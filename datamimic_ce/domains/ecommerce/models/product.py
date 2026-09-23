@@ -11,7 +11,6 @@ This module provides a model for representing an e-commerce product.
 """
 
 from pathlib import Path
-from typing import Any
 
 from datamimic_ce.domains.common.literal_generators.string_generator import StringGenerator
 from datamimic_ce.domains.domain_core import BaseEntity
@@ -270,7 +269,7 @@ class Product(BaseEntity):
 
         return all_tags
 
-    def to_dict(self) -> dict[str, Any]:
+    def to_dict(self) -> dict[str, object]:
         """Convert the product to a dictionary.
 
         Returns:

@@ -4,9 +4,8 @@
 # See LICENSE file for the full text of the license.
 # For questions and support, contact: info@rapiddweller.com
 
-from typing import Any
-
 from datamimic_ce.domains.common.generators.address_generator import AddressGenerator
+from datamimic_ce.domains.common.generators.city_generator import CityRecord
 from datamimic_ce.domains.domain_core import BaseEntity
 from datamimic_ce.domains.domain_core.property_cache import property_cache
 
@@ -44,7 +43,7 @@ class Address(BaseEntity):
 
     @property
     @property_cache
-    def city_data(self) -> dict[str, Any]:
+    def city_data(self) -> CityRecord:
         return self._row.city_generator.get_random_city()
 
     @property
@@ -122,7 +121,7 @@ class Address(BaseEntity):
     def full_address(self) -> str:
         return f"{self.street} {self.house_number}, {self.postal_code} {self.city}, {self.country}"
 
-    def to_dict(self) -> dict[str, Any]:
+    def to_dict(self) -> dict[str, object]:
         return {
             "street": self.street,
             "house_number": self.house_number,

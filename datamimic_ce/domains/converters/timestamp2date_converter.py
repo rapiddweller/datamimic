@@ -15,7 +15,7 @@ class Timestamp2DateConverter(Converter):
     Convert timestamp data (int or float) to datetime
     """
 
-    def convert(self, value: int | float) -> datetime:
+    def convert(self, value: object) -> datetime:
         if not isinstance(value, int | float):
             raise ValueError(
                 f"Converter Timestamp2Date expect datatype 'int' or 'float', "

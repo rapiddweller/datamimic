@@ -12,7 +12,6 @@ This module provides a model for representing a person.
 
 from collections.abc import Mapping
 from datetime import datetime
-from typing import Any
 
 from datamimic_ce.domains.common.demographics.sampler import DemographicSample
 from datamimic_ce.domains.common.generators.person_generator import PersonGenerator
@@ -219,7 +218,7 @@ class Person(BaseEntity):
 
         return self._person_generator.get_salutation_data(gender)
 
-    def to_dict(self) -> dict[str, Any]:
+    def to_dict(self) -> dict[str, object]:
         """Convert the person to a dictionary.
 
         Returns:

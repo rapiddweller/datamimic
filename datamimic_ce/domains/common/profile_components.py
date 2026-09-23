@@ -11,7 +11,6 @@ import csv
 import json
 from functools import cache
 from pathlib import Path
-from typing import Any
 
 from ..exceptions import DomainError
 from ..utils.dataset_path import dataset_path, is_strict_dataset_mode
@@ -48,7 +47,7 @@ def resolve_component_profile(
     version: str,
     component_id: str,
     request_hash: str,
-) -> tuple[str, dict[str, Any]]:
+) -> tuple[str, dict[str, object]]:
     """Resolve a component to (dmgrp_profile_id, constraints) enforcing strict mode."""
 
     if version != "v1":

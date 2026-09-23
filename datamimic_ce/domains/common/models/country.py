@@ -4,8 +4,6 @@
 # See LICENSE file for the full text of the license.
 # For questions and support, contact: info@rapiddweller.com
 
-from typing import Any
-
 from datamimic_ce.domains.common.generators.country_generator import CountryGenerator
 from datamimic_ce.domains.domain_core import BaseEntity
 from datamimic_ce.domains.domain_core.property_cache import property_cache
@@ -35,7 +33,7 @@ class Country(BaseEntity):
 
     @property
     @property_cache
-    def country_data(self) -> dict[str, Any]:
+    def country_data(self) -> dict[str, str]:
         """Get the country data.
 
         Returns:
@@ -83,7 +81,7 @@ class Country(BaseEntity):
         """
         return self.country_data["population"]
 
-    def to_dict(self) -> dict[str, Any]:
+    def to_dict(self) -> dict[str, object]:
         """Convert the country to a dictionary.
 
         Returns:

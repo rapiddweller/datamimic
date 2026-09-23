@@ -8,7 +8,6 @@
 import logging
 import random
 from pathlib import Path
-from typing import Any
 
 from datamimic_ce.domains.domain_core.base_domain_generator import DatasetAwareDomainGenerator
 from datamimic_ce.domains.utils.dataset_loader import read_csv_rows
@@ -69,7 +68,7 @@ class CountryGenerator(DatasetAwareDomainGenerator):
                 raise ValueError(f"Country with ISO code {iso_code} not found")
         return return_value
 
-    def get_random_country(self) -> dict[str, Any]:
+    def get_random_country(self) -> dict[str, str]:
         """Get a random country.
 
         Returns:

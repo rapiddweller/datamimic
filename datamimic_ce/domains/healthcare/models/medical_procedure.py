@@ -10,7 +10,6 @@ Medical Procedure entity model.
 This module provides the MedicalProcedure entity model for generating realistic medical procedure data.
 """
 
-from typing import Any
 
 from datamimic_ce.domains.domain_core import BaseEntity
 from datamimic_ce.domains.domain_core.property_cache import property_cache
@@ -229,7 +228,7 @@ class MedicalProcedure(BaseEntity):
         # Recovery time depends on whether the procedure is surgical
         return self._medical_procedure_generator.pick_recovery_time(self.is_surgical)
 
-    def to_dict(self) -> dict[str, Any]:
+    def to_dict(self) -> dict[str, object]:
         """Convert the medical procedure entity to a dictionary.
 
         Returns:

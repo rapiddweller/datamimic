@@ -1,11 +1,26 @@
 from __future__ import annotations
 
 from dataclasses import dataclass, field
-from typing import Any
+from typing import TypedDict
 
 from ..determinism import canonical_json, derive_seed, determinism_proof, hash_bytes, mix_seed, stable_uuid, with_rng
 from ..exceptions import DomainError
 from ..locales import SUPPORTED_DATASET_CODES, load_locale
+
+
+class AgeConstraints(TypedDict, total=False):
+    min: int
+    max: int
+
+
+class PatientConstraints(TypedDict, total=False):
+    age: AgeConstraints
+    conditions: list[str]
+    id_namespace: str
+
+
+def _empty_patient_constraints() -> PatientConstraints:
+    return {}
 
 
 @dataclass(frozen=True)
@@ -17,7 +32,7 @@ class PatientRequest:
     locale: str = "en_US"
     profile_id: str | None = None
     component_id: str | None = None
-    constraints: dict[str, Any] = field(default_factory=dict)
+    constraints: PatientConstraints = field(default_factory=_empty_patient_constraints)
     clock: str = "2025-01-01T00:00:00Z"
     request_hash: str = ""
 
@@ -28,7 +43,7 @@ def _human_id(namespace: str, uuid_value: str) -> str:
     return f"{namespace.upper()}-{checksum:02d}"
 
 
-def generate(req: PatientRequest, *, profile_seed: int | None = None) -> dict[str, Any]:
+def generate(req: PatientRequest, *, profile_seed: int | None = None) -> dict[str, object]:
     if req.count < 0:
         raise DomainError(
             code="invalid_count",
@@ -87,7 +102,7 @@ def generate(req: PatientRequest, *, profile_seed: int | None = None) -> dict[st
     id_namespace = constraints.get("id_namespace", patient_locale["id_namespace"])
     insurance_pool = patient_locale["insurance_providers"]
 
-    items: list[dict[str, Any]] = []
+    items: list[dict[str, object]] = []
 
     for index in range(req.count):
         item_seed = mix_seed(rng_root, index)

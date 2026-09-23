@@ -12,7 +12,6 @@ This module provides the PoliceOfficer entity model for generating realistic pol
 
 import datetime
 from pathlib import Path
-from typing import Any
 
 from datamimic_ce.domains.common.models.address import Address
 from datamimic_ce.domains.common.models.person import Person
@@ -252,7 +251,7 @@ class PoliceOfficer(BaseEntity):
         """
         return Address(self.police_officer_generator.address_generator)
 
-    def to_dict(self) -> dict[str, Any]:
+    def to_dict(self) -> dict[str, object]:
         """Convert the police officer entity to a dictionary.
 
         Returns:

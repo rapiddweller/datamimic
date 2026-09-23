@@ -1,6 +1,5 @@
 import random
 from pathlib import Path
-from typing import Any
 
 from datamimic_ce.domains.domain_core.base_domain_generator import DatasetAwareDomainGenerator
 from datamimic_ce.domains.utils.dataset_loader import read_weighted_records
@@ -25,7 +24,7 @@ class InsuranceCompanyGenerator(DatasetAwareDomainGenerator):
         self._last_company_code: str | None = None
         self._last_founded_year: str | None = None
 
-    def get_random_company(self) -> dict[str, Any]:
+    def get_random_company(self) -> dict[str, str]:
         #  use unified dataset path helper
         file_path = dataset_path("insurance", f"companies_{self._dataset}.csv", start=Path(__file__))
         loaded_wgt, loaded_data = read_weighted_records(file_path, "weight")

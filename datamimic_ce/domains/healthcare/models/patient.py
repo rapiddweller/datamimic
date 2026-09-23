@@ -11,7 +11,6 @@ This module provides the Patient entity model for generating realistic patient d
 """
 
 import datetime
-from typing import Any
 
 from datamimic_ce.domains.common.models.person import Person
 from datamimic_ce.domains.domain_core import BaseEntity
@@ -315,7 +314,7 @@ class Patient(BaseEntity):
         """
         self._field_cache["primary_doctor"] = value
 
-    def to_dict(self) -> dict[str, Any]:
+    def to_dict(self) -> dict[str, object]:
         """Convert the patient entity to a dictionary.
 
         Returns:

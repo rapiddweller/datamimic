@@ -11,7 +11,6 @@ This module defines the bank account model for the finance domain.
 """
 
 import datetime
-from typing import Any
 
 from datamimic_ce.domains.domain_core import BaseEntity
 from datamimic_ce.domains.domain_core.property_cache import property_cache
@@ -119,7 +118,7 @@ class BankAccount(BaseEntity):
     def bin(self) -> str:
         return self.bank_data.bin
 
-    def to_dict(self) -> dict[str, Any]:
+    def to_dict(self) -> dict[str, object]:
         return {
             "account_number": self.account_number,
             "iban": self.iban,

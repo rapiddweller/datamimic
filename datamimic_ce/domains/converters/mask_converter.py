@@ -4,8 +4,6 @@
 # See LICENSE file for the full text of the license.
 # For questions and support, contact: info@rapiddweller.com
 
-from typing import Any
-
 from datamimic_ce.domains.converters.converter import Converter
 
 
@@ -21,7 +19,7 @@ class MaskConverter(Converter):
             raise ValueError("Mask character can only be a single character")
         self._mask_char = mask_char
 
-    def convert(self, value: Any) -> str:
+    def convert(self, value: object) -> str:
         if not isinstance(value, str):
             raise ValueError(
                 f"Converter Mask expect datatype 'string', but got value {value} with invalid datatype {type(value)}"

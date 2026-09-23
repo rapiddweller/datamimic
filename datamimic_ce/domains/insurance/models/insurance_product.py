@@ -11,7 +11,6 @@ This module defines the insurance product model for the insurance domain.
 """
 
 from pathlib import Path
-from typing import Any
 
 from datamimic_ce.domains.domain_core import BaseEntity
 from datamimic_ce.domains.domain_core.property_cache import property_cache
@@ -34,7 +33,7 @@ class InsuranceProduct(BaseEntity):
 
     @property
     @property_cache
-    def product_data(self) -> dict[str, Any]:
+    def product_data(self) -> dict[str, str]:
         return self._insurance_product_generator.get_random_product()
 
     @property
@@ -62,7 +61,7 @@ class InsuranceProduct(BaseEntity):
             for _ in range(max(1, count))
         ]
 
-    def to_dict(self) -> dict[str, Any]:
+    def to_dict(self) -> dict[str, object]:
         return {
             "id": self.id,
             "type": self.type,

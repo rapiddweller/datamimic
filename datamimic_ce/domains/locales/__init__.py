@@ -5,7 +5,7 @@ from collections.abc import Iterable, Sequence
 from dataclasses import dataclass
 from functools import cache
 from pathlib import Path
-from typing import Any
+from typing import TypedDict
 
 from datamimic_ce.domains.utils.dataset_loader import read_csv_records, read_weighted_values
 
@@ -21,10 +21,39 @@ from ..utils.supported_datasets import compute_supported_datasets
 
 @dataclass(frozen=True)
 class LocalePack:
-    person: dict[str, Any]
-    address: dict[str, Any]
-    doctor: dict[str, Any]
-    patient: dict[str, Any]
+    person: PersonLocale
+    address: AddressLocale
+    doctor: DoctorLocale
+    patient: PatientLocale
+
+
+class PersonLocale(TypedDict):
+    sexes: list[str]
+    first_names: dict[str, list[str]]
+    last_names: list[str]
+    nationalities: list[str]
+    default_age_range: dict[str, int]
+
+
+class AddressLocale(TypedDict):
+    street_names: list[str]
+    cities: list[str]
+    states: list[str]
+    postal_code_format: str
+    country_code: str
+
+
+class DoctorLocale(TypedDict):
+    specialties: list[str]
+    license_prefix: str
+    titles: list[str]
+    hospitals: list[str]
+
+
+class PatientLocale(TypedDict):
+    conditions: list[str]
+    id_namespace: str
+    insurance_providers: list[str]
 
 
 _START = Path(__file__)
@@ -180,7 +209,7 @@ def _country_name(dataset: str) -> str:
     return code
 
 
-def _load_person_locale(dataset: str) -> dict[str, Any]:
+def _load_person_locale(dataset: str) -> PersonLocale:
     male_path = dataset_path("common", "person", f"givenName_male_{dataset}.csv", start=_START)
     female_path = dataset_path("common", "person", f"givenName_female_{dataset}.csv", start=_START)
     family_path = dataset_path("common", "person", f"familyName_{dataset}.csv", start=_START)
@@ -210,7 +239,7 @@ def _load_person_locale(dataset: str) -> dict[str, Any]:
     }
 
 
-def _load_address_locale(dataset: str) -> dict[str, Any]:
+def _load_address_locale(dataset: str) -> AddressLocale:
     street_path = dataset_path("common", "street", f"street_{dataset}.csv", start=_START)
     city_path = dataset_path("common", "city", f"city_{dataset}.csv", start=_START)
     state_path = dataset_path("common", "state", f"state_{dataset}.csv", start=_START)
@@ -234,7 +263,7 @@ def _load_address_locale(dataset: str) -> dict[str, Any]:
     }
 
 
-def _load_doctor_locale(dataset: str) -> dict[str, Any]:
+def _load_doctor_locale(dataset: str) -> DoctorLocale:
     specialties_path = dataset_path("healthcare", "medical", f"specialties_{dataset}.csv", start=_START)
     hospitals_path = dataset_path("healthcare", "medical", f"hospitals_{dataset}.csv", start=_START)
     titles_path = dataset_path("common", "person", f"title_{dataset}.csv", start=_START)
@@ -257,7 +286,7 @@ def _load_doctor_locale(dataset: str) -> dict[str, Any]:
     }
 
 
-def _load_patient_locale(dataset: str) -> dict[str, Any]:
+def _load_patient_locale(dataset: str) -> PatientLocale:
     conditions_path = dataset_path("healthcare", "medical", f"medical_conditions_{dataset}.csv", start=_START)
     insurance_path = dataset_path("healthcare", "medical", f"insurance_providers_{dataset}.csv", start=_START)
 

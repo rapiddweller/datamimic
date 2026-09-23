@@ -1,4 +1,3 @@
-from typing import Any
 
 from datamimic_ce.domains.common.literal_generators.phone_number_generator import PhoneNumberGenerator
 from datamimic_ce.domains.common.literal_generators.string_generator import StringGenerator
@@ -62,7 +61,7 @@ class Bank(BaseEntity):
         """
         return PhoneNumberGenerator(dataset=self._bank_generator.dataset, rng=self._bank_generator.rng).generate()
 
-    def to_dict(self) -> dict[str, Any]:
+    def to_dict(self) -> dict[str, object]:
         return {
             "name": self.name,
             "swift_code": self.swift_code,

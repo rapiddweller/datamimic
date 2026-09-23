@@ -3,12 +3,12 @@
 from __future__ import annotations
 
 import csv
-from collections.abc import Iterable, Mapping
+from collections.abc import Hashable, Iterable, Mapping
 from dataclasses import dataclass
 from functools import lru_cache
 from pathlib import Path
 from random import Random
-from typing import Any
+from typing import TypeAlias, TypeGuard, TypeVar
 
 from ...determinism import compute_provenance_hash
 from ...utils.dataset_path import dataset_path, is_strict_dataset_mode
@@ -22,6 +22,10 @@ from .profile import (
 )
 
 _START = Path(__file__)
+
+GroupRow: TypeAlias = dict[str, str | None]
+GroupMask: TypeAlias = dict[str, float] | dict[tuple[int, int], float] | dict[SexKey, float]
+MaskKey = TypeVar("MaskKey", bound=Hashable)
 
 GROUP_COLUMN_DIMENSIONS: Mapping[str, str] = {
     "age_group_ref": "age_band",
@@ -42,7 +46,7 @@ GENDER_KEY = "gender_category"
 class MaskBoundsError(ValueError):
     """Raised when a group mask violates the configured bounds."""
 
-    def __init__(self, dimension: str, group_id: str, key: Any, ratio: float) -> None:
+    def __init__(self, dimension: str, group_id: str, key: Hashable, ratio: float) -> None:
         super().__init__(
             f"Mask '{group_id}' in '{dimension}' exceeds bounds for key '{key}': ratio={ratio:.3f} not in [0.5, 1.5]"
         )
@@ -52,16 +56,53 @@ class MaskBoundsError(ValueError):
         self.ratio = ratio
 
 
-def _normalize(values: dict[Any, float]) -> dict[Any, float]:
+def _normalize(values: dict[MaskKey, float]) -> dict[MaskKey, float]:
     total = sum(values.values())
     if total <= 0:
         return {}
     return {key: weight / total for key, weight in values.items() if weight > 0}
 
 
+def _is_age_mask(mask: GroupMask) -> TypeGuard[dict[tuple[int, int], float]]:
+    return all(isinstance(key, tuple) for key in mask)
+
+
+def _is_gender_mask(mask: GroupMask) -> TypeGuard[dict[SexKey, float]]:
+    return all(key is None or isinstance(key, str) for key in mask)
+
+
+def _is_text_mask(mask: GroupMask) -> TypeGuard[dict[str, float]]:
+    return all(isinstance(key, str) for key in mask)
+
+
+def _normalize_group_mask(mask: GroupMask) -> GroupMask:
+    if _is_age_mask(mask):
+        return _normalize(mask)
+    if _is_gender_mask(mask):
+        return _normalize(mask)
+    if _is_text_mask(mask):
+        return _normalize(mask)
+    raise TypeError("Unsupported group mask keys")
+
+
+def _uniform_group_mask(mask: GroupMask) -> GroupMask:
+    if _is_age_mask(mask):
+        return _uniform(mask)
+    if _is_gender_mask(mask):
+        return _uniform(mask)
+    if _is_text_mask(mask):
+        return _uniform(mask)
+    raise TypeError("Unsupported group mask keys")
+
+
+def _uniform(values: dict[MaskKey, float]) -> dict[MaskKey, float]:
+    weight = 1.0 / len(values)
+    return {key: weight for key in values}
+
+
 def _enforce_mask_bounds(
-    base: Mapping[Any, float],
-    composed: Mapping[Any, float],
+    base: Mapping[MaskKey, float],
+    composed: Mapping[MaskKey, float],
     *,
     dimension: str,
     group_id: str,
@@ -75,7 +116,7 @@ def _enforce_mask_bounds(
             raise MaskBoundsError(dimension, group_id, key, ratio)
 
 
-def _clean_row(row: dict[str, Any]) -> dict[str, str]:
+def _clean_row(row: GroupRow) -> GroupRow:
     return {key: (value.strip() if isinstance(value, str) else value) for key, value in row.items()}
 
 
@@ -88,7 +129,7 @@ class GroupRegistry:
         version: str,
         dimension: str,
         group_id: str,
-    ) -> tuple[tuple[dict[str, str], ...], str | None, str | None]:
+    ) -> tuple[tuple[GroupRow, ...], str | None, str | None]:
         dataset_code = dataset.upper()
         path = dataset_path("groups", dimension, f"{dimension}_{dataset_code}.csv", start=_START)
         if not path.exists():
@@ -118,12 +159,12 @@ class GroupRegistry:
         group_id: str,
         file_hash: str,
         path_str: str,
-    ) -> tuple[dict[str, str], ...]:
+    ) -> tuple[GroupRow, ...]:
         del version, file_hash  # included in cache key for busting purposes
         path = Path(path_str)
         with path.open("r", encoding="utf-8", newline="") as handle:
             reader = csv.DictReader(handle)
-            rows: list[dict[str, str]] = []
+            rows: list[GroupRow] = []
             for raw in reader:
                 if not raw:
                     continue
@@ -139,7 +180,7 @@ def load_group_table(
     version: str,
     group_dimension: str,
     group_id: str,
-) -> tuple[dict[str, float] | dict[tuple[int, int], float], tuple[str, str] | None]:
+) -> tuple[GroupMask, tuple[str, str] | None]:
     """Load mask weights for a group dimension, normalized to sum ≈ 1."""
 
     matches, path_str, file_hash = GroupRegistry.resolve(
@@ -155,29 +196,36 @@ def load_group_table(
         return {}, None
 
     dataset_code = dataset.upper()
-    parsed: dict[Any, float]
     if group_dimension == AGE_KEY:
-        parsed = {}
+        parsed_age: dict[tuple[int, int], float] = {}
         for row in matches:
             try:
-                min_age = int(row["min_age"])
-                max_age = int(row["max_age"])
-                weight = float(row["weight"])
+                min_age_value = row["min_age"]
+                max_age_value = row["max_age"]
+                weight_value = row["weight"]
+                if min_age_value is None or max_age_value is None or weight_value is None:
+                    raise TypeError("Required age-band value is missing")
+                min_age = int(min_age_value)
+                max_age = int(max_age_value)
+                weight = float(weight_value)
             except (TypeError, ValueError, KeyError) as exc:  # pragma: no cover - schema guard
                 raise ValueError(
                     f"Invalid age band row for group '{group_id}' in {group_dimension}_{dataset_code}.csv"
                 ) from exc
-            parsed[(min_age, max_age)] = parsed.get((min_age, max_age), 0.0) + weight
+            parsed_age[(min_age, max_age)] = parsed_age.get((min_age, max_age), 0.0) + weight
+        parsed: GroupMask = parsed_age
     elif group_dimension == CONDITION_KEY:
-        parsed = {}
+        parsed_condition: dict[str, float] = {}
         for row in matches:
             condition = (row.get("condition") or "").strip()
-            parsed[condition] = parsed.get(condition, 0.0) + float(row.get("weight", 0) or 0)
+            parsed_condition[condition] = parsed_condition.get(condition, 0.0) + float(row.get("weight", 0) or 0)
+        parsed = parsed_condition
     elif group_dimension == GENDER_KEY:
-        parsed = {}
+        parsed_gender: dict[SexKey, float] = {}
         for row in matches:
             gender = normalize_sex(row.get("gender"))
-            parsed[gender] = parsed.get(gender, 0.0) + float(row.get("weight", 0) or 0)
+            parsed_gender[gender] = parsed_gender.get(gender, 0.0) + float(row.get("weight", 0) or 0)
+        parsed = parsed_gender
     else:
         value_column = next(
             (key for key in matches[0] if key not in {"group_id", "weight"}),
@@ -185,16 +233,16 @@ def load_group_table(
         )
         if value_column is None:
             raise ValueError(f"Group table '{group_dimension}_{dataset_code}.csv' lacks value columns")
-        parsed = {}
+        parsed_other: dict[str, float] = {}
         for row in matches:
             value_key = (row.get(value_column) or "").strip()
-            parsed[value_key] = parsed.get(value_key, 0.0) + float(row.get("weight", 0) or 0)
+            parsed_other[value_key] = parsed_other.get(value_key, 0.0) + float(row.get("weight", 0) or 0)
+        parsed = parsed_other
 
-    normalized = _normalize(parsed)
+    normalized = _normalize_group_mask(parsed)
     if not normalized and parsed:
         # All weights zero: treat as uniform mask over provided keys.
-        uniform_weight = 1.0 / len(parsed)
-        normalized = {key: uniform_weight for key in parsed}
+        normalized = _uniform_group_mask(parsed)
 
     provenance = None
     if normalized and path_str and file_hash:
@@ -203,7 +251,10 @@ def load_group_table(
     return normalized, provenance
 
 
-def compose_weights(base: Mapping[Any, float], mask: Mapping[Any, float] | None) -> dict[Any, float]:
+def compose_weights(
+    base: Mapping[MaskKey, float],
+    mask: Mapping[MaskKey, float] | None,
+) -> dict[MaskKey, float]:
     """Compose base priors with a mask and normalize."""
 
     if not base:
@@ -211,7 +262,7 @@ def compose_weights(base: Mapping[Any, float], mask: Mapping[Any, float] | None)
     if not mask:
         return _normalize(dict(base))
 
-    combined: dict[Any, float] = {}
+    combined: dict[MaskKey, float] = {}
     for key, base_weight in base.items():
         if base_weight <= 0:
             continue
@@ -242,7 +293,7 @@ class DemographicSampler:
 
     def __init__(self, profile: DemographicProfile):
         self._profile = profile
-        self._group_masks: dict[str, dict[Any, float]] = {}
+        self._group_masks: dict[str, GroupMask] = {}
         self._provenance_records: dict[str, str] = {}
         self._dimension_provenance: dict[str, str] = {}
 
@@ -276,7 +327,7 @@ class DemographicSampler:
     def provenance_descriptor(self) -> dict[str, str]:
         return dict(self._provenance_records)
 
-    def group_mask(self, dimension: str) -> dict[Any, float]:
+    def group_mask(self, dimension: str) -> GroupMask:
         """Expose the resolved mask for a given group dimension."""
 
         return dict(self._group_masks.get(dimension, {}))
@@ -298,7 +349,7 @@ class DemographicSampler:
 
     def apply_profile_groups(
         self,
-        profile_row: Mapping[str, Any],
+        profile_row: Mapping[str, str | None],
         dataset: str,
         version: str,
     ) -> DemographicSampler:
@@ -310,8 +361,12 @@ class DemographicSampler:
                 continue
             mask, provenance = load_group_table(dataset, version, dimension, value)
             if dimension == AGE_KEY:
+                if not _is_age_mask(mask):
+                    raise TypeError("Age group mask must use age-band keys")
                 self._apply_age_mask(mask, dimension=dimension, group_id=value, provenance=provenance)
             elif dimension == CONDITION_KEY:
+                if not _is_text_mask(mask):
+                    raise TypeError("Condition group mask must use string keys")
                 self._apply_condition_mask(
                     mask,
                     dimension=dimension,
@@ -319,6 +374,8 @@ class DemographicSampler:
                     provenance=provenance,
                 )
             elif dimension == GENDER_KEY:
+                if not _is_gender_mask(mask):
+                    raise TypeError("Gender group mask must use sex keys")
                 self._apply_gender_mask(
                     mask,
                     dimension=dimension,
@@ -326,6 +383,8 @@ class DemographicSampler:
                     provenance=provenance,
                 )
             else:
+                if not _is_text_mask(mask):
+                    raise TypeError("Group mask must use string keys")
                 if mask:
                     self._group_masks[dimension] = mask
                     self._register_provenance(dimension, provenance)
@@ -435,7 +494,7 @@ class DemographicSampler:
 
     def _apply_age_mask(
         self,
-        mask: Mapping[Any, float],
+        mask: Mapping[tuple[int, int], float],
         *,
         dimension: str,
         group_id: str,
@@ -477,7 +536,7 @@ class DemographicSampler:
 
     def _apply_condition_mask(
         self,
-        mask: Mapping[Any, float],
+        mask: Mapping[str, float],
         *,
         dimension: str,
         group_id: str,
@@ -527,7 +586,7 @@ class DemographicSampler:
 
     def _apply_gender_mask(
         self,
-        mask: Mapping[Any, float],
+        mask: Mapping[SexKey, float],
         *,
         dimension: str,
         group_id: str,

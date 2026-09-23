@@ -6,7 +6,7 @@
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, TypedDict
 
 if TYPE_CHECKING:
     from datamimic_ce.domains.common.models.demographic_config import DemographicConfig
@@ -25,6 +25,17 @@ from datamimic_ce.domains.utils.dataset_loader import (
     read_weighted_values,
 )
 from datamimic_ce.domains.utils.dataset_path import dataset_path
+
+
+class MaintenanceRecord(TypedDict):
+    date: str
+    technician: str
+    type: str
+    parts_replaced: list[str]
+    cost: float
+    duration_hours: float
+    result: str
+    notes: str
 
 
 class MedicalDeviceGenerator(ClockAnchoredDomainGenerator):
@@ -247,13 +258,13 @@ class MedicalDeviceGenerator(ClockAnchoredDomainGenerator):
             return ""
         return self._rng.choices(values, weights=weights, k=1)[0]
 
-    def generate_maintenance_history(self) -> list[dict[str, Any]]:
+    def generate_maintenance_history(self) -> list[MaintenanceRecord]:
         """Generate maintenance history for the device.
 
         Returns:
             A list of dictionaries representing maintenance history.
         """
-        history = []
+        history: list[MaintenanceRecord] = []
 
         # Generate between 2 and 8 maintenance records
         num_records = self._rng.randint(2, 8)
@@ -276,7 +287,7 @@ class MedicalDeviceGenerator(ClockAnchoredDomainGenerator):
                 break
 
             # Generate a maintenance record
-            maintenance_record = {
+            maintenance_record: MaintenanceRecord = {
                 "date": current_date.strftime("%Y-%m-%d"),
                 "technician": self._generate_technician_name(),
                 "type": self._generate_maintenance_type(),

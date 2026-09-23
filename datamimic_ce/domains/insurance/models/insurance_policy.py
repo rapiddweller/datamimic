@@ -1,6 +1,5 @@
 import datetime
 from pathlib import Path
-from typing import Any
 
 from datamimic_ce.domains.common.models.person import Person
 from datamimic_ce.domains.domain_core import BaseEntity
@@ -108,7 +107,7 @@ class InsurancePolicy(BaseEntity):
     def created_date(self) -> datetime.datetime:
         return self.insurance_policy_generator.datetime_generator.generate_date()
 
-    def to_dict(self) -> dict[str, Any]:
+    def to_dict(self) -> dict[str, object]:
         return {
             "id": self.id,
             "company": self.company.to_dict(),

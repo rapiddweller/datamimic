@@ -5,7 +5,6 @@
 # For questions and support, contact: info@rapiddweller.com
 
 import copy
-from typing import Any
 
 from datamimic_ce.domains.converters.converter import Converter
 
@@ -19,7 +18,7 @@ class RemoveNoneOrEmptyElementConverter(Converter):
 
     EMPTY_VALUES: list = list((None, "", [], {}))
 
-    def convert(self, value: list[Any] | dict[str, Any]) -> list[Any] | dict[str, Any]:
+    def convert(self, value: object) -> object:
         """Recursively removes empty elements."""
         # Early return for primitive types
         if not isinstance(value, list | dict):
@@ -30,7 +29,7 @@ class RemoveNoneOrEmptyElementConverter(Converter):
         copy_value = copy.deepcopy(value)
         return self._convert_list(copy_value) if isinstance(copy_value, list) else self._convert_dict(copy_value)
 
-    def _convert_list(self, values: list[Any]) -> list[Any]:
+    def _convert_list(self, values: list[object]) -> list[object]:
         """Process list elements with list comprehension."""
         # Single-pass list comprehension with inline conversion
         result = []
@@ -41,7 +40,7 @@ class RemoveNoneOrEmptyElementConverter(Converter):
                     result.append(converted)
         return result
 
-    def _convert_dict(self, data: dict[str, Any]) -> dict[str, Any]:
+    def _convert_dict(self, data: dict[object, object]) -> dict[object, object]:
         """Process dictionary with minimal copying."""
         # Create new dict directly with filtered items
         result = {}

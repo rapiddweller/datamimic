@@ -4,8 +4,6 @@
 # See LICENSE file for the full text of the license.
 # For questions and support, contact: info@rapiddweller.com
 
-from typing import Any
-
 from datamimic_ce.domains.converters.converter import Converter
 
 
@@ -28,7 +26,7 @@ class MiddleMaskConverter(Converter):
         self._end_mask_offset = end_mask_offset
         self._mask_char = mask_char
 
-    def convert(self, value: Any) -> str:
+    def convert(self, value: object) -> str:
         if not isinstance(value, str):
             raise ValueError(
                 f"MiddleMaskConverter expects data type 'string', but got value {value} "

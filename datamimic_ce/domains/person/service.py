@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass, field
 from datetime import datetime, timezone
-from typing import Any
+from typing import TypedDict
 
 from ..determinism import (
     canonical_json,
@@ -18,6 +18,21 @@ from ..exceptions import DomainError
 from ..locales import SUPPORTED_DATASET_CODES, load_locale
 
 
+class AgeConstraints(TypedDict, total=False):
+    min: int
+    max: int
+
+
+class PersonConstraints(TypedDict, total=False):
+    sex: str | list[str]
+    age: AgeConstraints
+    nationality: str
+
+
+def _empty_person_constraints() -> PersonConstraints:
+    return {}
+
+
 @dataclass(frozen=True)
 class PersonRequest:
     domain: str = "person"
@@ -27,12 +42,12 @@ class PersonRequest:
     locale: str = "en_US"
     profile_id: str | None = None
     component_id: str | None = None
-    constraints: dict[str, Any] = field(default_factory=dict)
+    constraints: PersonConstraints = field(default_factory=_empty_person_constraints)
     clock: str = "2025-01-01T00:00:00Z"
     request_hash: str = ""
 
 
-def generate(req: PersonRequest, *, profile_seed: int | None = None) -> dict[str, Any]:
+def generate(req: PersonRequest, *, profile_seed: int | None = None) -> dict[str, object]:
     if req.count < 0:
         raise DomainError(
             code="invalid_count",
@@ -92,7 +107,7 @@ def generate(req: PersonRequest, *, profile_seed: int | None = None) -> dict[str
             request_hash=req.request_hash,
         )
 
-    items: list[dict[str, Any]] = []
+    items: list[dict[str, object]] = []
     for index in range(req.count):
         item_seed = mix_seed(rng_root, index)
         rng = with_rng(item_seed)

@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import Any
 
 
 @dataclass(frozen=True)
@@ -11,12 +10,10 @@ class DomainError(Exception):
     hint: str | None
     path: str
     request_hash: str
-    details: dict[str, Any] | None = None
+    details: dict[str, object] | None = None
 
-    def to_dict(self) -> dict[str, Any]:
-        # mypy: Without an explicit annotation, this dict is inferred as dict[str, str].
-        # We include optional structured details later, so keep value type as Any.
-        payload: dict[str, Any] = {
+    def to_dict(self) -> dict[str, object]:
+        payload: dict[str, object] = {
             "code": self.code,
             "message": self.message,
             "path": self.path,

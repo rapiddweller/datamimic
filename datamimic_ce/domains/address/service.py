@@ -1,11 +1,20 @@
 from __future__ import annotations
 
 from dataclasses import dataclass, field
-from typing import Any
+from typing import TypedDict
 
 from ..determinism import canonical_json, derive_seed, determinism_proof, hash_bytes, mix_seed, stable_uuid, with_rng
 from ..exceptions import DomainError
 from ..locales import SUPPORTED_DATASET_CODES, load_locale
+
+
+class AddressConstraints(TypedDict, total=False):
+    country: str
+    postal_code_prefix: str | int
+
+
+def _empty_address_constraints() -> AddressConstraints:
+    return {}
 
 
 @dataclass(frozen=True)
@@ -15,7 +24,7 @@ class AddressRequest:
     count: int = 1
     seed: str | int = "0"
     locale: str = "en_US"
-    constraints: dict[str, Any] = field(default_factory=dict)
+    constraints: AddressConstraints = field(default_factory=_empty_address_constraints)
     clock: str = "2025-01-01T00:00:00Z"
     request_hash: str = ""
 
@@ -38,7 +47,7 @@ def _format_postal_code(pattern: str, rng) -> str:
     return "".join(digits)
 
 
-def generate(req: AddressRequest) -> dict[str, Any]:
+def generate(req: AddressRequest) -> dict[str, object]:
     if req.count < 0:
         raise DomainError(
             code="invalid_count",
@@ -72,7 +81,7 @@ def generate(req: AddressRequest) -> dict[str, Any]:
         )
 
     derived_seed = derive_seed(req.seed)
-    items: list[dict[str, Any]] = []
+    items: list[dict[str, object]] = []
 
     for index in range(req.count):
         item_seed = mix_seed(derived_seed, index)

@@ -11,7 +11,6 @@ This module provides the Doctor entity model for generating realistic doctor dat
 """
 
 import datetime
-from typing import Any
 
 from datamimic_ce.domains.common.models.address import Address
 from datamimic_ce.domains.common.models.person import Person
@@ -280,7 +279,7 @@ class Doctor(BaseEntity):
         """
         return self.person_data.address
 
-    def to_dict(self) -> dict[str, Any]:
+    def to_dict(self) -> dict[str, object]:
         """Convert the doctor entity to a dictionary.
 
         Returns:

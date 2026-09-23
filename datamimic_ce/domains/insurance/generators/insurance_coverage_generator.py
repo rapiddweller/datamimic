@@ -1,6 +1,5 @@
 import random
 from pathlib import Path
-from typing import Any
 
 from datamimic_ce.domains.domain_core.base_domain_generator import DatasetAwareDomainGenerator
 from datamimic_ce.domains.utils.dataset_loader import read_weighted_records
@@ -27,7 +26,7 @@ class InsuranceCoverageGenerator(DatasetAwareDomainGenerator):
         self._last_min_coverage: str | None = None
         self._last_max_coverage: str | None = None
 
-    def get_random_coverage(self) -> dict[str, Any]:
+    def get_random_coverage(self) -> dict[str, str]:
         #  centralize dataset path building for maintainability
         file_path = dataset_path("insurance", f"coverages_{self._dataset}.csv", start=Path(__file__))
         weights, rows = read_weighted_records(file_path, "weight")

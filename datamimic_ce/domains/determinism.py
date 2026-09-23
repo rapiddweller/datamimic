@@ -10,7 +10,7 @@ from collections.abc import Iterable
 from dataclasses import asdict, is_dataclass
 from datetime import datetime, timezone
 from pathlib import Path
-from typing import Any, Literal, TypedDict
+from typing import Literal, TypedDict
 
 
 def get_datamimic_lib_version(lib_name: str = "datamimic-ce") -> str | None:
@@ -30,7 +30,7 @@ class DeterminismProof(TypedDict):
     faker_version: str
 
 
-def canonicalize(obj: Any) -> Any:
+def canonicalize(obj: object) -> object:
     """Recursively sort mapping keys for deterministic JSON output."""
     if is_dataclass(obj) and not isinstance(obj, type):
         obj = asdict(obj)
@@ -41,7 +41,7 @@ def canonicalize(obj: Any) -> Any:
     return obj
 
 
-def canonical_json(obj: Any) -> bytes:
+def canonical_json(obj: object) -> bytes:
     canonical = canonicalize(obj)
     return json.dumps(canonical, separators=(",", ":"), ensure_ascii=False).encode("utf-8")
 
@@ -61,13 +61,13 @@ def determinism_proof(seed: int, content_hash: str) -> DeterminismProof:
     }
 
 
-def stable_uuid(namespace: str, *parts: Any) -> str:
+def stable_uuid(namespace: str, *parts: object) -> str:
     base_uuid = uuid.uuid5(uuid.NAMESPACE_URL, namespace)
     name = "::".join(str(part) for part in parts)
     return str(uuid.uuid5(base_uuid, name))
 
 
-def derive_seed(seed_any: Any) -> int:
+def derive_seed(seed_any: object) -> int:
     if isinstance(seed_any, int):
         return seed_any
     if isinstance(seed_any, str) and seed_any.isdigit():
@@ -76,7 +76,7 @@ def derive_seed(seed_any: Any) -> int:
     return int.from_bytes(digest[:8], "big", signed=False)
 
 
-def mix_seed(seed: int, *parts: Any) -> int:
+def mix_seed(seed: int, *parts: object) -> int:
     components: Iterable[str] = [str(seed), *[str(part) for part in parts]]
     digest = hashlib.sha256("::".join(components).encode("utf-8")).digest()
     return int.from_bytes(digest[:8], "big", signed=False)

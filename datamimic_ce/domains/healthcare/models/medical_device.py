@@ -4,12 +4,15 @@
 # See LICENSE file for the full text of the license.
 # For questions and support, contact: info@rapiddweller.com
 
-from typing import Any, TypeVar
+from typing import TypeVar
 
 from datamimic_ce.domains.common.models.person import Person
 from datamimic_ce.domains.domain_core import BaseEntity
 from datamimic_ce.domains.domain_core.property_cache import property_cache
-from datamimic_ce.domains.healthcare.generators.medical_device_generator import MedicalDeviceGenerator
+from datamimic_ce.domains.healthcare.generators.medical_device_generator import (
+    MaintenanceRecord,
+    MedicalDeviceGenerator,
+)
 
 T = TypeVar("T")
 
@@ -225,7 +228,7 @@ class MedicalDevice(BaseEntity):
 
     @property
     @property_cache
-    def maintenance_history(self) -> list[dict[str, Any]]:
+    def maintenance_history(self) -> list[MaintenanceRecord]:
         """Generate device maintenance history.
 
         Returns:
@@ -233,7 +236,7 @@ class MedicalDevice(BaseEntity):
         """
         return self._medical_device_generator.generate_maintenance_history()
 
-    def to_dict(self) -> dict[str, Any]:
+    def to_dict(self) -> dict[str, object]:
         """Convert the medical device to a dictionary.
 
         Returns:

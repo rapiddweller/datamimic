@@ -6,7 +6,6 @@
 
 import hmac
 from base64 import b64encode
-from typing import Any
 
 from datamimic_ce.domains.converters.converter import Converter
 from datamimic_ce.engine.dsl.api import SupportHash, SupportOutputFormat
@@ -31,7 +30,7 @@ class HashConverter(Converter):
         self._output_format = SupportOutputFormat(output_format.lower())
         self._key = key if salt is None else key + salt.encode("utf-8")
 
-    def convert(self, value: Any) -> str:
+    def convert(self, value: object) -> str:
         if not isinstance(value, str):
             raise ValueError(
                 f"HashConverter expects data type 'string', but got value {value} "

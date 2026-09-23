@@ -12,7 +12,6 @@ realistic educational institution data.
 """
 
 from pathlib import Path
-from typing import Any
 
 from datamimic_ce.domains.common.models.address import Address
 from datamimic_ce.domains.domain_core import BaseEntity
@@ -333,7 +332,7 @@ class EducationalInstitution(BaseEntity):
         """
         return Address(self._educational_institution_generator.address_generator)
 
-    def to_dict(self) -> dict[str, Any]:
+    def to_dict(self) -> dict[str, object]:
         """Convert the educational institution entity to a dictionary.
 
         Returns:

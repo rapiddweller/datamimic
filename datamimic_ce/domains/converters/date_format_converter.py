@@ -13,7 +13,7 @@ class DateFormatConverter(Converter):
     def __init__(self, format_str: str):
         self._format = format_str
 
-    def convert(self, value: datetime) -> str:
+    def convert(self, value: object) -> str:
         if not isinstance(value, datetime):
             raise ValueError(f"DateFormat converter expects datetime, got {type(value).__name__}: {value!r}")
         return value.strftime(self._format)

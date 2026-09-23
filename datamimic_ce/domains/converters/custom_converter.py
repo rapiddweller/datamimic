@@ -4,14 +4,12 @@
 # See LICENSE file for the full text of the license.
 # For questions and support, contact: info@rapiddweller.com
 
-from typing import Any
-
 from datamimic_ce.domains.converters.converter import Converter
 
 
 class CustomConverter(Converter):
-    def __init__(self, ctx: Any = None):
+    def __init__(self, ctx: object | None = None):
         self._ctx = ctx
 
-    def convert(self, value) -> Any:
+    def convert(self, value: object) -> object | None:
         pass

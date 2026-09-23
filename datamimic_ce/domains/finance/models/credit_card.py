@@ -11,7 +11,6 @@ This module defines the credit card model for the finance domain.
 """
 
 from datetime import datetime
-from typing import Any
 
 from datamimic_ce.domains.common.models.person import Person
 from datamimic_ce.domains.domain_core import BaseEntity
@@ -143,7 +142,7 @@ class CreditCard(BaseEntity):
     def iban(self) -> str:
         return self.bank_account_data.iban
 
-    def to_dict(self) -> dict[str, Any]:
+    def to_dict(self) -> dict[str, object]:
         return {
             "card_type": self.card_type,
             "card_number": self.card_number,

@@ -4,9 +4,7 @@
 # See LICENSE file for the full text of the license.
 # For questions and support, contact: info@rapiddweller.com
 
-from typing import Any
-
-from datamimic_ce.domains.common.generators.city_generator import CityGenerator
+from datamimic_ce.domains.common.generators.city_generator import CityGenerator, CityRecord
 from datamimic_ce.domains.domain_core import BaseEntity
 from datamimic_ce.domains.domain_core.property_cache import property_cache
 
@@ -25,7 +23,7 @@ class City(BaseEntity):
 
     @property
     @property_cache
-    def city_data(self) -> dict[str, Any]:
+    def city_data(self) -> CityRecord:
         """Get the city data.
 
         Returns:
@@ -127,7 +125,7 @@ class City(BaseEntity):
         """
         return self.city_data["country_code"]
 
-    def to_dict(self) -> dict[str, Any]:
+    def to_dict(self) -> dict[str, object]:
         """Convert the city to a dictionary.
 
         Returns:

@@ -7,11 +7,23 @@
 
 import random as _random
 from pathlib import Path
-from typing import Any
+from typing import TypedDict
 
 from datamimic_ce.domains.domain_core.base_domain_generator import DatasetAwareDomainGenerator
 from datamimic_ce.domains.utils.dataset_loader import read_csv_rows, read_headered_csv
 from datamimic_ce.domains.utils.dataset_path import dataset_path
+
+
+class CityRecord(TypedDict):
+    name: str
+    postal_code: str
+    area_code: str
+    state: str | None
+    language: str | None
+    population: str | None
+    name_extension: str
+    country: str
+    country_code: str
 
 
 class CityGenerator(DatasetAwareDomainGenerator):
@@ -69,7 +81,7 @@ class CityGenerator(DatasetAwareDomainGenerator):
                 raise ValueError(f"Unable to resolve country name for dataset {self._dataset}") from e
         return self._country_name
 
-    def get_random_city(self) -> dict[str, Any]:
+    def get_random_city(self) -> CityRecord:
         """Get a random city.
 
         Returns:
@@ -110,7 +122,7 @@ class CityGenerator(DatasetAwareDomainGenerator):
         idx_pop = city_header_dict.get("population") if "population" in city_header_dict else None
         idx_ext = city_header_dict.get("nameExtension") if "nameExtension" in city_header_dict else None
         assert idx_name is not None and idx_postal is not None and idx_area is not None
-        result = {
+        result: CityRecord = {
             "name": city_row[idx_name],
             "postal_code": city_row[idx_postal],
             "area_code": city_row[idx_area],

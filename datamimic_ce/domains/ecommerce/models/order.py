@@ -11,7 +11,6 @@ This module provides a model for representing an e-commerce order.
 """
 
 import datetime
-from typing import Any
 
 from datamimic_ce.domains.common.literal_generators.string_generator import StringGenerator
 from datamimic_ce.domains.common.models.address import Address
@@ -264,7 +263,7 @@ class Order(BaseEntity):
         # Add tax and shipping, subtract discount
         return round(subtotal + self.tax_amount + self.shipping_amount - self.discount_amount, 2)
 
-    def to_dict(self) -> dict[str, Any]:
+    def to_dict(self) -> dict[str, object]:
         """Convert the order to a dictionary.
 
         Returns:

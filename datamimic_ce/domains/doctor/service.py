@@ -1,11 +1,20 @@
 from __future__ import annotations
 
 from dataclasses import dataclass, field
-from typing import Any
+from typing import TypedDict
 
 from ..determinism import canonical_json, derive_seed, determinism_proof, hash_bytes, mix_seed, stable_uuid, with_rng
 from ..exceptions import DomainError
 from ..locales import SUPPORTED_DATASET_CODES, load_locale
+
+
+class DoctorConstraints(TypedDict, total=False):
+    specialty: str | list[str]
+    license_prefix: str
+
+
+def _empty_doctor_constraints() -> DoctorConstraints:
+    return {}
 
 
 @dataclass(frozen=True)
@@ -15,12 +24,12 @@ class DoctorRequest:
     count: int = 1
     seed: str | int = "0"
     locale: str = "en_US"
-    constraints: dict[str, Any] = field(default_factory=dict)
+    constraints: DoctorConstraints = field(default_factory=_empty_doctor_constraints)
     clock: str = "2025-01-01T00:00:00Z"
     request_hash: str = ""
 
 
-def generate(req: DoctorRequest) -> dict[str, Any]:
+def generate(req: DoctorRequest) -> dict[str, object]:
     if req.count < 0:
         raise DomainError(
             code="invalid_count",
@@ -81,7 +90,7 @@ def generate(req: DoctorRequest) -> dict[str, Any]:
     license_prefix = constraints.get("license_prefix", doctor_locale["license_prefix"])
 
     derived_seed = derive_seed(req.seed)
-    items: list[dict[str, Any]] = []
+    items: list[dict[str, object]] = []
 
     for index in range(req.count):
         item_seed = mix_seed(derived_seed, index)
