@@ -175,7 +175,9 @@ try:
 except Exception as error:
     record = {
         "outcome": type(error).__name__, "seeded": seeded,
-        "message": str(error).replace(str(path.parent), "<descriptor-dir>"),
+        "message": str(error).replace(str(path.parent), "<descriptor-dir>").replace(
+            os.environ["PYTHONPATH"], "<checkout>"
+        ),
     }
 print("STEP0_RESULT " + json.dumps(record, sort_keys=True, ensure_ascii=False, default=str), flush=True)
 """
