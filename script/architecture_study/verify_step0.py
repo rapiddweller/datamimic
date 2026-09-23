@@ -570,6 +570,21 @@ def self_test() -> None:
                 "def save_workbook(path):\n    Workbook().save(path)\n",
                 False,
             ),
+            (
+                "conditional-save-argument",
+                "Workbook().save('fixture.xlsx' if False else 'other.xlsx')",
+                False,
+            ),
+            (
+                "conditional-path-assignment",
+                "path = 'fixture.xlsx' if False else 'other.xlsx'\nWorkbook().save(path)",
+                False,
+            ),
+            (
+                "branch-rebound-path",
+                "path = 'fixture.xlsx'\nif True:\n    path = 'other.xlsx'\nWorkbook().save(path)",
+                False,
+            ),
         )
         failures: list[str] = []
         for name, body, expected in cases:
