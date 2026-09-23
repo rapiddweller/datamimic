@@ -6,22 +6,17 @@
 
 from datamimic_ce.engine.dsl.model.mongodb_model import MongoDBModel
 from datamimic_ce.engine.dsl.statements.statement import Statement
-from datamimic_ce.engine.io.clients.mongodb_client import MongoDBClient
-from datamimic_ce.engine.io.connection_config.mongodb_connection_config import MongoDBConnectionConfig
 
 
 class MongoDBStatement(Statement):
     def __init__(self, model: MongoDBModel):
         super().__init__(None, None)
         self._model = model
-        self._mongodb_connection_config = MongoDBConnectionConfig(**model.model_dump())
-        self._mongodb_client = MongoDBClient(self._mongodb_connection_config)
-        self._mongodb_id = model.id
+
+    @property
+    def model(self) -> MongoDBModel:
+        return self._model
 
     @property
     def mongodb_id(self):
-        return self._mongodb_id
-
-    @property
-    def mongodb_connection_config(self):
-        return self._mongodb_connection_config
+        return self._model.id

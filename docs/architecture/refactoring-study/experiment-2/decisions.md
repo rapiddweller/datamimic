@@ -78,3 +78,11 @@ upsert detection inspects live clients. None is descriptor structure.
 
 **Decision:** DSL statements expose parsed values only. Runtime evaluates counts, selects ranges,
 and inspects configured clients.
+
+## D11 — connection objects belong to IO
+
+**FACT:** `MongoDBStatement` constructed an unused client while parsing. Both database statements
+also constructed IO-owned connection configs.
+
+**Decision:** connection statements retain their validated DSL models. Runtime tasks construct the
+IO configs and clients when setup executes; parsing has no connection-object side effects.

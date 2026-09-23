@@ -1,6 +1,6 @@
 {
   "budgets": {
-    "calls_unresolved": 1407,
+    "calls_unresolved": 1404,
     "cycle_edges": 172,
     "private_crossings": 2,
     "typing_positions": 458,
@@ -5280,22 +5280,6 @@
       "count": 1,
       "roles": [
         {
-          "source": "datamimic_ce.engine.dsl.statements.database_statement",
-          "target": "datamimic_ce.engine.io.connection_config.rdbms_connection_config"
-        }
-      ],
-      "rules": [
-        "INTERFACES-ONLY"
-      ],
-      "subjects": [
-        "datamimic_ce.engine.dsl.statements.database_statement",
-        "datamimic_ce.engine.io.connection_config.rdbms_connection_config.RdbmsConnectionConfig"
-      ]
-    },
-    {
-      "count": 1,
-      "roles": [
-        {
           "source": "datamimic_ce.engine.runtime.tasks.database_task",
           "target": "datamimic_ce.engine.dsl.statements.database_statement"
         }
@@ -6042,38 +6026,6 @@
       "subjects": [
         "datamimic_ce.engine.dsl.statements.memstore_statement.MemstoreStatement",
         "datamimic_ce.engine.runtime.tasks.task_util"
-      ]
-    },
-    {
-      "count": 1,
-      "roles": [
-        {
-          "source": "datamimic_ce.engine.dsl.statements.mongodb_statement",
-          "target": "datamimic_ce.engine.io.clients.mongodb_client"
-        }
-      ],
-      "rules": [
-        "INTERFACES-ONLY"
-      ],
-      "subjects": [
-        "datamimic_ce.engine.dsl.statements.mongodb_statement",
-        "datamimic_ce.engine.io.clients.mongodb_client.MongoDBClient"
-      ]
-    },
-    {
-      "count": 1,
-      "roles": [
-        {
-          "source": "datamimic_ce.engine.dsl.statements.mongodb_statement",
-          "target": "datamimic_ce.engine.io.connection_config.mongodb_connection_config"
-        }
-      ],
-      "rules": [
-        "INTERFACES-ONLY"
-      ],
-      "subjects": [
-        "datamimic_ce.engine.dsl.statements.mongodb_statement",
-        "datamimic_ce.engine.io.connection_config.mongodb_connection_config.MongoDBConnectionConfig"
       ]
     },
     {
@@ -9751,22 +9703,6 @@
       "count": 1,
       "roles": [
         {
-          "source": "datamimic_ce.engine.dsl.statements.database_statement",
-          "target": "datamimic_ce.engine.io.connection_config.rdbms_connection_config"
-        }
-      ],
-      "rules": [
-        "REQUIRES-COMPLETE"
-      ],
-      "subjects": [
-        "datamimic_ce.engine.dsl.statements.database_statement",
-        "datamimic_ce.engine.io.connection_config.rdbms_connection_config"
-      ]
-    },
-    {
-      "count": 1,
-      "roles": [
-        {
           "source": "datamimic_ce.engine.dsl.statements.include_statement",
           "target": "datamimic_ce.engine.io.api"
         }
@@ -9777,38 +9713,6 @@
       "subjects": [
         "datamimic_ce.engine.dsl.statements.include_statement",
         "datamimic_ce.engine.io.api"
-      ]
-    },
-    {
-      "count": 1,
-      "roles": [
-        {
-          "source": "datamimic_ce.engine.dsl.statements.mongodb_statement",
-          "target": "datamimic_ce.engine.io.clients.mongodb_client"
-        }
-      ],
-      "rules": [
-        "REQUIRES-COMPLETE"
-      ],
-      "subjects": [
-        "datamimic_ce.engine.dsl.statements.mongodb_statement",
-        "datamimic_ce.engine.io.clients.mongodb_client"
-      ]
-    },
-    {
-      "count": 1,
-      "roles": [
-        {
-          "source": "datamimic_ce.engine.dsl.statements.mongodb_statement",
-          "target": "datamimic_ce.engine.io.connection_config.mongodb_connection_config"
-        }
-      ],
-      "rules": [
-        "REQUIRES-COMPLETE"
-      ],
-      "subjects": [
-        "datamimic_ce.engine.dsl.statements.mongodb_statement",
-        "datamimic_ce.engine.io.connection_config.mongodb_connection_config"
       ]
     },
     {

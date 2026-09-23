@@ -6,23 +6,18 @@
 
 from datamimic_ce.engine.dsl.model.database_model import DatabaseModel
 from datamimic_ce.engine.dsl.statements.statement import Statement
-from datamimic_ce.engine.io.connection_config.rdbms_connection_config import RdbmsConnectionConfig
 
 
 class DatabaseStatement(Statement):
     def __init__(self, model: DatabaseModel):
         super().__init__(None, None)
 
-        # Get connection configuration from descriptor element attribute, user defined conf or system env properties
-        self._db_id = model.id
+        self._model = model
 
-        # Compose Database connection configuration
-        self._db_connection_config = RdbmsConnectionConfig(**model.model_dump())
+    @property
+    def model(self) -> DatabaseModel:
+        return self._model
 
     @property
     def db_id(self):
-        return self._db_id
-
-    @property
-    def db_connection_config(self):
-        return self._db_connection_config
+        return self._model.id

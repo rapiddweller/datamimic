@@ -5,7 +5,7 @@
 # For questions and support, contact: info@rapiddweller.com
 
 from datamimic_ce.engine.dsl.statements.database_statement import DatabaseStatement
-from datamimic_ce.engine.io.api import RdbmsClient
+from datamimic_ce.engine.io.api import RdbmsClient, RdbmsConnectionConfig
 from datamimic_ce.engine.runtime.contexts.setup_context import SetupContext
 from datamimic_ce.engine.runtime.tasks.task import SetupSubTask
 
@@ -15,7 +15,8 @@ class DatabaseTask(SetupSubTask):
         self._statement = statement
 
     def execute(self, ctx: SetupContext):
-        client = RdbmsClient(self._statement.db_connection_config, ctx.task_id)
+        connection_config = RdbmsConnectionConfig(**self._statement.model.model_dump())
+        client = RdbmsClient(connection_config, ctx.task_id)
         ctx.add_client(self._statement.db_id, client)
 
     @property
