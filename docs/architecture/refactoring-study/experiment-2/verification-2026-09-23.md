@@ -3,14 +3,19 @@
 ## State
 
 - CE branch: `experiment/target-architecture-v2`; last code/test change `9d5e9c5c`.
-- The final local ArchKeel checker is `789784e1` (package `0.6.1.dev57`). The frozen
+- The final checker is published [ArchKeel 0.6.1](https://github.com/rapiddweller/archkeel/releases/tag/0.6.1),
+  tag `6f865167`, analyzer `0.47.0`. Its tag workflow passed build and PyPI
+  publish; a fresh isolated PyPI install reports `archkeel 0.6.1`. The frozen
   0.6.0 tag remains the Step-0 control; it cannot parse Amendment 11's
   `allowed_positions` field.
 - The contract scan is complete (474/474 files), with 0 violations, 0 unknown
   positions, and `declared_rules=PASS`. The violation baseline is empty. Twenty
   neutral raw UNKNOWN records remain (Amendment 11).
-- Measurement budgets are still positive and unchanged: 1,288 unresolved calls,
-  171 cycle edges, 144 typing positions, and 3 untyped private accesses.
+- The 0.6.1 `validate --against` check passes against frozen Step 0: no new or
+  resolved baseline violations. The exact current measurement budgets are 1,283
+  unresolved calls (narrowed from 1,288), 171 cycle edges, 144 typing positions,
+  and 3 untyped private accesses. `archkeel report` was regenerated with the
+  published package; the generated JSON/HTML stays outside the repository.
 
 ## DSL oracle
 
@@ -60,10 +65,11 @@ rose from 3,508 to 3,701, mainly convention messages.
 
 - **Structure reached, locally:** exact layout and component rules pass with complete
   coverage, an empty violation list, zero material unknown positions, and no budget rise.
-  The candidate checker is not yet a released package.
+  This is checked with the publicly installed ArchKeel 0.6.1 package, not a local
+  candidate. It does not prove behavior or test quality.
 - **Behavior preserved for the comparable oracle set:** both frozen comparisons have zero
   differences. The 322 unverified entries and six current external-service failures prevent
   an unqualified all-descriptors claim.
 - **Delivery not ready:** `make lint` and the complete current external-service suite are
-  not green; the final checker changes are not yet integrated and released. No CE merge or
+  not green; 322 XMLs have no Step-0-versus-HEAD runtime comparison. No CE merge or
   release is justified by the structural verdict alone.
