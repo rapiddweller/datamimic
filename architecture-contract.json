@@ -1,5 +1,4 @@
 {
-  "$schema": "https://raw.githubusercontent.com/rapiddweller/archkeel/0.6.0/schema/architecture-contract.schema.json",
   "schema_version": "2.1.0",
   "components": [
     {
@@ -122,7 +121,8 @@
       ],
       "public": [
         "datamimic_ce.authoring.api",
-        "datamimic_ce.authoring.contracts"
+        "datamimic_ce.authoring.contracts",
+        "datamimic_ce.authoring.spec:LeafFieldKind"
       ],
       "planned": [],
       "decided_by": "architect"
@@ -461,9 +461,36 @@
       "source": "datamimic_ce.authoring.api",
       "rationale": "The Authoring facade exposes typed application requests and results rather than implementation modules.",
       "provenance": [
-        "docs/architecture/refactoring-study/experiment-2/target-architecture.md"
+        "docs/architecture/refactoring-study/experiment-2/target-architecture.md",
+        "docs/architecture/refactoring-study/experiment-2/amendment-11.md"
       ],
-      "decided_by": "architect"
+      "decided_by": "architect",
+      "allowed_positions": [
+        {
+          "qualified_name": "datamimic_ce.authoring.api.run",
+          "position": "return",
+          "field_path": "products.sample",
+          "annotation": "dict[str, JsonValue]"
+        },
+        {
+          "qualified_name": "datamimic_ce.authoring.api.scaffold",
+          "position": "return",
+          "field_path": "issues.repair.corrected_fragment",
+          "annotation": "dict[str, JsonValue]"
+        },
+        {
+          "qualified_name": "datamimic_ce.authoring.api.scaffold",
+          "position": "return",
+          "field_path": "products.sample",
+          "annotation": "dict[str, JsonValue]"
+        },
+        {
+          "qualified_name": "datamimic_ce.authoring.api.scaffold",
+          "position": "return",
+          "field_path": "acceptance.results.observed_counts",
+          "annotation": "dict[str, int] | None"
+        }
+      ]
     },
     {
       "id": "RESOURCES-API-TYPES",
