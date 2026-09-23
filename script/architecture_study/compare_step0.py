@@ -4,11 +4,23 @@ from __future__ import annotations
 
 import argparse
 import json
+import re
 from pathlib import Path
 from typing import Any
 
 LEGACY_DEMO_PREFIX = "datamimic_ce/demos/"
 TARGET_DEMO_PREFIX = "datamimic_ce/resources/demos/"
+_ALLOWED_ATTRIBUTES = re.compile(r"(Must defined one of following attributes \{)([^{}]*)(\})")
+
+
+def normalize_error_message(message: str) -> str:
+    def sort_allowed_attributes(match: re.Match[str]) -> str:
+        members = match.group(2).split(", ")
+        if not members or any(not (member.startswith("'") and member.endswith("'")) for member in members):
+            return match.group(0)
+        return match.group(1) + ", ".join(sorted(members)) + match.group(3)
+
+    return _ALLOWED_ATTRIBUTES.sub(sort_allowed_attributes, message)
 
 
 def load(path: str) -> dict[str, Any]:
@@ -38,8 +50,8 @@ def comparable(record: dict[str, Any]) -> dict[str, Any]:
         return {**result, "reason": record.get("reason"), "evidence": record.get("evidence")}
     if record.get("outcome") != "ok":
         if record.get("status") == "EXPECTED-ERROR":
-            # Validation text can enumerate an unordered set differently per process.
-            return result
+            message = record.get("message")
+            return {**result, "message": normalize_error_message(message) if isinstance(message, str) else message}
         return {**result, "message": record.get("message"), "stderr": record.get("stderr")}
     if record.get("seeded"):
         return {**result, "result_output_digest": record.get("result_output_digest")}
@@ -77,6 +89,14 @@ def shape_compatible(before: Any, after: Any) -> bool:
 
 
 def equivalent(old: dict[str, Any], new: dict[str, Any]) -> bool:
+    for record in (old, new):
+        if record.get("status") == "EXPECTED-ERROR" and (
+            not isinstance(record.get("outcome"), str)
+            or record["outcome"] == "ok"
+            or not isinstance(record.get("message"), str)
+            or not record["message"].strip()
+        ):
+            return False
     old_view, new_view = comparable(old), comparable(new)
     if old.get("seeded") or old.get("outcome") != "ok":
         return old_view == new_view
@@ -112,11 +132,36 @@ def changed_fields(old: Any, new: Any) -> str:
     return ", ".join(fields)
 
 
+def self_test() -> None:
+    def error(message: str, outcome: str = "ValueError") -> dict[str, Any]:
+        return {
+            "status": "EXPECTED-ERROR",
+            "category": ["intentionally-invalid"],
+            "outcome": outcome,
+            "seeded": False,
+            "message": message,
+        }
+
+    first = "Must defined one of following attributes {'pattern', 'generator', 'constant'}"
+    reordered = "Must defined one of following attributes {'constant', 'pattern', 'generator'}"
+    assert equivalent(error(first), error(reordered))
+    assert not equivalent(error(first), error(first.replace("pattern", "regex")))
+    assert not equivalent(error(first), error(first, "RuntimeError"))
+    assert not equivalent(error(first), error(""))
+
+
 def main() -> None:
     parser = argparse.ArgumentParser()
-    parser.add_argument("before")
-    parser.add_argument("after")
+    parser.add_argument("before", nargs="?")
+    parser.add_argument("after", nargs="?")
+    parser.add_argument("--self-test", action="store_true")
     args = parser.parse_args()
+    if args.self_test:
+        self_test()
+        print("Step-0 comparator self-test passed")
+        return
+    if not args.before or not args.after:
+        parser.error("before and after snapshot paths are required")
     before, after = load(args.before), load(args.after)
     changed: list[tuple[str, Any, Any]] = []
     optional_shape_variances = 0
