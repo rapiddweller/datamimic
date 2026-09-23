@@ -257,6 +257,11 @@ def test_fixture_evidence(path: Path, root: ET.Element) -> list[str]:
                 binds_dir = any(
                     isinstance(node, ast.Name) and node.id == "_DIR" and isinstance(node.ctx, (ast.Store, ast.Del))
                     for node in ast.walk(statement)
+                ) or any(
+                    alias.name == "_DIR" or alias.asname == "_DIR"
+                    for node in ast.walk(statement)
+                    if isinstance(node, (ast.Import, ast.ImportFrom))
+                    for alias in node.names
                 )
                 if not binds_dir:
                     continue
@@ -286,19 +291,45 @@ def test_fixture_evidence(path: Path, root: ET.Element) -> list[str]:
                 evidence_matches: list[tuple[int, int]],
                 descriptor_dir: bool,
                 module_scope: bool = False,
+                shadowed_dir: bool = False,
             ) -> None:
                 assigned_paths: dict[str, int | None] = {}
-                local_dir_binding = not module_scope and any(
+                local_dir_binding = shadowed_dir or (not module_scope and any(
                     isinstance(node, ast.Name)
                     and node.id == "_DIR"
                     and isinstance(node.ctx, (ast.Store, ast.Del))
                     for statement in statements
                     if not isinstance(statement, (ast.FunctionDef, ast.AsyncFunctionDef))
                     for node in ast.walk(statement)
-                )
+                ))
                 for statement in statements:
                     if isinstance(statement, (ast.FunctionDef, ast.AsyncFunctionDef)):
-                        inspect_scope(statement.body, expected_filename, evidence_matches, descriptor_dir)
+                        shadowed = (
+                            any(
+                                argument.arg == "_DIR"
+                                for argument in (
+                                    *statement.args.posonlyargs,
+                                    *statement.args.args,
+                                    *statement.args.kwonlyargs,
+                                    statement.args.vararg,
+                                    statement.args.kwarg,
+                                )
+                                if argument is not None
+                            )
+                            or any(
+                                alias.name == "_DIR" or alias.asname == "_DIR"
+                                for child in ast.walk(statement)
+                                if isinstance(child, (ast.Import, ast.ImportFrom))
+                                for alias in child.names
+                            )
+                            or any(
+                                isinstance(child, (ast.Global, ast.Nonlocal)) and "_DIR" in child.names
+                                for child in ast.walk(statement)
+                            )
+                        )
+                        inspect_scope(
+                            statement.body, expected_filename, evidence_matches, descriptor_dir, shadowed_dir=shadowed
+                        )
                         continue
                     if isinstance(statement, ast.Assign):
                         value = statement.value
