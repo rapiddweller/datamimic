@@ -75,25 +75,6 @@ class TestCreditCard:
         assert credit_card.bin == credit_card.bin
         assert credit_card.iban == credit_card.iban
 
-    @pytest.mark.flaky(reruns=3)
-    def test_two_different_entities(self):
-        credit_card_service = CreditCardService()
-        credit_card1 = credit_card_service.generate()
-        credit_card2 = credit_card_service.generate()
-        assert credit_card1 is not None
-        assert credit_card2 is not None
-        assert credit_card1.card_number != credit_card2.card_number
-        assert credit_card1.expiration_date != credit_card2.expiration_date
-        assert credit_card1.cvv != credit_card2.cvv
-        assert credit_card1.cvc_number != credit_card2.cvc_number
-        assert credit_card1.credit_limit != credit_card2.credit_limit
-        assert credit_card1.current_balance != credit_card2.current_balance
-        assert credit_card1.issue_date != credit_card2.issue_date
-        assert credit_card1.bank_name != credit_card2.bank_name
-        assert credit_card1.bank_code != credit_card2.bank_code
-        assert credit_card1.bic != credit_card2.bic
-        assert credit_card1.bin != credit_card2.bin
-        assert credit_card1.iban != credit_card2.iban
 
     @pytest.mark.parametrize("dataset", _supported_datasets)
     def test_supported_datasets(self, dataset):

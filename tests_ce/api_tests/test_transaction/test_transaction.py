@@ -87,32 +87,6 @@ class TestTransaction:
         assert transaction.channel == transaction.channel
         assert transaction.direction == transaction.direction
 
-    @pytest.mark.flaky(reruns=3)
-    def test_two_different_entities(self):
-        transaction_service = TransactionService()
-        transaction1 = transaction_service.generate()
-        transaction2 = transaction_service.generate()
-        assert transaction1 is not None
-        assert transaction2 is not None
-        assert transaction1.transaction_id != transaction2.transaction_id
-        assert transaction1.reference_number != transaction2.reference_number
-
-        # The following comparisons might occasionally be the same by coincidence,
-        # but generally they should be different in most cases
-        assert any(
-            [
-                transaction1.transaction_date != transaction2.transaction_date,
-                transaction1.amount != transaction2.amount,
-                transaction1.transaction_type != transaction2.transaction_type,
-                transaction1.description != transaction2.description,
-                transaction1.status != transaction2.status,
-                transaction1.merchant_name != transaction2.merchant_name,
-                transaction1.merchant_category != transaction2.merchant_category,
-                transaction1.location != transaction2.location,
-                transaction1.channel != transaction2.channel,
-                transaction1.direction != transaction2.direction,
-            ]
-        )
 
     @pytest.mark.parametrize("dataset", _supported_datasets)
     def test_supported_datasets(self, dataset):

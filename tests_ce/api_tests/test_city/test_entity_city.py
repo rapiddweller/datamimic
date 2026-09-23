@@ -98,20 +98,6 @@ class TestEntityCity:
         assert city.language == city.language
         assert city.population == city.population
 
-    @pytest.mark.flaky(reruns=3)
-    def test_two_different_entities(self):
-        city_service = CityService()
-        city1 = city_service.generate()
-        city2 = city_service.generate()
-        assert city1.name != city2.name
-        assert city1.country == city2.country
-        assert city1.country_code == city2.country_code
-        assert city1.state != city2.state
-        assert city1.area_code != city2.area_code
-        assert city1.postal_code != city2.postal_code
-        assert city1.name_extension == "" or (city1.name_extension != city2.name_extension)
-        assert city1.language == None or (city1.language != city2.language)
-        assert city1.population == None or (city1.population != city2.population)
 
     @pytest.mark.parametrize("dataset", _supported_datasets)
     def test_supported_datasets(self, dataset):

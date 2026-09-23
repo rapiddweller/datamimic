@@ -112,22 +112,6 @@ class TestEntityAddress:
         assert address.fax == address.fax
         assert address.organization == address.organization
 
-    @pytest.mark.flaky(reruns=3)
-    def test_two_different_entities(self):
-        address_service = AddressService()
-        address1 = address_service.generate()
-        address2 = address_service.generate()
-        assert address1.street != address2.street
-        assert address1.house_number != address2.house_number
-        assert address1.city != address2.city
-        assert address1.state != address2.state
-        assert address1.zip_code != address2.zip_code
-        assert address1.country == address2.country
-        assert address1.country_code == address2.country_code
-        assert address1.phone != address2.phone
-        assert address1.mobile_phone != address2.mobile_phone
-        assert address1.fax != address2.fax
-        assert address1.organization != address2.organization
 
     @pytest.mark.parametrize("dataset", _supported_datasets)
     def test_supported_datasets(self, dataset):

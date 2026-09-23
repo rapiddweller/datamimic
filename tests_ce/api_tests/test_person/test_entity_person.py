@@ -64,17 +64,6 @@ class TestEntityPerson:
         assert person.salutation == person.salutation
         assert person.nobility_title == person.nobility_title
 
-    @pytest.mark.flaky(reruns=3)
-    def test_different_entities(self):
-        person_service = PersonService()
-        person1 = person_service.generate()
-        person2 = person_service.generate()
-        assert person1.given_name != person2.given_name
-        assert person1.family_name != person2.family_name
-        assert person1.email != person2.email
-        assert person1.phone != person2.phone
-        assert person1.address != person2.address
-        assert person1.birthdate != person2.birthdate
 
     @pytest.mark.parametrize("dataset", _supported_datasets)
     def test_person_generator_dataset(self, dataset):

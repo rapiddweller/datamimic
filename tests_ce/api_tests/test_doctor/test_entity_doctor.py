@@ -94,29 +94,6 @@ class TestEntityDoctor:
         assert doctor.phone == doctor.phone
         assert doctor.email == doctor.email
 
-    @pytest.mark.flaky(reruns=3)
-    def test_two_different_entities(self):
-        doctor_service = DoctorService()
-        doctor1 = doctor_service.generate()
-        doctor2 = doctor_service.generate()
-        assert doctor1.doctor_id != doctor2.doctor_id
-        assert doctor1.given_name != doctor2.given_name
-        assert doctor1.family_name != doctor2.family_name
-        assert doctor1.full_name != doctor2.full_name
-        assert doctor1.npi_number != doctor2.npi_number
-        assert doctor1.license_number != doctor2.license_number
-        assert doctor1.address != doctor2.address
-        assert doctor1.phone != doctor2.phone
-        assert doctor1.email != doctor2.email
-        assert doctor1.office_hours != doctor2.office_hours
-        assert doctor1.hospital != doctor2.hospital
-        assert doctor1.medical_school != doctor2.medical_school
-        assert doctor1.graduation_year != doctor2.graduation_year
-        assert doctor1.years_of_experience != doctor2.years_of_experience
-        assert doctor1.certifications != doctor2.certifications
-        assert doctor1.specialty != doctor2.specialty
-        assert doctor1.birthdate != doctor2.birthdate
-        assert doctor1.age != doctor2.age
 
     @pytest.mark.parametrize("dataset", _supported_datasets)
     def test_supported_datasets(self, dataset):

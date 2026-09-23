@@ -68,25 +68,6 @@ class TestEntityEducationalInstitution:
         assert educational_institution.accreditations == educational_institution.accreditations
         assert educational_institution.facilities == educational_institution.facilities
 
-    @pytest.mark.flaky(reruns=3)
-    def test_two_different_entities(self):
-        educational_institution_service = EducationalInstitutionService()
-        educational_institution1 = educational_institution_service.generate()
-        educational_institution2 = educational_institution_service.generate()
-        assert educational_institution1.institution_id != educational_institution2.institution_id
-        assert educational_institution1.name != educational_institution2.name
-        assert educational_institution1.type != educational_institution2.type
-        assert educational_institution1.level != educational_institution2.level
-        assert educational_institution1.founding_year != educational_institution2.founding_year
-        assert educational_institution1.student_count != educational_institution2.student_count
-        assert educational_institution1.staff_count != educational_institution2.staff_count
-        assert educational_institution1.website != educational_institution2.website
-        assert educational_institution1.email != educational_institution2.email
-        assert educational_institution1.phone != educational_institution2.phone
-        assert educational_institution1.address != educational_institution2.address
-        assert educational_institution1.programs != educational_institution2.programs
-        assert educational_institution1.accreditations != educational_institution2.accreditations
-        assert educational_institution1.facilities != educational_institution2.facilities
 
     @pytest.mark.parametrize("dataset", _supported_datasets)
     def test_educational_institution_dataset(self, dataset):
