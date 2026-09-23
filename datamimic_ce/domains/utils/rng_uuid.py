@@ -9,10 +9,11 @@
 from __future__ import annotations
 
 import uuid
-from random import Random
+
+from datamimic_ce.domains.utils.random_source import RandomSource
 
 
-def uuid4_from_random(rng: Random) -> str:
+def uuid4_from_random(rng: RandomSource) -> str:
     """Return a UUIDv4 string generated from the supplied RNG.
 
     Python's ``uuid.uuid4()`` always pulls from the global RNG/os entropy which

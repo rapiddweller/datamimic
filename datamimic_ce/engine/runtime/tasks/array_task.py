@@ -63,7 +63,7 @@ class ArrayTask(GenSubTask):
             return None
 
         rng = parent_context.rng
-        value: list[str | int | bool | float | Decimal] = [
+        value: list[str | int | bool | float | Decimal | bytes] = [
             TaskUtil.generate_random_value_based_on_type(array_type, rng=rng) for _ in range(count)
         ]
         # Add field "array" into current product

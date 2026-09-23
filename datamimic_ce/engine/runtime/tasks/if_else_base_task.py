@@ -6,7 +6,7 @@
 
 from abc import ABC
 
-from datamimic_ce.engine.dsl.api import ElseIfStatement, ElseStatement, IfStatement
+from datamimic_ce.engine.dsl.api import ConditionStatement, ElseIfStatement, ElseStatement, IfStatement
 from datamimic_ce.engine.runtime.contexts.geniter_context import GenIterContext
 from datamimic_ce.engine.runtime.tasks.condition_task import ConditionTask
 from datamimic_ce.engine.runtime.tasks.task import CommonSubTask, GenSubTask
@@ -38,7 +38,7 @@ class IfElseBaseTask(GenSubTask, ABC):
         ]
 
         # store statement of executed task to parent statement (condition statement) for later use
-        if self._statement.parent_stmt is not None and hasattr(self._statement.parent_stmt, "add_executed_statement"):
+        if isinstance(self._statement.parent_stmt, ConditionStatement):
             self._statement.parent_stmt.add_executed_statement(self.statement)
 
         product_holder: dict = {}

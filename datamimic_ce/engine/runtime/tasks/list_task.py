@@ -32,7 +32,7 @@ class ListTask(GenSubTask):
         :param parent_context:
         :return:
         """
-        value = []
+        values: list[object] = []
         for item_task in self._item_tasks:
             if self.statement.name is None:
                 raise ValueError(
@@ -47,7 +47,8 @@ class ListTask(GenSubTask):
                 raise ValueError(f"Generate sub-task expected, but got {type(item_task)}")
             item_task.execute(ctx)
             # Add current_product value of item to list
-            value.append(ctx.current_product.get("temp_item_name"))
+            values.append(ctx.current_product.get("temp_item_name"))
+        value: object = values
         for converter in self._converter_list:
             value = converter.convert(value)
         parent_context.add_current_product_field(self._statement.name, value)

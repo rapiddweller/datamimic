@@ -6,7 +6,7 @@
 import copy
 import os
 
-import dill  # type: ignore[import-untyped]
+import dill
 
 from datamimic_ce.engine.dsl.api import CompositeStatement, GenerateStatement, Statement
 from datamimic_ce.engine.io.api import DataSourcePagination, ExporterStateManager, ExporterUtil
@@ -214,10 +214,20 @@ class GenerateWorker:
                                 inner_generate_key = key.split("|", 1)[-1].strip()
                                 ctx.current_variables[inner_generate_key] = value
                     else:
-                        task.execute(ctx)  # type: ignore[attr-defined]
+                        from datamimic_ce.engine.runtime.tasks.task import CommonSubTask, GenSubTask
+
+                        if isinstance(task, GenSubTask | CommonSubTask):
+                            task.execute(ctx)
+                        else:
+                            raise TypeError(f"Unsupported generation task type: {type(task).__name__}")
                 # Post-process product by applying converters
                 for converter in converter_list:
-                    ctx.current_product = converter.convert(ctx.current_product)
+                    converted_product = converter.convert(ctx.current_product)
+                    if not isinstance(converted_product, dict):
+                        raise ValueError(
+                            f"Product converter must return a dictionary, but got {type(converted_product)}"
+                        )
+                    ctx.current_product = converted_product
 
                 # Lazily evaluate source script after executing sub-tasks
                 if source_scripted:
@@ -264,5 +274,7 @@ class GenerateWorker:
         context.root.process_id = worker_id - 1
 
         # Deserialize multiprocessing arguments
-        context.root.namespace.update(dill.loads(context.root.namespace_functions))
-        context.root.generators = dill.loads(context.root.generators)
+        if context.root.namespace_functions is not None:
+            context.root.namespace.update(dill.loads(context.root.namespace_functions))
+        if context.root.serialized_generators is not None:
+            context.root.generators = dill.loads(context.root.serialized_generators)

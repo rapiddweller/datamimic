@@ -10,7 +10,6 @@ from collections.abc import Iterable, Iterator
 from datetime import datetime, timedelta
 from decimal import Decimal, localcontext
 from random import Random
-from typing import Any
 
 import numpy
 
@@ -72,11 +71,11 @@ class KeyVariableTask(Task):
 
         self._mode: str | None = None
         # Lazily-built distinct-value iterator for unique="true" (sampling without replacement).
-        self._unique_iter: Iterator[Any] | None = None
+        self._unique_iter: Iterator[object] | None = None
         # Dedup set for generator-backed unique="true": every generated value is
         # tracked; duplicates trigger a bounded retry loop. Generator-owned uniqueness
         # is a separate concern — this is cross-row dedup at the task level.
-        self._generator_seen: set[Any] | None = None
+        self._generator_seen: set[object] | None = None
 
         self._simple_type_set = {
             DATA_TYPE_BINARY,
@@ -358,7 +357,7 @@ class KeyVariableTask(Task):
 
         return value
 
-    def _next_unique_value(self, ctx: Context) -> Any:
+    def _next_unique_value(self, ctx: Context) -> object:
         """Emit a distinct value per call (sampling 'values' without replacement,
         seeded via ctx.rng). Shared with <variable source unique> via unique_value_iter."""
         if self._unique_iter is None:
@@ -367,7 +366,7 @@ class KeyVariableTask(Task):
             )
         return next(self._unique_iter)
 
-    def _next_unique_generator_value(self) -> Any:
+    def _next_unique_generator_value(self) -> object:
         """Call the generator repeatedly until a value not yet seen this task is produced.
         Raises after a bounded number of retries."""
         if self._generator is None:

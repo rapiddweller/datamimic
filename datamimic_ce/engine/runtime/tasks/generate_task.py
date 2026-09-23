@@ -9,10 +9,10 @@ import math
 import shutil
 from typing import Protocol
 
-import dill  # type: ignore
+import dill
 
 from datamimic_ce.engine.dsl.api import CompositeStatement, GenerateStatement, KeyStatement, Statement, StatementUtil
-from datamimic_ce.engine.io.api import DatabaseClient, ExporterUtil
+from datamimic_ce.engine.io.api import DatabaseClient, ExporterUtil, UnifiedBufferedExporter
 from datamimic_ce.engine.runtime.config import settings
 from datamimic_ce.engine.runtime.contexts.context import Context
 from datamimic_ce.engine.runtime.contexts.geniter_context import GenIterContext
@@ -257,7 +257,8 @@ class GenerateTask(CommonSubTask):
                     for func in ns_funcs:
                         copied_context.root.namespace.pop(func)
                     copied_context.root.namespace_functions = dill.dumps(ns_funcs)
-                    copied_context.root.generators = dill.dumps(copied_context.root.generators)
+                    copied_context.root.serialized_generators = dill.dumps(copied_context.root.generators)
+                    copied_context.root.generators = {}
 
                     # Determine chunk data indices based on chunk size and required data count
                     # then populate to workers, such as (0, 1000), (1000, 2000), etc.
@@ -403,7 +404,7 @@ class GenerateTask(CommonSubTask):
         exporter_list = ExporterUtil.get_all_exporter(context, stmt, list(stmt.targets))
         # Finalize chunks files (writing end of file)
         for exporter in exporter_list:
-            if hasattr(exporter, "finalize_chunks"):
+            if isinstance(exporter, UnifiedBufferedExporter):
                 for worker_id in range(1, num_workers + 1):
                     exporter.finalize_chunks(worker_id)
 
@@ -420,7 +421,7 @@ class GenerateTask(CommonSubTask):
         exporters_list = ExporterUtil.get_all_exporter(context, stmt, list(stmt.targets))
         # Export artifact files of current statement
         for exporter in exporters_list:
-            if hasattr(exporter, "save_exported_result"):
+            if isinstance(exporter, UnifiedBufferedExporter):
                 exporter.save_exported_result()
 
         # Export artifact files of sub-gen_stmts
@@ -469,5 +470,4 @@ class GenerateTask(CommonSubTask):
             if isinstance(child_stmt, KeyStatement)
         ]
         for task in pre_tasks:
-            if hasattr(task, "pre_execute"):
-                task.pre_execute(context)
+            task.pre_execute(context)

@@ -5,9 +5,7 @@
 # For questions and support, contact: info@rapiddweller.com
 import functools
 import string
-from collections.abc import Callable
 from decimal import Decimal
-from typing import Any
 
 from datamimic_ce.domains.api import (
     AppendConverter,
@@ -21,6 +19,7 @@ from datamimic_ce.domains.api import (
     LowerCaseConverter,
     MaskConverter,
     MiddleMaskConverter,
+    RandomSource,
     RemoveNoneOrEmptyElementConverter,
     SubstringConverter,
     Timestamp2DateConverter,
@@ -65,10 +64,15 @@ from datamimic_ce.engine.dsl.api import (
     WhileStatement,
 )
 from datamimic_ce.engine.io.api import (
+    ConsoleExporter,
+    DatabaseExporter,
     DataSourcePagination,
+    Exporter,
     ExporterStateManager,
+    LogExporter,
     Memstore,
     MongoDBExporter,
+    TestResultExporter,
     UnifiedBufferedExporter,
     XMLExporter,
 )
@@ -89,8 +93,8 @@ from datamimic_ce.engine.runtime.tasks.task import Task
 
 
 def _create_converter_from_constructor_str(
-    context: Context, constructor_str: str, class_dict: dict[str, Callable[..., Any]]
-) -> Any:
+    context: Context, constructor_str: str, class_dict: dict[str, object]
+) -> Converter:
     class_name = constructor_str.partition("(")[0]
     converter_class = class_dict.get(class_name)
     if converter_class is None:
@@ -99,10 +103,17 @@ def _create_converter_from_constructor_str(
             raise ValueError(f"Cannot find converter '{class_name}'")
 
     if class_name != constructor_str:
-        return context.evaluate_python_expression(constructor_str, class_dict)
+        converter = context.evaluate_python_expression(constructor_str, class_dict)
+        if isinstance(converter, Converter):
+            return converter
+        raise TypeError(f"Converter expression '{constructor_str}' did not create a Converter")
     if isinstance(converter_class, type) and issubclass(converter_class, CustomConverter):
         return converter_class(context)
-    return converter_class()
+    if callable(converter_class):
+        converter = converter_class()
+        if isinstance(converter, Converter):
+            return converter
+    raise TypeError(f"Converter '{class_name}' is not callable")
 
 
 class TaskUtil:
@@ -192,7 +203,7 @@ class TaskUtil:
             raise ValueError(f"Cannot created task for statement {stmt.__class__.__name__}")
 
     @staticmethod
-    def evaluate_file_script_template(ctx: Context, datas: Any, prefix: str, suffix: str) -> dict | list:
+    def evaluate_file_script_template(ctx: Context, datas: object, prefix: str, suffix: str) -> object:
         """
         Check value in csv or json file that contain python expression
         then evaluate variables and functions
@@ -333,6 +344,8 @@ class TaskUtil:
         # Run exporters with operations first. Operations are ExportOperation members (parsed
         # once at the target boundary); dispatch is explicit per member — no getattr on a string.
         for exporter, operation in exporters["with_operation"]:
+            if not isinstance(exporter, DatabaseExporter | MongoDBExporter):
+                raise ValueError(f"Exporter does not support operation: {exporter}.{operation}")
             if isinstance(exporter, MongoDBExporter) and operation is ExportOperation.UPSERT:
                 json_product = exporter.upsert(product=json_product)
             elif operation is ExportOperation.UPDATE:
@@ -380,7 +393,7 @@ class TaskUtil:
         json_product: tuple,
         xml_result: dict,
         stmt: GenerateStatement,
-        exporters_without_operation: list,
+        exporters_without_operation: list[Exporter],
         exporter_state_manager: ExporterStateManager,
     ):
         # Run exporters without operations
@@ -397,8 +410,13 @@ class TaskUtil:
                     # every buffered exporter (JSON/CSV/TXT/XLSX/DbUnit/...) shares this consume
                     # signature; dispatch on the base class so new ones work without editing this list.
                     exporter.consume(json_product, stmt.full_name, exporter_state_manager)
-                else:
+                elif isinstance(
+                    exporter,
+                    ConsoleExporter | DatabaseExporter | MongoDBExporter | LogExporter | TestResultExporter,
+                ):
                     exporter.consume(json_product)
+                else:
+                    raise TypeError(f"Unsupported exporter type: {type(exporter).__name__}")
             except Exception as e:
                 # import traceback
                 # traceback.print_exc()
@@ -444,8 +462,8 @@ class TaskUtil:
     def generate_random_value_based_on_type(
         data_type: str | None,
         *,
-        rng: Any,
-    ) -> str | int | bool | float | Decimal:
+        rng: RandomSource,
+    ) -> str | int | bool | float | Decimal | bytes:
         # ``rng`` is required: callers inject the GenIterContext's rng so
         # seeded runs propagate fully.
         if data_type == DATA_TYPE_STRING:

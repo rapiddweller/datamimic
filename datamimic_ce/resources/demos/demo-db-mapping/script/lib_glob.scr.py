@@ -112,8 +112,8 @@ def create_mapping_cmd(city) -> str:
 
 
 class TransactionTypeConverter(Converter):
-    def convert(self, value: str) -> str:
-        transaction_types = {
+    def convert(self, value: object) -> str:
+        transaction_types: dict[object, str] = {
             "Completed": "DONE",
             "Pending": "WAITING",
             "Failed": "ERROR",
@@ -122,6 +122,6 @@ class TransactionTypeConverter(Converter):
 
 
 class CurrencySymbolConverter(Converter):
-    def convert(self, value: str) -> str:
-        currency_symbols = {"USD": "$", "EUR": "€", "GBP": "£", "JPY": "¥"}
+    def convert(self, value: object) -> str:
+        currency_symbols: dict[object, str] = {"USD": "$", "EUR": "€", "GBP": "£", "JPY": "¥"}
         return currency_symbols.get(value, "Unknown currency code")

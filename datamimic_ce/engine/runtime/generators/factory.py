@@ -9,6 +9,7 @@ import functools
 import inspect
 import logging
 import random
+from typing import Protocol, runtime_checkable
 
 from datamimic_ce.domains.api import (
     BaseDomainGenerator,
@@ -25,6 +26,11 @@ from datamimic_ce.engine.runtime.contexts.setup_context import SetupContext
 from datamimic_ce.engine.runtime.generators.sequence_table import SequenceTableGenerator
 
 logger = logging.getLogger("DATAMIMIC")
+
+
+@runtime_checkable
+class CachePolicy(Protocol):
+    cache_in_root: bool
 
 
 @functools.cache  # a class's __init__ signature is static
@@ -53,7 +59,9 @@ class GeneratorUtil:
             context (Context): The context in which the generators are used.
         """
         # Domain literals are discovered; database sequence generation is runtime-owned.
-        self._class_dict = {generator_type.__name__: generator_type for generator_type in iter_generator_types()}
+        self._class_dict: dict[str, type] = {
+            generator_type.__name__: generator_type for generator_type in iter_generator_types()
+        }
         self._class_dict["SequenceTableGenerator"] = SequenceTableGenerator
         self._context = context
 
@@ -77,7 +85,7 @@ class GeneratorUtil:
                 instead of the raw ``generator_str``.
 
         Returns:
-            Any: The created generator instance.
+            object: The created generator instance.
 
         Raises:
             ValueError: If generator creation fails or configuration is invalid
@@ -114,30 +122,37 @@ class GeneratorUtil:
             # Get generator class
             cls = self._class_dict.get(class_name)
             if cls is None:
+                dynamic_class: object | None
                 if isinstance(self._context, SetupContext):
-                    cls = self._context.get_dynamic_class(class_name)
+                    dynamic_class = self._context.get_dynamic_class(class_name)
                 elif isinstance(self._context, Context):
-                    cls = self._context.root.get_dynamic_class(class_name)
+                    dynamic_class = self._context.root.get_dynamic_class(class_name)
                 else:
                     raise ValueError(f"Cannot find generator class for '{class_name}'")
+                cls = dynamic_class if isinstance(dynamic_class, type) else None
 
             result = None
 
             if class_name == "GlobalIncrementGenerator":
+                if cls is None:
+                    raise TypeError("'NoneType' object is not callable")
                 # Build the fully qualified key path for uniqueness
                 # Traverse up the statement tree to build the path
-                path = []
-                current = stmt
-                while current is not None and hasattr(current, "name"):
-                    path.append(current.name)
-                    current = getattr(current, "parent", None)  # type: ignore
-                qualified_key = ".".join(reversed(path))  # type: ignore
+                path: list[str] = []
+                current: Statement | None = stmt
+                while current is not None:
+                    if current.name is not None:
+                        path.append(current.name)
+                    current = current.parent_stmt
+                qualified_key = ".".join(reversed(path))
                 result = cls(qualified_key=qualified_key, context=self._context)
                 # Use unified cache key (may differ from generator_str when a key is provided)
                 self._context.root.generators[cache_key] = result
                 return result
 
             if class_name == "SequenceTableGenerator":
+                if cls is None:
+                    raise TypeError("'NoneType' object is not callable")
                 # Optional explicit sequence name: SequenceTableGenerator(sequence='zsv.t_angebote_id_seq')
                 # (explicitly named native DB sequences, migration parity). ast-parsed like DateTimeGenerator below, but
                 # keyword-only and single-kwarg - anything else raises, args are never silently dropped.
@@ -155,6 +170,8 @@ class GeneratorUtil:
 
             # --- DateTimeGenerator special parsing ---
             if class_name == "DateTimeGenerator":
+                if cls is None:
+                    raise TypeError("'NoneType' object is not callable")
                 try:
                     module_node = ast.parse(generator_str)
                     if not (
@@ -256,7 +273,11 @@ class GeneratorUtil:
                         f"Cannot create generator '{class_name}' from string '{generator_str}' using evaluate: {e_eval}"
                     ) from e_eval
             else:
-                seed_kw = {"rng": seeded_rng} if seeded_rng is not None and _is_rng_generator(cls) else {}
+                seed_kw = {
+                    "rng": seeded_rng
+                } if seeded_rng is not None and cls is not None and _is_rng_generator(cls) else {}
+                if cls is None:
+                    raise TypeError("'NoneType' object is not callable")
                 if class_name in ["EmailAddressGenerator", "FamilyNameGenerator", "GivenNameGenerator"]:
                     result = cls(dataset=self._context.root.default_dataset, **seed_kw)
                 else:
@@ -268,13 +289,13 @@ class GeneratorUtil:
 
             # Decide whether to cache the generator instance globally. Generators
             # can opt out by defining ``cache_in_root = False``.
-            if getattr(result, "cache_in_root", True):
+            if not isinstance(result, CachePolicy) or result.cache_in_root:
                 self._context.root.generators[cache_key] = result
 
             return result
         except (ValueError, SyntaxError, NameError, TypeError) as e:
             current_class_name = class_name if "class_name" in locals() else generator_str
-            element_name_str = f" of element '{stmt.name}'" if stmt and hasattr(stmt, "name") else ""
+            element_name_str = f" of element '{stmt.name}'" if stmt.name is not None else ""
             logger.error(f"Error creating generator '{current_class_name}'{element_name_str}: {e}")
             if not isinstance(e, ValueError):
                 raise ValueError(f"Cannot create generator '{current_class_name}'{element_name_str}: {e}") from e

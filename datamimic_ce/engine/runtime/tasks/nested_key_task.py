@@ -93,10 +93,11 @@ class NestedKeyTask(GenSubTask):
         Create new data for nestedkey
         """
         nestedkey_type = self._statement.type
-        value: dict | list
+        value: object
         if nestedkey_type == DATA_TYPE_LIST:
             nestedkey_len = self._determine_nestedkey_length(context=parent_context)
-            value = []
+            generated_rows: list[object] = []
+            value = generated_rows
             if nestedkey_len:
                 self._lazy_init_sub_tasks(parent_context=parent_context, nestedkey_length=nestedkey_len)
                 # Generate data for each nestedkey record
@@ -104,7 +105,7 @@ class NestedKeyTask(GenSubTask):
                     # Create sub-context for each list element creation
                     ctx = GenIterContext(parent_context, str(self._statement.name))
                     generated_value = self._try_execute_sub_tasks(ctx)
-                    value.append(generated_value)
+                    generated_rows.append(generated_value)
         elif nestedkey_type == DATA_TYPE_DICT:
             self._lazy_init_sub_tasks(parent_context=parent_context, nestedkey_length=1)
             # Create sub-context for nestedkey creation
@@ -185,10 +186,15 @@ class NestedKeyTask(GenSubTask):
                         f"has already reached the end"
                     )
                     break
-        ctx.current_product = self._post_convert(ctx.current_product)
+        converted_product = self._post_convert(ctx.current_product)
+        if not isinstance(converted_product, dict):
+            raise ValueError(
+                f"Nested-key product converter must return a dictionary, but got {type(converted_product)}"
+            )
+        ctx.current_product = converted_product
         return {**ctx.current_product, **attributes}
 
-    def _evaluate_value_from_script(self, parent_context: GenIterContext) -> list | dict:
+    def _evaluate_value_from_script(self, parent_context: GenIterContext) -> object:
         """
         Evaluate data using script
 
@@ -196,7 +202,7 @@ class NestedKeyTask(GenSubTask):
         :return:
         """
         value = parent_context.evaluate_python_expression(self._statement.script)
-        result: dict | list
+        result: object
         if isinstance(value, list):
             result = self._modify_nestedkey_data_list(parent_context, value)
         elif isinstance(value, dict):
@@ -208,7 +214,7 @@ class NestedKeyTask(GenSubTask):
             )
         return result
 
-    def _load_data_from_source(self, parent_context: Context) -> list | dict:
+    def _load_data_from_source(self, parent_context: Context) -> object:
         """Load through the registry, then apply nested child tasks to the returned records."""
         if not isinstance(parent_context, GenIterContext):
             raise ValueError(f"<nestedKey> '{self._statement.name}' requires a generation context")
@@ -216,8 +222,10 @@ class NestedKeyTask(GenSubTask):
         raw = load_nested_key_source(parent_context, self._statement)
         if isinstance(raw, list):
             result: list | dict = self._modify_nestedkey_data_list(parent_context, raw)
-        else:
+        elif isinstance(raw, dict):
             result = self._modify_nestedkey_data_dict(parent_context, raw)
+        else:
+            raise ValueError(f"Source of <nestedKey> '{self._statement.name}' must produce a list or dictionary")
         return finalize_nested_key_source(parent_context, self._statement, result)
 
     def _modify_nestedkey_data_dict(self, parent_context: GenIterContext, value: dict) -> dict:
@@ -250,8 +258,14 @@ class NestedKeyTask(GenSubTask):
         self._lazy_init_sub_tasks(parent_context=parent_context, nestedkey_length=nestedkey_len)
         # Modify each nestedkey of the data
         for idx in range(nestedkey_len):
+            current_product = iterate_value[idx]
+            if not isinstance(current_product, dict):
+                raise ValueError(
+                    f"Expect current product of nestedkey '{self._statement.name}' is a dictionary, "
+                    f"but get invalid datatype: '{type(current_product)}'"
+                )
             ctx = GenIterContext(parent_context, str(self._statement.name))
-            ctx.current_product = iterate_value[idx]
+            ctx.current_product = current_product
 
             # Ensure current_product is a dictionary
             if not isinstance(ctx.current_product, dict):
@@ -274,7 +288,7 @@ class NestedKeyTask(GenSubTask):
         count = get_int_count(self._statement.count, context)
         return resolve_count(count, self._statement.min_count, self._statement.max_count, context.rng)
 
-    def _post_convert(self, value):
+    def _post_convert(self, value: object) -> object:
         """
         Post convert value after executing sub-tasks
         :param value:

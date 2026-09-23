@@ -12,6 +12,7 @@ from datamimic_ce.engine.dsl.api import SetupStatement
 from datamimic_ce.engine.io.api import TestResultExporter
 from datamimic_ce.engine.runtime.contexts.setup_context import SetupContext
 from datamimic_ce.engine.runtime.storage.memstore_manager import MemstoreManager
+from datamimic_ce.engine.runtime.tasks.task import CommonSubTask, SetupSubTask
 from datamimic_ce.engine.runtime.tasks.task_util import TaskUtil
 
 
@@ -66,7 +67,10 @@ class SetupTask:
 
         for stmt in self._setup_stmt.sub_statements:
             task = TaskUtil.get_task_by_statement(root_context, stmt)
-            task.execute(root_context)  # type: ignore[attr-defined]
+            if isinstance(task, SetupSubTask | CommonSubTask):
+                task.execute(root_context)
+            else:
+                raise TypeError(f"Unsupported setup task type: {type(task).__name__}")
 
     @staticmethod
     def execute_include(setup_stmt: SetupStatement, parent_context: SetupContext) -> None:
@@ -84,4 +88,7 @@ class SetupTask:
 
         for stmt in setup_stmt.sub_statements:
             task = TaskUtil.get_task_by_statement(root_context, stmt)
-            task.execute(root_context)  # type: ignore[attr-defined]
+            if isinstance(task, SetupSubTask | CommonSubTask):
+                task.execute(root_context)
+            else:
+                raise TypeError(f"Unsupported setup task type: {type(task).__name__}")

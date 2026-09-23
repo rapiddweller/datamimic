@@ -17,8 +17,8 @@ class SequenceTableGenerator(BaseLiteralGenerator):
     Generate sequential number set based on database sequence.
 
     This generator manages sequence numbers for database tables, handling pagination
-    and sequential number generation. It works with both KeyStatement and VariableStatement
-    types and is compatible with SQLAlchemy 2.x. Each process reserves its own range via
+    and sequential number generation for key statements. It is compatible with SQLAlchemy 2.x.
+    Each process reserves its own range via
     context.root.process_id (wired in generate_worker.py's mp_preprocess - previously dead:
     every worker read it as None/0, making the per-process offset a no-op; fixed and verified
     under an uneven count/numProcess ratio, see tests_ce/external_service_tests/
@@ -93,8 +93,7 @@ class SequenceTableGenerator(BaseLiteralGenerator):
         self._end: int | None = None
         self._explicit_sequence_name = sequence or None  # "" falls back to convention too
 
-        # Handle database attribute access safely
-        if not hasattr(stmt, "database"):
+        if isinstance(stmt, VariableStatement):
             raise ValueError(f"Statement type {type(stmt).__name__} must have 'database' attribute")
         self._source_name = stmt.database
 

@@ -4,7 +4,6 @@ from collections.abc import Iterable, Iterator
 from dataclasses import dataclass
 from enum import Enum
 from random import Random
-from typing import Any
 
 from datamimic_ce.engine.dsl.api import (
     EL_VARIABLE,
@@ -42,7 +41,7 @@ class VariableSourcePlan:
     """Task-facing result of one centrally routed variable source."""
 
     kind: VariableSourcePlanKind
-    data: Iterable[Any] | None = None
+    data: Iterable[object] | None = None
     client: DatabaseClient | None = None
     weighted_source: WeightedEntityDataSource | None = None
     selector: str | None = None
@@ -53,7 +52,7 @@ class VariableSourcePlan:
 def _variable_data_plan(
     context: SetupContext,
     stmt: VariableStatement,
-    data: Iterable[Any] | None,
+    data: Iterable[object] | None,
     pagination: DataSourcePagination | None,
     *,
     force_full_pool: bool,
@@ -206,7 +205,7 @@ def load_variable_iteration_selector(
     selector: str,
     prefix: str,
     suffix: str,
-) -> Iterable[Any]:
+) -> Iterable[object]:
     """Evaluate and execute one row-dependent variable selector."""
     return client.get_by_page_with_query(interpolate_variables(context, selector, prefix, suffix))
 
@@ -215,14 +214,16 @@ def load_variable_lazy_source(
     context: Context,
     stmt: VariableStatement,
     pagination: DataSourcePagination | None,
-) -> Iterator[Any] | None:
+) -> Iterator[object] | None:
     """Evaluate a dynamic variable source and apply its paging/distribution contract."""
     if stmt.source is None:
         return None
     data = context.evaluate_python_expression(stmt.source)
+    if not isinstance(data, Iterable):
+        raise TypeError(f"Variable source for '{stmt.name}' must be iterable")
     if stmt.distribution.loads_all or stmt.unique:
         seed = context.root.stable_distribution_seed(stmt.full_name)
-        selected = (
+        selected: Iterable[object] = (
             get_unique_data(data, pagination, seed, f"<variable> '{stmt.name}'")
             if stmt.unique
             else get_distributed_data(data, pagination, stmt.cyclic, seed, stmt.distribution)

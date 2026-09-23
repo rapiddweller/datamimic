@@ -40,7 +40,7 @@ import re
 import statistics
 import uuid
 from random import Random
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING
 
 import numpy as np
 import pandas as pd
@@ -52,7 +52,7 @@ from datamimic_ce.domains.api import resolve_clock, uuid4_from_random
 if TYPE_CHECKING:
     from datamimic_ce.engine.runtime.contexts.context import Context
 
-SAFE_GLOBALS: dict[str, Any] = {
+SAFE_GLOBALS: dict[str, object] = {
     "math": math,
     "random": random,
     "datetime": datetime,
@@ -104,16 +104,18 @@ class _EvalProxy:
     """Stands in for a module or class a DSL expression knows by name: ``overrides`` win, every
     other attribute and call goes to ``target``."""
 
-    def __init__(self, target: Any, overrides: dict[str, Any]) -> None:
+    def __init__(self, target: object, overrides: dict[str, object]) -> None:
         self._target = target
         self._overrides = overrides
 
-    def __getattr__(self, name: str) -> Any:
+    def __getattr__(self, name: str) -> object:
         if name in self._overrides:
             return self._overrides[name]
         return getattr(self._target, name)
 
-    def __call__(self, *args: Any, **kwargs: Any) -> Any:
+    def __call__(self, *args: object, **kwargs: object) -> object:
+        if not callable(self._target):
+            raise TypeError(f"'{type(self._target).__name__}' object is not callable")
         return self._target(*args, **kwargs)
 
 
@@ -128,11 +130,18 @@ class _Uncontrolled:
             f"'{self._name}' draws entropy that <setup rngSeed> cannot replay; use random.* or a generator instead"
         )
 
-    def __getattr__(self, attr: str) -> Any:
+    def __getattr__(self, attr: str) -> object:
         raise self._refuse()
 
-    def __call__(self, *args: Any, **kwargs: Any) -> Any:
+    def __call__(self, *args: object, **kwargs: object) -> object:
         raise self._refuse()
+
+
+class _OmittedRandomSeed:
+    """Distinguishes Random() from Random(None), whose seed semantics differ."""
+
+
+_OMITTED_RANDOM_SEED = _OmittedRandomSeed()
 
 
 class _SeededFaker:
@@ -142,7 +151,7 @@ class _SeededFaker:
     def __init__(self, context: Context) -> None:
         self._context = context
 
-    def __getattr__(self, name: str) -> Any:
+    def __getattr__(self, name: str) -> object:
         faker = self._context.root.seeded_faker
         faker.seed_instance(self._context.rng.getrandbits(64))
         return getattr(faker, name)
@@ -152,11 +161,11 @@ class _SeededFaker:
 NON_VALUE_TYPES = frozenset({Faker, _EvalProxy, _Uncontrolled, _SeededFaker})
 
 
-def _ignore_seed(*_args: Any, **_kwargs: Any) -> None:
+def _ignore_seed(*_args: object, **_kwargs: object) -> None:
     """random.seed() inside an expression would rewind the run's seeded stream, so it is a no-op."""
 
 
-def expression_globals(context: Context) -> dict[str, Any]:
+def expression_globals(context: Context) -> dict[str, object]:
     """Globals for one expression evaluated in ``context``."""
     if not context.root.is_seeded:
         return SAFE_GLOBALS
@@ -166,8 +175,10 @@ def expression_globals(context: Context) -> dict[str, Any]:
     def now(tz: datetime.tzinfo | None = None) -> datetime.datetime:
         return anchor if tz is None else anchor.replace(tzinfo=datetime.timezone.utc).astimezone(tz)
 
-    def seeded_random(*args: Any, **kwargs: Any) -> Random:
-        return Random(*args, **kwargs) if args or kwargs else Random(rng.getrandbits(64))
+    def seeded_random(
+        x: int | float | str | bytes | bytearray | None | _OmittedRandomSeed = _OMITTED_RANDOM_SEED,
+    ) -> Random:
+        return Random(rng.getrandbits(64)) if isinstance(x, _OmittedRandomSeed) else Random(x)
 
     def uuid4() -> uuid.UUID:
         return uuid.UUID(uuid4_from_random(rng))

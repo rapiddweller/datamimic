@@ -11,9 +11,13 @@ from datamimic_ce.engine.io.data_sources.data_source_pagination import DataSourc
 from datamimic_ce.engine.io.data_sources.data_source_registry import DataSourceRegistry
 from datamimic_ce.engine.io.data_sources.weighted_data_source import WeightedDataSource
 from datamimic_ce.engine.io.data_sources.weighted_entity_data_source import WeightedEntityDataSource
+from datamimic_ce.engine.io.exporters.console_exporter import ConsoleExporter
+from datamimic_ce.engine.io.exporters.database_exporter import DatabaseExporter
+from datamimic_ce.engine.io.exporters.exporter import Exporter
 from datamimic_ce.engine.io.exporters.exporter_config import ExporterConfig
 from datamimic_ce.engine.io.exporters.exporter_state_manager import ExporterStateManager
 from datamimic_ce.engine.io.exporters.exporter_util import ExporterUtil, buffered_exporter_names
+from datamimic_ce.engine.io.exporters.log_exporter import LogExporter
 from datamimic_ce.engine.io.exporters.memstore import Memstore
 from datamimic_ce.engine.io.exporters.mongodb_exporter import MongoDBExporter
 from datamimic_ce.engine.io.exporters.test_result_exporter import TestResultExporter
@@ -34,6 +38,10 @@ __all__ = [
     "DataSourceRegistry",
     "DatabaseClient",
     "ExporterConfig",
+    "Exporter",
+    "DatabaseExporter",
+    "ConsoleExporter",
+    "LogExporter",
     "ExporterStateManager",
     "ExporterUtil",
     "FileContentStorage",

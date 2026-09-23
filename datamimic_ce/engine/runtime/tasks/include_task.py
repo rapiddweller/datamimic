@@ -9,7 +9,7 @@ from datamimic_ce.engine.dsl.api import DescriptorParser, IncludeStatement, pars
 from datamimic_ce.engine.runtime.api import runtime_environment
 from datamimic_ce.engine.runtime.contexts.geniter_context import GenIterContext
 from datamimic_ce.engine.runtime.contexts.setup_context import SetupContext
-from datamimic_ce.engine.runtime.tasks.task import CommonSubTask
+from datamimic_ce.engine.runtime.tasks.task import CommonSubTask, SetupSubTask
 from datamimic_ce.engine.runtime.tasks.task_util import TaskUtil
 
 
@@ -36,7 +36,10 @@ class IncludeTask(CommonSubTask):
         # a path like "{database}/shop.{database}.properties" resolves to "h2/shop.h2.properties".
         if "{" in uri:
             escaped = uri.replace("'", "\\'").replace('"', '\\"')
-            uri = ctx.evaluate_python_expression(f"f'''{escaped}'''")
+            resolved_uri = ctx.evaluate_python_expression(f"f'''{escaped}'''")
+            if not isinstance(resolved_uri, str):
+                raise TypeError("Dynamic include URI must evaluate to a string")
+            uri = resolved_uri
 
         if isinstance(ctx, SetupContext):
             self._execute_with_setup_context(ctx, uri)
@@ -95,6 +98,9 @@ class IncludeTask(CommonSubTask):
 
             for stmt in sub_setup_stmt.sub_statements:
                 task = TaskUtil.get_task_by_statement(copied_root_context, stmt)
-                task.execute(copied_root_context)  # type: ignore[attr-defined]
+                if isinstance(task, SetupSubTask | CommonSubTask):
+                    task.execute(copied_root_context)
+                else:
+                    raise TypeError(f"Unsupported setup task type: {type(task).__name__}")
         else:
             raise ValueError(f"Unsupported include file type: {uri} inside <generate>. Only .xml is supported")

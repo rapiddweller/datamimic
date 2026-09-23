@@ -4,7 +4,6 @@
 # See LICENSE file for the full text of the license.
 # For questions and support, contact: info@rapiddweller.com
 
-from typing import Any
 
 
 class VariableIterator:
@@ -22,12 +21,12 @@ class VariableIterator:
     pagination.skip + a per-task row counter).
     """
 
-    def __init__(self, data: list[Any], cyclic: bool, position: int):
+    def __init__(self, data: list[object], cyclic: bool, position: int):
         self._data = data
         self._cyclic = cyclic
         self._position = position
 
-    def _current_row(self) -> Any:
+    def _current_row(self) -> object:
         if not self._data:
             return None
         if self._cyclic:
@@ -36,7 +35,7 @@ class VariableIterator:
             return None
         return self._data[self._position]
 
-    def __getattr__(self, name: str) -> Any:
+    def __getattr__(self, name: str) -> object:
         if name.startswith("_"):
             raise AttributeError(f"'{type(self).__name__}' object has no attribute '{name}'")
         row = self._current_row()
@@ -50,12 +49,13 @@ class VariableIterator:
                 if isinstance(key, str) and key.casefold() == fold:
                     return row[key]
             raise AttributeError(f"row at position {self._position} has no field '{name}': {row}")
-        if hasattr(row, name):
+        try:
             return getattr(row, name)
-        raise AttributeError(f"row at position {self._position} has no attribute '{name}': {row}")
+        except AttributeError:
+            raise AttributeError(f"row at position {self._position} has no attribute '{name}': {row}") from None
 
-    def get(self, name: str) -> Any:
-        return getattr(self, name)
+    def get(self, name: str) -> object:
+        return self.__getattr__(name)
 
     def __repr__(self) -> str:
         return f"VariableIterator(position={self._position}, cyclic={self._cyclic}, pool_size={len(self._data)})"

@@ -1,6 +1,6 @@
 """Route statement sources through IO-owned readers."""
 
-from typing import Any
+from collections.abc import Sized
 
 from datamimic_ce.engine.dsl.api import (
     DATA_TYPE_DICT,
@@ -51,7 +51,7 @@ def has_mongodb_upsert_target(targets: set[str], setup_context: SetupContext) ->
     return False
 
 
-def window_nested_key_rows(data: list[Any], count: int | None, cyclic: bool | None) -> list[Any]:
+def window_nested_key_rows(data: list[object], count: int | None, cyclic: bool | None) -> list[object]:
     """Select the rows for one nested-key execution."""
     size = len(data) if count is None else count if cyclic else min(count, len(data))
     return DataSourceRegistry.get_cyclic_data_list(
@@ -85,7 +85,10 @@ def set_data_source_length(ctx: SetupContext | GenIterContext, stmt: Statement) 
     # Check length of script data
     if isinstance(stmt, GenerateStatement) and stmt.script is not None:
         try:
-            ds_len = len(ctx.evaluate_python_expression(stmt.script))
+            data = ctx.evaluate_python_expression(stmt.script)
+            if not isinstance(data, Sized):
+                raise TypeError("Script source result has no length")
+            ds_len = len(data)
         except Exception as e:
             logger.debug(f"Cannot get length of script data before generating data: {e}")
             return
@@ -214,7 +217,7 @@ def load_generate_source(
 ) -> tuple[list[dict], bool]:
     """Load one generate source; this is the sole generate routing and paging owner."""
     build_from_source = True
-    source_data: dict | list = []
+    source_data: object = []
     root = context.root
     prefix = stmt.variable_prefix or root.default_variable_prefix
     suffix = stmt.variable_suffix or root.default_variable_suffix
@@ -322,7 +325,7 @@ def load_generate_source(
     return rows, build_from_source
 
 
-def load_nested_key_source(context: Context, stmt: NestedKeyStatement) -> list[Any] | dict[str, Any]:
+def load_nested_key_source(context: Context, stmt: NestedKeyStatement) -> object:
     """Resolve and load the raw source owned by one nested key."""
     source_expression = stmt.source
     if source_expression is None:
@@ -363,13 +366,13 @@ def load_nested_key_source(context: Context, stmt: NestedKeyStatement) -> list[A
 def finalize_nested_key_source(
     context: Context,
     stmt: NestedKeyStatement,
-    data: list[Any] | dict[str, Any],
-) -> list[Any] | dict[str, Any]:
+    data: object,
+) -> object:
     """Apply nested-key source templating and distribution in one boundary owner."""
     source_scripted = (
         stmt.source_script if stmt.source_script is not None else bool(context.root.default_source_scripted)
     )
-    result: list[Any] | dict[str, Any] = data
+    result = data
     if source_scripted:
         prefix = stmt.variable_prefix or context.root.default_variable_prefix
         suffix = stmt.variable_suffix or context.root.default_variable_suffix
@@ -396,7 +399,7 @@ def load_reference_source(
     context: Context,
     stmt: ReferenceStatement,
     pagination: DataSourcePagination | None,
-) -> list[dict[str, Any]]:
+) -> list[dict[str, object]]:
     """Load, map and select reference rows behind one typed datasource boundary."""
     client = context.root.clients.get(stmt.source)
     if not isinstance(client, RdbmsClient | MongoDBClient):
@@ -424,10 +427,10 @@ def load_reference_source(
 
 
 def _ordered_reference_rows(
-    records: list[dict[str, Any]],
+    records: list[dict[str, object]],
     stmt: ReferenceStatement,
     pagination: DataSourcePagination | None,
-) -> list[dict[str, Any]]:
+) -> list[dict[str, object]]:
     if pagination is None:
         return records
     start = pagination.skip

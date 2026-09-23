@@ -8,14 +8,14 @@ from collections.abc import Iterable, Iterator
 from random import Random
 from typing import TypeVar
 
-from datamimic_ce.domains.api import cumulated_index
+from datamimic_ce.domains.api import RandomSource, cumulated_index
 from datamimic_ce.engine.dsl.api import SourceDistribution
 from datamimic_ce.engine.io.api import DataSourcePagination
 
 T = TypeVar("T")
 
 
-def unique_values(pool: Iterable[T], rng: Random) -> list[T]:
+def unique_values(pool: Iterable[T], rng: RandomSource) -> list[T]:
     """Return distinct pool items in random order."""
     seen: set = set()
     distinct: list[T] = []
@@ -28,7 +28,7 @@ def unique_values(pool: Iterable[T], rng: Random) -> list[T]:
     return distinct
 
 
-def unique_value_iter(pool: Iterable[T], rng: Random, label: str) -> Iterator[T]:
+def unique_value_iter(pool: Iterable[T], rng: RandomSource, label: str) -> Iterator[T]:
     """Yield distinct pool items, then report exhaustion."""
     distinct = unique_values(pool, rng)
     yield from distinct

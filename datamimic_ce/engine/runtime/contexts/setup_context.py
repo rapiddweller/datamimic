@@ -9,7 +9,7 @@ import random
 import secrets
 from pathlib import Path
 from random import Random
-from typing import Any
+from typing import TypedDict
 
 from faker import Faker
 
@@ -17,16 +17,24 @@ from datamimic_ce.domains.api import (
     BaseLiteralGenerator,
     Converter,
     CustomConverter,
+    RandomSource,
     RunSeed,
     derive_child_seed,
     spawn_rng,
 )
-from datamimic_ce.engine.dsl.api import SetupStatement
-from datamimic_ce.engine.io.api import Client, TestResultExporter
+from datamimic_ce.engine.dsl.api import ExportOperation, SetupStatement
+from datamimic_ce.engine.io.api import Client, Exporter, TestResultExporter
 from datamimic_ce.engine.runtime.contexts.context import Context
 from datamimic_ce.engine.runtime.contexts.demographic_context import DemographicContext
 from datamimic_ce.engine.runtime.logging import logger
+from datamimic_ce.engine.runtime.plugins import execute_script
 from datamimic_ce.engine.runtime.storage.memstore_manager import MemstoreManager
+
+
+class TaskExporters(TypedDict):
+    page_count: int
+    with_operation: list[tuple[Exporter, ExportOperation]]
+    without_operation: list[Exporter]
 
 
 class SetupContext(Context):
@@ -70,7 +78,7 @@ class SetupContext(Context):
         self._distribution_seed_cache: dict[str | None, int] = {}
         self._properties = {} if properties is None else properties
         self._memstore_manager = memstore_manager
-        self._namespace = {} if namespace is None else namespace
+        self._namespace: dict[str, object] = {} if namespace is None else namespace
         self._accept_unknown_simple_types = True
         self._default_one_to_one = None
         self._default_imports = None
@@ -93,19 +101,20 @@ class SetupContext(Context):
         self._global_variables = {} if global_variables is None else global_variables
         self._num_process = num_process
         self._process_id: int | None = None
-        self._global_increment_registry: Any = None
+        self._global_increment_registry: dict[str, object] | None = None
         self._default_variable_prefix = default_variable_prefix
         self._default_variable_suffix = default_variable_suffix
         # IMPORTANT: do not set default bool value to default_source_scripted for config propagation
         self._default_source_scripted = default_source_scripted
         self._report_logging = report_logging
-        self._task_exporters: dict[str, dict[str, Any]] = {}
+        self._task_exporters: dict[str, TaskExporters] = {}
+        self._serialized_generators: bytes | None = None
         self._demographic_context = demographic_context
         self._run_seed = run_seed if run_seed is not None else RunSeed.create(None)
         # Generator stream root: variables/keys without their own seed fork a reproducible child RNG from it.
         self._root_rng: Random | None = Random(self._run_seed.value) if self._run_seed.seeded else None
         # Cached call-time rng — populated lazily on first ``.rng`` access.
-        self._call_rng: Any = None
+        self._call_rng: RandomSource | None = None
         self._seeded_faker: Faker | None = None
 
     def derive_seeded_rng(self) -> Random | None:
@@ -126,7 +135,7 @@ class SetupContext(Context):
         return self._run_seed.seeded
 
     @property
-    def rng(self) -> Any:
+    def rng(self) -> RandomSource:
         """Cached call-time rng. Mirrors ``GenIterContext.rng`` so ``ctx.rng``
         works whether ``ctx`` is a SetupContext or a GenIterContext."""
         if self._call_rng is None:
@@ -220,7 +229,7 @@ class SetupContext(Context):
                 copied_namespace[key] = value  # Use the original object if deepcopy fails
         return copied_namespace
 
-    def eval_namespace(self, content):
+    def eval_namespace(self, content: str) -> dict[str, object]:
         """
         Evaluate a given code content in a controlled namespace and update the dynamic classes.
 
@@ -240,13 +249,13 @@ class SetupContext(Context):
 
         try:
             # Execute the code and update the namespace
-            exec(content, initial_ns)
+            execute_script(content, initial_ns)
         except Exception as e:
             logger.error(f"Error executing content: {e}")
             raise
 
         # Identify updated fields and remove functions from the namespace
-        updated_fields = {}
+        updated_fields: dict[str, object] = {}
         for key, value in initial_ns.items():
             if (
                 not key.startswith("__")
@@ -260,7 +269,7 @@ class SetupContext(Context):
 
         return updated_fields
 
-    def get_dynamic_class(self, class_name: str):
+    def get_dynamic_class(self, class_name: str) -> object | None:
         """
         Get dynamic class from namespace by class name is mostly for the usecase of
         dynamic generator and converter creation.
@@ -275,12 +284,26 @@ class SetupContext(Context):
         :param stmt:
         :return:
         """
-        property_key = {name for name, value in vars(stmt.__class__).items() if isinstance(value, property)}
-        for key in property_key:
-            value = getattr(stmt, key)
-            # Ignore not-defined props in parent context
-            if value is not None:
-                setattr(self, key, value)
+        if stmt.use_mp is not None:
+            self.use_mp = stmt.use_mp
+        if stmt.default_separator is not None:
+            self.default_separator = stmt.default_separator
+        if stmt.default_locale is not None:
+            self.default_locale = stmt.default_locale
+        if stmt.default_dataset is not None:
+            self.default_dataset = stmt.default_dataset
+        if stmt.num_process is not None:
+            self.num_process = stmt.num_process
+        if stmt.default_line_separator is not None:
+            self._default_line_separator = stmt.default_line_separator
+        if stmt.default_source_scripted is not None:
+            self._default_source_scripted = stmt.default_source_scripted
+        if stmt.report_logging is not None:
+            self.report_logging = stmt.report_logging
+        if stmt.default_variable_prefix is not None:
+            self.default_variable_prefix = stmt.default_variable_prefix
+        if stmt.default_variable_suffix is not None:
+            self.default_variable_suffix = stmt.default_variable_suffix
 
     @property
     def demographic_context(self) -> DemographicContext | None:
@@ -323,12 +346,20 @@ class SetupContext(Context):
         self._namespace = value
 
     @property
-    def namespace_functions(self):
+    def namespace_functions(self) -> bytes | None:
         return self._namespace_functions
 
     @namespace_functions.setter
-    def namespace_functions(self, value):
+    def namespace_functions(self, value: bytes | None) -> None:
         self._namespace_functions = value
+
+    @property
+    def serialized_generators(self) -> bytes | None:
+        return self._serialized_generators
+
+    @serialized_generators.setter
+    def serialized_generators(self, value: bytes | None) -> None:
+        self._serialized_generators = value
 
     @property
     def use_mp(self) -> bool | None:
@@ -355,11 +386,11 @@ class SetupContext(Context):
         return self._descriptor_dir
 
     @property
-    def task_exporters(self) -> dict[str, dict[str, Any]]:
+    def task_exporters(self) -> dict[str, TaskExporters]:
         return self._task_exporters
 
     @task_exporters.setter
-    def task_exporters(self, value: dict[str, dict[str, Any]]) -> None:
+    def task_exporters(self, value: dict[str, TaskExporters]) -> None:
         self._task_exporters = value
 
     @property

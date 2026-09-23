@@ -10,9 +10,11 @@ import copy
 import re
 import types
 from abc import ABC, abstractmethod
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING
 
+from datamimic_ce.domains.api import RandomSource
 from datamimic_ce.engine.runtime.contexts.expression_globals import NON_VALUE_TYPES, expression_globals
+from datamimic_ce.engine.runtime.evaluation import evaluate_python
 
 if TYPE_CHECKING:
     from datamimic_ce.engine.runtime.contexts.setup_context import SetupContext
@@ -36,7 +38,7 @@ class Context(ABC):
 
     @property
     @abstractmethod
-    def rng(self) -> Any:
+    def rng(self) -> RandomSource:
         """The rng for randomness driven by this context (Random or random module)."""
 
     @property
@@ -47,7 +49,7 @@ class Context(ABC):
     def statement_start_times(self, value: dict[str, float]) -> None:
         self._statement_start_times = value
 
-    def evaluate_python_expression(self, expr: str, local_namespace: dict | None = None):
+    def evaluate_python_expression(self, expr: str, local_namespace: dict[str, object] | None = None) -> object:
         """
         Get reference from current variables and attributes
         :param local_namespace:
@@ -88,7 +90,7 @@ class Context(ABC):
 
         eval_globals = expression_globals(self)
         try:
-            result = eval(expr, eval_globals, data_dict)
+            result = evaluate_python(expr, eval_globals, data_dict)
 
             if isinstance(result, DotableDict):
                 return result.to_dict()
@@ -147,7 +149,7 @@ class Context(ABC):
 
                 updated_data_dict = recursion_data_dict(data_dict)
                 try:
-                    result = eval(expr, eval_globals, updated_data_dict)
+                    result = evaluate_python(expr, eval_globals, updated_data_dict)
                     if isinstance(result, DotableDict):
                         return result.to_dict()
                     elif isinstance(result, list):
@@ -184,7 +186,7 @@ class Context(ABC):
             #  Keep error reporting consistent; avoid extra stdout noise from traceback.print_exc()
             raise ValueError(f"Failed while evaluate '{expr}': {str(e)}") from e
 
-    def _current_scope(self) -> dict:
+    def _current_scope(self) -> dict[str, object]:
         """The current content scope for the ``this`` alias: ``this.field`` resolves to the same value as
         bare ``field``. In a generate/iterate that is the record's variables + products (products win on a
         name clash); at setup level it is the setup namespace + global variables."""
@@ -197,7 +199,7 @@ class Context(ABC):
             return {**self.namespace, **self.global_variables}
         return {}
 
-    def _parent_scope(self) -> dict:
+    def _parent_scope(self) -> dict[str, object]:
         """The immediate parent scope for the ``parent`` alias: the parent generate/nestedKey's
         variables + products. Empty when there is no enclosing generate scope (top-level = setup parent)."""
         from datamimic_ce.engine.runtime.contexts.geniter_context import GenIterContext
@@ -210,12 +212,12 @@ class Context(ABC):
         return {}
 
     @staticmethod
-    def get_content_variables_products(current_context: Context) -> dict:
+    def get_content_variables_products(current_context: Context) -> dict[str, object]:
         # Init current product of root context
         from datamimic_ce.engine.runtime.contexts.geniter_context import GenIterContext
         from datamimic_ce.engine.runtime.contexts.setup_context import SetupContext
 
-        data_dict: dict = {}
+        data_dict: dict[str, object] = {}
         # SetupContext evaluate script
         if isinstance(current_context, SetupContext):
             # Add current variable & product of outermost context
@@ -269,10 +271,10 @@ class DotableDict:
     Dotable presentation of dict
     """
 
-    def __init__(self, dictionary: dict):
+    def __init__(self, dictionary: dict[str, object]):
         self._dictionary = dictionary
 
-    def __getattr__(self, name):
+    def __getattr__(self, name: str) -> object:
         if name in self._dictionary:
             item = self._dictionary[name]
             if isinstance(item, dict):
@@ -284,10 +286,10 @@ class DotableDict:
         else:
             raise AttributeError(f"Cannot find attribute '{name}'")
 
-    def get(self, name):
-        return getattr(self, name)
+    def get(self, name: str) -> object:
+        return self.__getattr__(name)
 
-    def to_dict(self):
+    def to_dict(self) -> dict[str, object]:
         """
         Convert DotableDict to dict
         :return:

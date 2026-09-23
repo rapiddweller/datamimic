@@ -6,9 +6,9 @@
 
 import inspect
 from ast import literal_eval
-from collections.abc import Iterator
+from collections.abc import Callable, Iterator
 from random import Random
-from typing import Any, Final
+from typing import Final
 
 from datamimic_ce.engine.dsl.api import (
     ATTR_CONSTANT,
@@ -38,7 +38,7 @@ from datamimic_ce.engine.runtime.tasks.task_util import TaskUtil
 from datamimic_ce.engine.runtime.tasks.variable_iterator import VariableIterator
 
 
-def _parse_constructor_string(constructor_string: str) -> tuple[str, dict[str, Any]]:
+def _parse_constructor_string(constructor_string: str) -> tuple[str, dict[str, object]]:
     constructor_string = constructor_string.strip()
     opening = constructor_string.find("(")
     closing = constructor_string.rfind(")")
@@ -48,7 +48,7 @@ def _parse_constructor_string(constructor_string: str) -> tuple[str, dict[str, A
 
     entity_name = constructor_string[:opening].strip()
     parameters_string = constructor_string[opening + 1 : closing].strip() if closing != -1 else ""
-    parameters: dict[str, Any] = {}
+    parameters: dict[str, object] = {}
     for parameter in parameters_string.split(","):
         if "=" in parameter:
             key_value = parameter.split("=")
@@ -61,7 +61,7 @@ def _parse_constructor_string(constructor_string: str) -> tuple[str, dict[str, A
     return entity_name, parameters
 
 
-def _constructor_params(cls: type) -> frozenset[str]:
+def _constructor_params(cls: Callable[..., object]) -> frozenset[str]:
     """Names accepted by ``cls.__init__`` — used to inject only supported kwargs."""
     try:
         return frozenset(inspect.signature(cls).parameters)
@@ -70,7 +70,7 @@ def _constructor_params(cls: type) -> frozenset[str]:
 
 
 class VariableTask(KeyVariableTask, CommonSubTask):
-    _iterator: Iterator[Any] | None
+    _iterator: Iterator[object] | None
     _ITERATOR_MODE: Final = "iterator"
     _ENTITY_MODE: Final = "entity_builder"
     _WEIGHTED_ENTITY_MODE: Final = "weighted_entity"

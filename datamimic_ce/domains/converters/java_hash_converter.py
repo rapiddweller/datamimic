@@ -10,7 +10,9 @@ from datamimic_ce.domains.converters.converter import Converter
 class JavaHashConverter(Converter):
     """Replicate the Java Hash function"""
 
-    def convert(self, value: str) -> str:
+    def convert(self, value: object) -> str:
+        if not isinstance(value, str):
+            raise ValueError(f"JavaHash converter expects a string, got {type(value).__name__}: {value!r}")
         h = 0
         for char in value:
             h = (31 * h + ord(char)) & 0xFFFFFFFF

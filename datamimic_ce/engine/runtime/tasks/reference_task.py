@@ -6,7 +6,6 @@
 
 import itertools
 from collections.abc import Iterator
-from typing import Any
 
 from datamimic_ce.engine.dsl.api import ReferenceStatement
 from datamimic_ce.engine.io.api import DataSourcePagination
@@ -21,7 +20,7 @@ class ReferenceTask(GenSubTask):
         self._statement: ReferenceStatement = statement
         self._pagination: DataSourcePagination | None = pagination
         # Each item is a {target: value} record (one source row's selected columns).
-        self._iterator: Iterator[dict[str, Any]] | None = None
+        self._iterator: Iterator[dict[str, object]] | None = None
 
     @property
     def statement(self) -> ReferenceStatement:
@@ -53,5 +52,5 @@ class ReferenceTask(GenSubTask):
         # Legacy single-field references return the scalar; composite ones return the record.
         return record[self._statement.targets[0]] if not self._statement.is_composite else record
 
-    def _init_iterator(self, ctx: Context) -> Iterator[dict[str, Any]]:
+    def _init_iterator(self, ctx: Context) -> Iterator[dict[str, object]]:
         return iter(load_reference_source(ctx, self._statement, self._pagination))

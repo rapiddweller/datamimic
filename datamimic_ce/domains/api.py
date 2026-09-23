@@ -41,6 +41,7 @@ from datamimic_ce.domains.finance.generators.transaction_generator import Transa
 from datamimic_ce.domains.finance.models.bank_account import BankAccount
 from datamimic_ce.domains.finance.models.transaction import Transaction
 from datamimic_ce.domains.healthcare.services.patient_service import PatientService
+from datamimic_ce.domains.utils.random_source import RandomSource
 from datamimic_ce.domains.utils.rng_uuid import uuid4_from_random
 from datamimic_ce.engine.dsl.api import GeneratorCapability, describe_generator_type
 
@@ -77,6 +78,7 @@ __all__ = [
     "PatientService",
     "RemoveNoneOrEmptyElementConverter",
     "RunSeed",
+    "RandomSource",
     "StateMachineDef",
     "StateTransitionGenerator",
     "StringGenerator",

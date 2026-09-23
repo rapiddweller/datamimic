@@ -55,7 +55,10 @@ class ExecuteTask(SetupSubTask):
         # f-string interpolation so inline SQL may reference descriptor variables (e.g. {table}).
         if interpolate:
             escaped_text = content.replace("'", "\\'").replace('"', '\\"')
-            content = ctx.evaluate_python_expression(f"f'''{escaped_text}'''")
+            evaluated_content = ctx.evaluate_python_expression(f"f'''{escaped_text}'''")
+            if not isinstance(evaluated_content, str):
+                raise TypeError("Interpolated SQL must evaluate to a string")
+            content = evaluated_content
         ctx.root.clients[self._statement.target].execute_sql_script(content)
 
     def _run_bash(self, ctx: Context, code: str) -> None:

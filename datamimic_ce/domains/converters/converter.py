@@ -5,10 +5,9 @@
 # For questions and support, contact: info@rapiddweller.com
 
 from abc import ABC, abstractmethod
-from typing import Any
 
 
 class Converter(ABC):
     @abstractmethod
-    def convert(self, value) -> Any:
+    def convert(self, value: object) -> object:
         pass

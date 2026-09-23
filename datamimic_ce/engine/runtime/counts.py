@@ -1,7 +1,8 @@
 """Count evaluation and range resolution for runtime tasks."""
 
-from random import Random
+from typing import SupportsIndex, SupportsInt
 
+from datamimic_ce.domains.api import RandomSource
 from datamimic_ce.engine.runtime.contexts.context import Context
 
 
@@ -10,11 +11,14 @@ def get_int_count(count: str | None, context: Context) -> int | None:
         return None
     if count.isdigit():
         return int(count)
-    return int(context.evaluate_python_expression(count[1:-1]))
+    value = context.evaluate_python_expression(count[1:-1])
+    if isinstance(value, str | bytes | bytearray | SupportsInt | SupportsIndex):
+        return int(value)
+    raise TypeError(f"Count expression must evaluate to an integer-compatible value, got {type(value).__name__}")
 
 
 def resolve_count(
-    count: int | None, min_count: int | None, max_count: int | None, rng: Random
+    count: int | None, min_count: int | None, max_count: int | None, rng: RandomSource
 ) -> int | None:
     if count is not None:
         return count

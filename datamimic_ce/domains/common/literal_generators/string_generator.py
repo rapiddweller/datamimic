@@ -13,10 +13,11 @@ from contextlib import contextmanager
 import exrex  # type: ignore
 
 from datamimic_ce.domains.domain_core.base_literal_generator import BaseLiteralGenerator
+from datamimic_ce.domains.utils.random_source import RandomSource
 
 
 @contextmanager
-def _exrex_using(rng: random.Random) -> Iterator[None]:
+def _exrex_using(rng: RandomSource) -> Iterator[None]:
     """Make exrex draw from ``rng`` for the duration of the block.
 
     exrex binds ``random.choice``/``random.randint`` at import and exposes no
@@ -117,7 +118,7 @@ class StringGenerator(BaseLiteralGenerator):
         return self.prefix + "".join(result) + self.suffix
 
     @staticmethod
-    def rnd_str_from_regex(pattern: str, *, rng: random.Random) -> str:
+    def rnd_str_from_regex(pattern: str, *, rng: RandomSource) -> str:
         with _exrex_using(rng):
             result = exrex.getone(pattern, 1)
         if result is None:

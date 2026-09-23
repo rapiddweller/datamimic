@@ -12,6 +12,7 @@ from datamimic_ce.engine.dsl.api import (
     ATTR_TYPE,
     ATTR_VALUES,
     EL_KEY,
+    CompositeStatement,
     KeyStatement,
 )
 from datamimic_ce.engine.io.api import DataSourcePagination
@@ -76,7 +77,7 @@ class KeyTask(KeyVariableTask, GenSubTask):
                 value = self._convert_generated_value(value)
 
             attributes = {}
-            if hasattr(self._statement, "sub_statements"):
+            if isinstance(self._statement, CompositeStatement):
                 for stmt in self._statement.sub_statements:
                     task = TaskUtil.get_task_by_statement(root_ctx, stmt)
                     if isinstance(task, ElementTask) and isinstance(ctx, GenIterContext):

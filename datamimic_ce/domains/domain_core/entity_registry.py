@@ -8,6 +8,7 @@
 
 from __future__ import annotations
 
+from collections.abc import Callable
 from dataclasses import dataclass
 
 from datamimic_ce.domains.domain_core.attribute_catalog import FieldSpec
@@ -124,6 +125,6 @@ def get_entity_spec(name: str) -> EntitySpec | None:
     return None
 
 
-def get_entity_service_class(name: str) -> type[BaseDomainService] | None:
+def get_entity_service_class(name: str) -> Callable[..., BaseDomainService] | None:
     spec = get_entity_spec(name)
     return spec.service_cls if spec else None
