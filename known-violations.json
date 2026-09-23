@@ -7,42 +7,5 @@
     "untyped_private_accesses": 3
   },
   "schema_version": "1.2.0",
-  "violations": [
-    {
-      "count": 1,
-      "rules": [
-        "NO-MAGIC-CONTROL-FLOW"
-      ],
-      "subjects": [
-        "datamimic_ce.domains.domain_core.base_entity.BaseEntity.__getattr__"
-      ]
-    },
-    {
-      "count": 1,
-      "rules": [
-        "NO-MAGIC-CONTROL-FLOW"
-      ],
-      "subjects": [
-        "datamimic_ce.engine.runtime.contexts.expression_globals._EvalProxy.__getattr__"
-      ]
-    },
-    {
-      "count": 1,
-      "rules": [
-        "NO-MAGIC-CONTROL-FLOW"
-      ],
-      "subjects": [
-        "datamimic_ce.engine.runtime.contexts.expression_globals._SeededFaker.__getattr__"
-      ]
-    },
-    {
-      "count": 1,
-      "rules": [
-        "NO-MAGIC-CONTROL-FLOW"
-      ],
-      "subjects": [
-        "datamimic_ce.engine.runtime.tasks.variable_iterator.VariableIterator.__getattr__"
-      ]
-    }
-  ]
+  "violations": []
 }
