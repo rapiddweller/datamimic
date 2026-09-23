@@ -5,7 +5,6 @@
 # For questions and support, contact: info@rapiddweller.com
 
 from pathlib import Path
-from xml.etree.ElementTree import Element
 
 from datamimic_ce.engine.dsl.constants.attribute_constants import ATTR_CONDITION
 from datamimic_ce.engine.dsl.parsers.statement_parser import StatementParser
@@ -15,12 +14,13 @@ from datamimic_ce.engine.dsl.statements.else_if_statement import ElseIfStatement
 from datamimic_ce.engine.dsl.statements.else_statement import ElseStatement
 from datamimic_ce.engine.dsl.statements.if_statement import IfStatement
 from datamimic_ce.engine.dsl.statements.statement import Statement
+from datamimic_ce.engine.dsl.xml import XmlElement
 
 
 class ConditionParser(StatementParser):
     def __init__(
         self,
-        element: Element,
+        element: XmlElement,
         properties: dict,
     ):
         super().__init__(

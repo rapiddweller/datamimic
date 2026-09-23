@@ -4,7 +4,7 @@
 # See LICENSE file for the full text of the license.
 # For questions and support, contact: info@rapiddweller.com
 
-from typing import Any, ClassVar
+from typing import ClassVar
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
 
@@ -80,5 +80,5 @@ class ArrayModel(BaseModel):
 
     @field_validator("name")
     @classmethod
-    def validate_name(cls, value: Any) -> str:
+    def validate_name(cls, value: object) -> str:
         return ModelUtil.check_not_empty(value=value)

@@ -7,13 +7,14 @@
 import logging
 import sys
 from pathlib import Path
-from typing import Any, cast
 from urllib.parse import quote
 
 import oracledb
 import sqlalchemy
 from sqlalchemy import MetaData, func, inspect, select, text
 from sqlalchemy.engine import Dialect
+from sqlalchemy.engine.default import DefaultDialect
+from sqlalchemy.engine.row import Row
 from sqlalchemy.pool import QueuePool
 
 from datamimic_ce.engine.dsl.api import Dbms
@@ -151,7 +152,8 @@ class RdbmsClient(DatabaseClient):
                 # driver with driver="pymssql" on the <database> credential - no proprietary MS
                 # ODBC package to install, avoids the exact driver-install friction that pushed
                 # DATAMIMIC EE to make pymssql its own default (rdbms/url_builder.py).
-                if getattr(self._credential, "driver", None) == "pymssql":
+                extra_config = self._credential.model_extra or {}
+                if extra_config.get("driver") == "pymssql":
                     self._engine = create_sqlalchemy_engine("mssql+pymssql", user, password, host, port, db)
                 else:
                     self._engine = create_sqlalchemy_engine(
@@ -199,9 +201,11 @@ class RdbmsClient(DatabaseClient):
         """
         # Get the list of columns where None values should be converted to NULL.
         # Filter empties: "".split(",") is [""] and would inject a bogus ''-keyed column into every row.
-        none_as_null_col = [
-            col.strip() for col in getattr(self._credential, "none_as_null_col", "").split(",") if col.strip()
-        ]
+        extra_config = self._credential.model_extra or {}
+        none_as_null_col_value = extra_config.get("none_as_null_col", "")
+        if not isinstance(none_as_null_col_value, str):
+            raise TypeError("none_as_null_col must be a comma-separated string")
+        none_as_null_col = [col.strip() for col in none_as_null_col_value.split(",") if col.strip()]
         # Convert None values to SQLAlchemy NULL
         if len(none_as_null_col) > 0:
             for idx, data_dict in enumerate(data_list):
@@ -321,7 +325,7 @@ class RdbmsClient(DatabaseClient):
             logger.info(f"page is None, get all data from query {original_query}")
             result = self.get(original_query)
             # Use _mapping attribute for SQLAlchemy 2.0 Row objects
-            return [dict(row._mapping) if hasattr(row, "_mapping") else dict(row) for row in result]
+            return [dict(row._mapping) if isinstance(row, Row) else dict(row) for row in result]
 
         page = sql_dialect.selector_page(
             original_query,
@@ -333,7 +337,7 @@ class RdbmsClient(DatabaseClient):
         result = self.get(page.sql)[page.rows]
 
         # Handle both SQLAlchemy 1.x and 2.x Row objects
-        return [dict(row._mapping) if hasattr(row, "_mapping") else dict(row) for row in result]
+        return [dict(row._mapping) if isinstance(row, Row) else dict(row) for row in result]
 
     def _selector_columns(self, query: str) -> list[str]:
         """Output column names of a selector, probed once per selector rather than once per page."""
@@ -489,7 +493,9 @@ class RdbmsClient(DatabaseClient):
         """
         if not parts or any(not part for part in parts):
             raise ValueError("SQL identifiers must be non-empty")
-        preparer = cast(Any, dialect).identifier_preparer
+        if not isinstance(dialect, DefaultDialect):
+            raise TypeError("SQLAlchemy dialect does not provide identifier quoting")
+        preparer = dialect.identifier_preparer
         quote = preparer.quote_identifier
         return ".".join(quote(part) for part in parts)
 

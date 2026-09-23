@@ -9,7 +9,6 @@ import codecs
 import logging
 from datetime import datetime
 from pathlib import Path
-from typing import Any
 
 import xmltodict
 from lxml import etree
@@ -51,7 +50,7 @@ class XMLExporter(UnifiedBufferedExporter):
         """Returns the MIME type for the data content."""
         return "application/xml"
 
-    def _write_data_to_buffer(self, data: list[dict[str, Any]], worker_id: int, chunk_idx: int) -> None:
+    def _write_data_to_buffer(self, data: list[dict[str, object]], worker_id: int, chunk_idx: int) -> None:
         """
         Writes data to the current buffer file in XML format.
 
@@ -93,7 +92,7 @@ class XMLExporter(UnifiedBufferedExporter):
             raise ExporterError(f"Error writing data to buffer: {e}") from e
 
     @staticmethod
-    def _sanitize_record(data: dict[str, Any]) -> dict[str, Any]:
+    def _sanitize_record(data: dict[str, object]) -> dict[str, object]:
         """
         Recursively sanitize the record by converting values to strings,
         handling attributes, and formatting datetime objects.
@@ -105,9 +104,9 @@ class XMLExporter(UnifiedBufferedExporter):
             dict: Sanitized data with string values and attribute prefixes.
         """
 
-        def sanitize_value(recursion_data: Any) -> Any:
+        def sanitize_value(recursion_data: object) -> object:
             if isinstance(recursion_data, dict):
-                sanitized = {}
+                sanitized: dict[str, object] = {}
                 for rec_key, rec_value in recursion_data.items():
                     if rec_value is None:
                         # Set None values as empty strings

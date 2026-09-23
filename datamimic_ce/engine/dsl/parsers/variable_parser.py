@@ -4,13 +4,12 @@
 # See LICENSE file for the full text of the license.
 # For questions and support, contact: info@rapiddweller.com
 
-from xml.etree.ElementTree import Element
-
 from datamimic_ce.engine.dsl.constants.element_constants import EL_VARIABLE
 from datamimic_ce.engine.dsl.model.variable_model import VariableModel
 from datamimic_ce.engine.dsl.parsers.statement_parser import StatementParser
 from datamimic_ce.engine.dsl.statements.statement import Statement
 from datamimic_ce.engine.dsl.statements.variable_statement import VariableStatement
+from datamimic_ce.engine.dsl.xml import XmlElement
 
 
 class VariableParser(StatementParser):
@@ -20,7 +19,7 @@ class VariableParser(StatementParser):
 
     def __init__(
         self,
-        element: Element,
+        element: XmlElement,
         properties: dict,
     ):
         super().__init__(

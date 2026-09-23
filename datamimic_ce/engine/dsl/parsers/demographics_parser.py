@@ -3,16 +3,16 @@
 from __future__ import annotations
 
 from pathlib import Path
-from xml.etree.ElementTree import Element
 
 from datamimic_ce.engine.dsl.constants.element_constants import EL_DEMOGRAPHICS
 from datamimic_ce.engine.dsl.model.demographics_model import DemographicsModel
 from datamimic_ce.engine.dsl.parsers.statement_parser import StatementParser
 from datamimic_ce.engine.dsl.statements.demographics_statement import DemographicsStatement
+from datamimic_ce.engine.dsl.xml import XmlElement
 
 
 class DemographicsParser(StatementParser):
-    def __init__(self, element: Element, properties: dict | None):
+    def __init__(self, element: XmlElement, properties: dict | None):
         super().__init__(element, properties, valid_element_tag=EL_DEMOGRAPHICS)
 
     def parse(self, descriptor_dir: Path) -> DemographicsStatement:

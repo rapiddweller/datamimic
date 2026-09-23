@@ -4,8 +4,6 @@
 # See LICENSE file for the full text of the license.
 # For questions and support, contact: info@rapiddweller.com
 
-from typing import Any
-
 from datamimic_ce.engine.io.clients.rdbms_client import RdbmsClient
 from datamimic_ce.engine.io.exporters.exporter import Exporter
 
@@ -14,7 +12,7 @@ class DatabaseExporter(Exporter):
     def __init__(self, client: RdbmsClient):
         self._client = client
 
-    def consume(self, product: tuple[str, list[dict[str, Any]], dict[str, Any] | None]) -> None:
+    def consume(self, product: tuple[str, list[dict[str, object]], dict[str, object] | None]) -> None:
         """
         Write data into SQL database
 

@@ -6,8 +6,6 @@
 
 from abc import ABC
 from pathlib import Path
-from typing import Any
-from xml.etree.ElementTree import Element
 
 from datamimic_ce.engine.dsl.model.else_if_model import ElseIfModel
 from datamimic_ce.engine.dsl.model.if_model import IfModel
@@ -16,12 +14,14 @@ from datamimic_ce.engine.dsl.statements.condition_statement import ConditionStat
 from datamimic_ce.engine.dsl.statements.else_if_statement import ElseIfStatement
 from datamimic_ce.engine.dsl.statements.else_statement import ElseStatement
 from datamimic_ce.engine.dsl.statements.if_statement import IfStatement
+from datamimic_ce.engine.dsl.statements.statement import Statement
+from datamimic_ce.engine.dsl.xml import XmlElement
 
 
 class IfElseBaseParser(StatementParser, ABC):
     def __init__(
         self,
-        element: Element,
+        element: XmlElement,
         properties: dict,
         valid_element_tag: str,
     ):
@@ -37,9 +37,11 @@ class IfElseBaseParser(StatementParser, ABC):
         from datamimic_ce.engine.dsl.parsers.parser_util import ParserUtil
 
         # Retrieve the root composite statement
-        composite_stmt: Any = parent_stmt
+        composite_stmt: Statement | None = parent_stmt
         while isinstance(composite_stmt, ConditionStatement | IfStatement):
             composite_stmt = composite_stmt.parent_stmt
+        if composite_stmt is None:
+            raise ValueError("conditional statement has no enclosing composite")
         # Get valid sub elements of the composite statement
         valid_sub_ele_set = ParserUtil.get_valid_sub_elements_set_by_tag(
             ParserUtil.get_element_tag_by_statement(composite_stmt)

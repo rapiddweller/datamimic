@@ -5,8 +5,6 @@
 # For questions and support, contact: info@rapiddweller.com
 
 from pathlib import Path
-from typing import Any
-from xml.etree.ElementTree import Element
 
 from datamimic_ce.engine.dsl.constants.element_constants import EL_WHILE
 from datamimic_ce.engine.dsl.model.while_model import WhileModel
@@ -14,13 +12,15 @@ from datamimic_ce.engine.dsl.parsers.statement_parser import StatementParser
 from datamimic_ce.engine.dsl.statements.composite_statement import CompositeStatement
 from datamimic_ce.engine.dsl.statements.condition_statement import ConditionStatement
 from datamimic_ce.engine.dsl.statements.if_statement import IfStatement
+from datamimic_ce.engine.dsl.statements.statement import Statement
 from datamimic_ce.engine.dsl.statements.while_statement import WhileStatement
+from datamimic_ce.engine.dsl.xml import XmlElement
 
 
 class WhileParser(StatementParser):
     """Parse element "while" into a WhileStatement (a per-row loop over its child statements)."""
 
-    def __init__(self, element: Element, properties: dict):
+    def __init__(self, element: XmlElement, properties: dict):
         super().__init__(element, properties, valid_element_tag=EL_WHILE)
 
     def parse(self, descriptor_dir: Path, parent_stmt: CompositeStatement) -> WhileStatement:
@@ -28,9 +28,11 @@ class WhileParser(StatementParser):
 
         # A <while> body accepts whatever the enclosing composite (<generate>/<nestedKey>) accepts —
         # walk up through any condition/if/while wrappers to that composite, like IfElseBaseParser.
-        composite_stmt: Any = parent_stmt
+        composite_stmt: Statement | None = parent_stmt
         while isinstance(composite_stmt, ConditionStatement | IfStatement | WhileStatement):
             composite_stmt = composite_stmt.parent_stmt
+        if composite_stmt is None:
+            raise ValueError("<while> statement has no enclosing composite")
         valid_sub_ele_set = ParserUtil.get_valid_sub_elements_set_by_tag(
             ParserUtil.get_element_tag_by_statement(composite_stmt)
         )

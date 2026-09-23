@@ -13,7 +13,7 @@ import uuid
 from collections.abc import Callable
 from datetime import date, datetime
 from decimal import Decimal
-from typing import Any
+from typing import Protocol, runtime_checkable
 
 from datamimic_ce.engine.dsl.api import (
     EXPORTER_CONSOLE_EXPORTER,
@@ -70,7 +70,12 @@ def buffered_exporter_names() -> frozenset[str]:
     return frozenset(_BUFFERED_EXPORTERS)
 
 
-def custom_serializer(obj: Any) -> Any:
+@runtime_checkable
+class SupportsAsPy(Protocol):
+    def as_py(self) -> object: ...
+
+
+def custom_serializer(obj: object) -> object:
     """
     Custom serializer for JSON dump that supports a wide range of types.
     """
@@ -79,8 +84,10 @@ def custom_serializer(obj: Any) -> Any:
         return obj.isoformat()
 
     # If object supports pyarrow-like conversion
-    if hasattr(obj, "as_py") and callable(obj.as_py):
-        return obj.as_py()
+    if isinstance(obj, SupportsAsPy):
+        converter = obj.as_py
+        if callable(converter):
+            return converter()
 
     # UUID objects
     if isinstance(obj, uuid.UUID):

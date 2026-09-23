@@ -6,13 +6,13 @@
 
 from pathlib import Path
 from typing import Literal
-from xml.etree.ElementTree import Element
 
 from datamimic_ce.engine.dsl.constants.element_constants import EL_SETUP
 from datamimic_ce.engine.dsl.model.setup_model import SetupModel
 from datamimic_ce.engine.dsl.parsers.parser_util import ParserUtil
 from datamimic_ce.engine.dsl.parsers.statement_parser import StatementParser
 from datamimic_ce.engine.dsl.statements.setup_statement import SetupStatement
+from datamimic_ce.engine.dsl.xml import XmlElement
 
 
 class SetupParser(StatementParser):
@@ -22,7 +22,7 @@ class SetupParser(StatementParser):
 
     def __init__(
         self,
-        element: Element,
+        element: XmlElement,
         properties: dict | None,
         runtime_environment: Literal["development", "production"],
     ):

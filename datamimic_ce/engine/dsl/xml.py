@@ -4,8 +4,18 @@ from __future__ import annotations
 
 import re
 from pathlib import Path
+from typing import TypeAlias
 
 from lxml import etree
+
+XmlElement: TypeAlias = etree._Element
+
+
+def xml_tag(element: XmlElement) -> str:
+    tag = element.tag
+    if not isinstance(tag, str):
+        raise ValueError(f"XML element tag must be text, got {type(tag).__name__}")
+    return tag
 
 
 class DTDForbiddenError(ValueError):

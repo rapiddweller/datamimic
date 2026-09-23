@@ -8,7 +8,7 @@ import json
 import re
 from collections.abc import Mapping
 from decimal import Decimal
-from typing import Any, cast
+from typing import TypeGuard
 
 from bson.decimal128 import Decimal128
 from pymongo import MongoClient, UpdateOne
@@ -25,7 +25,7 @@ class MongoDBClient(DatabaseClient):
         self._credential = credential
 
     @staticmethod
-    def _to_bson(value: Any) -> Any:
+    def _to_bson(value: object) -> object:
         """Recursively convert types BSON cannot encode. ``decimal.Decimal`` -> ``bson.Decimal128``
         (MongoDB's native 128-bit decimal): lossless, unlike a float cast. Applied on every write so a
         DATAMIMIC ``type="decimal"`` field round-trips through mongo."""
@@ -39,7 +39,7 @@ class MongoDBClient(DatabaseClient):
         return value
 
     @staticmethod
-    def _from_bson(value: Any) -> Any:
+    def _from_bson(value: object) -> object:
         """Inverse of ``_to_bson``: ``bson.Decimal128`` -> ``decimal.Decimal`` on read, so a script that
         does arithmetic on a stored decimal (``product.price * qty``) gets a Python Decimal, not a
         Decimal128 (which has no numeric operators)."""
@@ -52,7 +52,22 @@ class MongoDBClient(DatabaseClient):
         return value
 
     @staticmethod
-    def _values_at_path(value: Any, parts: list[str]):
+    def _is_document(value: object) -> TypeGuard[dict[str, object]]:
+        return isinstance(value, dict) and all(isinstance(key, str) for key in value)
+
+    @staticmethod
+    def _documents(value: object) -> list[dict[str, object]]:
+        if not isinstance(value, list):
+            raise TypeError("MongoDB result must be a list of documents")
+        documents: list[dict[str, object]] = []
+        for document in value:
+            if not MongoDBClient._is_document(document):
+                raise TypeError("MongoDB result must be a list of documents")
+            documents.append(document)
+        return documents
+
+    @staticmethod
+    def _values_at_path(value: object, parts: list[str]):
         """All values reachable by descending a dotted field path; lists along the way unwind
         (one value per nested element). How a <reference> resolves an entity nested inside a
         collection document (a converted legacy <part> element)."""
@@ -120,7 +135,7 @@ class MongoDBClient(DatabaseClient):
                 cursor = collection.find(find_filter, find_projection)
                 if pagination is not None:
                     cursor = cursor.skip(pagination.skip).limit(pagination.limit)
-                return self._from_bson(list(cursor))
+                return self._documents(self._from_bson(list(cursor)))
             elif query_type == "aggregate":
                 query_result = self._query_aggregate_handler(query=query, connection=conn)
                 return query_result
@@ -171,7 +186,7 @@ class MongoDBClient(DatabaseClient):
             cursor = collection.find({})
             if pagination is not None:
                 cursor = cursor.skip(pagination.skip).limit(pagination.limit)
-            return self._from_bson(list(cursor))
+            return self._documents(self._from_bson(list(cursor)))
 
     def get_random_rows_by_columns(self, collection_name: str, column_names: list[str]) -> list[tuple]:
         """Fetch the given fields for a <reference> in a stable order, preserving row-tuple
@@ -194,7 +209,7 @@ class MongoDBClient(DatabaseClient):
             if "_id" not in projection:
                 projection["_id"] = 0
             docs = list(collection.find({}, projection))
-        docs = self._from_bson(docs)
+        docs = self._documents(self._from_bson(docs))
         if not dotted:
             rows = [tuple(doc.get(name) for name in column_names) for doc in docs]
         else:
@@ -206,7 +221,7 @@ class MongoDBClient(DatabaseClient):
         return sorted(rows, key=lambda row: tuple(self._sort_key(v) for v in row))
 
     @staticmethod
-    def _sort_key(value: Any) -> tuple:
+    def _sort_key(value: object) -> tuple[int, float | str]:
         if value is None:
             return (2, "")
         if isinstance(value, int | float | Decimal):
@@ -245,7 +260,9 @@ class MongoDBClient(DatabaseClient):
                     collection = db[collection_name]
                 else:
                     raise ValueError(f"Syntax error: collection name '{collection_name}' not found")
-                return collection.count_documents(cast(Mapping[str, Any], find_filter))
+                if not isinstance(find_filter, Mapping):
+                    raise ValueError("Syntax error: find filter must be an object")
+                return collection.count_documents(find_filter)
             elif query_type == "aggregate":
                 query_result = self._query_aggregate_handler(query=query, connection=conn)
                 return len(query_result)
@@ -278,7 +295,7 @@ class MongoDBClient(DatabaseClient):
         if not isinstance(aggregate_pipeline, list):
             raise ValueError("Syntax error: pipeline must be a list")
         # execute and return result
-        return self._from_bson(list(collection.aggregate(aggregate_pipeline)))
+        return self._documents(self._from_bson(list(collection.aggregate(aggregate_pipeline))))
 
     def count_table_length(self, table_name: str):
         pass
@@ -294,7 +311,7 @@ class MongoDBClient(DatabaseClient):
         with self._create_connection() as conn:
             db = conn[self._credential.database]
             collection = db[collection_name]
-            data = [self._to_bson(d) for d in data]
+            data = self._documents([self._to_bson(document) for document in data])
             inserted_ids = collection.insert_many(data).inserted_ids
             # Retrieve all the inserted data
             if not is_update:
@@ -355,7 +372,7 @@ class MongoDBClient(DatabaseClient):
         # query = self._decompose_find_query(selector)
 
         # Merge updated_data and filter query
-        updated_data = [self._to_bson({**filter_query, **data}) for data in updated_data]
+        updated_data = self._documents([self._to_bson({**filter_query, **data}) for data in updated_data])
 
         if collection_name is None or collection_name.isspace():
             raise ValueError(f"Syntax error: collection name '{collection_name}' not found")
@@ -372,7 +389,9 @@ class MongoDBClient(DatabaseClient):
                     update = {"$set": doc}
                     collection.update_one(filter, update, upsert=True)
                 # Return updated data
-                return self._from_bson(list(collection.find({"_id": {"$in": [doc["_id"] for doc in updated_data]}})))
+                return self._documents(
+                    self._from_bson(list(collection.find({"_id": {"$in": [doc["_id"] for doc in updated_data]}})))
+                )
 
     def _decompose_find_query(self, query: str) -> dict:
         """

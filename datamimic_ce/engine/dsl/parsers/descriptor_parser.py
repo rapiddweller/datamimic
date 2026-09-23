@@ -5,8 +5,7 @@
 # For questions and support, contact: info@rapiddweller.com
 
 from pathlib import Path
-from typing import Literal, cast
-from xml.etree.ElementTree import Element
+from typing import Literal
 
 from datamimic_ce.engine.dsl.parsers.setup_parser import SetupParser
 from datamimic_ce.engine.dsl.statements.setup_statement import SetupStatement
@@ -34,9 +33,7 @@ class DescriptorParser:
             root = parse_xml_file(descriptor_file_path)
 
             # Use SetupParser to parse root element "setup"
-            # Parser classes use the stdlib Element protocol in their legacy type
-            # annotations; lxml elements implement the same API at runtime.
-            setup_parser = SetupParser(cast(Element, root), properties, runtime_environment)
+            setup_parser = SetupParser(root, properties, runtime_environment)
             root_stmt = setup_parser.parse(descriptor_file_path.parent)
             return root_stmt
         except FileNotFoundError as e:

@@ -7,7 +7,8 @@
 """Constraint serialization: JSON-schema injectors and kind discriminators."""
 
 from collections.abc import Callable
-from typing import Any
+
+from pydantic.json_schema import JsonSchemaValue
 
 # Attribute constants (imported at module level to avoid circular imports)
 from datamimic_ce.engine.dsl.model.constraints.types import (
@@ -27,7 +28,7 @@ from datamimic_ce.engine.dsl.model.constraints.types import (
 )
 
 
-def serialize_constraints(constraints: tuple[Constraint, ...]) -> list[dict[str, Any]]:
+def serialize_constraints(constraints: tuple[Constraint, ...]) -> list[JsonSchemaValue]:
     """Serialize a tuple of constraints to a list of dicts with kind discriminators.
 
     Used by:
@@ -46,9 +47,9 @@ def serialize_constraints(constraints: tuple[Constraint, ...]) -> list[dict[str,
     if not constraints:
         return []
 
-    serialized: list[dict[str, Any]] = []
+    serialized: list[JsonSchemaValue] = []
     for fact in constraints:
-        serialized_fact: dict[str, Any] = {"kind": _constraint_kind(fact)}
+        serialized_fact: JsonSchemaValue = {"kind": _constraint_kind(fact)}
         serialized_fact.update(_serialized_constraint_fields(fact))
 
         # Only serialize lint_only if True (non-default)
@@ -64,7 +65,7 @@ def serialize_constraints(constraints: tuple[Constraint, ...]) -> list[dict[str,
     return serialized
 
 
-def _serialized_constraint_fields(fact: Constraint) -> dict[str, Any]:
+def _serialized_constraint_fields(fact: Constraint) -> JsonSchemaValue:
     if isinstance(fact, RequiredOneOf | MutuallyExclusive | AllOrNone):
         return {"attrs": sorted(fact.attrs)}
     if isinstance(fact, MutuallyExclusiveWhen):
@@ -113,10 +114,10 @@ def _serialized_constraint_fields(fact: Constraint) -> dict[str, Any]:
 
 def constraints_schema_extra(
     constraints: tuple[Constraint, ...],
-) -> Callable[[dict[str, Any]], None]:
+) -> Callable[[JsonSchemaValue], None]:
     """Bind one explicit rule tuple to a Pydantic JSON-schema projector."""
 
-    def inject(schema: dict[str, Any]) -> None:
+    def inject(schema: JsonSchemaValue) -> None:
         if constraints:
             schema["constraints"] = serialize_constraints(constraints)
 

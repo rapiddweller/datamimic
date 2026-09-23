@@ -32,6 +32,13 @@ class DummyAsPy:
         return {"key": "value"}
 
 
+class NonCallableAsPy:
+    as_py = None
+
+    def __str__(self):
+        return "fallback"
+
+
 class BrokenStr:
     """
     Dummy class that simulates a broken __str__ method.
@@ -53,6 +60,9 @@ class TestCustomSerializer(unittest.TestCase):
         """Test object with as_py method is correctly serialized using its as_py output."""
         dummy = DummyAsPy()
         self.assertEqual(custom_serializer(dummy), {"key": "value"})
+
+    def test_non_callable_as_py_uses_string_fallback(self):
+        self.assertEqual(custom_serializer(NonCallableAsPy()), "fallback")
 
     def test_uuid_object(self):
         """Test serialization for UUID objects."""

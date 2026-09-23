@@ -4,12 +4,11 @@
 # See LICENSE file for the full text of the license.
 # For questions and support, contact: info@rapiddweller.com
 
-from xml.etree.ElementTree import Element
-
 from datamimic_ce.engine.dsl.constants.element_constants import EL_GENERATOR
 from datamimic_ce.engine.dsl.model.generator_model import GeneratorModel
 from datamimic_ce.engine.dsl.parsers.statement_parser import StatementParser
 from datamimic_ce.engine.dsl.statements.generator_statement import GeneratorStatement
+from datamimic_ce.engine.dsl.xml import XmlElement
 
 
 class GeneratorParser(StatementParser):
@@ -19,7 +18,7 @@ class GeneratorParser(StatementParser):
 
     def __init__(
         self,
-        element: Element,
+        element: XmlElement,
         properties: dict,
     ):
         super().__init__(

@@ -8,6 +8,7 @@ import csv
 import json
 import zipfile
 from pathlib import Path
+from typing import TypeAlias, TypeGuard
 
 import numpy as np
 import pandas as pd
@@ -17,6 +18,37 @@ from pandas import DataFrame
 from datamimic_ce.engine.dsl.api import DTDForbiddenError, parse_xml_file
 
 from .file_cache import FileContentStorage
+
+JsonScalar: TypeAlias = bool | int | float | str | None
+JsonValue: TypeAlias = JsonScalar | list["JsonValue"] | dict[str, "JsonValue"]
+
+
+def _is_csv_rows(value: object) -> TypeGuard[list[tuple[str, ...]]]:
+    return isinstance(value, list) and all(
+        isinstance(row, tuple) and all(isinstance(cell, str) for cell in row) for row in value
+    )
+
+
+def _is_string_lines(value: object) -> TypeGuard[list[str]]:
+    return isinstance(value, list) and all(isinstance(line, str) for line in value)
+
+
+def _is_json_value(value: object) -> TypeGuard[JsonValue]:
+    if value is None or isinstance(value, str | int | float | bool):
+        return True
+    if isinstance(value, list):
+        return all(_is_json_value(item) for item in value)
+    if isinstance(value, dict):
+        return all(isinstance(key, str) and _is_json_value(value[key]) for key in value)
+    return False
+
+
+def _is_json_object(value: JsonValue) -> TypeGuard[dict[str, JsonValue]]:
+    return isinstance(value, dict)
+
+
+def _is_json_records(value: JsonValue) -> TypeGuard[list[dict[str, JsonValue]]]:
+    return isinstance(value, list) and all(_is_json_object(row) for row in value)
 
 
 class FileUtil:
@@ -71,13 +103,16 @@ class FileUtil:
         Read raw csv data
         """
         try:
-            return FileContentStorage.load_file_with_custom_func(
+            rows = FileContentStorage.load_file_with_custom_func(
                 str(file_path),
                 lambda: [
                     tuple(row)
                     for row in csv.reader(file_path.open("r", newline="", encoding=encoding), delimiter=separator)
                 ],
             )
+            if not _is_csv_rows(rows):
+                raise ValueError(f"Cached CSV data at '{file_path}' has an invalid shape")
+            return rows
         except FileNotFoundError as e:
             raise FileNotFoundError(f"CSV file not found '{file_path}', error: {e}") from e
 
@@ -171,6 +206,8 @@ class FileUtil:
         lines = FileContentStorage.load_file_with_custom_func(
             str(file_path), lambda: file_path.read_text(encoding=encoding).splitlines()
         )
+        if not _is_string_lines(lines):
+            raise ValueError(f"Cached fixed-width data at '{file_path}' has an invalid shape")
         if not lines:
             return []  # an empty file is an empty source, not a crash
 
@@ -222,19 +259,22 @@ class FileUtil:
         return df
 
     @staticmethod
-    def read_json(file_path: Path, encoding="utf-8") -> list[dict] | dict:
+    def read_json(file_path: Path, encoding="utf-8") -> JsonValue:
         """
         Read data from JSON
         """
         try:
-            return FileContentStorage.load_file_with_custom_func(
+            data = FileContentStorage.load_file_with_custom_func(
                 str(file_path), lambda: json.load(file_path.open(mode="r", encoding=encoding))
             )
+            if not _is_json_value(data):
+                raise ValueError(f"JSON file '{file_path}' contains a value outside the JSON data model")
+            return data
         except FileNotFoundError as e:
             raise FileNotFoundError(f"JSON file not found '{file_path}', error: {e}") from e
 
     @staticmethod
-    def read_json_to_list(file_path: Path, encoding="utf-8") -> list[dict]:
+    def read_json_to_list(file_path: Path, encoding="utf-8") -> list[JsonValue]:
         """
         Read data from JSON and parse into list of dict
         """
@@ -245,12 +285,12 @@ class FileUtil:
             raise ValueError(f"JSON file '{file_path}' must contain a list of objects")
 
     @staticmethod
-    def read_json_to_dict(file_path: Path, encoding="utf-8") -> dict:
+    def read_json_to_dict(file_path: Path, encoding="utf-8") -> dict[str, JsonValue]:
         """
         Read data from JSON and parse into dict
         """
         json_data = FileUtil.read_json(file_path, encoding)
-        if isinstance(json_data, dict):
+        if _is_json_object(json_data):
             return json_data
         else:
             raise ValueError(f"JSON file '{file_path}' must contain a dictionary")

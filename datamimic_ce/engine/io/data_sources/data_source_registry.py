@@ -17,7 +17,7 @@ from datamimic_ce.engine.dsl.api import SourceFileFormat
 from datamimic_ce.engine.io.clients.rdbms_client import RdbmsClient
 from datamimic_ce.engine.io.data_sources.data_source_pagination import DataSourcePagination
 from datamimic_ce.engine.io.file_cache import FileContentStorage
-from datamimic_ce.engine.io.files import FileUtil
+from datamimic_ce.engine.io.files import FileUtil, _is_json_object, _is_json_records
 
 logger = logging.getLogger("DATAMIMIC")
 
@@ -50,9 +50,9 @@ class DataSourceRegistry:
             return FileUtil.read_fixed_width_to_dict_list(Path(key))
         elif source_format is SourceFileFormat.JSON:
             json_data = FileUtil.read_json(Path(key))
-            if isinstance(json_data, list):
+            if _is_json_records(json_data):
                 return json_data
-            elif isinstance(json_data, dict):
+            elif _is_json_object(json_data):
                 return [json_data]
             else:
                 raise ValueError(f"JSON file '{key}' must contain a list of objects or a dictionary")
@@ -60,6 +60,8 @@ class DataSourceRegistry:
             document = FileContentStorage.load_file_with_custom_func(
                 key, lambda: xmltodict.parse(Path(key).read_bytes(), attr_prefix="@", cdata_key="#text")
             )
+            if not isinstance(document, dict):
+                raise ValueError(f"XML source '{key}' must have a document root")
             # <list><item>...</item></list> is a row list; any other document is one row
             root = document.get("list")
             if not isinstance(root, dict) or root.get("item") is None:

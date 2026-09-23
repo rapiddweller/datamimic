@@ -4,8 +4,6 @@
 # See LICENSE file for the full text of the license.
 # For questions and support, contact: info@rapiddweller.com
 
-from xml.etree.ElementTree import Element
-
 from pydantic import ValidationError
 
 from datamimic_ce.engine.dsl.constants.attribute_constants import ATTR_NAME
@@ -15,12 +13,13 @@ from datamimic_ce.engine.dsl.model.array_model import ArrayModel
 from datamimic_ce.engine.dsl.model.value_model import ValueModel
 from datamimic_ce.engine.dsl.parsers.statement_parser import StatementParser
 from datamimic_ce.engine.dsl.statements.array_statement import ArrayStatement
+from datamimic_ce.engine.dsl.xml import XmlElement, xml_tag
 
 
 class ArrayParser(StatementParser):
     def __init__(
         self,
-        element: Element,
+        element: XmlElement,
         properties: dict,
     ):
         super().__init__(
@@ -50,12 +49,13 @@ class ArrayParser(StatementParser):
 
         parsed_values: list[str] = []
         for child in self._element:
-            attributes = ParserUtil.retrieve_element_attributes(child.attrib, self._properties)
+            attributes: dict[str, object] = dict(child.attrib)
+            attributes = ParserUtil.retrieve_element_attributes(attributes, self._properties)
             try:
-                value_model = ValueModel(**attributes)
+                value_model = ValueModel.model_validate(attributes)
             except ValidationError as err:
                 raise ValueError(
-                    f"Invalid <{child.tag}> inside <array> '{self._element.get(ATTR_NAME)}': {err}"
+                    f"Invalid <{xml_tag(child)}> inside <array> '{self._element.get(ATTR_NAME)}': {err}"
                 ) from err
             parsed_values.append(value_model.constant)
 

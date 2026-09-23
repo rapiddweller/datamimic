@@ -6,7 +6,6 @@
 
 from pathlib import Path
 from random import Random
-from typing import Any
 
 from datamimic_ce.engine.io.files import FileUtil
 
@@ -25,7 +24,7 @@ class WeightedDataSource:
         # propagates fully to weighted source reads.
         self._rng = rng
 
-    def generate(self) -> Any:
+    def generate(self) -> object:
         """
         Get a random choice from dataframe with weight
         """

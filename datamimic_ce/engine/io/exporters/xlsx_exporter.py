@@ -10,7 +10,6 @@ import json
 import logging
 from datetime import date, datetime
 from pathlib import Path
-from typing import Any
 
 from datamimic_ce.engine.io.exporters.exporter_config import ExporterConfig
 from datamimic_ce.engine.io.exporters.unified_buffered_exporter import UnifiedBufferedExporter
@@ -37,7 +36,7 @@ class XLSXExporter(UnifiedBufferedExporter):
     def _get_content_type(self) -> str:
         return "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
 
-    def _write_data_to_buffer(self, data: list[dict[str, Any]], worker_id: int, chunk_idx: int) -> None:
+    def _write_data_to_buffer(self, data: list[dict[str, object]], worker_id: int, chunk_idx: int) -> None:
         """Append each record as a JSON line to the chunk buffer (converted to a workbook at finalize)."""
         buffer_file = self._get_buffer_file(worker_id, chunk_idx)
         if buffer_file is None:
@@ -47,7 +46,7 @@ class XLSXExporter(UnifiedBufferedExporter):
                 f.write(json.dumps(record, default=self._json_default) + "\n")
 
     @staticmethod
-    def _json_default(value: Any) -> str:
+    def _json_default(value: object) -> str:
         if isinstance(value, datetime | date):
             return value.isoformat()
         if isinstance(value, bytes | bytearray):
@@ -55,7 +54,7 @@ class XLSXExporter(UnifiedBufferedExporter):
         return str(value)
 
     @staticmethod
-    def _cell(value: Any) -> Any:
+    def _cell(value: object) -> object:
         """A spreadsheet cell holds a scalar: keep numbers/bools/None/str, stringify dict/list."""
         if value is None or isinstance(value, str | int | float | bool):
             return value

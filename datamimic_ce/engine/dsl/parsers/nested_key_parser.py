@@ -5,19 +5,19 @@
 # For questions and support, contact: info@rapiddweller.com
 
 from pathlib import Path
-from xml.etree.ElementTree import Element
 
 from datamimic_ce.engine.dsl.constants.element_constants import EL_NESTED_KEY
 from datamimic_ce.engine.dsl.model.nested_key_model import NestedKeyModel
 from datamimic_ce.engine.dsl.parsers.statement_parser import StatementParser
 from datamimic_ce.engine.dsl.statements.nested_key_statement import NestedKeyStatement
 from datamimic_ce.engine.dsl.statements.statement import Statement
+from datamimic_ce.engine.dsl.xml import XmlElement
 
 
 class NestedKeyParser(StatementParser):
     def __init__(
         self,
-        element: Element,
+        element: XmlElement,
         properties: dict,
     ):
         super().__init__(

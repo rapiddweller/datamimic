@@ -5,8 +5,6 @@
 # For questions and support, contact: info@rapiddweller.com
 
 from pathlib import Path
-from typing import cast
-from xml.etree.ElementTree import Element
 
 from datamimic_ce.engine.dsl.constants.element_constants import EL_ID, EL_KEY
 from datamimic_ce.engine.dsl.model.key_model import KeyModel
@@ -14,6 +12,7 @@ from datamimic_ce.engine.dsl.parsers.statement_parser import StatementParser
 from datamimic_ce.engine.dsl.statements.composite_statement import CompositeStatement
 from datamimic_ce.engine.dsl.statements.key_statement import KeyStatement
 from datamimic_ce.engine.dsl.statements.statement import Statement
+from datamimic_ce.engine.dsl.xml import XmlElement, xml_tag
 
 
 class KeyParser(StatementParser):
@@ -27,7 +26,7 @@ class KeyParser(StatementParser):
 
     def __init__(
         self,
-        element: Element,
+        element: XmlElement,
         properties: dict,
     ):
         super().__init__(
@@ -39,7 +38,7 @@ class KeyParser(StatementParser):
     def _validate_element_tag(self) -> None:
         """Accept both <key> and its alias <id> (base only checks a single tag)."""
         if self._element.tag not in self._VALID_TAGS:
-            raise ValueError(f"Expect element tag '{EL_KEY}' or '{EL_ID}', but got '{self._element.tag}'")
+            raise ValueError(f"Expect element tag '{EL_KEY}' or '{EL_ID}', but got '{xml_tag(self._element)}'")
 
     def parse(self, descriptor_dir: Path, parent_stmt: Statement) -> KeyStatement:
         """
@@ -48,7 +47,9 @@ class KeyParser(StatementParser):
         """
         from datamimic_ce.engine.dsl.parsers.parser_util import ParserUtil
 
-        key_stmt = KeyStatement(self.validate_attributes(KeyModel), cast(CompositeStatement, parent_stmt))
+        if not isinstance(parent_stmt, CompositeStatement):
+            raise TypeError("<key> requires a composite parent statement")
+        key_stmt = KeyStatement(self.validate_attributes(KeyModel), parent_stmt)
         sub_stmt_list = ParserUtil.parse_sub_elements(
             descriptor_dir,
             self._element,

@@ -58,16 +58,15 @@ from datamimic_ce.engine.dsl.constants.element_constants import (
 )
 
 if TYPE_CHECKING:
-    from xml.etree.ElementTree import Element
-
     from datamimic_ce.engine.dsl.model.constraints.types import Constraint
     from datamimic_ce.engine.dsl.parsers.statement_parser import StatementParser
+    from datamimic_ce.engine.dsl.xml import XmlElement
 
 
 class ParserFactory(Protocol):
     """Constructor contract shared by every registry-dispatchable parser."""
 
-    def __call__(self, element: Element, properties: dict, /) -> StatementParser: ...
+    def __call__(self, element: XmlElement, properties: dict, /) -> StatementParser: ...
 
 
 @dataclass(frozen=True)

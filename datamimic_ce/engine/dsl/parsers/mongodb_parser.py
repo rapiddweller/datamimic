@@ -5,13 +5,13 @@
 # For questions and support, contact: info@rapiddweller.com
 
 from pathlib import Path
-from xml.etree.ElementTree import Element
 
 from datamimic_ce.engine.dsl.constants.element_constants import EL_MONGODB
 from datamimic_ce.engine.dsl.model.mongodb_model import MongoDBModel
 from datamimic_ce.engine.dsl.parsers.parser_util import ParserUtil
 from datamimic_ce.engine.dsl.parsers.statement_parser import StatementParser
 from datamimic_ce.engine.dsl.statements.mongodb_statement import MongoDBStatement
+from datamimic_ce.engine.dsl.xml import XmlElement
 
 
 class MongoDBParser(StatementParser):
@@ -21,7 +21,7 @@ class MongoDBParser(StatementParser):
 
     def __init__(
         self,
-        element: Element,
+        element: XmlElement,
         properties: dict,
     ):
         super().__init__(
@@ -37,7 +37,7 @@ class MongoDBParser(StatementParser):
         """
         mongodb_attributes = ParserUtil.fulfill_credentials(
             descriptor_dir=descriptor_dir,
-            descriptor_attr=self._element.attrib,
+            descriptor_attr=dict(self._element.attrib),
             env_props=self.properties,
             system_type="mongo",
             runtime_environment=self.runtime_environment,

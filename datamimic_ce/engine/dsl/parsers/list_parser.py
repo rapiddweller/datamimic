@@ -5,18 +5,18 @@
 # For questions and support, contact: info@rapiddweller.com
 
 from pathlib import Path
-from xml.etree.ElementTree import Element
 
 from datamimic_ce.engine.dsl.constants.element_constants import EL_LIST
 from datamimic_ce.engine.dsl.model.list_model import ListModel
 from datamimic_ce.engine.dsl.parsers.statement_parser import StatementParser
 from datamimic_ce.engine.dsl.statements.list_statement import ListStatement
+from datamimic_ce.engine.dsl.xml import XmlElement
 
 
 class ListParser(StatementParser):
     def __init__(
         self,
-        element: Element,
+        element: XmlElement,
         properties: dict,
     ):
         super().__init__(

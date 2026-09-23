@@ -5,7 +5,6 @@
 # For questions and support, contact: info@rapiddweller.com
 
 from pathlib import Path
-from xml.etree.ElementTree import Element
 
 from datamimic_ce.engine.dsl.constants.element_constants import EL_GENERATE, EL_ITERATE
 from datamimic_ce.engine.dsl.model.generate_model import GenerateModel
@@ -13,6 +12,7 @@ from datamimic_ce.engine.dsl.parsers.statement_parser import StatementParser
 from datamimic_ce.engine.dsl.statements.generate_statement import GenerateStatement
 from datamimic_ce.engine.dsl.statements.statement import Statement
 from datamimic_ce.engine.dsl.statements.variable_statement import VariableStatement
+from datamimic_ce.engine.dsl.xml import XmlElement, xml_tag
 
 # Name reserved by the time-series iterator for its per-iteration namespace
 # (ts.now/ts.step/ts.series). A user-defined <variable name="ts"> would shadow
@@ -31,7 +31,7 @@ class GenerateParser(StatementParser):
 
     def __init__(
         self,
-        element: Element,
+        element: XmlElement,
         properties: dict,
     ):
         super().__init__(
@@ -43,7 +43,10 @@ class GenerateParser(StatementParser):
     def _validate_element_tag(self) -> None:
         """Accept both <generate> and its alias <iterate> (base only checks a single tag)."""
         if self._element.tag not in self._VALID_TAGS:
-            raise ValueError(f"Expect element tag '{EL_GENERATE}' or '{EL_ITERATE}', but got '{self._element.tag}'")
+            raise ValueError(
+                f"Expect element tag '{EL_GENERATE}' or '{EL_ITERATE}', "
+                f"but got '{xml_tag(self._element)}'"
+            )
 
     def parse(self, descriptor_dir: Path, parent_stmt: Statement, lazy_parse: bool = False) -> GenerateStatement:
         """

@@ -8,8 +8,7 @@ import copy
 import logging
 import re
 from pathlib import Path
-from typing import Any, Literal, cast
-from xml.etree.ElementTree import Element
+from typing import Literal
 
 from datamimic_ce.engine.dsl.constants.attribute_constants import ATTR_ENVIRONMENT, ATTR_ID, ATTR_SYSTEM
 from datamimic_ce.engine.dsl.constants.element_constants import (
@@ -52,6 +51,7 @@ from datamimic_ce.engine.dsl.statements.nested_key_statement import NestedKeySta
 from datamimic_ce.engine.dsl.statements.setup_statement import SetupStatement
 from datamimic_ce.engine.dsl.statements.statement import Statement
 from datamimic_ce.engine.dsl.statements.while_statement import WhileStatement
+from datamimic_ce.engine.dsl.xml import XmlElement, xml_tag
 
 logger = logging.getLogger("DATAMIMIC")
 
@@ -84,7 +84,7 @@ class ParserUtil:
 
     @staticmethod
     def _get_parser_by_element(
-        element: Element,
+        element: XmlElement,
         properties: dict,
         runtime_environment: Literal["development", "production"] = "production",
     ):
@@ -96,18 +96,19 @@ class ParserUtil:
         """
         from datamimic_ce.engine.dsl.model.element_registry import get_parser_class
 
-        parser_class = get_parser_class(element.tag)
+        tag = xml_tag(element)
+        parser_class = get_parser_class(tag)
         if parser_class is None:
-            raise ValueError(f"Cannot get parser for element <{element.tag}>")
+            raise ValueError(f"Cannot get parser for element <{tag}>")
         parser = parser_class(element, properties)
-        if element.tag in {EL_DATABASE, EL_MONGODB}:
+        if tag in {EL_DATABASE, EL_MONGODB}:
             parser.set_runtime_environment(runtime_environment)
         return parser
 
     @staticmethod
     def parse_sub_elements(
         descriptor_dir: Path,
-        element: Element,
+        element: XmlElement,
         properties: dict[str, str] | None,
         parent_stmt: Statement,
         runtime_environment: Literal["development", "production"] = "production",
@@ -126,14 +127,15 @@ class ParserUtil:
 
         for child_ele in element:
             # <comment> is a documentation-only element (legacy DSL compatibility): ignored, produces no statement.
-            if child_ele.tag == EL_COMMENT:
+            child_tag = xml_tag(child_ele)
+            if child_tag == EL_COMMENT:
                 continue
             parser = ParserUtil._get_parser_by_element(child_ele, copied_props, runtime_environment)
             # TODO: add more child-element-able parsers such as
             #  attribute, reference, part,... (i.e. elements which have attribute 'name')
             stmt: Statement
             if isinstance(parser, VariableParser | GenerateParser | NestedKeyParser | ElementParser):
-                if isinstance(parser, VariableParser) and element.tag == "setup":
+                if isinstance(parser, VariableParser) and xml_tag(element) == "setup":
                     stmt = parser.parse(parent_stmt=parent_stmt, has_parent_setup=True)
                 elif isinstance(parser, GenerateParser | NestedKeyParser):
                     stmt = parser.parse(descriptor_dir=descriptor_dir, parent_stmt=parent_stmt)
@@ -159,18 +161,22 @@ class ParserUtil:
                 elif isinstance(parser, KeyParser):
                     stmt = parser.parse(descriptor_dir=descriptor_dir, parent_stmt=parent_stmt)
                 elif isinstance(parser, ConditionParser | WhileParser):
+                    if not isinstance(parent_stmt, CompositeStatement):
+                        raise TypeError(f"<{child_tag}> requires a composite parent statement")
                     stmt = parser.parse(
-                        descriptor_dir=descriptor_dir, parent_stmt=cast(CompositeStatement, parent_stmt)
+                        descriptor_dir=descriptor_dir, parent_stmt=parent_stmt
                     )
                 elif isinstance(parser, IfParser | ElseIfParser | ElseParser):
+                    if not isinstance(parent_stmt, ConditionStatement):
+                        raise TypeError(f"<{child_tag}> requires a condition parent statement")
                     stmt = parser.parse(
-                        descriptor_dir=descriptor_dir, parent_stmt=cast(ConditionStatement, parent_stmt)
+                        descriptor_dir=descriptor_dir, parent_stmt=parent_stmt
                     )
                 else:
                     stmt = parser.parse(descriptor_dir=descriptor_dir)
 
             if stmt is None:
-                raise ValueError(f"Cannot parse element <{child_ele.tag}>")
+                raise ValueError(f"Cannot parse element <{child_tag}>")
 
             # Static properties includes affect parsing of later siblings.
             if isinstance(stmt, IncludeStatement):
@@ -183,7 +189,9 @@ class ParserUtil:
         return result
 
     @staticmethod
-    def retrieve_element_attributes(attributes: dict[str, Any], properties: dict[str, str] | None) -> dict[str, str]:
+    def retrieve_element_attributes(
+        attributes: dict[str, object], properties: dict[str, str] | None
+    ) -> dict[str, object]:
         """
         Retrieve element's attributes using environment properties
         :param attributes:

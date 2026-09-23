@@ -5,7 +5,7 @@
 # For questions and support, contact: info@rapiddweller.com
 
 from collections.abc import Callable
-from typing import Any, ClassVar
+from typing import ClassVar
 
 
 class FileContentStorage:
@@ -13,7 +13,7 @@ class FileContentStorage:
     Load file and store content in cache for later use
     """
 
-    _file_data_cache: ClassVar[dict[str, Any]] = {}
+    _file_data_cache: ClassVar[dict[str, object]] = {}
 
     @classmethod
     def load_file_with_cache(cls, cache_key: str):
@@ -28,7 +28,7 @@ class FileContentStorage:
             raise ValueError(f"Cannot find cache key '{cache_key}' in file content storage")
 
     @classmethod
-    def load_file_with_custom_func(cls, cache_key: str, read_func: Callable):
+    def load_file_with_custom_func(cls, cache_key: str, read_func: Callable[[], object]) -> object:
         """
         Load file from storage or using custom function to read file
         :param cache_key:

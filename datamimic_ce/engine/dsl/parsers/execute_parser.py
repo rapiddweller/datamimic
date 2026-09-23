@@ -4,12 +4,11 @@
 # See LICENSE file for the full text of the license.
 # For questions and support, contact: info@rapiddweller.com
 
-from xml.etree.ElementTree import Element
-
 from datamimic_ce.engine.dsl.constants.element_constants import EL_EXECUTE
 from datamimic_ce.engine.dsl.model.execute_model import ExecuteModel
 from datamimic_ce.engine.dsl.parsers.statement_parser import StatementParser
 from datamimic_ce.engine.dsl.statements.execute_statement import ExecuteStatement
+from datamimic_ce.engine.dsl.xml import XmlElement
 
 # uri file extension -> execution language (when `type` is not given explicitly).
 _EXT_TYPE = {".py": "python", ".sql": "sql", ".sh": "bash"}
@@ -18,7 +17,7 @@ _EXT_TYPE = {".py": "python", ".sql": "sql", ".sh": "bash"}
 class ExecuteParser(StatementParser):
     """Parse element "execute" to ExecuteStatement (a script file via ``uri`` XOR inline code)."""
 
-    def __init__(self, element: Element, properties: dict):
+    def __init__(self, element: XmlElement, properties: dict):
         super().__init__(element, properties, valid_element_tag=EL_EXECUTE)
 
     def parse(self) -> ExecuteStatement:

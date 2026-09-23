@@ -148,3 +148,12 @@ constructing a runtime request.
 
 **Decision:** runtime exposes `load_descriptor_properties(Path) -> PlatformProperties`; transports
 do not depend on IO. DSL remains the owner of property-file parsing and caching.
+
+## D19 — cached IO values are narrowed at their consumer boundary
+
+**FACT:** the shared file cache stores heterogeneous values, while JSON, CSV, and fixed-width
+consumers require different concrete shapes.
+
+**Decision:** the cache stores `object`; each consumer validates and narrows the shape it needs.
+`engine.io.dataset_api` exposes the recursive JSON value type required by domains, without exposing
+IO implementation modules.

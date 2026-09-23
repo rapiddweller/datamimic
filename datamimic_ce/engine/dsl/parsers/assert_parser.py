@@ -5,12 +5,12 @@
 # For questions and support, contact: info@rapiddweller.com
 
 from typing import Any
-from xml.etree.ElementTree import Element
 
 from datamimic_ce.engine.dsl.constants.element_constants import EL_ASSERT
 from datamimic_ce.engine.dsl.model.assert_model import AssertModel
 from datamimic_ce.engine.dsl.parsers.statement_parser import StatementParser
 from datamimic_ce.engine.dsl.statements.assert_statement import AssertStatement
+from datamimic_ce.engine.dsl.xml import XmlElement
 
 
 class AssertParser(StatementParser):
@@ -20,7 +20,7 @@ class AssertParser(StatementParser):
 
     def __init__(
         self,
-        element: Element,
+        element: XmlElement,
         properties: dict,
     ):
         super().__init__(

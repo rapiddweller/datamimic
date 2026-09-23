@@ -8,7 +8,6 @@ import json
 import logging
 from dataclasses import replace
 from pathlib import Path
-from typing import Any
 from xml.sax.saxutils import quoteattr
 
 from lxml import etree
@@ -42,7 +41,7 @@ class DbUnitExporter(UnifiedBufferedExporter):
     def _get_content_type(self) -> str:
         return "application/xml"
 
-    def _write_data_to_buffer(self, data: list[dict[str, Any]], worker_id: int, chunk_idx: int) -> None:
+    def _write_data_to_buffer(self, data: list[dict[str, object]], worker_id: int, chunk_idx: int) -> None:
         """Append each record as a JSON line (turned into a <dataset> at finalize)."""
         buffer_file = self._get_buffer_file(worker_id, chunk_idx)
         if buffer_file is None:

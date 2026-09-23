@@ -4,7 +4,7 @@
 # See LICENSE file for the full text of the license.
 # For questions and support, contact: info@rapiddweller.com
 
-from typing import Any, ClassVar
+from typing import ClassVar
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
 
@@ -56,7 +56,9 @@ class ExecuteModel(BaseModel):
 
     @model_validator(mode="before")  # noqa: B023
     @classmethod
-    def check_execute_valid_attributes(cls, values: dict[str, Any]) -> dict[str, Any]:
+    def check_execute_valid_attributes(cls, values: object) -> object:
+        if not isinstance(values, dict):
+            raise TypeError("<execute> attributes must be a mapping")
         return ModelUtil.check_valid_attributes(
             values=values,
             valid_attributes={ATTR_URI, ATTR_TARGET, ATTR_TYPE, ATTR_SCRIPT},
@@ -64,8 +66,10 @@ class ExecuteModel(BaseModel):
 
     @model_validator(mode="before")
     @classmethod
-    def check_execute_modes(cls, values: dict[str, Any]) -> dict[str, Any]:
+    def check_execute_modes(cls, values: object) -> object:
         """Enforce attribute-only execute modes; inline text remains parser-owned."""
+        if not isinstance(values, dict):
+            raise TypeError("<execute> attributes must be a mapping")
         return ModelUtil.check_constraints(values, cls.__constraints__)
 
     @field_validator("type")  # noqa: B023
