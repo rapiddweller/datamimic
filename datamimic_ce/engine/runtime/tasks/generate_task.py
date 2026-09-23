@@ -12,8 +12,7 @@ from typing import Protocol
 import dill  # type: ignore
 
 from datamimic_ce.engine.dsl.api import CompositeStatement, GenerateStatement, KeyStatement, Statement, StatementUtil
-from datamimic_ce.engine.io.api import DatabaseClient
-from datamimic_ce.engine.io.exporters.exporter_util import ExporterUtil
+from datamimic_ce.engine.io.api import DatabaseClient, ExporterUtil
 from datamimic_ce.engine.runtime.config import settings
 from datamimic_ce.engine.runtime.contexts.context import Context
 from datamimic_ce.engine.runtime.contexts.geniter_context import GenIterContext

@@ -13,11 +13,10 @@ import toml
 from pydantic import BaseModel, ConfigDict, Field, ValidationError
 
 from datamimic_ce.domains.api import get_datamimic_lib_version
-from datamimic_ce.engine.io.api import FileUtil
 from datamimic_ce.interfaces import cli_presenter
-from datamimic_ce.interfaces.api import run
+from datamimic_ce.interfaces.api import load_descriptor_properties, run
 from datamimic_ce.interfaces.cli_presenter import DemoInformation, DemoSummary, SystemInformation
-from datamimic_ce.interfaces.contracts import PlatformConfiguration, PlatformProperties, RunRequest
+from datamimic_ce.interfaces.contracts import PlatformConfiguration, RunRequest
 from datamimic_ce.interfaces.demo import handle_demo
 from datamimic_ce.interfaces.project import create_project_structure, validate_project_name
 
@@ -133,15 +132,11 @@ def execute_descriptor(
     try:
         os.chdir(descriptor.parent)
         logger.info(f"Changed working directory to: {descriptor.parent}")
-        try:
-            environment = FileUtil.parse_properties(descriptor.parent / "conf/environment.env.properties")
-        except FileNotFoundError:
-            environment = {}
         run(
             RunRequest(
                 descriptor_path=descriptor,
                 task_id=task_id,
-                platform_props=PlatformProperties.model_construct(root=environment),
+                platform_props=load_descriptor_properties(descriptor),
                 platform_configs=PlatformConfiguration.model_construct(root=platform_config_values),
                 test_mode=test_mode,
             )

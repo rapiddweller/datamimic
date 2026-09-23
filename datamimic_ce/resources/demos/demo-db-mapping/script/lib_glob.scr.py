@@ -21,7 +21,7 @@ class CustomBusinessMappingConverter(CustomConverter):
             # Get client (Database) from context
             client = context.get_client_by_id(self._client_id)
 
-            from datamimic_ce.engine.io.clients.database_client import DatabaseClient
+            from datamimic_ce.engine.io.api import DatabaseClient
 
             if client is None:
                 raise ValueError("Client with id 'mapping' not found")

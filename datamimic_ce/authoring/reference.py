@@ -256,7 +256,7 @@ def generator_reference() -> str:
 
 
 def targets_reference() -> str:
-    from datamimic_ce.engine.io.exporters.exporter_util import buffered_exporter_names
+    from datamimic_ce.engine.io.api import buffered_exporter_names
 
     lines = [
         '# Targets (target="A, B")',
@@ -485,7 +485,7 @@ def capabilities_manifest() -> dict[str, Any]:
 
     from datamimic_ce.authoring.spec import authoring_spec_json_schema
     from datamimic_ce.engine.dsl.api import POSITIONAL_NUMBER_SEQUENCES, ConverterEnum
-    from datamimic_ce.engine.io.exporters.exporter_util import buffered_exporter_names
+    from datamimic_ce.engine.io.api import buffered_exporter_names
 
     try:
         schema_version = version("datamimic_ce")

@@ -131,3 +131,20 @@ types.
 
 **Decision:** `domains.api` exposes those existing cross-component names as identity re-exports,
 plus its two facade-owned capability iterators. Domain internals do not import their own facade.
+
+## D17 — IO owns smoke-export execution
+
+**FACT:** Authoring inspected the private buffered-exporter registry, constructed exporter state,
+and built a runtime `SetupContext` solely to test file serialization.
+
+**Decision:** IO keeps the registry private and exposes one typed `smoke_export` operation.
+Authoring projects supported names through `buffered_exporter_names()` and sends opaque rows and
+parameters through IO-owned root contracts without validation or copying.
+
+## D18 — runtime loads descriptor properties for transports
+
+**FACT:** the CLI reached through IO only to load the descriptor's companion properties before
+constructing a runtime request.
+
+**Decision:** runtime exposes `load_descriptor_properties(Path) -> PlatformProperties`; transports
+do not depend on IO. DSL remains the owner of property-file parsing and caching.

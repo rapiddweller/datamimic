@@ -35,7 +35,7 @@ from pydantic_core import InitErrorDetails, PydanticCustomError
 
 from datamimic_ce._compat import StrEnum, assert_never
 from datamimic_ce.engine.dsl.api import EL_DATABASE, EL_GENERATE, EL_MONGODB, is_source_file
-from datamimic_ce.engine.io.exporters.exporter_util import buffered_exporter_names
+from datamimic_ce.engine.io.api import buffered_exporter_names
 
 PositiveStrictInt = Annotated[StrictInt, Field(gt=0)]
 NonNegativeStrictInt = Annotated[StrictInt, Field(ge=0)]

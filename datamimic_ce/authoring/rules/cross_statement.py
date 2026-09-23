@@ -42,7 +42,7 @@ from datamimic_ce.engine.dsl.api import (
     source_file_format_for,
     supported_source_file_formats,
 )
-from datamimic_ce.engine.io.exporters.exporter_util import ExporterUtil, buffered_exporter_names
+from datamimic_ce.engine.io.api import ExporterUtil, buffered_exporter_names
 
 _GENERATES = (EL_GENERATE, EL_ITERATE)
 _SOURCE_READERS = (*_GENERATES, EL_VARIABLE, EL_NESTED_KEY, EL_KEY, EL_ID, EL_ELEMENT, EL_REFERENCE)

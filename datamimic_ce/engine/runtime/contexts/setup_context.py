@@ -22,8 +22,7 @@ from datamimic_ce.domains.api import (
     spawn_rng,
 )
 from datamimic_ce.engine.dsl.api import SetupStatement
-from datamimic_ce.engine.io.api import Client
-from datamimic_ce.engine.io.exporters.test_result_exporter import TestResultExporter
+from datamimic_ce.engine.io.api import Client, TestResultExporter
 from datamimic_ce.engine.runtime.contexts.context import Context
 from datamimic_ce.engine.runtime.contexts.demographic_context import DemographicContext
 from datamimic_ce.engine.runtime.logging import logger

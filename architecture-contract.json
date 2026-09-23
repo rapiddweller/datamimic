@@ -233,11 +233,10 @@
       ],
       "public": [
         "datamimic_ce.engine.io.api",
+        "datamimic_ce.engine.io.contracts",
         "datamimic_ce.engine.io.dataset_api"
       ],
-      "planned": [
-        "datamimic_ce.engine.io.contracts"
-      ],
+      "planned": [],
       "decided_by": "architect"
     },
     {
@@ -442,6 +441,16 @@
       "kind": "boundary_types",
       "source": "datamimic_ce.engine.runtime.api",
       "rationale": "The runtime facade exposes declared capability contracts rather than runtime internals.",
+      "provenance": [
+        "docs/architecture/refactoring-study/experiment-2/target-architecture.md"
+      ],
+      "decided_by": "architect"
+    },
+    {
+      "id": "IO-API-TYPES",
+      "kind": "boundary_types",
+      "source": "datamimic_ce.engine.io.api",
+      "rationale": "The IO facade accepts declared IO requests instead of exposing mutable exporter internals.",
       "provenance": [
         "docs/architecture/refactoring-study/experiment-2/target-architecture.md"
       ],

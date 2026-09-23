@@ -55,7 +55,7 @@ from datamimic_ce.authoring.contracts import (
 from datamimic_ce.authoring.diagnostics import Diagnostic, LintResult
 from datamimic_ce.authoring.linter import lint_descriptor, lint_source
 from datamimic_ce.authoring.rule_catalog import RuleSeverity
-from datamimic_ce.engine.runtime.contexts.setup_context import SetupContext
+from datamimic_ce.engine.io.contracts import SmokeExportParameters, SmokeExportRequest, SmokeExportRows
 
 RULE_RUNTIME_ERROR = "DM002"
 RULE_SIDE_EFFECT_REFUSAL = "DM003"
@@ -438,16 +438,17 @@ def _parse_buffered_targets(targets: set[str]) -> list[_FileTarget]:
     """The subset of raw target strings that are buffered FILE exporters, parsed to
     (name, params). Membership in the exporter registry is the dispatch — memstores,
     clients, Console/Log never appear there, so they can never be smoked."""
-    from datamimic_ce.engine.io.exporters.exporter_util import _BUFFERED_EXPORTERS, ExporterUtil
+    from datamimic_ce.engine.io.api import ExporterUtil, buffered_exporter_names
 
     parsed: list[_FileTarget] = []
+    buffered_names = buffered_exporter_names()
     for raw in sorted(targets):
         try:
             entries = ExporterUtil.parse_function_string(raw)
         except ValueError:
             continue  # malformed target string — the engine's own path reports it
         for entry in entries:
-            if entry["function_name"] in _BUFFERED_EXPORTERS:
+            if entry["function_name"] in buffered_names:
                 parsed.append((entry["function_name"], entry.get("params") or {}))
     return parsed
 
@@ -577,61 +578,29 @@ def neutralize_for_dry_run(
         _neutralize(stmt)
 
 
-def _smoke_setup_context(tmp_dir: Path) -> SetupContext:
-    """Minimal engine context for smoke writes: every value an exporter reads from it
-    is a default; descriptor_dir points at the throwaway tmp dir so buffer files can
-    never land next to the real descriptor."""
-    from datamimic_ce.engine.io.exporters.test_result_exporter import TestResultExporter
-    from datamimic_ce.engine.runtime.storage.memstore_manager import MemstoreManager
-
-    return SetupContext(
-        memstore_manager=MemstoreManager(),
-        task_id=f"smoke_{uuid.uuid4().hex}",
-        test_mode=False,
-        test_result_exporter=TestResultExporter(),
-        default_separator=",",
-        default_locale="en_US",
-        default_dataset="US",
-        use_mp=False,
-        descriptor_dir=tmp_dir,
-        num_process=1,
-        default_variable_prefix="__",
-        default_variable_suffix="__",
-        default_line_separator=None,
-    )
-
-
 def _smoke_exporter(
-    smoke_ctx: SetupContext,
+    descriptor_dir: Path,
+    task_id: str,
     basename: str,
     full_name: str,
     rows: list[dict[str, object]],
     exporter_name: str,
     params: dict[str, object],
 ) -> Diagnostic | None:
-    from datamimic_ce.engine.io.exporters.exporter_config import ExporterConfig
-    from datamimic_ce.engine.io.exporters.exporter_state_manager import ExporterStateManager
-    from datamimic_ce.engine.io.exporters.exporter_util import _BUFFERED_EXPORTERS
+    from datamimic_ce.engine.io.api import smoke_export
 
     try:
-        chunk_size = params.get("chunk_size")
-        if chunk_size is not None and not isinstance(chunk_size, int):
-            raise TypeError("chunk_size target option must be an integer")
-        encoding = params.get("encoding")
-        if encoding is not None and not isinstance(encoding, str):
-            raise TypeError("encoding target option must be a string")
-        config = ExporterConfig(
-            setup_context=smoke_ctx,
-            product_name=basename,
-            chunk_size=chunk_size,
-            encoding=encoding,
-            export_uri=None,
-            track_serialized_rows=True,
+        written_rows = smoke_export(
+            SmokeExportRequest(
+                descriptor_dir=descriptor_dir,
+                task_id=task_id,
+                basename=basename,
+                full_name=full_name,
+                rows=SmokeExportRows.model_construct(root=rows),
+                exporter_name=exporter_name,
+                params=SmokeExportParameters.model_construct(root=params),
+            )
         )
-        exporter = _BUFFERED_EXPORTERS[exporter_name](config, dict(params))
-        exporter.consume((basename, rows), full_name, ExporterStateManager(worker_id=1))
-        exporter.finalize_chunks(1)
-        written_rows = exporter.count_buffered_rows(1)
         if written_rows == len(rows):
             return None
         return Diagnostic(
@@ -677,14 +646,23 @@ def _smoke_export(
     attempted_exporters = 0
     failed_exporters = 0
     with tempfile.TemporaryDirectory(prefix="datamimic_smoke_") as tmp:
-        smoke_ctx = _smoke_setup_context(Path(tmp))
+        descriptor_dir = Path(tmp)
+        task_id = f"smoke_{uuid.uuid4().hex}"
         for full_name, (basename, file_targets) in sorted(stripped.items()):
             rows = [row for row in captured.get(_capture_name(full_name), []) if isinstance(row, dict)]
             if not rows:
                 continue
             for exporter_name, params in file_targets:
                 attempted_exporters += 1
-                diagnostic = _smoke_exporter(smoke_ctx, basename, full_name, rows, exporter_name, params)
+                diagnostic = _smoke_exporter(
+                    descriptor_dir,
+                    task_id,
+                    basename,
+                    full_name,
+                    rows,
+                    exporter_name,
+                    params,
+                )
                 if diagnostic is not None:
                     failed_exporters += 1
                     diagnostics.append(diagnostic)
