@@ -6,12 +6,9 @@
 
 import sys
 
-from datamimic_ce.domains.domain_core.base_literal_generator import BaseLiteralGenerator
-from datamimic_ce.engine.dsl.enums.dbms_enums import Dbms
-from datamimic_ce.engine.dsl.statements.key_statement import KeyStatement
-from datamimic_ce.engine.dsl.statements.variable_statement import VariableStatement
-from datamimic_ce.engine.io.clients.rdbms_client import RdbmsClient
-from datamimic_ce.engine.io.data_sources.data_source_pagination import DataSourcePagination
+from datamimic_ce.domains.api import BaseLiteralGenerator
+from datamimic_ce.engine.dsl.api import Dbms, KeyStatement, VariableStatement
+from datamimic_ce.engine.io.api import DataSourcePagination, RdbmsClient
 from datamimic_ce.engine.runtime.contexts.context import Context
 
 

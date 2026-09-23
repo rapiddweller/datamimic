@@ -13,6 +13,7 @@ from datamimic_ce.authoring.reference import (
     capabilities_index,
     capabilities_manifest,
     capabilities_sections,
+    generator_reference,
     known_generator_names,
     reference,
 )
@@ -147,6 +148,8 @@ def test_generator_names_is_unbounded_and_deterministic() -> None:
     names = known_generator_names()
     assert isinstance(names, set)
     assert len(names) > 0
+    assert "SequenceTableGenerator" in names
+    assert "- SequenceTableGenerator(sequence)" in generator_reference()
     # Repeatable
     assert names == known_generator_names()
 

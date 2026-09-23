@@ -81,7 +81,6 @@ graph TD
     authoring --> runtime
     domains --> dsl
     domains --> io
-    domains --> runtime
     dsl --> domains
     dsl --> io
     dsl --> python_compat

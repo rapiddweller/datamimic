@@ -8,10 +8,7 @@
 everything derived from the engine's registries or gate-tested content.
 Token-capped: every answer ends with a pointer instead of overflowing."""
 
-import importlib
-import inspect
 import json
-import pkgutil
 from functools import lru_cache
 from typing import TYPE_CHECKING, Any
 
@@ -30,6 +27,8 @@ from datamimic_ce.authoring.rule_catalog import (
     serialize_rule_definition,
 )
 from datamimic_ce.authoring.schema import ElementSchema, build_schema_index
+from datamimic_ce.domains.api import iter_generator_capabilities as domain_generator_capabilities
+from datamimic_ce.engine.dsl.api import GeneratorCapability
 from datamimic_ce.engine.dsl.constants.exporter_constants import (
     EXPORTER_CONSOLE_EXPORTER,
     EXPORTER_LOG_EXPORTER,
@@ -55,8 +54,7 @@ from datamimic_ce.engine.dsl.model.constraints import (
     source_capabilities,
 )
 from datamimic_ce.engine.dsl.model.element_registry import canonical_tag, element_aliases
-
-_GENERATOR_PACKAGE = "datamimic_ce.domains.common.literal_generators"
+from datamimic_ce.engine.runtime.api import iter_generator_capabilities as runtime_generator_capabilities
 
 
 def clip(text: str, max_chars: int, hint: str) -> str:
@@ -241,40 +239,20 @@ def element_reference(tag: str) -> str:
 
 
 @lru_cache(maxsize=1)
-def _generator_info() -> list[tuple[str, list[str]]]:
-    """Unbounded list of (name, params) from the literal_generators package.
-
-    Serves both the prose renderer (which clips *rendered* text only) and
-    ``known_generator_names`` (which must see every name regardless of prose size).
-    """
-    result: list[tuple[str, list[str]]] = []
-    package = importlib.import_module(_GENERATOR_PACKAGE)
-    for module_info in sorted(pkgutil.iter_modules(package.__path__), key=lambda m: m.name):
-        module = importlib.import_module(f"{_GENERATOR_PACKAGE}.{module_info.name}")
-        for name, cls in sorted(vars(module).items()):
-            if not (inspect.isclass(cls) and name.endswith("Generator") and cls.__module__ == module.__name__):
-                continue
-            try:
-                # context/stmt/qualified_key are engine-injected, never DSL-passable - listing
-                # them makes an agent write generator="SequenceTableGenerator(context=...)" and
-                # hit a ValueError
-                internal = ("self", "context", "stmt", "qualified_key")
-                params = [p for p in inspect.signature(cls.__init__).parameters if p not in internal]
-            except (TypeError, ValueError):
-                params = []
-            result.append((name, params))
-    return result
+def _generator_info() -> tuple[GeneratorCapability, ...]:
+    capabilities = (*domain_generator_capabilities(), *runtime_generator_capabilities())
+    return tuple(sorted(capabilities, key=lambda capability: capability.name.casefold()))
 
 
 def known_generator_names() -> set[str]:
     """Unbounded set of generator class names — not clipped."""
-    return {name for name, _ in _generator_info()}
+    return {capability.name for capability in _generator_info()}
 
 
 def generator_reference() -> str:
     lines = ['# Generators (generator="Name" or generator="Name(arg=...)" )']
-    for name, params in _generator_info():
-        lines.append(f"- {name}({', '.join(params)})")
+    for capability in _generator_info():
+        lines.append(f"- {capability.name}({', '.join(capability.parameters)})")
     return clip("\n".join(lines), 8000, " [truncated]")
 
 

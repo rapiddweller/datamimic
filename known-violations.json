@@ -1,22 +1,13 @@
 {
   "budgets": {
-    "calls_unresolved": 1408,
+    "calls_unresolved": 1407,
     "cycle_edges": 177,
     "private_crossings": 2,
-    "typing_positions": 460,
+    "typing_positions": 458,
     "untyped_private_accesses": 4
   },
   "schema_version": "1.2.0",
   "violations": [
-    {
-      "count": 2,
-      "rules": [
-        "DYNAMIC-EXECUTION-OWNERS"
-      ],
-      "subjects": [
-        "datamimic_ce.authoring.reference._generator_info"
-      ]
-    },
     {
       "count": 1,
       "rules": [
@@ -2883,118 +2874,6 @@
       "subjects": [
         "datamimic_ce.domains.common.literal_generators.number_sequences",
         "datamimic_ce.engine.dsl.enums.distribution_enums.POSITIONAL_NUMBER_SEQUENCES"
-      ]
-    },
-    {
-      "count": 1,
-      "roles": [
-        {
-          "source": "datamimic_ce.domains.common.literal_generators.sequence_table_generator",
-          "target": "datamimic_ce.engine.dsl.enums.dbms_enums"
-        }
-      ],
-      "rules": [
-        "INTERFACES-ONLY"
-      ],
-      "subjects": [
-        "datamimic_ce.domains.common.literal_generators.sequence_table_generator",
-        "datamimic_ce.engine.dsl.enums.dbms_enums.Dbms"
-      ]
-    },
-    {
-      "count": 1,
-      "roles": [
-        {
-          "source": "datamimic_ce.domains.common.literal_generators.sequence_table_generator",
-          "target": "datamimic_ce.engine.dsl.statements.key_statement"
-        }
-      ],
-      "rules": [
-        "INTERFACES-ONLY"
-      ],
-      "subjects": [
-        "datamimic_ce.domains.common.literal_generators.sequence_table_generator",
-        "datamimic_ce.engine.dsl.statements.key_statement.KeyStatement"
-      ]
-    },
-    {
-      "count": 1,
-      "roles": [
-        {
-          "source": "datamimic_ce.domains.common.literal_generators.sequence_table_generator",
-          "target": "datamimic_ce.engine.dsl.statements.variable_statement"
-        }
-      ],
-      "rules": [
-        "INTERFACES-ONLY"
-      ],
-      "subjects": [
-        "datamimic_ce.domains.common.literal_generators.sequence_table_generator",
-        "datamimic_ce.engine.dsl.statements.variable_statement.VariableStatement"
-      ]
-    },
-    {
-      "count": 1,
-      "roles": [
-        {
-          "source": "datamimic_ce.domains.common.literal_generators.sequence_table_generator",
-          "target": "datamimic_ce.engine.io.clients.rdbms_client"
-        }
-      ],
-      "rules": [
-        "INTERFACES-ONLY"
-      ],
-      "subjects": [
-        "datamimic_ce.domains.common.literal_generators.sequence_table_generator",
-        "datamimic_ce.engine.io.clients.rdbms_client.RdbmsClient"
-      ]
-    },
-    {
-      "count": 1,
-      "roles": [
-        {
-          "source": "datamimic_ce.domains.common.literal_generators.sequence_table_generator",
-          "target": "datamimic_ce.engine.io.data_sources.data_source_pagination"
-        }
-      ],
-      "rules": [
-        "INTERFACES-ONLY"
-      ],
-      "subjects": [
-        "datamimic_ce.domains.common.literal_generators.sequence_table_generator",
-        "datamimic_ce.engine.io.data_sources.data_source_pagination.DataSourcePagination"
-      ]
-    },
-    {
-      "count": 1,
-      "roles": [
-        {
-          "source": "datamimic_ce.domains.common.literal_generators.sequence_table_generator",
-          "target": "datamimic_ce.engine.runtime.contexts.context"
-        }
-      ],
-      "rules": [
-        "INTERFACES-ONLY"
-      ],
-      "subjects": [
-        "datamimic_ce.domains.common.literal_generators.sequence_table_generator",
-        "datamimic_ce.engine.runtime.contexts.context.Context"
-      ]
-    },
-    {
-      "count": 1,
-      "roles": [
-        {
-          "source": "datamimic_ce.engine.runtime.tasks.key_variable_task",
-          "target": "datamimic_ce.domains.common.literal_generators.sequence_table_generator"
-        }
-      ],
-      "rules": [
-        "INTERFACES-ONLY"
-      ],
-      "subjects": [
-        "datamimic_ce.domains.common.literal_generators.sequence_table_generator.SequenceTableGenerator",
-        "datamimic_ce.engine.runtime.tasks.key_variable_task"
       ]
     },
     {
@@ -7339,15 +7218,6 @@
         "NO-MAGIC-CONTROL-FLOW"
       ],
       "subjects": [
-        "datamimic_ce.authoring.reference._generator_info"
-      ]
-    },
-    {
-      "count": 1,
-      "rules": [
-        "NO-MAGIC-CONTROL-FLOW"
-      ],
-      "subjects": [
         "datamimic_ce.authoring.reference.capabilities_index.elements"
       ]
     },
@@ -7709,15 +7579,6 @@
       ],
       "subjects": [
         "datamimic_ce.domains.common.literal_generators.hash_generator.HashGenerator.generate"
-      ]
-    },
-    {
-      "count": 1,
-      "rules": [
-        "NO-MAGIC-CONTROL-FLOW"
-      ],
-      "subjects": [
-        "datamimic_ce.domains.common.literal_generators.sequence_table_generator.SequenceTableGenerator.__init__"
       ]
     },
     {
@@ -9364,6 +9225,15 @@
         "NO-MAGIC-CONTROL-FLOW"
       ],
       "subjects": [
+        "datamimic_ce.engine.runtime.generators.sequence_table.SequenceTableGenerator.__init__"
+      ]
+    },
+    {
+      "count": 1,
+      "rules": [
+        "NO-MAGIC-CONTROL-FLOW"
+      ],
+      "subjects": [
         "datamimic_ce.engine.runtime.sources.router._ordered_reference_rows:records"
       ]
     },
@@ -9923,54 +9793,6 @@
       "subjects": [
         "datamimic_ce.datamimic",
         "datamimic_ce.interfaces.cli_runtime"
-      ]
-    },
-    {
-      "count": 1,
-      "roles": [
-        {
-          "source": "datamimic_ce.domains.common.literal_generators.sequence_table_generator",
-          "target": "datamimic_ce.engine.io.clients.rdbms_client"
-        }
-      ],
-      "rules": [
-        "REQUIRES-COMPLETE"
-      ],
-      "subjects": [
-        "datamimic_ce.domains.common.literal_generators.sequence_table_generator",
-        "datamimic_ce.engine.io.clients.rdbms_client"
-      ]
-    },
-    {
-      "count": 1,
-      "roles": [
-        {
-          "source": "datamimic_ce.domains.common.literal_generators.sequence_table_generator",
-          "target": "datamimic_ce.engine.io.data_sources.data_source_pagination"
-        }
-      ],
-      "rules": [
-        "REQUIRES-COMPLETE"
-      ],
-      "subjects": [
-        "datamimic_ce.domains.common.literal_generators.sequence_table_generator",
-        "datamimic_ce.engine.io.data_sources.data_source_pagination"
-      ]
-    },
-    {
-      "count": 1,
-      "roles": [
-        {
-          "source": "datamimic_ce.domains.common.literal_generators.sequence_table_generator",
-          "target": "datamimic_ce.engine.runtime.contexts.context"
-        }
-      ],
-      "rules": [
-        "REQUIRES-COMPLETE"
-      ],
-      "subjects": [
-        "datamimic_ce.domains.common.literal_generators.sequence_table_generator",
-        "datamimic_ce.engine.runtime.contexts.context"
       ]
     },
     {

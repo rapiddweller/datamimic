@@ -22,6 +22,7 @@ from datamimic_ce.engine.dsl.api import NumberDistribution, Statement
 from datamimic_ce.engine.io.api import DataSourcePagination
 from datamimic_ce.engine.runtime.contexts.context import Context
 from datamimic_ce.engine.runtime.contexts.setup_context import SetupContext
+from datamimic_ce.engine.runtime.generators.sequence_table import SequenceTableGenerator
 
 logger = logging.getLogger("DATAMIMIC")
 
@@ -51,9 +52,9 @@ class GeneratorUtil:
         Args:
             context (Context): The context in which the generators are used.
         """
-        # All DSL-exposable generators, auto-discovered from the
-        # literal_generators packages (no hand-maintained list).
+        # Domain literals are discovered; database sequence generation is runtime-owned.
         self._class_dict = {generator_type.__name__: generator_type for generator_type in iter_generator_types()}
+        self._class_dict["SequenceTableGenerator"] = SequenceTableGenerator
         self._context = context
 
     def create_generator(

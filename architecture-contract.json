@@ -155,11 +155,10 @@
         }
       ],
       "public": [
-        "datamimic_ce.engine.dsl.api"
-      ],
-      "planned": [
+        "datamimic_ce.engine.dsl.api",
         "datamimic_ce.engine.dsl.contracts"
       ],
+      "planned": [],
       "decided_by": "architect"
     },
     {
@@ -200,9 +199,10 @@
           "rationale": "Runtime supports the package's Python 3.10 floor."
         }
       ],
-      "public": [],
+      "public": [
+        "datamimic_ce.engine.runtime.api"
+      ],
       "planned": [
-        "datamimic_ce.engine.runtime.api",
         "datamimic_ce.engine.runtime.contracts"
       ],
       "decided_by": "architect"
@@ -409,10 +409,30 @@
       "decided_by": "architect"
     },
     {
+      "id": "DSL-API-TYPES",
+      "kind": "boundary_types",
+      "source": "datamimic_ce.engine.dsl.api",
+      "rationale": "The DSL facade exposes only builtins and declared DSL contract types.",
+      "provenance": [
+        "docs/architecture/refactoring-study/experiment-2/target-architecture.md"
+      ],
+      "decided_by": "architect"
+    },
+    {
       "id": "DOMAIN-API-TYPES",
       "kind": "boundary_types",
       "source": "datamimic_ce.domains.api",
       "rationale": "The domain facade exposes declared generator classes through a typed iterator, never an untyped registry dictionary.",
+      "provenance": [
+        "docs/architecture/refactoring-study/experiment-2/target-architecture.md"
+      ],
+      "decided_by": "architect"
+    },
+    {
+      "id": "RUNTIME-API-TYPES",
+      "kind": "boundary_types",
+      "source": "datamimic_ce.engine.runtime.api",
+      "rationale": "The runtime facade exposes declared capability contracts rather than runtime internals.",
       "provenance": [
         "docs/architecture/refactoring-study/experiment-2/target-architecture.md"
       ],

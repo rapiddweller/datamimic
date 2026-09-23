@@ -61,3 +61,12 @@ untyped structure the component contract.
 **Decision:** `domains.api` exposes declared generator classes and
 `iter_generator_types() -> Iterator[type]`. Runtime builds its private name index from that
 iterator. The registry dictionary remains an internal domain implementation detail.
+
+## D9 — capability facts stay with their executable owners
+
+**FACT:** generator classes already define the names and constructor parameters shown by the
+Authoring reference. Package scanning duplicates component discovery and crosses internal module
+boundaries.
+
+**Decision:** the DSL owns the typed `GeneratorCapability` projection. Domains and runtime publish
+their own capabilities through typed APIs; Authoring only composes those projections.
