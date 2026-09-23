@@ -51,3 +51,13 @@ methods on the former imported module variable but not on `logging.getLogger(...
 **Decision:** remove the cross-component runtime logger dependency and use
 `logging.getLogger("DATAMIMIC")` directly. Accept the resulting call-resolution measurement reset
 as an analyzer limitation; do not rewrite ordinary logger calls as unidiomatic class-method calls.
+
+## D8 — runtime consumes domain generators through a typed iterator
+
+**FACT:** runtime needs the concrete generator classes because the DSL supports heterogeneous
+constructor signatures. Exporting the existing registry dictionary would make that mutable,
+untyped structure the component contract.
+
+**Decision:** `domains.api` exposes declared generator classes and
+`iter_generator_types() -> Iterator[type]`. Runtime builds its private name index from that
+iterator. The registry dictionary remains an internal domain implementation detail.

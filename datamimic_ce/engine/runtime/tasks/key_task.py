@@ -4,7 +4,6 @@
 # See LICENSE file for the full text of the license.
 # For questions and support, contact: info@rapiddweller.com
 
-from datamimic_ce.domains.common.literal_generators.generator_util import GeneratorUtil
 from datamimic_ce.engine.dsl.constants.attribute_constants import (
     ATTR_CONSTANT,
     ATTR_GENERATOR,
@@ -19,6 +18,7 @@ from datamimic_ce.engine.io.api import DataSourcePagination
 from datamimic_ce.engine.runtime.contexts.context import Context
 from datamimic_ce.engine.runtime.contexts.geniter_context import GenIterContext
 from datamimic_ce.engine.runtime.contexts.setup_context import SetupContext
+from datamimic_ce.engine.runtime.generators.factory import GeneratorUtil
 from datamimic_ce.engine.runtime.tasks.element_task import ElementTask
 from datamimic_ce.engine.runtime.tasks.key_variable_task import KeyVariableTask
 from datamimic_ce.engine.runtime.tasks.task import GenSubTask

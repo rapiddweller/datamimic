@@ -14,7 +14,6 @@ from typing import Any
 
 import numpy
 
-from datamimic_ce.domains.common.literal_generators.generator_util import GeneratorUtil
 from datamimic_ce.domains.common.literal_generators.sequence_table_generator import SequenceTableGenerator
 from datamimic_ce.domains.common.literal_generators.string_generator import StringGenerator
 from datamimic_ce.domains.domain_core.runtime import from_epoch_utc, to_epoch_utc
@@ -34,6 +33,7 @@ from datamimic_ce.engine.dsl.statements.variable_statement import VariableStatem
 from datamimic_ce.engine.io.api import DataSourcePagination, WeightedDataSource
 from datamimic_ce.engine.runtime.contexts.context import Context
 from datamimic_ce.engine.runtime.contexts.setup_context import SetupContext
+from datamimic_ce.engine.runtime.generators.factory import GeneratorUtil
 from datamimic_ce.engine.runtime.sources.selection import unique_value_iter
 from datamimic_ce.engine.runtime.tasks.task import Task
 

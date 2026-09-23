@@ -6,7 +6,6 @@
 
 
 from datamimic_ce.domains.domain_core.base_literal_generator import BaseLiteralGenerator
-from datamimic_ce.engine.io.data_sources.data_source_pagination import DataSourcePagination
 
 
 class IncrementGenerator(BaseLiteralGenerator):
@@ -26,11 +25,9 @@ class IncrementGenerator(BaseLiteralGenerator):
         self._current = start
         self._step = step
 
-    def add_pagination(self, pagination: DataSourcePagination | None = None):
-        if pagination is None:
-            return
-        self._start = self._start + pagination.skip
-        self._end = min(self._end, self._start + pagination.limit)
+    def add_pagination(self, skip: int, limit: int) -> None:
+        self._start += skip
+        self._end = min(self._end, self._start + limit)
         self._current = self._start
 
     def generate(self) -> int:

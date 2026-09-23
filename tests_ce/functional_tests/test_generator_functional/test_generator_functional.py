@@ -4,12 +4,11 @@
 # See LICENSE file for the full text of the license.
 # For questions and support, contact: info@rapiddweller.com
 
-
+import uuid
 from decimal import Decimal
 from pathlib import Path
 
 from datamimic_ce.data_mimic_test import DataMimicTest
-from datamimic_ce.domains.common.literal_generators.generator_util import GeneratorUtil
 from datamimic_ce.engine.io.api import FileUtil
 
 
@@ -41,7 +40,8 @@ class TestDatamimicGeneratorFunctional:
 
         result_uuid_list = result["uuid_generator_test"]
         for output_result in result_uuid_list:
-            assert GeneratorUtil.is_valid_uuid(output_result["uuid_name"]) is True
+            value = output_result["uuid_name"]
+            assert uuid.UUID(value, version=4).hex == value.replace("-", "")
 
     def test_bank_generator(self):
         engine = DataMimicTest(test_dir=self._test_dir, filename="bank_generator_test.xml", capture_test_result=True)

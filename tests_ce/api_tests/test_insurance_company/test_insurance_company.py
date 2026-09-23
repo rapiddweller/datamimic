@@ -1,6 +1,7 @@
+import uuid
+
 import pytest
 
-from datamimic_ce.domains.common.literal_generators.generator_util import GeneratorUtil
 from datamimic_ce.domains.insurance.models.insurance_company import InsuranceCompany
 from datamimic_ce.domains.insurance.services.insurance_company_service import InsuranceCompanyService
 
@@ -25,8 +26,7 @@ class TestInsuranceCompany:
         assert insurance_company.website is not None
 
         assert insurance_company.id != ""
-        #  ensure consistent UUID format by validating via common utility
-        assert GeneratorUtil.is_valid_uuid(insurance_company.id)
+        assert uuid.UUID(insurance_company.id, version=4).hex == insurance_company.id.replace("-", "")
         assert insurance_company.name != ""
         assert insurance_company.code != ""
         assert insurance_company.founded_year != ""

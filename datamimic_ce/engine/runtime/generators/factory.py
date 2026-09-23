@@ -9,19 +9,17 @@ import functools
 import inspect
 import logging
 import random
-import uuid
 
-from datamimic_ce.domains.common.literal_generators.increment_generator import IncrementGenerator
-from datamimic_ce.domains.common.literal_generators.state_transition_generator import (
+from datamimic_ce.domains.api import (
+    BaseDomainGenerator,
+    BaseLiteralGenerator,
+    IncrementGenerator,
     StateMachineDef,
     StateTransitionGenerator,
+    iter_generator_types,
 )
-from datamimic_ce.domains.domain_core.base_domain_generator import BaseDomainGenerator
-from datamimic_ce.domains.domain_core.base_literal_generator import BaseLiteralGenerator
-from datamimic_ce.domains.domain_core.generator_registry import generator_namespace
-from datamimic_ce.engine.dsl.enums.distribution_enums import NumberDistribution
-from datamimic_ce.engine.dsl.statements.statement import Statement
-from datamimic_ce.engine.io.data_sources.data_source_pagination import DataSourcePagination
+from datamimic_ce.engine.dsl.api import NumberDistribution, Statement
+from datamimic_ce.engine.io.api import DataSourcePagination
 from datamimic_ce.engine.runtime.contexts.context import Context
 from datamimic_ce.engine.runtime.contexts.setup_context import SetupContext
 
@@ -55,7 +53,7 @@ class GeneratorUtil:
         """
         # All DSL-exposable generators, auto-discovered from the
         # literal_generators packages (no hand-maintained list).
-        self._class_dict = generator_namespace()
+        self._class_dict = {generator_type.__name__: generator_type for generator_type in iter_generator_types()}
         self._context = context
 
     def create_generator(
@@ -262,11 +260,8 @@ class GeneratorUtil:
                     result = cls(dataset=self._context.root.default_dataset, **seed_kw)
                 else:
                     result = cls(**seed_kw)
-            if isinstance(result, IncrementGenerator):
-                if hasattr(result, "add_pagination") and callable(result.add_pagination):
-                    result.add_pagination(pagination=pagination)
-                else:
-                    logger.warning(f"Generator {class_name} is IncrementGenerator but lacks add_pagination method.")
+            if isinstance(result, IncrementGenerator) and pagination is not None:
+                result.add_pagination(skip=pagination.skip, limit=pagination.limit)
             if result is None:
                 raise ValueError(f"Failed to create generator for '{generator_str}': result is None.")
 
@@ -324,24 +319,3 @@ class GeneratorUtil:
                 raise ValueError(f"'sequence' must be a string literal in '{generator_str}'")
             parsed_sequence = kw.value.value
         return parsed_sequence
-
-    @staticmethod
-    def is_valid_uuid(input_string: str) -> bool:
-        """
-        Validate that a UUID string is in fact a valid uuid4.
-
-        Args:
-            input_string (str): The input string to validate.
-
-        Returns:
-            bool: True if the input string is a valid uuid4, False otherwise.
-        """
-        try:
-            val = uuid.UUID(input_string, version=4)
-        except ValueError:
-            # If it's a value error, then the string is not a valid hex code for a UUID.
-            return False
-
-        # If the uuid_string is a valid hex code, but an invalid uuid4,
-        # the UUID.__init__ will convert it to a valid uuid4. This is bad for validation purposes.
-        return val.hex == input_string.replace("-", "")

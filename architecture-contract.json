@@ -154,9 +154,10 @@
           "rationale": "DSL enums support the package's Python 3.10 floor."
         }
       ],
-      "public": [],
+      "public": [
+        "datamimic_ce.engine.dsl.api"
+      ],
       "planned": [
-        "datamimic_ce.engine.dsl.api",
         "datamimic_ce.engine.dsl.contracts"
       ],
       "decided_by": "architect"
@@ -272,10 +273,10 @@
           "rationale": "Domain-owned packaged datasets use the narrow file-dataset IO surface."
         }
       ],
-      "public": [],
-      "planned": [
+      "public": [
         "datamimic_ce.domains.api"
       ],
+      "planned": [],
       "decided_by": "architect"
     },
     {
@@ -402,6 +403,16 @@
         "datamimic_ce.resources"
       ],
       "rationale": "The package root exposes only first-class components and proven Python compatibility entry points.",
+      "provenance": [
+        "docs/architecture/refactoring-study/experiment-2/target-architecture.md"
+      ],
+      "decided_by": "architect"
+    },
+    {
+      "id": "DOMAIN-API-TYPES",
+      "kind": "boundary_types",
+      "source": "datamimic_ce.domains.api",
+      "rationale": "The domain facade exposes declared generator classes through a typed iterator, never an untyped registry dictionary.",
       "provenance": [
         "docs/architecture/refactoring-study/experiment-2/target-architecture.md"
       ],

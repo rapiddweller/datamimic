@@ -1,8 +1,8 @@
 import datetime
+import uuid
 
 import pytest
 
-from datamimic_ce.domains.common.literal_generators.generator_util import GeneratorUtil
 from datamimic_ce.domains.common.models.person import Person
 from datamimic_ce.domains.insurance.models.insurance_company import InsuranceCompany
 from datamimic_ce.domains.insurance.models.insurance_policy import InsurancePolicy
@@ -40,8 +40,7 @@ class TestInsurancePolicy:
         assert insurance_policy.created_date is not None
 
         assert insurance_policy.id != ""
-        #  ensure consistent UUID format by validating via common utility
-        assert GeneratorUtil.is_valid_uuid(insurance_policy.id)
+        assert uuid.UUID(insurance_policy.id, version=4).hex == insurance_policy.id.replace("-", "")
         assert insurance_policy.start_date != ""
         assert insurance_policy.end_date != ""
         assert insurance_policy.status != ""
