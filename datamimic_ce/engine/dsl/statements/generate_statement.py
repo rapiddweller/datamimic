@@ -8,15 +8,11 @@ import logging
 
 from datamimic_ce.engine.dsl.constants.convention_constants import NAME_SEPARATOR
 from datamimic_ce.engine.dsl.enums.distribution_enums import SourceDistribution
-from datamimic_ce.engine.dsl.enums.operation_enums import ExportOperation
 from datamimic_ce.engine.dsl.model.generate_model import GenerateModel
 from datamimic_ce.engine.dsl.statements.composite_statement import CompositeStatement
 from datamimic_ce.engine.dsl.statements.statement import Statement
 from datamimic_ce.engine.dsl.statements.statement_util import StatementUtil
 from datamimic_ce.engine.dsl.timeseries import TimeSeriesConfig
-from datamimic_ce.engine.io.clients.mongodb_client import MongoDBClient
-from datamimic_ce.engine.runtime.contexts.context import Context
-from datamimic_ce.engine.runtime.contexts.setup_context import SetupContext
 
 logger = logging.getLogger("DATAMIMIC")
 
@@ -85,15 +81,6 @@ class GenerateStatement(CompositeStatement):
     @property
     def max_count(self) -> int | None:
         return self._max_count
-
-    def get_int_count(self, ctx: Context):
-        """
-        Get count as int value of GenerateStatement
-
-        :param ctx:
-        :return:
-        """
-        return StatementUtil.get_int_count(count=self._count, ctx=ctx)
 
     @property
     def source(self) -> str | None:
@@ -207,22 +194,6 @@ class GenerateStatement(CompositeStatement):
         # GenerateModel validator guarantees start and end are non-None when interval is.
         assert self._start is not None and self._end is not None
         return TimeSeriesConfig.parse(self._start, self._end, self._interval)
-
-    def contain_mongodb_upsert(self, setup_context: SetupContext) -> bool:
-        """
-        Check if GenerateStatement contains consumer mongodb.upsert
-
-        :param setup_context:
-        :return:
-        """
-        for consumer_str in self._targets:
-            if "." in consumer_str:
-                consumer, operation = consumer_str.split(".", 1)
-                if operation == ExportOperation.UPSERT.value and isinstance(
-                    setup_context.get_client_by_id(consumer), MongoDBClient
-                ):
-                    return True
-        return False
 
     def retrieve_sub_statement_by_fullname(self, name: str):
         """

@@ -22,8 +22,13 @@ from datamimic_ce.engine.runtime.config import settings
 from datamimic_ce.engine.runtime.contexts.context import Context
 from datamimic_ce.engine.runtime.contexts.geniter_context import GenIterContext
 from datamimic_ce.engine.runtime.contexts.setup_context import SetupContext
+from datamimic_ce.engine.runtime.counts import get_int_count, resolve_count
 from datamimic_ce.engine.runtime.logging import gen_timer, logger
-from datamimic_ce.engine.runtime.sources.router import data_source_cache_key, set_data_source_length
+from datamimic_ce.engine.runtime.sources.router import (
+    data_source_cache_key,
+    has_mongodb_upsert_target,
+    set_data_source_length,
+)
 from datamimic_ce.engine.runtime.tasks.single_process_policy import resolve_single_process
 from datamimic_ce.engine.runtime.tasks.task import CommonSubTask
 from datamimic_ce.engine.runtime.tasks.task_util import TaskUtil
@@ -59,13 +64,13 @@ class GenerateTask(CommonSubTask):
         # `count` is optional here and defaults to 1 series.
         ts_config = self._statement.get_time_series_config()
         if ts_config is not None:
-            series_count = self._statement.get_int_count(context) or 1
+            series_count = get_int_count(self._statement.count, context) or 1
             return series_count * ts_config.ticks_per_series
 
         # Get count from statement: explicit count, or a random value within the
         # minCount/maxCount range (seed-bound via context.rng). Same resolution as <nestedKey>.
-        count = StatementUtil.resolve_count(
-            self._statement.get_int_count(context),
+        count = resolve_count(
+            get_int_count(self._statement.count, context),
             self._statement.min_count,
             self._statement.max_count,
             context.rng,
@@ -92,7 +97,7 @@ class GenerateTask(CommonSubTask):
                 count = root_context.data_source_len[data_source_cache_key(self.statement)]
 
         # Check if there is a special consumer (e.g., mongodb_upsert)
-        if count == 0 and self.statement.contain_mongodb_upsert(root_context):
+        if count == 0 and has_mongodb_upsert_target(self.statement.targets, root_context):
             # Upsert one collection when no record found by query
             count = 1
 

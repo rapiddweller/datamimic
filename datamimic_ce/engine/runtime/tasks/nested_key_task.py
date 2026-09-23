@@ -8,11 +8,11 @@ import copy
 
 from datamimic_ce.engine.dsl.constants.data_type_constants import DATA_TYPE_DICT, DATA_TYPE_LIST
 from datamimic_ce.engine.dsl.statements.nested_key_statement import NestedKeyStatement
-from datamimic_ce.engine.dsl.statements.statement_util import StatementUtil
 from datamimic_ce.engine.io.api import DataSourcePagination
 from datamimic_ce.engine.runtime.contexts.context import Context
 from datamimic_ce.engine.runtime.contexts.geniter_context import GenIterContext
 from datamimic_ce.engine.runtime.contexts.setup_context import SetupContext
+from datamimic_ce.engine.runtime.counts import get_int_count, resolve_count
 from datamimic_ce.engine.runtime.logging import logger
 from datamimic_ce.engine.runtime.sources.router import (
     finalize_nested_key_source,
@@ -272,8 +272,8 @@ class NestedKeyTask(GenSubTask):
 
         :return:
         """
-        count = self._statement.get_int_count(context)
-        return StatementUtil.resolve_count(count, self._statement.min_count, self._statement.max_count, context.rng)
+        count = get_int_count(self._statement.count, context)
+        return resolve_count(count, self._statement.min_count, self._statement.max_count, context.rng)
 
     def _post_convert(self, value):
         """

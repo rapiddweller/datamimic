@@ -7,7 +7,7 @@
 """minCount/maxCount on <generate> (legacy-style random row count).
 
 Surface: engine (datamimic_ce). Mirrors the existing <nestedKey> minCount/maxCount
-behaviour; count resolution is the single shared StatementUtil.resolve_count.
+behaviour; count resolution is shared by the runtime tasks.
 """
 
 from __future__ import annotations

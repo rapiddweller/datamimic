@@ -6,7 +6,6 @@
 import re
 
 from datamimic_ce.engine.dsl.constants.attribute_constants import META_TARGET_ENTITY, META_TYPE
-from datamimic_ce.engine.runtime.contexts.context import Context
 
 
 class StatementUtil:
@@ -61,39 +60,3 @@ class StatementUtil:
         consumer_set = set(consumer_list)
 
         return consumer_set
-
-    @staticmethod
-    def get_int_count(count: str | None, ctx: Context):
-        """
-        Evaluate count (str) and return as int value for statement
-
-        :param count:
-        :param ctx:
-        :return:
-        """
-        if count is None:
-            return None
-        elif count.isdigit():
-            return int(count)
-        else:
-            return int(ctx.evaluate_python_expression(count[1:-1]))
-
-    @staticmethod
-    def resolve_count(count: int | None, min_count: int | None, max_count: int | None, rng) -> int | None:
-        """Single source of truth for resolving an effective row count from an explicit
-        count or a [minCount, maxCount] range. Shared by <generate> and <nestedKey>.
-
-        - explicit count wins
-        - none set -> None (caller falls back to source length)
-        - only one bound -> a ±5 window around it
-        - both -> rng.randint(min, max)
-        """
-        if count is not None:
-            return count
-        if min_count is not None and max_count is not None:
-            return rng.randint(min_count, max_count)
-        if max_count is not None:
-            return rng.randint(max(0, max_count - 5), max_count)
-        if min_count is not None:
-            return rng.randint(min_count, min_count + 5)
-        return None

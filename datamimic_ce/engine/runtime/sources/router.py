@@ -2,6 +2,7 @@
 
 from typing import Any
 
+from datamimic_ce.engine.dsl.api import ExportOperation
 from datamimic_ce.engine.dsl.constants.data_type_constants import DATA_TYPE_DICT, DATA_TYPE_LIST
 from datamimic_ce.engine.dsl.constants.element_constants import EL_GENERATE, EL_NESTED_KEY, EL_VARIABLE
 from datamimic_ce.engine.dsl.enums.distribution_enums import SourceDistribution
@@ -30,6 +31,17 @@ def data_source_cache_key(stmt: Statement) -> tuple[str | None, str | None]:
     if isinstance(stmt, GenerateStatement | VariableStatement | NestedKeyStatement):
         return (stmt.full_name, stmt.source)
     return (stmt.full_name, None)
+
+
+def has_mongodb_upsert_target(targets: set[str], setup_context: SetupContext) -> bool:
+    for target in targets:
+        if "." in target:
+            consumer, operation = target.split(".", 1)
+            if operation == ExportOperation.UPSERT.value and isinstance(
+                setup_context.get_client_by_id(consumer), MongoDBClient
+            ):
+                return True
+    return False
 
 
 def window_nested_key_rows(data: list[Any], count: int | None, cyclic: bool | None) -> list[Any]:
@@ -285,7 +297,7 @@ def load_generate_source(
                     "MongoDB source requires at least attribute 'sourceEntity', 'type', 'selector' "
                     "or 'iterationSelector'"
                 )
-            if not source_data and stmt.contain_mongodb_upsert(root):
+            if not source_data and has_mongodb_upsert_target(stmt.targets, root):
                 source_data = [{}]
         elif isinstance(client, RdbmsClient):
             if stmt.selector:

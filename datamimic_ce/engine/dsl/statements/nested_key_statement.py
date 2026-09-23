@@ -8,8 +8,6 @@ from datamimic_ce.engine.dsl.enums.distribution_enums import SourceDistribution
 from datamimic_ce.engine.dsl.model.nested_key_model import NestedKeyModel
 from datamimic_ce.engine.dsl.statements.composite_statement import CompositeStatement
 from datamimic_ce.engine.dsl.statements.statement import Statement
-from datamimic_ce.engine.dsl.statements.statement_util import StatementUtil
-from datamimic_ce.engine.runtime.contexts.context import Context
 
 
 class NestedKeyStatement(CompositeStatement):
@@ -42,15 +40,6 @@ class NestedKeyStatement(CompositeStatement):
     @property
     def count(self):
         return self._count
-
-    def get_int_count(self, ctx: Context):
-        """
-        Get count as int value of NestedKeyStatement
-
-        :param ctx:
-        :return:
-        """
-        return StatementUtil.get_int_count(count=self._count, ctx=ctx)
 
     @property
     def source(self):

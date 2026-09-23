@@ -70,3 +70,11 @@ boundaries.
 
 **Decision:** the DSL owns the typed `GeneratorCapability` projection. Domains and runtime publish
 their own capabilities through typed APIs; Authoring only composes those projections.
+
+## D10 — DSL statements contain no execution decisions
+
+**FACT:** count expressions require a runtime context, count ranges consume the run RNG, and Mongo
+upsert detection inspects live clients. None is descriptor structure.
+
+**Decision:** DSL statements expose parsed values only. Runtime evaluates counts, selects ranges,
+and inspects configured clients.

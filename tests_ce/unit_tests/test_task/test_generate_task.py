@@ -135,7 +135,7 @@ class TestGenerateTask:
         statement.converter = "json"
         statement.min_count = None
         statement.max_count = None
-        statement._count = 1000
+        statement.count = "1000"
         statement._source_uri = "mongodb://localhost:27017"
         statement._separator = ","
         statement._storage_id = "custom-storage-id"
@@ -146,13 +146,7 @@ class TestGenerateTask:
         statement.get_time_series_config.return_value = None
 
         # Configure methods
-        statement.get_int_count.return_value = statement._count
-        statement.contain_mongodb_upsert.return_value = True
         statement.retrieve_sub_statement_by_fullname.return_value = None
-
-        # Configure methods
-        statement.get_int_count.return_value = statement._count
-        statement.contain_mongodb_upsert.return_value = True
 
         # Adjust the sub-statement retrieval
         def mock_retrieve_sub_statement_by_fullname(name):
@@ -177,14 +171,13 @@ class TestGenerateTask:
 
     def test_determine_count_with_explicit_count(self, generate_task, mock_context, mock_statement):
         """Test _determine_count with an explicitly set count."""
-        mock_statement.get_int_count.return_value = 500
+        mock_statement.count = "500"
         count = generate_task._determine_count(mock_context)
         assert count == 500
-        mock_statement.get_int_count.assert_called_once_with(mock_context)
 
     def test_determine_count_with_selector(self, generate_task, mock_context, mock_statement):
         """Test count determination using a selector."""
-        mock_statement.get_int_count.return_value = None  # Add this line
+        mock_statement.count = None
         mock_statement.selector = "test_selector"
         mock_statement.source = "test_source"
         mock_client = MagicMock(spec=DatabaseClient)
@@ -198,7 +191,7 @@ class TestGenerateTask:
 
     def test_determine_count_with_selector_invalid_client(self, generate_task, mock_context, mock_statement):
         """Test error when using selector with a non-database client."""
-        mock_statement.get_int_count.return_value = None  # Add this line
+        mock_statement.count = None
         mock_statement.selector = "test_selector"
         mock_statement.source = "test_source"
         mock_context.root.get_client_by_id.return_value = MagicMock()
@@ -256,7 +249,7 @@ class TestGenerateTask:
             mock_context.use_mp = False
             mock_context.num_process = 1  # Add this line
             mock_statement.multiprocessing = False  # Ensure multiprocessing is disabled
-            mock_statement.get_int_count.return_value = 1000
+            mock_statement.count = "1000"
 
             generate_task.execute(mock_context)
 
@@ -273,7 +266,7 @@ class TestGenerateTask:
             # Enable multiprocessing
             mock_statement.multiprocessing = True
             mock_context.use_mp = True
-            mock_statement.get_int_count.return_value = 1000
+            mock_statement.count = "1000"
             mock_calc_page_size.return_value = 100
 
             generate_task.execute(mock_context)
@@ -342,7 +335,7 @@ class TestGenerateTask:
         # Create a mock GenerateStatement with spec
         mock_statement = MagicMock(spec=GenerateStatement)
         mock_statement.multiprocessing = multiprocessing
-        mock_statement.get_int_count.return_value = 100
+        mock_statement.count = "100"
 
         # Create a mock SetupContext with spec
         mock_context.use_mp = use_mp

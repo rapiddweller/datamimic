@@ -497,7 +497,7 @@ class ModelUtil:
     def check_is_digit_or_script(value) -> str:
         """
         Check if value is a string of digits or a {script} expression. The runtime evaluates any
-        python expression inside the braces (statement_util.get_int_count), so a computed count like
+        python expression inside the braces (runtime.counts.get_int_count), so a computed count like
         ``{customers * orders_per_customer}`` is as valid as a bare ``{var}`` reference.
         """
         if not value.isdigit() and re.match(r"^\{.+\}$", value) is None:
