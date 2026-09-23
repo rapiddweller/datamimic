@@ -13,7 +13,7 @@ from pathlib import Path
 import xmltodict
 from sqlalchemy.exc import OperationalError, ProgrammingError
 
-from datamimic_ce.engine.dsl.model.constraints import SourceFileFormat
+from datamimic_ce.engine.dsl.api import SourceFileFormat
 from datamimic_ce.engine.io.clients.rdbms_client import RdbmsClient
 from datamimic_ce.engine.io.data_sources.data_source_pagination import DataSourcePagination
 from datamimic_ce.engine.io.file_cache import FileContentStorage

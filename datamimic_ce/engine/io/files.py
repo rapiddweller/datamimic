@@ -14,7 +14,7 @@ import pandas as pd
 from lxml import etree
 from pandas import DataFrame
 
-from datamimic_ce.engine.dsl.xml import DTDForbiddenError, parse_xml_file
+from datamimic_ce.engine.dsl.api import DTDForbiddenError, parse_xml_file
 
 from .file_cache import FileContentStorage
 

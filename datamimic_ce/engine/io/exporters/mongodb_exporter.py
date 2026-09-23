@@ -5,7 +5,7 @@
 # For questions and support, contact: info@rapiddweller.com
 import copy
 
-from datamimic_ce.engine.dsl.constants.attribute_constants import META_SELECTOR, META_TARGET_ENTITY
+from datamimic_ce.engine.dsl.api import META_SELECTOR, META_TARGET_ENTITY
 from datamimic_ce.engine.io.clients.mongodb_client import MongoDBClient
 from datamimic_ce.engine.io.exporters.exporter import Exporter
 
@@ -22,7 +22,7 @@ class MongoDBExporter(Exporter):
         collection instead of demanding an explicit type/selector. A selector already resolves its
         OWN collection (MongoDBClient.update/upsert/delete parse it), so the name-based fallback is
         only injected when there is no selector - never override the filter's own target."""
-        from datamimic_ce.engine.dsl.statements.statement_util import StatementUtil
+        from datamimic_ce.engine.dsl.api import StatementUtil
 
         temp_product = copy.deepcopy(product)
         name, data = temp_product[0], temp_product[1]
@@ -34,7 +34,7 @@ class MongoDBExporter(Exporter):
 
     def consume(self, product) -> None:
         """Write data into MongoDB database"""
-        from datamimic_ce.engine.dsl.statements.statement_util import StatementUtil
+        from datamimic_ce.engine.dsl.api import StatementUtil
 
         temp_product = copy.deepcopy(product)
         # targetEntity -> type -> name routes the write to its collection (same as the RDBMS exporter).

@@ -13,7 +13,7 @@ from typing import Any, cast
 from bson.decimal128 import Decimal128
 from pymongo import MongoClient, UpdateOne
 
-from datamimic_ce.engine.dsl.constants.attribute_constants import META_SELECTOR, META_TARGET_ENTITY, META_TYPE
+from datamimic_ce.engine.dsl.api import META_SELECTOR, META_TARGET_ENTITY, META_TYPE
 from datamimic_ce.engine.io.clients.database_client import DatabaseClient
 from datamimic_ce.engine.io.clients.entity_serialization import stringify_entity_value
 from datamimic_ce.engine.io.connection_config.mongodb_connection_config import MongoDBConnectionConfig

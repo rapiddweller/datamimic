@@ -11,7 +11,7 @@ from decimal import Decimal
 from datamimic_ce.domains.common.literal_generators.number_sequences import build_number_sequence
 from datamimic_ce.domains.common.sampling import cumulated_index
 from datamimic_ce.domains.domain_core.base_literal_generator import BaseLiteralGenerator
-from datamimic_ce.engine.dsl.enums.distribution_enums import NumberDistribution
+from datamimic_ce.engine.dsl.api import NumberDistribution
 
 
 class FloatGenerator(BaseLiteralGenerator):

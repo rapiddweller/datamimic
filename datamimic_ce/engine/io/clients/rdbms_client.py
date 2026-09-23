@@ -16,7 +16,7 @@ from sqlalchemy import MetaData, func, inspect, select, text
 from sqlalchemy.engine import Dialect
 from sqlalchemy.pool import QueuePool
 
-from datamimic_ce.engine.dsl.enums.dbms_enums import Dbms
+from datamimic_ce.engine.dsl.api import Dbms
 from datamimic_ce.engine.io.clients import sql_dialect
 from datamimic_ce.engine.io.clients.database_client import DatabaseClient
 from datamimic_ce.engine.io.clients.entity_serialization import stringify_entity_value

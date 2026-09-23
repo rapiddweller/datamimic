@@ -19,7 +19,7 @@ from abc import ABC, abstractmethod
 from collections.abc import Callable, Iterator
 from decimal import Decimal
 
-from datamimic_ce.engine.dsl.enums.distribution_enums import POSITIONAL_NUMBER_SEQUENCES, NumberDistribution
+from datamimic_ce.engine.dsl.api import POSITIONAL_NUMBER_SEQUENCES, NumberDistribution
 
 
 def _grid_size(min_v: float, max_v: float, granularity: float) -> int:

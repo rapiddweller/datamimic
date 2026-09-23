@@ -15,7 +15,7 @@ from datetime import date, datetime
 from decimal import Decimal
 from typing import Any
 
-from datamimic_ce.engine.dsl.constants.exporter_constants import (
+from datamimic_ce.engine.dsl.api import (
     EXPORTER_CONSOLE_EXPORTER,
     EXPORTER_CSV,
     EXPORTER_DBUNIT,
@@ -26,9 +26,9 @@ from datamimic_ce.engine.dsl.constants.exporter_constants import (
     EXPORTER_TXT,
     EXPORTER_XLSX,
     EXPORTER_XML,
+    ExportOperation,
+    GenerateStatement,
 )
-from datamimic_ce.engine.dsl.enums.operation_enums import ExportOperation
-from datamimic_ce.engine.dsl.statements.generate_statement import GenerateStatement
 from datamimic_ce.engine.io.clients.client import Client
 from datamimic_ce.engine.io.clients.mongodb_client import MongoDBClient
 from datamimic_ce.engine.io.clients.rdbms_client import RdbmsClient
@@ -315,7 +315,7 @@ class ExporterUtil:
         # targetEntity names the physical output entity (file basename here; table/collection in the
         # store exporters) - one explicit override, honoured across every target family. type_=None:
         # a file basename never routed by 'type', so behaviour is unchanged without targetEntity.
-        from datamimic_ce.engine.dsl.statements.statement_util import StatementUtil
+        from datamimic_ce.engine.dsl.api import StatementUtil
 
         product_name = StatementUtil.resolve_target_entity(gen_stmt.target_entity, None, gen_stmt.name)
         # exportUri (validated at parse time) is the output-directory prefix for file exporters.
