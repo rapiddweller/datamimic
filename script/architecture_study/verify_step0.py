@@ -7,6 +7,7 @@ Run with the project interpreter:
 from __future__ import annotations
 
 import argparse
+import ast
 import hashlib
 import json
 import os
@@ -244,25 +245,53 @@ def test_fixture_evidence(path: Path, root: ET.Element) -> list[str]:
     evidence: list[str] = []
     for filename in missing:
         for source in sorted(path.parent.glob("*.py")):
-            lines = source.read_text(encoding="utf-8", errors="replace").splitlines()
-            reference_line = None
-            save_line = None
-            assigned_paths: dict[str, int] = {}
-            for index, line in enumerate(lines):
-                assignment = re.search(r"\b([A-Za-z_]\w*)\s*=.*[\"']" + re.escape(filename) + r"[\"']", line)
-                if assignment:
-                    assigned_paths[assignment.group(1)] = index
-                if ".save(" not in line:
-                    continue
-                argument = re.search(r"\.save\(\s*([A-Za-z_]\w*)\s*\)?", line)
-                if filename in line or (argument and argument.group(1) in assigned_paths):
-                    save_line = index
-                    reference_line = assigned_paths.get(argument.group(1), index) if argument else index
-                    break
-            if reference_line is not None and save_line is not None and "Workbook" in "\n".join(lines):
+            try:
+                tree = ast.parse(source.read_text(encoding="utf-8", errors="replace"))
+            except SyntaxError:
+                continue
+            workbook_creation = any(isinstance(node, ast.Name) and node.id == "Workbook" for node in ast.walk(tree))
+            matches: list[tuple[int, int]] = []
+
+            def inspect_scope(
+                statements: list[ast.stmt], expected_filename: str, evidence_matches: list[tuple[int, int]]
+            ) -> None:
+                assigned_paths: dict[str, int | None] = {}
+                for statement in statements:
+                    if isinstance(statement, (ast.FunctionDef, ast.AsyncFunctionDef)):
+                        inspect_scope(statement.body, expected_filename, evidence_matches)
+                        continue
+                    if isinstance(statement, ast.Assign):
+                        has_filename = any(
+                            isinstance(node, ast.Constant) and node.value == expected_filename
+                            for node in ast.walk(statement.value)
+                        )
+                        for target in statement.targets:
+                            if isinstance(target, ast.Name):
+                                assigned_paths[target.id] = statement.lineno if has_filename else None
+                    for node in ast.walk(statement):
+                        if (
+                            not isinstance(node, ast.Call)
+                            or not isinstance(node.func, ast.Attribute)
+                            or node.func.attr != "save"
+                        ):
+                            continue
+                        if not node.args:
+                            continue
+                        argument = node.args[0]
+                        if any(
+                            isinstance(value, ast.Constant) and value.value == expected_filename
+                            for value in ast.walk(argument)
+                        ):
+                            evidence_matches.append((node.lineno, node.lineno))
+                        elif isinstance(argument, ast.Name) and assigned_paths.get(argument.id) is not None:
+                            evidence_matches.append((assigned_paths[argument.id] or node.lineno, node.lineno))
+
+            inspect_scope(tree.body, filename, matches)
+            if matches and workbook_creation:
+                reference_line, save_line = matches[0]
                 evidence.append(
-                    f"{source.relative_to(REPO)}:{reference_line + 1} names {filename}; "
-                    f"{source.relative_to(REPO)}:{save_line + 1} writes the test workbook"
+                    f"{source.relative_to(REPO)}:{reference_line} names {filename}; "
+                    f"{source.relative_to(REPO)}:{save_line} writes the test workbook"
                 )
                 break
     return evidence
