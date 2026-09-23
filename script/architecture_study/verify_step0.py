@@ -535,6 +535,12 @@ def self_test() -> None:
                 "path = 'fixture.xlsx'\npath = 'other.xlsx'\nWorkbook().save(path)",
                 False,
             ),
+            (
+                "separate-function-path",
+                "def fixture_path():\n    path = 'fixture.xlsx'\n"
+                "def save_workbook(path):\n    Workbook().save(path)\n",
+                False,
+            ),
         )
         failures: list[str] = []
         for name, body, expected in cases:
