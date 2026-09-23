@@ -4,10 +4,11 @@
 # See LICENSE file for the full text of the license.
 # For questions and support, contact: info@rapiddweller.com
 import shutil
-from importlib.resources import files
 from pathlib import Path
 
 import typer
+
+from datamimic_ce.resources.api import demo_names
 
 
 def handle_demo(demo_name, demo_path, overwrite, target_directory):
@@ -43,7 +44,4 @@ def handle_demo(demo_name, demo_path, overwrite, target_directory):
 
 def demo_autocomplete(incomplete: str):
     """Autocomplete function for demo names."""
-    demo_dir = files("datamimic_ce.resources").joinpath("demos")
-    for demo in demo_dir.iterdir():
-        if demo.is_dir() and demo.name.startswith(incomplete):
-            yield demo.name
+    yield from (name for name in demo_names() if name.startswith(incomplete))

@@ -13,9 +13,8 @@ testable implementation owners; orchestration belongs here.
 
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Any
 
-from pydantic import ValidationError
+from pydantic import JsonValue, ValidationError
 
 from datamimic_ce.authoring.acceptance import evaluate_acceptance
 from datamimic_ce.authoring.compiler import CompileError, compile_authoring_spec
@@ -89,7 +88,7 @@ def _validation_remediations(
     ]
 
 
-def compile_document(spec: dict[str, Any]) -> CompiledDocument:
+def compile_document(spec: dict[str, JsonValue]) -> CompiledDocument:
     """Validate AuthoringSpecV1 and compile it through the canonical path."""
 
     try:
@@ -216,7 +215,7 @@ def scaffold(request: ScaffoldRequest) -> ScaffoldResult:
             ("acceptance_requirements",),
         )
     except ValidationError as error:
-        raw_requirements = {
+        raw_requirements: dict[str, JsonValue] = {
             "acceptance_requirements": [
                 expectation.model_dump(mode="json") for expectation in acceptance_requirements
             ]

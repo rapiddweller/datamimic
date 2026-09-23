@@ -27,6 +27,10 @@ class BankAccount(BaseEntity):
         self._bank_account_generator = bank_account_generator
 
     @property
+    def dataset(self) -> str:
+        return self._bank_account_generator.dataset
+
+    @property
     @property_cache
     def bank_data(self) -> Bank:
         return Bank(self._bank_account_generator.bank_generator)

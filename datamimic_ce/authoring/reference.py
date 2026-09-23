@@ -9,8 +9,11 @@ everything derived from the engine's registries or gate-tested content.
 Token-capped: every answer ends with a pointer instead of overflowing."""
 
 import json
+from collections.abc import Callable
 from functools import lru_cache
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING
+
+from pydantic import JsonValue, TypeAdapter
 
 if TYPE_CHECKING:
     from datamimic_ce.domains.api import EntitySpec
@@ -54,6 +57,8 @@ from datamimic_ce.engine.dsl.api import (
     source_capabilities,
 )
 from datamimic_ce.engine.runtime.api import iter_generator_capabilities as runtime_generator_capabilities
+
+_JSON_OBJECT_ADAPTER: TypeAdapter[dict[str, JsonValue]] = TypeAdapter(dict[str, JsonValue])
 
 
 def clip(text: str, max_chars: int, hint: str) -> str:
@@ -126,20 +131,6 @@ def _render_allowed_values_when(fact: AllowedValuesWhen, advisory: str) -> str:
     return f"{fact.attr} must be one of: {allowed_str}{suffix}{advisory}"
 
 
-_CONSTRAINT_RENDERERS: dict[type, object] = {
-    RequiredOneOf: _render_required_one_of,
-    MutuallyExclusive: _render_mutually_exclusive,
-    MutuallyExclusiveWhen: _render_mutually_exclusive_when,
-    Requires: _render_requires,
-    RequiresWhenValue: _render_requires_when_value,
-    AllOrNone: _render_all_or_none,
-    Forbids: _render_forbids,
-    ForbidsWhenValue: _render_forbids_when_value,
-    ValidValues: _render_valid_values,
-    AllowedValuesWhen: _render_allowed_values_when,
-}
-
-
 def _render_constraint_terse(fact: Constraint) -> str:
     """Render a single constraint object as a terse one-liner for element_reference().
 
@@ -147,9 +138,26 @@ def _render_constraint_terse(fact: Constraint) -> str:
     Attributes are sorted for stable output. lint_only facts are marked with [advisory].
     """
     advisory = " [advisory]" if fact.lint_only else ""
-    renderer = _CONSTRAINT_RENDERERS.get(type(fact))
-    if renderer is not None:
-        return renderer(fact, advisory)  # type: ignore[operator]
+    if type(fact) is RequiredOneOf:
+        return _render_required_one_of(fact, advisory)
+    if type(fact) is MutuallyExclusive:
+        return _render_mutually_exclusive(fact, advisory)
+    if type(fact) is MutuallyExclusiveWhen:
+        return _render_mutually_exclusive_when(fact, advisory)
+    if type(fact) is Requires:
+        return _render_requires(fact, advisory)
+    if type(fact) is RequiresWhenValue:
+        return _render_requires_when_value(fact, advisory)
+    if type(fact) is AllOrNone:
+        return _render_all_or_none(fact, advisory)
+    if type(fact) is Forbids:
+        return _render_forbids(fact, advisory)
+    if type(fact) is ForbidsWhenValue:
+        return _render_forbids_when_value(fact, advisory)
+    if type(fact) is ValidValues:
+        return _render_valid_values(fact, advisory)
+    if type(fact) is AllowedValuesWhen:
+        return _render_allowed_values_when(fact, advisory)
     return f"<unknown constraint type: {type(fact).__name__}>{advisory}"
 
 
@@ -479,7 +487,7 @@ def _authoring_category_listing_usage() -> str:
     return f"datamimic reference authoring [--category {categories}]"
 
 
-def capabilities_manifest() -> dict[str, Any]:
+def capabilities_manifest() -> dict[str, JsonValue]:
     """Machine-readable DSL surface, derived live from the engine registries — cannot drift."""
     from importlib.metadata import PackageNotFoundError, version
 
@@ -494,7 +502,7 @@ def capabilities_manifest() -> dict[str, Any]:
         schema_version = None
 
     index = build_schema_index()
-    elements: dict[str, Any] = {}
+    elements: dict[str, object] = {}
     for tag, schema in sorted(index.elements.items()):
         elements[tag] = {
             "attributes": {
@@ -508,7 +516,7 @@ def capabilities_manifest() -> dict[str, Any]:
             "children": sorted(schema.allowed_children) if schema.allowed_children is not None else "any",
             **({"constraints": serialize_constraints(schema.constraints)} if schema.constraints else {}),
         }
-    return {
+    manifest: dict[str, object] = {
         "schema_version": schema_version,
         "elements": elements,
         "aliases": element_aliases(),
@@ -527,9 +535,10 @@ def capabilities_manifest() -> dict[str, Any]:
         "rules": [serialize_rule_definition(definition) for definition in authoring_rule_definitions()],
         "authoring_spec": authoring_spec_json_schema(),
     }
+    return _JSON_OBJECT_ADAPTER.validate_python(manifest)
 
 
-def capabilities_index() -> dict[str, Any]:
+def capabilities_index() -> dict[str, JsonValue]:
     """Compact annotated index of ``capabilities_manifest()`` — ~10× smaller.
 
     Projects a versioned ToC with attribute names, child tags, and rule id/severity/title
@@ -537,13 +546,16 @@ def capabilities_index() -> dict[str, Any]:
     ``--section authoring_spec``).
     """
     manifest = capabilities_manifest()
-    elements: dict[str, Any] = {}
-    for tag, el in manifest["elements"].items():
+    elements: dict[str, object] = {}
+    manifest_elements = _json_object(manifest["elements"])
+    for tag, element_value in manifest_elements.items():
+        el = _json_object(element_value)
+        attributes = _json_object(el["attributes"])
         elements[tag] = {
-            "attributes": sorted(el["attributes"]),
+            "attributes": sorted(attributes),
             "children": el["children"],
         }
-    return {
+    index: dict[str, object] = {
         "_meta": {
             "format_version": 1,
             "view": "compact",
@@ -571,11 +583,31 @@ def capabilities_index() -> dict[str, Any]:
         "numeric_distributions": manifest["numeric_distributions"],
         "finite_numeric_sequences": manifest["finite_numeric_sequences"],
         "source_capabilities": manifest["source_capabilities"],
-        "rules": [{"id": r["id"], "severity": r["severity"], "title": r["title"]} for r in manifest["rules"]],
+        "rules": [
+            {
+                "id": rule["id"],
+                "severity": rule["severity"],
+                "title": rule["title"],
+            }
+            for rule in (_json_object(value) for value in _json_list(manifest["rules"]))
+        ],
     }
+    return _JSON_OBJECT_ADAPTER.validate_python(index)
 
 
-def capabilities_sections(names: tuple[str, ...]) -> dict[str, Any]:
+def _json_object(value: JsonValue) -> dict[str, JsonValue]:
+    if not isinstance(value, dict):
+        raise TypeError("Expected a JSON object")
+    return value
+
+
+def _json_list(value: JsonValue) -> list[JsonValue]:
+    if not isinstance(value, list):
+        raise TypeError("Expected a JSON array")
+    return value
+
+
+def capabilities_sections(names: tuple[str, ...]) -> dict[str, JsonValue]:
     """Return the requested manifest sections keyed by name.
 
     Raises:
@@ -590,7 +622,7 @@ def capabilities_sections(names: tuple[str, ...]) -> dict[str, Any]:
     return {name: manifest[name] for name in names}
 
 
-_TOPIC_HANDLERS: dict[ReferenceTopic, object] = {
+_TOPIC_HANDLERS: dict[ReferenceTopic, Callable[[str | None, AuthoringReferenceQuery | None], str]] = {
     ReferenceTopic.OVERVIEW: lambda _n, _q: overview_reference(),
     ReferenceTopic.ELEMENT: lambda name, _q: _element_ref_require_name(name),
     ReferenceTopic.GENERATORS: lambda name, _q: _generator_ref_filter(generator_reference(), name),
@@ -632,5 +664,5 @@ def reference(
         return compact_authoring_reference(category=category)
     handler = _TOPIC_HANDLERS.get(topic)
     if handler is not None:
-        return handler(name, query)  # type: ignore[operator]
+        return handler(name, query)
     raise ValueError(f"Unknown topic '{topic}'. Topics: {', '.join(ReferenceTopic)}")

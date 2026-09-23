@@ -9,7 +9,6 @@ from contextlib import suppress
 from copy import deepcopy
 from dataclasses import dataclass
 from difflib import SequenceMatcher
-from typing import Any
 
 from pydantic import JsonValue, TypeAdapter, ValidationError
 
@@ -41,18 +40,18 @@ class _PydanticIssueType(StrEnum):
     UNION_TAG_NOT_FOUND = "union_tag_not_found"
 
 
-_ROOT_SCHEMA = AuthoringSpecV1.model_json_schema()
+_ROOT_SCHEMA: dict[str, JsonValue] = AuthoringSpecV1.model_json_schema()
 _JSON_OBJECT_ADAPTER: TypeAdapter[dict[str, JsonValue]] = TypeAdapter(dict[str, JsonValue])
 _MIN_REPLACEMENT_SIMILARITY = 0.72
 _MIN_REPLACEMENT_MARGIN = 0.10
 @dataclass(frozen=True)
 class _ValidationLocation:
     path: tuple[str | int, ...]
-    owner_schema: Mapping[str, Any] | None
-    raw_owner: Mapping[str, Any] | None
+    owner_schema: Mapping[str, JsonValue] | None
+    raw_owner: Mapping[str, JsonValue] | None
 
 
-def _resolve_schema(schema: Mapping[str, Any]) -> Mapping[str, Any]:
+def _resolve_schema(schema: Mapping[str, JsonValue]) -> Mapping[str, JsonValue]:
     reference = schema.get("$ref")
     if not isinstance(reference, str):
         return schema
@@ -67,11 +66,11 @@ def _resolve_schema(schema: Mapping[str, Any]) -> Mapping[str, Any]:
 
 
 def _selected_union_schema(
-    schema: Mapping[str, Any],
+    schema: Mapping[str, JsonValue],
     raw: object,
     location: tuple[str | int, ...],
     index: int,
-) -> tuple[Mapping[str, Any], int]:
+) -> tuple[Mapping[str, JsonValue], int]:
     resolved = _resolve_schema(schema)
     discriminator = resolved.get("discriminator")
     if not isinstance(discriminator, Mapping) or not isinstance(raw, Mapping):
@@ -94,15 +93,15 @@ def _selected_union_schema(
 
 def _validation_location(
     location: tuple[str | int, ...],
-    raw: Mapping[str, Any],
+    raw: Mapping[str, JsonValue],
 ) -> _ValidationLocation:
     """Resolve a public path and its exact schema/raw owner without union labels."""
 
-    schema: Mapping[str, Any] = _ROOT_SCHEMA
+    schema: Mapping[str, JsonValue] = _ROOT_SCHEMA
     current: object = raw
     public: list[str | int] = []
-    owner_schema: Mapping[str, Any] | None = None
-    raw_owner: Mapping[str, Any] | None = None
+    owner_schema: Mapping[str, JsonValue] | None = None
+    raw_owner: Mapping[str, JsonValue] | None = None
     index = 0
     while index < len(location):
         schema, index = _selected_union_schema(schema, current, location, index)
@@ -158,7 +157,7 @@ def _issue_code(
 
 
 def _replace_field(
-    raw: Mapping[str, Any],
+    raw: Mapping[str, JsonValue],
     path: tuple[str | int, ...],
     replacement: str,
 ) -> tuple[dict[str, JsonValue], JsonValue] | None:
@@ -199,7 +198,7 @@ def _replace_field(
 
 
 def _replacement_repair(
-    raw: Mapping[str, Any],
+    raw: Mapping[str, JsonValue],
     location: _ValidationLocation,
     allowed_fields: tuple[str, ...],
 ) -> ReplaceFieldRepair | None:
@@ -284,7 +283,7 @@ def _replacement_repair(
 
 
 def _repair_context(
-    raw: Mapping[str, Any],
+    raw: Mapping[str, JsonValue],
     location: _ValidationLocation,
 ) -> tuple[
     tuple[str, ...],
@@ -325,7 +324,7 @@ def _missing_discriminator_category(
     return None
 
 
-def _source_product_message(path: tuple[str | int, ...], raw: Mapping[str, Any]) -> str | None:
+def _source_product_message(path: tuple[str | int, ...], raw: Mapping[str, JsonValue]) -> str | None:
     """Return typed repair guidance for common source-product shape errors."""
 
     if len(path) < 2 or path[0] != "products" or not isinstance(path[1], int):
@@ -354,7 +353,7 @@ def _source_product_message(path: tuple[str | int, ...], raw: Mapping[str, Any])
 
 
 def _build_intent_validation_issue(
-    location: _ValidationLocation, issue: Mapping[str, Any], raw: Mapping[str, Any]
+    location: _ValidationLocation, issue: Mapping[str, object], raw: Mapping[str, JsonValue]
 ) -> IntentValidationIssue:
     """Build one IntentValidationIssue from a filtered Pydantic error item."""
     path = location.path
@@ -418,7 +417,7 @@ def _build_intent_validation_issue(
 
 def project_validation_issues(
     error: ValidationError,
-    raw: Mapping[str, Any],
+    raw: Mapping[str, JsonValue],
 ) -> tuple[IntentValidationIssue, ...]:
     source = error.errors()
     public = [(_validation_location(tuple(issue["loc"]), raw), issue) for issue in source]

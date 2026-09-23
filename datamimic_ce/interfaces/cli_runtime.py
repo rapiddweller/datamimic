@@ -6,7 +6,6 @@ import json
 import logging
 import os
 import platform
-from importlib.resources import files
 from pathlib import Path
 
 import toml
@@ -19,6 +18,7 @@ from datamimic_ce.interfaces.cli_presenter import DemoInformation, DemoSummary, 
 from datamimic_ce.interfaces.contracts import PlatformConfiguration, RunRequest
 from datamimic_ce.interfaces.demo import handle_demo
 from datamimic_ce.interfaces.project import create_project_structure, validate_project_name
+from datamimic_ce.resources.api import demo_root
 
 logger = logging.getLogger("DATAMIMIC")
 
@@ -63,7 +63,7 @@ def initialize_project(project_name: str, target_directory: Path | None, force: 
 
 
 def show_demo_information(demo_name: str) -> None:
-    demo_dir = Path(str(files("datamimic_ce.resources").joinpath("demos"))) / demo_name
+    demo_dir = Path(str(demo_root())) / demo_name
     metadata_path = demo_dir / "info.toml"
     if not metadata_path.is_file():
         cli_presenter.fail(f"Demo '{demo_name}' not found", code=1)
@@ -83,7 +83,7 @@ def show_demo_information(demo_name: str) -> None:
 
 
 def list_demos() -> None:
-    demos_path = Path(str(files("datamimic_ce.resources").joinpath("demos")))
+    demos_path = Path(str(demo_root()))
     summaries: list[DemoSummary] = []
     for demo_dir in sorted(demos_path.iterdir()):
         metadata_path = demo_dir / "info.toml"
@@ -99,7 +99,7 @@ def create_demo(
     overwrite: bool,
     all_demos: bool,
 ) -> None:
-    demos_path = Path(str(files("datamimic_ce.resources").joinpath("demos")))
+    demos_path = Path(str(demo_root()))
     if all_demos:
         if target_directory is None:
             cli_presenter.fail("Target directory is required with --all", code=1)

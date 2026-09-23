@@ -13,7 +13,7 @@ that another transport rejects.
 
 from collections.abc import Callable
 from decimal import Decimal, InvalidOperation
-from typing import Annotated, Any, Literal, TypeVar
+from typing import Annotated, Literal, TypeVar
 
 from pydantic import (
     BaseModel,
@@ -528,7 +528,7 @@ class ProductResult(BaseModel):
 
     name: str
     count: int
-    sample: list[dict[str, Any]] = Field(default_factory=list)
+    sample: list[dict[str, JsonValue]] = Field(default_factory=list)
     truncated_rows: bool = False
     capture: ProductCaptureEvidence
 

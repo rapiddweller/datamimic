@@ -44,6 +44,8 @@ from dataclasses import dataclass
 from multiprocessing.connection import Connection
 from pathlib import Path
 
+from pydantic import JsonValue
+
 from datamimic_ce._compat import StrEnum
 from datamimic_ce.authoring.contracts import (
     AuthoringStage,
@@ -789,7 +791,7 @@ def dry_run_source_captured(
         )
 
 
-def _clip_value(value: object, max_chars: int = 200) -> object:
+def _clip_value(value: object, max_chars: int = 200) -> JsonValue:
     """Clip strings but PRESERVE dict/list structure. Agents verify intent by inspecting
     the sample ("is reviews a list of objects with a rating?"); stringifying nested
     structures would make that check impossible."""

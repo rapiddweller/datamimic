@@ -288,8 +288,9 @@ class InterpolationInScript(Rule):
         for element in ctx.iter():
             for attr in _SCRIPT_ATTRS:
                 value = element.get(attr)
-                if value and _INTERP_TOKEN.search(value):
-                    token = _INTERP_TOKEN.search(value).group()  # type: ignore[union-attr]
+                token_match = _INTERP_TOKEN.search(value) if value else None
+                if token_match:
+                    token = token_match.group()
                     yield ctx.diag(
                         type(self),
                         element,

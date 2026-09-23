@@ -32,11 +32,15 @@ class CustomBusinessMappingConverter(CustomConverter):
                 self.__class__._initialized = True
 
     @staticmethod
-    def create_sql_query(parsed_data: dict) -> str:
+    def create_sql_query(parsed_data: dict[str, str | int | list[str]]) -> str:
         # logger.debug(f"Parsed data: {parsed_data}, start creating SQL query...")
 
         # Extract the columns to be selected
-        output_columns = ", ".join(parsed_data["output_columns"])
+        selected_columns = parsed_data["output_columns"]
+        if isinstance(selected_columns, str | list):
+            output_columns = ", ".join(selected_columns)
+        else:
+            raise TypeError("can only join an iterable")
 
         # logger.debug(f"Output columns: {output_columns}, start creating WHERE clause...")
 
@@ -72,24 +76,27 @@ class CustomBusinessMappingConverter(CustomConverter):
         pattern = re.compile(r"(\w+)=\[([^\]]*)\]|(\w+)=([^,]+)")
 
         # Initialize the dictionary to hold the parsed values
-        parsed_data = {}
+        parsed_data: dict[str, str | int | list[str]] = {}
 
         # Iterate over all matches in the input string
+        last_value: str | int | list[str] = value
         for match in pattern.finditer(value):
             if match.group(1):
                 # Match for list values (e.g., output_column=['idTop','idSub'])
                 key = match.group(1)
-                value = [item.strip().strip("'") for item in match.group(2).split(",")]  # type: ignore[assignment]
+                last_value = [
+                    item.strip().strip("'") for item in match.group(2).split(",")
+                ]
             else:
                 # Match for single values (e.g., countryCode=234, city='Hamburg')
                 key = match.group(3)
-                value = match.group(4).strip().strip("'")
+                scalar_value = match.group(4).strip().strip("'")
                 # Convert value to integer if it is a digit
-                if value.isdigit():
-                    value = int(value)  # type: ignore[assignment]
+                last_value = int(scalar_value) if scalar_value.isdigit() else scalar_value
 
             # Add the key-value pair to the parsed_data dictionary
-            parsed_data[key] = value
+            if key is not None:
+                parsed_data[key] = last_value
 
         sql_query = self.create_sql_query(parsed_data)
         result = self.__class__._database_client.get_by_page_with_query(sql_query)
@@ -97,7 +104,7 @@ class CustomBusinessMappingConverter(CustomConverter):
         if result:
             return result[0]
         else:
-            raise ValueError(f"Mapping not found for value: {value}")
+            raise ValueError(f"Mapping not found for value: {last_value}")
 
 
 def create_mapping_cmd(city) -> str:

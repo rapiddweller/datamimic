@@ -12,9 +12,8 @@
 
 from dataclasses import dataclass
 from functools import lru_cache
-from typing import Any
 
-from pydantic import BaseModel
+from pydantic import BaseModel, JsonValue, TypeAdapter
 
 from datamimic_ce.engine.dsl.api import (
     Constraint,
@@ -110,7 +109,7 @@ def build_schema_index() -> SchemaIndex:
     return _build_schema_index(registry_revision(), rule_registry_revision())
 
 
-def element_json_schema(tag: str) -> dict[str, Any]:
+def element_json_schema(tag: str) -> dict[str, JsonValue]:
     """The real Pydantic-derived JSON schema for an element's attribute model
     (BaseModel.model_json_schema()), carrying whatever description/examples the model's
     Field(...) definitions provide. This is the SPOT other schema consumers (scaffold.py's
@@ -119,10 +118,10 @@ def element_json_schema(tag: str) -> dict[str, Any]:
     schema = build_schema_index().get(canonical_tag(tag))
     if schema is None or schema.model is None:
         raise ValueError(f"'{tag}' has no attribute model to reflect a JSON schema from")
-    result = schema.model.model_json_schema()
+    result = TypeAdapter(dict[str, JsonValue]).validate_python(schema.model.model_json_schema())
     constraints = element_constraints(tag)
     if constraints:
-        result["constraints"] = serialize_constraints(constraints)
+        result["constraints"] = TypeAdapter(JsonValue).validate_python(serialize_constraints(constraints))
     else:
         result.pop("constraints", None)
     return result

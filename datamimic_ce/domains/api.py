@@ -38,6 +38,7 @@ from datamimic_ce.domains.domain_core.runtime.clock import from_epoch_utc, resol
 from datamimic_ce.domains.domain_core.runtime.rng import derive_child_seed, spawn_rng
 from datamimic_ce.domains.domain_core.runtime.run_seed import RunSeed
 from datamimic_ce.domains.finance.generators.transaction_generator import TransactionGenerator
+from datamimic_ce.domains.finance.models.bank_account import BankAccount
 from datamimic_ce.domains.finance.models.transaction import Transaction
 from datamimic_ce.domains.healthcare.services.patient_service import PatientService
 from datamimic_ce.domains.utils.rng_uuid import uuid4_from_random
@@ -58,6 +59,7 @@ __all__ = [
     "AppendConverter",
     "BaseDomainGenerator",
     "BaseLiteralGenerator",
+    "BankAccount",
     "Converter",
     "CustomConverter",
     "CutLengthConverter",
