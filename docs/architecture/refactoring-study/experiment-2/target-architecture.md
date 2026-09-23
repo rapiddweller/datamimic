@@ -1,8 +1,10 @@
 # Experiment 2 target architecture
 
 The target is a smaller physical root, explicit component APIs, local types, and one canonical DSL
-vocabulary. `architecture-contract.json` is the machine-checkable target. A baseline records only
-the starting distance; success requires the baseline to become empty.
+vocabulary. `architecture-contract.json` is the machine-checkable structural target. The
+violation baseline records the starting distance; structural success requires its violation
+list to become empty. Numeric budgets remain separate, non-increasing quality ratchets
+(Amendment 12).
 
 ## Decisions
 
@@ -102,11 +104,15 @@ graph TD
 - every component edge is explicit and the graph is acyclic;
 - cross-component imports use `api.py` or `contracts.py`;
 - public boundary signatures use declared, component-owned types;
-- `Any`, reflective dispatch, and unchecked type escapes are forbidden everywhere;
+- explicit `Any`, casts, type ignores, and unapproved reflection are forbidden; four named
+  DSL/runtime `__getattr__` adapters are exact exceptions;
 - closed-vocabulary routing uses enums, verified by focused tests because ArchKeel 0.6.0 cannot
   distinguish dispatch from ordinary string-value comparisons;
 - dynamic execution is allowed only in the two explicit runtime owners;
 - the root allow-list is exact.
+
+The construct rules do not prove that every internal annotation is complete: remaining typing
+signals and analyzer limits stay visible as quality measurements (Amendment 12).
 
 ## Evidence at freeze
 

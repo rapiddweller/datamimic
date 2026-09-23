@@ -18,7 +18,9 @@ why the original target was wrong; an implementation difficulty is not a reason 
 ## Acceptance contract
 
 1. `archkeel validate --baseline known-violations.json` never accepts new debt.
-2. Final `archkeel validate` passes without a baseline and reports no material UNKNOWN.
+2. Final `archkeel validate --baseline known-violations.json --json` passes with an empty
+   violation list, no new or resolved findings, complete coverage, zero violations, and zero
+   material unknown positions. Numeric budgets may be positive but never increase (Amendment 12).
 3. The exact root layout and component namespaces match `target-architecture.md`.
 4. Every component crossing uses its declared API and every API has checked boundary types.
 5. All existing XML descriptors still parse. Seeded descriptors produce byte-identical captured
@@ -28,6 +30,12 @@ why the original target was wrong; an implementation difficulty is not a reason 
 7. Existing public CLI commands and documented Python entry points remain importable.
 8. Unit, API, factory, functional, integration, architecture, lint, and full-package mypy gates
    pass. External-service tests run serially against already-running local services.
+
+Report three verdicts separately: structure reached (items 1–4 and 7), behavior preserved
+(items 5–6 and the relevant runtime tests), and delivery ready (item 8, integrated checker,
+and remote CI). A structural pass does not imply the other two. The literal baseline-free
+command in the frozen protocol is inapplicable while measurement budgets are declared;
+Amendment 12 records the reason.
 
 ## Per-step gate
 
@@ -55,9 +63,10 @@ change the target.
 
 ## Success and stop conditions
 
-Success means the target is reached, not merely that debt decreased. Stop and report instead of
-weakening the target when behavior cannot be proven, ArchKeel returns UNKNOWN for a required fact,
-or compatibility requires a product decision.
+Structural success means the declared target is reached, not merely that debt decreased.
+Behavioral and delivery verdicts remain separate. Stop and report instead of weakening the
+target when behavior cannot be proven, ArchKeel returns UNKNOWN for a required fact, or
+compatibility requires a product decision.
 
 ## Known checker limit under test
 

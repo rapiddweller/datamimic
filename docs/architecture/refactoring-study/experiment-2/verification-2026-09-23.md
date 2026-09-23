@@ -2,12 +2,13 @@
 
 ## State
 
-- CE branch: `experiment/target-architecture-v2` at `9d5e9c5c`.
+- CE branch: `experiment/target-architecture-v2`; last code/test change `9d5e9c5c`.
 - The final local ArchKeel checker is `789784e1` (package `0.6.1.dev57`). The frozen
   0.6.0 tag remains the Step-0 control; it cannot parse Amendment 11's
   `allowed_positions` field.
 - The contract scan is complete (474/474 files), with 0 violations, 0 unknown
-  positions, and `declared_rules=PASS`. The violation baseline is empty.
+  positions, and `declared_rules=PASS`. The violation baseline is empty. Twenty
+  neutral raw UNKNOWN records remain (Amendment 11).
 - Measurement budgets are still positive and unchanged: 1,288 unresolved calls,
   171 cycle edges, 144 typing positions, and 3 untyped private accesses.
 
@@ -55,11 +56,14 @@ Ruff and full-package MyPy pass. `make lint` fails at Pylint with exit 30. The
 frozen code also exits 30 with 24 error-severity findings; total Pylint findings
 rose from 3,508 to 3,701, mainly convention messages.
 
-## Open acceptance decisions
+## Verdicts after Amendment 12
 
-Protocol item 2 says to validate without a baseline. ArchKeel requires
-`--baseline` when `measurement_budgets` are declared, so that exact gate exits 2.
-The baseline-backed gate passes with an empty violation list, but positive
-budgets. Protocol item 8's `make lint` and complete current external-service
-suite are also not green. Do not call the experiment fully accepted or release
-ready until these facts are dispositioned explicitly.
+- **Structure reached, locally:** exact layout and component rules pass with complete
+  coverage, an empty violation list, zero material unknown positions, and no budget rise.
+  The candidate checker is not yet a released package.
+- **Behavior preserved for the comparable oracle set:** both frozen comparisons have zero
+  differences. The 322 unverified entries and six current external-service failures prevent
+  an unqualified all-descriptors claim.
+- **Delivery not ready:** `make lint` and the complete current external-service suite are
+  not green; the final checker changes are not yet integrated and released. No CE merge or
+  release is justified by the structural verdict alone.
