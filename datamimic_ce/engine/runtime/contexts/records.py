@@ -1,4 +1,4 @@
-from datamimic_ce.engine.dsl.constants.convention_constants import NAME_SEPARATOR
+from datamimic_ce.engine.dsl.api import NAME_SEPARATOR
 
 
 def dict_nested_update(dictionary, key_path, value):

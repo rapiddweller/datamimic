@@ -4,7 +4,7 @@
 # See LICENSE file for the full text of the license.
 # For questions and support, contact: info@rapiddweller.com
 
-from datamimic_ce.engine.dsl.statements.mongodb_statement import MongoDBStatement
+from datamimic_ce.engine.dsl.api import MongoDBStatement
 from datamimic_ce.engine.io.api import MongoDBClient, MongoDBConnectionConfig
 from datamimic_ce.engine.runtime.contexts.setup_context import SetupContext
 from datamimic_ce.engine.runtime.tasks.task import SetupSubTask

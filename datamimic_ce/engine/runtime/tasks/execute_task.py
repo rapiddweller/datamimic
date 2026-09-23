@@ -7,7 +7,7 @@
 import subprocess  # noqa: S404
 import textwrap
 
-from datamimic_ce.engine.dsl.statements.execute_statement import ExecuteStatement
+from datamimic_ce.engine.dsl.api import ExecuteStatement
 from datamimic_ce.engine.runtime.contexts.context import Context
 from datamimic_ce.engine.runtime.contexts.geniter_context import GenIterContext
 from datamimic_ce.engine.runtime.logging import logger

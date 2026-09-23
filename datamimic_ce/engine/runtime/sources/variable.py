@@ -6,10 +6,13 @@ from enum import Enum
 from random import Random
 from typing import Any
 
-from datamimic_ce.engine.dsl.constants.element_constants import EL_VARIABLE
-from datamimic_ce.engine.dsl.model.constraints import SourceFileFormat, source_file_format_for
-from datamimic_ce.engine.dsl.statements.statement_util import StatementUtil
-from datamimic_ce.engine.dsl.statements.variable_statement import VariableStatement
+from datamimic_ce.engine.dsl.api import (
+    EL_VARIABLE,
+    SourceFileFormat,
+    StatementUtil,
+    VariableStatement,
+    source_file_format_for,
+)
 from datamimic_ce.engine.io.api import (
     DatabaseClient,
     DataSourcePagination,

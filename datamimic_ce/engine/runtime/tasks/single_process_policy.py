@@ -15,13 +15,15 @@ point used by the generate task.
 from collections.abc import Callable, Mapping
 from dataclasses import dataclass
 
-from datamimic_ce.engine.dsl.enums.dbms_enums import Dbms
-from datamimic_ce.engine.dsl.statements.composite_statement import CompositeStatement
-from datamimic_ce.engine.dsl.statements.generate_statement import GenerateStatement
-from datamimic_ce.engine.dsl.statements.key_statement import KeyStatement
-from datamimic_ce.engine.dsl.statements.reference_statement import ReferenceStatement
-from datamimic_ce.engine.dsl.statements.statement import Statement
-from datamimic_ce.engine.dsl.statements.variable_statement import VariableStatement
+from datamimic_ce.engine.dsl.api import (
+    CompositeStatement,
+    Dbms,
+    GenerateStatement,
+    KeyStatement,
+    ReferenceStatement,
+    Statement,
+    VariableStatement,
+)
 from datamimic_ce.engine.io.api import Client, RdbmsClient
 from datamimic_ce.engine.runtime.logging import logger
 

@@ -4,7 +4,7 @@
 # See LICENSE file for the full text of the license.
 # For questions and support, contact: info@rapiddweller.com
 
-from datamimic_ce.engine.dsl.statements.list_statement import ListStatement
+from datamimic_ce.engine.dsl.api import ListStatement
 from datamimic_ce.engine.runtime.contexts.geniter_context import GenIterContext
 from datamimic_ce.engine.runtime.contexts.setup_context import SetupContext
 from datamimic_ce.engine.runtime.tasks.task import GenSubTask

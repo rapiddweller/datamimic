@@ -8,7 +8,7 @@ from random import Random
 from datamimic_ce.domains.common.demographics.loader import load_demographic_profile
 from datamimic_ce.domains.common.demographics.sampler import DemographicSampler
 from datamimic_ce.domains.common.models.demographic_config import DemographicConfig
-from datamimic_ce.engine.dsl.statements.demographics_statement import DemographicsStatement
+from datamimic_ce.engine.dsl.api import DemographicsStatement
 from datamimic_ce.engine.runtime.contexts.demographic_context import DemographicContext
 from datamimic_ce.engine.runtime.contexts.setup_context import SetupContext
 from datamimic_ce.engine.runtime.tasks.task import SetupSubTask

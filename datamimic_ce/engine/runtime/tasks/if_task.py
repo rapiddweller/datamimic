@@ -4,7 +4,7 @@
 # See LICENSE file for the full text of the license.
 # For questions and support, contact: info@rapiddweller.com
 
-from datamimic_ce.engine.dsl.statements.if_statement import IfStatement
+from datamimic_ce.engine.dsl.api import IfStatement
 from datamimic_ce.engine.runtime.tasks.if_else_base_task import IfElseBaseTask
 
 

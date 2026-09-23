@@ -4,7 +4,7 @@
 # See LICENSE file for the full text of the license.
 # For questions and support, contact: info@rapiddweller.com
 
-from datamimic_ce.engine.dsl.statements.while_statement import WhileStatement
+from datamimic_ce.engine.dsl.api import WhileStatement
 from datamimic_ce.engine.runtime.contexts.geniter_context import GenIterContext
 from datamimic_ce.engine.runtime.tasks.condition_task import ConditionTask
 from datamimic_ce.engine.runtime.tasks.task import CommonSubTask, GenSubTask

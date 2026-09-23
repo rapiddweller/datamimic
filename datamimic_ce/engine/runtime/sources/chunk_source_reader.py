@@ -12,7 +12,7 @@ from .router import load_generate_source
 from .selection import get_distributed_data, get_unique_data
 
 if TYPE_CHECKING:
-    from datamimic_ce.engine.dsl.statements.generate_statement import GenerateStatement
+    from datamimic_ce.engine.dsl.api import GenerateStatement
     from datamimic_ce.engine.runtime.contexts.geniter_context import GenIterContext
     from datamimic_ce.engine.runtime.contexts.setup_context import SetupContext
 

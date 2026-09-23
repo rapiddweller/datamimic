@@ -113,3 +113,12 @@ and capture. `interfaces` exposes the compatibility-facing adapter. Boundary req
 use declared Pydantic root models; compatibility facades unwrap them to the existing dictionaries.
 The wrappers use construction without validation so the existing dictionary identity and accepted
 values remain unchanged.
+
+## D15 — the DSL facade is the canonical cross-component vocabulary
+
+**FACT:** runtime, Authoring, IO, and domains already consume DSL statements, enums, constants,
+constraints, and parser facts directly from internal modules.
+
+**Decision:** `engine.dsl.api` re-exports the exact cross-component vocabulary with object identity
+preserved. Consumers import that facade instead of wrappers or duplicate types. DSL-internal
+modules continue to import their owning implementations directly to avoid facade cycles.

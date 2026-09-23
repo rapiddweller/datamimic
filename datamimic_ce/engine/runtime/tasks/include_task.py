@@ -5,9 +5,7 @@
 # For questions and support, contact: info@rapiddweller.com
 import copy
 
-from datamimic_ce.engine.dsl.api import parse_properties
-from datamimic_ce.engine.dsl.parsers.descriptor_parser import DescriptorParser
-from datamimic_ce.engine.dsl.statements.include_statement import IncludeStatement
+from datamimic_ce.engine.dsl.api import DescriptorParser, IncludeStatement, parse_properties
 from datamimic_ce.engine.runtime.api import runtime_environment
 from datamimic_ce.engine.runtime.contexts.geniter_context import GenIterContext
 from datamimic_ce.engine.runtime.contexts.setup_context import SetupContext

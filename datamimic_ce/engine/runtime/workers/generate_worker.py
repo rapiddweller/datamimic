@@ -8,9 +8,7 @@ import os
 
 import dill  # type: ignore[import-untyped]
 
-from datamimic_ce.engine.dsl.statements.composite_statement import CompositeStatement
-from datamimic_ce.engine.dsl.statements.generate_statement import GenerateStatement
-from datamimic_ce.engine.dsl.statements.statement import Statement
+from datamimic_ce.engine.dsl.api import CompositeStatement, GenerateStatement, Statement
 from datamimic_ce.engine.io.api import DataSourcePagination
 from datamimic_ce.engine.io.exporters.exporter_state_manager import ExporterStateManager
 from datamimic_ce.engine.io.exporters.exporter_util import ExporterUtil

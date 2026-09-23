@@ -6,8 +6,7 @@
 
 import copy
 
-from datamimic_ce.engine.dsl.constants.data_type_constants import DATA_TYPE_DICT, DATA_TYPE_LIST
-from datamimic_ce.engine.dsl.statements.nested_key_statement import NestedKeyStatement
+from datamimic_ce.engine.dsl.api import DATA_TYPE_DICT, DATA_TYPE_LIST, NestedKeyStatement
 from datamimic_ce.engine.io.api import DataSourcePagination
 from datamimic_ce.engine.runtime.contexts.context import Context
 from datamimic_ce.engine.runtime.contexts.geniter_context import GenIterContext

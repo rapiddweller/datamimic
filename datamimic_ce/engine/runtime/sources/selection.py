@@ -9,7 +9,7 @@ from random import Random
 from typing import TypeVar
 
 from datamimic_ce.domains.common.sampling import cumulated_index
-from datamimic_ce.engine.dsl.enums.distribution_enums import SourceDistribution
+from datamimic_ce.engine.dsl.api import SourceDistribution
 from datamimic_ce.engine.io.api import DataSourcePagination
 
 T = TypeVar("T")

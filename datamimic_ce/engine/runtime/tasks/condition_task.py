@@ -5,10 +5,7 @@
 # For questions and support, contact: info@rapiddweller.com
 
 
-from datamimic_ce.engine.dsl.statements.condition_statement import ConditionStatement
-from datamimic_ce.engine.dsl.statements.else_if_statement import ElseIfStatement
-from datamimic_ce.engine.dsl.statements.else_statement import ElseStatement
-from datamimic_ce.engine.dsl.statements.if_statement import IfStatement
+from datamimic_ce.engine.dsl.api import ConditionStatement, ElseIfStatement, ElseStatement, IfStatement
 from datamimic_ce.engine.runtime.contexts.geniter_context import GenIterContext
 from datamimic_ce.engine.runtime.tasks.task import GenSubTask
 

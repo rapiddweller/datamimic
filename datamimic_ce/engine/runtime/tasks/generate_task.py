@@ -11,11 +11,7 @@ from typing import Protocol
 
 import dill  # type: ignore
 
-from datamimic_ce.engine.dsl.statements.composite_statement import CompositeStatement
-from datamimic_ce.engine.dsl.statements.generate_statement import GenerateStatement
-from datamimic_ce.engine.dsl.statements.key_statement import KeyStatement
-from datamimic_ce.engine.dsl.statements.statement import Statement
-from datamimic_ce.engine.dsl.statements.statement_util import StatementUtil
+from datamimic_ce.engine.dsl.api import CompositeStatement, GenerateStatement, KeyStatement, Statement, StatementUtil
 from datamimic_ce.engine.io.api import DatabaseClient
 from datamimic_ce.engine.io.exporters.exporter_util import ExporterUtil
 from datamimic_ce.engine.runtime.config import settings
@@ -110,7 +106,7 @@ class GenerateTask(CommonSubTask):
         size when cyclic is off — warn so the underrun is visible before anyone counts
         output rows. Top-level statements only (executed once => warned once); cumulated
         samples with replacement and never runs out."""
-        from datamimic_ce.engine.dsl.enums.distribution_enums import SourceDistribution
+        from datamimic_ce.engine.dsl.api import SourceDistribution
 
         stmt = self._statement
         if (
@@ -438,9 +434,7 @@ class GenerateTask(CommonSubTask):
         restarts in every worker process - two workers would emit the SAME values, silently
         duplicating what the sequence guarantees to be unique. Fail loudly instead; drop
         numProcess/multiprocessing (or the sequence) to proceed."""
-        from datamimic_ce.engine.dsl.enums.distribution_enums import POSITIONAL_NUMBER_SEQUENCES
-        from datamimic_ce.engine.dsl.statements.composite_statement import CompositeStatement
-        from datamimic_ce.engine.dsl.statements.key_statement import KeyStatement
+        from datamimic_ce.engine.dsl.api import POSITIONAL_NUMBER_SEQUENCES, CompositeStatement, KeyStatement
 
         # The ENTIRE subtree runs inside the workers, so scan it fully - a sequence key nested
         # in an inner <generate>/<nestedKey> duplicates just the same as a top-level one.

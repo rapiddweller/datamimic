@@ -7,7 +7,7 @@
 from abc import ABC, abstractmethod
 from typing import Any
 
-from datamimic_ce.engine.dsl.statements.statement import Statement
+from datamimic_ce.engine.dsl.api import Statement
 from datamimic_ce.engine.runtime.contexts.geniter_context import GenIterContext
 from datamimic_ce.engine.runtime.contexts.setup_context import SetupContext
 

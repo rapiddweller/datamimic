@@ -4,16 +4,16 @@
 # See LICENSE file for the full text of the license.
 # For questions and support, contact: info@rapiddweller.com
 
-from datamimic_ce.engine.dsl.constants.attribute_constants import (
+from datamimic_ce.engine.dsl.api import (
     ATTR_CONSTANT,
     ATTR_GENERATOR,
     ATTR_SCRIPT,
     ATTR_SOURCE,
     ATTR_TYPE,
     ATTR_VALUES,
+    EL_ELEMENT,
+    ElementStatement,
 )
-from datamimic_ce.engine.dsl.constants.element_constants import EL_ELEMENT
-from datamimic_ce.engine.dsl.statements.element_statement import ElementStatement
 from datamimic_ce.engine.io.api import DataSourcePagination
 from datamimic_ce.engine.runtime.contexts.context import Context
 from datamimic_ce.engine.runtime.contexts.geniter_context import GenIterContext

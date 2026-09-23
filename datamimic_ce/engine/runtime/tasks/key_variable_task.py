@@ -16,19 +16,22 @@ import numpy
 
 from datamimic_ce.domains.common.literal_generators.string_generator import StringGenerator
 from datamimic_ce.domains.domain_core.runtime import from_epoch_utc, to_epoch_utc
-from datamimic_ce.engine.dsl.constants.data_type_constants import (
+from datamimic_ce.engine.dsl.api import (
     DATA_TYPE_BINARY,
     DATA_TYPE_BOOL,
     DATA_TYPE_DECIMAL,
     DATA_TYPE_FLOAT,
     DATA_TYPE_INT,
     DATA_TYPE_STRING,
+    EL_ELEMENT,
+    EL_KEY,
+    EL_VARIABLE,
+    ElementStatement,
+    KeyStatement,
+    SourceFileFormat,
+    VariableStatement,
+    source_file_format_for,
 )
-from datamimic_ce.engine.dsl.constants.element_constants import EL_ELEMENT, EL_KEY, EL_VARIABLE
-from datamimic_ce.engine.dsl.model.constraints import SourceFileFormat, source_file_format_for
-from datamimic_ce.engine.dsl.statements.element_statement import ElementStatement
-from datamimic_ce.engine.dsl.statements.key_statement import KeyStatement
-from datamimic_ce.engine.dsl.statements.variable_statement import VariableStatement
 from datamimic_ce.engine.io.api import DataSourcePagination, WeightedDataSource
 from datamimic_ce.engine.runtime.contexts.context import Context
 from datamimic_ce.engine.runtime.contexts.setup_context import SetupContext

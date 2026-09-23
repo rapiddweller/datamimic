@@ -8,7 +8,7 @@ import itertools
 from collections.abc import Iterator
 from typing import Any
 
-from datamimic_ce.engine.dsl.statements.reference_statement import ReferenceStatement
+from datamimic_ce.engine.dsl.api import ReferenceStatement
 from datamimic_ce.engine.io.api import DataSourcePagination
 from datamimic_ce.engine.runtime.contexts.context import Context
 from datamimic_ce.engine.runtime.contexts.geniter_context import GenIterContext

@@ -5,7 +5,7 @@
 # For questions and support, contact: info@rapiddweller.com
 
 from datamimic_ce.domains.common.literal_generators.state_transition_generator import StateMachineDef
-from datamimic_ce.engine.dsl.statements.state_machine_statement import StateMachineStatement
+from datamimic_ce.engine.dsl.api import StateMachineStatement
 from datamimic_ce.engine.runtime.contexts.setup_context import SetupContext
 from datamimic_ce.engine.runtime.tasks.task import SetupSubTask
 

@@ -6,7 +6,7 @@
 
 import re
 
-from datamimic_ce.engine.dsl.statements.echo_statement import EchoStatement
+from datamimic_ce.engine.dsl.api import EchoStatement
 from datamimic_ce.engine.runtime.contexts.context import Context
 from datamimic_ce.engine.runtime.logging import logger
 from datamimic_ce.engine.runtime.tasks.task import CommonSubTask

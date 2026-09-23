@@ -10,7 +10,7 @@ from collections.abc import Iterator
 from random import Random
 from typing import Any, Final
 
-from datamimic_ce.engine.dsl.constants.attribute_constants import (
+from datamimic_ce.engine.dsl.api import (
     ATTR_CONSTANT,
     ATTR_ENTITY,
     ATTR_GENERATOR,
@@ -18,9 +18,9 @@ from datamimic_ce.engine.dsl.constants.attribute_constants import (
     ATTR_SOURCE,
     ATTR_TYPE,
     ATTR_VALUES,
+    EL_VARIABLE,
+    VariableStatement,
 )
-from datamimic_ce.engine.dsl.constants.element_constants import EL_VARIABLE
-from datamimic_ce.engine.dsl.statements.variable_statement import VariableStatement
 from datamimic_ce.engine.io.api import DataSourcePagination
 from datamimic_ce.engine.runtime.contexts.context import Context, DotableDict
 from datamimic_ce.engine.runtime.contexts.geniter_context import GenIterContext

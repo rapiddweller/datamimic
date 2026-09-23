@@ -17,7 +17,7 @@ from datamimic_ce.domains.converters.converter import Converter
 from datamimic_ce.domains.converters.custom_converter import CustomConverter
 from datamimic_ce.domains.domain_core.base_literal_generator import BaseLiteralGenerator
 from datamimic_ce.domains.domain_core.runtime import RunSeed, derive_child_seed, spawn_rng
-from datamimic_ce.engine.dsl.statements.setup_statement import SetupStatement
+from datamimic_ce.engine.dsl.api import SetupStatement
 from datamimic_ce.engine.io.api import Client
 from datamimic_ce.engine.io.exporters.test_result_exporter import TestResultExporter
 from datamimic_ce.engine.runtime.contexts.context import Context
