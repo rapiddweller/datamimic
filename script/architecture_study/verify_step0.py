@@ -271,8 +271,15 @@ def test_fixture_evidence(path: Path, root: ET.Element) -> list[str]:
                             and value.right.value == expected_filename
                         )
                         for target in statement.targets:
+                            for node in ast.walk(target):
+                                if isinstance(node, ast.Name) and isinstance(node.ctx, ast.Store):
+                                    assigned_paths[node.id] = None
                             if isinstance(target, ast.Name):
                                 assigned_paths[target.id] = statement.lineno if has_filename else None
+                    elif isinstance(statement, (ast.AnnAssign, ast.AugAssign, ast.Delete)):
+                        for node in ast.walk(statement):
+                            if isinstance(node, ast.Name) and isinstance(node.ctx, (ast.Store, ast.Del)):
+                                assigned_paths[node.id] = None
                     elif isinstance(
                         statement,
                         (ast.If, ast.For, ast.AsyncFor, ast.While, ast.Try, ast.With, ast.AsyncWith, ast.Match),
@@ -281,6 +288,9 @@ def test_fixture_evidence(path: Path, root: ET.Element) -> list[str]:
                             if isinstance(node, ast.Name) and isinstance(node.ctx, ast.Store):
                                 assigned_paths[node.id] = None
                         continue
+                    for node in ast.walk(statement):
+                        if isinstance(node, ast.NamedExpr) and isinstance(node.target, ast.Name):
+                            assigned_paths[node.target.id] = None
                     call = statement.value if isinstance(statement, (ast.Expr, ast.Return)) else None
                     if (
                         not isinstance(call, ast.Call)
