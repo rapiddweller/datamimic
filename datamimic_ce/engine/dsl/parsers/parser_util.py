@@ -164,10 +164,11 @@ class ParserUtil:
             if stmt is None:
                 raise ValueError(f"Cannot parse element <{child_ele.tag}>")
 
-            # Early execute some kinds of statement, such as <include>
+            # Static properties includes affect parsing of later siblings.
             if isinstance(stmt, IncludeStatement):
-                new_props = stmt.early_execute(descriptor_dir)
-                copied_props.update(new_props)
+                uri: str = stmt.uri
+                if "{" not in uri and uri.endswith(".properties"):
+                    copied_props.update(FileUtil.parse_properties(descriptor_dir / uri))
 
             result.append(stmt)
 

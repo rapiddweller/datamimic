@@ -6,27 +6,13 @@
 
 from datamimic_ce.engine.dsl.model.include_model import IncludeModel
 from datamimic_ce.engine.dsl.statements.statement import Statement
-from datamimic_ce.engine.io.api import FileUtil
 
 
 class IncludeStatement(Statement):
     def __init__(self, model: IncludeModel):
         super().__init__(None, None)
-        self._uri = model.uri
+        self._uri: str = model.uri
 
     @property
-    def uri(self):
+    def uri(self) -> str:
         return self._uri
-
-    def early_execute(self, descriptor_dir):
-        # A dynamic uri ({var}/... f-string) cannot be resolved at parse time - defer it to the
-        # IncludeTask, which resolves it against the runtime context (dynamic include).
-        if "{" in self._uri:
-            return {}
-        # Case 1: Check if uri is a properties file
-        if self._uri.endswith(".properties"):
-            # Import properties into context
-            return FileUtil.parse_properties(descriptor_dir / self._uri)
-        # Case 2: Check if uri is a descriptor file
-        else:
-            return {}
