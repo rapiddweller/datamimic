@@ -678,6 +678,20 @@ def self_test() -> None:
                 "path = 'fixture.xlsx'\ndel path\nWorkbook().save(path)",
                 False,
             ),
+            (
+                "shadowed-module-dir",
+                "_DIR = Path(__file__).resolve().parent\n"
+                "def save(_DIR):\n    Workbook().save(_DIR / 'fixture.xlsx')\n"
+                "save(Path('/tmp'))",
+                False,
+            ),
+            (
+                "function-import-dir-alias",
+                "_DIR = Path(__file__).resolve().parent\n"
+                "def save():\n    from test_support import _DIR\n"
+                "    Workbook().save(_DIR / 'fixture.xlsx')\nsave()",
+                False,
+            ),
         )
         failures: list[str] = []
         for name, body, expected in cases:
