@@ -261,30 +261,46 @@ def test_fixture_evidence(path: Path, root: ET.Element) -> list[str]:
                         inspect_scope(statement.body, expected_filename, evidence_matches)
                         continue
                     if isinstance(statement, ast.Assign):
-                        has_filename = any(
-                            isinstance(node, ast.Constant) and node.value == expected_filename
-                            for node in ast.walk(statement.value)
+                        value = statement.value
+                        has_filename = (
+                            isinstance(value, ast.Constant) and value.value == expected_filename
+                        ) or (
+                            isinstance(value, ast.BinOp)
+                            and isinstance(value.op, ast.Div)
+                            and isinstance(value.right, ast.Constant)
+                            and value.right.value == expected_filename
                         )
                         for target in statement.targets:
                             if isinstance(target, ast.Name):
                                 assigned_paths[target.id] = statement.lineno if has_filename else None
-                    for node in ast.walk(statement):
-                        if (
-                            not isinstance(node, ast.Call)
-                            or not isinstance(node.func, ast.Attribute)
-                            or node.func.attr != "save"
-                        ):
-                            continue
-                        if not node.args:
-                            continue
-                        argument = node.args[0]
-                        if any(
-                            isinstance(value, ast.Constant) and value.value == expected_filename
-                            for value in ast.walk(argument)
-                        ):
-                            evidence_matches.append((node.lineno, node.lineno))
-                        elif isinstance(argument, ast.Name) and assigned_paths.get(argument.id) is not None:
-                            evidence_matches.append((assigned_paths[argument.id] or node.lineno, node.lineno))
+                    elif isinstance(
+                        statement,
+                        (ast.If, ast.For, ast.AsyncFor, ast.While, ast.Try, ast.With, ast.AsyncWith, ast.Match),
+                    ):
+                        for node in ast.walk(statement):
+                            if isinstance(node, ast.Name) and isinstance(node.ctx, ast.Store):
+                                assigned_paths[node.id] = None
+                        continue
+                    call = statement.value if isinstance(statement, (ast.Expr, ast.Return)) else None
+                    if (
+                        not isinstance(call, ast.Call)
+                        or not isinstance(call.func, ast.Attribute)
+                        or call.func.attr != "save"
+                    ):
+                        continue
+                    if not call.args:
+                        continue
+                    argument = call.args[0]
+                    exact_filename = (isinstance(argument, ast.Constant) and argument.value == expected_filename) or (
+                        isinstance(argument, ast.BinOp)
+                        and isinstance(argument.op, ast.Div)
+                        and isinstance(argument.right, ast.Constant)
+                        and argument.right.value == expected_filename
+                    )
+                    if exact_filename:
+                        evidence_matches.append((call.lineno, call.lineno))
+                    elif isinstance(argument, ast.Name) and assigned_paths.get(argument.id) is not None:
+                        evidence_matches.append((assigned_paths[argument.id] or call.lineno, call.lineno))
 
             inspect_scope(tree.body, filename, matches)
             if matches and workbook_creation:
