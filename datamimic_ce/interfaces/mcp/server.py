@@ -13,9 +13,10 @@ from starlette.requests import Request
 from starlette.responses import JSONResponse, Response
 from starlette.status import HTTP_401_UNAUTHORIZED
 
-from datamimic_ce.authoring import service
+from datamimic_ce.authoring.api import check, reference, run, scaffold
 from datamimic_ce.authoring.contracts import (
     CheckRequest,
+    LintResult,
     ReferenceRequest,
     ReferenceResult,
     RunRequest,
@@ -23,7 +24,6 @@ from datamimic_ce.authoring.contracts import (
     ScaffoldRequest,
     ScaffoldResult,
 )
-from datamimic_ce.authoring.diagnostics import LintResult
 
 
 class MountableApplication(Protocol):
@@ -56,7 +56,7 @@ def create_server() -> FastMCP:
         error diagnostic before calling datamimic_run.
         """
 
-        return await to_thread.run_sync(service.check, request)
+        return await to_thread.run_sync(check, request)
 
     @server.tool("datamimic_run")
     async def datamimic_run(request: RunRequest) -> RunResult:
@@ -66,7 +66,7 @@ def create_server() -> FastMCP:
         explicitly enables side effects. Inspect captured samples and diagnostics.
         """
 
-        return await to_thread.run_sync(service.run, request)
+        return await to_thread.run_sync(run, request)
 
     @server.tool("datamimic_reference")
     async def datamimic_reference(request: ReferenceRequest) -> ReferenceResult:
@@ -76,7 +76,7 @@ def create_server() -> FastMCP:
         element, rule, category, or typed authoring variant.
         """
 
-        return await to_thread.run_sync(service.reference, request)
+        return await to_thread.run_sync(reference, request)
 
     @server.tool("datamimic_scaffold")
     async def datamimic_scaffold(request: ScaffoldRequest) -> ScaffoldResult:
@@ -87,7 +87,7 @@ def create_server() -> FastMCP:
         Their result source is reported as caller.
         """
 
-        return await to_thread.run_sync(service.scaffold, request)
+        return await to_thread.run_sync(scaffold, request)
 
     return server
 

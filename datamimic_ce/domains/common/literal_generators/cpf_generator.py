@@ -23,4 +23,4 @@ class CPFGenerator(BaseLiteralGenerator):
         self._gen = DataFakerGenerator(method="cpf", locale="pt_BR", rng=rng)
 
     def generate(self) -> str:
-        return self._gen.generate()
+        return str(self._gen.generate())

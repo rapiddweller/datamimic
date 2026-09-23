@@ -27,7 +27,4 @@ class HashGenerator(BaseLiteralGenerator):
             str: Hexadecimal string of the hash
         """
         data = self.rng.randbytes(32)
-        # Get the hash function
-        hash_func = getattr(hashlib, self._algorithm)
-        # Calculate and return the hash
-        return hash_func(data).hexdigest()
+        return hashlib.new(self._algorithm, data).hexdigest()

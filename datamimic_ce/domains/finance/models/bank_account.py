@@ -34,7 +34,7 @@ class BankAccount(BaseEntity):
     @property
     @property_cache
     def account_number(self) -> str:
-        return self._bank_account_generator.account_number_generator.generate()
+        return str(self._bank_account_generator.account_number_generator.generate())
 
     @property
     @property_cache

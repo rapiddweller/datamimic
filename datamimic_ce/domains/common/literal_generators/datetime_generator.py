@@ -53,6 +53,16 @@ class DateTimeGenerator(ClockAnchoredDomainGenerator):
         if seed is not None and rng is None:
             rng = _random.Random(seed)
         super().__init__(rng=rng, reference_now=reference_now)
+        self._result: datetime | str = self._reference_now
+        self._min_dt: datetime | None = None
+        self._max_dt: datetime | None = None
+        self._start_date = self._reference_now
+        self._time_difference = timedelta(0)
+        self._dom_allowed_set: set[int] | None = None
+        self._dom_allow_last = False
+        self._month_segments: dict[tuple[int, int], tuple[date, date]] = {}
+        self._month_choices: list[tuple[int, int, list[date], list[float]]] | None = None
+        self._month_choice_weights: list[float] | None = None
 
         # format and weights
         self._input_format = input_format if input_format else "%Y-%m-%d %H:%M:%S"
@@ -322,8 +332,9 @@ class DateTimeGenerator(ClockAnchoredDomainGenerator):
                 self._start_date = self._max_dt - default_span
                 self._time_difference = default_span
             else:
-                self._start_date = self._min_dt  # type: ignore[assignment]
-                self._time_difference = self._max_dt - self._min_dt  # type: ignore[operator]
+                assert self._min_dt is not None and self._max_dt is not None
+                self._start_date = self._min_dt
+                self._time_difference = self._max_dt - self._min_dt
 
             self._mode = self._RANDOM_DATETIME_MODE
 
@@ -332,8 +343,8 @@ class DateTimeGenerator(ClockAnchoredDomainGenerator):
                 self._month_weights is not None
                 or self._weekday_weights is not None
                 or self._dom_weights is not None
-                or (hasattr(self, "_dom_allowed_set") and self._dom_allowed_set is not None)
-                or (hasattr(self, "_dom_allow_last") and self._dom_allow_last)
+                or self._dom_allowed_set is not None
+                or self._dom_allow_last
             ):
                 start_date = self._start_date.date()
                 end_date = (self._start_date + self._time_difference).date()
@@ -350,7 +361,8 @@ class DateTimeGenerator(ClockAnchoredDomainGenerator):
             return self._result
 
         # Weighted day selection path (month/weekday/dom)
-        if hasattr(self, "_month_choices"):
+        if self._month_choices is not None:
+            assert self._month_choice_weights is not None
             y, m, days, day_weights = self._rng.choices(self._month_choices, weights=self._month_choice_weights, k=1)[0]
             chosen_day = self._rng.choices(days, weights=day_weights, k=1)[0]
             h, mi, se = self._sample_time_for_day(y, m, chosen_day.day)
@@ -374,10 +386,10 @@ class DateTimeGenerator(ClockAnchoredDomainGenerator):
     def _sample_time_for_day(self, y: int, m: int, d: int) -> tuple[int, int, int]:
         lo_h, lo_m, lo_s = 0, 0, 0
         hi_h, hi_m, hi_s = 23, 59, 59
-        if hasattr(self, "_min_dt") and self._min_dt and date(y, m, d) == self._min_dt.date():
+        if self._min_dt and date(y, m, d) == self._min_dt.date():
             t: time = self._min_dt.time()
             lo_h, lo_m, lo_s = t.hour, t.minute, t.second
-        if hasattr(self, "_max_dt") and self._max_dt and date(y, m, d) == self._max_dt.date():
+        if self._max_dt and date(y, m, d) == self._max_dt.date():
             t2: time = self._max_dt.time()
             hi_h, hi_m, hi_s = t2.hour, t2.minute, t2.second
         if (lo_h, lo_m, lo_s) > (hi_h, hi_m, hi_s):
@@ -447,10 +459,10 @@ class DateTimeGenerator(ClockAnchoredDomainGenerator):
                 dom = cur.day
                 dw = self._dom_weights[dom - 1] if self._dom_weights else 1.0
                 # Apply DOM sugar masks (allowed set and/or 'last')
-                allowed_set: set[int] | None = getattr(self, "_dom_allowed_set", None)
+                allowed_set = self._dom_allowed_set
                 if allowed_set is not None and dom not in allowed_set:
                     dw = 0.0
-                if getattr(self, "_dom_allow_last", False) and dom != calendar.monthrange(y, m)[1]:
+                if self._dom_allow_last and dom != calendar.monthrange(y, m)[1]:
                     dw = 0.0
                 day_weights.append(mw * ww * dw)
                 cur = cur + timedelta(days=1)

@@ -25,5 +25,4 @@ class UrlGenerator(BaseLiteralGenerator):
         self._gen = DataFakerGenerator(locale=locale, method="url", schemes=schemes, rng=rng)
 
     def generate(self) -> str:
-        url: str = self._gen.generate()
-        return url
+        return str(self._gen.generate())

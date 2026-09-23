@@ -9,9 +9,11 @@ from pathlib import Path
 import typer
 from pydantic import JsonValue, TypeAdapter, ValidationError
 
-from datamimic_ce.authoring import service
+from datamimic_ce.authoring.api import capabilities, check, reference, run, scaffold
 from datamimic_ce.authoring.contracts import (
     AUTHORING_REFERENCE_QUERY_ADAPTER,
+    AuthoringDocument,
+    AuthoringExpectation,
     AuthoringReferenceCategory,
     CheckRequest,
     ReferenceRequest,
@@ -20,12 +22,11 @@ from datamimic_ce.authoring.contracts import (
     ScaffoldRequest,
     ScaffoldVerification,
 )
-from datamimic_ce.authoring.spec import ExpectationIntent
 from datamimic_ce.interfaces import cli_presenter
 from datamimic_ce.interfaces.cli_presenter import CliOutputFormat, FailureThreshold
 
 JSON_OBJECT_ADAPTER = TypeAdapter(dict[str, JsonValue])
-ACCEPTANCE_REQUIREMENTS_ADAPTER = TypeAdapter(tuple[ExpectationIntent, ...])
+ACCEPTANCE_REQUIREMENTS_ADAPTER = TypeAdapter(tuple[AuthoringExpectation, ...])
 
 # Map Pydantic field names to CLI-facing option names for clean error messages.
 _FIELD_LABELS: dict[str, str] = {
@@ -86,7 +87,7 @@ def lint_descriptor(
         )
     except ValidationError as error:
         cli_presenter.fail(_format_validation_error(error), output_format)
-    cli_presenter.emit_check(service.check(request), descriptor_path, output_format, FailureThreshold(fail_on))
+    cli_presenter.emit_check(check(request), descriptor_path, output_format, FailureThreshold(fail_on))
 
 
 def dry_run_descriptor(
@@ -112,7 +113,7 @@ def dry_run_descriptor(
         )
     except ValidationError as error:
         cli_presenter.fail(_format_validation_error(error), output_format)
-    cli_presenter.emit_run(service.run(request), output_format)
+    cli_presenter.emit_run(run(request), output_format)
 
 
 def scaffold_model(
@@ -142,7 +143,7 @@ def scaffold_model(
     try:
         spec = JSON_OBJECT_ADAPTER.validate_json(text)
         request = ScaffoldRequest(
-            spec=spec,
+            spec=AuthoringDocument.model_construct(root=spec),
             acceptance_requirements=acceptance_requirements,
             max_count=max_count,
             sample_rows=sample_rows,
@@ -153,7 +154,7 @@ def scaffold_model(
         )
     except ValidationError as error:
         cli_presenter.fail(_format_validation_error(error), output_format)
-    cli_presenter.emit_scaffold(service.scaffold(request), output_format)
+    cli_presenter.emit_scaffold(scaffold(request), output_format)
 
 
 def _validate_show_reference_args(
@@ -178,7 +179,7 @@ def show_reference(
             if category is not None and kind is not None
             else None
         )
-        result = service.reference(
+        result = reference(
             ReferenceRequest(topic=topic, name=name, category=category if query is None else None, query=query)
         )
     except ValidationError as error:
@@ -203,7 +204,7 @@ def show_capabilities(section: str | None = None, full: bool = False) -> None:
             request = CapabilitiesRequest(mode="full")
         else:
             request = CapabilitiesRequest()
-        cli_presenter.emit_capabilities(service.capabilities(request).root)
+        cli_presenter.emit_capabilities(capabilities(request).root)
     except UnknownCapabilitySection as error:
         payload: dict[str, object] = {
             "ok": False,

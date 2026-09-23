@@ -38,4 +38,4 @@ class EANGenerator(BaseLiteralGenerator):
 
     def generate(self) -> str:
         """Generate a random EAN-13 code."""
-        return self._gen.generate()
+        return str(self._gen.generate())

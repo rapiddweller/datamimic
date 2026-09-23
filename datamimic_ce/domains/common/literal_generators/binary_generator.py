@@ -44,7 +44,7 @@ class BinaryGenerator(BaseLiteralGenerator):
                 f"BinaryGenerator mimeType '{mime_type}' is not supported. "
                 f"Supported: {', '.join(sorted(MIME_SIGNATURES))}"
             )
-        self._header, self._trailer = MIME_SIGNATURES.get(mime_type, (b"", b""))  # type: ignore[arg-type]
+        self._header, self._trailer = MIME_SIGNATURES[mime_type] if mime_type is not None else (b"", b"")
         signature_len = len(self._header) + len(self._trailer)
 
         # One bound given -> the other defaults sensibly, mirroring StringGenerator.
@@ -52,7 +52,8 @@ class BinaryGenerator(BaseLiteralGenerator):
             # a mime stub defaults document-ish (64..256), plain bytes stay small (1..16)
             lo, hi = (64, 256) if mime_type else (1, 16)
         elif min_len is None:
-            hi = int(max_len)  # type: ignore[arg-type]
+            assert max_len is not None
+            hi = max_len
             lo = min(1, hi)
         elif max_len is None:
             lo = hi = int(min_len)

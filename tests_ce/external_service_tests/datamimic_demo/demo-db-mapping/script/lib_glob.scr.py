@@ -7,8 +7,7 @@
 
 from functools import lru_cache
 
-from datamimic_ce.engine.runtime.contexts.context import Context
-from datamimic_ce.engine.runtime.contexts.setup_context import SetupContext
+from datamimic_ce.engine.runtime.api import Context, SetupContext
 
 
 class CustomBusinessMappingConverter(CustomConverter):

@@ -1,5 +1,6 @@
 """End-to-end contract tests for the reduced MCP authoring adapter."""
 
+import hashlib
 import json
 import threading
 
@@ -30,6 +31,11 @@ async def test_exact_authoring_tool_surface_and_no_resources(anyio_backend: str)
         }
         assert await client.list_resources() == []
         assert all(tool.description for tool in tools)
+        scaffold = next(tool for tool in tools if tool.name == "datamimic_scaffold")
+        schema_hash = hashlib.sha256(
+            json.dumps(scaffold.inputSchema, sort_keys=True, separators=(",", ":")).encode()
+        ).hexdigest()
+        assert schema_hash == "fa36a2e3d1da2f82cf1767a4649e6f2b3269eb5d7d12b82f5282d773221b6d51"
 
 
 @pytest.mark.anyio
@@ -118,7 +124,7 @@ async def test_blocking_service_work_is_offloaded_from_the_event_loop(
         service_threads.append(threading.get_ident())
         return LintResult(ok=True)
 
-    monkeypatch.setattr(mcp_server.service, "check", blocking_check)
+    monkeypatch.setattr(mcp_server, "check", blocking_check)
     async with Client(create_server()) as client:
         await client.call_tool("datamimic_check", {"request": {"xml": "<setup/>"}})
 

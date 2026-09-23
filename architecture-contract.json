@@ -121,11 +121,10 @@
         }
       ],
       "public": [
+        "datamimic_ce.authoring.api",
         "datamimic_ce.authoring.contracts"
       ],
-      "planned": [
-        "datamimic_ce.authoring.api"
-      ],
+      "planned": [],
       "decided_by": "architect"
     },
     {
@@ -451,6 +450,16 @@
       "kind": "boundary_types",
       "source": "datamimic_ce.engine.io.api",
       "rationale": "The IO facade accepts declared IO requests instead of exposing mutable exporter internals.",
+      "provenance": [
+        "docs/architecture/refactoring-study/experiment-2/target-architecture.md"
+      ],
+      "decided_by": "architect"
+    },
+    {
+      "id": "AUTHORING-API-TYPES",
+      "kind": "boundary_types",
+      "source": "datamimic_ce.authoring.api",
+      "rationale": "The Authoring facade exposes typed application requests and results rather than implementation modules.",
       "provenance": [
         "docs/architecture/refactoring-study/experiment-2/target-architecture.md"
       ],

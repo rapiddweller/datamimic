@@ -1,10 +1,9 @@
 import random
 from pathlib import Path
-from typing import Any
 
 from datamimic_ce.domains.domain_core.base_domain_generator import DatasetAwareDomainGenerator
 from datamimic_ce.domains.insurance.generators.insurance_coverage_generator import InsuranceCoverageGenerator
-from datamimic_ce.domains.utils.dataset_loader import load_weighted_values_try_dataset, pick_one_weighted
+from datamimic_ce.domains.utils.dataset_loader import pick_one_weighted, read_weighted_records
 
 
 class InsuranceProductGenerator(DatasetAwareDomainGenerator):
@@ -32,23 +31,15 @@ class InsuranceProductGenerator(DatasetAwareDomainGenerator):
     def insurance_coverage_generator(self) -> InsuranceCoverageGenerator:
         return self._insurance_coverage_generator
 
-    def get_random_product(self) -> dict[str, Any]:
-        #  centralized weighted loading via loaders with base filename only
-        values, weights = load_weighted_values_try_dataset(
-            "insurance", "products.csv", dataset=self._dataset, start=Path(__file__)
-        )
+    def get_random_product(self) -> dict[str, str]:
         # values are expected to be serialized dict-like fields or codes; we prefer SPOT returning a record
         # To maintain prior contract, we assume CSV columns: type,code,description,weight
         # Re-read as dicts via loader pattern:
         # Pick an index, then map columns from the headered rows.
-        from datamimic_ce.domains.utils.dataset_loader import read_weighted_records
         from datamimic_ce.domains.utils.dataset_path import dataset_path
 
         file_path = dataset_path("insurance", f"products_{self._dataset}.csv", start=Path(__file__))
-        _, rows = read_weighted_records(file_path, "weight")
-        from typing import cast
-
-        rows_dicts = cast(list[dict[str, object]], rows)
+        _, rows_dicts = read_weighted_records(file_path, "weight")
         # Avoid immediate repetition by type
         if self._last_product_type is not None and len(rows_dicts) > 1:
             pool = [row for row in rows_dicts if row.get("type") != self._last_product_type]

@@ -32,10 +32,8 @@ class DeterminismProof(TypedDict):
 
 def canonicalize(obj: Any) -> Any:
     """Recursively sort mapping keys for deterministic JSON output."""
-    if is_dataclass(obj):
-        # mypy: is_dataclass() is a runtime predicate and doesn't narrow to
-        # DataclassInstance; asdict expects a dataclass instance. Safe at runtime.
-        obj = asdict(obj)  # type: ignore[arg-type]
+    if is_dataclass(obj) and not isinstance(obj, type):
+        obj = asdict(obj)
     if isinstance(obj, dict):
         return {key: canonicalize(obj[key]) for key in sorted(obj)}
     if isinstance(obj, list):

@@ -14,9 +14,7 @@ from rich.panel import Panel
 from rich.table import Table
 
 from datamimic_ce._compat import StrEnum
-from datamimic_ce.authoring.contracts import AuthoringStage, RunResult, ScaffoldResult
-from datamimic_ce.authoring.diagnostics import LintResult
-from datamimic_ce.authoring.rule_catalog import RuleSeverity
+from datamimic_ce.authoring.contracts import AuthoringStage, LintResult, RuleSeverity, RunResult, ScaffoldResult
 
 
 class CliOutputFormat(StrEnum):

@@ -157,3 +157,20 @@ consumers require different concrete shapes.
 **Decision:** the cache stores `object`; each consumer validates and narrows the shape it needs.
 `engine.io.dataset_api` exposes the recursive JSON value type required by domains, without exposing
 IO implementation modules.
+
+## D20 — Authoring operations have one typed application facade
+
+**FACT:** CLI and MCP called `authoring.service` directly and imported diagnostics, rules, and
+intent variants from implementation modules.
+
+**Decision:** transports call the five functions in `authoring.api`. Requests and results cross the
+boundary through `authoring.contracts`; the service remains private implementation.
+
+## D21 — built-in domain capabilities use explicit inventories
+
+**FACT:** generator and entity discovery imported every matching package at runtime, while the
+published capability set is closed and already tested as an ordered projection.
+
+**Decision:** domains declare the built-in generator and entity-service inventories explicitly and
+load them lazily. Adding a built-in is a reviewed registry change; custom descriptor scripts remain
+the extension mechanism.

@@ -5,7 +5,6 @@
 # For questions and support, contact: info@rapiddweller.com
 
 import random
-from typing import Any
 
 from faker import Faker
 
@@ -44,18 +43,11 @@ class DataFakerGenerator(BaseLiteralGenerator):
         self._args = args
         self._kwargs = kwargs
 
-    def generate(self) -> Any:
-        # check worked methods
-        faker_method = getattr(self._faker, self._method, "method does not exist")
-        if faker_method == "method does not exist" or not callable(faker_method):
+    def generate(self) -> object:
+        try:
+            formatter = self._faker.get_formatter(self._method)
+        except AttributeError as exc:
+            raise ValueError(f"Wrong Faker method: {self._method} does not exist") from exc
+        if not callable(formatter):
             raise ValueError(f"Wrong Faker method: {self._method} does not exist")
-        # generate data
-        if self._args and self._kwargs:
-            result = faker_method(*self._args, **self._kwargs)
-        elif self._args:
-            result = faker_method(*self._args)
-        elif self._kwargs:
-            result = faker_method(**self._kwargs)
-        else:
-            result = faker_method()
-        return result
+        return formatter(*self._args, **self._kwargs)

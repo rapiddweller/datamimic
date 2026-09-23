@@ -1,31 +1,13 @@
 {
   "budgets": {
-    "calls_unresolved": 1403,
+    "calls_unresolved": 1399,
     "cycle_edges": 171,
     "private_crossings": 0,
-    "typing_positions": 421,
+    "typing_positions": 390,
     "untyped_private_accesses": 4
   },
   "schema_version": "1.2.0",
   "violations": [
-    {
-      "count": 1,
-      "rules": [
-        "DYNAMIC-EXECUTION-OWNERS"
-      ],
-      "subjects": [
-        "datamimic_ce.domains.domain_core.entity_registry._iter_service_modules"
-      ]
-    },
-    {
-      "count": 2,
-      "rules": [
-        "DYNAMIC-EXECUTION-OWNERS"
-      ],
-      "subjects": [
-        "datamimic_ce.domains.domain_core.generator_registry._iter_literal_generator_modules"
-      ]
-    },
     {
       "count": 2,
       "rules": [
@@ -46,148 +28,11 @@
     },
     {
       "count": 1,
-      "roles": [
-        {
-          "source": "datamimic_ce.interfaces.cli_presenter",
-          "target": "datamimic_ce.authoring.diagnostics"
-        }
-      ],
-      "rules": [
-        "INTERFACES-ONLY"
-      ],
-      "subjects": [
-        "datamimic_ce.authoring.diagnostics.LintResult",
-        "datamimic_ce.interfaces.cli_presenter"
-      ]
-    },
-    {
-      "count": 1,
-      "roles": [
-        {
-          "source": "datamimic_ce.interfaces.mcp.server",
-          "target": "datamimic_ce.authoring.diagnostics"
-        }
-      ],
-      "rules": [
-        "INTERFACES-ONLY"
-      ],
-      "subjects": [
-        "datamimic_ce.authoring.diagnostics.LintResult",
-        "datamimic_ce.interfaces.mcp.server"
-      ]
-    },
-    {
-      "count": 1,
-      "roles": [
-        {
-          "source": "datamimic_ce.interfaces.cli_presenter",
-          "target": "datamimic_ce.authoring.rule_catalog"
-        }
-      ],
-      "rules": [
-        "INTERFACES-ONLY"
-      ],
-      "subjects": [
-        "datamimic_ce.authoring.rule_catalog.RuleSeverity",
-        "datamimic_ce.interfaces.cli_presenter"
-      ]
-    },
-    {
-      "count": 1,
-      "roles": [
-        {
-          "source": "datamimic_ce.interfaces.cli_authoring",
-          "target": "datamimic_ce.authoring.service"
-        }
-      ],
-      "rules": [
-        "INTERFACES-ONLY"
-      ],
-      "subjects": [
-        "datamimic_ce.authoring.service",
-        "datamimic_ce.interfaces.cli_authoring"
-      ]
-    },
-    {
-      "count": 1,
-      "roles": [
-        {
-          "source": "datamimic_ce.interfaces.mcp.server",
-          "target": "datamimic_ce.authoring.service"
-        }
-      ],
-      "rules": [
-        "INTERFACES-ONLY"
-      ],
-      "subjects": [
-        "datamimic_ce.authoring.service",
-        "datamimic_ce.interfaces.mcp.server"
-      ]
-    },
-    {
-      "count": 1,
-      "roles": [
-        {
-          "source": "datamimic_ce.interfaces.cli_authoring",
-          "target": "datamimic_ce.authoring.spec"
-        }
-      ],
-      "rules": [
-        "INTERFACES-ONLY"
-      ],
-      "subjects": [
-        "datamimic_ce.authoring.spec.ExpectationIntent",
-        "datamimic_ce.interfaces.cli_authoring"
-      ]
-    },
-    {
-      "count": 1,
-      "roles": [
-        {
-          "source": "datamimic_ce.resources.demos.demo-db-mapping.script.lib_glob.scr",
-          "target": "datamimic_ce.engine.runtime.contexts.context"
-        }
-      ],
-      "rules": [
-        "INTERFACES-ONLY"
-      ],
-      "subjects": [
-        "datamimic_ce.engine.runtime.contexts.context.Context",
-        "datamimic_ce.resources.demos.demo-db-mapping.script.lib_glob.scr"
-      ]
-    },
-    {
-      "count": 1,
-      "roles": [
-        {
-          "source": "datamimic_ce.resources.demos.demo-db-mapping.script.lib_glob.scr",
-          "target": "datamimic_ce.engine.runtime.contexts.setup_context"
-        }
-      ],
-      "rules": [
-        "INTERFACES-ONLY"
-      ],
-      "subjects": [
-        "datamimic_ce.engine.runtime.contexts.setup_context.SetupContext",
-        "datamimic_ce.resources.demos.demo-db-mapping.script.lib_glob.scr"
-      ]
-    },
-    {
-      "count": 1,
       "rules": [
         "NO-MAGIC-CONTROL-FLOW"
       ],
       "subjects": [
         "datamimic_ce.authoring.contracts.ProductResult.sample"
-      ]
-    },
-    {
-      "count": 1,
-      "rules": [
-        "NO-MAGIC-CONTROL-FLOW"
-      ],
-      "subjects": [
-        "datamimic_ce.authoring.contracts.ScaffoldRequest.spec"
       ]
     },
     {
@@ -623,96 +468,6 @@
       ]
     },
     {
-      "count": 2,
-      "rules": [
-        "NO-MAGIC-CONTROL-FLOW"
-      ],
-      "subjects": [
-        "datamimic_ce.domains.common.literal_generators.binary_generator"
-      ]
-    },
-    {
-      "count": 1,
-      "rules": [
-        "NO-MAGIC-CONTROL-FLOW"
-      ],
-      "subjects": [
-        "datamimic_ce.domains.common.literal_generators.data_faker_generator.DataFakerGenerator.generate"
-      ]
-    },
-    {
-      "count": 1,
-      "rules": [
-        "NO-MAGIC-CONTROL-FLOW"
-      ],
-      "subjects": [
-        "datamimic_ce.domains.common.literal_generators.data_faker_generator.DataFakerGenerator.generate:return"
-      ]
-    },
-    {
-      "count": 2,
-      "rules": [
-        "NO-MAGIC-CONTROL-FLOW"
-      ],
-      "subjects": [
-        "datamimic_ce.domains.common.literal_generators.datetime_generator"
-      ]
-    },
-    {
-      "count": 2,
-      "rules": [
-        "NO-MAGIC-CONTROL-FLOW"
-      ],
-      "subjects": [
-        "datamimic_ce.domains.common.literal_generators.datetime_generator.DateTimeGenerator.__init__"
-      ]
-    },
-    {
-      "count": 2,
-      "rules": [
-        "NO-MAGIC-CONTROL-FLOW"
-      ],
-      "subjects": [
-        "datamimic_ce.domains.common.literal_generators.datetime_generator.DateTimeGenerator._build_month_choice_distribution"
-      ]
-    },
-    {
-      "count": 2,
-      "rules": [
-        "NO-MAGIC-CONTROL-FLOW"
-      ],
-      "subjects": [
-        "datamimic_ce.domains.common.literal_generators.datetime_generator.DateTimeGenerator._sample_time_for_day"
-      ]
-    },
-    {
-      "count": 1,
-      "rules": [
-        "NO-MAGIC-CONTROL-FLOW"
-      ],
-      "subjects": [
-        "datamimic_ce.domains.common.literal_generators.datetime_generator.DateTimeGenerator.generate"
-      ]
-    },
-    {
-      "count": 2,
-      "rules": [
-        "NO-MAGIC-CONTROL-FLOW"
-      ],
-      "subjects": [
-        "datamimic_ce.domains.common.literal_generators.email_address_generator.EmailAddressGenerator.generate"
-      ]
-    },
-    {
-      "count": 1,
-      "rules": [
-        "NO-MAGIC-CONTROL-FLOW"
-      ],
-      "subjects": [
-        "datamimic_ce.domains.common.literal_generators.hash_generator.HashGenerator.generate"
-      ]
-    },
-    {
       "count": 1,
       "rules": [
         "NO-MAGIC-CONTROL-FLOW"
@@ -961,15 +716,6 @@
         "NO-MAGIC-CONTROL-FLOW"
       ],
       "subjects": [
-        "datamimic_ce.domains.determinism"
-      ]
-    },
-    {
-      "count": 1,
-      "rules": [
-        "NO-MAGIC-CONTROL-FLOW"
-      ],
-      "subjects": [
         "datamimic_ce.domains.determinism.canonical_json:obj"
       ]
     },
@@ -1079,24 +825,6 @@
       ],
       "subjects": [
         "datamimic_ce.domains.domain_core.base_entity.BaseEntity.to_dict:return"
-      ]
-    },
-    {
-      "count": 1,
-      "rules": [
-        "NO-MAGIC-CONTROL-FLOW"
-      ],
-      "subjects": [
-        "datamimic_ce.domains.domain_core.entity_registry._iter_service_modules"
-      ]
-    },
-    {
-      "count": 1,
-      "rules": [
-        "NO-MAGIC-CONTROL-FLOW"
-      ],
-      "subjects": [
-        "datamimic_ce.domains.domain_core.generator_registry._iter_literal_generator_modules"
       ]
     },
     {
@@ -1267,15 +995,6 @@
         "NO-MAGIC-CONTROL-FLOW"
       ],
       "subjects": [
-        "datamimic_ce.domains.finance.generators.transaction_generator.TransactionGenerator.generate_transaction_data"
-      ]
-    },
-    {
-      "count": 1,
-      "rules": [
-        "NO-MAGIC-CONTROL-FLOW"
-      ],
-      "subjects": [
         "datamimic_ce.domains.finance.models.bank.Bank.to_dict:return"
       ]
     },
@@ -1313,15 +1032,6 @@
       ],
       "subjects": [
         "datamimic_ce.domains.healthcare.generators.medical_device_generator.MedicalDeviceGenerator.generate_maintenance_history:return"
-      ]
-    },
-    {
-      "count": 1,
-      "rules": [
-        "NO-MAGIC-CONTROL-FLOW"
-      ],
-      "subjects": [
-        "datamimic_ce.domains.healthcare.generators.patient_generator"
       ]
     },
     {
@@ -1394,24 +1104,6 @@
       ],
       "subjects": [
         "datamimic_ce.domains.insurance.generators.insurance_coverage_generator.InsuranceCoverageGenerator.get_random_coverage:return"
-      ]
-    },
-    {
-      "count": 1,
-      "rules": [
-        "NO-MAGIC-CONTROL-FLOW"
-      ],
-      "subjects": [
-        "datamimic_ce.domains.insurance.generators.insurance_product_generator.InsuranceProductGenerator.get_random_product"
-      ]
-    },
-    {
-      "count": 1,
-      "rules": [
-        "NO-MAGIC-CONTROL-FLOW"
-      ],
-      "subjects": [
-        "datamimic_ce.domains.insurance.generators.insurance_product_generator.InsuranceProductGenerator.get_random_product:return"
       ]
     },
     {
@@ -1601,33 +1293,6 @@
       ],
       "subjects": [
         "datamimic_ce.domains.person.service.generate:return"
-      ]
-    },
-    {
-      "count": 1,
-      "rules": [
-        "NO-MAGIC-CONTROL-FLOW"
-      ],
-      "subjects": [
-        "datamimic_ce.domains.public_sector.generators.educational_institution_generator.EducationalInstitutionGenerator.pick_institution_type"
-      ]
-    },
-    {
-      "count": 1,
-      "rules": [
-        "NO-MAGIC-CONTROL-FLOW"
-      ],
-      "subjects": [
-        "datamimic_ce.domains.public_sector.generators.police_officer_generator.PoliceOfficerGenerator.get_department"
-      ]
-    },
-    {
-      "count": 1,
-      "rules": [
-        "NO-MAGIC-CONTROL-FLOW"
-      ],
-      "subjects": [
-        "datamimic_ce.domains.public_sector.generators.police_officer_generator.PoliceOfficerGenerator.pick_unit"
       ]
     },
     {

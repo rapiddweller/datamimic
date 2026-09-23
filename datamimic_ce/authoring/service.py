@@ -192,8 +192,9 @@ def run(request: RunRequest) -> RunResult:
 
 def scaffold(request: ScaffoldRequest) -> ScaffoldResult:
     """Compile, lint, run, accept and optionally verify one authoring intent."""
+    acceptance_requirements = tuple(item.root for item in request.acceptance_requirements)
     try:
-        compiled = compile_document(request.spec)
+        compiled = compile_document(request.spec.root)
     except AuthoringDocumentError as error:
         return ScaffoldResult(
             ok=False,
@@ -210,14 +211,14 @@ def scaffold(request: ScaffoldRequest) -> ScaffoldResult:
         )
     try:
         validate_expectation_products(
-            request.acceptance_requirements,
+            acceptance_requirements,
             compiled.spec.products,
             ("acceptance_requirements",),
         )
     except ValidationError as error:
         raw_requirements = {
             "acceptance_requirements": [
-                expectation.model_dump(mode="json") for expectation in request.acceptance_requirements
+                expectation.model_dump(mode="json") for expectation in acceptance_requirements
             ]
         }
         issues = project_validation_issues(error, raw_requirements)
@@ -293,7 +294,7 @@ def scaffold(request: ScaffoldRequest) -> ScaffoldResult:
         compiled.plan,
         compiled.spec,
         captured_run.captured,
-        request.acceptance_requirements,
+        acceptance_requirements,
     )
     remediations: list[ScaffoldRemediation] = [
         *max_count_remediations(compiled.plan, captured_run.captured)

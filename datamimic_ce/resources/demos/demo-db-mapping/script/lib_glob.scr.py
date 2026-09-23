@@ -2,8 +2,7 @@ import logging
 from functools import lru_cache
 
 from datamimic_ce.domains.api import Converter, CustomConverter
-from datamimic_ce.engine.runtime.contexts.context import Context
-from datamimic_ce.engine.runtime.contexts.setup_context import SetupContext
+from datamimic_ce.engine.runtime.api import Context, SetupContext
 
 logger = logging.getLogger("DATAMIMIC")
 

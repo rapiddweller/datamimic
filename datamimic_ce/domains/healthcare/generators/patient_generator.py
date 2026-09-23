@@ -24,7 +24,6 @@ from datamimic_ce.domains.domain_core.base_domain_generator import DatasetAwareD
 from datamimic_ce.domains.utils.dataset_loader import (
     load_weighted_values_try_dataset,
     pick_one_weighted_no_repeat,
-    read_weighted_dataframe,
     read_weighted_records,
     read_weighted_values,
 )
@@ -171,9 +170,9 @@ class PatientGenerator(DatasetAwareDomainGenerator):
         file_path = dataset_path(
             "healthcare", "medical", f"insurance_providers_{self._dataset}.csv", start=Path(__file__)
         )
-        loaded_data = read_weighted_dataframe(file_path)
+        values, weights = read_weighted_values(file_path)
         # Reuse the injected RNG to keep sampling reproducible under tests.
-        return self._rng.choices(loaded_data[0], weights=loaded_data[1], k=1)[0]  # type: ignore
+        return self._rng.choices(values, weights=weights, k=1)[0]
 
     def get_allergies(self) -> list[str]:
         # Determine how many allergies to generate (most people have 0-3)

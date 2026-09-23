@@ -40,6 +40,7 @@ class EducationalInstitutionGenerator(ClockAnchoredDomainGenerator):
         )
         # Track last chosen level to reduce immediate repetition across entities
         self._last_level: str | None = None
+        self._last_institution_type: str | None = None
         self._last_accreditations: tuple[str, ...] | None = None
 
     @property
@@ -130,7 +131,7 @@ class EducationalInstitutionGenerator(ClockAnchoredDomainGenerator):
             "public_sector", "education", "institution_types.csv", dataset=self._dataset, start=start
         )
         choice = pick_one_weighted_no_repeat(
-            self._rng, values, weights, last=getattr(self, "_last_institution_type", None)
+            self._rng, values, weights, last=self._last_institution_type
         )
         self._last_institution_type = choice
         return choice

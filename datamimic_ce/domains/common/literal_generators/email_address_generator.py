@@ -5,7 +5,6 @@
 # For questions and support, contact: info@rapiddweller.com
 
 import random
-from typing import cast
 
 from datamimic_ce.domains.common.literal_generators.domain_generator import DomainGenerator
 from datamimic_ce.domains.common.literal_generators.family_name_generator import FamilyNameGenerator
@@ -42,11 +41,18 @@ class EmailAddressGenerator(DatasetAwareDomainGenerator):
         """
         create a email address
         """
-        given_name_generator = cast(GivenNameGenerator, self._given_name_generator)
-        family_name_generator = cast(FamilyNameGenerator, self._family_name_generator)
-
-        given_name = str(self._given_name or given_name_generator.generate()).lower()
-        family_name = str(self._family_name or family_name_generator.generate()).lower()
+        if not self._given_name:
+            assert self._given_name_generator is not None
+            given_name = self._given_name_generator.generate()
+        else:
+            given_name = self._given_name
+        if not self._family_name:
+            assert self._family_name_generator is not None
+            family_name = self._family_name_generator.generate()
+        else:
+            family_name = self._family_name
+        given_name = given_name.lower()
+        family_name = family_name.lower()
         if self._company_name:
             domain = self._domain_generator.generate_with_company_name(self._company_name).lower()
         else:

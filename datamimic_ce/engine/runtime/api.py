@@ -6,6 +6,8 @@ from typing import Literal
 
 from datamimic_ce.engine.dsl.api import GeneratorCapability, describe_generator_type, parse_properties
 from datamimic_ce.engine.runtime.config import settings
+from datamimic_ce.engine.runtime.contexts.context import Context
+from datamimic_ce.engine.runtime.contexts.setup_context import SetupContext
 from datamimic_ce.engine.runtime.contracts import PlatformProperties, RunRequest, RunResult, RunSession
 from datamimic_ce.engine.runtime.generators.sequence_table import SequenceTableGenerator
 from datamimic_ce.engine.runtime.runner import create_run_session as _create_run_session
@@ -38,6 +40,8 @@ def run(request: RunRequest) -> RunResult:
 
 
 __all__ = [
+    "Context",
+    "SetupContext",
     "create_run_session",
     "iter_generator_capabilities",
     "load_descriptor_properties",

@@ -2,24 +2,13 @@
 # Copyright (c) 2023-2025 Rapiddweller Asia Co., Ltd.
 # This software is licensed under the MIT License.
 # See LICENSE file for the full text of the license.
-# For questions and support, contact: info@rapiddweller.com
+# For questions and support: info@rapiddweller.com
 
-"""Registry for domain entity services.
-
-Discovers ``BaseDomainService`` subclasses across ``datamimic_ce.domains.*``
-so the DSL can resolve ``entity="Person"`` to a service class without a
-hand-maintained mapping. Each entity also carries its declared attribute
-specs so the schema-consistency gate can check them.
-"""
+"""Registry for built-in domain entity services."""
 
 from __future__ import annotations
 
-import importlib
-import inspect
-import pkgutil
-from collections.abc import Iterable
 from dataclasses import dataclass
-from types import ModuleType
 
 from datamimic_ce.domains.domain_core.attribute_catalog import FieldSpec
 from datamimic_ce.domains.domain_core.base_domain_service import BaseDomainService
@@ -37,7 +26,7 @@ class EntitySpec:
 
 _ENTITY_REGISTRY: dict[str, EntitySpec] = {}
 _CLASS_TO_SPEC: dict[type[BaseDomainService], EntitySpec] = {}
-_LOADED: bool = False
+_LOADED = False
 
 
 def _ensure_loaded() -> None:
@@ -48,27 +37,47 @@ def _ensure_loaded() -> None:
 
 
 def auto_register_entities() -> None:
-    """Discover BaseDomainService subclasses across datamimic_ce.domains.* services."""
-    import datamimic_ce.domains as domains_pkg
-
-    for module in _iter_service_modules(domains_pkg):
-        for _, cls in inspect.getmembers(module, inspect.isclass):
-            if not issubclass(cls, BaseDomainService) or cls is BaseDomainService:
-                continue
-            # Only register a class in the module that defines it (skip re-exports).
-            if cls.__module__ != module.__name__:
-                continue
-            _register_service_class(cls)
+    """Register the built-in entity services and their schema declarations."""
+    for service_cls in _builtin_services():
+        _register_service_class(service_cls)
 
 
-def _iter_service_modules(root_pkg: ModuleType) -> Iterable[ModuleType]:
-    """Yield modules under datamimic_ce.domains.* whose dotted name includes '.services'."""
-    if not hasattr(root_pkg, "__path__"):
-        return
-    for _, name, _ in pkgutil.walk_packages(root_pkg.__path__, root_pkg.__name__ + "."):
-        if ".services" not in name:
-            continue
-        yield importlib.import_module(name)
+def _builtin_services() -> tuple[type[BaseDomainService], ...]:
+    # Preserve package traversal order and first-alias wins with an explicit inventory.
+    from datamimic_ce.domains.common.services.address_service import AddressService
+    from datamimic_ce.domains.common.services.city_service import CityService
+    from datamimic_ce.domains.common.services.company_service import CompanyService
+    from datamimic_ce.domains.common.services.country_service import CountryService
+    from datamimic_ce.domains.common.services.person_service import PersonService
+    from datamimic_ce.domains.ecommerce.services.order_service import OrderService
+    from datamimic_ce.domains.ecommerce.services.product_service import ProductService
+    from datamimic_ce.domains.finance.services.bank_account_service import BankAccountService
+    from datamimic_ce.domains.finance.services.bank_service import BankService
+    from datamimic_ce.domains.finance.services.credit_card_service import CreditCardService
+    from datamimic_ce.domains.finance.services.transaction_service import TransactionService
+    from datamimic_ce.domains.healthcare.services.doctor_service import DoctorService
+    from datamimic_ce.domains.healthcare.services.hospital_service import HospitalService
+    from datamimic_ce.domains.healthcare.services.medical_device_service import MedicalDeviceService
+    from datamimic_ce.domains.healthcare.services.medical_procedure_service import MedicalProcedureService
+    from datamimic_ce.domains.healthcare.services.patient_service import PatientService
+    from datamimic_ce.domains.insurance.services.insurance_company_service import InsuranceCompanyService
+    from datamimic_ce.domains.insurance.services.insurance_coverage_service import InsuranceCoverageService
+    from datamimic_ce.domains.insurance.services.insurance_policy_service import InsurancePolicyService
+    from datamimic_ce.domains.insurance.services.insurance_product_service import InsuranceProductService
+    from datamimic_ce.domains.public_sector.services.administration_office_service import AdministrationOfficeService
+    from datamimic_ce.domains.public_sector.services.educational_institution_service import (
+        EducationalInstitutionService,
+    )
+    from datamimic_ce.domains.public_sector.services.police_officer_service import PoliceOfficerService
+
+    return (
+        AddressService, CityService, CompanyService, CountryService, PersonService,
+        OrderService, ProductService, BankAccountService, BankService, CreditCardService,
+        TransactionService, DoctorService, HospitalService, MedicalDeviceService,
+        MedicalProcedureService, PatientService, InsuranceCompanyService,
+        InsuranceCoverageService, InsurancePolicyService, InsuranceProductService,
+        AdministrationOfficeService, EducationalInstitutionService, PoliceOfficerService,
+    )
 
 
 def _entity_name_for(cls: type[BaseDomainService]) -> str:
@@ -91,25 +100,18 @@ def _register_service_class(cls: type[BaseDomainService]) -> None:
         _ENTITY_REGISTRY.setdefault(alias, spec)
 
 
-def _aliases_for(cls: type[BaseDomainService], entity_name: str) -> set[str]:
+def _aliases_for(cls: type[BaseDomainService], entity_name: str) -> tuple[str, ...]:
     service_name = cls.__name__
     module = cls.__module__
-    names = {entity_name, service_name, f"{module}.{service_name}"}
+    aliases = [entity_name, service_name, f"{module}.{service_name}"]
     if module.startswith(_DOMAINS_PREFIX):
-        names.add(f"{module[len(_DOMAINS_PREFIX) :]}.{service_name}")
-    return {name for name in names if name}
+        aliases.append(f"{module[len(_DOMAINS_PREFIX) : ]}.{service_name}")
+    return tuple(alias for alias in aliases if alias)
 
 
 def list_entity_specs() -> tuple[EntitySpec, ...]:
     _ensure_loaded()
-    seen: set[type[BaseDomainService]] = set()
-    ordered: list[EntitySpec] = []
-    for spec in _ENTITY_REGISTRY.values():
-        if spec.service_cls in seen:
-            continue
-        seen.add(spec.service_cls)
-        ordered.append(spec)
-    return tuple(ordered)
+    return tuple(_CLASS_TO_SPEC.values())
 
 
 def get_entity_spec(name: str) -> EntitySpec | None:
@@ -118,9 +120,7 @@ def get_entity_spec(name: str) -> EntitySpec | None:
     if spec is not None:
         return spec
     if name.startswith(_DOMAINS_PREFIX):
-        spec = _ENTITY_REGISTRY.get(name[len(_DOMAINS_PREFIX) :])
-        if spec is not None:
-            return spec
+        return _ENTITY_REGISTRY.get(name[len(_DOMAINS_PREFIX) :])
     return None
 
 
