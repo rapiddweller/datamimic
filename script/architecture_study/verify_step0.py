@@ -513,6 +513,22 @@ def self_test() -> None:
     assert test_evidence(REPO / "tests_ce/integration_tests/test_timeseries/invalid_partial_window.xml") is not None
     assert test_evidence(REPO / "tests_ce/integration_tests/test_timeseries/basic_one_series.xml") is None
     assert test_evidence(REPO / "tests_ce/functional_tests/test_condition/test_condition.xml") is None
+    with tempfile.TemporaryDirectory(prefix="dm-oracle-self-test-", dir=REPO) as temp:
+        for name, save_name in (("positive", "fixture.xlsx"), ("negative", "other.xlsx")):
+            case = Path(temp) / name
+            case.mkdir()
+            descriptor = case / "descriptor.xml"
+            descriptor.write_text('<setup><generate source="fixture.xlsx"/></setup>', encoding="utf-8")
+            reference = "fixture.xlsx" if name == "positive" else 'source = "fixture.xlsx"'
+            (case / "test_fixture.py").write_text(
+                f"from openpyxl import Workbook\n{reference}\nWorkbook().save('{save_name}')\n",
+                encoding="utf-8",
+            )
+            evidence = test_fixture_evidence(descriptor, ET.parse(descriptor).getroot())
+            if name == "positive":
+                assert evidence, "exact workbook creation should be detected"
+            else:
+                assert not evidence, f"unrelated workbook save was misclassified: {evidence}"
 
 
 def main() -> None:
