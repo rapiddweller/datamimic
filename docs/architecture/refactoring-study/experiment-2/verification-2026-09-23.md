@@ -2,7 +2,8 @@
 
 ## State
 
-- CE branch: `experiment/target-architecture-v2`; last code/test change `9d5e9c5c`.
+- CE branch: `experiment/target-architecture-v2`; last production-package change
+  `5c37e158`. Later commits change tests, the experiment oracle, and evidence only.
 - The final checker is published [ArchKeel 0.6.1](https://github.com/rapiddweller/archkeel/releases/tag/0.6.1),
   tag `6f865167`, analyzer `0.47.0`. Its tag workflow passed build and PyPI
   publish; a fresh isolated PyPI install reports `archkeel 0.6.1`. The frozen
@@ -16,6 +17,10 @@
   unresolved calls (narrowed from 1,288), 171 cycle edges, 144 typing positions,
   and 3 untyped private accesses. `archkeel report` was regenerated with the
   published package; the generated JSON/HTML stays outside the repository.
+- Internal cycle debt remains: 7 SCCs (6 module, 1 package), covering 171 cycle
+  edges. The largest module SCCs contain 28 DSL parser modules and 23 runtime
+  modules. The declared component graph has no cycle; this is not a claim that
+  package/module cycles are gone.
 
 ## DSL oracle
 
@@ -30,8 +35,20 @@ records `array<str>`.
 The capture covers 454 successful descriptors, 62 expected errors, 16 files that
 are not descriptors, and 76 unchanged unrunnable outcomes. Another 322 are
 unverified by this oracle: 273 service descriptors, 40 standalone authoring
-fixtures, and 9 dependent fixtures. The later test-only commit `9d5e9c5c` changes
-no production, XML, or adjacent XML test-evidence files.
+fixtures, and 9 dependent fixtures. The later test/oracle/evidence commits change
+no production or XML descriptor files.
+
+Three of the 9 XLSX-dependent descriptors were compared separately against the
+frozen Step-0 checkout with the same 12-row workbook fixture. The full captured
+rows match byte-for-byte: `read_random_seeded.xml` (12), `read_paged_ordered.xml`
+(12), and `read_cumulated_seeded.xml` (200). Both canonical capture files have
+SHA-256 `6d206b67c795442d93ef398a2ef25636ee036e3193d4eecf2b4a1b5473abb7ac`.
+The runner asserted the imported CE checkout in both processes. The automated
+inventory still skips all 9; this separate proof leaves 319 entries without a
+Step-0-versus-HEAD comparison. The fixture-dependency classifier now has positive
+and negative self-tests for exact writes, unrelated writes, rebinding, function
+scope, and conditional paths. Its static evidence remains conservative, not a
+proof that arbitrary Python fixture setup executes.
 
 ## Serial tests
 
@@ -54,12 +71,20 @@ The six external failures are MSSQL/Oracle tests configured for local ports
 1433/1521. OrbStack exposes 41433/41521. A temporary port-only rerun reached
 both servers, then failed on the existing MSSQL credentials and Oracle service
 name. The temporary config edits were reverted. Step 08c17 records six passes
-with fully matched local fixture settings. The current run does not prove those
+with fully matched local fixture settings. The port-only run did not prove those
 six against today's service configuration.
 
-Ruff and full-package MyPy pass. `make lint` fails at Pylint with exit 30. The
-frozen code also exits 30 with 24 error-severity findings; total Pylint findings
-rose from 3,508 to 3,701, mainly convention messages.
+The same six tests then passed serially (`6 passed` in 44.45 s) against fresh,
+disposable MSSQL 2025 and Oracle Free 23 containers, using copied fixture trees
+and matching local configs. Both containers and copied fixtures were removed;
+the shared Platform databases were not touched. This proves the six paths under
+that isolated environment, not one green run of the entire external suite.
+
+Ruff and full-package MyPy pass. `make lint` fails at Pylint with exit 30. With
+Pylint 3.3.7, frozen code and experiment have the same 24 error-severity
+findings by symbol and message. Total findings are 3,509 versus 3,707 in the
+latest paired run, mainly 212 additional convention messages. Historical
+lint debt is not hidden by changing the gate.
 
 ## Verdicts after Amendment 12
 
@@ -68,8 +93,8 @@ rose from 3,508 to 3,701, mainly convention messages.
   This is checked with the publicly installed ArchKeel 0.6.1 package, not a local
   candidate. It does not prove behavior or test quality.
 - **Behavior preserved for the comparable oracle set:** both frozen comparisons have zero
-  differences. The 322 unverified entries and six current external-service failures prevent
-  an unqualified all-descriptors claim.
-- **Delivery not ready:** `make lint` and the complete current external-service suite are
-  not green; 322 XMLs have no Step-0-versus-HEAD runtime comparison. No CE merge or
+  differences. Three more XLSX cases match exactly in isolated comparison. The
+  remaining 319 without comparison prevent an unqualified all-descriptors claim.
+- **Delivery not ready:** `make lint` remains red, the complete external-service
+  suite has not passed in one isolated run, and remote CE CI has not run. No CE merge or
   release is justified by the structural verdict alone.
