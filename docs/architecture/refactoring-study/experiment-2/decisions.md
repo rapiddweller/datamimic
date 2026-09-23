@@ -174,3 +174,11 @@ published capability set is closed and already tested as an ordered projection.
 **Decision:** domains declare the built-in generator and entity-service inventories explicitly and
 load them lazily. Adding a built-in is a reviewed registry change; custom descriptor scripts remain
 the extension mechanism.
+
+## D22 — packaged resources have a real read facade
+
+**FACT:** CLI code discovered `datamimic_ce.resources` twice through string-based
+`importlib.resources` calls while `resources.api` was still planned.
+
+**Decision:** `resources.api` owns packaged-demo discovery. Interfaces consume its typed
+`Traversable` and iterator results; existing filesystem-only copy semantics remain unchanged.

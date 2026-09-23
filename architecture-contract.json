@@ -312,10 +312,10 @@
           "rationale": "Examples exercise public domain generators."
         }
       ],
-      "public": [],
-      "planned": [
+      "public": [
         "datamimic_ce.resources.api"
       ],
+      "planned": [],
       "decided_by": "architect"
     },
     {
@@ -460,6 +460,16 @@
       "kind": "boundary_types",
       "source": "datamimic_ce.authoring.api",
       "rationale": "The Authoring facade exposes typed application requests and results rather than implementation modules.",
+      "provenance": [
+        "docs/architecture/refactoring-study/experiment-2/target-architecture.md"
+      ],
+      "decided_by": "architect"
+    },
+    {
+      "id": "RESOURCES-API-TYPES",
+      "kind": "boundary_types",
+      "source": "datamimic_ce.resources.api",
+      "rationale": "The resource facade exposes typed packaged-resource access rather than string-based package discovery.",
       "provenance": [
         "docs/architecture/refactoring-study/experiment-2/target-architecture.md"
       ],

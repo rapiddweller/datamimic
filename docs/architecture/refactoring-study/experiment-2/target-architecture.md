@@ -84,6 +84,7 @@ graph TD
     interfaces --> authoring
     interfaces --> domains
     interfaces --> python_compat
+    interfaces --> resources
     interfaces --> runtime
     io --> dsl
     python_api --> interfaces
