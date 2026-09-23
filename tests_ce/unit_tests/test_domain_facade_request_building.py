@@ -1,8 +1,8 @@
 import pytest
 
 from datamimic_ce.domains.address.service import AddressRequest
-from datamimic_ce.domains.doctor.service import DoctorRequest
 from datamimic_ce.domains.determinism import canonical_json, hash_bytes
+from datamimic_ce.domains.doctor.service import DoctorRequest
 from datamimic_ce.domains.exceptions import DomainError
 from datamimic_ce.domains.facade import _build_request, generate_domain
 from datamimic_ce.domains.json_types import JsonObject
