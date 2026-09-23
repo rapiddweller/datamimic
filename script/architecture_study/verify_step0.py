@@ -582,7 +582,17 @@ def self_test() -> None:
     assert test_evidence(REPO / "tests_ce/functional_tests/test_condition/test_condition.xml") is None
     with tempfile.TemporaryDirectory(prefix="dm-oracle-self-test-", dir=REPO) as temp:
         cases = (
-            ("positive", "Workbook().save('fixture.xlsx')", True),
+            (
+                "positive",
+                "_DIR = Path(__file__).resolve().parent\nWorkbook().save(_DIR / 'fixture.xlsx')",
+                True,
+            ),
+            (
+                "absolute-path-save",
+                "Workbook().save(Path('/tmp') / 'fixture.xlsx')",
+                False,
+            ),
+            ("relative-path-save", "Workbook().save('fixture.xlsx')", False),
             ("unrelated-save", "Workbook().save('other.xlsx')  # fixture.xlsx", False),
             ("suffix-save", "Workbook().save('fixture.xlsx.old')", False),
             (
@@ -634,7 +644,7 @@ def self_test() -> None:
             descriptor = case / "descriptor.xml"
             descriptor.write_text('<setup><generate source="fixture.xlsx"/></setup>', encoding="utf-8")
             (case / "test_fixture.py").write_text(
-                f"from openpyxl import Workbook\n{body}\n",
+                f"from pathlib import Path\nfrom openpyxl import Workbook\n{body}\n",
                 encoding="utf-8",
             )
             evidence = test_fixture_evidence(descriptor, ET.parse(descriptor).getroot())
