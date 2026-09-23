@@ -1,7 +1,8 @@
 from __future__ import annotations
 
 from dataclasses import dataclass, field
-from typing import TypedDict
+
+from typing_extensions import TypedDict
 
 from ..determinism import canonical_json, derive_seed, determinism_proof, hash_bytes, mix_seed, stable_uuid, with_rng
 from ..exceptions import DomainError

@@ -13,6 +13,7 @@ from functools import cache
 from pathlib import Path
 
 from ..exceptions import DomainError
+from ..json_types import JsonObject
 from ..utils.dataset_path import dataset_path, is_strict_dataset_mode
 from ..utils.supported_datasets import compute_supported_datasets
 from .locale_registry import dataset_code_for_locale
@@ -47,7 +48,7 @@ def resolve_component_profile(
     version: str,
     component_id: str,
     request_hash: str,
-) -> tuple[str, dict[str, object]]:
+) -> tuple[str, JsonObject]:
     """Resolve a component to (dmgrp_profile_id, constraints) enforcing strict mode."""
 
     if version != "v1":

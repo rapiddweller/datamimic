@@ -1,11 +1,12 @@
 from __future__ import annotations
 
 import json
+from collections.abc import Mapping
 from functools import cache
 from pathlib import Path
-from typing import Any
 
-from jsonschema import Draft7Validator  # type: ignore[import-untyped]
+from jsonschema import Draft7Validator
+from pydantic import JsonValue
 
 from .exceptions import DomainError
 
@@ -24,7 +25,7 @@ def load_schema(domain: str, kind: str, version: str) -> Draft7Validator:
 
 
 def validate_payload(
-    payload: dict[str, Any],
+    payload: JsonValue | Mapping[str, object],
     domain: str,
     kind: str,
     version: str,

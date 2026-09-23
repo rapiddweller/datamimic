@@ -2,7 +2,8 @@ from __future__ import annotations
 
 from dataclasses import dataclass, field
 from datetime import datetime, timezone
-from typing import TypedDict
+
+from typing_extensions import TypedDict
 
 from ..determinism import (
     canonical_json,
