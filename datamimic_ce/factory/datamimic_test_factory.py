@@ -39,9 +39,9 @@ class DataMimicTestFactory:
         )
 
         # Execute test
-        start_time = time.time()
+        start_time = time.perf_counter()
         test_engine.execute()
-        logger.info(f"The test took {time.time() - start_time} seconds to execute.")
+        logger.info(f"The test took {time.perf_counter() - start_time} seconds to execute.")
 
         # Capture result
         capture = test_engine.capture_test_result()
@@ -78,9 +78,9 @@ class DataMimicTestFactory:
         )
 
         # Execute test
-        start_time = time.time()
+        start_time = time.perf_counter()
         test_engine.execute()
-        logger.info(f"The test took {time.time() - start_time} seconds to execute.")
+        logger.info(f"The test took {time.perf_counter() - start_time} seconds to execute.")
 
         # Capture result
         capture = test_engine.capture_test_result()
