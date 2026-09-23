@@ -1,9 +1,9 @@
 {
   "budgets": {
-    "calls_unresolved": 1404,
-    "cycle_edges": 172,
+    "calls_unresolved": 1403,
+    "cycle_edges": 171,
     "private_crossings": 2,
-    "typing_positions": 458,
+    "typing_positions": 454,
     "untyped_private_accesses": 4
   },
   "schema_version": "1.2.0",
@@ -90,22 +90,6 @@
       "subjects": [
         "datamimic_ce.authoring.diagnostics.LintResult",
         "datamimic_ce.interfaces.mcp.server"
-      ]
-    },
-    {
-      "count": 1,
-      "roles": [
-        {
-          "source": "datamimic_ce.authoring.dryrun",
-          "target": "datamimic_ce.datamimic"
-        }
-      ],
-      "rules": [
-        "INTERFACES-ONLY"
-      ],
-      "subjects": [
-        "datamimic_ce.authoring.dryrun",
-        "datamimic_ce.datamimic.DataMimic"
       ]
     },
     {
@@ -2560,182 +2544,6 @@
       "count": 1,
       "roles": [
         {
-          "source": "datamimic_ce.datamimic",
-          "target": "datamimic_ce.engine.dsl.parsers.descriptor_parser"
-        }
-      ],
-      "rules": [
-        "INTERFACES-ONLY"
-      ],
-      "subjects": [
-        "datamimic_ce.datamimic",
-        "datamimic_ce.engine.dsl.parsers.descriptor_parser.DescriptorParser"
-      ]
-    },
-    {
-      "count": 1,
-      "roles": [
-        {
-          "source": "datamimic_ce.datamimic",
-          "target": "datamimic_ce.engine.dsl.statements.generate_statement"
-        }
-      ],
-      "rules": [
-        "INTERFACES-ONLY"
-      ],
-      "subjects": [
-        "datamimic_ce.datamimic",
-        "datamimic_ce.engine.dsl.statements.generate_statement.GenerateStatement"
-      ]
-    },
-    {
-      "count": 1,
-      "roles": [
-        {
-          "source": "datamimic_ce.datamimic",
-          "target": "datamimic_ce.engine.dsl.statements.setup_statement"
-        }
-      ],
-      "rules": [
-        "INTERFACES-ONLY"
-      ],
-      "subjects": [
-        "datamimic_ce.datamimic",
-        "datamimic_ce.engine.dsl.statements.setup_statement.SetupStatement"
-      ]
-    },
-    {
-      "count": 1,
-      "roles": [
-        {
-          "source": "datamimic_ce.datamimic",
-          "target": "datamimic_ce.engine.io.exporters.test_result_exporter"
-        }
-      ],
-      "rules": [
-        "INTERFACES-ONLY"
-      ],
-      "subjects": [
-        "datamimic_ce.datamimic",
-        "datamimic_ce.engine.io.exporters.test_result_exporter.TestResultExporter"
-      ]
-    },
-    {
-      "count": 1,
-      "roles": [
-        {
-          "source": "datamimic_ce.datamimic",
-          "target": "datamimic_ce.engine.runtime.logging"
-        }
-      ],
-      "rules": [
-        "INTERFACES-ONLY"
-      ],
-      "subjects": [
-        "datamimic_ce.datamimic",
-        "datamimic_ce.engine.runtime.logging.log_memory_info"
-      ]
-    },
-    {
-      "count": 1,
-      "roles": [
-        {
-          "source": "datamimic_ce.datamimic",
-          "target": "datamimic_ce.engine.runtime.logging"
-        }
-      ],
-      "rules": [
-        "INTERFACES-ONLY"
-      ],
-      "subjects": [
-        "datamimic_ce.datamimic",
-        "datamimic_ce.engine.runtime.logging.log_system_info"
-      ]
-    },
-    {
-      "count": 1,
-      "roles": [
-        {
-          "source": "datamimic_ce.datamimic",
-          "target": "datamimic_ce.engine.runtime.logging"
-        }
-      ],
-      "rules": [
-        "INTERFACES-ONLY"
-      ],
-      "subjects": [
-        "datamimic_ce.datamimic",
-        "datamimic_ce.engine.runtime.logging.setup_logger"
-      ]
-    },
-    {
-      "count": 1,
-      "roles": [
-        {
-          "source": "datamimic_ce.datamimic",
-          "target": "datamimic_ce.engine.runtime.process"
-        }
-      ],
-      "rules": [
-        "INTERFACES-ONLY"
-      ],
-      "subjects": [
-        "datamimic_ce.datamimic",
-        "datamimic_ce.engine.runtime.process.bootstrap_process_title"
-      ]
-    },
-    {
-      "count": 1,
-      "roles": [
-        {
-          "source": "datamimic_ce.datamimic",
-          "target": "datamimic_ce.engine.runtime.process"
-        }
-      ],
-      "rules": [
-        "INTERFACES-ONLY"
-      ],
-      "subjects": [
-        "datamimic_ce.datamimic",
-        "datamimic_ce.engine.runtime.process.set_main_process_title"
-      ]
-    },
-    {
-      "count": 1,
-      "roles": [
-        {
-          "source": "datamimic_ce.datamimic",
-          "target": "datamimic_ce.engine.runtime.tasks.setup_task"
-        }
-      ],
-      "rules": [
-        "INTERFACES-ONLY"
-      ],
-      "subjects": [
-        "datamimic_ce.datamimic",
-        "datamimic_ce.engine.runtime.tasks.setup_task.SetupTask"
-      ]
-    },
-    {
-      "count": 1,
-      "roles": [
-        {
-          "source": "datamimic_ce.interfaces.cli_runtime",
-          "target": "datamimic_ce.datamimic"
-        }
-      ],
-      "rules": [
-        "INTERFACES-ONLY"
-      ],
-      "subjects": [
-        "datamimic_ce.datamimic.DataMimic",
-        "datamimic_ce.interfaces.cli_runtime"
-      ]
-    },
-    {
-      "count": 1,
-      "roles": [
-        {
           "source": "datamimic_ce.engine.runtime.tasks.demographics_task",
           "target": "datamimic_ce.domains.common.demographics.loader"
         }
@@ -3370,38 +3178,6 @@
       "subjects": [
         "datamimic_ce.domains.determinism.get_datamimic_lib_version",
         "datamimic_ce.interfaces.cli_runtime"
-      ]
-    },
-    {
-      "count": 1,
-      "roles": [
-        {
-          "source": "datamimic_ce.engine.io.clients.mongodb_client",
-          "target": "datamimic_ce.domains.domain_core.base_entity"
-        }
-      ],
-      "rules": [
-        "INTERFACES-ONLY"
-      ],
-      "subjects": [
-        "datamimic_ce.domains.domain_core.base_entity.stringify_if_entity",
-        "datamimic_ce.engine.io.clients.mongodb_client"
-      ]
-    },
-    {
-      "count": 1,
-      "roles": [
-        {
-          "source": "datamimic_ce.engine.io.clients.rdbms_client",
-          "target": "datamimic_ce.domains.domain_core.base_entity"
-        }
-      ],
-      "rules": [
-        "INTERFACES-ONLY"
-      ],
-      "subjects": [
-        "datamimic_ce.domains.domain_core.base_entity.stringify_if_entity",
-        "datamimic_ce.engine.io.clients.rdbms_client"
       ]
     },
     {
@@ -5104,22 +4880,6 @@
       "count": 1,
       "roles": [
         {
-          "source": "datamimic_ce.engine.dsl.parsers.parser_util",
-          "target": "datamimic_ce.engine.runtime.config"
-        }
-      ],
-      "rules": [
-        "INTERFACES-ONLY"
-      ],
-      "subjects": [
-        "datamimic_ce.engine.dsl.parsers.parser_util",
-        "datamimic_ce.engine.runtime.config.settings"
-      ]
-    },
-    {
-      "count": 1,
-      "roles": [
-        {
           "source": "datamimic_ce.engine.runtime.tasks.array_task",
           "target": "datamimic_ce.engine.dsl.statements.array_statement"
         }
@@ -6608,38 +6368,6 @@
       "count": 1,
       "roles": [
         {
-          "source": "datamimic_ce.engine.io.clients.rdbms_client",
-          "target": "datamimic_ce.engine.runtime.config"
-        }
-      ],
-      "rules": [
-        "INTERFACES-ONLY"
-      ],
-      "subjects": [
-        "datamimic_ce.engine.io.clients.rdbms_client",
-        "datamimic_ce.engine.runtime.config.settings"
-      ]
-    },
-    {
-      "count": 1,
-      "roles": [
-        {
-          "source": "datamimic_ce.engine.io.exporters.exporter_config",
-          "target": "datamimic_ce.engine.runtime.contexts.setup_context"
-        }
-      ],
-      "rules": [
-        "INTERFACES-ONLY"
-      ],
-      "subjects": [
-        "datamimic_ce.engine.io.exporters.exporter_config",
-        "datamimic_ce.engine.runtime.contexts.setup_context.SetupContext"
-      ]
-    },
-    {
-      "count": 1,
-      "roles": [
-        {
           "source": "datamimic_ce.engine.runtime.tasks.task_util",
           "target": "datamimic_ce.engine.io.exporters.exporter_state_manager"
         }
@@ -6666,22 +6394,6 @@
       "subjects": [
         "datamimic_ce.engine.io.exporters.exporter_state_manager.ExporterStateManager",
         "datamimic_ce.engine.runtime.workers.generate_worker"
-      ]
-    },
-    {
-      "count": 1,
-      "roles": [
-        {
-          "source": "datamimic_ce.engine.io.exporters.exporter_util",
-          "target": "datamimic_ce.engine.runtime.contexts.setup_context"
-        }
-      ],
-      "rules": [
-        "INTERFACES-ONLY"
-      ],
-      "subjects": [
-        "datamimic_ce.engine.io.exporters.exporter_util",
-        "datamimic_ce.engine.runtime.contexts.setup_context.SetupContext"
       ]
     },
     {
@@ -6858,18 +6570,6 @@
       "subjects": [
         "datamimic_ce.engine.runtime.contexts.setup_context.SetupContext",
         "datamimic_ce.resources.demos.demo-db-mapping.script.lib_glob.scr"
-      ]
-    },
-    {
-      "count": 1,
-      "rules": [
-        "NO-COMPONENT-CYCLES"
-      ],
-      "subjects": [
-        "domains",
-        "dsl",
-        "io",
-        "runtime"
       ]
     },
     {
@@ -7122,15 +6822,6 @@
       ],
       "subjects": [
         "datamimic_ce.authoring.service.compile_document:spec"
-      ]
-    },
-    {
-      "count": 1,
-      "rules": [
-        "NO-MAGIC-CONTROL-FLOW"
-      ],
-      "subjects": [
-        "datamimic_ce.datamimic.DataMimic.__init__"
       ]
     },
     {
@@ -7788,24 +7479,6 @@
       ],
       "subjects": [
         "datamimic_ce.domains.domain_core.base_entity.BaseEntity.to_dict:return"
-      ]
-    },
-    {
-      "count": 1,
-      "rules": [
-        "NO-MAGIC-CONTROL-FLOW"
-      ],
-      "subjects": [
-        "datamimic_ce.domains.domain_core.base_entity.stringify_if_entity:return"
-      ]
-    },
-    {
-      "count": 1,
-      "rules": [
-        "NO-MAGIC-CONTROL-FLOW"
-      ],
-      "subjects": [
-        "datamimic_ce.domains.domain_core.base_entity.stringify_if_entity:value"
       ]
     },
     {
@@ -9495,214 +9168,6 @@
       "count": 1,
       "roles": [
         {
-          "source": "datamimic_ce.authoring.dryrun",
-          "target": "datamimic_ce.datamimic"
-        }
-      ],
-      "rules": [
-        "REQUIRES-COMPLETE"
-      ],
-      "subjects": [
-        "datamimic_ce.authoring.dryrun",
-        "datamimic_ce.datamimic"
-      ]
-    },
-    {
-      "count": 1,
-      "roles": [
-        {
-          "source": "datamimic_ce.datamimic",
-          "target": "datamimic_ce.engine.dsl.parsers.descriptor_parser"
-        }
-      ],
-      "rules": [
-        "REQUIRES-COMPLETE"
-      ],
-      "subjects": [
-        "datamimic_ce.datamimic",
-        "datamimic_ce.engine.dsl.parsers.descriptor_parser"
-      ]
-    },
-    {
-      "count": 1,
-      "roles": [
-        {
-          "source": "datamimic_ce.datamimic",
-          "target": "datamimic_ce.engine.dsl.statements.generate_statement"
-        }
-      ],
-      "rules": [
-        "REQUIRES-COMPLETE"
-      ],
-      "subjects": [
-        "datamimic_ce.datamimic",
-        "datamimic_ce.engine.dsl.statements.generate_statement"
-      ]
-    },
-    {
-      "count": 1,
-      "roles": [
-        {
-          "source": "datamimic_ce.datamimic",
-          "target": "datamimic_ce.engine.dsl.statements.setup_statement"
-        }
-      ],
-      "rules": [
-        "REQUIRES-COMPLETE"
-      ],
-      "subjects": [
-        "datamimic_ce.datamimic",
-        "datamimic_ce.engine.dsl.statements.setup_statement"
-      ]
-    },
-    {
-      "count": 1,
-      "roles": [
-        {
-          "source": "datamimic_ce.datamimic",
-          "target": "datamimic_ce.engine.io.exporters.test_result_exporter"
-        }
-      ],
-      "rules": [
-        "REQUIRES-COMPLETE"
-      ],
-      "subjects": [
-        "datamimic_ce.datamimic",
-        "datamimic_ce.engine.io.exporters.test_result_exporter"
-      ]
-    },
-    {
-      "count": 3,
-      "roles": [
-        {
-          "source": "datamimic_ce.datamimic",
-          "target": "datamimic_ce.engine.runtime.logging"
-        }
-      ],
-      "rules": [
-        "REQUIRES-COMPLETE"
-      ],
-      "subjects": [
-        "datamimic_ce.datamimic",
-        "datamimic_ce.engine.runtime.logging"
-      ]
-    },
-    {
-      "count": 2,
-      "roles": [
-        {
-          "source": "datamimic_ce.datamimic",
-          "target": "datamimic_ce.engine.runtime.process"
-        }
-      ],
-      "rules": [
-        "REQUIRES-COMPLETE"
-      ],
-      "subjects": [
-        "datamimic_ce.datamimic",
-        "datamimic_ce.engine.runtime.process"
-      ]
-    },
-    {
-      "count": 1,
-      "roles": [
-        {
-          "source": "datamimic_ce.datamimic",
-          "target": "datamimic_ce.engine.runtime.tasks.setup_task"
-        }
-      ],
-      "rules": [
-        "REQUIRES-COMPLETE"
-      ],
-      "subjects": [
-        "datamimic_ce.datamimic",
-        "datamimic_ce.engine.runtime.tasks.setup_task"
-      ]
-    },
-    {
-      "count": 1,
-      "roles": [
-        {
-          "source": "datamimic_ce.interfaces.cli_runtime",
-          "target": "datamimic_ce.datamimic"
-        }
-      ],
-      "rules": [
-        "REQUIRES-COMPLETE"
-      ],
-      "subjects": [
-        "datamimic_ce.datamimic",
-        "datamimic_ce.interfaces.cli_runtime"
-      ]
-    },
-    {
-      "count": 1,
-      "roles": [
-        {
-          "source": "datamimic_ce.engine.io.clients.mongodb_client",
-          "target": "datamimic_ce.domains.domain_core.base_entity"
-        }
-      ],
-      "rules": [
-        "REQUIRES-COMPLETE"
-      ],
-      "subjects": [
-        "datamimic_ce.domains.domain_core.base_entity",
-        "datamimic_ce.engine.io.clients.mongodb_client"
-      ]
-    },
-    {
-      "count": 1,
-      "roles": [
-        {
-          "source": "datamimic_ce.engine.io.clients.rdbms_client",
-          "target": "datamimic_ce.domains.domain_core.base_entity"
-        }
-      ],
-      "rules": [
-        "REQUIRES-COMPLETE"
-      ],
-      "subjects": [
-        "datamimic_ce.domains.domain_core.base_entity",
-        "datamimic_ce.engine.io.clients.rdbms_client"
-      ]
-    },
-    {
-      "count": 1,
-      "roles": [
-        {
-          "source": "datamimic_ce.engine.dsl.parsers.parser_util",
-          "target": "datamimic_ce.engine.io.api"
-        }
-      ],
-      "rules": [
-        "REQUIRES-COMPLETE"
-      ],
-      "subjects": [
-        "datamimic_ce.engine.dsl.parsers.parser_util",
-        "datamimic_ce.engine.io.api"
-      ]
-    },
-    {
-      "count": 1,
-      "roles": [
-        {
-          "source": "datamimic_ce.engine.dsl.parsers.parser_util",
-          "target": "datamimic_ce.engine.runtime.config"
-        }
-      ],
-      "rules": [
-        "REQUIRES-COMPLETE"
-      ],
-      "subjects": [
-        "datamimic_ce.engine.dsl.parsers.parser_util",
-        "datamimic_ce.engine.runtime.config"
-      ]
-    },
-    {
-      "count": 1,
-      "roles": [
-        {
           "source": "datamimic_ce.interfaces.cli_runtime",
           "target": "datamimic_ce.engine.io.api"
         }
@@ -9713,54 +9178,6 @@
       "subjects": [
         "datamimic_ce.engine.io.api",
         "datamimic_ce.interfaces.cli_runtime"
-      ]
-    },
-    {
-      "count": 1,
-      "roles": [
-        {
-          "source": "datamimic_ce.engine.io.clients.rdbms_client",
-          "target": "datamimic_ce.engine.runtime.config"
-        }
-      ],
-      "rules": [
-        "REQUIRES-COMPLETE"
-      ],
-      "subjects": [
-        "datamimic_ce.engine.io.clients.rdbms_client",
-        "datamimic_ce.engine.runtime.config"
-      ]
-    },
-    {
-      "count": 1,
-      "roles": [
-        {
-          "source": "datamimic_ce.engine.io.exporters.exporter_config",
-          "target": "datamimic_ce.engine.runtime.contexts.setup_context"
-        }
-      ],
-      "rules": [
-        "REQUIRES-COMPLETE"
-      ],
-      "subjects": [
-        "datamimic_ce.engine.io.exporters.exporter_config",
-        "datamimic_ce.engine.runtime.contexts.setup_context"
-      ]
-    },
-    {
-      "count": 1,
-      "roles": [
-        {
-          "source": "datamimic_ce.engine.io.exporters.exporter_util",
-          "target": "datamimic_ce.engine.runtime.contexts.setup_context"
-        }
-      ],
-      "rules": [
-        "REQUIRES-COMPLETE"
-      ],
-      "subjects": [
-        "datamimic_ce.engine.io.exporters.exporter_util",
-        "datamimic_ce.engine.runtime.contexts.setup_context"
       ]
     }
   ]

@@ -76,25 +76,18 @@ graph TD
     authoring --> domains
     authoring --> dsl
     authoring --> io
-    authoring --> python_api
     authoring --> python_compat
     authoring --> runtime
     domains --> dsl
     domains --> io
-    dsl --> io
     dsl --> python_compat
-    dsl --> runtime
     interfaces --> authoring
     interfaces --> domains
     interfaces --> io
-    interfaces --> python_api
     interfaces --> python_compat
-    io --> domains
+    interfaces --> runtime
     io --> dsl
-    io --> runtime
-    python_api --> dsl
-    python_api --> io
-    python_api --> runtime
+    python_api --> interfaces
     resources --> domains
     resources --> io
     resources --> runtime

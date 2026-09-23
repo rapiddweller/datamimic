@@ -6,7 +6,7 @@
 
 from dataclasses import dataclass
 
-from datamimic_ce.engine.runtime.contexts.setup_context import SetupContext
+from datamimic_ce.engine.io.exporters.exporter_context import ExporterContext
 
 
 @dataclass(frozen=True)
@@ -18,7 +18,7 @@ class ExporterConfig:
     options (CSV delimiter, XLSX sheet_name, ...) stay on the individual exporters.
     """
 
-    setup_context: SetupContext
+    setup_context: ExporterContext
     product_name: str
     chunk_size: int | None
     encoding: str | None

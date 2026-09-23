@@ -5,6 +5,7 @@
 # For questions and support, contact: info@rapiddweller.com
 
 from pathlib import Path
+from typing import Literal
 from xml.etree.ElementTree import Element
 
 from datamimic_ce.engine.dsl.constants.element_constants import EL_SETUP
@@ -19,12 +20,18 @@ class SetupParser(StatementParser):
     Parse element "setup" into RootStatement
     """
 
-    def __init__(self, element: Element, properties: dict | None):
+    def __init__(
+        self,
+        element: Element,
+        properties: dict | None,
+        runtime_environment: Literal["development", "production"],
+    ):
         super().__init__(
             element,
             properties,
             valid_element_tag=EL_SETUP,
         )
+        self._runtime_environment = runtime_environment
 
     def parse(self, descriptor_dir: Path) -> SetupStatement:
         """
@@ -39,6 +46,7 @@ class SetupParser(StatementParser):
             self._element,
             self._properties,
             setup_stmt,
+            runtime_environment=self._runtime_environment,
         )
         setup_stmt.sub_statements = sub_stmt_list
 

@@ -2,11 +2,15 @@
 
 import inspect
 
-from datamimic_ce.engine.dsl.contracts import GeneratorCapability, StateTransitionRule
+from datamimic_ce.engine.dsl.contracts import EntityValue, GeneratorCapability, StateTransitionRule
 from datamimic_ce.engine.dsl.enums.dbms_enums import Dbms
 from datamimic_ce.engine.dsl.enums.distribution_enums import NumberDistribution
 from datamimic_ce.engine.dsl.enums.operation_enums import ExportOperation
+from datamimic_ce.engine.dsl.parsers.descriptor_parser import DescriptorParser
+from datamimic_ce.engine.dsl.properties import parse_properties
+from datamimic_ce.engine.dsl.statements.generate_statement import GenerateStatement
 from datamimic_ce.engine.dsl.statements.key_statement import KeyStatement
+from datamimic_ce.engine.dsl.statements.setup_statement import SetupStatement
 from datamimic_ce.engine.dsl.statements.statement import Statement
 from datamimic_ce.engine.dsl.statements.variable_statement import VariableStatement
 
@@ -26,12 +30,17 @@ def describe_generator_type(generator_type: type) -> GeneratorCapability:
 
 __all__ = [
     "Dbms",
+    "DescriptorParser",
     "ExportOperation",
+    "EntityValue",
     "GeneratorCapability",
+    "GenerateStatement",
     "KeyStatement",
     "NumberDistribution",
     "Statement",
+    "SetupStatement",
     "StateTransitionRule",
     "VariableStatement",
     "describe_generator_type",
+    "parse_properties",
 ]

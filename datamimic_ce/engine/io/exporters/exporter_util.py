@@ -38,6 +38,7 @@ from datamimic_ce.engine.io.exporters.database_exporter import DatabaseExporter
 from datamimic_ce.engine.io.exporters.dbunit_exporter import DbUnitExporter
 from datamimic_ce.engine.io.exporters.exporter import Exporter
 from datamimic_ce.engine.io.exporters.exporter_config import ExporterConfig
+from datamimic_ce.engine.io.exporters.exporter_context import ExporterContext
 from datamimic_ce.engine.io.exporters.fixed_width_exporter import FixedWidthExporter
 from datamimic_ce.engine.io.exporters.json_exporter import JsonExporter
 from datamimic_ce.engine.io.exporters.log_exporter import LogExporter
@@ -46,7 +47,6 @@ from datamimic_ce.engine.io.exporters.txt_exporter import TXTExporter
 from datamimic_ce.engine.io.exporters.unified_buffered_exporter import UnifiedBufferedExporter
 from datamimic_ce.engine.io.exporters.xlsx_exporter import XLSXExporter
 from datamimic_ce.engine.io.exporters.xml_exporter import XMLExporter
-from datamimic_ce.engine.runtime.contexts.setup_context import SetupContext
 
 logger = logging.getLogger("DATAMIMIC")
 
@@ -139,7 +139,7 @@ def custom_serializer(obj: Any) -> Any:
 
 class ExporterUtil:
     @staticmethod
-    def get_all_exporter(setup_context: SetupContext, stmt: GenerateStatement, targets: list[str]) -> list:
+    def get_all_exporter(setup_context: ExporterContext, stmt: GenerateStatement, targets: list[str]) -> list:
         """
         Get all exporters from target string
 
@@ -157,7 +157,7 @@ class ExporterUtil:
 
     @staticmethod
     def create_exporter_list(
-        setup_context: SetupContext,
+        setup_context: ExporterContext,
         stmt: GenerateStatement,
         targets: list[str],
     ) -> tuple[list[tuple[Exporter, ExportOperation]], list[Exporter]]:
@@ -298,7 +298,7 @@ class ExporterUtil:
 
     @staticmethod
     def get_exporter_by_name(
-        setup_context: SetupContext,
+        setup_context: ExporterContext,
         name: str,
         gen_stmt: GenerateStatement,
         exporter_params_dict: dict,
@@ -360,7 +360,7 @@ class ExporterUtil:
             )
 
     @staticmethod
-    def create_exporter_from_client(client: Client, client_name: str):
+    def create_exporter_from_client(client: Client | None, client_name: str):
         if isinstance(client, MongoDBClient):
             return MongoDBExporter(client)
         elif isinstance(client, RdbmsClient):

@@ -3,10 +3,15 @@
 # This software is licensed under the MIT License.
 # See LICENSE file for the full text of the license.
 # For questions and support, contact: info@rapiddweller.com
+import logging
+import time
+import uuid
 from pathlib import Path
 
-from datamimic_ce.data_mimic_test import DataMimicTest
-from datamimic_ce.factory.factory_config import FactoryConfig
+from datamimic_ce.interfaces.api import create_run_session
+from datamimic_ce.interfaces.contracts import FactoryConfig, RunRequest
+
+logger = logging.getLogger("DATAMIMIC")
 
 
 class DataMimicTestFactory:
@@ -24,18 +29,25 @@ class DataMimicTestFactory:
         factory_config = FactoryConfig(self._entity_name, count=1, custom_data=custom_data)
 
         # Create test engine with factory config
-        test_engine = DataMimicTest(
-            self._xml_path.parent,
-            self._xml_path.name,
-            capture_test_result=True,
-            factory_config=factory_config,
+        test_engine = create_run_session(
+            RunRequest(
+                descriptor_path=self._xml_path,
+                task_id=str(uuid.uuid4()),
+                test_mode=True,
+                factory_config=factory_config,
+            )
         )
 
         # Execute test
-        test_engine.test_with_timer()
+        start_time = time.time()
+        test_engine.execute()
+        logger.info(f"The test took {time.time() - start_time} seconds to execute.")
 
         # Capture result
-        result = test_engine.capture_result().get(self._entity_name)
+        capture = test_engine.capture_test_result()
+        assert capture is not None
+        result = capture.root.get(self._entity_name)
+        assert result is not None
         assert len(result) == 1  # Only one entity is generated
 
         # Update custom data if provided
@@ -56,18 +68,25 @@ class DataMimicTestFactory:
         factory_config = FactoryConfig(self._entity_name, count=count, custom_data=custom_data)
 
         # Create test engine with factory config
-        test_engine = DataMimicTest(
-            self._xml_path.parent,
-            self._xml_path.name,
-            capture_test_result=True,
-            factory_config=factory_config,
+        test_engine = create_run_session(
+            RunRequest(
+                descriptor_path=self._xml_path,
+                task_id=str(uuid.uuid4()),
+                test_mode=True,
+                factory_config=factory_config,
+            )
         )
 
         # Execute test
-        test_engine.test_with_timer()
+        start_time = time.time()
+        test_engine.execute()
+        logger.info(f"The test took {time.time() - start_time} seconds to execute.")
 
         # Capture result
-        result = test_engine.capture_result().get(self._entity_name)
+        capture = test_engine.capture_test_result()
+        assert capture is not None
+        result = capture.root.get(self._entity_name)
+        assert result is not None
         assert len(result) == count  # Only one entity is generated
 
         # Update custom data if provided

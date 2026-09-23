@@ -61,24 +61,9 @@ class FileUtil:
         :return:
         """
 
-        try:
-            properties_dict = {}
-            # Load file content from cache or file
-            data = FileContentStorage.load_file_with_custom_func(
-                str(path), lambda: [line.strip() for line in path.open("r", encoding=encoding)]
-            )
-            # Parse properties from file content
-            for line in data:
-                # Skip comments and empty lines
-                if line.strip() and not line.startswith("#"):
-                    key, value = line.strip().split("=", 1)
-                    properties_dict[key.strip()] = value.strip()
-        except FileNotFoundError as e:
-            raise FileNotFoundError(
-                f"Property file not found {str(path)}, please check the file path again. Error message: {e}"
-            ) from e
+        from datamimic_ce.engine.dsl.api import parse_properties
 
-        return properties_dict
+        return parse_properties(path, encoding)
 
     @staticmethod
     def _read_raw_csv(file_path: Path, separator: str, encoding="utf-8") -> list[tuple]:

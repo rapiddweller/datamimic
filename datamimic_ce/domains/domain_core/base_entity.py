@@ -5,13 +5,14 @@
 # For questions and support, contact: info@rapiddweller.com
 
 
-from abc import ABC, abstractmethod
+from abc import abstractmethod
 from typing import Any
 
 from datamimic_ce.domains.domain_core.base_domain_generator import BaseDomainGenerator
+from datamimic_ce.engine.dsl.contracts import EntityValue
 
 
-class BaseEntity(ABC):
+class BaseEntity(EntityValue):
     """
     Base class for all domain entities.
 
@@ -54,12 +55,3 @@ class BaseEntity(ABC):
     def to_dict(self) -> dict[str, Any]:
         """Convert the entity to a dictionary."""
         raise NotImplementedError("Subclasses must implement this method.")
-
-
-def stringify_if_entity(value: Any) -> Any:
-    """A whole entity bound into a scalar column (e.g. `<key script="person">` into a varchar/
-    string field, the legacy toString() idiom) has no sane driver-level representation - both the
-    RDBMS and Mongo write paths call this first. `BaseEntity` defines no `__str__`, so a bare
-    `str(value)` would write Python's default `<...Person object at 0x...>` (a non-deterministic
-    memory address); `.to_dict()` is the one meaningful representation every entity provides."""
-    return str(value.to_dict()) if isinstance(value, BaseEntity) else value

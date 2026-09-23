@@ -41,5 +41,6 @@ class DatabaseParser(StatementParser):
             descriptor_attr=self._element.attrib,
             env_props=self.properties,
             system_type="db",
+            runtime_environment=self.runtime_environment,
         )
         return DatabaseStatement(self.validate_attributes(DatabaseModel, db_credentials))

@@ -44,11 +44,11 @@
           "rationale": "Interfaces support the package's Python 3.10 floor."
         }
       ],
-      "public": [],
-      "planned": [
+      "public": [
         "datamimic_ce.interfaces.api",
         "datamimic_ce.interfaces.contracts"
       ],
+      "planned": [],
       "decided_by": "architect"
     },
     {
@@ -200,11 +200,10 @@
         }
       ],
       "public": [
-        "datamimic_ce.engine.runtime.api"
-      ],
-      "planned": [
+        "datamimic_ce.engine.runtime.api",
         "datamimic_ce.engine.runtime.contracts"
       ],
+      "planned": [],
       "decided_by": "architect"
     },
     {
@@ -403,6 +402,16 @@
         "datamimic_ce.resources"
       ],
       "rationale": "The package root exposes only first-class components and proven Python compatibility entry points.",
+      "provenance": [
+        "docs/architecture/refactoring-study/experiment-2/target-architecture.md"
+      ],
+      "decided_by": "architect"
+    },
+    {
+      "id": "INTERFACES-API-TYPES",
+      "kind": "boundary_types",
+      "source": "datamimic_ce.interfaces.api",
+      "rationale": "The interface facade exposes declared request, result, and session contracts rather than execution internals.",
       "provenance": [
         "docs/architecture/refactoring-study/experiment-2/target-architecture.md"
       ],

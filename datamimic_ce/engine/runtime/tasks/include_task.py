@@ -5,9 +5,10 @@
 # For questions and support, contact: info@rapiddweller.com
 import copy
 
+from datamimic_ce.engine.dsl.api import parse_properties
 from datamimic_ce.engine.dsl.parsers.descriptor_parser import DescriptorParser
 from datamimic_ce.engine.dsl.statements.include_statement import IncludeStatement
-from datamimic_ce.engine.io.api import FileUtil
+from datamimic_ce.engine.runtime.api import runtime_environment
 from datamimic_ce.engine.runtime.contexts.geniter_context import GenIterContext
 from datamimic_ce.engine.runtime.contexts.setup_context import SetupContext
 from datamimic_ce.engine.runtime.tasks.task import CommonSubTask
@@ -54,7 +55,7 @@ class IncludeTask(CommonSubTask):
         # Case 1: Check if uri is a properties file
         if uri.endswith(".properties"):
             # Import properties into context
-            new_props = FileUtil.parse_properties(ctx.descriptor_dir / uri)
+            new_props = parse_properties(ctx.descriptor_dir / uri)
             ctx.properties.update(new_props)
         # Case 2: Check if uri is a descriptor file
         elif uri.endswith(".xml"):
@@ -64,6 +65,7 @@ class IncludeTask(CommonSubTask):
             sub_setup_stmt = DescriptorParser.parse(
                 ctx.descriptor_dir / self.statement.uri,
                 ctx.properties,
+                runtime_environment(),
             )
             SetupTask.execute_include(setup_stmt=sub_setup_stmt, parent_context=ctx)
         else:
@@ -82,6 +84,7 @@ class IncludeTask(CommonSubTask):
             sub_setup_stmt = DescriptorParser.parse(
                 root_ctx.descriptor_dir / uri,
                 root_ctx.properties,
+                runtime_environment(),
             )
             # Use copy of parent_context as child_context
             copied_root_context = copy.deepcopy(root_ctx)

@@ -10,6 +10,7 @@ from datamimic_ce.engine.io.data_sources.data_source_pagination import DataSourc
 from datamimic_ce.engine.io.data_sources.data_source_registry import DataSourceRegistry
 from datamimic_ce.engine.io.data_sources.weighted_data_source import WeightedDataSource
 from datamimic_ce.engine.io.data_sources.weighted_entity_data_source import WeightedEntityDataSource
+from datamimic_ce.engine.io.exporters.test_result_exporter import TestResultExporter
 from datamimic_ce.engine.io.file_cache import FileContentStorage
 from datamimic_ce.engine.io.files import FileUtil
 
@@ -24,6 +25,7 @@ __all__ = [
     "MongoDBConnectionConfig",
     "RdbmsConnectionConfig",
     "RdbmsClient",
+    "TestResultExporter",
     "WeightedDataSource",
     "WeightedEntityDataSource",
 ]

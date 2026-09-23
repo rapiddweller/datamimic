@@ -6,7 +6,7 @@
 
 import copy
 from abc import ABC, abstractmethod
-from typing import Any, TypeVar
+from typing import Any, Literal, TypeVar
 from xml.etree.ElementTree import Element
 
 from pydantic import BaseModel, ValidationError
@@ -36,6 +36,7 @@ class StatementParser(ABC):
 
         self._element: Element = element
         self._properties = env_properties
+        self._runtime_environment: Literal["development", "production"] = "production"
         self._valid_element_tag = valid_element_tag
         self._valid_sub_elements = ParserUtil.get_valid_sub_elements_set_by_tag(valid_element_tag)
 
@@ -47,6 +48,13 @@ class StatementParser(ABC):
     @property
     def properties(self) -> dict[str, str] | None:
         return self._properties
+
+    @property
+    def runtime_environment(self) -> Literal["development", "production"]:
+        return self._runtime_environment
+
+    def set_runtime_environment(self, value: Literal["development", "production"]) -> None:
+        self._runtime_environment = value
 
     @abstractmethod
     def parse(self, *args, **kwargs: Any) -> Statement:

@@ -86,3 +86,30 @@ also constructed IO-owned connection configs.
 
 **Decision:** connection statements retain their validated DSL models. Runtime tasks construct the
 IO configs and clients when setup executes; parsing has no connection-object side effects.
+
+## D12 — properties are DSL input; environment selection is runtime policy
+
+**FACT:** descriptor parsing needs companion property files, but choosing the runtime environment
+depends on process configuration.
+
+**Decision:** DSL owns property parsing and its per-path cache. Runtime selects the environment and
+passes it into the parser explicitly. DSL does not import runtime or IO.
+
+## D13 — IO accepts narrow owner contracts
+
+**FACT:** exporters need read-only run context and clients need entity serialization, but neither
+requires runtime task classes or concrete domain entities.
+
+**Decision:** IO defines a structural read-only exporter context. DSL defines the nominal
+`EntityValue` contract implemented by domain entities. IO imports neither runtime nor domains.
+
+## D14 — runtime owns execution; interfaces adapt it
+
+**FACT:** `DataMimic`, `DataMimicTest`, CLI, factory, and Authoring dry-run duplicated or reached
+through parts of the parse-and-run lifecycle.
+
+**Decision:** `engine.runtime` owns process setup, validation, parsing, task creation, execution,
+and capture. `interfaces` exposes the compatibility-facing adapter. Boundary requests and results
+use declared Pydantic root models; compatibility facades unwrap them to the existing dictionaries.
+The wrappers use construction without validation so the existing dictionary identity and accepted
+values remain unchanged.

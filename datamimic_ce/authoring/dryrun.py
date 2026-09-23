@@ -38,7 +38,7 @@ import pickle
 import tempfile
 import time
 import uuid
-from collections.abc import Iterator
+from collections.abc import Iterator, Mapping, Sequence
 from contextlib import contextmanager, suppress
 from dataclasses import dataclass
 from multiprocessing.connection import Connection
@@ -680,7 +680,7 @@ def _smoke_exporter(
 
 
 def _smoke_export(
-    captured: dict[str, list[object]],
+    captured: Mapping[str, Sequence[object]],
     stripped: _StrippedTargets,
 ) -> tuple[list[Diagnostic], SmokeExportCapture]:
     """Replay the captured rows through each stripped file exporter inside a temp dir
@@ -906,26 +906,30 @@ def _engine_process_worker(
     with _suppress_worker_stderr():
         from functools import partial
 
-        from datamimic_ce.datamimic import DataMimic
+        from datamimic_ce.engine.runtime.api import create_run_session
+        from datamimic_ce.engine.runtime.contracts import RunRequest
 
         budgets: _ProductBudgets = {}
         stripped: _StrippedTargets | None = {} if smoke_export else None
         try:
-            engine = DataMimic(
-                descriptor_path=path,
-                task_id=f"dryrun_{uuid.uuid4().hex}",
-                test_mode=True,
-                statement_transformer=partial(
-                    neutralize_for_dry_run,
-                    max_count=max_count,
-                    allow_side_effects=allow_side_effects,
-                    stripped_file_targets=stripped,
-                    product_budgets=budgets,
-                    descriptor_dir=path.parent,
+            session = create_run_session(
+                RunRequest(
+                    descriptor_path=path,
+                    task_id=f"dryrun_{uuid.uuid4().hex}",
+                    test_mode=True,
+                    statement_transformer=partial(
+                        neutralize_for_dry_run,
+                        max_count=max_count,
+                        allow_side_effects=allow_side_effects,
+                        stripped_file_targets=stripped,
+                        product_budgets=budgets,
+                        descriptor_dir=path.parent,
+                    ),
                 ),
             )
-            engine.parse_and_execute()
-            raw_capture = engine.capture_test_result() or {}
+            session.execute()
+            capture = session.capture_test_result()
+            raw_capture = capture.root if capture is not None else {}
             if stripped is None:
                 smoke_diagnostics: list[Diagnostic] = []
                 smoke_export_capture = SmokeExportCapture.not_requested()
@@ -1307,7 +1311,9 @@ def _execute_captured(
     # The parse can raise (e.g. lint suppressed a credential error) — map it to DM002,
     # never let it crash the tool.
     try:
-        has_execute = _contains_execute(DescriptorParser.parse(path, None))
+        from datamimic_ce.engine.runtime.api import runtime_environment
+
+        has_execute = _contains_execute(DescriptorParser.parse(path, None, runtime_environment()))
     except Exception as err:
         return _failed_capture(
             _run_error(RULE_RUNTIME_ERROR, f"Dry-run failed: {err}", _runtime_hint(err), lint),

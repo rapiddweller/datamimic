@@ -42,7 +42,9 @@ def run_engine_parse(descriptor_path: Path) -> Diagnostic | None:
     from datamimic_ce.engine.dsl.parsers.descriptor_parser import DescriptorParser
 
     try:
-        DescriptorParser.parse(descriptor_path, None)
+        from datamimic_ce.engine.runtime.api import runtime_environment
+
+        DescriptorParser.parse(descriptor_path, None, runtime_environment())
     except (ValueError, FileNotFoundError) as err:
         if _is_pure_credential_error(str(err)):
             return None  # DB credentials are wired at run time, not a lint error

@@ -8,7 +8,7 @@ import copy
 import logging
 import re
 from pathlib import Path
-from typing import Any, cast
+from typing import Any, Literal, cast
 from xml.etree.ElementTree import Element
 
 from datamimic_ce.engine.dsl.constants.attribute_constants import ATTR_ENVIRONMENT, ATTR_ID, ATTR_SYSTEM
@@ -16,7 +16,9 @@ from datamimic_ce.engine.dsl.constants.element_constants import (
     EL_ARRAY,
     EL_COMMENT,
     EL_CONDITION,
+    EL_DATABASE,
     EL_GENERATE,
+    EL_MONGODB,
     EL_NESTED_KEY,
     EL_SETUP,
     EL_WHILE,
@@ -40,6 +42,7 @@ from datamimic_ce.engine.dsl.parsers.reference_parser import ReferenceParser
 from datamimic_ce.engine.dsl.parsers.state_machine_parser import StateMachineParser
 from datamimic_ce.engine.dsl.parsers.variable_parser import VariableParser
 from datamimic_ce.engine.dsl.parsers.while_parser import WhileParser
+from datamimic_ce.engine.dsl.properties import parse_properties
 from datamimic_ce.engine.dsl.statements.array_statement import ArrayStatement
 from datamimic_ce.engine.dsl.statements.composite_statement import CompositeStatement
 from datamimic_ce.engine.dsl.statements.condition_statement import ConditionStatement
@@ -49,8 +52,6 @@ from datamimic_ce.engine.dsl.statements.nested_key_statement import NestedKeySta
 from datamimic_ce.engine.dsl.statements.setup_statement import SetupStatement
 from datamimic_ce.engine.dsl.statements.statement import Statement
 from datamimic_ce.engine.dsl.statements.while_statement import WhileStatement
-from datamimic_ce.engine.io.api import FileUtil
-from datamimic_ce.engine.runtime.config import settings
 
 logger = logging.getLogger("DATAMIMIC")
 
@@ -82,7 +83,11 @@ class ParserUtil:
         return get_valid_children(ele_tag)
 
     @staticmethod
-    def _get_parser_by_element(element: Element, properties: dict):
+    def _get_parser_by_element(
+        element: Element,
+        properties: dict,
+        runtime_environment: Literal["development", "production"] = "production",
+    ):
         """
         Parser factory: Creating parser based on element
         :param element:
@@ -94,7 +99,10 @@ class ParserUtil:
         parser_class = get_parser_class(element.tag)
         if parser_class is None:
             raise ValueError(f"Cannot get parser for element <{element.tag}>")
-        return parser_class(element, properties)
+        parser = parser_class(element, properties)
+        if element.tag in {EL_DATABASE, EL_MONGODB}:
+            parser.set_runtime_environment(runtime_environment)
+        return parser
 
     @staticmethod
     def parse_sub_elements(
@@ -102,6 +110,7 @@ class ParserUtil:
         element: Element,
         properties: dict[str, str] | None,
         parent_stmt: Statement,
+        runtime_environment: Literal["development", "production"] = "production",
     ) -> list[Statement]:
         """
         Parse sub-elements of composite element into list of Statement
@@ -112,7 +121,6 @@ class ParserUtil:
         :return:
         """
         result = []
-
         # Create a copied props for possible updating later, prevent updating original props dict
         copied_props = copy.deepcopy(properties) if properties else {}
 
@@ -120,7 +128,7 @@ class ParserUtil:
             # <comment> is a documentation-only element (legacy DSL compatibility): ignored, produces no statement.
             if child_ele.tag == EL_COMMENT:
                 continue
-            parser = ParserUtil._get_parser_by_element(child_ele, copied_props)
+            parser = ParserUtil._get_parser_by_element(child_ele, copied_props, runtime_environment)
             # TODO: add more child-element-able parsers such as
             #  attribute, reference, part,... (i.e. elements which have attribute 'name')
             stmt: Statement
@@ -168,7 +176,7 @@ class ParserUtil:
             if isinstance(stmt, IncludeStatement):
                 uri: str = stmt.uri
                 if "{" not in uri and uri.endswith(".properties"):
-                    copied_props.update(FileUtil.parse_properties(descriptor_dir / uri))
+                    copied_props.update(parse_properties(descriptor_dir / uri))
 
             result.append(stmt)
 
@@ -212,6 +220,7 @@ class ParserUtil:
         descriptor_attr: dict,
         env_props: dict[str, str] | None,
         system_type: str,
+        runtime_environment: Literal["development", "production"],
     ) -> dict:
         """
 
@@ -226,7 +235,7 @@ class ParserUtil:
 
         environment = (
             descriptor_attr.get(ATTR_ENVIRONMENT)
-            or ("local" if settings.RUNTIME_ENVIRONMENT == "development" else None)
+            or ("local" if runtime_environment == "development" else None)
             or "environment"
         )
         system = descriptor_attr.get(ATTR_SYSTEM)
@@ -247,7 +256,7 @@ class ParserUtil:
 
         try:
             if environment and system:
-                env_props_from_env_file = FileUtil.parse_properties(
+                env_props_from_env_file = parse_properties(
                     descriptor_dir / f"conf/{environment}.env.properties"
                 )
                 # Update env props from env file
@@ -256,7 +265,7 @@ class ParserUtil:
             logger.info(f"Environment file not found {str(descriptor_dir / f'conf/{environment}.env.properties')}")
             # Try to look for the file in the current directory
             try:
-                env_props_from_env_file = FileUtil.parse_properties(Path(f"{environment}.env.properties"))
+                env_props_from_env_file = parse_properties(Path(f"{environment}.env.properties"))
                 # Update env props from env file
                 conf_props.update(env_props_from_env_file)
                 logger.info(f"Environment file found in current directory: {environment}.env.properties")
@@ -267,7 +276,7 @@ class ParserUtil:
                     import os
 
                     home_dir = os.path.expanduser("~")
-                    env_props_from_env_file = FileUtil.parse_properties(
+                    env_props_from_env_file = parse_properties(
                         Path(home_dir) / "datamimic" / f"{environment}.env.properties"
                     )
                     # Update env props from env file

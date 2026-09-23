@@ -40,6 +40,7 @@ class MongoDBParser(StatementParser):
             descriptor_attr=self._element.attrib,
             env_props=self.properties,
             system_type="mongo",
+            runtime_environment=self.runtime_environment,
         )
 
         return MongoDBStatement(

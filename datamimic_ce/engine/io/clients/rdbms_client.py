@@ -16,13 +16,12 @@ from sqlalchemy import MetaData, func, inspect, select, text
 from sqlalchemy.engine import Dialect
 from sqlalchemy.pool import QueuePool
 
-from datamimic_ce.domains.domain_core.base_entity import stringify_if_entity
 from datamimic_ce.engine.dsl.enums.dbms_enums import Dbms
 from datamimic_ce.engine.io.clients import sql_dialect
 from datamimic_ce.engine.io.clients.database_client import DatabaseClient
+from datamimic_ce.engine.io.clients.entity_serialization import stringify_entity_value
 from datamimic_ce.engine.io.connection_config.rdbms_connection_config import RdbmsConnectionConfig
 from datamimic_ce.engine.io.data_sources.data_source_pagination import DataSourcePagination
-from datamimic_ce.engine.runtime.config import settings
 
 logger = logging.getLogger("DATAMIMIC")
 
@@ -138,20 +137,13 @@ class RdbmsClient(DatabaseClient):
         # Match the DBMS type and create the appropriate SQLAlchemy engine
         match dbms:
             case Dbms.SQLITE:
-                environment = settings.RUNTIME_ENVIRONMENT
-                if environment in {"development", "production"}:
-                    if not self._task_id:
-                        raise ValueError("Task ID is required to create SQLite db in task folder")
-                    # Construct the database path within the task folder
-                    db_path = Path("db") / f"{db}.sqlite"
-                    if not db_path.exists():
-                        # Ensure the parent directory exists
-                        logger.info(f"Creating SQLite db file in task folder: {db_path}")
-                        db_path.parent.mkdir(parents=True, exist_ok=True)
-
-                else:
-                    # Use a simple file-based SQLite database
-                    db_path = Path(f"{db}.sqlite")
+                if not self._task_id:
+                    raise ValueError("Task ID is required to create SQLite db in task folder")
+                # Both allowed runtime environments use a SQLite file inside the task folder.
+                db_path = Path("db") / f"{db}.sqlite"
+                if not db_path.exists():
+                    logger.info(f"Creating SQLite db file in task folder: {db_path}")
+                    db_path.parent.mkdir(parents=True, exist_ok=True)
                 self._engine = create_sqlite_engine(db_path)
 
             case Dbms.MSSQL:
@@ -390,7 +382,7 @@ class RdbmsClient(DatabaseClient):
         # <key script="person"> into a varchar field) has no driver-level binding otherwise -
         # confirmed this raises hard today (sqlite3.ProgrammingError: type not supported), so
         # this only turns a crash into a correct write, never changes behavior for what works now.
-        data_list = [{k: stringify_if_entity(v) for k, v in row.items()} for row in data_list]
+        data_list = [{k: stringify_entity_value(v) for k, v in row.items()} for row in data_list]
 
         with engine.begin() as connection:
             try:
