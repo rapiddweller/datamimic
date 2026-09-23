@@ -164,7 +164,7 @@ def main() -> None:
         parser.error("before and after snapshot paths are required")
     before, after = load(args.before), load(args.after)
     changed: list[tuple[str, Any, Any]] = []
-    optional_shape_variances = 0
+    tolerated_variances = 0
     for field in ("inventory_count", "category_counts_overlapping"):
         if before.get(field) != after.get(field):
             changed.append((f"inventory.{field}", before.get(field), after.get(field)))
@@ -180,14 +180,14 @@ def main() -> None:
         if old is None or new is None or not equivalent(old, new):
             changed.append((f"descriptor.{path}", comparable(old) if old else None, comparable(new) if new else None))
         elif old is not None and new is not None and comparable(old) != comparable(new):
-            optional_shape_variances += 1
+            tolerated_variances += 1
     before_projections = {name: item["sha256"] for name, item in before["projections"].items()}
     after_projections = {name: item["sha256"] for name, item in after["projections"].items()}
     if before_projections != after_projections:
         changed.append(("projections", before_projections, after_projections))
     print(
         f"{len(before_descriptors)} descriptors compared; {len(changed)} differences; "
-        f"{optional_shape_variances} optional-shape variances tolerated"
+        f"{tolerated_variances} normalized or optional-shape variances tolerated"
     )
     for name, old, new in changed:
         print(f"DIFFERENT {name}: {changed_fields(old, new)}")
