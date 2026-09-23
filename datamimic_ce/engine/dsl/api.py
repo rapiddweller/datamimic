@@ -2,7 +2,7 @@
 
 import inspect
 
-from datamimic_ce.engine.dsl.contracts import GeneratorCapability
+from datamimic_ce.engine.dsl.contracts import GeneratorCapability, StateTransitionRule
 from datamimic_ce.engine.dsl.enums.dbms_enums import Dbms
 from datamimic_ce.engine.dsl.enums.distribution_enums import NumberDistribution
 from datamimic_ce.engine.dsl.statements.key_statement import KeyStatement
@@ -29,6 +29,7 @@ __all__ = [
     "KeyStatement",
     "NumberDistribution",
     "Statement",
+    "StateTransitionRule",
     "VariableStatement",
     "describe_generator_type",
 ]

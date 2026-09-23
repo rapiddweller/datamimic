@@ -2880,22 +2880,6 @@
       "count": 1,
       "roles": [
         {
-          "source": "datamimic_ce.engine.dsl.statements.state_machine_statement",
-          "target": "datamimic_ce.domains.common.literal_generators.state_transition_generator"
-        }
-      ],
-      "rules": [
-        "INTERFACES-ONLY"
-      ],
-      "subjects": [
-        "datamimic_ce.domains.common.literal_generators.state_transition_generator.Rule",
-        "datamimic_ce.engine.dsl.statements.state_machine_statement"
-      ]
-    },
-    {
-      "count": 1,
-      "roles": [
-        {
           "source": "datamimic_ce.engine.runtime.tasks.state_machine_task",
           "target": "datamimic_ce.domains.common.literal_generators.state_transition_generator"
         }
@@ -9793,22 +9777,6 @@
       "subjects": [
         "datamimic_ce.datamimic",
         "datamimic_ce.interfaces.cli_runtime"
-      ]
-    },
-    {
-      "count": 1,
-      "roles": [
-        {
-          "source": "datamimic_ce.engine.dsl.statements.state_machine_statement",
-          "target": "datamimic_ce.domains.common.literal_generators.state_transition_generator"
-        }
-      ],
-      "rules": [
-        "REQUIRES-COMPLETE"
-      ],
-      "subjects": [
-        "datamimic_ce.domains.common.literal_generators.state_transition_generator",
-        "datamimic_ce.engine.dsl.statements.state_machine_statement"
       ]
     },
     {
