@@ -526,21 +526,30 @@ def self_test() -> None:
     assert test_evidence(REPO / "tests_ce/integration_tests/test_timeseries/basic_one_series.xml") is None
     assert test_evidence(REPO / "tests_ce/functional_tests/test_condition/test_condition.xml") is None
     with tempfile.TemporaryDirectory(prefix="dm-oracle-self-test-", dir=REPO) as temp:
-        for name, save_name in (("positive", "fixture.xlsx"), ("negative", "other.xlsx")):
+        cases = (
+            ("positive", "Workbook().save('fixture.xlsx')", True),
+            ("unrelated-save", "Workbook().save('other.xlsx')  # fixture.xlsx", False),
+            ("suffix-save", "Workbook().save('fixture.xlsx.old')", False),
+            (
+                "rebound-path",
+                "path = 'fixture.xlsx'\npath = 'other.xlsx'\nWorkbook().save(path)",
+                False,
+            ),
+        )
+        failures: list[str] = []
+        for name, body, expected in cases:
             case = Path(temp) / name
             case.mkdir()
             descriptor = case / "descriptor.xml"
             descriptor.write_text('<setup><generate source="fixture.xlsx"/></setup>', encoding="utf-8")
-            reference = "fixture.xlsx" if name == "positive" else 'source = "fixture.xlsx"'
             (case / "test_fixture.py").write_text(
-                f"from openpyxl import Workbook\n{reference}\nWorkbook().save('{save_name}')\n",
+                f"from openpyxl import Workbook\n{body}\n",
                 encoding="utf-8",
             )
             evidence = test_fixture_evidence(descriptor, ET.parse(descriptor).getroot())
-            if name == "positive":
-                assert evidence, "exact workbook creation should be detected"
-            else:
-                assert not evidence, f"unrelated workbook save was misclassified: {evidence}"
+            if bool(evidence) != expected:
+                failures.append(f"{name}: expected evidence={expected}, got {evidence}")
+        assert not failures, "fixture evidence cases failed:\n" + "\n".join(failures)
 
 
 def main() -> None:
