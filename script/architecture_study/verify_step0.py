@@ -601,6 +601,21 @@ def self_test() -> None:
                 "path = 'fixture.xlsx'\nif True:\n    path = 'other.xlsx'\nWorkbook().save(path)",
                 False,
             ),
+            (
+                "augmented-path-rebind",
+                "path = 'fixture.xlsx'\npath += '.old'\nWorkbook().save(path)",
+                False,
+            ),
+            (
+                "annotated-path-rebind",
+                "path = 'fixture.xlsx'\npath: str = 'other.xlsx'\nWorkbook().save(path)",
+                False,
+            ),
+            (
+                "deleted-path",
+                "path = 'fixture.xlsx'\ndel path\nWorkbook().save(path)",
+                False,
+            ),
         )
         failures: list[str] = []
         for name, body, expected in cases:
