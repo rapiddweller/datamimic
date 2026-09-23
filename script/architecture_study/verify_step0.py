@@ -462,10 +462,15 @@ def run_descriptor(record: dict[str, Any]) -> tuple[str, dict[str, Any]]:
 
 def projections() -> dict[str, Any]:
     env = {**os.environ, "PYTHONPATH": str(REPO)}
+    cli_module = (
+        "datamimic_ce.interfaces.cli"
+        if (REPO / "datamimic_ce/interfaces/cli.py").is_file()
+        else "datamimic_ce.cli"
+    )
     commands = {
-        "capabilities": [sys.executable, "-m", "datamimic_ce.interfaces.cli", "capabilities", "--full"],
-        "reference_authoring": [sys.executable, "-m", "datamimic_ce.interfaces.cli", "reference", "authoring"],
-        "reference_scaffold": [sys.executable, "-m", "datamimic_ce.interfaces.cli", "reference", "scaffold"],
+        "capabilities": [sys.executable, "-m", cli_module, "capabilities", "--full"],
+        "reference_authoring": [sys.executable, "-m", cli_module, "reference", "authoring"],
+        "reference_scaffold": [sys.executable, "-m", cli_module, "reference", "scaffold"],
     }
     captured: dict[str, Any] = {}
     for name, command in commands.items():
