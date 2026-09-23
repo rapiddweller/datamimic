@@ -250,23 +250,63 @@ def test_fixture_evidence(path: Path, root: ET.Element) -> list[str]:
             except SyntaxError:
                 continue
             workbook_creation = any(isinstance(node, ast.Name) and node.id == "Workbook" for node in ast.walk(tree))
+            dir_proven = False
+            for statement in tree.body:
+                if isinstance(statement, (ast.FunctionDef, ast.AsyncFunctionDef)):
+                    continue
+                binds_dir = any(
+                    isinstance(node, ast.Name) and node.id == "_DIR" and isinstance(node.ctx, (ast.Store, ast.Del))
+                    for node in ast.walk(statement)
+                )
+                if not binds_dir:
+                    continue
+                value = statement.value if isinstance(statement, ast.Assign) else None
+                dir_proven = (
+                    isinstance(statement, ast.Assign)
+                    and len(statement.targets) == 1
+                    and isinstance(statement.targets[0], ast.Name)
+                    and statement.targets[0].id == "_DIR"
+                    and isinstance(value, ast.Attribute)
+                    and value.attr == "parent"
+                    and isinstance(value.value, ast.Call)
+                    and isinstance(value.value.func, ast.Attribute)
+                    and value.value.func.attr == "resolve"
+                    and isinstance(value.value.func.value, ast.Call)
+                    and isinstance(value.value.func.value.func, ast.Name)
+                    and value.value.func.value.func.id == "Path"
+                    and value.value.func.value.args
+                    and isinstance(value.value.func.value.args[0], ast.Name)
+                    and value.value.func.value.args[0].id == "__file__"
+                )
             matches: list[tuple[int, int]] = []
 
             def inspect_scope(
-                statements: list[ast.stmt], expected_filename: str, evidence_matches: list[tuple[int, int]]
+                statements: list[ast.stmt],
+                expected_filename: str,
+                evidence_matches: list[tuple[int, int]],
+                descriptor_dir: bool,
+                module_scope: bool = False,
             ) -> None:
                 assigned_paths: dict[str, int | None] = {}
+                local_dir_binding = not module_scope and any(
+                    isinstance(node, ast.Name)
+                    and node.id == "_DIR"
+                    and isinstance(node.ctx, (ast.Store, ast.Del))
+                    for statement in statements
+                    if not isinstance(statement, (ast.FunctionDef, ast.AsyncFunctionDef))
+                    for node in ast.walk(statement)
+                )
                 for statement in statements:
                     if isinstance(statement, (ast.FunctionDef, ast.AsyncFunctionDef)):
-                        inspect_scope(statement.body, expected_filename, evidence_matches)
+                        inspect_scope(statement.body, expected_filename, evidence_matches, descriptor_dir)
                         continue
                     if isinstance(statement, ast.Assign):
                         value = statement.value
-                        has_filename = (
-                            isinstance(value, ast.Constant) and value.value == expected_filename
-                        ) or (
+                        has_filename = descriptor_dir and not local_dir_binding and (
                             isinstance(value, ast.BinOp)
                             and isinstance(value.op, ast.Div)
+                            and isinstance(value.left, ast.Name)
+                            and value.left.id == "_DIR"
                             and isinstance(value.right, ast.Constant)
                             and value.right.value == expected_filename
                         )
@@ -301,9 +341,11 @@ def test_fixture_evidence(path: Path, root: ET.Element) -> list[str]:
                     if not call.args:
                         continue
                     argument = call.args[0]
-                    exact_filename = (isinstance(argument, ast.Constant) and argument.value == expected_filename) or (
+                    exact_filename = descriptor_dir and not local_dir_binding and (
                         isinstance(argument, ast.BinOp)
                         and isinstance(argument.op, ast.Div)
+                        and isinstance(argument.left, ast.Name)
+                        and argument.left.id == "_DIR"
                         and isinstance(argument.right, ast.Constant)
                         and argument.right.value == expected_filename
                     )
@@ -312,7 +354,7 @@ def test_fixture_evidence(path: Path, root: ET.Element) -> list[str]:
                     elif isinstance(argument, ast.Name) and assigned_paths.get(argument.id) is not None:
                         evidence_matches.append((assigned_paths[argument.id] or call.lineno, call.lineno))
 
-            inspect_scope(tree.body, filename, matches)
+            inspect_scope(tree.body, filename, matches, dir_proven, module_scope=True)
             if matches and workbook_creation:
                 reference_line, save_line = matches[0]
                 evidence.append(
