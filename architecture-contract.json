@@ -484,7 +484,6 @@
         "cast",
         "delattr",
         "dunder_dict",
-        "getattr",
         "hasattr",
         "setattr",
         "type_ignore",
@@ -493,6 +492,25 @@
       "rationale": "Public behavior uses explicit types and avoids reflective escape hatches.",
       "provenance": [
         "docs/architecture/refactoring-study/experiment-2/target-architecture.md"
+      ],
+      "decided_by": "architect"
+    },
+    {
+      "id": "NO-GETATTR-COMPATIBILITY-ADAPTERS",
+      "kind": "forbidden_construct",
+      "source": "datamimic_ce",
+      "constructs": [
+        "getattr"
+      ],
+      "exact_sources": [
+        "datamimic_ce.domains.domain_core.base_entity.BaseEntity.__getattr__",
+        "datamimic_ce.engine.runtime.contexts.expression_globals._EvalProxy.__getattr__",
+        "datamimic_ce.engine.runtime.contexts.expression_globals._SeededFaker.__getattr__",
+        "datamimic_ce.engine.runtime.tasks.variable_iterator.VariableIterator.__getattr__"
+      ],
+      "rationale": "Only these DSL/runtime compatibility adapters may forward dynamic attributes; every other getattr remains forbidden.",
+      "provenance": [
+        "docs/architecture/refactoring-study/experiment-2/amendment-10.md"
       ],
       "decided_by": "architect"
     },
