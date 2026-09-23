@@ -7,7 +7,6 @@ Run with the project interpreter:
 from __future__ import annotations
 
 import argparse
-import ast
 import hashlib
 import json
 import os
@@ -232,168 +231,24 @@ def test_evidence(path: Path) -> str | None:
     return None
 
 
-def test_fixture_evidence(path: Path, root: ET.Element) -> list[str]:
-    missing = sorted(
-        {
+def missing_xlsx_source_evidence(path: Path, root: ET.Element) -> list[str]:
+    generated: set[str] = set()
+    missing: set[str] = set()
+    for node in root.iter():
+        source = node.get("source")
+        if (
             source
-            for node in root.iter()
-            if (source := node.get("source"))
             and Path(source).suffix.lower() == ".xlsx"
             and not (path.parent / source).is_file()
-        }
-    )
-    evidence: list[str] = []
-    for filename in missing:
-        for source in sorted(path.parent.glob("*.py")):
-            try:
-                tree = ast.parse(source.read_text(encoding="utf-8", errors="replace"))
-            except SyntaxError:
-                continue
-            workbook_creation = any(isinstance(node, ast.Name) and node.id == "Workbook" for node in ast.walk(tree))
-            dir_proven = False
-            for statement in tree.body:
-                if isinstance(statement, (ast.FunctionDef, ast.AsyncFunctionDef)):
-                    continue
-                binds_dir = any(
-                    isinstance(node, ast.Name) and node.id == "_DIR" and isinstance(node.ctx, (ast.Store, ast.Del))
-                    for node in ast.walk(statement)
-                ) or any(
-                    alias.name == "_DIR" or alias.asname == "_DIR"
-                    for node in ast.walk(statement)
-                    if isinstance(node, (ast.Import, ast.ImportFrom))
-                    for alias in node.names
-                )
-                if not binds_dir:
-                    continue
-                value = statement.value if isinstance(statement, ast.Assign) else None
-                dir_proven = (
-                    isinstance(statement, ast.Assign)
-                    and len(statement.targets) == 1
-                    and isinstance(statement.targets[0], ast.Name)
-                    and statement.targets[0].id == "_DIR"
-                    and isinstance(value, ast.Attribute)
-                    and value.attr == "parent"
-                    and isinstance(value.value, ast.Call)
-                    and isinstance(value.value.func, ast.Attribute)
-                    and value.value.func.attr == "resolve"
-                    and isinstance(value.value.func.value, ast.Call)
-                    and isinstance(value.value.func.value.func, ast.Name)
-                    and value.value.func.value.func.id == "Path"
-                    and value.value.func.value.args
-                    and isinstance(value.value.func.value.args[0], ast.Name)
-                    and value.value.func.value.args[0].id == "__file__"
-                )
-            matches: list[tuple[int, int]] = []
-
-            def inspect_scope(
-                statements: list[ast.stmt],
-                expected_filename: str,
-                evidence_matches: list[tuple[int, int]],
-                descriptor_dir: bool,
-                module_scope: bool = False,
-                shadowed_dir: bool = False,
-            ) -> None:
-                assigned_paths: dict[str, int | None] = {}
-                local_dir_binding = shadowed_dir or (not module_scope and any(
-                    isinstance(node, ast.Name)
-                    and node.id == "_DIR"
-                    and isinstance(node.ctx, (ast.Store, ast.Del))
-                    for statement in statements
-                    if not isinstance(statement, (ast.FunctionDef, ast.AsyncFunctionDef))
-                    for node in ast.walk(statement)
-                ))
-                for statement in statements:
-                    if isinstance(statement, (ast.FunctionDef, ast.AsyncFunctionDef)):
-                        shadowed = (
-                            any(
-                                argument.arg == "_DIR"
-                                for argument in (
-                                    *statement.args.posonlyargs,
-                                    *statement.args.args,
-                                    *statement.args.kwonlyargs,
-                                    statement.args.vararg,
-                                    statement.args.kwarg,
-                                )
-                                if argument is not None
-                            )
-                            or any(
-                                alias.name == "_DIR" or alias.asname == "_DIR"
-                                for child in ast.walk(statement)
-                                if isinstance(child, (ast.Import, ast.ImportFrom))
-                                for alias in child.names
-                            )
-                            or any(
-                                isinstance(child, (ast.Global, ast.Nonlocal)) and "_DIR" in child.names
-                                for child in ast.walk(statement)
-                            )
-                        )
-                        inspect_scope(
-                            statement.body, expected_filename, evidence_matches, descriptor_dir, shadowed_dir=shadowed
-                        )
-                        continue
-                    if isinstance(statement, ast.Assign):
-                        value = statement.value
-                        has_filename = descriptor_dir and not local_dir_binding and (
-                            isinstance(value, ast.BinOp)
-                            and isinstance(value.op, ast.Div)
-                            and isinstance(value.left, ast.Name)
-                            and value.left.id == "_DIR"
-                            and isinstance(value.right, ast.Constant)
-                            and value.right.value == expected_filename
-                        )
-                        for target in statement.targets:
-                            for node in ast.walk(target):
-                                if isinstance(node, ast.Name) and isinstance(node.ctx, ast.Store):
-                                    assigned_paths[node.id] = None
-                            if isinstance(target, ast.Name):
-                                assigned_paths[target.id] = statement.lineno if has_filename else None
-                    elif isinstance(statement, (ast.AnnAssign, ast.AugAssign, ast.Delete)):
-                        for node in ast.walk(statement):
-                            if isinstance(node, ast.Name) and isinstance(node.ctx, (ast.Store, ast.Del)):
-                                assigned_paths[node.id] = None
-                    elif isinstance(
-                        statement,
-                        (ast.If, ast.For, ast.AsyncFor, ast.While, ast.Try, ast.With, ast.AsyncWith, ast.Match),
-                    ):
-                        for node in ast.walk(statement):
-                            if isinstance(node, ast.Name) and isinstance(node.ctx, ast.Store):
-                                assigned_paths[node.id] = None
-                        continue
-                    for node in ast.walk(statement):
-                        if isinstance(node, ast.NamedExpr) and isinstance(node.target, ast.Name):
-                            assigned_paths[node.target.id] = None
-                    call = statement.value if isinstance(statement, (ast.Expr, ast.Return)) else None
-                    if (
-                        not isinstance(call, ast.Call)
-                        or not isinstance(call.func, ast.Attribute)
-                        or call.func.attr != "save"
-                    ):
-                        continue
-                    if not call.args:
-                        continue
-                    argument = call.args[0]
-                    exact_filename = descriptor_dir and not local_dir_binding and (
-                        isinstance(argument, ast.BinOp)
-                        and isinstance(argument.op, ast.Div)
-                        and isinstance(argument.left, ast.Name)
-                        and argument.left.id == "_DIR"
-                        and isinstance(argument.right, ast.Constant)
-                        and argument.right.value == expected_filename
-                    )
-                    if exact_filename:
-                        evidence_matches.append((call.lineno, call.lineno))
-                    elif isinstance(argument, ast.Name) and assigned_paths.get(argument.id) is not None:
-                        evidence_matches.append((assigned_paths[argument.id] or call.lineno, call.lineno))
-
-            inspect_scope(tree.body, filename, matches, dir_proven, module_scope=True)
-            if matches and workbook_creation:
-                reference_line, save_line = matches[0]
-                evidence.append(
-                    f"{source.relative_to(REPO)}:{reference_line} names {filename}; "
-                    f"{source.relative_to(REPO)}:{save_line} writes the test workbook"
-                )
-                break
-    return evidence
+            and os.path.normpath(source) not in generated
+        ):
+            missing.add(source)
+        if node.tag != "generate":
+            continue
+        name, export_uri, target = node.get("name"), node.get("exportUri"), node.get("target", "")
+        if name and export_uri and re.search(r"(?:^|[,\s])XLSX(?:$|[,\s(])", target, re.IGNORECASE):
+            generated.add(os.path.normpath(str(Path("output") / export_uri / f"{name}.xlsx")))
+    return [f"missing XLSX source {source}; no same-descriptor producer" for source in missing]
 
 
 def dynamic_count_evidence(path: Path, root: ET.Element) -> list[str]:
@@ -503,9 +358,9 @@ def inventory() -> list[dict[str, Any]]:
         if expected_error:
             categories.append("intentionally-invalid")
             evidence.append(expected_error)
-        fixture_evidence = test_fixture_evidence(path, root)
+        fixture_evidence = missing_xlsx_source_evidence(path, root)
         if fixture_evidence:
-            categories.append("test-fixture-dependent")
+            categories.append("missing-xlsx-source")
             evidence.extend(fixture_evidence)
         if not categories:
             categories.append("runnable")
@@ -528,14 +383,11 @@ def run_descriptor(record: dict[str, Any]) -> tuple[str, dict[str, Any]]:
     categories = record["category"]
     if "non-descriptor" in categories and "authoring-fixture" not in categories:
         return relative, {"status": "NOT-A-DESCRIPTOR", "category": categories, "evidence": record["evidence"]}
-    if "test-fixture-dependent" in categories:
+    if "missing-xlsx-source" in categories:
         return relative, {
             "status": "UNVERIFIED",
             "category": categories,
-            "reason": (
-                "UNVERIFIED: source workbook is generated by sibling test setup and "
-                "absent from the descriptor directory"
-            ),
+            "reason": "UNVERIFIED: referenced XLSX source is absent and not generated by this descriptor",
             "evidence": record["evidence"],
         }
     if "external-service" in categories or "authoring-fixture" in categories:
@@ -654,90 +506,35 @@ def self_test() -> None:
     assert test_evidence(REPO / "tests_ce/integration_tests/test_timeseries/basic_one_series.xml") is None
     assert test_evidence(REPO / "tests_ce/functional_tests/test_condition/test_condition.xml") is None
     with tempfile.TemporaryDirectory(prefix="dm-oracle-self-test-", dir=REPO) as temp:
-        cases = (
-            (
-                "positive",
-                "_DIR = Path(__file__).resolve().parent\nWorkbook().save(_DIR / 'fixture.xlsx')",
-                True,
-            ),
-            (
-                "absolute-path-save",
-                "Workbook().save(Path('/tmp') / 'fixture.xlsx')",
-                False,
-            ),
-            ("relative-path-save", "Workbook().save('fixture.xlsx')", False),
-            ("unrelated-save", "Workbook().save('other.xlsx')  # fixture.xlsx", False),
-            ("suffix-save", "Workbook().save('fixture.xlsx.old')", False),
-            (
-                "rebound-path",
-                "path = 'fixture.xlsx'\npath = 'other.xlsx'\nWorkbook().save(path)",
-                False,
-            ),
-            (
-                "separate-function-path",
-                "def fixture_path():\n    path = 'fixture.xlsx'\n"
-                "def save_workbook(path):\n    Workbook().save(path)\n",
-                False,
-            ),
-            (
-                "conditional-save-argument",
-                "Workbook().save('fixture.xlsx' if False else 'other.xlsx')",
-                False,
-            ),
-            (
-                "conditional-path-assignment",
-                "path = 'fixture.xlsx' if False else 'other.xlsx'\nWorkbook().save(path)",
-                False,
-            ),
-            (
-                "branch-rebound-path",
-                "path = 'fixture.xlsx'\nif True:\n    path = 'other.xlsx'\nWorkbook().save(path)",
-                False,
-            ),
-            (
-                "augmented-path-rebind",
-                "path = 'fixture.xlsx'\npath += '.old'\nWorkbook().save(path)",
-                False,
-            ),
-            (
-                "annotated-path-rebind",
-                "path = 'fixture.xlsx'\npath: str = 'other.xlsx'\nWorkbook().save(path)",
-                False,
-            ),
-            (
-                "deleted-path",
-                "path = 'fixture.xlsx'\ndel path\nWorkbook().save(path)",
-                False,
-            ),
-            (
-                "shadowed-module-dir",
-                "_DIR = Path(__file__).resolve().parent\n"
-                "def save(_DIR):\n    Workbook().save(_DIR / 'fixture.xlsx')\n"
-                "save(Path('/tmp'))",
-                False,
-            ),
-            (
-                "function-import-dir-alias",
-                "_DIR = Path(__file__).resolve().parent\n"
-                "def save():\n    from test_support import _DIR\n"
-                "    Workbook().save(_DIR / 'fixture.xlsx')\nsave()",
-                False,
-            ),
+        descriptor = Path(temp) / "descriptor.xml"
+        descriptor.write_text('<setup><generate source="fixture.xlsx"/></setup>', encoding="utf-8")
+        assert missing_xlsx_source_evidence(descriptor, ET.parse(descriptor).getroot())
+
+        descriptor.write_text(
+            '<setup><generate name="src_rows" exportUri="source_out" '
+            'target="CSV,JSON,XML,XLSX,DbUnit,FixedWidth(columns=\'id[4],name[16]\')"/>'
+            '<generate source="output/source_out/src_rows.xlsx"/></setup>',
+            encoding="utf-8",
         )
-        failures: list[str] = []
-        for name, body, expected in cases:
-            case = Path(temp) / name
-            case.mkdir()
-            descriptor = case / "descriptor.xml"
-            descriptor.write_text('<setup><generate source="fixture.xlsx"/></setup>', encoding="utf-8")
-            (case / "test_fixture.py").write_text(
-                f"from pathlib import Path\nfrom openpyxl import Workbook\n{body}\n",
-                encoding="utf-8",
-            )
-            evidence = test_fixture_evidence(descriptor, ET.parse(descriptor).getroot())
-            if bool(evidence) != expected:
-                failures.append(f"{name}: expected evidence={expected}, got {evidence}")
-        assert not failures, "fixture evidence cases failed:\n" + "\n".join(failures)
+        assert not missing_xlsx_source_evidence(descriptor, ET.parse(descriptor).getroot())
+
+        descriptor.write_text(
+            '<setup><generate source="output/source_out/src_rows.xlsx"/>'
+            '<generate name="src_rows" exportUri="source_out" target="XLSX"/></setup>',
+            encoding="utf-8",
+        )
+        assert missing_xlsx_source_evidence(descriptor, ET.parse(descriptor).getroot())
+
+        descriptor.write_text(
+            '<setup><generate name="src_rows" exportUri="source_out" target="XLSXEncoder"/>'
+            '<generate source="output/source_out/src_rows.xlsx"/></setup>',
+            encoding="utf-8",
+        )
+        assert missing_xlsx_source_evidence(descriptor, ET.parse(descriptor).getroot())
+
+        (Path(temp) / "fixture.xlsx").touch()
+        descriptor.write_text('<setup><generate source="fixture.xlsx"/></setup>', encoding="utf-8")
+        assert not missing_xlsx_source_evidence(descriptor, ET.parse(descriptor).getroot())
 
 
 def main() -> None:

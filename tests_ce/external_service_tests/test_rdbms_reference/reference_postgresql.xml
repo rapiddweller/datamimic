@@ -2,7 +2,7 @@
      Mirrors the MongoDB reference matrix exactly (same ReferenceTask, same seeded
      selection) - RdbmsClient.get_random_rows_by_columns returns a stable ORDER BY the
      selected columns (not ORDER BY random()), so the seeded shuffle in
-     runtime source selection is reproducible run-to-run. -->
+     DataSourceRegistry.get_unique_data/get_distributed_data is reproducible run-to-run. -->
 <setup rngSeed="7">
     <database id="sourceDB" system="postgresql" />
     <memstore id="mem" />

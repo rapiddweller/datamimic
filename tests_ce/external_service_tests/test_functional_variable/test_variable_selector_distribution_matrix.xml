@@ -3,7 +3,7 @@
      distribution="ordered" x cyclic true/false) - the cells below were previously
      completely untested for the selector= code path: distribution="random"/"cumulated"
      (loads_all=True, routed through VariableTask._distributed_iter) and unique="true"
-     (routed through runtime source selection). Same shared distribution/unique
+     (routed through DataSourceRegistry.get_unique_data). Same shared distribution/unique
      machinery already verified for <variable type=...> (test_mongodb_variable_matrix.xml)
      and <reference> (test_rdbms_reference/), exercised here via the selector= entry point. -->
 <setup rngSeed="7">
