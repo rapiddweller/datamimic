@@ -28,13 +28,10 @@ from datamimic_ce.authoring.rule_catalog import (
 )
 from datamimic_ce.authoring.schema import ElementSchema, build_schema_index
 from datamimic_ce.domains.api import iter_generator_capabilities as domain_generator_capabilities
-from datamimic_ce.engine.dsl.api import GeneratorCapability
-from datamimic_ce.engine.dsl.constants.exporter_constants import (
+from datamimic_ce.engine.dsl.api import (
     EXPORTER_CONSOLE_EXPORTER,
     EXPORTER_LOG_EXPORTER,
     EXPORTER_TEST_RESULT_EXPORTER,
-)
-from datamimic_ce.engine.dsl.model.constraints import (
     KEY_DISTRIBUTION_VALUES,
     SOURCE_DISTRIBUTION_VALUES,
     AllOrNone,
@@ -42,18 +39,20 @@ from datamimic_ce.engine.dsl.model.constraints import (
     Constraint,
     Forbids,
     ForbidsWhenValue,
+    GeneratorCapability,
     MutuallyExclusive,
     MutuallyExclusiveWhen,
     RequiredOneOf,
     Requires,
     RequiresWhenValue,
     ValidValues,
+    canonical_tag,
+    element_aliases,
     resolved_values,
     serialize_constraints,
     serialize_source_capability,
     source_capabilities,
 )
-from datamimic_ce.engine.dsl.model.element_registry import canonical_tag, element_aliases
 from datamimic_ce.engine.runtime.api import iter_generator_capabilities as runtime_generator_capabilities
 
 
@@ -338,7 +337,7 @@ def timeseries_reference() -> str:
 
 
 def distributions_reference() -> str:
-    from datamimic_ce.engine.dsl.enums.distribution_enums import (
+    from datamimic_ce.engine.dsl.api import (
         POSITIONAL_NUMBER_SEQUENCES,
     )
 
@@ -383,7 +382,7 @@ def distributions_reference() -> str:
 
 
 def converters_reference() -> str:
-    from datamimic_ce.engine.dsl.enums.converter_enums import ConverterEnum
+    from datamimic_ce.engine.dsl.api import ConverterEnum
 
     names = ", ".join(sorted(member.value for member in ConverterEnum))
     return (
@@ -485,8 +484,7 @@ def capabilities_manifest() -> dict[str, Any]:
     from importlib.metadata import PackageNotFoundError, version
 
     from datamimic_ce.authoring.spec import authoring_spec_json_schema
-    from datamimic_ce.engine.dsl.enums.converter_enums import ConverterEnum
-    from datamimic_ce.engine.dsl.enums.distribution_enums import POSITIONAL_NUMBER_SEQUENCES
+    from datamimic_ce.engine.dsl.api import POSITIONAL_NUMBER_SEQUENCES, ConverterEnum
     from datamimic_ce.engine.io.exporters.exporter_util import buffered_exporter_names
 
     try:

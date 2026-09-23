@@ -39,7 +39,7 @@ def _is_pure_credential_error(message: str) -> bool:
 
 def run_engine_parse(descriptor_path: Path) -> Diagnostic | None:
     """None when the engine accepts the descriptor, else one DM000 diagnostic."""
-    from datamimic_ce.engine.dsl.parsers.descriptor_parser import DescriptorParser
+    from datamimic_ce.engine.dsl.api import DescriptorParser
 
     try:
         from datamimic_ce.engine.runtime.api import runtime_environment

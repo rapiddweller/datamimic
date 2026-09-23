@@ -16,19 +16,15 @@ from lxml import etree
 from datamimic_ce.authoring.diagnostics import Diagnostic
 from datamimic_ce.authoring.rule_catalog import authoring_rule_definition
 from datamimic_ce.authoring.rules.base import LintContext, Rule
-from datamimic_ce.engine.dsl.constants.data_type_constants import (
+from datamimic_ce.engine.dsl.api import (
     DATA_TYPE_DICT,
     DATA_TYPE_LIST,
-)
-from datamimic_ce.engine.dsl.constants.element_constants import (
     EL_COMMENT,
     EL_ID,
     EL_KEY,
     EL_NESTED_KEY,
     EL_SETUP,
     EL_VARIABLE,
-)
-from datamimic_ce.engine.dsl.model.constraints import (
     KEY_DISTRIBUTION_VALUES,
     ValidValues,
     resolved_values,

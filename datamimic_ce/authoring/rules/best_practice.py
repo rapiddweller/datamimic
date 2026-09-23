@@ -19,8 +19,10 @@ from datamimic_ce.authoring.diagnostics import Diagnostic
 from datamimic_ce.authoring.rule_catalog import authoring_rule_definition
 from datamimic_ce.authoring.rules.base import LintContext, Rule
 from datamimic_ce.domains.common.literal_generators.number_sequences import finite_number_sequence_capacity
-from datamimic_ce.engine.dsl.constants.data_type_constants import DATA_TYPE_DECIMAL, DATA_TYPE_FLOAT, DATA_TYPE_INT
-from datamimic_ce.engine.dsl.constants.element_constants import (
+from datamimic_ce.engine.dsl.api import (
+    DATA_TYPE_DECIMAL,
+    DATA_TYPE_FLOAT,
+    DATA_TYPE_INT,
     EL_CONDITION,
     EL_ELSE,
     EL_ELSE_IF,
@@ -32,8 +34,10 @@ from datamimic_ce.engine.dsl.constants.element_constants import (
     EL_NESTED_KEY,
     EL_REFERENCE,
     EL_VARIABLE,
+    POSITIONAL_NUMBER_SEQUENCES,
+    NumberDistribution,
+    SourceDistribution,
 )
-from datamimic_ce.engine.dsl.enums.distribution_enums import POSITIONAL_NUMBER_SEQUENCES, NumberDistribution
 
 _GENERATES = (EL_GENERATE, EL_ITERATE)
 _SOURCE_READERS = (*_GENERATES, EL_VARIABLE, EL_NESTED_KEY, EL_REFERENCE)
@@ -357,8 +361,6 @@ class CountWithSourceCapsSilently(Rule):
     definition = authoring_rule_definition("DM316")
 
     def check(self, ctx: LintContext) -> Iterable[Diagnostic]:
-        from datamimic_ce.engine.dsl.enums.distribution_enums import SourceDistribution
-
         for element in ctx.iter(*_GENERATES):
             count = element.get("count")
             if (

@@ -16,7 +16,7 @@ from lxml import etree
 from datamimic_ce.authoring.diagnostics import Diagnostic
 from datamimic_ce.authoring.rule_catalog import authoring_rule_definition
 from datamimic_ce.authoring.rules.base import LintContext, Rule
-from datamimic_ce.engine.dsl.constants.element_constants import (
+from datamimic_ce.engine.dsl.api import (
     EL_DATABASE,
     EL_ELEMENT,
     EL_GENERATE,
@@ -29,15 +29,11 @@ from datamimic_ce.engine.dsl.constants.element_constants import (
     EL_NESTED_KEY,
     EL_REFERENCE,
     EL_VARIABLE,
-)
-from datamimic_ce.engine.dsl.constants.exporter_constants import (
     EXPORTER_CONSOLE_EXPORTER,
     EXPORTER_LOG_EXPORTER,
     EXPORTER_TEST_RESULT_EXPORTER,
-)
-from datamimic_ce.engine.dsl.enums.operation_enums import ExportOperation
-from datamimic_ce.engine.dsl.model.constraints import (
     DynamicSourceKind,
+    ExportOperation,
     SourceFileFormat,
     source_allows_client,
     source_allows_memstore,

@@ -16,18 +16,16 @@ from typing import Any
 
 from pydantic import BaseModel
 
-from datamimic_ce.engine.dsl.model.constraints import (
+from datamimic_ce.engine.dsl.api import (
     Constraint,
-    element_constraints,
-    rule_registry_revision,
-    serialize_constraints,
-)
-from datamimic_ce.engine.dsl.model.element_registry import (
     canonical_tag,
+    element_constraints,
     get_model_class,
     get_valid_children,
     list_element_tags,
     registry_revision,
+    rule_registry_revision,
+    serialize_constraints,
 )
 
 
