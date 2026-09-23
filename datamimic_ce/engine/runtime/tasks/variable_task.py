@@ -196,8 +196,7 @@ class VariableTask(KeyVariableTask, CommonSubTask):
     def _get_entity_generator(
         ctx: Context, entity_name: str, locale: str, dataset: str, count: int, statement: VariableStatement
     ):
-        from datamimic_ce.domains.common.models.demographic_config import DemographicConfig
-        from datamimic_ce.domains.domain_core.runtime import spawn_rng
+        from datamimic_ce.domains.api import DemographicConfig, spawn_rng
 
         entity_class_name, kwargs = _parse_constructor_string(entity_name)
         # Inject dataset if not explicitly provided in constructor
@@ -239,7 +238,7 @@ class VariableTask(KeyVariableTask, CommonSubTask):
         # Build from the last parsed VariableTask (self is not accessible in staticmethod); use closure via locals()
 
         # Resolve service classes and their aliases through the entity registry.
-        from datamimic_ce.domains.domain_core.entity_registry import get_entity_service_class
+        from datamimic_ce.domains.api import get_entity_service_class
 
         entity_cls = get_entity_service_class(entity_class_name)
         if entity_cls is None:

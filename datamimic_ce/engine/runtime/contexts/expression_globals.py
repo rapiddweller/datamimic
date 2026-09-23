@@ -47,8 +47,7 @@ import pandas as pd
 import requests
 from faker import Faker
 
-from datamimic_ce.domains.domain_core.runtime.clock import resolve_clock
-from datamimic_ce.domains.utils.rng_uuid import uuid4_from_random
+from datamimic_ce.domains.api import resolve_clock, uuid4_from_random
 
 if TYPE_CHECKING:
     from datamimic_ce.engine.runtime.contexts.context import Context

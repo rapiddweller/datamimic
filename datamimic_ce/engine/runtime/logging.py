@@ -14,7 +14,7 @@ from typing import Literal
 
 import psutil
 
-from datamimic_ce.domains.determinism import get_datamimic_lib_version
+from datamimic_ce.domains.api import get_datamimic_lib_version
 
 
 def setup_logger(logger_name: str, worker_name: str, level=logging.INFO):

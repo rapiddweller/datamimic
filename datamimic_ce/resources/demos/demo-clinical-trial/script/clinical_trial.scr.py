@@ -2,8 +2,7 @@ from __future__ import annotations
 
 from random import Random
 
-from datamimic_ce.domains.common.models.demographic_config import DemographicConfig
-from datamimic_ce.domains.healthcare.services.patient_service import PatientService
+from datamimic_ce.domains.api import DemographicConfig, PatientService
 
 
 def generate_clinical_cohort() -> list[dict]:

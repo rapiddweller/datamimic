@@ -6,8 +6,7 @@ from random import Random
 #  Showcase nestedKey with programmatic generation and deterministic RNG
 from typing import Any
 
-from datamimic_ce.domains.finance.generators.transaction_generator import TransactionGenerator
-from datamimic_ce.domains.finance.models.transaction import Transaction
+from datamimic_ce.domains.api import Transaction, TransactionGenerator
 
 
 def generate_transactions_for_account(account, n: int = 5, seed: int | None = None) -> list[dict[str, Any]]:

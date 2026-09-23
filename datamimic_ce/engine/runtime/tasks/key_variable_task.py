@@ -14,8 +14,7 @@ from typing import Any
 
 import numpy
 
-from datamimic_ce.domains.common.literal_generators.string_generator import StringGenerator
-from datamimic_ce.domains.domain_core.runtime import from_epoch_utc, to_epoch_utc
+from datamimic_ce.domains.api import StringGenerator, from_epoch_utc, to_epoch_utc
 from datamimic_ce.engine.dsl.api import (
     DATA_TYPE_BINARY,
     DATA_TYPE_BOOL,

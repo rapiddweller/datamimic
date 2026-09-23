@@ -13,7 +13,7 @@ from functools import lru_cache
 from typing import TYPE_CHECKING, Any
 
 if TYPE_CHECKING:
-    from datamimic_ce.domains.domain_core.entity_registry import EntitySpec
+    from datamimic_ce.domains.api import EntitySpec
 
 from datamimic_ce.authoring.contracts import AuthoringReferenceCategory, ReferenceTopic
 from datamimic_ce.authoring.reference_projection import (
@@ -270,7 +270,7 @@ def targets_reference() -> str:
 
 @lru_cache(maxsize=1)
 def _entity_specs() -> dict[str, "EntitySpec"]:
-    from datamimic_ce.domains.domain_core.entity_registry import list_entity_specs
+    from datamimic_ce.domains.api import list_entity_specs
 
     return {spec.entity: spec for spec in list_entity_specs()}
 

@@ -122,3 +122,12 @@ constraints, and parser facts directly from internal modules.
 **Decision:** `engine.dsl.api` re-exports the exact cross-component vocabulary with object identity
 preserved. Consumers import that facade instead of wrappers or duplicate types. DSL-internal
 modules continue to import their owning implementations directly to avoid facade cycles.
+
+## D16 — the domain facade exposes existing domain capabilities
+
+**FACT:** runtime, Authoring, interfaces, and shipped resource scripts already use domain
+generators, converters, entity registry facts, deterministic runtime helpers, and demographic
+types.
+
+**Decision:** `domains.api` exposes those existing cross-component names as identity re-exports,
+plus its two facade-owned capability iterators. Domain internals do not import their own facade.

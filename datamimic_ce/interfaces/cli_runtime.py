@@ -12,7 +12,7 @@ from pathlib import Path
 import toml
 from pydantic import BaseModel, ConfigDict, Field, ValidationError
 
-from datamimic_ce.domains.determinism import get_datamimic_lib_version
+from datamimic_ce.domains.api import get_datamimic_lib_version
 from datamimic_ce.engine.io.api import FileUtil
 from datamimic_ce.interfaces import cli_presenter
 from datamimic_ce.interfaces.api import run

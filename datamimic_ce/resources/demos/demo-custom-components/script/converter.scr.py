@@ -1,4 +1,4 @@
-from datamimic_ce.domains.converters.converter import Converter
+from datamimic_ce.domains.api import Converter
 
 
 class UpperCaseConverter(Converter):  # noqa: F821
