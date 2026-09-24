@@ -24,6 +24,12 @@ behavioral evidence and delivery gates.
   edges. The largest module SCCs contain 28 DSL parser modules and 23 runtime
   modules. The declared component graph has no cycle; this is not a claim that
   package/module cycles are gone.
+- The CE Make/CI architecture gate is pinned to 0.6.1. A negative probe found
+  that ArchKeel can exit 0 while `declared_rules=UNKNOWN`; the Make target now
+  fails closed on that verdict and on material unknown positions (Step 08C23).
+  Remote CI still has not run. A proposed stricter generator-return type passed
+  MyPy but remained UNKNOWN under ArchKeel, so that code change was reverted
+  without a contract/baseline amendment (Step 08C21).
 
 ## DSL oracle
 
@@ -188,9 +194,9 @@ records. Three leaves outside the aggregate fail on both revisions because
 `<generate>` rejects child `<attribute>`; their diagnostic member order is
 nondeterministic, so raw message hashes differ while exception type and
 diagnostic members match. These are failure-parity cases, not successful DSL
-executions. Forty-two local-only demo cases remain without a separate
-comparison. Of the other 193, the six SQLite comparisons below are now covered;
-187 remain. Those 187 comprise 148 directly service-backed runtime descriptors,
+executions. At this stage, 42 local-only demo cases lacked a separate
+comparison. Of the other 193, the six SQLite comparisons below were covered;
+187 still lacked one. Those 187 comprised 148 directly service-backed runtime descriptors,
 36 aggregate-owned fragments, two authoring-only fixtures, and one
 expected-invalid DBMS fixture.
 
@@ -210,14 +216,47 @@ capture, normalized export, and SQLite content evidence has SHA-256
 `be06f99b9e0a6e58bdc783a3b339a8aa8f542cd3b95d049c6318847a3fa6efcd`.
 All DB and output paths stayed inside each stage. The XLSX export differs in
 raw OOXML timestamp/task metadata; its normalized content matches, as do the
-CSV/JSON bytes. Fifty-six SQLite-using direct descriptors remain without a
-separate comparison.
+CSV/JSON bytes.
+
+Another 55 service-classified SQLite/demo XMLs were compared in fresh,
+separate stages against frozen `a219163e`: 19 seeded cases have exact captured
+row comparisons, and 36 unseeded or expected-error cases have matching
+outcome, counts, normalized shape or diagnostic detail. Eight of the 55 are
+fragments executed through four owning demo aggregates. Each configured
+SQLite alias resolved inside its disposable stage; generated files stayed
+there. Eight descriptors intentionally produced the same error on both
+revisions; none of the 55 was silently counted as a successful run. The
+200,000-row SQLite page-process case remains unrun. The demo mapping script
+changed only relocated imports; normalizing those imports makes its input
+bytes match Step 0. Aggregate demo evidence SHA-256:
+`524e5ee7220ff810c6d4cd7e2cf64e056fd2e1cc087dc7104b3daaf400935770`.
+The other retained batch digests are
+`aee1bff990352c4b45970889d5aea4599ac106d11ac539758c801157eb17ef92`,
+`382e17800de7e5222c7e18e015179461a899e12cedb443c5b9b75d9a1567b676`,
+`06681ef1cedd488b4c252ea0e1a6db3da07fda0544c593ee3671005e23aeb3e4`,
+`d5a9467a02d4d49300363ac243902f61770b87fb2e2a5c231d4671c970f8dd98`,
+`356d14bdb24d2fee57b0d96602d6a5baeadf77e7ef3a4e5502cba1b51521ac9f`,
+`2f866826bcfdc74d7dcb579f3a8e084deeb95cc6795e61fbecefe8b3e59f6e88`,
+and `115d813b1e111616e148b7e2d590bd15ea5449a6687dbc9085da48e6586776fc`.
+The first five-case batch has per-case digests but no retained combined digest.
+The comparison scripts were fixed at verifier SHA-256
+`4e34e98c35f8a20a53854b2944bfa24cfdfc1ced8d0fa41ef90e2f44424e1f1f`
+and comparator SHA-256
+`e1fa07b4ca426ecfa138a1a8d06fa5754cddd57b78c65759ed0d1c1fc7eac5e6`.
+Service staging was driven by inline orchestration, which limits exact replay
+of this batch; the temporary evidence root is
+`/tmp/dm-sqlite-demo-aggregates-proof-ulfxpec5` for the four demos.
 
 Ruff and full-package MyPy pass. `make lint` fails at Pylint with exit 30. With
 Pylint 3.3.7, frozen code and experiment have the same 24 error-severity
 findings by symbol and message. Total findings are 3,509 versus 3,707 in the
 latest paired run, mainly 212 additional convention messages. Historical
 lint debt is not hidden by changing the gate.
+
+The XLSX integration tests now use function-scoped copies of their unchanged
+XMLs and temporary workbook/output paths. All 15 pass serially and with four
+xdist workers. This removes a shared-directory race; it does not change the
+DSL oracle or prove other integration tests are race-free (Step 08C20).
 
 ArchKeel currently scans only `datamimic_ce` (`archkeel.toml`), not `tests_ce`.
 Its contract therefore does not enforce test placement or test dependencies.
@@ -235,9 +274,9 @@ governance gap is tracked in [ArchKeel #143](https://github.com/rapiddweller/arc
 - **Behavior preserved for the comparable oracle set:** both frozen comparisons have zero
   differences. All 9 XLSX-dependent cases have controlled parity evidence; all
   43 authoring XML fixtures have identical lint results. Of 273
-  service-classified skips, nine have exact seeded runtime parity and 35 more
-  have normalized outcome/shape/error parity only. The remaining 229 lack a
-  separate Step-0 run; the unseeded 35 also lack exact row comparison. An unqualified
+  service-classified skips, 28 have exact seeded runtime parity and 71 more
+  have normalized outcome/shape/error parity only. The remaining 174 lack a
+  separate Step-0 run; the unseeded 71 also lack exact row comparison. An unqualified
   all-descriptors claim is not supported.
 - **Delivery not ready:** `make lint` remains red, the complete external-service
   suite has not passed in one isolated run, and remote CE CI has not run. No CE merge or
