@@ -173,3 +173,9 @@ positions, and no new or resolved baseline findings after narrowing the
 `calls_unresolved` budget to 1,279. The historical comparison and all other
 open acceptance items above remain unchanged. `make check` and remote CI have
 not been rerun on this update.
+
+Independent QA reproduced the identifier gap: a random source whose `choice`
+always selects the first item makes `PatientService.generate_batch(2)` return
+the same `PAT-00000000` ID twice. A separate seeded replay check passed. The
+red uniqueness test was not added to the test suite pending the product choice:
+guaranteed uniqueness can change seeded output when a collision occurs.
