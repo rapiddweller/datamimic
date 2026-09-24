@@ -676,6 +676,8 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
 
       - name: Download unit test coverage report
         uses: actions/download-artifact@v7

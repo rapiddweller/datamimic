@@ -57,7 +57,7 @@ def get_shuffled_data_with_cyclic(
     res: list[T] = []
     while len(res) <= end_idx - start_idx or len(res) < (start_idx % source_len) + end_idx - start_idx:
         shuffle_data = list(data)
-        Random(current_seed).shuffle(shuffle_data)
+        Random(current_seed).shuffle(shuffle_data)  # NOSONAR: seeded synthetic data must replay, not protect secrets
         res.extend(shuffle_data)
         current_seed += 1
 

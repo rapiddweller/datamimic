@@ -103,10 +103,11 @@ def create_demo(
     if all_demos:
         if target_directory is None:
             cli_presenter.fail("Target directory is required with --all", code=1)
-        target_directory.mkdir(parents=True, exist_ok=True)
-        for demo in sorted(demos_path.iterdir()):
-            if demo.is_dir():
-                handle_demo(demo.name, demo, overwrite, target_directory / demo.name)
+        else:
+            target_directory.mkdir(parents=True, exist_ok=True)
+            for demo in sorted(demos_path.iterdir()):
+                if demo.is_dir():
+                    handle_demo(demo.name, demo, overwrite, target_directory / demo.name)
         return
     if demo_name is None:
         cli_presenter.fail("Specify a demo name or use --all", code=1)
