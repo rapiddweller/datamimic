@@ -11,7 +11,8 @@ list to become empty. Numeric budgets remain separate, non-increasing quality ra
 - `authoring` stays top-level because it is a first-class workflow with its own typed intent.
 - `domains` stays top-level because published documentation imports its services and models.
 - engine internals move below `engine/{dsl,runtime,io}`.
-- CLI and MCP move below `interfaces`; `cli*.py` and `mcp/` disappear from the root.
+- CLI and MCP live in separate `interfaces/cli/` and `interfaces/mcp/` packages;
+  CLI command modules do not sprawl across `interfaces/`.
 - shipped demos move below `resources`.
 - `datamimic.py`, `data_mimic_test.py`, and `factory/` stay as documented Python entry points but
   own no engine behavior.
@@ -31,6 +32,12 @@ datamimic_ce/
 │   ├── runtime/
 │   └── io/
 ├── interfaces/
+│   ├── cli/
+│   ├── mcp/
+│   ├── api.py
+│   ├── contracts.py
+│   ├── demo.py
+│   └── project.py
 ├── resources/
 ├── factory/              # documented Python compatibility entry point
 ├── datamimic.py          # documented Python compatibility entry point
@@ -110,6 +117,7 @@ graph TD
   distinguish dispatch from ordinary string-value comparisons;
 - dynamic execution is allowed only in the two explicit runtime owners;
 - the root allow-list is exact.
+- `interfaces/` has its own immediate-child allow-list, keeping CLI commands in one package.
 
 The construct rules do not prove that every internal annotation is complete: remaining typing
 signals and analyzer limits stay visible as quality measurements (Amendment 12).

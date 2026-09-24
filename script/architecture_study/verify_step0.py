@@ -460,6 +460,7 @@ def projections() -> dict[str, Any]:
     cli_module = (
         "datamimic_ce.interfaces.cli"
         if (REPO / "datamimic_ce/interfaces/cli.py").is_file()
+        or (REPO / "datamimic_ce/interfaces/cli/__main__.py").is_file()
         else "datamimic_ce.cli"
     )
     commands = {

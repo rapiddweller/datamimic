@@ -406,6 +406,24 @@
       "decided_by": "architect"
     },
     {
+      "id": "INTERFACES-LAYOUT",
+      "kind": "root_layout",
+      "root": "datamimic_ce.interfaces",
+      "allowed_children": [
+        "datamimic_ce.interfaces.api",
+        "datamimic_ce.interfaces.cli",
+        "datamimic_ce.interfaces.contracts",
+        "datamimic_ce.interfaces.demo",
+        "datamimic_ce.interfaces.mcp",
+        "datamimic_ce.interfaces.project"
+      ],
+      "rationale": "The transport boundary groups CLI commands under one package instead of sibling modules.",
+      "provenance": [
+        "docs/architecture/refactoring-study/experiment-2/target-architecture.md"
+      ],
+      "decided_by": "architect"
+    },
+    {
       "id": "INTERFACES-API-TYPES",
       "kind": "boundary_types",
       "source": "datamimic_ce.interfaces.api",

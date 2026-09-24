@@ -22,8 +22,8 @@ from datamimic_ce.authoring.contracts import (
     ScaffoldRequest,
     ScaffoldVerification,
 )
-from datamimic_ce.interfaces import cli_presenter
-from datamimic_ce.interfaces.cli_presenter import CliOutputFormat, FailureThreshold
+from datamimic_ce.interfaces.cli import presenter as cli_presenter
+from datamimic_ce.interfaces.cli.presenter import CliOutputFormat, FailureThreshold
 
 JSON_OBJECT_ADAPTER = TypeAdapter(dict[str, JsonValue])
 ACCEPTANCE_REQUIREMENTS_ADAPTER = TypeAdapter(tuple[AuthoringExpectation, ...])

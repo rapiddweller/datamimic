@@ -146,7 +146,7 @@ class TestCLI:
         result = runner.invoke(app, ["run", "valid_descriptor.xml"])
         assert result.exit_code == 0
 
-    @patch("datamimic_ce.interfaces.cli_runtime.create_project_structure")
+    @patch("datamimic_ce.interfaces.cli.runtime.create_project_structure")
     def test_init_creates_project_with_default_target(self, mock_create_structure, tmp_path, monkeypatch):
         """Test project initialization in the current directory"""
         monkeypatch.chdir(tmp_path)
@@ -159,7 +159,7 @@ class TestCLI:
         mock_create_structure.assert_called_once_with(project_dir)
         assert "created successfully" in result.output
 
-    @patch("datamimic_ce.interfaces.cli_runtime.create_project_structure")
+    @patch("datamimic_ce.interfaces.cli.runtime.create_project_structure")
     def test_init_creates_project_with_custom_target(self, mock_create_structure, tmp_path):
         """Test project initialization with a custom target directory"""
         project_name = "test-project"
@@ -177,7 +177,7 @@ class TestCLI:
             if target_dir.exists():
                 shutil.rmtree(target_dir)
 
-    @patch("datamimic_ce.interfaces.cli_runtime.create_project_structure")
+    @patch("datamimic_ce.interfaces.cli.runtime.create_project_structure")
     def test_init_creates_nested_directories(self, mock_create_structure, tmp_path):
         """Test project initialization with nested directory structure"""
         project_name = "test-project"
@@ -194,7 +194,7 @@ class TestCLI:
             if target_dir.exists():
                 shutil.rmtree(target_dir)
 
-    @patch("datamimic_ce.interfaces.cli_runtime.create_project_structure")
+    @patch("datamimic_ce.interfaces.cli.runtime.create_project_structure")
     def test_init_with_existing_directory(self, mock_create_structure, tmp_path):
         """Test project initialization in an existing directory"""
         project_name = "existing-project"
@@ -211,7 +211,7 @@ class TestCLI:
             if project_dir.exists():
                 shutil.rmtree(project_dir)
 
-    @patch("datamimic_ce.interfaces.cli_runtime.create_project_structure")
+    @patch("datamimic_ce.interfaces.cli.runtime.create_project_structure")
     def test_init_with_force_option(self, mock_create_structure, tmp_path):
         """Test initialization with force option on existing directory"""
         project_name = "existing-project"

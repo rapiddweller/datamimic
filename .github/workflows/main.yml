@@ -397,7 +397,7 @@ jobs:
       - name: Setup git
         run: |
           apt-get update
-          apt-get install -y git
+          apt-get install -y git make
           git config --global --add safe.directory $(realpath .)
       - name: Checkout repository
         uses: actions/checkout@v5
@@ -411,7 +411,8 @@ jobs:
       - name: Run unit tests with coverage
         run: |
           . .venv/bin/activate
-          uv run pytest tests_ce/unit_tests/ tests_ce/architecture/test_facade_determinism.py tests_ce/architecture/test_runtime_determinism_manifest.py --cov --cov-report=xml
+          uv run make coverage-unit
+          uv run pytest tests_ce/architecture/test_facade_determinism.py tests_ce/architecture/test_runtime_determinism_manifest.py
         shell: bash
       - name: Upload coverage report
         uses: actions/upload-artifact@v6

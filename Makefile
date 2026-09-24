@@ -1,7 +1,8 @@
-.PHONY: help install test test-unit test-integration test-functional coverage typecheck lint format check architecture-check clean
+.PHONY: help install test test-unit test-integration test-functional coverage coverage-unit typecheck lint format check architecture-check clean
 
 PACKAGE := datamimic_ce
 TESTS := tests_ce
+CE_COVERAGE_FILES := $(shell find $(PACKAGE) -type f -name '*.py')
 
 help:
 	@echo "Available targets:"
@@ -11,6 +12,7 @@ help:
 	@echo "  test-integration  Run integration tests only"
 	@echo "  test-functional   Run functional tests only"
 	@echo "  coverage          Run tests with coverage report for $(PACKAGE)"
+	@echo "  coverage-unit     Run unit tests with complete CE coverage and regression floor"
 	@echo "  typecheck         Run mypy against $(PACKAGE)"
 	@echo "  lint              Run ruff against $(PACKAGE)"
 	@echo "  format            Auto-format code with ruff"
@@ -37,6 +39,11 @@ coverage:
 	coverage run -m pytest $(TESTS)
 	coverage report --include="$(PACKAGE)/*"
 	coverage html --include="$(PACKAGE)/*"
+
+coverage-unit:
+	coverage run --source=$(PACKAGE) -m pytest $(TESTS)/unit_tests -n 0
+	@coverage report --format=total --omit='$(PACKAGE)/domains/common/examples/*.py,$(PACKAGE)/resources/demos/**/*.py,$(PACKAGE)/interfaces/demo.py' --fail-under=65.74 $(CE_COVERAGE_FILES)
+	@coverage xml --omit='$(PACKAGE)/domains/common/examples/*.py,$(PACKAGE)/resources/demos/**/*.py,$(PACKAGE)/interfaces/demo.py' $(CE_COVERAGE_FILES)
 
 typecheck:
 	mypy $(PACKAGE)

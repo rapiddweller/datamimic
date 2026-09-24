@@ -9,8 +9,9 @@ from datamimic_ce.authoring.contracts import (
     AuthoringReferenceCategory,
     ReferenceTopic,
 )
-from datamimic_ce.interfaces import cli_authoring, cli_runtime
-from datamimic_ce.interfaces.cli_presenter import CliOutputFormat
+from datamimic_ce.interfaces.cli import authoring as cli_authoring
+from datamimic_ce.interfaces.cli import runtime as cli_runtime
+from datamimic_ce.interfaces.cli.presenter import CliOutputFormat
 from datamimic_ce.interfaces.demo import demo_autocomplete
 
 app = typer.Typer(help="DATAMIMIC Command Line Interface.", rich_markup_mode="markdown")
@@ -155,7 +156,3 @@ def run(
     test_mode: Annotated[bool, typer.Option("--test-mode")] = False,
 ) -> None:
     cli_runtime.execute_descriptor(descriptor_path, platform_configs, task_id, test_mode)
-
-
-if __name__ == "__main__":
-    app(prog_name="DATAMIMIC")

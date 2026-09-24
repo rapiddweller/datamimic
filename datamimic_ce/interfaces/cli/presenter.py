@@ -1,4 +1,4 @@
-"""CLI-only rendering and process exit policy."""
+"""Rendering and process exit policy for the CLI."""
 
 from __future__ import annotations
 

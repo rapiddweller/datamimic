@@ -18,7 +18,7 @@ from datamimic_ce.engine.runtime.contracts import (
     RunSession,
 )
 from datamimic_ce.factory.factory_config import FactoryConfig as LegacyFactoryConfig
-from datamimic_ce.interfaces import cli_runtime
+from datamimic_ce.interfaces.cli import runtime as cli_runtime
 from datamimic_ce.interfaces.contracts import FactoryConfig
 
 
