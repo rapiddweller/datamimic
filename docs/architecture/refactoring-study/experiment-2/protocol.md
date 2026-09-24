@@ -28,6 +28,8 @@ why the original target was wrong; an implementation difficulty is not a reason 
    Unseeded descriptors retain outcome, product counts, row counts, and value shapes.
    Amendment 13 replaces cross-run equality only for genuinely dynamic unseeded counts with
    descriptor-defined ranges and same-run relationships; unknown shape remains unverified.
+   Target-state reproducibility requires the same initial target state;
+   Amendment 16 separates generated-ID uniqueness from target constraints.
 6. Authoring schema, reference, capability, compiler, lint, and transport projections remain
    identical unless an explicitly approved product change is recorded.
 7. Existing public CLI commands and documented Python entry points remain importable.
