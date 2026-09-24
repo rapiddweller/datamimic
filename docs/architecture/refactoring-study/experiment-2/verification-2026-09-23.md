@@ -247,6 +247,13 @@ Service staging was driven by inline orchestration, which limits exact replay
 of this batch; the temporary evidence root is
 `/tmp/dm-sqlite-demo-aggregates-proof-ulfxpec5` for the four demos.
 
+The last SQLite case, `test_page_process_sqlite.xml`, was then executed in
+separate Step-0 and target stages: both created 100,000 customer and 100,000
+user rows with matching schemas and no foreign-key violations. Its unseeded
+database bytes differ, so this is count/schema/invariant parity, not exact row
+parity. Step 08C24 records the descriptor and database hashes. All 62
+SQLite-using service-classified cases now have a separate comparison.
+
 Ruff and full-package MyPy pass. `make lint` fails at Pylint with exit 30. With
 Pylint 3.3.7, frozen code and experiment have the same 24 error-severity
 findings by symbol and message. Total findings are 3,509 versus 3,707 in the
@@ -274,9 +281,9 @@ governance gap is tracked in [ArchKeel #143](https://github.com/rapiddweller/arc
 - **Behavior preserved for the comparable oracle set:** both frozen comparisons have zero
   differences. All 9 XLSX-dependent cases have controlled parity evidence; all
   43 authoring XML fixtures have identical lint results. Of 273
-  service-classified skips, 28 have exact seeded runtime parity and 71 more
-  have normalized outcome/shape/error parity only. The remaining 174 lack a
-  separate Step-0 run; the unseeded 71 also lack exact row comparison. An unqualified
+  service-classified skips, 28 have exact seeded runtime parity and 72 more
+  have normalized outcome/shape/error parity only. The remaining 173 lack a
+  separate Step-0 run; the unseeded 72 also lack exact row comparison. An unqualified
   all-descriptors claim is not supported.
 - **Delivery not ready:** `make lint` remains red, the complete external-service
   suite has not passed in one isolated run, and remote CE CI has not run. No CE merge or

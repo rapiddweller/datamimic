@@ -2,9 +2,10 @@
 
 The structural target is reached locally. This is not a delivery verdict:
 229 service-classified XML inputs lacked separate Step-0 comparison at the
-last report; 55 have since been compared (19 exact seeded, 36 normalized
-unseeded/error), leaving 174. One 200,000-row SQLite case remains; the rest
-need other fixture/service paths. `make lint` remains red on both revisions, and remote
+last report; 56 have since been compared (19 exact seeded, 37 normalized
+unseeded/error), leaving 173. The 200,000-row SQLite case has count/schema
+parity, not exact row parity; all 62 SQLite cases are now paired. The remaining
+cases need other fixture/service paths. `make lint` remains red on both revisions, and remote
 CE CI has not run. Keep the frozen `a219163e` checkout and the exact 930 XML
 bytes as controls.
 
@@ -15,7 +16,10 @@ bytes as controls.
    Docker/OrbStack services with asserted endpoints. Seeded cases require exact
    captured rows and normalized file/DB output; unseeded cases require outcome,
    counts, and shape parity. Record intentional failures, non-descriptors, and
-   blocked fixtures separately. Never point destructive setup at shared data.
+   blocked fixtures separately. First persist the descriptor → owner → config →
+   backend → destructive-setup matrix for the 173 residual cases. Never point
+   destructive setup at shared data; the existing MySQL fixture even restarts
+   `mysql-local`.
 2. **Improve CE tests in small slices.** Deduplicate fixture lifecycle and
    assertions only where a shared invariant exists. Preserve coverage and XML
    bytes. Track duplicate tests separately from runtime-equivalence evidence;
@@ -33,7 +37,9 @@ bytes as controls.
 5. **Feed Experiment 3.** Turn reproduced checker blind spots into ArchKeel
    negative fixtures and rules, including module-level cycles, public facade
    quality, unresolved calls, and test-namespace governance. Dart is outside
-   this worktree and this acceptance run.
+   this worktree and this acceptance run. The typed-iterator `boundary_types`
+   repro is drafted in `archkeel-issue-typed-iterator.md`; filing is blocked by
+   GitHub integration 403 and an invalid local `gh` token.
 
 ## Separation and gates
 
