@@ -236,7 +236,7 @@ fragments executed through four owning demo aggregates. Each configured
 SQLite alias resolved inside its disposable stage; generated files stayed
 there. Eight descriptors intentionally produced the same error on both
 revisions; none of the 55 was silently counted as a successful run. The
-200,000-row SQLite page-process case remains unrun. The demo mapping script
+200,000-row SQLite page-process case was run later (Step 08C24). The demo mapping script
 changed only relocated imports; normalizing those imports makes its input
 bytes match Step 0. Aggregate demo evidence SHA-256:
 `524e5ee7220ff810c6d4cd7e2cf64e056fd2e1cc087dc7104b3daaf400935770`.
