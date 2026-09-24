@@ -28,7 +28,7 @@ from datamimic_ce.domains.public_sector.models.police_officer import PoliceOffic
 POLICE_OFFICER_SCHEMA = EntitySchema(
     "PoliceOfficer",
     (
-        field("officer_id", str, "Unique officer identifier."),
+        field("officer_id", str, "Unique officer identifier.", unique_identifier_format="OFF-[0-9A-F]{8}"),
         field("badge_number", str, "Badge number."),
         field("given_name", str, "First (given) name."),
         field("family_name", str, "Last (family) name."),

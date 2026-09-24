@@ -32,7 +32,12 @@ from datamimic_ce.domains.converters.upper_case_converter import UpperCaseConver
 from datamimic_ce.domains.determinism import get_datamimic_lib_version
 from datamimic_ce.domains.domain_core.base_domain_generator import BaseDomainGenerator
 from datamimic_ce.domains.domain_core.base_literal_generator import BaseLiteralGenerator
-from datamimic_ce.domains.domain_core.entity_registry import EntitySpec, get_entity_service_class, list_entity_specs
+from datamimic_ce.domains.domain_core.entity_registry import (
+    EntitySpec,
+    get_entity_service_class,
+    get_entity_spec,
+    list_entity_specs,
+)
 from datamimic_ce.domains.domain_core.generator_registry import generator_namespace
 from datamimic_ce.domains.domain_core.runtime.clock import from_epoch_utc, resolve_clock, to_epoch_utc
 from datamimic_ce.domains.domain_core.runtime.rng import derive_child_seed, spawn_rng
@@ -93,6 +98,7 @@ __all__ = [
     "from_epoch_utc",
     "get_datamimic_lib_version",
     "get_entity_service_class",
+    "get_entity_spec",
     "iter_generator_capabilities",
     "iter_generator_types",
     "list_entity_specs",

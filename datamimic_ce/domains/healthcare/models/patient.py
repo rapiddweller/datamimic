@@ -51,7 +51,7 @@ class Patient(BaseEntity):
         """
         rng = self._patient_generator.rng
         suffix = "".join(rng.choice("0123456789ABCDEF") for _ in range(8))
-        return f"PAT-{suffix}"
+        return self._claim_identifier("patient_id", f"PAT-{suffix}")
 
     @property
     @property_cache

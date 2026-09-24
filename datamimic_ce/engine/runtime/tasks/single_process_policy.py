@@ -26,6 +26,7 @@ from datamimic_ce.engine.dsl.api import (
 )
 from datamimic_ce.engine.io.api import Client, RdbmsClient
 from datamimic_ce.engine.runtime.logging import logger
+from datamimic_ce.engine.runtime.tasks.entity_constructor import _parse_constructor_string
 
 ClientMap = Mapping[str, Client]
 
@@ -44,6 +45,22 @@ def _is_global_constraint(stmt: Statement) -> bool:
 
 def _uses_global_constraint(stmt: GenerateStatement, seeded: bool, clients: ClientMap) -> bool:
     return _is_global_constraint(stmt) or any(_is_global_constraint(child) for child in stmt.sub_statements)
+
+
+def _uses_domain_identifiers(stmt: GenerateStatement, seeded: bool, clients: ClientMap) -> bool:
+    from datamimic_ce.domains.api import get_entity_spec
+
+    stack: list[Statement] = [stmt]
+    while stack:
+        current = stack.pop()
+        if isinstance(current, VariableStatement) and current.entity is not None:
+            entity_name, _kwargs = _parse_constructor_string(current.entity)
+            spec = get_entity_spec(entity_name)
+            if spec is not None and any(field.unique_identifier_format is not None for field in spec.attributes):
+                return True
+        if isinstance(current, CompositeStatement):
+            stack.extend(current.sub_statements)
+    return False
 
 
 def _has_delete_target(stmt: GenerateStatement, seeded: bool, clients: ClientMap) -> bool:
@@ -104,6 +121,12 @@ POLICIES: tuple[SingleProcessPolicy, ...] = (
         feature="unique/composite",
         applies=_uses_global_constraint,
         reason="'unique'/'composite' is a global cross-row constraint",
+        ee_scalable=True,
+    ),
+    SingleProcessPolicy(
+        feature="domain-identifier",
+        applies=_uses_domain_identifiers,
+        reason="domain identifiers are unique across one run, including pages",
         ee_scalable=True,
     ),
     SingleProcessPolicy(

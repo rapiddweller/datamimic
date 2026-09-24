@@ -23,7 +23,7 @@ from datamimic_ce.domains.healthcare.models.patient import Patient
 PATIENT_SCHEMA = EntitySchema(
     "Patient",
     (
-        field("patient_id", str, "Unique patient identifier."),
+        field("patient_id", str, "Unique patient identifier.", unique_identifier_format="PAT-[0-9A-F]{8}"),
         field("medical_record_number", str, "Medical record number."),
         field("ssn", str, "Social security number."),
         field("given_name", str, "First (given) name."),

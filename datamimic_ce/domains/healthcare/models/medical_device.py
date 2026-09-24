@@ -53,7 +53,7 @@ class MedicalDevice(BaseEntity):
         """
         rng = self._medical_device_generator.rng
         suffix = "".join(str(rng.randint(0, 9)) for _ in range(8))
-        return f"DEV-{suffix}"
+        return self._claim_identifier("device_id", f"DEV-{suffix}")
 
     @property
     @property_cache

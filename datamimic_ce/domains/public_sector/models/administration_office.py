@@ -51,7 +51,7 @@ class AdministrationOffice(BaseEntity):
         """
         rng = self._administration_office_generator.rng
         suffix = "".join(rng.choice("0123456789ABCDEF") for _ in range(8))
-        return f"ADM-{suffix}"
+        return self._claim_identifier("office_id", f"ADM-{suffix}")
 
     @property
     @property_cache

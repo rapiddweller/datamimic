@@ -67,6 +67,7 @@ class SetupContext(Context):
         report_logging: bool = True,
         demographic_context: DemographicContext | None = None,
         run_seed: RunSeed | None = None,
+        domain_identifier_registry: dict[tuple[str, str], set[str]] | None = None,
     ):
         # SetupContext is always its root_context
         super().__init__(self)
@@ -102,6 +103,7 @@ class SetupContext(Context):
         self._num_process = num_process
         self._process_id: int | None = None
         self._global_increment_registry: dict[str, object] | None = None
+        self._domain_identifier_registry = {} if domain_identifier_registry is None else domain_identifier_registry
         self._default_variable_prefix = default_variable_prefix
         self._default_variable_suffix = default_variable_suffix
         # IMPORTANT: do not set default bool value to default_source_scripted for config propagation
@@ -190,7 +192,12 @@ class SetupContext(Context):
             report_logging=copy.deepcopy(self._report_logging),
             demographic_context=copy.deepcopy(self._demographic_context, memo),
             run_seed=self._run_seed,
+            domain_identifier_registry=copy.deepcopy(self._domain_identifier_registry, memo),
         )
+
+    @property
+    def domain_identifier_registry(self) -> dict[tuple[str, str], set[str]]:
+        return self._domain_identifier_registry
 
     def _deepcopy_clients(self, memo):
         """

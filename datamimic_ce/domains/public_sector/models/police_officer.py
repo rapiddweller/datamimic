@@ -57,7 +57,7 @@ class PoliceOfficer(BaseEntity):
         """
         rng = self.police_officer_generator.rng
         suffix = "".join(rng.choice("0123456789ABCDEF") for _ in range(8))
-        return f"OFF-{suffix}"
+        return self._claim_identifier("officer_id", f"OFF-{suffix}")
 
     @property
     @property_cache

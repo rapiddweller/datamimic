@@ -32,7 +32,7 @@ class Hospital(BaseEntity):
         """
         rng = self._hospital_generator.rng
         suffix = "".join(rng.choice("0123456789ABCDEF") for _ in range(8))
-        return f"HOSP-{suffix}"
+        return self._claim_identifier("hospital_id", f"HOSP-{suffix}")
 
     @property
     @property_cache

@@ -16,7 +16,7 @@ from datamimic_ce.domains.healthcare.models.medical_device import MedicalDevice
 MEDICAL_DEVICE_SCHEMA = EntitySchema(
     "MedicalDevice",
     (
-        field("device_id", str, "Unique device identifier."),
+        field("device_id", str, "Unique device identifier.", unique_identifier_format="DEV-[0-9]{8}"),
         field("device_type", str, "Device type."),
         field("manufacturer", str, "Manufacturer name."),
         field("model_number", str, "Model number."),

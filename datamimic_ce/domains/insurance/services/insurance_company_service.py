@@ -20,7 +20,7 @@ from datamimic_ce.domains.insurance.models.insurance_company import InsuranceCom
 INSURANCE_COMPANY_SCHEMA = EntitySchema(
     "InsuranceCompany",
     (
-        field("id", str, "Unique company identifier."),
+        field("id", str, "Unique company identifier.", unique_identifier_format="uuid4"),
         field("name", str, "Company name."),
         field("code", str, "Company code."),
         field("founded_year", str, "Year the company was founded."),

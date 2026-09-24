@@ -5,7 +5,6 @@
 # For questions and support, contact: info@rapiddweller.com
 
 import inspect
-from ast import literal_eval
 from collections.abc import Callable, Iterator
 from random import Random
 from typing import Final
@@ -32,33 +31,11 @@ from datamimic_ce.engine.runtime.sources.variable import (
     load_variable_lazy_source,
     plan_variable_source,
 )
+from datamimic_ce.engine.runtime.tasks.entity_constructor import _parse_constructor_string
 from datamimic_ce.engine.runtime.tasks.key_variable_task import KeyVariableTask
 from datamimic_ce.engine.runtime.tasks.task import CommonSubTask
 from datamimic_ce.engine.runtime.tasks.task_util import TaskUtil
 from datamimic_ce.engine.runtime.tasks.variable_iterator import VariableIterator
-
-
-def _parse_constructor_string(constructor_string: str) -> tuple[str, dict[str, object]]:
-    constructor_string = constructor_string.strip()
-    opening = constructor_string.find("(")
-    closing = constructor_string.rfind(")")
-
-    if opening == -1:
-        return constructor_string, {}
-
-    entity_name = constructor_string[:opening].strip()
-    parameters_string = constructor_string[opening + 1 : closing].strip() if closing != -1 else ""
-    parameters: dict[str, object] = {}
-    for parameter in parameters_string.split(","):
-        if "=" in parameter:
-            key_value = parameter.split("=")
-            if len(key_value) == 2:
-                key, value = key_value
-                try:
-                    parameters[key.strip()] = literal_eval(value.strip())
-                except (ValueError, SyntaxError):
-                    parameters[key.strip()] = value.strip()
-    return entity_name, parameters
 
 
 def _constructor_params(cls: Callable[..., object]) -> frozenset[str]:
@@ -253,7 +230,12 @@ class VariableTask(KeyVariableTask, CommonSubTask):
             kwargs.setdefault("demographic_sampler", demographic_sampler)
         if rng_obj is not None and "rng" in accepted:
             kwargs["rng"] = rng_obj
-        return entity_cls(**kwargs)
+        service = entity_cls(**kwargs)
+        root = ctx.root
+        if not isinstance(root, SetupContext):
+            raise RuntimeError("Domain entity generation requires the setup context as root")
+        service.set_identifier_registry(root.domain_identifier_registry)
+        return service
 
     def _compute_storage_value(self):
         """storage="data": the same materialized pool every generated row. storage="value": the

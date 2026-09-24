@@ -26,7 +26,7 @@ class InsuranceCompany(BaseEntity):
     @property
     @property_cache
     def id(self) -> str:
-        return uuid4_from_random(self._insurance_company_generator.rng)
+        return self._claim_identifier("id", uuid4_from_random(self._insurance_company_generator.rng))
 
     @property
     @property_cache

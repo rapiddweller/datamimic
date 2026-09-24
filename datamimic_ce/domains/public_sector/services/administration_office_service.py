@@ -26,7 +26,7 @@ from datamimic_ce.domains.public_sector.models.administration_office import Admi
 ADMINISTRATION_OFFICE_SCHEMA = EntitySchema(
     "AdministrationOffice",
     (
-        field("office_id", str, "Unique office identifier."),
+        field("office_id", str, "Unique office identifier.", unique_identifier_format="ADM-[0-9A-F]{8}"),
         field("name", str, "Office name."),
         field("type", str, "Office type."),
         field("jurisdiction", str, "Jurisdiction served."),

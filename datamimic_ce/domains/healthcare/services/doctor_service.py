@@ -28,7 +28,7 @@ from datamimic_ce.domains.healthcare.models.doctor import Doctor
 DOCTOR_SCHEMA = EntitySchema(
     "Doctor",
     (
-        field("doctor_id", str, "Unique doctor identifier."),
+        field("doctor_id", str, "Unique doctor identifier.", unique_identifier_format="DOC-[0-9A-F]{8}"),
         field("npi_number", str, "National provider identifier."),
         field("license_number", str, "Medical license number."),
         field("given_name", str, "First (given) name."),

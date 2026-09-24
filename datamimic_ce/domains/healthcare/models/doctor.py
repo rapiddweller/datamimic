@@ -52,7 +52,7 @@ class Doctor(BaseEntity):
         #  use shared PrefixedIdGenerator for prefixed short ID format
         rng = self._doctor_generator.rng
         suffix = "".join(rng.choice("0123456789ABCDEF") for _ in range(8))
-        return f"DOC-{suffix}"
+        return self._claim_identifier("doctor_id", f"DOC-{suffix}")
 
     @property
     @property_cache

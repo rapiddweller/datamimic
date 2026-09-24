@@ -21,17 +21,21 @@ class InsurancePolicy(BaseEntity):
     @property
     @property_cache
     def id(self) -> str:
-        return uuid4_from_random(self.insurance_policy_generator.rng)
+        return self._claim_identifier("id", uuid4_from_random(self.insurance_policy_generator.rng))
 
     @property
     @property_cache
     def company(self) -> InsuranceCompany:
-        return InsuranceCompany(self.insurance_policy_generator.insurance_company_generator)
+        company = InsuranceCompany(self.insurance_policy_generator.insurance_company_generator)
+        self._bind_nested_identifier("company", company)
+        return company
 
     @property
     @property_cache
     def product(self) -> InsuranceProduct:
-        return InsuranceProduct(self.insurance_policy_generator.insurance_product_generator)
+        product = InsuranceProduct(self.insurance_policy_generator.insurance_product_generator)
+        self._bind_nested_identifier("product", product)
+        return product
 
     @property
     @property_cache

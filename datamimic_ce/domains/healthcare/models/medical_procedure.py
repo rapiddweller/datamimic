@@ -45,7 +45,7 @@ class MedicalProcedure(BaseEntity):
         """
         rng = self._medical_procedure_generator.rng
         suffix = "".join(rng.choice("0123456789ABCDEF") for _ in range(8))
-        return f"PROC-{suffix}"
+        return self._claim_identifier("procedure_id", f"PROC-{suffix}")
 
     @property
     @property_cache

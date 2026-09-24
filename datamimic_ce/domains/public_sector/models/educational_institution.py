@@ -54,7 +54,7 @@ class EducationalInstitution(BaseEntity):
         """
         rng = self._educational_institution_generator.rng
         suffix = "".join(rng.choice("0123456789ABCDEF") for _ in range(8))
-        return f"EDU-{suffix}"
+        return self._claim_identifier("institution_id", f"EDU-{suffix}")
 
     @property
     @property_cache
