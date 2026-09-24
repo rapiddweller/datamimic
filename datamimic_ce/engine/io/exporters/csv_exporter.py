@@ -103,8 +103,3 @@ class CSVExporter(UnifiedBufferedExporter):
     def _finalize_buffer_file(self, buffer_file: Path) -> None:
         # No finalization needed for CSV files
         pass
-
-    def _reset_state(self):
-        """Resets the exporter state for reuse."""
-        super()._reset_state()
-        logger.debug("CSVEEExporter state has been reset.")

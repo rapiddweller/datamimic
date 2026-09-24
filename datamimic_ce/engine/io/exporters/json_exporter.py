@@ -142,9 +142,3 @@ class JsonExporter(UnifiedBufferedExporter):
                 else:
                     raise ValueError(f"Unexpected JSON export root type: {type(payload).__name__}")
         return count
-
-    def _reset_state(self):
-        """Resets the exporter state for reuse."""
-
-        super()._reset_state()
-        logger.debug(f"{self.__class__.__name__} state has been reset.")

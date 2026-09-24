@@ -147,13 +147,6 @@ addopts = "-n auto --dist=loadscope"
 [tool.pyright]
 typeCheckingMode="off"
 
-[tool.pylint.main]
-fail-under = 9.0
-fail-on = ["E", "F"]
-
-[tool.pylint.reports]
-output-format = "colorized"
-
 [[tool.mypy.overrides]]
 module = "datamimic_ce.*"
 follow_imports = "skip"

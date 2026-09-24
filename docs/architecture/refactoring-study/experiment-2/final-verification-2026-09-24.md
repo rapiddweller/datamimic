@@ -160,3 +160,16 @@ Before merge:
 
 No further architecture sweep is justified by this evidence. The remaining
 work is test/proof completion and one product-contract decision.
+
+## Gate update, 2026-09-24
+
+Amendment 14 supersedes the Pylint decision in item 3 above. Pylint was not a
+declared dependency or CI gate; `make lint` now runs Ruff only. Two uncalled CSV
+and JSON exporter reset overrides with invalid `super()` calls were removed.
+The revised `make lint`, full-package MyPy, the unit gate (1,173 passed,
+11 skipped), focused exporter tests (26), and pinned ArchKeel 0.6.1 passed
+locally. ArchKeel reports 0 violations, 0 unknown
+positions, and no new or resolved baseline findings after narrowing the
+`calls_unresolved` budget to 1,279. The historical comparison and all other
+open acceptance items above remain unchanged. `make check` and remote CI have
+not been rerun on this update.

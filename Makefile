@@ -12,7 +12,7 @@ help:
 	@echo "  test-functional   Run functional tests only"
 	@echo "  coverage          Run tests with coverage report for $(PACKAGE)"
 	@echo "  typecheck         Run mypy against $(PACKAGE)"
-	@echo "  lint              Run ruff and pylint against $(PACKAGE)"
+	@echo "  lint              Run ruff against $(PACKAGE)"
 	@echo "  format            Auto-format code with ruff"
 	@echo "  check             Run lint, typecheck, and tests"
 	@echo "  architecture-check Validate the architecture contract with ArchKeel 0.6.1"
@@ -43,7 +43,6 @@ typecheck:
 
 lint:
 	ruff check $(PACKAGE)
-	pylint $(PACKAGE)
 
 format:
 	ruff format $(PACKAGE)
