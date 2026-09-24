@@ -55,6 +55,21 @@ jobs:
           if-no-files-found: error
           retention-days: 1
 
+  archkeel_check:
+    name: ArchKeel architecture contract
+    runs-on: ubuntu-22.04
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v5
+      - name: Set up Python 3.11
+        uses: actions/setup-python@v6
+        with:
+          python-version: '3.11'
+      - name: Install uv
+        uses: astral-sh/setup-uv@v8.1.0
+      - name: Validate architecture contract
+        run: make architecture-check
+
   install_dependencies:
     runs-on: ubuntu-22.04
     container: python:3.11-slim-bookworm
@@ -828,7 +843,7 @@ jobs:
   release:
     if: startsWith(github.ref, 'refs/tags/')
     runs-on: ubuntu-22.04
-    needs: [e2e_test, runtime_determinism_fan_in, mypy, ruff, python_310_smoke]
+    needs: [e2e_test, runtime_determinism_fan_in, mypy, ruff, python_310_smoke, archkeel_check]
     environment:
       name: pypi
       url: https://pypi.org/p/datamimic-ce
