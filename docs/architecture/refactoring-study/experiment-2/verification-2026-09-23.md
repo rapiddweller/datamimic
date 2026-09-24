@@ -253,7 +253,10 @@ separate Step-0 and target stages: both created 100,000 customer and 100,000
 user rows with matching schemas and no foreign-key violations. Its unseeded
 database bytes differ, so this is count/schema/invariant parity, not exact row
 parity. Step 08C24 records the descriptor and database hashes. All 62
-SQLite-using service-classified cases now have a separate comparison.
+SQLite-using service-classified cases were reported as separately compared.
+An independent ledger audit later found that the aggregate batch reports do
+not bind every one of those comparisons to an exact XML path and evidence
+class. The count is not yet a machine-checkable per-path acceptance result.
 
 Ruff and full-package MyPy pass. `make lint` fails at Pylint with exit 30. With
 Pylint 3.3.7, frozen code and experiment have the same 24 error-severity
@@ -273,8 +276,21 @@ The read-only service inventory now emits all 273 service-classified paths
 with client type/profile hints and possible test-file owners. Of those, 79 have
 no basename match, 44 have several, and 150 have one unproven match. It emits
 no credentials or resolved endpoint and makes no safety or execution claim.
-The 173 outstanding parity paths still need manual owner/setup resolution
-before a disposable-service run (Step 08C26).
+The reported 173 outstanding parity paths still need manual owner/setup
+resolution before a disposable-service run (Step 08C26). A second independent
+audit found that the existing step logs and standard oracle snapshots cannot
+reconstruct an exact set of 100 paired paths with evidence levels; the
+100/173 split is aggregate arithmetic until a path-level ledger is checked.
+
+The strict per-path ledger (`script/architecture_study/service_evidence_ledger.py`)
+currently classifies 14 of 273 paths: two exact seeded, eight matching expected
+errors, and four normalized unseeded comparisons. The other 259 are explicitly
+`UNVERIFIED`. Four newer entries are separate, disposable-container
+PostgreSQL and MongoDB runs against frozen `a219163e` and target `6190932d`
+(Steps 08C27, 08C28, and 08C30); each passed independent read-only database QA
+before its own containers were removed. Source code and XML did not change between
+the ledger's target code control `658f3a5f` and `6190932d`. The ledger does not
+silently promote batch totals or owner candidates to behavioral proof.
 
 ArchKeel currently scans only `datamimic_ce` (`archkeel.toml`), not `tests_ce`.
 Its contract therefore does not enforce test placement or test dependencies.
@@ -294,9 +310,11 @@ governance gap is tracked in [ArchKeel #143](https://github.com/rapiddweller/arc
 - **Behavior preserved for the comparable oracle set:** both frozen comparisons have zero
   differences. All 9 XLSX-dependent cases have controlled parity evidence; all
   43 authoring XML fixtures have identical lint results. Of 273
-  service-classified skips, 28 have exact seeded runtime parity and 72 more
-  have normalized outcome/shape/error parity only. The remaining 173 lack a
-  separate Step-0 run; the unseeded 72 also lack exact row comparison. An unqualified
+  service-classified skips, aggregate logs report 28 exact seeded runtime
+  comparisons and 72 normalized outcome/shape/error comparisons, leaving 173.
+  These counts are not yet reconstructable as 273 uniquely classified XML
+  paths; the strict ledger proves 14 paths and leaves 259 unverified. The
+  unseeded cases also lack a general exact-row guarantee. An unqualified
   all-descriptors claim is not supported.
 - **Delivery not ready:** `make lint` remains red, the complete external-service
   suite has not passed in one isolated run, and remote CE CI has not run. No CE merge or

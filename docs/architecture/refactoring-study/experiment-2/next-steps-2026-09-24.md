@@ -1,13 +1,14 @@
 # Experiment 2 continuation, 2026-09-24
 
-The structural target is reached locally. This is not a delivery verdict:
-229 service-classified XML inputs lacked separate Step-0 comparison at the
-last report; 56 have since been compared (19 exact seeded, 37 normalized
-unseeded/error), leaving 173. The 200,000-row SQLite case has count/schema
-parity, not exact row parity; all 62 SQLite cases are now paired. The remaining
-cases need other fixture/service paths. `make lint` remains red on both revisions, and remote
-CE CI has not run. Keep the frozen `a219163e` checkout and the exact 930 XML
-bytes as controls.
+The structural target is reached locally, but behavior and delivery are not
+accepted. Batch logs arithmetically report 100 of 273 service-classified XMLs
+paired with Step 0. The strict path ledger currently classifies only 14 by
+individual path and evidence class, including eight matching expected errors;
+259 remain `UNVERIFIED`. This is an
+evidence-accounting correction, not evidence that the earlier runs failed.
+The 200,000-row SQLite case has count/schema parity, not exact row parity.
+`make lint` remains red on both revisions, and remote CE CI has not run.
+Keep frozen `a219163e` and the exact 930 XML bytes as controls.
 
 ## Order
 
@@ -16,11 +17,13 @@ bytes as controls.
    Docker/OrbStack services with asserted endpoints. Seeded cases require exact
    captured rows and normalized file/DB output; unseeded cases require outcome,
    counts, and shape parity. Record intentional failures, non-descriptors, and
-   blocked fixtures separately. The read-only service inventory now lists all
-   273 service-classified XMLs and owner *candidates*. Resolve owner, config,
-   backend, and destructive setup manually for each of the 173 residual cases
-   before running it. Never point destructive setup at shared data; the
-   existing MySQL fixture even restarts `mysql-local`.
+   blocked fixtures separately. First bind every claimed comparison to an
+   exact XML path and evidence class; leave unprovable cases UNVERIFIED. The
+   read-only service inventory lists all 273 service-classified XMLs and owner
+   *candidates*. Resolve owner, config, backend, and destructive setup manually
+   for each residual case before running it. Never point destructive setup at
+   shared data. An unused MySQL fixture that could restart `mysql-local` was
+   removed after independent unit-test review (Step 08C31).
 2. **Improve CE tests in small slices.** Deduplicate fixture lifecycle and
    assertions only where a shared invariant exists. Preserve coverage and XML
    bytes. Track duplicate tests separately from runtime-equivalence evidence;
