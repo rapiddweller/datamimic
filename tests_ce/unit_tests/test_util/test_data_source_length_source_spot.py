@@ -15,9 +15,9 @@ from datamimic_ce.engine.dsl.model.constraints import SourceFileFormat, source_c
 from datamimic_ce.engine.dsl.statements.generate_statement import GenerateStatement
 from datamimic_ce.engine.dsl.statements.nested_key_statement import NestedKeyStatement
 from datamimic_ce.engine.dsl.statements.variable_statement import VariableStatement
+from datamimic_ce.engine.io.api import FileUtil
 from datamimic_ce.engine.io.data_sources.data_source_registry import DataSourceRegistry
 from datamimic_ce.engine.runtime.sources.router import set_data_source_length
-from datamimic_ce.engine.io.api import FileUtil
 
 
 def _context() -> tuple[Mock, Mock]:
@@ -111,6 +111,25 @@ def test_nonfile_source_still_uses_memstore_classification(
     root.memstore_manager.get_memstore.assert_called_once_with("upstream_rows")
     memstore.get_data_len_by_type.assert_called_once_with("rows")
     generic.assert_not_called()
+
+
+def test_scripted_source_length_skips_evaluation_errors() -> None:
+    context, root = _context()
+    context.evaluate_python_expression.side_effect = ValueError("not ready")
+    statement = _statement(VariableStatement, "{missing_source}", "rows")
+
+    set_data_source_length(context, statement)
+
+    assert root.data_source_len == {}
+
+
+def test_scripted_source_length_does_not_swallow_interrupts() -> None:
+    context, _ = _context()
+    context.evaluate_python_expression.side_effect = KeyboardInterrupt
+    statement = _statement(VariableStatement, "{missing_source}", "rows")
+
+    with pytest.raises(KeyboardInterrupt):
+        set_data_source_length(context, statement)
 
 
 @pytest.mark.parametrize(

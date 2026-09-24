@@ -102,7 +102,7 @@ def set_data_source_length(ctx: SetupContext | GenIterContext, stmt: Statement) 
         if source_str.startswith("{") and source_str.endswith("}"):
             try:
                 source_str = ctx.evaluate_python_expression(source_str[1:-1])
-            except:  # noqa: E722
+            except Exception:
                 return
             if not isinstance(source_str, str):
                 return
