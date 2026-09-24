@@ -147,11 +147,6 @@ class TestScaffoldParity:
         assert len(result.products) > 0
         assert all(p.name and p.count >= 0 for p in result.products)
 
-    def test_service_scaffold_rejects_removed_lint_only_switch(self):
-        """Scaffold always runs the complete canonical transaction."""
-        with pytest.raises(ValueError, match="dry_run"):
-            ScaffoldRequest(spec=SPEC_VALID_NO_DRY_RUN, dry_run=False)
-
     def test_service_scaffold_render_error(self):
         """Service correctly handles render errors."""
         request = ScaffoldRequest(

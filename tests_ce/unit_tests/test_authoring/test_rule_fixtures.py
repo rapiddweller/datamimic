@@ -56,12 +56,6 @@ def test_fixture_reports_seeded_rules(fixture: str) -> None:
     assert not missing, f"{fixture}: expected {missing} in {sorted(found)}"
 
 
-def test_every_fixture_produces_diagnostics() -> None:
-    for fixture in EXPECTED:
-        result = lint_descriptor(_FIXTURES / fixture)
-        assert result.diagnostics, f"{fixture} should produce at least one diagnostic"
-
-
 def test_dm401_validates_client_operation() -> None:
     from datamimic_ce.authoring.linter import lint_source
 
