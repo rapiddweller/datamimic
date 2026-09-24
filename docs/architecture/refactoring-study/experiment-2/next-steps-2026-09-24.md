@@ -16,10 +16,11 @@ bytes as controls.
    Docker/OrbStack services with asserted endpoints. Seeded cases require exact
    captured rows and normalized file/DB output; unseeded cases require outcome,
    counts, and shape parity. Record intentional failures, non-descriptors, and
-   blocked fixtures separately. First persist the descriptor → owner → config →
-   backend → destructive-setup matrix for the 173 residual cases. Never point
-   destructive setup at shared data; the existing MySQL fixture even restarts
-   `mysql-local`.
+   blocked fixtures separately. The read-only service inventory now lists all
+   273 service-classified XMLs and owner *candidates*. Resolve owner, config,
+   backend, and destructive setup manually for each of the 173 residual cases
+   before running it. Never point destructive setup at shared data; the
+   existing MySQL fixture even restarts `mysql-local`.
 2. **Improve CE tests in small slices.** Deduplicate fixture lifecycle and
    assertions only where a shared invariant exists. Preserve coverage and XML
    bytes. Track duplicate tests separately from runtime-equivalence evidence;

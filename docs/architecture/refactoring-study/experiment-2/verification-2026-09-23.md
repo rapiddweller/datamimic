@@ -111,7 +111,8 @@ cover a subset of these skips without changing the oracle's categories.
 
 | Suite | Result |
 |---|---|
-| Unit | 1,167 passed, 11 skipped |
+| Unit, before two duplicate-test deletions | 1,167 passed, 11 skipped |
+| Unit, current | 1,165 passed, 11 skipped |
 | API, before hygiene | 355 passed, 1 skipped, 1 random-collision failure |
 | API, after test-only hygiene commit | 333 passed, 1 skipped |
 | Factory | 4 passed |
@@ -264,6 +265,16 @@ The XLSX integration tests now use function-scoped copies of their unchanged
 XMLs and temporary workbook/output paths. All 15 pass serially and with four
 xdist workers. This removes a shared-directory race; it does not change the
 DSL oracle or prove other integration tests are race-free (Step 08C20).
+Two exact duplicate authoring tests were removed after independent review;
+the full authoring unit suite has 438 passing tests. The current full unit
+suite has 1,165 passing and 11 skipped tests (Step 08C25).
+
+The read-only service inventory now emits all 273 service-classified paths
+with client type/profile hints and possible test-file owners. Of those, 79 have
+no basename match, 44 have several, and 150 have one unproven match. It emits
+no credentials or resolved endpoint and makes no safety or execution claim.
+The 173 outstanding parity paths still need manual owner/setup resolution
+before a disposable-service run (Step 08C26).
 
 ArchKeel currently scans only `datamimic_ce` (`archkeel.toml`), not `tests_ce`.
 Its contract therefore does not enforce test placement or test dependencies.
@@ -274,10 +285,12 @@ governance gap is tracked in [ArchKeel #143](https://github.com/rapiddweller/arc
 
 ## Verdicts after Amendment 12
 
-- **Structure reached, locally:** exact layout and component rules pass with complete
+- **Declared structure reached, locally:** exact tracked layout and component rules pass with complete
   coverage, an empty violation list, zero material unknown positions, and no budget rise.
-  This is checked with the publicly installed ArchKeel 0.6.1 package, not a local
-  candidate. It does not prove behavior or test quality.
+  This is checked with the published ArchKeel 0.6.1 package, not a local
+  candidate. It does not prove behavior or test quality. In particular,
+  `domains.api.iter_generator_types()` still returns `Iterator[type]`; the
+  narrower, MyPy-valid generator union remains undecidable to this checker.
 - **Behavior preserved for the comparable oracle set:** both frozen comparisons have zero
   differences. All 9 XLSX-dependent cases have controlled parity evidence; all
   43 authoring XML fixtures have identical lint results. Of 273
