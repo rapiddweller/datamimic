@@ -24,7 +24,8 @@ why the original target was wrong; an implementation difficulty is not a reason 
 3. The exact root layout and component namespaces match `target-architecture.md`.
 4. Every component crossing uses its declared API and every API has checked boundary types.
 5. All existing XML descriptors still parse. Seeded descriptors produce byte-identical captured
-   output. Unseeded descriptors retain outcome, product counts, row counts, and value shapes.
+   output, except for proven domain-ID collision resolution (Amendment 15).
+   Unseeded descriptors retain outcome, product counts, row counts, and value shapes.
    Amendment 13 replaces cross-run equality only for genuinely dynamic unseeded counts with
    descriptor-defined ranges and same-run relationships; unknown shape remains unverified.
 6. Authoring schema, reference, capability, compiler, lint, and transport projections remain
