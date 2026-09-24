@@ -31,6 +31,15 @@ from pathlib import Path
 from datetime import date, datetime, time
 from decimal import Decimal
 import xml.etree.ElementTree as ET
+roots = os.environ.get("PYTHONPATH", "").split(os.pathsep)
+if len(roots) != 1 or not roots[0]:
+    raise RuntimeError("import root mismatch: expected one PYTHONPATH checkout root")
+checkout_root = Path(roots[0]).resolve()
+import datamimic_ce
+try:
+    Path(datamimic_ce.__file__).resolve().relative_to((checkout_root / "datamimic_ce").resolve())
+except ValueError:
+    raise RuntimeError("import root mismatch: datamimic_ce loaded outside the checkout root") from None
 from datamimic_ce.data_mimic_test import DataMimicTest
 
 def normalize(item):
@@ -99,17 +108,6 @@ def shape_rows(rows):
         }
     return shape_union(rows)
 
-def generate_counts(path):
-    try:
-        root = ET.parse(path).getroot()
-    except ET.ParseError:
-        return {}
-    return {
-        node.get("name"): node.get("count")
-        for node in root.iter("generate")
-        if node.get("name") is not None
-    }
-
 def output_digest(path):
     if path.suffix == ".xlsx":
         # OOXML core properties include the current creation/modification time.
@@ -125,7 +123,6 @@ def output_digest(path):
 path = Path(sys.argv[1])
 seeded = False
 task_id = None
-counts = generate_counts(path)
 try:
     seeded = "rngSeed" in ET.parse(path).getroot().attrib
     engine = DataMimicTest(test_dir=path.parent, filename=path.name, capture_test_result=True)
@@ -142,11 +139,7 @@ try:
             "outcome": "ok", "seeded": False,
             "products": {
                 name: {
-                    "rows": (
-                        (len(rows) if isinstance(rows, list) else 1)
-                        if name in counts and counts[name] is not None and counts[name].isdigit()
-                        else "dynamic"
-                    ),
+                    "rows": len(rows) if isinstance(rows, list) else 1,
                     "value_shape": shape_rows(rows),
                 }
                 for name, rows in sorted(products.items())

@@ -11,6 +11,7 @@ from typing import Any
 LEGACY_DEMO_PREFIX = "datamimic_ce/demos/"
 TARGET_DEMO_PREFIX = "datamimic_ce/resources/demos/"
 _ALLOWED_ATTRIBUTES = re.compile(r"(Must defined one of following attributes \{)([^{}]*)(\})")
+_TEST_EVIDENCE_LINE = re.compile(r"(tests_ce/[^:\s]+\.py):\d+")
 
 
 def normalize_error_message(message: str) -> str:
@@ -33,9 +34,21 @@ def canonical_path(path: str) -> str:
     return path
 
 
+def normalize_evidence(evidence: Any) -> Any:
+    if isinstance(evidence, str):
+        return _TEST_EVIDENCE_LINE.sub(r"\1:<line>", evidence)
+    if isinstance(evidence, list):
+        return [normalize_evidence(item) for item in evidence]
+    return evidence
+
+
 def inventory_by_path(records: list[dict[str, Any]]) -> dict[str, dict[str, Any]]:
     return {
-        canonical_path(item["path"]): {**item, "path": canonical_path(item["path"])}
+        canonical_path(item["path"]): {
+            **item,
+            "path": canonical_path(item["path"]),
+            **({"evidence": normalize_evidence(item["evidence"])} if "evidence" in item else {}),
+        }
         for item in records
     }
 
@@ -47,7 +60,11 @@ def descriptors_by_path(records: dict[str, Any]) -> dict[str, Any]:
 def comparable(record: dict[str, Any]) -> dict[str, Any]:
     result = {key: record.get(key) for key in ("status", "category", "outcome", "seeded")}
     if record.get("status") == "UNVERIFIED" or record.get("status") == "NOT-A-DESCRIPTOR":
-        return {**result, "reason": record.get("reason"), "evidence": record.get("evidence")}
+        return {
+            **result,
+            "reason": record.get("reason"),
+            "evidence": normalize_evidence(record.get("evidence")),
+        }
     if record.get("outcome") != "ok":
         if record.get("status") == "EXPECTED-ERROR":
             message = record.get("message")
@@ -72,16 +89,21 @@ def shape_compatible(before: Any, after: Any) -> bool:
     if before_type == "union" or after_type == "union":
         before_values = before.get("values", [before]) if before_type == "union" else [before]
         after_values = after.get("values", [after]) if after_type == "union" else [after]
-        return any(shape_compatible(left, right) for left in before_values for right in after_values)
+        before_values = [value for value in before_values if value != "null"]
+        after_values = [value for value in after_values if value != "null"]
+        return all(
+            any(shape_compatible(value, candidate) for candidate in candidates)
+            for values, candidates in ((before_values, after_values), (after_values, before_values))
+            for value in values
+        )
     if not isinstance(before, dict) or not isinstance(after, dict):
         return False
     if before_type == after_type == "object":
         if "values" in before or "values" in after:
             return "values" in before and "values" in after and shape_compatible(before["values"], after["values"])
         before_fields, after_fields = before.get("fields", {}), after.get("fields", {})
-        return all(
-            shape_compatible(before_fields[name], after_fields[name])
-            for name in before_fields.keys() & after_fields.keys()
+        return before_fields.keys() == after_fields.keys() and all(
+            shape_compatible(before_fields[name], after_fields[name]) for name in before_fields
         )
     if before_type == after_type == "array":
         return shape_compatible(before.get("items"), after.get("items"))
