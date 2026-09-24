@@ -1,6 +1,4 @@
-import shutil
 from collections import Counter
-from collections.abc import Iterator
 from pathlib import Path
 
 import pytest
@@ -8,100 +6,82 @@ from openpyxl import Workbook, load_workbook
 
 from datamimic_ce.data_mimic_test import DataMimicTest
 
-_DIR = Path(__file__).resolve().parent
+
+def test_xlsx_export_writes_a_valid_workbook(xlsx_test_dir: Path):
+    DataMimicTest(test_dir=xlsx_test_dir, filename="xlsx_export.xml").test_with_timer()
+
+    files = list(xlsx_test_dir.rglob("*.xlsx"))
+    assert len(files) == 1, f"expected one xlsx, got {files}"
+
+    rows = list(load_workbook(files[0]).active.iter_rows(values_only=True))
+    assert rows[0] == ("id", "name", "score")  # header from field order
+    assert len(rows) == 6  # header + 5 records
+    assert [r[0] for r in rows[1:]] == [1, 2, 3, 4, 5]  # ids kept as numbers
+    assert all(r[1] in {"Ann", "Bob", "Cy"} for r in rows[1:])
+    assert all(1 <= r[2] <= 9 for r in rows[1:])  # score int in range
 
 
-def test_xlsx_export_writes_a_valid_workbook():
-    output = _DIR / "output"
-    shutil.rmtree(output, ignore_errors=True)
-    try:
-        DataMimicTest(test_dir=_DIR, filename="xlsx_export.xml").test_with_timer()
-
-        files = list(_DIR.rglob("*.xlsx"))
-        assert len(files) == 1, f"expected one xlsx, got {files}"
-
-        rows = list(load_workbook(files[0]).active.iter_rows(values_only=True))
-        assert rows[0] == ("id", "name", "score")  # header from field order
-        assert len(rows) == 6  # header + 5 records
-        assert [r[0] for r in rows[1:]] == [1, 2, 3, 4, 5]  # ids kept as numbers
-        assert all(r[1] in {"Ann", "Bob", "Cy"} for r in rows[1:])
-        assert all(1 <= r[2] <= 9 for r in rows[1:])  # score int in range
-    finally:
-        shutil.rmtree(output, ignore_errors=True)
-
-
-def test_xlsx_source_is_read_row_by_row():
-    fixture = _DIR / "people_fixture.xlsx"
-    output = _DIR / "output"
+def test_xlsx_source_is_read_row_by_row(xlsx_test_dir: Path):
+    fixture = xlsx_test_dir / "people_fixture.xlsx"
     wb = Workbook()
     ws = wb.active
     ws.append(["name", "score"])
     ws.append(["Ann", 3])
     ws.append(["Bob", 5])
     wb.save(fixture)
-    try:
-        engine = DataMimicTest(test_dir=_DIR, filename="xlsx_read.xml", capture_test_result=True)
-        engine.test_with_timer()
-        rows = engine.capture_result()["rows"]
-        assert [r["who"] for r in rows] == ["Ann", "Bob"]  # header-keyed columns
-        assert [r["doubled"] for r in rows] == [6, 10]  # numbers read as numbers
-    finally:
-        fixture.unlink(missing_ok=True)
-        shutil.rmtree(output, ignore_errors=True)
+    engine = DataMimicTest(test_dir=xlsx_test_dir, filename="xlsx_read.xml", capture_test_result=True)
+    engine.test_with_timer()
+    rows = engine.capture_result()["rows"]
+    assert [r["who"] for r in rows] == ["Ann", "Bob"]  # header-keyed columns
+    assert [r["doubled"] for r in rows] == [6, 10]  # numbers read as numbers
 
 
 _LARGE_FIXTURE_LEN = 12
 
 
-def _write_large_fixture() -> Path:
-    fixture = _DIR / "people_fixture_large.xlsx"
+def _write_large_fixture(test_dir: Path) -> None:
+    fixture = test_dir / "people_fixture_large.xlsx"
     wb = Workbook()
     ws = wb.active
     ws.append(["name", "score"])
     for i in range(_LARGE_FIXTURE_LEN):
         ws.append([f"n{i:02d}", i])
     wb.save(fixture)
-    return fixture
 
 
 @pytest.fixture
-def large_xlsx_fixture() -> Iterator[Path]:
-    fixture = _write_large_fixture()
-    shutil.rmtree(_DIR / "output", ignore_errors=True)
-    try:
-        yield fixture
-    finally:
-        fixture.unlink(missing_ok=True)
-        shutil.rmtree(_DIR / "output", ignore_errors=True)
+def large_xlsx_dir(xlsx_test_dir: Path) -> Path:
+    _write_large_fixture(xlsx_test_dir)
+    return xlsx_test_dir
 
 
-def _run(filename: str) -> list[dict]:
-    engine = DataMimicTest(test_dir=_DIR, filename=filename, capture_test_result=True)
+def _run(filename: str, test_dir: Path) -> list[dict]:
+    engine = DataMimicTest(test_dir=test_dir, filename=filename, capture_test_result=True)
     engine.test_with_timer()
     return engine.capture_result()["rows"]
 
 
-def test_xlsx_paged_ordered_read_preserves_source_order(large_xlsx_fixture):
-    rows = _run("read_paged_ordered.xml")  # pageSize=5 < 12 source rows -> 3 pages
+def test_xlsx_paged_ordered_read_preserves_source_order(large_xlsx_dir: Path):
+    rows = _run("read_paged_ordered.xml", large_xlsx_dir)  # pageSize=5 < 12 source rows -> 3 pages
     assert [r["idx"] for r in rows] == list(range(_LARGE_FIXTURE_LEN))
 
 
-def test_xlsx_random_read_is_seeded_deterministic(large_xlsx_fixture):
-    first = [r["idx"] for r in _run("read_random_seeded.xml")]
-    second = [r["idx"] for r in _run("read_random_seeded.xml")]
+def test_xlsx_random_read_is_seeded_deterministic(large_xlsx_dir: Path):
+    first = [r["idx"] for r in _run("read_random_seeded.xml", large_xlsx_dir)]
+    second = [r["idx"] for r in _run("read_random_seeded.xml", large_xlsx_dir)]
     assert first == second  # same rngSeed -> same shuffle every run
     assert sorted(first) == list(range(_LARGE_FIXTURE_LEN))  # still a full permutation
     assert first != list(range(_LARGE_FIXTURE_LEN))  # actually shuffled, not coincidentally ordered
 
 
-def test_xlsx_random_read_is_unseeded_nondeterministic(large_xlsx_fixture):
-    rows = [r["idx"] for r in _run("read_random_unseeded.xml")]
+def test_xlsx_random_read_is_unseeded_nondeterministic(large_xlsx_dir: Path):
+    rows = [r["idx"] for r in _run("read_random_unseeded.xml", large_xlsx_dir)]
     assert sorted(rows) == list(range(_LARGE_FIXTURE_LEN))  # valid permutation regardless of seed
 
 
-def test_xlsx_cumulated_read_is_seeded_and_bell_weighted(large_xlsx_fixture):
-    first = [r["idx"] for r in _run("read_cumulated_seeded.xml")]
-    second = [r["idx"] for r in _run("read_cumulated_seeded.xml")]
+def test_xlsx_cumulated_read_is_seeded_and_bell_weighted(large_xlsx_dir: Path):
+    first = [r["idx"] for r in _run("read_cumulated_seeded.xml", large_xlsx_dir)]
+    second = [r["idx"] for r in _run("read_cumulated_seeded.xml", large_xlsx_dir)]
     assert first == second  # deterministic under rngSeed
     assert len(first) == 200
     assert set(first) <= set(range(_LARGE_FIXTURE_LEN))  # only real source indices, sampled with replacement
@@ -112,6 +92,6 @@ def test_xlsx_cumulated_read_is_seeded_and_bell_weighted(large_xlsx_fixture):
     assert middle > edges  # bell shape: middle rows drawn more often than edge rows
 
 
-def test_xlsx_cyclic_read_wraps_across_pages(large_xlsx_fixture):
-    rows = _run("read_cyclic_paged.xml")  # count=26, pageSize=7, source len=12
+def test_xlsx_cyclic_read_wraps_across_pages(large_xlsx_dir: Path):
+    rows = _run("read_cyclic_paged.xml", large_xlsx_dir)  # count=26, pageSize=7, source len=12
     assert [r["idx"] for r in rows] == [i % _LARGE_FIXTURE_LEN for i in range(26)]
