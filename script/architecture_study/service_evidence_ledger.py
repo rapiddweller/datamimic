@@ -19,6 +19,7 @@ VERIFICATION = "docs/architecture/refactoring-study/experiment-2/verification-20
 STEP27 = "docs/architecture/refactoring-study/experiment-2/step-08c27.md"
 STEP28 = "docs/architecture/refactoring-study/experiment-2/step-08c28.md"
 STEP30 = "docs/architecture/refactoring-study/experiment-2/step-08c30.md"
+STEP33 = "docs/architecture/refactoring-study/experiment-2/step-08c33.md"
 
 # Only per-path statements in the step records are promoted. Batch membership
 # and aggregate totals do not establish an individual comparison class.
@@ -64,6 +65,39 @@ EVIDENCE = {
     ),
     "tests_ce/external_service_tests/test_mongodb/test_mongodb_decimal.xml": (
         "exact_seeded", STEP30
+    ),
+    "tests_ce/external_service_tests/data_source_cyclic/test_csv_cyclic_mp.xml": (
+        "normalized_unseeded", STEP33
+    ),
+    "tests_ce/external_service_tests/data_source_cyclic/test_csv_cyclic_non_mp.xml": (
+        "normalized_unseeded", STEP33
+    ),
+    "tests_ce/external_service_tests/data_source_cyclic/test_json_cyclic.xml": (
+        "normalized_unseeded", STEP33
+    ),
+    "tests_ce/external_service_tests/data_source_cyclic/test_json_cyclic_non_mp.xml": (
+        "normalized_unseeded", STEP33
+    ),
+    "tests_ce/external_service_tests/data_source_cyclic/test_memstore_product_cyclic.xml": (
+        "normalized_unseeded", STEP33
+    ),
+    "tests_ce/external_service_tests/data_source_cyclic/test_part_cyclic_mp.xml": (
+        "normalized_unseeded", STEP33
+    ),
+    "tests_ce/external_service_tests/data_source_cyclic/test_part_memstore_cyclic.xml": (
+        "normalized_unseeded", STEP33
+    ),
+    "tests_ce/external_service_tests/data_source_cyclic/test_part_no_cyclic.xml": (
+        "normalized_unseeded", STEP33
+    ),
+    "tests_ce/external_service_tests/integration_data_source_cyclic/test_csv_cyclic.xml": (
+        "normalized_unseeded", STEP33
+    ),
+    "tests_ce/external_service_tests/integration_data_source_cyclic/test_json_cyclic.xml": (
+        "normalized_unseeded", STEP33
+    ),
+    "tests_ce/external_service_tests/integration_data_source_cyclic/test_product_cyclic.xml": (
+        "normalized_unseeded", STEP33
     ),
 }
 

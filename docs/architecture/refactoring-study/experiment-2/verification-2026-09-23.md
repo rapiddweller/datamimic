@@ -40,8 +40,14 @@ unchanged from frozen Step 0, including demos relocated from
 edits made during the refactor were reverted for this constraint. The earlier
 comparison snapshot at `a2e227ab` has SHA-256
 `96f796371002fc4059e1b7882b855c7e9a5e50d42364a0291a838bf3576112ac`.
-Both frozen Step-0 comparisons report 0 differences; all four authoring projections
-match. Snapshot G has one tolerated unseeded shape variance in
+The current strict serial comparison is **red with two differences** (Step
+08C32). One is an unseeded dynamic count that varies on frozen code; the
+other is a missing result marker after successful target execution, absent in
+three isolated reruns per revision. Neither is proven to be a code regression,
+but neither may be called full behavioral acceptance.
+
+Both frozen Step-0 comparisons report 0 differences; all four authoring
+projections match. Snapshot G has one tolerated unseeded shape variance in
 `tests_ce/integration_tests/test_entity/patient.xml`: `de_patients.allergies`
 is `array<unknown>` there and `array<str>` in the final run. Snapshot H also
 records `array<str>`.
@@ -50,8 +56,9 @@ A fresh full pair with the stricter error comparator used frozen `a219163e`
 and candidate `de1d5e6a`, the same verifier hash
 `4e34e98c35f8a20a53854b2944bfa24cfdfc1ced8d0fa41ef90e2f44424e1f1f`,
 and asserted the imported checkout in parent and child processes. It reports
-930 compared, **0 hard differences**, and four tolerated descriptor-path
-variances. Two are optional unseeded shapes: city `population` (`null`/`int`)
+930 compared, **0 hard differences under that earlier comparator**, and four
+tolerated descriptor-path variances. Two are optional unseeded shapes: city
+`population` (`null`/`int`)
 and order `coupon_code` fields (`null`/`str`). Frozen unchanged code itself
 produced both city shapes in three repeats and both order coupon shapes in 50
 repeats (49 `str`/`str`, one `null`/`null`). The other two variances are only
@@ -69,8 +76,9 @@ The comparator now checks exception class and normalized detail for expected
 errors. It sorts only the known unordered allowed-attribute set in two DSL
 diagnostics; unrelated text, missing detail, and changed exception types fail.
 Two same-commit repeat pairs match on all 63 and 62 common expected-error cases
-after this normalization. The fresh full pair above also has no hard difference
-under the stricter comparator.
+after this normalization. That pair preceded the object-field,
+union-alternative, and dynamic-count fixes; its green result does not
+supersede Step 08C32.
 
 Three of the 9 XLSX-dependent descriptors were compared separately against the
 frozen Step-0 checkout with the same 12-row workbook fixture. The full captured
@@ -112,7 +120,7 @@ cover a subset of these skips without changing the oracle's categories.
 | Suite | Result |
 |---|---|
 | Unit, before two duplicate-test deletions | 1,167 passed, 11 skipped |
-| Unit, current | 1,165 passed, 11 skipped |
+| Unit, current | 1,173 passed, 11 skipped |
 | API, before hygiene | 355 passed, 1 skipped, 1 random-collision failure |
 | API, after test-only hygiene commit | 333 passed, 1 skipped |
 | Factory | 4 passed |
@@ -177,8 +185,9 @@ Thirteen further standalone local-only source-cyclic descriptors also execute
 successfully on both checkouts with identical normalized oracle records, XML,
 and input fixture hashes. They are unseeded: the oracle compares outcome,
 recorded counts, shape, and output names, not generated row values. Dynamic
-counts are labeled `dynamic` rather than measured. This is execution
-and shape parity for 13 cases, not exact dataset parity.
+counts were labeled `dynamic` rather than measured in that earlier runner.
+This is execution and shape parity for 13 cases, not exact dataset parity.
+Step 08C32 now measures those counts in new snapshots.
 
 Another ten local-only variable/storage descriptors have matching Step-0
 capture records from isolated copies: six successful outcomes and four matching
@@ -270,7 +279,8 @@ xdist workers. This removes a shared-directory race; it does not change the
 DSL oracle or prove other integration tests are race-free (Step 08C20).
 Two exact duplicate authoring tests were removed after independent review;
 the full authoring unit suite has 438 passing tests. The current full unit
-suite has 1,165 passing and 11 skipped tests (Step 08C25).
+suite has 1,173 passing and 11 skipped tests after the eight new oracle tests
+(Step 08C32); Step 08C25 recorded 1,165 before them.
 
 The read-only service inventory now emits all 273 service-classified paths
 with client type/profile hints and possible test-file owners. Of those, 79 have
@@ -283,9 +293,11 @@ reconstruct an exact set of 100 paired paths with evidence levels; the
 100/173 split is aggregate arithmetic until a path-level ledger is checked.
 
 The strict per-path ledger (`script/architecture_study/service_evidence_ledger.py`)
-currently classifies 14 of 273 paths: two exact seeded, eight matching expected
-errors, and four normalized unseeded comparisons. The other 259 are explicitly
-`UNVERIFIED`. Four newer entries are separate, disposable-container
+currently classifies 25 of 273 paths: two exact seeded, eight matching expected
+errors, and 15 normalized unseeded comparisons. The other 248 are explicitly
+`UNVERIFIED`. Eleven new local-source/memstore comparisons passed the audited
+policy-only runner and independent per-path QA (Step 08C33); they do not prove
+exact unseeded values. Four earlier entries are separate, disposable-container
 PostgreSQL and MongoDB runs against frozen `a219163e` and target `6190932d`
 (Steps 08C27, 08C28, and 08C30); each passed independent read-only database QA
 before its own containers were removed. Source code and XML did not change between
@@ -307,13 +319,15 @@ governance gap is tracked in [ArchKeel #143](https://github.com/rapiddweller/arc
   candidate. It does not prove behavior or test quality. In particular,
   `domains.api.iter_generator_types()` still returns `Iterator[type]`; the
   narrower, MyPy-valid generator union remains undecidable to this checker.
-- **Behavior preserved for the comparable oracle set:** both frozen comparisons have zero
-  differences. All 9 XLSX-dependent cases have controlled parity evidence; all
-  43 authoring XML fixtures have identical lint results. Of 273
+- **Behavioral acceptance still open:** the older frozen comparisons had zero
+  differences under a weaker oracle; the current strict serial pair has two
+  unresolved differences (Step 08C32). All 9 XLSX-dependent cases have
+  controlled parity evidence; all 43 authoring XML fixtures have identical
+  lint results. Of 273
   service-classified skips, aggregate logs report 28 exact seeded runtime
   comparisons and 72 normalized outcome/shape/error comparisons, leaving 173.
   These counts are not yet reconstructable as 273 uniquely classified XML
-  paths; the strict ledger proves 14 paths and leaves 259 unverified. The
+  paths; the strict ledger proves 25 paths and leaves 248 unverified. The
   unseeded cases also lack a general exact-row guarantee. An unqualified
   all-descriptors claim is not supported.
 - **Delivery not ready:** `make lint` remains red, the complete external-service

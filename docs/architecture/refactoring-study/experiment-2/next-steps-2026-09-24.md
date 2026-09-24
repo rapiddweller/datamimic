@@ -2,18 +2,21 @@
 
 The structural target is reached locally, but behavior and delivery are not
 accepted. Batch logs arithmetically report 100 of 273 service-classified XMLs
-paired with Step 0. The strict path ledger currently classifies only 14 by
-individual path and evidence class, including eight matching expected errors;
-259 remain `UNVERIFIED`. This is an
+paired with Step 0. The strict path ledger currently classifies 25 by
+individual path and evidence class, including eight matching expected errors
+and 11 newly audited local-only comparisons; 248 remain `UNVERIFIED`. This is an
 evidence-accounting correction, not evidence that the earlier runs failed.
 The 200,000-row SQLite case has count/schema parity, not exact row parity.
+The strict full DSL oracle is red on two unresolved measurements (Step 08C32).
 `make lint` remains red on both revisions, and remote CE CI has not run.
 Keep frozen `a219163e` and the exact 930 XML bytes as controls.
 
 ## Order
 
-1. **Close behavioral evidence.** Compare each remaining executable descriptor
-   against Step 0. Use fresh copies and disposable SQLite databases or
+1. **Close behavioral evidence.** First fix the lost-result oracle reliability
+   and define a measurable acceptance rule for unseeded dynamic counts; do not
+   rerun until a lucky green result appears. Then compare each remaining
+   executable descriptor against Step 0. Use fresh copies and disposable SQLite databases or
    Docker/OrbStack services with asserted endpoints. Seeded cases require exact
    captured rows and normalized file/DB output; unseeded cases require outcome,
    counts, and shape parity. Record intentional failures, non-descriptors, and
