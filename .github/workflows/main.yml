@@ -207,7 +207,7 @@ jobs:
       - name: Install and import built package
         run: |
           python -m pip install dist/*.whl
-          python -c "import datamimic_ce; import datamimic_ce.authoring.contracts; import datamimic_ce.cli"
+          python -c "import datamimic_ce; import datamimic_ce.authoring.contracts; import datamimic_ce.interfaces.cli"
           datamimic --help
 
   python_312_smoke:
@@ -227,7 +227,7 @@ jobs:
       - name: Install and import built package
         run: |
           python -m pip install dist/*.whl
-          python -c "import datamimic_ce; import datamimic_ce.authoring.contracts; import datamimic_ce.cli"
+          python -c "import datamimic_ce; import datamimic_ce.authoring.contracts; import datamimic_ce.interfaces.cli"
           datamimic --help
 
   python_313_smoke:
@@ -247,7 +247,7 @@ jobs:
       - name: Install and import built package
         run: |
           python -m pip install dist/*.whl
-          python -c "import datamimic_ce; import datamimic_ce.authoring.contracts; import datamimic_ce.cli"
+          python -c "import datamimic_ce; import datamimic_ce.authoring.contracts; import datamimic_ce.interfaces.cli"
           datamimic --help
 
   runtime_determinism_matrix:
