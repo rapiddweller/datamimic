@@ -12,6 +12,7 @@ import json
 from functools import cache
 from pathlib import Path
 
+from datamimic_ce.errors import DomainErrorCode
 from datamimic_ce.errors.base import DomainError
 
 from .json_types import JsonObject
@@ -54,7 +55,7 @@ def resolve_component_profile(
 
     if version != "v1":
         raise DomainError(
-            code="unsupported_component_version",
+            code=DomainErrorCode.UNSUPPORTED_COMPONENT_VERSION,
             message=f"Unsupported component version: {version}",
             hint="Only v1 components are currently available.",
             path="/component_id",
@@ -67,7 +68,7 @@ def resolve_component_profile(
     if dataset_upper not in SUPPORTED_COMPONENT_DATASETS:
         if strict_mode:
             raise DomainError(
-                code="unsupported_component_dataset",
+                code=DomainErrorCode.UNSUPPORTED_COMPONENT_DATASET,
                 message=(f"Locale '{locale}' maps to dataset '{dataset_upper}' without demographic components"),
                 hint=(f"Add demographic_components_{dataset_upper}.csv under domain_data or disable strict mode"),
                 path="/component_id",
@@ -80,7 +81,7 @@ def resolve_component_profile(
     except FileNotFoundError as exc:
         if strict_mode:
             raise DomainError(
-                code="missing_component_dataset",
+                code=DomainErrorCode.MISSING_COMPONENT_DATASET,
                 message=str(exc),
                 hint=(f"Ensure demographic_components_{dataset_upper}.csv exists for locale '{locale}'"),
                 path="/component_id",
@@ -100,7 +101,7 @@ def resolve_component_profile(
                 constraints = json.loads(constraints_raw)
             except json.JSONDecodeError as exc:
                 raise DomainError(
-                    code="invalid_component_constraints",
+                    code=DomainErrorCode.INVALID_COMPONENT_CONSTRAINTS,
                     message=(f"Component '{component_id}' has invalid constraints_json payload"),
                     hint="Fix the JSON string stored in constraints_json column.",
                     path="/component_id",
@@ -112,7 +113,7 @@ def resolve_component_profile(
 
     if strict_mode:
         raise DomainError(
-            code="unknown_component",
+            code=DomainErrorCode.UNKNOWN_COMPONENT,
             message=(f"Component '{component_id}' is not defined for dataset '{dataset_upper}'"),
             hint=(f"Add a row with component_id '{component_id}' to demographic_components_{dataset_upper}.csv"),
             path="/component_id",

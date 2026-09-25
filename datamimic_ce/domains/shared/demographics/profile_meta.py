@@ -6,6 +6,7 @@ import csv
 from functools import cache
 from pathlib import Path
 
+from datamimic_ce.errors import DomainErrorCode
 from datamimic_ce.errors.base import DomainError
 
 from ..utils.dataset_path import dataset_path, is_strict_dataset_mode
@@ -49,7 +50,7 @@ def lookup_profile_row(*, dataset: str, version: str, profile_id: str, request_h
         return row
     if is_strict_dataset_mode():
         raise DomainError(
-            code="unknown_profile",
+            code=DomainErrorCode.UNKNOWN_PROFILE,
             message=(f"Profile '{profile_id}' not defined in profile_meta.dmgrp_{dataset_code}.csv"),
             hint="Add the profile metadata row or disable strict dataset mode.",
             path="/profile_id",

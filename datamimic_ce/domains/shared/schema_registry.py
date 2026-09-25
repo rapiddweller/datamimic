@@ -8,6 +8,7 @@ from pathlib import Path
 from jsonschema import Draft7Validator
 from pydantic import JsonValue
 
+from datamimic_ce.errors import DomainErrorCode
 from datamimic_ce.errors.base import DomainError
 
 SCHEMA_DIR = Path(__file__).resolve().parent / "schemas"
@@ -35,7 +36,7 @@ def validate_payload(
     errors = sorted(validator.iter_errors(payload), key=lambda e: e.path)
     if errors:
         raise DomainError(
-            code="schema_validation_failed",
+            code=DomainErrorCode.SCHEMA_VALIDATION_FAILED,
             message=f"{kind.capitalize()} schema validation failed for {domain} {version}",
             hint="Check the payload against the domain contract.",
             path="/" + "/".join(str(part) for part in errors[0].absolute_path),

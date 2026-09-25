@@ -14,6 +14,7 @@ from datamimic_ce.domains.shared.determinism import (
     with_rng,
 )
 from datamimic_ce.domains.shared.locales import SUPPORTED_DATASET_CODES, load_locale
+from datamimic_ce.errors import DomainErrorCode
 from datamimic_ce.errors.base import DomainError
 
 
@@ -41,7 +42,7 @@ class DoctorRequest:
 def generate(req: DoctorRequest) -> dict[str, object]:
     if req.count < 0:
         raise DomainError(
-            code="invalid_count",
+            code=DomainErrorCode.INVALID_COUNT,
             message="Count must be non-negative",
             hint="Provide a count >= 0",
             path="/count",
@@ -53,7 +54,7 @@ def generate(req: DoctorRequest) -> dict[str, object]:
     except ValueError as exc:
         hint_codes = ", ".join(SUPPORTED_DATASET_CODES) or "<none>"
         raise DomainError(
-            code="unsupported_locale",
+            code=DomainErrorCode.UNSUPPORTED_LOCALE,
             message=str(exc),
             hint=f"Choose a locale mapping to dataset codes: {hint_codes}",
             path="/locale",
@@ -86,7 +87,7 @@ def generate(req: DoctorRequest) -> dict[str, object]:
 
     if unknown:
         raise DomainError(
-            code="invalid_constraints",
+            code=DomainErrorCode.INVALID_CONSTRAINTS,
             message="constraints.specialty must be a known specialty",
             hint=f"Allowed values: {sorted(canonical_specialties)}",
             path="/constraints/specialty",

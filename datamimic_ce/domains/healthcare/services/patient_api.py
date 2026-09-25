@@ -14,6 +14,7 @@ from datamimic_ce.domains.shared.determinism import (
     with_rng,
 )
 from datamimic_ce.domains.shared.locales import SUPPORTED_DATASET_CODES, load_locale
+from datamimic_ce.errors import DomainErrorCode
 from datamimic_ce.errors.base import DomainError
 
 
@@ -55,7 +56,7 @@ def _human_id(namespace: str, uuid_value: str) -> str:
 def generate(req: PatientRequest, *, profile_seed: int | None = None) -> dict[str, object]:
     if req.count < 0:
         raise DomainError(
-            code="invalid_count",
+            code=DomainErrorCode.INVALID_COUNT,
             message="Count must be non-negative",
             hint="Provide a count >= 0",
             path="/count",
@@ -67,7 +68,7 @@ def generate(req: PatientRequest, *, profile_seed: int | None = None) -> dict[st
     except ValueError as exc:
         hint_codes = ", ".join(SUPPORTED_DATASET_CODES) or "<none>"
         raise DomainError(
-            code="unsupported_locale",
+            code=DomainErrorCode.UNSUPPORTED_LOCALE,
             message=str(exc),
             hint=f"Choose a locale mapping to dataset codes: {hint_codes}",
             path="/locale",
@@ -86,7 +87,7 @@ def generate(req: PatientRequest, *, profile_seed: int | None = None) -> dict[st
     max_age = age_constraints.get("max", person_locale["default_age_range"]["max"])
     if min_age > max_age:
         raise DomainError(
-            code="invalid_constraints",
+            code=DomainErrorCode.INVALID_CONSTRAINTS,
             message="constraints.age.min cannot exceed constraints.age.max",
             hint="Adjust the age range to be ascending",
             path="/constraints/age",
@@ -101,7 +102,7 @@ def generate(req: PatientRequest, *, profile_seed: int | None = None) -> dict[st
     available_conditions = set(patient_locale["conditions"])
     if not set(conditions_list).issubset(available_conditions):
         raise DomainError(
-            code="invalid_constraints",
+            code=DomainErrorCode.INVALID_CONSTRAINTS,
             message="constraints.conditions must be known codes",
             hint=f"Allowed values: {sorted(available_conditions)}",
             path="/constraints/conditions",

@@ -5,6 +5,7 @@ from datetime import datetime, timezone
 
 from typing_extensions import TypedDict
 
+from datamimic_ce.errors import DomainErrorCode
 from datamimic_ce.errors.base import DomainError
 
 from ..determinism import (
@@ -52,7 +53,7 @@ class PersonRequest:
 def generate(req: PersonRequest, *, profile_seed: int | None = None) -> dict[str, object]:
     if req.count < 0:
         raise DomainError(
-            code="invalid_count",
+            code=DomainErrorCode.INVALID_COUNT,
             message="Count must be non-negative",
             hint="Provide a count >= 0",
             path="/count",
@@ -64,7 +65,7 @@ def generate(req: PersonRequest, *, profile_seed: int | None = None) -> dict[str
     except ValueError as exc:
         hint_codes = ", ".join(SUPPORTED_DATASET_CODES) or "<none>"
         raise DomainError(
-            code="unsupported_locale",
+            code=DomainErrorCode.UNSUPPORTED_LOCALE,
             message=str(exc),
             hint=f"Choose a locale mapping to dataset codes: {hint_codes}",
             path="/locale",
@@ -84,7 +85,7 @@ def generate(req: PersonRequest, *, profile_seed: int | None = None) -> dict[str
 
     if min_age > max_age:
         raise DomainError(
-            code="invalid_constraints",
+            code=DomainErrorCode.INVALID_CONSTRAINTS,
             message="constraints.age.min cannot exceed constraints.age.max",
             hint="Adjust the age range to be ascending",
             path="/constraints/age",
@@ -102,7 +103,7 @@ def generate(req: PersonRequest, *, profile_seed: int | None = None) -> dict[str
     available_sexes = set(person_locale["sexes"])
     if not set(sexes).issubset(available_sexes):
         raise DomainError(
-            code="invalid_constraints",
+            code=DomainErrorCode.INVALID_CONSTRAINTS,
             message="constraints.sex must be within the locale-defined set",
             hint=f"Allowed values: {sorted(available_sexes)}",
             path="/constraints/sex",

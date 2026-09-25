@@ -6,6 +6,7 @@ from typing import TypeVar
 
 from pydantic import JsonValue, TypeAdapter
 
+from ..errors import DomainErrorCode
 from ..errors.base import DomainError
 from .healthcare.services.doctor_api import DoctorRequest
 from .healthcare.services.doctor_api import generate as generate_doctor
@@ -39,7 +40,7 @@ PROFILE_SEED_ENABLED: tuple[tuple[str, str], ...] = (
 def generate_domain(payload: JsonValue) -> JsonObject:
     if not isinstance(payload, dict):
         raise DomainError(
-            code="invalid_request",
+            code=DomainErrorCode.INVALID_REQUEST,
             message="Payload must be a JSON object",
             hint="Send a JSON object following the domain contract",
             path="/",
@@ -53,7 +54,7 @@ def generate_domain(payload: JsonValue) -> JsonObject:
 
     if not isinstance(domain, str):
         raise DomainError(
-            code="invalid_request",
+            code=DomainErrorCode.INVALID_REQUEST,
             message="Missing or invalid 'domain' field",
             hint="Provide the target domain as a string",
             path="/domain",
@@ -61,7 +62,7 @@ def generate_domain(payload: JsonValue) -> JsonObject:
         )
     if not isinstance(version, str):
         raise DomainError(
-            code="invalid_request",
+            code=DomainErrorCode.INVALID_REQUEST,
             message="Missing or invalid 'version' field",
             hint="Provide the target version as a string",
             path="/version",
@@ -71,7 +72,7 @@ def generate_domain(payload: JsonValue) -> JsonObject:
     key = (domain, version)
     if key not in REGISTRY:
         raise DomainError(
-            code="unsupported_domain",
+            code=DomainErrorCode.UNSUPPORTED_DOMAIN,
             message=f"Domain '{domain}' version '{version}' is not supported",
             hint=f"Supported domains: {sorted({registered_domain for registered_domain, _ in REGISTRY})}",
             path="/domain",
@@ -134,7 +135,7 @@ def _apply_profile_payload(
 
     if profile_id is not None and component_id is not None:
         raise DomainError(
-            code="invalid_profile_selector",
+            code=DomainErrorCode.INVALID_PROFILE_SELECTOR,
             message="Provide either profile_id or component_id, not both",
             hint="Remove one of the identifiers before retrying.",
             path="/component_id",
@@ -149,7 +150,7 @@ def _apply_profile_payload(
     if component_id is not None:
         if not isinstance(component_id, str) or not component_id:
             raise DomainError(
-                code="invalid_component_id",
+                code=DomainErrorCode.INVALID_COMPONENT_ID,
                 message="component_id must be a non-empty string",
                 hint="Example: 'urban_adult'",
                 path="/component_id",
@@ -171,7 +172,7 @@ def _apply_profile_payload(
     else:
         if not isinstance(profile_id, str) or not profile_id:
             raise DomainError(
-                code="invalid_profile_id",
+                code=DomainErrorCode.INVALID_PROFILE_ID,
                 message="profile_id must be a non-empty string",
                 hint="Example: 'urban_adult'",
                 path="/profile_id",

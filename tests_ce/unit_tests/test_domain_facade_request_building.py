@@ -7,6 +7,7 @@ from datamimic_ce.domains.shared.determinism import canonical_json, hash_bytes
 from datamimic_ce.domains.shared.json_types import JsonObject
 from datamimic_ce.domains.shared.services.address_api import AddressRequest
 from datamimic_ce.domains.shared.services.person_api import PersonRequest
+from datamimic_ce.errors import DomainErrorCode
 from datamimic_ce.errors.base import DomainError
 
 
@@ -95,6 +96,7 @@ def test_facade_rejects_invalid_payload_before_request_building() -> None:
 
     with pytest.raises(DomainError) as error:
         generate_domain(payload)
-    assert error.value.code == "schema_validation_failed"
+    assert error.value.code is DomainErrorCode.SCHEMA_VALIDATION_FAILED
+    assert error.value.to_dict()["code"] == "schema_validation_failed"
     assert error.value.path == "/locale"
     assert error.value.request_hash == hash_bytes(canonical_json(payload))

@@ -4,6 +4,7 @@ from dataclasses import dataclass, field
 
 from typing_extensions import TypedDict
 
+from datamimic_ce.errors import DomainErrorCode
 from datamimic_ce.errors.base import DomainError
 
 from ..determinism import canonical_json, derive_seed, determinism_proof, hash_bytes, mix_seed, stable_uuid, with_rng
@@ -52,7 +53,7 @@ def _format_postal_code(pattern: str, rng) -> str:
 def generate(req: AddressRequest) -> dict[str, object]:
     if req.count < 0:
         raise DomainError(
-            code="invalid_count",
+            code=DomainErrorCode.INVALID_COUNT,
             message="Count must be non-negative",
             hint="Provide a count >= 0",
             path="/count",
@@ -64,7 +65,7 @@ def generate(req: AddressRequest) -> dict[str, object]:
     except ValueError as exc:
         hint_codes = ", ".join(SUPPORTED_DATASET_CODES) or "<none>"
         raise DomainError(
-            code="unsupported_locale",
+            code=DomainErrorCode.UNSUPPORTED_LOCALE,
             message=str(exc),
             hint=f"Choose a locale mapping to dataset codes: {hint_codes}",
             path="/locale",
@@ -75,7 +76,7 @@ def generate(req: AddressRequest) -> dict[str, object]:
 
     if "country" in constraints and constraints["country"] != address_locale["country_code"]:
         raise DomainError(
-            code="invalid_constraints",
+            code=DomainErrorCode.INVALID_CONSTRAINTS,
             message="constraints.country must match the locale country code",
             hint=f"Use {address_locale['country_code']}",
             path="/constraints/country",
@@ -99,7 +100,7 @@ def generate(req: AddressRequest) -> dict[str, object]:
                 postal = _apply_postal_prefix(postal, str(postal_prefix))
             except ValueError as exc:
                 raise DomainError(
-                    code="invalid_constraints",
+                    code=DomainErrorCode.INVALID_CONSTRAINTS,
                     message=str(exc),
                     hint="Ensure the postal_code_prefix is shorter than the format",
                     path="/constraints/postal_code_prefix",

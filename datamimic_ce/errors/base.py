@@ -2,10 +2,12 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 
+from datamimic_ce.errors.codes import DomainErrorCode
+
 
 @dataclass(frozen=True)
 class DomainError(Exception):
-    code: str
+    code: DomainErrorCode
     message: str
     hint: str | None
     path: str
@@ -14,7 +16,7 @@ class DomainError(Exception):
 
     def to_dict(self) -> dict[str, object]:
         payload: dict[str, object] = {
-            "code": self.code,
+            "code": self.code.value,
             "message": self.message,
             "path": self.path,
             "request_hash": self.request_hash,
