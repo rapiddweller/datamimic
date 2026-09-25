@@ -18,6 +18,10 @@ logger = logging.getLogger("DATAMIMIC")
 
 
 class GenerateStatement(CompositeStatement):
+    @property
+    def is_generate_statement(self) -> bool:
+        return True
+
     def __init__(self, model: GenerateModel, parent_stmt: Statement):
         name = model.name
         super().__init__(name, parent_stmt)

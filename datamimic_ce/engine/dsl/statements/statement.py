@@ -5,7 +5,7 @@
 # For questions and support, contact: info@rapiddweller.com
 
 from abc import ABC
-from typing import TYPE_CHECKING, Optional
+from typing import TYPE_CHECKING, Optional, TypeGuard
 
 from datamimic_ce.engine.dsl.constants.convention_constants import NAME_SEPARATOR
 
@@ -47,6 +47,14 @@ class Statement(ABC):  # noqa: B024
         """The statement a direct child should treat as its logical parent."""
         return self
 
+    @property
+    def is_generate_statement(self) -> bool:
+        return False
+
+    @staticmethod
+    def _is_generate_statement(statement: "Statement") -> TypeGuard["GenerateStatement"]:
+        return statement.is_generate_statement
+
     def get_parent_full_name(self):
         # Split the path into components
         path_components = self.full_name.split(NAME_SEPARATOR)
@@ -56,12 +64,10 @@ class Statement(ABC):  # noqa: B024
         return NAME_SEPARATOR.join(path_components)
 
     def get_root_generate_statement(self) -> Optional["GenerateStatement"]:  # noqa: F821
-        from datamimic_ce.engine.dsl.statements.generate_statement import GenerateStatement
-
-        if isinstance(self, GenerateStatement):
+        if self.is_generate_statement:
             return None
         parent_stmt = self.parent_stmt
-        while parent_stmt is not None and not isinstance(parent_stmt, GenerateStatement):
+        while parent_stmt is not None and not self._is_generate_statement(parent_stmt):
             parent_stmt = parent_stmt.parent_stmt
         return parent_stmt
 
