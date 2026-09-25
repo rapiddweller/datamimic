@@ -618,10 +618,10 @@
         "exec"
       ],
       "allowed_sources": [
-        "datamimic_ce.engine.runtime.evaluation",
-        "datamimic_ce.engine.runtime.plugins"
+        "datamimic_ce.engine.runtime.scripting.evaluation",
+        "datamimic_ce.engine.runtime.scripting.plugins"
       ],
-      "rationale": "Dynamic execution is isolated in its two explicit runtime owners.",
+      "rationale": "Dynamic execution is isolated in scripting's expression and plugin owners.",
       "provenance": [
         "docs/architecture/refactoring-study/experiment-2/target-architecture.md"
       ],

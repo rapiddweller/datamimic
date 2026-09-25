@@ -4,7 +4,9 @@
     {
       "id": "DOMAINS-API", "label": "api", "role": "interface",
       "packages": [
-        "datamimic_ce.domains.api"
+        "datamimic_ce.domains.api",
+        "datamimic_ce.domains.entity_registry",
+        "datamimic_ce.domains.facade"
       ],
       "responsibilities": ["Publish supported domain capabilities and dispatch validated requests."],
       "forbidden_responsibilities": ["Own generator algorithms or runtime execution."],
@@ -28,14 +30,16 @@
       "responsibilities": ["Own domain primitives, typed contracts, and deterministic seed semantics."],
       "forbidden_responsibilities": ["Import built-in generators, vertical services, or Runtime."],
       "provenance": ["docs/architecture/inner/target.md"],
-      "requires": [], "public": [], "decided_by": "agent"
+      "requires": [
+        {"component": "shared", "rationale": "The base service resolves subclass dataset patterns against shared domain data files.", "decided_by": "agent"}
+      ], "public": [], "decided_by": "agent"
     },
     {
       "id": "DOMAINS-SHARED", "label": "shared", "role": "component",
       "packages": [
         "datamimic_ce.domains.shared"
       ],
-      "responsibilities": ["Own reusable generators, converters, locale data, and built-in registrations."],
+      "responsibilities": ["Own reusable generators, converters, locale data, and dataset lookup."],
       "forbidden_responsibilities": ["Import vertical behavior or Runtime context."],
       "provenance": ["docs/architecture/inner/target.md"],
       "requires": [
@@ -110,7 +114,7 @@
     {
       "id": "DOMAINS-REQUIRES-COMPLETE", "kind": "complete_requires",
       "include_type_checking": true,
-      "rationale": "The core stays independent and verticals do not depend on one another.",
+      "rationale": "Verticals do not depend on one another; the core uses only shared dataset lookup.",
       "provenance": ["docs/architecture/inner/target.md"], "decided_by": "agent"
     }
   ]
