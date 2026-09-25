@@ -11,6 +11,7 @@ from unittest.mock import MagicMock, patch
 
 from datamimic_ce.engine.dsl.statements.reference_statement import ReferenceStatement
 from datamimic_ce.engine.io.api import DataSourcePagination
+from datamimic_ce.engine.io.clients.database_client import DatabaseClient
 from datamimic_ce.engine.io.clients.rdbms_client import RdbmsClient
 from datamimic_ce.engine.runtime.contexts.geniter_context import GenIterContext
 from datamimic_ce.engine.runtime.tasks.reference_task import ReferenceTask
@@ -62,6 +63,14 @@ class TestReferenceTask(unittest.TestCase):
 
         message = str(context.exception)
         self.assertIn("RDBMS and MongoDB are supported", message)
+
+    def test_execute_unsupported_database_client(self):
+        """A generic database client is not a supported reference source."""
+        self.context.root.clients.get.return_value = MagicMock(spec=DatabaseClient)
+        task = ReferenceTask(self.statement)
+
+        with self.assertRaisesRegex(ValueError, "RDBMS and MongoDB are supported"):
+            task.execute(self.context)
 
     def test_execute_empty_dataset(self):
         """Test execution with empty dataset."""

@@ -29,7 +29,6 @@ from datamimic_ce.engine.io.api import (
     database_get_by_page_with_query,
     database_get_by_page_with_type,
     database_get_random_rows_by_columns,
-    is_database_client,
     is_mongodb_client,
     is_rdbms_client,
     mongodb_count_collection,
@@ -415,7 +414,7 @@ def load_reference_source(
 ) -> list[dict[str, object]]:
     """Load, map and select reference rows behind one typed datasource boundary."""
     client = context.root.clients.get(stmt.source)
-    if not is_database_client(client):
+    if not (is_rdbms_client(client) or is_mongodb_client(client)):
         raise ValueError(
             f"<reference> '{stmt.name}': source '{stmt.source}' is not a "
             "<database> or <mongodb> client (RDBMS and MongoDB are supported)"
