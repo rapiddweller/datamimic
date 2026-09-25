@@ -60,7 +60,8 @@ check: lint typecheck test
 
 architecture-check: architecture-cycle-check
 	pytest -q tests_ce/architecture/test_inner_architecture_target.py
-	uvx --python 3.11 --from archkeel==0.7.0 archkeel validate --baseline known-violations.json --json | python3 -c 'import json, sys; raw = sys.stdin.read(); print(raw, end=""); report = json.loads(raw); measurements = report.get("measurements") or {}; scalars = measurements.get("scalars") or {}; coverage = report.get("coverage") or {}; valid = report.get("exit_code") == 0 and report.get("declared_rules") == "PASS" and report.get("observation_complete") == "PASS" and coverage.get("status") == "PASS" and scalars.get("violations") == 0 and scalars.get("unknown_positions") == 0 and scalars.get("cycle_edges") == 0 and report.get("baseline_new") == 0 and report.get("baseline_resolved") == 0; sys.exit(0 if valid else 1)'
+	# ArchKeel ratchets type-only/package SCC edges; Pylint checks executable import cycles.
+	uvx --python 3.11 --from archkeel==0.7.0 archkeel validate --baseline known-violations.json --json | python3 -c 'import json, sys; raw = sys.stdin.read(); print(raw, end=""); report = json.loads(raw); measurements = report.get("measurements") or {}; scalars = measurements.get("scalars") or {}; coverage = report.get("coverage") or {}; valid = report.get("exit_code") == 0 and report.get("declared_rules") == "PASS" and report.get("observation_complete") == "PASS" and coverage.get("status") == "PASS" and scalars.get("violations") == 0 and scalars.get("unknown_positions") == 0 and report.get("baseline_new") == 0 and report.get("baseline_resolved") == 0; sys.exit(0 if valid else 1)'
 
 architecture-cycle-check:
 	uvx --python 3.11 --from pylint==3.3.7 pylint --disable=all --enable=cyclic-import --persistent=n --score=n datamimic_ce
