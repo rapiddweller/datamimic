@@ -31,6 +31,7 @@ datamimic_ce/
 │   ├── dsl/
 │   ├── runtime/
 │   └── io/
+├── errors/
 ├── interfaces/
 │   ├── cli/
 │   ├── mcp/

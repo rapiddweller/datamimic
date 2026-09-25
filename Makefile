@@ -43,8 +43,8 @@ coverage:
 
 coverage-unit:
 	coverage run --source=$(PACKAGE) -m pytest $(TESTS)/unit_tests -n 0
-	@coverage report --format=total --omit='$(PACKAGE)/domains/common/examples/*.py,$(PACKAGE)/resources/demos/**/*.py,$(PACKAGE)/interfaces/demo.py' --fail-under=65.74 $(CE_COVERAGE_FILES)
-	@coverage xml --omit='$(PACKAGE)/domains/common/examples/*.py,$(PACKAGE)/resources/demos/**/*.py,$(PACKAGE)/interfaces/demo.py' $(CE_COVERAGE_FILES)
+	@coverage report --format=total --omit='$(PACKAGE)/domains/shared/examples/*.py,$(PACKAGE)/resources/demos/**/*.py,$(PACKAGE)/interfaces/demo.py' --fail-under=65.74 $(CE_COVERAGE_FILES)
+	@coverage xml --omit='$(PACKAGE)/domains/shared/examples/*.py,$(PACKAGE)/resources/demos/**/*.py,$(PACKAGE)/interfaces/demo.py' $(CE_COVERAGE_FILES)
 
 typecheck:
 	mypy $(PACKAGE)

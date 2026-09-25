@@ -15,7 +15,7 @@ class DomainError(Exception):
     details: dict[str, object] | None = None
 
     def __reduce__(self) -> tuple[type[DomainError], tuple[object, ...]]:
-        return type(self), (self.code, self.message, self.hint, self.path, self.request_hash, self.details)
+        return DomainError, (self.code, self.message, self.hint, self.path, self.request_hash, self.details)
 
     def __str__(self) -> str:
         return ""
@@ -44,7 +44,7 @@ class InvalidLocaleError(ValueError, DomainError):
         return self.message
 
     def __reduce__(self) -> tuple[type[InvalidLocaleError], tuple[object, ...]]:
-        return type(self), (
+        return InvalidLocaleError, (
             self.code,
             self.message,
             self.hint,

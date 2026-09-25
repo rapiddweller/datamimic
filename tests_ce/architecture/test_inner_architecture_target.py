@@ -30,7 +30,6 @@ TARGET_DIRECTORIES = (
     "authoring/adapters",
     "authoring/projection",
     "errors/catalog",
-    "errors/context",
     "domains/domain_core",
     "domains/shared/models",
     "domains/shared/services",

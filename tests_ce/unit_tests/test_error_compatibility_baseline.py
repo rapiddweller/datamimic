@@ -4,7 +4,8 @@ import pytest
 
 from datamimic_ce.authoring.adapters.linter import lint_source
 from datamimic_ce.domains.facade import generate_domain
-from datamimic_ce.domains.shared.services.address_api import AddressRequest, generate as generate_address
+from datamimic_ce.domains.shared.services.address_api import AddressRequest
+from datamimic_ce.domains.shared.services.address_api import generate as generate_address
 from datamimic_ce.errors import ErrorCode, InvalidLocaleError
 from datamimic_ce.errors.base import DomainError
 

@@ -1,7 +1,12 @@
-# CE/EE inner architecture target — draft
+# CE/EE inner architecture target
 
-Status: agent proposal. Alex approved a target-first contract and the same physical
-core structure in CE and EE. This is a path invariant, not merely matching boxes in
+The diagnosis below records the initial target design, not current violation counts.
+Current implementation evidence is in `../refactoring-study/experiment-2/step-11-inner.md`.
+Amendment 18 defers CE `errors/context/` until it has a real consumer.
+
+Status: CE implementation candidate; `errors/context/` remains an architect decision.
+Alex approved a target-first contract and the same physical core structure in CE and
+EE. This is a path invariant, not merely matching boxes in
 a report. EE runtime semantics lead; its current root-level engine owners are not
 the target. This document does not authorize an EE file move or change descriptor behavior.
 
@@ -16,7 +21,7 @@ their ownership must exist in both editions where the shared feature exists:
     api.py  contracts.py  spec.py
     domain/  application/  adapters/  projection/
   errors/
-    base.py  catalog/  context/  factory.py  formatters.py
+    base.py  catalog/  factory.py  formatters.py
   domains/
     domain_core/       # domain contracts and primitives
     shared/            # reusable generators and shared data
@@ -90,7 +95,7 @@ an extra level ArchKeel 0.7.0 can enforce in an `inside` contract.
 | Runtime | Lifecycle starts Setup; Generate owns per-statement worker policy and execution. Contexts own state; IO owns reads/writes. | EE keeps policies and workers under `tasks/generate/`, while Lifecycle only starts Setup. | Move CE workers below Generate, remove task-side client construction, and verify setup, seeded replay, and external-service descriptors. |
 | DSL | Typed models own grammar facts; parsing binds parser implementations; statements carry executable meaning. No second element catalog. | Both editions derive Authoring/DSL capabilities from typed owners. CE's registry↔parser SCC is 28 modules. | Separate registry facts from parser construction without duplicating the vocabulary; compare Authoring projections and XML behavior. |
 | Domains | `domain_core` owns primitives, `shared` owns common generators and registrations, and finance/healthcare/insurance/ecommerce/public-sector own their vertical behavior. | EE already uses this split; CE `common` and `domain_core` import each other. | Move CE `common` to `shared` and both built-in registries out of the core; fold `doctor`/`patient` into healthcare and `address`/`person` into shared. No compatibility shim. |
-| Errors | One root `errors/` owns stable user-facing codes, exception types, descriptor context, factories, and formatting. Local validation rules remain with their component; logging configuration remains in Runtime. | EE already owns this under `errors/`; CE has scattered exceptions and separate Authoring validation codes. | Migrate shared error semantics from EE into CE without copying EE-only codes or changing unrelated Authoring validation contracts. |
+| Errors | One root `errors/` owns stable user-facing codes, exception types, factories, and formatting. Local validation rules remain with their component; logging configuration remains in Runtime. | EE already owns this under `errors/`; CE has scattered exceptions and separate Authoring validation codes. | Migrate shared error semantics from EE into CE without copying EE-only codes or changing unrelated Authoring validation contracts. |
 | Authoring | Intent and rules are pure; projection derives DSL facts; adapters handle XML and bounded execution; application sequences use cases. | EE's `domain/application/adapters/projection` split and CE's transport separation. | The two reverse imports are removed; preserve this boundary while migrating to EE-like owner paths. |
 
 These are agent decisions, not a claim that current code satisfies them. No target
@@ -105,7 +110,7 @@ edge is permitted solely because the current implementation imports it.
 | `authoring/{domain,application,adapters,projection}` | CE logic is mostly flat. | EE already uses the four groups. | CE adopts the EE owner paths; public root `api.py`, `contracts.py`, and `spec.py` stay explicit. |
 | `engine/io/{clients,connection_config,data_sources,exporters}` | Already under `engine/io/`. | `clients/`, `data_sources/`, and `exporters/` are root siblings. | EE moves those owners into the matching paths; Kafka/RabbitMQ and other EE connectors stay under IO. |
 | `domains/{domain_core,shared,...}` | CE still uses `common` beside `domain_core`. | EE uses `shared` and `domain_core` plus vertical domains. | CE adopts the EE ownership split; `domains.common` is removed, not retained as an alias. |
-| `errors/{base.py,catalog,context,factory.py,formatters.py}` | No root `errors/`; exceptions are scattered. | EE already has the target owner. | CE adopts EE's shared stable codes and types; EE-only codes stay in EE under the same owner. |
+| `errors/{base.py,catalog,factory.py,formatters.py}` | No root `errors/`; exceptions are scattered. | EE already has the target owner. | CE adopts EE's shared stable codes and types; EE-only codes stay in EE under the same owner. |
 
 Same physical structure means comparable ownership and navigation, not identical
 edition behavior, runtime settings, Rust support, or seeded output. EE's source
