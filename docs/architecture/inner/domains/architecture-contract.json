@@ -1,0 +1,129 @@
+{
+  "schema_version": "2.1.0",
+  "components": [
+    {
+      "id": "DOMAINS-API", "label": "api", "role": "interface",
+      "packages": [
+        "datamimic_ce.domains.api",
+        "datamimic_ce.domains.facade",
+        "datamimic_ce.domains.schema_registry"
+      ],
+      "responsibilities": ["Publish supported domain capabilities and dispatch validated requests."],
+      "forbidden_responsibilities": ["Own generator algorithms or runtime execution."],
+      "provenance": ["docs/architecture/inner/target.md"],
+      "requires": [
+        {"component": "domain_core", "rationale": "The facade publishes core domain contracts.", "decided_by": "agent"},
+        {"component": "shared", "rationale": "The facade publishes reusable generators and services.", "decided_by": "agent"},
+        {"component": "finance", "rationale": "The facade exposes finance capabilities.", "decided_by": "agent"},
+        {"component": "healthcare", "rationale": "The facade exposes healthcare capabilities.", "decided_by": "agent"},
+        {"component": "insurance", "rationale": "The facade exposes insurance capabilities.", "decided_by": "agent"},
+        {"component": "ecommerce", "rationale": "The facade exposes ecommerce capabilities.", "decided_by": "agent"},
+        {"component": "public_sector", "rationale": "The facade exposes public-sector capabilities.", "decided_by": "agent"}
+      ],
+      "public": ["datamimic_ce.domains.api"], "decided_by": "agent"
+    },
+    {
+      "id": "DOMAINS-CORE", "label": "domain_core", "role": "foundation",
+      "packages": [
+        "datamimic_ce.domains.domain_core",
+        "datamimic_ce.domains.determinism",
+        "datamimic_ce.domains.exceptions",
+        "datamimic_ce.domains.json_types"
+      ],
+      "responsibilities": ["Own domain primitives, typed contracts, and deterministic seed semantics."],
+      "forbidden_responsibilities": ["Import built-in generators, vertical services, or Runtime."],
+      "provenance": ["docs/architecture/inner/target.md"],
+      "requires": [], "public": [], "decided_by": "agent"
+    },
+    {
+      "id": "DOMAINS-SHARED", "label": "shared", "role": "component",
+      "packages": [
+        "datamimic_ce.domains.common",
+        "datamimic_ce.domains.converters",
+        "datamimic_ce.domains.locales",
+        "datamimic_ce.domains.utils",
+        "datamimic_ce.domains.address",
+        "datamimic_ce.domains.person"
+      ],
+      "responsibilities": ["Own reusable generators, converters, locale data, and built-in registrations."],
+      "forbidden_responsibilities": ["Import vertical behavior or Runtime context."],
+      "provenance": ["docs/architecture/inner/target.md"],
+      "requires": [
+        {"component": "domain_core", "rationale": "Shared generators implement core domain contracts.", "decided_by": "agent"}
+      ],
+      "public": [], "decided_by": "agent"
+    },
+    {
+      "id": "DOMAINS-FINANCE", "label": "finance", "role": "component",
+      "packages": ["datamimic_ce.domains.finance"],
+      "responsibilities": ["Own finance entities, generators, and services."],
+      "forbidden_responsibilities": ["Import another vertical or Runtime."],
+      "provenance": ["docs/architecture/inner/target.md"],
+      "requires": [
+        {"component": "domain_core", "rationale": "Finance implements core domain contracts.", "decided_by": "agent"},
+        {"component": "shared", "rationale": "Finance reuses shared generators and services.", "decided_by": "agent"}
+      ],
+      "public": [], "decided_by": "agent"
+    },
+    {
+      "id": "DOMAINS-HEALTHCARE", "label": "healthcare", "role": "component",
+      "packages": [
+        "datamimic_ce.domains.healthcare",
+        "datamimic_ce.domains.doctor",
+        "datamimic_ce.domains.patient"
+      ],
+      "responsibilities": ["Own healthcare, doctor, and patient behavior."],
+      "forbidden_responsibilities": ["Import another vertical or Runtime."],
+      "provenance": ["docs/architecture/inner/target.md"],
+      "requires": [
+        {"component": "domain_core", "rationale": "Healthcare implements core domain contracts.", "decided_by": "agent"},
+        {"component": "shared", "rationale": "Healthcare reuses shared generators and services.", "decided_by": "agent"}
+      ],
+      "public": [], "decided_by": "agent"
+    },
+    {
+      "id": "DOMAINS-INSURANCE", "label": "insurance", "role": "component",
+      "packages": ["datamimic_ce.domains.insurance"],
+      "responsibilities": ["Own insurance entities, generators, and services."],
+      "forbidden_responsibilities": ["Import another vertical or Runtime."],
+      "provenance": ["docs/architecture/inner/target.md"],
+      "requires": [
+        {"component": "domain_core", "rationale": "Insurance implements core domain contracts.", "decided_by": "agent"},
+        {"component": "shared", "rationale": "Insurance reuses shared generators and services.", "decided_by": "agent"}
+      ],
+      "public": [], "decided_by": "agent"
+    },
+    {
+      "id": "DOMAINS-ECOMMERCE", "label": "ecommerce", "role": "component",
+      "packages": ["datamimic_ce.domains.ecommerce"],
+      "responsibilities": ["Own ecommerce entities, generators, and services."],
+      "forbidden_responsibilities": ["Import another vertical or Runtime."],
+      "provenance": ["docs/architecture/inner/target.md"],
+      "requires": [
+        {"component": "domain_core", "rationale": "Ecommerce implements core domain contracts.", "decided_by": "agent"},
+        {"component": "shared", "rationale": "Ecommerce reuses shared generators and services.", "decided_by": "agent"}
+      ],
+      "public": [], "decided_by": "agent"
+    },
+    {
+      "id": "DOMAINS-PUBLIC", "label": "public_sector", "role": "component",
+      "packages": ["datamimic_ce.domains.public_sector"],
+      "responsibilities": ["Own public-sector entities, generators, and services."],
+      "forbidden_responsibilities": ["Import another vertical or Runtime."],
+      "provenance": ["docs/architecture/inner/target.md"],
+      "requires": [
+        {"component": "domain_core", "rationale": "Public-sector behavior implements core domain contracts.", "decided_by": "agent"},
+        {"component": "shared", "rationale": "Public-sector behavior reuses shared services.", "decided_by": "agent"}
+      ],
+      "public": [], "decided_by": "agent"
+    }
+  ],
+  "rules": [
+    {
+      "id": "DOMAINS-REQUIRES-COMPLETE", "kind": "complete_requires",
+      "include_type_checking": true,
+      "rationale": "The core stays independent and verticals do not depend on one another.",
+      "provenance": ["docs/architecture/inner/target.md"], "decided_by": "agent"
+    }
+  ]
+}

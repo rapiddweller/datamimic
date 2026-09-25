@@ -85,6 +85,7 @@
         "datamimic_ce.authoring"
       ],
       "namespace": "datamimic_ce.authoring",
+      "inside": "docs/architecture/inner/authoring/architecture-contract.json",
       "responsibilities": [
         "Typed model.dm.json intent",
         "linting, compilation, reference projection, and bounded verification"
@@ -135,6 +136,7 @@
         "datamimic_ce.engine.dsl"
       ],
       "namespace": "datamimic_ce.engine.dsl",
+      "inside": "docs/architecture/inner/dsl/architecture-contract.json",
       "responsibilities": [
         "Canonical executable XML vocabulary",
         "typed descriptor model and parsing"
@@ -168,6 +170,7 @@
         "datamimic_ce.engine.runtime"
       ],
       "namespace": "datamimic_ce.engine.runtime",
+      "inside": "docs/architecture/inner/runtime/architecture-contract.json",
       "responsibilities": [
         "Descriptor run lifecycle",
         "evaluation, context, task, worker, and in-memory run state"
@@ -213,6 +216,7 @@
         "datamimic_ce.engine.io"
       ],
       "namespace": "datamimic_ce.engine.io",
+      "inside": "docs/architecture/inner/io/architecture-contract.json",
       "responsibilities": [
         "Sources, targets, external clients, and connection configuration"
       ],
@@ -246,6 +250,7 @@
         "datamimic_ce.domains"
       ],
       "namespace": "datamimic_ce.domains",
+      "inside": "docs/architecture/inner/domains/architecture-contract.json",
       "responsibilities": [
         "Domain entities, generators, converters, datasets, and documented Python services"
       ],
@@ -395,6 +400,7 @@
         "datamimic_ce.datamimic",
         "datamimic_ce.domains",
         "datamimic_ce.engine",
+        "datamimic_ce.errors",
         "datamimic_ce.factory",
         "datamimic_ce.interfaces",
         "datamimic_ce.resources"
@@ -402,6 +408,21 @@
       "rationale": "The package root exposes only first-class components and proven Python compatibility entry points.",
       "provenance": [
         "docs/architecture/refactoring-study/experiment-2/target-architecture.md"
+      ],
+      "decided_by": "architect"
+    },
+    {
+      "id": "ENGINE-LAYOUT",
+      "kind": "root_layout",
+      "root": "datamimic_ce.engine",
+      "allowed_children": [
+        "datamimic_ce.engine.dsl",
+        "datamimic_ce.engine.io",
+        "datamimic_ce.engine.runtime"
+      ],
+      "rationale": "CE and EE use the same physical DSL, runtime, and IO core skeleton; edition features live inside their owner.",
+      "provenance": [
+        "docs/architecture/inner/target.md"
       ],
       "decided_by": "architect"
     },

@@ -1,0 +1,83 @@
+{
+  "schema_version": "2.1.0",
+  "components": [
+    {
+      "id": "IO-API", "label": "api", "role": "interface",
+      "packages": ["datamimic_ce.engine.io.api", "datamimic_ce.engine.io.dataset_api"],
+      "responsibilities": ["Publish typed IO operations to other components."],
+      "forbidden_responsibilities": ["Own connectors, source loading, or output writes."],
+      "provenance": ["docs/architecture/inner/target.md"],
+      "requires": [
+        {"component": "contracts", "rationale": "API calls use IO-owned types.", "decided_by": "agent"},
+        {"component": "clients", "rationale": "The compatibility facade exposes connector classes.", "decided_by": "agent"},
+        {"component": "data_sources", "rationale": "The public facade delegates source loading.", "decided_by": "agent"},
+        {"component": "exporters", "rationale": "The public facade delegates target writing.", "decided_by": "agent"},
+        {"component": "files", "rationale": "Dataset entry points delegate file access.", "decided_by": "agent"}
+      ],
+      "public": ["datamimic_ce.engine.io.api", "datamimic_ce.engine.io.dataset_api"],
+      "decided_by": "agent"
+    },
+    {
+      "id": "IO-CONTRACTS", "label": "contracts", "role": "contract",
+      "packages": ["datamimic_ce.engine.io.contracts"],
+      "responsibilities": ["Define IO-owned request, result, and pagination types."],
+      "forbidden_responsibilities": ["Instantiate clients or execute reads and writes."],
+      "provenance": ["docs/architecture/inner/target.md"],
+      "requires": [], "public": ["datamimic_ce.engine.io.contracts"], "decided_by": "agent"
+    },
+    {
+      "id": "IO-CLIENTS", "label": "clients", "role": "component",
+      "packages": ["datamimic_ce.engine.io.clients", "datamimic_ce.engine.io.connection_config"],
+      "responsibilities": ["Construct and operate external connections."],
+      "forbidden_responsibilities": ["Choose source rows or exporter policy."],
+      "provenance": ["docs/architecture/inner/target.md"],
+      "requires": [
+        {"component": "contracts", "rationale": "Connector methods use IO-owned value types.", "decided_by": "agent"}
+      ],
+      "public": [], "decided_by": "agent"
+    },
+    {
+      "id": "IO-SOURCES", "label": "data_sources", "role": "component",
+      "packages": ["datamimic_ce.engine.io.data_sources"],
+      "responsibilities": ["Load, page, and select source data."],
+      "forbidden_responsibilities": ["Own runtime tasks or output writes."],
+      "provenance": ["docs/architecture/inner/target.md"],
+      "requires": [
+        {"component": "contracts", "rationale": "Source loading uses shared IO value types.", "decided_by": "agent"},
+        {"component": "clients", "rationale": "External reads use connectors.", "decided_by": "agent"},
+        {"component": "files", "rationale": "File sources use one file implementation.", "decided_by": "agent"}
+      ],
+      "public": [], "decided_by": "agent"
+    },
+    {
+      "id": "IO-EXPORTERS", "label": "exporters", "role": "component",
+      "packages": ["datamimic_ce.engine.io.exporters"],
+      "responsibilities": ["Own target writes, output formats, and exporter lifecycle."],
+      "forbidden_responsibilities": ["Read source rows or execute runtime tasks."],
+      "provenance": ["docs/architecture/inner/target.md"],
+      "requires": [
+        {"component": "contracts", "rationale": "Exporter entry points use IO-owned types.", "decided_by": "agent"},
+        {"component": "clients", "rationale": "Client-backed targets write through connectors.", "decided_by": "agent"},
+        {"component": "files", "rationale": "File targets use the IO file implementation.", "decided_by": "agent"}
+      ],
+      "public": [], "decided_by": "agent"
+    },
+    {
+      "id": "IO-FILES", "label": "files", "role": "foundation",
+      "packages": ["datamimic_ce.engine.io.file_cache", "datamimic_ce.engine.io.files"],
+      "responsibilities": ["Read file formats and cache reusable file content."],
+      "forbidden_responsibilities": ["Know runtime tasks, clients, or exporters."],
+      "provenance": ["docs/architecture/inner/target.md"],
+      "requires": [], "public": [], "decided_by": "agent"
+    }
+  ],
+  "rules": [
+    {
+      "id": "IO-REQUIRES-COMPLETE", "kind": "complete_requires",
+      "include_type_checking": true,
+      "rationale": "Connector code must not depend on source or exporter policy.",
+      "provenance": ["docs/architecture/inner/target.md"],
+      "decided_by": "agent"
+    }
+  ]
+}

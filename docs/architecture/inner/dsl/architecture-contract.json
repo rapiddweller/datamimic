@@ -1,0 +1,88 @@
+{
+  "schema_version": "2.1.0",
+  "components": [
+    {
+      "id": "DSL-API", "label": "api", "role": "interface",
+      "packages": ["datamimic_ce.engine.dsl.api"],
+      "responsibilities": ["Publish the canonical executable DSL vocabulary."],
+      "forbidden_responsibilities": ["Duplicate element definitions or execute descriptors."],
+      "provenance": ["docs/architecture/inner/target.md"],
+      "requires": [
+        {"component": "contracts", "rationale": "The facade publishes DSL-owned types.", "decided_by": "agent"},
+        {"component": "vocabulary", "rationale": "The facade publishes element and enum names.", "decided_by": "agent"},
+        {"component": "model", "rationale": "The facade publishes typed element definitions.", "decided_by": "agent"},
+        {"component": "statements", "rationale": "The facade publishes parsed statements.", "decided_by": "agent"},
+        {"component": "parsers", "rationale": "The facade publishes descriptor parsing.", "decided_by": "agent"}
+      ],
+      "public": ["datamimic_ce.engine.dsl.api"], "decided_by": "agent"
+    },
+    {
+      "id": "DSL-CONTRACTS", "label": "contracts", "role": "contract",
+      "packages": ["datamimic_ce.engine.dsl.contracts"],
+      "responsibilities": ["Define DSL-owned extension and capability types."],
+      "forbidden_responsibilities": ["Import concrete parsers or runtime execution."],
+      "provenance": ["docs/architecture/inner/target.md"],
+      "requires": [], "public": ["datamimic_ce.engine.dsl.contracts"], "decided_by": "agent"
+    },
+    {
+      "id": "DSL-VOCABULARY", "label": "vocabulary", "role": "foundation",
+      "packages": ["datamimic_ce.engine.dsl.constants", "datamimic_ce.engine.dsl.enums"],
+      "responsibilities": ["Own element names, attributes, and closed DSL value sets."],
+      "forbidden_responsibilities": ["Know models, parsers, or runtime tasks."],
+      "provenance": ["docs/architecture/inner/target.md"],
+      "requires": [], "public": [], "decided_by": "agent"
+    },
+    {
+      "id": "DSL-MODELS", "label": "model", "role": "component",
+      "packages": ["datamimic_ce.engine.dsl.model", "datamimic_ce.engine.dsl.timeseries"],
+      "responsibilities": ["Own typed element grammar, constraints, and static metadata."],
+      "forbidden_responsibilities": ["Construct parser implementations or execute tasks."],
+      "provenance": ["docs/architecture/inner/target.md"],
+      "requires": [
+        {"component": "contracts", "rationale": "Models implement DSL-owned extension types.", "decided_by": "agent"},
+        {"component": "vocabulary", "rationale": "Models use canonical DSL names and enums.", "decided_by": "agent"}
+      ],
+      "public": [], "decided_by": "agent"
+    },
+    {
+      "id": "DSL-STATEMENTS", "label": "statements", "role": "component",
+      "packages": ["datamimic_ce.engine.dsl.statements"],
+      "responsibilities": ["Represent parsed executable descriptor meaning without IO."],
+      "forbidden_responsibilities": ["Construct parsers or execute runtime tasks."],
+      "provenance": ["docs/architecture/inner/target.md"],
+      "requires": [
+        {"component": "contracts", "rationale": "Statements use DSL-owned extension types.", "decided_by": "agent"},
+        {"component": "vocabulary", "rationale": "Statements use canonical DSL values.", "decided_by": "agent"},
+        {"component": "model", "rationale": "Statements carry validated typed models.", "decided_by": "agent"}
+      ],
+      "public": [], "decided_by": "agent"
+    },
+    {
+      "id": "DSL-PARSING", "label": "parsers", "role": "component",
+      "packages": [
+        "datamimic_ce.engine.dsl.parsers",
+        "datamimic_ce.engine.dsl.properties",
+        "datamimic_ce.engine.dsl.xml"
+      ],
+      "responsibilities": ["Parse XML and bind element models to statement constructors."],
+      "forbidden_responsibilities": ["Own a second grammar catalog or execute descriptors."],
+      "provenance": ["docs/architecture/inner/target.md"],
+      "requires": [
+        {"component": "contracts", "rationale": "Parser factories follow DSL-owned signatures.", "decided_by": "agent"},
+        {"component": "vocabulary", "rationale": "Parsing recognizes canonical element names.", "decided_by": "agent"},
+        {"component": "model", "rationale": "Parsing validates against typed grammar models.", "decided_by": "agent"},
+        {"component": "statements", "rationale": "Parsing produces executable statements.", "decided_by": "agent"}
+      ],
+      "public": [], "decided_by": "agent"
+    }
+  ],
+  "rules": [
+    {
+      "id": "DSL-REQUIRES-COMPLETE", "kind": "complete_requires",
+      "include_type_checking": true,
+      "rationale": "Grammar facts flow into parsing; typed models never import concrete parsers.",
+      "provenance": ["docs/architecture/inner/target.md"],
+      "decided_by": "agent"
+    }
+  ]
+}

@@ -17,7 +17,7 @@ help:
 	@echo "  lint              Run ruff against $(PACKAGE)"
 	@echo "  format            Auto-format code with ruff"
 	@echo "  check             Run lint, typecheck, and tests"
-	@echo "  architecture-check Validate the architecture contract with ArchKeel 0.6.1"
+	@echo "  architecture-check Validate the architecture contract with ArchKeel 0.7.0"
 	@echo "  clean             Remove caches and build artifacts"
 
 install:
@@ -58,7 +58,7 @@ format:
 check: lint typecheck test
 
 architecture-check:
-	uvx --python 3.11 --from archkeel==0.6.1 archkeel validate --baseline known-violations.json --json | python3 -c 'import json, sys; raw = sys.stdin.read(); print(raw, end=""); report = json.loads(raw); measurements = report.get("measurements") or {}; scalars = measurements.get("scalars") or {}; coverage = report.get("coverage") or {}; valid = report.get("exit_code") == 0 and report.get("declared_rules") == "PASS" and report.get("observation_complete") == "PASS" and coverage.get("status") == "PASS" and scalars.get("violations") == 0 and scalars.get("unknown_positions") == 0 and report.get("baseline_new") == 0 and report.get("baseline_resolved") == 0; sys.exit(0 if valid else 1)'
+	uvx --python 3.11 --from archkeel==0.7.0 archkeel validate --baseline known-violations.json --json | python3 -c 'import json, sys; raw = sys.stdin.read(); print(raw, end=""); report = json.loads(raw); measurements = report.get("measurements") or {}; scalars = measurements.get("scalars") or {}; coverage = report.get("coverage") or {}; valid = report.get("exit_code") == 0 and report.get("declared_rules") == "PASS" and report.get("observation_complete") == "PASS" and coverage.get("status") == "PASS" and scalars.get("violations") == 0 and scalars.get("unknown_positions") == 0 and report.get("baseline_new") == 0 and report.get("baseline_resolved") == 0; sys.exit(0 if valid else 1)'
 
 clean:
 	rm -rf .pytest_cache .mypy_cache .ruff_cache htmlcov .coverage coverage.xml
