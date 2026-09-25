@@ -107,7 +107,7 @@ def test_core_packages_follow_the_physical_target() -> None:
         issues.append(f"missing target packages: {missing_directories}")
     if empty_directories:
         issues.append(f"empty target packages: {empty_directories}")
-    if (PACKAGE / "domains/common").exists() or (PACKAGE / "domains/common.py").exists():
+    if any((PACKAGE / "domains/common").rglob("*.py")) or (PACKAGE / "domains/common.py").exists():
         issues.append("domains.common must be removed, with no compatibility shim")
     if actual_engine_roots != {"dsl", "io", "runtime"}:
         issues.append(f"unexpected engine packages: {sorted(actual_engine_roots)}")
