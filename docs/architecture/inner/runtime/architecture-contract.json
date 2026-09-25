@@ -71,7 +71,6 @@
       "id": "RUNTIME-TASKS", "label": "tasks", "role": "component",
       "packages": [
         "datamimic_ce.engine.runtime.tasks",
-        "datamimic_ce.engine.runtime.workers",
         "datamimic_ce.engine.runtime.process",
         "datamimic_ce.engine.runtime.generators",
         "datamimic_ce.engine.runtime.sources",

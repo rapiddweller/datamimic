@@ -18,7 +18,7 @@ from lxml import etree
 from datamimic_ce.authoring.domain.diagnostics import Diagnostic
 from datamimic_ce.authoring.domain.rule_catalog import authoring_rule_definition
 from datamimic_ce.authoring.domain.rules.base import LintContext, Rule
-from datamimic_ce.domains.shared.literal_generators.number_sequences import finite_number_sequence_capacity
+from datamimic_ce.domains.api import finite_number_sequence_capacity
 from datamimic_ce.engine.dsl.api import (
     DATA_TYPE_DECIMAL,
     DATA_TYPE_FLOAT,

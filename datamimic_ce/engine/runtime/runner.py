@@ -99,6 +99,8 @@ class RuntimeRunSession:
                 test_mode=request.test_mode,
                 test_result_storage=self._test_result_storage,
                 descriptor_dir=request.descriptor_path.parent,
+                runtime_environment=settings.RUNTIME_ENVIRONMENT,
+                ray_debug=settings.RAY_DEBUG,
             ).execute()
         except ValueError as error:
             logger.error(f"Value error: {error}")

@@ -16,7 +16,7 @@ from typing import TYPE_CHECKING
 from pydantic import JsonValue, TypeAdapter
 
 if TYPE_CHECKING:
-    from datamimic_ce.domains.shared.entity_registry import EntitySpec
+    from datamimic_ce.domains.api import EntitySpec
 
 from datamimic_ce.authoring.contracts import AuthoringReferenceCategory, ReferenceTopic
 from datamimic_ce.authoring.domain.rule_catalog import (
@@ -31,7 +31,7 @@ from datamimic_ce.authoring.projection.reference_projection import (
     authoring_reference_projection,
     list_authoring_reference_queries,
 )
-from datamimic_ce.domains.shared.generator_registry import generator_namespace
+from datamimic_ce.domains.api import iter_generator_capabilities as domain_generator_capabilities
 from datamimic_ce.engine.dsl.api import (
     EXPORTER_CONSOLE_EXPORTER,
     EXPORTER_LOG_EXPORTER,
@@ -51,7 +51,6 @@ from datamimic_ce.engine.dsl.api import (
     RequiresWhenValue,
     ValidValues,
     canonical_tag,
-    describe_generator_type,
     element_aliases,
     resolved_values,
     serialize_constraints,
@@ -249,7 +248,7 @@ def element_reference(tag: str) -> str:
 
 @lru_cache(maxsize=1)
 def _generator_info() -> tuple[GeneratorCapability, ...]:
-    domain_capabilities = tuple(describe_generator_type(generator) for generator in generator_namespace().values())
+    domain_capabilities = tuple(domain_generator_capabilities())
     capabilities = (*domain_capabilities, *runtime_generator_capabilities())
     return tuple(sorted(capabilities, key=lambda capability: capability.name.casefold()))
 
@@ -281,7 +280,7 @@ def targets_reference() -> str:
 
 @lru_cache(maxsize=1)
 def _entity_specs() -> dict[str, "EntitySpec"]:
-    from datamimic_ce.domains.shared.entity_registry import list_entity_specs
+    from datamimic_ce.domains.api import list_entity_specs
 
     return {spec.entity: spec for spec in list_entity_specs()}
 

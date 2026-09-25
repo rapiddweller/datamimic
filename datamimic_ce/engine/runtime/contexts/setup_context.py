@@ -9,7 +9,7 @@ import random
 import secrets
 from pathlib import Path
 from random import Random
-from typing import TypedDict
+from typing import Literal, TypedDict
 
 from faker import Faker
 
@@ -68,6 +68,8 @@ class SetupContext(Context):
         demographic_context: DemographicContext | None = None,
         run_seed: RunSeed | None = None,
         domain_identifier_registry: dict[tuple[str, str], set[str]] | None = None,
+        runtime_environment: Literal["development", "production"] = "production",
+        ray_debug: bool = False,
     ):
         # SetupContext is always its root_context
         super().__init__(self)
@@ -113,6 +115,8 @@ class SetupContext(Context):
         self._serialized_generators: bytes | None = None
         self._demographic_context = demographic_context
         self._run_seed = run_seed if run_seed is not None else RunSeed.create(None)
+        self.runtime_environment = runtime_environment
+        self.ray_debug = ray_debug
         # Generator stream root: variables/keys without their own seed fork a reproducible child RNG from it.
         self._root_rng: Random | None = Random(self._run_seed.value) if self._run_seed.seeded else None
         # Cached call-time rng — populated lazily on first ``.rng`` access.
@@ -193,6 +197,8 @@ class SetupContext(Context):
             demographic_context=copy.deepcopy(self._demographic_context, memo),
             run_seed=self._run_seed,
             domain_identifier_registry=copy.deepcopy(self._domain_identifier_registry, memo),
+            runtime_environment=self.runtime_environment,
+            ray_debug=self.ray_debug,
         )
 
     @property

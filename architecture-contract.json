@@ -243,6 +243,30 @@
       "decided_by": "architect"
     },
     {
+      "id": "COMP-ERRORS",
+      "label": "errors",
+      "role": "foundation",
+      "packages": [
+        "datamimic_ce.errors"
+      ],
+      "namespace": "datamimic_ce.errors",
+      "responsibilities": [
+        "Stable shared error types and codes"
+      ],
+      "forbidden_responsibilities": [
+        "component-specific validation policy",
+        "runtime logging configuration"
+      ],
+      "provenance": [
+        "docs/architecture/inner/target.md"
+      ],
+      "requires": [],
+      "public": [
+        "datamimic_ce.errors.base"
+      ],
+      "decided_by": "architect"
+    },
+    {
       "id": "COMP-DOMAINS",
       "label": "domains",
       "role": "component",
@@ -263,6 +287,10 @@
         "docs/architecture/refactoring-study/experiment-2/target-architecture.md"
       ],
       "requires": [
+        {
+          "component": "errors",
+          "rationale": "Domain services raise stable shared errors."
+        },
         {
           "component": "dsl",
           "rationale": "Domain generators implement DSL-owned generator contracts."

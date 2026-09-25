@@ -18,11 +18,7 @@
       "packages": [
         "datamimic_ce.authoring.contracts",
         "datamimic_ce.authoring.spec",
-        "datamimic_ce.authoring.diagnostics",
-        "datamimic_ce.authoring.rule_catalog",
-        "datamimic_ce.authoring.derived_facts",
-        "datamimic_ce.authoring.script_semantics",
-        "datamimic_ce.authoring.rules"
+        "datamimic_ce.authoring.domain"
       ],
       "responsibilities": ["Own typed intent, rules, diagnostics, and pure acceptance facts."],
       "forbidden_responsibilities": ["Import Runtime or IO", "Parse files or execute descriptors"],
@@ -34,9 +30,7 @@
     {
       "id": "AUTHORING-PROJECTION", "label": "projection", "role": "projection",
       "packages": [
-        "datamimic_ce.authoring.reference",
-        "datamimic_ce.authoring.reference_projection",
-        "datamimic_ce.authoring.schema"
+        "datamimic_ce.authoring.projection"
       ],
       "responsibilities": ["Project reference and schema views from canonical DSL and intent facts."],
       "forbidden_responsibilities": ["Define a second DSL catalog or execute a run."],
@@ -49,11 +43,7 @@
     {
       "id": "AUTHORING-ADAPTERS", "label": "adapters", "role": "component",
       "packages": [
-        "datamimic_ce.authoring.compiler",
-        "datamimic_ce.authoring.dryrun",
-        "datamimic_ce.authoring.engine_check",
-        "datamimic_ce.authoring.linter",
-        "datamimic_ce.authoring.xml_loader"
+        "datamimic_ce.authoring.adapters"
       ],
       "responsibilities": ["Compile intent to XML and adapt bounded parse and run checks."],
       "forbidden_responsibilities": ["Own intent or duplicate executable DSL definitions."],
@@ -67,11 +57,7 @@
     {
       "id": "AUTHORING-APPLICATION", "label": "application", "role": "component",
       "packages": [
-        "datamimic_ce.authoring.service",
-        "datamimic_ce.authoring.acceptance",
-        "datamimic_ce.authoring.verification",
-        "datamimic_ce.authoring.intent_linter",
-        "datamimic_ce.authoring.intent_validation"
+        "datamimic_ce.authoring.application"
       ],
       "responsibilities": ["Sequence lint, compilation, bounded verification, and declared acceptance."],
       "forbidden_responsibilities": ["Define new grammar facts or directly execute Runtime internals."],

@@ -27,7 +27,7 @@
     },
     {
       "id": "IO-CLIENTS", "label": "clients", "role": "component",
-      "packages": ["datamimic_ce.engine.io.clients", "datamimic_ce.engine.io.connection_config"],
+      "packages": ["datamimic_ce.engine.io.clients", "datamimic_ce.engine.io.connection_config", "datamimic_ce.engine.io.client_operations"],
       "responsibilities": ["Construct and operate external connections."],
       "forbidden_responsibilities": ["Choose source rows or exporter policy."],
       "provenance": ["docs/architecture/inner/target.md"],

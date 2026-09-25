@@ -58,6 +58,7 @@ graph TD
     authoring --> python_compat
     authoring --> runtime
     domains --> dsl
+    domains --> errors
     domains --> io
     dsl --> python_compat
     interfaces --> authoring
@@ -88,6 +89,7 @@ graph TD
     authoring --> python_compat
     authoring --> runtime
     domains --> dsl
+    domains --> errors
     domains --> io
     dsl --> python_compat
     interfaces --> authoring

@@ -13,7 +13,6 @@ import dill
 
 from datamimic_ce.engine.dsl.api import CompositeStatement, GenerateStatement, KeyStatement, Statement, StatementUtil
 from datamimic_ce.engine.io.api import ExporterUtil, UnifiedBufferedExporter, count_query_length
-from datamimic_ce.engine.runtime.config import settings
 from datamimic_ce.engine.runtime.contexts.context import Context
 from datamimic_ce.engine.runtime.contexts.geniter_context import GenIterContext
 from datamimic_ce.engine.runtime.contexts.setup_context import SetupContext
@@ -302,7 +301,11 @@ class GenerateTask(CommonSubTask):
                         _ray_mod = _ray
                         mp_worker = RayGenerateWorker()
                         # Initialize Ray
-                        _ray_mod.init(ignore_reinit_error=True, local_mode=settings.RAY_DEBUG, include_dashboard=False)
+                        _ray_mod.init(
+                            ignore_reinit_error=True,
+                            local_mode=context.root.ray_debug,
+                            include_dashboard=False,
+                        )
                         is_ray_initialized = True
                     else:
                         raise ValueError(

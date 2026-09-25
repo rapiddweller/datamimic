@@ -6,6 +6,7 @@
 
 import copy
 from pathlib import Path
+from typing import Literal
 
 from datamimic_ce.domains.api import RunSeed
 from datamimic_ce.engine.dsl.api import SetupStatement
@@ -26,6 +27,8 @@ class SetupTask:
         test_mode: bool,
         test_result_storage: TestResultExporter,
         descriptor_dir: Path,
+        runtime_environment: Literal["development", "production"] = "production",
+        ray_debug: bool = False,
     ):
         self._descriptor_dir = descriptor_dir
         self._setup_stmt = setup_stmt
@@ -35,6 +38,8 @@ class SetupTask:
         self._properties = properties
         self._test_mode = test_mode
         self._test_result_storage = test_result_storage
+        self._runtime_environment = runtime_environment
+        self._ray_debug = ray_debug
         # Assign default setup config value
         self._use_mp = self._setup_stmt.use_mp
         self._default_separator = setup_stmt.default_separator or "|"
@@ -63,6 +68,8 @@ class SetupTask:
             default_source_scripted=self._setup_stmt.default_source_scripted,
             report_logging=self._setup_stmt.report_logging in (True, None),  # default value is True
             run_seed=RunSeed.create(self._setup_stmt.rng_seed),
+            runtime_environment=self._runtime_environment,
+            ray_debug=self._ray_debug,
         )
 
         for stmt in self._setup_stmt.sub_statements:

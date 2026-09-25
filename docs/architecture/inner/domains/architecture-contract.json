@@ -4,9 +4,7 @@
     {
       "id": "DOMAINS-API", "label": "api", "role": "interface",
       "packages": [
-        "datamimic_ce.domains.api",
-        "datamimic_ce.domains.facade",
-        "datamimic_ce.domains.schema_registry"
+        "datamimic_ce.domains.api"
       ],
       "responsibilities": ["Publish supported domain capabilities and dispatch validated requests."],
       "forbidden_responsibilities": ["Own generator algorithms or runtime execution."],
@@ -25,10 +23,7 @@
     {
       "id": "DOMAINS-CORE", "label": "domain_core", "role": "foundation",
       "packages": [
-        "datamimic_ce.domains.domain_core",
-        "datamimic_ce.domains.determinism",
-        "datamimic_ce.domains.exceptions",
-        "datamimic_ce.domains.json_types"
+        "datamimic_ce.domains.domain_core"
       ],
       "responsibilities": ["Own domain primitives, typed contracts, and deterministic seed semantics."],
       "forbidden_responsibilities": ["Import built-in generators, vertical services, or Runtime."],
@@ -38,12 +33,7 @@
     {
       "id": "DOMAINS-SHARED", "label": "shared", "role": "component",
       "packages": [
-        "datamimic_ce.domains.common",
-        "datamimic_ce.domains.converters",
-        "datamimic_ce.domains.locales",
-        "datamimic_ce.domains.utils",
-        "datamimic_ce.domains.address",
-        "datamimic_ce.domains.person"
+        "datamimic_ce.domains.shared"
       ],
       "responsibilities": ["Own reusable generators, converters, locale data, and built-in registrations."],
       "forbidden_responsibilities": ["Import vertical behavior or Runtime context."],
@@ -68,9 +58,7 @@
     {
       "id": "DOMAINS-HEALTHCARE", "label": "healthcare", "role": "component",
       "packages": [
-        "datamimic_ce.domains.healthcare",
-        "datamimic_ce.domains.doctor",
-        "datamimic_ce.domains.patient"
+        "datamimic_ce.domains.healthcare"
       ],
       "responsibilities": ["Own healthcare, doctor, and patient behavior."],
       "forbidden_responsibilities": ["Import another vertical or Runtime."],
