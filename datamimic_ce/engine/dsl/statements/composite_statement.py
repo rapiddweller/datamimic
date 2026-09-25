@@ -24,3 +24,13 @@ class CompositeStatement(Statement, ABC):
     @sub_statements.setter
     def sub_statements(self, sub_statements: list[Statement]) -> None:
         self._sub_statements = [] if sub_statements is None else sub_statements
+
+
+class ConditionBranchStatement(CompositeStatement, ABC):
+    @property
+    def child_parent(self) -> Statement:
+        """A branch is control flow; its children belong to the enclosing statement."""
+        condition = self.parent_stmt
+        if condition is None or condition.parent_stmt is None:
+            raise ValueError("Condition branch has no enclosing statement")
+        return condition.parent_stmt

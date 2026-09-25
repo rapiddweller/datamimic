@@ -6,10 +6,10 @@
 
 
 from datamimic_ce.engine.dsl.model.if_model import IfModel
-from datamimic_ce.engine.dsl.statements.composite_statement import CompositeStatement
+from datamimic_ce.engine.dsl.statements.composite_statement import CompositeStatement, ConditionBranchStatement
 
 
-class IfStatement(CompositeStatement):
+class IfStatement(ConditionBranchStatement):
     def __init__(self, model: IfModel, parent_stmt: CompositeStatement):
         super().__init__(name=None, parent_stmt=parent_stmt)
         self._condition = model.condition

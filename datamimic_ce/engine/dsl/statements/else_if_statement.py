@@ -5,10 +5,10 @@
 # For questions and support, contact: info@rapiddweller.com
 
 from datamimic_ce.engine.dsl.model.else_if_model import ElseIfModel
-from datamimic_ce.engine.dsl.statements.composite_statement import CompositeStatement
+from datamimic_ce.engine.dsl.statements.composite_statement import CompositeStatement, ConditionBranchStatement
 
 
-class ElseIfStatement(CompositeStatement):
+class ElseIfStatement(ConditionBranchStatement):
     def __init__(self, model: ElseIfModel, parent_stmt: CompositeStatement):
         super().__init__(name=None, parent_stmt=parent_stmt)
         self._condition = model.condition

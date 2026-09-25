@@ -8,9 +8,8 @@ import copy
 import logging
 import re
 from collections.abc import Callable
-from functools import lru_cache
 from pathlib import Path
-from typing import Literal
+from typing import Literal, Protocol, runtime_checkable
 
 from datamimic_ce.engine.dsl.constants import element_constants as tags
 from datamimic_ce.engine.dsl.constants.attribute_constants import ATTR_ENVIRONMENT, ATTR_ID, ATTR_SYSTEM
@@ -25,26 +24,6 @@ from datamimic_ce.engine.dsl.constants.element_constants import (
     EL_SETUP,
     EL_WHILE,
 )
-from datamimic_ce.engine.dsl.parsers.array_parser import ArrayParser
-from datamimic_ce.engine.dsl.parsers.assert_parser import AssertParser
-from datamimic_ce.engine.dsl.parsers.condition_parser import ConditionParser
-from datamimic_ce.engine.dsl.parsers.echo_parser import EchoParser
-from datamimic_ce.engine.dsl.parsers.element_parser import ElementParser
-from datamimic_ce.engine.dsl.parsers.else_if_parser import ElseIfParser
-from datamimic_ce.engine.dsl.parsers.else_parser import ElseParser
-from datamimic_ce.engine.dsl.parsers.execute_parser import ExecuteParser
-from datamimic_ce.engine.dsl.parsers.generate_parser import GenerateParser
-from datamimic_ce.engine.dsl.parsers.generator_parser import GeneratorParser
-from datamimic_ce.engine.dsl.parsers.if_parser import IfParser
-from datamimic_ce.engine.dsl.parsers.include_parser import IncludeParser
-from datamimic_ce.engine.dsl.parsers.key_parser import KeyParser
-from datamimic_ce.engine.dsl.parsers.memstore_parser import MemstoreParser
-from datamimic_ce.engine.dsl.parsers.nested_key_parser import NestedKeyParser
-from datamimic_ce.engine.dsl.parsers.reference_parser import ReferenceParser
-from datamimic_ce.engine.dsl.parsers.state_machine_parser import StateMachineParser
-from datamimic_ce.engine.dsl.parsers.statement_parser import StatementParser
-from datamimic_ce.engine.dsl.parsers.variable_parser import VariableParser
-from datamimic_ce.engine.dsl.parsers.while_parser import WhileParser
 from datamimic_ce.engine.dsl.properties import parse_properties
 from datamimic_ce.engine.dsl.statements.array_statement import ArrayStatement
 from datamimic_ce.engine.dsl.statements.composite_statement import CompositeStatement
@@ -60,41 +39,14 @@ from datamimic_ce.engine.dsl.xml import XmlElement, xml_tag
 logger = logging.getLogger("DATAMIMIC")
 
 
-@lru_cache(maxsize=1)
-def _builtin_parser_classes() -> dict[str, Callable[[XmlElement, dict], StatementParser]]:
-    """Bind parser implementations after the model-owned grammar is loaded."""
-    from datamimic_ce.engine.dsl.parsers.database_parser import DatabaseParser
-    from datamimic_ce.engine.dsl.parsers.demographics_parser import DemographicsParser
-    from datamimic_ce.engine.dsl.parsers.item_parser import ItemParser
-    from datamimic_ce.engine.dsl.parsers.list_parser import ListParser
-    from datamimic_ce.engine.dsl.parsers.mongodb_parser import MongoDBParser
+@runtime_checkable
+class _Parser(Protocol):
+    def parse(self, *args: object, **kwargs: object) -> Statement: ...
 
-    return {
-        tags.EL_GENERATE: GenerateParser,
-        tags.EL_KEY: KeyParser,
-        tags.EL_VARIABLE: VariableParser,
-        tags.EL_NESTED_KEY: NestedKeyParser,
-        tags.EL_ARRAY: ArrayParser,
-        tags.EL_LIST: ListParser,
-        tags.EL_ITEM: ItemParser,
-        tags.EL_REFERENCE: ReferenceParser,
-        tags.EL_INCLUDE: IncludeParser,
-        tags.EL_MEMSTORE: MemstoreParser,
-        tags.EL_EXECUTE: ExecuteParser,
-        tags.EL_DATABASE: DatabaseParser,
-        tags.EL_MONGODB: MongoDBParser,
-        tags.EL_IF: IfParser,
-        tags.EL_ELSE_IF: ElseIfParser,
-        tags.EL_ELSE: ElseParser,
-        tags.EL_CONDITION: ConditionParser,
-        tags.EL_ECHO: EchoParser,
-        tags.EL_ELEMENT: ElementParser,
-        tags.EL_GENERATOR: GeneratorParser,
-        tags.EL_DEMOGRAPHICS: DemographicsParser,
-        tags.EL_STATE_MACHINE: StateMachineParser,
-        tags.EL_WHILE: WhileParser,
-        tags.EL_ASSERT: AssertParser,
-    }
+    def set_runtime_environment(self, value: Literal["development", "production"]) -> None: ...
+
+
+_BUILTIN_PARSERS: dict[str, Callable[..., object]] = {}
 
 
 class ParserUtil:
@@ -139,13 +91,12 @@ class ParserUtil:
 
         tag = xml_tag(element)
         definition = get_element_definition(tag)
-        builtin_parsers = _builtin_parser_classes()
-        parser_class = None if definition is None else definition.parser or builtin_parsers.get(canonical_tag(tag))
+        parser_class = None if definition is None else definition.parser or _BUILTIN_PARSERS.get(canonical_tag(tag))
         if parser_class is None:
             raise ValueError(f"Cannot get parser for element <{tag}>")
         parser = parser_class(element, properties)
-        if not isinstance(parser, StatementParser):
-            raise TypeError(f"Parser for element <{tag}> must extend StatementParser")
+        if not isinstance(parser, _Parser):
+            raise TypeError(f"Parser for element <{tag}> does not implement the parser contract")
         if tag in {EL_DATABASE, EL_MONGODB}:
             parser.set_runtime_environment(runtime_environment)
         return parser
@@ -166,6 +117,8 @@ class ParserUtil:
         :param parent_stmt:
         :return:
         """
+        from datamimic_ce.engine.dsl.model.element_registry import canonical_tag
+
         result = []
         # Create a copied props for possible updating later, prevent updating original props dict
         copied_props = copy.deepcopy(properties) if properties else {}
@@ -176,42 +129,42 @@ class ParserUtil:
             if child_tag == EL_COMMENT:
                 continue
             parser = ParserUtil._get_parser_by_element(child_ele, copied_props, runtime_environment)
+            canonical = canonical_tag(child_tag)
             # TODO: add more child-element-able parsers such as
             #  attribute, reference, part,... (i.e. elements which have attribute 'name')
             stmt: Statement
-            if isinstance(parser, VariableParser | GenerateParser | NestedKeyParser | ElementParser):
-                if isinstance(parser, VariableParser) and xml_tag(element) == "setup":
+            if canonical in {EL_GENERATE, EL_NESTED_KEY, tags.EL_VARIABLE, tags.EL_ELEMENT}:
+                if canonical == tags.EL_VARIABLE and xml_tag(element) == EL_SETUP:
                     stmt = parser.parse(parent_stmt=parent_stmt, has_parent_setup=True)
-                elif isinstance(parser, GenerateParser | NestedKeyParser):
+                elif canonical in {EL_GENERATE, EL_NESTED_KEY}:
                     stmt = parser.parse(descriptor_dir=descriptor_dir, parent_stmt=parent_stmt)
                 else:
                     stmt = parser.parse(parent_stmt=parent_stmt)
             else:
-                if isinstance(
-                    parser,
-                    MemstoreParser
-                    | ExecuteParser
-                    | IncludeParser
-                    | ArrayParser
-                    | EchoParser
-                    | GeneratorParser
-                    | StateMachineParser
-                    | AssertParser,
-                ):
+                if canonical in {
+                    tags.EL_MEMSTORE,
+                    tags.EL_EXECUTE,
+                    tags.EL_INCLUDE,
+                    EL_ARRAY,
+                    tags.EL_ECHO,
+                    tags.EL_GENERATOR,
+                    tags.EL_STATE_MACHINE,
+                    tags.EL_ASSERT,
+                }:
                     stmt = parser.parse()
-                elif isinstance(parser, ReferenceParser):
+                elif canonical == tags.EL_REFERENCE:
                     # Pass the parent so the reference's full_name is a unique path (e.g.
                     # "orders|slot"), not a bare name that collides across <generate>s.
                     stmt = parser.parse(parent_stmt=parent_stmt)
-                elif isinstance(parser, KeyParser):
+                elif canonical == tags.EL_KEY:
                     stmt = parser.parse(descriptor_dir=descriptor_dir, parent_stmt=parent_stmt)
-                elif isinstance(parser, ConditionParser | WhileParser):
+                elif canonical in {EL_CONDITION, EL_WHILE}:
                     if not isinstance(parent_stmt, CompositeStatement):
                         raise TypeError(f"<{child_tag}> requires a composite parent statement")
                     stmt = parser.parse(
                         descriptor_dir=descriptor_dir, parent_stmt=parent_stmt
                     )
-                elif isinstance(parser, IfParser | ElseIfParser | ElseParser):
+                elif canonical in {tags.EL_IF, tags.EL_ELSE_IF, tags.EL_ELSE}:
                     if not isinstance(parent_stmt, ConditionStatement):
                         raise TypeError(f"<{child_tag}> requires a condition parent statement")
                     stmt = parser.parse(

@@ -42,6 +42,11 @@ class Statement(ABC):  # noqa: B024
     def parent_stmt(self) -> Optional["Statement"]:
         return self._parent_stmt
 
+    @property
+    def child_parent(self) -> "Statement":
+        """The statement a direct child should treat as its logical parent."""
+        return self
+
     def get_parent_full_name(self):
         # Split the path into components
         path_components = self.full_name.split(NAME_SEPARATOR)
@@ -63,18 +68,5 @@ class Statement(ABC):  # noqa: B024
             return parent_stmt
 
     @staticmethod
-    def _adjust_parent_stmt(parent_stmt):
-        """
-        Change parent statement of sub-statements of [IfStatement, ElseIfStatement, ElseStatement]
-        Because Condition/if-else statement just for decision-making,
-        its sub-statements parent should connect to parent statement of <Condition>
-        """
-        from datamimic_ce.engine.dsl.statements.else_if_statement import ElseIfStatement
-        from datamimic_ce.engine.dsl.statements.else_statement import ElseStatement
-        from datamimic_ce.engine.dsl.statements.if_statement import IfStatement
-
-        # attach sub statements of if/else (condition) to outer statement
-        if isinstance(parent_stmt, IfStatement | ElseIfStatement | ElseStatement):
-            parent_stmt = parent_stmt.parent_stmt.parent_stmt
-
-        return parent_stmt
+    def _adjust_parent_stmt(parent_stmt: Optional["Statement"]) -> Optional["Statement"]:
+        return None if parent_stmt is None else parent_stmt.child_parent
