@@ -4,10 +4,7 @@
 # See LICENSE file for the full text of the license.
 # For questions and support, contact: info@rapiddweller.com
 
-import copy
-import itertools
 import logging
-from collections.abc import Iterable, Iterator
 from pathlib import Path
 
 import xmltodict
@@ -15,7 +12,7 @@ from sqlalchemy.exc import OperationalError, ProgrammingError
 
 from datamimic_ce.engine.dsl.api import SourceFileFormat
 from datamimic_ce.engine.io.clients.rdbms_client import RdbmsClient
-from datamimic_ce.engine.io.contracts import DataSourcePagination
+from datamimic_ce.engine.io.contracts import DataSourcePagination, select_rows
 from datamimic_ce.engine.io.file_cache import FileContentStorage
 from datamimic_ce.engine.io.files import FileUtil, _is_json_object, _is_json_records
 
@@ -88,50 +85,6 @@ class DataSourceRegistry:
             return None
 
     @staticmethod
-    def get_cyclic_data_list(
-        data: Iterable, pagination: DataSourcePagination | None, cyclic: bool = False, offset: int = 0
-    ) -> list:
-        """
-        Get cyclic data from iterable data source. ``offset`` drops the first N rows BEFORE any
-        windowing, so page windows and a cyclic wrap both operate strictly on the post-offset
-        region (a wrap must never re-include skipped rows).
-        """
-        if offset:
-            data = list(data)[offset:]
-        if pagination is None:
-            start_idx = 0
-            end_idx = len(list(data))
-        else:
-            start_idx = pagination.skip
-            end_idx = pagination.skip + pagination.limit
-
-        if cyclic:
-            iterator = itertools.cycle(data)
-            return [copy.deepcopy(ele) for ele in itertools.islice(iterator, start_idx, end_idx)]
-        else:
-            return list(itertools.islice(data, start_idx, end_idx))
-
-    @staticmethod
-    def get_cyclic_data_iterator(
-        data: Iterable, pagination: DataSourcePagination | None, cyclic: bool | None = False
-    ) -> Iterator | None:
-        """
-        Get cyclic iterator from iterable data source
-        """
-        if pagination is None:
-            start_idx = 0
-            end_idx = len(list(data))
-        else:
-            start_idx = pagination.skip
-            end_idx = pagination.skip + pagination.limit
-
-        if cyclic:
-            iterator = itertools.cycle(data)
-            return itertools.cycle(list(itertools.islice(iterator, start_idx, end_idx))[: end_idx - start_idx])
-        else:
-            return itertools.islice(data, start_idx, end_idx)
-
-    @staticmethod
     def load_csv_file(
         file_path: Path,
         separator: str,
@@ -159,7 +112,7 @@ class DataSourceRegistry:
             if (start_idx is not None and end_idx is not None)
             else None
         )
-        return DataSourceRegistry.get_cyclic_data_list(
+        return select_rows(
             data=file_data, cyclic=cyclic, pagination=pagination, offset=offset
         )
 
@@ -189,7 +142,7 @@ class DataSourceRegistry:
             if (start_idx is not None and end_idx is not None)
             else None
         )
-        return DataSourceRegistry.get_cyclic_data_list(
+        return select_rows(
             data=file_data, cyclic=cyclic, pagination=pagination, offset=offset
         )
 
@@ -204,7 +157,7 @@ class DataSourceRegistry:
             if (start_idx is not None and end_idx is not None)
             else None
         )
-        return DataSourceRegistry.get_cyclic_data_list(
+        return select_rows(
             data=file_data, cyclic=cyclic if cyclic is not None else False, pagination=pagination, offset=offset
         )
 
@@ -219,7 +172,7 @@ class DataSourceRegistry:
             if (start_idx is not None and end_idx is not None)
             else None
         )
-        return DataSourceRegistry.get_cyclic_data_list(
+        return select_rows(
             data=file_data, cyclic=cyclic if cyclic is not None else False, pagination=pagination, offset=offset
         )
 
@@ -247,7 +200,7 @@ class DataSourceRegistry:
             if (start_idx is not None and end_idx is not None)
             else None
         )
-        return DataSourceRegistry.get_cyclic_data_list(data=items, cyclic=cyclic, pagination=pagination, offset=offset)
+        return select_rows(data=items, cyclic=cyclic, pagination=pagination, offset=offset)
 
     @staticmethod
     def load_xml_file_with_operation(

@@ -21,6 +21,7 @@ from datamimic_ce.engine.dsl.api import (
     source_file_format_for,
 )
 from datamimic_ce.engine.io.api import DataSourcePagination, DataSourceRegistry, FileUtil, MongoDBClient, RdbmsClient
+from datamimic_ce.engine.io.contracts import select_rows
 from datamimic_ce.engine.runtime.contexts.context import Context
 from datamimic_ce.engine.runtime.contexts.geniter_context import GenIterContext
 from datamimic_ce.engine.runtime.contexts.setup_context import SetupContext
@@ -54,7 +55,7 @@ def has_mongodb_upsert_target(targets: set[str], setup_context: SetupContext) ->
 def window_nested_key_rows(data: list[object], count: int | None, cyclic: bool | None) -> list[object]:
     """Select the rows for one nested-key execution."""
     size = len(data) if count is None else count if cyclic else min(count, len(data))
-    return DataSourceRegistry.get_cyclic_data_list(
+    return select_rows(
         data=data,
         pagination=DataSourcePagination(0, size),
         cyclic=bool(cyclic),

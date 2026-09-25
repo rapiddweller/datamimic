@@ -20,7 +20,7 @@
     {
       "id": "IO-CONTRACTS", "label": "contracts", "role": "contract",
       "packages": ["datamimic_ce.engine.io.contracts"],
-      "responsibilities": ["Define IO-owned request, result, and pagination types."],
+      "responsibilities": ["Define IO-owned request/result types and pure pagination primitives."],
       "forbidden_responsibilities": ["Instantiate clients or execute reads and writes."],
       "provenance": ["docs/architecture/inner/target.md"],
       "requires": [], "public": ["datamimic_ce.engine.io.contracts"], "decided_by": "agent"

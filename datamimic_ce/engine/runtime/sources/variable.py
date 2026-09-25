@@ -15,10 +15,10 @@ from datamimic_ce.engine.dsl.api import (
 from datamimic_ce.engine.io.api import (
     DatabaseClient,
     DataSourcePagination,
-    DataSourceRegistry,
     FileUtil,
     WeightedEntityDataSource,
 )
+from datamimic_ce.engine.io.contracts import select_row_iterator, select_rows
 from datamimic_ce.engine.runtime.contexts.context import Context
 from datamimic_ce.engine.runtime.contexts.setup_context import SetupContext
 from datamimic_ce.engine.runtime.evaluation import interpolate_variables
@@ -150,7 +150,7 @@ def plan_variable_source(
                 stmt.cyclic and (pagination.limit > length or pagination.skip + pagination.limit > length)
             ):
                 rows = client.get_by_page_with_query(rendered_selector, DataSourcePagination(skip=0, limit=length))
-                data = DataSourceRegistry.get_cyclic_data_list(rows, pagination, cyclic=bool(stmt.cyclic))
+                data = select_rows(rows, pagination, cyclic=bool(stmt.cyclic))
             else:
                 data = client.get_by_page_with_query(rendered_selector, pagination)
         return _variable_data_plan(context, stmt, data, pagination, force_full_pool=force_full_pool)
@@ -167,7 +167,7 @@ def plan_variable_source(
         else:
             raise ValueError(f"Unsupported <variable> source format: {source_format.value}")
         if not (loads_all or force_full_pool):
-            data = DataSourceRegistry.get_cyclic_data_iterator(data, pagination, stmt.cyclic)
+            data = select_row_iterator(data, pagination, bool(stmt.cyclic))
         return _variable_data_plan(context, stmt, data, pagination, force_full_pool=force_full_pool)
 
     client = context.get_client_by_id(source)
@@ -180,7 +180,7 @@ def plan_variable_source(
         elif loads_all or force_full_pool:
             data = client.get_by_page_with_type(product_type)
         elif stmt.cyclic:
-            data = DataSourceRegistry.get_cyclic_data_list(
+            data = select_rows(
                 client.get_by_page_with_type(product_type), pagination, cyclic=True
             )
         else:
@@ -235,4 +235,4 @@ def load_variable_lazy_source(
             else get_distributed_data(data, pagination, stmt.cyclic, seed, stmt.distribution)
         )
         return iter(selected)
-    return DataSourceRegistry.get_cyclic_data_iterator(data, pagination, stmt.cyclic)
+    return select_row_iterator(data, pagination, bool(stmt.cyclic))

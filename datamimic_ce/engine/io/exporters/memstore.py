@@ -6,7 +6,7 @@
 
 import logging
 
-from datamimic_ce.engine.io.contracts import DataSourcePagination
+from datamimic_ce.engine.io.contracts import DataSourcePagination, select_rows
 from datamimic_ce.engine.io.exporters.exporter import Exporter
 
 logger = logging.getLogger("DATAMIMIC")
@@ -39,9 +39,7 @@ class Memstore(Exporter):
         :return:
         """
         try:
-            from datamimic_ce.engine.io.data_sources.data_source_registry import DataSourceRegistry
-
-            return DataSourceRegistry.get_cyclic_data_list(
+            return select_rows(
                 data=self._storage[product_type], cyclic=cyclic, pagination=pagination
             )
         except KeyError as e:
