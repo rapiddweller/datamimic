@@ -13,6 +13,8 @@ Safety model (allow_side_effects=False, the default):
   client targets (no DB writes), ConsoleExporter (writes stdout — would corrupt
   a stdio MCP transport) and LogExporter
 - <execute> statements (arbitrary SQL/scripts) refuse the run with DM003
+- XML <include> statements refuse the run with DM003 until included statements
+  can inherit the same target and count limits
 - DB/Mongo SOURCES stay allowed — they are reads; connectivity errors surface
   as DM002 with a hint at the conf/{env}.env.properties convention
 
@@ -353,6 +355,19 @@ def _contains_execute(root_stmt: object) -> bool:
     def _walk(stmt: object) -> bool:
         if isinstance(stmt, ExecuteStatement):
             return True
+        if isinstance(stmt, CompositeStatement):
+            return any(_walk(sub) for sub in stmt.sub_statements)
+        return False
+
+    return _walk(root_stmt)
+
+
+def _contains_unbounded_include(root_stmt: object) -> bool:
+    from datamimic_ce.engine.dsl.api import CompositeStatement, IncludeStatement
+
+    def _walk(stmt: object) -> bool:
+        if isinstance(stmt, IncludeStatement):
+            return not stmt.uri.endswith(".properties")
         if isinstance(stmt, CompositeStatement):
             return any(_walk(sub) for sub in stmt.sub_statements)
         return False
@@ -1279,7 +1294,9 @@ def _execute_captured(
     try:
         from datamimic_ce.engine.runtime.api import runtime_environment
 
-        has_execute = _contains_execute(DescriptorParser.parse(path, None, runtime_environment()))
+        root_stmt = DescriptorParser.parse(path, None, runtime_environment())
+        has_execute = _contains_execute(root_stmt)
+        has_unbounded_include = _contains_unbounded_include(root_stmt)
     except Exception as err:
         return _failed_capture(
             _run_error(RULE_RUNTIME_ERROR, f"Dry-run failed: {err}", _runtime_hint(err), lint),
@@ -1293,6 +1310,17 @@ def _execute_captured(
                 "Re-run with allow_side_effects=true if the statement is safe to execute.",
                 lint,
                 element="execute",
+            ),
+            max_count,
+        )
+    if has_unbounded_include:
+        return _failed_capture(
+            _run_error(
+                RULE_SIDE_EFFECT_REFUSAL,
+                "Descriptor contains an XML <include> that cannot inherit dry-run safety limits.",
+                "Inline the included XML to dry-run it, or use a full run after reviewing its effects.",
+                lint,
+                element="include",
             ),
             max_count,
         )
