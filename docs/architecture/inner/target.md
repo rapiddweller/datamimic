@@ -31,7 +31,10 @@ their ownership must exist in both editions where the shared feature exists:
       clients/  connection_config/  data_sources/  exporters/
     runtime/
       api.py  contracts.py  logging.py
-      contexts/  tasks/  workers/  storage/  lifecycle/  scripting/
+      contexts/  storage/  lifecycle/  scripting/
+      tasks/
+        generate/
+          workers/  services/policies/
   interfaces/
 ```
 
@@ -55,18 +58,19 @@ SCCs and 171 cycle edges. The largest SCCs contain 28 DSL and 23 Runtime modules
 ArchKeel's automatic Runtime draft made 15 components and 210 pair decisions; one
 component per directory or file would codify noise, not ownership.
 
-All five CE component interiors now have active drafts. ArchKeel 0.7.0 parses all
-476 CE files and reports 97 target violations: Domains 58, DSL 26, IO 6,
-Runtime 5, Authoring 2. The parent `requires` edges and numeric baseline were
-not widened. These are migration work, not permissions to add to `requires`.
+All five CE component interiors have active drafts. ArchKeel 0.7.0 parses all
+476 CE files and reports 94 target violations after correcting three wrongly
+forbidden Generate-to-worker edges (the first draft reported 97). The parent
+`requires` edges and numeric baseline were not widened. These are rule findings,
+not 94 independent design decisions.
 
-| Interior | Target violations | Main cause, not 97 independent design decisions |
-| --- | ---: | --- |
-| Domains | 58 | `domain_core` registries import shared generators and all vertical services; `base_domain_service` imports a shared utility. Move registration to `shared` instead of permitting reverse dependencies. |
-| DSL | 26 | The model-side element registry imports concrete parsers. Bind them from the parser side. |
-| IO | 6 | Three clients import source policy; `exporters.memstore` is imported by source modules. Move shared types and ownership to the correct side. |
-| Runtime | 5 | A task imports the public facade, another reads global config, and `generate_task` schedules three worker implementations. Scheduling belongs to lifecycle. |
-| Authoring | 2 | `rules.base` imports schema projection and XML loading. Pass pure facts into rules instead. |
+| Interior | Main cause to inspect |
+| --- | --- |
+| Domains | `domain_core` registries import shared generators and vertical services; place registration with its owner instead of permitting reverse dependencies. |
+| DSL | The model-side element registry imports concrete parsers; bind implementations from the parser side. |
+| IO | Clients import source policy, and source modules import `exporters.memstore`; move policy and shared types to their owners. |
+| Runtime | Generate-to-worker imports are legitimate inside Generate orchestration. Investigate remaining facade and global-config dependencies separately. |
+| Authoring | `rules.base` imports a schema fact lookup and a pure element-path helper; move those small facts/functions to the rule/domain owner, not a new framework. |
 
 Current-file assignments cover every non-root module within the five interiors.
 Their root `__init__.py` modules remain unassigned in the report; notably,
@@ -83,7 +87,7 @@ an extra level ArchKeel 0.7.0 can enforce in an `inside` contract.
 | Area | Target boundary | Basis | Consequence |
 | --- | --- | --- | --- |
 | IO | Separate API, contracts, clients, sources, exporters, and files. Sources read through clients; exporters own writes; clients do not import source policy. | EE read/write ownership and CE's three-module client/source SCC. | Move pagination types and cyclic selection out of clients; retain descriptor behavior. |
-| Runtime | Lifecycle schedules; workers execute tasks; contexts own state; logging and scripting are separate runtime owners. IO constructs clients and owns reads/writes. | EE's accepted no-tasks-to-clients rule. CE `generate_task` schedules workers, while workers import tasks. | Move scheduling out of tasks, replace task-side client construction behind a typed IO seam, and verify setup, seeded replay, and external-service descriptors. |
+| Runtime | Lifecycle starts Setup; Generate owns per-statement worker policy and execution. Contexts own state; IO owns reads/writes. | EE keeps policies and workers under `tasks/generate/`, while Lifecycle only starts Setup. | Move CE workers below Generate, remove task-side client construction, and verify setup, seeded replay, and external-service descriptors. |
 | DSL | Typed models own grammar facts; parsing binds parser implementations; statements carry executable meaning. No second element catalog. | Both editions derive Authoring/DSL capabilities from typed owners. CE's registry↔parser SCC is 28 modules. | Separate registry facts from parser construction without duplicating the vocabulary; compare Authoring projections and XML behavior. |
 | Domains | `domain_core` owns primitives, `shared` owns common generators and registrations, and finance/healthcare/insurance/ecommerce/public-sector own their vertical behavior. | EE already uses this split; CE `common` and `domain_core` import each other. | Move CE `common` to `shared` and both built-in registries out of the core; fold `doctor`/`patient` into healthcare and `address`/`person` into shared. No compatibility shim. |
 | Errors | One root `errors/` owns stable user-facing codes, exception types, descriptor context, factories, and formatting. Local validation rules remain with their component; logging configuration remains in Runtime. | EE already owns this under `errors/`; CE has scattered exceptions and separate Authoring validation codes. | Migrate shared error semantics from EE into CE without copying EE-only codes or changing unrelated Authoring validation contracts. |
@@ -97,7 +101,7 @@ edge is permitted solely because the current implementation imports it.
 | Shared target | CE today | EE today | Migration consequence |
 | --- | --- | --- | --- |
 | `engine/dsl/{model,parsers,statements,constants,enums}` | Already under `engine/dsl/`. | `model/`, `parsers/`, `statements/`, `constants/`, `dsl_contract/` are root siblings. | EE moves these owners into the matching paths without copying DSL facts into Authoring. |
-| `engine/runtime/{contexts,tasks,workers,storage,lifecycle,scripting}` | CE has contexts/tasks/workers/storage; lifecycle and scripting logic is still flat. | `tasks/`, `contexts/`, `lifecycle/`, and scripting are root siblings; worker code is below tasks. | Both editions use the same owner paths; Rust and advanced policies remain inside Runtime, not new root peers. |
+| `engine/runtime/{contexts,tasks,storage,lifecycle,scripting}` with `tasks/generate/workers` | CE workers still sit beside tasks; lifecycle and scripting logic is partly flat. | `tasks/`, `contexts/`, and `lifecycle/` are root siblings; workers and policy live under `tasks/generate/`. | Both editions use the same owner paths; Rust and advanced policies remain inside Runtime, not new root peers. |
 | `authoring/{domain,application,adapters,projection}` | CE logic is mostly flat. | EE already uses the four groups. | CE adopts the EE owner paths; public root `api.py`, `contracts.py`, and `spec.py` stay explicit. |
 | `engine/io/{clients,connection_config,data_sources,exporters}` | Already under `engine/io/`. | `clients/`, `data_sources/`, and `exporters/` are root siblings. | EE moves those owners into the matching paths; Kafka/RabbitMQ and other EE connectors stay under IO. |
 | `domains/{domain_core,shared,...}` | CE still uses `common` beside `domain_core`. | EE uses `shared` and `domain_core` plus vertical domains. | CE adopts the EE ownership split; `domains.common` is removed, not retained as an alias. |
@@ -133,6 +137,40 @@ exists (`reference.package_unscanned`). The first implementation slice adds
 real code, declares the component, and activates its public boundary. For a
 failure supported in both editions, verify the same stable code and public
 error type; EE-only codes remain EE-only.
+
+## Entry points and acceptance
+
+```text
+CLI run / Python DataMimic or factory
+  -> Runtime API -> DSL parse -> Setup -> Generate/other tasks
+  -> IO data sources and exporters -> result or stable error
+
+CLI lint/dry-run/scaffold / MCP tools
+  -> Authoring API -> intent projection or XML lint
+  -> optional bounded Runtime execution -> diagnostics and verification
+```
+
+CLI and MCP adapt requests and present results; they do not own execution or
+authoring policy. MCP `datamimic_run` is a bounded dry-run, not the unrestricted
+CLI `run`. Public boundaries must expose typed operations and results, not
+concrete client or exporter classes merely re-exported through `io.api`.
+Runtime Lifecycle prepares and starts Setup; Generate owns worker selection for
+each statement. IO owns source routing and write policy. The same concern has
+one owner in both editions.
+
+Acceptance requires no production module dependency cycles, not just no cycles
+between top-level components. Function-local imports do not erase a dependency
+cycle. The current Pylint 3.3.7 diagnostic reports 56 overlapping cycle paths;
+triage shared causes before treating that as 56 separate fixes. ArchKeel 0.7.0
+observes module cycles but does not enforce them in `inside` contracts. Until
+it does, use one targeted Pylint cycle check alongside ArchKeel and the DSL
+behavior suite; do not add a parallel collection of custom gates.
+
+Bounded Authoring must apply its count, target, and side-effect policy to every
+descriptor expansion. CE currently rejects XML `<include>` during dry-run
+because included statements are parsed later; `.properties` includes remain
+allowed. Safe support for XML includes requires a separately verified expansion
+path. Full `run` retains XML include behavior.
 
 ## Tool and delivery limits
 

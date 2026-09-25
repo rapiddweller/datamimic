@@ -71,12 +71,14 @@
       "id": "RUNTIME-TASKS", "label": "tasks", "role": "component",
       "packages": [
         "datamimic_ce.engine.runtime.tasks",
+        "datamimic_ce.engine.runtime.workers",
+        "datamimic_ce.engine.runtime.process",
         "datamimic_ce.engine.runtime.generators",
         "datamimic_ce.engine.runtime.sources",
         "datamimic_ce.engine.runtime.counts"
       ],
-      "responsibilities": ["Execute descriptor steps; ask IO to read or write through its public boundary."],
-      "forbidden_responsibilities": ["Construct database clients", "Schedule workers", "Own source connector policy"],
+      "responsibilities": ["Execute descriptor steps and choose workers per Generate statement; ask IO to read or write through its public boundary."],
+      "forbidden_responsibilities": ["Construct database clients", "Own source connector policy"],
       "provenance": ["docs/architecture/inner/target.md"],
       "requires": [
         {"component": "contracts", "rationale": "Tasks use runtime-owned plans.", "decided_by": "agent"},
@@ -88,33 +90,18 @@
       "public": [], "decided_by": "agent"
     },
     {
-      "id": "RUNTIME-WORKERS", "label": "workers", "role": "component",
-      "packages": ["datamimic_ce.engine.runtime.workers", "datamimic_ce.engine.runtime.process"],
-      "responsibilities": ["Execute a supplied task plan in one process or worker process."],
-      "forbidden_responsibilities": ["Choose worker policy or construct database clients."],
-      "provenance": ["docs/architecture/inner/target.md"],
-      "requires": [
-        {"component": "contracts", "rationale": "Worker inputs and outputs use runtime-owned plan types.", "decided_by": "agent"},
-        {"component": "contexts", "rationale": "Workers create execution contexts.", "decided_by": "agent"},
-        {"component": "tasks", "rationale": "Workers execute typed tasks.", "decided_by": "agent"},
-        {"component": "logging", "rationale": "Workers report execution through runtime logging.", "decided_by": "agent"}
-      ],
-      "public": [], "decided_by": "agent"
-    },
-    {
       "id": "RUNTIME-LIFECYCLE", "label": "lifecycle", "role": "component",
       "packages": [
         "datamimic_ce.engine.runtime.runner",
         "datamimic_ce.engine.runtime.config"
       ],
-      "responsibilities": ["Prepare, schedule, log, and complete descriptor runs."],
+      "responsibilities": ["Prepare, invoke setup, log, and complete descriptor runs."],
       "forbidden_responsibilities": ["Implement source connectors or DSL grammar."],
       "provenance": ["docs/architecture/inner/target.md"],
       "requires": [
         {"component": "contracts", "rationale": "Run lifecycle accepts and returns typed runtime values.", "decided_by": "agent"},
         {"component": "contexts", "rationale": "Run lifecycle creates execution context.", "decided_by": "agent"},
         {"component": "tasks", "rationale": "Run lifecycle starts the setup task.", "decided_by": "agent"},
-        {"component": "workers", "rationale": "Run lifecycle schedules worker execution.", "decided_by": "agent"},
         {"component": "logging", "rationale": "Run lifecycle configures runtime logging.", "decided_by": "agent"}
       ],
       "public": [], "decided_by": "agent"
@@ -124,7 +111,7 @@
     {
       "id": "RUNTIME-REQUIRES-COMPLETE", "kind": "complete_requires",
       "include_type_checking": true,
-      "rationale": "Task execution cannot depend back on the facade or worker scheduler.",
+      "rationale": "Task execution cannot depend back on the run facade or lifecycle.",
       "provenance": ["docs/architecture/inner/target.md"], "decided_by": "agent"
     }
   ]
