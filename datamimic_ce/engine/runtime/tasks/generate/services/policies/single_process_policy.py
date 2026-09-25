@@ -17,14 +17,13 @@ from dataclasses import dataclass
 
 from datamimic_ce.engine.dsl.api import (
     CompositeStatement,
-    Dbms,
     GenerateStatement,
     KeyStatement,
     ReferenceStatement,
     Statement,
     VariableStatement,
 )
-from datamimic_ce.engine.io.api import Client, RdbmsClient
+from datamimic_ce.engine.io.api import Client, uses_mysql_sequence_storage
 from datamimic_ce.engine.runtime.logging import logger
 from datamimic_ce.engine.runtime.tasks.entity_constructor import _parse_constructor_string
 
@@ -75,11 +74,7 @@ def _seeded(stmt: GenerateStatement, seeded: bool, clients: ClientMap) -> bool:
 
 
 def _uses_mysql_sequence(stmt: GenerateStatement, seeded: bool, clients: ClientMap) -> bool:
-    mysql_sources = {
-        source_id
-        for source_id, client in clients.items()
-        if isinstance(client, RdbmsClient) and client.credential.dbms is Dbms.MYSQL
-    }
+    mysql_sources = {source_id for source_id, client in clients.items() if uses_mysql_sequence_storage(client)}
     if not mysql_sources:
         return False
 

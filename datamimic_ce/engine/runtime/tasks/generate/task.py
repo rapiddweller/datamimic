@@ -12,7 +12,7 @@ from typing import Protocol
 import dill
 
 from datamimic_ce.engine.dsl.api import CompositeStatement, GenerateStatement, KeyStatement, Statement, StatementUtil
-from datamimic_ce.engine.io.api import DatabaseClient, ExporterUtil, UnifiedBufferedExporter
+from datamimic_ce.engine.io.api import ExporterUtil, UnifiedBufferedExporter, count_query_length
 from datamimic_ce.engine.runtime.config import settings
 from datamimic_ce.engine.runtime.contexts.context import Context
 from datamimic_ce.engine.runtime.contexts.geniter_context import GenIterContext
@@ -82,9 +82,8 @@ class GenerateTask(CommonSubTask):
                 client = (
                     root_context.get_client_by_id(self.statement.source) if self.statement.source is not None else None
                 )
-                if isinstance(client, DatabaseClient):
-                    count = client.count_query_length(selector)
-                else:
+                count = count_query_length(client, selector) if client is not None else None
+                if count is None:
                     raise ValueError(
                         "Using selector without count only supports DatabaseClient (MongoDB, Relational Database)"
                     )

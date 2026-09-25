@@ -1,5 +1,11 @@
 """Runtime-facing data-source and client boundary."""
 
+from datamimic_ce.engine.io.client_operations import (
+    count_query_length,
+    create_mongodb_client,
+    create_rdbms_client,
+    uses_mysql_sequence_storage,
+)
 from datamimic_ce.engine.io.clients.client import Client
 from datamimic_ce.engine.io.clients.database_client import DatabaseClient
 from datamimic_ce.engine.io.clients.mongodb_client import MongoDBClient
@@ -58,5 +64,9 @@ __all__ = [
     "WeightedEntityDataSource",
     "XMLExporter",
     "buffered_exporter_names",
+    "count_query_length",
+    "create_mongodb_client",
+    "create_rdbms_client",
     "smoke_export",
+    "uses_mysql_sequence_storage",
 ]
