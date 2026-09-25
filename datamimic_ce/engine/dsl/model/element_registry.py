@@ -4,23 +4,18 @@
 # See LICENSE file for the full text of the license.
 # For questions and support, contact: info@rapiddweller.com
 
-"""Single registration owner for CE DSL elements.
+"""Canonical CE DSL element facts for parsing and authoring.
 
-An :class:`ElementDefinition` connects the four structural facts that otherwise
-drift independently: tag/aliases, parser, attribute model, and valid children.
-Runtime parser dispatch and authoring schema reflection are projections of this
-registry; neither keeps its own element table.
-
-Parser imports stay lazy because parser modules depend on models and
-``ParserUtil``. Extensions register structure and constraints through one
-atomic API; built-in definitions remain immutable.
+Parser implementations are bound by the parsing layer. Extensions register
+structure and constraints atomically; built-in definitions remain immutable.
 """
 
 from __future__ import annotations
 
+from collections.abc import Callable
 from dataclasses import dataclass
 from functools import lru_cache
-from typing import TYPE_CHECKING, Protocol
+from typing import TYPE_CHECKING
 
 from pydantic import BaseModel
 
@@ -59,14 +54,6 @@ from datamimic_ce.engine.dsl.constants.element_constants import (
 
 if TYPE_CHECKING:
     from datamimic_ce.engine.dsl.model.constraints.types import Constraint
-    from datamimic_ce.engine.dsl.parsers.statement_parser import StatementParser
-    from datamimic_ce.engine.dsl.xml import XmlElement
-
-
-class ParserFactory(Protocol):
-    """Constructor contract shared by every registry-dispatchable parser."""
-
-    def __call__(self, element: XmlElement, properties: dict, /) -> StatementParser: ...
 
 
 @dataclass(frozen=True)
@@ -75,7 +62,7 @@ class ElementDefinition:
 
     tag: str
     model: type[BaseModel] | None
-    parser: ParserFactory | None
+    parser: Callable[..., object] | None
     allowed_children: frozenset[str] | None = frozenset()
     aliases: frozenset[str] = frozenset()
 
@@ -91,7 +78,7 @@ class ElementDefinition:
 
 @lru_cache(maxsize=1)
 def _builtin_definitions() -> dict[str, ElementDefinition]:
-    """Build built-in definitions lazily to avoid model/parser import cycles."""
+    """Build built-in grammar facts without importing parsing implementations."""
     from datamimic_ce.engine.dsl.model.array_model import ArrayModel
     from datamimic_ce.engine.dsl.model.assert_model import AssertModel
     from datamimic_ce.engine.dsl.model.database_model import DatabaseModel
@@ -116,30 +103,6 @@ def _builtin_definitions() -> dict[str, ElementDefinition]:
     from datamimic_ce.engine.dsl.model.value_model import ValueModel
     from datamimic_ce.engine.dsl.model.variable_model import VariableModel
     from datamimic_ce.engine.dsl.model.while_model import WhileModel
-    from datamimic_ce.engine.dsl.parsers.array_parser import ArrayParser
-    from datamimic_ce.engine.dsl.parsers.assert_parser import AssertParser
-    from datamimic_ce.engine.dsl.parsers.condition_parser import ConditionParser
-    from datamimic_ce.engine.dsl.parsers.database_parser import DatabaseParser
-    from datamimic_ce.engine.dsl.parsers.demographics_parser import DemographicsParser
-    from datamimic_ce.engine.dsl.parsers.echo_parser import EchoParser
-    from datamimic_ce.engine.dsl.parsers.element_parser import ElementParser
-    from datamimic_ce.engine.dsl.parsers.else_if_parser import ElseIfParser
-    from datamimic_ce.engine.dsl.parsers.else_parser import ElseParser
-    from datamimic_ce.engine.dsl.parsers.execute_parser import ExecuteParser
-    from datamimic_ce.engine.dsl.parsers.generate_parser import GenerateParser
-    from datamimic_ce.engine.dsl.parsers.generator_parser import GeneratorParser
-    from datamimic_ce.engine.dsl.parsers.if_parser import IfParser
-    from datamimic_ce.engine.dsl.parsers.include_parser import IncludeParser
-    from datamimic_ce.engine.dsl.parsers.item_parser import ItemParser
-    from datamimic_ce.engine.dsl.parsers.key_parser import KeyParser
-    from datamimic_ce.engine.dsl.parsers.list_parser import ListParser
-    from datamimic_ce.engine.dsl.parsers.memstore_parser import MemstoreParser
-    from datamimic_ce.engine.dsl.parsers.mongodb_parser import MongoDBParser
-    from datamimic_ce.engine.dsl.parsers.nested_key_parser import NestedKeyParser
-    from datamimic_ce.engine.dsl.parsers.reference_parser import ReferenceParser
-    from datamimic_ce.engine.dsl.parsers.state_machine_parser import StateMachineParser
-    from datamimic_ce.engine.dsl.parsers.variable_parser import VariableParser
-    from datamimic_ce.engine.dsl.parsers.while_parser import WhileParser
 
     definitions = (
         # <setup> is parsed by DescriptorParser directly, so it has no child-dispatch parser.
@@ -168,7 +131,7 @@ def _builtin_definitions() -> dict[str, ElementDefinition]:
         ElementDefinition(
             EL_GENERATE,
             GenerateModel,
-            GenerateParser,
+            None,
             frozenset(
                 {
                     EL_GENERATE,
@@ -192,15 +155,15 @@ def _builtin_definitions() -> dict[str, ElementDefinition]:
         ElementDefinition(
             EL_KEY,
             KeyModel,
-            KeyParser,
+            None,
             frozenset({EL_ELEMENT}),
             frozenset({EL_ID}),
         ),
-        ElementDefinition(EL_VARIABLE, VariableModel, VariableParser),
+        ElementDefinition(EL_VARIABLE, VariableModel, None),
         ElementDefinition(
             EL_NESTED_KEY,
             NestedKeyModel,
-            NestedKeyParser,
+            None,
             frozenset(
                 {
                     EL_KEY,
@@ -218,40 +181,40 @@ def _builtin_definitions() -> dict[str, ElementDefinition]:
                 }
             ),
         ),
-        ElementDefinition(EL_ARRAY, ArrayModel, ArrayParser, frozenset({EL_VALUE})),
+        ElementDefinition(EL_ARRAY, ArrayModel, None, frozenset({EL_VALUE})),
         # Child-only elements have models for authoring but no standalone parser.
         ElementDefinition(EL_VALUE, ValueModel, None),
-        ElementDefinition(EL_LIST, ListModel, ListParser, frozenset({EL_ITEM})),
+        ElementDefinition(EL_LIST, ListModel, None, frozenset({EL_ITEM})),
         ElementDefinition(
             EL_ITEM,
             ItemModel,
-            ItemParser,
+            None,
             frozenset({EL_KEY, EL_ID, EL_NESTED_KEY, EL_LIST, EL_ARRAY, EL_ELEMENT}),
         ),
-        ElementDefinition(EL_REFERENCE, ReferenceModel, ReferenceParser, frozenset({EL_FIELD})),
+        ElementDefinition(EL_REFERENCE, ReferenceModel, None, frozenset({EL_FIELD})),
         ElementDefinition(EL_FIELD, ReferenceFieldModel, None),
-        ElementDefinition(EL_INCLUDE, IncludeModel, IncludeParser, frozenset({EL_SETUP})),
-        ElementDefinition(EL_MEMSTORE, MemstoreModel, MemstoreParser),
-        ElementDefinition(EL_EXECUTE, ExecuteModel, ExecuteParser),
-        ElementDefinition(EL_DATABASE, DatabaseModel, DatabaseParser),
-        ElementDefinition(EL_MONGODB, MongoDBModel, MongoDBParser),
-        ElementDefinition(EL_IF, IfModel, IfParser, None),
-        ElementDefinition(EL_ELSE_IF, ElseIfModel, ElseIfParser, None),
-        ElementDefinition(EL_ELSE, None, ElseParser, None),
-        ElementDefinition(EL_CONDITION, None, ConditionParser, frozenset({EL_IF, EL_ELSE_IF, EL_ELSE})),
-        ElementDefinition(EL_ECHO, None, EchoParser),
-        ElementDefinition(EL_ELEMENT, ElementModel, ElementParser),
-        ElementDefinition(EL_GENERATOR, GeneratorModel, GeneratorParser),
-        ElementDefinition(EL_DEMOGRAPHICS, DemographicsModel, DemographicsParser),
+        ElementDefinition(EL_INCLUDE, IncludeModel, None, frozenset({EL_SETUP})),
+        ElementDefinition(EL_MEMSTORE, MemstoreModel, None),
+        ElementDefinition(EL_EXECUTE, ExecuteModel, None),
+        ElementDefinition(EL_DATABASE, DatabaseModel, None),
+        ElementDefinition(EL_MONGODB, MongoDBModel, None),
+        ElementDefinition(EL_IF, IfModel, None, None),
+        ElementDefinition(EL_ELSE_IF, ElseIfModel, None, None),
+        ElementDefinition(EL_ELSE, None, None, None),
+        ElementDefinition(EL_CONDITION, None, None, frozenset({EL_IF, EL_ELSE_IF, EL_ELSE})),
+        ElementDefinition(EL_ECHO, None, None),
+        ElementDefinition(EL_ELEMENT, ElementModel, None),
+        ElementDefinition(EL_GENERATOR, GeneratorModel, None),
+        ElementDefinition(EL_DEMOGRAPHICS, DemographicsModel, None),
         ElementDefinition(
             EL_STATE_MACHINE,
             StateMachineModel,
-            StateMachineParser,
+            None,
             frozenset({EL_TRANSITION}),
         ),
         ElementDefinition(EL_TRANSITION, None, None),
-        ElementDefinition(EL_WHILE, WhileModel, WhileParser, None),
-        ElementDefinition(EL_ASSERT, AssertModel, AssertParser),
+        ElementDefinition(EL_WHILE, WhileModel, None, None),
+        ElementDefinition(EL_ASSERT, AssertModel, None),
     )
     return {definition.tag: definition for definition in definitions}
 
@@ -372,11 +335,6 @@ def list_element_tags() -> list[str]:
 def get_element_definition(tag: str) -> ElementDefinition | None:
     """Return the canonical definition for a tag or alias."""
     return _definitions().get(canonical_tag(tag))
-
-
-def get_parser_class(tag: str) -> ParserFactory | None:
-    definition = get_element_definition(tag)
-    return definition.parser if definition is not None else None
 
 
 def get_model_class(tag: str) -> type[BaseModel] | None:

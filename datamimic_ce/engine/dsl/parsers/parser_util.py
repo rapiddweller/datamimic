@@ -7,9 +7,12 @@
 import copy
 import logging
 import re
+from collections.abc import Callable
+from functools import lru_cache
 from pathlib import Path
 from typing import Literal
 
+from datamimic_ce.engine.dsl.constants import element_constants as tags
 from datamimic_ce.engine.dsl.constants.attribute_constants import ATTR_ENVIRONMENT, ATTR_ID, ATTR_SYSTEM
 from datamimic_ce.engine.dsl.constants.element_constants import (
     EL_ARRAY,
@@ -39,6 +42,7 @@ from datamimic_ce.engine.dsl.parsers.memstore_parser import MemstoreParser
 from datamimic_ce.engine.dsl.parsers.nested_key_parser import NestedKeyParser
 from datamimic_ce.engine.dsl.parsers.reference_parser import ReferenceParser
 from datamimic_ce.engine.dsl.parsers.state_machine_parser import StateMachineParser
+from datamimic_ce.engine.dsl.parsers.statement_parser import StatementParser
 from datamimic_ce.engine.dsl.parsers.variable_parser import VariableParser
 from datamimic_ce.engine.dsl.parsers.while_parser import WhileParser
 from datamimic_ce.engine.dsl.properties import parse_properties
@@ -54,6 +58,43 @@ from datamimic_ce.engine.dsl.statements.while_statement import WhileStatement
 from datamimic_ce.engine.dsl.xml import XmlElement, xml_tag
 
 logger = logging.getLogger("DATAMIMIC")
+
+
+@lru_cache(maxsize=1)
+def _builtin_parser_classes() -> dict[str, Callable[[XmlElement, dict], StatementParser]]:
+    """Bind parser implementations after the model-owned grammar is loaded."""
+    from datamimic_ce.engine.dsl.parsers.database_parser import DatabaseParser
+    from datamimic_ce.engine.dsl.parsers.demographics_parser import DemographicsParser
+    from datamimic_ce.engine.dsl.parsers.item_parser import ItemParser
+    from datamimic_ce.engine.dsl.parsers.list_parser import ListParser
+    from datamimic_ce.engine.dsl.parsers.mongodb_parser import MongoDBParser
+
+    return {
+        tags.EL_GENERATE: GenerateParser,
+        tags.EL_KEY: KeyParser,
+        tags.EL_VARIABLE: VariableParser,
+        tags.EL_NESTED_KEY: NestedKeyParser,
+        tags.EL_ARRAY: ArrayParser,
+        tags.EL_LIST: ListParser,
+        tags.EL_ITEM: ItemParser,
+        tags.EL_REFERENCE: ReferenceParser,
+        tags.EL_INCLUDE: IncludeParser,
+        tags.EL_MEMSTORE: MemstoreParser,
+        tags.EL_EXECUTE: ExecuteParser,
+        tags.EL_DATABASE: DatabaseParser,
+        tags.EL_MONGODB: MongoDBParser,
+        tags.EL_IF: IfParser,
+        tags.EL_ELSE_IF: ElseIfParser,
+        tags.EL_ELSE: ElseParser,
+        tags.EL_CONDITION: ConditionParser,
+        tags.EL_ECHO: EchoParser,
+        tags.EL_ELEMENT: ElementParser,
+        tags.EL_GENERATOR: GeneratorParser,
+        tags.EL_DEMOGRAPHICS: DemographicsParser,
+        tags.EL_STATE_MACHINE: StateMachineParser,
+        tags.EL_WHILE: WhileParser,
+        tags.EL_ASSERT: AssertParser,
+    }
 
 
 class ParserUtil:
@@ -94,13 +135,17 @@ class ParserUtil:
         :param properties:
         :return:
         """
-        from datamimic_ce.engine.dsl.model.element_registry import get_parser_class
+        from datamimic_ce.engine.dsl.model.element_registry import canonical_tag, get_element_definition
 
         tag = xml_tag(element)
-        parser_class = get_parser_class(tag)
+        definition = get_element_definition(tag)
+        builtin_parsers = _builtin_parser_classes()
+        parser_class = None if definition is None else definition.parser or builtin_parsers.get(canonical_tag(tag))
         if parser_class is None:
             raise ValueError(f"Cannot get parser for element <{tag}>")
         parser = parser_class(element, properties)
+        if not isinstance(parser, StatementParser):
+            raise TypeError(f"Parser for element <{tag}> must extend StatementParser")
         if tag in {EL_DATABASE, EL_MONGODB}:
             parser.set_runtime_environment(runtime_environment)
         return parser
