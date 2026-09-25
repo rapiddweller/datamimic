@@ -14,6 +14,12 @@ class DomainError(Exception):
     request_hash: str
     details: dict[str, object] | None = None
 
+    def __reduce__(self) -> tuple[type[DomainError], tuple[object, ...]]:
+        return type(self), (self.code, self.message, self.hint, self.path, self.request_hash, self.details)
+
+    def __str__(self) -> str:
+        return ""
+
     def to_dict(self) -> dict[str, object]:
         payload: dict[str, object] = {
             "code": self.code.value,
@@ -36,3 +42,14 @@ class InvalidLocaleError(ValueError, DomainError):
 
     def __str__(self) -> str:
         return self.message
+
+    def __reduce__(self) -> tuple[type[InvalidLocaleError], tuple[object, ...]]:
+        return type(self), (
+            self.code,
+            self.message,
+            self.hint,
+            self.path,
+            self.request_hash,
+            self.details,
+            self.locale,
+        )
