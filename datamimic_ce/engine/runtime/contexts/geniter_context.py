@@ -46,6 +46,13 @@ class GenIterContext(Context):
         return self._current_name
 
     @property
+    def scope_name(self) -> str:
+        return self._current_name
+
+    def scope_content(self) -> dict[str, object]:
+        return {**self.current_variables, **self.current_product}
+
+    @property
     def current_product(self) -> dict:
         return self._current_product
 

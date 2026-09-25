@@ -6,9 +6,14 @@
 
 from abc import ABC
 
-from datamimic_ce.engine.dsl.api import ConditionStatement, ElseIfStatement, ElseStatement, IfStatement
+from datamimic_ce.engine.dsl.api import (
+    ConditionStatement,
+    ElseIfStatement,
+    ElseStatement,
+    GenerateStatement,
+    IfStatement,
+)
 from datamimic_ce.engine.runtime.contexts.geniter_context import GenIterContext
-from datamimic_ce.engine.runtime.tasks.condition_task import ConditionTask
 from datamimic_ce.engine.runtime.tasks.task import CommonSubTask, GenSubTask
 from datamimic_ce.engine.runtime.tasks.task_util import TaskUtil
 
@@ -30,8 +35,6 @@ class IfElseBaseTask(GenSubTask, ABC):
         :param parent_context:
         :return:
         """
-        from datamimic_ce.engine.runtime.tasks.generate.task import GenerateTask
-
         child_tasks = [
             TaskUtil.get_task_by_statement(ctx=parent_context.root, stmt=child_stmt)
             for child_stmt in self.statement.sub_statements
@@ -43,15 +46,15 @@ class IfElseBaseTask(GenSubTask, ABC):
 
         product_holder: dict = {}
         for child_task in child_tasks:
+            if not isinstance(child_task, GenSubTask | CommonSubTask):
+                raise ValueError(f"Common sub-task expected, but got {type(child_task)}")
             # Add generate product to current product_holder
-            if isinstance(child_task, GenerateTask | ConditionTask):
+            if isinstance(child_task.statement, GenerateStatement | ConditionStatement):
                 # Execute sub generate task
                 values = child_task.execute(parent_context)
                 if isinstance(values, dict):
                     for key, value in values.items():
                         product_holder[key] = product_holder.get(key, []) + value
             else:
-                if not isinstance(child_task, GenSubTask | CommonSubTask):
-                    raise ValueError(f"Common sub-task expected, but got {type(child_task)}")
                 child_task.execute(parent_context)
         return product_holder

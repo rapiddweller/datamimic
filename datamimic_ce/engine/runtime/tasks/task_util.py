@@ -3,9 +3,12 @@
 # This software is licensed under the MIT License.
 # See LICENSE file for the full text of the license.
 # For questions and support, contact: info@rapiddweller.com
+from __future__ import annotations
+
 import functools
 import string
 from decimal import Decimal
+from typing import TYPE_CHECKING
 
 from datamimic_ce.domains.api import (
     AppendConverter,
@@ -35,33 +38,10 @@ from datamimic_ce.engine.dsl.api import (
     META_SELECTOR,
     META_TARGET_ENTITY,
     META_TYPE,
-    ArrayStatement,
-    AssertStatement,
-    ConditionStatement,
     ConverterEnum,
-    DatabaseStatement,
-    DemographicsStatement,
-    EchoStatement,
-    ElementStatement,
-    ElseIfStatement,
-    ElseStatement,
-    ExecuteStatement,
     ExportOperation,
     GenerateStatement,
-    GeneratorStatement,
-    IfStatement,
-    IncludeStatement,
-    ItemStatement,
-    KeyStatement,
-    ListStatement,
-    MemstoreStatement,
-    MongoDBStatement,
-    NestedKeyStatement,
-    ReferenceStatement,
-    StateMachineStatement,
     Statement,
-    VariableStatement,
-    WhileStatement,
 )
 from datamimic_ce.engine.io.api import (
     ConsoleExporter,
@@ -79,17 +59,10 @@ from datamimic_ce.engine.io.api import (
 from datamimic_ce.engine.runtime.contexts.context import Context
 from datamimic_ce.engine.runtime.contexts.setup_context import SetupContext
 from datamimic_ce.engine.runtime.logging import logger
-from datamimic_ce.engine.runtime.tasks.array_task import ArrayTask
-from datamimic_ce.engine.runtime.tasks.assert_task import AssertTask
-from datamimic_ce.engine.runtime.tasks.database_task import DatabaseTask
-from datamimic_ce.engine.runtime.tasks.echo_task import EchoTask
-from datamimic_ce.engine.runtime.tasks.element_task import ElementTask
-from datamimic_ce.engine.runtime.tasks.execute_task import ExecuteTask
-from datamimic_ce.engine.runtime.tasks.generator_task import GeneratorTask
-from datamimic_ce.engine.runtime.tasks.memstore_task import MemstoreTask
-from datamimic_ce.engine.runtime.tasks.mongodb_task import MongoDBTask
-from datamimic_ce.engine.runtime.tasks.reference_task import ReferenceTask
-from datamimic_ce.engine.runtime.tasks.task import Task
+from datamimic_ce.engine.runtime.tasks.task_factory import create_task
+
+if TYPE_CHECKING:
+    from datamimic_ce.engine.runtime.tasks.task import Task
 
 
 def _create_converter_from_constructor_str(
@@ -123,84 +96,7 @@ class TaskUtil:
         stmt: Statement,
         pagination: DataSourcePagination | None = None,
     ) -> Task:
-        if isinstance(stmt, GenerateStatement):
-            from datamimic_ce.engine.runtime.tasks.generate.task import GenerateTask
-
-            return GenerateTask(stmt)
-        elif isinstance(stmt, MongoDBStatement):
-            return MongoDBTask(stmt)
-        elif isinstance(stmt, DatabaseStatement):
-            return DatabaseTask(stmt)
-        elif isinstance(stmt, IncludeStatement):
-            from datamimic_ce.engine.runtime.tasks.include_task import IncludeTask
-
-            return IncludeTask(stmt)
-        elif isinstance(stmt, MemstoreStatement):
-            return MemstoreTask(stmt)
-        elif isinstance(stmt, ExecuteStatement):
-            return ExecuteTask(stmt)
-        elif isinstance(stmt, KeyStatement):
-            from datamimic_ce.engine.runtime.tasks.key_task import KeyTask
-
-            return KeyTask(ctx, stmt, pagination)
-        elif isinstance(stmt, VariableStatement):
-            from datamimic_ce.engine.runtime.tasks.variable_task import VariableTask
-
-            return VariableTask(ctx, stmt, pagination)
-        elif isinstance(stmt, NestedKeyStatement):
-            from datamimic_ce.engine.runtime.tasks.nested_key_task import NestedKeyTask
-
-            return NestedKeyTask(ctx, stmt)
-        elif isinstance(stmt, ArrayStatement):
-            return ArrayTask(stmt)
-        elif isinstance(stmt, ReferenceStatement):
-            return ReferenceTask(stmt, pagination)
-        elif isinstance(stmt, ListStatement):
-            from datamimic_ce.engine.runtime.tasks.list_task import ListTask
-
-            return ListTask(ctx=ctx, statement=stmt)
-        elif isinstance(stmt, ItemStatement):
-            from datamimic_ce.engine.runtime.tasks.item_task import ItemTask
-
-            return ItemTask(ctx, stmt)
-        elif isinstance(stmt, IfStatement):
-            from datamimic_ce.engine.runtime.tasks.if_task import IfTask
-
-            return IfTask(stmt)
-        elif isinstance(stmt, ConditionStatement):
-            from datamimic_ce.engine.runtime.tasks.condition_task import ConditionTask
-
-            return ConditionTask(stmt)
-        elif isinstance(stmt, WhileStatement):
-            from datamimic_ce.engine.runtime.tasks.while_task import WhileTask
-
-            return WhileTask(stmt)
-        elif isinstance(stmt, DemographicsStatement):
-            from datamimic_ce.engine.runtime.tasks.demographics_task import DemographicsTask
-
-            return DemographicsTask(stmt)
-        elif isinstance(stmt, ElseIfStatement):
-            from datamimic_ce.engine.runtime.tasks.else_if_task import ElseIfTask
-
-            return ElseIfTask(stmt)
-        elif isinstance(stmt, ElseStatement):
-            from datamimic_ce.engine.runtime.tasks.else_task import ElseTask
-
-            return ElseTask(stmt)
-        elif isinstance(stmt, EchoStatement):
-            return EchoTask(stmt)
-        elif isinstance(stmt, AssertStatement):
-            return AssertTask(stmt)
-        elif isinstance(stmt, ElementStatement):
-            return ElementTask(ctx, stmt)
-        elif isinstance(stmt, GeneratorStatement):
-            return GeneratorTask(stmt)
-        elif isinstance(stmt, StateMachineStatement):
-            from datamimic_ce.engine.runtime.tasks.state_machine_task import StateMachineTask
-
-            return StateMachineTask(stmt)
-        else:
-            raise ValueError(f"Cannot created task for statement {stmt.__class__.__name__}")
+        return create_task(stmt, ctx, pagination)
 
     @staticmethod
     def evaluate_file_script_template(ctx: Context, datas: object, prefix: str, suffix: str) -> object:

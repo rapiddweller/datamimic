@@ -190,40 +190,40 @@ class Context(ABC):
         """The current content scope for the ``this`` alias: ``this.field`` resolves to the same value as
         bare ``field``. In a generate/iterate that is the record's variables + products (products win on a
         name clash); at setup level it is the setup namespace + global variables."""
-        from datamimic_ce.engine.runtime.contexts.geniter_context import GenIterContext
-        from datamimic_ce.engine.runtime.contexts.setup_context import SetupContext
-
-        if isinstance(self, GenIterContext):
-            return {**self.current_variables, **self.current_product}
-        if isinstance(self, SetupContext):
-            return {**self.namespace, **self.global_variables}
-        return {}
+        if self is self.root:
+            return {**self.root.namespace, **self.root.global_variables}
+        return self.scope_content()
 
     def _parent_scope(self) -> dict[str, object]:
         """The immediate parent scope for the ``parent`` alias: the parent generate/nestedKey's
         variables + products. Empty when there is no enclosing generate scope (top-level = setup parent)."""
-        from datamimic_ce.engine.runtime.contexts.geniter_context import GenIterContext
-
-        if not isinstance(self, GenIterContext):
+        if self is self.root:
             return {}
         parent = self.parent
-        if isinstance(parent, GenIterContext):
-            return {**parent.current_variables, **parent.current_product}
+        if parent is not None and parent is not parent.root:
+            return parent.scope_content()
+        return {}
+
+    @property
+    def parent(self) -> Context | None:
+        return None
+
+    @property
+    def scope_name(self) -> str:
+        return ""
+
+    def scope_content(self) -> dict[str, object]:
         return {}
 
     @staticmethod
     def get_content_variables_products(current_context: Context) -> dict[str, object]:
-        # Init current product of root context
-        from datamimic_ce.engine.runtime.contexts.geniter_context import GenIterContext
-        from datamimic_ce.engine.runtime.contexts.setup_context import SetupContext
-
         data_dict: dict[str, object] = {}
         # SetupContext evaluate script
-        if isinstance(current_context, SetupContext):
+        if current_context is current_context.root:
             # Add current variable & product of outermost context
             data_dict = {
-                **current_context.namespace,
-                **current_context.global_variables,
+                **current_context.root.namespace,
+                **current_context.root.global_variables,
                 **data_dict,
             }
         # GenIterContext evaluate script
@@ -233,24 +233,20 @@ class Context(ABC):
             # own vars land at the top level and the setup namespace/globals merge in.
             self_context = current_context
             self_is_outermost = False
-            while isinstance(current_context, GenIterContext):
+            while current_context is not current_context.root:
                 parent_context = current_context.parent
-                if isinstance(parent_context, SetupContext):
+                scope_content = current_context.scope_content()
+                if parent_context is None or parent_context is parent_context.root:
                     data_dict = {
-                        **parent_context.namespace,
-                        **parent_context.global_variables,
-                        **current_context.current_variables,
-                        **current_context.current_product,
+                        **current_context.root.namespace,
+                        **current_context.root.global_variables,
+                        **scope_content,
                         **data_dict,
                     }
                     self_is_outermost = current_context is self_context
                     break
                 data_dict = {
-                    current_context.current_name: {
-                        **current_context.current_variables,
-                        **current_context.current_product,
-                        **data_dict,
-                    }
+                    current_context.scope_name: {**scope_content, **data_dict}
                 }
                 current_context = parent_context
             # The scope evaluating THIS script also resolves its own variables/products by bare
@@ -260,8 +256,8 @@ class Context(ABC):
             # wins on a clash (`**data_dict` last), so a script combining an ancestor's and its own
             # same-named variable (e.g. `id + simple_user.id`, a real fixture in this repo) keeps
             # resolving bare `id` to the ancestor's, exactly as before this change.
-            if not self_is_outermost and isinstance(self_context, GenIterContext):
-                data_dict = {**self_context.current_variables, **self_context.current_product, **data_dict}
+            if not self_is_outermost and self_context is not self_context.root:
+                data_dict = {**self_context.scope_content(), **data_dict}
 
         return data_dict
 

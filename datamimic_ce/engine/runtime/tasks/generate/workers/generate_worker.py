@@ -8,13 +8,13 @@ import os
 
 import dill
 
-from datamimic_ce.engine.dsl.api import CompositeStatement, GenerateStatement, Statement
+from datamimic_ce.engine.dsl.api import CompositeStatement, ConditionStatement, GenerateStatement, Statement
 from datamimic_ce.engine.io.api import DataSourcePagination, ExporterStateManager, ExporterUtil
 from datamimic_ce.engine.runtime.contexts.geniter_context import GenIterContext
 from datamimic_ce.engine.runtime.contexts.setup_context import SetupContext
 from datamimic_ce.engine.runtime.logging import gen_timer, logger, setup_logger
 from datamimic_ce.engine.runtime.sources.chunk_source_reader import ChunkSourceReader
-from datamimic_ce.engine.runtime.tasks.generate.task import GenerateTask
+from datamimic_ce.engine.runtime.tasks.task import CommonSubTask, GenSubTask
 from datamimic_ce.engine.runtime.tasks.task_util import TaskUtil
 
 
@@ -199,14 +199,14 @@ class GenerateWorker:
 
             try:
                 # Start executing sub-tasks
-                from datamimic_ce.engine.runtime.tasks.condition_task import ConditionTask
-
                 for task in tasks:
                     # Collect product from sub-generate task and add into product_holder
-                    if isinstance(task, GenerateTask | ConditionTask):
+                    if not isinstance(task, GenSubTask | CommonSubTask):
+                        raise TypeError(f"Unsupported generation task type: {type(task).__name__}")
+                    if isinstance(task.statement, GenerateStatement | ConditionStatement):
                         # Execute sub generate task
                         sub_gen_result = task.execute(ctx)
-                        if sub_gen_result:
+                        if isinstance(sub_gen_result, dict):
                             for key, value in sub_gen_result.items():
                                 # Store product for later export
                                 product_holder[key] = product_holder.get(key, []) + value
@@ -214,12 +214,7 @@ class GenerateWorker:
                                 inner_generate_key = key.split("|", 1)[-1].strip()
                                 ctx.current_variables[inner_generate_key] = value
                     else:
-                        from datamimic_ce.engine.runtime.tasks.task import CommonSubTask, GenSubTask
-
-                        if isinstance(task, GenSubTask | CommonSubTask):
-                            task.execute(ctx)
-                        else:
-                            raise TypeError(f"Unsupported generation task type: {type(task).__name__}")
+                        task.execute(ctx)
                 # Post-process product by applying converters
                 for converter in converter_list:
                     converted_product = converter.convert(ctx.current_product)
