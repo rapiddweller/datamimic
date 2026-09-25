@@ -20,13 +20,13 @@ from datamimic_ce.authoring.contracts import (
     ScaffoldRequest,
     SourceReferenceQuery,
 )
-from datamimic_ce.authoring.reference_projection import (
+from datamimic_ce.authoring.projection.reference_projection import (
     authoring_reference_projection,
     list_authoring_reference_queries,
     source_product_repair_guidance,
 )
-from datamimic_ce.authoring.script_semantics import current_scope_reference
-from datamimic_ce.authoring.service import reference, scaffold
+from datamimic_ce.authoring.domain.script_semantics import current_scope_reference
+from datamimic_ce.authoring.application.service import reference, scaffold
 from datamimic_ce.authoring.spec import (
     AuthoringSpecV1,
     FieldIntentKind,

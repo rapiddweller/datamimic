@@ -9,7 +9,7 @@ import re
 
 import pytest
 
-from datamimic_ce.domains.common.literal_generators.data_faker_generator import DataFakerGenerator
+from datamimic_ce.domains.shared.literal_generators.data_faker_generator import DataFakerGenerator
 
 
 class TestFakerGenerator:

@@ -4,24 +4,24 @@ import random
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
-    from datamimic_ce.domains.common.demographics.sampler import DemographicSampler
-    from datamimic_ce.domains.common.models.demographic_config import DemographicConfig
+    from datamimic_ce.domains.shared.demographics.sampler import DemographicSampler
+    from datamimic_ce.domains.shared.models.demographic_config import DemographicConfig
 
 import datetime
 from pathlib import Path
 
-from datamimic_ce.domains.common.generators.address_generator import AddressGenerator
-from datamimic_ce.domains.common.generators.person_generator import PersonGenerator
-from datamimic_ce.domains.common.literal_generators.email_address_generator import EmailAddressGenerator
-from datamimic_ce.domains.common.literal_generators.phone_number_generator import PhoneNumberGenerator
 from datamimic_ce.domains.domain_core.base_domain_generator import ClockAnchoredDomainGenerator
-from datamimic_ce.domains.utils.dataset_loader import (
+from datamimic_ce.domains.shared.generators.address_generator import AddressGenerator
+from datamimic_ce.domains.shared.generators.person_generator import PersonGenerator
+from datamimic_ce.domains.shared.literal_generators.email_address_generator import EmailAddressGenerator
+from datamimic_ce.domains.shared.literal_generators.phone_number_generator import PhoneNumberGenerator
+from datamimic_ce.domains.shared.utils.dataset_loader import (
     load_weighted_values_try_dataset,
     pick_one_weighted,
     pick_one_weighted_no_repeat,
     read_weighted_records,
 )
-from datamimic_ce.domains.utils.dataset_path import dataset_path
+from datamimic_ce.domains.shared.utils.dataset_path import dataset_path
 
 
 class PoliceOfficerGenerator(ClockAnchoredDomainGenerator):
@@ -45,7 +45,7 @@ class PoliceOfficerGenerator(ClockAnchoredDomainGenerator):
         super().__init__(dataset=dataset, rng=rng, reference_now=reference_now)
         self._last_department: str | None = None
         self._last_unit: str | None = None
-        from datamimic_ce.domains.common.models.demographic_config import DemographicConfig as _DC
+        from datamimic_ce.domains.shared.models.demographic_config import DemographicConfig as _DC
 
         demo = demographic_config if demographic_config is not None else _DC()
         self._person_generator = PersonGenerator(
@@ -87,7 +87,7 @@ class PoliceOfficerGenerator(ClockAnchoredDomainGenerator):
 
     #  Centralize date generation to keep model pure and deterministic
     def generate_hire_date(self, age: int) -> str:
-        from datamimic_ce.domains.common.literal_generators.datetime_generator import DateTimeGenerator
+        from datamimic_ce.domains.shared.literal_generators.datetime_generator import DateTimeGenerator
 
         now = self._reference_now
         # Minimum age to join: 21. Years of service cannot exceed age-21 and cap at 30

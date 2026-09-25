@@ -1,7 +1,7 @@
 """Profile seed cascade regression tests (rules 4-6)."""
 
-from datamimic_ce.domains.determinism import canonical_json
-from datamimic_ce.domains.facade import generate_domain
+from datamimic_ce.domains.shared.determinism import canonical_json
+from datamimic_ce.domains.shared.facade import generate_domain
 
 
 def test_profile_id_repeatable() -> None:

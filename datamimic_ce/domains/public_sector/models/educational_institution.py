@@ -13,12 +13,12 @@ realistic educational institution data.
 
 from pathlib import Path
 
-from datamimic_ce.domains.common.models.address import Address
 from datamimic_ce.domains.domain_core import BaseEntity
 from datamimic_ce.domains.domain_core.property_cache import property_cache
 from datamimic_ce.domains.public_sector.generators.educational_institution_generator import (
     EducationalInstitutionGenerator,
 )
+from datamimic_ce.domains.shared.models.address import Address
 
 
 class EducationalInstitution(BaseEntity):

@@ -1,6 +1,6 @@
 import unittest
 
-from datamimic_ce.domains.converters.remove_none_or_empty_element_converter import RemoveNoneOrEmptyElementConverter
+from datamimic_ce.domains.shared.converters.remove_none_or_empty_element_converter import RemoveNoneOrEmptyElementConverter
 
 
 class TestRemoveNoneOrEmptyElementConverter(unittest.TestCase):

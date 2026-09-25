@@ -18,9 +18,9 @@ from datamimic_ce.authoring.contracts import (
     ScaffoldVerification,
     VerificationGateStatus,
 )
-from datamimic_ce.authoring.service import compile_document, scaffold
+from datamimic_ce.authoring.application.service import compile_document, scaffold
 from datamimic_ce.data_mimic_test import DataMimicTest
-from datamimic_ce.domains.common.literal_generators.float_generator import FloatGenerator
+from datamimic_ce.domains.shared.literal_generators.float_generator import FloatGenerator
 
 _TEST_DIR = Path(__file__).resolve().parent
 _REPO_ROOT = _TEST_DIR.parents[2]

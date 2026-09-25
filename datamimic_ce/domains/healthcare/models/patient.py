@@ -12,10 +12,10 @@ This module provides the Patient entity model for generating realistic patient d
 
 import datetime
 
-from datamimic_ce.domains.common.models.person import Person
 from datamimic_ce.domains.domain_core import BaseEntity
 from datamimic_ce.domains.domain_core.property_cache import property_cache
 from datamimic_ce.domains.healthcare.generators.patient_generator import PatientGenerator
+from datamimic_ce.domains.shared.models.person import Person
 
 
 class Patient(BaseEntity):

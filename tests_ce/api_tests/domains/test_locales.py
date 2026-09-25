@@ -4,7 +4,7 @@ from pathlib import Path
 
 import pytest
 
-import datamimic_ce.domains.locales as locales
+import datamimic_ce.domains.shared.locales as locales
 
 
 @pytest.fixture(autouse=True)

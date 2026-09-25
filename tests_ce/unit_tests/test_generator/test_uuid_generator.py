@@ -7,7 +7,7 @@
 import uuid
 from random import Random
 
-from datamimic_ce.domains.common.literal_generators.uuid_generator import UUIDGenerator
+from datamimic_ce.domains.shared.literal_generators.uuid_generator import UUIDGenerator
 
 
 def test_uuid_generator_replays_with_same_seed() -> None:

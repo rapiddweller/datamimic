@@ -1,5 +1,5 @@
-from datamimic_ce.domains.common.models.country import Country
-from datamimic_ce.domains.common.services.country_service import CountryService
+from datamimic_ce.domains.shared.models.country import Country
+from datamimic_ce.domains.shared.services.country_service import CountryService
 
 
 class TestEntityCountry:

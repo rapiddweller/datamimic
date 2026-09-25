@@ -3,7 +3,7 @@ from pathlib import Path
 
 from datamimic_ce.domains.domain_core.base_domain_generator import DatasetAwareDomainGenerator
 from datamimic_ce.domains.insurance.generators.insurance_coverage_generator import InsuranceCoverageGenerator
-from datamimic_ce.domains.utils.dataset_loader import pick_one_weighted, read_weighted_records
+from datamimic_ce.domains.shared.utils.dataset_loader import pick_one_weighted, read_weighted_records
 
 
 class InsuranceProductGenerator(DatasetAwareDomainGenerator):
@@ -36,7 +36,7 @@ class InsuranceProductGenerator(DatasetAwareDomainGenerator):
         # To maintain prior contract, we assume CSV columns: type,code,description,weight
         # Re-read as dicts via loader pattern:
         # Pick an index, then map columns from the headered rows.
-        from datamimic_ce.domains.utils.dataset_path import dataset_path
+        from datamimic_ce.domains.shared.utils.dataset_path import dataset_path
 
         file_path = dataset_path("insurance", f"products_{self._dataset}.csv", start=Path(__file__))
         _, rows_dicts = read_weighted_records(file_path, "weight")
@@ -58,7 +58,7 @@ class InsuranceProductGenerator(DatasetAwareDomainGenerator):
 
     #  Centralize dataset I/O from model per SOC
     def pick_coverage_count(self, *, start_path: Path) -> int:
-        from datamimic_ce.domains.utils.dataset_loader import load_weighted_values_try_dataset
+        from datamimic_ce.domains.shared.utils.dataset_loader import load_weighted_values_try_dataset
 
         values, weights = load_weighted_values_try_dataset(
             "insurance", "product", "coverage_counts.csv", dataset=self._dataset, start=start_path

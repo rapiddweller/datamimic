@@ -2,7 +2,7 @@ from datetime import datetime
 
 import pytest
 
-from datamimic_ce.domains.common.models.address import Address
+from datamimic_ce.domains.shared.models.address import Address
 from datamimic_ce.domains.public_sector.models.police_officer import PoliceOfficer
 from datamimic_ce.domains.public_sector.services.police_officer_service import PoliceOfficerService
 

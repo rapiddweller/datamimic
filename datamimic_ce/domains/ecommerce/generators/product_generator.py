@@ -14,7 +14,7 @@ import random
 from pathlib import Path
 
 from datamimic_ce.domains.domain_core.base_domain_generator import DatasetAwareDomainGenerator
-from datamimic_ce.domains.utils.dataset_loader import (
+from datamimic_ce.domains.shared.utils.dataset_loader import (
     load_weighted_values_try_dataset,
     pick_one_weighted,
 )
@@ -91,8 +91,8 @@ class ProductGenerator(DatasetAwareDomainGenerator):
             "currencies",
             "product_benefits",
         }:
-            from datamimic_ce.domains.utils.dataset_loader import read_headered_csv
-            from datamimic_ce.domains.utils.dataset_path import dataset_path
+            from datamimic_ce.domains.shared.utils.dataset_loader import read_headered_csv
+            from datamimic_ce.domains.shared.utils.dataset_path import dataset_path
 
             file_name = f"{data_type.lower()}_{self._dataset}.csv"
             file_path = dataset_path("ecommerce", file_name, start=Path(__file__))
@@ -158,8 +158,8 @@ class ProductGenerator(DatasetAwareDomainGenerator):
     @staticmethod
     def _load_product_json(file_name):
         # Keep JSON helper for non-weighted structured data.
-        from datamimic_ce.domains.utils.dataset_loader import read_json_data
-        from datamimic_ce.domains.utils.dataset_path import dataset_path
+        from datamimic_ce.domains.shared.utils.dataset_loader import read_json_data
+        from datamimic_ce.domains.shared.utils.dataset_path import dataset_path
 
         file_path = dataset_path("ecommerce", "product", f"{file_name}.json", start=Path(__file__))
         return read_json_data(file_path)

@@ -10,14 +10,14 @@ import pytest
 
 DATASETS = ("US", "DE", "VN")
 GROUP_DIRS = {
-    "age_band": Path("datamimic_ce/domains/domain_data/groups/age_band"),
-    "condition_prevalence_tier": Path("datamimic_ce/domains/domain_data/groups/condition_prevalence_tier"),
-    "gender_category": Path("datamimic_ce/domains/domain_data/groups/gender_category"),
-    "specialty_family": Path("datamimic_ce/domains/domain_data/groups/specialty_family"),
-    "area_code_cluster": Path("datamimic_ce/domains/domain_data/groups/area_code_cluster"),
-    "population_tier": Path("datamimic_ce/domains/domain_data/groups/population_tier"),
-    "coverage_line": Path("datamimic_ce/domains/domain_data/groups/coverage_line"),
-    "sector_macro": Path("datamimic_ce/domains/domain_data/groups/sector_macro"),
+    "age_band": Path("datamimic_ce/domains/shared/domain_data/groups/age_band"),
+    "condition_prevalence_tier": Path("datamimic_ce/domains/shared/domain_data/groups/condition_prevalence_tier"),
+    "gender_category": Path("datamimic_ce/domains/shared/domain_data/groups/gender_category"),
+    "specialty_family": Path("datamimic_ce/domains/shared/domain_data/groups/specialty_family"),
+    "area_code_cluster": Path("datamimic_ce/domains/shared/domain_data/groups/area_code_cluster"),
+    "population_tier": Path("datamimic_ce/domains/shared/domain_data/groups/population_tier"),
+    "coverage_line": Path("datamimic_ce/domains/shared/domain_data/groups/coverage_line"),
+    "sector_macro": Path("datamimic_ce/domains/shared/domain_data/groups/sector_macro"),
 }
 
 TOLERANCE = 1e-3

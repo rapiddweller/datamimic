@@ -43,7 +43,7 @@ ALLOWLIST: set[str] = {
     # SPOT itself: now_utc_naive() lives here.
     "datamimic_ce/domains/domain_core/runtime/clock.py",
     # Intentional "current datetime" output mode in datetime_generator.
-    "datamimic_ce/domains/common/literal_generators/datetime_generator.py",
+    "datamimic_ce/domains/shared/literal_generators/datetime_generator.py",
     # Telemetry / timing, not part of generator output.
     "datamimic_ce/engine/runtime/logging.py",
     "datamimic_ce/data_mimic_test.py",

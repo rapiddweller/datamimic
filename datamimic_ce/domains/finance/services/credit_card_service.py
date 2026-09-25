@@ -7,11 +7,11 @@
 from datetime import datetime
 from random import Random
 
-from datamimic_ce.domains.common.models.demographic_config import DemographicConfig
 from datamimic_ce.domains.domain_core import BaseDomainService
 from datamimic_ce.domains.domain_core.attribute_catalog import EntitySchema, FieldSpec, field
 from datamimic_ce.domains.finance.generators.credit_card_generator import CreditCardGenerator
 from datamimic_ce.domains.finance.models.credit_card import CreditCard
+from datamimic_ce.domains.shared.models.demographic_config import DemographicConfig
 
 CREDIT_CARD_SCHEMA = EntitySchema(
     "CreditCard",

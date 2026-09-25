@@ -17,7 +17,7 @@ from datamimic_ce.authoring.contracts import (
     ScaffoldResult,
     UniqueAcceptanceResult,
 )
-from datamimic_ce.authoring.service import scaffold
+from datamimic_ce.authoring.application.service import scaffold
 
 _TEST_DIR = Path(__file__).resolve().parent
 _REPO_ROOT = _TEST_DIR.parents[2]

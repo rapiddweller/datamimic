@@ -7,9 +7,9 @@ import datetime
 
 import pytest
 
-from datamimic_ce.domains.common.models import Address
 from datamimic_ce.domains.ecommerce.models.order import Order
 from datamimic_ce.domains.ecommerce.services import OrderService
+from datamimic_ce.domains.shared.models.address import Address
 
 
 class TestEntityOrder:

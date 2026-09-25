@@ -272,7 +272,7 @@ The CE seeded-runtime guarantee is scoped to the tested profiles. CI runs eight 
 **EE** behavior is outside this CE evidence.
 
 ```python
-from datamimic_ce.domains.facade import generate_domain
+from datamimic_ce.domains.shared.facade import generate_domain
 
 request = {
     "domain": "person",
@@ -510,7 +510,7 @@ Most teams adopt CE for one of three reasons. EE is not required for any of them
 **1. Reproducible test data for CI/CD pipelines.** Pin a seed against the `generate_domain` facade — or hand a seeded `random.Random` to any domain service — and you get replay-identical output within the tested compatibility boundary above. Both layers are replay-tested on every CI run by [`tests_ce/architecture/`](https://github.com/rapiddweller/datamimic/tree/development/tests_ce/architecture/). Regression tests stop being flaky because the input data is stable across runs.
 
 ```python
-from datamimic_ce.domains.facade import generate_domain
+from datamimic_ce.domains.shared.facade import generate_domain
 
 response = generate_domain({
     "domain": "person", "version": "v1", "count": 1,

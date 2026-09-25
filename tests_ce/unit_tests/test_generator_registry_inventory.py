@@ -1,4 +1,4 @@
-from datamimic_ce.domains.domain_core.generator_registry import generator_namespace
+from datamimic_ce.domains.shared.generator_registry import generator_namespace
 
 
 def test_builtin_generator_inventory_is_complete():

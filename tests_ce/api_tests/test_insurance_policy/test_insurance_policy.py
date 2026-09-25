@@ -3,7 +3,7 @@ import uuid
 
 import pytest
 
-from datamimic_ce.domains.common.models.person import Person
+from datamimic_ce.domains.shared.models.person import Person
 from datamimic_ce.domains.insurance.models.insurance_company import InsuranceCompany
 from datamimic_ce.domains.insurance.models.insurance_policy import InsurancePolicy
 from datamimic_ce.domains.insurance.models.insurance_product import InsuranceProduct

@@ -225,7 +225,7 @@ def test_nested_policy_company_and_product_ids_are_unique_after_collision(monkey
 
 
 def test_transaction_ids_are_unique_after_regex_generator_collision(monkeypatch: pytest.MonkeyPatch) -> None:
-    from datamimic_ce.domains.common.literal_generators.string_generator import StringGenerator
+    from datamimic_ce.domains.shared.literal_generators.string_generator import StringGenerator
 
     calls = 0
 

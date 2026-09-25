@@ -22,9 +22,9 @@ from typing import ClassVar
 from lxml import etree
 from pydantic import BaseModel
 
-from datamimic_ce.authoring.diagnostics import Diagnostic
-from datamimic_ce.authoring.linter import _run_rules, lint_source
-from datamimic_ce.authoring.schema import build_schema_index
+from datamimic_ce.authoring.domain.diagnostics import Diagnostic
+from datamimic_ce.authoring.application.linter import _run_rules, lint_source
+from datamimic_ce.authoring.domain.schema import build_schema_index
 from datamimic_ce.engine.dsl.model.constraints import (
     AllOrNone,
     AllowedValuesWhen,
@@ -211,7 +211,7 @@ def test_schema_index_is_clean_after_gate() -> None:
 def test_rule_modules_have_no_model_specific_wiring() -> None:
     """Belt and braces: the rules must read facts from the schema index, never from
     specific model modules — a private constant import is exactly the P1 this gate kills."""
-    from datamimic_ce.authoring.rules import best_practice, cross_statement, schema_rules, semantic_rules
+    from datamimic_ce.authoring.domain.rules import best_practice, cross_statement, schema_rules, semantic_rules
 
     for module in (schema_rules, semantic_rules, best_practice, cross_statement):
         source = inspect.getsource(module)

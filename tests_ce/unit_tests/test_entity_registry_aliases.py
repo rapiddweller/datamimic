@@ -2,14 +2,14 @@ from types import SimpleNamespace
 
 import pytest
 
-from datamimic_ce.domains.common.services.person_service import PersonService
+from datamimic_ce.domains.shared.services.person_service import PersonService
 from datamimic_ce.domains.domain_core.base_entity import BaseEntity
-from datamimic_ce.domains.domain_core.entity_registry import get_entity_service_class, list_entity_specs
+from datamimic_ce.domains.shared.entity_registry import get_entity_service_class, list_entity_specs
 from datamimic_ce.engine.runtime.tasks.variable_task import VariableTask
 
 
 def test_dotted_service_alias_resolves_through_entity_registry():
-    alias = "common.services.person_service.PersonService"
+    alias = "shared.services.person_service.PersonService"
     assert get_entity_service_class(alias) is PersonService
 
 
@@ -28,7 +28,7 @@ def test_unknown_dotted_entity_is_rejected():
     )
 
     with pytest.raises(ValueError, match="not supported in the domain architecture"):
-        VariableTask._get_entity_generator(context, "common.models.UnknownEntity", "en", "US", 1, statement)
+        VariableTask._get_entity_generator(context, "shared.models.UnknownEntity", "en", "US", 1, statement)
 
 
 def test_builtin_entity_inventory_is_complete():

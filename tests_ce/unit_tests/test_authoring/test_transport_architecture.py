@@ -48,11 +48,11 @@ def test_cli_entry_module_contains_no_private_or_non_command_functions() -> None
 
 def test_transports_do_not_import_authoring_implementation_modules() -> None:
     forbidden = {
-        "datamimic_ce.authoring.compiler",
-        "datamimic_ce.authoring.dryrun",
-        "datamimic_ce.authoring.linter",
-        "datamimic_ce.authoring.reference",
-        "datamimic_ce.authoring.reference_projection",
+        "datamimic_ce.authoring.application.compiler",
+        "datamimic_ce.authoring.adapters.dryrun",
+        "datamimic_ce.authoring.application.linter",
+        "datamimic_ce.authoring.projection.reference",
+        "datamimic_ce.authoring.projection.reference_projection",
     }
     for relative in (
         "datamimic_ce/interfaces/cli/__init__.py",

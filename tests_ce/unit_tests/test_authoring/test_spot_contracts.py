@@ -12,8 +12,8 @@ from pathlib import Path
 import pytest
 from pydantic import BaseModel
 
-from datamimic_ce.authoring.reference import capabilities_manifest, element_reference
-from datamimic_ce.authoring.schema import build_schema_index, element_json_schema
+from datamimic_ce.authoring.projection.reference import capabilities_manifest, element_reference
+from datamimic_ce.authoring.domain.schema import build_schema_index, element_json_schema
 from datamimic_ce.engine.dsl.constants.element_constants import EL_GENERATE, EL_ITERATE
 from datamimic_ce.engine.dsl.enums.distribution_enums import NumberDistribution, SourceDistribution
 from datamimic_ce.engine.dsl.model.constraints import (

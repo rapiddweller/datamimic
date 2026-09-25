@@ -13,11 +13,11 @@ This module provides the PoliceOfficer entity model for generating realistic pol
 import datetime
 from pathlib import Path
 
-from datamimic_ce.domains.common.models.address import Address
-from datamimic_ce.domains.common.models.person import Person
 from datamimic_ce.domains.domain_core import BaseEntity
 from datamimic_ce.domains.domain_core.property_cache import property_cache
 from datamimic_ce.domains.public_sector.generators.police_officer_generator import PoliceOfficerGenerator
+from datamimic_ce.domains.shared.models.address import Address
+from datamimic_ce.domains.shared.models.person import Person
 
 
 class PoliceOfficer(BaseEntity):

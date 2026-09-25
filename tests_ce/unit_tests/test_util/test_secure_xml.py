@@ -4,7 +4,7 @@ from pathlib import Path
 
 import pytest
 
-from datamimic_ce.authoring.xml_loader import RULE_XML_LOAD, load_source
+from datamimic_ce.authoring.adapters.xml_loader import RULE_XML_LOAD, load_source
 from datamimic_ce.engine.dsl.parsers.descriptor_parser import DescriptorParser
 from datamimic_ce.engine.dsl.xml import DTDForbiddenError, parse_xml_file, parse_xml_source
 from datamimic_ce.engine.io.api import FileUtil

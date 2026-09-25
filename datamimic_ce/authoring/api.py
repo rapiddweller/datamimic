@@ -1,6 +1,6 @@
 """Typed public entry points for authoring application operations."""
 
-from datamimic_ce.authoring import service
+from datamimic_ce.authoring.application import service
 from datamimic_ce.authoring.contracts import (
     CapabilitiesRequest,
     CapabilitiesResult,

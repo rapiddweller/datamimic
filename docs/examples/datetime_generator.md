@@ -69,7 +69,7 @@ If `min`/`max` constrain the first/last day, hours/minutes/seconds are sampled o
 Provide `seed` to get reproducible sequences (same inputs → same outputs).
 
 ```python
-from datamimic_ce.domains.common.literal_generators.datetime_generator import DateTimeGenerator
+from datamimic_ce.domains.shared.literal_generators.datetime_generator import DateTimeGenerator
 
 g1 = DateTimeGenerator(random=True, seed=123)
 g2 = DateTimeGenerator(random=True, seed=123)

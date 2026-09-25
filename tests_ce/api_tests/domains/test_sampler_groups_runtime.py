@@ -4,21 +4,21 @@ from __future__ import annotations
 
 import pytest
 
-from datamimic_ce.domains.common.demographics.profile import (
+from datamimic_ce.domains.shared.demographics.profile import (
     DemographicAgeBand,
     DemographicConditionRate,
     DemographicProfile,
     DemographicProfileId,
 )
-from datamimic_ce.domains.common.demographics.profile_meta import profile_group_refs
-from datamimic_ce.domains.common.demographics.sampler import (
+from datamimic_ce.domains.shared.demographics.profile_meta import profile_group_refs
+from datamimic_ce.domains.shared.demographics.sampler import (
     DemographicSampler,
     GroupRegistry,
     MaskBoundsError,
     load_group_table,
 )
-from datamimic_ce.domains.determinism import compute_provenance_hash
-from datamimic_ce.domains.utils.dataset_path import dataset_path
+from datamimic_ce.domains.shared.determinism import compute_provenance_hash
+from datamimic_ce.domains.shared.utils.dataset_path import dataset_path
 
 
 @pytest.fixture()
@@ -89,7 +89,7 @@ def test_age_mask_applies_band_filter(sample_profile: DemographicProfile, monkey
         return original(dataset, version, dimension, group_id)
 
     monkeypatch.setattr(
-        "datamimic_ce.domains.common.demographics.sampler.load_group_table",
+        "datamimic_ce.domains.shared.demographics.sampler.load_group_table",
         fake_load,
     )
 
@@ -127,7 +127,7 @@ def test_condition_mask_scales_weights(sample_profile: DemographicProfile, monke
         return original(dataset, version, dimension, group_id)
 
     monkeypatch.setattr(
-        "datamimic_ce.domains.common.demographics.sampler.load_group_table",
+        "datamimic_ce.domains.shared.demographics.sampler.load_group_table",
         fake_load,
     )
 
@@ -155,7 +155,7 @@ def test_mask_bounds_enforced_strict_mode(sample_profile: DemographicProfile, mo
         return ({(18, 44): 1.0}, ("/tmp/fake.csv", "hash"))
 
     monkeypatch.setattr(
-        "datamimic_ce.domains.common.demographics.sampler.load_group_table",
+        "datamimic_ce.domains.shared.demographics.sampler.load_group_table",
         fake_load,
     )
 
@@ -171,7 +171,7 @@ def test_mask_bounds_fallback_non_strict(sample_profile: DemographicProfile, mon
         return ({(18, 44): 1.0}, ("/tmp/fake.csv", "hash"))
 
     monkeypatch.setattr(
-        "datamimic_ce.domains.common.demographics.sampler.load_group_table",
+        "datamimic_ce.domains.shared.demographics.sampler.load_group_table",
         fake_load,
     )
 
@@ -198,7 +198,7 @@ def test_provenance_hash_tracks_group_files(
         return original(dataset, version, dimension, group_id)
 
     monkeypatch.setattr(
-        "datamimic_ce.domains.common.demographics.sampler.load_group_table",
+        "datamimic_ce.domains.shared.demographics.sampler.load_group_table",
         fake_load,
     )
 

@@ -4,7 +4,7 @@ from pathlib import Path
 
 import pytest
 
-from datamimic_ce.domains.utils.dataset_path import dataset_path, domain_data_root, repo_root
+from datamimic_ce.domains.shared.utils.dataset_path import dataset_path, domain_data_root, repo_root
 
 
 def test_repo_root_discovers_pyproject(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:

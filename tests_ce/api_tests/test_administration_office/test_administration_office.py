@@ -1,4 +1,4 @@
-from datamimic_ce.domains.common.models.address import Address
+from datamimic_ce.domains.shared.models.address import Address
 from datamimic_ce.domains.public_sector.models.administration_office import AdministrationOffice
 from datamimic_ce.domains.public_sector.services.administration_office_service import AdministrationOfficeService
 

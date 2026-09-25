@@ -34,8 +34,8 @@ from pydantic.json_schema import GetJsonSchemaHandler, JsonSchemaValue
 from pydantic_core import CoreSchema
 
 from datamimic_ce._compat import StrEnum
-from datamimic_ce.authoring.diagnostics import Diagnostic, LintResult
-from datamimic_ce.authoring.rule_catalog import RuleSeverity as RuleSeverity
+from datamimic_ce.authoring.domain.diagnostics import Diagnostic, LintResult
+from datamimic_ce.authoring.domain.rule_catalog import RuleSeverity as RuleSeverity
 from datamimic_ce.authoring.spec import (
     ExpectationIntent,
     ExpectationIntentKind,

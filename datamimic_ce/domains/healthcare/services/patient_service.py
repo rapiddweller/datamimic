@@ -13,12 +13,12 @@ This module provides the PatientService class for generating and managing patien
 from datetime import datetime
 from random import Random
 
-from datamimic_ce.domains.common.demographics.sampler import DemographicSampler
-from datamimic_ce.domains.common.models.demographic_config import DemographicConfig
 from datamimic_ce.domains.domain_core import BaseDomainService
 from datamimic_ce.domains.domain_core.attribute_catalog import EntitySchema, FieldSpec, field
 from datamimic_ce.domains.healthcare.generators.patient_generator import PatientGenerator
 from datamimic_ce.domains.healthcare.models.patient import Patient
+from datamimic_ce.domains.shared.demographics.sampler import DemographicSampler
+from datamimic_ce.domains.shared.models.demographic_config import DemographicConfig
 
 PATIENT_SCHEMA = EntitySchema(
     "Patient",

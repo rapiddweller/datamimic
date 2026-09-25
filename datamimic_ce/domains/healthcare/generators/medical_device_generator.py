@@ -9,22 +9,22 @@ from __future__ import annotations
 from typing import TYPE_CHECKING, TypedDict
 
 if TYPE_CHECKING:
-    from datamimic_ce.domains.common.models.demographic_config import DemographicConfig
+    from datamimic_ce.domains.shared.models.demographic_config import DemographicConfig
 
 import datetime
 import random
 from pathlib import Path
 
-from datamimic_ce.domains.common.generators.person_generator import PersonGenerator
 from datamimic_ce.domains.domain_core.base_domain_generator import ClockAnchoredDomainGenerator
-from datamimic_ce.domains.utils.dataset_loader import (
+from datamimic_ce.domains.shared.generators.person_generator import PersonGenerator
+from datamimic_ce.domains.shared.utils.dataset_loader import (
     load_weighted_values_try_dataset,
     pick_one_weighted,
     pick_one_weighted_no_repeat,
     read_weighted_dataframe,
     read_weighted_values,
 )
-from datamimic_ce.domains.utils.dataset_path import dataset_path
+from datamimic_ce.domains.shared.utils.dataset_path import dataset_path
 
 
 class MaintenanceRecord(TypedDict):
@@ -49,7 +49,7 @@ class MedicalDeviceGenerator(ClockAnchoredDomainGenerator):
         super().__init__(dataset=dataset, rng=rng, reference_now=reference_now)
         #  thread demographic constraints to person details used in usage logs/technicians
         if demographic_config is None:
-            from datamimic_ce.domains.common.models.demographic_config import DemographicConfig as _DC
+            from datamimic_ce.domains.shared.models.demographic_config import DemographicConfig as _DC
 
             demographic_config = _DC()
         self._person_generator = PersonGenerator(
@@ -65,7 +65,7 @@ class MedicalDeviceGenerator(ClockAnchoredDomainGenerator):
 
     # Date helpers to keep model pure and deterministic
     def generate_manufacture_date(self) -> str:
-        from datamimic_ce.domains.common.literal_generators.datetime_generator import DateTimeGenerator
+        from datamimic_ce.domains.shared.literal_generators.datetime_generator import DateTimeGenerator
 
         now = self._reference_now
         min_dt = (now - datetime.timedelta(days=3650)).strftime("%Y-%m-%d %H:%M:%S")
@@ -75,7 +75,7 @@ class MedicalDeviceGenerator(ClockAnchoredDomainGenerator):
         return dt.strftime("%Y-%m-%d")
 
     def generate_expiration_date(self) -> str:
-        from datamimic_ce.domains.common.literal_generators.datetime_generator import DateTimeGenerator
+        from datamimic_ce.domains.shared.literal_generators.datetime_generator import DateTimeGenerator
 
         now = self._reference_now
         min_dt = (now + datetime.timedelta(days=365)).strftime("%Y-%m-%d %H:%M:%S")
@@ -85,7 +85,7 @@ class MedicalDeviceGenerator(ClockAnchoredDomainGenerator):
         return dt.strftime("%Y-%m-%d")
 
     def generate_last_maintenance_date(self) -> str:
-        from datamimic_ce.domains.common.literal_generators.datetime_generator import DateTimeGenerator
+        from datamimic_ce.domains.shared.literal_generators.datetime_generator import DateTimeGenerator
 
         now = self._reference_now
         min_dt = (now - datetime.timedelta(days=180)).strftime("%Y-%m-%d %H:%M:%S")
@@ -95,7 +95,7 @@ class MedicalDeviceGenerator(ClockAnchoredDomainGenerator):
         return dt.strftime("%Y-%m-%d")
 
     def generate_next_maintenance_date(self) -> str:
-        from datamimic_ce.domains.common.literal_generators.datetime_generator import DateTimeGenerator
+        from datamimic_ce.domains.shared.literal_generators.datetime_generator import DateTimeGenerator
 
         now = self._reference_now
         min_dt = (now + datetime.timedelta(days=1)).strftime("%Y-%m-%d %H:%M:%S")
@@ -172,7 +172,7 @@ class MedicalDeviceGenerator(ClockAnchoredDomainGenerator):
         num_logs = self._rng.randint(3, 10)
 
         # Start date for logs (between 1 and 2 years ago)
-        from datamimic_ce.domains.common.literal_generators.datetime_generator import DateTimeGenerator
+        from datamimic_ce.domains.shared.literal_generators.datetime_generator import DateTimeGenerator
 
         now = self._reference_now
         min_dt = (now - datetime.timedelta(days=730)).strftime("%Y-%m-%d %H:%M:%S")
@@ -209,8 +209,8 @@ class MedicalDeviceGenerator(ClockAnchoredDomainGenerator):
         """
         from pathlib import Path
 
-        from datamimic_ce.domains.utils.dataset_loader import read_weighted_values
-        from datamimic_ce.domains.utils.dataset_path import dataset_path
+        from datamimic_ce.domains.shared.utils.dataset_loader import read_weighted_values
+        from datamimic_ce.domains.shared.utils.dataset_path import dataset_path
 
         dtype = device_type.lower()
         # Base purposes
@@ -247,8 +247,8 @@ class MedicalDeviceGenerator(ClockAnchoredDomainGenerator):
         """
         from pathlib import Path
 
-        from datamimic_ce.domains.utils.dataset_loader import read_weighted_values
-        from datamimic_ce.domains.utils.dataset_path import dataset_path
+        from datamimic_ce.domains.shared.utils.dataset_loader import read_weighted_values
+        from datamimic_ce.domains.shared.utils.dataset_path import dataset_path
 
         path = dataset_path("healthcare", "medical", f"usage_notes_{self._dataset}.csv", start=Path(__file__))
         values, weights = read_weighted_values(path)
@@ -270,7 +270,7 @@ class MedicalDeviceGenerator(ClockAnchoredDomainGenerator):
         num_records = self._rng.randint(2, 8)
 
         # Start date for maintenance (between 1 and 3 years ago)
-        from datamimic_ce.domains.common.literal_generators.datetime_generator import DateTimeGenerator
+        from datamimic_ce.domains.shared.literal_generators.datetime_generator import DateTimeGenerator
 
         now = self._reference_now
         min_dt = (now - datetime.timedelta(days=1095)).strftime("%Y-%m-%d %H:%M:%S")
@@ -309,7 +309,7 @@ class MedicalDeviceGenerator(ClockAnchoredDomainGenerator):
             A string representing a technician name.
         """
         # Use the existing PersonGenerator for realistic technician names
-        from datamimic_ce.domains.common.models.person import Person
+        from datamimic_ce.domains.shared.models.person import Person
 
         person = Person(self._person_generator)
         return f"{person.given_name} {person.family_name}"

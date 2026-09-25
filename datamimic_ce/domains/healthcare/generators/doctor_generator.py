@@ -15,22 +15,22 @@ from __future__ import annotations
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
-    from datamimic_ce.domains.common.demographics.sampler import DemographicSampler
-    from datamimic_ce.domains.common.models.demographic_config import DemographicConfig
+    from datamimic_ce.domains.shared.demographics.sampler import DemographicSampler
+    from datamimic_ce.domains.shared.models.demographic_config import DemographicConfig
 
 import datetime
 import random
 from pathlib import Path
 
-from datamimic_ce.domains.common.generators.person_generator import PersonGenerator
 from datamimic_ce.domains.domain_core.base_domain_generator import ClockAnchoredDomainGenerator
 from datamimic_ce.domains.healthcare.generators.hospital_generator import HospitalGenerator
-from datamimic_ce.domains.utils.dataset_loader import (
+from datamimic_ce.domains.shared.generators.person_generator import PersonGenerator
+from datamimic_ce.domains.shared.utils.dataset_loader import (
     pick_one_weighted_no_repeat,
     read_weighted_records,
     read_weighted_values,
 )
-from datamimic_ce.domains.utils.dataset_path import dataset_path
+from datamimic_ce.domains.shared.utils.dataset_path import dataset_path
 
 
 class DoctorGenerator(ClockAnchoredDomainGenerator):
@@ -45,7 +45,7 @@ class DoctorGenerator(ClockAnchoredDomainGenerator):
         reference_now: datetime.datetime | None = None,
     ):
         super().__init__(dataset=dataset, rng=rng, reference_now=reference_now)
-        from datamimic_ce.domains.common.models.demographic_config import DemographicConfig as _DC
+        from datamimic_ce.domains.shared.models.demographic_config import DemographicConfig as _DC
 
         demo = demographic_config if demographic_config is not None else _DC()
         self._person_generator = PersonGenerator(

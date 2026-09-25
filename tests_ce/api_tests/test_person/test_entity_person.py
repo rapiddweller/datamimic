@@ -2,9 +2,9 @@ from datetime import datetime
 
 import pytest
 
-from datamimic_ce.domains.common.models.address import Address
-from datamimic_ce.domains.common.models.person import Person
-from datamimic_ce.domains.common.services.person_service import PersonService
+from datamimic_ce.domains.shared.models.address import Address
+from datamimic_ce.domains.shared.models.person import Person
+from datamimic_ce.domains.shared.services.person_service import PersonService
 
 
 class TestEntityPerson:

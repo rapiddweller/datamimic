@@ -32,9 +32,9 @@ class RuntimeDeterminismManifest(TypedDict):
 
 def build_actual_manifest() -> RuntimeDeterminismManifest:
     from datamimic_ce.domains.api import iter_generator_capabilities as domain_generator_capabilities
-    from datamimic_ce.domains.determinism import canonical_json, hash_bytes
-    from datamimic_ce.domains.domain_core.entity_registry import list_entity_specs
-    from datamimic_ce.domains.facade import REGISTRY, generate_domain
+    from datamimic_ce.domains.shared.determinism import canonical_json, hash_bytes
+    from datamimic_ce.domains.shared.entity_registry import list_entity_specs
+    from datamimic_ce.domains.shared.facade import REGISTRY, generate_domain
     from datamimic_ce.engine.runtime.api import iter_generator_capabilities as runtime_generator_capabilities
     from tests_ce.integration_tests.test_determinism_seed_scenarios.test_determinism_seed_scenarios import (
         seeded_model_hash,

@@ -1,8 +1,8 @@
 import pytest
 
-from datamimic_ce.domains.common.models.address import Address
-from datamimic_ce.domains.common.models.company import Company
-from datamimic_ce.domains.common.services.company_service import CompanyService
+from datamimic_ce.domains.shared.models.address import Address
+from datamimic_ce.domains.shared.models.company import Company
+from datamimic_ce.domains.shared.services.company_service import CompanyService
 
 
 class TestEntityCompany:

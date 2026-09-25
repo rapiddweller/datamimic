@@ -27,7 +27,7 @@ class WhileTask(GenSubTask):
         return self._statement
 
     def execute(self, parent_context: GenIterContext) -> None:
-        from datamimic_ce.engine.runtime.tasks.generate_task import GenerateTask
+        from datamimic_ce.engine.runtime.tasks.generate.task import GenerateTask
         from datamimic_ce.engine.runtime.tasks.task_util import TaskUtil
 
         child_tasks = [

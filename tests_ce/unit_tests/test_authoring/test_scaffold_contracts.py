@@ -18,7 +18,7 @@ from datamimic_ce.authoring.contracts import (
     AuthoringStage,
     ScaffoldRequest,
 )
-from datamimic_ce.authoring.service import scaffold
+from datamimic_ce.authoring.application.service import scaffold
 from datamimic_ce.interfaces.cli import app
 
 # Test specs covering various scenarios

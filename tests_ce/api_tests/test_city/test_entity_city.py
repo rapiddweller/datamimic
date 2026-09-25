@@ -2,8 +2,8 @@ from typing import Optional
 
 import pytest
 
-from datamimic_ce.domains.common.models.city import City
-from datamimic_ce.domains.common.services.city_service import CityService
+from datamimic_ce.domains.shared.models.city import City
+from datamimic_ce.domains.shared.services.city_service import CityService
 
 
 class TestEntityCity:

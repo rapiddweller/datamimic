@@ -14,17 +14,17 @@ from lxml import etree
 from typer.testing import CliRunner
 
 from datamimic_ce.authoring.contracts import ReferenceTopic
-from datamimic_ce.authoring.diagnostics import Diagnostic
-from datamimic_ce.authoring.reference import capabilities_manifest, reference
-from datamimic_ce.authoring.rule_catalog import (
+from datamimic_ce.authoring.domain.diagnostics import Diagnostic
+from datamimic_ce.authoring.projection.reference import capabilities_manifest, reference
+from datamimic_ce.authoring.domain.rule_catalog import (
     AUTHORING_RULE_DEFINITIONS,
     RuleSeverity,
     authoring_rule_definitions,
     serialize_rule_definition,
 )
-from datamimic_ce.authoring.rules import ALL_INTENT_RULES, ALL_RULES
-from datamimic_ce.authoring.rules.base import IntentLintContext, LintContext
-from datamimic_ce.authoring.schema import build_schema_index
+from datamimic_ce.authoring.domain.rules import ALL_INTENT_RULES, ALL_RULES
+from datamimic_ce.authoring.domain.rules.base import IntentLintContext, LintContext
+from datamimic_ce.authoring.domain.schema import build_schema_index
 from datamimic_ce.engine.dsl.enums.distribution_enums import POSITIONAL_NUMBER_SEQUENCES, NumberDistribution
 from datamimic_ce.interfaces.cli import app
 

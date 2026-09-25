@@ -16,7 +16,7 @@ from datamimic_ce.engine.runtime.contexts.geniter_context import GenIterContext
 from datamimic_ce.engine.runtime.contexts.records import dict_nested_update
 from datamimic_ce.engine.runtime.contexts.setup_context import SetupContext
 from datamimic_ce.engine.runtime.storage.memstore_manager import MemstoreManager
-from datamimic_ce.engine.runtime.tasks.generate_task import GenerateTask
+from datamimic_ce.engine.runtime.tasks.generate.task import GenerateTask
 from datamimic_ce.engine.runtime.tasks.task_util import TaskUtil
 
 
@@ -277,7 +277,7 @@ class TestGenerateTask:
     def test_scan_data_source(self, generate_task, mock_context):
         """Test _scan_data_source method."""
         with patch(
-            "datamimic_ce.engine.runtime.tasks.generate_task.set_data_source_length"
+            "datamimic_ce.engine.runtime.tasks.generate.task.set_data_source_length"
         ) as mock_set_data_source_length:
             GenerateTask._scan_data_source(mock_context, generate_task.statement)
 
@@ -368,7 +368,7 @@ class TestGenerateTask:
     @pytest.mark.skip("Need rework with ray")
     def test_sp_generate(self, generate_task, mock_context, mock_statement):
         """Test _sp_generate method."""
-        with patch("datamimic_ce.engine.runtime.tasks.generate_task._geniter_single_process_generate") as mock_gen:
+        with patch("datamimic_ce.engine.runtime.tasks.generate.task._geniter_single_process_generate") as mock_gen:
             mock_gen.return_value = {mock_statement.full_name: [{"field1": "value1"}]}
             result = generate_task._sp_generate(mock_context, 0, 10)
             assert result == {mock_statement.full_name: [{"field1": "value1"}]}

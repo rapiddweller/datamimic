@@ -26,7 +26,7 @@ DATAMIMIC is built on three main architectural components:
 
 Follow the dataset standard in `docs/data-domains/datasets.md` for all file access:
 
-- Always resolve files via `dataset_path(...)` or the lightweight loaders in `datamimic_ce.domains.utils.dataset_loader`.
+- Always resolve files via `dataset_path(...)` or the lightweight loaders in `datamimic_ce.domains.shared.utils.dataset_loader`.
 - Pass base filenames to loaders; the helper appends `_{CC}.csv` using the generator’s normalized dataset.
 - Honor strict mode with `DATAMIMIC_STRICT_DATASET=1` to validate presence without US fallback.
 - Keep all dataset I/O in generators; models remain pure and only read values from their generator.
@@ -36,7 +36,7 @@ Examples
 Headerless weighted CSV (value,weight):
 
 ```python
-from datamimic_ce.domains.utils.dataset_loader import load_weighted_values_try_dataset, pick_one_weighted
+from datamimic_ce.domains.shared.utils.dataset_loader import load_weighted_values_try_dataset, pick_one_weighted
 
 values, weights = load_weighted_values_try_dataset(
     "ecommerce", "order", "coupon_prefixes.csv", dataset=self._dataset, start=Path(__file__)
@@ -47,7 +47,7 @@ prefix = pick_one_weighted(self._rng, values, weights)
 Headered weighted CSV (with `weight` column):
 
 ```python
-from datamimic_ce.domains.utils.dataset_path import dataset_path
+from datamimic_ce.domains.shared.utils.dataset_path import dataset_path
 from datamimic_ce.engine.io.api import FileUtil
 
 path = dataset_path("ecommerce", f"product_categories_{self._dataset}.csv", start=Path(__file__))
@@ -109,7 +109,7 @@ Domain services are the primary entry point for generating synthetic data. Each 
 ### Example 1: Generating a Person
 
 ```python
-from datamimic_ce.domains.common.services import PersonService
+from datamimic_ce.domains.shared.services import PersonService
 
 # Reproducible run: inject a seeded RNG
 from random import Random
@@ -148,7 +148,7 @@ print(f"Medical Conditions: {patient.conditions}")
 ### Example 3: Generating Batch Data
 
 ```python
-from datamimic_ce.domains.common.services import PersonService
+from datamimic_ce.domains.shared.services import PersonService
 import json
 from datetime import datetime
 

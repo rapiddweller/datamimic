@@ -19,8 +19,8 @@ import platform
 
 import pytest
 
-from datamimic_ce.domains.determinism import get_datamimic_lib_version
-from datamimic_ce.domains.facade import REGISTRY, generate_domain
+from datamimic_ce.domains.shared.determinism import get_datamimic_lib_version
+from datamimic_ce.domains.shared.facade import REGISTRY, generate_domain
 from tests_ce.architecture.runtime_determinism_manifest import EXPECTED_FACADE_CONTENT_HASHES
 
 REGISTERED_DOMAINS: list[str] = sorted({key[0] for key in REGISTRY})

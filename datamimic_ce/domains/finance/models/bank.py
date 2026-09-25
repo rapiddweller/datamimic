@@ -1,9 +1,9 @@
 
-from datamimic_ce.domains.common.literal_generators.phone_number_generator import PhoneNumberGenerator
-from datamimic_ce.domains.common.literal_generators.string_generator import StringGenerator
 from datamimic_ce.domains.domain_core import BaseEntity
 from datamimic_ce.domains.domain_core.property_cache import property_cache
 from datamimic_ce.domains.finance.generators.bank_generator import BankGenerator
+from datamimic_ce.domains.shared.literal_generators.phone_number_generator import PhoneNumberGenerator
+from datamimic_ce.domains.shared.literal_generators.string_generator import StringGenerator
 
 
 class Bank(BaseEntity):

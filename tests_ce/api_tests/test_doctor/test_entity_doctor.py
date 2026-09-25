@@ -2,8 +2,8 @@ import datetime
 
 import pytest
 
-from datamimic_ce.domains.common.models.address import Address
-from datamimic_ce.domains.common.models.person import Person
+from datamimic_ce.domains.shared.models.address import Address
+from datamimic_ce.domains.shared.models.person import Person
 from datamimic_ce.domains.healthcare.models.doctor import Doctor
 from datamimic_ce.domains.healthcare.models.hospital import Hospital
 from datamimic_ce.domains.healthcare.services.doctor_service import DoctorService

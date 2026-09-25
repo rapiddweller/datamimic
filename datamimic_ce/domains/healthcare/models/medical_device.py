@@ -6,13 +6,13 @@
 
 from typing import TypeVar
 
-from datamimic_ce.domains.common.models.person import Person
 from datamimic_ce.domains.domain_core import BaseEntity
 from datamimic_ce.domains.domain_core.property_cache import property_cache
 from datamimic_ce.domains.healthcare.generators.medical_device_generator import (
     MaintenanceRecord,
     MedicalDeviceGenerator,
 )
+from datamimic_ce.domains.shared.models.person import Person
 
 T = TypeVar("T")
 

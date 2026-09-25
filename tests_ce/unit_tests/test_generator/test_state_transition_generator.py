@@ -17,7 +17,7 @@ import random
 
 import pytest
 
-from datamimic_ce.domains.common.literal_generators.state_transition_generator import StateTransitionGenerator
+from datamimic_ce.domains.shared.literal_generators.state_transition_generator import StateTransitionGenerator
 
 
 def test_weighted_branch_distribution():

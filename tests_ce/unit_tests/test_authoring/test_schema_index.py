@@ -21,8 +21,8 @@ import xml.etree.ElementTree as ET
 import pytest
 from pydantic import BaseModel
 
-from datamimic_ce.authoring.rules import ALL_RULES, best_practice, cross_statement, schema_rules, semantic_rules
-from datamimic_ce.authoring.schema import build_schema_index
+from datamimic_ce.authoring.domain.rules import ALL_RULES, best_practice, cross_statement, schema_rules, semantic_rules
+from datamimic_ce.authoring.domain.schema import build_schema_index
 from datamimic_ce.engine.dsl.constants.element_constants import EL_COMMENT, EL_FIELD, EL_SETUP, EL_TRANSITION, EL_VALUE
 from datamimic_ce.engine.dsl.model.element_registry import (
     ElementDefinition,

@@ -15,18 +15,18 @@ import random
 from pathlib import Path
 from typing import TypeVar
 
-from datamimic_ce.domains.common.generators.address_generator import AddressGenerator
-from datamimic_ce.domains.common.literal_generators.family_name_generator import FamilyNameGenerator
-from datamimic_ce.domains.common.literal_generators.given_name_generator import GivenNameGenerator
-from datamimic_ce.domains.common.literal_generators.phone_number_generator import PhoneNumberGenerator
 from datamimic_ce.domains.domain_core.base_domain_generator import ClockAnchoredDomainGenerator
-from datamimic_ce.domains.utils.dataset_loader import (
+from datamimic_ce.domains.shared.generators.address_generator import AddressGenerator
+from datamimic_ce.domains.shared.literal_generators.family_name_generator import FamilyNameGenerator
+from datamimic_ce.domains.shared.literal_generators.given_name_generator import GivenNameGenerator
+from datamimic_ce.domains.shared.literal_generators.phone_number_generator import PhoneNumberGenerator
+from datamimic_ce.domains.shared.utils.dataset_loader import (
     load_weighted_values_try_dataset,
     pick_one_weighted_no_repeat,
     read_headered_csv,
     read_weighted_values,
 )
-from datamimic_ce.domains.utils.dataset_path import dataset_path
+from datamimic_ce.domains.shared.utils.dataset_path import dataset_path
 
 T = TypeVar("T")  # Define a type variable for generic typing
 
@@ -127,7 +127,7 @@ class AdministrationOfficeGenerator(ClockAnchoredDomainGenerator):
 
     # Helper: build office name using dataset patterns (US fallback handled by dataset_path)
     def build_office_name(self, city: str, state: str, office_type: str, jurisdiction: str) -> str:
-        from datamimic_ce.domains.utils.dataset_loader import load_weighted_values_try_dataset
+        from datamimic_ce.domains.shared.utils.dataset_loader import load_weighted_values_try_dataset
 
         patterns, w = load_weighted_values_try_dataset(
             "public_sector", "administration", "name_patterns.csv", dataset=self._dataset, start=Path(__file__)
@@ -215,7 +215,7 @@ class AdministrationOfficeGenerator(ClockAnchoredDomainGenerator):
         w_idx = header.get("weight")
         if name_idx is None or w_idx is None:
             # Fallback to headerless interpretation if structure unexpected
-            from datamimic_ce.domains.utils.dataset_loader import load_weighted_values_try_dataset
+            from datamimic_ce.domains.shared.utils.dataset_loader import load_weighted_values_try_dataset
 
             values, w = load_weighted_values_try_dataset(
                 "public_sector", "administration", "agencies.csv", dataset=self._dataset, start=start
@@ -243,7 +243,7 @@ class AdministrationOfficeGenerator(ClockAnchoredDomainGenerator):
 
     # Helper: departments from roles dataset
     def pick_departments(self, *, start: Path) -> list[str]:
-        from datamimic_ce.domains.utils.dataset_loader import load_weighted_values_try_dataset
+        from datamimic_ce.domains.shared.utils.dataset_loader import load_weighted_values_try_dataset
 
         values, w = load_weighted_values_try_dataset(
             "public_sector", "administration", "roles.csv", dataset=self._dataset, start=start
@@ -255,7 +255,7 @@ class AdministrationOfficeGenerator(ClockAnchoredDomainGenerator):
 
     # Helper: leadership roles mapped to generated names
     def build_leadership(self, *, start: Path) -> dict[str, str]:
-        from datamimic_ce.domains.utils.dataset_loader import load_weighted_values_try_dataset
+        from datamimic_ce.domains.shared.utils.dataset_loader import load_weighted_values_try_dataset
 
         roles, w = load_weighted_values_try_dataset(
             "public_sector", "administration", "roles.csv", dataset=self._dataset, start=start
@@ -272,7 +272,7 @@ class AdministrationOfficeGenerator(ClockAnchoredDomainGenerator):
     # Helper: website builder; choose suffix by dataset for extensibility
     def build_website(self, jurisdiction: str) -> str:
         # Build domain via dataset-driven DomainGenerator to avoid static TLD mappings
-        from datamimic_ce.domains.common.literal_generators.domain_generator import DomainGenerator
+        from datamimic_ce.domains.shared.literal_generators.domain_generator import DomainGenerator
 
         domain_generator = DomainGenerator(dataset=self._dataset, rng=self._derive_rng())
         domain = domain_generator.generate().lower()
@@ -281,7 +281,7 @@ class AdministrationOfficeGenerator(ClockAnchoredDomainGenerator):
     # Helper: email builder from dataset roles; local-part from role slug
     def build_email(self, office_type: str, website_url: str, *, start: Path) -> str:
         # Use roles dataset to derive a local-part; domain is derived from dataset-driven website
-        from datamimic_ce.domains.utils.dataset_loader import load_weighted_values_try_dataset
+        from datamimic_ce.domains.shared.utils.dataset_loader import load_weighted_values_try_dataset
 
         roles, w = load_weighted_values_try_dataset(
             "public_sector", "administration", "roles.csv", dataset=self._dataset, start=start

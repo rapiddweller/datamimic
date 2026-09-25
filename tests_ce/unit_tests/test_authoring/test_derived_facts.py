@@ -14,8 +14,8 @@ from datamimic_ce.authoring.contracts import (
     DerivedProductFact,
     ScaffoldRequest,
 )
-from datamimic_ce.authoring.derived_facts import derive_facts
-from datamimic_ce.authoring.service import compile_document, scaffold
+from datamimic_ce.authoring.projection.derived_facts import derive_facts
+from datamimic_ce.authoring.application.service import compile_document, scaffold
 
 
 @pytest.mark.parametrize(

@@ -11,10 +11,10 @@ This module provides the Hospital entity model for generating realistic hospital
 """
 
 
-from datamimic_ce.domains.common.models.address import Address
 from datamimic_ce.domains.domain_core import BaseEntity
 from datamimic_ce.domains.domain_core.property_cache import property_cache
 from datamimic_ce.domains.healthcare.generators.hospital_generator import HospitalGenerator
+from datamimic_ce.domains.shared.models.address import Address
 
 
 class Hospital(BaseEntity):

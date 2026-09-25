@@ -11,7 +11,7 @@ import random
 
 import pytest
 
-from datamimic_ce.domains.common.literal_generators.number_sequences import (
+from datamimic_ce.domains.shared.literal_generators.number_sequences import (
     build_number_sequence,
     finite_number_sequence_capacity,
 )

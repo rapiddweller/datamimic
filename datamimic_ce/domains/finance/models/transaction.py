@@ -12,11 +12,11 @@ This module defines the transaction model for the finance domain.
 
 import datetime
 
-from datamimic_ce.domains.common.literal_generators.string_generator import StringGenerator
 from datamimic_ce.domains.domain_core import BaseEntity
 from datamimic_ce.domains.domain_core.property_cache import property_cache
 from datamimic_ce.domains.finance.generators.transaction_generator import TransactionGenerator
 from datamimic_ce.domains.finance.models.bank_account import BankAccount
+from datamimic_ce.domains.shared.literal_generators.string_generator import StringGenerator
 
 
 class Transaction(BaseEntity):

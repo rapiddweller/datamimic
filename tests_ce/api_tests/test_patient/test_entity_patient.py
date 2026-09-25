@@ -2,7 +2,7 @@ import datetime
 
 import pytest
 
-from datamimic_ce.domains.common.models.person import Person
+from datamimic_ce.domains.shared.models.person import Person
 from datamimic_ce.domains.healthcare.models.patient import Patient
 from datamimic_ce.domains.healthcare.services.patient_service import PatientService
 

@@ -36,7 +36,7 @@ from pathlib import Path
 
 import pytest
 
-from datamimic_ce.authoring.reference import capabilities_manifest
+from datamimic_ce.authoring.projection.reference import capabilities_manifest
 from datamimic_ce.engine.dsl.enums.distribution_enums import NumberDistribution, SourceDistribution
 from datamimic_ce.engine.dsl.model.constraints import element_constraints, serialize_constraints
 from datamimic_ce.engine.dsl.model.generate_model import GenerateModel

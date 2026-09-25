@@ -3,8 +3,8 @@ import string
 
 import pytest
 
-from datamimic_ce.domains.common.models.address import Address
-from datamimic_ce.domains.common.services.address_service import AddressService
+from datamimic_ce.domains.shared.models.address import Address
+from datamimic_ce.domains.shared.services.address_service import AddressService
 
 
 class TestEntityAddress:

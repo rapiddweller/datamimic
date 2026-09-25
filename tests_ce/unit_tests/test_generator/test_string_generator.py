@@ -10,7 +10,7 @@ import re
 
 import pytest
 
-from datamimic_ce.domains.common.literal_generators.string_generator import StringGenerator
+from datamimic_ce.domains.shared.literal_generators.string_generator import StringGenerator
 
 
 class TestStringGenerator:

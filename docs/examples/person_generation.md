@@ -7,7 +7,7 @@ This example demonstrates how to generate synthetic person data using the DATAMI
 The most straightforward way to generate a person is using the `PersonService`:
 
 ```python
-from datamimic_ce.domains.common.services import PersonService
+from datamimic_ce.domains.shared.services import PersonService
 
 # Create a service instance
 person_service = PersonService(dataset="US")  # Specify locale/dataset
@@ -158,7 +158,7 @@ separate entity, serialize `person.address` on its own if you need it):
 You can customize the generation process by providing specific parameters:
 
 ```python
-from datamimic_ce.domains.common.models.demographic_config import DemographicConfig
+from datamimic_ce.domains.shared.models.demographic_config import DemographicConfig
 
 # Restrict age range via DemographicConfig; female_quota is a PersonService constructor
 # argument, not part of DemographicConfig

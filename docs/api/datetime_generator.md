@@ -115,7 +115,7 @@ Note: ensure `month_weights` length equals 12; the above pattern is 12 elements.
 
 ## Python API Examples
 
-from datamimic_ce.domains.common.literal_generators.datetime_generator import DateTimeGenerator
+from datamimic_ce.domains.shared.literal_generators.datetime_generator import DateTimeGenerator
 
 # Deterministic window, weekends only
 gen = DateTimeGenerator(

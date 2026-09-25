@@ -2,9 +2,9 @@ from __future__ import annotations
 
 import pytest
 
-from datamimic_ce.domains.determinism import canonical_json, derive_seed, stable_uuid
-from datamimic_ce.domains.exceptions import DomainError
-from datamimic_ce.domains.facade import generate_domain
+from datamimic_ce.domains.shared.determinism import canonical_json, derive_seed, stable_uuid
+from datamimic_ce.errors.base import DomainError
+from datamimic_ce.domains.shared.facade import generate_domain
 
 
 def test_determinism_person_minimal() -> None:

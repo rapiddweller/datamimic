@@ -12,13 +12,13 @@ This module defines the credit card model for the finance domain.
 
 from datetime import datetime
 
-from datamimic_ce.domains.common.models.person import Person
 from datamimic_ce.domains.domain_core import BaseEntity
 from datamimic_ce.domains.domain_core.property_cache import property_cache
 from datamimic_ce.domains.finance.generators.credit_card_generator import CreditCardGenerator
 from datamimic_ce.domains.finance.luhn import luhn_check_digit
 from datamimic_ce.domains.finance.models.bank import Bank
 from datamimic_ce.domains.finance.models.bank_account import BankAccount
+from datamimic_ce.domains.shared.models.person import Person
 
 
 class CreditCard(BaseEntity):

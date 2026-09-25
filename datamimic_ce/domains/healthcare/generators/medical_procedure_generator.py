@@ -9,7 +9,7 @@ Medical Procedure generator utilities.
 
 Dataset-driven generator for medical procedures: names, descriptions,
 categories, specialties. All strings and choices are sourced from
-datamimic_ce/domains/domain_data/healthcare/medical/*_{CC}.csv files.
+datamimic_ce/domains/shared/domain_data/healthcare/medical/*_{CC}.csv files.
 """
 
 from __future__ import annotations
@@ -18,8 +18,8 @@ import random
 from pathlib import Path
 
 from datamimic_ce.domains.domain_core.base_domain_generator import DatasetAwareDomainGenerator
-from datamimic_ce.domains.utils.dataset_loader import read_weighted_records, read_weighted_values
-from datamimic_ce.domains.utils.dataset_path import dataset_path
+from datamimic_ce.domains.shared.utils.dataset_loader import read_weighted_records, read_weighted_values
+from datamimic_ce.domains.shared.utils.dataset_path import dataset_path
 
 
 class MedicalProcedureGenerator(DatasetAwareDomainGenerator):
@@ -69,7 +69,7 @@ class MedicalProcedureGenerator(DatasetAwareDomainGenerator):
         requires_anesthesia: bool,
     ) -> str:
         """Generate a dataset-driven procedure description."""
-        from datamimic_ce.domains.utils.dataset_loader import load_weighted_values_try_dataset
+        from datamimic_ce.domains.shared.utils.dataset_loader import load_weighted_values_try_dataset
 
         if is_surgical:
             t_file = "procedure_description_templates_surgical.csv"
@@ -113,7 +113,7 @@ class MedicalProcedureGenerator(DatasetAwareDomainGenerator):
         )
 
         if requires_anesthesia:
-            from datamimic_ce.domains.utils.dataset_loader import load_weighted_values_try_dataset
+            from datamimic_ce.domains.shared.utils.dataset_loader import load_weighted_values_try_dataset
 
             a_vals, a_w = load_weighted_values_try_dataset(
                 "healthcare", "medical", "procedure_anesthesia_notes.csv", dataset=self._dataset, start=Path(__file__)
@@ -124,7 +124,7 @@ class MedicalProcedureGenerator(DatasetAwareDomainGenerator):
 
     def generate_specialty(self) -> str:
         """Generate a medical specialty (dataset-driven)."""
-        from datamimic_ce.domains.utils.dataset_loader import pick_one_weighted_no_repeat
+        from datamimic_ce.domains.shared.utils.dataset_loader import pick_one_weighted_no_repeat
 
         file_path = dataset_path("healthcare", "medical", f"specialties_{self._dataset}.csv", start=Path(__file__))
         wgt, loaded_data = read_weighted_records(file_path, "weight")

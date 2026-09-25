@@ -1,0 +1,88 @@
+# DATAMIMIC
+# Copyright (c) 2023-2025 Rapiddweller Asia Co., Ltd.
+# This software is licensed under the MIT License.
+# See LICENSE file for the full text of the license.
+# For questions and support, contact: info@rapiddweller.com
+
+import random
+
+from datamimic_ce.domains.domain_core.base_domain_generator import DatasetAwareDomainGenerator
+from datamimic_ce.domains.shared.literal_generators.domain_generator import DomainGenerator
+from datamimic_ce.domains.shared.literal_generators.family_name_generator import FamilyNameGenerator
+from datamimic_ce.domains.shared.literal_generators.given_name_generator import GivenNameGenerator
+
+
+class EmailAddressGenerator(DatasetAwareDomainGenerator):
+    """
+    Generates Email Addresses
+    Can pass in given_name and family_name to make the email follow the name structure
+    """
+
+    def __init__(
+        self,
+        dataset: str | None = None,
+        given_name: str | None = None,
+        family_name: str | None = None,
+        rng: random.Random | None = None,
+    ):
+        super().__init__(dataset=dataset, rng=rng)
+        self._given_name = given_name
+        self._given_name_generator = (
+            GivenNameGenerator(dataset=self._dataset, rng=self._derive_rng()) if given_name is None else None
+        )
+        self._family_name = family_name
+        self._family_name_generator = (
+            FamilyNameGenerator(dataset=self._dataset, rng=self._derive_rng()) if family_name is None else None
+        )
+        self._company_name: str | None = None
+        self._domain_generator = DomainGenerator(dataset=self._dataset, rng=self._derive_rng())
+
+    def generate(self) -> str:
+        """
+        create a email address
+        """
+        if not self._given_name:
+            assert self._given_name_generator is not None
+            given_name = self._given_name_generator.generate()
+        else:
+            given_name = self._given_name
+        if not self._family_name:
+            assert self._family_name_generator is not None
+            family_name = self._family_name_generator.generate()
+        else:
+            family_name = self._family_name
+        given_name = given_name.lower()
+        family_name = family_name.lower()
+        if self._company_name:
+            domain = self._domain_generator.generate_with_company_name(self._company_name).lower()
+        else:
+            domain = self._domain_generator.generate().lower()
+
+        join = self._rng.choice(["_", ".", "0", "1"])
+        if join == "0":
+            return f"{given_name}{family_name}@{domain}"
+        elif join == "1":
+            return f"{given_name[0]}{family_name}@{domain}"
+        else:
+            return f"{given_name}{join}{family_name}@{domain}"
+
+    def generate_with_company_name(self, company_name: str):
+        """
+        Generate with specific company name
+
+        :param company_name:
+        :return:
+        """
+        self._company_name = company_name
+        return self.generate()
+
+    def generate_with_name(self, given_name: str, family_name: str):
+        """
+        Generate with specific company name
+
+        :param company_name:
+        :return:
+        """
+        self._given_name = given_name
+        self._family_name = family_name
+        return self.generate()

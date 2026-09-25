@@ -9,7 +9,7 @@ import json
 
 from typer.testing import CliRunner
 
-import datamimic_ce.authoring.service as service_module
+import datamimic_ce.authoring.application.service as service_module
 from datamimic_ce.authoring.contracts import (
     AuthoringStage,
     CaptureStatus,
@@ -20,15 +20,15 @@ from datamimic_ce.authoring.contracts import (
     ScaffoldVerification,
     VerificationGateStatus,
 )
-from datamimic_ce.authoring.diagnostics import Diagnostic, LintResult
-from datamimic_ce.authoring.dryrun import (
+from datamimic_ce.authoring.domain.diagnostics import Diagnostic, LintResult
+from datamimic_ce.authoring.adapters.dryrun import (
     CapturedProduct,
     CapturedProducts,
     CapturedRun,
     SmokeExportCapture,
 )
-from datamimic_ce.authoring.rule_catalog import RuleSeverity
-from datamimic_ce.authoring.service import scaffold
+from datamimic_ce.authoring.domain.rule_catalog import RuleSeverity
+from datamimic_ce.authoring.application.service import scaffold
 from datamimic_ce.interfaces.cli import app
 
 

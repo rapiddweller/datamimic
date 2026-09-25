@@ -11,7 +11,7 @@ from __future__ import annotations
 
 import random
 
-from datamimic_ce.domains.utils.dataset_loader import pick_one_weighted_no_repeat
+from datamimic_ce.domains.shared.utils.dataset_loader import pick_one_weighted_no_repeat
 
 VALUES_MULTI = ["A", "B", "C"]
 WEIGHTS_MULTI = [1.0, 2.0, 3.0]

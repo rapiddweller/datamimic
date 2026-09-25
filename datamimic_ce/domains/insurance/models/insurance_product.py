@@ -16,7 +16,7 @@ from datamimic_ce.domains.domain_core import BaseEntity
 from datamimic_ce.domains.domain_core.property_cache import property_cache
 from datamimic_ce.domains.insurance.generators.insurance_product_generator import InsuranceProductGenerator
 from datamimic_ce.domains.insurance.models.insurance_coverage import InsuranceCoverage
-from datamimic_ce.domains.utils.rng_uuid import uuid4_from_random
+from datamimic_ce.domains.shared.utils.rng_uuid import uuid4_from_random
 
 
 class InsuranceProduct(BaseEntity):

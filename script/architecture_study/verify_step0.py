@@ -476,7 +476,7 @@ def projections() -> dict[str, Any]:
             "bytes": len(result.stdout),
             "content": result.stdout.decode("utf-8"),
         }
-    from datamimic_ce.authoring.compiler import compile_authoring_spec
+    from datamimic_ce.authoring.application.compiler import compile_authoring_spec
     from datamimic_ce.authoring.spec import AuthoringSpecV1
 
     spec = AuthoringSpecV1.model_validate(

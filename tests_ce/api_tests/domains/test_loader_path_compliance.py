@@ -1,7 +1,7 @@
 """Verify component loader relies on dataset_path (rule 3)."""
 
-import datamimic_ce.domains.common.profile_components as profile_components
-from datamimic_ce.domains.facade import generate_domain
+import datamimic_ce.domains.shared.profile_components as profile_components
+from datamimic_ce.domains.shared.facade import generate_domain
 
 
 def test_component_loader_uses_dataset_path(monkeypatch) -> None:

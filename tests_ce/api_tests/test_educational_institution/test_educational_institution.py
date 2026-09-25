@@ -1,6 +1,6 @@
 import pytest
 
-from datamimic_ce.domains.common.models.address import Address
+from datamimic_ce.domains.shared.models.address import Address
 from datamimic_ce.domains.public_sector.models.educational_institution import EducationalInstitution
 from datamimic_ce.domains.public_sector.services.educational_institution_service import EducationalInstitutionService
 

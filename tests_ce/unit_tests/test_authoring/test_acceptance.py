@@ -14,10 +14,10 @@ from pathlib import Path
 import pytest
 from pydantic import ValidationError
 
-import datamimic_ce.authoring.acceptance as acceptance_module
-import datamimic_ce.authoring.service as service_module
-from datamimic_ce.authoring.acceptance import evaluate_acceptance
-from datamimic_ce.authoring.compiler import compile_authoring_spec
+import datamimic_ce.authoring.application.acceptance as acceptance_module
+import datamimic_ce.authoring.application.service as service_module
+from datamimic_ce.authoring.application.acceptance import evaluate_acceptance
+from datamimic_ce.authoring.application.compiler import compile_authoring_spec
 from datamimic_ce.authoring.contracts import (
     MAX_DRY_RUN_COUNT,
     AcceptanceSource,
@@ -34,7 +34,7 @@ from datamimic_ce.authoring.contracts import (
     ScaffoldRequest,
     UniqueAcceptanceResult,
 )
-from datamimic_ce.authoring.dryrun import CapturedProduct, CapturedProducts
+from datamimic_ce.authoring.adapters.dryrun import CapturedProduct, CapturedProducts
 from datamimic_ce.authoring.spec import AllowedValuesExpectation, AuthoringSpecV1, RowConditionExpectation
 
 

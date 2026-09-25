@@ -13,7 +13,7 @@ This module defines the insurance company model for the insurance domain.
 from datamimic_ce.domains.domain_core import BaseEntity
 from datamimic_ce.domains.domain_core.property_cache import property_cache
 from datamimic_ce.domains.insurance.generators.insurance_company_generator import InsuranceCompanyGenerator
-from datamimic_ce.domains.utils.rng_uuid import uuid4_from_random
+from datamimic_ce.domains.shared.utils.rng_uuid import uuid4_from_random
 
 
 class InsuranceCompany(BaseEntity):

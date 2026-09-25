@@ -124,7 +124,7 @@ class TaskUtil:
         pagination: DataSourcePagination | None = None,
     ) -> Task:
         if isinstance(stmt, GenerateStatement):
-            from datamimic_ce.engine.runtime.tasks.generate_task import GenerateTask
+            from datamimic_ce.engine.runtime.tasks.generate.task import GenerateTask
 
             return GenerateTask(stmt)
         elif isinstance(stmt, MongoDBStatement):

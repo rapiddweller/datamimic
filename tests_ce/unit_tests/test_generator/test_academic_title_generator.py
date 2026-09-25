@@ -7,7 +7,7 @@
 
 from numpy import nan
 
-from datamimic_ce.domains.common.literal_generators.academic_title_generator import AcademicTitleGenerator
+from datamimic_ce.domains.shared.literal_generators.academic_title_generator import AcademicTitleGenerator
 
 
 class TestAcademicTitleGenerator:
@@ -58,7 +58,7 @@ class TestAcademicTitleGenerator:
         assert generator_3._quota == 0.5
 
     def test_invalid_dataset(self, caplog):
-        from datamimic_ce.domains.utils.dataset_path import reset_dataset_fallback_log
+        from datamimic_ce.domains.shared.utils.dataset_path import reset_dataset_fallback_log
         from datamimic_ce.engine.runtime.logging import logger as dm_logger
 
         # The US-fallback is logged once per process per dataset code, and a prior

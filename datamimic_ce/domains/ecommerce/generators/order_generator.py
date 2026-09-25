@@ -2,16 +2,16 @@ import datetime as dt
 import random
 from pathlib import Path
 
-from datamimic_ce.domains.common.generators.address_generator import AddressGenerator
 from datamimic_ce.domains.domain_core.base_domain_generator import ClockAnchoredDomainGenerator
 from datamimic_ce.domains.ecommerce.generators.product_generator import ProductGenerator
-from datamimic_ce.domains.utils.dataset_loader import (
+from datamimic_ce.domains.shared.generators.address_generator import AddressGenerator
+from datamimic_ce.domains.shared.utils.dataset_loader import (
     load_weighted_values_try_dataset,
     pick_one_weighted,
     pick_weighted_from_headered_csv,
     read_headered_csv,
 )
-from datamimic_ce.domains.utils.dataset_path import dataset_path
+from datamimic_ce.domains.shared.utils.dataset_path import dataset_path
 
 
 class OrderGenerator(ClockAnchoredDomainGenerator):
@@ -47,7 +47,7 @@ class OrderGenerator(ClockAnchoredDomainGenerator):
 
     #  Centralize date generation; models stay pure and RNG boundaries are clear
     def generate_order_date(self) -> dt.datetime:
-        from datamimic_ce.domains.common.literal_generators.datetime_generator import DateTimeGenerator
+        from datamimic_ce.domains.shared.literal_generators.datetime_generator import DateTimeGenerator
 
         now = self._reference_now
         min_dt = (now - dt.timedelta(days=365)).strftime("%Y-%m-%d %H:%M:%S")

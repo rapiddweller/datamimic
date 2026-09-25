@@ -8,7 +8,7 @@ import json
 
 import pytest
 
-from datamimic_ce.authoring.reference import (
+from datamimic_ce.authoring.projection.reference import (
     ReferenceTopic,
     capabilities_index,
     capabilities_manifest,
@@ -17,7 +17,7 @@ from datamimic_ce.authoring.reference import (
     known_generator_names,
     reference,
 )
-from datamimic_ce.authoring.schema import build_schema_index
+from datamimic_ce.authoring.domain.schema import build_schema_index
 from datamimic_ce.authoring.spec import authoring_spec_json_schema
 from datamimic_ce.engine.dsl.enums.converter_enums import ConverterEnum
 from datamimic_ce.engine.dsl.model.element_registry import list_element_tags

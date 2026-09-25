@@ -30,7 +30,7 @@ class IfElseBaseTask(GenSubTask, ABC):
         :param parent_context:
         :return:
         """
-        from datamimic_ce.engine.runtime.tasks.generate_task import GenerateTask
+        from datamimic_ce.engine.runtime.tasks.generate.task import GenerateTask
 
         child_tasks = [
             TaskUtil.get_task_by_statement(ctx=parent_context.root, stmt=child_stmt)

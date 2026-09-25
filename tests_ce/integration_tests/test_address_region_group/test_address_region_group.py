@@ -14,7 +14,7 @@ from pathlib import Path
 import pytest
 
 from datamimic_ce.data_mimic_test import DataMimicTest
-from datamimic_ce.domains.common.generators.region_groups import REGION_GROUPS
+from datamimic_ce.domains.shared.generators.region_groups import REGION_GROUPS
 
 _dir = Path(__file__).resolve().parent
 
