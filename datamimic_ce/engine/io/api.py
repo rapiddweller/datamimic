@@ -4,12 +4,22 @@ from datamimic_ce.engine.io.client_operations import (
     count_query_length,
     create_mongodb_client,
     create_rdbms_client,
+    database_count_query_length,
+    database_count_table_length,
+    database_get_by_page_with_query,
+    database_get_by_page_with_type,
+    database_get_random_rows_by_columns,
+    dispose_client_engine,
+    is_database_client,
+    is_mongodb_client,
+    is_rdbms_client,
+    mongodb_count_collection,
+    rdbms_count_query_length,
+    rdbms_get_current_sequence_number,
+    rdbms_increase_sequence_number,
     uses_mysql_sequence_storage,
 )
 from datamimic_ce.engine.io.clients.client import Client
-from datamimic_ce.engine.io.clients.database_client import DatabaseClient
-from datamimic_ce.engine.io.clients.mongodb_client import MongoDBClient
-from datamimic_ce.engine.io.clients.rdbms_client import RdbmsClient
 from datamimic_ce.engine.io.connection_config.mongodb_connection_config import MongoDBConnectionConfig
 from datamimic_ce.engine.io.connection_config.rdbms_connection_config import RdbmsConnectionConfig
 from datamimic_ce.engine.io.contracts import DataSourcePagination, SmokeExportRequest
@@ -41,7 +51,6 @@ __all__ = [
     "Client",
     "DataSourcePagination",
     "DataSourceRegistry",
-    "DatabaseClient",
     "ExporterConfig",
     "Exporter",
     "DatabaseExporter",
@@ -51,12 +60,10 @@ __all__ = [
     "ExporterUtil",
     "FileContentStorage",
     "FileUtil",
-    "MongoDBClient",
     "MongoDBConnectionConfig",
     "MongoDBExporter",
     "Memstore",
     "RdbmsConnectionConfig",
-    "RdbmsClient",
     "SmokeExportRequest",
     "TestResultExporter",
     "UnifiedBufferedExporter",
@@ -67,6 +74,19 @@ __all__ = [
     "count_query_length",
     "create_mongodb_client",
     "create_rdbms_client",
+    "database_count_table_length",
+    "database_count_query_length",
+    "database_get_by_page_with_query",
+    "database_get_by_page_with_type",
+    "database_get_random_rows_by_columns",
+    "dispose_client_engine",
+    "is_database_client",
+    "is_mongodb_client",
+    "is_rdbms_client",
+    "mongodb_count_collection",
+    "rdbms_count_query_length",
+    "rdbms_get_current_sequence_number",
+    "rdbms_increase_sequence_number",
     "smoke_export",
     "uses_mysql_sequence_storage",
 ]

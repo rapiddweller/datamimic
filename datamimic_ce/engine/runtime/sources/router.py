@@ -20,7 +20,21 @@ from datamimic_ce.engine.dsl.api import (
     source_file_format,
     source_file_format_for,
 )
-from datamimic_ce.engine.io.api import DataSourcePagination, DataSourceRegistry, FileUtil, MongoDBClient, RdbmsClient
+from datamimic_ce.engine.io.api import (
+    DataSourcePagination,
+    DataSourceRegistry,
+    FileUtil,
+    database_count_query_length,
+    database_count_table_length,
+    database_get_by_page_with_query,
+    database_get_by_page_with_type,
+    database_get_random_rows_by_columns,
+    is_database_client,
+    is_mongodb_client,
+    is_rdbms_client,
+    mongodb_count_collection,
+    rdbms_count_query_length,
+)
 from datamimic_ce.engine.io.contracts import select_rows
 from datamimic_ce.engine.runtime.contexts.context import Context
 from datamimic_ce.engine.runtime.contexts.geniter_context import GenIterContext
@@ -45,8 +59,8 @@ def has_mongodb_upsert_target(targets: set[str], setup_context: SetupContext) ->
     for target in targets:
         if "." in target:
             consumer, operation = target.split(".", 1)
-            if operation == ExportOperation.UPSERT.value and isinstance(
-                setup_context.get_client_by_id(consumer), MongoDBClient
+            if operation == ExportOperation.UPSERT.value and is_mongodb_client(
+                setup_context.get_client_by_id(consumer)
             ):
                 return True
     return False
@@ -153,36 +167,34 @@ def set_data_source_length(ctx: SetupContext | GenIterContext, stmt: Statement) 
             selector = stmt.selector if isinstance(stmt, GenerateStatement | VariableStatement) else None
             iteration_selector = stmt.iteration_selector if isinstance(stmt, VariableStatement) else None
 
-            if isinstance(client, RdbmsClient):
+            if is_rdbms_client(client):
                 if selector is not None:
-                    counted = DataSourceRegistry.rdbms_count_query_length(client, selector, source_str, "selector")
+                    counted = rdbms_count_query_length(client, selector, source_str, "selector")
                     if counted is None:
                         return
                     ds_len = counted
                 elif iteration_selector is not None:
-                    counted = DataSourceRegistry.rdbms_count_query_length(
-                        client, iteration_selector, source_str, "iterationSelector"
-                    )
+                    counted = rdbms_count_query_length(client, iteration_selector, source_str, "iterationSelector")
                     if counted is None:
                         return
                     ds_len = counted
                 elif stmt.source_entity is not None or stmt.type is not None:
-                    ds_len = client.count_table_length(table_name=StatementUtil.resolve_source_entity(stmt))
+                    ds_len = database_count_table_length(client, StatementUtil.resolve_source_entity(stmt))
 
-            elif isinstance(client, MongoDBClient):
+            elif is_mongodb_client(client):
                 if selector is not None:
                     try:
-                        ds_len = client.count_query_length(selector)
+                        ds_len = database_count_query_length(client, selector)
                     except ValueError:
                         return
                 elif (collection := StatementUtil.resolve_source_collection(stmt)) is not None:
                     try:
-                        ds_len = client.count(collection_name=collection)
+                        ds_len = mongodb_count_collection(client, collection)
                     except ValueError:
                         return
                 elif iteration_selector is not None:
                     try:
-                        ds_len = client.count_query_length(query=iteration_selector)
+                        ds_len = database_count_query_length(client, iteration_selector)
                     except ValueError:
                         logger.error(
                             f"Cannot get length of database source '{source_str}' "
@@ -298,11 +310,11 @@ def load_generate_source(
             )
         client = root.clients[source]
         selector = interpolate_variables(root, stmt.selector or "", prefix, suffix)
-        if isinstance(client, MongoDBClient):
+        if is_mongodb_client(client):
             if stmt.selector:
-                source_data = client.get_by_page_with_query(query=selector, pagination=pagination)
+                source_data = database_get_by_page_with_query(client, selector, pagination)
             elif (collection := StatementUtil.resolve_source_collection(stmt)) is not None:
-                source_data = client.get_by_page_with_type(collection_name=collection, pagination=pagination)
+                source_data = database_get_by_page_with_type(client, collection, pagination)
             else:
                 raise ValueError(
                     "MongoDB source requires at least attribute 'sourceEntity', 'type', 'selector' "
@@ -310,12 +322,12 @@ def load_generate_source(
                 )
             if not source_data and has_mongodb_upsert_target(stmt.targets, root):
                 source_data = [{}]
-        elif isinstance(client, RdbmsClient):
+        elif is_rdbms_client(client):
             if stmt.selector:
-                source_data = client.get_by_page_with_query(original_query=selector, pagination=pagination)
+                source_data = database_get_by_page_with_query(client, selector, pagination)
             else:
-                source_data = client.get_by_page_with_type(
-                    table_name=StatementUtil.resolve_source_entity(stmt), pagination=pagination
+                source_data = database_get_by_page_with_type(
+                    client, StatementUtil.resolve_source_entity(stmt), pagination
                 )
         else:
             raise ValueError(f"Cannot load data from client: {type(client).__name__}")
@@ -403,12 +415,12 @@ def load_reference_source(
 ) -> list[dict[str, object]]:
     """Load, map and select reference rows behind one typed datasource boundary."""
     client = context.root.clients.get(stmt.source)
-    if not isinstance(client, RdbmsClient | MongoDBClient):
+    if not is_database_client(client):
         raise ValueError(
             f"<reference> '{stmt.name}': source '{stmt.source}' is not a "
             "<database> or <mongodb> client (RDBMS and MongoDB are supported)"
         )
-    rows = client.get_random_rows_by_columns(stmt.source_type, stmt.source_keys)
+    rows = database_get_random_rows_by_columns(client, stmt.source_type, stmt.source_keys)
     if not rows:
         raise ValueError(f"No data found for reference {stmt.name}")
     records = [dict(zip(stmt.targets, row, strict=True)) for row in rows]

@@ -23,7 +23,7 @@ from datamimic_ce.domains.api import (
     spawn_rng,
 )
 from datamimic_ce.engine.dsl.api import ExportOperation, SetupStatement
-from datamimic_ce.engine.io.api import Client, Exporter, TestResultExporter
+from datamimic_ce.engine.io.api import Client, Exporter, TestResultExporter, dispose_client_engine
 from datamimic_ce.engine.runtime.contexts.context import Context
 from datamimic_ce.engine.runtime.contexts.demographic_context import DemographicContext
 from datamimic_ce.engine.runtime.logging import logger
@@ -163,13 +163,8 @@ class SetupContext(Context):
         :param memo:
         :return:
         """
-        # Close RDBMS engine
-        from datamimic_ce.engine.io.api import RdbmsClient
-
         for _key, value in self._clients.items():
-            if isinstance(value, RdbmsClient) and value.engine is not None:
-                value.engine.dispose()
-                value.engine = None
+            dispose_client_engine(value)
 
         # Create a new instance of SetupContext with the copied attributes
         return SetupContext(

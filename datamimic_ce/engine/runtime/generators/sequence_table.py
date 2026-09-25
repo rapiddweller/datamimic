@@ -7,8 +7,13 @@
 import sys
 
 from datamimic_ce.domains.api import BaseLiteralGenerator
-from datamimic_ce.engine.dsl.api import Dbms, KeyStatement, VariableStatement
-from datamimic_ce.engine.io.api import DataSourcePagination, RdbmsClient
+from datamimic_ce.engine.dsl.api import KeyStatement, VariableStatement
+from datamimic_ce.engine.io.api import (
+    DataSourcePagination,
+    rdbms_get_current_sequence_number,
+    rdbms_increase_sequence_number,
+    uses_mysql_sequence_storage,
+)
 from datamimic_ce.engine.runtime.contexts.context import Context
 
 
@@ -111,7 +116,7 @@ class SequenceTableGenerator(BaseLiteralGenerator):
         # Initialize sequence with process-safe range
         try:
             total_processes = self._root_gen_stmt.num_process or context.root.num_process or 1
-            uses_mysql = isinstance(rdbms_client, RdbmsClient) and rdbms_client.credential.dbms is Dbms.MYSQL
+            uses_mysql = uses_mysql_sequence_storage(rdbms_client)
             if total_processes > 1 and uses_mysql:
                 raise ValueError(
                     "SequenceTableGenerator with a MySQL source is single-process only; "
@@ -133,10 +138,11 @@ class SequenceTableGenerator(BaseLiteralGenerator):
             reserved_count = per_process_count * total_processes
 
             # Get current sequence and calculate process-specific range
-            current_seq = rdbms_client.get_current_sequence_number(
-                sequence_name=self._resolve_sequence_name(),
-                table_name=None if self._explicit_sequence_name else self._root_gen_stmt.type,
-                column_name=None if self._explicit_sequence_name else self._stmt.name,
+            current_seq = rdbms_get_current_sequence_number(
+                rdbms_client,
+                self._resolve_sequence_name(),
+                None if self._explicit_sequence_name else self._root_gen_stmt.type,
+                None if self._explicit_sequence_name else self._stmt.name,
             )
 
             # Calculate process-specific offset to avoid conflicts
@@ -175,11 +181,12 @@ class SequenceTableGenerator(BaseLiteralGenerator):
         # Reserve the SAME rounded-up block __init__ assumed (per_process_count * total_processes,
         # not the raw statement count) - keeps this in sync with the per-process offset arithmetic
         # above for an uneven count/numProcess ratio (see the comment in __init__).
-        rdbms_client.increase_sequence_number(
-            sequence_name=self._resolve_sequence_name(),
-            increment=self._per_process_count * self._total_processes,
-            table_name=None if self._explicit_sequence_name else self._root_gen_stmt.type,
-            column_name=None if self._explicit_sequence_name else self._stmt.name,
+        rdbms_increase_sequence_number(
+            rdbms_client,
+            self._resolve_sequence_name(),
+            self._per_process_count * self._total_processes,
+            None if self._explicit_sequence_name else self._root_gen_stmt.type,
+            None if self._explicit_sequence_name else self._stmt.name,
         )
 
     def add_pagination(self, pagination: DataSourcePagination | None = None) -> None:

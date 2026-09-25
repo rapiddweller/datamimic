@@ -2,6 +2,11 @@ import logging
 from functools import lru_cache
 
 from datamimic_ce.domains.api import Converter, CustomConverter
+from datamimic_ce.engine.io.api import (
+    database_count_table_length,
+    database_get_by_page_with_query,
+    is_database_client,
+)
 from datamimic_ce.engine.runtime.api import Context, SetupContext
 
 logger = logging.getLogger("DATAMIMIC")
@@ -20,16 +25,13 @@ class CustomBusinessMappingConverter(CustomConverter):
             # Get client (Database) from context
             client = context.get_client_by_id(self._client_id)
 
-            from datamimic_ce.engine.io.api import DatabaseClient
-
             if client is None:
                 raise ValueError("Client with id 'mapping' not found")
-            elif not isinstance(client, DatabaseClient):
+            if not is_database_client(client):
                 raise ValueError(f"Client with id 'mapping' is not a DatabaseClient, but a {type(client)}")
-            elif isinstance(client, DatabaseClient):
-                self.__class__._database_client = client
-                logger.debug(f"The table has {client.count_table_length('business_mapping')} rows")
-                self.__class__._initialized = True
+            self.__class__._database_client = client
+            logger.debug(f"The table has {database_count_table_length(client, 'business_mapping')} rows")
+            self.__class__._initialized = True
 
     @staticmethod
     def create_sql_query(parsed_data: dict[str, str | int | list[str]]) -> str:
@@ -99,7 +101,7 @@ class CustomBusinessMappingConverter(CustomConverter):
                 parsed_data[key] = last_value
 
         sql_query = self.create_sql_query(parsed_data)
-        result = self.__class__._database_client.get_by_page_with_query(sql_query)
+        result = database_get_by_page_with_query(self.__class__._database_client, sql_query)
         # Return the first row of the result as a dictionary
         if result:
             return result[0]

@@ -13,10 +13,14 @@ from datamimic_ce.engine.dsl.api import (
     source_file_format_for,
 )
 from datamimic_ce.engine.io.api import (
-    DatabaseClient,
+    Client,
     DataSourcePagination,
     FileUtil,
     WeightedEntityDataSource,
+    database_count_query_length,
+    database_get_by_page_with_query,
+    database_get_by_page_with_type,
+    is_database_client,
 )
 from datamimic_ce.engine.io.contracts import select_row_iterator, select_rows
 from datamimic_ce.engine.runtime.contexts.context import Context
@@ -42,7 +46,7 @@ class VariableSourcePlan:
 
     kind: VariableSourcePlanKind
     data: Iterable[object] | None = None
-    client: DatabaseClient | None = None
+    client: Client | None = None
     weighted_source: WeightedEntityDataSource | None = None
     selector: str | None = None
     prefix: str = ""
@@ -128,7 +132,7 @@ def plan_variable_source(
         prefix = stmt.variable_prefix or context.default_variable_prefix
         suffix = stmt.variable_suffix or context.default_variable_suffix
         client = context.get_client_by_id(source)
-        if not isinstance(client, DatabaseClient):
+        if not is_database_client(client):
             raise ValueError(f"<variable> '{stmt.name}': 'selector' only works with 'source' database (MongoDB, SQL)")
         if stmt.iteration_selector is not None:
             return VariableSourcePlan(
@@ -141,50 +145,53 @@ def plan_variable_source(
 
         rendered_selector = interpolate_variables(context, selector, prefix, suffix)
         if loads_all or force_full_pool or stmt.is_global_variable:
-            data = client.get_by_page_with_query(rendered_selector)
+            data = database_get_by_page_with_query(client, rendered_selector)
         else:
             length = context.data_source_len.get(data_source_cache_key(stmt))
             if length is None:
-                length = client.count_query_length(rendered_selector)
+                length = database_count_query_length(client, rendered_selector)
             if pagination is None or (
                 stmt.cyclic and (pagination.limit > length or pagination.skip + pagination.limit > length)
             ):
-                rows = client.get_by_page_with_query(rendered_selector, DataSourcePagination(skip=0, limit=length))
+                rows = database_get_by_page_with_query(
+                    client, rendered_selector, DataSourcePagination(skip=0, limit=length)
+                )
                 data = select_rows(rows, pagination, cyclic=bool(stmt.cyclic))
             else:
-                data = client.get_by_page_with_query(rendered_selector, pagination)
+                data = database_get_by_page_with_query(client, rendered_selector, pagination)
         return _variable_data_plan(context, stmt, data, pagination, force_full_pool=force_full_pool)
 
     if source_format is not None:
+        file_data: Iterable[object]
         if source_format is SourceFileFormat.CSV:
-            data = FileUtil.read_csv_to_dict_list(context.root.descriptor_dir / source, separator)
+            file_data = FileUtil.read_csv_to_dict_list(context.root.descriptor_dir / source, separator)
         elif source_format is SourceFileFormat.XLSX:
-            data = FileUtil.read_xlsx_to_dict_list(context.root.descriptor_dir / source)
+            file_data = FileUtil.read_xlsx_to_dict_list(context.root.descriptor_dir / source)
         elif source_format is SourceFileFormat.FIXED_WIDTH:
-            data = FileUtil.read_fixed_width_to_dict_list(context.root.descriptor_dir / source)
+            file_data = FileUtil.read_fixed_width_to_dict_list(context.root.descriptor_dir / source)
         elif source_format is SourceFileFormat.JSON:
-            data = FileUtil.read_json_to_list(context.root.descriptor_dir / source)
+            file_data = FileUtil.read_json_to_list(context.root.descriptor_dir / source)
         else:
             raise ValueError(f"Unsupported <variable> source format: {source_format.value}")
         if not (loads_all or force_full_pool):
-            data = select_row_iterator(data, pagination, bool(stmt.cyclic))
-        return _variable_data_plan(context, stmt, data, pagination, force_full_pool=force_full_pool)
+            file_data = select_row_iterator(file_data, pagination, bool(stmt.cyclic))
+        return _variable_data_plan(context, stmt, file_data, pagination, force_full_pool=force_full_pool)
 
     client = context.get_client_by_id(source)
     if client is not None:
-        if not isinstance(client, DatabaseClient):
+        if not is_database_client(client):
             raise ValueError(f"Cannot get data from source '{source}' of <variable> '{stmt.name}'")
         product_type = StatementUtil.resolve_source_entity(stmt)
         if product_type is None:
             data = None
         elif loads_all or force_full_pool:
-            data = client.get_by_page_with_type(product_type)
+            data = database_get_by_page_with_type(client, product_type)
         elif stmt.cyclic:
             data = select_rows(
-                client.get_by_page_with_type(product_type), pagination, cyclic=True
+                database_get_by_page_with_type(client, product_type), pagination, cyclic=True
             )
         else:
-            data = client.get_by_page_with_type(product_type, pagination)
+            data = database_get_by_page_with_type(client, product_type, pagination)
         return _variable_data_plan(context, stmt, data, pagination, force_full_pool=force_full_pool)
 
     if context.memstore_manager.contain(source):
@@ -207,13 +214,13 @@ def plan_variable_source(
 
 def load_variable_iteration_selector(
     context: Context,
-    client: DatabaseClient,
+    client: Client,
     selector: str,
     prefix: str,
     suffix: str,
 ) -> Iterable[object]:
     """Evaluate and execute one row-dependent variable selector."""
-    return client.get_by_page_with_query(interpolate_variables(context, selector, prefix, suffix))
+    return database_get_by_page_with_query(client, interpolate_variables(context, selector, prefix, suffix))
 
 
 def load_variable_lazy_source(

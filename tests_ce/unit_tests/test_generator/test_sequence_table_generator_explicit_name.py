@@ -12,9 +12,12 @@ the client, which a live-DB DSL test can't observe directly."""
 
 import uuid
 from pathlib import Path
+from types import SimpleNamespace
 
 import pytest
 
+from datamimic_ce.engine.dsl.api import Dbms
+from datamimic_ce.engine.io.clients.rdbms_client import RdbmsClient
 from datamimic_ce.engine.io.exporters.test_result_exporter import TestResultExporter
 from datamimic_ce.engine.runtime.contexts.setup_context import SetupContext
 from datamimic_ce.engine.runtime.generators.factory import GeneratorUtil
@@ -39,12 +42,13 @@ class DummyStmt:
         return self._root_gen
 
 
-class RecordingRdbmsClient:
+class RecordingRdbmsClient(RdbmsClient):
     """Records every sequence_name it is asked for, so tests can assert the literal string."""
 
     def __init__(self):
         self._seq = {}
         self.requested_names: list[str] = []
+        self._credential = SimpleNamespace(dbms=Dbms.POSTGRESQL)
 
     def get_current_sequence_number(
         self, sequence_name: str, table_name: str | None = None, column_name: str | None = None
