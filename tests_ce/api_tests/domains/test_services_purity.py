@@ -8,10 +8,10 @@ from pathlib import Path
 import pytest
 
 SERVICE_PATHS = (
-    Path("datamimic_ce/domains/person/service.py"),
-    Path("datamimic_ce/domains/patient/service.py"),
-    Path("datamimic_ce/domains/doctor/service.py"),
-    Path("datamimic_ce/domains/address/service.py"),
+    Path("datamimic_ce/domains/shared/services/person_api.py"),
+    Path("datamimic_ce/domains/healthcare/services/patient_api.py"),
+    Path("datamimic_ce/domains/healthcare/services/doctor_api.py"),
+    Path("datamimic_ce/domains/shared/services/address_api.py"),
 )
 
 
@@ -23,6 +23,10 @@ def test_services_do_not_call_open(path: Path) -> None:
             func = node.func
             if isinstance(func, ast.Name) and func.id == "open":
                 pytest.fail(f"{path} should not call open() directly")
-            if isinstance(func, ast.Attribute) and func.attr == "open":
-                if isinstance(func.value, ast.Name) and func.value.id == "Path":
-                    pytest.fail(f"{path} should not invoke Path.open directly")
+            if (
+                isinstance(func, ast.Attribute)
+                and func.attr == "open"
+                and isinstance(func.value, ast.Name)
+                and func.value.id == "Path"
+            ):
+                pytest.fail(f"{path} should not invoke Path.open directly")
