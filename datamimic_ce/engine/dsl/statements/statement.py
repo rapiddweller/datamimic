@@ -57,15 +57,13 @@ class Statement(ABC):  # noqa: B024
 
     def get_root_generate_statement(self) -> Optional["GenerateStatement"]:  # noqa: F821
         from datamimic_ce.engine.dsl.statements.generate_statement import GenerateStatement
-        from datamimic_ce.engine.dsl.statements.setup_statement import SetupStatement
 
-        if isinstance(self, GenerateStatement | SetupStatement):
+        if isinstance(self, GenerateStatement):
             return None
-        else:
-            parent_stmt = self.parent_stmt
-            while not isinstance(parent_stmt, GenerateStatement):
-                parent_stmt = parent_stmt.parent_stmt if parent_stmt is not None else None
-            return parent_stmt
+        parent_stmt = self.parent_stmt
+        while parent_stmt is not None and not isinstance(parent_stmt, GenerateStatement):
+            parent_stmt = parent_stmt.parent_stmt
+        return parent_stmt
 
     @staticmethod
     def _adjust_parent_stmt(parent_stmt: Optional["Statement"]) -> Optional["Statement"]:
