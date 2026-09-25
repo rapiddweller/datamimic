@@ -1,4 +1,4 @@
-.PHONY: help install test test-unit test-integration test-functional coverage coverage-unit typecheck lint format check architecture-check clean
+.PHONY: help install test test-unit test-integration test-functional coverage coverage-unit typecheck lint format check architecture-check architecture-cycle-check clean
 
 PACKAGE := datamimic_ce
 TESTS := tests_ce
@@ -17,7 +17,8 @@ help:
 	@echo "  lint              Run ruff against $(PACKAGE)"
 	@echo "  format            Auto-format code with ruff"
 	@echo "  check             Run lint, typecheck, and tests"
-	@echo "  architecture-check Validate the architecture contract with ArchKeel 0.7.0"
+	@echo "  architecture-check Validate the physical, dependency, and ArchKeel architecture gates"
+	@echo "  architecture-cycle-check Check module imports with pinned Pylint"
 	@echo "  clean             Remove caches and build artifacts"
 
 install:
@@ -57,8 +58,12 @@ format:
 
 check: lint typecheck test
 
-architecture-check:
-	uvx --python 3.11 --from archkeel==0.7.0 archkeel validate --baseline known-violations.json --json | python3 -c 'import json, sys; raw = sys.stdin.read(); print(raw, end=""); report = json.loads(raw); measurements = report.get("measurements") or {}; scalars = measurements.get("scalars") or {}; coverage = report.get("coverage") or {}; valid = report.get("exit_code") == 0 and report.get("declared_rules") == "PASS" and report.get("observation_complete") == "PASS" and coverage.get("status") == "PASS" and scalars.get("violations") == 0 and scalars.get("unknown_positions") == 0 and report.get("baseline_new") == 0 and report.get("baseline_resolved") == 0; sys.exit(0 if valid else 1)'
+architecture-check: architecture-cycle-check
+	pytest -q tests_ce/architecture/test_inner_architecture_target.py
+	uvx --python 3.11 --from archkeel==0.7.0 archkeel validate --baseline known-violations.json --json | python3 -c 'import json, sys; raw = sys.stdin.read(); print(raw, end=""); report = json.loads(raw); measurements = report.get("measurements") or {}; scalars = measurements.get("scalars") or {}; coverage = report.get("coverage") or {}; valid = report.get("exit_code") == 0 and report.get("declared_rules") == "PASS" and report.get("observation_complete") == "PASS" and coverage.get("status") == "PASS" and scalars.get("violations") == 0 and scalars.get("unknown_positions") == 0 and scalars.get("cycle_edges") == 0 and report.get("baseline_new") == 0 and report.get("baseline_resolved") == 0; sys.exit(0 if valid else 1)'
+
+architecture-cycle-check:
+	uvx --python 3.11 --from pylint==3.3.7 pylint --disable=all --enable=cyclic-import --persistent=n --score=n datamimic_ce
 
 clean:
 	rm -rf .pytest_cache .mypy_cache .ruff_cache htmlcov .coverage coverage.xml
