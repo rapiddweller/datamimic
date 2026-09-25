@@ -49,7 +49,7 @@ from pathlib import Path
 from pydantic import JsonValue
 
 from datamimic_ce._compat import StrEnum
-from datamimic_ce.authoring.application.linter import lint_descriptor, lint_source
+from datamimic_ce.authoring.adapters.linter import lint_descriptor, lint_source
 from datamimic_ce.authoring.contracts import (
     AuthoringStage,
     CaptureStatus,

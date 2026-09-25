@@ -11,7 +11,7 @@ from pathlib import Path
 import pytest
 
 from datamimic_ce.data_mimic_test import DataMimicTest
-from datamimic_ce.engine.runtime.config import settings
+from datamimic_ce.engine.runtime.lifecycle.config import settings
 
 
 class TestRdbmsFunctional:

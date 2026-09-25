@@ -7,8 +7,6 @@ from datamimic_ce.datamimic import DataMimic
 from datamimic_ce.engine.dsl.parsers.descriptor_parser import DescriptorParser
 from datamimic_ce.engine.dsl.statements.setup_statement import SetupStatement
 from datamimic_ce.engine.runtime import api as runtime_api
-from datamimic_ce.engine.runtime import runner
-from datamimic_ce.engine.runtime.config import settings
 from datamimic_ce.engine.runtime.contracts import (
     CapturedProducts,
     PlatformConfiguration,
@@ -17,6 +15,8 @@ from datamimic_ce.engine.runtime.contracts import (
     RunResult,
     RunSession,
 )
+from datamimic_ce.engine.runtime.lifecycle import runner
+from datamimic_ce.engine.runtime.lifecycle.config import settings
 from datamimic_ce.factory.factory_config import FactoryConfig as LegacyFactoryConfig
 from datamimic_ce.interfaces.cli import runtime as cli_runtime
 from datamimic_ce.interfaces.contracts import FactoryConfig

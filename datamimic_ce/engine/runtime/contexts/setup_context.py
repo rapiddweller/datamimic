@@ -27,7 +27,7 @@ from datamimic_ce.engine.io.api import Client, Exporter, TestResultExporter, dis
 from datamimic_ce.engine.runtime.contexts.context import Context
 from datamimic_ce.engine.runtime.contexts.demographic_context import DemographicContext
 from datamimic_ce.engine.runtime.logging import logger
-from datamimic_ce.engine.runtime.plugins import execute_script
+from datamimic_ce.engine.runtime.scripting.plugins import execute_script
 from datamimic_ce.engine.runtime.storage.memstore_manager import MemstoreManager
 
 

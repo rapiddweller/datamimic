@@ -1,13 +1,13 @@
 import pytest
 
-from datamimic_ce.domains.shared.services.address_api import AddressRequest
-from datamimic_ce.domains.shared.determinism import canonical_json, hash_bytes
+from datamimic_ce.domains.facade import _build_request, generate_domain
 from datamimic_ce.domains.healthcare.services.doctor_api import DoctorRequest
-from datamimic_ce.errors.base import DomainError
-from datamimic_ce.domains.shared.facade import _build_request, generate_domain
-from datamimic_ce.domains.shared.json_types import JsonObject
 from datamimic_ce.domains.healthcare.services.patient_api import PatientRequest
+from datamimic_ce.domains.shared.determinism import canonical_json, hash_bytes
+from datamimic_ce.domains.shared.json_types import JsonObject
+from datamimic_ce.domains.shared.services.address_api import AddressRequest
 from datamimic_ce.domains.shared.services.person_api import PersonRequest
+from datamimic_ce.errors.base import DomainError
 
 
 def test_request_builder_matches_all_domain_dataclass_constructors() -> None:

@@ -7,6 +7,12 @@ from datamimic_ce.domains.domain_core.base_literal_generator import BaseLiteralG
 from datamimic_ce.domains.domain_core.runtime.clock import from_epoch_utc, resolve_clock, to_epoch_utc
 from datamimic_ce.domains.domain_core.runtime.rng import derive_child_seed, spawn_rng
 from datamimic_ce.domains.domain_core.runtime.run_seed import RunSeed
+from datamimic_ce.domains.entity_registry import (
+    EntitySpec,
+    get_entity_service_class,
+    get_entity_spec,
+    list_entity_specs,
+)
 from datamimic_ce.domains.finance.generators.transaction_generator import TransactionGenerator
 from datamimic_ce.domains.finance.models.bank_account import BankAccount
 from datamimic_ce.domains.finance.models.transaction import Transaction
@@ -32,12 +38,6 @@ from datamimic_ce.domains.shared.demographics.loader import load_demographic_pro
 from datamimic_ce.domains.shared.demographics.profile import DemographicProfileId
 from datamimic_ce.domains.shared.demographics.sampler import DemographicSampler
 from datamimic_ce.domains.shared.determinism import get_datamimic_lib_version
-from datamimic_ce.domains.shared.entity_registry import (
-    EntitySpec,
-    get_entity_service_class,
-    get_entity_spec,
-    list_entity_specs,
-)
 from datamimic_ce.domains.shared.generator_registry import generator_namespace
 from datamimic_ce.domains.shared.literal_generators.increment_generator import IncrementGenerator
 from datamimic_ce.domains.shared.literal_generators.number_sequences import finite_number_sequence_capacity

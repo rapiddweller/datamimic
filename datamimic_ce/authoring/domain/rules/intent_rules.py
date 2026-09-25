@@ -4,6 +4,7 @@ import json
 from collections.abc import Iterable
 
 from datamimic_ce.authoring.contracts import CompilePlan, MemstoreRelationshipPlan
+from datamimic_ce.authoring.domain.derived_facts import derive_facts
 from datamimic_ce.authoring.domain.diagnostics import Diagnostic
 from datamimic_ce.authoring.domain.rule_catalog import authoring_rule_definition
 from datamimic_ce.authoring.domain.rules.base import IntentLintContext, IntentRule
@@ -13,7 +14,6 @@ from datamimic_ce.authoring.domain.script_semantics import (
     is_exact_scope_field_reference,
     references_current_scope_field,
 )
-from datamimic_ce.authoring.projection.derived_facts import derive_facts
 from datamimic_ce.authoring.spec import (
     AuthoringSpecV1,
     FileExportTarget,

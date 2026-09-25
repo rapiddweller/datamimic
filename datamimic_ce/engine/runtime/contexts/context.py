@@ -14,7 +14,7 @@ from typing import TYPE_CHECKING
 
 from datamimic_ce.domains.api import RandomSource
 from datamimic_ce.engine.runtime.contexts.expression_globals import NON_VALUE_TYPES, expression_globals
-from datamimic_ce.engine.runtime.evaluation import evaluate_python
+from datamimic_ce.engine.runtime.scripting.evaluation import evaluate_python
 
 if TYPE_CHECKING:
     from datamimic_ce.engine.runtime.contexts.setup_context import SetupContext

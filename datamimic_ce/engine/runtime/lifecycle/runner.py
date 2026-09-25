@@ -11,8 +11,8 @@ os.environ["RAY_DEDUP_LOGS"] = "0"
 
 from datamimic_ce.engine.dsl.api import DescriptorParser, GenerateStatement, SetupStatement
 from datamimic_ce.engine.io.api import TestResultExporter
-from datamimic_ce.engine.runtime.config import settings
 from datamimic_ce.engine.runtime.contracts import CapturedProducts, FactoryConfig, RunRequest, RunResult
+from datamimic_ce.engine.runtime.lifecycle.config import settings
 from datamimic_ce.engine.runtime.logging import log_memory_info, log_system_info, setup_logger
 from datamimic_ce.engine.runtime.process import bootstrap_process_title, set_main_process_title
 from datamimic_ce.engine.runtime.tasks.setup_task import SetupTask

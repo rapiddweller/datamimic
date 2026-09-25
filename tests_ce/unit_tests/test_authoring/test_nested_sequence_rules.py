@@ -7,9 +7,9 @@
 
 import pytest
 
-from datamimic_ce.authoring.contracts import AuthoringStage
 from datamimic_ce.authoring.adapters.dryrun import dry_run_source
-from datamimic_ce.authoring.application.linter import lint_source
+from datamimic_ce.authoring.adapters.linter import lint_source
+from datamimic_ce.authoring.contracts import AuthoringStage
 from datamimic_ce.engine.dsl.enums.distribution_enums import POSITIONAL_NUMBER_SEQUENCES, NumberDistribution
 
 

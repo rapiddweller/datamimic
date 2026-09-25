@@ -2,9 +2,9 @@ from types import SimpleNamespace
 
 import pytest
 
-from datamimic_ce.domains.shared.services.person_service import PersonService
 from datamimic_ce.domains.domain_core.base_entity import BaseEntity
-from datamimic_ce.domains.shared.entity_registry import get_entity_service_class, list_entity_specs
+from datamimic_ce.domains.entity_registry import get_entity_service_class, list_entity_specs
+from datamimic_ce.domains.shared.services.person_service import PersonService
 from datamimic_ce.engine.runtime.tasks.variable_task import VariableTask
 
 

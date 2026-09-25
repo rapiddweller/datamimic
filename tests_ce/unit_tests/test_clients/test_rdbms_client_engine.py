@@ -15,7 +15,7 @@ import pytest
 
 from datamimic_ce.engine.io.clients.rdbms_client import RdbmsClient
 from datamimic_ce.engine.io.connection_config.rdbms_connection_config import RdbmsConnectionConfig
-from datamimic_ce.engine.runtime.config import settings
+from datamimic_ce.engine.runtime.lifecycle.config import settings
 
 
 def _credential(**extra) -> RdbmsConnectionConfig:

@@ -296,7 +296,7 @@ def test_compiler_has_no_transport_execution_or_file_io_dependencies() -> None:
         "datamimic_ce.interfaces.cli",
         "datamimic_ce.interfaces.mcp",
         "authoring.adapters.dryrun",
-        "authoring.application.linter",
+        "authoring.adapters.linter",
     )
     assert not any(any(token in module for token in forbidden) for module in imported)
     assert "open(" not in inspect.getsource(compiler_module)

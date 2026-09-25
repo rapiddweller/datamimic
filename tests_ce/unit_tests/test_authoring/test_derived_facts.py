@@ -9,13 +9,13 @@
 import pytest
 from pydantic import ValidationError
 
+from datamimic_ce.authoring.application.service import compile_document, scaffold
 from datamimic_ce.authoring.contracts import (
     DerivedMemstoreFact,
     DerivedProductFact,
     ScaffoldRequest,
 )
-from datamimic_ce.authoring.projection.derived_facts import derive_facts
-from datamimic_ce.authoring.application.service import compile_document, scaffold
+from datamimic_ce.authoring.domain.derived_facts import derive_facts
 
 
 @pytest.mark.parametrize(

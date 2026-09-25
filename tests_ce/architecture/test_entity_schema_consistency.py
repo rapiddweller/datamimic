@@ -20,7 +20,7 @@ from random import Random
 import pytest
 
 from datamimic_ce.domains.domain_core.attribute_catalog import FieldSpec
-from datamimic_ce.domains.shared.entity_registry import list_entity_specs
+from datamimic_ce.domains.entity_registry import list_entity_specs
 
 _SEED = 20260521
 

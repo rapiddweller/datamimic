@@ -17,7 +17,7 @@ from datamimic_ce.data_mimic_test import DataMimicTest
 from datamimic_ce.engine.io.clients.mongodb_client import MongoDBClient
 from datamimic_ce.engine.io.connection_config.mongodb_connection_config import MongoDBConnectionConfig
 from datamimic_ce.engine.io.contracts import DataSourcePagination
-from datamimic_ce.engine.runtime.config import settings
+from datamimic_ce.engine.runtime.lifecycle.config import settings
 
 
 def _local_client() -> MongoDBClient:

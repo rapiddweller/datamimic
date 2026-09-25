@@ -1,6 +1,6 @@
 """Distribution checks for component-driven constraints (rules 4-6)."""
 
-from datamimic_ce.domains.shared.facade import generate_domain
+from datamimic_ce.domains.facade import generate_domain
 
 
 def _ages(response: dict) -> list[int]:

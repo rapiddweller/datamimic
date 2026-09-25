@@ -25,7 +25,7 @@ from datamimic_ce.engine.io.api import (
 from datamimic_ce.engine.io.contracts import select_row_iterator, select_rows
 from datamimic_ce.engine.runtime.contexts.context import Context
 from datamimic_ce.engine.runtime.contexts.setup_context import SetupContext
-from datamimic_ce.engine.runtime.evaluation import interpolate_variables
+from datamimic_ce.engine.runtime.scripting.evaluation import interpolate_variables
 from datamimic_ce.engine.runtime.sources.selection import get_distributed_data, get_unique_data
 
 from .router import data_source_cache_key

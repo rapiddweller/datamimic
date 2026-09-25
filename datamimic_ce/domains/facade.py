@@ -6,19 +6,19 @@ from typing import TypeVar
 
 from pydantic import JsonValue, TypeAdapter
 
-from ...errors.base import DomainError
-from ..healthcare.services.doctor_api import DoctorRequest
-from ..healthcare.services.doctor_api import generate as generate_doctor
-from ..healthcare.services.patient_api import PatientRequest
-from ..healthcare.services.patient_api import generate as generate_patient
-from .determinism import canonical_json, derive_profile_seed, hash_bytes
-from .json_types import JsonObject
-from .profile_components import resolve_component_profile
-from .schema_registry import validate_payload
-from .services.address_api import AddressRequest
-from .services.address_api import generate as generate_address
-from .services.person_api import PersonRequest
-from .services.person_api import generate as generate_person
+from ..errors.base import DomainError
+from .healthcare.services.doctor_api import DoctorRequest
+from .healthcare.services.doctor_api import generate as generate_doctor
+from .healthcare.services.patient_api import PatientRequest
+from .healthcare.services.patient_api import generate as generate_patient
+from .shared.determinism import canonical_json, derive_profile_seed, hash_bytes
+from .shared.json_types import JsonObject
+from .shared.profile_components import resolve_component_profile
+from .shared.schema_registry import validate_payload
+from .shared.services.address_api import AddressRequest
+from .shared.services.address_api import generate as generate_address
+from .shared.services.person_api import PersonRequest
+from .shared.services.person_api import generate as generate_person
 
 RequestT = TypeVar("RequestT", bound=PersonRequest | AddressRequest | PatientRequest | DoctorRequest)
 

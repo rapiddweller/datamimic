@@ -22,8 +22,8 @@ from typing import ClassVar
 from lxml import etree
 from pydantic import BaseModel
 
+from datamimic_ce.authoring.adapters.linter import _run_rules, lint_source
 from datamimic_ce.authoring.domain.diagnostics import Diagnostic
-from datamimic_ce.authoring.application.linter import _run_rules, lint_source
 from datamimic_ce.authoring.domain.schema import build_schema_index
 from datamimic_ce.engine.dsl.model.constraints import (
     AllOrNone,
