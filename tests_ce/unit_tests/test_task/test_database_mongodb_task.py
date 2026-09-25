@@ -28,7 +28,9 @@ def test_database_task_builds_io_config_from_dsl_model() -> None:
     context.task_id = "task"
     client = object()
 
-    with patch("datamimic_ce.engine.runtime.tasks.database_task.RdbmsClient", return_value=client) as create_client:
+    with patch(
+        "datamimic_ce.engine.runtime.tasks.database_task.create_rdbms_client", return_value=client
+    ) as create_client:
         DatabaseTask(statement).execute(context)
 
     config = create_client.call_args.args[0]
@@ -47,7 +49,9 @@ def test_mongodb_task_builds_io_config_without_statement_side_effects() -> None:
 
     context = MagicMock(spec=SetupContext)
     client = object()
-    with patch("datamimic_ce.engine.runtime.tasks.mongodb_task.MongoDBClient", return_value=client) as create_client:
+    with patch(
+        "datamimic_ce.engine.runtime.tasks.mongodb_task.create_mongodb_client", return_value=client
+    ) as create_client:
         MongoDBTask(statement).execute(context)
 
     config = create_client.call_args.args[0]
