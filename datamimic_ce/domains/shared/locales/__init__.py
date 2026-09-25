@@ -27,6 +27,20 @@ class LocalePack:
     patient: PatientLocale
 
 
+class UnsupportedLocaleDatasetError(ValueError):
+    """The locale maps to a dataset absent from the bundled domain data."""
+
+    def __init__(self, locale: str, dataset: str, supported_datasets: tuple[str, ...]) -> None:
+        self.locale = locale
+        self.dataset = dataset
+        self.supported_datasets = supported_datasets
+        supported_hint = ", ".join(supported_datasets) or "<none>"
+        super().__init__(
+            f"Locale '{locale}' maps to dataset '{dataset}' which lacks the required domain datasets. "
+            f"Supported dataset codes: {supported_hint}"
+        )
+
+
 class PersonLocale(TypedDict):
     sexes: list[str]
     first_names: dict[str, list[str]]
@@ -104,11 +118,7 @@ def _dataset_for_locale(locale: str) -> str:
 
 def _ensure_supported_dataset(locale: str, dataset: str) -> None:
     if dataset not in SUPPORTED_DATASETS:
-        supported_hint = ", ".join(SUPPORTED_DATASET_CODES) if SUPPORTED_DATASETS else "<none>"
-        raise ValueError(
-            f"Locale '{locale}' maps to dataset '{dataset}' which lacks the required domain datasets. "
-            f"Supported dataset codes: {supported_hint}"
-        )
+        raise UnsupportedLocaleDatasetError(locale, dataset, SUPPORTED_DATASET_CODES)
 
 
 def _clean(value: str) -> str:

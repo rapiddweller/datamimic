@@ -8,7 +8,7 @@ from datamimic_ce.errors import DomainErrorCode, invalid_locale_error
 from datamimic_ce.errors.base import DomainError
 
 from ..determinism import canonical_json, derive_seed, determinism_proof, hash_bytes, mix_seed, stable_uuid, with_rng
-from ..locales import SUPPORTED_DATASET_CODES, load_locale
+from ..locales import SUPPORTED_DATASET_CODES, UnsupportedLocaleDatasetError, load_locale
 
 
 class AddressConstraints(TypedDict, total=False):
@@ -62,7 +62,7 @@ def generate(req: AddressRequest) -> dict[str, object]:
 
     try:
         locale_pack = load_locale(req.locale, req.version)
-    except ValueError as exc:
+    except UnsupportedLocaleDatasetError as exc:
         hint_codes = ", ".join(SUPPORTED_DATASET_CODES) or "<none>"
         raise invalid_locale_error(
             req.locale,

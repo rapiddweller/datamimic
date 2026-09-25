@@ -18,7 +18,7 @@ from ..determinism import (
     stable_uuid,
     with_rng,
 )
-from ..locales import SUPPORTED_DATASET_CODES, load_locale
+from ..locales import SUPPORTED_DATASET_CODES, UnsupportedLocaleDatasetError, load_locale
 
 
 class AgeConstraints(TypedDict, total=False):
@@ -62,7 +62,7 @@ def generate(req: PersonRequest, *, profile_seed: int | None = None) -> dict[str
 
     try:
         locale_pack = load_locale(req.locale, req.version)
-    except ValueError as exc:
+    except UnsupportedLocaleDatasetError as exc:
         hint_codes = ", ".join(SUPPORTED_DATASET_CODES) or "<none>"
         raise invalid_locale_error(
             req.locale,

@@ -13,7 +13,7 @@ from datamimic_ce.domains.shared.determinism import (
     stable_uuid,
     with_rng,
 )
-from datamimic_ce.domains.shared.locales import SUPPORTED_DATASET_CODES, load_locale
+from datamimic_ce.domains.shared.locales import SUPPORTED_DATASET_CODES, UnsupportedLocaleDatasetError, load_locale
 from datamimic_ce.errors import DomainErrorCode, invalid_locale_error
 from datamimic_ce.errors.base import DomainError
 
@@ -51,7 +51,7 @@ def generate(req: DoctorRequest) -> dict[str, object]:
 
     try:
         locale_pack = load_locale(req.locale, req.version)
-    except ValueError as exc:
+    except UnsupportedLocaleDatasetError as exc:
         hint_codes = ", ".join(SUPPORTED_DATASET_CODES) or "<none>"
         raise invalid_locale_error(
             req.locale,
