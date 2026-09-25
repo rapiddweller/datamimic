@@ -16,6 +16,7 @@ from datamimic_ce.domains.shared.determinism import (
 from datamimic_ce.domains.shared.locales import SUPPORTED_DATASET_CODES, load_locale
 from datamimic_ce.errors import DomainErrorCode
 from datamimic_ce.errors.base import DomainError
+from datamimic_ce.errors.factory import invalid_locale_error
 
 
 class DoctorConstraints(TypedDict, total=False):
@@ -53,9 +54,8 @@ def generate(req: DoctorRequest) -> dict[str, object]:
         locale_pack = load_locale(req.locale, req.version)
     except ValueError as exc:
         hint_codes = ", ".join(SUPPORTED_DATASET_CODES) or "<none>"
-        raise DomainError(
-            code=DomainErrorCode.UNSUPPORTED_LOCALE,
-            message=str(exc),
+        raise invalid_locale_error(
+            req.locale,
             hint=f"Choose a locale mapping to dataset codes: {hint_codes}",
             path="/locale",
             request_hash=req.request_hash,

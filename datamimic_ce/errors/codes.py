@@ -18,5 +18,6 @@ class DomainErrorCode(str, Enum):
     UNSUPPORTED_DOMAIN = "unsupported_domain"
     UNSUPPORTED_COMPONENT_DATASET = "unsupported_component_dataset"
     UNSUPPORTED_COMPONENT_VERSION = "unsupported_component_version"
-    UNSUPPORTED_LOCALE = "unsupported_locale"
 
+class ErrorCode(str, Enum):
+    INVALID_LOCALE = "E002"

@@ -4,7 +4,7 @@ import pytest
 
 from datamimic_ce.domains.facade import generate_domain
 from datamimic_ce.domains.shared.determinism import canonical_json, derive_seed, stable_uuid
-from datamimic_ce.errors.base import DomainError
+from datamimic_ce.errors import ErrorCode, InvalidLocaleError
 
 
 def test_determinism_person_minimal() -> None:
@@ -64,6 +64,7 @@ def test_person_unsupported_locale() -> None:
         "locale": "fr_FR",
         "clock": "2025-01-01T00:00:00Z",
     }
-    with pytest.raises(DomainError) as excinfo:
+    with pytest.raises(InvalidLocaleError) as excinfo:
         generate_domain(req)
-    assert excinfo.value.code == "unsupported_locale"
+    assert excinfo.value.code is ErrorCode.INVALID_LOCALE
+    assert "not supported" in str(excinfo.value)

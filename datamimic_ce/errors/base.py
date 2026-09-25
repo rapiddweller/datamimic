@@ -2,12 +2,12 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 
-from datamimic_ce.errors.codes import DomainErrorCode
+from datamimic_ce.errors.codes import DomainErrorCode, ErrorCode
 
 
 @dataclass(frozen=True)
 class DomainError(Exception):
-    code: DomainErrorCode
+    code: DomainErrorCode | ErrorCode
     message: str
     hint: str | None
     path: str
@@ -26,3 +26,13 @@ class DomainError(Exception):
         if self.details is not None:
             payload["details"] = self.details
         return payload
+
+
+@dataclass(frozen=True)
+class InvalidLocaleError(ValueError, DomainError):
+    """CE 5.0 aligns the Python locale error code and message with EE's E002 contract."""
+
+    locale: str | None = None
+
+    def __str__(self) -> str:
+        return self.message

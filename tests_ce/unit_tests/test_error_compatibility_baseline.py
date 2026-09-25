@@ -1,10 +1,10 @@
-"""Keep the existing CE XML parser diagnostics stable during error migration."""
+"""Pin XML diagnostics and the CE 5.0 shared locale error contract."""
 
 import pytest
 
 from datamimic_ce.authoring.adapters.linter import lint_source
 from datamimic_ce.domains.facade import generate_domain
-from datamimic_ce.errors.base import DomainError
+from datamimic_ce.errors import ErrorCode, InvalidLocaleError
 
 
 def test_valid_setup_has_no_parser_diagnostic() -> None:
@@ -21,7 +21,7 @@ def test_malformed_xml_keeps_authoring_code() -> None:
     assert [diagnostic.rule for diagnostic in result.diagnostics] == ["DM001"]
 
 
-def test_address_locale_error_baseline() -> None:
+def test_address_locale_error_uses_shared_error_contract() -> None:
     request = {
         "domain": "address",
         "version": "v1",
@@ -33,9 +33,15 @@ def test_address_locale_error_baseline() -> None:
     assert generate_domain(request)["items"]
 
     request["locale"] = "xx_XX"
-    with pytest.raises(DomainError) as caught:
+    with pytest.raises(InvalidLocaleError) as caught:
         generate_domain(request)
-    assert type(caught.value) is DomainError
-    assert caught.value.code == "unsupported_locale"
-    assert str(caught.value) == ""
-    assert caught.value.path == "/locale"
+
+    error = caught.value
+    assert isinstance(error, ValueError)
+    assert error.code is ErrorCode.INVALID_LOCALE
+    assert error.locale == "xx_XX"
+    assert error.path == "/locale"
+    assert error.request_hash
+    assert str(error) == "[E002] Locale 'xx_XX' is not supported. Use a valid locale like 'en_US'."
+    assert error.to_dict()["code"] == "E002"
+    assert error.to_dict()["hint"]
