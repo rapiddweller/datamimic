@@ -11,7 +11,6 @@ from datamimic_ce.engine.dsl.constants.convention_constants import NAME_SEPARATO
 from datamimic_ce.engine.dsl.statements.composite_statement import CompositeStatement
 from datamimic_ce.engine.dsl.statements.else_if_statement import ElseIfStatement
 from datamimic_ce.engine.dsl.statements.else_statement import ElseStatement
-from datamimic_ce.engine.dsl.statements.generate_statement import GenerateStatement
 from datamimic_ce.engine.dsl.statements.if_statement import IfStatement
 
 logger = logging.getLogger("DATAMIMIC")
@@ -41,7 +40,7 @@ class ConditionStatement(CompositeStatement):
             for executed_statement in self._executed_statements:
                 # search in sub_statements of each condition executed task statements
                 for sub_statement in executed_statement.sub_statements:
-                    if stmt_name == sub_statement.name and isinstance(sub_statement, GenerateStatement):
+                    if stmt_name == sub_statement.name and isinstance(sub_statement, CompositeStatement):
                         return sub_statement.retrieve_sub_statement_by_fullname(name)
                     elif isinstance(sub_statement, ConditionStatement):
                         result_statement = sub_statement.retrieve_executed_sub_gen_statement_by_name(name)

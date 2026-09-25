@@ -5,8 +5,12 @@
 # For questions and support, contact: info@rapiddweller.com
 
 from abc import ABC
+from typing import TYPE_CHECKING
 
 from datamimic_ce.engine.dsl.statements.statement import Statement
+
+if TYPE_CHECKING:
+    from datamimic_ce.engine.dsl.statements.generate_statement import GenerateStatement
 
 
 class CompositeStatement(Statement, ABC):
@@ -24,6 +28,12 @@ class CompositeStatement(Statement, ABC):
     @sub_statements.setter
     def sub_statements(self, sub_statements: list[Statement]) -> None:
         self._sub_statements = [] if sub_statements is None else sub_statements
+
+    def retrieve_sub_statement_by_fullname(self, name: str) -> "GenerateStatement | None":
+        return None
+
+    def retrieve_executed_sub_gen_statement_by_name(self, name: str) -> "GenerateStatement | None":
+        return None
 
 
 class ConditionBranchStatement(CompositeStatement, ABC):

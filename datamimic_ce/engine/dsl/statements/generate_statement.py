@@ -201,8 +201,6 @@ class GenerateStatement(CompositeStatement):
         :param name:
         :return:
         """
-        from datamimic_ce.engine.dsl.statements.condition_statement import ConditionStatement
-
         try:
             # 1. Check if name is the same as current statement
             if name == self.name:
@@ -215,9 +213,9 @@ class GenerateStatement(CompositeStatement):
                 next_stmt_name = segments[0]
                 name = NAME_SEPARATOR.join(segments)
                 for sub_stmt in self.sub_statements:
-                    if next_stmt_name == sub_stmt.name and isinstance(sub_stmt, GenerateStatement):
+                    if next_stmt_name == sub_stmt.name and isinstance(sub_stmt, CompositeStatement):
                         return sub_stmt.retrieve_sub_statement_by_fullname(name)
-                    elif isinstance(sub_stmt, ConditionStatement):
+                    elif isinstance(sub_stmt, CompositeStatement):
                         condition_result = sub_stmt.retrieve_executed_sub_gen_statement_by_name(name)
                         if condition_result:
                             return condition_result
