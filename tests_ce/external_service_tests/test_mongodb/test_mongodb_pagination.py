@@ -16,7 +16,7 @@ import pytest
 from datamimic_ce.data_mimic_test import DataMimicTest
 from datamimic_ce.engine.io.clients.mongodb_client import MongoDBClient
 from datamimic_ce.engine.io.connection_config.mongodb_connection_config import MongoDBConnectionConfig
-from datamimic_ce.engine.io.data_sources.data_source_pagination import DataSourcePagination
+from datamimic_ce.engine.io.contracts import DataSourcePagination
 from datamimic_ce.engine.runtime.config import settings
 
 

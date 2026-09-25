@@ -6,7 +6,7 @@
 
 import logging
 
-from datamimic_ce.engine.io.data_sources.data_source_pagination import DataSourcePagination
+from datamimic_ce.engine.io.contracts import DataSourcePagination
 from datamimic_ce.engine.io.exporters.exporter import Exporter
 
 logger = logging.getLogger("DATAMIMIC")

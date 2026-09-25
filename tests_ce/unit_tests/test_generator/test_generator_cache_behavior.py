@@ -5,7 +5,7 @@ import pytest
 
 from datamimic_ce.engine.dsl.enums.dbms_enums import Dbms
 from datamimic_ce.engine.io.clients.rdbms_client import RdbmsClient
-from datamimic_ce.engine.io.data_sources.data_source_pagination import DataSourcePagination
+from datamimic_ce.engine.io.contracts import DataSourcePagination
 from datamimic_ce.engine.io.exporters.test_result_exporter import TestResultExporter
 from datamimic_ce.engine.runtime.contexts.setup_context import SetupContext
 from datamimic_ce.engine.runtime.generators.factory import GeneratorUtil

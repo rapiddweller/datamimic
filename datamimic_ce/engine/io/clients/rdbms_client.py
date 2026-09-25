@@ -22,7 +22,7 @@ from datamimic_ce.engine.io.clients import sql_dialect
 from datamimic_ce.engine.io.clients.database_client import DatabaseClient
 from datamimic_ce.engine.io.clients.entity_serialization import stringify_entity_value
 from datamimic_ce.engine.io.connection_config.rdbms_connection_config import RdbmsConnectionConfig
-from datamimic_ce.engine.io.data_sources.data_source_pagination import DataSourcePagination
+from datamimic_ce.engine.io.contracts import DataSourcePagination
 
 logger = logging.getLogger("DATAMIMIC")
 

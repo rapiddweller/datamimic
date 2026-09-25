@@ -53,24 +53,24 @@ explicit CE/EE path comparison at acceptance; a green contract alone cannot prov
 
 ## Why another level
 
-The CE component contract passes, but the 0.7.0 observation still contains six module
-SCCs and 171 cycle edges. The largest SCCs contain 28 DSL and 23 Runtime modules.
+The CE component contract passes, but the 0.7.0 observation still contains
+168 module cycle edges. The largest SCCs contain 28 DSL and 23 Runtime modules.
 ArchKeel's automatic Runtime draft made 15 components and 210 pair decisions; one
 component per directory or file would codify noise, not ownership.
 
 All five CE component interiors have active drafts. ArchKeel 0.7.0 parses all
-476 CE files and reports 94 target violations after correcting three wrongly
-forbidden Generate-to-worker edges (the first draft reported 97). The parent
-`requires` edges and numeric baseline were not widened. These are rule findings,
-not 94 independent design decisions.
+475 CE files and reports 89 target violations after correcting three wrongly
+forbidden Generate-to-worker edges and moving IO pagination/selection ownership
+(the first draft reported 97). The parent `requires` edges and numeric baseline
+were not widened. These are rule findings, not 89 independent design decisions.
 
-| Interior | Main cause to inspect |
-| --- | --- |
-| Domains | `domain_core` registries import shared generators and vertical services; place registration with its owner instead of permitting reverse dependencies. |
-| DSL | The model-side element registry imports concrete parsers; bind implementations from the parser side. |
-| IO | Clients import source policy, and source modules import `exporters.memstore`; move policy and shared types to their owners. |
-| Runtime | Generate-to-worker imports are legitimate inside Generate orchestration. Investigate remaining facade and global-config dependencies separately. |
-| Authoring | `rules.base` imports a schema fact lookup and a pure element-path helper; move those small facts/functions to the rule/domain owner, not a new framework. |
+| Interior | Violations | Main cause to inspect |
+| --- | ---: | --- |
+| Domains | 58 | `domain_core` registries import shared generators and vertical services; place registration with its owner instead of permitting reverse dependencies. |
+| DSL | 26 | The model-side element registry imports concrete parsers; bind implementations from the parser side. |
+| IO | 1 | Pagination now lives in IO contracts and selector cycling in Runtime sources. The remaining `data_sources`↔`exporters.memstore` dependency still needs an ownership decision. |
+| Runtime | 2 | Generate-to-worker imports are legitimate inside Generate orchestration. Investigate remaining facade and global-config dependencies separately. |
+| Authoring | 2 | `rules.base` imports a schema fact lookup and a pure element-path helper; move those small facts/functions to the rule/domain owner, not a new framework. |
 
 Current-file assignments cover every non-root module within the five interiors.
 Their root `__init__.py` modules remain unassigned in the report; notably,
@@ -86,7 +86,7 @@ an extra level ArchKeel 0.7.0 can enforce in an `inside` contract.
 
 | Area | Target boundary | Basis | Consequence |
 | --- | --- | --- | --- |
-| IO | Separate API, contracts, clients, sources, exporters, and files. Sources read through clients; exporters own writes; clients do not import source policy. | EE read/write ownership and CE's three-module client/source SCC. | Move pagination types and cyclic selection out of clients; retain descriptor behavior. |
+| IO | Separate API, contracts, clients, sources, exporters, and files. Sources read through clients; exporters own writes; clients do not import source policy. | EE read/write ownership and CE's three-module client/source SCC. | Pagination and cyclic selection have moved; resolve the source/exporter dependency without changing descriptor behavior. |
 | Runtime | Lifecycle starts Setup; Generate owns per-statement worker policy and execution. Contexts own state; IO owns reads/writes. | EE keeps policies and workers under `tasks/generate/`, while Lifecycle only starts Setup. | Move CE workers below Generate, remove task-side client construction, and verify setup, seeded replay, and external-service descriptors. |
 | DSL | Typed models own grammar facts; parsing binds parser implementations; statements carry executable meaning. No second element catalog. | Both editions derive Authoring/DSL capabilities from typed owners. CE's registry↔parser SCC is 28 modules. | Separate registry facts from parser construction without duplicating the vocabulary; compare Authoring projections and XML behavior. |
 | Domains | `domain_core` owns primitives, `shared` owns common generators and registrations, and finance/healthcare/insurance/ecommerce/public-sector own their vertical behavior. | EE already uses this split; CE `common` and `domain_core` import each other. | Move CE `common` to `shared` and both built-in registries out of the core; fold `doctor`/`patient` into healthcare and `address`/`person` into shared. No compatibility shim. |
@@ -160,7 +160,7 @@ one owner in both editions.
 
 Acceptance requires no production module dependency cycles, not just no cycles
 between top-level components. Function-local imports do not erase a dependency
-cycle. The current Pylint 3.3.7 diagnostic reports 56 overlapping cycle paths;
+cycle. The current Pylint 3.3.7 diagnostic reports 53 overlapping cycle paths;
 triage shared causes before treating that as 56 separate fixes. ArchKeel 0.7.0
 observes module cycles but does not enforce them in `inside` contracts. Until
 it does, use one targeted Pylint cycle check alongside ArchKeel and the DSL

@@ -6,6 +6,22 @@ from pathlib import Path
 from pydantic import RootModel
 
 
+class DataSourcePagination:
+    """Page window for source reads."""
+
+    def __init__(self, skip: int, limit: int):
+        self._skip = skip
+        self._limit = limit
+
+    @property
+    def skip(self) -> int:
+        return self._skip
+
+    @property
+    def limit(self) -> int:
+        return self._limit
+
+
 class SmokeExportRows(RootModel[list[dict[str, object]]]):
     pass
 
@@ -25,4 +41,4 @@ class SmokeExportRequest:
     params: SmokeExportParameters
 
 
-__all__ = ["SmokeExportParameters", "SmokeExportRequest", "SmokeExportRows"]
+__all__ = ["DataSourcePagination", "SmokeExportParameters", "SmokeExportRequest", "SmokeExportRows"]

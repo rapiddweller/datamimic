@@ -17,7 +17,7 @@ from datamimic_ce.engine.dsl.api import META_SELECTOR, META_TARGET_ENTITY, META_
 from datamimic_ce.engine.io.clients.database_client import DatabaseClient
 from datamimic_ce.engine.io.clients.entity_serialization import stringify_entity_value
 from datamimic_ce.engine.io.connection_config.mongodb_connection_config import MongoDBConnectionConfig
-from datamimic_ce.engine.io.data_sources.data_source_pagination import DataSourcePagination
+from datamimic_ce.engine.io.contracts import DataSourcePagination
 
 
 class MongoDBClient(DatabaseClient):

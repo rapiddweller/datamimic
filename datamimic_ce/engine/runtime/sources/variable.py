@@ -146,7 +146,13 @@ def plan_variable_source(
             length = context.data_source_len.get(data_source_cache_key(stmt))
             if length is None:
                 length = client.count_query_length(rendered_selector)
-            data = client.get_cyclic_data(rendered_selector, bool(stmt.cyclic), length, pagination)
+            if pagination is None or (
+                stmt.cyclic and (pagination.limit > length or pagination.skip + pagination.limit > length)
+            ):
+                rows = client.get_by_page_with_query(rendered_selector, DataSourcePagination(skip=0, limit=length))
+                data = DataSourceRegistry.get_cyclic_data_list(rows, pagination, cyclic=bool(stmt.cyclic))
+            else:
+                data = client.get_by_page_with_query(rendered_selector, pagination)
         return _variable_data_plan(context, stmt, data, pagination, force_full_pool=force_full_pool)
 
     if source_format is not None:

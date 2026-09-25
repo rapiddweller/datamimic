@@ -7,7 +7,7 @@
 from abc import abstractmethod
 
 from datamimic_ce.engine.io.clients.client import Client
-from datamimic_ce.engine.io.data_sources.data_source_pagination import DataSourcePagination
+from datamimic_ce.engine.io.contracts import DataSourcePagination
 
 
 class DatabaseClient(Client):
@@ -29,21 +29,6 @@ class DatabaseClient(Client):
         """
         Get data from database when there is a type (table name) by pagination
         """
-
-    def get_cyclic_data(self, query: str, cyclic: bool, data_len: int, pagination: DataSourcePagination | None) -> list:
-        """
-        Get cyclic data from database
-        """
-        # Get whole queried data if data count or data limit exceed data len
-        if (pagination is None) or (
-            cyclic and (pagination.limit > data_len or pagination.skip + pagination.limit > data_len)
-        ):
-            data = self.get_by_page_with_query(query, DataSourcePagination(skip=0, limit=data_len))
-            from datamimic_ce.engine.io.data_sources.data_source_registry import DataSourceRegistry
-
-            return DataSourceRegistry.get_cyclic_data_list(data=data, cyclic=cyclic, pagination=pagination)
-        else:
-            return self.get_by_page_with_query(query, pagination)
 
     @abstractmethod
     def count_table_length(self, table_name: str) -> int:
