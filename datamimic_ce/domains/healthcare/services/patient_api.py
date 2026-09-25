@@ -14,9 +14,8 @@ from datamimic_ce.domains.shared.determinism import (
     with_rng,
 )
 from datamimic_ce.domains.shared.locales import SUPPORTED_DATASET_CODES, load_locale
-from datamimic_ce.errors import DomainErrorCode
+from datamimic_ce.errors import DomainErrorCode, invalid_locale_error
 from datamimic_ce.errors.base import DomainError
-from datamimic_ce.errors.factory import invalid_locale_error
 
 
 class AgeConstraints(TypedDict, total=False):

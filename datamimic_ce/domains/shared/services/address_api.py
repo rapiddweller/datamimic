@@ -4,9 +4,8 @@ from dataclasses import dataclass, field
 
 from typing_extensions import TypedDict
 
-from datamimic_ce.errors import DomainErrorCode
+from datamimic_ce.errors import DomainErrorCode, invalid_locale_error
 from datamimic_ce.errors.base import DomainError
-from datamimic_ce.errors.factory import invalid_locale_error
 
 from ..determinism import canonical_json, derive_seed, determinism_proof, hash_bytes, mix_seed, stable_uuid, with_rng
 from ..locales import SUPPORTED_DATASET_CODES, load_locale

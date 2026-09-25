@@ -5,9 +5,8 @@ from datetime import datetime, timezone
 
 from typing_extensions import TypedDict
 
-from datamimic_ce.errors import DomainErrorCode
+from datamimic_ce.errors import DomainErrorCode, invalid_locale_error
 from datamimic_ce.errors.base import DomainError
-from datamimic_ce.errors.factory import invalid_locale_error
 
 from ..determinism import (
     canonical_json,
