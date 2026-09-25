@@ -32,7 +32,6 @@ from datamimic_ce.engine.io.api import (
     is_mongodb_client,
     is_rdbms_client,
     mongodb_count_collection,
-    rdbms_count_query_length,
 )
 from datamimic_ce.engine.io.contracts import select_rows
 from datamimic_ce.engine.runtime.contexts.context import Context
@@ -168,12 +167,14 @@ def set_data_source_length(ctx: SetupContext | GenIterContext, stmt: Statement) 
 
             if is_rdbms_client(client):
                 if selector is not None:
-                    counted = rdbms_count_query_length(client, selector, source_str, "selector")
+                    counted = DataSourceRegistry.rdbms_count_query_length(client, selector, source_str, "selector")
                     if counted is None:
                         return
                     ds_len = counted
                 elif iteration_selector is not None:
-                    counted = rdbms_count_query_length(client, iteration_selector, source_str, "iterationSelector")
+                    counted = DataSourceRegistry.rdbms_count_query_length(
+                        client, iteration_selector, source_str, "iterationSelector"
+                    )
                     if counted is None:
                         return
                     ds_len = counted

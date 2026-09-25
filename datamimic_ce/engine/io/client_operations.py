@@ -71,14 +71,6 @@ def mongodb_count_collection(client: Client, collection: str) -> int:
     return client.count(collection)
 
 
-def rdbms_count_query_length(client: Client, query: str, source: str, label: str) -> int | None:
-    if not isinstance(client, RdbmsClient):
-        raise TypeError("Client is not an RDBMS client")
-    from datamimic_ce.engine.io.data_sources.data_source_registry import DataSourceRegistry
-
-    return DataSourceRegistry.rdbms_count_query_length(client, query, source, label)
-
-
 def database_get_random_rows_by_columns(client: Client | None, name: str, columns: list[str]) -> list[tuple]:
     if not isinstance(client, RdbmsClient | MongoDBClient):
         raise TypeError("Client does not support database column reads")

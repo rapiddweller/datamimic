@@ -11,6 +11,7 @@ import xmltodict
 from sqlalchemy.exc import OperationalError, ProgrammingError
 
 from datamimic_ce.engine.dsl.api import SourceFileFormat
+from datamimic_ce.engine.io.clients.client import Client
 from datamimic_ce.engine.io.clients.rdbms_client import RdbmsClient
 from datamimic_ce.engine.io.contracts import DataSourcePagination, select_rows
 from datamimic_ce.engine.io.file_cache import FileContentStorage
@@ -74,10 +75,12 @@ class DataSourceRegistry:
             raise ValueError(f"Data source '{key}' is not supported is not handled by DataSourceRegistry")
 
     @staticmethod
-    def rdbms_count_query_length(client: RdbmsClient, query: str, source_str: str, query_label: str) -> int | None:
+    def rdbms_count_query_length(client: Client, query: str, source_str: str, query_label: str) -> int | None:
         """Row count for one RDBMS length-probe query; ``None`` on a query failure (already
         logged at ERROR). sqlalchemy's exception types are an io-only concern - the caller
         (the runtime's source router) only ever sees the int|None result."""
+        if not isinstance(client, RdbmsClient):
+            raise TypeError("Client is not an RDBMS client")
         try:
             return client.count_query_length(query=query)
         except (ProgrammingError, OperationalError):
