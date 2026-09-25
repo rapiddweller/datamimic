@@ -16,10 +16,6 @@ from datamimic_ce.engine.dsl.api import DTDForbiddenError, parse_xml_file, parse
 
 RULE_XML_LOAD = "DM001"
 
-def element_path(element: etree._Element) -> str:
-    """Stable address for diagnostics, e.g. '/setup/generate[2]/key[3]'."""
-    return element.getroottree().getpath(element)
-
 
 def load_source(xml: str) -> tuple["etree._Element | None", Diagnostic | None]:
     """Parse inline descriptor XML. Returns (root, None) or (None, DM001 diagnostic)."""

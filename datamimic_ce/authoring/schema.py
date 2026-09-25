@@ -10,13 +10,12 @@
 - Elements:   ``model.element_registry`` (tag/model/parser/aliases/nesting)
 """
 
-from dataclasses import dataclass
 from functools import lru_cache
 
 from pydantic import BaseModel, JsonValue, TypeAdapter
 
+from datamimic_ce.authoring.rules.schema_facts import AttributeSpec, ElementSchema, SchemaIndex
 from datamimic_ce.engine.dsl.api import (
-    Constraint,
     canonical_tag,
     element_constraints,
     get_model_class,
@@ -26,38 +25,6 @@ from datamimic_ce.engine.dsl.api import (
     rule_registry_revision,
     serialize_constraints,
 )
-
-
-@dataclass(frozen=True)
-class AttributeSpec:
-    name: str  # XML attribute name (= field alias or field name)
-    required: bool
-    annotation: str  # rendered type, e.g. "int | None"
-    default: object
-    description: str | None = None  # from Field(description=...), when the model provides one
-
-
-@dataclass(frozen=True)
-class ElementSchema:
-    tag: str
-    model: type[BaseModel] | None
-    attributes: dict[str, AttributeSpec]
-    allowed_children: set[str] | None  # None = any children allowed; empty = leaf
-    allowed_parents: set[str]  # derived by inverting the nesting table
-    open_attrs: bool  # extra="allow" models (database/mongodb credentials)
-    constraints: "tuple[Constraint, ...]" = ()  # from the model's __constraints__
-
-
-class SchemaIndex:
-    def __init__(self, elements: dict[str, ElementSchema]):
-        self.elements = elements
-
-    def get(self, tag: str) -> ElementSchema | None:
-        return self.elements.get(tag)
-
-    @property
-    def tags(self) -> set[str]:
-        return set(self.elements)
 
 
 def _attribute_specs(model: type[BaseModel]) -> dict[str, AttributeSpec]:

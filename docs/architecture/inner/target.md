@@ -59,10 +59,10 @@ ArchKeel's automatic Runtime draft made 15 components and 210 pair decisions; on
 component per directory or file would codify noise, not ownership.
 
 All five CE component interiors have active drafts. ArchKeel 0.7.0 parses all
-475 CE files and reports 89 target violations after correcting three wrongly
-forbidden Generate-to-worker edges and moving IO pagination/selection ownership
+476 CE files and reports 87 target violations after correcting three wrongly
+forbidden Generate-to-worker edges and moving IO and Authoring ownership
 (the first draft reported 97). The parent `requires` edges and numeric baseline
-were not widened. These are rule findings, not 89 independent design decisions.
+were not widened. These are rule findings, not 87 independent design decisions.
 
 | Interior | Violations | Main cause to inspect |
 | --- | ---: | --- |
@@ -70,7 +70,7 @@ were not widened. These are rule findings, not 89 independent design decisions.
 | DSL | 26 | The model-side element registry imports concrete parsers; bind implementations from the parser side. |
 | IO | 1 | Pagination now lives in IO contracts and selector cycling in Runtime sources. The remaining `data_sources`↔`exporters.memstore` dependency still needs an ownership decision. |
 | Runtime | 2 | Generate-to-worker imports are legitimate inside Generate orchestration. Investigate remaining facade and global-config dependencies separately. |
-| Authoring | 2 | `rules.base` imports a schema fact lookup and a pure element-path helper; move those small facts/functions to the rule/domain owner, not a new framework. |
+| Authoring | 0 | Rule schema facts now live with the rules; diagnostics compute their own XML path. |
 
 Current-file assignments cover every non-root module within the five interiors.
 Their root `__init__.py` modules remain unassigned in the report; notably,
@@ -91,7 +91,7 @@ an extra level ArchKeel 0.7.0 can enforce in an `inside` contract.
 | DSL | Typed models own grammar facts; parsing binds parser implementations; statements carry executable meaning. No second element catalog. | Both editions derive Authoring/DSL capabilities from typed owners. CE's registry↔parser SCC is 28 modules. | Separate registry facts from parser construction without duplicating the vocabulary; compare Authoring projections and XML behavior. |
 | Domains | `domain_core` owns primitives, `shared` owns common generators and registrations, and finance/healthcare/insurance/ecommerce/public-sector own their vertical behavior. | EE already uses this split; CE `common` and `domain_core` import each other. | Move CE `common` to `shared` and both built-in registries out of the core; fold `doctor`/`patient` into healthcare and `address`/`person` into shared. No compatibility shim. |
 | Errors | One root `errors/` owns stable user-facing codes, exception types, descriptor context, factories, and formatting. Local validation rules remain with their component; logging configuration remains in Runtime. | EE already owns this under `errors/`; CE has scattered exceptions and separate Authoring validation codes. | Migrate shared error semantics from EE into CE without copying EE-only codes or changing unrelated Authoring validation contracts. |
-| Authoring | Intent and rules are pure; projection derives DSL facts; adapters handle XML and bounded execution; application sequences use cases. | EE's `domain/application/adapters/projection` split and CE's transport separation. | Remove two rule imports of file/schema adapters; keep Runtime access inside the bounded execution adapter, without inventing a second DSL vocabulary. |
+| Authoring | Intent and rules are pure; projection derives DSL facts; adapters handle XML and bounded execution; application sequences use cases. | EE's `domain/application/adapters/projection` split and CE's transport separation. | The two reverse imports are removed; preserve this boundary while migrating to EE-like owner paths. |
 
 These are agent decisions, not a claim that current code satisfies them. No target
 edge is permitted solely because the current implementation imports it.

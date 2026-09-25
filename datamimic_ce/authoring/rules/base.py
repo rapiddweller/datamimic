@@ -16,8 +16,7 @@ from lxml import etree
 
 from datamimic_ce.authoring.diagnostics import Diagnostic
 from datamimic_ce.authoring.rule_catalog import RuleDefinition, RuleSeverity
-from datamimic_ce.authoring.schema import SchemaIndex
-from datamimic_ce.authoring.xml_loader import element_path
+from datamimic_ce.authoring.rules.schema_facts import SchemaIndex
 from datamimic_ce.engine.dsl.api import EL_COMMENT
 
 if TYPE_CHECKING:
@@ -61,7 +60,7 @@ class LintContext:
             message=message,
             fix_hint=fix_hint,
             element=str(element.tag),
-            path=element_path(element),
+            path=element.getroottree().getpath(element),
             name=element.get("name") or element.get("id"),
             line=element.sourceline,
             docs=definition.docs,

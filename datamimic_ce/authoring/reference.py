@@ -29,7 +29,8 @@ from datamimic_ce.authoring.rule_catalog import (
     authoring_rule_definitions,
     serialize_rule_definition,
 )
-from datamimic_ce.authoring.schema import ElementSchema, build_schema_index
+from datamimic_ce.authoring.rules.schema_facts import ElementSchema
+from datamimic_ce.authoring.schema import build_schema_index
 from datamimic_ce.domains.api import iter_generator_capabilities as domain_generator_capabilities
 from datamimic_ce.engine.dsl.api import (
     EXPORTER_CONSOLE_EXPORTER,
