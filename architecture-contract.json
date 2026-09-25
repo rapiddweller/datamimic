@@ -262,6 +262,7 @@
       ],
       "requires": [],
       "public": [
+        "datamimic_ce.errors",
         "datamimic_ce.errors.base"
       ],
       "decided_by": "architect"
