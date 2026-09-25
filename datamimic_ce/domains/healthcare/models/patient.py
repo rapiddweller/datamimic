@@ -11,12 +11,11 @@ This module provides the Patient entity model for generating realistic patient d
 """
 
 import datetime
-from typing import Any
 
-from datamimic_ce.domains.common.models.person import Person
 from datamimic_ce.domains.domain_core import BaseEntity
 from datamimic_ce.domains.domain_core.property_cache import property_cache
 from datamimic_ce.domains.healthcare.generators.patient_generator import PatientGenerator
+from datamimic_ce.domains.shared.models.person import Person
 
 
 class Patient(BaseEntity):
@@ -52,7 +51,7 @@ class Patient(BaseEntity):
         """
         rng = self._patient_generator.rng
         suffix = "".join(rng.choice("0123456789ABCDEF") for _ in range(8))
-        return f"PAT-{suffix}"
+        return self._claim_identifier("patient_id", f"PAT-{suffix}")
 
     @property
     @property_cache
@@ -315,7 +314,7 @@ class Patient(BaseEntity):
         """
         self._field_cache["primary_doctor"] = value
 
-    def to_dict(self) -> dict[str, Any]:
+    def to_dict(self) -> dict[str, object]:
         """Convert the patient entity to a dictionary.
 
         Returns:

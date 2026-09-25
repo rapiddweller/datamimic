@@ -1,15 +1,14 @@
 import datetime
 from pathlib import Path
-from typing import Any
 
-from datamimic_ce.domains.common.models.person import Person
 from datamimic_ce.domains.domain_core import BaseEntity
 from datamimic_ce.domains.domain_core.property_cache import property_cache
 from datamimic_ce.domains.insurance.generators.insurance_policy_generator import InsurancePolicyGenerator
 from datamimic_ce.domains.insurance.models.insurance_company import InsuranceCompany
 from datamimic_ce.domains.insurance.models.insurance_coverage import InsuranceCoverage
 from datamimic_ce.domains.insurance.models.insurance_product import InsuranceProduct
-from datamimic_ce.domains.utils.rng_uuid import uuid4_from_random
+from datamimic_ce.domains.shared.models.person import Person
+from datamimic_ce.domains.shared.utils.rng_uuid import uuid4_from_random
 
 
 class InsurancePolicy(BaseEntity):
@@ -22,17 +21,21 @@ class InsurancePolicy(BaseEntity):
     @property
     @property_cache
     def id(self) -> str:
-        return uuid4_from_random(self.insurance_policy_generator.rng)
+        return self._claim_identifier("id", uuid4_from_random(self.insurance_policy_generator.rng))
 
     @property
     @property_cache
     def company(self) -> InsuranceCompany:
-        return InsuranceCompany(self.insurance_policy_generator.insurance_company_generator)
+        company = InsuranceCompany(self.insurance_policy_generator.insurance_company_generator)
+        self._bind_nested_identifier("company", company)
+        return company
 
     @property
     @property_cache
     def product(self) -> InsuranceProduct:
-        return InsuranceProduct(self.insurance_policy_generator.insurance_product_generator)
+        product = InsuranceProduct(self.insurance_policy_generator.insurance_product_generator)
+        self._bind_nested_identifier("product", product)
+        return product
 
     @property
     @property_cache
@@ -108,7 +111,7 @@ class InsurancePolicy(BaseEntity):
     def created_date(self) -> datetime.datetime:
         return self.insurance_policy_generator.datetime_generator.generate_date()
 
-    def to_dict(self) -> dict[str, Any]:
+    def to_dict(self) -> dict[str, object]:
         return {
             "id": self.id,
             "company": self.company.to_dict(),

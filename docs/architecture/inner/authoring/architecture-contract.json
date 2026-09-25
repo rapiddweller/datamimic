@@ -1,0 +1,81 @@
+{
+  "schema_version": "2.1.0",
+  "components": [
+    {
+      "id": "AUTHORING-API", "label": "api", "role": "interface",
+      "packages": ["datamimic_ce.authoring.api"],
+      "responsibilities": ["Expose authoring use cases through one transport-neutral entry point."],
+      "forbidden_responsibilities": ["Own compilation, verification, or transport behavior."],
+      "provenance": ["docs/architecture/inner/target.md"],
+      "requires": [
+        {"component": "domain", "rationale": "Public signatures use authoring-owned types.", "decided_by": "agent"},
+        {"component": "application", "rationale": "The facade delegates authoring workflows.", "decided_by": "agent"}
+      ],
+      "public": ["datamimic_ce.authoring.api"], "decided_by": "agent"
+    },
+    {
+      "id": "AUTHORING-DOMAIN", "label": "domain", "role": "contract",
+      "packages": [
+        "datamimic_ce.authoring.contracts",
+        "datamimic_ce.authoring.spec",
+        "datamimic_ce.authoring.domain"
+      ],
+      "responsibilities": ["Own typed intent, rules, diagnostics, and pure acceptance facts."],
+      "forbidden_responsibilities": ["Import Runtime or IO", "Parse files or execute descriptors"],
+      "provenance": ["docs/architecture/inner/target.md"],
+      "requires": [],
+      "public": ["datamimic_ce.authoring.contracts", "datamimic_ce.authoring.spec:LeafFieldKind"],
+      "decided_by": "agent"
+    },
+    {
+      "id": "AUTHORING-PROJECTION", "label": "projection", "role": "projection",
+      "packages": [
+        "datamimic_ce.authoring.projection"
+      ],
+      "responsibilities": ["Project reference and schema views from canonical DSL and intent facts."],
+      "forbidden_responsibilities": ["Define a second DSL catalog or execute a run."],
+      "provenance": ["docs/architecture/inner/target.md"],
+      "requires": [
+        {"component": "domain", "rationale": "Projections render authoring-owned facts and types.", "decided_by": "agent"}
+      ],
+      "public": [], "decided_by": "agent"
+    },
+    {
+      "id": "AUTHORING-ADAPTERS", "label": "adapters", "role": "component",
+      "packages": [
+        "datamimic_ce.authoring.adapters"
+      ],
+      "responsibilities": ["Compile intent to XML and adapt bounded parse and run checks."],
+      "forbidden_responsibilities": ["Own intent or duplicate executable DSL definitions."],
+      "provenance": ["docs/architecture/inner/target.md"],
+      "requires": [
+        {"component": "domain", "rationale": "Adapters consume typed intent and diagnostics.", "decided_by": "agent"},
+        {"component": "projection", "rationale": "Compiler and linter use derived DSL schema views.", "decided_by": "agent"}
+      ],
+      "public": [], "decided_by": "agent"
+    },
+    {
+      "id": "AUTHORING-APPLICATION", "label": "application", "role": "component",
+      "packages": [
+        "datamimic_ce.authoring.application"
+      ],
+      "responsibilities": ["Sequence lint, compilation, bounded verification, and declared acceptance."],
+      "forbidden_responsibilities": ["Define new grammar facts or directly execute Runtime internals."],
+      "provenance": ["docs/architecture/inner/target.md"],
+      "requires": [
+        {"component": "domain", "rationale": "Workflows operate on typed authoring requests and results.", "decided_by": "agent"},
+        {"component": "projection", "rationale": "Validation uses canonical reference projections.", "decided_by": "agent"},
+        {"component": "adapters", "rationale": "Workflows delegate compilation and bounded checks.", "decided_by": "agent"}
+      ],
+      "public": [], "decided_by": "agent"
+    }
+  ],
+  "rules": [
+    {
+      "id": "AUTHORING-REQUIRES-COMPLETE", "kind": "complete_requires",
+      "include_type_checking": true,
+      "rationale": "Pure intent and rules must not depend on file or execution adapters.",
+      "provenance": ["docs/architecture/inner/target.md"], "decided_by": "agent"
+    }
+  ]
+}

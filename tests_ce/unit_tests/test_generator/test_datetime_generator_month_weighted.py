@@ -3,7 +3,7 @@
 
 from datetime import datetime
 
-from datamimic_ce.domains.common.literal_generators.datetime_generator import DateTimeGenerator
+from datamimic_ce.domains.shared.literal_generators.datetime_generator import DateTimeGenerator
 
 
 def test_respects_exact_second_window_with_boundaries():

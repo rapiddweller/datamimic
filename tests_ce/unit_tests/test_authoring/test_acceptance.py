@@ -14,10 +14,10 @@ from pathlib import Path
 import pytest
 from pydantic import ValidationError
 
-import datamimic_ce.authoring.acceptance as acceptance_module
-import datamimic_ce.authoring.service as service_module
-from datamimic_ce.authoring.acceptance import evaluate_acceptance
-from datamimic_ce.authoring.compiler import compile_authoring_spec
+import datamimic_ce.authoring.application.acceptance as acceptance_module
+import datamimic_ce.authoring.application.service as service_module
+from datamimic_ce.authoring.application.acceptance import evaluate_acceptance
+from datamimic_ce.authoring.application.compiler import compile_authoring_spec
 from datamimic_ce.authoring.contracts import (
     MAX_DRY_RUN_COUNT,
     AcceptanceSource,
@@ -34,7 +34,7 @@ from datamimic_ce.authoring.contracts import (
     ScaffoldRequest,
     UniqueAcceptanceResult,
 )
-from datamimic_ce.authoring.dryrun import CapturedProduct, CapturedProducts
+from datamimic_ce.authoring.adapters.dryrun import CapturedProduct, CapturedProducts
 from datamimic_ce.authoring.spec import AllowedValuesExpectation, AuthoringSpecV1, RowConditionExpectation
 
 
@@ -1050,8 +1050,8 @@ def test_acceptance_has_no_xml_or_transport_dependency() -> None:
     }
 
     assert not any(module.endswith("xml") or ".xml" in module for module in imported_modules)
-    assert "datamimic_ce.cli" not in imported_modules
-    assert not any(module.startswith("datamimic_ce.mcp") for module in imported_modules)
+    assert "datamimic_ce.interfaces.cli" not in imported_modules
+    assert not any(module.startswith("datamimic_ce.interfaces.mcp") for module in imported_modules)
     assert "eval(" not in source
 
 

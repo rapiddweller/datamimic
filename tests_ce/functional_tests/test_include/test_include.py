@@ -16,6 +16,9 @@ class TestInclude:
     def test_simple_include(self):
         engine = DataMimicTest(test_dir=self._test_dir, filename="test_simple_include.xml", capture_test_result=True)
         engine.test_with_timer()
+        result = engine.capture_result()
+        assert len(result["CUSTOMER"]) == 10
+        assert len(result["USER"]) == 5
 
     def test_dynamic_uri_include(self):
         engine = DataMimicTest(test_dir=self._test_dir, filename="test_dynamic_uri.xml", capture_test_result=True)

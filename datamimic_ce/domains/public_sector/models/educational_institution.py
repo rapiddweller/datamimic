@@ -12,14 +12,13 @@ realistic educational institution data.
 """
 
 from pathlib import Path
-from typing import Any
 
-from datamimic_ce.domains.common.models.address import Address
 from datamimic_ce.domains.domain_core import BaseEntity
 from datamimic_ce.domains.domain_core.property_cache import property_cache
 from datamimic_ce.domains.public_sector.generators.educational_institution_generator import (
     EducationalInstitutionGenerator,
 )
+from datamimic_ce.domains.shared.models.address import Address
 
 
 class EducationalInstitution(BaseEntity):
@@ -55,7 +54,7 @@ class EducationalInstitution(BaseEntity):
         """
         rng = self._educational_institution_generator.rng
         suffix = "".join(rng.choice("0123456789ABCDEF") for _ in range(8))
-        return f"EDU-{suffix}"
+        return self._claim_identifier("institution_id", f"EDU-{suffix}")
 
     @property
     @property_cache
@@ -333,7 +332,7 @@ class EducationalInstitution(BaseEntity):
         """
         return Address(self._educational_institution_generator.address_generator)
 
-    def to_dict(self) -> dict[str, Any]:
+    def to_dict(self) -> dict[str, object]:
         """Convert the educational institution entity to a dictionary.
 
         Returns:

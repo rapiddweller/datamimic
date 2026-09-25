@@ -15,13 +15,34 @@ from __future__ import annotations
 import datetime as dt
 import random
 from pathlib import Path
+from typing import Protocol, TypedDict, runtime_checkable
 
-from datamimic_ce.domains.common.literal_generators.data_faker_generator import DataFakerGenerator
-from datamimic_ce.domains.common.literal_generators.string_generator import StringGenerator
 from datamimic_ce.domains.domain_core.base_domain_generator import ClockAnchoredDomainGenerator
-from datamimic_ce.domains.utils.dataset_path import dataset_path
-from datamimic_ce.utils.file_content_storage import FileContentStorage
-from datamimic_ce.utils.file_util import FileUtil
+from datamimic_ce.domains.shared.literal_generators.data_faker_generator import DataFakerGenerator
+from datamimic_ce.domains.shared.literal_generators.string_generator import StringGenerator
+from datamimic_ce.domains.shared.utils.dataset_loader import read_cached_headered_csv, read_csv_rows
+from datamimic_ce.domains.shared.utils.dataset_path import dataset_path
+
+
+@runtime_checkable
+class CurrencyAccount(Protocol):
+    @property
+    def currency(self) -> str: ...
+
+
+class TransactionData(TypedDict):
+    type: str
+    direction: str
+    merchant: str
+    merchant_category: str
+    amount: float
+    currency_code: str
+    currency_symbol: str
+    status: str
+    channel: str
+    location: str
+    reference_number: str
+    description: str
 
 
 class TransactionGenerator(ClockAnchoredDomainGenerator):
@@ -48,13 +69,13 @@ class TransactionGenerator(ClockAnchoredDomainGenerator):
             rng=self._derive_rng(),
         )
         # Cache structures: map key -> (header_dict, rows)
-        self._transaction_data: dict[str, tuple[dict[str, int], list[tuple[object, ...]]]] = {}
-        self._currency_data: dict[str, tuple[dict[str, int], list[tuple[object, ...]]]] = {}
-        self._amount_data: dict[str, tuple[dict[str, int], list[tuple[object, ...]]]] = {}
+        self._transaction_data: dict[str, tuple[dict[str, int], list[tuple[str, ...]]]] = {}
+        self._currency_data: dict[str, tuple[dict[str, int], list[tuple[str, ...]]]] = {}
+        self._amount_data: dict[str, tuple[dict[str, int], list[tuple[str, ...]]]] = {}
 
     #  Centralize date sampling to keep model pure and determinism consistent
     def generate_transaction_date(self) -> dt.datetime:
-        from datamimic_ce.domains.common.literal_generators.datetime_generator import DateTimeGenerator
+        from datamimic_ce.domains.shared.literal_generators.datetime_generator import DateTimeGenerator
 
         now = self._reference_now
         min_dt = (now - dt.timedelta(days=365)).strftime("%Y-%m-%d %H:%M:%S")
@@ -90,7 +111,7 @@ class TransactionGenerator(ClockAnchoredDomainGenerator):
 
     def _load_data_file(
         self, file_name: str, subdirectory: str = "transaction"
-    ) -> tuple[dict[str, int], list[tuple[object, ...]]]:
+    ) -> tuple[dict[str, int], list[tuple[str, ...]]]:
         """Load data from a CSV file.
 
         Args:
@@ -102,14 +123,11 @@ class TransactionGenerator(ClockAnchoredDomainGenerator):
         """
         file_path = self._get_base_path(subdirectory) / file_name
 
-        return FileContentStorage.load_file_with_custom_func(
-            cache_key=str(file_path),
-            read_func=lambda: FileUtil.read_csv_to_dict_of_tuples_with_header(file_path, delimiter=","),
-        )
+        return read_cached_headered_csv(file_path, cache_key=str(file_path))
 
     def _weighted_choice(
-        self, data: list[tuple[object, ...]], header_dict: dict[str, int], weight_key: str = "weight"
-    ) -> tuple[object, ...]:
+        self, data: list[tuple[str, ...]], header_dict: dict[str, int], weight_key: str = "weight"
+    ) -> tuple[str, ...]:
         """Select a random item based on weights.
 
         Args:
@@ -221,11 +239,9 @@ class TransactionGenerator(ClockAnchoredDomainGenerator):
         try:
             if "cities" not in self._transaction_data:
                 # Use existing datasets under common/city with semicolon delimiter
-                from datamimic_ce.domains.utils.dataset_path import dataset_path
-                from datamimic_ce.utils.file_util import FileUtil
-
+                from datamimic_ce.domains.shared.utils.dataset_path import dataset_path
                 file_path = dataset_path("common", "city", f"city_{self._dataset}.csv", start=Path(__file__))
-                rows = FileUtil.read_csv_to_list_of_tuples_without_header(file_path, delimiter=";")
+                rows = read_csv_rows(file_path, delimiter=";")
                 # Drop header if present
                 if rows and rows[0] and rows[0][0] == "state.id":
                     rows = rows[1:]
@@ -269,16 +285,13 @@ class TransactionGenerator(ClockAnchoredDomainGenerator):
             currencies_path = dataset_path("ecommerce", f"currencies_{self.dataset}.csv", start=Path(__file__))
             # Convert the weighted data into the expected format (header_dict, data)
             header_dict = {"code": 0, "name": 1, "weight": 2, "symbol": 3}  # Define the header structure
-            from typing import cast
-
             with currencies_path.open("r", newline="", encoding="utf-8") as csvfile:
                 import csv
 
                 csvreader = csv.reader(csvfile, delimiter=",")
                 next(csvreader)  # Skip header row
                 data = [tuple(row) for row in csvreader]  # Keep all columns to maintain structure
-            data_typed = cast(list[tuple[object, ...]], data)
-            self._currency_data["currencies"] = (header_dict, data_typed)
+            self._currency_data["currencies"] = (header_dict, data)
 
         # Get currency mapping for the current dataset
         mapping_header, mapping_data = self._currency_data["currency_mapping"]
@@ -433,7 +446,7 @@ class TransactionGenerator(ClockAnchoredDomainGenerator):
         # Round to 2 decimal places
         return round(amount, 2)
 
-    def generate_transaction_data(self, bank_account=None) -> dict:
+    def generate_transaction_data(self, bank_account: object | None = None) -> TransactionData:
         """Generate complete transaction data.
 
         Args:
@@ -454,15 +467,16 @@ class TransactionGenerator(ClockAnchoredDomainGenerator):
         amount = self.generate_amount(category, transaction_type)
 
         # Get currency (either from account or generate new)
-        if bank_account and hasattr(bank_account, "currency"):
+        if bank_account and isinstance(bank_account, CurrencyAccount):
+            currency_code = bank_account.currency
             currency = {
-                "code": bank_account.currency,
+                "code": currency_code,
                 # Ideally we would also get name and symbol, but we'll keep it simple
                 "symbol": "$"
-                if bank_account.currency == "USD"
+                if currency_code == "USD"
                 else "€"
-                if bank_account.currency == "EUR"
-                else bank_account.currency,
+                if currency_code == "EUR"
+                else currency_code,
             }
         else:
             currency = self.get_currency()

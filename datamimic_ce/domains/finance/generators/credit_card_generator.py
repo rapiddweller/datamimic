@@ -3,7 +3,7 @@ from __future__ import annotations
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
-    from datamimic_ce.domains.common.models.demographic_config import DemographicConfig
+    from datamimic_ce.domains.shared.models.demographic_config import DemographicConfig
 # DATAMIMIC
 # Copyright (c) 2023-2025 Rapiddweller Asia Co., Ltd.
 # This software is licensed under the MIT License.
@@ -13,12 +13,12 @@ if TYPE_CHECKING:
 import random
 from pathlib import Path
 
-from datamimic_ce.domains.common.generators.person_generator import PersonGenerator
-from datamimic_ce.domains.common.literal_generators.datetime_generator import DateTimeGenerator
 from datamimic_ce.domains.domain_core.base_domain_generator import DatasetAwareDomainGenerator
 from datamimic_ce.domains.finance.generators.bank_account_generator import BankAccountGenerator
-from datamimic_ce.domains.utils.dataset_path import dataset_path
-from datamimic_ce.utils.file_util import FileUtil
+from datamimic_ce.domains.shared.generators.person_generator import PersonGenerator
+from datamimic_ce.domains.shared.literal_generators.datetime_generator import DateTimeGenerator
+from datamimic_ce.domains.shared.utils.dataset_loader import read_csv_rows
+from datamimic_ce.domains.shared.utils.dataset_path import dataset_path
 
 
 class CreditCardGenerator(DatasetAwareDomainGenerator):
@@ -31,7 +31,7 @@ class CreditCardGenerator(DatasetAwareDomainGenerator):
         super().__init__(dataset=dataset, rng=rng)
         #  ensure person data (names/emails/phones) follow the selected dataset (DE/US)
         if demographic_config is None:
-            from datamimic_ce.domains.common.models.demographic_config import DemographicConfig as _DC
+            from datamimic_ce.domains.shared.models.demographic_config import DemographicConfig as _DC
 
             demographic_config = _DC()
         self._person_generator = PersonGenerator(
@@ -66,7 +66,7 @@ class CreditCardGenerator(DatasetAwareDomainGenerator):
     def _load_card_types(self) -> list[tuple]:
         if self._card_types_cache is None:
             file_path = dataset_path("finance", "credit_card", f"card_types_{self._dataset}.csv", start=Path(__file__))
-            self._card_types_cache = FileUtil.read_csv_to_list_of_tuples_without_header(file_path)[1:]
+            self._card_types_cache = read_csv_rows(file_path)[1:]
         return self._card_types_cache
 
     def get_card_specs(self) -> dict:

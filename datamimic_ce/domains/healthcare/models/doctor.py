@@ -11,14 +11,13 @@ This module provides the Doctor entity model for generating realistic doctor dat
 """
 
 import datetime
-from typing import Any
 
-from datamimic_ce.domains.common.models.address import Address
-from datamimic_ce.domains.common.models.person import Person
 from datamimic_ce.domains.domain_core import BaseEntity
 from datamimic_ce.domains.domain_core.property_cache import property_cache
 from datamimic_ce.domains.healthcare.generators.doctor_generator import DoctorGenerator
 from datamimic_ce.domains.healthcare.models.hospital import Hospital
+from datamimic_ce.domains.shared.models.address import Address
+from datamimic_ce.domains.shared.models.person import Person
 
 
 class Doctor(BaseEntity):
@@ -53,7 +52,7 @@ class Doctor(BaseEntity):
         #  use shared PrefixedIdGenerator for prefixed short ID format
         rng = self._doctor_generator.rng
         suffix = "".join(rng.choice("0123456789ABCDEF") for _ in range(8))
-        return f"DOC-{suffix}"
+        return self._claim_identifier("doctor_id", f"DOC-{suffix}")
 
     @property
     @property_cache
@@ -280,7 +279,7 @@ class Doctor(BaseEntity):
         """
         return self.person_data.address
 
-    def to_dict(self) -> dict[str, Any]:
+    def to_dict(self) -> dict[str, object]:
         """Convert the doctor entity to a dictionary.
 
         Returns:

@@ -18,9 +18,9 @@ from datamimic_ce.authoring.contracts import (
     ScaffoldVerification,
     VerificationGateStatus,
 )
-from datamimic_ce.authoring.service import compile_document, scaffold
+from datamimic_ce.authoring.application.service import compile_document, scaffold
 from datamimic_ce.data_mimic_test import DataMimicTest
-from datamimic_ce.domains.common.literal_generators.float_generator import FloatGenerator
+from datamimic_ce.domains.shared.literal_generators.float_generator import FloatGenerator
 
 _TEST_DIR = Path(__file__).resolve().parent
 _REPO_ROOT = _TEST_DIR.parents[2]
@@ -41,7 +41,7 @@ def _run_json_export(tmp_path: Path) -> list[dict[str, object]]:
     descriptor = tmp_path / "decimal_scale.xml"
     descriptor.write_text((_TEST_DIR / "decimal_scale.xml").read_text(encoding="utf-8"), encoding="utf-8")
     subprocess.run(
-        [sys.executable, "-m", "datamimic_ce.cli", "run", str(descriptor)],
+        [sys.executable, "-m", "datamimic_ce.interfaces.cli", "run", str(descriptor)],
         cwd=tmp_path,
         check=True,
         capture_output=True,

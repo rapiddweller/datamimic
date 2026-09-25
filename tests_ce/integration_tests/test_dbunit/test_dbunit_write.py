@@ -5,7 +5,7 @@ import xml.etree.ElementTree as ET
 from pathlib import Path
 
 from datamimic_ce.data_mimic_test import DataMimicTest
-from datamimic_ce.utils.file_util import FileUtil
+from datamimic_ce.engine.io.api import FileUtil
 
 _DIR = Path(__file__).resolve().parent
 

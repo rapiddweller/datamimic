@@ -20,7 +20,7 @@ from datamimic_ce.domains.insurance.models.insurance_product import InsurancePro
 INSURANCE_PRODUCT_SCHEMA = EntitySchema(
     "InsuranceProduct",
     (
-        field("id", str, "Unique product identifier."),
+        field("id", str, "Unique product identifier.", unique_identifier_format="uuid4"),
         field("type", str, "Product type."),
         field("code", str, "Product code."),
         field("description", str, "Product description."),

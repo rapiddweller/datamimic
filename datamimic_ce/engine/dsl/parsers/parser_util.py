@@ -1,0 +1,308 @@
+# DATAMIMIC
+# Copyright (c) 2023-2025 Rapiddweller Asia Co., Ltd.
+# This software is licensed under the MIT License.
+# See LICENSE file for the full text of the license.
+# For questions and support, contact: info@rapiddweller.com
+
+import copy
+import logging
+import re
+from collections.abc import Callable
+from pathlib import Path
+from typing import Literal, Protocol, runtime_checkable
+
+from datamimic_ce.engine.dsl.constants import element_constants as tags
+from datamimic_ce.engine.dsl.constants.attribute_constants import ATTR_ENVIRONMENT, ATTR_ID, ATTR_SYSTEM
+from datamimic_ce.engine.dsl.constants.element_constants import (
+    EL_ARRAY,
+    EL_COMMENT,
+    EL_CONDITION,
+    EL_DATABASE,
+    EL_GENERATE,
+    EL_MONGODB,
+    EL_NESTED_KEY,
+    EL_SETUP,
+    EL_WHILE,
+)
+from datamimic_ce.engine.dsl.properties import parse_properties
+from datamimic_ce.engine.dsl.statements.array_statement import ArrayStatement
+from datamimic_ce.engine.dsl.statements.composite_statement import CompositeStatement
+from datamimic_ce.engine.dsl.statements.condition_statement import ConditionStatement
+from datamimic_ce.engine.dsl.statements.generate_statement import GenerateStatement
+from datamimic_ce.engine.dsl.statements.include_statement import IncludeStatement
+from datamimic_ce.engine.dsl.statements.nested_key_statement import NestedKeyStatement
+from datamimic_ce.engine.dsl.statements.setup_statement import SetupStatement
+from datamimic_ce.engine.dsl.statements.statement import Statement
+from datamimic_ce.engine.dsl.statements.while_statement import WhileStatement
+from datamimic_ce.engine.dsl.xml import XmlElement, xml_tag
+
+logger = logging.getLogger("DATAMIMIC")
+
+
+@runtime_checkable
+class _Parser(Protocol):
+    def parse(self, *args: object, **kwargs: object) -> Statement: ...
+
+    def set_runtime_environment(self, value: Literal["development", "production"]) -> None: ...
+
+
+_BUILTIN_PARSERS: dict[str, Callable[..., object]] = {}
+
+
+class ParserUtil:
+    @staticmethod
+    def get_element_tag_by_statement(stmt: Statement) -> str:
+        if isinstance(stmt, ArrayStatement):
+            return EL_ARRAY
+        elif isinstance(stmt, ConditionStatement):
+            return EL_CONDITION
+        elif isinstance(stmt, SetupStatement):
+            return EL_SETUP
+        elif isinstance(stmt, NestedKeyStatement):
+            return EL_NESTED_KEY
+        elif isinstance(stmt, GenerateStatement):
+            return EL_GENERATE
+        elif isinstance(stmt, WhileStatement):
+            return EL_WHILE
+        else:
+            raise ValueError(f"Cannot get element tag for statement {stmt.__class__.__name__}")
+
+    @staticmethod
+    def get_valid_sub_elements_set_by_tag(ele_tag: str) -> set | None:
+        # return None mean that element can have all kind of sub element,
+        # check StatementParser._validate_sub_elements for detail
+        from datamimic_ce.engine.dsl.model.element_registry import get_valid_children
+
+        return get_valid_children(ele_tag)
+
+    @staticmethod
+    def _get_parser_by_element(
+        element: XmlElement,
+        properties: dict,
+        runtime_environment: Literal["development", "production"] = "production",
+    ):
+        """
+        Parser factory: Creating parser based on element
+        :param element:
+        :param properties:
+        :return:
+        """
+        from datamimic_ce.engine.dsl.model.element_registry import canonical_tag, get_element_definition
+
+        tag = xml_tag(element)
+        definition = get_element_definition(tag)
+        parser_class = None if definition is None else definition.parser or _BUILTIN_PARSERS.get(canonical_tag(tag))
+        if parser_class is None:
+            raise ValueError(f"Cannot get parser for element <{tag}>")
+        parser = parser_class(element, properties)
+        if not isinstance(parser, _Parser):
+            raise TypeError(f"Parser for element <{tag}> does not implement the parser contract")
+        if tag in {EL_DATABASE, EL_MONGODB}:
+            parser.set_runtime_environment(runtime_environment)
+        return parser
+
+    @staticmethod
+    def parse_sub_elements(
+        descriptor_dir: Path,
+        element: XmlElement,
+        properties: dict[str, str] | None,
+        parent_stmt: Statement,
+        runtime_environment: Literal["development", "production"] = "production",
+    ) -> list[Statement]:
+        """
+        Parse sub-elements of composite element into list of Statement
+        :param descriptor_dir:
+        :param element:
+        :param properties:
+        :param parent_stmt:
+        :return:
+        """
+        from datamimic_ce.engine.dsl.model.element_registry import canonical_tag
+
+        result = []
+        # Create a copied props for possible updating later, prevent updating original props dict
+        copied_props = copy.deepcopy(properties) if properties else {}
+
+        for child_ele in element:
+            # <comment> is a documentation-only element (legacy DSL compatibility): ignored, produces no statement.
+            child_tag = xml_tag(child_ele)
+            if child_tag == EL_COMMENT:
+                continue
+            parser = ParserUtil._get_parser_by_element(child_ele, copied_props, runtime_environment)
+            canonical = canonical_tag(child_tag)
+            # TODO: add more child-element-able parsers such as
+            #  attribute, reference, part,... (i.e. elements which have attribute 'name')
+            stmt: Statement
+            if canonical in {EL_GENERATE, EL_NESTED_KEY, tags.EL_VARIABLE, tags.EL_ELEMENT}:
+                if canonical == tags.EL_VARIABLE and xml_tag(element) == EL_SETUP:
+                    stmt = parser.parse(parent_stmt=parent_stmt, has_parent_setup=True)
+                elif canonical in {EL_GENERATE, EL_NESTED_KEY}:
+                    stmt = parser.parse(descriptor_dir=descriptor_dir, parent_stmt=parent_stmt)
+                else:
+                    stmt = parser.parse(parent_stmt=parent_stmt)
+            else:
+                if canonical in {
+                    tags.EL_MEMSTORE,
+                    tags.EL_EXECUTE,
+                    tags.EL_INCLUDE,
+                    EL_ARRAY,
+                    tags.EL_ECHO,
+                    tags.EL_GENERATOR,
+                    tags.EL_STATE_MACHINE,
+                    tags.EL_ASSERT,
+                }:
+                    stmt = parser.parse()
+                elif canonical == tags.EL_REFERENCE:
+                    # Pass the parent so the reference's full_name is a unique path (e.g.
+                    # "orders|slot"), not a bare name that collides across <generate>s.
+                    stmt = parser.parse(parent_stmt=parent_stmt)
+                elif canonical == tags.EL_KEY:
+                    stmt = parser.parse(descriptor_dir=descriptor_dir, parent_stmt=parent_stmt)
+                elif canonical in {EL_CONDITION, EL_WHILE}:
+                    if not isinstance(parent_stmt, CompositeStatement):
+                        raise TypeError(f"<{child_tag}> requires a composite parent statement")
+                    stmt = parser.parse(
+                        descriptor_dir=descriptor_dir, parent_stmt=parent_stmt
+                    )
+                elif canonical in {tags.EL_IF, tags.EL_ELSE_IF, tags.EL_ELSE}:
+                    if not isinstance(parent_stmt, ConditionStatement):
+                        raise TypeError(f"<{child_tag}> requires a condition parent statement")
+                    stmt = parser.parse(
+                        descriptor_dir=descriptor_dir, parent_stmt=parent_stmt
+                    )
+                else:
+                    stmt = parser.parse(descriptor_dir=descriptor_dir)
+
+            if stmt is None:
+                raise ValueError(f"Cannot parse element <{child_tag}>")
+
+            # Static properties includes affect parsing of later siblings.
+            if isinstance(stmt, IncludeStatement):
+                uri: str = stmt.uri
+                if "{" not in uri and uri.endswith(".properties"):
+                    copied_props.update(parse_properties(descriptor_dir / uri))
+
+            result.append(stmt)
+
+        return result
+
+    @staticmethod
+    def retrieve_element_attributes(
+        attributes: dict[str, object], properties: dict[str, str] | None
+    ) -> dict[str, object]:
+        """
+        Retrieve element's attributes using environment properties
+        :param attributes:
+        :param properties:
+        :return:
+        """
+        if properties is None:
+            return attributes
+
+        # Look up element's attributes defined as variable then evaluate them
+        for key, value in attributes.items():
+            if type(value) is str and re.match(r"^\{[a-zA-Z_][a-zA-Z0-9_]*(?:\.[a-zA-Z0-9_]+)*\}$", value) is not None:
+                prop_key = value[1:-1]
+
+                if "." not in prop_key:
+                    # single-level prop_key
+                    attributes[key] = properties.get(prop_key, value)
+                else:
+                    # prop_key with dot mean that properties have nested level
+                    prop_keys = prop_key.split(".")
+                    temp_value: dict | None = copy.deepcopy(properties)
+                    for k in prop_keys:
+                        if temp_value:
+                            temp_value = temp_value.get(k)
+                        if temp_value is None:
+                            break
+                    attributes[key] = temp_value or value
+
+        return attributes
+
+    @staticmethod
+    def fulfill_credentials(
+        descriptor_dir: Path,
+        descriptor_attr: dict,
+        env_props: dict[str, str] | None,
+        system_type: str,
+        runtime_environment: Literal["development", "production"],
+    ) -> dict:
+        """
+
+        Fulfill credentials by getting from descriptor attributes, user's conf file or env file
+        :param descriptor_dir:
+        :param descriptor_attr:
+        :param env_props:
+        :param system_type:
+        :param nullable:
+        :return:
+        """
+
+        environment = (
+            descriptor_attr.get(ATTR_ENVIRONMENT)
+            or ("local" if runtime_environment == "development" else None)
+            or "environment"
+        )
+        system = descriptor_attr.get(ATTR_SYSTEM)
+
+        if system is None:
+            # Use id's value as fallback of attribute system
+            if system_type in ["db", "mongo", "kafka", "dwh", "object-storage"]:
+                system = descriptor_attr.get(ATTR_ID)
+            else:
+                raise ValueError(f"System type '{system_type}' is not supported")
+
+        # Load configs from file env.properties
+        conf_props = {}
+        # If receiving envs props from platform, load from platform envs only
+        if env_props:
+            conf_props = env_props
+        # else load from env.properties files (for testing purpose only)
+
+        try:
+            if environment and system:
+                env_props_from_env_file = parse_properties(
+                    descriptor_dir / f"conf/{environment}.env.properties"
+                )
+                # Update env props from env file
+                conf_props.update(env_props_from_env_file)
+        except FileNotFoundError:
+            logger.info(f"Environment file not found {str(descriptor_dir / f'conf/{environment}.env.properties')}")
+            # Try to look for the file in the current directory
+            try:
+                env_props_from_env_file = parse_properties(Path(f"{environment}.env.properties"))
+                # Update env props from env file
+                conf_props.update(env_props_from_env_file)
+                logger.info(f"Environment file found in current directory: {environment}.env.properties")
+            except FileNotFoundError:
+                logger.info(f"Environment file not found in current directory: {environment}.env.properties")
+                # Try to look for the file in the user's home directory under datamimic folder
+                try:
+                    import os
+
+                    home_dir = os.path.expanduser("~")
+                    env_props_from_env_file = parse_properties(
+                        Path(home_dir) / "datamimic" / f"{environment}.env.properties"
+                    )
+                    # Update env props from env file
+                    conf_props.update(env_props_from_env_file)
+                    logger.info(f"Environment file found in home directory: ~/datamimic/{environment}.env.properties")
+                except FileNotFoundError:
+                    logger.info(
+                        f"Environment file not found in home directory: ~/datamimic/{environment}.env.properties"
+                    )
+
+        credentials = copy.deepcopy(descriptor_attr)
+
+        for attr_key, attr_value in conf_props.items():
+            if attr_key.startswith(f"{system}.{system_type}.") and attr_value is not None:
+                attr_name = "".join(attr_key.split(".")[2:])
+                credentials[attr_name] = attr_value
+
+                if any(pattern in attr_name.lower() for pattern in ["password", "pwd", "pass"]):
+                    logger.debug(f"Get value for {attr_name}: ******")
+                else:
+                    logger.debug(f"Get value for {attr_name}: {attr_value}")
+
+        return credentials

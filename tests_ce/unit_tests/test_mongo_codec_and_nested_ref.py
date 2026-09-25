@@ -8,7 +8,7 @@ from decimal import Decimal
 
 from bson.decimal128 import Decimal128
 
-from datamimic_ce.clients.mongodb_client import MongoDBClient
+from datamimic_ce.engine.io.clients.mongodb_client import MongoDBClient
 
 
 class TestMongoDecimalCodec:

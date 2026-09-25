@@ -12,16 +12,16 @@ from pathlib import Path
 
 import pytest
 
-import datamimic_ce.authoring.dryrun as dryrun_module
+import datamimic_ce.authoring.adapters.dryrun as dryrun_module
 from datamimic_ce.authoring.contracts import (
     AuthoringStage,
     ScaffoldRequest,
     ScaffoldVerification,
     VerificationGateStatus,
 )
-from datamimic_ce.authoring.dryrun import dry_run_source, dry_run_source_captured
-from datamimic_ce.authoring.service import compile_document, scaffold
-from datamimic_ce.exporters.json_exporter import JsonExporter
+from datamimic_ce.authoring.adapters.dryrun import dry_run_source, dry_run_source_captured
+from datamimic_ce.authoring.application.service import compile_document, scaffold
+from datamimic_ce.engine.io.exporters.json_exporter import JsonExporter
 
 _PIPELINE = """<setup rngSeed="1">
     <memstore id="mem"/>
@@ -98,6 +98,59 @@ def test_dry_run_refuses_execute_without_allow() -> None:
     result = dry_run_source(xml)
     assert not result.ok and result.stage is AuthoringStage.RUN
     assert [d.rule for d in result.diagnostics] == ["DM003"]
+
+
+@pytest.mark.parametrize(
+    "body",
+    [
+        '<include uri="included.xml"/>',
+        '<generate name="rows" count="1"><include uri="included.xml"/></generate>',
+    ],
+)
+def test_dry_run_refuses_execute_in_included_descriptor(tmp_path: Path, body: str) -> None:
+    marker = tmp_path / "executed.txt"
+    script = tmp_path / "marker.scr.py"
+    script.write_text(
+        f"from pathlib import Path\nPath({str(marker)!r}).write_text('executed')\n",
+        encoding="utf-8",
+    )
+    included = tmp_path / "included.xml"
+    included.write_text('<setup><execute uri="marker.scr.py"/></setup>', encoding="utf-8")
+    descriptor = tmp_path / "datamimic.xml"
+    descriptor.write_text(f"<setup>{body}</setup>", encoding="utf-8")
+
+    result = dryrun_module.dry_run_captured(descriptor).result
+
+    assert not marker.exists()
+    assert not result.ok and result.stage is AuthoringStage.RUN
+    assert [diagnostic.rule for diagnostic in result.diagnostics] == ["DM003"]
+
+
+def test_dry_run_refuses_unbounded_include_even_when_side_effects_allowed(tmp_path: Path) -> None:
+    (tmp_path / "included.xml").write_text(
+        '<setup><generate name="rows" count="20"><key name="id" constant="1"/></generate></setup>',
+        encoding="utf-8",
+    )
+    descriptor = tmp_path / "datamimic.xml"
+    descriptor.write_text('<setup><include uri="included.xml"/></setup>', encoding="utf-8")
+
+    result = dryrun_module.dry_run_captured(descriptor, max_count=1, allow_side_effects=True).result
+
+    assert not result.ok and [diagnostic.rule for diagnostic in result.diagnostics] == ["DM003"]
+
+
+def test_dry_run_keeps_properties_include(tmp_path: Path) -> None:
+    (tmp_path / "values.properties").write_text("limit=1\n", encoding="utf-8")
+    descriptor = tmp_path / "datamimic.xml"
+    descriptor.write_text(
+        '<setup><include uri="values.properties"/>'
+        '<generate name="rows" count="1"><key name="id" constant="1"/></generate></setup>',
+        encoding="utf-8",
+    )
+
+    result = dryrun_module.dry_run_captured(descriptor).result
+
+    assert result.ok
 
 
 def test_dry_run_maps_runtime_error_to_dm002() -> None:

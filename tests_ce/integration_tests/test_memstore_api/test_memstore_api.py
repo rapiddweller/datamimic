@@ -54,9 +54,11 @@ def test_memstore_sum_feeds_a_subsequent_count():
     across the whole sum -> count -> generate -> recount pipeline."""
     engine = DataMimicTest(_dir, "test_memstore_sum_and_count.xml", capture_test_result=True)
     engine.test_with_timer()
-    row = engine.capture_result()["result"][0]
+    captured = engine.capture_result()
+    row = captured["result"][0]
     assert 9 <= row["totalCount"] <= 21  # 3 rows, each in {3,5,7}
     assert row["teCount"] == row["totalCount"]
+    assert len(captured["te"]) == row["totalCount"]
 
 
 def test_memstore_remove_not_existing_ids():

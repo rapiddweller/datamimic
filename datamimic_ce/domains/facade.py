@@ -2,30 +2,33 @@ from __future__ import annotations
 
 import json
 from dataclasses import fields
-from typing import Any
+from typing import TypeVar
 
-from .address.service import AddressRequest
-from .address.service import generate as generate_address
-from .common.profile_components import resolve_component_profile
-from .determinism import canonical_json, derive_profile_seed, hash_bytes
-from .doctor.service import DoctorRequest
-from .doctor.service import generate as generate_doctor
-from .exceptions import DomainError
-from .patient.service import PatientRequest
-from .patient.service import generate as generate_patient
-from .person.service import PersonRequest
-from .person.service import generate as generate_person
-from .schema_registry import validate_payload
+from pydantic import JsonValue, TypeAdapter
 
-GeneratorEntry = tuple[Any, Any]
+from ..errors import DomainErrorCode
+from ..errors.base import DomainError
+from .healthcare.services.doctor_api import DoctorRequest
+from .healthcare.services.doctor_api import generate as generate_doctor
+from .healthcare.services.patient_api import PatientRequest
+from .healthcare.services.patient_api import generate as generate_patient
+from .shared.determinism import canonical_json, derive_profile_seed, hash_bytes
+from .shared.json_types import JsonObject
+from .shared.profile_components import resolve_component_profile
+from .shared.schema_registry import validate_payload
+from .shared.services.address_api import AddressRequest
+from .shared.services.address_api import generate as generate_address
+from .shared.services.person_api import PersonRequest
+from .shared.services.person_api import generate as generate_person
 
+RequestT = TypeVar("RequestT", bound=PersonRequest | AddressRequest | PatientRequest | DoctorRequest)
 
-REGISTRY: dict[tuple[str, str], GeneratorEntry] = {
-    ("person", "v1"): (PersonRequest, generate_person),
-    ("address", "v1"): (AddressRequest, generate_address),
-    ("patient", "v1"): (PatientRequest, generate_patient),
-    ("doctor", "v1"): (DoctorRequest, generate_doctor),
-}
+REGISTRY: tuple[tuple[str, str], ...] = (
+    ("person", "v1"),
+    ("address", "v1"),
+    ("patient", "v1"),
+    ("doctor", "v1"),
+)
 
 # Rule 5: facade orchestrates profile/component resolution to keep services pure.
 PROFILE_SEED_ENABLED: tuple[tuple[str, str], ...] = (
@@ -34,10 +37,10 @@ PROFILE_SEED_ENABLED: tuple[tuple[str, str], ...] = (
 )
 
 
-def generate_domain(payload: dict[str, Any]) -> dict[str, Any]:
+def generate_domain(payload: JsonValue) -> JsonObject:
     if not isinstance(payload, dict):
         raise DomainError(
-            code="invalid_request",
+            code=DomainErrorCode.INVALID_REQUEST,
             message="Payload must be a JSON object",
             hint="Send a JSON object following the domain contract",
             path="/",
@@ -46,13 +49,12 @@ def generate_domain(payload: dict[str, Any]) -> dict[str, Any]:
 
     canonical_request = canonical_json(payload)
     request_hash = hash_bytes(canonical_request)
-
     domain = payload.get("domain")
     version = payload.get("version")
 
     if not isinstance(domain, str):
         raise DomainError(
-            code="invalid_request",
+            code=DomainErrorCode.INVALID_REQUEST,
             message="Missing or invalid 'domain' field",
             hint="Provide the target domain as a string",
             path="/domain",
@@ -60,7 +62,7 @@ def generate_domain(payload: dict[str, Any]) -> dict[str, Any]:
         )
     if not isinstance(version, str):
         raise DomainError(
-            code="invalid_request",
+            code=DomainErrorCode.INVALID_REQUEST,
             message="Missing or invalid 'version' field",
             hint="Provide the target version as a string",
             path="/version",
@@ -70,14 +72,12 @@ def generate_domain(payload: dict[str, Any]) -> dict[str, Any]:
     key = (domain, version)
     if key not in REGISTRY:
         raise DomainError(
-            code="unsupported_domain",
+            code=DomainErrorCode.UNSUPPORTED_DOMAIN,
             message=f"Domain '{domain}' version '{version}' is not supported",
-            hint=f"Supported domains: {sorted({k[0] for k in REGISTRY})}",
+            hint=f"Supported domains: {sorted({registered_domain for registered_domain, _ in REGISTRY})}",
             path="/domain",
             request_hash=request_hash,
         )
-
-    request_cls, generator = REGISTRY[key]
 
     validate_payload(payload, domain, "request", version, request_hash)
 
@@ -86,22 +86,34 @@ def generate_domain(payload: dict[str, Any]) -> dict[str, Any]:
     if key in PROFILE_SEED_ENABLED:
         request_payload, profile_seed = _apply_profile_payload(request_payload, domain, version, request_hash)
 
-    request_obj = _build_request(request_payload, request_cls, request_hash)
-
-    extra_kwargs: dict[str, Any] = {}
-    if profile_seed is not None:
-        extra_kwargs["profile_seed"] = profile_seed
-
-    response = generator(request_obj, **extra_kwargs)
+    if key == ("person", "v1"):
+        person_request = _build_request(request_payload, PersonRequest, request_hash)
+        response = (
+            generate_person(person_request, profile_seed=profile_seed)
+            if profile_seed is not None
+            else generate_person(person_request)
+        )
+    elif key == ("address", "v1"):
+        address_request = _build_request(request_payload, AddressRequest, request_hash)
+        response = generate_address(address_request)
+    elif key == ("patient", "v1"):
+        patient_request = _build_request(request_payload, PatientRequest, request_hash)
+        response = (
+            generate_patient(patient_request, profile_seed=profile_seed)
+            if profile_seed is not None
+            else generate_patient(patient_request)
+        )
+    else:
+        doctor_request = _build_request(request_payload, DoctorRequest, request_hash)
+        response = generate_doctor(doctor_request)
 
     validate_payload(response, domain, "response", version, request_hash)
-
     canonical_response = canonical_json(response)
     return json.loads(canonical_response.decode("utf-8"))
 
 
-def _build_request(payload: dict[str, Any], request_cls: Any, request_hash: str) -> Any:
-    kwargs: dict[str, Any] = {"request_hash": request_hash}
+def _build_request(payload: JsonObject, request_cls: type[RequestT], request_hash: str) -> RequestT:
+    kwargs: dict[str, object] = {"request_hash": request_hash}
     for field in fields(request_cls):
         if field.name == "request_hash":
             continue
@@ -109,21 +121,21 @@ def _build_request(payload: dict[str, Any], request_cls: Any, request_hash: str)
             kwargs[field.name] = payload["constraints"] or {}
         elif field.name in payload:
             kwargs[field.name] = payload[field.name]
-    return request_cls(**kwargs)
+    return TypeAdapter(request_cls).validate_python(kwargs)
 
 
 def _apply_profile_payload(
-    payload: dict[str, Any],
+    payload: JsonObject,
     domain: str,
     version: str,
     request_hash: str,
-) -> tuple[dict[str, Any], int | None]:
+) -> tuple[JsonObject, int | None]:
     profile_id = payload.get("profile_id")
     component_id = payload.get("component_id")
 
     if profile_id is not None and component_id is not None:
         raise DomainError(
-            code="invalid_profile_selector",
+            code=DomainErrorCode.INVALID_PROFILE_SELECTOR,
             message="Provide either profile_id or component_id, not both",
             hint="Remove one of the identifiers before retrying.",
             path="/component_id",
@@ -138,27 +150,29 @@ def _apply_profile_payload(
     if component_id is not None:
         if not isinstance(component_id, str) or not component_id:
             raise DomainError(
-                code="invalid_component_id",
+                code=DomainErrorCode.INVALID_COMPONENT_ID,
                 message="component_id must be a non-empty string",
                 hint="Example: 'urban_adult'",
                 path="/component_id",
                 request_hash=request_hash,
             )
+        locale = payload["locale"]
+        assert isinstance(locale, str)
         resolved_profile_id, extra_constraints = resolve_component_profile(
-            locale=payload["locale"],
+            locale=locale,
             version=version,
             component_id=component_id,
             request_hash=request_hash,
         )
         updated["profile_id"] = resolved_profile_id
         base_constraints = updated.get("constraints") or {}
-        merged_constraints = _merge_constraints(base_constraints, extra_constraints)
-        updated["constraints"] = merged_constraints
+        updated["constraints"] = _merge_constraints(base_constraints, extra_constraints)
         facet = component_id
+        selected_profile_id = resolved_profile_id
     else:
         if not isinstance(profile_id, str) or not profile_id:
             raise DomainError(
-                code="invalid_profile_id",
+                code=DomainErrorCode.INVALID_PROFILE_ID,
                 message="profile_id must be a non-empty string",
                 hint="Example: 'urban_adult'",
                 path="/profile_id",
@@ -166,15 +180,16 @@ def _apply_profile_payload(
             )
         updated["profile_id"] = profile_id
         facet = "profile"
+        selected_profile_id = profile_id
 
-    seed = derive_profile_seed(domain, updated["profile_id"], facet)
+    seed = derive_profile_seed(domain, selected_profile_id, facet)
     return updated, seed
 
 
-def _merge_constraints(base: Any, extra: Any) -> Any:
+def _merge_constraints(base: JsonValue, extra: JsonValue) -> JsonValue:
     if not isinstance(base, dict) or not isinstance(extra, dict):
         return extra
-    merged: dict[str, Any] = dict(base)
+    merged = dict(base)
     for key, value in extra.items():
         if key in merged:
             merged[key] = _merge_constraints(merged[key], value)

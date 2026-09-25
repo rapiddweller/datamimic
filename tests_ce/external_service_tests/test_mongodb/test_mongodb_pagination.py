@@ -13,11 +13,11 @@ from pathlib import Path
 
 import pytest
 
-from datamimic_ce.clients.mongodb_client import MongoDBClient
-from datamimic_ce.config import settings
-from datamimic_ce.connection_config.mongodb_connection_config import MongoDBConnectionConfig
 from datamimic_ce.data_mimic_test import DataMimicTest
-from datamimic_ce.data_sources.data_source_pagination import DataSourcePagination
+from datamimic_ce.engine.io.clients.mongodb_client import MongoDBClient
+from datamimic_ce.engine.io.connection_config.mongodb_connection_config import MongoDBConnectionConfig
+from datamimic_ce.engine.io.contracts import DataSourcePagination
+from datamimic_ce.engine.runtime.lifecycle.config import settings
 
 
 def _local_client() -> MongoDBClient:

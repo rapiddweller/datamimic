@@ -1,0 +1,40 @@
+"""Task that installs demographic profiles into the setup context."""
+
+from __future__ import annotations
+
+from pathlib import Path
+from random import Random
+
+from datamimic_ce.domains.api import DemographicConfig, DemographicSampler, load_demographic_profile
+from datamimic_ce.engine.dsl.api import DemographicsStatement
+from datamimic_ce.engine.runtime.contexts.demographic_context import DemographicContext
+from datamimic_ce.engine.runtime.contexts.setup_context import SetupContext
+from datamimic_ce.engine.runtime.tasks.task import SetupSubTask
+
+
+class DemographicsTask(SetupSubTask):
+    def __init__(self, statement: DemographicsStatement):
+        self._statement = statement
+
+    def execute(self, ctx: SetupContext) -> None:
+        directory = Path(self._statement.directory)
+        profile = load_demographic_profile(directory, self._statement.dataset, self._statement.version)
+        sampler = DemographicSampler(profile)
+        if self._statement.rng_seed is not None:
+            rng = Random(self._statement.rng_seed)
+        else:
+            # Inherit the model-wide <setup rngSeed> when the block has no own rngSeed.
+            derived = ctx.derive_seeded_rng()
+            rng = derived if derived is not None else Random()
+        demographic_context = DemographicContext(
+            profile_id=profile.profile_id,
+            sampler=sampler,
+            overrides=DemographicConfig(),
+            rng=rng,
+        )
+        # Store the context once so every entity derives deterministic child RNGs without hidden globals.
+        ctx.set_demographic_context(demographic_context)
+
+    @property
+    def statement(self) -> DemographicsStatement:
+        return self._statement

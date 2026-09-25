@@ -8,8 +8,8 @@ from pathlib import Path
 
 from lxml import etree
 
-from datamimic_ce.exporters.exporter_state_manager import ExporterStateManager
-from datamimic_ce.exporters.xml_exporter import XMLExporter  # Adjust the import path as necessary
+from datamimic_ce.engine.io.exporters.exporter_state_manager import ExporterStateManager
+from datamimic_ce.engine.io.exporters.xml_exporter import XMLExporter  # Adjust the import path as necessary
 from tests_ce.unit_tests.test_exporter.exporter_test_util import MockSetupContext, generate_mock_data, make_exporter
 
 

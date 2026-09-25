@@ -9,7 +9,7 @@ from pathlib import Path
 import sqlalchemy
 
 from datamimic_ce.data_mimic_test import DataMimicTest
-from datamimic_ce.utils.file_util import FileUtil
+from datamimic_ce.engine.io.api import FileUtil
 
 
 class TestSqlAlchemyExtendedConf:

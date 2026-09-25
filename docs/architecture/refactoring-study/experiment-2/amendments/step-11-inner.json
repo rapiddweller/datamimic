@@ -1,0 +1,7 @@
+{
+  "after_digest": "290ef65b9231fb11bca1782695cfa25dee8059152a75076a48f51d65ce692163",
+  "before_digest": "20672151ebea1df440c65a703a75be1e80512ac2fc387ce012a05593b974f198",
+  "decided_by": "Alex (architect)",
+  "rationale": "The approved shared errors owner is now real; nested contracts describe previously ungoverned interiors; moved runtime execution owners replace deleted paths. No new behavioral or dependency exception is granted.",
+  "schema_version": "1.0.0"
+}

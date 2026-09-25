@@ -13,7 +13,7 @@ that another transport rejects.
 
 from collections.abc import Callable
 from decimal import Decimal, InvalidOperation
-from typing import Annotated, Any, Literal, TypeVar
+from typing import Annotated, Literal, TypeVar
 
 from pydantic import (
     BaseModel,
@@ -21,16 +21,21 @@ from pydantic import (
     Field,
     JsonValue,
     RootModel,
+    SkipValidation,
     StrictBool,
     StrictInt,
     StrictStr,
     TypeAdapter,
+    WithJsonSchema,
     model_serializer,
     model_validator,
 )
+from pydantic.json_schema import GetJsonSchemaHandler, JsonSchemaValue
+from pydantic_core import CoreSchema
 
 from datamimic_ce._compat import StrEnum
-from datamimic_ce.authoring.diagnostics import Diagnostic, LintResult
+from datamimic_ce.authoring.domain.diagnostics import Diagnostic, LintResult
+from datamimic_ce.authoring.domain.rule_catalog import RuleSeverity as RuleSeverity
 from datamimic_ce.authoring.spec import (
     ExpectationIntent,
     ExpectationIntentKind,
@@ -462,16 +467,27 @@ class RunRequest(BaseModel):
         return self
 
 
+class AuthoringDocument(RootModel[dict[str, SkipValidation[JsonValue]]]):
+    """Raw JSON document submitted to the scaffold operation."""
+
+
+class AuthoringExpectation(RootModel[ExpectationIntent]):
+    """One typed caller-owned acceptance expectation."""
+
+
 class ScaffoldRequest(BaseModel):
     """Canonical request for complete compile, lint, run and acceptance verification."""
 
     model_config = ConfigDict(extra="forbid", frozen=True)
 
-    spec: dict[str, Any] = Field(
+    spec: Annotated[
+        AuthoringDocument,
+        WithJsonSchema({"type": "object", "title": "Spec"}),
+    ] = Field(
         ...,
         description="Versioned AuthoringSpecV1 model.dm.json intent.",
     )
-    acceptance_requirements: tuple[ExpectationIntent, ...] = Field(
+    acceptance_requirements: tuple[AuthoringExpectation, ...] = Field(
         default=(),
         description=(
             "Optional caller-owned acceptance assertions for this transaction. "
@@ -492,13 +508,27 @@ class ScaffoldRequest(BaseModel):
     )
     verification: ScaffoldVerification = Field(default_factory=_default_scaffold_verification)
 
+    @classmethod
+    def __get_pydantic_json_schema__(
+        cls,
+        core_schema: CoreSchema,
+        handler: GetJsonSchemaHandler,
+    ) -> JsonSchemaValue:
+        schema = handler.resolve_ref_schema(handler(core_schema))
+        acceptance = schema["properties"]["acceptance_requirements"]
+        item_schema = handler.resolve_ref_schema(acceptance["items"])
+        del item_schema["title"]
+        del item_schema["description"]
+        acceptance["items"] = item_schema
+        return schema
+
 
 class ProductResult(BaseModel):
     """Result for a single product (generate output)."""
 
     name: str
     count: int
-    sample: list[dict[str, Any]] = Field(default_factory=list)
+    sample: list[dict[str, JsonValue]] = Field(default_factory=list)
     truncated_rows: bool = False
     capture: ProductCaptureEvidence
 

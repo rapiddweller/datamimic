@@ -12,9 +12,9 @@ from pathlib import Path
 
 import pytest
 
-import datamimic_ce.authoring.dryrun as dryrun_module
+import datamimic_ce.authoring.adapters.dryrun as dryrun_module
 from datamimic_ce.authoring.contracts import CaptureStatus
-from datamimic_ce.authoring.dryrun import dry_run_captured, dry_run_source
+from datamimic_ce.authoring.adapters.dryrun import dry_run_captured, dry_run_source
 
 
 def test_nested_generate_count_is_bounded_per_parent() -> None:

@@ -9,7 +9,7 @@ Expected:
 
 import random
 
-from datamimic_ce.domains.common.models.demographic_config import DemographicConfig
+from datamimic_ce.domains.shared.models.demographic_config import DemographicConfig
 from datamimic_ce.domains.healthcare.services.patient_service import PatientService
 
 

@@ -1,0 +1,7 @@
+{
+  "after_digest": "15caac1c2f5df281a765aaa36fbad668902777af68900c9e4274328434933e0c",
+  "before_digest": "b97ea579fed35d5e310e324465ca3268bc4dfd7766cbeef9a1ddb5d8fcca9575",
+  "decided_by": "architect",
+  "rationale": "Retain exact JSON-valued public response fields already present in the Authoring wire shape and expose only the finite LeafFieldKind alias used by public contract types.",
+  "schema_version": "1.0.0"
+}

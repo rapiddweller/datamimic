@@ -13,7 +13,7 @@ behavior these accepted combinations enable."""
 import pytest
 from pydantic import ValidationError
 
-from datamimic_ce.model.variable_model import VariableModel
+from datamimic_ce.engine.dsl.model.variable_model import VariableModel
 
 
 class TestVariableModelStorage:

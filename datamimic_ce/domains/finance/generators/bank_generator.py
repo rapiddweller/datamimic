@@ -7,9 +7,8 @@ import random
 from pathlib import Path
 
 from datamimic_ce.domains.domain_core.base_domain_generator import DatasetAwareDomainGenerator
-from datamimic_ce.domains.utils.dataset_loader import pick_one_weighted_no_repeat
-from datamimic_ce.domains.utils.dataset_path import dataset_path
-from datamimic_ce.utils.file_util import FileUtil
+from datamimic_ce.domains.shared.utils.dataset_loader import pick_one_weighted_no_repeat, read_headered_csv
+from datamimic_ce.domains.shared.utils.dataset_path import dataset_path
 
 
 class BankGenerator(DatasetAwareDomainGenerator):
@@ -25,7 +24,7 @@ class BankGenerator(DatasetAwareDomainGenerator):
     def generate_bank_data(self) -> dict:
         #  centralized dataset path
         file_path = dataset_path("finance", "bank", f"banks_{self._dataset}.csv", start=Path(__file__))
-        header_dict, loaded_data = FileUtil.read_csv_to_dict_of_tuples_with_header(file_path, delimiter=",")
+        header_dict, loaded_data = read_headered_csv(file_path, delimiter=",")
 
         name_idx = header_dict["name"]
         wgt_idx = header_dict["weight"]

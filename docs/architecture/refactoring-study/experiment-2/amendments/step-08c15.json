@@ -1,0 +1,7 @@
+{
+  "after_digest": "efddde06c77a52253dfb2d335800a1395c5ccf2856091007150eddf40f603077",
+  "before_digest": "097f3073ca6997c10ed8a14920ad456aa74e0c8976a9bdeccbcee7011b7b51ea",
+  "decided_by": "experiment orchestrator",
+  "rationale": "Activate the frozen Resources facade after replacing direct package discovery with a typed public API; no component dependency permission is added.",
+  "schema_version": "1.0.0"
+}

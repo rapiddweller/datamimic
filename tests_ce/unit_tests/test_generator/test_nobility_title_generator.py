@@ -5,7 +5,7 @@ from __future__ import annotations
 
 from random import Random
 
-from datamimic_ce.domains.common.literal_generators.nobility_title_generator import NobilityTitleGenerator
+from datamimic_ce.domains.shared.literal_generators.nobility_title_generator import NobilityTitleGenerator
 
 
 def test_other_gender_returns_string_when_quota_hits() -> None:

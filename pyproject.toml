@@ -65,8 +65,8 @@ mcp = [
 local_scheme = "dirty-tag"  # Includes a "dirty" tag in version if working directory is not clean
 
 [project.scripts]
-datamimic = "datamimic_ce.cli:app"  # Entry point for your CLI application
-datamimic-mcp = "datamimic_ce.mcp.cli:app"
+datamimic = "datamimic_ce.interfaces.cli:app"  # Entry point for your CLI application
+datamimic-mcp = "datamimic_ce.interfaces.mcp.cli:app"
 
 [tool.setuptools]
 include-package-data = true
@@ -106,6 +106,7 @@ dev-dependencies = [
 
 [tool.mypy]
 python_version = "3.10"
+mypy_path = "$MYPY_CONFIG_FILE_DIR/stubs"
 warn_redundant_casts = true
 warn_unused_ignores = true
 
@@ -146,19 +147,12 @@ addopts = "-n auto --dist=loadscope"
 [tool.pyright]
 typeCheckingMode="off"
 
-[tool.pylint.main]
-fail-under = 9.0
-fail-on = ["E", "F"]
-
-[tool.pylint.reports]
-output-format = "colorized"
-
 [[tool.mypy.overrides]]
 module = "datamimic_ce.*"
 follow_imports = "skip"
 
 [[tool.mypy.overrides]]
-module = "datamimic_ce.mcp.*"
+module = "datamimic_ce.interfaces.mcp.*"
 follow_imports = "normal"
 disallow_any_generics = true
 no_implicit_optional = true

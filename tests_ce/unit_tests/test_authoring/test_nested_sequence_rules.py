@@ -7,10 +7,10 @@
 
 import pytest
 
+from datamimic_ce.authoring.adapters.dryrun import dry_run_source
+from datamimic_ce.authoring.adapters.linter import lint_source
 from datamimic_ce.authoring.contracts import AuthoringStage
-from datamimic_ce.authoring.dryrun import dry_run_source
-from datamimic_ce.authoring.linter import lint_source
-from datamimic_ce.enums.distribution_enums import POSITIONAL_NUMBER_SEQUENCES, NumberDistribution
+from datamimic_ce.engine.dsl.enums.distribution_enums import POSITIONAL_NUMBER_SEQUENCES, NumberDistribution
 
 
 def _nested_model(

@@ -13,8 +13,6 @@ This module provides a service for working with PoliceOfficer entities.
 from datetime import datetime
 from random import Random
 
-from datamimic_ce.domains.common.demographics.sampler import DemographicSampler
-from datamimic_ce.domains.common.models.demographic_config import DemographicConfig
 from datamimic_ce.domains.domain_core import BaseDomainService
 from datamimic_ce.domains.domain_core.attribute_catalog import (
     EntitySchema,
@@ -24,11 +22,13 @@ from datamimic_ce.domains.domain_core.attribute_catalog import (
 )
 from datamimic_ce.domains.public_sector.generators.police_officer_generator import PoliceOfficerGenerator
 from datamimic_ce.domains.public_sector.models.police_officer import PoliceOfficer
+from datamimic_ce.domains.shared.demographics.sampler import DemographicSampler
+from datamimic_ce.domains.shared.models.demographic_config import DemographicConfig
 
 POLICE_OFFICER_SCHEMA = EntitySchema(
     "PoliceOfficer",
     (
-        field("officer_id", str, "Unique officer identifier."),
+        field("officer_id", str, "Unique officer identifier.", unique_identifier_format="OFF-[0-9A-F]{8}"),
         field("badge_number", str, "Badge number."),
         field("given_name", str, "First (given) name."),
         field("family_name", str, "Last (family) name."),

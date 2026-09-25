@@ -7,7 +7,9 @@
 
 import re
 
-from datamimic_ce.domains.common.literal_generators.data_faker_generator import DataFakerGenerator
+import pytest
+
+from datamimic_ce.domains.shared.literal_generators.data_faker_generator import DataFakerGenerator
 
 
 class TestFakerGenerator:
@@ -46,19 +48,21 @@ class TestFakerGenerator:
             assert 999 >= three_digit_number >= 100
 
     def test_invalid_method(self):
-        for _ in range(100):
-            invalid_method = "_invalid_method"
-            try:
-                DataFakerGenerator(method=invalid_method).generate()
-                assert False
-            except ValueError as e:
-                assert str(e) == f"Faker method '{invalid_method}' is not supported"
+        invalid_method = "_invalid_method"
+        with pytest.raises(ValueError) as error:
+            DataFakerGenerator(method=invalid_method).generate()
+        assert str(error.value) == f"Faker method '{invalid_method}' is not supported"
 
     def test_not_exist_method(self):
-        for _ in range(100):
-            invalid_method = "not_exist_method"
-            try:
-                DataFakerGenerator(method=invalid_method).generate()
-                assert False
-            except ValueError as e:
-                assert str(e) == f"Wrong Faker method: {invalid_method} does not exist"
+        invalid_method = "not_exist_method"
+        with pytest.raises(ValueError) as error:
+            DataFakerGenerator(method=invalid_method).generate()
+        assert str(error.value) == f"Wrong Faker method: {invalid_method} does not exist"
+
+    def test_provider_collection_is_not_a_faker_method(self):
+        with pytest.raises(ValueError, match="Wrong Faker method: providers does not exist"):
+            DataFakerGenerator(method="providers").generate()
+
+    def test_valid_method_argument_errors_are_preserved(self):
+        with pytest.raises(TypeError):
+            DataFakerGenerator(method="random_int", unexpected_argument=True).generate()

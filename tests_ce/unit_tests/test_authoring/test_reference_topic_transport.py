@@ -9,8 +9,8 @@ import pytest
 from typer.testing import CliRunner
 
 from datamimic_ce.authoring.contracts import AuthoringReferenceCategory, ReferenceRequest, ReferenceTopic
-from datamimic_ce.authoring.service import reference
-from datamimic_ce.cli import app
+from datamimic_ce.authoring.application.service import reference
+from datamimic_ce.interfaces.cli import app
 
 _TOPIC_NAMES = {
     ReferenceTopic.ELEMENT: "generate",

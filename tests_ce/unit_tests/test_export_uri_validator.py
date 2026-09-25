@@ -1,6 +1,6 @@
 import pytest
 
-from datamimic_ce.model.model_util import ModelUtil
+from datamimic_ce.engine.dsl.model.model_util import ModelUtil
 
 
 def test_normalize_strips_slashes_and_passes_a_valid_prefix():

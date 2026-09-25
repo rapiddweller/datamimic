@@ -72,7 +72,7 @@ class TestEntityFunctional:
         """
         helper of test case test_functional_entity_product
         """
-        ecommerce_data_dir = Path(__file__).resolve().parents[3] / "datamimic_ce/domains/domain_data/ecommerce"
+        ecommerce_data_dir = Path(__file__).resolve().parents[3] / "datamimic_ce/domains/shared/domain_data/ecommerce"
         category_list = pd.read_csv(ecommerce_data_dir.joinpath("product_categories_US.csv"))["category"].tolist()
         brands_list = pd.read_csv(ecommerce_data_dir.joinpath("product_brands_US.csv"))["brand"].tolist()
         benefits_list = pd.read_csv(ecommerce_data_dir.joinpath("product_benefits_US.csv"))["benefit"].tolist()
@@ -140,7 +140,7 @@ class TestEntityFunctional:
         """
         helper of test case test_functional_entity_order
         """
-        ecommerce_data_dir = Path(__file__).resolve().parents[3] / "datamimic_ce/domains/domain_data/ecommerce"
+        ecommerce_data_dir = Path(__file__).resolve().parents[3] / "datamimic_ce/domains/shared/domain_data/ecommerce"
         status_list = pd.read_csv(ecommerce_data_dir.joinpath("order_statuses_US.csv"))["status"].tolist()
         payment_methods_list = pd.read_csv(ecommerce_data_dir.joinpath("payment_methods_US.csv"))["method"].tolist()
         shipping_methods_list = pd.read_csv(ecommerce_data_dir.joinpath("shipping_methods_US.csv"))["method"].tolist()

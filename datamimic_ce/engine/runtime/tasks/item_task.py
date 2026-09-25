@@ -1,0 +1,56 @@
+# DATAMIMIC
+# Copyright (c) 2023-2025 Rapiddweller Asia Co., Ltd.
+# This software is licensed under the MIT License.
+# See LICENSE file for the full text of the license.
+# For questions and support, contact: info@rapiddweller.com
+
+from datamimic_ce.engine.dsl.api import ItemStatement
+from datamimic_ce.engine.runtime.contexts.geniter_context import GenIterContext
+from datamimic_ce.engine.runtime.contexts.setup_context import SetupContext
+from datamimic_ce.engine.runtime.tasks.element_task import ElementTask
+from datamimic_ce.engine.runtime.tasks.task import GenSubTask
+from datamimic_ce.engine.runtime.tasks.task_util import TaskUtil
+
+
+class ItemTask(GenSubTask):
+    def __init__(
+        self,
+        ctx: SetupContext,
+        statement: ItemStatement,
+    ):
+        self._statement = statement
+
+        # Not apply pagination for sub-statement
+        self._sub_tasks = [TaskUtil.get_task_by_statement(ctx, child_stmt) for child_stmt in statement.sub_statements]
+
+    @property
+    def statement(self) -> ItemStatement:
+        return self._statement
+
+    def execute(self, parent_context: GenIterContext):
+        """
+        Generate data for element "item"
+        :param parent_context:
+        :return:
+        """
+        # check condition to enable or disable element, default True
+        condition = TaskUtil.evaluate_condition_value(
+            ctx=parent_context,
+            element_name=self._statement.name,
+            value=self._statement.condition,
+        )
+        if condition:
+            result = {}
+            for sub_task in self._sub_tasks:
+                ctx = GenIterContext(parent_context, "temp_item_name")
+                # Create sub-context for each item generation
+                # ItemTask generate product and apend to ctx.current_product
+                if isinstance(sub_task, ElementTask):
+                    result.update(sub_task.generate_xml_attribute(ctx))
+                else:
+                    if not isinstance(sub_task, GenSubTask):
+                        raise ValueError(f"Generate sub-task expected, but got {type(sub_task)}")
+                    sub_task.execute(ctx)
+                    # Add sub-element of item to result dict
+                    result.update(ctx.current_product)
+            parent_context.add_current_product_field("temp_item_name", result)

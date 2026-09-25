@@ -11,11 +11,11 @@ from pathlib import Path
 import pytest
 from pydantic import ValidationError
 
-import datamimic_ce.authoring.compiler as compiler_module
-from datamimic_ce.authoring.compiler import compile_authoring_spec
+import datamimic_ce.authoring.application.compiler as compiler_module
+from datamimic_ce.authoring.adapters.dryrun import dry_run_source
+from datamimic_ce.authoring.application.compiler import compile_authoring_spec
 from datamimic_ce.authoring.contracts import FileSourceBindingPlan, FileTargetBindingPlan
-from datamimic_ce.authoring.dryrun import dry_run_source
-from datamimic_ce.authoring.reference import capabilities_manifest, scaffold_reference
+from datamimic_ce.authoring.projection.reference import capabilities_manifest, scaffold_reference
 from datamimic_ce.authoring.spec import (
     AuthoringSpecV1,
     FileExportTarget,
@@ -23,9 +23,13 @@ from datamimic_ce.authoring.spec import (
     MemstoreSource,
     authoring_spec_json_schema,
 )
-from datamimic_ce.constants.element_constants import EL_GENERATE
-from datamimic_ce.exporters.exporter_util import buffered_exporter_names
-from datamimic_ce.model.constraints import SourceFileFormat, source_file_format, supported_source_file_formats
+from datamimic_ce.engine.dsl.constants.element_constants import EL_GENERATE
+from datamimic_ce.engine.dsl.model.constraints import (
+    SourceFileFormat,
+    source_file_format,
+    supported_source_file_formats,
+)
+from datamimic_ce.engine.io.exporters.exporter_util import buffered_exporter_names
 
 _CANONICAL_SPEC = {
     "version": "1",
@@ -288,7 +292,12 @@ def test_compiler_has_no_transport_execution_or_file_io_dependencies() -> None:
             imported.update(alias.name for alias in node.names)
         elif isinstance(node, ast.ImportFrom) and node.module is not None:
             imported.add(node.module)
-    forbidden = ("datamimic_ce.cli", "datamimic_ce.mcp", "authoring.dryrun", "authoring.linter")
+    forbidden = (
+        "datamimic_ce.interfaces.cli",
+        "datamimic_ce.interfaces.mcp",
+        "authoring.adapters.dryrun",
+        "authoring.adapters.linter",
+    )
     assert not any(any(token in module for token in forbidden) for module in imported)
     assert "open(" not in inspect.getsource(compiler_module)
 

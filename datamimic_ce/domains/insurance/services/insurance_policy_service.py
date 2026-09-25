@@ -13,16 +13,18 @@ This module provides service functions for generating and managing insurance pol
 from datetime import date
 from random import Random
 
-from datamimic_ce.domains.common.models.demographic_config import DemographicConfig
 from datamimic_ce.domains.domain_core import BaseDomainService
 from datamimic_ce.domains.domain_core.attribute_catalog import EntitySchema, FieldSpec, field
 from datamimic_ce.domains.insurance.generators.insurance_policy_generator import InsurancePolicyGenerator
 from datamimic_ce.domains.insurance.models.insurance_policy import InsurancePolicy
+from datamimic_ce.domains.insurance.services.insurance_company_service import INSURANCE_COMPANY_SCHEMA
+from datamimic_ce.domains.insurance.services.insurance_product_service import INSURANCE_PRODUCT_SCHEMA
+from datamimic_ce.domains.shared.models.demographic_config import DemographicConfig
 
 INSURANCE_POLICY_SCHEMA = EntitySchema(
     "InsurancePolicy",
     (
-        field("id", str, "Unique policy identifier."),
+        field("id", str, "Unique policy identifier.", unique_identifier_format="uuid4"),
         field("company", dict, "Issuing insurance company."),
         field("product", dict, "Insured product."),
         field("policy_holder", dict, "Policy holder details."),
@@ -39,6 +41,11 @@ INSURANCE_POLICY_SCHEMA = EntitySchema(
 
 class InsurancePolicyService(BaseDomainService[InsurancePolicy]):
     """Service for generating and managing insurance policies."""
+
+    NESTED_ENTITY_SCHEMAS = {
+        "company": INSURANCE_COMPANY_SCHEMA,
+        "product": INSURANCE_PRODUCT_SCHEMA,
+    }
 
     def __init__(
         self,

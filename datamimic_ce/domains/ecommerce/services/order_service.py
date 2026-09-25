@@ -20,7 +20,7 @@ from datamimic_ce.domains.ecommerce.models.order import Order
 ORDER_SCHEMA = EntitySchema(
     "Order",
     (
-        field("order_id", str, "Unique order identifier."),
+        field("order_id", str, "Unique order identifier.", unique_identifier_format="ORD[A-Z0-9]{8}"),
         field("user_id", str, "Identifier of the ordering user."),
         field("product_list", list, "List of ordered products."),
         field("total_amount", float, "Order total amount."),

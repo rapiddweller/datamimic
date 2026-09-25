@@ -1,0 +1,7 @@
+{
+  "after_digest": "4b5949c97181486d7f4995a4271c668075445c955d4026eae9a65ac27d265d4b",
+  "before_digest": "efddde06c77a52253dfb2d335800a1395c5ccf2856091007150eddf40f603077",
+  "decided_by": "experiment orchestrator",
+  "rationale": "Permit getattr only in the four evidenced DSL/runtime compatibility adapter methods; preserve their tested legacy and seeded-expression behavior while keeping all other constructs forbidden.",
+  "schema_version": "1.0.0"
+}

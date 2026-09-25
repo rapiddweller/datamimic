@@ -1,6 +1,6 @@
 import unittest
 
-from datamimic_ce.exporters.exporter_util import ExporterUtil
+from datamimic_ce.engine.io.exporters.exporter_util import ExporterUtil
 
 
 class TestExporterUtil(unittest.TestCase):

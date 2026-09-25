@@ -11,14 +11,13 @@ This module provides a model for representing an e-commerce order.
 """
 
 import datetime
-from typing import Any
 
-from datamimic_ce.domains.common.literal_generators.string_generator import StringGenerator
-from datamimic_ce.domains.common.models.address import Address
 from datamimic_ce.domains.domain_core import BaseEntity
 from datamimic_ce.domains.domain_core.property_cache import property_cache
 from datamimic_ce.domains.ecommerce.generators.order_generator import OrderGenerator
 from datamimic_ce.domains.ecommerce.models.product import Product
+from datamimic_ce.domains.shared.literal_generators.string_generator import StringGenerator
+from datamimic_ce.domains.shared.models.address import Address
 
 
 class Order(BaseEntity):
@@ -51,9 +50,10 @@ class Order(BaseEntity):
             A unique order ID
         """
         #  use shared PrefixedIdGenerator for prefixed ID without separator
-        from datamimic_ce.domains.common.literal_generators.prefixed_id_generator import PrefixedIdGenerator
+        from datamimic_ce.domains.shared.literal_generators.prefixed_id_generator import PrefixedIdGenerator
 
-        return PrefixedIdGenerator("ORD", "[A-Z0-9]{8}", separator="", rng=self._order_generator.rng).generate()
+        candidate = PrefixedIdGenerator("ORD", "[A-Z0-9]{8}", separator="", rng=self._order_generator.rng).generate()
+        return self._claim_identifier("order_id", candidate)
 
     @property
     @property_cache
@@ -64,7 +64,7 @@ class Order(BaseEntity):
             A unique user ID
         """
         #  use shared PrefixedIdGenerator for prefixed ID without separator
-        from datamimic_ce.domains.common.literal_generators.prefixed_id_generator import PrefixedIdGenerator
+        from datamimic_ce.domains.shared.literal_generators.prefixed_id_generator import PrefixedIdGenerator
 
         return PrefixedIdGenerator("USER", "[A-Z0-9]{8}", separator="", rng=self._order_generator.rng).generate()
 
@@ -264,7 +264,7 @@ class Order(BaseEntity):
         # Add tax and shipping, subtract discount
         return round(subtotal + self.tax_amount + self.shipping_amount - self.discount_amount, 2)
 
-    def to_dict(self) -> dict[str, Any]:
+    def to_dict(self) -> dict[str, object]:
         """Convert the order to a dictionary.
 
         Returns:

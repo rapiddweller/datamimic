@@ -37,6 +37,7 @@ class FieldSpec:
     description: str
     optional: bool = False
     children: tuple[FieldSpec, ...] = ()
+    unique_identifier_format: str | None = None
 
     @property
     def data_type(self) -> str:
@@ -58,9 +59,22 @@ class EntitySchema:
     fields: tuple[FieldSpec, ...]
 
 
-def field(name: str, py_type: PyType, description: str, *, optional: bool = False) -> FieldSpec:
+def field(
+    name: str,
+    py_type: PyType,
+    description: str,
+    *,
+    optional: bool = False,
+    unique_identifier_format: str | None = None,
+) -> FieldSpec:
     """Build a leaf field spec."""
-    return FieldSpec(name=name, py_type=py_type, description=description, optional=optional)
+    return FieldSpec(
+        name=name,
+        py_type=py_type,
+        description=description,
+        optional=optional,
+        unique_identifier_format=unique_identifier_format,
+    )
 
 
 def group(name: str, description: str, children: Iterable[FieldSpec], *, optional: bool = False) -> FieldSpec:

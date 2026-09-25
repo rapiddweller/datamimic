@@ -5,8 +5,8 @@ from __future__ import annotations
 
 from random import Random
 
-from datamimic_ce.domains.common.generators.person_generator import PersonGenerator
-from datamimic_ce.domains.common.models.person import Person
+from datamimic_ce.domains.shared.generators.person_generator import PersonGenerator
+from datamimic_ce.domains.shared.models.person import Person
 from datamimic_ce.domains.finance.generators.bank_account_generator import BankAccountGenerator
 from datamimic_ce.domains.finance.models.bank_account import BankAccount
 

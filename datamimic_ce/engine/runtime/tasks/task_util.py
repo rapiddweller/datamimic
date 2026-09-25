@@ -1,0 +1,381 @@
+# DATAMIMIC
+# Copyright (c) 2023-2025 Rapiddweller Asia Co., Ltd.
+# This software is licensed under the MIT License.
+# See LICENSE file for the full text of the license.
+# For questions and support, contact: info@rapiddweller.com
+from __future__ import annotations
+
+import functools
+import string
+from decimal import Decimal
+from typing import TYPE_CHECKING
+
+from datamimic_ce.domains.api import (
+    AppendConverter,
+    Converter,
+    CustomConverter,
+    CutLengthConverter,
+    Date2TimestampConverter,
+    DateFormatConverter,
+    HashConverter,
+    JavaHashConverter,
+    LowerCaseConverter,
+    MaskConverter,
+    MiddleMaskConverter,
+    RandomSource,
+    RemoveNoneOrEmptyElementConverter,
+    SubstringConverter,
+    Timestamp2DateConverter,
+    UpperCaseConverter,
+)
+from datamimic_ce.engine.dsl.api import (
+    DATA_TYPE_BINARY,
+    DATA_TYPE_BOOL,
+    DATA_TYPE_DECIMAL,
+    DATA_TYPE_FLOAT,
+    DATA_TYPE_INT,
+    DATA_TYPE_STRING,
+    META_SELECTOR,
+    META_TARGET_ENTITY,
+    META_TYPE,
+    ConverterEnum,
+    ExportOperation,
+    GenerateStatement,
+    Statement,
+)
+from datamimic_ce.engine.io.api import (
+    ConsoleExporter,
+    DatabaseExporter,
+    DataSourcePagination,
+    Exporter,
+    ExporterStateManager,
+    LogExporter,
+    Memstore,
+    MongoDBExporter,
+    TestResultExporter,
+    UnifiedBufferedExporter,
+    XMLExporter,
+)
+from datamimic_ce.engine.runtime.contexts.context import Context
+from datamimic_ce.engine.runtime.contexts.setup_context import SetupContext
+from datamimic_ce.engine.runtime.logging import logger
+from datamimic_ce.engine.runtime.tasks.task_factory import create_task
+
+if TYPE_CHECKING:
+    from datamimic_ce.engine.runtime.tasks.task import Task
+
+
+def _create_converter_from_constructor_str(
+    context: Context, constructor_str: str, class_dict: dict[str, object]
+) -> Converter:
+    class_name = constructor_str.partition("(")[0]
+    converter_class = class_dict.get(class_name)
+    if converter_class is None:
+        converter_class = context.root.get_dynamic_class(class_name)
+        if converter_class is None:
+            raise ValueError(f"Cannot find converter '{class_name}'")
+
+    if class_name != constructor_str:
+        converter = context.evaluate_python_expression(constructor_str, class_dict)
+        if isinstance(converter, Converter):
+            return converter
+        raise TypeError(f"Converter expression '{constructor_str}' did not create a Converter")
+    if isinstance(converter_class, type) and issubclass(converter_class, CustomConverter):
+        return converter_class(context)
+    if callable(converter_class):
+        converter = converter_class()
+        if isinstance(converter, Converter):
+            return converter
+    raise TypeError(f"Converter '{class_name}' is not callable")
+
+
+class TaskUtil:
+    @staticmethod
+    def get_task_by_statement(
+        ctx: SetupContext,
+        stmt: Statement,
+        pagination: DataSourcePagination | None = None,
+    ) -> Task:
+        return create_task(stmt, ctx, pagination)
+
+    @staticmethod
+    def evaluate_file_script_template(ctx: Context, datas: object, prefix: str, suffix: str) -> object:
+        """
+        Check value in csv or json file that contain python expression
+        then evaluate variables and functions
+        e.g. '{1+3}' -> 4
+        """
+        from datamimic_ce.engine.runtime.scripting.evaluation import evaluate_source_template
+
+        return evaluate_source_template(ctx, datas, prefix, suffix)
+
+    @staticmethod
+    def evaluate_condition_value(ctx: Context, element_name: str | None, value: str | None) -> bool:
+        """
+        Evaluate value in 'condition' property
+        Value must be a boolean expression
+        Use HTML entities name for comparison operators:
+        """
+        # Evaluate value of "condition"
+        condition = ctx.evaluate_python_expression(value) if value else True
+        # verify condition value syntax
+        if isinstance(condition, bool):
+            return condition
+        else:
+            raise ValueError(
+                f"Evaluated value of condition script '{value}' in element '{element_name}' is not valid boolean value"
+            )
+
+    @staticmethod
+    def create_converter_list(context: Context, converter_str: str | None) -> list[Converter]:
+        """
+        Create converter instance from converter_string
+        :param context:
+        :param converter_str:
+        :return:
+        """
+        return (
+            []
+            if converter_str is None or converter_str == ""
+            else list(
+                map(
+                    lambda ele: _create_converter_from_constructor_str(
+                        context=context,
+                        constructor_str=ele.strip(),
+                        class_dict={
+                            ConverterEnum.LowerCase.value: LowerCaseConverter,
+                            ConverterEnum.UpperCase.value: UpperCaseConverter,
+                            ConverterEnum.DateFormat.value: DateFormatConverter,
+                            ConverterEnum.Mask.value: MaskConverter,
+                            ConverterEnum.MiddleMask.value: MiddleMaskConverter,
+                            ConverterEnum.CutLength.value: CutLengthConverter,
+                            ConverterEnum.Substring.value: SubstringConverter,
+                            ConverterEnum.Append.value: AppendConverter,
+                            ConverterEnum.Hash.value: functools.partial(
+                                HashConverter, key=context.root.run_seed.key_for("hash-converter")
+                            ),
+                            ConverterEnum.JavaHash.value: JavaHashConverter,
+                            ConverterEnum.Timestamp2Date.value: Timestamp2DateConverter,
+                            ConverterEnum.Date2Timestamp.value: Date2TimestampConverter,
+                            ConverterEnum.RemoveNoneOrEmptyElement.value: RemoveNoneOrEmptyElementConverter,
+                        },
+                    ),
+                    converter_str.split(";"),
+                )
+            )
+        )
+
+    @staticmethod
+    def evaluate_variable_concat_prefix_suffix(context: Context, expr: str, prefix: str, suffix: str) -> str:
+        """
+        Evaluate expression data, replace dynamic variables have prefix and suffix with value
+        :param context:
+        :param expr:
+        :param prefix:
+        :param suffix:
+        :return:
+        """
+        from datamimic_ce.engine.runtime.scripting.evaluation import interpolate_variables
+
+        return interpolate_variables(context, expr, prefix, suffix)
+
+    @staticmethod
+    def export_product_by_page(
+        root_context: SetupContext,
+        stmt: GenerateStatement,
+        xml_result: dict[str, list[dict]],
+        exporter_state_manager: ExporterStateManager,
+    ) -> None:
+        """
+        Export single page of product in generate statement.
+
+        :param root_context: SetupContext instance.
+        :param stmt: GenerateStatement instance.
+        :param xml_result: Dictionary of product data.
+        :param exporter_state_manager: ExporterStateManager instance.
+        :return: None
+        """
+        # If product is in XML format, convert it to JSON
+        json_result = [TaskUtil.convert_xml_dict_to_json_dict(product) for product in xml_result[stmt.full_name]]
+
+        # Wrap product key and value into a tuple
+        # for iterate database may have key, value, and other statement attribute info
+        # Carry every routing hint that is set (not mutually exclusive): targetEntity/type name the
+        # write collection/table, selector carries the query. A Mongo upsert needs BOTH the collection
+        # (targetEntity) AND the filter (selector), so they must not shadow each other.
+        metadata: dict = {}
+        if stmt.target_entity:
+            metadata[META_TARGET_ENTITY] = stmt.target_entity
+        if stmt.selector:
+            metadata[META_SELECTOR] = stmt.selector
+        if stmt.type:
+            metadata[META_TYPE] = stmt.type
+        json_product = (stmt.name, json_result, metadata) if metadata else (stmt.name, json_result)
+
+        # Create a unique cache key incorporating task_id and statement details
+        exporters_cache_key = stmt.full_name
+
+        # Get cached exporters
+        exporters = root_context.task_exporters[exporters_cache_key]
+        exporters["page_count"] += 1
+
+        # A nested <generate> defers its page export to here (generate_worker skips it for
+        # GenIterContext): this statement's own rows and its children's are ordered relative to
+        # each other so neither direction of the FK constraint is violated:
+        # - insert/update/upsert (any operation but delete): own rows first, then children -
+        #   a child row's FK to the not-yet-existing parent would otherwise fail.
+        # - delete: children FIRST, then own rows - a child row's FK to this (still existing)
+        #   parent would otherwise block the parent's deletion.
+        # Each recursion level re-checks its OWN targets, so a cascade of nested deletes becomes
+        # deepest-first automatically. The operation itself comes from the same parsed
+        # (exporter, operation) pairs the engine already built via ExporterUtil.parse_function_string
+        # (see create_exporter_list) - not a re-parse of the raw target string.
+        own_targets_delete = any(operation is ExportOperation.DELETE for _, operation in exporters["with_operation"])
+
+        if own_targets_delete:
+            for sub_stmt in stmt.sub_statements:
+                TaskUtil._export_nested_products_by_page(root_context, sub_stmt, xml_result, exporter_state_manager)
+
+        # Use cached exporters
+        # Run exporters with operations first. Operations are ExportOperation members (parsed
+        # once at the target boundary); dispatch is explicit per member — no getattr on a string.
+        for exporter, operation in exporters["with_operation"]:
+            if not isinstance(exporter, DatabaseExporter | MongoDBExporter):
+                raise ValueError(f"Exporter does not support operation: {exporter}.{operation}")
+            if isinstance(exporter, MongoDBExporter) and operation is ExportOperation.UPSERT:
+                json_product = exporter.upsert(product=json_product)
+            elif operation is ExportOperation.UPDATE:
+                exporter.update(json_product)
+            elif operation is ExportOperation.UPSERT:
+                exporter.upsert(json_product)
+            elif operation is ExportOperation.DELETE:
+                exporter.delete(json_product)
+            else:  # unreachable while ExportOperation has exactly these members
+                raise ValueError(f"Exporter does not support operation: {exporter}.{operation}")
+
+        TaskUtil.exporter_without_operation(
+            json_product,
+            xml_result,
+            stmt,
+            exporters["without_operation"],
+            exporter_state_manager,
+        )
+
+        if not own_targets_delete:
+            for sub_stmt in stmt.sub_statements:
+                TaskUtil._export_nested_products_by_page(root_context, sub_stmt, xml_result, exporter_state_manager)
+
+    @staticmethod
+    def _export_nested_products_by_page(
+        root_context: SetupContext,
+        sub_stmt,
+        xml_result: dict,
+        exporter_state_manager: ExporterStateManager,
+    ) -> None:
+        """Export a nested generate's page products (own rows already handled by the caller, either
+        before or after this call - see export_product_by_page); walk through composite statements
+        (condition/if) so a generate inside them is not missed."""
+        from datamimic_ce.engine.dsl.api import CompositeStatement
+
+        if isinstance(sub_stmt, GenerateStatement):
+            if xml_result.get(sub_stmt.full_name):
+                TaskUtil.export_product_by_page(root_context, sub_stmt, xml_result, exporter_state_manager)
+        elif isinstance(sub_stmt, CompositeStatement):  # condition/if/else wrappers
+            for child in sub_stmt.sub_statements:
+                TaskUtil._export_nested_products_by_page(root_context, child, xml_result, exporter_state_manager)
+
+    @staticmethod
+    def exporter_without_operation(
+        json_product: tuple,
+        xml_result: dict,
+        stmt: GenerateStatement,
+        exporters_without_operation: list[Exporter],
+        exporter_state_manager: ExporterStateManager,
+    ):
+        # Run exporters without operations
+        for exporter in exporters_without_operation:
+            try:
+                # Skip lazy exporters
+                if isinstance(exporter, Memstore):
+                    continue
+                elif isinstance(exporter, XMLExporter):
+                    exporter.consume(
+                        (json_product[0], xml_result[stmt.full_name]), stmt.full_name, exporter_state_manager
+                    )
+                elif isinstance(exporter, UnifiedBufferedExporter):
+                    # every buffered exporter (JSON/CSV/TXT/XLSX/DbUnit/...) shares this consume
+                    # signature; dispatch on the base class so new ones work without editing this list.
+                    exporter.consume(json_product, stmt.full_name, exporter_state_manager)
+                elif isinstance(
+                    exporter,
+                    ConsoleExporter | DatabaseExporter | MongoDBExporter | LogExporter | TestResultExporter,
+                ):
+                    exporter.consume(json_product)
+                else:
+                    raise TypeError(f"Unsupported exporter type: {type(exporter).__name__}")
+            except Exception as e:
+                # import traceback
+                # traceback.print_exc()
+                logger.error(f"Error in exporter {type(exporter).__name__}: {str(e)}")
+                raise ValueError(f"Error in exporter {type(exporter).__name__}: {e}") from e
+
+    @staticmethod
+    def evaluate_selector_script(context: Context, stmt: GenerateStatement):
+        """
+        Evaluate script selector.
+
+        :param context: Context instance.
+        :param stmt: GenerateStatement instance.
+        :return: Evaluated selector.
+        """
+        selector = stmt.selector or ""
+        prefix = stmt.variable_prefix or context.root.default_variable_prefix
+        suffix = stmt.variable_suffix or context.root.default_variable_suffix
+        return TaskUtil.evaluate_variable_concat_prefix_suffix(context, selector, prefix=prefix, suffix=suffix)
+
+    @staticmethod
+    def convert_xml_dict_to_json_dict(xml_dict: dict):
+        """
+        Convert XML dict with #text and @attribute to pure JSON dict.
+
+        :param xml_dict: XML dictionary.
+        :return: JSON dictionary.
+        """
+        if "#text" in xml_dict:
+            return xml_dict["#text"]
+        res = {}
+        for key, value in xml_dict.items():
+            if not key.startswith("@"):
+                if isinstance(value, dict):
+                    res[key] = TaskUtil.convert_xml_dict_to_json_dict(value)
+                elif isinstance(value, list):
+                    res[key] = [TaskUtil.convert_xml_dict_to_json_dict(v) if isinstance(v, dict) else v for v in value]
+                else:
+                    res[key] = value
+        return res
+
+    @staticmethod
+    def generate_random_value_based_on_type(
+        data_type: str | None,
+        *,
+        rng: RandomSource,
+    ) -> str | int | bool | float | Decimal | bytes:
+        # ``rng`` is required: callers inject the GenIterContext's rng so
+        # seeded runs propagate fully.
+        if data_type == DATA_TYPE_STRING:
+            min_len = 0
+            max_len = 20
+            return "".join(rng.choice(string.ascii_letters) for _ in range(rng.randint(min_len, max_len)))
+        elif data_type == DATA_TYPE_INT:
+            return rng.randint(0, 100)
+        elif data_type == DATA_TYPE_FLOAT:
+            return rng.uniform(0, 100)
+        elif data_type == DATA_TYPE_DECIMAL:
+            # fixed 2dp default for bare type="decimal"; use a DecimalGenerator for other scales
+            return Decimal(str(round(rng.uniform(0, 100), 2)))
+        elif data_type == DATA_TYPE_BOOL:
+            return rng.choice((True, False))
+        elif data_type == DATA_TYPE_BINARY:
+            return rng.randbytes(rng.randint(1, 16))  # same default range as BinaryGenerator
+        else:
+            raise ValueError(f"Cannot generate random value for data type {data_type}")

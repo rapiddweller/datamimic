@@ -19,7 +19,7 @@ The allow-list captures intentional exceptions:
 * ``clock.py`` — the SPOT itself.
 * ``datetime_generator.py`` — has a documented "current datetime" mode
   where the *output* is meant to be the live wall-clock.
-* ``utils/logging_util.py`` and ``data_mimic_test.py`` — telemetry
+* ``engine/runtime/logging.py`` and ``data_mimic_test.py`` — telemetry
   timestamps; not part of generator output.
 
 Adding a new wall-clock callsite means either (a) routing it through
@@ -43,9 +43,9 @@ ALLOWLIST: set[str] = {
     # SPOT itself: now_utc_naive() lives here.
     "datamimic_ce/domains/domain_core/runtime/clock.py",
     # Intentional "current datetime" output mode in datetime_generator.
-    "datamimic_ce/domains/common/literal_generators/datetime_generator.py",
+    "datamimic_ce/domains/shared/literal_generators/datetime_generator.py",
     # Telemetry / timing, not part of generator output.
-    "datamimic_ce/utils/logging_util.py",
+    "datamimic_ce/engine/runtime/logging.py",
     "datamimic_ce/data_mimic_test.py",
 }
 

@@ -1,7 +1,7 @@
 from __future__ import annotations
 
-from datamimic_ce.domains.determinism import canonical_json
 from datamimic_ce.domains.facade import generate_domain
+from datamimic_ce.domains.shared.determinism import canonical_json
 
 
 def test_determinism_address_zero_count() -> None:

@@ -11,13 +11,12 @@ This module defines the transaction model for the finance domain.
 """
 
 import datetime
-from typing import Any
 
-from datamimic_ce.domains.common.literal_generators.string_generator import StringGenerator
 from datamimic_ce.domains.domain_core import BaseEntity
 from datamimic_ce.domains.domain_core.property_cache import property_cache
 from datamimic_ce.domains.finance.generators.transaction_generator import TransactionGenerator
 from datamimic_ce.domains.finance.models.bank_account import BankAccount
+from datamimic_ce.domains.shared.literal_generators.string_generator import StringGenerator
 
 
 class Transaction(BaseEntity):
@@ -48,7 +47,8 @@ class Transaction(BaseEntity):
         Returns:
             A unique identifier for the transaction.
         """
-        return StringGenerator.rnd_str_from_regex("[A-Z0-9]{16}", rng=self._transaction_generator.rng)
+        candidate = StringGenerator.rnd_str_from_regex("[A-Z0-9]{16}", rng=self._transaction_generator.rng)
+        return self._claim_identifier("transaction_id", candidate)
 
     @property
     @property_cache
@@ -203,7 +203,7 @@ class Transaction(BaseEntity):
         """
         return self._transaction_data["direction"]
 
-    def to_dict(self) -> dict[str, Any]:
+    def to_dict(self) -> dict[str, object]:
         """Convert transaction to a dictionary.
 
         Returns:

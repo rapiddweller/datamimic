@@ -12,12 +12,11 @@ realistic public administration office data.
 """
 
 from pathlib import Path
-from typing import Any
 
-from datamimic_ce.domains.common.models.address import Address
 from datamimic_ce.domains.domain_core import BaseEntity
 from datamimic_ce.domains.domain_core.property_cache import property_cache
 from datamimic_ce.domains.public_sector.generators.administration_office_generator import AdministrationOfficeGenerator
+from datamimic_ce.domains.shared.models.address import Address
 
 
 class AdministrationOffice(BaseEntity):
@@ -52,7 +51,7 @@ class AdministrationOffice(BaseEntity):
         """
         rng = self._administration_office_generator.rng
         suffix = "".join(rng.choice("0123456789ABCDEF") for _ in range(8))
-        return f"ADM-{suffix}"
+        return self._claim_identifier("office_id", f"ADM-{suffix}")
 
     @property
     @property_cache
@@ -380,7 +379,7 @@ class AdministrationOffice(BaseEntity):
         """
         return self._administration_office_generator.build_leadership(start=Path(__file__))
 
-    def to_dict(self) -> dict[str, Any]:
+    def to_dict(self) -> dict[str, object]:
         """Convert the administration office entity to a dictionary.
 
         Returns:

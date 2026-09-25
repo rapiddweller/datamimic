@@ -12,7 +12,7 @@ import json
 from datetime import date, datetime
 from decimal import Decimal
 
-from datamimic_ce.exporters.json_exporter import DateTimeEncoder
+from datamimic_ce.engine.io.exporters.json_exporter import DateTimeEncoder
 
 
 def test_encoder_handles_engine_value_types() -> None:

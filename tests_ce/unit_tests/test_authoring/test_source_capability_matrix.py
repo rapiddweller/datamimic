@@ -5,23 +5,21 @@
 
 """Runtime and authoring must project one contextual source-capability catalog."""
 
-import inspect
-
 import pytest
 
+from datamimic_ce.authoring.adapters.dryrun import dry_run_source
+from datamimic_ce.authoring.adapters.linter import lint_source
 from datamimic_ce.authoring.contracts import AuthoringStage
-from datamimic_ce.authoring.dryrun import dry_run_source
-from datamimic_ce.authoring.linter import lint_source
-from datamimic_ce.authoring.reference import capabilities_manifest, distributions_reference
-from datamimic_ce.model.constraints import (
+from datamimic_ce.authoring.projection.reference import capabilities_manifest, distributions_reference
+from datamimic_ce.engine.dsl.model.constraints import (
     SourceFileFormat,
     serialize_source_capability,
     source_capabilities,
     source_file_format_for,
 )
-from datamimic_ce.tasks.element_task import ElementTask
-from datamimic_ce.tasks.key_variable_task import KeyVariableTask
-from datamimic_ce.tasks.task import Task
+from datamimic_ce.engine.runtime.tasks.element_task import ElementTask
+from datamimic_ce.engine.runtime.tasks.key_variable_task import KeyVariableTask
+from datamimic_ce.engine.runtime.tasks.task import Task
 
 
 @pytest.mark.parametrize(
@@ -106,37 +104,6 @@ def test_source_capabilities_project_identically_to_manifest_and_reference() -> 
         assert f"<{capability.element}>" in prose
         for file_format in capability.file_formats:
             assert file_format.value in prose
-
-
-def test_datasource_registry_is_the_runtime_source_boundary() -> None:
-    from datamimic_ce.data_sources import data_source_registry
-    from datamimic_ce.tasks import nested_key_task, reference_task, task_util, variable_task
-
-    registry_source = inspect.getsource(data_source_registry)
-    assert "source_file_format_for" in registry_source
-    for routing_api in (
-        "load_generate_source",
-        "plan_variable_source",
-        "load_nested_key_source",
-        "load_reference_source",
-    ):
-        assert routing_api in registry_source
-
-    forbidden_task_details = (
-        "source_file_format_for",
-        "SourceFileFormat",
-        "FileUtil",
-        "RdbmsClient",
-        "MongoDBClient",
-        "SourceDistribution",
-        "get_distributed_data",
-        "get_unique_data",
-        "get_cyclic_data_list",
-    )
-    for module in (nested_key_task, reference_task, task_util, variable_task):
-        task_source = inspect.getsource(module)
-        for detail in forbidden_task_details:
-            assert detail not in task_source, f"{module.__name__} leaks datasource detail {detail}"
 
 
 def test_every_declared_file_capability_resolves_in_its_own_context() -> None:

@@ -1,4 +1,4 @@
-from datamimic_ce.utils import process_util
+from datamimic_ce.engine.runtime import process as process_util
 
 
 def test_set_main_process_title_uses_compact_runtime_context(monkeypatch) -> None:

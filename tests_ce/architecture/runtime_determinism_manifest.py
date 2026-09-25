@@ -31,10 +31,11 @@ class RuntimeDeterminismManifest(TypedDict):
 
 
 def build_actual_manifest() -> RuntimeDeterminismManifest:
-    from datamimic_ce.domains.determinism import canonical_json, hash_bytes
-    from datamimic_ce.domains.domain_core.entity_registry import list_entity_specs
-    from datamimic_ce.domains.domain_core.generator_registry import generator_namespace
+    from datamimic_ce.domains.api import iter_generator_capabilities as domain_generator_capabilities
+    from datamimic_ce.domains.entity_registry import list_entity_specs
     from datamimic_ce.domains.facade import REGISTRY, generate_domain
+    from datamimic_ce.domains.shared.determinism import canonical_json, hash_bytes
+    from datamimic_ce.engine.runtime.api import iter_generator_capabilities as runtime_generator_capabilities
     from tests_ce.integration_tests.test_determinism_seed_scenarios.test_determinism_seed_scenarios import (
         seeded_model_hash,
     )
@@ -67,6 +68,7 @@ def build_actual_manifest() -> RuntimeDeterminismManifest:
         for key in literal_root.findall("generate[@name='literal']/key")
         if (value := key.get("generator")) is not None
     }
+    generator_capabilities = (*domain_generator_capabilities(), *runtime_generator_capabilities())
     script_paths = literal_root.findall("generate[@name='script']/key")
     dynamic_families = sorted(
         {
@@ -79,7 +81,7 @@ def build_actual_manifest() -> RuntimeDeterminismManifest:
         "Facade API": f"{len(hashes)}/{len(EXPECTED_FACADE_CONTENT_HASHES)}",
         "Entities": f"{len(entity_root.findall('generate'))}/{len(list_entity_specs())} (selected attributes)",
         "Literal generators": (
-            f"{len(literal_generators)}/{len(generator_namespace())} "
+            f"{len(literal_generators)}/{len(generator_capabilities)} "
             "(SequenceTableGenerator covered by external-service DSL tests; excluded from this byte hash: DB state)"
         ),
         "Dynamic seeded Safe Globals": f"{len(script_paths)} representative paths ({', '.join(dynamic_families)})",

@@ -14,7 +14,7 @@ from pathlib import Path
 import pytest
 
 from datamimic_ce.data_mimic_test import DataMimicTest
-from datamimic_ce.domains.common.generators.region_groups import REGION_GROUPS
+from datamimic_ce.domains.shared.generators.region_groups import REGION_GROUPS
 
 _dir = Path(__file__).resolve().parent
 
@@ -55,7 +55,7 @@ def test_europe_is_deterministic_under_a_seed():
 def test_every_group_code_has_city_and_street_data():
     """Gate: a group member without data files fails only when the seeded draw happens to pick
     it - a flaky runtime crash. Every code in every group must have its city/street CSVs."""
-    data_dir = Path(__file__).resolve().parents[3] / "datamimic_ce" / "domains" / "domain_data" / "common"
+    data_dir = Path(__file__).resolve().parents[3] / "datamimic_ce" / "domains" / "shared" / "domain_data" / "common"
     for kind in ("city", "street"):
         have = {p.stem.split("_")[-1] for p in (data_dir / kind).glob(f"{kind}_*.csv")}
         for group, codes in REGION_GROUPS.items():

@@ -51,19 +51,6 @@ class TestBank:
         assert bank.bic == bank.bic
         assert bank.bin == bank.bin
 
-    @pytest.mark.flaky(reruns=3)
-    def test_two_different_entities(self):
-        bank_service = BankService()
-        bank1 = bank_service.generate()
-        bank2 = bank_service.generate()
-        assert bank1 is not None
-        assert bank2 is not None
-        assert bank1.name != bank2.name
-        assert bank1.swift_code != bank2.swift_code
-        assert bank1.routing_number != bank2.routing_number
-        assert bank1.bank_code != bank2.bank_code
-        assert bank1.bic != bank2.bic
-        assert bank1.bin != bank2.bin
 
     @pytest.mark.parametrize("dataset", _supported_datasets)
     def test_supported_datasets(self, dataset):

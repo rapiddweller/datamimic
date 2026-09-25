@@ -9,9 +9,9 @@ import pytest
 from pydantic import BaseModel, ValidationError
 from pydantic.networks import EmailStr
 
-from datamimic_ce.domains.common.literal_generators.email_address_generator import EmailAddressGenerator
-from datamimic_ce.domains.common.literal_generators.family_name_generator import FamilyNameGenerator
-from datamimic_ce.domains.common.literal_generators.given_name_generator import GivenNameGenerator
+from datamimic_ce.domains.shared.literal_generators.email_address_generator import EmailAddressGenerator
+from datamimic_ce.domains.shared.literal_generators.family_name_generator import FamilyNameGenerator
+from datamimic_ce.domains.shared.literal_generators.given_name_generator import GivenNameGenerator
 
 
 class EmailModel(BaseModel):

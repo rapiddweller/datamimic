@@ -8,8 +8,8 @@
 import random
 from pathlib import Path
 
-from datamimic_ce.data_sources.data_source_pagination import DataSourcePagination
-from datamimic_ce.data_sources.data_source_registry import DataSourceRegistry
+from datamimic_ce.engine.io.api import DataSourcePagination
+from datamimic_ce.engine.runtime.sources.selection import get_shuffled_data_with_cyclic
 
 
 class TestDataSourceUtil:
@@ -33,13 +33,10 @@ class TestDataSourceUtil:
         cyclic = False
         seed = random.randint(0, 100)
         print()
-        assert (
-            len(DataSourceRegistry.get_shuffled_data_with_cyclic(source_data, pagination_list[0], cyclic, seed))
-            == page_step
-        )
+        assert len(get_shuffled_data_with_cyclic(source_data, pagination_list[0], cyclic, seed)) == page_step
         checking_list = []
         for pagination in pagination_list:
-            shuffled_list = DataSourceRegistry.get_shuffled_data_with_cyclic(source_data, pagination, cyclic, seed)
+            shuffled_list = get_shuffled_data_with_cyclic(source_data, pagination, cyclic, seed)
             checking_list.extend(shuffled_list)
         assert len(set(checking_list)) == page_len
         assert len(checking_list) == page_len
@@ -62,13 +59,10 @@ class TestDataSourceUtil:
         cyclic = False
         seed = random.randint(0, 100)
         print()
-        assert (
-            len(DataSourceRegistry.get_shuffled_data_with_cyclic(source_data, pagination_list[0], cyclic, seed))
-            == page_step
-        )
+        assert len(get_shuffled_data_with_cyclic(source_data, pagination_list[0], cyclic, seed)) == page_step
         checking_list = []
         for pagination in pagination_list:
-            shuffled_list = DataSourceRegistry.get_shuffled_data_with_cyclic(source_data, pagination, cyclic, seed)
+            shuffled_list = get_shuffled_data_with_cyclic(source_data, pagination, cyclic, seed)
             checking_list.extend(shuffled_list)
         assert len(set(checking_list)) == source_len - page_start
         assert len(checking_list) == source_len - page_start
@@ -91,13 +85,10 @@ class TestDataSourceUtil:
         cyclic = True
         seed = random.randint(0, 100)
         print()
-        assert (
-            len(DataSourceRegistry.get_shuffled_data_with_cyclic(source_data, pagination_list[0], cyclic, seed))
-            == page_step
-        )
+        assert len(get_shuffled_data_with_cyclic(source_data, pagination_list[0], cyclic, seed)) == page_step
         checking_list = []
         for pagination in pagination_list:
-            shuffled_list = DataSourceRegistry.get_shuffled_data_with_cyclic(source_data, pagination, cyclic, seed)
+            shuffled_list = get_shuffled_data_with_cyclic(source_data, pagination, cyclic, seed)
             checking_list.extend(shuffled_list)
         assert len(set(checking_list)) == page_len
         assert len(checking_list) == page_len
@@ -120,13 +111,10 @@ class TestDataSourceUtil:
         cyclic = True
         seed = random.randint(0, 100)
         print()
-        assert (
-            len(DataSourceRegistry.get_shuffled_data_with_cyclic(source_data, pagination_list[0], cyclic, seed))
-            == page_step
-        )
+        assert len(get_shuffled_data_with_cyclic(source_data, pagination_list[0], cyclic, seed)) == page_step
         checking_list = []
         for pagination in pagination_list:
-            shuffled_list = DataSourceRegistry.get_shuffled_data_with_cyclic(source_data, pagination, cyclic, seed)
+            shuffled_list = get_shuffled_data_with_cyclic(source_data, pagination, cyclic, seed)
             checking_list.extend(shuffled_list)
         assert len(set(checking_list)) == source_len
         assert len(checking_list) == page_len
@@ -149,13 +137,10 @@ class TestDataSourceUtil:
         cyclic = True
         seed = random.randint(0, 100)
         print()
-        assert (
-            len(DataSourceRegistry.get_shuffled_data_with_cyclic(source_data, pagination_list[0], cyclic, seed))
-            == page_step
-        )
+        assert len(get_shuffled_data_with_cyclic(source_data, pagination_list[0], cyclic, seed)) == page_step
         checking_list = []
         for pagination in pagination_list:
-            shuffled_list = DataSourceRegistry.get_shuffled_data_with_cyclic(source_data, pagination, cyclic, seed)
+            shuffled_list = get_shuffled_data_with_cyclic(source_data, pagination, cyclic, seed)
             checking_list.extend(shuffled_list)
         assert len(set(checking_list)) == source_len
         assert len(checking_list) == page_len

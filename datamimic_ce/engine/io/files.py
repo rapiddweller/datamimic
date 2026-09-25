@@ -1,0 +1,440 @@
+# DATAMIMIC
+# Copyright (c) 2023-2025 Rapiddweller Asia Co., Ltd.
+# This software is licensed under the MIT License.
+# See LICENSE file for the full text of the license.
+# For questions and support, contact: info@rapiddweller.com
+
+import csv
+import json
+import zipfile
+from pathlib import Path
+from typing import TypeAlias, TypeGuard
+
+import numpy as np
+import pandas as pd
+from lxml import etree
+from pandas import DataFrame
+
+from datamimic_ce.engine.dsl.api import DTDForbiddenError, parse_xml_file
+
+from .file_cache import FileContentStorage
+
+JsonScalar: TypeAlias = bool | int | float | str | None
+JsonValue: TypeAlias = JsonScalar | list["JsonValue"] | dict[str, "JsonValue"]
+
+
+def _is_csv_rows(value: object) -> TypeGuard[list[tuple[str, ...]]]:
+    return isinstance(value, list) and all(
+        isinstance(row, tuple) and all(isinstance(cell, str) for cell in row) for row in value
+    )
+
+
+def _is_string_lines(value: object) -> TypeGuard[list[str]]:
+    return isinstance(value, list) and all(isinstance(line, str) for line in value)
+
+
+def _is_json_value(value: object) -> TypeGuard[JsonValue]:
+    if value is None or isinstance(value, str | int | float | bool):
+        return True
+    if isinstance(value, list):
+        return all(_is_json_value(item) for item in value)
+    if isinstance(value, dict):
+        return all(isinstance(key, str) and _is_json_value(value[key]) for key in value)
+    return False
+
+
+def _is_json_object(value: JsonValue) -> TypeGuard[dict[str, JsonValue]]:
+    return isinstance(value, dict)
+
+
+def _is_json_records(value: JsonValue) -> TypeGuard[list[dict[str, JsonValue]]]:
+    return isinstance(value, list) and all(_is_json_object(row) for row in value)
+
+
+class FileUtil:
+    @staticmethod
+    def read_dbunit_to_dict_list(path: Path, table: str) -> list[dict[str, str | None]]:
+        """Read one table from a dbunit flat-XML dataset.
+
+        Flat XML: every child of <dataset> is a row, the element name is the table, its attributes are
+        the columns. A dataset holds many tables, so `table` selects one. Rows of one table may carry
+        different columns ("ragged") - an absent attribute is a NULL, a present empty string is "". The
+        result unifies the columns across the table (column sensing, like DbUnit >= 2.3): every row
+        carries every column, an absent one filled with None. This gives faithful table semantics (a
+        NULL cell, not a missing key) and lets a batch RDBMS insert see a uniform column set.
+
+        Security: predefined XML character entities are decoded, while DTD declarations and
+        custom entities are rejected by the shared runtime XML parser. External DTD references are
+        retained for DbUnit compatibility but are never loaded or fetched.
+        """
+        try:
+            root = parse_xml_file(path)
+        except (DTDForbiddenError, etree.XMLSyntaxError) as e:
+            raise ValueError(f"dbunit dataset '{path}' is not well-formed XML: {e}") from e
+        # dbunit's root is <dataset>; anything else is not a dataset
+        if root.tag != "dataset":
+            raise ValueError(f"dbunit dataset '{path}' must have a <dataset> root, got {root.tag!r}")
+        raw = [child.attrib for child in root if child.tag == table]
+        if not raw:
+            available = sorted({child.tag for child in root})
+            raise ValueError(f"dbunit dataset '{path}' has no rows for table '{table}'; available: {available}")
+        # column sensing: union of columns in first-appearance order, absent -> None
+        columns: dict[str, None] = {}
+        for attrib in raw:
+            columns.update(dict.fromkeys(attrib))
+        return [{col: attrib.get(col) for col in columns} for attrib in raw]
+
+    @staticmethod
+    def parse_properties(path: Path, encoding="utf-8") -> dict[str, str]:
+        """
+        Parse properties from file then save into a dict
+        :param path:
+        :param encoding:
+        :return:
+        """
+
+        from datamimic_ce.engine.dsl.api import parse_properties
+
+        return parse_properties(path, encoding)
+
+    @staticmethod
+    def _read_raw_csv(file_path: Path, separator: str, encoding="utf-8") -> list[tuple]:
+        """
+        Read raw csv data
+        """
+        try:
+            rows = FileContentStorage.load_file_with_custom_func(
+                str(file_path),
+                lambda: [
+                    tuple(row)
+                    for row in csv.reader(file_path.open("r", newline="", encoding=encoding), delimiter=separator)
+                ],
+            )
+            if not _is_csv_rows(rows):
+                raise ValueError(f"Cached CSV data at '{file_path}' has an invalid shape")
+            return rows
+        except FileNotFoundError as e:
+            raise FileNotFoundError(f"CSV file not found '{file_path}', error: {e}") from e
+
+    @staticmethod
+    def read_csv_to_dict_list(file_path: Path, separator: str, encoding="utf-8") -> list[dict]:
+        """
+        Read data from csv and parse into list of dict
+        """
+        raw_data = FileUtil._read_raw_csv(file_path, separator, encoding)
+        if not raw_data:
+            return []  # an empty CSV is an empty source, not a crash
+        # Column names never carry meaningful surrounding whitespace; a padded/aligned CSV
+        # (e.g. migrated legacy entity CSVs: "ean_code     ,name    ,...") would otherwise produce
+        # keys like "name    " that a script's field access ("this.name") cannot resolve.
+        header = [col.strip() if isinstance(col, str) else col for col in raw_data[0]]
+        processed_data = [dict(zip(header, row, strict=False)) for row in raw_data[1:]]
+        return processed_data
+
+    @staticmethod
+    def read_xlsx_to_dict_list(file_path: Path, sheet_name: str | None = None) -> list[dict]:
+        """Read the first row of an .xlsx sheet as the header and each following row as a dict.
+
+        Robust to real-world sheets: an empty sheet/file yields []; blank header cells are not turned
+        into ``None``-keyed columns; a row shorter than the header pads missing cells with ``None`` and
+        cells past the last header column are ignored. A file that is not a valid .xlsx raises a clear
+        ValueError rather than a bare BadZipFile.
+        """
+        from openpyxl import load_workbook
+        from openpyxl.utils.exceptions import InvalidFileException
+
+        try:
+            workbook = load_workbook(file_path, read_only=True, data_only=True)
+        except (InvalidFileException, zipfile.BadZipFile, KeyError) as e:
+            raise ValueError(f"Invalid XLSX file '{file_path}': {e}") from e
+
+        try:
+            sheet = workbook[sheet_name] if sheet_name else workbook.active
+        except KeyError as e:
+            raise ValueError(f"XLSX file '{file_path}' has no sheet named '{sheet_name}'") from e
+        if sheet is None:
+            return []  # no sheet -> empty source
+
+        rows = sheet.iter_rows(values_only=True)
+        header = next(rows, None)
+        if header is None:
+            return []  # empty sheet is an empty source, not a crash
+        # Real columns = non-blank header cells, keyed by their column position (skip blank headers so
+        # openpyxl's rectangular row padding never produces a None-keyed column).
+        columns = [(idx, str(name)) for idx, name in enumerate(header) if name is not None]
+        return [{name: (row[idx] if idx < len(row) else None) for idx, name in columns} for row in rows]
+
+    @staticmethod
+    def _parses_as_float(value: str) -> bool:
+        try:
+            float(value)
+            return True
+        except (TypeError, ValueError):
+            return False
+
+    @staticmethod
+    def parse_fixed_width_spec(spec: str) -> list[tuple[str, int, bool, str]]:
+        """Parse a fixed-width column spec (legacy-DSL grammar): ``name[width]`` (left-aligned,
+        space-padded) or ``name[width r pad]`` (right-aligned, e.g. ``price[8r0]`` = width 8,
+        zero-padded). Returns ``(name, width, right_aligned, pad_char)`` per column, in order.
+        """
+        import re
+
+        fields = []
+        for token in spec.split(","):
+            token = token.strip()
+            match = re.fullmatch(r"(\w+)\[(\d+)(r)?(.)?\]", token)
+            if not match:
+                raise ValueError(f"Invalid fixed-width column spec token: '{token}' in '{spec}'")
+            name, width, right_flag, pad = match.groups()
+            right_aligned = right_flag is not None
+            pad_char = pad if pad is not None else ("0" if right_aligned else " ")
+            fields.append((name, int(width), right_aligned, pad_char))
+        return fields
+
+    @staticmethod
+    def read_fixed_width_to_dict_list(
+        file_path: Path, spec: str | None = None, encoding: str = "utf-8"
+    ) -> list[dict[str, str]]:
+        """Read a fixed-width-column file into a list of dicts.
+
+        Self-describing by default (``spec=None``): the file's first line must be
+        ``# name[13],name2[30],...`` (the column spec as a comment) so the reader needs only the
+        path - the same convention ``FixedWidthExporter`` writes. Pass ``spec`` explicitly to read
+        a file that doesn't carry that header line.
+        """
+        lines = FileContentStorage.load_file_with_custom_func(
+            str(file_path), lambda: file_path.read_text(encoding=encoding).splitlines()
+        )
+        if not _is_string_lines(lines):
+            raise ValueError(f"Cached fixed-width data at '{file_path}' has an invalid shape")
+        if not lines:
+            return []  # an empty file is an empty source, not a crash
+
+        if spec is not None:
+            fields = FileUtil.parse_fixed_width_spec(spec)
+            data_lines = lines
+        else:
+            header = lines[0]
+            if not header.startswith("#"):
+                raise ValueError(
+                    f"Fixed-width file '{file_path}' has no '# name[width],...' spec header on its "
+                    f"first line - pass spec= explicitly to read a file without one"
+                )
+            fields = FileUtil.parse_fixed_width_spec(header[1:])
+            data_lines = lines[1:]
+
+        result: list[dict[str, str]] = []
+        for line in data_lines:
+            row: dict[str, str] = {}
+            offset = 0
+            for name, width, right_aligned, pad_char in fields:
+                raw = line[offset : offset + width]
+                row[name] = raw.lstrip(pad_char) if right_aligned else raw.strip()
+                offset += width
+            result.append(row)
+        return result
+
+    @staticmethod
+    def read_weight_csv(file_path: Path, separator: str = ",", encoding="utf-8") -> DataFrame:
+        """
+        Read a 2-column value|weight csv, header optional. Auto-detected: if the first row's
+        weight column doesn't parse as a number, it's a header row and gets skipped.
+        """
+        # Load file content from cache or file
+        raw_data = FileUtil._read_raw_csv(file_path, separator, encoding)
+
+        if raw_data and len(raw_data[0]) > 1 and not FileUtil._parses_as_float(raw_data[0][1]):
+            raw_data = raw_data[1:]
+
+        # Convert data to DataFrame, select only 2 columns (data and weight)
+        df = pd.DataFrame(raw_data, columns=[0, 1])
+        # Convert column 1 to float and replace NaN with 1
+        df[1] = df[1].astype(float).fillna(1)
+        # Replace NaN df in the first column with None to avoid nan
+        df[0] = df[0].replace(to_replace=np.nan, value=None)
+        # Calculate probability using count stat
+        df[1] = df[1] / df[1].sum()
+
+        return df
+
+    @staticmethod
+    def read_json(file_path: Path, encoding="utf-8") -> JsonValue:
+        """
+        Read data from JSON
+        """
+        try:
+            data = FileContentStorage.load_file_with_custom_func(
+                str(file_path), lambda: json.load(file_path.open(mode="r", encoding=encoding))
+            )
+            if not _is_json_value(data):
+                raise ValueError(f"JSON file '{file_path}' contains a value outside the JSON data model")
+            return data
+        except FileNotFoundError as e:
+            raise FileNotFoundError(f"JSON file not found '{file_path}', error: {e}") from e
+
+    @staticmethod
+    def read_json_to_list(file_path: Path, encoding="utf-8") -> list[JsonValue]:
+        """
+        Read data from JSON and parse into list of dict
+        """
+        json_data = FileUtil.read_json(file_path, encoding)
+        if isinstance(json_data, list):
+            return json_data
+        else:
+            raise ValueError(f"JSON file '{file_path}' must contain a list of objects")
+
+    @staticmethod
+    def read_json_to_dict(file_path: Path, encoding="utf-8") -> dict[str, JsonValue]:
+        """
+        Read data from JSON and parse into dict
+        """
+        json_data = FileUtil.read_json(file_path, encoding)
+        if _is_json_object(json_data):
+            return json_data
+        else:
+            raise ValueError(f"JSON file '{file_path}' must contain a dictionary")
+
+    @staticmethod
+    def read_csv_to_dict_of_tuples_with_header(
+        file_path: Path, delimiter: str = ",", encoding="utf-8"
+    ) -> tuple[dict, list[tuple]]:
+        """
+        Read CSV to header dict and data list
+        :param delimiter: delimiter used in the CSV file
+        :param file_path: path to the CSV file
+        :param encoding: encoding of the CSV file
+        :return: a tuple containing a dictionary of headers and a list of tuples with string datas
+        """
+        # Load raw data
+        raw_data = FileUtil._read_raw_csv(file_path, delimiter, encoding)
+        header = raw_data[0]
+        data_rows = raw_data[1:]
+
+        # Create header dict
+        header_dict = {}
+        for idx, column in enumerate(header):
+            modified_column = column.replace("\ufeff", "")
+            header_dict[modified_column] = idx
+
+        # Return header dict and data rows
+        return header_dict, data_rows
+
+    @staticmethod
+    def read_csv_to_list_of_tuples_without_header(
+        file_path: Path, delimiter: str = ",", encoding="utf-8"
+    ) -> list[tuple]:
+        """
+        Read CSV without header to data list
+        :param file_path: path to the CSV file
+        :param delimiter: delimiter used in the CSV file
+        :param encoding: encoding of the CSV file
+        :return: a list of tuples containing the string data
+        """
+        return FileUtil._read_raw_csv(file_path, delimiter, encoding)
+
+    @staticmethod
+    def read_wgt_file(file_path: Path, delimiter: str = ",", encoding="utf-8") -> tuple[list, list]:
+        """
+        Read wgt file having no header and 2 columns (wgt is 2nd column)
+        :param file_path:
+        :param delimiter:
+        :param encoding: encoding of the CSV file
+        :return: Tuple contain list of values and list of weights
+        """
+        values = []
+        weights = []
+
+        # Load raw data
+        raw_data = FileUtil._read_raw_csv(file_path, delimiter, encoding)
+
+        # Process data
+        for row in raw_data:
+            #  tolerate text values containing delimiters; use last column as weight
+            if len(row) >= 2:
+                try:
+                    weights.append(float(row[-1]))
+                except (TypeError, ValueError):
+                    # Treat non-numeric weight as 1.0
+                    weights.append(1.0)
+                # Reconstruct value by joining all but the last column
+                values.append((",".join(row[:-1])).strip())
+            elif len(row) == 1:
+                # Assume weight as 1 if missing
+                weights.append(1.0)
+                values.append(row[0])
+            else:
+                # Skip empty rows
+                continue
+
+        # Normalize weights
+        weights_sum = sum(weights)
+        weights = [weight / weights_sum for weight in weights]
+
+        return values, weights
+
+    @staticmethod
+    def read_csv_having_weight_column(filepath: Path, weight_column_name: str, delimiter: str = ",", encoding="utf-8"):
+        """
+        Read CSV file having one weight column
+        :param filepath:
+        :param weight_column_name:
+        :param delimiter:
+        :param encoding:
+        :return:
+        """
+        weights = []  # List to store weights
+        data_without_weights = []  # List to store dictionaries of data without the specified weight column
+
+        # Load raw data
+        list_of_dict_data = FileUtil.read_csv_to_dict_list(filepath, delimiter, encoding)
+
+        # Process data
+        for row in list_of_dict_data:
+            # Extract and remove the specified weight column from the row
+            weight = row.pop(weight_column_name, None)
+            if weight is not None:
+                # Convert weight to the appropriate type (float, int) if necessary
+                weights.append(float(weight))
+                # Add the modified row (now without the weight) to the data_without_weights list
+                data_without_weights.append(row)
+
+        # Return the tuple of weights list and data_without_weights list
+        return (weights, data_without_weights)
+
+    @staticmethod
+    def read_mutil_column_wgt_file(
+        file_path: Path,
+        weight_col_index: int = 1,
+        delimiter: str = ",",
+        encoding="utf-8",
+    ) -> tuple[list, list]:
+        """
+        Read wgt file having no header and mutil columns,
+        if weight column missing or wrong index then weight value will be 1.0
+        :param file_path:
+        :param weight_col_index: index of weight column (default = 1)
+        :param delimiter:
+        :param encoding:
+        :return: Tuple contain list of values and list of weights
+        """
+        weights = []  # List to store weights
+        values = []  # List to store data
+
+        # Load raw data
+        raw_data = FileUtil._read_raw_csv(file_path, delimiter, encoding)
+
+        for row in raw_data:
+            # Skip the empty row
+            if not row:
+                continue
+            # default weight 1.0 when weight column is missing or wrong index
+            if weight_col_index < 0 or weight_col_index >= len(row):
+                weights.append(1.0)
+            else:
+                weight = row[weight_col_index]
+                weights.append(float(weight) if weight else 1.0)
+
+            values.append(row)
+        # Return the tuple of values list and weights list
+        return values, weights

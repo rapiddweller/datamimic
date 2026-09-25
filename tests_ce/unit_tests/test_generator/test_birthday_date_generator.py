@@ -9,7 +9,7 @@ from datetime import datetime
 
 import pytest
 
-from datamimic_ce.domains.common.literal_generators.birthdate_generator import BirthdateGenerator
+from datamimic_ce.domains.shared.literal_generators.birthdate_generator import BirthdateGenerator
 
 
 class TestBirthGenerator:

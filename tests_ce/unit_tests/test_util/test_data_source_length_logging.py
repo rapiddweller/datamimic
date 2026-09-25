@@ -13,11 +13,13 @@ the operational logger globally — a merge review caught exactly that regressio
 import logging
 from unittest.mock import Mock
 
+import pytest
 from sqlalchemy.exc import OperationalError, ProgrammingError
 
-from datamimic_ce.clients.rdbms_client import RdbmsClient
-from datamimic_ce.data_sources.data_source_registry import DataSourceRegistry
-from datamimic_ce.statements.variable_statement import VariableStatement
+from datamimic_ce.engine.dsl.statements.variable_statement import VariableStatement
+from datamimic_ce.engine.io.clients.rdbms_client import RdbmsClient
+from datamimic_ce.engine.io.data_sources.data_source_registry import DataSourceRegistry
+from datamimic_ce.engine.runtime.sources.router import set_data_source_length
 
 
 def _ctx_and_stmt_for_db_source(count_error: Exception) -> tuple[Mock, VariableStatement]:
@@ -55,7 +57,12 @@ def test_db_count_query_failure_logs_at_error_level(caplog, monkeypatch) -> None
         ctx, stmt = _ctx_and_stmt_for_db_source(exc)
         with caplog.at_level(logging.ERROR, logger="DATAMIMIC"):
             caplog.clear()
-            DataSourceRegistry.set_data_source_length(ctx, stmt)
+            set_data_source_length(ctx, stmt)
         error_records = [r for r in caplog.records if r.levelno == logging.ERROR]
         assert error_records, f"{type(exc).__name__}: count-query failure produced no ERROR log record"
         assert "Cannot get length of database source" in error_records[0].getMessage()
+
+
+def test_count_query_rejects_non_rdbms_client() -> None:
+    with pytest.raises(TypeError, match="not an RDBMS"):
+        DataSourceRegistry.rdbms_count_query_length(Mock(), "SELECT 1", "db", "selector")

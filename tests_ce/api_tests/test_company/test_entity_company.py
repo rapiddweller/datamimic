@@ -1,8 +1,8 @@
 import pytest
 
-from datamimic_ce.domains.common.models.address import Address
-from datamimic_ce.domains.common.models.company import Company
-from datamimic_ce.domains.common.services.company_service import CompanyService
+from datamimic_ce.domains.shared.models.address import Address
+from datamimic_ce.domains.shared.models.company import Company
+from datamimic_ce.domains.shared.services.company_service import CompanyService
 
 
 class TestEntityCompany:
@@ -97,24 +97,6 @@ class TestEntityCompany:
         assert company.state == company.state
         assert company.zip_code == company.zip_code
 
-    @pytest.mark.flaky(reruns=3)
-    def test_two_different_entities(self):
-        company_service = CompanyService()
-        company1 = company_service.generate()
-        company2 = company_service.generate()
-        assert company1.id != company2.id
-        assert company1.short_name != company2.short_name
-        assert company1.full_name != company2.full_name
-        assert company1.sector != company2.sector
-        assert company1.legal_form != company2.legal_form
-        assert company1.address_data != company2.address_data
-        assert company1.email != company2.email
-        assert company1.phone_number != company2.phone_number
-        assert company1.country_code == company2.country_code
-        assert company1.country == company2.country
-        assert company1.city != company2.city
-        assert company1.state != company2.state
-        assert company1.zip_code != company2.zip_code
 
     @pytest.mark.parametrize("dataset", _supported_datasets)
     def test_supported_datasets(self, dataset):

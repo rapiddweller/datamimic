@@ -12,8 +12,8 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
 
 import pytest
 
-from datamimic_ce.domains.common.demographics.loader import load_demographic_profile
-from datamimic_ce.domains.common.demographics.sampler import DemographicSampler
+from datamimic_ce.domains.shared.demographics.loader import load_demographic_profile
+from datamimic_ce.domains.shared.demographics.sampler import DemographicSampler
 
 _test_dir = Path(__file__).resolve().parent
 

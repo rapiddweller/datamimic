@@ -6,8 +6,8 @@ Expected: patient/person record exposes transaction_profile='student' (or attach
 
 import random
 
-from datamimic_ce.domains.common.models.demographic_config import DemographicConfig
-from datamimic_ce.domains.common.services.person_service import PersonService
+from datamimic_ce.domains.shared.models.demographic_config import DemographicConfig
+from datamimic_ce.domains.shared.services.person_service import PersonService
 from datamimic_ce.domains.healthcare.services.patient_service import PatientService
 
 

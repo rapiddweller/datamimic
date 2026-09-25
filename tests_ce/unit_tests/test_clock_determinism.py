@@ -20,7 +20,7 @@ from datetime import datetime
 
 import pytest
 
-from datamimic_ce.domains.common.literal_generators.birthdate_generator import BirthdateGenerator
+from datamimic_ce.domains.shared.literal_generators.birthdate_generator import BirthdateGenerator
 from datamimic_ce.domains.ecommerce.generators.order_generator import OrderGenerator
 from datamimic_ce.domains.finance.generators.bank_account_generator import BankAccountGenerator
 from datamimic_ce.domains.finance.generators.transaction_generator import TransactionGenerator

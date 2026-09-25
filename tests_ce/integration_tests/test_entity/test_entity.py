@@ -8,7 +8,7 @@
 from pathlib import Path
 
 from datamimic_ce.data_mimic_test import DataMimicTest
-from datamimic_ce.utils.file_util import FileUtil
+from datamimic_ce.engine.io.api import FileUtil
 
 
 class TestEntity:
@@ -115,7 +115,7 @@ class TestEntity:
         engine.test_with_timer()
         result = engine.capture_result()
         customers = result.get("customer")
-        dataset_root = Path(__file__).parent.parent.parent.parent / "datamimic_ce/domains/domain_data/common/person"
+        dataset_root = Path(__file__).parent.parent.parent.parent / "datamimic_ce/domains/shared/domain_data/common/person"
         file_name_male = dataset_root / f"givenName_male_{default_dataset}.csv"
         file_name_female = dataset_root / f"givenName_female_{default_dataset}.csv"
         male_data, wgt = FileUtil.read_wgt_file(file_name_male)

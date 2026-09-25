@@ -11,12 +11,11 @@ This module provides a model for representing an e-commerce product.
 """
 
 from pathlib import Path
-from typing import Any
 
-from datamimic_ce.domains.common.literal_generators.string_generator import StringGenerator
 from datamimic_ce.domains.domain_core import BaseEntity
 from datamimic_ce.domains.domain_core.property_cache import property_cache
 from datamimic_ce.domains.ecommerce.generators.product_generator import ProductGenerator
+from datamimic_ce.domains.shared.literal_generators.string_generator import StringGenerator
 
 # NOTE: No dataset I/O in model; all loading done in ProductGenerator
 
@@ -52,9 +51,10 @@ class Product(BaseEntity):
             A unique product ID
         """
         #  use shared PrefixedIdGenerator for prefixed ID without separator
-        from datamimic_ce.domains.common.literal_generators.prefixed_id_generator import PrefixedIdGenerator
+        from datamimic_ce.domains.shared.literal_generators.prefixed_id_generator import PrefixedIdGenerator
 
-        return PrefixedIdGenerator("PROD", "[A-Z0-9]{8}", separator="", rng=self._product_generator.rng).generate()
+        candidate = PrefixedIdGenerator("PROD", "[A-Z0-9]{8}", separator="", rng=self._product_generator.rng).generate()
+        return self._claim_identifier("product_id", candidate)
 
     @property
     @property_cache
@@ -270,7 +270,7 @@ class Product(BaseEntity):
 
         return all_tags
 
-    def to_dict(self) -> dict[str, Any]:
+    def to_dict(self) -> dict[str, object]:
         """Convert the product to a dictionary.
 
         Returns:

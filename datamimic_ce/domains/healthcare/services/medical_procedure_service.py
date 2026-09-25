@@ -20,7 +20,7 @@ from datamimic_ce.domains.healthcare.models.medical_procedure import MedicalProc
 MEDICAL_PROCEDURE_SCHEMA = EntitySchema(
     "MedicalProcedure",
     (
-        field("procedure_id", str, "Unique procedure identifier."),
+        field("procedure_id", str, "Unique procedure identifier.", unique_identifier_format="PROC-[0-9A-F]{8}"),
         field("procedure_code", str, "Internal procedure code."),
         field("cpt_code", str, "CPT billing code."),
         field("name", str, "Procedure name."),

@@ -4,10 +4,10 @@ from pathlib import Path
 
 import pytest
 
-from datamimic_ce.authoring.xml_loader import RULE_XML_LOAD, load_source
-from datamimic_ce.parsers.descriptor_parser import DescriptorParser
-from datamimic_ce.utils.file_util import FileUtil
-from datamimic_ce.utils.secure_xml import DTDForbiddenError, parse_xml_file, parse_xml_source
+from datamimic_ce.authoring.adapters.xml_loader import RULE_XML_LOAD, load_source
+from datamimic_ce.engine.dsl.parsers.descriptor_parser import DescriptorParser
+from datamimic_ce.engine.dsl.xml import DTDForbiddenError, parse_xml_file, parse_xml_source
+from datamimic_ce.engine.io.api import FileUtil
 
 _ATTRIBUTE_ENTITY = '<!DOCTYPE setup [<!ENTITY secret "expanded">]><setup value="&secret;"/>'
 
@@ -44,7 +44,7 @@ def test_file_doctype_is_rejected_by_runtime_parser(tmp_path: Path) -> None:
     descriptor.write_text(_ATTRIBUTE_ENTITY, encoding="utf-8")
 
     with pytest.raises(DTDForbiddenError, match="DTD declarations"):
-        DescriptorParser.parse(descriptor, None)
+        DescriptorParser.parse(descriptor, None, "production")
 
     with pytest.raises(DTDForbiddenError, match="DTD declarations"):
         parse_xml_file(descriptor)
@@ -67,7 +67,7 @@ def test_runtime_parser_ignores_comments_and_processing_instructions(tmp_path: P
         encoding="utf-8",
     )
 
-    setup = DescriptorParser.parse(descriptor, None)
+    setup = DescriptorParser.parse(descriptor, None, "production")
 
     assert setup.sub_statements == []
 

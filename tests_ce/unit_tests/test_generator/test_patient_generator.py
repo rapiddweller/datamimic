@@ -16,9 +16,9 @@ class TestPatientGeneratorEmergencyContact:
     def test_emergency_relationships_respect_csv_weights(self, tmp_path, monkeypatch):
         dataset = "US"
         # Intercept emergency relationships file load and provide controlled weights
-        from datamimic_ce.utils import file_util as _fu
+        from datamimic_ce.engine.io.api import FileUtil
 
-        orig_read = _fu.FileUtil.read_wgt_file
+        orig_read = FileUtil.read_wgt_file
 
         def _fake_read_wgt_file(file_path, delimiter=",", encoding="utf-8"):
             from pathlib import Path as _P
@@ -29,7 +29,7 @@ class TestPatientGeneratorEmergencyContact:
                 return ["Parent", "Friend"], [0.75, 0.25]
             return orig_read(file_path, delimiter=delimiter, encoding=encoding)
 
-        monkeypatch.setattr(_fu.FileUtil, "read_wgt_file", staticmethod(_fake_read_wgt_file))
+        monkeypatch.setattr(FileUtil, "read_wgt_file", staticmethod(_fake_read_wgt_file))
 
         generator = PatientGenerator(dataset=dataset, rng=random.Random(12345))
         monkeypatch.setattr(generator._given_name_generator, "generate", lambda: "Given")

@@ -22,33 +22,33 @@ class TestGetCumulatedDataPagination:
     page 1), so seeded multi-page reads equal a single contiguous read."""
 
     def test_pages_are_contiguous(self):
-        from datamimic_ce.data_sources.data_source_pagination import DataSourcePagination
-        from datamimic_ce.data_sources.data_source_registry import DataSourceRegistry
+        from datamimic_ce.engine.io.api import DataSourcePagination
+        from datamimic_ce.engine.runtime.sources.selection import get_cumulated_data
 
         data = list(range(27))
-        whole = DataSourceRegistry.get_cumulated_data(data, DataSourcePagination(0, 100), seed=7)
-        page1 = DataSourceRegistry.get_cumulated_data(data, DataSourcePagination(0, 40), seed=7)
-        page2 = DataSourceRegistry.get_cumulated_data(data, DataSourcePagination(40, 60), seed=7)
+        whole = get_cumulated_data(data, DataSourcePagination(0, 100), seed=7)
+        page1 = get_cumulated_data(data, DataSourcePagination(0, 40), seed=7)
+        page2 = get_cumulated_data(data, DataSourcePagination(40, 60), seed=7)
         assert page1 + page2 == whole
 
     def test_empty_source(self):
-        from datamimic_ce.data_sources.data_source_pagination import DataSourcePagination
-        from datamimic_ce.data_sources.data_source_registry import DataSourceRegistry
+        from datamimic_ce.engine.io.api import DataSourcePagination
+        from datamimic_ce.engine.runtime.sources.selection import get_cumulated_data
 
-        assert DataSourceRegistry.get_cumulated_data([], DataSourcePagination(0, 10), seed=1) == []
+        assert get_cumulated_data([], DataSourcePagination(0, 10), seed=1) == []
 
 
 class TestSourceDistributionCoerce:
     """coerce is the validation boundary for <variable> (no model validator there)."""
 
     def test_absent_is_random(self):
-        from datamimic_ce.enums.distribution_enums import SourceDistribution
+        from datamimic_ce.engine.dsl.enums.distribution_enums import SourceDistribution
 
         assert SourceDistribution.coerce(None) is SourceDistribution.RANDOM
         assert SourceDistribution.coerce("cumulated") is SourceDistribution.CUMULATED
 
     def test_unknown_raises(self):
-        from datamimic_ce.enums.distribution_enums import SourceDistribution
+        from datamimic_ce.engine.dsl.enums.distribution_enums import SourceDistribution
 
         with pytest.raises(ValueError):
             SourceDistribution.coerce("garbage")

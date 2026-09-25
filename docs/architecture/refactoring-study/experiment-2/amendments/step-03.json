@@ -1,0 +1,7 @@
+{
+  "after_digest": "3e143fa42046cf751d647b1f437a2f17dc4b7fd1bc9a4f65aed5d6892f112c7f",
+  "before_digest": "0cc50a2c675431e18924d59a80cfde1a9cfa025d737f67603b4039a7bdd79376",
+  "decided_by": "experiment orchestrator",
+  "rationale": "Step 3 moved the complete DSL implementation into the already-declared datamimic_ce.engine.dsl namespace. Removing the five deleted legacy package paths synchronizes ownership with the target and grants no dependency or behavior permission.",
+  "schema_version": "1.0.0"
+}

@@ -46,7 +46,7 @@ Each domain package follows a consistent structure:
 
 ```
 domains/
-├── common/
+├── shared/
 │   ├── data_loaders/
 │   ├── generators/
 │   ├── literal_generators/
@@ -75,7 +75,7 @@ Here's a simple example to get started with DATAMIMIC's Domain-Driven Framework:
 
 ```python
 # Import the required service
-from datamimic_ce.domains.common.services import PersonService
+from datamimic_ce.domains.shared.services import PersonService
 
 # Create a service with specific parameters
 person_service = PersonService(

@@ -7,10 +7,10 @@
 from abc import ABC
 from typing import Generic, TypeVar
 
-from datamimic_ce.domains.domain_core.attribute_catalog import FieldSpec
+from datamimic_ce.domains.domain_core.attribute_catalog import EntitySchema, FieldSpec
 from datamimic_ce.domains.domain_core.base_domain_generator import BaseDomainGenerator
 from datamimic_ce.domains.domain_core.base_entity import BaseEntity
-from datamimic_ce.domains.utils.supported_datasets import compute_supported_datasets
+from datamimic_ce.domains.shared.utils.supported_datasets import compute_supported_datasets
 
 T = TypeVar("T", bound=BaseEntity)
 
@@ -31,10 +31,16 @@ class BaseDomainService(ABC, Generic[T]):
     # Dataset-file glob patterns (with a ``{CC}`` placeholder) required by this
     # entity; override per service. Empty => supported_datasets() returns set().
     DATASET_PATTERNS: tuple[str, ...] = ()
+    NESTED_ENTITY_SCHEMAS: dict[str, EntitySchema] = {}
 
     def __init__(self, data_generator: BaseDomainGenerator, model_cls: type[T]):
         self._data_generator = data_generator
         self._model_cls = model_cls
+        self._identifier_registry: dict[tuple[str, str], set[str]] = {}
+
+    def set_identifier_registry(self, registry: dict[tuple[str, str], set[str]]) -> None:
+        """Use the engine run's registry instead of this service's standalone registry."""
+        self._identifier_registry = registry
 
     @classmethod
     def attribute_specs(cls) -> tuple[FieldSpec, ...]:
@@ -51,7 +57,14 @@ class BaseDomainService(ABC, Generic[T]):
         Generate a single instance of the domain object.
         :return:
         """
-        return self._model_cls(self._data_generator)
+        entity = self._model_cls(self._data_generator)
+        entity._bind_identifier_registry(
+            self._identifier_registry,
+            self._model_cls.__name__,
+            self.attribute_specs(),
+            self.NESTED_ENTITY_SCHEMAS,
+        )
+        return entity
 
     def generate_batch(self, count: int = 10) -> list[T]:
         """

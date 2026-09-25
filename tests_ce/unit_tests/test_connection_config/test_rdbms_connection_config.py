@@ -8,8 +8,8 @@ from copy import copy
 import pytest
 from pydantic import ValidationError
 
-from datamimic_ce.connection_config.rdbms_connection_config import RdbmsConnectionConfig
-from datamimic_ce.model.database_model import DatabaseModel
+from datamimic_ce.engine.dsl.model.database_model import DatabaseModel
+from datamimic_ce.engine.io.connection_config.rdbms_connection_config import RdbmsConnectionConfig
 
 
 class TestRdbmsConnectionConfig:

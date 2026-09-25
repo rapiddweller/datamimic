@@ -5,13 +5,15 @@
 # For questions and support, contact: info@rapiddweller.com
 
 
+import logging
 import time
 import uuid
 from pathlib import Path
 
-from datamimic_ce.datamimic import DataMimic
-from datamimic_ce.factory.factory_config import FactoryConfig
-from datamimic_ce.logger import logger
+from datamimic_ce.interfaces.api import create_run_session
+from datamimic_ce.interfaces.contracts import FactoryConfig, RunRequest, RunSession
+
+logger = logging.getLogger("DATAMIMIC")
 
 
 class DataMimicTest:
@@ -25,11 +27,13 @@ class DataMimicTest:
         test_file_path = test_dir / filename
         self._capture_test_result = capture_test_result
         self._task_id = str(uuid.uuid4())
-        self._engine = DataMimic(
-            descriptor_path=test_file_path,
-            task_id=self._task_id,
-            test_mode=capture_test_result,
-            factory_config=factory_config,
+        self._session: RunSession = create_run_session(
+            RunRequest(
+                descriptor_path=test_file_path,
+                task_id=self._task_id,
+                test_mode=capture_test_result,
+                factory_config=factory_config,
+            )
         )
 
     @property
@@ -44,7 +48,7 @@ class DataMimicTest:
         start_time = time.time()
 
         # Use default string instead of UUID4 for testing if not able get task_id from celery request
-        self._engine.parse_and_execute()
+        self._session.execute()
 
         # Get the current time after the code execution
         end_time = time.time()
@@ -58,6 +62,7 @@ class DataMimicTest:
         :return:
         """
         if self._capture_test_result:
-            return self._engine.capture_test_result()
+            captured = self._session.capture_test_result()
+            return captured.root if captured is not None else None
         else:
             raise ValueError("Capturing test result mode is currently disable")

@@ -2,16 +2,16 @@ import datetime as dt
 import random
 from pathlib import Path
 
-from datamimic_ce.domains.common.generators.address_generator import AddressGenerator
 from datamimic_ce.domains.domain_core.base_domain_generator import ClockAnchoredDomainGenerator
 from datamimic_ce.domains.ecommerce.generators.product_generator import ProductGenerator
-from datamimic_ce.domains.utils.dataset_loader import (
+from datamimic_ce.domains.shared.generators.address_generator import AddressGenerator
+from datamimic_ce.domains.shared.utils.dataset_loader import (
     load_weighted_values_try_dataset,
     pick_one_weighted,
     pick_weighted_from_headered_csv,
+    read_headered_csv,
 )
-from datamimic_ce.domains.utils.dataset_path import dataset_path
-from datamimic_ce.utils.file_util import FileUtil
+from datamimic_ce.domains.shared.utils.dataset_path import dataset_path
 
 
 class OrderGenerator(ClockAnchoredDomainGenerator):
@@ -47,7 +47,7 @@ class OrderGenerator(ClockAnchoredDomainGenerator):
 
     #  Centralize date generation; models stay pure and RNG boundaries are clear
     def generate_order_date(self) -> dt.datetime:
-        from datamimic_ce.domains.common.literal_generators.datetime_generator import DateTimeGenerator
+        from datamimic_ce.domains.shared.literal_generators.datetime_generator import DateTimeGenerator
 
         now = self._reference_now
         min_dt = (now - dt.timedelta(days=365)).strftime("%Y-%m-%d %H:%M:%S")
@@ -71,7 +71,7 @@ class OrderGenerator(ClockAnchoredDomainGenerator):
     def get_shipping_amount(self, shipping_method: str) -> float:
         # Load method rows, then pick bounds for the selected method
         file_path = dataset_path("ecommerce", f"shipping_methods_{self._dataset}.csv", start=Path(__file__))
-        header_dict, rows = FileUtil.read_csv_to_dict_of_tuples_with_header(file_path, ",")
+        header_dict, rows = read_headered_csv(file_path, ",")
         idx_method = header_dict["method"]
         idx_min = header_dict["min_cost"]
         idx_max = header_dict["max_cost"]

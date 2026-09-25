@@ -5,8 +5,8 @@
 # For questions and support, contact: info@rapiddweller.com
 from copy import copy
 
-from datamimic_ce.connection_config.mongodb_connection_config import MongoDBConnectionConfig
-from datamimic_ce.model.mongodb_model import MongoDBModel
+from datamimic_ce.engine.dsl.model.mongodb_model import MongoDBModel
+from datamimic_ce.engine.io.connection_config.mongodb_connection_config import MongoDBConnectionConfig
 
 
 class TestMongodbConnectionConfig:

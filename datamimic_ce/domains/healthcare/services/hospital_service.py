@@ -21,7 +21,7 @@ from datamimic_ce.domains.healthcare.models.hospital import Hospital
 HOSPITAL_SCHEMA = EntitySchema(
     "Hospital",
     (
-        field("hospital_id", str, "Unique hospital identifier."),
+        field("hospital_id", str, "Unique hospital identifier.", unique_identifier_format="HOSP-[0-9A-F]{8}"),
         field("name", str, "Hospital name."),
         field("type", str, "Hospital type."),
         field("departments", list, "Departments offered."),

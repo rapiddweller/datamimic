@@ -6,7 +6,7 @@
 
 import random
 
-from datamimic_ce.domains.common.literal_generators.ean_generator import EANGenerator
+from datamimic_ce.domains.shared.literal_generators.ean_generator import EANGenerator
 
 
 class TestEANGenerator:

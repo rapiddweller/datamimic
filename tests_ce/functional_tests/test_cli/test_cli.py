@@ -5,12 +5,23 @@ from unittest.mock import patch
 
 from typer.testing import CliRunner
 
-from datamimic_ce.cli import app
+from datamimic_ce.interfaces.cli import app
 
 runner = CliRunner()
 
 
 class TestCLI:
+    def test_init_creates_project_structure(self, tmp_path, monkeypatch):
+        monkeypatch.chdir(tmp_path)
+
+        result = runner.invoke(app, ["init", "sample-project"])
+
+        project_dir = tmp_path / "sample-project"
+        assert result.exit_code == 0
+        assert all((project_dir / name).is_dir() for name in ("data", "output", "script", "config"))
+        assert (project_dir / "datamimic.xml").is_file()
+        assert (project_dir / "README.md").is_file()
+
     def test_version_info(self):
         result = runner.invoke(app, ["version"])
         assert result.exit_code == 0
@@ -28,8 +39,8 @@ class TestCLI:
         assert "Log Level" in result.output
 
     def test_capabilities_projects_central_alias_rules(self):
-        from datamimic_ce.constants.element_constants import EL_ITERATE
-        from datamimic_ce.model.constraints import element_constraints, serialize_constraints
+        from datamimic_ce.engine.dsl.constants.element_constants import EL_ITERATE
+        from datamimic_ce.engine.dsl.model.constraints import element_constraints, serialize_constraints
 
         result = runner.invoke(app, ["capabilities", "--full"])
 
@@ -135,7 +146,7 @@ class TestCLI:
         result = runner.invoke(app, ["run", "valid_descriptor.xml"])
         assert result.exit_code == 0
 
-    @patch("datamimic_ce.utils.file_util.FileUtil.create_project_structure")
+    @patch("datamimic_ce.interfaces.cli.runtime.create_project_structure")
     def test_init_creates_project_with_default_target(self, mock_create_structure, tmp_path, monkeypatch):
         """Test project initialization in the current directory"""
         monkeypatch.chdir(tmp_path)
@@ -148,7 +159,7 @@ class TestCLI:
         mock_create_structure.assert_called_once_with(project_dir)
         assert "created successfully" in result.output
 
-    @patch("datamimic_ce.utils.file_util.FileUtil.create_project_structure")
+    @patch("datamimic_ce.interfaces.cli.runtime.create_project_structure")
     def test_init_creates_project_with_custom_target(self, mock_create_structure, tmp_path):
         """Test project initialization with a custom target directory"""
         project_name = "test-project"
@@ -166,7 +177,7 @@ class TestCLI:
             if target_dir.exists():
                 shutil.rmtree(target_dir)
 
-    @patch("datamimic_ce.utils.file_util.FileUtil.create_project_structure")
+    @patch("datamimic_ce.interfaces.cli.runtime.create_project_structure")
     def test_init_creates_nested_directories(self, mock_create_structure, tmp_path):
         """Test project initialization with nested directory structure"""
         project_name = "test-project"
@@ -183,7 +194,7 @@ class TestCLI:
             if target_dir.exists():
                 shutil.rmtree(target_dir)
 
-    @patch("datamimic_ce.utils.file_util.FileUtil.create_project_structure")
+    @patch("datamimic_ce.interfaces.cli.runtime.create_project_structure")
     def test_init_with_existing_directory(self, mock_create_structure, tmp_path):
         """Test project initialization in an existing directory"""
         project_name = "existing-project"
@@ -200,7 +211,7 @@ class TestCLI:
             if project_dir.exists():
                 shutil.rmtree(project_dir)
 
-    @patch("datamimic_ce.utils.file_util.FileUtil.create_project_structure")
+    @patch("datamimic_ce.interfaces.cli.runtime.create_project_structure")
     def test_init_with_force_option(self, mock_create_structure, tmp_path):
         """Test initialization with force option on existing directory"""
         project_name = "existing-project"

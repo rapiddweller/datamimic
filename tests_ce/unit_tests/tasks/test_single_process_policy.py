@@ -12,13 +12,13 @@ from unittest.mock import MagicMock
 
 import pytest
 
-from datamimic_ce.clients.rdbms_client import RdbmsClient
-from datamimic_ce.enums.dbms_enums import Dbms
-from datamimic_ce.statements.generate_statement import GenerateStatement
-from datamimic_ce.statements.key_statement import KeyStatement
-from datamimic_ce.statements.reference_statement import ReferenceStatement
-from datamimic_ce.statements.variable_statement import VariableStatement
-from datamimic_ce.tasks.single_process_policy import resolve_single_process
+from datamimic_ce.engine.dsl.enums.dbms_enums import Dbms
+from datamimic_ce.engine.dsl.statements.generate_statement import GenerateStatement
+from datamimic_ce.engine.dsl.statements.key_statement import KeyStatement
+from datamimic_ce.engine.dsl.statements.reference_statement import ReferenceStatement
+from datamimic_ce.engine.dsl.statements.variable_statement import VariableStatement
+from datamimic_ce.engine.io.clients.rdbms_client import RdbmsClient
+from datamimic_ce.engine.runtime.tasks.generate.services.policies.single_process_policy import resolve_single_process
 
 
 def _gen(children=(), unique=False, targets=()) -> MagicMock:

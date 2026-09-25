@@ -1,0 +1,60 @@
+# DATAMIMIC
+# Copyright (c) 2023-2025 Rapiddweller Asia Co., Ltd.
+# This software is licensed under the MIT License.
+# See LICENSE file for the full text of the license.
+# For questions and support, contact: info@rapiddweller.com
+
+from abc import ABC
+
+from datamimic_ce.engine.dsl.api import (
+    ConditionStatement,
+    ElseIfStatement,
+    ElseStatement,
+    GenerateStatement,
+    IfStatement,
+)
+from datamimic_ce.engine.runtime.contexts.geniter_context import GenIterContext
+from datamimic_ce.engine.runtime.tasks.task import CommonSubTask, GenSubTask
+from datamimic_ce.engine.runtime.tasks.task_util import TaskUtil
+
+
+class IfElseBaseTask(GenSubTask, ABC):
+    def __init__(
+        self,
+        statement: IfStatement | ElseIfStatement | ElseStatement,
+    ):
+        self._statement = statement
+
+    @property
+    def statement(self) -> IfStatement | ElseIfStatement | ElseStatement:
+        return self._statement
+
+    def execute(self, parent_context: GenIterContext):
+        """
+        Generate data for element "if", "else_if" and "else"
+        :param parent_context:
+        :return:
+        """
+        child_tasks = [
+            TaskUtil.get_task_by_statement(ctx=parent_context.root, stmt=child_stmt)
+            for child_stmt in self.statement.sub_statements
+        ]
+
+        # store statement of executed task to parent statement (condition statement) for later use
+        if isinstance(self._statement.parent_stmt, ConditionStatement):
+            self._statement.parent_stmt.add_executed_statement(self.statement)
+
+        product_holder: dict = {}
+        for child_task in child_tasks:
+            if not isinstance(child_task, GenSubTask | CommonSubTask):
+                raise ValueError(f"Common sub-task expected, but got {type(child_task)}")
+            # Add generate product to current product_holder
+            if isinstance(child_task.statement, GenerateStatement | ConditionStatement):
+                # Execute sub generate task
+                values = child_task.execute(parent_context)
+                if isinstance(values, dict):
+                    for key, value in values.items():
+                        product_holder[key] = product_holder.get(key, []) + value
+            else:
+                child_task.execute(parent_context)
+        return product_holder

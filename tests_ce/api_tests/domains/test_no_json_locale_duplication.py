@@ -2,7 +2,7 @@
 
 from pathlib import Path
 
-import datamimic_ce.domains.locales as locales_module
+import datamimic_ce.domains.shared.locales as locales_module
 
 
 def test_no_locale_json_duplication() -> None:

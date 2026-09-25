@@ -19,12 +19,12 @@ from typing import Any
 
 import pytest
 
-from datamimic_ce.domains.common.literal_generators.cnpj_generator import CNPJGenerator
-from datamimic_ce.domains.common.literal_generators.cpf_generator import CPFGenerator
-from datamimic_ce.domains.common.literal_generators.data_faker_generator import DataFakerGenerator
-from datamimic_ce.domains.common.literal_generators.ean_generator import EANGenerator
-from datamimic_ce.domains.common.literal_generators.ssn_generator import SSNGenerator
-from datamimic_ce.domains.common.literal_generators.url_generator import UrlGenerator
+from datamimic_ce.domains.shared.literal_generators.cnpj_generator import CNPJGenerator
+from datamimic_ce.domains.shared.literal_generators.cpf_generator import CPFGenerator
+from datamimic_ce.domains.shared.literal_generators.data_faker_generator import DataFakerGenerator
+from datamimic_ce.domains.shared.literal_generators.ean_generator import EANGenerator
+from datamimic_ce.domains.shared.literal_generators.ssn_generator import SSNGenerator
+from datamimic_ce.domains.shared.literal_generators.url_generator import UrlGenerator
 
 # ---------------------------------------------------------------------------
 # Fixtures — factory callables keyed by a human-readable name.

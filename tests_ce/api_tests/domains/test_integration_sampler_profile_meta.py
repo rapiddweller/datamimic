@@ -6,7 +6,7 @@ from pathlib import Path
 
 import pytest
 
-from datamimic_ce.domains.common.demographics import build_sampler_with_profile_groups
+from datamimic_ce.domains.shared.demographics import build_sampler_with_profile_groups
 
 
 @pytest.fixture()

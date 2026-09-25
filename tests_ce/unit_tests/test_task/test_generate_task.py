@@ -5,19 +5,19 @@ from unittest.mock import MagicMock, PropertyMock, patch
 
 import pytest
 
-from datamimic_ce.clients.database_client import DatabaseClient
-from datamimic_ce.clients.mongodb_client import MongoDBClient
-from datamimic_ce.contexts.geniter_context import GenIterContext
-from datamimic_ce.contexts.setup_context import SetupContext
-from datamimic_ce.exporters.exporter_util import ExporterUtil
-from datamimic_ce.exporters.mongodb_exporter import MongoDBExporter
-from datamimic_ce.product_storage.memstore_manager import MemstoreManager
-from datamimic_ce.statements.generate_statement import GenerateStatement
-from datamimic_ce.statements.key_statement import KeyStatement
-from datamimic_ce.statements.setup_statement import SetupStatement
-from datamimic_ce.tasks.generate_task import GenerateTask
-from datamimic_ce.tasks.task_util import TaskUtil
-from datamimic_ce.utils.dict_util import dict_nested_update
+from datamimic_ce.engine.dsl.statements.generate_statement import GenerateStatement
+from datamimic_ce.engine.dsl.statements.key_statement import KeyStatement
+from datamimic_ce.engine.dsl.statements.setup_statement import SetupStatement
+from datamimic_ce.engine.io.clients.database_client import DatabaseClient
+from datamimic_ce.engine.io.clients.mongodb_client import MongoDBClient
+from datamimic_ce.engine.io.exporters.exporter_util import ExporterUtil
+from datamimic_ce.engine.io.exporters.mongodb_exporter import MongoDBExporter
+from datamimic_ce.engine.runtime.contexts.geniter_context import GenIterContext
+from datamimic_ce.engine.runtime.contexts.records import dict_nested_update
+from datamimic_ce.engine.runtime.contexts.setup_context import SetupContext
+from datamimic_ce.engine.runtime.storage.memstore_manager import MemstoreManager
+from datamimic_ce.engine.runtime.tasks.generate.task import GenerateTask
+from datamimic_ce.engine.runtime.tasks.task_util import TaskUtil
 
 
 class TestGenerateTask:
@@ -135,7 +135,7 @@ class TestGenerateTask:
         statement.converter = "json"
         statement.min_count = None
         statement.max_count = None
-        statement._count = 1000
+        statement.count = "1000"
         statement._source_uri = "mongodb://localhost:27017"
         statement._separator = ","
         statement._storage_id = "custom-storage-id"
@@ -146,13 +146,7 @@ class TestGenerateTask:
         statement.get_time_series_config.return_value = None
 
         # Configure methods
-        statement.get_int_count.return_value = statement._count
-        statement.contain_mongodb_upsert.return_value = True
         statement.retrieve_sub_statement_by_fullname.return_value = None
-
-        # Configure methods
-        statement.get_int_count.return_value = statement._count
-        statement.contain_mongodb_upsert.return_value = True
 
         # Adjust the sub-statement retrieval
         def mock_retrieve_sub_statement_by_fullname(name):
@@ -177,14 +171,13 @@ class TestGenerateTask:
 
     def test_determine_count_with_explicit_count(self, generate_task, mock_context, mock_statement):
         """Test _determine_count with an explicitly set count."""
-        mock_statement.get_int_count.return_value = 500
+        mock_statement.count = "500"
         count = generate_task._determine_count(mock_context)
         assert count == 500
-        mock_statement.get_int_count.assert_called_once_with(mock_context)
 
     def test_determine_count_with_selector(self, generate_task, mock_context, mock_statement):
         """Test count determination using a selector."""
-        mock_statement.get_int_count.return_value = None  # Add this line
+        mock_statement.count = None
         mock_statement.selector = "test_selector"
         mock_statement.source = "test_source"
         mock_client = MagicMock(spec=DatabaseClient)
@@ -198,7 +191,7 @@ class TestGenerateTask:
 
     def test_determine_count_with_selector_invalid_client(self, generate_task, mock_context, mock_statement):
         """Test error when using selector with a non-database client."""
-        mock_statement.get_int_count.return_value = None  # Add this line
+        mock_statement.count = None
         mock_statement.selector = "test_selector"
         mock_statement.source = "test_source"
         mock_context.root.get_client_by_id.return_value = MagicMock()
@@ -256,7 +249,7 @@ class TestGenerateTask:
             mock_context.use_mp = False
             mock_context.num_process = 1  # Add this line
             mock_statement.multiprocessing = False  # Ensure multiprocessing is disabled
-            mock_statement.get_int_count.return_value = 1000
+            mock_statement.count = "1000"
 
             generate_task.execute(mock_context)
 
@@ -273,7 +266,7 @@ class TestGenerateTask:
             # Enable multiprocessing
             mock_statement.multiprocessing = True
             mock_context.use_mp = True
-            mock_statement.get_int_count.return_value = 1000
+            mock_statement.count = "1000"
             mock_calc_page_size.return_value = 100
 
             generate_task.execute(mock_context)
@@ -284,7 +277,7 @@ class TestGenerateTask:
     def test_scan_data_source(self, generate_task, mock_context):
         """Test _scan_data_source method."""
         with patch(
-            "datamimic_ce.data_sources.data_source_registry.DataSourceRegistry.set_data_source_length"
+            "datamimic_ce.engine.runtime.tasks.generate.task.set_data_source_length"
         ) as mock_set_data_source_length:
             GenerateTask._scan_data_source(mock_context, generate_task.statement)
 
@@ -309,7 +302,9 @@ class TestGenerateTask:
 
     def test_pre_execute(self, generate_task, mock_context, mock_statement):
         """Test pre_execute method."""
-        with patch("datamimic_ce.tasks.task_util.TaskUtil.get_task_by_statement") as mock_get_task_by_statement:
+        with patch(
+            "datamimic_ce.engine.runtime.tasks.task_util.TaskUtil.get_task_by_statement"
+        ) as mock_get_task_by_statement:
             # Setup
             key_statement = MagicMock(spec=KeyStatement)
             mock_statement.sub_statements = [key_statement]
@@ -340,13 +335,10 @@ class TestGenerateTask:
         # Create a mock GenerateStatement with spec
         mock_statement = MagicMock(spec=GenerateStatement)
         mock_statement.multiprocessing = multiprocessing
-        mock_statement.get_int_count.return_value = 100
+        mock_statement.count = "100"
 
         # Create a mock SetupContext with spec
         mock_context.use_mp = use_mp
-
-        # Mock exporter util
-        exporter_util = MagicMock()
 
         if has_mongodb_delete:
             # Create a mock MongoDBExporter with spec
@@ -376,7 +368,7 @@ class TestGenerateTask:
     @pytest.mark.skip("Need rework with ray")
     def test_sp_generate(self, generate_task, mock_context, mock_statement):
         """Test _sp_generate method."""
-        with patch("datamimic_ce.tasks.generate_task._geniter_single_process_generate") as mock_gen:
+        with patch("datamimic_ce.engine.runtime.tasks.generate.task._geniter_single_process_generate") as mock_gen:
             mock_gen.return_value = {mock_statement.full_name: [{"field1": "value1"}]}
             result = generate_task._sp_generate(mock_context, 0, 10)
             assert result == {mock_statement.full_name: [{"field1": "value1"}]}

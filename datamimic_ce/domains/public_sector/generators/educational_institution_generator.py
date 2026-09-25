@@ -2,10 +2,10 @@ import datetime
 import random
 from pathlib import Path
 
-from datamimic_ce.domains.common.generators.address_generator import AddressGenerator
-from datamimic_ce.domains.common.literal_generators.email_address_generator import EmailAddressGenerator
-from datamimic_ce.domains.common.literal_generators.phone_number_generator import PhoneNumberGenerator
 from datamimic_ce.domains.domain_core.base_domain_generator import ClockAnchoredDomainGenerator
+from datamimic_ce.domains.shared.generators.address_generator import AddressGenerator
+from datamimic_ce.domains.shared.literal_generators.email_address_generator import EmailAddressGenerator
+from datamimic_ce.domains.shared.literal_generators.phone_number_generator import PhoneNumberGenerator
 
 
 class EducationalInstitutionGenerator(ClockAnchoredDomainGenerator):
@@ -40,6 +40,7 @@ class EducationalInstitutionGenerator(ClockAnchoredDomainGenerator):
         )
         # Track last chosen level to reduce immediate repetition across entities
         self._last_level: str | None = None
+        self._last_institution_type: str | None = None
         self._last_accreditations: tuple[str, ...] | None = None
 
     @property
@@ -59,8 +60,8 @@ class EducationalInstitutionGenerator(ClockAnchoredDomainGenerator):
     def pick_level(self, institution_type: str, *, start: Path) -> str:
         import csv
 
-        from datamimic_ce.domains.utils.dataset_loader import pick_one_weighted_no_repeat
-        from datamimic_ce.domains.utils.dataset_path import dataset_path
+        from datamimic_ce.domains.shared.utils.dataset_loader import pick_one_weighted_no_repeat
+        from datamimic_ce.domains.shared.utils.dataset_path import dataset_path
 
         path = dataset_path("public_sector", "education", f"levels_{self._dataset}.csv", start=start)
         levels_by_pattern: dict[str, list[tuple[str, float]]] = {}
@@ -91,7 +92,7 @@ class EducationalInstitutionGenerator(ClockAnchoredDomainGenerator):
         return chosen
 
     def pick_accreditations(self, institution_type: str, *, start: Path) -> list[str]:
-        from datamimic_ce.domains.utils.dataset_loader import load_weighted_values_try_dataset
+        from datamimic_ce.domains.shared.utils.dataset_loader import load_weighted_values_try_dataset
 
         # Select appropriate accreditations based on institution type
         if any(k in institution_type for k in ("University", "College")):
@@ -121,7 +122,7 @@ class EducationalInstitutionGenerator(ClockAnchoredDomainGenerator):
 
     # Helper: pick institution type from dataset with weighted values
     def pick_institution_type(self, *, start: Path) -> str:
-        from datamimic_ce.domains.utils.dataset_loader import (
+        from datamimic_ce.domains.shared.utils.dataset_loader import (
             load_weighted_values_try_dataset,
             pick_one_weighted_no_repeat,
         )
@@ -130,14 +131,14 @@ class EducationalInstitutionGenerator(ClockAnchoredDomainGenerator):
             "public_sector", "education", "institution_types.csv", dataset=self._dataset, start=start
         )
         choice = pick_one_weighted_no_repeat(
-            self._rng, values, weights, last=getattr(self, "_last_institution_type", None)
+            self._rng, values, weights, last=self._last_institution_type
         )
         self._last_institution_type = choice
         return choice
 
     # Helper: programs selection, weighted without replacement
     def pick_programs(self, slug: str, *, start: Path) -> list[str]:
-        from datamimic_ce.domains.utils.dataset_loader import (
+        from datamimic_ce.domains.shared.utils.dataset_loader import (
             load_weighted_values_try_dataset,
             sample_weighted_no_replacement,
         )
@@ -153,7 +154,7 @@ class EducationalInstitutionGenerator(ClockAnchoredDomainGenerator):
 
     # Helper: facilities selection based on type
     def pick_facilities(self, institution_type: str, *, start: Path) -> list[str]:
-        from datamimic_ce.domains.utils.dataset_loader import load_weighted_values_try_dataset
+        from datamimic_ce.domains.shared.utils.dataset_loader import load_weighted_values_try_dataset
 
         if any(k in institution_type for k in ("University", "College")):
             cat = "higher_ed"

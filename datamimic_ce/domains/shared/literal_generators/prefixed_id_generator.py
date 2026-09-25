@@ -1,0 +1,36 @@
+# DATAMIMIC
+# Copyright (c) 2023-2025 Rapiddweller Asia Co., Ltd.
+# This software is licensed under the MIT License.
+# See LICENSE file for the full text of the license.
+# For questions and support, contact: info@rapiddweller.com
+
+import random
+
+from datamimic_ce.domains.domain_core.base_literal_generator import BaseLiteralGenerator
+from datamimic_ce.domains.shared.literal_generators.string_generator import StringGenerator
+
+
+class PrefixedIdGenerator(BaseLiteralGenerator):
+    """
+    Generate an ID composed of a prefix and a regex-defined body.
+
+    Examples:
+    - prefix="DOC", body_pattern="[0-9A-F]{8}", separator="-" -> "DOC-5A3EF0C1"
+    - prefix="ORD", body_pattern="[A-Z0-9]{8}", separator=""  -> "ORD7ZG2QH4C"
+    """
+
+    def __init__(
+        self,
+        prefix: str,
+        body_pattern: str,
+        separator: str = "-",
+        rng: random.Random | None = None,
+    ) -> None:
+        super().__init__(rng=rng)
+        self._prefix = prefix
+        self._body_pattern = body_pattern
+        self._sep = separator
+
+    def generate(self) -> str:
+        body = StringGenerator.rnd_str_from_regex(self._body_pattern, rng=self._rng)
+        return f"{self._prefix}{self._sep}{body}"

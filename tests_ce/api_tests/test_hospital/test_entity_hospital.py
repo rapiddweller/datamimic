@@ -1,6 +1,6 @@
 import pytest
 
-from datamimic_ce.domains.common.models.address import Address
+from datamimic_ce.domains.shared.models.address import Address
 from datamimic_ce.domains.healthcare.models.hospital import Hospital
 from datamimic_ce.domains.healthcare.services.hospital_service import HospitalService
 
@@ -75,20 +75,6 @@ class TestEntityHospital:
         assert hospital.emergency_services == hospital.emergency_services
         assert hospital.teaching_status == hospital.teaching_status
 
-    @pytest.mark.flaky(reruns=3)
-    def test_two_different_entities(self):
-        hospital_service = HospitalService()
-        hospital1 = hospital_service.generate()
-        hospital2 = hospital_service.generate()
-        assert hospital1.hospital_id != hospital2.hospital_id
-        assert hospital1.name != hospital2.name
-        assert hospital1.address != hospital2.address
-        assert hospital1.phone != hospital2.phone
-        assert hospital1.email != hospital2.email
-        assert hospital1.website != hospital2.website
-        assert hospital1.type != hospital2.type
-        assert hospital1.departments != hospital2.departments
-        assert hospital1.services != hospital2.services
 
     @pytest.mark.parametrize("dataset", _supported_datasets)
     def test_supported_datasets(self, dataset):

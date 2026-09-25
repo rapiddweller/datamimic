@@ -77,7 +77,7 @@ pip install datamimic-ce
 The fastest way to get started with DATAMIMIC is using the Python API:
 
 ```python
-from datamimic_ce.domains.common.services import PersonService
+from datamimic_ce.domains.shared.services import PersonService
 
 # Create a service instance
 person_service = PersonService(dataset="US")
@@ -131,7 +131,7 @@ DATAMIMIC favors explicit seeding via injected RNGs. Pass a seeded `random.Rando
 
 ```python
 from random import Random
-from datamimic_ce.domains.common.services import PersonService
+from datamimic_ce.domains.shared.services import PersonService
 
 # Deterministic people for the same seed
 svc_a = PersonService(dataset="US", rng=Random(123))

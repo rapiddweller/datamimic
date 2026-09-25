@@ -4,7 +4,7 @@ from dataclasses import dataclass, field
 
 from typer.testing import CliRunner
 
-import datamimic_ce.mcp.cli as cli
+import datamimic_ce.interfaces.mcp.cli as cli
 
 runner = CliRunner()
 

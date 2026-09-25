@@ -1,0 +1,105 @@
+# DATAMIMIC
+# Copyright (c) 2023-2025 Rapiddweller Asia Co., Ltd.
+# This software is licensed under the MIT License.
+# See LICENSE file for the full text of the license.
+# For questions and support, contact: info@rapiddweller.com
+
+
+from decimal import Decimal
+
+from datamimic_ce.engine.dsl.api import (
+    DATA_TYPE_BOOL,
+    DATA_TYPE_FLOAT,
+    DATA_TYPE_INT,
+    DATA_TYPE_LITERAL,
+    DATA_TYPE_STRING,
+    ArrayStatement,
+)
+from datamimic_ce.engine.runtime.contexts.geniter_context import GenIterContext
+from datamimic_ce.engine.runtime.tasks.task import GenSubTask
+
+
+class ArrayTask(GenSubTask):
+    def __init__(self, statement: ArrayStatement):
+        self._valid_element_type = {
+            DATA_TYPE_STRING,
+            DATA_TYPE_INT,
+            DATA_TYPE_BOOL,
+            DATA_TYPE_FLOAT,
+        }
+        self._statement = statement
+
+    @property
+    def statement(self) -> ArrayStatement:
+        return self._statement
+
+    def execute(self, parent_context: GenIterContext) -> None:
+        """
+        Generate data for element "array"
+        :param parent_context:
+        :return: None
+        """
+        if self._statement.type == DATA_TYPE_LITERAL:
+            self._execute_literal_generate(parent_context)
+        elif self._statement.script:
+            self._execute_script_generate(parent_context)
+        else:
+            self._execute_type_generate(parent_context)
+
+    def _execute_literal_generate(self, parent_context: GenIterContext) -> None:
+        """Preserve literal array values exactly - no random generation, no script evaluation."""
+        parent_context.add_current_product_field(self._statement.name, list(self._statement.literal_values))
+
+    def _execute_type_generate(self, parent_context: GenIterContext) -> None:
+        """
+        Create new data for path
+        """
+        from datamimic_ce.engine.runtime.tasks.task_util import TaskUtil
+
+        array_type = self._statement.type
+        count = self.statement.count
+
+        if not count:
+            return None
+
+        rng = parent_context.rng
+        value: list[str | int | bool | float | Decimal | bytes] = [
+            TaskUtil.generate_random_value_based_on_type(array_type, rng=rng) for _ in range(count)
+        ]
+        # Add field "array" into current product
+        parent_context.add_current_product_field(self._statement.name, value)
+
+    def _execute_script_generate(self, parent_context: GenIterContext) -> None:
+        """
+        Create data from script value
+        Result value datatype must be a List
+        """
+        valid_py_types = ["str", "int", "bool", "float"]
+
+        if not self._statement.script:
+            return None
+
+        value = parent_context.evaluate_python_expression(self._statement.script)
+        if isinstance(value, list):
+            if len(value) > 0:
+                # check validation of elements datatype
+                element_type = type(value[0])
+                element_type_name = element_type.__name__
+                if element_type_name not in valid_py_types:
+                    raise ValueError(
+                        f"Failed while evaluate script '{self._statement.script} of <array> '{self._statement.name}':"
+                        f"\n - expect array element datatypes in ({', '.join(valid_py_types)})"
+                        f", but got invalid datatype '{element_type_name}'"
+                    )
+                if not all(isinstance(ele, element_type) for ele in value):
+                    raise ValueError(
+                        f"Failed while evaluate script '{self._statement.script} of <array> '{self._statement.name}':"
+                        f"\n - all elements in list must be the same data type"
+                    )
+        else:
+            raise ValueError(
+                f"expect datatype list of evaluated script '{self._statement.script}'"
+                f" of <array> '{self._statement.name}', but got invalid datatype '{type(value).__name__}'"
+            )
+        # Add field "array" into current product
+        parent_context.add_current_product_field(self._statement.name, value)

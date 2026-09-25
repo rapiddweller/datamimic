@@ -1,0 +1,7 @@
+{
+  "after_digest": "0cc50a2c675431e18924d59a80cfde1a9cfa025d737f67603b4039a7bdd79376",
+  "before_digest": "beca9675d9a3f11e2d07c605aebfeb502ebc60cec670c928cc1c4f649ac5eca4",
+  "decided_by": "experiment orchestrator",
+  "rationale": "Step 2 implemented the declared engine.io.api facade and introduced real cross-component importers. Promotion from planned to public synchronizes the contract with that implementation; it grants no new target dependency edge.",
+  "schema_version": "1.0.0"
+}

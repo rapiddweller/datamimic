@@ -8,19 +8,20 @@ import json
 
 import pytest
 
-from datamimic_ce.authoring.reference import (
+from datamimic_ce.authoring.projection.reference import (
     ReferenceTopic,
     capabilities_index,
     capabilities_manifest,
     capabilities_sections,
+    generator_reference,
     known_generator_names,
     reference,
 )
-from datamimic_ce.authoring.schema import build_schema_index
+from datamimic_ce.authoring.domain.schema import build_schema_index
 from datamimic_ce.authoring.spec import authoring_spec_json_schema
-from datamimic_ce.enums.converter_enums import ConverterEnum
-from datamimic_ce.exporters.exporter_util import buffered_exporter_names
-from datamimic_ce.model.element_registry import list_element_tags
+from datamimic_ce.engine.dsl.enums.converter_enums import ConverterEnum
+from datamimic_ce.engine.dsl.model.element_registry import list_element_tags
+from datamimic_ce.engine.io.exporters.exporter_util import buffered_exporter_names
 
 
 def test_overview_is_owned_prose_over_live_topics() -> None:
@@ -147,6 +148,8 @@ def test_generator_names_is_unbounded_and_deterministic() -> None:
     names = known_generator_names()
     assert isinstance(names, set)
     assert len(names) > 0
+    assert "SequenceTableGenerator" in names
+    assert "- SequenceTableGenerator(sequence)" in generator_reference()
     # Repeatable
     assert names == known_generator_names()
 
@@ -162,7 +165,7 @@ def test_capabilities_cli_compact_is_valid_json() -> None:
     """The compact output is parseable, versioned, and omits authoring_spec."""
     from typer.testing import CliRunner
 
-    from datamimic_ce.cli import app
+    from datamimic_ce.interfaces.cli import app
 
     result = CliRunner().invoke(app, ["capabilities"])
     assert result.exit_code == 0
@@ -176,7 +179,7 @@ def test_capabilities_cli_compact_is_valid_json() -> None:
 def test_capabilities_cli_section_error_is_machine_readable() -> None:
     from typer.testing import CliRunner
 
-    from datamimic_ce.cli import app
+    from datamimic_ce.interfaces.cli import app
 
     result = CliRunner().invoke(app, ["capabilities", "--section", "bogus"])
     assert result.exit_code == 1
@@ -189,7 +192,7 @@ def test_capabilities_cli_section_error_is_machine_readable() -> None:
 def test_capabilities_cli_section_and_full_are_mutually_exclusive() -> None:
     from typer.testing import CliRunner
 
-    from datamimic_ce.cli import app
+    from datamimic_ce.interfaces.cli import app
 
     result = CliRunner().invoke(app, ["capabilities", "--section", "x", "--full"])
     assert result.exit_code == 1
@@ -201,7 +204,7 @@ def test_capabilities_cli_section_and_full_are_mutually_exclusive() -> None:
 def test_capabilities_cli_section_mode_returns_keyed_dict() -> None:
     from typer.testing import CliRunner
 
-    from datamimic_ce.cli import app
+    from datamimic_ce.interfaces.cli import app
 
     result = CliRunner().invoke(app, ["capabilities", "--section", "rules"])
     assert result.exit_code == 0
@@ -219,7 +222,7 @@ def test_capabilities_cli_section_mode_returns_keyed_dict() -> None:
 def test_capabilities_cli_full_mode_is_unwrapped_manifest() -> None:
     from typer.testing import CliRunner
 
-    from datamimic_ce.cli import app
+    from datamimic_ce.interfaces.cli import app
 
     result = CliRunner().invoke(app, ["capabilities", "--full"])
     assert result.exit_code == 0

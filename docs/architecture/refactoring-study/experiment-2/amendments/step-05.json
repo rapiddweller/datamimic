@@ -1,0 +1,7 @@
+{
+  "after_digest": "99febc13a98c371b5b2213993aa26dcfdfaadfbd8690fb5a10143124f158afe4",
+  "before_digest": "8c98bcba740d3e73286779ef0c47557b8eff723b4ba4775cfee030579ad91976",
+  "decided_by": "experiment orchestrator",
+  "rationale": "Step 5 moved clients, connection configuration, data sources, and exporters into the already-declared datamimic_ce.engine.io namespace. Removing the four deleted legacy paths synchronizes ownership with the target and grants no dependency or behavior permission.",
+  "schema_version": "1.0.0"
+}

@@ -21,7 +21,7 @@ from datamimic_ce.domains.finance.models.transaction import Transaction
 TRANSACTION_SCHEMA = EntitySchema(
     "Transaction",
     (
-        field("transaction_id", str, "Unique transaction identifier."),
+        field("transaction_id", str, "Unique transaction identifier.", unique_identifier_format="[A-Z0-9]{16}"),
         field("transaction_date", datetime, "Date and time of the transaction."),
         field("amount", float, "Transaction amount."),
         field("transaction_type", str, "Transaction type."),

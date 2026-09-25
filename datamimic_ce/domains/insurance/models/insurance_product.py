@@ -11,13 +11,12 @@ This module defines the insurance product model for the insurance domain.
 """
 
 from pathlib import Path
-from typing import Any
 
 from datamimic_ce.domains.domain_core import BaseEntity
 from datamimic_ce.domains.domain_core.property_cache import property_cache
 from datamimic_ce.domains.insurance.generators.insurance_product_generator import InsuranceProductGenerator
 from datamimic_ce.domains.insurance.models.insurance_coverage import InsuranceCoverage
-from datamimic_ce.domains.utils.rng_uuid import uuid4_from_random
+from datamimic_ce.domains.shared.utils.rng_uuid import uuid4_from_random
 
 
 class InsuranceProduct(BaseEntity):
@@ -30,11 +29,11 @@ class InsuranceProduct(BaseEntity):
     @property
     @property_cache
     def id(self) -> str:
-        return uuid4_from_random(self._insurance_product_generator.rng)
+        return self._claim_identifier("id", uuid4_from_random(self._insurance_product_generator.rng))
 
     @property
     @property_cache
-    def product_data(self) -> dict[str, Any]:
+    def product_data(self) -> dict[str, str]:
         return self._insurance_product_generator.get_random_product()
 
     @property
@@ -62,7 +61,7 @@ class InsuranceProduct(BaseEntity):
             for _ in range(max(1, count))
         ]
 
-    def to_dict(self) -> dict[str, Any]:
+    def to_dict(self) -> dict[str, object]:
         return {
             "id": self.id,
             "type": self.type,

@@ -14,19 +14,20 @@ from functools import cache
 from pathlib import Path
 from random import Random
 
-from datamimic_ce.domains.common.demographics.sampler import DemographicSample, DemographicSampler
-from datamimic_ce.domains.common.generators.person_generator import PersonGenerator
-from datamimic_ce.domains.common.literal_generators.family_name_generator import FamilyNameGenerator
-from datamimic_ce.domains.common.literal_generators.given_name_generator import GivenNameGenerator
-from datamimic_ce.domains.common.literal_generators.phone_number_generator import PhoneNumberGenerator
-from datamimic_ce.domains.common.models.demographic_config import DemographicConfig
 from datamimic_ce.domains.domain_core.base_domain_generator import DatasetAwareDomainGenerator
-from datamimic_ce.domains.utils.dataset_loader import (
+from datamimic_ce.domains.shared.demographics.sampler import DemographicSample, DemographicSampler
+from datamimic_ce.domains.shared.generators.person_generator import PersonGenerator
+from datamimic_ce.domains.shared.literal_generators.family_name_generator import FamilyNameGenerator
+from datamimic_ce.domains.shared.literal_generators.given_name_generator import GivenNameGenerator
+from datamimic_ce.domains.shared.literal_generators.phone_number_generator import PhoneNumberGenerator
+from datamimic_ce.domains.shared.models.demographic_config import DemographicConfig
+from datamimic_ce.domains.shared.utils.dataset_loader import (
     load_weighted_values_try_dataset,
     pick_one_weighted_no_repeat,
+    read_weighted_records,
+    read_weighted_values,
 )
-from datamimic_ce.domains.utils.dataset_path import dataset_path
-from datamimic_ce.utils.file_util import FileUtil
+from datamimic_ce.domains.shared.utils.dataset_path import dataset_path
 
 _CONDITION_DATA_DIR = dataset_path("healthcare", "medical", start=Path(__file__))
 # Directory for emergency relationships CSVs; test may monkeypatch this.
@@ -169,9 +170,9 @@ class PatientGenerator(DatasetAwareDomainGenerator):
         file_path = dataset_path(
             "healthcare", "medical", f"insurance_providers_{self._dataset}.csv", start=Path(__file__)
         )
-        loaded_data = FileUtil.read_weight_csv(file_path)
+        values, weights = read_weighted_values(file_path)
         # Reuse the injected RNG to keep sampling reproducible under tests.
-        return self._rng.choices(loaded_data[0], weights=loaded_data[1], k=1)[0]  # type: ignore
+        return self._rng.choices(values, weights=weights, k=1)[0]
 
     def get_allergies(self) -> list[str]:
         # Determine how many allergies to generate (most people have 0-3)
@@ -185,7 +186,7 @@ class PatientGenerator(DatasetAwareDomainGenerator):
             return []
 
         file_path = dataset_path("healthcare", "medical", f"allergies_{self._dataset}.csv", start=Path(__file__))
-        wgt, loaded_data = FileUtil.read_csv_having_weight_column(file_path, "weight")
+        wgt, loaded_data = read_weighted_records(file_path, "weight")
 
         # Sample allergies with consistent randomness for downstream assertions.
         random_choices = self._rng.choices(loaded_data, weights=wgt, k=num_allergies)
@@ -209,7 +210,7 @@ class PatientGenerator(DatasetAwareDomainGenerator):
             return []
 
         file_path = dataset_path("healthcare", "medical", f"medications_{self._dataset}.csv", start=Path(__file__))
-        wgt, loaded_data = FileUtil.read_csv_having_weight_column(file_path, "weight")
+        wgt, loaded_data = read_weighted_records(file_path, "weight")
 
         # Align medication sampling with the shared RNG for deterministic seeds.
         random_choices = self._rng.choices(loaded_data, weights=wgt, k=num_medications)
@@ -367,7 +368,7 @@ def _load_emergency_relationships(dataset: str) -> tuple[list[str], list[float]]
 
     # Use dataset_path so US fallback and single-warning logging is applied consistently
     path = dataset_path("healthcare", "medical", f"emergency_relationships_{dataset}.csv", start=Path(__file__))
-    values, weights = FileUtil.read_wgt_file(file_path=path)
+    values, weights = read_weighted_values(file_path=path)
 
     cache[dataset] = (values, weights)
     return values, weights

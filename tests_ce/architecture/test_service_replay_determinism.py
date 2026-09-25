@@ -23,17 +23,12 @@ from random import Random
 
 import pytest
 
-from datamimic_ce.domains.common.services.address_service import AddressService
-from datamimic_ce.domains.common.services.city_service import CityService
-from datamimic_ce.domains.common.services.company_service import CompanyService
-from datamimic_ce.domains.common.services.country_service import CountryService
-from datamimic_ce.domains.common.services.person_service import PersonService
 from datamimic_ce.domains.domain_core.base_domain_generator import ClockAnchoredDomainGenerator
-from datamimic_ce.domains.domain_core.entity_registry import list_entity_specs
 
 # All CE domain services that wrap a single entity. Listed explicitly so a
 # missing service is a visible PR change, not a discovery side-effect.
 from datamimic_ce.domains.ecommerce.services import OrderService, ProductService
+from datamimic_ce.domains.entity_registry import list_entity_specs
 from datamimic_ce.domains.finance.services import (
     BankAccountService,
     BankService,
@@ -58,6 +53,11 @@ from datamimic_ce.domains.public_sector.services import (
     EducationalInstitutionService,
     PoliceOfficerService,
 )
+from datamimic_ce.domains.shared.services.address_service import AddressService
+from datamimic_ce.domains.shared.services.city_service import CityService
+from datamimic_ce.domains.shared.services.company_service import CompanyService
+from datamimic_ce.domains.shared.services.country_service import CountryService
+from datamimic_ce.domains.shared.services.person_service import PersonService
 
 SEED = 20260519
 

@@ -3,8 +3,8 @@ import unittest
 import uuid
 from pathlib import Path
 
-from datamimic_ce.exporters.exporter_state_manager import ExporterStateManager
-from datamimic_ce.exporters.txt_exporter import TXTExporter
+from datamimic_ce.engine.io.exporters.exporter_state_manager import ExporterStateManager
+from datamimic_ce.engine.io.exporters.txt_exporter import TXTExporter
 from tests_ce.unit_tests.test_exporter.exporter_test_util import MockSetupContext, generate_mock_data, make_exporter
 
 

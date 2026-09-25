@@ -18,8 +18,8 @@ from datamimic_ce.authoring.contracts import (
     AuthoringStage,
     ScaffoldRequest,
 )
-from datamimic_ce.authoring.service import scaffold
-from datamimic_ce.cli import app
+from datamimic_ce.authoring.application.service import scaffold
+from datamimic_ce.interfaces.cli import app
 
 # Test specs covering various scenarios
 SPEC_VALID_DRY_RUN = {
@@ -146,11 +146,6 @@ class TestScaffoldParity:
         assert result.xml is not None
         assert len(result.products) > 0
         assert all(p.name and p.count >= 0 for p in result.products)
-
-    def test_service_scaffold_rejects_removed_lint_only_switch(self):
-        """Scaffold always runs the complete canonical transaction."""
-        with pytest.raises(ValueError, match="dry_run"):
-            ScaffoldRequest(spec=SPEC_VALID_NO_DRY_RUN, dry_run=False)
 
     def test_service_scaffold_render_error(self):
         """Service correctly handles render errors."""

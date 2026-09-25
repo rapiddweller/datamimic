@@ -1,7 +1,7 @@
 from types import SimpleNamespace
 
-from datamimic_ce.workers.generate_worker import GenerateWorker
-from datamimic_ce.workers.multiprocessing_generate_worker import MultiprocessingGenerateWorker
+from datamimic_ce.engine.runtime.tasks.generate.workers.generate_worker import GenerateWorker
+from datamimic_ce.engine.runtime.tasks.generate.workers.multiprocessing_generate_worker import MultiprocessingGenerateWorker
 
 
 def test_mp_wrapper_sets_title_before_generating(monkeypatch) -> None:
@@ -10,7 +10,7 @@ def test_mp_wrapper_sets_title_before_generating(monkeypatch) -> None:
     captured: dict[str, object] = {}
 
     monkeypatch.setattr(
-        "datamimic_ce.utils.process_util.set_generate_worker_process_title",
+        "datamimic_ce.engine.runtime.process.set_generate_worker_process_title",
         lambda **kwargs: captured.update(kwargs),
     )
     monkeypatch.setattr(GenerateWorker, "mp_preprocess", lambda *_: None)

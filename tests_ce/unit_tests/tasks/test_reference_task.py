@@ -9,11 +9,12 @@ import unittest
 from random import Random
 from unittest.mock import MagicMock, patch
 
-from datamimic_ce.clients.rdbms_client import RdbmsClient
-from datamimic_ce.contexts.geniter_context import GenIterContext
-from datamimic_ce.data_sources.data_source_pagination import DataSourcePagination
-from datamimic_ce.statements.reference_statement import ReferenceStatement
-from datamimic_ce.tasks.reference_task import ReferenceTask
+from datamimic_ce.engine.dsl.statements.reference_statement import ReferenceStatement
+from datamimic_ce.engine.io.api import DataSourcePagination
+from datamimic_ce.engine.io.clients.database_client import DatabaseClient
+from datamimic_ce.engine.io.clients.rdbms_client import RdbmsClient
+from datamimic_ce.engine.runtime.contexts.geniter_context import GenIterContext
+from datamimic_ce.engine.runtime.tasks.reference_task import ReferenceTask
 
 
 class TestReferenceTask(unittest.TestCase):
@@ -36,7 +37,7 @@ class TestReferenceTask(unittest.TestCase):
         # ReferenceTask reads ctx.rng directly; the random module exposes the
         # same callable API as a Random instance, so it works as a drop-in.
         self.context.rng = random
-        # unique selection routes via DataSourceRegistry.get_unique_data (stable per-statement seed).
+        # Unique selection uses the statement's stable distribution seed.
         self.context.root.stable_distribution_seed.return_value = 42
         self.rdbms_client = MagicMock(spec=RdbmsClient)
         self.context.root.clients.get.return_value = self.rdbms_client
@@ -62,6 +63,14 @@ class TestReferenceTask(unittest.TestCase):
 
         message = str(context.exception)
         self.assertIn("RDBMS and MongoDB are supported", message)
+
+    def test_execute_unsupported_database_client(self):
+        """A generic database client is not a supported reference source."""
+        self.context.root.clients.get.return_value = MagicMock(spec=DatabaseClient)
+        task = ReferenceTask(self.statement)
+
+        with self.assertRaisesRegex(ValueError, "RDBMS and MongoDB are supported"):
+            task.execute(self.context)
 
     def test_execute_empty_dataset(self):
         """Test execution with empty dataset."""
@@ -155,7 +164,7 @@ class TestReferenceTask(unittest.TestCase):
         task = ReferenceTask(self.statement, self.pagination)
 
         with patch(
-            "datamimic_ce.tasks.reference_task.DataSourceRegistry.load_reference_source",
+            "datamimic_ce.engine.runtime.tasks.reference_task.load_reference_source",
             return_value=selected,
         ) as load_reference_source:
             assert task.execute(self.context) == 17

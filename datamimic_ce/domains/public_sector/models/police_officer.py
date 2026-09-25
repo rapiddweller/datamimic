@@ -12,13 +12,12 @@ This module provides the PoliceOfficer entity model for generating realistic pol
 
 import datetime
 from pathlib import Path
-from typing import Any
 
-from datamimic_ce.domains.common.models.address import Address
-from datamimic_ce.domains.common.models.person import Person
 from datamimic_ce.domains.domain_core import BaseEntity
 from datamimic_ce.domains.domain_core.property_cache import property_cache
 from datamimic_ce.domains.public_sector.generators.police_officer_generator import PoliceOfficerGenerator
+from datamimic_ce.domains.shared.models.address import Address
+from datamimic_ce.domains.shared.models.person import Person
 
 
 class PoliceOfficer(BaseEntity):
@@ -58,7 +57,7 @@ class PoliceOfficer(BaseEntity):
         """
         rng = self.police_officer_generator.rng
         suffix = "".join(rng.choice("0123456789ABCDEF") for _ in range(8))
-        return f"OFF-{suffix}"
+        return self._claim_identifier("officer_id", f"OFF-{suffix}")
 
     @property
     @property_cache
@@ -252,7 +251,7 @@ class PoliceOfficer(BaseEntity):
         """
         return Address(self.police_officer_generator.address_generator)
 
-    def to_dict(self) -> dict[str, Any]:
+    def to_dict(self) -> dict[str, object]:
         """Convert the police officer entity to a dictionary.
 
         Returns:

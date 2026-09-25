@@ -55,6 +55,21 @@ jobs:
           if-no-files-found: error
           retention-days: 1
 
+  archkeel_check:
+    name: ArchKeel architecture contract
+    runs-on: ubuntu-22.04
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v5
+      - name: Set up Python 3.11
+        uses: actions/setup-python@v6
+        with:
+          python-version: '3.11'
+      - name: Install uv
+        uses: astral-sh/setup-uv@v8.1.0
+      - name: Validate architecture contract
+        run: make architecture-check
+
   install_dependencies:
     runs-on: ubuntu-22.04
     container: python:3.11-slim-bookworm
@@ -192,7 +207,7 @@ jobs:
       - name: Install and import built package
         run: |
           python -m pip install dist/*.whl
-          python -c "import datamimic_ce; import datamimic_ce.authoring.contracts; import datamimic_ce.cli"
+          python -c "import datamimic_ce; import datamimic_ce.authoring.contracts; import datamimic_ce.interfaces.cli"
           datamimic --help
 
   python_312_smoke:
@@ -212,7 +227,7 @@ jobs:
       - name: Install and import built package
         run: |
           python -m pip install dist/*.whl
-          python -c "import datamimic_ce; import datamimic_ce.authoring.contracts; import datamimic_ce.cli"
+          python -c "import datamimic_ce; import datamimic_ce.authoring.contracts; import datamimic_ce.interfaces.cli"
           datamimic --help
 
   python_313_smoke:
@@ -232,7 +247,7 @@ jobs:
       - name: Install and import built package
         run: |
           python -m pip install dist/*.whl
-          python -c "import datamimic_ce; import datamimic_ce.authoring.contracts; import datamimic_ce.cli"
+          python -c "import datamimic_ce; import datamimic_ce.authoring.contracts; import datamimic_ce.interfaces.cli"
           datamimic --help
 
   runtime_determinism_matrix:
@@ -382,7 +397,7 @@ jobs:
       - name: Setup git
         run: |
           apt-get update
-          apt-get install -y git
+          apt-get install -y git make
           git config --global --add safe.directory $(realpath .)
       - name: Checkout repository
         uses: actions/checkout@v5
@@ -396,7 +411,8 @@ jobs:
       - name: Run unit tests with coverage
         run: |
           . .venv/bin/activate
-          uv run pytest tests_ce/unit_tests/ tests_ce/architecture/test_facade_determinism.py tests_ce/architecture/test_runtime_determinism_manifest.py --cov --cov-report=xml
+          uv run make coverage-unit
+          uv run pytest tests_ce/architecture/test_facade_determinism.py tests_ce/architecture/test_runtime_determinism_manifest.py
         shell: bash
       - name: Upload coverage report
         uses: actions/upload-artifact@v6
@@ -660,6 +676,8 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
 
       - name: Download unit test coverage report
         uses: actions/download-artifact@v7
@@ -828,7 +846,7 @@ jobs:
   release:
     if: startsWith(github.ref, 'refs/tags/')
     runs-on: ubuntu-22.04
-    needs: [e2e_test, runtime_determinism_fan_in, mypy, ruff, python_310_smoke]
+    needs: [e2e_test, runtime_determinism_fan_in, mypy, ruff, python_310_smoke, archkeel_check]
     environment:
       name: pypi
       url: https://pypi.org/p/datamimic-ce

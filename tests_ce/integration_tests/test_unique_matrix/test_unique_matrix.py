@@ -37,7 +37,7 @@ def _assert_count(values: list, expected: int) -> None:
     assert len(values) == expected, f"expected {expected} rows, got {len(values)}"
 
 
-# ── valid: values-based ──────────────────────────────────────────────
+# ── valid value sources ──────────────────────────────────────────────
 
 _VALID_VALUES = [
     "key_values",
@@ -46,15 +46,6 @@ _VALID_VALUES = [
     "variable_values_seeded",
 ]
 
-
-@pytest.mark.parametrize("case", _VALID_VALUES)
-def test_valid_values_unique(case: str) -> None:
-    rows = _run(f"{case}.xml", "gen")
-    _assert_count(rows, 5)
-    _assert_distinct([r["code"] for r in rows], case)
-
-
-# ── valid: generator-based ───────────────────────────────────────────
 
 _VALID_GENERATORS = [
     "key_ean_generator",
@@ -68,8 +59,8 @@ _VALID_GENERATORS = [
 ]
 
 
-@pytest.mark.parametrize("case", _VALID_GENERATORS)
-def test_valid_generator_unique(case: str) -> None:
+@pytest.mark.parametrize("case", _VALID_VALUES + _VALID_GENERATORS)
+def test_valid_value_sources_are_unique(case: str) -> None:
     rows = _run(f"{case}.xml", "gen")
     _assert_count(rows, 5)
     _assert_distinct([r["code"] for r in rows], case)

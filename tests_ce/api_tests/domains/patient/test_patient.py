@@ -1,7 +1,7 @@
 from __future__ import annotations
 
-from datamimic_ce.domains.determinism import canonical_json, derive_seed, stable_uuid
 from datamimic_ce.domains.facade import generate_domain
+from datamimic_ce.domains.shared.determinism import canonical_json, derive_seed, stable_uuid
 
 
 def test_patient_cross_entity_consistency() -> None:

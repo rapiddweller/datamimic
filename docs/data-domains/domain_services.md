@@ -26,7 +26,7 @@ DATAMIMIC provides domain services across various industries:
 ### Common Services
 
 ```python
-from datamimic_ce.domains.common.services.person_service import PersonService
+from datamimic_ce.domains.shared.services.person_service import PersonService
 
 # Generate a single person
 person_service = PersonService()

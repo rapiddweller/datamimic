@@ -10,7 +10,7 @@ from pathlib import Path
 
 from typer.testing import CliRunner
 
-from datamimic_ce.cli import app
+from datamimic_ce.interfaces.cli import app
 
 _REPOSITORY_ROOT = Path(__file__).resolve().parents[3]
 _MARKDOWN_LINK = re.compile(r"\[[^]]+\]\(([^)]+)\)")

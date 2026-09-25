@@ -1,0 +1,411 @@
+# DATAMIMIC
+# Copyright (c) 2023-2025 Rapiddweller Asia Co., Ltd.
+# This software is licensed under the MIT License.
+# See LICENSE file for the full text of the license.
+# For questions and support, contact: info@rapiddweller.com
+
+import ast
+import base64
+import json
+import logging
+import re
+import uuid
+from collections.abc import Callable
+from datetime import date, datetime
+from decimal import Decimal
+from typing import Protocol, runtime_checkable
+
+from datamimic_ce.engine.dsl.api import (
+    EXPORTER_CONSOLE_EXPORTER,
+    EXPORTER_CSV,
+    EXPORTER_DBUNIT,
+    EXPORTER_FIXED_WIDTH,
+    EXPORTER_JSON,
+    EXPORTER_LOG_EXPORTER,
+    EXPORTER_TEST_RESULT_EXPORTER,
+    EXPORTER_TXT,
+    EXPORTER_XLSX,
+    EXPORTER_XML,
+    ExportOperation,
+    GenerateStatement,
+)
+from datamimic_ce.engine.io.clients.client import Client
+from datamimic_ce.engine.io.clients.mongodb_client import MongoDBClient
+from datamimic_ce.engine.io.clients.rdbms_client import RdbmsClient
+from datamimic_ce.engine.io.exporters.console_exporter import ConsoleExporter
+from datamimic_ce.engine.io.exporters.csv_exporter import CSVExporter
+from datamimic_ce.engine.io.exporters.database_exporter import DatabaseExporter
+from datamimic_ce.engine.io.exporters.dbunit_exporter import DbUnitExporter
+from datamimic_ce.engine.io.exporters.exporter import Exporter
+from datamimic_ce.engine.io.exporters.exporter_config import ExporterConfig
+from datamimic_ce.engine.io.exporters.exporter_context import ExporterContext
+from datamimic_ce.engine.io.exporters.fixed_width_exporter import FixedWidthExporter
+from datamimic_ce.engine.io.exporters.json_exporter import JsonExporter
+from datamimic_ce.engine.io.exporters.log_exporter import LogExporter
+from datamimic_ce.engine.io.exporters.mongodb_exporter import MongoDBExporter
+from datamimic_ce.engine.io.exporters.txt_exporter import TXTExporter
+from datamimic_ce.engine.io.exporters.unified_buffered_exporter import UnifiedBufferedExporter
+from datamimic_ce.engine.io.exporters.xlsx_exporter import XLSXExporter
+from datamimic_ce.engine.io.exporters.xml_exporter import XMLExporter
+
+logger = logging.getLogger("DATAMIMIC")
+
+# Registry of buffered file exporters: target name -> class. Every concrete exporter takes the uniform
+# (ExporterConfig, params) constructor; adding one is a single entry here, not a new factory branch.
+_BufferedExporterFactory = Callable[[ExporterConfig, dict], UnifiedBufferedExporter]
+_BUFFERED_EXPORTERS: dict[str, _BufferedExporterFactory] = {
+    EXPORTER_CSV: CSVExporter,
+    EXPORTER_JSON: JsonExporter,
+    EXPORTER_XML: XMLExporter,
+    EXPORTER_XLSX: XLSXExporter,
+    EXPORTER_TXT: TXTExporter,
+    EXPORTER_DBUNIT: DbUnitExporter,
+    EXPORTER_FIXED_WIDTH: FixedWidthExporter,
+}
+
+
+def buffered_exporter_names() -> frozenset[str]:
+    """Public read-only projection of registered buffered file-export targets."""
+
+    return frozenset(_BUFFERED_EXPORTERS)
+
+
+@runtime_checkable
+class SupportsAsPy(Protocol):
+    def as_py(self) -> object: ...
+
+
+def custom_serializer(obj: object) -> object:
+    """
+    Custom serializer for JSON dump that supports a wide range of types.
+    """
+    # Datetime and date objects
+    if isinstance(obj, datetime | date):
+        return obj.isoformat()
+
+    # If object supports pyarrow-like conversion
+    if isinstance(obj, SupportsAsPy):
+        converter = obj.as_py
+        if callable(converter):
+            return converter()
+
+    # UUID objects
+    if isinstance(obj, uuid.UUID):
+        return str(obj)
+
+    # MongoDB ObjectId (if available)
+    try:
+        from bson import ObjectId
+
+        if isinstance(obj, ObjectId):
+            return str(obj)
+    except ImportError:
+        pass
+
+    # pandas Timestamp objects (if available)
+    try:
+        import pandas as pd
+
+        if isinstance(obj, pd.Timestamp):
+            return obj.isoformat()
+    except ImportError:
+        pass
+
+    # Decimal objects
+    if isinstance(obj, Decimal):
+        return str(obj)
+
+    # NumPy scalar types
+    try:
+        import numpy as np
+
+        if isinstance(obj, np.generic):
+            return obj.item()
+    except ImportError:
+        pass
+
+    # Convert sets and frozensets to lists (JSON serializable)
+    if isinstance(obj, set | frozenset):
+        return list(obj)
+
+    # Handle bytes: try UTF-8, fallback to base64 encoding
+    if isinstance(obj, bytes):
+        try:
+            return obj.decode("utf-8")
+        except UnicodeDecodeError:
+            return base64.b64encode(obj).decode("ascii")
+
+    # Log and fallback
+    try:
+        return str(obj)
+    except Exception as e:
+        raise TypeError(
+            f"Failed when serializing exporting data: Object {repr(obj)} of type {type(obj)} is not JSON serializable"
+        ) from e
+
+
+class ExporterUtil:
+    @staticmethod
+    def get_all_exporter(setup_context: ExporterContext, stmt: GenerateStatement, targets: list[str]) -> list:
+        """
+        Get all exporters from target string
+
+        :param setup_context:
+        :param stmt:
+        :param targets:
+        :return:
+        """
+        exporters_with_operation, exporters_without_operation = ExporterUtil.create_exporter_list(
+            setup_context=setup_context,
+            stmt=stmt,
+            targets=targets,
+        )
+        return exporters_without_operation + exporters_with_operation
+
+    @staticmethod
+    def create_exporter_list(
+        setup_context: ExporterContext,
+        stmt: GenerateStatement,
+        targets: list[str],
+    ) -> tuple[list[tuple[Exporter, ExportOperation]], list[Exporter]]:
+        """
+        Create list of consumers with and without operation from consumer string
+
+        :param setup_context:
+        :param stmt:
+        :param targets:
+        :return:
+        """
+        consumers_with_operation = []
+        consumers_without_operation = []
+
+        # Join the targets list into a single string
+        target_str = ",".join(list(targets))
+
+        # Parse the target string using the parse_function_string function
+        try:
+            parsed_targets = ExporterUtil.parse_function_string(target_str)
+        except ValueError as e:
+            raise ValueError(f"Error parsing target string: {e}") from e
+
+        # Now loop over the parsed functions and create exporters
+        for target in parsed_targets:
+            exporter_name = target["function_name"]
+            params = target.get("params") or {}
+            # Handle consumer with operation
+            if "." in exporter_name:
+                consumer_name, operation_raw = exporter_name.split(".", 1)
+                try:
+                    operation = ExportOperation(operation_raw)
+                except ValueError:
+                    valid = ", ".join(op.value for op in ExportOperation)
+                    raise ValueError(
+                        f"Unknown client operation '{operation_raw}' in target '{exporter_name}'. "
+                        f"Valid operations: {valid}; a plain client id inserts."
+                    ) from None
+                client = setup_context.get_client_by_id(consumer_name)
+                consumer = ExporterUtil.create_exporter_from_client(client, consumer_name)
+                consumers_with_operation.append((consumer, operation))
+            # Handle consumer without operation
+            else:
+                consumer = ExporterUtil.get_exporter_by_name(
+                    setup_context=setup_context,
+                    name=exporter_name,
+                    gen_stmt=stmt,
+                    exporter_params_dict=params,
+                )
+                if consumer is not None:
+                    consumers_without_operation.append(consumer)
+
+        return consumers_with_operation, consumers_without_operation
+
+    @staticmethod
+    def parse_function_string(function_string):
+        parsed_functions = []
+        # Remove spaces and check if only commas or blank string are provided
+        if function_string.strip() == "" or all(char in ", " for char in function_string):
+            return parsed_functions
+
+        # Wrap the function string in a list to make it valid Python code
+        code_to_parse = f"[{function_string}]"
+
+        try:
+            # Parse the code into an AST node
+            module = ast.parse(code_to_parse, mode="eval")
+        except SyntaxError as e:
+            raise ValueError(f"Error parsing function string: {e}") from e
+
+        # Ensure the parsed node is a list
+        if not isinstance(module.body, ast.List):
+            raise ValueError("Function string is not a valid list of function calls.")
+
+        # Iterate over each element in the list
+        for element in module.body.elts:
+            # Handle function calls with parameters
+            if isinstance(element, ast.Call):
+                # Extract function name, including dot notation (e.g., mongodb.upsert)
+                if isinstance(element.func, ast.Name):
+                    function_name = element.func.id
+                elif isinstance(element.func, ast.Attribute):
+                    # Capture the full dotted name
+                    parts = []
+                    current = element.func
+                    while isinstance(current, ast.Attribute):
+                        parts.append(current.attr)
+                        current = current.value
+                    if isinstance(current, ast.Name):
+                        parts.append(current.id)
+                    function_name = ".".join(reversed(parts))
+                else:
+                    raise ValueError("Unsupported function type in function call.")
+
+                params = {}
+                # Extract keyword arguments
+                for keyword in element.keywords:
+                    key = keyword.arg
+                    try:
+                        # Safely evaluate the value using ast.literal_eval
+                        value = ast.literal_eval(keyword.value)
+                    except (ValueError, SyntaxError):
+                        # If evaluation fails, raise error for non-literal parameters
+                        raise ValueError(f"Non-literal parameter found: {keyword.value}") from None
+                    params[key] = value
+
+                parsed_functions.append({"function_name": function_name, "params": params})
+            # Handle function names without parameters, including dotted names like mongodb.delete
+            elif isinstance(element, ast.Attribute):
+                # For dotted names like mongodb.delete
+                parts = []
+                current = element
+                while isinstance(current, ast.Attribute):
+                    parts.append(current.attr)
+                    current = current.value
+                if isinstance(current, ast.Name):
+                    parts.append(current.id)
+                function_name = ".".join(reversed(parts))
+                parsed_functions.append({"function_name": function_name, "params": None})
+            elif isinstance(element, ast.Name):
+                # For single names like CSV
+                function_name = element.id
+                parsed_functions.append({"function_name": function_name, "params": None})
+            elif isinstance(element, ast.Constant):  # For Python 3.8+, for older versions use ast.Str or ast.Num
+                # This handles cases like 'CSV' and 'JSON' if they are given as strings
+                function_name = element.value
+                parsed_functions.append({"function_name": function_name, "params": None})
+            else:
+                # Attempt to evaluate other expressions (e.g., strings, numbers)
+                try:
+                    value = ast.literal_eval(element)
+                    function_name = str(value)
+                    parsed_functions.append({"function_name": function_name, "params": None})
+                except Exception:
+                    raise ValueError("Unsupported expression in function string.") from None
+
+        return parsed_functions
+
+    @staticmethod
+    def get_exporter_by_name(
+        setup_context: ExporterContext,
+        name: str,
+        gen_stmt: GenerateStatement,
+        exporter_params_dict: dict,
+    ):
+        """
+        Consumer factory: Create consumer based on name
+
+        :param setup_context:
+        :param name:
+        :param gen_stmt:
+        :param exporter_params_dict:
+        :return:
+        """
+        # targetEntity names the physical output entity (file basename here; table/collection in the
+        # store exporters) - one explicit override, honoured across every target family. type_=None:
+        # a file basename never routed by 'type', so behaviour is unchanged without targetEntity.
+        from datamimic_ce.engine.dsl.api import StatementUtil
+
+        product_name = StatementUtil.resolve_target_entity(gen_stmt.target_entity, None, gen_stmt.name)
+        # exportUri (validated at parse time) is the output-directory prefix for file exporters.
+        export_uri = gen_stmt.export_uri
+
+        if name is None or name == "":
+            return None
+
+        # A buffered file exporter: build the shared config once and let the class pull its own
+        # format-specific options from params. Adding a common setting touches only ExporterConfig;
+        # adding an exporter touches only _BUFFERED_EXPORTERS.
+        if name in _BUFFERED_EXPORTERS:
+            config = ExporterConfig(
+                setup_context=setup_context,
+                product_name=product_name,
+                chunk_size=exporter_params_dict.get("chunk_size"),
+                encoding=exporter_params_dict.get("encoding"),
+                export_uri=export_uri,
+            )
+            return _BUFFERED_EXPORTERS[name](config, exporter_params_dict)
+
+        if name == EXPORTER_CONSOLE_EXPORTER:
+            return ConsoleExporter()
+        elif name == EXPORTER_LOG_EXPORTER:
+            return LogExporter()
+        elif name == EXPORTER_TEST_RESULT_EXPORTER:
+            return setup_context.test_result_exporter
+        elif name in setup_context.clients:
+            # 1. get client from context
+            client = setup_context.get_client_by_id(name)
+            # 2. create consumer from client
+            return ExporterUtil.create_exporter_from_client(client, name)
+        elif setup_context.memstore_manager.contain(name):
+            return setup_context.memstore_manager.get_memstore(name)
+        else:
+            raise ValueError(
+                f"Target not found: {name}, please check the target name again. "
+                f"Expected: {', '.join(_BUFFERED_EXPORTERS)}, {EXPORTER_TEST_RESULT_EXPORTER}, "
+                f"{EXPORTER_CONSOLE_EXPORTER}, {EXPORTER_LOG_EXPORTER}, "
+                f"or client {list(setup_context.clients.keys())} "
+                f"or memstore {setup_context.memstore_manager.get_memstores_list()}"
+            )
+
+    @staticmethod
+    def create_exporter_from_client(client: Client | None, client_name: str):
+        if isinstance(client, MongoDBClient):
+            return MongoDBExporter(client)
+        elif isinstance(client, RdbmsClient):
+            return DatabaseExporter(client)
+        else:
+            raise ValueError(f"Cannot create target for client {client_name}")
+
+    @staticmethod
+    def json_dumps(data: object, indent=4) -> str:
+        """
+        JSON dump with default custom serializer
+        """
+        return json.dumps(data, default=custom_serializer, ensure_ascii=False, indent=indent)
+
+    @staticmethod
+    def check_path_format(path) -> str:
+        """
+        Check if the targetUri path is a valid file or directory path
+        :param path:
+        :return: "file" if the path is a file path, "directory" if the path is a directory path
+        """
+        logger.debug(f"Checking targetUri path format: {path}")
+        # Regex to validate the path with only forward slashes and valid characters
+        if re.match(r"^[a-zA-Z0-9_\-\.\/]+$", path):
+            # Check for invalid path ending (should not end with a dot)
+            if path.endswith("."):
+                logger.debug("Invalid path format")
+                raise ValueError(f"Invalid targetUri path format {path}")
+            # Check for file extension: one or more characters after a dot, and not ending with a dot
+            elif re.search(r"\.[a-zA-Z0-9]+$", path):
+                logger.debug(f"File path format detected: {path}")
+                return "file"
+            # Check for path with only slashes
+            elif all(char == "/" for char in path):
+                logger.debug("Invalid path format: path contains only slashes")
+                raise ValueError(f"Invalid targetUri path format {path}")
+            else:
+                logger.debug(f"Directory path format detected: {path}")
+                return "directory"
+        else:
+            raise ValueError(f"Invalid targetUri path format {path}")

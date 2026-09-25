@@ -20,7 +20,7 @@ except ImportError:
     ObjectId = None
 
 # Import the custom_serializer function from the module
-from datamimic_ce.exporters.exporter_util import custom_serializer
+from datamimic_ce.engine.io.exporters.exporter_util import custom_serializer
 
 
 class DummyAsPy:
@@ -30,6 +30,13 @@ class DummyAsPy:
 
     def as_py(self):
         return {"key": "value"}
+
+
+class NonCallableAsPy:
+    as_py = None
+
+    def __str__(self):
+        return "fallback"
 
 
 class BrokenStr:
@@ -53,6 +60,9 @@ class TestCustomSerializer(unittest.TestCase):
         """Test object with as_py method is correctly serialized using its as_py output."""
         dummy = DummyAsPy()
         self.assertEqual(custom_serializer(dummy), {"key": "value"})
+
+    def test_non_callable_as_py_uses_string_fallback(self):
+        self.assertEqual(custom_serializer(NonCallableAsPy()), "fallback")
 
     def test_uuid_object(self):
         """Test serialization for UUID objects."""

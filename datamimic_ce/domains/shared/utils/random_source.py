@@ -1,0 +1,26 @@
+"""Structural contract shared by Python's random module and Random instances."""
+
+from __future__ import annotations
+
+from collections.abc import MutableSequence, Sequence
+from typing import Protocol, TypeVar
+
+T = TypeVar("T")
+
+
+class RandomSource(Protocol):
+    def randint(self, a: int, b: int) -> int: ...
+    def random(self) -> float: ...
+    def uniform(self, a: float, b: float) -> float: ...
+    def randbytes(self, n: int) -> bytes: ...
+    def getrandbits(self, k: int) -> int: ...
+    def choice(self, seq: Sequence[T]) -> T: ...
+    def choices(
+        self,
+        population: Sequence[T],
+        weights: Sequence[float] | None = None,
+        *,
+        cum_weights: Sequence[float] | None = None,
+        k: int = 1,
+    ) -> list[T]: ...
+    def shuffle(self, x: MutableSequence[T]) -> None: ...

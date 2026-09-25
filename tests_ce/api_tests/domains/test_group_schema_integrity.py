@@ -19,7 +19,7 @@ EXPECTED_COLUMNS = {
     "sector_macro": ["group_id", "sector", "weight"],
 }
 
-BASE_DIR = Path("datamimic_ce/domains/domain_data/groups")
+BASE_DIR = Path("datamimic_ce/domains/shared/domain_data/groups")
 
 
 @pytest.mark.parametrize("dimension", sorted(EXPECTED_COLUMNS))

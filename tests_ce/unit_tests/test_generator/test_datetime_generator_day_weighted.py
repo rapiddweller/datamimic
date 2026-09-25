@@ -3,7 +3,7 @@
 
 import pytest
 
-from datamimic_ce.domains.common.literal_generators.datetime_generator import DateTimeGenerator
+from datamimic_ce.domains.shared.literal_generators.datetime_generator import DateTimeGenerator
 
 
 def test_weekday_weights_only_mondays():

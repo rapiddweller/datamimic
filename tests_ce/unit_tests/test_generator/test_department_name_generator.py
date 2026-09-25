@@ -5,7 +5,7 @@
 # For questions and support, contact: info@rapiddweller.com
 
 
-from datamimic_ce.domains.common.literal_generators.department_name_generator import DepartmentNameGenerator
+from datamimic_ce.domains.shared.literal_generators.department_name_generator import DepartmentNameGenerator
 
 
 def test_department_name_generator_support_locale():

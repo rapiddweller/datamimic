@@ -7,7 +7,7 @@ import hashlib
 from collections.abc import Iterable
 from random import Random
 
-from datamimic_ce.domains.common.models.person import Person
+from datamimic_ce.domains.shared.models.person import Person
 
 
 def _derive_seed(person: Person, cohort: str) -> int:

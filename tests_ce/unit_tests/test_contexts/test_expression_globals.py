@@ -15,7 +15,7 @@ from types import SimpleNamespace
 import pytest
 from faker import Faker
 
-from datamimic_ce.contexts.expression_globals import SAFE_GLOBALS, expression_globals
+from datamimic_ce.engine.runtime.contexts.expression_globals import SAFE_GLOBALS, expression_globals
 
 # Every name reviewed for entropy and external state (policy: expression_globals module docstring).
 # A new SAFE_GLOBALS name fails this gate until it is classified there.

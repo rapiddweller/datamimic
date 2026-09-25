@@ -25,7 +25,7 @@ from typing import TypeGuard
 
 from datamimic_ce.domains.domain_core.attribute_catalog import FieldSpec
 from datamimic_ce.domains.domain_core.base_entity import BaseEntity
-from datamimic_ce.domains.domain_core.entity_registry import EntitySpec, list_entity_specs
+from datamimic_ce.domains.entity_registry import EntitySpec, list_entity_specs
 
 SEED = 42
 COUNT = 3

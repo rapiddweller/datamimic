@@ -4,8 +4,8 @@ import json
 from pathlib import Path
 
 from datamimic_ce.authoring.contracts import ScaffoldRequest
-from datamimic_ce.authoring.rule_catalog import RuleSeverity
-from datamimic_ce.authoring.service import scaffold
+from datamimic_ce.authoring.domain.rule_catalog import RuleSeverity
+from datamimic_ce.authoring.application.service import scaffold
 
 _FIXTURES = Path(__file__).resolve().parent / "fixtures"
 

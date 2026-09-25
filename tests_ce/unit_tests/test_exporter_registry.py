@@ -1,4 +1,4 @@
-from datamimic_ce.constants.exporter_constants import (
+from datamimic_ce.engine.dsl.constants.exporter_constants import (
     EXPORTER_CSV,
     EXPORTER_DBUNIT,
     EXPORTER_FIXED_WIDTH,
@@ -7,15 +7,15 @@ from datamimic_ce.constants.exporter_constants import (
     EXPORTER_XLSX,
     EXPORTER_XML,
 )
-from datamimic_ce.exporters.csv_exporter import CSVExporter
-from datamimic_ce.exporters.dbunit_exporter import DbUnitExporter
-from datamimic_ce.exporters.exporter_util import _BUFFERED_EXPORTERS
-from datamimic_ce.exporters.fixed_width_exporter import FixedWidthExporter
-from datamimic_ce.exporters.json_exporter import JsonExporter
-from datamimic_ce.exporters.txt_exporter import TXTExporter
-from datamimic_ce.exporters.unified_buffered_exporter import UnifiedBufferedExporter
-from datamimic_ce.exporters.xlsx_exporter import XLSXExporter
-from datamimic_ce.exporters.xml_exporter import XMLExporter
+from datamimic_ce.engine.io.exporters.csv_exporter import CSVExporter
+from datamimic_ce.engine.io.exporters.dbunit_exporter import DbUnitExporter
+from datamimic_ce.engine.io.exporters.exporter_util import _BUFFERED_EXPORTERS
+from datamimic_ce.engine.io.exporters.fixed_width_exporter import FixedWidthExporter
+from datamimic_ce.engine.io.exporters.json_exporter import JsonExporter
+from datamimic_ce.engine.io.exporters.txt_exporter import TXTExporter
+from datamimic_ce.engine.io.exporters.unified_buffered_exporter import UnifiedBufferedExporter
+from datamimic_ce.engine.io.exporters.xlsx_exporter import XLSXExporter
+from datamimic_ce.engine.io.exporters.xml_exporter import XMLExporter
 
 
 def test_registry_maps_every_buffered_target_to_its_class():

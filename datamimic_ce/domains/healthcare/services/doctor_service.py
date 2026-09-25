@@ -13,8 +13,6 @@ This module provides a service for working with Doctor entities.
 from datetime import datetime
 from random import Random
 
-from datamimic_ce.domains.common.demographics.sampler import DemographicSampler
-from datamimic_ce.domains.common.models.demographic_config import DemographicConfig
 from datamimic_ce.domains.domain_core import BaseDomainService
 from datamimic_ce.domains.domain_core.attribute_catalog import (
     EntitySchema,
@@ -24,11 +22,13 @@ from datamimic_ce.domains.domain_core.attribute_catalog import (
 )
 from datamimic_ce.domains.healthcare.generators.doctor_generator import DoctorGenerator
 from datamimic_ce.domains.healthcare.models.doctor import Doctor
+from datamimic_ce.domains.shared.demographics.sampler import DemographicSampler
+from datamimic_ce.domains.shared.models.demographic_config import DemographicConfig
 
 DOCTOR_SCHEMA = EntitySchema(
     "Doctor",
     (
-        field("doctor_id", str, "Unique doctor identifier."),
+        field("doctor_id", str, "Unique doctor identifier.", unique_identifier_format="DOC-[0-9A-F]{8}"),
         field("npi_number", str, "National provider identifier."),
         field("license_number", str, "Medical license number."),
         field("given_name", str, "First (given) name."),

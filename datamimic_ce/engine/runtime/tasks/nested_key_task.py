@@ -1,0 +1,299 @@
+# DATAMIMIC
+# Copyright (c) 2023-2025 Rapiddweller Asia Co., Ltd.
+# This software is licensed under the MIT License.
+# See LICENSE file for the full text of the license.
+# For questions and support, contact: info@rapiddweller.com
+
+import copy
+
+from datamimic_ce.engine.dsl.api import DATA_TYPE_DICT, DATA_TYPE_LIST, NestedKeyStatement
+from datamimic_ce.engine.io.api import DataSourcePagination
+from datamimic_ce.engine.runtime.contexts.context import Context
+from datamimic_ce.engine.runtime.contexts.geniter_context import GenIterContext
+from datamimic_ce.engine.runtime.contexts.setup_context import SetupContext
+from datamimic_ce.engine.runtime.counts import get_int_count, resolve_count
+from datamimic_ce.engine.runtime.logging import logger
+from datamimic_ce.engine.runtime.sources.router import (
+    finalize_nested_key_source,
+    load_nested_key_source,
+    window_nested_key_rows,
+)
+from datamimic_ce.engine.runtime.tasks.element_task import ElementTask
+from datamimic_ce.engine.runtime.tasks.task import GenSubTask
+from datamimic_ce.engine.runtime.tasks.task_util import TaskUtil
+
+
+class NestedKeyTask(GenSubTask):
+    def __init__(
+        self,
+        ctx: SetupContext,
+        statement: NestedKeyStatement,
+    ):
+        self._statement = statement
+        self._default_value = statement.default_value
+        self._sub_tasks: list | None = None
+        self._converter_list = TaskUtil.create_converter_list(ctx, statement.converter)
+
+    @property
+    def statement(self) -> NestedKeyStatement:
+        return self._statement
+
+    def execute(self, parent_context: Context) -> None:
+        """
+        Generate data for element "nestedKey"
+        :param parent_context:
+        :return:
+        """
+        # Lazy creating sub_tasks of nestedkey_task for refreshing state of sub_tasks among nestedkey_tasks
+        self._sub_tasks = [
+            TaskUtil.get_task_by_statement(
+                ctx=parent_context.root,
+                stmt=child_stmt,
+            )
+            for child_stmt in self._statement.sub_statements
+        ]
+
+        # check condition to enable or disable element, default True
+        condition = TaskUtil.evaluate_condition_value(
+            ctx=parent_context,
+            element_name=self._statement.name,
+            value=self._statement.condition,
+        )
+        if isinstance(parent_context, GenIterContext):
+            if condition:
+                # If both source and script are None, create new nestedkey instead of loading data from file
+                if self._statement.source is None and self._statement.script is None:
+                    self._execute_generate(parent_context)
+                else:
+                    self._execute_iterate(parent_context)
+            elif self._default_value is not None:
+                # If condition false and default_value exist, assign default value to nestedKey
+                default_value = parent_context.evaluate_python_expression(self._default_value)
+                default_value = self._post_convert(default_value)
+                parent_context.add_current_product_field(self._statement.name, default_value)
+
+    def _lazy_init_sub_tasks(self, parent_context: GenIterContext, nestedkey_length: int):
+        """
+        Lazy creating sub_tasks of nestedkey_task for refreshing state of sub_tasks among nestedkey_tasks
+
+        :return:
+        """
+        # Set pagination as length of list
+        self._sub_tasks = [
+            TaskUtil.get_task_by_statement(
+                ctx=parent_context.root,
+                stmt=child_stmt,
+                pagination=DataSourcePagination(skip=0, limit=nestedkey_length),
+            )
+            for child_stmt in self._statement.sub_statements
+        ]
+
+    def _execute_generate(self, parent_context: GenIterContext) -> None:
+        """
+        Create new data for nestedkey
+        """
+        nestedkey_type = self._statement.type
+        value: object
+        if nestedkey_type == DATA_TYPE_LIST:
+            nestedkey_len = self._determine_nestedkey_length(context=parent_context)
+            generated_rows: list[object] = []
+            value = generated_rows
+            if nestedkey_len:
+                self._lazy_init_sub_tasks(parent_context=parent_context, nestedkey_length=nestedkey_len)
+                # Generate data for each nestedkey record
+                for _ in range(nestedkey_len):
+                    # Create sub-context for each list element creation
+                    ctx = GenIterContext(parent_context, str(self._statement.name))
+                    generated_value = self._try_execute_sub_tasks(ctx)
+                    generated_rows.append(generated_value)
+        elif nestedkey_type == DATA_TYPE_DICT:
+            self._lazy_init_sub_tasks(parent_context=parent_context, nestedkey_length=1)
+            # Create sub-context for nestedkey creation
+            ctx = GenIterContext(parent_context, str(self._statement.name))
+            value = self._try_execute_sub_tasks(ctx)
+        else:
+            # Load value from current product then assign to nestedkey if type is not defined,
+            # this is used from enriching template data
+            logger.debug(
+                f"Type of nestedkey '{self._statement.name}' is not defined, load value from current "
+                f"product/template instead and merge with additional configuration"
+            )
+            nestedkey_data = parent_context.current_product[self._statement.name]
+            self._lazy_init_sub_tasks(parent_context=parent_context, nestedkey_length=len(nestedkey_data))
+            ctx = GenIterContext(parent_context, str(self._statement.name))
+            ctx.current_product = nestedkey_data
+            value = self._try_execute_sub_tasks(ctx)
+
+        # Add field "nestedKey" into current product
+        parent_context.add_current_product_field(self._statement.name, value)
+
+    def _execute_iterate(self, parent_context: GenIterContext) -> None:
+        """
+        Load data from file and modify then assign to nestedkey
+        """
+        if self._statement.script is not None:
+            try:
+                result = self._evaluate_value_from_script(parent_context)
+            except Exception as e:
+                if self._default_value is not None:
+                    result = parent_context.evaluate_python_expression(self._default_value)
+                    logger.debug(
+                        f"Could not evaluate script of element '{self._statement.name}'. "
+                        f"Default value '{self._default_value}'  will be used instead."
+                    )
+                else:
+                    raise ValueError(f"Failed when execute script of element '{self._statement.name}'") from e
+        elif self._statement.source:
+            result = self._load_data_from_source(parent_context)
+        else:
+            raise ValueError(f"Cannot load original data for <nestedKey> '{self._statement.name}'")
+
+        # Post convert value after executing sub-tasks
+        if isinstance(result, list):
+            result = list(map(lambda ele: self._post_convert(ele), result))
+        elif isinstance(result, dict):
+            result = self._post_convert(result)
+        elif result is None:
+            pass
+        else:
+            raise ValueError(
+                f"Expect evaluated datatype of script '{self._statement.script}' (of element <{self._statement.name}>)"
+                f" is 'list' or 'dict', but get invalid datatype: '{type(result)}'"
+            )
+
+        # Add field "nestedKey" into current product
+        parent_context.add_current_product_field(self._statement.name, result)
+
+    def _try_execute_sub_tasks(self, ctx: GenIterContext) -> dict:
+        """
+        Try to execute sub-tasks of nestedkey_task. Throw StopIteration error when any source reach the end
+        :param ctx:
+        :return:
+        """
+        attributes = {}
+        # Try to execute sub_tasks
+        if self._sub_tasks:
+            for sub_task in self._sub_tasks:
+                try:
+                    if isinstance(sub_task, ElementTask):
+                        attributes.update(sub_task.generate_xml_attribute(ctx))
+                    else:
+                        sub_task.execute(ctx)
+                except StopIteration:
+                    # Stop generating data if one of datasource reach the end
+                    logger.info(
+                        f"Data generator sub-task {sub_task.__class__.__name__} '{sub_task.statement.name}' "
+                        f"has already reached the end"
+                    )
+                    break
+        converted_product = self._post_convert(ctx.current_product)
+        if not isinstance(converted_product, dict):
+            raise ValueError(
+                f"Nested-key product converter must return a dictionary, but got {type(converted_product)}"
+            )
+        ctx.current_product = converted_product
+        return {**ctx.current_product, **attributes}
+
+    def _evaluate_value_from_script(self, parent_context: GenIterContext) -> object:
+        """
+        Evaluate data using script
+
+        :param parent_context:
+        :return:
+        """
+        value = parent_context.evaluate_python_expression(self._statement.script)
+        result: object
+        if isinstance(value, list):
+            result = self._modify_nestedkey_data_list(parent_context, value)
+        elif isinstance(value, dict):
+            result = self._modify_nestedkey_data_dict(parent_context, value)
+        else:
+            raise ValueError(
+                f"Expect evaluated datatype of script '{self._statement.script}' is 'list' or 'dict', "
+                f"but get invalid datatype: '{type(value)}'"
+            )
+        return result
+
+    def _load_data_from_source(self, parent_context: Context) -> object:
+        """Load through the registry, then apply nested child tasks to the returned records."""
+        if not isinstance(parent_context, GenIterContext):
+            raise ValueError(f"<nestedKey> '{self._statement.name}' requires a generation context")
+
+        raw = load_nested_key_source(parent_context, self._statement)
+        if isinstance(raw, list):
+            result: list | dict = self._modify_nestedkey_data_list(parent_context, raw)
+        elif isinstance(raw, dict):
+            result = self._modify_nestedkey_data_dict(parent_context, raw)
+        else:
+            raise ValueError(f"Source of <nestedKey> '{self._statement.name}' must produce a list or dictionary")
+        return finalize_nested_key_source(parent_context, self._statement, result)
+
+    def _modify_nestedkey_data_dict(self, parent_context: GenIterContext, value: dict) -> dict:
+        """
+        Modify original dict data of nestedkey
+
+        :param parent_context:
+        :param value:
+        :return:
+        """
+        self._lazy_init_sub_tasks(parent_context=parent_context, nestedkey_length=1)
+        # Create sub-context for nestedkey creation
+        ctx = GenIterContext(parent_context, str(self._statement.name))
+        ctx.current_product = copy.copy(value)
+        modified_value = self._try_execute_sub_tasks(ctx)
+        return modified_value
+
+    def _modify_nestedkey_data_list(self, parent_context: GenIterContext, value: list) -> list[dict]:
+        """
+        Modify original list data of nestedKey
+        :param value:
+        :return:
+        """
+        result = []
+        count = self._determine_nestedkey_length(context=parent_context)
+        iterate_value = window_nested_key_rows(value, count, self._statement.cyclic)
+        nestedkey_len = len(iterate_value)
+
+        # Modify port data
+        self._lazy_init_sub_tasks(parent_context=parent_context, nestedkey_length=nestedkey_len)
+        # Modify each nestedkey of the data
+        for idx in range(nestedkey_len):
+            current_product = iterate_value[idx]
+            if not isinstance(current_product, dict):
+                raise ValueError(
+                    f"Expect current product of nestedkey '{self._statement.name}' is a dictionary, "
+                    f"but get invalid datatype: '{type(current_product)}'"
+                )
+            ctx = GenIterContext(parent_context, str(self._statement.name))
+            ctx.current_product = current_product
+
+            # Ensure current_product is a dictionary
+            if not isinstance(ctx.current_product, dict):
+                raise ValueError(
+                    f"Expect current product of nestedkey '{self._statement.name}' is a dictionary, "
+                    f"but get invalid datatype: '{type(ctx.current_product)}'"
+                )
+
+            modified_value = self._try_execute_sub_tasks(ctx)
+            result.append(modified_value)
+
+        return result
+
+    def _determine_nestedkey_length(self, context: Context) -> int | None:
+        """
+        Determine nestedkey length based on count, minCount and maxCount
+
+        :return:
+        """
+        count = get_int_count(self._statement.count, context)
+        return resolve_count(count, self._statement.min_count, self._statement.max_count, context.rng)
+
+    def _post_convert(self, value: object) -> object:
+        """
+        Post convert value after executing sub-tasks
+        :param value:
+        :return:
+        """
+        for converter in self._converter_list:
+            value = converter.convert(value)
+        return value
