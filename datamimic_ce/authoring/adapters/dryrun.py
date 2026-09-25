@@ -349,30 +349,21 @@ def _memstore_source_binding(
     )
 
 
-def _contains_execute(root_stmt: object) -> bool:
-    from datamimic_ce.engine.dsl.api import CompositeStatement, ExecuteStatement
+def _dry_run_hazards(root_stmt: object) -> tuple[bool, bool]:
+    from datamimic_ce.engine.dsl.api import CompositeStatement, ExecuteStatement, IncludeStatement
 
-    def _walk(stmt: object) -> bool:
+    has_execute = False
+    has_unbounded_include = False
+    pending = [root_stmt]
+    while pending:
+        stmt = pending.pop()
         if isinstance(stmt, ExecuteStatement):
-            return True
-        if isinstance(stmt, CompositeStatement):
-            return any(_walk(sub) for sub in stmt.sub_statements)
-        return False
-
-    return _walk(root_stmt)
-
-
-def _contains_unbounded_include(root_stmt: object) -> bool:
-    from datamimic_ce.engine.dsl.api import CompositeStatement, IncludeStatement
-
-    def _walk(stmt: object) -> bool:
-        if isinstance(stmt, IncludeStatement):
-            return not stmt.uri.endswith(".properties")
-        if isinstance(stmt, CompositeStatement):
-            return any(_walk(sub) for sub in stmt.sub_statements)
-        return False
-
-    return _walk(root_stmt)
+            has_execute = True
+        elif isinstance(stmt, IncludeStatement) and not stmt.uri.endswith(".properties"):
+            has_unbounded_include = True
+        elif isinstance(stmt, CompositeStatement):
+            pending.extend(stmt.sub_statements)
+    return has_execute, has_unbounded_include
 
 
 # One stripped file target of a product: (exporter name in the registry, ctor params).
@@ -1295,8 +1286,7 @@ def _execute_captured(
         from datamimic_ce.engine.runtime.api import runtime_environment
 
         root_stmt = DescriptorParser.parse(path, None, runtime_environment())
-        has_execute = _contains_execute(root_stmt)
-        has_unbounded_include = _contains_unbounded_include(root_stmt)
+        has_execute, has_unbounded_include = _dry_run_hazards(root_stmt)
     except Exception as err:
         return _failed_capture(
             _run_error(RULE_RUNTIME_ERROR, f"Dry-run failed: {err}", _runtime_hint(err), lint),
