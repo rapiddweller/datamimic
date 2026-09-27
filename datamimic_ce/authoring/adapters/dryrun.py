@@ -177,7 +177,7 @@ class _MemstoreSourceBinding:
     """Typed runtime routing fact for one generate reading a memstore entity."""
 
     source_id: str
-    entity: str
+    entity: str | None
     status: _MemstoreBindingStatus
     producers: tuple[_MemstoreProducer, ...]
 
@@ -297,13 +297,14 @@ def _memstore_producers(
     root_stmt: object,
     memstore_ids: set[str],
 ) -> tuple[_MemstoreProducer, ...]:
-    from datamimic_ce.engine.dsl.api import GenerateStatement, StatementUtil
+    from datamimic_ce.engine.dsl.api import GenerateStatement
+    from datamimic_ce.engine.io.api import resolve_target_entity
 
     producers: list[_MemstoreProducer] = []
     for statement in _generate_statements(root_stmt):
         if not isinstance(statement, GenerateStatement):
             continue
-        entity = StatementUtil.resolve_target_entity(
+        entity = resolve_target_entity(
             statement.target_entity,
             statement.type,
             statement.name,
@@ -325,13 +326,14 @@ def _memstore_source_binding(
     memstore_ids: set[str],
     producers: tuple[_MemstoreProducer, ...],
 ) -> _MemstoreSourceBinding | None:
-    from datamimic_ce.engine.dsl.api import EL_GENERATE, GenerateStatement, StatementUtil, source_file_format_for
+    from datamimic_ce.engine.dsl.api import EL_GENERATE, GenerateStatement, source_file_format_for
+    from datamimic_ce.engine.io.api import resolve_source_entity
 
     if not isinstance(stmt, GenerateStatement) or stmt.source not in memstore_ids:
         return None
     if source_file_format_for(EL_GENERATE, stmt.source, stmt.type) is not None:
         return None
-    entity = StatementUtil.resolve_source_entity(stmt)
+    entity = resolve_source_entity(stmt.source_entity, stmt.type, stmt.name)
     candidates = tuple(
         producer for producer in producers if producer.source_id == stmt.source and producer.entity == entity
     )
@@ -446,13 +448,13 @@ def _parse_buffered_targets(targets: set[str]) -> list[_FileTarget]:
     """The subset of raw target strings that are buffered FILE exporters, parsed to
     (name, params). Membership in the exporter registry is the dispatch — memstores,
     clients, Console/Log never appear there, so they can never be smoked."""
-    from datamimic_ce.engine.io.api import ExporterUtil, buffered_exporter_names
+    from datamimic_ce.engine.io.api import buffered_exporter_names, parse_function_string
 
     parsed: list[_FileTarget] = []
     buffered_names = buffered_exporter_names()
     for raw in sorted(targets):
         try:
-            entries = ExporterUtil.parse_function_string(raw)
+            entries = parse_function_string(raw)
         except ValueError:
             continue  # malformed target string — the engine's own path reports it
         for entry in entries:
@@ -473,7 +475,8 @@ def neutralize_for_dry_run(
     """Statement transformer: cap counts, keep only memstore targets, force 1 process.
     When a collector dict is given, the FILE targets removed from each product are
     recorded so smoke_export can replay the captured rows through them afterwards."""
-    from datamimic_ce.engine.dsl.api import CompositeStatement, GenerateStatement, SetupStatement, StatementUtil
+    from datamimic_ce.engine.dsl.api import CompositeStatement, GenerateStatement, SetupStatement
+    from datamimic_ce.engine.io.api import resolve_target_entity
 
     assert isinstance(root_stmt, SetupStatement)
     memstores = _memstore_ids(root_stmt)
@@ -489,7 +492,7 @@ def neutralize_for_dry_run(
                     file_targets = _parse_buffered_targets(stmt.targets - memstores)
                     if file_targets:
                         # same basename resolution as the real exporter factory
-                        basename = StatementUtil.resolve_target_entity(stmt.target_entity, None, stmt.name)
+                        basename = resolve_target_entity(stmt.target_entity, None, stmt.name)
                         stripped_file_targets[stmt.full_name] = (basename, file_targets)
                 stmt.targets = {t for t in stmt.targets if t in memstores}
             stmt.num_process = 1

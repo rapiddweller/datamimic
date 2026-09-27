@@ -11,8 +11,8 @@ from typing import Protocol
 
 import dill
 
-from datamimic_ce.engine.dsl.api import CompositeStatement, GenerateStatement, KeyStatement, Statement, StatementUtil
-from datamimic_ce.engine.io.api import ExporterUtil, UnifiedBufferedExporter, count_query_length
+from datamimic_ce.engine.dsl.api import CompositeStatement, GenerateStatement, KeyStatement, Statement
+from datamimic_ce.engine.io.api import ExporterUtil, UnifiedBufferedExporter, count_query_length, resolve_target_entity
 from datamimic_ce.engine.runtime.contexts.context import Context, SetupContext
 from datamimic_ce.engine.runtime.contexts.geniter_context import GenIterContext
 from datamimic_ce.engine.runtime.logging import gen_timer, logger
@@ -371,7 +371,7 @@ class GenerateTask(CommonSubTask):
         for current_exporter_str in current_stmt.targets:
             if setup_context.memstore_manager.contain(current_exporter_str):
                 # targetEntity -> type -> name keys the memstore, symmetric with the sourceEntity read.
-                entity = StatementUtil.resolve_target_entity(
+                entity = resolve_target_entity(
                     current_stmt.target_entity, current_stmt.type, current_stmt.name
                 )
                 # A nested generate that never executed (condition never fired, outer count 0)

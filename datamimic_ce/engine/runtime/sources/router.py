@@ -15,7 +15,6 @@ from datamimic_ce.engine.dsl.api import (
     SourceDistribution,
     SourceFileFormat,
     Statement,
-    StatementUtil,
     VariableStatement,
     source_file_format,
     source_file_format_for,
@@ -32,6 +31,8 @@ from datamimic_ce.engine.io.api import (
     is_mongodb_client,
     is_rdbms_client,
     mongodb_count_collection,
+    resolve_source_collection,
+    resolve_source_entity,
 )
 from datamimic_ce.engine.io.contracts import select_rows
 from datamimic_ce.engine.io.data_sources.selection import get_distributed_data, get_unique_data
@@ -137,9 +138,11 @@ def set_data_source_length(ctx: SetupContext | GenIterContext, stmt: Statement) 
         )
         # dbunit dataset: one table's row count (checked before the generic .xml branch below).
         if source_format is SourceFileFormat.DBUNIT_XML:
+            entity = resolve_source_entity(stmt.source_entity, stmt.type, stmt.name)
             ds_len = len(
                 FileUtil.read_dbunit_to_dict_list(
-                    root_ctx.descriptor_dir / source_str, StatementUtil.resolve_source_entity(stmt)
+                    root_ctx.descriptor_dir / source_str,
+                    entity,
                 )
             )
         # 2.1: Check if datasource is csv file
@@ -154,7 +157,7 @@ def set_data_source_length(ctx: SetupContext | GenIterContext, stmt: Statement) 
         # 2.4: Check if datasource is memstore
         elif root_ctx.memstore_manager.contain(source_str):
             ds_len = root_ctx.memstore_manager.get_memstore(source_str).get_data_len_by_type(
-                StatementUtil.resolve_source_entity(stmt)
+                resolve_source_entity(stmt.source_entity, stmt.type, stmt.name)
             )
         elif root_ctx.get_client_by_id(source_str) is not None:
             client = root_ctx.get_client_by_id(source_str)
@@ -178,7 +181,8 @@ def set_data_source_length(ctx: SetupContext | GenIterContext, stmt: Statement) 
                         return
                     ds_len = counted
                 elif stmt.source_entity is not None or stmt.type is not None:
-                    ds_len = database_count_table_length(client, StatementUtil.resolve_source_entity(stmt))
+                    entity = resolve_source_entity(stmt.source_entity, stmt.type, stmt.name)
+                    ds_len = database_count_table_length(client, entity)
 
             elif is_mongodb_client(client):
                 if selector is not None:
@@ -186,7 +190,7 @@ def set_data_source_length(ctx: SetupContext | GenIterContext, stmt: Statement) 
                         ds_len = database_count_query_length(client, selector)
                     except ValueError:
                         return
-                elif (collection := StatementUtil.resolve_source_collection(stmt)) is not None:
+                elif (collection := resolve_source_collection(stmt.source_entity, stmt.type)) is not None:
                     try:
                         ds_len = mongodb_count_collection(client, collection)
                     except ValueError:
@@ -282,8 +286,9 @@ def load_generate_source(
             root.descriptor_dir / source, stmt.cyclic, start_idx, end_idx, offset=stmt.offset
         )
     elif source_format is SourceFileFormat.DBUNIT_XML:
+        entity = resolve_source_entity(stmt.source_entity, stmt.type, stmt.name)
         source_data = FileUtil.read_dbunit_to_dict_list(
-            root.descriptor_dir / source, StatementUtil.resolve_source_entity(stmt)
+            root.descriptor_dir / source, entity
         )
         if stmt.offset:
             source_data = source_data[stmt.offset :]
@@ -299,7 +304,7 @@ def load_generate_source(
                 f"<generate> '{stmt.full_name}': offset= is only supported for file sources, not memstore '{source}'"
             )
         source_data = root.memstore_manager.get_memstore(source).get_data_by_type(
-            StatementUtil.resolve_source_entity(stmt), pagination, stmt.cyclic
+            resolve_source_entity(stmt.source_entity, stmt.type, stmt.name), pagination, stmt.cyclic
         )
     elif root.clients.get(source) is not None:
         if stmt.offset:
@@ -312,7 +317,7 @@ def load_generate_source(
         if is_mongodb_client(client):
             if stmt.selector:
                 source_data = database_get_by_page_with_query(client, selector, pagination)
-            elif (collection := StatementUtil.resolve_source_collection(stmt)) is not None:
+            elif (collection := resolve_source_collection(stmt.source_entity, stmt.type)) is not None:
                 source_data = database_get_by_page_with_type(client, collection, pagination)
             else:
                 raise ValueError(
@@ -325,9 +330,8 @@ def load_generate_source(
             if stmt.selector:
                 source_data = database_get_by_page_with_query(client, selector, pagination)
             else:
-                source_data = database_get_by_page_with_type(
-                    client, StatementUtil.resolve_source_entity(stmt), pagination
-                )
+                entity = resolve_source_entity(stmt.source_entity, stmt.type, stmt.name)
+                source_data = database_get_by_page_with_type(client, entity, pagination)
         else:
             raise ValueError(f"Cannot load data from client: {type(client).__name__}")
     else:
@@ -359,7 +363,7 @@ def load_nested_key_source(context: Context, stmt: NestedKeyStatement) -> object
             return FileUtil.read_json_to_list(context.root.descriptor_dir / source)
         if context.root.memstore_manager.contain(source):
             return context.root.memstore_manager.get_memstore(source).get_data_by_type(
-                StatementUtil.resolve_source_entity(stmt), None, stmt.cyclic
+                resolve_source_entity(stmt.source_entity, stmt.type, stmt.name), None, stmt.cyclic
             )
         raise ValueError(f"Invalid source '{source}' of nestedkey '{stmt.name}'")
 
@@ -370,7 +374,7 @@ def load_nested_key_source(context: Context, stmt: NestedKeyStatement) -> object
 
     if context.root.memstore_manager.contain(source):
         return context.root.memstore_manager.get_memstore(source).get_data_by_type(
-            StatementUtil.resolve_source_entity(stmt), None, stmt.cyclic
+            resolve_source_entity(stmt.source_entity, stmt.type, stmt.name), None, stmt.cyclic
         )
     raise ValueError(f"Cannot load data from source '{source_expression}' of <nestedKey> '{stmt.name}'")
 

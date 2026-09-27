@@ -23,12 +23,18 @@ from datamimic_ce.engine.io.connection_config.mongodb_connection_config import M
 from datamimic_ce.engine.io.connection_config.properties import load_connection_profile
 from datamimic_ce.engine.io.connection_config.rdbms_connection_config import RdbmsConnectionConfig
 from datamimic_ce.engine.io.contracts import DataSourcePagination, SmokeExportRequest
+from datamimic_ce.engine.io.data_sources.boundary.entities import resolve_source_collection, resolve_source_entity
 from datamimic_ce.engine.io.data_sources.data_source_registry import DataSourceRegistry
 from datamimic_ce.engine.io.data_sources.weighted_data_source import WeightedDataSource
 from datamimic_ce.engine.io.data_sources.weighted_entity_data_source import WeightedEntityDataSource
 from datamimic_ce.engine.io.exporters.core.exporter import Exporter
 from datamimic_ce.engine.io.exporters.core.exporter_config import ExporterConfig
 from datamimic_ce.engine.io.exporters.core.exporter_state_manager import ExporterStateManager
+from datamimic_ce.engine.io.exporters.core.routing import (
+    parse_function_string,
+    resolve_target_entity,
+    resolve_target_entity_from_metadata,
+)
 from datamimic_ce.engine.io.exporters.core.unified_buffered_exporter import UnifiedBufferedExporter
 from datamimic_ce.engine.io.exporters.database.database_exporter import DatabaseExporter
 from datamimic_ce.engine.io.exporters.database.mongodb_exporter import MongoDBExporter
@@ -86,6 +92,11 @@ __all__ = [
     "is_mongodb_client",
     "is_rdbms_client",
     "mongodb_count_collection",
+    "parse_function_string",
+    "resolve_source_collection",
+    "resolve_source_entity",
+    "resolve_target_entity",
+    "resolve_target_entity_from_metadata",
     "rdbms_get_current_sequence_number",
     "rdbms_increase_sequence_number",
     "smoke_export",

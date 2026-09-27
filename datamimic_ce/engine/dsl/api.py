@@ -59,6 +59,7 @@ from datamimic_ce.engine.dsl.statements.flow.commands.echo_statement import Echo
 from datamimic_ce.engine.dsl.statements.flow.commands.execute_statement import ExecuteStatement
 from datamimic_ce.engine.dsl.statements.flow.loops.while_statement import WhileStatement
 from datamimic_ce.engine.dsl.statements.generation.generate_statement import GenerateStatement
+from datamimic_ce.engine.dsl.statements.generation.targets import parse_consumer
 from datamimic_ce.engine.dsl.statements.setup.database_statement import DatabaseStatement
 from datamimic_ce.engine.dsl.statements.setup.demographics_statement import DemographicsStatement
 from datamimic_ce.engine.dsl.statements.setup.generator_statement import GeneratorStatement
@@ -67,7 +68,6 @@ from datamimic_ce.engine.dsl.statements.setup.memstore_statement import Memstore
 from datamimic_ce.engine.dsl.statements.setup.mongodb_statement import MongoDBStatement
 from datamimic_ce.engine.dsl.statements.setup.setup_statement import SetupStatement
 from datamimic_ce.engine.dsl.statements.setup.state_machine_statement import StateMachineStatement
-from datamimic_ce.engine.dsl.statements.statement_util import StatementUtil
 from datamimic_ce.engine.dsl.statements.traversal import (
     get_nearest_generate_statement,
     retrieve_executed_sub_gen_statement_by_name,
@@ -261,7 +261,7 @@ __all__ = [
     "source_file_format_for",
     "supported_source_file_formats",
     "Statement",
-    "StatementUtil",
+    "parse_consumer",
     "StateMachineStatement",
     "SupportHash",
     "SupportOutputFormat",

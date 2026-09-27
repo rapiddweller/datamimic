@@ -30,7 +30,7 @@ class Memstore(Exporter):
         """
         return self._storage.get(product_type, [])
 
-    def get_data_by_type(self, product_type: str, pagination: DataSourcePagination | None, cyclic: bool):
+    def get_data_by_type(self, product_type: str | None, pagination: DataSourcePagination | None, cyclic: bool):
         """
         Get data in memstore by data type and pagination
         :param product_type:
@@ -46,7 +46,7 @@ class Memstore(Exporter):
             logger.error(f"Data naming '{product_type}' is empty in memstore: {e}")
             raise KeyError(f"Data naming '{product_type}' is empty in memstore") from e
 
-    def get_data_len_by_type(self, entity_name: str) -> int:
+    def get_data_len_by_type(self, entity_name: str | None) -> int:
         """
         Get length of data from memstore
         """

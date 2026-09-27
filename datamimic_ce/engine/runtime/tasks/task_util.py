@@ -78,7 +78,7 @@ class TaskUtil:
         #   parent would otherwise block the parent's deletion.
         # Each recursion level re-checks its OWN targets, so a cascade of nested deletes becomes
         # deepest-first automatically. The operation itself comes from the same parsed
-        # (exporter, operation) pairs the engine already built via ExporterUtil.parse_function_string
+        # (exporter, operation) pairs the engine already built via parse_function_string
         # (see create_exporter_list) - not a re-parse of the raw target string.
         own_targets_delete = any(operation is ExportOperation.DELETE for _, operation in exporters["with_operation"])
 

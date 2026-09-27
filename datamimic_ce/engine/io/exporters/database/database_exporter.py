@@ -6,6 +6,7 @@
 
 from datamimic_ce.engine.io.clients.rdbms_client import RdbmsClient
 from datamimic_ce.engine.io.exporters.core.exporter import Exporter
+from datamimic_ce.engine.io.exporters.core.routing import resolve_target_entity_from_metadata
 
 
 class DatabaseExporter(Exporter):
@@ -44,9 +45,7 @@ class DatabaseExporter(Exporter):
 
     @staticmethod
     def _table_name(name: str, rest: list) -> str:
-        # targetEntity -> type -> name (see StatementUtil.resolve_target_entity).
-        from datamimic_ce.engine.dsl.api import StatementUtil
-
-        return StatementUtil.resolve_target_entity_from_metadata(
+        # targetEntity -> type -> name.
+        return resolve_target_entity_from_metadata(
             name, rest[0] if rest and isinstance(rest[0], dict) else None
         )

@@ -4,7 +4,6 @@
 # See LICENSE file for the full text of the license.
 # For questions and support, contact: info@rapiddweller.com
 
-import ast
 import base64
 import json
 import logging
@@ -35,6 +34,7 @@ from datamimic_ce.engine.io.clients.rdbms_client import RdbmsClient
 from datamimic_ce.engine.io.exporters.core.exporter import Exporter
 from datamimic_ce.engine.io.exporters.core.exporter_config import ExporterConfig
 from datamimic_ce.engine.io.exporters.core.exporter_context import ExporterContext
+from datamimic_ce.engine.io.exporters.core.routing import parse_function_string, resolve_target_entity
 from datamimic_ce.engine.io.exporters.core.unified_buffered_exporter import UnifiedBufferedExporter
 from datamimic_ce.engine.io.exporters.database.database_exporter import DatabaseExporter
 from datamimic_ce.engine.io.exporters.database.mongodb_exporter import MongoDBExporter
@@ -184,7 +184,7 @@ class ExporterUtil:
 
         # Parse the target string using the parse_function_string function
         try:
-            parsed_targets = ExporterUtil.parse_function_string(target_str)
+            parsed_targets = parse_function_string(target_str)
         except ValueError as e:
             raise ValueError(f"Error parsing target string: {e}") from e
 
@@ -220,90 +220,6 @@ class ExporterUtil:
         return consumers_with_operation, consumers_without_operation
 
     @staticmethod
-    def parse_function_string(function_string):
-        parsed_functions = []
-        # Remove spaces and check if only commas or blank string are provided
-        if function_string.strip() == "" or all(char in ", " for char in function_string):
-            return parsed_functions
-
-        # Wrap the function string in a list to make it valid Python code
-        code_to_parse = f"[{function_string}]"
-
-        try:
-            # Parse the code into an AST node
-            module = ast.parse(code_to_parse, mode="eval")
-        except SyntaxError as e:
-            raise ValueError(f"Error parsing function string: {e}") from e
-
-        # Ensure the parsed node is a list
-        if not isinstance(module.body, ast.List):
-            raise ValueError("Function string is not a valid list of function calls.")
-
-        # Iterate over each element in the list
-        for element in module.body.elts:
-            # Handle function calls with parameters
-            if isinstance(element, ast.Call):
-                # Extract function name, including dot notation (e.g., mongodb.upsert)
-                if isinstance(element.func, ast.Name):
-                    function_name = element.func.id
-                elif isinstance(element.func, ast.Attribute):
-                    # Capture the full dotted name
-                    parts = []
-                    current = element.func
-                    while isinstance(current, ast.Attribute):
-                        parts.append(current.attr)
-                        current = current.value
-                    if isinstance(current, ast.Name):
-                        parts.append(current.id)
-                    function_name = ".".join(reversed(parts))
-                else:
-                    raise ValueError("Unsupported function type in function call.")
-
-                params = {}
-                # Extract keyword arguments
-                for keyword in element.keywords:
-                    key = keyword.arg
-                    try:
-                        # Safely evaluate the value using ast.literal_eval
-                        value = ast.literal_eval(keyword.value)
-                    except (ValueError, SyntaxError):
-                        # If evaluation fails, raise error for non-literal parameters
-                        raise ValueError(f"Non-literal parameter found: {keyword.value}") from None
-                    params[key] = value
-
-                parsed_functions.append({"function_name": function_name, "params": params})
-            # Handle function names without parameters, including dotted names like mongodb.delete
-            elif isinstance(element, ast.Attribute):
-                # For dotted names like mongodb.delete
-                parts = []
-                current = element
-                while isinstance(current, ast.Attribute):
-                    parts.append(current.attr)
-                    current = current.value
-                if isinstance(current, ast.Name):
-                    parts.append(current.id)
-                function_name = ".".join(reversed(parts))
-                parsed_functions.append({"function_name": function_name, "params": None})
-            elif isinstance(element, ast.Name):
-                # For single names like CSV
-                function_name = element.id
-                parsed_functions.append({"function_name": function_name, "params": None})
-            elif isinstance(element, ast.Constant):  # For Python 3.8+, for older versions use ast.Str or ast.Num
-                # This handles cases like 'CSV' and 'JSON' if they are given as strings
-                function_name = element.value
-                parsed_functions.append({"function_name": function_name, "params": None})
-            else:
-                # Attempt to evaluate other expressions (e.g., strings, numbers)
-                try:
-                    value = ast.literal_eval(element)
-                    function_name = str(value)
-                    parsed_functions.append({"function_name": function_name, "params": None})
-                except Exception:
-                    raise ValueError("Unsupported expression in function string.") from None
-
-        return parsed_functions
-
-    @staticmethod
     def get_exporter_by_name(
         setup_context: ExporterContext,
         name: str,
@@ -322,9 +238,7 @@ class ExporterUtil:
         # targetEntity names the physical output entity (file basename here; table/collection in the
         # store exporters) - one explicit override, honoured across every target family. type_=None:
         # a file basename never routed by 'type', so behaviour is unchanged without targetEntity.
-        from datamimic_ce.engine.dsl.api import StatementUtil
-
-        product_name = StatementUtil.resolve_target_entity(gen_stmt.target_entity, None, gen_stmt.name)
+        product_name = resolve_target_entity(gen_stmt.target_entity, None, gen_stmt.name)
         # exportUri (validated at parse time) is the output-directory prefix for file exporters.
         export_uri = gen_stmt.export_uri
 

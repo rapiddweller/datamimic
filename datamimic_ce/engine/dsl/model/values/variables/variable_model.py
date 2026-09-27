@@ -72,8 +72,7 @@ class VariableModel(BaseModel):
         None,
         description="Normally a scalar cast for a generated value (e.g. 'int', 'string'). When "
         "'source' is also set, this instead selects which source-backed statement's rows to read "
-        "(a producer name, not a type) — see StatementUtil.resolve_source_entity's "
-        "sourceEntity -> type -> name fallback.",
+        "(a producer name, not a type); sourceEntity -> type -> name is the fallback.",
     )
     source: str | None = Field(
         None,

@@ -42,7 +42,7 @@ from datamimic_ce.engine.dsl.api import (
     source_file_format_for,
     supported_source_file_formats,
 )
-from datamimic_ce.engine.io.api import ExporterUtil, buffered_exporter_names
+from datamimic_ce.engine.io.api import buffered_exporter_names, parse_function_string
 
 _GENERATES = (EL_GENERATE, EL_ITERATE)
 _SOURCE_READERS = (*_GENERATES, EL_VARIABLE, EL_NESTED_KEY, EL_KEY, EL_ID, EL_ELEMENT, EL_REFERENCE)
@@ -192,7 +192,7 @@ class UnknownTarget(Rule):
                 continue
             try:
                 # SPOT: the exact parser the engine uses (AST-based, param-safe)
-                parsed = ExporterUtil.parse_function_string(target_attr)
+                parsed = parse_function_string(target_attr)
             except ValueError as err:
                 yield ctx.diag(UnknownTarget, element, evidence=f"target parser returned: {err}")
                 continue

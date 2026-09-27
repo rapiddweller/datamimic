@@ -8,6 +8,8 @@
 mem.sumEntityColumn/mem.entityCount/mem.removeNotExistingIds). No DSL entry point exists for these
 yet (that's the separate execute-namespace-binding fix) - unit-tested directly against the class."""
 
+import logging
+
 import pytest
 
 from datamimic_ce.engine.io.exporters.memory.memstore import Memstore
@@ -54,6 +56,22 @@ def test_entity_count_is_an_alias_of_get_data_len_by_type():
     mem = Memstore("mem")
     mem.consume(("t", [{"id": 1}, {"id": 2}]))
     assert mem.entityCount("t") == 2 == mem.get_data_len_by_type("t")
+
+
+def test_missing_optional_entity_remains_strict_for_rows_and_lenient_for_length(caplog, monkeypatch):
+    mem = Memstore("mem")
+    monkeypatch.setattr(logging.getLogger("DATAMIMIC"), "propagate", True)
+
+    with caplog.at_level(logging.ERROR, logger="DATAMIMIC"), pytest.raises(
+        KeyError, match="Data naming 'None' is empty in memstore"
+    ):
+        mem.get_data_by_type(None, None, cyclic=False)
+    assert "Data naming 'None' is empty in memstore" in caplog.messages[0]
+
+    caplog.clear()
+    with caplog.at_level(logging.ERROR, logger="DATAMIMIC"):
+        assert mem.get_data_len_by_type(None) == 0
+    assert caplog.messages == ["Data having entity 'None' is empty in memstore"]
 
 
 def test_remove_not_existing_ids_keeps_only_matches():

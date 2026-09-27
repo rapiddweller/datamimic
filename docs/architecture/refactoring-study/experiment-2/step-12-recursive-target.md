@@ -271,3 +271,28 @@ target gate or a verified finished HTML report.
 
 CI-ONLY VERIFICATION: no new remote run. The isolated service after-side and
 final old/new database result comparison remain open.
+
+## Eighth slice: source and target routing ownership
+
+`StatementUtil` is gone. DSL owns target-token parsing; IO owns scalar source
+and target resolution and the existing AST target parser. Callers use those
+functions directly, without an old-path class. The optional MemStore entity
+still reaches its historical error/length paths; no empty-string fallback or
+new assertion changes the result. Astra approved the ownership after reviewing
+the nullable path and Mongo's explicit-collection rule.
+
+LOCAL VERIFIED: 1,940 non-service tests passed, 13 existing skips; full-package
+Ruff/Mypy and Pylint's import-cycle gate pass. Both recursive definition tests
+pass. The physical target check remains red: 12 missing target modules and 11
+legacy/unowned modules. All 930 XML and seven intent-model file hashes match
+the frozen inputs. Step-0 retained every status (454 captured, 62 expected
+errors, 16 non-descriptors, 76 unrunnable, 322 unverified). Its raw comparator
+reports the known unseeded MemStore `te` count variance, whose same-run bounded
+test passes, and a capability-text change. Against the preceding slice only
+five capability description entries change: they no longer cite the deleted
+`StatementUtil`; compiler, authoring reference and scaffold projections are
+identical. Against the frozen source the prior build-version identity delta
+remains. The raw comparator therefore exits 1; it is not called green.
+
+CI-ONLY VERIFICATION: no new remote or after-side external-service run. The
+exporter, source-boundary and task-registry slices remain open.

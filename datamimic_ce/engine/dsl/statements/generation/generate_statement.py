@@ -8,7 +8,7 @@ from datamimic_ce.engine.dsl.model.generation.generate_model import GenerateMode
 from datamimic_ce.engine.dsl.model.generation.timeseries import TimeSeriesConfig
 from datamimic_ce.engine.dsl.statements.base.composite_statement import CompositeStatement
 from datamimic_ce.engine.dsl.statements.base.statement import Statement
-from datamimic_ce.engine.dsl.statements.statement_util import StatementUtil
+from datamimic_ce.engine.dsl.statements.generation.targets import parse_consumer
 from datamimic_ce.engine.dsl.vocabulary.enums.distribution_enums import SourceDistribution
 
 
@@ -29,7 +29,7 @@ class GenerateStatement(CompositeStatement):
         self._target_entity = model.target_entity
         self._selector = model.selector
         self._separator = model.separator
-        self._targets: set[str] = StatementUtil.parse_consumer(model.target)
+        self._targets: set[str] = parse_consumer(model.target)
         self._page_size = model.page_size
         self._mp = model.multiprocessing
         self._export_uri = model.export_uri

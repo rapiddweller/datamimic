@@ -14,7 +14,7 @@ class NestedKeyStatement(CompositeStatement):
     def __init__(self, model: NestedKeyModel, parent_stmt: Statement):
         name = model.name
         super().__init__(name, parent_stmt)
-        self._name = name
+        self._name: str = name
         self._type = model.type
         self._count = model.count
         self._source = model.source
@@ -32,6 +32,10 @@ class NestedKeyStatement(CompositeStatement):
         self._converter = model.converter
         self._variable_prefix = model.variable_prefix
         self._variable_suffix = model.variable_suffix
+
+    @property
+    def name(self) -> str:
+        return self._name
 
     @property
     def type(self):

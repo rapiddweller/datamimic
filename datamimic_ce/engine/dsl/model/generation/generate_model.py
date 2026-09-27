@@ -151,21 +151,19 @@ class GenerateModel(BaseModel):
         examples=["CSV", "JSON", "mem", "db.upsert", "mem,JSON"],
     )
     # Explicit physical entity to read/write (table/collection). Precedence: sourceEntity/targetEntity
-    # -> type -> name; absent -> existing behaviour. See StatementUtil.resolve_source/target_entity.
+    # -> type -> name; absent -> existing behaviour.
     source_entity: str | None = Field(
         None,
         alias=ATTR_SOURCE_ENTITY,
         description="Explicit physical entity to read/write (table/collection). Precedence: "
-        "sourceEntity/targetEntity -> type -> name; absent -> existing behaviour. See "
-        "StatementUtil.resolve_source/target_entity.",
+        "sourceEntity/targetEntity -> type -> name; absent -> existing behaviour.",
         examples=["customers", "public.customers"],
     )
     target_entity: str | None = Field(
         None,
         alias=ATTR_TARGET_ENTITY,
         description="Explicit physical entity to read/write (table/collection). Precedence: "
-        "sourceEntity/targetEntity -> type -> name; absent -> existing behaviour. See "
-        "StatementUtil.resolve_source/target_entity.",
+        "sourceEntity/targetEntity -> type -> name; absent -> existing behaviour.",
         examples=["customers_out", "public.customers_out"],
     )
     page_size: int | None = Field(

@@ -8,7 +8,6 @@ from random import Random
 from datamimic_ce.engine.dsl.api import (
     EL_VARIABLE,
     SourceFileFormat,
-    StatementUtil,
     VariableStatement,
     source_file_format_for,
 )
@@ -21,6 +20,7 @@ from datamimic_ce.engine.io.api import (
     database_get_by_page_with_query,
     database_get_by_page_with_type,
     is_database_client,
+    resolve_source_entity,
 )
 from datamimic_ce.engine.io.contracts import select_row_iterator, select_rows
 from datamimic_ce.engine.io.data_sources.selection import get_distributed_data, get_unique_data
@@ -180,21 +180,21 @@ def plan_variable_source(
     if client is not None:
         if not is_database_client(client):
             raise ValueError(f"Cannot get data from source '{source}' of <variable> '{stmt.name}'")
-        product_type = StatementUtil.resolve_source_entity(stmt)
+        product_type = resolve_source_entity(stmt.source_entity, stmt.type, stmt.name)
         if product_type is None:
-            data = None
+            source_data = None
         elif loads_all or force_full_pool:
-            data = database_get_by_page_with_type(client, product_type)
+            source_data = database_get_by_page_with_type(client, product_type)
         elif stmt.cyclic:
-            data = select_rows(
+            source_data = select_rows(
                 database_get_by_page_with_type(client, product_type), pagination, cyclic=True
             )
         else:
-            data = database_get_by_page_with_type(client, product_type, pagination)
-        return _variable_data_plan(context, stmt, data, pagination, force_full_pool=force_full_pool)
+            source_data = database_get_by_page_with_type(client, product_type, pagination)
+        return _variable_data_plan(context, stmt, source_data, pagination, force_full_pool=force_full_pool)
 
     if context.memstore_manager.contain(source):
-        product_type = StatementUtil.resolve_source_entity(stmt)
+        product_type = resolve_source_entity(stmt.source_entity, stmt.type, stmt.name)
         memstore = context.memstore_manager.get_memstore(source)
         data = (
             memstore.get_all_data_by_type(product_type)
