@@ -2168,7 +2168,7 @@
       "source": "engine/io/exporters/exporter_util.py",
       "targets": [
         "engine/io/exporters/registry.py",
-        "engine/io/exporters/core/serialization.py"
+        "engine/io/exporters/core/routing.py"
       ],
       "reason": "Astra target decision; see semantic-review/astra-target-decision.md."
     },

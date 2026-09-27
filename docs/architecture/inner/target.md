@@ -174,6 +174,9 @@ clients and exporter implementations are not the Runtime-facing API.
 - Dissolve `tasks/task_util.py`: dispatch uses the existing registry; evaluation
   goes to Scripting; converter binding stays with value construction; Generate
   owns page ordering, IO owns exporter setup/write/serialization.
+- Dissolve `ExporterUtil`: the IO registry exposes the actual construction and
+  consumption functions. Drop its unused serializer and path-check helpers;
+  keep the live JSON encoder and XML-row conversion at their owners.
 - Split source expression/context adaptation from IO read/count/selection policy.
   Preserve read, template evaluation and seed timing; never pass Runtime context
   or a closure over it into IO.

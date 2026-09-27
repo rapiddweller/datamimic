@@ -230,9 +230,11 @@
         "datamimic_ce.engine.io.exporters.core.exporter_context:MemstoreProvider",
         "datamimic_ce.engine.io.exporters.core.exporter_state_manager:ExporterStateManager",
         "datamimic_ce.engine.io.exporters.core.exporter_state_manager:ExporterStateStorage",
-        "datamimic_ce.engine.io.exporters.registry:ExporterUtil",
+        "datamimic_ce.engine.io.exporters.core.routing:parse_function_string",
+        "datamimic_ce.engine.io.exporters.registry:create_exporter_list",
+        "datamimic_ce.engine.io.exporters.registry:consume_exporters",
         "datamimic_ce.engine.io.exporters.registry:buffered_exporter_names",
-        "datamimic_ce.engine.io.exporters.diagnostics.smoke_export:smoke_export"
+        "datamimic_ce.engine.io.exporters.registry:smoke_export"
       ],
       "decided_by": "agent",
       "inside": "docs/architecture/inner/io/exporters/architecture-contract.json"
