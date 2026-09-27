@@ -27,6 +27,17 @@ def test_resolve_count_preserves_explicit_and_bounded_counts() -> None:
     assert resolve_count(None, None, None, rng) is None
 
 
+def test_resolve_count_draws_only_for_a_range() -> None:
+    rng = MagicMock()
+    rng.randint.return_value = 5
+
+    assert resolve_count(4, 3, 7, rng) == 4
+    rng.randint.assert_not_called()
+
+    assert resolve_count(None, 3, 7, rng) == 5
+    rng.randint.assert_called_once_with(3, 7)
+
+
 def test_has_mongodb_upsert_target_requires_upsert_operation_and_mongo_client() -> None:
     context = MagicMock(spec=SetupContext)
     context.get_client_by_id.return_value = MagicMock(spec=MongoDBClient)

@@ -14,6 +14,7 @@ from datamimic_ce.engine.io.api import DataSourcePagination
 from datamimic_ce.engine.io.clients.database_client import DatabaseClient
 from datamimic_ce.engine.io.clients.rdbms_client import RdbmsClient
 from datamimic_ce.engine.runtime.contexts.geniter_context import GenIterContext
+from datamimic_ce.engine.runtime.sources.router import load_reference_source
 from datamimic_ce.engine.runtime.tasks.values.references.reference_task import ReferenceTask
 
 
@@ -172,6 +173,41 @@ class TestReferenceTask(unittest.TestCase):
 
         load_reference_source.assert_called_once_with(self.context, self.statement, self.pagination)
         self.rdbms_client.get_random_rows_by_columns.assert_not_called()
+
+    def test_source_loader_maps_columns_and_consumes_one_stable_seed(self):
+        self.statement.source_keys = ["source_id", "source_name"]
+        self.statement.targets = ["id", "name"]
+        self.statement.full_name = "customer_reference"
+        self.statement.unique = False
+        self.statement.distribution = "ordered"
+        self.statement.cyclic = False
+        self.rdbms_client.get_random_rows_by_columns.return_value = [(1, "Ada"), (2, "Bert"), (3, "Cam")]
+
+        with patch("datamimic_ce.engine.runtime.sources.router.is_rdbms_client", return_value=True):
+            rows = load_reference_source(self.context, self.statement, self.pagination)
+
+        assert rows == [{"id": 1, "name": "Ada"}, {"id": 2, "name": "Bert"}]
+        self.rdbms_client.get_random_rows_by_columns.assert_called_once_with(
+            "test_type", ["source_id", "source_name"]
+        )
+        self.context.root.stable_distribution_seed.assert_called_once_with("customer_reference")
+
+    def test_unpaged_cyclic_reference_shares_root_rotation_across_rebuilt_tasks(self):
+        self.statement.cyclic = True
+        self.statement.full_name = "customer_reference"
+        self.context.root.generators = {}
+        first = ReferenceTask(self.statement)
+        second = ReferenceTask(self.statement)
+
+        with patch(
+            "datamimic_ce.engine.runtime.tasks.values.references.reference_task.load_reference_source",
+            return_value=[{"test_name": "Ada"}, {"test_name": "Bert"}],
+        ) as load_reference_source:
+            assert first.execute(self.context) == "Ada"
+            assert second.execute(self.context) == "Bert"
+
+        load_reference_source.assert_called_once_with(self.context, self.statement, None)
+        assert "<reference>-cycle|customer_reference" in self.context.root.generators
 
 
 if __name__ == "__main__":
