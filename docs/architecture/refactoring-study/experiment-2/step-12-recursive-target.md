@@ -326,6 +326,12 @@ DM402 names source routing instead of the removed utility classes. Compiler,
 Authoring reference and scaffold projections are unchanged. This is a
 classified difference, not a green raw comparison.
 
+The after-side isolated Docker/OrbStack service suite used a fresh private
+stack and the committed `0a7094a0` source snapshot: 164 passed, four skipped.
+Its 168 JUnit case identities and outcomes exactly match the frozen before
+suite; 14 SQL Server-version warnings do not change assertions. This is not
+a direct comparison of persisted database values.
+
 CI-ONLY VERIFICATION: no new remote run. ArchKeel still exits 2/UNKNOWN because
-`runtime.tasks.registry` is absent. Source boundaries, task registry, final
-service/database-output parity and complete target acceptance remain open.
+`runtime.tasks.registry` is absent. Source boundaries, task registry, direct
+database-output parity and complete target acceptance remain open.
