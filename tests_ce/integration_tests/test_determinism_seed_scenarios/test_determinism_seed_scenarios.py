@@ -42,7 +42,7 @@ from typing import TypedDict
 
 import pytest
 
-from datamimic_ce.data_mimic_test import DataMimicTest
+from datamimic_ce.interfaces.python.data_mimic_test import DataMimicTest
 from datamimic_ce.domains.api import iter_generator_capabilities
 from tests_ce.integration_tests.dsl_model_builder import build_all_entities_seeded_xml
 
@@ -173,7 +173,7 @@ _REPO_ROOT = _TEST_DIR.parents[2]
 _RUN_IN_FRESH_PROCESS = """
 import json, sys
 from pathlib import Path
-from datamimic_ce.data_mimic_test import DataMimicTest
+from datamimic_ce.interfaces.python.data_mimic_test import DataMimicTest
 engine = DataMimicTest(test_dir=Path(sys.argv[1]), filename=sys.argv[2], capture_test_result=True)
 engine.test_with_timer()
 result = json.dumps(engine.capture_result(), default=str, ensure_ascii=False, separators=(",", ":"), sort_keys=True)

@@ -21,7 +21,7 @@ from datamimic_ce.authoring.contracts import (
 )
 from datamimic_ce.authoring.adapters.dryrun import dry_run_source, dry_run_source_captured
 from datamimic_ce.authoring.application.service import compile_document, scaffold
-from datamimic_ce.engine.io.exporters.json_exporter import JsonExporter
+from datamimic_ce.engine.io.exporters.formats.json_exporter import JsonExporter
 
 _PIPELINE = """<setup rngSeed="1">
     <memstore id="mem"/>

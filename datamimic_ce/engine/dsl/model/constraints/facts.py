@@ -21,7 +21,20 @@ This ensures one declaration, all consumers derive consistently.
 """
 
 # Attribute constants (imported at module level to avoid circular imports)
-from datamimic_ce.engine.dsl.constants.attribute_constants import (
+from datamimic_ce.engine.dsl.model.constraints.types import (
+    AllOrNone,
+    AllowedValuesWhen,
+    Constraint,
+    Forbids,
+    ForbidsWhenValue,
+    MutuallyExclusive,
+    MutuallyExclusiveWhen,
+    RequiredOneOf,
+    Requires,
+    RequiresWhenValue,
+    ValidValues,
+)
+from datamimic_ce.engine.dsl.vocabulary.constants.attribute_constants import (
     ATTR_CONDITION,
     ATTR_CONSTANT,
     ATTR_COUNT,
@@ -55,7 +68,7 @@ from datamimic_ce.engine.dsl.constants.attribute_constants import (
     ATTR_WEIGHT_COLUMN,
     ATTR_WEIGHTS,
 )
-from datamimic_ce.engine.dsl.constants.data_type_constants import (
+from datamimic_ce.engine.dsl.vocabulary.constants.data_type_constants import (
     DATA_TYPE_BINARY,
     DATA_TYPE_BOOL,
     DATA_TYPE_DECIMAL,
@@ -64,19 +77,6 @@ from datamimic_ce.engine.dsl.constants.data_type_constants import (
     DATA_TYPE_LIST,
     DATA_TYPE_LITERAL,
     DATA_TYPE_STRING,
-)
-from datamimic_ce.engine.dsl.model.constraints.types import (
-    AllOrNone,
-    AllowedValuesWhen,
-    Constraint,
-    Forbids,
-    ForbidsWhenValue,
-    MutuallyExclusive,
-    MutuallyExclusiveWhen,
-    RequiredOneOf,
-    Requires,
-    RequiresWhenValue,
-    ValidValues,
 )
 
 # ============================================================================
@@ -386,14 +386,14 @@ OUT_DATE_FORMAT_STRING_TYPE = AllowedValuesWhen(
 
 def _source_distribution_values() -> set[str]:
     """Resolve the CE source-selection vocabulary lazily from its runtime enum."""
-    from datamimic_ce.engine.dsl.enums.distribution_enums import SourceDistribution
+    from datamimic_ce.engine.dsl.vocabulary.enums.distribution_enums import SourceDistribution
 
     return {member.value for member in SourceDistribution}
 
 
 def _number_distribution_values() -> set[str]:
     """Resolve the CE numeric-range vocabulary lazily from its runtime enum."""
-    from datamimic_ce.engine.dsl.enums.distribution_enums import NumberDistribution
+    from datamimic_ce.engine.dsl.vocabulary.enums.distribution_enums import NumberDistribution
 
     return {member.value for member in NumberDistribution}
 

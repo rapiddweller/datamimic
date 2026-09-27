@@ -1,4 +1,4 @@
-from datamimic_ce.engine.runtime.tasks.variable_task import _parse_constructor_string
+from datamimic_ce.engine.runtime.tasks.values.variables.variable_task import _parse_constructor_string
 
 
 def test_constructor_arguments_keep_literal_types_and_string_fallback():

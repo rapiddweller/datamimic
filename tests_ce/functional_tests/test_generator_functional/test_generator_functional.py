@@ -8,7 +8,7 @@ import uuid
 from decimal import Decimal
 from pathlib import Path
 
-from datamimic_ce.data_mimic_test import DataMimicTest
+from datamimic_ce.interfaces.python.data_mimic_test import DataMimicTest
 from datamimic_ce.engine.io.api import FileUtil
 
 

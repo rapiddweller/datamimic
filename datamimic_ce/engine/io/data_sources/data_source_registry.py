@@ -14,8 +14,8 @@ from datamimic_ce.engine.dsl.api import SourceFileFormat
 from datamimic_ce.engine.io.clients.client import Client
 from datamimic_ce.engine.io.clients.rdbms_client import RdbmsClient
 from datamimic_ce.engine.io.contracts import DataSourcePagination, select_rows
-from datamimic_ce.engine.io.file_cache import FileContentStorage
-from datamimic_ce.engine.io.files import FileUtil, _is_json_object, _is_json_records
+from datamimic_ce.engine.io.files.cache import FileContentStorage
+from datamimic_ce.engine.io.files.readers import FileUtil, _is_json_object, _is_json_records
 
 logger = logging.getLogger("DATAMIMIC")
 

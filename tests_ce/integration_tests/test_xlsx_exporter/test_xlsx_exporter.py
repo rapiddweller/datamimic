@@ -4,7 +4,7 @@ from pathlib import Path
 import pytest
 from openpyxl import Workbook, load_workbook
 
-from datamimic_ce.data_mimic_test import DataMimicTest
+from datamimic_ce.interfaces.python.data_mimic_test import DataMimicTest
 
 
 def test_xlsx_export_writes_a_valid_workbook(xlsx_test_dir: Path):

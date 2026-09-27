@@ -9,7 +9,7 @@ test_mongodb_variable_matrix.xml for the exact combinations and why each is vali
 
 from pathlib import Path
 
-from datamimic_ce.data_mimic_test import DataMimicTest
+from datamimic_ce.interfaces.python.data_mimic_test import DataMimicTest
 
 
 def _run() -> dict:

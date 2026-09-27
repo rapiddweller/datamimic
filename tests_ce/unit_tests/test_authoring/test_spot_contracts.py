@@ -14,8 +14,8 @@ from pydantic import BaseModel
 
 from datamimic_ce.authoring.projection.reference import capabilities_manifest, element_reference
 from datamimic_ce.authoring.domain.schema import build_schema_index, element_json_schema
-from datamimic_ce.engine.dsl.constants.element_constants import EL_GENERATE, EL_ITERATE
-from datamimic_ce.engine.dsl.enums.distribution_enums import NumberDistribution, SourceDistribution
+from datamimic_ce.engine.dsl.vocabulary.constants.element_constants import EL_GENERATE, EL_ITERATE
+from datamimic_ce.engine.dsl.vocabulary.enums.distribution_enums import NumberDistribution, SourceDistribution
 from datamimic_ce.engine.dsl.model.constraints import (
     KEY_DISTRIBUTION_VALUES,
     SOURCE_DISTRIBUTION_VALUES,
@@ -26,15 +26,7 @@ from datamimic_ce.engine.dsl.model.constraints import (
     resolved_values,
     serialize_constraints,
 )
-from datamimic_ce.engine.dsl.model.element_registry import (
-    ElementDefinition,
-    canonical_tag,
-    get_element_definition,
-    get_model_class,
-    list_element_tags,
-    register_element_extension,
-    unregister_element_extension,
-)
+from datamimic_ce.engine.dsl.model.registry import ElementDefinition, canonical_tag, get_element_definition, get_model_class, list_element_tags, register_element_extension, unregister_element_extension
 
 
 def test_structural_and_rule_registries_cover_the_same_ce_surface() -> None:

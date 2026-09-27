@@ -9,14 +9,14 @@
 from pathlib import Path
 
 from datamimic_ce.domains.domain_core.base_literal_generator import BaseLiteralGenerator
-from datamimic_ce.engine.dsl.model.generator_model import GeneratorModel
-from datamimic_ce.engine.dsl.statements.generator_statement import GeneratorStatement
+from datamimic_ce.engine.dsl.model.setup.generator_model import GeneratorModel
+from datamimic_ce.engine.dsl.statements.setup.generator_statement import GeneratorStatement
 from datamimic_ce.engine.dsl.statements.statement import Statement
-from datamimic_ce.engine.io.exporters.test_result_exporter import TestResultExporter
+from datamimic_ce.engine.io.exporters.diagnostics.test_result_exporter import TestResultExporter
 from datamimic_ce.engine.runtime.contexts.setup_context import SetupContext
-from datamimic_ce.engine.runtime.generators.factory import GeneratorUtil
+from datamimic_ce.engine.runtime.tasks.values.construction.factory import GeneratorUtil
 from datamimic_ce.engine.runtime.storage.memstore_manager import MemstoreManager
-from datamimic_ce.engine.runtime.tasks.generator_task import GeneratorTask
+from datamimic_ce.engine.runtime.tasks.setup.generator_task import GeneratorTask
 
 
 class DummyStatement(Statement):

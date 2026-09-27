@@ -7,7 +7,18 @@
 """Element-rule registry: the SPOT that maps CE DSL tag names to their Constraint tuples."""
 
 # Attribute constants (imported at module level to avoid circular imports)
-from datamimic_ce.engine.dsl.constants.element_constants import (
+from datamimic_ce.engine.dsl.model.constraints.facts import (
+    _ARRAY_RULES,
+    _EXECUTE_RULES,
+    _GENERATE_RULES,
+    _KEY_RULES,
+    _NESTED_KEY_RULES,
+    _REFERENCE_RULES,
+    _VARIABLE_RULES,
+    ITERATE_REQUIRES_SOURCE,
+)
+from datamimic_ce.engine.dsl.model.constraints.types import Constraint
+from datamimic_ce.engine.dsl.vocabulary.constants.element_constants import (
     EL_ARRAY,
     EL_ASSERT,
     EL_CONDITION,
@@ -39,17 +50,6 @@ from datamimic_ce.engine.dsl.constants.element_constants import (
     EL_VARIABLE,
     EL_WHILE,
 )
-from datamimic_ce.engine.dsl.model.constraints.facts import (
-    _ARRAY_RULES,
-    _EXECUTE_RULES,
-    _GENERATE_RULES,
-    _KEY_RULES,
-    _NESTED_KEY_RULES,
-    _REFERENCE_RULES,
-    _VARIABLE_RULES,
-    ITERATE_REQUIRES_SOURCE,
-)
-from datamimic_ce.engine.dsl.model.constraints.types import Constraint
 
 # Explicit entry for every CE registry tag. Empty tuples are intentional and make
 # omissions review-visible: a new built-in element must decide its rule contract.

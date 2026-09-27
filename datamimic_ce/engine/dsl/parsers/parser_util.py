@@ -11,9 +11,20 @@ from collections.abc import Callable
 from pathlib import Path
 from typing import Literal, Protocol, runtime_checkable
 
-from datamimic_ce.engine.dsl.constants import element_constants as tags
-from datamimic_ce.engine.dsl.constants.attribute_constants import ATTR_ENVIRONMENT, ATTR_ID, ATTR_SYSTEM
-from datamimic_ce.engine.dsl.constants.element_constants import (
+from datamimic_ce.engine.dsl.parsers.input.properties import parse_properties
+from datamimic_ce.engine.dsl.parsers.input.xml import XmlElement, xml_tag
+from datamimic_ce.engine.dsl.statements.composite_statement import CompositeStatement
+from datamimic_ce.engine.dsl.statements.condition_statement import ConditionStatement
+from datamimic_ce.engine.dsl.statements.flow.loops.while_statement import WhileStatement
+from datamimic_ce.engine.dsl.statements.generate_statement import GenerateStatement
+from datamimic_ce.engine.dsl.statements.setup.include_statement import IncludeStatement
+from datamimic_ce.engine.dsl.statements.setup.setup_statement import SetupStatement
+from datamimic_ce.engine.dsl.statements.statement import Statement
+from datamimic_ce.engine.dsl.statements.values.structured.array_statement import ArrayStatement
+from datamimic_ce.engine.dsl.statements.values.structured.nested_key_statement import NestedKeyStatement
+from datamimic_ce.engine.dsl.vocabulary.constants import element_constants as tags
+from datamimic_ce.engine.dsl.vocabulary.constants.attribute_constants import ATTR_ENVIRONMENT, ATTR_ID, ATTR_SYSTEM
+from datamimic_ce.engine.dsl.vocabulary.constants.element_constants import (
     EL_ARRAY,
     EL_COMMENT,
     EL_CONDITION,
@@ -24,17 +35,6 @@ from datamimic_ce.engine.dsl.constants.element_constants import (
     EL_SETUP,
     EL_WHILE,
 )
-from datamimic_ce.engine.dsl.properties import parse_properties
-from datamimic_ce.engine.dsl.statements.array_statement import ArrayStatement
-from datamimic_ce.engine.dsl.statements.composite_statement import CompositeStatement
-from datamimic_ce.engine.dsl.statements.condition_statement import ConditionStatement
-from datamimic_ce.engine.dsl.statements.generate_statement import GenerateStatement
-from datamimic_ce.engine.dsl.statements.include_statement import IncludeStatement
-from datamimic_ce.engine.dsl.statements.nested_key_statement import NestedKeyStatement
-from datamimic_ce.engine.dsl.statements.setup_statement import SetupStatement
-from datamimic_ce.engine.dsl.statements.statement import Statement
-from datamimic_ce.engine.dsl.statements.while_statement import WhileStatement
-from datamimic_ce.engine.dsl.xml import XmlElement, xml_tag
 
 logger = logging.getLogger("DATAMIMIC")
 
@@ -71,7 +71,7 @@ class ParserUtil:
     def get_valid_sub_elements_set_by_tag(ele_tag: str) -> set | None:
         # return None mean that element can have all kind of sub element,
         # check StatementParser._validate_sub_elements for detail
-        from datamimic_ce.engine.dsl.model.element_registry import get_valid_children
+        from datamimic_ce.engine.dsl.model.registry import get_valid_children
 
         return get_valid_children(ele_tag)
 
@@ -87,7 +87,7 @@ class ParserUtil:
         :param properties:
         :return:
         """
-        from datamimic_ce.engine.dsl.model.element_registry import canonical_tag, get_element_definition
+        from datamimic_ce.engine.dsl.model.registry import canonical_tag, get_element_definition
 
         tag = xml_tag(element)
         definition = get_element_definition(tag)
@@ -117,7 +117,7 @@ class ParserUtil:
         :param parent_stmt:
         :return:
         """
-        from datamimic_ce.engine.dsl.model.element_registry import canonical_tag
+        from datamimic_ce.engine.dsl.model.registry import canonical_tag
 
         result = []
         # Create a copied props for possible updating later, prevent updating original props dict

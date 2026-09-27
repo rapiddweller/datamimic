@@ -32,21 +32,21 @@ from datamimic_ce.engine.dsl.api import (
 from datamimic_ce.engine.io.clients.client import Client
 from datamimic_ce.engine.io.clients.mongodb_client import MongoDBClient
 from datamimic_ce.engine.io.clients.rdbms_client import RdbmsClient
-from datamimic_ce.engine.io.exporters.console_exporter import ConsoleExporter
-from datamimic_ce.engine.io.exporters.csv_exporter import CSVExporter
-from datamimic_ce.engine.io.exporters.database_exporter import DatabaseExporter
-from datamimic_ce.engine.io.exporters.dbunit_exporter import DbUnitExporter
-from datamimic_ce.engine.io.exporters.exporter import Exporter
-from datamimic_ce.engine.io.exporters.exporter_config import ExporterConfig
-from datamimic_ce.engine.io.exporters.exporter_context import ExporterContext
-from datamimic_ce.engine.io.exporters.fixed_width_exporter import FixedWidthExporter
-from datamimic_ce.engine.io.exporters.json_exporter import JsonExporter
-from datamimic_ce.engine.io.exporters.log_exporter import LogExporter
-from datamimic_ce.engine.io.exporters.mongodb_exporter import MongoDBExporter
-from datamimic_ce.engine.io.exporters.txt_exporter import TXTExporter
-from datamimic_ce.engine.io.exporters.unified_buffered_exporter import UnifiedBufferedExporter
-from datamimic_ce.engine.io.exporters.xlsx_exporter import XLSXExporter
-from datamimic_ce.engine.io.exporters.xml_exporter import XMLExporter
+from datamimic_ce.engine.io.exporters.core.exporter import Exporter
+from datamimic_ce.engine.io.exporters.core.exporter_config import ExporterConfig
+from datamimic_ce.engine.io.exporters.core.exporter_context import ExporterContext
+from datamimic_ce.engine.io.exporters.core.unified_buffered_exporter import UnifiedBufferedExporter
+from datamimic_ce.engine.io.exporters.database.database_exporter import DatabaseExporter
+from datamimic_ce.engine.io.exporters.database.mongodb_exporter import MongoDBExporter
+from datamimic_ce.engine.io.exporters.diagnostics.console_exporter import ConsoleExporter
+from datamimic_ce.engine.io.exporters.diagnostics.log_exporter import LogExporter
+from datamimic_ce.engine.io.exporters.formats.csv_exporter import CSVExporter
+from datamimic_ce.engine.io.exporters.formats.dbunit_exporter import DbUnitExporter
+from datamimic_ce.engine.io.exporters.formats.fixed_width_exporter import FixedWidthExporter
+from datamimic_ce.engine.io.exporters.formats.json_exporter import JsonExporter
+from datamimic_ce.engine.io.exporters.formats.txt_exporter import TXTExporter
+from datamimic_ce.engine.io.exporters.formats.xlsx_exporter import XLSXExporter
+from datamimic_ce.engine.io.exporters.formats.xml_exporter import XMLExporter
 
 logger = logging.getLogger("DATAMIMIC")
 

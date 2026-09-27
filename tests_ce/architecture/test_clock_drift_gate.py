@@ -19,7 +19,7 @@ The allow-list captures intentional exceptions:
 * ``clock.py`` — the SPOT itself.
 * ``datetime_generator.py`` — has a documented "current datetime" mode
   where the *output* is meant to be the live wall-clock.
-* ``engine/runtime/logging.py`` and ``data_mimic_test.py`` — telemetry
+* ``engine/runtime/logging.py`` and ``interfaces/python/data_mimic_test.py`` — telemetry
   timestamps; not part of generator output.
 
 Adding a new wall-clock callsite means either (a) routing it through
@@ -46,7 +46,7 @@ ALLOWLIST: set[str] = {
     "datamimic_ce/domains/shared/literal_generators/datetime_generator.py",
     # Telemetry / timing, not part of generator output.
     "datamimic_ce/engine/runtime/logging.py",
-    "datamimic_ce/data_mimic_test.py",
+    "datamimic_ce/interfaces/python/data_mimic_test.py",
 }
 
 # Method names on datetime / time module that read the wall-clock.

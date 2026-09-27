@@ -19,8 +19,8 @@ from datamimic_ce.authoring.projection.reference import (
 )
 from datamimic_ce.authoring.domain.schema import build_schema_index
 from datamimic_ce.authoring.spec import authoring_spec_json_schema
-from datamimic_ce.engine.dsl.enums.converter_enums import ConverterEnum
-from datamimic_ce.engine.dsl.model.element_registry import list_element_tags
+from datamimic_ce.engine.dsl.vocabulary.enums.converter_enums import ConverterEnum
+from datamimic_ce.engine.dsl.model.registry import list_element_tags
 from datamimic_ce.engine.io.exporters.exporter_util import buffered_exporter_names
 
 

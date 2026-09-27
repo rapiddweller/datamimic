@@ -6,13 +6,13 @@
 
 import logging
 
-from datamimic_ce.engine.dsl.constants.convention_constants import NAME_SEPARATOR
-from datamimic_ce.engine.dsl.enums.distribution_enums import SourceDistribution
-from datamimic_ce.engine.dsl.model.generate_model import GenerateModel
+from datamimic_ce.engine.dsl.model.generation.generate_model import GenerateModel
+from datamimic_ce.engine.dsl.model.generation.timeseries import TimeSeriesConfig
 from datamimic_ce.engine.dsl.statements.composite_statement import CompositeStatement
 from datamimic_ce.engine.dsl.statements.statement import Statement
 from datamimic_ce.engine.dsl.statements.statement_util import StatementUtil
-from datamimic_ce.engine.dsl.timeseries import TimeSeriesConfig
+from datamimic_ce.engine.dsl.vocabulary.constants.convention_constants import NAME_SEPARATOR
+from datamimic_ce.engine.dsl.vocabulary.enums.distribution_enums import SourceDistribution
 
 logger = logging.getLogger("DATAMIMIC")
 

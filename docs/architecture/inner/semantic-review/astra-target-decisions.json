@@ -158,7 +158,7 @@
     {
       "id": "D14",
       "title": "Authoring retains observable contracts",
-      "decision": "Keep CompilePlan within authoring/contracts.py because ScaffoldResult exposes it. Keep contracts/spec/domain in one semantic domain aggregate: DTOs depend on diagnostic/spec types and intent rules consume plans, so a separate contracts component creates a needless component cycle. No source merge or internal DTO copy. Put derived_facts in projection. Preserve CE persisted intent semantics and EE transaction semantics; shared physical layering is not permission to change either product contract.",
+      "decision": "Keep CompilePlan within authoring/contracts.py because ScaffoldResult exposes it. Keep contracts/spec/domain in one semantic domain aggregate: DTOs depend on diagnostic/spec types and intent rules consume plans, so a separate contracts component creates a needless component cycle. No source merge or internal DTO copy. Retain derived_facts in Domain: its semantic counts, memstore relationships and foreign-key facts are consumed by DM408 and application result assembly. Astra corrected the initial projection assignment, which would create Domain -> Projection -> Domain. Expose only derive_facts; do not widen Domain dependencies or duplicate derivation. Preserve CE persisted intent semantics and EE transaction semantics; shared physical layering is not permission to change either product contract.",
       "evidence": [
         "datamimic_ce/authoring/contracts.py",
         "datamimic_ce/authoring/domain/derived_facts.py"
@@ -414,7 +414,7 @@
           "packages": [
             "datamimic_ce.authoring.projection"
           ],
-          "concern": "Project canonical DSL/domain facts and derive compiled-plan facts."
+          "concern": "Render reference and schema views from canonical DSL/domain facts."
         },
         {
           "id": "AUTHORING-ADAPTERS",
@@ -1374,7 +1374,7 @@
     },
     {
       "path": "authoring/projection",
-      "concern": "Project canonical DSL/domain facts and derive compiled-plan facts.",
+      "concern": "Render reference and schema views from canonical DSL/domain facts.",
       "component": "AUTHORING-PROJECTION"
     },
     {
@@ -2251,7 +2251,7 @@
     {
       "source": "authoring/domain/derived_facts.py",
       "targets": [
-        "authoring/projection/derived_facts.py"
+        "authoring/domain/derived_facts.py"
       ]
     },
     {
@@ -4650,6 +4650,7 @@
     {
       "source": "engine/runtime/tasks/__init__.py",
       "targets": [
+        "engine/runtime/tasks/__init__.py",
         "engine/runtime/tasks/registry.py"
       ]
     },
@@ -5136,6 +5137,12 @@
   ],
   "mapping_application": "Each source occurs exactly once in effective_module_mapping. Empty targets means removal. More than one target means behavior split; shared destinations are deliberate merges, not collision waivers. Replace prior relocation for a split source. No source projection is permitted to infer target component ownership. Build physical file inventory as distinct targets plus new_modules; contract namespaces are not files.",
   "source_split_operations": [
+    {
+      "source": "engine/runtime/tasks/__init__.py",
+      "bootstrap": "Retain package composition importing registry once, without reexports, aliases or mutable initialization flags. Spawned multiprocessing and Ray workers enter below the lifecycle runner.",
+      "registry": "Move existing ordered task registrations unchanged into registry.py. Implementations import explicit leaves, never the package initializer.",
+      "verification": "Cold spawn and Ray worker execution, unsupported statement failure, registry extension precedence and seeded replay. Parser registration differs: DescriptorParser composes it explicitly, so the old parsers initializer is removed."
+    },
     {
       "source": "engine/runtime/sources/router.py",
       "runtime": "Evaluate scripts/selectors, derive stable seeds, resolve context/defaults/statement metadata and update root caches.",

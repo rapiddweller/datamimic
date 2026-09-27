@@ -59,10 +59,10 @@ from datamimic_ce.engine.io.api import (
 from datamimic_ce.engine.runtime.contexts.context import Context
 from datamimic_ce.engine.runtime.contexts.setup_context import SetupContext
 from datamimic_ce.engine.runtime.logging import logger
-from datamimic_ce.engine.runtime.tasks.task_factory import create_task
+from datamimic_ce.engine.runtime.tasks.base.dispatch import create_task
 
 if TYPE_CHECKING:
-    from datamimic_ce.engine.runtime.tasks.task import Task
+    from datamimic_ce.engine.runtime.tasks.base.task import Task
 
 
 def _create_converter_from_constructor_str(

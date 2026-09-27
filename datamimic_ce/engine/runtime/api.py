@@ -8,10 +8,10 @@ from datamimic_ce.engine.dsl.api import GeneratorCapability, describe_generator_
 from datamimic_ce.engine.runtime.contexts.context import Context
 from datamimic_ce.engine.runtime.contexts.setup_context import SetupContext
 from datamimic_ce.engine.runtime.contracts import PlatformProperties, RunRequest, RunResult, RunSession
-from datamimic_ce.engine.runtime.generators.sequence_table import SequenceTableGenerator
 from datamimic_ce.engine.runtime.lifecycle.config import settings
 from datamimic_ce.engine.runtime.lifecycle.runner import create_run_session as _create_run_session
 from datamimic_ce.engine.runtime.lifecycle.runner import run as _run
+from datamimic_ce.engine.runtime.tasks.values.construction.sequence_table import SequenceTableGenerator
 
 
 def iter_generator_capabilities() -> Iterator[GeneratorCapability]:

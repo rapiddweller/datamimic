@@ -17,9 +17,9 @@ from datamimic_ce.engine.dsl.model.constraints import (
     source_capabilities,
     source_file_format_for,
 )
-from datamimic_ce.engine.runtime.tasks.element_task import ElementTask
-from datamimic_ce.engine.runtime.tasks.key_variable_task import KeyVariableTask
-from datamimic_ce.engine.runtime.tasks.task import Task
+from datamimic_ce.engine.runtime.tasks.values.scalar.element_task import ElementTask
+from datamimic_ce.engine.runtime.tasks.values.key_variable_task import KeyVariableTask
+from datamimic_ce.engine.runtime.tasks.base.task import Task
 
 
 @pytest.mark.parametrize(

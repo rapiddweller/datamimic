@@ -8,7 +8,7 @@ import shutil
 import xml.etree.ElementTree as ET
 from pathlib import Path
 
-from datamimic_ce.data_mimic_test import DataMimicTest
+from datamimic_ce.interfaces.python.data_mimic_test import DataMimicTest
 
 
 class TestXmlFunctional:

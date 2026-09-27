@@ -16,7 +16,7 @@ from unittest.mock import Mock
 import pytest
 from sqlalchemy.exc import OperationalError, ProgrammingError
 
-from datamimic_ce.engine.dsl.statements.variable_statement import VariableStatement
+from datamimic_ce.engine.dsl.statements.values.variables.variable_statement import VariableStatement
 from datamimic_ce.engine.io.clients.rdbms_client import RdbmsClient
 from datamimic_ce.engine.io.data_sources.data_source_registry import DataSourceRegistry
 from datamimic_ce.engine.runtime.sources.router import set_data_source_length

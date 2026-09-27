@@ -2,10 +2,10 @@ from argparse import Namespace
 from pathlib import Path
 from typing import Literal
 
-from datamimic_ce.data_mimic_test import DataMimicTest
-from datamimic_ce.datamimic import DataMimic
-from datamimic_ce.engine.dsl.parsers.descriptor_parser import DescriptorParser
-from datamimic_ce.engine.dsl.statements.setup_statement import SetupStatement
+from datamimic_ce.interfaces.python.data_mimic_test import DataMimicTest
+from datamimic_ce.interfaces.python.datamimic import DataMimic
+from datamimic_ce.engine.dsl.parsers.document.descriptor_parser import DescriptorParser
+from datamimic_ce.engine.dsl.statements.setup.setup_statement import SetupStatement
 from datamimic_ce.engine.runtime import api as runtime_api
 from datamimic_ce.engine.runtime.contracts import (
     CapturedProducts,
@@ -45,7 +45,7 @@ def test_python_api_uses_interface_request_and_preserves_factory_config_identity
         captured.append(request)
         return session
 
-    monkeypatch.setattr("datamimic_ce.datamimic.create_run_session", create_run_session)
+    monkeypatch.setattr("datamimic_ce.interfaces.python.datamimic.create_run_session", create_run_session)
 
     def transformer(_statement) -> None:
         pass
@@ -87,7 +87,7 @@ def test_python_api_uses_interface_request_and_preserves_factory_config_identity
 
 def test_data_mimic_test_keeps_disabled_capture_error(monkeypatch) -> None:
     session = SessionStub()
-    monkeypatch.setattr("datamimic_ce.data_mimic_test.create_run_session", lambda _request: session)
+    monkeypatch.setattr("datamimic_ce.interfaces.python.data_mimic_test.create_run_session", lambda _request: session)
     test_engine = DataMimicTest(Path("."), "descriptor.xml")
 
     try:

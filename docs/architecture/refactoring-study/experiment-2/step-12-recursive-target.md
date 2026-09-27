@@ -6,7 +6,7 @@ Date: 2026-09-27. Status: in progress, not target acceptance.
 
 `eb4733dd` freezes Astra's delegated decisions, 22 canonical contract scopes and
 the explicit dispositions of all 488 source Python modules at `3b844b50`.
-The final map has 486 non-demo target modules, including explicit splits,
+The amended map has 487 non-demo target modules, including explicit splits,
 merges, removals and one new typed IO boundary. Nine demo Python modules remain
 visible but outside physical regrouping.
 
@@ -77,3 +77,44 @@ a silently green raw comparator. The Domain slice is accepted with that stated
 evidence; final architecture and external-service acceptance remain open.
 
 CI-ONLY VERIFICATION: no new remote run yet. No PR merge or release performed.
+
+## Second slice: DSL, IO, Runtime and Python entrypoints
+
+160 single-destination moves are implemented. Root's AST comparison against
+`e884e763` finds no production changes beyond imports. Physical gaps are now
+29 missing target paths and 21 legacy paths; semantic splits remain pending.
+The original 930 XML descriptors, seven intent models and violation baseline
+are unchanged. Two embedded Python imports in verification runners follow the
+new Python entrypoint; their expectations are unchanged.
+
+Astra corrected two decisions before the semantic slices:
+
+- Keep `derived_facts` in Authoring Domain. DM408 and application results consume
+  the same semantic derivation; moving it to Projection creates a cycle.
+- Keep a meaningful Runtime task initializer importing the new registry once.
+  Cold multiprocessing and Ray workers enter below the lifecycle runner.
+  This adds one target module, taking the total from 495 to 496. DSL parser
+  composition remains explicit in the descriptor parser.
+
+The one-shot mover scanned too broadly and also rewrote 364 generated
+`build/lib` Python copies. The generated directory was quarantined recoverably
+at `/private/tmp/ce-s2b-build-cache.TxV6P1/build`; the mover was retired. Subsequent
+work must use tracked inputs and explicit destinations, never recursive checkout
+rewrites. No descriptor or captured baseline was affected.
+
+LOCAL VERIFIED: recursive definition tests pass; full-package Ruff and Mypy
+pass (488 files). Luna reports 1,201 unit passes / 11 skips before the final
+path corrections and 24 affected authoring/determinism passes afterward.
+Independent QA passed 147 registry-owner tests and the cold CLI entrypoint.
+The serial run had 3,857 passes, 28 skips, one deselected final-layout check,
+and one failure: the clock gate still allowed telemetry at the old Python
+entrypoint path. After updating that exact path, 480 clock/entrypoint checks
+pass. The failed full run remains recorded; it was not rerun wholesale.
+
+Step-0 retains all 930 statuses. Raw comparisons remain red only for the known
+unseeded MemStore count variance and build-version identity. S2A to S2B changes
+capabilities only at `/schema_version` (`dev130` to `dev131`), not capability
+content. XML/model hashes remain exact. This movement-only slice is accepted
+with these bounded results; service and final architecture acceptance remain open.
+
+CI-ONLY VERIFICATION: no new remote run.

@@ -5,7 +5,7 @@
 # For questions and support, contact: info@rapiddweller.com
 from copy import copy
 
-from datamimic_ce.engine.dsl.model.mongodb_model import MongoDBModel
+from datamimic_ce.engine.dsl.model.setup.mongodb_model import MongoDBModel
 from datamimic_ce.engine.io.connection_config.mongodb_connection_config import MongoDBConnectionConfig
 
 

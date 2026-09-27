@@ -4,9 +4,9 @@ from typing import Literal
 import pytest
 
 from datamimic_ce.engine.dsl.api import parse_properties
-from datamimic_ce.engine.dsl.parsers.descriptor_parser import DescriptorParser
+from datamimic_ce.engine.dsl.parsers.document.descriptor_parser import DescriptorParser
 from datamimic_ce.engine.dsl.parsers.parser_util import ParserUtil
-from datamimic_ce.engine.dsl.statements.mongodb_statement import MongoDBStatement
+from datamimic_ce.engine.dsl.statements.setup.mongodb_statement import MongoDBStatement
 from datamimic_ce.engine.io.api import FileUtil
 
 

@@ -7,9 +7,9 @@
 from typing import TYPE_CHECKING
 
 from datamimic_ce.engine.io.api import DataSourcePagination
+from datamimic_ce.engine.io.data_sources.selection import get_distributed_data, get_unique_data
 
 from .router import load_generate_source
-from .selection import get_distributed_data, get_unique_data
 
 if TYPE_CHECKING:
     from datamimic_ce.engine.dsl.api import GenerateStatement

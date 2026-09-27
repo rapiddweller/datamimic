@@ -14,7 +14,7 @@ from datamimic_ce.engine.runtime.contexts.geniter_context import GenIterContext
 from datamimic_ce.engine.runtime.contexts.setup_context import SetupContext
 from datamimic_ce.engine.runtime.logging import gen_timer, logger, setup_logger
 from datamimic_ce.engine.runtime.sources.chunk_source_reader import ChunkSourceReader
-from datamimic_ce.engine.runtime.tasks.task import CommonSubTask, GenSubTask
+from datamimic_ce.engine.runtime.tasks.base.task import CommonSubTask, GenSubTask
 from datamimic_ce.engine.runtime.tasks.task_util import TaskUtil
 
 

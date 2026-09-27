@@ -24,7 +24,7 @@ from __future__ import annotations
 
 from pathlib import Path
 
-from datamimic_ce.data_mimic_test import DataMimicTest
+from datamimic_ce.interfaces.python.data_mimic_test import DataMimicTest
 
 _TEST_DIR = Path(__file__).resolve().parent
 _FILE_ORDER = [str(i) for i in range(12)]

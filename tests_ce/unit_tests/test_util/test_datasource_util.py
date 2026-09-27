@@ -9,7 +9,7 @@ import random
 from pathlib import Path
 
 from datamimic_ce.engine.io.api import DataSourcePagination
-from datamimic_ce.engine.runtime.sources.selection import get_shuffled_data_with_cyclic
+from datamimic_ce.engine.io.data_sources.selection import get_shuffled_data_with_cyclic
 
 
 class TestDataSourceUtil:

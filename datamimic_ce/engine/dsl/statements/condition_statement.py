@@ -7,11 +7,11 @@
 
 import logging
 
-from datamimic_ce.engine.dsl.constants.convention_constants import NAME_SEPARATOR
 from datamimic_ce.engine.dsl.statements.composite_statement import CompositeStatement
-from datamimic_ce.engine.dsl.statements.else_if_statement import ElseIfStatement
-from datamimic_ce.engine.dsl.statements.else_statement import ElseStatement
-from datamimic_ce.engine.dsl.statements.if_statement import IfStatement
+from datamimic_ce.engine.dsl.statements.flow.branches.else_if_statement import ElseIfStatement
+from datamimic_ce.engine.dsl.statements.flow.branches.else_statement import ElseStatement
+from datamimic_ce.engine.dsl.statements.flow.branches.if_statement import IfStatement
+from datamimic_ce.engine.dsl.vocabulary.constants.convention_constants import NAME_SEPARATOR
 
 logger = logging.getLogger("DATAMIMIC")
 

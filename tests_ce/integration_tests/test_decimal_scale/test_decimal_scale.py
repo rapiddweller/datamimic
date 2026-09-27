@@ -19,7 +19,7 @@ from datamimic_ce.authoring.contracts import (
     VerificationGateStatus,
 )
 from datamimic_ce.authoring.application.service import compile_document, scaffold
-from datamimic_ce.data_mimic_test import DataMimicTest
+from datamimic_ce.interfaces.python.data_mimic_test import DataMimicTest
 from datamimic_ce.domains.shared.literal_generators.numeric.float_generator import FloatGenerator
 
 _TEST_DIR = Path(__file__).resolve().parent

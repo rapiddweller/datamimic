@@ -57,6 +57,7 @@
       "public": [
         "datamimic_ce.authoring.contracts",
         "datamimic_ce.authoring.spec",
+        "datamimic_ce.authoring.domain.derived_facts:derive_facts",
         "datamimic_ce.authoring.domain.diagnostics",
         "datamimic_ce.authoring.domain.rule_catalog",
         "datamimic_ce.authoring.domain.rules.base",
@@ -79,7 +80,7 @@
         "datamimic_ce.authoring.projection"
       ],
       "responsibilities": [
-        "Project canonical DSL/domain facts and derive compiled-plan facts."
+        "Render reference and schema views from canonical DSL/domain facts."
       ],
       "forbidden_responsibilities": [
         "Define a second DSL catalog or execute a run."
@@ -95,7 +96,6 @@
         }
       ],
       "public": [
-        "datamimic_ce.authoring.projection.derived_facts",
         "datamimic_ce.authoring.projection.reference",
         "datamimic_ce.authoring.projection.reference_projection"
       ],
@@ -255,6 +255,7 @@
       "kind": "root_layout",
       "root": "datamimic_ce.authoring.domain",
       "allowed_children": [
+        "datamimic_ce.authoring.domain.derived_facts",
         "datamimic_ce.authoring.domain.diagnostics",
         "datamimic_ce.authoring.domain.rule_catalog",
         "datamimic_ce.authoring.domain.rules",
@@ -291,11 +292,10 @@
       "kind": "root_layout",
       "root": "datamimic_ce.authoring.projection",
       "allowed_children": [
-        "datamimic_ce.authoring.projection.derived_facts",
         "datamimic_ce.authoring.projection.reference",
         "datamimic_ce.authoring.projection.reference_projection"
       ],
-      "rationale": "Project canonical DSL/domain facts and derive compiled-plan facts. Exact reviewed target children; no hidden extra modules.",
+      "rationale": "Render reference and schema views from canonical DSL/domain facts. Exact reviewed target children; no hidden extra modules.",
       "provenance": [
         "docs/architecture/inner/structure-review.json"
       ],

@@ -4,7 +4,7 @@ from unittest.mock import MagicMock
 from datamimic_ce.engine.io.clients.mongodb_client import MongoDBClient
 from datamimic_ce.engine.runtime.contexts.context import Context
 from datamimic_ce.engine.runtime.contexts.setup_context import SetupContext
-from datamimic_ce.engine.runtime.counts import get_int_count, resolve_count
+from datamimic_ce.engine.runtime.tasks.base.counts import get_int_count, resolve_count
 from datamimic_ce.engine.runtime.sources.router import has_mongodb_upsert_target
 
 

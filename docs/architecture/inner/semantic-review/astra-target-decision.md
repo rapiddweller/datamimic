@@ -98,7 +98,7 @@ a cohesion review; it is not a quota.
 | StatementUtil | Consumer grammar stays DSL; scalar source-entity fallback goes IO/data_sources; target metadata/routing goes IO/exporters. Preserve Mongo's different fallback and file naming. |
 | Parser composition | Concrete registry above base dispatch; document orchestration above low-level `input/xml.py` and `input/properties.py`. Task composition likewise lives in a real registry module. |
 | TaskUtil | Delete forwarding. Preserve boolean condition rejection in scripting; converter construction in values; dependency-sensitive export order in Generate; serialization/write routing in IO. |
-| Authoring | Keep public CompilePlan in contracts; contracts/spec/domain remain one semantic domain aggregate because DTOs and rules are mutually related. No DTO copy or artificial component cycle. derived_facts moves to projection; preserve edition semantics. |
+| Authoring | Keep public CompilePlan in contracts; contracts/spec/domain remain one semantic domain aggregate because DTOs and rules are mutually related. Retain derived_facts in Domain: both DM408 and application results consume its semantic facts. The initial projection assignment was wrong and would create a cycle. No DTO copy, wrapper or duplicated derivation; preserve edition semantics. |
 | Interfaces | Delete forwarding api/contracts/factory_config modules, updating every consumer. The Python test factory is one `factory.py`, not a one-file folder. Keep the behavior-bearing Domains facade at `domains/facade.py`. |
 | Domains / resources | Keep coherent aggregates. DbUnit is a file-format exporter. Examples become runnable packaged resources, not a new demo registry/API. Root errors remain stable. |
 
@@ -121,6 +121,14 @@ alignment opportunity. It does not block or belong inside this structural
 migration. Conflicting-credential fixtures must prove the unchanged CE winner.
 
 ### Two real cycle remedies
+
+Registry follow-up: `DescriptorParser` composes the parser registry explicitly;
+private parser-dispatch tests initialize that registry without weakening their
+assertions. Runtime keeps a meaningful `tasks/__init__.py` that imports its
+registry once: multiprocessing and Ray workers enter below the lifecycle runner.
+This is package composition, not an old-name facade. Children must import explicit
+leaf modules, never the initializer. Move ordered bindings unchanged; add no
+initialization flag or per-run refresh. Prove cold spawned-worker and Ray entry.
 
 1. **Statements:** high-level `statements/traversal.py` owns Generate/Condition
    traversal. Common Statement/CompositeStatement no longer import or type their

@@ -8,7 +8,7 @@ from pathlib import Path
 import pytest
 from openpyxl import Workbook, load_workbook
 
-from datamimic_ce.data_mimic_test import DataMimicTest
+from datamimic_ce.interfaces.python.data_mimic_test import DataMimicTest
 
 
 def _write_fixture(test_dir: Path, rows: list[list]):

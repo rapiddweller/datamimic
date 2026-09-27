@@ -9,12 +9,12 @@ import unittest
 from random import Random
 from unittest.mock import MagicMock, patch
 
-from datamimic_ce.engine.dsl.statements.reference_statement import ReferenceStatement
+from datamimic_ce.engine.dsl.statements.values.references.reference_statement import ReferenceStatement
 from datamimic_ce.engine.io.api import DataSourcePagination
 from datamimic_ce.engine.io.clients.database_client import DatabaseClient
 from datamimic_ce.engine.io.clients.rdbms_client import RdbmsClient
 from datamimic_ce.engine.runtime.contexts.geniter_context import GenIterContext
-from datamimic_ce.engine.runtime.tasks.reference_task import ReferenceTask
+from datamimic_ce.engine.runtime.tasks.values.references.reference_task import ReferenceTask
 
 
 class TestReferenceTask(unittest.TestCase):
@@ -164,7 +164,7 @@ class TestReferenceTask(unittest.TestCase):
         task = ReferenceTask(self.statement, self.pagination)
 
         with patch(
-            "datamimic_ce.engine.runtime.tasks.reference_task.load_reference_source",
+            "datamimic_ce.engine.runtime.tasks.values.references.reference_task.load_reference_source",
             return_value=selected,
         ) as load_reference_source:
             assert task.execute(self.context) == 17

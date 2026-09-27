@@ -5,7 +5,7 @@
 # For questions and support, contact: info@rapiddweller.com
 import re
 
-from datamimic_ce.engine.dsl.constants.attribute_constants import META_TARGET_ENTITY, META_TYPE
+from datamimic_ce.engine.dsl.vocabulary.constants.attribute_constants import META_TARGET_ENTITY, META_TYPE
 
 
 class StatementUtil:

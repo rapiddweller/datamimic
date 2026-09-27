@@ -41,7 +41,7 @@ datamimic demo create <demo-name>    # Create a specific demo
 
 ```python
 from datamimic_ce.domains.shared.services import PersonService
-from datamimic_ce.factory.datamimic_test_factory import DataMimicTestFactory
+from datamimic_ce.interfaces.python.factory import DataMimicTestFactory
 
 # Using domain services
 person_service = PersonService(dataset="US")

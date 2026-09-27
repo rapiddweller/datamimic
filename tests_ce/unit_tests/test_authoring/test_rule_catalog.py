@@ -25,7 +25,7 @@ from datamimic_ce.authoring.domain.rule_catalog import (
 from datamimic_ce.authoring.domain.rules import ALL_INTENT_RULES, ALL_RULES
 from datamimic_ce.authoring.domain.rules.base import IntentLintContext, LintContext
 from datamimic_ce.authoring.domain.schema import build_schema_index
-from datamimic_ce.engine.dsl.enums.distribution_enums import POSITIONAL_NUMBER_SEQUENCES, NumberDistribution
+from datamimic_ce.engine.dsl.vocabulary.enums.distribution_enums import POSITIONAL_NUMBER_SEQUENCES, NumberDistribution
 from datamimic_ce.interfaces.cli import app
 
 

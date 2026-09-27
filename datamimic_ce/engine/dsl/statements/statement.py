@@ -7,7 +7,7 @@
 from abc import ABC
 from typing import TYPE_CHECKING, Optional, TypeGuard
 
-from datamimic_ce.engine.dsl.constants.convention_constants import NAME_SEPARATOR
+from datamimic_ce.engine.dsl.vocabulary.constants.convention_constants import NAME_SEPARATOR
 
 if TYPE_CHECKING:
     from datamimic_ce.engine.dsl.statements.generate_statement import GenerateStatement

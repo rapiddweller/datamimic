@@ -6,7 +6,7 @@ from pathlib import Path
 import pytest
 from sqlalchemy.exc import IntegrityError
 
-from datamimic_ce.data_mimic_test import DataMimicTest
+from datamimic_ce.interfaces.python.data_mimic_test import DataMimicTest
 
 
 def _descriptor(tmp_path: Path, *, target: str, count: int = 1, email: str | None = None) -> list[dict[str, object]]:

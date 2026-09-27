@@ -1,14 +1,14 @@
 from unittest.mock import MagicMock, patch
 
-from datamimic_ce.engine.dsl.enums.dbms_enums import Dbms
-from datamimic_ce.engine.dsl.model.database_model import DatabaseModel
-from datamimic_ce.engine.dsl.model.mongodb_model import MongoDBModel
-from datamimic_ce.engine.dsl.statements.database_statement import DatabaseStatement
-from datamimic_ce.engine.dsl.statements.mongodb_statement import MongoDBStatement
+from datamimic_ce.engine.dsl.vocabulary.enums.dbms_enums import Dbms
+from datamimic_ce.engine.dsl.model.setup.database_model import DatabaseModel
+from datamimic_ce.engine.dsl.model.setup.mongodb_model import MongoDBModel
+from datamimic_ce.engine.dsl.statements.setup.database_statement import DatabaseStatement
+from datamimic_ce.engine.dsl.statements.setup.mongodb_statement import MongoDBStatement
 from datamimic_ce.engine.io.api import MongoDBConnectionConfig, RdbmsConnectionConfig
 from datamimic_ce.engine.runtime.contexts.setup_context import SetupContext
-from datamimic_ce.engine.runtime.tasks.database_task import DatabaseTask
-from datamimic_ce.engine.runtime.tasks.mongodb_task import MongoDBTask
+from datamimic_ce.engine.runtime.tasks.setup.database_task import DatabaseTask
+from datamimic_ce.engine.runtime.tasks.setup.mongodb_task import MongoDBTask
 
 
 def test_database_task_builds_io_config_from_dsl_model() -> None:
@@ -29,7 +29,7 @@ def test_database_task_builds_io_config_from_dsl_model() -> None:
     client = object()
 
     with patch(
-        "datamimic_ce.engine.runtime.tasks.database_task.create_rdbms_client", return_value=client
+        "datamimic_ce.engine.runtime.tasks.setup.database_task.create_rdbms_client", return_value=client
     ) as create_client:
         DatabaseTask(statement).execute(context)
 
@@ -50,7 +50,7 @@ def test_mongodb_task_builds_io_config_without_statement_side_effects() -> None:
     context = MagicMock(spec=SetupContext)
     client = object()
     with patch(
-        "datamimic_ce.engine.runtime.tasks.mongodb_task.create_mongodb_client", return_value=client
+        "datamimic_ce.engine.runtime.tasks.setup.mongodb_task.create_mongodb_client", return_value=client
     ) as create_client:
         MongoDBTask(statement).execute(context)
 

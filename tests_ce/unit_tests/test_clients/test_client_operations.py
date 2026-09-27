@@ -4,19 +4,7 @@ from unittest.mock import MagicMock, patch
 import pytest
 
 from datamimic_ce.engine.dsl.api import Dbms
-from datamimic_ce.engine.io.client_operations import (
-    count_query_length,
-    create_mongodb_client,
-    create_rdbms_client,
-    database_get_by_page_with_query,
-    database_get_random_rows_by_columns,
-    is_database_client,
-    is_mongodb_client,
-    is_rdbms_client,
-    mongodb_count_collection,
-    rdbms_get_current_sequence_number,
-    uses_mysql_sequence_storage,
-)
+from datamimic_ce.engine.io.clients.operations import count_query_length, create_mongodb_client, create_rdbms_client, database_get_by_page_with_query, database_get_random_rows_by_columns, is_database_client, is_mongodb_client, is_rdbms_client, mongodb_count_collection, rdbms_get_current_sequence_number, uses_mysql_sequence_storage
 from datamimic_ce.engine.io.clients.client import Client
 from datamimic_ce.engine.io.clients.database_client import DatabaseClient
 from datamimic_ce.engine.io.clients.mongodb_client import MongoDBClient
@@ -29,7 +17,7 @@ from datamimic_ce.engine.io.contracts import DataSourcePagination
 def test_create_rdbms_client_delegates_config_and_task_id() -> None:
     config = MagicMock(spec=RdbmsConnectionConfig)
     client = object()
-    with patch("datamimic_ce.engine.io.client_operations.RdbmsClient", return_value=client) as factory:
+    with patch("datamimic_ce.engine.io.clients.operations.RdbmsClient", return_value=client) as factory:
         assert create_rdbms_client(config, "task-1") is client
     factory.assert_called_once_with(config, "task-1")
 
@@ -37,7 +25,7 @@ def test_create_rdbms_client_delegates_config_and_task_id() -> None:
 def test_create_mongodb_client_delegates_config() -> None:
     config = MagicMock(spec=MongoDBConnectionConfig)
     client = object()
-    with patch("datamimic_ce.engine.io.client_operations.MongoDBClient", return_value=client) as factory:
+    with patch("datamimic_ce.engine.io.clients.operations.MongoDBClient", return_value=client) as factory:
         assert create_mongodb_client(config) is client
     factory.assert_called_once_with(config)
 

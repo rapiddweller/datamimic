@@ -38,11 +38,7 @@ from datamimic_ce.engine.dsl.model.constraints import (
     RequiresWhenValue,
     ValidValues,
 )
-from datamimic_ce.engine.dsl.model.element_registry import (
-    ElementDefinition,
-    register_element_extension,
-    unregister_element_extension,
-)
+from datamimic_ce.engine.dsl.model.registry import ElementDefinition, register_element_extension, unregister_element_extension
 
 _TAG = "syntheticelement"
 

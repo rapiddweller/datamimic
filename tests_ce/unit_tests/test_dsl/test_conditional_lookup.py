@@ -1,8 +1,8 @@
-from datamimic_ce.engine.dsl.model.generate_model import GenerateModel
-from datamimic_ce.engine.dsl.model.if_model import IfModel
+from datamimic_ce.engine.dsl.model.generation.generate_model import GenerateModel
+from datamimic_ce.engine.dsl.model.flow.branches.if_model import IfModel
 from datamimic_ce.engine.dsl.statements.condition_statement import ConditionStatement
 from datamimic_ce.engine.dsl.statements.generate_statement import GenerateStatement
-from datamimic_ce.engine.dsl.statements.if_statement import IfStatement
+from datamimic_ce.engine.dsl.statements.flow.branches.if_statement import IfStatement
 
 
 def test_conditional_generate_lookup_keeps_executed_branch_semantics() -> None:

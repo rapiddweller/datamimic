@@ -2,7 +2,7 @@ import json
 
 import pytest
 
-from datamimic_ce.engine.io.files import FileUtil
+from datamimic_ce.engine.io.files.readers import FileUtil
 
 
 @pytest.mark.parametrize(

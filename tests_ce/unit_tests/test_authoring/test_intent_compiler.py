@@ -23,7 +23,7 @@ from datamimic_ce.authoring.spec import (
     MemstoreSource,
     authoring_spec_json_schema,
 )
-from datamimic_ce.engine.dsl.constants.element_constants import EL_GENERATE
+from datamimic_ce.engine.dsl.vocabulary.constants.element_constants import EL_GENERATE
 from datamimic_ce.engine.dsl.model.constraints import (
     SourceFileFormat,
     source_file_format,

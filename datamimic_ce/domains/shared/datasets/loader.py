@@ -8,7 +8,7 @@ from typing import TypeAlias, TypeGuard
 from pandas import DataFrame
 
 from datamimic_ce.domains.domain_core.datasets.path import dataset_path
-from datamimic_ce.engine.io.dataset_api import FileContentStorage, FileUtil, JsonValue
+from datamimic_ce.engine.io.files.api import FileContentStorage, FileUtil, JsonValue
 
 CsvRow: TypeAlias = tuple[str, ...]
 CsvRecord: TypeAlias = dict[str, str]

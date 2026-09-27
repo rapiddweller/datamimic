@@ -1152,10 +1152,6 @@
   ],
   "relocations": [
     {
-      "source": "authoring/domain/derived_facts.py",
-      "target": "authoring/projection/derived_facts.py"
-    },
-    {
       "source": "data_mimic_test.py",
       "target": "interfaces/python/data_mimic_test.py"
     },
@@ -1948,10 +1944,6 @@
       "target": "engine/io/data_sources/selection.py"
     },
     {
-      "source": "engine/runtime/tasks/__init__.py",
-      "target": "engine/runtime/tasks/registry.py"
-    },
-    {
       "source": "engine/runtime/tasks/array_task.py",
       "target": "engine/runtime/tasks/values/structured/array_task.py"
     },
@@ -2086,6 +2078,14 @@
   ],
   "package_relocations": [],
   "splits": [
+    {
+      "source": "engine/runtime/tasks/__init__.py",
+      "targets": [
+        "engine/runtime/tasks/__init__.py",
+        "engine/runtime/tasks/registry.py"
+      ],
+      "reason": "Astra reviewed real multiprocessing and Ray entrypoints: retain package composition so fresh workers load ordered task bindings once; child implementations import explicit leaves, never this initializer. No legacy exports or initialization flags."
+    },
     {
       "source": "__init__.py",
       "targets": [

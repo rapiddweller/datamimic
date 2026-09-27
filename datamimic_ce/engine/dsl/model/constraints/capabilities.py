@@ -11,11 +11,8 @@ from dataclasses import dataclass
 from datamimic_ce._compat import StrEnum
 
 # Attribute constants (imported at module level to avoid circular imports)
-from datamimic_ce.engine.dsl.constants.data_type_constants import (
-    DATA_TYPE_DICT,
-    DATA_TYPE_LIST,
-)
-from datamimic_ce.engine.dsl.constants.element_constants import (
+from datamimic_ce.engine.dsl.vocabulary.constants.data_type_constants import DATA_TYPE_DICT, DATA_TYPE_LIST
+from datamimic_ce.engine.dsl.vocabulary.constants.element_constants import (
     EL_ELEMENT,
     EL_GENERATE,
     EL_ID,
