@@ -17,8 +17,8 @@ from datamimic_ce.domains.shared.demographics.sampler import (
     MaskBoundsError,
     load_group_table,
 )
-from datamimic_ce.domains.shared.determinism import compute_provenance_hash
-from datamimic_ce.domains.shared.utils.dataset_path import dataset_path
+from datamimic_ce.domains.domain_core.runtime.determinism import compute_provenance_hash
+from datamimic_ce.domains.domain_core.datasets.path import dataset_path
 
 
 @pytest.fixture()

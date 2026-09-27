@@ -13,7 +13,7 @@ This module provides the MedicalProcedureService class for generating and managi
 from random import Random
 
 from datamimic_ce.domains.domain_core import BaseDomainService
-from datamimic_ce.domains.domain_core.attribute_catalog import EntitySchema, FieldSpec, field
+from datamimic_ce.domains.domain_core.contracts.attribute_catalog import EntitySchema, FieldSpec, field
 from datamimic_ce.domains.healthcare.generators.medical_procedure_generator import MedicalProcedureGenerator
 from datamimic_ce.domains.healthcare.models.medical_procedure import MedicalProcedure
 

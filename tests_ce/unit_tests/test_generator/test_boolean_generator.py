@@ -5,7 +5,7 @@
 # For questions and support, contact: info@rapiddweller.com
 
 
-from datamimic_ce.domains.shared.literal_generators.boolean_generator import BooleanGenerator
+from datamimic_ce.domains.shared.literal_generators.primitives.boolean_generator import BooleanGenerator
 
 
 class TestBooleanGenerator:

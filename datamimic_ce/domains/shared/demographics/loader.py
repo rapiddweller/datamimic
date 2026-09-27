@@ -7,7 +7,7 @@ from collections import defaultdict
 from collections.abc import Iterable
 from pathlib import Path
 
-from datamimic_ce.domains.shared.utils.dataset_loader import read_csv_records
+from datamimic_ce.domains.shared.datasets.loader import read_csv_records
 
 from .profile import (
     DemographicAgeBand,

@@ -23,9 +23,9 @@ import re
 from datetime import date, datetime
 from typing import TypeGuard
 
-from datamimic_ce.domains.domain_core.attribute_catalog import FieldSpec
+from datamimic_ce.domains.domain_core.contracts.attribute_catalog import FieldSpec
 from datamimic_ce.domains.domain_core.base_entity import BaseEntity
-from datamimic_ce.domains.entity_registry import EntitySpec, list_entity_specs
+from datamimic_ce.domains.registry.entities import EntitySpec, list_entity_specs
 
 SEED = 42
 COUNT = 3

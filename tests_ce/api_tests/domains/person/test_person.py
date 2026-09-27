@@ -3,7 +3,7 @@ from __future__ import annotations
 import pytest
 
 from datamimic_ce.domains.facade import generate_domain
-from datamimic_ce.domains.shared.determinism import canonical_json, derive_seed, stable_uuid
+from datamimic_ce.domains.domain_core.runtime.determinism import canonical_json, derive_seed, stable_uuid
 from datamimic_ce.errors import ErrorCode, InvalidLocaleError
 
 

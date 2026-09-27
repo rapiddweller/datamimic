@@ -76,6 +76,7 @@ datamimic_ce = ["py.typed"]
 
 [tool.setuptools.packages.find]
 where = ["."]
+include = ["datamimic_ce*"]
 exclude = ["tests_ce"]
 namespaces = true
 

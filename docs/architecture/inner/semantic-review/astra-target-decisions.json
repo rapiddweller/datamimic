@@ -199,7 +199,7 @@
     {
       "id": "D18",
       "title": "Boundary exceptions must be exact and truthful",
-      "decision": "Retain Path, datetime, Random, Traversable, Pydantic strict primitives, lxml element and schema-value types. Permit only reviewed function/position pairs, not entire APIs. Correct get_entity_service_class return from Callable[..., BaseDomainService] to type[BaseDomainService] | None: registry stores actual classes. Keep type[BaseModel] factory and constrained zero-argument value suppliers. Recompute final UNKNOWN results; allowances record scoped intentional opacity, not deeper type proof.",
+      "decision": "Retain Path, datetime, Random, Traversable, Pydantic strict primitives, lxml element and schema-value types. Permit only reviewed function/position pairs, not entire APIs. Astra corrected the initial class-return proposal after tracing heterogeneous constructors: rename the existing lookup to get_entity_service_factory with Callable[..., BaseDomainService] | None; retain EntitySpec.service_cls: type[BaseDomainService] for class discovery. No extra wrapper, local type-erasure alias or private Runtime import. Explicit DSL keywords reach the concrete constructor unchanged; only injected options are signature-filtered. Keep type[BaseModel] factory and constrained zero-argument value suppliers. Recompute final UNKNOWN results; allowances record scoped intentional opacity, not deeper type proof.",
       "evidence": [
         "datamimic_ce/domains/entity_registry.py:128",
         "datamimic_ce/engine/dsl/model/constraints/types.py",
@@ -5401,9 +5401,10 @@
         "qualified_name": "datamimic_ce.domains.api.get_entity_service_class",
         "position": "return",
         "annotation": "Callable[..., BaseDomainService] | None",
-        "action": "fix_annotation_then_allow_exact_position",
-        "target_annotation": "type[BaseDomainService] | None",
-        "rationale": "Registry stores class objects, not unconstrained arbitrary callables; fix annotation before reviewing retained class boundary.",
+        "action": "rename_then_allow_exact_position",
+        "target_qualified_name": "datamimic_ce.domains.api.get_entity_service_factory",
+        "target_annotation": "Callable[..., BaseDomainService] | None",
+        "rationale": "Concrete registered services have heterogeneous constructor signatures. This exact return position exposes dynamic DSL construction, not static argument proof; class identity remains available through EntitySpec.service_cls.",
         "evidence_ids": [
           "EVD-426a2720ef6c6695"
         ]

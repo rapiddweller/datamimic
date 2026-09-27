@@ -10,9 +10,9 @@ from pathlib import Path
 from random import Random
 from typing import TypeAlias, TypeGuard, TypeVar
 
-from datamimic_ce.domains.shared.determinism import compute_provenance_hash
+from datamimic_ce.domains.domain_core.runtime.determinism import compute_provenance_hash
 
-from ..utils.dataset_path import dataset_path, is_strict_dataset_mode
+from ...domain_core.datasets.path import dataset_path, is_strict_dataset_mode
 from .profile import (
     DemographicAgeBand,
     DemographicConditionRate,

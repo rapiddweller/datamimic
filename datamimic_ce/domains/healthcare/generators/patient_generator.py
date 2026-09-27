@@ -15,19 +15,19 @@ from pathlib import Path
 from random import Random
 
 from datamimic_ce.domains.domain_core.base_domain_generator import DatasetAwareDomainGenerator
-from datamimic_ce.domains.shared.demographics.sampler import DemographicSample, DemographicSampler
-from datamimic_ce.domains.shared.generators.person_generator import PersonGenerator
-from datamimic_ce.domains.shared.literal_generators.family_name_generator import FamilyNameGenerator
-from datamimic_ce.domains.shared.literal_generators.given_name_generator import GivenNameGenerator
-from datamimic_ce.domains.shared.literal_generators.phone_number_generator import PhoneNumberGenerator
-from datamimic_ce.domains.shared.models.demographic_config import DemographicConfig
-from datamimic_ce.domains.shared.utils.dataset_loader import (
+from datamimic_ce.domains.domain_core.datasets.path import dataset_path
+from datamimic_ce.domains.shared.datasets.loader import (
     load_weighted_values_try_dataset,
     pick_one_weighted_no_repeat,
     read_weighted_records,
     read_weighted_values,
 )
-from datamimic_ce.domains.shared.utils.dataset_path import dataset_path
+from datamimic_ce.domains.shared.demographics.config import DemographicConfig
+from datamimic_ce.domains.shared.demographics.sampler import DemographicSample, DemographicSampler
+from datamimic_ce.domains.shared.generators.person_generator import PersonGenerator
+from datamimic_ce.domains.shared.literal_generators.contact.phone_number_generator import PhoneNumberGenerator
+from datamimic_ce.domains.shared.literal_generators.person.family_name_generator import FamilyNameGenerator
+from datamimic_ce.domains.shared.literal_generators.person.given_name_generator import GivenNameGenerator
 
 _CONDITION_DATA_DIR = dataset_path("healthcare", "medical", start=Path(__file__))
 # Directory for emergency relationships CSVs; test may monkeypatch this.

@@ -14,7 +14,7 @@ from datetime import datetime
 from random import Random
 
 from datamimic_ce.domains.domain_core import BaseDomainService
-from datamimic_ce.domains.domain_core.attribute_catalog import EntitySchema, FieldSpec, field, group
+from datamimic_ce.domains.domain_core.contracts.attribute_catalog import EntitySchema, FieldSpec, field, group
 from datamimic_ce.domains.finance.generators.transaction_generator import TransactionGenerator
 from datamimic_ce.domains.finance.models.transaction import Transaction
 

@@ -13,7 +13,7 @@ This module provides service functions for generating and managing insurance pro
 from random import Random
 
 from datamimic_ce.domains.domain_core import BaseDomainService
-from datamimic_ce.domains.domain_core.attribute_catalog import EntitySchema, FieldSpec, field
+from datamimic_ce.domains.domain_core.contracts.attribute_catalog import EntitySchema, FieldSpec, field
 from datamimic_ce.domains.insurance.generators.insurance_product_generator import InsuranceProductGenerator
 from datamimic_ce.domains.insurance.models.insurance_product import InsuranceProduct
 

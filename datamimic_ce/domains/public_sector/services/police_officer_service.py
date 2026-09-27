@@ -14,7 +14,7 @@ from datetime import datetime
 from random import Random
 
 from datamimic_ce.domains.domain_core import BaseDomainService
-from datamimic_ce.domains.domain_core.attribute_catalog import (
+from datamimic_ce.domains.domain_core.contracts.attribute_catalog import (
     EntitySchema,
     FieldSpec,
     address_group,
@@ -22,8 +22,8 @@ from datamimic_ce.domains.domain_core.attribute_catalog import (
 )
 from datamimic_ce.domains.public_sector.generators.police_officer_generator import PoliceOfficerGenerator
 from datamimic_ce.domains.public_sector.models.police_officer import PoliceOfficer
+from datamimic_ce.domains.shared.demographics.config import DemographicConfig
 from datamimic_ce.domains.shared.demographics.sampler import DemographicSampler
-from datamimic_ce.domains.shared.models.demographic_config import DemographicConfig
 
 POLICE_OFFICER_SCHEMA = EntitySchema(
     "PoliceOfficer",

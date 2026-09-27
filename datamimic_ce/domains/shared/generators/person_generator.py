@@ -12,19 +12,19 @@ from pathlib import Path
 from random import Random
 
 from datamimic_ce.domains.domain_core.base_domain_generator import DatasetAwareDomainGenerator
+from datamimic_ce.domains.domain_core.datasets.path import dataset_path
+from datamimic_ce.domains.shared.datasets.loader import read_headered_csv
+from datamimic_ce.domains.shared.demographics.config import DemographicConfig
 from datamimic_ce.domains.shared.demographics.sampler import DemographicSample, DemographicSampler
 from datamimic_ce.domains.shared.generators.address_generator import AddressGenerator
-from datamimic_ce.domains.shared.literal_generators.academic_title_generator import AcademicTitleGenerator
-from datamimic_ce.domains.shared.literal_generators.birthdate_generator import BirthdateGenerator
-from datamimic_ce.domains.shared.literal_generators.email_address_generator import EmailAddressGenerator
-from datamimic_ce.domains.shared.literal_generators.family_name_generator import FamilyNameGenerator
-from datamimic_ce.domains.shared.literal_generators.gender_generator import GenderGenerator
-from datamimic_ce.domains.shared.literal_generators.given_name_generator import GivenNameGenerator
-from datamimic_ce.domains.shared.literal_generators.nobility_title_generator import NobilityTitleGenerator
-from datamimic_ce.domains.shared.literal_generators.phone_number_generator import PhoneNumberGenerator
-from datamimic_ce.domains.shared.models.demographic_config import DemographicConfig
-from datamimic_ce.domains.shared.utils.dataset_loader import read_headered_csv
-from datamimic_ce.domains.shared.utils.dataset_path import dataset_path
+from datamimic_ce.domains.shared.literal_generators.contact.email_address_generator import EmailAddressGenerator
+from datamimic_ce.domains.shared.literal_generators.contact.phone_number_generator import PhoneNumberGenerator
+from datamimic_ce.domains.shared.literal_generators.person.academic_title_generator import AcademicTitleGenerator
+from datamimic_ce.domains.shared.literal_generators.person.family_name_generator import FamilyNameGenerator
+from datamimic_ce.domains.shared.literal_generators.person.gender_generator import GenderGenerator
+from datamimic_ce.domains.shared.literal_generators.person.given_name_generator import GivenNameGenerator
+from datamimic_ce.domains.shared.literal_generators.person.nobility_title_generator import NobilityTitleGenerator
+from datamimic_ce.domains.shared.literal_generators.temporal.birthdate_generator import BirthdateGenerator
 
 
 class PersonGenerator(DatasetAwareDomainGenerator):

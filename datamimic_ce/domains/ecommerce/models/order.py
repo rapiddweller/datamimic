@@ -16,7 +16,7 @@ from datamimic_ce.domains.domain_core import BaseEntity
 from datamimic_ce.domains.domain_core.property_cache import property_cache
 from datamimic_ce.domains.ecommerce.generators.order_generator import OrderGenerator
 from datamimic_ce.domains.ecommerce.models.product import Product
-from datamimic_ce.domains.shared.literal_generators.string_generator import StringGenerator
+from datamimic_ce.domains.shared.literal_generators.primitives.string_generator import StringGenerator
 from datamimic_ce.domains.shared.models.address import Address
 
 
@@ -50,7 +50,9 @@ class Order(BaseEntity):
             A unique order ID
         """
         #  use shared PrefixedIdGenerator for prefixed ID without separator
-        from datamimic_ce.domains.shared.literal_generators.prefixed_id_generator import PrefixedIdGenerator
+        from datamimic_ce.domains.shared.literal_generators.identity.keys.prefixed_id_generator import (
+            PrefixedIdGenerator,
+        )
 
         candidate = PrefixedIdGenerator("ORD", "[A-Z0-9]{8}", separator="", rng=self._order_generator.rng).generate()
         return self._claim_identifier("order_id", candidate)
@@ -64,7 +66,9 @@ class Order(BaseEntity):
             A unique user ID
         """
         #  use shared PrefixedIdGenerator for prefixed ID without separator
-        from datamimic_ce.domains.shared.literal_generators.prefixed_id_generator import PrefixedIdGenerator
+        from datamimic_ce.domains.shared.literal_generators.identity.keys.prefixed_id_generator import (
+            PrefixedIdGenerator,
+        )
 
         return PrefixedIdGenerator("USER", "[A-Z0-9]{8}", separator="", rng=self._order_generator.rng).generate()
 

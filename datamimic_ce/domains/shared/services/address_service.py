@@ -1,7 +1,7 @@
 from random import Random
 
 from datamimic_ce.domains.domain_core import BaseDomainService
-from datamimic_ce.domains.domain_core.attribute_catalog import ADDRESS_FIELDS, EntitySchema, FieldSpec, field
+from datamimic_ce.domains.domain_core.contracts.attribute_catalog import ADDRESS_FIELDS, EntitySchema, FieldSpec, field
 from datamimic_ce.domains.shared.generators.address_generator import AddressGenerator
 from datamimic_ce.domains.shared.models.address import Address
 

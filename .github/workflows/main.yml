@@ -414,7 +414,7 @@ jobs:
         run: |
           . .venv/bin/activate
           uv run make coverage-unit
-          uv run pytest tests_ce/architecture/test_facade_determinism.py tests_ce/architecture/test_runtime_determinism_manifest.py
+          uv run pytest tests_ce/architecture/test_facade_determinism.py tests_ce/architecture/test_runtime_determinism_manifest.py tests_ce/architecture/test_installed_domain_resources.py
         shell: bash
       - name: Upload coverage report
         uses: actions/upload-artifact@v6

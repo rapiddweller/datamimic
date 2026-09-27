@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from datamimic_ce.domains.facade import generate_domain
-from datamimic_ce.domains.shared.determinism import canonical_json
+from datamimic_ce.domains.domain_core.runtime.determinism import canonical_json
 
 SEEDS: list[str] = ["alpha", "beta", "gamma", "delta"]
 DOMAINS: list[str] = ["person", "address", "patient", "doctor"]

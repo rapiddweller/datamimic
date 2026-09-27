@@ -9,10 +9,10 @@ import random
 from pathlib import Path
 
 from datamimic_ce.domains.domain_core.base_domain_generator import ClockAnchoredDomainGenerator
+from datamimic_ce.domains.domain_core.datasets.path import dataset_path
 from datamimic_ce.domains.finance.generators.bank_generator import BankGenerator
-from datamimic_ce.domains.shared.literal_generators.data_faker_generator import DataFakerGenerator
-from datamimic_ce.domains.shared.utils.dataset_loader import pick_one_weighted_no_repeat, read_csv_rows
-from datamimic_ce.domains.shared.utils.dataset_path import dataset_path
+from datamimic_ce.domains.shared.datasets.loader import pick_one_weighted_no_repeat, read_csv_rows
+from datamimic_ce.domains.shared.literal_generators.primitives.data_faker_generator import DataFakerGenerator
 
 
 class BankAccountGenerator(ClockAnchoredDomainGenerator):
@@ -45,7 +45,7 @@ class BankAccountGenerator(ClockAnchoredDomainGenerator):
 
     #  Centralize date generation to keep models pure and RNG deterministic
     def generate_created_date(self) -> datetime.datetime:
-        from datamimic_ce.domains.shared.literal_generators.datetime_generator import DateTimeGenerator
+        from datamimic_ce.domains.shared.literal_generators.temporal.datetime_generator import DateTimeGenerator
 
         now = self._reference_now
         min_dt = (now - datetime.timedelta(days=365)).strftime("%Y-%m-%d %H:%M:%S")
@@ -60,7 +60,7 @@ class BankAccountGenerator(ClockAnchoredDomainGenerator):
         return dt
 
     def generate_last_transaction_date(self, created_date: datetime.datetime) -> datetime.datetime:
-        from datamimic_ce.domains.shared.literal_generators.datetime_generator import DateTimeGenerator
+        from datamimic_ce.domains.shared.literal_generators.temporal.datetime_generator import DateTimeGenerator
 
         now = self._reference_now
         min_dt = created_date.strftime("%Y-%m-%d %H:%M:%S")

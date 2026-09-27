@@ -144,10 +144,15 @@ Path, datetime, Random, Traversable, strict Pydantic values, lxml trees and JSON
 Schema values remain their actual types. Allow only reviewed positions; no
 whole-API waiver and no string coercion to satisfy the checker.
 
-One actual defect must change: `get_entity_service_class` returns registered
-classes, so its type is `type[BaseDomainService] | None`, not an unconstrained
-Callable. Model-class discovery and typed zero-argument constraint suppliers
-are intentional. Deleted interface forwarders need no surviving allowances.
+Astra corrected D18 after tracing the constructors: subclasses do not share
+`BaseDomainService`'s constructor signature. Rename the existing lookup to
+`get_entity_service_factory`, retaining `Callable[..., BaseDomainService] | None`;
+this is an explicitly dynamic DSL constructor boundary, not argument-type proof.
+Class discovery remains `EntitySpec.service_cls: type[BaseDomainService]`.
+Do not add a local callable alias, wrapper or private Runtime-to-Domains import.
+Explicit DSL keywords must still reach the concrete constructor unchanged.
+Model-class discovery and zero-argument constraint suppliers are intentional.
+Deleted interface forwarders need no surviving allowances.
 
 Moving dataset/schema loaders breaks `__file__`-relative assumptions unless
 resource lookup is repaired. Keep packaged data ownership stable and resolve

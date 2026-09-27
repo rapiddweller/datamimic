@@ -9,7 +9,7 @@ from pathlib import Path
 from datamimic_ce.errors import DomainErrorCode
 from datamimic_ce.errors.base import DomainError
 
-from ..utils.dataset_path import dataset_path, is_strict_dataset_mode
+from ...domain_core.datasets.path import dataset_path, is_strict_dataset_mode
 
 _START = Path(__file__)
 

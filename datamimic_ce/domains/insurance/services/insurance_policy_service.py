@@ -14,12 +14,12 @@ from datetime import date
 from random import Random
 
 from datamimic_ce.domains.domain_core import BaseDomainService
-from datamimic_ce.domains.domain_core.attribute_catalog import EntitySchema, FieldSpec, field
+from datamimic_ce.domains.domain_core.contracts.attribute_catalog import EntitySchema, FieldSpec, field
 from datamimic_ce.domains.insurance.generators.insurance_policy_generator import InsurancePolicyGenerator
 from datamimic_ce.domains.insurance.models.insurance_policy import InsurancePolicy
 from datamimic_ce.domains.insurance.services.insurance_company_service import INSURANCE_COMPANY_SCHEMA
 from datamimic_ce.domains.insurance.services.insurance_product_service import INSURANCE_PRODUCT_SCHEMA
-from datamimic_ce.domains.shared.models.demographic_config import DemographicConfig
+from datamimic_ce.domains.shared.demographics.config import DemographicConfig
 
 INSURANCE_POLICY_SCHEMA = EntitySchema(
     "InsurancePolicy",

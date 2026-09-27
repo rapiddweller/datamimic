@@ -20,7 +20,7 @@ from datamimic_ce.authoring.contracts import (
 )
 from datamimic_ce.authoring.application.service import compile_document, scaffold
 from datamimic_ce.data_mimic_test import DataMimicTest
-from datamimic_ce.domains.shared.literal_generators.float_generator import FloatGenerator
+from datamimic_ce.domains.shared.literal_generators.numeric.float_generator import FloatGenerator
 
 _TEST_DIR = Path(__file__).resolve().parent
 _REPO_ROOT = _TEST_DIR.parents[2]

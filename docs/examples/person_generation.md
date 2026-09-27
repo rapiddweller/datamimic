@@ -158,7 +158,7 @@ separate entity, serialize `person.address` on its own if you need it):
 You can customize the generation process by providing specific parameters:
 
 ```python
-from datamimic_ce.domains.shared.models.demographic_config import DemographicConfig
+from datamimic_ce.domains.shared.demographics.config import DemographicConfig
 
 # Restrict age range via DemographicConfig; female_quota is a PersonService constructor
 # argument, not part of DemographicConfig

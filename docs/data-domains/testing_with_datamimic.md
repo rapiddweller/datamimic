@@ -111,7 +111,7 @@ Generate specific edge cases for thorough testing:
 
 ```python
 from datamimic_ce.domains.healthcare.services.patient_service import PatientService
-from datamimic_ce.domains.shared.models.demographic_config import DemographicConfig
+from datamimic_ce.domains.shared.demographics.config import DemographicConfig
 
 # Generate elderly patients for testing age-specific rules
 elderly_patient_service = PatientService(demographic_config=DemographicConfig(age_min=65, age_max=100))

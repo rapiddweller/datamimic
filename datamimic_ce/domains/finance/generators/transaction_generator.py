@@ -18,10 +18,10 @@ from pathlib import Path
 from typing import Protocol, TypedDict, runtime_checkable
 
 from datamimic_ce.domains.domain_core.base_domain_generator import ClockAnchoredDomainGenerator
-from datamimic_ce.domains.shared.literal_generators.data_faker_generator import DataFakerGenerator
-from datamimic_ce.domains.shared.literal_generators.string_generator import StringGenerator
-from datamimic_ce.domains.shared.utils.dataset_loader import read_cached_headered_csv, read_csv_rows
-from datamimic_ce.domains.shared.utils.dataset_path import dataset_path
+from datamimic_ce.domains.domain_core.datasets.path import dataset_path
+from datamimic_ce.domains.shared.datasets.loader import read_cached_headered_csv, read_csv_rows
+from datamimic_ce.domains.shared.literal_generators.primitives.data_faker_generator import DataFakerGenerator
+from datamimic_ce.domains.shared.literal_generators.primitives.string_generator import StringGenerator
 
 
 @runtime_checkable
@@ -75,7 +75,7 @@ class TransactionGenerator(ClockAnchoredDomainGenerator):
 
     #  Centralize date sampling to keep model pure and determinism consistent
     def generate_transaction_date(self) -> dt.datetime:
-        from datamimic_ce.domains.shared.literal_generators.datetime_generator import DateTimeGenerator
+        from datamimic_ce.domains.shared.literal_generators.temporal.datetime_generator import DateTimeGenerator
 
         now = self._reference_now
         min_dt = (now - dt.timedelta(days=365)).strftime("%Y-%m-%d %H:%M:%S")
@@ -239,7 +239,8 @@ class TransactionGenerator(ClockAnchoredDomainGenerator):
         try:
             if "cities" not in self._transaction_data:
                 # Use existing datasets under common/city with semicolon delimiter
-                from datamimic_ce.domains.shared.utils.dataset_path import dataset_path
+                from datamimic_ce.domains.domain_core.datasets.path import dataset_path
+
                 file_path = dataset_path("common", "city", f"city_{self._dataset}.csv", start=Path(__file__))
                 rows = read_csv_rows(file_path, delimiter=";")
                 # Drop header if present
@@ -472,11 +473,7 @@ class TransactionGenerator(ClockAnchoredDomainGenerator):
             currency = {
                 "code": currency_code,
                 # Ideally we would also get name and symbol, but we'll keep it simple
-                "symbol": "$"
-                if currency_code == "USD"
-                else "€"
-                if currency_code == "EUR"
-                else currency_code,
+                "symbol": "$" if currency_code == "USD" else "€" if currency_code == "EUR" else currency_code,
             }
         else:
             currency = self.get_currency()

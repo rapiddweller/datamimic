@@ -8,14 +8,14 @@ from pydantic import JsonValue, TypeAdapter
 
 from ..errors import DomainErrorCode
 from ..errors.base import DomainError
+from .domain_core.contracts.json_types import JsonObject
+from .domain_core.runtime.determinism import canonical_json, derive_profile_seed, hash_bytes
 from .healthcare.services.doctor_api import DoctorRequest
 from .healthcare.services.doctor_api import generate as generate_doctor
 from .healthcare.services.patient_api import PatientRequest
 from .healthcare.services.patient_api import generate as generate_patient
-from .shared.determinism import canonical_json, derive_profile_seed, hash_bytes
-from .shared.json_types import JsonObject
-from .shared.profile_components import resolve_component_profile
-from .shared.schema_registry import validate_payload
+from .registry.schema import validate_payload
+from .shared.datasets.profile_components import resolve_component_profile
 from .shared.services.address_api import AddressRequest
 from .shared.services.address_api import generate as generate_address
 from .shared.services.person_api import PersonRequest

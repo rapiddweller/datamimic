@@ -1,6 +1,6 @@
 import pytest
 
-from datamimic_ce.domains.shared import locales
+from datamimic_ce.domains.shared.datasets import locales
 from datamimic_ce.domains.shared.services import address_api
 from datamimic_ce.errors import InvalidLocaleError
 

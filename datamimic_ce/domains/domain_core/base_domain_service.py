@@ -7,10 +7,10 @@
 from abc import ABC
 from typing import Generic, TypeVar
 
-from datamimic_ce.domains.domain_core.attribute_catalog import EntitySchema, FieldSpec
 from datamimic_ce.domains.domain_core.base_domain_generator import BaseDomainGenerator
 from datamimic_ce.domains.domain_core.base_entity import BaseEntity
-from datamimic_ce.domains.shared.utils.supported_datasets import compute_supported_datasets
+from datamimic_ce.domains.domain_core.contracts.attribute_catalog import EntitySchema, FieldSpec
+from datamimic_ce.domains.domain_core.datasets.catalog import compute_supported_datasets
 
 T = TypeVar("T", bound=BaseEntity)
 

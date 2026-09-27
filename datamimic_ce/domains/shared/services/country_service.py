@@ -8,7 +8,7 @@
 from random import Random
 
 from datamimic_ce.domains.domain_core import BaseDomainService
-from datamimic_ce.domains.domain_core.attribute_catalog import EntitySchema, FieldSpec, field
+from datamimic_ce.domains.domain_core.contracts.attribute_catalog import EntitySchema, FieldSpec, field
 from datamimic_ce.domains.shared.generators.country_generator import CountryGenerator
 from datamimic_ce.domains.shared.models.country import Country
 

@@ -14,7 +14,7 @@ from datetime import datetime
 from random import Random
 
 from datamimic_ce.domains.domain_core import BaseDomainService
-from datamimic_ce.domains.domain_core.attribute_catalog import (
+from datamimic_ce.domains.domain_core.contracts.attribute_catalog import (
     EntitySchema,
     FieldSpec,
     address_group,
@@ -22,8 +22,8 @@ from datamimic_ce.domains.domain_core.attribute_catalog import (
 )
 from datamimic_ce.domains.healthcare.generators.doctor_generator import DoctorGenerator
 from datamimic_ce.domains.healthcare.models.doctor import Doctor
+from datamimic_ce.domains.shared.demographics.config import DemographicConfig
 from datamimic_ce.domains.shared.demographics.sampler import DemographicSampler
-from datamimic_ce.domains.shared.models.demographic_config import DemographicConfig
 
 DOCTOR_SCHEMA = EntitySchema(
     "Doctor",

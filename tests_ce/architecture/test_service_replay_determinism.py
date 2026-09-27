@@ -28,7 +28,7 @@ from datamimic_ce.domains.domain_core.base_domain_generator import ClockAnchored
 # All CE domain services that wrap a single entity. Listed explicitly so a
 # missing service is a visible PR change, not a discovery side-effect.
 from datamimic_ce.domains.ecommerce.services import OrderService, ProductService
-from datamimic_ce.domains.entity_registry import list_entity_specs
+from datamimic_ce.domains.registry.entities import list_entity_specs
 from datamimic_ce.domains.finance.services import (
     BankAccountService,
     BankService,

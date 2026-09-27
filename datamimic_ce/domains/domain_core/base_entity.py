@@ -15,7 +15,7 @@ from datamimic_ce.domains.domain_core.base_domain_generator import BaseDomainGen
 from datamimic_ce.engine.dsl.contracts import EntityValue
 
 if TYPE_CHECKING:
-    from datamimic_ce.domains.domain_core.attribute_catalog import EntitySchema, FieldSpec
+    from datamimic_ce.domains.domain_core.contracts.attribute_catalog import EntitySchema, FieldSpec
 
 
 class BaseEntity(EntityValue):

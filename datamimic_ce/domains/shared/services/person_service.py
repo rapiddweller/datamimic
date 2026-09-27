@@ -9,10 +9,10 @@ from datetime import datetime
 from random import Random
 
 from datamimic_ce.domains.domain_core import BaseDomainService
-from datamimic_ce.domains.domain_core.attribute_catalog import EntitySchema, FieldSpec, field
+from datamimic_ce.domains.domain_core.contracts.attribute_catalog import EntitySchema, FieldSpec, field
+from datamimic_ce.domains.shared.demographics.config import DemographicConfig
 from datamimic_ce.domains.shared.demographics.sampler import DemographicSampler
 from datamimic_ce.domains.shared.generators.person_generator import PersonGenerator
-from datamimic_ce.domains.shared.models.demographic_config import DemographicConfig
 from datamimic_ce.domains.shared.models.person import Person
 
 PERSON_SCHEMA = EntitySchema(

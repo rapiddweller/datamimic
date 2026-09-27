@@ -3,8 +3,8 @@ import pytest
 from datamimic_ce.domains.facade import _build_request, generate_domain
 from datamimic_ce.domains.healthcare.services.doctor_api import DoctorRequest
 from datamimic_ce.domains.healthcare.services.patient_api import PatientRequest
-from datamimic_ce.domains.shared.determinism import canonical_json, hash_bytes
-from datamimic_ce.domains.shared.json_types import JsonObject
+from datamimic_ce.domains.domain_core.runtime.determinism import canonical_json, hash_bytes
+from datamimic_ce.domains.domain_core.contracts.json_types import JsonObject
 from datamimic_ce.domains.shared.services.address_api import AddressRequest
 from datamimic_ce.domains.shared.services.person_api import PersonRequest
 from datamimic_ce.errors import DomainErrorCode

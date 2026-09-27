@@ -8,7 +8,7 @@ from typing import TypeVar
 
 import pytest
 
-from datamimic_ce.domains.domain_core.attribute_catalog import field
+from datamimic_ce.domains.domain_core.contracts.attribute_catalog import field
 from datamimic_ce.domains.domain_core.base_domain_generator import BaseDomainGenerator
 from datamimic_ce.domains.domain_core.base_entity import BaseEntity
 from datamimic_ce.domains.ecommerce.services.order_service import OrderService
@@ -225,7 +225,7 @@ def test_nested_policy_company_and_product_ids_are_unique_after_collision(monkey
 
 
 def test_transaction_ids_are_unique_after_regex_generator_collision(monkeypatch: pytest.MonkeyPatch) -> None:
-    from datamimic_ce.domains.shared.literal_generators.string_generator import StringGenerator
+    from datamimic_ce.domains.shared.literal_generators.primitives.string_generator import StringGenerator
 
     calls = 0
 
