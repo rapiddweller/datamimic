@@ -2,7 +2,7 @@
 
 from pathlib import Path
 from types import SimpleNamespace
-from unittest.mock import Mock
+from unittest.mock import Mock, call
 
 import pytest
 
@@ -181,6 +181,52 @@ def test_generate_csv_reads_one_chunk_then_templates_against_root(monkeypatch: p
         offset=3,
     )
     template.assert_called_once_with(root, [{"code": "<<value>>"}], "<<", ">>")
+
+
+def test_nested_key_requires_a_string_source_expression_before_reading(monkeypatch: pytest.MonkeyPatch) -> None:
+    context = SimpleNamespace(evaluate_python_expression=Mock(return_value=7), root=SimpleNamespace())
+    statement = SimpleNamespace(source="{source_id}", name="items", type="list")
+    source_format = Mock()
+    monkeypatch.setattr(source_router, "source_file_format_for", source_format)
+
+    with pytest.raises(ValueError, match="Source expression of <nestedKey> 'items' must evaluate to a string"):
+        source_router.load_nested_key_source(context, statement)
+
+    context.evaluate_python_expression.assert_called_once_with("source_id")
+    source_format.assert_not_called()
+
+
+def test_nested_key_templates_before_distribution_seed_and_selection(monkeypatch: pytest.MonkeyPatch) -> None:
+    timeline = Mock()
+    root = SimpleNamespace(
+        default_source_scripted=False,
+        default_variable_prefix="{{",
+        default_variable_suffix="}}",
+        get_distribution_seed=timeline.seed,
+    )
+    context = SimpleNamespace(root=root)
+    statement = SimpleNamespace(
+        source_script=True,
+        variable_prefix=None,
+        variable_suffix=None,
+        name="items",
+        cyclic=False,
+        distribution=SourceDistribution.RANDOM,
+    )
+    rows = [{"v": "{{value}}"}]
+    templated = [{"v": "expanded"}]
+    selected = [{"v": "selected"}]
+    timeline.template.return_value = templated
+    timeline.distribute.return_value = selected
+    monkeypatch.setattr(source_router, "evaluate_source_template", timeline.template)
+    monkeypatch.setattr(source_router, "get_distributed_data", timeline.distribute)
+
+    assert source_router.finalize_nested_key_source(context, statement, rows) == selected
+    assert timeline.mock_calls == [
+        call.template(context, rows, "{{", "}}"),
+        call.seed(),
+        call.distribute(templated, None, False, timeline.seed.return_value, SourceDistribution.RANDOM),
+    ]
 
 
 def test_chunk_random_source_loads_once_per_chunk_with_one_stable_seed(monkeypatch: pytest.MonkeyPatch) -> None:

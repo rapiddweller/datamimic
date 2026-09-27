@@ -17,6 +17,7 @@ from datamimic_ce.engine.dsl.statements.values.variables.variable_statement impo
 from datamimic_ce.engine.dsl.vocabulary.source_capabilities import SourceFileFormat, source_capabilities
 from datamimic_ce.engine.io.api import FileUtil
 from datamimic_ce.engine.io.data_sources.data_source_registry import DataSourceRegistry
+from datamimic_ce.engine.runtime.sources import router as source_router
 from datamimic_ce.engine.runtime.sources.router import set_data_source_length
 
 
@@ -111,6 +112,51 @@ def test_nonfile_source_still_uses_memstore_classification(
     root.memstore_manager.get_memstore.assert_called_once_with("upstream_rows")
     memstore.get_data_len_by_type.assert_called_once_with("rows")
     generic.assert_not_called()
+
+
+def test_cached_source_length_skips_reader(monkeypatch: pytest.MonkeyPatch) -> None:
+    context, root = _context()
+    statement = _statement(VariableStatement, "rows.csv", "rows")
+    root.data_source_len[("consumer", "rows.csv")] = 7
+    reader = Mock()
+
+    monkeypatch.setattr(DataSourceRegistry, "_get_source", reader)
+    set_data_source_length(context, statement)
+
+    assert root.data_source_len == {("consumer", "rows.csv"): 7}
+    reader.assert_not_called()
+
+
+@pytest.mark.parametrize(("offset", "expected"), [(2, 3), (9, 0)])
+def test_generate_offset_is_applied_before_source_length_cache(
+    monkeypatch: pytest.MonkeyPatch, offset: int, expected: int
+) -> None:
+    context, root = _context()
+    statement = _statement(GenerateStatement, "rows.csv", "rows")
+    statement._offset = offset
+    reader = Mock(return_value=[{}, {}, {}, {}, {}])
+    monkeypatch.setattr(DataSourceRegistry, "_get_source", reader)
+
+    set_data_source_length(context, statement)
+
+    assert root.data_source_len[("consumer", "rows.csv")] == expected
+    reader.assert_called_once()
+
+
+def test_mongodb_count_requires_selector_entity_or_type(monkeypatch: pytest.MonkeyPatch) -> None:
+    context, _ = _context()
+    statement = _statement(VariableStatement, "mongo", "rows")
+    statement._source_entity = None
+    statement._type = None
+    statement._selector = None
+    statement._iteration_selector = None
+    context.root.get_client_by_id.return_value = object()
+    monkeypatch.setattr(source_router, "is_mongodb_client", lambda _: True)
+
+    with pytest.raises(
+        ValueError, match="MongoDB source requires at least attribute 'type', 'selector' or 'iterationSelector'"
+    ):
+        set_data_source_length(context, statement)
 
 
 def test_scripted_source_length_skips_evaluation_errors() -> None:

@@ -7,6 +7,7 @@
 import random
 import unittest
 from random import Random
+from types import SimpleNamespace
 from unittest.mock import MagicMock, patch
 
 from datamimic_ce.engine.dsl.statements.values.references.reference_statement import ReferenceStatement
@@ -191,6 +192,41 @@ class TestReferenceTask(unittest.TestCase):
             "test_type", ["source_id", "source_name"]
         )
         self.context.root.stable_distribution_seed.assert_called_once_with("customer_reference")
+
+    def test_random_reference_uses_one_seed_and_one_choice_per_page_row(self):
+        self.statement.full_name = "customer_reference"
+        self.statement.unique = False
+        self.statement.distribution = None
+        self.statement.cyclic = False
+        self.pagination.limit = 3
+        self.context.rng = MagicMock()
+        self.context.rng.choice.side_effect = lambda records: records[0]
+        self.rdbms_client.get_random_rows_by_columns.return_value = [(1,), (2,)]
+
+        with patch("datamimic_ce.engine.runtime.sources.router.is_rdbms_client", return_value=True):
+            rows = load_reference_source(self.context, self.statement, self.pagination)
+
+        assert rows == [{"test_name": 1}] * 3
+        self.context.root.stable_distribution_seed.assert_called_once_with("customer_reference")
+        assert self.context.rng.choice.call_count == 3
+
+    def test_random_reference_nonpositive_window_does_not_access_rng(self):
+        self.statement.full_name = "customer_reference"
+        self.statement.unique = False
+        self.statement.distribution = None
+        self.statement.cyclic = False
+        self.rdbms_client.get_random_rows_by_columns.return_value = [(1,), (2,)]
+        context_without_rng = SimpleNamespace(root=self.context.root)
+
+        for limit in (0, -1):
+            self.pagination.limit = limit
+            self.context.root.stable_distribution_seed.reset_mock()
+
+            with patch("datamimic_ce.engine.runtime.sources.router.is_rdbms_client", return_value=True):
+                rows = load_reference_source(context_without_rng, self.statement, self.pagination)
+
+            assert rows == []
+            self.context.root.stable_distribution_seed.assert_called_once_with("customer_reference")
 
     def test_unpaged_cyclic_reference_shares_root_rotation_across_rebuilt_tasks(self):
         self.statement.cyclic = True
