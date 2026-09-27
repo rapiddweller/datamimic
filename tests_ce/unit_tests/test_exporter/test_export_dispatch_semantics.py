@@ -4,8 +4,19 @@ from types import SimpleNamespace
 
 import pytest
 
-from datamimic_ce.engine.dsl.api import ExportOperation
+from datamimic_ce.engine.dsl.api import (
+    EXPORTER_CSV,
+    EXPORTER_DBUNIT,
+    EXPORTER_FIXED_WIDTH,
+    EXPORTER_JSON,
+    EXPORTER_TXT,
+    EXPORTER_XLSX,
+    EXPORTER_XML,
+    ExportOperation,
+)
+from datamimic_ce.engine.io.api import buffered_exporter_names
 from datamimic_ce.engine.io.exporters.core.exporter import Exporter
+from datamimic_ce.engine.io.exporters.core.exporter_config import ExporterConfig
 from datamimic_ce.engine.io.exporters.core.exporter_state_manager import ExporterStateManager
 from datamimic_ce.engine.io.exporters.database.mongodb_exporter import MongoDBExporter
 from datamimic_ce.engine.io.exporters.diagnostics.console_exporter import ConsoleExporter
@@ -167,3 +178,62 @@ def test_buffered_exporter_scalar_config_preserves_fallbacks_and_explicit_values
         "published",
         ";",
     )
+
+
+def test_buffered_exporter_public_names_and_config_scalars(tmp_path) -> None:
+    setup_context = MockSetupContext(task_id="dispatch", descriptor_dir=tmp_path)
+    assert buffered_exporter_names() == frozenset(
+        {
+            EXPORTER_CSV,
+            EXPORTER_DBUNIT,
+            EXPORTER_FIXED_WIDTH,
+            EXPORTER_JSON,
+            EXPORTER_TXT,
+            EXPORTER_XLSX,
+            EXPORTER_XML,
+        }
+    )
+
+    default = ExporterConfig(setup_context, "products", None, None)
+    explicit = ExporterConfig(setup_context, "products", 7, "latin-1", "published", True)
+    assert (
+        default.product_name,
+        default.chunk_size,
+        default.encoding,
+        default.export_uri,
+        default.track_serialized_rows,
+    ) == (
+        "products",
+        None,
+        None,
+        None,
+        False,
+    )
+    assert (
+        explicit.product_name,
+        explicit.chunk_size,
+        explicit.encoding,
+        explicit.export_uri,
+        explicit.track_serialized_rows,
+    ) == (
+        "products",
+        7,
+        "latin-1",
+        "published",
+        True,
+    )
+
+
+def test_exporter_factory_preserves_target_parse_and_unknown_operation_errors(tmp_path) -> None:
+    setup_context = MockSetupContext(task_id="dispatch", descriptor_dir=tmp_path)
+    statement = _statement()
+    with pytest.raises(ValueError, match="Error parsing target string: Non-literal parameter found") as malformed:
+        ExporterUtil.create_exporter_list(setup_context, statement, ["CSV(chunk_size=runtime_value)"])
+    assert isinstance(malformed.value.__cause__, ValueError)
+
+    with pytest.raises(
+        ValueError,
+        match=r"Unknown client operation 'patch' in target 'db.patch'.*plain client id inserts.",
+    ) as unknown_operation:
+        ExporterUtil.create_exporter_list(setup_context, statement, ["db.patch"])
+    assert unknown_operation.value.__cause__ is None
