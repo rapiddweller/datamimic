@@ -1,7 +1,8 @@
-"""Structural contract shared by Python's random module and Random instances."""
+"""Neutral random-source contract and sampling helpers shared across layers."""
 
 from __future__ import annotations
 
+import random
 from collections.abc import MutableSequence, Sequence
 from typing import Protocol, TypeVar
 
@@ -24,3 +25,8 @@ class RandomSource(Protocol):
         k: int = 1,
     ) -> list[T]: ...
     def shuffle(self, x: MutableSequence[T]) -> None: ...
+
+
+def cumulated_index(rng: random.Random, span: int) -> int:
+    """Return an index selected with a symmetric bell-shaped distribution."""
+    return (sum(rng.randint(0, span) for _ in range(5)) + 2) // 5

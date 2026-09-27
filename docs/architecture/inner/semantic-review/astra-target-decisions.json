@@ -188,7 +188,7 @@
     {
       "id": "D17",
       "title": "No packaging scaffolding or new compatibility layer",
-      "decision": "Use namespace support already enabled by packaging for new grouping directories. Retain meaningful __init__ exports/composition only; never add empty markers just for reports. Move root load_dotenv side effect into lifecycle/config.py initialization called by actual entries, preserving entry environment loading. Root errors stay stable; vendor DB error translation belongs IO. No EE Rust/runtime-config subsystem imported.",
+      "decision": "Use namespace support already enabled by packaging for new grouping directories. Retain meaningful __init__ exports/composition only; never add empty markers just for reports. Astra corrected the dotenv relocation after tracing MCP defaults/auth and standalone dataset entrypoints: retain the existing root load_dotenv bootstrap unchanged, once per normal package import with override=False. Moving the call changes caller-relative lookup and delays environment loading; forcing standalone Domains through Runtime would introduce the wrong dependency. Lifecycle/config keeps Settings and its distinct cwd env_file behavior. No new bootstrap wrapper or flag. Root errors stay stable; vendor DB error translation belongs IO. No EE Rust/runtime-config subsystem imported.",
       "evidence": [
         "pyproject.toml",
         "datamimic_ce/__init__.py",
@@ -2142,8 +2142,7 @@
     {
       "source": "__init__.py",
       "targets": [
-        "__init__.py",
-        "engine/runtime/lifecycle/config.py"
+        "__init__.py"
       ]
     },
     {

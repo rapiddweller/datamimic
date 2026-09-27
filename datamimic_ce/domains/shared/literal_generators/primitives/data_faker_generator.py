@@ -9,7 +9,7 @@ import random
 from faker import Faker
 
 from datamimic_ce.domains.domain_core.base_literal_generator import BaseLiteralGenerator
-from datamimic_ce.engine.dsl.api import UnsupportedMethod
+from datamimic_ce.engine.dsl.vocabulary.enums.faker_enums import UnsupportedMethod
 
 
 class DataFakerGenerator(BaseLiteralGenerator):

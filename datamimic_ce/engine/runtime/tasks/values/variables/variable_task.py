@@ -215,9 +215,9 @@ class VariableTask(KeyVariableTask, CommonSubTask):
         # Build from the last parsed VariableTask (self is not accessible in staticmethod); use closure via locals()
 
         # Resolve service classes and their aliases through the entity registry.
-        from datamimic_ce.domains.api import get_entity_service_class
+        from datamimic_ce.domains.api import get_entity_service_factory
 
-        entity_cls = get_entity_service_class(entity_class_name)
+        entity_cls = get_entity_service_factory(entity_class_name)
         if entity_cls is None:
             raise ValueError(f"Entity '{entity_name}' is not supported in the domain architecture.")
 

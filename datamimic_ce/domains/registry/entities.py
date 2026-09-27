@@ -142,6 +142,6 @@ def get_entity_spec(name: str) -> EntitySpec | None:
     return None
 
 
-def get_entity_service_class(name: str) -> Callable[..., BaseDomainService] | None:
+def get_entity_service_factory(name: str) -> Callable[..., BaseDomainService] | None:
     spec = get_entity_spec(name)
     return spec.service_cls if spec else None

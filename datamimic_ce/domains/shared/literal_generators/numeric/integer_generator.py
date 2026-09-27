@@ -9,8 +9,8 @@ from collections.abc import Iterator
 
 from datamimic_ce.domains.domain_core.base_literal_generator import BaseLiteralGenerator
 from datamimic_ce.domains.shared.literal_generators.numeric.number_sequences import build_number_sequence
-from datamimic_ce.domains.shared.sampling import cumulated_index
-from datamimic_ce.engine.dsl.api import NumberDistribution
+from datamimic_ce.engine.dsl.vocabulary.enums.distribution_enums import NumberDistribution
+from datamimic_ce.randomness import cumulated_index
 
 
 class IntegerGenerator(BaseLiteralGenerator):

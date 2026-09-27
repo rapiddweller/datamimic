@@ -22,7 +22,6 @@ from datamimic_ce.domains.api import (
     LowerCaseConverter,
     MaskConverter,
     MiddleMaskConverter,
-    RandomSource,
     RemoveNoneOrEmptyElementConverter,
     SubstringConverter,
     Timestamp2DateConverter,
@@ -60,6 +59,7 @@ from datamimic_ce.engine.runtime.contexts.context import Context
 from datamimic_ce.engine.runtime.contexts.setup_context import SetupContext
 from datamimic_ce.engine.runtime.logging import logger
 from datamimic_ce.engine.runtime.tasks.base.dispatch import create_task
+from datamimic_ce.randomness import RandomSource
 
 if TYPE_CHECKING:
     from datamimic_ce.engine.runtime.tasks.base.task import Task

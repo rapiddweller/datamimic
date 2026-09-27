@@ -31,7 +31,12 @@ from datamimic_ce.authoring.projection.reference_projection import (
     authoring_reference_projection,
     list_authoring_reference_queries,
 )
-from datamimic_ce.domains.api import iter_generator_capabilities as domain_generator_capabilities
+from datamimic_ce.domains.api import (
+    GeneratorCapability,
+)
+from datamimic_ce.domains.api import (
+    iter_generator_capabilities as domain_generator_capabilities,
+)
 from datamimic_ce.engine.dsl.api import (
     EXPORTER_CONSOLE_EXPORTER,
     EXPORTER_LOG_EXPORTER,
@@ -43,7 +48,6 @@ from datamimic_ce.engine.dsl.api import (
     Constraint,
     Forbids,
     ForbidsWhenValue,
-    GeneratorCapability,
     MutuallyExclusive,
     MutuallyExclusiveWhen,
     RequiredOneOf,

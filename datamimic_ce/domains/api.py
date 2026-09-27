@@ -4,6 +4,7 @@ from collections.abc import Iterator
 
 from datamimic_ce.domains.domain_core.base_domain_generator import BaseDomainGenerator
 from datamimic_ce.domains.domain_core.base_literal_generator import BaseLiteralGenerator
+from datamimic_ce.domains.domain_core.contracts.generation import GeneratorCapability
 from datamimic_ce.domains.domain_core.runtime.clock import from_epoch_utc, resolve_clock, to_epoch_utc
 from datamimic_ce.domains.domain_core.runtime.determinism import get_datamimic_lib_version
 from datamimic_ce.domains.domain_core.runtime.rng import derive_child_seed, spawn_rng
@@ -15,10 +16,11 @@ from datamimic_ce.domains.finance.models.transaction import Transaction
 from datamimic_ce.domains.healthcare.services.patient_service import PatientService
 from datamimic_ce.domains.registry.entities import (
     EntitySpec,
-    get_entity_service_class,
+    get_entity_service_factory,
     get_entity_spec,
     list_entity_specs,
 )
+from datamimic_ce.domains.registry.generators import describe_generator_type
 from datamimic_ce.domains.shared.converters.base.converter import Converter
 from datamimic_ce.domains.shared.converters.privacy.hash_converter import HashConverter
 from datamimic_ce.domains.shared.converters.privacy.java_hash_converter import JavaHashConverter
@@ -48,9 +50,6 @@ from datamimic_ce.domains.shared.literal_generators.primitives.state_transition_
 )
 from datamimic_ce.domains.shared.literal_generators.primitives.string_generator import StringGenerator
 from datamimic_ce.domains.shared.literal_generators.registry import generator_namespace
-from datamimic_ce.domains.shared.sampling import cumulated_index
-from datamimic_ce.domains.shared.utils.random_source import RandomSource
-from datamimic_ce.engine.dsl.api import GeneratorCapability, describe_generator_type
 
 
 def iter_generator_types() -> Iterator[type]:
@@ -77,6 +76,7 @@ __all__ = [
     "DemographicProfileId",
     "DemographicSampler",
     "EntitySpec",
+    "GeneratorCapability",
     "HashConverter",
     "JavaHashConverter",
     "LowerCaseConverter",
@@ -85,7 +85,6 @@ __all__ = [
     "PatientService",
     "RemoveNoneOrEmptyElementConverter",
     "RunSeed",
-    "RandomSource",
     "StateMachineDef",
     "StateTransitionGenerator",
     "StringGenerator",
@@ -94,12 +93,12 @@ __all__ = [
     "Transaction",
     "TransactionGenerator",
     "UpperCaseConverter",
-    "cumulated_index",
     "derive_child_seed",
+    "describe_generator_type",
     "finite_number_sequence_capacity",
     "from_epoch_utc",
     "get_datamimic_lib_version",
-    "get_entity_service_class",
+    "get_entity_service_factory",
     "get_entity_spec",
     "iter_generator_capabilities",
     "iter_generator_types",

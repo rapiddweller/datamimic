@@ -4,7 +4,8 @@ from collections.abc import Iterator
 from pathlib import Path
 from typing import Literal
 
-from datamimic_ce.engine.dsl.api import GeneratorCapability, describe_generator_type, parse_properties
+from datamimic_ce.domains.api import GeneratorCapability, describe_generator_type
+from datamimic_ce.engine.dsl.api import parse_properties
 from datamimic_ce.engine.runtime.contexts.context import Context
 from datamimic_ce.engine.runtime.contexts.setup_context import SetupContext
 from datamimic_ce.engine.runtime.contracts import PlatformProperties, RunRequest, RunResult, RunSession

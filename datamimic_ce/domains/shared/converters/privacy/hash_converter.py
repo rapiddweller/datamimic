@@ -8,7 +8,7 @@ import hmac
 from base64 import b64encode
 
 from datamimic_ce.domains.shared.converters.base.converter import Converter
-from datamimic_ce.engine.dsl.api import SupportHash, SupportOutputFormat
+from datamimic_ce.engine.dsl.vocabulary.enums.converter_enums import SupportHash, SupportOutputFormat
 
 
 class HashConverter(Converter):

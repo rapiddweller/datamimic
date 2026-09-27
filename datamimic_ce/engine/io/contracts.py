@@ -2,12 +2,18 @@
 
 import copy
 import itertools
+from abc import ABC, abstractmethod
 from collections.abc import Iterable, Iterator
 from dataclasses import dataclass
 from pathlib import Path
 from typing import TypeVar
 
 from pydantic import RootModel
+
+
+class EntityValue(ABC):
+    @abstractmethod
+    def to_dict(self) -> dict[str, object]: ...
 
 
 class DataSourcePagination:
@@ -74,6 +80,7 @@ class SmokeExportRequest:
 
 __all__ = [
     "DataSourcePagination",
+    "EntityValue",
     "SmokeExportParameters",
     "SmokeExportRequest",
     "SmokeExportRows",

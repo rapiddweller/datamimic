@@ -284,7 +284,7 @@
         },
         {
           "component": "dsl",
-          "rationale": "Domain generators implement DSL-owned generator contracts.",
+          "rationale": "Domain generators use the canonical DSL vocabulary enums.",
           "through": [
             "datamimic_ce.engine.dsl.vocabulary.enums.distribution_enums",
             "datamimic_ce.engine.dsl.vocabulary.enums.converter_enums",

@@ -4,7 +4,6 @@
 # See LICENSE file for the full text of the license.
 # For questions and support, contact: info@rapiddweller.com
 
-from datamimic_ce.engine.dsl.contracts import StateTransitionRule
 from datamimic_ce.engine.dsl.statements.statement import Statement
 
 
@@ -12,7 +11,7 @@ class StateMachineStatement(Statement):
     """A named <state-machine> definition: an id, an optional start state, and the
     list of weighted (from, to, weight) transitions."""
 
-    def __init__(self, name: str, start: str | None, rules: list[StateTransitionRule]):
+    def __init__(self, name: str, start: str | None, rules: list[tuple[str, str, float]]):
         self._name = name
         self._start = start
         self._rules = rules
@@ -26,5 +25,5 @@ class StateMachineStatement(Statement):
         return self._start
 
     @property
-    def rules(self) -> list[StateTransitionRule]:
+    def rules(self) -> list[tuple[str, str, float]]:
         return self._rules

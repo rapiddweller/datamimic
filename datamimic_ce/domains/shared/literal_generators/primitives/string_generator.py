@@ -13,7 +13,7 @@ from contextlib import contextmanager
 import exrex
 
 from datamimic_ce.domains.domain_core.base_literal_generator import BaseLiteralGenerator
-from datamimic_ce.domains.shared.utils.random_source import RandomSource
+from datamimic_ce.randomness import RandomSource
 
 
 @contextmanager

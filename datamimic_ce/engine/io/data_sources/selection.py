@@ -8,9 +8,9 @@ from collections.abc import Iterable, Iterator
 from random import Random
 from typing import TypeVar
 
-from datamimic_ce.domains.api import RandomSource, cumulated_index
 from datamimic_ce.engine.dsl.api import SourceDistribution
 from datamimic_ce.engine.io.api import DataSourcePagination
+from datamimic_ce.randomness import RandomSource, cumulated_index
 
 T = TypeVar("T")
 

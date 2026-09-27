@@ -2,8 +2,8 @@
 
 from typing import SupportsIndex, SupportsInt
 
-from datamimic_ce.domains.api import RandomSource
 from datamimic_ce.engine.runtime.contexts.context import Context
+from datamimic_ce.randomness import RandomSource
 
 
 def get_int_count(count: str | None, context: Context) -> int | None:

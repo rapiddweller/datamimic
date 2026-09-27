@@ -12,7 +12,7 @@ from functools import cache
 from typing import TYPE_CHECKING
 
 from datamimic_ce.domains.domain_core.base_domain_generator import BaseDomainGenerator
-from datamimic_ce.engine.dsl.contracts import EntityValue
+from datamimic_ce.engine.io.contracts import EntityValue
 
 if TYPE_CHECKING:
     from datamimic_ce.domains.domain_core.contracts.attribute_catalog import EntitySchema, FieldSpec

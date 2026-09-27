@@ -2087,14 +2087,6 @@
       "reason": "Astra reviewed real multiprocessing and Ray entrypoints: retain package composition so fresh workers load ordered task bindings once; child implementations import explicit leaves, never this initializer. No legacy exports or initialization flags."
     },
     {
-      "source": "__init__.py",
-      "targets": [
-        "__init__.py",
-        "engine/runtime/lifecycle/config.py"
-      ],
-      "reason": "Astra target decision; see semantic-review/astra-target-decision.md."
-    },
-    {
       "source": "domains/shared/literal_generators/global_increment_generator.py",
       "targets": [
         "engine/runtime/tasks/values/construction/global_increment.py",

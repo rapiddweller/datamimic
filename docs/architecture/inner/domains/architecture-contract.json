@@ -60,7 +60,7 @@
       ],
       "public": [
         "datamimic_ce.domains.registry.entities:EntitySpec",
-        "datamimic_ce.domains.registry.entities:get_entity_service_class",
+        "datamimic_ce.domains.registry.entities:get_entity_service_factory",
         "datamimic_ce.domains.registry.entities:get_entity_spec",
         "datamimic_ce.domains.registry.entities:list_entity_specs",
         "datamimic_ce.domains.registry.generators:describe_generator_type",

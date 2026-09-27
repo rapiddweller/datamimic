@@ -118,3 +118,30 @@ content. XML/model hashes remain exact. This movement-only slice is accepted
 with these bounded results; service and final architecture acceptance remain open.
 
 CI-ONLY VERIFICATION: no new remote run.
+
+## Third slice: neutral contracts and generator metadata
+
+Random-source primitives now live in `randomness.py`; the unchanged EntityValue
+ABC belongs to IO. Domain generation types and signature metadata no longer
+depend on the high-level DSL API. The existing service lookup is renamed to
+`get_entity_service_factory`, without changing constructor filtering or its
+explicitly dynamic callable return. Old modules/exports are removed, not shimmed.
+
+Root verified identical ASTs for all six moved declarations, allowing only the
+approved function rename. Terra's checks cover real Person/Patient/BankAccount
+construction, rejected explicit keywords, injected options, the actual EntityValue
+ABC, capability ordering/fallback and exact RNG state after 25 sampling draws.
+
+Astra also withdrew the planned root dotenv move after tracing MCP and standalone
+Domain entrypoints. Its existing package bootstrap remains unchanged: relocation
+would change lookup/timing and require the wrong Domain-to-Runtime dependency.
+The target file set remains 496; this removes a needless behavior split.
+
+LOCAL VERIFIED: Luna's 35 unit and 27 integration/manifest checks pass; Terra's
+independent 23 focused and 556 wider checks pass. Full-package Ruff/Mypy pass.
+S3A versus S2B: 930 descriptors compared, zero differences, two existing normalized
+or optional variances; capability payload and hash are identical. Comparison
+with the original retains the previously recorded unseeded/build-identity deltas.
+XML/models/baseline are unchanged. The slice is accepted, not the final target.
+
+CI-ONLY VERIFICATION: no new remote run.

@@ -1,8 +1,5 @@
-"""Public DSL types and generator capability projection."""
+"""Public DSL types."""
 
-import inspect
-
-from datamimic_ce.engine.dsl.contracts import EntityValue, GeneratorCapability, StateTransitionRule
 from datamimic_ce.engine.dsl.model.constraints import (
     COUNT_XOR_MAX,
     COUNT_XOR_MIN,
@@ -147,18 +144,6 @@ from datamimic_ce.engine.dsl.vocabulary.enums.distribution_enums import (
 from datamimic_ce.engine.dsl.vocabulary.enums.faker_enums import UnsupportedMethod
 from datamimic_ce.engine.dsl.vocabulary.enums.operation_enums import ExportOperation
 
-
-def describe_generator_type(generator_type: type) -> GeneratorCapability:
-    try:
-        internal = {"self", "context", "stmt", "qualified_key"}
-        parameters = tuple(
-            parameter for parameter in inspect.signature(generator_type).parameters if parameter not in internal
-        )
-    except (TypeError, ValueError):
-        parameters = ()
-    return GeneratorCapability(name=generator_type.__name__, parameters=parameters)
-
-
 __all__ = [
     "ATTR_CONSTANT",
     "ATTR_DISTRIBUTION",
@@ -217,7 +202,6 @@ __all__ = [
     "ElementStatement",
     "ElseIfStatement",
     "ElseStatement",
-    "EntityValue",
     "ExecuteStatement",
     "ExportOperation",
     "Forbids",
@@ -232,7 +216,6 @@ __all__ = [
     "EXPORTER_TXT",
     "EXPORTER_XLSX",
     "EXPORTER_XML",
-    "GeneratorCapability",
     "GenerateStatement",
     "GeneratorStatement",
     "IfStatement",
@@ -275,7 +258,6 @@ __all__ = [
     "Statement",
     "StatementUtil",
     "StateMachineStatement",
-    "StateTransitionRule",
     "SupportHash",
     "SupportOutputFormat",
     "TimeSeriesConfig",
@@ -285,7 +267,6 @@ __all__ = [
     "WEIGHTS_REQUIRE_VALUES",
     "WhileStatement",
     "canonical_tag",
-    "describe_generator_type",
     "element_aliases",
     "element_constraints",
     "get_model_class",

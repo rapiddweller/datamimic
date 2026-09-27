@@ -11,7 +11,7 @@ from collections.abc import Iterable
 from dataclasses import dataclass
 
 from datamimic_ce.domains.domain_core.base_literal_generator import BaseLiteralGenerator
-from datamimic_ce.engine.dsl.api import StateTransitionRule
+from datamimic_ce.domains.domain_core.contracts.generation import StateTransitionRule
 
 # One transition: (from_state, to_state, weight)
 Rule = StateTransitionRule

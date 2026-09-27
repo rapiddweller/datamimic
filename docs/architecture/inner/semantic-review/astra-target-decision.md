@@ -116,6 +116,11 @@ cwd → home/datamimic fallback, truthy `env_props` alias/update behavior,
 environment-over-descriptor precedence and sequential static-property includes.
 Do not eagerly read every profile.
 
+Implementation review: pass the loader only through known built-in parse paths;
+custom-tag extension signatures stay unchanged. Preserve the current nested
+parsers' default production environment rather than silently propagating the
+outer environment as an unrelated fix.
+
 EE's descriptor-over-environment precedence is a separately recorded semantic
 alignment opportunity. It does not block or belong inside this structural
 migration. Conflicting-credential fixtures must prove the unchanged CE winner.
@@ -170,8 +175,12 @@ check is mandatory; a checkout-only test can miss this failure.
 
 New grouping folders can be namespace packages under the existing packaging
 configuration. Do not manufacture empty `__init__.py` files for the report.
-Keep meaningful initialization, but move root `load_dotenv()` from import time
-to actual lifecycle initialization.
+Keep meaningful initialization. Astra corrected the proposed dotenv relocation:
+retain root `load_dotenv()` unchanged, once per normal package import with
+`override=False`. MCP reads defaults during import; standalone Domains also
+consume environment settings without Runtime. Moving this call changes timing
+and caller-relative `.env` lookup. Runtime `Settings` retains its separate cwd
+file lookup. No bootstrap wrapper or new initialization flag is needed.
 
 ## Dependency direction
 
@@ -186,6 +195,19 @@ to actual lifecycle initialization.
 - Domains, IO and Runtime may use the neutral randomness leaf; it imports none
   of them. Seed lifecycle and business generation do not move into it.
 - Stable errors are low-level. Vendor error translation remains with IO.
+
+Source extraction must stage **read → Runtime evaluation → IO selection**.
+Eagerly preparing every seed changes the random stream. The IO chunk pool owns
+selection and retained page order; Runtime coordinates loading, template
+evaluation and the subsequent seed request. No callback may smuggle Context or
+Statement into IO. A three-method `MemstoreSource` protocol in IO contracts
+avoids a data-sources/exporters cycle without a wrapper.
+
+Preserve different source precedence: Generate/count use file → memstore →
+client; Variable uses weighted → selector → file → client → memstore. Preserve
+CSV/JSON/XML's different template/error handling, unknown counts, deferred
+iteration selectors and existing DbUnit offset behavior. These are behavioral
+constraints, not permission to standardize the implementations during the move.
 
 A vocabulary enum used to express IO or Domain policy is not a Statement
 dependency. Import its canonical leaf, not the high DSL facade. IO credential

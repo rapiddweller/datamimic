@@ -10,7 +10,7 @@ from __future__ import annotations
 
 import uuid
 
-from datamimic_ce.domains.shared.utils.random_source import RandomSource
+from datamimic_ce.randomness import RandomSource
 
 
 def uuid4_from_random(rng: RandomSource) -> str:
