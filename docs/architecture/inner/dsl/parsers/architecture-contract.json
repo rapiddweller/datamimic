@@ -1,0 +1,550 @@
+{
+  "schema_version": "2.1.0",
+  "components": [
+    {
+      "id": "PARSERS-BASE",
+      "label": "base",
+      "role": "foundation",
+      "packages": [
+        "datamimic_ce.engine.dsl.parsers.base"
+      ],
+      "responsibilities": [
+        "Parser abstraction and dispatch mechanism; no concrete composition imports."
+      ],
+      "forbidden_responsibilities": [
+        "Select concrete parser implementations"
+      ],
+      "provenance": [
+        "docs/architecture/inner/target.md"
+      ],
+      "requires": [
+        {
+          "component": "input",
+          "rationale": "Dispatch and validation use low-level XML and property syntax, never concrete parser registration.",
+          "decided_by": "agent"
+        }
+      ],
+      "public": [
+        "datamimic_ce.engine.dsl.parsers.base.dispatch:BUILTIN_PARSERS",
+        "datamimic_ce.engine.dsl.parsers.base.dispatch:ParserUtil",
+        "datamimic_ce.engine.dsl.parsers.base.statement_parser:StatementParser"
+      ],
+      "decided_by": "agent"
+    },
+    {
+      "id": "PARSERS-FLOW",
+      "label": "flow",
+      "role": "component",
+      "packages": [
+        "datamimic_ce.engine.dsl.parsers.flow"
+      ],
+      "responsibilities": [
+        "Branch, loop and command tree construction."
+      ],
+      "forbidden_responsibilities": [
+        "Bind the global parser registry or own descriptor loading"
+      ],
+      "provenance": [
+        "docs/architecture/inner/target.md"
+      ],
+      "requires": [
+        {
+          "component": "base",
+          "rationale": "Implement parser contracts and consume low-level XML syntax.",
+          "decided_by": "agent"
+        },
+        {
+          "component": "input",
+          "rationale": "Implement parser contracts and consume low-level XML syntax.",
+          "decided_by": "agent"
+        }
+      ],
+      "public": [
+        "datamimic_ce.engine.dsl.parsers.flow.commands.assert_parser:AssertParser",
+        "datamimic_ce.engine.dsl.parsers.flow.branches.condition_parser:ConditionParser",
+        "datamimic_ce.engine.dsl.parsers.flow.branches.else_if_parser:ElseIfParser",
+        "datamimic_ce.engine.dsl.parsers.flow.branches.else_parser:ElseParser",
+        "datamimic_ce.engine.dsl.parsers.flow.branches.if_else_base_parser:IfElseBaseParser",
+        "datamimic_ce.engine.dsl.parsers.flow.branches.if_parser:IfParser",
+        "datamimic_ce.engine.dsl.parsers.flow.loops.while_parser:WhileParser",
+        "datamimic_ce.engine.dsl.parsers.flow.commands.echo_parser:EchoParser",
+        "datamimic_ce.engine.dsl.parsers.flow.commands.execute_parser:ExecuteParser"
+      ],
+      "decided_by": "agent"
+    },
+    {
+      "id": "PARSERS-VALUES",
+      "label": "values",
+      "role": "component",
+      "packages": [
+        "datamimic_ce.engine.dsl.parsers.values"
+      ],
+      "responsibilities": [
+        "Value tree construction."
+      ],
+      "forbidden_responsibilities": [
+        "Bind the global parser registry or own descriptor loading"
+      ],
+      "provenance": [
+        "docs/architecture/inner/target.md"
+      ],
+      "requires": [
+        {
+          "component": "base",
+          "rationale": "Implement parser contracts and consume low-level XML syntax.",
+          "decided_by": "agent"
+        },
+        {
+          "component": "input",
+          "rationale": "Implement parser contracts and consume low-level XML syntax.",
+          "decided_by": "agent"
+        }
+      ],
+      "public": [
+        "datamimic_ce.engine.dsl.parsers.values.structured.array_parser:ArrayParser",
+        "datamimic_ce.engine.dsl.parsers.values.scalar.element_parser:ElementParser",
+        "datamimic_ce.engine.dsl.parsers.values.structured.item_parser:ItemParser",
+        "datamimic_ce.engine.dsl.parsers.values.scalar.key_parser:KeyParser",
+        "datamimic_ce.engine.dsl.parsers.values.structured.list_parser:ListParser",
+        "datamimic_ce.engine.dsl.parsers.values.structured.nested_key_parser:NestedKeyParser",
+        "datamimic_ce.engine.dsl.parsers.values.references.reference_parser:ReferenceParser",
+        "datamimic_ce.engine.dsl.parsers.values.variables.variable_parser:VariableParser"
+      ],
+      "decided_by": "agent"
+    },
+    {
+      "id": "PARSERS-SETUP",
+      "label": "setup",
+      "role": "component",
+      "packages": [
+        "datamimic_ce.engine.dsl.parsers.setup"
+      ],
+      "responsibilities": [
+        "Concrete setup declaration parsing; shared client-config merge is lower in base."
+      ],
+      "forbidden_responsibilities": [
+        "Bind the global parser registry or own descriptor loading"
+      ],
+      "provenance": [
+        "docs/architecture/inner/target.md"
+      ],
+      "requires": [
+        {
+          "component": "base",
+          "rationale": "Implement parser contracts and consume low-level XML syntax.",
+          "decided_by": "agent"
+        },
+        {
+          "component": "input",
+          "rationale": "Implement parser contracts and consume low-level XML syntax.",
+          "decided_by": "agent"
+        }
+      ],
+      "public": [
+        "datamimic_ce.engine.dsl.parsers.setup.state_machine_parser:StateMachineParser",
+        "datamimic_ce.engine.dsl.parsers.setup.generator_parser:GeneratorParser",
+        "datamimic_ce.engine.dsl.parsers.setup.database_parser:DatabaseParser",
+        "datamimic_ce.engine.dsl.parsers.setup.include_parser:IncludeParser",
+        "datamimic_ce.engine.dsl.parsers.setup.memstore_parser:MemstoreParser",
+        "datamimic_ce.engine.dsl.parsers.setup.mongodb_parser:MongoDBParser",
+        "datamimic_ce.engine.dsl.parsers.setup.setup_parser:SetupParser",
+        "datamimic_ce.engine.dsl.parsers.setup.demographics_parser:DemographicsParser"
+      ],
+      "decided_by": "agent"
+    },
+    {
+      "id": "PARSERS-GENERATION",
+      "label": "generation",
+      "role": "component",
+      "packages": [
+        "datamimic_ce.engine.dsl.parsers.generation"
+      ],
+      "responsibilities": [
+        "Generate parsing only."
+      ],
+      "forbidden_responsibilities": [
+        "Bind the global parser registry or own descriptor loading"
+      ],
+      "provenance": [
+        "docs/architecture/inner/target.md"
+      ],
+      "requires": [
+        {
+          "component": "base",
+          "rationale": "Implement parser contracts and consume low-level XML syntax.",
+          "decided_by": "agent"
+        },
+        {
+          "component": "input",
+          "rationale": "Implement parser contracts and consume low-level XML syntax.",
+          "decided_by": "agent"
+        }
+      ],
+      "public": [
+        "datamimic_ce.engine.dsl.parsers.generation.generate_parser:GenerateParser"
+      ],
+      "decided_by": "agent"
+    },
+    {
+      "id": "PARSERS-REGISTRY",
+      "label": "registry",
+      "role": "component",
+      "packages": [
+        "datamimic_ce.engine.dsl.parsers.registry"
+      ],
+      "responsibilities": [
+        "Explicit concrete parser composition."
+      ],
+      "forbidden_responsibilities": [
+        "Own model grammar facts or descriptor entry-point policy"
+      ],
+      "provenance": [
+        "docs/architecture/inner/target.md"
+      ],
+      "requires": [
+        {
+          "component": "base",
+          "rationale": "Bind concrete parsers above the dispatch mechanism.",
+          "decided_by": "agent"
+        },
+        {
+          "component": "flow",
+          "rationale": "Bind concrete parsers above the dispatch mechanism.",
+          "decided_by": "agent"
+        },
+        {
+          "component": "values",
+          "rationale": "Bind concrete parsers above the dispatch mechanism.",
+          "decided_by": "agent"
+        },
+        {
+          "component": "setup",
+          "rationale": "Bind concrete parsers above the dispatch mechanism.",
+          "decided_by": "agent"
+        },
+        {
+          "component": "generation",
+          "rationale": "Bind concrete parsers above the dispatch mechanism.",
+          "decided_by": "agent"
+        }
+      ],
+      "public": [
+        "datamimic_ce.engine.dsl.parsers.registry"
+      ],
+      "decided_by": "agent"
+    },
+    {
+      "id": "PARSERS-DOCUMENT",
+      "label": "document",
+      "role": "component",
+      "packages": [
+        "datamimic_ce.engine.dsl.parsers.document"
+      ],
+      "responsibilities": [
+        "Ordered descriptor orchestration; injected IO property loader."
+      ],
+      "forbidden_responsibilities": [
+        "Own element dispatch or duplicate grammar facts"
+      ],
+      "provenance": [
+        "docs/architecture/inner/target.md"
+      ],
+      "requires": [
+        {
+          "component": "setup",
+          "rationale": "Load a document, initialize built-in composition and parse its setup.",
+          "decided_by": "agent"
+        },
+        {
+          "component": "registry",
+          "rationale": "Load a document, initialize built-in composition and parse its setup.",
+          "decided_by": "agent"
+        },
+        {
+          "component": "input",
+          "rationale": "Load a document, initialize built-in composition and parse its setup.",
+          "decided_by": "agent"
+        }
+      ],
+      "public": [
+        "datamimic_ce.engine.dsl.parsers.document.descriptor_parser:DescriptorParser"
+      ],
+      "decided_by": "agent"
+    },
+    {
+      "id": "PARSERS-INPUT",
+      "label": "input",
+      "packages": [
+        "datamimic_ce.engine.dsl.parsers.input"
+      ],
+      "responsibilities": [
+        "Low-level XML/property syntax inputs used by recursive parsers."
+      ],
+      "public": [
+        "datamimic_ce.engine.dsl.parsers.input.properties:parse_properties",
+        "datamimic_ce.engine.dsl.parsers.input.xml:DTDForbiddenError",
+        "datamimic_ce.engine.dsl.parsers.input.xml:XmlElement",
+        "datamimic_ce.engine.dsl.parsers.input.xml:parse_xml_file",
+        "datamimic_ce.engine.dsl.parsers.input.xml:parse_xml_source",
+        "datamimic_ce.engine.dsl.parsers.input.xml:xml_tag"
+      ],
+      "decided_by": "agent",
+      "role": "component",
+      "forbidden_responsibilities": [
+        "Own another component's concern."
+      ],
+      "provenance": [
+        "docs/architecture/inner/semantic-review/astra-target-decision.md"
+      ],
+      "requires": []
+    }
+  ],
+  "rules": [
+    {
+      "id": "PARSERS-ASSIGNMENT",
+      "kind": "complete_assignment",
+      "source": "datamimic_ce.engine.dsl.parsers.registry",
+      "rationale": "Each parser implementation belongs to one semantic family.",
+      "provenance": [
+        "docs/architecture/inner/target.md"
+      ],
+      "decided_by": "agent"
+    },
+    {
+      "id": "PARSERS-REQUIRES-COMPLETE",
+      "kind": "complete_requires",
+      "include_type_checking": true,
+      "rationale": "Parser implementations depend on the base protocol; composition owns registry-to-implementation dependencies.",
+      "provenance": [
+        "docs/architecture/inner/target.md"
+      ],
+      "decided_by": "agent"
+    },
+    {
+      "id": "PARSERS-NO-COMPONENT-CYCLES",
+      "kind": "no_component_cycles",
+      "rationale": "Parser family dependencies must remain acyclic.",
+      "provenance": [
+        "docs/architecture/inner/target.md"
+      ],
+      "decided_by": "agent"
+    },
+    {
+      "id": "PARSERS-INTERFACE-BOUNDARY",
+      "kind": "interface_boundary",
+      "include_type_checking": true,
+      "rationale": "The shared parser base and descriptor entry point are the declared interfaces.",
+      "provenance": [
+        "docs/architecture/inner/target.md"
+      ],
+      "decided_by": "agent"
+    },
+    {
+      "id": "LAYOUT-ENGINE-DSL-PARSERS-BASE",
+      "kind": "root_layout",
+      "root": "datamimic_ce.engine.dsl.parsers.base",
+      "allowed_children": [
+        "datamimic_ce.engine.dsl.parsers.base.client_config",
+        "datamimic_ce.engine.dsl.parsers.base.dispatch",
+        "datamimic_ce.engine.dsl.parsers.base.statement_parser"
+      ],
+      "rationale": "Parser abstraction and dispatch mechanism; no concrete composition imports. Exact reviewed target children; no hidden extra modules.",
+      "provenance": [
+        "docs/architecture/inner/structure-review.json"
+      ],
+      "decided_by": "agent"
+    },
+    {
+      "id": "LAYOUT-ENGINE-DSL-PARSERS-DOCUMENT",
+      "kind": "root_layout",
+      "root": "datamimic_ce.engine.dsl.parsers.document",
+      "allowed_children": [
+        "datamimic_ce.engine.dsl.parsers.document.descriptor_parser"
+      ],
+      "rationale": "Ordered descriptor orchestration; injected IO property loader. Exact reviewed target children; no hidden extra modules.",
+      "provenance": [
+        "docs/architecture/inner/structure-review.json"
+      ],
+      "decided_by": "agent"
+    },
+    {
+      "id": "LAYOUT-ENGINE-DSL-PARSERS-FLOW",
+      "kind": "root_layout",
+      "root": "datamimic_ce.engine.dsl.parsers.flow",
+      "allowed_children": [
+        "datamimic_ce.engine.dsl.parsers.flow.branches",
+        "datamimic_ce.engine.dsl.parsers.flow.commands",
+        "datamimic_ce.engine.dsl.parsers.flow.loops"
+      ],
+      "rationale": "Branch, loop and command tree construction. Exact reviewed target children; no hidden extra modules.",
+      "provenance": [
+        "docs/architecture/inner/structure-review.json"
+      ],
+      "decided_by": "agent"
+    },
+    {
+      "id": "LAYOUT-ENGINE-DSL-PARSERS-FLOW-BRANCHES",
+      "kind": "root_layout",
+      "root": "datamimic_ce.engine.dsl.parsers.flow.branches",
+      "allowed_children": [
+        "datamimic_ce.engine.dsl.parsers.flow.branches.condition_parser",
+        "datamimic_ce.engine.dsl.parsers.flow.branches.else_if_parser",
+        "datamimic_ce.engine.dsl.parsers.flow.branches.else_parser",
+        "datamimic_ce.engine.dsl.parsers.flow.branches.if_else_base_parser",
+        "datamimic_ce.engine.dsl.parsers.flow.branches.if_parser"
+      ],
+      "rationale": "Branch, loop and command tree construction. Exact reviewed target children; no hidden extra modules.",
+      "provenance": [
+        "docs/architecture/inner/structure-review.json"
+      ],
+      "decided_by": "agent"
+    },
+    {
+      "id": "LAYOUT-ENGINE-DSL-PARSERS-FLOW-COMMANDS",
+      "kind": "root_layout",
+      "root": "datamimic_ce.engine.dsl.parsers.flow.commands",
+      "allowed_children": [
+        "datamimic_ce.engine.dsl.parsers.flow.commands.assert_parser",
+        "datamimic_ce.engine.dsl.parsers.flow.commands.echo_parser",
+        "datamimic_ce.engine.dsl.parsers.flow.commands.execute_parser"
+      ],
+      "rationale": "Branch, loop and command tree construction. Exact reviewed target children; no hidden extra modules.",
+      "provenance": [
+        "docs/architecture/inner/structure-review.json"
+      ],
+      "decided_by": "agent"
+    },
+    {
+      "id": "LAYOUT-ENGINE-DSL-PARSERS-FLOW-LOOPS",
+      "kind": "root_layout",
+      "root": "datamimic_ce.engine.dsl.parsers.flow.loops",
+      "allowed_children": [
+        "datamimic_ce.engine.dsl.parsers.flow.loops.while_parser"
+      ],
+      "rationale": "Branch, loop and command tree construction. Exact reviewed target children; no hidden extra modules.",
+      "provenance": [
+        "docs/architecture/inner/structure-review.json"
+      ],
+      "decided_by": "agent"
+    },
+    {
+      "id": "LAYOUT-ENGINE-DSL-PARSERS-GENERATION",
+      "kind": "root_layout",
+      "root": "datamimic_ce.engine.dsl.parsers.generation",
+      "allowed_children": [
+        "datamimic_ce.engine.dsl.parsers.generation.generate_parser"
+      ],
+      "rationale": "Generate parsing only. Exact reviewed target children; no hidden extra modules.",
+      "provenance": [
+        "docs/architecture/inner/structure-review.json"
+      ],
+      "decided_by": "agent"
+    },
+    {
+      "id": "LAYOUT-ENGINE-DSL-PARSERS-INPUT",
+      "kind": "root_layout",
+      "root": "datamimic_ce.engine.dsl.parsers.input",
+      "allowed_children": [
+        "datamimic_ce.engine.dsl.parsers.input.properties",
+        "datamimic_ce.engine.dsl.parsers.input.xml"
+      ],
+      "rationale": "Low-level XML/property syntax inputs used by recursive parsers. Exact reviewed target children; no hidden extra modules.",
+      "provenance": [
+        "docs/architecture/inner/structure-review.json"
+      ],
+      "decided_by": "agent"
+    },
+    {
+      "id": "LAYOUT-ENGINE-DSL-PARSERS-SETUP",
+      "kind": "root_layout",
+      "root": "datamimic_ce.engine.dsl.parsers.setup",
+      "allowed_children": [
+        "datamimic_ce.engine.dsl.parsers.setup.database_parser",
+        "datamimic_ce.engine.dsl.parsers.setup.demographics_parser",
+        "datamimic_ce.engine.dsl.parsers.setup.generator_parser",
+        "datamimic_ce.engine.dsl.parsers.setup.include_parser",
+        "datamimic_ce.engine.dsl.parsers.setup.memstore_parser",
+        "datamimic_ce.engine.dsl.parsers.setup.mongodb_parser",
+        "datamimic_ce.engine.dsl.parsers.setup.setup_parser",
+        "datamimic_ce.engine.dsl.parsers.setup.state_machine_parser"
+      ],
+      "rationale": "Concrete setup declaration parsing; shared client-config merge is lower in base. Exact reviewed target children; no hidden extra modules.",
+      "provenance": [
+        "docs/architecture/inner/structure-review.json"
+      ],
+      "decided_by": "agent"
+    },
+    {
+      "id": "LAYOUT-ENGINE-DSL-PARSERS-VALUES",
+      "kind": "root_layout",
+      "root": "datamimic_ce.engine.dsl.parsers.values",
+      "allowed_children": [
+        "datamimic_ce.engine.dsl.parsers.values.references",
+        "datamimic_ce.engine.dsl.parsers.values.scalar",
+        "datamimic_ce.engine.dsl.parsers.values.structured",
+        "datamimic_ce.engine.dsl.parsers.values.variables"
+      ],
+      "rationale": "Value tree construction. Exact reviewed target children; no hidden extra modules.",
+      "provenance": [
+        "docs/architecture/inner/structure-review.json"
+      ],
+      "decided_by": "agent"
+    },
+    {
+      "id": "LAYOUT-ENGINE-DSL-PARSERS-VALUES-REFERENCES",
+      "kind": "root_layout",
+      "root": "datamimic_ce.engine.dsl.parsers.values.references",
+      "allowed_children": [
+        "datamimic_ce.engine.dsl.parsers.values.references.reference_parser"
+      ],
+      "rationale": "Value tree construction. Exact reviewed target children; no hidden extra modules.",
+      "provenance": [
+        "docs/architecture/inner/structure-review.json"
+      ],
+      "decided_by": "agent"
+    },
+    {
+      "id": "LAYOUT-ENGINE-DSL-PARSERS-VALUES-SCALAR",
+      "kind": "root_layout",
+      "root": "datamimic_ce.engine.dsl.parsers.values.scalar",
+      "allowed_children": [
+        "datamimic_ce.engine.dsl.parsers.values.scalar.element_parser",
+        "datamimic_ce.engine.dsl.parsers.values.scalar.key_parser"
+      ],
+      "rationale": "Value tree construction. Exact reviewed target children; no hidden extra modules.",
+      "provenance": [
+        "docs/architecture/inner/structure-review.json"
+      ],
+      "decided_by": "agent"
+    },
+    {
+      "id": "LAYOUT-ENGINE-DSL-PARSERS-VALUES-STRUCTURED",
+      "kind": "root_layout",
+      "root": "datamimic_ce.engine.dsl.parsers.values.structured",
+      "allowed_children": [
+        "datamimic_ce.engine.dsl.parsers.values.structured.array_parser",
+        "datamimic_ce.engine.dsl.parsers.values.structured.item_parser",
+        "datamimic_ce.engine.dsl.parsers.values.structured.list_parser",
+        "datamimic_ce.engine.dsl.parsers.values.structured.nested_key_parser"
+      ],
+      "rationale": "Value tree construction. Exact reviewed target children; no hidden extra modules.",
+      "provenance": [
+        "docs/architecture/inner/structure-review.json"
+      ],
+      "decided_by": "agent"
+    },
+    {
+      "id": "LAYOUT-ENGINE-DSL-PARSERS-VALUES-VARIABLES",
+      "kind": "root_layout",
+      "root": "datamimic_ce.engine.dsl.parsers.values.variables",
+      "allowed_children": [
+        "datamimic_ce.engine.dsl.parsers.values.variables.variable_parser"
+      ],
+      "rationale": "Value tree construction. Exact reviewed target children; no hidden extra modules.",
+      "provenance": [
+        "docs/architecture/inner/structure-review.json"
+      ],
+      "decided_by": "agent"
+    }
+  ]
+}

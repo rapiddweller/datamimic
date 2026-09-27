@@ -1,0 +1,215 @@
+{
+  "schema_version": "2.1.0",
+  "components": [
+    {
+      "id": "FINANCE-MODELS",
+      "label": "models",
+      "role": "component",
+      "packages": [
+        "datamimic_ce.domains.finance.models"
+      ],
+      "responsibilities": [
+        "Lazy domain entities; may call generators for computed values."
+      ],
+      "forbidden_responsibilities": [
+        "Generate dataset values directly or own service orchestration."
+      ],
+      "provenance": [
+        "docs/architecture/inner/target.md"
+      ],
+      "requires": [
+        {
+          "component": "generators",
+          "rationale": "Finance entities delegate value creation and computed properties to generators.",
+          "decided_by": "agent"
+        },
+        {
+          "component": "algorithms",
+          "rationale": "Credit-card number construction uses the Luhn check-digit primitive.",
+          "decided_by": "agent"
+        }
+      ],
+      "public": [
+        "datamimic_ce.domains.finance.models.bank:Bank",
+        "datamimic_ce.domains.finance.models.bank_account:BankAccount",
+        "datamimic_ce.domains.finance.models.credit_card:CreditCard",
+        "datamimic_ce.domains.finance.models.transaction:Transaction"
+      ],
+      "decided_by": "agent"
+    },
+    {
+      "id": "FINANCE-GENERATORS",
+      "label": "generators",
+      "role": "component",
+      "packages": [
+        "datamimic_ce.domains.finance.generators"
+      ],
+      "responsibilities": [
+        "Value algorithms; must not import entity models/services."
+      ],
+      "forbidden_responsibilities": [
+        "Import finance models or services."
+      ],
+      "provenance": [
+        "docs/architecture/inner/target.md"
+      ],
+      "requires": [],
+      "public": [
+        "datamimic_ce.domains.finance.generators.bank_account_generator:BankAccountGenerator",
+        "datamimic_ce.domains.finance.generators.bank_generator:BankGenerator",
+        "datamimic_ce.domains.finance.generators.credit_card_generator:CreditCardGenerator",
+        "datamimic_ce.domains.finance.generators.transaction_generator:TransactionGenerator",
+        "datamimic_ce.domains.finance.generators.transaction_generator:CurrencyAccount",
+        "datamimic_ce.domains.finance.generators.transaction_generator:TransactionData"
+      ],
+      "decided_by": "agent"
+    },
+    {
+      "id": "FINANCE-SERVICES",
+      "label": "services",
+      "role": "component",
+      "packages": [
+        "datamimic_ce.domains.finance.services"
+      ],
+      "responsibilities": [
+        "Domain construction workflows using models and generators."
+      ],
+      "forbidden_responsibilities": [
+        "Implement generator algorithms or bypass the entity models."
+      ],
+      "provenance": [
+        "docs/architecture/inner/target.md"
+      ],
+      "requires": [
+        {
+          "component": "models",
+          "rationale": "Services return and compose finance entities.",
+          "decided_by": "agent"
+        },
+        {
+          "component": "generators",
+          "rationale": "Services instantiate the matching finance generators.",
+          "decided_by": "agent"
+        }
+      ],
+      "public": [
+        "datamimic_ce.domains.finance.services.bank_account_service:BankAccountService",
+        "datamimic_ce.domains.finance.services.bank_service:BankService",
+        "datamimic_ce.domains.finance.services.credit_card_service:CreditCardService",
+        "datamimic_ce.domains.finance.services.transaction_service:TransactionService"
+      ],
+      "decided_by": "agent"
+    },
+    {
+      "id": "FINANCE-ALGORITHMS",
+      "label": "algorithms",
+      "role": "component",
+      "packages": [
+        "datamimic_ce.domains.finance.luhn"
+      ],
+      "responsibilities": [
+        "Finance-specific checksum algorithm."
+      ],
+      "forbidden_responsibilities": [
+        "Depend on finance entities, generators, or services."
+      ],
+      "provenance": [
+        "docs/architecture/inner/target.md"
+      ],
+      "requires": [],
+      "public": [
+        "datamimic_ce.domains.finance.luhn:luhn_check_digit"
+      ],
+      "decided_by": "agent"
+    }
+  ],
+  "rules": [
+    {
+      "id": "FINANCE-ASSIGNMENT",
+      "kind": "complete_assignment",
+      "source": "datamimic_ce.domains.finance",
+      "rationale": "Each finance implementation module has one semantic owner; the package initializer is the source module.",
+      "provenance": [
+        "docs/architecture/inner/target.md"
+      ],
+      "decided_by": "agent"
+    },
+    {
+      "id": "FINANCE-REQUIRES",
+      "kind": "complete_requires",
+      "include_type_checking": true,
+      "rationale": "Entity and service dependencies are explicit while generators remain independent of entities and services.",
+      "provenance": [
+        "docs/architecture/inner/target.md"
+      ],
+      "decided_by": "agent"
+    },
+    {
+      "id": "FINANCE-INTERFACES",
+      "kind": "interface_boundary",
+      "include_type_checking": true,
+      "rationale": "Only entity, generator, service, typed generator records, and the check-digit operation cross component boundaries.",
+      "provenance": [
+        "docs/architecture/inner/target.md"
+      ],
+      "decided_by": "agent"
+    },
+    {
+      "id": "FINANCE-ACYCLIC",
+      "kind": "no_component_cycles",
+      "rationale": "Finance ownership flows from algorithms and generators to entities, then to services.",
+      "provenance": [
+        "docs/architecture/inner/target.md"
+      ],
+      "decided_by": "agent"
+    },
+    {
+      "id": "LAYOUT-DOMAINS-FINANCE-GENERATORS",
+      "kind": "root_layout",
+      "root": "datamimic_ce.domains.finance.generators",
+      "allowed_children": [
+        "datamimic_ce.domains.finance.generators.bank_account_generator",
+        "datamimic_ce.domains.finance.generators.bank_generator",
+        "datamimic_ce.domains.finance.generators.credit_card_generator",
+        "datamimic_ce.domains.finance.generators.transaction_generator"
+      ],
+      "rationale": "Value algorithms; must not import entity models/services. Exact reviewed target children; no hidden extra modules.",
+      "provenance": [
+        "docs/architecture/inner/structure-review.json"
+      ],
+      "decided_by": "agent"
+    },
+    {
+      "id": "LAYOUT-DOMAINS-FINANCE-MODELS",
+      "kind": "root_layout",
+      "root": "datamimic_ce.domains.finance.models",
+      "allowed_children": [
+        "datamimic_ce.domains.finance.models.bank",
+        "datamimic_ce.domains.finance.models.bank_account",
+        "datamimic_ce.domains.finance.models.credit_card",
+        "datamimic_ce.domains.finance.models.transaction"
+      ],
+      "rationale": "Lazy domain entities; may call generators for computed values. Exact reviewed target children; no hidden extra modules.",
+      "provenance": [
+        "docs/architecture/inner/structure-review.json"
+      ],
+      "decided_by": "agent"
+    },
+    {
+      "id": "LAYOUT-DOMAINS-FINANCE-SERVICES",
+      "kind": "root_layout",
+      "root": "datamimic_ce.domains.finance.services",
+      "allowed_children": [
+        "datamimic_ce.domains.finance.services.bank_account_service",
+        "datamimic_ce.domains.finance.services.bank_service",
+        "datamimic_ce.domains.finance.services.credit_card_service",
+        "datamimic_ce.domains.finance.services.transaction_service"
+      ],
+      "rationale": "Domain construction workflows using models and generators. Exact reviewed target children; no hidden extra modules.",
+      "provenance": [
+        "docs/architecture/inner/structure-review.json"
+      ],
+      "decided_by": "agent"
+    }
+  ]
+}

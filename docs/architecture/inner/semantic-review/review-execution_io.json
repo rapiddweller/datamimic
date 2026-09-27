@@ -1,0 +1,2706 @@
+{
+  "reviewer": "luna-execution-io; TaskUtil nach Astra-Challenge durch Koordinator korrigiert",
+  "records": [
+    {
+      "id": "module:engine/io/__init__.py",
+      "concern": "Dieses leere Initializer-Modul ergänzt keine IO-Verantwortung.",
+      "verdict": "keep",
+      "reason": "Der Zielpfad `engine/io/__init__.py` ordnet diese Ausführung der passenden Verantwortung zu.",
+      "evidence": [
+        {
+          "path": "datamimic_ce/engine/io/__init__.py",
+          "line": 1
+        }
+      ]
+    },
+    {
+      "id": "module:engine/io/api.py",
+      "concern": "Dieses Modul veröffentlicht typisierte IO-Operationen und den begrenzten Smoke-Export.",
+      "verdict": "keep",
+      "reason": "Der Zielpfad `engine/io/api.py` ordnet diese Ausführung der passenden Verantwortung zu.",
+      "evidence": [
+        {
+          "path": "datamimic_ce/engine/io/api.py",
+          "line": 44
+        }
+      ]
+    },
+    {
+      "id": "module:engine/io/client_operations.py",
+      "concern": "Dieses Modul bündelt typisierte Datenbankoperationen für Verbindungen, Abfragen, Seiten und Sequenzen.",
+      "verdict": "keep",
+      "reason": "Der Zielpfad `engine/io/clients/operations.py` ordnet diese Ausführung der passenden Verantwortung zu.",
+      "evidence": [
+        {
+          "path": "datamimic_ce/engine/io/client_operations.py",
+          "line": 13
+        }
+      ]
+    },
+    {
+      "id": "module:engine/io/clients/__init__.py",
+      "concern": "Dieses leere Initializer-Modul ergänzt keine Client-Verantwortung.",
+      "verdict": "keep",
+      "reason": "Der Zielpfad `engine/io/clients/__init__.py` ordnet diese Ausführung der passenden Verantwortung zu.",
+      "evidence": [
+        {
+          "path": "datamimic_ce/engine/io/clients/__init__.py",
+          "line": 1
+        }
+      ]
+    },
+    {
+      "id": "module:engine/io/clients/client.py",
+      "concern": "Dieses Modul definiert den gemeinsamen Vertrag für Datenbank-Clients.",
+      "verdict": "keep",
+      "reason": "Der Zielpfad `engine/io/clients/client.py` ordnet diese Ausführung der passenden Verantwortung zu.",
+      "evidence": [
+        {
+          "path": "datamimic_ce/engine/io/clients/client.py",
+          "line": 10
+        }
+      ]
+    },
+    {
+      "id": "module:engine/io/clients/database_client.py",
+      "concern": "Dieses Modul bündelt Abfrage- und Schreiboperationen, die beide Datenbankfamilien teilen.",
+      "verdict": "keep",
+      "reason": "Der Zielpfad `engine/io/clients/database_client.py` ordnet diese Ausführung der passenden Verantwortung zu.",
+      "evidence": [
+        {
+          "path": "datamimic_ce/engine/io/clients/database_client.py",
+          "line": 13
+        }
+      ]
+    },
+    {
+      "id": "module:engine/io/clients/entity_serialization.py",
+      "concern": "Dieses Modul wandelt Domainwerte vor dem Datenbankschreiben in serialisierbare Werte um.",
+      "verdict": "keep",
+      "reason": "Der Zielpfad `engine/io/clients/entity_serialization.py` ordnet diese Ausführung der passenden Verantwortung zu.",
+      "evidence": [
+        {
+          "path": "datamimic_ce/engine/io/clients/entity_serialization.py",
+          "line": 4
+        }
+      ]
+    },
+    {
+      "id": "module:engine/io/clients/mongodb_client.py",
+      "concern": "Dieses Modul implementiert Verbindung, Abfrage und Schreibzugriff für MongoDB.",
+      "verdict": "keep",
+      "reason": "Der Zielpfad `engine/io/clients/mongodb_client.py` ordnet diese Ausführung der passenden Verantwortung zu.",
+      "evidence": [
+        {
+          "path": "datamimic_ce/engine/io/clients/mongodb_client.py",
+          "line": 23
+        }
+      ]
+    },
+    {
+      "id": "module:engine/io/clients/rdbms_client.py",
+      "concern": "Dieses Modul implementiert SQL-Verbindung, Abfragen, Schreiben und Sequenzzugriff.",
+      "verdict": "keep",
+      "reason": "Der Zielpfad `engine/io/clients/rdbms_client.py` ordnet diese Ausführung der passenden Verantwortung zu.",
+      "evidence": [
+        {
+          "path": "datamimic_ce/engine/io/clients/rdbms_client.py",
+          "line": 32
+        }
+      ]
+    },
+    {
+      "id": "module:engine/io/clients/sql_dialect.py",
+      "concern": "Dieses Modul erkennt Dialektregeln und ergänzt sichere Zeilenbegrenzungen für SQL-Abfragen.",
+      "verdict": "keep",
+      "reason": "Der Zielpfad `engine/io/clients/sql_dialect.py` ordnet diese Ausführung der passenden Verantwortung zu.",
+      "evidence": [
+        {
+          "path": "datamimic_ce/engine/io/clients/sql_dialect.py",
+          "line": 29
+        }
+      ]
+    },
+    {
+      "id": "module:engine/io/connection_config/__init__.py",
+      "concern": "Dieses leere Initializer-Modul enthält keine Verbindungslogik.",
+      "verdict": "keep",
+      "reason": "Der Zielpfad `engine/io/connection_config/__init__.py` ordnet diese Ausführung der passenden Verantwortung zu.",
+      "evidence": [
+        {
+          "path": "datamimic_ce/engine/io/connection_config/__init__.py",
+          "line": 1
+        }
+      ]
+    },
+    {
+      "id": "module:engine/io/connection_config/connection_config_base.py",
+      "concern": "Dieses Modul definiert Validierung und Zugriff für typisierte Verbindungsdaten.",
+      "verdict": "keep",
+      "reason": "Der Zielpfad `engine/io/connection_config/connection_config_base.py` ordnet diese Ausführung der passenden Verantwortung zu.",
+      "evidence": [
+        {
+          "path": "datamimic_ce/engine/io/connection_config/connection_config_base.py",
+          "line": 10
+        }
+      ]
+    },
+    {
+      "id": "module:engine/io/connection_config/mongodb_connection_config.py",
+      "concern": "Dieses Modul validiert MongoDB-Verbindungsdaten und stellt die Treiberoptionen bereit.",
+      "verdict": "keep",
+      "reason": "Der Zielpfad `engine/io/connection_config/mongodb_connection_config.py` ordnet diese Ausführung der passenden Verantwortung zu.",
+      "evidence": [
+        {
+          "path": "datamimic_ce/engine/io/connection_config/mongodb_connection_config.py",
+          "line": 13
+        }
+      ]
+    },
+    {
+      "id": "module:engine/io/connection_config/rdbms_connection_config.py",
+      "concern": "Dieses Modul validiert SQL-Verbindungsdaten und stellt SQLAlchemy-Optionen bereit.",
+      "verdict": "keep",
+      "reason": "Der Zielpfad `engine/io/connection_config/rdbms_connection_config.py` ordnet diese Ausführung der passenden Verantwortung zu.",
+      "evidence": [
+        {
+          "path": "datamimic_ce/engine/io/connection_config/rdbms_connection_config.py",
+          "line": 14
+        }
+      ]
+    },
+    {
+      "id": "module:engine/io/contracts.py",
+      "concern": "Dieses Modul definiert Paginationstypen, enthält aber auch ausführbare Auswahlfunktionen für Zeilen.",
+      "verdict": "split",
+      "reason": "Paginationstypen sind Verträge; select_rows und select_row_iterator führen Auswahlverhalten aus und passen zu den IO-Quelloperationen.",
+      "evidence": [
+        {
+          "path": "datamimic_ce/engine/io/contracts.py",
+          "line": 13
+        }
+      ],
+      "recommended_targets": [
+        "engine/io/contracts.py",
+        "engine/io/data_sources/selection.py"
+      ]
+    },
+    {
+      "id": "module:engine/io/data_sources/__init__.py",
+      "concern": "Dieses leere Initializer-Modul ergänzt keine Quelllogik.",
+      "verdict": "keep",
+      "reason": "Der Zielpfad `engine/io/data_sources/__init__.py` ordnet diese Ausführung der passenden Verantwortung zu.",
+      "evidence": [
+        {
+          "path": "datamimic_ce/engine/io/data_sources/__init__.py",
+          "line": 1
+        }
+      ]
+    },
+    {
+      "id": "module:engine/io/data_sources/data_source_registry.py",
+      "concern": "Dieses Modul lädt und paginiert Dateiquellen sowie Datenbankquellen ohne Runtime-Kontext.",
+      "verdict": "keep",
+      "reason": "Der Zielpfad `engine/io/data_sources/data_source_registry.py` ordnet diese Ausführung der passenden Verantwortung zu.",
+      "evidence": [
+        {
+          "path": "datamimic_ce/engine/io/data_sources/data_source_registry.py",
+          "line": 23
+        }
+      ]
+    },
+    {
+      "id": "module:engine/io/data_sources/weighted_data_source.py",
+      "concern": "Dieses Modul liest gewichtete Einzelwerte aus einer Datei.",
+      "verdict": "keep",
+      "reason": "Der Zielpfad `engine/io/data_sources/weighted_data_source.py` ordnet diese Ausführung der passenden Verantwortung zu.",
+      "evidence": [
+        {
+          "path": "datamimic_ce/engine/io/data_sources/weighted_data_source.py",
+          "line": 13
+        }
+      ]
+    },
+    {
+      "id": "module:engine/io/data_sources/weighted_entity_data_source.py",
+      "concern": "Dieses Modul zieht gewichtete Domainzeilen mit der übergebenen Zufallsquelle.",
+      "verdict": "keep",
+      "reason": "Der Zielpfad `engine/io/data_sources/weighted_entity_data_source.py` ordnet diese Ausführung der passenden Verantwortung zu.",
+      "evidence": [
+        {
+          "path": "datamimic_ce/engine/io/data_sources/weighted_entity_data_source.py",
+          "line": 13
+        }
+      ]
+    },
+    {
+      "id": "module:engine/io/dataset_api.py",
+      "concern": "Dieses Modul bündelt Dateileser und Dateicache unter einer schmalen Dataset-API.",
+      "verdict": "keep",
+      "reason": "Der Zielpfad `engine/io/files/api.py` ordnet diese Ausführung der passenden Verantwortung zu.",
+      "evidence": [
+        {
+          "path": "datamimic_ce/engine/io/dataset_api.py",
+          "line": 1
+        }
+      ]
+    },
+    {
+      "id": "module:engine/io/exporters/__init__.py",
+      "concern": "Dieses leere Initializer-Modul ergänzt keine Exporterverantwortung.",
+      "verdict": "keep",
+      "reason": "Der Zielpfad `engine/io/exporters/__init__.py` ordnet diese Ausführung der passenden Verantwortung zu.",
+      "evidence": [
+        {
+          "path": "datamimic_ce/engine/io/exporters/__init__.py",
+          "line": 1
+        }
+      ]
+    },
+    {
+      "id": "module:engine/io/exporters/console_exporter.py",
+      "concern": "Dieses Modul schreibt erzeugte Datensätze in die Konsolenausgabe.",
+      "verdict": "keep",
+      "reason": "Der Zielpfad `engine/io/exporters/diagnostics/console_exporter.py` ordnet diese Ausführung der passenden Verantwortung zu.",
+      "evidence": [
+        {
+          "path": "datamimic_ce/engine/io/exporters/console_exporter.py",
+          "line": 10
+        }
+      ]
+    },
+    {
+      "id": "module:engine/io/exporters/csv_exporter.py",
+      "concern": "Dieses Modul serialisiert gepufferte Datensätze als CSV-Datei.",
+      "verdict": "keep",
+      "reason": "Der Zielpfad `engine/io/exporters/formats/csv_exporter.py` ordnet diese Ausführung der passenden Verantwortung zu.",
+      "evidence": [
+        {
+          "path": "datamimic_ce/engine/io/exporters/csv_exporter.py",
+          "line": 19
+        }
+      ]
+    },
+    {
+      "id": "module:engine/io/exporters/database_exporter.py",
+      "concern": "Dieses Modul schreibt Datensätze in relationale Ziele und wendet Zieloperationen an.",
+      "verdict": "keep",
+      "reason": "Der Zielpfad `engine/io/exporters/database/database_exporter.py` ordnet diese Ausführung der passenden Verantwortung zu.",
+      "evidence": [
+        {
+          "path": "datamimic_ce/engine/io/exporters/database_exporter.py",
+          "line": 11
+        }
+      ]
+    },
+    {
+      "id": "module:engine/io/exporters/dbunit_exporter.py",
+      "concern": "Dieses Modul schreibt relationale Testdaten im DBUnit-XML-Format.",
+      "verdict": "keep",
+      "reason": "Der Zielpfad `engine/io/exporters/database/dbunit_exporter.py` ordnet diese Ausführung der passenden Verantwortung zu.",
+      "evidence": [
+        {
+          "path": "datamimic_ce/engine/io/exporters/dbunit_exporter.py",
+          "line": 21
+        }
+      ]
+    },
+    {
+      "id": "module:engine/io/exporters/exporter.py",
+      "concern": "Dieses Modul definiert den gemeinsamen Vertrag zum Verarbeiten und Abschließen von Exporten.",
+      "verdict": "keep",
+      "reason": "Der Zielpfad `engine/io/exporters/core/exporter.py` ordnet diese Ausführung der passenden Verantwortung zu.",
+      "evidence": [
+        {
+          "path": "datamimic_ce/engine/io/exporters/exporter.py",
+          "line": 8
+        }
+      ]
+    },
+    {
+      "id": "module:engine/io/exporters/exporter_config.py",
+      "concern": "Dieses Modul trägt typisierte Pfad-, Namens- und Laufkonfiguration für Exporter.",
+      "verdict": "keep",
+      "reason": "Der Zielpfad `engine/io/exporters/core/exporter_config.py` ordnet diese Ausführung der passenden Verantwortung zu.",
+      "evidence": [
+        {
+          "path": "datamimic_ce/engine/io/exporters/exporter_config.py",
+          "line": 13
+        }
+      ]
+    },
+    {
+      "id": "module:engine/io/exporters/exporter_context.py",
+      "concern": "Dieses Modul definiert den Zugriff, den Exporter auf Laufzeit- und Memstore-Dienste benötigen.",
+      "verdict": "keep",
+      "reason": "Der Zielpfad `engine/io/exporters/core/exporter_context.py` ordnet diese Ausführung der passenden Verantwortung zu.",
+      "evidence": [
+        {
+          "path": "datamimic_ce/engine/io/exporters/exporter_context.py",
+          "line": 10
+        }
+      ]
+    },
+    {
+      "id": "module:engine/io/exporters/exporter_state_manager.py",
+      "concern": "Dieses Modul verwaltet Exporterzustand und gepufferte Ausgabe über Worker hinweg.",
+      "verdict": "keep",
+      "reason": "Der Zielpfad `engine/io/exporters/core/exporter_state_manager.py` ordnet diese Ausführung der passenden Verantwortung zu.",
+      "evidence": [
+        {
+          "path": "datamimic_ce/engine/io/exporters/exporter_state_manager.py",
+          "line": 8
+        }
+      ]
+    },
+    {
+      "id": "module:engine/io/exporters/exporter_util.py",
+      "concern": "Dieses Modul parst Targetangaben und erstellt konkrete Exporter; es enthält auch Serialisierungshelfer.",
+      "verdict": "split",
+      "reason": "Die Aufteilung in Registry und IO-Serialisierung passt; die Registry darf zusätzlich nicht GenerateStatement importieren oder dessen Zielfelder selbst auswerten.",
+      "evidence": [
+        {
+          "path": "datamimic_ce/engine/io/exporters/exporter_util.py",
+          "line": 166
+        }
+      ],
+      "recommended_targets": [
+        "engine/io/exporters/registry.py",
+        "engine/io/exporters/core/serialization.py"
+      ]
+    },
+    {
+      "id": "module:engine/io/exporters/fixed_width_exporter.py",
+      "concern": "Dieses Modul schreibt gepufferte Datensätze im Festbreitenformat.",
+      "verdict": "keep",
+      "reason": "Der Zielpfad `engine/io/exporters/formats/fixed_width_exporter.py` ordnet diese Ausführung der passenden Verantwortung zu.",
+      "evidence": [
+        {
+          "path": "datamimic_ce/engine/io/exporters/fixed_width_exporter.py",
+          "line": 17
+        }
+      ]
+    },
+    {
+      "id": "module:engine/io/exporters/json_exporter.py",
+      "concern": "Dieses Modul serialisiert gepufferte Datensätze als JSON.",
+      "verdict": "keep",
+      "reason": "Der Zielpfad `engine/io/exporters/formats/json_exporter.py` ordnet diese Ausführung der passenden Verantwortung zu.",
+      "evidence": [
+        {
+          "path": "datamimic_ce/engine/io/exporters/json_exporter.py",
+          "line": 17
+        }
+      ]
+    },
+    {
+      "id": "module:engine/io/exporters/log_exporter.py",
+      "concern": "Dieses Modul schreibt Datensätze in die Laufzeitprotokolle.",
+      "verdict": "keep",
+      "reason": "Der Zielpfad `engine/io/exporters/diagnostics/log_exporter.py` ordnet diese Ausführung der passenden Verantwortung zu.",
+      "evidence": [
+        {
+          "path": "datamimic_ce/engine/io/exporters/log_exporter.py",
+          "line": 14
+        }
+      ]
+    },
+    {
+      "id": "module:engine/io/exporters/memstore.py",
+      "concern": "Dieses Modul speichert erzeugte Produkte im laufbezogenen Memstore.",
+      "verdict": "keep",
+      "reason": "Der Zielpfad `engine/io/exporters/memory/memstore.py` ordnet diese Ausführung der passenden Verantwortung zu.",
+      "evidence": [
+        {
+          "path": "datamimic_ce/engine/io/exporters/memstore.py",
+          "line": 15
+        }
+      ]
+    },
+    {
+      "id": "module:engine/io/exporters/mongodb_exporter.py",
+      "concern": "Dieses Modul schreibt Datensätze in MongoDB-Ziele und führt Zieloperationen aus.",
+      "verdict": "keep",
+      "reason": "Der Zielpfad `engine/io/exporters/database/mongodb_exporter.py` ordnet diese Ausführung der passenden Verantwortung zu.",
+      "evidence": [
+        {
+          "path": "datamimic_ce/engine/io/exporters/mongodb_exporter.py",
+          "line": 13
+        }
+      ]
+    },
+    {
+      "id": "module:engine/io/exporters/smoke_export.py",
+      "concern": "Dieses Modul prüft konfigurierte Exporter mit begrenzten Daten in einem temporären Ziel.",
+      "verdict": "keep",
+      "reason": "Der Zielpfad `engine/io/exporters/diagnostics/smoke_export.py` ordnet diese Ausführung der passenden Verantwortung zu.",
+      "evidence": [
+        {
+          "path": "datamimic_ce/engine/io/exporters/smoke_export.py",
+          "line": 18
+        }
+      ]
+    },
+    {
+      "id": "module:engine/io/exporters/test_result_exporter.py",
+      "concern": "Dieses Modul fängt erzeugte Produkte für begrenzte Laufzeitprüfungen auf.",
+      "verdict": "keep",
+      "reason": "Der Zielpfad `engine/io/exporters/diagnostics/test_result_exporter.py` ordnet diese Ausführung der passenden Verantwortung zu.",
+      "evidence": [
+        {
+          "path": "datamimic_ce/engine/io/exporters/test_result_exporter.py",
+          "line": 11
+        }
+      ]
+    },
+    {
+      "id": "module:engine/io/exporters/txt_exporter.py",
+      "concern": "Dieses Modul schreibt gepufferte Datensätze als Textdatei.",
+      "verdict": "keep",
+      "reason": "Der Zielpfad `engine/io/exporters/formats/txt_exporter.py` ordnet diese Ausführung der passenden Verantwortung zu.",
+      "evidence": [
+        {
+          "path": "datamimic_ce/engine/io/exporters/txt_exporter.py",
+          "line": 26
+        }
+      ]
+    },
+    {
+      "id": "module:engine/io/exporters/unified_buffered_exporter.py",
+      "concern": "Dieses Modul bündelt Seitenpufferung, Dateifinalisierung und Bereinigung für Dateiexporter.",
+      "verdict": "keep",
+      "reason": "Der Zielpfad `engine/io/exporters/core/unified_buffered_exporter.py` ordnet diese Ausführung der passenden Verantwortung zu.",
+      "evidence": [
+        {
+          "path": "datamimic_ce/engine/io/exporters/unified_buffered_exporter.py",
+          "line": 15
+        }
+      ]
+    },
+    {
+      "id": "module:engine/io/exporters/xlsx_exporter.py",
+      "concern": "Dieses Modul schreibt gepufferte Datensätze in eine XLSX-Arbeitsmappe.",
+      "verdict": "keep",
+      "reason": "Der Zielpfad `engine/io/exporters/formats/xlsx_exporter.py` ordnet diese Ausführung der passenden Verantwortung zu.",
+      "evidence": [
+        {
+          "path": "datamimic_ce/engine/io/exporters/xlsx_exporter.py",
+          "line": 20
+        }
+      ]
+    },
+    {
+      "id": "module:engine/io/exporters/xml_exporter.py",
+      "concern": "Dieses Modul serialisiert erzeugte Datensätze als XML.",
+      "verdict": "keep",
+      "reason": "Der Zielpfad `engine/io/exporters/formats/xml_exporter.py` ordnet diese Ausführung der passenden Verantwortung zu.",
+      "evidence": [
+        {
+          "path": "datamimic_ce/engine/io/exporters/xml_exporter.py",
+          "line": 22
+        }
+      ]
+    },
+    {
+      "id": "module:engine/io/file_cache.py",
+      "concern": "Dieses Modul cached eingelesene Dateiinhalte nach Quellschlüssel.",
+      "verdict": "keep",
+      "reason": "Der Zielpfad `engine/io/files/cache.py` ordnet diese Ausführung der passenden Verantwortung zu.",
+      "evidence": [
+        {
+          "path": "datamimic_ce/engine/io/file_cache.py",
+          "line": 11
+        }
+      ]
+    },
+    {
+      "id": "module:engine/io/files.py",
+      "concern": "Dieses Modul liest unterstützte Dateiformate und liefert typisierte Datensatzzeilen.",
+      "verdict": "keep",
+      "reason": "Der Zielpfad `engine/io/files/readers.py` ordnet diese Ausführung der passenden Verantwortung zu.",
+      "evidence": [
+        {
+          "path": "datamimic_ce/engine/io/files.py",
+          "line": 26
+        }
+      ]
+    },
+    {
+      "id": "module:engine/runtime/__init__.py",
+      "concern": "Dieses leere Initializer-Modul ergänzt keine Runtime-API.",
+      "verdict": "keep",
+      "reason": "Der Zielpfad `engine/runtime/__init__.py` ordnet diese Ausführung der passenden Verantwortung zu.",
+      "evidence": [
+        {
+          "path": "datamimic_ce/engine/runtime/__init__.py",
+          "line": 1
+        }
+      ]
+    },
+    {
+      "id": "module:engine/runtime/api.py",
+      "concern": "Dieses Modul veröffentlicht Laufstart, Sitzungserzeugung, Descriptor-Eigenschaften und Generatorfähigkeiten.",
+      "verdict": "keep",
+      "reason": "Der Zielpfad `engine/runtime/api.py` ordnet diese Ausführung der passenden Verantwortung zu.",
+      "evidence": [
+        {
+          "path": "datamimic_ce/engine/runtime/api.py",
+          "line": 34
+        }
+      ]
+    },
+    {
+      "id": "module:engine/runtime/contexts/__init__.py",
+      "concern": "Dieses leere Initializer-Modul komponiert keine Kontextimplementierungen.",
+      "verdict": "keep",
+      "reason": "Der Zielpfad `engine/runtime/contexts/__init__.py` ordnet diese Ausführung der passenden Verantwortung zu.",
+      "evidence": [
+        {
+          "path": "datamimic_ce/engine/runtime/contexts/__init__.py",
+          "line": 1
+        }
+      ]
+    },
+    {
+      "id": "module:engine/runtime/contexts/context.py",
+      "concern": "Dieses Modul löst aktuelle, übergeordnete und Root-Sichtbereiche für Ausdrücke auf.",
+      "verdict": "keep",
+      "reason": "Der Zielpfad `engine/runtime/contexts/context.py` ordnet diese Ausführung der passenden Verantwortung zu.",
+      "evidence": [
+        {
+          "path": "datamimic_ce/engine/runtime/contexts/context.py",
+          "line": 30
+        }
+      ]
+    },
+    {
+      "id": "module:engine/runtime/contexts/demographic_context.py",
+      "concern": "Dieses Modul trägt Demografiekonfiguration für Domain-Datengenerierung.",
+      "verdict": "keep",
+      "reason": "Der Zielpfad `engine/runtime/contexts/demographic_context.py` ordnet diese Ausführung der passenden Verantwortung zu.",
+      "evidence": [
+        {
+          "path": "datamimic_ce/engine/runtime/contexts/demographic_context.py",
+          "line": 12
+        }
+      ]
+    },
+    {
+      "id": "module:engine/runtime/contexts/expression_globals.py",
+      "concern": "Dieses Modul erzeugt den begrenzten Namensraum, den Descriptor-Ausdrücke sehen.",
+      "verdict": "keep",
+      "reason": "Der Zielpfad `engine/runtime/contexts/expression_globals.py` ordnet diese Ausführung der passenden Verantwortung zu.",
+      "evidence": [
+        {
+          "path": "datamimic_ce/engine/runtime/contexts/expression_globals.py",
+          "line": 103
+        }
+      ]
+    },
+    {
+      "id": "module:engine/runtime/contexts/geniter_context.py",
+      "concern": "Dieses Modul hält Zeilenzustand, aktuelles Produkt, Elternsicht und Worker-ID.",
+      "verdict": "keep",
+      "reason": "Der Zielpfad `engine/runtime/contexts/geniter_context.py` ordnet diese Ausführung der passenden Verantwortung zu.",
+      "evidence": [
+        {
+          "path": "datamimic_ce/engine/runtime/contexts/geniter_context.py",
+          "line": 16
+        }
+      ]
+    },
+    {
+      "id": "module:engine/runtime/contexts/records.py",
+      "concern": "Dieses Modul aktualisiert verschachtelte Datensatzfelder anhand eines Pfads.",
+      "verdict": "keep",
+      "reason": "Der Zielpfad `engine/runtime/contexts/records.py` ordnet diese Ausführung der passenden Verantwortung zu.",
+      "evidence": [
+        {
+          "path": "datamimic_ce/engine/runtime/contexts/records.py",
+          "line": 4
+        }
+      ]
+    },
+    {
+      "id": "module:engine/runtime/contexts/setup_context.py",
+      "concern": "Dieses Modul hält Clients, Generatoren, Quellen und Laufzustand während der Setup- und Generate-Ausführung.",
+      "verdict": "keep",
+      "reason": "Der Zielpfad `engine/runtime/contexts/setup_context.py` ordnet diese Ausführung der passenden Verantwortung zu.",
+      "evidence": [
+        {
+          "path": "datamimic_ce/engine/runtime/contexts/setup_context.py",
+          "line": 34
+        }
+      ]
+    },
+    {
+      "id": "module:engine/runtime/contracts.py",
+      "concern": "Dieses Modul definiert typisierte Laufanfrage, Ergebnis, Sitzung und Produkterfassung.",
+      "verdict": "keep",
+      "reason": "Der Zielpfad `engine/runtime/contracts.py` ordnet diese Ausführung der passenden Verantwortung zu.",
+      "evidence": [
+        {
+          "path": "datamimic_ce/engine/runtime/contracts.py",
+          "line": 14
+        }
+      ]
+    },
+    {
+      "id": "module:engine/runtime/counts.py",
+      "concern": "Dieses Modul wertet Count-Ausdrücke aus und löst zufällige Count-Bereiche auf.",
+      "verdict": "keep",
+      "reason": "Der Zielpfad `engine/runtime/tasks/base/counts.py` ordnet diese Ausführung der passenden Verantwortung zu.",
+      "evidence": [
+        {
+          "path": "datamimic_ce/engine/runtime/counts.py",
+          "line": 9
+        }
+      ]
+    },
+    {
+      "id": "module:engine/runtime/generators/__init__.py",
+      "concern": "Dieses leere Initializer-Modul ergänzt keine Generatorfabrik.",
+      "verdict": "keep",
+      "reason": "Der Zielpfad `engine/runtime/tasks/values/construction/__init__.py` ordnet diese Ausführung der passenden Verantwortung zu.",
+      "evidence": [
+        {
+          "path": "datamimic_ce/engine/runtime/generators/factory.py",
+          "line": 49
+        }
+      ]
+    },
+    {
+      "id": "module:engine/runtime/generators/factory.py",
+      "concern": "Dieses Modul erzeugt Domaingeneratoren aus Descriptorangaben und wendet Cache- und Zufallsrichtlinien an.",
+      "verdict": "keep",
+      "reason": "Der Zielpfad `engine/runtime/tasks/values/construction/factory.py` ordnet diese Ausführung der passenden Verantwortung zu.",
+      "evidence": [
+        {
+          "path": "datamimic_ce/engine/runtime/generators/factory.py",
+          "line": 32
+        }
+      ]
+    },
+    {
+      "id": "module:engine/runtime/generators/sequence_table.py",
+      "concern": "Dieses Modul reserviert paginierte Werte aus relationalen Sequenzspeichern.",
+      "verdict": "keep",
+      "reason": "Der Zielpfad `engine/runtime/tasks/values/construction/sequence_table.py` ordnet diese Ausführung der passenden Verantwortung zu.",
+      "evidence": [
+        {
+          "path": "datamimic_ce/engine/runtime/generators/sequence_table.py",
+          "line": 20
+        }
+      ]
+    },
+    {
+      "id": "module:engine/runtime/lifecycle/__init__.py",
+      "concern": "Dieses leere Initializer-Modul ergänzt keine Lifecycle-Logik.",
+      "verdict": "keep",
+      "reason": "Der Zielpfad `engine/runtime/lifecycle/__init__.py` ordnet diese Ausführung der passenden Verantwortung zu.",
+      "evidence": [
+        {
+          "path": "datamimic_ce/engine/runtime/lifecycle/runner.py",
+          "line": 23
+        }
+      ]
+    },
+    {
+      "id": "module:engine/runtime/lifecycle/config.py",
+      "concern": "Dieses Modul liest Prozesskonfiguration aus Umgebungsvariablen.",
+      "verdict": "keep",
+      "reason": "Der Zielpfad `engine/runtime/lifecycle/config.py` ordnet diese Ausführung der passenden Verantwortung zu.",
+      "evidence": [
+        {
+          "path": "datamimic_ce/engine/runtime/lifecycle/config.py",
+          "line": 14
+        }
+      ]
+    },
+    {
+      "id": "module:engine/runtime/lifecycle/runner.py",
+      "concern": "Dieses Modul parst den Descriptor, startet Setup und liefert das typisierte Laufergebnis.",
+      "verdict": "keep",
+      "reason": "Der Zielpfad `engine/runtime/lifecycle/runner.py` ordnet diese Ausführung der passenden Verantwortung zu.",
+      "evidence": [
+        {
+          "path": "datamimic_ce/engine/runtime/lifecycle/runner.py",
+          "line": 84
+        }
+      ]
+    },
+    {
+      "id": "module:engine/runtime/logging.py",
+      "concern": "Dieses Modul richtet Laufzeit- und Workerprotokolle ein und meldet Systemdaten.",
+      "verdict": "keep",
+      "reason": "Der Zielpfad `engine/runtime/logging.py` ordnet diese Ausführung der passenden Verantwortung zu.",
+      "evidence": [
+        {
+          "path": "datamimic_ce/engine/runtime/logging.py",
+          "line": 20
+        }
+      ]
+    },
+    {
+      "id": "module:engine/runtime/process.py",
+      "concern": "Dieses Modul setzt Prozessnamen für Hauptlauf und Generate-Worker.",
+      "verdict": "keep",
+      "reason": "Der Zielpfad `engine/runtime/lifecycle/process.py` ordnet diese Ausführung der passenden Verantwortung zu.",
+      "evidence": [
+        {
+          "path": "datamimic_ce/engine/runtime/process.py",
+          "line": 22
+        }
+      ]
+    },
+    {
+      "id": "module:engine/runtime/scripting/__init__.py",
+      "concern": "Dieses leere Initializer-Modul ergänzt keine Ausdrucksauswertung.",
+      "verdict": "keep",
+      "reason": "Der Zielpfad `engine/runtime/scripting/__init__.py` ordnet diese Ausführung der passenden Verantwortung zu.",
+      "evidence": [
+        {
+          "path": "datamimic_ce/engine/runtime/scripting/evaluation.py",
+          "line": 13
+        }
+      ]
+    },
+    {
+      "id": "module:engine/runtime/scripting/evaluation.py",
+      "concern": "Dieses Modul wertet Descriptorausdrücke aus und ersetzt Variablen in Quellvorlagen.",
+      "verdict": "keep",
+      "reason": "Der Zielpfad `engine/runtime/scripting/evaluation.py` ordnet diese Ausführung der passenden Verantwortung zu.",
+      "evidence": [
+        {
+          "path": "datamimic_ce/engine/runtime/scripting/evaluation.py",
+          "line": 9
+        }
+      ]
+    },
+    {
+      "id": "module:engine/runtime/scripting/plugins/__init__.py",
+      "concern": "Dieses Modul führt Descriptor-Skripte im vorbereiteten Namensraum aus.",
+      "verdict": "keep",
+      "reason": "Der Zielpfad `engine/runtime/scripting/plugins/__init__.py` ordnet diese Ausführung der passenden Verantwortung zu.",
+      "evidence": [
+        {
+          "path": "datamimic_ce/engine/runtime/scripting/plugins/__init__.py",
+          "line": 6
+        }
+      ]
+    },
+    {
+      "id": "module:engine/runtime/sources/__init__.py",
+      "concern": "Dieses leere Initializer-Modul ergänzt keine Quellenanpassung.",
+      "verdict": "keep",
+      "reason": "Der Zielpfad `engine/runtime/tasks/sources/__init__.py` ordnet diese Ausführung der passenden Verantwortung zu.",
+      "evidence": [
+        {
+          "path": "datamimic_ce/engine/runtime/sources/__init__.py",
+          "line": 1
+        }
+      ]
+    },
+    {
+      "id": "module:engine/runtime/sources/chunk_source_reader.py",
+      "concern": "Dieses Modul lädt und ordnet Quellzeilen pro Chunk, wenn stabile Seitenfenster nötig sind.",
+      "verdict": "keep",
+      "reason": "Der Zielpfad `engine/runtime/tasks/sources/chunk_source_reader.py` ordnet diese Ausführung der passenden Verantwortung zu.",
+      "evidence": [
+        {
+          "path": "datamimic_ce/engine/runtime/sources/chunk_source_reader.py",
+          "line": 20
+        }
+      ]
+    },
+    {
+      "id": "module:engine/runtime/sources/router.py",
+      "concern": "Dieses Modul übersetzt typisierte Runtime-Statements und Kontexte in Datei- oder Clientaufrufe.",
+      "verdict": "keep",
+      "reason": "Der Zielpfad `engine/runtime/tasks/sources/router.py` ordnet diese Ausführung der passenden Verantwortung zu.",
+      "evidence": [
+        {
+          "path": "datamimic_ce/engine/runtime/sources/router.py",
+          "line": 45
+        }
+      ]
+    },
+    {
+      "id": "module:engine/runtime/sources/selection.py",
+      "concern": "Dieses Modul wendet seedgebundene Quellenverteilung und Eindeutigkeit an; auch Key-Aufgaben nutzen es.",
+      "verdict": "change",
+      "reason": "Die Verteilungslogik verarbeitet DSL-SourceDistribution und wird von ChunkSourceReader, Variable-Quellen und eindeutigen Keys genutzt; IO sollte keine Statementsemantik übernehmen.",
+      "evidence": [
+        {
+          "path": "datamimic_ce/engine/runtime/sources/selection.py",
+          "line": 18
+        }
+      ],
+      "recommended_targets": [
+        "engine/runtime/sources/selection.py"
+      ]
+    },
+    {
+      "id": "module:engine/runtime/sources/variable.py",
+      "concern": "Dieses Modul plant und lädt Variablenquellen nach Statement- und Kontextsemantik.",
+      "verdict": "keep",
+      "reason": "Der Zielpfad `engine/runtime/tasks/sources/variable.py` ordnet diese Ausführung der passenden Verantwortung zu.",
+      "evidence": [
+        {
+          "path": "datamimic_ce/engine/runtime/sources/variable.py",
+          "line": 34
+        }
+      ]
+    },
+    {
+      "id": "module:engine/runtime/storage/__init__.py",
+      "concern": "Dieses leere Initializer-Modul ergänzt keine Speicherlebensdauer.",
+      "verdict": "keep",
+      "reason": "Der Zielpfad `engine/runtime/storage/__init__.py` ordnet diese Ausführung der passenden Verantwortung zu.",
+      "evidence": [
+        {
+          "path": "datamimic_ce/engine/runtime/storage/__init__.py",
+          "line": 1
+        }
+      ]
+    },
+    {
+      "id": "module:engine/runtime/storage/memstore_manager.py",
+      "concern": "Dieses Modul verwaltet laufbezogene Memstore-Handles und deren Lebensdauer.",
+      "verdict": "keep",
+      "reason": "Der Zielpfad `engine/runtime/storage/memstore_manager.py` ordnet diese Ausführung der passenden Verantwortung zu.",
+      "evidence": [
+        {
+          "path": "datamimic_ce/engine/runtime/storage/memstore_manager.py",
+          "line": 10
+        }
+      ]
+    },
+    {
+      "id": "module:engine/runtime/tasks/__init__.py",
+      "concern": "Dieses Modul importiert konkrete Tasks und registriert die Statement-Dispatchzweige beim Import.",
+      "verdict": "keep",
+      "reason": "Die Registrierung erhält einen expliziten Modulpfad; der Lifecycle muss ihn einmal laden, bevor Setup dispatcht.",
+      "evidence": [
+        {
+          "path": "datamimic_ce/engine/runtime/tasks/__init__.py",
+          "line": 61
+        }
+      ]
+    },
+    {
+      "id": "module:engine/runtime/tasks/array_task.py",
+      "concern": "Dieses Modul erzeugt Arrayfelder durch Ausführung verschachtelter Werttasks.",
+      "verdict": "keep",
+      "reason": "Der Zielpfad `engine/runtime/tasks/values/structured/array_task.py` ordnet diese Ausführung der passenden Verantwortung zu.",
+      "evidence": [
+        {
+          "path": "datamimic_ce/engine/runtime/tasks/array_task.py",
+          "line": 22
+        }
+      ]
+    },
+    {
+      "id": "module:engine/runtime/tasks/assert_task.py",
+      "concern": "Dieses Modul wertet eine Assertion aus und bricht bei falscher Bedingung ab.",
+      "verdict": "keep",
+      "reason": "Der Zielpfad `engine/runtime/tasks/flow/commands/assert_task.py` ordnet diese Ausführung der passenden Verantwortung zu.",
+      "evidence": [
+        {
+          "path": "datamimic_ce/engine/runtime/tasks/assert_task.py",
+          "line": 13
+        }
+      ]
+    },
+    {
+      "id": "module:engine/runtime/tasks/condition_task.py",
+      "concern": "Dieses Modul führt verschachtelte Tasks aus, wenn eine Bedingung zutrifft.",
+      "verdict": "keep",
+      "reason": "Der Zielpfad `engine/runtime/tasks/flow/branches/condition_task.py` ordnet diese Ausführung der passenden Verantwortung zu.",
+      "evidence": [
+        {
+          "path": "datamimic_ce/engine/runtime/tasks/condition_task.py",
+          "line": 13
+        }
+      ]
+    },
+    {
+      "id": "module:engine/runtime/tasks/database_task.py",
+      "concern": "Dieses Modul erstellt und registriert während Setup einen relationalen Client.",
+      "verdict": "keep",
+      "reason": "Der Zielpfad `engine/runtime/tasks/setup/database_task.py` ordnet diese Ausführung der passenden Verantwortung zu.",
+      "evidence": [
+        {
+          "path": "datamimic_ce/engine/runtime/tasks/database_task.py",
+          "line": 13
+        }
+      ]
+    },
+    {
+      "id": "module:engine/runtime/tasks/demographics_task.py",
+      "concern": "Dieses Modul lädt und registriert Demografiekonfiguration während Setup.",
+      "verdict": "keep",
+      "reason": "Der Zielpfad `engine/runtime/tasks/setup/demographics_task.py` ordnet diese Ausführung der passenden Verantwortung zu.",
+      "evidence": [
+        {
+          "path": "datamimic_ce/engine/runtime/tasks/demographics_task.py",
+          "line": 15
+        }
+      ]
+    },
+    {
+      "id": "module:engine/runtime/tasks/echo_task.py",
+      "concern": "Dieses Modul gibt Descriptor-Text als Laufzeitdiagnose aus.",
+      "verdict": "keep",
+      "reason": "Der Zielpfad `engine/runtime/tasks/flow/commands/echo_task.py` ordnet diese Ausführung der passenden Verantwortung zu.",
+      "evidence": [
+        {
+          "path": "datamimic_ce/engine/runtime/tasks/echo_task.py",
+          "line": 15
+        }
+      ]
+    },
+    {
+      "id": "module:engine/runtime/tasks/element_task.py",
+      "concern": "Dieses Modul erzeugt ein Elementfeld mit Key- und Variablenverhalten.",
+      "verdict": "keep",
+      "reason": "Der Zielpfad `engine/runtime/tasks/values/scalar/element_task.py` ordnet diese Ausführung der passenden Verantwortung zu.",
+      "evidence": [
+        {
+          "path": "datamimic_ce/engine/runtime/tasks/element_task.py",
+          "line": 24
+        }
+      ]
+    },
+    {
+      "id": "module:engine/runtime/tasks/else_if_task.py",
+      "concern": "Dieses Modul wertet einen else-if-Zweig im gemeinsamen Bedingungszustand aus.",
+      "verdict": "keep",
+      "reason": "Der Zielpfad `engine/runtime/tasks/flow/branches/else_if_task.py` ordnet diese Ausführung der passenden Verantwortung zu.",
+      "evidence": [
+        {
+          "path": "datamimic_ce/engine/runtime/tasks/else_if_task.py",
+          "line": 11
+        }
+      ]
+    },
+    {
+      "id": "module:engine/runtime/tasks/else_task.py",
+      "concern": "Dieses Modul führt den Ersatz-Zweig im gemeinsamen Bedingungszustand aus.",
+      "verdict": "keep",
+      "reason": "Der Zielpfad `engine/runtime/tasks/flow/branches/else_task.py` ordnet diese Ausführung der passenden Verantwortung zu.",
+      "evidence": [
+        {
+          "path": "datamimic_ce/engine/runtime/tasks/else_task.py",
+          "line": 11
+        }
+      ]
+    },
+    {
+      "id": "module:engine/runtime/tasks/entity_constructor.py",
+      "concern": "Dieses Modul zerlegt Domain-Konstruktorangaben in Klassennamen und Parameter.",
+      "verdict": "keep",
+      "reason": "Der Zielpfad `engine/runtime/tasks/values/construction/entity_constructor.py` ordnet diese Ausführung der passenden Verantwortung zu.",
+      "evidence": [
+        {
+          "path": "datamimic_ce/engine/runtime/tasks/entity_constructor.py",
+          "line": 6
+        }
+      ]
+    },
+    {
+      "id": "module:engine/runtime/tasks/execute_task.py",
+      "concern": "Dieses Modul führt deklarierte SQL-, Python- oder Shell-Skripte aus Setup-Statements und verschachtelten Generate-Zeilen aus.",
+      "verdict": "keep",
+      "reason": "SetupSubTask ist nicht der ganze Aufrufgraph: SetupTask kann ExecuteTask dispatchen, aber NestedKeyTask führt dieselbe Task direkt im GenIterContext aus; die Modulposition unter commands bleibt deshalb passend.",
+      "evidence": [
+        {
+          "path": "datamimic_ce/engine/runtime/tasks/execute_task.py",
+          "line": 20
+        },
+        {
+          "path": "datamimic_ce/engine/runtime/tasks/execute_task.py",
+          "line": 31
+        },
+        {
+          "path": "datamimic_ce/engine/runtime/tasks/execute_task.py",
+          "line": 53
+        },
+        {
+          "path": "datamimic_ce/engine/runtime/tasks/nested_key_task.py",
+          "line": 181
+        },
+        {
+          "path": "datamimic_ce/engine/runtime/tasks/execute_task.py",
+          "line": 98
+        }
+      ]
+    },
+    {
+      "id": "module:engine/runtime/tasks/generate/__init__.py",
+      "concern": "Dieses leere Initializer-Modul komponiert keine Generate-Richtlinie.",
+      "verdict": "keep",
+      "reason": "Der Zielpfad `engine/runtime/tasks/generate/__init__.py` ordnet diese Ausführung der passenden Verantwortung zu.",
+      "evidence": [
+        {
+          "path": "datamimic_ce/engine/runtime/tasks/generate/__init__.py",
+          "line": 1
+        }
+      ]
+    },
+    {
+      "id": "module:engine/runtime/tasks/generate/services/__init__.py",
+      "concern": "Dieses leere Modul bildet nur den Wrapperpfad services; die Zielstruktur entfernt ihn.",
+      "verdict": "change",
+      "reason": "Das Verzeichnis enthält nur einen leeren Wrapper und die Zielstruktur legt Richtlinien direkt unter generate ab; dafür bleibt kein Modul nötig.",
+      "evidence": [
+        {
+          "path": "datamimic_ce/engine/runtime/tasks/generate/services/__init__.py",
+          "line": 1
+        }
+      ],
+      "recommended_targets": []
+    },
+    {
+      "id": "module:engine/runtime/tasks/generate/services/policies/__init__.py",
+      "concern": "Dieses leere Initializer-Modul markiert das Paket der Generate-Richtlinien.",
+      "verdict": "keep",
+      "reason": "Der Initializer kann mit dem Richtlinienpaket nach policies/ wandern; er enthält keine eigene Laufzeitlogik.",
+      "evidence": [
+        {
+          "path": "datamimic_ce/engine/runtime/tasks/generate/services/policies/__init__.py",
+          "line": 1
+        }
+      ]
+    },
+    {
+      "id": "module:engine/runtime/tasks/generate/services/policies/single_process_policy.py",
+      "concern": "Dieses Modul reduziert Parallelität, wenn Seed, Eindeutigkeit, Löschung, Domain-IDs oder MySQL-Sequenzen es verlangen.",
+      "verdict": "keep",
+      "reason": "Der vorgeschlagene direkte Pfad policies/ passt zur reinen Workerfähigkeitsentscheidung; der Wrapper services entfällt.",
+      "evidence": [
+        {
+          "path": "datamimic_ce/engine/runtime/tasks/generate/services/policies/single_process_policy.py",
+          "line": 107
+        }
+      ]
+    },
+    {
+      "id": "module:engine/runtime/tasks/generate/task.py",
+      "concern": "Dieses Modul löst Count und Workerplan auf, startet Worker und koordiniert Produktexport.",
+      "verdict": "keep",
+      "reason": "Der Zielpfad `engine/runtime/tasks/generate/task.py` ordnet diese Ausführung der passenden Verantwortung zu.",
+      "evidence": [
+        {
+          "path": "datamimic_ce/engine/runtime/tasks/generate/task.py",
+          "line": 201
+        }
+      ]
+    },
+    {
+      "id": "module:engine/runtime/tasks/generate/workers/__init__.py",
+      "concern": "Dieses leere Initializer-Modul enthält keine Workerlogik.",
+      "verdict": "keep",
+      "reason": "Der Zielpfad `engine/runtime/tasks/generate/workers/__init__.py` ordnet diese Ausführung der passenden Verantwortung zu.",
+      "evidence": [
+        {
+          "path": "datamimic_ce/engine/runtime/tasks/generate/workers/__init__.py",
+          "line": 1
+        }
+      ]
+    },
+    {
+      "id": "module:engine/runtime/tasks/generate/workers/generate_worker.py",
+      "concern": "Dieses Modul erzeugt Seiten in einem Worker, führt Zeilentasks aus und exportiert Ergebnisse.",
+      "verdict": "keep",
+      "reason": "Der Zielpfad `engine/runtime/tasks/generate/workers/generate_worker.py` ordnet diese Ausführung der passenden Verantwortung zu.",
+      "evidence": [
+        {
+          "path": "datamimic_ce/engine/runtime/tasks/generate/workers/generate_worker.py",
+          "line": 21
+        }
+      ]
+    },
+    {
+      "id": "module:engine/runtime/tasks/generate/workers/multiprocessing_generate_worker.py",
+      "concern": "Dieses Modul führt Generate-Chunks in lokalen Multiprocessing-Prozessen aus.",
+      "verdict": "keep",
+      "reason": "Der Zielpfad `engine/runtime/tasks/generate/workers/multiprocessing_generate_worker.py` ordnet diese Ausführung der passenden Verantwortung zu.",
+      "evidence": [
+        {
+          "path": "datamimic_ce/engine/runtime/tasks/generate/workers/multiprocessing_generate_worker.py",
+          "line": 14
+        }
+      ]
+    },
+    {
+      "id": "module:engine/runtime/tasks/generate/workers/ray_generate_worker.py",
+      "concern": "Dieses Modul führt Generate-Chunks über die optionale Ray-Laufzeit aus.",
+      "verdict": "keep",
+      "reason": "Der Zielpfad `engine/runtime/tasks/generate/workers/ray_generate_worker.py` ordnet diese Ausführung der passenden Verantwortung zu.",
+      "evidence": [
+        {
+          "path": "datamimic_ce/engine/runtime/tasks/generate/workers/ray_generate_worker.py",
+          "line": 15
+        }
+      ]
+    },
+    {
+      "id": "module:engine/runtime/tasks/generator_task.py",
+      "concern": "Dieses Modul erzeugt über GeneratorUtil die deklarierte Generatorinstanz; deren Root-Caching richtet sich optional nach CachePolicy.",
+      "verdict": "change",
+      "reason": "GeneratorTask verarbeitet eine Generator-Deklaration und gehört zu Setup; GeneratorUtil entscheidet anhand von cache_in_root, ob die Instanz im Root-Kontext landet.",
+      "evidence": [
+        {
+          "path": "datamimic_ce/engine/runtime/tasks/generator_task.py",
+          "line": 25
+        },
+        {
+          "path": "datamimic_ce/engine/runtime/generators/factory.py",
+          "line": 292
+        }
+      ],
+      "recommended_targets": [
+        "engine/runtime/tasks/setup/generator_task.py"
+      ]
+    },
+    {
+      "id": "module:engine/runtime/tasks/if_else_base_task.py",
+      "concern": "Dieses Modul verfolgt ausgeführte Zweige und bündelt gemeinsame Branch-Ausführung.",
+      "verdict": "keep",
+      "reason": "Der Zielpfad `engine/runtime/tasks/flow/branches/if_else_base_task.py` ordnet diese Ausführung der passenden Verantwortung zu.",
+      "evidence": [
+        {
+          "path": "datamimic_ce/engine/runtime/tasks/if_else_base_task.py",
+          "line": 21
+        }
+      ]
+    },
+    {
+      "id": "module:engine/runtime/tasks/if_task.py",
+      "concern": "Dieses Modul führt den primären Bedingungszweig aus, wenn der Ausdruck wahr ist.",
+      "verdict": "keep",
+      "reason": "Der Zielpfad `engine/runtime/tasks/flow/branches/if_task.py` ordnet diese Ausführung der passenden Verantwortung zu.",
+      "evidence": [
+        {
+          "path": "datamimic_ce/engine/runtime/tasks/if_task.py",
+          "line": 11
+        }
+      ]
+    },
+    {
+      "id": "module:engine/runtime/tasks/include_task.py",
+      "concern": "Dieses Modul lädt .properties in SetupContext und führt XML-Deskriptoren sowohl dort als auch in GenIterContext mit kopiertem Root-Zustand und aktuellen Zeilenwerten aus.",
+      "verdict": "keep",
+      "reason": "Setup-Zuordnung passt wegen der konkreten Setup-Reentry: IncludeTask delegiert XML-Einbindungen an SetupTask.execute_include oder dispatcht SetupSubTasks auf einer Kontextkopie; im Generate-Zweig reicht es aktuelle Variablen und Produktwerte in diese erneute Setup-Ausführung.",
+      "evidence": [
+        {
+          "path": "datamimic_ce/engine/runtime/tasks/include_task.py",
+          "line": 27
+        },
+        {
+          "path": "datamimic_ce/engine/runtime/tasks/include_task.py",
+          "line": 51
+        },
+        {
+          "path": "datamimic_ce/engine/runtime/tasks/include_task.py",
+          "line": 64
+        },
+        {
+          "path": "datamimic_ce/engine/runtime/tasks/include_task.py",
+          "line": 76
+        },
+        {
+          "path": "datamimic_ce/engine/runtime/tasks/include_task.py",
+          "line": 91
+        }
+      ]
+    },
+    {
+      "id": "module:engine/runtime/tasks/item_task.py",
+      "concern": "Dieses Modul erzeugt ein Element eines verschachtelten Listenfelds.",
+      "verdict": "keep",
+      "reason": "Der Zielpfad `engine/runtime/tasks/values/structured/item_task.py` ordnet diese Ausführung der passenden Verantwortung zu.",
+      "evidence": [
+        {
+          "path": "datamimic_ce/engine/runtime/tasks/item_task.py",
+          "line": 15
+        }
+      ]
+    },
+    {
+      "id": "module:engine/runtime/tasks/key_task.py",
+      "concern": "Dieses Modul erzeugt und weist ein Keyfeld anhand von Quelle, Generator, Skript oder Eindeutigkeit zu.",
+      "verdict": "keep",
+      "reason": "Der Zielpfad `engine/runtime/tasks/values/scalar/key_task.py` ordnet diese Ausführung der passenden Verantwortung zu.",
+      "evidence": [
+        {
+          "path": "datamimic_ce/engine/runtime/tasks/key_task.py",
+          "line": 29
+        }
+      ]
+    },
+    {
+      "id": "module:engine/runtime/tasks/key_variable_task.py",
+      "concern": "Dieses Modul bündelt Erzeugung, Umwandlung und Eindeutigkeit, die KeyTask, VariableTask und ElementTask gemeinsam nutzen.",
+      "verdict": "change",
+      "reason": "Der gemeinsame Basistask gehört an die Wertefamilie selbst; der Unterordner variables würde seine Key- und Element-Aufrufer falsch klassifizieren.",
+      "evidence": [
+        {
+          "path": "datamimic_ce/engine/runtime/tasks/key_variable_task.py",
+          "line": 42
+        }
+      ],
+      "recommended_targets": [
+        "engine/runtime/tasks/values/key_variable_task.py"
+      ]
+    },
+    {
+      "id": "module:engine/runtime/tasks/list_task.py",
+      "concern": "Dieses Modul erzeugt Listenfelder aus verschachtelten Item-Tasks.",
+      "verdict": "keep",
+      "reason": "Der Zielpfad `engine/runtime/tasks/values/structured/list_task.py` ordnet diese Ausführung der passenden Verantwortung zu.",
+      "evidence": [
+        {
+          "path": "datamimic_ce/engine/runtime/tasks/list_task.py",
+          "line": 14
+        }
+      ]
+    },
+    {
+      "id": "module:engine/runtime/tasks/memstore_task.py",
+      "concern": "Dieses Modul deklariert oder konfiguriert den Memstore während Setup.",
+      "verdict": "keep",
+      "reason": "Der Zielpfad `engine/runtime/tasks/setup/memstore_task.py` ordnet diese Ausführung der passenden Verantwortung zu.",
+      "evidence": [
+        {
+          "path": "datamimic_ce/engine/runtime/tasks/memstore_task.py",
+          "line": 12
+        }
+      ]
+    },
+    {
+      "id": "module:engine/runtime/tasks/mongodb_task.py",
+      "concern": "Dieses Modul erstellt und registriert während Setup einen MongoDB-Client.",
+      "verdict": "keep",
+      "reason": "Der Zielpfad `engine/runtime/tasks/setup/mongodb_task.py` ordnet diese Ausführung der passenden Verantwortung zu.",
+      "evidence": [
+        {
+          "path": "datamimic_ce/engine/runtime/tasks/mongodb_task.py",
+          "line": 13
+        }
+      ]
+    },
+    {
+      "id": "module:engine/runtime/tasks/nested_key_task.py",
+      "concern": "Dieses Modul lädt oder erzeugt verschachtelte Key-Datensätze und führt deren Kindtasks aus.",
+      "verdict": "keep",
+      "reason": "Der Zielpfad `engine/runtime/tasks/values/structured/nested_key_task.py` ordnet diese Ausführung der passenden Verantwortung zu.",
+      "evidence": [
+        {
+          "path": "datamimic_ce/engine/runtime/tasks/nested_key_task.py",
+          "line": 26
+        }
+      ]
+    },
+    {
+      "id": "module:engine/runtime/tasks/reference_task.py",
+      "concern": "Dieses Modul löst Referenzwerte aus einer Quelle oder aus verwandten Laufzeitdaten auf.",
+      "verdict": "keep",
+      "reason": "Der Zielpfad `engine/runtime/tasks/values/references/reference_task.py` ordnet diese Ausführung der passenden Verantwortung zu.",
+      "evidence": [
+        {
+          "path": "datamimic_ce/engine/runtime/tasks/reference_task.py",
+          "line": 18
+        }
+      ]
+    },
+    {
+      "id": "module:engine/runtime/tasks/setup_task.py",
+      "concern": "Dieses Modul initialisiert den Setup-Kontext und dispatcht die Substatements in Descriptor-Reihenfolge.",
+      "verdict": "keep",
+      "reason": "SetupTask orchestriert Descriptor-Ausführung; der Zielordner gruppiert Setup-Tasks, ohne Setup auf passive Konfiguration zu reduzieren.",
+      "evidence": [
+        {
+          "path": "datamimic_ce/engine/runtime/tasks/setup_task.py",
+          "line": 51
+        }
+      ]
+    },
+    {
+      "id": "module:engine/runtime/tasks/state_machine_task.py",
+      "concern": "Dieses Modul legt eine StateMachineDef im Root-Kontext ab; es führt keine Zustands- oder Schleifenlogik aus.",
+      "verdict": "change",
+      "reason": "StateMachineTask registriert eine Definition vor dem Generate-Lauf und gehört daher zu Setup, nicht zu Flow.",
+      "evidence": [
+        {
+          "path": "datamimic_ce/engine/runtime/tasks/state_machine_task.py",
+          "line": 24
+        }
+      ],
+      "recommended_targets": [
+        "engine/runtime/tasks/setup/state_machine_task.py"
+      ]
+    },
+    {
+      "id": "module:engine/runtime/tasks/task.py",
+      "concern": "Dieses Modul definiert Taskprotokolle sowie Setup-, Generate- und gemeinsame Basisklassen.",
+      "verdict": "keep",
+      "reason": "Der Zielpfad `engine/runtime/tasks/base/task.py` ordnet diese Ausführung der passenden Verantwortung zu.",
+      "evidence": [
+        {
+          "path": "datamimic_ce/engine/runtime/tasks/task.py",
+          "line": 16
+        }
+      ]
+    },
+    {
+      "id": "module:engine/runtime/tasks/task_factory.py",
+      "concern": "Dieses Modul stellt typisierte singledispatch-Erzeugung von Tasks aus Statements bereit.",
+      "verdict": "keep",
+      "reason": "Der Zielpfad `engine/runtime/tasks/base/dispatch.py` ordnet diese Ausführung der passenden Verantwortung zu.",
+      "evidence": [
+        {
+          "path": "datamimic_ce/engine/runtime/tasks/task_factory.py",
+          "line": 17
+        }
+      ]
+    },
+    {
+      "id": "module:engine/runtime/tasks/task_util.py",
+      "concern": "Dieses Modul bündelt Dispatch, streng boolesche Bedingungsprüfung, Skript-Weiterleitungen, Converterbindung, Exportreihenfolge und Serialisierung.",
+      "verdict": "split",
+      "reason": "Reine Dispatch- und Template-Weiterleitungen können entfallen; evaluate_condition_value muss dagegen seine bool-Prüfung für Key, Element, Item und NestedKey behalten. Statement-Selektor bleibt beim Router, Converter und Zufallswerte bei Konstruktion, Exportordnung bei Generate und XML-Konvertierung bei IO.",
+      "evidence": [
+        {
+          "path": "datamimic_ce/engine/runtime/tasks/task_util.py",
+          "line": 113
+        },
+        {
+          "path": "datamimic_ce/engine/runtime/tasks/task_util.py",
+          "line": 183
+        }
+      ],
+      "recommended_targets": [
+        "engine/runtime/scripting/evaluation.py",
+        "engine/runtime/sources/router.py",
+        "engine/runtime/tasks/values/construction/factory.py",
+        "engine/runtime/tasks/values/construction/converters.py",
+        "engine/runtime/tasks/generate/export_order.py",
+        "engine/io/exporters/core/serialization.py"
+      ]
+    },
+    {
+      "id": "module:engine/runtime/tasks/variable_iterator.py",
+      "concern": "Dieses Modul iteriert Variablenwerte nach Verteilungs- und Paginationsemantik.",
+      "verdict": "keep",
+      "reason": "Der Zielpfad `engine/runtime/tasks/values/variables/variable_iterator.py` ordnet diese Ausführung der passenden Verantwortung zu.",
+      "evidence": [
+        {
+          "path": "datamimic_ce/engine/runtime/tasks/variable_iterator.py",
+          "line": 9
+        }
+      ]
+    },
+    {
+      "id": "module:engine/runtime/tasks/variable_task.py",
+      "concern": "Dieses Modul erzeugt Entity- oder Literalvariablen, wendet Converter an und weist Werte zu.",
+      "verdict": "keep",
+      "reason": "Der Zielpfad `engine/runtime/tasks/values/variables/variable_task.py` ordnet diese Ausführung der passenden Verantwortung zu.",
+      "evidence": [
+        {
+          "path": "datamimic_ce/engine/runtime/tasks/variable_task.py",
+          "line": 41
+        }
+      ]
+    },
+    {
+      "id": "module:engine/runtime/tasks/while_task.py",
+      "concern": "Dieses Modul führt eine Schleife aus, solange die Descriptorbedingung erfüllt ist.",
+      "verdict": "keep",
+      "reason": "Der Zielpfad `engine/runtime/tasks/flow/loops/while_task.py` ordnet diese Ausführung der passenden Verantwortung zu.",
+      "evidence": [
+        {
+          "path": "datamimic_ce/engine/runtime/tasks/while_task.py",
+          "line": 13
+        }
+      ]
+    },
+    {
+      "id": "folder:engine/io",
+      "concern": "Der Ordner bündelt Datei-, Quell-, Client- und Zieloperationen hinter IO-Verträgen.",
+      "verdict": "keep",
+      "reason": "Die vorgesehenen Teilpakete trennen Datei-/Quellzugriff, Verbindungen, Export und deren öffentliche IO-Operationen.",
+      "evidence": [
+        {
+          "path": "datamimic_ce/engine/io/api.py",
+          "line": 44
+        },
+        {
+          "path": "datamimic_ce/engine/io/data_sources/data_source_registry.py",
+          "line": 23
+        },
+        {
+          "path": "datamimic_ce/engine/io/exporters/exporter.py",
+          "line": 8
+        }
+      ]
+    },
+    {
+      "id": "folder:engine/io/clients",
+      "concern": "Der Ordner hält gemeinsame Clientverträge und konkrete Datenbankzugriffe zusammen.",
+      "verdict": "keep",
+      "reason": "Clientvertrag und relationale sowie MongoDB-Implementierungen bilden dieselbe Verbindungsschicht.",
+      "evidence": [
+        {
+          "path": "datamimic_ce/engine/io/clients/client.py",
+          "line": 10
+        },
+        {
+          "path": "datamimic_ce/engine/io/clients/mongodb_client.py",
+          "line": 23
+        },
+        {
+          "path": "datamimic_ce/engine/io/clients/rdbms_client.py",
+          "line": 32
+        }
+      ]
+    },
+    {
+      "id": "folder:engine/io/connection_config",
+      "concern": "Der Ordner hält typisierte Verbindungsdaten neben deren Clientfamilien.",
+      "verdict": "keep",
+      "reason": "Basisschnittstelle und vendor-spezifische Konfigurationen gehören zu den jeweiligen Clientverbindungen.",
+      "evidence": [
+        {
+          "path": "datamimic_ce/engine/io/connection_config/connection_config_base.py",
+          "line": 10
+        },
+        {
+          "path": "datamimic_ce/engine/io/connection_config/mongodb_connection_config.py",
+          "line": 13
+        },
+        {
+          "path": "datamimic_ce/engine/io/connection_config/rdbms_connection_config.py",
+          "line": 14
+        }
+      ]
+    },
+    {
+      "id": "folder:engine/io/data_sources",
+      "concern": "Der Ordner lädt, zählt, paginiert und selektiert Quellzeilen.",
+      "verdict": "keep",
+      "reason": "Registry und gewichtete Quellen lesen Quelldaten; Paging und Row-Auswahl gehören zu diesen IO-Operationen.",
+      "evidence": [
+        {
+          "path": "datamimic_ce/engine/io/data_sources/data_source_registry.py",
+          "line": 23
+        },
+        {
+          "path": "datamimic_ce/engine/io/data_sources/weighted_data_source.py",
+          "line": 13
+        },
+        {
+          "path": "datamimic_ce/engine/io/data_sources/weighted_entity_data_source.py",
+          "line": 13
+        }
+      ]
+    },
+    {
+      "id": "folder:engine/io/exporters",
+      "concern": "Der Ordner bündelt Ausgabeadapter, die erzeugte Produkte an Targets schreiben.",
+      "verdict": "keep",
+      "reason": "Exporterfamilien implementieren konkrete Zielschreibvorgänge; die Registry bleibt die Kompositionsstelle.",
+      "evidence": [
+        {
+          "path": "datamimic_ce/engine/io/exporters/exporter.py",
+          "line": 8
+        },
+        {
+          "path": "datamimic_ce/engine/io/exporters/csv_exporter.py",
+          "line": 19
+        },
+        {
+          "path": "datamimic_ce/engine/io/exporters/database_exporter.py",
+          "line": 11
+        }
+      ]
+    },
+    {
+      "id": "folder:engine/io/exporters/core",
+      "concern": "Der Ordner enthält gemeinsame Exporterverträge, Pufferung und Abschlusslogik.",
+      "verdict": "keep",
+      "reason": "Vertrag, Konfiguration, Zustand und gemeinsamer Puffer bilden die gemeinsame Exporter-Laufzeit.",
+      "evidence": [
+        {
+          "path": "datamimic_ce/engine/io/exporters/exporter.py",
+          "line": 8
+        },
+        {
+          "path": "datamimic_ce/engine/io/exporters/exporter_config.py",
+          "line": 13
+        },
+        {
+          "path": "datamimic_ce/engine/io/exporters/unified_buffered_exporter.py",
+          "line": 15
+        }
+      ]
+    },
+    {
+      "id": "folder:engine/io/exporters/database",
+      "concern": "Der Ordner gruppiert relationale und MongoDB-Zielschreiber.",
+      "verdict": "keep",
+      "reason": "Relationale, MongoDB- und DBUnit-Ausgaben schreiben Datenbankfixtures und teilen keine Datei-Formatlogik.",
+      "evidence": [
+        {
+          "path": "datamimic_ce/engine/io/exporters/database_exporter.py",
+          "line": 11
+        },
+        {
+          "path": "datamimic_ce/engine/io/exporters/mongodb_exporter.py",
+          "line": 13
+        },
+        {
+          "path": "datamimic_ce/engine/io/exporters/dbunit_exporter.py",
+          "line": 21
+        }
+      ]
+    },
+    {
+      "id": "folder:engine/io/exporters/diagnostics",
+      "concern": "Der Ordner gruppiert Konsolen-, Log- und begrenzte Prüfausgaben.",
+      "verdict": "keep",
+      "reason": "Konsolen-, Log- und Prüfergebnis-Exporter liefern Laufdiagnostik statt Produktdateien.",
+      "evidence": [
+        {
+          "path": "datamimic_ce/engine/io/exporters/console_exporter.py",
+          "line": 10
+        },
+        {
+          "path": "datamimic_ce/engine/io/exporters/log_exporter.py",
+          "line": 14
+        },
+        {
+          "path": "datamimic_ce/engine/io/exporters/test_result_exporter.py",
+          "line": 11
+        }
+      ]
+    },
+    {
+      "id": "folder:engine/io/exporters/formats",
+      "concern": "Der Ordner gruppiert Datei-Exporter nach Ausgabeformat.",
+      "verdict": "keep",
+      "reason": "Die Dateien implementieren voneinander getrennte Serialisierungen, aber dieselbe Ausgabeart: dateibasierte Formate.",
+      "evidence": [
+        {
+          "path": "datamimic_ce/engine/io/exporters/csv_exporter.py",
+          "line": 19
+        },
+        {
+          "path": "datamimic_ce/engine/io/exporters/json_exporter.py",
+          "line": 30
+        },
+        {
+          "path": "datamimic_ce/engine/io/exporters/xml_exporter.py",
+          "line": 28
+        }
+      ]
+    },
+    {
+      "id": "folder:engine/io/exporters/memory",
+      "concern": "Der Ordner enthält den Memstore-Ausgabeadapter; die Speicherlebensdauer bleibt Runtime-Aufgabe.",
+      "verdict": "keep",
+      "reason": "Memstore ist ein IO-Zieladapter; SetupContext und MemstoreManager behalten die Lebensdauer des Stores.",
+      "evidence": [
+        {
+          "path": "datamimic_ce/engine/io/exporters/memstore.py",
+          "line": 15
+        },
+        {
+          "path": "datamimic_ce/engine/runtime/storage/memstore_manager.py",
+          "line": 10
+        }
+      ]
+    },
+    {
+      "id": "folder:engine/io/files",
+      "concern": "Der Ordner liest Dateiformate und cached deren dekodierte Inhalte.",
+      "verdict": "keep",
+      "reason": "Dateiformat-Decoder und Dateicache liefern wiederverwendbare Datei-Reads ohne Task- oder Exporterwissen.",
+      "evidence": [
+        {
+          "path": "datamimic_ce/engine/io/files.py",
+          "line": 26
+        },
+        {
+          "path": "datamimic_ce/engine/io/file_cache.py",
+          "line": 11
+        }
+      ]
+    },
+    {
+      "id": "folder:engine/runtime",
+      "concern": "Der Ordner bündelt Lauflebenszyklus und Taskausführung über typed IO-Aufrufe.",
+      "verdict": "keep",
+      "reason": "API, Lifecycle, Kontext, Tasks und Runtime-Speicher koordinieren einen Lauf über IO-Operationen.",
+      "evidence": [
+        {
+          "path": "datamimic_ce/engine/runtime/api.py",
+          "line": 34
+        },
+        {
+          "path": "datamimic_ce/engine/runtime/lifecycle/runner.py",
+          "line": 23
+        },
+        {
+          "path": "datamimic_ce/engine/runtime/contexts/setup_context.py",
+          "line": 40
+        }
+      ]
+    },
+    {
+      "id": "folder:engine/runtime/contexts",
+      "concern": "Der Ordner hält Lauf-, Zeilen- und Ausdruckssichtbereiche.",
+      "verdict": "keep",
+      "reason": "Root-, Setup- und Generate-Kontexte tragen Laufzustand und Auswertungssicht für ihre jeweiligen Ausführungsbereiche.",
+      "evidence": [
+        {
+          "path": "datamimic_ce/engine/runtime/contexts/context.py",
+          "line": 30
+        },
+        {
+          "path": "datamimic_ce/engine/runtime/contexts/setup_context.py",
+          "line": 40
+        },
+        {
+          "path": "datamimic_ce/engine/runtime/contexts/geniter_context.py",
+          "line": 16
+        }
+      ]
+    },
+    {
+      "id": "folder:engine/runtime/lifecycle",
+      "concern": "Der Ordner startet, konfiguriert und beendet eine Descriptor-Ausführung.",
+      "verdict": "keep",
+      "reason": "Runner und Konfiguration steuern einen Descriptor-Lauf; Prozessnamen bleiben ein begleitender Lifecycle-Schritt.",
+      "evidence": [
+        {
+          "path": "datamimic_ce/engine/runtime/lifecycle/runner.py",
+          "line": 23
+        },
+        {
+          "path": "datamimic_ce/engine/runtime/lifecycle/config.py",
+          "line": 14
+        },
+        {
+          "path": "datamimic_ce/engine/runtime/process.py",
+          "line": 22
+        }
+      ]
+    },
+    {
+      "id": "folder:engine/runtime/scripting",
+      "concern": "Der Ordner wertet Ausdrücke anhand des Runtime-Kontexts aus.",
+      "verdict": "keep",
+      "reason": "Ausdrucksauswertung und Script-Ausführung sind Runtime-Verhalten auf Basis des vorbereiteten Kontextes.",
+      "evidence": [
+        {
+          "path": "datamimic_ce/engine/runtime/scripting/evaluation.py",
+          "line": 13
+        },
+        {
+          "path": "datamimic_ce/engine/runtime/scripting/plugins/__init__.py",
+          "line": 6
+        },
+        {
+          "path": "datamimic_ce/engine/runtime/contexts/setup_context.py",
+          "line": 260
+        }
+      ]
+    },
+    {
+      "id": "folder:engine/runtime/scripting/plugins",
+      "concern": "Der Ordner enthält die tatsächliche Script-Ausführung und ist kein eigener Produktbereich.",
+      "verdict": "keep",
+      "reason": "Der Zielordner hat eine reale Ausführung: SetupContext ruft execute_script für Setup-Skripte auf; eine Plugin-Registry ist damit nicht behauptet.",
+      "evidence": [
+        {
+          "path": "datamimic_ce/engine/runtime/scripting/plugins/__init__.py",
+          "line": 6
+        },
+        {
+          "path": "datamimic_ce/engine/runtime/contexts/setup_context.py",
+          "line": 30
+        },
+        {
+          "path": "datamimic_ce/engine/runtime/contexts/setup_context.py",
+          "line": 260
+        }
+      ]
+    },
+    {
+      "id": "folder:engine/runtime/storage",
+      "concern": "Der Ordner verwaltet laufbezogene Speicherressourcen.",
+      "verdict": "keep",
+      "reason": "MemstoreManager kapselt laufbezogene Store-Handles und deren Lebensdauer außerhalb der IO-Schreibadapter.",
+      "evidence": [
+        {
+          "path": "datamimic_ce/engine/runtime/storage/memstore_manager.py",
+          "line": 10
+        },
+        {
+          "path": "datamimic_ce/engine/runtime/tasks/setup_task.py",
+          "line": 11
+        }
+      ]
+    },
+    {
+      "id": "folder:engine/runtime/tasks",
+      "concern": "Der Ordner gruppiert Taskfamilien und eine explizite Dispatch-Registry.",
+      "verdict": "keep",
+      "reason": "Die Unterpakete trennen gemeinsame Dispatchgrundlagen, Setup-Orchestrierung, Generate-Ausführung, Flow, Werte und Quelladaption.",
+      "evidence": [
+        {
+          "path": "datamimic_ce/engine/runtime/tasks/task_factory.py",
+          "line": 17
+        },
+        {
+          "path": "datamimic_ce/engine/runtime/tasks/setup_task.py",
+          "line": 75
+        },
+        {
+          "path": "datamimic_ce/engine/runtime/tasks/generate/task.py",
+          "line": 31
+        }
+      ]
+    },
+    {
+      "id": "folder:engine/runtime/tasks/base",
+      "concern": "Der Ordner enthält gemeinsame Taskverträge und Dispatch-Grundlagen.",
+      "verdict": "keep",
+      "reason": "Taskprotokolle, Count-Auflösung und Dispatch sind von konkreten Taskfamilien gemeinsam genutzte Grundlagen; TaskUtil-Verantwortungen werden separat aufgelöst.",
+      "evidence": [
+        {
+          "path": "datamimic_ce/engine/runtime/tasks/task.py",
+          "line": 16
+        },
+        {
+          "path": "datamimic_ce/engine/runtime/counts.py",
+          "line": 9
+        },
+        {
+          "path": "datamimic_ce/engine/runtime/tasks/task_factory.py",
+          "line": 17
+        }
+      ]
+    },
+    {
+      "id": "folder:engine/runtime/tasks/flow",
+      "concern": "Der Ordner enthält bedingte Zweige, Schleifen und Taskbefehle.",
+      "verdict": "keep",
+      "reason": "Nach Auslagerung von StateMachineTask bleiben If/Else, While und Commands; ExecuteTask bleibt im commands-Ziel, weil NestedKeyTask es auch pro Zeile ausführt.",
+      "evidence": [
+        {
+          "path": "datamimic_ce/engine/runtime/tasks/if_else_base_task.py",
+          "line": 21
+        },
+        {
+          "path": "datamimic_ce/engine/runtime/tasks/while_task.py",
+          "line": 13
+        },
+        {
+          "path": "datamimic_ce/engine/runtime/tasks/assert_task.py",
+          "line": 13
+        }
+      ]
+    },
+    {
+      "id": "folder:engine/runtime/tasks/flow/branches",
+      "concern": "Der Ordner bündelt bedingte Zweige samt gemeinsamem Branch-Zustand.",
+      "verdict": "keep",
+      "reason": "If, ElseIf und Else nutzen den gemeinsamen Branch-Zustand und führen Bedingungen innerhalb eines Zeilenlaufs aus.",
+      "evidence": [
+        {
+          "path": "datamimic_ce/engine/runtime/tasks/if_else_base_task.py",
+          "line": 21
+        },
+        {
+          "path": "datamimic_ce/engine/runtime/tasks/if_task.py",
+          "line": 11
+        },
+        {
+          "path": "datamimic_ce/engine/runtime/tasks/else_task.py",
+          "line": 11
+        }
+      ]
+    },
+    {
+      "id": "folder:engine/runtime/tasks/flow/commands",
+      "concern": "Der Ordner bündelt Flow-Befehle einschließlich descriptorseitiger SQL-, Python- und Shell-Wirkungen.",
+      "verdict": "keep",
+      "reason": "ExecuteTask ist als SetupSubTask registriert, wird aber auch aus NestedKeyTask pro Zeile ausgeführt; die SetupSubTask-Basisklasse allein bildet seine Consumer nicht ab.",
+      "evidence": [
+        {
+          "path": "datamimic_ce/engine/runtime/tasks/assert_task.py",
+          "line": 13
+        },
+        {
+          "path": "datamimic_ce/engine/runtime/tasks/echo_task.py",
+          "line": 15
+        },
+        {
+          "path": "datamimic_ce/engine/runtime/tasks/execute_task.py",
+          "line": 20
+        },
+        {
+          "path": "datamimic_ce/engine/dsl/model/element_registry.py",
+          "line": 173
+        },
+        {
+          "path": "datamimic_ce/engine/runtime/tasks/nested_key_task.py",
+          "line": 181
+        }
+      ]
+    },
+    {
+      "id": "folder:engine/runtime/tasks/flow/loops",
+      "concern": "Der Ordner führt Schleifen aus; die State-Machine-Definition wird dagegen in Setup registriert.",
+      "verdict": "keep",
+      "reason": "Nach Auslagerung der Definitionstask enthält die Loop-Gruppe WhileTask, die ihre Bedingung prüft und Iterationen ausführt.",
+      "evidence": [
+        {
+          "path": "datamimic_ce/engine/runtime/tasks/while_task.py",
+          "line": 13
+        },
+        {
+          "path": "datamimic_ce/engine/runtime/tasks/while_task.py",
+          "line": 29
+        }
+      ]
+    },
+    {
+      "id": "folder:engine/runtime/tasks/generate",
+      "concern": "Der Ordner koordiniert einen Generate-Lauf über Richtlinie und Worker.",
+      "verdict": "keep",
+      "reason": "GenerateTask plant einen Lauf; Workers führen die Seiten aus und Policies entscheiden nur über nötige Serialisierung.",
+      "evidence": [
+        {
+          "path": "datamimic_ce/engine/runtime/tasks/generate/task.py",
+          "line": 31
+        },
+        {
+          "path": "datamimic_ce/engine/runtime/tasks/generate/workers/generate_worker.py",
+          "line": 21
+        },
+        {
+          "path": "datamimic_ce/engine/runtime/tasks/generate/services/policies/single_process_policy.py",
+          "line": 107
+        }
+      ]
+    },
+    {
+      "id": "folder:engine/runtime/tasks/generate/policies",
+      "concern": "Der Ordner enthält die pure Entscheidung, wann Generate seriell laufen muss.",
+      "verdict": "keep",
+      "reason": "Die konkrete Policy wertet Generator-, Source- und Clientfähigkeiten aus und liefert die Workerzahl; der direkte policies-Pfad entfernt den leeren services-Wrapper.",
+      "evidence": [
+        {
+          "path": "datamimic_ce/engine/runtime/tasks/generate/services/policies/single_process_policy.py",
+          "line": 33
+        },
+        {
+          "path": "datamimic_ce/engine/runtime/tasks/generate/services/policies/single_process_policy.py",
+          "line": 107
+        }
+      ]
+    },
+    {
+      "id": "folder:engine/runtime/tasks/generate/workers",
+      "concern": "Der Ordner führt zugewiesene Generate-Seiten in ausgewählten Workerarten aus.",
+      "verdict": "keep",
+      "reason": "Ein gemeinsamer Workerpfad plus Multiprocessing- und Ray-Ausführungen realisieren die von GenerateTask gewählte Ausführung.",
+      "evidence": [
+        {
+          "path": "datamimic_ce/engine/runtime/tasks/generate/workers/generate_worker.py",
+          "line": 21
+        },
+        {
+          "path": "datamimic_ce/engine/runtime/tasks/generate/workers/multiprocessing_generate_worker.py",
+          "line": 14
+        },
+        {
+          "path": "datamimic_ce/engine/runtime/tasks/generate/workers/ray_generate_worker.py",
+          "line": 15
+        }
+      ]
+    },
+    {
+      "id": "folder:engine/runtime/tasks/setup",
+      "concern": "Der Ordner bündelt SetupTask-Orchestrierung und Tasks, die Ressourcen beim Erreichen ihres Statements registrieren.",
+      "verdict": "keep",
+      "reason": "Acht Module bleiben eine kohärente setupbezogene Gruppe: SetupTask dispatcht in Descriptor-Reihenfolge; Client-, Store-, Include-, Generator- und StateMachine-Tasks wirken, wenn ihr Statement erreicht wird. ExecuteTask bleibt trotz Setup-Aufrufpfad wegen seiner NestedKey-Ausführung im geteilten commands-Ziel.",
+      "evidence": [
+        {
+          "path": "datamimic_ce/engine/runtime/tasks/setup_task.py",
+          "line": 75
+        },
+        {
+          "path": "datamimic_ce/engine/runtime/tasks/include_task.py",
+          "line": 27
+        },
+        {
+          "path": "datamimic_ce/engine/runtime/tasks/execute_task.py",
+          "line": 20
+        },
+        {
+          "path": "datamimic_ce/engine/runtime/tasks/nested_key_task.py",
+          "line": 181
+        },
+        {
+          "path": "datamimic_ce/engine/runtime/tasks/generator_task.py",
+          "line": 25
+        },
+        {
+          "path": "datamimic_ce/engine/runtime/tasks/state_machine_task.py",
+          "line": 24
+        }
+      ]
+    },
+    {
+      "id": "folder:engine/runtime/tasks/sources",
+      "concern": "Der Ordner übersetzt Runtime-Statements und Kontext in IO-Quellaufrufe.",
+      "verdict": "keep",
+      "reason": "Router und VariableSourcePlan übersetzen Statement-/Kontextsemantik in Datei- und Clientoperationen; ChunkSourceReader hält Seitenwissen nahe am Generate-Aufruf.",
+      "evidence": [
+        {
+          "path": "datamimic_ce/engine/runtime/sources/router.py",
+          "line": 45
+        },
+        {
+          "path": "datamimic_ce/engine/runtime/sources/variable.py",
+          "line": 100
+        },
+        {
+          "path": "datamimic_ce/engine/runtime/sources/chunk_source_reader.py",
+          "line": 20
+        }
+      ]
+    },
+    {
+      "id": "folder:engine/runtime/tasks/values",
+      "concern": "Der Ordner erzeugt skalare und strukturierte Feldwerte in Zeilen-Sicht.",
+      "verdict": "keep",
+      "reason": "Die Obergruppe umfasst Zeilenwerttasks und gemeinsame Key-/Variable-Auswertung; KeyVariableTask liegt deshalb direkt hier statt im Variablen-Unterpaket.",
+      "evidence": [
+        {
+          "path": "datamimic_ce/engine/runtime/tasks/key_variable_task.py",
+          "line": 42
+        },
+        {
+          "path": "datamimic_ce/engine/runtime/tasks/key_task.py",
+          "line": 29
+        },
+        {
+          "path": "datamimic_ce/engine/runtime/tasks/array_task.py",
+          "line": 22
+        }
+      ]
+    },
+    {
+      "id": "folder:engine/runtime/tasks/values/construction",
+      "concern": "Der Ordner erzeugt Domaingeneratoren, Entities und Converter für Feldwerte.",
+      "verdict": "keep",
+      "reason": "GeneratorUtil, EntityConstructor und Converter-Erzeugung bereiten Producer für Feldwerte vor; die Descriptor-GeneratorTask selbst bleibt Setup.",
+      "evidence": [
+        {
+          "path": "datamimic_ce/engine/runtime/generators/factory.py",
+          "line": 49
+        },
+        {
+          "path": "datamimic_ce/engine/runtime/tasks/entity_constructor.py",
+          "line": 6
+        },
+        {
+          "path": "datamimic_ce/engine/runtime/tasks/task_util.py",
+          "line": 130
+        }
+      ]
+    },
+    {
+      "id": "folder:engine/runtime/tasks/values/references",
+      "concern": "Der Ordner löst Referenzfelder aus verwandten Quelldaten auf.",
+      "verdict": "keep",
+      "reason": "ReferenceTask löst referenzierte Werte auf und nutzt Runtime-Source-Adaption statt Datenbankzugriffe selbst zu besitzen.",
+      "evidence": [
+        {
+          "path": "datamimic_ce/engine/runtime/tasks/reference_task.py",
+          "line": 18
+        },
+        {
+          "path": "datamimic_ce/engine/runtime/sources/router.py",
+          "line": 411
+        }
+      ]
+    },
+    {
+      "id": "folder:engine/runtime/tasks/values/scalar",
+      "concern": "Der Ordner weist Key- und Elementwerte in Zeilen zu.",
+      "verdict": "keep",
+      "reason": "KeyTask und ElementTask erzeugen Zeilenwerte; GeneratorTask verlässt diese Gruppe und wird nur bei Descriptor-Deklaration ausgeführt.",
+      "evidence": [
+        {
+          "path": "datamimic_ce/engine/runtime/tasks/key_task.py",
+          "line": 29
+        },
+        {
+          "path": "datamimic_ce/engine/runtime/tasks/element_task.py",
+          "line": 24
+        },
+        {
+          "path": "datamimic_ce/engine/runtime/tasks/generator_task.py",
+          "line": 25
+        }
+      ]
+    },
+    {
+      "id": "folder:engine/runtime/tasks/values/structured",
+      "concern": "Der Ordner erzeugt Array-, Listen- und Nested-Key-Werte.",
+      "verdict": "keep",
+      "reason": "Array, Item, List und NestedKey bauen zusammengesetzte Feldwerte aus Untertasks.",
+      "evidence": [
+        {
+          "path": "datamimic_ce/engine/runtime/tasks/array_task.py",
+          "line": 22
+        },
+        {
+          "path": "datamimic_ce/engine/runtime/tasks/item_task.py",
+          "line": 15
+        },
+        {
+          "path": "datamimic_ce/engine/runtime/tasks/nested_key_task.py",
+          "line": 26
+        }
+      ]
+    },
+    {
+      "id": "folder:engine/runtime/tasks/values/variables",
+      "concern": "Der Ordner erzeugt Variablenwerte und deren Iteration.",
+      "verdict": "keep",
+      "reason": "VariableTask und VariableIterator bilden die Variablenaufgabe; der von Keys, Variablen und Elementen geteilte Basistask bleibt auf Ebene values.",
+      "evidence": [
+        {
+          "path": "datamimic_ce/engine/runtime/tasks/variable_task.py",
+          "line": 49
+        },
+        {
+          "path": "datamimic_ce/engine/runtime/tasks/variable_iterator.py",
+          "line": 9
+        },
+        {
+          "path": "datamimic_ce/engine/runtime/tasks/key_variable_task.py",
+          "line": 42
+        }
+      ]
+    },
+    {
+      "id": "contract:runtime/tasks/generate/orchestration",
+      "concern": "Diese Komponente löst Count und Workerplan auf und koordiniert den Generate-Lauf.",
+      "verdict": "keep",
+      "reason": "Die Implementierung belegt diese Zuständigkeit an ihrem tatsächlichen Einstiegspunkt.",
+      "evidence": [
+        {
+          "path": "datamimic_ce/engine/runtime/tasks/generate/task.py",
+          "line": 31
+        }
+      ]
+    },
+    {
+      "id": "contract:runtime/tasks/generate/workers",
+      "concern": "Diese Komponente verarbeitet zugewiesene Seiten und Zeilen im gewählten Worker.",
+      "verdict": "keep",
+      "reason": "Die Implementierung belegt diese Zuständigkeit an ihrem tatsächlichen Einstiegspunkt.",
+      "evidence": [
+        {
+          "path": "datamimic_ce/engine/runtime/tasks/generate/workers/generate_worker.py",
+          "line": 21
+        }
+      ]
+    },
+    {
+      "id": "contract:runtime/tasks/generate/policies",
+      "concern": "Diese Komponente reduziert angeforderte Parallelität, wenn Laufzeitfähigkeiten es erfordern.",
+      "verdict": "change",
+      "reason": "Der Vertrag verweist auf generate.services, obwohl die Zielzuordnung die Richtlinie direkt nach generate/policies verschiebt.",
+      "evidence": [
+        {
+          "path": "datamimic_ce/engine/runtime/tasks/generate/services/policies/single_process_policy.py",
+          "line": 107
+        }
+      ]
+    },
+    {
+      "id": "contract:runtime/tasks/base",
+      "concern": "Diese Komponente stellt gemeinsame Taskverträge, Count-Auflösung und Statement-Dispatch bereit.",
+      "verdict": "change",
+      "reason": "task_util enthält Exportordnung, Converterbindung und Serialisierung neben Dispatch; der Vertrag soll diese bereits unterschiedlichen Aufrufer auflösen.",
+      "evidence": [
+        {
+          "path": "datamimic_ce/engine/runtime/tasks/task.py",
+          "line": 16
+        },
+        {
+          "path": "datamimic_ce/engine/runtime/tasks/task_util.py",
+          "line": 183
+        }
+      ]
+    },
+    {
+      "id": "contract:runtime/tasks/setup",
+      "concern": "Diese Komponente orchestriert Setup-Statements in Descriptor-Reihenfolge und enthält Setup-eigene Deklarations- und Ressourcen-Tasks.",
+      "verdict": "change",
+      "reason": "Der Vertrag ergänzt Generator- und StateMachine-Definitionen; SetupTask dispatcht Statements der Reihe nach. ExecuteTask kann dort zwar auftreten, bleibt wegen seines zusätzlichen GenIterContext-Aufrufpfads im commands-Vertrag.",
+      "evidence": [
+        {
+          "path": "datamimic_ce/engine/runtime/tasks/setup_task.py",
+          "line": 75
+        },
+        {
+          "path": "datamimic_ce/engine/runtime/tasks/execute_task.py",
+          "line": 20
+        },
+        {
+          "path": "datamimic_ce/engine/runtime/tasks/nested_key_task.py",
+          "line": 181
+        },
+        {
+          "path": "datamimic_ce/engine/runtime/tasks/include_task.py",
+          "line": 51
+        },
+        {
+          "path": "datamimic_ce/engine/runtime/tasks/generator_task.py",
+          "line": 25
+        },
+        {
+          "path": "datamimic_ce/engine/runtime/tasks/state_machine_task.py",
+          "line": 24
+        }
+      ]
+    },
+    {
+      "id": "contract:runtime/tasks/generate",
+      "concern": "Diese Komponente koordiniert Count, Workerplanung, Seitenausführung und Export eines Generate-Statements.",
+      "verdict": "keep",
+      "reason": "Die Implementierung belegt diese Zuständigkeit an ihrem tatsächlichen Einstiegspunkt.",
+      "evidence": [
+        {
+          "path": "datamimic_ce/engine/runtime/tasks/generate/task.py",
+          "line": 31
+        }
+      ]
+    },
+    {
+      "id": "contract:runtime/tasks/values",
+      "concern": "Diese Komponente erzeugt Feldwerte und enthält aktuell fälschlich die Generator-Setup-Task.",
+      "verdict": "change",
+      "reason": "GeneratorTask liegt hier fälschlich neben Key/Element-Feldwerten, obwohl es den Generator während Setup instanziiert und speichert.",
+      "evidence": [
+        {
+          "path": "datamimic_ce/engine/runtime/tasks/key_task.py",
+          "line": 29
+        },
+        {
+          "path": "datamimic_ce/engine/runtime/tasks/generator_task.py",
+          "line": 25
+        }
+      ]
+    },
+    {
+      "id": "contract:runtime/tasks/flow",
+      "concern": "Diese Komponente führt Zweige, Schleifen und Commands mit möglichen descriptorseitigen Wirkungen aus.",
+      "verdict": "keep",
+      "reason": "ExecuteTask bleibt im commands-Vertrag, weil NestedKeyTask es auch im GenIterContext pro Zeile ausführt; nur StateMachineTask registriert eine Definition und gehört nicht in den Flow-Vertrag.",
+      "evidence": [
+        {
+          "path": "datamimic_ce/engine/runtime/tasks/while_task.py",
+          "line": 13
+        },
+        {
+          "path": "datamimic_ce/engine/runtime/tasks/execute_task.py",
+          "line": 20
+        },
+        {
+          "path": "datamimic_ce/engine/dsl/model/element_registry.py",
+          "line": 173
+        },
+        {
+          "path": "datamimic_ce/engine/runtime/tasks/nested_key_task.py",
+          "line": 181
+        },
+        {
+          "path": "datamimic_ce/engine/runtime/tasks/state_machine_task.py",
+          "line": 24
+        }
+      ]
+    },
+    {
+      "id": "contract:runtime/tasks/sources",
+      "concern": "Diese Komponente übersetzt Runtime-Statements in typisierte Quelloperationen.",
+      "verdict": "keep",
+      "reason": "Die Implementierung belegt diese Zuständigkeit an ihrem tatsächlichen Einstiegspunkt.",
+      "evidence": [
+        {
+          "path": "datamimic_ce/engine/runtime/sources/router.py",
+          "line": 45
+        }
+      ]
+    },
+    {
+      "id": "contract:runtime/api",
+      "concern": "Diese Komponente stellt typisierte Runtime-Einstiegspunkte bereit.",
+      "verdict": "keep",
+      "reason": "Die Implementierung belegt diese Zuständigkeit an ihrem tatsächlichen Einstiegspunkt.",
+      "evidence": [
+        {
+          "path": "datamimic_ce/engine/runtime/api.py",
+          "line": 34
+        }
+      ]
+    },
+    {
+      "id": "contract:runtime/contracts",
+      "concern": "Diese Komponente definiert RunRequest, RunResult und RunSession für Runtime-Aufrufer.",
+      "verdict": "keep",
+      "reason": "Die Implementierung belegt diese Zuständigkeit an ihrem tatsächlichen Einstiegspunkt.",
+      "evidence": [
+        {
+          "path": "datamimic_ce/engine/runtime/contracts.py",
+          "line": 51
+        }
+      ]
+    },
+    {
+      "id": "contract:runtime/storage",
+      "concern": "Diese Komponente verwaltet laufbezogene Memstore-Handles.",
+      "verdict": "keep",
+      "reason": "Die Implementierung belegt diese Zuständigkeit an ihrem tatsächlichen Einstiegspunkt.",
+      "evidence": [
+        {
+          "path": "datamimic_ce/engine/runtime/storage/memstore_manager.py",
+          "line": 10
+        }
+      ]
+    },
+    {
+      "id": "contract:runtime/logging",
+      "concern": "Diese Komponente richtet Laufzeit- und Workerlogging ein.",
+      "verdict": "keep",
+      "reason": "Die Implementierung belegt diese Zuständigkeit an ihrem tatsächlichen Einstiegspunkt.",
+      "evidence": [
+        {
+          "path": "datamimic_ce/engine/runtime/logging.py",
+          "line": 20
+        }
+      ]
+    },
+    {
+      "id": "contract:runtime/evaluation",
+      "concern": "Diese Komponente wertet Python-Ausdrücke und Quellvorlagen mit Runtime-Sicht aus.",
+      "verdict": "keep",
+      "reason": "Die Implementierung belegt diese Zuständigkeit an ihrem tatsächlichen Einstiegspunkt.",
+      "evidence": [
+        {
+          "path": "datamimic_ce/engine/runtime/scripting/evaluation.py",
+          "line": 13
+        }
+      ]
+    },
+    {
+      "id": "contract:runtime/contexts",
+      "concern": "Diese Komponente hält Root-, Setup- und Zeilen-Sichtbereiche für die Ausführung.",
+      "verdict": "keep",
+      "reason": "Die Implementierung belegt diese Zuständigkeit an ihrem tatsächlichen Einstiegspunkt.",
+      "evidence": [
+        {
+          "path": "datamimic_ce/engine/runtime/contexts/context.py",
+          "line": 30
+        }
+      ]
+    },
+    {
+      "id": "contract:runtime/tasks",
+      "concern": "Diese Komponente bündelt Taskfamilien; die konkrete Dispatchregistrierung liegt heute im Package-Initializer.",
+      "verdict": "change",
+      "reason": "Das Layout erlaubt registry, aber kein TASKS-REGISTRY-Komponenteneigner deckt die konkrete singledispatch-Komposition ab.",
+      "evidence": [
+        {
+          "path": "datamimic_ce/engine/runtime/tasks/__init__.py",
+          "line": 61
+        }
+      ]
+    },
+    {
+      "id": "contract:runtime/lifecycle",
+      "concern": "Diese Komponente parst den Descriptor, orchestriert Setup und beendet einen Lauf.",
+      "verdict": "keep",
+      "reason": "Die Implementierung belegt diese Zuständigkeit an ihrem tatsächlichen Einstiegspunkt.",
+      "evidence": [
+        {
+          "path": "datamimic_ce/engine/runtime/lifecycle/runner.py",
+          "line": 84
+        }
+      ]
+    },
+    {
+      "id": "contract:io/exporters/core",
+      "concern": "Diese Komponente definiert Exportervertrag, Konfiguration, Pufferung und Lebenszyklus.",
+      "verdict": "change",
+      "reason": "Der Zielplan weist Serialisierung als separates Modul aus, doch die Core-Komponentenliste besitzt dafür keinen Paket-Eintrag.",
+      "evidence": [
+        {
+          "path": "datamimic_ce/engine/io/exporters/exporter.py",
+          "line": 8
+        },
+        {
+          "path": "datamimic_ce/engine/io/exporters/unified_buffered_exporter.py",
+          "line": 15
+        },
+        {
+          "path": "datamimic_ce/engine/runtime/tasks/task_util.py",
+          "line": 337
+        }
+      ]
+    },
+    {
+      "id": "contract:io/exporters/formats",
+      "concern": "Diese Komponente schreibt Datensätze in Datei-Formate.",
+      "verdict": "keep",
+      "reason": "Die Implementierung belegt diese Zuständigkeit an ihrem tatsächlichen Einstiegspunkt.",
+      "evidence": [
+        {
+          "path": "datamimic_ce/engine/io/exporters/csv_exporter.py",
+          "line": 19
+        }
+      ]
+    },
+    {
+      "id": "contract:io/exporters/database",
+      "concern": "Diese Komponente schreibt Datensätze in relationale und MongoDB-Ziele.",
+      "verdict": "keep",
+      "reason": "Die Implementierung belegt diese Zuständigkeit an ihrem tatsächlichen Einstiegspunkt.",
+      "evidence": [
+        {
+          "path": "datamimic_ce/engine/io/exporters/database_exporter.py",
+          "line": 11
+        }
+      ]
+    },
+    {
+      "id": "contract:io/exporters/memory",
+      "concern": "Diese Komponente schreibt Produkte in den laufbezogenen Memstore.",
+      "verdict": "keep",
+      "reason": "Die Implementierung belegt diese Zuständigkeit an ihrem tatsächlichen Einstiegspunkt.",
+      "evidence": [
+        {
+          "path": "datamimic_ce/engine/io/exporters/memstore.py",
+          "line": 15
+        }
+      ]
+    },
+    {
+      "id": "contract:io/exporters/diagnostics",
+      "concern": "Diese Komponente liefert Konsolen-, Log- und begrenzte Prüfausgaben.",
+      "verdict": "keep",
+      "reason": "Die Implementierung belegt diese Zuständigkeit an ihrem tatsächlichen Einstiegspunkt.",
+      "evidence": [
+        {
+          "path": "datamimic_ce/engine/io/exporters/test_result_exporter.py",
+          "line": 11
+        }
+      ]
+    },
+    {
+      "id": "contract:io/exporters/registry",
+      "concern": "Diese Komponente parst Targetnamen und komponiert konkrete Exporter, erhält dafür aber derzeit GenerateStatement.",
+      "verdict": "change",
+      "reason": "Die IO-Registry liest target_entity und export_uri selbst aus einem DSL-Typ; Runtime sollte diese Felder auflösen und der Registry skalare Zielkonfiguration übergeben.",
+      "evidence": [
+        {
+          "path": "datamimic_ce/engine/io/exporters/exporter_util.py",
+          "line": 149
+        },
+        {
+          "path": "datamimic_ce/engine/io/exporters/exporter_util.py",
+          "line": 327
+        }
+      ]
+    },
+    {
+      "id": "contract:io/api",
+      "concern": "Diese Komponente veröffentlicht typisierte IO-Operationen für Runtime-Aufrufer.",
+      "verdict": "keep",
+      "reason": "Die Implementierung belegt diese Zuständigkeit an ihrem tatsächlichen Einstiegspunkt.",
+      "evidence": [
+        {
+          "path": "datamimic_ce/engine/io/api.py",
+          "line": 44
+        }
+      ]
+    },
+    {
+      "id": "contract:io/contracts",
+      "concern": "Diese Komponente definiert Pagination und Smoke-Export; das Modul enthält zugleich ausführbare Zeilenauswahl.",
+      "verdict": "change",
+      "reason": "Paginationstypen gehören in contracts; die ausführbaren select_rows-Funktionen gehören zu den IO-Quelloperationen.",
+      "evidence": [
+        {
+          "path": "datamimic_ce/engine/io/contracts.py",
+          "line": 13
+        },
+        {
+          "path": "datamimic_ce/engine/io/contracts.py",
+          "line": 32
+        }
+      ]
+    },
+    {
+      "id": "contract:io/clients",
+      "concern": "Diese Komponente verwaltet Verbindungen und Operationen für externe Datenbanken.",
+      "verdict": "keep",
+      "reason": "Die Implementierung belegt diese Zuständigkeit an ihrem tatsächlichen Einstiegspunkt.",
+      "evidence": [
+        {
+          "path": "datamimic_ce/engine/io/client_operations.py",
+          "line": 13
+        }
+      ]
+    },
+    {
+      "id": "contract:io/data_sources",
+      "concern": "Diese Komponente lädt, paginiert und selektiert Quelldatensätze.",
+      "verdict": "keep",
+      "reason": "Die Implementierung belegt diese Zuständigkeit an ihrem tatsächlichen Einstiegspunkt.",
+      "evidence": [
+        {
+          "path": "datamimic_ce/engine/io/data_sources/data_source_registry.py",
+          "line": 23
+        }
+      ]
+    },
+    {
+      "id": "contract:io/exporters",
+      "concern": "Diese Komponente schreibt erzeugte Produkte an Datei-, Datenbank-, Speicher- und Diagnoseziele.",
+      "verdict": "keep",
+      "reason": "Die Implementierung belegt diese Zuständigkeit an ihrem tatsächlichen Einstiegspunkt.",
+      "evidence": [
+        {
+          "path": "datamimic_ce/engine/io/exporters/exporter.py",
+          "line": 8
+        }
+      ]
+    },
+    {
+      "id": "contract:io/files",
+      "concern": "Diese Komponente dekodiert Dateiformate und cached Dateiinhalt.",
+      "verdict": "keep",
+      "reason": "Die Implementierung belegt diese Zuständigkeit an ihrem tatsächlichen Einstiegspunkt.",
+      "evidence": [
+        {
+          "path": "datamimic_ce/engine/io/files.py",
+          "line": 26
+        }
+      ]
+    }
+  ],
+  "findings": [
+    {
+      "title": "GeneratorTask instanziiert eine Generator-Deklaration",
+      "scenario": "Ein Descriptor deklariert einen Generator für ein späteres Feld; GeneratorTask delegiert die Erzeugung an GeneratorUtil und CachePolicy bestimmt, ob die Instanz im Root-Kontext wiederverwendet wird.",
+      "evidence": [
+        {
+          "path": "datamimic_ce/engine/runtime/tasks/generator_task.py",
+          "line": 25
+        },
+        {
+          "path": "datamimic_ce/engine/runtime/generators/factory.py",
+          "line": 68
+        },
+        {
+          "path": "datamimic_ce/engine/runtime/generators/factory.py",
+          "line": 292
+        }
+      ],
+      "recommendation": "Nach runtime/tasks/setup/generator_task.py verschieben und aus TASKS-VALUES entfernen; die optionale CachePolicy bleibt unverändert."
+    },
+    {
+      "title": "StateMachineTask registriert Definition statt Flow auszuführen",
+      "scenario": "Ein Descriptor deklariert eine Zustandsmaschine, die ein Generator später verwendet; dieser Task speichert nur deren Definition im Root-Kontext.",
+      "evidence": [
+        {
+          "path": "datamimic_ce/engine/runtime/tasks/state_machine_task.py",
+          "line": 24
+        },
+        {
+          "path": "datamimic_ce/engine/runtime/tasks/while_task.py",
+          "line": 29
+        }
+      ],
+      "recommendation": "Nach runtime/tasks/setup/state_machine_task.py verschieben und aus TASKS-FLOW entfernen; die Setup-Gruppe bleibt bei acht kohärenten Tasks."
+    },
+    {
+      "title": "task_util überspannt getrennte Aufrufpfade",
+      "scenario": "Bei verschachteltem Datenbank-Delete bestimmt Runtime die Kind-vor-Eltern-Reihenfolge; Converter-Aufbau dient Key/Variable-Werten, während Skriptauswertung bereits separat angeboten wird.",
+      "evidence": [
+        {
+          "path": "datamimic_ce/engine/runtime/tasks/task_util.py",
+          "line": 113
+        },
+        {
+          "path": "datamimic_ce/engine/runtime/tasks/key_task.py",
+          "line": 68
+        },
+        {
+          "path": "datamimic_ce/engine/runtime/tasks/task_util.py",
+          "line": 183
+        },
+        {
+          "path": "datamimic_ce/engine/runtime/tasks/task_util.py",
+          "line": 231
+        },
+        {
+          "path": "datamimic_ce/engine/runtime/tasks/task_util.py",
+          "line": 276
+        },
+        {
+          "path": "datamimic_ce/engine/runtime/scripting/evaluation.py",
+          "line": 44
+        }
+      ],
+      "recommendation": "Nur reine Dispatch-/Template-Weiterleitungen entfernen; die bool-Prüfung von evaluate_condition_value unverändert in der Runtime-Bedingungsauswertung erhalten und durch Negativtests absichern. Statement-Selektor nach sources/router, Converter und Zufallswerte nach values/construction, Exportreihenfolge nach Generate und XML-Konvertierung nach IO verschieben."
+    },
+    {
+      "title": "SourceDistribution bleibt Runtime-Semantik",
+      "scenario": "Ein paginiertes <generate distribution='random'> benötigt eine seedgebundene globale Reihenfolge; dieselbe Auswahlhilfe wird von Unique-Key-Aufgaben genutzt und hängt deshalb an Runtime/Domain-Zufall, nicht nur am IO-Lesen.",
+      "evidence": [
+        {
+          "path": "datamimic_ce/engine/runtime/sources/selection.py",
+          "line": 8
+        },
+        {
+          "path": "datamimic_ce/engine/runtime/tasks/key_variable_task.py",
+          "line": 38
+        },
+        {
+          "path": "datamimic_ce/engine/runtime/tasks/generate/workers/generate_worker.py",
+          "line": 62
+        }
+      ],
+      "recommendation": "Die vorgeschlagene Verlagerung nach io/data_sources/selection.py zurücknehmen; IO behält Zeilenlesen und einfache Pagination, Runtime behält Distribution und Eindeutigkeitsauswahl."
+    },
+    {
+      "title": "Registry-Komposition muss im Lifecycle einmal geladen werden",
+      "scenario": "RuntimeRunSession importiert SetupTask, dessen TaskUtil über create_task dispatcht; die Handler werden derzeit beim Import von tasks.__init__ registriert, sodass ein Umzug in registry.py ohne Lifecycle-Import Statementdispatch bricht.",
+      "evidence": [
+        {
+          "path": "datamimic_ce/engine/runtime/tasks/__init__.py",
+          "line": 61
+        },
+        {
+          "path": "datamimic_ce/engine/runtime/tasks/task_factory.py",
+          "line": 17
+        },
+        {
+          "path": "datamimic_ce/engine/runtime/tasks/setup_task.py",
+          "line": 75
+        },
+        {
+          "path": "datamimic_ce/engine/runtime/lifecycle/runner.py",
+          "line": 18
+        }
+      ],
+      "recommendation": "Registry am Lifecycle-Kompositionspunkt einmal importieren und SetupTask weiterhin als Ausführungsorchestrator behandeln."
+    },
+    {
+      "title": "Setup bleibt eine kohärente Gruppe mit acht Modulen",
+      "scenario": "Ein Descriptor enthält Verbindungs-, Datei-, Generator- und Zustandsmaschinen-Statements in fester Reihenfolge; SetupTask dispatcht jedes beim Erreichen. ExecuteTask kann ebenfalls als Setup-Statement wirken, wird aber zusätzlich in NestedKeyTask pro Zeile ausgeführt.",
+      "evidence": [
+        {
+          "path": "datamimic_ce/engine/runtime/tasks/setup_task.py",
+          "line": 75
+        },
+        {
+          "path": "datamimic_ce/engine/runtime/tasks/include_task.py",
+          "line": 64
+        },
+        {
+          "path": "datamimic_ce/engine/runtime/tasks/nested_key_task.py",
+          "line": 181
+        },
+        {
+          "path": "datamimic_ce/engine/runtime/tasks/generator_task.py",
+          "line": 25
+        },
+        {
+          "path": "datamimic_ce/engine/runtime/tasks/state_machine_task.py",
+          "line": 24
+        }
+      ],
+      "recommendation": "GeneratorTask und StateMachineTask der bestehenden Setup-Familie zuordnen; ExecuteTask im commands-Ziel belassen, obwohl Setup es ebenfalls dispatcht. Acht Module sind kohärent, ohne eine künstliche Deklarationsgruppe zu bilden."
+    },
+    {
+      "title": "KeyVariableTask ist gemeinsame Wertebasis",
+      "scenario": "Ein Descriptor erzeugt Keys, Variablen und Elementfelder; alle drei konkreten Tasks erben dieselbe Erzeugungs- und Konvertierungslogik.",
+      "evidence": [
+        {
+          "path": "datamimic_ce/engine/runtime/tasks/key_variable_task.py",
+          "line": 42
+        },
+        {
+          "path": "datamimic_ce/engine/runtime/tasks/key_task.py",
+          "line": 29
+        },
+        {
+          "path": "datamimic_ce/engine/runtime/tasks/variable_task.py",
+          "line": 49
+        },
+        {
+          "path": "datamimic_ce/engine/runtime/tasks/element_task.py",
+          "line": 24
+        }
+      ],
+      "recommendation": "Nach runtime/tasks/values/key_variable_task.py verschieben, statt den gemeinsamen Basistask unter values/variables abzulegen."
+    },
+    {
+      "title": "Exporter-Registry erhält einen DSL-Typ",
+      "scenario": "Ein Generate-Statement setzt targetEntity und exportUri; die IO-Registry liest beide direkt aus GenerateStatement, obwohl Runtime die Aussage des Descriptors bereits kennt.",
+      "evidence": [
+        {
+          "path": "datamimic_ce/engine/io/exporters/exporter_util.py",
+          "line": 30
+        },
+        {
+          "path": "datamimic_ce/engine/io/exporters/exporter_util.py",
+          "line": 149
+        },
+        {
+          "path": "datamimic_ce/engine/io/exporters/exporter_util.py",
+          "line": 327
+        },
+        {
+          "path": "datamimic_ce/engine/io/exporters/exporter_util.py",
+          "line": 329
+        }
+      ],
+      "recommendation": "Runtime soll Zielname, Produktname und Exportpfad aus dem Statement auflösen und die IO-Registry mit diesen typisierten Werten statt GenerateStatement aufrufen."
+    }
+  ],
+  "traces": [
+    "Runtime-Aufruf → runtime.api.run → lifecycle.runner.RuntimeRunSession.execute → DescriptorParser.parse → SetupTask.execute → Registry/create_task → GenerateTask.execute → Worker → Quellrouter und DataSourceRegistry/Client → Zeilentasks und GeneratorUtil → Exportreihenfolge und ExporterUtil → konkreter Exporter → Datei, Datenbank, Memstore oder Prüfergebnis.",
+    "SetupTask initialisiert Root-Zustand und dispatcht Substatements in Descriptor-Reihenfolge; Registrierungstasks ändern Zustand, wenn sie ausgeführt werden. GenerateTask führt ein erreichtes Generate-Statement aus, Worker erzeugen Zeilen und IO-Exporter schreiben die Ergebnisse.",
+    "Generate/Variable/Reference/Key-Aufgabe → Runtime Source Router → IO Reader oder Client → Runtime Distribution/Seitenfenster → Worker-Zeilentasks; Targetangabe → Exporter Registry → konkreter IO Exporter → Zielmedium."
+  ],
+  "limitations": [
+    "Nur der aktuelle DATAMIMIC CE-Bestand und die vorgeschlagenen Zieldokumente wurden geprüft; daraus folgt keine Aussage über EE-Kompatibilität.",
+    "Folder-Zeilen bewerten physische Zielpfade anhand der dort zugeordneten Quellmodule; ein Ordner ist kein eigenständiger Geschäftsdienst.",
+    "Die vorhandenen Änderungen im Checkout wurden als Reviewgegenstand behandelt; es wurden keine Quellmodule, Contracts oder Tests geändert."
+  ]
+}

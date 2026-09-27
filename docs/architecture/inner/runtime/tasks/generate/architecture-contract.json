@@ -1,0 +1,154 @@
+{
+  "schema_version": "2.1.0",
+  "components": [
+    {
+      "id": "GENERATE-ORCHESTRATION",
+      "label": "orchestration",
+      "role": "component",
+      "packages": [
+        "datamimic_ce.engine.runtime.tasks.generate.task",
+        "datamimic_ce.engine.runtime.tasks.generate.export_order"
+      ],
+      "responsibilities": [
+        "Row-generation orchestration and dependency-sensitive export ordering."
+      ],
+      "forbidden_responsibilities": [
+        "Connect clients or duplicate source/exporter algorithms."
+      ],
+      "provenance": [
+        "docs/architecture/inner/target.md"
+      ],
+      "requires": [
+        {
+          "component": "workers",
+          "rationale": "Orchestration selects the execution worker.",
+          "decided_by": "agent"
+        },
+        {
+          "component": "policies",
+          "rationale": "The scheduling decision consumes capability policy.",
+          "decided_by": "agent"
+        }
+      ],
+      "public": [
+        "datamimic_ce.engine.runtime.tasks.generate.task:GenerateTask"
+      ],
+      "decided_by": "agent"
+    },
+    {
+      "id": "GENERATE-WORKERS",
+      "label": "workers",
+      "role": "component",
+      "packages": [
+        "datamimic_ce.engine.runtime.tasks.generate.workers"
+      ],
+      "responsibilities": [
+        "Worker execution and process handoff."
+      ],
+      "forbidden_responsibilities": [
+        "Parse descriptors or choose capability policy."
+      ],
+      "provenance": [
+        "docs/architecture/inner/target.md"
+      ],
+      "requires": [],
+      "public": [
+        "datamimic_ce.engine.runtime.tasks.generate.workers.generate_worker:GenerateWorker",
+        "datamimic_ce.engine.runtime.tasks.generate.workers.multiprocessing_generate_worker:MultiprocessingGenerateWorker",
+        "datamimic_ce.engine.runtime.tasks.generate.workers.ray_generate_worker:RayGenerateWorker"
+      ],
+      "decided_by": "agent"
+    },
+    {
+      "id": "GENERATE-POLICIES",
+      "label": "policies",
+      "role": "component",
+      "packages": [
+        "datamimic_ce.engine.runtime.tasks.generate.policies"
+      ],
+      "responsibilities": [
+        "Actual batching/lifecycle/count/worker policies."
+      ],
+      "forbidden_responsibilities": [
+        "Execute rows, access clients directly or start workers."
+      ],
+      "provenance": [
+        "docs/architecture/inner/target.md"
+      ],
+      "requires": [],
+      "public": [
+        "datamimic_ce.engine.runtime.tasks.generate.policies.single_process_policy:resolve_single_process"
+      ],
+      "decided_by": "agent"
+    }
+  ],
+  "rules": [
+    {
+      "id": "GENERATE-ASSIGNMENT",
+      "kind": "complete_assignment",
+      "source": "datamimic_ce.engine.runtime",
+      "rationale": "Every child implementation has one owner; parent initializer behavior is reviewed explicitly.",
+      "provenance": [
+        "docs/architecture/inner/target.md"
+      ],
+      "decided_by": "agent"
+    },
+    {
+      "id": "GENERATE-REQUIRES",
+      "kind": "complete_requires",
+      "include_type_checking": true,
+      "rationale": "Only the listed responsibility directions are permitted.",
+      "provenance": [
+        "docs/architecture/inner/target.md"
+      ],
+      "decided_by": "agent"
+    },
+    {
+      "id": "GENERATE-INTERFACES",
+      "kind": "interface_boundary",
+      "include_type_checking": true,
+      "rationale": "A dependency reaches explicit operations and types, not arbitrary implementation details.",
+      "provenance": [
+        "docs/architecture/inner/target.md"
+      ],
+      "decided_by": "agent"
+    },
+    {
+      "id": "GENERATE-ACYCLIC",
+      "kind": "no_component_cycles",
+      "rationale": "Lower layers do not import their consumers.",
+      "provenance": [
+        "docs/architecture/inner/target.md"
+      ],
+      "decided_by": "agent"
+    },
+    {
+      "id": "LAYOUT-ENGINE-RUNTIME-TASKS-GENERATE-POLICIES",
+      "kind": "root_layout",
+      "root": "datamimic_ce.engine.runtime.tasks.generate.policies",
+      "allowed_children": [
+        "datamimic_ce.engine.runtime.tasks.generate.policies.single_process_policy"
+      ],
+      "rationale": "Actual batching/lifecycle/count/worker policies. Exact reviewed target children; no hidden extra modules.",
+      "provenance": [
+        "docs/architecture/inner/structure-review.json"
+      ],
+      "decided_by": "agent"
+    },
+    {
+      "id": "LAYOUT-ENGINE-RUNTIME-TASKS-GENERATE-WORKERS",
+      "kind": "root_layout",
+      "root": "datamimic_ce.engine.runtime.tasks.generate.workers",
+      "allowed_children": [
+        "datamimic_ce.engine.runtime.tasks.generate.workers.generate_worker",
+        "datamimic_ce.engine.runtime.tasks.generate.workers.multiprocessing_generate_worker",
+        "datamimic_ce.engine.runtime.tasks.generate.workers.ray_generate_worker"
+      ],
+      "rationale": "Worker execution and process handoff. Exact reviewed target children; no hidden extra modules.",
+      "provenance": [
+        "docs/architecture/inner/structure-review.json"
+      ],
+      "decided_by": "agent"
+    }
+  ]
+}

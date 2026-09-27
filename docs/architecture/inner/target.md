@@ -1,204 +1,255 @@
-# CE/EE inner architecture target
+# CE / EE target architecture — recursive definition
 
-The diagnosis below records the initial target design, not current violation counts.
-Current implementation evidence is in `../refactoring-study/experiment-2/step-11-inner.md`.
-Amendment 18 defers CE `errors/context/` until it has a real consumer.
+Date: 2026-09-27. Status: **Astra-decided target; implementation not complete**.
+See [Astra's semantic decisions](semantic-review/astra-target-decision.md) and
+[Amendment 20](../refactoring-study/experiment-2/amendment-20.md).
+Published ArchKeel 0.8.0 timed out on the earlier draft. The local candidate
+completes but reports failures; neither result certifies this target.
+This replaces the earlier 0.7 design notes in this file, not the experiment history.
+Alex's decisions: equal physical core paths, EE leads shared semantics, stable root
+`errors/`, no legacy import shims, no Rust or EE runtime configuration in CE.
+Delegated grouping and interface decisions remain marked `decided_by: agent` in JSON.
 
-Status: CE implementation candidate; `errors/context/` remains an architect decision.
-Alex approved a target-first contract and the same physical core structure in CE and
-EE. This is a path invariant, not merely matching boxes in
-a report. EE runtime semantics lead; its current root-level engine owners are not
-the target. This document does not authorize an EE file move or change descriptor behavior.
+The source-to-target map and recursive review are in
+[structure-review.json](structure-review.json). The shared root below applies to
+both `datamimic_ce` and `datamimic_ee`. See [EE migration](edition-alignment.md)
+for edition-only additions and the superseded Experiment 3 proposal.
 
-## Physical target in both editions
-
-Replace `<edition>` with `datamimic_ce` or `datamimic_ee`. These directories and
-their ownership must exist in both editions where the shared feature exists:
+## Physical target
 
 ```text
 <edition>/
+  __init__.py                    public distribution entry, not a second workflow
+  _compat.py                     Python-version primitives only, where needed
+  randomness.py                  shared RNG protocol and weighted-index primitive
+  interfaces/
+    cli/                        command registration, arguments, presentation
+    mcp/                        optional typed tool transport
+    python/                     DataMimic, test harness, factory entry points
+      datamimic.py  data_mimic_test.py  factory.py
+    demo.py  project.py
   authoring/
-    api.py  contracts.py  spec.py
-    domain/  application/  adapters/  projection/
-  errors/
-    base.py  catalog/  factory.py  formatters.py
-  domains/
-    domain_core/       # domain contracts and primitives
-    shared/            # reusable generators and shared data
-      models/  services/  generators/  literal_generators/  converters/
-    {finance,healthcare,insurance,ecommerce,public_sector}/  # vertical owners
+    api.py  contracts.py  spec/
+    domain/
+      diagnostics.py  schema.py  script_semantics.py
+      rule_catalog.py
+      rules/                    base, schema, semantics, intent, cross-statement
+    application/                service, compile/verify/acceptance sequencing
+    adapters/                   XML loading/lint, bounded execution, EE bundle assembly
+    projection/                 deterministic reference/schema views; no runtime imports
   engine/
     dsl/
+      api.py
+      vocabulary/
+        constants/  enums/      canonical names and closed values
+      model/
+        validation.py  constraints/  flow/  values/  setup/  generation/
+        registry.py             schema facts, never parser implementations
+      parsers/
+        base/  flow/  values/  setup/  generation/  document/  input/
+        registry.py             parser binding and dispatch
+      statements/
+        base/  flow/  values/  setup/  generation/  traversal.py
+    runtime/
       api.py  contracts.py
-      constants/  enums/  model/  parsers/  statements/
+      lifecycle/                invocation, configuration loading, cleanup, process titles
+      logging.py                CE sinks; EE may grow logging/ under the same owner
+      contexts/                 execution state, row/iteration scope
+      storage/                  run-local store handles and lifecycle
+      scripting/                expression evaluation, read-only script helpers
+        plugins/                only real extension implementations
+      tasks/
+        base/                   task protocols, shared count resolution and dispatch
+        registry.py             composition only; populated once by lifecycle
+        setup/                  ordered descriptor/client/store/generator/state-machine declarations
+        flow/
+          branches/  loops/  commands/
+        values/
+          key_variable_task.py  scalar/  structured/  references/  variables/  construction/
+        sources/                statement/context-to-IO request adaptation
+        generate/
+          task.py  export_order.py
+          workers/              selected execution strategy
+          policies/             capability-based concurrency reduction; no services wrapper
     io/
       api.py  contracts.py
-      clients/  connection_config/  data_sources/  exporters/
-    runtime/
-      api.py  contracts.py  logging.py
-      contexts/  storage/  lifecycle/  scripting/
-      tasks/
-        generate/
-          workers/  services/policies/
-  interfaces/
+      clients/                  connections, transport and vendor details
+      connection_config/        typed connector settings
+      data_sources/             read/count/selection/pagination policy
+      files/                    narrow dataset API, readers and cache
+      exporters/
+        core/  formats/  database/  memory/  diagnostics/
+        registry.py             exporter construction and registration
+  domains/
+    api.py  facade.py
+    registry/                   entity/generator discovery and request validation
+    domain_core/
+      contracts/                schema and domain value types, not executable entities
+      datasets/                 neutral path/inventory primitives, no shared generators
+      runtime/                  RNG, seed, clock and deterministic primitives
+      base_entity.py  base_domain_generator.py  base_literal_generator.py
+      base_domain_service.py  property_cache.py
+    shared/
+      models/  services/  generators/
+      datasets/                 locale/profile lookup and dataset loading
+      demographics/             profile policy and sampling
+      literal_generators/
+        numeric/  primitives/  temporal/  person/  contact/  business/
+        identity/               codes/, keys/, security/
+        registry.py
+      converters/
+        base/  text/  temporal/  privacy/  structural/
+    finance/                    models/, generators/, services/; luhn.py remains local
+    healthcare/                 models/, generators/, services/
+    insurance/                  models/, generators/, services/
+    ecommerce/                  models/, generators/, services/
+    public_sector/              models/, generators/, services/
+  errors/
+    base.py  codes.py  factory.py  formatters.py
+    catalog/
+  resources/
+    api.py  demos/  examples/
 ```
 
-This is the common core skeleton, not a demand for identical files or features.
-Edition-only connectors belong under `engine/io/`; EE-only task and worker policies
-belong under `engine/runtime/`. A shared capability must keep the same owning path
-and public boundary in both editions. CE's current `domains/common` and EE's root
-`model/`, `parsers/`, `tasks/`, `clients/`, `data_sources/`, and `exporters/` are
-transitional, not additional target owners. Do not create empty placeholder packages.
-The package name differs only at `<edition>`.
+DSL `flow/` uses the same branches/loops/commands families; DSL `values/`
+uses scalar/structured/references/variables families. These are grouping names,
+not a new DSL vocabulary. Keep model, parsing and statement layers separate.
+Every existing CE source scope, including namespace folders and initializer-only
+code, has a review entry; exact module moves take precedence over package moves.
+Unchanged leaf modules stay with their reviewed owner. Non-Python datasets keep
+their resource paths unless an independently verified packaging migration requires a move.
 
-The CE `ENGINE-LAYOUT` rule forbids a fourth direct `engine/` child. ArchKeel's
-current `root_layout` rule checks allowed children but does not require missing
-children or compare two repositories. Full physical parity therefore needs an
-explicit CE/EE path comparison at acceptance; a green contract alone cannot prove it.
+Seven children is a review trigger, not a correctness law. The exact retained
+groups and reasons are in `structure-review.json`. Domains keeps its real
+facade beside registry and API; ordered setup declarations remain together.
+Adding a wrapper solely to reduce a count would make navigation worse.
 
-## Why another level
+## Lifecycle and boundaries
 
-The CE component contract passes, but the 0.7.0 observation still contains
-168 module cycle edges. The largest SCCs contain 28 DSL and 23 Runtime modules.
-ArchKeel's automatic Runtime draft made 15 components and 210 pair decisions; one
-component per directory or file would codify noise, not ownership.
-
-All five CE component interiors have active drafts. ArchKeel 0.7.0 parses all
-476 CE files and reports 87 target violations after correcting three wrongly
-forbidden Generate-to-worker edges and moving IO and Authoring ownership
-(the first draft reported 97). The parent `requires` edges and numeric baseline
-were not widened. These are rule findings, not 87 independent design decisions.
-
-| Interior | Violations | Main cause to inspect |
-| --- | ---: | --- |
-| Domains | 58 | `domain_core` registries import shared generators and vertical services; place registration with its owner instead of permitting reverse dependencies. |
-| DSL | 26 | The model-side element registry imports concrete parsers; bind implementations from the parser side. |
-| IO | 1 | Pagination now lives in IO contracts and selector cycling in Runtime sources. The remaining `data_sources`↔`exporters.memstore` dependency still needs an ownership decision. |
-| Runtime | 2 | Generate-to-worker imports are legitimate inside Generate orchestration. Investigate remaining facade and global-config dependencies separately. |
-| Authoring | 0 | Rule schema facts now live with the rules; diagnostics compute their own XML path. |
-
-Current-file assignments cover every non-root module within the five interiors.
-Their root `__init__.py` modules remain unassigned in the report; notably,
-`authoring/__init__.py` re-exports use cases and is not an inert package marker.
-ArchKeel 0.7.0 does not enforce that gap. Do not place the package root in the
-`api` sub-component: it would overlap every child and leave them all ownerless.
-The target owner labels describe where code should end up, not a claim that CE
-already has the EE-like directories. `domains/shared` still groups 98 current
-modules; its EE-like child directories are physical acceptance criteria, not
-an extra level ArchKeel 0.7.0 can enforce in an `inside` contract.
-
-## Agent decisions
-
-| Area | Target boundary | Basis | Consequence |
-| --- | --- | --- | --- |
-| IO | Separate API, contracts, clients, sources, exporters, and files. Sources read through clients; exporters own writes; clients do not import source policy. | EE read/write ownership and CE's three-module client/source SCC. | Pagination and cyclic selection have moved; resolve the source/exporter dependency without changing descriptor behavior. |
-| Runtime | Lifecycle starts Setup; Generate owns per-statement worker policy and execution. Contexts own state; IO owns reads/writes. | EE keeps policies and workers under `tasks/generate/`, while Lifecycle only starts Setup. | Move CE workers below Generate, remove task-side client construction, and verify setup, seeded replay, and external-service descriptors. |
-| DSL | Typed models own grammar facts; parsing binds parser implementations; statements carry executable meaning. No second element catalog. | Both editions derive Authoring/DSL capabilities from typed owners. CE's registry↔parser SCC is 28 modules. | Separate registry facts from parser construction without duplicating the vocabulary; compare Authoring projections and XML behavior. |
-| Domains | `domain_core` owns primitives, `shared` owns common generators and registrations, and finance/healthcare/insurance/ecommerce/public-sector own their vertical behavior. | EE already uses this split; CE `common` and `domain_core` import each other. | Move CE `common` to `shared` and both built-in registries out of the core; fold `doctor`/`patient` into healthcare and `address`/`person` into shared. No compatibility shim. |
-| Errors | One root `errors/` owns stable user-facing codes, exception types, factories, and formatting. Local validation rules remain with their component; logging configuration remains in Runtime. | EE already owns this under `errors/`; CE has scattered exceptions and separate Authoring validation codes. | Migrate shared error semantics from EE into CE without copying EE-only codes or changing unrelated Authoring validation contracts. |
-| Authoring | Intent and rules are pure; projection derives DSL facts; adapters handle XML and bounded execution; application sequences use cases. | EE's `domain/application/adapters/projection` split and CE's transport separation. | The two reverse imports are removed; preserve this boundary while migrating to EE-like owner paths. |
-
-These are agent decisions, not a claim that current code satisfies them. No target
-edge is permitted solely because the current implementation imports it.
-
-## EE migration impact
-
-| Shared target | CE today | EE today | Migration consequence |
-| --- | --- | --- | --- |
-| `engine/dsl/{model,parsers,statements,constants,enums}` | Already under `engine/dsl/`. | `model/`, `parsers/`, `statements/`, `constants/`, `dsl_contract/` are root siblings. | EE moves these owners into the matching paths without copying DSL facts into Authoring. |
-| `engine/runtime/{contexts,tasks,storage,lifecycle,scripting}` with `tasks/generate/workers` | CE workers still sit beside tasks; lifecycle and scripting logic is partly flat. | `tasks/`, `contexts/`, and `lifecycle/` are root siblings; workers and policy live under `tasks/generate/`. | Both editions use the same owner paths; Rust and advanced policies remain inside Runtime, not new root peers. |
-| `authoring/{domain,application,adapters,projection}` | CE logic is mostly flat. | EE already uses the four groups. | CE adopts the EE owner paths; public root `api.py`, `contracts.py`, and `spec.py` stay explicit. |
-| `engine/io/{clients,connection_config,data_sources,exporters}` | Already under `engine/io/`. | `clients/`, `data_sources/`, and `exporters/` are root siblings. | EE moves those owners into the matching paths; Kafka/RabbitMQ and other EE connectors stay under IO. |
-| `domains/{domain_core,shared,...}` | CE still uses `common` beside `domain_core`. | EE uses `shared` and `domain_core` plus vertical domains. | CE adopts the EE ownership split; `domains.common` is removed, not retained as an alias. |
-| `errors/{base.py,catalog,factory.py,formatters.py}` | No root `errors/`; exceptions are scattered. | EE already has the target owner. | CE adopts EE's shared stable codes and types; EE-only codes stay in EE under the same owner. |
-
-Same physical structure means comparable ownership and navigation, not identical
-edition behavior, runtime settings, Rust support, or seeded output. EE's source
-checkout is clean under `datamimic_ee/`; its current ArchKeel-migration worktree
-contains unrelated uncommitted governance changes and is not an accepted target.
-
-## Accepted 5.0 compatibility decision
-
-Alex decided against a `domains.common` compatibility path. Move repository-owned
-imports in code, tests, docs, and bundled descriptor scripts to `domains.shared`
-when the implementation moves, then delete `domains.common`. For example,
-`tests_ce/integration_tests/test_entity/customer.xml` loads `script/customer.scr.py`,
-which imports `Person` from `domains.common.models.person`; that script must move
-to the new import while the XML and its generated result remain unchanged.
-External Python scripts importing `domains.common` will need the same migration.
-This is an explicit Python import break for CE 5.0, not a promise of unchanged
-external script execution.
-
-## Accepted error ownership decision
-
-Alex chose a root `errors/` in both editions for stable codes and types. EE's
-existing package is the reference for shared user-facing error behavior. CE's
-current Authoring-only validation codes are not moved just to make the tree
-look symmetric; move a code only when it is genuinely shared. Error factories
-own user-facing formatting, while components still decide when to raise and
-Runtime retains logging configuration. No empty CE package is created for the
-draft; ArchKeel 0.7.0 rejects an `errors` component before any Python module
-exists (`reference.package_unscanned`). The first implementation slice adds
-real code, declares the component, and activates its public boundary. For a
-failure supported in both editions, verify the same stable code and public
-error type; EE-only codes remain EE-only.
-
-## Entry points and acceptance
-
-```text
-CLI run / Python DataMimic or factory
-  -> Runtime API -> DSL parse -> Setup -> Generate/other tasks
-  -> IO data sources and exporters -> result or stable error
-
-CLI lint/dry-run/scaffold / MCP tools
-  -> Authoring API -> intent projection or XML lint
-  -> optional bounded Runtime execution -> diagnostics and verification
+```mermaid
+flowchart LR
+  CLI["CLI / Python"] --> RA["Runtime API"]
+  MCP["MCP / authoring CLI"] --> AA["Authoring API"]
+  AA --> APP["Application"]
+  APP --> AD["Adapters"]
+  APP --> PR["Derived projections"]
+  PR --> DF["DSL / domain / IO facts"]
+  AD -->|"bounded request"| RA
+  RA --> LIFE["Lifecycle"]
+  LIFE --> PARSE["DSL parse → typed statements"]
+  LIFE --> SETUP["Setup"]
+  SETUP --> TASKS["Task dispatch"]
+  TASKS --> GEN["Generate: policy → worker → rows"]
+  GEN --> READ["IO source operations"]
+  GEN --> DOMAIN["Domain generators"]
+  GEN --> WRITE["IO exporter operations"]
+  WRITE --> RESULT["Result / typed error"]
 ```
 
-CLI and MCP adapt requests and present results; they do not own execution or
-authoring policy. MCP `datamimic_run` is a bounded dry-run, not the unrestricted
-CLI `run`. Public boundaries must expose typed operations and results, not
-concrete client or exporter classes merely re-exported through `io.api`.
-Runtime Lifecycle prepares and starts Setup; Generate owns worker selection for
-each statement. IO owns source routing and write policy. The same concern has
-one owner in both editions.
+This is declared lifecycle intent, not proof of runtime call order.
+Full run, bounded dry-run and factory execution share Runtime operations.
+CLI and MCP translate/present requests; they do not repeat application policy.
+MCP's bounded run is not permission to execute an unrestricted CLI run.
 
-Acceptance requires no production module dependency cycles, not just no cycles
-between top-level components. Function-local imports do not erase a dependency
-cycle. The current Pylint 3.3.7 diagnostic reports 53 overlapping cycle paths;
-triage shared causes before treating that as 56 separate fixes. ArchKeel 0.7.0
-observes module cycles but does not enforce them in `inside` contracts. Until
-it does, use one targeted Pylint cycle check alongside ArchKeel and the DSL
-behavior suite; do not add a parallel collection of custom gates.
+| Boundary | Owns / exposes | Must not do |
+|---|---|---|
+| DSL | Element metadata, validation, parsing and typed statements; parser binding belongs to parsers | Execute tasks, connect clients, import Authoring |
+| Runtime | Typed run/session request and result; lifecycle starts Setup, Generate chooses workers | Implement connector or exporter internals |
+| IO | Typed source/count/registration/write operations; IO owns concrete clients/exporters | Read Runtime context or interpret task statements |
+| Domains | Typed entity/generator/converter capabilities and deterministic primitives | Import Runtime; core must not import shared implementations |
+| Authoring | Intent/rules and compile/check/verify operations; adapters gather runtime facts | Duplicate DSL facts or let pure projection import Runtime |
+| Errors | Stable codes/types/catalog/formatting | Own validation policy, runtime settings or import IO clients |
+| Interfaces | Command/tool/Python adaptation | Become a second workflow engine |
 
-Bounded Authoring must apply its count, target, and side-effect policy to every
-descriptor expansion. CE currently rejects XML `<include>` during dry-run
-because included statements are parsed later; `.properties` includes remain
-allowed. Safe support for XML includes requires a separately verified expansion
-path. Full `run` retains XML include behavior.
+Types live with their semantic owner. No global `types/`, `models/`,
+`services/` or `utils/` catch-all. A public interface may be an existing typed
+function or class; it does not require a new wrapper module. Nested public lists
+are local to their boundary and do not automatically publish through the parent.
+Concrete model and statement types are legitimate internal interfaces; concrete
+clients and exporter implementations are not the Runtime-facing API.
 
-## Tool and delivery limits
+## Changes that need more than a file move
 
-ArchKeel 0.7.0 can load an `inside` JSON contract, check its public surface against
-the parent, and enforce its `complete_requires` edges. It does not currently
-enforce the inside's module assignment, cycle, interface, or external-scope rules,
-and its report reads only one inside level. A green inner edge check is therefore
-not proof of a fully enforced lower-level architecture.
-For example, the outer Runtime rule permits `runtime -> io.api`; it cannot tell
-that the exported class is a concrete database client instantiated by a task.
-The no-tasks-to-clients obligation needs a separate symbol/construct check or
-review until ArchKeel can express it. Do not waive it because the inner count is low.
+- Dissolve `tasks/task_util.py`: dispatch uses the existing registry; evaluation
+  goes to Scripting; converter binding stays with value construction; Generate
+  owns page ordering, IO owns exporter setup/write/serialization.
+- Split source expression/context adaptation from generic selection. Move only
+  pure selection/pagination policy to IO; never pass Runtime context into IO.
+- Move the neutral dataset path/inventory primitive below `domain_core`.
+  Remove the current `domain_core → shared` permission; do not replace it with
+  an injection framework or a reverse facade.
+- Keep task registration out of an implicit, behavior-heavy `tasks/__init__.py`.
+  Lifecycle initializes composition once; dispatch primitives do not import
+  concrete task implementations.
+- Keep lazy domain entities distinct from passive types: services compose entities
+  and generators; entity properties may use generators, never the reverse.
+  Move shared `DemographicConfig` to `shared/demographics/config.py` so generators
+  do not import the entity-model layer. Do not change evaluation order or RNG draws.
+- `IncludeTask` stays with Setup because it executes an included descriptor's Setup;
+  putting it under Flow would introduce a reverse orchestration dependency.
+- Drop Generate's empty `services/` wrapper. Policies sit directly beside workers;
+  the EE policy implementations use the same owner.
+- Move EE vendor-error mapping behind IO. `errors/` receives structured facts,
+  not an import of the client SQL identifier parser.
+- Retain grammar definitions at their typed owners. Split EE DSL contract
+  models, parser binding, runtime reflection and bundle assembly by ownership.
+- Narrow current IO/Runtime facades: a renamed concrete class is not a typed
+  operation boundary. Existing root type findings remain visible.
+- `errors/context/` is still deferred in CE by Amendment 18. Do not create an
+  empty mirror of an EE feature that has no CE consumer.
+- Public Python module paths move for 5.0 without shims. Keep installed CLI
+  command behavior via entry-point configuration; migrate repository scripts
+  and documented callers in the same implementation slice.
 
-Keep the existing CE branch and baseline unchanged while target contracts are
-drafted in an isolated worktree. All five inside contracts are active there and
-intentionally red. Preserve those findings as work to resolve in small slices.
-Every production slice needs positive and negative tests, the
-descriptor oracle, full static gates, and exact EE/CE ownership review. EE gets
-its own migration and edition-local seeded replay; CE and EE need not generate
-the same values.
+## Measurement and honesty
 
-Suggested order: finish CE target contracts and architect decisions; close the
-ArchKeel inside-enforcement gap; remove CE target violations in narrow slices;
-run the full CE descriptor and test gates; then migrate EE to the same physical
-core layout with EE-local architecture and behavior gates. Do not combine the
-CE and EE file moves into one review.
+ArchKeel **0.8.0** supports recursive `inside` contracts. Mounted boundaries
+declare complete assignment, explicit dependency directions, local interfaces
+and component acyclicity. One root module-cycle rule covers deeper imports,
+including `TYPE_CHECKING`; function-local imports do not erase a cycle.
+Canonical `packages` selectors and `root_layout` rules describe the future
+structure at every depth, including paths not created yet. The move map accounts
+for each source from the frozen commit. Historical observations describe the old
+structure; absent target paths and remaining old paths keep acceptance red.
+
+Remaining limits are explicit:
+
+- `root_layout` forbids unexpected children but does not require absent ones.
+  Keep the existing physical-presence check and compare the move map at completion.
+- `complete_assignment` exempts the selected source module. The review ledger
+  assigns initializer responsibility; this is not automatic proof that its behavior
+  obeys the intended boundary.
+- Static imports/types do not prove behavior, data-flow purity or dynamic loading.
+  UNKNOWN is not PASS; narrow tests and source review remain necessary.
+- A package can pass its contract while a large function remains poorly factored.
+  The operation-level splits above remain implementation acceptance work.
+
+`make architecture-definition-check` validates the recursive definition and its
+mapping, not current architecture conformance. `make architecture-check` remains
+strict and is expected to fail until the source reaches this target.
+Do not rewrite `known-violations.json` to absorb these newly exposed findings.
+The definition commit precedes production moves; descriptor inputs remain frozen.
+
+## Delivery sequence and acceptance
+
+1. Freeze the target definition and record baseline/tool findings separately.
+2. Implement CE slices: neutral primitives and errors; DSL families; IO boundaries;
+   Runtime task composition; Authoring/projection; entry points and packaging.
+3. Each slice: Luna implementation and independent Terra QA, root review, targeted positive
+   and negative cases, unchanged-descriptor oracle, Ruff and full-package MyPy.
+   Consult Astra for unresolved technical judgment; Alex decides product conflicts.
+   Check shared behavior against the frozen EE implementation before changing CE
+   semantics. CE output preservation alone does not establish EE semantic alignment.
+4. Final CE gate: every target path reached, no unowned modules, no forbidden/private
+   crossings, zero module cycles, no material UNKNOWN, full descriptor/service suite.
+   Preserve seeded values within CE with identical initial resources/targets;
+   unseeded runs retain outcome, counts/declared ranges and structure.
+5. Apply the same physical map to EE with its existing, stronger tests intact.
+   Keep EE-only policies/connectors/native implementation below their owners.
+   CE and EE need not produce the same seeded values.
+6. Report structure, behavior and delivery separately. Full EE leaf review and
+   cross-edition descriptor execution are not implied by this CE definition.
+
+The current input-model difference (CE intent JSON versus EE transaction-scoped
+DM JSON) needs a product migration decision when Authoring is ported. It does not
+justify different physical ownership or silently changing either edition now.

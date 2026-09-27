@@ -3,6 +3,11 @@
 Written before implementation. Contract edits after freeze require a dated amendment explaining
 why the original target was wrong; an implementation difficulty is not a reason to weaken it.
 
+Current recursive target: [Amendment 19](amendment-19.md), corrected through the
+semantic freeze in [Amendment 20](amendment-20.md). Astra decides remaining
+ownership questions; Luna implements and Terra verifies independently. Frozen
+inputs below remain history, including the original checker and agent versions.
+
 ## Fixed inputs
 
 | Input | Frozen value |

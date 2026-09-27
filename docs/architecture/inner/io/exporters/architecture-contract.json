@@ -1,0 +1,312 @@
+{
+  "schema_version": "2.1.0",
+  "components": [
+    {
+      "id": "EXPORTERS-CORE",
+      "label": "core",
+      "role": "foundation",
+      "packages": [
+        "datamimic_ce.engine.io.exporters.core"
+      ],
+      "responsibilities": [
+        "Export contracts, buffers, serialization and target routing."
+      ],
+      "forbidden_responsibilities": [
+        "Import concrete format exporters",
+        "Select exporters from target strings"
+      ],
+      "provenance": [
+        "docs/architecture/inner/target.md"
+      ],
+      "requires": [],
+      "public": [
+        "datamimic_ce.engine.io.exporters.core.exporter:Exporter"
+      ],
+      "decided_by": "agent"
+    },
+    {
+      "id": "EXPORTERS-FORMATS",
+      "label": "formats",
+      "role": "component",
+      "packages": [
+        "datamimic_ce.engine.io.exporters.formats"
+      ],
+      "responsibilities": [
+        "File encodings, including DbUnit flat XML."
+      ],
+      "forbidden_responsibilities": [
+        "Select exporters or own external database writes"
+      ],
+      "provenance": [
+        "docs/architecture/inner/target.md"
+      ],
+      "requires": [
+        {
+          "component": "core",
+          "rationale": "Format exporters implement the shared exporter contract.",
+          "decided_by": "agent"
+        }
+      ],
+      "public": [
+        "datamimic_ce.engine.io.exporters.formats.csv_exporter:CSVExporter",
+        "datamimic_ce.engine.io.exporters.formats.fixed_width_exporter:FixedWidthExporter",
+        "datamimic_ce.engine.io.exporters.formats.json_exporter:JsonExporter",
+        "datamimic_ce.engine.io.exporters.formats.txt_exporter:TXTExporter",
+        "datamimic_ce.engine.io.exporters.formats.xlsx_exporter:XLSXExporter",
+        "datamimic_ce.engine.io.exporters.formats.xml_exporter:XMLExporter",
+        "datamimic_ce.engine.io.exporters.formats.dbunit_exporter:DbUnitExporter"
+      ],
+      "decided_by": "agent"
+    },
+    {
+      "id": "EXPORTERS-DATABASE",
+      "label": "database",
+      "role": "component",
+      "packages": [
+        "datamimic_ce.engine.io.exporters.database"
+      ],
+      "responsibilities": [
+        "Database/Mongo write adapters."
+      ],
+      "forbidden_responsibilities": [
+        "Select exporters or own file formats"
+      ],
+      "provenance": [
+        "docs/architecture/inner/target.md"
+      ],
+      "requires": [
+        {
+          "component": "core",
+          "rationale": "Database exporters implement the shared exporter contract.",
+          "decided_by": "agent"
+        }
+      ],
+      "public": [
+        "datamimic_ce.engine.io.exporters.database.database_exporter:DatabaseExporter",
+        "datamimic_ce.engine.io.exporters.database.mongodb_exporter:MongoDBExporter"
+      ],
+      "decided_by": "agent"
+    },
+    {
+      "id": "EXPORTERS-MEMORY",
+      "label": "memory",
+      "role": "component",
+      "packages": [
+        "datamimic_ce.engine.io.exporters.memory"
+      ],
+      "responsibilities": [
+        "Memstore writes."
+      ],
+      "forbidden_responsibilities": [
+        "Select exporters or own Runtime store lifecycle"
+      ],
+      "provenance": [
+        "docs/architecture/inner/target.md"
+      ],
+      "requires": [
+        {
+          "component": "core",
+          "rationale": "Memstore export implements the shared exporter contract.",
+          "decided_by": "agent"
+        }
+      ],
+      "public": [],
+      "decided_by": "agent"
+    },
+    {
+      "id": "EXPORTERS-DIAGNOSTICS",
+      "label": "diagnostics",
+      "role": "component",
+      "packages": [
+        "datamimic_ce.engine.io.exporters.diagnostics"
+      ],
+      "responsibilities": [
+        "Console/log/test/smoke observation exporters."
+      ],
+      "forbidden_responsibilities": [
+        "Select exporters or own file/database formats"
+      ],
+      "provenance": [
+        "docs/architecture/inner/target.md"
+      ],
+      "requires": [
+        {
+          "component": "core",
+          "rationale": "Diagnostic exporters implement the shared exporter contract.",
+          "decided_by": "agent"
+        }
+      ],
+      "public": [
+        "datamimic_ce.engine.io.exporters.diagnostics.console_exporter:ConsoleExporter",
+        "datamimic_ce.engine.io.exporters.diagnostics.log_exporter:LogExporter",
+        "datamimic_ce.engine.io.exporters.diagnostics.test_result_exporter:TestResultExporter"
+      ],
+      "decided_by": "agent"
+    },
+    {
+      "id": "EXPORTERS-REGISTRY",
+      "label": "registry",
+      "role": "component",
+      "packages": [
+        "datamimic_ce.engine.io.exporters.registry"
+      ],
+      "responsibilities": [
+        "Concrete exporter assembly."
+      ],
+      "forbidden_responsibilities": [
+        "Implement exporters or be re-exported as a facade for concrete classes"
+      ],
+      "provenance": [
+        "docs/architecture/inner/target.md"
+      ],
+      "requires": [
+        {
+          "component": "core",
+          "rationale": "Exporter composition uses core configuration and lifecycle contracts.",
+          "decided_by": "agent"
+        },
+        {
+          "component": "formats",
+          "rationale": "The registry binds file-format exporters.",
+          "decided_by": "agent"
+        },
+        {
+          "component": "database",
+          "rationale": "The registry binds database target exporters.",
+          "decided_by": "agent"
+        },
+        {
+          "component": "diagnostics",
+          "rationale": "The registry binds console and diagnostic exporters.",
+          "decided_by": "agent"
+        }
+      ],
+      "public": [
+        "datamimic_ce.engine.io.exporters.registry:ExporterUtil"
+      ],
+      "decided_by": "agent"
+    }
+  ],
+  "rules": [
+    {
+      "id": "EXPORTERS-ASSIGNMENT",
+      "kind": "complete_assignment",
+      "source": "datamimic_ce.engine.io.exporters",
+      "rationale": "Every exporter implementation and assembly module has one owner.",
+      "provenance": [
+        "docs/architecture/inner/target.md"
+      ],
+      "decided_by": "agent"
+    },
+    {
+      "id": "EXPORTERS-REQUIRES-COMPLETE",
+      "kind": "complete_requires",
+      "include_type_checking": true,
+      "rationale": "Exporter families depend on shared lifecycle contracts; only registry composition depends on concrete families.",
+      "provenance": [
+        "docs/architecture/inner/target.md"
+      ],
+      "decided_by": "agent"
+    },
+    {
+      "id": "EXPORTERS-NO-COMPONENT-CYCLES",
+      "kind": "no_component_cycles",
+      "rationale": "Exporter implementations and composition must remain acyclic.",
+      "provenance": [
+        "docs/architecture/inner/target.md"
+      ],
+      "decided_by": "agent"
+    },
+    {
+      "id": "EXPORTERS-INTERFACE-BOUNDARY",
+      "kind": "interface_boundary",
+      "include_type_checking": true,
+      "rationale": "The base protocol, concrete format/database implementations, and registry entry point are declared where they cross family boundaries.",
+      "provenance": [
+        "docs/architecture/inner/target.md"
+      ],
+      "decided_by": "agent"
+    },
+    {
+      "id": "LAYOUT-ENGINE-IO-EXPORTERS-CORE",
+      "kind": "root_layout",
+      "root": "datamimic_ce.engine.io.exporters.core",
+      "allowed_children": [
+        "datamimic_ce.engine.io.exporters.core.exporter",
+        "datamimic_ce.engine.io.exporters.core.exporter_config",
+        "datamimic_ce.engine.io.exporters.core.exporter_context",
+        "datamimic_ce.engine.io.exporters.core.exporter_state_manager",
+        "datamimic_ce.engine.io.exporters.core.routing",
+        "datamimic_ce.engine.io.exporters.core.serialization",
+        "datamimic_ce.engine.io.exporters.core.unified_buffered_exporter"
+      ],
+      "rationale": "Export contracts, buffers, serialization and target routing. Exact reviewed target children; no hidden extra modules.",
+      "provenance": [
+        "docs/architecture/inner/structure-review.json"
+      ],
+      "decided_by": "agent"
+    },
+    {
+      "id": "LAYOUT-ENGINE-IO-EXPORTERS-DATABASE",
+      "kind": "root_layout",
+      "root": "datamimic_ce.engine.io.exporters.database",
+      "allowed_children": [
+        "datamimic_ce.engine.io.exporters.database.database_exporter",
+        "datamimic_ce.engine.io.exporters.database.mongodb_exporter"
+      ],
+      "rationale": "Database/Mongo write adapters. Exact reviewed target children; no hidden extra modules.",
+      "provenance": [
+        "docs/architecture/inner/structure-review.json"
+      ],
+      "decided_by": "agent"
+    },
+    {
+      "id": "LAYOUT-ENGINE-IO-EXPORTERS-DIAGNOSTICS",
+      "kind": "root_layout",
+      "root": "datamimic_ce.engine.io.exporters.diagnostics",
+      "allowed_children": [
+        "datamimic_ce.engine.io.exporters.diagnostics.console_exporter",
+        "datamimic_ce.engine.io.exporters.diagnostics.log_exporter",
+        "datamimic_ce.engine.io.exporters.diagnostics.smoke_export",
+        "datamimic_ce.engine.io.exporters.diagnostics.test_result_exporter"
+      ],
+      "rationale": "Console/log/test/smoke observation exporters. Exact reviewed target children; no hidden extra modules.",
+      "provenance": [
+        "docs/architecture/inner/structure-review.json"
+      ],
+      "decided_by": "agent"
+    },
+    {
+      "id": "LAYOUT-ENGINE-IO-EXPORTERS-FORMATS",
+      "kind": "root_layout",
+      "root": "datamimic_ce.engine.io.exporters.formats",
+      "allowed_children": [
+        "datamimic_ce.engine.io.exporters.formats.csv_exporter",
+        "datamimic_ce.engine.io.exporters.formats.dbunit_exporter",
+        "datamimic_ce.engine.io.exporters.formats.fixed_width_exporter",
+        "datamimic_ce.engine.io.exporters.formats.json_exporter",
+        "datamimic_ce.engine.io.exporters.formats.txt_exporter",
+        "datamimic_ce.engine.io.exporters.formats.xlsx_exporter",
+        "datamimic_ce.engine.io.exporters.formats.xml_exporter"
+      ],
+      "rationale": "File encodings, including DbUnit flat XML. Exact reviewed target children; no hidden extra modules.",
+      "provenance": [
+        "docs/architecture/inner/structure-review.json"
+      ],
+      "decided_by": "agent"
+    },
+    {
+      "id": "LAYOUT-ENGINE-IO-EXPORTERS-MEMORY",
+      "kind": "root_layout",
+      "root": "datamimic_ce.engine.io.exporters.memory",
+      "allowed_children": [
+        "datamimic_ce.engine.io.exporters.memory.memstore"
+      ],
+      "rationale": "Memstore writes. Exact reviewed target children; no hidden extra modules.",
+      "provenance": [
+        "docs/architecture/inner/structure-review.json"
+      ],
+      "decided_by": "agent"
+    }
+  ]
+}

@@ -2,115 +2,423 @@
   "schema_version": "2.1.0",
   "components": [
     {
-      "id": "RUNTIME-API", "label": "api", "role": "interface",
-      "packages": ["datamimic_ce.engine.runtime.api"],
-      "responsibilities": ["Expose typed run requests, results, and supported runtime operations."],
-      "forbidden_responsibilities": ["Own task execution or IO implementations."],
-      "provenance": ["docs/architecture/inner/target.md"],
-      "requires": [
-        {"component": "contracts", "rationale": "Public operations use runtime-owned types.", "decided_by": "agent"},
-        {"component": "lifecycle", "rationale": "The facade delegates run setup and execution.", "decided_by": "agent"},
-        {"component": "contexts", "rationale": "The existing Python API exposes run contexts.", "decided_by": "agent"},
-        {"component": "tasks", "rationale": "The existing Python API exposes generator operations.", "decided_by": "agent"}
-      ],
-      "public": ["datamimic_ce.engine.runtime.api"], "decided_by": "agent"
-    },
-    {
-      "id": "RUNTIME-CONTRACTS", "label": "contracts", "role": "contract",
-      "packages": ["datamimic_ce.engine.runtime.contracts"],
-      "responsibilities": ["Define runtime-owned run requests, results, and worker-plan types."],
-      "forbidden_responsibilities": ["Import concrete tasks, workers, or connectors."],
-      "provenance": ["docs/architecture/inner/target.md"],
-      "requires": [], "public": ["datamimic_ce.engine.runtime.contracts"], "decided_by": "agent"
-    },
-    {
-      "id": "RUNTIME-STORAGE", "label": "storage", "role": "component",
-      "packages": ["datamimic_ce.engine.runtime.storage"],
-      "responsibilities": ["Own run-local state such as memstore handles."],
-      "forbidden_responsibilities": ["Schedule tasks or execute DSL expressions."],
-      "provenance": ["docs/architecture/inner/target.md"],
-      "requires": [
-        {"component": "contracts", "rationale": "Storage uses runtime-owned value types.", "decided_by": "agent"}
-      ],
-      "public": [], "decided_by": "agent"
-    },
-    {
-      "id": "RUNTIME-LOGGING", "label": "logging", "role": "foundation",
-      "packages": ["datamimic_ce.engine.runtime.logging"],
-      "responsibilities": ["Provide runtime logging and run timing without task policy."],
-      "forbidden_responsibilities": ["Import tasks, workers, or descriptor orchestration."],
-      "provenance": ["docs/architecture/inner/target.md"],
-      "requires": [], "public": [], "decided_by": "agent"
-    },
-    {
-      "id": "RUNTIME-EVALUATION", "label": "evaluation", "role": "component",
-      "packages": ["datamimic_ce.engine.runtime.scripting"],
-      "responsibilities": ["Evaluate DSL expressions and user scripts in an explicit namespace."],
-      "forbidden_responsibilities": ["Own run state, task scheduling, or external clients."],
-      "provenance": ["docs/architecture/inner/target.md"],
-      "requires": [
-        {"component": "contracts", "rationale": "Evaluation uses runtime-owned context protocols.", "decided_by": "agent"}
-      ],
-      "public": [], "decided_by": "agent"
-    },
-    {
-      "id": "RUNTIME-CONTEXTS", "label": "contexts", "role": "component",
-      "packages": ["datamimic_ce.engine.runtime.contexts"],
-      "responsibilities": ["Hold run and iteration context without orchestration policy."],
-      "forbidden_responsibilities": ["Start workers or construct external clients."],
-      "provenance": ["docs/architecture/inner/target.md"],
-      "requires": [
-        {"component": "contracts", "rationale": "Context state uses runtime-owned types.", "decided_by": "agent"},
-        {"component": "storage", "rationale": "Run contexts hold run-local memstore state.", "decided_by": "agent"},
-        {"component": "evaluation", "rationale": "Contexts delegate expression and script execution.", "decided_by": "agent"},
-        {"component": "logging", "rationale": "Contexts report run events through runtime logging.", "decided_by": "agent"}
-      ],
-      "public": [], "decided_by": "agent"
-    },
-    {
-      "id": "RUNTIME-TASKS", "label": "tasks", "role": "component",
+      "id": "RUNTIME-API",
+      "label": "api",
+      "role": "interface",
       "packages": [
-        "datamimic_ce.engine.runtime.tasks",
-        "datamimic_ce.engine.runtime.process",
-        "datamimic_ce.engine.runtime.generators",
-        "datamimic_ce.engine.runtime.sources",
-        "datamimic_ce.engine.runtime.counts"
+        "datamimic_ce.engine.runtime.api"
       ],
-      "responsibilities": ["Execute descriptor steps and choose workers per Generate statement; ask IO to read or write through its public boundary."],
-      "forbidden_responsibilities": ["Construct database clients", "Own source connector policy"],
-      "provenance": ["docs/architecture/inner/target.md"],
+      "responsibilities": [
+        "Public runtime lifecycle entry."
+      ],
+      "forbidden_responsibilities": [
+        "Own task execution or IO implementations."
+      ],
+      "provenance": [
+        "docs/architecture/inner/target.md"
+      ],
       "requires": [
-        {"component": "contracts", "rationale": "Tasks use runtime-owned plans.", "decided_by": "agent"},
-        {"component": "contexts", "rationale": "Tasks operate on explicit execution context.", "decided_by": "agent"},
-        {"component": "evaluation", "rationale": "Tasks delegate expression evaluation.", "decided_by": "agent"},
-        {"component": "storage", "rationale": "Tasks access run-local stores through context-owned state.", "decided_by": "agent"},
-        {"component": "logging", "rationale": "Tasks report execution through runtime logging.", "decided_by": "agent"}
+        {
+          "component": "contracts",
+          "rationale": "Public operations use runtime-owned types.",
+          "decided_by": "agent"
+        },
+        {
+          "component": "lifecycle",
+          "rationale": "The facade delegates run setup and execution.",
+          "decided_by": "agent"
+        },
+        {
+          "component": "contexts",
+          "rationale": "The existing Python API exposes run contexts.",
+          "decided_by": "agent"
+        },
+        {
+          "component": "tasks",
+          "rationale": "The existing Python API exposes generator operations.",
+          "decided_by": "agent"
+        }
       ],
-      "public": [], "decided_by": "agent"
+      "public": [
+        "datamimic_ce.engine.runtime.api"
+      ],
+      "decided_by": "agent"
     },
     {
-      "id": "RUNTIME-LIFECYCLE", "label": "lifecycle", "role": "component",
+      "id": "RUNTIME-CONTRACTS",
+      "label": "contracts",
+      "role": "contract",
+      "packages": [
+        "datamimic_ce.engine.runtime.contracts"
+      ],
+      "responsibilities": [
+        "Run configuration and results."
+      ],
+      "forbidden_responsibilities": [
+        "Import concrete tasks, workers, or connectors."
+      ],
+      "provenance": [
+        "docs/architecture/inner/target.md"
+      ],
+      "requires": [],
+      "public": [
+        "datamimic_ce.engine.runtime.contracts"
+      ],
+      "decided_by": "agent"
+    },
+    {
+      "id": "RUNTIME-STORAGE",
+      "label": "storage",
+      "role": "component",
+      "packages": [
+        "datamimic_ce.engine.runtime.storage"
+      ],
+      "responsibilities": [
+        "Run/row storage primitives."
+      ],
+      "forbidden_responsibilities": [
+        "Schedule tasks or execute DSL expressions."
+      ],
+      "provenance": [
+        "docs/architecture/inner/target.md"
+      ],
+      "requires": [
+        {
+          "component": "contracts",
+          "rationale": "Storage uses runtime-owned value types.",
+          "decided_by": "agent"
+        }
+      ],
+      "public": [
+        "datamimic_ce.engine.runtime.storage.global_increment:GlobalIncrementRegistry",
+        "datamimic_ce.engine.runtime.storage.memstore_manager"
+      ],
+      "decided_by": "agent"
+    },
+    {
+      "id": "RUNTIME-LOGGING",
+      "label": "logging",
+      "role": "foundation",
+      "packages": [
+        "datamimic_ce.engine.runtime.logging"
+      ],
+      "responsibilities": [
+        "Runtime logging setup."
+      ],
+      "forbidden_responsibilities": [
+        "Import tasks, workers, or descriptor orchestration."
+      ],
+      "provenance": [
+        "docs/architecture/inner/target.md"
+      ],
+      "requires": [],
+      "public": [
+        "datamimic_ce.engine.runtime.logging"
+      ],
+      "decided_by": "agent"
+    },
+    {
+      "id": "RUNTIME-CONTEXTS",
+      "label": "contexts",
+      "role": "component",
+      "packages": [
+        "datamimic_ce.engine.runtime.contexts"
+      ],
+      "responsibilities": [
+        "Closed Context/SetupContext hierarchy, row state and seeded expression dependencies."
+      ],
+      "forbidden_responsibilities": [
+        "Start workers or construct external clients."
+      ],
+      "provenance": [
+        "docs/architecture/inner/target.md"
+      ],
+      "requires": [
+        {
+          "component": "contracts",
+          "rationale": "Context state uses runtime-owned types.",
+          "decided_by": "agent"
+        },
+        {
+          "component": "storage",
+          "rationale": "Run contexts hold run-local memstore state.",
+          "decided_by": "agent"
+        },
+        {
+          "component": "evaluation",
+          "rationale": "Contexts delegate expression and script execution.",
+          "decided_by": "agent"
+        },
+        {
+          "component": "logging",
+          "rationale": "Contexts report run events through runtime logging.",
+          "decided_by": "agent"
+        }
+      ],
+      "public": [
+        "datamimic_ce.engine.runtime.contexts.context",
+        "datamimic_ce.engine.runtime.contexts.demographic_context",
+        "datamimic_ce.engine.runtime.contexts.expression_globals",
+        "datamimic_ce.engine.runtime.contexts.geniter_context",
+        "datamimic_ce.engine.runtime.contexts.records"
+      ],
+      "decided_by": "agent"
+    },
+    {
+      "id": "RUNTIME-TASKS",
+      "label": "tasks",
+      "role": "component",
+      "packages": [
+        "datamimic_ce.engine.runtime.tasks"
+      ],
+      "responsibilities": [
+        "Statement execution, value construction and resolved source requests."
+      ],
+      "forbidden_responsibilities": [
+        "Construct database clients",
+        "Own source connector policy"
+      ],
+      "provenance": [
+        "docs/architecture/inner/target.md"
+      ],
+      "requires": [
+        {
+          "component": "contracts",
+          "rationale": "Tasks use runtime-owned plans.",
+          "decided_by": "agent"
+        },
+        {
+          "component": "contexts",
+          "rationale": "Tasks operate on explicit execution context.",
+          "decided_by": "agent"
+        },
+        {
+          "component": "evaluation",
+          "rationale": "Tasks delegate expression evaluation.",
+          "decided_by": "agent"
+        },
+        {
+          "component": "storage",
+          "rationale": "Tasks access run-local stores through context-owned state.",
+          "decided_by": "agent"
+        },
+        {
+          "component": "logging",
+          "rationale": "Tasks report execution through runtime logging.",
+          "decided_by": "agent"
+        }
+      ],
+      "public": [
+        "datamimic_ce.engine.runtime.tasks.registry",
+        "datamimic_ce.engine.runtime.tasks.setup.setup_task:SetupTask",
+        "datamimic_ce.engine.runtime.tasks.values.construction.sequence_table:SequenceTableGenerator"
+      ],
+      "decided_by": "agent",
+      "inside": "docs/architecture/inner/runtime/tasks/architecture-contract.json"
+    },
+    {
+      "id": "RUNTIME-LIFECYCLE",
+      "label": "lifecycle",
+      "role": "component",
       "packages": [
         "datamimic_ce.engine.runtime.lifecycle"
       ],
-      "responsibilities": ["Prepare, invoke setup, log, and complete descriptor runs."],
-      "forbidden_responsibilities": ["Implement source connectors or DSL grammar."],
-      "provenance": ["docs/architecture/inner/target.md"],
-      "requires": [
-        {"component": "contracts", "rationale": "Run lifecycle accepts and returns typed runtime values.", "decided_by": "agent"},
-        {"component": "contexts", "rationale": "Run lifecycle creates execution context.", "decided_by": "agent"},
-        {"component": "tasks", "rationale": "Run lifecycle starts the setup task.", "decided_by": "agent"},
-        {"component": "logging", "rationale": "Run lifecycle configures runtime logging.", "decided_by": "agent"}
+      "responsibilities": [
+        "Run configuration, process setup, session/run orchestration and cleanup."
       ],
-      "public": [], "decided_by": "agent"
+      "forbidden_responsibilities": [
+        "Implement source connectors or DSL grammar."
+      ],
+      "provenance": [
+        "docs/architecture/inner/target.md"
+      ],
+      "requires": [
+        {
+          "component": "contracts",
+          "rationale": "Run lifecycle accepts and returns typed runtime values.",
+          "decided_by": "agent"
+        },
+        {
+          "component": "contexts",
+          "rationale": "Run lifecycle creates execution context.",
+          "decided_by": "agent"
+        },
+        {
+          "component": "tasks",
+          "rationale": "Run lifecycle starts the setup task.",
+          "decided_by": "agent"
+        },
+        {
+          "component": "logging",
+          "rationale": "Run lifecycle configures runtime logging.",
+          "decided_by": "agent"
+        }
+      ],
+      "public": [
+        "datamimic_ce.engine.runtime.lifecycle.runner",
+        "datamimic_ce.engine.runtime.lifecycle.config:settings",
+        "datamimic_ce.engine.runtime.lifecycle.process"
+      ],
+      "decided_by": "agent"
+    },
+    {
+      "id": "RUNTIME-EVALUATION",
+      "label": "evaluation",
+      "role": "component",
+      "packages": [
+        "datamimic_ce.engine.runtime.scripting"
+      ],
+      "responsibilities": [
+        "Expression evaluation/interpolation and boolean condition invariant."
+      ],
+      "forbidden_responsibilities": [
+        "Own run state, task scheduling, or external clients."
+      ],
+      "provenance": [
+        "docs/architecture/inner/target.md"
+      ],
+      "requires": [
+        {
+          "component": "contracts",
+          "rationale": "Evaluation uses runtime-owned context protocols.",
+          "decided_by": "agent"
+        }
+      ],
+      "public": [
+        "datamimic_ce.engine.runtime.scripting.evaluation"
+      ],
+      "decided_by": "agent"
     }
   ],
   "rules": [
     {
-      "id": "RUNTIME-REQUIRES-COMPLETE", "kind": "complete_requires",
+      "id": "RUNTIME-REQUIRES-COMPLETE",
+      "kind": "complete_requires",
       "include_type_checking": true,
       "rationale": "Task execution cannot depend back on the run facade or lifecycle.",
-      "provenance": ["docs/architecture/inner/target.md"], "decided_by": "agent"
+      "provenance": [
+        "docs/architecture/inner/target.md"
+      ],
+      "decided_by": "agent"
+    },
+    {
+      "id": "RUNTIME-ASSIGNMENT",
+      "kind": "complete_assignment",
+      "source": "datamimic_ce.engine.runtime",
+      "rationale": "Every implementation below this boundary has one declared owner; initializer behavior is reviewed separately.",
+      "provenance": [
+        "docs/architecture/inner/target.md"
+      ],
+      "decided_by": "agent"
+    },
+    {
+      "id": "RUNTIME-INTERFACES",
+      "kind": "interface_boundary",
+      "include_type_checking": true,
+      "rationale": "Sibling components use explicit entry points; a permitted direction does not publish all internals.",
+      "provenance": [
+        "docs/architecture/inner/target.md"
+      ],
+      "decided_by": "agent"
+    },
+    {
+      "id": "RUNTIME-ACYCLIC",
+      "kind": "no_component_cycles",
+      "rationale": "Responsibility layers must not require one another in both directions.",
+      "provenance": [
+        "docs/architecture/inner/target.md"
+      ],
+      "decided_by": "agent"
+    },
+    {
+      "id": "LAYOUT-ENGINE-RUNTIME-CONTEXTS",
+      "kind": "root_layout",
+      "root": "datamimic_ce.engine.runtime.contexts",
+      "allowed_children": [
+        "datamimic_ce.engine.runtime.contexts.context",
+        "datamimic_ce.engine.runtime.contexts.demographic_context",
+        "datamimic_ce.engine.runtime.contexts.expression_globals",
+        "datamimic_ce.engine.runtime.contexts.geniter_context",
+        "datamimic_ce.engine.runtime.contexts.records"
+      ],
+      "rationale": "Closed Context/SetupContext hierarchy, row state and seeded expression dependencies. Exact reviewed target children; no hidden extra modules.",
+      "provenance": [
+        "docs/architecture/inner/structure-review.json"
+      ],
+      "decided_by": "agent"
+    },
+    {
+      "id": "LAYOUT-ENGINE-RUNTIME-LIFECYCLE",
+      "kind": "root_layout",
+      "root": "datamimic_ce.engine.runtime.lifecycle",
+      "allowed_children": [
+        "datamimic_ce.engine.runtime.lifecycle.config",
+        "datamimic_ce.engine.runtime.lifecycle.process",
+        "datamimic_ce.engine.runtime.lifecycle.runner"
+      ],
+      "rationale": "Run configuration, process setup, session/run orchestration and cleanup. Exact reviewed target children; no hidden extra modules.",
+      "provenance": [
+        "docs/architecture/inner/structure-review.json"
+      ],
+      "decided_by": "agent"
+    },
+    {
+      "id": "LAYOUT-ENGINE-RUNTIME-SCRIPTING",
+      "kind": "root_layout",
+      "root": "datamimic_ce.engine.runtime.scripting",
+      "allowed_children": [
+        "datamimic_ce.engine.runtime.scripting.evaluation",
+        "datamimic_ce.engine.runtime.scripting.plugins"
+      ],
+      "rationale": "Expression evaluation/interpolation and boolean condition invariant. Exact reviewed target children; no hidden extra modules.",
+      "provenance": [
+        "docs/architecture/inner/structure-review.json"
+      ],
+      "decided_by": "agent"
+    },
+    {
+      "id": "LAYOUT-ENGINE-RUNTIME-SCRIPTING-PLUGINS",
+      "kind": "root_layout",
+      "root": "datamimic_ce.engine.runtime.scripting.plugins",
+      "allowed_children": [],
+      "rationale": "Expression evaluation/interpolation and boolean condition invariant. Exact reviewed target children; no hidden extra modules.",
+      "provenance": [
+        "docs/architecture/inner/structure-review.json"
+      ],
+      "decided_by": "agent"
+    },
+    {
+      "id": "LAYOUT-ENGINE-RUNTIME-STORAGE",
+      "kind": "root_layout",
+      "root": "datamimic_ce.engine.runtime.storage",
+      "allowed_children": [
+        "datamimic_ce.engine.runtime.storage.global_increment",
+        "datamimic_ce.engine.runtime.storage.memstore_manager"
+      ],
+      "rationale": "Run/row storage primitives. Exact reviewed target children; no hidden extra modules.",
+      "provenance": [
+        "docs/architecture/inner/structure-review.json"
+      ],
+      "decided_by": "agent"
+    },
+    {
+      "id": "LAYOUT-ENGINE-RUNTIME-TASKS",
+      "kind": "root_layout",
+      "root": "datamimic_ce.engine.runtime.tasks",
+      "allowed_children": [
+        "datamimic_ce.engine.runtime.tasks.base",
+        "datamimic_ce.engine.runtime.tasks.flow",
+        "datamimic_ce.engine.runtime.tasks.generate",
+        "datamimic_ce.engine.runtime.tasks.registry",
+        "datamimic_ce.engine.runtime.tasks.setup",
+        "datamimic_ce.engine.runtime.tasks.sources",
+        "datamimic_ce.engine.runtime.tasks.values"
+      ],
+      "rationale": "Statement execution, value construction and resolved source requests. Exact reviewed target children; no hidden extra modules.",
+      "provenance": [
+        "docs/architecture/inner/structure-review.json"
+      ],
+      "decided_by": "agent"
     }
   ]
 }

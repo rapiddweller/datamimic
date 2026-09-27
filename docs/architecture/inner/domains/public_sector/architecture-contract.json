@@ -1,0 +1,180 @@
+{
+  "schema_version": "2.1.0",
+  "components": [
+    {
+      "id": "PUBLIC-SECTOR-MODELS",
+      "label": "models",
+      "role": "component",
+      "packages": [
+        "datamimic_ce.domains.public_sector.models"
+      ],
+      "responsibilities": [
+        "Lazy domain entities; may call generators for computed values."
+      ],
+      "forbidden_responsibilities": [
+        "Generate dataset values directly or own service orchestration."
+      ],
+      "provenance": [
+        "docs/architecture/inner/target.md"
+      ],
+      "requires": [
+        {
+          "component": "generators",
+          "rationale": "Public-sector entities delegate computed values to generators.",
+          "decided_by": "agent"
+        }
+      ],
+      "public": [
+        "datamimic_ce.domains.public_sector.models.administration_office:AdministrationOffice",
+        "datamimic_ce.domains.public_sector.models.educational_institution:EducationalInstitution",
+        "datamimic_ce.domains.public_sector.models.police_officer:PoliceOfficer"
+      ],
+      "decided_by": "agent"
+    },
+    {
+      "id": "PUBLIC-SECTOR-GENERATORS",
+      "label": "generators",
+      "role": "component",
+      "packages": [
+        "datamimic_ce.domains.public_sector.generators"
+      ],
+      "responsibilities": [
+        "Value algorithms; must not import entity models/services."
+      ],
+      "forbidden_responsibilities": [
+        "Import public-sector models or services."
+      ],
+      "provenance": [
+        "docs/architecture/inner/target.md"
+      ],
+      "requires": [],
+      "public": [
+        "datamimic_ce.domains.public_sector.generators.administration_office_generator:AdministrationOfficeGenerator",
+        "datamimic_ce.domains.public_sector.generators.educational_institution_generator:EducationalInstitutionGenerator",
+        "datamimic_ce.domains.public_sector.generators.police_officer_generator:PoliceOfficerGenerator"
+      ],
+      "decided_by": "agent"
+    },
+    {
+      "id": "PUBLIC-SECTOR-SERVICES",
+      "label": "services",
+      "role": "component",
+      "packages": [
+        "datamimic_ce.domains.public_sector.services"
+      ],
+      "responsibilities": [
+        "Domain construction workflows using models and generators."
+      ],
+      "forbidden_responsibilities": [
+        "Implement generator algorithms or bypass entity models."
+      ],
+      "provenance": [
+        "docs/architecture/inner/target.md"
+      ],
+      "requires": [
+        {
+          "component": "models",
+          "rationale": "Services return typed public-sector entities.",
+          "decided_by": "agent"
+        },
+        {
+          "component": "generators",
+          "rationale": "Services delegate entity creation to domain generators.",
+          "decided_by": "agent"
+        }
+      ],
+      "public": [
+        "datamimic_ce.domains.public_sector.services.administration_office_service:AdministrationOfficeService",
+        "datamimic_ce.domains.public_sector.services.educational_institution_service:EducationalInstitutionService",
+        "datamimic_ce.domains.public_sector.services.police_officer_service:PoliceOfficerService"
+      ],
+      "decided_by": "agent"
+    }
+  ],
+  "rules": [
+    {
+      "id": "PUBLIC-SECTOR-ASSIGNMENT",
+      "kind": "complete_assignment",
+      "source": "datamimic_ce.domains.public_sector",
+      "rationale": "Each public-sector implementation module has one semantic owner; the package initializer is the source module.",
+      "provenance": [
+        "docs/architecture/inner/target.md"
+      ],
+      "decided_by": "agent"
+    },
+    {
+      "id": "PUBLIC-SECTOR-REQUIRES",
+      "kind": "complete_requires",
+      "include_type_checking": true,
+      "rationale": "Entities and services may consume generators; generator-to-entity and generator-to-service dependencies remain disallowed.",
+      "provenance": [
+        "docs/architecture/inner/target.md"
+      ],
+      "decided_by": "agent"
+    },
+    {
+      "id": "PUBLIC-SECTOR-INTERFACES",
+      "kind": "interface_boundary",
+      "include_type_checking": true,
+      "rationale": "Only entity, generator, and service types cross family boundaries.",
+      "provenance": [
+        "docs/architecture/inner/target.md"
+      ],
+      "decided_by": "agent"
+    },
+    {
+      "id": "PUBLIC-SECTOR-ACYCLIC",
+      "kind": "no_component_cycles",
+      "rationale": "Public-sector ownership flows from generators to entities and services, without reverse generator dependencies.",
+      "provenance": [
+        "docs/architecture/inner/target.md"
+      ],
+      "decided_by": "agent"
+    },
+    {
+      "id": "LAYOUT-DOMAINS-PUBLIC_SECTOR-GENERATORS",
+      "kind": "root_layout",
+      "root": "datamimic_ce.domains.public_sector.generators",
+      "allowed_children": [
+        "datamimic_ce.domains.public_sector.generators.administration_office_generator",
+        "datamimic_ce.domains.public_sector.generators.educational_institution_generator",
+        "datamimic_ce.domains.public_sector.generators.police_officer_generator"
+      ],
+      "rationale": "Value algorithms; must not import entity models/services. Exact reviewed target children; no hidden extra modules.",
+      "provenance": [
+        "docs/architecture/inner/structure-review.json"
+      ],
+      "decided_by": "agent"
+    },
+    {
+      "id": "LAYOUT-DOMAINS-PUBLIC_SECTOR-MODELS",
+      "kind": "root_layout",
+      "root": "datamimic_ce.domains.public_sector.models",
+      "allowed_children": [
+        "datamimic_ce.domains.public_sector.models.administration_office",
+        "datamimic_ce.domains.public_sector.models.educational_institution",
+        "datamimic_ce.domains.public_sector.models.police_officer"
+      ],
+      "rationale": "Lazy domain entities; may call generators for computed values. Exact reviewed target children; no hidden extra modules.",
+      "provenance": [
+        "docs/architecture/inner/structure-review.json"
+      ],
+      "decided_by": "agent"
+    },
+    {
+      "id": "LAYOUT-DOMAINS-PUBLIC_SECTOR-SERVICES",
+      "kind": "root_layout",
+      "root": "datamimic_ce.domains.public_sector.services",
+      "allowed_children": [
+        "datamimic_ce.domains.public_sector.services.administration_office_service",
+        "datamimic_ce.domains.public_sector.services.educational_institution_service",
+        "datamimic_ce.domains.public_sector.services.police_officer_service"
+      ],
+      "rationale": "Domain construction workflows using models and generators. Exact reviewed target children; no hidden extra modules.",
+      "provenance": [
+        "docs/architecture/inner/structure-review.json"
+      ],
+      "decided_by": "agent"
+    }
+  ]
+}

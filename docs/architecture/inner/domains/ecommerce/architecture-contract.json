@@ -1,0 +1,174 @@
+{
+  "schema_version": "2.1.0",
+  "components": [
+    {
+      "id": "ECOMMERCE-MODELS",
+      "label": "models",
+      "role": "component",
+      "packages": [
+        "datamimic_ce.domains.ecommerce.models"
+      ],
+      "responsibilities": [
+        "Lazy domain entities; may call generators for computed values."
+      ],
+      "forbidden_responsibilities": [
+        "Generate dataset values directly or own service orchestration."
+      ],
+      "provenance": [
+        "docs/architecture/inner/target.md"
+      ],
+      "requires": [
+        {
+          "component": "generators",
+          "rationale": "Commerce entities delegate computed values to generators.",
+          "decided_by": "agent"
+        }
+      ],
+      "public": [
+        "datamimic_ce.domains.ecommerce.models.order:Order",
+        "datamimic_ce.domains.ecommerce.models.product:Product"
+      ],
+      "decided_by": "agent"
+    },
+    {
+      "id": "ECOMMERCE-GENERATORS",
+      "label": "generators",
+      "role": "component",
+      "packages": [
+        "datamimic_ce.domains.ecommerce.generators"
+      ],
+      "responsibilities": [
+        "Value algorithms; must not import entity models/services."
+      ],
+      "forbidden_responsibilities": [
+        "Import commerce models or services."
+      ],
+      "provenance": [
+        "docs/architecture/inner/target.md"
+      ],
+      "requires": [],
+      "public": [
+        "datamimic_ce.domains.ecommerce.generators.order_generator:OrderGenerator",
+        "datamimic_ce.domains.ecommerce.generators.product_generator:ProductGenerator"
+      ],
+      "decided_by": "agent"
+    },
+    {
+      "id": "ECOMMERCE-SERVICES",
+      "label": "services",
+      "role": "component",
+      "packages": [
+        "datamimic_ce.domains.ecommerce.services"
+      ],
+      "responsibilities": [
+        "Domain construction workflows using models and generators."
+      ],
+      "forbidden_responsibilities": [
+        "Implement generator algorithms or bypass entity models."
+      ],
+      "provenance": [
+        "docs/architecture/inner/target.md"
+      ],
+      "requires": [
+        {
+          "component": "models",
+          "rationale": "Services return commerce entities.",
+          "decided_by": "agent"
+        },
+        {
+          "component": "generators",
+          "rationale": "Services instantiate commerce generators.",
+          "decided_by": "agent"
+        }
+      ],
+      "public": [
+        "datamimic_ce.domains.ecommerce.services.order_service:OrderService",
+        "datamimic_ce.domains.ecommerce.services.product_service:ProductService"
+      ],
+      "decided_by": "agent"
+    }
+  ],
+  "rules": [
+    {
+      "id": "ECOMMERCE-ASSIGNMENT",
+      "kind": "complete_assignment",
+      "source": "datamimic_ce.domains.ecommerce",
+      "rationale": "Each commerce implementation module has one semantic owner; the package initializer is the source module.",
+      "provenance": [
+        "docs/architecture/inner/target.md"
+      ],
+      "decided_by": "agent"
+    },
+    {
+      "id": "ECOMMERCE-REQUIRES",
+      "kind": "complete_requires",
+      "include_type_checking": true,
+      "rationale": "Entities and services may consume generators; generator-to-entity and generator-to-service dependencies remain disallowed.",
+      "provenance": [
+        "docs/architecture/inner/target.md"
+      ],
+      "decided_by": "agent"
+    },
+    {
+      "id": "ECOMMERCE-INTERFACES",
+      "kind": "interface_boundary",
+      "include_type_checking": true,
+      "rationale": "Only entity, generator, and service types cross family boundaries.",
+      "provenance": [
+        "docs/architecture/inner/target.md"
+      ],
+      "decided_by": "agent"
+    },
+    {
+      "id": "ECOMMERCE-ACYCLIC",
+      "kind": "no_component_cycles",
+      "rationale": "Commerce ownership flows from generators to entities and services, without reverse generator dependencies.",
+      "provenance": [
+        "docs/architecture/inner/target.md"
+      ],
+      "decided_by": "agent"
+    },
+    {
+      "id": "LAYOUT-DOMAINS-ECOMMERCE-GENERATORS",
+      "kind": "root_layout",
+      "root": "datamimic_ce.domains.ecommerce.generators",
+      "allowed_children": [
+        "datamimic_ce.domains.ecommerce.generators.order_generator",
+        "datamimic_ce.domains.ecommerce.generators.product_generator"
+      ],
+      "rationale": "Value algorithms; must not import entity models/services. Exact reviewed target children; no hidden extra modules.",
+      "provenance": [
+        "docs/architecture/inner/structure-review.json"
+      ],
+      "decided_by": "agent"
+    },
+    {
+      "id": "LAYOUT-DOMAINS-ECOMMERCE-MODELS",
+      "kind": "root_layout",
+      "root": "datamimic_ce.domains.ecommerce.models",
+      "allowed_children": [
+        "datamimic_ce.domains.ecommerce.models.order",
+        "datamimic_ce.domains.ecommerce.models.product"
+      ],
+      "rationale": "Lazy domain entities; may call generators for computed values. Exact reviewed target children; no hidden extra modules.",
+      "provenance": [
+        "docs/architecture/inner/structure-review.json"
+      ],
+      "decided_by": "agent"
+    },
+    {
+      "id": "LAYOUT-DOMAINS-ECOMMERCE-SERVICES",
+      "kind": "root_layout",
+      "root": "datamimic_ce.domains.ecommerce.services",
+      "allowed_children": [
+        "datamimic_ce.domains.ecommerce.services.order_service",
+        "datamimic_ce.domains.ecommerce.services.product_service"
+      ],
+      "rationale": "Domain construction workflows using models and generators. Exact reviewed target children; no hidden extra modules.",
+      "provenance": [
+        "docs/architecture/inner/structure-review.json"
+      ],
+      "decided_by": "agent"
+    }
+  ]
+}

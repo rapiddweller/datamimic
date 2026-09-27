@@ -1,0 +1,459 @@
+{
+  "schema_version": "2.1.0",
+  "components": [
+    {
+      "id": "SHARED-MODELS",
+      "label": "models",
+      "role": "contract",
+      "packages": [
+        "datamimic_ce.domains.shared.models"
+      ],
+      "responsibilities": [
+        "Cross-industry lazy entities and value shapes."
+      ],
+      "forbidden_responsibilities": [
+        "Own another component's behavior."
+      ],
+      "provenance": [
+        "docs/architecture/inner/target.md"
+      ],
+      "requires": [
+        {
+          "component": "generators",
+          "rationale": "Lazy domain entities resolve cached properties through generators; they are not passive DTOs.",
+          "decided_by": "agent"
+        },
+        {
+          "component": "literal_generators",
+          "rationale": "Computed properties use typed scalar generators.",
+          "decided_by": "agent"
+        },
+        {
+          "component": "demographics",
+          "rationale": "Entity views use demographic facts; configuration belongs to Demographics, not entity views.",
+          "decided_by": "agent"
+        }
+      ],
+      "public": [
+        "datamimic_ce.domains.shared.models.address",
+        "datamimic_ce.domains.shared.models.city",
+        "datamimic_ce.domains.shared.models.company",
+        "datamimic_ce.domains.shared.models.country",
+        "datamimic_ce.domains.shared.models.person"
+      ],
+      "decided_by": "agent"
+    },
+    {
+      "id": "SHARED-DATASETS",
+      "label": "datasets",
+      "role": "component",
+      "packages": [
+        "datamimic_ce.domains.shared.datasets"
+      ],
+      "responsibilities": [
+        "Shared locales, sampling and profile composition."
+      ],
+      "forbidden_responsibilities": [
+        "Own another component's behavior."
+      ],
+      "provenance": [
+        "docs/architecture/inner/target.md"
+      ],
+      "requires": [],
+      "public": [
+        "datamimic_ce.domains.shared.datasets.loader",
+        "datamimic_ce.domains.shared.datasets.locales",
+        "datamimic_ce.domains.shared.datasets.locale_registry",
+        "datamimic_ce.domains.shared.datasets.profile_components"
+      ],
+      "decided_by": "agent"
+    },
+    {
+      "id": "SHARED-GENERATORS",
+      "label": "generators",
+      "role": "component",
+      "packages": [
+        "datamimic_ce.domains.shared.generators"
+      ],
+      "responsibilities": [
+        "Shared entity-value generation."
+      ],
+      "forbidden_responsibilities": [
+        "Own another component's behavior."
+      ],
+      "provenance": [
+        "docs/architecture/inner/target.md"
+      ],
+      "requires": [
+        {
+          "component": "datasets",
+          "rationale": "Generation consumes locale data.",
+          "decided_by": "agent"
+        },
+        {
+          "component": "literal_generators",
+          "rationale": "Entity generation composes scalar generators.",
+          "decided_by": "agent"
+        },
+        {
+          "component": "demographics",
+          "rationale": "Entity generation applies demographic profiles.",
+          "decided_by": "agent"
+        }
+      ],
+      "public": [
+        "datamimic_ce.domains.shared.generators.address_generator",
+        "datamimic_ce.domains.shared.generators.city_generator",
+        "datamimic_ce.domains.shared.generators.company_generator",
+        "datamimic_ce.domains.shared.generators.country_generator",
+        "datamimic_ce.domains.shared.generators.person_generator"
+      ],
+      "decided_by": "agent"
+    },
+    {
+      "id": "SHARED-SERVICES",
+      "label": "services",
+      "role": "component",
+      "packages": [
+        "datamimic_ce.domains.shared.services"
+      ],
+      "responsibilities": [
+        "Shared entity construction workflows."
+      ],
+      "forbidden_responsibilities": [
+        "Own another component's behavior."
+      ],
+      "provenance": [
+        "docs/architecture/inner/target.md"
+      ],
+      "requires": [
+        {
+          "component": "models",
+          "rationale": "Services return typed entity values.",
+          "decided_by": "agent"
+        },
+        {
+          "component": "generators",
+          "rationale": "Services delegate generation.",
+          "decided_by": "agent"
+        },
+        {
+          "component": "datasets",
+          "rationale": "Services load supported datasets.",
+          "decided_by": "agent"
+        },
+        {
+          "component": "demographics",
+          "rationale": "Services accept demographic profiles.",
+          "decided_by": "agent"
+        }
+      ],
+      "public": [
+        "datamimic_ce.domains.shared.services.address_api",
+        "datamimic_ce.domains.shared.services.person_api",
+        "datamimic_ce.domains.shared.services.address_service",
+        "datamimic_ce.domains.shared.services.city_service",
+        "datamimic_ce.domains.shared.services.company_service",
+        "datamimic_ce.domains.shared.services.country_service",
+        "datamimic_ce.domains.shared.services.person_service"
+      ],
+      "decided_by": "agent"
+    },
+    {
+      "id": "SHARED-LITERAL-GENERATORS",
+      "label": "literal_generators",
+      "role": "component",
+      "packages": [
+        "datamimic_ce.domains.shared.literal_generators"
+      ],
+      "responsibilities": [
+        "Context-free scalar/state-transition algorithms and their builtin inventory."
+      ],
+      "forbidden_responsibilities": [
+        "Own another component's behavior."
+      ],
+      "provenance": [
+        "docs/architecture/inner/target.md"
+      ],
+      "requires": [
+        {
+          "component": "datasets",
+          "rationale": "Locale-aware generators consume dataset values.",
+          "decided_by": "agent"
+        }
+      ],
+      "public": [
+        "datamimic_ce.domains.shared.literal_generators.registry",
+        "datamimic_ce.domains.shared.literal_generators.numeric.float_generator:FloatGenerator",
+        "datamimic_ce.domains.shared.literal_generators.numeric.increment_generator:IncrementGenerator",
+        "datamimic_ce.domains.shared.literal_generators.numeric.integer_generator:IntegerGenerator",
+        "datamimic_ce.domains.shared.literal_generators.numeric.number_sequences:finite_number_sequence_capacity",
+        "datamimic_ce.domains.shared.literal_generators.primitives.binary_generator:BinaryGenerator",
+        "datamimic_ce.domains.shared.literal_generators.primitives.boolean_generator:BooleanGenerator",
+        "datamimic_ce.domains.shared.literal_generators.primitives.color_generators:ColorGenerator",
+        "datamimic_ce.domains.shared.literal_generators.primitives.data_faker_generator:DataFakerGenerator",
+        "datamimic_ce.domains.shared.literal_generators.primitives.state_transition_generator:StateTransitionGenerator",
+        "datamimic_ce.domains.shared.literal_generators.primitives.string_generator:StringGenerator",
+        "datamimic_ce.domains.shared.literal_generators.identity.codes.cnpj_generator:CNPJGenerator",
+        "datamimic_ce.domains.shared.literal_generators.identity.codes.cpf_generator:CPFGenerator",
+        "datamimic_ce.domains.shared.literal_generators.identity.codes.ean_generator:EANGenerator",
+        "datamimic_ce.domains.shared.literal_generators.identity.security.hash_generator:HashGenerator",
+        "datamimic_ce.domains.shared.literal_generators.identity.security.password_generator:PasswordGenerator",
+        "datamimic_ce.domains.shared.literal_generators.identity.keys.prefixed_id_generator:PrefixedIdGenerator",
+        "datamimic_ce.domains.shared.literal_generators.identity.codes.ssn_generator:SSNGenerator",
+        "datamimic_ce.domains.shared.literal_generators.identity.security.token_generator:TokenGenerator",
+        "datamimic_ce.domains.shared.literal_generators.identity.keys.uuid_generator:UUIDGenerator",
+        "datamimic_ce.domains.shared.literal_generators.temporal.birthdate_generator:BirthdateGenerator",
+        "datamimic_ce.domains.shared.literal_generators.temporal.datetime_generator:DateTimeGenerator",
+        "datamimic_ce.domains.shared.literal_generators.person.academic_title_generator:AcademicTitleGenerator",
+        "datamimic_ce.domains.shared.literal_generators.person.family_name_generator:FamilyNameGenerator",
+        "datamimic_ce.domains.shared.literal_generators.person.gender_generator:GenderGenerator",
+        "datamimic_ce.domains.shared.literal_generators.person.given_name_generator:GivenNameGenerator",
+        "datamimic_ce.domains.shared.literal_generators.person.nobility_title_generator:NobilityTitleGenerator",
+        "datamimic_ce.domains.shared.literal_generators.contact.domain_generator:DomainGenerator",
+        "datamimic_ce.domains.shared.literal_generators.contact.email_address_generator:EmailAddressGenerator",
+        "datamimic_ce.domains.shared.literal_generators.contact.phone_number_generator:PhoneNumberGenerator",
+        "datamimic_ce.domains.shared.literal_generators.contact.street_name_generator:StreetNameGenerator",
+        "datamimic_ce.domains.shared.literal_generators.contact.url_generator:UrlGenerator",
+        "datamimic_ce.domains.shared.literal_generators.business.company_name_generator:CompanyNameGenerator",
+        "datamimic_ce.domains.shared.literal_generators.business.department_name_generator:DepartmentNameGenerator",
+        "datamimic_ce.domains.shared.literal_generators.business.sector_generator:SectorGenerator",
+        "datamimic_ce.domains.shared.literal_generators.registry:generator_namespace"
+      ],
+      "decided_by": "agent",
+      "inside": "docs/architecture/inner/domains/shared/literal_generators/architecture-contract.json"
+    },
+    {
+      "id": "SHARED-CONVERTERS",
+      "label": "converters",
+      "role": "component",
+      "packages": [
+        "datamimic_ce.domains.shared.converters"
+      ],
+      "responsibilities": [
+        "Typed value transformations."
+      ],
+      "forbidden_responsibilities": [
+        "Own another component's behavior."
+      ],
+      "provenance": [
+        "docs/architecture/inner/target.md"
+      ],
+      "requires": [],
+      "public": [
+        "datamimic_ce.domains.shared.converters.base.converter:Converter"
+      ],
+      "decided_by": "agent",
+      "inside": "docs/architecture/inner/domains/shared/converters/architecture-contract.json"
+    },
+    {
+      "id": "SHARED-DEMOGRAPHICS",
+      "label": "demographics",
+      "role": "component",
+      "packages": [
+        "datamimic_ce.domains.shared.demographics"
+      ],
+      "responsibilities": [
+        "Demographic model, profile validation and sampling rules."
+      ],
+      "forbidden_responsibilities": [
+        "Own another component's behavior."
+      ],
+      "provenance": [
+        "docs/architecture/inner/target.md"
+      ],
+      "requires": [
+        {
+          "component": "datasets",
+          "rationale": "Profiles resolve their configured dataset.",
+          "decided_by": "agent"
+        }
+      ],
+      "public": [
+        "datamimic_ce.domains.shared.demographics.api",
+        "datamimic_ce.domains.shared.demographics.profile",
+        "datamimic_ce.domains.shared.demographics.loader",
+        "datamimic_ce.domains.shared.demographics.sampler",
+        "datamimic_ce.domains.shared.demographics.config:DemographicConfig"
+      ],
+      "decided_by": "agent"
+    }
+  ],
+  "rules": [
+    {
+      "id": "SHARED-ASSIGNMENT",
+      "kind": "complete_assignment",
+      "source": "datamimic_ce.domains.shared",
+      "rationale": "Every child implementation has one owner; parent initializer behavior is reviewed explicitly.",
+      "provenance": [
+        "docs/architecture/inner/target.md"
+      ],
+      "decided_by": "agent"
+    },
+    {
+      "id": "SHARED-REQUIRES",
+      "kind": "complete_requires",
+      "include_type_checking": true,
+      "rationale": "Only the listed responsibility directions are permitted.",
+      "provenance": [
+        "docs/architecture/inner/target.md"
+      ],
+      "decided_by": "agent"
+    },
+    {
+      "id": "SHARED-INTERFACES",
+      "kind": "interface_boundary",
+      "include_type_checking": true,
+      "rationale": "A dependency reaches explicit operations and types, not arbitrary implementation details.",
+      "provenance": [
+        "docs/architecture/inner/target.md"
+      ],
+      "decided_by": "agent"
+    },
+    {
+      "id": "SHARED-ACYCLIC",
+      "kind": "no_component_cycles",
+      "rationale": "Lower layers do not import their consumers.",
+      "provenance": [
+        "docs/architecture/inner/target.md"
+      ],
+      "decided_by": "agent"
+    },
+    {
+      "id": "LAYOUT-DOMAINS-SHARED-CONVERTERS",
+      "kind": "root_layout",
+      "root": "datamimic_ce.domains.shared.converters",
+      "allowed_children": [
+        "datamimic_ce.domains.shared.converters.base",
+        "datamimic_ce.domains.shared.converters.privacy",
+        "datamimic_ce.domains.shared.converters.structural",
+        "datamimic_ce.domains.shared.converters.temporal",
+        "datamimic_ce.domains.shared.converters.text"
+      ],
+      "rationale": "Typed value transformations. Exact reviewed target children; no hidden extra modules.",
+      "provenance": [
+        "docs/architecture/inner/structure-review.json"
+      ],
+      "decided_by": "agent"
+    },
+    {
+      "id": "LAYOUT-DOMAINS-SHARED-DATASETS",
+      "kind": "root_layout",
+      "root": "datamimic_ce.domains.shared.datasets",
+      "allowed_children": [
+        "datamimic_ce.domains.shared.datasets.loader",
+        "datamimic_ce.domains.shared.datasets.locale_registry",
+        "datamimic_ce.domains.shared.datasets.locales",
+        "datamimic_ce.domains.shared.datasets.profile_components"
+      ],
+      "rationale": "Shared locales, sampling and profile composition. Exact reviewed target children; no hidden extra modules.",
+      "provenance": [
+        "docs/architecture/inner/structure-review.json"
+      ],
+      "decided_by": "agent"
+    },
+    {
+      "id": "LAYOUT-DOMAINS-SHARED-DATASETS-LOCALES",
+      "kind": "root_layout",
+      "root": "datamimic_ce.domains.shared.datasets.locales",
+      "allowed_children": [],
+      "rationale": "Shared locales, sampling and profile composition. Exact reviewed target children; no hidden extra modules.",
+      "provenance": [
+        "docs/architecture/inner/structure-review.json"
+      ],
+      "decided_by": "agent"
+    },
+    {
+      "id": "LAYOUT-DOMAINS-SHARED-DEMOGRAPHICS",
+      "kind": "root_layout",
+      "root": "datamimic_ce.domains.shared.demographics",
+      "allowed_children": [
+        "datamimic_ce.domains.shared.demographics.api",
+        "datamimic_ce.domains.shared.demographics.config",
+        "datamimic_ce.domains.shared.demographics.loader",
+        "datamimic_ce.domains.shared.demographics.profile",
+        "datamimic_ce.domains.shared.demographics.profile_meta",
+        "datamimic_ce.domains.shared.demographics.sampler"
+      ],
+      "rationale": "Demographic model, profile validation and sampling rules. Exact reviewed target children; no hidden extra modules.",
+      "provenance": [
+        "docs/architecture/inner/structure-review.json"
+      ],
+      "decided_by": "agent"
+    },
+    {
+      "id": "LAYOUT-DOMAINS-SHARED-GENERATORS",
+      "kind": "root_layout",
+      "root": "datamimic_ce.domains.shared.generators",
+      "allowed_children": [
+        "datamimic_ce.domains.shared.generators.address_generator",
+        "datamimic_ce.domains.shared.generators.city_generator",
+        "datamimic_ce.domains.shared.generators.company_generator",
+        "datamimic_ce.domains.shared.generators.country_generator",
+        "datamimic_ce.domains.shared.generators.person_generator",
+        "datamimic_ce.domains.shared.generators.region_groups"
+      ],
+      "rationale": "Shared entity-value generation. Exact reviewed target children; no hidden extra modules.",
+      "provenance": [
+        "docs/architecture/inner/structure-review.json"
+      ],
+      "decided_by": "agent"
+    },
+    {
+      "id": "LAYOUT-DOMAINS-SHARED-LITERAL_GENERATORS",
+      "kind": "root_layout",
+      "root": "datamimic_ce.domains.shared.literal_generators",
+      "allowed_children": [
+        "datamimic_ce.domains.shared.literal_generators.business",
+        "datamimic_ce.domains.shared.literal_generators.contact",
+        "datamimic_ce.domains.shared.literal_generators.identity",
+        "datamimic_ce.domains.shared.literal_generators.numeric",
+        "datamimic_ce.domains.shared.literal_generators.person",
+        "datamimic_ce.domains.shared.literal_generators.primitives",
+        "datamimic_ce.domains.shared.literal_generators.registry",
+        "datamimic_ce.domains.shared.literal_generators.temporal"
+      ],
+      "rationale": "Context-free scalar/state-transition algorithms and their builtin inventory. Exact reviewed target children; no hidden extra modules.",
+      "provenance": [
+        "docs/architecture/inner/structure-review.json"
+      ],
+      "decided_by": "agent"
+    },
+    {
+      "id": "LAYOUT-DOMAINS-SHARED-MODELS",
+      "kind": "root_layout",
+      "root": "datamimic_ce.domains.shared.models",
+      "allowed_children": [
+        "datamimic_ce.domains.shared.models.address",
+        "datamimic_ce.domains.shared.models.city",
+        "datamimic_ce.domains.shared.models.company",
+        "datamimic_ce.domains.shared.models.country",
+        "datamimic_ce.domains.shared.models.person"
+      ],
+      "rationale": "Cross-industry lazy entities and value shapes. Exact reviewed target children; no hidden extra modules.",
+      "provenance": [
+        "docs/architecture/inner/structure-review.json"
+      ],
+      "decided_by": "agent"
+    },
+    {
+      "id": "LAYOUT-DOMAINS-SHARED-SERVICES",
+      "kind": "root_layout",
+      "root": "datamimic_ce.domains.shared.services",
+      "allowed_children": [
+        "datamimic_ce.domains.shared.services.address_api",
+        "datamimic_ce.domains.shared.services.address_service",
+        "datamimic_ce.domains.shared.services.city_service",
+        "datamimic_ce.domains.shared.services.company_service",
+        "datamimic_ce.domains.shared.services.country_service",
+        "datamimic_ce.domains.shared.services.person_api",
+        "datamimic_ce.domains.shared.services.person_service"
+      ],
+      "rationale": "Shared entity construction workflows. Exact reviewed target children; no hidden extra modules.",
+      "provenance": [
+        "docs/architecture/inner/structure-review.json"
+      ],
+      "decided_by": "agent"
+    }
+  ]
+}

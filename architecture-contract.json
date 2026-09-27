@@ -10,8 +10,7 @@
       ],
       "namespace": "datamimic_ce.interfaces",
       "responsibilities": [
-        "CLI, MCP, and Python transport adaptation",
-        "input validation and presentation"
+        "Transport and Python caller adaptation; no execution policy."
       ],
       "forbidden_responsibilities": [
         "descriptor execution",
@@ -44,38 +43,13 @@
         }
       ],
       "public": [
-        "datamimic_ce.interfaces.api",
-        "datamimic_ce.interfaces.contracts"
+        "datamimic_ce.interfaces.python.data_mimic_test:DataMimicTest",
+        "datamimic_ce.interfaces.python.datamimic:DataMimic",
+        "datamimic_ce.interfaces.python.factory:DataMimicTestFactory"
       ],
       "planned": [],
-      "decided_by": "architect"
-    },
-    {
-      "id": "COMP-PYTHON-API",
-      "label": "python_api",
-      "role": "interface",
-      "packages": [
-        "datamimic_ce.datamimic",
-        "datamimic_ce.data_mimic_test",
-        "datamimic_ce.factory"
-      ],
-      "responsibilities": [
-        "Stable documented Python entry points"
-      ],
-      "forbidden_responsibilities": [
-        "owning execution, DSL, IO, or domain logic"
-      ],
-      "provenance": [
-        "docs/architecture/refactoring-study/experiment-2/target-architecture.md"
-      ],
-      "requires": [
-        {
-          "component": "interfaces",
-          "rationale": "Stable Python entry points delegate to the interface API."
-        }
-      ],
-      "public": [],
-      "decided_by": "architect"
+      "decided_by": "agent",
+      "inside": "docs/architecture/inner/interfaces/architecture-contract.json"
     },
     {
       "id": "COMP-AUTHORING",
@@ -87,8 +61,7 @@
       "namespace": "datamimic_ce.authoring",
       "inside": "docs/architecture/inner/authoring/architecture-contract.json",
       "responsibilities": [
-        "Typed model.dm.json intent",
-        "linting, compilation, reference projection, and bounded verification"
+        "Compile intent and run bounded verification transactions."
       ],
       "forbidden_responsibilities": [
         "a second DSL vocabulary",
@@ -126,7 +99,7 @@
         "datamimic_ce.authoring.spec:LeafFieldKind"
       ],
       "planned": [],
-      "decided_by": "architect"
+      "decided_by": "agent"
     },
     {
       "id": "COMP-DSL",
@@ -138,8 +111,7 @@
       "namespace": "datamimic_ce.engine.dsl",
       "inside": "docs/architecture/inner/dsl/architecture-contract.json",
       "responsibilities": [
-        "Canonical executable XML vocabulary",
-        "typed descriptor model and parsing"
+        "Validate descriptor vocabulary and construct execution statements."
       ],
       "forbidden_responsibilities": [
         "descriptor execution",
@@ -157,10 +129,13 @@
       ],
       "public": [
         "datamimic_ce.engine.dsl.api",
-        "datamimic_ce.engine.dsl.contracts"
+        "datamimic_ce.engine.dsl.parsers.input.properties:parse_properties",
+        "datamimic_ce.engine.dsl.vocabulary.enums.converter_enums",
+        "datamimic_ce.engine.dsl.vocabulary.enums.distribution_enums",
+        "datamimic_ce.engine.dsl.vocabulary.enums.faker_enums"
       ],
       "planned": [],
-      "decided_by": "architect"
+      "decided_by": "agent"
     },
     {
       "id": "COMP-RUNTIME",
@@ -172,8 +147,7 @@
       "namespace": "datamimic_ce.engine.runtime",
       "inside": "docs/architecture/inner/runtime/architecture-contract.json",
       "responsibilities": [
-        "Descriptor run lifecycle",
-        "evaluation, context, task, worker, and in-memory run state"
+        "Execute statements; own run, row and worker state."
       ],
       "forbidden_responsibilities": [
         "database driver details",
@@ -199,6 +173,11 @@
         {
           "component": "python_compat",
           "rationale": "Runtime supports the package's Python 3.10 floor."
+        },
+        {
+          "component": "randomness",
+          "rationale": "Use the shared RNG protocol and weighted-index primitive; no generator or run lifecycle dependency.",
+          "decided_by": "agent"
         }
       ],
       "public": [
@@ -206,7 +185,7 @@
         "datamimic_ce.engine.runtime.contracts"
       ],
       "planned": [],
-      "decided_by": "architect"
+      "decided_by": "agent"
     },
     {
       "id": "COMP-IO",
@@ -218,7 +197,7 @@
       "namespace": "datamimic_ce.engine.io",
       "inside": "docs/architecture/inner/io/architecture-contract.json",
       "responsibilities": [
-        "Sources, targets, external clients, and connection configuration"
+        "Read, select, page and write external/in-memory data."
       ],
       "forbidden_responsibilities": [
         "reading runtime context",
@@ -231,16 +210,26 @@
       "requires": [
         {
           "component": "dsl",
-          "rationale": "IO accepts typed DSL-owned source and target descriptions."
+          "rationale": "IO accepts typed DSL-owned source and target descriptions.",
+          "through": [
+            "datamimic_ce.engine.dsl.vocabulary",
+            "datamimic_ce.engine.dsl.parsers.input.properties:parse_properties"
+          ]
+        },
+        {
+          "component": "randomness",
+          "rationale": "Use the shared RNG protocol and weighted-index primitive; no generator or run lifecycle dependency.",
+          "decided_by": "agent"
         }
       ],
       "public": [
         "datamimic_ce.engine.io.api",
         "datamimic_ce.engine.io.contracts",
-        "datamimic_ce.engine.io.dataset_api"
+        "datamimic_ce.engine.io.contracts:EntityValue",
+        "datamimic_ce.engine.io.files.api"
       ],
       "planned": [],
-      "decided_by": "architect"
+      "decided_by": "agent"
     },
     {
       "id": "COMP-ERRORS",
@@ -251,7 +240,7 @@
       ],
       "namespace": "datamimic_ce.errors",
       "responsibilities": [
-        "Stable shared error types and codes"
+        "Stable public error types, codes, formatting and construction."
       ],
       "forbidden_responsibilities": [
         "component-specific validation policy",
@@ -265,7 +254,8 @@
         "datamimic_ce.errors",
         "datamimic_ce.errors.base"
       ],
-      "decided_by": "architect"
+      "decided_by": "agent",
+      "inside": "docs/architecture/inner/errors/architecture-contract.json"
     },
     {
       "id": "COMP-DOMAINS",
@@ -277,7 +267,7 @@
       "namespace": "datamimic_ce.domains",
       "inside": "docs/architecture/inner/domains/architecture-contract.json",
       "responsibilities": [
-        "Domain entities, generators, converters, datasets, and documented Python services"
+        "Generate business values/entities and load their domain datasets."
       ],
       "forbidden_responsibilities": [
         "runtime context access",
@@ -294,21 +284,34 @@
         },
         {
           "component": "dsl",
-          "rationale": "Domain generators implement DSL-owned generator contracts."
+          "rationale": "Domain generators implement DSL-owned generator contracts.",
+          "through": [
+            "datamimic_ce.engine.dsl.vocabulary.enums.distribution_enums",
+            "datamimic_ce.engine.dsl.vocabulary.enums.converter_enums",
+            "datamimic_ce.engine.dsl.vocabulary.enums.faker_enums"
+          ]
         },
         {
           "component": "io",
           "through": [
-            "datamimic_ce.engine.io.dataset_api"
+            "datamimic_ce.engine.io.files.api",
+            "datamimic_ce.engine.io.contracts:EntityValue"
           ],
           "rationale": "Domain-owned packaged datasets use the narrow file-dataset IO surface."
+        },
+        {
+          "component": "randomness",
+          "rationale": "Use the shared RNG protocol and weighted-index primitive; no generator or run lifecycle dependency.",
+          "decided_by": "agent"
         }
       ],
       "public": [
-        "datamimic_ce.domains.api"
+        "datamimic_ce.domains.api",
+        "datamimic_ce.domains.domain_core.contracts.generation",
+        "datamimic_ce.domains.facade:generate_domain"
       ],
       "planned": [],
-      "decided_by": "architect"
+      "decided_by": "agent"
     },
     {
       "id": "COMP-RESOURCES",
@@ -319,7 +322,7 @@
       ],
       "namespace": "datamimic_ce.resources",
       "responsibilities": [
-        "Shipped descriptors, scripts, and example data"
+        "Packaged runnable demos/examples and resource access."
       ],
       "forbidden_responsibilities": [
         "being imported by engine code",
@@ -350,7 +353,7 @@
         "datamimic_ce.resources.api"
       ],
       "planned": [],
-      "decided_by": "architect"
+      "decided_by": "agent"
     },
     {
       "id": "COMP-PYTHON-COMPAT",
@@ -360,7 +363,7 @@
         "datamimic_ce._compat"
       ],
       "responsibilities": [
-        "Python 3.10 compatibility primitives only"
+        "Existing interpreter compatibility only; not old import aliases."
       ],
       "forbidden_responsibilities": [
         "product behavior",
@@ -375,7 +378,30 @@
         "datamimic_ce._compat:StrEnum",
         "datamimic_ce._compat:assert_never"
       ],
-      "decided_by": "architect"
+      "decided_by": "agent"
+    },
+    {
+      "id": "COMP-RANDOMNESS",
+      "label": "randomness",
+      "packages": [
+        "datamimic_ce.randomness"
+      ],
+      "responsibilities": [
+        "Actual shared RNG structural contract and cumulated-index primitive, below Domain, IO and Runtime; no lifecycle or generation policy."
+      ],
+      "public": [
+        "datamimic_ce.randomness:RandomSource",
+        "datamimic_ce.randomness:cumulated_index"
+      ],
+      "decided_by": "agent",
+      "role": "component",
+      "forbidden_responsibilities": [
+        "Own another component's concern."
+      ],
+      "provenance": [
+        "docs/architecture/inner/semantic-review/astra-target-decision.md"
+      ],
+      "requires": []
     }
   ],
   "rules": [
@@ -413,71 +439,6 @@
       "kind": "interface_boundary",
       "include_type_checking": true,
       "rationale": "Cross-component imports use the owning component's declared API.",
-      "provenance": [
-        "docs/architecture/refactoring-study/experiment-2/target-architecture.md"
-      ],
-      "decided_by": "architect"
-    },
-    {
-      "id": "ROOT-LAYOUT",
-      "kind": "root_layout",
-      "root": "datamimic_ce",
-      "allowed_children": [
-        "datamimic_ce._compat",
-        "datamimic_ce.authoring",
-        "datamimic_ce.data_mimic_test",
-        "datamimic_ce.datamimic",
-        "datamimic_ce.domains",
-        "datamimic_ce.engine",
-        "datamimic_ce.errors",
-        "datamimic_ce.factory",
-        "datamimic_ce.interfaces",
-        "datamimic_ce.resources"
-      ],
-      "rationale": "The package root exposes only first-class components and proven Python compatibility entry points.",
-      "provenance": [
-        "docs/architecture/refactoring-study/experiment-2/target-architecture.md"
-      ],
-      "decided_by": "architect"
-    },
-    {
-      "id": "ENGINE-LAYOUT",
-      "kind": "root_layout",
-      "root": "datamimic_ce.engine",
-      "allowed_children": [
-        "datamimic_ce.engine.dsl",
-        "datamimic_ce.engine.io",
-        "datamimic_ce.engine.runtime"
-      ],
-      "rationale": "CE and EE use the same physical DSL, runtime, and IO core skeleton; edition features live inside their owner.",
-      "provenance": [
-        "docs/architecture/inner/target.md"
-      ],
-      "decided_by": "architect"
-    },
-    {
-      "id": "INTERFACES-LAYOUT",
-      "kind": "root_layout",
-      "root": "datamimic_ce.interfaces",
-      "allowed_children": [
-        "datamimic_ce.interfaces.api",
-        "datamimic_ce.interfaces.cli",
-        "datamimic_ce.interfaces.contracts",
-        "datamimic_ce.interfaces.demo",
-        "datamimic_ce.interfaces.mcp",
-        "datamimic_ce.interfaces.project"
-      ],
-      "rationale": "The transport boundary groups CLI commands under one package instead of sibling modules.",
-      "provenance": [
-        "docs/architecture/refactoring-study/experiment-2/target-architecture.md"
-      ],
-      "decided_by": "architect"
-    },
-    {
-      "id": "INTERFACES-API-TYPES",
-      "kind": "boundary_types",
-      "source": "datamimic_ce.interfaces.api",
-      "rationale": "The interface facade exposes declared request, result, and session contracts rather than execution internals.",
       "provenance": [
         "docs/architecture/refactoring-study/experiment-2/target-architecture.md"
       ],
@@ -601,7 +562,7 @@
         "datamimic_ce.domains.domain_core.base_entity.BaseEntity.__getattr__",
         "datamimic_ce.engine.runtime.contexts.expression_globals._EvalProxy.__getattr__",
         "datamimic_ce.engine.runtime.contexts.expression_globals._SeededFaker.__getattr__",
-        "datamimic_ce.engine.runtime.tasks.variable_iterator.VariableIterator.__getattr__"
+        "datamimic_ce.engine.runtime.tasks.values.variables.variable_iterator.VariableIterator.__getattr__"
       ],
       "rationale": "Only these DSL/runtime compatibility adapters may forward dynamic attributes; every other getattr remains forbidden.",
       "provenance": [
@@ -627,6 +588,263 @@
         "docs/architecture/refactoring-study/experiment-2/target-architecture.md"
       ],
       "decided_by": "architect"
+    },
+    {
+      "id": "NO-MODULE-CYCLES",
+      "kind": "no_component_cycles",
+      "level": "module",
+      "rationale": "No production module cycles, including type-only imports; a green component graph is insufficient.",
+      "provenance": [
+        "docs/architecture/inner/target.md"
+      ],
+      "decided_by": "agent"
+    },
+    {
+      "id": "PURE-INTENT-NO-RUNTIME",
+      "kind": "forbidden_dependency",
+      "source": "datamimic_ce.authoring.domain",
+      "target": "datamimic_ce.engine.runtime",
+      "include_type_checking": true,
+      "rationale": "Intent and validation facts must remain runtime-free; bounded execution is an adapter concern.",
+      "provenance": [
+        "docs/architecture/inner/target.md"
+      ],
+      "decided_by": "agent"
+    },
+    {
+      "id": "PURE-INTENT-NO-IO",
+      "kind": "forbidden_dependency",
+      "source": "datamimic_ce.authoring.domain",
+      "target": "datamimic_ce.engine.io",
+      "include_type_checking": true,
+      "rationale": "Intent cannot open sources or construct clients.",
+      "provenance": [
+        "docs/architecture/inner/target.md"
+      ],
+      "decided_by": "agent"
+    },
+    {
+      "id": "PROJECTION-NO-RUNTIME",
+      "kind": "forbidden_dependency",
+      "source": "datamimic_ce.authoring.projection",
+      "target": "datamimic_ce.engine.runtime",
+      "include_type_checking": true,
+      "rationale": "Runtime reflection belongs in a capability adapter; projections render supplied facts.",
+      "provenance": [
+        "docs/architecture/inner/target.md"
+      ],
+      "decided_by": "agent"
+    },
+    {
+      "id": "TASKS-NO-CLIENTS",
+      "kind": "forbidden_dependency",
+      "source": "datamimic_ce.engine.runtime.tasks.registry",
+      "target": "datamimic_ce.engine.io.clients",
+      "include_type_checking": true,
+      "rationale": "Task orchestration delegates IO operations; it never imports concrete clients, even for typing.",
+      "provenance": [
+        "docs/architecture/inner/target.md"
+      ],
+      "decided_by": "agent"
+    },
+    {
+      "id": "LAYOUT-ROOT",
+      "kind": "root_layout",
+      "root": "datamimic_ce",
+      "allowed_children": [
+        "datamimic_ce._compat",
+        "datamimic_ce.authoring",
+        "datamimic_ce.domains",
+        "datamimic_ce.engine",
+        "datamimic_ce.errors",
+        "datamimic_ce.interfaces",
+        "datamimic_ce.randomness",
+        "datamimic_ce.resources"
+      ],
+      "rationale": "Distribution and engine ownership. Exact reviewed target children; no hidden extra modules.",
+      "provenance": [
+        "docs/architecture/inner/structure-review.json"
+      ],
+      "decided_by": "agent"
+    },
+    {
+      "id": "LAYOUT-AUTHORING",
+      "kind": "root_layout",
+      "root": "datamimic_ce.authoring",
+      "allowed_children": [
+        "datamimic_ce.authoring.adapters",
+        "datamimic_ce.authoring.api",
+        "datamimic_ce.authoring.application",
+        "datamimic_ce.authoring.contracts",
+        "datamimic_ce.authoring.domain",
+        "datamimic_ce.authoring.projection",
+        "datamimic_ce.authoring.spec"
+      ],
+      "rationale": "Compile intent and run bounded verification transactions. Exact reviewed target children; no hidden extra modules.",
+      "provenance": [
+        "docs/architecture/inner/structure-review.json"
+      ],
+      "decided_by": "agent"
+    },
+    {
+      "id": "LAYOUT-DOMAINS",
+      "kind": "root_layout",
+      "root": "datamimic_ce.domains",
+      "allowed_children": [
+        "datamimic_ce.domains.api",
+        "datamimic_ce.domains.domain_core",
+        "datamimic_ce.domains.ecommerce",
+        "datamimic_ce.domains.facade",
+        "datamimic_ce.domains.finance",
+        "datamimic_ce.domains.healthcare",
+        "datamimic_ce.domains.insurance",
+        "datamimic_ce.domains.public_sector",
+        "datamimic_ce.domains.registry",
+        "datamimic_ce.domains.shared"
+      ],
+      "rationale": "Generate business values/entities and load their domain datasets. Exact reviewed target children; no hidden extra modules.",
+      "provenance": [
+        "docs/architecture/inner/structure-review.json"
+      ],
+      "decided_by": "agent"
+    },
+    {
+      "id": "LAYOUT-ENGINE",
+      "kind": "root_layout",
+      "root": "datamimic_ce.engine",
+      "allowed_children": [
+        "datamimic_ce.engine.dsl",
+        "datamimic_ce.engine.io",
+        "datamimic_ce.engine.runtime"
+      ],
+      "rationale": "Physical aggregate of the named owned components; no additional service/API. Exact reviewed target children; no hidden extra modules.",
+      "provenance": [
+        "docs/architecture/inner/structure-review.json"
+      ],
+      "decided_by": "agent"
+    },
+    {
+      "id": "LAYOUT-ENGINE-DSL",
+      "kind": "root_layout",
+      "root": "datamimic_ce.engine.dsl",
+      "allowed_children": [
+        "datamimic_ce.engine.dsl.api",
+        "datamimic_ce.engine.dsl.model",
+        "datamimic_ce.engine.dsl.parsers",
+        "datamimic_ce.engine.dsl.statements",
+        "datamimic_ce.engine.dsl.vocabulary"
+      ],
+      "rationale": "Validate descriptor vocabulary and construct execution statements. Exact reviewed target children; no hidden extra modules.",
+      "provenance": [
+        "docs/architecture/inner/structure-review.json"
+      ],
+      "decided_by": "agent"
+    },
+    {
+      "id": "LAYOUT-ENGINE-IO",
+      "kind": "root_layout",
+      "root": "datamimic_ce.engine.io",
+      "allowed_children": [
+        "datamimic_ce.engine.io.api",
+        "datamimic_ce.engine.io.clients",
+        "datamimic_ce.engine.io.connection_config",
+        "datamimic_ce.engine.io.contracts",
+        "datamimic_ce.engine.io.data_sources",
+        "datamimic_ce.engine.io.exporters",
+        "datamimic_ce.engine.io.files"
+      ],
+      "rationale": "Read, select, page and write external/in-memory data. Exact reviewed target children; no hidden extra modules.",
+      "provenance": [
+        "docs/architecture/inner/structure-review.json"
+      ],
+      "decided_by": "agent"
+    },
+    {
+      "id": "LAYOUT-ENGINE-RUNTIME",
+      "kind": "root_layout",
+      "root": "datamimic_ce.engine.runtime",
+      "allowed_children": [
+        "datamimic_ce.engine.runtime.api",
+        "datamimic_ce.engine.runtime.contexts",
+        "datamimic_ce.engine.runtime.contracts",
+        "datamimic_ce.engine.runtime.lifecycle",
+        "datamimic_ce.engine.runtime.logging",
+        "datamimic_ce.engine.runtime.scripting",
+        "datamimic_ce.engine.runtime.storage",
+        "datamimic_ce.engine.runtime.tasks"
+      ],
+      "rationale": "Execute statements; own run, row and worker state. Exact reviewed target children; no hidden extra modules.",
+      "provenance": [
+        "docs/architecture/inner/structure-review.json"
+      ],
+      "decided_by": "agent"
+    },
+    {
+      "id": "LAYOUT-ERRORS",
+      "kind": "root_layout",
+      "root": "datamimic_ce.errors",
+      "allowed_children": [
+        "datamimic_ce.errors.base",
+        "datamimic_ce.errors.catalog",
+        "datamimic_ce.errors.codes",
+        "datamimic_ce.errors.factory",
+        "datamimic_ce.errors.formatters"
+      ],
+      "rationale": "Stable public error types, codes, formatting and construction. Exact reviewed target children; no hidden extra modules.",
+      "provenance": [
+        "docs/architecture/inner/structure-review.json"
+      ],
+      "decided_by": "agent"
+    },
+    {
+      "id": "LAYOUT-INTERFACES",
+      "kind": "root_layout",
+      "root": "datamimic_ce.interfaces",
+      "allowed_children": [
+        "datamimic_ce.interfaces.cli",
+        "datamimic_ce.interfaces.demo",
+        "datamimic_ce.interfaces.mcp",
+        "datamimic_ce.interfaces.project",
+        "datamimic_ce.interfaces.python"
+      ],
+      "rationale": "Transport and Python caller adaptation; no execution policy. Exact reviewed target children; no hidden extra modules.",
+      "provenance": [
+        "docs/architecture/inner/structure-review.json"
+      ],
+      "decided_by": "agent"
+    },
+    {
+      "id": "LAYOUT-RESOURCES",
+      "kind": "root_layout",
+      "root": "datamimic_ce.resources",
+      "allowed_children": [
+        "datamimic_ce.resources.api",
+        "datamimic_ce.resources.demos",
+        "datamimic_ce.resources.examples"
+      ],
+      "rationale": "Packaged runnable demos/examples and resource access. Exact reviewed target children; no hidden extra modules.",
+      "provenance": [
+        "docs/architecture/inner/structure-review.json"
+      ],
+      "decided_by": "agent"
+    },
+    {
+      "id": "LAYOUT-RESOURCES-EXAMPLES",
+      "kind": "root_layout",
+      "root": "datamimic_ce.resources.examples",
+      "allowed_children": [
+        "datamimic_ce.resources.examples.generate_address",
+        "datamimic_ce.resources.examples.generate_cities",
+        "datamimic_ce.resources.examples.generate_companies",
+        "datamimic_ce.resources.examples.generate_countries",
+        "datamimic_ce.resources.examples.generate_people",
+        "datamimic_ce.resources.examples.generate_people_demographics"
+      ],
+      "rationale": "Packaged runnable demos/examples and resource access. Exact reviewed target children; no hidden extra modules.",
+      "provenance": [
+        "docs/architecture/inner/structure-review.json"
+      ],
+      "decided_by": "agent"
     }
   ],
   "declarations": {

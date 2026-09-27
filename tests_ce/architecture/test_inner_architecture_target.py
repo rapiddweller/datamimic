@@ -3,116 +3,37 @@
 from __future__ import annotations
 
 import ast
+import json
 from pathlib import Path
+
+from tests_ce.architecture.test_recursive_target_definition import (
+    MANIFEST,
+    _current_files,
+    _files_at,
+    _physical_target_issues,
+    _target_files,
+    _target_implementation_issues,
+)
 
 ROOT = Path(__file__).resolve().parents[2]
 PACKAGE = ROOT / "datamimic_ce"
 
-TARGET_FILES = (
-    "authoring/api.py",
-    "authoring/contracts.py",
-    "authoring/spec.py",
-    "errors/base.py",
-    "errors/factory.py",
-    "errors/formatters.py",
-    "engine/dsl/api.py",
-    "engine/dsl/contracts.py",
-    "engine/io/api.py",
-    "engine/io/contracts.py",
-    "engine/runtime/api.py",
-    "engine/runtime/contracts.py",
-    "engine/runtime/logging.py",
-)
-
-TARGET_DIRECTORIES = (
-    "authoring/domain",
-    "authoring/application",
-    "authoring/adapters",
-    "authoring/projection",
-    "errors/catalog",
-    "domains/domain_core",
-    "domains/shared/models",
-    "domains/shared/services",
-    "domains/shared/generators",
-    "domains/shared/literal_generators",
-    "domains/shared/converters",
-    "domains/finance",
-    "domains/healthcare",
-    "domains/insurance",
-    "domains/ecommerce",
-    "domains/public_sector",
-    "engine/dsl/constants",
-    "engine/dsl/enums",
-    "engine/dsl/model",
-    "engine/dsl/parsers",
-    "engine/dsl/statements",
-    "engine/io/clients",
-    "engine/io/connection_config",
-    "engine/io/data_sources",
-    "engine/io/exporters",
-    "engine/runtime/contexts",
-    "engine/runtime/storage",
-    "engine/runtime/lifecycle",
-    "engine/runtime/scripting",
-    "engine/runtime/tasks/generate/workers",
-    "engine/runtime/tasks/generate/services/policies",
-    "interfaces/cli",
-)
-
 CONCRETE_IO_EXPORTS = {"DatabaseClient", "MongoDBClient", "RdbmsClient"}
 
 
-def _has_python_code(directory: Path) -> bool:
-    for module in directory.rglob("*.py"):
-        body = ast.parse(module.read_text(encoding="utf-8"), filename=str(module)).body
-        if body and isinstance(body[0], ast.Expr) and isinstance(body[0].value, ast.Constant) and isinstance(
-            body[0].value.value, str
-        ):
-            body = body[1:]
-        if any(not isinstance(statement, ast.Pass) for statement in body):
-            return True
-    return False
-
-
-def test_empty_package_check_allows_a_real_initializer(tmp_path: Path) -> None:
-    package = tmp_path / "package"
-    package.mkdir()
-    initializer = package / "__init__.py"
-    initializer.write_text('"""Placeholder only."""\npass\n', encoding="utf-8")
-
-    assert not _has_python_code(package)
-
-    initializer.write_text('"""Package facade."""\nfrom .api import run\n', encoding="utf-8")
-    assert _has_python_code(package)
-
-
-def test_core_packages_follow_the_physical_target() -> None:
-    missing_files = [path for path in TARGET_FILES if not (PACKAGE / path).is_file()]
-    missing_directories = [path for path in TARGET_DIRECTORIES if not (PACKAGE / path).is_dir()]
-    empty_directories = [
+def test_current_filesystem_matches_the_frozen_target_map() -> None:
+    manifest = json.loads(MANIFEST.read_text(encoding="utf-8"))
+    source = _files_at(manifest["source_commit"])
+    excluded = {path for path in source if any(path.startswith(item["prefix"]) for item in manifest["exclusions"])}
+    targets = _target_files(source - excluded, manifest)
+    current = {
         path
-        for path in TARGET_DIRECTORIES
-        if (PACKAGE / path).is_dir() and not _has_python_code(PACKAGE / path)
-    ]
-    actual_engine_roots = {
-        path.name
-        for path in (PACKAGE / "engine").iterdir()
-        if path.is_dir() and (path / "__init__.py").is_file()
+        for path in _current_files()
+        if not any(path.startswith(item["prefix"]) for item in manifest["exclusions"])
     }
 
-    issues = []
-    if missing_files:
-        issues.append(f"missing target modules: {missing_files}")
-    if missing_directories:
-        issues.append(f"missing target packages: {missing_directories}")
-    if empty_directories:
-        issues.append(f"empty target packages: {empty_directories}")
-    if any((PACKAGE / "domains/common").rglob("*.py")) or (PACKAGE / "domains/common.py").exists():
-        issues.append("domains.common must be removed, with no compatibility shim")
-    if actual_engine_roots != {"dsl", "io", "runtime"}:
-        issues.append(f"unexpected engine packages: {sorted(actual_engine_roots)}")
-
-    assert not issues, "; ".join(issues)
+    assert not _physical_target_issues(current, targets)
+    assert not _target_implementation_issues(targets, PACKAGE, manifest["source_commit"])
 
 
 def test_runtime_tasks_do_not_depend_on_concrete_io_clients_through_facades() -> None:

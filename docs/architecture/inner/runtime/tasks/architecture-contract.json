@@ -1,0 +1,539 @@
+{
+  "schema_version": "2.1.0",
+  "components": [
+    {
+      "id": "TASKS-BASE",
+      "label": "base",
+      "role": "foundation",
+      "packages": [
+        "datamimic_ce.engine.runtime.tasks.base"
+      ],
+      "responsibilities": [
+        "Task abstraction, count policy and task lookup mechanism."
+      ],
+      "forbidden_responsibilities": [
+        "Import concrete task families",
+        "Own setup orchestration or worker selection"
+      ],
+      "provenance": [
+        "docs/architecture/inner/target.md"
+      ],
+      "requires": [],
+      "public": [
+        "datamimic_ce.engine.runtime.tasks.base.counts:get_int_count",
+        "datamimic_ce.engine.runtime.tasks.base.counts:resolve_count",
+        "datamimic_ce.engine.runtime.tasks.base.dispatch:create_task",
+        "datamimic_ce.engine.runtime.tasks.base.task:CommonSubTask",
+        "datamimic_ce.engine.runtime.tasks.base.task:GenSubTask",
+        "datamimic_ce.engine.runtime.tasks.base.task:SetupSubTask",
+        "datamimic_ce.engine.runtime.tasks.base.task:Task"
+      ],
+      "decided_by": "agent"
+    },
+    {
+      "id": "TASKS-SETUP",
+      "label": "setup",
+      "role": "component",
+      "packages": [
+        "datamimic_ce.engine.runtime.tasks.setup"
+      ],
+      "responsibilities": [
+        "Ordered declarations/client registration/includes; not an eager preprocessing phase."
+      ],
+      "forbidden_responsibilities": [
+        "Own Generate worker policy",
+        "Construct database clients directly"
+      ],
+      "provenance": [
+        "docs/architecture/inner/target.md"
+      ],
+      "requires": [
+        {
+          "component": "base",
+          "rationale": "Execute ordered declarations through dispatch and construct configured generators.",
+          "decided_by": "agent"
+        },
+        {
+          "component": "values",
+          "rationale": "Execute ordered declarations through dispatch and construct configured generators.",
+          "decided_by": "agent"
+        }
+      ],
+      "public": [
+        "datamimic_ce.engine.runtime.tasks.setup.setup_task:SetupTask",
+        "datamimic_ce.engine.runtime.tasks.setup.database_task:DatabaseTask",
+        "datamimic_ce.engine.runtime.tasks.setup.mongodb_task:MongoDBTask",
+        "datamimic_ce.engine.runtime.tasks.setup.memstore_task:MemstoreTask",
+        "datamimic_ce.engine.runtime.tasks.setup.demographics_task:DemographicsTask",
+        "datamimic_ce.engine.runtime.tasks.setup.include_task:IncludeTask",
+        "datamimic_ce.engine.runtime.tasks.setup.generator_task:GeneratorTask",
+        "datamimic_ce.engine.runtime.tasks.setup.state_machine_task:StateMachineTask"
+      ],
+      "decided_by": "agent"
+    },
+    {
+      "id": "TASKS-GENERATE",
+      "label": "generate",
+      "role": "component",
+      "packages": [
+        "datamimic_ce.engine.runtime.tasks.generate"
+      ],
+      "inside": "docs/architecture/inner/runtime/tasks/generate/architecture-contract.json",
+      "responsibilities": [
+        "Generate orchestration, export order and workers."
+      ],
+      "forbidden_responsibilities": [
+        "Own descriptor lifecycle or concrete IO clients"
+      ],
+      "provenance": [
+        "docs/architecture/inner/target.md"
+      ],
+      "requires": [
+        {
+          "component": "base",
+          "rationale": "Generate execution follows the task contract.",
+          "decided_by": "agent"
+        },
+        {
+          "component": "values",
+          "rationale": "Workers execute generated value tasks.",
+          "decided_by": "agent"
+        },
+        {
+          "component": "sources",
+          "rationale": "Generate execution uses Runtime source adapters.",
+          "decided_by": "agent"
+        }
+      ],
+      "public": [
+        "datamimic_ce.engine.runtime.tasks.generate.task:GenerateTask"
+      ],
+      "decided_by": "agent"
+    },
+    {
+      "id": "TASKS-VALUES",
+      "label": "values",
+      "role": "component",
+      "packages": [
+        "datamimic_ce.engine.runtime.tasks.values"
+      ],
+      "responsibilities": [
+        "Shared value base and scalar/structured/reference/variable execution and construction."
+      ],
+      "forbidden_responsibilities": [
+        "Own task dispatch or setup orchestration"
+      ],
+      "provenance": [
+        "docs/architecture/inner/target.md"
+      ],
+      "requires": [
+        {
+          "component": "base",
+          "rationale": "Value tasks implement the shared task and count contracts.",
+          "decided_by": "agent"
+        },
+        {
+          "component": "sources",
+          "rationale": "Value tasks consume Runtime source operations for keys, references, and variables.",
+          "decided_by": "agent"
+        }
+      ],
+      "public": [
+        "datamimic_ce.engine.runtime.tasks.values.structured.array_task:ArrayTask",
+        "datamimic_ce.engine.runtime.tasks.values.scalar.element_task:ElementTask",
+        "datamimic_ce.engine.runtime.tasks.values.structured.item_task:ItemTask",
+        "datamimic_ce.engine.runtime.tasks.values.scalar.key_task:KeyTask",
+        "datamimic_ce.engine.runtime.tasks.values.key_variable_task:KeyVariableTask",
+        "datamimic_ce.engine.runtime.tasks.values.structured.list_task:ListTask",
+        "datamimic_ce.engine.runtime.tasks.values.structured.nested_key_task:NestedKeyTask",
+        "datamimic_ce.engine.runtime.tasks.values.references.reference_task:ReferenceTask",
+        "datamimic_ce.engine.runtime.tasks.values.variables.variable_task:VariableTask",
+        "datamimic_ce.engine.runtime.tasks.values.variables.variable_iterator:VariableIterator"
+      ],
+      "decided_by": "agent"
+    },
+    {
+      "id": "TASKS-FLOW",
+      "label": "flow",
+      "role": "component",
+      "packages": [
+        "datamimic_ce.engine.runtime.tasks.flow"
+      ],
+      "responsibilities": [
+        "Branch, loop, assert, echo and Execute in every valid row/root scope."
+      ],
+      "forbidden_responsibilities": [
+        "Own setup lifecycle or Generate worker selection"
+      ],
+      "provenance": [
+        "docs/architecture/inner/target.md"
+      ],
+      "requires": [
+        {
+          "component": "base",
+          "rationale": "Execute control flow through the task dispatch contract.",
+          "decided_by": "agent"
+        }
+      ],
+      "public": [
+        "datamimic_ce.engine.runtime.tasks.flow.commands.assert_task:AssertTask",
+        "datamimic_ce.engine.runtime.tasks.flow.branches.condition_task:ConditionTask",
+        "datamimic_ce.engine.runtime.tasks.flow.branches.else_if_task:ElseIfTask",
+        "datamimic_ce.engine.runtime.tasks.flow.branches.else_task:ElseTask",
+        "datamimic_ce.engine.runtime.tasks.flow.commands.execute_task:ExecuteTask",
+        "datamimic_ce.engine.runtime.tasks.flow.branches.if_else_base_task:IfElseBaseTask",
+        "datamimic_ce.engine.runtime.tasks.flow.branches.if_task:IfTask",
+        "datamimic_ce.engine.runtime.tasks.flow.loops.while_task:WhileTask",
+        "datamimic_ce.engine.runtime.tasks.flow.commands.echo_task:EchoTask"
+      ],
+      "decided_by": "agent"
+    },
+    {
+      "id": "TASKS-SOURCES",
+      "label": "sources",
+      "role": "component",
+      "packages": [
+        "datamimic_ce.engine.runtime.tasks.sources"
+      ],
+      "responsibilities": [
+        "Statement/context resolution and IO request adaptation only."
+      ],
+      "forbidden_responsibilities": [
+        "Own generic IO clients or exporter policy"
+      ],
+      "provenance": [
+        "docs/architecture/inner/target.md"
+      ],
+      "requires": [
+        {
+          "component": "base",
+          "rationale": "Source adapters use shared task mechanics and count values.",
+          "decided_by": "agent"
+        }
+      ],
+      "public": [
+        "datamimic_ce.engine.runtime.tasks.sources.router:data_source_cache_key",
+        "datamimic_ce.engine.runtime.tasks.sources.router:has_mongodb_upsert_target",
+        "datamimic_ce.engine.runtime.tasks.sources.router:set_data_source_length",
+        "datamimic_ce.engine.runtime.tasks.sources.router:load_nested_key_source",
+        "datamimic_ce.engine.runtime.tasks.sources.router:finalize_nested_key_source",
+        "datamimic_ce.engine.runtime.tasks.sources.router:window_nested_key_rows",
+        "datamimic_ce.engine.runtime.tasks.sources.router:load_reference_source",
+        "datamimic_ce.engine.runtime.tasks.sources.router:reference_uses_shared_cycle",
+        "datamimic_ce.engine.runtime.tasks.sources.variable:VariableSourcePlanKind",
+        "datamimic_ce.engine.runtime.tasks.sources.variable:load_variable_iteration_selector",
+        "datamimic_ce.engine.runtime.tasks.sources.variable:load_variable_lazy_source",
+        "datamimic_ce.engine.runtime.tasks.sources.variable:plan_variable_source",
+        "datamimic_ce.engine.runtime.tasks.sources.chunk_source_reader:ChunkSourceReader"
+      ],
+      "decided_by": "agent"
+    },
+    {
+      "id": "TASKS-REGISTRY",
+      "label": "registry",
+      "packages": [
+        "datamimic_ce.engine.runtime.tasks.registry"
+      ],
+      "responsibilities": [
+        "Concrete Statement-to-Task registration at execution composition root."
+      ],
+      "public": [
+        "datamimic_ce.engine.runtime.tasks.registry"
+      ],
+      "decided_by": "agent",
+      "role": "component",
+      "forbidden_responsibilities": [
+        "Own another component's concern."
+      ],
+      "provenance": [
+        "docs/architecture/inner/semantic-review/astra-target-decision.md"
+      ],
+      "requires": [
+        {
+          "component": "base",
+          "rationale": "Register concrete Statement-to-Task implementations once at lifecycle composition.",
+          "decided_by": "agent"
+        },
+        {
+          "component": "setup",
+          "rationale": "Register concrete Statement-to-Task implementations once at lifecycle composition.",
+          "decided_by": "agent"
+        },
+        {
+          "component": "generate",
+          "rationale": "Register concrete Statement-to-Task implementations once at lifecycle composition.",
+          "decided_by": "agent"
+        },
+        {
+          "component": "values",
+          "rationale": "Register concrete Statement-to-Task implementations once at lifecycle composition.",
+          "decided_by": "agent"
+        },
+        {
+          "component": "flow",
+          "rationale": "Register concrete Statement-to-Task implementations once at lifecycle composition.",
+          "decided_by": "agent"
+        }
+      ]
+    }
+  ],
+  "rules": [
+    {
+      "id": "TASKS-ASSIGNMENT",
+      "kind": "complete_assignment",
+      "source": "datamimic_ce.engine.runtime",
+      "rationale": "Every module in the parent Runtime task ownership set has one semantic owner.",
+      "provenance": [
+        "docs/architecture/inner/target.md"
+      ],
+      "decided_by": "agent"
+    },
+    {
+      "id": "TASKS-REQUIRES-COMPLETE",
+      "kind": "complete_requires",
+      "include_type_checking": true,
+      "rationale": "Task-family dependencies are explicit; absent directions remain forbidden.",
+      "provenance": [
+        "docs/architecture/inner/target.md"
+      ],
+      "decided_by": "agent"
+    },
+    {
+      "id": "TASKS-NO-COMPONENT-CYCLES",
+      "kind": "no_component_cycles",
+      "rationale": "Task-family orchestration must remain acyclic.",
+      "provenance": [
+        "docs/architecture/inner/target.md"
+      ],
+      "decided_by": "agent"
+    },
+    {
+      "id": "TASKS-INTERFACE-BOUNDARY",
+      "kind": "interface_boundary",
+      "include_type_checking": true,
+      "rationale": "Registration consumes explicit task classes; shared dispatch/count contracts and source operations remain separate from orchestration.",
+      "provenance": [
+        "docs/architecture/inner/target.md"
+      ],
+      "decided_by": "agent"
+    },
+    {
+      "id": "LAYOUT-ENGINE-RUNTIME-TASKS-BASE",
+      "kind": "root_layout",
+      "root": "datamimic_ce.engine.runtime.tasks.base",
+      "allowed_children": [
+        "datamimic_ce.engine.runtime.tasks.base.counts",
+        "datamimic_ce.engine.runtime.tasks.base.dispatch",
+        "datamimic_ce.engine.runtime.tasks.base.task"
+      ],
+      "rationale": "Task abstraction, count policy and task lookup mechanism. Exact reviewed target children; no hidden extra modules.",
+      "provenance": [
+        "docs/architecture/inner/structure-review.json"
+      ],
+      "decided_by": "agent"
+    },
+    {
+      "id": "LAYOUT-ENGINE-RUNTIME-TASKS-FLOW",
+      "kind": "root_layout",
+      "root": "datamimic_ce.engine.runtime.tasks.flow",
+      "allowed_children": [
+        "datamimic_ce.engine.runtime.tasks.flow.branches",
+        "datamimic_ce.engine.runtime.tasks.flow.commands",
+        "datamimic_ce.engine.runtime.tasks.flow.loops"
+      ],
+      "rationale": "Branch, loop, assert, echo and Execute in every valid row/root scope. Exact reviewed target children; no hidden extra modules.",
+      "provenance": [
+        "docs/architecture/inner/structure-review.json"
+      ],
+      "decided_by": "agent"
+    },
+    {
+      "id": "LAYOUT-ENGINE-RUNTIME-TASKS-FLOW-BRANCHES",
+      "kind": "root_layout",
+      "root": "datamimic_ce.engine.runtime.tasks.flow.branches",
+      "allowed_children": [
+        "datamimic_ce.engine.runtime.tasks.flow.branches.condition_task",
+        "datamimic_ce.engine.runtime.tasks.flow.branches.else_if_task",
+        "datamimic_ce.engine.runtime.tasks.flow.branches.else_task",
+        "datamimic_ce.engine.runtime.tasks.flow.branches.if_else_base_task",
+        "datamimic_ce.engine.runtime.tasks.flow.branches.if_task"
+      ],
+      "rationale": "Branch, loop, assert, echo and Execute in every valid row/root scope. Exact reviewed target children; no hidden extra modules.",
+      "provenance": [
+        "docs/architecture/inner/structure-review.json"
+      ],
+      "decided_by": "agent"
+    },
+    {
+      "id": "LAYOUT-ENGINE-RUNTIME-TASKS-FLOW-COMMANDS",
+      "kind": "root_layout",
+      "root": "datamimic_ce.engine.runtime.tasks.flow.commands",
+      "allowed_children": [
+        "datamimic_ce.engine.runtime.tasks.flow.commands.assert_task",
+        "datamimic_ce.engine.runtime.tasks.flow.commands.echo_task",
+        "datamimic_ce.engine.runtime.tasks.flow.commands.execute_task"
+      ],
+      "rationale": "Branch, loop, assert, echo and Execute in every valid row/root scope. Exact reviewed target children; no hidden extra modules.",
+      "provenance": [
+        "docs/architecture/inner/structure-review.json"
+      ],
+      "decided_by": "agent"
+    },
+    {
+      "id": "LAYOUT-ENGINE-RUNTIME-TASKS-FLOW-LOOPS",
+      "kind": "root_layout",
+      "root": "datamimic_ce.engine.runtime.tasks.flow.loops",
+      "allowed_children": [
+        "datamimic_ce.engine.runtime.tasks.flow.loops.while_task"
+      ],
+      "rationale": "Branch, loop, assert, echo and Execute in every valid row/root scope. Exact reviewed target children; no hidden extra modules.",
+      "provenance": [
+        "docs/architecture/inner/structure-review.json"
+      ],
+      "decided_by": "agent"
+    },
+    {
+      "id": "LAYOUT-ENGINE-RUNTIME-TASKS-GENERATE",
+      "kind": "root_layout",
+      "root": "datamimic_ce.engine.runtime.tasks.generate",
+      "allowed_children": [
+        "datamimic_ce.engine.runtime.tasks.generate.export_order",
+        "datamimic_ce.engine.runtime.tasks.generate.policies",
+        "datamimic_ce.engine.runtime.tasks.generate.task",
+        "datamimic_ce.engine.runtime.tasks.generate.workers"
+      ],
+      "rationale": "Generate orchestration, export order and workers. Exact reviewed target children; no hidden extra modules.",
+      "provenance": [
+        "docs/architecture/inner/structure-review.json"
+      ],
+      "decided_by": "agent"
+    },
+    {
+      "id": "LAYOUT-ENGINE-RUNTIME-TASKS-SETUP",
+      "kind": "root_layout",
+      "root": "datamimic_ce.engine.runtime.tasks.setup",
+      "allowed_children": [
+        "datamimic_ce.engine.runtime.tasks.setup.database_task",
+        "datamimic_ce.engine.runtime.tasks.setup.demographics_task",
+        "datamimic_ce.engine.runtime.tasks.setup.generator_task",
+        "datamimic_ce.engine.runtime.tasks.setup.include_task",
+        "datamimic_ce.engine.runtime.tasks.setup.memstore_task",
+        "datamimic_ce.engine.runtime.tasks.setup.mongodb_task",
+        "datamimic_ce.engine.runtime.tasks.setup.setup_task",
+        "datamimic_ce.engine.runtime.tasks.setup.state_machine_task"
+      ],
+      "rationale": "Ordered declarations/client registration/includes; not an eager preprocessing phase. Exact reviewed target children; no hidden extra modules.",
+      "provenance": [
+        "docs/architecture/inner/structure-review.json"
+      ],
+      "decided_by": "agent"
+    },
+    {
+      "id": "LAYOUT-ENGINE-RUNTIME-TASKS-SOURCES",
+      "kind": "root_layout",
+      "root": "datamimic_ce.engine.runtime.tasks.sources",
+      "allowed_children": [
+        "datamimic_ce.engine.runtime.tasks.sources.chunk_source_reader",
+        "datamimic_ce.engine.runtime.tasks.sources.router",
+        "datamimic_ce.engine.runtime.tasks.sources.variable"
+      ],
+      "rationale": "Statement/context resolution and IO request adaptation only. Exact reviewed target children; no hidden extra modules.",
+      "provenance": [
+        "docs/architecture/inner/structure-review.json"
+      ],
+      "decided_by": "agent"
+    },
+    {
+      "id": "LAYOUT-ENGINE-RUNTIME-TASKS-VALUES",
+      "kind": "root_layout",
+      "root": "datamimic_ce.engine.runtime.tasks.values",
+      "allowed_children": [
+        "datamimic_ce.engine.runtime.tasks.values.construction",
+        "datamimic_ce.engine.runtime.tasks.values.key_variable_task",
+        "datamimic_ce.engine.runtime.tasks.values.references",
+        "datamimic_ce.engine.runtime.tasks.values.scalar",
+        "datamimic_ce.engine.runtime.tasks.values.structured",
+        "datamimic_ce.engine.runtime.tasks.values.variables"
+      ],
+      "rationale": "Shared value base and scalar/structured/reference/variable execution and construction. Exact reviewed target children; no hidden extra modules.",
+      "provenance": [
+        "docs/architecture/inner/structure-review.json"
+      ],
+      "decided_by": "agent"
+    },
+    {
+      "id": "LAYOUT-ENGINE-RUNTIME-TASKS-VALUES-CONSTRUCTION",
+      "kind": "root_layout",
+      "root": "datamimic_ce.engine.runtime.tasks.values.construction",
+      "allowed_children": [
+        "datamimic_ce.engine.runtime.tasks.values.construction.converters",
+        "datamimic_ce.engine.runtime.tasks.values.construction.entity_constructor",
+        "datamimic_ce.engine.runtime.tasks.values.construction.factory",
+        "datamimic_ce.engine.runtime.tasks.values.construction.global_increment",
+        "datamimic_ce.engine.runtime.tasks.values.construction.sequence_table"
+      ],
+      "rationale": "Shared value base and scalar/structured/reference/variable execution and construction. Exact reviewed target children; no hidden extra modules.",
+      "provenance": [
+        "docs/architecture/inner/structure-review.json"
+      ],
+      "decided_by": "agent"
+    },
+    {
+      "id": "LAYOUT-ENGINE-RUNTIME-TASKS-VALUES-REFERENCES",
+      "kind": "root_layout",
+      "root": "datamimic_ce.engine.runtime.tasks.values.references",
+      "allowed_children": [
+        "datamimic_ce.engine.runtime.tasks.values.references.reference_task"
+      ],
+      "rationale": "Shared value base and scalar/structured/reference/variable execution and construction. Exact reviewed target children; no hidden extra modules.",
+      "provenance": [
+        "docs/architecture/inner/structure-review.json"
+      ],
+      "decided_by": "agent"
+    },
+    {
+      "id": "LAYOUT-ENGINE-RUNTIME-TASKS-VALUES-SCALAR",
+      "kind": "root_layout",
+      "root": "datamimic_ce.engine.runtime.tasks.values.scalar",
+      "allowed_children": [
+        "datamimic_ce.engine.runtime.tasks.values.scalar.element_task",
+        "datamimic_ce.engine.runtime.tasks.values.scalar.key_task"
+      ],
+      "rationale": "Shared value base and scalar/structured/reference/variable execution and construction. Exact reviewed target children; no hidden extra modules.",
+      "provenance": [
+        "docs/architecture/inner/structure-review.json"
+      ],
+      "decided_by": "agent"
+    },
+    {
+      "id": "LAYOUT-ENGINE-RUNTIME-TASKS-VALUES-STRUCTURED",
+      "kind": "root_layout",
+      "root": "datamimic_ce.engine.runtime.tasks.values.structured",
+      "allowed_children": [
+        "datamimic_ce.engine.runtime.tasks.values.structured.array_task",
+        "datamimic_ce.engine.runtime.tasks.values.structured.item_task",
+        "datamimic_ce.engine.runtime.tasks.values.structured.list_task",
+        "datamimic_ce.engine.runtime.tasks.values.structured.nested_key_task"
+      ],
+      "rationale": "Shared value base and scalar/structured/reference/variable execution and construction. Exact reviewed target children; no hidden extra modules.",
+      "provenance": [
+        "docs/architecture/inner/structure-review.json"
+      ],
+      "decided_by": "agent"
+    },
+    {
+      "id": "LAYOUT-ENGINE-RUNTIME-TASKS-VALUES-VARIABLES",
+      "kind": "root_layout",
+      "root": "datamimic_ce.engine.runtime.tasks.values.variables",
+      "allowed_children": [
+        "datamimic_ce.engine.runtime.tasks.values.variables.variable_iterator",
+        "datamimic_ce.engine.runtime.tasks.values.variables.variable_task"
+      ],
+      "rationale": "Shared value base and scalar/structured/reference/variable execution and construction. Exact reviewed target children; no hidden extra modules.",
+      "provenance": [
+        "docs/architecture/inner/structure-review.json"
+      ],
+      "decided_by": "agent"
+    }
+  ]
+}

@@ -1,0 +1,492 @@
+{
+  "schema_version": "2.1.0",
+  "components": [
+    {
+      "id": "MODEL-VALIDATION",
+      "label": "validation",
+      "role": "foundation",
+      "packages": [
+        "datamimic_ce.engine.dsl.model.validation"
+      ],
+      "responsibilities": [
+        "Shared actual validation helpers; no artificial base folder."
+      ],
+      "forbidden_responsibilities": [
+        "Construct parsers",
+        "Own element registration"
+      ],
+      "provenance": [
+        "docs/architecture/inner/target.md"
+      ],
+      "requires": [],
+      "public": [
+        "datamimic_ce.engine.dsl.model.validation:ModelUtil"
+      ],
+      "decided_by": "agent"
+    },
+    {
+      "id": "MODEL-CONSTRAINTS",
+      "label": "constraints",
+      "role": "component",
+      "packages": [
+        "datamimic_ce.engine.dsl.model.constraints"
+      ],
+      "responsibilities": [
+        "Canonical cross-field grammar facts."
+      ],
+      "forbidden_responsibilities": [
+        "Import element models or parsers"
+      ],
+      "provenance": [
+        "docs/architecture/inner/target.md"
+      ],
+      "requires": [],
+      "public": [
+        "datamimic_ce.engine.dsl.model.constraints"
+      ],
+      "decided_by": "agent"
+    },
+    {
+      "id": "MODEL-FLOW",
+      "label": "flow",
+      "role": "component",
+      "packages": [
+        "datamimic_ce.engine.dsl.model.flow"
+      ],
+      "responsibilities": [
+        "Branches, loops and commands."
+      ],
+      "forbidden_responsibilities": [
+        "Construct parsers or register parser implementations"
+      ],
+      "provenance": [
+        "docs/architecture/inner/target.md"
+      ],
+      "requires": [
+        {
+          "component": "validation",
+          "rationale": "Flow models use shared typed model primitives.",
+          "decided_by": "agent"
+        },
+        {
+          "component": "constraints",
+          "rationale": "Flow models use canonical grammar constraints.",
+          "decided_by": "agent"
+        }
+      ],
+      "public": [
+        "datamimic_ce.engine.dsl.model.flow.commands.assert_model:AssertModel",
+        "datamimic_ce.engine.dsl.model.flow.branches.base_if_else_model:BaseIfElseModel",
+        "datamimic_ce.engine.dsl.model.flow.branches.condition_model:ConditionModel",
+        "datamimic_ce.engine.dsl.model.flow.branches.else_if_model:ElseIfModel",
+        "datamimic_ce.engine.dsl.model.flow.branches.else_model:ElseModel",
+        "datamimic_ce.engine.dsl.model.flow.branches.if_model:IfModel",
+        "datamimic_ce.engine.dsl.model.flow.loops.while_model:WhileModel",
+        "datamimic_ce.engine.dsl.model.flow.commands.execute_model:ExecuteModel"
+      ],
+      "decided_by": "agent"
+    },
+    {
+      "id": "MODEL-VALUES",
+      "label": "values",
+      "role": "component",
+      "packages": [
+        "datamimic_ce.engine.dsl.model.values"
+      ],
+      "responsibilities": [
+        "Scalar, structured, reference and variable value grammar."
+      ],
+      "forbidden_responsibilities": [
+        "Construct parsers or register parser implementations"
+      ],
+      "provenance": [
+        "docs/architecture/inner/target.md"
+      ],
+      "requires": [
+        {
+          "component": "validation",
+          "rationale": "Value models use shared typed model primitives.",
+          "decided_by": "agent"
+        },
+        {
+          "component": "constraints",
+          "rationale": "Value models use canonical grammar constraints.",
+          "decided_by": "agent"
+        }
+      ],
+      "public": [
+        "datamimic_ce.engine.dsl.model.values.scalar.element_model:ElementModel",
+        "datamimic_ce.engine.dsl.model.values.structured.array_model:ArrayModel",
+        "datamimic_ce.engine.dsl.model.values.structured.item_model:ItemModel",
+        "datamimic_ce.engine.dsl.model.values.scalar.key_model:KeyModel",
+        "datamimic_ce.engine.dsl.model.values.structured.list_model:ListModel",
+        "datamimic_ce.engine.dsl.model.values.structured.nested_key_model:NestedKeyModel",
+        "datamimic_ce.engine.dsl.model.values.references.reference_field_model:ReferenceFieldModel",
+        "datamimic_ce.engine.dsl.model.values.references.reference_model:ReferenceModel",
+        "datamimic_ce.engine.dsl.model.values.scalar.value_model:ValueModel",
+        "datamimic_ce.engine.dsl.model.values.variables.variable_model:VariableModel"
+      ],
+      "decided_by": "agent"
+    },
+    {
+      "id": "MODEL-SETUP",
+      "label": "setup",
+      "role": "component",
+      "packages": [
+        "datamimic_ce.engine.dsl.model.setup"
+      ],
+      "responsibilities": [
+        "Ordered setup/client/include/generator/state-machine/demographics declarations."
+      ],
+      "forbidden_responsibilities": [
+        "Construct parsers or register parser implementations"
+      ],
+      "provenance": [
+        "docs/architecture/inner/target.md"
+      ],
+      "requires": [
+        {
+          "component": "validation",
+          "rationale": "Resource models use shared typed model primitives.",
+          "decided_by": "agent"
+        },
+        {
+          "component": "constraints",
+          "rationale": "Resource models use canonical grammar constraints.",
+          "decided_by": "agent"
+        }
+      ],
+      "public": [
+        "datamimic_ce.engine.dsl.model.setup.state_machine_model:StateMachineModel",
+        "datamimic_ce.engine.dsl.model.setup.generator_model:GeneratorModel",
+        "datamimic_ce.engine.dsl.model.setup.database_model:DatabaseModel",
+        "datamimic_ce.engine.dsl.model.setup.include_model:IncludeModel",
+        "datamimic_ce.engine.dsl.model.setup.memstore_model:MemstoreModel",
+        "datamimic_ce.engine.dsl.model.setup.mongodb_model:MongoDBModel",
+        "datamimic_ce.engine.dsl.model.setup.setup_model:SetupModel",
+        "datamimic_ce.engine.dsl.model.setup.demographics_model:DemographicsModel"
+      ],
+      "decided_by": "agent"
+    },
+    {
+      "id": "MODEL-GENERATION",
+      "label": "generation",
+      "role": "component",
+      "packages": [
+        "datamimic_ce.engine.dsl.model.generation"
+      ],
+      "responsibilities": [
+        "Generate and time-series grammar."
+      ],
+      "forbidden_responsibilities": [
+        "Construct parsers or register parser implementations"
+      ],
+      "provenance": [
+        "docs/architecture/inner/target.md"
+      ],
+      "requires": [
+        {
+          "component": "validation",
+          "rationale": "Generation models use shared typed model primitives.",
+          "decided_by": "agent"
+        },
+        {
+          "component": "constraints",
+          "rationale": "Generation models use canonical grammar constraints.",
+          "decided_by": "agent"
+        }
+      ],
+      "public": [
+        "datamimic_ce.engine.dsl.model.generation.generate_model:GenerateModel",
+        "datamimic_ce.engine.dsl.model.generation.timeseries:TimeSeriesConfig",
+        "datamimic_ce.engine.dsl.model.generation.timeseries:TimeSeriesNamespace"
+      ],
+      "decided_by": "agent"
+    },
+    {
+      "id": "MODEL-REGISTRY",
+      "label": "registry",
+      "role": "component",
+      "packages": [
+        "datamimic_ce.engine.dsl.model.registry"
+      ],
+      "responsibilities": [
+        "Element-to-model inventory."
+      ],
+      "forbidden_responsibilities": [
+        "Import parser implementations or define a second vocabulary"
+      ],
+      "provenance": [
+        "docs/architecture/inner/target.md"
+      ],
+      "requires": [
+        {
+          "component": "validation",
+          "rationale": "The registry publishes shared model facts.",
+          "decided_by": "agent"
+        },
+        {
+          "component": "constraints",
+          "rationale": "The registry exposes canonical element constraints.",
+          "decided_by": "agent"
+        },
+        {
+          "component": "flow",
+          "rationale": "The registry composes flow model metadata.",
+          "decided_by": "agent"
+        },
+        {
+          "component": "values",
+          "rationale": "The registry composes value model metadata.",
+          "decided_by": "agent"
+        },
+        {
+          "component": "setup",
+          "rationale": "The registry composes resource model metadata.",
+          "decided_by": "agent"
+        },
+        {
+          "component": "generation",
+          "rationale": "The registry composes generation model metadata.",
+          "decided_by": "agent"
+        }
+      ],
+      "public": [
+        "datamimic_ce.engine.dsl.model.registry:ElementDefinition",
+        "datamimic_ce.engine.dsl.model.registry:canonical_tag",
+        "datamimic_ce.engine.dsl.model.registry:element_aliases",
+        "datamimic_ce.engine.dsl.model.registry:get_element_definition",
+        "datamimic_ce.engine.dsl.model.registry:get_model_class",
+        "datamimic_ce.engine.dsl.model.registry:get_valid_children",
+        "datamimic_ce.engine.dsl.model.registry:list_element_tags",
+        "datamimic_ce.engine.dsl.model.registry:registry_revision"
+      ],
+      "decided_by": "agent"
+    }
+  ],
+  "rules": [
+    {
+      "id": "MODEL-ASSIGNMENT",
+      "kind": "complete_assignment",
+      "source": "datamimic_ce.engine.dsl",
+      "rationale": "Each model and constraint implementation has one grammar owner.",
+      "provenance": [
+        "docs/architecture/inner/target.md"
+      ],
+      "decided_by": "agent"
+    },
+    {
+      "id": "MODEL-REQUIRES-COMPLETE",
+      "kind": "complete_requires",
+      "include_type_checking": true,
+      "rationale": "Model composition flows from constraints and model families to the registry; reverse parser dependencies are forbidden.",
+      "provenance": [
+        "docs/architecture/inner/target.md"
+      ],
+      "decided_by": "agent"
+    },
+    {
+      "id": "MODEL-NO-COMPONENT-CYCLES",
+      "kind": "no_component_cycles",
+      "rationale": "Model ownership and registry composition must remain acyclic.",
+      "provenance": [
+        "docs/architecture/inner/target.md"
+      ],
+      "decided_by": "agent"
+    },
+    {
+      "id": "MODEL-INTERFACE-BOUNDARY",
+      "kind": "interface_boundary",
+      "include_type_checking": true,
+      "rationale": "Sibling families consume explicit model types; metadata consumers use canonical constraint and registry projections.",
+      "provenance": [
+        "docs/architecture/inner/target.md"
+      ],
+      "decided_by": "agent"
+    },
+    {
+      "id": "LAYOUT-ENGINE-DSL-MODEL-CONSTRAINTS",
+      "kind": "root_layout",
+      "root": "datamimic_ce.engine.dsl.model.constraints",
+      "allowed_children": [
+        "datamimic_ce.engine.dsl.model.constraints.capabilities",
+        "datamimic_ce.engine.dsl.model.constraints.facts",
+        "datamimic_ce.engine.dsl.model.constraints.registry",
+        "datamimic_ce.engine.dsl.model.constraints.serialization",
+        "datamimic_ce.engine.dsl.model.constraints.types"
+      ],
+      "rationale": "Canonical cross-field grammar facts. Exact reviewed target children; no hidden extra modules.",
+      "provenance": [
+        "docs/architecture/inner/structure-review.json"
+      ],
+      "decided_by": "agent"
+    },
+    {
+      "id": "LAYOUT-ENGINE-DSL-MODEL-FLOW",
+      "kind": "root_layout",
+      "root": "datamimic_ce.engine.dsl.model.flow",
+      "allowed_children": [
+        "datamimic_ce.engine.dsl.model.flow.branches",
+        "datamimic_ce.engine.dsl.model.flow.commands",
+        "datamimic_ce.engine.dsl.model.flow.loops"
+      ],
+      "rationale": "Branches, loops and commands. Exact reviewed target children; no hidden extra modules.",
+      "provenance": [
+        "docs/architecture/inner/structure-review.json"
+      ],
+      "decided_by": "agent"
+    },
+    {
+      "id": "LAYOUT-ENGINE-DSL-MODEL-FLOW-BRANCHES",
+      "kind": "root_layout",
+      "root": "datamimic_ce.engine.dsl.model.flow.branches",
+      "allowed_children": [
+        "datamimic_ce.engine.dsl.model.flow.branches.base_if_else_model",
+        "datamimic_ce.engine.dsl.model.flow.branches.condition_model",
+        "datamimic_ce.engine.dsl.model.flow.branches.else_if_model",
+        "datamimic_ce.engine.dsl.model.flow.branches.else_model",
+        "datamimic_ce.engine.dsl.model.flow.branches.if_model"
+      ],
+      "rationale": "Branches, loops and commands. Exact reviewed target children; no hidden extra modules.",
+      "provenance": [
+        "docs/architecture/inner/structure-review.json"
+      ],
+      "decided_by": "agent"
+    },
+    {
+      "id": "LAYOUT-ENGINE-DSL-MODEL-FLOW-COMMANDS",
+      "kind": "root_layout",
+      "root": "datamimic_ce.engine.dsl.model.flow.commands",
+      "allowed_children": [
+        "datamimic_ce.engine.dsl.model.flow.commands.assert_model",
+        "datamimic_ce.engine.dsl.model.flow.commands.execute_model"
+      ],
+      "rationale": "Branches, loops and commands. Exact reviewed target children; no hidden extra modules.",
+      "provenance": [
+        "docs/architecture/inner/structure-review.json"
+      ],
+      "decided_by": "agent"
+    },
+    {
+      "id": "LAYOUT-ENGINE-DSL-MODEL-FLOW-LOOPS",
+      "kind": "root_layout",
+      "root": "datamimic_ce.engine.dsl.model.flow.loops",
+      "allowed_children": [
+        "datamimic_ce.engine.dsl.model.flow.loops.while_model"
+      ],
+      "rationale": "Branches, loops and commands. Exact reviewed target children; no hidden extra modules.",
+      "provenance": [
+        "docs/architecture/inner/structure-review.json"
+      ],
+      "decided_by": "agent"
+    },
+    {
+      "id": "LAYOUT-ENGINE-DSL-MODEL-GENERATION",
+      "kind": "root_layout",
+      "root": "datamimic_ce.engine.dsl.model.generation",
+      "allowed_children": [
+        "datamimic_ce.engine.dsl.model.generation.generate_model",
+        "datamimic_ce.engine.dsl.model.generation.timeseries"
+      ],
+      "rationale": "Generate and time-series grammar. Exact reviewed target children; no hidden extra modules.",
+      "provenance": [
+        "docs/architecture/inner/structure-review.json"
+      ],
+      "decided_by": "agent"
+    },
+    {
+      "id": "LAYOUT-ENGINE-DSL-MODEL-SETUP",
+      "kind": "root_layout",
+      "root": "datamimic_ce.engine.dsl.model.setup",
+      "allowed_children": [
+        "datamimic_ce.engine.dsl.model.setup.database_model",
+        "datamimic_ce.engine.dsl.model.setup.demographics_model",
+        "datamimic_ce.engine.dsl.model.setup.generator_model",
+        "datamimic_ce.engine.dsl.model.setup.include_model",
+        "datamimic_ce.engine.dsl.model.setup.memstore_model",
+        "datamimic_ce.engine.dsl.model.setup.mongodb_model",
+        "datamimic_ce.engine.dsl.model.setup.setup_model",
+        "datamimic_ce.engine.dsl.model.setup.state_machine_model"
+      ],
+      "rationale": "Ordered setup/client/include/generator/state-machine/demographics declarations. Exact reviewed target children; no hidden extra modules.",
+      "provenance": [
+        "docs/architecture/inner/structure-review.json"
+      ],
+      "decided_by": "agent"
+    },
+    {
+      "id": "LAYOUT-ENGINE-DSL-MODEL-VALUES",
+      "kind": "root_layout",
+      "root": "datamimic_ce.engine.dsl.model.values",
+      "allowed_children": [
+        "datamimic_ce.engine.dsl.model.values.references",
+        "datamimic_ce.engine.dsl.model.values.scalar",
+        "datamimic_ce.engine.dsl.model.values.structured",
+        "datamimic_ce.engine.dsl.model.values.variables"
+      ],
+      "rationale": "Scalar, structured, reference and variable value grammar. Exact reviewed target children; no hidden extra modules.",
+      "provenance": [
+        "docs/architecture/inner/structure-review.json"
+      ],
+      "decided_by": "agent"
+    },
+    {
+      "id": "LAYOUT-ENGINE-DSL-MODEL-VALUES-REFERENCES",
+      "kind": "root_layout",
+      "root": "datamimic_ce.engine.dsl.model.values.references",
+      "allowed_children": [
+        "datamimic_ce.engine.dsl.model.values.references.reference_field_model",
+        "datamimic_ce.engine.dsl.model.values.references.reference_model"
+      ],
+      "rationale": "Scalar, structured, reference and variable value grammar. Exact reviewed target children; no hidden extra modules.",
+      "provenance": [
+        "docs/architecture/inner/structure-review.json"
+      ],
+      "decided_by": "agent"
+    },
+    {
+      "id": "LAYOUT-ENGINE-DSL-MODEL-VALUES-SCALAR",
+      "kind": "root_layout",
+      "root": "datamimic_ce.engine.dsl.model.values.scalar",
+      "allowed_children": [
+        "datamimic_ce.engine.dsl.model.values.scalar.element_model",
+        "datamimic_ce.engine.dsl.model.values.scalar.key_model",
+        "datamimic_ce.engine.dsl.model.values.scalar.value_model"
+      ],
+      "rationale": "Scalar, structured, reference and variable value grammar. Exact reviewed target children; no hidden extra modules.",
+      "provenance": [
+        "docs/architecture/inner/structure-review.json"
+      ],
+      "decided_by": "agent"
+    },
+    {
+      "id": "LAYOUT-ENGINE-DSL-MODEL-VALUES-STRUCTURED",
+      "kind": "root_layout",
+      "root": "datamimic_ce.engine.dsl.model.values.structured",
+      "allowed_children": [
+        "datamimic_ce.engine.dsl.model.values.structured.array_model",
+        "datamimic_ce.engine.dsl.model.values.structured.item_model",
+        "datamimic_ce.engine.dsl.model.values.structured.list_model",
+        "datamimic_ce.engine.dsl.model.values.structured.nested_key_model"
+      ],
+      "rationale": "Scalar, structured, reference and variable value grammar. Exact reviewed target children; no hidden extra modules.",
+      "provenance": [
+        "docs/architecture/inner/structure-review.json"
+      ],
+      "decided_by": "agent"
+    },
+    {
+      "id": "LAYOUT-ENGINE-DSL-MODEL-VALUES-VARIABLES",
+      "kind": "root_layout",
+      "root": "datamimic_ce.engine.dsl.model.values.variables",
+      "allowed_children": [
+        "datamimic_ce.engine.dsl.model.values.variables.variable_model"
+      ],
+      "rationale": "Scalar, structured, reference and variable value grammar. Exact reviewed target children; no hidden extra modules.",
+      "provenance": [
+        "docs/architecture/inner/structure-review.json"
+      ],
+      "decided_by": "agent"
+    }
+  ]
+}

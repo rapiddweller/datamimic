@@ -1,0 +1,199 @@
+{
+  "schema_version": "2.1.0",
+  "components": [
+    {
+      "id": "HEALTHCARE-MODELS",
+      "label": "models",
+      "role": "component",
+      "packages": [
+        "datamimic_ce.domains.healthcare.models"
+      ],
+      "responsibilities": [
+        "Lazy domain entities; may call generators for computed values."
+      ],
+      "forbidden_responsibilities": [
+        "Generate dataset values directly or own service orchestration."
+      ],
+      "provenance": [
+        "docs/architecture/inner/target.md"
+      ],
+      "requires": [
+        {
+          "component": "generators",
+          "rationale": "Healthcare entities delegate computed values to domain generators.",
+          "decided_by": "agent"
+        }
+      ],
+      "public": [
+        "datamimic_ce.domains.healthcare.models.doctor:Doctor",
+        "datamimic_ce.domains.healthcare.models.hospital:Hospital",
+        "datamimic_ce.domains.healthcare.models.medical_device:MedicalDevice",
+        "datamimic_ce.domains.healthcare.models.medical_procedure:MedicalProcedure",
+        "datamimic_ce.domains.healthcare.models.patient:Patient"
+      ],
+      "decided_by": "agent"
+    },
+    {
+      "id": "HEALTHCARE-GENERATORS",
+      "label": "generators",
+      "role": "component",
+      "packages": [
+        "datamimic_ce.domains.healthcare.generators"
+      ],
+      "responsibilities": [
+        "Value algorithms; must not import entity models/services."
+      ],
+      "forbidden_responsibilities": [
+        "Import healthcare models or services."
+      ],
+      "provenance": [
+        "docs/architecture/inner/target.md"
+      ],
+      "requires": [],
+      "public": [
+        "datamimic_ce.domains.healthcare.generators.doctor_generator:DoctorGenerator",
+        "datamimic_ce.domains.healthcare.generators.hospital_generator:HospitalGenerator",
+        "datamimic_ce.domains.healthcare.generators.medical_device_generator:MedicalDeviceGenerator",
+        "datamimic_ce.domains.healthcare.generators.medical_device_generator:MaintenanceRecord",
+        "datamimic_ce.domains.healthcare.generators.medical_procedure_generator:MedicalProcedureGenerator",
+        "datamimic_ce.domains.healthcare.generators.patient_generator:PatientGenerator"
+      ],
+      "decided_by": "agent"
+    },
+    {
+      "id": "HEALTHCARE-SERVICES",
+      "label": "services",
+      "role": "component",
+      "packages": [
+        "datamimic_ce.domains.healthcare.services"
+      ],
+      "responsibilities": [
+        "Domain construction workflows using models and generators."
+      ],
+      "forbidden_responsibilities": [
+        "Own generator algorithms or entity property behavior."
+      ],
+      "provenance": [
+        "docs/architecture/inner/target.md"
+      ],
+      "requires": [
+        {
+          "component": "models",
+          "rationale": "Services return typed healthcare entities.",
+          "decided_by": "agent"
+        },
+        {
+          "component": "generators",
+          "rationale": "Services delegate value creation to domain generators.",
+          "decided_by": "agent"
+        }
+      ],
+      "public": [
+        "datamimic_ce.domains.healthcare.services.doctor_service:DoctorService",
+        "datamimic_ce.domains.healthcare.services.hospital_service:HospitalService",
+        "datamimic_ce.domains.healthcare.services.medical_device_service:MedicalDeviceService",
+        "datamimic_ce.domains.healthcare.services.medical_procedure_service:MedicalProcedureService",
+        "datamimic_ce.domains.healthcare.services.patient_service:PatientService",
+        "datamimic_ce.domains.healthcare.services.doctor_api:DoctorRequest",
+        "datamimic_ce.domains.healthcare.services.doctor_api:generate",
+        "datamimic_ce.domains.healthcare.services.patient_api:PatientRequest",
+        "datamimic_ce.domains.healthcare.services.patient_api:generate"
+      ],
+      "decided_by": "agent"
+    }
+  ],
+  "rules": [
+    {
+      "id": "HEALTHCARE-ASSIGNMENT",
+      "kind": "complete_assignment",
+      "source": "datamimic_ce.domains.healthcare",
+      "rationale": "Each healthcare implementation module has one semantic owner; the package initializer is the source module.",
+      "provenance": [
+        "docs/architecture/inner/target.md"
+      ],
+      "decided_by": "agent"
+    },
+    {
+      "id": "HEALTHCARE-REQUIRES",
+      "kind": "complete_requires",
+      "include_type_checking": true,
+      "rationale": "Entities and services may consume generators; generator-to-entity and generator-to-service dependencies remain disallowed.",
+      "provenance": [
+        "docs/architecture/inner/target.md"
+      ],
+      "decided_by": "agent"
+    },
+    {
+      "id": "HEALTHCARE-INTERFACES",
+      "kind": "interface_boundary",
+      "include_type_checking": true,
+      "rationale": "Expose entity/generator/service operations and the request types/functions consumed by the domain facade; expose the typed maintenance record used by MedicalDevice.",
+      "provenance": [
+        "docs/architecture/inner/target.md"
+      ],
+      "decided_by": "agent"
+    },
+    {
+      "id": "HEALTHCARE-ACYCLIC",
+      "kind": "no_component_cycles",
+      "rationale": "Healthcare ownership flows from generators to entities and services, without reverse generator dependencies.",
+      "provenance": [
+        "docs/architecture/inner/target.md"
+      ],
+      "decided_by": "agent"
+    },
+    {
+      "id": "LAYOUT-DOMAINS-HEALTHCARE-GENERATORS",
+      "kind": "root_layout",
+      "root": "datamimic_ce.domains.healthcare.generators",
+      "allowed_children": [
+        "datamimic_ce.domains.healthcare.generators.doctor_generator",
+        "datamimic_ce.domains.healthcare.generators.hospital_generator",
+        "datamimic_ce.domains.healthcare.generators.medical_device_generator",
+        "datamimic_ce.domains.healthcare.generators.medical_procedure_generator",
+        "datamimic_ce.domains.healthcare.generators.patient_generator"
+      ],
+      "rationale": "Value algorithms; must not import entity models/services. Exact reviewed target children; no hidden extra modules.",
+      "provenance": [
+        "docs/architecture/inner/structure-review.json"
+      ],
+      "decided_by": "agent"
+    },
+    {
+      "id": "LAYOUT-DOMAINS-HEALTHCARE-MODELS",
+      "kind": "root_layout",
+      "root": "datamimic_ce.domains.healthcare.models",
+      "allowed_children": [
+        "datamimic_ce.domains.healthcare.models.doctor",
+        "datamimic_ce.domains.healthcare.models.hospital",
+        "datamimic_ce.domains.healthcare.models.medical_device",
+        "datamimic_ce.domains.healthcare.models.medical_procedure",
+        "datamimic_ce.domains.healthcare.models.patient"
+      ],
+      "rationale": "Lazy domain entities; may call generators for computed values. Exact reviewed target children; no hidden extra modules.",
+      "provenance": [
+        "docs/architecture/inner/structure-review.json"
+      ],
+      "decided_by": "agent"
+    },
+    {
+      "id": "LAYOUT-DOMAINS-HEALTHCARE-SERVICES",
+      "kind": "root_layout",
+      "root": "datamimic_ce.domains.healthcare.services",
+      "allowed_children": [
+        "datamimic_ce.domains.healthcare.services.doctor_api",
+        "datamimic_ce.domains.healthcare.services.doctor_service",
+        "datamimic_ce.domains.healthcare.services.hospital_service",
+        "datamimic_ce.domains.healthcare.services.medical_device_service",
+        "datamimic_ce.domains.healthcare.services.medical_procedure_service",
+        "datamimic_ce.domains.healthcare.services.patient_api",
+        "datamimic_ce.domains.healthcare.services.patient_service"
+      ],
+      "rationale": "Domain construction workflows using models and generators. Exact reviewed target children; no hidden extra modules.",
+      "provenance": [
+        "docs/architecture/inner/structure-review.json"
+      ],
+      "decided_by": "agent"
+    }
+  ]
+}

@@ -2,81 +2,406 @@
   "schema_version": "2.1.0",
   "components": [
     {
-      "id": "IO-API", "label": "api", "role": "interface",
-      "packages": ["datamimic_ce.engine.io.api", "datamimic_ce.engine.io.dataset_api"],
-      "responsibilities": ["Publish typed IO operations to other components."],
-      "forbidden_responsibilities": ["Own connectors, source loading, or output writes."],
-      "provenance": ["docs/architecture/inner/target.md"],
-      "requires": [
-        {"component": "contracts", "rationale": "API calls use IO-owned types.", "decided_by": "agent"},
-        {"component": "clients", "rationale": "The compatibility facade exposes connector classes.", "decided_by": "agent"},
-        {"component": "data_sources", "rationale": "The public facade delegates source loading.", "decided_by": "agent"},
-        {"component": "exporters", "rationale": "The public facade delegates target writing.", "decided_by": "agent"},
-        {"component": "files", "rationale": "Dataset entry points delegate file access.", "decided_by": "agent"}
+      "id": "IO-API",
+      "label": "api",
+      "role": "interface",
+      "packages": [
+        "datamimic_ce.engine.io.api"
       ],
-      "public": ["datamimic_ce.engine.io.api", "datamimic_ce.engine.io.dataset_api"],
+      "responsibilities": [
+        "Supported IO operations."
+      ],
+      "forbidden_responsibilities": [
+        "Own connectors, source loading, or output writes."
+      ],
+      "provenance": [
+        "docs/architecture/inner/target.md"
+      ],
+      "requires": [
+        {
+          "component": "contracts",
+          "rationale": "API calls use IO-owned types.",
+          "decided_by": "agent"
+        },
+        {
+          "component": "clients",
+          "rationale": "IO entry points own connection registration and operation dispatch; concrete clients remain internal.",
+          "decided_by": "agent"
+        },
+        {
+          "component": "data_sources",
+          "rationale": "The public facade delegates source loading.",
+          "decided_by": "agent"
+        },
+        {
+          "component": "exporters",
+          "rationale": "The public facade delegates target writing.",
+          "decided_by": "agent"
+        },
+        {
+          "component": "files",
+          "rationale": "Dataset entry points delegate file access.",
+          "decided_by": "agent"
+        },
+        {
+          "component": "connection_config",
+          "rationale": "Use resolved connector settings and on-demand property loading.",
+          "decided_by": "agent"
+        }
+      ],
+      "public": [
+        "datamimic_ce.engine.io.api"
+      ],
       "decided_by": "agent"
     },
     {
-      "id": "IO-CONTRACTS", "label": "contracts", "role": "contract",
-      "packages": ["datamimic_ce.engine.io.contracts"],
-      "responsibilities": ["Define IO-owned request/result types and pure pagination primitives."],
-      "forbidden_responsibilities": ["Instantiate clients or execute reads and writes."],
-      "provenance": ["docs/architecture/inner/target.md"],
-      "requires": [], "public": ["datamimic_ce.engine.io.contracts"], "decided_by": "agent"
-    },
-    {
-      "id": "IO-CLIENTS", "label": "clients", "role": "component",
-      "packages": ["datamimic_ce.engine.io.clients", "datamimic_ce.engine.io.connection_config", "datamimic_ce.engine.io.client_operations"],
-      "responsibilities": ["Construct and operate external connections."],
-      "forbidden_responsibilities": ["Choose source rows or exporter policy."],
-      "provenance": ["docs/architecture/inner/target.md"],
-      "requires": [
-        {"component": "contracts", "rationale": "Connector methods use IO-owned value types.", "decided_by": "agent"}
+      "id": "IO-CONTRACTS",
+      "label": "contracts",
+      "role": "contract",
+      "packages": [
+        "datamimic_ce.engine.io.contracts"
       ],
-      "public": [], "decided_by": "agent"
-    },
-    {
-      "id": "IO-SOURCES", "label": "data_sources", "role": "component",
-      "packages": ["datamimic_ce.engine.io.data_sources"],
-      "responsibilities": ["Load, page, and select source data."],
-      "forbidden_responsibilities": ["Own runtime tasks or output writes."],
-      "provenance": ["docs/architecture/inner/target.md"],
-      "requires": [
-        {"component": "contracts", "rationale": "Source loading uses shared IO value types.", "decided_by": "agent"},
-        {"component": "clients", "rationale": "External reads use connectors.", "decided_by": "agent"},
-        {"component": "files", "rationale": "File sources use one file implementation.", "decided_by": "agent"}
+      "responsibilities": [
+        "Context-free IO value contracts."
       ],
-      "public": [], "decided_by": "agent"
-    },
-    {
-      "id": "IO-EXPORTERS", "label": "exporters", "role": "component",
-      "packages": ["datamimic_ce.engine.io.exporters"],
-      "responsibilities": ["Own target writes, output formats, and exporter lifecycle."],
-      "forbidden_responsibilities": ["Read source rows or execute runtime tasks."],
-      "provenance": ["docs/architecture/inner/target.md"],
-      "requires": [
-        {"component": "contracts", "rationale": "Exporter entry points use IO-owned types.", "decided_by": "agent"},
-        {"component": "clients", "rationale": "Client-backed targets write through connectors.", "decided_by": "agent"},
-        {"component": "files", "rationale": "File targets use the IO file implementation.", "decided_by": "agent"}
+      "forbidden_responsibilities": [
+        "Instantiate clients or execute reads and writes."
       ],
-      "public": [], "decided_by": "agent"
+      "provenance": [
+        "docs/architecture/inner/target.md"
+      ],
+      "requires": [],
+      "public": [
+        "datamimic_ce.engine.io.contracts",
+        "datamimic_ce.engine.io.contracts:EntityValue"
+      ],
+      "decided_by": "agent"
     },
     {
-      "id": "IO-FILES", "label": "files", "role": "foundation",
-      "packages": ["datamimic_ce.engine.io.file_cache", "datamimic_ce.engine.io.files"],
-      "responsibilities": ["Read file formats and cache reusable file content."],
-      "forbidden_responsibilities": ["Know runtime tasks, clients, or exporters."],
-      "provenance": ["docs/architecture/inner/target.md"],
-      "requires": [], "public": [], "decided_by": "agent"
+      "id": "IO-CLIENTS",
+      "label": "clients",
+      "role": "component",
+      "packages": [
+        "datamimic_ce.engine.io.clients"
+      ],
+      "responsibilities": [
+        "Connection lifecycle and database/client operations."
+      ],
+      "forbidden_responsibilities": [
+        "Choose source rows or exporter policy."
+      ],
+      "provenance": [
+        "docs/architecture/inner/target.md"
+      ],
+      "requires": [
+        {
+          "component": "contracts",
+          "rationale": "Connector methods use IO-owned value types.",
+          "decided_by": "agent"
+        },
+        {
+          "component": "connection_config",
+          "rationale": "Use resolved connector settings and on-demand property loading.",
+          "decided_by": "agent"
+        }
+      ],
+      "public": [
+        "datamimic_ce.engine.io.clients.client",
+        "datamimic_ce.engine.io.clients.database_client",
+        "datamimic_ce.engine.io.clients.entity_serialization",
+        "datamimic_ce.engine.io.clients.mongodb_client",
+        "datamimic_ce.engine.io.clients.rdbms_client",
+        "datamimic_ce.engine.io.clients.sql_dialect",
+        "datamimic_ce.engine.io.clients.operations"
+      ],
+      "decided_by": "agent"
+    },
+    {
+      "id": "IO-CONNECTION-CONFIG",
+      "label": "connection_config",
+      "packages": [
+        "datamimic_ce.engine.io.connection_config"
+      ],
+      "responsibilities": [
+        "Connection settings and on-demand property-file loading."
+      ],
+      "public": [
+        "datamimic_ce.engine.io.connection_config.connection_config_base",
+        "datamimic_ce.engine.io.connection_config.mongodb_connection_config",
+        "datamimic_ce.engine.io.connection_config.properties:load_properties",
+        "datamimic_ce.engine.io.connection_config.rdbms_connection_config"
+      ],
+      "decided_by": "agent",
+      "role": "component",
+      "forbidden_responsibilities": [
+        "Own another component's concern."
+      ],
+      "provenance": [
+        "docs/architecture/inner/semantic-review/astra-target-decision.md"
+      ],
+      "requires": []
+    },
+    {
+      "id": "IO-SOURCES",
+      "label": "data_sources",
+      "role": "component",
+      "packages": [
+        "datamimic_ce.engine.io.data_sources"
+      ],
+      "responsibilities": [
+        "Source resolution, distribution, uniqueness, cyclic windows, paging and pool lifetime."
+      ],
+      "forbidden_responsibilities": [
+        "Own runtime tasks or output writes."
+      ],
+      "provenance": [
+        "docs/architecture/inner/target.md"
+      ],
+      "requires": [
+        {
+          "component": "contracts",
+          "rationale": "Source loading uses shared IO value types.",
+          "decided_by": "agent"
+        },
+        {
+          "component": "clients",
+          "rationale": "External reads use connectors.",
+          "decided_by": "agent"
+        },
+        {
+          "component": "files",
+          "rationale": "File sources use one file implementation.",
+          "decided_by": "agent"
+        }
+      ],
+      "public": [
+        "datamimic_ce.engine.io.data_sources.boundary.models",
+        "datamimic_ce.engine.io.data_sources.chunk_reader",
+        "datamimic_ce.engine.io.data_sources.data_source_registry",
+        "datamimic_ce.engine.io.data_sources.router",
+        "datamimic_ce.engine.io.data_sources.selection:get_distributed_data",
+        "datamimic_ce.engine.io.data_sources.selection:get_unique_data",
+        "datamimic_ce.engine.io.data_sources.selection:select_row_iterator",
+        "datamimic_ce.engine.io.data_sources.selection:select_rows",
+        "datamimic_ce.engine.io.data_sources.selection:unique_value_iter",
+        "datamimic_ce.engine.io.data_sources.variable",
+        "datamimic_ce.engine.io.data_sources.weighted_data_source",
+        "datamimic_ce.engine.io.data_sources.weighted_entity_data_source"
+      ],
+      "decided_by": "agent"
+    },
+    {
+      "id": "IO-EXPORTERS",
+      "label": "exporters",
+      "role": "component",
+      "packages": [
+        "datamimic_ce.engine.io.exporters"
+      ],
+      "responsibilities": [
+        "Output routing, serialization and write adapters."
+      ],
+      "forbidden_responsibilities": [
+        "Read source rows or execute runtime tasks."
+      ],
+      "provenance": [
+        "docs/architecture/inner/target.md"
+      ],
+      "requires": [
+        {
+          "component": "contracts",
+          "rationale": "Exporter entry points use IO-owned types.",
+          "decided_by": "agent"
+        },
+        {
+          "component": "clients",
+          "rationale": "Client-backed targets write through connectors.",
+          "decided_by": "agent"
+        },
+        {
+          "component": "files",
+          "rationale": "File targets use the IO file implementation.",
+          "decided_by": "agent"
+        }
+      ],
+      "public": [
+        "datamimic_ce.engine.io.exporters.core.exporter:Exporter",
+        "datamimic_ce.engine.io.exporters.core.exporter_config:ExporterConfig",
+        "datamimic_ce.engine.io.exporters.core.exporter_context:ExporterContext",
+        "datamimic_ce.engine.io.exporters.core.exporter_context:MemstoreProvider",
+        "datamimic_ce.engine.io.exporters.core.exporter_state_manager:ExporterStateManager",
+        "datamimic_ce.engine.io.exporters.core.exporter_state_manager:ExporterStateStorage",
+        "datamimic_ce.engine.io.exporters.registry:ExporterUtil",
+        "datamimic_ce.engine.io.exporters.registry:buffered_exporter_names",
+        "datamimic_ce.engine.io.exporters.diagnostics.smoke_export:smoke_export"
+      ],
+      "decided_by": "agent",
+      "inside": "docs/architecture/inner/io/exporters/architecture-contract.json"
+    },
+    {
+      "id": "IO-FILES",
+      "label": "files",
+      "role": "foundation",
+      "packages": [
+        "datamimic_ce.engine.io.files"
+      ],
+      "responsibilities": [
+        "File/cache/dataset readers."
+      ],
+      "forbidden_responsibilities": [
+        "Know runtime tasks, clients, or exporters."
+      ],
+      "provenance": [
+        "docs/architecture/inner/target.md"
+      ],
+      "requires": [],
+      "public": [
+        "datamimic_ce.engine.io.files.api",
+        "datamimic_ce.engine.io.files.cache",
+        "datamimic_ce.engine.io.files.readers"
+      ],
+      "decided_by": "agent"
     }
   ],
   "rules": [
     {
-      "id": "IO-REQUIRES-COMPLETE", "kind": "complete_requires",
+      "id": "IO-REQUIRES-COMPLETE",
+      "kind": "complete_requires",
       "include_type_checking": true,
       "rationale": "Connector code must not depend on source or exporter policy.",
-      "provenance": ["docs/architecture/inner/target.md"],
+      "provenance": [
+        "docs/architecture/inner/target.md"
+      ],
+      "decided_by": "agent"
+    },
+    {
+      "id": "IO-ASSIGNMENT",
+      "kind": "complete_assignment",
+      "source": "datamimic_ce.engine.io",
+      "rationale": "Every implementation below this boundary has one declared owner; initializer behavior is reviewed separately.",
+      "provenance": [
+        "docs/architecture/inner/target.md"
+      ],
+      "decided_by": "agent"
+    },
+    {
+      "id": "IO-INTERFACES",
+      "kind": "interface_boundary",
+      "include_type_checking": true,
+      "rationale": "Sibling components use explicit entry points; a permitted direction does not publish all internals.",
+      "provenance": [
+        "docs/architecture/inner/target.md"
+      ],
+      "decided_by": "agent"
+    },
+    {
+      "id": "IO-ACYCLIC",
+      "kind": "no_component_cycles",
+      "rationale": "Responsibility layers must not require one another in both directions.",
+      "provenance": [
+        "docs/architecture/inner/target.md"
+      ],
+      "decided_by": "agent"
+    },
+    {
+      "id": "LAYOUT-ENGINE-IO-CLIENTS",
+      "kind": "root_layout",
+      "root": "datamimic_ce.engine.io.clients",
+      "allowed_children": [
+        "datamimic_ce.engine.io.clients.client",
+        "datamimic_ce.engine.io.clients.database_client",
+        "datamimic_ce.engine.io.clients.entity_serialization",
+        "datamimic_ce.engine.io.clients.mongodb_client",
+        "datamimic_ce.engine.io.clients.operations",
+        "datamimic_ce.engine.io.clients.rdbms_client",
+        "datamimic_ce.engine.io.clients.sql_dialect"
+      ],
+      "rationale": "Connection lifecycle and database/client operations. Exact reviewed target children; no hidden extra modules.",
+      "provenance": [
+        "docs/architecture/inner/structure-review.json"
+      ],
+      "decided_by": "agent"
+    },
+    {
+      "id": "LAYOUT-ENGINE-IO-CONNECTION_CONFIG",
+      "kind": "root_layout",
+      "root": "datamimic_ce.engine.io.connection_config",
+      "allowed_children": [
+        "datamimic_ce.engine.io.connection_config.connection_config_base",
+        "datamimic_ce.engine.io.connection_config.mongodb_connection_config",
+        "datamimic_ce.engine.io.connection_config.properties",
+        "datamimic_ce.engine.io.connection_config.rdbms_connection_config"
+      ],
+      "rationale": "Connection settings and on-demand property-file loading. Exact reviewed target children; no hidden extra modules.",
+      "provenance": [
+        "docs/architecture/inner/structure-review.json"
+      ],
+      "decided_by": "agent"
+    },
+    {
+      "id": "LAYOUT-ENGINE-IO-DATA_SOURCES",
+      "kind": "root_layout",
+      "root": "datamimic_ce.engine.io.data_sources",
+      "allowed_children": [
+        "datamimic_ce.engine.io.data_sources.boundary",
+        "datamimic_ce.engine.io.data_sources.chunk_reader",
+        "datamimic_ce.engine.io.data_sources.data_source_registry",
+        "datamimic_ce.engine.io.data_sources.router",
+        "datamimic_ce.engine.io.data_sources.selection",
+        "datamimic_ce.engine.io.data_sources.variable",
+        "datamimic_ce.engine.io.data_sources.weighted_data_source",
+        "datamimic_ce.engine.io.data_sources.weighted_entity_data_source"
+      ],
+      "rationale": "Source resolution, distribution, uniqueness, cyclic windows, paging and pool lifetime. Exact reviewed target children; no hidden extra modules.",
+      "provenance": [
+        "docs/architecture/inner/structure-review.json"
+      ],
+      "decided_by": "agent"
+    },
+    {
+      "id": "LAYOUT-ENGINE-IO-DATA_SOURCES-BOUNDARY",
+      "kind": "root_layout",
+      "root": "datamimic_ce.engine.io.data_sources.boundary",
+      "allowed_children": [
+        "datamimic_ce.engine.io.data_sources.boundary.entities",
+        "datamimic_ce.engine.io.data_sources.boundary.models"
+      ],
+      "rationale": "Source resolution, distribution, uniqueness, cyclic windows, paging and pool lifetime. Exact reviewed target children; no hidden extra modules.",
+      "provenance": [
+        "docs/architecture/inner/structure-review.json"
+      ],
+      "decided_by": "agent"
+    },
+    {
+      "id": "LAYOUT-ENGINE-IO-EXPORTERS",
+      "kind": "root_layout",
+      "root": "datamimic_ce.engine.io.exporters",
+      "allowed_children": [
+        "datamimic_ce.engine.io.exporters.core",
+        "datamimic_ce.engine.io.exporters.database",
+        "datamimic_ce.engine.io.exporters.diagnostics",
+        "datamimic_ce.engine.io.exporters.formats",
+        "datamimic_ce.engine.io.exporters.memory",
+        "datamimic_ce.engine.io.exporters.registry"
+      ],
+      "rationale": "Output routing, serialization and write adapters. Exact reviewed target children; no hidden extra modules.",
+      "provenance": [
+        "docs/architecture/inner/structure-review.json"
+      ],
+      "decided_by": "agent"
+    },
+    {
+      "id": "LAYOUT-ENGINE-IO-FILES",
+      "kind": "root_layout",
+      "root": "datamimic_ce.engine.io.files",
+      "allowed_children": [
+        "datamimic_ce.engine.io.files.api",
+        "datamimic_ce.engine.io.files.cache",
+        "datamimic_ce.engine.io.files.readers"
+      ],
+      "rationale": "File/cache/dataset readers. Exact reviewed target children; no hidden extra modules.",
+      "provenance": [
+        "docs/architecture/inner/structure-review.json"
+      ],
       "decided_by": "agent"
     }
   ]

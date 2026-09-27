@@ -2,86 +2,395 @@
   "schema_version": "2.1.0",
   "components": [
     {
-      "id": "DSL-API", "label": "api", "role": "interface",
-      "packages": ["datamimic_ce.engine.dsl.api"],
-      "responsibilities": ["Publish the canonical executable DSL vocabulary."],
-      "forbidden_responsibilities": ["Duplicate element definitions or execute descriptors."],
-      "provenance": ["docs/architecture/inner/target.md"],
-      "requires": [
-        {"component": "contracts", "rationale": "The facade publishes DSL-owned types.", "decided_by": "agent"},
-        {"component": "vocabulary", "rationale": "The facade publishes element and enum names.", "decided_by": "agent"},
-        {"component": "model", "rationale": "The facade publishes typed element definitions.", "decided_by": "agent"},
-        {"component": "statements", "rationale": "The facade publishes parsed statements.", "decided_by": "agent"},
-        {"component": "parsers", "rationale": "The facade publishes descriptor parsing.", "decided_by": "agent"}
-      ],
-      "public": ["datamimic_ce.engine.dsl.api"], "decided_by": "agent"
-    },
-    {
-      "id": "DSL-CONTRACTS", "label": "contracts", "role": "contract",
-      "packages": ["datamimic_ce.engine.dsl.contracts"],
-      "responsibilities": ["Define DSL-owned extension and capability types."],
-      "forbidden_responsibilities": ["Import concrete parsers or runtime execution."],
-      "provenance": ["docs/architecture/inner/target.md"],
-      "requires": [], "public": ["datamimic_ce.engine.dsl.contracts"], "decided_by": "agent"
-    },
-    {
-      "id": "DSL-VOCABULARY", "label": "vocabulary", "role": "foundation",
-      "packages": ["datamimic_ce.engine.dsl.constants", "datamimic_ce.engine.dsl.enums"],
-      "responsibilities": ["Own element names, attributes, and closed DSL value sets."],
-      "forbidden_responsibilities": ["Know models, parsers, or runtime tasks."],
-      "provenance": ["docs/architecture/inner/target.md"],
-      "requires": [], "public": [], "decided_by": "agent"
-    },
-    {
-      "id": "DSL-MODELS", "label": "model", "role": "component",
-      "packages": ["datamimic_ce.engine.dsl.model", "datamimic_ce.engine.dsl.timeseries"],
-      "responsibilities": ["Own typed element grammar, constraints, and static metadata."],
-      "forbidden_responsibilities": ["Construct parser implementations or execute tasks."],
-      "provenance": ["docs/architecture/inner/target.md"],
-      "requires": [
-        {"component": "contracts", "rationale": "Models implement DSL-owned extension types.", "decided_by": "agent"},
-        {"component": "vocabulary", "rationale": "Models use canonical DSL names and enums.", "decided_by": "agent"}
-      ],
-      "public": [], "decided_by": "agent"
-    },
-    {
-      "id": "DSL-STATEMENTS", "label": "statements", "role": "component",
-      "packages": ["datamimic_ce.engine.dsl.statements"],
-      "responsibilities": ["Represent parsed executable descriptor meaning without IO."],
-      "forbidden_responsibilities": ["Construct parsers or execute runtime tasks."],
-      "provenance": ["docs/architecture/inner/target.md"],
-      "requires": [
-        {"component": "contracts", "rationale": "Statements use DSL-owned extension types.", "decided_by": "agent"},
-        {"component": "vocabulary", "rationale": "Statements use canonical DSL values.", "decided_by": "agent"},
-        {"component": "model", "rationale": "Statements carry validated typed models.", "decided_by": "agent"}
-      ],
-      "public": [], "decided_by": "agent"
-    },
-    {
-      "id": "DSL-PARSING", "label": "parsers", "role": "component",
+      "id": "DSL-API",
+      "label": "api",
+      "role": "interface",
       "packages": [
-        "datamimic_ce.engine.dsl.parsers",
-        "datamimic_ce.engine.dsl.properties",
-        "datamimic_ce.engine.dsl.xml"
+        "datamimic_ce.engine.dsl.api"
       ],
-      "responsibilities": ["Parse XML and bind element models to statement constructors."],
-      "forbidden_responsibilities": ["Own a second grammar catalog or execute descriptors."],
-      "provenance": ["docs/architecture/inner/target.md"],
+      "responsibilities": [
+        "Supported grammar/parser entry and capability projection."
+      ],
+      "forbidden_responsibilities": [
+        "Duplicate element definitions or execute descriptors."
+      ],
+      "provenance": [
+        "docs/architecture/inner/target.md"
+      ],
       "requires": [
-        {"component": "contracts", "rationale": "Parser factories follow DSL-owned signatures.", "decided_by": "agent"},
-        {"component": "vocabulary", "rationale": "Parsing recognizes canonical element names.", "decided_by": "agent"},
-        {"component": "model", "rationale": "Parsing validates against typed grammar models.", "decided_by": "agent"},
-        {"component": "statements", "rationale": "Parsing produces executable statements.", "decided_by": "agent"}
+        {
+          "component": "vocabulary",
+          "rationale": "The facade publishes element and enum names.",
+          "decided_by": "agent"
+        },
+        {
+          "component": "model",
+          "rationale": "The facade publishes typed element definitions.",
+          "decided_by": "agent"
+        },
+        {
+          "component": "statements",
+          "rationale": "The facade publishes parsed statements.",
+          "decided_by": "agent"
+        },
+        {
+          "component": "parsers",
+          "rationale": "The facade publishes descriptor parsing.",
+          "decided_by": "agent"
+        }
       ],
-      "public": [], "decided_by": "agent"
+      "public": [
+        "datamimic_ce.engine.dsl.api"
+      ],
+      "decided_by": "agent"
+    },
+    {
+      "id": "DSL-VOCABULARY",
+      "label": "vocabulary",
+      "role": "foundation",
+      "packages": [
+        "datamimic_ce.engine.dsl.vocabulary"
+      ],
+      "responsibilities": [
+        "Canonical descriptor constants and enums."
+      ],
+      "forbidden_responsibilities": [
+        "Know models, parsers, or runtime tasks."
+      ],
+      "provenance": [
+        "docs/architecture/inner/target.md"
+      ],
+      "requires": [],
+      "public": [
+        "datamimic_ce.engine.dsl.vocabulary.constants.attribute_constants",
+        "datamimic_ce.engine.dsl.vocabulary.constants.convention_constants",
+        "datamimic_ce.engine.dsl.vocabulary.constants.data_type_constants",
+        "datamimic_ce.engine.dsl.vocabulary.constants.element_constants",
+        "datamimic_ce.engine.dsl.vocabulary.constants.exporter_constants",
+        "datamimic_ce.engine.dsl.vocabulary.enums.converter_enums",
+        "datamimic_ce.engine.dsl.vocabulary.enums.dbms_enums",
+        "datamimic_ce.engine.dsl.vocabulary.enums.distribution_enums",
+        "datamimic_ce.engine.dsl.vocabulary.enums.faker_enums",
+        "datamimic_ce.engine.dsl.vocabulary.enums.operation_enums"
+      ],
+      "decided_by": "agent"
+    },
+    {
+      "id": "DSL-MODELS",
+      "label": "model",
+      "role": "component",
+      "packages": [
+        "datamimic_ce.engine.dsl.model"
+      ],
+      "responsibilities": [
+        "Descriptor validation models and constraints."
+      ],
+      "forbidden_responsibilities": [
+        "Construct parser implementations or execute tasks."
+      ],
+      "provenance": [
+        "docs/architecture/inner/target.md"
+      ],
+      "requires": [
+        {
+          "component": "vocabulary",
+          "rationale": "Models use canonical DSL names and enums.",
+          "decided_by": "agent"
+        }
+      ],
+      "public": [
+        "datamimic_ce.engine.dsl.model.values.scalar.element_model:ElementModel",
+        "datamimic_ce.engine.dsl.model.validation:ModelUtil",
+        "datamimic_ce.engine.dsl.model.constraints",
+        "datamimic_ce.engine.dsl.model.flow.commands.assert_model:AssertModel",
+        "datamimic_ce.engine.dsl.model.flow.branches.base_if_else_model:BaseIfElseModel",
+        "datamimic_ce.engine.dsl.model.flow.branches.condition_model:ConditionModel",
+        "datamimic_ce.engine.dsl.model.flow.branches.else_if_model:ElseIfModel",
+        "datamimic_ce.engine.dsl.model.flow.branches.else_model:ElseModel",
+        "datamimic_ce.engine.dsl.model.flow.branches.if_model:IfModel",
+        "datamimic_ce.engine.dsl.model.setup.state_machine_model:StateMachineModel",
+        "datamimic_ce.engine.dsl.model.flow.loops.while_model:WhileModel",
+        "datamimic_ce.engine.dsl.model.values.structured.array_model:ArrayModel",
+        "datamimic_ce.engine.dsl.model.setup.generator_model:GeneratorModel",
+        "datamimic_ce.engine.dsl.model.values.structured.item_model:ItemModel",
+        "datamimic_ce.engine.dsl.model.values.scalar.key_model:KeyModel",
+        "datamimic_ce.engine.dsl.model.values.structured.list_model:ListModel",
+        "datamimic_ce.engine.dsl.model.values.structured.nested_key_model:NestedKeyModel",
+        "datamimic_ce.engine.dsl.model.values.references.reference_field_model:ReferenceFieldModel",
+        "datamimic_ce.engine.dsl.model.values.references.reference_model:ReferenceModel",
+        "datamimic_ce.engine.dsl.model.values.scalar.value_model:ValueModel",
+        "datamimic_ce.engine.dsl.model.values.variables.variable_model:VariableModel",
+        "datamimic_ce.engine.dsl.model.setup.database_model:DatabaseModel",
+        "datamimic_ce.engine.dsl.model.flow.commands.execute_model:ExecuteModel",
+        "datamimic_ce.engine.dsl.model.setup.include_model:IncludeModel",
+        "datamimic_ce.engine.dsl.model.setup.memstore_model:MemstoreModel",
+        "datamimic_ce.engine.dsl.model.setup.mongodb_model:MongoDBModel",
+        "datamimic_ce.engine.dsl.model.setup.setup_model:SetupModel",
+        "datamimic_ce.engine.dsl.model.setup.demographics_model:DemographicsModel",
+        "datamimic_ce.engine.dsl.model.generation.generate_model:GenerateModel",
+        "datamimic_ce.engine.dsl.model.generation.timeseries:TimeSeriesConfig",
+        "datamimic_ce.engine.dsl.model.generation.timeseries:TimeSeriesNamespace",
+        "datamimic_ce.engine.dsl.model.registry:ElementDefinition",
+        "datamimic_ce.engine.dsl.model.registry:canonical_tag",
+        "datamimic_ce.engine.dsl.model.registry:element_aliases",
+        "datamimic_ce.engine.dsl.model.registry:get_element_definition",
+        "datamimic_ce.engine.dsl.model.registry:get_model_class",
+        "datamimic_ce.engine.dsl.model.registry:get_valid_children",
+        "datamimic_ce.engine.dsl.model.registry:list_element_tags",
+        "datamimic_ce.engine.dsl.model.registry:registry_revision"
+      ],
+      "decided_by": "agent",
+      "inside": "docs/architecture/inner/dsl/model/architecture-contract.json"
+    },
+    {
+      "id": "DSL-STATEMENTS",
+      "label": "statements",
+      "role": "component",
+      "packages": [
+        "datamimic_ce.engine.dsl.statements"
+      ],
+      "responsibilities": [
+        "Parsed statement tree and its traversal."
+      ],
+      "forbidden_responsibilities": [
+        "Construct parsers or execute runtime tasks."
+      ],
+      "provenance": [
+        "docs/architecture/inner/target.md"
+      ],
+      "requires": [
+        {
+          "component": "vocabulary",
+          "rationale": "Statements use canonical DSL values.",
+          "decided_by": "agent"
+        },
+        {
+          "component": "model",
+          "rationale": "Statements carry validated typed models.",
+          "decided_by": "agent"
+        }
+      ],
+      "public": [
+        "datamimic_ce.engine.dsl.statements.base.statement:Statement",
+        "datamimic_ce.engine.dsl.statements.base.composite_statement:CompositeStatement",
+        "datamimic_ce.engine.dsl.statements.base.composite_statement:ConditionBranchStatement",
+        "datamimic_ce.engine.dsl.statements.flow.commands.assert_statement:AssertStatement",
+        "datamimic_ce.engine.dsl.statements.flow.branches.condition_statement:ConditionStatement",
+        "datamimic_ce.engine.dsl.statements.flow.branches.else_if_statement:ElseIfStatement",
+        "datamimic_ce.engine.dsl.statements.flow.branches.else_statement:ElseStatement",
+        "datamimic_ce.engine.dsl.statements.flow.branches.if_statement:IfStatement",
+        "datamimic_ce.engine.dsl.statements.setup.state_machine_statement:StateMachineStatement",
+        "datamimic_ce.engine.dsl.statements.flow.loops.while_statement:WhileStatement",
+        "datamimic_ce.engine.dsl.statements.values.structured.array_statement:ArrayStatement",
+        "datamimic_ce.engine.dsl.statements.values.scalar.element_statement:ElementStatement",
+        "datamimic_ce.engine.dsl.statements.setup.generator_statement:GeneratorStatement",
+        "datamimic_ce.engine.dsl.statements.values.structured.item_statement:ItemStatement",
+        "datamimic_ce.engine.dsl.statements.values.scalar.key_statement:KeyStatement",
+        "datamimic_ce.engine.dsl.statements.values.structured.list_statement:ListStatement",
+        "datamimic_ce.engine.dsl.statements.values.structured.nested_key_statement:NestedKeyStatement",
+        "datamimic_ce.engine.dsl.statements.values.references.reference_statement:ReferenceField",
+        "datamimic_ce.engine.dsl.statements.values.references.reference_statement:ReferenceStatement",
+        "datamimic_ce.engine.dsl.statements.values.variables.variable_statement:VariableStatement",
+        "datamimic_ce.engine.dsl.statements.setup.database_statement:DatabaseStatement",
+        "datamimic_ce.engine.dsl.statements.setup.demographics_statement:DemographicsStatement",
+        "datamimic_ce.engine.dsl.statements.flow.commands.echo_statement:EchoStatement",
+        "datamimic_ce.engine.dsl.statements.flow.commands.execute_statement:ExecuteStatement",
+        "datamimic_ce.engine.dsl.statements.setup.include_statement:IncludeStatement",
+        "datamimic_ce.engine.dsl.statements.setup.memstore_statement:MemstoreStatement",
+        "datamimic_ce.engine.dsl.statements.setup.mongodb_statement:MongoDBStatement",
+        "datamimic_ce.engine.dsl.statements.setup.setup_statement:SetupStatement",
+        "datamimic_ce.engine.dsl.statements.generation.generate_statement:GenerateStatement"
+      ],
+      "decided_by": "agent",
+      "inside": "docs/architecture/inner/dsl/statements/architecture-contract.json"
+    },
+    {
+      "id": "DSL-PARSING",
+      "label": "parsers",
+      "role": "component",
+      "packages": [
+        "datamimic_ce.engine.dsl.parsers"
+      ],
+      "responsibilities": [
+        "Ordered document parsing and concrete parser dispatch."
+      ],
+      "forbidden_responsibilities": [
+        "Own a second grammar catalog or execute descriptors."
+      ],
+      "provenance": [
+        "docs/architecture/inner/target.md"
+      ],
+      "requires": [
+        {
+          "component": "vocabulary",
+          "rationale": "Parsing recognizes canonical element names.",
+          "decided_by": "agent"
+        },
+        {
+          "component": "model",
+          "rationale": "Parsing validates against typed grammar models.",
+          "decided_by": "agent"
+        },
+        {
+          "component": "statements",
+          "rationale": "Parsing produces executable statements.",
+          "decided_by": "agent"
+        }
+      ],
+      "public": [
+        "datamimic_ce.engine.dsl.parsers.document.descriptor_parser:DescriptorParser",
+        "datamimic_ce.engine.dsl.parsers.input.properties:parse_properties",
+        "datamimic_ce.engine.dsl.parsers.input.xml:DTDForbiddenError",
+        "datamimic_ce.engine.dsl.parsers.input.xml:parse_xml_file",
+        "datamimic_ce.engine.dsl.parsers.input.xml:parse_xml_source"
+      ],
+      "decided_by": "agent",
+      "inside": "docs/architecture/inner/dsl/parsers/architecture-contract.json"
     }
   ],
   "rules": [
     {
-      "id": "DSL-REQUIRES-COMPLETE", "kind": "complete_requires",
+      "id": "DSL-REQUIRES-COMPLETE",
+      "kind": "complete_requires",
       "include_type_checking": true,
       "rationale": "Grammar facts flow into parsing; typed models never import concrete parsers.",
-      "provenance": ["docs/architecture/inner/target.md"],
+      "provenance": [
+        "docs/architecture/inner/target.md"
+      ],
+      "decided_by": "agent"
+    },
+    {
+      "id": "DSL-ASSIGNMENT",
+      "kind": "complete_assignment",
+      "source": "datamimic_ce.engine.dsl",
+      "rationale": "Every implementation below this boundary has one declared owner; initializer behavior is reviewed separately.",
+      "provenance": [
+        "docs/architecture/inner/target.md"
+      ],
+      "decided_by": "agent"
+    },
+    {
+      "id": "DSL-INTERFACES",
+      "kind": "interface_boundary",
+      "include_type_checking": true,
+      "rationale": "Sibling components use explicit entry points; a permitted direction does not publish all internals.",
+      "provenance": [
+        "docs/architecture/inner/target.md"
+      ],
+      "decided_by": "agent"
+    },
+    {
+      "id": "DSL-ACYCLIC",
+      "kind": "no_component_cycles",
+      "rationale": "Responsibility layers must not require one another in both directions.",
+      "provenance": [
+        "docs/architecture/inner/target.md"
+      ],
+      "decided_by": "agent"
+    },
+    {
+      "id": "LAYOUT-ENGINE-DSL-MODEL",
+      "kind": "root_layout",
+      "root": "datamimic_ce.engine.dsl.model",
+      "allowed_children": [
+        "datamimic_ce.engine.dsl.model.constraints",
+        "datamimic_ce.engine.dsl.model.flow",
+        "datamimic_ce.engine.dsl.model.generation",
+        "datamimic_ce.engine.dsl.model.registry",
+        "datamimic_ce.engine.dsl.model.setup",
+        "datamimic_ce.engine.dsl.model.validation",
+        "datamimic_ce.engine.dsl.model.values"
+      ],
+      "rationale": "Descriptor validation models and constraints. Exact reviewed target children; no hidden extra modules.",
+      "provenance": [
+        "docs/architecture/inner/structure-review.json"
+      ],
+      "decided_by": "agent"
+    },
+    {
+      "id": "LAYOUT-ENGINE-DSL-PARSERS",
+      "kind": "root_layout",
+      "root": "datamimic_ce.engine.dsl.parsers",
+      "allowed_children": [
+        "datamimic_ce.engine.dsl.parsers.base",
+        "datamimic_ce.engine.dsl.parsers.document",
+        "datamimic_ce.engine.dsl.parsers.flow",
+        "datamimic_ce.engine.dsl.parsers.generation",
+        "datamimic_ce.engine.dsl.parsers.input",
+        "datamimic_ce.engine.dsl.parsers.registry",
+        "datamimic_ce.engine.dsl.parsers.setup",
+        "datamimic_ce.engine.dsl.parsers.values"
+      ],
+      "rationale": "Ordered document parsing and concrete parser dispatch. Exact reviewed target children; no hidden extra modules.",
+      "provenance": [
+        "docs/architecture/inner/structure-review.json"
+      ],
+      "decided_by": "agent"
+    },
+    {
+      "id": "LAYOUT-ENGINE-DSL-STATEMENTS",
+      "kind": "root_layout",
+      "root": "datamimic_ce.engine.dsl.statements",
+      "allowed_children": [
+        "datamimic_ce.engine.dsl.statements.base",
+        "datamimic_ce.engine.dsl.statements.flow",
+        "datamimic_ce.engine.dsl.statements.generation",
+        "datamimic_ce.engine.dsl.statements.setup",
+        "datamimic_ce.engine.dsl.statements.traversal",
+        "datamimic_ce.engine.dsl.statements.values"
+      ],
+      "rationale": "Parsed statement tree and its traversal. Exact reviewed target children; no hidden extra modules.",
+      "provenance": [
+        "docs/architecture/inner/structure-review.json"
+      ],
+      "decided_by": "agent"
+    },
+    {
+      "id": "LAYOUT-ENGINE-DSL-VOCABULARY",
+      "kind": "root_layout",
+      "root": "datamimic_ce.engine.dsl.vocabulary",
+      "allowed_children": [
+        "datamimic_ce.engine.dsl.vocabulary.constants",
+        "datamimic_ce.engine.dsl.vocabulary.enums"
+      ],
+      "rationale": "Canonical descriptor constants and enums. Exact reviewed target children; no hidden extra modules.",
+      "provenance": [
+        "docs/architecture/inner/structure-review.json"
+      ],
+      "decided_by": "agent"
+    },
+    {
+      "id": "LAYOUT-ENGINE-DSL-VOCABULARY-CONSTANTS",
+      "kind": "root_layout",
+      "root": "datamimic_ce.engine.dsl.vocabulary.constants",
+      "allowed_children": [
+        "datamimic_ce.engine.dsl.vocabulary.constants.attribute_constants",
+        "datamimic_ce.engine.dsl.vocabulary.constants.convention_constants",
+        "datamimic_ce.engine.dsl.vocabulary.constants.data_type_constants",
+        "datamimic_ce.engine.dsl.vocabulary.constants.element_constants",
+        "datamimic_ce.engine.dsl.vocabulary.constants.exporter_constants"
+      ],
+      "rationale": "Canonical descriptor constants and enums. Exact reviewed target children; no hidden extra modules.",
+      "provenance": [
+        "docs/architecture/inner/structure-review.json"
+      ],
+      "decided_by": "agent"
+    },
+    {
+      "id": "LAYOUT-ENGINE-DSL-VOCABULARY-ENUMS",
+      "kind": "root_layout",
+      "root": "datamimic_ce.engine.dsl.vocabulary.enums",
+      "allowed_children": [
+        "datamimic_ce.engine.dsl.vocabulary.enums.converter_enums",
+        "datamimic_ce.engine.dsl.vocabulary.enums.dbms_enums",
+        "datamimic_ce.engine.dsl.vocabulary.enums.distribution_enums",
+        "datamimic_ce.engine.dsl.vocabulary.enums.faker_enums",
+        "datamimic_ce.engine.dsl.vocabulary.enums.operation_enums"
+      ],
+      "rationale": "Canonical descriptor constants and enums. Exact reviewed target children; no hidden extra modules.",
+      "provenance": [
+        "docs/architecture/inner/structure-review.json"
+      ],
       "decided_by": "agent"
     }
   ]
