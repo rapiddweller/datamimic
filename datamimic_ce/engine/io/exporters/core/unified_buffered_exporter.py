@@ -44,13 +44,12 @@ class UnifiedBufferedExporter(Exporter, ABC):
         if config.chunk_size is not None and config.chunk_size <= 0:
             raise ValueError("Chunk size must be a positive integer or None for unlimited size.")
 
-        setup_context = config.setup_context
         self._exporter_type = exporter_type
         self.product_name = config.product_name  # Name of the product being exported
-        self._encoding = config.encoding or setup_context.default_encoding
-        self._mp = setup_context.use_mp  # Multiprocessing flag
-        self._task_id = setup_context.task_id  # Task ID for tracking
-        self._descriptor_dir = setup_context.descriptor_dir  # Directory for storing temp files
+        self._encoding = config.encoding or config.default_encoding
+        self._mp = config.use_mp  # Multiprocessing flag
+        self._task_id = config.task_id  # Task ID for tracking
+        self._descriptor_dir = config.descriptor_dir  # Directory for storing temp files
         self._chunk_size = config.chunk_size  # Max entities per chunk
         # exportUri: a validated output-directory prefix; falls back to the task_id dir when unset.
         self._export_uri = config.export_uri

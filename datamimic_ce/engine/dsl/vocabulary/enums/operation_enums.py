@@ -11,7 +11,7 @@ class ExportOperation(StrEnum):
     """Client write operation selected by a target suffix (``clientId.<operation>``).
 
     A plain ``clientId`` target inserts. Parsed once at the target boundary
-    (ExporterUtil.create_exporter_list) so everything downstream dispatches on the
+    (the IO exporter registry) so everything downstream dispatches on the
     enum instead of raw strings.
     """
 

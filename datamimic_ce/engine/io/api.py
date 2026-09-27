@@ -35,24 +35,23 @@ from datamimic_ce.engine.io.exporters.core.routing import (
     resolve_target_entity,
     resolve_target_entity_from_metadata,
 )
+from datamimic_ce.engine.io.exporters.core.serialization import convert_xml_dict_to_json_dict
 from datamimic_ce.engine.io.exporters.core.unified_buffered_exporter import UnifiedBufferedExporter
 from datamimic_ce.engine.io.exporters.database.database_exporter import DatabaseExporter
 from datamimic_ce.engine.io.exporters.database.mongodb_exporter import MongoDBExporter
 from datamimic_ce.engine.io.exporters.diagnostics.console_exporter import ConsoleExporter
 from datamimic_ce.engine.io.exporters.diagnostics.log_exporter import LogExporter
 from datamimic_ce.engine.io.exporters.diagnostics.test_result_exporter import TestResultExporter
-from datamimic_ce.engine.io.exporters.exporter_util import ExporterUtil, buffered_exporter_names
 from datamimic_ce.engine.io.exporters.formats.xml_exporter import XMLExporter
 from datamimic_ce.engine.io.exporters.memory.memstore import Memstore
+from datamimic_ce.engine.io.exporters.registry import (
+    buffered_exporter_names,
+    consume_exporters,
+    create_exporter_list,
+    smoke_export,
+)
 from datamimic_ce.engine.io.files.cache import FileContentStorage
 from datamimic_ce.engine.io.files.readers import FileUtil
-
-
-def smoke_export(request: SmokeExportRequest) -> int:
-    from datamimic_ce.engine.io.exporters.diagnostics.smoke_export import smoke_export as _smoke_export
-
-    return _smoke_export(request)
-
 
 __all__ = [
     "Client",
@@ -64,7 +63,9 @@ __all__ = [
     "ConsoleExporter",
     "LogExporter",
     "ExporterStateManager",
-    "ExporterUtil",
+    "consume_exporters",
+    "convert_xml_dict_to_json_dict",
+    "create_exporter_list",
     "FileContentStorage",
     "FileUtil",
     "MongoDBConnectionConfig",

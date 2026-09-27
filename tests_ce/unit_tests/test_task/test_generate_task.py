@@ -11,7 +11,6 @@ from datamimic_ce.engine.dsl.statements.values.scalar.key_statement import KeySt
 from datamimic_ce.engine.io.clients.database_client import DatabaseClient
 from datamimic_ce.engine.io.clients.mongodb_client import MongoDBClient
 from datamimic_ce.engine.io.exporters.database.mongodb_exporter import MongoDBExporter
-from datamimic_ce.engine.io.exporters.exporter_util import ExporterUtil
 from datamimic_ce.engine.runtime.contexts.context import SetupContext
 from datamimic_ce.engine.runtime.contexts.geniter_context import GenIterContext
 from datamimic_ce.engine.runtime.contexts.records import dict_nested_update
@@ -84,10 +83,6 @@ class TestGenerateTask:
         context.properties = {"prop1": "value1"}
         context.namespace = {"CustomClass": MagicMock()}
         context.current_seed = 42
-
-        # Setup exporter utility
-        exporter_util = MagicMock()
-        exporter_util.create_exporter_list.return_value = ([], [])
 
         # Setup memstore manager
         context.memstore_manager = MagicMock(spec=MemstoreManager)
@@ -335,15 +330,16 @@ class TestGenerateTask:
         if has_mongodb_delete:
             # Create a mock MongoDBExporter with spec
             mock_mongo_exporter = MagicMock(spec=MongoDBExporter)
-            ExporterUtil.create_exporter_list.return_value = ([(mock_mongo_exporter, "delete")], [])
+            exporters = ([(mock_mongo_exporter, "delete")], [])
         else:
-            ExporterUtil.create_exporter_list.return_value = ([], [])
+            exporters = ([], [])
 
         # Create the GenerateTask with the mock_statement
         generate_task = GenerateTask(mock_statement)
 
         # Mock methods
         with (
+            patch("datamimic_ce.engine.runtime.tasks.generate.task.create_exporter_list", return_value=exporters),
             patch.object(generate_task, "_mp_page_process") as mock_mp_process,
             patch.object(generate_task, "_sp_generate") as mock_sp_generate,
             patch.object(generate_task, "_calculate_default_page_size", return_value=100),

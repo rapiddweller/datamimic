@@ -4,7 +4,6 @@ from typing import Protocol
 
 from datamimic_ce.engine.io.clients.client import Client
 from datamimic_ce.engine.io.exporters.core.exporter import Exporter
-from datamimic_ce.engine.io.exporters.diagnostics.test_result_exporter import TestResultExporter
 
 
 class MemstoreProvider(Protocol):
@@ -23,7 +22,7 @@ class ExporterContext(Protocol):
     def memstore_manager(self) -> MemstoreProvider: ...
 
     @property
-    def test_result_exporter(self) -> TestResultExporter: ...
+    def test_result_exporter(self) -> Exporter: ...
 
     @property
     def default_encoding(self) -> str: ...

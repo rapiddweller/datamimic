@@ -231,6 +231,7 @@
         "datamimic_ce.engine.io.exporters.core.exporter_state_manager:ExporterStateManager",
         "datamimic_ce.engine.io.exporters.core.exporter_state_manager:ExporterStateStorage",
         "datamimic_ce.engine.io.exporters.core.routing:parse_function_string",
+        "datamimic_ce.engine.io.exporters.core.serialization:convert_xml_dict_to_json_dict",
         "datamimic_ce.engine.io.exporters.registry:create_exporter_list",
         "datamimic_ce.engine.io.exporters.registry:consume_exporters",
         "datamimic_ce.engine.io.exporters.registry:buffered_exporter_names",

@@ -5,22 +5,21 @@
 # For questions and support, contact: info@rapiddweller.com
 
 from dataclasses import dataclass
-
-from datamimic_ce.engine.io.exporters.core.exporter_context import ExporterContext
+from pathlib import Path
 
 
 @dataclass(frozen=True)
 class ExporterConfig:
-    """The parameters every buffered file exporter shares.
+    """Scalar settings shared by buffered exporters."""
 
-    Bundling them means a cross-cutting exporter setting (chunk_size, encoding, exportUri, ...) is
-    added in ONE place instead of every exporter constructor + every factory call. Format-specific
-    options (CSV delimiter, XLSX sheet_name, ...) stay on the individual exporters.
-    """
-
-    setup_context: ExporterContext
     product_name: str
     chunk_size: int | None
     encoding: str | None
-    export_uri: str | None = None
+    export_uri: str | None
+    default_encoding: str
+    default_separator: str
+    default_line_separator: str
+    descriptor_dir: Path
+    task_id: str
+    use_mp: bool | None
     track_serialized_rows: bool = False

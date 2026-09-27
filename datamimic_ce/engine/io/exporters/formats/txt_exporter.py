@@ -31,10 +31,9 @@ class TXTExporter(UnifiedBufferedExporter):
 
     def __init__(self, config: ExporterConfig, params: dict):
         """Initialize the TXTExporter. separator defaults to ':', line_terminator to the system default."""
-        setup_context = config.setup_context
-        self.separator = params.get("separator") or setup_context.default_separator or ":"
+        self.separator = params.get("separator") or config.default_separator or ":"
         self.line_terminator = (
-            params.get("line_terminator") or setup_context.default_line_separator or os.linesep or "\n"
+            params.get("line_terminator") or config.default_line_separator or os.linesep or "\n"
         )
         self._track_serialized_rows = config.track_serialized_rows
         self._serialized_records_by_buffer: dict[Path, list[str]] = {}

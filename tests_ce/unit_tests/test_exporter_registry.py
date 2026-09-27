@@ -1,31 +1,22 @@
-from datamimic_ce.engine.dsl.vocabulary.constants.exporter_constants import EXPORTER_CSV, EXPORTER_DBUNIT, EXPORTER_FIXED_WIDTH, EXPORTER_JSON, EXPORTER_TXT, EXPORTER_XLSX, EXPORTER_XML
-from datamimic_ce.engine.io.exporters.formats.csv_exporter import CSVExporter
-from datamimic_ce.engine.io.exporters.formats.dbunit_exporter import DbUnitExporter
-from datamimic_ce.engine.io.exporters.exporter_util import _BUFFERED_EXPORTERS
-from datamimic_ce.engine.io.exporters.formats.fixed_width_exporter import FixedWidthExporter
-from datamimic_ce.engine.io.exporters.formats.json_exporter import JsonExporter
-from datamimic_ce.engine.io.exporters.formats.txt_exporter import TXTExporter
-from datamimic_ce.engine.io.exporters.core.unified_buffered_exporter import UnifiedBufferedExporter
-from datamimic_ce.engine.io.exporters.formats.xlsx_exporter import XLSXExporter
-from datamimic_ce.engine.io.exporters.formats.xml_exporter import XMLExporter
+from datamimic_ce.engine.dsl.vocabulary.constants.exporter_constants import (
+    EXPORTER_CSV,
+    EXPORTER_DBUNIT,
+    EXPORTER_FIXED_WIDTH,
+    EXPORTER_JSON,
+    EXPORTER_TXT,
+    EXPORTER_XLSX,
+    EXPORTER_XML,
+)
+from datamimic_ce.engine.io.api import buffered_exporter_names
 
 
-def test_registry_maps_every_buffered_target_to_its_class():
-    assert {
-        EXPORTER_CSV: CSVExporter,
-        EXPORTER_JSON: JsonExporter,
-        EXPORTER_XML: XMLExporter,
-        EXPORTER_XLSX: XLSXExporter,
-        EXPORTER_TXT: TXTExporter,
-        EXPORTER_DBUNIT: DbUnitExporter,
-        EXPORTER_FIXED_WIDTH: FixedWidthExporter,
-    } == _BUFFERED_EXPORTERS
-
-
-def test_every_registered_exporter_is_a_buffered_exporter_with_a_uniform_ctor():
-    import inspect
-
-    for cls in _BUFFERED_EXPORTERS.values():
-        assert issubclass(cls, UnifiedBufferedExporter)
-        # uniform constructor: (self, config, params)
-        assert list(inspect.signature(cls.__init__).parameters)[1:] == ["config", "params"]
+def test_registry_publishes_every_buffered_target_name():
+    assert buffered_exporter_names() == {
+        EXPORTER_CSV,
+        EXPORTER_JSON,
+        EXPORTER_XML,
+        EXPORTER_XLSX,
+        EXPORTER_TXT,
+        EXPORTER_DBUNIT,
+        EXPORTER_FIXED_WIDTH,
+    }

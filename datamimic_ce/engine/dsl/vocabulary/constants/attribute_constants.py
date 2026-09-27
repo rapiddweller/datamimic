@@ -27,7 +27,7 @@ ATTR_SOURCE_ENTITY: Final = "sourceEntity"
 ATTR_TARGET_ENTITY: Final = "targetEntity"
 
 # Product-metadata routing keys: product[2] carries how a write is routed (which collection/table,
-# which query). One definition for the builder (task_util) and every consumer (Mongo client,
+# which query). One definition for the builder (Runtime export ordering) and every consumer (Mongo client,
 # resolve_target_entity_from_metadata) so a typo fails at import, not silently at runtime.
 META_TARGET_ENTITY: Final = "target_entity"
 META_SELECTOR: Final = "selector"

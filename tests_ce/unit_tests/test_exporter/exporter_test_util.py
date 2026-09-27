@@ -18,14 +18,19 @@ class MockSetupContext:
 
 
 def make_exporter(cls, *, setup_context, product_name, chunk_size=None, encoding=None, export_uri=None, **params):
-    """Construct a buffered exporter from the old flat kwargs via the new ExporterConfig ctor."""
+    """Construct a buffered exporter through its scalar configuration."""
     from datamimic_ce.engine.io.exporters.core.exporter_config import ExporterConfig
 
     config = ExporterConfig(
-        setup_context=setup_context,
         product_name=product_name,
         chunk_size=chunk_size,
         encoding=encoding,
         export_uri=export_uri,
+        default_encoding=setup_context.default_encoding,
+        default_separator=setup_context.default_separator,
+        default_line_separator=setup_context.default_line_separator,
+        descriptor_dir=setup_context.descriptor_dir,
+        task_id=setup_context.task_id,
+        use_mp=setup_context.use_mp,
     )
     return cls(config, params)

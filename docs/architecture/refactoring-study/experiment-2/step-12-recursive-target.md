@@ -296,3 +296,36 @@ remains. The raw comparator therefore exits 1; it is not called green.
 
 CI-ONLY VERIFICATION: no new remote or after-side external-service run. The
 exporter, source-boundary and task-registry slices remain open.
+
+## Ninth slice: exporter ownership and page order
+
+`ExporterUtil` and the remaining `TaskUtil` code are gone. IO owns the exporter
+registry, row conversion, concrete dispatch and smoke export. Generate owns
+parent/child page order. Buffered exporter configuration contains scalar values,
+not a Runtime context. Tests now call the actual IO and Generate operations;
+tests for the deleted, unused serializer/path-format helpers were removed.
+
+Astra found a declared Generate child-cycle during review: the worker calls
+`export_order`, while `task.py` selects workers. Amendment 24 gives export order
+its own child component without changing a file or runtime behavior. Amendment
+23 publishes the exact IO conversion function and tests its failure before
+cache lookup, page-count mutation and nested writes.
+
+LOCAL VERIFIED: Terra's independent focused suites passed 173 exporter/authoring/
+source tests, 15 nested-export tests and 21 Generate tests (11 skips). Root's
+serial non-service sweep passed 1,920 tests, 13 skips and two existing Pydantic
+warnings. Full-package Ruff/Mypy (494 modules), Pylint import-cycle check and
+both recursive definition tests pass. The physical target remains red: nine
+missing target modules and eight legacy/unowned modules. All 930 XML and seven
+intent-model hashes match the frozen inputs. Step-0 retained every status
+(454 captured, 62 expected errors, 16 non-descriptors, 76 unrunnable, 322
+unverified). Its raw comparison exits 1 for the approved unseeded MemStore
+`te` count variance (17 to 15; the same-run bounded invariant passed) and
+two capability provenance strings: DM401 now names the IO target parser,
+DM402 names source routing instead of the removed utility classes. Compiler,
+Authoring reference and scaffold projections are unchanged. This is a
+classified difference, not a green raw comparison.
+
+CI-ONLY VERIFICATION: no new remote run. ArchKeel still exits 2/UNKNOWN because
+`runtime.tasks.registry` is absent. Source boundaries, task registry, final
+service/database-output parity and complete target acceptance remain open.

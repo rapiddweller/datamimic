@@ -22,11 +22,18 @@ from pathlib import Path
 
 import pytest
 
-from datamimic_ce.interfaces.python.data_mimic_test import DataMimicTest
-from datamimic_ce.engine.dsl.vocabulary.constants.exporter_constants import EXPORTER_CSV, EXPORTER_DBUNIT, EXPORTER_FIXED_WIDTH, EXPORTER_JSON, EXPORTER_TXT, EXPORTER_XLSX, EXPORTER_XML
 from datamimic_ce.engine.dsl.model.constraints import SourceFileFormat
-from datamimic_ce.engine.io.exporters.exporter_util import _BUFFERED_EXPORTERS
-from datamimic_ce.engine.io.api import FileUtil
+from datamimic_ce.engine.dsl.vocabulary.constants.exporter_constants import (
+    EXPORTER_CSV,
+    EXPORTER_DBUNIT,
+    EXPORTER_FIXED_WIDTH,
+    EXPORTER_JSON,
+    EXPORTER_TXT,
+    EXPORTER_XLSX,
+    EXPORTER_XML,
+)
+from datamimic_ce.engine.io.api import FileUtil, buffered_exporter_names
+from datamimic_ce.interfaces.python.data_mimic_test import DataMimicTest
 
 _DIR = Path(__file__).resolve().parent
 _OUT = _DIR / "output" / "matrix_out"
@@ -106,7 +113,7 @@ _READERS = {
 )
 def test_every_registered_buffered_exporter_round_trips(descriptor: str, encoding: str):
     # Self-extending: a new registry entry must add a matrix reader
-    assert set(_READERS) == set(_BUFFERED_EXPORTERS), "matrix reader missing for a registered exporter"
+    assert set(_READERS) == buffered_exporter_names(), "matrix reader missing for a registered exporter"
 
     shutil.rmtree(_DIR / "output", ignore_errors=True)
     try:

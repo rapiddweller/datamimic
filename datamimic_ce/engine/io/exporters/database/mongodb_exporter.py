@@ -5,7 +5,7 @@
 # For questions and support, contact: info@rapiddweller.com
 import copy
 
-from datamimic_ce.engine.dsl.api import META_SELECTOR, META_TARGET_ENTITY
+from datamimic_ce.engine.dsl.vocabulary.constants.attribute_constants import META_SELECTOR, META_TARGET_ENTITY
 from datamimic_ce.engine.io.clients.mongodb_client import MongoDBClient
 from datamimic_ce.engine.io.exporters.core.exporter import Exporter
 from datamimic_ce.engine.io.exporters.core.routing import resolve_target_entity_from_metadata

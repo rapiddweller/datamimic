@@ -26,7 +26,7 @@
         "datamimic_ce.engine.io.exporters.core.exporter_state_manager:ExporterStateManager",
         "datamimic_ce.engine.io.exporters.core.unified_buffered_exporter:UnifiedBufferedExporter",
         "datamimic_ce.engine.io.exporters.core.routing",
-        "datamimic_ce.engine.io.exporters.core.serialization"
+        "datamimic_ce.engine.io.exporters.core.serialization:convert_xml_dict_to_json_dict"
       ],
       "decided_by": "agent"
     },

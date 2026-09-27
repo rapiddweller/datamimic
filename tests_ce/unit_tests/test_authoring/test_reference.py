@@ -8,6 +8,7 @@ import json
 
 import pytest
 
+from datamimic_ce.authoring.domain.schema import build_schema_index
 from datamimic_ce.authoring.projection.reference import (
     ReferenceTopic,
     capabilities_index,
@@ -17,11 +18,10 @@ from datamimic_ce.authoring.projection.reference import (
     known_generator_names,
     reference,
 )
-from datamimic_ce.authoring.domain.schema import build_schema_index
 from datamimic_ce.authoring.spec import authoring_spec_json_schema
-from datamimic_ce.engine.dsl.vocabulary.enums.converter_enums import ConverterEnum
 from datamimic_ce.engine.dsl.model.registry import list_element_tags
-from datamimic_ce.engine.io.exporters.exporter_util import buffered_exporter_names
+from datamimic_ce.engine.dsl.vocabulary.enums.converter_enums import ConverterEnum
+from datamimic_ce.engine.io.api import buffered_exporter_names
 
 
 def test_overview_is_owned_prose_over_live_topics() -> None:

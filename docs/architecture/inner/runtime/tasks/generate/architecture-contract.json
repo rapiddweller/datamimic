@@ -6,11 +6,10 @@
       "label": "orchestration",
       "role": "component",
       "packages": [
-        "datamimic_ce.engine.runtime.tasks.generate.task",
-        "datamimic_ce.engine.runtime.tasks.generate.export_order"
+        "datamimic_ce.engine.runtime.tasks.generate.task"
       ],
       "responsibilities": [
-        "Row-generation orchestration and dependency-sensitive export ordering."
+        "Row-generation orchestration and worker selection."
       ],
       "forbidden_responsibilities": [
         "Connect clients or duplicate source/exporter algorithms."
@@ -51,11 +50,39 @@
       "provenance": [
         "docs/architecture/inner/target.md"
       ],
-      "requires": [],
+      "requires": [
+        {
+          "component": "export_order",
+          "rationale": "Workers dispatch completed pages in dependency-safe order.",
+          "decided_by": "agent"
+        }
+      ],
       "public": [
         "datamimic_ce.engine.runtime.tasks.generate.workers.generate_worker:GenerateWorker",
         "datamimic_ce.engine.runtime.tasks.generate.workers.multiprocessing_generate_worker:MultiprocessingGenerateWorker",
         "datamimic_ce.engine.runtime.tasks.generate.workers.ray_generate_worker:RayGenerateWorker"
+      ],
+      "decided_by": "agent"
+    },
+    {
+      "id": "GENERATE-EXPORT-ORDER",
+      "label": "export_order",
+      "role": "component",
+      "packages": [
+        "datamimic_ce.engine.runtime.tasks.generate.export_order"
+      ],
+      "responsibilities": [
+        "Write parent and child pages in dependency-safe order."
+      ],
+      "forbidden_responsibilities": [
+        "Select workers or construct concrete exporters."
+      ],
+      "provenance": [
+        "docs/architecture/refactoring-study/experiment-2/amendment-24.md"
+      ],
+      "requires": [],
+      "public": [
+        "datamimic_ce.engine.runtime.tasks.generate.export_order:export_product_by_page"
       ],
       "decided_by": "agent"
     },

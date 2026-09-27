@@ -1,7 +1,6 @@
 import unittest
 
 from datamimic_ce.engine.io.api import parse_function_string
-from datamimic_ce.engine.io.exporters.exporter_util import ExporterUtil
 
 
 class TestExporterUtil(unittest.TestCase):
@@ -136,66 +135,6 @@ class TestExporterUtil(unittest.TestCase):
             }
         ]
         self.assertEqual(result, expected)
-
-    def test_check_path_format_file(self):
-        # Test valid file path
-        path = "valid/file/path.txt"
-        assert ExporterUtil.check_path_format(path) == "file"
-
-    def test_check_path_format_directory(self):
-        # Test valid directory path
-        path = "valid/directory/path"
-        assert ExporterUtil.check_path_format(path) == "directory"
-
-    def test_check_path_format_invalid_ending_dot(self):
-        # Test invalid path ending with a dot
-        path = "invalid/path/ending/with/dot."
-        with self.assertRaises(ValueError):
-            ExporterUtil.check_path_format(path)
-
-    def test_check_path_format_invalid_characters(self):
-        # Test invalid path with special characters
-        path = "invalid/path/with/special*chars"
-        with self.assertRaises(ValueError):
-            ExporterUtil.check_path_format(path)
-
-    def test_check_path_format_empty_string(self):
-        # Test empty string path
-        path = ""
-        with self.assertRaises(ValueError):
-            ExporterUtil.check_path_format(path)
-
-    def test_check_path_format_only_dots(self):
-        # Test path with only dots
-        path = "..."
-        with self.assertRaises(ValueError):
-            ExporterUtil.check_path_format(path)
-
-    def test_check_path_format_only_slashes(self):
-        # Test path with only slashes
-        path = "///"
-        with self.assertRaises(ValueError):
-            ExporterUtil.check_path_format(path)
-
-    def test_check_path_format_file_with_multiple_dots(self):
-        # Test valid file path with multiple dots
-        path = "valid/file/path.with.multiple.dots.txt"
-        assert ExporterUtil.check_path_format(path) == "file"
-
-    def test_check_path_format_directory_with_dashes_underscores(self):
-        # Test valid directory path with dashes and underscores
-        path = "valid-directory/with_underscores"
-        assert ExporterUtil.check_path_format(path) == "directory"
-
-    def test_check_path_format_file_with_numbers(self):
-        # Test valid file path with numbers
-        path = "valid/file/path123.txt"
-        assert ExporterUtil.check_path_format(path) == "file"
-
-    def test_check_path_format_directory_with_numbers(self):
-        # Test valid directory path with numbers
-        path = "valid/directory123"
-        assert ExporterUtil.check_path_format(path) == "directory"
 
 
 if __name__ == "__main__":

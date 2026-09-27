@@ -13,20 +13,21 @@ from datamimic_ce.engine.dsl.api import (
     EXPORTER_XLSX,
     EXPORTER_XML,
     ExportOperation,
+    GenerateStatement,
 )
-from datamimic_ce.engine.io.api import buffered_exporter_names
+from datamimic_ce.engine.dsl.model.generation.generate_model import GenerateModel
+from datamimic_ce.engine.io.api import buffered_exporter_names, create_exporter_list
 from datamimic_ce.engine.io.exporters.core.exporter import Exporter
 from datamimic_ce.engine.io.exporters.core.exporter_config import ExporterConfig
 from datamimic_ce.engine.io.exporters.core.exporter_state_manager import ExporterStateManager
 from datamimic_ce.engine.io.exporters.database.mongodb_exporter import MongoDBExporter
 from datamimic_ce.engine.io.exporters.diagnostics.console_exporter import ConsoleExporter
 from datamimic_ce.engine.io.exporters.diagnostics.test_result_exporter import TestResultExporter
-from datamimic_ce.engine.io.exporters.exporter_util import ExporterUtil
 from datamimic_ce.engine.io.exporters.formats.csv_exporter import CSVExporter
 from datamimic_ce.engine.io.exporters.formats.json_exporter import JsonExporter
 from datamimic_ce.engine.io.exporters.formats.txt_exporter import TXTExporter
 from datamimic_ce.engine.io.exporters.formats.xml_exporter import XMLExporter
-from datamimic_ce.engine.runtime.tasks.task_util import TaskUtil
+from datamimic_ce.engine.runtime.tasks.generate import export_order
 from tests_ce.unit_tests.test_exporter.exporter_test_util import MockSetupContext
 
 
@@ -67,7 +68,7 @@ def test_mongodb_upsert_replaces_rows_for_subsequent_plain_exporter(monkeypatch:
     result = TestResultExporter()
     source_rows = [{"id": 1, "state": "original"}]
 
-    TaskUtil.export_product_by_page(
+    export_order.export_product_by_page(
         _root(stmt, [(mongo, ExportOperation.UPSERT)], [result]),
         stmt,
         {stmt.full_name: source_rows},
@@ -90,7 +91,7 @@ def test_xml_receives_original_rows_while_other_buffered_exporters_receive_conve
     monkeypatch.setattr(JsonExporter, "consume", lambda self, *args: received_json.append(args))
     source_rows = [{"payload": {"#text": "original"}}]
 
-    TaskUtil.export_product_by_page(
+    export_order.export_product_by_page(
         _root(stmt, [], [xml_exporter, json_exporter]),
         stmt,
         {stmt.full_name: source_rows},
@@ -106,7 +107,7 @@ def test_operation_errors_stay_direct_while_plain_export_errors_wrap_the_cause()
     source = {stmt.full_name: [{"id": 1}]}
 
     with pytest.raises(ValueError, match="Exporter does not support operation") as operation_error:
-        TaskUtil.export_product_by_page(
+        export_order.export_product_by_page(
             _root(stmt, [(Exporter(), ExportOperation.UPDATE)], []),
             stmt,
             source,
@@ -119,7 +120,7 @@ def test_operation_errors_stay_direct_while_plain_export_errors_wrap_the_cause()
             raise RuntimeError("plain export failed")
 
     with pytest.raises(ValueError, match="Error in exporter BrokenConsoleExporter: plain export failed") as plain_error:
-        TaskUtil.export_product_by_page(
+        export_order.export_product_by_page(
             _root(stmt, [], [BrokenConsoleExporter()]),
             stmt,
             source,
@@ -134,8 +135,8 @@ def test_buffered_exporter_scalar_config_preserves_fallbacks_and_explicit_values
     setup_context.default_line_separator = "\n"
     setup_context.default_encoding = "utf-8"
 
-    csv_default = ExporterUtil.get_exporter_by_name(setup_context, "CSV", _statement(), {})
-    txt_default = ExporterUtil.get_exporter_by_name(setup_context, "TXT", _statement(), {})
+    _, defaults = create_exporter_list(setup_context, "products", None, ["CSV", "TXT"])
+    csv_default, txt_default = defaults
     assert isinstance(csv_default, CSVExporter)
     assert isinstance(txt_default, TXTExporter)
     assert (csv_default.chunk_size, csv_default.encoding, csv_default._export_uri, csv_default.delimiter) == (
@@ -151,19 +152,16 @@ def test_buffered_exporter_scalar_config_preserves_fallbacks_and_explicit_values
         "|",
     )
 
-    stmt = _statement(export_uri="published")
-    csv_explicit = ExporterUtil.get_exporter_by_name(
+    _, explicit = create_exporter_list(
         setup_context,
-        "CSV",
-        stmt,
-        {"chunk_size": 7, "encoding": "latin-1", "delimiter": ";", "line_terminator": "\r\n"},
+        "products",
+        "published",
+        [
+            "CSV(chunk_size=7, encoding='latin-1', delimiter=';', line_terminator='\\r\\n')",
+            "TXT(chunk_size=7, encoding='latin-1', separator=';', line_terminator='\\r\\n')",
+        ],
     )
-    txt_explicit = ExporterUtil.get_exporter_by_name(
-        setup_context,
-        "TXT",
-        stmt,
-        {"chunk_size": 7, "encoding": "latin-1", "separator": ";", "line_terminator": "\r\n"},
-    )
+    csv_explicit, txt_explicit = explicit
     assert isinstance(csv_explicit, CSVExporter)
     assert isinstance(txt_explicit, TXTExporter)
     assert (csv_explicit.chunk_size, csv_explicit.encoding, csv_explicit._export_uri, csv_explicit.delimiter) == (
@@ -181,7 +179,6 @@ def test_buffered_exporter_scalar_config_preserves_fallbacks_and_explicit_values
 
 
 def test_buffered_exporter_public_names_and_config_scalars(tmp_path) -> None:
-    setup_context = MockSetupContext(task_id="dispatch", descriptor_dir=tmp_path)
     assert buffered_exporter_names() == frozenset(
         {
             EXPORTER_CSV,
@@ -194,8 +191,31 @@ def test_buffered_exporter_public_names_and_config_scalars(tmp_path) -> None:
         }
     )
 
-    default = ExporterConfig(setup_context, "products", None, None)
-    explicit = ExporterConfig(setup_context, "products", 7, "latin-1", "published", True)
+    default = ExporterConfig(
+        product_name="products",
+        chunk_size=None,
+        encoding=None,
+        export_uri=None,
+        default_encoding="utf-8",
+        default_separator="|",
+        default_line_separator="\n",
+        descriptor_dir=tmp_path,
+        task_id="dispatch",
+        use_mp=False,
+    )
+    explicit = ExporterConfig(
+        product_name="products",
+        chunk_size=7,
+        encoding="latin-1",
+        export_uri="published",
+        default_encoding="utf-8",
+        default_separator="|",
+        default_line_separator="\n",
+        descriptor_dir=tmp_path,
+        task_id="dispatch",
+        use_mp=False,
+        track_serialized_rows=True,
+    )
     assert (
         default.product_name,
         default.chunk_size,
@@ -228,12 +248,57 @@ def test_exporter_factory_preserves_target_parse_and_unknown_operation_errors(tm
     setup_context = MockSetupContext(task_id="dispatch", descriptor_dir=tmp_path)
     statement = _statement()
     with pytest.raises(ValueError, match="Error parsing target string: Non-literal parameter found") as malformed:
-        ExporterUtil.create_exporter_list(setup_context, statement, ["CSV(chunk_size=runtime_value)"])
+        create_exporter_list(setup_context, statement.name, statement.export_uri, ["CSV(chunk_size=runtime_value)"])
     assert isinstance(malformed.value.__cause__, ValueError)
 
     with pytest.raises(
         ValueError,
         match=r"Unknown client operation 'patch' in target 'db.patch'.*plain client id inserts.",
     ) as unknown_operation:
-        ExporterUtil.create_exporter_list(setup_context, statement, ["db.patch"])
+        create_exporter_list(setup_context, statement.name, statement.export_uri, ["db.patch"])
     assert unknown_operation.value.__cause__ is None
+
+
+def test_conversion_failure_precedes_cache_lookup_page_count_and_nested_writes(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    class TrackingExporters(dict[str, dict]):
+        def __init__(self, entries: dict[str, dict]) -> None:
+            super().__init__(entries)
+            self.lookups: list[str] = []
+
+        def __getitem__(self, key: str) -> dict:
+            self.lookups.append(key)
+            return super().__getitem__(key)
+
+    parent = GenerateStatement(GenerateModel(name="parents", count="1"), None)
+    child = GenerateStatement(GenerateModel(name="children", count="1"), parent)
+    parent.sub_statements = [child]
+    parent_result = TestResultExporter()
+    child_result = TestResultExporter()
+    exporters = TrackingExporters(
+        {
+            parent.full_name: {"page_count": 7, "with_operation": [], "without_operation": [parent_result]},
+            child.full_name: {"page_count": 4, "with_operation": [], "without_operation": [child_result]},
+        }
+    )
+    root_context = SimpleNamespace(task_exporters=exporters)
+
+    def fail_conversion(_row: dict[str, object]) -> object:
+        raise ValueError("unserializable XML row")
+
+    monkeypatch.setattr(export_order, "convert_xml_dict_to_json_dict", fail_conversion)
+
+    with pytest.raises(ValueError, match="unserializable XML row"):
+        export_order.export_product_by_page(
+            root_context,
+            parent,
+            {parent.full_name: [{"payload": {"#text": "parent"}}], child.full_name: [{"id": 1}]},
+            ExporterStateManager(worker_id=1),
+        )
+
+    assert exporters.lookups == []
+    assert exporters[parent.full_name]["page_count"] == 7
+    assert exporters[child.full_name]["page_count"] == 4
+    assert parent_result.get_result() == {}
+    assert child_result.get_result() == {}

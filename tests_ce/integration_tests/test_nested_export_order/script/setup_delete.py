@@ -6,7 +6,7 @@
 #   - fk_orders_user (BEFORE INSERT on orders): phase 1 must insert the parent user before its
 #     child orders - proves the existing parent-before-child insert order still holds.
 #   - fk_users_children (BEFORE DELETE on users): phase 2 must delete a user's orders before the
-#     user row itself - this is what the new delete-first ordering (TaskUtil.export_product_by_page)
+#     user row itself - this is what the delete-first ordering (export_order.export_product_by_page)
 #     is proving.
 import sqlite3
 from pathlib import Path

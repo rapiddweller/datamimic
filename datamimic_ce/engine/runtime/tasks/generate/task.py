@@ -12,7 +12,12 @@ from typing import Protocol
 import dill
 
 from datamimic_ce.engine.dsl.api import CompositeStatement, GenerateStatement, KeyStatement, Statement
-from datamimic_ce.engine.io.api import ExporterUtil, UnifiedBufferedExporter, count_query_length, resolve_target_entity
+from datamimic_ce.engine.io.api import (
+    UnifiedBufferedExporter,
+    count_query_length,
+    create_exporter_list,
+    resolve_target_entity,
+)
 from datamimic_ce.engine.runtime.contexts.context import Context, SetupContext
 from datamimic_ce.engine.runtime.contexts.geniter_context import GenIterContext
 from datamimic_ce.engine.runtime.logging import gen_timer, logger
@@ -405,7 +410,13 @@ class GenerateTask(CommonSubTask):
         num_workers = GenerateTask._determine_num_workers(context, stmt)
 
         # Get ARTIFACT exporters from statement
-        exporter_list = ExporterUtil.get_all_exporter(context, stmt, list(stmt.targets))
+        exporters_with_operation, exporters_without_operation = create_exporter_list(
+            context,
+            resolve_target_entity(stmt.target_entity, None, stmt.name),
+            stmt.export_uri,
+            list(stmt.targets),
+        )
+        exporter_list = [*exporters_without_operation, *exporters_with_operation]
         # Finalize chunks files (writing end of file)
         for exporter in exporter_list:
             if isinstance(exporter, UnifiedBufferedExporter):
@@ -422,7 +433,13 @@ class GenerateTask(CommonSubTask):
         """
         Export artifact files to storage (Execute on outermost gen_stmt)
         """
-        exporters_list = ExporterUtil.get_all_exporter(context, stmt, list(stmt.targets))
+        exporters_with_operation, exporters_without_operation = create_exporter_list(
+            context,
+            resolve_target_entity(stmt.target_entity, None, stmt.name),
+            stmt.export_uri,
+            list(stmt.targets),
+        )
+        exporters_list = [*exporters_without_operation, *exporters_with_operation]
         # Export artifact files of current statement
         for exporter in exporters_list:
             if isinstance(exporter, UnifiedBufferedExporter):

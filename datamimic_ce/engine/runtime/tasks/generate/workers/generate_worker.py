@@ -9,7 +9,12 @@ import os
 import dill
 
 from datamimic_ce.engine.dsl.api import CompositeStatement, ConditionStatement, GenerateStatement, Statement
-from datamimic_ce.engine.io.api import DataSourcePagination, ExporterStateManager, ExporterUtil
+from datamimic_ce.engine.io.api import (
+    DataSourcePagination,
+    ExporterStateManager,
+    create_exporter_list,
+    resolve_target_entity,
+)
 from datamimic_ce.engine.runtime.contexts.context import SetupContext
 from datamimic_ce.engine.runtime.contexts.geniter_context import GenIterContext
 from datamimic_ce.engine.runtime.logging import gen_timer, logger, setup_logger
@@ -17,7 +22,7 @@ from datamimic_ce.engine.runtime.scripting.evaluation import evaluate_source_tem
 from datamimic_ce.engine.runtime.sources.chunk_source_reader import ChunkSourceReader
 from datamimic_ce.engine.runtime.tasks.base.dispatch import create_task
 from datamimic_ce.engine.runtime.tasks.base.task import CommonSubTask, GenSubTask
-from datamimic_ce.engine.runtime.tasks.task_util import TaskUtil
+from datamimic_ce.engine.runtime.tasks.generate.export_order import export_product_by_page
 from datamimic_ce.engine.runtime.tasks.values.construction.converters import create_converter_list
 
 
@@ -62,9 +67,10 @@ class GenerateWorker:
         (
             consumers_with_operation,
             consumers_without_operation,
-        ) = ExporterUtil.create_exporter_list(
+        ) = create_exporter_list(
             setup_context=root_context,
-            stmt=stmt,
+            product_name=resolve_target_entity(stmt.target_entity, None, stmt.name),
+            export_uri=stmt.export_uri,
             targets=list(exporters_set),
         )
 
@@ -103,10 +109,10 @@ class GenerateWorker:
                 timer_result["records_count"] = page_end - page_start
                 # Export product by page. A NESTED generate (GenIterContext) defers to the enclosing
                 # statement's page export, which writes the parent's rows first and then recurses into
-                # the children (TaskUtil.export_product_by_page) - exporting here would land child rows
+                # the children - exporting here would land child rows
                 # in the DB before their parent exists and break child->parent FK constraints.
                 if not isinstance(context, GenIterContext):
-                    TaskUtil.export_product_by_page(context.root, stmt, result_dict, exporter_state_manager)
+                    export_product_by_page(context.root, stmt, result_dict, exporter_state_manager)
 
             # Collect result for later capturing (keep_keys None -> keep everything)
             for key in result_dict.keys() if keep_keys is None else keep_keys & result_dict.keys():

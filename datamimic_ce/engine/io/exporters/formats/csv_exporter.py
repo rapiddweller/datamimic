@@ -22,7 +22,6 @@ class CSVExporter(UnifiedBufferedExporter):
     """
 
     def __init__(self, config: ExporterConfig, params: dict):
-        setup_context = config.setup_context
         fieldnames = params.get("fieldnames")
         # fieldnames may arrive as a string literal from the DSL target params
         if isinstance(fieldnames, str):
@@ -32,11 +31,11 @@ class CSVExporter(UnifiedBufferedExporter):
                 raise ValueError(f"Error parsing fieldnames {fieldnames}: {e}") from e
         self.fieldnames = fieldnames or []
         # Retrieve delimiter/quoting from params or use setup defaults
-        self.delimiter = params.get("delimiter") or setup_context.default_separator or ","
+        self.delimiter = params.get("delimiter") or config.default_separator or ","
         self.quotechar = params.get("quotechar") or '"'
         self.quoting = params.get("quoting") or csv.QUOTE_MINIMAL
         self.line_terminator = (
-            params.get("line_terminator") or setup_context.default_line_separator or os.linesep or "\n"
+            params.get("line_terminator") or config.default_line_separator or os.linesep or "\n"
         )
         super().__init__("csv", config)
         logger.info(
