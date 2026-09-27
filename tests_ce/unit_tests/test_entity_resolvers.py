@@ -18,6 +18,18 @@ def _stmt(source_entity=None, type_=None, name="stmt"):
     return SimpleNamespace(source_entity=source_entity, type=type_, name=name)
 
 
+def test_parse_consumer_preserves_nested_arguments_and_deduplicates() -> None:
+    consumers = StatementUtil.parse_consumer(
+        " CSV(chunk_size=2, encoding='utf-8'), MongoDB.upsert, CSV(chunk_size=2, encoding='utf-8') "
+    )
+    assert consumers == {
+        "CSV(chunk_size=2, encoding='utf-8')",
+        "MongoDB.upsert",
+    }
+    assert StatementUtil.parse_consumer(None) == set()
+    assert StatementUtil.parse_consumer(" , ") == set()
+
+
 # ---- resolve_source_entity: name-fallback families (RDBMS/memstore/nestedKey) ----
 
 
