@@ -148,7 +148,8 @@
         "datamimic_ce.engine.runtime.tasks.values.structured.nested_key_task:NestedKeyTask",
         "datamimic_ce.engine.runtime.tasks.values.references.reference_task:ReferenceTask",
         "datamimic_ce.engine.runtime.tasks.values.variables.variable_task:VariableTask",
-        "datamimic_ce.engine.runtime.tasks.values.variables.variable_iterator:VariableIterator"
+        "datamimic_ce.engine.runtime.tasks.values.variables.variable_iterator:VariableIterator",
+        "datamimic_ce.engine.runtime.tasks.values.construction.factory:RUNTIME_GENERATOR_TYPES"
       ],
       "decided_by": "agent"
     },

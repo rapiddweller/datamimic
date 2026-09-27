@@ -211,6 +211,7 @@
       "public": [
         "datamimic_ce.engine.runtime.tasks.registry",
         "datamimic_ce.engine.runtime.tasks.setup.setup_task:SetupTask",
+        "datamimic_ce.engine.runtime.tasks.values.construction.factory:RUNTIME_GENERATOR_TYPES",
         "datamimic_ce.engine.runtime.tasks.values.construction.sequence_table:SequenceTableGenerator"
       ],
       "decided_by": "agent",
