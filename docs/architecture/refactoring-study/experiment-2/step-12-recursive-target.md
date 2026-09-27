@@ -233,3 +233,41 @@ cross-worker duplicates (`1,2,1,2`) are recorded in [CE #276](https://github.com
 separate from this behavior-preserving move. Worker details are in the QA receipt.
 
 CI-ONLY VERIFICATION: no new remote run; final service/worker acceptance remains open.
+
+## Seventh slice: non-exporter TaskUtil ownership
+
+Task dispatch now calls the existing dispatcher directly. Condition and source
+template evaluation live in Scripting; converter construction and scalar
+random defaults live with value construction. Generate retains selector
+interpolation at its original count-resolution point. `TaskUtil` now contains
+only the exporter/page code reserved for the next slice.
+
+Terra independently verified 99 affected tests with 11 existing skips and
+added pre-move exporter-dispatch tests. Root reviewed the call sites and caught
+one vacuous `MagicMock` assertion; it now patches the actual dispatcher.
+
+The first broad run had 1,932 passes, 13 skips and three failures. One test
+captured no log after an earlier engine run disabled propagation; it now
+enables propagation only for that test. The MCP SSE test could not bind a
+loopback port in the sandbox and passed outside it. The datetime test compared
+the engine's historical UTC date with the host's local date. Astra checked the
+frozen clock/generator AST and a timezone-boundary probe: production already
+used UTC. The test now bounds the generated date by UTC before/after execution,
+with a fixed-instant regression. No descriptor or production clock changed.
+
+LOCAL VERIFIED: the repeated broad serial suite passes 1,936 tests with 13
+existing skips and two serializer warnings; full-package Ruff/Mypy pass (492
+modules); recursive target definition passes. A four-job Step-0 capture has all
+930 inventory entries and 454 captured runs, with no lost child result. Its
+only runtime comparison difference against S3C is the previously approved
+unseeded MemStore count; the same-run count invariant passes. Against the
+frozen source, the historical capability build-identity difference remains.
+All 930 XML and seven intent-model hashes match their frozen manifests.
+The physical target is still incomplete: 15 missing and 12 legacy modules
+after Astra's source-capability correction. The ArchKeel candidate scans all
+492 Python files in about 10 seconds but exits 2/UNKNOWN because required
+future IO-boundary and task-registry subjects are absent. It is not a green
+target gate or a verified finished HTML report.
+
+CI-ONLY VERIFICATION: no new remote run. The isolated service after-side and
+final old/new database result comparison remain open.

@@ -17,7 +17,6 @@ from datamimic_ce.engine.io.api import FileUtil, load_connection_profile
 from datamimic_ce.engine.runtime.contexts.context import SetupContext
 from datamimic_ce.engine.runtime.tasks.base.task import SetupSubTask
 from datamimic_ce.engine.runtime.tasks.setup.include_task import IncludeTask
-from datamimic_ce.engine.runtime.tasks.task_util import TaskUtil
 
 
 def test_parse_properties_preserves_comment_and_value_semantics(tmp_path: Path) -> None:
@@ -346,13 +345,13 @@ def test_nested_xml_includes_keep_the_setup_runtime_environment(
         def execute(self, _context: SetupContext) -> None:
             observed.append(self._statement)
 
-    def task_for_statement(_context: SetupContext, statement: object) -> IncludeTask | CaptureTask:
+    def task_for_statement(statement: object, _context: SetupContext) -> IncludeTask | CaptureTask:
         if isinstance(statement, IncludeStatement):
             return IncludeTask(statement)
         assert isinstance(statement, MongoDBStatement)
         return CaptureTask(statement)
 
-    monkeypatch.setattr(TaskUtil, "get_task_by_statement", task_for_statement)
+    monkeypatch.setattr("datamimic_ce.engine.runtime.tasks.setup.setup_task.create_task", task_for_statement)
     context = SetupContext(
         memstore_manager=None,
         task_id="include-runtime-environment",

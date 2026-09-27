@@ -16,15 +16,16 @@ from datamimic_ce.engine.io.api import ExporterUtil, UnifiedBufferedExporter, co
 from datamimic_ce.engine.runtime.contexts.context import Context, SetupContext
 from datamimic_ce.engine.runtime.contexts.geniter_context import GenIterContext
 from datamimic_ce.engine.runtime.logging import gen_timer, logger
+from datamimic_ce.engine.runtime.scripting.evaluation import interpolate_variables
 from datamimic_ce.engine.runtime.sources.router import (
     data_source_cache_key,
     has_mongodb_upsert_target,
     set_data_source_length,
 )
 from datamimic_ce.engine.runtime.tasks.base.counts import get_int_count, resolve_count
+from datamimic_ce.engine.runtime.tasks.base.dispatch import create_task
 from datamimic_ce.engine.runtime.tasks.base.task import CommonSubTask
 from datamimic_ce.engine.runtime.tasks.generate.policies.single_process_policy import resolve_single_process
-from datamimic_ce.engine.runtime.tasks.task_util import TaskUtil
 
 
 class GenerateTask(CommonSubTask):
@@ -73,10 +74,10 @@ class GenerateTask(CommonSubTask):
         if count is None:
             # Check if "selector" is defined with "source"
             if self.statement.selector:
-                # Evaluate script selector
-                from datamimic_ce.engine.runtime.tasks.task_util import TaskUtil
-
-                selector = TaskUtil.evaluate_selector_script(context=context, stmt=self._statement)
+                selector = self.statement.selector or ""
+                prefix = self.statement.variable_prefix or root_context.default_variable_prefix
+                suffix = self.statement.variable_suffix or root_context.default_variable_suffix
+                selector = interpolate_variables(context, selector, prefix, suffix)
                 client = (
                     root_context.get_client_by_id(self.statement.source) if self.statement.source is not None else None
                 )
@@ -468,7 +469,7 @@ class GenerateTask(CommonSubTask):
         root_context = context.root
 
         pre_tasks = [
-            TaskUtil.get_task_by_statement(root_context, child_stmt, None)
+            create_task(child_stmt, root_context, None)
             for child_stmt in self.statement.sub_statements
             if isinstance(child_stmt, KeyStatement)
         ]

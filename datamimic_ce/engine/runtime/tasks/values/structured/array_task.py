@@ -17,6 +17,7 @@ from datamimic_ce.engine.dsl.api import (
 )
 from datamimic_ce.engine.runtime.contexts.geniter_context import GenIterContext
 from datamimic_ce.engine.runtime.tasks.base.task import GenSubTask
+from datamimic_ce.engine.runtime.tasks.values.construction.factory import generate_random_value_based_on_type
 
 
 class ArrayTask(GenSubTask):
@@ -54,8 +55,6 @@ class ArrayTask(GenSubTask):
         """
         Create new data for path
         """
-        from datamimic_ce.engine.runtime.tasks.task_util import TaskUtil
-
         array_type = self._statement.type
         count = self.statement.count
 
@@ -64,7 +63,7 @@ class ArrayTask(GenSubTask):
 
         rng = parent_context.rng
         value: list[str | int | bool | float | Decimal | bytes] = [
-            TaskUtil.generate_random_value_based_on_type(array_type, rng=rng) for _ in range(count)
+            generate_random_value_based_on_type(array_type, rng=rng) for _ in range(count)
         ]
         # Add field "array" into current product
         parent_context.add_current_product_field(self._statement.name, value)

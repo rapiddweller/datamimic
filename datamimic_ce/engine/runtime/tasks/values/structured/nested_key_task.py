@@ -11,14 +11,16 @@ from datamimic_ce.engine.io.api import DataSourcePagination
 from datamimic_ce.engine.runtime.contexts.context import Context, SetupContext
 from datamimic_ce.engine.runtime.contexts.geniter_context import GenIterContext
 from datamimic_ce.engine.runtime.logging import logger
+from datamimic_ce.engine.runtime.scripting.evaluation import evaluate_condition_value
 from datamimic_ce.engine.runtime.sources.router import (
     finalize_nested_key_source,
     load_nested_key_source,
     window_nested_key_rows,
 )
 from datamimic_ce.engine.runtime.tasks.base.counts import get_int_count, resolve_count
+from datamimic_ce.engine.runtime.tasks.base.dispatch import create_task
 from datamimic_ce.engine.runtime.tasks.base.task import GenSubTask
-from datamimic_ce.engine.runtime.tasks.task_util import TaskUtil
+from datamimic_ce.engine.runtime.tasks.values.construction.converters import create_converter_list
 from datamimic_ce.engine.runtime.tasks.values.scalar.element_task import ElementTask
 
 
@@ -31,7 +33,7 @@ class NestedKeyTask(GenSubTask):
         self._statement = statement
         self._default_value = statement.default_value
         self._sub_tasks: list | None = None
-        self._converter_list = TaskUtil.create_converter_list(ctx, statement.converter)
+        self._converter_list = create_converter_list(ctx, statement.converter)
 
     @property
     def statement(self) -> NestedKeyStatement:
@@ -45,19 +47,12 @@ class NestedKeyTask(GenSubTask):
         """
         # Lazy creating sub_tasks of nestedkey_task for refreshing state of sub_tasks among nestedkey_tasks
         self._sub_tasks = [
-            TaskUtil.get_task_by_statement(
-                ctx=parent_context.root,
-                stmt=child_stmt,
-            )
+            create_task(child_stmt, parent_context.root)
             for child_stmt in self._statement.sub_statements
         ]
 
         # check condition to enable or disable element, default True
-        condition = TaskUtil.evaluate_condition_value(
-            ctx=parent_context,
-            element_name=self._statement.name,
-            value=self._statement.condition,
-        )
+        condition = evaluate_condition_value(parent_context, self._statement.name, self._statement.condition)
         if isinstance(parent_context, GenIterContext):
             if condition:
                 # If both source and script are None, create new nestedkey instead of loading data from file
@@ -79,9 +74,9 @@ class NestedKeyTask(GenSubTask):
         """
         # Set pagination as length of list
         self._sub_tasks = [
-            TaskUtil.get_task_by_statement(
-                ctx=parent_context.root,
-                stmt=child_stmt,
+            create_task(
+                child_stmt,
+                parent_context.root,
                 pagination=DataSourcePagination(skip=0, limit=nestedkey_length),
             )
             for child_stmt in self._statement.sub_statements

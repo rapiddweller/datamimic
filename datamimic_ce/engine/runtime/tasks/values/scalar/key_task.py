@@ -18,8 +18,9 @@ from datamimic_ce.engine.dsl.api import (
 from datamimic_ce.engine.io.api import DataSourcePagination
 from datamimic_ce.engine.runtime.contexts.context import Context, SetupContext
 from datamimic_ce.engine.runtime.contexts.geniter_context import GenIterContext
+from datamimic_ce.engine.runtime.scripting.evaluation import evaluate_condition_value
+from datamimic_ce.engine.runtime.tasks.base.dispatch import create_task
 from datamimic_ce.engine.runtime.tasks.base.task import GenSubTask
-from datamimic_ce.engine.runtime.tasks.task_util import TaskUtil
 from datamimic_ce.engine.runtime.tasks.values.construction.factory import GeneratorUtil
 from datamimic_ce.engine.runtime.tasks.values.key_variable_task import KeyVariableTask
 from datamimic_ce.engine.runtime.tasks.values.scalar.element_task import ElementTask
@@ -64,9 +65,7 @@ class KeyTask(KeyVariableTask, GenSubTask):
         root_ctx = ctx.root
 
         # check condition to enable or disable element, default True
-        condition = TaskUtil.evaluate_condition_value(
-            ctx=ctx, element_name=self._statement.name, value=self.statement.condition
-        )
+        condition = evaluate_condition_value(ctx, self._statement.name, self.statement.condition)
 
         if condition:
             if self.statement.null_quota and ctx.rng.random() < self.statement.null_quota:
@@ -78,7 +77,7 @@ class KeyTask(KeyVariableTask, GenSubTask):
             attributes = {}
             if isinstance(self._statement, CompositeStatement):
                 for stmt in self._statement.sub_statements:
-                    task = TaskUtil.get_task_by_statement(root_ctx, stmt)
+                    task = create_task(stmt, root_ctx)
                     if isinstance(task, ElementTask) and isinstance(ctx, GenIterContext):
                         attributes.update(task.generate_xml_attribute(ctx))
                     else:

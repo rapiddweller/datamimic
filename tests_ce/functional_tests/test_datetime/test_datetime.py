@@ -6,7 +6,7 @@
 
 
 import time
-from datetime import datetime
+from datetime import datetime, timezone
 from pathlib import Path
 
 import pytest
@@ -18,10 +18,12 @@ class TestDateTime:
     _test_dir = Path(__file__).resolve().parent
 
     def test_datetime_functional(self) -> None:
+        utc_before_run = datetime.now(timezone.utc).date()
         engine = DataMimicTest(
             test_dir=self._test_dir, filename="functional_test_datetime.xml", capture_test_result=True
         )
         engine.test_with_timer()
+        utc_after_run = datetime.now(timezone.utc).date()
 
         result = engine.capture_result()
         date_time_test = result["date_time_test"]
@@ -35,7 +37,8 @@ class TestDateTime:
             assert isinstance(data["date_time_with_in_out"], str)
             assert data["date_time_with_in_out"] == "01.02.2022"
             assert isinstance(data["date_time_with_out"], str)
-            assert data["date_time_with_out"] == datetime.now().strftime("%d.%m.%Y")
+            generated_date = datetime.strptime(data["date_time_with_out"], "%d.%m.%Y").date()
+            assert utc_before_run <= generated_date <= utc_after_run
 
     def test_datetime_invalid_in_date_format(self) -> None:
         test_engine = DataMimicTest(test_dir=self._test_dir, filename="functional_test_date_invalid_in_format.xml")

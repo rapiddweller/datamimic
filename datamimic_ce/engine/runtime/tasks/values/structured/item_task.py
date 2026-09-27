@@ -7,8 +7,9 @@
 from datamimic_ce.engine.dsl.api import ItemStatement
 from datamimic_ce.engine.runtime.contexts.context import SetupContext
 from datamimic_ce.engine.runtime.contexts.geniter_context import GenIterContext
+from datamimic_ce.engine.runtime.scripting.evaluation import evaluate_condition_value
+from datamimic_ce.engine.runtime.tasks.base.dispatch import create_task
 from datamimic_ce.engine.runtime.tasks.base.task import GenSubTask
-from datamimic_ce.engine.runtime.tasks.task_util import TaskUtil
 from datamimic_ce.engine.runtime.tasks.values.scalar.element_task import ElementTask
 
 
@@ -21,7 +22,7 @@ class ItemTask(GenSubTask):
         self._statement = statement
 
         # Not apply pagination for sub-statement
-        self._sub_tasks = [TaskUtil.get_task_by_statement(ctx, child_stmt) for child_stmt in statement.sub_statements]
+        self._sub_tasks = [create_task(child_stmt, ctx) for child_stmt in statement.sub_statements]
 
     @property
     def statement(self) -> ItemStatement:
@@ -34,11 +35,7 @@ class ItemTask(GenSubTask):
         :return:
         """
         # check condition to enable or disable element, default True
-        condition = TaskUtil.evaluate_condition_value(
-            ctx=parent_context,
-            element_name=self._statement.name,
-            value=self._statement.condition,
-        )
+        condition = evaluate_condition_value(parent_context, self._statement.name, self._statement.condition)
         if condition:
             result = {}
             for sub_task in self._sub_tasks:

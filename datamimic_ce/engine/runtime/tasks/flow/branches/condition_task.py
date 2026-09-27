@@ -24,10 +24,10 @@ class ConditionTask(GenSubTask):
         :param parent_context:
         :return:
         """
-        from datamimic_ce.engine.runtime.tasks.task_util import TaskUtil
+        from datamimic_ce.engine.runtime.tasks.base.dispatch import create_task
 
         child_tasks = [
-            TaskUtil.get_task_by_statement(parent_context.root, child_stmt)
+            create_task(child_stmt, parent_context.root)
             for child_stmt in self.statement.sub_statements
         ]
 

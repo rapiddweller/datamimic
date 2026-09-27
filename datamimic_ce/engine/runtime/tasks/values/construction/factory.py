@@ -9,6 +9,8 @@ import functools
 import inspect
 import logging
 import random
+import string
+from decimal import Decimal
 from typing import Protocol, runtime_checkable
 
 from datamimic_ce.domains.api import (
@@ -19,11 +21,21 @@ from datamimic_ce.domains.api import (
     StateTransitionGenerator,
     iter_generator_types,
 )
-from datamimic_ce.engine.dsl.api import NumberDistribution, Statement
+from datamimic_ce.engine.dsl.api import (
+    DATA_TYPE_BINARY,
+    DATA_TYPE_BOOL,
+    DATA_TYPE_DECIMAL,
+    DATA_TYPE_FLOAT,
+    DATA_TYPE_INT,
+    DATA_TYPE_STRING,
+    NumberDistribution,
+    Statement,
+)
 from datamimic_ce.engine.io.api import DataSourcePagination
 from datamimic_ce.engine.runtime.contexts.context import Context, SetupContext
 from datamimic_ce.engine.runtime.tasks.values.construction.global_increment import GlobalIncrementGenerator
 from datamimic_ce.engine.runtime.tasks.values.construction.sequence_table import SequenceTableGenerator
+from datamimic_ce.randomness import RandomSource
 
 logger = logging.getLogger("DATAMIMIC")
 
@@ -31,6 +43,31 @@ RUNTIME_GENERATOR_TYPES: tuple[type[BaseLiteralGenerator], ...] = (
     GlobalIncrementGenerator,
     SequenceTableGenerator,
 )
+
+
+def generate_random_value_based_on_type(
+    data_type: str | None,
+    *,
+    rng: RandomSource,
+) -> str | int | bool | float | Decimal | bytes:
+    # ``rng`` is required: callers inject the GenIterContext's rng so seeded runs propagate fully.
+    if data_type == DATA_TYPE_STRING:
+        min_len = 0
+        max_len = 20
+        return "".join(rng.choice(string.ascii_letters) for _ in range(rng.randint(min_len, max_len)))
+    elif data_type == DATA_TYPE_INT:
+        return rng.randint(0, 100)
+    elif data_type == DATA_TYPE_FLOAT:
+        return rng.uniform(0, 100)
+    elif data_type == DATA_TYPE_DECIMAL:
+        # fixed 2dp default for bare type="decimal"; use a DecimalGenerator for other scales
+        return Decimal(str(round(rng.uniform(0, 100), 2)))
+    elif data_type == DATA_TYPE_BOOL:
+        return rng.choice((True, False))
+    elif data_type == DATA_TYPE_BINARY:
+        return rng.randbytes(rng.randint(1, 16))  # same default range as BinaryGenerator
+    else:
+        raise ValueError(f"Cannot generate random value for data type {data_type}")
 
 
 @runtime_checkable

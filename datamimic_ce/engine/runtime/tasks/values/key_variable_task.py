@@ -33,8 +33,13 @@ from datamimic_ce.engine.dsl.api import (
 from datamimic_ce.engine.io.api import DataSourcePagination, WeightedDataSource
 from datamimic_ce.engine.io.data_sources.selection import unique_value_iter
 from datamimic_ce.engine.runtime.contexts.context import Context, SetupContext
+from datamimic_ce.engine.runtime.scripting.evaluation import interpolate_variables
 from datamimic_ce.engine.runtime.tasks.base.task import Task
-from datamimic_ce.engine.runtime.tasks.values.construction.factory import GeneratorUtil
+from datamimic_ce.engine.runtime.tasks.values.construction.converters import create_converter_list
+from datamimic_ce.engine.runtime.tasks.values.construction.factory import (
+    GeneratorUtil,
+    generate_random_value_based_on_type,
+)
 from datamimic_ce.engine.runtime.tasks.values.construction.sequence_table import SequenceTableGenerator
 
 
@@ -55,8 +60,6 @@ class KeyVariableTask(Task):
         statement: KeyStatement | VariableStatement | ElementStatement,
         pagination: DataSourcePagination | None = None,
     ):
-        from datamimic_ce.engine.runtime.tasks.task_util import TaskUtil
-
         if isinstance(statement, KeyStatement):
             self._element_tag = EL_KEY
         elif isinstance(statement, VariableStatement):
@@ -66,7 +69,7 @@ class KeyVariableTask(Task):
         self._statement = statement
         self._generator: WeightedDataSource | None = None
         self._pagination = pagination
-        self._converter_list = TaskUtil.create_converter_list(ctx, statement.converter)
+        self._converter_list = create_converter_list(ctx, statement.converter)
 
         self._mode: str | None = None
         # Lazily-built distinct-value iterator for unique="true" (sampling without replacement).
@@ -224,8 +227,6 @@ class KeyVariableTask(Task):
         Generate data based on generation mode
         :param ctx:
         """
-        from datamimic_ce.engine.runtime.tasks.task_util import TaskUtil
-
         if self._mode == self._SCRIPT_MODE:
             try:
                 if self._statement.script is not None:
@@ -255,12 +256,7 @@ class KeyVariableTask(Task):
         elif self._mode == self._STRING_MODE:
             self._prefix = self.statement.variable_prefix or ctx.root.default_variable_prefix
             self._suffix = self.statement.variable_suffix or ctx.root.default_variable_suffix
-            value = TaskUtil.evaluate_variable_concat_prefix_suffix(
-                context=ctx,
-                expr=self.statement.string or "",
-                prefix=self._prefix,
-                suffix=self._suffix,
-            )
+            value = interpolate_variables(ctx, self.statement.string or "", self._prefix, self._suffix)
         elif self._mode == self._VALUES_MODE:
             # None if no values; unique = distinct per row (no replacement); weighted pick
             # when 'weights' given; otherwise a uniform random pick.
@@ -314,7 +310,7 @@ class KeyVariableTask(Task):
                 raise ValueError(f"Pattern is missing for <{self._element_tag}> '{self._statement.name}'")
             value = StringGenerator.rnd_str_from_regex(self._statement.pattern, rng=ctx.rng)
         elif self._mode == self._RANDOM_MODE:
-            value = TaskUtil.generate_random_value_based_on_type(self._statement.type, rng=ctx.rng)
+            value = generate_random_value_based_on_type(self._statement.type, rng=ctx.rng)
         else:
             raise RuntimeError(f"Cannot find data generation mode for <{self._element_tag}> '{self._statement.name}'")
 

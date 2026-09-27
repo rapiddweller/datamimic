@@ -13,9 +13,12 @@ from datamimic_ce.engine.io.api import DataSourcePagination, ExporterStateManage
 from datamimic_ce.engine.runtime.contexts.context import SetupContext
 from datamimic_ce.engine.runtime.contexts.geniter_context import GenIterContext
 from datamimic_ce.engine.runtime.logging import gen_timer, logger, setup_logger
+from datamimic_ce.engine.runtime.scripting.evaluation import evaluate_source_template
 from datamimic_ce.engine.runtime.sources.chunk_source_reader import ChunkSourceReader
+from datamimic_ce.engine.runtime.tasks.base.dispatch import create_task
 from datamimic_ce.engine.runtime.tasks.base.task import CommonSubTask, GenSubTask
 from datamimic_ce.engine.runtime.tasks.task_util import TaskUtil
+from datamimic_ce.engine.runtime.tasks.values.construction.converters import create_converter_list
 
 
 class GenerateWorker:
@@ -157,11 +160,11 @@ class GenerateWorker:
         pagination = DataSourcePagination(skip=page_start, limit=processed_data_count)
 
         # Extract converter list for post-processing
-        converter_list = TaskUtil.create_converter_list(context, stmt.converter)
+        converter_list = create_converter_list(context, stmt.converter)
 
         # 1: Build sub-tasks in GenIterStatement
         tasks = [
-            TaskUtil.get_task_by_statement(root_context, child_stmt, pagination) for child_stmt in stmt.sub_statements
+            create_task(child_stmt, root_context, pagination) for child_stmt in stmt.sub_statements
         ]
 
         # 2: Load this page's window of the data source (file, database, memory, ...)
@@ -229,9 +232,7 @@ class GenerateWorker:
                     # Evaluate python expression in source
                     prefix = stmt.variable_prefix or root_context.default_variable_prefix
                     suffix = stmt.variable_suffix or root_context.default_variable_suffix
-                    evaluated_product = TaskUtil.evaluate_file_script_template(
-                        ctx=ctx, datas=ctx.current_product, prefix=prefix, suffix=suffix
-                    )
+                    evaluated_product = evaluate_source_template(ctx, ctx.current_product, prefix, suffix)
                     # Update current product with evaluated product
                     if not isinstance(evaluated_product, dict):
                         raise ValueError(

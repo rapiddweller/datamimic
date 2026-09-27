@@ -7,8 +7,9 @@
 from datamimic_ce.engine.dsl.api import ListStatement
 from datamimic_ce.engine.runtime.contexts.context import SetupContext
 from datamimic_ce.engine.runtime.contexts.geniter_context import GenIterContext
+from datamimic_ce.engine.runtime.tasks.base.dispatch import create_task
 from datamimic_ce.engine.runtime.tasks.base.task import GenSubTask
-from datamimic_ce.engine.runtime.tasks.task_util import TaskUtil
+from datamimic_ce.engine.runtime.tasks.values.construction.converters import create_converter_list
 
 
 class ListTask(GenSubTask):
@@ -19,8 +20,8 @@ class ListTask(GenSubTask):
     ):
         self._statement = statement
         # Not apply pagination for sub-statement
-        self._item_tasks = [TaskUtil.get_task_by_statement(ctx, child_stmt) for child_stmt in statement.sub_statements]
-        self._converter_list = TaskUtil.create_converter_list(ctx, self._statement.converter)
+        self._item_tasks = [create_task(child_stmt, ctx) for child_stmt in statement.sub_statements]
+        self._converter_list = create_converter_list(ctx, self._statement.converter)
 
     @property
     def statement(self) -> ListStatement:

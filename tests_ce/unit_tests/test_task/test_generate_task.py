@@ -17,7 +17,7 @@ from datamimic_ce.engine.runtime.contexts.geniter_context import GenIterContext
 from datamimic_ce.engine.runtime.contexts.records import dict_nested_update
 from datamimic_ce.engine.runtime.storage.memstore_manager import MemstoreManager
 from datamimic_ce.engine.runtime.tasks.generate.task import GenerateTask
-from datamimic_ce.engine.runtime.tasks.task_util import TaskUtil
+from datamimic_ce.engine.runtime.tasks.setup.setup_task import SetupTask
 
 
 class TestGenerateTask:
@@ -165,10 +165,15 @@ class TestGenerateTask:
         assert count == 500
 
     def test_determine_count_with_selector(self, generate_task, mock_context, mock_statement):
-        """Test count determination using a selector."""
+        """Selector interpolation uses statement markers or the setup defaults."""
         mock_statement.count = None
-        mock_statement.selector = "test_selector"
+        mock_statement.selector = "select <<source_name>>"
         mock_statement.source = "test_source"
+        mock_statement.variable_prefix = None
+        mock_statement.variable_suffix = None
+        mock_context.default_variable_prefix = "<<"
+        mock_context.default_variable_suffix = ">>"
+        mock_context.evaluate_python_expression.return_value = "source_rows"
         mock_client = MagicMock(spec=DatabaseClient)
         mock_client.count_query_length.return_value = 750
         mock_context.root.get_client_by_id.return_value = mock_client
@@ -176,7 +181,7 @@ class TestGenerateTask:
         count = generate_task._determine_count(mock_context)
 
         assert count == 750
-        mock_client.count_query_length.assert_called_once_with("test_selector")
+        mock_client.count_query_length.assert_called_once_with("select source_rows")
 
     def test_determine_count_with_selector_invalid_client(self, generate_task, mock_context, mock_statement):
         """Test error when using selector with a non-database client."""
@@ -291,22 +296,20 @@ class TestGenerateTask:
 
     def test_pre_execute(self, generate_task, mock_context, mock_statement):
         """Test pre_execute method."""
-        with patch(
-            "datamimic_ce.engine.runtime.tasks.task_util.TaskUtil.get_task_by_statement"
-        ) as mock_get_task_by_statement:
+        with patch("datamimic_ce.engine.runtime.tasks.generate.task.create_task") as mock_create_task:
             # Setup
             key_statement = MagicMock(spec=KeyStatement)
             mock_statement.sub_statements = [key_statement]
 
             # Mock task util and task
             mock_task = MagicMock()
-            mock_get_task_by_statement.return_value = mock_task
+            mock_create_task.return_value = mock_task
 
             # Execute
             generate_task.pre_execute(mock_context)
 
             # Verify
-            mock_get_task_by_statement.assert_called_once_with(mock_context.root, key_statement, None)
+            mock_create_task.assert_called_once_with(key_statement, mock_context.root, None)
             mock_task.pre_execute.assert_called_once_with(mock_context)
 
     @pytest.mark.skip("Need rework with ray")
@@ -438,7 +441,7 @@ class TestGenerateTask:
 
         with patch("copy.deepcopy", return_value=copied_root_context):
             # Execute
-            GenerateTask.execute_include(setup_stmt, parent_context)
+            SetupTask.execute_include(setup_stmt, parent_context)
 
         # Verify that update_with_stmt was called on the copied_root_context
         copied_root_context.update_with_stmt.assert_called_once_with(setup_stmt)
@@ -448,14 +451,17 @@ class TestGenerateTask:
         stmt = MagicMock()
         setup_stmt.sub_statements = [stmt]
         mock_task = MagicMock()
-        TaskUtil.get_task_by_statement.return_value = mock_task
-
-        with patch("copy.deepcopy", return_value=copied_root_context):
+        with (
+            patch("copy.deepcopy", return_value=copied_root_context),
+            patch(
+                "datamimic_ce.engine.runtime.tasks.setup.setup_task.create_task", return_value=mock_task
+            ) as create_task,
+        ):
             # Execute again
-            GenerateTask.execute_include(setup_stmt, parent_context)
+            SetupTask.execute_include(setup_stmt, parent_context)
 
-        # Verify that get_task_by_statement was called with the correct arguments
-        TaskUtil.get_task_by_statement.assert_called_with(copied_root_context, stmt)
+        # Verify that the task dispatch was called with the correct arguments
+        create_task.assert_called_with(stmt, copied_root_context)
         # Verify that task.execute was called with the copied_root_context
         mock_task.execute.assert_called_with(copied_root_context)
 
@@ -479,14 +485,10 @@ class TestGenerateTask:
         # No KeyStatements in sub_statements
         mock_statement.sub_statements = []
 
-        # Mock task util
-        task_util = MagicMock()
+        with patch("datamimic_ce.engine.runtime.tasks.generate.task.create_task") as create_task:
+            generate_task.pre_execute(mock_context)
 
-        # Execute
-        generate_task.pre_execute(mock_context)
-
-        # Verify
-        task_util.get_task_by_statement.assert_not_called()
+        create_task.assert_not_called()
 
     @pytest.mark.skip("Need rework with ray")
     def test_execute_inner_generate(self, generate_task, mock_context, mock_statement):

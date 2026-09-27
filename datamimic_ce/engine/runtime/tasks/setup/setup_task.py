@@ -13,8 +13,8 @@ from datamimic_ce.engine.dsl.api import SetupStatement
 from datamimic_ce.engine.io.api import TestResultExporter
 from datamimic_ce.engine.runtime.contexts.context import SetupContext
 from datamimic_ce.engine.runtime.storage.memstore_manager import MemstoreManager
+from datamimic_ce.engine.runtime.tasks.base.dispatch import create_task
 from datamimic_ce.engine.runtime.tasks.base.task import CommonSubTask, SetupSubTask
-from datamimic_ce.engine.runtime.tasks.task_util import TaskUtil
 
 
 class SetupTask:
@@ -73,7 +73,7 @@ class SetupTask:
         )
 
         for stmt in self._setup_stmt.sub_statements:
-            task = TaskUtil.get_task_by_statement(root_context, stmt)
+            task = create_task(stmt, root_context)
             if isinstance(task, SetupSubTask | CommonSubTask):
                 task.execute(root_context)
             else:
@@ -94,7 +94,7 @@ class SetupTask:
         root_context.update_with_stmt(setup_stmt)
 
         for stmt in setup_stmt.sub_statements:
-            task = TaskUtil.get_task_by_statement(root_context, stmt)
+            task = create_task(stmt, root_context)
             if isinstance(task, SetupSubTask | CommonSubTask):
                 task.execute(root_context)
             else:

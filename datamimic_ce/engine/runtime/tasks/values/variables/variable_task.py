@@ -24,6 +24,7 @@ from datamimic_ce.engine.io.api import DataSourcePagination
 from datamimic_ce.engine.runtime.contexts.context import Context, DotableDict, SetupContext
 from datamimic_ce.engine.runtime.contexts.geniter_context import GenIterContext
 from datamimic_ce.engine.runtime.logging import logger
+from datamimic_ce.engine.runtime.scripting.evaluation import evaluate_source_template
 from datamimic_ce.engine.runtime.sources.variable import (
     VariableSourcePlanKind,
     load_variable_iteration_selector,
@@ -31,7 +32,6 @@ from datamimic_ce.engine.runtime.sources.variable import (
     plan_variable_source,
 )
 from datamimic_ce.engine.runtime.tasks.base.task import CommonSubTask
-from datamimic_ce.engine.runtime.tasks.task_util import TaskUtil
 from datamimic_ce.engine.runtime.tasks.values.construction.entity_constructor import _parse_constructor_string
 from datamimic_ce.engine.runtime.tasks.values.key_variable_task import KeyVariableTask
 from datamimic_ce.engine.runtime.tasks.values.variables.variable_iterator import VariableIterator
@@ -316,7 +316,7 @@ class VariableTask(KeyVariableTask, CommonSubTask):
                 variable_prefix = self.statement.variable_prefix or setup_ctx.default_variable_prefix
                 variable_suffix = self.statement.variable_suffix or setup_ctx.default_variable_suffix
                 # Evaluate source script
-                value = TaskUtil.evaluate_file_script_template(ctx, value, variable_prefix, variable_suffix)
+                value = evaluate_source_template(ctx, value, variable_prefix, variable_suffix)
             else:
                 raise ValueError("sourceScripted only support datasource CSV or JSON")
 

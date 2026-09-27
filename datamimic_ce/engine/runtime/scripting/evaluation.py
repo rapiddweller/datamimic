@@ -27,6 +27,16 @@ def interpolate_variables(context: ExpressionContext, expression: str, prefix: s
     )
 
 
+def evaluate_condition_value(context: ExpressionContext, element_name: str | None, value: str | None) -> bool:
+    """Evaluate a DSL condition and reject non-boolean results."""
+    condition = context.evaluate_python_expression(value) if value else True
+    if isinstance(condition, bool):
+        return condition
+    raise ValueError(
+        f"Evaluated value of condition script '{value}' in element '{element_name}' is not valid boolean value"
+    )
+
+
 def _dictionary(value: object) -> TypeGuard[dict[object, object]]:
     return isinstance(value, dict)
 
@@ -58,4 +68,4 @@ def evaluate_source_template(context: ExpressionContext, data: object, prefix: s
     return interpolate_variables(context, data, prefix, suffix)
 
 
-__all__ = ["evaluate_python", "evaluate_source_template", "interpolate_variables"]
+__all__ = ["evaluate_condition_value", "evaluate_python", "evaluate_source_template", "interpolate_variables"]

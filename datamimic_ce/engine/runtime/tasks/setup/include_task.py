@@ -9,8 +9,8 @@ from datamimic_ce.engine.dsl.api import DescriptorParser, IncludeStatement, pars
 from datamimic_ce.engine.io.api import load_connection_profile
 from datamimic_ce.engine.runtime.contexts.context import SetupContext
 from datamimic_ce.engine.runtime.contexts.geniter_context import GenIterContext
+from datamimic_ce.engine.runtime.tasks.base.dispatch import create_task
 from datamimic_ce.engine.runtime.tasks.base.task import CommonSubTask, SetupSubTask
-from datamimic_ce.engine.runtime.tasks.task_util import TaskUtil
 
 
 class IncludeTask(CommonSubTask):
@@ -99,7 +99,7 @@ class IncludeTask(CommonSubTask):
             copied_root_context.global_variables.update(ctx.current_product)
 
             for stmt in sub_setup_stmt.sub_statements:
-                task = TaskUtil.get_task_by_statement(copied_root_context, stmt)
+                task = create_task(stmt, copied_root_context)
                 if isinstance(task, SetupSubTask | CommonSubTask):
                     task.execute(copied_root_context)
                 else:

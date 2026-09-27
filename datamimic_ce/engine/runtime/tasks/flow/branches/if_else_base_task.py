@@ -14,8 +14,8 @@ from datamimic_ce.engine.dsl.api import (
     IfStatement,
 )
 from datamimic_ce.engine.runtime.contexts.geniter_context import GenIterContext
+from datamimic_ce.engine.runtime.tasks.base.dispatch import create_task
 from datamimic_ce.engine.runtime.tasks.base.task import CommonSubTask, GenSubTask
-from datamimic_ce.engine.runtime.tasks.task_util import TaskUtil
 
 
 class IfElseBaseTask(GenSubTask, ABC):
@@ -36,7 +36,7 @@ class IfElseBaseTask(GenSubTask, ABC):
         :return:
         """
         child_tasks = [
-            TaskUtil.get_task_by_statement(ctx=parent_context.root, stmt=child_stmt)
+            create_task(child_stmt, parent_context.root)
             for child_stmt in self.statement.sub_statements
         ]
 

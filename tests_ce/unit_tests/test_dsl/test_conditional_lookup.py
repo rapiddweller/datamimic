@@ -85,10 +85,13 @@ def test_conditional_lookup_recurses_only_through_executed_nested_conditions() -
     assert retrieve_sub_statement_by_fullname(outer, "outer|target") is target
 
 
-def test_conditional_lookup_preserves_missing_execution_and_malformed_path_diagnostics(caplog) -> None:
+def test_conditional_lookup_preserves_missing_execution_and_malformed_path_diagnostics(caplog, monkeypatch) -> None:
     outer = _generate("outer")
     condition = ConditionStatement(outer)
     outer.sub_statements = [condition]
+    # A prior engine run installs the operational stderr handler and disables
+    # propagation; caplog needs the record to reach its root handler.
+    monkeypatch.setattr(logging.getLogger("DATAMIMIC"), "propagate", True)
 
     with caplog.at_level(logging.ERROR, logger="DATAMIMIC"):
         assert retrieve_sub_statement_by_fullname(outer, "outer|inner") is None

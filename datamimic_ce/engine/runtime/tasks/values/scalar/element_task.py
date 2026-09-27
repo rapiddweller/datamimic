@@ -17,6 +17,7 @@ from datamimic_ce.engine.dsl.api import (
 from datamimic_ce.engine.io.api import DataSourcePagination
 from datamimic_ce.engine.runtime.contexts.context import Context, SetupContext
 from datamimic_ce.engine.runtime.contexts.geniter_context import GenIterContext
+from datamimic_ce.engine.runtime.scripting.evaluation import evaluate_condition_value
 from datamimic_ce.engine.runtime.tasks.values.key_variable_task import KeyVariableTask
 
 
@@ -51,12 +52,8 @@ class ElementTask(KeyVariableTask):
         :param ctx:
         :return:
         """
-        from datamimic_ce.engine.runtime.tasks.task_util import TaskUtil
-
         # check condition to enable or disable element, default True
-        condition = TaskUtil.evaluate_condition_value(
-            ctx=ctx, element_name=self._statement.name, value=self.statement.condition
-        )
+        condition = evaluate_condition_value(ctx, self._statement.name, self.statement.condition)
 
         if not condition:
             return {}
