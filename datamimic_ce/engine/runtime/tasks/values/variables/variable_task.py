@@ -21,9 +21,8 @@ from datamimic_ce.engine.dsl.api import (
     VariableStatement,
 )
 from datamimic_ce.engine.io.api import DataSourcePagination
-from datamimic_ce.engine.runtime.contexts.context import Context, DotableDict
+from datamimic_ce.engine.runtime.contexts.context import Context, DotableDict, SetupContext
 from datamimic_ce.engine.runtime.contexts.geniter_context import GenIterContext
-from datamimic_ce.engine.runtime.contexts.setup_context import SetupContext
 from datamimic_ce.engine.runtime.logging import logger
 from datamimic_ce.engine.runtime.sources.variable import (
     VariableSourcePlanKind,

@@ -7,8 +7,8 @@ import copy
 
 from datamimic_ce.engine.dsl.api import DescriptorParser, IncludeStatement, parse_properties
 from datamimic_ce.engine.io.api import load_connection_profile
+from datamimic_ce.engine.runtime.contexts.context import SetupContext
 from datamimic_ce.engine.runtime.contexts.geniter_context import GenIterContext
-from datamimic_ce.engine.runtime.contexts.setup_context import SetupContext
 from datamimic_ce.engine.runtime.tasks.base.task import CommonSubTask, SetupSubTask
 from datamimic_ce.engine.runtime.tasks.task_util import TaskUtil
 

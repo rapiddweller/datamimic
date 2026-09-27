@@ -21,11 +21,16 @@ from datamimic_ce.domains.api import (
 )
 from datamimic_ce.engine.dsl.api import NumberDistribution, Statement
 from datamimic_ce.engine.io.api import DataSourcePagination
-from datamimic_ce.engine.runtime.contexts.context import Context
-from datamimic_ce.engine.runtime.contexts.setup_context import SetupContext
+from datamimic_ce.engine.runtime.contexts.context import Context, SetupContext
+from datamimic_ce.engine.runtime.tasks.values.construction.global_increment import GlobalIncrementGenerator
 from datamimic_ce.engine.runtime.tasks.values.construction.sequence_table import SequenceTableGenerator
 
 logger = logging.getLogger("DATAMIMIC")
+
+RUNTIME_GENERATOR_TYPES: tuple[type[BaseLiteralGenerator], ...] = (
+    GlobalIncrementGenerator,
+    SequenceTableGenerator,
+)
 
 
 @runtime_checkable
@@ -60,9 +65,9 @@ class GeneratorUtil:
         """
         # Domain literals are discovered; database sequence generation is runtime-owned.
         self._class_dict: dict[str, type] = {
-            generator_type.__name__: generator_type for generator_type in iter_generator_types()
+            generator_type.__name__: generator_type
+            for generator_type in (*iter_generator_types(), *RUNTIME_GENERATOR_TYPES)
         }
-        self._class_dict["SequenceTableGenerator"] = SequenceTableGenerator
         self._context = context
 
     def create_generator(

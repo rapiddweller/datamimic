@@ -19,7 +19,7 @@ import pytest
 from datamimic_ce.engine.dsl.api import Dbms, GenerateStatement
 from datamimic_ce.engine.io.clients.rdbms_client import RdbmsClient
 from datamimic_ce.engine.io.exporters.diagnostics.test_result_exporter import TestResultExporter
-from datamimic_ce.engine.runtime.contexts.setup_context import SetupContext
+from datamimic_ce.engine.runtime.contexts.context import SetupContext
 from datamimic_ce.engine.runtime.storage.memstore_manager import MemstoreManager
 from datamimic_ce.engine.runtime.tasks.values.construction.factory import GeneratorUtil
 

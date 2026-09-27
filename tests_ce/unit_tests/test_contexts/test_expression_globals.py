@@ -54,8 +54,17 @@ def _context(seed: int | None) -> SimpleNamespace:
     return SimpleNamespace(root=root, rng=Random(seed))
 
 
+def _globals(context: SimpleNamespace):
+    is_seeded = context.root.is_seeded
+    return expression_globals(
+        is_seeded,
+        context.rng if is_seeded else None,
+        lambda: context.root.seeded_faker,
+    )
+
+
 def _evaluate(expr: str, context: SimpleNamespace):
-    return eval(expr, expression_globals(context), {})  # noqa: S307 - the expression namespace under test
+    return eval(expr, _globals(context), {})  # noqa: S307 - the expression namespace under test
 
 
 def test_every_global_is_reviewed() -> None:
@@ -98,3 +107,82 @@ def test_runs_sharing_a_process_keep_their_own_faker() -> None:
         _evaluate("fake.name()", run_b)
     alone = _context(1)
     assert interleaved == [_evaluate("fake.name()", alone) for _ in range(3)]
+
+
+class _TrackedRng:
+    def __init__(self, events: list[str]) -> None:
+        self.bits: list[int] = []
+        self._events = events
+
+    def getrandbits(self, bits: int) -> int:
+        self.bits.append(bits)
+        self._events.append("bits")
+        return 17
+
+
+class _TrackedRoot:
+    def __init__(self, owner: "_TrackedSeededContext", seeded: bool) -> None:
+        self._owner = owner
+        self.is_seeded = seeded
+
+    @property
+    def seeded_faker(self) -> Faker:
+        self._owner._faker_reads += 1
+        self._owner.events.append("faker")
+        return Faker()
+
+
+class _TrackedSeededContext:
+    def __init__(self, seeded: bool) -> None:
+        self.rng_reads = 0
+        self.events: list[str] = []
+        self._rng = _TrackedRng(self.events)
+        self._faker_reads = 0
+        self.root = _TrackedRoot(self, seeded)
+
+    @property
+    def rng(self) -> _TrackedRng:
+        self.rng_reads += 1
+        return self._rng
+
+
+def test_unseeded_expression_globals_are_the_raw_mapping_without_rng_access() -> None:
+    context = _TrackedSeededContext(seeded=False)
+
+    assert _globals(context) is SAFE_GLOBALS
+    assert context.rng_reads == 0
+    assert context._faker_reads == 0
+
+
+def test_seeded_expression_globals_bind_rng_for_constant_expressions() -> None:
+    context = _TrackedSeededContext(seeded=True)
+
+    assert eval("1", _globals(context), {}) == 1  # noqa: S307 - globals under test
+    assert context.rng_reads == 1
+    assert context._rng.bits == []
+    assert context._faker_reads == 0
+
+
+def test_seeded_fake_provider_draws_one_64_bit_seed_lazily() -> None:
+    context = _TrackedSeededContext(seeded=True)
+    globals_ = _globals(context)
+
+    fake = globals_["fake"]
+    assert context._rng.bits == []
+    assert context._faker_reads == 0
+
+    assert callable(fake.name)
+    assert context._rng.bits == [64]
+    assert context._faker_reads == 1
+    assert context.events == ["faker", "bits"]
+
+
+def test_seeded_random_omitted_seed_draws_lazily_but_none_does_not() -> None:
+    context = _TrackedSeededContext(seeded=True)
+    random_proxy = _globals(context)["random"]
+
+    random_proxy.Random()
+    assert context._rng.bits == [64]
+
+    random_proxy.Random(None)
+    assert context._rng.bits == [64]

@@ -6,7 +6,7 @@
 
 from datamimic_ce.engine.dsl.api import MongoDBStatement
 from datamimic_ce.engine.io.api import MongoDBConnectionConfig, create_mongodb_client
-from datamimic_ce.engine.runtime.contexts.setup_context import SetupContext
+from datamimic_ce.engine.runtime.contexts.context import SetupContext
 from datamimic_ce.engine.runtime.tasks.base.task import SetupSubTask
 
 

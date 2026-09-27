@@ -32,8 +32,7 @@ from datamimic_ce.engine.dsl.api import (
 )
 from datamimic_ce.engine.io.api import DataSourcePagination, WeightedDataSource
 from datamimic_ce.engine.io.data_sources.selection import unique_value_iter
-from datamimic_ce.engine.runtime.contexts.context import Context
-from datamimic_ce.engine.runtime.contexts.setup_context import SetupContext
+from datamimic_ce.engine.runtime.contexts.context import Context, SetupContext
 from datamimic_ce.engine.runtime.tasks.base.task import Task
 from datamimic_ce.engine.runtime.tasks.values.construction.factory import GeneratorUtil
 from datamimic_ce.engine.runtime.tasks.values.construction.sequence_table import SequenceTableGenerator

@@ -3,14 +3,14 @@ import json
 
 import datamimic_ce.authoring.contracts as contracts
 from datamimic_ce.authoring import api
+from datamimic_ce.authoring.application import service
+from datamimic_ce.authoring.application.service import scaffold
 from datamimic_ce.authoring.domain.diagnostics import LintResult
 from datamimic_ce.authoring.domain.rule_catalog import RuleSeverity
-from datamimic_ce.authoring.application.service import scaffold
-from datamimic_ce.authoring.application import service
 from datamimic_ce.authoring.spec import ExactCountExpectation, ExpectationIntent
 from datamimic_ce.engine.runtime.api import Context, SetupContext
 from datamimic_ce.engine.runtime.contexts.context import Context as InternalContext
-from datamimic_ce.engine.runtime.contexts.setup_context import SetupContext as InternalSetupContext
+from datamimic_ce.engine.runtime.contexts.context import SetupContext as InternalSetupContext
 
 
 def test_authoring_api_has_typed_signatures_and_delegates(monkeypatch) -> None:

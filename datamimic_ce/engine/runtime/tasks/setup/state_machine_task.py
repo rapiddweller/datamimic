@@ -6,7 +6,7 @@
 
 from datamimic_ce.domains.api import StateMachineDef
 from datamimic_ce.engine.dsl.api import StateMachineStatement
-from datamimic_ce.engine.runtime.contexts.setup_context import SetupContext
+from datamimic_ce.engine.runtime.contexts.context import SetupContext
 from datamimic_ce.engine.runtime.tasks.base.task import SetupSubTask
 
 

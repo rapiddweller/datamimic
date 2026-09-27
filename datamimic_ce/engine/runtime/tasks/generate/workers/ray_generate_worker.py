@@ -7,8 +7,8 @@
 import ray
 
 from datamimic_ce.engine.dsl.api import GenerateStatement
+from datamimic_ce.engine.runtime.contexts.context import SetupContext
 from datamimic_ce.engine.runtime.contexts.geniter_context import GenIterContext
-from datamimic_ce.engine.runtime.contexts.setup_context import SetupContext
 from datamimic_ce.engine.runtime.tasks.generate.workers.generate_worker import GenerateWorker
 
 

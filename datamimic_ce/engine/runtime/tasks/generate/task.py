@@ -13,9 +13,8 @@ import dill
 
 from datamimic_ce.engine.dsl.api import CompositeStatement, GenerateStatement, KeyStatement, Statement, StatementUtil
 from datamimic_ce.engine.io.api import ExporterUtil, UnifiedBufferedExporter, count_query_length
-from datamimic_ce.engine.runtime.contexts.context import Context
+from datamimic_ce.engine.runtime.contexts.context import Context, SetupContext
 from datamimic_ce.engine.runtime.contexts.geniter_context import GenIterContext
-from datamimic_ce.engine.runtime.contexts.setup_context import SetupContext
 from datamimic_ce.engine.runtime.logging import gen_timer, logger
 from datamimic_ce.engine.runtime.sources.router import (
     data_source_cache_key,

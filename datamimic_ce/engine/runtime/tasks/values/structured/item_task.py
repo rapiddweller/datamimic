@@ -5,8 +5,8 @@
 # For questions and support, contact: info@rapiddweller.com
 
 from datamimic_ce.engine.dsl.api import ItemStatement
+from datamimic_ce.engine.runtime.contexts.context import SetupContext
 from datamimic_ce.engine.runtime.contexts.geniter_context import GenIterContext
-from datamimic_ce.engine.runtime.contexts.setup_context import SetupContext
 from datamimic_ce.engine.runtime.tasks.base.task import GenSubTask
 from datamimic_ce.engine.runtime.tasks.task_util import TaskUtil
 from datamimic_ce.engine.runtime.tasks.values.scalar.element_task import ElementTask

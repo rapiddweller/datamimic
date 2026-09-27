@@ -8,9 +8,8 @@ import random
 from random import Random
 
 from datamimic_ce.domains.api import spawn_rng
-from datamimic_ce.engine.runtime.contexts.context import Context
+from datamimic_ce.engine.runtime.contexts.context import Context, SetupContext
 from datamimic_ce.engine.runtime.contexts.records import dict_nested_update
-from datamimic_ce.engine.runtime.contexts.setup_context import SetupContext
 from datamimic_ce.randomness import RandomSource
 
 

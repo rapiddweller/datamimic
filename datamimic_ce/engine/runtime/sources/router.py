@@ -35,9 +35,8 @@ from datamimic_ce.engine.io.api import (
 )
 from datamimic_ce.engine.io.contracts import select_rows
 from datamimic_ce.engine.io.data_sources.selection import get_distributed_data, get_unique_data
-from datamimic_ce.engine.runtime.contexts.context import Context
+from datamimic_ce.engine.runtime.contexts.context import Context, SetupContext
 from datamimic_ce.engine.runtime.contexts.geniter_context import GenIterContext
-from datamimic_ce.engine.runtime.contexts.setup_context import SetupContext
 from datamimic_ce.engine.runtime.logging import logger
 from datamimic_ce.engine.runtime.scripting.evaluation import evaluate_source_template, interpolate_variables
 

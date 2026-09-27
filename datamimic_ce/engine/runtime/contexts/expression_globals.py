@@ -39,8 +39,8 @@ import random
 import re
 import statistics
 import uuid
+from collections.abc import Callable
 from random import Random
-from typing import TYPE_CHECKING
 
 import numpy as np
 import pandas as pd
@@ -48,9 +48,7 @@ import requests
 from faker import Faker
 
 from datamimic_ce.domains.api import resolve_clock, uuid4_from_random
-
-if TYPE_CHECKING:
-    from datamimic_ce.engine.runtime.contexts.context import Context
+from datamimic_ce.randomness import RandomSource
 
 SAFE_GLOBALS: dict[str, object] = {
     "math": math,
@@ -148,12 +146,13 @@ class _SeededFaker:
     """``fake`` under a seed: every provider access reseeds the run's Faker from the rng, so a Faker
     value costs one rng draw and expressions without ``fake`` draw nothing."""
 
-    def __init__(self, context: Context) -> None:
-        self._context = context
+    def __init__(self, rng: RandomSource, faker_supplier: Callable[[], Faker]) -> None:
+        self._rng = rng
+        self._faker_supplier = faker_supplier
 
     def __getattr__(self, name: str) -> object:
-        faker = self._context.root.seeded_faker
-        faker.seed_instance(self._context.rng.getrandbits(64))
+        faker = self._faker_supplier()
+        faker.seed_instance(self._rng.getrandbits(64))
         return getattr(faker, name)
 
 
@@ -165,11 +164,15 @@ def _ignore_seed(*_args: object, **_kwargs: object) -> None:
     """random.seed() inside an expression would rewind the run's seeded stream, so it is a no-op."""
 
 
-def expression_globals(context: Context) -> dict[str, object]:
-    """Globals for one expression evaluated in ``context``."""
-    if not context.root.is_seeded:
+def expression_globals(
+    is_seeded: bool,
+    rng: RandomSource | None,
+    seeded_faker_supplier: Callable[[], Faker],
+) -> dict[str, object]:
+    """Globals for one expression, using explicit dependencies for seeded behavior."""
+    if not is_seeded:
         return SAFE_GLOBALS
-    rng = context.rng
+    assert rng is not None
     anchor = resolve_clock(deterministic=True)
 
     def now(tz: datetime.tzinfo | None = None) -> datetime.datetime:
@@ -206,5 +209,5 @@ def expression_globals(context: Context) -> dict[str, object]:
         "pd": _EvalProxy(pd, {"Timestamp": anchored_timestamp}),
         "np": _EvalProxy(np, {"random": _Uncontrolled("np.random")}),
         "os": _EvalProxy(os, {"urandom": _Uncontrolled("os.urandom"), "getrandom": _Uncontrolled("os.getrandom")}),
-        "fake": _SeededFaker(context),
+        "fake": _SeededFaker(rng, seeded_faker_supplier),
     }

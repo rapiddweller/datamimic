@@ -9,7 +9,7 @@ from datamimic_ce.engine.dsl.api import Statement
 
 if TYPE_CHECKING:
     from datamimic_ce.engine.io.api import DataSourcePagination
-    from datamimic_ce.engine.runtime.contexts.setup_context import SetupContext
+    from datamimic_ce.engine.runtime.contexts.context import SetupContext
     from datamimic_ce.engine.runtime.tasks.base.task import Task
 
 

@@ -37,7 +37,6 @@ def _builtin_generators() -> tuple[type, ...]:
     from datamimic_ce.domains.shared.literal_generators.contact.phone_number_generator import PhoneNumberGenerator
     from datamimic_ce.domains.shared.literal_generators.contact.street_name_generator import StreetNameGenerator
     from datamimic_ce.domains.shared.literal_generators.contact.url_generator import UrlGenerator
-    from datamimic_ce.domains.shared.literal_generators.global_increment_generator import GlobalIncrementGenerator
     from datamimic_ce.domains.shared.literal_generators.identity.codes.cnpj_generator import CNPJGenerator
     from datamimic_ce.domains.shared.literal_generators.identity.codes.cpf_generator import CPFGenerator
     from datamimic_ce.domains.shared.literal_generators.identity.codes.ean_generator import EANGenerator
@@ -85,7 +84,6 @@ def _builtin_generators() -> tuple[type, ...]:
         FloatGenerator,
         GenderGenerator,
         GivenNameGenerator,
-        GlobalIncrementGenerator,
         HashGenerator,
         IncrementGenerator,
         IntegerGenerator,

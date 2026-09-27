@@ -201,3 +201,35 @@ No shared database was touched. Details are in the QA service-baseline receipt.
 
 CI-ONLY VERIFICATION: no new remote run. Strict target validation remains UNKNOWN
 because the IO boundary and task registry target modules are not implemented yet.
+
+## Sixth slice: contexts and runtime-owned generators
+
+Context and SetupContext share their cohesive owner; expression globals take an
+explicit RNG and lazy Faker supplier without importing Context. GlobalIncrement
+state belongs to Runtime storage, its generator to value construction. Domain and
+Runtime capability inventories still expose each generator exactly once.
+
+Review caught and corrected a missing constructor-time counter registration.
+Astra also rejected deleting the generator's context reference: actual old/new
+probes showed different deepcopy graphs and client-disposal hooks despite matching
+counter values. The reference is retained; only the unused scalar flag is removed.
+
+LOCAL VERIFIED: Terra's independent 148 tests pass with 11 existing skips;
+21 inventory/replay tests pass after strengthening the duplicate-name assertion.
+Full-package Ruff/Mypy and both definition tests pass. XML/model hashes and the
+violation baseline remain unchanged. The target has 15 missing / 11 legacy paths.
+
+The final full Step-0 capture has one missing child result: the credit-card run
+logged 100 generated rows and exited zero, but returned no result marker. Three
+isolated retries exactly match its previous capture. No capture was overwritten.
+All other differences are the recorded unseeded MemStore count variation; its
+same-run invariant passes. Projection payloads are identical to the preceding
+slice; comparison with the original retains the documented build identity delta.
+
+Real isolated Linux spawn and Ray workers reproduce the frozen GlobalIncrement
+sequence. One Ray attempt failed during Raylet registration; an unchanged retry
+passed. This is not a claim of uninterrupted worker reliability. The pre-existing
+cross-worker duplicates (`1,2,1,2`) are recorded in [CE #276](https://github.com/rapiddweller/datamimic/issues/276),
+separate from this behavior-preserving move. Worker details are in the QA receipt.
+
+CI-ONLY VERIFICATION: no new remote run; final service/worker acceptance remains open.

@@ -15,9 +15,8 @@ from datamimic_ce.engine.dsl.api import (
     ElementStatement,
 )
 from datamimic_ce.engine.io.api import DataSourcePagination
-from datamimic_ce.engine.runtime.contexts.context import Context
+from datamimic_ce.engine.runtime.contexts.context import Context, SetupContext
 from datamimic_ce.engine.runtime.contexts.geniter_context import GenIterContext
-from datamimic_ce.engine.runtime.contexts.setup_context import SetupContext
 from datamimic_ce.engine.runtime.tasks.values.key_variable_task import KeyVariableTask
 
 

@@ -6,17 +6,17 @@ from typing import Literal
 
 from datamimic_ce.domains.api import GeneratorCapability, describe_generator_type
 from datamimic_ce.engine.dsl.api import parse_properties
-from datamimic_ce.engine.runtime.contexts.context import Context
-from datamimic_ce.engine.runtime.contexts.setup_context import SetupContext
+from datamimic_ce.engine.runtime.contexts.context import Context, SetupContext
 from datamimic_ce.engine.runtime.contracts import PlatformProperties, RunRequest, RunResult, RunSession
 from datamimic_ce.engine.runtime.lifecycle.config import settings
 from datamimic_ce.engine.runtime.lifecycle.runner import create_run_session as _create_run_session
 from datamimic_ce.engine.runtime.lifecycle.runner import run as _run
-from datamimic_ce.engine.runtime.tasks.values.construction.sequence_table import SequenceTableGenerator
+from datamimic_ce.engine.runtime.tasks.values.construction.factory import RUNTIME_GENERATOR_TYPES
 
 
 def iter_generator_capabilities() -> Iterator[GeneratorCapability]:
-    yield describe_generator_type(SequenceTableGenerator)
+    for generator_type in RUNTIME_GENERATOR_TYPES:
+        yield describe_generator_type(generator_type)
 
 
 def runtime_environment() -> Literal["development", "production"]:

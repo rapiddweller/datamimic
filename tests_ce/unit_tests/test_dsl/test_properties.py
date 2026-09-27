@@ -14,7 +14,7 @@ from datamimic_ce.engine.dsl.parsers.input import properties as property_input
 from datamimic_ce.engine.dsl.statements.setup.include_statement import IncludeStatement
 from datamimic_ce.engine.dsl.statements.setup.mongodb_statement import MongoDBStatement
 from datamimic_ce.engine.io.api import FileUtil, load_connection_profile
-from datamimic_ce.engine.runtime.contexts.setup_context import SetupContext
+from datamimic_ce.engine.runtime.contexts.context import SetupContext
 from datamimic_ce.engine.runtime.tasks.base.task import SetupSubTask
 from datamimic_ce.engine.runtime.tasks.setup.include_task import IncludeTask
 from datamimic_ce.engine.runtime.tasks.task_util import TaskUtil

@@ -55,8 +55,7 @@ from datamimic_ce.engine.io.api import (
     UnifiedBufferedExporter,
     XMLExporter,
 )
-from datamimic_ce.engine.runtime.contexts.context import Context
-from datamimic_ce.engine.runtime.contexts.setup_context import SetupContext
+from datamimic_ce.engine.runtime.contexts.context import Context, SetupContext
 from datamimic_ce.engine.runtime.logging import logger
 from datamimic_ce.engine.runtime.tasks.base.dispatch import create_task
 from datamimic_ce.randomness import RandomSource

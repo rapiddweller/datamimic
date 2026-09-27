@@ -6,7 +6,7 @@
 
 from datamimic_ce.engine.dsl.api import DatabaseStatement
 from datamimic_ce.engine.io.api import RdbmsConnectionConfig, create_rdbms_client
-from datamimic_ce.engine.runtime.contexts.setup_context import SetupContext
+from datamimic_ce.engine.runtime.contexts.context import SetupContext
 from datamimic_ce.engine.runtime.tasks.base.task import SetupSubTask
 
 

@@ -8,9 +8,8 @@ import copy
 
 from datamimic_ce.engine.dsl.api import DATA_TYPE_DICT, DATA_TYPE_LIST, NestedKeyStatement
 from datamimic_ce.engine.io.api import DataSourcePagination
-from datamimic_ce.engine.runtime.contexts.context import Context
+from datamimic_ce.engine.runtime.contexts.context import Context, SetupContext
 from datamimic_ce.engine.runtime.contexts.geniter_context import GenIterContext
-from datamimic_ce.engine.runtime.contexts.setup_context import SetupContext
 from datamimic_ce.engine.runtime.logging import logger
 from datamimic_ce.engine.runtime.sources.router import (
     finalize_nested_key_source,

@@ -42,8 +42,9 @@ from typing import TypedDict
 
 import pytest
 
+from datamimic_ce.domains.api import iter_generator_capabilities as domain_generator_capabilities
+from datamimic_ce.engine.runtime.api import iter_generator_capabilities as runtime_generator_capabilities
 from datamimic_ce.interfaces.python.data_mimic_test import DataMimicTest
-from datamimic_ce.domains.api import iter_generator_capabilities
 from tests_ce.integration_tests.dsl_model_builder import build_all_entities_seeded_xml
 
 _TEST_DIR = Path(__file__).resolve().parent
@@ -216,7 +217,11 @@ def _run_in_fresh_process(filename: str) -> dict[str, object]:
 def test_replay_model_covers_every_literal_generator() -> None:
     model = (_TEST_DIR / "replay_all_seeded.xml").read_text(encoding="utf-8")
     used = set(re.findall(r'generator="([A-Za-z]+Generator)', model))
-    assert {capability.name for capability in iter_generator_capabilities()} == used
+    available = {
+        capability.name
+        for capability in (*domain_generator_capabilities(), *runtime_generator_capabilities())
+    }
+    assert available - {"SequenceTableGenerator"} == used
 
 
 def test_every_seeded_path_replays_across_processes() -> None:

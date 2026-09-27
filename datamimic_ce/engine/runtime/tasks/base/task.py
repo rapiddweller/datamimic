@@ -8,9 +8,8 @@ from abc import ABC, abstractmethod
 from typing import Protocol
 
 from datamimic_ce.engine.dsl.api import Statement
-from datamimic_ce.engine.runtime.contexts.context import Context
+from datamimic_ce.engine.runtime.contexts.context import Context, SetupContext
 from datamimic_ce.engine.runtime.contexts.geniter_context import GenIterContext
-from datamimic_ce.engine.runtime.contexts.setup_context import SetupContext
 
 
 class Task(ABC):

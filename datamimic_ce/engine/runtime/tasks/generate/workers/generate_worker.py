@@ -10,8 +10,8 @@ import dill
 
 from datamimic_ce.engine.dsl.api import CompositeStatement, ConditionStatement, GenerateStatement, Statement
 from datamimic_ce.engine.io.api import DataSourcePagination, ExporterStateManager, ExporterUtil
+from datamimic_ce.engine.runtime.contexts.context import SetupContext
 from datamimic_ce.engine.runtime.contexts.geniter_context import GenIterContext
-from datamimic_ce.engine.runtime.contexts.setup_context import SetupContext
 from datamimic_ce.engine.runtime.logging import gen_timer, logger, setup_logger
 from datamimic_ce.engine.runtime.sources.chunk_source_reader import ChunkSourceReader
 from datamimic_ce.engine.runtime.tasks.base.task import CommonSubTask, GenSubTask

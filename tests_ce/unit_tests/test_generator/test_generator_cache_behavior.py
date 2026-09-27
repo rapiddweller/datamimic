@@ -1,3 +1,4 @@
+import copy
 import uuid
 from pathlib import Path
 
@@ -8,9 +9,10 @@ from datamimic_ce.engine.dsl.vocabulary.enums.dbms_enums import Dbms
 from datamimic_ce.engine.io.clients.rdbms_client import RdbmsClient
 from datamimic_ce.engine.io.contracts import DataSourcePagination
 from datamimic_ce.engine.io.exporters.diagnostics.test_result_exporter import TestResultExporter
-from datamimic_ce.engine.runtime.contexts.setup_context import SetupContext
+from datamimic_ce.engine.runtime.contexts.context import SetupContext
 from datamimic_ce.engine.runtime.storage.memstore_manager import MemstoreManager
 from datamimic_ce.engine.runtime.tasks.values.construction.factory import GeneratorUtil
+from datamimic_ce.engine.runtime.tasks.values.construction.global_increment import GlobalIncrementGenerator
 
 
 class DummyRootGenStmt(GenerateStatement):
@@ -91,9 +93,49 @@ def test_global_increment_generator_uses_cache_key(setup_context: SetupContext):
     g2 = util.create_generator("GlobalIncrementGenerator", stmt=leaf, key="mykey")
 
     assert g1 is g2
+    assert [g1.generate(), g2.generate()] == [1, 2]
     assert "mykey" in setup_context.generators
     # Ensure no duplicate entry under raw generator string
     assert "GlobalIncrementGenerator" not in setup_context.generators
+
+
+def test_global_increment_registry_preserves_key_scope_and_registered_start(setup_context: SetupContext):
+    first = GlobalIncrementGenerator("parent.id", setup_context)
+    same_key = GlobalIncrementGenerator("parent.id", setup_context)
+    distinct_key = GlobalIncrementGenerator("parent.code", setup_context)
+
+    assert [first.generate(), first.generate(), same_key.generate()] == [1, 2, 3]
+    assert distinct_key.generate() == 1
+
+    registry = setup_context.global_increment_registry
+    assert registry is not None
+    registry.register("configured", start=17)
+    assert GlobalIncrementGenerator("configured", setup_context).generate() == 17
+
+
+def test_deepcopy_of_cached_global_increment_preserves_legacy_copy_graph(
+    setup_context: SetupContext, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    generator = GlobalIncrementGenerator("parent.id", setup_context)
+    setup_context.generators["parent.id"] = generator
+    client = object()
+    setup_context.clients["client"] = client
+    dispose_calls: list[object] = []
+    monkeypatch.setattr(
+        "datamimic_ce.engine.runtime.contexts.context.dispose_client_engine",
+        dispose_calls.append,
+    )
+
+    assert generator.generate() == 1
+    copied = copy.deepcopy(setup_context)
+    copied_generator = copied.generators["parent.id"]
+
+    assert dispose_calls == [client, client]
+    assert copied.global_increment_registry is None
+    assert hasattr(copied_generator, "_context")
+    assert copied_generator.generate() == 2
+    assert generator.generate() == 2
+    assert GlobalIncrementGenerator("parent.id", setup_context).generate() == 3
 
 
 def test_sequence_table_generator_uses_cache_key(setup_context: SetupContext):
