@@ -335,3 +335,32 @@ a direct comparison of persisted database values.
 CI-ONLY VERIFICATION: no new remote run. ArchKeel still exits 2/UNKNOWN because
 `runtime.tasks.registry` is absent. Source boundaries, task registry, direct
 database-output parity and complete target acceptance remain open.
+
+## Tenth slice: source-capability ownership
+
+The unchanged source-format/capability catalog moved from DSL model constraints
+to DSL vocabulary. Production and test imports now use its owner; `dsl.api`
+keeps its existing public names. There is no old-path forwarding module.
+Astra required the exact vocabulary leaf in the root DSL public list, added
+under Amendment 21. No runtime dispatch or descriptor changed in this slice.
+
+LOCAL VERIFIED: Terra's independent focused suite passed 175 tests. Root's
+serial non-service sweep passed 1,928 tests, 13 skips and two existing Pydantic
+warnings. Full-package Ruff/Mypy (494 modules), Pylint's import-cycle gate and
+the recursive definition gate pass. The moved catalog is byte-identical to its
+prior file. The physical target still fails: eight missing target modules and
+seven legacy/unowned modules. ArchKeel's candidate validator still reports
+UNKNOWN solely because `runtime.tasks.registry` has no scanned module. All
+930 XML and seven intent-model hashes match the frozen files. Step-0 retained
+all status counts (454 captured, 62 expected errors, 16 non-descriptors,
+76 unrunnable, 322 unverified); all four projection hashes are identical to
+the preceding slice. The raw comparator exits 1 for one unseeded Condition demo
+whose optional `else-if_true` field was absent in this capture. Three isolated
+reruns on the same code contained that field; this is a classified stochastic
+variance, not a green raw comparison. No new service run was required for this
+byte-identical catalog move; the S3F2 after-side service result remains the
+latest service evidence.
+
+CI-ONLY VERIFICATION: no new remote run. IO source boundaries, the task
+registry, direct database-output parity and complete target acceptance remain
+open.

@@ -58,9 +58,8 @@ from datamimic_ce.engine.dsl.api import (
     element_aliases,
     resolved_values,
     serialize_constraints,
-    serialize_source_capability,
-    source_capabilities,
 )
+from datamimic_ce.engine.dsl.vocabulary.source_capabilities import serialize_source_capability, source_capabilities
 from datamimic_ce.engine.runtime.api import iter_generator_capabilities as runtime_generator_capabilities
 
 _JSON_OBJECT_ADAPTER: TypeAdapter[dict[str, JsonValue]] = TypeAdapter(dict[str, JsonValue])

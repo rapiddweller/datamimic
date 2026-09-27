@@ -8,8 +8,10 @@ the root contract permits IO to depend only on DSL vocabulary. Move the whole
 module to `dsl/vocabulary/source_capabilities.py`; update real imports, not an
 old-path shim. Keep the existing catalog and projections together.
 
-The target map and nested DSL layouts now declare that destination. The file
-count stays 495. This does not widen IO's permissions or change DSL behavior.
+The target map and nested DSL layouts declare that destination. The root DSL
+interface publishes that exact module so IO, Runtime and Authoring can use it;
+the rest of vocabulary stays private. The file count stays 495. This does not
+widen IO's dependency edge or change DSL behavior.
 The source and descriptor baselines remain frozen.
 
 The same ownership review keeps `select_rows` and `select_row_iterator` in

@@ -132,7 +132,8 @@
         "datamimic_ce.engine.dsl.parsers.input.properties:parse_properties",
         "datamimic_ce.engine.dsl.vocabulary.enums.converter_enums",
         "datamimic_ce.engine.dsl.vocabulary.enums.distribution_enums",
-        "datamimic_ce.engine.dsl.vocabulary.enums.faker_enums"
+        "datamimic_ce.engine.dsl.vocabulary.enums.faker_enums",
+        "datamimic_ce.engine.dsl.vocabulary.source_capabilities"
       ],
       "planned": [],
       "decided_by": "agent"

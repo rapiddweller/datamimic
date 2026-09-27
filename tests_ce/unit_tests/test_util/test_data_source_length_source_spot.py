@@ -12,9 +12,9 @@ from unittest.mock import Mock
 import pytest
 
 from datamimic_ce.engine.dsl.api import GenerateStatement
-from datamimic_ce.engine.dsl.model.constraints import SourceFileFormat, source_capabilities
 from datamimic_ce.engine.dsl.statements.values.structured.nested_key_statement import NestedKeyStatement
 from datamimic_ce.engine.dsl.statements.values.variables.variable_statement import VariableStatement
+from datamimic_ce.engine.dsl.vocabulary.source_capabilities import SourceFileFormat, source_capabilities
 from datamimic_ce.engine.io.api import FileUtil
 from datamimic_ce.engine.io.data_sources.data_source_registry import DataSourceRegistry
 from datamimic_ce.engine.runtime.sources.router import set_data_source_length

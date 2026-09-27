@@ -13,9 +13,11 @@ from datamimic_ce.engine.dsl.api import (
     NestedKeyStatement,
     ReferenceStatement,
     SourceDistribution,
-    SourceFileFormat,
     Statement,
     VariableStatement,
+)
+from datamimic_ce.engine.dsl.vocabulary.source_capabilities import (
+    SourceFileFormat,
     source_file_format,
     source_file_format_for,
 )

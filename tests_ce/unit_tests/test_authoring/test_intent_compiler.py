@@ -23,12 +23,12 @@ from datamimic_ce.authoring.spec import (
     MemstoreSource,
     authoring_spec_json_schema,
 )
-from datamimic_ce.engine.dsl.model.constraints import (
+from datamimic_ce.engine.dsl.vocabulary.constants.element_constants import EL_GENERATE
+from datamimic_ce.engine.dsl.vocabulary.source_capabilities import (
     SourceFileFormat,
     source_file_format,
     supported_source_file_formats,
 )
-from datamimic_ce.engine.dsl.vocabulary.constants.element_constants import EL_GENERATE
 from datamimic_ce.engine.io.api import buffered_exporter_names
 
 _CANONICAL_SPEC = {

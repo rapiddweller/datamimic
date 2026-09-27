@@ -7,10 +7,9 @@ from random import Random
 
 from datamimic_ce.engine.dsl.api import (
     EL_VARIABLE,
-    SourceFileFormat,
     VariableStatement,
-    source_file_format_for,
 )
+from datamimic_ce.engine.dsl.vocabulary.source_capabilities import SourceFileFormat, source_file_format_for
 from datamimic_ce.engine.io.api import (
     Client,
     DataSourcePagination,

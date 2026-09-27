@@ -20,21 +20,6 @@ The JSON schema exposure is derived by a shared callable factory
 This ensures one declaration, all consumers derive consistently.
 """
 
-from datamimic_ce.engine.dsl.model.constraints.capabilities import (
-    DynamicSourceKind,
-    SourceCapability,
-    SourceFileFormat,
-    is_source_file,
-    recognized_source_file_formats,
-    serialize_source_capability,
-    source_allows_client,
-    source_allows_memstore,
-    source_capabilities,
-    source_dynamic_kind,
-    source_file_format,
-    source_file_format_for,
-    supported_source_file_formats,
-)
 from datamimic_ce.engine.dsl.model.constraints.facts import (
     AGE_MAX_REQUIRES_GENERATOR_OR_ENTITY,
     AGE_MIN_REQUIRES_GENERATOR_OR_ENTITY,
@@ -146,7 +131,6 @@ __all__ = [
     "Constraint",
     "DATASET_REQUIRES_GENERATOR_OR_ENTITY",
     "DEFAULT_VALUE_REQUIRES_SCRIPT",
-    "DynamicSourceKind",
     "EXECUTE_SCRIPT_REQUIRES_TYPE",
     "EXECUTE_TYPE_VALUES",
     "EXECUTE_URI_SCRIPT_EXCLUSIVE",
@@ -195,8 +179,6 @@ __all__ = [
     "SOURCE_ENTITY_REQUIRES_SOURCE",
     "SOURCE_MODE_EXCLUSIVE",
     "SOURCE_SCRIPTED_REQUIRES_SOURCE",
-    "SourceCapability",
-    "SourceFileFormat",
     "TIMESERIES_ALL_OR_NONE",
     "UNIQUE_DISTRIBUTION_RANDOM",
     "UNIQUE_FORBIDS_CYCLIC",
@@ -211,19 +193,9 @@ __all__ = [
     "WEIGHT_COLUMN_REQUIRES_SOURCE",
     "constraints_schema_extra",
     "element_constraints",
-    "is_source_file",
-    "recognized_source_file_formats",
     "registered_rule_tags",
     "resolved_allowed",
     "resolved_values",
     "rule_registry_revision",
     "serialize_constraints",
-    "serialize_source_capability",
-    "source_allows_client",
-    "source_allows_memstore",
-    "source_capabilities",
-    "source_dynamic_kind",
-    "source_file_format",
-    "source_file_format_for",
-    "supported_source_file_formats",
 ]

@@ -326,7 +326,8 @@ def _memstore_source_binding(
     memstore_ids: set[str],
     producers: tuple[_MemstoreProducer, ...],
 ) -> _MemstoreSourceBinding | None:
-    from datamimic_ce.engine.dsl.api import EL_GENERATE, GenerateStatement, source_file_format_for
+    from datamimic_ce.engine.dsl.api import EL_GENERATE, GenerateStatement
+    from datamimic_ce.engine.dsl.vocabulary.source_capabilities import source_file_format_for
     from datamimic_ce.engine.io.api import resolve_source_entity
 
     if not isinstance(stmt, GenerateStatement) or stmt.source not in memstore_ids:
@@ -403,7 +404,8 @@ def _source_row_count(
 ) -> int | None:
     """Return a file source's statically observable remaining rows, if supported."""
 
-    from datamimic_ce.engine.dsl.api import EL_GENERATE, GenerateStatement, SourceFileFormat, source_file_format_for
+    from datamimic_ce.engine.dsl.api import EL_GENERATE, GenerateStatement
+    from datamimic_ce.engine.dsl.vocabulary.source_capabilities import SourceFileFormat, source_file_format_for
     from datamimic_ce.engine.io.api import DataSourceRegistry
 
     if not isinstance(stmt, GenerateStatement) or descriptor_dir is None or stmt.source is None:

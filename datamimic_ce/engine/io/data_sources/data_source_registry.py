@@ -10,7 +10,7 @@ from pathlib import Path
 import xmltodict
 from sqlalchemy.exc import OperationalError, ProgrammingError
 
-from datamimic_ce.engine.dsl.api import SourceFileFormat
+from datamimic_ce.engine.dsl.vocabulary.source_capabilities import SourceFileFormat
 from datamimic_ce.engine.io.clients.client import Client
 from datamimic_ce.engine.io.clients.rdbms_client import RdbmsClient
 from datamimic_ce.engine.io.contracts import DataSourcePagination, select_rows

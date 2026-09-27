@@ -32,8 +32,10 @@ from datamimic_ce.engine.dsl.api import (
     EXPORTER_CONSOLE_EXPORTER,
     EXPORTER_LOG_EXPORTER,
     EXPORTER_TEST_RESULT_EXPORTER,
-    DynamicSourceKind,
     ExportOperation,
+)
+from datamimic_ce.engine.dsl.vocabulary.source_capabilities import (
+    DynamicSourceKind,
     SourceFileFormat,
     source_allows_client,
     source_allows_memstore,

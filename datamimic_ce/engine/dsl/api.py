@@ -10,7 +10,6 @@ from datamimic_ce.engine.dsl.model.constraints import (
     AllOrNone,
     AllowedValuesWhen,
     Constraint,
-    DynamicSourceKind,
     Forbids,
     ForbidsWhenValue,
     MutuallyExclusive,
@@ -18,22 +17,12 @@ from datamimic_ce.engine.dsl.model.constraints import (
     RequiredOneOf,
     Requires,
     RequiresWhenValue,
-    SourceFileFormat,
     ValidValues,
     element_constraints,
-    is_source_file,
     resolved_allowed,
     resolved_values,
     rule_registry_revision,
     serialize_constraints,
-    serialize_source_capability,
-    source_allows_client,
-    source_allows_memstore,
-    source_capabilities,
-    source_dynamic_kind,
-    source_file_format,
-    source_file_format_for,
-    supported_source_file_formats,
 )
 from datamimic_ce.engine.dsl.model.generation.timeseries import TimeSeriesConfig
 from datamimic_ce.engine.dsl.model.registry import (
@@ -148,6 +137,19 @@ from datamimic_ce.engine.dsl.vocabulary.enums.distribution_enums import (
 )
 from datamimic_ce.engine.dsl.vocabulary.enums.faker_enums import UnsupportedMethod
 from datamimic_ce.engine.dsl.vocabulary.enums.operation_enums import ExportOperation
+from datamimic_ce.engine.dsl.vocabulary.source_capabilities import (
+    DynamicSourceKind,
+    SourceFileFormat,
+    is_source_file,
+    serialize_source_capability,
+    source_allows_client,
+    source_allows_memstore,
+    source_capabilities,
+    source_dynamic_kind,
+    source_file_format,
+    source_file_format_for,
+    supported_source_file_formats,
+)
 
 __all__ = [
     "ATTR_CONSTANT",

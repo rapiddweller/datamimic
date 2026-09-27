@@ -22,7 +22,6 @@ from pathlib import Path
 
 import pytest
 
-from datamimic_ce.engine.dsl.model.constraints import SourceFileFormat
 from datamimic_ce.engine.dsl.vocabulary.constants.exporter_constants import (
     EXPORTER_CSV,
     EXPORTER_DBUNIT,
@@ -32,6 +31,7 @@ from datamimic_ce.engine.dsl.vocabulary.constants.exporter_constants import (
     EXPORTER_XLSX,
     EXPORTER_XML,
 )
+from datamimic_ce.engine.dsl.vocabulary.source_capabilities import SourceFileFormat
 from datamimic_ce.engine.io.api import FileUtil, buffered_exporter_names
 from datamimic_ce.interfaces.python.data_mimic_test import DataMimicTest
 

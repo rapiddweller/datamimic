@@ -11,15 +11,15 @@ from datamimic_ce.authoring.adapters.dryrun import dry_run_source
 from datamimic_ce.authoring.adapters.linter import lint_source
 from datamimic_ce.authoring.contracts import AuthoringStage
 from datamimic_ce.authoring.projection.reference import capabilities_manifest, distributions_reference
-from datamimic_ce.engine.dsl.model.constraints import (
+from datamimic_ce.engine.dsl.vocabulary.source_capabilities import (
     SourceFileFormat,
     serialize_source_capability,
     source_capabilities,
     source_file_format_for,
 )
-from datamimic_ce.engine.runtime.tasks.values.scalar.element_task import ElementTask
-from datamimic_ce.engine.runtime.tasks.values.key_variable_task import KeyVariableTask
 from datamimic_ce.engine.runtime.tasks.base.task import Task
+from datamimic_ce.engine.runtime.tasks.values.key_variable_task import KeyVariableTask
+from datamimic_ce.engine.runtime.tasks.values.scalar.element_task import ElementTask
 
 
 @pytest.mark.parametrize(
