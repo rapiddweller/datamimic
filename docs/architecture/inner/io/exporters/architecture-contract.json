@@ -20,7 +20,13 @@
       ],
       "requires": [],
       "public": [
-        "datamimic_ce.engine.io.exporters.core.exporter:Exporter"
+        "datamimic_ce.engine.io.exporters.core.exporter:Exporter",
+        "datamimic_ce.engine.io.exporters.core.exporter_context:ExporterContext",
+        "datamimic_ce.engine.io.exporters.core.exporter_config:ExporterConfig",
+        "datamimic_ce.engine.io.exporters.core.exporter_state_manager:ExporterStateManager",
+        "datamimic_ce.engine.io.exporters.core.unified_buffered_exporter:UnifiedBufferedExporter",
+        "datamimic_ce.engine.io.exporters.core.routing",
+        "datamimic_ce.engine.io.exporters.core.serialization"
       ],
       "decided_by": "agent"
     },
@@ -121,7 +127,7 @@
         "datamimic_ce.engine.io.exporters.diagnostics"
       ],
       "responsibilities": [
-        "Console/log/test/smoke observation exporters."
+        "Console/log/test observation exporters."
       ],
       "forbidden_responsibilities": [
         "Select exporters or own file/database formats"
@@ -151,7 +157,7 @@
         "datamimic_ce.engine.io.exporters.registry"
       ],
       "responsibilities": [
-        "Concrete exporter assembly."
+        "Concrete exporter assembly, operation dispatch and bounded smoke execution."
       ],
       "forbidden_responsibilities": [
         "Implement exporters or be re-exported as a facade for concrete classes"
@@ -179,10 +185,18 @@
           "component": "diagnostics",
           "rationale": "The registry binds console and diagnostic exporters.",
           "decided_by": "agent"
+        },
+        {
+          "component": "memory",
+          "rationale": "Concrete write dispatch preserves lazy memstore handling.",
+          "decided_by": "agent"
         }
       ],
       "public": [
-        "datamimic_ce.engine.io.exporters.registry:ExporterUtil"
+        "datamimic_ce.engine.io.exporters.registry:create_exporter_list",
+        "datamimic_ce.engine.io.exporters.registry:consume_exporters",
+        "datamimic_ce.engine.io.exporters.registry:buffered_exporter_names",
+        "datamimic_ce.engine.io.exporters.registry:smoke_export"
       ],
       "decided_by": "agent"
     }
@@ -267,10 +281,9 @@
       "allowed_children": [
         "datamimic_ce.engine.io.exporters.diagnostics.console_exporter",
         "datamimic_ce.engine.io.exporters.diagnostics.log_exporter",
-        "datamimic_ce.engine.io.exporters.diagnostics.smoke_export",
         "datamimic_ce.engine.io.exporters.diagnostics.test_result_exporter"
       ],
-      "rationale": "Console/log/test/smoke observation exporters. Exact reviewed target children; no hidden extra modules.",
+      "rationale": "Console/log/test observation exporters. Exact reviewed target children; no hidden extra modules.",
       "provenance": [
         "docs/architecture/inner/structure-review.json"
       ],

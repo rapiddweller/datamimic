@@ -209,6 +209,22 @@ CSV/JSON/XML's different template/error handling, unknown counts, deferred
 iteration selectors and existing DbUnit offset behavior. These are behavioral
 constraints, not permission to standardize the implementations during the move.
 
+Exporter follow-up: IO registry retains the existing IO-owned `ExporterContext`
+protocol for composition; an object implementing that narrow protocol is allowed,
+but Runtime types and DSL statements are not. `ExporterConfig` stores only its
+actual scalar settings. Remove the fake smoke context and return base `Exporter`
+from the protocol, eliminating core's dependency on diagnostic implementations.
+Concrete write dispatch and smoke execution belong to registry, not core or
+diagnostics: either alternative creates a cycle through concrete exporters.
+This moves the existing smoke module into registry and reduces the physical
+target from 496 to 495 Python modules; no behavior or inventory entry is dropped.
+
+Runtime retains page counters and parent/child write ordering. Preserve Mongo
+upsert's returned product for subsequent exporters, original XML rows, operation
+order and exception wrapping. File basenames still ignore `type`; target options
+and default settings keep their existing fallbacks. Generic serialization and
+the JSON exporter's different encoder remain distinct.
+
 A vocabulary enum used to express IO or Domain policy is not a Statement
 dependency. Import its canonical leaf, not the high DSL facade. IO credential
 loading may reuse the low-level property-input reader. Do not duplicate enums

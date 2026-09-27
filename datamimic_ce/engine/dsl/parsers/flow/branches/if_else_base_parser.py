@@ -9,6 +9,7 @@ from pathlib import Path
 
 from datamimic_ce.engine.dsl.model.flow.branches.else_if_model import ElseIfModel
 from datamimic_ce.engine.dsl.model.flow.branches.if_model import IfModel
+from datamimic_ce.engine.dsl.parsers.base.client_config import ConnectionProfileLoader
 from datamimic_ce.engine.dsl.parsers.base.statement_parser import StatementParser
 from datamimic_ce.engine.dsl.parsers.input.xml import XmlElement
 from datamimic_ce.engine.dsl.statements.condition_statement import ConditionStatement
@@ -32,9 +33,17 @@ class IfElseBaseParser(StatementParser, ABC):
         )
 
     def parse(
-        self, descriptor_dir: Path, parent_stmt: ConditionStatement
+        self,
+        descriptor_dir: Path,
+        parent_stmt: ConditionStatement,
+        *,
+        profile_loader: ConnectionProfileLoader,
     ) -> IfStatement | ElseIfStatement | ElseStatement:
-        from datamimic_ce.engine.dsl.parsers.parser_util import ParserUtil
+        from datamimic_ce.engine.dsl.parsers.base.dispatch import (
+            get_element_tag_by_statement,
+            get_valid_sub_elements_set_by_tag,
+            parse_sub_elements,
+        )
 
         # Retrieve the root composite statement
         composite_stmt: Statement | None = parent_stmt
@@ -43,9 +52,7 @@ class IfElseBaseParser(StatementParser, ABC):
         if composite_stmt is None:
             raise ValueError("conditional statement has no enclosing composite")
         # Get valid sub elements of the composite statement
-        valid_sub_ele_set = ParserUtil.get_valid_sub_elements_set_by_tag(
-            ParserUtil.get_element_tag_by_statement(composite_stmt)
-        )
+        valid_sub_ele_set = get_valid_sub_elements_set_by_tag(get_element_tag_by_statement(composite_stmt))
         # Validate sub elements
         self.set_and_validate_valid_sub_elements(valid_sub_ele_set)
 
@@ -60,11 +67,12 @@ class IfElseBaseParser(StatementParser, ABC):
             case _:
                 raise ValueError(f"Invalid element tag for IfElseBaseParser: {self._valid_element_tag}")
 
-        sub_stmt_list = ParserUtil.parse_sub_elements(
+        sub_stmt_list = parse_sub_elements(
             descriptor_dir=descriptor_dir,
             element=self._element,
             properties=self._properties,
             parent_stmt=parsed_stmt,
+            profile_loader=profile_loader,
         )
         parsed_stmt.sub_statements = sub_stmt_list
 

@@ -114,7 +114,7 @@
     {
       "id": "D10",
       "title": "Preserve real TaskUtil invariants, delete forwarding",
-      "decision": "Move boolean condition validation into scripting/evaluation.py (missing condition true; nonbool rejected). Existing dispatch/source-template/interpolation calls directly replace forwarding. Converter construction and scalar generation belong values/construction; hierarchical export ordering belongs generate/export_order.py; concrete exporter routing and XML-dict serialization belong IO. Do not add methods merely to replace old utility names.",
+      "decision": "Move boolean condition validation into scripting/evaluation.py (missing condition true; nonbool rejected). Existing dispatch/source-template/interpolation calls directly replace forwarding. Converter construction and scalar generation belong values/construction; hierarchical export ordering belongs generate/export_order.py. IO registry owns construction, concrete dispatch and smoke execution; core owns scalar routing/target-argument parsing and serialization. Retain IO-owned ExporterContext only at registry composition, with base Exporter return type; scalar-only ExporterConfig replaces its retained context and the fake smoke context. Moving smoke into registry removes a diagnostics/registry cycle. No GenerateStatement or Runtime type dependency enters IO. Do not add methods merely to replace old utility names.",
       "evidence": [
         "datamimic_ce/engine/runtime/tasks/task_util.py:94",
         "datamimic_ce/engine/runtime/tasks/task_util.py:113",
@@ -1005,14 +1005,14 @@
           "packages": [
             "datamimic_ce.engine.io.exporters.diagnostics"
           ],
-          "concern": "Console/log/test/smoke observation exporters."
+          "concern": "Console/log/test observation exporters."
         },
         {
           "id": "EXPORTERS-REGISTRY",
           "packages": [
             "datamimic_ce.engine.io.exporters.registry"
           ],
-          "concern": "Concrete exporter assembly."
+          "concern": "Concrete exporter assembly, operation dispatch and bounded smoke execution."
         }
       ]
     },
@@ -1899,7 +1899,7 @@
     },
     {
       "path": "engine/io/exporters/diagnostics",
-      "concern": "Console/log/test/smoke observation exporters.",
+      "concern": "Console/log/test observation exporters.",
       "component": "EXPORTERS-DIAGNOSTICS"
     },
     {
@@ -4423,7 +4423,7 @@
     {
       "source": "engine/io/exporters/smoke_export.py",
       "targets": [
-        "engine/io/exporters/diagnostics/smoke_export.py"
+        "engine/io/exporters/registry.py"
       ]
     },
     {

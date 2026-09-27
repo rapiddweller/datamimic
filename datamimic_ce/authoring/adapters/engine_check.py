@@ -40,11 +40,17 @@ def _is_pure_credential_error(message: str) -> bool:
 def run_engine_parse(descriptor_path: Path) -> Diagnostic | None:
     """None when the engine accepts the descriptor, else one DM000 diagnostic."""
     from datamimic_ce.engine.dsl.api import DescriptorParser
+    from datamimic_ce.engine.io.api import load_connection_profile
 
     try:
         from datamimic_ce.engine.runtime.api import runtime_environment
 
-        DescriptorParser.parse(descriptor_path, None, runtime_environment())
+        DescriptorParser.parse(
+            descriptor_path,
+            None,
+            runtime_environment(),
+            profile_loader=load_connection_profile,
+        )
     except (ValueError, FileNotFoundError) as err:
         if _is_pure_credential_error(str(err)):
             return None  # DB credentials are wired at run time, not a lint error

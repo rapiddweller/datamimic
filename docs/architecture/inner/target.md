@@ -19,7 +19,7 @@ for edition-only additions and the superseded Experiment 3 proposal.
 
 ```text
 <edition>/
-  __init__.py                    public distribution entry, not a second workflow
+  __init__.py                    existing package-wide environment bootstrap
   _compat.py                     Python-version primitives only, where needed
   randomness.py                  shared RNG protocol and weighted-index primitive
   interfaces/
@@ -47,7 +47,7 @@ for edition-only additions and the superseded Experiment 3 proposal.
         registry.py             schema facts, never parser implementations
       parsers/
         base/  flow/  values/  setup/  generation/  document/  input/
-        registry.py             parser binding and dispatch
+        registry.py             concrete bindings, composed by DescriptorParser
       statements/
         base/  flow/  values/  setup/  generation/  traversal.py
     runtime/
@@ -60,7 +60,7 @@ for edition-only additions and the superseded Experiment 3 proposal.
         plugins/                only real extension implementations
       tasks/
         base/                   task protocols, shared count resolution and dispatch
-        registry.py             composition only; populated once by lifecycle
+        registry.py             ordered bindings, loaded once by tasks/__init__.py
         setup/                  ordered descriptor/client/store/generator/state-machine declarations
         flow/
           branches/  loops/  commands/
@@ -173,14 +173,16 @@ clients and exporter implementations are not the Runtime-facing API.
 - Dissolve `tasks/task_util.py`: dispatch uses the existing registry; evaluation
   goes to Scripting; converter binding stays with value construction; Generate
   owns page ordering, IO owns exporter setup/write/serialization.
-- Split source expression/context adaptation from generic selection. Move only
-  pure selection/pagination policy to IO; never pass Runtime context into IO.
+- Split source expression/context adaptation from IO read/count/selection policy.
+  Preserve read, template evaluation and seed timing; never pass Runtime context
+  or a closure over it into IO.
 - Move the neutral dataset path/inventory primitive below `domain_core`.
   Remove the current `domain_core → shared` permission; do not replace it with
   an injection framework or a reverse facade.
-- Keep task registration out of an implicit, behavior-heavy `tasks/__init__.py`.
-  Lifecycle initializes composition once; dispatch primitives do not import
-  concrete task implementations.
+- Move ordered task bindings into `tasks/registry.py`. Retain one explicit import
+  in `tasks/__init__.py`: cold multiprocessing/Ray workers enter below Lifecycle.
+  Dispatch primitives do not import concrete task implementations. Parser registry
+  composition instead belongs to DescriptorParser.
 - Keep lazy domain entities distinct from passive types: services compose entities
   and generators; entity properties may use generators, never the reverse.
   Move shared `DemographicConfig` to `shared/demographics/config.py` so generators

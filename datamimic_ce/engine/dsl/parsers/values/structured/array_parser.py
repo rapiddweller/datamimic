@@ -45,12 +45,12 @@ class ArrayParser(StatementParser):
         return ArrayStatement(model)
 
     def _parse_literal_values(self) -> list[str]:
-        from datamimic_ce.engine.dsl.parsers.parser_util import ParserUtil
+        from datamimic_ce.engine.dsl.parsers.base.dispatch import retrieve_element_attributes
 
         parsed_values: list[str] = []
         for child in self._element:
             attributes: dict[str, object] = dict(child.attrib)
-            attributes = ParserUtil.retrieve_element_attributes(attributes, self._properties)
+            attributes = retrieve_element_attributes(attributes, self._properties)
             try:
                 value_model = ValueModel.model_validate(attributes)
             except ValidationError as err:

@@ -7,6 +7,8 @@
 from pathlib import Path
 from typing import Literal
 
+from datamimic_ce.engine.dsl.parsers import registry  # noqa: F401  # package composition
+from datamimic_ce.engine.dsl.parsers.base.client_config import ConnectionProfileLoader
 from datamimic_ce.engine.dsl.parsers.input.xml import parse_xml_file
 from datamimic_ce.engine.dsl.parsers.setup.setup_parser import SetupParser
 from datamimic_ce.engine.dsl.statements.setup.setup_statement import SetupStatement
@@ -22,6 +24,8 @@ class DescriptorParser:
         descriptor_file_path: Path,
         properties: dict | None,
         runtime_environment: Literal["development", "production"],
+        *,
+        profile_loader: ConnectionProfileLoader,
     ) -> SetupStatement:
         """
         Parsing descriptor file to RootStatement
@@ -34,7 +38,7 @@ class DescriptorParser:
 
             # Use SetupParser to parse root element "setup"
             setup_parser = SetupParser(root, properties, runtime_environment)
-            root_stmt = setup_parser.parse(descriptor_file_path.parent)
+            root_stmt = setup_parser.parse(descriptor_file_path.parent, profile_loader=profile_loader)
             return root_stmt
         except FileNotFoundError as e:
             raise FileNotFoundError(f"Descriptor file not found: '{descriptor_file_path.name}'") from e

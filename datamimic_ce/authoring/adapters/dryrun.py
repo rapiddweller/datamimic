@@ -1278,6 +1278,7 @@ def _execute_captured(
     smoke_export: bool = False,
 ) -> CapturedRun:
     from datamimic_ce.engine.dsl.api import DescriptorParser
+    from datamimic_ce.engine.io.api import load_connection_profile
 
     # Refusal gate: <execute> runs arbitrary SQL/scripts — never silently in a dry-run.
     # The parse can raise (e.g. lint suppressed a credential error) — map it to DM002,
@@ -1285,7 +1286,12 @@ def _execute_captured(
     try:
         from datamimic_ce.engine.runtime.api import runtime_environment
 
-        root_stmt = DescriptorParser.parse(path, None, runtime_environment())
+        root_stmt = DescriptorParser.parse(
+            path,
+            None,
+            runtime_environment(),
+            profile_loader=load_connection_profile,
+        )
         has_execute, has_unbounded_include = _dry_run_hazards(root_stmt)
     except Exception as err:
         return _failed_capture(

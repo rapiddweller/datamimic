@@ -7,6 +7,7 @@
 from pathlib import Path
 
 from datamimic_ce.engine.dsl.model.setup.database_model import DatabaseModel
+from datamimic_ce.engine.dsl.parsers.base.client_config import ConnectionProfileLoader, fulfill_credentials
 from datamimic_ce.engine.dsl.parsers.base.statement_parser import StatementParser
 from datamimic_ce.engine.dsl.parsers.input.xml import XmlElement
 from datamimic_ce.engine.dsl.statements.setup.database_statement import DatabaseStatement
@@ -29,18 +30,17 @@ class DatabaseParser(StatementParser):
             valid_element_tag=EL_DATABASE,
         )
 
-    def parse(self, descriptor_dir: Path) -> DatabaseStatement:
+    def parse(self, descriptor_dir: Path, *, profile_loader: ConnectionProfileLoader) -> DatabaseStatement:
         """
         Parse element "database" into DatabaseStatement
         :return:
         """
-        from datamimic_ce.engine.dsl.parsers.parser_util import ParserUtil
-
-        db_credentials = ParserUtil.fulfill_credentials(
+        db_credentials = fulfill_credentials(
             descriptor_dir=descriptor_dir,
             descriptor_attr=dict(self._element.attrib),
             env_props=self.properties,
             system_type="db",
             runtime_environment=self.runtime_environment,
+            profile_loader=profile_loader,
         )
         return DatabaseStatement(self.validate_attributes(DatabaseModel, db_credentials))

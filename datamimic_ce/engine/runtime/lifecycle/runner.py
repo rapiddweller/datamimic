@@ -10,7 +10,7 @@ import uuid
 os.environ["RAY_DEDUP_LOGS"] = "0"
 
 from datamimic_ce.engine.dsl.api import DescriptorParser, GenerateStatement, SetupStatement
-from datamimic_ce.engine.io.api import TestResultExporter
+from datamimic_ce.engine.io.api import TestResultExporter, load_connection_profile
 from datamimic_ce.engine.runtime.contracts import CapturedProducts, FactoryConfig, RunRequest, RunResult
 from datamimic_ce.engine.runtime.lifecycle.config import settings
 from datamimic_ce.engine.runtime.lifecycle.process import bootstrap_process_title, set_main_process_title
@@ -85,7 +85,12 @@ class RuntimeRunSession:
         request = self._request
         try:
             properties = request.platform_props.root if request.platform_props is not None else None
-            root_stmt = DescriptorParser.parse(request.descriptor_path, properties, settings.RUNTIME_ENVIRONMENT)
+            root_stmt = DescriptorParser.parse(
+                request.descriptor_path,
+                properties,
+                settings.RUNTIME_ENVIRONMENT,
+                profile_loader=load_connection_profile,
+            )
             if request.factory_config is not None:
                 self._validate_xml_model(root_stmt, request.factory_config)
             if request.statement_transformer is not None:

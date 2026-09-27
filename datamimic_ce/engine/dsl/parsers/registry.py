@@ -1,5 +1,6 @@
-"""Bind built-in parsers after loading the model-owned DSL grammar."""
+"""Ordered built-in parser bindings for the CE DSL."""
 
+from datamimic_ce.engine.dsl.parsers.base.dispatch import BUILTIN_PARSERS
 from datamimic_ce.engine.dsl.parsers.flow.branches.condition_parser import ConditionParser
 from datamimic_ce.engine.dsl.parsers.flow.branches.else_if_parser import ElseIfParser
 from datamimic_ce.engine.dsl.parsers.flow.branches.else_parser import ElseParser
@@ -9,7 +10,6 @@ from datamimic_ce.engine.dsl.parsers.flow.commands.echo_parser import EchoParser
 from datamimic_ce.engine.dsl.parsers.flow.commands.execute_parser import ExecuteParser
 from datamimic_ce.engine.dsl.parsers.flow.loops.while_parser import WhileParser
 from datamimic_ce.engine.dsl.parsers.generation.generate_parser import GenerateParser
-from datamimic_ce.engine.dsl.parsers.parser_util import _BUILTIN_PARSERS
 from datamimic_ce.engine.dsl.parsers.setup.database_parser import DatabaseParser
 from datamimic_ce.engine.dsl.parsers.setup.demographics_parser import DemographicsParser
 from datamimic_ce.engine.dsl.parsers.setup.generator_parser import GeneratorParser
@@ -27,7 +27,7 @@ from datamimic_ce.engine.dsl.parsers.values.structured.nested_key_parser import 
 from datamimic_ce.engine.dsl.parsers.values.variables.variable_parser import VariableParser
 from datamimic_ce.engine.dsl.vocabulary.constants import element_constants as tags
 
-_BUILTIN_PARSERS.update(
+BUILTIN_PARSERS.update(
     {
         tags.EL_GENERATE: GenerateParser,
         tags.EL_KEY: KeyParser,

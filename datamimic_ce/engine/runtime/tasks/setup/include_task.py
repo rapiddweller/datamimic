@@ -6,6 +6,7 @@
 import copy
 
 from datamimic_ce.engine.dsl.api import DescriptorParser, IncludeStatement, parse_properties
+from datamimic_ce.engine.io.api import load_connection_profile
 from datamimic_ce.engine.runtime.contexts.geniter_context import GenIterContext
 from datamimic_ce.engine.runtime.contexts.setup_context import SetupContext
 from datamimic_ce.engine.runtime.tasks.base.task import CommonSubTask, SetupSubTask
@@ -66,6 +67,7 @@ class IncludeTask(CommonSubTask):
                 ctx.descriptor_dir / self.statement.uri,
                 ctx.properties,
                 ctx.runtime_environment,
+                profile_loader=load_connection_profile,
             )
             SetupTask.execute_include(setup_stmt=sub_setup_stmt, parent_context=ctx)
         else:
@@ -85,6 +87,7 @@ class IncludeTask(CommonSubTask):
                 root_ctx.descriptor_dir / uri,
                 root_ctx.properties,
                 root_ctx.runtime_environment,
+                profile_loader=load_connection_profile,
             )
             # Use copy of parent_context as child_context
             copied_root_context = copy.deepcopy(root_ctx)

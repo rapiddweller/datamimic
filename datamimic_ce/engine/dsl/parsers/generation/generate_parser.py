@@ -7,6 +7,7 @@
 from pathlib import Path
 
 from datamimic_ce.engine.dsl.model.generation.generate_model import GenerateModel
+from datamimic_ce.engine.dsl.parsers.base.client_config import ConnectionProfileLoader
 from datamimic_ce.engine.dsl.parsers.base.statement_parser import StatementParser
 from datamimic_ce.engine.dsl.parsers.input.xml import XmlElement, xml_tag
 from datamimic_ce.engine.dsl.statements.generate_statement import GenerateStatement
@@ -26,7 +27,7 @@ class GenerateParser(StatementParser):
     """
 
     # <iterate> is a human-readable alias of <generate>: same parser, model, statement
-    # and valid sub-elements. The dispatch in ParserUtil routes both tags here.
+    # and valid sub-elements. The dispatch table routes both tags here.
     _VALID_TAGS = frozenset({EL_GENERATE, EL_ITERATE})
 
     def __init__(
@@ -44,16 +45,22 @@ class GenerateParser(StatementParser):
         """Accept both <generate> and its alias <iterate> (base only checks a single tag)."""
         if self._element.tag not in self._VALID_TAGS:
             raise ValueError(
-                f"Expect element tag '{EL_GENERATE}' or '{EL_ITERATE}', "
-                f"but got '{xml_tag(self._element)}'"
+                f"Expect element tag '{EL_GENERATE}' or '{EL_ITERATE}', but got '{xml_tag(self._element)}'"
             )
 
-    def parse(self, descriptor_dir: Path, parent_stmt: Statement, lazy_parse: bool = False) -> GenerateStatement:
+    def parse(
+        self,
+        descriptor_dir: Path,
+        parent_stmt: Statement,
+        lazy_parse: bool = False,
+        *,
+        profile_loader: ConnectionProfileLoader,
+    ) -> GenerateStatement:
         """
         Parse element "generate" into GenerateStatement
         :return:
         """
-        from datamimic_ce.engine.dsl.parsers.parser_util import ParserUtil
+        from datamimic_ce.engine.dsl.parsers.base.dispatch import parse_sub_elements
 
         model = self.validate_attributes(GenerateModel)
 
@@ -65,11 +72,12 @@ class GenerateParser(StatementParser):
         # Parse sub elements
 
         gen_stmt = GenerateStatement(model, parent_stmt)
-        sub_stmt_list = ParserUtil.parse_sub_elements(
+        sub_stmt_list = parse_sub_elements(
             descriptor_dir,
             self._element,
             self._properties,
             gen_stmt,
+            profile_loader=profile_loader,
         )
 
         gen_stmt.sub_statements = sub_stmt_list

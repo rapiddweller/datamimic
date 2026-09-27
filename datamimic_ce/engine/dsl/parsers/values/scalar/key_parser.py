@@ -7,6 +7,7 @@
 from pathlib import Path
 
 from datamimic_ce.engine.dsl.model.values.scalar.key_model import KeyModel
+from datamimic_ce.engine.dsl.parsers.base.client_config import ConnectionProfileLoader
 from datamimic_ce.engine.dsl.parsers.base.statement_parser import StatementParser
 from datamimic_ce.engine.dsl.parsers.input.xml import XmlElement, xml_tag
 from datamimic_ce.engine.dsl.statements.composite_statement import CompositeStatement
@@ -21,7 +22,7 @@ class KeyParser(StatementParser):
     """
 
     # <id> is a human-readable alias of <key>: same parser, model, statement and
-    # valid sub-elements. The dispatch in ParserUtil routes both tags here.
+    # valid sub-elements. The dispatch table routes both tags here.
     _VALID_TAGS = frozenset({EL_KEY, EL_ID})
 
     def __init__(
@@ -40,21 +41,28 @@ class KeyParser(StatementParser):
         if self._element.tag not in self._VALID_TAGS:
             raise ValueError(f"Expect element tag '{EL_KEY}' or '{EL_ID}', but got '{xml_tag(self._element)}'")
 
-    def parse(self, descriptor_dir: Path, parent_stmt: Statement) -> KeyStatement:
+    def parse(
+        self,
+        descriptor_dir: Path,
+        parent_stmt: Statement,
+        *,
+        profile_loader: ConnectionProfileLoader,
+    ) -> KeyStatement:
         """
         Parse element "attribute" into AttributeStatement
         :return:
         """
-        from datamimic_ce.engine.dsl.parsers.parser_util import ParserUtil
+        from datamimic_ce.engine.dsl.parsers.base.dispatch import parse_sub_elements
 
         if not isinstance(parent_stmt, CompositeStatement):
             raise TypeError("<key> requires a composite parent statement")
         key_stmt = KeyStatement(self.validate_attributes(KeyModel), parent_stmt)
-        sub_stmt_list = ParserUtil.parse_sub_elements(
+        sub_stmt_list = parse_sub_elements(
             descriptor_dir,
             self._element,
             self._properties,
             parent_stmt=key_stmt,
+            profile_loader=profile_loader,
         )
         key_stmt.sub_statements = sub_stmt_list
 

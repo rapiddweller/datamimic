@@ -10,6 +10,10 @@ from typing import Any, Literal, TypeVar
 
 from pydantic import BaseModel, ValidationError
 
+from datamimic_ce.engine.dsl.parsers.base.dispatch import (
+    get_valid_sub_elements_set_by_tag,
+    retrieve_element_attributes,
+)
 from datamimic_ce.engine.dsl.parsers.input.xml import XmlElement, xml_tag
 from datamimic_ce.engine.dsl.statements.composite_statement import CompositeStatement
 from datamimic_ce.engine.dsl.statements.statement import Statement
@@ -31,14 +35,11 @@ class StatementParser(ABC):
         env_properties: dict[str, str] | None,
         valid_element_tag: str,
     ):
-        from datamimic_ce.engine.dsl.parsers.parser_util import ParserUtil
-        # valid_sub_elements = ParserUtil.get_valid_sub_elements_set_by_tag(valid_element_tag)
-
         self._element: XmlElement = element
         self._properties = env_properties
         self._runtime_environment: Literal["development", "production"] = "production"
         self._valid_element_tag = valid_element_tag
-        self._valid_sub_elements = ParserUtil.get_valid_sub_elements_set_by_tag(valid_element_tag)
+        self._valid_sub_elements = get_valid_sub_elements_set_by_tag(valid_element_tag)
 
         # Validate XML element
         self._validate_element_tag()
@@ -157,9 +158,7 @@ class StatementParser(ABC):
         else:
             original_attributes.update(copy.deepcopy(self._element.attrib))
         # Retrieve config value from properties files
-        from datamimic_ce.engine.dsl.parsers.parser_util import ParserUtil
-
-        attributes = ParserUtil.retrieve_element_attributes(original_attributes, self._properties)
+        attributes = retrieve_element_attributes(original_attributes, self._properties)
         try:
             return model(**attributes)
         except ValidationError as err:

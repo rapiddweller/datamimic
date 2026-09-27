@@ -26,7 +26,12 @@
       ],
       "public": [
         "datamimic_ce.engine.dsl.parsers.base.dispatch:BUILTIN_PARSERS",
-        "datamimic_ce.engine.dsl.parsers.base.dispatch:ParserUtil",
+        "datamimic_ce.engine.dsl.parsers.base.dispatch:get_element_tag_by_statement",
+        "datamimic_ce.engine.dsl.parsers.base.dispatch:get_valid_sub_elements_set_by_tag",
+        "datamimic_ce.engine.dsl.parsers.base.dispatch:parse_sub_elements",
+        "datamimic_ce.engine.dsl.parsers.base.dispatch:retrieve_element_attributes",
+        "datamimic_ce.engine.dsl.parsers.base.client_config:ConnectionProfileLoader",
+        "datamimic_ce.engine.dsl.parsers.base.client_config:fulfill_credentials",
         "datamimic_ce.engine.dsl.parsers.base.statement_parser:StatementParser"
       ],
       "decided_by": "agent"

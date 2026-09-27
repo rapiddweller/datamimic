@@ -128,7 +128,7 @@
       "public": [
         "datamimic_ce.engine.io.connection_config.connection_config_base",
         "datamimic_ce.engine.io.connection_config.mongodb_connection_config",
-        "datamimic_ce.engine.io.connection_config.properties:load_properties",
+        "datamimic_ce.engine.io.connection_config.properties:load_connection_profile",
         "datamimic_ce.engine.io.connection_config.rdbms_connection_config"
       ],
       "decided_by": "agent",

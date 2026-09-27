@@ -7,9 +7,9 @@
 from pathlib import Path
 
 from datamimic_ce.engine.dsl.model.setup.mongodb_model import MongoDBModel
+from datamimic_ce.engine.dsl.parsers.base.client_config import ConnectionProfileLoader, fulfill_credentials
 from datamimic_ce.engine.dsl.parsers.base.statement_parser import StatementParser
 from datamimic_ce.engine.dsl.parsers.input.xml import XmlElement
-from datamimic_ce.engine.dsl.parsers.parser_util import ParserUtil
 from datamimic_ce.engine.dsl.statements.setup.mongodb_statement import MongoDBStatement
 from datamimic_ce.engine.dsl.vocabulary.constants.element_constants import EL_MONGODB
 
@@ -30,17 +30,18 @@ class MongoDBParser(StatementParser):
             valid_element_tag=EL_MONGODB,
         )
 
-    def parse(self, descriptor_dir: Path) -> MongoDBStatement:
+    def parse(self, descriptor_dir: Path, *, profile_loader: ConnectionProfileLoader) -> MongoDBStatement:
         """
         Parse element "mongodb" into MongoDBStatement
         :return:
         """
-        mongodb_attributes = ParserUtil.fulfill_credentials(
+        mongodb_attributes = fulfill_credentials(
             descriptor_dir=descriptor_dir,
             descriptor_attr=dict(self._element.attrib),
             env_props=self.properties,
             system_type="mongo",
             runtime_environment=self.runtime_environment,
+            profile_loader=profile_loader,
         )
 
         return MongoDBStatement(

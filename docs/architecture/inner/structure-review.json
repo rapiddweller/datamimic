@@ -1885,7 +1885,7 @@
     },
     {
       "source": "engine/io/exporters/smoke_export.py",
-      "target": "engine/io/exporters/diagnostics/smoke_export.py"
+      "target": "engine/io/exporters/registry.py"
     },
     {
       "source": "engine/io/exporters/test_result_exporter.py",

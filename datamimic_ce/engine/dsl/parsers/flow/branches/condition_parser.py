@@ -6,6 +6,7 @@
 
 from pathlib import Path
 
+from datamimic_ce.engine.dsl.parsers.base.client_config import ConnectionProfileLoader
 from datamimic_ce.engine.dsl.parsers.base.statement_parser import StatementParser
 from datamimic_ce.engine.dsl.parsers.input.xml import XmlElement
 from datamimic_ce.engine.dsl.statements.composite_statement import CompositeStatement
@@ -29,20 +30,27 @@ class ConditionParser(StatementParser):
             valid_element_tag=ATTR_CONDITION,
         )
 
-    def parse(self, descriptor_dir: Path, parent_stmt: CompositeStatement) -> ConditionStatement:
+    def parse(
+        self,
+        descriptor_dir: Path,
+        parent_stmt: CompositeStatement,
+        *,
+        profile_loader: ConnectionProfileLoader,
+    ) -> ConditionStatement:
         """
         Parse element "condition" to ConditionStatement.
         :return:
         """
         # Parse sub elements
-        from datamimic_ce.engine.dsl.parsers.parser_util import ParserUtil
+        from datamimic_ce.engine.dsl.parsers.base.dispatch import parse_sub_elements
 
         condition_stmt = ConditionStatement(parent_stmt)
-        sub_stmt_list = ParserUtil.parse_sub_elements(
+        sub_stmt_list = parse_sub_elements(
             descriptor_dir=descriptor_dir,
             element=self._element,
             properties=self._properties,
             parent_stmt=condition_stmt,
+            profile_loader=profile_loader,
         )
         self._check_valid_order_and_count(sub_stmt_list)
 

@@ -7,6 +7,7 @@
 from pathlib import Path
 
 from datamimic_ce.engine.dsl.model.values.structured.item_model import ItemModel
+from datamimic_ce.engine.dsl.parsers.base.client_config import ConnectionProfileLoader
 from datamimic_ce.engine.dsl.parsers.base.statement_parser import StatementParser
 from datamimic_ce.engine.dsl.parsers.input.xml import XmlElement
 from datamimic_ce.engine.dsl.statements.values.structured.item_statement import ItemStatement
@@ -25,20 +26,26 @@ class ItemParser(StatementParser):
             valid_element_tag=EL_ITEM,
         )
 
-    def parse(self, descriptor_dir: Path) -> ItemStatement:
+    def parse(
+        self,
+        descriptor_dir: Path,
+        *,
+        profile_loader: ConnectionProfileLoader,
+    ) -> ItemStatement:
         """
         Parse element "item" to ItemStatement
         :return:
         """
         # Parse sub elements
-        from datamimic_ce.engine.dsl.parsers.parser_util import ParserUtil
+        from datamimic_ce.engine.dsl.parsers.base.dispatch import parse_sub_elements
 
         item_stmt = ItemStatement(self.validate_attributes(ItemModel))
-        sub_stmt_list = ParserUtil.parse_sub_elements(
+        sub_stmt_list = parse_sub_elements(
             descriptor_dir=descriptor_dir,
             element=self._element,
             properties=self._properties,
             parent_stmt=item_stmt,
+            profile_loader=profile_loader,
         )
         item_stmt.sub_statements = sub_stmt_list
 

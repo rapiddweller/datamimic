@@ -6,9 +6,11 @@ Date: 2026-09-27. Status: in progress, not target acceptance.
 
 `eb4733dd` freezes Astra's delegated decisions, 22 canonical contract scopes and
 the explicit dispositions of all 488 source Python modules at `3b844b50`.
-The amended map has 487 non-demo target modules, including explicit splits,
+At that freeze the map had 487 non-demo target modules, including explicit splits,
 merges, removals and one new typed IO boundary. Nine demo Python modules remain
 visible but outside physical regrouping.
+The reviewed exporter amendment below reduces the current target to 486 core
+modules plus those nine demo scripts.
 
 The independent definition gate passes. Before production moves, physical
 acceptance correctly failed with 260 missing target paths and 253 legacy paths.
@@ -145,3 +147,34 @@ with the original retains the previously recorded unseeded/build-identity deltas
 XML/models/baseline are unchanged. The slice is accepted, not the final target.
 
 CI-ONLY VERIFICATION: no new remote run.
+
+Separate pre-existing finding: [CE #275](https://github.com/rapiddweller/datamimic/issues/275)
+records a bounded reproduction of shuffled selection hanging on a one-shot
+iterator. The function is unchanged from the frozen source; no end-to-end DSL
+reachability is claimed. It is not silently fixed as part of the relocation.
+
+## Fourth slice: parser composition and connection profiles
+
+DescriptorParser composes the ordered built-in registry explicitly. Base dispatch
+no longer imports concrete parsers. IO owns profile file loading; DSL owns the
+typed loader callback and credential merging. Runtime and Authoring inject the
+loader. The old parser utility class and package re-export initializer are removed.
+
+Independent tests preserve descriptor/current-directory/home lookup order,
+FileNotFoundError-only fallback, property precedence and aliasing, nested includes,
+extension calls and cold composition. No descriptor, intent model or baseline changed.
+
+LOCAL VERIFIED: 124 serial parser/authoring regression tests pass; full-package
+Ruff and Mypy pass (490 files). Step-0 retains 454 captured, 62 expected errors,
+16 non-descriptors, 76 unrunnable and 322 unverified entries. S3B versus S3A has
+only the known Amendment-13 unseeded count variance; its bounded invariant passes.
+The original comparison additionally retains the documented capability build
+identity difference. This is not a claim that all 930 entries executed.
+
+CI-ONLY VERIFICATION: no new remote or external-service run.
+
+Astra also corrected the pending exporter target after tracing its dependencies:
+smoke execution joins the existing registry instead of creating a diagnostics-to-
+registry cycle. Exporter configuration becomes scalar-only; the IO-owned context
+protocol remains only at composition. The target now has 495 Python modules,
+including nine packaged demo scripts. The recursive definition gate passes.

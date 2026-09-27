@@ -8,9 +8,10 @@ from pathlib import Path
 from typing import Literal
 
 from datamimic_ce.engine.dsl.model.setup.setup_model import SetupModel
+from datamimic_ce.engine.dsl.parsers.base.client_config import ConnectionProfileLoader
+from datamimic_ce.engine.dsl.parsers.base.dispatch import parse_sub_elements
 from datamimic_ce.engine.dsl.parsers.base.statement_parser import StatementParser
 from datamimic_ce.engine.dsl.parsers.input.xml import XmlElement
-from datamimic_ce.engine.dsl.parsers.parser_util import ParserUtil
 from datamimic_ce.engine.dsl.statements.setup.setup_statement import SetupStatement
 from datamimic_ce.engine.dsl.vocabulary.constants.element_constants import EL_SETUP
 
@@ -33,7 +34,12 @@ class SetupParser(StatementParser):
         )
         self._runtime_environment = runtime_environment
 
-    def parse(self, descriptor_dir: Path) -> SetupStatement:
+    def parse(
+        self,
+        descriptor_dir: Path,
+        *,
+        profile_loader: ConnectionProfileLoader,
+    ) -> SetupStatement:
         """
         Parse element "setup" into RootStatement
         :return:
@@ -41,12 +47,13 @@ class SetupParser(StatementParser):
         # Parse sub elements
 
         setup_stmt = SetupStatement(self.validate_attributes(SetupModel))
-        sub_stmt_list = ParserUtil.parse_sub_elements(
+        sub_stmt_list = parse_sub_elements(
             descriptor_dir,
             self._element,
             self._properties,
             setup_stmt,
             runtime_environment=self._runtime_environment,
+            profile_loader=profile_loader,
         )
         setup_stmt.sub_statements = sub_stmt_list
 

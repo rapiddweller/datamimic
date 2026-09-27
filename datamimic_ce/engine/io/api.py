@@ -20,6 +20,7 @@ from datamimic_ce.engine.io.clients.operations import (
     uses_mysql_sequence_storage,
 )
 from datamimic_ce.engine.io.connection_config.mongodb_connection_config import MongoDBConnectionConfig
+from datamimic_ce.engine.io.connection_config.properties import load_connection_profile
 from datamimic_ce.engine.io.connection_config.rdbms_connection_config import RdbmsConnectionConfig
 from datamimic_ce.engine.io.contracts import DataSourcePagination, SmokeExportRequest
 from datamimic_ce.engine.io.data_sources.data_source_registry import DataSourceRegistry
@@ -46,6 +47,7 @@ def smoke_export(request: SmokeExportRequest) -> int:
 
     return _smoke_export(request)
 
+
 __all__ = [
     "Client",
     "DataSourcePagination",
@@ -60,6 +62,7 @@ __all__ = [
     "FileContentStorage",
     "FileUtil",
     "MongoDBConnectionConfig",
+    "load_connection_profile",
     "MongoDBExporter",
     "Memstore",
     "RdbmsConnectionConfig",
