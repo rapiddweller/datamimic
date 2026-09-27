@@ -204,20 +204,12 @@
       "provenance": [
         "docs/architecture/inner/target.md"
       ],
-      "requires": [
-        {
-          "component": "base",
-          "rationale": "Source adapters use shared task mechanics and count values.",
-          "decided_by": "agent"
-        }
-      ],
+      "requires": [],
       "public": [
         "datamimic_ce.engine.runtime.tasks.sources.router:data_source_cache_key",
-        "datamimic_ce.engine.runtime.tasks.sources.router:has_mongodb_upsert_target",
         "datamimic_ce.engine.runtime.tasks.sources.router:set_data_source_length",
         "datamimic_ce.engine.runtime.tasks.sources.router:load_nested_key_source",
         "datamimic_ce.engine.runtime.tasks.sources.router:finalize_nested_key_source",
-        "datamimic_ce.engine.runtime.tasks.sources.router:window_nested_key_rows",
         "datamimic_ce.engine.runtime.tasks.sources.router:load_reference_source",
         "datamimic_ce.engine.runtime.tasks.sources.router:reference_uses_shared_cycle",
         "datamimic_ce.engine.runtime.tasks.sources.variable:VariableSourcePlanKind",

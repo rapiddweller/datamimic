@@ -177,6 +177,8 @@
         }
       ],
       "public": [
+        "datamimic_ce.engine.io.data_sources.boundary.entities:resolve_source_entity",
+        "datamimic_ce.engine.io.data_sources.boundary.entities:resolve_source_collection",
         "datamimic_ce.engine.io.data_sources.boundary.models",
         "datamimic_ce.engine.io.data_sources.chunk_reader",
         "datamimic_ce.engine.io.data_sources.data_source_registry",
@@ -231,6 +233,9 @@
         "datamimic_ce.engine.io.exporters.core.exporter_state_manager:ExporterStateManager",
         "datamimic_ce.engine.io.exporters.core.exporter_state_manager:ExporterStateStorage",
         "datamimic_ce.engine.io.exporters.core.routing:parse_function_string",
+        "datamimic_ce.engine.io.exporters.core.routing:resolve_target_entity",
+        "datamimic_ce.engine.io.exporters.core.routing:resolve_target_entity_from_metadata",
+        "datamimic_ce.engine.io.exporters.core.routing:has_mongodb_upsert_target",
         "datamimic_ce.engine.io.exporters.core.serialization:convert_xml_dict_to_json_dict",
         "datamimic_ce.engine.io.exporters.registry:create_exporter_list",
         "datamimic_ce.engine.io.exporters.registry:consume_exporters",
