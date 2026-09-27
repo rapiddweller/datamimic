@@ -52,7 +52,7 @@
         "datamimic_ce.engine.dsl.vocabulary"
       ],
       "responsibilities": [
-        "Canonical descriptor constants and enums."
+        "Canonical descriptor constants, enums and source capability facts."
       ],
       "forbidden_responsibilities": [
         "Know models, parsers, or runtime tasks."
@@ -71,7 +71,8 @@
         "datamimic_ce.engine.dsl.vocabulary.enums.dbms_enums",
         "datamimic_ce.engine.dsl.vocabulary.enums.distribution_enums",
         "datamimic_ce.engine.dsl.vocabulary.enums.faker_enums",
-        "datamimic_ce.engine.dsl.vocabulary.enums.operation_enums"
+        "datamimic_ce.engine.dsl.vocabulary.enums.operation_enums",
+        "datamimic_ce.engine.dsl.vocabulary.source_capabilities"
       ],
       "decided_by": "agent"
     },
@@ -354,7 +355,8 @@
       "root": "datamimic_ce.engine.dsl.vocabulary",
       "allowed_children": [
         "datamimic_ce.engine.dsl.vocabulary.constants",
-        "datamimic_ce.engine.dsl.vocabulary.enums"
+        "datamimic_ce.engine.dsl.vocabulary.enums",
+        "datamimic_ce.engine.dsl.vocabulary.source_capabilities"
       ],
       "rationale": "Canonical descriptor constants and enums. Exact reviewed target children; no hidden extra modules.",
       "provenance": [

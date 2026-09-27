@@ -309,7 +309,6 @@
       "kind": "root_layout",
       "root": "datamimic_ce.engine.dsl.model.constraints",
       "allowed_children": [
-        "datamimic_ce.engine.dsl.model.constraints.capabilities",
         "datamimic_ce.engine.dsl.model.constraints.facts",
         "datamimic_ce.engine.dsl.model.constraints.registry",
         "datamimic_ce.engine.dsl.model.constraints.serialization",

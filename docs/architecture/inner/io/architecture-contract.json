@@ -62,7 +62,7 @@
         "datamimic_ce.engine.io.contracts"
       ],
       "responsibilities": [
-        "Context-free IO value contracts."
+        "Context-free IO value contracts and neutral row windows."
       ],
       "forbidden_responsibilities": [
         "Instantiate clients or execute reads and writes."
@@ -73,7 +73,9 @@
       "requires": [],
       "public": [
         "datamimic_ce.engine.io.contracts",
-        "datamimic_ce.engine.io.contracts:EntityValue"
+        "datamimic_ce.engine.io.contracts:EntityValue",
+        "datamimic_ce.engine.io.contracts:select_row_iterator",
+        "datamimic_ce.engine.io.contracts:select_rows"
       ],
       "decided_by": "agent"
     },
@@ -181,8 +183,6 @@
         "datamimic_ce.engine.io.data_sources.router",
         "datamimic_ce.engine.io.data_sources.selection:get_distributed_data",
         "datamimic_ce.engine.io.data_sources.selection:get_unique_data",
-        "datamimic_ce.engine.io.data_sources.selection:select_row_iterator",
-        "datamimic_ce.engine.io.data_sources.selection:select_rows",
         "datamimic_ce.engine.io.data_sources.selection:unique_value_iter",
         "datamimic_ce.engine.io.data_sources.variable",
         "datamimic_ce.engine.io.data_sources.weighted_data_source",

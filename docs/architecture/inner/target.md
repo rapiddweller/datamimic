@@ -42,6 +42,7 @@ for edition-only additions and the superseded Experiment 3 proposal.
       api.py
       vocabulary/
         constants/  enums/      canonical names and closed values
+        source_capabilities.py  source-format and source-mode facts
       model/
         validation.py  constraints/  flow/  values/  setup/  generation/
         registry.py             schema facts, never parser implementations
@@ -176,6 +177,8 @@ clients and exporter implementations are not the Runtime-facing API.
 - Split source expression/context adaptation from IO read/count/selection policy.
   Preserve read, template evaluation and seed timing; never pass Runtime context
   or a closure over it into IO.
+- Move the pure `source=` capability catalog from model constraints into DSL
+  vocabulary. IO may consume those facts without depending on model validation.
 - Move the neutral dataset path/inventory primitive below `domain_core`.
   Remove the current `domain_core → shared` permission; do not replace it with
   an injection framework or a reverse facade.

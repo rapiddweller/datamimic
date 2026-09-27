@@ -1504,6 +1504,10 @@
       "target": "engine/dsl/model/flow/branches/condition_model.py"
     },
     {
+      "source": "engine/dsl/model/constraints/capabilities.py",
+      "target": "engine/dsl/vocabulary/source_capabilities.py"
+    },
+    {
       "source": "engine/dsl/model/database_model.py",
       "target": "engine/dsl/model/setup/database_model.py"
     },
@@ -2157,14 +2161,6 @@
         "engine/dsl/statements/generation/targets.py",
         "engine/io/data_sources/boundary/entities.py",
         "engine/io/exporters/core/routing.py"
-      ],
-      "reason": "Astra target decision; see semantic-review/astra-target-decision.md."
-    },
-    {
-      "source": "engine/io/contracts.py",
-      "targets": [
-        "engine/io/contracts.py",
-        "engine/io/data_sources/selection.py"
       ],
       "reason": "Astra target decision; see semantic-review/astra-target-decision.md."
     },
