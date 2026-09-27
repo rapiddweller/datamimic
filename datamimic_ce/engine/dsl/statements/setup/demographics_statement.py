@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from datamimic_ce.engine.dsl.model.setup.demographics_model import DemographicsModel
-from datamimic_ce.engine.dsl.statements.statement import Statement
+from datamimic_ce.engine.dsl.statements.base.statement import Statement
 
 
 class DemographicsStatement(Statement):

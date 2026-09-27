@@ -5,8 +5,8 @@
 # For questions and support, contact: info@rapiddweller.com
 
 from datamimic_ce.engine.dsl.model.values.structured.nested_key_model import NestedKeyModel
-from datamimic_ce.engine.dsl.statements.composite_statement import CompositeStatement
-from datamimic_ce.engine.dsl.statements.statement import Statement
+from datamimic_ce.engine.dsl.statements.base.composite_statement import CompositeStatement
+from datamimic_ce.engine.dsl.statements.base.statement import Statement
 from datamimic_ce.engine.dsl.vocabulary.enums.distribution_enums import SourceDistribution
 
 

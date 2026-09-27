@@ -5,7 +5,7 @@
 # For questions and support, contact: info@rapiddweller.com
 
 from datamimic_ce.engine.dsl.model.setup.database_model import DatabaseModel
-from datamimic_ce.engine.dsl.statements.statement import Statement
+from datamimic_ce.engine.dsl.statements.base.statement import Statement
 
 
 class DatabaseStatement(Statement):

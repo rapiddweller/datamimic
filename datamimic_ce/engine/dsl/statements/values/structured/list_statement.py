@@ -5,7 +5,7 @@
 # For questions and support, contact: info@rapiddweller.com
 
 from datamimic_ce.engine.dsl.model.values.structured.list_model import ListModel
-from datamimic_ce.engine.dsl.statements.composite_statement import CompositeStatement
+from datamimic_ce.engine.dsl.statements.base.composite_statement import CompositeStatement
 
 
 class ListStatement(CompositeStatement):

@@ -7,7 +7,7 @@ from datamimic_ce.engine.dsl.model.values.references.reference_field_model impor
 from datamimic_ce.engine.dsl.model.values.references.reference_model import ReferenceModel
 from datamimic_ce.engine.dsl.parsers.base.statement_parser import StatementParser
 from datamimic_ce.engine.dsl.parsers.input.xml import XmlElement, xml_tag
-from datamimic_ce.engine.dsl.statements.statement import Statement
+from datamimic_ce.engine.dsl.statements.base.statement import Statement
 from datamimic_ce.engine.dsl.statements.values.references.reference_statement import ReferenceField, ReferenceStatement
 from datamimic_ce.engine.dsl.vocabulary.constants.attribute_constants import ATTR_SOURCE_KEY
 from datamimic_ce.engine.dsl.vocabulary.constants.element_constants import EL_COMMENT, EL_FIELD, EL_REFERENCE

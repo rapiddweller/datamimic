@@ -178,3 +178,26 @@ smoke execution joins the existing registry instead of creating a diagnostics-to
 registry cycle. Exporter configuration becomes scalar-only; the IO-owned context
 protocol remains only at composition. The target now has 495 Python modules,
 including nine packaged demo scripts. The recursive definition gate passes.
+
+## Fifth slice: statement traversal
+
+Statement/CompositeStatement now own only the common tree shape. Generate and
+Condition live in their respective families; high-level traversal imports those
+families, not the reverse. The old descendant-aware base methods and paths are
+removed. `get_nearest_generate_statement` names the existing nearest-ancestor
+behavior correctly; a Generate itself still returns no ancestor. Condition exposes
+its existing executed-branch set as a typed field, without copying or sorting it.
+
+LOCAL VERIFIED: independent baseline tests passed before implementation. Afterward,
+147 relevant tests pass with 11 existing skips; full-package Ruff/Mypy pass (491
+files), as does the recursive definition gate. All Step-0 statuses and XML/model
+hashes remain unchanged. The only comparisons are the previously recorded unseeded
+count and build-identity differences. Physical gaps are 17 missing / 13 legacy paths.
+
+The original source also passed isolated Docker service verification: 164 tests
+passed, four existing skips; the separate local-profile PostgreSQL test passed.
+These are the before-side assertions, not yet old/new database-output equivalence.
+No shared database was touched. Details are in the QA service-baseline receipt.
+
+CI-ONLY VERIFICATION: no new remote run. Strict target validation remains UNKNOWN
+because the IO boundary and task registry target modules are not implemented yet.

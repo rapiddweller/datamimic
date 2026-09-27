@@ -4,15 +4,16 @@
 # See LICENSE file for the full text of the license.
 # For questions and support, contact: info@rapiddweller.com
 
-from datamimic_ce.engine.dsl.model.flow.branches.else_if_model import ElseIfModel
 from datamimic_ce.engine.dsl.statements.base.composite_statement import CompositeStatement, ConditionBranchStatement
 
 
-class ElseIfStatement(ConditionBranchStatement):
-    def __init__(self, model: ElseIfModel, parent_stmt: CompositeStatement):
+class ConditionStatement(CompositeStatement):
+    def __init__(self, parent_stmt: CompositeStatement):
         super().__init__(name=None, parent_stmt=parent_stmt)
-        self._condition = model.condition
+        self.executed_statements: set[ConditionBranchStatement] = set()
 
-    @property
-    def condition(self):
-        return self._condition
+    def add_executed_statement(self, value: ConditionBranchStatement) -> None:
+        """
+        Keep executed statements for later use
+        """
+        self.executed_statements.add(value)

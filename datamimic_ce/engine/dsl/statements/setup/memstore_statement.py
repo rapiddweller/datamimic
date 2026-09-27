@@ -5,7 +5,7 @@
 # For questions and support, contact: info@rapiddweller.com
 
 from datamimic_ce.engine.dsl.model.setup.memstore_model import MemstoreModel
-from datamimic_ce.engine.dsl.statements.statement import Statement
+from datamimic_ce.engine.dsl.statements.base.statement import Statement
 
 
 class MemstoreStatement(Statement):

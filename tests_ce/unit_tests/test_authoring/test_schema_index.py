@@ -26,6 +26,7 @@ from pydantic import BaseModel
 
 from datamimic_ce.authoring.domain.rules import ALL_RULES, best_practice, cross_statement, schema_rules, semantic_rules
 from datamimic_ce.authoring.domain.schema import build_schema_index
+from datamimic_ce.engine.dsl.api import Statement
 from datamimic_ce.engine.dsl.model.registry import (
     ElementDefinition,
     get_model_class,
@@ -37,7 +38,6 @@ from datamimic_ce.engine.dsl.model.validation import ModelUtil
 from datamimic_ce.engine.dsl.parsers import registry as _registry  # noqa: F401
 from datamimic_ce.engine.dsl.parsers.base import dispatch
 from datamimic_ce.engine.dsl.parsers.base.statement_parser import StatementParser
-from datamimic_ce.engine.dsl.statements.statement import Statement
 from datamimic_ce.engine.dsl.vocabulary.constants.element_constants import (
     EL_COMMENT,
     EL_FIELD,

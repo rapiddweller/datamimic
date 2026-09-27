@@ -9,13 +9,13 @@ from typing import Literal, Protocol, runtime_checkable
 from datamimic_ce.engine.dsl.parsers.base.client_config import ConnectionProfileLoader
 from datamimic_ce.engine.dsl.parsers.input.properties import parse_properties
 from datamimic_ce.engine.dsl.parsers.input.xml import XmlElement, xml_tag
-from datamimic_ce.engine.dsl.statements.composite_statement import CompositeStatement
-from datamimic_ce.engine.dsl.statements.condition_statement import ConditionStatement
+from datamimic_ce.engine.dsl.statements.base.composite_statement import CompositeStatement
+from datamimic_ce.engine.dsl.statements.base.statement import Statement
+from datamimic_ce.engine.dsl.statements.flow.branches.condition_statement import ConditionStatement
 from datamimic_ce.engine.dsl.statements.flow.loops.while_statement import WhileStatement
-from datamimic_ce.engine.dsl.statements.generate_statement import GenerateStatement
+from datamimic_ce.engine.dsl.statements.generation.generate_statement import GenerateStatement
 from datamimic_ce.engine.dsl.statements.setup.include_statement import IncludeStatement
 from datamimic_ce.engine.dsl.statements.setup.setup_statement import SetupStatement
-from datamimic_ce.engine.dsl.statements.statement import Statement
 from datamimic_ce.engine.dsl.statements.values.structured.array_statement import ArrayStatement
 from datamimic_ce.engine.dsl.statements.values.structured.nested_key_statement import NestedKeyStatement
 from datamimic_ce.engine.dsl.vocabulary.constants import element_constants as tags

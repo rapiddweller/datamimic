@@ -7,7 +7,7 @@
 from dataclasses import dataclass
 
 from datamimic_ce.engine.dsl.model.values.references.reference_model import ReferenceModel
-from datamimic_ce.engine.dsl.statements.statement import Statement
+from datamimic_ce.engine.dsl.statements.base.statement import Statement
 
 
 @dataclass(frozen=True)

@@ -10,8 +10,8 @@ from datamimic_ce.engine.dsl.model.generation.generate_model import GenerateMode
 from datamimic_ce.engine.dsl.parsers.base.client_config import ConnectionProfileLoader
 from datamimic_ce.engine.dsl.parsers.base.statement_parser import StatementParser
 from datamimic_ce.engine.dsl.parsers.input.xml import XmlElement, xml_tag
-from datamimic_ce.engine.dsl.statements.generate_statement import GenerateStatement
-from datamimic_ce.engine.dsl.statements.statement import Statement
+from datamimic_ce.engine.dsl.statements.base.statement import Statement
+from datamimic_ce.engine.dsl.statements.generation.generate_statement import GenerateStatement
 from datamimic_ce.engine.dsl.statements.values.variables.variable_statement import VariableStatement
 from datamimic_ce.engine.dsl.vocabulary.constants.element_constants import EL_GENERATE, EL_ITERATE
 

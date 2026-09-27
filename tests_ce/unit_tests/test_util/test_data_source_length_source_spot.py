@@ -11,8 +11,8 @@ from unittest.mock import Mock
 
 import pytest
 
+from datamimic_ce.engine.dsl.api import GenerateStatement
 from datamimic_ce.engine.dsl.model.constraints import SourceFileFormat, source_capabilities
-from datamimic_ce.engine.dsl.statements.generate_statement import GenerateStatement
 from datamimic_ce.engine.dsl.statements.values.structured.nested_key_statement import NestedKeyStatement
 from datamimic_ce.engine.dsl.statements.values.variables.variable_statement import VariableStatement
 from datamimic_ce.engine.io.api import FileUtil

@@ -6,7 +6,7 @@
 
 
 from datamimic_ce.engine.dsl.model.values.structured.array_model import ArrayModel
-from datamimic_ce.engine.dsl.statements.statement import Statement
+from datamimic_ce.engine.dsl.statements.base.statement import Statement
 
 
 class ArrayStatement(Statement):

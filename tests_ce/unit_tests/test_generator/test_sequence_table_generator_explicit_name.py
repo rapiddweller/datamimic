@@ -16,30 +16,26 @@ from types import SimpleNamespace
 
 import pytest
 
-from datamimic_ce.engine.dsl.api import Dbms
+from datamimic_ce.engine.dsl.api import Dbms, GenerateStatement
 from datamimic_ce.engine.io.clients.rdbms_client import RdbmsClient
 from datamimic_ce.engine.io.exporters.diagnostics.test_result_exporter import TestResultExporter
 from datamimic_ce.engine.runtime.contexts.setup_context import SetupContext
-from datamimic_ce.engine.runtime.tasks.values.construction.factory import GeneratorUtil
 from datamimic_ce.engine.runtime.storage.memstore_manager import MemstoreManager
+from datamimic_ce.engine.runtime.tasks.values.construction.factory import GeneratorUtil
 
 
-class DummyRootGenStmt:
+class DummyRootGenStmt(GenerateStatement):
     def __init__(self, type_: str = "orders", count: int = 10, num_process: int | None = None):
-        self.type = type_
-        self.count = count
-        self.num_process = num_process
+        self._type = type_
+        self._count = count
+        self._num_process = num_process
 
 
 class DummyStmt:
     def __init__(self, name: str, database: str, root_gen):
         self.name = name
-        self.parent = None
+        self.parent_stmt = root_gen
         self.database = database
-        self._root_gen = root_gen
-
-    def get_root_generate_statement(self):
-        return self._root_gen
 
 
 class RecordingRdbmsClient(RdbmsClient):

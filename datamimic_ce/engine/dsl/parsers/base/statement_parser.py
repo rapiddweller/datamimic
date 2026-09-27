@@ -15,8 +15,8 @@ from datamimic_ce.engine.dsl.parsers.base.dispatch import (
     retrieve_element_attributes,
 )
 from datamimic_ce.engine.dsl.parsers.input.xml import XmlElement, xml_tag
-from datamimic_ce.engine.dsl.statements.composite_statement import CompositeStatement
-from datamimic_ce.engine.dsl.statements.statement import Statement
+from datamimic_ce.engine.dsl.statements.base.composite_statement import CompositeStatement
+from datamimic_ce.engine.dsl.statements.base.statement import Statement
 from datamimic_ce.engine.dsl.vocabulary.constants.attribute_constants import ATTR_ID, ATTR_NAME
 from datamimic_ce.engine.dsl.vocabulary.constants.element_constants import EL_COMMENT, EL_DATABASE, EL_MONGODB
 

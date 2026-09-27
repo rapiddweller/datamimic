@@ -3,20 +3,21 @@ from pathlib import Path
 
 import pytest
 
+from datamimic_ce.engine.dsl.api import GenerateStatement
 from datamimic_ce.engine.dsl.vocabulary.enums.dbms_enums import Dbms
 from datamimic_ce.engine.io.clients.rdbms_client import RdbmsClient
 from datamimic_ce.engine.io.contracts import DataSourcePagination
 from datamimic_ce.engine.io.exporters.diagnostics.test_result_exporter import TestResultExporter
 from datamimic_ce.engine.runtime.contexts.setup_context import SetupContext
-from datamimic_ce.engine.runtime.tasks.values.construction.factory import GeneratorUtil
 from datamimic_ce.engine.runtime.storage.memstore_manager import MemstoreManager
+from datamimic_ce.engine.runtime.tasks.values.construction.factory import GeneratorUtil
 
 
-class DummyRootGenStmt:
+class DummyRootGenStmt(GenerateStatement):
     def __init__(self, type_: str = "generate", count: int = 10, num_process: int | None = None):
-        self.type = type_
-        self.count = count
-        self.num_process = num_process
+        self._type = type_
+        self._count = count
+        self._num_process = num_process
 
 
 class DummyStmt:
@@ -24,12 +25,8 @@ class DummyStmt:
 
     def __init__(self, name: str, parent_stmt=None, database: str | None = None, root_gen=None):
         self.name = name
-        self.parent_stmt = parent_stmt
+        self.parent_stmt = parent_stmt if parent_stmt is not None else root_gen
         self.database = database
-        self._root_gen = root_gen
-
-    def get_root_generate_statement(self):
-        return self._root_gen
 
 
 class DummyCredential:

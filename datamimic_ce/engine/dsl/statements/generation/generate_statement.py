@@ -4,24 +4,15 @@
 # See LICENSE file for the full text of the license.
 # For questions and support, contact: info@rapiddweller.com
 
-import logging
-
 from datamimic_ce.engine.dsl.model.generation.generate_model import GenerateModel
 from datamimic_ce.engine.dsl.model.generation.timeseries import TimeSeriesConfig
-from datamimic_ce.engine.dsl.statements.composite_statement import CompositeStatement
-from datamimic_ce.engine.dsl.statements.statement import Statement
+from datamimic_ce.engine.dsl.statements.base.composite_statement import CompositeStatement
+from datamimic_ce.engine.dsl.statements.base.statement import Statement
 from datamimic_ce.engine.dsl.statements.statement_util import StatementUtil
-from datamimic_ce.engine.dsl.vocabulary.constants.convention_constants import NAME_SEPARATOR
 from datamimic_ce.engine.dsl.vocabulary.enums.distribution_enums import SourceDistribution
-
-logger = logging.getLogger("DATAMIMIC")
 
 
 class GenerateStatement(CompositeStatement):
-    @property
-    def is_generate_statement(self) -> bool:
-        return True
-
     def __init__(self, model: GenerateModel, parent_stmt: Statement):
         name = model.name
         super().__init__(name, parent_stmt)
@@ -198,32 +189,3 @@ class GenerateStatement(CompositeStatement):
         # GenerateModel validator guarantees start and end are non-None when interval is.
         assert self._start is not None and self._end is not None
         return TimeSeriesConfig.parse(self._start, self._end, self._interval)
-
-    def retrieve_sub_statement_by_fullname(self, name: str):
-        """
-        Review sub GenerateStatement by statement fullname
-        :param name:
-        :return:
-        """
-        try:
-            # 1. Check if name is the same as current statement
-            if name == self.name:
-                return self
-            else:
-                # 2. Continue checking sub statements
-                # Remove current statement name from fullname
-                segments = name.split(NAME_SEPARATOR)
-                segments.pop(0)
-                next_stmt_name = segments[0]
-                name = NAME_SEPARATOR.join(segments)
-                for sub_stmt in self.sub_statements:
-                    if next_stmt_name == sub_stmt.name and isinstance(sub_stmt, CompositeStatement):
-                        return sub_stmt.retrieve_sub_statement_by_fullname(name)
-                    elif isinstance(sub_stmt, CompositeStatement):
-                        condition_result = sub_stmt.retrieve_executed_sub_gen_statement_by_name(name)
-                        if condition_result:
-                            return condition_result
-
-        except IndexError as e:
-            logger.error(f"Error when retrieve sub statement by fullname '{name}': {e}")
-        return None

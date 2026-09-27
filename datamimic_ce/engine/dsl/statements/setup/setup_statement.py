@@ -7,7 +7,7 @@
 import ast
 
 from datamimic_ce.engine.dsl.model.setup.setup_model import SetupModel
-from datamimic_ce.engine.dsl.statements.composite_statement import CompositeStatement
+from datamimic_ce.engine.dsl.statements.base.composite_statement import CompositeStatement
 
 
 class SetupStatement(CompositeStatement):

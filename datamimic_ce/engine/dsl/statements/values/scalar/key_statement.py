@@ -5,7 +5,7 @@
 # For questions and support, contact: info@rapiddweller.com
 
 from datamimic_ce.engine.dsl.model.values.scalar.key_model import KeyModel
-from datamimic_ce.engine.dsl.statements.composite_statement import CompositeStatement
+from datamimic_ce.engine.dsl.statements.base.composite_statement import CompositeStatement
 
 
 class KeyStatement(CompositeStatement):

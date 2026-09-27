@@ -5,13 +5,13 @@ from unittest.mock import MagicMock, PropertyMock, patch
 
 import pytest
 
-from datamimic_ce.engine.dsl.statements.generate_statement import GenerateStatement
-from datamimic_ce.engine.dsl.statements.values.scalar.key_statement import KeyStatement
+from datamimic_ce.engine.dsl.api import GenerateStatement
 from datamimic_ce.engine.dsl.statements.setup.setup_statement import SetupStatement
+from datamimic_ce.engine.dsl.statements.values.scalar.key_statement import KeyStatement
 from datamimic_ce.engine.io.clients.database_client import DatabaseClient
 from datamimic_ce.engine.io.clients.mongodb_client import MongoDBClient
-from datamimic_ce.engine.io.exporters.exporter_util import ExporterUtil
 from datamimic_ce.engine.io.exporters.database.mongodb_exporter import MongoDBExporter
+from datamimic_ce.engine.io.exporters.exporter_util import ExporterUtil
 from datamimic_ce.engine.runtime.contexts.geniter_context import GenIterContext
 from datamimic_ce.engine.runtime.contexts.records import dict_nested_update
 from datamimic_ce.engine.runtime.contexts.setup_context import SetupContext
@@ -144,17 +144,6 @@ class TestGenerateTask:
         statement.end = None
         statement.interval = None
         statement.get_time_series_config.return_value = None
-
-        # Configure methods
-        statement.retrieve_sub_statement_by_fullname.return_value = None
-
-        # Adjust the sub-statement retrieval
-        def mock_retrieve_sub_statement_by_fullname(name):
-            if name == statement.full_name:
-                return statement
-            return None
-
-        statement.retrieve_sub_statement_by_fullname.side_effect = mock_retrieve_sub_statement_by_fullname
 
         return statement
 

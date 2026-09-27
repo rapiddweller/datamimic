@@ -4,7 +4,7 @@ from xml.etree import ElementTree as ET
 
 import pytest
 
-from datamimic_ce.engine.dsl.api import parse_properties
+from datamimic_ce.engine.dsl.api import Statement, parse_properties
 from datamimic_ce.engine.dsl.model.setup.include_model import IncludeModel
 from datamimic_ce.engine.dsl.parsers.base import dispatch
 from datamimic_ce.engine.dsl.parsers.base.client_config import fulfill_credentials
@@ -13,7 +13,6 @@ from datamimic_ce.engine.dsl.parsers.generation.generate_parser import GenerateP
 from datamimic_ce.engine.dsl.parsers.input import properties as property_input
 from datamimic_ce.engine.dsl.statements.setup.include_statement import IncludeStatement
 from datamimic_ce.engine.dsl.statements.setup.mongodb_statement import MongoDBStatement
-from datamimic_ce.engine.dsl.statements.statement import Statement
 from datamimic_ce.engine.io.api import FileUtil, load_connection_profile
 from datamimic_ce.engine.runtime.contexts.setup_context import SetupContext
 from datamimic_ce.engine.runtime.tasks.base.task import SetupSubTask

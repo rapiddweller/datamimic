@@ -10,7 +10,7 @@ from datamimic_ce.engine.dsl.model.values.structured.nested_key_model import Nes
 from datamimic_ce.engine.dsl.parsers.base.client_config import ConnectionProfileLoader
 from datamimic_ce.engine.dsl.parsers.base.statement_parser import StatementParser
 from datamimic_ce.engine.dsl.parsers.input.xml import XmlElement
-from datamimic_ce.engine.dsl.statements.statement import Statement
+from datamimic_ce.engine.dsl.statements.base.statement import Statement
 from datamimic_ce.engine.dsl.statements.values.structured.nested_key_statement import NestedKeyStatement
 from datamimic_ce.engine.dsl.vocabulary.constants.element_constants import EL_NESTED_KEY
 

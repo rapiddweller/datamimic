@@ -4,7 +4,7 @@
 # See LICENSE file for the full text of the license.
 # For questions and support, contact: info@rapiddweller.com
 
-from datamimic_ce.engine.dsl.statements.composite_statement import CompositeStatement, ConditionBranchStatement
+from datamimic_ce.engine.dsl.statements.base.composite_statement import CompositeStatement, ConditionBranchStatement
 
 
 class ElseStatement(ConditionBranchStatement):

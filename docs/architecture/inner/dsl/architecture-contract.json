@@ -199,7 +199,10 @@
         "datamimic_ce.engine.dsl.statements.setup.memstore_statement:MemstoreStatement",
         "datamimic_ce.engine.dsl.statements.setup.mongodb_statement:MongoDBStatement",
         "datamimic_ce.engine.dsl.statements.setup.setup_statement:SetupStatement",
-        "datamimic_ce.engine.dsl.statements.generation.generate_statement:GenerateStatement"
+        "datamimic_ce.engine.dsl.statements.generation.generate_statement:GenerateStatement",
+        "datamimic_ce.engine.dsl.statements.traversal:get_nearest_generate_statement",
+        "datamimic_ce.engine.dsl.statements.traversal:retrieve_executed_sub_gen_statement_by_name",
+        "datamimic_ce.engine.dsl.statements.traversal:retrieve_sub_statement_by_fullname"
       ],
       "decided_by": "agent",
       "inside": "docs/architecture/inner/dsl/statements/architecture-contract.json"

@@ -175,7 +175,7 @@
         "High-level Generate/Condition-aware tree queries."
       ],
       "public": [
-        "datamimic_ce.engine.dsl.statements.traversal:get_root_generate_statement",
+        "datamimic_ce.engine.dsl.statements.traversal:get_nearest_generate_statement",
         "datamimic_ce.engine.dsl.statements.traversal:retrieve_executed_sub_gen_statement_by_name",
         "datamimic_ce.engine.dsl.statements.traversal:retrieve_sub_statement_by_fullname"
       ],

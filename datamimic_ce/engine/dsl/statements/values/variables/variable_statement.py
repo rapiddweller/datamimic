@@ -6,7 +6,7 @@
 
 
 from datamimic_ce.engine.dsl.model.values.variables.variable_model import VariableModel
-from datamimic_ce.engine.dsl.statements.statement import Statement
+from datamimic_ce.engine.dsl.statements.base.statement import Statement
 from datamimic_ce.engine.dsl.vocabulary.enums.distribution_enums import SourceDistribution
 
 

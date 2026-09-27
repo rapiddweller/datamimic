@@ -7,7 +7,7 @@
 import sys
 
 from datamimic_ce.domains.api import BaseLiteralGenerator
-from datamimic_ce.engine.dsl.api import KeyStatement, VariableStatement
+from datamimic_ce.engine.dsl.api import KeyStatement, VariableStatement, get_nearest_generate_statement
 from datamimic_ce.engine.io.api import (
     DataSourcePagination,
     rdbms_get_current_sequence_number,
@@ -108,7 +108,7 @@ class SequenceTableGenerator(BaseLiteralGenerator):
 
         # Get root generate statement safely (stashed: the root of a key/variable cannot change
         # over this instance's lifetime, so pre_execute reuses it instead of re-walking the tree)
-        root_gen_stmt = self._stmt.get_root_generate_statement()
+        root_gen_stmt = get_nearest_generate_statement(self._stmt)
         if root_gen_stmt is None:
             raise ValueError("Root generate statement is required")
         self._root_gen_stmt = root_gen_stmt

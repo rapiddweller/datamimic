@@ -48,8 +48,9 @@ from datamimic_ce.engine.dsl.model.validation import ModelUtil
 from datamimic_ce.engine.dsl.parsers.document.descriptor_parser import DescriptorParser
 from datamimic_ce.engine.dsl.parsers.input.properties import parse_properties
 from datamimic_ce.engine.dsl.parsers.input.xml import DTDForbiddenError, parse_xml_file, parse_xml_source
-from datamimic_ce.engine.dsl.statements.composite_statement import CompositeStatement
-from datamimic_ce.engine.dsl.statements.condition_statement import ConditionStatement
+from datamimic_ce.engine.dsl.statements.base.composite_statement import CompositeStatement
+from datamimic_ce.engine.dsl.statements.base.statement import Statement
+from datamimic_ce.engine.dsl.statements.flow.branches.condition_statement import ConditionStatement
 from datamimic_ce.engine.dsl.statements.flow.branches.else_if_statement import ElseIfStatement
 from datamimic_ce.engine.dsl.statements.flow.branches.else_statement import ElseStatement
 from datamimic_ce.engine.dsl.statements.flow.branches.if_statement import IfStatement
@@ -57,7 +58,7 @@ from datamimic_ce.engine.dsl.statements.flow.commands.assert_statement import As
 from datamimic_ce.engine.dsl.statements.flow.commands.echo_statement import EchoStatement
 from datamimic_ce.engine.dsl.statements.flow.commands.execute_statement import ExecuteStatement
 from datamimic_ce.engine.dsl.statements.flow.loops.while_statement import WhileStatement
-from datamimic_ce.engine.dsl.statements.generate_statement import GenerateStatement
+from datamimic_ce.engine.dsl.statements.generation.generate_statement import GenerateStatement
 from datamimic_ce.engine.dsl.statements.setup.database_statement import DatabaseStatement
 from datamimic_ce.engine.dsl.statements.setup.demographics_statement import DemographicsStatement
 from datamimic_ce.engine.dsl.statements.setup.generator_statement import GeneratorStatement
@@ -66,8 +67,12 @@ from datamimic_ce.engine.dsl.statements.setup.memstore_statement import Memstore
 from datamimic_ce.engine.dsl.statements.setup.mongodb_statement import MongoDBStatement
 from datamimic_ce.engine.dsl.statements.setup.setup_statement import SetupStatement
 from datamimic_ce.engine.dsl.statements.setup.state_machine_statement import StateMachineStatement
-from datamimic_ce.engine.dsl.statements.statement import Statement
 from datamimic_ce.engine.dsl.statements.statement_util import StatementUtil
+from datamimic_ce.engine.dsl.statements.traversal import (
+    get_nearest_generate_statement,
+    retrieve_executed_sub_gen_statement_by_name,
+    retrieve_sub_statement_by_fullname,
+)
 from datamimic_ce.engine.dsl.statements.values.references.reference_statement import ReferenceStatement
 from datamimic_ce.engine.dsl.statements.values.scalar.element_statement import ElementStatement
 from datamimic_ce.engine.dsl.statements.values.scalar.key_statement import KeyStatement
@@ -270,12 +275,15 @@ __all__ = [
     "element_aliases",
     "element_constraints",
     "get_model_class",
+    "get_nearest_generate_statement",
     "get_valid_children",
     "is_source_file",
     "list_element_tags",
     "parse_properties",
     "parse_xml_file",
     "parse_xml_source",
+    "retrieve_executed_sub_gen_statement_by_name",
+    "retrieve_sub_statement_by_fullname",
     "registry_revision",
     "rule_registry_revision",
 ]

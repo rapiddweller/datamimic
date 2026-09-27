@@ -12,11 +12,11 @@ from datamimic_ce.engine.dsl.model.flow.branches.if_model import IfModel
 from datamimic_ce.engine.dsl.parsers.base.client_config import ConnectionProfileLoader
 from datamimic_ce.engine.dsl.parsers.base.statement_parser import StatementParser
 from datamimic_ce.engine.dsl.parsers.input.xml import XmlElement
-from datamimic_ce.engine.dsl.statements.condition_statement import ConditionStatement
+from datamimic_ce.engine.dsl.statements.base.statement import Statement
+from datamimic_ce.engine.dsl.statements.flow.branches.condition_statement import ConditionStatement
 from datamimic_ce.engine.dsl.statements.flow.branches.else_if_statement import ElseIfStatement
 from datamimic_ce.engine.dsl.statements.flow.branches.else_statement import ElseStatement
 from datamimic_ce.engine.dsl.statements.flow.branches.if_statement import IfStatement
-from datamimic_ce.engine.dsl.statements.statement import Statement
 
 
 class IfElseBaseParser(StatementParser, ABC):

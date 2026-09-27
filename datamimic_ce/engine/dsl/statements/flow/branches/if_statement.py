@@ -6,7 +6,7 @@
 
 
 from datamimic_ce.engine.dsl.model.flow.branches.if_model import IfModel
-from datamimic_ce.engine.dsl.statements.composite_statement import CompositeStatement, ConditionBranchStatement
+from datamimic_ce.engine.dsl.statements.base.composite_statement import CompositeStatement, ConditionBranchStatement
 
 
 class IfStatement(ConditionBranchStatement):

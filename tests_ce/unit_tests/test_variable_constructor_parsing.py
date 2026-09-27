@@ -9,8 +9,8 @@ from datamimic_ce.domains.finance.services.bank_account_service import BankAccou
 from datamimic_ce.domains.healthcare.services.patient_service import PatientService
 from datamimic_ce.domains.shared.demographics.config import DemographicConfig
 from datamimic_ce.domains.shared.services.person_service import PersonService
+from datamimic_ce.engine.dsl.api import Statement
 from datamimic_ce.engine.dsl.model.values.variables.variable_model import VariableModel
-from datamimic_ce.engine.dsl.statements.statement import Statement
 from datamimic_ce.engine.dsl.statements.values.variables.variable_statement import VariableStatement
 from datamimic_ce.engine.runtime.contexts.setup_context import SetupContext
 from datamimic_ce.engine.runtime.tasks.values.variables.variable_task import VariableTask, _parse_constructor_string
