@@ -302,7 +302,7 @@
       "decided_by": "agent",
       "role": "component",
       "forbidden_responsibilities": [
-        "Own another component's concern."
+        "Construct statement models or execute output targets."
       ],
       "provenance": [
         "docs/architecture/inner/semantic-review/astra-target-decision.md"
