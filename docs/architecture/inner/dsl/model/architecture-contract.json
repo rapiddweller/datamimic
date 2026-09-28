@@ -18,7 +18,13 @@
       "provenance": [
         "docs/architecture/inner/target.md"
       ],
-      "requires": [],
+      "requires": [
+        {
+          "component": "constraints",
+          "rationale": "Shared model validation applies the canonical constraint facts.",
+          "decided_by": "architect"
+        }
+      ],
       "public": [
         "datamimic_ce.engine.dsl.model.validation:ModelUtil"
       ],
