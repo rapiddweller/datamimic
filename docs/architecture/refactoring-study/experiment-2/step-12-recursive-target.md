@@ -425,3 +425,28 @@ CI-ONLY VERIFICATION: no new remote or after-side service run. Variable source
 ownership, Runtime router relocation, direct persisted database parity and
 complete target acceptance remain open. Released ArchKeel 0.8.0 remains
 UNKNOWN at its fixed 60-second analyzer deadline (#192).
+
+## Thirteenth slice: variable source reads
+
+Runtime retains variable planning, selector validation, seed, cache, lazy
+evaluation and weighted-source policy. IO now owns file, database and MemStore
+reads and query paging. The old Runtime source path is gone, with no forwarding
+module. Luna pinned empty versus materialized pools before the move; Terra's
+independent review found no P1/P2 semantic regression for valid DSL.
+
+LOCAL VERIFIED: 1,945 serial non-service tests pass, with 13 existing skips
+and two known serializer warnings; 113 focused source tests, full-package
+Ruff/Mypy (499 modules), Pylint import-cycle and both recursive definition
+checks pass. The 930 XML and seven intent-model hashes are unchanged.
+Step-0 retains 454 captured, 62 expected errors, 16 non-descriptors, 76
+unrunnable and 322 unverified entries. Against the prior slice, its raw
+comparison exits 1 for two known unseeded differences: a conditional field
+appears in one demo capture and the MemStore `te` row count changes from 9
+to 13. An isolated same-code repeat still captures the conditional field
+and the MemStore count of 13. All four projection payloads match the prior
+slice. This is classified evidence, not exact raw equality. The target still
+has one missing module and five legacy/unowned paths.
+
+CI-ONLY VERIFICATION: no new remote or after-side external-service run.
+Runtime router relocation, direct persisted database parity and complete
+target acceptance remain open.
