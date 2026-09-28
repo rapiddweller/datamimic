@@ -274,7 +274,7 @@
     {
       "id": "TASKS-ASSIGNMENT",
       "kind": "complete_assignment",
-      "source": "datamimic_ce.engine.runtime",
+      "source": "datamimic_ce.engine.runtime.tasks",
       "rationale": "Every module in the parent Runtime task ownership set has one semantic owner.",
       "provenance": [
         "docs/architecture/inner/target.md"

@@ -274,7 +274,7 @@
     {
       "id": "MODEL-ASSIGNMENT",
       "kind": "complete_assignment",
-      "source": "datamimic_ce.engine.dsl",
+      "source": "datamimic_ce.engine.dsl.model",
       "rationale": "Each model and constraint implementation has one grammar owner.",
       "provenance": [
         "docs/architecture/inner/target.md"

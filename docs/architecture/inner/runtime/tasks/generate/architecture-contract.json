@@ -113,7 +113,7 @@
     {
       "id": "GENERATE-ASSIGNMENT",
       "kind": "complete_assignment",
-      "source": "datamimic_ce.engine.runtime",
+      "source": "datamimic_ce.engine.runtime.tasks.generate",
       "rationale": "Every child implementation has one owner; parent initializer behavior is reviewed explicitly.",
       "provenance": [
         "docs/architecture/inner/target.md"

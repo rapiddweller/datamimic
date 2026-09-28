@@ -643,7 +643,7 @@
     {
       "id": "TASKS-NO-CLIENTS",
       "kind": "forbidden_dependency",
-      "source": "datamimic_ce.engine.runtime.tasks.registry",
+      "source": "datamimic_ce.engine.runtime.tasks",
       "target": "datamimic_ce.engine.io.clients",
       "include_type_checking": true,
       "rationale": "Task orchestration delegates IO operations; it never imports concrete clients, even for typing.",

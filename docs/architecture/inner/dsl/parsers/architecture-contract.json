@@ -308,7 +308,7 @@
     {
       "id": "PARSERS-ASSIGNMENT",
       "kind": "complete_assignment",
-      "source": "datamimic_ce.engine.dsl.parsers.registry",
+      "source": "datamimic_ce.engine.dsl.parsers",
       "rationale": "Each parser implementation belongs to one semantic family.",
       "provenance": [
         "docs/architecture/inner/target.md"
