@@ -9,10 +9,10 @@
         "datamimic_ce.engine.dsl.parsers.base"
       ],
       "responsibilities": [
-        "Parser abstraction and dispatch mechanism; no concrete composition imports."
+        "Dispatch XML elements through registered parser bindings without importing concrete parsers."
       ],
       "forbidden_responsibilities": [
-        "Select concrete parser implementations"
+        "Populate built-in parser bindings or implement element-specific parsing."
       ],
       "provenance": [
         "docs/architecture/inner/target.md"
