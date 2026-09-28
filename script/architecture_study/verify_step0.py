@@ -132,6 +132,34 @@ def shape_rows(rows):
         return shape(rows)
     return shape_union(rows)
 
+def xml_element_shape(element):
+    children = []
+    for child in element:
+        child_shape = xml_element_shape(child)
+        if children and children[-1]["element"] == child_shape:
+            children[-1]["count"] += 1
+        else:
+            children.append({"count": 1, "element": child_shape})
+    return {
+        "name": element.tag,
+        "attributes": sorted(element.attrib),
+        "text": bool((element.text or "").strip()),
+        "children": children,
+    }
+
+def xml_shape(path):
+    root = ET.parse(path).getroot()
+    element_counts = {}
+    for element in root.iter():
+        element_counts[element.tag] = element_counts.get(element.tag, 0) + 1
+    return {
+        "type": "xml",
+        "root": root.tag,
+        "root_child_count": len(root),
+        "element_counts": dict(sorted(element_counts.items())),
+        "elements": xml_element_shape(root),
+    }
+
 def output_digest(path):
     if path.suffix == ".xlsx":
         # OOXML core properties include the current creation/modification time.
@@ -153,10 +181,13 @@ try:
     task_id = engine.task_id
     engine.test_with_timer()
     result = engine.capture_result()
-    expects_json_output = any(
-        any(consumer.partition("(")[0] == "JSON" for consumer in parse_consumer(node.get("target")))
+    expected_output_formats = sorted({
+        {"JSON": "json", "XML": "xml", "DbUnit": "dbunit.xml"}[consumer.partition("(")[0]]
         for node in ET.parse(path).getroot().iter("generate")
-    )
+        for consumer in parse_consumer(node.get("target"))
+        if consumer.partition("(")[0] in {"JSON", "XML", "DbUnit"}
+    })
+    expects_structural_output = bool(expected_output_formats)
     if seeded:
         normalized = normalize(result)
         canonical = json.dumps(normalized, sort_keys=True, separators=(",", ":"), ensure_ascii=False)
@@ -194,6 +225,9 @@ try:
                                 output_schemas[str(relative)] = output_shape
                     except (OSError, UnicodeError, json.JSONDecodeError):
                         pass
+                elif not seeded and item.suffix == ".xml":
+                    output_shape = xml_shape(item)
+                    output_schemas[str(relative)] = output_shape
     record["output_files"] = files if seeded else sorted(files)
     if seeded:
         record["output_digest"] = hashlib.sha256(
@@ -207,7 +241,8 @@ try:
         ).hexdigest()
     else:
         record["output_schemas"] = output_schemas
-        record["output_schema_expected"] = expects_json_output
+        record["output_schema_expected"] = expects_structural_output
+        record["output_schema_expected_formats"] = expected_output_formats
 except Exception as error:
     record = {
         "outcome": type(error).__name__, "seeded": seeded,
@@ -501,9 +536,21 @@ def run_descriptor(record: dict[str, Any]) -> tuple[str, dict[str, Any]]:
                 status = "UNVERIFIED"
                 detail = ", ".join(missing) or "incomplete schema evidence"
                 result["reason"] = "UNVERIFIED: output schema capture unavailable for " + detail
+            expected_formats = result.get("output_schema_expected_formats") or []
+            missing_formats = [
+                suffix for suffix in expected_formats
+                if not any(path.endswith("." + suffix) for path in output_files)
+            ]
             if result.get("output_schema_expected") and not output_files:
                 status = "UNVERIFIED"
-                result["reason"] = "UNVERIFIED: output schema unavailable for declared JSON output"
+                result["reason"] = "UNVERIFIED: output schema unavailable for declared JSON/XML output"
+            elif missing_formats:
+                status = "UNVERIFIED"
+                result["reason"] = (
+                    "UNVERIFIED: output schema unavailable for declared "
+                    + ", ".join(missing_formats)
+                    + " output"
+                )
         result.update({"status": status, "category": categories, "evidence": record["evidence"]})
         result["generate_counts"] = record.get("generate_counts", {})
         return relative, result

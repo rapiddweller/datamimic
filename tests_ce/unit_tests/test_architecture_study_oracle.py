@@ -265,6 +265,33 @@ def test_child_captures_json_output_schema_for_list_and_object_roots(
         assert row_shape["fields"] == {"n": "str"}
 
 
+def test_unseeded_xml_capture_records_expanded_tags_and_child_order(tmp_path: Path) -> None:
+    source = REPO / "tests_ce/integration_tests/consumer_xml/test_generate_single_item_xml.xml"
+    descriptor = tmp_path / source.name
+    shutil.copy2(source, descriptor)
+
+    _, record = run_descriptor(
+        {"path": str(descriptor), "category": ["runnable"], "evidence": []}
+    )
+
+    assert record["status"] == "CAPTURED"
+    assert record["output_schema_expected"] is True
+    schema = record["output_schemas"]["xml_single_item.xml"]
+    assert schema["type"] == "xml"
+    assert schema["root"] == "{http://example.com/course}course"
+    root_children = schema["elements"]["children"]
+    assert [child["element"]["name"] for child in root_children] == [
+        "{http://example.com/course}title",
+        "{http://example.com/chapter}chapter",
+    ]
+    chapter = root_children[1]["element"]
+    assert chapter["name"] == "{http://example.com/chapter}chapter"
+    assert [child["element"]["name"] for child in chapter["children"]] == [
+        "{http://example.com/chapter}title",
+        "{http://example.com/lesson}lesson",
+    ]
+
+
 def _unseeded_json_record(schema: dict[str, object] | None) -> dict[str, object]:
     record: dict[str, object] = {
         "status": "CAPTURED",
@@ -307,6 +334,160 @@ def test_unseeded_comparison_rejects_deleted_json_output_field() -> None:
     baseline = _unseeded_json_record(before_schema)
     assert equivalent(baseline, baseline)
     assert not equivalent(_unseeded_json_record(before_schema), _unseeded_json_record(after_schema))
+
+
+def _xml_output_record(schema: dict[str, object] | None) -> dict[str, object]:
+    record: dict[str, object] = {
+        "status": "CAPTURED",
+        "category": ["runnable"],
+        "outcome": "ok",
+        "seeded": False,
+        # The in-memory product capture is deliberately identical across XML variants.
+        "products": {
+            "rows": {
+                "rows": 2,
+                "value_shape": {
+                    "type": "object",
+                    "fields": {"n": "str"},
+                    "presence_counts": {"n": {"present": 2, "total": 2}},
+                },
+            }
+        },
+        "output_files": ["rows.xml"],
+    }
+    if schema is not None:
+        record["output_schemas"] = {"rows.xml": schema}
+    return record
+
+
+def _xml_schema(
+    *, root: str = "{urn:rows}rows", child: str = "{urn:rows}row",
+    attribute: str = "id", child_order: tuple[str, ...] | None = None, record_count: int = 2,
+) -> dict[str, object]:
+    child_order = child_order or ("{urn:rows}id", "{urn:rows}name")
+    return {
+        "type": "xml",
+        "root": root,
+        "root_child_count": record_count,
+        "element_counts": {root: 1, child: record_count, **{tag: record_count for tag in child_order}},
+        "elements": {
+            "name": root,
+            "attributes": [],
+            "text": False,
+            "children": [
+                {
+                    "count": record_count,
+                    "element": {
+                        "name": child,
+                        "attributes": [attribute],
+                        "text": False,
+                        "children": [
+                            {
+                                "count": 1,
+                                "element": {"name": tag, "attributes": [], "text": True, "children": []},
+                            }
+                            for tag in child_order
+                        ],
+                    },
+                }
+            ],
+        },
+    }
+
+
+def test_unseeded_xml_comparison_ignores_text_values_but_keeps_structure() -> None:
+    schema = _xml_schema()
+
+    assert equivalent(_xml_output_record(schema), _xml_output_record(copy.deepcopy(schema)))
+
+
+@pytest.mark.parametrize(
+    "changed_schema",
+    [
+        _xml_schema(child="{urn:rows}other"),
+        _xml_schema(attribute="key"),
+        _xml_schema(root="{urn:other}rows"),
+        _xml_schema(child_order=("{urn:rows}name", "{urn:rows}id")),
+        _xml_schema(record_count=1),
+    ],
+    ids=["child-removal", "attribute-removal", "namespace-tag", "child-order", "record-count"],
+)
+def test_unseeded_xml_comparison_rejects_structural_export_changes(
+    changed_schema: dict[str, object],
+) -> None:
+    assert not equivalent(_xml_output_record(_xml_schema()), _xml_output_record(changed_schema))
+
+
+def test_unseeded_xml_comparison_rejects_swapped_children_across_same_tag_siblings() -> None:
+    def sibling(attribute: str, child: str) -> dict[str, object]:
+        return {
+            "name": "{urn:rows}row",
+            "attributes": [attribute],
+            "text": False,
+            "children": [
+                {
+                    "count": 1,
+                    "element": {"name": child, "attributes": [], "text": True, "children": []},
+                }
+            ],
+        }
+
+    def schema(rows: list[dict[str, object]]) -> dict[str, object]:
+        return {
+            "type": "xml",
+            "root": "{urn:rows}rows",
+            "root_child_count": 2,
+            "element_counts": {
+                "{urn:rows}rows": 1,
+                "{urn:rows}row": 2,
+                "{urn:rows}left": 1,
+                "{urn:rows}right": 1,
+            },
+            "elements": {
+                "name": "{urn:rows}rows",
+                "attributes": [],
+                "text": False,
+                "children": [{"count": 1, "element": row} for row in rows],
+            },
+        }
+
+    original = schema([sibling("left-id", "{urn:rows}left"), sibling("right-id", "{urn:rows}right")])
+    swapped = schema([sibling("left-id", "{urn:rows}right"), sibling("right-id", "{urn:rows}left")])
+
+    assert not equivalent(_xml_output_record(original), _xml_output_record(swapped))
+
+
+def test_unseeded_xml_comparison_requires_existing_well_formed_schema_evidence() -> None:
+    baseline = _xml_output_record(_xml_schema())
+    no_schema = _xml_output_record(None)
+    malformed_schema = _xml_output_record({"type": "xml", "elements": "not-an-element-map"})
+    missing_file = copy.deepcopy(baseline)
+    missing_file["output_files"] = []
+
+    assert not equivalent(baseline, no_schema)
+    assert not equivalent(baseline, malformed_schema)
+    assert not equivalent(malformed_schema, malformed_schema)
+    assert not equivalent(baseline, missing_file)
+
+
+def test_unseeded_xml_comparison_rejects_boolean_as_element_count() -> None:
+    malformed = _xml_schema(record_count=1)
+    malformed["root_child_count"] = True
+    malformed["element_counts"]["{urn:rows}rows"] = True
+    record = _xml_output_record(malformed)
+
+    assert not equivalent(record, record)
+
+
+def test_seeded_xml_capture_still_requires_exact_output_digest() -> None:
+    before = {
+        "status": "CAPTURED", "category": ["runnable"], "outcome": "ok", "seeded": True,
+        "result_output_digest": "a" * 64,
+    }
+    after = {**before, "result_output_digest": "b" * 64}
+
+    assert equivalent(before, before)
+    assert not equivalent(before, after)
 
 
 def test_unseeded_comparison_rejects_deleted_nested_json_key() -> None:

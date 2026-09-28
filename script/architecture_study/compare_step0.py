@@ -135,6 +135,51 @@ def shape_compatible(before: Any, after: Any) -> bool:
     return before == after
 
 
+def valid_xml_schema(schema: dict[str, Any]) -> bool:
+    if set(schema) != {"type", "root", "root_child_count", "element_counts", "elements"}:
+        return False
+    counts: dict[str, int] = {}
+
+    def valid_element(element: Any, multiplier: int) -> bool:
+        if not isinstance(element, dict) or set(element) != {"name", "attributes", "text", "children"}:
+            return False
+        name, attributes, children = element["name"], element["attributes"], element["children"]
+        if (
+            not isinstance(name, str) or not name
+            or not isinstance(attributes, list)
+            or any(not isinstance(attribute, str) or not attribute for attribute in attributes)
+            or attributes != sorted(set(attributes))
+            or type(element["text"]) is not bool
+            or not isinstance(children, list)
+        ):
+            return False
+        counts[name] = counts.get(name, 0) + multiplier
+        for child in children:
+            if (
+                not isinstance(child, dict) or set(child) != {"count", "element"}
+                or type(child["count"]) is not int or child["count"] < 1
+                or not valid_element(child["element"], multiplier * child["count"])
+            ):
+                return False
+        return True
+
+    root = schema["elements"]
+    if not valid_element(root, 1):
+        return False
+    return (
+        schema["type"] == "xml"
+        and schema["root"] == root["name"]
+        and type(schema["root_child_count"]) is int
+        and isinstance(schema["element_counts"], dict)
+        and all(
+            isinstance(name, str) and name and type(count) is int and count > 0
+            for name, count in schema["element_counts"].items()
+        )
+        and schema["root_child_count"] == sum(child["count"] for child in root["children"])
+        and schema["element_counts"] == counts
+    )
+
+
 def equivalent(old: dict[str, Any], new: dict[str, Any]) -> bool:
     allowed_statuses = {"CAPTURED", "EXPECTED-ERROR", "NOT-A-DESCRIPTOR"}
     if any(record.get("status") not in allowed_statuses for record in (old, new)):
@@ -167,18 +212,28 @@ def equivalent(old: dict[str, Any], new: dict[str, Any]) -> bool:
         return False
     if set(before_schemas) != set(before_files) or set(after_schemas) != set(after_files):
         return False
-    if before_schemas.keys() != after_schemas.keys() or any(
-        not isinstance(before_schemas[path], dict)
-        or not isinstance(after_schemas[path], dict)
-        or before_schemas[path].get("length") != after_schemas[path].get("length")
-        or type(before_schemas[path].get("length")) is not int
-        or type(after_schemas[path].get("length")) is not int
-        or before_schemas[path]["length"] < 0
-        or after_schemas[path]["length"] < 0
-        or not shape_compatible(before_schemas[path], after_schemas[path])
-        for path in before_schemas
-    ):
+    if before_schemas.keys() != after_schemas.keys():
         return False
+    for path in before_schemas:
+        before_schema, after_schema = before_schemas[path], after_schemas[path]
+        if not isinstance(before_schema, dict) or not isinstance(after_schema, dict):
+            return False
+        if before_schema.get("type") == after_schema.get("type") == "xml":
+            if (
+                not valid_xml_schema(before_schema)
+                or not valid_xml_schema(after_schema)
+                or before_schema != after_schema
+            ):
+                return False
+        elif (
+            before_schema.get("length") != after_schema.get("length")
+            or type(before_schema.get("length")) is not int
+            or type(after_schema.get("length")) is not int
+            or before_schema["length"] < 0
+            or after_schema["length"] < 0
+            or not shape_compatible(before_schema, after_schema)
+        ):
+            return False
     before_products, after_products = old.get("products") or {}, new.get("products") or {}
     if before_products.keys() != after_products.keys():
         return False
@@ -224,7 +279,6 @@ def self_test() -> None:
     assert not equivalent(error(first), error(first.replace("pattern", "regex")))
     assert not equivalent(error(first), error(first, "RuntimeError"))
     assert not equivalent(error(first), error(""))
-
 
 def main() -> None:
     parser = argparse.ArgumentParser()
