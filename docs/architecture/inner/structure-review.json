@@ -2332,6 +2332,7 @@
     {"target": "domains/registry/generators.py", "responsibility": "Registers built-in domain generators and exposes their capability metadata to DSL expressions."},
     {"target": "engine/dsl/api.py", "responsibility": "Exports the stable DSL model, parser, statement, vocabulary, and constraint API."},
     {"target": "engine/dsl/model/constraints/__init__.py", "responsibility": "Exports DSL constraint facts, types, registry, and schema-serialization helpers."},
+    {"target": "engine/dsl/model/setup/generator_model.py", "responsibility": "Validates a generator declaration's non-empty name and expression and rejects unsupported attributes."},
     {"target": "engine/dsl/model/setup/setup_model.py", "responsibility": "Validates setup attributes and carries run-wide defaults, seed, and multiprocessing settings."},
     {"target": "engine/dsl/parsers/base/client_config.py", "responsibility": "Merges descriptor attributes with lazily loaded connection profile credentials."},
     {"target": "engine/dsl/parsers/base/dispatch.py", "responsibility": "Dispatches parsed XML elements to built-in or registered extension statement parsers."},
