@@ -56,7 +56,7 @@
         "datamimic_ce.domains.registry"
       ],
       "responsibilities": [
-        "Entity inventory, schema validation and generator metadata projection."
+        "Entity inventory, schema validation, builtin generator inventory and capability metadata projection."
       ],
       "public": [
         "datamimic_ce.domains.registry.entities:EntitySpec",
@@ -64,6 +64,7 @@
         "datamimic_ce.domains.registry.entities:get_entity_spec",
         "datamimic_ce.domains.registry.entities:list_entity_specs",
         "datamimic_ce.domains.registry.generators:describe_generator_type",
+        "datamimic_ce.domains.registry.generators:generator_namespace",
         "datamimic_ce.domains.registry.schema",
         "datamimic_ce.domains.registry.schema:load_schema",
         "datamimic_ce.domains.registry.schema:validate_payload"
@@ -216,7 +217,7 @@
         }
       ],
       "public": [
-        "datamimic_ce.domains.shared.literal_generators.registry",
+        "datamimic_ce.domains.shared.generators.phone_number_generator",
         "datamimic_ce.domains.shared.datasets.locales",
         "datamimic_ce.domains.shared.demographics.api",
         "datamimic_ce.domains.shared.demographics.profile",
@@ -263,7 +264,6 @@
         "datamimic_ce.domains.shared.literal_generators.person.nobility_title_generator",
         "datamimic_ce.domains.shared.literal_generators.numeric.number_sequences",
         "datamimic_ce.domains.shared.literal_generators.identity.security.password_generator",
-        "datamimic_ce.domains.shared.literal_generators.contact.phone_number_generator",
         "datamimic_ce.domains.shared.literal_generators.identity.keys.prefixed_id_generator",
         "datamimic_ce.domains.shared.literal_generators.business.sector_generator",
         "datamimic_ce.domains.shared.literal_generators.identity.codes.ssn_generator",

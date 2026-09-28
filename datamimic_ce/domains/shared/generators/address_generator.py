@@ -11,9 +11,9 @@ from dataclasses import dataclass
 from datamimic_ce.domains.domain_core.base_domain_generator import DatasetAwareDomainGenerator
 from datamimic_ce.domains.shared.generators.city_generator import CityGenerator
 from datamimic_ce.domains.shared.generators.country_generator import CountryGenerator
+from datamimic_ce.domains.shared.generators.phone_number_generator import PhoneNumberGenerator
 from datamimic_ce.domains.shared.generators.region_groups import REGION_GROUPS
 from datamimic_ce.domains.shared.literal_generators.business.company_name_generator import CompanyNameGenerator
-from datamimic_ce.domains.shared.literal_generators.contact.phone_number_generator import PhoneNumberGenerator
 from datamimic_ce.domains.shared.literal_generators.contact.street_name_generator import StreetNameGenerator
 
 

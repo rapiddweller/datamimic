@@ -20,7 +20,7 @@ from datamimic_ce.domains.registry.entities import (
     get_entity_spec,
     list_entity_specs,
 )
-from datamimic_ce.domains.registry.generators import describe_generator_type
+from datamimic_ce.domains.registry.generators import describe_generator_type, generator_namespace
 from datamimic_ce.domains.shared.converters.base.converter import Converter
 from datamimic_ce.domains.shared.converters.privacy.hash_converter import HashConverter
 from datamimic_ce.domains.shared.converters.privacy.java_hash_converter import JavaHashConverter
@@ -49,7 +49,6 @@ from datamimic_ce.domains.shared.literal_generators.primitives.state_transition_
     StateTransitionGenerator,
 )
 from datamimic_ce.domains.shared.literal_generators.primitives.string_generator import StringGenerator
-from datamimic_ce.domains.shared.literal_generators.registry import generator_namespace
 
 
 def iter_generator_types() -> Iterator[type]:

@@ -7,7 +7,7 @@
 
 import random
 
-from datamimic_ce.domains.shared.literal_generators.contact.phone_number_generator import PhoneNumberGenerator
+from datamimic_ce.domains.shared.generators.phone_number_generator import PhoneNumberGenerator
 
 
 class TestPhoneNumberGenerator:

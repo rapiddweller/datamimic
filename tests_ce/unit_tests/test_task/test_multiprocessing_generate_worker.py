@@ -12,7 +12,7 @@ def test_mp_wrapper_sets_title_before_generating(monkeypatch) -> None:
     events: list[tuple[str, object]] = []
 
     monkeypatch.setattr(
-        "datamimic_ce.engine.runtime.lifecycle.process.set_generate_worker_process_title",
+        "datamimic_ce.engine.runtime.process_titles.set_generate_worker_process_title",
         lambda **kwargs: events.append(("title", kwargs)),
     )
     monkeypatch.setattr(GenerateWorker, "mp_preprocess", lambda *_: events.append(("preprocess", None)))

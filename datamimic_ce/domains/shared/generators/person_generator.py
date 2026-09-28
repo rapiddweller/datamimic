@@ -17,8 +17,8 @@ from datamimic_ce.domains.shared.datasets.loader import read_headered_csv
 from datamimic_ce.domains.shared.demographics.config import DemographicConfig
 from datamimic_ce.domains.shared.demographics.sampler import DemographicSample, DemographicSampler
 from datamimic_ce.domains.shared.generators.address_generator import AddressGenerator
+from datamimic_ce.domains.shared.generators.phone_number_generator import PhoneNumberGenerator
 from datamimic_ce.domains.shared.literal_generators.contact.email_address_generator import EmailAddressGenerator
-from datamimic_ce.domains.shared.literal_generators.contact.phone_number_generator import PhoneNumberGenerator
 from datamimic_ce.domains.shared.literal_generators.person.academic_title_generator import AcademicTitleGenerator
 from datamimic_ce.domains.shared.literal_generators.person.family_name_generator import FamilyNameGenerator
 from datamimic_ce.domains.shared.literal_generators.person.gender_generator import GenderGenerator

@@ -25,7 +25,7 @@ from datamimic_ce.domains.shared.datasets.loader import (
 from datamimic_ce.domains.shared.demographics.config import DemographicConfig
 from datamimic_ce.domains.shared.demographics.sampler import DemographicSample, DemographicSampler
 from datamimic_ce.domains.shared.generators.person_generator import PersonGenerator
-from datamimic_ce.domains.shared.literal_generators.contact.phone_number_generator import PhoneNumberGenerator
+from datamimic_ce.domains.shared.generators.phone_number_generator import PhoneNumberGenerator
 from datamimic_ce.domains.shared.literal_generators.person.family_name_generator import FamilyNameGenerator
 from datamimic_ce.domains.shared.literal_generators.person.given_name_generator import GivenNameGenerator
 

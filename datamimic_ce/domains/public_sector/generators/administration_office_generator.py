@@ -24,7 +24,7 @@ from datamimic_ce.domains.shared.datasets.loader import (
     read_weighted_values,
 )
 from datamimic_ce.domains.shared.generators.address_generator import AddressGenerator
-from datamimic_ce.domains.shared.literal_generators.contact.phone_number_generator import PhoneNumberGenerator
+from datamimic_ce.domains.shared.generators.phone_number_generator import PhoneNumberGenerator
 from datamimic_ce.domains.shared.literal_generators.person.family_name_generator import FamilyNameGenerator
 from datamimic_ce.domains.shared.literal_generators.person.given_name_generator import GivenNameGenerator
 

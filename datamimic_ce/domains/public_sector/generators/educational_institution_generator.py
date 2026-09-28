@@ -4,8 +4,8 @@ from pathlib import Path
 
 from datamimic_ce.domains.domain_core.base_domain_generator import ClockAnchoredDomainGenerator
 from datamimic_ce.domains.shared.generators.address_generator import AddressGenerator
+from datamimic_ce.domains.shared.generators.phone_number_generator import PhoneNumberGenerator
 from datamimic_ce.domains.shared.literal_generators.contact.email_address_generator import EmailAddressGenerator
-from datamimic_ce.domains.shared.literal_generators.contact.phone_number_generator import PhoneNumberGenerator
 
 
 class EducationalInstitutionGenerator(ClockAnchoredDomainGenerator):

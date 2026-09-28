@@ -503,3 +503,31 @@ individual review; no violation baseline was widened.
 
 CI-ONLY VERIFICATION: no CE remote run. The isolated after-side service suite,
 direct persisted-value parity and final contract acceptance remain open.
+
+## Sixteenth slice: remove domain and runtime component cycles
+
+The PhoneNumberGenerator moved unchanged into `shared/generators`; the builtin
+DSL inventory moved into the existing `domains/registry/generators.py`. The
+process-title implementation moved unchanged out of Runtime Lifecycle to
+`runtime/process_titles.py`. No old import path remains. Terra found a stale
+test import and a Ruff import-order error; both were corrected before acceptance.
+
+LOCAL VERIFIED: 1,948 serial non-service tests pass, with 13 existing skips and
+two known serializer warnings. Independent Luna QA passed 16 focused tests and
+one seeded DSL replay; full-package Ruff/Mypy, Pylint import-cycle and recursive
+target-definition checks pass. All 930 XML and seven intent-model hashes match
+the frozen input inventory. The candidate ArchKeel report completes with no
+`no_component_cycles` or Runtime root-layout violation, but it still reports
+220 other violations; its declared rules are not PASS.
+Step-0 retains all prior status counts (454 captured, 62 expected errors, 16
+non-descriptors, 76 unrunnable, 322 unverified) and all four projection
+payloads. Raw comparison with the preceding slice exits 1 for two unseeded
+cases only: an optional Condition field and the MemStore `te` count (17 to 11).
+An isolated repeat on unchanged code omits the same optional field and returns
+13 `te` rows, confirming run-to-run variance. The frozen capabilities digest
+also differs from its original Step-0 constant, as in earlier slices; the
+current projection is unchanged from the preceding slice. Do not count these
+as exact-equality passes.
+
+CI-ONLY VERIFICATION: no new CE remote run. Isolated service parity and final
+contract acceptance remain open.

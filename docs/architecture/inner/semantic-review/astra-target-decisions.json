@@ -448,7 +448,7 @@
           "packages": [
             "datamimic_ce.domains.registry"
           ],
-          "concern": "Entity inventory, schema validation and generator metadata projection."
+          "concern": "Entity inventory, schema validation, builtin generator inventory and capability metadata projection."
         },
         {
           "id": "DOMAINS-FACADE",
@@ -545,7 +545,7 @@
           "packages": [
             "datamimic_ce.domains.shared.literal_generators"
           ],
-          "concern": "Context-free scalar/state-transition algorithms and their builtin inventory."
+          "concern": "Context-free scalar/state-transition algorithms."
         },
         {
           "id": "SHARED-CONVERTERS",
@@ -656,13 +656,6 @@
             "datamimic_ce.domains.shared.literal_generators.business"
           ],
           "concern": "Company, department and sector data."
-        },
-        {
-          "id": "LITERALS-REGISTRY",
-          "packages": [
-            "datamimic_ce.domains.shared.literal_generators.registry"
-          ],
-          "concern": "Explicit builtin generator inventory excluding runtime-dependent generators."
         }
       ]
     },
@@ -1044,9 +1037,10 @@
         {
           "id": "RUNTIME-LOGGING",
           "packages": [
-            "datamimic_ce.engine.runtime.logging"
+            "datamimic_ce.engine.runtime.logging",
+            "datamimic_ce.engine.runtime.process_titles"
           ],
-          "concern": "Runtime logging setup."
+          "concern": "Runtime logging setup and process titles."
         },
         {
           "id": "RUNTIME-CONTEXTS",
@@ -1067,7 +1061,7 @@
           "packages": [
             "datamimic_ce.engine.runtime.lifecycle"
           ],
-          "concern": "Run configuration, process setup, session/run orchestration and cleanup."
+          "concern": "Run configuration, session/run orchestration and cleanup."
         },
         {
           "id": "RUNTIME-EVALUATION",
@@ -1504,7 +1498,7 @@
     },
     {
       "path": "domains/registry",
-      "concern": "Entity inventory, schema validation and generator metadata projection.",
+      "concern": "Entity inventory, schema validation, builtin generator inventory and capability metadata projection.",
       "component": "DOMAINS-REGISTRY"
     },
     {
@@ -1564,7 +1558,7 @@
     },
     {
       "path": "domains/shared/literal_generators",
-      "concern": "Context-free scalar/state-transition algorithms and their builtin inventory.",
+      "concern": "Context-free scalar/state-transition algorithms.",
       "component": "SHARED-LITERAL-GENERATORS"
     },
     {
@@ -1929,7 +1923,7 @@
     },
     {
       "path": "engine/runtime/lifecycle",
-      "concern": "Run configuration, process setup, session/run orchestration and cleanup.",
+      "concern": "Run configuration, session/run orchestration and cleanup.",
       "component": "RUNTIME-LIFECYCLE"
     },
     {
@@ -3096,7 +3090,7 @@
     {
       "source": "domains/shared/generator_registry.py",
       "targets": [
-        "domains/shared/literal_generators/registry.py"
+        "domains/registry/generators.py"
       ]
     },
     {
@@ -3301,7 +3295,7 @@
     {
       "source": "domains/shared/literal_generators/phone_number_generator.py",
       "targets": [
-        "domains/shared/literal_generators/contact/phone_number_generator.py"
+        "domains/shared/generators/phone_number_generator.py"
       ]
     },
     {
@@ -4579,7 +4573,7 @@
     {
       "source": "engine/runtime/process.py",
       "targets": [
-        "engine/runtime/lifecycle/process.py"
+        "engine/runtime/process_titles.py"
       ]
     },
     {

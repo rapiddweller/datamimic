@@ -100,10 +100,11 @@
       "label": "logging",
       "role": "foundation",
       "packages": [
-        "datamimic_ce.engine.runtime.logging"
+        "datamimic_ce.engine.runtime.logging",
+        "datamimic_ce.engine.runtime.process_titles"
       ],
       "responsibilities": [
-        "Runtime logging setup."
+        "Runtime logging setup and process titles."
       ],
       "forbidden_responsibilities": [
         "Import tasks, workers, or descriptor orchestration."
@@ -113,7 +114,8 @@
       ],
       "requires": [],
       "public": [
-        "datamimic_ce.engine.runtime.logging"
+        "datamimic_ce.engine.runtime.logging",
+        "datamimic_ce.engine.runtime.process_titles"
       ],
       "decided_by": "agent"
     },
@@ -225,7 +227,7 @@
         "datamimic_ce.engine.runtime.lifecycle"
       ],
       "responsibilities": [
-        "Run configuration, process setup, session/run orchestration and cleanup."
+        "Run configuration, session/run orchestration and cleanup."
       ],
       "forbidden_responsibilities": [
         "Implement source connectors or DSL grammar."
@@ -257,8 +259,7 @@
       ],
       "public": [
         "datamimic_ce.engine.runtime.lifecycle.runner",
-        "datamimic_ce.engine.runtime.lifecycle.config:settings",
-        "datamimic_ce.engine.runtime.lifecycle.process"
+        "datamimic_ce.engine.runtime.lifecycle.config:settings"
       ],
       "decided_by": "agent"
     },
@@ -354,10 +355,9 @@
       "root": "datamimic_ce.engine.runtime.lifecycle",
       "allowed_children": [
         "datamimic_ce.engine.runtime.lifecycle.config",
-        "datamimic_ce.engine.runtime.lifecycle.process",
         "datamimic_ce.engine.runtime.lifecycle.runner"
       ],
-      "rationale": "Run configuration, process setup, session/run orchestration and cleanup. Exact reviewed target children; no hidden extra modules.",
+      "rationale": "Run configuration, session/run orchestration and cleanup. Exact reviewed target children; no hidden extra modules.",
       "provenance": [
         "docs/architecture/inner/structure-review.json"
       ],

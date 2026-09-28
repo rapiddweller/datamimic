@@ -174,7 +174,6 @@
       "public": [
         "datamimic_ce.domains.shared.literal_generators.contact.domain_generator:DomainGenerator",
         "datamimic_ce.domains.shared.literal_generators.contact.email_address_generator:EmailAddressGenerator",
-        "datamimic_ce.domains.shared.literal_generators.contact.phone_number_generator:PhoneNumberGenerator",
         "datamimic_ce.domains.shared.literal_generators.contact.street_name_generator:StreetNameGenerator",
         "datamimic_ce.domains.shared.literal_generators.contact.url_generator:UrlGenerator"
       ],
@@ -209,64 +208,6 @@
         "datamimic_ce.domains.shared.literal_generators.business.sector_generator:SectorGenerator"
       ],
       "decided_by": "agent"
-    },
-    {
-      "id": "LITERALS-REGISTRY",
-      "label": "registry",
-      "role": "component",
-      "packages": [
-        "datamimic_ce.domains.shared.literal_generators.registry"
-      ],
-      "responsibilities": [
-        "Explicit builtin generator inventory excluding runtime-dependent generators."
-      ],
-      "forbidden_responsibilities": [
-        "Implement generators or depend on Runtime"
-      ],
-      "provenance": [
-        "docs/architecture/inner/target.md"
-      ],
-      "requires": [
-        {
-          "component": "numeric",
-          "rationale": "The registry includes numeric generators.",
-          "decided_by": "agent"
-        },
-        {
-          "component": "primitives",
-          "rationale": "The registry includes primitive generators.",
-          "decided_by": "agent"
-        },
-        {
-          "component": "identity",
-          "rationale": "The registry includes identity generators.",
-          "decided_by": "agent"
-        },
-        {
-          "component": "temporal",
-          "rationale": "The registry includes temporal generators.",
-          "decided_by": "agent"
-        },
-        {
-          "component": "person",
-          "rationale": "The registry includes person generators.",
-          "decided_by": "agent"
-        },
-        {
-          "component": "contact",
-          "rationale": "The registry includes contact generators.",
-          "decided_by": "agent"
-        },
-        {
-          "component": "business",
-          "rationale": "The registry includes business generators.",
-          "decided_by": "agent"
-        }
-      ],
-      "public": [
-        "datamimic_ce.domains.shared.literal_generators.registry:generator_namespace"
-      ],
-      "decided_by": "agent"
     }
   ],
   "rules": [
@@ -274,7 +215,7 @@
       "id": "LITERALS-ASSIGNMENT",
       "kind": "complete_assignment",
       "source": "datamimic_ce.domains.shared",
-      "rationale": "Every built-in literal generator and its registry has one owner within the parent component scope.",
+      "rationale": "Every built-in literal generator has one owner within the parent component scope; registry composition belongs to domains.registry.",
       "provenance": [
         "docs/architecture/inner/target.md"
       ],
@@ -284,7 +225,7 @@
       "id": "LITERALS-REQUIRES-COMPLETE",
       "kind": "complete_requires",
       "include_type_checking": true,
-      "rationale": "Generator-family reuse and registry composition are explicit; generators cannot depend on registry assembly.",
+      "rationale": "Generator-family reuse is explicit; generators cannot depend on registry assembly.",
       "provenance": [
         "docs/architecture/inner/target.md"
       ],
@@ -303,7 +244,7 @@
       "id": "LITERALS-INTERFACE-BOUNDARY",
       "kind": "interface_boundary",
       "include_type_checking": true,
-      "rationale": "Generator classes are typed interfaces used by the registry and callers; the registry exposes its read-only projection.",
+      "rationale": "Generator classes are typed interfaces used by callers; registry composition belongs to domains.registry.",
       "provenance": [
         "docs/architecture/inner/target.md"
       ],
@@ -331,7 +272,6 @@
       "allowed_children": [
         "datamimic_ce.domains.shared.literal_generators.contact.domain_generator",
         "datamimic_ce.domains.shared.literal_generators.contact.email_address_generator",
-        "datamimic_ce.domains.shared.literal_generators.contact.phone_number_generator",
         "datamimic_ce.domains.shared.literal_generators.contact.street_name_generator",
         "datamimic_ce.domains.shared.literal_generators.contact.url_generator"
       ],

@@ -1257,7 +1257,7 @@
     },
     {
       "source": "domains/shared/generator_registry.py",
-      "target": "domains/shared/literal_generators/registry.py"
+      "target": "domains/registry/generators.py"
     },
     {
       "source": "domains/shared/json_types.py",
@@ -1361,7 +1361,7 @@
     },
     {
       "source": "domains/shared/literal_generators/phone_number_generator.py",
-      "target": "domains/shared/literal_generators/contact/phone_number_generator.py"
+      "target": "domains/shared/generators/phone_number_generator.py"
     },
     {
       "source": "domains/shared/literal_generators/prefixed_id_generator.py",
@@ -1937,7 +1937,7 @@
     },
     {
       "source": "engine/runtime/process.py",
-      "target": "engine/runtime/lifecycle/process.py"
+      "target": "engine/runtime/process_titles.py"
     },
     {
       "source": "engine/runtime/sources/__init__.py",
@@ -2222,10 +2222,6 @@
     {
       "path": "domains/domain_core",
       "reason": "Generator/entity/service contracts, shared dataset infrastructure and deterministic primitives. These distinct owners remain together; a count-only wrapper adds no boundary."
-    },
-    {
-      "path": "domains/shared/literal_generators",
-      "reason": "Context-free scalar/state-transition algorithms and their builtin inventory. These distinct owners remain together; a count-only wrapper adds no boundary."
     },
     {
       "path": "engine/dsl/model/setup",

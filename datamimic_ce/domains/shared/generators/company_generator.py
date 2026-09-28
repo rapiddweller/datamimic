@@ -12,10 +12,10 @@ from datamimic_ce.domains.domain_core.base_domain_generator import DatasetAwareD
 from datamimic_ce.domains.domain_core.datasets.path import dataset_path
 from datamimic_ce.domains.shared.datasets.loader import pick_one_weighted_no_repeat, read_weighted_values
 from datamimic_ce.domains.shared.generators.address_generator import AddressGenerator
+from datamimic_ce.domains.shared.generators.phone_number_generator import PhoneNumberGenerator
 from datamimic_ce.domains.shared.literal_generators.business.company_name_generator import CompanyNameGenerator
 from datamimic_ce.domains.shared.literal_generators.business.sector_generator import SectorGenerator
 from datamimic_ce.domains.shared.literal_generators.contact.email_address_generator import EmailAddressGenerator
-from datamimic_ce.domains.shared.literal_generators.contact.phone_number_generator import PhoneNumberGenerator
 
 
 class CompanyGenerator(DatasetAwareDomainGenerator):

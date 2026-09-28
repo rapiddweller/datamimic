@@ -53,8 +53,8 @@ for edition-only additions and the superseded Experiment 3 proposal.
         base/  flow/  values/  setup/  generation/  traversal.py
     runtime/
       api.py  contracts.py
-      lifecycle/                invocation, configuration loading, cleanup, process titles
-      logging.py                CE sinks; EE may grow logging/ under the same owner
+      lifecycle/                invocation, configuration loading, cleanup
+      logging.py  process_titles.py
       contexts/                 execution state, row/iteration scope
       storage/                  run-local store handles and lifecycle
       scripting/                expression evaluation, read-only script helpers
@@ -97,7 +97,6 @@ for edition-only additions and the superseded Experiment 3 proposal.
       literal_generators/
         numeric/  primitives/  temporal/  person/  contact/  business/
         identity/               codes/, keys/, security/
-        registry.py
       converters/
         base/  text/  temporal/  privacy/  structural/
     finance/                    models/, generators/, services/; luhn.py remains local
@@ -239,6 +238,13 @@ Do not rewrite `known-violations.json` to absorb these newly exposed findings.
 The definition commit precedes production moves; descriptor inputs remain frozen.
 
 ## Delivery sequence and acceptance
+
+### S3G7 ownership amendment
+
+PhoneNumberGenerator lives in `domains/shared/generators`; `domains/registry/generators.py`
+owns the composed builtin inventory and capability projection. Process titles live
+in `engine/runtime/process_titles.py` under Runtime Logging; the multiprocessing
+worker keeps its local import. No legacy forwarding modules or descriptor edits.
 
 1. Freeze the target definition and record baseline/tool findings separately.
 2. Implement CE slices: neutral primitives and errors; DSL families; IO boundaries;

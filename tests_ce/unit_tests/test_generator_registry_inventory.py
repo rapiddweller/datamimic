@@ -1,7 +1,6 @@
 from datamimic_ce.domains.api import iter_generator_capabilities as domain_generator_capabilities
 from datamimic_ce.domains.domain_core.contracts.generation import GeneratorCapability
-from datamimic_ce.domains.registry.generators import describe_generator_type
-from datamimic_ce.domains.shared.literal_generators.registry import generator_namespace
+from datamimic_ce.domains.registry.generators import describe_generator_type, generator_namespace
 from datamimic_ce.engine.runtime.api import iter_generator_capabilities as runtime_generator_capabilities
 
 

@@ -292,7 +292,7 @@
           "component": "io",
           "through": [
             "datamimic_ce.engine.io.files.api",
-            "datamimic_ce.engine.io.contracts:EntityValue"
+            "datamimic_ce.engine.io.contracts"
           ],
           "rationale": "Domain-owned packaged datasets use the narrow file-dataset IO surface."
         },
@@ -766,6 +766,7 @@
         "datamimic_ce.engine.runtime.contracts",
         "datamimic_ce.engine.runtime.lifecycle",
         "datamimic_ce.engine.runtime.logging",
+        "datamimic_ce.engine.runtime.process_titles",
         "datamimic_ce.engine.runtime.scripting",
         "datamimic_ce.engine.runtime.storage",
         "datamimic_ce.engine.runtime.tasks"

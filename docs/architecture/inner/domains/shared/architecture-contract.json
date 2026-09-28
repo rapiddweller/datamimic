@@ -106,7 +106,8 @@
         "datamimic_ce.domains.shared.generators.city_generator",
         "datamimic_ce.domains.shared.generators.company_generator",
         "datamimic_ce.domains.shared.generators.country_generator",
-        "datamimic_ce.domains.shared.generators.person_generator"
+        "datamimic_ce.domains.shared.generators.person_generator",
+        "datamimic_ce.domains.shared.generators.phone_number_generator:PhoneNumberGenerator"
       ],
       "decided_by": "agent"
     },
@@ -167,7 +168,7 @@
         "datamimic_ce.domains.shared.literal_generators"
       ],
       "responsibilities": [
-        "Context-free scalar/state-transition algorithms and their builtin inventory."
+        "Context-free scalar/state-transition algorithms."
       ],
       "forbidden_responsibilities": [
         "Own another component's behavior."
@@ -183,7 +184,6 @@
         }
       ],
       "public": [
-        "datamimic_ce.domains.shared.literal_generators.registry",
         "datamimic_ce.domains.shared.literal_generators.numeric.float_generator:FloatGenerator",
         "datamimic_ce.domains.shared.literal_generators.numeric.increment_generator:IncrementGenerator",
         "datamimic_ce.domains.shared.literal_generators.numeric.integer_generator:IntegerGenerator",
@@ -212,13 +212,11 @@
         "datamimic_ce.domains.shared.literal_generators.person.nobility_title_generator:NobilityTitleGenerator",
         "datamimic_ce.domains.shared.literal_generators.contact.domain_generator:DomainGenerator",
         "datamimic_ce.domains.shared.literal_generators.contact.email_address_generator:EmailAddressGenerator",
-        "datamimic_ce.domains.shared.literal_generators.contact.phone_number_generator:PhoneNumberGenerator",
         "datamimic_ce.domains.shared.literal_generators.contact.street_name_generator:StreetNameGenerator",
         "datamimic_ce.domains.shared.literal_generators.contact.url_generator:UrlGenerator",
         "datamimic_ce.domains.shared.literal_generators.business.company_name_generator:CompanyNameGenerator",
         "datamimic_ce.domains.shared.literal_generators.business.department_name_generator:DepartmentNameGenerator",
-        "datamimic_ce.domains.shared.literal_generators.business.sector_generator:SectorGenerator",
-        "datamimic_ce.domains.shared.literal_generators.registry:generator_namespace"
+        "datamimic_ce.domains.shared.literal_generators.business.sector_generator:SectorGenerator"
       ],
       "decided_by": "agent",
       "inside": "docs/architecture/inner/domains/shared/literal_generators/architecture-contract.json"
@@ -391,6 +389,7 @@
         "datamimic_ce.domains.shared.generators.company_generator",
         "datamimic_ce.domains.shared.generators.country_generator",
         "datamimic_ce.domains.shared.generators.person_generator",
+        "datamimic_ce.domains.shared.generators.phone_number_generator",
         "datamimic_ce.domains.shared.generators.region_groups"
       ],
       "rationale": "Shared entity-value generation. Exact reviewed target children; no hidden extra modules.",
@@ -410,10 +409,9 @@
         "datamimic_ce.domains.shared.literal_generators.numeric",
         "datamimic_ce.domains.shared.literal_generators.person",
         "datamimic_ce.domains.shared.literal_generators.primitives",
-        "datamimic_ce.domains.shared.literal_generators.registry",
         "datamimic_ce.domains.shared.literal_generators.temporal"
       ],
-      "rationale": "Context-free scalar/state-transition algorithms and their builtin inventory. Exact reviewed target children; no hidden extra modules.",
+      "rationale": "Context-free scalar/state-transition algorithms. Exact reviewed target children; no hidden extra modules.",
       "provenance": [
         "docs/architecture/inner/structure-review.json"
       ],

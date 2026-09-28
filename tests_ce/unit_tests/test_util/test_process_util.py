@@ -1,7 +1,7 @@
 from pathlib import Path
 from types import SimpleNamespace
 
-from datamimic_ce.engine.runtime.lifecycle import process as process_util
+from datamimic_ce.engine.runtime import process_titles as process_util
 from datamimic_ce.engine.runtime.lifecycle import runner
 
 
