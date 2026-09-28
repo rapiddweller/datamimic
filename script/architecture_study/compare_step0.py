@@ -135,6 +135,61 @@ def shape_compatible(before: Any, after: Any) -> bool:
     return before == after
 
 
+def has_nested_array(value: Any, root: bool = True) -> bool:
+    if not isinstance(value, dict):
+        return False
+    kind = value.get("type")
+    if kind == "array":
+        return not root or has_nested_array(value.get("items"), False)
+    if kind == "object":
+        return any(has_nested_array(field, False) for field in value.get("fields", {}).values())
+    if kind == "union":
+        return any(has_nested_array(member, False) for member in value.get("values", []))
+    return False
+
+
+def nested_cardinalities_compatible(
+    before_shape: Any,
+    after_shape: Any,
+    before_counts: Any,
+    after_counts: Any,
+    before_contract: Any,
+    after_contract: Any,
+) -> bool:
+    before_has_arrays = has_nested_array(before_shape)
+    after_has_arrays = has_nested_array(after_shape)
+    if before_has_arrays != after_has_arrays:
+        return False
+    if before_contract != after_contract:
+        return False
+    if before_contract is not None and (
+        not isinstance(before_contract, dict)
+        or any(
+            not isinstance(path, str) or type(count) is not int or count < 0
+            for path, count in before_contract.items()
+        )
+    ):
+        return False
+    if not before_has_arrays:
+        return before_counts in (None, {}) and after_counts in (None, {})
+    if before_contract is None or after_contract is None:
+        return False
+    if not isinstance(before_counts, dict) or not isinstance(after_counts, dict) or not before_counts:
+        return False
+    if before_counts.keys() != after_counts.keys():
+        return False
+    return all(
+        isinstance(before_counts[path], list)
+        and isinstance(after_counts[path], list)
+        and before_counts[path]
+        and after_counts[path]
+        and all(type(count) is int and count >= 0 for count in before_counts[path])
+        and all(type(count) is int and count >= 0 for count in after_counts[path])
+        and before_counts[path] == after_counts[path]
+        for path in before_counts
+    )
+
+
 def valid_xml_schema(schema: dict[str, Any]) -> bool:
     if set(schema) != {"type", "root", "root_child_count", "element_counts", "elements"}:
         return False
@@ -232,6 +287,14 @@ def equivalent(old: dict[str, Any], new: dict[str, Any]) -> bool:
             or before_schema["length"] < 0
             or after_schema["length"] < 0
             or not shape_compatible(before_schema, after_schema)
+            or not nested_cardinalities_compatible(
+                before_schema,
+                after_schema,
+                before_schema.get("nested_cardinalities"),
+                after_schema.get("nested_cardinalities"),
+                before_schema.get("nested_cardinality_contract"),
+                after_schema.get("nested_cardinality_contract"),
+            )
         ):
             return False
     before_products, after_products = old.get("products") or {}, new.get("products") or {}
@@ -242,6 +305,14 @@ def equivalent(old: dict[str, Any], new: dict[str, Any]) -> bool:
         and shape_compatible(
             before_products[name].get("value_shape"),
             after_products[name].get("value_shape"),
+        )
+        and nested_cardinalities_compatible(
+            before_products[name].get("value_shape"),
+            after_products[name].get("value_shape"),
+            before_products[name].get("nested_cardinalities"),
+            after_products[name].get("nested_cardinalities"),
+            before_products[name].get("nested_cardinality_contract"),
+            after_products[name].get("nested_cardinality_contract"),
         )
         for name in before_products
     )

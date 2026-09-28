@@ -686,6 +686,179 @@ def test_unseeded_json_output_schema_rejects_row_loss() -> None:
     assert not equivalent(before, after)
 
 
+def test_unseeded_json_comparison_rejects_nested_array_cardinality_change(tmp_path: Path) -> None:
+    def capture(item_count: int) -> dict[str, object]:
+        case_dir = tmp_path / str(item_count)
+        case_dir.mkdir()
+        descriptor = case_dir / "nested.json.xml"
+        descriptor.write_text(
+            '<setup><generate name="rows" count="1" target="JSON" exportUri="out">'
+            '<key name="id" generator="IncrementGenerator"/>'
+            f'<nestedKey name="items" type="list" count="{item_count}">'
+            '<key name="value" constant="x"/>'
+            "</nestedKey></generate></setup>",
+            encoding="utf-8",
+        )
+        _, record = run_descriptor({"path": str(descriptor), "category": ["runnable"], "evidence": []})
+        return record
+
+    one_item = capture(1)
+    two_items = capture(2)
+
+    assert one_item["products"]["rows"]["rows"] == two_items["products"]["rows"]["rows"] == 1
+    assert shape_compatible(
+        one_item["products"]["rows"]["value_shape"], two_items["products"]["rows"]["value_shape"]
+    )
+    assert shape_compatible(one_item["output_schemas"]["out/rows.json"], two_items["output_schemas"]["out/rows.json"])
+    assert not equivalent(one_item, two_items)
+
+
+def test_unseeded_json_comparison_accepts_scalar_value_variation(tmp_path: Path) -> None:
+    def capture(value: str, case_dir: Path) -> dict[str, object]:
+        case_dir.mkdir()
+        descriptor = case_dir / "scalar.xml"
+        descriptor.write_text(
+            '<setup><generate name="rows" count="1" target="JSON" exportUri="out">'
+            f'<key name="n" constant="{value}"/>'
+            "</generate></setup>",
+            encoding="utf-8",
+        )
+        _, record = run_descriptor({"path": str(descriptor), "category": ["runnable"], "evidence": []})
+        return record
+
+    before = capture("first scalar", tmp_path / "first")
+    after = capture("second scalar", tmp_path / "second")
+
+    assert equivalent(before, after)
+
+
+def test_unseeded_nested_cardinality_rejects_missing_parent_evidence() -> None:
+    schema = {
+        "type": "array",
+        "items": {
+            "type": "object",
+            "fields": {
+                "items": {
+                    "type": "array",
+                    "items": {
+                        "type": "object",
+                        "fields": {"value": "str"},
+                        "presence_counts": {"value": {"present": 1, "total": 1}},
+                    },
+                }
+            },
+            "presence_counts": {"items": {"present": 2, "total": 2}},
+        },
+        "length": 2,
+        "nested_cardinalities": {"/items": [2, 2]},
+    }
+    expected = _unseeded_json_record(schema)
+    expected["products"]["rows"]["rows"] = 2
+    expected["products"]["rows"]["value_shape"] = schema["items"]
+    expected["products"]["rows"]["nested_cardinalities"] = {"/items": [2, 2]}
+
+    actual = copy.deepcopy(expected)
+    actual["output_schemas"]["rows.json"]["nested_cardinalities"] = {"/items": [2]}
+    actual["products"]["rows"]["nested_cardinalities"] = {"/items": [2]}
+
+    assert shape_compatible(expected["products"]["rows"]["value_shape"], actual["products"]["rows"]["value_shape"])
+    assert not equivalent(expected, actual)
+
+
+def test_unseeded_per_parent_cardinality_checks_each_parent_not_only_total(tmp_path: Path) -> None:
+    def capture(name: str, count: str) -> dict[str, object]:
+        case_dir = tmp_path / name
+        case_dir.mkdir()
+        descriptor = case_dir / "nested.xml"
+        descriptor.write_text(
+            '<setup><generate name="rows" count="2" target="JSON" exportUri="out">'
+            '<key name="id" generator="IncrementGenerator"/>'
+            '<key name="item_count" script="1 if id == 1 else 3"/>'
+            f'<nestedKey name="items" type="list" count="{count}">'
+            '<key name="value" constant="x"/>'
+            "</nestedKey></generate></setup>",
+            encoding="utf-8",
+        )
+        _, record = run_descriptor({"path": str(descriptor), "category": ["runnable"], "evidence": []})
+        return record
+
+    expected = capture("expected", "2")
+    actual = capture("actual", "{item_count}")
+
+    assert expected["products"]["rows"]["rows"] == actual["products"]["rows"]["rows"] == 2
+    assert shape_compatible(
+        expected["products"]["rows"]["value_shape"], actual["products"]["rows"]["value_shape"]
+    )
+    assert expected["status"] == "CAPTURED"
+    assert actual["status"] == "UNVERIFIED"
+    assert not equivalent(expected, actual)
+
+
+@pytest.mark.parametrize(
+    "nested",
+    [
+        '<key name="item_count" generator="IntegerGenerator(min=1,max=3)"/>'
+        '<nestedKey name="items" type="list" count="{item_count}"><key name="value" constant="x"/></nestedKey>',
+        '<nestedKey name="items" type="list" count="2" condition="id == 1">'
+        '<key name="value" constant="x"/></nestedKey>',
+        '<key name="item_count" script="1 if id == 1 else 3"/>'
+        '<nestedKey name="items" type="list" count="{item_count}"><key name="value" constant="x"/></nestedKey>',
+    ],
+    ids=["generated-count", "conditional-list", "script-count"],
+)
+def test_unseeded_nonliteral_nested_cardinality_is_unverified(tmp_path: Path, nested: str) -> None:
+    descriptor = tmp_path / "dynamic_nested.xml"
+    descriptor.write_text(
+        '<setup><generate name="rows" count="2" target="JSON" exportUri="out">'
+        '<key name="id" generator="IncrementGenerator"/>'
+        f"{nested}</generate></setup>",
+        encoding="utf-8",
+    )
+
+    _, record = run_descriptor({"path": str(descriptor), "category": ["runnable"], "evidence": []})
+
+    assert record["status"] == "UNVERIFIED"
+    assert "cardinal" in record["reason"].lower()
+
+
+def test_unseeded_nested_array_without_legacy_cardinality_evidence_is_not_a_pass() -> None:
+    legacy = _unseeded_json_record(
+        {
+            "type": "array",
+            "items": {
+                "type": "object",
+                "fields": {
+                    "items": {
+                        "type": "array",
+                        "items": "str",
+                    }
+                },
+                "presence_counts": {"items": {"present": 1, "total": 1}},
+            },
+            "length": 1,
+        }
+    )
+
+    assert not equivalent(legacy, legacy)
+
+
+def test_properties_include_does_not_make_fixed_nested_cardinality_unknown(tmp_path: Path) -> None:
+    (tmp_path / "settings.properties").write_text("label=example\n", encoding="utf-8")
+    descriptor = tmp_path / "with_properties.xml"
+    descriptor.write_text(
+        '<setup><include uri="settings.properties"/>'
+        '<generate name="rows" count="2" target="JSON" exportUri="out">'
+        '<nestedKey name="items" type="list" count="2">'
+        '<key name="value" constant="x"/>'
+        "</nestedKey></generate></setup>",
+        encoding="utf-8",
+    )
+
+    _, record = run_descriptor({"path": str(descriptor), "category": ["runnable"], "evidence": []})
+
+    assert record["status"] == "CAPTURED"
+
+
 def test_child_rejects_import_outside_its_pythonpath_root(tmp_path: Path) -> None:
     descriptor = tmp_path / "safe.xml"
     descriptor.write_text(

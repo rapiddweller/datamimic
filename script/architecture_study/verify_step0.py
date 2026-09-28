@@ -132,6 +132,27 @@ def shape_rows(rows):
         return shape(rows)
     return shape_union(rows)
 
+def nested_cardinalities(value):
+    counts = {}
+
+    def visit(item, path):
+        if isinstance(item, list):
+            if path:
+                counts.setdefault(path, []).append(len(item))
+            for child in item:
+                visit(child, path + "/*")
+        elif isinstance(item, dict):
+            for key, child in item.items():
+                escaped = str(key).replace("~", "~0").replace("/", "~1")
+                visit(child, path + "/" + escaped)
+
+    if isinstance(value, list):
+        for row in value:
+            visit(row, "")
+    else:
+        visit(value, "")
+    return {path: sorted(lengths) for path, lengths in sorted(counts.items())}
+
 def xml_element_shape(element):
     children = []
     for child in element:
@@ -200,6 +221,7 @@ try:
                 name: {
                     "rows": len(rows) if isinstance(rows, list) else 1,
                     "value_shape": shape_rows(rows),
+                    "nested_cardinalities": nested_cardinalities(rows),
                 }
                 for name, rows in sorted(products.items())
             },
@@ -222,6 +244,7 @@ try:
                             output_shape = shape(payload)
                             if complete_shape(output_shape):
                                 output_shape["length"] = len(payload) if isinstance(payload, list) else 1
+                                output_shape["nested_cardinalities"] = nested_cardinalities(payload)
                                 output_schemas[str(relative)] = output_shape
                     except (OSError, UnicodeError, json.JSONDecodeError):
                         pass
@@ -268,6 +291,119 @@ def descriptor_generate_counts(path: Path) -> dict[str, str | None]:
         for node in root.iter("generate")
         if node.get("name") is not None
     }
+
+
+def nested_list_count_contract(path: Path) -> tuple[dict[str, dict[str, int]], set[str], bool, bool]:
+    root = ET.parse(path).getroot()
+    contracts: dict[str, dict[str, int]] = {}
+    uncertain_products: set[str] = set()
+    visited: set[int] = set()
+    generates = root.findall("./generate")
+    names = [node.get("name") for node in generates]
+    duplicate_products = {name for name in names if name is not None and names.count(name) > 1}
+
+    def visit(parent: ET.Element, prefix: str, parent_known: bool, expected: dict[str, int]) -> bool:
+        uncertain = False
+        children = list(parent)
+        child_names = [child.get("name") for child in children]
+        duplicate_names = {name for name in child_names if name is not None and child_names.count(name) > 1}
+        for child in children:
+            if child.tag == "nestedKey":
+                visited.add(id(child))
+                name = child.get("name")
+                if name is None:
+                    uncertain = True
+                    continue
+                escaped = name.replace("~", "~0").replace("/", "~1")
+                field_path = prefix + "/" + escaped
+                nested_type = child.get("type")
+                if nested_type == "list":
+                    count = child.get("count", "")
+                    fixed = (
+                        parent_known
+                        and name not in duplicate_names
+                        and count.isdigit()
+                        and child.get("source") is None
+                        and child.get("script") is None
+                        and child.get("condition") is None
+                        and child.get("converter") is None
+                        and child.get("minCount") is None
+                        and child.get("maxCount") is None
+                        and child.get("defaultValue") is None
+                    )
+                    if fixed:
+                        expected[field_path] = int(count)
+                    else:
+                        uncertain = True
+                    uncertain = visit(child, field_path + "/*", fixed, expected) or uncertain
+                elif nested_type == "dict":
+                    known = (
+                        parent_known
+                        and name not in duplicate_names
+                        and child.get("source") is None
+                        and child.get("script") is None
+                        and child.get("condition") is None
+                    )
+                    uncertain = visit(child, field_path, known, expected) or uncertain
+                else:
+                    uncertain = visit(child, field_path, False, expected) or uncertain
+            elif list(child):
+                # Control-flow or another unnamed container can change whether a list field exists.
+                uncertain = visit(child, prefix, False, expected) or uncertain
+        return uncertain
+
+    for node in generates:
+        name = node.get("name")
+        if name is None:
+            continue
+        expected: dict[str, int] = {}
+        uncertain = visit(node, "", name not in duplicate_products, expected)
+        if name in duplicate_products:
+            uncertain = True
+        contracts[name] = expected
+        if uncertain:
+            uncertain_products.add(name)
+
+    unvisited_list = any(
+        node.tag == "nestedKey" and node.get("type") == "list" and id(node) not in visited
+        for node in root.iter("nestedKey")
+    )
+    direct_generates = {id(node) for node in generates}
+    unknown_scope = any(id(node) not in direct_generates for node in root.iter("generate")) or any(
+        Path(node.get("uri", "")).suffix.lower() != ".properties" for node in root.iter("include")
+    )
+    return contracts, uncertain_products, unvisited_list, unknown_scope
+
+
+def matches_nested_cardinalities(observed: Any, expected: dict[str, int], root_count: int) -> bool:
+    if not isinstance(observed, dict) or type(root_count) is not int or root_count < 0:
+        return False
+    if not observed.keys() <= expected.keys():
+        return False
+
+    def occurrence_count(path: str) -> int | None:
+        if "/*/" not in path:
+            return root_count
+        parent_path = path.rsplit("/*/", 1)[0]
+        parent_count = expected.get(parent_path)
+        parent_occurrences = occurrence_count(parent_path)
+        return None if parent_count is None or parent_occurrences is None else parent_count * parent_occurrences
+
+    for path, count in expected.items():
+        occurrences = occurrence_count(path)
+        lengths = observed.get(path)
+        if occurrences is None:
+            return False
+        if occurrences == 0:
+            if lengths is not None:
+                return False
+        elif (
+            not isinstance(lengths, list)
+            or len(lengths) != occurrences
+            or any(type(length) is not int or length != count for length in lengths)
+        ):
+            return False
+    return True
 
 
 def test_evidence(path: Path) -> str | None:
@@ -551,6 +687,80 @@ def run_descriptor(record: dict[str, Any]) -> tuple[str, dict[str, Any]]:
                     + ", ".join(missing_formats)
                     + " output"
                 )
+            if status == "CAPTURED":
+                contracts, uncertain_products, unvisited_list, unknown_scope = nested_list_count_contract(path)
+                products = result.get("products")
+                if unvisited_list or uncertain_products:
+                    affected = ", ".join(sorted(uncertain_products)) or "nestedKey list"
+                    status = "UNVERIFIED"
+                    result["reason"] = f"UNVERIFIED: nested list cardinality is dynamic or ambiguous for {affected}"
+                elif not isinstance(products, dict):
+                    status = "UNVERIFIED"
+                    result["reason"] = "UNVERIFIED: nested list cardinality evidence is missing"
+                else:
+                    missing_products = sorted(
+                        name for name, expected in contracts.items() if expected and name not in products
+                    )
+                    if missing_products:
+                        status = "UNVERIFIED"
+                        result["reason"] = (
+                            "UNVERIFIED: nested list cardinality evidence is missing for "
+                            + ", ".join(missing_products)
+                        )
+                    for name, product in products.items():
+                        if status != "CAPTURED":
+                            break
+                        expected = contracts.get(name, {})
+                        observed = product.get("nested_cardinalities") if isinstance(product, dict) else None
+                        root_count = product.get("rows") if isinstance(product, dict) else None
+                        if not matches_nested_cardinalities(observed, expected, root_count):
+                            status = "UNVERIFIED"
+                            result["reason"] = (
+                                "UNVERIFIED: nested list cardinality evidence is missing or mismatched "
+                                f"for {name}"
+                            )
+                            break
+                        product["nested_cardinality_contract"] = expected
+                    if status == "CAPTURED":
+                        expected_outputs = list(contracts.values()) or [{}]
+                        has_nested_arrays = any(
+                            bool(product.get("nested_cardinalities"))
+                            for product in products.values()
+                            if isinstance(product, dict)
+                        ) or any(
+                            bool(schema.get("nested_cardinalities"))
+                            for schema in (result.get("output_schemas") or {}).values()
+                            if isinstance(schema, dict)
+                        )
+                        if unknown_scope and has_nested_arrays:
+                            status = "UNVERIFIED"
+                            result["reason"] = (
+                                "UNVERIFIED: nested list cardinality scope includes a nested "
+                                "generate or include"
+                            )
+                        for output_path, schema in (result.get("output_schemas") or {}).items():
+                            if status != "CAPTURED":
+                                break
+                            if not output_path.endswith(".json"):
+                                continue
+                            observed = schema.get("nested_cardinalities") if isinstance(schema, dict) else None
+                            output_count = schema.get("length") if isinstance(schema, dict) else None
+                            output_contract = next(
+                                (
+                                    expected
+                                    for expected in expected_outputs
+                                    if matches_nested_cardinalities(observed, expected, output_count)
+                                ),
+                                None,
+                            )
+                            if output_contract is None:
+                                status = "UNVERIFIED"
+                                result["reason"] = (
+                                    "UNVERIFIED: JSON output nested list cardinality evidence is "
+                                    f"missing or ambiguous for {output_path}"
+                                )
+                                break
+                            schema["nested_cardinality_contract"] = output_contract
         result.update({"status": status, "category": categories, "evidence": record["evidence"]})
         result["generate_counts"] = record.get("generate_counts", {})
         return relative, result
