@@ -6,7 +6,7 @@ from datamimic_ce.domains.api import get_entity_service_factory
 from datamimic_ce.domains.domain_core.base_entity import BaseEntity
 from datamimic_ce.domains.registry.entities import list_entity_specs
 from datamimic_ce.domains.shared.services.person_service import PersonService
-from datamimic_ce.engine.runtime.tasks.values.variables.variable_task import VariableTask
+from datamimic_ce.engine.runtime.tasks.values.construction.entity import create_entity_generator
 
 
 def test_dotted_service_alias_resolves_through_entity_registry():
@@ -29,7 +29,7 @@ def test_unknown_dotted_entity_is_rejected():
     )
 
     with pytest.raises(ValueError, match="not supported in the domain architecture"):
-        VariableTask._get_entity_generator(context, "shared.models.UnknownEntity", "en", "US", 1, statement)
+        create_entity_generator(context, "shared.models.UnknownEntity", "US", statement)
 
 
 def test_builtin_entity_inventory_is_complete():

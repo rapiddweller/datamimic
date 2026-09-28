@@ -67,7 +67,8 @@ for edition-only additions and the superseded Experiment 3 proposal.
         flow/
           branches/  loops/  commands/
         values/
-          key_variable_task.py  scalar/  structured/  references/  variables/  construction/
+          key_variable_task.py  scalar/  structured/  reference/task.py  variable/{task.py, iterator.py}
+          construction/{converters.py, entity.py, entity_constructor.py, factory.py, global_increment.py, sequence_table.py}
         sources/                statement/context-to-IO request adaptation
         generate/
           task.py  export_order.py
@@ -277,7 +278,7 @@ selection behavior and generic signatures remain owned by IO data sources.
 
 ### S3G16 Domain service API
 
-Publish the shared entity services and demographic config through `domains.api`;
+Publish the shared entity services, their `BaseDomainService` return contract, and demographic config through `domains.api`;
 the six examples and affected shared-service snippets use that surface. The EE
 checkout at `dc7526592` has the same five service owner paths under
 `domains/shared/services`, but no `domains/api.py`; parity is not yet claimed.

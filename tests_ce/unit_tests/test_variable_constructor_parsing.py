@@ -13,8 +13,8 @@ from datamimic_ce.engine.dsl.api import Statement
 from datamimic_ce.engine.dsl.model.values.variables.variable_model import VariableModel
 from datamimic_ce.engine.dsl.statements.values.variables.variable_statement import VariableStatement
 from datamimic_ce.engine.runtime.contexts.context import SetupContext
+from datamimic_ce.engine.runtime.tasks.values.construction.entity import create_entity_generator
 from datamimic_ce.engine.runtime.tasks.values.construction.entity_constructor import parse_constructor_string
-from datamimic_ce.engine.runtime.tasks.values.variables.variable_task import VariableTask
 
 
 def test_constructor_arguments_keep_literal_types_and_string_fallback():
@@ -61,14 +61,14 @@ def _statement(**overrides: object) -> VariableStatement:
     (("Person", PersonService), ("Patient", PatientService), ("BankAccount", BankAccountService)),
 )
 def test_dynamic_entity_constructor_resolves_builtin_service(entity: str, service_type: type[object]) -> None:
-    service = VariableTask._get_entity_generator(_context(), entity, "en_US", "US", 1, _statement())
+    service = create_entity_generator(_context(), entity, "US", _statement())
 
     assert isinstance(service, service_type)
 
 
 def test_dynamic_entity_constructor_preserves_explicit_invalid_kwargs() -> None:
     with pytest.raises(TypeError, match="unexpected keyword argument 'invalid'"):
-        VariableTask._get_entity_generator(_context(), "Person(invalid=1)", "en_US", "US", 1, _statement())
+        create_entity_generator(_context(), "Person(invalid=1)", "US", _statement())
 
 
 def test_dynamic_entity_constructor_injects_only_signature_supported_overrides(monkeypatch: pytest.MonkeyPatch) -> None:
@@ -84,12 +84,10 @@ def test_dynamic_entity_constructor_injects_only_signature_supported_overrides(m
     from datamimic_ce import domains
 
     monkeypatch.setattr(domains.api, "get_entity_service_factory", lambda _: DatasetOnlyService)
-    service = VariableTask._get_entity_generator(
+    service = create_entity_generator(
         _context(),
         "DatasetOnly",
-        "en_US",
         "US",
-        1,
         _statement(ageMin=30, ageMax=35, conditionsInclude="I10", rngSeed=7),
     )
 
@@ -110,12 +108,10 @@ def test_dynamic_entity_constructor_injects_supported_rng_and_demographics(monke
     from datamimic_ce import domains
 
     monkeypatch.setattr(domains.api, "get_entity_service_factory", lambda _: OverrideAwareService)
-    service = VariableTask._get_entity_generator(
+    service = create_entity_generator(
         _context(),
         "OverrideAware",
-        "en_US",
         "US",
-        1,
         _statement(ageMin=30, ageMax=35, conditionsInclude="I10", conditionsExclude="E11", rngSeed=7),
     )
 

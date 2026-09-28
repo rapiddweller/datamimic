@@ -46,6 +46,7 @@
       ],
       "public": [
         "datamimic_ce.domains.api",
+        "datamimic_ce.domains.api:BaseDomainService",
         "datamimic_ce.domains.api:AddressService",
         "datamimic_ce.domains.api:CityService",
         "datamimic_ce.domains.api:CompanyService",

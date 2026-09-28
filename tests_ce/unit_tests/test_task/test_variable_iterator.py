@@ -11,7 +11,7 @@ reads fields that exist)."""
 
 import pytest
 
-from datamimic_ce.engine.runtime.tasks.values.variables.variable_iterator import VariableIterator
+from datamimic_ce.engine.runtime.tasks.values.variable.iterator import VariableIterator
 
 
 class _Row:

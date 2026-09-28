@@ -14,8 +14,16 @@ class TestVariableEntity:
     _test_dir = Path(__file__).resolve().parent
 
     def test_person_entity(self):
-        engine = DataMimicTest(test_dir=self._test_dir, filename="test_person_entity.xml")
+        engine = DataMimicTest(
+            test_dir=self._test_dir, filename="test_person_entity.xml", capture_test_result=True
+        )
         engine.test_with_timer()
+        rows = engine.capture_result()["user"]
+
+        assert len(rows) == 5
+        assert [row["id"] for row in rows] == [1, 2, 3, 4, 5]
+        assert all(row["name"] and row["email"] and row["birthday"] for row in rows)
+        assert all(isinstance(row["age"], int) and row["age"] >= 0 for row in rows)
 
     def test_company_entity(self):
         engine = DataMimicTest(test_dir=self._test_dir, filename="test_company_entity.xml")

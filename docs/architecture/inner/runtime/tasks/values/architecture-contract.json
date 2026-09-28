@@ -1,0 +1,218 @@
+{
+  "schema_version": "2.1.0",
+  "components": [
+    {
+      "id": "VALUES-BASE",
+      "label": "key_variable",
+      "role": "foundation",
+      "packages": ["datamimic_ce.engine.runtime.tasks.values.key_variable_task"],
+      "responsibilities": ["Shared key and variable value generation."],
+      "forbidden_responsibilities": ["Own task dispatch or descriptor setup."],
+      "provenance": ["docs/architecture/inner/target.md"],
+      "requires": [
+        {"component": "construction", "rationale": "Value generation uses shared constructors and converters.", "decided_by": "agent"}
+      ],
+      "public": ["datamimic_ce.engine.runtime.tasks.values.key_variable_task:KeyVariableTask"],
+      "decided_by": "agent"
+    },
+    {
+      "id": "VALUES-SCALAR",
+      "label": "scalar",
+      "role": "component",
+      "packages": ["datamimic_ce.engine.runtime.tasks.values.scalar"],
+      "responsibilities": ["Execute scalar element and key values."],
+      "forbidden_responsibilities": ["Own shared key/variable generation or task dispatch."],
+      "provenance": ["docs/architecture/inner/target.md"],
+      "requires": [
+        {"component": "key_variable", "rationale": "Scalar tasks share key and variable generation behavior.", "decided_by": "agent"},
+        {"component": "construction", "rationale": "Scalar tasks use generator construction.", "decided_by": "agent"}
+      ],
+      "public": [
+        "datamimic_ce.engine.runtime.tasks.values.scalar.element_task:ElementTask",
+        "datamimic_ce.engine.runtime.tasks.values.scalar.key_task:KeyTask"
+      ],
+      "decided_by": "agent"
+    },
+    {
+      "id": "VALUES-STRUCTURED",
+      "label": "structured",
+      "role": "component",
+      "packages": ["datamimic_ce.engine.runtime.tasks.values.structured"],
+      "responsibilities": ["Execute array, item, list and nested-key values."],
+      "forbidden_responsibilities": ["Own scalar execution or task dispatch."],
+      "provenance": ["docs/architecture/inner/target.md"],
+      "requires": [
+        {"component": "scalar", "rationale": "Structured values delegate scalar element execution.", "decided_by": "agent"},
+        {"component": "construction", "rationale": "Structured values use converters and type-based construction.", "decided_by": "agent"}
+      ],
+      "public": [
+        "datamimic_ce.engine.runtime.tasks.values.structured.array_task:ArrayTask",
+        "datamimic_ce.engine.runtime.tasks.values.structured.item_task:ItemTask",
+        "datamimic_ce.engine.runtime.tasks.values.structured.list_task:ListTask",
+        "datamimic_ce.engine.runtime.tasks.values.structured.nested_key_task:NestedKeyTask"
+      ],
+      "decided_by": "agent"
+    },
+    {
+      "id": "VALUES-REFERENCE",
+      "label": "reference",
+      "role": "component",
+      "packages": ["datamimic_ce.engine.runtime.tasks.values.reference"],
+      "responsibilities": ["Resolve selected reference rows into scalar or composite values."],
+      "forbidden_responsibilities": ["Own source connector policy or task dispatch."],
+      "provenance": ["docs/architecture/inner/target.md"],
+      "requires": [],
+      "public": ["datamimic_ce.engine.runtime.tasks.values.reference.task:ReferenceTask"],
+      "decided_by": "agent"
+    },
+    {
+      "id": "VALUES-VARIABLE",
+      "label": "variable",
+      "role": "component",
+      "packages": ["datamimic_ce.engine.runtime.tasks.values.variable"],
+      "responsibilities": ["Load, iterate, construct and expose variable values."],
+      "forbidden_responsibilities": ["Own source selection policy or task dispatch."],
+      "provenance": ["docs/architecture/inner/target.md"],
+      "requires": [
+        {"component": "key_variable", "rationale": "VariableTask extends shared key/variable behavior.", "decided_by": "agent"},
+        {"component": "construction", "rationale": "Variables construct domain entity services.", "decided_by": "agent"}
+      ],
+      "public": [
+        "datamimic_ce.engine.runtime.tasks.values.variable.iterator:VariableIterator",
+        "datamimic_ce.engine.runtime.tasks.values.variable.task:VariableTask"
+      ],
+      "decided_by": "agent"
+    },
+    {
+      "id": "VALUES-CONSTRUCTION",
+      "label": "construction",
+      "role": "component",
+      "packages": ["datamimic_ce.engine.runtime.tasks.values.construction"],
+      "responsibilities": ["Construct runtime generators, converters and domain entity services."],
+      "forbidden_responsibilities": ["Own value-task execution or task dispatch."],
+      "provenance": ["docs/architecture/inner/target.md"],
+      "requires": [],
+      "public": [
+        "datamimic_ce.engine.runtime.tasks.values.construction.converters:create_converter_list",
+        "datamimic_ce.engine.runtime.tasks.values.construction.entity:create_entity_generator",
+        "datamimic_ce.engine.runtime.tasks.values.construction.entity_constructor:parse_constructor_string",
+        "datamimic_ce.engine.runtime.tasks.values.construction.factory:GeneratorUtil",
+        "datamimic_ce.engine.runtime.tasks.values.construction.factory:generate_random_value_based_on_type",
+        "datamimic_ce.engine.runtime.tasks.values.construction.sequence_table:SequenceTableGenerator"
+      ],
+      "decided_by": "agent"
+    }
+  ],
+  "rules": [
+    {
+      "id": "VALUES-ASSIGNMENT",
+      "kind": "complete_assignment",
+      "source": "datamimic_ce.engine.runtime.tasks.values",
+      "rationale": "Each value module belongs to its semantic child owner.",
+      "provenance": ["docs/architecture/inner/target.md"],
+      "decided_by": "agent"
+    },
+    {
+      "id": "VALUES-REQUIRES",
+      "kind": "complete_requires",
+      "include_type_checking": true,
+      "rationale": "Value leaf dependencies follow direct runtime imports.",
+      "provenance": ["docs/architecture/inner/target.md"],
+      "decided_by": "agent"
+    },
+    {
+      "id": "VALUES-INTERFACES",
+      "kind": "interface_boundary",
+      "include_type_checking": true,
+      "rationale": "Cross-leaf imports use declared operations and task classes.",
+      "provenance": ["docs/architecture/inner/target.md"],
+      "decided_by": "agent"
+    },
+    {
+      "id": "VALUES-ACYCLIC",
+      "kind": "no_component_cycles",
+      "rationale": "Value leaf dependencies remain acyclic.",
+      "provenance": ["docs/architecture/inner/target.md"],
+      "decided_by": "agent"
+    },
+    {
+      "id": "LAYOUT-ENGINE-RUNTIME-TASKS-VALUES",
+      "kind": "root_layout",
+      "root": "datamimic_ce.engine.runtime.tasks.values",
+      "allowed_children": [
+        "datamimic_ce.engine.runtime.tasks.values.construction",
+        "datamimic_ce.engine.runtime.tasks.values.key_variable_task",
+        "datamimic_ce.engine.runtime.tasks.values.reference",
+        "datamimic_ce.engine.runtime.tasks.values.scalar",
+        "datamimic_ce.engine.runtime.tasks.values.structured",
+        "datamimic_ce.engine.runtime.tasks.values.variable"
+      ],
+      "rationale": "The six direct children own shared base, scalar, structured, reference, variable and construction behavior.",
+      "provenance": ["docs/architecture/inner/structure-review.json"],
+      "decided_by": "agent"
+    },
+    {
+      "id": "LAYOUT-ENGINE-RUNTIME-TASKS-VALUES-CONSTRUCTION",
+      "kind": "root_layout",
+      "root": "datamimic_ce.engine.runtime.tasks.values.construction",
+      "allowed_children": [
+        "datamimic_ce.engine.runtime.tasks.values.construction.converters",
+        "datamimic_ce.engine.runtime.tasks.values.construction.entity",
+        "datamimic_ce.engine.runtime.tasks.values.construction.entity_constructor",
+        "datamimic_ce.engine.runtime.tasks.values.construction.factory",
+        "datamimic_ce.engine.runtime.tasks.values.construction.global_increment",
+        "datamimic_ce.engine.runtime.tasks.values.construction.sequence_table"
+      ],
+      "rationale": "Construction owns generators, converters, entity services and constructor syntax.",
+      "provenance": ["docs/architecture/inner/structure-review.json"],
+      "decided_by": "agent"
+    },
+    {
+      "id": "LAYOUT-ENGINE-RUNTIME-TASKS-VALUES-REFERENCE",
+      "kind": "root_layout",
+      "root": "datamimic_ce.engine.runtime.tasks.values.reference",
+      "allowed_children": ["datamimic_ce.engine.runtime.tasks.values.reference.task"],
+      "rationale": "Reference package contains its task implementation.",
+      "provenance": ["docs/architecture/inner/structure-review.json"],
+      "decided_by": "agent"
+    },
+    {
+      "id": "LAYOUT-ENGINE-RUNTIME-TASKS-VALUES-SCALAR",
+      "kind": "root_layout",
+      "root": "datamimic_ce.engine.runtime.tasks.values.scalar",
+      "allowed_children": [
+        "datamimic_ce.engine.runtime.tasks.values.scalar.element_task",
+        "datamimic_ce.engine.runtime.tasks.values.scalar.key_task"
+      ],
+      "rationale": "Scalar package contains element and key tasks.",
+      "provenance": ["docs/architecture/inner/structure-review.json"],
+      "decided_by": "agent"
+    },
+    {
+      "id": "LAYOUT-ENGINE-RUNTIME-TASKS-VALUES-STRUCTURED",
+      "kind": "root_layout",
+      "root": "datamimic_ce.engine.runtime.tasks.values.structured",
+      "allowed_children": [
+        "datamimic_ce.engine.runtime.tasks.values.structured.array_task",
+        "datamimic_ce.engine.runtime.tasks.values.structured.item_task",
+        "datamimic_ce.engine.runtime.tasks.values.structured.list_task",
+        "datamimic_ce.engine.runtime.tasks.values.structured.nested_key_task"
+      ],
+      "rationale": "Structured package contains array, item, list and nested-key tasks.",
+      "provenance": ["docs/architecture/inner/structure-review.json"],
+      "decided_by": "agent"
+    },
+    {
+      "id": "LAYOUT-ENGINE-RUNTIME-TASKS-VALUES-VARIABLE",
+      "kind": "root_layout",
+      "root": "datamimic_ce.engine.runtime.tasks.values.variable",
+      "allowed_children": [
+        "datamimic_ce.engine.runtime.tasks.values.variable.iterator",
+        "datamimic_ce.engine.runtime.tasks.values.variable.task"
+      ],
+      "rationale": "Variable owns execution and its storage iterator.",
+      "provenance": ["docs/architecture/inner/structure-review.json"],
+      "decided_by": "agent"
+    }
+  ]
+}

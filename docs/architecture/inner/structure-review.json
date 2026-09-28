@@ -2053,7 +2053,7 @@
     },
     {
       "source": "engine/runtime/tasks/reference_task.py",
-      "target": "engine/runtime/tasks/values/references/reference_task.py"
+      "target": "engine/runtime/tasks/values/reference/task.py"
     },
     {
       "source": "engine/runtime/tasks/setup_task.py",
@@ -2073,11 +2073,7 @@
     },
     {
       "source": "engine/runtime/tasks/variable_iterator.py",
-      "target": "engine/runtime/tasks/values/variables/variable_iterator.py"
-    },
-    {
-      "source": "engine/runtime/tasks/variable_task.py",
-      "target": "engine/runtime/tasks/values/variables/variable_task.py"
+      "target": "engine/runtime/tasks/values/variable/iterator.py"
     },
     {
       "source": "engine/runtime/tasks/while_task.py",
@@ -2090,6 +2086,14 @@
   ],
   "package_relocations": [],
   "splits": [
+    {
+      "source": "engine/runtime/tasks/variable_task.py",
+      "targets": [
+        "engine/runtime/tasks/values/variable/task.py",
+        "engine/runtime/tasks/values/construction/entity.py"
+      ],
+      "reason": "Variable entity service construction has a typed construction owner; keep VariableTask focused on source modes and row execution."
+    },
     {
       "source": "engine/runtime/tasks/__init__.py",
       "targets": [

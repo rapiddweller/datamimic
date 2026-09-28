@@ -117,6 +117,7 @@
       "packages": [
         "datamimic_ce.engine.runtime.tasks.values"
       ],
+      "inside": "docs/architecture/inner/runtime/tasks/values/architecture-contract.json",
       "responsibilities": [
         "Shared value base and scalar/structured/reference/variable execution and construction."
       ],
@@ -146,9 +147,8 @@
         "datamimic_ce.engine.runtime.tasks.values.key_variable_task:KeyVariableTask",
         "datamimic_ce.engine.runtime.tasks.values.structured.list_task:ListTask",
         "datamimic_ce.engine.runtime.tasks.values.structured.nested_key_task:NestedKeyTask",
-        "datamimic_ce.engine.runtime.tasks.values.references.reference_task:ReferenceTask",
-        "datamimic_ce.engine.runtime.tasks.values.variables.variable_task:VariableTask",
-        "datamimic_ce.engine.runtime.tasks.values.variables.variable_iterator:VariableIterator",
+        "datamimic_ce.engine.runtime.tasks.values.reference.task:ReferenceTask",
+        "datamimic_ce.engine.runtime.tasks.values.variable.task:VariableTask",
         "datamimic_ce.engine.runtime.tasks.values.construction.converters:create_converter_list",
         "datamimic_ce.engine.runtime.tasks.values.construction.entity_constructor:parse_constructor_string",
         "datamimic_ce.engine.runtime.tasks.values.construction.factory:GeneratorUtil",
@@ -390,98 +390,6 @@
         "datamimic_ce.engine.runtime.tasks.sources.variable"
       ],
       "rationale": "Statement/context resolution and IO request adaptation only. Exact reviewed target children; no hidden extra modules.",
-      "provenance": [
-        "docs/architecture/inner/structure-review.json"
-      ],
-      "decided_by": "agent"
-    },
-    {
-      "id": "LAYOUT-ENGINE-RUNTIME-TASKS-VALUES",
-      "kind": "root_layout",
-      "root": "datamimic_ce.engine.runtime.tasks.values",
-      "allowed_children": [
-        "datamimic_ce.engine.runtime.tasks.values.construction",
-        "datamimic_ce.engine.runtime.tasks.values.key_variable_task",
-        "datamimic_ce.engine.runtime.tasks.values.references",
-        "datamimic_ce.engine.runtime.tasks.values.scalar",
-        "datamimic_ce.engine.runtime.tasks.values.structured",
-        "datamimic_ce.engine.runtime.tasks.values.variables"
-      ],
-      "rationale": "Shared value base and scalar/structured/reference/variable execution and construction. Exact reviewed target children; no hidden extra modules.",
-      "provenance": [
-        "docs/architecture/inner/structure-review.json"
-      ],
-      "decided_by": "agent"
-    },
-    {
-      "id": "LAYOUT-ENGINE-RUNTIME-TASKS-VALUES-CONSTRUCTION",
-      "kind": "root_layout",
-      "root": "datamimic_ce.engine.runtime.tasks.values.construction",
-      "allowed_children": [
-        "datamimic_ce.engine.runtime.tasks.values.construction.converters",
-        "datamimic_ce.engine.runtime.tasks.values.construction.entity_constructor",
-        "datamimic_ce.engine.runtime.tasks.values.construction.factory",
-        "datamimic_ce.engine.runtime.tasks.values.construction.global_increment",
-        "datamimic_ce.engine.runtime.tasks.values.construction.sequence_table"
-      ],
-      "rationale": "Shared value base and scalar/structured/reference/variable execution and construction. Exact reviewed target children; no hidden extra modules.",
-      "provenance": [
-        "docs/architecture/inner/structure-review.json"
-      ],
-      "decided_by": "agent"
-    },
-    {
-      "id": "LAYOUT-ENGINE-RUNTIME-TASKS-VALUES-REFERENCES",
-      "kind": "root_layout",
-      "root": "datamimic_ce.engine.runtime.tasks.values.references",
-      "allowed_children": [
-        "datamimic_ce.engine.runtime.tasks.values.references.reference_task"
-      ],
-      "rationale": "Shared value base and scalar/structured/reference/variable execution and construction. Exact reviewed target children; no hidden extra modules.",
-      "provenance": [
-        "docs/architecture/inner/structure-review.json"
-      ],
-      "decided_by": "agent"
-    },
-    {
-      "id": "LAYOUT-ENGINE-RUNTIME-TASKS-VALUES-SCALAR",
-      "kind": "root_layout",
-      "root": "datamimic_ce.engine.runtime.tasks.values.scalar",
-      "allowed_children": [
-        "datamimic_ce.engine.runtime.tasks.values.scalar.element_task",
-        "datamimic_ce.engine.runtime.tasks.values.scalar.key_task"
-      ],
-      "rationale": "Shared value base and scalar/structured/reference/variable execution and construction. Exact reviewed target children; no hidden extra modules.",
-      "provenance": [
-        "docs/architecture/inner/structure-review.json"
-      ],
-      "decided_by": "agent"
-    },
-    {
-      "id": "LAYOUT-ENGINE-RUNTIME-TASKS-VALUES-STRUCTURED",
-      "kind": "root_layout",
-      "root": "datamimic_ce.engine.runtime.tasks.values.structured",
-      "allowed_children": [
-        "datamimic_ce.engine.runtime.tasks.values.structured.array_task",
-        "datamimic_ce.engine.runtime.tasks.values.structured.item_task",
-        "datamimic_ce.engine.runtime.tasks.values.structured.list_task",
-        "datamimic_ce.engine.runtime.tasks.values.structured.nested_key_task"
-      ],
-      "rationale": "Shared value base and scalar/structured/reference/variable execution and construction. Exact reviewed target children; no hidden extra modules.",
-      "provenance": [
-        "docs/architecture/inner/structure-review.json"
-      ],
-      "decided_by": "agent"
-    },
-    {
-      "id": "LAYOUT-ENGINE-RUNTIME-TASKS-VALUES-VARIABLES",
-      "kind": "root_layout",
-      "root": "datamimic_ce.engine.runtime.tasks.values.variables",
-      "allowed_children": [
-        "datamimic_ce.engine.runtime.tasks.values.variables.variable_iterator",
-        "datamimic_ce.engine.runtime.tasks.values.variables.variable_task"
-      ],
-      "rationale": "Shared value base and scalar/structured/reference/variable execution and construction. Exact reviewed target children; no hidden extra modules.",
       "provenance": [
         "docs/architecture/inner/structure-review.json"
       ],

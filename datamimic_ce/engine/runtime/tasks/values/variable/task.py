@@ -4,9 +4,7 @@
 # See LICENSE file for the full text of the license.
 # For questions and support, contact: info@rapiddweller.com
 
-import inspect
-from collections.abc import Callable, Iterator
-from random import Random
+from collections.abc import Iterator
 from typing import Final
 
 from datamimic_ce.engine.dsl.api import (
@@ -32,17 +30,9 @@ from datamimic_ce.engine.runtime.tasks.sources.variable import (
     load_variable_lazy_source,
     plan_variable_source,
 )
-from datamimic_ce.engine.runtime.tasks.values.construction.entity_constructor import parse_constructor_string
+from datamimic_ce.engine.runtime.tasks.values.construction.entity import create_entity_generator
 from datamimic_ce.engine.runtime.tasks.values.key_variable_task import KeyVariableTask
-from datamimic_ce.engine.runtime.tasks.values.variables.variable_iterator import VariableIterator
-
-
-def _constructor_params(cls: Callable[..., object]) -> frozenset[str]:
-    """Names accepted by ``cls.__init__`` — used to inject only supported kwargs."""
-    try:
-        return frozenset(inspect.signature(cls).parameters)
-    except (TypeError, ValueError):
-        return frozenset()
+from datamimic_ce.engine.runtime.tasks.values.variable.iterator import VariableIterator
 
 
 class VariableTask(KeyVariableTask, CommonSubTask):
@@ -131,15 +121,12 @@ class VariableTask(KeyVariableTask, CommonSubTask):
                 self._mode = self._ITERATOR_MODE
         elif statement.entity is not None:
             # Create entity builder
-            locale = statement.locale or ctx.default_locale
             dataset = statement.dataset or ctx.default_dataset
             try:
-                self._entity_generator = self._get_entity_generator(
+                self._entity_generator = create_entity_generator(
                     ctx,
                     entity_name=statement.entity,
-                    locale=locale,
                     dataset=dataset,
-                    count=1 if pagination is None else pagination.limit,
                     statement=statement,
                 )
             except Exception as e:
@@ -167,74 +154,6 @@ class VariableTask(KeyVariableTask, CommonSubTask):
     @property
     def statement(self) -> VariableStatement:
         return self._statement
-
-    @staticmethod
-    def _get_entity_generator(
-        ctx: Context, entity_name: str, locale: str, dataset: str, count: int, statement: VariableStatement
-    ):
-        from datamimic_ce.domains.api import DemographicConfig, spawn_rng
-
-        entity_class_name, kwargs = parse_constructor_string(entity_name)
-        # Inject dataset if not explicitly provided in constructor
-        kwargs.setdefault("dataset", dataset)
-        demographic_context = ctx.root.demographic_context
-        # Build demographic config + rng from statement attributes when present
-        demo_cfg = None
-        if any(
-            v is not None
-            for v in (statement.age_min, statement.age_max, statement.conditions_include, statement.conditions_exclude)
-        ):
-            includes = (
-                frozenset(x.strip() for x in (statement.conditions_include or "").split(",") if x.strip())
-                if statement.conditions_include is not None
-                else None
-            )
-            excludes = (
-                frozenset(x.strip() for x in (statement.conditions_exclude or "").split(",") if x.strip())
-                if statement.conditions_exclude is not None
-                else None
-            )
-            demo_cfg = DemographicConfig(
-                age_min=statement.age_min,
-                age_max=statement.age_max,
-                conditions_include=includes,
-                conditions_exclude=excludes,
-            )
-        rng_obj = Random(statement.rng_seed) if statement.rng_seed is not None else None
-        if demo_cfg is None and demographic_context is not None and demographic_context.overrides is not None:
-            # Share profile-level defaults when no per-variable overrides are provided.
-            demo_cfg = demographic_context.overrides
-        if rng_obj is None and demographic_context is not None:
-            # Derive entity-level RNGs from the demographics root seed to keep sampling reproducible.
-            rng_obj = spawn_rng(demographic_context.rng)
-        if rng_obj is None:
-            # Fall back to the model-wide <setup rngSeed> root; None if no seed was given.
-            rng_obj = ctx.root.derive_seeded_rng()
-        demographic_sampler = demographic_context.sampler if demographic_context is not None else None
-        # Build from the last parsed VariableTask (self is not accessible in staticmethod); use closure via locals()
-
-        # Resolve service classes and their aliases through the entity registry.
-        from datamimic_ce.domains.api import get_entity_service_factory
-
-        entity_cls = get_entity_service_factory(entity_class_name)
-        if entity_cls is None:
-            raise ValueError(f"Entity '{entity_name}' is not supported in the domain architecture.")
-
-        # Only inject the optional demographic/rng knobs the constructor accepts —
-        # determined from the signature, not a hand-maintained per-entity list.
-        accepted = _constructor_params(entity_cls)
-        if demo_cfg is not None and "demographic_config" in accepted:
-            kwargs.setdefault("demographic_config", demo_cfg)
-        if demographic_sampler is not None and "demographic_sampler" in accepted:
-            kwargs.setdefault("demographic_sampler", demographic_sampler)
-        if rng_obj is not None and "rng" in accepted:
-            kwargs["rng"] = rng_obj
-        service = entity_cls(**kwargs)
-        root = ctx.root
-        if not isinstance(root, SetupContext):
-            raise RuntimeError("Domain entity generation requires the setup context as root")
-        service.set_identifier_registry(root.domain_identifier_registry)
-        return service
 
     def _compute_storage_value(self):
         """storage="data": the same materialized pool every generated row. storage="value": the

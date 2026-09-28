@@ -47,14 +47,14 @@ from datamimic_ce.engine.runtime.tasks.setup.include_task import IncludeTask
 from datamimic_ce.engine.runtime.tasks.setup.memstore_task import MemstoreTask
 from datamimic_ce.engine.runtime.tasks.setup.mongodb_task import MongoDBTask
 from datamimic_ce.engine.runtime.tasks.setup.state_machine_task import StateMachineTask
-from datamimic_ce.engine.runtime.tasks.values.references.reference_task import ReferenceTask
+from datamimic_ce.engine.runtime.tasks.values.reference.task import ReferenceTask
 from datamimic_ce.engine.runtime.tasks.values.scalar.element_task import ElementTask
 from datamimic_ce.engine.runtime.tasks.values.scalar.key_task import KeyTask
 from datamimic_ce.engine.runtime.tasks.values.structured.array_task import ArrayTask
 from datamimic_ce.engine.runtime.tasks.values.structured.item_task import ItemTask
 from datamimic_ce.engine.runtime.tasks.values.structured.list_task import ListTask
 from datamimic_ce.engine.runtime.tasks.values.structured.nested_key_task import NestedKeyTask
-from datamimic_ce.engine.runtime.tasks.values.variables.variable_task import VariableTask
+from datamimic_ce.engine.runtime.tasks.values.variable.task import VariableTask
 
 
 @create_task.register
