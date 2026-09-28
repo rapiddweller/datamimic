@@ -19,4 +19,16 @@ class CountSourceRequest:
     iteration_selector: str | None
 
 
-__all__ = ["CountSourceRequest"]
+@dataclass(frozen=True)
+class VariableSourceRequest:
+    source: str
+    descriptor_dir: Path
+    separator: str
+    source_entity: str | None
+    source_type: str | None
+    name: str
+    materialize_full_pool: bool
+    cyclic: bool
+
+
+__all__ = ["CountSourceRequest", "VariableSourceRequest"]

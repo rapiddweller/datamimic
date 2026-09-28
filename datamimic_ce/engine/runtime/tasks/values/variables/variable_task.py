@@ -25,13 +25,13 @@ from datamimic_ce.engine.runtime.contexts.context import Context, DotableDict, S
 from datamimic_ce.engine.runtime.contexts.geniter_context import GenIterContext
 from datamimic_ce.engine.runtime.logging import logger
 from datamimic_ce.engine.runtime.scripting.evaluation import evaluate_source_template
-from datamimic_ce.engine.runtime.sources.variable import (
+from datamimic_ce.engine.runtime.tasks.base.task import CommonSubTask
+from datamimic_ce.engine.runtime.tasks.sources.variable import (
     VariableSourcePlanKind,
     load_variable_iteration_selector,
     load_variable_lazy_source,
     plan_variable_source,
 )
-from datamimic_ce.engine.runtime.tasks.base.task import CommonSubTask
 from datamimic_ce.engine.runtime.tasks.values.construction.entity_constructor import _parse_constructor_string
 from datamimic_ce.engine.runtime.tasks.values.key_variable_task import KeyVariableTask
 from datamimic_ce.engine.runtime.tasks.values.variables.variable_iterator import VariableIterator

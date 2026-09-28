@@ -1,32 +1,26 @@
-"""Plan and load variable sources."""
+"""Plan variable source execution and retain runtime-owned policy."""
 
 from collections.abc import Iterable, Iterator
 from dataclasses import dataclass
 from enum import Enum
 from random import Random
 
-from datamimic_ce.engine.dsl.api import (
-    EL_VARIABLE,
-    VariableStatement,
-)
+from datamimic_ce.engine.dsl.api import EL_VARIABLE, VariableStatement
 from datamimic_ce.engine.dsl.vocabulary.source_capabilities import SourceFileFormat, source_file_format_for
 from datamimic_ce.engine.io.api import (
     Client,
     DataSourcePagination,
-    FileUtil,
+    VariableSourceRequest,
     WeightedEntityDataSource,
-    database_count_query_length,
-    database_get_by_page_with_query,
-    database_get_by_page_with_type,
     is_database_client,
-    resolve_source_entity,
+    read_variable_query,
+    read_variable_source,
+    select_row_iterator,
 )
-from datamimic_ce.engine.io.contracts import select_row_iterator, select_rows
 from datamimic_ce.engine.io.data_sources.selection import get_distributed_data, get_unique_data
 from datamimic_ce.engine.runtime.contexts.context import Context, SetupContext
 from datamimic_ce.engine.runtime.scripting.evaluation import interpolate_variables
-
-from .router import data_source_cache_key
+from datamimic_ce.engine.runtime.sources.router import data_source_cache_key
 
 
 class VariableSourcePlanKind(str, Enum):
@@ -40,7 +34,7 @@ class VariableSourcePlanKind(str, Enum):
 
 @dataclass(frozen=True)
 class VariableSourcePlan:
-    """Task-facing result of one centrally routed variable source."""
+    """Task-facing result of one planned variable source."""
 
     kind: VariableSourcePlanKind
     data: Iterable[object] | None = None
@@ -59,7 +53,7 @@ def _variable_data_plan(
     *,
     force_full_pool: bool,
 ) -> VariableSourcePlan:
-    """Shape a routed variable pool and expose only an execution mode to the task."""
+    """Shape a loaded pool and expose only an execution mode to the task."""
     if data is None:
         return VariableSourcePlan(
             kind=VariableSourcePlanKind.STORAGE if force_full_pool else VariableSourcePlanKind.ITERATOR
@@ -102,7 +96,7 @@ def plan_variable_source(
     *,
     force_full_pool: bool,
 ) -> VariableSourcePlan:
-    """Route and page a variable source without leaking source policy into its task."""
+    """Plan variable source execution while keeping policy in Runtime."""
     source = stmt.source
     if source is None:
         raise ValueError(f"<variable> '{stmt.name}' has no source to plan")
@@ -125,7 +119,7 @@ def plan_variable_source(
 
     if stmt.selector is not None or stmt.iteration_selector is not None:
         selector = stmt.selector or stmt.iteration_selector
-        if selector is None:  # narrowed explicitly for static analysis
+        if selector is None:
             raise RuntimeError("variable selector plan reached an impossible empty selector")
         prefix = stmt.variable_prefix or context.default_variable_prefix
         suffix = stmt.variable_suffix or context.default_variable_suffix
@@ -142,65 +136,42 @@ def plan_variable_source(
             )
 
         rendered_selector = interpolate_variables(context, selector, prefix, suffix)
-        if loads_all or force_full_pool or stmt.is_global_variable:
-            data = database_get_by_page_with_query(client, rendered_selector)
-        else:
-            length = context.data_source_len.get(data_source_cache_key(stmt))
-            if length is None:
-                length = database_count_query_length(client, rendered_selector)
-            if pagination is None or (
-                stmt.cyclic and (pagination.limit > length or pagination.skip + pagination.limit > length)
-            ):
-                rows = database_get_by_page_with_query(
-                    client, rendered_selector, DataSourcePagination(skip=0, limit=length)
-                )
-                data = select_rows(rows, pagination, cyclic=bool(stmt.cyclic))
-            else:
-                data = database_get_by_page_with_query(client, rendered_selector, pagination)
+        full_pool = bool(loads_all or force_full_pool or stmt.is_global_variable)
+        cached_length = None if full_pool else context.data_source_len.get(data_source_cache_key(stmt))
+        data = read_variable_query(
+            client,
+            rendered_selector,
+            pagination,
+            full_pool=full_pool,
+            cached_length=cached_length,
+            cyclic=bool(stmt.cyclic),
+        )
         return _variable_data_plan(context, stmt, data, pagination, force_full_pool=force_full_pool)
 
+    request = VariableSourceRequest(
+        source=source,
+        descriptor_dir=context.root.descriptor_dir,
+        separator=separator,
+        source_entity=stmt.source_entity,
+        source_type=stmt.type,
+        name=stmt.name,
+        materialize_full_pool=loads_all or force_full_pool,
+        cyclic=bool(stmt.cyclic),
+    )
+    source_data: Iterable[object] | None
     if source_format is not None:
-        file_data: Iterable[object]
-        if source_format is SourceFileFormat.CSV:
-            file_data = FileUtil.read_csv_to_dict_list(context.root.descriptor_dir / source, separator)
-        elif source_format is SourceFileFormat.XLSX:
-            file_data = FileUtil.read_xlsx_to_dict_list(context.root.descriptor_dir / source)
-        elif source_format is SourceFileFormat.FIXED_WIDTH:
-            file_data = FileUtil.read_fixed_width_to_dict_list(context.root.descriptor_dir / source)
-        elif source_format is SourceFileFormat.JSON:
-            file_data = FileUtil.read_json_to_list(context.root.descriptor_dir / source)
-        else:
-            raise ValueError(f"Unsupported <variable> source format: {source_format.value}")
-        if not (loads_all or force_full_pool):
-            file_data = select_row_iterator(file_data, pagination, bool(stmt.cyclic))
-        return _variable_data_plan(context, stmt, file_data, pagination, force_full_pool=force_full_pool)
+        source_data = read_variable_source(request, None, None, pagination)
+        return _variable_data_plan(context, stmt, source_data, pagination, force_full_pool=force_full_pool)
 
     client = context.get_client_by_id(source)
     if client is not None:
-        if not is_database_client(client):
-            raise ValueError(f"Cannot get data from source '{source}' of <variable> '{stmt.name}'")
-        product_type = resolve_source_entity(stmt.source_entity, stmt.type, stmt.name)
-        if product_type is None:
-            source_data = None
-        elif loads_all or force_full_pool:
-            source_data = database_get_by_page_with_type(client, product_type)
-        elif stmt.cyclic:
-            source_data = select_rows(
-                database_get_by_page_with_type(client, product_type), pagination, cyclic=True
-            )
-        else:
-            source_data = database_get_by_page_with_type(client, product_type, pagination)
+        source_data = read_variable_source(request, client, None, pagination)
         return _variable_data_plan(context, stmt, source_data, pagination, force_full_pool=force_full_pool)
 
     if context.memstore_manager.contain(source):
-        product_type = resolve_source_entity(stmt.source_entity, stmt.type, stmt.name)
         memstore = context.memstore_manager.get_memstore(source)
-        data = (
-            memstore.get_all_data_by_type(product_type)
-            if loads_all or force_full_pool
-            else memstore.get_data_by_type(product_type, pagination, stmt.cyclic)
-        )
-        return _variable_data_plan(context, stmt, data, pagination, force_full_pool=force_full_pool)
+        source_data = read_variable_source(request, None, memstore, pagination)
+        return _variable_data_plan(context, stmt, source_data, pagination, force_full_pool=force_full_pool)
 
     if force_full_pool:
         raise ValueError(
@@ -218,7 +189,14 @@ def load_variable_iteration_selector(
     suffix: str,
 ) -> Iterable[object]:
     """Evaluate and execute one row-dependent variable selector."""
-    return database_get_by_page_with_query(client, interpolate_variables(context, selector, prefix, suffix))
+    return read_variable_query(
+        client,
+        interpolate_variables(context, selector, prefix, suffix),
+        None,
+        full_pool=True,
+        cached_length=None,
+        cyclic=False,
+    )
 
 
 def load_variable_lazy_source(
@@ -241,3 +219,12 @@ def load_variable_lazy_source(
         )
         return iter(selected)
     return select_row_iterator(data, pagination, bool(stmt.cyclic))
+
+
+__all__ = [
+    "VariableSourcePlan",
+    "VariableSourcePlanKind",
+    "load_variable_iteration_selector",
+    "load_variable_lazy_source",
+    "plan_variable_source",
+]
