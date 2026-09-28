@@ -25,6 +25,7 @@ from datamimic_ce.engine.io.connection_config.rdbms_connection_config import Rdb
 from datamimic_ce.engine.io.contracts import DataSourcePagination, MemstoreSource, SmokeExportRequest
 from datamimic_ce.engine.io.data_sources.boundary.entities import resolve_source_collection, resolve_source_entity
 from datamimic_ce.engine.io.data_sources.boundary.models import CountSourceRequest
+from datamimic_ce.engine.io.data_sources.chunk_reader import ChunkSourceWindow
 from datamimic_ce.engine.io.data_sources.data_source_registry import DataSourceRegistry
 from datamimic_ce.engine.io.data_sources.router import (
     count_source,
@@ -64,6 +65,7 @@ from datamimic_ce.engine.io.files.readers import FileUtil
 
 __all__ = [
     "Client",
+    "ChunkSourceWindow",
     "DataSourcePagination",
     "DataSourceRegistry",
     "ExporterConfig",

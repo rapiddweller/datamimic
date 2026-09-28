@@ -180,7 +180,7 @@
         "datamimic_ce.engine.io.data_sources.boundary.entities:resolve_source_entity",
         "datamimic_ce.engine.io.data_sources.boundary.entities:resolve_source_collection",
         "datamimic_ce.engine.io.data_sources.boundary.models",
-        "datamimic_ce.engine.io.data_sources.chunk_reader",
+        "datamimic_ce.engine.io.data_sources.chunk_reader:ChunkSourceWindow",
         "datamimic_ce.engine.io.data_sources.data_source_registry",
         "datamimic_ce.engine.io.data_sources.router",
         "datamimic_ce.engine.io.data_sources.selection:get_distributed_data",

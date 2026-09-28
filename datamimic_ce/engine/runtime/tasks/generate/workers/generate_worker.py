@@ -19,10 +19,10 @@ from datamimic_ce.engine.runtime.contexts.context import SetupContext
 from datamimic_ce.engine.runtime.contexts.geniter_context import GenIterContext
 from datamimic_ce.engine.runtime.logging import gen_timer, logger, setup_logger
 from datamimic_ce.engine.runtime.scripting.evaluation import evaluate_source_template
-from datamimic_ce.engine.runtime.sources.chunk_source_reader import ChunkSourceReader
 from datamimic_ce.engine.runtime.tasks.base.dispatch import create_task
 from datamimic_ce.engine.runtime.tasks.base.task import CommonSubTask, GenSubTask
 from datamimic_ce.engine.runtime.tasks.generate.export_order import export_product_by_page
+from datamimic_ce.engine.runtime.tasks.sources.chunk_source_reader import ChunkSourceReader
 from datamimic_ce.engine.runtime.tasks.values.construction.converters import create_converter_list
 
 
