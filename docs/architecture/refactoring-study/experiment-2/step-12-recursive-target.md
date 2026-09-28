@@ -400,3 +400,28 @@ S3F2 result, not a verification of these source moves.
 
 CI-ONLY VERIFICATION: no new remote run. Chunk/variable source boundaries,
 direct persisted database parity and complete target acceptance remain open.
+
+## Twelfth slice: chunk source window
+
+`ChunkSourceReader` moved into Runtime tasks. IO owns only the selected
+`ChunkSourceWindow`; it receives an already loaded pool and seed, selects once,
+and returns shallow page slices. Runtime keeps lazy first-page loading, source
+evaluation and seed timing. The old path was deleted without a forwarding
+module. Astra approved this smaller boundary; independent QA added cumulated,
+unique and exhaustion cases before the move. Terra found no actionable
+after-side defect.
+
+LOCAL VERIFIED: 43 focused source/DSL tests and the serial non-service sweep
+(1,943 passed, 13 existing skips, two known warnings) pass. Full-package
+Ruff/Mypy (498 modules), recursive definition and Pylint import-cycle gates
+pass. The physical target still has three missing modules and six legacy/
+unowned modules. All 930 XML and seven intent-model hashes remain unchanged.
+Step-0 retained all status counts (454 captured, 62 expected errors, 16
+non-descriptors, 76 unrunnable, 322 unverified). Compared with S3G1, only the
+previously classified unseeded MemStore `te` count varies; all four projection
+hashes match. The raw comparator exits 1, not a green exact-equality result.
+
+CI-ONLY VERIFICATION: no new remote or after-side service run. Variable source
+ownership, Runtime router relocation, direct persisted database parity and
+complete target acceptance remain open. Released ArchKeel 0.8.0 remains
+UNKNOWN at its fixed 60-second analyzer deadline (#192).
