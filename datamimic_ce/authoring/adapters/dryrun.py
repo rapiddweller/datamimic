@@ -406,7 +406,7 @@ def _source_row_count(
 
     from datamimic_ce.engine.dsl.api import EL_GENERATE, GenerateStatement
     from datamimic_ce.engine.dsl.vocabulary.source_capabilities import SourceFileFormat, source_file_format_for
-    from datamimic_ce.engine.io.api import DataSourceRegistry
+    from datamimic_ce.engine.io.api import CountSourceRequest, count_source
 
     if not isinstance(stmt, GenerateStatement) or descriptor_dir is None or stmt.source is None:
         return None
@@ -414,16 +414,28 @@ def _source_row_count(
     if source_format is None or source_format is SourceFileFormat.DBUNIT_XML:
         return None
     try:
-        rows = DataSourceRegistry._get_source(
-            str(descriptor_dir / stmt.source),
-            stmt.separator or default_separator,
-            source_format,
+        rows = count_source(
+            CountSourceRequest(
+                source=stmt.source,
+                source_id=(stmt.full_name, stmt.source),
+                descriptor_dir=descriptor_dir,
+                element=EL_GENERATE,
+                source_type=stmt.type,
+                source_entity=stmt.source_entity,
+                name=stmt.name,
+                separator=stmt.separator,
+                default_separator=default_separator,
+                selector=stmt.selector,
+                iteration_selector=None,
+            ),
+            None,
+            None,
         )
     except Exception:
         # This is evidence discovery, not execution. The canonical runtime reports
         # the real file error; failure to prove a length must remain UNKNOWN.
         return None
-    return max(0, len(rows) - stmt.offset)
+    return None if rows is None else max(0, rows - stmt.offset)
 
 
 def _range_upper_bound(stmt: object) -> int | None:
