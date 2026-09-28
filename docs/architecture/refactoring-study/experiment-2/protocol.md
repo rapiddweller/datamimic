@@ -33,6 +33,7 @@ inputs below remain history, including the original checker and agent versions.
    Unseeded descriptors retain outcome, product counts, row counts, and value shapes.
    Amendment 13 replaces cross-run equality only for genuinely dynamic unseeded counts with
    descriptor-defined ranges and same-run relationships; unknown shape remains unverified.
+   Amendment 50 requires field-presence evidence and rejects unknown or all-null shapes as proof.
    Target-state reproducibility requires the same initial target state;
    Amendment 16 separates generated-ID uniqueness from target constraints.
 6. Authoring schema, reference, capability, compiler, lint, and transport projections remain

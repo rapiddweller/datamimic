@@ -80,9 +80,9 @@ def comparable(record: dict[str, Any]) -> dict[str, Any]:
 
 
 def shape_compatible(before: Any, after: Any) -> bool:
-    if before == after:
-        return True
     if before == "unknown" or after == "unknown" or before == "null" or after == "null":
+        return False
+    if before == after and not isinstance(before, dict):
         return True
     before_type = before.get("type") if isinstance(before, dict) else None
     after_type = after.get("type") if isinstance(after, dict) else None
@@ -91,6 +91,8 @@ def shape_compatible(before: Any, after: Any) -> bool:
         after_values = after.get("values", [after]) if after_type == "union" else [after]
         before_values = [value for value in before_values if value != "null"]
         after_values = [value for value in after_values if value != "null"]
+        if not before_values or not after_values:
+            return False
         return all(
             any(shape_compatible(value, candidate) for candidate in candidates)
             for values, candidates in ((before_values, after_values), (after_values, before_values))
@@ -99,12 +101,21 @@ def shape_compatible(before: Any, after: Any) -> bool:
     if not isinstance(before, dict) or not isinstance(after, dict):
         return False
     if before_type == after_type == "object":
-        if "values" in before or "values" in after:
-            return "values" in before and "values" in after and shape_compatible(before["values"], after["values"])
         before_fields, after_fields = before.get("fields", {}), after.get("fields", {})
-        return before_fields.keys() == after_fields.keys() and all(
-            shape_compatible(before_fields[name], after_fields[name]) for name in before_fields
-        )
+        if before_fields.keys() != after_fields.keys():
+            return False
+        before_presence, after_presence = before.get("presence_counts"), after.get("presence_counts")
+        if not isinstance(before_presence, dict) or not isinstance(after_presence, dict):
+            return False
+        if before_presence.keys() != before_fields.keys() or after_presence.keys() != after_fields.keys():
+            return False
+        if before_presence != after_presence:
+            return False
+        for name in before_fields:
+            before_field, after_field = before_fields[name], after_fields[name]
+            if not shape_compatible(before_field, after_field):
+                return False
+        return True
     if before_type == after_type == "array":
         return shape_compatible(before.get("items"), after.get("items"))
     return before == after

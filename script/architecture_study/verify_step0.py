@@ -64,7 +64,11 @@ def normalize(item):
 
 def shape(item):
     if isinstance(item, dict):
-        return {"type": "object", "fields": {key: shape(value) for key, value in sorted(item.items())}}
+        return {
+            "type": "object",
+            "fields": {key: shape(value) for key, value in sorted(item.items())},
+            "presence_counts": {key: {"present": 1, "total": 1} for key in item},
+        }
     if isinstance(item, list):
         return {"type": "array", "items": shape_union(item)}
     if item is None:
@@ -80,15 +84,22 @@ def shape(item):
 def shape_union(items):
     if not items:
         return "unknown"
-    non_null = [value for value in items if value is not None]
-    if non_null:
-        items = non_null
     if items and all(isinstance(value, list) for value in items):
         members = [member for value in items for member in value]
         return {"type": "array", "items": shape_union(members) if members else "unknown"}
     if items and all(isinstance(value, dict) for value in items):
-        members = [member for value in items for member in value.values()]
-        return {"type": "object", "values": shape_union(members) if members else "unknown"}
+        keys = sorted({key for value in items for key in value})
+        return {
+            "type": "object",
+            "fields": {
+                key: shape_union([value[key] for value in items if key in value])
+                for key in keys
+            },
+            "presence_counts": {
+                key: {"present": sum(key in value for value in items), "total": len(items)}
+                for key in keys
+            },
+        }
     members = sorted({json.dumps(shape(value), sort_keys=True) for value in items})
     if len(members) == 1:
         return json.loads(members[0])
@@ -97,15 +108,6 @@ def shape_union(items):
 def shape_rows(rows):
     if not isinstance(rows, list) or not rows:
         return shape(rows)
-    if all(isinstance(row, dict) for row in rows):
-        keys = sorted({key for row in rows for key in row})
-        return {
-            "type": "object",
-            "fields": {
-                key: shape_union([row[key] for row in rows if key in row])
-                for key in keys
-            },
-        }
     return shape_union(rows)
 
 def output_digest(path):
