@@ -321,8 +321,9 @@ intent-model hashes match the frozen inputs. Step-0 retained every status
 (454 captured, 62 expected errors, 16 non-descriptors, 76 unrunnable, 322
 unverified). Its raw comparison exits 1 for the approved unseeded MemStore
 `te` count variance (17 to 15; the same-run bounded invariant passed) and
-two capability provenance strings: DM401 now names the IO target parser,
-DM402 names source routing instead of the removed utility classes. Compiler,
+two capability provenance strings: DM401 then named an IO target parser
+(corrected to DSL ownership in Amendment 60); DM402 names source routing
+instead of the removed utility classes. Compiler,
 Authoring reference and scaffold projections are unchanged. This is a
 classified difference, not a green raw comparison.
 

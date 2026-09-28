@@ -39,7 +39,8 @@ inputs below remain history, including the original checker and agent versions.
    Target-state reproducibility requires the same initial target state;
    Amendment 16 separates generated-ID uniqueness from target constraints.
 6. Authoring schema, reference, capability, compiler, lint, and transport projections remain
-   identical unless an explicitly approved product change is recorded.
+   identical unless an explicitly approved product change is recorded. Amendment 60 records
+   the narrow capability wording and package-version exception.
 7. Existing public CLI commands and documented Python entry points remain importable.
 8. Unit, API, factory, functional, integration, architecture, lint, and full-package mypy gates
    pass. External-service tests run serially against already-running local services.

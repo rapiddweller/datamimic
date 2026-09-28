@@ -3,8 +3,12 @@
 from __future__ import annotations
 
 import argparse
+import hashlib
 import json
+import os
 import re
+import subprocess
+import sys
 from pathlib import Path
 from typing import Any
 
@@ -12,6 +16,59 @@ LEGACY_DEMO_PREFIX = "datamimic_ce/demos/"
 TARGET_DEMO_PREFIX = "datamimic_ce/resources/demos/"
 _ALLOWED_ATTRIBUTES = re.compile(r"(Must defined one of following attributes \{)([^{}]*)(\})")
 _TEST_EVIDENCE_LINE = re.compile(r"(tests_ce/[^:\s]+\.py):\d+")
+_CAPABILITY_WORDING_CHANGES = {
+    ("rules", "35", "provenance"): (
+        "ExporterUtil target parser and ExportOperation enum.",
+        "DSL target parser and ExportOperation enum.",
+    ),
+    ("rules", "36", "provenance"): (
+        "TaskUtil source dispatch contract.",
+        "Source routing contract.",
+    ),
+    ("elements", "generate", "attributes", "sourceEntity", "description"): (
+        "Explicit physical entity to read/write (table/collection). "
+        "Precedence: sourceEntity/targetEntity -> type -> name; "
+        "absent -> existing behaviour. See StatementUtil.resolve_source/target_entity.",
+        "Explicit physical entity to read/write (table/collection). "
+        "Precedence: sourceEntity/targetEntity -> type -> name; "
+        "absent -> existing behaviour.",
+    ),
+    ("elements", "generate", "attributes", "targetEntity", "description"): (
+        "Explicit physical entity to read/write (table/collection). "
+        "Precedence: sourceEntity/targetEntity -> type -> name; "
+        "absent -> existing behaviour. See StatementUtil.resolve_source/target_entity.",
+        "Explicit physical entity to read/write (table/collection). "
+        "Precedence: sourceEntity/targetEntity -> type -> name; "
+        "absent -> existing behaviour.",
+    ),
+    ("elements", "variable", "attributes", "type", "description"): (
+        "Normally a scalar cast for a generated value (e.g. 'int', 'string'). "
+        "When 'source' is also set, this instead selects "
+        "which source-backed statement's rows to read (a producer name, not a type) — see "
+        "StatementUtil.resolve_source_entity's sourceEntity -> type -> name fallback.",
+        "Normally a scalar cast for a generated value (e.g. 'int', 'string'). "
+        "When 'source' is also set, this instead selects "
+        "which source-backed statement's rows to read (a producer name, not a type); "
+        "sourceEntity -> type -> name is the fallback.",
+    ),
+    ("elements", "iterate", "attributes", "sourceEntity", "description"): (
+        "Explicit physical entity to read/write (table/collection). "
+        "Precedence: sourceEntity/targetEntity -> type -> name; "
+        "absent -> existing behaviour. See StatementUtil.resolve_source/target_entity.",
+        "Explicit physical entity to read/write (table/collection). "
+        "Precedence: sourceEntity/targetEntity -> type -> name; "
+        "absent -> existing behaviour.",
+    ),
+    ("elements", "iterate", "attributes", "targetEntity", "description"): (
+        "Explicit physical entity to read/write (table/collection). "
+        "Precedence: sourceEntity/targetEntity -> type -> name; "
+        "absent -> existing behaviour. See StatementUtil.resolve_source/target_entity.",
+        "Explicit physical entity to read/write (table/collection). "
+        "Precedence: sourceEntity/targetEntity -> type -> name; "
+        "absent -> existing behaviour.",
+    ),
+}
+_CAPABILITY_OLD_VERSION = "4.3.1.dev89+dirty"
 
 
 def normalize_error_message(message: str) -> str:
@@ -26,6 +83,91 @@ def normalize_error_message(message: str) -> str:
 
 def load(path: str) -> dict[str, Any]:
     return json.loads(Path(path).read_text(encoding="utf-8"))
+
+
+def projection_content(item: Any) -> str | None:
+    if not isinstance(item, dict):
+        return None
+    content = item.get("content")
+    if not isinstance(content, str):
+        return None
+    encoded = content.encode("utf-8")
+    if item.get("bytes") != len(encoded) or item.get("sha256") != hashlib.sha256(encoded).hexdigest():
+        return None
+    return content
+
+
+def captured_package_version() -> str | None:
+    repo = Path(__file__).resolve().parents[2]
+    result = subprocess.run(
+        [sys.executable, "-c", "from importlib.metadata import version; print(version('datamimic_ce'))"],
+        cwd=repo,
+        env={**os.environ, "PYTHONPATH": str(repo)},
+        capture_output=True,
+        text=True,
+    )
+    return result.stdout.strip() if result.returncode == 0 else None
+
+
+def _at_path(value: Any, path: tuple[str, ...]) -> Any:
+    for part in path:
+        if isinstance(value, dict) and part in value:
+            value = value[part]
+        elif isinstance(value, list) and part.isdecimal() and int(part) < len(value):
+            value = value[int(part)]
+        else:
+            return None
+    return value
+
+
+def _set_path(value: dict[str, Any], path: tuple[str, ...], replacement: Any) -> None:
+    parent = _at_path(value, path[:-1])
+    if isinstance(parent, dict):
+        parent[path[-1]] = replacement
+    else:
+        parent[int(path[-1])] = replacement
+
+
+def capability_projection_equivalent(old_item: Any, new_item: Any) -> bool:
+    old_content, new_content = projection_content(old_item), projection_content(new_item)
+    if old_content is None or new_content is None:
+        return False
+    try:
+        old, new = json.loads(old_content), json.loads(new_content)
+    except (TypeError, json.JSONDecodeError):
+        return False
+    if not isinstance(old, dict) or not isinstance(new, dict):
+        return False
+
+    # The frozen old value is part of the reviewed snapshot; independently
+    # verify the new value against the package installed for this comparison.
+    if old.get("schema_version") != _CAPABILITY_OLD_VERSION:
+        return False
+    if captured_package_version() != new.get("schema_version"):
+        return False
+
+    old["schema_version"] = new["schema_version"]
+    for path, (before, after) in _CAPABILITY_WORDING_CHANGES.items():
+        if _at_path(old, path) != before or _at_path(new, path) != after:
+            return False
+        _set_path(old, path, _at_path(new, path))
+    return old == new
+
+
+def projections_equivalent(before: dict[str, Any], after: dict[str, Any]) -> bool:
+    required = {"capabilities", "reference_authoring", "reference_scaffold", "compiler"}
+    if not required <= before.keys() or before.keys() != after.keys():
+        return False
+    for name, old_item in before.items():
+        new_item = after[name]
+        if name == "capabilities":
+            if not capability_projection_equivalent(old_item, new_item):
+                return False
+            continue
+        old_content, new_content = projection_content(old_item), projection_content(new_item)
+        if old_content is None or new_content is None or old_content != new_content:
+            return False
+    return True
 
 
 def canonical_path(path: str) -> str:
@@ -382,9 +524,24 @@ def main() -> None:
             changed.append((f"descriptor.{path}", comparable(old) if old else None, comparable(new) if new else None))
         elif old is not None and new is not None and comparable(old) != comparable(new):
             tolerated_variances += 1
-    before_projections = {name: item["sha256"] for name, item in before["projections"].items()}
-    after_projections = {name: item["sha256"] for name, item in after["projections"].items()}
-    if before_projections != after_projections:
+    before_projections = before.get("projections")
+    after_projections = after.get("projections")
+    projection_pass = False
+    if isinstance(before_projections, dict) and isinstance(after_projections, dict):
+        projection_pass = projections_equivalent(before_projections, after_projections)
+        old_capability = before_projections.get("capabilities")
+        new_capability = after_projections.get("capabilities")
+        if (
+            projection_pass
+            and isinstance(old_capability, dict)
+            and isinstance(new_capability, dict)
+            and old_capability.get("sha256") != new_capability.get("sha256")
+        ):
+            print(
+                "APPROVED Amendment 60 capability projection: "
+                f"{old_capability['sha256']} -> {new_capability['sha256']}"
+            )
+    if not projection_pass:
         changed.append(("projections", before_projections, after_projections))
     print(
         f"{len(before_descriptors)} descriptors compared; {len(changed)} differences; "

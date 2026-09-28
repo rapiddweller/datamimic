@@ -860,6 +860,9 @@ def main() -> None:
     parser.add_argument("--jobs", type=int, default=8)
     parser.add_argument("--limit", type=int, help="Run only the first N local cases for a smoke check")
     parser.add_argument("--only", nargs="*", help="Run named descriptor paths while retaining the full inventory")
+    parser.add_argument(
+        "--capture-only", action="store_true", help="Record raw projection drift for later snapshot comparison"
+    )
     parser.add_argument("--self-test", action="store_true")
     args = parser.parse_args()
     if args.self_test:
@@ -912,7 +915,8 @@ def main() -> None:
     print(f"projection hashes: {json.dumps(projection_hashes, sort_keys=True)}")
     if drift:
         print(f"projection drift: {json.dumps(drift, sort_keys=True)}")
-        raise SystemExit(1)
+        if not args.capture_only:
+            raise SystemExit(1)
 
 
 if __name__ == "__main__":

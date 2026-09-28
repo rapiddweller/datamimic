@@ -469,7 +469,7 @@ _AUTHORING_RULE_DEFINITIONS: tuple[RuleDefinition, ...] = (
         "Unknown target",
         "A target cannot be parsed or does not resolve to a built-in or declared client/memstore.",
         "Use a built-in target or declare the referenced id and operation.",
-        "IO target parser and ExportOperation enum.",
+        "DSL target parser and ExportOperation enum.",
         '<generate name="g" count="1" target="JSON"/>',
         '<generate name="g" count="1" target="missing"/>',
     ),

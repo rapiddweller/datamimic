@@ -11,14 +11,207 @@ from pathlib import Path
 
 import pytest
 
+from script.architecture_study import compare_step0
 from script.architecture_study.compare_step0 import (
+    _CAPABILITY_OLD_VERSION,
+    _CAPABILITY_WORDING_CHANGES,
+    capability_projection_equivalent,
     changed_fields,
     comparable,
     equivalent,
     inventory_by_path,
+    projections_equivalent,
     shape_compatible,
 )
 from script.architecture_study.verify_step0 import CHILD, REPO, RESULT_PREFIX, run_descriptor
+
+_EXPECTED_CAPABILITY_WORDING_CHANGES = {
+    ("rules", "35", "provenance"): (
+        "ExporterUtil target parser and ExportOperation enum.",
+        "DSL target parser and ExportOperation enum.",
+    ),
+    ("rules", "36", "provenance"): (
+        "TaskUtil source dispatch contract.", "Source routing contract."
+    ),
+    ("elements", "generate", "attributes", "sourceEntity", "description"): (
+        "Explicit physical entity to read/write (table/collection). "
+        "Precedence: sourceEntity/targetEntity -> type -> name; absent -> existing behaviour. "
+        "See StatementUtil.resolve_source/target_entity.",
+        "Explicit physical entity to read/write (table/collection). "
+        "Precedence: sourceEntity/targetEntity -> type -> name; absent -> existing behaviour.",
+    ),
+    ("elements", "generate", "attributes", "targetEntity", "description"): (
+        "Explicit physical entity to read/write (table/collection). "
+        "Precedence: sourceEntity/targetEntity -> type -> name; absent -> existing behaviour. "
+        "See StatementUtil.resolve_source/target_entity.",
+        "Explicit physical entity to read/write (table/collection). "
+        "Precedence: sourceEntity/targetEntity -> type -> name; absent -> existing behaviour.",
+    ),
+    ("elements", "variable", "attributes", "type", "description"): (
+        "Normally a scalar cast for a generated value (e.g. 'int', 'string'). "
+        "When 'source' is also set, this instead selects which source-backed statement's rows to read "
+        "(a producer name, not a type) — see "
+        "StatementUtil.resolve_source_entity's sourceEntity -> type -> name fallback.",
+        "Normally a scalar cast for a generated value (e.g. 'int', 'string'). "
+        "When 'source' is also set, this instead selects which source-backed statement's rows to read "
+        "(a producer name, not a type); sourceEntity -> type -> name is the fallback.",
+    ),
+    ("elements", "iterate", "attributes", "sourceEntity", "description"): (
+        "Explicit physical entity to read/write (table/collection). "
+        "Precedence: sourceEntity/targetEntity -> type -> name; absent -> existing behaviour. "
+        "See StatementUtil.resolve_source/target_entity.",
+        "Explicit physical entity to read/write (table/collection). "
+        "Precedence: sourceEntity/targetEntity -> type -> name; absent -> existing behaviour.",
+    ),
+    ("elements", "iterate", "attributes", "targetEntity", "description"): (
+        "Explicit physical entity to read/write (table/collection). "
+        "Precedence: sourceEntity/targetEntity -> type -> name; absent -> existing behaviour. "
+        "See StatementUtil.resolve_source/target_entity.",
+        "Explicit physical entity to read/write (table/collection). "
+        "Precedence: sourceEntity/targetEntity -> type -> name; absent -> existing behaviour.",
+    ),
+}
+
+
+def _projection(content: str) -> dict[str, object]:
+    import hashlib
+
+    encoded = content.encode("utf-8")
+    return {"content": content, "bytes": len(encoded), "sha256": hashlib.sha256(encoded).hexdigest()}
+
+
+def _capability_pair() -> tuple[dict[str, object], dict[str, object]]:
+    import json
+
+    old: dict[str, object] = {"schema_version": _CAPABILITY_OLD_VERSION}
+    new: dict[str, object] = {"schema_version": compare_step0.captured_package_version()}
+    for path, (before, after) in _EXPECTED_CAPABILITY_WORDING_CHANGES.items():
+        for document, wording in ((old, before), (new, after)):
+            parent: object = document
+            for part in path[:-1]:
+                if isinstance(parent, dict):
+                    parent = parent.setdefault(part, []) if part == "rules" else parent.setdefault(part, {})
+                elif isinstance(parent, list):
+                    while len(parent) <= int(part):
+                        parent.append({})
+                    parent = parent[int(part)]
+            if isinstance(parent, list):
+                while len(parent) <= int(path[-1]):
+                    parent.append({})
+                parent[int(path[-1])] = wording
+            else:
+                parent[path[-1]] = wording
+    return json.loads(json.dumps(old)), json.loads(json.dumps(new))
+
+
+def test_capability_projection_accepts_only_amendment_60_changes() -> None:
+    import json
+
+    assert _CAPABILITY_WORDING_CHANGES == _EXPECTED_CAPABILITY_WORDING_CHANGES
+    old, new = _capability_pair()
+    old_item, new_item = _projection(json.dumps(old)), _projection(json.dumps(new))
+    original = copy.deepcopy((old_item, new_item))
+    assert capability_projection_equivalent(
+        old_item, new_item
+    )
+    assert (old_item, new_item) == original
+
+
+@pytest.mark.parametrize("path", list(_EXPECTED_CAPABILITY_WORDING_CHANGES))
+def test_capability_projection_rejects_third_wording(path: tuple[str, ...]) -> None:
+    old, new = _capability_pair()
+    item: object = new
+    for part in path[:-1]:
+        item = item[int(part)] if isinstance(item, list) else item[part]
+    assert isinstance(item, dict)
+    item[path[-1]] = "unreviewed wording"
+    assert not capability_projection_equivalent(
+        _projection(json.dumps(old)), _projection(json.dumps(new))
+    )
+
+
+@pytest.mark.parametrize(
+    "mutation",
+    [
+        {"elements": {"generate": {"attributes": {"unlisted": "change"}}}},
+        {"elements": {"generate": {"attributes": {"count": {"type": "changed"}}}}},
+        {"elements": {"generate": {"attributes": {"count": {"enum": ["changed"]}}}}},
+        {"elements": {"generate": {"attributes": {"count": {"required": True}}}}},
+        {"rules": [{"severity": "changed"}]},
+        {"schema_version": "not-the-installed-version"},
+    ],
+)
+def test_capability_projection_rejects_unlisted_change(mutation: dict[str, object]) -> None:
+    import json
+
+    old, new = _capability_pair()
+    new.update(mutation)
+    assert not capability_projection_equivalent(
+        _projection(json.dumps(old)), _projection(json.dumps(new))
+    )
+
+
+@pytest.mark.parametrize("replacement", [None, ""])
+def test_capability_projection_rejects_null_or_invalid_version(replacement: object) -> None:
+    import json
+
+    old, new = _capability_pair()
+    new["schema_version"] = replacement
+    assert not capability_projection_equivalent(
+        _projection(json.dumps(old)), _projection(json.dumps(new))
+    )
+
+    new.pop("schema_version")
+    assert not capability_projection_equivalent(
+        _projection(json.dumps(old)), _projection(json.dumps(new))
+    )
+
+
+def test_capability_projection_rejects_missing_installed_metadata(monkeypatch: pytest.MonkeyPatch) -> None:
+    old, new = _capability_pair()
+    monkeypatch.setattr(compare_step0, "captured_package_version", lambda: None)
+    assert not capability_projection_equivalent(
+        _projection(json.dumps(old)), _projection(json.dumps(new))
+    )
+
+
+@pytest.mark.parametrize("metadata", ["bad-hash", 0])
+def test_capability_projection_rejects_corrupt_capture_metadata(metadata: object) -> None:
+    import json
+
+    old, new = _capability_pair()
+    old_item, new_item = _projection(json.dumps(old)), _projection(json.dumps(new))
+    if metadata == "bad-hash":
+        old_item["sha256"] = "bad"
+    else:
+        old_item["bytes"] = 0
+    assert not capability_projection_equivalent(old_item, new_item)
+
+
+def test_projection_comparison_keeps_non_capabilities_byte_exact() -> None:
+    import json
+
+    old, new = _capability_pair()
+    before = {"capabilities": _projection(json.dumps(old)), "compiler": _projection("same")}
+    after = {"capabilities": _projection(json.dumps(new)), "compiler": _projection("different")}
+
+    assert not projections_equivalent(before, after)
+
+
+@pytest.mark.parametrize("changed", ["compiler", "reference_authoring", "reference_scaffold"])
+def test_other_projections_must_remain_byte_exact(changed: str) -> None:
+    old, new = _capability_pair()
+    before = {name: _projection("same") for name in ("compiler", "reference_authoring", "reference_scaffold")}
+    after = copy.deepcopy(before)
+    before["capabilities"] = _projection(json.dumps(old))
+    after["capabilities"] = _projection(json.dumps(new))
+    assert projections_equivalent(before, after)
+    after[changed] = _projection("different")
+    assert not projections_equivalent(before, after)
+
+
+def test_projection_comparison_requires_all_projections() -> None:
+    assert not projections_equivalent({"compiler": _projection("same")}, {"compiler": _projection("same")})
 
 
 def test_shape_rejects_missing_object_field() -> None:
