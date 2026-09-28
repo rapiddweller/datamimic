@@ -61,6 +61,7 @@ graph TD
     domains --> dsl
     domains --> errors
     domains --> io
+    domains --> randomness
     dsl --> python_compat
     interfaces --> authoring
     interfaces --> domains
@@ -68,7 +69,7 @@ graph TD
     interfaces --> resources
     interfaces --> runtime
     io --> dsl
-    python_api --> interfaces
+    io --> randomness
     resources --> domains
     resources --> dsl
     resources --> io
@@ -76,6 +77,7 @@ graph TD
     runtime --> domains
     runtime --> dsl
     runtime --> io
+    runtime --> randomness
     runtime --> python_compat
 ```
 
@@ -92,6 +94,7 @@ graph TD
     domains --> dsl
     domains --> errors
     domains --> io
+    domains --> randomness
     dsl --> python_compat
     interfaces --> authoring
     interfaces --> domains
@@ -99,13 +102,14 @@ graph TD
     interfaces --> resources
     interfaces --> runtime
     io --> dsl
-    python_api --> interfaces
+    io --> randomness
     resources --> domains
     resources --> io
     resources --> runtime
     runtime --> domains
     runtime --> dsl
     runtime --> io
+    runtime --> randomness
 ```
 
 ## Enforced properties
