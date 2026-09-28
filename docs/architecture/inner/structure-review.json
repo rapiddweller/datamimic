@@ -1444,10 +1444,6 @@
       "target": "domains/domain_core/datasets/catalog.py"
     },
     {
-      "source": "engine/dsl/constants/__init__.py",
-      "target": "engine/dsl/vocabulary/constants/__init__.py"
-    },
-    {
       "source": "engine/dsl/constants/attribute_constants.py",
       "target": "engine/dsl/vocabulary/constants/attribute_constants.py"
     },
@@ -1466,10 +1462,6 @@
     {
       "source": "engine/dsl/constants/exporter_constants.py",
       "target": "engine/dsl/vocabulary/constants/exporter_constants.py"
-    },
-    {
-      "source": "engine/dsl/enums/__init__.py",
-      "target": "engine/dsl/vocabulary/enums/__init__.py"
     },
     {
       "source": "engine/dsl/enums/converter_enums.py",
@@ -2260,6 +2252,26 @@
     }
   ],
   "removed_initializers": [
+    {
+      "source": "engine/dsl/__init__.py",
+      "reason": "Docstring-only marker; namespace package discovery already covers the DSL directory."
+    },
+    {
+      "source": "engine/dsl/constants/__init__.py",
+      "reason": "Docstring-only marker; constants live in the namespace package's modules."
+    },
+    {
+      "source": "engine/dsl/enums/__init__.py",
+      "reason": "Docstring-only marker; enums live in the namespace package's modules."
+    },
+    {
+      "source": "engine/dsl/model/__init__.py",
+      "reason": "Docstring-only marker; model responsibilities belong to the package and concrete modules."
+    },
+    {
+      "source": "engine/dsl/statements/__init__.py",
+      "reason": "Docstring-only marker; statements live in the namespace package's modules."
+    },
     {
       "source": "engine/runtime/tasks/generate/services/__init__.py",
       "reason": "Docstring-only old grouping marker."

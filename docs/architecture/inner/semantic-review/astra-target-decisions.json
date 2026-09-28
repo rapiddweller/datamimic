@@ -3516,9 +3516,7 @@
     },
     {
       "source": "engine/dsl/__init__.py",
-      "targets": [
-        "engine/dsl/__init__.py"
-      ]
+      "targets": []
     },
     {
       "source": "engine/dsl/api.py",
@@ -3529,9 +3527,7 @@
     },
     {
       "source": "engine/dsl/constants/__init__.py",
-      "targets": [
-        "engine/dsl/vocabulary/constants/__init__.py"
-      ]
+      "targets": []
     },
     {
       "source": "engine/dsl/constants/attribute_constants.py",
@@ -3572,9 +3568,7 @@
     },
     {
       "source": "engine/dsl/enums/__init__.py",
-      "targets": [
-        "engine/dsl/vocabulary/enums/__init__.py"
-      ]
+      "targets": []
     },
     {
       "source": "engine/dsl/enums/converter_enums.py",
@@ -3608,9 +3602,7 @@
     },
     {
       "source": "engine/dsl/model/__init__.py",
-      "targets": [
-        "engine/dsl/model/__init__.py"
-      ]
+      "targets": []
     },
     {
       "source": "engine/dsl/model/array_model.py",
@@ -4008,9 +4000,7 @@
     },
     {
       "source": "engine/dsl/statements/__init__.py",
-      "targets": [
-        "engine/dsl/statements/__init__.py"
-      ]
+      "targets": []
     },
     {
       "source": "engine/dsl/statements/array_statement.py",
@@ -5089,6 +5079,26 @@
     }
   ],
   "removed_modules": [
+    {
+      "source": "engine/dsl/__init__.py",
+      "reason": "Docstring-only package marker; namespace package discovery covers the directory."
+    },
+    {
+      "source": "engine/dsl/constants/__init__.py",
+      "reason": "Docstring-only package marker; no executable or export responsibility."
+    },
+    {
+      "source": "engine/dsl/enums/__init__.py",
+      "reason": "Docstring-only package marker; no executable or export responsibility."
+    },
+    {
+      "source": "engine/dsl/model/__init__.py",
+      "reason": "Docstring-only package marker; no executable or export responsibility."
+    },
+    {
+      "source": "engine/dsl/statements/__init__.py",
+      "reason": "Docstring-only package marker; no executable or export responsibility."
+    },
     {
       "source": "engine/dsl/model/condition_model.py",
       "reason": "Unused empty model; condition statements are built without it."
