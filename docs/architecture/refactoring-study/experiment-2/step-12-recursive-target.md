@@ -450,3 +450,26 @@ has one missing module and five legacy/unowned paths.
 CI-ONLY VERIFICATION: no new remote or after-side external-service run.
 Runtime router relocation, direct persisted database parity and complete
 target acceptance remain open.
+
+## Fourteenth slice: task source router and IO upsert check
+
+The statement-aware router moved into Runtime tasks without a forwarding
+module. The MongoDB upsert-target check now lives in IO and receives the
+existing client mapping; its lower-case operation, first-dot split and
+missing-client behavior are unchanged. All in-repo imports use the new path.
+Luna pinned missing, malformed and non-Mongo targets before the move, and
+independent QA found no after-side gap.
+
+LOCAL VERIFIED: 72 affected tests and the serial non-service sweep (1,945
+passed, 13 existing skips, two known warnings) pass. Full-package Ruff/Mypy,
+Pylint import-cycle and both recursive definition checks pass. The physical
+target has no missing modules; four obsolete modules remain to delete.
+All 930 XML and seven intent-model hashes are unchanged. Step-0 retains all
+prior status counts, and all four projection payloads match the variable
+slice. The raw comparator exits 1 for the known unseeded MemStore `te` count
+changing from 13 to 9; one optional Condition shape variance is normalized.
+This is not exact raw equality.
+
+CI-ONLY VERIFICATION: no new remote or after-side external-service run.
+Facade cleanup, direct persisted database parity and complete target
+acceptance remain open.
