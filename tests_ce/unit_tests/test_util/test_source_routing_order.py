@@ -143,6 +143,96 @@ def test_invalid_variable_selector_rejects_before_interpolation_or_query(
     query.assert_not_called()
 
 
+def test_variable_source_keeps_missing_empty_and_materialized_pools_distinct(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    client = object()
+    context = SimpleNamespace(
+        default_separator="|",
+        get_client_by_id=Mock(return_value=client),
+        data_source_len={},
+        root=SimpleNamespace(descriptor_dir=Path("/descriptor"), stable_distribution_seed=Mock(return_value=7)),
+    )
+    statement = SimpleNamespace(
+        source="db",
+        selector=None,
+        iteration_selector=None,
+        separator=None,
+        distribution=SourceDistribution.ORDERED,
+        unique=False,
+        cyclic=False,
+        source_entity=None,
+        type=None,
+        name="variable",
+        full_name="variable",
+        is_global_variable=False,
+    )
+    monkeypatch.setattr(variable_sources, "is_database_client", lambda _: True)
+    monkeypatch.setattr(variable_sources, "resolve_source_entity", lambda *args: None)
+
+    missing = variable_sources.plan_variable_source(
+        context, statement, DataSourcePagination(skip=0, limit=2), force_full_pool=False
+    )
+    assert missing.kind is variable_sources.VariableSourcePlanKind.ITERATOR
+    assert missing.data is None
+
+    monkeypatch.setattr(variable_sources, "resolve_source_entity", lambda *args: "rows")
+    read = Mock(return_value=[])
+    monkeypatch.setattr(variable_sources, "database_get_by_page_with_type", read)
+    empty = variable_sources.plan_variable_source(
+        context, statement, DataSourcePagination(skip=0, limit=2), force_full_pool=False
+    )
+    assert empty.kind is variable_sources.VariableSourcePlanKind.ITERATOR
+    assert empty.data == []
+    read.assert_called_once()
+    assert read.call_args.args[:2] == (client, "rows")
+    assert (read.call_args.args[2].skip, read.call_args.args[2].limit) == (0, 2)
+
+    read.reset_mock()
+    materialized = variable_sources.plan_variable_source(
+        context, statement, DataSourcePagination(skip=4, limit=2), force_full_pool=True
+    )
+    assert materialized.kind is variable_sources.VariableSourcePlanKind.STORAGE
+    assert materialized.data == []
+    read.assert_called_once_with(client, "rows")
+
+
+def test_variable_cyclic_source_reads_pool_once_and_selects_wrapped_window(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    client = object()
+    pagination = DataSourcePagination(skip=2, limit=3)
+    context = SimpleNamespace(
+        default_separator="|",
+        get_client_by_id=Mock(return_value=client),
+        data_source_len={},
+        root=SimpleNamespace(descriptor_dir=Path("/descriptor"), stable_distribution_seed=Mock(return_value=7)),
+    )
+    statement = SimpleNamespace(
+        source="db",
+        selector=None,
+        iteration_selector=None,
+        separator=None,
+        distribution=SourceDistribution.ORDERED,
+        unique=False,
+        cyclic=True,
+        source_entity="rows",
+        type=None,
+        name="variable",
+        full_name="variable",
+        is_global_variable=False,
+    )
+    rows = [{"id": 0}, {"id": 1}, {"id": 2}]
+    read = Mock(return_value=rows)
+    monkeypatch.setattr(variable_sources, "is_database_client", lambda _: True)
+    monkeypatch.setattr(variable_sources, "database_get_by_page_with_type", read)
+
+    plan = variable_sources.plan_variable_source(context, statement, pagination, force_full_pool=False)
+
+    assert list(plan.data or []) == [{"id": 2}, {"id": 0}, {"id": 1}]
+    read.assert_called_once_with(client, "rows")
+
+
 def test_generate_csv_reads_one_chunk_then_templates_against_root(monkeypatch: pytest.MonkeyPatch) -> None:
     root = SimpleNamespace(
         descriptor_dir=Path("/descriptor"), default_variable_prefix="<<", default_variable_suffix=">>"
