@@ -3,6 +3,27 @@
 from dataclasses import dataclass
 from pathlib import Path
 
+from datamimic_ce.engine.dsl.vocabulary.source_capabilities import SourceFileFormat
+
+
+@dataclass(frozen=True)
+class GenerateFileSourceRequest:
+    source: str
+    descriptor_dir: Path
+    name: str
+    separator: str
+    cyclic: bool | None
+    start_idx: int | None
+    end_idx: int | None
+    offset: int
+    source_entity: str | None
+
+
+@dataclass(frozen=True)
+class GenerateFileSource:
+    file_format: SourceFileFormat
+    rows: list[dict]
+
 
 @dataclass(frozen=True)
 class CountSourceRequest:
@@ -31,4 +52,4 @@ class VariableSourceRequest:
     cyclic: bool
 
 
-__all__ = ["CountSourceRequest", "VariableSourceRequest"]
+__all__ = ["CountSourceRequest", "GenerateFileSource", "GenerateFileSourceRequest", "VariableSourceRequest"]

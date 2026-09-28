@@ -8,11 +8,17 @@ import pytest
 
 from datamimic_ce.engine.dsl.statements.values.variables.variable_statement import VariableStatement
 from datamimic_ce.engine.dsl.vocabulary.enums.distribution_enums import SourceDistribution
+from datamimic_ce.engine.dsl.vocabulary.source_capabilities import SourceFileFormat
 from datamimic_ce.engine.io.contracts import DataSourcePagination
 from datamimic_ce.engine.io.data_sources import chunk_reader
 from datamimic_ce.engine.io.data_sources import variable as io_variable_sources
+from datamimic_ce.engine.io.data_sources.boundary.models import GenerateFileSource, GenerateFileSourceRequest
 from datamimic_ce.engine.io.data_sources.data_source_registry import DataSourceRegistry
-from datamimic_ce.engine.io.data_sources.router import select_reference_rows, window_nested_key_rows
+from datamimic_ce.engine.io.data_sources.router import (
+    read_generate_file_source,
+    select_reference_rows,
+    window_nested_key_rows,
+)
 from datamimic_ce.engine.io.exporters.core import routing as io_exporter_routing
 from datamimic_ce.engine.runtime.tasks.sources import chunk_source_reader
 from datamimic_ce.engine.runtime.tasks.sources import generate as generate_source_router
@@ -311,6 +317,9 @@ def test_generate_csv_reads_one_chunk_then_templates_against_root(monkeypatch: p
         cyclic=False,
         offset=3,
         full_name="products",
+        name="products",
+        type=None,
+        source_entity=None,
     )
     load_csv = Mock(return_value=[{"code": "<<value>>"}])
     template = Mock(return_value=[{"code": "expanded"}])
@@ -339,6 +348,127 @@ def test_generate_csv_reads_one_chunk_then_templates_against_root(monkeypatch: p
         offset=3,
     )
     template.assert_called_once_with(root, [{"code": "<<value>>"}], "<<", ">>")
+
+
+def test_generate_file_io_preserves_weighted_suffix_fallbacks(tmp_path: Path) -> None:
+    headered_weight = tmp_path / "values.wgt.csv"
+    headered_weight.write_text("value|weight\ntrue|80\nfalse|20\n", encoding="utf-8")
+    weighted_entity = tmp_path / "entities.wgt.ent.csv"
+    weighted_entity.write_text("id,name,weight\n1,Cheap,80\n2,Expensive,20\n", encoding="utf-8")
+    headerless_weight = tmp_path / "headerless.wgt.csv"
+    headerless_weight.write_text("true|80\nfalse|20\n", encoding="utf-8")
+
+    weighted_rows = read_generate_file_source(
+        GenerateFileSourceRequest(headered_weight.name, tmp_path, "values", "|", False, None, None, 0, None)
+    )
+    entity_rows = read_generate_file_source(
+        GenerateFileSourceRequest(weighted_entity.name, tmp_path, "entities", ",", False, None, None, 0, None)
+    )
+
+    assert weighted_rows is not None
+    assert weighted_rows.rows == [{"value": "true", "weight": "80"}, {"value": "false", "weight": "20"}]
+    assert entity_rows is not None
+    assert entity_rows.rows == [
+        {"id": "1", "name": "Cheap", "weight": "80"},
+        {"id": "2", "name": "Expensive", "weight": "20"},
+    ]
+    with pytest.raises(ValueError, match="headerless weighted"):
+        read_generate_file_source(
+            GenerateFileSourceRequest(headerless_weight.name, tmp_path, "headerless", "|", False, None, None, 0, None)
+        )
+
+
+def test_generate_dbunit_file_uses_name_fallback_and_offset(tmp_path: Path) -> None:
+    descriptor = tmp_path / "rows.dbunit.xml"
+    descriptor.write_text("<dataset><rows id='1'/><rows id='2'/><rows id='3'/></dataset>", encoding="utf-8")
+
+    result = read_generate_file_source(
+        GenerateFileSourceRequest(descriptor.name, tmp_path, "rows", "|", False, None, None, 1, None)
+    )
+
+    assert result is not None
+    assert result.rows == [{"id": "2"}, {"id": "3"}]
+
+
+def test_generate_file_reader_declines_memstore_and_client_ids(tmp_path: Path) -> None:
+    for source in ("memstore", "client"):
+        assert (
+            read_generate_file_source(
+                GenerateFileSourceRequest(source, tmp_path, "rows", "|", False, None, None, 0, None)
+            )
+            is None
+        )
+
+
+def test_generate_json_template_failure_keeps_loaded_rows(monkeypatch: pytest.MonkeyPatch) -> None:
+    root = SimpleNamespace(
+        descriptor_dir=Path("/descriptor"), default_variable_prefix="{{", default_variable_suffix="}}"
+    )
+    context = SimpleNamespace(root=root)
+    statement = SimpleNamespace(
+        variable_prefix=None,
+        variable_suffix=None,
+        full_name="products",
+        name="products",
+        type=None,
+        source_entity=None,
+        cyclic=False,
+        offset=0,
+    )
+    rows = [{"name": "{{ missing }}"}]
+    monkeypatch.setattr(
+        generate_source_router,
+        "read_generate_file_source",
+        Mock(return_value=GenerateFileSource(SourceFileFormat.JSON, rows)),
+    )
+    template = Mock(side_effect=[[{"name": "Ada"}], ValueError("missing template value")])
+    monkeypatch.setattr(generate_source_router, "evaluate_source_template", template)
+
+    result, build_from_source = generate_source_router.load_generate_source(
+        context, statement, "rows.json", "|", True, None, None, None
+    )
+    failed_result, failed_build = generate_source_router.load_generate_source(
+        context, statement, "rows.json", "|", True, None, None, None
+    )
+
+    assert result == [{"name": "Ada"}]
+    assert build_from_source is True
+    assert failed_result == rows
+    assert failed_build is True
+    assert template.call_args_list == [call(root, rows, "{{", "}}"), call(root, rows, "{{", "}}")]
+
+
+def test_generate_xml_template_evaluates_against_context(monkeypatch: pytest.MonkeyPatch) -> None:
+    root = SimpleNamespace(
+        descriptor_dir=Path("/descriptor"), default_variable_prefix="{{", default_variable_suffix="}}"
+    )
+    context = SimpleNamespace(root=root)
+    statement = SimpleNamespace(
+        variable_prefix=None,
+        variable_suffix=None,
+        full_name="products",
+        name="products",
+        type=None,
+        source_entity=None,
+        cyclic=False,
+        offset=0,
+    )
+    rows = [{"name": "{{ product_name }}"}]
+    monkeypatch.setattr(
+        generate_source_router,
+        "read_generate_file_source",
+        Mock(return_value=GenerateFileSource(SourceFileFormat.XML, rows)),
+    )
+    template = Mock(return_value={"name": "Example"})
+    monkeypatch.setattr(generate_source_router, "evaluate_source_template", template)
+
+    result, build_from_source = generate_source_router.load_generate_source(
+        context, statement, "rows.xml", "|", True, None, None, None
+    )
+
+    assert result == [{"name": "Example"}]
+    assert build_from_source is True
+    template.assert_called_once_with(context, rows, "{{", "}}")
 
 
 def test_nested_key_requires_a_string_source_expression_before_reading(monkeypatch: pytest.MonkeyPatch) -> None:

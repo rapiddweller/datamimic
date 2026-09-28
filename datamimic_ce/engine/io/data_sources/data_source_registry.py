@@ -21,10 +21,10 @@ logger = logging.getLogger("DATAMIMIC")
 
 
 class DataSourceRegistry:
-    """File loaders and source paging, with scalar signatures.
+    """Concrete file readers with scalar signatures.
 
-    Owns no statement/context knowledge: routing a statement's ``source=`` to one of
-    these calls is the runtime's job (``engine.runtime.tasks.sources``).
+    Owns no statement/context knowledge: ``engine.io.data_sources.router`` selects
+    readers and applies their row windows.
     """
 
     @staticmethod

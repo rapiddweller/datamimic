@@ -5,9 +5,13 @@ from pathlib import Path
 from typing import TypeVar
 
 from datamimic_ce.engine.dsl.vocabulary.constants.data_type_constants import DATA_TYPE_DICT, DATA_TYPE_LIST
-from datamimic_ce.engine.dsl.vocabulary.constants.element_constants import EL_NESTED_KEY
+from datamimic_ce.engine.dsl.vocabulary.constants.element_constants import EL_GENERATE, EL_NESTED_KEY
 from datamimic_ce.engine.dsl.vocabulary.enums.distribution_enums import SourceDistribution
-from datamimic_ce.engine.dsl.vocabulary.source_capabilities import SourceFileFormat, source_file_format_for
+from datamimic_ce.engine.dsl.vocabulary.source_capabilities import (
+    SourceFileFormat,
+    source_file_format,
+    source_file_format_for,
+)
 from datamimic_ce.engine.io.clients.client import Client
 from datamimic_ce.engine.io.clients.operations import (
     database_count_query_length,
@@ -19,7 +23,11 @@ from datamimic_ce.engine.io.clients.operations import (
 )
 from datamimic_ce.engine.io.contracts import DataSourcePagination, MemstoreSource, select_rows
 from datamimic_ce.engine.io.data_sources.boundary.entities import resolve_source_collection, resolve_source_entity
-from datamimic_ce.engine.io.data_sources.boundary.models import CountSourceRequest
+from datamimic_ce.engine.io.data_sources.boundary.models import (
+    CountSourceRequest,
+    GenerateFileSource,
+    GenerateFileSourceRequest,
+)
 from datamimic_ce.engine.io.data_sources.data_source_registry import DataSourceRegistry
 from datamimic_ce.engine.io.data_sources.selection import get_distributed_data, get_unique_data
 from datamimic_ce.engine.io.files.readers import FileUtil
@@ -95,6 +103,55 @@ def count_source(
         raise ValueError("MongoDB source requires at least attribute 'type', 'selector' or 'iterationSelector'")
 
     raise ValueError(f"Cannot determine type of client '{request.source_id}.{request.source}'")
+
+
+def read_generate_file_source(request: GenerateFileSourceRequest) -> GenerateFileSource | None:
+    """Classify and read a <generate> file source, or return None for a non-file source."""
+    file_path = request.descriptor_dir / request.source
+    file_format = source_file_format_for(EL_GENERATE, request.source)
+    if (
+        source_file_format(request.source) is SourceFileFormat.WEIGHTED_CSV
+        and not DataSourceRegistry._weighted_csv_has_header(file_path, request.separator)
+    ):
+        raise ValueError(
+            f"<generate> '{request.name}': source '{request.source}' is a headerless weighted "
+            "value|weight file - not supported at <generate>-level (only <key source=...> "
+            "applies '.wgt.csv' weights today; add a header row to read it as a plain, "
+            "unweighted CSV instead)"
+        )
+    if file_format is None:
+        return None
+
+    if file_format is SourceFileFormat.DBUNIT_XML:
+        rows = FileUtil.read_dbunit_to_dict_list(file_path, request.source_entity or request.name)[request.offset :]
+    elif file_format is SourceFileFormat.CSV:
+        rows = DataSourceRegistry.load_csv_file(
+            file_path=file_path,
+            separator=request.separator,
+            cyclic=request.cyclic,
+            start_idx=request.start_idx,
+            end_idx=request.end_idx,
+            offset=request.offset,
+        )
+    elif file_format is SourceFileFormat.JSON:
+        rows = DataSourceRegistry.load_json_file(
+            file_path, request.cyclic, request.start_idx, request.end_idx, offset=request.offset
+        )
+    elif file_format is SourceFileFormat.XLSX:
+        rows = DataSourceRegistry.load_xlsx_file(
+            file_path, request.cyclic, request.start_idx, request.end_idx, offset=request.offset
+        )
+    elif file_format is SourceFileFormat.FIXED_WIDTH:
+        rows = DataSourceRegistry.load_fixed_width_file(
+            file_path, request.cyclic, request.start_idx, request.end_idx, offset=request.offset
+        )
+    elif file_format is SourceFileFormat.XML:
+        rows = DataSourceRegistry.load_xml_file(
+            file_path, request.cyclic, request.start_idx, request.end_idx, offset=request.offset
+        )
+    else:
+        return None
+    return GenerateFileSource(file_format, rows)
 
 
 def read_nested_key_source(
@@ -208,6 +265,7 @@ def _ordered_reference_rows(
 
 __all__ = [
     "count_source",
+    "read_generate_file_source",
     "read_nested_key_source",
     "read_reference_rows",
     "select_reference_rows",

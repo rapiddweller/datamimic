@@ -134,6 +134,7 @@
         "datamimic_ce.engine.dsl.vocabulary.constants.attribute_constants:META_TYPE",
         "datamimic_ce.engine.dsl.vocabulary.constants.data_type_constants:DATA_TYPE_DICT",
         "datamimic_ce.engine.dsl.vocabulary.constants.data_type_constants:DATA_TYPE_LIST",
+        "datamimic_ce.engine.dsl.vocabulary.constants.element_constants:EL_GENERATE",
         "datamimic_ce.engine.dsl.vocabulary.constants.element_constants:EL_VARIABLE",
         "datamimic_ce.engine.dsl.vocabulary.constants.element_constants:EL_NESTED_KEY",
         "datamimic_ce.engine.dsl.vocabulary.constants.exporter_constants:EXPORTER_CONSOLE_EXPORTER",

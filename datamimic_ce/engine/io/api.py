@@ -29,11 +29,17 @@ from datamimic_ce.engine.io.contracts import (
     select_row_iterator,
 )
 from datamimic_ce.engine.io.data_sources.boundary.entities import resolve_source_collection, resolve_source_entity
-from datamimic_ce.engine.io.data_sources.boundary.models import CountSourceRequest, VariableSourceRequest
+from datamimic_ce.engine.io.data_sources.boundary.models import (
+    CountSourceRequest,
+    GenerateFileSource,
+    GenerateFileSourceRequest,
+    VariableSourceRequest,
+)
 from datamimic_ce.engine.io.data_sources.chunk_reader import ChunkSourceWindow
 from datamimic_ce.engine.io.data_sources.data_source_registry import DataSourceRegistry
 from datamimic_ce.engine.io.data_sources.router import (
     count_source,
+    read_generate_file_source,
     read_nested_key_source,
     read_reference_rows,
     select_reference_rows,
@@ -94,6 +100,8 @@ __all__ = [
     "RdbmsConnectionConfig",
     "SmokeExportRequest",
     "CountSourceRequest",
+    "GenerateFileSource",
+    "GenerateFileSourceRequest",
     "VariableSourceRequest",
     "TestResultExporter",
     "UnifiedBufferedExporter",
@@ -121,6 +129,7 @@ __all__ = [
     "resolve_source_collection",
     "resolve_source_entity",
     "read_nested_key_source",
+    "read_generate_file_source",
     "read_reference_rows",
     "read_variable_query",
     "read_variable_source",
