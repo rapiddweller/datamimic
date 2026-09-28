@@ -1,0 +1,140 @@
+{
+  "schema_version": "2.1.0",
+  "components": [
+    {
+      "id": "FLOW-BRANCHES",
+      "label": "branches",
+      "role": "component",
+      "packages": ["datamimic_ce.engine.runtime.tasks.flow.branches"],
+      "responsibilities": ["Select the first matching branch, record it as executed, and propagate nested products."],
+      "forbidden_responsibilities": ["Own loop or command execution."],
+      "provenance": ["docs/architecture/inner/target.md"],
+      "requires": [],
+      "public": [
+        "datamimic_ce.engine.runtime.tasks.flow.branches.condition_task:ConditionTask",
+        "datamimic_ce.engine.runtime.tasks.flow.branches.else_if_task:ElseIfTask",
+        "datamimic_ce.engine.runtime.tasks.flow.branches.else_task:ElseTask",
+        "datamimic_ce.engine.runtime.tasks.flow.branches.if_task:IfTask"
+      ],
+      "decided_by": "agent"
+    },
+    {
+      "id": "FLOW-LOOPS",
+      "label": "loops",
+      "role": "component",
+      "packages": ["datamimic_ce.engine.runtime.tasks.flow.loops"],
+      "responsibilities": ["Reevaluate the loop condition between iterations and enforce its iteration cap."],
+      "forbidden_responsibilities": ["Own branch or command execution."],
+      "provenance": ["docs/architecture/inner/target.md"],
+      "requires": [],
+      "public": ["datamimic_ce.engine.runtime.tasks.flow.loops.while_task:WhileTask"],
+      "decided_by": "agent"
+    },
+    {
+      "id": "FLOW-ASSERTION",
+      "label": "assertion",
+      "role": "component",
+      "packages": ["datamimic_ce.engine.runtime.tasks.flow.commands.assert_task"],
+      "responsibilities": ["Fail execution when a declared assertion is false."],
+      "forbidden_responsibilities": ["Own general diagnostics or script execution."],
+      "provenance": ["docs/architecture/inner/target.md"],
+      "requires": [],
+      "public": ["datamimic_ce.engine.runtime.tasks.flow.commands.assert_task:AssertTask"],
+      "decided_by": "agent"
+    },
+    {
+      "id": "FLOW-DIAGNOSTICS",
+      "label": "diagnostics",
+      "role": "component",
+      "packages": ["datamimic_ce.engine.runtime.tasks.flow.commands.echo_task"],
+      "responsibilities": ["Emit nonfatal diagnostic output after descriptor interpolation."],
+      "forbidden_responsibilities": ["Own assertions or script execution."],
+      "provenance": ["docs/architecture/inner/target.md"],
+      "requires": [],
+      "public": ["datamimic_ce.engine.runtime.tasks.flow.commands.echo_task:EchoTask"],
+      "decided_by": "agent"
+    },
+    {
+      "id": "FLOW-SCRIPT-EXECUTION",
+      "label": "script-execution",
+      "role": "component",
+      "packages": ["datamimic_ce.engine.runtime.tasks.flow.commands.execute_task"],
+      "responsibilities": ["Execute inline, file, or expression Python, SQL, and Bash in setup or nested-key scope only."],
+      "forbidden_responsibilities": ["Accept direct generate children."],
+      "provenance": ["docs/architecture/inner/target.md"],
+      "requires": [],
+      "public": ["datamimic_ce.engine.runtime.tasks.flow.commands.execute_task:ExecuteTask"],
+      "decided_by": "agent"
+    }
+  ],
+  "rules": [
+    {
+      "id": "FLOW-ASSIGNMENT",
+      "kind": "complete_assignment",
+      "source": "datamimic_ce.engine.runtime.tasks.flow",
+      "rationale": "Every flow module has one semantic owner.",
+      "provenance": ["docs/architecture/inner/target.md"],
+      "decided_by": "agent"
+    },
+    {
+      "id": "FLOW-REQUIRES",
+      "kind": "complete_requires",
+      "include_type_checking": true,
+      "rationale": "Semantic leaves have no cross-leaf dependencies.",
+      "provenance": ["docs/architecture/inner/target.md"],
+      "decided_by": "agent"
+    },
+    {
+      "id": "FLOW-INTERFACES",
+      "kind": "interface_boundary",
+      "include_type_checking": true,
+      "rationale": "Task leaves expose only their declared public task classes.",
+      "provenance": ["docs/architecture/inner/target.md"],
+      "decided_by": "agent"
+    },
+    {
+      "id": "FLOW-ACYCLIC",
+      "kind": "no_component_cycles",
+      "rationale": "Semantic leaves do not depend on one another.",
+      "provenance": ["docs/architecture/inner/target.md"],
+      "decided_by": "agent"
+    },
+    {
+      "id": "LAYOUT-ENGINE-RUNTIME-TASKS-FLOW-BRANCHES",
+      "kind": "root_layout",
+      "root": "datamimic_ce.engine.runtime.tasks.flow.branches",
+      "allowed_children": [
+        "datamimic_ce.engine.runtime.tasks.flow.branches.condition_task",
+        "datamimic_ce.engine.runtime.tasks.flow.branches.else_if_task",
+        "datamimic_ce.engine.runtime.tasks.flow.branches.else_task",
+        "datamimic_ce.engine.runtime.tasks.flow.branches.if_else_base_task",
+        "datamimic_ce.engine.runtime.tasks.flow.branches.if_task"
+      ],
+      "rationale": "Branch adapters share one internal base; commands is only a physical grouping.",
+      "provenance": ["docs/architecture/inner/structure-review.json"],
+      "decided_by": "agent"
+    },
+    {
+      "id": "LAYOUT-ENGINE-RUNTIME-TASKS-FLOW-LOOPS",
+      "kind": "root_layout",
+      "root": "datamimic_ce.engine.runtime.tasks.flow.loops",
+      "allowed_children": ["datamimic_ce.engine.runtime.tasks.flow.loops.while_task"],
+      "rationale": "The loop package contains WhileTask only.",
+      "provenance": ["docs/architecture/inner/structure-review.json"],
+      "decided_by": "agent"
+    },
+    {
+      "id": "LAYOUT-ENGINE-RUNTIME-TASKS-FLOW-COMMANDS",
+      "kind": "root_layout",
+      "root": "datamimic_ce.engine.runtime.tasks.flow.commands",
+      "allowed_children": [
+        "datamimic_ce.engine.runtime.tasks.flow.commands.assert_task",
+        "datamimic_ce.engine.runtime.tasks.flow.commands.echo_task",
+        "datamimic_ce.engine.runtime.tasks.flow.commands.execute_task"
+      ],
+      "rationale": "Commands is physical grouping for assertion, diagnostics and script execution leaves.",
+      "provenance": ["docs/architecture/inner/structure-review.json"],
+      "decided_by": "agent"
+    }
+  ]
+}

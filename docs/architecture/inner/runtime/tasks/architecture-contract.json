@@ -163,11 +163,13 @@
       "packages": [
         "datamimic_ce.engine.runtime.tasks.flow"
       ],
+      "inside": "docs/architecture/inner/runtime/tasks/flow/architecture-contract.json",
       "responsibilities": [
-        "Branch, loop, assert, echo and Execute in every valid row/root scope."
+        "Controls branch selection, bounded loops, assertions, diagnostics and scripted effects."
       ],
       "forbidden_responsibilities": [
-        "Own setup lifecycle or Generate worker selection"
+        "Own setup lifecycle or Generate worker selection",
+        "Allow direct imports between semantic leaves"
       ],
       "provenance": [
         "docs/architecture/inner/target.md"
@@ -185,7 +187,6 @@
         "datamimic_ce.engine.runtime.tasks.flow.branches.else_if_task:ElseIfTask",
         "datamimic_ce.engine.runtime.tasks.flow.branches.else_task:ElseTask",
         "datamimic_ce.engine.runtime.tasks.flow.commands.execute_task:ExecuteTask",
-        "datamimic_ce.engine.runtime.tasks.flow.branches.if_else_base_task:IfElseBaseTask",
         "datamimic_ce.engine.runtime.tasks.flow.branches.if_task:IfTask",
         "datamimic_ce.engine.runtime.tasks.flow.loops.while_task:WhileTask",
         "datamimic_ce.engine.runtime.tasks.flow.commands.echo_task:EchoTask"
@@ -336,51 +337,6 @@
         "datamimic_ce.engine.runtime.tasks.flow.branches",
         "datamimic_ce.engine.runtime.tasks.flow.commands",
         "datamimic_ce.engine.runtime.tasks.flow.loops"
-      ],
-      "rationale": "Branch, loop, assert, echo and Execute in every valid row/root scope. Exact reviewed target children; no hidden extra modules.",
-      "provenance": [
-        "docs/architecture/inner/structure-review.json"
-      ],
-      "decided_by": "agent"
-    },
-    {
-      "id": "LAYOUT-ENGINE-RUNTIME-TASKS-FLOW-BRANCHES",
-      "kind": "root_layout",
-      "root": "datamimic_ce.engine.runtime.tasks.flow.branches",
-      "allowed_children": [
-        "datamimic_ce.engine.runtime.tasks.flow.branches.condition_task",
-        "datamimic_ce.engine.runtime.tasks.flow.branches.else_if_task",
-        "datamimic_ce.engine.runtime.tasks.flow.branches.else_task",
-        "datamimic_ce.engine.runtime.tasks.flow.branches.if_else_base_task",
-        "datamimic_ce.engine.runtime.tasks.flow.branches.if_task"
-      ],
-      "rationale": "Branch, loop, assert, echo and Execute in every valid row/root scope. Exact reviewed target children; no hidden extra modules.",
-      "provenance": [
-        "docs/architecture/inner/structure-review.json"
-      ],
-      "decided_by": "agent"
-    },
-    {
-      "id": "LAYOUT-ENGINE-RUNTIME-TASKS-FLOW-COMMANDS",
-      "kind": "root_layout",
-      "root": "datamimic_ce.engine.runtime.tasks.flow.commands",
-      "allowed_children": [
-        "datamimic_ce.engine.runtime.tasks.flow.commands.assert_task",
-        "datamimic_ce.engine.runtime.tasks.flow.commands.echo_task",
-        "datamimic_ce.engine.runtime.tasks.flow.commands.execute_task"
-      ],
-      "rationale": "Branch, loop, assert, echo and Execute in every valid row/root scope. Exact reviewed target children; no hidden extra modules.",
-      "provenance": [
-        "docs/architecture/inner/structure-review.json"
-      ],
-      "decided_by": "agent"
-    },
-    {
-      "id": "LAYOUT-ENGINE-RUNTIME-TASKS-FLOW-LOOPS",
-      "kind": "root_layout",
-      "root": "datamimic_ce.engine.runtime.tasks.flow.loops",
-      "allowed_children": [
-        "datamimic_ce.engine.runtime.tasks.flow.loops.while_task"
       ],
       "rationale": "Branch, loop, assert, echo and Execute in every valid row/root scope. Exact reviewed target children; no hidden extra modules.",
       "provenance": [
