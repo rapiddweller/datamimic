@@ -15,7 +15,7 @@ from datamimic_ce.engine.runtime.scripting.evaluation import evaluate_condition_
 from datamimic_ce.engine.runtime.tasks.base.counts import get_int_count, resolve_count
 from datamimic_ce.engine.runtime.tasks.base.dispatch import create_task
 from datamimic_ce.engine.runtime.tasks.base.task import GenSubTask
-from datamimic_ce.engine.runtime.tasks.sources.router import (
+from datamimic_ce.engine.runtime.tasks.sources.nested import (
     finalize_nested_key_source,
     load_nested_key_source,
 )

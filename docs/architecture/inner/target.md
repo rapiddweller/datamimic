@@ -69,7 +69,8 @@ for edition-only additions and the superseded Experiment 3 proposal.
         values/
           key_variable_task.py  scalar/  structured/  reference/task.py  variable/{task.py, iterator.py}
           construction/{converters.py, entity.py, entity_constructor.py, factory.py, global_increment.py, sequence_table.py}
-        sources/                statement/context-to-IO request adaptation
+        sources/                generate.py, length.py, nested.py, reference.py,
+                                variable.py, chunk_source_reader.py; statement/context-to-IO adaptation
         generate/
           task.py  export_order.py
           workers/              selected execution strategy
@@ -214,6 +215,9 @@ buffered exporter names to its rule context; pure authoring rules do not import 
   models, parser binding, runtime reflection and bundle assembly by ownership.
 - Narrow current IO/Runtime facades: a renamed concrete class is not a typed
   operation boundary. Existing root type findings remain visible.
+- Keep Runtime source adapters split by operation: generate loading, source
+  length, nested-key loading/finalization and reference selection. These modules
+  adapt statements and context; source algorithms remain in IO/data_sources.
 - `errors/context/` is still deferred in CE by Amendment 18. Do not create an
   empty mirror of an EE feature that has no CE consumer.
 - Public Python module paths move for 5.0 without shims. Keep installed CLI

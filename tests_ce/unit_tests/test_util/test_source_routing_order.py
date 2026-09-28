@@ -15,7 +15,9 @@ from datamimic_ce.engine.io.data_sources.data_source_registry import DataSourceR
 from datamimic_ce.engine.io.data_sources.router import select_reference_rows, window_nested_key_rows
 from datamimic_ce.engine.io.exporters.core import routing as io_exporter_routing
 from datamimic_ce.engine.runtime.tasks.sources import chunk_source_reader
-from datamimic_ce.engine.runtime.tasks.sources import router as source_router
+from datamimic_ce.engine.runtime.tasks.sources import generate as generate_source_router
+from datamimic_ce.engine.runtime.tasks.sources import length as length_source_router
+from datamimic_ce.engine.runtime.tasks.sources import nested as nested_source_router
 from datamimic_ce.engine.runtime.tasks.sources import variable as variable_sources
 from datamimic_ce.engine.runtime.tasks.sources.chunk_source_reader import ChunkSourceReader
 
@@ -115,8 +117,8 @@ def test_length_cache_keeps_same_named_sources_separate() -> None:
     root.get_client_by_id.return_value = None
     context = SimpleNamespace(root=root)
 
-    source_router.set_data_source_length(context, _variable_statement("first", full_name="consumer"))
-    source_router.set_data_source_length(context, _variable_statement("second", full_name="consumer"))
+    length_source_router.set_data_source_length(context, _variable_statement("first", full_name="consumer"))
+    length_source_router.set_data_source_length(context, _variable_statement("second", full_name="consumer"))
 
     assert root.data_source_len == {("consumer", "first"): 2, ("consumer", "second"): 5}
     first.get_data_len_by_type.assert_called_once_with("rows")
@@ -313,9 +315,9 @@ def test_generate_csv_reads_one_chunk_then_templates_against_root(monkeypatch: p
     load_csv = Mock(return_value=[{"code": "<<value>>"}])
     template = Mock(return_value=[{"code": "expanded"}])
     monkeypatch.setattr(DataSourceRegistry, "load_csv_file", load_csv)
-    monkeypatch.setattr(source_router, "evaluate_source_template", template)
+    monkeypatch.setattr(generate_source_router, "evaluate_source_template", template)
 
-    rows, build_from_source = source_router.load_generate_source(
+    rows, build_from_source = generate_source_router.load_generate_source(
         context,
         statement,
         "rows.csv",
@@ -343,10 +345,10 @@ def test_nested_key_requires_a_string_source_expression_before_reading(monkeypat
     context = SimpleNamespace(evaluate_python_expression=Mock(return_value=7), root=SimpleNamespace())
     statement = SimpleNamespace(source="{source_id}", name="items", type="list")
     source_format = Mock()
-    monkeypatch.setattr(source_router, "source_file_format_for", source_format)
+    monkeypatch.setattr(nested_source_router, "source_file_format_for", source_format)
 
     with pytest.raises(ValueError, match="Source expression of <nestedKey> 'items' must evaluate to a string"):
-        source_router.load_nested_key_source(context, statement)
+        nested_source_router.load_nested_key_source(context, statement)
 
     context.evaluate_python_expression.assert_called_once_with("source_id")
     source_format.assert_not_called()
@@ -369,9 +371,9 @@ def test_nested_key_file_sources_bypass_memstore(monkeypatch: pytest.MonkeyPatch
         cyclic=False,
     )
     read = Mock(return_value=[])
-    monkeypatch.setattr(source_router, "read_nested_key_source", read)
+    monkeypatch.setattr(nested_source_router, "read_nested_key_source", read)
 
-    assert source_router.load_nested_key_source(context, statement) == []
+    assert nested_source_router.load_nested_key_source(context, statement) == []
     read.assert_called_once()
 
 
@@ -389,7 +391,7 @@ def test_nested_key_dict_with_unknown_source_never_inspects_memstore() -> None:
     )
 
     with pytest.raises(ValueError, match="dict.*does not support format"):
-        source_router.load_nested_key_source(context, statement)
+        nested_source_router.load_nested_key_source(context, statement)
 
 
 def test_nested_key_templates_before_distribution_seed_and_selection(monkeypatch: pytest.MonkeyPatch) -> None:
@@ -414,10 +416,10 @@ def test_nested_key_templates_before_distribution_seed_and_selection(monkeypatch
     selected = [{"v": "selected"}]
     timeline.template.return_value = templated
     timeline.distribute.return_value = selected
-    monkeypatch.setattr(source_router, "evaluate_source_template", timeline.template)
-    monkeypatch.setattr(source_router, "get_distributed_data", timeline.distribute)
+    monkeypatch.setattr(nested_source_router, "evaluate_source_template", timeline.template)
+    monkeypatch.setattr(nested_source_router, "get_distributed_data", timeline.distribute)
 
-    assert source_router.finalize_nested_key_source(context, statement, rows) == selected
+    assert nested_source_router.finalize_nested_key_source(context, statement, rows) == selected
     assert timeline.mock_calls == [
         call.template(context, rows, "{{", "}}"),
         call.seed(),
@@ -616,7 +618,7 @@ def test_generate_prefers_memstore_while_variable_prefers_client_for_same_source
         targets=set(),
     )
 
-    rows, _ = source_router.load_generate_source(
+    rows, _ = generate_source_router.load_generate_source(
         generate_context, generate, source_id, "|", False, 0, 1, DataSourcePagination(skip=0, limit=1)
     )
     assert rows == [{"id": "memstore"}]
@@ -688,12 +690,12 @@ def test_empty_mongodb_generate_source_only_falls_back_for_upsert(
         targets=targets,
     )
     query = Mock(return_value=[])
-    monkeypatch.setattr(source_router, "is_mongodb_client", lambda value: value is mongo)
+    monkeypatch.setattr(generate_source_router, "is_mongodb_client", lambda value: value is mongo)
     monkeypatch.setattr(io_exporter_routing, "is_mongodb_client", lambda value: value is mongo)
-    monkeypatch.setattr(source_router, "interpolate_variables", Mock(return_value="{}"))
-    monkeypatch.setattr(source_router, "database_get_by_page_with_query", query)
+    monkeypatch.setattr(generate_source_router, "interpolate_variables", Mock(return_value="{}"))
+    monkeypatch.setattr(generate_source_router, "database_get_by_page_with_query", query)
 
-    rows, build_from_source = source_router.load_generate_source(
+    rows, build_from_source = generate_source_router.load_generate_source(
         SimpleNamespace(root=root), statement, "mongo", "|", False, 0, 1, DataSourcePagination(skip=0, limit=1)
     )
 

@@ -209,14 +209,15 @@
       "provenance": [
         "docs/architecture/inner/target.md"
       ],
+      "inside": "docs/architecture/inner/runtime/tasks/sources/architecture-contract.json",
       "requires": [],
       "public": [
-        "datamimic_ce.engine.runtime.tasks.sources.router:data_source_cache_key",
-        "datamimic_ce.engine.runtime.tasks.sources.router:set_data_source_length",
-        "datamimic_ce.engine.runtime.tasks.sources.router:load_nested_key_source",
-        "datamimic_ce.engine.runtime.tasks.sources.router:finalize_nested_key_source",
-        "datamimic_ce.engine.runtime.tasks.sources.router:load_reference_source",
-        "datamimic_ce.engine.runtime.tasks.sources.router:reference_uses_shared_cycle",
+        "datamimic_ce.engine.runtime.tasks.sources.length:data_source_cache_key",
+        "datamimic_ce.engine.runtime.tasks.sources.length:set_data_source_length",
+        "datamimic_ce.engine.runtime.tasks.sources.nested:load_nested_key_source",
+        "datamimic_ce.engine.runtime.tasks.sources.nested:finalize_nested_key_source",
+        "datamimic_ce.engine.runtime.tasks.sources.reference:load_reference_source",
+        "datamimic_ce.engine.runtime.tasks.sources.reference:reference_uses_shared_cycle",
         "datamimic_ce.engine.runtime.tasks.sources.variable:VariableSourcePlanKind",
         "datamimic_ce.engine.runtime.tasks.sources.variable:load_variable_iteration_selector",
         "datamimic_ce.engine.runtime.tasks.sources.variable:load_variable_lazy_source",
@@ -375,21 +376,6 @@
         "datamimic_ce.engine.runtime.tasks.setup.state_machine_task"
       ],
       "rationale": "Ordered declarations/client registration/includes; not an eager preprocessing phase. Exact reviewed target children; no hidden extra modules.",
-      "provenance": [
-        "docs/architecture/inner/structure-review.json"
-      ],
-      "decided_by": "agent"
-    },
-    {
-      "id": "LAYOUT-ENGINE-RUNTIME-TASKS-SOURCES",
-      "kind": "root_layout",
-      "root": "datamimic_ce.engine.runtime.tasks.sources",
-      "allowed_children": [
-        "datamimic_ce.engine.runtime.tasks.sources.chunk_source_reader",
-        "datamimic_ce.engine.runtime.tasks.sources.router",
-        "datamimic_ce.engine.runtime.tasks.sources.variable"
-      ],
-      "rationale": "Statement/context resolution and IO request adaptation only. Exact reviewed target children; no hidden extra modules.",
       "provenance": [
         "docs/architecture/inner/structure-review.json"
       ],

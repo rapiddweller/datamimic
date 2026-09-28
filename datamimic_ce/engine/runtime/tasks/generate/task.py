@@ -27,10 +27,7 @@ from datamimic_ce.engine.runtime.tasks.base.counts import get_int_count, resolve
 from datamimic_ce.engine.runtime.tasks.base.dispatch import create_task
 from datamimic_ce.engine.runtime.tasks.base.task import CommonSubTask
 from datamimic_ce.engine.runtime.tasks.generate.policies.single_process_policy import resolve_single_process
-from datamimic_ce.engine.runtime.tasks.sources.router import (
-    data_source_cache_key,
-    set_data_source_length,
-)
+from datamimic_ce.engine.runtime.tasks.sources.length import data_source_cache_key, set_data_source_length
 
 
 class GenerateTask(CommonSubTask):

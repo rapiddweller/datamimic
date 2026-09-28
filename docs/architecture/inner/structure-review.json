@@ -2195,11 +2195,14 @@
     {
       "source": "engine/runtime/sources/router.py",
       "targets": [
-        "engine/runtime/tasks/sources/router.py",
+        "engine/runtime/tasks/sources/generate.py",
+        "engine/runtime/tasks/sources/length.py",
+        "engine/runtime/tasks/sources/nested.py",
+        "engine/runtime/tasks/sources/reference.py",
         "engine/io/data_sources/router.py",
         "engine/io/exporters/core/routing.py"
       ],
-      "reason": "Astra target decision; see semantic-review/astra-target-decision.md."
+      "reason": "Amendment 48; see refactoring-study/experiment-2/amendments/amendment-48.md."
     },
     {
       "source": "engine/runtime/sources/variable.py",

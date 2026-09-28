@@ -12,7 +12,7 @@ from datamimic_ce.engine.io.api import DataSourcePagination
 from datamimic_ce.engine.runtime.contexts.context import Context
 from datamimic_ce.engine.runtime.contexts.geniter_context import GenIterContext
 from datamimic_ce.engine.runtime.tasks.base.task import GenSubTask
-from datamimic_ce.engine.runtime.tasks.sources.router import load_reference_source, reference_uses_shared_cycle
+from datamimic_ce.engine.runtime.tasks.sources.reference import load_reference_source, reference_uses_shared_cycle
 
 
 class ReferenceTask(GenSubTask):

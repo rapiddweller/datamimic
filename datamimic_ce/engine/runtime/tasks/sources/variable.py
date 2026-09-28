@@ -21,7 +21,7 @@ from datamimic_ce.engine.io.api import (
 )
 from datamimic_ce.engine.runtime.contexts.context import Context, SetupContext
 from datamimic_ce.engine.runtime.scripting.evaluation import interpolate_variables
-from datamimic_ce.engine.runtime.tasks.sources.router import data_source_cache_key
+from datamimic_ce.engine.runtime.tasks.sources.length import data_source_cache_key
 
 
 class VariableSourcePlanKind(str, Enum):
