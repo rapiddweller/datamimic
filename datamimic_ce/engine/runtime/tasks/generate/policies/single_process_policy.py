@@ -25,7 +25,7 @@ from datamimic_ce.engine.dsl.api import (
 )
 from datamimic_ce.engine.io.api import Client, uses_mysql_sequence_storage
 from datamimic_ce.engine.runtime.logging import logger
-from datamimic_ce.engine.runtime.tasks.values.construction.entity_constructor import _parse_constructor_string
+from datamimic_ce.engine.runtime.tasks.values.construction.entity_constructor import parse_constructor_string
 
 ClientMap = Mapping[str, Client]
 
@@ -53,7 +53,7 @@ def _uses_domain_identifiers(stmt: GenerateStatement, seeded: bool, clients: Cli
     while stack:
         current = stack.pop()
         if isinstance(current, VariableStatement) and current.entity is not None:
-            entity_name, _kwargs = _parse_constructor_string(current.entity)
+            entity_name, _kwargs = parse_constructor_string(current.entity)
             spec = get_entity_spec(entity_name)
             if spec is not None and any(field.unique_identifier_format is not None for field in spec.attributes):
                 return True

@@ -287,7 +287,8 @@
         }
       ],
       "public": [
-        "datamimic_ce.engine.runtime.scripting.evaluation"
+        "datamimic_ce.engine.runtime.scripting.evaluation",
+        "datamimic_ce.engine.runtime.scripting.plugins:execute_script"
       ],
       "decided_by": "agent"
     }

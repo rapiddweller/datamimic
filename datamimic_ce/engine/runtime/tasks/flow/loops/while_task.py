@@ -7,7 +7,6 @@
 from datamimic_ce.engine.dsl.api import WhileStatement
 from datamimic_ce.engine.runtime.contexts.geniter_context import GenIterContext
 from datamimic_ce.engine.runtime.tasks.base.task import CommonSubTask, GenSubTask
-from datamimic_ce.engine.runtime.tasks.flow.branches.condition_task import ConditionTask
 
 
 class WhileTask(GenSubTask):
@@ -28,7 +27,6 @@ class WhileTask(GenSubTask):
 
     def execute(self, parent_context: GenIterContext) -> None:
         from datamimic_ce.engine.runtime.tasks.base.dispatch import create_task
-        from datamimic_ce.engine.runtime.tasks.generate.task import GenerateTask
 
         child_tasks = [
             create_task(child_stmt, parent_context.root)
@@ -45,7 +43,7 @@ class WhileTask(GenSubTask):
             # Side-effect loop: the body's <key>/<variable> mutate the row (current_product/variables),
             # so re-executing them per iteration advances the condition. Results are not accumulated.
             for child_task in child_tasks:
-                if not isinstance(child_task, GenerateTask | ConditionTask | GenSubTask | CommonSubTask):
+                if not isinstance(child_task, GenSubTask | CommonSubTask):
                     raise ValueError(f"Unexpected sub-task in <while>: {type(child_task)}")
                 child_task.execute(parent_context)
             iterations += 1

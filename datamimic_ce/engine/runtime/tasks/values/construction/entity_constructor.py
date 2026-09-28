@@ -3,7 +3,7 @@
 from ast import literal_eval
 
 
-def _parse_constructor_string(constructor_string: str) -> tuple[str, dict[str, object]]:
+def parse_constructor_string(constructor_string: str) -> tuple[str, dict[str, object]]:
     constructor_string = constructor_string.strip()
     opening = constructor_string.find("(")
     closing = constructor_string.rfind(")")

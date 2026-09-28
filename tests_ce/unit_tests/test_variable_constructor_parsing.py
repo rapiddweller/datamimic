@@ -13,11 +13,12 @@ from datamimic_ce.engine.dsl.api import Statement
 from datamimic_ce.engine.dsl.model.values.variables.variable_model import VariableModel
 from datamimic_ce.engine.dsl.statements.values.variables.variable_statement import VariableStatement
 from datamimic_ce.engine.runtime.contexts.context import SetupContext
-from datamimic_ce.engine.runtime.tasks.values.variables.variable_task import VariableTask, _parse_constructor_string
+from datamimic_ce.engine.runtime.tasks.values.construction.entity_constructor import parse_constructor_string
+from datamimic_ce.engine.runtime.tasks.values.variables.variable_task import VariableTask
 
 
 def test_constructor_arguments_keep_literal_types_and_string_fallback():
-    assert _parse_constructor_string("Person(code='0012', count=3, mode=fast)") == (
+    assert parse_constructor_string("Person(code='0012', count=3, mode=fast)") == (
         "Person",
         {"code": "0012", "count": 3, "mode": "fast"},
     )

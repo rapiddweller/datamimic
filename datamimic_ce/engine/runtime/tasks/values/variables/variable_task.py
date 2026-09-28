@@ -32,7 +32,7 @@ from datamimic_ce.engine.runtime.tasks.sources.variable import (
     load_variable_lazy_source,
     plan_variable_source,
 )
-from datamimic_ce.engine.runtime.tasks.values.construction.entity_constructor import _parse_constructor_string
+from datamimic_ce.engine.runtime.tasks.values.construction.entity_constructor import parse_constructor_string
 from datamimic_ce.engine.runtime.tasks.values.key_variable_task import KeyVariableTask
 from datamimic_ce.engine.runtime.tasks.values.variables.variable_iterator import VariableIterator
 
@@ -174,7 +174,7 @@ class VariableTask(KeyVariableTask, CommonSubTask):
     ):
         from datamimic_ce.domains.api import DemographicConfig, spawn_rng
 
-        entity_class_name, kwargs = _parse_constructor_string(entity_name)
+        entity_class_name, kwargs = parse_constructor_string(entity_name)
         # Inject dataset if not explicitly provided in constructor
         kwargs.setdefault("dataset", dataset)
         demographic_context = ctx.root.demographic_context

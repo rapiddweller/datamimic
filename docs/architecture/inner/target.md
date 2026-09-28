@@ -250,6 +250,10 @@ worker keeps its local import. No legacy forwarding modules or descriptor edits.
 
 IO uses DSL vocabulary modules and input parsers directly; `dsl.api` remains the facade for external consumers.
 
+### S3G13 Runtime internal boundaries
+
+Contexts use the public script execution operation; task families share declared value-construction operations. `WhileTask` accepts the common subtask bases directly.
+
 1. Freeze the target definition and record baseline/tool findings separately.
 2. Implement CE slices: neutral primitives and errors; DSL families; IO boundaries;
    Runtime task composition; Authoring/projection; entry points and packaging.
