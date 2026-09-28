@@ -270,7 +270,7 @@
         "datamimic_ce.engine.runtime.scripting"
       ],
       "responsibilities": [
-        "Expression evaluation/interpolation, seeded expression-global policy and boolean condition invariant."
+        "Expression evaluation/interpolation, result normalization and error translation, seeded expression-global policy and boolean condition invariant."
       ],
       "forbidden_responsibilities": [
         "Own run state, task scheduling, or external clients."
@@ -372,7 +372,7 @@
         "datamimic_ce.engine.runtime.scripting.expression_globals",
         "datamimic_ce.engine.runtime.scripting.plugins"
       ],
-      "rationale": "Expression evaluation/interpolation, seeded expression-global policy and boolean condition invariant. Exact reviewed target children; no hidden extra modules.",
+      "rationale": "Expression evaluation/interpolation, result normalization and error translation, seeded expression-global policy and boolean condition invariant. Exact reviewed target children; no hidden extra modules.",
       "provenance": [
         "docs/architecture/inner/structure-review.json"
       ],

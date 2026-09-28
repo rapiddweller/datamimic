@@ -8,9 +8,7 @@ from __future__ import annotations  # Enable forward declarations
 
 import copy
 import random
-import re
 import secrets
-import types
 from abc import ABC, abstractmethod
 from pathlib import Path
 from random import Random
@@ -30,19 +28,12 @@ from datamimic_ce.engine.dsl.api import ExportOperation, SetupStatement
 from datamimic_ce.engine.io.api import Client, Exporter, TestResultExporter, dispose_client_engine
 from datamimic_ce.engine.runtime.contexts.demographic_context import DemographicContext
 from datamimic_ce.engine.runtime.logging import logger
-from datamimic_ce.engine.runtime.scripting.evaluation import evaluate_python
-from datamimic_ce.engine.runtime.scripting.expression_globals import NON_VALUE_TYPES, expression_globals
+from datamimic_ce.engine.runtime.scripting import evaluation
+from datamimic_ce.engine.runtime.scripting.expression_globals import expression_globals
 from datamimic_ce.engine.runtime.scripting.plugins import execute_script
 from datamimic_ce.engine.runtime.storage.global_increment import GlobalIncrementRegistry
 from datamimic_ce.engine.runtime.storage.memstore_manager import MemstoreManager
 from datamimic_ce.randomness import RandomSource
-
-# The number-one authoring trap: bare record-local names only resolve at the top level.
-# Appended to undefined-name errors so the failure itself teaches the scope rule.
-_SCOPE_GUIDANCE = (
-    "a same-scope sibling resolves bare (or via this.) - check the name; "
-    "an ANCESTOR scope's name needs parent./root., it does not resolve bare"
-)
 
 
 class Context(ABC):
@@ -90,7 +81,7 @@ class Context(ABC):
         # Convert namespace dict to dotable dict
         for key, value in data_dict.items():
             if isinstance(value, dict):
-                data_dict[key] = DotableDict(value)
+                data_dict[key] = evaluation.DotableDict(value)
 
         # Canonical scope aliases, mirroring DATAMIMIC EE (bound only when not already a user name):
         #  - `this`: the current content scope, so `this.field` == bare `field` (essential in nested
@@ -98,13 +89,13 @@ class Context(ABC):
         #  - `parent`: the immediate parent generate/nestedKey scope.
         #  - `root`: the full merged content tree from the outermost scope down (root.<field> / root.<name>.<field>).
         if "this" not in data_dict:
-            data_dict["this"] = DotableDict(self._current_scope())
+            data_dict["this"] = evaluation.DotableDict(self._current_scope())
         if "parent" not in data_dict:
             parent_scope = self._parent_scope()
             if parent_scope:
-                data_dict["parent"] = DotableDict(parent_scope)
+                data_dict["parent"] = evaluation.DotableDict(parent_scope)
         if "root" not in data_dict:
-            data_dict["root"] = DotableDict(dict(content_tree))
+            data_dict["root"] = evaluation.DotableDict(dict(content_tree))
 
         is_seeded = self.root.is_seeded
         eval_globals = expression_globals(
@@ -112,102 +103,7 @@ class Context(ABC):
             rng=self.rng if is_seeded else None,
             seeded_faker_supplier=lambda: self.root.seeded_faker,
         )
-        try:
-            result = evaluate_python(expr, eval_globals, data_dict)
-
-            if isinstance(result, DotableDict):
-                return result.to_dict()
-            elif isinstance(result, list):
-                return [ele.to_dict() if isinstance(ele, DotableDict) else ele for ele in result]
-            # check result is not function, class or module
-            elif callable(result) or isinstance(result, types.ModuleType):
-                raise ValueError(f"'{expr}' is an callable function, not a valid type (string, integer, float,...)")
-            elif type(result) in NON_VALUE_TYPES:
-                raise ValueError(
-                    f"'{expr}' is {type(result).__name__} function, not a valid type (string, integer, float,...)"
-                )
-            else:
-                return result
-        except NameError as e:
-            # Same exception TYPE as before (ValueError) — only the message improves:
-            # name the missing identifier and teach the scope rule.
-            missing = e.name if e.name is not None else str(e)
-            raise ValueError(
-                f"Failed while evaluate '{expr}': name '{missing}' is not defined in this scope; {_SCOPE_GUIDANCE}"
-            ) from e
-        except AttributeError as e:
-            # DotableDict raises this for a missing field on this./parent./root. (str(e)
-            # already names it: "Cannot find attribute 'x'"); native ones carry e.name.
-            missing_attr = f"missing attribute '{e.name}'" if e.name is not None else str(e)
-            raise ValueError(f"Failed while evaluate '{expr}': {missing_attr}; {_SCOPE_GUIDANCE}") from e
-        except KeyError as e:
-            missing_key = e.args[0] if e.args else str(e)
-            raise ValueError(f"Failed while evaluate '{expr}': missing key {missing_key!r}") from e
-        except TypeError as e:
-            raise ValueError(f"Failed while evaluate '{expr}': '{expr}' have undefined item or wrong structure") from e
-        except SyntaxError as e:
-            # special case with expr have ':' (example xml tag: 'gc:CodeList')
-            if ":" in expr:
-                # encode ':' character
-                colon_replacement = "__"
-                expr = expr.replace(r"\:", "__")
-
-                def process_after_dot(match):
-                    # After the first dot, replace all : with __
-                    part_after_dot = match.group(1)
-                    return "." + re.sub(r"[:]", "__", part_after_dot)
-
-                # Find the first dot and apply the transformation
-                expr = re.sub(r"\.(.*)", process_after_dot, expr)
-
-                def recursion_data_dict(recursion_dict):
-                    updated_dict = {}
-                    for recursion_key, recursion_value in recursion_dict.items():
-                        if isinstance(recursion_value, dict):
-                            recursion_value = recursion_data_dict(recursion_value)
-                        if isinstance(recursion_value, DotableDict):
-                            recursion_value = DotableDict(recursion_data_dict(recursion_value.to_dict()))
-                        updated_dict[recursion_key.replace(":", colon_replacement)] = recursion_value
-                    return updated_dict
-
-                updated_data_dict = recursion_data_dict(data_dict)
-                try:
-                    result = evaluate_python(expr, eval_globals, updated_data_dict)
-                    if isinstance(result, DotableDict):
-                        return result.to_dict()
-                    elif isinstance(result, list):
-                        return [ele.to_dict() if isinstance(ele, DotableDict) else ele for ele in result]
-                    # check result is not function, class or module
-                    elif callable(result) or isinstance(result, types.ModuleType):
-                        raise ValueError(
-                            f"'{expr}' is an callable function, not a valid type (string, integer, float,...)"
-                        )
-                    elif type(result) in NON_VALUE_TYPES:
-                        raise ValueError(
-                            f"'{expr}' is {type(result).__name__} "
-                            f"function, not a valid type (string, integer, float,...)"
-                        )
-                    else:
-                        return result
-                except Exception as err:
-                    # decode ':' character
-                    expr = expr.replace(colon_replacement, ":")
-                    raise ValueError(
-                        f"Evaluation error for expression '{expr}': "
-                        "The expression may contain undefined items, improper structure, "
-                        "or case-sensitive issues (e.g., using 'true' instead of 'True'). "
-                        "Please double-check that all parameters and type notations are correct and supported."
-                    ) from err
-            else:
-                raise ValueError(
-                    f"Evaluation error for expression '{expr}': "
-                    "The expression may contain undefined elements, formatting errors, "
-                    "or unsupported parameter names. Ensure that boolean values and all parameter names "
-                    "(e.g., 'True' vs 'true') adhere to the required formats."
-                ) from e
-        except Exception as e:
-            #  Keep error reporting consistent; avoid extra stdout noise from traceback.print_exc()
-            raise ValueError(f"Failed while evaluate '{expr}': {str(e)}") from e
+        return evaluation.evaluate_python(expr, eval_globals, data_dict)
 
     def _current_scope(self) -> dict[str, object]:
         """The current content scope for the ``this`` alias: ``this.field`` resolves to the same value as
@@ -284,39 +180,6 @@ class Context(ABC):
 
         return data_dict
 
-
-class DotableDict:
-    """
-    Dotable presentation of dict
-    """
-
-    def __init__(self, dictionary: dict[str, object]):
-        self._dictionary = dictionary
-
-    def __getattr__(self, name: str) -> object:
-        if name in self._dictionary:
-            item = self._dictionary[name]
-            if isinstance(item, dict):
-                return DotableDict(item)
-            elif isinstance(item, list):
-                return [DotableDict(x) if isinstance(x, dict) else x for x in item]
-            else:
-                return item
-        else:
-            raise AttributeError(f"Cannot find attribute '{name}'")
-
-    def get(self, name: str) -> object:
-        return self.__getattr__(name)
-
-    def to_dict(self) -> dict[str, object]:
-        """
-        Convert DotableDict to dict
-        :return:
-        """
-        return self._dictionary
-
-    def keys(self):
-        return self._dictionary.keys()
 
 class TaskExporters(TypedDict):
     page_count: int
