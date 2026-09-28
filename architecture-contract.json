@@ -42,11 +42,7 @@
           "rationale": "Interfaces support the package's Python 3.10 floor."
         }
       ],
-      "public": [
-        "datamimic_ce.interfaces.python.data_mimic_test:DataMimicTest",
-        "datamimic_ce.interfaces.python.datamimic:DataMimic",
-        "datamimic_ce.interfaces.python.factory:DataMimicTestFactory"
-      ],
+      "public": [],
       "planned": [],
       "decided_by": "agent",
       "inside": "docs/architecture/inner/interfaces/architecture-contract.json"
@@ -849,6 +845,14 @@
     }
   ],
   "declarations": {
+    "public_api": [
+      "datamimic_ce.interfaces.python.datamimic:DataMimic",
+      "datamimic_ce.interfaces.python.data_mimic_test:DataMimicTest",
+      "datamimic_ce.interfaces.python.factory:DataMimicTestFactory"
+    ],
+    "public_api_provenance": [
+      "docs/architecture/refactoring-study/experiment-2/target-architecture.md"
+    ],
     "public_commands": [
       {
         "id": "CMD-DATAMIMIC",

@@ -109,11 +109,7 @@
       "responsibilities": [
         "Python caller/test-factory adaptation; factory.py is a module."
       ],
-      "public": [
-        "datamimic_ce.interfaces.python.data_mimic_test:DataMimicTest",
-        "datamimic_ce.interfaces.python.datamimic:DataMimic",
-        "datamimic_ce.interfaces.python.factory:DataMimicTestFactory"
-      ],
+      "public": [],
       "decided_by": "agent",
       "role": "component",
       "forbidden_responsibilities": [
