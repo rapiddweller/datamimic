@@ -256,6 +256,11 @@
       ],
       "requires": [
         {
+          "component": "base",
+          "rationale": "Use the shared connection-profile loader contract.",
+          "decided_by": "agent"
+        },
+        {
           "component": "setup",
           "rationale": "Load a document, initialize built-in composition and parse its setup.",
           "decided_by": "agent"
