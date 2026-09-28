@@ -25,4 +25,8 @@ frozen descriptor inventory.
 
 CI-ONLY VERIFICATION: not run. Full old/current descriptor capture,
 service-backed cases, and final target acceptance remain open. An
-`UNVERIFIED` dynamic case is not a parity claim.
+`UNVERIFIED` dynamic case is not a parity claim. The local ArchKeel candidate
+reports one new `IO-API-TYPES` finding for the returned dynamic database row
+shape (`list[dict[str, object]]`); the target type rule is not yet met. Its
+`validate` result is `UNKNOWN` (94 baseline-new findings and 13 inherited
+public-interface diagnostics), not a green architecture gate.
