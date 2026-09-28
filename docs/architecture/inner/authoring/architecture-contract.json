@@ -9,7 +9,7 @@
         "datamimic_ce.authoring.api"
       ],
       "responsibilities": [
-        "Public use-case entry."
+        "Exposes capabilities, check, reference, run, and scaffold as typed entry points that delegate to the authoring application."
       ],
       "forbidden_responsibilities": [
         "Own compilation, verification, or transport behavior."

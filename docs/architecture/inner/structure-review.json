@@ -2330,13 +2330,13 @@
     {"target": "engine/dsl/statements/traversal.py", "responsibility": "Traverses statement ancestry and branches to resolve enclosing generation relationships."},
     {"target": "engine/io/connection_config/properties.py", "responsibility": "Loads connection profile properties from the supported configuration sources."},
     {"target": "engine/io/contracts.py", "responsibility": "Defines IO paging, memstore, entity-value and smoke-export contracts plus shared page selection."},
-    {"target": "engine/io/data_sources/boundary/entities.py", "responsibility": "Converts resolved source rows into the entity shapes consumed by runtime tasks."},
+    {"target": "engine/io/data_sources/boundary/entities.py", "responsibility": "Resolves source entity and MongoDB collection names from descriptor fields at the IO boundary."},
     {"target": "engine/io/data_sources/boundary/models.py", "responsibility": "Defines typed source requests that carry resolved inputs without runtime context or statements."},
-    {"target": "engine/io/data_sources/chunk_reader.py", "responsibility": "Reads and pages chunked source data at the IO boundary."},
+    {"target": "engine/io/data_sources/chunk_reader.py", "responsibility": "Selects unique or distributed rows from a loaded source pool and slices pages within one chunk."},
     {"target": "engine/io/data_sources/router.py", "responsibility": "Routes typed source requests to the correct IO read, selection, and paging operations."},
     {"target": "engine/io/data_sources/variable.py", "responsibility": "Reads variable source pools or pages from resolved file, database, and memstore requests."},
-    {"target": "engine/io/exporters/core/routing.py", "responsibility": "Resolves target metadata into exporter selection and write destinations."},
-    {"target": "engine/io/exporters/core/serialization.py", "responsibility": "Serializes generated entities into the row and document forms required by exporters."},
+    {"target": "engine/io/exporters/core/routing.py", "responsibility": "Resolves target entity names from metadata and detects MongoDB upsert targets."},
+    {"target": "engine/io/exporters/core/serialization.py", "responsibility": "Converts XML-shaped dictionaries by dropping attribute keys and unwrapping text nodes."},
     {"target": "engine/io/exporters/registry.py", "responsibility": "Registers and selects exporter implementations for declared target formats."},
     {"target": "engine/runtime/contexts/context.py", "responsibility": "Owns root and nested execution context state for descriptor runs."},
     {"target": "engine/runtime/scripting/evaluation.py", "responsibility": "Evaluates descriptor Python expressions and interpolates runtime values into source templates."},
@@ -2355,6 +2355,6 @@
     {"target": "engine/runtime/tasks/values/construction/factory.py", "responsibility": "Creates runtime value generators from DSL value declarations and execution context."},
     {"target": "engine/runtime/tasks/values/construction/global_increment.py", "responsibility": "Implements the global increment generator using the root-scoped counter registry."},
     {"target": "engine/runtime/tasks/values/variable/task.py", "responsibility": "Executes variable statements by selecting their source mode and producing row values."},
-    {"target": "randomness.py", "responsibility": "Provides the shared seeded random source and sampling primitive used by IO and domains."}
+    {"target": "randomness.py", "responsibility": "Defines the shared random-source protocol and a bell-shaped index sampler."}
   ]
 }

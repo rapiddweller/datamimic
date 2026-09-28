@@ -212,7 +212,7 @@
         "datamimic_ce.domains.shared"
       ],
       "responsibilities": [
-        "Reusable cross-industry domain concepts."
+        "Owns reusable generators, converters, datasets, demographic profiles, models, and services shared by industry domains."
       ],
       "forbidden_responsibilities": [
         "Import vertical behavior or Runtime context."

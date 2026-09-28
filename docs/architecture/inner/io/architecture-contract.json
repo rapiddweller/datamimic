@@ -9,7 +9,7 @@
         "datamimic_ce.engine.io.api"
       ],
       "responsibilities": [
-        "Supported IO operations."
+        "Exposes client, source-read, file, and exporter operations to Runtime through the IO facade."
       ],
       "forbidden_responsibilities": [
         "Own connectors, source loading, or output writes."
