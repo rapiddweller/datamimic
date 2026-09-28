@@ -127,7 +127,7 @@
         "datamimic_ce.engine.runtime.contexts"
       ],
       "responsibilities": [
-        "Closed Context/SetupContext hierarchy, row state and seeded expression dependencies."
+        "Closed Context/SetupContext hierarchy and row state."
       ],
       "forbidden_responsibilities": [
         "Start workers or construct external clients."
@@ -160,7 +160,6 @@
       "public": [
         "datamimic_ce.engine.runtime.contexts.context",
         "datamimic_ce.engine.runtime.contexts.demographic_context",
-        "datamimic_ce.engine.runtime.contexts.expression_globals",
         "datamimic_ce.engine.runtime.contexts.geniter_context",
         "datamimic_ce.engine.runtime.contexts.records"
       ],
@@ -271,7 +270,7 @@
         "datamimic_ce.engine.runtime.scripting"
       ],
       "responsibilities": [
-        "Expression evaluation/interpolation and boolean condition invariant."
+        "Expression evaluation/interpolation, seeded expression-global policy and boolean condition invariant."
       ],
       "forbidden_responsibilities": [
         "Own run state, task scheduling, or external clients."
@@ -288,6 +287,7 @@
       ],
       "public": [
         "datamimic_ce.engine.runtime.scripting.evaluation",
+        "datamimic_ce.engine.runtime.scripting.expression_globals",
         "datamimic_ce.engine.runtime.scripting.plugins:execute_script"
       ],
       "decided_by": "agent"
@@ -340,11 +340,10 @@
       "allowed_children": [
         "datamimic_ce.engine.runtime.contexts.context",
         "datamimic_ce.engine.runtime.contexts.demographic_context",
-        "datamimic_ce.engine.runtime.contexts.expression_globals",
         "datamimic_ce.engine.runtime.contexts.geniter_context",
         "datamimic_ce.engine.runtime.contexts.records"
       ],
-      "rationale": "Closed Context/SetupContext hierarchy, row state and seeded expression dependencies. Exact reviewed target children; no hidden extra modules.",
+      "rationale": "Closed Context/SetupContext hierarchy and row state. Exact reviewed target children; no hidden extra modules.",
       "provenance": [
         "docs/architecture/inner/structure-review.json"
       ],
@@ -370,9 +369,10 @@
       "root": "datamimic_ce.engine.runtime.scripting",
       "allowed_children": [
         "datamimic_ce.engine.runtime.scripting.evaluation",
+        "datamimic_ce.engine.runtime.scripting.expression_globals",
         "datamimic_ce.engine.runtime.scripting.plugins"
       ],
-      "rationale": "Expression evaluation/interpolation and boolean condition invariant. Exact reviewed target children; no hidden extra modules.",
+      "rationale": "Expression evaluation/interpolation, seeded expression-global policy and boolean condition invariant. Exact reviewed target children; no hidden extra modules.",
       "provenance": [
         "docs/architecture/inner/structure-review.json"
       ],

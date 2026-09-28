@@ -1924,6 +1924,10 @@
       "target": "engine/io/files/readers.py"
     },
     {
+      "source": "engine/runtime/contexts/expression_globals.py",
+      "target": "engine/runtime/scripting/expression_globals.py"
+    },
+    {
       "source": "engine/runtime/counts.py",
       "target": "engine/runtime/tasks/base/counts.py"
     },

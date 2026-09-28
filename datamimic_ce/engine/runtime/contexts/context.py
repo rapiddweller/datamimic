@@ -29,9 +29,9 @@ from datamimic_ce.domains.api import (
 from datamimic_ce.engine.dsl.api import ExportOperation, SetupStatement
 from datamimic_ce.engine.io.api import Client, Exporter, TestResultExporter, dispose_client_engine
 from datamimic_ce.engine.runtime.contexts.demographic_context import DemographicContext
-from datamimic_ce.engine.runtime.contexts.expression_globals import NON_VALUE_TYPES, expression_globals
 from datamimic_ce.engine.runtime.logging import logger
 from datamimic_ce.engine.runtime.scripting.evaluation import evaluate_python
+from datamimic_ce.engine.runtime.scripting.expression_globals import NON_VALUE_TYPES, expression_globals
 from datamimic_ce.engine.runtime.scripting.plugins import execute_script
 from datamimic_ce.engine.runtime.storage.global_increment import GlobalIncrementRegistry
 from datamimic_ce.engine.runtime.storage.memstore_manager import MemstoreManager

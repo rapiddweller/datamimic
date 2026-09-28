@@ -58,7 +58,7 @@ for edition-only additions and the superseded Experiment 3 proposal.
       logging.py  process_titles.py
       contexts/                 execution state, row/iteration scope
       storage/                  run-local store handles and lifecycle
-      scripting/                expression evaluation, read-only script helpers
+      scripting/                expression evaluation, seeded expression globals, read-only script helpers
         plugins/                only real extension implementations
       tasks/
         base/                   task protocols, shared count resolution and dispatch
