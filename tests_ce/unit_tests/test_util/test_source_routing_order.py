@@ -196,6 +196,46 @@ def test_nested_key_requires_a_string_source_expression_before_reading(monkeypat
     source_format.assert_not_called()
 
 
+@pytest.mark.parametrize(
+    "source",
+    ["items.csv", "items.json"],
+)
+def test_nested_key_file_sources_bypass_memstore(monkeypatch: pytest.MonkeyPatch, source: str) -> None:
+    root = SimpleNamespace(descriptor_dir=Path("/descriptor"), default_separator="|", memstore_manager=Mock())
+    root.memstore_manager.contain.side_effect = AssertionError("file sources must bypass memstore")
+    context = SimpleNamespace(root=root)
+    statement = SimpleNamespace(
+        source=source,
+        type="list",
+        source_entity="items",
+        name="items",
+        separator=None,
+        cyclic=False,
+    )
+    read = Mock(return_value=[])
+    monkeypatch.setattr(source_router, "read_nested_key_source", read)
+
+    assert source_router.load_nested_key_source(context, statement) == []
+    read.assert_called_once()
+
+
+def test_nested_key_dict_with_unknown_source_never_inspects_memstore() -> None:
+    root = SimpleNamespace(descriptor_dir=Path("/descriptor"), default_separator="|", memstore_manager=Mock())
+    root.memstore_manager.contain.side_effect = AssertionError("dict sources must bypass memstore")
+    context = SimpleNamespace(root=root)
+    statement = SimpleNamespace(
+        source="items.unknown",
+        type="dict",
+        source_entity="items",
+        name="items",
+        separator=None,
+        cyclic=False,
+    )
+
+    with pytest.raises(ValueError, match="dict.*does not support format"):
+        source_router.load_nested_key_source(context, statement)
+
+
 def test_nested_key_templates_before_distribution_seed_and_selection(monkeypatch: pytest.MonkeyPatch) -> None:
     timeline = Mock()
     root = SimpleNamespace(

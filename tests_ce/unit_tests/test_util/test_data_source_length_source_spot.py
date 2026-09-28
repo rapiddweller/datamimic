@@ -16,8 +16,8 @@ from datamimic_ce.engine.dsl.statements.values.structured.nested_key_statement i
 from datamimic_ce.engine.dsl.statements.values.variables.variable_statement import VariableStatement
 from datamimic_ce.engine.dsl.vocabulary.source_capabilities import SourceFileFormat, source_capabilities
 from datamimic_ce.engine.io.api import FileUtil
+from datamimic_ce.engine.io.data_sources import router as io_source_router
 from datamimic_ce.engine.io.data_sources.data_source_registry import DataSourceRegistry
-from datamimic_ce.engine.runtime.sources import router as source_router
 from datamimic_ce.engine.runtime.sources.router import set_data_source_length
 
 
@@ -114,6 +114,20 @@ def test_nonfile_source_still_uses_memstore_classification(
     generic.assert_not_called()
 
 
+def test_supported_file_length_never_inspects_memstore_or_client(monkeypatch: pytest.MonkeyPatch) -> None:
+    context, root = _context()
+    statement = _statement(VariableStatement, "rows.csv", "rows")
+    reader = Mock(return_value=[{}, {}])
+    root.memstore_manager.contain.side_effect = AssertionError("file sources must bypass memstore")
+    root.get_client_by_id.side_effect = AssertionError("file sources must bypass clients")
+    monkeypatch.setattr(DataSourceRegistry, "_get_source", reader)
+
+    set_data_source_length(context, statement)
+
+    assert root.data_source_len == {("consumer", "rows.csv"): 2}
+    reader.assert_called_once_with("/descriptor/rows.csv", "|", SourceFileFormat.CSV)
+
+
 def test_cached_source_length_skips_reader(monkeypatch: pytest.MonkeyPatch) -> None:
     context, root = _context()
     statement = _statement(VariableStatement, "rows.csv", "rows")
@@ -151,7 +165,7 @@ def test_mongodb_count_requires_selector_entity_or_type(monkeypatch: pytest.Monk
     statement._selector = None
     statement._iteration_selector = None
     context.root.get_client_by_id.return_value = object()
-    monkeypatch.setattr(source_router, "is_mongodb_client", lambda _: True)
+    monkeypatch.setattr(io_source_router, "is_mongodb_client", lambda _: True)
 
     with pytest.raises(
         ValueError, match="MongoDB source requires at least attribute 'type', 'selector' or 'iterationSelector'"
