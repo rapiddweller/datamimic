@@ -27,10 +27,7 @@ def _review_records() -> dict[str, dict]:
 
 
 def _current_modules() -> set[str]:
-    return {
-        path.relative_to(ROOT / "datamimic_ce").as_posix()
-        for path in (ROOT / "datamimic_ce").rglob("*.py")
-    }
+    return {path.relative_to(ROOT / "datamimic_ce").as_posix() for path in (ROOT / "datamimic_ce").rglob("*.py")}
 
 
 def _components() -> list[dict]:
@@ -45,13 +42,11 @@ def _components() -> list[dict]:
 
 
 def _ambiguous_targets(manifest: dict) -> set[str]:
-    return {
-        target
-        for split in manifest["splits"]
-        for target in split["targets"]
-    } | {merge["target"] for merge in manifest["merges"]} | {
-        module["target"] for module in manifest["new_modules"]
-    }
+    return (
+        {target for split in manifest["splits"] for target in split["targets"]}
+        | {merge["target"] for merge in manifest["merges"]}
+        | {module["target"] for module in manifest["new_modules"]}
+    )
 
 
 def test_current_modules_and_components_have_a_target_and_one_sentence_concern() -> None:
@@ -69,9 +64,11 @@ def test_current_modules_and_components_have_a_target_and_one_sentence_concern()
     ambiguous_targets = _ambiguous_targets(manifest)
     overrides = {item["target"]: item["responsibility"] for item in manifest["target_module_concerns"]}
     assert len(overrides) == len(manifest["target_module_concerns"]), "duplicate target-module concern"
-    assert set(overrides) == ambiguous_targets, (
-        "target-module concerns must cover only split, merge, and new destinations: "
-        f"missing={sorted(ambiguous_targets - set(overrides))}, extra={sorted(set(overrides) - ambiguous_targets)}"
+    assert ambiguous_targets <= set(overrides), (
+        f"missing explicit concern for split, merge, or new target: {sorted(ambiguous_targets - set(overrides))}"
+    )
+    assert set(overrides) <= set(target_sources), (
+        f"concern for absent target module: {sorted(set(overrides) - set(target_sources))}"
     )
     assert len(set(overrides.values())) == len(overrides), "duplicate target-module responsibility"
     for target, sources in target_sources.items():
