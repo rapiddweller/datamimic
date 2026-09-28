@@ -364,3 +364,39 @@ latest service evidence.
 CI-ONLY VERIFICATION: no new remote run. IO source boundaries, the task
 registry, direct database-output parity and complete target acceptance remain
 open.
+
+## Eleventh slice: cold task registry and IO source ownership
+
+The task registry now lives in `runtime.tasks.registry`; the package initializer
+imports it so fresh multiprocessing workers still register tasks. A real
+two-worker descriptor test proves custom registration in worker processes.
+The source-format catalog stays in DSL vocabulary. IO now owns source counting,
+nested-key file/memstore reads, reference row fetching and selection. Runtime
+still resolves statements, expressions, clients, seed and cache. No old-path
+forwarding module was added. Independent tests pin file-before-provider order,
+the Mongo error path, and lazy reference RNG behavior. Astra rejected a proposed
+dict pre-scan guard: that scan historically probes providers before the loader
+rejects the source, so the guard and its test were removed.
+
+LOCAL VERIFIED: 1,940 non-service tests passed, 13 existing skips and two known
+Pydantic warnings; full-package Ruff/Mypy (497 modules), Pylint import-cycle
+check and both recursive definition tests pass. The physical target still has
+five missing modules and seven legacy/unowned modules. All 930 XML and seven
+intent-model hashes match the frozen files. Step-0 inventoried all 930 XML
+files; one otherwise successful multiprocessing descriptor lost its child result
+under the four-job sweep (453 captured, 77 unrunnable), then passed in an
+isolated repeat. The other two differences from the prior slice are unseeded
+Condition and MemStore value/count variance; all four capability/compiler/
+authoring projection hashes match the prior slice. The raw comparison exits 1,
+so this is classified evidence, not a green equality claim.
+
+Released ArchKeel 0.8.0 exits 2/UNKNOWN on this full CE scan because its
+bundled analyzer exceeds its fixed 60-second deadline (tracked as #192). A
+newer local candidate completes coverage but reports 13 target modules not
+built yet, two stale graph edges and 132 public-interface diagnostics; these
+must be resolved individually after the remaining physical moves. Neither run
+is a passing target gate. The latest isolated service-backed suite remains the
+S3F2 result, not a verification of these source moves.
+
+CI-ONLY VERIFICATION: no new remote run. Chunk/variable source boundaries,
+direct persisted database parity and complete target acceptance remain open.
