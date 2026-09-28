@@ -46,19 +46,73 @@ def test_shape_rejects_unknown_against_concrete_type() -> None:
     assert not shape_compatible("unknown", "int")
 
 
-def test_shape_does_not_accept_different_field_presence_counts() -> None:
+def test_shape_accepts_optional_field_presence_variance() -> None:
     before = {
         "type": "object",
         "fields": {"name": "str"},
-        "presence_counts": {"name": {"present": 1, "total": 2}},
+        "presence_counts": {"name": {"present": 1, "total": 4}},
     }
     after = {
         "type": "object",
         "fields": {"name": "str"},
-        "presence_counts": {"name": {"present": 2, "total": 2}},
+        "presence_counts": {"name": {"present": 2, "total": 4}},
     }
 
-    assert not shape_compatible(before, after)
+    assert shape_compatible(before, after)
+
+
+def test_shape_accepts_nested_optional_field_presence_variance() -> None:
+    def shape(car_present: int) -> dict:
+        return {
+            "type": "object",
+            "fields": {
+                "pet": {
+                    "type": "object",
+                    "fields": {
+                        "car": {
+                            "type": "object",
+                            "fields": {"maker": "str"},
+                            "presence_counts": {
+                                "maker": {"present": car_present, "total": car_present}
+                            },
+                        }
+                    },
+                    "presence_counts": {"car": {"present": car_present, "total": 5}},
+                }
+            },
+            "presence_counts": {"pet": {"present": 5, "total": 5}},
+        }
+
+    assert shape_compatible(shape(1), shape(2))
+
+
+@pytest.mark.parametrize(
+    ("before_count", "after_count"),
+    [(1, 4), (4, 1)],
+)
+def test_shape_rejects_required_optional_field_change(before_count: int, after_count: int) -> None:
+    def shape(present: int) -> dict:
+        return {
+            "type": "object",
+            "fields": {"name": "str"},
+            "presence_counts": {"name": {"present": present, "total": 4}},
+        }
+
+    assert not shape_compatible(shape(before_count), shape(after_count))
+
+
+@pytest.mark.parametrize(
+    ("present", "total"),
+    [(0, 4), (5, 4), (1.5, 4), (1, 0)],
+)
+def test_shape_rejects_invalid_presence_counts(present: int | float, total: int) -> None:
+    invalid_shape = {
+        "type": "object",
+        "fields": {"name": "str"},
+        "presence_counts": {"name": {"present": present, "total": total}},
+    }
+
+    assert not shape_compatible(invalid_shape, invalid_shape)
 
 
 def test_shape_does_not_accept_legacy_object_without_presence_metadata() -> None:

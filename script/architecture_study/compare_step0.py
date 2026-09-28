@@ -110,9 +110,22 @@ def shape_compatible(before: Any, after: Any) -> bool:
             return False
         if before_presence.keys() != before_fields.keys() or after_presence.keys() != after_fields.keys():
             return False
-        if before_presence != after_presence:
-            return False
         for name in before_fields:
+            old_count, new_count = before_presence[name], after_presence[name]
+            if not isinstance(old_count, dict) or not isinstance(new_count, dict):
+                return False
+            old_present, old_total = old_count.get("present"), old_count.get("total")
+            new_present, new_total = new_count.get("present"), new_count.get("total")
+            if (
+                type(old_present) is not int
+                or type(new_present) is not int
+                or type(old_total) is not int
+                or type(new_total) is not int
+                or not 0 < old_present <= old_total
+                or not 0 < new_present <= new_total
+                or (old_present == old_total) != (new_present == new_total)
+            ):
+                return False
             before_field, after_field = before_fields[name], after_fields[name]
             if not shape_compatible(before_field, after_field):
                 return False
