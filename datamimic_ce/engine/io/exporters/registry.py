@@ -7,6 +7,7 @@
 import logging
 from collections.abc import Callable
 
+from datamimic_ce.engine.dsl.parsers.input.target import parse_function_string
 from datamimic_ce.engine.dsl.vocabulary.constants.exporter_constants import (
     EXPORTER_CONSOLE_EXPORTER,
     EXPORTER_CSV,
@@ -28,7 +29,6 @@ from datamimic_ce.engine.io.exporters.core.exporter import Exporter
 from datamimic_ce.engine.io.exporters.core.exporter_config import ExporterConfig
 from datamimic_ce.engine.io.exporters.core.exporter_context import ExporterContext
 from datamimic_ce.engine.io.exporters.core.exporter_state_manager import ExporterStateManager
-from datamimic_ce.engine.io.exporters.core.routing import parse_function_string
 from datamimic_ce.engine.io.exporters.core.unified_buffered_exporter import UnifiedBufferedExporter
 from datamimic_ce.engine.io.exporters.database.database_exporter import DatabaseExporter
 from datamimic_ce.engine.io.exporters.database.mongodb_exporter import MongoDBExporter

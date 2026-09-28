@@ -245,6 +245,7 @@
       "public": [
         "datamimic_ce.engine.dsl.parsers.document.descriptor_parser:DescriptorParser",
         "datamimic_ce.engine.dsl.parsers.input.properties:parse_properties",
+        "datamimic_ce.engine.dsl.parsers.input.target:parse_function_string",
         "datamimic_ce.engine.dsl.parsers.input.xml:DTDForbiddenError",
         "datamimic_ce.engine.dsl.parsers.input.xml:parse_xml_file",
         "datamimic_ce.engine.dsl.parsers.input.xml:parse_xml_source"

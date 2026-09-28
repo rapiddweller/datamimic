@@ -52,7 +52,6 @@ from datamimic_ce.engine.io.exporters.core.exporter_config import ExporterConfig
 from datamimic_ce.engine.io.exporters.core.exporter_state_manager import ExporterStateManager
 from datamimic_ce.engine.io.exporters.core.routing import (
     has_mongodb_upsert_target,
-    parse_function_string,
     resolve_target_entity,
     resolve_target_entity_from_metadata,
 )
@@ -112,7 +111,6 @@ __all__ = [
     "is_mongodb_client",
     "is_rdbms_client",
     "mongodb_count_collection",
-    "parse_function_string",
     "resolve_source_collection",
     "resolve_source_entity",
     "read_nested_key_source",

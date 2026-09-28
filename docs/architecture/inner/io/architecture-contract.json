@@ -235,7 +235,6 @@
         "datamimic_ce.engine.io.exporters.core.exporter_context:MemstoreProvider",
         "datamimic_ce.engine.io.exporters.core.exporter_state_manager:ExporterStateManager",
         "datamimic_ce.engine.io.exporters.core.exporter_state_manager:ExporterStateStorage",
-        "datamimic_ce.engine.io.exporters.core.routing:parse_function_string",
         "datamimic_ce.engine.io.exporters.core.routing:resolve_target_entity",
         "datamimic_ce.engine.io.exporters.core.routing:resolve_target_entity_from_metadata",
         "datamimic_ce.engine.io.exporters.core.routing:has_mongodb_upsert_target",

@@ -2298,6 +2298,10 @@
     {
       "target": "engine/io/data_sources/boundary/models.py",
       "reason": "Typed resolved source requests with no Context/Statement. Put new IO boundary contracts here rather than importing runtime context; actual request invariant earns module."
+    },
+    {
+      "target": "engine/dsl/parsers/input/target.py",
+      "reason": "Own the shared target-call syntax parser with DSL input parsing, so authoring rules do not depend on IO."
     }
   ]
 }

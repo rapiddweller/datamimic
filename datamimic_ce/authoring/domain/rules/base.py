@@ -25,9 +25,16 @@ if TYPE_CHECKING:
 
 
 class LintContext:
-    def __init__(self, root: etree._Element, schemas: SchemaIndex, base_dir: Path | None = None):
+    def __init__(
+        self,
+        root: etree._Element,
+        schemas: SchemaIndex,
+        buffered_exporter_names: frozenset[str],
+        base_dir: Path | None = None,
+    ):
         self.root = root
         self.schemas = schemas
+        self.buffered_exporter_names = buffered_exporter_names
         self.base_dir = base_dir  # descriptor dir; None for inline XML without one
 
     def iter(self, *tags: str) -> Iterator[etree._Element]:

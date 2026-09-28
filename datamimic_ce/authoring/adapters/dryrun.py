@@ -450,7 +450,8 @@ def _parse_buffered_targets(targets: set[str]) -> list[_FileTarget]:
     """The subset of raw target strings that are buffered FILE exporters, parsed to
     (name, params). Membership in the exporter registry is the dispatch — memstores,
     clients, Console/Log never appear there, so they can never be smoked."""
-    from datamimic_ce.engine.io.api import buffered_exporter_names, parse_function_string
+    from datamimic_ce.engine.dsl.parsers.input.target import parse_function_string
+    from datamimic_ce.engine.io.api import buffered_exporter_names
 
     parsed: list[_FileTarget] = []
     buffered_names = buffered_exporter_names()

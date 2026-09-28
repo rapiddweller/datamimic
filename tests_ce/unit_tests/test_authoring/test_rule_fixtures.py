@@ -240,6 +240,43 @@ def test_dm401_dm402_hints_show_the_memstore_declaration() -> None:
     assert '<memstore id="mem"/>' in diag.fix_hint
 
 
+def test_dm401_uses_adapter_exporter_names_and_reports_parse_errors() -> None:
+    from datamimic_ce.authoring.adapters.linter import lint_source
+    from datamimic_ce.engine.io.api import buffered_exporter_names
+
+    buffered_names = buffered_exporter_names()
+    valid_targets = ", ".join(sorted(buffered_names))
+    valid = lint_source(
+        '<setup rngSeed="1"><generate name="g" count="1" '
+        f'target="{valid_targets}"/></setup>'
+    )
+    assert not [diagnostic for diagnostic in valid.diagnostics if diagnostic.rule == "DM401"]
+
+    invalid = lint_source(
+        '<setup rngSeed="1"><generate name="g" count="1" target="unknown_target"/></setup>'
+    )
+    diag = next(diagnostic for diagnostic in invalid.diagnostics if diagnostic.rule == "DM401")
+    assert "known targets:" in diag.fix_hint
+    assert all(name in diag.fix_hint for name in buffered_names)
+    assert "ConsoleExporter" in diag.fix_hint
+
+    malformed = lint_source(
+        '<setup rngSeed="1"><generate name="g" count="1" target="CSV(chunk_size=)"/></setup>'
+    )
+    malformed_diag = next(diagnostic for diagnostic in malformed.diagnostics if diagnostic.rule == "DM401")
+    assert "target parser returned: Error parsing function string: invalid syntax" in malformed_diag.message
+
+
+@pytest.mark.parametrize("target", ("123", "True", "None"))
+def test_dm401_rejects_non_string_target_constants_without_crashing(target: str) -> None:
+    from datamimic_ce.authoring.adapters.linter import lint_source
+
+    result = lint_source(
+        f'<setup rngSeed="1"><generate name="g" count="1" target="{target}"/></setup>'
+    )
+    assert any(diagnostic.rule == "DM401" for diagnostic in result.diagnostics)
+
+
 def test_dry_run_never_crashes_on_parse_error() -> None:
     from datamimic_ce.authoring.adapters.dryrun import dry_run_source
 

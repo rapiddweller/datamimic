@@ -139,7 +139,7 @@ def test_evaluators_cannot_replace_catalog_message_or_fix_hint() -> None:
     assert not violations, f"evaluators must project catalog-owned diagnostics: {violations}"
 
     root = etree.fromstring(b"<setup/>")
-    ctx = LintContext(root, build_schema_index())
+    ctx = LintContext(root, build_schema_index(), frozenset())
     for rule in ALL_RULES:
         diagnostic = ctx.diag(
             rule,

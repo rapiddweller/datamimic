@@ -34,6 +34,7 @@ from datamimic_ce.engine.dsl.api import (
     EXPORTER_TEST_RESULT_EXPORTER,
     ExportOperation,
 )
+from datamimic_ce.engine.dsl.parsers.input.target import parse_function_string
 from datamimic_ce.engine.dsl.vocabulary.source_capabilities import (
     DynamicSourceKind,
     SourceFileFormat,
@@ -44,12 +45,10 @@ from datamimic_ce.engine.dsl.vocabulary.source_capabilities import (
     source_file_format_for,
     supported_source_file_formats,
 )
-from datamimic_ce.engine.io.api import buffered_exporter_names, parse_function_string
 
 _GENERATES = (EL_GENERATE, EL_ITERATE)
 _SOURCE_READERS = (*_GENERATES, EL_VARIABLE, EL_NESTED_KEY, EL_KEY, EL_ID, EL_ELEMENT, EL_REFERENCE)
 _STATIC_TARGETS = {
-    *buffered_exporter_names(),
     EXPORTER_CONSOLE_EXPORTER,
     EXPORTER_LOG_EXPORTER,
     EXPORTER_TEST_RESULT_EXPORTER,
@@ -155,6 +154,7 @@ def _check_target_entry(
     name: str,
     clients: set[str],
     memstores: set[str],
+    buffered_exporter_names: frozenset[str],
 ) -> tuple[str | None, str | None]:
     """Validate one parsed target entry name.
 
@@ -174,8 +174,9 @@ def _check_target_entry(
                 f"Client operations: {', '.join(sorted(_CLIENT_OPERATIONS))}; plain clientId inserts.",
             )
         return (None, None)
-    if name not in _STATIC_TARGETS and name not in clients and name not in memstores:
-        valid = sorted(_STATIC_TARGETS | clients | memstores)
+    static_targets = _STATIC_TARGETS | buffered_exporter_names
+    if name not in static_targets and name not in clients and name not in memstores:
+        valid = sorted(static_targets | clients | memstores)
         return (
             f"target '{name}' is not built-in or declared",
             f"For memory output add <memstore id=\"{name}\"/> above the writer; known targets: {', '.join(valid)}.",
@@ -199,7 +200,17 @@ class UnknownTarget(Rule):
                 yield ctx.diag(UnknownTarget, element, evidence=f"target parser returned: {err}")
                 continue
             for entry in parsed:
-                evidence, fix_context = _check_target_entry(entry["function_name"], clients, memstores)
+                function_name = entry["function_name"]
+                if not isinstance(function_name, str):
+                    yield ctx.diag(
+                        UnknownTarget,
+                        element,
+                        evidence=f"target entry {function_name!r} is not a string target name",
+                    )
+                    continue
+                evidence, fix_context = _check_target_entry(
+                    function_name, clients, memstores, ctx.buffered_exporter_names
+                )
                 if evidence is not None:
                     yield ctx.diag(UnknownTarget, element, evidence=evidence, fix_context=fix_context)
 

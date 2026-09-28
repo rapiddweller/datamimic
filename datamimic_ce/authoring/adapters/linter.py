@@ -23,6 +23,7 @@ from datamimic_ce.authoring.domain.diagnostics import Diagnostic, LintResult
 from datamimic_ce.authoring.domain.rule_catalog import RuleSeverity
 from datamimic_ce.authoring.domain.rules import ALL_RULES, LintContext
 from datamimic_ce.authoring.domain.schema import build_schema_index
+from datamimic_ce.engine.io.api import buffered_exporter_names
 
 _INLINE_NOTE = (
     " (inline XML runs in a temp dir: relative source/include paths are not resolvable — "
@@ -31,7 +32,7 @@ _INLINE_NOTE = (
 
 
 def _run_rules(root: etree._Element, base_dir: Path | None) -> list[Diagnostic]:
-    ctx = LintContext(root, build_schema_index(), base_dir=base_dir)
+    ctx = LintContext(root, build_schema_index(), buffered_exporter_names(), base_dir=base_dir)
     diagnostics: list[Diagnostic] = []
     for rule_cls in ALL_RULES:
         diagnostics.extend(rule_cls().check(ctx))

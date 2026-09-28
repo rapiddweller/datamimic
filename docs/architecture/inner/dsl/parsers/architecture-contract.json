@@ -288,10 +288,11 @@
         "datamimic_ce.engine.dsl.parsers.input"
       ],
       "responsibilities": [
-        "Low-level XML/property syntax inputs used by recursive parsers."
+        "Low-level XML/property/target syntax inputs used by recursive parsers and routing."
       ],
       "public": [
         "datamimic_ce.engine.dsl.parsers.input.properties:parse_properties",
+        "datamimic_ce.engine.dsl.parsers.input.target:parse_function_string",
         "datamimic_ce.engine.dsl.parsers.input.xml:DTDForbiddenError",
         "datamimic_ce.engine.dsl.parsers.input.xml:XmlElement",
         "datamimic_ce.engine.dsl.parsers.input.xml:parse_xml_file",
@@ -456,9 +457,10 @@
       "root": "datamimic_ce.engine.dsl.parsers.input",
       "allowed_children": [
         "datamimic_ce.engine.dsl.parsers.input.properties",
+        "datamimic_ce.engine.dsl.parsers.input.target",
         "datamimic_ce.engine.dsl.parsers.input.xml"
       ],
-      "rationale": "Low-level XML/property syntax inputs used by recursive parsers. Exact reviewed target children; no hidden extra modules.",
+      "rationale": "Low-level XML/property/target syntax inputs used by recursive parsers and routing. Exact reviewed target children; no hidden extra modules.",
       "provenance": [
         "docs/architecture/inner/structure-review.json"
       ],

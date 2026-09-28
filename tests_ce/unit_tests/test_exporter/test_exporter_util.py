@@ -1,6 +1,6 @@
 import unittest
 
-from datamimic_ce.engine.io.api import parse_function_string
+from datamimic_ce.engine.dsl.parsers.input.target import parse_function_string
 
 
 class TestExporterUtil(unittest.TestCase):
@@ -122,6 +122,18 @@ class TestExporterUtil(unittest.TestCase):
             }
         ]
         self.assertEqual(result, expected)
+
+    def test_quoted_string_constant_is_a_target_name(self):
+        self.assertEqual(parse_function_string("'CSV'"), [{"function_name": "CSV", "params": None}])
+
+    def test_legacy_non_string_literals_keep_their_result_shape(self):
+        self.assertEqual(parse_function_string("123"), [{"function_name": 123, "params": None}])
+        self.assertEqual(parse_function_string("True"), [{"function_name": True, "params": None}])
+        self.assertEqual(parse_function_string("[1, 2]"), [{"function_name": "[1, 2]", "params": None}])
+
+    def test_invalid_syntax_is_rejected(self):
+        with self.assertRaisesRegex(ValueError, "Error parsing function string: invalid syntax"):
+            parse_function_string("JSON(chunk_size=)")
 
     def test_large_nested_data_structure(self):
         # Test function with a large and complex nested data structure

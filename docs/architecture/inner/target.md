@@ -48,6 +48,7 @@ for edition-only additions and the superseded Experiment 3 proposal.
         registry.py             schema facts, never parser implementations
       parsers/
         base/  flow/  values/  setup/  generation/  document/  input/
+          properties.py  target.py  xml.py
         registry.py             concrete bindings, composed by DescriptorParser
       statements/
         base/  flow/  values/  setup/  generation/  traversal.py
@@ -175,6 +176,8 @@ File JSON shape guards are shared operations owned by the file readers; the
 exporter registry's Memstore dependency is declared at the memory owner.
 Runtime source-selection operations cross into IO through `io.api`; the
 selection algorithms remain owned by IO data sources.
+Target-call syntax is parsed by DSL input code. The linter adapter supplies
+buffered exporter names to its rule context; pure authoring rules do not import IO.
 
 ## Changes that need more than a file move
 
