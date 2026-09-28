@@ -88,7 +88,7 @@
       },
       {
         "path": "datamimic_ce/engine/io/data_sources/router.py",
-        "responsibility": "Counts sources and routes nested-key and reference reads to file, database, or memstore readers, applying row selection."
+        "responsibility": "Counts sources and routes generate, nested-key, and reference reads to file, database, or memstore readers, applying row selection."
       },
       {
         "path": "datamimic_ce/engine/io/data_sources/selection.py",

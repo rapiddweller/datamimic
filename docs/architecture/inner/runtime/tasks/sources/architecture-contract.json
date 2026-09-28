@@ -8,7 +8,7 @@
       },
       {
         "path": "datamimic_ce/engine/runtime/tasks/sources/generate.py",
-        "responsibility": "Resolves and loads source rows for generate statements using runtime context and IO requests."
+        "responsibility": "Resolves generate statement inputs and adapts runtime context to file, memstore, and database reads."
       },
       {
         "path": "datamimic_ce/engine/runtime/tasks/sources/length.py",
@@ -49,7 +49,7 @@
       "label": "generate",
       "role": "component",
       "packages": ["datamimic_ce.engine.runtime.tasks.sources.generate"],
-      "responsibilities": ["Adapt generate statements and runtime context into IO source reads."],
+      "responsibilities": ["Resolve generate statement inputs and adapt runtime context to IO source reads."],
       "forbidden_responsibilities": ["Own source selection algorithms or exporter policy."],
       "provenance": ["docs/architecture/inner/target.md"],
       "requires": [],

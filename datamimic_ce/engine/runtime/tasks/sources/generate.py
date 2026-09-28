@@ -9,13 +9,9 @@ from datamimic_ce.engine.dsl.vocabulary.source_capabilities import (
 from datamimic_ce.engine.io.api import (
     DataSourcePagination,
     GenerateFileSourceRequest,
-    database_get_by_page_with_query,
-    database_get_by_page_with_type,
     has_mongodb_upsert_target,
-    is_mongodb_client,
-    is_rdbms_client,
+    read_generate_database_source,
     read_generate_file_source,
-    resolve_source_collection,
     resolve_source_entity,
 )
 from datamimic_ce.engine.runtime.contexts.context import SetupContext
@@ -90,27 +86,15 @@ def load_generate_source(
                 f"not database client '{source}' - use a selector with an SQL/Mongo skip instead"
             )
         client = root.clients[source]
-        selector = interpolate_variables(root, stmt.selector or "", prefix, suffix)
-        if is_mongodb_client(client):
-            if stmt.selector:
-                source_data = database_get_by_page_with_query(client, selector, pagination)
-            elif (collection := resolve_source_collection(stmt.source_entity, stmt.type)) is not None:
-                source_data = database_get_by_page_with_type(client, collection, pagination)
-            else:
-                raise ValueError(
-                    "MongoDB source requires at least attribute 'sourceEntity', 'type', 'selector' "
-                    "or 'iterationSelector'"
-                )
-            if not source_data and has_mongodb_upsert_target(stmt.targets, root.clients):
-                source_data = [{}]
-        elif is_rdbms_client(client):
-            if stmt.selector:
-                source_data = database_get_by_page_with_query(client, selector, pagination)
-            else:
-                entity = resolve_source_entity(stmt.source_entity, stmt.type, stmt.name)
-                source_data = database_get_by_page_with_type(client, entity, pagination)
-        else:
-            raise ValueError(f"Cannot load data from client: {type(client).__name__}")
+        rendered_selector = interpolate_variables(root, stmt.selector or "", prefix, suffix)
+        source_data = read_generate_database_source(
+            client,
+            rendered_selector if stmt.selector else None,
+            resolve_source_entity(stmt.source_entity, stmt.type, stmt.name),
+            stmt.source_entity or stmt.type,
+            pagination,
+            has_mongodb_upsert_target(stmt.targets, root.clients),
+        )
     else:
         raise ValueError(f"cannot find data source {source} for iterate task")
 

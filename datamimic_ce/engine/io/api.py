@@ -39,6 +39,7 @@ from datamimic_ce.engine.io.data_sources.chunk_reader import ChunkSourceWindow
 from datamimic_ce.engine.io.data_sources.data_source_registry import DataSourceRegistry
 from datamimic_ce.engine.io.data_sources.router import (
     count_source,
+    read_generate_database_source,
     read_generate_file_source,
     read_nested_key_source,
     read_reference_rows,
@@ -129,6 +130,7 @@ __all__ = [
     "resolve_source_collection",
     "resolve_source_entity",
     "read_nested_key_source",
+    "read_generate_database_source",
     "read_generate_file_source",
     "read_reference_rows",
     "read_variable_query",

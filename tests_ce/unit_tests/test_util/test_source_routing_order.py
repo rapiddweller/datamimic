@@ -11,6 +11,7 @@ from datamimic_ce.engine.dsl.vocabulary.enums.distribution_enums import SourceDi
 from datamimic_ce.engine.dsl.vocabulary.source_capabilities import SourceFileFormat
 from datamimic_ce.engine.io.contracts import DataSourcePagination
 from datamimic_ce.engine.io.data_sources import chunk_reader
+from datamimic_ce.engine.io.data_sources import router as io_source_router
 from datamimic_ce.engine.io.data_sources import variable as io_variable_sources
 from datamimic_ce.engine.io.data_sources.boundary.models import GenerateFileSource, GenerateFileSourceRequest
 from datamimic_ce.engine.io.data_sources.data_source_registry import DataSourceRegistry
@@ -398,6 +399,33 @@ def test_generate_file_reader_declines_memstore_and_client_ids(tmp_path: Path) -
             )
             is None
         )
+
+
+def test_generate_file_source_precedes_memstore(monkeypatch: pytest.MonkeyPatch) -> None:
+    root = SimpleNamespace(
+        descriptor_dir=Path("/descriptor"),
+        default_variable_prefix="{{",
+        default_variable_suffix="}}",
+        memstore_manager=Mock(),
+        clients={},
+    )
+    file_source = Mock(return_value=GenerateFileSource(SourceFileFormat.JSON, [{"id": 1}]))
+    monkeypatch.setattr(generate_source_router, "read_generate_file_source", file_source)
+
+    rows, build_from_source = generate_source_router.load_generate_source(
+        SimpleNamespace(root=root),
+        _generate_source_statement(),
+        "rows.json",
+        "|",
+        False,
+        None,
+        None,
+        None,
+    )
+
+    assert rows == [{"id": 1}]
+    assert build_from_source is True
+    root.memstore_manager.contain.assert_not_called()
 
 
 def test_generate_json_template_failure_keeps_loaded_rows(monkeypatch: pytest.MonkeyPatch) -> None:
@@ -798,39 +826,180 @@ def test_empty_mongodb_generate_source_only_falls_back_for_upsert(
     monkeypatch: pytest.MonkeyPatch, targets: set[str], expected: list[dict]
 ) -> None:
     mongo = object()
+    query = Mock(return_value=[])
+    monkeypatch.setattr(io_source_router, "is_mongodb_client", lambda value: value is mongo)
+    monkeypatch.setattr(io_source_router, "database_get_by_page_with_query", query)
+
+    rows = io_source_router.read_generate_database_source(
+        mongo, "{}", "products", None, DataSourcePagination(skip=0, limit=1), "mongo.upsert" in targets
+    )
+
+    assert rows == expected
+    query.assert_called_once()
+    queried_client, selector, pagination = query.call_args.args
+    assert (queried_client, selector, pagination.skip, pagination.limit) == (mongo, "{}", 0, 1)
+
+
+@pytest.mark.parametrize(
+    ("is_mongo", "selector", "entity", "collection", "expected_query", "expected_entity"),
+    [
+        (False, "select * from rows", "rows", None, "select * from rows", None),
+        (False, None, "rows", None, None, "rows"),
+        (True, "{}", "rows", "rows", "{}", None),
+        (True, None, "rows", "rows", None, "rows"),
+    ],
+)
+def test_generate_database_io_uses_resolved_selector_or_entity_and_page(
+    monkeypatch: pytest.MonkeyPatch,
+    is_mongo: bool,
+    selector: str | None,
+    entity: str,
+    collection: str | None,
+    expected_query: str | None,
+    expected_entity: str | None,
+) -> None:
+    client = object()
+    query = Mock(return_value=[{"id": 1}])
+    entity_read = Mock(return_value=[{"id": 1}])
+    monkeypatch.setattr(io_source_router, "is_mongodb_client", lambda _: is_mongo)
+    monkeypatch.setattr(io_source_router, "is_rdbms_client", lambda _: not is_mongo)
+    monkeypatch.setattr(io_source_router, "database_get_by_page_with_query", query)
+    monkeypatch.setattr(io_source_router, "database_get_by_page_with_type", entity_read)
+    pagination = DataSourcePagination(skip=3, limit=2)
+
+    rows = io_source_router.read_generate_database_source(
+        client, selector, entity, collection, pagination, False
+    )
+
+    assert rows == [{"id": 1}]
+    if expected_query is not None:
+        query.assert_called_once_with(client, expected_query, pagination)
+        entity_read.assert_not_called()
+    else:
+        query.assert_not_called()
+        entity_read.assert_called_once_with(client, expected_entity, pagination)
+
+
+def _generate_source_statement(**overrides: object) -> SimpleNamespace:
+    values: dict[str, object] = {
+        "variable_prefix": None,
+        "variable_suffix": None,
+        "cyclic": False,
+        "offset": 0,
+        "full_name": "products",
+        "name": "products",
+        "source_entity": None,
+        "type": None,
+        "selector": None,
+        "targets": set(),
+    }
+    values.update(overrides)
+    return SimpleNamespace(**values)
+
+
+def _generate_source_context(source: str, client: object | None, memstore: Mock | None = None) -> SimpleNamespace:
+    manager = Mock()
+    manager.contain.return_value = memstore is not None
+    manager.get_memstore.return_value = memstore
     root = SimpleNamespace(
         descriptor_dir=Path("/descriptor"),
         default_variable_prefix="{{",
         default_variable_suffix="}}",
-        memstore_manager=Mock(),
-        clients={"mongo": mongo},
-        get_client_by_id=Mock(return_value=mongo),
+        memstore_manager=manager,
+        clients={source: client} if client is not None else {},
     )
-    root.memstore_manager.contain.return_value = False
-    statement = SimpleNamespace(
-        variable_prefix=None,
-        variable_suffix=None,
-        cyclic=False,
-        offset=0,
-        full_name="products",
-        name="products",
-        source_entity=None,
-        type=None,
-        selector="{}",
-        targets=targets,
-    )
-    query = Mock(return_value=[])
-    monkeypatch.setattr(generate_source_router, "is_mongodb_client", lambda value: value is mongo)
-    monkeypatch.setattr(io_exporter_routing, "is_mongodb_client", lambda value: value is mongo)
-    monkeypatch.setattr(generate_source_router, "interpolate_variables", Mock(return_value="{}"))
-    monkeypatch.setattr(generate_source_router, "database_get_by_page_with_query", query)
+    return SimpleNamespace(root=root)
 
-    rows, build_from_source = generate_source_router.load_generate_source(
-        SimpleNamespace(root=root), statement, "mongo", "|", False, 0, 1, DataSourcePagination(skip=0, limit=1)
+
+def test_generate_mongodb_requires_selector_or_collection_before_reading(monkeypatch: pytest.MonkeyPatch) -> None:
+    client = object()
+    query = Mock()
+    collection_read = Mock()
+    monkeypatch.setattr(io_source_router, "is_mongodb_client", lambda value: value is client)
+    monkeypatch.setattr(io_source_router, "database_get_by_page_with_query", query)
+    monkeypatch.setattr(io_source_router, "database_get_by_page_with_type", collection_read)
+
+    with pytest.raises(ValueError, match="MongoDB source requires"):
+        io_source_router.read_generate_database_source(
+            client, None, "products", None, DataSourcePagination(skip=0, limit=1), False
+        )
+
+    query.assert_not_called()
+    collection_read.assert_not_called()
+
+
+def test_generate_database_io_rejects_unsupported_client(monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.setattr(io_source_router, "is_mongodb_client", lambda _: False)
+    monkeypatch.setattr(io_source_router, "is_rdbms_client", lambda _: False)
+
+    with pytest.raises(ValueError, match="Cannot load data from client: object"):
+        io_source_router.read_generate_database_source(object(), None, "rows", None, None, False)
+
+
+@pytest.mark.parametrize(("target", "has_upsert_target"), [("mongo.upsert", True), ("mongo.delete", False)])
+def test_generate_passes_mongodb_upsert_target_to_io(
+    monkeypatch: pytest.MonkeyPatch, target: str, has_upsert_target: bool
+) -> None:
+    client = object()
+    context = _generate_source_context("mongo", client)
+    statement = _generate_source_statement(source_entity="rows", targets={target})
+    database_read = Mock(return_value=[])
+    monkeypatch.setattr(generate_source_router, "read_generate_database_source", database_read)
+    monkeypatch.setattr(io_exporter_routing, "is_mongodb_client", lambda value: value is client)
+
+    rows, _ = generate_source_router.load_generate_source(
+        context, statement, "mongo", "|", False, None, None, DataSourcePagination(skip=0, limit=1)
     )
 
-    assert rows == expected
+    assert rows == []
+    assert database_read.call_args.args[-1] is has_upsert_target
+
+
+@pytest.mark.parametrize("source_kind", ["memstore", "rdbms", "mongodb"])
+def test_generate_unsupported_offset_fails_before_source_read(
+    monkeypatch: pytest.MonkeyPatch, source_kind: str
+) -> None:
+    source = "source"
+    client = object() if source_kind != "memstore" else None
+    memstore = Mock() if source_kind == "memstore" else None
+    context = _generate_source_context(source, client, memstore)
+    database_read = Mock()
+    monkeypatch.setattr(generate_source_router, "read_generate_database_source", database_read)
+
+    with pytest.raises(ValueError, match="offset= is only supported"):
+        generate_source_router.load_generate_source(
+            context,
+            _generate_source_statement(offset=1, selector="{}", source_entity="rows"),
+            source,
+            "|",
+            False,
+            None,
+            None,
+            DataSourcePagination(skip=0, limit=1),
+        )
+
+    database_read.assert_not_called()
+    if memstore is not None:
+        memstore.get_data_by_type.assert_not_called()
+
+
+def test_chunk_source_reader_delegates_database_page_to_generate_source(monkeypatch: pytest.MonkeyPatch) -> None:
+    client = object()
+    context = _generate_source_context("db", client)
+    context.root.default_source_scripted = False
+    context.root.default_separator = "|"
+    statement = _generate_source_statement(
+        source="db", distribution=SourceDistribution.ORDERED, source_script=None, separator=None, unique=False
+    )
+    query = Mock(return_value=[{"id": 7}])
+    monkeypatch.setattr(generate_source_router, "read_generate_database_source", query)
+    statement.selector = "select 7"
+
+    rows, build_from_source = ChunkSourceReader(context, statement, 0, 4).read_page(2, 4)
+
+    assert rows == [{"id": 7}]
     assert build_from_source is True
-    query.assert_called_once()
-    queried_client, selector, pagination = query.call_args.args
-    assert (queried_client, selector, pagination.skip, pagination.limit) == (mongo, "{}", 0, 1)
+    actual = query.call_args.args
+    assert actual[:4] == (client, "select 7", "products", None)
+    assert (actual[4].skip, actual[4].limit) == (2, 2)
+    assert actual[5:] == (False,)

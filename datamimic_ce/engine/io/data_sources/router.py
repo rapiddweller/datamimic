@@ -16,6 +16,8 @@ from datamimic_ce.engine.io.clients.client import Client
 from datamimic_ce.engine.io.clients.operations import (
     database_count_query_length,
     database_count_table_length,
+    database_get_by_page_with_query,
+    database_get_by_page_with_type,
     database_get_random_rows_by_columns,
     is_mongodb_client,
     is_rdbms_client,
@@ -154,6 +156,35 @@ def read_generate_file_source(request: GenerateFileSourceRequest) -> GenerateFil
     return GenerateFileSource(file_format, rows)
 
 
+def read_generate_database_source(
+    client: Client,
+    selector: str | None,
+    entity: str,
+    collection: str | None,
+    pagination: DataSourcePagination | None,
+    has_upsert_target: bool,
+) -> list[dict[str, object]]:
+    """Read one resolved database source for a <generate> statement."""
+    if is_mongodb_client(client):
+        if selector is not None:
+            rows = database_get_by_page_with_query(client, selector, pagination)
+        elif collection is not None:
+            rows = database_get_by_page_with_type(client, collection, pagination)
+        else:
+            raise ValueError(
+                "MongoDB source requires at least attribute 'sourceEntity', 'type', 'selector' "
+                "or 'iterationSelector'"
+            )
+        if not rows and has_upsert_target:
+            return [{}]
+        return rows
+    if is_rdbms_client(client):
+        if selector is not None:
+            return database_get_by_page_with_query(client, selector, pagination)
+        return database_get_by_page_with_type(client, entity, pagination)
+    raise ValueError(f"Cannot load data from client: {type(client).__name__}")
+
+
 def read_nested_key_source(
     descriptor_dir: Path,
     source_expression: str,
@@ -266,6 +297,7 @@ def _ordered_reference_rows(
 __all__ = [
     "count_source",
     "read_generate_file_source",
+    "read_generate_database_source",
     "read_nested_key_source",
     "read_reference_rows",
     "select_reference_rows",
