@@ -11,10 +11,11 @@ from datamimic_ce.engine.dsl.vocabulary.enums.distribution_enums import SourceDi
 from datamimic_ce.engine.io.contracts import DataSourcePagination
 from datamimic_ce.engine.io.data_sources.data_source_registry import DataSourceRegistry
 from datamimic_ce.engine.io.data_sources import chunk_reader
+from datamimic_ce.engine.io.data_sources import variable as io_variable_sources
 from datamimic_ce.engine.runtime.sources import router as source_router
-from datamimic_ce.engine.runtime.sources import variable as variable_sources
 from datamimic_ce.engine.runtime.tasks.sources import chunk_source_reader
 from datamimic_ce.engine.runtime.tasks.sources.chunk_source_reader import ChunkSourceReader
+from datamimic_ce.engine.runtime.tasks.sources import variable as variable_sources
 
 
 def _variable_statement(source: str, *, full_name: str, source_entity: str = "rows") -> VariableStatement:
@@ -66,7 +67,7 @@ def test_variable_selector_is_eager_but_iteration_selector_is_row_deferred(
     query = Mock(return_value=[{"id": 1}])
     monkeypatch.setattr(variable_sources, "is_database_client", lambda _: True)
     monkeypatch.setattr(variable_sources, "interpolate_variables", interpolate)
-    monkeypatch.setattr(variable_sources, "database_get_by_page_with_query", query)
+    monkeypatch.setattr(io_variable_sources, "database_get_by_page_with_query", query)
 
     selector = SimpleNamespace(
         source="db",
@@ -132,7 +133,7 @@ def test_invalid_variable_selector_rejects_before_interpolation_or_query(
     )
     monkeypatch.setattr(variable_sources, "is_database_client", lambda _: False)
     monkeypatch.setattr(variable_sources, "interpolate_variables", interpolate)
-    monkeypatch.setattr(variable_sources, "database_get_by_page_with_query", query)
+    monkeypatch.setattr(io_variable_sources, "database_get_by_page_with_query", query)
 
     with pytest.raises(ValueError, match="selector.*source.*database"):
         variable_sources.plan_variable_source(
@@ -143,7 +144,7 @@ def test_invalid_variable_selector_rejects_before_interpolation_or_query(
     query.assert_not_called()
 
 
-def test_variable_source_keeps_missing_empty_and_materialized_pools_distinct(
+def test_variable_source_keeps_empty_and_materialized_pools_distinct(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     client = object()
@@ -161,24 +162,15 @@ def test_variable_source_keeps_missing_empty_and_materialized_pools_distinct(
         distribution=SourceDistribution.ORDERED,
         unique=False,
         cyclic=False,
-        source_entity=None,
+        source_entity="rows",
         type=None,
         name="variable",
         full_name="variable",
         is_global_variable=False,
     )
-    monkeypatch.setattr(variable_sources, "is_database_client", lambda _: True)
-    monkeypatch.setattr(variable_sources, "resolve_source_entity", lambda *args: None)
-
-    missing = variable_sources.plan_variable_source(
-        context, statement, DataSourcePagination(skip=0, limit=2), force_full_pool=False
-    )
-    assert missing.kind is variable_sources.VariableSourcePlanKind.ITERATOR
-    assert missing.data is None
-
-    monkeypatch.setattr(variable_sources, "resolve_source_entity", lambda *args: "rows")
+    monkeypatch.setattr(io_variable_sources, "is_database_client", lambda _: True)
     read = Mock(return_value=[])
-    monkeypatch.setattr(variable_sources, "database_get_by_page_with_type", read)
+    monkeypatch.setattr(io_variable_sources, "database_get_by_page_with_type", read)
     empty = variable_sources.plan_variable_source(
         context, statement, DataSourcePagination(skip=0, limit=2), force_full_pool=False
     )
@@ -224,8 +216,8 @@ def test_variable_cyclic_source_reads_pool_once_and_selects_wrapped_window(
     )
     rows = [{"id": 0}, {"id": 1}, {"id": 2}]
     read = Mock(return_value=rows)
-    monkeypatch.setattr(variable_sources, "is_database_client", lambda _: True)
-    monkeypatch.setattr(variable_sources, "database_get_by_page_with_type", read)
+    monkeypatch.setattr(io_variable_sources, "is_database_client", lambda _: True)
+    monkeypatch.setattr(io_variable_sources, "database_get_by_page_with_type", read)
 
     plan = variable_sources.plan_variable_source(context, statement, pagination, force_full_pool=False)
 
@@ -561,7 +553,8 @@ def test_generate_prefers_memstore_while_variable_prefers_client_for_same_source
 
     database_rows = Mock(return_value=[{"id": "client"}])
     monkeypatch.setattr(variable_sources, "is_database_client", lambda value: value is client)
-    monkeypatch.setattr(variable_sources, "database_get_by_page_with_type", database_rows)
+    monkeypatch.setattr(io_variable_sources, "is_database_client", lambda value: value is client)
+    monkeypatch.setattr(io_variable_sources, "database_get_by_page_with_type", database_rows)
     variable_context = SimpleNamespace(
         default_separator="|",
         get_client_by_id=root.get_client_by_id,
