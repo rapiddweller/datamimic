@@ -9,7 +9,7 @@
         "datamimic_ce.engine.io.exporters.core"
       ],
       "responsibilities": [
-        "Export contracts, buffers, serialization and target routing."
+        "Exporter base, configuration, buffering, serialization, and target routing."
       ],
       "forbidden_responsibilities": [
         "Import concrete format exporters",

@@ -25,7 +25,7 @@
         },
         {
           "component": "clients",
-          "rationale": "IO entry points own connection registration and operation dispatch; concrete clients remain internal.",
+          "rationale": "IO supplies client operations and connection creation; Runtime setup registers clients in its execution context.",
           "decided_by": "agent"
         },
         {
