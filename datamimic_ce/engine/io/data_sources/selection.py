@@ -8,8 +8,8 @@ from collections.abc import Iterable, Iterator
 from random import Random
 from typing import TypeVar
 
-from datamimic_ce.engine.dsl.api import SourceDistribution
-from datamimic_ce.engine.io.api import DataSourcePagination
+from datamimic_ce.engine.dsl.vocabulary.enums.distribution_enums import SourceDistribution
+from datamimic_ce.engine.io.contracts import DataSourcePagination
 from datamimic_ce.randomness import RandomSource, cumulated_index
 
 T = TypeVar("T")

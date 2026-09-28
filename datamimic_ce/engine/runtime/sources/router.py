@@ -4,7 +4,6 @@ from collections.abc import Sized
 
 from datamimic_ce.engine.dsl.api import (
     DATA_TYPE_DICT,
-    DATA_TYPE_LIST,
     EL_GENERATE,
     EL_NESTED_KEY,
     EL_VARIABLE,
@@ -22,22 +21,22 @@ from datamimic_ce.engine.dsl.vocabulary.source_capabilities import (
     source_file_format_for,
 )
 from datamimic_ce.engine.io.api import (
+    CountSourceRequest,
     DataSourcePagination,
     DataSourceRegistry,
     FileUtil,
-    database_count_query_length,
-    database_count_table_length,
+    count_source,
     database_get_by_page_with_query,
     database_get_by_page_with_type,
-    database_get_random_rows_by_columns,
+    get_distributed_data,
     is_mongodb_client,
     is_rdbms_client,
-    mongodb_count_collection,
+    read_nested_key_source,
+    read_reference_rows,
     resolve_source_collection,
     resolve_source_entity,
+    select_reference_rows,
 )
-from datamimic_ce.engine.io.contracts import select_rows
-from datamimic_ce.engine.io.data_sources.selection import get_distributed_data, get_unique_data
 from datamimic_ce.engine.runtime.contexts.context import Context, SetupContext
 from datamimic_ce.engine.runtime.contexts.geniter_context import GenIterContext
 from datamimic_ce.engine.runtime.logging import logger
@@ -66,16 +65,6 @@ def has_mongodb_upsert_target(targets: set[str], setup_context: SetupContext) ->
     return False
 
 
-def window_nested_key_rows(data: list[object], count: int | None, cyclic: bool | None) -> list[object]:
-    """Select the rows for one nested-key execution."""
-    size = len(data) if count is None else count if cyclic else min(count, len(data))
-    return select_rows(
-        data=data,
-        pagination=DataSourcePagination(0, size),
-        cyclic=bool(cyclic),
-    )
-
-
 def set_data_source_length(ctx: SetupContext | GenIterContext, stmt: Statement) -> None:
     """
     Calculate length of data source then save into context
@@ -91,11 +80,11 @@ def set_data_source_length(ctx: SetupContext | GenIterContext, stmt: Statement) 
 
     root_ctx = ctx.root
     source_id: tuple[str | None, str | None] = data_source_cache_key(stmt)
-    ds_len: int = 0
-
     # Check if data source length is already set
     if root_ctx.data_source_len.get(source_id, None) is not None:
         return
+
+    ds_len: int | None
 
     # Check length of script data
     if isinstance(stmt, GenerateStatement) and stmt.script is not None:
@@ -133,87 +122,52 @@ def set_data_source_length(ctx: SetupContext | GenIterContext, stmt: Statement) 
             source_element = EL_NESTED_KEY
         else:
             return
-        source_format = source_file_format_for(
-            source_element,
-            source_str,
-            stmt.type,
+        source_format = source_file_format_for(source_element, source_str, stmt.type)
+        memstore = (
+            root_ctx.memstore_manager.get_memstore(source_str)
+            if source_format is None
+            and root_ctx.memstore_manager.contain(source_str)
+            else None
         )
-        # dbunit dataset: one table's row count (checked before the generic .xml branch below).
-        if source_format is SourceFileFormat.DBUNIT_XML:
-            entity = resolve_source_entity(stmt.source_entity, stmt.type, stmt.name)
-            ds_len = len(
-                FileUtil.read_dbunit_to_dict_list(
-                    root_ctx.descriptor_dir / source_str,
-                    entity,
-                )
-            )
-        # 2.1: Check if datasource is csv file
-        elif source_format is not None:
-            ds_len = len(
-                DataSourceRegistry._get_source(
-                    str(root_ctx.descriptor_dir / source_str),
-                    stmt.separator or ctx.root.default_separator,
-                    source_format,
-                )
-            )
-        # 2.4: Check if datasource is memstore
-        elif root_ctx.memstore_manager.contain(source_str):
-            ds_len = root_ctx.memstore_manager.get_memstore(source_str).get_data_len_by_type(
-                resolve_source_entity(stmt.source_entity, stmt.type, stmt.name)
-            )
-        elif root_ctx.get_client_by_id(source_str) is not None:
+        client = None
+        if source_format is None and memstore is None and root_ctx.get_client_by_id(source_str) is not None:
             client = root_ctx.get_client_by_id(source_str)
             if client is None:
                 raise ValueError(f"Client '{source_str}' could not be found in your context, please check your script")
-            # handle database collection/table as data source
-            selector = stmt.selector if isinstance(stmt, GenerateStatement | VariableStatement) else None
-            iteration_selector = stmt.iteration_selector if isinstance(stmt, VariableStatement) else None
-
-            if is_rdbms_client(client):
-                if selector is not None:
-                    counted = DataSourceRegistry.rdbms_count_query_length(client, selector, source_str, "selector")
-                    if counted is None:
-                        return
-                    ds_len = counted
-                elif iteration_selector is not None:
-                    counted = DataSourceRegistry.rdbms_count_query_length(
-                        client, iteration_selector, source_str, "iterationSelector"
-                    )
-                    if counted is None:
-                        return
-                    ds_len = counted
-                elif stmt.source_entity is not None or stmt.type is not None:
-                    entity = resolve_source_entity(stmt.source_entity, stmt.type, stmt.name)
-                    ds_len = database_count_table_length(client, entity)
-
-            elif is_mongodb_client(client):
-                if selector is not None:
-                    try:
-                        ds_len = database_count_query_length(client, selector)
-                    except ValueError:
-                        return
-                elif (collection := resolve_source_collection(stmt.source_entity, stmt.type)) is not None:
-                    try:
-                        ds_len = mongodb_count_collection(client, collection)
-                    except ValueError:
-                        return
-                elif iteration_selector is not None:
-                    try:
-                        ds_len = database_count_query_length(client, iteration_selector)
-                    except ValueError:
-                        logger.error(
-                            f"Cannot get length of database source '{source_str}' "
-                            f"with iterationSelector '{iteration_selector}'"
-                        )
-                        return
-                else:
-                    raise ValueError(
-                        "MongoDB source requires at least attribute 'type', 'selector' or 'iterationSelector'"
-                    )
-            else:
-                raise ValueError(f"Cannot determine type of client '{source_id}.{source_str}'")
-        else:
-            logger.warning(f"Data source '{source_str}' is not supported for length calculation")
+        selector = (
+            stmt.selector
+            if client is not None and isinstance(stmt, GenerateStatement | VariableStatement)
+            else None
+        )
+        iteration_selector = (
+            stmt.iteration_selector if client is not None and isinstance(stmt, VariableStatement) else None
+        )
+        ds_len = count_source(
+            CountSourceRequest(
+                source=source_str,
+                source_id=source_id,
+                descriptor_dir=root_ctx.descriptor_dir,
+                element=source_element,
+                source_type=stmt.type,
+                source_entity=stmt.source_entity,
+                name=stmt.name,
+                separator=(
+                    stmt.separator
+                    if source_format is not None and source_format is not SourceFileFormat.DBUNIT_XML
+                    else None
+                ),
+                default_separator=(
+                    root_ctx.default_separator
+                    if source_format is not None and source_format is not SourceFileFormat.DBUNIT_XML
+                    else ""
+                ),
+                selector=selector,
+                iteration_selector=iteration_selector,
+            ),
+            memstore,
+            client,
+        )
+        if ds_len is None:
             return
 
     # 3: Set length of data source. offset= shrinks the available window - the count
@@ -355,30 +309,22 @@ def load_nested_key_source(context: Context, stmt: NestedKeyStatement) -> object
     )
     if not isinstance(source, str):
         raise ValueError(f"Source expression of <nestedKey> '{stmt.name}' must evaluate to a string")
-
     source_format = source_file_format_for(EL_NESTED_KEY, source, stmt.type)
-    if stmt.type == DATA_TYPE_LIST:
-        if source_format is SourceFileFormat.CSV:
-            separator = stmt.separator or context.root.default_separator
-            return FileUtil.read_csv_to_dict_list(context.root.descriptor_dir / source, separator)
-        if source_format is SourceFileFormat.JSON:
-            return FileUtil.read_json_to_list(context.root.descriptor_dir / source)
-        if context.root.memstore_manager.contain(source):
-            return context.root.memstore_manager.get_memstore(source).get_data_by_type(
-                resolve_source_entity(stmt.source_entity, stmt.type, stmt.name), None, stmt.cyclic
-            )
-        raise ValueError(f"Invalid source '{source}' of nestedkey '{stmt.name}'")
-
-    if stmt.type == DATA_TYPE_DICT:
-        if source_format is SourceFileFormat.JSON:
-            return FileUtil.read_json_to_dict(context.root.descriptor_dir / source)
-        raise ValueError(f"Source of nestedkey having type as 'dict' does not support format {source}")
-
-    if context.root.memstore_manager.contain(source):
-        return context.root.memstore_manager.get_memstore(source).get_data_by_type(
-            resolve_source_entity(stmt.source_entity, stmt.type, stmt.name), None, stmt.cyclic
-        )
-    raise ValueError(f"Cannot load data from source '{source_expression}' of <nestedKey> '{stmt.name}'")
+    memstore = None
+    if source_format is None and stmt.type != DATA_TYPE_DICT and context.root.memstore_manager.contain(source):
+        memstore = context.root.memstore_manager.get_memstore(source)
+    return read_nested_key_source(
+        context.root.descriptor_dir,
+        source_expression,
+        source,
+        stmt.type,
+        stmt.source_entity,
+        stmt.name,
+        stmt.separator if source_format is SourceFileFormat.CSV else None,
+        context.root.default_separator if source_format is SourceFileFormat.CSV else "",
+        stmt.cyclic,
+        memstore,
+    )
 
 
 def finalize_nested_key_source(
@@ -420,44 +366,25 @@ def load_reference_source(
 ) -> list[dict[str, object]]:
     """Load, map and select reference rows behind one typed datasource boundary."""
     client = context.root.clients.get(stmt.source)
-    if not (is_rdbms_client(client) or is_mongodb_client(client)):
-        raise ValueError(
-            f"<reference> '{stmt.name}': source '{stmt.source}' is not a "
-            "<database> or <mongodb> client (RDBMS and MongoDB are supported)"
-        )
-    rows = database_get_random_rows_by_columns(client, stmt.source_type, stmt.source_keys)
-    if not rows:
-        raise ValueError(f"No data found for reference {stmt.name}")
-    records = [dict(zip(stmt.targets, row, strict=True)) for row in rows]
+    records = read_reference_rows(client, stmt.source, stmt.source_type, stmt.source_keys, stmt.targets, stmt.name)
 
     seed = context.root.stable_distribution_seed(stmt.full_name)
-    if stmt.unique:
-        return get_unique_data(records, pagination, seed, f"<reference> '{stmt.name}'")
-
     distribution = SourceDistribution.coerce(stmt.distribution)
-    if (stmt.distribution is not None and distribution is not SourceDistribution.RANDOM) or stmt.cyclic:
-        if distribution is SourceDistribution.ORDERED or (stmt.distribution is None and stmt.cyclic):
-            return _ordered_reference_rows(records, stmt, pagination)
-        return get_distributed_data(records, pagination, stmt.cyclic, seed, distribution)
-
-    size = pagination.limit if pagination is not None else 1
-    return [context.rng.choice(records) for _ in range(size)]
-
-
-def _ordered_reference_rows(
-    records: list[dict[str, object]],
-    stmt: ReferenceStatement,
-    pagination: DataSourcePagination | None,
-) -> list[dict[str, object]]:
-    if pagination is None:
-        return records
-    start = pagination.skip
-    size = pagination.limit
-    if stmt.cyclic:
-        return [records[(start + index) % len(records)] for index in range(size)]
-    if start + size > len(records):
-        raise ValueError(
-            f"<reference> '{stmt.name}' distribution='ordered' needs {start + size} rows "
-            f'but the source has only {len(records)} (use cyclic="true" to wrap around)'
-        )
-    return records[start : start + size]
+    random_rng = None
+    if not stmt.unique and distribution is SourceDistribution.RANDOM and not stmt.cyclic:
+        size = pagination.limit if pagination is not None else 1
+        if size > 0:
+            random_rng = context.rng
+    default_cyclic_ordered = stmt.distribution is None and stmt.cyclic
+    return select_reference_rows(
+        records,
+        pagination,
+        stmt.cyclic,
+        distribution,
+        stmt.distribution is not None,
+        stmt.unique,
+        seed,
+        f"<reference> '{stmt.name}'",
+        random_rng,
+        default_cyclic_ordered,
+    )

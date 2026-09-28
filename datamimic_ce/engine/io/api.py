@@ -22,9 +22,18 @@ from datamimic_ce.engine.io.clients.operations import (
 from datamimic_ce.engine.io.connection_config.mongodb_connection_config import MongoDBConnectionConfig
 from datamimic_ce.engine.io.connection_config.properties import load_connection_profile
 from datamimic_ce.engine.io.connection_config.rdbms_connection_config import RdbmsConnectionConfig
-from datamimic_ce.engine.io.contracts import DataSourcePagination, SmokeExportRequest
+from datamimic_ce.engine.io.contracts import DataSourcePagination, MemstoreSource, SmokeExportRequest
 from datamimic_ce.engine.io.data_sources.boundary.entities import resolve_source_collection, resolve_source_entity
+from datamimic_ce.engine.io.data_sources.boundary.models import CountSourceRequest
 from datamimic_ce.engine.io.data_sources.data_source_registry import DataSourceRegistry
+from datamimic_ce.engine.io.data_sources.router import (
+    count_source,
+    read_nested_key_source,
+    read_reference_rows,
+    select_reference_rows,
+    window_nested_key_rows,
+)
+from datamimic_ce.engine.io.data_sources.selection import get_distributed_data
 from datamimic_ce.engine.io.data_sources.weighted_data_source import WeightedDataSource
 from datamimic_ce.engine.io.data_sources.weighted_entity_data_source import WeightedEntityDataSource
 from datamimic_ce.engine.io.exporters.core.exporter import Exporter
@@ -71,9 +80,11 @@ __all__ = [
     "MongoDBConnectionConfig",
     "load_connection_profile",
     "MongoDBExporter",
+    "MemstoreSource",
     "Memstore",
     "RdbmsConnectionConfig",
     "SmokeExportRequest",
+    "CountSourceRequest",
     "TestResultExporter",
     "UnifiedBufferedExporter",
     "WeightedDataSource",
@@ -81,8 +92,10 @@ __all__ = [
     "XMLExporter",
     "buffered_exporter_names",
     "count_query_length",
+    "count_source",
     "create_mongodb_client",
     "create_rdbms_client",
+    "get_distributed_data",
     "database_count_table_length",
     "database_count_query_length",
     "database_get_by_page_with_query",
@@ -96,10 +109,14 @@ __all__ = [
     "parse_function_string",
     "resolve_source_collection",
     "resolve_source_entity",
+    "read_nested_key_source",
+    "read_reference_rows",
+    "select_reference_rows",
     "resolve_target_entity",
     "resolve_target_entity_from_metadata",
     "rdbms_get_current_sequence_number",
     "rdbms_increase_sequence_number",
     "smoke_export",
+    "window_nested_key_rows",
     "uses_mysql_sequence_storage",
 ]

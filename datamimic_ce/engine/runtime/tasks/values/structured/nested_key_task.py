@@ -7,7 +7,7 @@
 import copy
 
 from datamimic_ce.engine.dsl.api import DATA_TYPE_DICT, DATA_TYPE_LIST, NestedKeyStatement
-from datamimic_ce.engine.io.api import DataSourcePagination
+from datamimic_ce.engine.io.api import DataSourcePagination, window_nested_key_rows
 from datamimic_ce.engine.runtime.contexts.context import Context, SetupContext
 from datamimic_ce.engine.runtime.contexts.geniter_context import GenIterContext
 from datamimic_ce.engine.runtime.logging import logger
@@ -15,7 +15,6 @@ from datamimic_ce.engine.runtime.scripting.evaluation import evaluate_condition_
 from datamimic_ce.engine.runtime.sources.router import (
     finalize_nested_key_source,
     load_nested_key_source,
-    window_nested_key_rows,
 )
 from datamimic_ce.engine.runtime.tasks.base.counts import get_int_count, resolve_count
 from datamimic_ce.engine.runtime.tasks.base.dispatch import create_task

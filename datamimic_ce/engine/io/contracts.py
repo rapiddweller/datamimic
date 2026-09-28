@@ -6,7 +6,7 @@ from abc import ABC, abstractmethod
 from collections.abc import Iterable, Iterator
 from dataclasses import dataclass
 from pathlib import Path
-from typing import TypeVar
+from typing import Protocol, TypeVar
 
 from pydantic import RootModel
 
@@ -30,6 +30,18 @@ class DataSourcePagination:
     @property
     def limit(self) -> int:
         return self._limit
+
+
+class MemstoreSource(Protocol):
+    """The read-only memstore surface consumed by data-source routing."""
+
+    def get_all_data_by_type(self, product_type: str) -> list[dict[str, object]]: ...
+
+    def get_data_by_type(
+        self, product_type: str | None, pagination: DataSourcePagination | None, cyclic: bool
+    ) -> list[dict[str, object]]: ...
+
+    def get_data_len_by_type(self, entity_name: str | None) -> int: ...
 
 
 _Row = TypeVar("_Row")
@@ -81,6 +93,7 @@ class SmokeExportRequest:
 __all__ = [
     "DataSourcePagination",
     "EntityValue",
+    "MemstoreSource",
     "SmokeExportParameters",
     "SmokeExportRequest",
     "SmokeExportRows",
