@@ -2,6 +2,11 @@
 
 Status: **target decided; implementation and acceptance still pending**.
 
+Amendment (2026-09-28): remove the empty, unused `ConditionModel` and
+`ElseModel` modules from the target. The registry declares no model for those
+elements; their parsers construct statements directly. Their old direct-import
+symbols were declared public, so external use remains unknown. No shim is added.
+
 This decision supersedes the tentative ownership proposals in the four semantic
 reviews. It resolves all 17 `unclear` entries. It does not rewrite the historical
 773-entry baseline or certify the current layout.

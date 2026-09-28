@@ -1504,10 +1504,6 @@
       "target": "engine/dsl/model/flow/branches/base_if_else_model.py"
     },
     {
-      "source": "engine/dsl/model/condition_model.py",
-      "target": "engine/dsl/model/flow/branches/condition_model.py"
-    },
-    {
       "source": "engine/dsl/model/constraints/capabilities.py",
       "target": "engine/dsl/vocabulary/source_capabilities.py"
     },
@@ -1530,10 +1526,6 @@
     {
       "source": "engine/dsl/model/else_if_model.py",
       "target": "engine/dsl/model/flow/branches/else_if_model.py"
-    },
-    {
-      "source": "engine/dsl/model/else_model.py",
-      "target": "engine/dsl/model/flow/branches/else_model.py"
     },
     {
       "source": "engine/dsl/model/execute_model.py",
@@ -2274,6 +2266,14 @@
     }
   ],
   "removed_modules": [
+    {
+      "source": "engine/dsl/model/condition_model.py",
+      "reason": "Unused empty model; the registry and parser construct the condition statement without it."
+    },
+    {
+      "source": "engine/dsl/model/else_model.py",
+      "reason": "Unused empty model; the registry and parser construct the else statement without it."
+    },
     {
       "source": "factory/factory_config.py",
       "reason": "Forwarding only; import runtime/contracts.py directly."

@@ -3632,9 +3632,7 @@
     },
     {
       "source": "engine/dsl/model/condition_model.py",
-      "targets": [
-        "engine/dsl/model/flow/branches/condition_model.py"
-      ]
+      "targets": []
     },
     {
       "source": "engine/dsl/model/constraints/__init__.py",
@@ -3704,9 +3702,7 @@
     },
     {
       "source": "engine/dsl/model/else_model.py",
-      "targets": [
-        "engine/dsl/model/flow/branches/else_model.py"
-      ]
+      "targets": []
     },
     {
       "source": "engine/dsl/model/execute_model.py",
@@ -5093,6 +5089,14 @@
     }
   ],
   "removed_modules": [
+    {
+      "source": "engine/dsl/model/condition_model.py",
+      "reason": "Unused empty model; condition statements are built without it."
+    },
+    {
+      "source": "engine/dsl/model/else_model.py",
+      "reason": "Unused empty model; else statements are built without it."
+    },
     {
       "source": "interfaces/api.py",
       "reason": "Forwarding only; migrate all consumers to runtime/authoring canonical entry."

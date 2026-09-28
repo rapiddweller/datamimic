@@ -87,9 +87,7 @@
       "public": [
         "datamimic_ce.engine.dsl.model.flow.commands.assert_model:AssertModel",
         "datamimic_ce.engine.dsl.model.flow.branches.base_if_else_model:BaseIfElseModel",
-        "datamimic_ce.engine.dsl.model.flow.branches.condition_model:ConditionModel",
         "datamimic_ce.engine.dsl.model.flow.branches.else_if_model:ElseIfModel",
-        "datamimic_ce.engine.dsl.model.flow.branches.else_model:ElseModel",
         "datamimic_ce.engine.dsl.model.flow.branches.if_model:IfModel",
         "datamimic_ce.engine.dsl.model.flow.loops.while_model:WhileModel",
         "datamimic_ce.engine.dsl.model.flow.commands.execute_model:ExecuteModel"
@@ -351,9 +349,7 @@
       "root": "datamimic_ce.engine.dsl.model.flow.branches",
       "allowed_children": [
         "datamimic_ce.engine.dsl.model.flow.branches.base_if_else_model",
-        "datamimic_ce.engine.dsl.model.flow.branches.condition_model",
         "datamimic_ce.engine.dsl.model.flow.branches.else_if_model",
-        "datamimic_ce.engine.dsl.model.flow.branches.else_model",
         "datamimic_ce.engine.dsl.model.flow.branches.if_model"
       ],
       "rationale": "Branches, loops and commands. Exact reviewed target children; no hidden extra modules.",
