@@ -1,12 +1,12 @@
 import pytest
 
-from datamimic_ce.domains.facade import _build_request, generate_domain
-from datamimic_ce.domains.healthcare.services.doctor_api import DoctorRequest
-from datamimic_ce.domains.healthcare.services.patient_api import PatientRequest
-from datamimic_ce.domains.domain_core.runtime.determinism import canonical_json, hash_bytes
 from datamimic_ce.domains.domain_core.contracts.json_types import JsonObject
-from datamimic_ce.domains.shared.services.address_api import AddressRequest
-from datamimic_ce.domains.shared.services.person_api import PersonRequest
+from datamimic_ce.domains.domain_core.runtime.determinism import canonical_json, hash_bytes
+from datamimic_ce.domains.facade import _build_request, generate_domain
+from datamimic_ce.domains.healthcare.use_cases.doctor_api import DoctorRequest
+from datamimic_ce.domains.healthcare.use_cases.patient_api import PatientRequest
+from datamimic_ce.domains.shared.use_cases.address_api import AddressRequest
+from datamimic_ce.domains.shared.use_cases.person_api import PersonRequest
 from datamimic_ce.errors import DomainErrorCode
 from datamimic_ce.errors.base import DomainError
 
@@ -100,3 +100,35 @@ def test_facade_rejects_invalid_payload_before_request_building() -> None:
     assert error.value.to_dict()["code"] == "schema_validation_failed"
     assert error.value.path == "/locale"
     assert error.value.request_hash == hash_bytes(canonical_json(payload))
+
+
+@pytest.mark.parametrize(
+    ("domain", "locale", "constraints", "path"),
+    [
+        ("address", "en_US", {"country": "DE"}, "/constraints/country"),
+        ("person", "en_US", {"age": {"min": 40, "max": 20}}, "/constraints/age"),
+        ("doctor", "en_US", {"specialty": "Not a specialty"}, "/constraints/specialty"),
+        ("patient", "en_US", {"conditions": ["NOT_A_CONDITION"]}, "/constraints/conditions"),
+    ],
+)
+def test_facade_rejects_invalid_domain_constraints(
+    domain: str,
+    locale: str,
+    constraints: dict[str, object],
+    path: str,
+) -> None:
+    payload: JsonObject = {
+        "domain": domain,
+        "version": "v1",
+        "count": 1,
+        "seed": 7,
+        "locale": locale,
+        "constraints": constraints,
+        "clock": "2025-01-02T03:04:05Z",
+    }
+
+    with pytest.raises(DomainError) as error:
+        generate_domain(payload)
+
+    assert error.value.code is DomainErrorCode.INVALID_CONSTRAINTS
+    assert error.value.path == path

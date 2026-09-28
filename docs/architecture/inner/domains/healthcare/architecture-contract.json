@@ -93,12 +93,27 @@
         "datamimic_ce.domains.healthcare.services.hospital_service:HospitalService",
         "datamimic_ce.domains.healthcare.services.medical_device_service:MedicalDeviceService",
         "datamimic_ce.domains.healthcare.services.medical_procedure_service:MedicalProcedureService",
-        "datamimic_ce.domains.healthcare.services.patient_service:PatientService",
-        "datamimic_ce.domains.healthcare.services.doctor_api:DoctorRequest",
-        "datamimic_ce.domains.healthcare.services.doctor_api:generate",
-        "datamimic_ce.domains.healthcare.services.patient_api:PatientRequest",
-        "datamimic_ce.domains.healthcare.services.patient_api:generate"
+        "datamimic_ce.domains.healthcare.services.patient_service:PatientService"
       ],
+      "decided_by": "agent"
+    },
+    {
+      "id": "HEALTHCARE-USE-CASES",
+      "label": "use_cases",
+      "role": "component",
+      "packages": [
+        "datamimic_ce.domains.healthcare.use_cases"
+      ],
+      "responsibilities": [
+        "Standalone deterministic JSON doctor and patient use cases."
+      ],
+      "forbidden_responsibilities": [
+        "Own entity construction services or runtime execution."
+      ],
+      "provenance": [
+        "docs/architecture/inner/target.md"
+      ],
+      "requires": [],
       "decided_by": "agent"
     }
   ],
@@ -181,15 +196,27 @@
       "kind": "root_layout",
       "root": "datamimic_ce.domains.healthcare.services",
       "allowed_children": [
-        "datamimic_ce.domains.healthcare.services.doctor_api",
         "datamimic_ce.domains.healthcare.services.doctor_service",
         "datamimic_ce.domains.healthcare.services.hospital_service",
         "datamimic_ce.domains.healthcare.services.medical_device_service",
         "datamimic_ce.domains.healthcare.services.medical_procedure_service",
-        "datamimic_ce.domains.healthcare.services.patient_api",
         "datamimic_ce.domains.healthcare.services.patient_service"
       ],
-      "rationale": "Domain construction workflows using models and generators. Exact reviewed target children; no hidden extra modules.",
+      "rationale": "Registered entity construction services. Exact reviewed target children; no hidden extra modules.",
+      "provenance": [
+        "docs/architecture/inner/structure-review.json"
+      ],
+      "decided_by": "agent"
+    },
+    {
+      "id": "LAYOUT-DOMAINS-HEALTHCARE-USE-CASES",
+      "kind": "root_layout",
+      "root": "datamimic_ce.domains.healthcare.use_cases",
+      "allowed_children": [
+        "datamimic_ce.domains.healthcare.use_cases.doctor_api",
+        "datamimic_ce.domains.healthcare.use_cases.patient_api"
+      ],
+      "rationale": "Standalone deterministic JSON use cases. Exact reviewed target children; no hidden extra modules.",
       "provenance": [
         "docs/architecture/inner/structure-review.json"
       ],

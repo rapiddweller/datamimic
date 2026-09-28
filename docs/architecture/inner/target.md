@@ -296,6 +296,11 @@ the six examples and affected shared-service snippets use that surface. The EE
 checkout at `dc7526592` has the same five service owner paths under
 `domains/shared/services`, but no `domains/api.py`; parity is not yet claimed.
 
+Standalone deterministic JSON address, person, doctor, and patient use cases
+live under `domains/{shared,healthcare}/use_cases`; `services` remains for
+registered entity services. The former `services.*_api` import paths are
+intentionally removed without shims. The move does not edit XML descriptors or DSL code.
+
 ### S3G17 Model constraint extension boundary
 
 The model registry reads the canonical `Constraint` and `element_constraints`

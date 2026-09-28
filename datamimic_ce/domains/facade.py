@@ -10,16 +10,16 @@ from ..errors import DomainErrorCode
 from ..errors.base import DomainError
 from .domain_core.contracts.json_types import JsonObject
 from .domain_core.runtime.determinism import canonical_json, derive_profile_seed, hash_bytes
-from .healthcare.services.doctor_api import DoctorRequest
-from .healthcare.services.doctor_api import generate as generate_doctor
-from .healthcare.services.patient_api import PatientRequest
-from .healthcare.services.patient_api import generate as generate_patient
+from .healthcare.use_cases.doctor_api import DoctorRequest
+from .healthcare.use_cases.doctor_api import generate as generate_doctor
+from .healthcare.use_cases.patient_api import PatientRequest
+from .healthcare.use_cases.patient_api import generate as generate_patient
 from .registry.schema import validate_payload
 from .shared.datasets.profile_components import resolve_component_profile
-from .shared.services.address_api import AddressRequest
-from .shared.services.address_api import generate as generate_address
-from .shared.services.person_api import PersonRequest
-from .shared.services.person_api import generate as generate_person
+from .shared.use_cases.address_api import AddressRequest
+from .shared.use_cases.address_api import generate as generate_address
+from .shared.use_cases.person_api import PersonRequest
+from .shared.use_cases.person_api import generate as generate_person
 
 RequestT = TypeVar("RequestT", bound=PersonRequest | AddressRequest | PatientRequest | DoctorRequest)
 

@@ -2694,7 +2694,7 @@
     {
       "source": "domains/healthcare/services/doctor_api.py",
       "targets": [
-        "domains/healthcare/services/doctor_api.py"
+        "domains/healthcare/use_cases/doctor_api.py"
       ]
     },
     {
@@ -2724,7 +2724,7 @@
     {
       "source": "domains/healthcare/services/patient_api.py",
       "targets": [
-        "domains/healthcare/services/patient_api.py"
+        "domains/healthcare/use_cases/patient_api.py"
       ]
     },
     {
@@ -3433,7 +3433,7 @@
     {
       "source": "domains/shared/services/address_api.py",
       "targets": [
-        "domains/shared/services/address_api.py"
+        "domains/shared/use_cases/address_api.py"
       ]
     },
     {
@@ -3463,7 +3463,7 @@
     {
       "source": "domains/shared/services/person_api.py",
       "targets": [
-        "domains/shared/services/person_api.py"
+        "domains/shared/use_cases/person_api.py"
       ]
     },
     {

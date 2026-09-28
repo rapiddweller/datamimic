@@ -212,7 +212,7 @@
         "datamimic_ce.domains.shared"
       ],
       "responsibilities": [
-        "Owns reusable generators, converters, datasets, demographic profiles, models, and services shared by industry domains."
+        "Owns reusable generators, converters, datasets, demographic profiles, models, services, and use cases shared by industry domains."
       ],
       "forbidden_responsibilities": [
         "Import vertical behavior or Runtime context."
@@ -260,12 +260,12 @@
         "datamimic_ce.domains.shared.generators.country_generator",
         "datamimic_ce.domains.shared.generators.person_generator",
         "datamimic_ce.domains.shared.generators.region_groups",
-        "datamimic_ce.domains.shared.services.address_api",
+        "datamimic_ce.domains.shared.use_cases.address_api",
         "datamimic_ce.domains.shared.services.address_service",
         "datamimic_ce.domains.shared.services.city_service",
         "datamimic_ce.domains.shared.services.company_service",
         "datamimic_ce.domains.shared.services.country_service",
-        "datamimic_ce.domains.shared.services.person_api",
+        "datamimic_ce.domains.shared.use_cases.person_api",
         "datamimic_ce.domains.shared.services.person_service",
         "datamimic_ce.domains.shared.literal_generators.person.academic_title_generator",
         "datamimic_ce.domains.shared.literal_generators.primitives.binary_generator",
@@ -411,10 +411,10 @@
         "datamimic_ce.domains.healthcare.services.medical_device_service:MedicalDeviceService",
         "datamimic_ce.domains.healthcare.services.medical_procedure_service:MedicalProcedureService",
         "datamimic_ce.domains.healthcare.services.patient_service:PatientService",
-        "datamimic_ce.domains.healthcare.services.doctor_api:DoctorRequest",
-        "datamimic_ce.domains.healthcare.services.doctor_api:generate",
-        "datamimic_ce.domains.healthcare.services.patient_api:PatientRequest",
-        "datamimic_ce.domains.healthcare.services.patient_api:generate"
+        "datamimic_ce.domains.healthcare.use_cases.doctor_api:DoctorRequest",
+        "datamimic_ce.domains.healthcare.use_cases.doctor_api:generate",
+        "datamimic_ce.domains.healthcare.use_cases.patient_api:PatientRequest",
+        "datamimic_ce.domains.healthcare.use_cases.patient_api:generate"
       ],
       "decided_by": "agent",
       "inside": "docs/architecture/inner/domains/healthcare/architecture-contract.json"
@@ -690,7 +690,8 @@
       "allowed_children": [
         "datamimic_ce.domains.healthcare.generators",
         "datamimic_ce.domains.healthcare.models",
-        "datamimic_ce.domains.healthcare.services"
+        "datamimic_ce.domains.healthcare.services",
+        "datamimic_ce.domains.healthcare.use_cases"
       ],
       "rationale": "Industry-specific entities, generation algorithms and services. Exact reviewed target children; no hidden extra modules.",
       "provenance": [
@@ -754,7 +755,8 @@
         "datamimic_ce.domains.shared.generators",
         "datamimic_ce.domains.shared.literal_generators",
         "datamimic_ce.domains.shared.models",
-        "datamimic_ce.domains.shared.services"
+        "datamimic_ce.domains.shared.services",
+        "datamimic_ce.domains.shared.use_cases"
       ],
       "rationale": "Reusable cross-industry domain concepts. Exact reviewed target children; no hidden extra modules.",
       "provenance": [

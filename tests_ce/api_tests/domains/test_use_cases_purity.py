@@ -1,4 +1,4 @@
-"""Static checks that domain services avoid direct file I/O."""
+"""Static checks that domain use cases avoid direct file I/O."""
 
 from __future__ import annotations
 
@@ -7,16 +7,16 @@ from pathlib import Path
 
 import pytest
 
-SERVICE_PATHS = (
-    Path("datamimic_ce/domains/shared/services/person_api.py"),
-    Path("datamimic_ce/domains/healthcare/services/patient_api.py"),
-    Path("datamimic_ce/domains/healthcare/services/doctor_api.py"),
-    Path("datamimic_ce/domains/shared/services/address_api.py"),
+USE_CASE_PATHS = (
+    Path("datamimic_ce/domains/shared/use_cases/person_api.py"),
+    Path("datamimic_ce/domains/healthcare/use_cases/patient_api.py"),
+    Path("datamimic_ce/domains/healthcare/use_cases/doctor_api.py"),
+    Path("datamimic_ce/domains/shared/use_cases/address_api.py"),
 )
 
 
-@pytest.mark.parametrize("path", SERVICE_PATHS)
-def test_services_do_not_call_open(path: Path) -> None:
+@pytest.mark.parametrize("path", USE_CASE_PATHS)
+def test_use_cases_do_not_call_open(path: Path) -> None:
     tree = ast.parse(path.read_text())
     for node in ast.walk(tree):
         if isinstance(node, ast.Call):

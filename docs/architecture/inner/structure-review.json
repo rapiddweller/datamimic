@@ -316,7 +316,7 @@
       ],
       "target": "domains/healthcare/services",
       "disposition": "retain",
-      "rationale": "Keep the vertical's data models, generation and dataset services separate; no cross-vertical imports.",
+      "rationale": "Move the standalone JSON API workflows to domains/healthcare/use_cases; remove their old import paths without shims.",
       "initializer_owner": "domains/healthcare/services"
     },
     {
@@ -591,7 +591,7 @@
       ],
       "target": "domains/shared/services",
       "disposition": "retain",
-      "rationale": "Keep the vertical's data models, generation and dataset services separate; no cross-vertical imports.",
+      "rationale": "Move the standalone JSON API workflows to domains/shared/use_cases; remove their old import paths without shims.",
       "initializer_owner": "domains/shared/services"
     },
     {
@@ -1174,6 +1174,22 @@
     {
       "source": "domains/shared/converters/append_converter.py",
       "target": "domains/shared/converters/text/append_converter.py"
+    },
+    {
+      "source": "domains/healthcare/services/doctor_api.py",
+      "target": "domains/healthcare/use_cases/doctor_api.py"
+    },
+    {
+      "source": "domains/healthcare/services/patient_api.py",
+      "target": "domains/healthcare/use_cases/patient_api.py"
+    },
+    {
+      "source": "domains/shared/services/address_api.py",
+      "target": "domains/shared/use_cases/address_api.py"
+    },
+    {
+      "source": "domains/shared/services/person_api.py",
+      "target": "domains/shared/use_cases/person_api.py"
     },
     {
       "source": "domains/shared/converters/converter.py",
@@ -2205,6 +2221,10 @@
     {
       "path": "domains",
       "reason": "Generate business values/entities and load their domain datasets. These distinct owners remain together; a count-only wrapper adds no boundary."
+    },
+    {
+      "path": "domains/shared",
+      "reason": "Keep cross-industry datasets, generators, models, services, and standalone JSON use cases under the shared domain."
     },
     {
       "path": "domains/domain_core",

@@ -119,7 +119,7 @@
         "datamimic_ce.domains.shared.services"
       ],
       "responsibilities": [
-        "Shared entity construction workflows."
+        "Registered shared entity construction services."
       ],
       "forbidden_responsibilities": [
         "Own another component's behavior."
@@ -150,13 +150,36 @@
         }
       ],
       "public": [
-        "datamimic_ce.domains.shared.services.address_api",
-        "datamimic_ce.domains.shared.services.person_api",
         "datamimic_ce.domains.shared.services.address_service",
         "datamimic_ce.domains.shared.services.city_service",
         "datamimic_ce.domains.shared.services.company_service",
         "datamimic_ce.domains.shared.services.country_service",
         "datamimic_ce.domains.shared.services.person_service"
+      ],
+      "decided_by": "agent"
+    },
+    {
+      "id": "SHARED-USE-CASES",
+      "label": "use_cases",
+      "role": "component",
+      "packages": [
+        "datamimic_ce.domains.shared.use_cases"
+      ],
+      "responsibilities": [
+        "Standalone deterministic JSON address and person use cases."
+      ],
+      "forbidden_responsibilities": [
+        "Own entity construction services or runtime execution."
+      ],
+      "provenance": [
+        "docs/architecture/inner/target.md"
+      ],
+      "requires": [
+        {
+          "component": "datasets",
+          "rationale": "Use cases load locale data.",
+          "decided_by": "agent"
+        }
       ],
       "decided_by": "agent"
     },
@@ -439,15 +462,27 @@
       "kind": "root_layout",
       "root": "datamimic_ce.domains.shared.services",
       "allowed_children": [
-        "datamimic_ce.domains.shared.services.address_api",
         "datamimic_ce.domains.shared.services.address_service",
         "datamimic_ce.domains.shared.services.city_service",
         "datamimic_ce.domains.shared.services.company_service",
         "datamimic_ce.domains.shared.services.country_service",
-        "datamimic_ce.domains.shared.services.person_api",
         "datamimic_ce.domains.shared.services.person_service"
       ],
-      "rationale": "Shared entity construction workflows. Exact reviewed target children; no hidden extra modules.",
+      "rationale": "Registered entity construction services. Exact reviewed target children; no hidden extra modules.",
+      "provenance": [
+        "docs/architecture/inner/structure-review.json"
+      ],
+      "decided_by": "agent"
+    },
+    {
+      "id": "LAYOUT-DOMAINS-SHARED-USE-CASES",
+      "kind": "root_layout",
+      "root": "datamimic_ce.domains.shared.use_cases",
+      "allowed_children": [
+        "datamimic_ce.domains.shared.use_cases.address_api",
+        "datamimic_ce.domains.shared.use_cases.person_api"
+      ],
+      "rationale": "Standalone deterministic JSON use cases. Exact reviewed target children; no hidden extra modules.",
       "provenance": [
         "docs/architecture/inner/structure-review.json"
       ],
