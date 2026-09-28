@@ -2,6 +2,7 @@
 
 import logging
 from pathlib import Path
+from typing import TypeVar
 
 from datamimic_ce.engine.dsl.vocabulary.constants.data_type_constants import DATA_TYPE_DICT, DATA_TYPE_LIST
 from datamimic_ce.engine.dsl.vocabulary.constants.element_constants import EL_NESTED_KEY
@@ -25,6 +26,7 @@ from datamimic_ce.engine.io.files.readers import FileUtil
 from datamimic_ce.randomness import RandomSource
 
 logger = logging.getLogger("DATAMIMIC")
+T = TypeVar("T")
 
 
 def count_source(
@@ -130,7 +132,7 @@ def read_nested_key_source(
     raise ValueError(f"Cannot load data from source '{source_expression}' of <nestedKey> '{name}'")
 
 
-def window_nested_key_rows(data: list[object], count: int | None, cyclic: bool | None) -> list[object]:
+def window_nested_key_rows(data: list[T], count: int | None, cyclic: bool | None) -> list[T]:
     """Select the rows for one nested-key execution."""
     size = len(data) if count is None else count if cyclic else min(count, len(data))
     return select_rows(data=data, pagination=DataSourcePagination(0, size), cyclic=bool(cyclic))
@@ -157,7 +159,7 @@ def read_reference_rows(
 
 
 def select_reference_rows(
-    records: list[dict[str, object]],
+    records: list[T],
     pagination: DataSourcePagination | None,
     cyclic: bool | None,
     distribution: SourceDistribution,
@@ -167,7 +169,7 @@ def select_reference_rows(
     label: str,
     rng: RandomSource | None,
     default_cyclic_ordered: bool | None,
-) -> list[dict[str, object]]:
+) -> list[T]:
     """Apply reference uniqueness, distribution, or ordinary runtime RNG selection."""
     if unique:
         return get_unique_data(records, pagination, seed, label)
@@ -185,11 +187,11 @@ def select_reference_rows(
 
 
 def _ordered_reference_rows(
-    records: list[dict[str, object]],
+    records: list[T],
     pagination: DataSourcePagination | None,
     cyclic: bool | None,
     label: str,
-) -> list[dict[str, object]]:
+) -> list[T]:
     if pagination is None:
         return records
     start = pagination.skip

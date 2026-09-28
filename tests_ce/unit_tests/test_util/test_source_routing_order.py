@@ -11,12 +11,84 @@ from datamimic_ce.engine.dsl.vocabulary.enums.distribution_enums import SourceDi
 from datamimic_ce.engine.io.contracts import DataSourcePagination
 from datamimic_ce.engine.io.data_sources import chunk_reader
 from datamimic_ce.engine.io.data_sources import variable as io_variable_sources
-from datamimic_ce.engine.io.exporters.core import routing as io_exporter_routing
 from datamimic_ce.engine.io.data_sources.data_source_registry import DataSourceRegistry
+from datamimic_ce.engine.io.data_sources.router import select_reference_rows, window_nested_key_rows
+from datamimic_ce.engine.io.exporters.core import routing as io_exporter_routing
 from datamimic_ce.engine.runtime.tasks.sources import chunk_source_reader
 from datamimic_ce.engine.runtime.tasks.sources import router as source_router
 from datamimic_ce.engine.runtime.tasks.sources import variable as variable_sources
 from datamimic_ce.engine.runtime.tasks.sources.chunk_source_reader import ChunkSourceReader
+
+
+def test_nested_key_window_preserves_order_and_noncyclic_bounds() -> None:
+    rows = [{"id": 1}, {"id": 2}]
+
+    assert window_nested_key_rows(rows, 2, False) == rows
+    assert window_nested_key_rows(rows, 0, False) == []
+    selected = window_nested_key_rows(rows, 5, False)
+    assert selected == rows
+    assert selected[0] is rows[0]
+
+
+def test_nested_key_cyclic_window_wraps_with_independent_deep_copies() -> None:
+    rows = [{"id": 1, "nested": {"value": "original"}}, {"id": 2, "nested": {"value": "second"}}]
+
+    selected = window_nested_key_rows(rows, 3, True)
+
+    assert [row["id"] for row in selected] == [1, 2, 1]
+    assert selected[0] is not rows[0]
+    assert selected[2] is not selected[0]
+    selected[2]["nested"]["value"] = "changed"
+    assert selected[0]["nested"]["value"] == "original"
+    assert rows[0]["nested"]["value"] == "original"
+
+
+def test_random_reference_requires_rng_only_for_positive_windows() -> None:
+    rows = [{"id": 1}]
+    pagination = DataSourcePagination(skip=0, limit=1)
+
+    with pytest.raises(TypeError, match="Random source is required"):
+        select_reference_rows(
+            rows,
+            pagination,
+            False,
+            SourceDistribution.RANDOM,
+            False,
+            False,
+            1,
+            "<reference> 'items'",
+            None,
+            False,
+        )
+
+    assert select_reference_rows(
+        rows,
+        DataSourcePagination(skip=0, limit=0),
+        False,
+        SourceDistribution.RANDOM,
+        False,
+        False,
+        1,
+        "<reference> 'items'",
+        None,
+        False,
+    ) == []
+
+
+def test_ordered_reference_rejects_window_past_source() -> None:
+    with pytest.raises(ValueError, match="distribution='ordered' needs 3 rows"):
+        select_reference_rows(
+            [{"id": 1}, {"id": 2}],
+            DataSourcePagination(skip=0, limit=3),
+            False,
+            SourceDistribution.ORDERED,
+            True,
+            False,
+            1,
+            "<reference> 'items'",
+            None,
+            False,
+        )
 
 
 def _variable_statement(source: str, *, full_name: str, source_entity: str = "rows") -> VariableStatement:
