@@ -60,6 +60,7 @@ from datamimic_ce.engine.io.exporters.core.unified_buffered_exporter import Unif
 from datamimic_ce.engine.io.exporters.diagnostics.test_result_exporter import TestResultExporter
 from datamimic_ce.engine.io.exporters.memory.memstore import Memstore
 from datamimic_ce.engine.io.exporters.registry import (
+    ExportSession,
     buffered_exporter_names,
     consume_exporters,
     create_exporter_list,
@@ -77,6 +78,7 @@ __all__ = [
     "ExporterConfig",
     "Exporter",
     "ExporterStateManager",
+    "ExportSession",
     "consume_exporters",
     "convert_xml_dict_to_json_dict",
     "create_exporter_list",

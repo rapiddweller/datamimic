@@ -12,7 +12,7 @@ import secrets
 from abc import ABC, abstractmethod
 from pathlib import Path
 from random import Random
-from typing import Literal, TypedDict
+from typing import Literal
 
 from faker import Faker
 
@@ -24,8 +24,8 @@ from datamimic_ce.domains.api import (
     derive_child_seed,
     spawn_rng,
 )
-from datamimic_ce.engine.dsl.api import ExportOperation, SetupStatement
-from datamimic_ce.engine.io.api import Client, Exporter, TestResultExporter, dispose_client_engine
+from datamimic_ce.engine.dsl.api import SetupStatement
+from datamimic_ce.engine.io.api import Client, ExportSession, TestResultExporter, dispose_client_engine
 from datamimic_ce.engine.runtime.contexts.demographic_context import DemographicContext
 from datamimic_ce.engine.runtime.logging import logger
 from datamimic_ce.engine.runtime.scripting import evaluation
@@ -181,12 +181,6 @@ class Context(ABC):
         return data_dict
 
 
-class TaskExporters(TypedDict):
-    page_count: int
-    with_operation: list[tuple[Exporter, ExportOperation]]
-    without_operation: list[Exporter]
-
-
 class SetupContext(Context):
     """
     Root context, saving clients and data source length info
@@ -261,7 +255,7 @@ class SetupContext(Context):
         # IMPORTANT: do not set default bool value to default_source_scripted for config propagation
         self._default_source_scripted = default_source_scripted
         self._report_logging = report_logging
-        self._task_exporters: dict[str, TaskExporters] = {}
+        self._export_session: ExportSession | None = None
         self._serialized_generators: bytes | None = None
         self._demographic_context = demographic_context
         self._run_seed = run_seed if run_seed is not None else RunSeed.create(None)
@@ -544,12 +538,12 @@ class SetupContext(Context):
         return self._descriptor_dir
 
     @property
-    def task_exporters(self) -> dict[str, TaskExporters]:
-        return self._task_exporters
+    def export_session(self) -> ExportSession | None:
+        return self._export_session
 
-    @task_exporters.setter
-    def task_exporters(self, value: dict[str, TaskExporters]) -> None:
-        self._task_exporters = value
+    @export_session.setter
+    def export_session(self, value: ExportSession | None) -> None:
+        self._export_session = value
 
     @property
     def default_separator(self) -> str:

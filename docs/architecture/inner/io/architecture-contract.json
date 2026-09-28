@@ -359,6 +359,7 @@
         "datamimic_ce.engine.io.exporters.core.routing:resolve_target_entity_from_metadata",
         "datamimic_ce.engine.io.exporters.core.routing:has_mongodb_upsert_target",
         "datamimic_ce.engine.io.exporters.core.serialization:convert_xml_dict_to_json_dict",
+        "datamimic_ce.engine.io.exporters.registry:ExportSession",
         "datamimic_ce.engine.io.exporters.registry:create_exporter_list",
         "datamimic_ce.engine.io.exporters.registry:consume_exporters",
         "datamimic_ce.engine.io.exporters.registry:buffered_exporter_names",

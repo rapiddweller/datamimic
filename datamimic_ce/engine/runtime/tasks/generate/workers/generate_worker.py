@@ -11,8 +11,7 @@ import dill
 from datamimic_ce.engine.dsl.api import CompositeStatement, ConditionStatement, GenerateStatement, Statement
 from datamimic_ce.engine.io.api import (
     DataSourcePagination,
-    ExporterStateManager,
-    create_exporter_list,
+    ExportSession,
     resolve_target_entity,
 )
 from datamimic_ce.engine.runtime.contexts.context import SetupContext
@@ -56,30 +55,18 @@ class GenerateWorker:
 
         result: dict = {}
 
-        # Initialize ARTIFACT exporter state manager for each worker
-        exporter_state_manager = ExporterStateManager(worker_id)
-
-        # Create and cache exporters for each worker
-        exporters_set = stmt.targets.copy()
         root_context = context.root
-
-        # Create exporters with operations
-        (
-            consumers_with_operation,
-            consumers_without_operation,
-        ) = create_exporter_list(
+        export_session = root_context.export_session
+        if export_session is None:
+            export_session = ExportSession(worker_id)
+            root_context.export_session = export_session
+        export_session.register(
             setup_context=root_context,
+            full_name=stmt.full_name,
             product_name=resolve_target_entity(stmt.target_entity, None, stmt.name),
             export_uri=stmt.export_uri,
-            targets=list(exporters_set),
+            targets=list(stmt.targets),
         )
-
-        # Cache the exporters
-        root_context.task_exporters[stmt.full_name] = {
-            "with_operation": consumers_with_operation,
-            "without_operation": consumers_without_operation,
-            "page_count": 0,  # Track number of pages processed
-        }
 
         # Keys the outermost run must accumulate across pages: everything in test mode,
         # otherwise only products a memstore consumes at the end of the run
@@ -112,7 +99,7 @@ class GenerateWorker:
                 # the children - exporting here would land child rows
                 # in the DB before their parent exists and break child->parent FK constraints.
                 if not isinstance(context, GenIterContext):
-                    export_product_by_page(context.root, stmt, result_dict, exporter_state_manager)
+                    export_product_by_page(stmt, result_dict, export_session)
 
             # Collect result for later capturing (keep_keys None -> keep everything)
             for key in result_dict.keys() if keep_keys is None else keep_keys & result_dict.keys():

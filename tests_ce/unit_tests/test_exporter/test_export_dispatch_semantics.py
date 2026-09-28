@@ -16,10 +16,10 @@ from datamimic_ce.engine.dsl.api import (
     GenerateStatement,
 )
 from datamimic_ce.engine.dsl.model.generation.generate_model import GenerateModel
-from datamimic_ce.engine.io.api import buffered_exporter_names, create_exporter_list
+from datamimic_ce.engine.io.api import ExportSession, buffered_exporter_names, create_exporter_list
+from datamimic_ce.engine.io.exporters import registry as exporter_registry
 from datamimic_ce.engine.io.exporters.core.exporter import Exporter
 from datamimic_ce.engine.io.exporters.core.exporter_config import ExporterConfig
-from datamimic_ce.engine.io.exporters.core.exporter_state_manager import ExporterStateManager
 from datamimic_ce.engine.io.exporters.database.mongodb_exporter import MongoDBExporter
 from datamimic_ce.engine.io.exporters.diagnostics.console_exporter import ConsoleExporter
 from datamimic_ce.engine.io.exporters.diagnostics.test_result_exporter import TestResultExporter
@@ -43,16 +43,10 @@ def _statement(*, export_uri: str | None = None) -> SimpleNamespace:
     )
 
 
-def _root(stmt: SimpleNamespace, with_operation: list, without_operation: list) -> SimpleNamespace:
-    return SimpleNamespace(
-        task_exporters={
-            stmt.full_name: {
-                "page_count": 0,
-                "with_operation": with_operation,
-                "without_operation": without_operation,
-            }
-        }
-    )
+def _session(stmt: SimpleNamespace, with_operation: list, without_operation: list) -> ExportSession:
+    session = ExportSession(worker_id=1)
+    session._register_exporters(stmt.full_name, with_operation, without_operation)
+    return session
 
 
 def test_mongodb_upsert_replaces_rows_for_subsequent_plain_exporter(monkeypatch: pytest.MonkeyPatch) -> None:
@@ -69,10 +63,9 @@ def test_mongodb_upsert_replaces_rows_for_subsequent_plain_exporter(monkeypatch:
     source_rows = [{"id": 1, "state": "original"}]
 
     export_order.export_product_by_page(
-        _root(stmt, [(mongo, ExportOperation.UPSERT)], [result]),
         stmt,
         {stmt.full_name: source_rows},
-        ExporterStateManager(worker_id=1),
+        _session(stmt, [(mongo, ExportOperation.UPSERT)], [result]),
     )
 
     assert captured_upsert == [("products", source_rows)]
@@ -92,10 +85,9 @@ def test_xml_receives_original_rows_while_other_buffered_exporters_receive_conve
     source_rows = [{"payload": {"#text": "original"}}]
 
     export_order.export_product_by_page(
-        _root(stmt, [], [xml_exporter, json_exporter]),
         stmt,
         {stmt.full_name: source_rows},
-        ExporterStateManager(worker_id=1),
+        _session(stmt, [], [xml_exporter, json_exporter]),
     )
 
     assert received_xml[0][0] == ("products", source_rows)
@@ -108,10 +100,9 @@ def test_operation_errors_stay_direct_while_plain_export_errors_wrap_the_cause()
 
     with pytest.raises(ValueError, match="Exporter does not support operation") as operation_error:
         export_order.export_product_by_page(
-            _root(stmt, [(Exporter(), ExportOperation.UPDATE)], []),
             stmt,
             source,
-            ExporterStateManager(worker_id=1),
+            _session(stmt, [(Exporter(), ExportOperation.UPDATE)], []),
         )
     assert operation_error.value.__cause__ is None
 
@@ -121,10 +112,9 @@ def test_operation_errors_stay_direct_while_plain_export_errors_wrap_the_cause()
 
     with pytest.raises(ValueError, match="Error in exporter BrokenConsoleExporter: plain export failed") as plain_error:
         export_order.export_product_by_page(
-            _root(stmt, [], [BrokenConsoleExporter()]),
             stmt,
             source,
-            ExporterStateManager(worker_id=1),
+            _session(stmt, [], [BrokenConsoleExporter()]),
         )
     assert isinstance(plain_error.value.__cause__, RuntimeError)
 
@@ -259,46 +249,26 @@ def test_exporter_factory_preserves_target_parse_and_unknown_operation_errors(tm
     assert unknown_operation.value.__cause__ is None
 
 
-def test_conversion_failure_precedes_cache_lookup_page_count_and_nested_writes(
+def test_conversion_failure_precedes_registration_lookup_and_nested_writes(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    class TrackingExporters(dict[str, dict]):
-        def __init__(self, entries: dict[str, dict]) -> None:
-            super().__init__(entries)
-            self.lookups: list[str] = []
-
-        def __getitem__(self, key: str) -> dict:
-            self.lookups.append(key)
-            return super().__getitem__(key)
-
     parent = GenerateStatement(GenerateModel(name="parents", count="1"), None)
     child = GenerateStatement(GenerateModel(name="children", count="1"), parent)
     parent.sub_statements = [child]
-    parent_result = TestResultExporter()
     child_result = TestResultExporter()
-    exporters = TrackingExporters(
-        {
-            parent.full_name: {"page_count": 7, "with_operation": [], "without_operation": [parent_result]},
-            child.full_name: {"page_count": 4, "with_operation": [], "without_operation": [child_result]},
-        }
-    )
-    root_context = SimpleNamespace(task_exporters=exporters)
+    session = ExportSession(worker_id=1)
+    session._register_exporters(child.full_name, [], [child_result])
 
     def fail_conversion(_row: dict[str, object]) -> object:
         raise ValueError("unserializable XML row")
 
-    monkeypatch.setattr(export_order, "convert_xml_dict_to_json_dict", fail_conversion)
+    monkeypatch.setattr(exporter_registry, "convert_xml_dict_to_json_dict", fail_conversion)
 
     with pytest.raises(ValueError, match="unserializable XML row"):
         export_order.export_product_by_page(
-            root_context,
             parent,
             {parent.full_name: [{"payload": {"#text": "parent"}}], child.full_name: [{"id": 1}]},
-            ExporterStateManager(worker_id=1),
+            session,
         )
 
-    assert exporters.lookups == []
-    assert exporters[parent.full_name]["page_count"] == 7
-    assert exporters[child.full_name]["page_count"] == 4
-    assert parent_result.get_result() == {}
     assert child_result.get_result() == {}
