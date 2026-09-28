@@ -337,8 +337,7 @@
         "datamimic_ce.domains.api:PersonService",
         "datamimic_ce.domains.domain_core.contracts.attribute_catalog:FieldSpec",
         "datamimic_ce.domains.domain_core.contracts.generation",
-        "datamimic_ce.domains.shared.demographics.profile:DemographicProfile",
-        "datamimic_ce.domains.facade:generate_domain"
+        "datamimic_ce.domains.shared.demographics.profile:DemographicProfile"
       ],
       "planned": [],
       "decided_by": "agent"
@@ -882,10 +881,13 @@
     "public_api": [
       "datamimic_ce.interfaces.python.datamimic:DataMimic",
       "datamimic_ce.interfaces.python.data_mimic_test:DataMimicTest",
-      "datamimic_ce.interfaces.python.factory:DataMimicTestFactory"
+      "datamimic_ce.interfaces.python.factory:DataMimicTestFactory",
+      "datamimic_ce.domains.domain_core.contracts.json_types:JsonObject",
+      "datamimic_ce.domains.facade:generate_domain"
     ],
     "public_api_provenance": [
-      "docs/architecture/refactoring-study/experiment-2/target-architecture.md"
+      "docs/architecture/refactoring-study/experiment-2/target-architecture.md",
+      "README.md"
     ],
     "public_commands": [
       {

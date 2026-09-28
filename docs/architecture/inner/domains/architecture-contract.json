@@ -227,9 +227,7 @@
       "responsibilities": [
         "Existing request validation and domain-service generation workflow."
       ],
-      "public": [
-        "datamimic_ce.domains.facade:generate_domain"
-      ],
+      "public": [],
       "decided_by": "agent",
       "role": "component",
       "forbidden_responsibilities": [
