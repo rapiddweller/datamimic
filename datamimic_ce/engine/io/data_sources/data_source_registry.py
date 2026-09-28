@@ -15,7 +15,7 @@ from datamimic_ce.engine.io.clients.client import Client
 from datamimic_ce.engine.io.clients.rdbms_client import RdbmsClient
 from datamimic_ce.engine.io.contracts import DataSourcePagination, select_rows
 from datamimic_ce.engine.io.files.cache import FileContentStorage
-from datamimic_ce.engine.io.files.readers import FileUtil, _is_json_object, _is_json_records
+from datamimic_ce.engine.io.files.readers import FileUtil, is_json_object, is_json_records
 
 logger = logging.getLogger("DATAMIMIC")
 
@@ -48,9 +48,9 @@ class DataSourceRegistry:
             return FileUtil.read_fixed_width_to_dict_list(Path(key))
         elif source_format is SourceFileFormat.JSON:
             json_data = FileUtil.read_json(Path(key))
-            if _is_json_records(json_data):
+            if is_json_records(json_data):
                 return json_data
-            elif _is_json_object(json_data):
+            elif is_json_object(json_data):
                 return [json_data]
             else:
                 raise ValueError(f"JSON file '{key}' must contain a list of objects or a dictionary")

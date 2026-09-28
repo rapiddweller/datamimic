@@ -42,12 +42,12 @@ def _is_json_value(value: object) -> TypeGuard[JsonValue]:
     return False
 
 
-def _is_json_object(value: JsonValue) -> TypeGuard[dict[str, JsonValue]]:
+def is_json_object(value: JsonValue) -> TypeGuard[dict[str, JsonValue]]:
     return isinstance(value, dict)
 
 
-def _is_json_records(value: JsonValue) -> TypeGuard[list[dict[str, JsonValue]]]:
-    return isinstance(value, list) and all(_is_json_object(row) for row in value)
+def is_json_records(value: JsonValue) -> TypeGuard[list[dict[str, JsonValue]]]:
+    return isinstance(value, list) and all(is_json_object(row) for row in value)
 
 
 class FileUtil:
@@ -289,7 +289,7 @@ class FileUtil:
         Read data from JSON and parse into dict
         """
         json_data = FileUtil.read_json(file_path, encoding)
-        if _is_json_object(json_data):
+        if is_json_object(json_data):
             return json_data
         else:
             raise ValueError(f"JSON file '{file_path}' must contain a dictionary")

@@ -265,7 +265,9 @@
       "public": [
         "datamimic_ce.engine.io.files.api",
         "datamimic_ce.engine.io.files.cache",
-        "datamimic_ce.engine.io.files.readers"
+        "datamimic_ce.engine.io.files.readers",
+        "datamimic_ce.engine.io.files.readers:is_json_object",
+        "datamimic_ce.engine.io.files.readers:is_json_records"
       ],
       "decided_by": "agent"
     }

@@ -168,6 +168,11 @@ are local to their boundary and do not automatically publish through the parent.
 Concrete model and statement types are legitimate internal interfaces; concrete
 clients and exporter implementations are not the Runtime-facing API.
 
+The IO facade drops five unused concrete exporter re-exports; live runtime
+consumers still use its Memstore and TestResultExporter types.
+File JSON shape guards are shared operations owned by the file readers; the
+exporter registry's Memstore dependency is declared at the memory owner.
+
 ## Changes that need more than a file move
 
 - Dissolve `tasks/task_util.py`: dispatch uses the existing registry; evaluation
@@ -253,6 +258,11 @@ IO uses DSL vocabulary modules and input parsers directly; `dsl.api` remains the
 ### S3G13 Runtime internal boundaries
 
 Contexts use the public script execution operation; task families share declared value-construction operations. `WhileTask` accepts the common subtask bases directly.
+
+### S3G14 IO interface cleanup
+
+The facade drops unused concrete exporter re-exports. JSON shape guards become
+named reader operations, and the exporter registry declares its Memstore dependency.
 
 1. Freeze the target definition and record baseline/tool findings separately.
 2. Implement CE slices: neutral primitives and errors; DSL families; IO boundaries;

@@ -116,7 +116,9 @@
           "decided_by": "agent"
         }
       ],
-      "public": [],
+      "public": [
+        "datamimic_ce.engine.io.exporters.memory.memstore:Memstore"
+      ],
       "decided_by": "agent"
     },
     {
