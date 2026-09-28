@@ -18,5 +18,12 @@ class TestNullQuota:
         return Path(__file__).resolve().parent
 
     def test_null_quota(self, test_dir: Path) -> None:
-        test_engine = DataMimicTest(test_dir=test_dir, filename="test_null_quota.xml")
+        test_engine = DataMimicTest(
+            test_dir=test_dir, filename="test_null_quota.xml", capture_test_result=True
+        )
         test_engine.test_with_timer()
+        result = test_engine.capture_result()
+        assert result is not None
+        assert len(result["data"]) == 10
+        assert all(row["null"] is None for row in result["data"])
+        assert all(row["notNull"] is not None for row in result["data"])
