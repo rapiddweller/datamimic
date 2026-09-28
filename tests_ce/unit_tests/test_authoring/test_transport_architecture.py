@@ -51,7 +51,7 @@ def test_transports_do_not_import_authoring_implementation_modules() -> None:
         "datamimic_ce.authoring.application.compiler",
         "datamimic_ce.authoring.adapters.dryrun",
         "datamimic_ce.authoring.adapters.linter",
-        "datamimic_ce.authoring.projection.reference",
+        "datamimic_ce.authoring.adapters.reference",
         "datamimic_ce.authoring.projection.reference_projection",
     }
     for relative in (

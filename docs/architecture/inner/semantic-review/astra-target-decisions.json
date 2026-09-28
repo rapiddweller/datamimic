@@ -414,14 +414,14 @@
           "packages": [
             "datamimic_ce.authoring.projection"
           ],
-          "concern": "Render reference and schema views from canonical DSL/domain facts."
+          "concern": "Build typed authoring-reference variants from canonical intent facts."
         },
         {
           "id": "AUTHORING-ADAPTERS",
           "packages": [
             "datamimic_ce.authoring.adapters"
           ],
-          "concern": "Bounded runtime/filesystem execution adapters."
+          "concern": "Bounded runtime/filesystem adapters and runtime-backed reference/capability views."
         },
         {
           "id": "AUTHORING-APPLICATION",
@@ -1348,7 +1348,7 @@
     },
     {
       "path": "authoring/adapters",
-      "concern": "Bounded runtime/filesystem execution adapters.",
+      "concern": "Bounded runtime/filesystem adapters and runtime-backed reference/capability views.",
       "component": "AUTHORING-ADAPTERS"
     },
     {
@@ -1368,7 +1368,7 @@
     },
     {
       "path": "authoring/projection",
-      "concern": "Render reference and schema views from canonical DSL/domain facts.",
+      "concern": "Build typed authoring-reference variants from canonical intent facts.",
       "component": "AUTHORING-PROJECTION"
     },
     {
@@ -2328,7 +2328,7 @@
     {
       "source": "authoring/projection/reference.py",
       "targets": [
-        "authoring/projection/reference.py"
+        "authoring/adapters/reference.py"
       ]
     },
     {

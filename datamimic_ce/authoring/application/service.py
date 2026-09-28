@@ -115,7 +115,7 @@ def compile_document(spec: dict[str, JsonValue]) -> CompiledDocument:
 
 
 def capabilities(request: CapabilitiesRequest | None = None) -> CapabilitiesResult:
-    from datamimic_ce.authoring.projection.reference import (
+    from datamimic_ce.authoring.adapters.reference import (
         capabilities_index,
         capabilities_manifest,
         capabilities_sections,
@@ -131,7 +131,7 @@ def capabilities(request: CapabilitiesRequest | None = None) -> CapabilitiesResu
 
 
 def reference(request: ReferenceRequest) -> ReferenceResult:
-    from datamimic_ce.authoring.projection.reference import reference as project_reference
+    from datamimic_ce.authoring.adapters.reference import reference as project_reference
 
     try:
         content = project_reference(request.topic, request.name, category=request.category, query=request.query)

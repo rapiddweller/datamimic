@@ -113,7 +113,7 @@
         "datamimic_ce.authoring.projection"
       ],
       "responsibilities": [
-        "Render reference and schema views from canonical DSL/domain facts."
+        "Build typed authoring-reference variants from canonical intent facts."
       ],
       "forbidden_responsibilities": [
         "Define a second DSL catalog or execute a run."
@@ -129,7 +129,6 @@
         }
       ],
       "public": [
-        "datamimic_ce.authoring.projection.reference",
         "datamimic_ce.authoring.projection.reference_projection"
       ],
       "decided_by": "agent"
@@ -142,7 +141,7 @@
         "datamimic_ce.authoring.adapters"
       ],
       "responsibilities": [
-        "Bounded runtime/filesystem execution adapters."
+        "Bounded runtime/filesystem adapters and runtime-backed reference/capability views."
       ],
       "forbidden_responsibilities": [
         "Own intent or duplicate executable DSL definitions."
@@ -166,6 +165,7 @@
         "datamimic_ce.authoring.adapters.dryrun",
         "datamimic_ce.authoring.adapters.engine_check",
         "datamimic_ce.authoring.adapters.linter",
+        "datamimic_ce.authoring.adapters.reference",
         "datamimic_ce.authoring.adapters.xml_loader"
       ],
       "decided_by": "agent"
@@ -257,9 +257,10 @@
         "datamimic_ce.authoring.adapters.dryrun",
         "datamimic_ce.authoring.adapters.engine_check",
         "datamimic_ce.authoring.adapters.linter",
+        "datamimic_ce.authoring.adapters.reference",
         "datamimic_ce.authoring.adapters.xml_loader"
       ],
-      "rationale": "Bounded runtime/filesystem execution adapters. Exact reviewed target children; no hidden extra modules.",
+      "rationale": "Bounded runtime/filesystem execution adapters and runtime-backed reference/capability views. Exact reviewed target children; no hidden extra modules.",
       "provenance": [
         "docs/architecture/inner/structure-review.json"
       ],
@@ -325,10 +326,9 @@
       "kind": "root_layout",
       "root": "datamimic_ce.authoring.projection",
       "allowed_children": [
-        "datamimic_ce.authoring.projection.reference",
         "datamimic_ce.authoring.projection.reference_projection"
       ],
-      "rationale": "Render reference and schema views from canonical DSL/domain facts. Exact reviewed target children; no hidden extra modules.",
+      "rationale": "Build typed authoring-reference variants from canonical intent facts. Exact reviewed target children; no hidden extra modules.",
       "provenance": [
         "docs/architecture/inner/structure-review.json"
       ],

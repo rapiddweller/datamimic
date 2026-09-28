@@ -35,8 +35,8 @@ for edition-only additions and the superseded Experiment 3 proposal.
       rule_catalog.py
       rules/                    base, schema, semantics, intent, cross-statement
     application/                service, compile/verify/acceptance sequencing
-    adapters/                   XML loading/lint, bounded execution, EE bundle assembly
-    projection/                 deterministic reference/schema views; no runtime imports
+    adapters/                   XML loading/lint, bounded execution, live reference/capability views
+    projection/                 typed authoring-reference variants; no runtime imports
   engine/
     dsl/
       api.py
@@ -133,8 +133,9 @@ flowchart LR
   AA --> APP["Application"]
   APP --> AD["Adapters"]
   APP --> PR["Derived projections"]
-  PR --> DF["DSL / domain / IO facts"]
-  AD -->|"bounded request"| RA
+  PR --> IF["Canonical intent facts"]
+  AD --> DF["DSL / domain facts"]
+  AD -->|"bounded run / capability facts"| RA
   RA --> LIFE["Lifecycle"]
   LIFE --> PARSE["DSL parse → typed statements"]
   LIFE --> SETUP["Setup"]
@@ -285,6 +286,12 @@ projection, and coordinates extension constraint registration atomically with
 element structure. The constraints registry exposes per-tag mutation operations
 for this internal SPI; atomicity remains owned by the model registry. No
 `dsl.api` re-export is added.
+
+### S3G18 Runtime-backed reference adapter
+
+Reference and capability rendering lives in `authoring/adapters/reference.py`
+because it combines live Runtime capabilities with DSL and domain facts. The
+typed intent-reference projection stays runtime-free.
 
 1. Freeze the target definition and record baseline/tool findings separately.
 2. Implement CE slices: neutral primitives and errors; DSL families; IO boundaries;

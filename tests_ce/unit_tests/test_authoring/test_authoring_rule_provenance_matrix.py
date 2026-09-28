@@ -36,11 +36,11 @@ from pathlib import Path
 
 import pytest
 
-from datamimic_ce.authoring.projection.reference import capabilities_manifest
-from datamimic_ce.engine.dsl.vocabulary.enums.distribution_enums import NumberDistribution, SourceDistribution
+from datamimic_ce.authoring.adapters.reference import capabilities_manifest
 from datamimic_ce.engine.dsl.model.constraints import element_constraints, serialize_constraints
 from datamimic_ce.engine.dsl.model.generation.generate_model import GenerateModel
 from datamimic_ce.engine.dsl.model.values.structured.nested_key_model import NestedKeyModel
+from datamimic_ce.engine.dsl.vocabulary.enums.distribution_enums import NumberDistribution, SourceDistribution
 from datamimic_ce.engine.io.api import FileUtil
 
 CE_SOURCE_DISTRIBUTIONS = frozenset({"random", "ordered", "cumulated"})

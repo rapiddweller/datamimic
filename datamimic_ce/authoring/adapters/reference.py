@@ -18,7 +18,7 @@ from pydantic import JsonValue, TypeAdapter
 if TYPE_CHECKING:
     from datamimic_ce.domains.api import EntitySpec
 
-from datamimic_ce.authoring.contracts import AuthoringReferenceCategory, ReferenceTopic
+from datamimic_ce.authoring.contracts import AuthoringReferenceCategory, AuthoringReferenceQuery, ReferenceTopic
 from datamimic_ce.authoring.domain.rule_catalog import (
     authoring_rule_definition,
     authoring_rule_definitions,
@@ -27,7 +27,6 @@ from datamimic_ce.authoring.domain.rule_catalog import (
 from datamimic_ce.authoring.domain.rules.schema_facts import ElementSchema
 from datamimic_ce.authoring.domain.schema import build_schema_index
 from datamimic_ce.authoring.projection.reference_projection import (
-    AuthoringReferenceQuery,
     authoring_reference_projection,
     list_authoring_reference_queries,
 )

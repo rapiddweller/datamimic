@@ -9,8 +9,8 @@ import pytest
 
 from datamimic_ce.authoring.adapters.dryrun import dry_run_source
 from datamimic_ce.authoring.adapters.linter import lint_source
+from datamimic_ce.authoring.adapters.reference import capabilities_manifest, distributions_reference
 from datamimic_ce.authoring.contracts import AuthoringStage
-from datamimic_ce.authoring.projection.reference import capabilities_manifest, distributions_reference
 from datamimic_ce.engine.dsl.vocabulary.source_capabilities import (
     SourceFileFormat,
     serialize_source_capability,

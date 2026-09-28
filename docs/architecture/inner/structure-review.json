@@ -1152,6 +1152,10 @@
   ],
   "relocations": [
     {
+      "source": "authoring/projection/reference.py",
+      "target": "authoring/adapters/reference.py"
+    },
+    {
       "source": "data_mimic_test.py",
       "target": "interfaces/python/data_mimic_test.py"
     },

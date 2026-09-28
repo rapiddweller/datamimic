@@ -13,9 +13,9 @@ import pytest
 from lxml import etree
 from typer.testing import CliRunner
 
+from datamimic_ce.authoring.adapters.reference import capabilities_manifest, reference
 from datamimic_ce.authoring.contracts import ReferenceTopic
 from datamimic_ce.authoring.domain.diagnostics import Diagnostic
-from datamimic_ce.authoring.projection.reference import capabilities_manifest, reference
 from datamimic_ce.authoring.domain.rule_catalog import (
     AUTHORING_RULE_DEFINITIONS,
     RuleSeverity,

@@ -13,9 +13,9 @@ from pydantic import ValidationError
 
 import datamimic_ce.authoring.application.compiler as compiler_module
 from datamimic_ce.authoring.adapters.dryrun import dry_run_source
+from datamimic_ce.authoring.adapters.reference import capabilities_manifest, scaffold_reference
 from datamimic_ce.authoring.application.compiler import compile_authoring_spec
 from datamimic_ce.authoring.contracts import FileSourceBindingPlan, FileTargetBindingPlan
-from datamimic_ce.authoring.projection.reference import capabilities_manifest, scaffold_reference
 from datamimic_ce.authoring.spec import (
     AuthoringSpecV1,
     FileExportTarget,
