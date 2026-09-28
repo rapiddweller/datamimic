@@ -1008,7 +1008,7 @@
       },
       {
         "path": "datamimic_ce/resources/demos/__init___.py",
-        "responsibility": "Die Datei markiert den Bestand ausgelieferter Demos, ohne eigenes Verhalten."
+        "responsibility": "Diese historische Datei enth\u00e4lt nur einen Docstring und initialisiert das Demo-Verzeichnis nicht."
       },
       {
         "path": "datamimic_ce/resources/demos/demo-clinical-trial/script/clinical_trial.scr.py",
