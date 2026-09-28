@@ -12,10 +12,10 @@ from datamimic_ce.engine.io.api import (
     resolve_source_collection,
     resolve_source_entity,
     resolve_target_entity,
-    resolve_target_entity_from_metadata,
 )
 from datamimic_ce.engine.io.clients.mongodb_client import MongoDBClient
 from datamimic_ce.engine.io.connection_config.mongodb_connection_config import MongoDBConnectionConfig
+from datamimic_ce.engine.io.exporters.core.routing import resolve_target_entity_from_metadata
 
 
 def test_parse_consumer_preserves_nested_arguments_and_deduplicates() -> None:

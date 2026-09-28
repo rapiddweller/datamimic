@@ -53,7 +53,6 @@ from datamimic_ce.engine.io.exporters.core.exporter_state_manager import Exporte
 from datamimic_ce.engine.io.exporters.core.routing import (
     has_mongodb_upsert_target,
     resolve_target_entity,
-    resolve_target_entity_from_metadata,
 )
 from datamimic_ce.engine.io.exporters.core.serialization import convert_xml_dict_to_json_dict
 from datamimic_ce.engine.io.exporters.core.unified_buffered_exporter import UnifiedBufferedExporter
@@ -120,7 +119,6 @@ __all__ = [
     "select_reference_rows",
     "select_row_iterator",
     "resolve_target_entity",
-    "resolve_target_entity_from_metadata",
     "rdbms_get_current_sequence_number",
     "rdbms_increase_sequence_number",
     "smoke_export",
