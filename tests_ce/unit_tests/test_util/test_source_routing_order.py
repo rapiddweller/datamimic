@@ -10,10 +10,11 @@ from datamimic_ce.engine.dsl.statements.values.variables.variable_statement impo
 from datamimic_ce.engine.dsl.vocabulary.enums.distribution_enums import SourceDistribution
 from datamimic_ce.engine.io.contracts import DataSourcePagination
 from datamimic_ce.engine.io.data_sources.data_source_registry import DataSourceRegistry
-from datamimic_ce.engine.runtime.sources import chunk_source_reader
+from datamimic_ce.engine.io.data_sources import chunk_reader
 from datamimic_ce.engine.runtime.sources import router as source_router
 from datamimic_ce.engine.runtime.sources import variable as variable_sources
-from datamimic_ce.engine.runtime.sources.chunk_source_reader import ChunkSourceReader
+from datamimic_ce.engine.runtime.tasks.sources import chunk_source_reader
+from datamimic_ce.engine.runtime.tasks.sources.chunk_source_reader import ChunkSourceReader
 
 
 def _variable_statement(source: str, *, full_name: str, source_entity: str = "rows") -> VariableStatement:
@@ -289,7 +290,7 @@ def test_chunk_random_source_loads_once_per_chunk_with_one_stable_seed(monkeypat
     load = Mock(return_value=([{"id": index} for index in range(8)], True))
     distribute = Mock(return_value=[{"id": index} for index in range(10, 14)])
     monkeypatch.setattr(chunk_source_reader, "load_generate_source", load)
-    monkeypatch.setattr(chunk_source_reader, "get_distributed_data", distribute)
+    monkeypatch.setattr(chunk_reader, "get_distributed_data", distribute)
 
     reader = ChunkSourceReader(context, statement, chunk_start=10, chunk_end=14)
     assert reader.read_page(10, 12) == ([{"id": 10}, {"id": 11}], True)
@@ -330,6 +331,103 @@ def test_chunk_ordered_source_reads_each_page_without_stable_seed(monkeypatch: p
 
     assert [call.args[5:7] for call in load.call_args_list] == [(0, 1), (1, 2)]
     root.stable_distribution_seed.assert_not_called()
+
+
+def test_chunk_cumulated_source_loads_once_and_slices_the_chunk_window(monkeypatch: pytest.MonkeyPatch) -> None:
+    root = SimpleNamespace(
+        default_source_scripted=False,
+        default_separator="|",
+        stable_distribution_seed=Mock(return_value=23),
+    )
+    context = SimpleNamespace(root=root)
+    statement = SimpleNamespace(
+        source="rows.csv",
+        source_script=None,
+        separator=None,
+        distribution=SourceDistribution.CUMULATED,
+        unique=False,
+        full_name="products",
+        name="products",
+        cyclic=True,
+    )
+    pool = [{"id": index} for index in range(5)]
+    selected = [{"id": index} for index in range(4)]
+    load = Mock(return_value=(pool, True))
+    distribute = Mock(return_value=selected)
+    monkeypatch.setattr(chunk_source_reader, "load_generate_source", load)
+    monkeypatch.setattr(chunk_reader, "get_distributed_data", distribute)
+
+    reader = ChunkSourceReader(context, statement, chunk_start=6, chunk_end=10)
+    assert reader.read_page(6, 8) == (selected[:2], True)
+    assert reader.read_page(8, 10) == (selected[2:], True)
+
+    load.assert_called_once_with(context, statement, "rows.csv", "|", False, None, None, None)
+    root.stable_distribution_seed.assert_called_once_with("products")
+    distribute.assert_called_once()
+    selected_pool, pagination, cyclic, seed, distribution = distribute.call_args.args
+    assert selected_pool is pool
+    assert (pagination.skip, pagination.limit) == (6, 4)
+    assert (cyclic, seed, distribution) == (True, 23, SourceDistribution.CUMULATED)
+
+
+def test_chunk_unique_selection_overrides_distribution_and_retains_build_flag(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    root = SimpleNamespace(
+        default_source_scripted=False,
+        default_separator="|",
+        stable_distribution_seed=Mock(return_value=5),
+    )
+    context = SimpleNamespace(root=root)
+    statement = SimpleNamespace(
+        source="rows.csv",
+        source_script=None,
+        separator=None,
+        distribution=SourceDistribution.RANDOM,
+        unique=True,
+        full_name="products",
+        name="products",
+        cyclic=False,
+    )
+    pool = [{"id": index} for index in range(4)]
+    load = Mock(return_value=(pool, False))
+    distribute = Mock()
+    monkeypatch.setattr(chunk_source_reader, "load_generate_source", load)
+    monkeypatch.setattr(chunk_reader, "get_distributed_data", distribute)
+
+    reader = ChunkSourceReader(context, statement, chunk_start=1, chunk_end=3)
+    first = reader.read_page(1, 2)
+    second = reader.read_page(2, 3)
+
+    assert first == ([{"id": 1}], False)
+    assert second == ([{"id": 3}], False)
+    load.assert_called_once()
+    root.stable_distribution_seed.assert_called_once_with("products")
+    distribute.assert_not_called()
+
+
+def test_chunk_unique_selection_fails_when_distinct_pool_is_too_small(monkeypatch: pytest.MonkeyPatch) -> None:
+    root = SimpleNamespace(
+        default_source_scripted=False,
+        default_separator="|",
+        stable_distribution_seed=Mock(return_value=5),
+    )
+    context = SimpleNamespace(root=root)
+    statement = SimpleNamespace(
+        source="rows.csv",
+        source_script=None,
+        separator=None,
+        distribution=SourceDistribution.RANDOM,
+        unique=True,
+        full_name="products",
+        name="products",
+        cyclic=False,
+    )
+    monkeypatch.setattr(chunk_source_reader, "load_generate_source", Mock(return_value=([{"id": 1}], True)))
+
+    reader = ChunkSourceReader(context, statement, chunk_start=0, chunk_end=2)
+    with pytest.raises(ValueError, match="Cannot generate 2 unique values.*only 1 distinct available"):
+        reader.read_page(0, 2)
 
 
 def test_generate_prefers_memstore_while_variable_prefers_client_for_same_source_id(
