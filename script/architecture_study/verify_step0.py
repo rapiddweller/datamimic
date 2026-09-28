@@ -40,8 +40,13 @@ try:
     Path(datamimic_ce.__file__).resolve().relative_to((checkout_root / "datamimic_ce").resolve())
 except ValueError:
     raise RuntimeError("import root mismatch: datamimic_ce loaded outside the checkout root") from None
-from datamimic_ce.interfaces.python.data_mimic_test import DataMimicTest
-from datamimic_ce.engine.dsl.statements.generation.targets import parse_consumer
+if (checkout_root / "datamimic_ce/interfaces/python/data_mimic_test.py").is_file():
+    from datamimic_ce.interfaces.python.data_mimic_test import DataMimicTest
+    from datamimic_ce.engine.dsl.statements.generation.targets import parse_consumer
+else:
+    from datamimic_ce.data_mimic_test import DataMimicTest
+    from datamimic_ce.engine.dsl.statements.statement_util import StatementUtil
+    parse_consumer = StatementUtil.parse_consumer
 
 def normalize(item):
     if item is None or isinstance(item, (bool, int, str)):

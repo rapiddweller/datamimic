@@ -201,6 +201,43 @@ def test_child_records_actual_rows_for_dynamic_count(tmp_path: Path) -> None:
     }
 
 
+def test_child_captures_from_pre_move_checkout_layout(tmp_path: Path) -> None:
+    package = tmp_path / "datamimic_ce"
+    package.mkdir()
+    (package / "__init__.py").write_text("", encoding="utf-8")
+    (package / "data_mimic_test.py").write_text(
+        "class DataMimicTest:\n"
+        "    task_id = None\n"
+        "    def __init__(self, **kwargs): pass\n"
+        "    def test_with_timer(self): pass\n"
+        "    def capture_result(self): return {'sample': [{'value': 1}]}\n",
+        encoding="utf-8",
+    )
+    statements = package / "engine/dsl/statements"
+    statements.mkdir(parents=True)
+    (statements / "statement_util.py").write_text(
+        "class StatementUtil:\n"
+        "    @staticmethod\n"
+        "    def parse_consumer(value): return set()\n",
+        encoding="utf-8",
+    )
+    descriptor = tmp_path / "sample.xml"
+    descriptor.write_text("<setup/>", encoding="utf-8")
+    result = subprocess.run(
+        [sys.executable, "-c", CHILD, str(descriptor)],
+        cwd=tmp_path,
+        env={**os.environ, "PYTHONPATH": str(tmp_path)},
+        check=True,
+        capture_output=True,
+        text=True,
+        timeout=30,
+    )
+    record_line = next(line for line in result.stdout.splitlines() if line.startswith(RESULT_PREFIX))
+    record = json.loads(record_line.removeprefix(RESULT_PREFIX))
+    assert record["outcome"] == "ok"
+    assert record["products"]["sample"]["rows"] == 1
+
+
 def test_child_capture_and_comparison_reject_nested_field_removal(tmp_path: Path) -> None:
     descriptor = tmp_path / "nested.xml"
     descriptor.write_text(
