@@ -1,4 +1,4 @@
-"""Route statement sources through IO-owned readers."""
+"""Route runtime source statements through IO-owned readers."""
 
 from collections.abc import Sized
 
@@ -7,7 +7,6 @@ from datamimic_ce.engine.dsl.api import (
     EL_GENERATE,
     EL_NESTED_KEY,
     EL_VARIABLE,
-    ExportOperation,
     GenerateStatement,
     NestedKeyStatement,
     ReferenceStatement,
@@ -29,6 +28,7 @@ from datamimic_ce.engine.io.api import (
     database_get_by_page_with_query,
     database_get_by_page_with_type,
     get_distributed_data,
+    has_mongodb_upsert_target,
     is_mongodb_client,
     is_rdbms_client,
     read_nested_key_source,
@@ -52,17 +52,6 @@ def data_source_cache_key(stmt: Statement) -> tuple[str | None, str | None]:
     if isinstance(stmt, GenerateStatement | VariableStatement | NestedKeyStatement):
         return (stmt.full_name, stmt.source)
     return (stmt.full_name, None)
-
-
-def has_mongodb_upsert_target(targets: set[str], setup_context: SetupContext) -> bool:
-    for target in targets:
-        if "." in target:
-            consumer, operation = target.split(".", 1)
-            if operation == ExportOperation.UPSERT.value and is_mongodb_client(
-                setup_context.get_client_by_id(consumer)
-            ):
-                return True
-    return False
 
 
 def set_data_source_length(ctx: SetupContext | GenIterContext, stmt: Statement) -> None:
@@ -280,7 +269,7 @@ def load_generate_source(
                     "MongoDB source requires at least attribute 'sourceEntity', 'type', 'selector' "
                     "or 'iterationSelector'"
                 )
-            if not source_data and has_mongodb_upsert_target(stmt.targets, root):
+            if not source_data and has_mongodb_upsert_target(stmt.targets, root.clients):
                 source_data = [{}]
         elif is_rdbms_client(client):
             if stmt.selector:

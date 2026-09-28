@@ -1,9 +1,9 @@
 import random
 from unittest.mock import MagicMock
 
+from datamimic_ce.engine.io.api import has_mongodb_upsert_target
 from datamimic_ce.engine.io.clients.mongodb_client import MongoDBClient
-from datamimic_ce.engine.runtime.contexts.context import Context, SetupContext
-from datamimic_ce.engine.runtime.sources.router import has_mongodb_upsert_target
+from datamimic_ce.engine.runtime.contexts.context import Context
 from datamimic_ce.engine.runtime.tasks.base.counts import get_int_count, resolve_count
 
 
@@ -39,14 +39,10 @@ def test_resolve_count_draws_only_for_a_range() -> None:
 
 
 def test_has_mongodb_upsert_target_requires_upsert_operation_and_mongo_client() -> None:
-    context = MagicMock(spec=SetupContext)
-    context.get_client_by_id.return_value = MagicMock(spec=MongoDBClient)
+    clients = {"mongodb": MagicMock(spec=MongoDBClient)}
 
-    assert has_mongodb_upsert_target({"mongodb.upsert"}, context)
-    assert not has_mongodb_upsert_target({"mongodb.delete"}, context)
-    assert not has_mongodb_upsert_target({"mongodb.upsert.extra"}, context)
-    context.get_client_by_id.return_value = None
-    assert not has_mongodb_upsert_target({"missing.upsert"}, context)
-    context.get_client_by_id.assert_called_with("missing")
-    context.get_client_by_id.return_value = object()
-    assert not has_mongodb_upsert_target({"mongodb.upsert"}, context)
+    assert has_mongodb_upsert_target({"mongodb.upsert"}, clients)
+    assert not has_mongodb_upsert_target({"mongodb.delete"}, clients)
+    assert not has_mongodb_upsert_target({"mongodb.upsert.extra"}, clients)
+    assert not has_mongodb_upsert_target({"missing.upsert"}, clients)
+    assert not has_mongodb_upsert_target({"mongodb.upsert"}, {"mongodb": object()})

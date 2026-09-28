@@ -18,7 +18,7 @@ from datamimic_ce.engine.dsl.vocabulary.source_capabilities import SourceFileFor
 from datamimic_ce.engine.io.api import FileUtil
 from datamimic_ce.engine.io.data_sources import router as io_source_router
 from datamimic_ce.engine.io.data_sources.data_source_registry import DataSourceRegistry
-from datamimic_ce.engine.runtime.sources.router import set_data_source_length
+from datamimic_ce.engine.runtime.tasks.sources.router import set_data_source_length
 
 
 def _context() -> tuple[Mock, Mock]:

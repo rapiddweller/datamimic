@@ -24,7 +24,7 @@ class DataSourceRegistry:
     """File loaders and source paging, with scalar signatures.
 
     Owns no statement/context knowledge: routing a statement's ``source=`` to one of
-    these calls is the runtime's job (``engine.runtime.sources.router``).
+    these calls is the runtime's job (``engine.runtime.tasks.sources.router``).
     """
 
     @staticmethod

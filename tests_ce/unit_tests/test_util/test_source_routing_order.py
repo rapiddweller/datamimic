@@ -9,13 +9,14 @@ import pytest
 from datamimic_ce.engine.dsl.statements.values.variables.variable_statement import VariableStatement
 from datamimic_ce.engine.dsl.vocabulary.enums.distribution_enums import SourceDistribution
 from datamimic_ce.engine.io.contracts import DataSourcePagination
-from datamimic_ce.engine.io.data_sources.data_source_registry import DataSourceRegistry
 from datamimic_ce.engine.io.data_sources import chunk_reader
 from datamimic_ce.engine.io.data_sources import variable as io_variable_sources
-from datamimic_ce.engine.runtime.sources import router as source_router
+from datamimic_ce.engine.io.exporters.core import routing as io_exporter_routing
+from datamimic_ce.engine.io.data_sources.data_source_registry import DataSourceRegistry
 from datamimic_ce.engine.runtime.tasks.sources import chunk_source_reader
-from datamimic_ce.engine.runtime.tasks.sources.chunk_source_reader import ChunkSourceReader
+from datamimic_ce.engine.runtime.tasks.sources import router as source_router
 from datamimic_ce.engine.runtime.tasks.sources import variable as variable_sources
+from datamimic_ce.engine.runtime.tasks.sources.chunk_source_reader import ChunkSourceReader
 
 
 def _variable_statement(source: str, *, full_name: str, source_entity: str = "rows") -> VariableStatement:
@@ -616,6 +617,7 @@ def test_empty_mongodb_generate_source_only_falls_back_for_upsert(
     )
     query = Mock(return_value=[])
     monkeypatch.setattr(source_router, "is_mongodb_client", lambda value: value is mongo)
+    monkeypatch.setattr(io_exporter_routing, "is_mongodb_client", lambda value: value is mongo)
     monkeypatch.setattr(source_router, "interpolate_variables", Mock(return_value="{}"))
     monkeypatch.setattr(source_router, "database_get_by_page_with_query", query)
 

@@ -16,21 +16,21 @@ from datamimic_ce.engine.io.api import (
     UnifiedBufferedExporter,
     count_query_length,
     create_exporter_list,
+    has_mongodb_upsert_target,
     resolve_target_entity,
 )
 from datamimic_ce.engine.runtime.contexts.context import Context, SetupContext
 from datamimic_ce.engine.runtime.contexts.geniter_context import GenIterContext
 from datamimic_ce.engine.runtime.logging import gen_timer, logger
 from datamimic_ce.engine.runtime.scripting.evaluation import interpolate_variables
-from datamimic_ce.engine.runtime.sources.router import (
-    data_source_cache_key,
-    has_mongodb_upsert_target,
-    set_data_source_length,
-)
 from datamimic_ce.engine.runtime.tasks.base.counts import get_int_count, resolve_count
 from datamimic_ce.engine.runtime.tasks.base.dispatch import create_task
 from datamimic_ce.engine.runtime.tasks.base.task import CommonSubTask
 from datamimic_ce.engine.runtime.tasks.generate.policies.single_process_policy import resolve_single_process
+from datamimic_ce.engine.runtime.tasks.sources.router import (
+    data_source_cache_key,
+    set_data_source_length,
+)
 
 
 class GenerateTask(CommonSubTask):
@@ -95,7 +95,7 @@ class GenerateTask(CommonSubTask):
                 count = root_context.data_source_len[data_source_cache_key(self.statement)]
 
         # Check if there is a special consumer (e.g., mongodb_upsert)
-        if count == 0 and has_mongodb_upsert_target(self.statement.targets, root_context):
+        if count == 0 and has_mongodb_upsert_target(self.statement.targets, root_context.clients):
             # Upsert one collection when no record found by query
             count = 1
 

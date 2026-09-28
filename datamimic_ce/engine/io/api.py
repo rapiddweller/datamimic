@@ -47,6 +47,7 @@ from datamimic_ce.engine.io.exporters.core.exporter import Exporter
 from datamimic_ce.engine.io.exporters.core.exporter_config import ExporterConfig
 from datamimic_ce.engine.io.exporters.core.exporter_state_manager import ExporterStateManager
 from datamimic_ce.engine.io.exporters.core.routing import (
+    has_mongodb_upsert_target,
     parse_function_string,
     resolve_target_entity,
     resolve_target_entity_from_metadata,
@@ -105,6 +106,7 @@ __all__ = [
     "create_mongodb_client",
     "create_rdbms_client",
     "get_distributed_data",
+    "has_mongodb_upsert_target",
     "database_count_table_length",
     "database_count_query_length",
     "database_get_by_page_with_query",

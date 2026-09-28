@@ -15,7 +15,7 @@ from datamimic_ce.engine.io.api import DataSourcePagination
 from datamimic_ce.engine.io.clients.database_client import DatabaseClient
 from datamimic_ce.engine.io.clients.rdbms_client import RdbmsClient
 from datamimic_ce.engine.runtime.contexts.geniter_context import GenIterContext
-from datamimic_ce.engine.runtime.sources.router import load_reference_source
+from datamimic_ce.engine.runtime.tasks.sources.router import load_reference_source
 from datamimic_ce.engine.runtime.tasks.values.references.reference_task import ReferenceTask
 
 
@@ -184,7 +184,7 @@ class TestReferenceTask(unittest.TestCase):
         self.statement.cyclic = False
         self.rdbms_client.get_random_rows_by_columns.return_value = [(1, "Ada"), (2, "Bert"), (3, "Cam")]
 
-        with patch("datamimic_ce.engine.runtime.sources.router.is_rdbms_client", return_value=True):
+        with patch("datamimic_ce.engine.runtime.tasks.sources.router.is_rdbms_client", return_value=True):
             rows = load_reference_source(self.context, self.statement, self.pagination)
 
         assert rows == [{"id": 1, "name": "Ada"}, {"id": 2, "name": "Bert"}]
@@ -203,7 +203,7 @@ class TestReferenceTask(unittest.TestCase):
         self.context.rng.choice.side_effect = lambda records: records[0]
         self.rdbms_client.get_random_rows_by_columns.return_value = [(1,), (2,)]
 
-        with patch("datamimic_ce.engine.runtime.sources.router.is_rdbms_client", return_value=True):
+        with patch("datamimic_ce.engine.runtime.tasks.sources.router.is_rdbms_client", return_value=True):
             rows = load_reference_source(self.context, self.statement, self.pagination)
 
         assert rows == [{"test_name": 1}] * 3
@@ -222,7 +222,7 @@ class TestReferenceTask(unittest.TestCase):
             self.pagination.limit = limit
             self.context.root.stable_distribution_seed.reset_mock()
 
-            with patch("datamimic_ce.engine.runtime.sources.router.is_rdbms_client", return_value=True):
+            with patch("datamimic_ce.engine.runtime.tasks.sources.router.is_rdbms_client", return_value=True):
                 rows = load_reference_source(context_without_rng, self.statement, self.pagination)
 
             assert rows == []

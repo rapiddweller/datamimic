@@ -8,7 +8,7 @@ from datamimic_ce.engine.dsl.api import GenerateStatement
 from datamimic_ce.engine.io.api import ChunkSourceWindow, DataSourcePagination
 from datamimic_ce.engine.runtime.contexts.context import SetupContext
 from datamimic_ce.engine.runtime.contexts.geniter_context import GenIterContext
-from datamimic_ce.engine.runtime.sources.router import load_generate_source
+from datamimic_ce.engine.runtime.tasks.sources.router import load_generate_source
 
 
 class ChunkSourceReader:
