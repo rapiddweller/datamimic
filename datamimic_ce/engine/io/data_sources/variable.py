@@ -2,7 +2,7 @@
 
 from collections.abc import Iterable
 
-from datamimic_ce.engine.dsl.api import EL_VARIABLE
+from datamimic_ce.engine.dsl.vocabulary.constants.element_constants import EL_VARIABLE
 from datamimic_ce.engine.dsl.vocabulary.source_capabilities import SourceFileFormat, source_file_format_for
 from datamimic_ce.engine.io.clients.client import Client
 from datamimic_ce.engine.io.clients.operations import (

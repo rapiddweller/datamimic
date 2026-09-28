@@ -1,6 +1,6 @@
 """Operations that runtime tasks may perform without depending on client classes."""
 
-from datamimic_ce.engine.dsl.api import Dbms
+from datamimic_ce.engine.dsl.vocabulary.enums.dbms_enums import Dbms
 from datamimic_ce.engine.io.clients.client import Client
 from datamimic_ce.engine.io.clients.database_client import DatabaseClient
 from datamimic_ce.engine.io.clients.mongodb_client import MongoDBClient

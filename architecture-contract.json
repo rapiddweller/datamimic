@@ -126,6 +126,13 @@
       "public": [
         "datamimic_ce.engine.dsl.api",
         "datamimic_ce.engine.dsl.parsers.input.properties:parse_properties",
+        "datamimic_ce.engine.dsl.parsers.input.xml:DTDForbiddenError",
+        "datamimic_ce.engine.dsl.parsers.input.xml:parse_xml_file",
+        "datamimic_ce.engine.dsl.vocabulary.constants.attribute_constants:META_SELECTOR",
+        "datamimic_ce.engine.dsl.vocabulary.constants.attribute_constants:META_TARGET_ENTITY",
+        "datamimic_ce.engine.dsl.vocabulary.constants.attribute_constants:META_TYPE",
+        "datamimic_ce.engine.dsl.vocabulary.constants.element_constants:EL_VARIABLE",
+        "datamimic_ce.engine.dsl.vocabulary.enums.dbms_enums:Dbms",
         "datamimic_ce.engine.dsl.vocabulary.enums.converter_enums",
         "datamimic_ce.engine.dsl.vocabulary.enums.distribution_enums",
         "datamimic_ce.engine.dsl.vocabulary.enums.faker_enums",
@@ -210,7 +217,8 @@
           "rationale": "IO accepts typed DSL-owned source and target descriptions.",
           "through": [
             "datamimic_ce.engine.dsl.vocabulary",
-            "datamimic_ce.engine.dsl.parsers.input.properties:parse_properties"
+            "datamimic_ce.engine.dsl.parsers.input.properties",
+            "datamimic_ce.engine.dsl.parsers.input.xml"
           ]
         },
         {

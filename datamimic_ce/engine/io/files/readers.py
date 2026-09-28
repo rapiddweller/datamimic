@@ -15,7 +15,7 @@ import pandas as pd
 from lxml import etree
 from pandas import DataFrame
 
-from datamimic_ce.engine.dsl.api import DTDForbiddenError, parse_xml_file
+from datamimic_ce.engine.dsl.parsers.input.xml import DTDForbiddenError, parse_xml_file
 from datamimic_ce.engine.io.files.cache import FileContentStorage
 
 JsonScalar: TypeAlias = bool | int | float | str | None
@@ -92,7 +92,7 @@ class FileUtil:
         :return:
         """
 
-        from datamimic_ce.engine.dsl.api import parse_properties
+        from datamimic_ce.engine.dsl.parsers.input.properties import parse_properties
 
         return parse_properties(path, encoding)
 

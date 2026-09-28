@@ -246,6 +246,10 @@ owns the composed builtin inventory and capability projection. Process titles li
 in `engine/runtime/process_titles.py` under Runtime Logging; the multiprocessing
 worker keeps its local import. No legacy forwarding modules or descriptor edits.
 
+### S3G10 IO-to-DSL imports
+
+IO uses DSL vocabulary modules and input parsers directly; `dsl.api` remains the facade for external consumers.
+
 1. Freeze the target definition and record baseline/tool findings separately.
 2. Implement CE slices: neutral primitives and errors; DSL families; IO boundaries;
    Runtime task composition; Authoring/projection; entry points and packaging.

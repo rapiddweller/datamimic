@@ -4,7 +4,7 @@ import logging
 import os
 from pathlib import Path
 
-from datamimic_ce.engine.dsl.api import parse_properties
+from datamimic_ce.engine.dsl.parsers.input.properties import parse_properties
 
 logger = logging.getLogger("DATAMIMIC")
 
