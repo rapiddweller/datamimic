@@ -156,7 +156,6 @@
         "datamimic_ce.engine.dsl.model.validation:ModelUtil",
         "datamimic_ce.engine.dsl.model.constraints",
         "datamimic_ce.engine.dsl.model.flow.commands.assert_model:AssertModel",
-        "datamimic_ce.engine.dsl.model.flow.branches.base_if_else_model:BaseIfElseModel",
         "datamimic_ce.engine.dsl.model.flow.branches.else_if_model:ElseIfModel",
         "datamimic_ce.engine.dsl.model.flow.branches.if_model:IfModel",
         "datamimic_ce.engine.dsl.model.setup.state_machine_model:StateMachineModel",

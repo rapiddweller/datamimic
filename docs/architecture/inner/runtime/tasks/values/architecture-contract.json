@@ -146,7 +146,6 @@
         {"component": "construction", "rationale": "Variables construct domain entity services.", "decided_by": "agent"}
       ],
       "public": [
-        "datamimic_ce.engine.runtime.tasks.values.variable.iterator:VariableIterator",
         "datamimic_ce.engine.runtime.tasks.values.variable.task:VariableTask"
       ],
       "decided_by": "agent"

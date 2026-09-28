@@ -200,7 +200,6 @@
         "datamimic_ce.engine.runtime.tasks.values.scalar.element_task:ElementTask",
         "datamimic_ce.engine.runtime.tasks.values.structured.item_task:ItemTask",
         "datamimic_ce.engine.runtime.tasks.values.scalar.key_task:KeyTask",
-        "datamimic_ce.engine.runtime.tasks.values.key_variable_task:KeyVariableTask",
         "datamimic_ce.engine.runtime.tasks.values.structured.list_task:ListTask",
         "datamimic_ce.engine.runtime.tasks.values.structured.nested_key_task:NestedKeyTask",
         "datamimic_ce.engine.runtime.tasks.values.reference.task:ReferenceTask",
@@ -290,9 +289,6 @@
       ],
       "responsibilities": [
         "Concrete Statement-to-Task registration at execution composition root."
-      ],
-      "public": [
-        "datamimic_ce.engine.runtime.tasks.registry"
       ],
       "decided_by": "agent",
       "role": "component",

@@ -207,7 +207,6 @@
       "public": [
         "datamimic_ce.domains.shared.datasets.loader",
         "datamimic_ce.domains.shared.datasets.locales",
-        "datamimic_ce.domains.shared.datasets.locale_registry",
         "datamimic_ce.domains.shared.datasets.profile_components"
       ],
       "decided_by": "agent"
@@ -435,7 +434,6 @@
         }
       ],
       "public": [
-        "datamimic_ce.domains.shared.demographics.api",
         "datamimic_ce.domains.shared.demographics.profile",
         "datamimic_ce.domains.shared.demographics.loader",
         "datamimic_ce.domains.shared.demographics.sampler",

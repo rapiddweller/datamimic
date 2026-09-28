@@ -232,8 +232,6 @@
       ],
       "public": [
         "datamimic_ce.engine.io.clients.client",
-        "datamimic_ce.engine.io.clients.database_client",
-        "datamimic_ce.engine.io.clients.entity_serialization",
         "datamimic_ce.engine.io.clients.mongodb_client",
         "datamimic_ce.engine.io.clients.rdbms_client",
         "datamimic_ce.engine.io.clients.sql_dialect",
@@ -251,7 +249,6 @@
         "Connection settings and on-demand property-file loading."
       ],
       "public": [
-        "datamimic_ce.engine.io.connection_config.connection_config_base",
         "datamimic_ce.engine.io.connection_config.mongodb_connection_config",
         "datamimic_ce.engine.io.connection_config.properties:load_connection_profile",
         "datamimic_ce.engine.io.connection_config.rdbms_connection_config"
@@ -354,15 +351,11 @@
         "datamimic_ce.engine.io.exporters.core.exporter_context:ExporterContext",
         "datamimic_ce.engine.io.exporters.core.exporter_context:MemstoreProvider",
         "datamimic_ce.engine.io.exporters.core.exporter_state_manager:ExporterStateManager",
-        "datamimic_ce.engine.io.exporters.core.exporter_state_manager:ExporterStateStorage",
         "datamimic_ce.engine.io.exporters.core.routing:resolve_target_entity",
-        "datamimic_ce.engine.io.exporters.core.routing:resolve_target_entity_from_metadata",
         "datamimic_ce.engine.io.exporters.core.routing:has_mongodb_upsert_target",
-        "datamimic_ce.engine.io.exporters.core.serialization:convert_xml_dict_to_json_dict",
         "datamimic_ce.engine.io.exporters.registry:ExportSession",
         "datamimic_ce.engine.io.exporters.registry:capture_test_results",
         "datamimic_ce.engine.io.exporters.registry:create_exporter_list",
-        "datamimic_ce.engine.io.exporters.registry:consume_exporters",
         "datamimic_ce.engine.io.exporters.registry:consume_memstore_target",
         "datamimic_ce.engine.io.exporters.registry:finalize_exporter_chunks",
         "datamimic_ce.engine.io.exporters.registry:publish_exported_artifacts",

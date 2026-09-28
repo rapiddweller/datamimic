@@ -209,7 +209,6 @@
         "datamimic_ce.engine.dsl.parsers.flow.branches.condition_parser:ConditionParser",
         "datamimic_ce.engine.dsl.parsers.flow.branches.else_if_parser:ElseIfParser",
         "datamimic_ce.engine.dsl.parsers.flow.branches.else_parser:ElseParser",
-        "datamimic_ce.engine.dsl.parsers.flow.branches.if_else_base_parser:IfElseBaseParser",
         "datamimic_ce.engine.dsl.parsers.flow.branches.if_parser:IfParser",
         "datamimic_ce.engine.dsl.parsers.flow.loops.while_parser:WhileParser",
         "datamimic_ce.engine.dsl.parsers.flow.commands.echo_parser:EchoParser",

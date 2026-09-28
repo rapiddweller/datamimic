@@ -244,8 +244,7 @@
       "public": [
         "datamimic_ce.engine.runtime.contexts.context",
         "datamimic_ce.engine.runtime.contexts.demographic_context",
-        "datamimic_ce.engine.runtime.contexts.geniter_context",
-        "datamimic_ce.engine.runtime.contexts.records"
+        "datamimic_ce.engine.runtime.contexts.geniter_context"
       ],
       "decided_by": "agent"
     },
@@ -294,10 +293,8 @@
         }
       ],
       "public": [
-        "datamimic_ce.engine.runtime.tasks.registry",
         "datamimic_ce.engine.runtime.tasks.setup.setup_task:SetupTask",
-        "datamimic_ce.engine.runtime.tasks.values.construction.factory:RUNTIME_GENERATOR_TYPES",
-        "datamimic_ce.engine.runtime.tasks.values.construction.sequence_table:SequenceTableGenerator"
+        "datamimic_ce.engine.runtime.tasks.values.construction.factory:RUNTIME_GENERATOR_TYPES"
       ],
       "decided_by": "agent",
       "inside": "docs/architecture/inner/runtime/tasks/architecture-contract.json"

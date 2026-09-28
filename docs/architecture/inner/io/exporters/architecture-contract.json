@@ -290,7 +290,6 @@
         "datamimic_ce.engine.io.exporters.registry:ExportSession",
         "datamimic_ce.engine.io.exporters.registry:capture_test_results",
         "datamimic_ce.engine.io.exporters.registry:create_exporter_list",
-        "datamimic_ce.engine.io.exporters.registry:consume_exporters",
         "datamimic_ce.engine.io.exporters.registry:consume_memstore_target",
         "datamimic_ce.engine.io.exporters.registry:finalize_exporter_chunks",
         "datamimic_ce.engine.io.exporters.registry:publish_exported_artifacts",

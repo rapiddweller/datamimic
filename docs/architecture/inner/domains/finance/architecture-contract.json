@@ -131,7 +131,6 @@
         "datamimic_ce.domains.finance.generators.bank_generator:BankGenerator",
         "datamimic_ce.domains.finance.generators.credit_card_generator:CreditCardGenerator",
         "datamimic_ce.domains.finance.generators.transaction_generator:TransactionGenerator",
-        "datamimic_ce.domains.finance.generators.transaction_generator:CurrencyAccount",
         "datamimic_ce.domains.finance.generators.transaction_generator:TransactionData"
       ],
       "decided_by": "agent"
