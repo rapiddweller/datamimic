@@ -50,7 +50,10 @@
         }
       ],
       "public": [
-        "datamimic_ce.engine.io.api"
+        "datamimic_ce.engine.io.api",
+        "datamimic_ce.engine.io.api:get_distributed_data",
+        "datamimic_ce.engine.io.api:get_unique_data",
+        "datamimic_ce.engine.io.api:unique_value_iter"
       ],
       "decided_by": "agent"
     },

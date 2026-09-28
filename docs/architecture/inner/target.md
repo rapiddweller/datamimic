@@ -172,6 +172,8 @@ The IO facade drops five unused concrete exporter re-exports; live runtime
 consumers still use its Memstore and TestResultExporter types.
 File JSON shape guards are shared operations owned by the file readers; the
 exporter registry's Memstore dependency is declared at the memory owner.
+Runtime source-selection operations cross into IO through `io.api`; the
+selection algorithms remain owned by IO data sources.
 
 ## Changes that need more than a file move
 
@@ -263,6 +265,11 @@ Contexts use the public script execution operation; task families share declared
 
 The facade drops unused concrete exporter re-exports. JSON shape guards become
 named reader operations, and the exporter registry declares its Memstore dependency.
+
+### S3G15 Runtime-to-IO selection facade
+
+Runtime callers use the IO facade for seeded unique and distributed selection;
+selection behavior and generic signatures remain owned by IO data sources.
 
 1. Freeze the target definition and record baseline/tool findings separately.
 2. Implement CE slices: neutral primitives and errors; DSL families; IO boundaries;

@@ -39,7 +39,11 @@ from datamimic_ce.engine.io.data_sources.router import (
     select_reference_rows,
     window_nested_key_rows,
 )
-from datamimic_ce.engine.io.data_sources.selection import get_distributed_data
+from datamimic_ce.engine.io.data_sources.selection import (
+    get_distributed_data,
+    get_unique_data,
+    unique_value_iter,
+)
 from datamimic_ce.engine.io.data_sources.variable import read_variable_query, read_variable_source
 from datamimic_ce.engine.io.data_sources.weighted_data_source import WeightedDataSource
 from datamimic_ce.engine.io.data_sources.weighted_entity_data_source import WeightedEntityDataSource
@@ -96,6 +100,7 @@ __all__ = [
     "create_mongodb_client",
     "create_rdbms_client",
     "get_distributed_data",
+    "get_unique_data",
     "has_mongodb_upsert_target",
     "database_count_table_length",
     "database_count_query_length",
@@ -123,4 +128,5 @@ __all__ = [
     "smoke_export",
     "window_nested_key_rows",
     "uses_mysql_sequence_storage",
+    "unique_value_iter",
 ]

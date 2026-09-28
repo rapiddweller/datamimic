@@ -12,12 +12,13 @@ from datamimic_ce.engine.io.api import (
     DataSourcePagination,
     VariableSourceRequest,
     WeightedEntityDataSource,
+    get_distributed_data,
+    get_unique_data,
     is_database_client,
     read_variable_query,
     read_variable_source,
     select_row_iterator,
 )
-from datamimic_ce.engine.io.data_sources.selection import get_distributed_data, get_unique_data
 from datamimic_ce.engine.runtime.contexts.context import Context, SetupContext
 from datamimic_ce.engine.runtime.scripting.evaluation import interpolate_variables
 from datamimic_ce.engine.runtime.tasks.sources.router import data_source_cache_key

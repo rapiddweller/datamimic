@@ -29,8 +29,7 @@ from datamimic_ce.engine.dsl.api import (
     VariableStatement,
 )
 from datamimic_ce.engine.dsl.vocabulary.source_capabilities import SourceFileFormat, source_file_format_for
-from datamimic_ce.engine.io.api import DataSourcePagination, WeightedDataSource
-from datamimic_ce.engine.io.data_sources.selection import unique_value_iter
+from datamimic_ce.engine.io.api import DataSourcePagination, WeightedDataSource, unique_value_iter
 from datamimic_ce.engine.runtime.contexts.context import Context, SetupContext
 from datamimic_ce.engine.runtime.scripting.evaluation import interpolate_variables
 from datamimic_ce.engine.runtime.tasks.base.task import Task
