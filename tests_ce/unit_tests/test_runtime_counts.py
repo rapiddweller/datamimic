@@ -44,5 +44,9 @@ def test_has_mongodb_upsert_target_requires_upsert_operation_and_mongo_client() 
 
     assert has_mongodb_upsert_target({"mongodb.upsert"}, context)
     assert not has_mongodb_upsert_target({"mongodb.delete"}, context)
+    assert not has_mongodb_upsert_target({"mongodb.upsert.extra"}, context)
+    context.get_client_by_id.return_value = None
+    assert not has_mongodb_upsert_target({"missing.upsert"}, context)
+    context.get_client_by_id.assert_called_with("missing")
     context.get_client_by_id.return_value = object()
     assert not has_mongodb_upsert_target({"mongodb.upsert"}, context)
