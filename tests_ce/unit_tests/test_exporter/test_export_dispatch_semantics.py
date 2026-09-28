@@ -49,6 +49,21 @@ def _session(stmt: SimpleNamespace, with_operation: list, without_operation: lis
     return session
 
 
+def test_lazy_capture_rejects_wrong_exporter_type() -> None:
+    context = SimpleNamespace(test_result_exporter=Exporter())
+
+    with pytest.raises(TypeError, match="Test capture requires TestResultExporter"):
+        exporter_registry.capture_test_results(context, {"rows": []})
+
+
+def test_memstore_write_rejects_wrong_exporter_type() -> None:
+    manager = SimpleNamespace(contain=lambda _target: True, get_memstore=lambda _target: Exporter())
+    context = SimpleNamespace(memstore_manager=manager)
+
+    with pytest.raises(TypeError, match="Memstore target requires Memstore exporter"):
+        exporter_registry.consume_memstore_target(context, ["mem"], None, None, "rows", "rows", {"rows": []})
+
+
 def test_mongodb_upsert_replaces_rows_for_subsequent_plain_exporter(monkeypatch: pytest.MonkeyPatch) -> None:
     stmt = _statement()
     mongo = object.__new__(MongoDBExporter)

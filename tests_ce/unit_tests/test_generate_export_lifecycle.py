@@ -168,3 +168,102 @@ def test_finalization_failure_does_not_publish_buffered_files(tmp_path: Path, mo
 
     assert not (tmp_path / "output" / "results").exists()
     assert not list(tmp_path.glob("temp_result_*"))
+
+
+@pytest.mark.parametrize("multiprocessing", [False, True], ids=["single", "multi"])
+def test_lazy_capture_preserves_generated_rows_in_sp_and_mp(tmp_path: Path, multiprocessing: bool) -> None:
+    directory = tmp_path / ("capture_multi" if multiprocessing else "capture_single")
+    directory.mkdir()
+    setup = 'multiprocessing="True" numProcess="2"' if multiprocessing else 'multiprocessing="0"'
+    (directory / "capture.xml").write_text(
+        f'<setup {setup}><generate name="rows" count="5" target="">'
+        '<key name="id" generator="IncrementGenerator"/>'
+        "</generate></setup>",
+        encoding="utf-8",
+    )
+
+    engine = DataMimicTest(test_dir=directory, filename="capture.xml", capture_test_result=True)
+    engine.test_with_timer()
+
+    assert engine.capture_result() == {"rows": [{"id": value} for value in range(1, 6)]}
+
+
+def test_lazy_capture_registers_zero_count_product(tmp_path: Path) -> None:
+    descriptor = tmp_path / "zero_capture.xml"
+    descriptor.write_text(
+        '<setup multiprocessing="0"><generate name="rows" count="0" target="">'
+        '<key name="id" generator="IncrementGenerator"/>'
+        "</generate></setup>",
+        encoding="utf-8",
+    )
+
+    engine = DataMimicTest(test_dir=tmp_path, filename=descriptor.name, capture_test_result=True)
+    engine.test_with_timer()
+
+    assert engine.capture_result() == {"rows": []}
+
+
+@pytest.mark.parametrize("wrapped", [False, True], ids=["direct-child", "condition-child"])
+def test_lazy_capture_includes_nested_product_rows(tmp_path: Path, wrapped: bool) -> None:
+    descriptor = tmp_path / "nested_capture.xml"
+    child = (
+        '<generate name="children" count="1" target="">'
+        '<key name="parent_id" script="parent.id"/>'
+        '<key name="id" generator="IncrementGenerator"/>'
+        "</generate>"
+    )
+    nested = f'<condition><if condition="True">{child}</if></condition>' if wrapped else child
+    descriptor.write_text(
+        '<setup multiprocessing="0"><generate name="parents" count="2" target="">'
+        '<key name="id" generator="IncrementGenerator"/>'
+        f"{nested}</generate></setup>",
+        encoding="utf-8",
+    )
+
+    engine = DataMimicTest(test_dir=tmp_path, filename=descriptor.name, capture_test_result=True)
+    engine.test_with_timer()
+
+    result = engine.capture_result()
+    assert len(result["parents"]) == 2
+    assert len(result["children"]) == 2
+    assert [row["parent_id"] for row in result["children"]] == [1, 2]
+
+
+@pytest.mark.parametrize("multiprocessing", [False, True], ids=["single", "multi"])
+def test_memstore_readback_preserves_rows_in_sp_and_mp(tmp_path: Path, multiprocessing: bool) -> None:
+    directory = tmp_path / ("mem_multi" if multiprocessing else "mem_single")
+    directory.mkdir()
+    setup = 'multiprocessing="True" numProcess="2"' if multiprocessing else 'multiprocessing="0"'
+    (directory / "memstore.xml").write_text(
+        f'<setup {setup}><memstore id="mem"/>'
+        '<generate name="rows" count="5" target="mem">'
+        '<key name="id" generator="IncrementGenerator"/>'
+        '</generate><generate name="copy" source="mem" type="rows" distribution="ordered" target=""/>'
+        "</setup>",
+        encoding="utf-8",
+    )
+
+    engine = DataMimicTest(test_dir=directory, filename="memstore.xml", capture_test_result=True)
+    engine.test_with_timer()
+
+    expected = [{"id": value} for value in range(1, 6)]
+    result = engine.capture_result()
+    assert result == {"rows": expected, "copy": expected}
+
+
+def test_zero_count_memstore_product_is_read_back_as_empty(tmp_path: Path) -> None:
+    descriptor = tmp_path / "zero_memstore.xml"
+    descriptor.write_text(
+        '<setup multiprocessing="0"><memstore id="mem"/>'
+        '<generate name="rows" count="0" target="mem">'
+        '<key name="id" generator="IncrementGenerator"/>'
+        '</generate><generate name="copy" source="mem" type="rows" '
+        'distribution="ordered" target=""/>'
+        "</setup>",
+        encoding="utf-8",
+    )
+
+    engine = DataMimicTest(test_dir=tmp_path, filename=descriptor.name, capture_test_result=True)
+    engine.test_with_timer()
+
+    assert engine.capture_result() == {"rows": [], "copy": []}

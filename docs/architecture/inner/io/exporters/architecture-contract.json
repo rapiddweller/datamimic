@@ -88,7 +88,7 @@
       },
       {
         "path": "datamimic_ce/engine/io/exporters/registry.py",
-        "responsibility": "Owns exporter sessions, target dispatch, buffered finalization and publication, and bounded smoke exports."
+        "responsibility": "Owns exporter sessions, target dispatch, buffered and lazy writes, publication, and bounded smoke exports."
       }
     ]
   },
@@ -288,8 +288,10 @@
       ],
       "public": [
         "datamimic_ce.engine.io.exporters.registry:ExportSession",
+        "datamimic_ce.engine.io.exporters.registry:capture_test_results",
         "datamimic_ce.engine.io.exporters.registry:create_exporter_list",
         "datamimic_ce.engine.io.exporters.registry:consume_exporters",
+        "datamimic_ce.engine.io.exporters.registry:consume_memstore_target",
         "datamimic_ce.engine.io.exporters.registry:finalize_exporter_chunks",
         "datamimic_ce.engine.io.exporters.registry:publish_exported_artifacts",
         "datamimic_ce.engine.io.exporters.registry:buffered_exporter_names",

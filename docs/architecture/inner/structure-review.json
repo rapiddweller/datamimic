@@ -2446,7 +2446,7 @@
     {"target": "engine/io/exporters/core/routing.py", "responsibility": "Resolves target entity names from metadata and detects MongoDB upsert targets."},
     {"target": "engine/io/exporters/core/serialization.py", "responsibility": "Converts XML-shaped dictionaries by dropping attribute keys and unwrapping text nodes."},
     {"target": "engine/io/exporters/core/unified_buffered_exporter.py", "responsibility": "Buffers rows into chunked files, finalizes them, and moves them to the output directory."},
-    {"target": "engine/io/exporters/registry.py", "responsibility": "Owns exporter sessions, target dispatch, buffered finalization and publication, and bounded smoke exports."},
+    {"target": "engine/io/exporters/registry.py", "responsibility": "Owns exporter sessions, target dispatch, buffered and lazy writes, publication, and bounded smoke exports."},
     {"target": "engine/runtime/contexts/context.py", "responsibility": "Owns root and nested execution context state for descriptor runs."},
     {"target": "engine/runtime/contexts/demographic_context.py", "responsibility": "Carries the selected profile, sampler, overrides, and RNG for demographic generation."},
     {"target": "engine/runtime/scripting/evaluation.py", "responsibility": "Evaluates descriptor Python expressions and interpolates runtime values into source templates."},

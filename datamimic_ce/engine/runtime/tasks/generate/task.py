@@ -13,6 +13,8 @@ import dill
 
 from datamimic_ce.engine.dsl.api import CompositeStatement, GenerateStatement, KeyStatement, Statement
 from datamimic_ce.engine.io.api import (
+    capture_test_results,
+    consume_memstore_target,
     count_query_length,
     finalize_exporter_chunks,
     has_mongodb_upsert_target,
@@ -241,7 +243,7 @@ class GenerateTask(CommonSubTask):
                     empty_result: dict[str, list] = {self.statement.full_name: []}
                     if isinstance(context, SetupContext):
                         if context.test_mode:
-                            context.root.test_result_exporter.consume((self.statement.full_name, []))
+                            capture_test_results(context.root, empty_result)
                         self.export_memstore(context, self.statement, empty_result)
                     return empty_result
 
@@ -345,9 +347,7 @@ class GenerateTask(CommonSubTask):
                     # Lazily export gathered product with lazy exporters
                     # Export TestResultExporter if in test mode
                     if context.test_mode:
-                        test_result_exporter = context.root.test_result_exporter
-                        for product_name, product_records in merged_result.items():
-                            test_result_exporter.consume((product_name, product_records))
+                        capture_test_results(context.root, merged_result)
                     # Export memstore exporters
                     self.export_memstore(context, self.statement, merged_result)
 
@@ -370,20 +370,15 @@ class GenerateTask(CommonSubTask):
 
     @staticmethod
     def export_memstore(setup_context: SetupContext, current_stmt: GenerateStatement, merged_result: dict[str, list]):
-        for current_exporter_str in current_stmt.targets:
-            if setup_context.memstore_manager.contain(current_exporter_str):
-                # targetEntity -> type -> name keys the memstore, symmetric with the sourceEntity read.
-                entity = resolve_target_entity(
-                    current_stmt.target_entity, current_stmt.type, current_stmt.name
-                )
-                # A nested generate that never executed (condition never fired, outer count 0)
-                # leaves no product: consume empty so downstream memstore reads see the
-                # entity with 0 rows instead of a missing key.
-                setup_context.memstore_manager.get_memstore(current_exporter_str).consume(
-                    (entity, merged_result.get(current_stmt.full_name, []))
-                )
-                # Export to memstore only once
-                break
+        consume_memstore_target(
+            setup_context,
+            list(current_stmt.targets),
+            current_stmt.target_entity,
+            current_stmt.type,
+            current_stmt.name,
+            current_stmt.full_name,
+            merged_result,
+        )
         GenerateTask._export_memstore_children(setup_context, current_stmt, merged_result)
 
     @staticmethod

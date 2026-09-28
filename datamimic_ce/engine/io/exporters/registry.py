@@ -5,7 +5,7 @@
 # For questions and support, contact: info@rapiddweller.com
 
 import logging
-from collections.abc import Callable
+from collections.abc import Callable, Mapping
 from typing import TypedDict
 
 from datamimic_ce.engine.dsl.parsers.input.target import parse_function_string
@@ -30,6 +30,7 @@ from datamimic_ce.engine.io.exporters.core.exporter import Exporter
 from datamimic_ce.engine.io.exporters.core.exporter_config import ExporterConfig
 from datamimic_ce.engine.io.exporters.core.exporter_context import ExporterContext
 from datamimic_ce.engine.io.exporters.core.exporter_state_manager import ExporterStateManager
+from datamimic_ce.engine.io.exporters.core.routing import resolve_target_entity
 from datamimic_ce.engine.io.exporters.core.serialization import convert_xml_dict_to_json_dict
 from datamimic_ce.engine.io.exporters.core.unified_buffered_exporter import UnifiedBufferedExporter
 from datamimic_ce.engine.io.exporters.database.database_exporter import DatabaseExporter
@@ -302,6 +303,39 @@ def publish_exported_artifacts(
     """Publish only after Runtime completes the separate finalization pass."""
     for exporter in _buffered_exporters(setup_context, product_name, export_uri, targets):
         exporter.save_exported_result()
+
+
+def capture_test_results(
+    setup_context: ExporterContext,
+    products: Mapping[str, list[dict[str, object]]],
+) -> None:
+    """Capture after worker merge so SP and MP expose the same product set."""
+    exporter = setup_context.test_result_exporter
+    if not isinstance(exporter, TestResultExporter):
+        raise TypeError("Test capture requires TestResultExporter")
+    for product_name, product_rows in products.items():
+        exporter.consume((product_name, product_rows))
+
+
+def consume_memstore_target(
+    setup_context: ExporterContext,
+    targets: list[str],
+    target_entity: str | None,
+    product_type: str | None,
+    product_name: str,
+    full_name: str,
+    products: Mapping[str, list[dict[str, object]]],
+) -> None:
+    """Preserve the existing first-memstore-target write rule."""
+    for target in targets:
+        if setup_context.memstore_manager.contain(target):
+            entity = resolve_target_entity(target_entity, product_type, product_name)
+            rows = products.get(full_name, [])
+            exporter = setup_context.memstore_manager.get_memstore(target)
+            if not isinstance(exporter, Memstore):
+                raise TypeError("Memstore target requires Memstore exporter")
+            exporter.consume((entity, rows))
+            return
 
 
 def smoke_export(request: SmokeExportRequest) -> int:
