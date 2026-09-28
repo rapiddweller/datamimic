@@ -10,8 +10,7 @@ from __future__ import annotations
 
 from random import Random
 
-from datamimic_ce.domains.shared.demographics.config import DemographicConfig
-from datamimic_ce.domains.shared.services.person_service import PersonService
+from datamimic_ce.domains.api import DemographicConfig, PersonService
 
 
 def generate_seeded_people(count: int = 3) -> None:

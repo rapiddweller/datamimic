@@ -1,4 +1,4 @@
-from datamimic_ce.domains.shared.services.country_service import CountryService
+from datamimic_ce.domains.api import CountryService
 
 
 def generate_countries():

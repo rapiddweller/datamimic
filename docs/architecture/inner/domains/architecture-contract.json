@@ -45,7 +45,13 @@
         }
       ],
       "public": [
-        "datamimic_ce.domains.api"
+        "datamimic_ce.domains.api",
+        "datamimic_ce.domains.api:AddressService",
+        "datamimic_ce.domains.api:CityService",
+        "datamimic_ce.domains.api:CompanyService",
+        "datamimic_ce.domains.api:CountryService",
+        "datamimic_ce.domains.api:DemographicConfig",
+        "datamimic_ce.domains.api:PersonService"
       ],
       "decided_by": "agent"
     },

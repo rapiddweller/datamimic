@@ -109,7 +109,7 @@ Domain services are the primary entry point for generating synthetic data. Each 
 ### Example 1: Generating a Person
 
 ```python
-from datamimic_ce.domains.shared.services import PersonService
+from datamimic_ce.domains.api import PersonService
 
 # Reproducible run: inject a seeded RNG
 from random import Random
@@ -148,7 +148,7 @@ print(f"Medical Conditions: {patient.conditions}")
 ### Example 3: Generating Batch Data
 
 ```python
-from datamimic_ce.domains.shared.services import PersonService
+from datamimic_ce.domains.api import PersonService
 import json
 from datetime import datetime
 

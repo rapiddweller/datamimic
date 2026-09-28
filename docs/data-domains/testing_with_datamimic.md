@@ -110,8 +110,7 @@ class TestBankAPI:
 Generate specific edge cases for thorough testing:
 
 ```python
-from datamimic_ce.domains.healthcare.services.patient_service import PatientService
-from datamimic_ce.domains.shared.demographics.config import DemographicConfig
+from datamimic_ce.domains.api import DemographicConfig, PatientService
 
 # Generate elderly patients for testing age-specific rules
 elderly_patient_service = PatientService(demographic_config=DemographicConfig(age_min=65, age_max=100))
@@ -152,7 +151,7 @@ Use DATAMIMIC for integration tests with databases:
 
 ```python
 import pytest
-from datamimic_ce.domains.shared.services.person_service import PersonService
+from datamimic_ce.domains.api import PersonService
 from your_app.database import db_session
 from your_app.models import User
 
@@ -218,4 +217,4 @@ db.session.commit()
 
 ## Conclusion
 
-DATAMIMIC's domain-driven approach to synthetic data generation makes it an excellent tool for testing at all levels. By providing realistic, coherent data that follows real-world distributions, DATAMIMIC helps ensure your tests accurately reflect the conditions your software will face in production. 
+DATAMIMIC's domain-driven approach to synthetic data generation makes it an excellent tool for testing at all levels. By providing realistic, coherent data that follows real-world distributions, DATAMIMIC helps ensure your tests accurately reflect the conditions your software will face in production.

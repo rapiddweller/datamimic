@@ -1,4 +1,4 @@
-from datamimic_ce.domains.shared.services.person_service import PersonService
+from datamimic_ce.domains.api import PersonService
 
 
 def generate_people(count: int = 10):

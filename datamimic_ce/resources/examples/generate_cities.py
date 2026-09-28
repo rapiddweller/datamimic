@@ -1,6 +1,6 @@
 # generate cities
 
-from datamimic_ce.domains.shared.services.city_service import CityService
+from datamimic_ce.domains.api import CityService
 
 
 def generate_cities():

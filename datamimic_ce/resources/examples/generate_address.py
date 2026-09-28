@@ -1,4 +1,4 @@
-from datamimic_ce.domains.shared.services.address_service import AddressService
+from datamimic_ce.domains.api import AddressService
 
 
 def generate_address():

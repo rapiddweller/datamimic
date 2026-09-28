@@ -75,7 +75,7 @@ Here's a simple example to get started with DATAMIMIC's Domain-Driven Framework:
 
 ```python
 # Import the required service
-from datamimic_ce.domains.shared.services import PersonService
+from datamimic_ce.domains.api import PersonService
 
 # Create a service with specific parameters
 person_service = PersonService(

@@ -49,6 +49,11 @@ from datamimic_ce.domains.shared.literal_generators.primitives.state_transition_
     StateTransitionGenerator,
 )
 from datamimic_ce.domains.shared.literal_generators.primitives.string_generator import StringGenerator
+from datamimic_ce.domains.shared.services.address_service import AddressService
+from datamimic_ce.domains.shared.services.city_service import CityService
+from datamimic_ce.domains.shared.services.company_service import CompanyService
+from datamimic_ce.domains.shared.services.country_service import CountryService
+from datamimic_ce.domains.shared.services.person_service import PersonService
 
 
 def iter_generator_types() -> Iterator[type]:
@@ -63,11 +68,15 @@ def iter_generator_capabilities() -> Iterator[GeneratorCapability]:
 
 __all__ = [
     "AppendConverter",
+    "AddressService",
     "BaseDomainGenerator",
     "BaseLiteralGenerator",
     "BankAccount",
     "Converter",
     "CustomConverter",
+    "CityService",
+    "CompanyService",
+    "CountryService",
     "CutLengthConverter",
     "Date2TimestampConverter",
     "DateFormatConverter",
@@ -82,6 +91,7 @@ __all__ = [
     "MaskConverter",
     "MiddleMaskConverter",
     "PatientService",
+    "PersonService",
     "RemoveNoneOrEmptyElementConverter",
     "RunSeed",
     "StateMachineDef",

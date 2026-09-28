@@ -1,4 +1,4 @@
-from datamimic_ce.domains.shared.services.company_service import CompanyService
+from datamimic_ce.domains.api import CompanyService
 
 
 def generate_companies():

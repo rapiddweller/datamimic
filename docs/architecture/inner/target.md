@@ -271,6 +271,13 @@ named reader operations, and the exporter registry declares its Memstore depende
 Runtime callers use the IO facade for seeded unique and distributed selection;
 selection behavior and generic signatures remain owned by IO data sources.
 
+### S3G16 Domain service API
+
+Publish the shared entity services and demographic config through `domains.api`;
+the six examples and affected shared-service snippets use that surface. The EE
+checkout at `dc7526592` has the same five service owner paths under
+`domains/shared/services`, but no `domains/api.py`; parity is not yet claimed.
+
 1. Freeze the target definition and record baseline/tool findings separately.
 2. Implement CE slices: neutral primitives and errors; DSL families; IO boundaries;
    Runtime task composition; Authoring/projection; entry points and packaging.
