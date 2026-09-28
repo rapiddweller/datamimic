@@ -12,10 +12,8 @@ from pathlib import Path
 import pytest
 from pydantic import BaseModel
 
-from datamimic_ce.authoring.projection.reference import capabilities_manifest, element_reference
 from datamimic_ce.authoring.domain.schema import build_schema_index, element_json_schema
-from datamimic_ce.engine.dsl.vocabulary.constants.element_constants import EL_GENERATE, EL_ITERATE
-from datamimic_ce.engine.dsl.vocabulary.enums.distribution_enums import NumberDistribution, SourceDistribution
+from datamimic_ce.authoring.projection.reference import capabilities_manifest, element_reference
 from datamimic_ce.engine.dsl.model.constraints import (
     KEY_DISTRIBUTION_VALUES,
     SOURCE_DISTRIBUTION_VALUES,
@@ -26,7 +24,17 @@ from datamimic_ce.engine.dsl.model.constraints import (
     resolved_values,
     serialize_constraints,
 )
-from datamimic_ce.engine.dsl.model.registry import ElementDefinition, canonical_tag, get_element_definition, get_model_class, list_element_tags, register_element_extension, unregister_element_extension
+from datamimic_ce.engine.dsl.model.registry import (
+    ElementDefinition,
+    canonical_tag,
+    get_element_definition,
+    get_model_class,
+    list_element_tags,
+    register_element_extension,
+    unregister_element_extension,
+)
+from datamimic_ce.engine.dsl.vocabulary.constants.element_constants import EL_GENERATE, EL_ITERATE
+from datamimic_ce.engine.dsl.vocabulary.enums.distribution_enums import NumberDistribution, SourceDistribution
 
 
 def test_structural_and_rule_registries_cover_the_same_ce_surface() -> None:
@@ -139,14 +147,14 @@ def test_extension_registration_rolls_back_structure_and_rules_atomically(monkey
 
     tag = "synthetic-atomic-extension"
     alias = "synthetic-atomic-alias"
-    original_register = rule_registry._register_element_constraints
+    original_register = rule_registry.register_extension_constraints
 
     def fail_for_alias(registered_tag: str, constraints: tuple[Constraint, ...]) -> None:
         if registered_tag == alias:
             raise RuntimeError("forced second-half failure")
         original_register(registered_tag, constraints)
 
-    monkeypatch.setattr(rule_registry, "_register_element_constraints", fail_for_alias)
+    monkeypatch.setattr(rule_registry, "register_extension_constraints", fail_for_alias)
 
     with pytest.raises(RuntimeError, match="forced second-half failure"):
         register_element_extension(ElementDefinition(tag, None, None, aliases=frozenset({alias})))
@@ -155,3 +163,31 @@ def test_extension_registration_rolls_back_structure_and_rules_atomically(monkey
     assert get_element_definition(alias) is None
     assert tag not in registered_rule_tags()
     assert alias not in registered_rule_tags()
+
+
+def test_extension_unregistration_rolls_back_rules_atomically(monkeypatch: pytest.MonkeyPatch) -> None:
+    from datamimic_ce.engine.dsl.model.constraints import registry as rule_registry
+
+    tag = "synthetic-unregister-extension"
+    alias = "synthetic-unregister-alias"
+    rules: tuple[Constraint, ...] = (RequiredOneOf(frozenset(("source",))),)
+    register_element_extension(ElementDefinition(tag, None, None, aliases=frozenset({alias})), rules)
+    original_unregister = rule_registry.unregister_extension_constraints
+
+    def fail_for_alias(registered_tag: str) -> None:
+        if registered_tag == alias:
+            raise RuntimeError("forced second-half failure")
+        original_unregister(registered_tag)
+
+    monkeypatch.setattr(rule_registry, "unregister_extension_constraints", fail_for_alias)
+    try:
+        with pytest.raises(RuntimeError, match="forced second-half failure"):
+            unregister_element_extension(tag)
+
+        assert get_element_definition(tag) is not None
+        assert get_element_definition(alias) is not None
+        assert element_constraints(tag) is rules
+        assert element_constraints(alias) is rules
+    finally:
+        monkeypatch.undo()
+        unregister_element_extension(tag)

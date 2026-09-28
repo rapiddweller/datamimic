@@ -278,6 +278,14 @@ the six examples and affected shared-service snippets use that surface. The EE
 checkout at `dc7526592` has the same five service owner paths under
 `domains/shared/services`, but no `domains/api.py`; parity is not yet claimed.
 
+### S3G17 Model constraint extension boundary
+
+The model registry reads the canonical `Constraint` and `element_constraints`
+projection, and coordinates extension constraint registration atomically with
+element structure. The constraints registry exposes per-tag mutation operations
+for this internal SPI; atomicity remains owned by the model registry. No
+`dsl.api` re-export is added.
+
 1. Freeze the target definition and record baseline/tool findings separately.
 2. Implement CE slices: neutral primitives and errors; DSL families; IO boundaries;
    Runtime task composition; Authoring/projection; entry points and packaging.

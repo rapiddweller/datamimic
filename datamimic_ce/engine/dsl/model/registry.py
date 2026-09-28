@@ -267,19 +267,19 @@ def register_element_extension(
 ) -> None:
     """Atomically register structure and business rules for one extension element."""
     from datamimic_ce.engine.dsl.model.constraints.registry import (
-        _register_element_constraints,
-        _unregister_element_constraints,
+        register_extension_constraints,
+        unregister_extension_constraints,
     )
 
     _register_element_definition(definition)
     registered_rule_tags: list[str] = []
     try:
         for tag in (definition.tag, *sorted(definition.aliases)):
-            _register_element_constraints(tag, constraints)
+            register_extension_constraints(tag, constraints)
             registered_rule_tags.append(tag)
     except Exception:
         for tag in reversed(registered_rule_tags):
-            _unregister_element_constraints(tag)
+            unregister_extension_constraints(tag)
         _unregister_element_definition(definition.tag)
         raise
 
@@ -287,9 +287,9 @@ def register_element_extension(
 def unregister_element_extension(tag: str) -> None:
     """Atomically remove structure and business rules for one extension element."""
     from datamimic_ce.engine.dsl.model.constraints.registry import (
-        _register_element_constraints,
-        _unregister_element_constraints,
         element_constraints,
+        register_extension_constraints,
+        unregister_extension_constraints,
     )
 
     definition = get_element_definition(tag)
@@ -304,12 +304,12 @@ def unregister_element_extension(tag: str) -> None:
     removed: list[str] = []
     try:
         for registered_tag in contracts:
-            _unregister_element_constraints(registered_tag)
+            unregister_extension_constraints(registered_tag)
             removed.append(registered_tag)
         _unregister_element_definition(canonical)
     except Exception:
         for registered_tag in removed:
-            _register_element_constraints(registered_tag, contracts[registered_tag])
+            register_extension_constraints(registered_tag, contracts[registered_tag])
         raise
 
 

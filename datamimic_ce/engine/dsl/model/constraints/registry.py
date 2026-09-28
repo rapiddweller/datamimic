@@ -95,8 +95,8 @@ def element_constraints(tag: str) -> tuple[Constraint, ...]:
     return _EXTENSION_CONSTRAINTS.get(tag, _ELEMENT_CONSTRAINTS.get(tag, ()))
 
 
-def _register_element_constraints(tag: str, constraints: tuple[Constraint, ...]) -> None:
-    """Register one part of an atomic extension contract."""
+def register_extension_constraints(tag: str, constraints: tuple[Constraint, ...]) -> None:
+    """Register one tag within the model registry's coordinated extension lifecycle."""
     global _RULE_REGISTRY_REVISION
 
     if tag in _ELEMENT_CONSTRAINTS or tag in _EXTENSION_CONSTRAINTS:
@@ -105,8 +105,8 @@ def _register_element_constraints(tag: str, constraints: tuple[Constraint, ...])
     _RULE_REGISTRY_REVISION += 1
 
 
-def _unregister_element_constraints(tag: str) -> None:
-    """Remove one part of an atomic extension contract."""
+def unregister_extension_constraints(tag: str) -> None:
+    """Remove one tag within the model registry's coordinated extension lifecycle."""
     global _RULE_REGISTRY_REVISION
 
     if tag not in _EXTENSION_CONSTRAINTS:

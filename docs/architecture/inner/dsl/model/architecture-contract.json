@@ -38,7 +38,7 @@
         "datamimic_ce.engine.dsl.model.constraints"
       ],
       "responsibilities": [
-        "Canonical cross-field grammar facts."
+        "Canonical cross-field grammar facts and per-tag rule mutations used only by the model registry's coordinated extension lifecycle."
       ],
       "forbidden_responsibilities": [
         "Import element models or parsers"
@@ -48,7 +48,11 @@
       ],
       "requires": [],
       "public": [
-        "datamimic_ce.engine.dsl.model.constraints"
+        "datamimic_ce.engine.dsl.model.constraints",
+        "datamimic_ce.engine.dsl.model.constraints.types:Constraint",
+        "datamimic_ce.engine.dsl.model.constraints.registry:element_constraints",
+        "datamimic_ce.engine.dsl.model.constraints.registry:register_extension_constraints",
+        "datamimic_ce.engine.dsl.model.constraints.registry:unregister_extension_constraints"
       ],
       "decided_by": "agent"
     },
@@ -217,7 +221,7 @@
         "datamimic_ce.engine.dsl.model.registry"
       ],
       "responsibilities": [
-        "Element-to-model inventory."
+        "Element inventory and atomic extension lifecycle."
       ],
       "forbidden_responsibilities": [
         "Import parser implementations or define a second vocabulary"
@@ -233,7 +237,7 @@
         },
         {
           "component": "constraints",
-          "rationale": "The registry exposes canonical element constraints.",
+          "rationale": "The registry reads canonical constraints and coordinates atomic extension rule registration and rollback.",
           "decided_by": "agent"
         },
         {
