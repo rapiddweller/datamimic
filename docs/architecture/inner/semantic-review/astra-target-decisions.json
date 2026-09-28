@@ -4516,9 +4516,7 @@
     },
     {
       "source": "engine/runtime/generators/__init__.py",
-      "targets": [
-        "engine/runtime/tasks/values/construction/__init__.py"
-      ]
+      "targets": []
     },
     {
       "source": "engine/runtime/generators/factory.py",
@@ -4582,9 +4580,7 @@
     },
     {
       "source": "engine/runtime/sources/__init__.py",
-      "targets": [
-        "engine/runtime/tasks/sources/__init__.py"
-      ]
+      "targets": []
     },
     {
       "source": "engine/runtime/sources/chunk_source_reader.py",
@@ -4701,9 +4697,7 @@
     },
     {
       "source": "engine/runtime/tasks/generate/__init__.py",
-      "targets": [
-        "engine/runtime/tasks/generate/__init__.py"
-      ]
+      "targets": []
     },
     {
       "source": "engine/runtime/tasks/generate/services/__init__.py",
@@ -4711,9 +4705,7 @@
     },
     {
       "source": "engine/runtime/tasks/generate/services/policies/__init__.py",
-      "targets": [
-        "engine/runtime/tasks/generate/policies/__init__.py"
-      ]
+      "targets": []
     },
     {
       "source": "engine/runtime/tasks/generate/services/policies/single_process_policy.py",
@@ -4729,9 +4721,7 @@
     },
     {
       "source": "engine/runtime/tasks/generate/workers/__init__.py",
-      "targets": [
-        "engine/runtime/tasks/generate/workers/__init__.py"
-      ]
+      "targets": []
     },
     {
       "source": "engine/runtime/tasks/generate/workers/generate_worker.py",
@@ -5079,6 +5069,26 @@
     }
   ],
   "removed_modules": [
+    {
+      "source": "engine/runtime/generators/__init__.py",
+      "reason": "Empty package marker; construction has concrete modules."
+    },
+    {
+      "source": "engine/runtime/sources/__init__.py",
+      "reason": "Docstring-only package marker; source routing has concrete modules."
+    },
+    {
+      "source": "engine/runtime/tasks/generate/__init__.py",
+      "reason": "Docstring-only package marker; task composition stays in tasks/__init__.py."
+    },
+    {
+      "source": "engine/runtime/tasks/generate/services/policies/__init__.py",
+      "reason": "Docstring-only package marker; policies have concrete modules."
+    },
+    {
+      "source": "engine/runtime/tasks/generate/workers/__init__.py",
+      "reason": "Docstring-only package marker; workers have concrete modules."
+    },
     {
       "source": "engine/dsl/__init__.py",
       "reason": "Docstring-only package marker; namespace package discovery covers the directory."

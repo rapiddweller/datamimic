@@ -1916,10 +1916,6 @@
       "target": "engine/runtime/tasks/base/counts.py"
     },
     {
-      "source": "engine/runtime/generators/__init__.py",
-      "target": "engine/runtime/tasks/values/construction/__init__.py"
-    },
-    {
       "source": "engine/runtime/generators/factory.py",
       "target": "engine/runtime/tasks/values/construction/factory.py"
     },
@@ -1930,10 +1926,6 @@
     {
       "source": "engine/runtime/process.py",
       "target": "engine/runtime/process_titles.py"
-    },
-    {
-      "source": "engine/runtime/sources/__init__.py",
-      "target": "engine/runtime/tasks/sources/__init__.py"
     },
     {
       "source": "engine/runtime/sources/selection.py",
@@ -1982,10 +1974,6 @@
     {
       "source": "engine/runtime/tasks/execute_task.py",
       "target": "engine/runtime/tasks/flow/commands/execute_task.py"
-    },
-    {
-      "source": "engine/runtime/tasks/generate/services/policies/__init__.py",
-      "target": "engine/runtime/tasks/generate/policies/__init__.py"
     },
     {
       "source": "engine/runtime/tasks/generate/services/policies/single_process_policy.py",
@@ -2252,6 +2240,26 @@
     }
   ],
   "removed_initializers": [
+    {
+      "source": "engine/runtime/generators/__init__.py",
+      "reason": "Empty marker; value construction lives in the namespace package's modules."
+    },
+    {
+      "source": "engine/runtime/sources/__init__.py",
+      "reason": "Docstring-only marker; source routing lives in concrete modules."
+    },
+    {
+      "source": "engine/runtime/tasks/generate/__init__.py",
+      "reason": "Docstring-only marker; task registry composition remains in tasks/__init__.py."
+    },
+    {
+      "source": "engine/runtime/tasks/generate/services/policies/__init__.py",
+      "reason": "Docstring-only marker; policy behavior lives in concrete modules."
+    },
+    {
+      "source": "engine/runtime/tasks/generate/workers/__init__.py",
+      "reason": "Docstring-only marker; worker behavior lives in concrete modules."
+    },
     {
       "source": "engine/dsl/__init__.py",
       "reason": "Docstring-only marker; namespace package discovery already covers the DSL directory."

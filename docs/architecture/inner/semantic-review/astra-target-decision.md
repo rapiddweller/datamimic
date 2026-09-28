@@ -8,6 +8,8 @@ elements; their parsers construct statements directly. Their old direct-import
 symbols were declared public, so external use remains unknown. No shim is added.
 Five docstring-only DSL package initializers are also removed. Setuptools already
 discovers namespace packages; external package-introspection use remains unknown.
+Five equally empty runtime-task descendants are removed; the executable
+`tasks/__init__.py` still composes the task registry for worker processes.
 
 This decision supersedes the tentative ownership proposals in the four semantic
 reviews. It resolves all 17 `unclear` entries. It does not rewrite the historical
