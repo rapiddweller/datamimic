@@ -270,6 +270,40 @@ def consume_exporters(
             raise ValueError(f"Error in exporter {type(exporter).__name__}: {e}") from e
 
 
+def _buffered_exporters(
+    setup_context: ExporterContext,
+    product_name: str,
+    export_uri: str | None,
+    targets: list[str],
+) -> list[UnifiedBufferedExporter]:
+    _, without_operation = create_exporter_list(setup_context, product_name, export_uri, targets)
+    return [exporter for exporter in without_operation if isinstance(exporter, UnifiedBufferedExporter)]
+
+
+def finalize_exporter_chunks(
+    setup_context: ExporterContext,
+    product_name: str,
+    export_uri: str | None,
+    targets: list[str],
+    worker_ids: range,
+) -> None:
+    """Finalize every worker's chunks before any artifact is published."""
+    for exporter in _buffered_exporters(setup_context, product_name, export_uri, targets):
+        for worker_id in worker_ids:
+            exporter.finalize_chunks(worker_id)
+
+
+def publish_exported_artifacts(
+    setup_context: ExporterContext,
+    product_name: str,
+    export_uri: str | None,
+    targets: list[str],
+) -> None:
+    """Publish only after Runtime completes the separate finalization pass."""
+    for exporter in _buffered_exporters(setup_context, product_name, export_uri, targets):
+        exporter.save_exported_result()
+
+
 def smoke_export(request: SmokeExportRequest) -> int:
     """Run one bounded buffered export for an authoring smoke check."""
     params = request.params.root

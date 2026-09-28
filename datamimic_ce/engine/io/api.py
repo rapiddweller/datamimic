@@ -64,6 +64,8 @@ from datamimic_ce.engine.io.exporters.registry import (
     buffered_exporter_names,
     consume_exporters,
     create_exporter_list,
+    finalize_exporter_chunks,
+    publish_exported_artifacts,
     smoke_export,
 )
 from datamimic_ce.engine.io.files.cache import FileContentStorage
@@ -82,6 +84,7 @@ __all__ = [
     "consume_exporters",
     "convert_xml_dict_to_json_dict",
     "create_exporter_list",
+    "finalize_exporter_chunks",
     "FileContentStorage",
     "FileUtil",
     "MongoDBConnectionConfig",
@@ -97,6 +100,7 @@ __all__ = [
     "WeightedDataSource",
     "WeightedEntityDataSource",
     "buffered_exporter_names",
+    "publish_exported_artifacts",
     "count_query_length",
     "count_source",
     "create_mongodb_client",
