@@ -242,7 +242,10 @@
         "datamimic_ce.engine.io.exporters.registry:create_exporter_list",
         "datamimic_ce.engine.io.exporters.registry:consume_exporters",
         "datamimic_ce.engine.io.exporters.registry:buffered_exporter_names",
-        "datamimic_ce.engine.io.exporters.registry:smoke_export"
+        "datamimic_ce.engine.io.exporters.registry:smoke_export",
+        "datamimic_ce.engine.io.exporters.memory.memstore:Memstore",
+        "datamimic_ce.engine.io.exporters.diagnostics.test_result_exporter:TestResultExporter",
+        "datamimic_ce.engine.io.exporters.core.unified_buffered_exporter:UnifiedBufferedExporter"
       ],
       "decided_by": "agent",
       "inside": "docs/architecture/inner/io/exporters/architecture-contract.json"

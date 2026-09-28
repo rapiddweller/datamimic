@@ -49,6 +49,7 @@ from datamimic_ce.engine.io.data_sources.weighted_data_source import WeightedDat
 from datamimic_ce.engine.io.data_sources.weighted_entity_data_source import WeightedEntityDataSource
 from datamimic_ce.engine.io.exporters.core.exporter import Exporter
 from datamimic_ce.engine.io.exporters.core.exporter_config import ExporterConfig
+from datamimic_ce.engine.io.exporters.core.exporter_context import ExporterContext
 from datamimic_ce.engine.io.exporters.core.exporter_state_manager import ExporterStateManager
 from datamimic_ce.engine.io.exporters.core.routing import (
     has_mongodb_upsert_target,
@@ -72,6 +73,7 @@ __all__ = [
     "ChunkSourceWindow",
     "DataSourcePagination",
     "DataSourceRegistry",
+    "ExporterContext",
     "ExporterConfig",
     "Exporter",
     "ExporterStateManager",
