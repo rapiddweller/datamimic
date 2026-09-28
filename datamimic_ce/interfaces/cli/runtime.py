@@ -12,10 +12,10 @@ import toml
 from pydantic import BaseModel, ConfigDict, Field, ValidationError
 
 from datamimic_ce.domains.api import get_datamimic_lib_version
-from datamimic_ce.interfaces.api import load_descriptor_properties, run
+from datamimic_ce.engine.runtime.api import load_descriptor_properties, run
+from datamimic_ce.engine.runtime.contracts import PlatformConfiguration, RunRequest
 from datamimic_ce.interfaces.cli import presenter as cli_presenter
 from datamimic_ce.interfaces.cli.presenter import DemoInformation, DemoSummary, SystemInformation
-from datamimic_ce.interfaces.contracts import PlatformConfiguration, RunRequest
 from datamimic_ce.interfaces.demo import handle_demo
 from datamimic_ce.interfaces.project import create_project_structure, validate_project_name
 from datamimic_ce.resources.api import demo_root

@@ -10,8 +10,8 @@ import time
 import uuid
 from pathlib import Path
 
-from datamimic_ce.interfaces.api import create_run_session
-from datamimic_ce.interfaces.contracts import FactoryConfig, RunRequest, RunSession
+from datamimic_ce.engine.runtime.api import create_run_session
+from datamimic_ce.engine.runtime.contracts import FactoryConfig, RunRequest, RunSession
 
 logger = logging.getLogger("DATAMIMIC")
 

@@ -7,6 +7,7 @@ from datamimic_ce.engine.dsl.statements.setup.setup_statement import SetupStatem
 from datamimic_ce.engine.runtime import api as runtime_api
 from datamimic_ce.engine.runtime.contracts import (
     CapturedProducts,
+    FactoryConfig,
     PlatformConfiguration,
     PlatformProperties,
     RunRequest,
@@ -15,9 +16,7 @@ from datamimic_ce.engine.runtime.contracts import (
 )
 from datamimic_ce.engine.runtime.lifecycle import runner
 from datamimic_ce.engine.runtime.lifecycle.config import settings
-from datamimic_ce.factory.factory_config import FactoryConfig as LegacyFactoryConfig
 from datamimic_ce.interfaces.cli import runtime as cli_runtime
-from datamimic_ce.interfaces.contracts import FactoryConfig
 from datamimic_ce.interfaces.python.data_mimic_test import DataMimicTest
 from datamimic_ce.interfaces.python.datamimic import DataMimic
 
@@ -35,8 +34,7 @@ class SessionStub:
         return CapturedProducts.model_construct(root=self.captured)
 
 
-def test_python_api_uses_interface_request_and_preserves_factory_config_identity(monkeypatch) -> None:
-    assert LegacyFactoryConfig is FactoryConfig
+def test_python_api_uses_runtime_request_and_preserves_factory_config(monkeypatch) -> None:
     captured: list[RunRequest] = []
     result = {"entity": [{"id": 1}]}
     session = SessionStub(result)
