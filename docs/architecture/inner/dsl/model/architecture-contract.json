@@ -64,7 +64,7 @@
         "datamimic_ce.engine.dsl.model.flow"
       ],
       "responsibilities": [
-        "Branches, loops and commands."
+        "Define validated models for branch conditions, loops and flow commands."
       ],
       "forbidden_responsibilities": [
         "Construct parsers or register parser implementations"

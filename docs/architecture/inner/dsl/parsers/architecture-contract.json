@@ -85,7 +85,7 @@
         "datamimic_ce.engine.dsl.parsers.values"
       ],
       "responsibilities": [
-        "Value tree construction."
+        "Parse scalar, structured, reference and variable values into statement nodes."
       ],
       "forbidden_responsibilities": [
         "Bind the global parser registry or own descriptor loading"
@@ -165,7 +165,7 @@
         "datamimic_ce.engine.dsl.parsers.generation"
       ],
       "responsibilities": [
-        "Generate parsing only."
+        "Parse generate and iterate elements into generation statements, including nested variables and time-series settings."
       ],
       "forbidden_responsibilities": [
         "Bind the global parser registry or own descriptor loading"

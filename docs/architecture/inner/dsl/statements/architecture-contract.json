@@ -68,7 +68,7 @@
         "datamimic_ce.engine.dsl.statements.values"
       ],
       "responsibilities": [
-        "Value declaration state."
+        "Represent scalar, structured, reference and variable declarations in the parsed statement tree."
       ],
       "forbidden_responsibilities": [
         "Parse descriptors or execute task policy"
