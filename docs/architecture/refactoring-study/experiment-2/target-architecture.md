@@ -112,6 +112,25 @@ graph TD
     runtime --> randomness
 ```
 
+## Completion evidence
+
+Physical layout, semantic target, observed conformance, report UX, and behavior are separate
+acceptance claims. The current inventory has 146 `root_layout` scopes, 22 contracts, and 21 mounts;
+these establish physical coverage, not the semantics of each leaf. An atomic semantic leaf is a
+declared target node for an independently meaningful policy, behavior, API, or cross-component
+boundary—not every filesystem directory. Its decision must be explicit in the containing
+machine-checked architecture contract: ownership, an allowed dependency set (possibly empty), and a
+public decision (a named API or deliberate `public: []`). Grouping-only folders inherit the nearest
+parent contract; do not create one contract per directory. Aggregate cards such as
+`runtime.contexts`, `tasks.flow`, or `tasks.values` cannot replace decisions for independently
+meaningful children.
+
+The final report must independently explore `Actual` (observed implementation), `Target` (declared
+contracts and layout only), and `Diff` (their comparison), down to deliberate atomic leaves. `Target`
+must not be derived by filtering observed edges. A structural or report pass does not prove behavior
+preservation; behavior retains the separate protocol gates. An HTML view limited to Diagram,
+Structure, and Review does not meet this report requirement.
+
 ## Enforced properties
 
 - every Python module has exactly one owner;

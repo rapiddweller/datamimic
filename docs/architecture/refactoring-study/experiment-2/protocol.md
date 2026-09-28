@@ -40,12 +40,25 @@ inputs below remain history, including the original checker and agent versions.
 7. Existing public CLI commands and documented Python entry points remain importable.
 8. Unit, API, factory, functional, integration, architecture, lint, and full-package mypy gates
    pass. External-service tests run serially against already-running local services.
+9. The final report independently explores `Actual`, `Target`, and `Diff`. `Actual` comes from
+   observed source; `Target` comes only from declared contracts and target layout, never from
+   filtering observed edges; `Diff` compares the two. Each view remains explorable to deliberate
+   atomic leaves.
 
-Report three verdicts separately: structure reached (items 1–4 and 7), behavior preserved
-(items 5–6 and the relevant runtime tests), and delivery ready (item 8, integrated checker,
-and remote CI). A structural pass does not imply the other two. The literal baseline-free
-command in the frozen protocol is inapplicable while measurement budgets are declared;
-Amendment 12 records the reason.
+Items 3–4 require both physical and semantic completion. Layout scopes establish permitted tree
+shape only. An atomic semantic leaf is a declared target node for an independently meaningful
+policy, behavior, API, or cross-component boundary—not every filesystem directory. Its decision
+must be explicit in the containing machine-checked architecture contract, stating ownership,
+allowed dependency set, and public decision: a named API or deliberate `public: []`; an empty
+allowed-dependency set is valid. Grouping-only folders inherit their nearest parent's contract; do
+not create a contract per directory. Aggregate component cards do not stand in for independently
+meaningful children.
+
+Report four verdicts separately: structure reached (items 1–4 and 7), behavior preserved
+(items 5–6 and the relevant runtime tests), report explorability (item 9), and delivery ready
+(item 8, integrated checker, and remote CI). A structural pass does not imply the other three.
+The literal baseline-free command in the frozen protocol is inapplicable while measurement budgets
+are declared; Amendment 12 records the reason.
 
 ## Per-step gate
 
