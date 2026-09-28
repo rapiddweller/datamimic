@@ -37,31 +37,31 @@ class ElementStatement(Statement):
         return self._name
 
     @property
-    def type(self):
+    def type(self) -> str | None:
         return self._type
 
     @property
-    def values(self):
+    def values(self) -> str | None:
         return self._values
 
     @property
-    def weights(self):
+    def weights(self) -> str | None:
         return self._weights
 
     @property
-    def unique(self):
+    def unique(self) -> bool | None:
         return self._unique
 
     @property
-    def script(self):
+    def script(self) -> str | None:
         return self._script
 
     @property
-    def constant(self):
+    def constant(self) -> str | None:
         return self._constant
 
     @property
-    def generator(self):
+    def generator(self) -> str | None:
         return self._generator
 
     @property
