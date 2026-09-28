@@ -473,3 +473,33 @@ This is not exact raw equality.
 CI-ONLY VERIFICATION: no new remote or after-side external-service run.
 Facade cleanup, direct persisted database parity and complete target
 acceptance remain open.
+
+## Fifteenth slice: remove forwarding facades
+
+The four remaining legacy paths are gone: two Interfaces forwarders, the
+FactoryConfig alias and an empty Generate initializer. CLI and Python adapters
+now import the existing Runtime API and contracts directly. There is no
+replacement shim. External imports from `datamimic_ce.interfaces.api`,
+`datamimic_ce.interfaces.contracts` and
+`datamimic_ce.factory.factory_config` must migrate to
+`datamimic_ce.engine.runtime.api` or `.contracts`; this is an intentional
+Python import-path break, not a DSL change.
+
+LOCAL VERIFIED: the physical map matches exactly (486 target/core Python
+modules, 486 current, no missing or legacy paths). The serial non-service
+suite passes 1,945 tests with 13 existing skips and two known warnings;
+independent QA covered fresh CLI, MCP, Python and Factory imports/behavior,
+and Terra found no P1/P2 regression. Pylint import-cycle and both recursive
+definition checks pass. All 930 XML and seven intent-model hashes are
+unchanged. Step-0 retains all prior status counts and all four projection
+payloads. Its raw comparison to the preceding slice exits 1 only for known
+unseeded Condition optional-field and MemStore `te` count differences (9 to
+17), not for a seeded descriptor. The raw result is not called green.
+
+Physical conformance is not contract conformance: the ArchKeel candidate now
+completes the CE scan but reports 131 `interface.unused` diagnostics, two
+graph drifts and 309 rule violations across 25 rules. These findings require
+individual review; no violation baseline was widened.
+
+CI-ONLY VERIFICATION: no CE remote run. The isolated after-side service suite,
+direct persisted-value parity and final contract acceptance remain open.
