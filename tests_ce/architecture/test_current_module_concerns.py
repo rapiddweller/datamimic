@@ -76,9 +76,11 @@ def test_current_modules_and_components_have_a_target_and_one_sentence_concern()
             assert len(sources) == 1, f"ambiguous target needs an explicit concern: {target}"
         concerns = (
             {overrides[target]}
-            if target in ambiguous_targets
+            if target in overrides
             else {records[f"module:{source}"].get("concern", "").strip() for source in sources}
         )
+        if target in overrides:
+            assert concerns == {overrides[target]}, f"stale inherited concern overrides target concern: {target}"
         assert concerns and all(concerns), f"missing or blank current-module concern: {target}"
         assert all(concern.endswith((".", "!", "?")) for concern in concerns), (
             f"incomplete current-module concern: {target}"
