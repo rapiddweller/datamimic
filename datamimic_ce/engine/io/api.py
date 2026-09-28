@@ -55,7 +55,6 @@ from datamimic_ce.engine.io.exporters.core.routing import (
     has_mongodb_upsert_target,
     resolve_target_entity,
 )
-from datamimic_ce.engine.io.exporters.core.serialization import convert_xml_dict_to_json_dict
 from datamimic_ce.engine.io.exporters.core.unified_buffered_exporter import UnifiedBufferedExporter
 from datamimic_ce.engine.io.exporters.diagnostics.test_result_exporter import TestResultExporter
 from datamimic_ce.engine.io.exporters.memory.memstore import Memstore
@@ -63,7 +62,6 @@ from datamimic_ce.engine.io.exporters.registry import (
     ExportSession,
     buffered_exporter_names,
     capture_test_results,
-    consume_exporters,
     consume_memstore_target,
     create_exporter_list,
     finalize_exporter_chunks,
@@ -84,9 +82,7 @@ __all__ = [
     "ExporterStateManager",
     "ExportSession",
     "capture_test_results",
-    "consume_exporters",
     "consume_memstore_target",
-    "convert_xml_dict_to_json_dict",
     "create_exporter_list",
     "finalize_exporter_chunks",
     "FileContentStorage",

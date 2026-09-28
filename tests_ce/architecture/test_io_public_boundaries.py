@@ -18,9 +18,21 @@ CONCRETE_EXPORTERS = {
     "XMLExporter": "datamimic_ce.engine.io.exporters.formats.xml_exporter",
 }
 
+INTERNAL_EXPORT_HELPERS = {
+    "consume_exporters": "datamimic_ce.engine.io.exporters.registry",
+    "convert_xml_dict_to_json_dict": "datamimic_ce.engine.io.exporters.core.serialization",
+}
+
 
 def test_io_api_does_not_reexport_unused_concrete_exporters() -> None:
     for name, module_name in CONCRETE_EXPORTERS.items():
+        assert name not in io_api.__all__
+        assert not hasattr(io_api, name)
+        assert hasattr(importlib.import_module(module_name), name)
+
+
+def test_io_api_keeps_export_helpers_internal() -> None:
+    for name, module_name in INTERNAL_EXPORT_HELPERS.items():
         assert name not in io_api.__all__
         assert not hasattr(io_api, name)
         assert hasattr(importlib.import_module(module_name), name)
