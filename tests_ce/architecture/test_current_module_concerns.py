@@ -5,6 +5,7 @@ from __future__ import annotations
 import json
 from pathlib import Path
 
+from tests_ce.architecture.test_exact_module_targets import _declared_modules
 from tests_ce.architecture.test_recursive_target_definition import (
     _files_at,
     _source_has_python_code,
@@ -63,6 +64,7 @@ def test_current_modules_and_components_have_a_target_and_one_sentence_concern()
     assert set(records) == {f"module:{source}" for source in source_files}, "missing source-module concern"
     ambiguous_targets = _ambiguous_targets(manifest)
     overrides = {item["target"]: item["responsibility"] for item in manifest["target_module_concerns"]}
+    declarations = _declared_modules()
     assert len(overrides) == len(manifest["target_module_concerns"]), "duplicate target-module concern"
     assert ambiguous_targets <= set(overrides), (
         f"missing explicit concern for split, merge, or new target: {sorted(ambiguous_targets - set(overrides))}"
@@ -71,6 +73,8 @@ def test_current_modules_and_components_have_a_target_and_one_sentence_concern()
         f"concern for absent target module: {sorted(set(overrides) - set(target_sources))}"
     )
     assert len(set(overrides.values())) == len(overrides), "duplicate target-module responsibility"
+    for target, responsibility in overrides.items():
+        assert declarations[target][0][1] == responsibility, f"contract and reviewed target disagree: {target}"
     for target, sources in target_sources.items():
         if target not in ambiguous_targets:
             assert len(sources) == 1, f"ambiguous target needs an explicit concern: {target}"

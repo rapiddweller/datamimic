@@ -1,5 +1,145 @@
 {
   "schema_version": "2.1.0",
+  "declarations": {
+    "modules": [
+      {
+        "path": "datamimic_ce/engine/dsl/parsers/base/client_config.py",
+        "responsibility": "Merges descriptor attributes with lazily loaded connection profile credentials."
+      },
+      {
+        "path": "datamimic_ce/engine/dsl/parsers/base/dispatch.py",
+        "responsibility": "Dispatches parsed XML elements to built-in or registered extension statement parsers."
+      },
+      {
+        "path": "datamimic_ce/engine/dsl/parsers/base/statement_parser.py",
+        "responsibility": "StatementParser vereinheitlicht XML-Tag-/Child-Pr\u00fcfung, Properties-Substitution und Pydantic-Fehler\u00fcbersetzung f\u00fcr konkrete Parser."
+      },
+      {
+        "path": "datamimic_ce/engine/dsl/parsers/document/descriptor_parser.py",
+        "responsibility": "DescriptorParser liest die Descriptordatei als alleinigen Entry Point und delegiert den Root an SetupParser."
+      },
+      {
+        "path": "datamimic_ce/engine/dsl/parsers/flow/branches/condition_parser.py",
+        "responsibility": "Parses <condition>, dispatches its child statements, then requires one leading <if>, optional <else-if> branches, and at most one final <else>."
+      },
+      {
+        "path": "datamimic_ce/engine/dsl/parsers/flow/branches/else_if_parser.py",
+        "responsibility": "Binds <else-if> to the shared conditional parser, which validates ElseIfModel and allowed children for the enclosing composite before dispatching its body."
+      },
+      {
+        "path": "datamimic_ce/engine/dsl/parsers/flow/branches/else_parser.py",
+        "responsibility": "Binds <else> to the shared conditional parser; it has no attribute model, validates allowed children for the enclosing composite, and dispatches its body."
+      },
+      {
+        "path": "datamimic_ce/engine/dsl/parsers/flow/branches/if_else_base_parser.py",
+        "responsibility": "Shared <if>/<else-if>/<else> parser: validates child tags against the enclosing composite, validates IfModel or ElseIfModel for those branches, and dispatches nested statements."
+      },
+      {
+        "path": "datamimic_ce/engine/dsl/parsers/flow/branches/if_parser.py",
+        "responsibility": "Binds <if> to the shared conditional parser, which validates IfModel and allowed children for the enclosing composite before dispatching its body."
+      },
+      {
+        "path": "datamimic_ce/engine/dsl/parsers/flow/commands/assert_parser.py",
+        "responsibility": "Parses <assert>, validates AssertModel attributes, and builds AssertStatement."
+      },
+      {
+        "path": "datamimic_ce/engine/dsl/parsers/flow/commands/echo_parser.py",
+        "responsibility": "Parses <echo> and builds EchoStatement from the element text; it does not validate an attribute model."
+      },
+      {
+        "path": "datamimic_ce/engine/dsl/parsers/flow/commands/execute_parser.py",
+        "responsibility": "Parses <execute>, validates ExecuteModel, requires exactly one code source (uri, inline text, or script), and infers the language from a file extension when type is absent."
+      },
+      {
+        "path": "datamimic_ce/engine/dsl/parsers/flow/loops/while_parser.py",
+        "responsibility": "Parses <while>, validates WhileModel and child tags against the enclosing composite, then dispatches its body statements."
+      },
+      {
+        "path": "datamimic_ce/engine/dsl/parsers/generation/generate_parser.py",
+        "responsibility": "Parses <generate> or its <iterate> alias, validates GenerateModel, dispatches children, requires a source for <iterate>, and reserves direct-child variable name ts in time-series mode."
+      },
+      {
+        "path": "datamimic_ce/engine/dsl/parsers/input/properties.py",
+        "responsibility": "parse_properties l\u00e4dt gecachte Java-Properties-Zeilen und mappt key=value Paare; das ist Konfigurationsdatei-Parsing."
+      },
+      {
+        "path": "datamimic_ce/engine/dsl/parsers/input/target.py",
+        "responsibility": "Parses target-call syntax into target names and literal keyword arguments for DSL consumers."
+      },
+      {
+        "path": "datamimic_ce/engine/dsl/parsers/input/xml.py",
+        "responsibility": "Creates safe XML parsers, rejects internal-subset DOCTYPEs, and exposes source and file entry points."
+      },
+      {
+        "path": "datamimic_ce/engine/dsl/parsers/registry.py",
+        "responsibility": "Registers built-in CE XML tags with their concrete statement parsers."
+      },
+      {
+        "path": "datamimic_ce/engine/dsl/parsers/setup/database_parser.py",
+        "responsibility": "Parses <database>, resolves db connection-profile credentials, validates DatabaseModel with the resolved attributes, and builds DatabaseStatement."
+      },
+      {
+        "path": "datamimic_ce/engine/dsl/parsers/setup/demographics_parser.py",
+        "responsibility": "Parses <demographics>, validates DemographicsModel, resolves a relative directory against the descriptor directory, and builds DemographicsStatement."
+      },
+      {
+        "path": "datamimic_ce/engine/dsl/parsers/setup/generator_parser.py",
+        "responsibility": "Der Parser \u00fcbersetzt eine Setup-Definition in GeneratorStatement; er parst keinen skalaren Datensatzwert."
+      },
+      {
+        "path": "datamimic_ce/engine/dsl/parsers/setup/include_parser.py",
+        "responsibility": "Validates include-element attributes and constructs a statement with the referenced descriptor URI."
+      },
+      {
+        "path": "datamimic_ce/engine/dsl/parsers/setup/memstore_parser.py",
+        "responsibility": "Parses <memstore>, validates MemstoreModel attributes, and builds MemstoreStatement."
+      },
+      {
+        "path": "datamimic_ce/engine/dsl/parsers/setup/mongodb_parser.py",
+        "responsibility": "Parses <mongodb>, resolves mongo connection-profile credentials, validates MongoDBModel with the resolved attributes, and builds MongoDBStatement."
+      },
+      {
+        "path": "datamimic_ce/engine/dsl/parsers/setup/setup_parser.py",
+        "responsibility": "Parses the <setup> root, validates SetupModel attributes, and dispatches its child elements into SetupStatement."
+      },
+      {
+        "path": "datamimic_ce/engine/dsl/parsers/setup/state_machine_parser.py",
+        "responsibility": "Parses state-machine transition structure and numeric weights into a named definition consumed by the runtime generator."
+      },
+      {
+        "path": "datamimic_ce/engine/dsl/parsers/values/references/reference_parser.py",
+        "responsibility": "Parses <reference> in legacy sourceKey or <field>-child form, rejects mixing both forms and duplicate source keys, and builds ReferenceStatement."
+      },
+      {
+        "path": "datamimic_ce/engine/dsl/parsers/values/scalar/element_parser.py",
+        "responsibility": "Parses <element>, validates ElementModel attributes, and builds ElementStatement."
+      },
+      {
+        "path": "datamimic_ce/engine/dsl/parsers/values/scalar/key_parser.py",
+        "responsibility": "Parses <key> or its <id> alias, validates KeyModel, requires a composite parent, and dispatches child statements."
+      },
+      {
+        "path": "datamimic_ce/engine/dsl/parsers/values/structured/array_parser.py",
+        "responsibility": "Parses <array> and validates ArrayModel; literal arrays require valid <value> children, while non-literal arrays reject children."
+      },
+      {
+        "path": "datamimic_ce/engine/dsl/parsers/values/structured/item_parser.py",
+        "responsibility": "Parses <item>, validates ItemModel attributes, and dispatches child elements into ItemStatement."
+      },
+      {
+        "path": "datamimic_ce/engine/dsl/parsers/values/structured/list_parser.py",
+        "responsibility": "Parses <list>, validates ListModel attributes, and dispatches child elements into ListStatement."
+      },
+      {
+        "path": "datamimic_ce/engine/dsl/parsers/values/structured/nested_key_parser.py",
+        "responsibility": "Parses <nestedKey>, validates NestedKeyModel attributes, and dispatches child elements into NestedKeyStatement."
+      },
+      {
+        "path": "datamimic_ce/engine/dsl/parsers/values/variables/variable_parser.py",
+        "responsibility": "Parses <variable>, validates VariableModel attributes, and builds VariableStatement with its parent and setup context."
+      }
+    ]
+  },
   "components": [
     {
       "id": "PARSERS-BASE",

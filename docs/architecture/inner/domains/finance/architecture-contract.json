@@ -1,5 +1,77 @@
 {
   "schema_version": "2.1.0",
+  "declarations": {
+    "modules": [
+      {
+        "path": "datamimic_ce/domains/finance/__init__.py",
+        "responsibility": "Der Initializer exportiert Bank, BankAccount, CreditCard und Transaction als Paketoberfl\u00e4che des Finanzmodells."
+      },
+      {
+        "path": "datamimic_ce/domains/finance/generators/__init__.py",
+        "responsibility": "Der Initializer markiert ein Python-Paket, enth\u00e4lt aber keine ausf\u00fchrbare Fachlogik."
+      },
+      {
+        "path": "datamimic_ce/domains/finance/generators/bank_account_generator.py",
+        "responsibility": "Der BankAccountGenerator erzeugt synthetische Fachwerte \u00fcber generate_created_date, generate_last_transaction_date, get_bank_account_types und nutzt die erforderliche RNG-, Datensatz- oder Zeitbasis."
+      },
+      {
+        "path": "datamimic_ce/domains/finance/generators/bank_generator.py",
+        "responsibility": "Der BankGenerator erzeugt synthetische Fachwerte \u00fcber generate_bank_data und nutzt die erforderliche RNG-, Datensatz- oder Zeitbasis."
+      },
+      {
+        "path": "datamimic_ce/domains/finance/generators/credit_card_generator.py",
+        "responsibility": "Der CreditCardGenerator erzeugt synthetische Fachwerte \u00fcber generate_card_type, get_card_specs und nutzt die erforderliche RNG-, Datensatz- oder Zeitbasis."
+      },
+      {
+        "path": "datamimic_ce/domains/finance/generators/transaction_generator.py",
+        "responsibility": "TransactionGenerator liest Buchungsdatens\u00e4tze und verankert Transaktionszeit sowie Referenzwerte am injizierten RNG und an der aufgel\u00f6sten Run-Uhr."
+      },
+      {
+        "path": "datamimic_ce/domains/finance/luhn.py",
+        "responsibility": "Die Funktion berechnet die Luhn-Pr\u00fcfziffer f\u00fcr formatierte Zahlungskennungen."
+      },
+      {
+        "path": "datamimic_ce/domains/finance/models/__init__.py",
+        "responsibility": "Der Initializer markiert ein Python-Paket, enth\u00e4lt aber keine ausf\u00fchrbare Fachlogik."
+      },
+      {
+        "path": "datamimic_ce/domains/finance/models/bank.py",
+        "responsibility": "Bank exposes institution identity, payment-network identifiers, routing data, and customer-service contact."
+      },
+      {
+        "path": "datamimic_ce/domains/finance/models/bank_account.py",
+        "responsibility": "BankAccount links bank details to account identifiers, balances, currency, and account lifecycle dates."
+      },
+      {
+        "path": "datamimic_ce/domains/finance/models/credit_card.py",
+        "responsibility": "CreditCard links cardholder, account, and bank data with card credentials, limits, balances, and dates."
+      },
+      {
+        "path": "datamimic_ce/domains/finance/models/transaction.py",
+        "responsibility": "Transaction records an account-linked payment event with amount, classification, merchant, status, channel, and location."
+      },
+      {
+        "path": "datamimic_ce/domains/finance/services/__init__.py",
+        "responsibility": "Der Initializer exportiert die vier Finanzservices, die ihre jeweiligen Modelle und Generatoren verbinden."
+      },
+      {
+        "path": "datamimic_ce/domains/finance/services/bank_account_service.py",
+        "responsibility": "Der BankAccountService bindet konkreten Generator und Modell und deklariert die f\u00fcr Registry und DSL sichtbaren Entity-Felder."
+      },
+      {
+        "path": "datamimic_ce/domains/finance/services/bank_service.py",
+        "responsibility": "Der BankService bindet konkreten Generator und Modell und deklariert die f\u00fcr Registry und DSL sichtbaren Entity-Felder."
+      },
+      {
+        "path": "datamimic_ce/domains/finance/services/credit_card_service.py",
+        "responsibility": "Der CreditCardService bindet konkreten Generator und Modell und deklariert die f\u00fcr Registry und DSL sichtbaren Entity-Felder."
+      },
+      {
+        "path": "datamimic_ce/domains/finance/services/transaction_service.py",
+        "responsibility": "Der TransactionService bindet konkreten Generator und Modell und deklariert die f\u00fcr Registry und DSL sichtbaren Entity-Felder."
+      }
+    ]
+  },
   "components": [
     {
       "id": "FINANCE-MODELS",

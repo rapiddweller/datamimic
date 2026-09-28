@@ -1,5 +1,125 @@
 {
   "schema_version": "2.1.0",
+  "declarations": {
+    "modules": [
+      {
+        "path": "datamimic_ce/engine/dsl/statements/base/composite_statement.py",
+        "responsibility": "Stores child statements and defines the logical parent behavior shared by composites and branches."
+      },
+      {
+        "path": "datamimic_ce/engine/dsl/statements/base/statement.py",
+        "responsibility": "Provides statement identity, ancestry, names, and the default source-entity contract."
+      },
+      {
+        "path": "datamimic_ce/engine/dsl/statements/flow/branches/condition_statement.py",
+        "responsibility": "Tracks the conditional branch statements selected during execution."
+      },
+      {
+        "path": "datamimic_ce/engine/dsl/statements/flow/branches/else_if_statement.py",
+        "responsibility": "Stores the predicate for an else-if branch in the condition statement tree."
+      },
+      {
+        "path": "datamimic_ce/engine/dsl/statements/flow/branches/else_statement.py",
+        "responsibility": "Represents the unconditional else branch in the condition statement tree."
+      },
+      {
+        "path": "datamimic_ce/engine/dsl/statements/flow/branches/if_statement.py",
+        "responsibility": "Stores the predicate for an if branch in the condition statement tree."
+      },
+      {
+        "path": "datamimic_ce/engine/dsl/statements/flow/commands/assert_statement.py",
+        "responsibility": "Stores an assertion predicate and its optional failure message."
+      },
+      {
+        "path": "datamimic_ce/engine/dsl/statements/flow/commands/echo_statement.py",
+        "responsibility": "Stores the optional value emitted by an echo command."
+      },
+      {
+        "path": "datamimic_ce/engine/dsl/statements/flow/commands/execute_statement.py",
+        "responsibility": "Carries resolved execution type, script source, target, and inline code for a setup execute command."
+      },
+      {
+        "path": "datamimic_ce/engine/dsl/statements/flow/loops/while_statement.py",
+        "responsibility": "Stores a while-loop predicate and maximum iteration count with its child statements."
+      },
+      {
+        "path": "datamimic_ce/engine/dsl/statements/generation/generate_statement.py",
+        "responsibility": "Carries parsed generation settings and child statements into runtime execution."
+      },
+      {
+        "path": "datamimic_ce/engine/dsl/statements/generation/targets.py",
+        "responsibility": "Parses the generate statement's comma-separated consumer targets."
+      },
+      {
+        "path": "datamimic_ce/engine/dsl/statements/setup/database_statement.py",
+        "responsibility": "Carries a database connection model and exposes its configured id."
+      },
+      {
+        "path": "datamimic_ce/engine/dsl/statements/setup/demographics_statement.py",
+        "responsibility": "Carries the demographics dataset, version, directory, and optional RNG seed."
+      },
+      {
+        "path": "datamimic_ce/engine/dsl/statements/setup/generator_statement.py",
+        "responsibility": "Das Statement tr\u00e4gt Name und Konstruktor-Ausdruck einer wiederverwendbaren Setup-Definition statt eines erzeugten Feldwerts."
+      },
+      {
+        "path": "datamimic_ce/engine/dsl/statements/setup/include_statement.py",
+        "responsibility": "Carries the URI of a descriptor to include."
+      },
+      {
+        "path": "datamimic_ce/engine/dsl/statements/setup/memstore_statement.py",
+        "responsibility": "Carries the configured memstore id as a named setup statement."
+      },
+      {
+        "path": "datamimic_ce/engine/dsl/statements/setup/mongodb_statement.py",
+        "responsibility": "Carries a MongoDB connection model and exposes its configured id."
+      },
+      {
+        "path": "datamimic_ce/engine/dsl/statements/setup/setup_statement.py",
+        "responsibility": "Carries setup-wide defaults and runtime options in the composite setup node."
+      },
+      {
+        "path": "datamimic_ce/engine/dsl/statements/setup/state_machine_statement.py",
+        "responsibility": "Das Statement h\u00e4lt \u00dcbergangsregeln einer Setup-Definition, nicht die Ausf\u00fchrung eines Kontrollfluss-Loops."
+      },
+      {
+        "path": "datamimic_ce/engine/dsl/statements/traversal.py",
+        "responsibility": "Traverses statement ancestry and branches to resolve enclosing generation relationships."
+      },
+      {
+        "path": "datamimic_ce/engine/dsl/statements/values/references/reference_statement.py",
+        "responsibility": "Carries source-selection settings and source-column to target-field mappings for references."
+      },
+      {
+        "path": "datamimic_ce/engine/dsl/statements/values/scalar/element_statement.py",
+        "responsibility": "Carries one named scalar element's value-generation settings."
+      },
+      {
+        "path": "datamimic_ce/engine/dsl/statements/values/scalar/key_statement.py",
+        "responsibility": "Carries one named key's value-generation constraints and settings in a composite statement."
+      },
+      {
+        "path": "datamimic_ce/engine/dsl/statements/values/structured/array_statement.py",
+        "responsibility": "Carries array count, type, script, and literal values."
+      },
+      {
+        "path": "datamimic_ce/engine/dsl/statements/values/structured/item_statement.py",
+        "responsibility": "Stores the condition that controls inclusion of a structured item."
+      },
+      {
+        "path": "datamimic_ce/engine/dsl/statements/values/structured/list_statement.py",
+        "responsibility": "Carries the converter applied to a structured list."
+      },
+      {
+        "path": "datamimic_ce/engine/dsl/statements/values/structured/nested_key_statement.py",
+        "responsibility": "Carries a named nested key's source, count, value, and distribution settings."
+      },
+      {
+        "path": "datamimic_ce/engine/dsl/statements/values/variables/variable_statement.py",
+        "responsibility": "Carries a named variable's source or value-generation settings and scope."
+      }
+    ]
+  },
   "components": [
     {
       "id": "STATEMENTS-BASE",

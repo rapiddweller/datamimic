@@ -1,5 +1,33 @@
 {
   "schema_version": "2.1.0",
+  "declarations": {
+    "modules": [
+      {
+        "path": "datamimic_ce/engine/runtime/tasks/sources/chunk_source_reader.py",
+        "responsibility": "Coordinates chunked source reads for runtime source tasks."
+      },
+      {
+        "path": "datamimic_ce/engine/runtime/tasks/sources/generate.py",
+        "responsibility": "Resolves and loads source rows for generate statements using runtime context and IO requests."
+      },
+      {
+        "path": "datamimic_ce/engine/runtime/tasks/sources/length.py",
+        "responsibility": "Calculates and caches source lengths used by runtime setup and iteration tasks."
+      },
+      {
+        "path": "datamimic_ce/engine/runtime/tasks/sources/nested.py",
+        "responsibility": "Resolves nested-key source expressions and loads their rows through IO operations."
+      },
+      {
+        "path": "datamimic_ce/engine/runtime/tasks/sources/reference.py",
+        "responsibility": "Loads and selects reference rows while applying runtime seed and distribution policy."
+      },
+      {
+        "path": "datamimic_ce/engine/runtime/tasks/sources/variable.py",
+        "responsibility": "Plans variable source execution modes and applies runtime-owned source policy."
+      }
+    ]
+  },
   "components": [
     {
       "id": "SOURCE-LENGTH",

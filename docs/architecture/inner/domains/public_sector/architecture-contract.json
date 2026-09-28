@@ -1,5 +1,61 @@
 {
   "schema_version": "2.1.0",
+  "declarations": {
+    "modules": [
+      {
+        "path": "datamimic_ce/domains/public_sector/__init__.py",
+        "responsibility": "Der Initializer markiert ein Python-Paket, enth\u00e4lt aber keine ausf\u00fchrbare Fachlogik."
+      },
+      {
+        "path": "datamimic_ce/domains/public_sector/generators/__init__.py",
+        "responsibility": "Der Initializer markiert ein Python-Paket, enth\u00e4lt aber keine ausf\u00fchrbare Fachlogik."
+      },
+      {
+        "path": "datamimic_ce/domains/public_sector/generators/administration_office_generator.py",
+        "responsibility": "Der AdministrationOfficeGenerator erzeugt synthetische Fachwerte \u00fcber pick_office_type, pick_jurisdiction_bucket, build_office_name und nutzt die erforderliche RNG-, Datensatz- oder Zeitbasis."
+      },
+      {
+        "path": "datamimic_ce/domains/public_sector/generators/educational_institution_generator.py",
+        "responsibility": "Der EducationalInstitutionGenerator erzeugt synthetische Fachwerte \u00fcber pick_level, pick_accreditations, pick_institution_type und nutzt die erforderliche RNG-, Datensatz- oder Zeitbasis."
+      },
+      {
+        "path": "datamimic_ce/domains/public_sector/generators/police_officer_generator.py",
+        "responsibility": "Der PoliceOfficerGenerator erzeugt synthetische Fachwerte \u00fcber generate_hire_date, get_rank, get_department und nutzt die erforderliche RNG-, Datensatz- oder Zeitbasis."
+      },
+      {
+        "path": "datamimic_ce/domains/public_sector/models/__init__.py",
+        "responsibility": "Der Initializer markiert ein Python-Paket, enth\u00e4lt aber keine ausf\u00fchrbare Fachlogik."
+      },
+      {
+        "path": "datamimic_ce/domains/public_sector/models/administration_office.py",
+        "responsibility": "AdministrationOffice represents a jurisdictional office with address, staffing, budget, hours, services, departments, and leadership."
+      },
+      {
+        "path": "datamimic_ce/domains/public_sector/models/educational_institution.py",
+        "responsibility": "EducationalInstitution describes a school with type, level, population, programs, accreditation, facilities, and contact details."
+      },
+      {
+        "path": "datamimic_ce/domains/public_sector/models/police_officer.py",
+        "responsibility": "PoliceOfficer combines officer identity and personal details with assignment, rank, service history, credentials, and shift."
+      },
+      {
+        "path": "datamimic_ce/domains/public_sector/services/__init__.py",
+        "responsibility": "Der Initializer exportiert Verwaltungsstellen-, Bildungs- und Polizeiservices als Paketoberfl\u00e4che."
+      },
+      {
+        "path": "datamimic_ce/domains/public_sector/services/administration_office_service.py",
+        "responsibility": "Der AdministrationOfficeService bindet konkreten Generator und Modell und deklariert die f\u00fcr Registry und DSL sichtbaren Entity-Felder."
+      },
+      {
+        "path": "datamimic_ce/domains/public_sector/services/educational_institution_service.py",
+        "responsibility": "Der EducationalInstitutionService bindet konkreten Generator und Modell und deklariert die f\u00fcr Registry und DSL sichtbaren Entity-Felder."
+      },
+      {
+        "path": "datamimic_ce/domains/public_sector/services/police_officer_service.py",
+        "responsibility": "Der PoliceOfficerService bindet konkreten Generator und Modell und deklariert die f\u00fcr Registry und DSL sichtbaren Entity-Felder."
+      }
+    ]
+  },
   "components": [
     {
       "id": "PUBLIC-SECTOR-MODELS",

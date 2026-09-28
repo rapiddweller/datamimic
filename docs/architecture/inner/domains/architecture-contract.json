@@ -1,5 +1,101 @@
 {
   "schema_version": "2.1.0",
+  "declarations": {
+    "modules": [
+      {
+        "path": "datamimic_ce/domains/__init__.py",
+        "responsibility": "Der Initializer markiert ein Python-Paket, enth\u00e4lt aber keine ausf\u00fchrbare Fachlogik."
+      },
+      {
+        "path": "datamimic_ce/domains/api.py",
+        "responsibility": "Die \u00f6ffentliche Erweiterungs-API exportiert Literal-/Domain-Typen und projiziert den Generatorbestand auf Engine-Capabilities."
+      },
+      {
+        "path": "datamimic_ce/domains/domain_core/__init__.py",
+        "responsibility": "Der Initializer exportiert BaseEntity und BaseDomainService \u00fcber den von Services und Tests verwendeten Core-Importpfad."
+      },
+      {
+        "path": "datamimic_ce/domains/domain_core/base_domain_generator.py",
+        "responsibility": "Die drei Basisklassen geben RNG, normalisierten Datensatz und einmalig fixierte Referenzzeit nur an Generatoren weiter, die sie ben\u00f6tigen."
+      },
+      {
+        "path": "datamimic_ce/domains/domain_core/base_domain_service.py",
+        "responsibility": "Der gemeinsame Service bindet Modell und Generator, macht Feldschema und unterst\u00fctzte Datens\u00e4tze sichtbar und erzeugt einzelne oder mehrere Entities."
+      },
+      {
+        "path": "datamimic_ce/domains/domain_core/base_entity.py",
+        "responsibility": "Die Entity-Basis memoisiert Felder, h\u00e4lt Aliaszugriff kompatibel und vergibt formatgebundene eindeutige Schl\u00fcssel auch \u00fcber verschachtelte Entities hinweg."
+      },
+      {
+        "path": "datamimic_ce/domains/domain_core/base_literal_generator.py",
+        "responsibility": "Die Literal-Basis stellt atomaren Generatoren einen injizierbaren RNG bereit, den die Engine nach der Konstruktion neu binden kann."
+      },
+      {
+        "path": "datamimic_ce/domains/domain_core/contracts/attribute_catalog.py",
+        "responsibility": "Das Modul deklariert Entity-Felder mit echten Python-Typen und wiederverwendbare verschachtelte Adressfelder als Schema-SPOT."
+      },
+      {
+        "path": "datamimic_ce/domains/domain_core/contracts/generation.py",
+        "responsibility": "Defines shared generator capability metadata and state transition rules for domain generation."
+      },
+      {
+        "path": "datamimic_ce/domains/domain_core/contracts/json_types.py",
+        "responsibility": "Die Typaliase beschreiben rekursive JSON-Werte der Domain-API ohne freie Any-Payloads."
+      },
+      {
+        "path": "datamimic_ce/domains/domain_core/datasets/catalog.py",
+        "responsibility": "Das Modul ermittelt die gemeinsamen Datensatzcodes, f\u00fcr die alle einer Entity zugeordneten Dateien vorliegen."
+      },
+      {
+        "path": "datamimic_ce/domains/domain_core/datasets/path.py",
+        "responsibility": "Das Modul l\u00f6st den Domain-Datenstamm samt Env-Override und US-Fallback auf und unterdr\u00fcckt wiederholte Fallback-Warnungen."
+      },
+      {
+        "path": "datamimic_ce/domains/domain_core/property_cache.py",
+        "responsibility": "Der Decorator cached erzeugte Entity-Properties im Feldcache, damit wiederholtes Lesen keine neuen Zufallswerte erzeugt."
+      },
+      {
+        "path": "datamimic_ce/domains/domain_core/runtime/__init__.py",
+        "responsibility": "Der Initializer b\u00fcndelt RunSeed sowie RNG- und Clock-Funktionen als gemeinsame Runtime-Importoberfl\u00e4che."
+      },
+      {
+        "path": "datamimic_ce/domains/domain_core/runtime/clock.py",
+        "responsibility": "Das Modul vereinheitlicht UTC-Wanduhrzugriffe, eingefrorene Seed-Zeit und zeitzonenunabh\u00e4ngige Epoch-Konvertierung."
+      },
+      {
+        "path": "datamimic_ce/domains/domain_core/runtime/determinism.py",
+        "responsibility": "Das Modul kanonisiert und hasht JSON, leitet stabile IDs und Profil-Seeds ab und stellt den seedbaren Service-RNG bereit."
+      },
+      {
+        "path": "datamimic_ce/domains/domain_core/runtime/rng.py",
+        "responsibility": "Das Modul zieht reproduzierbare Kind-Seeds aus einem Eltern-RNG und erzeugt daraus getrennte RNG-Streams."
+      },
+      {
+        "path": "datamimic_ce/domains/domain_core/runtime/rng_uuid.py",
+        "responsibility": "Die Funktion erzeugt UUIDs aus einem \u00fcbergebenen Random-Stream, sodass UUID-Felder dieselbe Seed-Reproduzierbarkeit behalten."
+      },
+      {
+        "path": "datamimic_ce/domains/domain_core/runtime/run_seed.py",
+        "responsibility": "RunSeed h\u00e4lt Seed oder Run-Entropie und leitet daraus worker\u00fcbergreifend stabile Schl\u00fcssel je Verwendungszweck ab."
+      },
+      {
+        "path": "datamimic_ce/domains/facade.py",
+        "responsibility": "Die JSON-Facade pr\u00fcft Domain-Anfragen, l\u00f6st optionale Profile auf, baut typisierte Requests, ruft Generatoren auf und validiert die Antworten."
+      },
+      {
+        "path": "datamimic_ce/domains/registry/entities.py",
+        "responsibility": "Das Modul registriert ausgew\u00e4hlte Entity-Services, leitet Feldschemata ab und bedient die von der DSL verwendeten Namensaliase."
+      },
+      {
+        "path": "datamimic_ce/domains/registry/generators.py",
+        "responsibility": "Registers built-in domain generators and exposes their capability metadata to DSL expressions."
+      },
+      {
+        "path": "datamimic_ce/domains/registry/schema.py",
+        "responsibility": "Das Modul l\u00e4dt versionierte JSON-Schemas und validiert Request- oder Response-Payloads an der JSON-Domain-Grenze."
+      }
+    ]
+  },
   "components": [
     {
       "id": "DOMAINS-API",
@@ -79,7 +175,7 @@
       "decided_by": "agent",
       "role": "component",
       "forbidden_responsibilities": [
-        "Own another component's concern."
+        "Implement generator algorithms or execute domain use cases."
       ],
       "provenance": [
         "docs/architecture/inner/semantic-review/astra-target-decision.md"
@@ -137,7 +233,7 @@
       "decided_by": "agent",
       "role": "component",
       "forbidden_responsibilities": [
-        "Own another component's concern."
+        "Own entity inventories, generator algorithms, or descriptor execution."
       ],
       "provenance": [
         "docs/architecture/inner/semantic-review/astra-target-decision.md"
@@ -212,7 +308,7 @@
         "datamimic_ce.domains.shared"
       ],
       "responsibilities": [
-        "Owns reusable generators, converters, datasets, demographic profiles, models, services, and use cases shared by industry domains."
+        "Owns reusable generators, converters, datasets, demographic profiles, models, services, and use cases shared by industry domains and JSON generation use cases."
       ],
       "forbidden_responsibilities": [
         "Import vertical behavior or Runtime context."

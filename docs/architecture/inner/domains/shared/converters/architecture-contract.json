@@ -1,5 +1,73 @@
 {
   "schema_version": "2.1.0",
+  "declarations": {
+    "modules": [
+      {
+        "path": "datamimic_ce/domains/shared/converters/__init__.py",
+        "responsibility": "Der Initializer markiert ein Python-Paket, enth\u00e4lt aber keine ausf\u00fchrbare Fachlogik."
+      },
+      {
+        "path": "datamimic_ce/domains/shared/converters/base/converter.py",
+        "responsibility": "Der Converter transformiert in convert einen vorhandenen Wert f\u00fcr die DSL-Ausgabe, ohne ein Domain-Objekt zu erzeugen."
+      },
+      {
+        "path": "datamimic_ce/domains/shared/converters/privacy/hash_converter.py",
+        "responsibility": "Der HashConverter transformiert in convert einen vorhandenen Wert f\u00fcr die DSL-Ausgabe, ohne ein Domain-Objekt zu erzeugen."
+      },
+      {
+        "path": "datamimic_ce/domains/shared/converters/privacy/java_hash_converter.py",
+        "responsibility": "Der JavaHashConverter transformiert in convert einen vorhandenen Wert f\u00fcr die DSL-Ausgabe, ohne ein Domain-Objekt zu erzeugen."
+      },
+      {
+        "path": "datamimic_ce/domains/shared/converters/privacy/mask_converter.py",
+        "responsibility": "Der MaskConverter transformiert in convert einen vorhandenen Wert f\u00fcr die DSL-Ausgabe, ohne ein Domain-Objekt zu erzeugen."
+      },
+      {
+        "path": "datamimic_ce/domains/shared/converters/privacy/middle_mask_converter.py",
+        "responsibility": "Der MiddleMaskConverter transformiert in convert einen vorhandenen Wert f\u00fcr die DSL-Ausgabe, ohne ein Domain-Objekt zu erzeugen."
+      },
+      {
+        "path": "datamimic_ce/domains/shared/converters/structural/custom_converter.py",
+        "responsibility": "Der CustomConverter transformiert in convert einen vorhandenen Wert f\u00fcr die DSL-Ausgabe, ohne ein Domain-Objekt zu erzeugen."
+      },
+      {
+        "path": "datamimic_ce/domains/shared/converters/structural/remove_none_or_empty_element_converter.py",
+        "responsibility": "Der RemoveNoneOrEmptyElementConverter transformiert in convert einen vorhandenen Wert f\u00fcr die DSL-Ausgabe, ohne ein Domain-Objekt zu erzeugen."
+      },
+      {
+        "path": "datamimic_ce/domains/shared/converters/temporal/date2timestamp_converter.py",
+        "responsibility": "Der Date2TimestampConverter transformiert in convert einen vorhandenen Wert f\u00fcr die DSL-Ausgabe, ohne ein Domain-Objekt zu erzeugen."
+      },
+      {
+        "path": "datamimic_ce/domains/shared/converters/temporal/date_format_converter.py",
+        "responsibility": "Der DateFormatConverter transformiert in convert einen vorhandenen Wert f\u00fcr die DSL-Ausgabe, ohne ein Domain-Objekt zu erzeugen."
+      },
+      {
+        "path": "datamimic_ce/domains/shared/converters/temporal/timestamp2date_converter.py",
+        "responsibility": "Der Timestamp2DateConverter transformiert in convert einen vorhandenen Wert f\u00fcr die DSL-Ausgabe, ohne ein Domain-Objekt zu erzeugen."
+      },
+      {
+        "path": "datamimic_ce/domains/shared/converters/text/append_converter.py",
+        "responsibility": "Der AppendConverter transformiert in convert einen vorhandenen Wert f\u00fcr die DSL-Ausgabe, ohne ein Domain-Objekt zu erzeugen."
+      },
+      {
+        "path": "datamimic_ce/domains/shared/converters/text/cut_length_converter.py",
+        "responsibility": "Der CutLengthConverter transformiert in convert einen vorhandenen Wert f\u00fcr die DSL-Ausgabe, ohne ein Domain-Objekt zu erzeugen."
+      },
+      {
+        "path": "datamimic_ce/domains/shared/converters/text/lower_case_converter.py",
+        "responsibility": "Der LowerCaseConverter transformiert in convert einen vorhandenen Wert f\u00fcr die DSL-Ausgabe, ohne ein Domain-Objekt zu erzeugen."
+      },
+      {
+        "path": "datamimic_ce/domains/shared/converters/text/substring_converter.py",
+        "responsibility": "Der SubstringConverter transformiert in convert einen vorhandenen Wert f\u00fcr die DSL-Ausgabe, ohne ein Domain-Objekt zu erzeugen."
+      },
+      {
+        "path": "datamimic_ce/domains/shared/converters/text/upper_case_converter.py",
+        "responsibility": "Der UpperCaseConverter transformiert in convert einen vorhandenen Wert f\u00fcr die DSL-Ausgabe, ohne ein Domain-Objekt zu erzeugen."
+      }
+    ]
+  },
   "components": [
     {
       "id": "CONVERTERS-BASE",

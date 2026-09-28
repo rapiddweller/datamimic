@@ -1,5 +1,33 @@
 {
   "schema_version": "2.1.0",
+  "declarations": {
+    "modules": [
+      {
+        "path": "datamimic_ce/errors/__init__.py",
+        "responsibility": "Das Paket kennzeichnet den Namespace f\u00fcr Domainfehler und ihre Fabriken."
+      },
+      {
+        "path": "datamimic_ce/errors/base.py",
+        "responsibility": "DomainError tr\u00e4gt typisierten Fehlercode, Nachricht, Kontext und serialisierbare Fehlerdaten."
+      },
+      {
+        "path": "datamimic_ce/errors/catalog/__init__.py",
+        "responsibility": "Der Katalog rendert den sprachabh\u00e4ngigen Text f\u00fcr den Locale-Fehler."
+      },
+      {
+        "path": "datamimic_ce/errors/codes.py",
+        "responsibility": "Enums definieren stabile Domain- und allgemeine Fehlercodes."
+      },
+      {
+        "path": "datamimic_ce/errors/factory.py",
+        "responsibility": "Die Fabrik erzeugt InvalidLocaleError mit Code, Kontext und stabilen Metadaten."
+      },
+      {
+        "path": "datamimic_ce/errors/formatters.py",
+        "responsibility": "Der Formatter erzeugt die sprachabh\u00e4ngige Invalid-Locale-Meldung."
+      }
+    ]
+  },
   "components": [
     {
       "id": "ERRORS-CODES",
@@ -59,7 +87,7 @@
         "datamimic_ce.errors.catalog"
       ],
       "responsibilities": [
-        "Typed specific errors."
+        "Canonical error message text."
       ],
       "forbidden_responsibilities": [
         "Inspect runtime state or implement validation policy."
@@ -190,7 +218,7 @@
       "kind": "root_layout",
       "root": "datamimic_ce.errors.catalog",
       "allowed_children": [],
-      "rationale": "Typed specific errors. Exact reviewed target children; no hidden extra modules.",
+      "rationale": "Canonical error message text. Exact reviewed target children; no hidden extra modules.",
       "provenance": [
         "docs/architecture/inner/structure-review.json"
       ],

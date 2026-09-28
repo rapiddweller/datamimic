@@ -1,5 +1,141 @@
 {
   "schema_version": "2.1.0",
+  "declarations": {
+    "modules": [
+      {
+        "path": "datamimic_ce/engine/dsl/model/constraints/__init__.py",
+        "responsibility": "Exports DSL constraint facts, types, registry, and schema-serialization helpers."
+      },
+      {
+        "path": "datamimic_ce/engine/dsl/model/constraints/facts.py",
+        "responsibility": "Die Datei deklariert konkrete, wiederverwendete Attributregeln je DSL-Element, darunter unabh\u00e4ngige Source- und Numeric-Distribution-Vertr\u00e4ge."
+      },
+      {
+        "path": "datamimic_ce/engine/dsl/model/constraints/registry.py",
+        "responsibility": "Die Registry ordnet alle Tags ihren Fact-Tupeln zu und revidiert Extension-Registrierungen bei \u00c4nderungen."
+      },
+      {
+        "path": "datamimic_ce/engine/dsl/model/constraints/serialization.py",
+        "responsibility": "Serialisierung \u00fcbersetzt getypte Constraint-Objekte in Schema-/Reference-Payloads mit discriminators."
+      },
+      {
+        "path": "datamimic_ce/engine/dsl/model/constraints/types.py",
+        "responsibility": "Die frozen Dataclasses definieren zehn Constraint-Formen und typisierte Resolver f\u00fcr dynamische erlaubte Werte."
+      },
+      {
+        "path": "datamimic_ce/engine/dsl/model/flow/branches/base_if_else_model.py",
+        "responsibility": "Defines the shared non-empty Python condition field and rejects attributes beyond condition for if/else-if branches."
+      },
+      {
+        "path": "datamimic_ce/engine/dsl/model/flow/branches/else_if_model.py",
+        "responsibility": "Specializes BaseIfElseModel as the else-if branch model; inherits its required non-empty condition and attribute allowlist."
+      },
+      {
+        "path": "datamimic_ce/engine/dsl/model/flow/branches/if_model.py",
+        "responsibility": "Specializes BaseIfElseModel as the if branch model; inherits its required non-empty condition and attribute allowlist."
+      },
+      {
+        "path": "datamimic_ce/engine/dsl/model/flow/commands/assert_model.py",
+        "responsibility": "Validates a required non-empty assertion condition and optional failure message, allowing only condition and message attributes."
+      },
+      {
+        "path": "datamimic_ce/engine/dsl/model/flow/commands/execute_model.py",
+        "responsibility": "Validates execute uri, target, type, and script attributes; constraint facts enforce URI/script exclusivity and registered execute languages."
+      },
+      {
+        "path": "datamimic_ce/engine/dsl/model/flow/loops/while_model.py",
+        "responsibility": "Validates a non-empty loop condition and maxIterations safety cap (default 10000), allowing only those two attributes."
+      },
+      {
+        "path": "datamimic_ce/engine/dsl/model/generation/generate_model.py",
+        "responsibility": "Validates named generation counts or ranges, source/script and target settings, paging and process options, and the all-or-none time-series window fields with source/count constraints."
+      },
+      {
+        "path": "datamimic_ce/engine/dsl/model/generation/timeseries.py",
+        "responsibility": "TimeSeriesConfig validiert ISO-Zeiten und Dauer und berechnet den Tick/Series-Index f\u00fcr GenerateStatement."
+      },
+      {
+        "path": "datamimic_ce/engine/dsl/model/registry.py",
+        "responsibility": "Owns canonical element metadata, child grammar, aliases, model and extension-parser bindings, and atomic constraint registration."
+      },
+      {
+        "path": "datamimic_ce/engine/dsl/model/setup/database_model.py",
+        "responsibility": "Requires database id and DBMS; validates optional host, port, database, environment, system, credentials, and schema fields."
+      },
+      {
+        "path": "datamimic_ce/engine/dsl/model/setup/demographics_model.py",
+        "responsibility": "Validates demographics dataset, version, directory, and optional RNG seed, rejecting attributes outside that setup contract."
+      },
+      {
+        "path": "datamimic_ce/engine/dsl/model/setup/generator_model.py",
+        "responsibility": "Validates a generator declaration's non-empty name and expression and rejects unsupported attributes."
+      },
+      {
+        "path": "datamimic_ce/engine/dsl/model/setup/include_model.py",
+        "responsibility": "Validates a required non-empty descriptor URI and rejects include attributes other than uri."
+      },
+      {
+        "path": "datamimic_ce/engine/dsl/model/setup/memstore_model.py",
+        "responsibility": "Validates the required non-empty memstore id and rejects other setup attributes."
+      },
+      {
+        "path": "datamimic_ce/engine/dsl/model/setup/mongodb_model.py",
+        "responsibility": "Validates MongoDB id, host, port, database, and optional environment and credentials; id is non-empty and port is checked numerically."
+      },
+      {
+        "path": "datamimic_ce/engine/dsl/model/setup/setup_model.py",
+        "responsibility": "Validates setup attributes and carries run-wide defaults, seed, and multiprocessing settings."
+      },
+      {
+        "path": "datamimic_ce/engine/dsl/model/setup/state_machine_model.py",
+        "responsibility": "Declares the state-machine ID and optional start state used to register a setup-level weighted machine."
+      },
+      {
+        "path": "datamimic_ce/engine/dsl/model/validation.py",
+        "responsibility": "ModelUtil f\u00fchrt Constraint-Fakten aus und beh\u00e4lt au\u00dferdem bestehende typspezifische Modellvalidierer; es ist Validierungsmechanik, kein BaseModel."
+      },
+      {
+        "path": "datamimic_ce/engine/dsl/model/values/references/reference_field_model.py",
+        "responsibility": "Validates each reference mapping's required non-empty target field and sourceKey, allowing only those two attributes."
+      },
+      {
+        "path": "datamimic_ce/engine/dsl/model/values/references/reference_model.py",
+        "responsibility": "Validates named source-backed references, optional sourceKey, sourceType, uniqueness, distribution, and cyclic behavior against shared reference constraints."
+      },
+      {
+        "path": "datamimic_ce/engine/dsl/model/values/scalar/element_model.py",
+        "responsibility": "Provides the element model as a KeyModel specialization, inheriting the key value-source fields and their validation."
+      },
+      {
+        "path": "datamimic_ce/engine/dsl/model/values/scalar/key_model.py",
+        "responsibility": "Validates named scalar key value sources and numeric/string constraints, including weights requiring values, source/generator modes, uniqueness, and date-format pairs."
+      },
+      {
+        "path": "datamimic_ce/engine/dsl/model/values/scalar/value_model.py",
+        "responsibility": "Validates a required non-empty constant attribute and rejects any other value-element attributes."
+      },
+      {
+        "path": "datamimic_ce/engine/dsl/model/values/structured/array_model.py",
+        "responsibility": "Validates a named array's type, count, and script fields; registry constraints restrict script mode and type values."
+      },
+      {
+        "path": "datamimic_ce/engine/dsl/model/values/structured/item_model.py",
+        "responsibility": "Allows an optional condition attribute to control a structured item and rejects other item attributes."
+      },
+      {
+        "path": "datamimic_ce/engine/dsl/model/values/structured/list_model.py",
+        "responsibility": "Validates a required non-empty list name and optional converter, allowing only those list attributes."
+      },
+      {
+        "path": "datamimic_ce/engine/dsl/model/values/structured/nested_key_model.py",
+        "responsibility": "Validates named nested dict/list, source/script, count, condition, fallback, distribution, and converter settings, including cyclic/source/count and script incompatibility constraints."
+      },
+      {
+        "path": "datamimic_ce/engine/dsl/model/values/variables/variable_model.py",
+        "responsibility": "Validates named variables across literal, script, generator, entity, and source-backed value modes, with constraints for weights, uniqueness, storage, date formats, and mode-specific options."
+      }
+    ]
+  },
   "components": [
     {
       "id": "MODEL-VALIDATION",

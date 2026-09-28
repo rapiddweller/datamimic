@@ -1,5 +1,61 @@
 {
   "schema_version": "2.1.0",
+  "declarations": {
+    "modules": [
+      {
+        "path": "datamimic_ce/engine/runtime/tasks/__init__.py",
+        "responsibility": "Imports the task registry at package load so statement handlers are registered before dispatch."
+      },
+      {
+        "path": "datamimic_ce/engine/runtime/tasks/base/counts.py",
+        "responsibility": "Dieses Modul wertet Count-Ausdr\u00fccke aus und l\u00f6st zuf\u00e4llige Count-Bereiche auf."
+      },
+      {
+        "path": "datamimic_ce/engine/runtime/tasks/base/dispatch.py",
+        "responsibility": "Dieses Modul stellt typisierte singledispatch-Erzeugung von Tasks aus Statements bereit."
+      },
+      {
+        "path": "datamimic_ce/engine/runtime/tasks/base/task.py",
+        "responsibility": "Dieses Modul definiert Taskprotokolle sowie Setup-, Generate- und gemeinsame Basisklassen."
+      },
+      {
+        "path": "datamimic_ce/engine/runtime/tasks/registry.py",
+        "responsibility": "Owns the ordered bindings from DSL statement types to runtime task implementations."
+      },
+      {
+        "path": "datamimic_ce/engine/runtime/tasks/setup/database_task.py",
+        "responsibility": "Dieses Modul erstellt und registriert w\u00e4hrend Setup einen relationalen Client."
+      },
+      {
+        "path": "datamimic_ce/engine/runtime/tasks/setup/demographics_task.py",
+        "responsibility": "Dieses Modul l\u00e4dt und registriert Demografiekonfiguration w\u00e4hrend Setup."
+      },
+      {
+        "path": "datamimic_ce/engine/runtime/tasks/setup/generator_task.py",
+        "responsibility": "Dieses Modul erzeugt \u00fcber GeneratorUtil die deklarierte Generatorinstanz; deren Root-Caching richtet sich optional nach CachePolicy."
+      },
+      {
+        "path": "datamimic_ce/engine/runtime/tasks/setup/include_task.py",
+        "responsibility": "Dieses Modul l\u00e4dt .properties in SetupContext und f\u00fchrt XML-Deskriptoren sowohl dort als auch in GenIterContext mit kopiertem Root-Zustand und aktuellen Zeilenwerten aus."
+      },
+      {
+        "path": "datamimic_ce/engine/runtime/tasks/setup/memstore_task.py",
+        "responsibility": "Dieses Modul deklariert oder konfiguriert den Memstore w\u00e4hrend Setup."
+      },
+      {
+        "path": "datamimic_ce/engine/runtime/tasks/setup/mongodb_task.py",
+        "responsibility": "Dieses Modul erstellt und registriert w\u00e4hrend Setup einen MongoDB-Client."
+      },
+      {
+        "path": "datamimic_ce/engine/runtime/tasks/setup/setup_task.py",
+        "responsibility": "Dieses Modul initialisiert den Setup-Kontext und dispatcht die Substatements in Descriptor-Reihenfolge."
+      },
+      {
+        "path": "datamimic_ce/engine/runtime/tasks/setup/state_machine_task.py",
+        "responsibility": "Dieses Modul legt eine StateMachineDef im Root-Kontext ab; es f\u00fchrt keine Zustands- oder Schleifenlogik aus."
+      }
+    ]
+  },
   "components": [
     {
       "id": "TASKS-BASE",
@@ -241,7 +297,7 @@
       "decided_by": "agent",
       "role": "component",
       "forbidden_responsibilities": [
-        "Own another component's concern."
+        "Implement task execution, source selection, or worker scheduling."
       ],
       "provenance": [
         "docs/architecture/inner/semantic-review/astra-target-decision.md"

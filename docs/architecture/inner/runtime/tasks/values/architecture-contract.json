@@ -1,5 +1,73 @@
 {
   "schema_version": "2.1.0",
+  "declarations": {
+    "modules": [
+      {
+        "path": "datamimic_ce/engine/runtime/tasks/values/construction/converters.py",
+        "responsibility": "Constructs configured value converters and preserves their descriptor order."
+      },
+      {
+        "path": "datamimic_ce/engine/runtime/tasks/values/construction/entity.py",
+        "responsibility": "Builds domain entity generators from variable statements and runtime demographic state."
+      },
+      {
+        "path": "datamimic_ce/engine/runtime/tasks/values/construction/entity_constructor.py",
+        "responsibility": "Dieses Modul zerlegt Domain-Konstruktorangaben in Klassennamen und Parameter."
+      },
+      {
+        "path": "datamimic_ce/engine/runtime/tasks/values/construction/factory.py",
+        "responsibility": "Creates runtime value generators from DSL value declarations and execution context."
+      },
+      {
+        "path": "datamimic_ce/engine/runtime/tasks/values/construction/global_increment.py",
+        "responsibility": "Implements the global increment generator using the root-scoped counter registry."
+      },
+      {
+        "path": "datamimic_ce/engine/runtime/tasks/values/construction/sequence_table.py",
+        "responsibility": "Dieses Modul reserviert paginierte Werte aus relationalen Sequenzspeichern."
+      },
+      {
+        "path": "datamimic_ce/engine/runtime/tasks/values/key_variable_task.py",
+        "responsibility": "Dieses Modul b\u00fcndelt Erzeugung, Umwandlung und Eindeutigkeit, die KeyTask, VariableTask und ElementTask gemeinsam nutzen."
+      },
+      {
+        "path": "datamimic_ce/engine/runtime/tasks/values/reference/task.py",
+        "responsibility": "Dieses Modul l\u00f6st Referenzwerte aus einer Quelle oder aus verwandten Laufzeitdaten auf."
+      },
+      {
+        "path": "datamimic_ce/engine/runtime/tasks/values/scalar/element_task.py",
+        "responsibility": "Dieses Modul erzeugt ein Elementfeld mit Key- und Variablenverhalten."
+      },
+      {
+        "path": "datamimic_ce/engine/runtime/tasks/values/scalar/key_task.py",
+        "responsibility": "Dieses Modul erzeugt und weist ein Keyfeld anhand von Quelle, Generator, Skript oder Eindeutigkeit zu."
+      },
+      {
+        "path": "datamimic_ce/engine/runtime/tasks/values/structured/array_task.py",
+        "responsibility": "Dieses Modul erzeugt Arrayfelder durch Ausf\u00fchrung verschachtelter Werttasks."
+      },
+      {
+        "path": "datamimic_ce/engine/runtime/tasks/values/structured/item_task.py",
+        "responsibility": "Dieses Modul erzeugt ein Element eines verschachtelten Listenfelds."
+      },
+      {
+        "path": "datamimic_ce/engine/runtime/tasks/values/structured/list_task.py",
+        "responsibility": "Dieses Modul erzeugt Listenfelder aus verschachtelten Item-Tasks."
+      },
+      {
+        "path": "datamimic_ce/engine/runtime/tasks/values/structured/nested_key_task.py",
+        "responsibility": "Dieses Modul l\u00e4dt oder erzeugt verschachtelte Key-Datens\u00e4tze und f\u00fchrt deren Kindtasks aus."
+      },
+      {
+        "path": "datamimic_ce/engine/runtime/tasks/values/variable/iterator.py",
+        "responsibility": "Dieses Modul iteriert Variablenwerte nach Verteilungs- und Paginationsemantik."
+      },
+      {
+        "path": "datamimic_ce/engine/runtime/tasks/values/variable/task.py",
+        "responsibility": "Executes variable statements by selecting their source mode and producing row values."
+      }
+    ]
+  },
   "components": [
     {
       "id": "VALUES-BASE",

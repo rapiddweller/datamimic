@@ -1,5 +1,149 @@
 {
   "schema_version": "2.1.0",
+  "declarations": {
+    "modules": [
+      {
+        "path": "datamimic_ce/domains/shared/__init__.py",
+        "responsibility": "Der Initializer markiert ein Python-Paket, enth\u00e4lt aber keine ausf\u00fchrbare Fachlogik."
+      },
+      {
+        "path": "datamimic_ce/domains/shared/datasets/__init__.py",
+        "responsibility": "Der Initializer markiert ein Python-Paket, enth\u00e4lt aber keine ausf\u00fchrbare Fachlogik."
+      },
+      {
+        "path": "datamimic_ce/domains/shared/datasets/loader.py",
+        "responsibility": "Loads CSV and JSON domain datasets and provides weighted selection helpers for generators."
+      },
+      {
+        "path": "datamimic_ce/domains/shared/datasets/locale_registry.py",
+        "responsibility": "Das Modul ordnet Locale-Codes Datens\u00e4tzen zu und liefert regionalspezifische Format- und Bedingungs\u00fcberschreibungen."
+      },
+      {
+        "path": "datamimic_ce/domains/shared/datasets/locales/__init__.py",
+        "responsibility": "Das Modul l\u00e4dt und cached typisierte Locale-Pakete samt Personen-, Adress-, Arzt- und Patientenwerten aus Datendateien."
+      },
+      {
+        "path": "datamimic_ce/domains/shared/datasets/profile_components.py",
+        "responsibility": "Das Modul ordnet benannte Profilkomponenten konkreten Profilen und zus\u00e4tzlichen Constraints zu."
+      },
+      {
+        "path": "datamimic_ce/domains/shared/demographics/__init__.py",
+        "responsibility": "Der Initializer exportiert Profilmodelle, Ladefunktion, Gruppenmetadaten und Sampler als \u00f6ffentliche Demografie-API."
+      },
+      {
+        "path": "datamimic_ce/domains/shared/demographics/api.py",
+        "responsibility": "Das Modul implementiert build_sampler_with_profile_groups und wird von Services oder Generatoren aufgerufen."
+      },
+      {
+        "path": "datamimic_ce/domains/shared/demographics/config.py",
+        "responsibility": "Defines immutable demographic overrides and applies default age bounds."
+      },
+      {
+        "path": "datamimic_ce/domains/shared/demographics/loader.py",
+        "responsibility": "Loads and validates demographic age-band and condition-rate CSVs into a profile."
+      },
+      {
+        "path": "datamimic_ce/domains/shared/demographics/profile.py",
+        "responsibility": "Defines demographic profile IDs, age bands, condition rates, and lookup helpers."
+      },
+      {
+        "path": "datamimic_ce/domains/shared/demographics/profile_meta.py",
+        "responsibility": "Loads profile metadata and resolves group references for a dataset profile."
+      },
+      {
+        "path": "datamimic_ce/domains/shared/demographics/sampler.py",
+        "responsibility": "GroupRegistry l\u00e4dt gewichtete Demografiegruppen, setzt Alters-/Geschlechtsmasken innerhalb ihrer Grenzen um und DemographicSampler zieht daraus Profile."
+      },
+      {
+        "path": "datamimic_ce/domains/shared/generators/__init__.py",
+        "responsibility": "Der Initializer markiert ein Python-Paket, enth\u00e4lt aber keine ausf\u00fchrbare Fachlogik."
+      },
+      {
+        "path": "datamimic_ce/domains/shared/generators/address_generator.py",
+        "responsibility": "Resolves country-specific address sub-generators per row, including region-group selection."
+      },
+      {
+        "path": "datamimic_ce/domains/shared/generators/city_generator.py",
+        "responsibility": "CityGenerator liest Ortsdaten und erzeugt daraus CityRecord-Felder; das TypedDict beschreibt nur die Ausgabezeilenform."
+      },
+      {
+        "path": "datamimic_ce/domains/shared/generators/company_generator.py",
+        "responsibility": "Der CompanyGenerator erzeugt synthetische Fachwerte \u00fcber get_legal_form und nutzt die erforderliche RNG-, Datensatz- oder Zeitbasis."
+      },
+      {
+        "path": "datamimic_ce/domains/shared/generators/country_generator.py",
+        "responsibility": "Der CountryGenerator erzeugt synthetische Fachwerte \u00fcber load_country_data, get_country_by_iso_code, get_random_country und nutzt die erforderliche RNG-, Datensatz- oder Zeitbasis."
+      },
+      {
+        "path": "datamimic_ce/domains/shared/generators/person_generator.py",
+        "responsibility": "Der PersonGenerator erzeugt synthetische Fachwerte \u00fcber reserve_demographic_sample, generate_birthdate_for_age, get_salutation_data und nutzt die erforderliche RNG-, Datensatz- oder Zeitbasis."
+      },
+      {
+        "path": "datamimic_ce/domains/shared/generators/phone_number_generator.py",
+        "responsibility": "Der PhoneNumberGenerator erzeugt synthetische Fachwerte \u00fcber generate und nutzt die erforderliche RNG-, Datensatz- oder Zeitbasis."
+      },
+      {
+        "path": "datamimic_ce/domains/shared/generators/region_groups.py",
+        "responsibility": "Maps region aliases to concrete country datasets for address generation."
+      },
+      {
+        "path": "datamimic_ce/domains/shared/models/__init__.py",
+        "responsibility": "Der Initializer markiert ein Python-Paket, enth\u00e4lt aber keine ausf\u00fchrbare Fachlogik."
+      },
+      {
+        "path": "datamimic_ce/domains/shared/models/address.py",
+        "responsibility": "Die Entity Address cached ihre erzeugten Felder (street, house_number, city_data, city, area) und serialisiert sie \u00fcber to_dict."
+      },
+      {
+        "path": "datamimic_ce/domains/shared/models/city.py",
+        "responsibility": "Die Entity City cached ihre erzeugten Felder (city_data, name, postal_code, area_code, state) und serialisiert sie \u00fcber to_dict."
+      },
+      {
+        "path": "datamimic_ce/domains/shared/models/company.py",
+        "responsibility": "Die Entity Company cached ihre erzeugten Felder (id, short_name, sector, legal_form, full_name) und serialisiert sie \u00fcber to_dict."
+      },
+      {
+        "path": "datamimic_ce/domains/shared/models/country.py",
+        "responsibility": "Die Entity Country cached ihre erzeugten Felder (iso_code, country_data, name, default_language_locale, phone_code) und serialisiert sie \u00fcber to_dict."
+      },
+      {
+        "path": "datamimic_ce/domains/shared/models/person.py",
+        "responsibility": "Die Entity Person cached ihre erzeugten Felder (gender, given_name, family_name, full_name, name) und serialisiert sie \u00fcber to_dict."
+      },
+      {
+        "path": "datamimic_ce/domains/shared/services/__init__.py",
+        "responsibility": "Der Initializer exportiert Address-, City-, Company-, Country- und Person-Services f\u00fcr Paketimporte."
+      },
+      {
+        "path": "datamimic_ce/domains/shared/services/address_service.py",
+        "responsibility": "Der AddressService bindet konkreten Generator und Modell und deklariert die f\u00fcr Registry und DSL sichtbaren Entity-Felder."
+      },
+      {
+        "path": "datamimic_ce/domains/shared/services/city_service.py",
+        "responsibility": "Der CityService bindet konkreten Generator und Modell und deklariert die f\u00fcr Registry und DSL sichtbaren Entity-Felder."
+      },
+      {
+        "path": "datamimic_ce/domains/shared/services/company_service.py",
+        "responsibility": "Der CompanyService bindet konkreten Generator und Modell und deklariert die f\u00fcr Registry und DSL sichtbaren Entity-Felder."
+      },
+      {
+        "path": "datamimic_ce/domains/shared/services/country_service.py",
+        "responsibility": "Der CountryService bindet konkreten Generator und Modell und deklariert die f\u00fcr Registry und DSL sichtbaren Entity-Felder."
+      },
+      {
+        "path": "datamimic_ce/domains/shared/services/person_service.py",
+        "responsibility": "Der PersonService bindet konkreten Generator und Modell und deklariert die f\u00fcr Registry und DSL sichtbaren Entity-Felder."
+      },
+      {
+        "path": "datamimic_ce/domains/shared/use_cases/address_api.py",
+        "responsibility": "Generates locale-backed address JSON and applies country and postal-code constraints."
+      },
+      {
+        "path": "datamimic_ce/domains/shared/use_cases/person_api.py",
+        "responsibility": "Generates locale-backed person JSON from age and sex constraints, with optional profile-seed control."
+      }
+    ]
+  },
   "components": [
     {
       "id": "SHARED-MODELS",
@@ -12,7 +156,7 @@
         "Cross-industry lazy entities and value shapes."
       ],
       "forbidden_responsibilities": [
-        "Own another component's behavior."
+        "Own service registration, dataset loading, or runtime execution."
       ],
       "provenance": [
         "docs/architecture/inner/target.md"
@@ -51,10 +195,10 @@
         "datamimic_ce.domains.shared.datasets"
       ],
       "responsibilities": [
-        "Shared locales, sampling and profile composition."
+        "Resolve locale/profile datasets, provide sampling helpers, and load the versioned person/address/doctor/patient locale bundle with its completeness rules and packaged-data overrides."
       ],
       "forbidden_responsibilities": [
-        "Own another component's behavior."
+        "Own generated-record semantics, entity construction, or demographic profile validation."
       ],
       "provenance": [
         "docs/architecture/inner/target.md"
@@ -79,7 +223,7 @@
         "Shared entity-value generation."
       ],
       "forbidden_responsibilities": [
-        "Own another component's behavior."
+        "Own entity service registration, demographic profile validation, or runtime execution."
       ],
       "provenance": [
         "docs/architecture/inner/target.md"
@@ -122,7 +266,7 @@
         "Registered shared entity construction services."
       ],
       "forbidden_responsibilities": [
-        "Own another component's behavior."
+        "Implement scalar generator algorithms or execute runtime statements."
       ],
       "provenance": [
         "docs/architecture/inner/target.md"
@@ -194,7 +338,7 @@
         "Context-free scalar/state-transition algorithms."
       ],
       "forbidden_responsibilities": [
-        "Own another component's behavior."
+        "Own entity construction services, runtime counters, or run-level seed policy."
       ],
       "provenance": [
         "docs/architecture/inner/target.md"
@@ -255,7 +399,7 @@
         "Typed value transformations."
       ],
       "forbidden_responsibilities": [
-        "Own another component's behavior."
+        "Generate domain entities or evaluate runtime expressions."
       ],
       "provenance": [
         "docs/architecture/inner/target.md"
@@ -278,7 +422,7 @@
         "Demographic model, profile validation and sampling rules."
       ],
       "forbidden_responsibilities": [
-        "Own another component's behavior."
+        "Implement file readers or construct domain entities."
       ],
       "provenance": [
         "docs/architecture/inner/target.md"
@@ -367,7 +511,7 @@
         "datamimic_ce.domains.shared.datasets.locales",
         "datamimic_ce.domains.shared.datasets.profile_components"
       ],
-      "rationale": "Shared locales, sampling and profile composition. Exact reviewed target children; no hidden extra modules.",
+      "rationale": "Versioned person/address/doctor/patient locale bundle and dataset helpers. Exact reviewed target children; no hidden extra modules.",
       "provenance": [
         "docs/architecture/inner/structure-review.json"
       ],
@@ -378,7 +522,7 @@
       "kind": "root_layout",
       "root": "datamimic_ce.domains.shared.datasets.locales",
       "allowed_children": [],
-      "rationale": "Shared locales, sampling and profile composition. Exact reviewed target children; no hidden extra modules.",
+      "rationale": "Versioned person/address/doctor/patient locale bundle and dataset helpers. Exact reviewed target children; no hidden extra modules.",
       "provenance": [
         "docs/architecture/inner/structure-review.json"
       ],

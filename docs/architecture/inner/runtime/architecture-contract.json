@@ -1,5 +1,89 @@
 {
   "schema_version": "2.1.0",
+  "declarations": {
+    "modules": [
+      {
+        "path": "datamimic_ce/engine/runtime/__init__.py",
+        "responsibility": "Dieses leere Initializer-Modul erg\u00e4nzt keine Runtime-API."
+      },
+      {
+        "path": "datamimic_ce/engine/runtime/api.py",
+        "responsibility": "Dieses Modul ver\u00f6ffentlicht Laufstart, Sitzungserzeugung, Descriptor-Eigenschaften und Generatorf\u00e4higkeiten."
+      },
+      {
+        "path": "datamimic_ce/engine/runtime/contexts/__init__.py",
+        "responsibility": "Dieses leere Initializer-Modul komponiert keine Kontextimplementierungen."
+      },
+      {
+        "path": "datamimic_ce/engine/runtime/contexts/context.py",
+        "responsibility": "Owns root and nested execution context state for descriptor runs."
+      },
+      {
+        "path": "datamimic_ce/engine/runtime/contexts/demographic_context.py",
+        "responsibility": "Carries the selected profile, sampler, overrides, and RNG for demographic generation."
+      },
+      {
+        "path": "datamimic_ce/engine/runtime/contexts/geniter_context.py",
+        "responsibility": "Dieses Modul h\u00e4lt Zeilenzustand, aktuelles Produkt, Elternsicht und Worker-ID."
+      },
+      {
+        "path": "datamimic_ce/engine/runtime/contexts/records.py",
+        "responsibility": "Dieses Modul aktualisiert verschachtelte Datensatzfelder anhand eines Pfads."
+      },
+      {
+        "path": "datamimic_ce/engine/runtime/contracts.py",
+        "responsibility": "Dieses Modul definiert typisierte Laufanfrage, Ergebnis, Sitzung und Produkterfassung."
+      },
+      {
+        "path": "datamimic_ce/engine/runtime/lifecycle/__init__.py",
+        "responsibility": "Dieses leere Initializer-Modul erg\u00e4nzt keine Lifecycle-Logik."
+      },
+      {
+        "path": "datamimic_ce/engine/runtime/lifecycle/config.py",
+        "responsibility": "Dieses Modul liest Prozesskonfiguration aus Umgebungsvariablen."
+      },
+      {
+        "path": "datamimic_ce/engine/runtime/lifecycle/runner.py",
+        "responsibility": "Dieses Modul parst den Descriptor, startet Setup und liefert das typisierte Laufergebnis."
+      },
+      {
+        "path": "datamimic_ce/engine/runtime/logging.py",
+        "responsibility": "Dieses Modul richtet Laufzeit- und Workerprotokolle ein und meldet Systemdaten."
+      },
+      {
+        "path": "datamimic_ce/engine/runtime/process_titles.py",
+        "responsibility": "Dieses Modul setzt Prozessnamen f\u00fcr Hauptlauf und Generate-Worker."
+      },
+      {
+        "path": "datamimic_ce/engine/runtime/scripting/__init__.py",
+        "responsibility": "Dieses leere Initializer-Modul erg\u00e4nzt keine Ausdrucksauswertung."
+      },
+      {
+        "path": "datamimic_ce/engine/runtime/scripting/evaluation.py",
+        "responsibility": "Evaluates descriptor Python expressions and interpolates runtime values into source templates."
+      },
+      {
+        "path": "datamimic_ce/engine/runtime/scripting/expression_globals.py",
+        "responsibility": "Dieses Modul erzeugt den begrenzten Namensraum, den Descriptor-Ausdr\u00fccke sehen."
+      },
+      {
+        "path": "datamimic_ce/engine/runtime/scripting/plugins/__init__.py",
+        "responsibility": "Dieses Modul f\u00fchrt Descriptor-Skripte im vorbereiteten Namensraum aus."
+      },
+      {
+        "path": "datamimic_ce/engine/runtime/storage/__init__.py",
+        "responsibility": "Dieses leere Initializer-Modul erg\u00e4nzt keine Speicherlebensdauer."
+      },
+      {
+        "path": "datamimic_ce/engine/runtime/storage/global_increment.py",
+        "responsibility": "Maintains monotonic counters keyed to a runtime root and qualified generator name."
+      },
+      {
+        "path": "datamimic_ce/engine/runtime/storage/memstore_manager.py",
+        "responsibility": "Dieses Modul verwaltet laufbezogene Memstore-Handles und deren Lebensdauer."
+      }
+    ]
+  },
   "components": [
     {
       "id": "RUNTIME-API",
@@ -278,13 +362,7 @@
       "provenance": [
         "docs/architecture/inner/target.md"
       ],
-      "requires": [
-        {
-          "component": "contracts",
-          "rationale": "Evaluation uses runtime-owned context protocols.",
-          "decided_by": "agent"
-        }
-      ],
+      "requires": [],
       "public": [
         "datamimic_ce.engine.runtime.scripting.evaluation",
         "datamimic_ce.engine.runtime.scripting.expression_globals",

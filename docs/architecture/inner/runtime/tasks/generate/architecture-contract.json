@@ -1,5 +1,33 @@
 {
   "schema_version": "2.1.0",
+  "declarations": {
+    "modules": [
+      {
+        "path": "datamimic_ce/engine/runtime/tasks/generate/export_order.py",
+        "responsibility": "Dispatches generated pages to exporters in parent-child order appropriate to the export operation."
+      },
+      {
+        "path": "datamimic_ce/engine/runtime/tasks/generate/policies/single_process_policy.py",
+        "responsibility": "Dieses Modul reduziert Parallelit\u00e4t, wenn Seed, Eindeutigkeit, L\u00f6schung, Domain-IDs oder MySQL-Sequenzen es verlangen."
+      },
+      {
+        "path": "datamimic_ce/engine/runtime/tasks/generate/task.py",
+        "responsibility": "Dieses Modul l\u00f6st Count und Workerplan auf, startet Worker und koordiniert Produktexport."
+      },
+      {
+        "path": "datamimic_ce/engine/runtime/tasks/generate/workers/generate_worker.py",
+        "responsibility": "Dieses Modul erzeugt Seiten in einem Worker, f\u00fchrt Zeilentasks aus und exportiert Ergebnisse."
+      },
+      {
+        "path": "datamimic_ce/engine/runtime/tasks/generate/workers/multiprocessing_generate_worker.py",
+        "responsibility": "Dieses Modul f\u00fchrt Generate-Chunks in lokalen Multiprocessing-Prozessen aus."
+      },
+      {
+        "path": "datamimic_ce/engine/runtime/tasks/generate/workers/ray_generate_worker.py",
+        "responsibility": "Dieses Modul f\u00fchrt Generate-Chunks \u00fcber die optionale Ray-Laufzeit aus."
+      }
+    ]
+  },
   "components": [
     {
       "id": "GENERATE-ORCHESTRATION",
@@ -94,7 +122,7 @@
         "datamimic_ce.engine.runtime.tasks.generate.policies"
       ],
       "responsibilities": [
-        "Actual batching/lifecycle/count/worker policies."
+        "Determine capability-based concurrency reduction and explain single-process requirements."
       ],
       "forbidden_responsibilities": [
         "Execute rows, access clients directly or start workers."
@@ -156,7 +184,7 @@
       "allowed_children": [
         "datamimic_ce.engine.runtime.tasks.generate.policies.single_process_policy"
       ],
-      "rationale": "Actual batching/lifecycle/count/worker policies. Exact reviewed target children; no hidden extra modules.",
+      "rationale": "Capability-based concurrency reduction. Exact reviewed target children; no hidden extra modules.",
       "provenance": [
         "docs/architecture/inner/structure-review.json"
       ],

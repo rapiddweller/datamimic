@@ -1,5 +1,93 @@
 {
   "schema_version": "2.1.0",
+  "declarations": {
+    "modules": [
+      {
+        "path": "datamimic_ce/domains/healthcare/__init__.py",
+        "responsibility": "Der Initializer exportiert ausgew\u00e4hlte Arzt-, Klinik- und Patientenmodelle samt Services f\u00fcr Paketimporte."
+      },
+      {
+        "path": "datamimic_ce/domains/healthcare/generators/__init__.py",
+        "responsibility": "Der Initializer exportiert HospitalGenerator als Paketimport; die weiteren Generatoren bleiben \u00fcber ihre Module importierbar."
+      },
+      {
+        "path": "datamimic_ce/domains/healthcare/generators/doctor_generator.py",
+        "responsibility": "Der DoctorGenerator erzeugt synthetische Fachwerte \u00fcber generate_specialty, generate_medical_school, generate_certifications und nutzt die erforderliche RNG-, Datensatz- oder Zeitbasis."
+      },
+      {
+        "path": "datamimic_ce/domains/healthcare/generators/hospital_generator.py",
+        "responsibility": "Der HospitalGenerator erzeugt synthetische Fachwerte \u00fcber generate_hospital_name, get_hospital_type, generate_departments und nutzt die erforderliche RNG-, Datensatz- oder Zeitbasis."
+      },
+      {
+        "path": "datamimic_ce/domains/healthcare/generators/medical_device_generator.py",
+        "responsibility": "MedicalDeviceGenerator erzeugt Ger\u00e4te- und Wartungswerte aus Healthcare-Datens\u00e4tzen und verkn\u00fcpft Technikerwerte mit PersonGenerator."
+      },
+      {
+        "path": "datamimic_ce/domains/healthcare/generators/medical_procedure_generator.py",
+        "responsibility": "Der MedicalProcedureGenerator erzeugt synthetische Fachwerte \u00fcber get_procedure_name, generate_procedure_description, generate_specialty und nutzt die erforderliche RNG-, Datensatz- oder Zeitbasis."
+      },
+      {
+        "path": "datamimic_ce/domains/healthcare/generators/patient_generator.py",
+        "responsibility": "Der PatientGenerator erzeugt synthetische Fachwerte \u00fcber pick_blood_type, generate_age_appropriate_conditions, generate_insurance_provider und nutzt die erforderliche RNG-, Datensatz- oder Zeitbasis."
+      },
+      {
+        "path": "datamimic_ce/domains/healthcare/models/__init__.py",
+        "responsibility": "Der Initializer exportiert Doctor als Paketimport; die anderen Healthcare-Modelle bleiben in ihren Modulpfaden."
+      },
+      {
+        "path": "datamimic_ce/domains/healthcare/models/doctor.py",
+        "responsibility": "Doctor combines professional identity and credentials with specialty, hospital affiliation, availability, and contact details."
+      },
+      {
+        "path": "datamimic_ce/domains/healthcare/models/hospital.py",
+        "responsibility": "Hospital represents a care facility with services, capacity, accreditation, operating attributes, and contact details."
+      },
+      {
+        "path": "datamimic_ce/domains/healthcare/models/medical_device.py",
+        "responsibility": "MedicalDevice tracks equipment identity, assignment, lifecycle dates, status, usage, and maintenance history."
+      },
+      {
+        "path": "datamimic_ce/domains/healthcare/models/medical_procedure.py",
+        "responsibility": "MedicalProcedure describes a coded clinical service with specialty, duration, cost, clinical flags, and recovery time."
+      },
+      {
+        "path": "datamimic_ce/domains/healthcare/models/patient.py",
+        "responsibility": "Patient combines stable identity and demographics with clinical, body-measurement, insurance, and care-contact data."
+      },
+      {
+        "path": "datamimic_ce/domains/healthcare/services/__init__.py",
+        "responsibility": "Der Initializer b\u00fcndelt die Healthcare-Serviceklassen f\u00fcr Registry- und Paketimporte."
+      },
+      {
+        "path": "datamimic_ce/domains/healthcare/services/doctor_service.py",
+        "responsibility": "Der DoctorService bindet konkreten Generator und Modell und deklariert die f\u00fcr Registry und DSL sichtbaren Entity-Felder."
+      },
+      {
+        "path": "datamimic_ce/domains/healthcare/services/hospital_service.py",
+        "responsibility": "Der HospitalService bindet konkreten Generator und Modell und deklariert die f\u00fcr Registry und DSL sichtbaren Entity-Felder."
+      },
+      {
+        "path": "datamimic_ce/domains/healthcare/services/medical_device_service.py",
+        "responsibility": "Der MedicalDeviceService bindet konkreten Generator und Modell und deklariert die f\u00fcr Registry und DSL sichtbaren Entity-Felder."
+      },
+      {
+        "path": "datamimic_ce/domains/healthcare/services/medical_procedure_service.py",
+        "responsibility": "Der MedicalProcedureService bindet konkreten Generator und Modell und deklariert die f\u00fcr Registry und DSL sichtbaren Entity-Felder."
+      },
+      {
+        "path": "datamimic_ce/domains/healthcare/services/patient_service.py",
+        "responsibility": "Der PatientService bindet konkreten Generator und Modell und deklariert die f\u00fcr Registry und DSL sichtbaren Entity-Felder."
+      },
+      {
+        "path": "datamimic_ce/domains/healthcare/use_cases/doctor_api.py",
+        "responsibility": "Validates locale-backed specialty and license constraints, then generates doctor JSON from a DoctorRequest."
+      },
+      {
+        "path": "datamimic_ce/domains/healthcare/use_cases/patient_api.py",
+        "responsibility": "Generates patient JSON from locale-backed age and condition constraints, with optional profile-seed control and a stable identifier."
+      }
+    ]
+  },
   "components": [
     {
       "id": "HEALTHCARE-MODELS",

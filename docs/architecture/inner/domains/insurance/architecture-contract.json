@@ -1,5 +1,73 @@
 {
   "schema_version": "2.1.0",
+  "declarations": {
+    "modules": [
+      {
+        "path": "datamimic_ce/domains/insurance/__init__.py",
+        "responsibility": "Der Initializer markiert ein Python-Paket, enth\u00e4lt aber keine ausf\u00fchrbare Fachlogik."
+      },
+      {
+        "path": "datamimic_ce/domains/insurance/generators/__init__.py",
+        "responsibility": "Der Initializer markiert ein Python-Paket, enth\u00e4lt aber keine ausf\u00fchrbare Fachlogik."
+      },
+      {
+        "path": "datamimic_ce/domains/insurance/generators/insurance_company_generator.py",
+        "responsibility": "Der InsuranceCompanyGenerator erzeugt synthetische Fachwerte \u00fcber get_random_company und nutzt die erforderliche RNG-, Datensatz- oder Zeitbasis."
+      },
+      {
+        "path": "datamimic_ce/domains/insurance/generators/insurance_coverage_generator.py",
+        "responsibility": "Der InsuranceCoverageGenerator erzeugt synthetische Fachwerte \u00fcber get_random_coverage und nutzt die erforderliche RNG-, Datensatz- oder Zeitbasis."
+      },
+      {
+        "path": "datamimic_ce/domains/insurance/generators/insurance_policy_generator.py",
+        "responsibility": "Der InsurancePolicyGenerator erzeugt synthetische Fachwerte \u00fcber pick_premium_amount, pick_premium_frequency, pick_status und nutzt die erforderliche RNG-, Datensatz- oder Zeitbasis."
+      },
+      {
+        "path": "datamimic_ce/domains/insurance/generators/insurance_product_generator.py",
+        "responsibility": "Der InsuranceProductGenerator erzeugt synthetische Fachwerte \u00fcber get_random_product, pick_coverage_count und nutzt die erforderliche RNG-, Datensatz- oder Zeitbasis."
+      },
+      {
+        "path": "datamimic_ce/domains/insurance/models/__init__.py",
+        "responsibility": "Der Initializer markiert ein Python-Paket, enth\u00e4lt aber keine ausf\u00fchrbare Fachlogik."
+      },
+      {
+        "path": "datamimic_ce/domains/insurance/models/insurance_company.py",
+        "responsibility": "InsuranceCompany represents an insurer with source company data, identity, code, founding year, headquarters, and website."
+      },
+      {
+        "path": "datamimic_ce/domains/insurance/models/insurance_coverage.py",
+        "responsibility": "InsuranceCoverage defines a product-linked benefit with descriptive details and minimum and maximum coverage."
+      },
+      {
+        "path": "datamimic_ce/domains/insurance/models/insurance_policy.py",
+        "responsibility": "InsurancePolicy links insurer, product, policyholder, and coverages with premium, term, and status data."
+      },
+      {
+        "path": "datamimic_ce/domains/insurance/models/insurance_product.py",
+        "responsibility": "InsuranceProduct represents a coded insurance offering with type, description, and available coverages."
+      },
+      {
+        "path": "datamimic_ce/domains/insurance/services/__init__.py",
+        "responsibility": "Der Initializer b\u00fcndelt Company-, Coverage-, Policy- und Product-Serviceklassen f\u00fcr Paketimporte."
+      },
+      {
+        "path": "datamimic_ce/domains/insurance/services/insurance_company_service.py",
+        "responsibility": "Der InsuranceCompanyService bindet konkreten Generator und Modell und deklariert die f\u00fcr Registry und DSL sichtbaren Entity-Felder."
+      },
+      {
+        "path": "datamimic_ce/domains/insurance/services/insurance_coverage_service.py",
+        "responsibility": "Der InsuranceCoverageService bindet konkreten Generator und Modell und deklariert die f\u00fcr Registry und DSL sichtbaren Entity-Felder."
+      },
+      {
+        "path": "datamimic_ce/domains/insurance/services/insurance_policy_service.py",
+        "responsibility": "Der InsurancePolicyService bindet konkreten Generator und Modell und deklariert die f\u00fcr Registry und DSL sichtbaren Entity-Felder."
+      },
+      {
+        "path": "datamimic_ce/domains/insurance/services/insurance_product_service.py",
+        "responsibility": "Der InsuranceProductService bindet konkreten Generator und Modell und deklariert die f\u00fcr Registry und DSL sichtbaren Entity-Felder."
+      }
+    ]
+  },
   "components": [
     {
       "id": "INSURANCE-MODELS",

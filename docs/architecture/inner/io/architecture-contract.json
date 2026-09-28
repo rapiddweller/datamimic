@@ -1,5 +1,125 @@
 {
   "schema_version": "2.1.0",
+  "declarations": {
+    "modules": [
+      {
+        "path": "datamimic_ce/engine/io/__init__.py",
+        "responsibility": "Dieses leere Initializer-Modul erg\u00e4nzt keine IO-Verantwortung."
+      },
+      {
+        "path": "datamimic_ce/engine/io/api.py",
+        "responsibility": "Dieses Modul ver\u00f6ffentlicht typisierte IO-Operationen und den begrenzten Smoke-Export."
+      },
+      {
+        "path": "datamimic_ce/engine/io/clients/__init__.py",
+        "responsibility": "Dieses leere Initializer-Modul erg\u00e4nzt keine Client-Verantwortung."
+      },
+      {
+        "path": "datamimic_ce/engine/io/clients/client.py",
+        "responsibility": "Provides the marker base class for database clients."
+      },
+      {
+        "path": "datamimic_ce/engine/io/clients/database_client.py",
+        "responsibility": "Dieses Modul b\u00fcndelt Abfrage- und Schreiboperationen, die beide Datenbankfamilien teilen."
+      },
+      {
+        "path": "datamimic_ce/engine/io/clients/entity_serialization.py",
+        "responsibility": "Stringifies EntityValue instances before database writes."
+      },
+      {
+        "path": "datamimic_ce/engine/io/clients/mongodb_client.py",
+        "responsibility": "Dieses Modul implementiert Verbindung, Abfrage und Schreibzugriff f\u00fcr MongoDB."
+      },
+      {
+        "path": "datamimic_ce/engine/io/clients/operations.py",
+        "responsibility": "Dieses Modul b\u00fcndelt typisierte Datenbankoperationen f\u00fcr Verbindungen, Abfragen, Seiten und Sequenzen."
+      },
+      {
+        "path": "datamimic_ce/engine/io/clients/rdbms_client.py",
+        "responsibility": "Dieses Modul implementiert SQL-Verbindung, Abfragen, Schreiben und Sequenzzugriff."
+      },
+      {
+        "path": "datamimic_ce/engine/io/clients/sql_dialect.py",
+        "responsibility": "Builds dialect-aware count, column-probe, and page queries, and splits executable SQL scripts."
+      },
+      {
+        "path": "datamimic_ce/engine/io/connection_config/__init__.py",
+        "responsibility": "Dieses leere Initializer-Modul enth\u00e4lt keine Verbindungslogik."
+      },
+      {
+        "path": "datamimic_ce/engine/io/connection_config/connection_config_base.py",
+        "responsibility": "Dieses Modul definiert Validierung und Zugriff f\u00fcr typisierte Verbindungsdaten."
+      },
+      {
+        "path": "datamimic_ce/engine/io/connection_config/mongodb_connection_config.py",
+        "responsibility": "Dieses Modul validiert MongoDB-Verbindungsdaten und stellt die Treiberoptionen bereit."
+      },
+      {
+        "path": "datamimic_ce/engine/io/connection_config/properties.py",
+        "responsibility": "Loads connection profile properties from the supported configuration sources."
+      },
+      {
+        "path": "datamimic_ce/engine/io/connection_config/rdbms_connection_config.py",
+        "responsibility": "Dieses Modul validiert SQL-Verbindungsdaten und stellt SQLAlchemy-Optionen bereit."
+      },
+      {
+        "path": "datamimic_ce/engine/io/contracts.py",
+        "responsibility": "Defines IO paging, memstore, entity-value and smoke-export contracts plus shared page selection."
+      },
+      {
+        "path": "datamimic_ce/engine/io/data_sources/__init__.py",
+        "responsibility": "Dieses leere Initializer-Modul erg\u00e4nzt keine Quelllogik."
+      },
+      {
+        "path": "datamimic_ce/engine/io/data_sources/boundary/entities.py",
+        "responsibility": "Resolves source entity and MongoDB collection names from descriptor fields at the IO boundary."
+      },
+      {
+        "path": "datamimic_ce/engine/io/data_sources/boundary/models.py",
+        "responsibility": "Defines typed source requests that carry resolved inputs without runtime context or statements."
+      },
+      {
+        "path": "datamimic_ce/engine/io/data_sources/chunk_reader.py",
+        "responsibility": "Selects unique or distributed rows from a loaded source pool and slices pages within one chunk."
+      },
+      {
+        "path": "datamimic_ce/engine/io/data_sources/data_source_registry.py",
+        "responsibility": "Loads and pages supported file sources; exposes an RDBMS query-count helper."
+      },
+      {
+        "path": "datamimic_ce/engine/io/data_sources/router.py",
+        "responsibility": "Counts sources and routes nested-key and reference reads to file, database, or memstore readers, applying row selection."
+      },
+      {
+        "path": "datamimic_ce/engine/io/data_sources/selection.py",
+        "responsibility": "Dieses Modul wendet seedgebundene Quellenverteilung und Eindeutigkeit an; auch Key-Aufgaben nutzen es."
+      },
+      {
+        "path": "datamimic_ce/engine/io/data_sources/variable.py",
+        "responsibility": "Reads variable source pools or pages from resolved file, database, and memstore requests."
+      },
+      {
+        "path": "datamimic_ce/engine/io/data_sources/weighted_data_source.py",
+        "responsibility": "Dieses Modul liest gewichtete Einzelwerte aus einer Datei."
+      },
+      {
+        "path": "datamimic_ce/engine/io/data_sources/weighted_entity_data_source.py",
+        "responsibility": "Draws weighted entity dictionaries from a CSV source using the supplied RNG."
+      },
+      {
+        "path": "datamimic_ce/engine/io/files/api.py",
+        "responsibility": "Dieses Modul b\u00fcndelt Dateileser und Dateicache unter einer schmalen Dataset-API."
+      },
+      {
+        "path": "datamimic_ce/engine/io/files/cache.py",
+        "responsibility": "Dieses Modul cached eingelesene Dateiinhalte nach Quellschl\u00fcssel."
+      },
+      {
+        "path": "datamimic_ce/engine/io/files/readers.py",
+        "responsibility": "Dieses Modul liest unterst\u00fctzte Dateiformate und liefert typisierte Datensatzzeilen."
+      }
+    ]
+  },
   "components": [
     {
       "id": "IO-API",
@@ -139,7 +259,7 @@
       "decided_by": "agent",
       "role": "component",
       "forbidden_responsibilities": [
-        "Own another component's concern."
+        "Open client connections, select source rows, or register clients in runtime context."
       ],
       "provenance": [
         "docs/architecture/inner/semantic-review/astra-target-decision.md"

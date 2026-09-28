@@ -978,6 +978,92 @@
           "docs/architecture/refactoring-study/experiment-2/protocol.md"
         ]
       }
+    ],
+    "modules": [
+      {
+        "path": "datamimic_ce/__init__.py",
+        "responsibility": "Der Paketstart l\u00e4dt dotenv beim Import und beeinflusst damit auch Verbraucher ohne Runtime-Aufruf."
+      },
+      {
+        "path": "datamimic_ce/_compat.py",
+        "responsibility": "Das Modul stellt auf \u00e4lteren Python-Versionen String-Enum- und Exhaustiveness-Helfer bereit."
+      },
+      {
+        "path": "datamimic_ce/engine/__init__.py",
+        "responsibility": "Das Paket markiert den Engine-Namensraum ohne zus\u00e4tzliche Engine-Logik."
+      },
+      {
+        "path": "datamimic_ce/randomness.py",
+        "responsibility": "Defines the shared random-source protocol and a bell-shaped index sampler."
+      },
+      {
+        "path": "datamimic_ce/resources/__init__.py",
+        "responsibility": "Das Paket markiert die mitgelieferten Demo- und Descriptor-Ressourcen."
+      },
+      {
+        "path": "datamimic_ce/resources/api.py",
+        "responsibility": "Die API gibt den gepackten Demo-Root als Traversable zur\u00fcck und enumeriert dessen Unterordner."
+      },
+      {
+        "path": "datamimic_ce/resources/demos/__init___.py",
+        "responsibility": "Die Datei markiert den Bestand ausgelieferter Demos, ohne eigenes Verhalten."
+      },
+      {
+        "path": "datamimic_ce/resources/demos/demo-clinical-trial/script/clinical_trial.scr.py",
+        "responsibility": "Das Skript erzeugt eine fest konfigurierte Patientenkohorte mit lokal gesetztem Seed und serialisiert die ben\u00f6tigten Felder."
+      },
+      {
+        "path": "datamimic_ce/resources/demos/demo-custom-components/script/converter.scr.py",
+        "responsibility": "Das Skript zeigt benutzerdefinierte Converter f\u00fcr Maskierung, Normalisierung und Formatierung."
+      },
+      {
+        "path": "datamimic_ce/resources/demos/demo-custom-components/script/generator.scr.py",
+        "responsibility": "Das Skript zeigt zus\u00e4tzliche LiteralGenerator-Implementierungen f\u00fcr Werte wie Farbe, Adresse und Kennung."
+      },
+      {
+        "path": "datamimic_ce/resources/demos/demo-custom-components/script/generator_glob.scr.py",
+        "responsibility": "Das Skript zeigt global importierte Abh\u00e4ngigkeiten in mehreren benutzerdefinierten Generatoren."
+      },
+      {
+        "path": "datamimic_ce/resources/demos/demo-datetime/script/py_script.scr.py",
+        "responsibility": "Die Hilfsfunktion verschiebt einen datetime-Wert um eine angegebene Anzahl Tage."
+      },
+      {
+        "path": "datamimic_ce/resources/demos/demo-db-mapping/script/lib_glob.scr.py",
+        "responsibility": "Das Beispiel verbindet einen benutzerdefinierten Converter mit einem Runtime-Client und SQL-basierter Mappingabfrage."
+      },
+      {
+        "path": "datamimic_ce/resources/demos/demo-finance/script/ledger.scr.py",
+        "responsibility": "Die Funktion erzeugt Kontotransaktionen mit optionalem RNG-Seed und \u00fcbernimmt sie in W\u00f6rterbuchzeilen."
+      },
+      {
+        "path": "datamimic_ce/resources/demos/demo-py-scripting/script/lib.scr.py",
+        "responsibility": "Die Beispieldatei zeigt einfache Python-Arithmetik sowie die Umwandlung zuf\u00e4lliger Tabellendaten in JSON."
+      },
+      {
+        "path": "datamimic_ce/resources/examples/generate_address.py",
+        "responsibility": "Demonstrates single and batch address generation through AddressService."
+      },
+      {
+        "path": "datamimic_ce/resources/examples/generate_cities.py",
+        "responsibility": "Demonstrates batch city generation through CityService."
+      },
+      {
+        "path": "datamimic_ce/resources/examples/generate_companies.py",
+        "responsibility": "Demonstrates batch company generation through CompanyService."
+      },
+      {
+        "path": "datamimic_ce/resources/examples/generate_countries.py",
+        "responsibility": "Demonstrates batch country generation through CountryService."
+      },
+      {
+        "path": "datamimic_ce/resources/examples/generate_people.py",
+        "responsibility": "Demonstrates configurable-size batch person generation through PersonService."
+      },
+      {
+        "path": "datamimic_ce/resources/examples/generate_people_demographics.py",
+        "responsibility": "Demonstrates seeded person generation and demographic age constraints through PersonService."
+      }
     ]
   }
 }

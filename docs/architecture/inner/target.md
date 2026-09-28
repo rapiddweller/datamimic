@@ -14,6 +14,10 @@ The source-to-target map and recursive review are in
 [structure-review.json](structure-review.json). The shared root below applies to
 both `datamimic_ce` and `datamimic_ee`. See [EE migration](edition-alignment.md)
 for edition-only additions and the superseded Experiment 3 proposal.
+Each current CE Python file has one target sentence in the deepest mounted
+contract's `declarations.modules`; those declarations are the report's target
+inventory. The source review is historical evidence; its explicit target
+overrides must match the contract declarations.
 
 Every current CE Python module has a target path and a candidate responsibility
 sentence: one-to-one moves inherit the historical source concern from
@@ -300,6 +304,10 @@ Standalone deterministic JSON address, person, doctor, and patient use cases
 live under `domains/{shared,healthcare}/use_cases`; `services` remains for
 registered entity services. The former `services.*_api` import paths are
 intentionally removed without shims. The move does not edit XML descriptors or DSL code.
+
+The versioned locale bundle stays in `shared/datasets`: all four JSON use cases
+use the same supported-dataset intersection and eager validation. Healthcare
+use cases own the generated doctor/patient records, not a second loader.
 
 ### S3G17 Model constraint extension boundary
 

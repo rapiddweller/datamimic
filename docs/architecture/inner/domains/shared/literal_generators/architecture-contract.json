@@ -1,5 +1,141 @@
 {
   "schema_version": "2.1.0",
+  "declarations": {
+    "modules": [
+      {
+        "path": "datamimic_ce/domains/shared/literal_generators/business/company_name_generator.py",
+        "responsibility": "Der CompanyNameGenerator erzeugt synthetische Fachwerte \u00fcber generate und nutzt die erforderliche RNG-, Datensatz- oder Zeitbasis."
+      },
+      {
+        "path": "datamimic_ce/domains/shared/literal_generators/business/department_name_generator.py",
+        "responsibility": "Der DepartmentNameGenerator erzeugt synthetische Fachwerte \u00fcber generate und nutzt die erforderliche RNG-, Datensatz- oder Zeitbasis."
+      },
+      {
+        "path": "datamimic_ce/domains/shared/literal_generators/business/sector_generator.py",
+        "responsibility": "Der SectorGenerator erzeugt synthetische Fachwerte \u00fcber generate und nutzt die erforderliche RNG-, Datensatz- oder Zeitbasis."
+      },
+      {
+        "path": "datamimic_ce/domains/shared/literal_generators/contact/domain_generator.py",
+        "responsibility": "Der DomainGenerator erzeugt synthetische Fachwerte \u00fcber generate, generate_with_company_name und nutzt die erforderliche RNG-, Datensatz- oder Zeitbasis."
+      },
+      {
+        "path": "datamimic_ce/domains/shared/literal_generators/contact/email_address_generator.py",
+        "responsibility": "Der EmailAddressGenerator erzeugt synthetische Fachwerte \u00fcber generate, generate_with_company_name, generate_with_name und nutzt die erforderliche RNG-, Datensatz- oder Zeitbasis."
+      },
+      {
+        "path": "datamimic_ce/domains/shared/literal_generators/contact/street_name_generator.py",
+        "responsibility": "Der StreetNameGenerator erzeugt synthetische Fachwerte \u00fcber generate und nutzt die erforderliche RNG-, Datensatz- oder Zeitbasis."
+      },
+      {
+        "path": "datamimic_ce/domains/shared/literal_generators/contact/url_generator.py",
+        "responsibility": "Der UrlGenerator erzeugt synthetische Fachwerte \u00fcber generate und nutzt die erforderliche RNG-, Datensatz- oder Zeitbasis."
+      },
+      {
+        "path": "datamimic_ce/domains/shared/literal_generators/identity/codes/cnpj_generator.py",
+        "responsibility": "Der CNPJGenerator erzeugt synthetische Fachwerte \u00fcber generate und nutzt die erforderliche RNG-, Datensatz- oder Zeitbasis."
+      },
+      {
+        "path": "datamimic_ce/domains/shared/literal_generators/identity/codes/cpf_generator.py",
+        "responsibility": "Der CPFGenerator erzeugt synthetische Fachwerte \u00fcber generate und nutzt die erforderliche RNG-, Datensatz- oder Zeitbasis."
+      },
+      {
+        "path": "datamimic_ce/domains/shared/literal_generators/identity/codes/ean_generator.py",
+        "responsibility": "Der EANGenerator erzeugt synthetische Fachwerte \u00fcber generate und nutzt die erforderliche RNG-, Datensatz- oder Zeitbasis."
+      },
+      {
+        "path": "datamimic_ce/domains/shared/literal_generators/identity/codes/ssn_generator.py",
+        "responsibility": "Der SSNGenerator erzeugt synthetische Fachwerte \u00fcber generate und nutzt die erforderliche RNG-, Datensatz- oder Zeitbasis."
+      },
+      {
+        "path": "datamimic_ce/domains/shared/literal_generators/identity/keys/prefixed_id_generator.py",
+        "responsibility": "Der PrefixedIdGenerator erzeugt synthetische Fachwerte \u00fcber generate und nutzt die erforderliche RNG-, Datensatz- oder Zeitbasis."
+      },
+      {
+        "path": "datamimic_ce/domains/shared/literal_generators/identity/keys/uuid_generator.py",
+        "responsibility": "Der UUIDGenerator erzeugt synthetische Fachwerte \u00fcber generate und nutzt die erforderliche RNG-, Datensatz- oder Zeitbasis."
+      },
+      {
+        "path": "datamimic_ce/domains/shared/literal_generators/identity/security/hash_generator.py",
+        "responsibility": "Der HashGenerator erzeugt synthetische Fachwerte \u00fcber generate und nutzt die erforderliche RNG-, Datensatz- oder Zeitbasis."
+      },
+      {
+        "path": "datamimic_ce/domains/shared/literal_generators/identity/security/password_generator.py",
+        "responsibility": "Der PasswordGenerator erzeugt synthetische Fachwerte \u00fcber generate und nutzt die erforderliche RNG-, Datensatz- oder Zeitbasis."
+      },
+      {
+        "path": "datamimic_ce/domains/shared/literal_generators/identity/security/token_generator.py",
+        "responsibility": "Der TokenGenerator erzeugt synthetische Fachwerte \u00fcber generate und nutzt die erforderliche RNG-, Datensatz- oder Zeitbasis."
+      },
+      {
+        "path": "datamimic_ce/domains/shared/literal_generators/numeric/float_generator.py",
+        "responsibility": "Der FloatGenerator erzeugt synthetische Fachwerte \u00fcber generate und nutzt die erforderliche RNG-, Datensatz- oder Zeitbasis."
+      },
+      {
+        "path": "datamimic_ce/domains/shared/literal_generators/numeric/increment_generator.py",
+        "responsibility": "Der IncrementGenerator erzeugt synthetische Fachwerte \u00fcber add_pagination, generate und nutzt die erforderliche RNG-, Datensatz- oder Zeitbasis."
+      },
+      {
+        "path": "datamimic_ce/domains/shared/literal_generators/numeric/integer_generator.py",
+        "responsibility": "Der IntegerGenerator erzeugt synthetische Fachwerte \u00fcber generate und nutzt die erforderliche RNG-, Datensatz- oder Zeitbasis."
+      },
+      {
+        "path": "datamimic_ce/domains/shared/literal_generators/numeric/number_sequences.py",
+        "responsibility": "build_number_sequence erzeugt Iteratoren f\u00fcr endliche Grid-L\u00e4ufe, Shuffle-/Wedge-/Bitreverse-Folgen, Rekurrenzen und einen s\u00e4ttigenden RNG-Walk."
+      },
+      {
+        "path": "datamimic_ce/domains/shared/literal_generators/person/academic_title_generator.py",
+        "responsibility": "Der AcademicTitleGenerator erzeugt synthetische Fachwerte \u00fcber generate, reset und nutzt die erforderliche RNG-, Datensatz- oder Zeitbasis."
+      },
+      {
+        "path": "datamimic_ce/domains/shared/literal_generators/person/family_name_generator.py",
+        "responsibility": "Der FamilyNameGenerator erzeugt synthetische Fachwerte \u00fcber generate und nutzt die erforderliche RNG-, Datensatz- oder Zeitbasis."
+      },
+      {
+        "path": "datamimic_ce/domains/shared/literal_generators/person/gender_generator.py",
+        "responsibility": "Der GenderGenerator erzeugt synthetische Fachwerte \u00fcber generate und nutzt die erforderliche RNG-, Datensatz- oder Zeitbasis."
+      },
+      {
+        "path": "datamimic_ce/domains/shared/literal_generators/person/given_name_generator.py",
+        "responsibility": "Der GivenNameGenerator erzeugt synthetische Fachwerte \u00fcber generate, generate_with_gender und nutzt die erforderliche RNG-, Datensatz- oder Zeitbasis."
+      },
+      {
+        "path": "datamimic_ce/domains/shared/literal_generators/person/nobility_title_generator.py",
+        "responsibility": "Der NobilityTitleGenerator erzeugt synthetische Fachwerte \u00fcber generate, generate_with_gender und nutzt die erforderliche RNG-, Datensatz- oder Zeitbasis."
+      },
+      {
+        "path": "datamimic_ce/domains/shared/literal_generators/primitives/binary_generator.py",
+        "responsibility": "Der BinaryGenerator erzeugt synthetische Fachwerte \u00fcber generate und nutzt die erforderliche RNG-, Datensatz- oder Zeitbasis."
+      },
+      {
+        "path": "datamimic_ce/domains/shared/literal_generators/primitives/boolean_generator.py",
+        "responsibility": "Der BooleanGenerator erzeugt synthetische Fachwerte \u00fcber generate und nutzt die erforderliche RNG-, Datensatz- oder Zeitbasis."
+      },
+      {
+        "path": "datamimic_ce/domains/shared/literal_generators/primitives/color_generators.py",
+        "responsibility": "Der ColorGenerator erzeugt synthetische Fachwerte \u00fcber generate und nutzt die erforderliche RNG-, Datensatz- oder Zeitbasis."
+      },
+      {
+        "path": "datamimic_ce/domains/shared/literal_generators/primitives/data_faker_generator.py",
+        "responsibility": "Der DataFakerGenerator erzeugt synthetische Fachwerte \u00fcber generate und nutzt die erforderliche RNG-, Datensatz- oder Zeitbasis."
+      },
+      {
+        "path": "datamimic_ce/domains/shared/literal_generators/primitives/state_transition_generator.py",
+        "responsibility": "StateTransitionGenerator parst oder indexiert \u00dcbergangsregeln und liefert mit injiziertem RNG einen zustandsabh\u00e4ngigen Folgewert pro generate-Aufruf."
+      },
+      {
+        "path": "datamimic_ce/domains/shared/literal_generators/primitives/string_generator.py",
+        "responsibility": "Der StringGenerator erzeugt synthetische Fachwerte \u00fcber generate, rnd_str_from_regex und nutzt die erforderliche RNG-, Datensatz- oder Zeitbasis."
+      },
+      {
+        "path": "datamimic_ce/domains/shared/literal_generators/temporal/birthdate_generator.py",
+        "responsibility": "Der BirthdateGenerator erzeugt synthetische Fachwerte \u00fcber generate, reset, convert_birthdate_to_age und nutzt die erforderliche RNG-, Datensatz- oder Zeitbasis."
+      },
+      {
+        "path": "datamimic_ce/domains/shared/literal_generators/temporal/datetime_generator.py",
+        "responsibility": "Der DateTimeGenerator erzeugt synthetische Fachwerte \u00fcber generate, generate_date und nutzt die erforderliche RNG-, Datensatz- oder Zeitbasis."
+      }
+    ]
+  },
   "components": [
     {
       "id": "LITERALS-NUMERIC",

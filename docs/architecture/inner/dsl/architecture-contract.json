@@ -1,5 +1,57 @@
 {
   "schema_version": "2.1.0",
+  "declarations": {
+    "modules": [
+      {
+        "path": "datamimic_ce/engine/dsl/api.py",
+        "responsibility": "Exports the stable DSL model, parser, statement, vocabulary, and constraint API."
+      },
+      {
+        "path": "datamimic_ce/engine/dsl/vocabulary/constants/attribute_constants.py",
+        "responsibility": "Defines descriptor attribute names and product-routing metadata keys shared by parsers and runtime consumers."
+      },
+      {
+        "path": "datamimic_ce/engine/dsl/vocabulary/constants/convention_constants.py",
+        "responsibility": "Defines the separator used to compose statement full names."
+      },
+      {
+        "path": "datamimic_ce/engine/dsl/vocabulary/constants/data_type_constants.py",
+        "responsibility": "Defines DSL value-type labels, including exact decimal, binary, collection and literal-array types."
+      },
+      {
+        "path": "datamimic_ce/engine/dsl/vocabulary/constants/element_constants.py",
+        "responsibility": "Defines XML element tags and the iterate/id aliases that share generate/key semantics."
+      },
+      {
+        "path": "datamimic_ce/engine/dsl/vocabulary/constants/exporter_constants.py",
+        "responsibility": "Defines built-in exporter identifiers and supported file-format names."
+      },
+      {
+        "path": "datamimic_ce/engine/dsl/vocabulary/enums/converter_enums.py",
+        "responsibility": "Names converters and the hash algorithms and output formats used by HashConverter."
+      },
+      {
+        "path": "datamimic_ce/engine/dsl/vocabulary/enums/dbms_enums.py",
+        "responsibility": "Validates database-system names in descriptors and supplies typed client and SQL dispatch values."
+      },
+      {
+        "path": "datamimic_ce/engine/dsl/vocabulary/enums/distribution_enums.py",
+        "responsibility": "Defines numeric sampling and finite sequence modes plus source-row selection and load-versus-page policy."
+      },
+      {
+        "path": "datamimic_ce/engine/dsl/vocabulary/enums/faker_enums.py",
+        "responsibility": "Lists Faker method names rejected by the runtime Faker-generator boundary."
+      },
+      {
+        "path": "datamimic_ce/engine/dsl/vocabulary/enums/operation_enums.py",
+        "responsibility": "Defines typed update, upsert and delete operations parsed from target suffixes."
+      },
+      {
+        "path": "datamimic_ce/engine/dsl/vocabulary/source_capabilities.py",
+        "responsibility": "Die SourceCapability-Fakten entscheiden Format- und Client-/Memstore-Eignung; sie beschreiben Datenquellfamilien statt einzelne Attributregeln."
+      }
+    ]
+  },
   "components": [
     {
       "id": "DSL-API",

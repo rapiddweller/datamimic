@@ -1,5 +1,49 @@
 {
   "schema_version": "2.1.0",
+  "declarations": {
+    "modules": [
+      {
+        "path": "datamimic_ce/domains/ecommerce/__init__.py",
+        "responsibility": "Der Initializer markiert ein Python-Paket, enth\u00e4lt aber keine ausf\u00fchrbare Fachlogik."
+      },
+      {
+        "path": "datamimic_ce/domains/ecommerce/generators/__init__.py",
+        "responsibility": "Der Initializer markiert ein Python-Paket, enth\u00e4lt aber keine ausf\u00fchrbare Fachlogik."
+      },
+      {
+        "path": "datamimic_ce/domains/ecommerce/generators/order_generator.py",
+        "responsibility": "Der OrderGenerator erzeugt synthetische Fachwerte \u00fcber generate_order_date, get_order_status, get_payment_method und nutzt die erforderliche RNG-, Datensatz- oder Zeitbasis."
+      },
+      {
+        "path": "datamimic_ce/domains/ecommerce/generators/product_generator.py",
+        "responsibility": "Der ProductGenerator erzeugt synthetische Fachwerte \u00fcber pick_rating, maybe_pick_trending_tag, get_product_data_by_data_type und nutzt die erforderliche RNG-, Datensatz- oder Zeitbasis."
+      },
+      {
+        "path": "datamimic_ce/domains/ecommerce/models/__init__.py",
+        "responsibility": "Der Initializer markiert ein Python-Paket, enth\u00e4lt aber keine ausf\u00fchrbare Fachlogik."
+      },
+      {
+        "path": "datamimic_ce/domains/ecommerce/models/order.py",
+        "responsibility": "Order represents a buyer's purchase, including line items, payment, pricing, and shipping details."
+      },
+      {
+        "path": "datamimic_ce/domains/ecommerce/models/product.py",
+        "responsibility": "Product represents a catalog item with category, brand, descriptive, pricing, inventory, and merchandising attributes."
+      },
+      {
+        "path": "datamimic_ce/domains/ecommerce/services/__init__.py",
+        "responsibility": "Der Initializer exportiert OrderService und ProductService f\u00fcr Paketimporte; Entity-Erzeugung bleibt in den Serviceklassen."
+      },
+      {
+        "path": "datamimic_ce/domains/ecommerce/services/order_service.py",
+        "responsibility": "Der OrderService bindet konkreten Generator und Modell und deklariert die f\u00fcr Registry und DSL sichtbaren Entity-Felder."
+      },
+      {
+        "path": "datamimic_ce/domains/ecommerce/services/product_service.py",
+        "responsibility": "Der ProductService bindet konkreten Generator und Modell und deklariert die f\u00fcr Registry und DSL sichtbaren Entity-Felder."
+      }
+    ]
+  },
   "components": [
     {
       "id": "ECOMMERCE-MODELS",
