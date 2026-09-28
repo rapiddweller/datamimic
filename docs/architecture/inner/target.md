@@ -15,6 +15,14 @@ The source-to-target map and recursive review are in
 both `datamimic_ce` and `datamimic_ee`. See [EE migration](edition-alignment.md)
 for edition-only additions and the superseded Experiment 3 proposal.
 
+Every current CE Python module has one target and a responsibility sentence:
+one-to-one moves inherit their reviewed source concern from
+`semantic-review/review-*.json`; split, merged and new modules have explicit
+`target_module_concerns` in the structure review. The existing
+`architecture-definition-check` verifies this mapping and every component's
+responsibility. The root `__init__.py` remains an explicit environment-bootstrap
+exception, not a catch-all component.
+
 ## Physical target
 
 ```text

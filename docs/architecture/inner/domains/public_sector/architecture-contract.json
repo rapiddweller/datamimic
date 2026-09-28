@@ -9,7 +9,7 @@
         "datamimic_ce.domains.public_sector.models"
       ],
       "responsibilities": [
-        "Lazy domain entities; may call generators for computed values."
+        "Expose lazy government-office, educational-institution, and police-officer records with jurisdiction, public-service, facility, and personnel fields."
       ],
       "forbidden_responsibilities": [
         "Generate dataset values directly or own service orchestration."
@@ -39,7 +39,7 @@
         "datamimic_ce.domains.public_sector.generators"
       ],
       "responsibilities": [
-        "Value algorithms; must not import entity models/services."
+        "Generate jurisdiction-aware office operations, institution programs and facilities, and officer ranks, assignments, and qualifications."
       ],
       "forbidden_responsibilities": [
         "Import public-sector models or services."
@@ -63,7 +63,7 @@
         "datamimic_ce.domains.public_sector.services"
       ],
       "responsibilities": [
-        "Domain construction workflows using models and generators."
+        "Bind office, education, and police models to generators and declare DSL fields and required datasets."
       ],
       "forbidden_responsibilities": [
         "Implement generator algorithms or bypass entity models."

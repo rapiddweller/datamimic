@@ -9,7 +9,7 @@
         "datamimic_ce.domains.insurance.models"
       ],
       "responsibilities": [
-        "Lazy domain entities; may call generators for computed values."
+        "Expose insurer, product, coverage, and policy data, including the policyholder, nested company and product, coverage list, premium, term, and status."
       ],
       "forbidden_responsibilities": [
         "Generate dataset values directly or own service orchestration."
@@ -40,7 +40,7 @@
         "datamimic_ce.domains.insurance.generators"
       ],
       "responsibilities": [
-        "Value algorithms; must not import entity models/services."
+        "Generate weighted insurer, product, and coverage records plus policy premiums, terms, and statuses."
       ],
       "forbidden_responsibilities": [
         "Import insurance models or services."
@@ -65,7 +65,7 @@
         "datamimic_ce.domains.insurance.services"
       ],
       "responsibilities": [
-        "Domain construction workflows using models and generators."
+        "Bind company, product, coverage, and policy generators to their models and declare policy nested schemas, fields, and datasets."
       ],
       "forbidden_responsibilities": [
         "Implement generator algorithms or bypass entity models."

@@ -327,7 +327,7 @@
         "datamimic_ce.domains.finance"
       ],
       "responsibilities": [
-        "Industry-specific entities, generation algorithms and services."
+        "Generate banks, accounts, credit cards, and transaction records with finance-specific identifiers and values."
       ],
       "forbidden_responsibilities": [
         "Import another vertical or Runtime."
@@ -374,7 +374,7 @@
         "datamimic_ce.domains.healthcare"
       ],
       "responsibilities": [
-        "Industry-specific entities, generation algorithms and services."
+        "Generate patients, doctors, hospitals, procedures, and medical devices with clinical and lifecycle data."
       ],
       "forbidden_responsibilities": [
         "Import another vertical or Runtime."
@@ -427,7 +427,7 @@
         "datamimic_ce.domains.insurance"
       ],
       "responsibilities": [
-        "Industry-specific entities, generation algorithms and services."
+        "Generate insurers, insurance products, coverages, and policies with their nested policyholder and premium data."
       ],
       "forbidden_responsibilities": [
         "Import another vertical or Runtime."
@@ -472,7 +472,7 @@
         "datamimic_ce.domains.ecommerce"
       ],
       "responsibilities": [
-        "Industry-specific entities, generation algorithms and services."
+        "Generate product catalog values and orders with buyer, payment, and fulfillment details."
       ],
       "forbidden_responsibilities": [
         "Import another vertical or Runtime."
@@ -511,7 +511,7 @@
         "datamimic_ce.domains.public_sector"
       ],
       "responsibilities": [
-        "Industry-specific entities, generation algorithms and services."
+        "Generate government offices, educational institutions, and police personnel with jurisdiction and operational details."
       ],
       "forbidden_responsibilities": [
         "Import another vertical or Runtime."

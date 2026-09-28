@@ -9,7 +9,7 @@
         "datamimic_ce.domains.finance.models"
       ],
       "responsibilities": [
-        "Lazy domain entities; may call generators for computed values."
+        "Expose lazy Bank, BankAccount, CreditCard, and Transaction values, including linked account and merchant details."
       ],
       "forbidden_responsibilities": [
         "Generate dataset values directly or own service orchestration."
@@ -45,7 +45,7 @@
         "datamimic_ce.domains.finance.generators"
       ],
       "responsibilities": [
-        "Value algorithms; must not import entity models/services."
+        "Generate bank and account identifiers, card specifications, and transactions with categorized amounts, merchants, currencies, and dates."
       ],
       "forbidden_responsibilities": [
         "Import finance models or services."
@@ -72,7 +72,7 @@
         "datamimic_ce.domains.finance.services"
       ],
       "responsibilities": [
-        "Domain construction workflows using models and generators."
+        "Bind the four finance models to their generators and publish descriptor field schemas and required datasets."
       ],
       "forbidden_responsibilities": [
         "Implement generator algorithms or bypass the entity models."

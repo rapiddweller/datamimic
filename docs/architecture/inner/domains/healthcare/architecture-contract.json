@@ -9,7 +9,7 @@
         "datamimic_ce.domains.healthcare.models"
       ],
       "responsibilities": [
-        "Lazy domain entities; may call generators for computed values."
+        "Expose lazy patient and doctor demographics plus hospital, procedure, and medical-device clinical and operational fields."
       ],
       "forbidden_responsibilities": [
         "Generate dataset values directly or own service orchestration."
@@ -41,7 +41,7 @@
         "datamimic_ce.domains.healthcare.generators"
       ],
       "responsibilities": [
-        "Value algorithms; must not import entity models/services."
+        "Generate patient demographics and conditions, doctor credentials, hospital services, procedure details, and device lifecycle history."
       ],
       "forbidden_responsibilities": [
         "Import healthcare models or services."
@@ -68,7 +68,7 @@
         "datamimic_ce.domains.healthcare.services"
       ],
       "responsibilities": [
-        "Domain construction workflows using models and generators."
+        "Bind patient, doctor, hospital, procedure, and device generators to entity models and declare exposed fields and required datasets."
       ],
       "forbidden_responsibilities": [
         "Own generator algorithms or entity property behavior."
