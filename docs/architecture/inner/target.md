@@ -23,9 +23,9 @@ Every current CE Python module has a target path and a candidate responsibility
 sentence: one-to-one moves inherit the historical source concern from
 `semantic-review/review-*.json`; revised modules have explicit
 `target_module_concerns` in the structure review. `architecture-definition-check`
-checks coverage, not semantic correctness. A current-code review is in progress;
-module responsibilities are not yet individually accepted or native ArchKeel
-target declarations. The root `__init__.py` remains an explicit
+checks coverage, not semantic correctness. The sentences are native ArchKeel
+target declarations, but they are not yet individually accepted. The root
+`__init__.py` remains an explicit
 environment-bootstrap exception, not a catch-all component.
 
 ## Physical target

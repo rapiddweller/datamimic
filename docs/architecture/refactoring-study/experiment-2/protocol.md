@@ -34,6 +34,8 @@ inputs below remain history, including the original checker and agent versions.
    Amendment 13 replaces cross-run equality only for genuinely dynamic unseeded counts with
    descriptor-defined ranges and same-run relationships; unknown shape remains unverified.
    Amendment 50 requires field-presence evidence and rejects unknown or all-null shapes as proof.
+   Amendment 51 requires structural evidence for every unseeded export file; an
+   unsupported format cannot pass merely because its filename is unchanged.
    Target-state reproducibility requires the same initial target state;
    Amendment 16 separates generated-ID uniqueness from target constraints.
 6. Authoring schema, reference, capability, compiler, lint, and transport projections remain
@@ -44,7 +46,8 @@ inputs below remain history, including the original checker and agent versions.
 9. The final report independently explores `Actual`, `Target`, and `Diff`. `Actual` comes from
    observed source; `Target` comes only from declared contracts and target layout, never from
    filtering observed edges; `Diff` compares the two. Each view remains explorable to deliberate
-   atomic leaves.
+   atomic leaves. A selected target component or module shows its responsibility sentence;
+   a searchable index exposes all sentences without opening every node.
 
 Items 3–4 require both physical and semantic completion. Layout scopes establish permitted tree
 shape only. An atomic semantic leaf is a declared target node for an independently meaningful

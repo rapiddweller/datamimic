@@ -6,10 +6,19 @@ import os
 import shutil
 import subprocess
 import sys
+import xml.etree.ElementTree as ET
 from pathlib import Path
 
-from script.architecture_study.compare_step0 import comparable, inventory_by_path, shape_compatible
-from script.architecture_study.verify_step0 import CHILD, REPO, RESULT_PREFIX
+import pytest
+
+from script.architecture_study.compare_step0 import (
+    changed_fields,
+    comparable,
+    equivalent,
+    inventory_by_path,
+    shape_compatible,
+)
+from script.architecture_study.verify_step0 import CHILD, REPO, RESULT_PREFIX, run_descriptor
 
 
 def test_shape_rejects_missing_object_field() -> None:
@@ -168,6 +177,278 @@ def test_child_capture_and_comparison_reject_nested_field_removal(tmp_path: Path
     changed_shape = copy.deepcopy(shape)
     del changed_shape["fields"]["items"]["items"]["fields"]["line_no"]
     assert not shape_compatible(shape, changed_shape)
+
+
+@pytest.mark.parametrize(
+    ("chunk_size", "root_type", "file_count"), [(None, "array", 1), (1, "object", 2)]
+)
+def test_child_captures_json_output_schema_for_list_and_object_roots(
+    tmp_path: Path, chunk_size: int | None, root_type: str, file_count: int
+) -> None:
+    source = REPO / "tests_ce/integration_tests/test_export_uri/json_uri.xml"
+    descriptor = tmp_path / source.name
+    root = ET.parse(source).getroot()
+    if chunk_size is not None:
+        root.find("generate").set("target", f"JSON(chunk_size={chunk_size})")
+    ET.ElementTree(root).write(descriptor, encoding="unicode")
+    result = subprocess.run(
+        [sys.executable, "-c", CHILD, str(descriptor)],
+        cwd=tmp_path,
+        env={**os.environ, "PYTHONPATH": str(REPO)},
+        check=True,
+        capture_output=True,
+        text=True,
+        timeout=30,
+    )
+
+    record_line = next(line for line in result.stdout.splitlines() if line.startswith(RESULT_PREFIX))
+    record = json.loads(record_line.removeprefix(RESULT_PREFIX))
+    schemas = record["output_schemas"]
+    assert len(schemas) == file_count
+    for file_shape in schemas.values():
+        assert file_shape["type"] == root_type
+        row_shape = file_shape["items"] if root_type == "array" else file_shape
+        assert row_shape["fields"] == {"n": "str"}
+
+
+def _unseeded_json_record(schema: dict[str, object] | None) -> dict[str, object]:
+    record: dict[str, object] = {
+        "status": "CAPTURED",
+        "category": ["runnable"],
+        "outcome": "ok",
+        "seeded": False,
+        "products": {
+            "rows": {
+                "rows": 1,
+                "value_shape": {
+                    "type": "object",
+                    "fields": {"n": "str"},
+                    "presence_counts": {"n": {"present": 1, "total": 1}},
+                },
+            }
+        },
+        "output_files": ["rows.json" if schema is not None else "rows.txt"],
+    }
+    if schema is not None:
+        record["output_schemas"] = {record["output_files"][0]: schema}
+    return record
+
+
+def test_unseeded_comparison_rejects_deleted_json_output_field() -> None:
+    before_schema = {
+        "type": "array",
+        "items": {
+            "type": "object",
+            "fields": {"n": "str"},
+            "presence_counts": {"n": {"present": 1, "total": 1}},
+        },
+        "length": 1,
+    }
+    after_schema = {
+        "type": "array",
+        "items": {"type": "object", "fields": {}, "presence_counts": {}},
+        "length": 1,
+    }
+
+    baseline = _unseeded_json_record(before_schema)
+    assert equivalent(baseline, baseline)
+    assert not equivalent(_unseeded_json_record(before_schema), _unseeded_json_record(after_schema))
+
+
+def test_unseeded_comparison_rejects_deleted_nested_json_key() -> None:
+    before_schema = {
+        "type": "object",
+        "fields": {
+            "payload": {
+                "type": "object",
+                "fields": {"child_id": "str"},
+                "presence_counts": {"child_id": {"present": 1, "total": 1}},
+            }
+        },
+        "presence_counts": {"payload": {"present": 1, "total": 1}},
+        "length": 1,
+    }
+    after_schema = {
+        "type": "object",
+        "fields": {"payload": {"type": "object", "fields": {}, "presence_counts": {}}},
+        "presence_counts": {"payload": {"present": 1, "total": 1}},
+        "length": 1,
+    }
+
+    baseline = _unseeded_json_record(before_schema)
+    assert equivalent(baseline, baseline)
+    assert not equivalent(_unseeded_json_record(before_schema), _unseeded_json_record(after_schema))
+
+
+def test_unseeded_comparison_requires_schema_for_unsupported_text_output() -> None:
+    incomplete = _unseeded_json_record(None)
+
+    assert not equivalent(incomplete, incomplete)
+    assert changed_fields(comparable(incomplete), comparable(incomplete)) == "incomplete evidence"
+
+
+def test_identical_unverified_service_record_is_not_parity_proof() -> None:
+    unverified = {
+        "status": "UNVERIFIED",
+        "category": ["runnable", "external-service"],
+        "reason": "UNVERIFIED: service inventory unavailable",
+        "evidence": ["tests_ce/external_service_tests/test_db.py"],
+    }
+
+    assert not equivalent(unverified, unverified)
+
+
+@pytest.mark.parametrize(
+    "status", ["UNRUNNABLE", "UNEXPECTED-SUCCESS"],
+)
+def test_identical_non_success_status_is_not_parity_proof(status: str) -> None:
+    record = {
+        "status": status,
+        "category": ["runnable"],
+        "outcome": "ok" if status == "UNEXPECTED-SUCCESS" else "timeout",
+        "seeded": status == "UNEXPECTED-SUCCESS",
+        "result_output_digest": "same" if status == "UNEXPECTED-SUCCESS" else None,
+    }
+
+    assert not equivalent(record, record)
+
+
+@pytest.mark.parametrize("digest", [None, ""])
+def test_seeded_capture_requires_nonempty_output_digest(digest: str | None) -> None:
+    record = {
+        "status": "CAPTURED",
+        "category": ["runnable"],
+        "outcome": "ok",
+        "seeded": True,
+        "result_output_digest": digest,
+    }
+
+    assert not equivalent(record, record)
+
+
+@pytest.mark.parametrize("outcome", [None, "timeout"])
+def test_captured_record_requires_ok_outcome(outcome: str | None) -> None:
+    record = {
+        "status": "CAPTURED",
+        "category": ["runnable"],
+        "outcome": outcome,
+        "seeded": False,
+    }
+
+    assert not equivalent(record, record)
+
+
+def test_unseeded_ndjson_capture_is_unverified_without_schema(tmp_path: Path) -> None:
+    source = REPO / "tests_ce/integration_tests/test_export_uri/json_uri.xml"
+    descriptor = tmp_path / source.name
+    root = ET.parse(source).getroot()
+    root.find("generate").set("target", "JSON(use_ndjson=True)")
+    ET.ElementTree(root).write(descriptor, encoding="unicode")
+
+    _, record = run_descriptor(
+        {"path": str(descriptor), "category": ["runnable"], "evidence": []}
+    )
+
+    assert record["status"] == "UNVERIFIED"
+    assert "schema" in record["reason"].lower()
+    assert not equivalent(record, record)
+
+
+def test_empty_json_array_export_is_unverified_without_concrete_schema(tmp_path: Path) -> None:
+    source = REPO / "tests_ce/integration_tests/test_export_uri/json_uri.xml"
+    descriptor = tmp_path / source.name
+    root = ET.parse(source).getroot()
+    root.find("generate").set("count", "0")
+    ET.ElementTree(root).write(descriptor, encoding="unicode")
+
+    _, record = run_descriptor(
+        {"path": str(descriptor), "category": ["runnable"], "evidence": []}
+    )
+
+    assert record["status"] == "UNVERIFIED"
+    assert "schema" in record["reason"].lower()
+
+
+def test_zero_row_configured_json_export_is_unverified_without_file(tmp_path: Path) -> None:
+    source = REPO / "tests_ce/integration_tests/test_export_uri/json_uri.xml"
+    descriptor = tmp_path / source.name
+    root = ET.parse(source).getroot()
+    generate = root.find("generate")
+    generate.set("count", "0")
+    generate.set("target", "JSON(chunk_size=1)")
+    ET.ElementTree(root).write(descriptor, encoding="unicode")
+
+    _, record = run_descriptor(
+        {"path": str(descriptor), "category": ["runnable"], "evidence": []}
+    )
+
+    assert record["status"] == "UNVERIFIED"
+    assert "schema" in record["reason"].lower()
+
+
+def test_nested_empty_json_array_export_is_unverified(tmp_path: Path) -> None:
+    descriptor = tmp_path / "nested_empty.xml"
+    descriptor.write_text(
+        '<setup><generate name="rows" count="1" target="JSON" exportUri="out">'
+        '<key name="id" generator="IncrementGenerator"/>'
+        '<nestedKey name="items" type="list" count="0">'
+        '<key name="value" constant="x"/>'
+        "</nestedKey></generate></setup>",
+        encoding="utf-8",
+    )
+
+    _, record = run_descriptor(
+        {"path": str(descriptor), "category": ["runnable"], "evidence": []}
+    )
+
+    assert record["status"] == "UNVERIFIED"
+    assert "schema" in record["reason"].lower()
+
+
+def test_all_null_json_field_export_is_unverified(tmp_path: Path) -> None:
+    descriptor = tmp_path / "all_null.xml"
+    (tmp_path / "input.json").write_text('[{"id": null}]', encoding="utf-8")
+    descriptor.write_text(
+        '<setup><generate name="rows" source="input.json" count="1" '
+        'target="JSON" exportUri="out" distribution="ordered"/></setup>',
+        encoding="utf-8",
+    )
+
+    _, record = run_descriptor(
+        {"path": str(descriptor), "category": ["runnable"], "evidence": []}
+    )
+
+    assert record["status"] == "UNVERIFIED"
+    assert "schema" in record["reason"].lower()
+
+
+def test_unseeded_json_output_schema_rejects_row_loss() -> None:
+    before = _unseeded_json_record(
+        {
+            "type": "array",
+            "items": {
+                "type": "object",
+                "fields": {"n": "str"},
+                "presence_counts": {"n": {"present": 1, "total": 1}},
+            },
+            "length": 2,
+        }
+    )
+    after = _unseeded_json_record(
+        {
+            "type": "array",
+            "items": {
+                "type": "object",
+                "fields": {"n": "str"},
+                "presence_counts": {"n": {"present": 1, "total": 1}},
+            },
+            "length": 1,
+        }
+    )
+    # Product results are held constant to prove the exported file itself is checked.
+    before["products"] = after["products"]
+
+    assert not equivalent(before, after)
 
 
 def test_child_rejects_import_outside_its_pythonpath_root(tmp_path: Path) -> None:

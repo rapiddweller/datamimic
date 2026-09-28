@@ -41,6 +41,7 @@ try:
 except ValueError:
     raise RuntimeError("import root mismatch: datamimic_ce loaded outside the checkout root") from None
 from datamimic_ce.interfaces.python.data_mimic_test import DataMimicTest
+from datamimic_ce.engine.dsl.statements.generation.targets import parse_consumer
 
 def normalize(item):
     if item is None or isinstance(item, (bool, int, str)):
@@ -105,6 +106,27 @@ def shape_union(items):
         return json.loads(members[0])
     return {"type": "union", "values": [json.loads(value) for value in members]}
 
+def complete_shape(value):
+    if value == "unknown" or value == "null":
+        return False
+    if not isinstance(value, dict):
+        return True
+    kind = value.get("type")
+    if kind == "union":
+        members = [member for member in value.get("values", []) if member != "null"]
+        return bool(members) and all(complete_shape(member) for member in members)
+    if kind == "array":
+        return complete_shape(value.get("items"))
+    if kind == "object":
+        fields, presence = value.get("fields"), value.get("presence_counts")
+        return (
+            isinstance(fields, dict)
+            and isinstance(presence, dict)
+            and fields.keys() == presence.keys()
+            and all(complete_shape(field) for field in fields.values())
+        )
+    return False
+
 def shape_rows(rows):
     if not isinstance(rows, list) or not rows:
         return shape(rows)
@@ -131,6 +153,10 @@ try:
     task_id = engine.task_id
     engine.test_with_timer()
     result = engine.capture_result()
+    expects_json_output = any(
+        any(consumer.partition("(")[0] == "JSON" for consumer in parse_consumer(node.get("target")))
+        for node in ET.parse(path).getroot().iter("generate")
+    )
     if seeded:
         normalized = normalize(result)
         canonical = json.dumps(normalized, sort_keys=True, separators=(",", ":"), ensure_ascii=False)
@@ -149,6 +175,7 @@ try:
         }
     output = path.parent / "output"
     files = {}
+    output_schemas = {}
     if output.is_dir():
         for item in sorted(output.rglob("*")):
             if item.is_file():
@@ -156,6 +183,17 @@ try:
                 if task_id is not None and relative.parts[0] == task_id:
                     relative = Path(*relative.parts[1:])
                 files[str(relative)] = output_digest(item)
+                if not seeded and item.suffix == ".json":
+                    try:
+                        with item.open(encoding="utf-8") as exported_file:
+                            payload = json.load(exported_file)
+                        if isinstance(payload, (dict, list)):
+                            output_shape = shape(payload)
+                            if complete_shape(output_shape):
+                                output_shape["length"] = len(payload) if isinstance(payload, list) else 1
+                                output_schemas[str(relative)] = output_shape
+                    except (OSError, UnicodeError, json.JSONDecodeError):
+                        pass
     record["output_files"] = files if seeded else sorted(files)
     if seeded:
         record["output_digest"] = hashlib.sha256(
@@ -167,6 +205,9 @@ try:
                 result_and_output, sort_keys=True, separators=(",", ":"), ensure_ascii=False
             ).encode()
         ).hexdigest()
+    else:
+        record["output_schemas"] = output_schemas
+        record["output_schema_expected"] = expects_json_output
 except Exception as error:
     record = {
         "outcome": type(error).__name__, "seeded": seeded,
@@ -452,6 +493,17 @@ def run_descriptor(record: dict[str, Any]) -> tuple[str, dict[str, Any]]:
             if result["outcome"] != "ok"
             else "CAPTURED"
         )
+        if status == "CAPTURED" and not result.get("seeded"):
+            output_files = result.get("output_files") or []
+            output_schemas = result.get("output_schemas")
+            if not isinstance(output_schemas, dict) or set(output_schemas) != set(output_files):
+                missing = sorted(set(output_files) ^ set(output_schemas or {}))
+                status = "UNVERIFIED"
+                detail = ", ".join(missing) or "incomplete schema evidence"
+                result["reason"] = "UNVERIFIED: output schema capture unavailable for " + detail
+            if result.get("output_schema_expected") and not output_files:
+                status = "UNVERIFIED"
+                result["reason"] = "UNVERIFIED: output schema unavailable for declared JSON output"
         result.update({"status": status, "category": categories, "evidence": record["evidence"]})
         result["generate_counts"] = record.get("generate_counts", {})
         return relative, result

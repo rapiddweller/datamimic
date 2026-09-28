@@ -76,6 +76,7 @@ def comparable(record: dict[str, Any]) -> dict[str, Any]:
         **result,
         "products": record.get("products"),
         "output_files": record.get("output_files"),
+        "output_schemas": record.get("output_schemas"),
     }
 
 
@@ -122,6 +123,17 @@ def shape_compatible(before: Any, after: Any) -> bool:
 
 
 def equivalent(old: dict[str, Any], new: dict[str, Any]) -> bool:
+    allowed_statuses = {"CAPTURED", "EXPECTED-ERROR", "NOT-A-DESCRIPTOR"}
+    if any(record.get("status") not in allowed_statuses for record in (old, new)):
+        return False
+    for record in (old, new):
+        if record.get("status") == "CAPTURED":
+            if record.get("outcome") != "ok" or type(record.get("seeded")) is not bool:
+                return False
+            if record["seeded"]:
+                digest = record.get("result_output_digest")
+                if not isinstance(digest, str) or re.fullmatch(r"[0-9a-f]{64}", digest) is None:
+                    return False
     for record in (old, new):
         if record.get("status") == "EXPECTED-ERROR" and (
             not isinstance(record.get("outcome"), str)
@@ -136,6 +148,24 @@ def equivalent(old: dict[str, Any], new: dict[str, Any]) -> bool:
     for key in ("status", "category", "outcome", "seeded", "output_files"):
         if old_view.get(key) != new_view.get(key):
             return False
+    before_schemas, after_schemas = old_view.get("output_schemas"), new_view.get("output_schemas")
+    before_files, after_files = old_view.get("output_files") or [], new_view.get("output_files") or []
+    if not isinstance(before_schemas, dict) or not isinstance(after_schemas, dict):
+        return False
+    if set(before_schemas) != set(before_files) or set(after_schemas) != set(after_files):
+        return False
+    if before_schemas.keys() != after_schemas.keys() or any(
+        not isinstance(before_schemas[path], dict)
+        or not isinstance(after_schemas[path], dict)
+        or before_schemas[path].get("length") != after_schemas[path].get("length")
+        or type(before_schemas[path].get("length")) is not int
+        or type(after_schemas[path].get("length")) is not int
+        or before_schemas[path]["length"] < 0
+        or after_schemas[path]["length"] < 0
+        or not shape_compatible(before_schemas[path], after_schemas[path])
+        for path in before_schemas
+    ):
+        return False
     before_products, after_products = old.get("products") or {}, new.get("products") or {}
     if before_products.keys() != after_products.keys():
         return False
@@ -162,7 +192,7 @@ def changed_fields(old: Any, new: Any) -> str:
             if old_products.get(name) != new_products.get(name)
         )
         fields[fields.index("products")] = "products[" + ",".join(products) + "]"
-    return ", ".join(fields)
+    return ", ".join(fields) or "incomplete evidence"
 
 
 def self_test() -> None:
