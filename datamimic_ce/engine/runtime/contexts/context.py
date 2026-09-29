@@ -518,7 +518,7 @@ class SetupContext(Context):
         return self._use_mp
 
     @use_mp.setter
-    def use_mp(self, value):
+    def use_mp(self, value: bool | None) -> None:
         self._use_mp = value
 
     @property
@@ -586,7 +586,7 @@ class SetupContext(Context):
         return self._num_process
 
     @num_process.setter
-    def num_process(self, value) -> None:
+    def num_process(self, value: int | None) -> None:
         self._num_process = value
 
     @property
@@ -603,7 +603,7 @@ class SetupContext(Context):
         return self._default_variable_prefix
 
     @default_variable_prefix.setter
-    def default_variable_prefix(self, value) -> None:
+    def default_variable_prefix(self, value: str) -> None:
         self._default_variable_prefix = value
 
     @property
@@ -611,7 +611,7 @@ class SetupContext(Context):
         return self._default_variable_suffix
 
     @default_variable_suffix.setter
-    def default_variable_suffix(self, value) -> None:
+    def default_variable_suffix(self, value: str) -> None:
         self._default_variable_suffix = value
 
     @property
@@ -627,7 +627,7 @@ class SetupContext(Context):
         return self._report_logging
 
     @report_logging.setter
-    def report_logging(self, value) -> None:
+    def report_logging(self, value: bool) -> None:
         self._report_logging = value
 
     @property

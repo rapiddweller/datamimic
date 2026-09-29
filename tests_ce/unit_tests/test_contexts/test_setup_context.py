@@ -83,3 +83,15 @@ def test_include_setup_merge_overrides_declared_defaults_but_preserves_run_seed(
     assert context.default_variable_prefix == "${"
     assert context.default_variable_suffix == "}"
     assert context.run_seed.value == 7
+
+
+def test_include_setup_merge_preserves_scalars_when_statement_values_are_none() -> None:
+    context = _context()
+
+    context.update_with_stmt(SetupStatement(SetupModel()))
+
+    assert context.use_mp is False
+    assert context.num_process == 1
+    assert context.default_variable_prefix == "__"
+    assert context.default_variable_suffix == "__"
+    assert context.report_logging is True
