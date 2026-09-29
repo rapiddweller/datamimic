@@ -282,6 +282,10 @@ IO uses DSL vocabulary modules and input parsers directly; `dsl.api` remains the
 ### S3G13 Runtime internal boundaries
 
 Contexts use the public script execution operation; task families share declared value-construction operations. `WhileTask` accepts the common subtask bases directly.
+`Context` and `SetupContext` are public scripting classes, not DTOs.
+Checked-in scripts rely on their class identity and client lookup. Type closed
+state precisely; review dynamic positions individually. Do not wrap or remove
+these exports merely to satisfy the type gate.
 
 ### S3G14 IO interface cleanup
 

@@ -498,7 +498,7 @@
       "id": "RUNTIME-API-TYPES",
       "kind": "boundary_types",
       "source": "datamimic_ce.engine.runtime.api",
-      "rationale": "The runtime facade exposes declared capability contracts rather than runtime internals.",
+      "rationale": "Runtime requests and results are declared; Context and SetupContext remain public scripting types with separately reviewed dynamic state.",
       "provenance": [
         "docs/architecture/refactoring-study/experiment-2/target-architecture.md"
       ],
