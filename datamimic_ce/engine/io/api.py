@@ -75,7 +75,6 @@ from datamimic_ce.engine.io.exporters.registry import (
     publish_exported_artifacts,
     smoke_export,
 )
-from datamimic_ce.engine.io.files.cache import FileContentStorage
 from datamimic_ce.engine.io.files.readers import FileUtil
 
 __all__ = [
@@ -92,7 +91,6 @@ __all__ = [
     "consume_memstore_target",
     "create_exporter_list",
     "finalize_exporter_chunks",
-    "FileContentStorage",
     "FileUtil",
     "MongoDBConnectionConfig",
     "load_connection_profile",
