@@ -340,7 +340,9 @@
         "datamimic_ce.domains.api:PersonService",
         "datamimic_ce.domains.domain_core.contracts.attribute_catalog:FieldSpec",
         "datamimic_ce.domains.domain_core.contracts.generation",
-        "datamimic_ce.domains.shared.demographics.profile:DemographicProfile"
+        "datamimic_ce.domains.shared.demographics.profile:DemographicProfile",
+        "datamimic_ce.domains.shared.demographics.profile:DemographicAgeBand",
+        "datamimic_ce.domains.shared.demographics.profile:DemographicConditionRate"
       ],
       "planned": [],
       "decided_by": "agent"

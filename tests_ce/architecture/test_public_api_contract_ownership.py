@@ -40,3 +40,14 @@ def test_generate_domain_is_root_public_api_and_domain_api_sibling_stays_public(
     sibling_api = _component(domains, "DOMAINS-API")["public"]
     assert "datamimic_ce.domains.api" in sibling_api
     assert "datamimic_ce.domains.api:AddressService" in sibling_api
+
+
+def test_demographic_profile_records_are_owned_by_domains_not_global_public_api() -> None:
+    symbols = {
+        "datamimic_ce.domains.shared.demographics.profile:DemographicAgeBand",
+        "datamimic_ce.domains.shared.demographics.profile:DemographicConditionRate",
+    }
+    root = _read_contract(ROOT / "architecture-contract.json")
+    root_domains = _component(root, "COMP-DOMAINS")["public"]
+    assert all(root_domains.count(symbol) == 1 for symbol in symbols)
+    assert symbols.isdisjoint(root["declarations"]["public_api"])
