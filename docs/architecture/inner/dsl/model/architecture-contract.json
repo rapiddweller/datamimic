@@ -91,6 +91,10 @@
         "responsibility": "Declares the state-machine ID and optional start state used to register a setup-level weighted machine."
       },
       {
+        "path": "datamimic_ce/engine/dsl/model/setup/transition_model.py",
+        "responsibility": "Validates transition endpoints and positive weights for state-machine edges."
+      },
+      {
         "path": "datamimic_ce/engine/dsl/model/validation.py",
         "responsibility": "ModelUtil f\u00fchrt Constraint-Fakten aus und beh\u00e4lt au\u00dferdem bestehende typspezifische Modellvalidierer; es ist Validierungsmechanik, kein BaseModel."
       },
@@ -301,6 +305,7 @@
       ],
       "public": [
         "datamimic_ce.engine.dsl.model.setup.state_machine_model:StateMachineModel",
+        "datamimic_ce.engine.dsl.model.setup.transition_model:TransitionModel",
         "datamimic_ce.engine.dsl.model.setup.generator_model:GeneratorModel",
         "datamimic_ce.engine.dsl.model.setup.database_model:DatabaseModel",
         "datamimic_ce.engine.dsl.model.setup.include_model:IncludeModel",
@@ -546,7 +551,8 @@
         "datamimic_ce.engine.dsl.model.setup.memstore_model",
         "datamimic_ce.engine.dsl.model.setup.mongodb_model",
         "datamimic_ce.engine.dsl.model.setup.setup_model",
-        "datamimic_ce.engine.dsl.model.setup.state_machine_model"
+        "datamimic_ce.engine.dsl.model.setup.state_machine_model",
+        "datamimic_ce.engine.dsl.model.setup.transition_model"
       ],
       "rationale": "Ordered setup/client/include/generator/state-machine/demographics declarations. Exact reviewed target children; no hidden extra modules.",
       "provenance": [

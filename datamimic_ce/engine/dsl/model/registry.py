@@ -93,6 +93,7 @@ def _builtin_definitions() -> dict[str, ElementDefinition]:
     from datamimic_ce.engine.dsl.model.setup.mongodb_model import MongoDBModel
     from datamimic_ce.engine.dsl.model.setup.setup_model import SetupModel
     from datamimic_ce.engine.dsl.model.setup.state_machine_model import StateMachineModel
+    from datamimic_ce.engine.dsl.model.setup.transition_model import TransitionModel
     from datamimic_ce.engine.dsl.model.values.references.reference_field_model import ReferenceFieldModel
     from datamimic_ce.engine.dsl.model.values.references.reference_model import ReferenceModel
     from datamimic_ce.engine.dsl.model.values.scalar.element_model import ElementModel
@@ -212,7 +213,7 @@ def _builtin_definitions() -> dict[str, ElementDefinition]:
             None,
             frozenset({EL_TRANSITION}),
         ),
-        ElementDefinition(EL_TRANSITION, None, None),
+        ElementDefinition(EL_TRANSITION, TransitionModel, None),
         ElementDefinition(EL_WHILE, WhileModel, None, None),
         ElementDefinition(EL_ASSERT, AssertModel, None),
     )

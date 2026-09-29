@@ -2353,6 +2353,10 @@
     {
       "target": "engine/dsl/parsers/input/target.py",
       "reason": "Own the shared target-call syntax parser with DSL input parsing, so authoring rules do not depend on IO."
+    },
+    {
+      "target": "engine/dsl/model/setup/transition_model.py",
+      "reason": "The transition grammar needs one typed owner shared by parser and authoring schema."
     }
   ],
   "target_module_concerns": [
@@ -2395,6 +2399,7 @@
     {"target": "engine/dsl/model/registry.py", "responsibility": "Owns canonical element metadata, child grammar, aliases, model and extension-parser bindings, and atomic constraint registration."},
     {"target": "engine/dsl/model/setup/generator_model.py", "responsibility": "Validates a generator declaration's non-empty name and expression and rejects unsupported attributes."},
     {"target": "engine/dsl/model/setup/setup_model.py", "responsibility": "Validates setup attributes and carries run-wide defaults, seed, and multiprocessing settings."},
+    {"target": "engine/dsl/model/setup/transition_model.py", "responsibility": "Validates transition endpoints and positive weights for state-machine edges."},
     {"target": "engine/dsl/parsers/base/client_config.py", "responsibility": "Merges descriptor attributes with lazily loaded connection profile credentials."},
     {"target": "engine/dsl/parsers/base/dispatch.py", "responsibility": "Dispatches parsed XML elements to built-in or registered extension statement parsers."},
     {"target": "engine/dsl/parsers/registry.py", "responsibility": "Registers built-in CE XML tags with their concrete statement parsers."},

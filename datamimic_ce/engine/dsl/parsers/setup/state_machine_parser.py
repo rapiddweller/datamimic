@@ -5,10 +5,10 @@
 # For questions and support, contact: info@rapiddweller.com
 
 from datamimic_ce.engine.dsl.model.setup.state_machine_model import StateMachineModel
+from datamimic_ce.engine.dsl.model.setup.transition_model import TransitionModel
 from datamimic_ce.engine.dsl.parsers.base.statement_parser import StatementParser
 from datamimic_ce.engine.dsl.parsers.input.xml import XmlElement, xml_tag
 from datamimic_ce.engine.dsl.statements.setup.state_machine_statement import StateMachineStatement
-from datamimic_ce.engine.dsl.vocabulary.constants.attribute_constants import ATTR_FROM, ATTR_TO, ATTR_WEIGHT
 from datamimic_ce.engine.dsl.vocabulary.constants.element_constants import EL_COMMENT, EL_STATE_MACHINE, EL_TRANSITION
 
 
@@ -27,18 +27,8 @@ class StateMachineParser(StatementParser):
                 continue
             if xml_tag(child) != EL_TRANSITION:
                 raise ValueError(f"<state-machine> only accepts <transition> children, got <{xml_tag(child)}>")
-            attrs = child.attrib
-            extra = set(attrs) - {ATTR_FROM, ATTR_TO, ATTR_WEIGHT}
-            if extra:
-                raise ValueError(f"<transition> got invalid attribute(s) {sorted(extra)}, expects from/to/weight")
-            src, tgt = attrs.get(ATTR_FROM), attrs.get(ATTR_TO)
-            if not src or not tgt:
-                raise ValueError("<transition> requires both 'from' and 'to'")
-            try:
-                weight = float(attrs[ATTR_WEIGHT]) if ATTR_WEIGHT in attrs else 1.0
-            except ValueError as e:
-                raise ValueError(f"<transition {src}->{tgt}> has invalid weight '{attrs[ATTR_WEIGHT]}'") from e
-            rules.append((src, tgt, weight))
+            transition = TransitionModel(**child.attrib)
+            rules.append((transition.source, transition.target, transition.weight))
         if not rules:
             raise ValueError(f"<state-machine> '{model.id}' needs at least one <transition>")
         return StateMachineStatement(name=model.id, start=model.start, rules=rules)
