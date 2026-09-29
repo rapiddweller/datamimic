@@ -190,6 +190,8 @@ retain root `load_dotenv()` unchanged, once per normal package import with
 consume environment settings without Runtime. Moving this call changes timing
 and caller-relative `.env` lookup. Runtime `Settings` retains its separate cwd
 file lookup. No bootstrap wrapper or new initialization flag is needed.
+This historical compatibility decision is superseded for CE 5.0 by
+[Amendment 68](../../refactoring-study/experiment-2/amendment-68.md).
 
 ## Dependency direction
 

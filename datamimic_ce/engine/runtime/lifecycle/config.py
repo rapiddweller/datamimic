@@ -4,6 +4,7 @@
 # See LICENSE file for the full text of the license.
 # For questions and support, contact: info@rapiddweller.com
 
+from functools import lru_cache
 from typing import Literal
 
 from pydantic_settings import BaseSettings, SettingsConfigDict
@@ -20,7 +21,9 @@ class Settings(BaseSettings):
     LIB_EDITION: str = "CE"
 
     RAY_DEBUG: bool = False
-    model_config = SettingsConfigDict(env_file=".env", case_sensitive=True, extra="ignore")
+    model_config = SettingsConfigDict(case_sensitive=True, extra="ignore")
 
 
-settings = Settings()  # pyright: ignore
+@lru_cache(maxsize=1)
+def get_settings() -> Settings:
+    return Settings()  # pyright: ignore

@@ -15,7 +15,7 @@ import pytest
 
 from datamimic_ce.engine.io.clients.rdbms_client import RdbmsClient
 from datamimic_ce.engine.io.connection_config.rdbms_connection_config import RdbmsConnectionConfig
-from datamimic_ce.engine.runtime.lifecycle.config import settings
+from datamimic_ce.engine.runtime.lifecycle.config import get_settings
 
 
 def _credential(**extra) -> RdbmsConnectionConfig:
@@ -65,7 +65,7 @@ class TestRdbmsClientMssqlEngineSelection:
 @pytest.mark.parametrize("environment", ["development", "production"])
 def test_sqlite_uses_task_directory_in_each_supported_environment(tmp_path, monkeypatch, environment):
     monkeypatch.chdir(tmp_path)
-    monkeypatch.setattr(settings, "RUNTIME_ENVIRONMENT", environment)
+    monkeypatch.setattr(get_settings(), "RUNTIME_ENVIRONMENT", environment)
     credential = RdbmsConnectionConfig(
         dbms="sqlite",
         host=None,

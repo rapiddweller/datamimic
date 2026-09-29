@@ -987,7 +987,7 @@
     "modules": [
       {
         "path": "datamimic_ce/__init__.py",
-        "responsibility": "Der Paketstart l\u00e4dt dotenv beim Import und beeinflusst damit auch Verbraucher ohne Runtime-Aufruf."
+        "responsibility": "The package initializer exposes the CE namespace without loading configuration or mutating the process environment."
       },
       {
         "path": "datamimic_ce/_compat.py",

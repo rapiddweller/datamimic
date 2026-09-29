@@ -13,18 +13,18 @@ from pathlib import Path
 
 import pytest
 
-from datamimic_ce.interfaces.python.data_mimic_test import DataMimicTest
 from datamimic_ce.engine.io.clients.mongodb_client import MongoDBClient
 from datamimic_ce.engine.io.connection_config.mongodb_connection_config import MongoDBConnectionConfig
 from datamimic_ce.engine.io.contracts import DataSourcePagination
-from datamimic_ce.engine.runtime.lifecycle.config import settings
+from datamimic_ce.engine.runtime.lifecycle.config import get_settings
+from datamimic_ce.interfaces.python.data_mimic_test import DataMimicTest
 
 
 def _local_client() -> MongoDBClient:
     """Same host/port split as conf/local.env.properties vs. conf/environment.env.properties
     (used by the DSL-fixture tests below via <mongodb id="mongodb"/>) - a direct client
     construction can't read those files, so it must branch the same way by hand."""
-    if settings.RUNTIME_ENVIRONMENT == "development":
+    if get_settings().RUNTIME_ENVIRONMENT == "development":
         host, port = "localhost", 47017
     else:
         host, port = "mongo", 27017

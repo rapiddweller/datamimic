@@ -65,8 +65,8 @@ mcp = [
 local_scheme = "dirty-tag"  # Includes a "dirty" tag in version if working directory is not clean
 
 [project.scripts]
-datamimic = "datamimic_ce.interfaces.cli:app"  # Entry point for your CLI application
-datamimic-mcp = "datamimic_ce.interfaces.mcp.cli:app"
+datamimic = "datamimic_ce.interfaces.cli.__main__:main"  # Entry point for your CLI application
+datamimic-mcp = "datamimic_ce.interfaces.mcp.cli:main"
 
 [tool.setuptools]
 include-package-data = true

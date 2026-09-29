@@ -9,15 +9,15 @@ from pathlib import Path
 
 import pytest
 
+from datamimic_ce.engine.runtime.lifecycle.config import get_settings
 from datamimic_ce.interfaces.python.data_mimic_test import DataMimicTest
-from datamimic_ce.engine.runtime.lifecycle.config import settings
 
 
 class TestRdbms:
     _test_dir = Path(__file__).resolve().parent
 
     @pytest.mark.skipif(
-        settings.RUNTIME_ENVIRONMENT == "production",
+        get_settings().RUNTIME_ENVIRONMENT == "production",
         reason="This test can only test with local postgres credential",
     )
     def test_postgresql_local(self):
@@ -25,7 +25,7 @@ class TestRdbms:
         test_engine.test_with_timer()
 
     @pytest.mark.skipif(
-        settings.RUNTIME_ENVIRONMENT == "development",
+        get_settings().RUNTIME_ENVIRONMENT == "development",
         reason="This test can only test with stage postgres credential",
     )
     def test_postgresql_stage(self):
@@ -33,7 +33,7 @@ class TestRdbms:
         test_engine.test_with_timer()
 
     @pytest.mark.skipif(
-        settings.RUNTIME_ENVIRONMENT == "development",
+        get_settings().RUNTIME_ENVIRONMENT == "development",
         reason="This test can only test with stage postgres credential",
     )
     def test_mysql(self):
@@ -41,7 +41,7 @@ class TestRdbms:
         test_engine.test_with_timer()
 
     @pytest.mark.skipif(
-        settings.RUNTIME_ENVIRONMENT == "development",
+        get_settings().RUNTIME_ENVIRONMENT == "development",
         reason="This test can only test with stage postgres credential",
     )
     def test_mssql(self):
@@ -49,7 +49,7 @@ class TestRdbms:
         test_engine.test_with_timer()
 
     @pytest.mark.skipif(
-        settings.RUNTIME_ENVIRONMENT == "development",
+        get_settings().RUNTIME_ENVIRONMENT == "development",
         reason="This test can only test with stage postgres credential",
     )
     def test_oracle(self):

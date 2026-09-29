@@ -8,7 +8,7 @@ from datamimic_ce.domains.api import GeneratorCapability, describe_generator_typ
 from datamimic_ce.engine.dsl.api import parse_properties
 from datamimic_ce.engine.runtime.contexts.context import Context, SetupContext
 from datamimic_ce.engine.runtime.contracts import PlatformProperties, RunRequest, RunResult, RunSession
-from datamimic_ce.engine.runtime.lifecycle.config import settings
+from datamimic_ce.engine.runtime.lifecycle.config import get_settings
 from datamimic_ce.engine.runtime.lifecycle.runner import create_run_session as _create_run_session
 from datamimic_ce.engine.runtime.lifecycle.runner import run as _run
 from datamimic_ce.engine.runtime.tasks.values.construction.factory import RUNTIME_GENERATOR_TYPES
@@ -20,7 +20,7 @@ def iter_generator_capabilities() -> Iterator[GeneratorCapability]:
 
 
 def runtime_environment() -> Literal["development", "production"]:
-    return settings.RUNTIME_ENVIRONMENT
+    return get_settings().RUNTIME_ENVIRONMENT
 
 
 def load_descriptor_properties(descriptor_path: Path) -> PlatformProperties:

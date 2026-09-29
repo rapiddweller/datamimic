@@ -339,7 +339,7 @@
       ],
       "public": [
         "datamimic_ce.engine.runtime.lifecycle.runner",
-        "datamimic_ce.engine.runtime.lifecycle.config:settings"
+        "datamimic_ce.engine.runtime.lifecycle.config:get_settings"
       ],
       "decided_by": "agent"
     },

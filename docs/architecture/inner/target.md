@@ -25,19 +25,25 @@ sentence: one-to-one moves inherit the historical source concern from
 `target_module_concerns` in the structure review. `architecture-definition-check`
 checks coverage, not semantic correctness. The sentences are native ArchKeel
 target declarations, but they are not yet individually accepted. The root
-`__init__.py` remains an explicit
-environment-bootstrap exception, not a catch-all component.
+`__init__.py` is an inert package initializer, not an environment owner.
+CLI and MCP executable startup load only the startup cwd `.env` with
+`override=False` before reading settings or transport defaults. Library callers
+prepare their own environment. Runtime settings resolve on use. Descriptor
+`.env.properties` lookup remains separate. This deliberately changes the old
+import-time bootstrap behavior ([Amendment 68](../refactoring-study/experiment-2/amendment-68.md)).
+The empty `engine/__init__.py` is namespace scaffolding; neither initializer
+is a catch-all component.
 
 ## Physical target
 
 ```text
 <edition>/
-  __init__.py                    existing package-wide environment bootstrap
+  __init__.py                    inert package initializer
   _compat.py                     Python-version primitives only, where needed
   randomness.py                  shared RNG protocol and weighted-index primitive
   interfaces/
-    cli/                        command registration, arguments, presentation
-    mcp/                        optional typed tool transport
+    cli/                        inert package, executable startup, command registration, presentation
+    mcp/                        inert package, executable startup, optional typed tool transport
     python/                     DataMimic, test harness, factory entry points
       datamimic.py  data_mimic_test.py  factory.py
     demo.py  project.py

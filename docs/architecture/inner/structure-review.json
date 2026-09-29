@@ -30,7 +30,7 @@
       ],
       "target": ".",
       "disposition": "regroup",
-      "rationale": "Reviewed overload; target groups follow responsibility, not a numerical quota. The root load_dotenv bootstrap is an accepted distribution-initializer exception. See relocations and mounted contracts.",
+      "rationale": "Reviewed overload; target groups follow responsibility, not a numerical quota. The root initializer becomes inert; executable entrypoints own dotenv startup. See amendment 68.",
       "initializer_owner": "distribution"
     },
     {
@@ -2343,6 +2343,10 @@
   ],
   "new_modules": [
     {
+      "target": "interfaces/cli/_app.py",
+      "reason": "Executable CLI startup must load dotenv before command registration imports the application graph."
+    },
+    {
       "target": "engine/io/data_sources/boundary/models.py",
       "reason": "Typed resolved source requests with no Context/Statement. Put new IO boundary contracts here rather than importing runtime context; actual request invariant earns module."
     },
@@ -2356,6 +2360,12 @@
     }
   ],
   "target_module_concerns": [
+    {"target": "__init__.py", "responsibility": "The package initializer exposes the CE namespace without loading configuration or mutating the process environment."},
+    {"target": "interfaces/cli/__init__.py", "responsibility": "The CLI package exposes the app lazily so executable startup can load its environment first."},
+    {"target": "interfaces/cli/__main__.py", "responsibility": "Executable CLI startup loads the working-directory environment before importing and running the app."},
+    {"target": "interfaces/cli/_app.py", "responsibility": "Declares Typer commands and delegates each operation to its CLI adapter."},
+    {"target": "interfaces/mcp/__init__.py", "responsibility": "The MCP package exposes server entrypoints lazily without initializing the application graph."},
+    {"target": "interfaces/mcp/cli.py", "responsibility": "The MCP executable loads the working-directory environment, then selects transport and bind configuration."},
     {"target": "engine/dsl/model/validation.py", "responsibility": "Provides shared raw-attribute validation functions and internal ModelUtil checks for DSL models."},
     {"target": "authoring/adapters/reference.py", "responsibility": "Builds bounded DSL and typed authoring references from engine registries and authoring schemas."},
     {"target": "authoring/contracts.py", "responsibility": "Defines transport-neutral authoring requests and results plus validated compiler-plan types shared across the authoring flow."},

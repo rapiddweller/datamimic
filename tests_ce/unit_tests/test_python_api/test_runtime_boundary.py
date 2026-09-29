@@ -15,7 +15,7 @@ from datamimic_ce.engine.runtime.contracts import (
     RunSession,
 )
 from datamimic_ce.engine.runtime.lifecycle import runner
-from datamimic_ce.engine.runtime.lifecycle.config import settings
+from datamimic_ce.engine.runtime.lifecycle.config import get_settings
 from datamimic_ce.interfaces.cli import runtime as cli_runtime
 from datamimic_ce.interfaces.python.data_mimic_test import DataMimicTest
 from datamimic_ce.interfaces.python.datamimic import DataMimic
@@ -119,7 +119,7 @@ def test_runtime_session_uses_current_environment_for_parsing(tmp_path: Path, mo
         def execute(self) -> None:
             pass
 
-    monkeypatch.setattr(settings, "RUNTIME_ENVIRONMENT", "development")
+    monkeypatch.setattr(get_settings(), "RUNTIME_ENVIRONMENT", "development")
     monkeypatch.setattr(runner.DescriptorParser, "parse", parse_descriptor)
     monkeypatch.setattr(runner, "SetupTask", SetupTaskStub)
     session = runner.create_run_session(RunRequest(descriptor_path=descriptor, test_mode=True))

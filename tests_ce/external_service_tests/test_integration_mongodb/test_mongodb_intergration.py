@@ -9,8 +9,8 @@ from pathlib import Path
 
 import pytest
 
+from datamimic_ce.engine.runtime.lifecycle.config import get_settings
 from datamimic_ce.interfaces.python.data_mimic_test import DataMimicTest
-from datamimic_ce.engine.runtime.lifecycle.config import settings
 
 
 class TestMongoDB:
@@ -44,12 +44,12 @@ class TestMongoDB:
         test_engine = DataMimicTest(test_dir=self._test_dir, filename="test_mongodb_aggregate.xml")
         test_engine.test_with_timer()
 
-    @pytest.mark.skipif(settings.RUNTIME_ENVIRONMENT != "development", reason="Run only on local")
+    @pytest.mark.skipif(get_settings().RUNTIME_ENVIRONMENT != "development", reason="Run only on local")
     def test_mongodb_local_env(self):
         test_engine = DataMimicTest(test_dir=self._test_dir, filename="test_mongodb_local_env.xml")
         test_engine.test_with_timer()
 
-    @pytest.mark.skipif(settings.RUNTIME_ENVIRONMENT == "development", reason="Not run on local")
+    @pytest.mark.skipif(get_settings().RUNTIME_ENVIRONMENT == "development", reason="Not run on local")
     def test_mongodb_global_env(self):
         test_engine = DataMimicTest(test_dir=self._test_dir, filename="test_mongodb_global_env.xml")
         test_engine.test_with_timer()
