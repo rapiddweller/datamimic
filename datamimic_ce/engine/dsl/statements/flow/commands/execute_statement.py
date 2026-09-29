@@ -18,11 +18,11 @@ class ExecuteStatement(Statement):
         self._script = model.script  # expression whose evaluated value is the code
 
     @property
-    def uri(self):
+    def uri(self) -> str | None:
         return self._uri
 
     @property
-    def target(self):
+    def target(self) -> str | None:
         return self._target
 
     @property
