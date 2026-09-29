@@ -51,3 +51,26 @@ def test_demographic_profile_records_are_owned_by_domains_not_global_public_api(
     root_domains = _component(root, "COMP-DOMAINS")["public"]
     assert all(root_domains.count(symbol) == 1 for symbol in symbols)
     assert symbols.isdisjoint(root["declarations"]["public_api"])
+
+
+def test_statement_branch_and_memstore_manager_are_root_component_declarations() -> None:
+    owners = {
+        "COMP-DSL": "datamimic_ce.engine.dsl.statements.base.composite_statement:ConditionBranchStatement",
+        "COMP-RUNTIME": "datamimic_ce.engine.runtime.storage.memstore_manager:MemstoreManager",
+    }
+    root = _read_contract(ROOT / "architecture-contract.json")
+    assert set(owners.values()).isdisjoint(root["declarations"]["public_api"])
+    for owner_id, symbol in owners.items():
+        assert _component(root, owner_id)["public"].count(symbol) == 1
+        assert all(
+            symbol not in component.get("public", [])
+            for component in root["components"]
+            if component["id"] != owner_id
+        )
+
+    dsl = _read_contract(ROOT / "docs/architecture/inner/dsl/statements/architecture-contract.json")
+    assert owners["COMP-DSL"] in _component(dsl, "STATEMENTS-BASE")["public"]
+    runtime = _read_contract(ROOT / "docs/architecture/inner/runtime/architecture-contract.json")
+    assert "datamimic_ce.engine.runtime.storage.memstore_manager" in _component(runtime, "RUNTIME-STORAGE")[
+        "public"
+    ]

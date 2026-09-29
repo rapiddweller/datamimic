@@ -125,6 +125,7 @@
       ],
       "public": [
         "datamimic_ce.engine.dsl.api",
+        "datamimic_ce.engine.dsl.statements.base.composite_statement:ConditionBranchStatement",
         "datamimic_ce.engine.dsl.model.constraints.types:Constraint",
         "datamimic_ce.engine.dsl.parsers.input.properties:parse_properties",
         "datamimic_ce.engine.dsl.parsers.input.target:parse_function_string",
@@ -203,7 +204,8 @@
       ],
       "public": [
         "datamimic_ce.engine.runtime.api",
-        "datamimic_ce.engine.runtime.contracts"
+        "datamimic_ce.engine.runtime.contracts",
+        "datamimic_ce.engine.runtime.storage.memstore_manager:MemstoreManager"
       ],
       "planned": [],
       "decided_by": "agent"
