@@ -2,13 +2,14 @@
 
 Released ArchKeel 0.8.0 rejects this contract's `declarations.modules`, added
 after that release, before architecture rules are evaluated. Both Make targets
-now use immutable ArchKeel commit `0c1252490e736f4e742f02caf34923fc50395ec6`
-(`0.8.1.dev20`). The report parses all 491 CE modules.
+now use immutable ArchKeel commit `20ee2979dedbc45bae125dcd3d13f58b28092d14`
+(`0.8.1.dev27`). This includes the merged inherited-generic fix (#204).
+The report parses all 491 CE modules.
 
-This does not make the gate green. The current validate run still reports
-`interface.unused` for inherited service result types (ArchKeel #204), plus
-baseline-new findings. Do not delete truthful public promises to satisfy the
-checker or describe the target as achieved.
+This does not make the gate green. The current validate run has no contract
+diagnostics, but still reports 85 violations, 169 UNKNOWN positions, and 66
+baseline-new findings on the dirty worktree. Do not describe the target as
+achieved.
 
 LOCAL VERIFIED: the pinned `archkeel --version`, `make architecture-report`,
 recursive target-definition tests, and validate diagnostics. CI is pending.
