@@ -926,7 +926,7 @@
       ],
       "target": "engine/runtime/tasks/values/construction",
       "disposition": "relocate",
-      "rationale": "Move into its common CE/EE owner; no legacy import shim.",
+      "rationale": "Factory selection and stateful sequence generation share the existing construction owner; no legacy import shim.",
       "initializer_owner": "engine/runtime/generators"
     },
     {

@@ -16,7 +16,7 @@
       },
       {
         "path": "datamimic_ce/engine/runtime/tasks/values/construction/factory.py",
-        "responsibility": "Creates runtime value generators from DSL value declarations and execution context."
+        "responsibility": "Selects, configures and caches runtime value generators from DSL declarations and execution context."
       },
       {
         "path": "datamimic_ce/engine/runtime/tasks/values/construction/global_increment.py",
@@ -24,7 +24,7 @@
       },
       {
         "path": "datamimic_ce/engine/runtime/tasks/values/construction/sequence_table.py",
-        "responsibility": "Dieses Modul reserviert paginierte Werte aus relationalen Sequenzspeichern."
+        "responsibility": "Reserves and generates paginated values from relational sequence stores."
       },
       {
         "path": "datamimic_ce/engine/runtime/tasks/values/key_variable_task.py",
@@ -78,7 +78,7 @@
       "forbidden_responsibilities": ["Own task dispatch or descriptor setup."],
       "provenance": ["docs/architecture/inner/target.md"],
       "requires": [
-        {"component": "construction", "rationale": "Value generation uses shared constructors and converters.", "decided_by": "agent"}
+        {"component": "construction", "rationale": "Value generation uses shared constructors, converters and sequence generation.", "decided_by": "agent"}
       ],
       "public": ["datamimic_ce.engine.runtime.tasks.values.key_variable_task:KeyVariableTask"],
       "decided_by": "agent"
@@ -155,7 +155,7 @@
       "label": "construction",
       "role": "component",
       "packages": ["datamimic_ce.engine.runtime.tasks.values.construction"],
-      "responsibilities": ["Construct runtime generators, converters and domain entity services."],
+      "responsibilities": ["Builds and runs value generators, converters and domain entity services."],
       "forbidden_responsibilities": ["Own value-task execution or task dispatch."],
       "provenance": ["docs/architecture/inner/target.md"],
       "requires": [],
@@ -230,7 +230,7 @@
         "datamimic_ce.engine.runtime.tasks.values.construction.global_increment",
         "datamimic_ce.engine.runtime.tasks.values.construction.sequence_table"
       ],
-      "rationale": "Construction owns generators, converters, entity services and constructor syntax.",
+      "rationale": "Construction owns generator selection and stateful implementations, converters, entity services and constructor syntax.",
       "provenance": ["docs/architecture/inner/structure-review.json"],
       "decided_by": "agent"
     },
