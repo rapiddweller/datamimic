@@ -42,6 +42,36 @@ def test_generate_domain_is_root_public_api_and_domain_api_sibling_stays_public(
     assert "datamimic_ce.domains.api:AddressService" in sibling_api
 
 
+def test_inherited_domain_service_models_are_declared_at_domains_boundaries() -> None:
+    models = {
+        "datamimic_ce.domains.shared.models.address:Address",
+        "datamimic_ce.domains.shared.models.city:City",
+        "datamimic_ce.domains.shared.models.company:Company",
+        "datamimic_ce.domains.shared.models.country:Country",
+        "datamimic_ce.domains.shared.models.person:Person",
+        "datamimic_ce.domains.healthcare.models.patient:Patient",
+    }
+    root = _read_contract(ROOT / "architecture-contract.json")
+    root_domains = _component(root, "COMP-DOMAINS")["public"]
+    assert all(root_domains.count(symbol) == 1 for symbol in models)
+    assert models.isdisjoint(root["declarations"]["public_api"])
+
+    domains = _read_contract(ROOT / "docs/architecture/inner/domains/architecture-contract.json")
+    shared_models = {
+        "datamimic_ce.domains.shared.models.address:Address",
+        "datamimic_ce.domains.shared.models.city:City",
+        "datamimic_ce.domains.shared.models.company:Company",
+        "datamimic_ce.domains.shared.models.country:Country",
+        "datamimic_ce.domains.shared.models.person:Person",
+    }
+    shared_public = _component(domains, "DOMAINS-SHARED")["public"]
+    assert all(shared_public.count(symbol) == 1 for symbol in shared_models)
+    assert _component(domains, "DOMAINS-HEALTHCARE")["public"].count(
+        "datamimic_ce.domains.healthcare.models.patient:Patient"
+    ) == 1
+    assert models.isdisjoint(_component(domains, "DOMAINS-API")["public"])
+
+
 def test_demographic_profile_records_are_owned_by_domains_not_global_public_api() -> None:
     symbols = {
         "datamimic_ce.domains.shared.demographics.profile:DemographicAgeBand",

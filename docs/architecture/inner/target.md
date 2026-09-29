@@ -321,6 +321,11 @@ The versioned locale bundle stays in `shared/datasets`: all four JSON use cases
 use the same supported-dataset intersection and eager validation. Healthcare
 use cases own the generated doctor/patient records, not a second loader.
 
+Domain model types returned by published `BaseDomainService[T]` services are
+internal boundary promises. Shared Address, City, Company, Country, and Person
+are exact class entries, not whole-module grants. The pinned ArchKeel commit
+includes the inherited-generic proof from [#204](https://github.com/rapiddweller/archkeel/issues/204).
+
 ### S3G17 Model constraint extension boundary
 
 The model registry reads the canonical `Constraint` and `element_constraints`
