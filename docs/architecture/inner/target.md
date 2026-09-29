@@ -122,7 +122,7 @@ is a catch-all component.
         identity/               codes/, keys/, security/
       converters/
         base/  text/  temporal/  privacy/  structural/
-    finance/                    models/, generators/, services/; luhn.py remains local
+    finance/                    contracts.py, models/, generators/, services/; luhn.py remains local
     healthcare/                 models/, generators/, services/
     insurance/                  models/, generators/, services/
     ecommerce/                  models/, generators/, services/

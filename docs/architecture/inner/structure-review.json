@@ -2347,6 +2347,10 @@
       "reason": "Executable CLI startup must load dotenv before command registration imports the application graph."
     },
     {
+      "target": "domains/finance/contracts.py",
+      "reason": "EE-aligned finance payload TypedDicts belong at the finance contract boundary."
+    },
+    {
       "target": "engine/io/data_sources/boundary/models.py",
       "reason": "Typed resolved source requests with no Context/Statement. Put new IO boundary contracts here rather than importing runtime context; actual request invariant earns module."
     },
@@ -2377,6 +2381,7 @@
     {"target": "domains/finance/models/bank_account.py", "responsibility": "BankAccount links bank details to account identifiers, balances, currency, and account lifecycle dates."},
     {"target": "domains/finance/models/credit_card.py", "responsibility": "CreditCard links cardholder, account, and bank data with card credentials, limits, balances, and dates."},
     {"target": "domains/finance/models/transaction.py", "responsibility": "Transaction records an account-linked payment event with amount, classification, merchant, status, channel, and location."},
+    {"target": "domains/finance/contracts.py", "responsibility": "Defines finance-owned typed payloads for generated values and serialized account and transaction records."},
     {"target": "domains/registry/generators.py", "responsibility": "Registers built-in domain generators and exposes their capability metadata to DSL expressions."},
     {"target": "domains/healthcare/models/doctor.py", "responsibility": "Doctor combines professional identity and credentials with specialty, hospital affiliation, availability, and contact details."},
     {"target": "domains/healthcare/models/hospital.py", "responsibility": "Hospital represents a care facility with services, capacity, accreditation, operating attributes, and contact details."},

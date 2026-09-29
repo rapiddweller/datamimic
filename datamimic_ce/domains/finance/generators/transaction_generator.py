@@ -15,10 +15,11 @@ from __future__ import annotations
 import datetime as dt
 import random
 from pathlib import Path
-from typing import Protocol, TypedDict, runtime_checkable
+from typing import Protocol, runtime_checkable
 
 from datamimic_ce.domains.domain_core.base_domain_generator import ClockAnchoredDomainGenerator
 from datamimic_ce.domains.domain_core.datasets.path import dataset_path
+from datamimic_ce.domains.finance.contracts import CurrencyData, GeneratedTransactionData, TransactionTypeData
 from datamimic_ce.domains.shared.datasets.loader import read_cached_headered_csv, read_csv_rows
 from datamimic_ce.domains.shared.literal_generators.primitives.data_faker_generator import DataFakerGenerator
 from datamimic_ce.domains.shared.literal_generators.primitives.string_generator import StringGenerator
@@ -28,21 +29,6 @@ from datamimic_ce.domains.shared.literal_generators.primitives.string_generator 
 class CurrencyAccount(Protocol):
     @property
     def currency(self) -> str: ...
-
-
-class TransactionData(TypedDict):
-    type: str
-    direction: str
-    merchant: str
-    merchant_category: str
-    amount: float
-    currency_code: str
-    currency_symbol: str
-    status: str
-    channel: str
-    location: str
-    reference_number: str
-    description: str
 
 
 class TransactionGenerator(ClockAnchoredDomainGenerator):
@@ -147,7 +133,7 @@ class TransactionGenerator(ClockAnchoredDomainGenerator):
             # If no weight key exists, use equal weights
             return self._rng.choice(data)
 
-    def get_transaction_type(self) -> dict:
+    def get_transaction_type(self) -> TransactionTypeData:
         """Generate a random transaction type.
 
         Returns:
@@ -270,7 +256,7 @@ class TransactionGenerator(ClockAnchoredDomainGenerator):
         """
         return StringGenerator.rnd_str_from_regex("[A-Z0-9]{10,12}", rng=self._rng)
 
-    def get_currency(self) -> dict:
+    def get_currency(self) -> CurrencyData:
         """Get currency information based on the current dataset.
 
         Returns:
@@ -447,7 +433,7 @@ class TransactionGenerator(ClockAnchoredDomainGenerator):
         # Round to 2 decimal places
         return round(amount, 2)
 
-    def generate_transaction_data(self, bank_account: object | None = None) -> TransactionData:
+    def generate_transaction_data(self, bank_account: object | None = None) -> GeneratedTransactionData:
         """Generate complete transaction data.
 
         Args:
@@ -470,9 +456,9 @@ class TransactionGenerator(ClockAnchoredDomainGenerator):
         # Get currency (either from account or generate new)
         if bank_account and isinstance(bank_account, CurrencyAccount):
             currency_code = bank_account.currency
-            currency = {
+            currency: CurrencyData = {
                 "code": currency_code,
-                # Ideally we would also get name and symbol, but we'll keep it simple
+                # Ideally we would get name and symbol from the account, but we only have its code.
                 "symbol": "$" if currency_code == "USD" else "€" if currency_code == "EUR" else currency_code,
             }
         else:

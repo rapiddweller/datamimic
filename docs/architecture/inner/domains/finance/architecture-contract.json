@@ -11,6 +11,10 @@
         "responsibility": "Der Initializer markiert ein Python-Paket, enth\u00e4lt aber keine ausf\u00fchrbare Fachlogik."
       },
       {
+        "path": "datamimic_ce/domains/finance/contracts.py",
+        "responsibility": "Defines finance-owned typed payloads for generated values and serialized account and transaction records."
+      },
+      {
         "path": "datamimic_ce/domains/finance/generators/bank_account_generator.py",
         "responsibility": "Der BankAccountGenerator erzeugt synthetische Fachwerte \u00fcber generate_created_date, generate_last_transaction_date, get_bank_account_types und nutzt die erforderliche RNG-, Datensatz- oder Zeitbasis."
       },
@@ -99,6 +103,11 @@
           "component": "algorithms",
           "rationale": "Credit-card number construction uses the Luhn check-digit primitive.",
           "decided_by": "agent"
+        },
+        {
+          "component": "contracts",
+          "rationale": "Entity serializers return finance-owned payload contracts.",
+          "decided_by": "agent"
         }
       ],
       "public": [
@@ -125,13 +134,44 @@
       "provenance": [
         "docs/architecture/inner/target.md"
       ],
-      "requires": [],
+      "requires": [
+        {
+          "component": "contracts",
+          "rationale": "Generator result signatures use finance-owned payload contracts.",
+          "decided_by": "agent"
+        }
+      ],
       "public": [
         "datamimic_ce.domains.finance.generators.bank_account_generator:BankAccountGenerator",
         "datamimic_ce.domains.finance.generators.bank_generator:BankGenerator",
         "datamimic_ce.domains.finance.generators.credit_card_generator:CreditCardGenerator",
-        "datamimic_ce.domains.finance.generators.transaction_generator:TransactionGenerator",
-        "datamimic_ce.domains.finance.generators.transaction_generator:TransactionData"
+        "datamimic_ce.domains.finance.generators.transaction_generator:TransactionGenerator"
+      ],
+      "decided_by": "agent"
+    },
+    {
+      "id": "FINANCE-CONTRACTS",
+      "label": "contracts",
+      "role": "component",
+      "packages": [
+        "datamimic_ce.domains.finance.contracts"
+      ],
+      "responsibilities": [
+        "Own the typed payload shapes exchanged by finance generators and models."
+      ],
+      "forbidden_responsibilities": [
+        "Generate financial values or depend on finance generators, models, or services."
+      ],
+      "provenance": [
+        "docs/architecture/inner/target.md"
+      ],
+      "requires": [],
+      "public": [
+        "datamimic_ce.domains.finance.contracts:BankAccountData",
+        "datamimic_ce.domains.finance.contracts:CurrencyData",
+        "datamimic_ce.domains.finance.contracts:GeneratedTransactionData",
+        "datamimic_ce.domains.finance.contracts:TransactionData",
+        "datamimic_ce.domains.finance.contracts:TransactionTypeData"
       ],
       "decided_by": "agent"
     },
@@ -219,7 +259,7 @@
       "id": "FINANCE-INTERFACES",
       "kind": "interface_boundary",
       "include_type_checking": true,
-      "rationale": "Only entity, generator, service, typed generator records, and the check-digit operation cross component boundaries.",
+      "rationale": "Only entity, generator, service, finance payload contracts, and the check-digit operation cross component boundaries.",
       "provenance": [
         "docs/architecture/inner/target.md"
       ],
@@ -228,7 +268,7 @@
     {
       "id": "FINANCE-ACYCLIC",
       "kind": "no_component_cycles",
-      "rationale": "Finance ownership flows from algorithms and generators to entities, then to services.",
+      "rationale": "Finance ownership flows from contracts and algorithms to generators, then entities and services.",
       "provenance": [
         "docs/architecture/inner/target.md"
       ],

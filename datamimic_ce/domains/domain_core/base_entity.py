@@ -7,7 +7,7 @@
 from __future__ import annotations
 
 from abc import abstractmethod
-from collections.abc import Iterator
+from collections.abc import Iterator, Mapping
 from functools import cache
 from typing import TYPE_CHECKING
 
@@ -114,7 +114,7 @@ class BaseEntity(EntityValue):
             entity._bind_identifier_registry(self._identifier_registry, schema.entity, schema.fields, {})
 
     @abstractmethod
-    def to_dict(self) -> dict[str, object]:
+    def to_dict(self) -> Mapping[str, object]:
         """Convert the entity to a dictionary."""
         raise NotImplementedError("Subclasses must implement this method.")
 

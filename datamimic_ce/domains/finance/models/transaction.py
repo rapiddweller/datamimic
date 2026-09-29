@@ -14,6 +14,7 @@ import datetime
 
 from datamimic_ce.domains.domain_core import BaseEntity
 from datamimic_ce.domains.domain_core.property_cache import property_cache
+from datamimic_ce.domains.finance.contracts import TransactionData
 from datamimic_ce.domains.finance.generators.transaction_generator import TransactionGenerator
 from datamimic_ce.domains.finance.models.bank_account import BankAccount
 from datamimic_ce.domains.shared.literal_generators.primitives.string_generator import StringGenerator
@@ -203,13 +204,13 @@ class Transaction(BaseEntity):
         """
         return self._transaction_data["direction"]
 
-    def to_dict(self) -> dict[str, object]:
+    def to_dict(self) -> TransactionData:
         """Convert transaction to a dictionary.
 
         Returns:
             A dictionary representation of the transaction.
         """
-        result = {
+        result: TransactionData = {
             "transaction_id": self.transaction_id,
             "transaction_date": self.transaction_date,
             "amount": self.amount,

@@ -14,6 +14,7 @@ import datetime
 
 from datamimic_ce.domains.domain_core import BaseEntity
 from datamimic_ce.domains.domain_core.property_cache import property_cache
+from datamimic_ce.domains.finance.contracts import BankAccountData
 from datamimic_ce.domains.finance.generators.bank_account_generator import BankAccountGenerator
 from datamimic_ce.domains.finance.models.bank import Bank
 
@@ -118,7 +119,7 @@ class BankAccount(BaseEntity):
     def bin(self) -> str:
         return self.bank_data.bin
 
-    def to_dict(self) -> dict[str, object]:
+    def to_dict(self) -> BankAccountData:
         return {
             "account_number": self.account_number,
             "iban": self.iban,

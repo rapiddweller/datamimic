@@ -3,7 +3,7 @@
 import copy
 import itertools
 from abc import ABC, abstractmethod
-from collections.abc import Iterable, Iterator
+from collections.abc import Iterable, Iterator, Mapping
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Protocol, TypeVar
@@ -13,7 +13,7 @@ from pydantic import RootModel
 
 class EntityValue(ABC):
     @abstractmethod
-    def to_dict(self) -> dict[str, object]: ...
+    def to_dict(self) -> Mapping[str, object]: ...
 
 
 class DataSourcePagination:
