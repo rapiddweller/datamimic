@@ -84,7 +84,7 @@ class FileUtil:
         return [{col: attrib.get(col) for col in columns} for attrib in raw]
 
     @staticmethod
-    def parse_properties(path: Path, encoding="utf-8") -> dict[str, str]:
+    def parse_properties(path: Path, encoding: str = "utf-8") -> dict[str, str]:
         """
         Parse properties from file then save into a dict
         :param path:
@@ -97,7 +97,7 @@ class FileUtil:
         return parse_properties(path, encoding)
 
     @staticmethod
-    def _read_raw_csv(file_path: Path, separator: str, encoding="utf-8") -> list[tuple]:
+    def _read_raw_csv(file_path: Path, separator: str, encoding: str = "utf-8") -> list[tuple]:
         """
         Read raw csv data
         """
@@ -116,7 +116,7 @@ class FileUtil:
             raise FileNotFoundError(f"CSV file not found '{file_path}', error: {e}") from e
 
     @staticmethod
-    def read_csv_to_dict_list(file_path: Path, separator: str, encoding="utf-8") -> list[dict]:
+    def read_csv_to_dict_list(file_path: Path, separator: str, encoding: str = "utf-8") -> list[dict]:
         """
         Read data from csv and parse into list of dict
         """
@@ -235,7 +235,7 @@ class FileUtil:
         return result
 
     @staticmethod
-    def read_weight_csv(file_path: Path, separator: str = ",", encoding="utf-8") -> DataFrame:
+    def read_weight_csv(file_path: Path, separator: str = ",", encoding: str = "utf-8") -> DataFrame:
         """
         Read a 2-column value|weight csv, header optional. Auto-detected: if the first row's
         weight column doesn't parse as a number, it's a header row and gets skipped.
@@ -258,7 +258,7 @@ class FileUtil:
         return df
 
     @staticmethod
-    def read_json(file_path: Path, encoding="utf-8") -> JsonValue:
+    def read_json(file_path: Path, encoding: str = "utf-8") -> JsonValue:
         """
         Read data from JSON
         """
@@ -273,7 +273,7 @@ class FileUtil:
             raise FileNotFoundError(f"JSON file not found '{file_path}', error: {e}") from e
 
     @staticmethod
-    def read_json_to_list(file_path: Path, encoding="utf-8") -> list[JsonValue]:
+    def read_json_to_list(file_path: Path, encoding: str = "utf-8") -> list[JsonValue]:
         """
         Read data from JSON and parse into list of dict
         """
@@ -284,7 +284,7 @@ class FileUtil:
             raise ValueError(f"JSON file '{file_path}' must contain a list of objects")
 
     @staticmethod
-    def read_json_to_dict(file_path: Path, encoding="utf-8") -> dict[str, JsonValue]:
+    def read_json_to_dict(file_path: Path, encoding: str = "utf-8") -> dict[str, JsonValue]:
         """
         Read data from JSON and parse into dict
         """
@@ -296,7 +296,7 @@ class FileUtil:
 
     @staticmethod
     def read_csv_to_dict_of_tuples_with_header(
-        file_path: Path, delimiter: str = ",", encoding="utf-8"
+        file_path: Path, delimiter: str = ",", encoding: str = "utf-8"
     ) -> tuple[dict, list[tuple]]:
         """
         Read CSV to header dict and data list
@@ -321,7 +321,7 @@ class FileUtil:
 
     @staticmethod
     def read_csv_to_list_of_tuples_without_header(
-        file_path: Path, delimiter: str = ",", encoding="utf-8"
+        file_path: Path, delimiter: str = ",", encoding: str = "utf-8"
     ) -> list[tuple]:
         """
         Read CSV without header to data list
@@ -333,7 +333,7 @@ class FileUtil:
         return FileUtil._read_raw_csv(file_path, delimiter, encoding)
 
     @staticmethod
-    def read_wgt_file(file_path: Path, delimiter: str = ",", encoding="utf-8") -> tuple[list, list]:
+    def read_wgt_file(file_path: Path, delimiter: str = ",", encoding: str = "utf-8") -> tuple[list, list]:
         """
         Read wgt file having no header and 2 columns (wgt is 2nd column)
         :param file_path:
@@ -373,7 +373,9 @@ class FileUtil:
         return values, weights
 
     @staticmethod
-    def read_csv_having_weight_column(filepath: Path, weight_column_name: str, delimiter: str = ",", encoding="utf-8"):
+    def read_csv_having_weight_column(
+        filepath: Path, weight_column_name: str, delimiter: str = ",", encoding: str = "utf-8"
+    ):
         """
         Read CSV file having one weight column
         :param filepath:
@@ -406,7 +408,7 @@ class FileUtil:
         file_path: Path,
         weight_col_index: int = 1,
         delimiter: str = ",",
-        encoding="utf-8",
+        encoding: str = "utf-8",
     ) -> tuple[list, list]:
         """
         Read wgt file having no header and mutil columns,
