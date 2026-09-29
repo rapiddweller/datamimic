@@ -17,7 +17,7 @@ class ConnectionConfig(ABC):
     """
 
     @abstractmethod
-    def check_connection_config(self):
+    def check_connection_config(self) -> bool:
         """
         Check the connection configuration.
 

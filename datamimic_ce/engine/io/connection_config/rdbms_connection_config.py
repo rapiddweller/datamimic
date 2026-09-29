@@ -29,7 +29,7 @@ class RdbmsConnectionConfig(ConnectionConfig, BaseModel):
     def get_connection_config(self):
         return BaseModel.model_dump(self)
 
-    def check_connection_config(self):
+    def check_connection_config(self) -> bool:
         if not self.host:
             raise ValueError("Host is required")
 
