@@ -8,7 +8,7 @@ from abc import ABC
 from typing import Generic, TypeVar
 
 from datamimic_ce.domains.domain_core.base_domain_generator import BaseDomainGenerator
-from datamimic_ce.domains.domain_core.base_entity import BaseEntity
+from datamimic_ce.domains.domain_core.base_entity import BaseEntity, IdentifierRegistry
 from datamimic_ce.domains.domain_core.contracts.attribute_catalog import EntitySchema, FieldSpec
 from datamimic_ce.domains.domain_core.datasets.catalog import compute_supported_datasets
 
@@ -36,9 +36,9 @@ class BaseDomainService(ABC, Generic[T]):
     def __init__(self, data_generator: BaseDomainGenerator, model_cls: type[T]):
         self._data_generator = data_generator
         self._model_cls = model_cls
-        self._identifier_registry: dict[tuple[str, str], set[str]] = {}
+        self._identifier_registry = IdentifierRegistry()
 
-    def set_identifier_registry(self, registry: dict[tuple[str, str], set[str]]) -> None:
+    def set_identifier_registry(self, registry: IdentifierRegistry) -> None:
         """Use the engine run's registry instead of this service's standalone registry."""
         self._identifier_registry = registry
 

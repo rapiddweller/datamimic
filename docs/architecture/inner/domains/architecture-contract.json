@@ -24,7 +24,7 @@
       },
       {
         "path": "datamimic_ce/domains/domain_core/base_entity.py",
-        "responsibility": "Die Entity-Basis memoisiert Felder, h\u00e4lt Aliaszugriff kompatibel und vergibt formatgebundene eindeutige Schl\u00fcssel auch \u00fcber verschachtelte Entities hinweg."
+        "responsibility": "Die Entity-Basis memoisiert Felder und h\u00e4lt Aliaszugriff kompatibel; das Domain-eigene Register vergibt formatgebundene eindeutige Schl\u00fcssel auch \u00fcber verschachtelte Entities hinweg."
       },
       {
         "path": "datamimic_ce/domains/domain_core/base_literal_generator.py",
@@ -280,6 +280,7 @@
         "datamimic_ce.domains.domain_core.base_domain_service",
         "datamimic_ce.domains.domain_core.base_entity",
         "datamimic_ce.domains.domain_core.base_entity:BaseEntity",
+        "datamimic_ce.domains.domain_core.base_entity:IdentifierRegistry",
         "datamimic_ce.domains.domain_core.base_literal_generator",
         "datamimic_ce.domains.domain_core.contracts.attribute_catalog",
         "datamimic_ce.domains.domain_core.contracts.generation:GeneratorCapability",

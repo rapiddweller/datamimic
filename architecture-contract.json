@@ -336,6 +336,7 @@
         "datamimic_ce.domains.api:CompanyService",
         "datamimic_ce.domains.api:CountryService",
         "datamimic_ce.domains.api:DemographicConfig",
+        "datamimic_ce.domains.api:IdentifierRegistry",
         "datamimic_ce.domains.api:PersonService",
         "datamimic_ce.domains.domain_core.contracts.attribute_catalog:FieldSpec",
         "datamimic_ce.domains.domain_core.contracts.generation",

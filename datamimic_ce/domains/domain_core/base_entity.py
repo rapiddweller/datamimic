@@ -18,6 +18,33 @@ if TYPE_CHECKING:
     from datamimic_ce.domains.domain_core.contracts.attribute_catalog import EntitySchema, FieldSpec
 
 
+class IdentifierRegistry:
+    """Own allocation of unique domain identifiers for one generation run."""
+
+    def __init__(self) -> None:
+        self._seen: dict[tuple[str, str], set[str]] = {}
+
+    def claim(
+        self,
+        entity_name: str,
+        name: str,
+        candidate: str,
+        identifier_format: str,
+    ) -> str:
+        key = (entity_name, name)
+        seen = self._seen.setdefault(key, set())
+        if candidate not in seen:
+            self._seen[key] = seen | {candidate}
+            return candidate
+
+        for alternative in _identifier_alternatives(identifier_format, candidate, len(seen)):
+            if alternative not in seen:
+                self._seen[key] = seen | {alternative}
+                return alternative
+
+        raise ValueError(f"Unique identifier space exhausted for {entity_name}.{name}")
+
+
 class BaseEntity(EntityValue):
     """
     Base class for all domain entities.
@@ -29,7 +56,7 @@ class BaseEntity(EntityValue):
     def __init__(self, generator: BaseDomainGenerator | None = None):
         # Cache for generated values
         self._field_cache: dict[str, object] = {}
-        self._identifier_registry: dict[tuple[str, str], set[str]] | None = None
+        self._identifier_registry: IdentifierRegistry | None = None
         self._entity_name = type(self).__name__
         self._unique_identifier_formats: dict[str, str] = {}
         self._nested_identifier_schemas: dict[str, EntitySchema] = {}
@@ -60,7 +87,7 @@ class BaseEntity(EntityValue):
 
     def _bind_identifier_registry(
         self,
-        registry: dict[tuple[str, str], set[str]],
+        registry: IdentifierRegistry,
         entity_name: str,
         attributes: tuple[FieldSpec, ...],
         nested_schemas: dict[str, EntitySchema],
@@ -79,21 +106,7 @@ class BaseEntity(EntityValue):
         registry = self._identifier_registry
         if identifier_format is None or registry is None:
             return candidate
-
-        key = (self._entity_name, name)
-        if key not in registry:
-            registry[key] = set()
-        seen = registry[key]
-        if candidate not in seen:
-            registry[key] = seen | {candidate}
-            return candidate
-
-        for alternative in _identifier_alternatives(identifier_format, candidate, len(seen)):
-            if alternative not in seen:
-                registry[key] = seen | {alternative}
-                return alternative
-
-        raise ValueError(f"Unique identifier space exhausted for {self._entity_name}.{name}")
+        return registry.claim(self._entity_name, name, candidate, identifier_format)
 
     def _bind_nested_identifier(self, name: str, entity: BaseEntity) -> None:
         schema = self._nested_identifier_schemas.get(name)

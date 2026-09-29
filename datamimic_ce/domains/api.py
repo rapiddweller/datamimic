@@ -4,6 +4,7 @@ from collections.abc import Iterator
 
 from datamimic_ce.domains.domain_core.base_domain_generator import BaseDomainGenerator
 from datamimic_ce.domains.domain_core.base_domain_service import BaseDomainService
+from datamimic_ce.domains.domain_core.base_entity import IdentifierRegistry
 from datamimic_ce.domains.domain_core.base_literal_generator import BaseLiteralGenerator
 from datamimic_ce.domains.domain_core.contracts.generation import GeneratorCapability
 from datamimic_ce.domains.domain_core.runtime.clock import from_epoch_utc, resolve_clock, to_epoch_utc
@@ -88,6 +89,7 @@ __all__ = [
     "EntitySpec",
     "GeneratorCapability",
     "HashConverter",
+    "IdentifierRegistry",
     "JavaHashConverter",
     "LowerCaseConverter",
     "MaskConverter",

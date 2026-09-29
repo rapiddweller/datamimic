@@ -5,6 +5,7 @@ from random import Random
 
 import pytest
 
+from datamimic_ce.domains.api import IdentifierRegistry
 from datamimic_ce.domains.finance.services.bank_account_service import BankAccountService
 from datamimic_ce.domains.healthcare.services.patient_service import PatientService
 from datamimic_ce.domains.shared.demographics.config import DemographicConfig
@@ -78,7 +79,7 @@ def test_dynamic_entity_constructor_injects_only_signature_supported_overrides(m
         def __init__(self, dataset: str | None = None) -> None:
             received["dataset"] = dataset
 
-        def set_identifier_registry(self, registry: dict[tuple[str, str], set[str]]) -> None:  # noqa: ARG002
+        def set_identifier_registry(self, registry: IdentifierRegistry) -> None:  # noqa: ARG002
             return None
 
     from datamimic_ce import domains
@@ -102,7 +103,7 @@ def test_dynamic_entity_constructor_injects_supported_rng_and_demographics(monke
         def __init__(self, dataset: str | None, demographic_config: object, rng: object) -> None:
             received.update(dataset=dataset, demographic_config=demographic_config, rng=rng)
 
-        def set_identifier_registry(self, registry: dict[tuple[str, str], set[str]]) -> None:  # noqa: ARG002
+        def set_identifier_registry(self, registry: IdentifierRegistry) -> None:  # noqa: ARG002
             return None
 
     from datamimic_ce import domains

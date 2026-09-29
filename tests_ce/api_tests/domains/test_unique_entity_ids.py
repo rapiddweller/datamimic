@@ -10,7 +10,7 @@ import pytest
 
 from datamimic_ce.domains.domain_core.contracts.attribute_catalog import field
 from datamimic_ce.domains.domain_core.base_domain_generator import BaseDomainGenerator
-from datamimic_ce.domains.domain_core.base_entity import BaseEntity
+from datamimic_ce.domains.domain_core.base_entity import BaseEntity, IdentifierRegistry
 from datamimic_ce.domains.ecommerce.services.order_service import OrderService
 from datamimic_ce.domains.ecommerce.services.product_service import ProductService
 from datamimic_ce.domains.finance.services.transaction_service import TransactionService
@@ -157,6 +157,15 @@ _SERVICE_IDS = (
 _COLLISION_TEST_SERVICES = tuple(case for case in _SERVICE_IDS if case[0] is not TransactionService)
 
 
+def test_identifier_registry_scopes_claims_by_entity_and_field() -> None:
+    registry = IdentifierRegistry()
+
+    assert registry.claim("First", "id", "IDA", "ID[A-B]{1}") == "IDA"
+    assert registry.claim("Second", "id", "IDA", "ID[A-B]{1}") == "IDA"
+    assert registry.claim("First", "other_id", "IDA", "ID[A-B]{1}") == "IDA"
+    assert registry.claim("First", "id", "IDA", "ID[A-B]{1}") == "IDB"
+
+
 @pytest.mark.parametrize(("service_type", "field_name", "get_id", "id_pattern", "_expected"), _COLLISION_TEST_SERVICES)
 def test_service_batch_keeps_ids_unique_after_candidate_collision(
     service_type, field_name: str, get_id, id_pattern: str, _expected
@@ -257,7 +266,7 @@ def test_finite_identifier_format_exhaustion_is_explicit() -> None:
     attributes = (field("entity_id", str, "test ID", unique_identifier_format="ONLY[A]{1}"),)
     first = TinyEntity(BaseDomainGenerator(rng=Random(1)))
     second = TinyEntity(BaseDomainGenerator(rng=Random(1)))
-    registry: dict[tuple[str, str], set[str]] = {}
+    registry = IdentifierRegistry()
     first._bind_identifier_registry(registry, "TinyEntity", attributes, {})
     second._bind_identifier_registry(registry, "TinyEntity", attributes, {})
 

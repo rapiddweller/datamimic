@@ -20,6 +20,7 @@ from datamimic_ce.domains.api import (
     BaseLiteralGenerator,
     Converter,
     CustomConverter,
+    IdentifierRegistry,
     RunSeed,
     derive_child_seed,
     spawn_rng,
@@ -211,7 +212,7 @@ class SetupContext(Context):
         report_logging: bool = True,
         demographic_context: DemographicContext | None = None,
         run_seed: RunSeed | None = None,
-        domain_identifier_registry: dict[tuple[str, str], set[str]] | None = None,
+        domain_identifier_registry: IdentifierRegistry | None = None,
         runtime_environment: Literal["development", "production"] = "production",
         ray_debug: bool = False,
     ):
@@ -251,7 +252,9 @@ class SetupContext(Context):
         self._num_process = num_process
         self._process_id: int | None = None
         self.global_increment_registry: GlobalIncrementRegistry | None = None
-        self._domain_identifier_registry = {} if domain_identifier_registry is None else domain_identifier_registry
+        self._domain_identifier_registry = (
+            IdentifierRegistry() if domain_identifier_registry is None else domain_identifier_registry
+        )
         self._default_variable_prefix = default_variable_prefix
         self._default_variable_suffix = default_variable_suffix
         # IMPORTANT: do not set default bool value to default_source_scripted for config propagation
@@ -343,7 +346,7 @@ class SetupContext(Context):
         )
 
     @property
-    def domain_identifier_registry(self) -> dict[tuple[str, str], set[str]]:
+    def domain_identifier_registry(self) -> IdentifierRegistry:
         return self._domain_identifier_registry
 
     def _deepcopy_clients(self, memo):

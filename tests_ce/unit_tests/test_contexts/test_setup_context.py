@@ -52,6 +52,20 @@ def test_setup_context_deepcopy_shares_globals_but_resets_runtime_state() -> Non
     assert copied.global_increment_registry is None
 
 
+def test_setup_context_deepcopy_isolates_domain_identifier_state() -> None:
+    context = _context()
+    registry = context.domain_identifier_registry
+    assert registry.claim("TinyEntity", "id", "IDA", "ID[A-C]{1}") == "IDA"
+
+    copied = copy.deepcopy(context)
+    copied_registry = copied.domain_identifier_registry
+
+    assert copied_registry is not registry
+    assert copied_registry.claim("TinyEntity", "id", "IDA", "ID[A-C]{1}") == "IDB"
+    assert copied_registry.claim("TinyEntity", "id", "IDA", "ID[A-C]{1}") == "IDC"
+    assert registry.claim("TinyEntity", "id", "IDA", "ID[A-C]{1}") == "IDB"
+
+
 def test_include_setup_merge_overrides_declared_defaults_but_preserves_run_seed() -> None:
     context = _context()
     statement = SetupStatement(
