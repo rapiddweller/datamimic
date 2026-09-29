@@ -15,11 +15,13 @@ Compiler, authoring-reference, and scaffold-reference projection hashes match
 Step 40. The capability projection differs: the schema version advanced and
 `<transition>` now advertises `from`, `to`, and `weight` attributes. The
 transition metadata change is recorded in the dated transition-grammar
-amendment. The current comparator still recognizes only Amendment 60, so its
-full projection gate reports a difference until the exact approved delta is
-encoded and negatively tested.
+amendment. The comparator now accepts exactly that transition map alongside
+Amendment 60 and the package version. Its negative tests reject missing,
+wrong, or extra transition fields; all other projection content stays exact.
+The frozen Step-0 capability projection and the current capture pass this
+projection check, without claiming the full descriptor comparison passes.
 
-LOCAL VERIFIED: 1,477 CE unit tests passed (11 skipped, 1 xfailed); 930 local
+LOCAL VERIFIED: 1,484 CE unit tests passed (11 skipped, 1 xfailed); 930 local
 oracle cases ran with four workers and were compared with Step 40. Repeat
 captures for the six unseeded schema differences ran serially. Raw captures:
 `/private/tmp/ce-step53-oracle.json`, `/private/tmp/ce-step53-unseeded-repeat.json`,

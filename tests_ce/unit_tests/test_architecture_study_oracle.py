@@ -8,10 +8,11 @@ import subprocess
 import sys
 import xml.etree.ElementTree as ET
 from pathlib import Path
+from types import SimpleNamespace
 
 import pytest
 
-from script.architecture_study import compare_step0
+from script.architecture_study import compare_step0, verify_step0
 from script.architecture_study.compare_step0 import (
     _CAPABILITY_OLD_VERSION,
     _CAPABILITY_WORDING_CHANGES,
@@ -23,7 +24,7 @@ from script.architecture_study.compare_step0 import (
     projections_equivalent,
     shape_compatible,
 )
-from script.architecture_study.verify_step0 import CHILD, REPO, RESULT_PREFIX, run_descriptor
+from script.architecture_study.verify_step0 import CHILD, REPO, RESULT_PREFIX, inventory, run_descriptor
 
 _EXPECTED_CAPABILITY_WORDING_CHANGES = {
     ("rules", "35", "provenance"): (
@@ -85,6 +86,15 @@ def _capability_pair() -> tuple[dict[str, object], dict[str, object]]:
 
     old: dict[str, object] = {"schema_version": _CAPABILITY_OLD_VERSION}
     new: dict[str, object] = {"schema_version": compare_step0.captured_package_version()}
+    for document, attributes in (
+        (old, {}),
+        (new, {
+            "from": {"required": True, "type": "str"},
+            "to": {"required": True, "type": "str"},
+            "weight": {"required": False, "type": "float"},
+        }),
+    ):
+        document.setdefault("elements", {}).setdefault("transition", {})["attributes"] = attributes
     for path, (before, after) in _EXPECTED_CAPABILITY_WORDING_CHANGES.items():
         for document, wording in ((old, before), (new, after)):
             parent: object = document
@@ -104,7 +114,7 @@ def _capability_pair() -> tuple[dict[str, object], dict[str, object]]:
     return json.loads(json.dumps(old)), json.loads(json.dumps(new))
 
 
-def test_capability_projection_accepts_only_amendment_60_changes() -> None:
+def test_capability_projection_accepts_amendment_60_and_transition_grammar() -> None:
     import json
 
     assert _CAPABILITY_WORDING_CHANGES == _EXPECTED_CAPABILITY_WORDING_CHANGES
@@ -115,6 +125,50 @@ def test_capability_projection_accepts_only_amendment_60_changes() -> None:
         old_item, new_item
     )
     assert (old_item, new_item) == original
+
+
+@pytest.mark.parametrize(
+    "attributes",
+    [
+        {
+            "from": {"required": True, "type": "int"},
+            "to": {"required": True, "type": "str"},
+            "weight": {"required": False, "type": "float"},
+        },
+        {
+            "from": {"required": False, "type": "str"},
+            "to": {"required": True, "type": "str"},
+            "weight": {"required": False, "type": "float"},
+        },
+        {"from": {"required": True, "type": "str"}, "weight": {"required": False, "type": "float"}},
+        {
+            "from": {"required": True, "type": "str"},
+            "to": {"required": True, "type": "str"},
+            "weight": {"required": False},
+        },
+        {
+            "from": {"required": True, "type": "str"},
+            "to": {"required": True, "type": "str"},
+            "weight": {"required": False, "type": "float", "default": 1.0},
+        },
+        {
+            "from": {"required": True, "type": "str"},
+            "to": {"required": True, "type": "str"},
+            "weight": {"required": False, "type": "float"},
+            "extra": {"required": False, "type": "str"},
+        },
+    ],
+)
+def test_capability_projection_rejects_unapproved_transition_grammar(attributes: dict[str, object]) -> None:
+    old, new = _capability_pair()
+    new["elements"]["transition"]["attributes"] = attributes
+    assert not capability_projection_equivalent(_projection(json.dumps(old)), _projection(json.dumps(new)))
+
+
+def test_capability_projection_rejects_nonempty_frozen_transition_grammar() -> None:
+    old, new = _capability_pair()
+    old["elements"]["transition"]["attributes"] = {"from": {"required": True, "type": "str"}}
+    assert not capability_projection_equivalent(_projection(json.dumps(old)), _projection(json.dumps(new)))
 
 
 @pytest.mark.parametrize("path", list(_EXPECTED_CAPABILITY_WORDING_CHANGES))
@@ -1141,3 +1195,73 @@ def test_evidence_normalization_preserves_test_path_and_semantics() -> None:
         assert comparable({**baseline, "status": "UNVERIFIED"}) != comparable(
             {**changed, "status": "UNVERIFIED"}
         )
+
+
+def _inventory_one_descriptor(tmp_path: Path, monkeypatch: pytest.MonkeyPatch, relative: str, xml: str) -> dict:
+    descriptor = tmp_path / relative
+    descriptor.parent.mkdir(parents=True, exist_ok=True)
+    descriptor.write_text(xml, encoding="utf-8")
+    monkeypatch.setattr(verify_step0, "REPO", tmp_path)
+    monkeypatch.setattr(
+        verify_step0.subprocess,
+        "run",
+        lambda *_args, **_kwargs: SimpleNamespace(stdout=relative),
+    )
+    return inventory()[0]
+
+
+@pytest.mark.parametrize(
+    ("relative", "clients", "expected_category"),
+    [
+        ("tests_ce/integration_tests/local.xml", '<database id="one" dbms="sqlite"/>', "runnable"),
+        (
+            "tests_ce/integration_tests/local.xml",
+            '<database id="one" dbms="sqlite"/><database id="two" dbms="sqlite"/>',
+            "runnable",
+        ),
+        ("tests_ce/integration_tests/remote.xml", '<database id="db" dbms="postgresql"/>', "external-service"),
+        ("tests_ce/integration_tests/unknown.xml", '<database id="db"/>', "external-service"),
+        ("tests_ce/integration_tests/unknown.xml", '<database id="db" dbms="SQLITE"/>', "external-service"),
+        (
+            "tests_ce/integration_tests/mixed.xml",
+            '<database id="local" dbms="sqlite"/><database id="remote" dbms="postgresql"/>',
+            "external-service",
+        ),
+        (
+            "tests_ce/integration_tests/mixed.xml",
+            '<database id="local" dbms="sqlite"/><mongodb id="remote"/>',
+            "external-service",
+        ),
+        ("tests_ce/integration_tests/mongo.xml", '<mongodb id="mongo"/>', "external-service"),
+        ("tests_ce/integration_tests/kafka.xml", '<kafka id="events"/>', "external-service"),
+        ("tests_ce/integration_tests/object.xml", '<object-storage id="bucket"/>', "external-service"),
+        (
+            "tests_ce/external_service_tests/local.xml",
+            '<database id="db" dbms="sqlite"/>',
+            "external-service",
+        ),
+        (
+            "tests_ce/integration_tests/namespaced.xml",
+            '<remote:mongodb xmlns:remote="urn:clients" id="mongo"/>',
+            "external-service",
+        ),
+        ("tests_ce/integration_tests/cased.xml", '<MongoDB id="mongo"/>', "external-service"),
+    ],
+)
+def test_inventory_gates_unknown_or_external_clients_but_allows_local_sqlite(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+    relative: str,
+    clients: str,
+    expected_category: str,
+) -> None:
+    record = _inventory_one_descriptor(
+        tmp_path,
+        monkeypatch,
+        relative,
+        f"<setup>{clients}<generate name='rows' count='1'/></setup>",
+    )
+
+    assert expected_category in record["category"]
+    if expected_category == "runnable":
+        assert "external-service" not in record["category"]

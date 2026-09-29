@@ -541,12 +541,23 @@ def inventory() -> list[dict[str, Any]]:
             records.append({"path": relative, "category": categories, "evidence": evidence})
             continue
         tags = sorted({node.tag.rsplit("}", 1)[-1].lower() for node in root.iter()})
+        database_nodes = [
+            node for node in root.iter() if node.tag.rsplit("}", 1)[-1].lower() == "database"
+        ]
+        sqlite_only_databases = bool(database_nodes) and all(
+            node.get("dbms") == "sqlite" for node in database_nodes
+        )
         categories: list[str] = []
         evidence: list[str] = []
         if relative.startswith("tests_ce/unit_tests/test_authoring/fixtures/"):
             categories.append("authoring-fixture")
             evidence.append("unit_tests/test_authoring/fixtures path; fixture consumed by authoring tests")
-        if "external_service_tests" in path.parts or {"database", "mongodb", "kafka", "object-storage"} & set(tags):
+        external_clients = {"mongodb", "kafka", "object-storage"} & set(tags)
+        if (
+            "external_service_tests" in path.parts
+            or external_clients
+            or ("database" in tags and not sqlite_only_databases)
+        ):
             categories.append("external-service")
             source = (
                 "tests_ce/external_service_tests suite"
@@ -578,7 +589,7 @@ def inventory() -> list[dict[str, Any]]:
             evidence.extend(fixture_evidence)
         if not categories:
             categories.append("runnable")
-            evidence.append("well-formed <setup>; no service client or explicit expected-error test")
+            evidence.append("well-formed <setup>; no external service client or explicit expected-error test")
         records.append(
             {
                 "path": relative,

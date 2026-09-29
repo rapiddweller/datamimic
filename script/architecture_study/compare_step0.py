@@ -69,6 +69,15 @@ _CAPABILITY_WORDING_CHANGES = {
     ),
 }
 _CAPABILITY_OLD_VERSION = "4.3.1.dev89+dirty"
+_CAPABILITY_TRANSITION_CHANGE = (
+    ("elements", "transition", "attributes"),
+    {},
+    {
+        "from": {"required": True, "type": "str"},
+        "to": {"required": True, "type": "str"},
+        "weight": {"required": False, "type": "float"},
+    },
+)
 
 
 def normalize_error_message(message: str) -> str:
@@ -151,6 +160,10 @@ def capability_projection_equivalent(old_item: Any, new_item: Any) -> bool:
         if _at_path(old, path) != before or _at_path(new, path) != after:
             return False
         _set_path(old, path, _at_path(new, path))
+    path, before, after = _CAPABILITY_TRANSITION_CHANGE
+    if _at_path(old, path) != before or _at_path(new, path) != after:
+        return False
+    _set_path(old, path, after)
     return old == new
 
 
@@ -538,7 +551,7 @@ def main() -> None:
             and old_capability.get("sha256") != new_capability.get("sha256")
         ):
             print(
-                "APPROVED Amendment 60 capability projection: "
+                "APPROVED Amendment 60 and transition grammar capability projection: "
                 f"{old_capability['sha256']} -> {new_capability['sha256']}"
             )
     if not projection_pass:
