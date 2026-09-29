@@ -4,7 +4,7 @@
 # See LICENSE file for the full text of the license.
 # For questions and support, contact: info@rapiddweller.com
 
-from datamimic_ce.engine.dsl.model.setup.generator_model import GeneratorModel
+from datamimic_ce.engine.dsl.model.setup.generators.generator_model import GeneratorModel
 from datamimic_ce.engine.dsl.parsers.base.statement_parser import StatementParser
 from datamimic_ce.engine.dsl.parsers.input.xml import XmlElement
 from datamimic_ce.engine.dsl.statements.setup.generator_statement import GeneratorStatement

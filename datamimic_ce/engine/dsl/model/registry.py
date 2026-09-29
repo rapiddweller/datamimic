@@ -87,13 +87,13 @@ def _builtin_definitions() -> dict[str, ElementDefinition]:
     from datamimic_ce.engine.dsl.model.generation.generate_model import GenerateModel
     from datamimic_ce.engine.dsl.model.setup.database_model import DatabaseModel
     from datamimic_ce.engine.dsl.model.setup.demographics_model import DemographicsModel
-    from datamimic_ce.engine.dsl.model.setup.generator_model import GeneratorModel
+    from datamimic_ce.engine.dsl.model.setup.generators.generator_model import GeneratorModel
+    from datamimic_ce.engine.dsl.model.setup.generators.state_machine_model import StateMachineModel
+    from datamimic_ce.engine.dsl.model.setup.generators.transition_model import TransitionModel
     from datamimic_ce.engine.dsl.model.setup.include_model import IncludeModel
     from datamimic_ce.engine.dsl.model.setup.memstore_model import MemstoreModel
     from datamimic_ce.engine.dsl.model.setup.mongodb_model import MongoDBModel
     from datamimic_ce.engine.dsl.model.setup.setup_model import SetupModel
-    from datamimic_ce.engine.dsl.model.setup.state_machine_model import StateMachineModel
-    from datamimic_ce.engine.dsl.model.setup.transition_model import TransitionModel
     from datamimic_ce.engine.dsl.model.values.references.reference_field_model import ReferenceFieldModel
     from datamimic_ce.engine.dsl.model.values.references.reference_model import ReferenceModel
     from datamimic_ce.engine.dsl.model.values.scalar.element_model import ElementModel

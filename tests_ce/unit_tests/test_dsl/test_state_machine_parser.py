@@ -5,7 +5,7 @@ from pydantic import ValidationError
 
 from datamimic_ce.authoring.domain.schema import build_schema_index
 from datamimic_ce.engine.dsl.model.registry import get_model_class
-from datamimic_ce.engine.dsl.model.setup.transition_model import TransitionModel
+from datamimic_ce.engine.dsl.model.setup.generators.transition_model import TransitionModel
 from datamimic_ce.engine.dsl.parsers.input.xml import parse_xml_source
 from datamimic_ce.engine.dsl.parsers.setup.state_machine_parser import StateMachineParser
 from datamimic_ce.engine.dsl.vocabulary.constants.element_constants import EL_TRANSITION

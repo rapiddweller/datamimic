@@ -10,7 +10,7 @@ from pathlib import Path
 
 from datamimic_ce.domains.domain_core.base_literal_generator import BaseLiteralGenerator
 from datamimic_ce.engine.dsl.api import Statement
-from datamimic_ce.engine.dsl.model.setup.generator_model import GeneratorModel
+from datamimic_ce.engine.dsl.model.setup.generators.generator_model import GeneratorModel
 from datamimic_ce.engine.dsl.statements.setup.generator_statement import GeneratorStatement
 from datamimic_ce.engine.io.exporters.diagnostics.test_result_exporter import TestResultExporter
 from datamimic_ce.engine.runtime.contexts.context import SetupContext

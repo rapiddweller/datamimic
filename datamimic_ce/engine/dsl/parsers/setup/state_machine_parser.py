@@ -4,8 +4,8 @@
 # See LICENSE file for the full text of the license.
 # For questions and support, contact: info@rapiddweller.com
 
-from datamimic_ce.engine.dsl.model.setup.state_machine_model import StateMachineModel
-from datamimic_ce.engine.dsl.model.setup.transition_model import TransitionModel
+from datamimic_ce.engine.dsl.model.setup.generators.state_machine_model import StateMachineModel
+from datamimic_ce.engine.dsl.model.setup.generators.transition_model import TransitionModel
 from datamimic_ce.engine.dsl.parsers.base.statement_parser import StatementParser
 from datamimic_ce.engine.dsl.parsers.input.xml import XmlElement, xml_tag
 from datamimic_ce.engine.dsl.statements.setup.state_machine_statement import StateMachineStatement

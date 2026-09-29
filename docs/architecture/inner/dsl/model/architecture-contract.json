@@ -67,7 +67,7 @@
         "responsibility": "Validates demographics dataset, version, directory, and optional RNG seed, rejecting attributes outside that setup contract."
       },
       {
-        "path": "datamimic_ce/engine/dsl/model/setup/generator_model.py",
+        "path": "datamimic_ce/engine/dsl/model/setup/generators/generator_model.py",
         "responsibility": "Validates a generator declaration's non-empty name and expression and rejects unsupported attributes."
       },
       {
@@ -87,11 +87,11 @@
         "responsibility": "Validates setup attributes and carries run-wide defaults, seed, and multiprocessing settings."
       },
       {
-        "path": "datamimic_ce/engine/dsl/model/setup/state_machine_model.py",
+        "path": "datamimic_ce/engine/dsl/model/setup/generators/state_machine_model.py",
         "responsibility": "Declares the state-machine ID and optional start state used to register a setup-level weighted machine."
       },
       {
-        "path": "datamimic_ce/engine/dsl/model/setup/transition_model.py",
+        "path": "datamimic_ce/engine/dsl/model/setup/generators/transition_model.py",
         "responsibility": "Validates transition endpoints and positive weights for state-machine edges."
       },
       {
@@ -304,9 +304,9 @@
         }
       ],
       "public": [
-        "datamimic_ce.engine.dsl.model.setup.state_machine_model:StateMachineModel",
-        "datamimic_ce.engine.dsl.model.setup.transition_model:TransitionModel",
-        "datamimic_ce.engine.dsl.model.setup.generator_model:GeneratorModel",
+        "datamimic_ce.engine.dsl.model.setup.generators.state_machine_model:StateMachineModel",
+        "datamimic_ce.engine.dsl.model.setup.generators.transition_model:TransitionModel",
+        "datamimic_ce.engine.dsl.model.setup.generators.generator_model:GeneratorModel",
         "datamimic_ce.engine.dsl.model.setup.database_model:DatabaseModel",
         "datamimic_ce.engine.dsl.model.setup.include_model:IncludeModel",
         "datamimic_ce.engine.dsl.model.setup.memstore_model:MemstoreModel",
@@ -546,15 +546,28 @@
       "allowed_children": [
         "datamimic_ce.engine.dsl.model.setup.database_model",
         "datamimic_ce.engine.dsl.model.setup.demographics_model",
-        "datamimic_ce.engine.dsl.model.setup.generator_model",
+        "datamimic_ce.engine.dsl.model.setup.generators",
         "datamimic_ce.engine.dsl.model.setup.include_model",
         "datamimic_ce.engine.dsl.model.setup.memstore_model",
         "datamimic_ce.engine.dsl.model.setup.mongodb_model",
-        "datamimic_ce.engine.dsl.model.setup.setup_model",
-        "datamimic_ce.engine.dsl.model.setup.state_machine_model",
-        "datamimic_ce.engine.dsl.model.setup.transition_model"
+        "datamimic_ce.engine.dsl.model.setup.setup_model"
       ],
-      "rationale": "Ordered setup/client/include/generator/state-machine/demographics declarations. Exact reviewed target children; no hidden extra modules.",
+      "rationale": "Setup clients, includes, demographics, and generator declarations; generator definitions form one semantic child group.",
+      "provenance": [
+        "docs/architecture/inner/structure-review.json"
+      ],
+      "decided_by": "agent"
+    },
+    {
+      "id": "LAYOUT-ENGINE-DSL-MODEL-SETUP-GENERATORS",
+      "kind": "root_layout",
+      "root": "datamimic_ce.engine.dsl.model.setup.generators",
+      "allowed_children": [
+        "datamimic_ce.engine.dsl.model.setup.generators.generator_model",
+        "datamimic_ce.engine.dsl.model.setup.generators.state_machine_model",
+        "datamimic_ce.engine.dsl.model.setup.generators.transition_model"
+      ],
+      "rationale": "Named and stateful generator definitions share grammar ownership, without grouping unrelated setup clients.",
       "provenance": [
         "docs/architecture/inner/structure-review.json"
       ],

@@ -1545,7 +1545,7 @@
     },
     {
       "source": "engine/dsl/model/generator_model.py",
-      "target": "engine/dsl/model/setup/generator_model.py"
+      "target": "engine/dsl/model/setup/generators/generator_model.py"
     },
     {
       "source": "engine/dsl/model/if_model.py",
@@ -1597,7 +1597,7 @@
     },
     {
       "source": "engine/dsl/model/state_machine_model.py",
-      "target": "engine/dsl/model/setup/state_machine_model.py"
+      "target": "engine/dsl/model/setup/generators/state_machine_model.py"
     },
     {
       "source": "engine/dsl/model/value_model.py",
@@ -2231,10 +2231,6 @@
       "reason": "Generator/entity/service contracts, shared dataset infrastructure and deterministic primitives. These distinct owners remain together; a count-only wrapper adds no boundary."
     },
     {
-      "path": "engine/dsl/model/setup",
-      "reason": "Ordered setup/client/include/generator/state-machine/demographics declarations. These distinct owners remain together; a count-only wrapper adds no boundary."
-    },
-    {
       "path": "engine/dsl/parsers",
       "reason": "Ordered document parsing and concrete parser dispatch. These distinct owners remain together; a count-only wrapper adds no boundary."
     },
@@ -2355,7 +2351,7 @@
       "reason": "Own the shared target-call syntax parser with DSL input parsing, so authoring rules do not depend on IO."
     },
     {
-      "target": "engine/dsl/model/setup/transition_model.py",
+      "target": "engine/dsl/model/setup/generators/transition_model.py",
       "reason": "The transition grammar needs one typed owner shared by parser and authoring schema."
     }
   ],
@@ -2397,9 +2393,9 @@
     {"target": "engine/dsl/api.py", "responsibility": "Exports the stable DSL model, parser, statement, vocabulary, and constraint API."},
     {"target": "engine/dsl/model/constraints/__init__.py", "responsibility": "Exports DSL constraint facts, types, registry, and schema-serialization helpers."},
     {"target": "engine/dsl/model/registry.py", "responsibility": "Owns canonical element metadata, child grammar, aliases, model and extension-parser bindings, and atomic constraint registration."},
-    {"target": "engine/dsl/model/setup/generator_model.py", "responsibility": "Validates a generator declaration's non-empty name and expression and rejects unsupported attributes."},
+    {"target": "engine/dsl/model/setup/generators/generator_model.py", "responsibility": "Validates a generator declaration's non-empty name and expression and rejects unsupported attributes."},
     {"target": "engine/dsl/model/setup/setup_model.py", "responsibility": "Validates setup attributes and carries run-wide defaults, seed, and multiprocessing settings."},
-    {"target": "engine/dsl/model/setup/transition_model.py", "responsibility": "Validates transition endpoints and positive weights for state-machine edges."},
+    {"target": "engine/dsl/model/setup/generators/transition_model.py", "responsibility": "Validates transition endpoints and positive weights for state-machine edges."},
     {"target": "engine/dsl/parsers/base/client_config.py", "responsibility": "Merges descriptor attributes with lazily loaded connection profile credentials."},
     {"target": "engine/dsl/parsers/base/dispatch.py", "responsibility": "Dispatches parsed XML elements to built-in or registered extension statement parsers."},
     {"target": "engine/dsl/parsers/registry.py", "responsibility": "Registers built-in CE XML tags with their concrete statement parsers."},

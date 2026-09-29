@@ -58,6 +58,7 @@ environment-bootstrap exception, not a catch-all component.
         source_capabilities.py  source-format and source-mode facts
       model/
         validation.py  constraints/  flow/  values/  setup/  generation/
+        setup/generators/       named and stateful generator definitions
         registry.py             schema facts, never parser implementations
       parsers/
         base/  flow/  values/  setup/  generation/  document/  input/
