@@ -97,7 +97,7 @@ class FileUtil:
         return parse_properties(path, encoding)
 
     @staticmethod
-    def _read_raw_csv(file_path: Path, separator: str, encoding: str = "utf-8") -> list[tuple]:
+    def _read_raw_csv(file_path: Path, separator: str, encoding: str = "utf-8") -> list[tuple[str, ...]]:
         """
         Read raw csv data
         """
@@ -116,7 +116,9 @@ class FileUtil:
             raise FileNotFoundError(f"CSV file not found '{file_path}', error: {e}") from e
 
     @staticmethod
-    def read_csv_to_dict_list(file_path: Path, separator: str, encoding: str = "utf-8") -> list[dict]:
+    def read_csv_to_dict_list(
+        file_path: Path, separator: str, encoding: str = "utf-8"
+    ) -> list[dict[str, str]]:
         """
         Read data from csv and parse into list of dict
         """
@@ -297,7 +299,7 @@ class FileUtil:
     @staticmethod
     def read_csv_to_dict_of_tuples_with_header(
         file_path: Path, delimiter: str = ",", encoding: str = "utf-8"
-    ) -> tuple[dict, list[tuple]]:
+    ) -> tuple[dict[str, int], list[tuple[str, ...]]]:
         """
         Read CSV to header dict and data list
         :param delimiter: delimiter used in the CSV file
@@ -322,7 +324,7 @@ class FileUtil:
     @staticmethod
     def read_csv_to_list_of_tuples_without_header(
         file_path: Path, delimiter: str = ",", encoding: str = "utf-8"
-    ) -> list[tuple]:
+    ) -> list[tuple[str, ...]]:
         """
         Read CSV without header to data list
         :param file_path: path to the CSV file

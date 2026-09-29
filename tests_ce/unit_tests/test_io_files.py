@@ -1,7 +1,9 @@
 import json
+from typing import get_type_hints
 
 import pytest
 
+from datamimic_ce.engine.io.files.cache import FileContentStorage
 from datamimic_ce.engine.io.files.readers import FileUtil
 
 
@@ -36,3 +38,56 @@ def test_read_json_to_list_rejects_non_list_roots(tmp_path):
 
     with pytest.raises(ValueError, match="must contain a list of objects"):
         FileUtil.read_json_to_list(path)
+
+
+def test_csv_raw_reader_caches_quoted_rows(tmp_path):
+    path = tmp_path / "quoted.csv"
+    path.write_text('name|note\nAda|"uses | delimiter"\n', encoding="utf-8")
+
+    assert FileUtil._read_raw_csv(path, "|") == [("name", "note"), ("Ada", "uses | delimiter")]
+
+    path.unlink()
+    assert FileUtil._read_raw_csv(path, "|") == [("name", "note"), ("Ada", "uses | delimiter")]
+
+
+def test_csv_readers_preserve_bom_and_ragged_row_behavior(tmp_path):
+    path = tmp_path / "ragged.csv"
+    path.write_text("\ufeffname,value\nAda\nGrace,compiler,extra\n", encoding="utf-8")
+
+    assert FileUtil.read_csv_to_dict_of_tuples_with_header(path) == (
+        {"name": 0, "value": 1},
+        [("Ada",), ("Grace", "compiler", "extra")],
+    )
+    assert FileUtil.read_csv_to_dict_list(path, ",") == [
+        {"\ufeffname": "Ada"},
+        {"\ufeffname": "Grace", "value": "compiler"},
+    ]
+
+
+def test_csv_reader_rejects_malformed_cached_rows(tmp_path):
+    path = tmp_path / "cached.csv"
+    FileContentStorage._file_data_cache[str(path)] = [("valid",), (1,)]
+
+    with pytest.raises(ValueError, match="Cached CSV data.*invalid shape"):
+        FileUtil._read_raw_csv(path, ",")
+
+
+def test_csv_empty_file_is_empty_for_raw_and_dict_readers(tmp_path):
+    path = tmp_path / "empty.csv"
+    path.write_text("", encoding="utf-8")
+
+    assert FileUtil._read_raw_csv(path, ",") == []
+    assert FileUtil.read_csv_to_dict_list(path, ",") == []
+    with pytest.raises(IndexError):
+        FileUtil.read_csv_to_dict_of_tuples_with_header(path)
+
+
+def test_csv_reader_annotations_are_narrow():
+    assert get_type_hints(FileUtil._read_raw_csv)["return"] == list[tuple[str, ...]]
+    assert get_type_hints(FileUtil.read_csv_to_dict_list)["return"] == list[dict[str, str]]
+    assert get_type_hints(FileUtil.read_csv_to_dict_of_tuples_with_header)["return"] == tuple[
+        dict[str, int], list[tuple[str, ...]]
+    ]
+    assert get_type_hints(FileUtil.read_csv_to_list_of_tuples_without_header)["return"] == list[
+        tuple[str, ...]
+    ]
