@@ -16,8 +16,9 @@ from datamimic_ce.engine.dsl.api import (
     GenerateStatement,
 )
 from datamimic_ce.engine.dsl.model.generation.generate_model import GenerateModel
-from datamimic_ce.engine.io.api import ExportSession, buffered_exporter_names, create_exporter_list
+from datamimic_ce.engine.io.api import ExportSession, buffered_exporter_names
 from datamimic_ce.engine.io.exporters import registry as exporter_registry
+from datamimic_ce.engine.io.exporters import session as export_session_module
 from datamimic_ce.engine.io.exporters.core.exporter import Exporter
 from datamimic_ce.engine.io.exporters.core.exporter_config import ExporterConfig
 from datamimic_ce.engine.io.exporters.database.mongodb_exporter import MongoDBExporter
@@ -27,6 +28,7 @@ from datamimic_ce.engine.io.exporters.formats.csv_exporter import CSVExporter
 from datamimic_ce.engine.io.exporters.formats.json_exporter import JsonExporter
 from datamimic_ce.engine.io.exporters.formats.txt_exporter import TXTExporter
 from datamimic_ce.engine.io.exporters.formats.xml_exporter import XMLExporter
+from datamimic_ce.engine.io.exporters.registry import create_exporter_list
 from datamimic_ce.engine.runtime.tasks.generate import export_order
 from tests_ce.unit_tests.test_exporter.exporter_test_util import MockSetupContext
 
@@ -277,12 +279,42 @@ def test_conversion_failure_precedes_registration_lookup_and_nested_writes(
     def fail_conversion(_row: dict[str, object]) -> object:
         raise ValueError("unserializable XML row")
 
-    monkeypatch.setattr(exporter_registry, "convert_xml_dict_to_json_dict", fail_conversion)
+    monkeypatch.setattr(export_session_module, "convert_xml_dict_to_json_dict", fail_conversion)
 
     with pytest.raises(ValueError, match="unserializable XML row"):
         export_order.export_product_by_page(
             parent,
             {parent.full_name: [{"payload": {"#text": "parent"}}], child.full_name: [{"id": 1}]},
+            session,
+        )
+
+    assert child_result.get_result() == {}
+
+
+def test_export_session_registers_targets_through_registry_factory() -> None:
+    result = TestResultExporter()
+    setup_context = SimpleNamespace(test_result_exporter=result)
+    session = ExportSession(worker_id=1)
+
+    session.register(setup_context, "products", "products", None, ["TestResultExporter"])
+    page = session.prepare_page("products", "products", [{"id": 1}], {})
+    session.dispatch_page("products", page)
+
+    assert result.get_result() == {"products": [{"id": 1}]}
+
+
+def test_missing_registration_fails_before_nested_writes() -> None:
+    parent = GenerateStatement(GenerateModel(name="parents", count="1"), None)
+    child = GenerateStatement(GenerateModel(name="children", count="1"), parent)
+    parent.sub_statements = [child]
+    child_result = TestResultExporter()
+    session = ExportSession(worker_id=1)
+    session._register_exporters(child.full_name, [], [child_result])
+
+    with pytest.raises(KeyError, match=parent.full_name):
+        export_order.export_product_by_page(
+            parent,
+            {parent.full_name: [{"id": 1}], child.full_name: [{"id": 2}]},
             session,
         )
 

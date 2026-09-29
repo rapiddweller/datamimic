@@ -103,7 +103,8 @@ is a catch-all component.
       files/                    narrow dataset API, readers and cache
       exporters/
         core/  formats/  database/  memory/  diagnostics/
-        registry.py             exporter construction and registration
+        registry.py             exporter construction from target strings
+        session.py              worker registration and page dispatch
   domains/
     api.py  facade.py
     registry/                   entity/generator discovery and request validation

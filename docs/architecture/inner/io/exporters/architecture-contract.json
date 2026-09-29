@@ -88,7 +88,11 @@
       },
       {
         "path": "datamimic_ce/engine/io/exporters/registry.py",
-        "responsibility": "Owns exporter sessions, target dispatch, buffered and lazy writes, publication, and bounded smoke exports."
+        "responsibility": "Constructs exporters from target strings and coordinates buffered writes, publication, and bounded smoke exports."
+      },
+      {
+        "path": "datamimic_ce/engine/io/exporters/session.py",
+        "responsibility": "Owns worker exporter registration and page dispatch."
       }
     ]
   },
@@ -251,7 +255,7 @@
         "datamimic_ce.engine.io.exporters.registry"
       ],
       "responsibilities": [
-        "Per-worker exporter registration, page dispatch and bounded smoke execution."
+        "Exporter construction from target strings, publication and bounded smoke execution."
       ],
       "forbidden_responsibilities": [
         "Implement exporters or be re-exported as a facade for concrete classes"
@@ -282,12 +286,11 @@
         },
         {
           "component": "memory",
-          "rationale": "Concrete write dispatch preserves lazy memstore handling.",
+          "rationale": "Target construction resolves named memstores.",
           "decided_by": "agent"
         }
       ],
       "public": [
-        "datamimic_ce.engine.io.exporters.registry:ExportSession",
         "datamimic_ce.engine.io.exporters.registry:capture_test_results",
         "datamimic_ce.engine.io.exporters.registry:create_exporter_list",
         "datamimic_ce.engine.io.exporters.registry:consume_memstore_target",
@@ -295,6 +298,59 @@
         "datamimic_ce.engine.io.exporters.registry:publish_exported_artifacts",
         "datamimic_ce.engine.io.exporters.registry:buffered_exporter_names",
         "datamimic_ce.engine.io.exporters.registry:smoke_export"
+      ],
+      "decided_by": "agent"
+    },
+    {
+      "id": "EXPORTERS-SESSION",
+      "label": "session",
+      "role": "component",
+      "packages": [
+        "datamimic_ce.engine.io.exporters.session"
+      ],
+      "responsibilities": [
+        "Per-worker exporter registration and page dispatch."
+      ],
+      "forbidden_responsibilities": [
+        "Construct exporters independently of the exporter registry"
+      ],
+      "provenance": [
+        "docs/architecture/inner/target.md"
+      ],
+      "requires": [
+        {
+          "component": "registry",
+          "rationale": "Session registration uses the registry's target-string constructor.",
+          "decided_by": "agent"
+        },
+        {
+          "component": "core",
+          "rationale": "Sessions use exporter and worker-state contracts.",
+          "decided_by": "agent"
+        },
+        {
+          "component": "formats",
+          "rationale": "Page dispatch supports XML and buffered file exporters.",
+          "decided_by": "agent"
+        },
+        {
+          "component": "database",
+          "rationale": "Page dispatch applies database target operations.",
+          "decided_by": "agent"
+        },
+        {
+          "component": "diagnostics",
+          "rationale": "Page dispatch supports diagnostic exporters.",
+          "decided_by": "agent"
+        },
+        {
+          "component": "memory",
+          "rationale": "Page dispatch preserves lazy memstore handling.",
+          "decided_by": "agent"
+        }
+      ],
+      "public": [
+        "datamimic_ce.engine.io.exporters.session:ExportSession"
       ],
       "decided_by": "agent"
     }

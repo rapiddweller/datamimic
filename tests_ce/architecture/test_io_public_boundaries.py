@@ -19,7 +19,7 @@ CONCRETE_EXPORTERS = {
 }
 
 INTERNAL_EXPORT_HELPERS = {
-    "consume_exporters": "datamimic_ce.engine.io.exporters.registry",
+    "consume_exporters": "datamimic_ce.engine.io.exporters.session",
     "convert_xml_dict_to_json_dict": "datamimic_ce.engine.io.exporters.core.serialization",
 }
 

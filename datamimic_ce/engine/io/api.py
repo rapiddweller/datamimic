@@ -66,7 +66,6 @@ from datamimic_ce.engine.io.exporters.core.unified_buffered_exporter import Unif
 from datamimic_ce.engine.io.exporters.diagnostics.test_result_exporter import TestResultExporter
 from datamimic_ce.engine.io.exporters.memory.memstore import Memstore
 from datamimic_ce.engine.io.exporters.registry import (
-    ExportSession,
     buffered_exporter_names,
     capture_test_results,
     consume_memstore_target,
@@ -75,6 +74,7 @@ from datamimic_ce.engine.io.exporters.registry import (
     publish_exported_artifacts,
     smoke_export,
 )
+from datamimic_ce.engine.io.exporters.session import ExportSession
 from datamimic_ce.engine.io.files.readers import FileUtil
 
 __all__ = [

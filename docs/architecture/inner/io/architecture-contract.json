@@ -353,7 +353,7 @@
         "datamimic_ce.engine.io.exporters.core.exporter_state_manager:ExporterStateManager",
         "datamimic_ce.engine.io.exporters.core.routing:resolve_target_entity",
         "datamimic_ce.engine.io.exporters.core.routing:has_mongodb_upsert_target",
-        "datamimic_ce.engine.io.exporters.registry:ExportSession",
+        "datamimic_ce.engine.io.exporters.session:ExportSession",
         "datamimic_ce.engine.io.exporters.registry:capture_test_results",
         "datamimic_ce.engine.io.exporters.registry:create_exporter_list",
         "datamimic_ce.engine.io.exporters.registry:consume_memstore_target",
@@ -514,7 +514,8 @@
         "datamimic_ce.engine.io.exporters.diagnostics",
         "datamimic_ce.engine.io.exporters.formats",
         "datamimic_ce.engine.io.exporters.memory",
-        "datamimic_ce.engine.io.exporters.registry"
+        "datamimic_ce.engine.io.exporters.registry",
+        "datamimic_ce.engine.io.exporters.session"
       ],
       "rationale": "Output routing, serialization and write adapters. Exact reviewed target children; no hidden extra modules.",
       "provenance": [
