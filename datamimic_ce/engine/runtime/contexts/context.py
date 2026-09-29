@@ -550,7 +550,7 @@ class SetupContext(Context):
         return self._default_separator
 
     @default_separator.setter
-    def default_separator(self, value):
+    def default_separator(self, value: str) -> None:
         self._default_separator = value
 
     @property
@@ -558,7 +558,7 @@ class SetupContext(Context):
         return self._default_locale
 
     @default_locale.setter
-    def default_locale(self, value):
+    def default_locale(self, value: str) -> None:
         self._default_locale = value
 
     @property
@@ -566,7 +566,7 @@ class SetupContext(Context):
         return self._default_dataset
 
     @default_dataset.setter
-    def default_dataset(self, value):
+    def default_dataset(self, value: str) -> None:
         self._default_dataset = value
 
     @property
