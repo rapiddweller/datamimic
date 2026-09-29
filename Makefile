@@ -3,6 +3,7 @@
 PACKAGE := datamimic_ce
 TESTS := tests_ce
 CE_COVERAGE_FILES := $(shell find $(PACKAGE) -type f -name '*.py')
+ARCHKEEL_SOURCE := archkeel @ git+https://github.com/rapiddweller/archkeel.git@0c1252490e736f4e742f02caf34923fc50395ec6
 
 help:
 	@echo "Available targets:"
@@ -19,7 +20,7 @@ help:
 	@echo "  check             Run lint, typecheck, and tests"
 	@echo "  architecture-check Validate the physical, dependency, and ArchKeel architecture gates"
 	@echo "  architecture-definition-check Validate recursive target coverage and move-map consistency"
-	@echo "  architecture-report Generate the current ArchKeel 0.8.0 HTML and JSON report"
+	@echo "  architecture-report Generate the current ArchKeel HTML and JSON report"
 	@echo "  architecture-cycle-check Check module imports with pinned Pylint"
 	@echo "  clean             Remove caches and build artifacts"
 
@@ -64,12 +65,12 @@ architecture-definition-check:
 	uvx --python 3.11 --from pytest==8.3.5 pytest -q tests_ce/architecture/test_recursive_target_definition.py tests_ce/architecture/test_current_module_concerns.py tests_ce/architecture/test_exact_module_targets.py
 
 architecture-report:
-	uvx --python 3.11 --from archkeel==0.8.0 archkeel report --output test-artifacts/architecture/ce-recursive-target/architecture.json --json
+	uvx --python 3.11 --from '$(ARCHKEEL_SOURCE)' archkeel report --output test-artifacts/architecture/ce-recursive-target/architecture.json --json
 
 architecture-check: architecture-cycle-check architecture-definition-check
 	uvx --python 3.11 --from pytest==8.3.5 pytest -q tests_ce/architecture/test_inner_architecture_target.py
 	# ArchKeel ratchets type-only/package SCC edges; Pylint checks executable import cycles.
-	uvx --python 3.11 --from archkeel==0.8.0 archkeel validate --baseline known-violations.json --json | python3 -c 'import json, sys; raw = sys.stdin.read(); print(raw, end=""); report = json.loads(raw); measurements = report.get("measurements") or {}; scalars = measurements.get("scalars") or {}; coverage = report.get("coverage") or {}; valid = report.get("exit_code") == 0 and report.get("declared_rules") == "PASS" and report.get("observation_complete") == "PASS" and coverage.get("status") == "PASS" and scalars.get("violations") == 0 and scalars.get("unknown_positions") == 0 and report.get("baseline_new") == 0 and report.get("baseline_resolved") == 0; sys.exit(0 if valid else 1)'
+	uvx --python 3.11 --from '$(ARCHKEEL_SOURCE)' archkeel validate --baseline known-violations.json --json | python3 -c 'import json, sys; raw = sys.stdin.read(); print(raw, end=""); report = json.loads(raw); measurements = report.get("measurements") or {}; scalars = measurements.get("scalars") or {}; coverage = report.get("coverage") or {}; valid = report.get("exit_code") == 0 and report.get("declared_rules") == "PASS" and report.get("observation_complete") == "PASS" and coverage.get("status") == "PASS" and scalars.get("violations") == 0 and scalars.get("unknown_positions") == 0 and report.get("baseline_new") == 0 and report.get("baseline_resolved") == 0; sys.exit(0 if valid else 1)'
 
 architecture-cycle-check:
 	uvx --python 3.11 --from pylint==3.3.7 pylint --disable=all --enable=cyclic-import --persistent=n --score=n datamimic_ce
