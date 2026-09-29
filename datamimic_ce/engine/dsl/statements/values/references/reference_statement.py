@@ -32,20 +32,20 @@ class ReferenceStatement(Statement):
         self._fields = fields
 
     @property
-    def source(self):
+    def source(self) -> str:
         return self._source
 
     @property
-    def source_type(self):
+    def source_type(self) -> str:
         return self._source_type
 
     @property
-    def source_key(self):
+    def source_key(self) -> str:
         # Legacy single-field accessor (first field's source column).
         return self._fields[0].source_key
 
     @property
-    def unique(self):
+    def unique(self) -> bool | None:
         return self._unique
 
     @property

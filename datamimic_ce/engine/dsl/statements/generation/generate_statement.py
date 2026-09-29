@@ -58,11 +58,11 @@ class GenerateStatement(CompositeStatement):
         return self._full_name
 
     @property
-    def count(self):
+    def count(self) -> str | None:
         return self._count
 
     @count.setter
-    def count(self, value):
+    def count(self, value: str | None) -> None:
         self._count = value
 
     @property
@@ -119,7 +119,7 @@ class GenerateStatement(CompositeStatement):
         return self._targets
 
     @targets.setter
-    def targets(self, value: set[str]):
+    def targets(self, value: set[str]) -> None:
         self._targets = value
 
     @property

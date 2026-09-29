@@ -126,19 +126,19 @@ class VariableStatement(Statement):
         return self._converter
 
     @property
-    def constant(self):
+    def constant(self) -> str | None:
         return self._constant
 
     @property
-    def values(self):
+    def values(self) -> str | None:
         return self._values
 
     @property
-    def weights(self):
+    def weights(self) -> str | None:
         return self._weights
 
     @property
-    def unique(self):
+    def unique(self) -> bool | None:
         return self._unique
 
     @property

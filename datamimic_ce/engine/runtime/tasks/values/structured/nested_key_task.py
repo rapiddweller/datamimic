@@ -124,9 +124,10 @@ class NestedKeyTask(GenSubTask):
         """
         Load data from file and modify then assign to nestedkey
         """
-        if self._statement.script is not None:
+        script = self._statement.script
+        if script is not None:
             try:
-                result = self._evaluate_value_from_script(parent_context)
+                result = self._evaluate_value_from_script(parent_context, script)
             except Exception as e:
                 if self._default_value is not None:
                     result = parent_context.evaluate_python_expression(self._default_value)
@@ -187,14 +188,14 @@ class NestedKeyTask(GenSubTask):
         ctx.current_product = converted_product
         return {**ctx.current_product, **attributes}
 
-    def _evaluate_value_from_script(self, parent_context: GenIterContext) -> object:
+    def _evaluate_value_from_script(self, parent_context: GenIterContext, script: str) -> object:
         """
         Evaluate data using script
 
         :param parent_context:
         :return:
         """
-        value = parent_context.evaluate_python_expression(self._statement.script)
+        value = parent_context.evaluate_python_expression(script)
         result: object
         if isinstance(value, list):
             result = self._modify_nestedkey_data_list(parent_context, value)

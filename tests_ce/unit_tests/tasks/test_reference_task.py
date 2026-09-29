@@ -10,13 +10,19 @@ from random import Random
 from types import SimpleNamespace
 from unittest.mock import MagicMock, patch
 
-from datamimic_ce.engine.dsl.statements.values.references.reference_statement import ReferenceStatement
+from datamimic_ce.engine.dsl import api as dsl_api
+from datamimic_ce.engine.dsl.statements.values.references.reference_statement import ReferenceField, ReferenceStatement
 from datamimic_ce.engine.io.api import DataSourcePagination
 from datamimic_ce.engine.io.clients.database_client import DatabaseClient
 from datamimic_ce.engine.io.clients.rdbms_client import RdbmsClient
 from datamimic_ce.engine.runtime.contexts.geniter_context import GenIterContext
 from datamimic_ce.engine.runtime.tasks.sources.reference import load_reference_source
 from datamimic_ce.engine.runtime.tasks.values.reference.task import ReferenceTask
+
+
+def test_api_reference_field_is_canonical_type():
+    assert dsl_api.ReferenceField is ReferenceField
+    assert "ReferenceField" in dsl_api.__all__
 
 
 class TestReferenceTask(unittest.TestCase):

@@ -68,7 +68,7 @@ from datamimic_ce.engine.dsl.statements.traversal import (
     retrieve_executed_sub_gen_statement_by_name,
     retrieve_sub_statement_by_fullname,
 )
-from datamimic_ce.engine.dsl.statements.values.references.reference_statement import ReferenceStatement
+from datamimic_ce.engine.dsl.statements.values.references.reference_statement import ReferenceField, ReferenceStatement
 from datamimic_ce.engine.dsl.statements.values.scalar.element_statement import ElementStatement
 from datamimic_ce.engine.dsl.statements.values.scalar.key_statement import KeyStatement
 from datamimic_ce.engine.dsl.statements.values.structured.array_statement import ArrayStatement
@@ -252,6 +252,7 @@ __all__ = [
     "NestedKeyStatement",
     "NumberDistribution",
     "POSITIONAL_NUMBER_SEQUENCES",
+    "ReferenceField",
     "ReferenceStatement",
     "RequiredOneOf",
     "Requires",

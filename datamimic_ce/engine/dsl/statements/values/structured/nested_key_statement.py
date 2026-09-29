@@ -38,15 +38,15 @@ class NestedKeyStatement(CompositeStatement):
         return self._name
 
     @property
-    def type(self):
+    def type(self) -> str | None:
         return self._type
 
     @property
-    def count(self):
+    def count(self) -> str | None:
         return self._count
 
     @property
-    def source(self):
+    def source(self) -> str | None:
         return self._source
 
     @property
@@ -54,35 +54,35 @@ class NestedKeyStatement(CompositeStatement):
         return self._source_entity
 
     @property
-    def source_script(self):
+    def source_script(self) -> bool | None:
         return self._source_script
 
     @property
-    def cyclic(self):
+    def cyclic(self) -> bool | None:
         return self._cyclic
 
     @property
-    def separator(self):
+    def separator(self) -> str | None:
         return self._separator
 
     @property
-    def condition(self):
+    def condition(self) -> str | None:
         return self._condition
 
     @property
-    def script(self):
+    def script(self) -> str | None:
         return self._script
 
     @property
-    def min_count(self):
+    def min_count(self) -> int | None:
         return self._min_count
 
     @property
-    def max_count(self):
+    def max_count(self) -> int | None:
         return self._max_count
 
     @property
-    def default_value(self):
+    def default_value(self) -> str | None:
         return self._default_value
 
     @property
@@ -90,13 +90,13 @@ class NestedKeyStatement(CompositeStatement):
         return self._distribution
 
     @property
-    def converter(self):
+    def converter(self) -> str | None:
         return self._converter
 
     @property
-    def variable_prefix(self):
+    def variable_prefix(self) -> str | None:
         return self._variable_prefix
 
     @property
-    def variable_suffix(self):
+    def variable_suffix(self) -> str | None:
         return self._variable_suffix
