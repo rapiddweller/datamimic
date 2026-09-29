@@ -23,6 +23,14 @@ INTERNAL_EXPORT_HELPERS = {
     "convert_xml_dict_to_json_dict": "datamimic_ce.engine.io.exporters.core.serialization",
 }
 
+INTERNAL_IO_TYPES = {
+    "DataSourceRegistry": "datamimic_ce.engine.io.data_sources.data_source_registry",
+    "ExporterConfig": "datamimic_ce.engine.io.exporters.core.exporter_config",
+    "ExporterStateManager": "datamimic_ce.engine.io.exporters.core.exporter_state_manager",
+    "UnifiedBufferedExporter": "datamimic_ce.engine.io.exporters.core.unified_buffered_exporter",
+    "create_exporter_list": "datamimic_ce.engine.io.exporters.registry",
+}
+
 
 def test_io_api_does_not_reexport_unused_concrete_exporters() -> None:
     for name, module_name in CONCRETE_EXPORTERS.items():
@@ -33,6 +41,13 @@ def test_io_api_does_not_reexport_unused_concrete_exporters() -> None:
 
 def test_io_api_keeps_export_helpers_internal() -> None:
     for name, module_name in INTERNAL_EXPORT_HELPERS.items():
+        assert name not in io_api.__all__
+        assert not hasattr(io_api, name)
+        assert hasattr(importlib.import_module(module_name), name)
+
+
+def test_io_api_keeps_registry_and_exporter_implementation_types_internal() -> None:
+    for name, module_name in INTERNAL_IO_TYPES.items():
         assert name not in io_api.__all__
         assert not hasattr(io_api, name)
         assert hasattr(importlib.import_module(module_name), name)
