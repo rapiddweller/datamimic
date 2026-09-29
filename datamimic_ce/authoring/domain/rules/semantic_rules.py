@@ -14,7 +14,7 @@ coverage here with zero changes to this file — there are NO imports of model-p
 constants and NO hard-coded tag lists tied to declared facts. ``lint_only=True`` facts
 are checked too: they are exactly the lint layer's job (the engine executor skips them).
 
-Where possible each rule still CALLS the same ModelUtil check the engine runs (SPOT);
+Where possible each rule still CALLS the same validation function the engine runs (SPOT);
 the engine parse remains phase-2 authority for anything not covered here."""
 
 from collections.abc import Callable, Iterable, Iterator  # noqa: I001
@@ -44,6 +44,11 @@ from datamimic_ce.engine.dsl.api import (
     COUNT_XOR_MIN,
     EXIST_COUNT,
     WEIGHTS_REQUIRE_VALUES,
+    check_constraints,
+    check_exist_count,
+    check_is_digit_or_script,
+    check_min_max_count,
+    check_weights_require_values,
     AllOrNone,
     AllowedValuesWhen,
     Constraint,
@@ -58,7 +63,6 @@ from datamimic_ce.engine.dsl.api import (
     resolved_allowed,
     resolved_values,
 )
-from datamimic_ce.engine.dsl.api import ModelUtil
 from datamimic_ce.authoring.domain.rule_catalog import RuleSeverity, authoring_rule_definition
 
 _GENERATES = (EL_GENERATE, EL_ITERATE)
@@ -109,7 +113,7 @@ def _is_unique_constraint(fact: Constraint) -> bool:
     return isinstance(fact, AllowedValuesWhen) and fact.when_attr == ATTR_UNIQUE
 
 
-def _model_util_diag(
+def _engine_validation_diag(
     rule: type[Rule],
     ctx: LintContext,
     element: etree._Element,
@@ -117,7 +121,7 @@ def _model_util_diag(
     fix_context: str | None = None,
     severity: RuleSeverity | None = None,
 ) -> Diagnostic | None:
-    """Run one engine-side ModelUtil check against the element's attributes."""
+    """Run one engine-side validation against the element's attributes."""
     try:
         check(dict(element.attrib))
     except ValueError as err:
@@ -136,7 +140,7 @@ def _constraint_check(constraints: tuple[Constraint, ...]) -> Callable[[dict[str
 
     def check(values: dict[str, str]) -> object:
         lint_constraints = tuple(replace(fact, lint_only=False) if fact.lint_only else fact for fact in constraints)
-        return ModelUtil.check_constraints(values, lint_constraints)
+        return check_constraints(values, lint_constraints)
 
     return check
 
@@ -196,11 +200,11 @@ def _weights_require_values_diag(
 ) -> Diagnostic | None:
     if WEIGHTS_REQUIRE_VALUES not in constraints:
         return None
-    return _model_util_diag(
+    return _engine_validation_diag(
         rule,
         ctx,
         element,
-        ModelUtil.check_weights_require_values,
+        check_weights_require_values,
         fix_context="For weighted literals, add values=.",
     )
 
@@ -334,9 +338,9 @@ class CountBoundsConflict(Rule):
             tag = str(element.tag)
 
             def check_bounds(values: dict[str, str], _tag: str = tag) -> object:
-                return ModelUtil.check_min_max_count(values, _tag)
+                return check_min_max_count(values, _tag)
 
-            diag = _model_util_diag(
+            diag = _engine_validation_diag(
                 type(self),
                 ctx,
                 element,
@@ -361,11 +365,11 @@ class CountRequired(Rule):
                 for fact in constraints
             ):
                 continue
-            diag = _model_util_diag(
+            diag = _engine_validation_diag(
                 type(self),
                 ctx,
                 element,
-                ModelUtil.check_exist_count,
+                check_exist_count,
             )
             if diag:
                 yield diag
@@ -401,7 +405,7 @@ class UniqueConstraints(Rule):
             if not declared:
                 continue
 
-            diag = _model_util_diag(
+            diag = _engine_validation_diag(
                 type(self),
                 ctx,
                 element,
@@ -419,7 +423,7 @@ class SourceModeConflict(Rule):
             for fact in constraints:
                 if not isinstance(fact, MutuallyExclusiveWhen):
                     continue
-                diag = _model_util_diag(
+                diag = _engine_validation_diag(
                     type(self),
                     ctx,
                     element,
@@ -439,7 +443,7 @@ class CountDigitsOrScript(Rule):
             if count is None:
                 continue
             try:
-                ModelUtil.check_is_digit_or_script(count)
+                check_is_digit_or_script(count)
             except ValueError as err:
                 yield ctx.diag(
                     type(self),
@@ -635,7 +639,7 @@ class ConditionalDeclaredConstraints(Rule):
                     continue  # DM205 owns mode-gated mutual exclusion
                 if not isinstance(fact, RequiresWhenValue | ForbidsWhenValue):
                     continue
-                diag = _model_util_diag(
+                diag = _engine_validation_diag(
                     type(self),
                     ctx,
                     element,

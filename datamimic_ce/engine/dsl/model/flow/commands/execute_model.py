@@ -15,7 +15,7 @@ from datamimic_ce.engine.dsl.model.constraints import (
     element_constraints,
     resolved_values,
 )
-from datamimic_ce.engine.dsl.model.validation import ModelUtil
+from datamimic_ce.engine.dsl.model.validation import ModelUtil, check_constraints
 from datamimic_ce.engine.dsl.vocabulary.constants.attribute_constants import (
     ATTR_SCRIPT,
     ATTR_TARGET,
@@ -75,7 +75,7 @@ class ExecuteModel(BaseModel):
         """Enforce attribute-only execute modes; inline text remains parser-owned."""
         if not isinstance(values, dict):
             raise TypeError("<execute> attributes must be a mapping")
-        return ModelUtil.check_constraints(values, cls.__constraints__)
+        return check_constraints(values, cls.__constraints__)
 
     @field_validator("type")  # noqa: B023
     @classmethod

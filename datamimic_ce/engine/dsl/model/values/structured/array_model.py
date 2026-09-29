@@ -15,7 +15,7 @@ from datamimic_ce.engine.dsl.model.constraints import (
     element_constraints,
     resolved_values,
 )
-from datamimic_ce.engine.dsl.model.validation import ModelUtil
+from datamimic_ce.engine.dsl.model.validation import ModelUtil, check_constraints
 from datamimic_ce.engine.dsl.vocabulary.constants.attribute_constants import (
     ATTR_COUNT,
     ATTR_NAME,
@@ -68,7 +68,7 @@ class ArrayModel(BaseModel):
     @classmethod
     def check_script_mode(cls, values: dict) -> dict:
         """Enforce the centrally declared array generation modes."""
-        return ModelUtil.check_constraints(values, cls.__constraints__)
+        return check_constraints(values, cls.__constraints__)
 
     @field_validator("type")
     @classmethod

@@ -2356,6 +2356,7 @@
     }
   ],
   "target_module_concerns": [
+    {"target": "engine/dsl/model/validation.py", "responsibility": "Provides shared raw-attribute validation functions and internal ModelUtil checks for DSL models."},
     {"target": "authoring/adapters/reference.py", "responsibility": "Builds bounded DSL and typed authoring references from engine registries and authoring schemas."},
     {"target": "authoring/contracts.py", "responsibility": "Defines transport-neutral authoring requests and results plus validated compiler-plan types shared across the authoring flow."},
     {"target": "authoring/domain/derived_facts.py", "responsibility": "Derives product, memstore, and foreign-key facts from CompilePlan for scaffold responses and intent rules."},

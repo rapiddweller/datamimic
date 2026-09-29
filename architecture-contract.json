@@ -125,6 +125,7 @@
       ],
       "public": [
         "datamimic_ce.engine.dsl.api",
+        "datamimic_ce.engine.dsl.model.constraints.types:Constraint",
         "datamimic_ce.engine.dsl.parsers.input.properties:parse_properties",
         "datamimic_ce.engine.dsl.parsers.input.target:parse_function_string",
         "datamimic_ce.engine.dsl.parsers.input.xml:DTDForbiddenError",

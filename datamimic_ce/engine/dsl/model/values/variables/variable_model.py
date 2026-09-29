@@ -19,7 +19,7 @@ from datamimic_ce.engine.dsl.model.constraints import (
     element_constraints,
     resolved_values,
 )
-from datamimic_ce.engine.dsl.model.validation import ModelUtil
+from datamimic_ce.engine.dsl.model.validation import ModelUtil, check_weights_require_values
 from datamimic_ce.engine.dsl.vocabulary.constants.attribute_constants import (
     ATTR_CONSTANT,
     ATTR_CONVERTER,
@@ -334,7 +334,7 @@ class VariableModel(BaseModel):
     @model_validator(mode="before")
     @classmethod
     def validate_weights_require_values(cls, values: dict):
-        return ModelUtil.check_weights_require_values(values)
+        return check_weights_require_values(values)
 
     @model_validator(mode="before")
     @classmethod

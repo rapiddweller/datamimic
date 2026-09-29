@@ -21,7 +21,7 @@ from datamimic_ce.engine.dsl.model.constraints import (
     element_constraints,
     resolved_values,
 )
-from datamimic_ce.engine.dsl.model.validation import ModelUtil
+from datamimic_ce.engine.dsl.model.validation import ModelUtil, check_constraints, check_min_max_count
 from datamimic_ce.engine.dsl.vocabulary.constants.attribute_constants import (
     ATTR_CONDITION,
     ATTR_CONVERTER,
@@ -187,17 +187,17 @@ class NestedKeyModel(BaseModel):
     def validate_cyclic_exit(cls, values: dict):
         # cyclic can combine with source and script; enforce the declared fact
         # (presence-based Requires with a static message).
-        return ModelUtil.check_constraints(values, (NESTED_CYCLIC_REQUIRES_SOURCE_OR_SCRIPT,))
+        return check_constraints(values, (NESTED_CYCLIC_REQUIRES_SOURCE_OR_SCRIPT,))
 
     @model_validator(mode="before")
     @classmethod
     def validate_min_max_count(cls, values: dict):
-        return ModelUtil.check_min_max_count(values, EL_NESTED_KEY)
+        return check_min_max_count(values, EL_NESTED_KEY)
 
     @model_validator(mode="before")
     @classmethod
     def validate_count_with_data_type(cls, values: dict):
-        return ModelUtil.check_constraints(
+        return check_constraints(
             values,
             (NESTED_CYCLIC_REQUIRES_COUNT, NESTED_LIST_REQUIRES_COUNT),
         )

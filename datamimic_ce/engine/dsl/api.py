@@ -33,7 +33,13 @@ from datamimic_ce.engine.dsl.model.registry import (
     list_element_tags,
     registry_revision,
 )
-from datamimic_ce.engine.dsl.model.validation import ModelUtil
+from datamimic_ce.engine.dsl.model.validation import (
+    check_constraints,
+    check_exist_count,
+    check_is_digit_or_script,
+    check_min_max_count,
+    check_weights_require_values,
+)
 from datamimic_ce.engine.dsl.parsers.document.descriptor_parser import DescriptorParser
 from datamimic_ce.engine.dsl.parsers.input.properties import parse_properties
 from datamimic_ce.engine.dsl.parsers.input.xml import DTDForbiddenError, parse_xml_file, parse_xml_source
@@ -234,7 +240,11 @@ __all__ = [
     "META_SELECTOR",
     "META_TARGET_ENTITY",
     "META_TYPE",
-    "ModelUtil",
+    "check_constraints",
+    "check_exist_count",
+    "check_is_digit_or_script",
+    "check_min_max_count",
+    "check_weights_require_values",
     "MongoDBStatement",
     "MutuallyExclusive",
     "MutuallyExclusiveWhen",

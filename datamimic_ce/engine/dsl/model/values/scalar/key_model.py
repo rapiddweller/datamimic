@@ -23,7 +23,7 @@ from datamimic_ce.engine.dsl.model.constraints import (
     element_constraints,
     resolved_values,
 )
-from datamimic_ce.engine.dsl.model.validation import ModelUtil
+from datamimic_ce.engine.dsl.model.validation import ModelUtil, check_constraints, check_weights_require_values
 from datamimic_ce.engine.dsl.vocabulary.constants.attribute_constants import (
     ATTR_CONDITION,
     ATTR_CONSTANT,
@@ -278,7 +278,7 @@ class KeyModel(BaseModel):
     @model_validator(mode="before")
     @classmethod
     def validate_weights_require_values(cls, values: dict):
-        return ModelUtil.check_weights_require_values(values)
+        return check_weights_require_values(values)
 
     @model_validator(mode="before")
     @classmethod
@@ -293,7 +293,7 @@ class KeyModel(BaseModel):
         error to fail loudly on, never to silently ignore."""
         if ATTR_DISTRIBUTION not in values:
             return values
-        ModelUtil.check_constraints(
+        check_constraints(
             values,
             (
                 KEY_DISTRIBUTION_REQUIRES_TYPE,

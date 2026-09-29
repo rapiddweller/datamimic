@@ -203,6 +203,57 @@ def _constraint_error(values: dict, fact: Constraint) -> str | None:
     return _allowed_values_error(values, fact)
 
 
+def check_constraints(values: dict, constraints: tuple[Constraint, ...]) -> dict:
+    for fact in constraints:
+        if fact.lint_only:
+            continue
+        error = _constraint_error(values, fact)
+        if error is not None:
+            raise ValueError(error)
+    return values
+
+
+def check_exist_count(values: dict) -> dict:
+    from datamimic_ce.engine.dsl.model.constraints import EXIST_COUNT
+
+    return check_constraints(values, (EXIST_COUNT,))
+
+
+def check_weights_require_values(values: dict) -> dict:
+    from datamimic_ce.engine.dsl.model.constraints import WEIGHTS_REQUIRE_VALUES
+
+    return check_constraints(values, (WEIGHTS_REQUIRE_VALUES,))
+
+
+def check_min_max_count(values: dict, element_tag: str) -> dict:
+    """Validate count versus minCount/maxCount, preserving raw XML semantics."""
+    key_set = set(values.keys())
+    if ATTR_COUNT in key_set:
+        if ATTR_MIN_COUNT in key_set or ATTR_MAX_COUNT in key_set:
+            raise ValueError(
+                f"'{ATTR_MIN_COUNT}' and '{ATTR_MAX_COUNT}' must not be defined "
+                f"when '{ATTR_COUNT}' exists in <{element_tag}>"
+            )
+    elif ATTR_MIN_COUNT in key_set and ATTR_MAX_COUNT in key_set:
+        try:
+            min_count = _INT_ADAPTER.validate_python(values[ATTR_MIN_COUNT])
+            max_count = _INT_ADAPTER.validate_python(values[ATTR_MAX_COUNT])
+        except (TypeError, ValueError):
+            return values
+        if min_count > max_count:
+            raise ValueError(
+                f"'{ATTR_MIN_COUNT}' value ({values[ATTR_MIN_COUNT]}) "
+                f"must be less than or equal to '{ATTR_MAX_COUNT}' value ({values[ATTR_MAX_COUNT]})"
+            )
+    return values
+
+
+def check_is_digit_or_script(value: str) -> str:
+    if not value.isdigit() and re.match(r"^\{.+\}$", value) is None:
+        raise ValueError(f"must be string of digits or script, but get: '{value}'")
+    return value
+
+
 class ModelUtil:
     @staticmethod
     def normalize_export_uri(value: str | None) -> str | None:
@@ -242,26 +293,6 @@ class ModelUtil:
         return values
 
     @staticmethod
-    def check_exist_count(values: dict) -> dict:
-        """Check if 'count' is defined in case 'source' and 'script' are not defined.
-
-        Delegate to declared constraint: EXIST_COUNT.
-        """
-        from datamimic_ce.engine.dsl.model.constraints import EXIST_COUNT
-
-        return ModelUtil.check_constraints(values, (EXIST_COUNT,))
-
-    @staticmethod
-    def check_weights_require_values(values: dict) -> dict:
-        """'weights' is the companion of 'values' — it is meaningless on its own.
-
-        Delegate to declared constraint: WEIGHTS_REQUIRE_VALUES.
-        """
-        from datamimic_ce.engine.dsl.model.constraints import WEIGHTS_REQUIRE_VALUES
-
-        return ModelUtil.check_constraints(values, (WEIGHTS_REQUIRE_VALUES,))
-
-    @staticmethod
     def check_unique_constraints(
         values: dict,
         constraints: tuple["Constraint", ...] | None = None,
@@ -294,7 +325,7 @@ class ModelUtil:
             if constraints is None
             else constraints
         )
-        return ModelUtil.check_constraints(values, declared)
+        return check_constraints(values, declared)
 
     @staticmethod
     def check_storage_constraints(values: dict) -> dict:
@@ -320,35 +351,6 @@ class ModelUtil:
         return values
 
     @staticmethod
-    def check_min_max_count(values: dict, element_tag: str) -> dict:
-        """count and minCount/maxCount are mutually exclusive; minCount must not exceed maxCount.
-        Shared by <generate> and <nestedKey>.
-
-        Facts COUNT_XOR_MIN and COUNT_XOR_MAX are declared for schema, but this method keeps
-        the full imperative logic for the element_tag-parameterized message and min>max ordering
-        check (value-gated, per review R1).
-        """
-        key_set = set(values.keys())
-        if ATTR_COUNT in key_set:
-            if ATTR_MIN_COUNT in key_set or ATTR_MAX_COUNT in key_set:
-                raise ValueError(
-                    f"'{ATTR_MIN_COUNT}' and '{ATTR_MAX_COUNT}' must not be defined "
-                    f"when '{ATTR_COUNT}' exists in <{element_tag}>"
-                )
-        elif ATTR_MIN_COUNT in key_set and ATTR_MAX_COUNT in key_set:
-            try:
-                min_count = _INT_ADAPTER.validate_python(values[ATTR_MIN_COUNT])
-                max_count = _INT_ADAPTER.validate_python(values[ATTR_MAX_COUNT])
-            except (TypeError, ValueError):
-                return values
-            if min_count > max_count:
-                raise ValueError(
-                    f"'{ATTR_MIN_COUNT}' value ({values[ATTR_MIN_COUNT]}) "
-                    f"must be less than or equal to '{ATTR_MAX_COUNT}' value ({values[ATTR_MAX_COUNT]})"
-                )
-        return values
-
-    @staticmethod
     def check_valid_additional_source_attributes(values: dict) -> dict:
         """Check if additional attributes (cyclic, selector,...) are defined with 'source'.
 
@@ -356,7 +358,7 @@ class ModelUtil:
         """
         from datamimic_ce.engine.dsl.model.constraints import SOURCE_COMPANIONS_WITH_CYCLIC
 
-        return ModelUtil.check_constraints(values, SOURCE_COMPANIONS_WITH_CYCLIC)
+        return check_constraints(values, SOURCE_COMPANIONS_WITH_CYCLIC)
 
     @staticmethod
     def check_valid_additional_source_attributes_without_cyclic(values: dict) -> dict:
@@ -367,7 +369,7 @@ class ModelUtil:
         """
         from datamimic_ce.engine.dsl.model.constraints import SOURCE_COMPANIONS_WITHOUT_CYCLIC
 
-        return ModelUtil.check_constraints(values, SOURCE_COMPANIONS_WITHOUT_CYCLIC)
+        return check_constraints(values, SOURCE_COMPANIONS_WITHOUT_CYCLIC)
 
     @staticmethod
     def check_valid_additional_generator_entity_attributes(values: dict) -> dict:
@@ -377,7 +379,7 @@ class ModelUtil:
         """
         from datamimic_ce.engine.dsl.model.constraints import GENERATOR_ENTITY_ADDONS
 
-        return ModelUtil.check_constraints(values, GENERATOR_ENTITY_ADDONS)
+        return check_constraints(values, GENERATOR_ENTITY_ADDONS)
 
     @staticmethod
     def check_not_empty(value) -> str:
@@ -486,7 +488,7 @@ class ModelUtil:
         """Delegate the source-gated type/selector XOR to its central fact."""
         from datamimic_ce.engine.dsl.model.constraints import SOURCE_MODE_EXCLUSIVE
 
-        return ModelUtil.check_constraints(values, (SOURCE_MODE_EXCLUSIVE,))
+        return check_constraints(values, (SOURCE_MODE_EXCLUSIVE,))
 
     @staticmethod
     def check_valid_default_value(values: dict) -> dict:
@@ -496,45 +498,4 @@ class ModelUtil:
         """
         from datamimic_ce.engine.dsl.model.constraints import DEFAULT_VALUE_REQUIRES_SCRIPT
 
-        return ModelUtil.check_constraints(values, (DEFAULT_VALUE_REQUIRES_SCRIPT,))
-
-    @staticmethod
-    def check_is_digit_or_script(value) -> str:
-        """
-        Check if value is a string of digits or a {script} expression. The runtime evaluates any
-        python expression inside the braces (runtime.counts.get_int_count), so a computed count like
-        ``{customers * orders_per_customer}`` is as valid as a bare ``{var}`` reference.
-        """
-        if not value.isdigit() and re.match(r"^\{.+\}$", value) is None:
-            raise ValueError(f"must be string of digits or script, but get: '{value}'")
-        return value
-
-    @staticmethod
-    def check_constraints(values: dict, constraints: tuple["Constraint", ...]) -> dict:
-        """Generic executor for declarative constraint facts.
-
-        Walks the constraints tuple; for each fact:
-        - SKIPS it if lint_only=True
-        - Enforces the fact's semantics, honoring when_true gates via _attr_true()
-        - Raises ValueError with the fact's message (if set), else a sensible default
-
-        Returns values unchanged on success (matching every existing ModelUtil check's contract).
-        Keys in values are raw XML attribute names — exactly what mode="before" validators receive.
-
-        Args:
-            values: Dict of attribute name -> value (raw XML attributes, not coerced)
-            constraints: Tuple of Constraint objects
-
-        Returns:
-            values (unchanged)
-
-        Raises:
-            ValueError: On constraint violation, with the fact's message or a generated default
-        """
-        for fact in constraints:
-            if fact.lint_only:
-                continue
-            error = _constraint_error(values, fact)
-            if error is not None:
-                raise ValueError(error)
-        return values
+        return check_constraints(values, (DEFAULT_VALUE_REQUIRES_SCRIPT,))

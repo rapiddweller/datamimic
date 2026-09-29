@@ -19,7 +19,13 @@ from datamimic_ce.engine.dsl.model.constraints import (
     element_constraints,
     resolved_values,
 )
-from datamimic_ce.engine.dsl.model.validation import ModelUtil
+from datamimic_ce.engine.dsl.model.validation import (
+    ModelUtil,
+    check_constraints,
+    check_exist_count,
+    check_is_digit_or_script,
+    check_min_max_count,
+)
 from datamimic_ce.engine.dsl.vocabulary.constants.attribute_constants import (
     ATTR_CONVERTER,
     ATTR_COUNT,
@@ -296,7 +302,7 @@ class GenerateModel(BaseModel):
     @classmethod
     def validate_offset_requires_source(cls, values: dict):
         # Enforce the declared fact (static message lives on the fact).
-        return ModelUtil.check_constraints(values, (GENERATE_OFFSET_REQUIRES_SOURCE,))
+        return check_constraints(values, (GENERATE_OFFSET_REQUIRES_SOURCE,))
 
     @field_validator("source_entity", "target_entity")
     @classmethod
@@ -337,12 +343,12 @@ class GenerateModel(BaseModel):
         # existing rule that count is required unless source/script supplies the length.
         if _TIMESERIES_ATTRS & values.keys():
             return values
-        return ModelUtil.check_exist_count(values=values)
+        return check_exist_count(values=values)
 
     @model_validator(mode="before")
     @classmethod
     def validate_min_max_count(cls, values: dict):
-        return ModelUtil.check_min_max_count(values, EL_GENERATE)
+        return check_min_max_count(values, EL_GENERATE)
 
     @model_validator(mode="before")
     @classmethod
@@ -367,7 +373,7 @@ class GenerateModel(BaseModel):
     @field_validator("count")
     @classmethod
     def validate_count(cls, value):
-        return ModelUtil.check_is_digit_or_script(value=value)
+        return check_is_digit_or_script(value=value)
 
     @field_validator("distribution")
     @classmethod

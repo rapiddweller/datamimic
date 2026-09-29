@@ -96,7 +96,7 @@
       },
       {
         "path": "datamimic_ce/engine/dsl/model/validation.py",
-        "responsibility": "ModelUtil f\u00fchrt Constraint-Fakten aus und beh\u00e4lt au\u00dferdem bestehende typspezifische Modellvalidierer; es ist Validierungsmechanik, kein BaseModel."
+        "responsibility": "Provides shared raw-attribute validation functions and internal ModelUtil checks for DSL models."
       },
       {
         "path": "datamimic_ce/engine/dsl/model/values/references/reference_field_model.py",
@@ -166,7 +166,12 @@
         }
       ],
       "public": [
-        "datamimic_ce.engine.dsl.model.validation:ModelUtil"
+        "datamimic_ce.engine.dsl.model.validation:ModelUtil",
+        "datamimic_ce.engine.dsl.model.validation:check_constraints",
+        "datamimic_ce.engine.dsl.model.validation:check_weights_require_values",
+        "datamimic_ce.engine.dsl.model.validation:check_min_max_count",
+        "datamimic_ce.engine.dsl.model.validation:check_exist_count",
+        "datamimic_ce.engine.dsl.model.validation:check_is_digit_or_script"
       ],
       "decided_by": "agent"
     },
