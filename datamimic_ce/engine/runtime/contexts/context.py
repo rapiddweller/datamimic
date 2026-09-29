@@ -202,7 +202,7 @@ class SetupContext(Context):
         default_variable_suffix: str,
         default_line_separator: str | None,
         clients: dict | None = None,
-        data_source_len: dict | None = None,
+        data_source_len: dict[tuple[str | None, str | None], int] | None = None,
         properties: dict | None = None,
         namespace: dict | None = None,
         global_variables: dict | None = None,
@@ -219,7 +219,9 @@ class SetupContext(Context):
         super().__init__(self)
         self._descriptor_dir = descriptor_dir
         self._clients = {} if clients is None else clients
-        self._data_source_len = {} if data_source_len is None else data_source_len
+        self._data_source_len: dict[tuple[str | None, str | None], int] = (
+            {} if data_source_len is None else data_source_len
+        )
         # Per-statement distribution seed, computed once and reused across a statement's pages so
         # paginated sub-task selection (random / cumulated / unique) stays globally consistent.
         self._distribution_seed_cache: dict[str | None, int] = {}
@@ -474,7 +476,7 @@ class SetupContext(Context):
         self._clients = value
 
     @property
-    def data_source_len(self):
+    def data_source_len(self) -> dict[tuple[str | None, str | None], int]:
         return self._data_source_len
 
     @property
