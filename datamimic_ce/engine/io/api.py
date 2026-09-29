@@ -54,7 +54,7 @@ from datamimic_ce.engine.io.data_sources.variable import read_variable_query, re
 from datamimic_ce.engine.io.data_sources.weighted_data_source import WeightedDataSource
 from datamimic_ce.engine.io.data_sources.weighted_entity_data_source import WeightedEntityDataSource
 from datamimic_ce.engine.io.exporters.core.exporter import Exporter
-from datamimic_ce.engine.io.exporters.core.exporter_context import ExporterContext
+from datamimic_ce.engine.io.exporters.core.exporter_context import ExporterContext, MemstoreProvider
 from datamimic_ce.engine.io.exporters.core.routing import (
     has_mongodb_upsert_target,
     resolve_target_entity,
@@ -86,6 +86,7 @@ __all__ = [
     "MongoDBConnectionConfig",
     "load_connection_profile",
     "MemstoreSource",
+    "MemstoreProvider",
     "Memstore",
     "RdbmsConnectionConfig",
     "SmokeExportRequest",

@@ -53,6 +53,15 @@ def test_io_api_keeps_registry_and_exporter_implementation_types_internal() -> N
         assert hasattr(importlib.import_module(module_name), name)
 
 
+def test_io_api_exposes_exporter_context_support_type() -> None:
+    owner = importlib.import_module("datamimic_ce.engine.io.exporters.core.exporter_context")
+    assert "MemstoreProvider" in io_api.__all__
+    assert io_api.MemstoreProvider is owner.MemstoreProvider
+    contract = json.loads((ROOT / "architecture-contract.json").read_text(encoding="utf-8"))
+    io_public = next(component["public"] for component in contract["components"] if component["id"] == "COMP-IO")
+    assert all(not entry.startswith("datamimic_ce.engine.io.exporters.core.") for entry in io_public)
+
+
 def test_exporter_registry_has_only_exact_memstore_visibility() -> None:
     contract = json.loads(
         (ROOT / "docs/architecture/inner/io/exporters/architecture-contract.json").read_text(encoding="utf-8")
