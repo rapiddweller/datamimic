@@ -20,6 +20,11 @@ from random import Random
 import pytest
 
 from datamimic_ce.domains.domain_core.contracts.attribute_catalog import FieldSpec
+from datamimic_ce.domains.finance.generators.bank_account_generator import BankAccountGenerator
+from datamimic_ce.domains.finance.generators.transaction_generator import TransactionGenerator
+from datamimic_ce.domains.finance.models.bank_account import BankAccount
+from datamimic_ce.domains.finance.models.transaction import Transaction
+from datamimic_ce.domains.finance.services.transaction_service import TRANSACTION_SCHEMA
 from datamimic_ce.domains.registry.entities import list_entity_specs
 
 _SEED = 20260521
@@ -71,3 +76,23 @@ def test_emitted_value_types_match_schema(spec) -> None:
         f"{spec.entity} schema type(s) disagree with emitted values: {mismatches} "
         f"— fix the EntitySchema field type or the generator."
     )
+
+
+def test_linked_transaction_account_matches_nested_schema() -> None:
+    transaction = Transaction(
+        TransactionGenerator(rng=Random(_SEED)),
+        BankAccount(BankAccountGenerator(rng=Random(_SEED))),
+    )
+    account = transaction.to_dict()["account"]
+    account_spec = next(field for field in TRANSACTION_SCHEMA.fields if field.name == "account")
+
+    assert isinstance(account, dict)
+    declared = {field.name: field for field in account_spec.children}
+    assert set(account) == set(declared)
+    assert all(_type_matches(value, declared[name]) for name, value in account.items())
+
+
+def test_unlinked_transaction_omits_account() -> None:
+    transaction = Transaction(TransactionGenerator(rng=Random(_SEED)))
+
+    assert "account" not in transaction.to_dict()

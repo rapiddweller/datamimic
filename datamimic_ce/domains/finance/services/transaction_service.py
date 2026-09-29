@@ -17,6 +17,7 @@ from datamimic_ce.domains.domain_core import BaseDomainService
 from datamimic_ce.domains.domain_core.contracts.attribute_catalog import EntitySchema, FieldSpec, field, group
 from datamimic_ce.domains.finance.generators.transaction_generator import TransactionGenerator
 from datamimic_ce.domains.finance.models.transaction import Transaction
+from datamimic_ce.domains.finance.services.bank_account_service import BANK_ACCOUNT_SCHEMA
 
 TRANSACTION_SCHEMA = EntitySchema(
     "Transaction",
@@ -38,11 +39,8 @@ TRANSACTION_SCHEMA = EntitySchema(
         field("direction", str, "Transaction direction (debit/credit)."),
         group(
             "account",
-            "Associated account summary (present when an account is linked).",
-            (
-                field("account_number", str, "Account number."),
-                field("account_type", str, "Account type."),
-            ),
+            "Associated bank account details (present when an account is linked).",
+            BANK_ACCOUNT_SCHEMA.fields,
             optional=True,
         ),
     ),
