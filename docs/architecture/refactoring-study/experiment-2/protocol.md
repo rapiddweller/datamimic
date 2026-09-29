@@ -78,6 +78,11 @@ The serial result is authoritative when xdist and serial execution disagree. No 
 excluded from equivalence until repeated unchanged Step-0 runs demonstrate the instability and the
 evidence is logged.
 
+[The 2026-09-29 measurement amendment](amendment-2026-09-29-typed-cache-measurement.md)
+records one exact UNKNOWN-to-violation transition in Step 38. It permits retaining
+the correct annotation, not counting that step as gate-green or growing the
+accepted baseline. The final zero-violation and zero-unknown targets are unchanged.
+
 When the first real function is added to an API module, the same commit adds that module's
 `boundary_types` rule. The rule then remains mandatory. This is a narrowing, not permission to
 change the target.
