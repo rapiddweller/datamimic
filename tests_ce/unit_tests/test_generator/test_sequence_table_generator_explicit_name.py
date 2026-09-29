@@ -25,7 +25,7 @@ from datamimic_ce.engine.runtime.tasks.values.construction.factory import Genera
 
 
 class DummyRootGenStmt(GenerateStatement):
-    def __init__(self, type_: str = "orders", count: int = 10, num_process: int | None = None):
+    def __init__(self, type_: str = "orders", count: str | None = "10", num_process: int | None = None):
         self._type = type_
         self._count = count
         self._num_process = num_process
@@ -86,11 +86,17 @@ def setup_context() -> SetupContext:
     )
 
 
-def _make(setup_context: SetupContext, generator_str: str, key: str):
+def _make(
+    setup_context: SetupContext,
+    generator_str: str,
+    key: str,
+    count: str | None = "5",
+    database: str | None = "db1",
+):
     client = RecordingRdbmsClient()
     setup_context.clients["db1"] = client
-    root_gen = DummyRootGenStmt(type_="orders", count=5)
-    stmt = DummyStmt(name="id", database="db1", root_gen=root_gen)
+    root_gen = DummyRootGenStmt(type_="orders", count=count)
+    stmt = DummyStmt(name="id", database=database, root_gen=root_gen)
     gen = GeneratorUtil(context=setup_context).create_generator(generator_str, stmt=stmt, key=key)
     return gen, client
 
@@ -137,3 +143,16 @@ def test_malformed_args_are_rejected(setup_context: SetupContext):
 def test_non_string_sequence_is_rejected(setup_context: SetupContext):
     with pytest.raises(ValueError, match="string"):
         _make(setup_context, "SequenceTableGenerator(sequence=42)", key="k8")
+
+
+def test_missing_generate_count_has_useful_error(setup_context: SetupContext):
+    with pytest.raises(
+        ValueError,
+        match="Failed to initialize sequence: SequenceTableGenerator requires a generate count",
+    ):
+        _make(setup_context, "SequenceTableGenerator", key="k9", count=None)
+
+
+def test_missing_database_name_has_useful_error(setup_context: SetupContext):
+    with pytest.raises(ValueError, match="No database client found for source: None"):
+        _make(setup_context, "SequenceTableGenerator", key="k10", database=None)

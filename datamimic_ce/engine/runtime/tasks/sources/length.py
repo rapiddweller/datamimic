@@ -76,11 +76,12 @@ def set_data_source_length(ctx: SetupContext | GenIterContext, stmt: Statement) 
         # Ignore to check scripted source if eval failed in pre-execute task
         if source_str.startswith("{") and source_str.endswith("}"):
             try:
-                source_str = ctx.evaluate_python_expression(source_str[1:-1])
+                evaluated_source = ctx.evaluate_python_expression(source_str[1:-1])
             except Exception:
                 return
-            if not isinstance(source_str, str):
+            if not isinstance(evaluated_source, str):
                 return
+            source_str = evaluated_source
 
         # 2: Get source info from ctx client (e.g. checking if it is SQL, MongoDB or CSV source)
 

@@ -91,6 +91,10 @@ def _target_implementation_issues(
         path = package / target
         if not path.is_file():
             continue
+        if target == "__init__.py":
+            if _has_python_code(ast.parse(path.read_text(encoding="utf-8"), filename=str(path)).body):
+                issues.append("root initializer must remain empty")
+            continue
         requires_code = not sources or any(_source_has_python_code(source, source_commit) for source in sources)
         if requires_code and not _has_python_code(ast.parse(path.read_text(encoding="utf-8"), filename=str(path)).body):
             issues.append(f"placeholder target module: {target}")
@@ -394,6 +398,15 @@ def test_recursive_target_definition_rejects_mapping_and_layout_false_greens(tmp
     ) == ["placeholder target module: target.py"]
     placeholder.write_text("value = 1\n", encoding="utf-8")
     assert not _target_implementation_issues({"target.py": {source}}, tmp_path, target_manifest["source_commit"])
+    root_initializer = tmp_path / "__init__.py"
+    root_initializer.write_text("", encoding="utf-8")
+    assert not _target_implementation_issues(
+        {"__init__.py": {"__init__.py"}}, tmp_path, target_manifest["source_commit"]
+    )
+    root_initializer.write_text("load_dotenv()\n", encoding="utf-8")
+    assert _target_implementation_issues(
+        {"__init__.py": {"__init__.py"}}, tmp_path, target_manifest["source_commit"]
+    ) == ["root initializer must remain empty"]
 
     with pytest.raises(AssertionError, match="missing target modules"):
         assert not _physical_target_issues({"legacy.py"}, {"target.py": {"source.py"}})

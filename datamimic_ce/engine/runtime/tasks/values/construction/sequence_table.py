@@ -100,7 +100,10 @@ class SequenceTableGenerator(BaseLiteralGenerator):
 
         if isinstance(stmt, VariableStatement):
             raise ValueError(f"Statement type {type(stmt).__name__} must have 'database' attribute")
-        self._source_name = stmt.database
+        source_name = stmt.database
+        if source_name is None:
+            raise ValueError(f"No database client found for source: {source_name}")
+        self._source_name: str = source_name
 
         rdbms_client = context.root.clients.get(self._source_name)
         if rdbms_client is None:
@@ -124,7 +127,10 @@ class SequenceTableGenerator(BaseLiteralGenerator):
                 )
             self._process_id = context.root.process_id or 0
 
-            total_count = int(root_gen_stmt.count)
+            count = root_gen_stmt.count
+            if count is None:
+                raise ValueError("SequenceTableGenerator requires a generate count")
+            total_count = int(count)
 
             # Calculate per-process count
             per_process_count = (total_count + total_processes - 1) // total_processes
