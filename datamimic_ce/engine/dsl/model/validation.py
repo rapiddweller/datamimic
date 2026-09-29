@@ -40,6 +40,7 @@ from datamimic_ce.engine.dsl.vocabulary.constants.data_type_constants import DAT
 # Parse XML bool attributes exactly like the pydantic bool fields do, so a "before"
 # cross-field check can never disagree with the coerced value (e.g. unique="yes").
 _BOOL_ADAPTER = TypeAdapter(bool)
+_INT_ADAPTER = TypeAdapter(int)
 
 
 def _attr_true(value: object) -> bool:
@@ -334,13 +335,17 @@ class ModelUtil:
                     f"'{ATTR_MIN_COUNT}' and '{ATTR_MAX_COUNT}' must not be defined "
                     f"when '{ATTR_COUNT}' exists in <{element_tag}>"
                 )
-        elif (
-            ATTR_MIN_COUNT in key_set and ATTR_MAX_COUNT in key_set and values[ATTR_MIN_COUNT] > values[ATTR_MAX_COUNT]
-        ):
-            raise ValueError(
-                f"'{ATTR_MIN_COUNT}' value ({values[ATTR_MIN_COUNT]}) "
-                f"must be less than or equal to '{ATTR_MAX_COUNT}' value ({values[ATTR_MAX_COUNT]})"
-            )
+        elif ATTR_MIN_COUNT in key_set and ATTR_MAX_COUNT in key_set:
+            try:
+                min_count = _INT_ADAPTER.validate_python(values[ATTR_MIN_COUNT])
+                max_count = _INT_ADAPTER.validate_python(values[ATTR_MAX_COUNT])
+            except (TypeError, ValueError):
+                return values
+            if min_count > max_count:
+                raise ValueError(
+                    f"'{ATTR_MIN_COUNT}' value ({values[ATTR_MIN_COUNT]}) "
+                    f"must be less than or equal to '{ATTR_MAX_COUNT}' value ({values[ATTR_MAX_COUNT]})"
+                )
         return values
 
     @staticmethod
