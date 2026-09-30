@@ -151,8 +151,11 @@ def main() -> None:
     )
     result = run(RunRequest(descriptor, test_mode=True, statement_transformer=add_pid_statement))
     assert result.captured is not None
-    rows = result.captured.root["rows"]
+    assert type(result.captured) is dict
+    rows = result.captured["rows"]
+    assert type(rows) is list
     assert len(rows) == 4
+    assert all(type(row) is dict for row in rows)
     Path("pids.json").write_text(
         json.dumps({"parent_pid": os.getpid(), "worker_pids": [row["pid"] for row in rows]}),
         encoding="utf-8",

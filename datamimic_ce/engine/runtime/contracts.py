@@ -19,10 +19,6 @@ class PlatformConfiguration(RootModel[dict[str, object]]):
     """Runtime configuration values supplied by a transport."""
 
 
-class CapturedProducts(RootModel[dict[str, list[dict[str, object]]]]):
-    """Products captured by a test-mode execution."""
-
-
 class FactoryConfig:
     """Configuration for generating a selected entity through the runtime."""
 
@@ -61,7 +57,7 @@ class RunRequest:
 
 @dataclass(frozen=True)
 class RunResult:
-    captured: CapturedProducts | None
+    captured: dict[str, list[dict[str, object]]] | None
 
 
 class RunSession(Protocol):
@@ -69,4 +65,4 @@ class RunSession(Protocol):
 
     def execute(self) -> RunResult: ...
 
-    def capture_test_result(self) -> CapturedProducts | None: ...
+    def capture_test_result(self) -> dict[str, list[dict[str, object]]] | None: ...

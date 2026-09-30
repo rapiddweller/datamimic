@@ -46,7 +46,7 @@ class DataMimicTestFactory:
         # Capture result
         capture = test_engine.capture_test_result()
         assert capture is not None
-        result = capture.root.get(self._entity_name)
+        result = capture.get(self._entity_name)
         assert result is not None
         assert len(result) == 1  # Only one entity is generated
 
@@ -85,7 +85,7 @@ class DataMimicTestFactory:
         # Capture result
         capture = test_engine.capture_test_result()
         assert capture is not None
-        result = capture.root.get(self._entity_name)
+        result = capture.get(self._entity_name)
         assert result is not None
         assert len(result) == count  # Only one entity is generated
 

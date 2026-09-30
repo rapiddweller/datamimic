@@ -53,7 +53,6 @@ class DataMimic:
         """Parse the descriptor and execute its setup task."""
         self._session.execute()
 
-    def capture_test_result(self) -> dict | None:
+    def capture_test_result(self) -> dict[str, list[dict[str, object]]] | None:
         """Capture test result in test mode."""
-        captured = self._session.capture_test_result()
-        return captured.root if captured is not None else None
+        return self._session.capture_test_result()

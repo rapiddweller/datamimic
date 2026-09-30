@@ -869,7 +869,7 @@ def _engine_process_worker(
             )
             session.execute()
             capture = session.capture_test_result()
-            raw_capture = capture.root if capture is not None else {}
+            raw_capture = capture if capture is not None else {}
             if stripped is None:
                 smoke_diagnostics: list[Diagnostic] = []
                 smoke_export_capture = SmokeExportCapture.not_requested()

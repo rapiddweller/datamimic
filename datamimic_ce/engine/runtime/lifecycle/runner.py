@@ -11,7 +11,7 @@ os.environ["RAY_DEDUP_LOGS"] = "0"
 
 from datamimic_ce.engine.dsl.api import DescriptorParser, GenerateStatement, SetupStatement
 from datamimic_ce.engine.io.api import TestResultExporter, load_connection_profile
-from datamimic_ce.engine.runtime.contracts import CapturedProducts, FactoryConfig, RunRequest, RunResult
+from datamimic_ce.engine.runtime.contracts import FactoryConfig, RunRequest, RunResult
 from datamimic_ce.engine.runtime.lifecycle.config import get_settings
 from datamimic_ce.engine.runtime.logging import log_memory_info, log_system_info, setup_logger
 from datamimic_ce.engine.runtime.process_titles import bootstrap_process_title, set_main_process_title
@@ -114,14 +114,12 @@ class RuntimeRunSession:
         except Exception as error:
             logger.exception(f"Error in DATAMIMIC process. Error message: {error}")
             raise error
-        captured = (
-            CapturedProducts.model_construct(root=self._test_result_storage.get_result()) if request.test_mode else None
-        )
+        captured = self._test_result_storage.get_result() if request.test_mode else None
         return RunResult(captured)
 
-    def capture_test_result(self) -> CapturedProducts | None:
+    def capture_test_result(self) -> dict[str, list[dict[str, object]]] | None:
         if self._request.test_mode:
-            return CapturedProducts.model_construct(root=self._test_result_storage.get_result())
+            return self._test_result_storage.get_result()
         raise ValueError("Cannot capture test result in non-test mode") from None
 
 

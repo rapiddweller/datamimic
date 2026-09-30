@@ -56,13 +56,12 @@ class DataMimicTest:
         elapsed_time = end_time - start_time
         logger.info(f"The test took {elapsed_time} seconds to execute.")
 
-    def capture_result(self):
+    def capture_result(self) -> dict[str, list[dict[str, object]]] | None:
         """
         Capture test data
         :return:
         """
         if self._capture_test_result:
-            captured = self._session.capture_test_result()
-            return captured.root if captured is not None else None
+            return self._session.capture_test_result()
         else:
             raise ValueError("Capturing test result mode is currently disable")

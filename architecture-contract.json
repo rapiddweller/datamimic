@@ -517,11 +517,32 @@
       "id": "RUNTIME-API-TYPES",
       "kind": "boundary_types",
       "source": "datamimic_ce.engine.runtime.api",
-      "rationale": "Runtime requests and results are declared; Context and SetupContext remain public scripting types with separately reviewed dynamic state.",
+      "rationale": "Runtime requests and results are declared; Context and SetupContext remain public scripting types with separately reviewed dynamic state. run.captured preserves open native DSL data; execution controls remain typed.",
       "provenance": [
-        "docs/architecture/refactoring-study/experiment-2/target-architecture.md"
+        "docs/architecture/refactoring-study/experiment-2/target-architecture.md",
+        "docs/architecture/refactoring-study/experiment-2/amendment-82.md"
       ],
-      "decided_by": "architect"
+      "decided_by": "architect",
+      "allowed_positions": [
+        {
+          "qualified_name": "datamimic_ce.engine.runtime.api.run",
+          "position": "return",
+          "field_path": "captured",
+          "annotation": "dict[str, list[dict[str, object]]]"
+        },
+        {
+          "qualified_name": "datamimic_ce.engine.runtime.api.run",
+          "position": "return",
+          "field_path": "captured",
+          "annotation": "dict[str, object]"
+        },
+        {
+          "qualified_name": "datamimic_ce.engine.runtime.api.run",
+          "position": "return",
+          "field_path": "captured",
+          "annotation": "object"
+        }
+      ]
     },
     {
       "id": "IO-API-TYPES",
