@@ -7,6 +7,15 @@ import json
 from pathlib import Path
 
 from datamimic_ce.engine.io import api as io_api
+from datamimic_ce.engine.io.api import (
+    database_count_table_length as direct_database_count_table_length,
+)
+from datamimic_ce.engine.io.api import (
+    database_get_by_page_with_query as direct_database_get_by_page_with_query,
+)
+from datamimic_ce.engine.io.api import (
+    is_database_client as direct_is_database_client,
+)
 
 ROOT = Path(__file__).resolve().parents[2]
 
@@ -30,6 +39,33 @@ INTERNAL_IO_TYPES = {
     "UnifiedBufferedExporter": "datamimic_ce.engine.io.exporters.core.unified_buffered_exporter",
     "create_exporter_list": "datamimic_ce.engine.io.exporters.registry",
 }
+
+IO_ONLY_CLIENT_AND_COLLECTION_BINDINGS = {
+    "database_count_query_length": "datamimic_ce.engine.io.clients.operations",
+    "database_get_by_page_with_type": "datamimic_ce.engine.io.clients.operations",
+    "database_get_random_rows_by_columns": "datamimic_ce.engine.io.clients.operations",
+    "is_mongodb_client": "datamimic_ce.engine.io.clients.operations",
+    "is_rdbms_client": "datamimic_ce.engine.io.clients.operations",
+    "mongodb_count_collection": "datamimic_ce.engine.io.clients.operations",
+    "resolve_source_collection": "datamimic_ce.engine.io.data_sources.boundary.entities",
+}
+
+
+def test_io_root_hides_client_and_collection_operations_but_keeps_owners() -> None:
+    for name, owner_name in IO_ONLY_CLIENT_AND_COLLECTION_BINDINGS.items():
+        assert name not in io_api.__all__
+        assert not hasattr(io_api, name)
+        assert hasattr(importlib.import_module(owner_name), name)
+
+
+def test_io_root_retains_live_database_script_operations() -> None:
+    operations = importlib.import_module("datamimic_ce.engine.io.clients.operations")
+    assert direct_database_count_table_length is operations.database_count_table_length
+    assert direct_database_get_by_page_with_query is operations.database_get_by_page_with_query
+    assert direct_is_database_client is operations.is_database_client
+    assert io_api.database_count_table_length is direct_database_count_table_length
+    assert io_api.database_get_by_page_with_query is direct_database_get_by_page_with_query
+    assert io_api.is_database_client is direct_is_database_client
 
 
 def test_io_api_does_not_reexport_unused_concrete_exporters() -> None:

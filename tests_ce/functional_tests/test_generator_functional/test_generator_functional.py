@@ -8,8 +8,8 @@ import uuid
 from decimal import Decimal
 from pathlib import Path
 
+from datamimic_ce.engine.io.files.api import FileUtil
 from datamimic_ce.interfaces.python.data_mimic_test import DataMimicTest
-from datamimic_ce.engine.io.api import FileUtil
 
 
 def count_digits_after_decimal(number):

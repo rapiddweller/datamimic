@@ -32,7 +32,8 @@ from datamimic_ce.engine.dsl.vocabulary.constants.exporter_constants import (
     EXPORTER_XML,
 )
 from datamimic_ce.engine.dsl.vocabulary.source_capabilities import SourceFileFormat
-from datamimic_ce.engine.io.api import FileUtil, buffered_exporter_names
+from datamimic_ce.engine.io.api import buffered_exporter_names
+from datamimic_ce.engine.io.files.api import FileUtil
 from datamimic_ce.interfaces.python.data_mimic_test import DataMimicTest
 
 _DIR = Path(__file__).resolve().parent

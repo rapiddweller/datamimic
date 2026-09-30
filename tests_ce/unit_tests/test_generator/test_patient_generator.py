@@ -16,7 +16,7 @@ class TestPatientGeneratorEmergencyContact:
     def test_emergency_relationships_respect_csv_weights(self, tmp_path, monkeypatch):
         dataset = "US"
         # Intercept emergency relationships file load and provide controlled weights
-        from datamimic_ce.engine.io.api import FileUtil
+        from datamimic_ce.engine.io.files.api import FileUtil
 
         orig_read = FileUtil.read_wgt_file
 

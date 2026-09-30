@@ -48,10 +48,10 @@ Headered weighted CSV (with `weight` column):
 
 ```python
 from datamimic_ce.domains.domain_core.datasets.path import dataset_path
-from datamimic_ce.engine.io.api import FileUtil
+from datamimic_ce.domains.shared.datasets.loader import read_headered_csv
 
 path = dataset_path("ecommerce", f"product_categories_{self._dataset}.csv", start=Path(__file__))
-header, rows = FileUtil.read_csv_to_dict_of_tuples_with_header(path, ",")
+header, rows = read_headered_csv(path, ",")
 weights = [float(r[header["weight"]]) for r in rows]
 category = self._rng.choices(rows, weights=weights, k=1)[0][header["category"]]
 ```

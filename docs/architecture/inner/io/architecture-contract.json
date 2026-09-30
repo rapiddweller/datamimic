@@ -129,7 +129,7 @@
         "datamimic_ce.engine.io.api"
       ],
       "responsibilities": [
-        "Exposes client, source-read, file, and exporter operations to Runtime through the IO facade."
+        "Exposes client lifecycle, resolved source reads and exporter operations to Runtime and Authoring."
       ],
       "forbidden_responsibilities": [
         "Own connectors, source loading, or output writes."
@@ -156,11 +156,6 @@
         {
           "component": "exporters",
           "rationale": "The public facade delegates target writing.",
-          "decided_by": "agent"
-        },
-        {
-          "component": "files",
-          "rationale": "Dataset entry points delegate file access.",
           "decided_by": "agent"
         },
         {
@@ -298,7 +293,6 @@
       ],
       "public": [
         "datamimic_ce.engine.io.data_sources.boundary.entities:resolve_source_entity",
-        "datamimic_ce.engine.io.data_sources.boundary.entities:resolve_source_collection",
         "datamimic_ce.engine.io.data_sources.boundary.models",
         "datamimic_ce.engine.io.data_sources.chunk_reader:ChunkSourceWindow",
         "datamimic_ce.engine.io.data_sources.router",

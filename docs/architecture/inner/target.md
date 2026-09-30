@@ -204,6 +204,11 @@ The IO facade drops five unused concrete exporter re-exports; live runtime
 consumers still use its Memstore and TestResultExporter types.
 File JSON shape guards are shared operations owned by the file readers; the
 exporter registry's Memstore dependency is declared at the memory owner.
+File readers are published through `engine.io.files.api`, not the Runtime-facing
+root facade. Removing its documented `FileUtil` import is a deliberate CE 5.0
+Python import break, without a shim ([Amendment 81](../refactoring-study/experiment-2/amendment-81.md)).
+Open reader values remain unchanged; the file facade is not yet covered by the
+root boundary-type rule. Fewer root findings do not prove better reader typing.
 Runtime source-selection operations cross into IO through `io.api`; the
 selection algorithms remain owned by IO data sources.
 Target-call syntax is parsed by DSL input code. The linter adapter supplies

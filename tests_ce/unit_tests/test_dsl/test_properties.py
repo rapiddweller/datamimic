@@ -13,7 +13,8 @@ from datamimic_ce.engine.dsl.parsers.generation.generate_parser import GenerateP
 from datamimic_ce.engine.dsl.parsers.input import properties as property_input
 from datamimic_ce.engine.dsl.statements.setup.include_statement import IncludeStatement
 from datamimic_ce.engine.dsl.statements.setup.mongodb_statement import MongoDBStatement
-from datamimic_ce.engine.io.api import FileUtil, load_connection_profile
+from datamimic_ce.engine.io.api import load_connection_profile
+from datamimic_ce.engine.io.files.api import FileUtil
 from datamimic_ce.engine.runtime.contexts.context import SetupContext
 from datamimic_ce.engine.runtime.tasks.base.task import SetupSubTask
 from datamimic_ce.engine.runtime.tasks.setup.include_task import IncludeTask

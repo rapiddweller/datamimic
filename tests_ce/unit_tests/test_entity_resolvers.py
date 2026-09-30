@@ -9,12 +9,12 @@ import pytest
 
 from datamimic_ce.engine.dsl.api import parse_consumer
 from datamimic_ce.engine.io.api import (
-    resolve_source_collection,
     resolve_source_entity,
     resolve_target_entity,
 )
 from datamimic_ce.engine.io.clients.mongodb_client import MongoDBClient
 from datamimic_ce.engine.io.connection_config.mongodb_connection_config import MongoDBConnectionConfig
+from datamimic_ce.engine.io.data_sources.boundary.entities import resolve_source_collection
 from datamimic_ce.engine.io.exporters.core.routing import resolve_target_entity_from_metadata
 
 
