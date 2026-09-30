@@ -108,7 +108,7 @@
         "datamimic_ce.domains.insurance.generators"
       ],
       "responsibilities": [
-        "Generate weighted insurer, product, and coverage records plus policy premiums, terms, and statuses."
+        "Generate weighted insurer, product, and coverage records plus policy premiums, terms, and statuses; define the fixed coverage output record."
       ],
       "forbidden_responsibilities": [
         "Import insurance models or services."
@@ -119,6 +119,7 @@
       "requires": [],
       "public": [
         "datamimic_ce.domains.insurance.generators.insurance_company_generator:InsuranceCompanyGenerator",
+        "datamimic_ce.domains.insurance.generators.insurance_coverage_generator:InsuranceCoverageData",
         "datamimic_ce.domains.insurance.generators.insurance_coverage_generator:InsuranceCoverageGenerator",
         "datamimic_ce.domains.insurance.generators.insurance_policy_generator:InsurancePolicyGenerator",
         "datamimic_ce.domains.insurance.generators.insurance_product_generator:InsuranceProductGenerator"
