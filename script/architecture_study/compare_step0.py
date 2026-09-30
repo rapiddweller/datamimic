@@ -147,6 +147,16 @@ def capability_projection_equivalent(old_item: Any, new_item: Any) -> bool:
         return False
     if not isinstance(old, dict) or not isinstance(new, dict):
         return False
+    if old_content == new_content:
+        version = old.get("schema_version")
+        elements = old.get("elements")
+        return (
+            isinstance(version, str)
+            and bool(version)
+            and version == captured_package_version()
+            and isinstance(elements, dict)
+            and bool(elements)
+        )
 
     # The frozen old value is part of the reviewed snapshot; independently
     # verify the new value against the package installed for this comparison.
