@@ -13,14 +13,14 @@ from pathlib import Path
 import pytest
 
 import datamimic_ce.authoring.adapters.dryrun as dryrun_module
+from datamimic_ce.authoring.adapters.dryrun import dry_run_source, dry_run_source_captured
+from datamimic_ce.authoring.application.service import compile_document, scaffold
 from datamimic_ce.authoring.contracts import (
     AuthoringStage,
     ScaffoldRequest,
     ScaffoldVerification,
     VerificationGateStatus,
 )
-from datamimic_ce.authoring.adapters.dryrun import dry_run_source, dry_run_source_captured
-from datamimic_ce.authoring.application.service import compile_document, scaffold
 from datamimic_ce.engine.io.exporters.formats.json_exporter import JsonExporter
 
 _PIPELINE = """<setup rngSeed="1">

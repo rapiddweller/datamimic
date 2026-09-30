@@ -39,5 +39,8 @@ retain the older copied Git metadata; their source, not that copied HEAD label,
 defines the comparison. Earlier dirty integration changes are not published
 by this checkpoint. Full-corpus and architecture acceptance remain open.
 
-CI-ONLY VERIFICATION: pending Step75 publication. Step74 normal lanes pass;
-its architecture job fails. No merge/release or full descriptor pass implied.
+CI-ONLY VERIFICATION: run `36766950609` at pushed `8927a0e3` passes normal
+tests, external services, seeded matrix/hash comparison, lint, MyPy, build,
+wheel smokes and the Sonar job. Architecture fails: 69 new boundary findings,
+typing budget 145 > 143, and baseline ratchet reductions require reconciliation.
+E2E/release are skipped. No merge/release or full descriptor pass implied.

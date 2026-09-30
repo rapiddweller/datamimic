@@ -12,6 +12,7 @@ that another transport rejects.
 """
 
 from collections.abc import Callable
+from dataclasses import dataclass
 from decimal import Decimal, InvalidOperation
 from typing import Annotated, Literal, TypeVar
 
@@ -1434,6 +1435,60 @@ class RunResult(BaseModel):
     products_truncated: int = 0
     lint: LintResult | None = None
     diagnostics: list[Diagnostic] = Field(default_factory=list)
+
+
+@dataclass(frozen=True)
+class CapturedProduct:
+    """All bounded rows captured for one runtime product before projection."""
+
+    name: str
+    rows: tuple[object, ...]
+    capture: ProductCaptureEvidence | None = None
+
+
+@dataclass(frozen=True)
+class CapturedProducts:
+    """Internal acceptance input; unlike ``ProductResult`` this is never sampled."""
+
+    products: tuple[CapturedProduct, ...]
+    max_count: int
+
+    def get(self, name: str) -> CapturedProduct | None:
+        return next((product for product in self.products if product.name == name), None)
+
+
+@dataclass(frozen=True)
+class SmokeExportCapture:
+    """Typed internal facts from smoke-export execution, without public policy."""
+
+    requested: bool
+    applicable_exporters: int
+    attempted_exporters: int
+    failed_exporters: int
+
+    @classmethod
+    def not_requested(cls) -> "SmokeExportCapture":
+        return cls(
+            requested=False,
+            applicable_exporters=0,
+            attempted_exporters=0,
+            failed_exporters=0,
+        )
+
+
+@dataclass(frozen=True)
+class CapturedRun:
+    """One engine result paired with the full bounded capture from that run."""
+
+    result: RunResult
+    captured: CapturedProducts
+    base_run_ok: bool = True
+    smoke_export: SmokeExportCapture = SmokeExportCapture(
+        requested=False,
+        applicable_exporters=0,
+        attempted_exporters=0,
+        failed_exporters=0,
+    )
 
 
 class ScaffoldParameter(StrEnum):

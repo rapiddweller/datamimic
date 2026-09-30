@@ -14,9 +14,9 @@ from pathlib import Path
 import pytest
 from pydantic import ValidationError
 
-import datamimic_ce.authoring.application.acceptance as acceptance_module
 import datamimic_ce.authoring.application.service as service_module
-from datamimic_ce.authoring.application.acceptance import evaluate_acceptance
+import datamimic_ce.authoring.domain.acceptance as acceptance_module
+import datamimic_ce.authoring.domain.verification as verification_module
 from datamimic_ce.authoring.application.compiler import compile_authoring_spec
 from datamimic_ce.authoring.contracts import (
     MAX_DRY_RUN_COUNT,
@@ -25,6 +25,8 @@ from datamimic_ce.authoring.contracts import (
     AllowedValuesAcceptanceResult,
     AuthoringStage,
     CaptureCompletenessStatus,
+    CapturedProduct,
+    CapturedProducts,
     CaptureStatus,
     MemstoreCompletenessAcceptanceResult,
     PerParentCountAcceptanceResult,
@@ -34,7 +36,7 @@ from datamimic_ce.authoring.contracts import (
     ScaffoldRequest,
     UniqueAcceptanceResult,
 )
-from datamimic_ce.authoring.adapters.dryrun import CapturedProduct, CapturedProducts
+from datamimic_ce.authoring.domain.acceptance import evaluate_acceptance
 from datamimic_ce.authoring.spec import AllowedValuesExpectation, AuthoringSpecV1, RowConditionExpectation
 
 
@@ -1042,17 +1044,56 @@ def test_time_series_count_above_bound_is_unevaluable() -> None:
     assert not result.verified
 
 
-def test_acceptance_has_no_xml_or_transport_dependency() -> None:
-    source = Path(acceptance_module.__file__).read_text(encoding="utf-8")
+def _policy_imports(source: str) -> tuple[set[str], set[str]]:
+    forbidden = (
+        "datamimic_ce.authoring.adapters",
+        "datamimic_ce.authoring.application",
+        "datamimic_ce.engine.runtime",
+        "datamimic_ce.engine.io",
+    )
     tree = ast.parse(source)
-    imported_modules = {
-        node.module for node in ast.walk(tree) if isinstance(node, ast.ImportFrom) and node.module is not None
-    }
+    imported_modules: set[str] = set()
+    forbidden_imports: set[str] = set()
+    for node in ast.walk(tree):
+        if isinstance(node, ast.Import):
+            imported_modules.update(alias.name for alias in node.names)
+        elif isinstance(node, ast.ImportFrom):
+            if node.level:
+                forbidden_imports.add(f"relative import level {node.level}: {node.module or ''}")
+            if node.module is None:
+                continue
+            imported_modules.add(node.module)
+            imported_modules.update(f"{node.module}.{alias.name}" for alias in node.names)
+    for imported in imported_modules:
+        if any(imported == prefix or imported.startswith(prefix + ".") for prefix in forbidden):
+            forbidden_imports.add(imported)
+    return imported_modules, forbidden_imports
 
-    assert not any(module.endswith("xml") or ".xml" in module for module in imported_modules)
-    assert "datamimic_ce.interfaces.cli" not in imported_modules
-    assert not any(module.startswith("datamimic_ce.interfaces.mcp") for module in imported_modules)
-    assert "eval(" not in source
+
+@pytest.mark.parametrize(
+    ("source", "expected"),
+    [
+        ("from ..adapters import dryrun", {"relative import level 2: adapters"}),
+        ("from datamimic_ce.authoring import adapters", {"datamimic_ce.authoring.adapters"}),
+        ("from datamimic_ce.authoring.domain import acceptance", set()),
+    ],
+)
+def test_policy_dependency_guard_catches_relative_and_package_alias_imports(source: str, expected: set[str]) -> None:
+    _imported_modules, forbidden_imports = _policy_imports(source)
+
+    assert forbidden_imports == expected
+
+
+def test_acceptance_and_verification_have_no_adapter_application_runtime_or_io_dependency() -> None:
+    for policy_module in (acceptance_module, verification_module):
+        source = Path(policy_module.__file__).read_text(encoding="utf-8")
+        imported_modules, forbidden_imports = _policy_imports(source)
+
+        assert not forbidden_imports, f"{policy_module.__name__} imports forbidden dependencies: {forbidden_imports}"
+        assert not any(module.endswith("xml") or ".xml" in module for module in imported_modules)
+        assert "datamimic_ce.interfaces.cli" not in imported_modules
+        assert not any(module.startswith("datamimic_ce.interfaces.mcp") for module in imported_modules)
+        assert "eval(" not in source
 
 
 def test_acceptance_merge_deduplicates_identical_but_retains_conflicts() -> None:

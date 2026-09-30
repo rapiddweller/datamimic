@@ -52,10 +52,14 @@ from datamimic_ce._compat import StrEnum
 from datamimic_ce.authoring.adapters.linter import lint_descriptor, lint_source
 from datamimic_ce.authoring.contracts import (
     AuthoringStage,
+    CapturedProduct,
+    CapturedProducts,
+    CapturedRun,
     CaptureStatus,
     ProductCaptureEvidence,
     ProductResult,
     RunResult,
+    SmokeExportCapture,
 )
 from datamimic_ce.authoring.domain.diagnostics import Diagnostic, LintResult
 from datamimic_ce.authoring.domain.rule_catalog import RuleSeverity
@@ -71,60 +75,6 @@ DryRunProduct = ProductResult
 
 DryRunResult = RunResult
 """Backward-compatible alias for the canonical dry-run result contract."""
-
-
-@dataclass(frozen=True)
-class CapturedProduct:
-    """All bounded rows captured for one runtime product before projection."""
-
-    name: str
-    rows: tuple[object, ...]
-    capture: ProductCaptureEvidence | None = None
-
-
-@dataclass(frozen=True)
-class CapturedProducts:
-    """Internal acceptance input; unlike ``ProductResult`` this is never sampled."""
-
-    products: tuple[CapturedProduct, ...]
-    max_count: int
-
-    def get(self, name: str) -> CapturedProduct | None:
-        return next((product for product in self.products if product.name == name), None)
-
-
-@dataclass(frozen=True)
-class SmokeExportCapture:
-    """Typed internal facts from smoke-export execution, without public policy."""
-
-    requested: bool
-    applicable_exporters: int
-    attempted_exporters: int
-    failed_exporters: int
-
-    @classmethod
-    def not_requested(cls) -> "SmokeExportCapture":
-        return cls(
-            requested=False,
-            applicable_exporters=0,
-            attempted_exporters=0,
-            failed_exporters=0,
-        )
-
-
-@dataclass(frozen=True)
-class CapturedRun:
-    """One engine result paired with the full bounded capture from that run."""
-
-    result: DryRunResult
-    captured: CapturedProducts
-    base_run_ok: bool = True
-    smoke_export: SmokeExportCapture = SmokeExportCapture(
-        requested=False,
-        applicable_exporters=0,
-        attempted_exporters=0,
-        failed_exporters=0,
-    )
 
 
 @dataclass(frozen=True)

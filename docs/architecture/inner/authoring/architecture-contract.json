@@ -12,7 +12,7 @@
       },
       {
         "path": "datamimic_ce/authoring/adapters/dryrun.py",
-        "responsibility": "Der Adapter begrenzt Counts, neutralisiert Seiteneffekte und kapselt den Runtime-Lauf samt vollst\u00e4ndiger Capture-Evidenz."
+        "responsibility": "Bounds execution, neutralizes side effects and produces complete capture evidence using canonical Authoring records."
       },
       {
         "path": "datamimic_ce/authoring/adapters/engine_check.py",
@@ -39,8 +39,8 @@
         "responsibility": "Das Paket kennzeichnet die Authoring-Use-Cases, ohne zus\u00e4tzliche Ausf\u00fchrungslogik einzuf\u00fchren."
       },
       {
-        "path": "datamimic_ce/authoring/application/acceptance.py",
-        "responsibility": "Die Auswertung pr\u00fcft explizite und abgeleitete Erwartungen gegen dieselbe vollst\u00e4ndige begrenzte Capture."
+        "path": "datamimic_ce/authoring/domain/acceptance.py",
+        "responsibility": "Evaluates explicit and derived expectations against the same full bounded capture."
       },
       {
         "path": "datamimic_ce/authoring/application/compiler.py",
@@ -59,12 +59,12 @@
         "responsibility": "Der Service orchestriert Spec-Pr\u00fcfung, Kompilierung, Lint, einen begrenzten Lauf, Acceptance und optionale Nachweise."
       },
       {
-        "path": "datamimic_ce/authoring/application/verification.py",
-        "responsibility": "Die Verifikationspolitik vergleicht Captures und formt Retry-, Smoke-Export- und Replay-Evidenz."
+        "path": "datamimic_ce/authoring/domain/verification.py",
+        "responsibility": "Compares captures and derives retry, smoke-export and replay evidence without executing a run."
       },
       {
         "path": "datamimic_ce/authoring/contracts.py",
-        "responsibility": "Defines transport-neutral authoring requests and results plus validated compiler-plan types shared across the authoring flow."
+        "responsibility": "Defines canonical Authoring requests, results, compiler plans and full bounded-capture evidence records."
       },
       {
         "path": "datamimic_ce/authoring/domain/__init__.py",
@@ -224,6 +224,7 @@
         "datamimic_ce.authoring.spec:ValueRole",
         "datamimic_ce.authoring.spec:ValuesField",
         "datamimic_ce.authoring.spec:WeightedField",
+        "datamimic_ce.authoring.domain.acceptance:evaluate_acceptance",
         "datamimic_ce.authoring.domain.derived_facts:derive_facts",
         "datamimic_ce.authoring.domain.diagnostics",
         "datamimic_ce.authoring.domain.rule_catalog",
@@ -232,7 +233,14 @@
         "datamimic_ce.authoring.domain.rules.base",
         "datamimic_ce.authoring.domain.rules.schema_facts",
         "datamimic_ce.authoring.domain.schema",
-        "datamimic_ce.authoring.domain.script_semantics"
+        "datamimic_ce.authoring.domain.script_semantics",
+        "datamimic_ce.authoring.domain.verification:blocked_replay",
+        "datamimic_ce.authoring.domain.verification:blocked_verification",
+        "datamimic_ce.authoring.domain.verification:max_count_remediations",
+        "datamimic_ce.authoring.domain.verification:replay_evidence",
+        "datamimic_ce.authoring.domain.verification:replay_not_requested",
+        "datamimic_ce.authoring.domain.verification:smoke_export_evidence",
+        "datamimic_ce.authoring.domain.verification:unseeded_replay_evidence"
       ],
       "decided_by": "agent"
     },
@@ -400,12 +408,10 @@
       "kind": "root_layout",
       "root": "datamimic_ce.authoring.application",
       "allowed_children": [
-        "datamimic_ce.authoring.application.acceptance",
         "datamimic_ce.authoring.application.compiler",
         "datamimic_ce.authoring.application.intent_linter",
         "datamimic_ce.authoring.application.intent_validation",
-        "datamimic_ce.authoring.application.service",
-        "datamimic_ce.authoring.application.verification"
+        "datamimic_ce.authoring.application.service"
       ],
       "rationale": "Compile/check/run/scaffold transaction coordination. Exact reviewed target children; no hidden extra modules.",
       "provenance": [
@@ -418,12 +424,14 @@
       "kind": "root_layout",
       "root": "datamimic_ce.authoring.domain",
       "allowed_children": [
+        "datamimic_ce.authoring.domain.acceptance",
         "datamimic_ce.authoring.domain.derived_facts",
         "datamimic_ce.authoring.domain.diagnostics",
         "datamimic_ce.authoring.domain.rule_catalog",
         "datamimic_ce.authoring.domain.rules",
         "datamimic_ce.authoring.domain.schema",
-        "datamimic_ce.authoring.domain.script_semantics"
+        "datamimic_ce.authoring.domain.script_semantics",
+        "datamimic_ce.authoring.domain.verification"
       ],
       "rationale": "Intent specification, diagnostics, acceptance facts and pure rules. Exact reviewed target children; no hidden extra modules.",
       "provenance": [

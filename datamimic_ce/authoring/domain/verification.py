@@ -5,9 +5,10 @@
 
 """Pure scaffold verification policy over typed bounded-run evidence."""
 
-from datamimic_ce.authoring.adapters.dryrun import CapturedProducts, CapturedRun, SmokeExportCapture
 from datamimic_ce.authoring.contracts import (
     MAX_DRY_RUN_COUNT,
+    CapturedProducts,
+    CapturedRun,
     CaptureStatus,
     CompilePlan,
     DeterministicReplayEvidence,
@@ -20,6 +21,7 @@ from datamimic_ce.authoring.contracts import (
     RetryWithParameterRemediation,
     ScaffoldVerification,
     ScaffoldVerificationEvidence,
+    SmokeExportCapture,
     SmokeExportEvidence,
     SourceProductCompilePlan,
     TimeSeriesProductCompilePlan,
@@ -277,7 +279,7 @@ def replay_evidence(
 __all__ = [
     "blocked_replay",
     "blocked_verification",
-    "compare_captures",
+    "max_count_remediations",
     "replay_evidence",
     "replay_not_requested",
     "smoke_export_evidence",

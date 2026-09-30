@@ -22,19 +22,9 @@ from datamimic_ce.authoring.adapters.dryrun import (
     dry_run_source_captured,
 )
 from datamimic_ce.authoring.adapters.linter import lint_descriptor, lint_source
-from datamimic_ce.authoring.application.acceptance import evaluate_acceptance
 from datamimic_ce.authoring.application.compiler import CompileError, compile_authoring_spec
 from datamimic_ce.authoring.application.intent_linter import intent_diagnostics_pass_verification, lint_intent
 from datamimic_ce.authoring.application.intent_validation import project_validation_issues
-from datamimic_ce.authoring.application.verification import (
-    blocked_replay,
-    blocked_verification,
-    max_count_remediations,
-    replay_evidence,
-    replay_not_requested,
-    smoke_export_evidence,
-    unseeded_replay_evidence,
-)
 from datamimic_ce.authoring.contracts import (
     AllowedValuesRemediation,
     AuthoringStage,
@@ -53,8 +43,18 @@ from datamimic_ce.authoring.contracts import (
     ScaffoldResult,
     ScaffoldVerificationEvidence,
 )
+from datamimic_ce.authoring.domain.acceptance import evaluate_acceptance
 from datamimic_ce.authoring.domain.derived_facts import derive_facts
 from datamimic_ce.authoring.domain.diagnostics import LintResult
+from datamimic_ce.authoring.domain.verification import (
+    blocked_replay,
+    blocked_verification,
+    max_count_remediations,
+    replay_evidence,
+    replay_not_requested,
+    smoke_export_evidence,
+    unseeded_replay_evidence,
+)
 from datamimic_ce.authoring.spec import AuthoringSpecV1, validate_expectation_products
 
 

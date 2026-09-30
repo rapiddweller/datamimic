@@ -39,6 +39,12 @@ root owners; line references are from the EE experiment snapshot.
 
 ## Boundaries
 
+Shared Authoring target: `domain/acceptance.py` and `domain/verification.py`
+own verdict policy; `contracts.py` owns bounded-capture records; Application
+owns execution sequencing. EE currently uses `projection/acceptance.py` and
+Domain request/evidence types. Its later physical migration must keep its
+algorithms and stronger tests; this CE move does not claim EE conformance.
+
 Keep the existing operations and typed values as the public seams; moves must
 not add a facade feature or synchronization framework.
 

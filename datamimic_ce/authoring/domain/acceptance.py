@@ -23,7 +23,6 @@ from dataclasses import dataclass, replace
 from decimal import Decimal, InvalidOperation
 from typing import Literal, TypeAlias
 
-from datamimic_ce.authoring.adapters.dryrun import CapturedProduct, CapturedProducts
 from datamimic_ce.authoring.contracts import (
     AcceptanceReport,
     AcceptanceResult,
@@ -33,6 +32,8 @@ from datamimic_ce.authoring.contracts import (
     AllowedValuesAcceptanceResult,
     CaptureCompletenessEvidence,
     CaptureCompletenessStatus,
+    CapturedProduct,
+    CapturedProducts,
     CaptureStatus,
     CompilePlan,
     ExactCountAcceptancePlan,
@@ -1672,4 +1673,4 @@ def evaluate_acceptance(
     )
 
 
-__all__ = ["evaluate_acceptance", "merge_expectations"]
+__all__ = ["evaluate_acceptance"]

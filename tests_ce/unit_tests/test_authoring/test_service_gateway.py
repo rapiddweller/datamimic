@@ -14,8 +14,12 @@ from pydantic import ValidationError
 from typer.testing import CliRunner
 
 import datamimic_ce.authoring.application.service as authoring_service
+from datamimic_ce.authoring.application.service import check, run
 from datamimic_ce.authoring.contracts import (
     AuthoringStage,
+    CapturedProduct,
+    CapturedProducts,
+    CapturedRun,
     CheckRequest,
     RunRequest,
     RunResult,
@@ -23,12 +27,6 @@ from datamimic_ce.authoring.contracts import (
     ScaffoldResult,
 )
 from datamimic_ce.authoring.domain.diagnostics import LintResult
-from datamimic_ce.authoring.adapters.dryrun import (
-    CapturedProduct,
-    CapturedProducts,
-    CapturedRun,
-)
-from datamimic_ce.authoring.application.service import check, run
 from datamimic_ce.interfaces.cli import app
 
 _XML = """<setup rngSeed="1">

@@ -8,6 +8,10 @@ semantic freeze in [Amendment 20](amendment-20.md). Astra decides remaining
 ownership questions; Luna implements and Terra verifies independently. Frozen
 inputs below remain history, including the original checker and agent versions.
 
+[Amendment 80](amendment-80.md) corrects Authoring policy ownership: acceptance
+and verification live in Domain; canonical contracts own the existing capture
+records. Application still sequences execution and adapters still run it.
+
 ## Fixed inputs
 
 | Input | Frozen value |

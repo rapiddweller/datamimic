@@ -52,8 +52,9 @@ is a catch-all component.
     domain/
       diagnostics.py  schema.py  script_semantics.py
       rule_catalog.py
+      acceptance.py  verification.py   verdict policy over full capture evidence
       rules/                    base, schema, semantics, intent, cross-statement
-    application/                service, compile/verify/acceptance sequencing
+    application/                service owns compile/run/acceptance/replay sequencing
     adapters/                   XML loading/lint, bounded execution, live reference/capability views
     projection/                 typed authoring-reference variants; no runtime imports
   engine/
@@ -192,6 +193,12 @@ function or class; it does not require a new wrapper module. Nested public lists
 are local to their boundary and do not automatically publish through the parent.
 Concrete model and statement types are legitimate internal interfaces; concrete
 clients and exporter implementations are not the Runtime-facing API.
+
+Authoring Domain owns acceptance/replay verdicts and canonical bounded-capture
+records in `contracts.py`. Application sequences runs; the dry-run adapter
+produces evidence. Policies never import the execution adapter. Its eight Domain
+children are a reviewed cohesion exception, not an automatic seven-child limit
+([Amendment 80](../refactoring-study/experiment-2/amendment-80.md)).
 
 The IO facade drops five unused concrete exporter re-exports; live runtime
 consumers still use its Memstore and TestResultExporter types.

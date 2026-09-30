@@ -1152,6 +1152,14 @@
   ],
   "relocations": [
     {
+      "source": "authoring/application/acceptance.py",
+      "target": "authoring/domain/acceptance.py"
+    },
+    {
+      "source": "authoring/application/verification.py",
+      "target": "authoring/domain/verification.py"
+    },
+    {
       "source": "authoring/projection/reference.py",
       "target": "authoring/adapters/reference.py"
     },
@@ -2217,6 +2225,10 @@
   ],
   "retained_over_seven": [
     {
+      "path": "authoring/domain",
+      "reason": "Eight distinct grammar, diagnostics and verdict-policy children. Acceptance and replay remain separate policies; a count-only folder adds no boundary and merging them creates a roughly 2,000-line mixed-policy module."
+    },
+    {
       "path": ".",
       "reason": "Reviewed distribution entry points. These distinct owners remain together; a count-only wrapper adds no boundary."
     },
@@ -2374,7 +2386,10 @@
     {"target": "interfaces/mcp/cli.py", "responsibility": "The MCP executable loads the working-directory environment, then selects transport and bind configuration."},
     {"target": "engine/dsl/model/validation.py", "responsibility": "Provides shared raw-attribute validation functions and internal ModelUtil checks for DSL models."},
     {"target": "authoring/adapters/reference.py", "responsibility": "Builds bounded DSL and typed authoring references from engine registries and authoring schemas."},
-    {"target": "authoring/contracts.py", "responsibility": "Defines transport-neutral authoring requests and results plus validated compiler-plan types shared across the authoring flow."},
+    {"target": "authoring/contracts.py", "responsibility": "Defines canonical Authoring requests, results, compiler plans and full bounded-capture evidence records."},
+    {"target": "authoring/adapters/dryrun.py", "responsibility": "Bounds execution, neutralizes side effects and produces complete capture evidence using canonical Authoring records."},
+    {"target": "authoring/domain/acceptance.py", "responsibility": "Evaluates explicit and derived expectations against the same full bounded capture."},
+    {"target": "authoring/domain/verification.py", "responsibility": "Compares captures and derives retry, smoke-export and replay evidence without executing a run."},
     {"target": "authoring/domain/derived_facts.py", "responsibility": "Derives product, memstore, and foreign-key facts from CompilePlan for scaffold responses and intent rules."},
     {"target": "domains/ecommerce/models/order.py", "responsibility": "Order represents a buyer's purchase, including line items, payment, pricing, and shipping details."},
     {"target": "domains/ecommerce/models/product.py", "responsibility": "Product represents a catalog item with category, brand, descriptive, pricing, inventory, and merchandising attributes."},
