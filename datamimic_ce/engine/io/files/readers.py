@@ -377,7 +377,7 @@ class FileUtil:
     @staticmethod
     def read_csv_having_weight_column(
         filepath: Path, weight_column_name: str, delimiter: str = ",", encoding: str = "utf-8"
-    ):
+    ) -> tuple[list[float], list[dict[str, str]]]:
         """
         Read CSV file having one weight column
         :param filepath:

@@ -64,6 +64,25 @@ def test_csv_readers_preserve_bom_and_ragged_row_behavior(tmp_path):
     ]
 
 
+@pytest.mark.parametrize("weight_column", ["weight", "chance"])
+def test_weighted_csv_reader_preserves_string_rows_and_repeated_reads(tmp_path, weight_column):
+    path = tmp_path / "weighted.csv"
+    path.write_text(
+        f'account id,display name,{weight_column}\n007,"A, Inc.",1.5\n008,Grace,2\n',
+        encoding="utf-8",
+    )
+
+    expected = (
+        [1.5, 2.0],
+        [
+            {"account id": "007", "display name": "A, Inc."},
+            {"account id": "008", "display name": "Grace"},
+        ],
+    )
+    assert FileUtil.read_csv_having_weight_column(path, weight_column) == expected
+    assert FileUtil.read_csv_having_weight_column(path, weight_column) == expected
+
+
 def test_csv_reader_rejects_malformed_cached_rows(tmp_path):
     path = tmp_path / "cached.csv"
     FileContentStorage._file_data_cache[str(path)] = [("valid",), (1,)]
@@ -85,6 +104,9 @@ def test_csv_empty_file_is_empty_for_raw_and_dict_readers(tmp_path):
 def test_csv_reader_annotations_are_narrow():
     assert get_type_hints(FileUtil._read_raw_csv)["return"] == list[tuple[str, ...]]
     assert get_type_hints(FileUtil.read_csv_to_dict_list)["return"] == list[dict[str, str]]
+    assert get_type_hints(FileUtil.read_csv_having_weight_column).get("return") == tuple[
+        list[float], list[dict[str, str]]
+    ]
     assert get_type_hints(FileUtil.read_csv_to_dict_of_tuples_with_header)["return"] == tuple[
         dict[str, int], list[tuple[str, ...]]
     ]

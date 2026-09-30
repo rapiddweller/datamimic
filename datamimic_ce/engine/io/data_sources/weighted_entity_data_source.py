@@ -47,7 +47,7 @@ class WeightedEntityDataSource:
         separator: str,
         rng: Random,
         weight_column_name: str | None = None,
-    ):
+    ) -> None:
         weight_column = weight_column_name or "weight"
         self._weights, self._data_dict_list = FileUtil.read_csv_having_weight_column(
             file_path, weight_column, separator
@@ -56,7 +56,7 @@ class WeightedEntityDataSource:
         # propagates fully to weighted entity source reads.
         self._rng = rng
 
-    def generate(self) -> dict:
+    def generate(self) -> dict[str, str]:
         """
         Generate a dict represent an entity with weight from file ".wgt.ent.csv"
 
