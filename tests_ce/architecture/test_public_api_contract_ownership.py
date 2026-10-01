@@ -104,3 +104,20 @@ def test_statement_branch_and_memstore_manager_are_root_component_declarations()
     assert "datamimic_ce.engine.runtime.storage.memstore_manager" in _component(runtime, "RUNTIME-STORAGE")[
         "public"
     ]
+
+
+def test_state_machine_definition_is_generation_contract_owned() -> None:
+    from datamimic_ce.domains import api
+    from datamimic_ce.domains.domain_core.contracts import generation
+
+    symbol = "datamimic_ce.domains.domain_core.contracts.generation:StateMachineDef"
+    assert api.StateMachineDef is generation.StateMachineDef
+
+    domains = _read_contract(ROOT / "docs/architecture/inner/domains/architecture-contract.json")
+    core = _component(domains, "DOMAINS-CORE")["public"]
+    assert core.count(symbol) == 1
+    assert all(
+        symbol not in component.get("public", [])
+        for component in domains["components"]
+        if component["id"] != "DOMAINS-CORE"
+    )

@@ -6,7 +6,7 @@ from datamimic_ce.domains.domain_core.base_domain_generator import BaseDomainGen
 from datamimic_ce.domains.domain_core.base_domain_service import BaseDomainService
 from datamimic_ce.domains.domain_core.base_entity import IdentifierRegistry
 from datamimic_ce.domains.domain_core.base_literal_generator import BaseLiteralGenerator
-from datamimic_ce.domains.domain_core.contracts.generation import GeneratorCapability
+from datamimic_ce.domains.domain_core.contracts.generation import GeneratorCapability, StateMachineDef
 from datamimic_ce.domains.domain_core.runtime.clock import from_epoch_utc, resolve_clock, to_epoch_utc
 from datamimic_ce.domains.domain_core.runtime.determinism import get_datamimic_lib_version
 from datamimic_ce.domains.domain_core.runtime.rng import derive_child_seed, spawn_rng
@@ -47,7 +47,6 @@ from datamimic_ce.domains.shared.demographics.sampler import DemographicSampler
 from datamimic_ce.domains.shared.literal_generators.numeric.increment_generator import IncrementGenerator
 from datamimic_ce.domains.shared.literal_generators.numeric.number_sequences import finite_number_sequence_capacity
 from datamimic_ce.domains.shared.literal_generators.primitives.state_transition_generator import (
-    StateMachineDef,
     StateTransitionGenerator,
 )
 from datamimic_ce.domains.shared.literal_generators.primitives.string_generator import StringGenerator

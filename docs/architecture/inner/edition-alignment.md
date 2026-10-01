@@ -100,3 +100,13 @@ by responsibility instead of carrying that catch-all wrapper into the common tre
   unsupported EE-to-CE paths with capability and descriptor evidence. Check
   seeded replay within each edition under identical initial target state, not
   equality of CE and EE random values (`experiment-3/protocol.md:71-81`).
+
+## State-machine definition ownership
+
+CE places the immutable `StateMachineDef` in
+`domains/domain_core/contracts/generation.py`; the concrete transition generator
+owns only walking and sampling. This is also the shared physical EE target, not
+evidence that EE has moved. CE keeps its current Runtime generator map: a working
+XML converter reads `root.generators[id].start`. Separating that map needs an
+explicit scripting decision. Named-alias reuse is tracked in CE issue #279;
+neither registration nor seeded values change in this ownership step.

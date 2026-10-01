@@ -2393,7 +2393,7 @@
     {"target": "authoring/domain/derived_facts.py", "responsibility": "Derives product, memstore, and foreign-key facts from CompilePlan for scaffold responses and intent rules."},
     {"target": "domains/ecommerce/models/order.py", "responsibility": "Order represents a buyer's purchase, including line items, payment, pricing, and shipping details."},
     {"target": "domains/ecommerce/models/product.py", "responsibility": "Product represents a catalog item with category, brand, descriptive, pricing, inventory, and merchandising attributes."},
-    {"target": "domains/domain_core/contracts/generation.py", "responsibility": "Defines shared generator capability metadata and state transition rules for domain generation."},
+    {"target": "domains/domain_core/contracts/generation.py", "responsibility": "Defines generator capability metadata, immutable state-machine definitions and transition rules for domain generation."},
     {"target": "domains/finance/models/bank.py", "responsibility": "Bank exposes institution identity, payment-network identifiers, routing data, and customer-service contact."},
     {"target": "domains/finance/models/bank_account.py", "responsibility": "BankAccount links bank details to account identifiers, balances, currency, and account lifecycle dates."},
     {"target": "domains/finance/models/credit_card.py", "responsibility": "CreditCard links cardholder, account, and bank data with card credentials, limits, balances, and dates."},

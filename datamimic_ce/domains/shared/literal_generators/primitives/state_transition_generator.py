@@ -8,22 +8,12 @@ from __future__ import annotations
 
 import random
 from collections.abc import Iterable
-from dataclasses import dataclass
 
 from datamimic_ce.domains.domain_core.base_literal_generator import BaseLiteralGenerator
 from datamimic_ce.domains.domain_core.contracts.generation import StateTransitionRule
 
 # One transition: (from_state, to_state, weight)
 Rule = StateTransitionRule
-
-
-@dataclass(frozen=True)
-class StateMachineDef:
-    """A reusable <state-machine> definition stored under its id in the context, so
-    each ``generator="<id>"`` reference builds its own (stateful) generator."""
-
-    rules: tuple[Rule, ...]
-    start: str | None = None
 
 
 def _parse_spec(spec: str) -> list[Rule]:
