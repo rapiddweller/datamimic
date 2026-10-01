@@ -15,7 +15,7 @@ class MaskConverter(Converter):
     """
 
     def __init__(self, mask_char: str = "*"):
-        if len(mask_char) != 1:
+        if not isinstance(mask_char, str) or len(mask_char) != 1:
             raise ValueError("Mask character can only be a single character")
         self._mask_char = mask_char
 

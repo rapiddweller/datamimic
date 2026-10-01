@@ -144,3 +144,11 @@ def test_converter_construction_preserves_order_dynamic_context_and_seeded_hash_
 
     assert token(23) == token(23)
     assert token(23) != token(24)
+
+    mask_converters = create_converter_list(context, "Mask('#');MiddleMask(1,1,'#')")
+    assert mask_converters[0].convert("abcd") == "####"
+    assert mask_converters[1].convert("abcd") == "a##d"
+    with pytest.raises(ValueError):
+        create_converter_list(context, "Mask(['#'])")
+    with pytest.raises(ValueError):
+        create_converter_list(context, "MiddleMask(1,1,b'#')")

@@ -20,7 +20,7 @@ class MiddleMaskConverter(Converter):
     """
 
     def __init__(self, start_mask_index: int, end_mask_offset: int, mask_char: str = "*"):
-        if len(mask_char) != 1:
+        if not isinstance(mask_char, str) or len(mask_char) != 1:
             raise ValueError("Mask character can only be a single character")
         self._start_mask_index = start_mask_index
         self._end_mask_offset = end_mask_offset
