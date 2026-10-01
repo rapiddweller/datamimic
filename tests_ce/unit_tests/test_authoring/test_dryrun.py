@@ -7,6 +7,8 @@
 """Dry-run: capped, capture-only execution with the safety gates."""
 
 import json
+import os
+import tempfile
 from multiprocessing.connection import Connection
 from pathlib import Path
 
@@ -22,6 +24,8 @@ from datamimic_ce.authoring.contracts import (
     VerificationGateStatus,
 )
 from datamimic_ce.engine.io.exporters.formats.json_exporter import JsonExporter
+from datamimic_ce.engine.runtime.api import create_run_session
+from datamimic_ce.engine.runtime.contracts import RunRequest
 
 _PIPELINE = """<setup rngSeed="1">
     <memstore id="mem"/>
@@ -49,6 +53,32 @@ def _short_write_worker(
 ) -> None:
     JsonExporter._write_data_to_buffer = _short_write_json
     dryrun_module._engine_process_worker(path, max_count, allow_side_effects, smoke_export, send_connection)
+
+
+def _observe_smoke_artifact_worker(
+    path: Path,
+    max_count: int,
+    allow_side_effects: bool,
+    smoke_export: bool,
+    send_connection: Connection,
+) -> None:
+    receipt = os.environ.get("DATAMIMIC_SMOKE_ARTIFACT_RECEIPT")
+    original_cleanup = tempfile.TemporaryDirectory.cleanup
+
+    def observe_cleanup(directory) -> None:
+        try:
+            smoke_dir = Path(directory.name)
+            if receipt is not None and smoke_dir.name.startswith("datamimic_smoke_"):
+                for artifact in smoke_dir.glob("temp_result_*_exporter_*_product_*/*"):
+                    Path(receipt).write_bytes(artifact.read_bytes())
+        finally:
+            original_cleanup(directory)
+
+    tempfile.TemporaryDirectory.cleanup = observe_cleanup
+    try:
+        dryrun_module._engine_process_worker(path, max_count, allow_side_effects, smoke_export, send_connection)
+    finally:
+        tempfile.TemporaryDirectory.cleanup = original_cleanup
 
 
 def test_dry_run_caps_counts_strips_targets_keeps_memstore(tmp_path: Path, monkeypatch) -> None:
@@ -189,6 +219,121 @@ def test_smoke_export_passes_and_leaves_no_files(tmp_path: Path, monkeypatch) ->
     assert run.smoke_export.attempted_exporters == 9
     assert run.smoke_export.failed_exporters == 0
     assert not list(tmp_path.iterdir())  # smoke writes never leave the temp dir
+
+
+@pytest.mark.parametrize(
+    ("exporter", "xml", "expected"),
+    [
+        (
+            "CSV",
+            '<setup rngSeed="17"><generate name="rows" count="2" target="CSV">'
+            '<key name="id" generator="IncrementGenerator"/><key name="label" constant="x"/>'
+            "</generate></setup>",
+            b"id|label\r\n1|x\r\n2|x\r\n",
+        ),
+        (
+            "CSV",
+            '<setup rngSeed="17" defaultSeparator=""><generate name="rows" count="2" target="CSV">'
+            '<key name="id" generator="IncrementGenerator"/><key name="label" constant="x"/>'
+            "</generate></setup>",
+            b"id|label\r\n1|x\r\n2|x\r\n",
+        ),
+        (
+            "CSV",
+            '<setup rngSeed="17" defaultSeparator=";"><generate name="rows" count="2" target="CSV">'
+            '<key name="id" generator="IncrementGenerator"/><key name="label" constant="x"/>'
+            "</generate></setup>",
+            b"id;label\r\n1;x\r\n2;x\r\n",
+        ),
+        (
+            "CSV",
+            '<setup rngSeed="17" defaultSeparator="||"><generate name="rows" count="2" target="CSV(delimiter=\';\')">'
+            '<key name="id" generator="IncrementGenerator"/><key name="label" constant="x"/>'
+            "</generate></setup>",
+            b"id;label\r\n1;x\r\n2;x\r\n",
+        ),
+        (
+            "CSV",
+            '<setup rngSeed="17"><generate name="parents" count="2" target="ConsoleExporter">'
+            '<key name="id" generator="IncrementGenerator"/><generate name="children" count="1" target="CSV">'
+            '<key name="parent_id" script="parent.id"/><key name="label" constant="x"/>'
+            "</generate></generate></setup>",
+            b"parent_id|label\r\n1|x\r\n2|x\r\n",
+        ),
+        (
+            "TXT",
+            '<setup rngSeed="17"><generate name="rows" count="2" target="TXT">'
+            '<key name="id" generator="IncrementGenerator"/></generate></setup>',
+            b"rows: {'id': 1}\nrows: {'id': 2}\n",
+        ),
+        (
+            "TXT",
+            '<setup rngSeed="17" defaultSeparator=";" defaultLineSeparator=";">'
+            '<generate name="rows" count="2" target="TXT">'
+            '<key name="id" generator="IncrementGenerator"/></generate></setup>',
+            b"rows: {'id': 1};rows: {'id': 2};",
+        ),
+        (
+            "TXT",
+            '<setup rngSeed="17" defaultLineSeparator="\\r\\n">'
+            '<generate name="rows" count="2" target="TXT">'
+            '<key name="id" generator="IncrementGenerator"/></generate></setup>',
+            b"rows: {'id': 1}\r\nrows: {'id': 2}\r\n",
+        ),
+        (
+            "TXT",
+            '<setup rngSeed="17" defaultSeparator="||" defaultLineSeparator="\\r\\n">'
+            '<generate name="rows" count="2" target="TXT(separator=\':\', line_terminator=\';\')">'
+            '<key name="id" generator="IncrementGenerator"/></generate></setup>',
+            b"rows: {'id': 1};rows: {'id': 2};",
+        ),
+    ],
+)
+def test_smoke_export_uses_setup_defaults_and_matches_runtime_artifact(
+    tmp_path: Path,
+    monkeypatch,
+    exporter: str,
+    xml: str,
+    expected: bytes,
+) -> None:
+    monkeypatch.chdir(tmp_path)
+    monkeypatch.setenv("DATAMIMIC_SMOKE_ARTIFACT_RECEIPT", str(tmp_path / "smoke-artifact.bin"))
+    monkeypatch.setattr(dryrun_module, "_engine_process_worker", _observe_smoke_artifact_worker)
+    smoked = dry_run_source_captured(xml, smoke_export=True)
+
+    assert smoked.result.ok, [(d.rule, d.message) for d in smoked.result.diagnostics]
+    assert (tmp_path / "smoke-artifact.bin").read_bytes() == expected
+    assert {path.name for path in tmp_path.iterdir()} == {"smoke-artifact.bin"}
+
+    descriptor = tmp_path / "descriptor.xml"
+    descriptor.write_text(xml, encoding="utf-8")
+    create_run_session(
+        RunRequest(descriptor_path=descriptor, task_id="real_export", test_mode=True)
+    ).execute()
+    artifacts = sorted((tmp_path / "output" / "real_export").glob(f"*.{exporter.lower()}"))
+    assert len(artifacts) == 1
+    assert artifacts[0].read_bytes() == expected
+
+
+def test_smoke_export_rejects_multichar_setup_csv_separator_like_runtime(tmp_path: Path, monkeypatch) -> None:
+    monkeypatch.chdir(tmp_path)
+    xml = """<setup rngSeed="17" defaultSeparator="||">
+        <generate name="rows" count="2" target="CSV">
+            <key name="id" generator="IncrementGenerator"/>
+            <key name="label" constant="x"/>
+        </generate>
+    </setup>"""
+
+    smoked = dry_run_source_captured(xml, smoke_export=True)
+
+    assert not smoked.result.ok
+    assert [diagnostic.rule for diagnostic in smoked.result.diagnostics] == ["DM002"]
+    assert smoked.smoke_export.failed_exporters == 1
+    descriptor = tmp_path / "descriptor.xml"
+    descriptor.write_text(xml, encoding="utf-8")
+    with pytest.raises(ValueError, match="delimiter.*1-character"):
+        create_run_session(RunRequest(descriptor_path=descriptor, task_id="real_export")).execute()
+    assert not list(tmp_path.glob("output/*/*.csv"))
 
 
 @pytest.mark.parametrize(

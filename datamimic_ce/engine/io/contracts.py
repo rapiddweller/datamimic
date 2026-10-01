@@ -94,6 +94,8 @@ class SmokeExportRequest:
     rows: SmokeExportRows
     exporter_name: str
     params: SmokeExportParameters
+    default_separator: str
+    default_line_separator: str
 
 
 __all__ = [

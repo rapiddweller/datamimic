@@ -321,8 +321,8 @@ def _dry_run_hazards(root_stmt: object) -> tuple[bool, bool]:
 
 # One stripped file target of a product: (exporter name in the registry, ctor params).
 _FileTarget = tuple[str, dict[str, object]]
-# product full_name -> (file basename, its stripped file targets)
-_StrippedTargets = dict[str, tuple[str, list[_FileTarget]]]
+# product full_name -> basename, stripped file targets, resolved setup defaults
+_StrippedTargets = dict[str, tuple[str, list[_FileTarget], str, str]]
 
 
 def _capture_name(full_name: str) -> str:
@@ -449,6 +449,7 @@ def neutralize_for_dry_run(
     root_stmt.num_process = 1
 
     default_separator = root_stmt.default_separator or "|"
+    default_line_separator = root_stmt.default_line_separator or "\n"
 
     def _neutralize(stmt: object) -> None:
         if isinstance(stmt, GenerateStatement):
@@ -458,7 +459,12 @@ def neutralize_for_dry_run(
                     if file_targets:
                         # same basename resolution as the real exporter factory
                         basename = resolve_target_entity(stmt.target_entity, None, stmt.name)
-                        stripped_file_targets[stmt.full_name] = (basename, file_targets)
+                        stripped_file_targets[stmt.full_name] = (
+                            basename,
+                            file_targets,
+                            default_separator,
+                            default_line_separator,
+                        )
                 stmt.targets = {t for t in stmt.targets if t in memstores}
             stmt.num_process = 1
             requested = _static_count(stmt.count)
@@ -562,6 +568,8 @@ def _smoke_exporter(
     rows: list[dict[str, object]],
     exporter_name: str,
     params: dict[str, object],
+    default_separator: str,
+    default_line_separator: str,
 ) -> Diagnostic | None:
     from datamimic_ce.engine.io.api import smoke_export
 
@@ -575,6 +583,8 @@ def _smoke_exporter(
                 rows=SmokeExportRows.model_construct(root=rows),
                 exporter_name=exporter_name,
                 params=SmokeExportParameters.model_construct(root=params),
+                default_separator=default_separator,
+                default_line_separator=default_line_separator,
             )
         )
         if written_rows == len(rows):
@@ -618,13 +628,13 @@ def _smoke_export(
     (write + finalize — the two phases where serialization crashes live). The tempdir
     context manager guarantees zero artifacts. Failures become DM002 diagnostics."""
     diagnostics: list[Diagnostic] = []
-    applicable_exporters = sum(len(file_targets) for _basename, file_targets in stripped.values())
+    applicable_exporters = sum(len(file_targets) for _basename, file_targets, _, _ in stripped.values())
     attempted_exporters = 0
     failed_exporters = 0
     with tempfile.TemporaryDirectory(prefix="datamimic_smoke_") as tmp:
         descriptor_dir = Path(tmp)
         task_id = f"smoke_{uuid.uuid4().hex}"
-        for full_name, (basename, file_targets) in sorted(stripped.items()):
+        for full_name, (basename, file_targets, default_separator, default_line_separator) in sorted(stripped.items()):
             rows = [row for row in captured.get(_capture_name(full_name), []) if isinstance(row, dict)]
             if not rows:
                 continue
@@ -638,6 +648,8 @@ def _smoke_export(
                     rows,
                     exporter_name,
                     params,
+                    default_separator,
+                    default_line_separator,
                 )
                 if diagnostic is not None:
                     failed_exporters += 1
