@@ -4,135 +4,135 @@
     "modules": [
       {
         "path": "datamimic_ce/domains/shared/literal_generators/business/company_name_generator.py",
-        "responsibility": "Der CompanyNameGenerator erzeugt synthetische Fachwerte \u00fcber generate und nutzt die erforderliche RNG-, Datensatz- oder Zeitbasis."
+        "responsibility": "CompanyNameGenerator generates synthetic domain values through generate, using the required RNG, dataset, or clock basis."
       },
       {
         "path": "datamimic_ce/domains/shared/literal_generators/business/department_name_generator.py",
-        "responsibility": "Der DepartmentNameGenerator erzeugt synthetische Fachwerte \u00fcber generate und nutzt die erforderliche RNG-, Datensatz- oder Zeitbasis."
+        "responsibility": "DepartmentNameGenerator generates synthetic domain values through generate, using the required RNG, dataset, or clock basis."
       },
       {
         "path": "datamimic_ce/domains/shared/literal_generators/business/sector_generator.py",
-        "responsibility": "Der SectorGenerator erzeugt synthetische Fachwerte \u00fcber generate und nutzt die erforderliche RNG-, Datensatz- oder Zeitbasis."
+        "responsibility": "SectorGenerator generates synthetic domain values through generate, using the required RNG, dataset, or clock basis."
       },
       {
         "path": "datamimic_ce/domains/shared/literal_generators/contact/domain_generator.py",
-        "responsibility": "Der DomainGenerator erzeugt synthetische Fachwerte \u00fcber generate, generate_with_company_name und nutzt die erforderliche RNG-, Datensatz- oder Zeitbasis."
+        "responsibility": "DomainGenerator generates synthetic domain values through generate and generate_with_company_name, using the required RNG, dataset, or clock basis."
       },
       {
         "path": "datamimic_ce/domains/shared/literal_generators/contact/email_address_generator.py",
-        "responsibility": "Der EmailAddressGenerator erzeugt synthetische Fachwerte \u00fcber generate, generate_with_company_name, generate_with_name und nutzt die erforderliche RNG-, Datensatz- oder Zeitbasis."
+        "responsibility": "EmailAddressGenerator generates synthetic domain values through generate, generate_with_company_name, and generate_with_name, using the required RNG, dataset, or clock basis."
       },
       {
         "path": "datamimic_ce/domains/shared/literal_generators/contact/street_name_generator.py",
-        "responsibility": "Der StreetNameGenerator erzeugt synthetische Fachwerte \u00fcber generate und nutzt die erforderliche RNG-, Datensatz- oder Zeitbasis."
+        "responsibility": "StreetNameGenerator generates synthetic domain values through generate, using the required RNG, dataset, or clock basis."
       },
       {
         "path": "datamimic_ce/domains/shared/literal_generators/contact/url_generator.py",
-        "responsibility": "Der UrlGenerator erzeugt synthetische Fachwerte \u00fcber generate und nutzt die erforderliche RNG-, Datensatz- oder Zeitbasis."
+        "responsibility": "UrlGenerator generates synthetic domain values through generate, using the required RNG, dataset, or clock basis."
       },
       {
         "path": "datamimic_ce/domains/shared/literal_generators/identity/codes/cnpj_generator.py",
-        "responsibility": "Der CNPJGenerator erzeugt synthetische Fachwerte \u00fcber generate und nutzt die erforderliche RNG-, Datensatz- oder Zeitbasis."
+        "responsibility": "CNPJGenerator generates synthetic domain values through generate, using the required RNG, dataset, or clock basis."
       },
       {
         "path": "datamimic_ce/domains/shared/literal_generators/identity/codes/cpf_generator.py",
-        "responsibility": "Der CPFGenerator erzeugt synthetische Fachwerte \u00fcber generate und nutzt die erforderliche RNG-, Datensatz- oder Zeitbasis."
+        "responsibility": "CPFGenerator generates synthetic domain values through generate, using the required RNG, dataset, or clock basis."
       },
       {
         "path": "datamimic_ce/domains/shared/literal_generators/identity/codes/ean_generator.py",
-        "responsibility": "Der EANGenerator erzeugt synthetische Fachwerte \u00fcber generate und nutzt die erforderliche RNG-, Datensatz- oder Zeitbasis."
+        "responsibility": "EANGenerator generates synthetic domain values through generate, using the required RNG, dataset, or clock basis."
       },
       {
         "path": "datamimic_ce/domains/shared/literal_generators/identity/codes/ssn_generator.py",
-        "responsibility": "Der SSNGenerator erzeugt synthetische Fachwerte \u00fcber generate und nutzt die erforderliche RNG-, Datensatz- oder Zeitbasis."
+        "responsibility": "SSNGenerator generates synthetic domain values through generate, using the required RNG, dataset, or clock basis."
       },
       {
         "path": "datamimic_ce/domains/shared/literal_generators/identity/keys/prefixed_id_generator.py",
-        "responsibility": "Der PrefixedIdGenerator erzeugt synthetische Fachwerte \u00fcber generate und nutzt die erforderliche RNG-, Datensatz- oder Zeitbasis."
+        "responsibility": "PrefixedIdGenerator generates synthetic domain values through generate, using the required RNG, dataset, or clock basis."
       },
       {
         "path": "datamimic_ce/domains/shared/literal_generators/identity/keys/uuid_generator.py",
-        "responsibility": "Der UUIDGenerator erzeugt synthetische Fachwerte \u00fcber generate und nutzt die erforderliche RNG-, Datensatz- oder Zeitbasis."
+        "responsibility": "UUIDGenerator generates synthetic domain values through generate, using the required RNG, dataset, or clock basis."
       },
       {
         "path": "datamimic_ce/domains/shared/literal_generators/identity/security/hash_generator.py",
-        "responsibility": "Der HashGenerator erzeugt synthetische Fachwerte \u00fcber generate und nutzt die erforderliche RNG-, Datensatz- oder Zeitbasis."
+        "responsibility": "HashGenerator generates synthetic domain values through generate, using the required RNG, dataset, or clock basis."
       },
       {
         "path": "datamimic_ce/domains/shared/literal_generators/identity/security/password_generator.py",
-        "responsibility": "Der PasswordGenerator erzeugt synthetische Fachwerte \u00fcber generate und nutzt die erforderliche RNG-, Datensatz- oder Zeitbasis."
+        "responsibility": "PasswordGenerator generates synthetic domain values through generate, using the required RNG, dataset, or clock basis."
       },
       {
         "path": "datamimic_ce/domains/shared/literal_generators/identity/security/token_generator.py",
-        "responsibility": "Der TokenGenerator erzeugt synthetische Fachwerte \u00fcber generate und nutzt die erforderliche RNG-, Datensatz- oder Zeitbasis."
+        "responsibility": "TokenGenerator generates synthetic domain values through generate, using the required RNG, dataset, or clock basis."
       },
       {
         "path": "datamimic_ce/domains/shared/literal_generators/numeric/float_generator.py",
-        "responsibility": "Der FloatGenerator erzeugt synthetische Fachwerte \u00fcber generate und nutzt die erforderliche RNG-, Datensatz- oder Zeitbasis."
+        "responsibility": "FloatGenerator generates synthetic domain values through generate, using the required RNG, dataset, or clock basis."
       },
       {
         "path": "datamimic_ce/domains/shared/literal_generators/numeric/increment_generator.py",
-        "responsibility": "Der IncrementGenerator erzeugt synthetische Fachwerte \u00fcber add_pagination, generate und nutzt die erforderliche RNG-, Datensatz- oder Zeitbasis."
+        "responsibility": "IncrementGenerator generates synthetic domain values through add_pagination and generate, using the required RNG, dataset, or clock basis."
       },
       {
         "path": "datamimic_ce/domains/shared/literal_generators/numeric/integer_generator.py",
-        "responsibility": "Der IntegerGenerator erzeugt synthetische Fachwerte \u00fcber generate und nutzt die erforderliche RNG-, Datensatz- oder Zeitbasis."
+        "responsibility": "IntegerGenerator generates synthetic domain values through generate, using the required RNG, dataset, or clock basis."
       },
       {
         "path": "datamimic_ce/domains/shared/literal_generators/numeric/number_sequences.py",
-        "responsibility": "build_number_sequence erzeugt Iteratoren f\u00fcr endliche Grid-L\u00e4ufe, Shuffle-/Wedge-/Bitreverse-Folgen, Rekurrenzen und einen s\u00e4ttigenden RNG-Walk."
+        "responsibility": "build_number_sequence creates iterators for finite grid runs, shuffle, wedge, and bit-reversal sequences, recurrences, and a saturating RNG walk."
       },
       {
         "path": "datamimic_ce/domains/shared/literal_generators/person/academic_title_generator.py",
-        "responsibility": "Der AcademicTitleGenerator erzeugt synthetische Fachwerte \u00fcber generate, reset und nutzt die erforderliche RNG-, Datensatz- oder Zeitbasis."
+        "responsibility": "AcademicTitleGenerator generates synthetic domain values through generate and reset, using the required RNG, dataset, or clock basis."
       },
       {
         "path": "datamimic_ce/domains/shared/literal_generators/person/family_name_generator.py",
-        "responsibility": "Der FamilyNameGenerator erzeugt synthetische Fachwerte \u00fcber generate und nutzt die erforderliche RNG-, Datensatz- oder Zeitbasis."
+        "responsibility": "FamilyNameGenerator generates synthetic domain values through generate, using the required RNG, dataset, or clock basis."
       },
       {
         "path": "datamimic_ce/domains/shared/literal_generators/person/gender_generator.py",
-        "responsibility": "Der GenderGenerator erzeugt synthetische Fachwerte \u00fcber generate und nutzt die erforderliche RNG-, Datensatz- oder Zeitbasis."
+        "responsibility": "GenderGenerator generates synthetic domain values through generate, using the required RNG, dataset, or clock basis."
       },
       {
         "path": "datamimic_ce/domains/shared/literal_generators/person/given_name_generator.py",
-        "responsibility": "Der GivenNameGenerator erzeugt synthetische Fachwerte \u00fcber generate, generate_with_gender und nutzt die erforderliche RNG-, Datensatz- oder Zeitbasis."
+        "responsibility": "GivenNameGenerator generates synthetic domain values through generate and generate_with_gender, using the required RNG, dataset, or clock basis."
       },
       {
         "path": "datamimic_ce/domains/shared/literal_generators/person/nobility_title_generator.py",
-        "responsibility": "Der NobilityTitleGenerator erzeugt synthetische Fachwerte \u00fcber generate, generate_with_gender und nutzt die erforderliche RNG-, Datensatz- oder Zeitbasis."
+        "responsibility": "NobilityTitleGenerator generates synthetic domain values through generate and generate_with_gender, using the required RNG, dataset, or clock basis."
       },
       {
         "path": "datamimic_ce/domains/shared/literal_generators/primitives/binary_generator.py",
-        "responsibility": "Der BinaryGenerator erzeugt synthetische Fachwerte \u00fcber generate und nutzt die erforderliche RNG-, Datensatz- oder Zeitbasis."
+        "responsibility": "BinaryGenerator generates synthetic domain values through generate, using the required RNG, dataset, or clock basis."
       },
       {
         "path": "datamimic_ce/domains/shared/literal_generators/primitives/boolean_generator.py",
-        "responsibility": "Der BooleanGenerator erzeugt synthetische Fachwerte \u00fcber generate und nutzt die erforderliche RNG-, Datensatz- oder Zeitbasis."
+        "responsibility": "BooleanGenerator generates synthetic domain values through generate, using the required RNG, dataset, or clock basis."
       },
       {
         "path": "datamimic_ce/domains/shared/literal_generators/primitives/color_generators.py",
-        "responsibility": "Der ColorGenerator erzeugt synthetische Fachwerte \u00fcber generate und nutzt die erforderliche RNG-, Datensatz- oder Zeitbasis."
+        "responsibility": "ColorGenerator generates synthetic domain values through generate, using the required RNG, dataset, or clock basis."
       },
       {
         "path": "datamimic_ce/domains/shared/literal_generators/primitives/data_faker_generator.py",
-        "responsibility": "Der DataFakerGenerator erzeugt synthetische Fachwerte \u00fcber generate und nutzt die erforderliche RNG-, Datensatz- oder Zeitbasis."
+        "responsibility": "DataFakerGenerator generates synthetic domain values through generate, using the required RNG, dataset, or clock basis."
       },
       {
         "path": "datamimic_ce/domains/shared/literal_generators/primitives/state_transition_generator.py",
-        "responsibility": "StateTransitionGenerator parst oder indexiert \u00dcbergangsregeln und liefert mit injiziertem RNG einen zustandsabh\u00e4ngigen Folgewert pro generate-Aufruf."
+        "responsibility": "StateTransitionGenerator parses or indexes transition rules and uses an injected RNG to return a state-dependent next value on each generate call."
       },
       {
         "path": "datamimic_ce/domains/shared/literal_generators/primitives/string_generator.py",
-        "responsibility": "Der StringGenerator erzeugt synthetische Fachwerte \u00fcber generate, rnd_str_from_regex und nutzt die erforderliche RNG-, Datensatz- oder Zeitbasis."
+        "responsibility": "StringGenerator generates synthetic domain values through generate and rnd_str_from_regex, using the required RNG, dataset, or clock basis."
       },
       {
         "path": "datamimic_ce/domains/shared/literal_generators/temporal/birthdate_generator.py",
-        "responsibility": "Der BirthdateGenerator erzeugt synthetische Fachwerte \u00fcber generate, reset, convert_birthdate_to_age und nutzt die erforderliche RNG-, Datensatz- oder Zeitbasis."
+        "responsibility": "BirthdateGenerator generates synthetic domain values through generate, reset, and convert_birthdate_to_age, using the required RNG, dataset, or clock basis."
       },
       {
         "path": "datamimic_ce/domains/shared/literal_generators/temporal/datetime_generator.py",
-        "responsibility": "Der DateTimeGenerator erzeugt synthetische Fachwerte \u00fcber generate, generate_date und nutzt die erforderliche RNG-, Datensatz- oder Zeitbasis."
+        "responsibility": "DateTimeGenerator generates synthetic domain values through generate and generate_date, using the required RNG, dataset, or clock basis."
       }
     ]
   },

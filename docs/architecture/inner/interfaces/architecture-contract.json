@@ -4,7 +4,7 @@
     "modules": [
       {
         "path": "datamimic_ce/interfaces/__init__.py",
-        "responsibility": "Das Paket gruppiert CLI-, MCP- und Python-Einstiege, ohne Fachlogik einzuf\u00fchren."
+        "responsibility": "The package groups CLI, MCP, and Python entrypoints without adding domain logic."
       },
       {
         "path": "datamimic_ce/interfaces/cli/__init__.py",
@@ -20,19 +20,19 @@
       },
       {
         "path": "datamimic_ce/interfaces/cli/authoring.py",
-        "responsibility": "Der Adapter liest CLI-Eingaben, validiert Transportoptionen und ruft Authoring-Services auf."
+        "responsibility": "The adapter reads CLI inputs, validates transport options, and calls authoring services."
       },
       {
         "path": "datamimic_ce/interfaces/cli/presenter.py",
-        "responsibility": "Der Presenter formatiert Run-, Lint-, Scaffold- und Demo-Antworten und setzt CLI-Fehlercodes."
+        "responsibility": "The presenter formats run, lint, scaffold, and demo responses and sets CLI error codes."
       },
       {
         "path": "datamimic_ce/interfaces/cli/runtime.py",
-        "responsibility": "Die CLI-Aktionen vereinen Vollausf\u00fchrung, Systeminfo, Projektinitialisierung und Demo-Verwaltung."
+        "responsibility": "The CLI commands cover full execution, system information, project initialization, and demo management."
       },
       {
         "path": "datamimic_ce/interfaces/demo.py",
-        "responsibility": "Die Helfer listen Demo-Namen f\u00fcr Autocomplete und kopieren ein ausgew\u00e4hltes Paketdemo in den Arbeitsordner."
+        "responsibility": "The helpers list demo names for autocomplete and copy a selected packaged demo into the working directory."
       },
       {
         "path": "datamimic_ce/interfaces/mcp/__init__.py",
@@ -44,23 +44,23 @@
       },
       {
         "path": "datamimic_ce/interfaces/mcp/server.py",
-        "responsibility": "Der Server adaptiert dieselben Authoring-Aufrufe asynchron und sch\u00fctzt den SSE-Zugang optional per API-Key."
+        "responsibility": "The server adapts the same authoring calls asynchronously and can protect SSE access with an API key."
       },
       {
         "path": "datamimic_ce/interfaces/project.py",
-        "responsibility": "Die Projektinitialisierung schreibt Verzeichnisse, README und ein fest eingebettetes XML-Modell."
+        "responsibility": "Project initialization writes directories, a README, and a fixed embedded XML model."
       },
       {
         "path": "datamimic_ce/interfaces/python/data_mimic_test.py",
-        "responsibility": "DataMimicTest kapselt eine RunSession und erlaubt Result-Capture nur im ausdr\u00fccklich aktivierten Testmodus."
+        "responsibility": "DataMimicTest wraps a RunSession and permits result capture only when test mode is explicitly enabled."
       },
       {
         "path": "datamimic_ce/interfaces/python/datamimic.py",
-        "responsibility": "DataMimic \u00fcbersetzt Python-Parameter in RunRequest und h\u00e4lt die Session f\u00fcr execute und Capture."
+        "responsibility": "DataMimic translates Python parameters into RunRequest and retains the session for execute and capture."
       },
       {
         "path": "datamimic_ce/interfaces/python/factory.py",
-        "responsibility": "Die Factory startet eine testkonfigurierte RunSession und gibt einzelne oder geb\u00fcndelte erzeugte Entities zur\u00fcck."
+        "responsibility": "The factory starts a test-configured RunSession and returns individual or batched generated entities."
       }
     ]
   },

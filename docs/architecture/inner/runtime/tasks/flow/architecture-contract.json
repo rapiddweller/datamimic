@@ -4,31 +4,31 @@
     "modules": [
       {
         "path": "datamimic_ce/engine/runtime/tasks/flow/branches/condition_task.py",
-        "responsibility": "Dieses Modul f\u00fchrt verschachtelte Tasks aus, wenn eine Bedingung zutrifft."
+        "responsibility": "This module runs nested tasks when a condition is true."
       },
       {
         "path": "datamimic_ce/engine/runtime/tasks/flow/branches/else_if_task.py",
-        "responsibility": "Dieses Modul wertet einen else-if-Zweig im gemeinsamen Bedingungszustand aus."
+        "responsibility": "This module evaluates an else-if branch in the shared condition state."
       },
       {
         "path": "datamimic_ce/engine/runtime/tasks/flow/branches/else_task.py",
-        "responsibility": "Dieses Modul f\u00fchrt den Ersatz-Zweig im gemeinsamen Bedingungszustand aus."
+        "responsibility": "This module runs the fallback branch in the shared condition state."
       },
       {
         "path": "datamimic_ce/engine/runtime/tasks/flow/branches/if_else_base_task.py",
-        "responsibility": "Dieses Modul verfolgt ausgef\u00fchrte Zweige und b\u00fcndelt gemeinsame Branch-Ausf\u00fchrung."
+        "responsibility": "This module tracks executed branches and groups shared branch execution."
       },
       {
         "path": "datamimic_ce/engine/runtime/tasks/flow/branches/if_task.py",
-        "responsibility": "Dieses Modul f\u00fchrt den prim\u00e4ren Bedingungszweig aus, wenn der Ausdruck wahr ist."
+        "responsibility": "This module runs the primary conditional branch when the expression is true."
       },
       {
         "path": "datamimic_ce/engine/runtime/tasks/flow/commands/assert_task.py",
-        "responsibility": "Dieses Modul wertet eine Assertion aus und bricht bei falscher Bedingung ab."
+        "responsibility": "This module evaluates an assertion and stops when its condition is false."
       },
       {
         "path": "datamimic_ce/engine/runtime/tasks/flow/commands/echo_task.py",
-        "responsibility": "Dieses Modul gibt Descriptor-Text als Laufzeitdiagnose aus."
+        "responsibility": "This module emits descriptor text as a runtime diagnostic."
       },
       {
         "path": "datamimic_ce/engine/runtime/tasks/flow/commands/execute_task.py",
@@ -36,7 +36,7 @@
       },
       {
         "path": "datamimic_ce/engine/runtime/tasks/flow/loops/while_task.py",
-        "responsibility": "Dieses Modul f\u00fchrt eine Schleife aus, solange die Descriptorbedingung erf\u00fcllt ist."
+        "responsibility": "This module runs a loop while the descriptor condition is true."
       }
     ]
   },

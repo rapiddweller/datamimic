@@ -4,7 +4,7 @@
     "modules": [
       {
         "path": "datamimic_ce/engine/io/exporters/__init__.py",
-        "responsibility": "Dieses leere Initializer-Modul erg\u00e4nzt keine Exporterverantwortung."
+        "responsibility": "This empty initializer module adds no exporter responsibility."
       },
       {
         "path": "datamimic_ce/engine/io/exporters/core/exporter.py",
@@ -12,11 +12,11 @@
       },
       {
         "path": "datamimic_ce/engine/io/exporters/core/exporter_config.py",
-        "responsibility": "Dieses Modul tr\u00e4gt typisierte Pfad-, Namens- und Laufkonfiguration f\u00fcr Exporter."
+        "responsibility": "This module carries typed path, name, and run configuration for exporters."
       },
       {
         "path": "datamimic_ce/engine/io/exporters/core/exporter_context.py",
-        "responsibility": "Dieses Modul definiert den Zugriff, den Exporter auf Laufzeit- und Memstore-Dienste ben\u00f6tigen."
+        "responsibility": "This module defines the access exporters need to runtime and memstore services."
       },
       {
         "path": "datamimic_ce/engine/io/exporters/core/exporter_state_manager.py",
@@ -36,55 +36,55 @@
       },
       {
         "path": "datamimic_ce/engine/io/exporters/database/database_exporter.py",
-        "responsibility": "Dieses Modul schreibt Datens\u00e4tze in relationale Ziele und wendet Zieloperationen an."
+        "responsibility": "This module writes records to relational targets and applies target operations."
       },
       {
         "path": "datamimic_ce/engine/io/exporters/database/mongodb_exporter.py",
-        "responsibility": "Dieses Modul schreibt Datens\u00e4tze in MongoDB-Ziele und f\u00fchrt Zieloperationen aus."
+        "responsibility": "This module writes records to MongoDB targets and applies target operations."
       },
       {
         "path": "datamimic_ce/engine/io/exporters/diagnostics/console_exporter.py",
-        "responsibility": "Dieses Modul schreibt erzeugte Datens\u00e4tze in die Konsolenausgabe."
+        "responsibility": "This module writes generated records to the console."
       },
       {
         "path": "datamimic_ce/engine/io/exporters/diagnostics/log_exporter.py",
-        "responsibility": "Dieses Modul schreibt Datens\u00e4tze in die Laufzeitprotokolle."
+        "responsibility": "This module writes records to the runtime logs."
       },
       {
         "path": "datamimic_ce/engine/io/exporters/diagnostics/test_result_exporter.py",
-        "responsibility": "Dieses Modul f\u00e4ngt erzeugte Produkte f\u00fcr begrenzte Laufzeitpr\u00fcfungen auf."
+        "responsibility": "This module captures generated products for bounded runtime checks."
       },
       {
         "path": "datamimic_ce/engine/io/exporters/formats/csv_exporter.py",
-        "responsibility": "Dieses Modul serialisiert gepufferte Datens\u00e4tze als CSV-Datei."
+        "responsibility": "This module serializes buffered records as a CSV file."
       },
       {
         "path": "datamimic_ce/engine/io/exporters/formats/dbunit_exporter.py",
-        "responsibility": "Dieses Modul schreibt relationale Testdaten im DBUnit-XML-Format."
+        "responsibility": "This module writes relational test data in DBUnit XML format."
       },
       {
         "path": "datamimic_ce/engine/io/exporters/formats/fixed_width_exporter.py",
-        "responsibility": "Dieses Modul schreibt gepufferte Datens\u00e4tze im Festbreitenformat."
+        "responsibility": "This module writes buffered records in fixed-width format."
       },
       {
         "path": "datamimic_ce/engine/io/exporters/formats/json_exporter.py",
-        "responsibility": "Dieses Modul serialisiert gepufferte Datens\u00e4tze als JSON."
+        "responsibility": "This module serializes buffered records as JSON."
       },
       {
         "path": "datamimic_ce/engine/io/exporters/formats/txt_exporter.py",
-        "responsibility": "Dieses Modul schreibt gepufferte Datens\u00e4tze als Textdatei."
+        "responsibility": "This module writes buffered records as a text file."
       },
       {
         "path": "datamimic_ce/engine/io/exporters/formats/xlsx_exporter.py",
-        "responsibility": "Dieses Modul schreibt gepufferte Datens\u00e4tze in eine XLSX-Arbeitsmappe."
+        "responsibility": "This module writes buffered records to an XLSX workbook."
       },
       {
         "path": "datamimic_ce/engine/io/exporters/formats/xml_exporter.py",
-        "responsibility": "Dieses Modul serialisiert erzeugte Datens\u00e4tze als XML."
+        "responsibility": "This module serializes generated records as XML."
       },
       {
         "path": "datamimic_ce/engine/io/exporters/memory/memstore.py",
-        "responsibility": "Dieses Modul speichert erzeugte Produkte im laufbezogenen Memstore."
+        "responsibility": "This module stores generated products in the run-scoped memstore."
       },
       {
         "path": "datamimic_ce/engine/io/exporters/registry.py",

@@ -60,7 +60,7 @@
       },
       {
         "path": "datamimic_ce/engine/dsl/statements/setup/generator_statement.py",
-        "responsibility": "Das Statement tr\u00e4gt Name und Konstruktor-Ausdruck einer wiederverwendbaren Setup-Definition statt eines erzeugten Feldwerts."
+        "responsibility": "The statement carries the name and constructor expression of a reusable setup definition, not a generated field value."
       },
       {
         "path": "datamimic_ce/engine/dsl/statements/setup/include_statement.py",
@@ -80,7 +80,7 @@
       },
       {
         "path": "datamimic_ce/engine/dsl/statements/setup/state_machine_statement.py",
-        "responsibility": "Das Statement h\u00e4lt \u00dcbergangsregeln einer Setup-Definition, nicht die Ausf\u00fchrung eines Kontrollfluss-Loops."
+        "responsibility": "The statement holds transition rules for a setup definition, not the execution of a control-flow loop."
       },
       {
         "path": "datamimic_ce/engine/dsl/statements/traversal.py",

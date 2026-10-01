@@ -4,11 +4,11 @@
     "modules": [
       {
         "path": "datamimic_ce/domains/shared/__init__.py",
-        "responsibility": "Der Initializer markiert ein Python-Paket, enth\u00e4lt aber keine ausf\u00fchrbare Fachlogik."
+        "responsibility": "The package initializer marks a Python package and contains no executable domain logic."
       },
       {
         "path": "datamimic_ce/domains/shared/datasets/__init__.py",
-        "responsibility": "Der Initializer markiert ein Python-Paket, enth\u00e4lt aber keine ausf\u00fchrbare Fachlogik."
+        "responsibility": "The package initializer marks a Python package and contains no executable domain logic."
       },
       {
         "path": "datamimic_ce/domains/shared/datasets/loader.py",
@@ -16,23 +16,23 @@
       },
       {
         "path": "datamimic_ce/domains/shared/datasets/locale_registry.py",
-        "responsibility": "Das Modul ordnet Locale-Codes Datens\u00e4tzen zu und liefert regionalspezifische Format- und Bedingungs\u00fcberschreibungen."
+        "responsibility": "This module maps locale codes to datasets and provides region-specific format and condition overrides."
       },
       {
         "path": "datamimic_ce/domains/shared/datasets/locales/__init__.py",
-        "responsibility": "Das Modul l\u00e4dt und cached typisierte Locale-Pakete samt Personen-, Adress-, Arzt- und Patientenwerten aus Datendateien."
+        "responsibility": "This module loads and caches typed locale packages with person, address, doctor, and patient values from data files."
       },
       {
         "path": "datamimic_ce/domains/shared/datasets/profile_components.py",
-        "responsibility": "Das Modul ordnet benannte Profilkomponenten konkreten Profilen und zus\u00e4tzlichen Constraints zu."
+        "responsibility": "This module maps named profile components to specific profiles and additional constraints."
       },
       {
         "path": "datamimic_ce/domains/shared/demographics/__init__.py",
-        "responsibility": "Der Initializer exportiert Profilmodelle, Ladefunktion, Gruppenmetadaten und Sampler als \u00f6ffentliche Demografie-API."
+        "responsibility": "The initializer exports profile models, the loader, group metadata, and the sampler as the public demographics API."
       },
       {
         "path": "datamimic_ce/domains/shared/demographics/api.py",
-        "responsibility": "Das Modul implementiert build_sampler_with_profile_groups und wird von Services oder Generatoren aufgerufen."
+        "responsibility": "This module implements build_sampler_with_profile_groups and is called by services or generators."
       },
       {
         "path": "datamimic_ce/domains/shared/demographics/config.py",
@@ -52,11 +52,11 @@
       },
       {
         "path": "datamimic_ce/domains/shared/demographics/sampler.py",
-        "responsibility": "GroupRegistry l\u00e4dt gewichtete Demografiegruppen, setzt Alters-/Geschlechtsmasken innerhalb ihrer Grenzen um und DemographicSampler zieht daraus Profile."
+        "responsibility": "GroupRegistry loads weighted demographic groups and applies age and sex masks within their limits; DemographicSampler draws profiles from them."
       },
       {
         "path": "datamimic_ce/domains/shared/generators/__init__.py",
-        "responsibility": "Der Initializer markiert ein Python-Paket, enth\u00e4lt aber keine ausf\u00fchrbare Fachlogik."
+        "responsibility": "The package initializer marks a Python package and contains no executable domain logic."
       },
       {
         "path": "datamimic_ce/domains/shared/generators/address_generator.py",
@@ -64,23 +64,23 @@
       },
       {
         "path": "datamimic_ce/domains/shared/generators/city_generator.py",
-        "responsibility": "CityGenerator liest Ortsdaten und erzeugt daraus CityRecord-Felder; das TypedDict beschreibt nur die Ausgabezeilenform."
+        "responsibility": "CityGenerator reads location data and creates CityRecord fields; the TypedDict describes only the output row shape."
       },
       {
         "path": "datamimic_ce/domains/shared/generators/company_generator.py",
-        "responsibility": "Der CompanyGenerator erzeugt synthetische Fachwerte \u00fcber get_legal_form und nutzt die erforderliche RNG-, Datensatz- oder Zeitbasis."
+        "responsibility": "CompanyGenerator generates synthetic domain values through get_legal_form, using the required RNG, dataset, or clock basis."
       },
       {
         "path": "datamimic_ce/domains/shared/generators/country_generator.py",
-        "responsibility": "Der CountryGenerator erzeugt synthetische Fachwerte \u00fcber load_country_data, get_country_by_iso_code, get_random_country und nutzt die erforderliche RNG-, Datensatz- oder Zeitbasis."
+        "responsibility": "CountryGenerator generates synthetic domain values through load_country_data, get_country_by_iso_code, and get_random_country, using the required RNG, dataset, or clock basis."
       },
       {
         "path": "datamimic_ce/domains/shared/generators/person_generator.py",
-        "responsibility": "Der PersonGenerator erzeugt synthetische Fachwerte \u00fcber reserve_demographic_sample, generate_birthdate_for_age, get_salutation_data und nutzt die erforderliche RNG-, Datensatz- oder Zeitbasis."
+        "responsibility": "PersonGenerator generates synthetic domain values through reserve_demographic_sample, generate_birthdate_for_age, and get_salutation_data, using the required RNG, dataset, or clock basis."
       },
       {
         "path": "datamimic_ce/domains/shared/generators/phone_number_generator.py",
-        "responsibility": "Der PhoneNumberGenerator erzeugt synthetische Fachwerte \u00fcber generate und nutzt die erforderliche RNG-, Datensatz- oder Zeitbasis."
+        "responsibility": "PhoneNumberGenerator generates synthetic domain values through generate, using the required RNG, dataset, or clock basis."
       },
       {
         "path": "datamimic_ce/domains/shared/generators/region_groups.py",
@@ -88,51 +88,51 @@
       },
       {
         "path": "datamimic_ce/domains/shared/models/__init__.py",
-        "responsibility": "Der Initializer markiert ein Python-Paket, enth\u00e4lt aber keine ausf\u00fchrbare Fachlogik."
+        "responsibility": "The package initializer marks a Python package and contains no executable domain logic."
       },
       {
         "path": "datamimic_ce/domains/shared/models/address.py",
-        "responsibility": "Die Entity Address cached ihre erzeugten Felder (street, house_number, city_data, city, area) und serialisiert sie \u00fcber to_dict."
+        "responsibility": "The Address entity caches its generated fields (street, house_number, city_data, city, area) and serializes them with to_dict."
       },
       {
         "path": "datamimic_ce/domains/shared/models/city.py",
-        "responsibility": "Die Entity City cached ihre erzeugten Felder (city_data, name, postal_code, area_code, state) und serialisiert sie \u00fcber to_dict."
+        "responsibility": "The City entity caches its generated fields (city_data, name, postal_code, area_code, state) and serializes them with to_dict."
       },
       {
         "path": "datamimic_ce/domains/shared/models/company.py",
-        "responsibility": "Die Entity Company cached ihre erzeugten Felder (id, short_name, sector, legal_form, full_name) und serialisiert sie \u00fcber to_dict."
+        "responsibility": "The Company entity caches its generated fields (id, short_name, sector, legal_form, full_name) and serializes them with to_dict."
       },
       {
         "path": "datamimic_ce/domains/shared/models/country.py",
-        "responsibility": "Die Entity Country cached ihre erzeugten Felder (iso_code, country_data, name, default_language_locale, phone_code) und serialisiert sie \u00fcber to_dict."
+        "responsibility": "The Country entity caches its generated fields (iso_code, country_data, name, default_language_locale, phone_code) and serializes them with to_dict."
       },
       {
         "path": "datamimic_ce/domains/shared/models/person.py",
-        "responsibility": "Die Entity Person cached ihre erzeugten Felder (gender, given_name, family_name, full_name, name) und serialisiert sie \u00fcber to_dict."
+        "responsibility": "The Person entity caches its generated fields (gender, given_name, family_name, full_name, name) and serializes them with to_dict."
       },
       {
         "path": "datamimic_ce/domains/shared/services/__init__.py",
-        "responsibility": "Der Initializer exportiert Address-, City-, Company-, Country- und Person-Services f\u00fcr Paketimporte."
+        "responsibility": "The initializer exports Address, City, Company, Country, and Person services for package imports."
       },
       {
         "path": "datamimic_ce/domains/shared/services/address_service.py",
-        "responsibility": "Der AddressService bindet konkreten Generator und Modell und deklariert die f\u00fcr Registry und DSL sichtbaren Entity-Felder."
+        "responsibility": "AddressService binds its concrete generator and model and declares the entity fields exposed to the registry and DSL."
       },
       {
         "path": "datamimic_ce/domains/shared/services/city_service.py",
-        "responsibility": "Der CityService bindet konkreten Generator und Modell und deklariert die f\u00fcr Registry und DSL sichtbaren Entity-Felder."
+        "responsibility": "CityService binds its concrete generator and model and declares the entity fields exposed to the registry and DSL."
       },
       {
         "path": "datamimic_ce/domains/shared/services/company_service.py",
-        "responsibility": "Der CompanyService bindet konkreten Generator und Modell und deklariert die f\u00fcr Registry und DSL sichtbaren Entity-Felder."
+        "responsibility": "CompanyService binds its concrete generator and model and declares the entity fields exposed to the registry and DSL."
       },
       {
         "path": "datamimic_ce/domains/shared/services/country_service.py",
-        "responsibility": "Der CountryService bindet konkreten Generator und Modell und deklariert die f\u00fcr Registry und DSL sichtbaren Entity-Felder."
+        "responsibility": "CountryService binds its concrete generator and model and declares the entity fields exposed to the registry and DSL."
       },
       {
         "path": "datamimic_ce/domains/shared/services/person_service.py",
-        "responsibility": "Der PersonService bindet konkreten Generator und Modell und deklariert die f\u00fcr Registry und DSL sichtbaren Entity-Felder."
+        "responsibility": "PersonService binds its concrete generator and model and declares the entity fields exposed to the registry and DSL."
       },
       {
         "path": "datamimic_ce/domains/shared/use_cases/address_api.py",

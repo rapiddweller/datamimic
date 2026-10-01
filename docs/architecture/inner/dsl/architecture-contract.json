@@ -48,7 +48,7 @@
       },
       {
         "path": "datamimic_ce/engine/dsl/vocabulary/source_capabilities.py",
-        "responsibility": "Die SourceCapability-Fakten entscheiden Format- und Client-/Memstore-Eignung; sie beschreiben Datenquellfamilien statt einzelne Attributregeln."
+        "responsibility": "SourceCapability facts determine format and client or memstore suitability; they describe data source families rather than individual attribute rules."
       }
     ]
   },

@@ -4,23 +4,23 @@
     "modules": [
       {
         "path": "datamimic_ce/domains/ecommerce/__init__.py",
-        "responsibility": "Der Initializer markiert ein Python-Paket, enth\u00e4lt aber keine ausf\u00fchrbare Fachlogik."
+        "responsibility": "The package initializer marks a Python package and contains no executable domain logic."
       },
       {
         "path": "datamimic_ce/domains/ecommerce/generators/__init__.py",
-        "responsibility": "Der Initializer markiert ein Python-Paket, enth\u00e4lt aber keine ausf\u00fchrbare Fachlogik."
+        "responsibility": "The package initializer marks a Python package and contains no executable domain logic."
       },
       {
         "path": "datamimic_ce/domains/ecommerce/generators/order_generator.py",
-        "responsibility": "Der OrderGenerator erzeugt synthetische Fachwerte \u00fcber generate_order_date, get_order_status, get_payment_method und nutzt die erforderliche RNG-, Datensatz- oder Zeitbasis."
+        "responsibility": "OrderGenerator generates synthetic domain values through generate_order_date, get_order_status, and get_payment_method, using the required RNG, dataset, or clock basis."
       },
       {
         "path": "datamimic_ce/domains/ecommerce/generators/product_generator.py",
-        "responsibility": "Der ProductGenerator erzeugt synthetische Fachwerte \u00fcber pick_rating, maybe_pick_trending_tag, get_product_data_by_data_type und nutzt die erforderliche RNG-, Datensatz- oder Zeitbasis."
+        "responsibility": "ProductGenerator generates synthetic domain values through pick_rating, maybe_pick_trending_tag, and get_product_data_by_data_type, using the required RNG, dataset, or clock basis."
       },
       {
         "path": "datamimic_ce/domains/ecommerce/models/__init__.py",
-        "responsibility": "Der Initializer markiert ein Python-Paket, enth\u00e4lt aber keine ausf\u00fchrbare Fachlogik."
+        "responsibility": "The package initializer marks a Python package and contains no executable domain logic."
       },
       {
         "path": "datamimic_ce/domains/ecommerce/models/order.py",
@@ -32,15 +32,15 @@
       },
       {
         "path": "datamimic_ce/domains/ecommerce/services/__init__.py",
-        "responsibility": "Der Initializer exportiert OrderService und ProductService f\u00fcr Paketimporte; Entity-Erzeugung bleibt in den Serviceklassen."
+        "responsibility": "The initializer exports OrderService and ProductService for package imports; entity creation remains in the service classes."
       },
       {
         "path": "datamimic_ce/domains/ecommerce/services/order_service.py",
-        "responsibility": "Der OrderService bindet konkreten Generator und Modell und deklariert die f\u00fcr Registry und DSL sichtbaren Entity-Felder."
+        "responsibility": "OrderService binds its concrete generator and model and declares the entity fields exposed to the registry and DSL."
       },
       {
         "path": "datamimic_ce/domains/ecommerce/services/product_service.py",
-        "responsibility": "Der ProductService bindet konkreten Generator und Modell und deklariert die f\u00fcr Registry und DSL sichtbaren Entity-Felder."
+        "responsibility": "ProductService binds its concrete generator and model and declares the entity fields exposed to the registry and DSL."
       }
     ]
   },

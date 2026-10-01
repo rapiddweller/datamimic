@@ -1029,11 +1029,11 @@
       },
       {
         "path": "datamimic_ce/_compat.py",
-        "responsibility": "Das Modul stellt auf \u00e4lteren Python-Versionen String-Enum- und Exhaustiveness-Helfer bereit."
+        "responsibility": "This module provides String Enum and exhaustiveness helpers for older Python versions."
       },
       {
         "path": "datamimic_ce/engine/__init__.py",
-        "responsibility": "Das Paket markiert den Engine-Namensraum ohne zus\u00e4tzliche Engine-Logik."
+        "responsibility": "The package marks the engine namespace without adding engine logic."
       },
       {
         "path": "datamimic_ce/randomness.py",
@@ -1041,47 +1041,47 @@
       },
       {
         "path": "datamimic_ce/resources/__init__.py",
-        "responsibility": "Das Paket markiert die mitgelieferten Demo- und Descriptor-Ressourcen."
+        "responsibility": "The package marks the bundled demo and descriptor resources."
       },
       {
         "path": "datamimic_ce/resources/api.py",
-        "responsibility": "Die API gibt den gepackten Demo-Root als Traversable zur\u00fcck und enumeriert dessen Unterordner."
+        "responsibility": "The API returns the packaged demo root as a Traversable and lists its subdirectories."
       },
       {
         "path": "datamimic_ce/resources/demos/__init___.py",
-        "responsibility": "Diese historische Datei enth\u00e4lt nur einen Docstring und initialisiert das Demo-Verzeichnis nicht."
+        "responsibility": "This legacy file contains only a docstring and does not initialize the demo directory."
       },
       {
         "path": "datamimic_ce/resources/demos/demo-clinical-trial/script/clinical_trial.scr.py",
-        "responsibility": "Das Skript erzeugt eine fest konfigurierte Patientenkohorte mit lokal gesetztem Seed und serialisiert die ben\u00f6tigten Felder."
+        "responsibility": "The script generates a fixed-configuration patient cohort with a locally set seed and serializes the required fields."
       },
       {
         "path": "datamimic_ce/resources/demos/demo-custom-components/script/converter.scr.py",
-        "responsibility": "Das Skript zeigt benutzerdefinierte Converter f\u00fcr Maskierung, Normalisierung und Formatierung."
+        "responsibility": "The script demonstrates custom converters for masking, normalization, and formatting."
       },
       {
         "path": "datamimic_ce/resources/demos/demo-custom-components/script/generator.scr.py",
-        "responsibility": "Das Skript zeigt zus\u00e4tzliche LiteralGenerator-Implementierungen f\u00fcr Werte wie Farbe, Adresse und Kennung."
+        "responsibility": "The script demonstrates additional LiteralGenerator implementations for values such as color, address, and identifier."
       },
       {
         "path": "datamimic_ce/resources/demos/demo-custom-components/script/generator_glob.scr.py",
-        "responsibility": "Das Skript zeigt global importierte Abh\u00e4ngigkeiten in mehreren benutzerdefinierten Generatoren."
+        "responsibility": "The script demonstrates globally imported dependencies in several custom generators."
       },
       {
         "path": "datamimic_ce/resources/demos/demo-datetime/script/py_script.scr.py",
-        "responsibility": "Die Hilfsfunktion verschiebt einen datetime-Wert um eine angegebene Anzahl Tage."
+        "responsibility": "The helper function shifts a datetime value by a specified number of days."
       },
       {
         "path": "datamimic_ce/resources/demos/demo-db-mapping/script/lib_glob.scr.py",
-        "responsibility": "Das Beispiel verbindet einen benutzerdefinierten Converter mit einem Runtime-Client und SQL-basierter Mappingabfrage."
+        "responsibility": "The example connects a custom converter to a runtime client and an SQL-based mapping query."
       },
       {
         "path": "datamimic_ce/resources/demos/demo-finance/script/ledger.scr.py",
-        "responsibility": "Die Funktion erzeugt Kontotransaktionen mit optionalem RNG-Seed und \u00fcbernimmt sie in W\u00f6rterbuchzeilen."
+        "responsibility": "The function generates account transactions with an optional RNG seed and stores them in dictionary rows."
       },
       {
         "path": "datamimic_ce/resources/demos/demo-py-scripting/script/lib.scr.py",
-        "responsibility": "Die Beispieldatei zeigt einfache Python-Arithmetik sowie die Umwandlung zuf\u00e4lliger Tabellendaten in JSON."
+        "responsibility": "The example file demonstrates basic Python arithmetic and converts random table data to JSON."
       },
       {
         "path": "datamimic_ce/resources/examples/generate_address.py",

@@ -8,15 +8,15 @@
       },
       {
         "path": "datamimic_ce/engine/runtime/tasks/base/counts.py",
-        "responsibility": "Dieses Modul wertet Count-Ausdr\u00fccke aus und l\u00f6st zuf\u00e4llige Count-Bereiche auf."
+        "responsibility": "This module evaluates count expressions and resolves random count ranges."
       },
       {
         "path": "datamimic_ce/engine/runtime/tasks/base/dispatch.py",
-        "responsibility": "Dieses Modul stellt typisierte singledispatch-Erzeugung von Tasks aus Statements bereit."
+        "responsibility": "This module provides typed singledispatch creation of tasks from statements."
       },
       {
         "path": "datamimic_ce/engine/runtime/tasks/base/task.py",
-        "responsibility": "Dieses Modul definiert Taskprotokolle sowie Setup-, Generate- und gemeinsame Basisklassen."
+        "responsibility": "This module defines task protocols and the setup, generate, and shared base classes."
       },
       {
         "path": "datamimic_ce/engine/runtime/tasks/registry.py",
@@ -24,35 +24,35 @@
       },
       {
         "path": "datamimic_ce/engine/runtime/tasks/setup/database_task.py",
-        "responsibility": "Dieses Modul erstellt und registriert w\u00e4hrend Setup einen relationalen Client."
+        "responsibility": "This module creates and registers a relational client during setup."
       },
       {
         "path": "datamimic_ce/engine/runtime/tasks/setup/demographics_task.py",
-        "responsibility": "Dieses Modul l\u00e4dt und registriert Demografiekonfiguration w\u00e4hrend Setup."
+        "responsibility": "This module loads and registers demographic configuration during setup."
       },
       {
         "path": "datamimic_ce/engine/runtime/tasks/setup/generator_task.py",
-        "responsibility": "Dieses Modul erzeugt \u00fcber GeneratorUtil die deklarierte Generatorinstanz; deren Root-Caching richtet sich optional nach CachePolicy."
+        "responsibility": "This module creates the declared generator instance through GeneratorUtil; optional root caching follows CachePolicy."
       },
       {
         "path": "datamimic_ce/engine/runtime/tasks/setup/include_task.py",
-        "responsibility": "Dieses Modul l\u00e4dt .properties in SetupContext und f\u00fchrt XML-Deskriptoren sowohl dort als auch in GenIterContext mit kopiertem Root-Zustand und aktuellen Zeilenwerten aus."
+        "responsibility": "This module loads .properties into SetupContext and runs XML descriptors there and in GenIterContext with copied root state and current row values."
       },
       {
         "path": "datamimic_ce/engine/runtime/tasks/setup/memstore_task.py",
-        "responsibility": "Dieses Modul deklariert oder konfiguriert den Memstore w\u00e4hrend Setup."
+        "responsibility": "This module declares or configures the memstore during setup."
       },
       {
         "path": "datamimic_ce/engine/runtime/tasks/setup/mongodb_task.py",
-        "responsibility": "Dieses Modul erstellt und registriert w\u00e4hrend Setup einen MongoDB-Client."
+        "responsibility": "This module creates and registers a MongoDB client during setup."
       },
       {
         "path": "datamimic_ce/engine/runtime/tasks/setup/setup_task.py",
-        "responsibility": "Dieses Modul initialisiert den Setup-Kontext und dispatcht die Substatements in Descriptor-Reihenfolge."
+        "responsibility": "This module initializes the setup context and dispatches substatements in descriptor order."
       },
       {
         "path": "datamimic_ce/engine/runtime/tasks/setup/state_machine_task.py",
-        "responsibility": "Dieses Modul legt eine StateMachineDef im Root-Kontext ab; es f\u00fchrt keine Zustands- oder Schleifenlogik aus."
+        "responsibility": "This module stores a StateMachineDef in the root context; it does not execute state or loop logic."
       }
     ]
   },

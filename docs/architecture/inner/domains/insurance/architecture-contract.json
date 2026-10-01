@@ -4,31 +4,31 @@
     "modules": [
       {
         "path": "datamimic_ce/domains/insurance/__init__.py",
-        "responsibility": "Der Initializer markiert ein Python-Paket, enth\u00e4lt aber keine ausf\u00fchrbare Fachlogik."
+        "responsibility": "The package initializer marks a Python package and contains no executable domain logic."
       },
       {
         "path": "datamimic_ce/domains/insurance/generators/__init__.py",
-        "responsibility": "Der Initializer markiert ein Python-Paket, enth\u00e4lt aber keine ausf\u00fchrbare Fachlogik."
+        "responsibility": "The package initializer marks a Python package and contains no executable domain logic."
       },
       {
         "path": "datamimic_ce/domains/insurance/generators/insurance_company_generator.py",
-        "responsibility": "Der InsuranceCompanyGenerator erzeugt synthetische Fachwerte \u00fcber get_random_company und nutzt die erforderliche RNG-, Datensatz- oder Zeitbasis."
+        "responsibility": "InsuranceCompanyGenerator generates synthetic domain values through get_random_company, using the required RNG, dataset, or clock basis."
       },
       {
         "path": "datamimic_ce/domains/insurance/generators/insurance_coverage_generator.py",
-        "responsibility": "Der InsuranceCoverageGenerator erzeugt synthetische Fachwerte \u00fcber get_random_coverage und nutzt die erforderliche RNG-, Datensatz- oder Zeitbasis."
+        "responsibility": "InsuranceCoverageGenerator generates synthetic domain values through get_random_coverage, using the required RNG, dataset, or clock basis."
       },
       {
         "path": "datamimic_ce/domains/insurance/generators/insurance_policy_generator.py",
-        "responsibility": "Der InsurancePolicyGenerator erzeugt synthetische Fachwerte \u00fcber pick_premium_amount, pick_premium_frequency, pick_status und nutzt die erforderliche RNG-, Datensatz- oder Zeitbasis."
+        "responsibility": "InsurancePolicyGenerator generates synthetic domain values through pick_premium_amount, pick_premium_frequency, and pick_status, using the required RNG, dataset, or clock basis."
       },
       {
         "path": "datamimic_ce/domains/insurance/generators/insurance_product_generator.py",
-        "responsibility": "Der InsuranceProductGenerator erzeugt synthetische Fachwerte \u00fcber get_random_product, pick_coverage_count und nutzt die erforderliche RNG-, Datensatz- oder Zeitbasis."
+        "responsibility": "InsuranceProductGenerator generates synthetic domain values through get_random_product and pick_coverage_count, using the required RNG, dataset, or clock basis."
       },
       {
         "path": "datamimic_ce/domains/insurance/models/__init__.py",
-        "responsibility": "Der Initializer markiert ein Python-Paket, enth\u00e4lt aber keine ausf\u00fchrbare Fachlogik."
+        "responsibility": "The package initializer marks a Python package and contains no executable domain logic."
       },
       {
         "path": "datamimic_ce/domains/insurance/models/insurance_company.py",
@@ -48,23 +48,23 @@
       },
       {
         "path": "datamimic_ce/domains/insurance/services/__init__.py",
-        "responsibility": "Der Initializer b\u00fcndelt Company-, Coverage-, Policy- und Product-Serviceklassen f\u00fcr Paketimporte."
+        "responsibility": "The initializer groups the company, coverage, policy, and product service classes for package imports."
       },
       {
         "path": "datamimic_ce/domains/insurance/services/insurance_company_service.py",
-        "responsibility": "Der InsuranceCompanyService bindet konkreten Generator und Modell und deklariert die f\u00fcr Registry und DSL sichtbaren Entity-Felder."
+        "responsibility": "InsuranceCompanyService binds its concrete generator and model and declares the entity fields exposed to the registry and DSL."
       },
       {
         "path": "datamimic_ce/domains/insurance/services/insurance_coverage_service.py",
-        "responsibility": "Der InsuranceCoverageService bindet konkreten Generator und Modell und deklariert die f\u00fcr Registry und DSL sichtbaren Entity-Felder."
+        "responsibility": "InsuranceCoverageService binds its concrete generator and model and declares the entity fields exposed to the registry and DSL."
       },
       {
         "path": "datamimic_ce/domains/insurance/services/insurance_policy_service.py",
-        "responsibility": "Der InsurancePolicyService bindet konkreten Generator und Modell und deklariert die f\u00fcr Registry und DSL sichtbaren Entity-Felder."
+        "responsibility": "InsurancePolicyService binds its concrete generator and model and declares the entity fields exposed to the registry and DSL."
       },
       {
         "path": "datamimic_ce/domains/insurance/services/insurance_product_service.py",
-        "responsibility": "Der InsuranceProductService bindet konkreten Generator und Modell und deklariert die f\u00fcr Registry und DSL sichtbaren Entity-Felder."
+        "responsibility": "InsuranceProductService binds its concrete generator and model and declares the entity fields exposed to the registry and DSL."
       }
     ]
   },

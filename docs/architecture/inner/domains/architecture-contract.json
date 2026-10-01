@@ -4,35 +4,35 @@
     "modules": [
       {
         "path": "datamimic_ce/domains/__init__.py",
-        "responsibility": "Der Initializer markiert ein Python-Paket, enth\u00e4lt aber keine ausf\u00fchrbare Fachlogik."
+        "responsibility": "The package initializer marks a Python package and contains no executable domain logic."
       },
       {
         "path": "datamimic_ce/domains/api.py",
-        "responsibility": "Die \u00f6ffentliche Erweiterungs-API exportiert Literal-/Domain-Typen und projiziert den Generatorbestand auf Engine-Capabilities."
+        "responsibility": "The public extension API exports literal and domain types and projects the generator inventory to engine capabilities."
       },
       {
         "path": "datamimic_ce/domains/domain_core/__init__.py",
-        "responsibility": "Der Initializer exportiert BaseEntity und BaseDomainService \u00fcber den von Services und Tests verwendeten Core-Importpfad."
+        "responsibility": "The initializer exports BaseEntity and BaseDomainService through the core import path used by services and tests."
       },
       {
         "path": "datamimic_ce/domains/domain_core/base_domain_generator.py",
-        "responsibility": "Die drei Basisklassen geben RNG, normalisierten Datensatz und einmalig fixierte Referenzzeit nur an Generatoren weiter, die sie ben\u00f6tigen."
+        "responsibility": "The three base classes pass the RNG, normalized dataset, and fixed reference time only to generators that need them."
       },
       {
         "path": "datamimic_ce/domains/domain_core/base_domain_service.py",
-        "responsibility": "Der gemeinsame Service bindet Modell und Generator, macht Feldschema und unterst\u00fctzte Datens\u00e4tze sichtbar und erzeugt einzelne oder mehrere Entities."
+        "responsibility": "The shared service binds the model and generator, exposes the field schema and supported datasets, and creates one or more entities."
       },
       {
         "path": "datamimic_ce/domains/domain_core/base_entity.py",
-        "responsibility": "Die Entity-Basis memoisiert Felder und h\u00e4lt Aliaszugriff kompatibel; das Domain-eigene Register vergibt formatgebundene eindeutige Schl\u00fcssel auch \u00fcber verschachtelte Entities hinweg."
+        "responsibility": "The entity base memoizes fields and preserves alias access compatibility; the domain registry assigns format-specific unique keys across nested entities."
       },
       {
         "path": "datamimic_ce/domains/domain_core/base_literal_generator.py",
-        "responsibility": "Die Literal-Basis stellt atomaren Generatoren einen injizierbaren RNG bereit, den die Engine nach der Konstruktion neu binden kann."
+        "responsibility": "The literal base provides atomic generators with an injectable RNG that the engine can rebind after construction."
       },
       {
         "path": "datamimic_ce/domains/domain_core/contracts/attribute_catalog.py",
-        "responsibility": "Das Modul deklariert Entity-Felder mit echten Python-Typen und wiederverwendbare verschachtelte Adressfelder als Schema-SPOT."
+        "responsibility": "This module declares entity fields with real Python types and reusable nested address fields as the schema source of truth."
       },
       {
         "path": "datamimic_ce/domains/domain_core/contracts/generation.py",
@@ -40,51 +40,51 @@
       },
       {
         "path": "datamimic_ce/domains/domain_core/contracts/json_types.py",
-        "responsibility": "Die Typaliase beschreiben rekursive JSON-Werte der Domain-API ohne freie Any-Payloads."
+        "responsibility": "The type aliases describe recursive JSON values in the domain API without unconstrained Any payloads."
       },
       {
         "path": "datamimic_ce/domains/domain_core/datasets/catalog.py",
-        "responsibility": "Das Modul ermittelt die gemeinsamen Datensatzcodes, f\u00fcr die alle einer Entity zugeordneten Dateien vorliegen."
+        "responsibility": "This module finds the dataset codes for which all files assigned to an entity are available."
       },
       {
         "path": "datamimic_ce/domains/domain_core/datasets/path.py",
-        "responsibility": "Das Modul l\u00f6st den Domain-Datenstamm samt Env-Override und US-Fallback auf und unterdr\u00fcckt wiederholte Fallback-Warnungen."
+        "responsibility": "This module resolves the domain data root, including the environment override and US fallback, and suppresses repeated fallback warnings."
       },
       {
         "path": "datamimic_ce/domains/domain_core/property_cache.py",
-        "responsibility": "Der Decorator cached erzeugte Entity-Properties im Feldcache, damit wiederholtes Lesen keine neuen Zufallswerte erzeugt."
+        "responsibility": "The decorator caches generated entity properties so repeated reads do not generate new random values."
       },
       {
         "path": "datamimic_ce/domains/domain_core/runtime/__init__.py",
-        "responsibility": "Der Initializer b\u00fcndelt RunSeed sowie RNG- und Clock-Funktionen als gemeinsame Runtime-Importoberfl\u00e4che."
+        "responsibility": "The initializer groups RunSeed and RNG and clock functions into a shared runtime import surface."
       },
       {
         "path": "datamimic_ce/domains/domain_core/runtime/clock.py",
-        "responsibility": "Das Modul vereinheitlicht UTC-Wanduhrzugriffe, eingefrorene Seed-Zeit und zeitzonenunabh\u00e4ngige Epoch-Konvertierung."
+        "responsibility": "This module unifies UTC wall-clock access, frozen seed time, and timezone-independent epoch conversion."
       },
       {
         "path": "datamimic_ce/domains/domain_core/runtime/determinism.py",
-        "responsibility": "Das Modul kanonisiert und hasht JSON, leitet stabile IDs und Profil-Seeds ab und stellt den seedbaren Service-RNG bereit."
+        "responsibility": "This module canonicalizes and hashes JSON, derives stable IDs and profile seeds, and provides the seedable service RNG."
       },
       {
         "path": "datamimic_ce/domains/domain_core/runtime/rng.py",
-        "responsibility": "Das Modul zieht reproduzierbare Kind-Seeds aus einem Eltern-RNG und erzeugt daraus getrennte RNG-Streams."
+        "responsibility": "This module draws reproducible child seeds from a parent RNG and creates separate RNG streams from them."
       },
       {
         "path": "datamimic_ce/domains/domain_core/runtime/rng_uuid.py",
-        "responsibility": "Die Funktion erzeugt UUIDs aus einem \u00fcbergebenen Random-Stream, sodass UUID-Felder dieselbe Seed-Reproduzierbarkeit behalten."
+        "responsibility": "The function generates UUIDs from a supplied random stream so UUID fields retain seed reproducibility."
       },
       {
         "path": "datamimic_ce/domains/domain_core/runtime/run_seed.py",
-        "responsibility": "RunSeed h\u00e4lt Seed oder Run-Entropie und leitet daraus worker\u00fcbergreifend stabile Schl\u00fcssel je Verwendungszweck ab."
+        "responsibility": "RunSeed stores the seed or run entropy and derives stable keys per use across workers."
       },
       {
         "path": "datamimic_ce/domains/facade.py",
-        "responsibility": "Die JSON-Facade pr\u00fcft Domain-Anfragen, l\u00f6st optionale Profile auf, baut typisierte Requests, ruft Generatoren auf und validiert die Antworten."
+        "responsibility": "The JSON facade validates domain requests, resolves optional profiles, builds typed requests, invokes generators, and validates the responses."
       },
       {
         "path": "datamimic_ce/domains/registry/entities.py",
-        "responsibility": "Das Modul registriert ausgew\u00e4hlte Entity-Services, leitet Feldschemata ab und bedient die von der DSL verwendeten Namensaliase."
+        "responsibility": "This module registers selected entity services, derives field schemas, and supports the name aliases used by the DSL."
       },
       {
         "path": "datamimic_ce/domains/registry/generators.py",
@@ -92,7 +92,7 @@
       },
       {
         "path": "datamimic_ce/domains/registry/schema.py",
-        "responsibility": "Das Modul l\u00e4dt versionierte JSON-Schemas und validiert Request- oder Response-Payloads an der JSON-Domain-Grenze."
+        "responsibility": "This module loads versioned JSON schemas and validates request or response payloads at the JSON domain boundary."
       }
     ]
   },

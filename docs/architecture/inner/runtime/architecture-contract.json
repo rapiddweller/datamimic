@@ -4,15 +4,15 @@
     "modules": [
       {
         "path": "datamimic_ce/engine/runtime/__init__.py",
-        "responsibility": "Dieses leere Initializer-Modul erg\u00e4nzt keine Runtime-API."
+        "responsibility": "This empty initializer module adds no runtime API."
       },
       {
         "path": "datamimic_ce/engine/runtime/api.py",
-        "responsibility": "Dieses Modul ver\u00f6ffentlicht Laufstart, Sitzungserzeugung, Descriptor-Eigenschaften und Generatorf\u00e4higkeiten."
+        "responsibility": "This module exposes run startup, session creation, descriptor properties, and generator capabilities."
       },
       {
         "path": "datamimic_ce/engine/runtime/contexts/__init__.py",
-        "responsibility": "Dieses leere Initializer-Modul komponiert keine Kontextimplementierungen."
+        "responsibility": "This empty initializer module does not compose context implementations."
       },
       {
         "path": "datamimic_ce/engine/runtime/contexts/context.py",
@@ -24,39 +24,39 @@
       },
       {
         "path": "datamimic_ce/engine/runtime/contexts/geniter_context.py",
-        "responsibility": "Dieses Modul h\u00e4lt Zeilenzustand, aktuelles Produkt, Elternsicht und Worker-ID."
+        "responsibility": "This module holds row state, the current product, the parent view, and the worker ID."
       },
       {
         "path": "datamimic_ce/engine/runtime/contexts/records.py",
-        "responsibility": "Dieses Modul aktualisiert verschachtelte Datensatzfelder anhand eines Pfads."
+        "responsibility": "This module updates nested record fields by path."
       },
       {
         "path": "datamimic_ce/engine/runtime/contracts.py",
-        "responsibility": "Dieses Modul definiert typisierte Laufanfrage, Ergebnis, Sitzung und Produkterfassung."
+        "responsibility": "This module defines the typed run request, result, session, and product capture."
       },
       {
         "path": "datamimic_ce/engine/runtime/lifecycle/__init__.py",
-        "responsibility": "Dieses leere Initializer-Modul erg\u00e4nzt keine Lifecycle-Logik."
+        "responsibility": "This empty initializer module adds no lifecycle logic."
       },
       {
         "path": "datamimic_ce/engine/runtime/lifecycle/config.py",
-        "responsibility": "Dieses Modul liest Prozesskonfiguration aus Umgebungsvariablen."
+        "responsibility": "This module reads process configuration from environment variables."
       },
       {
         "path": "datamimic_ce/engine/runtime/lifecycle/runner.py",
-        "responsibility": "Dieses Modul parst den Descriptor, startet Setup und liefert das typisierte Laufergebnis."
+        "responsibility": "This module parses the descriptor, starts setup, and returns the typed run result."
       },
       {
         "path": "datamimic_ce/engine/runtime/logging.py",
-        "responsibility": "Dieses Modul richtet Laufzeit- und Workerprotokolle ein und meldet Systemdaten."
+        "responsibility": "This module configures runtime and worker logging and reports system information."
       },
       {
         "path": "datamimic_ce/engine/runtime/process_titles.py",
-        "responsibility": "Dieses Modul setzt Prozessnamen f\u00fcr Hauptlauf und Generate-Worker."
+        "responsibility": "This module sets process names for the main run and generate workers."
       },
       {
         "path": "datamimic_ce/engine/runtime/scripting/__init__.py",
-        "responsibility": "Dieses leere Initializer-Modul erg\u00e4nzt keine Ausdrucksauswertung."
+        "responsibility": "This empty initializer module adds no expression evaluation."
       },
       {
         "path": "datamimic_ce/engine/runtime/scripting/evaluation.py",
@@ -64,15 +64,15 @@
       },
       {
         "path": "datamimic_ce/engine/runtime/scripting/expression_globals.py",
-        "responsibility": "Dieses Modul erzeugt den begrenzten Namensraum, den Descriptor-Ausdr\u00fccke sehen."
+        "responsibility": "This module creates the restricted namespace visible to descriptor expressions."
       },
       {
         "path": "datamimic_ce/engine/runtime/scripting/plugins/__init__.py",
-        "responsibility": "Dieses Modul f\u00fchrt Descriptor-Skripte im vorbereiteten Namensraum aus."
+        "responsibility": "This module runs descriptor scripts in the prepared namespace."
       },
       {
         "path": "datamimic_ce/engine/runtime/storage/__init__.py",
-        "responsibility": "Dieses leere Initializer-Modul erg\u00e4nzt keine Speicherlebensdauer."
+        "responsibility": "This empty initializer module adds no storage lifecycle."
       },
       {
         "path": "datamimic_ce/engine/runtime/storage/global_increment.py",
@@ -80,7 +80,7 @@
       },
       {
         "path": "datamimic_ce/engine/runtime/storage/memstore_manager.py",
-        "responsibility": "Dieses Modul verwaltet laufbezogene Memstore-Handles und deren Lebensdauer."
+        "responsibility": "This module manages run-scoped memstore handles and their lifecycle."
       }
     ]
   },

@@ -4,11 +4,11 @@
     "modules": [
       {
         "path": "datamimic_ce/authoring/__init__.py",
-        "responsibility": "Das Paket exportiert die kanonischen Intent-, Request- und Scaffold-Einstiege."
+        "responsibility": "The package exports the canonical intent, request, and scaffold entrypoints."
       },
       {
         "path": "datamimic_ce/authoring/adapters/__init__.py",
-        "responsibility": "Das Paket markiert den Adapter-Namensraum, ohne eigene Authoring-Logik bereitzustellen."
+        "responsibility": "The package marks the adapter namespace and provides no authoring logic of its own."
       },
       {
         "path": "datamimic_ce/authoring/adapters/dryrun.py",
@@ -16,11 +16,11 @@
       },
       {
         "path": "datamimic_ce/authoring/adapters/engine_check.py",
-        "responsibility": "Der Adapter f\u00fchrt nach erfolgreichem Regel-Lint den Engine-Parser als zweite Validierungsautorit\u00e4t aus."
+        "responsibility": "After rule lint succeeds, the adapter runs the engine parser as a second validation authority."
       },
       {
         "path": "datamimic_ce/authoring/adapters/linter.py",
-        "responsibility": "Der Adapter l\u00e4dt XML, aggregiert registrierte Diagnosen und ruft den Engine-Parser nur bei fehlerfreiem Regel-Lauf auf."
+        "responsibility": "The adapter loads XML, aggregates registered diagnostics, and calls the engine parser only when rule checks pass."
       },
       {
         "path": "datamimic_ce/authoring/adapters/reference.py",
@@ -28,15 +28,15 @@
       },
       {
         "path": "datamimic_ce/authoring/adapters/xml_loader.py",
-        "responsibility": "Der Loader verwendet den gemeinsamen sicheren XML-Parser und \u00fcbersetzt Syntax- oder DTD-Fehler in DM001-Diagnosen."
+        "responsibility": "The loader uses the shared safe XML parser and converts syntax or DTD errors into DM001 diagnostics."
       },
       {
         "path": "datamimic_ce/authoring/api.py",
-        "responsibility": "Die API bietet getypte Funktionen f\u00fcr Capabilities, Check, Reference, Run und Scaffold."
+        "responsibility": "The API provides typed functions for capabilities, check, reference, run, and scaffold."
       },
       {
         "path": "datamimic_ce/authoring/application/__init__.py",
-        "responsibility": "Das Paket kennzeichnet die Authoring-Use-Cases, ohne zus\u00e4tzliche Ausf\u00fchrungslogik einzuf\u00fchren."
+        "responsibility": "The package marks the authoring use cases without adding execution logic."
       },
       {
         "path": "datamimic_ce/authoring/domain/acceptance.py",
@@ -44,19 +44,19 @@
       },
       {
         "path": "datamimic_ce/authoring/application/compiler.py",
-        "responsibility": "Der Compiler \u00fcbersetzt AuthoringSpecV1 in XML und einen typisierten Plan ohne Lint oder Runtime-Ausf\u00fchrung."
+        "responsibility": "The compiler translates AuthoringSpecV1 into XML and a typed plan without linting or runtime execution."
       },
       {
         "path": "datamimic_ce/authoring/application/intent_linter.py",
-        "responsibility": "Der Linter f\u00fchrt Intent-Regeln \u00fcber Spezifikation und CompilePlan aus und entscheidet, ob Hinweise die Verifikation blockieren."
+        "responsibility": "The linter applies intent rules to the specification and CompilePlan and decides whether findings block verification."
       },
       {
         "path": "datamimic_ce/authoring/application/intent_validation.py",
-        "responsibility": "Das Modul projiziert Pydantic-Validierungsfehler in pfadgenaue, reparierbare Intent-Issues."
+        "responsibility": "This module projects Pydantic validation errors into path-specific, repairable intent issues."
       },
       {
         "path": "datamimic_ce/authoring/application/service.py",
-        "responsibility": "Der Service orchestriert Spec-Pr\u00fcfung, Kompilierung, Lint, einen begrenzten Lauf, Acceptance und optionale Nachweise."
+        "responsibility": "The service orchestrates spec validation, compilation, linting, a bounded run, acceptance, and optional evidence."
       },
       {
         "path": "datamimic_ce/authoring/domain/verification.py",
@@ -68,7 +68,7 @@
       },
       {
         "path": "datamimic_ce/authoring/domain/__init__.py",
-        "responsibility": "Das Paket kennzeichnet die Authoring-Vokabeln und Regeln ohne eigene Fachfunktion."
+        "responsibility": "The package marks the authoring vocabulary and rules without adding domain behavior."
       },
       {
         "path": "datamimic_ce/authoring/domain/derived_facts.py",
@@ -76,63 +76,63 @@
       },
       {
         "path": "datamimic_ce/authoring/domain/diagnostics.py",
-        "responsibility": "Die DTOs vereinheitlichen einzelne Diagnosen und Lintergebnisse f\u00fcr Authoring-Antworten."
+        "responsibility": "The DTOs standardize individual diagnostics and lint results for authoring responses."
       },
       {
         "path": "datamimic_ce/authoring/domain/rule_catalog.py",
-        "responsibility": "Der Katalog h\u00e4lt DM-Regel-IDs, Severity, Fix-Hints und deren stabile Referenzprojektion zentral."
+        "responsibility": "The catalog centrally maintains DM rule IDs, severity, fix hints, and their stable reference projection."
       },
       {
         "path": "datamimic_ce/authoring/domain/rules/__init__.py",
-        "responsibility": "Das Paket stellt Gruppen von XML- und Intent-Regeln bereit, ohne eigene Regelentscheidung zu treffen."
+        "responsibility": "The package provides groups of XML and intent rules without making rule decisions itself."
       },
       {
         "path": "datamimic_ce/authoring/domain/rules/base.py",
-        "responsibility": "Die Basistypen geben XML-Regeln und Intent-Regeln getrennte Kontexte und Diagnoseerzeugung."
+        "responsibility": "The base types give XML rules and intent rules separate contexts and diagnostic creation."
       },
       {
         "path": "datamimic_ce/authoring/domain/rules/best_practice.py",
-        "responsibility": "Die Regeln warnen vor operationalen Default-Risiken wie Shuffle, fehlendem Seed und Full-Source-Laden."
+        "responsibility": "The rules warn about operational default risks such as shuffling, a missing seed, and loading the full source."
       },
       {
         "path": "datamimic_ce/authoring/domain/rules/cross_statement.py",
-        "responsibility": "Die Regeln pr\u00fcfen Beziehungen zwischen Deklarationen, Quellen, Zielen und Include-Pfaden im XML-Baum."
+        "responsibility": "The rules check relationships between declarations, sources, targets, and include paths in the XML tree."
       },
       {
         "path": "datamimic_ce/authoring/domain/rules/intent_rules.py",
-        "responsibility": "Die Regeln pr\u00fcfen Produktbeziehungen und Lieferbarkeit direkt auf AuthoringSpec und CompilePlan."
+        "responsibility": "The rules check product relationships and deliverability directly in AuthoringSpec and CompilePlan."
       },
       {
         "path": "datamimic_ce/authoring/domain/rules/schema_facts.py",
-        "responsibility": "SchemaIndex und Attribut-/Elementbeschreibungen liefern die registrierte Grammatik an XML-Regeln."
+        "responsibility": "SchemaIndex and attribute and element descriptions provide the registered grammar to XML rules."
       },
       {
         "path": "datamimic_ce/authoring/domain/rules/schema_rules.py",
-        "responsibility": "Die Regeln vergleichen XML-Tags, Kinder und Attribute mit dem aus der Engine abgeleiteten Schema."
+        "responsibility": "The rules compare XML tags, children, and attributes with the schema derived from the engine."
       },
       {
         "path": "datamimic_ce/authoring/domain/rules/semantic_rules.py",
-        "responsibility": "Die Regeln pr\u00fcfen bedingte DSL-Constraints und Wertebeziehungen anhand zentral registrierter Fakten."
+        "responsibility": "The rules check conditional DSL constraints and value relationships against centrally registered facts."
       },
       {
         "path": "datamimic_ce/authoring/domain/schema.py",
-        "responsibility": "Das Modul projiziert Elementmodelle in einen SchemaIndex und stellt JSON-Schema f\u00fcr einzelne XML-Elemente bereit."
+        "responsibility": "This module projects element models into a SchemaIndex and provides JSON Schema for individual XML elements."
       },
       {
         "path": "datamimic_ce/authoring/domain/script_semantics.py",
-        "responsibility": "Die Helfer pr\u00fcfen DSL-Scope-Referenzen in Script-Feldausdr\u00fccken."
+        "responsibility": "The helpers check DSL scope references in script field expressions."
       },
       {
         "path": "datamimic_ce/authoring/projection/__init__.py",
-        "responsibility": "Das Paket kennzeichnet ausgabeseitige Authoring-Projektionen ohne eigene Fachfunktion."
+        "responsibility": "The package marks output-side authoring projections without adding domain behavior."
       },
       {
         "path": "datamimic_ce/authoring/projection/reference_projection.py",
-        "responsibility": "Das Modul projiziert Authoring-Varianten, Schemas und Reparaturhinweise f\u00fcr typed Reference-Abfragen."
+        "responsibility": "This module projects authoring variants, schemas, and repair hints for typed reference queries."
       },
       {
         "path": "datamimic_ce/authoring/spec.py",
-        "responsibility": "AuthoringSpecV1 validiert die versionierte JSON-Intent-Sprache \u00fcber diskriminierte Produkte, Felder und Erwartungen."
+        "responsibility": "AuthoringSpecV1 validates the versioned JSON intent language through discriminated products, fields, and expectations."
       }
     ]
   },

@@ -8,19 +8,19 @@
       },
       {
         "path": "datamimic_ce/engine/dsl/model/constraints/facts.py",
-        "responsibility": "Die Datei deklariert konkrete, wiederverwendete Attributregeln je DSL-Element, darunter unabh\u00e4ngige Source- und Numeric-Distribution-Vertr\u00e4ge."
+        "responsibility": "This file declares concrete, reused attribute rules for each DSL element, including independent source and numeric distribution contracts."
       },
       {
         "path": "datamimic_ce/engine/dsl/model/constraints/registry.py",
-        "responsibility": "Die Registry ordnet alle Tags ihren Fact-Tupeln zu und revidiert Extension-Registrierungen bei \u00c4nderungen."
+        "responsibility": "The registry maps every tag to its fact tuples and increments its revision when extension registrations change."
       },
       {
         "path": "datamimic_ce/engine/dsl/model/constraints/serialization.py",
-        "responsibility": "Serialisierung \u00fcbersetzt getypte Constraint-Objekte in Schema-/Reference-Payloads mit discriminators."
+        "responsibility": "Serialization converts typed constraint objects into schema and reference payloads with discriminators."
       },
       {
         "path": "datamimic_ce/engine/dsl/model/constraints/types.py",
-        "responsibility": "Die frozen Dataclasses definieren zehn Constraint-Formen und typisierte Resolver f\u00fcr dynamische erlaubte Werte."
+        "responsibility": "The frozen dataclasses define ten constraint types and typed resolvers for dynamic allowed values."
       },
       {
         "path": "datamimic_ce/engine/dsl/model/flow/branches/base_if_else_model.py",
@@ -52,7 +52,7 @@
       },
       {
         "path": "datamimic_ce/engine/dsl/model/generation/timeseries.py",
-        "responsibility": "TimeSeriesConfig validiert ISO-Zeiten und Dauer und berechnet den Tick/Series-Index f\u00fcr GenerateStatement."
+        "responsibility": "TimeSeriesConfig validates ISO timestamps and duration and calculates the tick and series index for GenerateStatement."
       },
       {
         "path": "datamimic_ce/engine/dsl/model/registry.py",

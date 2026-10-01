@@ -4,27 +4,27 @@
     "modules": [
       {
         "path": "datamimic_ce/errors/__init__.py",
-        "responsibility": "Das Paket kennzeichnet den Namespace f\u00fcr Domainfehler und ihre Fabriken."
+        "responsibility": "The package marks the namespace for domain errors and their factories."
       },
       {
         "path": "datamimic_ce/errors/base.py",
-        "responsibility": "DomainError tr\u00e4gt typisierten Fehlercode, Nachricht, Kontext und serialisierbare Fehlerdaten."
+        "responsibility": "DomainError carries a typed error code, message, context, and serializable error data."
       },
       {
         "path": "datamimic_ce/errors/catalog/__init__.py",
-        "responsibility": "Der Katalog rendert den sprachabh\u00e4ngigen Text f\u00fcr den Locale-Fehler."
+        "responsibility": "The catalog renders the locale-specific text for the locale error."
       },
       {
         "path": "datamimic_ce/errors/codes.py",
-        "responsibility": "Enums definieren stabile Domain- und allgemeine Fehlercodes."
+        "responsibility": "Enums define stable domain and general error codes."
       },
       {
         "path": "datamimic_ce/errors/factory.py",
-        "responsibility": "Die Fabrik erzeugt InvalidLocaleError mit Code, Kontext und stabilen Metadaten."
+        "responsibility": "The factory creates InvalidLocaleError with a code, context, and stable metadata."
       },
       {
         "path": "datamimic_ce/errors/formatters.py",
-        "responsibility": "Der Formatter erzeugt die sprachabh\u00e4ngige Invalid-Locale-Meldung."
+        "responsibility": "The formatter creates the locale-specific invalid-locale message."
       }
     ]
   },

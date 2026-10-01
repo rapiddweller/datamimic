@@ -4,15 +4,15 @@
     "modules": [
       {
         "path": "datamimic_ce/engine/io/__init__.py",
-        "responsibility": "Dieses leere Initializer-Modul erg\u00e4nzt keine IO-Verantwortung."
+        "responsibility": "This empty initializer module adds no IO responsibility."
       },
       {
         "path": "datamimic_ce/engine/io/api.py",
-        "responsibility": "Dieses Modul ver\u00f6ffentlicht typisierte IO-Operationen und den begrenzten Smoke-Export."
+        "responsibility": "This module exposes typed IO operations and the bounded smoke export."
       },
       {
         "path": "datamimic_ce/engine/io/clients/__init__.py",
-        "responsibility": "Dieses leere Initializer-Modul erg\u00e4nzt keine Client-Verantwortung."
+        "responsibility": "This empty initializer module adds no client responsibility."
       },
       {
         "path": "datamimic_ce/engine/io/clients/client.py",
@@ -20,7 +20,7 @@
       },
       {
         "path": "datamimic_ce/engine/io/clients/database_client.py",
-        "responsibility": "Dieses Modul b\u00fcndelt Abfrage- und Schreiboperationen, die beide Datenbankfamilien teilen."
+        "responsibility": "This module groups query and write operations shared by both database families."
       },
       {
         "path": "datamimic_ce/engine/io/clients/entity_serialization.py",
@@ -28,15 +28,15 @@
       },
       {
         "path": "datamimic_ce/engine/io/clients/mongodb_client.py",
-        "responsibility": "Dieses Modul implementiert Verbindung, Abfrage und Schreibzugriff f\u00fcr MongoDB."
+        "responsibility": "This module implements MongoDB connection, query, and write access."
       },
       {
         "path": "datamimic_ce/engine/io/clients/operations.py",
-        "responsibility": "Dieses Modul b\u00fcndelt typisierte Datenbankoperationen f\u00fcr Verbindungen, Abfragen, Seiten und Sequenzen."
+        "responsibility": "This module groups typed database operations for connections, queries, pages, and sequences."
       },
       {
         "path": "datamimic_ce/engine/io/clients/rdbms_client.py",
-        "responsibility": "Dieses Modul implementiert SQL-Verbindung, Abfragen, Schreiben und Sequenzzugriff."
+        "responsibility": "This module implements SQL connections, queries, writes, and sequence access."
       },
       {
         "path": "datamimic_ce/engine/io/clients/sql_dialect.py",
@@ -44,15 +44,15 @@
       },
       {
         "path": "datamimic_ce/engine/io/connection_config/__init__.py",
-        "responsibility": "Dieses leere Initializer-Modul enth\u00e4lt keine Verbindungslogik."
+        "responsibility": "This empty initializer module contains no connection logic."
       },
       {
         "path": "datamimic_ce/engine/io/connection_config/connection_config_base.py",
-        "responsibility": "Dieses Modul definiert Validierung und Zugriff f\u00fcr typisierte Verbindungsdaten."
+        "responsibility": "This module defines validation and access for typed connection data."
       },
       {
         "path": "datamimic_ce/engine/io/connection_config/mongodb_connection_config.py",
-        "responsibility": "Dieses Modul validiert MongoDB-Verbindungsdaten und stellt die Treiberoptionen bereit."
+        "responsibility": "This module validates MongoDB connection data and provides the driver options."
       },
       {
         "path": "datamimic_ce/engine/io/connection_config/properties.py",
@@ -60,7 +60,7 @@
       },
       {
         "path": "datamimic_ce/engine/io/connection_config/rdbms_connection_config.py",
-        "responsibility": "Dieses Modul validiert SQL-Verbindungsdaten und stellt SQLAlchemy-Optionen bereit."
+        "responsibility": "This module validates SQL connection data and provides SQLAlchemy options."
       },
       {
         "path": "datamimic_ce/engine/io/contracts.py",
@@ -68,7 +68,7 @@
       },
       {
         "path": "datamimic_ce/engine/io/data_sources/__init__.py",
-        "responsibility": "Dieses leere Initializer-Modul erg\u00e4nzt keine Quelllogik."
+        "responsibility": "This empty initializer module adds no source logic."
       },
       {
         "path": "datamimic_ce/engine/io/data_sources/boundary/entities.py",
@@ -92,7 +92,7 @@
       },
       {
         "path": "datamimic_ce/engine/io/data_sources/selection.py",
-        "responsibility": "Dieses Modul wendet seedgebundene Quellenverteilung und Eindeutigkeit an; auch Key-Aufgaben nutzen es."
+        "responsibility": "This module applies seeded source distribution and uniqueness; key tasks use it as well."
       },
       {
         "path": "datamimic_ce/engine/io/data_sources/variable.py",
@@ -100,7 +100,7 @@
       },
       {
         "path": "datamimic_ce/engine/io/data_sources/weighted_data_source.py",
-        "responsibility": "Dieses Modul liest gewichtete Einzelwerte aus einer Datei."
+        "responsibility": "This module reads weighted individual values from a file."
       },
       {
         "path": "datamimic_ce/engine/io/data_sources/weighted_entity_data_source.py",
@@ -108,15 +108,15 @@
       },
       {
         "path": "datamimic_ce/engine/io/files/api.py",
-        "responsibility": "Dieses Modul b\u00fcndelt Dateileser und Dateicache unter einer schmalen Dataset-API."
+        "responsibility": "This module groups file readers and the file cache behind a narrow dataset API."
       },
       {
         "path": "datamimic_ce/engine/io/files/cache.py",
-        "responsibility": "Dieses Modul cached eingelesene Dateiinhalte nach Quellschl\u00fcssel."
+        "responsibility": "This module caches file contents by source key."
       },
       {
         "path": "datamimic_ce/engine/io/files/readers.py",
-        "responsibility": "Dieses Modul liest unterst\u00fctzte Dateiformate und liefert typisierte Datensatzzeilen."
+        "responsibility": "This module reads supported file formats and returns typed dataset rows."
       }
     ]
   },

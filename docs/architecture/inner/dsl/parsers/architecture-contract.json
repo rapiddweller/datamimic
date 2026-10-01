@@ -12,11 +12,11 @@
       },
       {
         "path": "datamimic_ce/engine/dsl/parsers/base/statement_parser.py",
-        "responsibility": "StatementParser vereinheitlicht XML-Tag-/Child-Pr\u00fcfung, Properties-Substitution und Pydantic-Fehler\u00fcbersetzung f\u00fcr konkrete Parser."
+        "responsibility": "StatementParser standardizes XML tag and child validation, properties substitution, and Pydantic error translation for concrete parsers."
       },
       {
         "path": "datamimic_ce/engine/dsl/parsers/document/descriptor_parser.py",
-        "responsibility": "DescriptorParser liest die Descriptordatei als alleinigen Entry Point und delegiert den Root an SetupParser."
+        "responsibility": "DescriptorParser reads the descriptor file as the sole entrypoint and delegates the root to SetupParser."
       },
       {
         "path": "datamimic_ce/engine/dsl/parsers/flow/branches/condition_parser.py",
@@ -60,7 +60,7 @@
       },
       {
         "path": "datamimic_ce/engine/dsl/parsers/input/properties.py",
-        "responsibility": "parse_properties l\u00e4dt gecachte Java-Properties-Zeilen und mappt key=value Paare; das ist Konfigurationsdatei-Parsing."
+        "responsibility": "parse_properties loads cached Java properties lines and maps key=value pairs; this is configuration-file parsing."
       },
       {
         "path": "datamimic_ce/engine/dsl/parsers/input/target.py",
@@ -84,7 +84,7 @@
       },
       {
         "path": "datamimic_ce/engine/dsl/parsers/setup/generator_parser.py",
-        "responsibility": "Der Parser \u00fcbersetzt eine Setup-Definition in GeneratorStatement; er parst keinen skalaren Datensatzwert."
+        "responsibility": "The parser translates a setup definition into GeneratorStatement; it does not parse a scalar record value."
       },
       {
         "path": "datamimic_ce/engine/dsl/parsers/setup/include_parser.py",

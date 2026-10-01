@@ -4,27 +4,27 @@
     "modules": [
       {
         "path": "datamimic_ce/domains/public_sector/__init__.py",
-        "responsibility": "Der Initializer markiert ein Python-Paket, enth\u00e4lt aber keine ausf\u00fchrbare Fachlogik."
+        "responsibility": "The package initializer marks a Python package and contains no executable domain logic."
       },
       {
         "path": "datamimic_ce/domains/public_sector/generators/__init__.py",
-        "responsibility": "Der Initializer markiert ein Python-Paket, enth\u00e4lt aber keine ausf\u00fchrbare Fachlogik."
+        "responsibility": "The package initializer marks a Python package and contains no executable domain logic."
       },
       {
         "path": "datamimic_ce/domains/public_sector/generators/administration_office_generator.py",
-        "responsibility": "Der AdministrationOfficeGenerator erzeugt synthetische Fachwerte \u00fcber pick_office_type, pick_jurisdiction_bucket, build_office_name und nutzt die erforderliche RNG-, Datensatz- oder Zeitbasis."
+        "responsibility": "AdministrationOfficeGenerator generates synthetic domain values through pick_office_type, pick_jurisdiction_bucket, and build_office_name, using the required RNG, dataset, or clock basis."
       },
       {
         "path": "datamimic_ce/domains/public_sector/generators/educational_institution_generator.py",
-        "responsibility": "Der EducationalInstitutionGenerator erzeugt synthetische Fachwerte \u00fcber pick_level, pick_accreditations, pick_institution_type und nutzt die erforderliche RNG-, Datensatz- oder Zeitbasis."
+        "responsibility": "EducationalInstitutionGenerator generates synthetic domain values through pick_level, pick_accreditations, and pick_institution_type, using the required RNG, dataset, or clock basis."
       },
       {
         "path": "datamimic_ce/domains/public_sector/generators/police_officer_generator.py",
-        "responsibility": "Der PoliceOfficerGenerator erzeugt synthetische Fachwerte \u00fcber generate_hire_date, get_rank, get_department und nutzt die erforderliche RNG-, Datensatz- oder Zeitbasis."
+        "responsibility": "PoliceOfficerGenerator generates synthetic domain values through generate_hire_date, get_rank, and get_department, using the required RNG, dataset, or clock basis."
       },
       {
         "path": "datamimic_ce/domains/public_sector/models/__init__.py",
-        "responsibility": "Der Initializer markiert ein Python-Paket, enth\u00e4lt aber keine ausf\u00fchrbare Fachlogik."
+        "responsibility": "The package initializer marks a Python package and contains no executable domain logic."
       },
       {
         "path": "datamimic_ce/domains/public_sector/models/administration_office.py",
@@ -40,19 +40,19 @@
       },
       {
         "path": "datamimic_ce/domains/public_sector/services/__init__.py",
-        "responsibility": "Der Initializer exportiert Verwaltungsstellen-, Bildungs- und Polizeiservices als Paketoberfl\u00e4che."
+        "responsibility": "The initializer exports the administration office, education, and police services as the package API."
       },
       {
         "path": "datamimic_ce/domains/public_sector/services/administration_office_service.py",
-        "responsibility": "Der AdministrationOfficeService bindet konkreten Generator und Modell und deklariert die f\u00fcr Registry und DSL sichtbaren Entity-Felder."
+        "responsibility": "AdministrationOfficeService binds its concrete generator and model and declares the entity fields exposed to the registry and DSL."
       },
       {
         "path": "datamimic_ce/domains/public_sector/services/educational_institution_service.py",
-        "responsibility": "Der EducationalInstitutionService bindet konkreten Generator und Modell und deklariert die f\u00fcr Registry und DSL sichtbaren Entity-Felder."
+        "responsibility": "EducationalInstitutionService binds its concrete generator and model and declares the entity fields exposed to the registry and DSL."
       },
       {
         "path": "datamimic_ce/domains/public_sector/services/police_officer_service.py",
-        "responsibility": "Der PoliceOfficerService bindet konkreten Generator und Modell und deklariert die f\u00fcr Registry und DSL sichtbaren Entity-Felder."
+        "responsibility": "PoliceOfficerService binds its concrete generator and model and declares the entity fields exposed to the registry and DSL."
       }
     ]
   },

@@ -8,23 +8,23 @@
       },
       {
         "path": "datamimic_ce/engine/runtime/tasks/generate/policies/single_process_policy.py",
-        "responsibility": "Dieses Modul reduziert Parallelit\u00e4t, wenn Seed, Eindeutigkeit, L\u00f6schung, Domain-IDs oder MySQL-Sequenzen es verlangen."
+        "responsibility": "This module reduces parallelism when required by the seed, uniqueness, deletion, domain IDs, or MySQL sequences."
       },
       {
         "path": "datamimic_ce/engine/runtime/tasks/generate/task.py",
-        "responsibility": "Dieses Modul l\u00f6st Count und Workerplan auf, startet Worker und koordiniert Produktexport."
+        "responsibility": "This module resolves the count and worker plan, starts workers, and coordinates product export."
       },
       {
         "path": "datamimic_ce/engine/runtime/tasks/generate/workers/generate_worker.py",
-        "responsibility": "Dieses Modul erzeugt Seiten in einem Worker, f\u00fchrt Zeilentasks aus und exportiert Ergebnisse."
+        "responsibility": "This module generates pages in a worker, runs row tasks, and exports results."
       },
       {
         "path": "datamimic_ce/engine/runtime/tasks/generate/workers/multiprocessing_generate_worker.py",
-        "responsibility": "Dieses Modul f\u00fchrt Generate-Chunks in lokalen Multiprocessing-Prozessen aus."
+        "responsibility": "This module runs generate chunks in local multiprocessing processes."
       },
       {
         "path": "datamimic_ce/engine/runtime/tasks/generate/workers/ray_generate_worker.py",
-        "responsibility": "Dieses Modul f\u00fchrt Generate-Chunks \u00fcber die optionale Ray-Laufzeit aus."
+        "responsibility": "This module runs generate chunks through the optional Ray runtime."
       }
     ]
   },
