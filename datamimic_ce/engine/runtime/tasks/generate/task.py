@@ -6,7 +6,6 @@
 
 import copy
 import math
-import shutil
 from typing import Protocol
 
 import dill
@@ -14,6 +13,7 @@ import dill
 from datamimic_ce.engine.dsl.api import CompositeStatement, GenerateStatement, KeyStatement, Statement
 from datamimic_ce.engine.io.api import (
     capture_test_results,
+    cleanup_exporter_chunks,
     consume_memstore_target,
     count_query_length,
     finalize_exporter_chunks,
@@ -362,8 +362,7 @@ class GenerateTask(CommonSubTask):
             finally:
                 # Clean temp directory on outermost gen_stmt
                 if isinstance(context, SetupContext):
-                    for temp_dir in context.descriptor_dir.glob(f"temp_result_{context.task_id}*"):
-                        shutil.rmtree(temp_dir)
+                    cleanup_exporter_chunks(context.descriptor_dir, context.task_id)
                 # Shutdown Ray if initialized
                 if is_ray_initialized and _ray_mod is not None:
                     _ray_mod.shutdown()

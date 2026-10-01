@@ -106,6 +106,7 @@ is a catch-all component.
         core/  formats/  database/  memory/  diagnostics/
         registry.py             exporter construction from target strings
         session.py              worker registration and page dispatch
+        lifecycle.py            chunk finalization, artifact publication and temporary-file cleanup
   domains/
     api.py  facade.py
     registry/                   entity/generator discovery and request validation
@@ -139,6 +140,9 @@ is a catch-all component.
 DSL `flow/` uses the same branches/loops/commands families; DSL `values/`
 uses scalar/structured/references/variables families. These are grouping names,
 not a new DSL vocabulary. Keep model, parsing and statement layers separate.
+Exporters has eight deliberate owners: shared primitives, four output families,
+construction, worker page dispatch and completion. Session and lifecycle use
+registry independently; another grouping would add no boundary (amendment 86).
 Every existing CE source scope, including namespace folders and initializer-only
 code, has a review entry; exact module moves take precedence over package moves.
 Unchanged leaf modules stay with their reviewed owner. Non-Python datasets keep

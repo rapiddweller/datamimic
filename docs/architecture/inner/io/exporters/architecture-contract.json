@@ -87,8 +87,12 @@
         "responsibility": "This module stores generated products in the run-scoped memstore."
       },
       {
+        "path": "datamimic_ce/engine/io/exporters/lifecycle.py",
+        "responsibility": "Finalizes buffered chunks, publishes completed artifacts, and removes run-specific temporary chunks."
+      },
+      {
         "path": "datamimic_ce/engine/io/exporters/registry.py",
-        "responsibility": "Constructs exporters from target strings and coordinates buffered writes, publication, and bounded smoke exports."
+        "responsibility": "Constructs exporters from target strings and supports capture, memstore writes, and bounded smoke exports."
       },
       {
         "path": "datamimic_ce/engine/io/exporters/session.py",
@@ -255,7 +259,7 @@
         "datamimic_ce.engine.io.exporters.registry"
       ],
       "responsibilities": [
-        "Exporter construction from target strings, publication and bounded smoke execution."
+        "Constructs exporters from target strings and supports capture, memstore writes, and bounded smoke exports."
       ],
       "forbidden_responsibilities": [
         "Implement exporters or be re-exported as a facade for concrete classes"
@@ -294,10 +298,44 @@
         "datamimic_ce.engine.io.exporters.registry:capture_test_results",
         "datamimic_ce.engine.io.exporters.registry:create_exporter_list",
         "datamimic_ce.engine.io.exporters.registry:consume_memstore_target",
-        "datamimic_ce.engine.io.exporters.registry:finalize_exporter_chunks",
-        "datamimic_ce.engine.io.exporters.registry:publish_exported_artifacts",
         "datamimic_ce.engine.io.exporters.registry:buffered_exporter_names",
         "datamimic_ce.engine.io.exporters.registry:smoke_export"
+      ],
+      "decided_by": "agent"
+    },
+    {
+      "id": "EXPORTERS-LIFECYCLE",
+      "label": "lifecycle",
+      "role": "component",
+      "packages": [
+        "datamimic_ce.engine.io.exporters.lifecycle"
+      ],
+      "responsibilities": [
+        "Finalizes buffered chunks, publishes completed artifacts, and removes run-specific temporary chunks."
+      ],
+      "forbidden_responsibilities": [
+        "Traverse DSL statements or decide runtime execution phases",
+        "Construct exporters independently of the exporter registry"
+      ],
+      "provenance": [
+        "docs/architecture/refactoring-study/experiment-2/amendment-86.md"
+      ],
+      "requires": [
+        {
+          "component": "registry",
+          "rationale": "Completion reconstructs buffered exporters through the target-string registry.",
+          "decided_by": "agent"
+        },
+        {
+          "component": "core",
+          "rationale": "Completion uses the exporter context and buffered exporter contract.",
+          "decided_by": "agent"
+        }
+      ],
+      "public": [
+        "datamimic_ce.engine.io.exporters.lifecycle:finalize_exporter_chunks",
+        "datamimic_ce.engine.io.exporters.lifecycle:publish_exported_artifacts",
+        "datamimic_ce.engine.io.exporters.lifecycle:cleanup_exporter_chunks"
       ],
       "decided_by": "agent"
     },

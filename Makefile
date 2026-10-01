@@ -3,7 +3,7 @@
 PACKAGE := datamimic_ce
 TESTS := tests_ce
 CE_COVERAGE_FILES := $(shell find $(PACKAGE) -type f -name '*.py')
-ARCHKEEL_SOURCE := archkeel==0.8.1
+ARCHKEEL_SOURCE := archkeel==0.8.3
 
 help:
 	@echo "Available targets:"

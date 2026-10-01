@@ -54,13 +54,16 @@ from datamimic_ce.engine.io.exporters.core.routing import (
     resolve_target_entity,
 )
 from datamimic_ce.engine.io.exporters.diagnostics.test_result_exporter import TestResultExporter
+from datamimic_ce.engine.io.exporters.lifecycle import (
+    cleanup_exporter_chunks,
+    finalize_exporter_chunks,
+    publish_exported_artifacts,
+)
 from datamimic_ce.engine.io.exporters.memory.memstore import Memstore
 from datamimic_ce.engine.io.exporters.registry import (
     buffered_exporter_names,
     capture_test_results,
     consume_memstore_target,
-    finalize_exporter_chunks,
-    publish_exported_artifacts,
     smoke_export,
 )
 from datamimic_ce.engine.io.exporters.session import ExportSession
@@ -73,6 +76,7 @@ __all__ = [
     "Exporter",
     "ExportSession",
     "capture_test_results",
+    "cleanup_exporter_chunks",
     "consume_memstore_target",
     "finalize_exporter_chunks",
     "MongoDBConnectionConfig",
