@@ -6,9 +6,15 @@ from abc import ABC, abstractmethod
 from collections.abc import Iterable, Iterator, Mapping
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Protocol, TypeVar
+from typing import Protocol, TypedDict, TypeVar
 
 from pydantic import RootModel
+
+
+class ExportMetadata(TypedDict, total=False):
+    target_entity: str
+    selector: str
+    type: str
 
 
 class EntityValue(ABC):
@@ -93,6 +99,7 @@ class SmokeExportRequest:
 __all__ = [
     "DataSourcePagination",
     "EntityValue",
+    "ExportMetadata",
     "MemstoreSource",
     "SmokeExportParameters",
     "SmokeExportRequest",

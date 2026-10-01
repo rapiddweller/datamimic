@@ -2467,7 +2467,7 @@
     {"target": "engine/io/clients/client.py", "responsibility": "Provides the marker base class for database clients."},
     {"target": "engine/io/clients/entity_serialization.py", "responsibility": "Stringifies EntityValue instances before database writes."},
     {"target": "engine/io/clients/sql_dialect.py", "responsibility": "Builds dialect-aware count, column-probe, and page queries, and splits executable SQL scripts."},
-    {"target": "engine/io/contracts.py", "responsibility": "Defines IO paging, memstore, entity-value and smoke-export contracts plus shared page selection."},
+    {"target": "engine/io/contracts.py", "responsibility": "Defines IO paging, memstore, entity-value, export-routing and smoke-export contracts plus shared page selection."},
     {"target": "engine/io/data_sources/boundary/entities.py", "responsibility": "Resolves source entity and MongoDB collection names from descriptor fields at the IO boundary."},
     {"target": "engine/io/data_sources/boundary/models.py", "responsibility": "Defines typed source requests that carry resolved inputs without runtime context or statements."},
     {"target": "engine/io/data_sources/chunk_reader.py", "responsibility": "Selects unique or distributed rows from a loaded source pool and slices pages within one chunk."},

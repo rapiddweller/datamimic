@@ -12,6 +12,7 @@ from datamimic_ce.engine.dsl.api import (
     GenerateStatement,
 )
 from datamimic_ce.engine.io.api import ExportSession
+from datamimic_ce.engine.io.contracts import ExportMetadata
 
 
 def export_product_by_page(
@@ -21,7 +22,7 @@ def export_product_by_page(
 ) -> None:
     """Dispatch a page and recurse in dependency-safe parent/child order."""
     xml_rows = xml_result[stmt.full_name]
-    metadata: dict[str, str] = {}
+    metadata: ExportMetadata = {}
     if stmt.target_entity:
         metadata[META_TARGET_ENTITY] = stmt.target_entity
     if stmt.selector:

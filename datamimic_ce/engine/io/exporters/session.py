@@ -8,6 +8,7 @@ import logging
 from typing import TypedDict
 
 from datamimic_ce.engine.dsl.vocabulary.enums.operation_enums import ExportOperation
+from datamimic_ce.engine.io.contracts import ExportMetadata
 from datamimic_ce.engine.io.exporters.core.exporter import Exporter
 from datamimic_ce.engine.io.exporters.core.exporter_context import ExporterContext
 from datamimic_ce.engine.io.exporters.core.exporter_state_manager import ExporterStateManager
@@ -31,7 +32,7 @@ class _ProductExporters(TypedDict):
 
 
 PreparedPage = tuple[
-    tuple[str, list[object]] | tuple[str, list[object], dict[str, str]], list[dict]
+    tuple[str, list[object]] | tuple[str, list[object], ExportMetadata], list[dict]
 ]
 
 
@@ -75,7 +76,7 @@ class ExportSession:
         full_name: str,
         product_name: str,
         xml_rows: list[dict],
-        metadata: dict[str, str],
+        metadata: ExportMetadata,
     ) -> PreparedPage:
         json_rows = [convert_xml_dict_to_json_dict(row) for row in xml_rows]
         json_product = (product_name, json_rows, metadata) if metadata else (product_name, json_rows)

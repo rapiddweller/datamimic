@@ -64,7 +64,7 @@
       },
       {
         "path": "datamimic_ce/engine/io/contracts.py",
-        "responsibility": "Defines IO paging, memstore, entity-value and smoke-export contracts plus shared page selection."
+        "responsibility": "Defines IO paging, memstore, entity-value, export-routing and smoke-export contracts plus shared page selection."
       },
       {
         "path": "datamimic_ce/engine/io/data_sources/__init__.py",

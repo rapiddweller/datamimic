@@ -9,6 +9,7 @@ from datamimic_ce.engine.dsl.vocabulary.constants.attribute_constants import MET
 from datamimic_ce.engine.dsl.vocabulary.enums.operation_enums import ExportOperation
 from datamimic_ce.engine.io.clients.client import Client
 from datamimic_ce.engine.io.clients.operations import is_mongodb_client
+from datamimic_ce.engine.io.contracts import ExportMetadata
 
 
 def resolve_target_entity(target_entity: str | None, type_: str | None, name: str) -> str:
@@ -16,7 +17,7 @@ def resolve_target_entity(target_entity: str | None, type_: str | None, name: st
     return target_entity or type_ or name
 
 
-def resolve_target_entity_from_metadata(name: str, metadata: dict | None) -> str:
+def resolve_target_entity_from_metadata(name: str, metadata: ExportMetadata | Mapping[str, str] | None) -> str:
     """Resolve an output entity from exporter metadata."""
     md = metadata or {}
     return resolve_target_entity(md.get(META_TARGET_ENTITY), md.get(META_TYPE), name)

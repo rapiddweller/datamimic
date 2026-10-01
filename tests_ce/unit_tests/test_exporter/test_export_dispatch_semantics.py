@@ -111,6 +111,29 @@ def test_xml_receives_original_rows_while_other_buffered_exporters_receive_conve
     assert received_json[0][0] == ("products", [{"payload": "original"}])
 
 
+def test_statement_metadata_reaches_json_but_not_xml_exporters(monkeypatch: pytest.MonkeyPatch) -> None:
+    stmt = _statement()
+    stmt.target_entity = "target"
+    stmt.selector = "id=1"
+    stmt.type = "kind"
+    xml_exporter = object.__new__(XMLExporter)
+    json_exporter = object.__new__(JsonExporter)
+    received_xml: list[tuple] = []
+    received_json: list[tuple] = []
+    monkeypatch.setattr(XMLExporter, "consume", lambda self, *args: received_xml.append(args))
+    monkeypatch.setattr(JsonExporter, "consume", lambda self, *args: received_json.append(args))
+
+    export_order.export_product_by_page(
+        stmt,
+        {stmt.full_name: [{"id": 1}]},
+        _session(stmt, [], [xml_exporter, json_exporter]),
+    )
+
+    expected_metadata = {"target_entity": "target", "selector": "id=1", "type": "kind"}
+    assert received_xml[0][0] == ("products", [{"id": 1}])
+    assert received_json[0][0] == ("products", [{"id": 1}], expected_metadata)
+
+
 def test_operation_errors_stay_direct_while_plain_export_errors_wrap_the_cause() -> None:
     stmt = _statement()
     source = {stmt.full_name: [{"id": 1}]}
@@ -301,6 +324,22 @@ def test_export_session_registers_targets_through_registry_factory() -> None:
     session.dispatch_page("products", page)
 
     assert result.get_result() == {"products": [{"id": 1}]}
+
+
+def test_prepare_page_preserves_metadata_tuple_shape_and_original_rows() -> None:
+    session = ExportSession(worker_id=1)
+    rows = [{"payload": {"#text": "original"}}]
+    session._register_exporters("products", [], [])
+
+    without_metadata, original_rows = session.prepare_page("products", "products", rows, {})
+    with_metadata, metadata_rows = session.prepare_page(
+        "products", "products", rows, {"target_entity": "orders"}
+    )
+
+    assert without_metadata == ("products", [{"payload": "original"}])
+    assert with_metadata == ("products", [{"payload": "original"}], {"target_entity": "orders"})
+    assert original_rows is rows
+    assert metadata_rows is rows
 
 
 def test_missing_registration_fails_before_nested_writes() -> None:
