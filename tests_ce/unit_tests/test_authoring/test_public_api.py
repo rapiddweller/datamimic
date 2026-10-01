@@ -8,9 +8,12 @@ from datamimic_ce.authoring.application.service import scaffold
 from datamimic_ce.authoring.domain.diagnostics import LintResult
 from datamimic_ce.authoring.domain.rule_catalog import RuleSeverity
 from datamimic_ce.authoring.spec import ExactCountExpectation, ExpectationIntent
-from datamimic_ce.engine.runtime.api import Context, SetupContext
+from datamimic_ce.engine.dsl.api import TimeSeriesNamespace
+from datamimic_ce.engine.dsl.model.generation.timeseries import TimeSeriesNamespace as InternalTimeSeriesNamespace
+from datamimic_ce.engine.runtime.api import Context, DemographicContext, SetupContext
 from datamimic_ce.engine.runtime.contexts.context import Context as InternalContext
 from datamimic_ce.engine.runtime.contexts.context import SetupContext as InternalSetupContext
+from datamimic_ce.engine.runtime.contexts.demographic_context import DemographicContext as InternalDemographicContext
 
 
 def test_authoring_api_has_typed_signatures_and_delegates(monkeypatch) -> None:
@@ -42,9 +45,11 @@ def test_public_contract_exports_preserve_identity() -> None:
     assert contracts.RuleSeverity is RuleSeverity
 
 
-def test_runtime_api_exports_context_types_by_identity() -> None:
+def test_runtime_and_dsl_api_export_types_by_identity() -> None:
     assert Context is InternalContext
     assert SetupContext is InternalSetupContext
+    assert DemographicContext is InternalDemographicContext
+    assert TimeSeriesNamespace is InternalTimeSeriesNamespace
 
 
 def test_scaffold_document_keeps_json_shape() -> None:

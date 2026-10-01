@@ -106,6 +106,14 @@ def test_statement_branch_and_memstore_manager_are_root_component_declarations()
     ]
 
 
+def test_facade_records_keep_their_existing_owner_modules() -> None:
+    from datamimic_ce.engine.dsl.api import TimeSeriesNamespace
+    from datamimic_ce.engine.runtime.api import DemographicContext
+
+    assert TimeSeriesNamespace.__module__ == "datamimic_ce.engine.dsl.model.generation.timeseries"
+    assert DemographicContext.__module__ == "datamimic_ce.engine.runtime.contexts.demographic_context"
+
+
 def test_state_machine_definition_is_generation_contract_owned() -> None:
     from datamimic_ce.domains import api
     from datamimic_ce.domains.domain_core.contracts import generation
