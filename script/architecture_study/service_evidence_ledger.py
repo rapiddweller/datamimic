@@ -4,7 +4,9 @@ from __future__ import annotations
 
 import argparse
 import json
+import subprocess
 from collections import Counter
+from collections.abc import Mapping
 from pathlib import Path, PurePosixPath
 from typing import Any
 
@@ -116,6 +118,71 @@ def validate_evidence_reference(reference: str) -> None:
         raise ValueError(f"invalid experiment-2 evidence reference: {reference!r}")
 
 
+def tracked_descriptor_paths() -> set[str]:
+    result = subprocess.run(
+        ["git", "ls-files"],
+        cwd=REPO,
+        capture_output=True,
+        text=True,
+        check=True,
+    )
+    return set(result.stdout.splitlines())
+
+
+def validate_descriptor_path(path: str, tracked_paths: set[str]) -> None:
+    relative = PurePosixPath(path)
+    if (
+        not path
+        or "\\" in path
+        or relative.is_absolute()
+        or relative.as_posix() != path
+        or any(part in {"", ".", ".."} for part in relative.parts)
+        or relative.suffix != ".xml"
+    ):
+        raise ValueError(f"invalid descriptor path: {path!r}")
+    if path not in tracked_paths:
+        raise ValueError(f"evidence descriptor is not tracked: {path}")
+
+    descriptor = REPO / Path(*relative.parts)
+    try:
+        resolved = descriptor.resolve(strict=True)
+        resolved.relative_to(REPO.resolve())
+    except (OSError, ValueError) as error:
+        raise ValueError(f"evidence descriptor is missing or outside the repository: {path}") from error
+    if not descriptor.is_file() or not resolved.is_file():
+        raise ValueError(f"evidence descriptor is not a regular file: {path}")
+
+
+def validate_and_partition_evidence(
+    inventory_paths: list[str],
+    evidence_rows: Mapping[str, object],
+    tracked_paths: set[str],
+) -> tuple[dict[str, tuple[str, str]], list[dict[str, str]]]:
+    in_scope: dict[str, tuple[str, str]] = {}
+    historical: list[dict[str, str]] = []
+    inventory = set(inventory_paths)
+    for path, row in evidence_rows.items():
+        if not isinstance(path, str):
+            raise ValueError(f"invalid evidence descriptor path: {path!r}")
+        validate_descriptor_path(path, tracked_paths)
+        if not isinstance(row, tuple) or len(row) != 2:
+            raise ValueError(f"invalid evidence tuple for {path}: expected exactly two values")
+        evidence_class, reference = row
+        if not isinstance(evidence_class, str) or evidence_class not in CLASSES:
+            raise ValueError(f"invalid evidence class for {path}: {evidence_class!r}")
+        if not isinstance(reference, str):
+            raise ValueError(f"invalid evidence reference for {path}: {reference!r}")
+        validate_evidence_reference(reference)
+
+        if path in inventory:
+            in_scope[path] = (evidence_class, reference)
+        else:
+            historical.append(
+                {"path": path, "status": evidence_class, "evidence_ref": reference}
+            )
+    return in_scope, sorted(historical, key=lambda entry: entry["path"])
+
+
 def build_ledger(
     inventory_paths: list[str],
     evidence_rows: dict[str, tuple[str, str]] | None = None,
@@ -131,11 +198,13 @@ def build_ledger(
     entries = []
     for path in sorted(universe):
         evidence = evidence_rows.get(path)
-        evidence_class, reference = evidence if evidence else (None, None)
         if evidence is not None:
+            evidence_class, reference = evidence
             if evidence_class not in CLASSES:
                 raise ValueError(f"invalid evidence class for {path}: {evidence_class}")
             validate_evidence_reference(reference)
+        else:
+            evidence_class, reference = None, None
         entries.append(
             {
                 "path": path,
@@ -186,11 +255,32 @@ def self_check() -> None:
             raise AssertionError(f"invalid evidence reference must fail: {reference!r}")
     for row in (("exact_seeded", ""), ("exact_seeded",)):
         try:
-            build_ledger(["a.xml"], {"a.xml": row})
+            malformed: Any = {"a.xml": row}
+            build_ledger(["a.xml"], malformed)
         except (TypeError, ValueError):
             pass
         else:
             raise AssertionError("missing evidence references must fail")
+
+    tracked = tracked_descriptor_paths()
+    sample_path = next(iter(EVIDENCE))
+    in_scope, historical = validate_and_partition_evidence(
+        [sample_path], {sample_path: EVIDENCE[sample_path]}, tracked
+    )
+    assert in_scope == {sample_path: EVIDENCE[sample_path]}
+    assert historical == []
+    invalid_rows: tuple[Mapping[str, object], ...] = (
+        {"../outside.xml": ("exact_seeded", STEP22)},
+        {sample_path: ("unknown", STEP22)},
+        {sample_path: ("exact_seeded",)},
+    )
+    for evidence in invalid_rows:
+        try:
+            validate_and_partition_evidence([sample_path], evidence, tracked)
+        except (TypeError, ValueError):
+            pass
+        else:
+            raise AssertionError("invalid evidence must fail before partitioning")
 
 
 def main() -> None:
@@ -200,7 +290,22 @@ def main() -> None:
     if args.self_check:
         self_check()
     inventory = build_report()
-    ledger = build_ledger([entry["path"] for entry in inventory["entries"]])
+    inventory_paths = [entry["path"] for entry in inventory["entries"]]
+    in_scope, historical = validate_and_partition_evidence(
+        inventory_paths, EVIDENCE, tracked_descriptor_paths()
+    )
+    ledger = build_ledger(inventory_paths, in_scope)
+    ledger.update(
+        {
+            "historical_out_of_scope_entries": historical,
+            "current_parity_status": "not-assessed",
+            "evidence_scope": "historical-revision-bound",
+            "status_semantics": (
+                "Statuses describe comparisons recorded in evidence_ref; UNVERIFIED means no "
+                "admitted historical per-path evidence, and no status certifies current-HEAD parity."
+            ),
+        }
+    )
     print(json.dumps(ledger, indent=2, sort_keys=True))
 
 
