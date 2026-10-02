@@ -18,5 +18,5 @@ class MongoDBStatement(Statement):
         return self._model
 
     @property
-    def mongodb_id(self):
+    def mongodb_id(self) -> str:
         return self._model.id

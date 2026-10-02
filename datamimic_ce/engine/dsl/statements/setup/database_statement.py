@@ -19,5 +19,5 @@ class DatabaseStatement(Statement):
         return self._model
 
     @property
-    def db_id(self):
+    def db_id(self) -> str:
         return self._model.id

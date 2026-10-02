@@ -10,13 +10,13 @@ from datamimic_ce.engine.dsl.statements.base.statement import Statement
 
 class GeneratorStatement(Statement):
     def __init__(self, model: GeneratorModel):
-        self._name = model.name
+        self._name: str = model.name
         self._generator = model.generator
 
     @property
-    def name(self):
+    def name(self) -> str:
         return self._name
 
     @property
-    def generator(self):
+    def generator(self) -> str:
         return self._generator

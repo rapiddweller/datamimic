@@ -14,5 +14,5 @@ class ItemStatement(CompositeStatement):
         self._condition = model.condition
 
     @property
-    def condition(self):
+    def condition(self) -> str | None:
         return self._condition

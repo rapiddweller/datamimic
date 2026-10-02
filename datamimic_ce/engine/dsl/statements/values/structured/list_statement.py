@@ -14,5 +14,5 @@ class ListStatement(CompositeStatement):
         self._converter = model.converter
 
     @property
-    def converter(self):
+    def converter(self) -> str | None:
         return self._converter

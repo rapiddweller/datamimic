@@ -14,5 +14,5 @@ class ElseIfStatement(ConditionBranchStatement):
         self._condition = model.condition
 
     @property
-    def condition(self):
+    def condition(self) -> str:
         return self._condition

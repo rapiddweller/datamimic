@@ -14,5 +14,5 @@ class MemstoreStatement(Statement):
         self._id = model.id
 
     @property
-    def id(self):
+    def id(self) -> str:
         return self._id
