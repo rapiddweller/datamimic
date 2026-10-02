@@ -1,0 +1,501 @@
+{
+  "schema_version": "2.1.0",
+  "declarations": {
+    "modules": [
+      {
+        "path": "datamimic_ce/engine/runtime/__init__.py",
+        "responsibility": "This empty initializer module adds no runtime API."
+      },
+      {
+        "path": "datamimic_ce/engine/runtime/api.py",
+        "responsibility": "This module exposes run startup, session creation, descriptor properties, and generator capabilities."
+      },
+      {
+        "path": "datamimic_ce/engine/runtime/contexts/__init__.py",
+        "responsibility": "This empty initializer module does not compose context implementations."
+      },
+      {
+        "path": "datamimic_ce/engine/runtime/contexts/context.py",
+        "responsibility": "Owns root and nested execution context state for descriptor runs."
+      },
+      {
+        "path": "datamimic_ce/engine/runtime/contexts/demographic_context.py",
+        "responsibility": "Carries the selected profile, sampler, overrides, and RNG for demographic generation."
+      },
+      {
+        "path": "datamimic_ce/engine/runtime/contexts/geniter_context.py",
+        "responsibility": "This module holds row state, the current product, the parent view, and the worker ID."
+      },
+      {
+        "path": "datamimic_ce/engine/runtime/contexts/records.py",
+        "responsibility": "This module updates nested record fields by path."
+      },
+      {
+        "path": "datamimic_ce/engine/runtime/contracts.py",
+        "responsibility": "This module defines the typed run request, result, session, and product capture."
+      },
+      {
+        "path": "datamimic_ce/engine/runtime/lifecycle/__init__.py",
+        "responsibility": "This empty initializer module adds no lifecycle logic."
+      },
+      {
+        "path": "datamimic_ce/engine/runtime/lifecycle/config.py",
+        "responsibility": "This module reads process configuration from environment variables."
+      },
+      {
+        "path": "datamimic_ce/engine/runtime/lifecycle/runner.py",
+        "responsibility": "This module parses the descriptor, starts setup, and returns the typed run result."
+      },
+      {
+        "path": "datamimic_ce/engine/runtime/logging.py",
+        "responsibility": "This module configures runtime and worker logging and reports system information."
+      },
+      {
+        "path": "datamimic_ce/engine/runtime/process_titles.py",
+        "responsibility": "This module sets process names for the main run and generate workers."
+      },
+      {
+        "path": "datamimic_ce/engine/runtime/scripting/__init__.py",
+        "responsibility": "This empty initializer module adds no expression evaluation."
+      },
+      {
+        "path": "datamimic_ce/engine/runtime/scripting/evaluation.py",
+        "responsibility": "Evaluates descriptor Python expressions and interpolates runtime values into source templates."
+      },
+      {
+        "path": "datamimic_ce/engine/runtime/scripting/expression_globals.py",
+        "responsibility": "This module creates the restricted namespace visible to descriptor expressions."
+      },
+      {
+        "path": "datamimic_ce/engine/runtime/scripting/plugins/__init__.py",
+        "responsibility": "This module runs descriptor scripts in the prepared namespace."
+      },
+      {
+        "path": "datamimic_ce/engine/runtime/storage/__init__.py",
+        "responsibility": "This empty initializer module adds no storage lifecycle."
+      },
+      {
+        "path": "datamimic_ce/engine/runtime/storage/global_increment.py",
+        "responsibility": "Maintains monotonic counters keyed to a runtime root and qualified generator name."
+      },
+      {
+        "path": "datamimic_ce/engine/runtime/storage/memstore_manager.py",
+        "responsibility": "This module manages run-scoped memstore handles and their lifecycle."
+      }
+    ]
+  },
+  "components": [
+    {
+      "id": "RUNTIME-API",
+      "label": "api",
+      "role": "interface",
+      "packages": [
+        "datamimic_ce.engine.runtime.api"
+      ],
+      "responsibilities": [
+        "Public runtime lifecycle entry."
+      ],
+      "forbidden_responsibilities": [
+        "Own task execution or IO implementations."
+      ],
+      "provenance": [
+        "docs/architecture/inner/target.md"
+      ],
+      "requires": [
+        {
+          "component": "contracts",
+          "rationale": "Public operations use runtime-owned types.",
+          "decided_by": "agent"
+        },
+        {
+          "component": "lifecycle",
+          "rationale": "The facade delegates run setup and execution.",
+          "decided_by": "agent"
+        },
+        {
+          "component": "contexts",
+          "rationale": "The existing Python API exposes run contexts.",
+          "decided_by": "agent"
+        },
+        {
+          "component": "tasks",
+          "rationale": "The existing Python API exposes generator operations.",
+          "decided_by": "agent"
+        }
+      ],
+      "public": [
+        "datamimic_ce.engine.runtime.api"
+      ],
+      "decided_by": "agent"
+    },
+    {
+      "id": "RUNTIME-CONTRACTS",
+      "label": "contracts",
+      "role": "contract",
+      "packages": [
+        "datamimic_ce.engine.runtime.contracts"
+      ],
+      "responsibilities": [
+        "Run configuration and results."
+      ],
+      "forbidden_responsibilities": [
+        "Import concrete tasks, workers, or connectors."
+      ],
+      "provenance": [
+        "docs/architecture/inner/target.md"
+      ],
+      "requires": [],
+      "public": [
+        "datamimic_ce.engine.runtime.contracts"
+      ],
+      "decided_by": "agent"
+    },
+    {
+      "id": "RUNTIME-STORAGE",
+      "label": "storage",
+      "role": "component",
+      "packages": [
+        "datamimic_ce.engine.runtime.storage"
+      ],
+      "responsibilities": [
+        "Run/row storage primitives."
+      ],
+      "forbidden_responsibilities": [
+        "Schedule tasks or execute DSL expressions."
+      ],
+      "provenance": [
+        "docs/architecture/inner/target.md"
+      ],
+      "requires": [
+        {
+          "component": "contracts",
+          "rationale": "Storage uses runtime-owned value types.",
+          "decided_by": "agent"
+        }
+      ],
+      "public": [
+        "datamimic_ce.engine.runtime.storage.global_increment:GlobalIncrementRegistry",
+        "datamimic_ce.engine.runtime.storage.memstore_manager"
+      ],
+      "decided_by": "agent"
+    },
+    {
+      "id": "RUNTIME-LOGGING",
+      "label": "logging",
+      "role": "foundation",
+      "packages": [
+        "datamimic_ce.engine.runtime.logging",
+        "datamimic_ce.engine.runtime.process_titles"
+      ],
+      "responsibilities": [
+        "Runtime logging setup and process titles."
+      ],
+      "forbidden_responsibilities": [
+        "Import tasks, workers, or descriptor orchestration."
+      ],
+      "provenance": [
+        "docs/architecture/inner/target.md"
+      ],
+      "requires": [],
+      "public": [
+        "datamimic_ce.engine.runtime.logging",
+        "datamimic_ce.engine.runtime.process_titles"
+      ],
+      "decided_by": "agent"
+    },
+    {
+      "id": "RUNTIME-CONTEXTS",
+      "label": "contexts",
+      "role": "component",
+      "packages": [
+        "datamimic_ce.engine.runtime.contexts"
+      ],
+      "responsibilities": [
+        "Closed Context/SetupContext hierarchy and row state."
+      ],
+      "forbidden_responsibilities": [
+        "Start workers or construct external clients."
+      ],
+      "provenance": [
+        "docs/architecture/inner/target.md"
+      ],
+      "requires": [
+        {
+          "component": "contracts",
+          "rationale": "Context state uses runtime-owned types.",
+          "decided_by": "agent"
+        },
+        {
+          "component": "storage",
+          "rationale": "Run contexts hold run-local memstore state.",
+          "decided_by": "agent"
+        },
+        {
+          "component": "evaluation",
+          "rationale": "Contexts delegate expression and script execution.",
+          "decided_by": "agent"
+        },
+        {
+          "component": "logging",
+          "rationale": "Contexts report run events through runtime logging.",
+          "decided_by": "agent"
+        }
+      ],
+      "public": [
+        "datamimic_ce.engine.runtime.contexts.context",
+        "datamimic_ce.engine.runtime.contexts.demographic_context",
+        "datamimic_ce.engine.runtime.contexts.geniter_context"
+      ],
+      "decided_by": "agent"
+    },
+    {
+      "id": "RUNTIME-TASKS",
+      "label": "tasks",
+      "role": "component",
+      "packages": [
+        "datamimic_ce.engine.runtime.tasks"
+      ],
+      "responsibilities": [
+        "Statement execution, value construction and resolved source requests."
+      ],
+      "forbidden_responsibilities": [
+        "Construct database clients",
+        "Own source connector policy"
+      ],
+      "provenance": [
+        "docs/architecture/inner/target.md"
+      ],
+      "requires": [
+        {
+          "component": "contracts",
+          "rationale": "Tasks use runtime-owned plans.",
+          "decided_by": "agent"
+        },
+        {
+          "component": "contexts",
+          "rationale": "Tasks operate on explicit execution context.",
+          "decided_by": "agent"
+        },
+        {
+          "component": "evaluation",
+          "rationale": "Tasks delegate expression evaluation.",
+          "decided_by": "agent"
+        },
+        {
+          "component": "storage",
+          "rationale": "Tasks access run-local stores through context-owned state.",
+          "decided_by": "agent"
+        },
+        {
+          "component": "logging",
+          "rationale": "Tasks report execution through runtime logging.",
+          "decided_by": "agent"
+        }
+      ],
+      "public": [
+        "datamimic_ce.engine.runtime.tasks.setup.setup_task:SetupTask",
+        "datamimic_ce.engine.runtime.tasks.values.construction.factory:RUNTIME_GENERATOR_TYPES"
+      ],
+      "decided_by": "agent",
+      "inside": "docs/architecture/inner/runtime/tasks/architecture-contract.json"
+    },
+    {
+      "id": "RUNTIME-LIFECYCLE",
+      "label": "lifecycle",
+      "role": "component",
+      "packages": [
+        "datamimic_ce.engine.runtime.lifecycle"
+      ],
+      "responsibilities": [
+        "Run configuration, session/run orchestration and cleanup."
+      ],
+      "forbidden_responsibilities": [
+        "Implement source connectors or DSL grammar."
+      ],
+      "provenance": [
+        "docs/architecture/inner/target.md"
+      ],
+      "requires": [
+        {
+          "component": "contracts",
+          "rationale": "Run lifecycle accepts and returns typed runtime values.",
+          "decided_by": "agent"
+        },
+        {
+          "component": "contexts",
+          "rationale": "Run lifecycle creates execution context.",
+          "decided_by": "agent"
+        },
+        {
+          "component": "tasks",
+          "rationale": "Run lifecycle starts the setup task.",
+          "decided_by": "agent"
+        },
+        {
+          "component": "logging",
+          "rationale": "Run lifecycle configures runtime logging.",
+          "decided_by": "agent"
+        }
+      ],
+      "public": [
+        "datamimic_ce.engine.runtime.lifecycle.runner",
+        "datamimic_ce.engine.runtime.lifecycle.config:get_settings"
+      ],
+      "decided_by": "agent"
+    },
+    {
+      "id": "RUNTIME-EVALUATION",
+      "label": "evaluation",
+      "role": "component",
+      "packages": [
+        "datamimic_ce.engine.runtime.scripting"
+      ],
+      "responsibilities": [
+        "Expression evaluation/interpolation, result normalization and error translation, seeded expression-global policy and boolean condition invariant."
+      ],
+      "forbidden_responsibilities": [
+        "Own run state, task scheduling, or external clients."
+      ],
+      "provenance": [
+        "docs/architecture/inner/target.md"
+      ],
+      "requires": [],
+      "public": [
+        "datamimic_ce.engine.runtime.scripting.evaluation",
+        "datamimic_ce.engine.runtime.scripting.expression_globals",
+        "datamimic_ce.engine.runtime.scripting.plugins:execute_script"
+      ],
+      "decided_by": "agent"
+    }
+  ],
+  "rules": [
+    {
+      "id": "RUNTIME-REQUIRES-COMPLETE",
+      "kind": "complete_requires",
+      "include_type_checking": true,
+      "rationale": "Task execution cannot depend back on the run facade or lifecycle.",
+      "provenance": [
+        "docs/architecture/inner/target.md"
+      ],
+      "decided_by": "agent"
+    },
+    {
+      "id": "RUNTIME-ASSIGNMENT",
+      "kind": "complete_assignment",
+      "source": "datamimic_ce.engine.runtime",
+      "rationale": "Every implementation below this boundary has one declared owner; initializer behavior is reviewed separately.",
+      "provenance": [
+        "docs/architecture/inner/target.md"
+      ],
+      "decided_by": "agent"
+    },
+    {
+      "id": "RUNTIME-INTERFACES",
+      "kind": "interface_boundary",
+      "include_type_checking": true,
+      "rationale": "Sibling components use explicit entry points; a permitted direction does not publish all internals.",
+      "provenance": [
+        "docs/architecture/inner/target.md"
+      ],
+      "decided_by": "agent"
+    },
+    {
+      "id": "RUNTIME-ACYCLIC",
+      "kind": "no_component_cycles",
+      "rationale": "Responsibility layers must not require one another in both directions.",
+      "provenance": [
+        "docs/architecture/inner/target.md"
+      ],
+      "decided_by": "agent"
+    },
+    {
+      "id": "LAYOUT-ENGINE-RUNTIME-CONTEXTS",
+      "kind": "root_layout",
+      "root": "datamimic_ce.engine.runtime.contexts",
+      "allowed_children": [
+        "datamimic_ce.engine.runtime.contexts.context",
+        "datamimic_ce.engine.runtime.contexts.demographic_context",
+        "datamimic_ce.engine.runtime.contexts.geniter_context",
+        "datamimic_ce.engine.runtime.contexts.records"
+      ],
+      "rationale": "Closed Context/SetupContext hierarchy and row state. Exact reviewed target children; no hidden extra modules.",
+      "provenance": [
+        "docs/architecture/inner/structure-review.json"
+      ],
+      "decided_by": "agent"
+    },
+    {
+      "id": "LAYOUT-ENGINE-RUNTIME-LIFECYCLE",
+      "kind": "root_layout",
+      "root": "datamimic_ce.engine.runtime.lifecycle",
+      "allowed_children": [
+        "datamimic_ce.engine.runtime.lifecycle.config",
+        "datamimic_ce.engine.runtime.lifecycle.runner"
+      ],
+      "rationale": "Run configuration, session/run orchestration and cleanup. Exact reviewed target children; no hidden extra modules.",
+      "provenance": [
+        "docs/architecture/inner/structure-review.json"
+      ],
+      "decided_by": "agent"
+    },
+    {
+      "id": "LAYOUT-ENGINE-RUNTIME-SCRIPTING",
+      "kind": "root_layout",
+      "root": "datamimic_ce.engine.runtime.scripting",
+      "allowed_children": [
+        "datamimic_ce.engine.runtime.scripting.evaluation",
+        "datamimic_ce.engine.runtime.scripting.expression_globals",
+        "datamimic_ce.engine.runtime.scripting.plugins"
+      ],
+      "rationale": "Expression evaluation/interpolation, result normalization and error translation, seeded expression-global policy and boolean condition invariant. Exact reviewed target children; no hidden extra modules.",
+      "provenance": [
+        "docs/architecture/inner/structure-review.json"
+      ],
+      "decided_by": "agent"
+    },
+    {
+      "id": "LAYOUT-ENGINE-RUNTIME-SCRIPTING-PLUGINS",
+      "kind": "root_layout",
+      "root": "datamimic_ce.engine.runtime.scripting.plugins",
+      "allowed_children": [],
+      "rationale": "Expression evaluation/interpolation and boolean condition invariant. Exact reviewed target children; no hidden extra modules.",
+      "provenance": [
+        "docs/architecture/inner/structure-review.json"
+      ],
+      "decided_by": "agent"
+    },
+    {
+      "id": "LAYOUT-ENGINE-RUNTIME-STORAGE",
+      "kind": "root_layout",
+      "root": "datamimic_ce.engine.runtime.storage",
+      "allowed_children": [
+        "datamimic_ce.engine.runtime.storage.global_increment",
+        "datamimic_ce.engine.runtime.storage.memstore_manager"
+      ],
+      "rationale": "Run/row storage primitives. Exact reviewed target children; no hidden extra modules.",
+      "provenance": [
+        "docs/architecture/inner/structure-review.json"
+      ],
+      "decided_by": "agent"
+    },
+    {
+      "id": "LAYOUT-ENGINE-RUNTIME-TASKS",
+      "kind": "root_layout",
+      "root": "datamimic_ce.engine.runtime.tasks",
+      "allowed_children": [
+        "datamimic_ce.engine.runtime.tasks.base",
+        "datamimic_ce.engine.runtime.tasks.flow",
+        "datamimic_ce.engine.runtime.tasks.generate",
+        "datamimic_ce.engine.runtime.tasks.registry",
+        "datamimic_ce.engine.runtime.tasks.setup",
+        "datamimic_ce.engine.runtime.tasks.sources",
+        "datamimic_ce.engine.runtime.tasks.values"
+      ],
+      "rationale": "Statement execution, value construction and resolved source requests. Exact reviewed target children; no hidden extra modules.",
+      "provenance": [
+        "docs/architecture/inner/structure-review.json"
+      ],
+      "decided_by": "agent"
+    }
+  ]
+}

@@ -57,6 +57,36 @@ def test_capabilities_is_repeatable_pure_json_without_global_cli(tmp_path: Path)
     assert {"kafka-exporter", "object-storage", "operate"}.isdisjoint(manifest["elements"])
 
 
+def test_module_invocation_preserves_success_and_usage_exit_codes(tmp_path: Path) -> None:
+    env = os.environ.copy()
+    env["PYTHONPATH"] = str(Path(__file__).parents[3])
+
+    success = subprocess.run(
+        [sys.executable, "-m", "datamimic_ce.interfaces.cli", "capabilities"],
+        cwd=tmp_path,
+        env=env,
+        capture_output=True,
+        text=True,
+        check=False,
+        timeout=30,
+    )
+    invalid_command = subprocess.run(
+        [sys.executable, "-m", "datamimic_ce.interfaces.cli", "unknown-command"],
+        cwd=tmp_path,
+        env=env,
+        capture_output=True,
+        text=True,
+        check=False,
+        timeout=30,
+    )
+
+    assert success.returncode == 0
+    assert success.stderr == ""
+    assert json.loads(success.stdout)["schema_version"]
+    assert invalid_command.returncode == 2
+    assert "Usage:" in invalid_command.stderr
+
+
 @pytest.mark.parametrize(
     ("command", "message"),
     [

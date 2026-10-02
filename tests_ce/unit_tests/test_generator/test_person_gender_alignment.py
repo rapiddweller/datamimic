@@ -9,11 +9,11 @@ from random import Random
 
 import pytest
 
-from datamimic_ce.domains.common.demographics.sampler import DemographicSample
-from datamimic_ce.domains.common.generators.address_generator import AddressRow
-from datamimic_ce.domains.common.generators.person_generator import PersonGenerator
-from datamimic_ce.domains.common.models.address import Address
-from datamimic_ce.domains.common.models.person import Person
+from datamimic_ce.domains.shared.demographics.sampler import DemographicSample
+from datamimic_ce.domains.shared.generators.address_generator import AddressRow
+from datamimic_ce.domains.shared.generators.person_generator import PersonGenerator
+from datamimic_ce.domains.shared.models.address import Address
+from datamimic_ce.domains.shared.models.person import Person
 
 PRIMARY_DATASETS = ("DE", "US", "VN")
 

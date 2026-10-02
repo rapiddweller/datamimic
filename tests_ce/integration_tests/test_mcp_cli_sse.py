@@ -28,7 +28,7 @@ def spawn_server(port: int, api_key: str | None = None) -> subprocess.Popen[byte
         [
             sys.executable,
             "-m",
-            "datamimic_ce.mcp.cli",
+            "datamimic_ce.interfaces.mcp.cli",
             "--transport",
             "sse",
             "--host",

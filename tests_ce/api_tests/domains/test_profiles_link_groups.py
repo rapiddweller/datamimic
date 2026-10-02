@@ -8,22 +8,22 @@ from pathlib import Path
 import pytest
 
 DATASETS = ("US", "DE", "VN")
-PROFILE_META_PATTERN = Path("datamimic_ce/domains/domain_data/demographics/profile_meta.dmgrp_{dataset}.csv")
+PROFILE_META_PATTERN = Path("datamimic_ce/domains/shared/domain_data/demographics/profile_meta.dmgrp_{dataset}.csv")
 GROUP_DIMENSIONS = {
-    "age_group_ref": Path("datamimic_ce/domains/domain_data/groups/age_band/age_band_{dataset}.csv"),
-    "gender_group_ref": Path("datamimic_ce/domains/domain_data/groups/gender_category/gender_category_{dataset}.csv"),
+    "age_group_ref": Path("datamimic_ce/domains/shared/domain_data/groups/age_band/age_band_{dataset}.csv"),
+    "gender_group_ref": Path("datamimic_ce/domains/shared/domain_data/groups/gender_category/gender_category_{dataset}.csv"),
     "condition_group_ref": Path(
-        "datamimic_ce/domains/domain_data/groups/condition_prevalence_tier/condition_prevalence_tier_{dataset}.csv"
+        "datamimic_ce/domains/shared/domain_data/groups/condition_prevalence_tier/condition_prevalence_tier_{dataset}.csv"
     ),
-    "region_group_ref": Path("datamimic_ce/domains/domain_data/groups/population_tier/population_tier_{dataset}.csv"),
-    "sector_group_ref": Path("datamimic_ce/domains/domain_data/groups/sector_macro/sector_macro_{dataset}.csv"),
+    "region_group_ref": Path("datamimic_ce/domains/shared/domain_data/groups/population_tier/population_tier_{dataset}.csv"),
+    "sector_group_ref": Path("datamimic_ce/domains/shared/domain_data/groups/sector_macro/sector_macro_{dataset}.csv"),
     "specialty_group_ref": Path(
-        "datamimic_ce/domains/domain_data/groups/specialty_family/specialty_family_{dataset}.csv"
+        "datamimic_ce/domains/shared/domain_data/groups/specialty_family/specialty_family_{dataset}.csv"
     ),
     "area_cluster_ref": Path(
-        "datamimic_ce/domains/domain_data/groups/area_code_cluster/area_code_cluster_{dataset}.csv"
+        "datamimic_ce/domains/shared/domain_data/groups/area_code_cluster/area_code_cluster_{dataset}.csv"
     ),
-    "coverage_line_ref": Path("datamimic_ce/domains/domain_data/groups/coverage_line/coverage_line_{dataset}.csv"),
+    "coverage_line_ref": Path("datamimic_ce/domains/shared/domain_data/groups/coverage_line/coverage_line_{dataset}.csv"),
 }
 
 

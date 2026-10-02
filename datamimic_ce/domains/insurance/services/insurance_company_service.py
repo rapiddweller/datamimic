@@ -13,14 +13,14 @@ This module provides service functions for generating and managing insurance com
 from random import Random
 
 from datamimic_ce.domains.domain_core import BaseDomainService
-from datamimic_ce.domains.domain_core.attribute_catalog import EntitySchema, FieldSpec, field
+from datamimic_ce.domains.domain_core.contracts.attribute_catalog import EntitySchema, FieldSpec, field
 from datamimic_ce.domains.insurance.generators.insurance_company_generator import InsuranceCompanyGenerator
 from datamimic_ce.domains.insurance.models.insurance_company import InsuranceCompany
 
 INSURANCE_COMPANY_SCHEMA = EntitySchema(
     "InsuranceCompany",
     (
-        field("id", str, "Unique company identifier."),
+        field("id", str, "Unique company identifier.", unique_identifier_format="uuid4"),
         field("name", str, "Company name."),
         field("code", str, "Company code."),
         field("founded_year", str, "Year the company was founded."),

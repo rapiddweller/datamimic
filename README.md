@@ -546,6 +546,10 @@ DATAMIMIC provides test-data and execution evidence that can support compliance 
 
 ## Architecture
 
+The 5.0 refactoring target is documented in the [shared CE/EE core structure](docs/architecture/inner/target.md),
+including nested boundaries and the source-to-target map. It is a target, not a claim
+that the current implementation conforms; see the [verification status](docs/architecture/refactoring-study/experiment-2/amendment-19.md).
+
 CE and EE share the DATAMIMIC DSL. The execution layer is separate: CE is a Python execution engine using multiprocessing (with optional Ray for distribution); EE is an independently-optimised execution engine with a Rust fastpath, ML/auto-regressive generation, keyset and manifest building from live schemas, and execution designed for billion-record workloads.
 
 ```

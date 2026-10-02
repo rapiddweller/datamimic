@@ -1,0 +1,7 @@
+{
+  "after_digest": "b7f4d3c33422ec56d1fbd3a134df1a1150fb1a2454fa27e3e5dd1b7e823b4592",
+  "before_digest": "3bee06b20cb849f6c231b504b8a604a1d23f5f1f6bd8f322a81908737d377df4",
+  "decided_by": "experiment orchestrator",
+  "rationale": "Step 7C removed the final mixed-owner root utilities and the obsolete utils ownership entry. Sampling and selection now live in their already-declared target components; no dependency permission was added.",
+  "schema_version": "1.0.0"
+}

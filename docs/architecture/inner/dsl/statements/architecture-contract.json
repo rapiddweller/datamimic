@@ -1,0 +1,549 @@
+{
+  "schema_version": "2.1.0",
+  "declarations": {
+    "modules": [
+      {
+        "path": "datamimic_ce/engine/dsl/statements/base/composite_statement.py",
+        "responsibility": "Stores child statements and defines the logical parent behavior shared by composites and branches."
+      },
+      {
+        "path": "datamimic_ce/engine/dsl/statements/base/statement.py",
+        "responsibility": "Provides statement identity, ancestry, names, and the default source-entity contract."
+      },
+      {
+        "path": "datamimic_ce/engine/dsl/statements/flow/branches/condition_statement.py",
+        "responsibility": "Tracks the conditional branch statements selected during execution."
+      },
+      {
+        "path": "datamimic_ce/engine/dsl/statements/flow/branches/else_if_statement.py",
+        "responsibility": "Stores the predicate for an else-if branch in the condition statement tree."
+      },
+      {
+        "path": "datamimic_ce/engine/dsl/statements/flow/branches/else_statement.py",
+        "responsibility": "Represents the unconditional else branch in the condition statement tree."
+      },
+      {
+        "path": "datamimic_ce/engine/dsl/statements/flow/branches/if_statement.py",
+        "responsibility": "Stores the predicate for an if branch in the condition statement tree."
+      },
+      {
+        "path": "datamimic_ce/engine/dsl/statements/flow/commands/assert_statement.py",
+        "responsibility": "Stores an assertion predicate and its optional failure message."
+      },
+      {
+        "path": "datamimic_ce/engine/dsl/statements/flow/commands/echo_statement.py",
+        "responsibility": "Stores the optional value emitted by an echo command."
+      },
+      {
+        "path": "datamimic_ce/engine/dsl/statements/flow/commands/execute_statement.py",
+        "responsibility": "Carries resolved execution type, script source, target, and inline code for a setup execute command."
+      },
+      {
+        "path": "datamimic_ce/engine/dsl/statements/flow/loops/while_statement.py",
+        "responsibility": "Stores a while-loop predicate and maximum iteration count with its child statements."
+      },
+      {
+        "path": "datamimic_ce/engine/dsl/statements/generation/generate_statement.py",
+        "responsibility": "Carries parsed generation settings and child statements into runtime execution."
+      },
+      {
+        "path": "datamimic_ce/engine/dsl/statements/generation/targets.py",
+        "responsibility": "Parses the generate statement's comma-separated consumer targets."
+      },
+      {
+        "path": "datamimic_ce/engine/dsl/statements/setup/database_statement.py",
+        "responsibility": "Carries a database connection model and exposes its configured id."
+      },
+      {
+        "path": "datamimic_ce/engine/dsl/statements/setup/demographics_statement.py",
+        "responsibility": "Carries the demographics dataset, version, directory, and optional RNG seed."
+      },
+      {
+        "path": "datamimic_ce/engine/dsl/statements/setup/generator_statement.py",
+        "responsibility": "The statement carries the name and constructor expression of a reusable setup definition, not a generated field value."
+      },
+      {
+        "path": "datamimic_ce/engine/dsl/statements/setup/include_statement.py",
+        "responsibility": "Carries the URI of a descriptor to include."
+      },
+      {
+        "path": "datamimic_ce/engine/dsl/statements/setup/memstore_statement.py",
+        "responsibility": "Carries the configured memstore id as a named setup statement."
+      },
+      {
+        "path": "datamimic_ce/engine/dsl/statements/setup/mongodb_statement.py",
+        "responsibility": "Carries a MongoDB connection model and exposes its configured id."
+      },
+      {
+        "path": "datamimic_ce/engine/dsl/statements/setup/setup_statement.py",
+        "responsibility": "Carries setup-wide defaults and runtime options in the composite setup node."
+      },
+      {
+        "path": "datamimic_ce/engine/dsl/statements/setup/state_machine_statement.py",
+        "responsibility": "The statement holds transition rules for a setup definition, not the execution of a control-flow loop."
+      },
+      {
+        "path": "datamimic_ce/engine/dsl/statements/traversal.py",
+        "responsibility": "Traverses statement ancestry and branches to resolve enclosing generation relationships."
+      },
+      {
+        "path": "datamimic_ce/engine/dsl/statements/values/references/reference_statement.py",
+        "responsibility": "Carries source-selection settings and source-column to target-field mappings for references."
+      },
+      {
+        "path": "datamimic_ce/engine/dsl/statements/values/scalar/element_statement.py",
+        "responsibility": "Carries one named scalar element's value-generation settings."
+      },
+      {
+        "path": "datamimic_ce/engine/dsl/statements/values/scalar/key_statement.py",
+        "responsibility": "Carries one named key's value-generation constraints and settings in a composite statement."
+      },
+      {
+        "path": "datamimic_ce/engine/dsl/statements/values/structured/array_statement.py",
+        "responsibility": "Carries array count, type, script, and literal values."
+      },
+      {
+        "path": "datamimic_ce/engine/dsl/statements/values/structured/item_statement.py",
+        "responsibility": "Stores the condition that controls inclusion of a structured item."
+      },
+      {
+        "path": "datamimic_ce/engine/dsl/statements/values/structured/list_statement.py",
+        "responsibility": "Carries the converter applied to a structured list."
+      },
+      {
+        "path": "datamimic_ce/engine/dsl/statements/values/structured/nested_key_statement.py",
+        "responsibility": "Carries a named nested key's source, count, value, and distribution settings."
+      },
+      {
+        "path": "datamimic_ce/engine/dsl/statements/values/variables/variable_statement.py",
+        "responsibility": "Carries a named variable's source or value-generation settings and scope."
+      }
+    ]
+  },
+  "components": [
+    {
+      "id": "STATEMENTS-BASE",
+      "label": "base",
+      "role": "foundation",
+      "packages": [
+        "datamimic_ce.engine.dsl.statements.base"
+      ],
+      "responsibilities": [
+        "Common statement tree state, no knowledge of Generate subclass."
+      ],
+      "forbidden_responsibilities": [
+        "Parse XML or execute Runtime tasks"
+      ],
+      "provenance": [
+        "docs/architecture/inner/target.md"
+      ],
+      "requires": [],
+      "public": [
+        "datamimic_ce.engine.dsl.statements.base.statement:Statement",
+        "datamimic_ce.engine.dsl.statements.base.composite_statement:CompositeStatement",
+        "datamimic_ce.engine.dsl.statements.base.composite_statement:ConditionBranchStatement"
+      ],
+      "decided_by": "agent"
+    },
+    {
+      "id": "STATEMENTS-FLOW",
+      "label": "flow",
+      "role": "component",
+      "packages": [
+        "datamimic_ce.engine.dsl.statements.flow"
+      ],
+      "responsibilities": [
+        "Branch, loop and command state including executed-branch registration."
+      ],
+      "forbidden_responsibilities": [
+        "Parse descriptors or execute task policy"
+      ],
+      "provenance": [
+        "docs/architecture/inner/target.md"
+      ],
+      "requires": [
+        {
+          "component": "base",
+          "rationale": "Flow statements compose shared statement contracts.",
+          "decided_by": "agent"
+        }
+      ],
+      "public": [
+        "datamimic_ce.engine.dsl.statements.flow.commands.assert_statement:AssertStatement",
+        "datamimic_ce.engine.dsl.statements.flow.branches.condition_statement:ConditionStatement",
+        "datamimic_ce.engine.dsl.statements.flow.branches.else_if_statement:ElseIfStatement",
+        "datamimic_ce.engine.dsl.statements.flow.branches.else_statement:ElseStatement",
+        "datamimic_ce.engine.dsl.statements.flow.branches.if_statement:IfStatement",
+        "datamimic_ce.engine.dsl.statements.flow.loops.while_statement:WhileStatement",
+        "datamimic_ce.engine.dsl.statements.flow.commands.echo_statement:EchoStatement",
+        "datamimic_ce.engine.dsl.statements.flow.commands.execute_statement:ExecuteStatement"
+      ],
+      "decided_by": "agent"
+    },
+    {
+      "id": "STATEMENTS-VALUES",
+      "label": "values",
+      "role": "component",
+      "packages": [
+        "datamimic_ce.engine.dsl.statements.values"
+      ],
+      "responsibilities": [
+        "Represent scalar, structured, reference and variable declarations in the parsed statement tree."
+      ],
+      "forbidden_responsibilities": [
+        "Parse descriptors or execute task policy"
+      ],
+      "provenance": [
+        "docs/architecture/inner/target.md"
+      ],
+      "requires": [
+        {
+          "component": "base",
+          "rationale": "Value statements use shared statement contracts.",
+          "decided_by": "agent"
+        }
+      ],
+      "public": [
+        "datamimic_ce.engine.dsl.statements.values.structured.array_statement:ArrayStatement",
+        "datamimic_ce.engine.dsl.statements.values.scalar.element_statement:ElementStatement",
+        "datamimic_ce.engine.dsl.statements.values.structured.item_statement:ItemStatement",
+        "datamimic_ce.engine.dsl.statements.values.scalar.key_statement:KeyStatement",
+        "datamimic_ce.engine.dsl.statements.values.structured.list_statement:ListStatement",
+        "datamimic_ce.engine.dsl.statements.values.structured.nested_key_statement:NestedKeyStatement",
+        "datamimic_ce.engine.dsl.statements.values.references.reference_statement:ReferenceField",
+        "datamimic_ce.engine.dsl.statements.values.references.reference_statement:ReferenceStatement",
+        "datamimic_ce.engine.dsl.statements.values.variables.variable_statement:VariableStatement"
+      ],
+      "decided_by": "agent"
+    },
+    {
+      "id": "STATEMENTS-SETUP",
+      "label": "setup",
+      "role": "component",
+      "packages": [
+        "datamimic_ce.engine.dsl.statements.setup"
+      ],
+      "responsibilities": [
+        "Setup/client/include/generator/state-machine/demographics state."
+      ],
+      "forbidden_responsibilities": [
+        "Parse descriptors or execute task policy"
+      ],
+      "provenance": [
+        "docs/architecture/inner/target.md"
+      ],
+      "requires": [
+        {
+          "component": "base",
+          "rationale": "Resource statements use shared statement contracts.",
+          "decided_by": "agent"
+        }
+      ],
+      "public": [
+        "datamimic_ce.engine.dsl.statements.setup.state_machine_statement:StateMachineStatement",
+        "datamimic_ce.engine.dsl.statements.setup.generator_statement:GeneratorStatement",
+        "datamimic_ce.engine.dsl.statements.setup.database_statement:DatabaseStatement",
+        "datamimic_ce.engine.dsl.statements.setup.include_statement:IncludeStatement",
+        "datamimic_ce.engine.dsl.statements.setup.memstore_statement:MemstoreStatement",
+        "datamimic_ce.engine.dsl.statements.setup.mongodb_statement:MongoDBStatement",
+        "datamimic_ce.engine.dsl.statements.setup.setup_statement:SetupStatement",
+        "datamimic_ce.engine.dsl.statements.setup.demographics_statement:DemographicsStatement"
+      ],
+      "decided_by": "agent"
+    },
+    {
+      "id": "STATEMENTS-GENERATION",
+      "label": "generation",
+      "role": "component",
+      "packages": [
+        "datamimic_ce.engine.dsl.statements.generation"
+      ],
+      "responsibilities": [
+        "Generate representation and consumer grammar."
+      ],
+      "forbidden_responsibilities": [
+        "Parse descriptors or execute task policy"
+      ],
+      "provenance": [
+        "docs/architecture/inner/target.md"
+      ],
+      "requires": [
+        {
+          "component": "base",
+          "rationale": "Represent generated products and their typed variable children.",
+          "decided_by": "agent"
+        },
+        {
+          "component": "values",
+          "rationale": "Represent generated products and their typed variable children.",
+          "decided_by": "agent"
+        }
+      ],
+      "public": [
+        "datamimic_ce.engine.dsl.statements.generation.generate_statement:GenerateStatement",
+        "datamimic_ce.engine.dsl.statements.generation.targets:parse_consumer"
+      ],
+      "decided_by": "agent"
+    },
+    {
+      "id": "STATEMENTS-TRAVERSAL",
+      "label": "traversal",
+      "packages": [
+        "datamimic_ce.engine.dsl.statements.traversal"
+      ],
+      "responsibilities": [
+        "High-level Generate/Condition-aware tree queries."
+      ],
+      "public": [
+        "datamimic_ce.engine.dsl.statements.traversal:get_nearest_generate_statement",
+        "datamimic_ce.engine.dsl.statements.traversal:retrieve_executed_sub_gen_statement_by_name",
+        "datamimic_ce.engine.dsl.statements.traversal:retrieve_sub_statement_by_fullname"
+      ],
+      "decided_by": "agent",
+      "role": "component",
+      "forbidden_responsibilities": [
+        "Construct or execute statement trees."
+      ],
+      "provenance": [
+        "docs/architecture/inner/semantic-review/astra-target-decision.md"
+      ],
+      "requires": [
+        {
+          "component": "base",
+          "rationale": "Traverse concrete Generate and executed Condition branches without reversing the base dependency.",
+          "decided_by": "agent"
+        },
+        {
+          "component": "flow",
+          "rationale": "Traverse concrete Generate and executed Condition branches without reversing the base dependency.",
+          "decided_by": "agent"
+        },
+        {
+          "component": "generation",
+          "rationale": "Traverse concrete Generate and executed Condition branches without reversing the base dependency.",
+          "decided_by": "agent"
+        }
+      ]
+    }
+  ],
+  "rules": [
+    {
+      "id": "STATEMENTS-ASSIGNMENT",
+      "kind": "complete_assignment",
+      "source": "datamimic_ce.engine.dsl.statements",
+      "rationale": "Each executable statement belongs to one semantic family.",
+      "provenance": [
+        "docs/architecture/inner/target.md"
+      ],
+      "decided_by": "agent"
+    },
+    {
+      "id": "STATEMENTS-REQUIRES-COMPLETE",
+      "kind": "complete_requires",
+      "include_type_checking": true,
+      "rationale": "Statement families compose through shared base contracts; parser and execution policy remain outside this layer.",
+      "provenance": [
+        "docs/architecture/inner/target.md"
+      ],
+      "decided_by": "agent"
+    },
+    {
+      "id": "STATEMENTS-NO-COMPONENT-CYCLES",
+      "kind": "no_component_cycles",
+      "rationale": "Executable statement ownership must remain acyclic.",
+      "provenance": [
+        "docs/architecture/inner/target.md"
+      ],
+      "decided_by": "agent"
+    },
+    {
+      "id": "STATEMENTS-INTERFACE-BOUNDARY",
+      "kind": "interface_boundary",
+      "include_type_checking": true,
+      "rationale": "The base statement contract and Generate statement are the declared interfaces.",
+      "provenance": [
+        "docs/architecture/inner/target.md"
+      ],
+      "decided_by": "agent"
+    },
+    {
+      "id": "LAYOUT-ENGINE-DSL-STATEMENTS-BASE",
+      "kind": "root_layout",
+      "root": "datamimic_ce.engine.dsl.statements.base",
+      "allowed_children": [
+        "datamimic_ce.engine.dsl.statements.base.composite_statement",
+        "datamimic_ce.engine.dsl.statements.base.statement"
+      ],
+      "rationale": "Common statement tree state, no knowledge of Generate subclass. Exact reviewed target children; no hidden extra modules.",
+      "provenance": [
+        "docs/architecture/inner/structure-review.json"
+      ],
+      "decided_by": "agent"
+    },
+    {
+      "id": "LAYOUT-ENGINE-DSL-STATEMENTS-FLOW",
+      "kind": "root_layout",
+      "root": "datamimic_ce.engine.dsl.statements.flow",
+      "allowed_children": [
+        "datamimic_ce.engine.dsl.statements.flow.branches",
+        "datamimic_ce.engine.dsl.statements.flow.commands",
+        "datamimic_ce.engine.dsl.statements.flow.loops"
+      ],
+      "rationale": "Branch, loop and command state including executed-branch registration. Exact reviewed target children; no hidden extra modules.",
+      "provenance": [
+        "docs/architecture/inner/structure-review.json"
+      ],
+      "decided_by": "agent"
+    },
+    {
+      "id": "LAYOUT-ENGINE-DSL-STATEMENTS-FLOW-BRANCHES",
+      "kind": "root_layout",
+      "root": "datamimic_ce.engine.dsl.statements.flow.branches",
+      "allowed_children": [
+        "datamimic_ce.engine.dsl.statements.flow.branches.condition_statement",
+        "datamimic_ce.engine.dsl.statements.flow.branches.else_if_statement",
+        "datamimic_ce.engine.dsl.statements.flow.branches.else_statement",
+        "datamimic_ce.engine.dsl.statements.flow.branches.if_statement"
+      ],
+      "rationale": "Branch, loop and command state including executed-branch registration. Exact reviewed target children; no hidden extra modules.",
+      "provenance": [
+        "docs/architecture/inner/structure-review.json"
+      ],
+      "decided_by": "agent"
+    },
+    {
+      "id": "LAYOUT-ENGINE-DSL-STATEMENTS-FLOW-COMMANDS",
+      "kind": "root_layout",
+      "root": "datamimic_ce.engine.dsl.statements.flow.commands",
+      "allowed_children": [
+        "datamimic_ce.engine.dsl.statements.flow.commands.assert_statement",
+        "datamimic_ce.engine.dsl.statements.flow.commands.echo_statement",
+        "datamimic_ce.engine.dsl.statements.flow.commands.execute_statement"
+      ],
+      "rationale": "Branch, loop and command state including executed-branch registration. Exact reviewed target children; no hidden extra modules.",
+      "provenance": [
+        "docs/architecture/inner/structure-review.json"
+      ],
+      "decided_by": "agent"
+    },
+    {
+      "id": "LAYOUT-ENGINE-DSL-STATEMENTS-FLOW-LOOPS",
+      "kind": "root_layout",
+      "root": "datamimic_ce.engine.dsl.statements.flow.loops",
+      "allowed_children": [
+        "datamimic_ce.engine.dsl.statements.flow.loops.while_statement"
+      ],
+      "rationale": "Branch, loop and command state including executed-branch registration. Exact reviewed target children; no hidden extra modules.",
+      "provenance": [
+        "docs/architecture/inner/structure-review.json"
+      ],
+      "decided_by": "agent"
+    },
+    {
+      "id": "LAYOUT-ENGINE-DSL-STATEMENTS-GENERATION",
+      "kind": "root_layout",
+      "root": "datamimic_ce.engine.dsl.statements.generation",
+      "allowed_children": [
+        "datamimic_ce.engine.dsl.statements.generation.generate_statement",
+        "datamimic_ce.engine.dsl.statements.generation.targets"
+      ],
+      "rationale": "Generate representation and consumer grammar. Exact reviewed target children; no hidden extra modules.",
+      "provenance": [
+        "docs/architecture/inner/structure-review.json"
+      ],
+      "decided_by": "agent"
+    },
+    {
+      "id": "LAYOUT-ENGINE-DSL-STATEMENTS-SETUP",
+      "kind": "root_layout",
+      "root": "datamimic_ce.engine.dsl.statements.setup",
+      "allowed_children": [
+        "datamimic_ce.engine.dsl.statements.setup.database_statement",
+        "datamimic_ce.engine.dsl.statements.setup.demographics_statement",
+        "datamimic_ce.engine.dsl.statements.setup.generator_statement",
+        "datamimic_ce.engine.dsl.statements.setup.include_statement",
+        "datamimic_ce.engine.dsl.statements.setup.memstore_statement",
+        "datamimic_ce.engine.dsl.statements.setup.mongodb_statement",
+        "datamimic_ce.engine.dsl.statements.setup.setup_statement",
+        "datamimic_ce.engine.dsl.statements.setup.state_machine_statement"
+      ],
+      "rationale": "Setup/client/include/generator/state-machine/demographics state. Exact reviewed target children; no hidden extra modules.",
+      "provenance": [
+        "docs/architecture/inner/structure-review.json"
+      ],
+      "decided_by": "agent"
+    },
+    {
+      "id": "LAYOUT-ENGINE-DSL-STATEMENTS-VALUES",
+      "kind": "root_layout",
+      "root": "datamimic_ce.engine.dsl.statements.values",
+      "allowed_children": [
+        "datamimic_ce.engine.dsl.statements.values.references",
+        "datamimic_ce.engine.dsl.statements.values.scalar",
+        "datamimic_ce.engine.dsl.statements.values.structured",
+        "datamimic_ce.engine.dsl.statements.values.variables"
+      ],
+      "rationale": "Value declaration state. Exact reviewed target children; no hidden extra modules.",
+      "provenance": [
+        "docs/architecture/inner/structure-review.json"
+      ],
+      "decided_by": "agent"
+    },
+    {
+      "id": "LAYOUT-ENGINE-DSL-STATEMENTS-VALUES-REFERENCES",
+      "kind": "root_layout",
+      "root": "datamimic_ce.engine.dsl.statements.values.references",
+      "allowed_children": [
+        "datamimic_ce.engine.dsl.statements.values.references.reference_statement"
+      ],
+      "rationale": "Value declaration state. Exact reviewed target children; no hidden extra modules.",
+      "provenance": [
+        "docs/architecture/inner/structure-review.json"
+      ],
+      "decided_by": "agent"
+    },
+    {
+      "id": "LAYOUT-ENGINE-DSL-STATEMENTS-VALUES-SCALAR",
+      "kind": "root_layout",
+      "root": "datamimic_ce.engine.dsl.statements.values.scalar",
+      "allowed_children": [
+        "datamimic_ce.engine.dsl.statements.values.scalar.element_statement",
+        "datamimic_ce.engine.dsl.statements.values.scalar.key_statement"
+      ],
+      "rationale": "Value declaration state. Exact reviewed target children; no hidden extra modules.",
+      "provenance": [
+        "docs/architecture/inner/structure-review.json"
+      ],
+      "decided_by": "agent"
+    },
+    {
+      "id": "LAYOUT-ENGINE-DSL-STATEMENTS-VALUES-STRUCTURED",
+      "kind": "root_layout",
+      "root": "datamimic_ce.engine.dsl.statements.values.structured",
+      "allowed_children": [
+        "datamimic_ce.engine.dsl.statements.values.structured.array_statement",
+        "datamimic_ce.engine.dsl.statements.values.structured.item_statement",
+        "datamimic_ce.engine.dsl.statements.values.structured.list_statement",
+        "datamimic_ce.engine.dsl.statements.values.structured.nested_key_statement"
+      ],
+      "rationale": "Value declaration state. Exact reviewed target children; no hidden extra modules.",
+      "provenance": [
+        "docs/architecture/inner/structure-review.json"
+      ],
+      "decided_by": "agent"
+    },
+    {
+      "id": "LAYOUT-ENGINE-DSL-STATEMENTS-VALUES-VARIABLES",
+      "kind": "root_layout",
+      "root": "datamimic_ce.engine.dsl.statements.values.variables",
+      "allowed_children": [
+        "datamimic_ce.engine.dsl.statements.values.variables.variable_statement"
+      ],
+      "rationale": "Value declaration state. Exact reviewed target children; no hidden extra modules.",
+      "provenance": [
+        "docs/architecture/inner/structure-review.json"
+      ],
+      "decided_by": "agent"
+    }
+  ]
+}

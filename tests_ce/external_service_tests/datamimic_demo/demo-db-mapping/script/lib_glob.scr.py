@@ -7,8 +7,7 @@
 
 from functools import lru_cache
 
-from datamimic_ce.contexts.context import Context
-from datamimic_ce.contexts.setup_context import SetupContext
+from datamimic_ce.engine.runtime.api import Context, SetupContext
 
 
 class CustomBusinessMappingConverter(CustomConverter):
@@ -24,7 +23,7 @@ class CustomBusinessMappingConverter(CustomConverter):
             # Get client (Database) from context
             client = context.get_client_by_id(self._client_id)
 
-            from datamimic_ce.clients.database_client import DatabaseClient
+            from datamimic_ce.engine.io.clients.database_client import DatabaseClient
 
             if client is None:
                 raise ValueError("Client with id 'mapping' not found")
@@ -32,7 +31,7 @@ class CustomBusinessMappingConverter(CustomConverter):
                 raise ValueError(f"Client with id 'mapping' is not a DatabaseClient, but a {type(client)}")
             elif isinstance(client, DatabaseClient):
                 self.__class__._database_client = client
-                from datamimic_ce.logger import logger
+                from datamimic_ce.engine.runtime.logging import logger
 
                 logger.debug(f"The table has {client.count_table_length('business_mapping')} rows")
                 self.__class__._initialized = True

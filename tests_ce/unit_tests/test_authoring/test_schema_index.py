@@ -16,25 +16,36 @@ Gate 3 (registry): rule ids unique, banded by module, and every rule ships a fix
 """
 
 import contextlib
+import subprocess
+import sys
 import xml.etree.ElementTree as ET
+from pathlib import Path
 
 import pytest
 from pydantic import BaseModel
 
-from datamimic_ce.authoring.rules import ALL_RULES, best_practice, cross_statement, schema_rules, semantic_rules
-from datamimic_ce.authoring.schema import build_schema_index
-from datamimic_ce.constants.element_constants import EL_COMMENT, EL_FIELD, EL_SETUP, EL_TRANSITION, EL_VALUE
-from datamimic_ce.model.element_registry import (
+from datamimic_ce.authoring.domain.rules import ALL_RULES, best_practice, cross_statement, schema_rules, semantic_rules
+from datamimic_ce.authoring.domain.schema import build_schema_index
+from datamimic_ce.engine.dsl.api import Statement
+from datamimic_ce.engine.dsl.model.registry import (
     ElementDefinition,
     get_model_class,
     list_element_tags,
     register_element_extension,
     unregister_element_extension,
 )
-from datamimic_ce.model.model_util import ModelUtil
-from datamimic_ce.parsers.parser_util import ParserUtil
-from datamimic_ce.parsers.statement_parser import StatementParser
-from datamimic_ce.statements.statement import Statement
+from datamimic_ce.engine.dsl.model.validation import ModelUtil
+from datamimic_ce.engine.dsl.parsers import registry as _registry  # noqa: F401
+from datamimic_ce.engine.dsl.parsers.base import dispatch
+from datamimic_ce.engine.dsl.parsers.base.statement_parser import StatementParser
+from datamimic_ce.engine.dsl.vocabulary.constants.element_constants import (
+    EL_COMMENT,
+    EL_FIELD,
+    EL_SETUP,
+    EL_TRANSITION,
+    EL_VALUE,
+)
+from datamimic_ce.engine.io.api import load_connection_profile
 
 # Models that intentionally have no check_valid_attributes guard:
 # database/mongodb take open credential attributes (extra="allow").
@@ -102,11 +113,11 @@ def test_gate2_dispatch_accepts_exactly_the_mapped_tags() -> None:
     non_dispatchable = (EL_SETUP, EL_COMMENT, EL_TRANSITION, EL_FIELD, EL_VALUE)
     dispatchable = {tag for tag in list_element_tags() if tag not in non_dispatchable}
     for tag in sorted(dispatchable):
-        parser = ParserUtil._get_parser_by_element(ET.Element(tag), properties=None)
+        parser = dispatch.get_parser_by_element(ET.Element(tag), properties={})
         assert parser is not None, f"<{tag}> is registered but the engine cannot dispatch it"
     for tag in (EL_TRANSITION, EL_FIELD, EL_VALUE, "definitely_not_an_element"):
         with pytest.raises(ValueError):
-            ParserUtil._get_parser_by_element(ET.Element(tag), properties=None)
+            dispatch.get_parser_by_element(ET.Element(tag), properties={})
 
 
 def test_gate2_nesting_children_are_known_tags() -> None:
@@ -133,7 +144,7 @@ def test_gate2_single_registration_reaches_parser_and_authoring() -> None:
 
     register_element_extension(ElementDefinition(tag, SyntheticModel, SyntheticParser))
     try:
-        parser = ParserUtil._get_parser_by_element(ET.Element(tag), properties=None)
+        parser = dispatch.get_parser_by_element(ET.Element(tag), properties={})
         schema = build_schema_index().get(tag)
 
         assert isinstance(parser, SyntheticParser)
@@ -146,6 +157,73 @@ def test_gate2_single_registration_reaches_parser_and_authoring() -> None:
     assert build_schema_index().get(tag) is None
 
 
+def test_extension_parser_receives_the_descriptor_directory_keyword() -> None:
+    tag = "synthetic-parser-kwargs"
+    observed: list[Path] = []
+
+    class SyntheticParser:
+        def __init__(self, _element: ET.Element, _properties: dict | None) -> None:
+            pass
+
+        def set_runtime_environment(self, _value: object) -> None:
+            pass
+
+        def parse(self, *, descriptor_dir: Path) -> Statement:
+            observed.append(descriptor_dir)
+            return Statement("synthetic", None)
+
+    register_element_extension(ElementDefinition(tag, None, SyntheticParser))
+    try:
+        root = ET.fromstring(f"<setup><{tag}/></setup>")
+        parsed = dispatch.parse_sub_elements(
+            Path("descriptor-root"), root, {}, Statement(None, None), profile_loader=load_connection_profile
+        )
+    finally:
+        unregister_element_extension(tag)
+
+    assert len(parsed) == 1
+    assert observed == [Path("descriptor-root")]
+
+
+def test_cold_parser_registry_dispatches_builtins_and_reports_unknown_tags() -> None:
+    script = """
+from lxml import etree
+from datamimic_ce.engine.dsl.parsers import registry as _registry
+from datamimic_ce.engine.dsl.parsers.base.dispatch import get_parser_by_element
+
+assert get_parser_by_element(etree.Element('memstore', id='rows'), properties={}) is not None
+try:
+    get_parser_by_element(etree.Element('unknown-parser-tag'), properties={})
+except ValueError as error:
+    assert str(error) == 'Cannot get parser for element <unknown-parser-tag>'
+else:
+    raise AssertionError('unknown tags must fail through the parser registry')
+"""
+
+    result = subprocess.run([sys.executable, "-c", script], text=True, capture_output=True, check=False, timeout=30)
+
+    assert result.returncode == 0, result.stderr
+
+
+def test_cold_descriptor_parser_requires_no_external_bootstrap() -> None:
+    script = """
+from pathlib import Path
+from tempfile import TemporaryDirectory
+from datamimic_ce.engine.dsl.parsers.document.descriptor_parser import DescriptorParser
+from datamimic_ce.engine.io.api import load_connection_profile
+
+with TemporaryDirectory() as directory:
+    descriptor = Path(directory) / 'descriptor.xml'
+    descriptor.write_text('<setup><memstore id="rows"/></setup>', encoding='utf-8')
+    parsed = DescriptorParser.parse(descriptor, None, 'production', profile_loader=load_connection_profile)
+    assert len(parsed.sub_statements) == 1
+"""
+
+    result = subprocess.run([sys.executable, "-c", script], text=True, capture_output=True, check=False, timeout=30)
+
+    assert result.returncode == 0, result.stderr
+
+
 def test_gate4_reflection_dependent_fields_keep_their_descriptions() -> None:
     """scaffold.py pulls start/end/interval's schema text straight from GenerateModel via
     model_json_schema() reflection (SPOT — see authoring/schema.py's element_json_schema()).
@@ -153,8 +231,8 @@ def test_gate4_reflection_dependent_fields_keep_their_descriptions() -> None:
     without failing any other test; this guard catches it directly. Deliberately scoped to
     the fields this reflection path actually depends on, not every CE model field — full
     retrofit is separate, incremental follow-up work, not this gate's job."""
-    from datamimic_ce.model.generate_model import GenerateModel
-    from datamimic_ce.model.variable_model import VariableModel
+    from datamimic_ce.engine.dsl.model.generation.generate_model import GenerateModel
+    from datamimic_ce.engine.dsl.model.values.variables.variable_model import VariableModel
 
     generate_schema = GenerateModel.model_json_schema()["properties"]
     for field_name in ("start", "end", "interval"):

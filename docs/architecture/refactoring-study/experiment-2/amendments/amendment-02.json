@@ -1,0 +1,7 @@
+{
+  "after_digest": "beca9675d9a3f11e2d07c605aebfeb502ebc60cec670c928cc1c4f649ac5eca4",
+  "before_digest": "fb1973693dfc107920deb5882f881386ba054072af4478deb510dea355e85a95",
+  "decided_by": "Alex (architecture owner)",
+  "rationale": "ArchKeel 0.6.0 treats every string-literal comparison as dispatch. The 163 findings include ordinary domain values, XML syntax checks, and external client handling. Removing this invalid proxy avoids semantic rewrites; enum routing remains a focused tested target.",
+  "schema_version": "1.0.0"
+}

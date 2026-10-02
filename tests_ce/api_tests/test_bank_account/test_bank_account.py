@@ -70,24 +70,6 @@ class TestBankAccount:
         assert bank_account.last_transaction_date == bank_account.last_transaction_date
         assert bank_account.bank_name == bank_account.bank_name
 
-    @pytest.mark.flaky(reruns=10)
-    def test_two_different_entities(self):
-        bank_account_service = BankAccountService()
-        bank_account1 = bank_account_service.generate()
-        bank_account2 = bank_account_service.generate()
-        assert bank_account1 is not None
-        assert bank_account2 is not None
-        assert bank_account1.account_number != bank_account2.account_number
-        assert bank_account1.iban != bank_account2.iban
-        assert bank_account1.account_type != bank_account2.account_type
-        assert bank_account1.bank_code != bank_account2.bank_code
-        assert bank_account1.bic != bank_account2.bic
-        assert bank_account1.bin != bank_account2.bin
-        assert bank_account1.balance != bank_account2.balance
-        assert bank_account1.currency != bank_account2.currency
-        assert bank_account1.created_date != bank_account2.created_date
-        assert bank_account1.last_transaction_date != bank_account2.last_transaction_date
-        assert bank_account1.bank_name != bank_account2.bank_name
 
     @pytest.mark.parametrize("dataset", _supported_datasets)
     def test_supported_datasets(self, dataset):

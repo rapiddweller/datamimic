@@ -13,23 +13,21 @@ import pytest
 from pydantic import ValidationError
 from typer.testing import CliRunner
 
-import datamimic_ce.authoring.service as authoring_service
+import datamimic_ce.authoring.application.service as authoring_service
+from datamimic_ce.authoring.application.service import check, run
 from datamimic_ce.authoring.contracts import (
     AuthoringStage,
+    CapturedProduct,
+    CapturedProducts,
+    CapturedRun,
     CheckRequest,
     RunRequest,
     RunResult,
     ScaffoldRequest,
     ScaffoldResult,
 )
-from datamimic_ce.authoring.diagnostics import LintResult
-from datamimic_ce.authoring.dryrun import (
-    CapturedProduct,
-    CapturedProducts,
-    CapturedRun,
-)
-from datamimic_ce.authoring.service import check, run
-from datamimic_ce.cli import app
+from datamimic_ce.authoring.domain.diagnostics import LintResult
+from datamimic_ce.interfaces.cli import app
 
 _XML = """<setup rngSeed="1">
     <generate name="items" count="3" target="">

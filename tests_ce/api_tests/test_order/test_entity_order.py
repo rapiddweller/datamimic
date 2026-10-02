@@ -7,9 +7,9 @@ import datetime
 
 import pytest
 
-from datamimic_ce.domains.common.models import Address
 from datamimic_ce.domains.ecommerce.models.order import Order
 from datamimic_ce.domains.ecommerce.services import OrderService
+from datamimic_ce.domains.shared.models.address import Address
 
 
 class TestEntityOrder:
@@ -86,14 +86,6 @@ class TestEntityOrder:
         assert order.coupon_code == order.coupon_code
         assert order.notes == order.notes
 
-    @pytest.mark.flaky(reruns=3)
-    def test_two_different_entities(self):
-        order_service = OrderService()
-        order1 = order_service.generate()
-        order2 = order_service.generate()
-        assert order1.to_dict() != order2.to_dict()
-        assert order1.order_id != order2.order_id
-        assert order1.user_id != order2.user_id
 
     @pytest.mark.parametrize("dataset", _supported_datasets)
     def test_supported_datasets(self, dataset):

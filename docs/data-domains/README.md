@@ -32,7 +32,7 @@ DATAMIMIC implements several industry-specific domains:
 ### 1. Generate a Person Entity
 
 ```python
-from datamimic_ce.domains.common.services import PersonService
+from datamimic_ce.domains.api import PersonService
 
 # Create a service
 person_service = PersonService(dataset="US")
@@ -107,4 +107,4 @@ See the [Domain Services](domain_services.md) documentation for detailed API ref
 
 ## Implementation Status
 
-All examples and documentation in this section have been verified to work with the current version of DATAMIMIC. Our continuous testing ensures that the documented functionality is accurate and reliable. 
+All examples and documentation in this section have been verified to work with the current version of DATAMIMIC. Our continuous testing ensures that the documented functionality is accurate and reliable.

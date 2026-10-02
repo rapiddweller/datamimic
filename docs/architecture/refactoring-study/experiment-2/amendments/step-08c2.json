@@ -1,0 +1,7 @@
+{
+  "after_digest": "aac0004bbb9f525eb2b22912ec37850cc0c996e52b651e26bbbbc8cdfee900d9",
+  "before_digest": "aefad852a46755a4a5ca56262cc3a48f2a79f4692db94006a631f2112ce06ec7",
+  "decided_by": "experiment orchestrator",
+  "rationale": "Step 8C2 implements the frozen DSL and runtime facades with typed generator capability signatures and moves DB sequence generation to runtime; no dependency permission is added.",
+  "schema_version": "1.0.0"
+}

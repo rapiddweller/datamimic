@@ -1,0 +1,172 @@
+{
+  "schema_version": "2.1.0",
+  "declarations": {
+    "modules": [
+      {
+        "path": "datamimic_ce/engine/runtime/tasks/sources/chunk_source_reader.py",
+        "responsibility": "Coordinates chunked source reads for runtime source tasks."
+      },
+      {
+        "path": "datamimic_ce/engine/runtime/tasks/sources/generate.py",
+        "responsibility": "Resolves generate statement inputs and adapts runtime context to file, memstore, and database reads."
+      },
+      {
+        "path": "datamimic_ce/engine/runtime/tasks/sources/length.py",
+        "responsibility": "Calculates and caches source lengths used by runtime setup and iteration tasks."
+      },
+      {
+        "path": "datamimic_ce/engine/runtime/tasks/sources/nested.py",
+        "responsibility": "Resolves nested-key source expressions and loads their rows through IO operations."
+      },
+      {
+        "path": "datamimic_ce/engine/runtime/tasks/sources/reference.py",
+        "responsibility": "Resolves reference options and runtime seed state for IO reads and selection, and identifies when rebuilt tasks need shared rotation."
+      },
+      {
+        "path": "datamimic_ce/engine/runtime/tasks/sources/variable.py",
+        "responsibility": "Plans variable source modes and adapts statement and runtime state to IO reads and row selection."
+      }
+    ]
+  },
+  "components": [
+    {
+      "id": "SOURCE-LENGTH",
+      "label": "length",
+      "role": "component",
+      "packages": ["datamimic_ce.engine.runtime.tasks.sources.length"],
+      "responsibilities": ["Resolve statement identity and cache source lengths through IO operations."],
+      "forbidden_responsibilities": ["Load generated rows or own reference and nested-key selection."],
+      "provenance": ["docs/architecture/inner/target.md"],
+      "requires": [],
+      "public": [
+        "datamimic_ce.engine.runtime.tasks.sources.length:data_source_cache_key",
+        "datamimic_ce.engine.runtime.tasks.sources.length:set_data_source_length"
+      ],
+      "decided_by": "agent"
+    },
+    {
+      "id": "SOURCE-GENERATE",
+      "label": "generate",
+      "role": "component",
+      "packages": ["datamimic_ce.engine.runtime.tasks.sources.generate"],
+      "responsibilities": ["Resolve generate statement inputs and adapt runtime context to IO source reads."],
+      "forbidden_responsibilities": ["Own source selection algorithms or exporter policy."],
+      "provenance": ["docs/architecture/inner/target.md"],
+      "requires": [],
+      "public": ["datamimic_ce.engine.runtime.tasks.sources.generate:load_generate_source"],
+      "decided_by": "agent"
+    },
+    {
+      "id": "SOURCE-NESTED",
+      "label": "nested",
+      "role": "component",
+      "packages": ["datamimic_ce.engine.runtime.tasks.sources.nested"],
+      "responsibilities": ["Resolve nested-key source expressions and adapt rows for templating and distribution."],
+      "forbidden_responsibilities": ["Own source reads, distribution algorithms or task execution."],
+      "provenance": ["docs/architecture/inner/target.md"],
+      "requires": [],
+      "public": [
+        "datamimic_ce.engine.runtime.tasks.sources.nested:load_nested_key_source",
+        "datamimic_ce.engine.runtime.tasks.sources.nested:finalize_nested_key_source"
+      ],
+      "decided_by": "agent"
+    },
+    {
+      "id": "SOURCE-REFERENCE",
+      "label": "reference",
+      "role": "component",
+      "packages": ["datamimic_ce.engine.runtime.tasks.sources.reference"],
+      "responsibilities": ["Adapt reference statements and runtime seed state to IO row selection."],
+      "forbidden_responsibilities": ["Own reference row loading or selection algorithms."],
+      "provenance": ["docs/architecture/inner/target.md"],
+      "requires": [],
+      "public": [
+        "datamimic_ce.engine.runtime.tasks.sources.reference:load_reference_source",
+        "datamimic_ce.engine.runtime.tasks.sources.reference:reference_uses_shared_cycle"
+      ],
+      "decided_by": "agent"
+    },
+    {
+      "id": "SOURCE-CHUNK-READER",
+      "label": "chunk_source_reader",
+      "role": "component",
+      "packages": ["datamimic_ce.engine.runtime.tasks.sources.chunk_source_reader"],
+      "responsibilities": ["Adapt generated source reads to stable page windows."],
+      "forbidden_responsibilities": ["Own source read or selection algorithms."],
+      "provenance": ["docs/architecture/inner/target.md"],
+      "requires": [
+        {"component": "generate", "rationale": "The reader delegates source loading to the generate adapter.", "decided_by": "agent"}
+      ],
+      "public": ["datamimic_ce.engine.runtime.tasks.sources.chunk_source_reader:ChunkSourceReader"],
+      "decided_by": "agent"
+    },
+    {
+      "id": "SOURCE-VARIABLE",
+      "label": "variable",
+      "role": "component",
+      "packages": ["datamimic_ce.engine.runtime.tasks.sources.variable"],
+      "responsibilities": ["Plan variable source execution and adapt runtime state to IO operations."],
+      "forbidden_responsibilities": ["Own generic source selection algorithms."],
+      "provenance": ["docs/architecture/inner/target.md"],
+      "requires": [
+        {"component": "length", "rationale": "Variable source planning shares the statement source-length cache key.", "decided_by": "agent"}
+      ],
+      "public": [
+        "datamimic_ce.engine.runtime.tasks.sources.variable:VariableSourcePlanKind",
+        "datamimic_ce.engine.runtime.tasks.sources.variable:load_variable_iteration_selector",
+        "datamimic_ce.engine.runtime.tasks.sources.variable:load_variable_lazy_source",
+        "datamimic_ce.engine.runtime.tasks.sources.variable:plan_variable_source"
+      ],
+      "decided_by": "agent"
+    }
+  ],
+  "rules": [
+    {
+      "id": "SOURCE-ASSIGNMENT",
+      "kind": "complete_assignment",
+      "source": "datamimic_ce.engine.runtime.tasks.sources",
+      "rationale": "Each runtime source adapter has one reviewed concern owner.",
+      "provenance": ["docs/architecture/inner/target.md"],
+      "decided_by": "agent"
+    },
+    {
+      "id": "SOURCE-REQUIRES",
+      "kind": "complete_requires",
+      "include_type_checking": true,
+      "rationale": "Source adapter dependencies are explicit and local implementation crossings use public operations.",
+      "provenance": ["docs/architecture/inner/target.md"],
+      "decided_by": "agent"
+    },
+    {
+      "id": "SOURCE-INTERFACES",
+      "kind": "interface_boundary",
+      "include_type_checking": true,
+      "rationale": "Runtime consumers use the declared adapter operations; IO operations cross through the public IO facade.",
+      "provenance": ["docs/architecture/inner/target.md"],
+      "decided_by": "agent"
+    },
+    {
+      "id": "SOURCE-ACYCLIC",
+      "kind": "no_component_cycles",
+      "rationale": "Source adapters do not depend back on their consumers.",
+      "provenance": ["docs/architecture/inner/target.md"],
+      "decided_by": "agent"
+    },
+    {
+      "id": "LAYOUT-ENGINE-RUNTIME-TASKS-SOURCES",
+      "kind": "root_layout",
+      "root": "datamimic_ce.engine.runtime.tasks.sources",
+      "allowed_children": [
+        "datamimic_ce.engine.runtime.tasks.sources.chunk_source_reader",
+        "datamimic_ce.engine.runtime.tasks.sources.generate",
+        "datamimic_ce.engine.runtime.tasks.sources.length",
+        "datamimic_ce.engine.runtime.tasks.sources.nested",
+        "datamimic_ce.engine.runtime.tasks.sources.reference",
+        "datamimic_ce.engine.runtime.tasks.sources.variable"
+      ],
+      "rationale": "Exact reviewed source adapter modules; no broad router or compatibility shim.",
+      "provenance": ["docs/architecture/inner/structure-review.json"],
+      "decided_by": "agent"
+    }
+  ]
+}

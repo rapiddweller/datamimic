@@ -1,10 +1,19 @@
 import random
 from pathlib import Path
-from typing import Any
+from typing import TypedDict
 
 from datamimic_ce.domains.domain_core.base_domain_generator import DatasetAwareDomainGenerator
-from datamimic_ce.domains.utils.dataset_path import dataset_path
-from datamimic_ce.utils.file_util import FileUtil
+from datamimic_ce.domains.domain_core.datasets.path import dataset_path
+from datamimic_ce.domains.shared.datasets.loader import read_weighted_records
+
+
+class InsuranceCoverageData(TypedDict):
+    name: str
+    code: str
+    product_code: str
+    description: str
+    min_coverage: str
+    max_coverage: str
 
 
 class InsuranceCoverageGenerator(DatasetAwareDomainGenerator):
@@ -27,10 +36,10 @@ class InsuranceCoverageGenerator(DatasetAwareDomainGenerator):
         self._last_min_coverage: str | None = None
         self._last_max_coverage: str | None = None
 
-    def get_random_coverage(self) -> dict[str, Any]:
+    def get_random_coverage(self) -> InsuranceCoverageData:
         #  centralize dataset path building for maintainability
         file_path = dataset_path("insurance", f"coverages_{self._dataset}.csv", start=Path(__file__))
-        weights, rows = FileUtil.read_csv_having_weight_column(file_path, "weight")
+        weights, rows = read_weighted_records(file_path, "weight")
         # Avoid immediate repetition by code and by product_code if possible
         pool = rows
         pool_w = weights

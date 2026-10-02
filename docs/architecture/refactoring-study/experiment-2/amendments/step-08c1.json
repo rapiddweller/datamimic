@@ -1,0 +1,7 @@
+{
+  "after_digest": "aefad852a46755a4a5ca56262cc3a48f2a79f4692db94006a631f2112ce06ec7",
+  "before_digest": "9e8355a411cdd8ab8b85966b1c81036da655ded862cbc04583a216d9c43acdbb",
+  "decided_by": "experiment orchestrator",
+  "rationale": "Step 8C1 builds the frozen target's DSL and domain component APIs, moves generator orchestration to runtime, and activates a typed domain boundary; no dependency permission is added.",
+  "schema_version": "1.0.0"
+}

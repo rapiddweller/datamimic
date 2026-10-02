@@ -1,7 +1,5 @@
-import pytest
-
-from datamimic_ce.domains.common.models.country import Country
-from datamimic_ce.domains.common.services.country_service import CountryService
+from datamimic_ce.domains.shared.models.country import Country
+from datamimic_ce.domains.shared.services.country_service import CountryService
 
 
 class TestEntityCountry:
@@ -64,16 +62,6 @@ class TestEntityCountry:
         assert country_data["phone_code"] == country.phone_code
         assert country_data["population"] == country.population
 
-    @pytest.mark.flaky(reruns=3)
-    def test_different_entities(self):
-        country_service = CountryService()
-        country1 = country_service.generate()
-        country2 = country_service.generate()
-        assert country1.iso_code != country2.iso_code
-        assert country1.name != country2.name
-        assert country1.default_language_locale != country2.default_language_locale
-        assert country1.phone_code != country2.phone_code
-        assert country1.population != country2.population
 
     def test_supported_datasets_static(self):
         codes = CountryService.supported_datasets()

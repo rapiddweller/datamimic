@@ -4,7 +4,8 @@ from dataclasses import dataclass, field
 
 from typer.testing import CliRunner
 
-import datamimic_ce.mcp.cli as cli
+import datamimic_ce.interfaces.mcp.cli as cli
+from datamimic_ce.interfaces.mcp import server as mcp_server
 
 runner = CliRunner()
 
@@ -20,7 +21,7 @@ class FakeServer:
 def test_stdio_is_a_direct_top_level_option(monkeypatch) -> None:
     server = FakeServer()
     uvicorn_calls: list[object] = []
-    monkeypatch.setattr(cli, "create_server", lambda: server)
+    monkeypatch.setattr(mcp_server, "create_server", lambda: server)
     monkeypatch.setattr(cli.uvicorn, "run", lambda *args, **kwargs: uvicorn_calls.append((args, kwargs)))
 
     result = runner.invoke(cli.app, ["--transport", "stdio"])
@@ -34,8 +35,8 @@ def test_sse_is_a_direct_top_level_option(monkeypatch) -> None:
     server = FakeServer()
     application = object()
     captured: dict[str, object] = {}
-    monkeypatch.setattr(cli, "create_server", lambda: server)
-    monkeypatch.setattr(cli, "build_sse_app", lambda current, api_key: application)
+    monkeypatch.setattr(mcp_server, "create_server", lambda: server)
+    monkeypatch.setattr(mcp_server, "build_sse_app", lambda current, api_key: application)
 
     def record_run(app: object, host: str, port: int, log_level: str) -> None:
         captured.update(app=app, host=host, port=port, log_level=log_level)

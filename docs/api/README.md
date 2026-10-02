@@ -40,8 +40,8 @@ datamimic demo create <demo-name>    # Create a specific demo
 ### Python SDK Quick Start
 
 ```python
-from datamimic_ce.domains.common.services import PersonService
-from datamimic_ce.factory.datamimic_test_factory import DataMimicTestFactory
+from datamimic_ce.domains.api import PersonService
+from datamimic_ce.interfaces.python.factory import DataMimicTestFactory
 
 # Using domain services
 person_service = PersonService(dataset="US")

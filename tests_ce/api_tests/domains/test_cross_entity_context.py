@@ -6,14 +6,14 @@ from random import Random
 
 import pytest
 
-from datamimic_ce.domains.common.demographics.profile import (
+from datamimic_ce.domains.shared.demographics.profile import (
     DemographicAgeBand,
     DemographicConditionRate,
     DemographicProfile,
     DemographicProfileId,
 )
-from datamimic_ce.domains.common.demographics.profile_meta import profile_group_refs
-from datamimic_ce.domains.common.demographics.sampler import DemographicSampler
+from datamimic_ce.domains.shared.demographics.profile_meta import profile_group_refs
+from datamimic_ce.domains.shared.demographics.sampler import DemographicSampler
 
 
 @pytest.fixture()

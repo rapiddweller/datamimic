@@ -5,14 +5,14 @@
 """Nested <generate> page-export order: a child row must reach the db AFTER its parent for
 insert/update/upsert (FK: child -> parent), and BEFORE its parent for delete (FK still points at
 the still-existing parent, so the child must go first). Proven with real SQLite FK-emulating
-triggers via the actual engine (TaskUtil.export_product_by_page /
+triggers via the actual engine (generate.export_order.export_product_by_page /
 generate_worker.GenerateWorker.generate_and_export_data_by_chunk) - a wrong write order aborts the
 run instead of merely producing a wrong assertion, so a broken ordering fails LOUDLY.
 """
 
 from pathlib import Path
 
-from datamimic_ce.data_mimic_test import DataMimicTest
+from datamimic_ce.interfaces.python.data_mimic_test import DataMimicTest
 
 _TEST_DIR = Path(__file__).resolve().parent
 
@@ -42,7 +42,7 @@ def test_insert_order_parent_before_child():
 
 def test_insert_order_parent_before_child_through_condition():
     """Same proof with the nested <generate> wrapped in <condition><if condition="True">:
-    exercises the CompositeStatement walk in TaskUtil._export_nested_products_by_page."""
+    exercises the CompositeStatement walk in export_order._export_nested_products_by_page."""
     _assert_users_and_orders(_run("insert_order_condition.xml"))
 
 

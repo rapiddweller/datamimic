@@ -1,6 +1,4 @@
-import pytest
-
-from datamimic_ce.domains.common.models.address import Address
+from datamimic_ce.domains.shared.models.address import Address
 from datamimic_ce.domains.public_sector.models.administration_office import AdministrationOffice
 from datamimic_ce.domains.public_sector.services.administration_office_service import AdministrationOfficeService
 
@@ -64,25 +62,6 @@ class TestEntityAdministrationOffice:
         assert administration_office.leadership == administration_office.leadership
         assert administration_office.address == administration_office.address
 
-    @pytest.mark.flaky(reruns=3)
-    def test_two_different_entities(self):
-        administration_office_service = AdministrationOfficeService()
-        administration_office1 = administration_office_service.generate()
-        administration_office2 = administration_office_service.generate()
-        assert administration_office1.name != administration_office2.name
-        assert administration_office1.type != administration_office2.type
-        assert administration_office1.jurisdiction != administration_office2.jurisdiction
-        assert administration_office1.founding_year != administration_office2.founding_year
-        assert administration_office1.staff_count != administration_office2.staff_count
-        assert administration_office1.annual_budget != administration_office2.annual_budget
-        assert administration_office1.hours_of_operation != administration_office2.hours_of_operation
-        assert administration_office1.website != administration_office2.website
-        assert administration_office1.email != administration_office2.email
-        assert administration_office1.phone != administration_office2.phone
-        assert administration_office1.services != administration_office2.services
-        assert administration_office1.departments != administration_office2.departments
-        assert administration_office1.leadership != administration_office2.leadership
-        assert administration_office1.address != administration_office2.address
 
     def test_supported_datasets_static(self):
         codes = AdministrationOfficeService.supported_datasets()

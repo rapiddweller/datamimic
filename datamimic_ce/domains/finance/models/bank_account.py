@@ -11,10 +11,10 @@ This module defines the bank account model for the finance domain.
 """
 
 import datetime
-from typing import Any
 
 from datamimic_ce.domains.domain_core import BaseEntity
 from datamimic_ce.domains.domain_core.property_cache import property_cache
+from datamimic_ce.domains.finance.contracts import BankAccountData
 from datamimic_ce.domains.finance.generators.bank_account_generator import BankAccountGenerator
 from datamimic_ce.domains.finance.models.bank import Bank
 
@@ -27,6 +27,10 @@ class BankAccount(BaseEntity):
         self._bank_account_generator = bank_account_generator
 
     @property
+    def dataset(self) -> str:
+        return self._bank_account_generator.dataset
+
+    @property
     @property_cache
     def bank_data(self) -> Bank:
         return Bank(self._bank_account_generator.bank_generator)
@@ -34,7 +38,7 @@ class BankAccount(BaseEntity):
     @property
     @property_cache
     def account_number(self) -> str:
-        return self._bank_account_generator.account_number_generator.generate()
+        return str(self._bank_account_generator.account_number_generator.generate())
 
     @property
     @property_cache
@@ -115,7 +119,7 @@ class BankAccount(BaseEntity):
     def bin(self) -> str:
         return self.bank_data.bin
 
-    def to_dict(self) -> dict[str, Any]:
+    def to_dict(self) -> BankAccountData:
         return {
             "account_number": self.account_number,
             "iban": self.iban,

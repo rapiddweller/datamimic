@@ -9,3 +9,4 @@ recursive-exclude * tests_ce
 
 # Exclude specific test-related directories
 prune tests_ce
+prune test-artifacts

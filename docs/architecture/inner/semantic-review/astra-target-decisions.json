@@ -1,0 +1,5584 @@
+{
+  "format_version": 1,
+  "status": "target_decided_implementation_not_verified",
+  "decider": "Astra under explicit user delegation; root reviews implementation and canonical contract application",
+  "ce_source_commit": "3b844b5083e5af89269ef917bc0614601d30cf61",
+  "ee_read_only_evidence_commit": "dc7526592073985ed69902b21d6a1c861ac02fa0",
+  "scope": "CE implementation target and same-path shared-core convention for EE; not an EE migration or behavior-equivalence certification.",
+  "authority": "Immutable freeze input and rationale. Once applied, canonical ArchKeel contract packages own target selectors. This file is not a second live contract and is not itself an ArchKeel contract.",
+  "historical_inputs": {
+    "manifest_sha256": "15c6646edccd3987c35036f65f9c194ec91c389c94c0d85dbf4449dd60d4d400",
+    "structure_review_sha256": "46342fd46bdd6026efa71f8ac9d0289f83604a75cb9fbb68ec58c724de21b5d7",
+    "reviews": {
+      "domains": "fa6ca7c4c0eefceb708cd1b25020cdc2a5fe91636d0199d3ae3a4d059fd62b2d",
+      "dsl": "766986634812702d0484dd7575e10e3887531df2d930b14c61b909beeede5e18",
+      "entry_authoring": "35bad9c488cc7b8509aa2bacc9c7a7c77acced22a10d30acdc63700b0928654e",
+      "execution_io": "209fa17c4c841ca98e22ea21a3f715c53096cf4bf7a81a401f637e38995fc63d"
+    }
+  },
+  "decisions": [
+    {
+      "id": "D01",
+      "title": "Canonical target is future physical ownership",
+      "decision": "Use future packages selectors in the existing ArchKeel contract schema. Delete root COMP-PYTHON-API, interfaces forwarding components and CE DSL-CONTRACTS component. Diagrams read those contracts directly. Keep original manifest/review/observation immutable as historical source evidence. Missing future paths are pending/failing migration, never green. No target_packages or parallel target_components field.",
+      "evidence": [
+        "docs/architecture/inner/semantic-review/manifest.json",
+        "docs/architecture/inner/structure-review.json"
+      ]
+    },
+    {
+      "id": "D02",
+      "title": "Setup means ordered declarations, not eager initialization",
+      "decision": "Use setup in all three DSL layers for setup/client/include/generator/state_machine/demographics declarations. Runtime GeneratorTask and StateMachineTask belong tasks/setup. Keep descriptor execution order, optional CE generator caching and Include reentry into Setup or GenIter. Definitions after Generate remain after Generate.",
+      "evidence": [
+        "datamimic_ce/engine/runtime/tasks/setup_task.py:75",
+        "datamimic_ce/engine/runtime/tasks/generator_task.py:25",
+        "datamimic_ce/engine/runtime/tasks/state_machine_task.py:24",
+        "datamimic_ce/engine/runtime/tasks/include_task.py:27",
+        "../datamimic-ee/datamimic_ee/tasks/state_machine_task.py:36"
+      ]
+    },
+    {
+      "id": "D03",
+      "title": "Keep actual value and flow families",
+      "decision": "Keep variable binding modes together. Put KeyVariableTask directly in tasks/values as shared base. Keep branches/loops/commands aggregates, including Execute at nested-row scope. ElementModel retains grammar/schema identity under values/scalar; ModelUtil becomes model/validation.py. No model/base wrapper.",
+      "evidence": [
+        "datamimic_ce/engine/runtime/tasks/key_variable_task.py:42",
+        "datamimic_ce/engine/runtime/tasks/execute_task.py:85",
+        "datamimic_ce/engine/dsl/model/element_model.py"
+      ]
+    },
+    {
+      "id": "D04",
+      "title": "IO owns source policy; Runtime resolves execution inputs",
+      "decision": "Runtime sources resolves expressions, root defaults, statement identity, cache keys and seed derivation into typed IO requests. IO data_sources owns family dispatch, count/read/page, distribution, uniqueness, cyclic windows and pool lifetime. No Context/Statement reaches IO. Keep domain numeric algorithms in Domains. This overturns the audit assessment's Runtime-selection recommendation; EE data_sources is the leading boundary, not a perfect implementation to copy blindly.",
+      "evidence": [
+        "datamimic_ce/engine/runtime/sources/router.py:45",
+        "datamimic_ce/engine/runtime/sources/router.py:77",
+        "datamimic_ce/engine/runtime/sources/variable.py:56",
+        "datamimic_ce/engine/runtime/sources/chunk_source_reader.py:40",
+        "../datamimic-ee/datamimic_ee/data_sources/boundary/inline_value_service.py:21"
+      ]
+    },
+    {
+      "id": "D05",
+      "title": "Global increment is Runtime state",
+      "decision": "Move GlobalIncrementGenerator into tasks/values/construction/global_increment.py and its existing GlobalIncrementRegistry state class into storage/global_increment.py. Both Context and generator depend on storage; Context must not import tasks for its truthful registry annotation. Runtime construction/capabilities register the existing name. Remove it from Domains builtin inventory. Preserve per-root key/counter/reset, collision behavior and DSL spelling. No generic context interface in Domains.",
+      "evidence": [
+        "datamimic_ce/domains/shared/literal_generators/global_increment_generator.py:10",
+        "datamimic_ce/engine/runtime/generators/factory.py:136",
+        "datamimic_ce/engine/runtime/contexts/setup_context.py:107"
+      ]
+    },
+    {
+      "id": "D06",
+      "title": "Move neutral generator contracts out of DSL",
+      "decision": "Move EntityValue into engine/io/contracts.py: it is the ABC consumed by IO entity serialization and implemented by BaseEntity. Move StateTransitionRule and GeneratorCapability into domain_core/contracts/generation.py. DSL StateMachineStatement uses the same plain tuple[str, str, float] shape rather than importing Domains for an alias. Move describe_generator_type into domains/registry/generators.py. Remove the vacated CE DSL contracts module and old DSL API exports; no shims. Keep executable BaseEntity at domain_core/base_entity.py. Domains may import canonical DSL vocabulary enum leaves directly, never high dsl.api or model/parser/statement implementation. This preserves a one-way Domains -> IO -> DSL dependency rather than creating a root cycle.",
+      "evidence": [
+        "datamimic_ce/engine/dsl/contracts.py",
+        "datamimic_ce/engine/dsl/api.py:151",
+        "datamimic_ce/domains/domain_core/base_entity.py",
+        "datamimic_ce/domains/api.py:53"
+      ]
+    },
+    {
+      "id": "D07",
+      "title": "Dissolve StatementUtil by behavior",
+      "decision": "Source-entity fallback functions accept scalar values in IO/data_sources/boundary/entities.py; target entity/metadata resolution in IO/exporters/core/routing.py; consumer string grammar in DSL/statements/generation/targets.py. Preserve SQL/mem source_entity->type->name; Mongo source_entity->type without name; output target_entity->type->name; file basename behavior. Runtime passes resolved fields, not Statements, into IO.",
+      "evidence": [
+        "datamimic_ce/engine/dsl/statements/statement_util.py"
+      ]
+    },
+    {
+      "id": "D08",
+      "title": "Preserve credentials semantics while moving IO",
+      "decision": "Supply one typed on-demand property-loader callable from runtime document composition into parsing; the parser calls it at the same credential-fulfilment point. IO/connection_config/properties.py owns profile lookup/load; parsers/base/client_config.py owns descriptor merge, below setup parsers to avoid base/setup cycles. The IO loader may use the low-level parsers/input/properties.py syntax reader, not concrete DSL parsing. Preserve truthy env_props alias/mutation, conditional environment+system load, descriptor-dir then cwd then home/datamimic fallback, env overwrite, and static include sibling order. Do not eagerly preload every profile. EE descriptor-wins precedence is explicitly deferred semantic alignment, not part of structural acceptance.",
+      "evidence": [
+        "datamimic_ce/engine/dsl/parsers/parser_util.py:179",
+        "datamimic_ce/engine/dsl/parsers/parser_util.py:239",
+        "datamimic_ce/engine/dsl/parsers/parser_util.py:263",
+        "../datamimic-ee/datamimic_ee/parsers/client_config.py:33"
+      ]
+    },
+    {
+      "id": "D09",
+      "title": "Composition above recursive primitives",
+      "decision": "Parser base owns dispatch mechanism only, registry.py concrete composition, document descriptor orchestration. Lower XML/property syntax helpers live parsers/input, not document. Task registry.py owns concrete Statement-to-Task registration; base/dispatch.py lookup only. Entry composition initializes each registry once before use; standalone supported parser/task callers still work.",
+      "evidence": [
+        "datamimic_ce/engine/dsl/parsers/__init__.py",
+        "datamimic_ce/engine/dsl/parsers/parser_util.py:49",
+        "datamimic_ce/engine/runtime/tasks/__init__.py",
+        "datamimic_ce/engine/runtime/tasks/task_factory.py"
+      ]
+    },
+    {
+      "id": "D10",
+      "title": "Preserve real TaskUtil invariants, delete forwarding",
+      "decision": "Move boolean condition validation into scripting/evaluation.py (missing condition true; nonbool rejected). Existing dispatch/source-template/interpolation calls directly replace forwarding. Converter construction and scalar generation belong values/construction; hierarchical export ordering belongs generate/export_order.py. IO registry owns construction, concrete dispatch and smoke execution; core owns scalar routing/target-argument parsing and serialization. Retain IO-owned ExporterContext only at registry composition, with base Exporter return type; scalar-only ExporterConfig replaces its retained context and the fake smoke context. Moving smoke into registry removes a diagnostics/registry cycle. No GenerateStatement or Runtime type dependency enters IO. Do not add methods merely to replace old utility names.",
+      "evidence": [
+        "datamimic_ce/engine/runtime/tasks/task_util.py:94",
+        "datamimic_ce/engine/runtime/tasks/task_util.py:113",
+        "datamimic_ce/engine/runtime/tasks/task_util.py:183",
+        "datamimic_ce/engine/runtime/tasks/task_util.py:288"
+      ]
+    },
+    {
+      "id": "D11",
+      "title": "Break statement cycle at the specialized traversal",
+      "decision": "Move root-Generate, named descendant and executed-branch queries into statements/traversal.py, importing concrete Generate/Condition and base. Remove Generate-specific type guards/virtual traversal from base Statement/CompositeStatement; retain their actual tree state. Preserve Condition executed-set iteration and branch registration, full-name lookup, deep includes, and None/error behavior. Not a TYPE_CHECKING-only fix.",
+      "evidence": [
+        "datamimic_ce/engine/dsl/statements/statement.py:51",
+        "datamimic_ce/engine/dsl/statements/composite_statement.py:32",
+        "datamimic_ce/engine/dsl/statements/generate_statement.py:202",
+        "datamimic_ce/engine/dsl/statements/condition_statement.py:30"
+      ]
+    },
+    {
+      "id": "D12",
+      "title": "Treat root/base context as a closed hierarchy",
+      "decision": "Co-locate Context and SetupContext in contexts/context.py, migrate imports and remove setup_context.py. Explicitly retain two classes and responsibilities on the diagram; about 800 lines is reviewed cohesion debt, not decoupling or a green-check trick. expression_globals accepts explicit seeded flag/RNG/lazy Faker dependencies and does not import Context. Preserve unseeded short circuit, lazy Faker initialization and RNG draws. No 53-property protocol mirror.",
+      "evidence": [
+        "datamimic_ce/engine/runtime/contexts/context.py:16",
+        "datamimic_ce/engine/runtime/contexts/setup_context.py:40",
+        "datamimic_ce/engine/runtime/contexts/setup_context.py:144",
+        "datamimic_ce/engine/runtime/contexts/expression_globals.py"
+      ]
+    },
+    {
+      "id": "D13",
+      "title": "Remove import-only interface layers",
+      "decision": "Delete interfaces/api.py, interfaces/contracts.py and factory/factory_config.py forwarding modules; migrate every caller/test/doc directly to canonical runtime or authoring entries. Python factory becomes interfaces/python/factory.py. No deprecated alias modules. Preserve real facade behavior and public result contracts rather than blanket facade removal.",
+      "evidence": [
+        "datamimic_ce/interfaces/api.py",
+        "datamimic_ce/interfaces/contracts.py",
+        "datamimic_ce/factory/factory_config.py",
+        "datamimic_ce/factory/datamimic_test_factory.py"
+      ]
+    },
+    {
+      "id": "D14",
+      "title": "Authoring retains observable contracts",
+      "decision": "Keep CompilePlan within authoring/contracts.py because ScaffoldResult exposes it. Keep contracts/spec/domain in one semantic domain aggregate: DTOs depend on diagnostic/spec types and intent rules consume plans, so a separate contracts component creates a needless component cycle. No source merge or internal DTO copy. Retain derived_facts in Domain: its semantic counts, memstore relationships and foreign-key facts are consumed by DM408 and application result assembly. Astra corrected the initial projection assignment, which would create Domain -> Projection -> Domain. Expose only derive_facts; do not widen Domain dependencies or duplicate derivation. Preserve CE persisted intent semantics and EE transaction semantics; shared physical layering is not permission to change either product contract.",
+      "evidence": [
+        "datamimic_ce/authoring/contracts.py",
+        "datamimic_ce/authoring/domain/derived_facts.py"
+      ]
+    },
+    {
+      "id": "D15",
+      "title": "Domains retain useful aggregates and real facade",
+      "decision": "Keep domain_core shared dataset infrastructure; keep shared families and vertical models/generators/services. Keep domains/facade.py sibling to api.py, registry entities/schema/metadata above concrete services. Identity family remains grouped; seven is a review trigger, not quota. Generator->model forbidden; lazy model->generator allowed. Keep StateTransitionGenerator domain algorithm distinct from its setup definition.",
+      "evidence": [
+        "datamimic_ce/domains/facade.py",
+        "datamimic_ce/domains/entity_registry.py:46",
+        "datamimic_ce/domains/shared/literal_generators/state_transition_generator.py:20"
+      ]
+    },
+    {
+      "id": "D16",
+      "title": "Physical moves must preserve packaged resources",
+      "decision": "Keep domain_data and schemas as data under their existing shared resource owner. Replace relocation-sensitive __file__ assumptions with stable package-resource lookup at the loader, preserving explicit environment/start override behavior and fallback policy. DbUnit belongs exporter formats (flat XML), not database transport. Keep runnable Python examples in resources/examples; do not add them to demo discovery or invent an examples facade.",
+      "evidence": [
+        "datamimic_ce/domains/shared/utils/dataset_path.py:78",
+        "datamimic_ce/domains/shared/schema_registry.py:14",
+        "datamimic_ce/engine/io/exporters/dbunit_exporter.py:21",
+        "datamimic_ce/domains/shared/examples"
+      ]
+    },
+    {
+      "id": "D17",
+      "title": "No packaging scaffolding or new compatibility layer",
+      "decision": "Use namespace support already enabled by packaging for new grouping directories. Retain meaningful __init__ exports/composition only; never add empty markers just for reports. Astra corrected the dotenv relocation after tracing MCP defaults/auth and standalone dataset entrypoints: retain the existing root load_dotenv bootstrap unchanged, once per normal package import with override=False. Moving the call changes caller-relative lookup and delays environment loading; forcing standalone Domains through Runtime would introduce the wrong dependency. Lifecycle/config keeps Settings and its distinct cwd env_file behavior. No new bootstrap wrapper or flag. Root errors stay stable; vendor DB error translation belongs IO. No EE Rust/runtime-config subsystem imported.",
+      "evidence": [
+        "pyproject.toml",
+        "datamimic_ce/__init__.py",
+        "datamimic_ce/errors",
+        "../datamimic-ee/datamimic_ee/errors/AGENTS.md"
+      ]
+    },
+    {
+      "id": "D18",
+      "title": "Boundary exceptions must be exact and truthful",
+      "decision": "Retain Path, datetime, Random, Traversable, Pydantic strict primitives, lxml element and schema-value types. Permit only reviewed function/position pairs, not entire APIs. Astra corrected the initial class-return proposal after tracing heterogeneous constructors: rename the existing lookup to get_entity_service_factory with Callable[..., BaseDomainService] | None; retain EntitySpec.service_cls: type[BaseDomainService] for class discovery. No extra wrapper, local type-erasure alias or private Runtime import. Explicit DSL keywords reach the concrete constructor unchanged; only injected options are signature-filtered. Keep type[BaseModel] factory and constrained zero-argument value suppliers. Recompute final UNKNOWN results; allowances record scoped intentional opacity, not deeper type proof.",
+      "evidence": [
+        "datamimic_ce/domains/entity_registry.py:128",
+        "datamimic_ce/engine/dsl/model/constraints/types.py",
+        "test-artifacts/architecture/ce-recursive-target/architecture.json"
+      ]
+    }
+  ],
+  "final_dependency_amendment": {
+    "id": "D19",
+    "decision": "Merge existing RandomSource Protocol and cumulated_index into the real neutral leaf randomness.py. Moving source selection into IO would otherwise create IO -> Domains -> IO. Domain numeric generators, IO selection and Runtime may depend on these exact primitives; no wrappers, duplicated distribution math, new folder or broad shared utility package. Keep generation algorithms, seed lifecycle and deterministic clocks at their existing owners.",
+    "public": [
+      "datamimic_ce.randomness:RandomSource",
+      "datamimic_ce.randomness:cumulated_index"
+    ],
+    "remove_old_api_exports": [
+      "datamimic_ce.domains.api:RandomSource",
+      "datamimic_ce.domains.api:cumulated_index"
+    ],
+    "evidence": [
+      "datamimic_ce/engine/runtime/sources/selection.py:11",
+      "datamimic_ce/domains/shared/sampling.py:10",
+      "datamimic_ce/domains/shared/utils/random_source.py:12",
+      "datamimic_ce/domains/shared/utils/dataset_loader.py:11"
+    ]
+  },
+  "unclear_resolutions": [
+    {
+      "id": "module:domains/shared/literal_generators/global_increment_generator.py",
+      "status": "resolved",
+      "decision": "D05"
+    },
+    {
+      "id": "module:engine/dsl/contracts.py",
+      "status": "resolved",
+      "decision": "D06"
+    },
+    {
+      "id": "module:engine/dsl/statements/statement_util.py",
+      "status": "resolved",
+      "decision": "D07"
+    },
+    {
+      "id": "folder:engine/dsl/model/base",
+      "status": "resolved",
+      "decision": "D03"
+    },
+    {
+      "id": "folder:engine/dsl/model/flow",
+      "status": "resolved",
+      "decision": "D03"
+    },
+    {
+      "id": "folder:engine/dsl/model/values/variables",
+      "status": "resolved",
+      "decision": "D03"
+    },
+    {
+      "id": "folder:engine/dsl/parsers/resources",
+      "status": "resolved",
+      "decision": "D02"
+    },
+    {
+      "id": "folder:engine/dsl/statements/flow",
+      "status": "resolved",
+      "decision": "D03"
+    },
+    {
+      "id": "contract:dsl/model/base",
+      "status": "resolved",
+      "decision": "D03"
+    },
+    {
+      "id": "contract:dsl/model/resources",
+      "status": "resolved",
+      "decision": "D02"
+    },
+    {
+      "id": "contract:dsl/parsers/resources",
+      "status": "resolved",
+      "decision": "D02"
+    },
+    {
+      "id": "contract:dsl/parsers/generation",
+      "status": "resolved",
+      "decision": "D02"
+    },
+    {
+      "id": "contract:dsl/contracts",
+      "status": "resolved",
+      "decision": "D06"
+    },
+    {
+      "id": "module:authoring/contracts.py",
+      "status": "resolved",
+      "decision": "D14"
+    },
+    {
+      "id": "module:factory/factory_config.py",
+      "status": "resolved",
+      "decision": "D13"
+    },
+    {
+      "id": "folder:interfaces/python/factory",
+      "status": "resolved",
+      "decision": "D13"
+    },
+    {
+      "id": "folder:resources/examples",
+      "status": "resolved",
+      "decision": "D16"
+    }
+  ],
+  "target_contract_selectors": [
+    {
+      "scope": "",
+      "contract_path": "architecture-contract.json",
+      "components": [
+        {
+          "id": "COMP-INTERFACES",
+          "packages": [
+            "datamimic_ce.interfaces"
+          ],
+          "concern": "Transport and Python caller adaptation; no execution policy."
+        },
+        {
+          "id": "COMP-AUTHORING",
+          "packages": [
+            "datamimic_ce.authoring"
+          ],
+          "concern": "Compile intent and run bounded verification transactions."
+        },
+        {
+          "id": "COMP-DSL",
+          "packages": [
+            "datamimic_ce.engine.dsl"
+          ],
+          "concern": "Validate descriptor vocabulary and construct execution statements."
+        },
+        {
+          "id": "COMP-RUNTIME",
+          "packages": [
+            "datamimic_ce.engine.runtime"
+          ],
+          "concern": "Execute statements; own run, row and worker state."
+        },
+        {
+          "id": "COMP-IO",
+          "packages": [
+            "datamimic_ce.engine.io"
+          ],
+          "concern": "Read, select, page and write external/in-memory data."
+        },
+        {
+          "id": "COMP-ERRORS",
+          "packages": [
+            "datamimic_ce.errors"
+          ],
+          "concern": "Stable public error types, codes, formatting and construction."
+        },
+        {
+          "id": "COMP-DOMAINS",
+          "packages": [
+            "datamimic_ce.domains"
+          ],
+          "concern": "Generate business values/entities and load their domain datasets."
+        },
+        {
+          "id": "COMP-RESOURCES",
+          "packages": [
+            "datamimic_ce.resources"
+          ],
+          "concern": "Packaged runnable demos/examples and resource access."
+        },
+        {
+          "id": "COMP-PYTHON-COMPAT",
+          "packages": [
+            "datamimic_ce._compat"
+          ],
+          "concern": "Existing interpreter compatibility only; not old import aliases."
+        },
+        {
+          "id": "COMP-RANDOMNESS",
+          "packages": [
+            "datamimic_ce.randomness"
+          ],
+          "concern": "Actual shared RNG structural contract and cumulated-index primitive, below Domain, IO and Runtime; no lifecycle or generation policy."
+        }
+      ]
+    },
+    {
+      "scope": "authoring",
+      "contract_path": "docs/architecture/inner/authoring/architecture-contract.json",
+      "components": [
+        {
+          "id": "AUTHORING-API",
+          "packages": [
+            "datamimic_ce.authoring.api"
+          ],
+          "concern": "Public use-case entry."
+        },
+        {
+          "id": "AUTHORING-DOMAIN",
+          "packages": [
+            "datamimic_ce.authoring.contracts",
+            "datamimic_ce.authoring.spec",
+            "datamimic_ce.authoring.domain"
+          ],
+          "concern": "Observable request/result contracts, intent specification, diagnostics, acceptance facts and pure rules; one domain aggregate without a DTO/rule component cycle."
+        },
+        {
+          "id": "AUTHORING-PROJECTION",
+          "packages": [
+            "datamimic_ce.authoring.projection"
+          ],
+          "concern": "Build typed authoring-reference variants from canonical intent facts."
+        },
+        {
+          "id": "AUTHORING-ADAPTERS",
+          "packages": [
+            "datamimic_ce.authoring.adapters"
+          ],
+          "concern": "Bounded runtime/filesystem adapters and runtime-backed reference/capability views."
+        },
+        {
+          "id": "AUTHORING-APPLICATION",
+          "packages": [
+            "datamimic_ce.authoring.application"
+          ],
+          "concern": "Compile/check/run/scaffold transaction coordination."
+        }
+      ]
+    },
+    {
+      "scope": "domains",
+      "contract_path": "docs/architecture/inner/domains/architecture-contract.json",
+      "components": [
+        {
+          "id": "DOMAINS-API",
+          "packages": [
+            "datamimic_ce.domains.api"
+          ],
+          "concern": "Supported domain entry and capability composition."
+        },
+        {
+          "id": "DOMAINS-REGISTRY",
+          "packages": [
+            "datamimic_ce.domains.registry"
+          ],
+          "concern": "Entity inventory, schema validation, builtin generator inventory and capability metadata projection."
+        },
+        {
+          "id": "DOMAINS-FACADE",
+          "packages": [
+            "datamimic_ce.domains.facade"
+          ],
+          "concern": "Existing request validation and domain-service generation workflow."
+        },
+        {
+          "id": "DOMAINS-CORE",
+          "packages": [
+            "datamimic_ce.domains.domain_core"
+          ],
+          "concern": "Generator/entity/service contracts, shared dataset infrastructure and deterministic primitives."
+        },
+        {
+          "id": "DOMAINS-SHARED",
+          "packages": [
+            "datamimic_ce.domains.shared"
+          ],
+          "concern": "Reusable cross-industry domain concepts."
+        },
+        {
+          "id": "DOMAINS-FINANCE",
+          "packages": [
+            "datamimic_ce.domains.finance"
+          ],
+          "concern": "Industry-specific entities, generation algorithms and services."
+        },
+        {
+          "id": "DOMAINS-HEALTHCARE",
+          "packages": [
+            "datamimic_ce.domains.healthcare"
+          ],
+          "concern": "Industry-specific entities, generation algorithms and services."
+        },
+        {
+          "id": "DOMAINS-INSURANCE",
+          "packages": [
+            "datamimic_ce.domains.insurance"
+          ],
+          "concern": "Industry-specific entities, generation algorithms and services."
+        },
+        {
+          "id": "DOMAINS-ECOMMERCE",
+          "packages": [
+            "datamimic_ce.domains.ecommerce"
+          ],
+          "concern": "Industry-specific entities, generation algorithms and services."
+        },
+        {
+          "id": "DOMAINS-PUBLIC",
+          "packages": [
+            "datamimic_ce.domains.public_sector"
+          ],
+          "concern": "Industry-specific entities, generation algorithms and services."
+        }
+      ]
+    },
+    {
+      "scope": "domains/shared",
+      "contract_path": "docs/architecture/inner/domains/shared/architecture-contract.json",
+      "components": [
+        {
+          "id": "SHARED-MODELS",
+          "packages": [
+            "datamimic_ce.domains.shared.models"
+          ],
+          "concern": "Cross-industry lazy entities and value shapes."
+        },
+        {
+          "id": "SHARED-DATASETS",
+          "packages": [
+            "datamimic_ce.domains.shared.datasets"
+          ],
+          "concern": "Shared locales, sampling and profile composition."
+        },
+        {
+          "id": "SHARED-GENERATORS",
+          "packages": [
+            "datamimic_ce.domains.shared.generators"
+          ],
+          "concern": "Shared entity-value generation."
+        },
+        {
+          "id": "SHARED-SERVICES",
+          "packages": [
+            "datamimic_ce.domains.shared.services"
+          ],
+          "concern": "Shared entity construction workflows."
+        },
+        {
+          "id": "SHARED-LITERAL-GENERATORS",
+          "packages": [
+            "datamimic_ce.domains.shared.literal_generators"
+          ],
+          "concern": "Context-free scalar/state-transition algorithms."
+        },
+        {
+          "id": "SHARED-CONVERTERS",
+          "packages": [
+            "datamimic_ce.domains.shared.converters"
+          ],
+          "concern": "Typed value transformations."
+        },
+        {
+          "id": "SHARED-DEMOGRAPHICS",
+          "packages": [
+            "datamimic_ce.domains.shared.demographics"
+          ],
+          "concern": "Demographic model, profile validation and sampling rules."
+        }
+      ]
+    },
+    {
+      "scope": "domains/shared/converters",
+      "contract_path": "docs/architecture/inner/domains/shared/converters/architecture-contract.json",
+      "components": [
+        {
+          "id": "CONVERTERS-BASE",
+          "packages": [
+            "datamimic_ce.domains.shared.converters.base"
+          ],
+          "concern": "Converter interface."
+        },
+        {
+          "id": "CONVERTERS-TEXT",
+          "packages": [
+            "datamimic_ce.domains.shared.converters.text"
+          ],
+          "concern": "Text transformations."
+        },
+        {
+          "id": "CONVERTERS-TEMPORAL",
+          "packages": [
+            "datamimic_ce.domains.shared.converters.temporal"
+          ],
+          "concern": "Date/time representation transformations."
+        },
+        {
+          "id": "CONVERTERS-PRIVACY",
+          "packages": [
+            "datamimic_ce.domains.shared.converters.privacy"
+          ],
+          "concern": "Masking and hashing transformations; no blanket security guarantee."
+        },
+        {
+          "id": "CONVERTERS-STRUCTURAL",
+          "packages": [
+            "datamimic_ce.domains.shared.converters.structural"
+          ],
+          "concern": "Custom and structural value transformations."
+        }
+      ]
+    },
+    {
+      "scope": "domains/shared/literal_generators",
+      "contract_path": "docs/architecture/inner/domains/shared/literal_generators/architecture-contract.json",
+      "components": [
+        {
+          "id": "LITERALS-NUMERIC",
+          "packages": [
+            "datamimic_ce.domains.shared.literal_generators.numeric"
+          ],
+          "concern": "Numeric and local increment algorithms; no global runtime counter."
+        },
+        {
+          "id": "LITERALS-PRIMITIVES",
+          "packages": [
+            "datamimic_ce.domains.shared.literal_generators.primitives"
+          ],
+          "concern": "Primitive values and independent state-transition instances."
+        },
+        {
+          "id": "LITERALS-IDENTITY",
+          "packages": [
+            "datamimic_ce.domains.shared.literal_generators.identity"
+          ],
+          "concern": "Identifier, code, password and token data algorithms; retain coherent family."
+        },
+        {
+          "id": "LITERALS-TEMPORAL",
+          "packages": [
+            "datamimic_ce.domains.shared.literal_generators.temporal"
+          ],
+          "concern": "Birthdate and datetime generation."
+        },
+        {
+          "id": "LITERALS-PERSON",
+          "packages": [
+            "datamimic_ce.domains.shared.literal_generators.person"
+          ],
+          "concern": "Personal names and title data."
+        },
+        {
+          "id": "LITERALS-CONTACT",
+          "packages": [
+            "datamimic_ce.domains.shared.literal_generators.contact"
+          ],
+          "concern": "Contact and address components."
+        },
+        {
+          "id": "LITERALS-BUSINESS",
+          "packages": [
+            "datamimic_ce.domains.shared.literal_generators.business"
+          ],
+          "concern": "Company, department and sector data."
+        }
+      ]
+    },
+    {
+      "scope": "dsl",
+      "contract_path": "docs/architecture/inner/dsl/architecture-contract.json",
+      "components": [
+        {
+          "id": "DSL-API",
+          "packages": [
+            "datamimic_ce.engine.dsl.api"
+          ],
+          "concern": "Supported grammar/parser entry and capability projection."
+        },
+        {
+          "id": "DSL-VOCABULARY",
+          "packages": [
+            "datamimic_ce.engine.dsl.vocabulary"
+          ],
+          "concern": "Canonical descriptor constants and enums."
+        },
+        {
+          "id": "DSL-MODELS",
+          "packages": [
+            "datamimic_ce.engine.dsl.model"
+          ],
+          "concern": "Descriptor validation models and constraints."
+        },
+        {
+          "id": "DSL-STATEMENTS",
+          "packages": [
+            "datamimic_ce.engine.dsl.statements"
+          ],
+          "concern": "Parsed statement tree and its traversal."
+        },
+        {
+          "id": "DSL-PARSING",
+          "packages": [
+            "datamimic_ce.engine.dsl.parsers"
+          ],
+          "concern": "Ordered document parsing and concrete parser dispatch."
+        }
+      ]
+    },
+    {
+      "scope": "dsl/model",
+      "contract_path": "docs/architecture/inner/dsl/model/architecture-contract.json",
+      "components": [
+        {
+          "id": "MODEL-VALIDATION",
+          "packages": [
+            "datamimic_ce.engine.dsl.model.validation"
+          ],
+          "concern": "Shared actual validation helpers; no artificial base folder."
+        },
+        {
+          "id": "MODEL-CONSTRAINTS",
+          "packages": [
+            "datamimic_ce.engine.dsl.model.constraints"
+          ],
+          "concern": "Canonical cross-field grammar facts."
+        },
+        {
+          "id": "MODEL-FLOW",
+          "packages": [
+            "datamimic_ce.engine.dsl.model.flow"
+          ],
+          "concern": "Branches, loops and commands."
+        },
+        {
+          "id": "MODEL-VALUES",
+          "packages": [
+            "datamimic_ce.engine.dsl.model.values"
+          ],
+          "concern": "Scalar, structured, reference and variable value grammar."
+        },
+        {
+          "id": "MODEL-SETUP",
+          "packages": [
+            "datamimic_ce.engine.dsl.model.setup"
+          ],
+          "concern": "Ordered setup/client/include/generator/state-machine/demographics declarations."
+        },
+        {
+          "id": "MODEL-GENERATION",
+          "packages": [
+            "datamimic_ce.engine.dsl.model.generation"
+          ],
+          "concern": "Generate and time-series grammar."
+        },
+        {
+          "id": "MODEL-REGISTRY",
+          "packages": [
+            "datamimic_ce.engine.dsl.model.registry"
+          ],
+          "concern": "Element-to-model inventory."
+        }
+      ]
+    },
+    {
+      "scope": "dsl/parsers",
+      "contract_path": "docs/architecture/inner/dsl/parsers/architecture-contract.json",
+      "components": [
+        {
+          "id": "PARSERS-BASE",
+          "packages": [
+            "datamimic_ce.engine.dsl.parsers.base"
+          ],
+          "concern": "Parser abstraction and dispatch mechanism; no concrete composition imports."
+        },
+        {
+          "id": "PARSERS-FLOW",
+          "packages": [
+            "datamimic_ce.engine.dsl.parsers.flow"
+          ],
+          "concern": "Branch, loop and command tree construction."
+        },
+        {
+          "id": "PARSERS-VALUES",
+          "packages": [
+            "datamimic_ce.engine.dsl.parsers.values"
+          ],
+          "concern": "Value tree construction."
+        },
+        {
+          "id": "PARSERS-SETUP",
+          "packages": [
+            "datamimic_ce.engine.dsl.parsers.setup"
+          ],
+          "concern": "Concrete setup declaration parsing; shared client-config merge is lower in base."
+        },
+        {
+          "id": "PARSERS-GENERATION",
+          "packages": [
+            "datamimic_ce.engine.dsl.parsers.generation"
+          ],
+          "concern": "Generate parsing only."
+        },
+        {
+          "id": "PARSERS-REGISTRY",
+          "packages": [
+            "datamimic_ce.engine.dsl.parsers.registry"
+          ],
+          "concern": "Explicit concrete parser composition."
+        },
+        {
+          "id": "PARSERS-DOCUMENT",
+          "packages": [
+            "datamimic_ce.engine.dsl.parsers.document"
+          ],
+          "concern": "Ordered descriptor orchestration; injected IO property loader."
+        },
+        {
+          "id": "PARSERS-INPUT",
+          "packages": [
+            "datamimic_ce.engine.dsl.parsers.input"
+          ],
+          "concern": "Low-level XML/property syntax inputs used by recursive parsers."
+        }
+      ]
+    },
+    {
+      "scope": "dsl/statements",
+      "contract_path": "docs/architecture/inner/dsl/statements/architecture-contract.json",
+      "components": [
+        {
+          "id": "STATEMENTS-BASE",
+          "packages": [
+            "datamimic_ce.engine.dsl.statements.base"
+          ],
+          "concern": "Common statement tree state, no knowledge of Generate subclass."
+        },
+        {
+          "id": "STATEMENTS-FLOW",
+          "packages": [
+            "datamimic_ce.engine.dsl.statements.flow"
+          ],
+          "concern": "Branch, loop and command state including executed-branch registration."
+        },
+        {
+          "id": "STATEMENTS-VALUES",
+          "packages": [
+            "datamimic_ce.engine.dsl.statements.values"
+          ],
+          "concern": "Value declaration state."
+        },
+        {
+          "id": "STATEMENTS-SETUP",
+          "packages": [
+            "datamimic_ce.engine.dsl.statements.setup"
+          ],
+          "concern": "Setup/client/include/generator/state-machine/demographics state."
+        },
+        {
+          "id": "STATEMENTS-GENERATION",
+          "packages": [
+            "datamimic_ce.engine.dsl.statements.generation"
+          ],
+          "concern": "Generate representation and consumer grammar."
+        },
+        {
+          "id": "STATEMENTS-TRAVERSAL",
+          "packages": [
+            "datamimic_ce.engine.dsl.statements.traversal"
+          ],
+          "concern": "High-level Generate/Condition-aware tree queries."
+        }
+      ]
+    },
+    {
+      "scope": "interfaces",
+      "contract_path": "docs/architecture/inner/interfaces/architecture-contract.json",
+      "components": [
+        {
+          "id": "TRANSPORT-CLI",
+          "packages": [
+            "datamimic_ce.interfaces.cli"
+          ],
+          "concern": "CLI request/response adaptation."
+        },
+        {
+          "id": "TRANSPORT-MCP",
+          "packages": [
+            "datamimic_ce.interfaces.mcp"
+          ],
+          "concern": "Optional MCP request/response adaptation."
+        },
+        {
+          "id": "TRANSPORT-DEMO",
+          "packages": [
+            "datamimic_ce.interfaces.demo"
+          ],
+          "concern": "Demo workflow entry."
+        },
+        {
+          "id": "TRANSPORT-PROJECT",
+          "packages": [
+            "datamimic_ce.interfaces.project"
+          ],
+          "concern": "Project creation entry."
+        },
+        {
+          "id": "TRANSPORT-PYTHON",
+          "packages": [
+            "datamimic_ce.interfaces.python"
+          ],
+          "concern": "Python caller/test-factory adaptation; factory.py is a module."
+        }
+      ]
+    },
+    {
+      "scope": "io",
+      "contract_path": "docs/architecture/inner/io/architecture-contract.json",
+      "components": [
+        {
+          "id": "IO-API",
+          "packages": [
+            "datamimic_ce.engine.io.api"
+          ],
+          "concern": "Supported IO operations."
+        },
+        {
+          "id": "IO-CONTRACTS",
+          "packages": [
+            "datamimic_ce.engine.io.contracts"
+          ],
+          "concern": "Context-free IO value contracts."
+        },
+        {
+          "id": "IO-CLIENTS",
+          "packages": [
+            "datamimic_ce.engine.io.clients"
+          ],
+          "concern": "Connection lifecycle and database/client operations."
+        },
+        {
+          "id": "IO-CONNECTION-CONFIG",
+          "packages": [
+            "datamimic_ce.engine.io.connection_config"
+          ],
+          "concern": "Connection settings and on-demand property-file loading."
+        },
+        {
+          "id": "IO-SOURCES",
+          "packages": [
+            "datamimic_ce.engine.io.data_sources"
+          ],
+          "concern": "Source resolution, distribution, uniqueness, cyclic windows, paging and pool lifetime."
+        },
+        {
+          "id": "IO-EXPORTERS",
+          "packages": [
+            "datamimic_ce.engine.io.exporters"
+          ],
+          "concern": "Output routing, serialization and write adapters."
+        },
+        {
+          "id": "IO-FILES",
+          "packages": [
+            "datamimic_ce.engine.io.files"
+          ],
+          "concern": "File/cache/dataset readers."
+        }
+      ]
+    },
+    {
+      "scope": "io/exporters",
+      "contract_path": "docs/architecture/inner/io/exporters/architecture-contract.json",
+      "components": [
+        {
+          "id": "EXPORTERS-CORE",
+          "packages": [
+            "datamimic_ce.engine.io.exporters.core"
+          ],
+          "concern": "Export contracts, buffers, serialization and target routing."
+        },
+        {
+          "id": "EXPORTERS-FORMATS",
+          "packages": [
+            "datamimic_ce.engine.io.exporters.formats"
+          ],
+          "concern": "File encodings, including DbUnit flat XML."
+        },
+        {
+          "id": "EXPORTERS-DATABASE",
+          "packages": [
+            "datamimic_ce.engine.io.exporters.database"
+          ],
+          "concern": "Database/Mongo write adapters."
+        },
+        {
+          "id": "EXPORTERS-MEMORY",
+          "packages": [
+            "datamimic_ce.engine.io.exporters.memory"
+          ],
+          "concern": "Memstore writes."
+        },
+        {
+          "id": "EXPORTERS-DIAGNOSTICS",
+          "packages": [
+            "datamimic_ce.engine.io.exporters.diagnostics"
+          ],
+          "concern": "Console/log/test observation exporters."
+        },
+        {
+          "id": "EXPORTERS-REGISTRY",
+          "packages": [
+            "datamimic_ce.engine.io.exporters.registry"
+          ],
+          "concern": "Concrete exporter assembly, operation dispatch and bounded smoke execution."
+        }
+      ]
+    },
+    {
+      "scope": "runtime",
+      "contract_path": "docs/architecture/inner/runtime/architecture-contract.json",
+      "components": [
+        {
+          "id": "RUNTIME-API",
+          "packages": [
+            "datamimic_ce.engine.runtime.api"
+          ],
+          "concern": "Public runtime lifecycle entry."
+        },
+        {
+          "id": "RUNTIME-CONTRACTS",
+          "packages": [
+            "datamimic_ce.engine.runtime.contracts"
+          ],
+          "concern": "Run configuration and results."
+        },
+        {
+          "id": "RUNTIME-STORAGE",
+          "packages": [
+            "datamimic_ce.engine.runtime.storage"
+          ],
+          "concern": "Run/row storage primitives."
+        },
+        {
+          "id": "RUNTIME-LOGGING",
+          "packages": [
+            "datamimic_ce.engine.runtime.logging",
+            "datamimic_ce.engine.runtime.process_titles"
+          ],
+          "concern": "Runtime logging setup and process titles."
+        },
+        {
+          "id": "RUNTIME-CONTEXTS",
+          "packages": [
+            "datamimic_ce.engine.runtime.contexts"
+          ],
+          "concern": "Closed Context/SetupContext hierarchy, row state and seeded expression dependencies."
+        },
+        {
+          "id": "RUNTIME-TASKS",
+          "packages": [
+            "datamimic_ce.engine.runtime.tasks"
+          ],
+          "concern": "Statement execution, value construction and resolved source requests."
+        },
+        {
+          "id": "RUNTIME-LIFECYCLE",
+          "packages": [
+            "datamimic_ce.engine.runtime.lifecycle"
+          ],
+          "concern": "Run configuration, session/run orchestration and cleanup."
+        },
+        {
+          "id": "RUNTIME-EVALUATION",
+          "packages": [
+            "datamimic_ce.engine.runtime.scripting"
+          ],
+          "concern": "Expression evaluation/interpolation and boolean condition invariant."
+        }
+      ]
+    },
+    {
+      "scope": "runtime/tasks",
+      "contract_path": "docs/architecture/inner/runtime/tasks/architecture-contract.json",
+      "components": [
+        {
+          "id": "TASKS-BASE",
+          "packages": [
+            "datamimic_ce.engine.runtime.tasks.base"
+          ],
+          "concern": "Task abstraction, count policy and task lookup mechanism."
+        },
+        {
+          "id": "TASKS-SETUP",
+          "packages": [
+            "datamimic_ce.engine.runtime.tasks.setup"
+          ],
+          "concern": "Ordered declarations/client registration/includes; not an eager preprocessing phase."
+        },
+        {
+          "id": "TASKS-GENERATE",
+          "packages": [
+            "datamimic_ce.engine.runtime.tasks.generate"
+          ],
+          "concern": "Generate orchestration, export order and workers."
+        },
+        {
+          "id": "TASKS-VALUES",
+          "packages": [
+            "datamimic_ce.engine.runtime.tasks.values"
+          ],
+          "concern": "Shared value base and scalar/structured/reference/variable execution and construction."
+        },
+        {
+          "id": "TASKS-FLOW",
+          "packages": [
+            "datamimic_ce.engine.runtime.tasks.flow"
+          ],
+          "concern": "Branch, loop, assert, echo and Execute in every valid row/root scope."
+        },
+        {
+          "id": "TASKS-SOURCES",
+          "packages": [
+            "datamimic_ce.engine.runtime.tasks.sources"
+          ],
+          "concern": "Statement/context resolution and IO request adaptation only."
+        },
+        {
+          "id": "TASKS-REGISTRY",
+          "packages": [
+            "datamimic_ce.engine.runtime.tasks.registry"
+          ],
+          "concern": "Concrete Statement-to-Task registration at execution composition root."
+        }
+      ]
+    },
+    {
+      "scope": "runtime/tasks/generate",
+      "contract_path": "docs/architecture/inner/runtime/tasks/generate/architecture-contract.json",
+      "components": [
+        {
+          "id": "GENERATE-ORCHESTRATION",
+          "packages": [
+            "datamimic_ce.engine.runtime.tasks.generate.task",
+            "datamimic_ce.engine.runtime.tasks.generate.export_order"
+          ],
+          "concern": "Row-generation orchestration and dependency-sensitive export ordering."
+        },
+        {
+          "id": "GENERATE-WORKERS",
+          "packages": [
+            "datamimic_ce.engine.runtime.tasks.generate.workers"
+          ],
+          "concern": "Worker execution and process handoff."
+        },
+        {
+          "id": "GENERATE-POLICIES",
+          "packages": [
+            "datamimic_ce.engine.runtime.tasks.generate.policies"
+          ],
+          "concern": "Actual batching/lifecycle/count/worker policies."
+        }
+      ]
+    },
+    {
+      "scope": "errors",
+      "contract_path": "docs/architecture/inner/errors/architecture-contract.json",
+      "components": [
+        {
+          "id": "ERRORS-CODES",
+          "packages": [
+            "datamimic_ce.errors.codes"
+          ],
+          "concern": "Stable error-code vocabulary."
+        },
+        {
+          "id": "ERRORS-BASE",
+          "packages": [
+            "datamimic_ce.errors.base"
+          ],
+          "concern": "Public error hierarchy."
+        },
+        {
+          "id": "ERRORS-CATALOG",
+          "packages": [
+            "datamimic_ce.errors.catalog"
+          ],
+          "concern": "Typed specific errors."
+        },
+        {
+          "id": "ERRORS-FORMATTERS",
+          "packages": [
+            "datamimic_ce.errors.formatters"
+          ],
+          "concern": "Stable error formatting."
+        },
+        {
+          "id": "ERRORS-FACTORY",
+          "packages": [
+            "datamimic_ce.errors.factory"
+          ],
+          "concern": "Error construction; no vendor IO mapping."
+        }
+      ]
+    },
+    {
+      "scope": "domains/ecommerce",
+      "contract_path": "docs/architecture/inner/domains/ecommerce/architecture-contract.json",
+      "components": [
+        {
+          "id": "ECOMMERCE-MODELS",
+          "packages": [
+            "datamimic_ce.domains.ecommerce.models"
+          ],
+          "concern": "Lazy domain entities; may call generators for computed values."
+        },
+        {
+          "id": "ECOMMERCE-GENERATORS",
+          "packages": [
+            "datamimic_ce.domains.ecommerce.generators"
+          ],
+          "concern": "Value algorithms; must not import entity models/services."
+        },
+        {
+          "id": "ECOMMERCE-SERVICES",
+          "packages": [
+            "datamimic_ce.domains.ecommerce.services"
+          ],
+          "concern": "Domain construction workflows using models and generators."
+        }
+      ]
+    },
+    {
+      "scope": "domains/finance",
+      "contract_path": "docs/architecture/inner/domains/finance/architecture-contract.json",
+      "components": [
+        {
+          "id": "FINANCE-MODELS",
+          "packages": [
+            "datamimic_ce.domains.finance.models"
+          ],
+          "concern": "Lazy domain entities; may call generators for computed values."
+        },
+        {
+          "id": "FINANCE-GENERATORS",
+          "packages": [
+            "datamimic_ce.domains.finance.generators"
+          ],
+          "concern": "Value algorithms; must not import entity models/services."
+        },
+        {
+          "id": "FINANCE-SERVICES",
+          "packages": [
+            "datamimic_ce.domains.finance.services"
+          ],
+          "concern": "Domain construction workflows using models and generators."
+        },
+        {
+          "id": "FINANCE-ALGORITHMS",
+          "packages": [
+            "datamimic_ce.domains.finance.luhn"
+          ],
+          "concern": "Finance-specific checksum algorithm."
+        }
+      ]
+    },
+    {
+      "scope": "domains/healthcare",
+      "contract_path": "docs/architecture/inner/domains/healthcare/architecture-contract.json",
+      "components": [
+        {
+          "id": "HEALTHCARE-MODELS",
+          "packages": [
+            "datamimic_ce.domains.healthcare.models"
+          ],
+          "concern": "Lazy domain entities; may call generators for computed values."
+        },
+        {
+          "id": "HEALTHCARE-GENERATORS",
+          "packages": [
+            "datamimic_ce.domains.healthcare.generators"
+          ],
+          "concern": "Value algorithms; must not import entity models/services."
+        },
+        {
+          "id": "HEALTHCARE-SERVICES",
+          "packages": [
+            "datamimic_ce.domains.healthcare.services"
+          ],
+          "concern": "Domain construction workflows using models and generators."
+        }
+      ]
+    },
+    {
+      "scope": "domains/insurance",
+      "contract_path": "docs/architecture/inner/domains/insurance/architecture-contract.json",
+      "components": [
+        {
+          "id": "INSURANCE-MODELS",
+          "packages": [
+            "datamimic_ce.domains.insurance.models"
+          ],
+          "concern": "Lazy domain entities; may call generators for computed values."
+        },
+        {
+          "id": "INSURANCE-GENERATORS",
+          "packages": [
+            "datamimic_ce.domains.insurance.generators"
+          ],
+          "concern": "Value algorithms; must not import entity models/services."
+        },
+        {
+          "id": "INSURANCE-SERVICES",
+          "packages": [
+            "datamimic_ce.domains.insurance.services"
+          ],
+          "concern": "Domain construction workflows using models and generators."
+        }
+      ]
+    },
+    {
+      "scope": "domains/public_sector",
+      "contract_path": "docs/architecture/inner/domains/public_sector/architecture-contract.json",
+      "components": [
+        {
+          "id": "PUBLIC-SECTOR-MODELS",
+          "packages": [
+            "datamimic_ce.domains.public_sector.models"
+          ],
+          "concern": "Lazy domain entities; may call generators for computed values."
+        },
+        {
+          "id": "PUBLIC-SECTOR-GENERATORS",
+          "packages": [
+            "datamimic_ce.domains.public_sector.generators"
+          ],
+          "concern": "Value algorithms; must not import entity models/services."
+        },
+        {
+          "id": "PUBLIC-SECTOR-SERVICES",
+          "packages": [
+            "datamimic_ce.domains.public_sector.services"
+          ],
+          "concern": "Domain construction workflows using models and generators."
+        }
+      ]
+    }
+  ],
+  "edition_selector_rule": "EE substitutes datamimic_ee for datamimic_ce for implemented shared concerns. Edition-only behavior adds a real component; no empty modules or duplicate shim paths for parity.",
+  "target_directories": [
+    {
+      "path": "authoring",
+      "concern": "Compile intent and run bounded verification transactions.",
+      "component": "COMP-AUTHORING"
+    },
+    {
+      "path": "authoring/adapters",
+      "concern": "Bounded runtime/filesystem adapters and runtime-backed reference/capability views.",
+      "component": "AUTHORING-ADAPTERS"
+    },
+    {
+      "path": "authoring/application",
+      "concern": "Compile/check/run/scaffold transaction coordination.",
+      "component": "AUTHORING-APPLICATION"
+    },
+    {
+      "path": "authoring/domain",
+      "concern": "Intent specification, diagnostics, acceptance facts and pure rules.",
+      "component": "AUTHORING-DOMAIN"
+    },
+    {
+      "path": "authoring/domain/rules",
+      "concern": "Intent specification, diagnostics, acceptance facts and pure rules.",
+      "component": "AUTHORING-DOMAIN"
+    },
+    {
+      "path": "authoring/projection",
+      "concern": "Build typed authoring-reference variants from canonical intent facts.",
+      "component": "AUTHORING-PROJECTION"
+    },
+    {
+      "path": "domains",
+      "concern": "Generate business values/entities and load their domain datasets.",
+      "component": "COMP-DOMAINS"
+    },
+    {
+      "path": "domains/domain_core",
+      "concern": "Generator/entity/service contracts, shared dataset infrastructure and deterministic primitives.",
+      "component": "DOMAINS-CORE"
+    },
+    {
+      "path": "domains/domain_core/contracts",
+      "concern": "Generator/entity/service contracts, shared dataset infrastructure and deterministic primitives.",
+      "component": "DOMAINS-CORE"
+    },
+    {
+      "path": "domains/domain_core/datasets",
+      "concern": "Generator/entity/service contracts, shared dataset infrastructure and deterministic primitives.",
+      "component": "DOMAINS-CORE"
+    },
+    {
+      "path": "domains/domain_core/runtime",
+      "concern": "Generator/entity/service contracts, shared dataset infrastructure and deterministic primitives.",
+      "component": "DOMAINS-CORE"
+    },
+    {
+      "path": "domains/ecommerce",
+      "concern": "Industry-specific entities, generation algorithms and services.",
+      "component": "DOMAINS-ECOMMERCE"
+    },
+    {
+      "path": "domains/ecommerce/generators",
+      "concern": "Value algorithms; must not import entity models/services.",
+      "component": "ECOMMERCE-GENERATORS"
+    },
+    {
+      "path": "domains/ecommerce/models",
+      "concern": "Lazy domain entities; may call generators for computed values.",
+      "component": "ECOMMERCE-MODELS"
+    },
+    {
+      "path": "domains/ecommerce/services",
+      "concern": "Domain construction workflows using models and generators.",
+      "component": "ECOMMERCE-SERVICES"
+    },
+    {
+      "path": "domains/finance",
+      "concern": "Industry-specific entities, generation algorithms and services.",
+      "component": "DOMAINS-FINANCE"
+    },
+    {
+      "path": "domains/finance/generators",
+      "concern": "Value algorithms; must not import entity models/services.",
+      "component": "FINANCE-GENERATORS"
+    },
+    {
+      "path": "domains/finance/models",
+      "concern": "Lazy domain entities; may call generators for computed values.",
+      "component": "FINANCE-MODELS"
+    },
+    {
+      "path": "domains/finance/services",
+      "concern": "Domain construction workflows using models and generators.",
+      "component": "FINANCE-SERVICES"
+    },
+    {
+      "path": "domains/healthcare",
+      "concern": "Industry-specific entities, generation algorithms and services.",
+      "component": "DOMAINS-HEALTHCARE"
+    },
+    {
+      "path": "domains/healthcare/generators",
+      "concern": "Value algorithms; must not import entity models/services.",
+      "component": "HEALTHCARE-GENERATORS"
+    },
+    {
+      "path": "domains/healthcare/models",
+      "concern": "Lazy domain entities; may call generators for computed values.",
+      "component": "HEALTHCARE-MODELS"
+    },
+    {
+      "path": "domains/healthcare/services",
+      "concern": "Domain construction workflows using models and generators.",
+      "component": "HEALTHCARE-SERVICES"
+    },
+    {
+      "path": "domains/insurance",
+      "concern": "Industry-specific entities, generation algorithms and services.",
+      "component": "DOMAINS-INSURANCE"
+    },
+    {
+      "path": "domains/insurance/generators",
+      "concern": "Value algorithms; must not import entity models/services.",
+      "component": "INSURANCE-GENERATORS"
+    },
+    {
+      "path": "domains/insurance/models",
+      "concern": "Lazy domain entities; may call generators for computed values.",
+      "component": "INSURANCE-MODELS"
+    },
+    {
+      "path": "domains/insurance/services",
+      "concern": "Domain construction workflows using models and generators.",
+      "component": "INSURANCE-SERVICES"
+    },
+    {
+      "path": "domains/public_sector",
+      "concern": "Industry-specific entities, generation algorithms and services.",
+      "component": "DOMAINS-PUBLIC"
+    },
+    {
+      "path": "domains/public_sector/generators",
+      "concern": "Value algorithms; must not import entity models/services.",
+      "component": "PUBLIC-SECTOR-GENERATORS"
+    },
+    {
+      "path": "domains/public_sector/models",
+      "concern": "Lazy domain entities; may call generators for computed values.",
+      "component": "PUBLIC-SECTOR-MODELS"
+    },
+    {
+      "path": "domains/public_sector/services",
+      "concern": "Domain construction workflows using models and generators.",
+      "component": "PUBLIC-SECTOR-SERVICES"
+    },
+    {
+      "path": "domains/registry",
+      "concern": "Entity inventory, schema validation, builtin generator inventory and capability metadata projection.",
+      "component": "DOMAINS-REGISTRY"
+    },
+    {
+      "path": "domains/shared",
+      "concern": "Reusable cross-industry domain concepts.",
+      "component": "DOMAINS-SHARED"
+    },
+    {
+      "path": "domains/shared/converters",
+      "concern": "Typed value transformations.",
+      "component": "SHARED-CONVERTERS"
+    },
+    {
+      "path": "domains/shared/converters/base",
+      "concern": "Converter interface.",
+      "component": "CONVERTERS-BASE"
+    },
+    {
+      "path": "domains/shared/converters/privacy",
+      "concern": "Masking and hashing transformations; no blanket security guarantee.",
+      "component": "CONVERTERS-PRIVACY"
+    },
+    {
+      "path": "domains/shared/converters/structural",
+      "concern": "Custom and structural value transformations.",
+      "component": "CONVERTERS-STRUCTURAL"
+    },
+    {
+      "path": "domains/shared/converters/temporal",
+      "concern": "Date/time representation transformations.",
+      "component": "CONVERTERS-TEMPORAL"
+    },
+    {
+      "path": "domains/shared/converters/text",
+      "concern": "Text transformations.",
+      "component": "CONVERTERS-TEXT"
+    },
+    {
+      "path": "domains/shared/datasets",
+      "concern": "Shared locales, sampling and profile composition.",
+      "component": "SHARED-DATASETS"
+    },
+    {
+      "path": "domains/shared/datasets/locales",
+      "concern": "Shared locales, sampling and profile composition.",
+      "component": "SHARED-DATASETS"
+    },
+    {
+      "path": "domains/shared/demographics",
+      "concern": "Demographic model, profile validation and sampling rules.",
+      "component": "SHARED-DEMOGRAPHICS"
+    },
+    {
+      "path": "domains/shared/generators",
+      "concern": "Shared entity-value generation.",
+      "component": "SHARED-GENERATORS"
+    },
+    {
+      "path": "domains/shared/literal_generators",
+      "concern": "Context-free scalar/state-transition algorithms.",
+      "component": "SHARED-LITERAL-GENERATORS"
+    },
+    {
+      "path": "domains/shared/literal_generators/business",
+      "concern": "Company, department and sector data.",
+      "component": "LITERALS-BUSINESS"
+    },
+    {
+      "path": "domains/shared/literal_generators/contact",
+      "concern": "Contact and address components.",
+      "component": "LITERALS-CONTACT"
+    },
+    {
+      "path": "domains/shared/literal_generators/identity",
+      "concern": "Identifier, code, password and token data algorithms; retain coherent family.",
+      "component": "LITERALS-IDENTITY"
+    },
+    {
+      "path": "domains/shared/literal_generators/identity/codes",
+      "concern": "Identifier, code, password and token data algorithms; retain coherent family.",
+      "component": "LITERALS-IDENTITY"
+    },
+    {
+      "path": "domains/shared/literal_generators/identity/keys",
+      "concern": "Identifier, code, password and token data algorithms; retain coherent family.",
+      "component": "LITERALS-IDENTITY"
+    },
+    {
+      "path": "domains/shared/literal_generators/identity/security",
+      "concern": "Identifier, code, password and token data algorithms; retain coherent family.",
+      "component": "LITERALS-IDENTITY"
+    },
+    {
+      "path": "domains/shared/literal_generators/numeric",
+      "concern": "Numeric and local increment algorithms; no global runtime counter.",
+      "component": "LITERALS-NUMERIC"
+    },
+    {
+      "path": "domains/shared/literal_generators/person",
+      "concern": "Personal names and title data.",
+      "component": "LITERALS-PERSON"
+    },
+    {
+      "path": "domains/shared/literal_generators/primitives",
+      "concern": "Primitive values and independent state-transition instances.",
+      "component": "LITERALS-PRIMITIVES"
+    },
+    {
+      "path": "domains/shared/literal_generators/temporal",
+      "concern": "Birthdate and datetime generation.",
+      "component": "LITERALS-TEMPORAL"
+    },
+    {
+      "path": "domains/shared/models",
+      "concern": "Cross-industry lazy entities and value shapes.",
+      "component": "SHARED-MODELS"
+    },
+    {
+      "path": "domains/shared/services",
+      "concern": "Shared entity construction workflows.",
+      "component": "SHARED-SERVICES"
+    },
+    {
+      "path": "engine",
+      "concern": "Physical aggregate of the named owned components; no additional service/API.",
+      "component": null
+    },
+    {
+      "path": "engine/dsl",
+      "concern": "Validate descriptor vocabulary and construct execution statements.",
+      "component": "COMP-DSL"
+    },
+    {
+      "path": "engine/dsl/model",
+      "concern": "Descriptor validation models and constraints.",
+      "component": "DSL-MODELS"
+    },
+    {
+      "path": "engine/dsl/model/constraints",
+      "concern": "Canonical cross-field grammar facts.",
+      "component": "MODEL-CONSTRAINTS"
+    },
+    {
+      "path": "engine/dsl/model/flow",
+      "concern": "Branches, loops and commands.",
+      "component": "MODEL-FLOW"
+    },
+    {
+      "path": "engine/dsl/model/flow/branches",
+      "concern": "Branches, loops and commands.",
+      "component": "MODEL-FLOW"
+    },
+    {
+      "path": "engine/dsl/model/flow/commands",
+      "concern": "Branches, loops and commands.",
+      "component": "MODEL-FLOW"
+    },
+    {
+      "path": "engine/dsl/model/flow/loops",
+      "concern": "Branches, loops and commands.",
+      "component": "MODEL-FLOW"
+    },
+    {
+      "path": "engine/dsl/model/generation",
+      "concern": "Generate and time-series grammar.",
+      "component": "MODEL-GENERATION"
+    },
+    {
+      "path": "engine/dsl/model/setup",
+      "concern": "Ordered setup/client/include/generator/state-machine/demographics declarations.",
+      "component": "MODEL-SETUP"
+    },
+    {
+      "path": "engine/dsl/model/values",
+      "concern": "Scalar, structured, reference and variable value grammar.",
+      "component": "MODEL-VALUES"
+    },
+    {
+      "path": "engine/dsl/model/values/references",
+      "concern": "Scalar, structured, reference and variable value grammar.",
+      "component": "MODEL-VALUES"
+    },
+    {
+      "path": "engine/dsl/model/values/scalar",
+      "concern": "Scalar, structured, reference and variable value grammar.",
+      "component": "MODEL-VALUES"
+    },
+    {
+      "path": "engine/dsl/model/values/structured",
+      "concern": "Scalar, structured, reference and variable value grammar.",
+      "component": "MODEL-VALUES"
+    },
+    {
+      "path": "engine/dsl/model/values/variables",
+      "concern": "Scalar, structured, reference and variable value grammar.",
+      "component": "MODEL-VALUES"
+    },
+    {
+      "path": "engine/dsl/parsers",
+      "concern": "Ordered document parsing and concrete parser dispatch.",
+      "component": "DSL-PARSING"
+    },
+    {
+      "path": "engine/dsl/parsers/base",
+      "concern": "Parser abstraction and dispatch mechanism; no concrete composition imports.",
+      "component": "PARSERS-BASE"
+    },
+    {
+      "path": "engine/dsl/parsers/document",
+      "concern": "Ordered descriptor orchestration; injected IO property loader.",
+      "component": "PARSERS-DOCUMENT"
+    },
+    {
+      "path": "engine/dsl/parsers/flow",
+      "concern": "Branch, loop and command tree construction.",
+      "component": "PARSERS-FLOW"
+    },
+    {
+      "path": "engine/dsl/parsers/flow/branches",
+      "concern": "Branch, loop and command tree construction.",
+      "component": "PARSERS-FLOW"
+    },
+    {
+      "path": "engine/dsl/parsers/flow/commands",
+      "concern": "Branch, loop and command tree construction.",
+      "component": "PARSERS-FLOW"
+    },
+    {
+      "path": "engine/dsl/parsers/flow/loops",
+      "concern": "Branch, loop and command tree construction.",
+      "component": "PARSERS-FLOW"
+    },
+    {
+      "path": "engine/dsl/parsers/generation",
+      "concern": "Generate parsing only.",
+      "component": "PARSERS-GENERATION"
+    },
+    {
+      "path": "engine/dsl/parsers/input",
+      "concern": "Low-level XML/property syntax inputs used by recursive parsers.",
+      "component": "PARSERS-INPUT"
+    },
+    {
+      "path": "engine/dsl/parsers/setup",
+      "concern": "Concrete setup declaration parsing; shared client-config merge is lower in base.",
+      "component": "PARSERS-SETUP"
+    },
+    {
+      "path": "engine/dsl/parsers/values",
+      "concern": "Value tree construction.",
+      "component": "PARSERS-VALUES"
+    },
+    {
+      "path": "engine/dsl/parsers/values/references",
+      "concern": "Value tree construction.",
+      "component": "PARSERS-VALUES"
+    },
+    {
+      "path": "engine/dsl/parsers/values/scalar",
+      "concern": "Value tree construction.",
+      "component": "PARSERS-VALUES"
+    },
+    {
+      "path": "engine/dsl/parsers/values/structured",
+      "concern": "Value tree construction.",
+      "component": "PARSERS-VALUES"
+    },
+    {
+      "path": "engine/dsl/parsers/values/variables",
+      "concern": "Value tree construction.",
+      "component": "PARSERS-VALUES"
+    },
+    {
+      "path": "engine/dsl/statements",
+      "concern": "Parsed statement tree and its traversal.",
+      "component": "DSL-STATEMENTS"
+    },
+    {
+      "path": "engine/dsl/statements/base",
+      "concern": "Common statement tree state, no knowledge of Generate subclass.",
+      "component": "STATEMENTS-BASE"
+    },
+    {
+      "path": "engine/dsl/statements/flow",
+      "concern": "Branch, loop and command state including executed-branch registration.",
+      "component": "STATEMENTS-FLOW"
+    },
+    {
+      "path": "engine/dsl/statements/flow/branches",
+      "concern": "Branch, loop and command state including executed-branch registration.",
+      "component": "STATEMENTS-FLOW"
+    },
+    {
+      "path": "engine/dsl/statements/flow/commands",
+      "concern": "Branch, loop and command state including executed-branch registration.",
+      "component": "STATEMENTS-FLOW"
+    },
+    {
+      "path": "engine/dsl/statements/flow/loops",
+      "concern": "Branch, loop and command state including executed-branch registration.",
+      "component": "STATEMENTS-FLOW"
+    },
+    {
+      "path": "engine/dsl/statements/generation",
+      "concern": "Generate representation and consumer grammar.",
+      "component": "STATEMENTS-GENERATION"
+    },
+    {
+      "path": "engine/dsl/statements/setup",
+      "concern": "Setup/client/include/generator/state-machine/demographics state.",
+      "component": "STATEMENTS-SETUP"
+    },
+    {
+      "path": "engine/dsl/statements/values",
+      "concern": "Value declaration state.",
+      "component": "STATEMENTS-VALUES"
+    },
+    {
+      "path": "engine/dsl/statements/values/references",
+      "concern": "Value declaration state.",
+      "component": "STATEMENTS-VALUES"
+    },
+    {
+      "path": "engine/dsl/statements/values/scalar",
+      "concern": "Value declaration state.",
+      "component": "STATEMENTS-VALUES"
+    },
+    {
+      "path": "engine/dsl/statements/values/structured",
+      "concern": "Value declaration state.",
+      "component": "STATEMENTS-VALUES"
+    },
+    {
+      "path": "engine/dsl/statements/values/variables",
+      "concern": "Value declaration state.",
+      "component": "STATEMENTS-VALUES"
+    },
+    {
+      "path": "engine/dsl/vocabulary",
+      "concern": "Canonical descriptor constants and enums.",
+      "component": "DSL-VOCABULARY"
+    },
+    {
+      "path": "engine/dsl/vocabulary/constants",
+      "concern": "Canonical descriptor constants and enums.",
+      "component": "DSL-VOCABULARY"
+    },
+    {
+      "path": "engine/dsl/vocabulary/enums",
+      "concern": "Canonical descriptor constants and enums.",
+      "component": "DSL-VOCABULARY"
+    },
+    {
+      "path": "engine/io",
+      "concern": "Read, select, page and write external/in-memory data.",
+      "component": "COMP-IO"
+    },
+    {
+      "path": "engine/io/clients",
+      "concern": "Connection lifecycle and database/client operations.",
+      "component": "IO-CLIENTS"
+    },
+    {
+      "path": "engine/io/connection_config",
+      "concern": "Connection settings and on-demand property-file loading.",
+      "component": "IO-CONNECTION-CONFIG"
+    },
+    {
+      "path": "engine/io/data_sources",
+      "concern": "Source resolution, distribution, uniqueness, cyclic windows, paging and pool lifetime.",
+      "component": "IO-SOURCES"
+    },
+    {
+      "path": "engine/io/data_sources/boundary",
+      "concern": "Source resolution, distribution, uniqueness, cyclic windows, paging and pool lifetime.",
+      "component": "IO-SOURCES"
+    },
+    {
+      "path": "engine/io/exporters",
+      "concern": "Output routing, serialization and write adapters.",
+      "component": "IO-EXPORTERS"
+    },
+    {
+      "path": "engine/io/exporters/core",
+      "concern": "Export contracts, buffers, serialization and target routing.",
+      "component": "EXPORTERS-CORE"
+    },
+    {
+      "path": "engine/io/exporters/database",
+      "concern": "Database/Mongo write adapters.",
+      "component": "EXPORTERS-DATABASE"
+    },
+    {
+      "path": "engine/io/exporters/diagnostics",
+      "concern": "Console/log/test observation exporters.",
+      "component": "EXPORTERS-DIAGNOSTICS"
+    },
+    {
+      "path": "engine/io/exporters/formats",
+      "concern": "File encodings, including DbUnit flat XML.",
+      "component": "EXPORTERS-FORMATS"
+    },
+    {
+      "path": "engine/io/exporters/memory",
+      "concern": "Memstore writes.",
+      "component": "EXPORTERS-MEMORY"
+    },
+    {
+      "path": "engine/io/files",
+      "concern": "File/cache/dataset readers.",
+      "component": "IO-FILES"
+    },
+    {
+      "path": "engine/runtime",
+      "concern": "Execute statements; own run, row and worker state.",
+      "component": "COMP-RUNTIME"
+    },
+    {
+      "path": "engine/runtime/contexts",
+      "concern": "Closed Context/SetupContext hierarchy, row state and seeded expression dependencies.",
+      "component": "RUNTIME-CONTEXTS"
+    },
+    {
+      "path": "engine/runtime/lifecycle",
+      "concern": "Run configuration, session/run orchestration and cleanup.",
+      "component": "RUNTIME-LIFECYCLE"
+    },
+    {
+      "path": "engine/runtime/scripting",
+      "concern": "Expression evaluation/interpolation and boolean condition invariant.",
+      "component": "RUNTIME-EVALUATION"
+    },
+    {
+      "path": "engine/runtime/scripting/plugins",
+      "concern": "Expression evaluation/interpolation and boolean condition invariant.",
+      "component": "RUNTIME-EVALUATION"
+    },
+    {
+      "path": "engine/runtime/storage",
+      "concern": "Run/row storage primitives.",
+      "component": "RUNTIME-STORAGE"
+    },
+    {
+      "path": "engine/runtime/tasks",
+      "concern": "Statement execution, value construction and resolved source requests.",
+      "component": "RUNTIME-TASKS"
+    },
+    {
+      "path": "engine/runtime/tasks/base",
+      "concern": "Task abstraction, count policy and task lookup mechanism.",
+      "component": "TASKS-BASE"
+    },
+    {
+      "path": "engine/runtime/tasks/flow",
+      "concern": "Branch, loop, assert, echo and Execute in every valid row/root scope.",
+      "component": "TASKS-FLOW"
+    },
+    {
+      "path": "engine/runtime/tasks/flow/branches",
+      "concern": "Branch, loop, assert, echo and Execute in every valid row/root scope.",
+      "component": "TASKS-FLOW"
+    },
+    {
+      "path": "engine/runtime/tasks/flow/commands",
+      "concern": "Branch, loop, assert, echo and Execute in every valid row/root scope.",
+      "component": "TASKS-FLOW"
+    },
+    {
+      "path": "engine/runtime/tasks/flow/loops",
+      "concern": "Branch, loop, assert, echo and Execute in every valid row/root scope.",
+      "component": "TASKS-FLOW"
+    },
+    {
+      "path": "engine/runtime/tasks/generate",
+      "concern": "Generate orchestration, export order and workers.",
+      "component": "TASKS-GENERATE"
+    },
+    {
+      "path": "engine/runtime/tasks/generate/policies",
+      "concern": "Actual batching/lifecycle/count/worker policies.",
+      "component": "GENERATE-POLICIES"
+    },
+    {
+      "path": "engine/runtime/tasks/generate/workers",
+      "concern": "Worker execution and process handoff.",
+      "component": "GENERATE-WORKERS"
+    },
+    {
+      "path": "engine/runtime/tasks/setup",
+      "concern": "Ordered declarations/client registration/includes; not an eager preprocessing phase.",
+      "component": "TASKS-SETUP"
+    },
+    {
+      "path": "engine/runtime/tasks/sources",
+      "concern": "Statement/context resolution and IO request adaptation only.",
+      "component": "TASKS-SOURCES"
+    },
+    {
+      "path": "engine/runtime/tasks/values",
+      "concern": "Shared value base and scalar/structured/reference/variable execution and construction.",
+      "component": "TASKS-VALUES"
+    },
+    {
+      "path": "engine/runtime/tasks/values/construction",
+      "concern": "Shared value base and scalar/structured/reference/variable execution and construction.",
+      "component": "TASKS-VALUES"
+    },
+    {
+      "path": "engine/runtime/tasks/values/references",
+      "concern": "Shared value base and scalar/structured/reference/variable execution and construction.",
+      "component": "TASKS-VALUES"
+    },
+    {
+      "path": "engine/runtime/tasks/values/scalar",
+      "concern": "Shared value base and scalar/structured/reference/variable execution and construction.",
+      "component": "TASKS-VALUES"
+    },
+    {
+      "path": "engine/runtime/tasks/values/structured",
+      "concern": "Shared value base and scalar/structured/reference/variable execution and construction.",
+      "component": "TASKS-VALUES"
+    },
+    {
+      "path": "engine/runtime/tasks/values/variables",
+      "concern": "Shared value base and scalar/structured/reference/variable execution and construction.",
+      "component": "TASKS-VALUES"
+    },
+    {
+      "path": "errors",
+      "concern": "Stable public error types, codes, formatting and construction.",
+      "component": "COMP-ERRORS"
+    },
+    {
+      "path": "errors/catalog",
+      "concern": "Typed specific errors.",
+      "component": "ERRORS-CATALOG"
+    },
+    {
+      "path": "interfaces",
+      "concern": "Transport and Python caller adaptation; no execution policy.",
+      "component": "COMP-INTERFACES"
+    },
+    {
+      "path": "interfaces/cli",
+      "concern": "CLI request/response adaptation.",
+      "component": "TRANSPORT-CLI"
+    },
+    {
+      "path": "interfaces/mcp",
+      "concern": "Optional MCP request/response adaptation.",
+      "component": "TRANSPORT-MCP"
+    },
+    {
+      "path": "interfaces/python",
+      "concern": "Python caller/test-factory adaptation; factory.py is a module.",
+      "component": "TRANSPORT-PYTHON"
+    },
+    {
+      "path": "resources",
+      "concern": "Packaged runnable demos/examples and resource access.",
+      "component": "COMP-RESOURCES"
+    },
+    {
+      "path": "resources/demos",
+      "concern": "Packaged runnable demos/examples and resource access.",
+      "component": "COMP-RESOURCES"
+    },
+    {
+      "path": "resources/demos/demo-clinical-trial",
+      "concern": "Packaged runnable demos/examples and resource access.",
+      "component": "COMP-RESOURCES"
+    },
+    {
+      "path": "resources/demos/demo-clinical-trial/script",
+      "concern": "Packaged runnable demos/examples and resource access.",
+      "component": "COMP-RESOURCES"
+    },
+    {
+      "path": "resources/demos/demo-custom-components",
+      "concern": "Packaged runnable demos/examples and resource access.",
+      "component": "COMP-RESOURCES"
+    },
+    {
+      "path": "resources/demos/demo-custom-components/script",
+      "concern": "Packaged runnable demos/examples and resource access.",
+      "component": "COMP-RESOURCES"
+    },
+    {
+      "path": "resources/demos/demo-datetime",
+      "concern": "Packaged runnable demos/examples and resource access.",
+      "component": "COMP-RESOURCES"
+    },
+    {
+      "path": "resources/demos/demo-datetime/script",
+      "concern": "Packaged runnable demos/examples and resource access.",
+      "component": "COMP-RESOURCES"
+    },
+    {
+      "path": "resources/demos/demo-db-mapping",
+      "concern": "Packaged runnable demos/examples and resource access.",
+      "component": "COMP-RESOURCES"
+    },
+    {
+      "path": "resources/demos/demo-db-mapping/script",
+      "concern": "Packaged runnable demos/examples and resource access.",
+      "component": "COMP-RESOURCES"
+    },
+    {
+      "path": "resources/demos/demo-finance",
+      "concern": "Packaged runnable demos/examples and resource access.",
+      "component": "COMP-RESOURCES"
+    },
+    {
+      "path": "resources/demos/demo-finance/script",
+      "concern": "Packaged runnable demos/examples and resource access.",
+      "component": "COMP-RESOURCES"
+    },
+    {
+      "path": "resources/demos/demo-py-scripting",
+      "concern": "Packaged runnable demos/examples and resource access.",
+      "component": "COMP-RESOURCES"
+    },
+    {
+      "path": "resources/demos/demo-py-scripting/script",
+      "concern": "Packaged runnable demos/examples and resource access.",
+      "component": "COMP-RESOURCES"
+    },
+    {
+      "path": "resources/examples",
+      "concern": "Packaged runnable demos/examples and resource access.",
+      "component": "COMP-RESOURCES"
+    }
+  ],
+  "effective_module_mapping": [
+    {
+      "source": "__init__.py",
+      "targets": [
+        "__init__.py"
+      ]
+    },
+    {
+      "source": "_compat.py",
+      "targets": [
+        "_compat.py"
+      ]
+    },
+    {
+      "source": "authoring/__init__.py",
+      "targets": [
+        "authoring/__init__.py"
+      ]
+    },
+    {
+      "source": "authoring/adapters/__init__.py",
+      "targets": [
+        "authoring/adapters/__init__.py"
+      ]
+    },
+    {
+      "source": "authoring/adapters/dryrun.py",
+      "targets": [
+        "authoring/adapters/dryrun.py"
+      ]
+    },
+    {
+      "source": "authoring/adapters/engine_check.py",
+      "targets": [
+        "authoring/adapters/engine_check.py"
+      ]
+    },
+    {
+      "source": "authoring/adapters/linter.py",
+      "targets": [
+        "authoring/adapters/linter.py"
+      ]
+    },
+    {
+      "source": "authoring/adapters/xml_loader.py",
+      "targets": [
+        "authoring/adapters/xml_loader.py"
+      ]
+    },
+    {
+      "source": "authoring/api.py",
+      "targets": [
+        "authoring/api.py"
+      ]
+    },
+    {
+      "source": "authoring/application/__init__.py",
+      "targets": [
+        "authoring/application/__init__.py"
+      ]
+    },
+    {
+      "source": "authoring/application/acceptance.py",
+      "targets": [
+        "authoring/application/acceptance.py"
+      ]
+    },
+    {
+      "source": "authoring/application/compiler.py",
+      "targets": [
+        "authoring/application/compiler.py"
+      ]
+    },
+    {
+      "source": "authoring/application/intent_linter.py",
+      "targets": [
+        "authoring/application/intent_linter.py"
+      ]
+    },
+    {
+      "source": "authoring/application/intent_validation.py",
+      "targets": [
+        "authoring/application/intent_validation.py"
+      ]
+    },
+    {
+      "source": "authoring/application/service.py",
+      "targets": [
+        "authoring/application/service.py"
+      ]
+    },
+    {
+      "source": "authoring/application/verification.py",
+      "targets": [
+        "authoring/application/verification.py"
+      ]
+    },
+    {
+      "source": "authoring/contracts.py",
+      "targets": [
+        "authoring/contracts.py"
+      ]
+    },
+    {
+      "source": "authoring/domain/__init__.py",
+      "targets": [
+        "authoring/domain/__init__.py"
+      ]
+    },
+    {
+      "source": "authoring/domain/derived_facts.py",
+      "targets": [
+        "authoring/domain/derived_facts.py"
+      ]
+    },
+    {
+      "source": "authoring/domain/diagnostics.py",
+      "targets": [
+        "authoring/domain/diagnostics.py"
+      ]
+    },
+    {
+      "source": "authoring/domain/rule_catalog.py",
+      "targets": [
+        "authoring/domain/rule_catalog.py"
+      ]
+    },
+    {
+      "source": "authoring/domain/rules/__init__.py",
+      "targets": [
+        "authoring/domain/rules/__init__.py"
+      ]
+    },
+    {
+      "source": "authoring/domain/rules/base.py",
+      "targets": [
+        "authoring/domain/rules/base.py"
+      ]
+    },
+    {
+      "source": "authoring/domain/rules/best_practice.py",
+      "targets": [
+        "authoring/domain/rules/best_practice.py"
+      ]
+    },
+    {
+      "source": "authoring/domain/rules/cross_statement.py",
+      "targets": [
+        "authoring/domain/rules/cross_statement.py"
+      ]
+    },
+    {
+      "source": "authoring/domain/rules/intent_rules.py",
+      "targets": [
+        "authoring/domain/rules/intent_rules.py"
+      ]
+    },
+    {
+      "source": "authoring/domain/rules/schema_facts.py",
+      "targets": [
+        "authoring/domain/rules/schema_facts.py"
+      ]
+    },
+    {
+      "source": "authoring/domain/rules/schema_rules.py",
+      "targets": [
+        "authoring/domain/rules/schema_rules.py"
+      ]
+    },
+    {
+      "source": "authoring/domain/rules/semantic_rules.py",
+      "targets": [
+        "authoring/domain/rules/semantic_rules.py"
+      ]
+    },
+    {
+      "source": "authoring/domain/schema.py",
+      "targets": [
+        "authoring/domain/schema.py"
+      ]
+    },
+    {
+      "source": "authoring/domain/script_semantics.py",
+      "targets": [
+        "authoring/domain/script_semantics.py"
+      ]
+    },
+    {
+      "source": "authoring/projection/__init__.py",
+      "targets": [
+        "authoring/projection/__init__.py"
+      ]
+    },
+    {
+      "source": "authoring/projection/reference.py",
+      "targets": [
+        "authoring/adapters/reference.py"
+      ]
+    },
+    {
+      "source": "authoring/projection/reference_projection.py",
+      "targets": [
+        "authoring/projection/reference_projection.py"
+      ]
+    },
+    {
+      "source": "authoring/spec.py",
+      "targets": [
+        "authoring/spec.py"
+      ]
+    },
+    {
+      "source": "data_mimic_test.py",
+      "targets": [
+        "interfaces/python/data_mimic_test.py"
+      ]
+    },
+    {
+      "source": "datamimic.py",
+      "targets": [
+        "interfaces/python/datamimic.py"
+      ]
+    },
+    {
+      "source": "domains/__init__.py",
+      "targets": [
+        "domains/__init__.py"
+      ]
+    },
+    {
+      "source": "domains/api.py",
+      "targets": [
+        "domains/api.py"
+      ]
+    },
+    {
+      "source": "domains/domain_core/__init__.py",
+      "targets": [
+        "domains/domain_core/__init__.py"
+      ]
+    },
+    {
+      "source": "domains/domain_core/attribute_catalog.py",
+      "targets": [
+        "domains/domain_core/contracts/attribute_catalog.py"
+      ]
+    },
+    {
+      "source": "domains/domain_core/base_domain_generator.py",
+      "targets": [
+        "domains/domain_core/base_domain_generator.py"
+      ]
+    },
+    {
+      "source": "domains/domain_core/base_domain_service.py",
+      "targets": [
+        "domains/domain_core/base_domain_service.py"
+      ]
+    },
+    {
+      "source": "domains/domain_core/base_entity.py",
+      "targets": [
+        "domains/domain_core/base_entity.py"
+      ]
+    },
+    {
+      "source": "domains/domain_core/base_literal_generator.py",
+      "targets": [
+        "domains/domain_core/base_literal_generator.py"
+      ]
+    },
+    {
+      "source": "domains/domain_core/property_cache.py",
+      "targets": [
+        "domains/domain_core/property_cache.py"
+      ]
+    },
+    {
+      "source": "domains/domain_core/runtime/__init__.py",
+      "targets": [
+        "domains/domain_core/runtime/__init__.py"
+      ]
+    },
+    {
+      "source": "domains/domain_core/runtime/clock.py",
+      "targets": [
+        "domains/domain_core/runtime/clock.py"
+      ]
+    },
+    {
+      "source": "domains/domain_core/runtime/rng.py",
+      "targets": [
+        "domains/domain_core/runtime/rng.py"
+      ]
+    },
+    {
+      "source": "domains/domain_core/runtime/run_seed.py",
+      "targets": [
+        "domains/domain_core/runtime/run_seed.py"
+      ]
+    },
+    {
+      "source": "domains/ecommerce/__init__.py",
+      "targets": [
+        "domains/ecommerce/__init__.py"
+      ]
+    },
+    {
+      "source": "domains/ecommerce/generators/__init__.py",
+      "targets": [
+        "domains/ecommerce/generators/__init__.py"
+      ]
+    },
+    {
+      "source": "domains/ecommerce/generators/order_generator.py",
+      "targets": [
+        "domains/ecommerce/generators/order_generator.py"
+      ]
+    },
+    {
+      "source": "domains/ecommerce/generators/product_generator.py",
+      "targets": [
+        "domains/ecommerce/generators/product_generator.py"
+      ]
+    },
+    {
+      "source": "domains/ecommerce/models/__init__.py",
+      "targets": [
+        "domains/ecommerce/models/__init__.py"
+      ]
+    },
+    {
+      "source": "domains/ecommerce/models/order.py",
+      "targets": [
+        "domains/ecommerce/models/order.py"
+      ]
+    },
+    {
+      "source": "domains/ecommerce/models/product.py",
+      "targets": [
+        "domains/ecommerce/models/product.py"
+      ]
+    },
+    {
+      "source": "domains/ecommerce/services/__init__.py",
+      "targets": [
+        "domains/ecommerce/services/__init__.py"
+      ]
+    },
+    {
+      "source": "domains/ecommerce/services/order_service.py",
+      "targets": [
+        "domains/ecommerce/services/order_service.py"
+      ]
+    },
+    {
+      "source": "domains/ecommerce/services/product_service.py",
+      "targets": [
+        "domains/ecommerce/services/product_service.py"
+      ]
+    },
+    {
+      "source": "domains/entity_registry.py",
+      "targets": [
+        "domains/registry/entities.py"
+      ]
+    },
+    {
+      "source": "domains/facade.py",
+      "targets": [
+        "domains/facade.py"
+      ]
+    },
+    {
+      "source": "domains/finance/__init__.py",
+      "targets": [
+        "domains/finance/__init__.py"
+      ]
+    },
+    {
+      "source": "domains/finance/generators/__init__.py",
+      "targets": [
+        "domains/finance/generators/__init__.py"
+      ]
+    },
+    {
+      "source": "domains/finance/generators/bank_account_generator.py",
+      "targets": [
+        "domains/finance/generators/bank_account_generator.py"
+      ]
+    },
+    {
+      "source": "domains/finance/generators/bank_generator.py",
+      "targets": [
+        "domains/finance/generators/bank_generator.py"
+      ]
+    },
+    {
+      "source": "domains/finance/generators/credit_card_generator.py",
+      "targets": [
+        "domains/finance/generators/credit_card_generator.py"
+      ]
+    },
+    {
+      "source": "domains/finance/generators/transaction_generator.py",
+      "targets": [
+        "domains/finance/generators/transaction_generator.py"
+      ]
+    },
+    {
+      "source": "domains/finance/luhn.py",
+      "targets": [
+        "domains/finance/luhn.py"
+      ]
+    },
+    {
+      "source": "domains/finance/models/__init__.py",
+      "targets": [
+        "domains/finance/models/__init__.py"
+      ]
+    },
+    {
+      "source": "domains/finance/models/bank.py",
+      "targets": [
+        "domains/finance/models/bank.py"
+      ]
+    },
+    {
+      "source": "domains/finance/models/bank_account.py",
+      "targets": [
+        "domains/finance/models/bank_account.py"
+      ]
+    },
+    {
+      "source": "domains/finance/models/credit_card.py",
+      "targets": [
+        "domains/finance/models/credit_card.py"
+      ]
+    },
+    {
+      "source": "domains/finance/models/transaction.py",
+      "targets": [
+        "domains/finance/models/transaction.py"
+      ]
+    },
+    {
+      "source": "domains/finance/services/__init__.py",
+      "targets": [
+        "domains/finance/services/__init__.py"
+      ]
+    },
+    {
+      "source": "domains/finance/services/bank_account_service.py",
+      "targets": [
+        "domains/finance/services/bank_account_service.py"
+      ]
+    },
+    {
+      "source": "domains/finance/services/bank_service.py",
+      "targets": [
+        "domains/finance/services/bank_service.py"
+      ]
+    },
+    {
+      "source": "domains/finance/services/credit_card_service.py",
+      "targets": [
+        "domains/finance/services/credit_card_service.py"
+      ]
+    },
+    {
+      "source": "domains/finance/services/transaction_service.py",
+      "targets": [
+        "domains/finance/services/transaction_service.py"
+      ]
+    },
+    {
+      "source": "domains/healthcare/__init__.py",
+      "targets": [
+        "domains/healthcare/__init__.py"
+      ]
+    },
+    {
+      "source": "domains/healthcare/generators/__init__.py",
+      "targets": [
+        "domains/healthcare/generators/__init__.py"
+      ]
+    },
+    {
+      "source": "domains/healthcare/generators/doctor_generator.py",
+      "targets": [
+        "domains/healthcare/generators/doctor_generator.py"
+      ]
+    },
+    {
+      "source": "domains/healthcare/generators/hospital_generator.py",
+      "targets": [
+        "domains/healthcare/generators/hospital_generator.py"
+      ]
+    },
+    {
+      "source": "domains/healthcare/generators/medical_device_generator.py",
+      "targets": [
+        "domains/healthcare/generators/medical_device_generator.py"
+      ]
+    },
+    {
+      "source": "domains/healthcare/generators/medical_procedure_generator.py",
+      "targets": [
+        "domains/healthcare/generators/medical_procedure_generator.py"
+      ]
+    },
+    {
+      "source": "domains/healthcare/generators/patient_generator.py",
+      "targets": [
+        "domains/healthcare/generators/patient_generator.py"
+      ]
+    },
+    {
+      "source": "domains/healthcare/models/__init__.py",
+      "targets": [
+        "domains/healthcare/models/__init__.py"
+      ]
+    },
+    {
+      "source": "domains/healthcare/models/doctor.py",
+      "targets": [
+        "domains/healthcare/models/doctor.py"
+      ]
+    },
+    {
+      "source": "domains/healthcare/models/hospital.py",
+      "targets": [
+        "domains/healthcare/models/hospital.py"
+      ]
+    },
+    {
+      "source": "domains/healthcare/models/medical_device.py",
+      "targets": [
+        "domains/healthcare/models/medical_device.py"
+      ]
+    },
+    {
+      "source": "domains/healthcare/models/medical_procedure.py",
+      "targets": [
+        "domains/healthcare/models/medical_procedure.py"
+      ]
+    },
+    {
+      "source": "domains/healthcare/models/patient.py",
+      "targets": [
+        "domains/healthcare/models/patient.py"
+      ]
+    },
+    {
+      "source": "domains/healthcare/services/__init__.py",
+      "targets": [
+        "domains/healthcare/services/__init__.py"
+      ]
+    },
+    {
+      "source": "domains/healthcare/services/doctor_api.py",
+      "targets": [
+        "domains/healthcare/use_cases/doctor_api.py"
+      ]
+    },
+    {
+      "source": "domains/healthcare/services/doctor_service.py",
+      "targets": [
+        "domains/healthcare/services/doctor_service.py"
+      ]
+    },
+    {
+      "source": "domains/healthcare/services/hospital_service.py",
+      "targets": [
+        "domains/healthcare/services/hospital_service.py"
+      ]
+    },
+    {
+      "source": "domains/healthcare/services/medical_device_service.py",
+      "targets": [
+        "domains/healthcare/services/medical_device_service.py"
+      ]
+    },
+    {
+      "source": "domains/healthcare/services/medical_procedure_service.py",
+      "targets": [
+        "domains/healthcare/services/medical_procedure_service.py"
+      ]
+    },
+    {
+      "source": "domains/healthcare/services/patient_api.py",
+      "targets": [
+        "domains/healthcare/use_cases/patient_api.py"
+      ]
+    },
+    {
+      "source": "domains/healthcare/services/patient_service.py",
+      "targets": [
+        "domains/healthcare/services/patient_service.py"
+      ]
+    },
+    {
+      "source": "domains/insurance/__init__.py",
+      "targets": [
+        "domains/insurance/__init__.py"
+      ]
+    },
+    {
+      "source": "domains/insurance/generators/__init__.py",
+      "targets": [
+        "domains/insurance/generators/__init__.py"
+      ]
+    },
+    {
+      "source": "domains/insurance/generators/insurance_company_generator.py",
+      "targets": [
+        "domains/insurance/generators/insurance_company_generator.py"
+      ]
+    },
+    {
+      "source": "domains/insurance/generators/insurance_coverage_generator.py",
+      "targets": [
+        "domains/insurance/generators/insurance_coverage_generator.py"
+      ]
+    },
+    {
+      "source": "domains/insurance/generators/insurance_policy_generator.py",
+      "targets": [
+        "domains/insurance/generators/insurance_policy_generator.py"
+      ]
+    },
+    {
+      "source": "domains/insurance/generators/insurance_product_generator.py",
+      "targets": [
+        "domains/insurance/generators/insurance_product_generator.py"
+      ]
+    },
+    {
+      "source": "domains/insurance/models/__init__.py",
+      "targets": [
+        "domains/insurance/models/__init__.py"
+      ]
+    },
+    {
+      "source": "domains/insurance/models/insurance_company.py",
+      "targets": [
+        "domains/insurance/models/insurance_company.py"
+      ]
+    },
+    {
+      "source": "domains/insurance/models/insurance_coverage.py",
+      "targets": [
+        "domains/insurance/models/insurance_coverage.py"
+      ]
+    },
+    {
+      "source": "domains/insurance/models/insurance_policy.py",
+      "targets": [
+        "domains/insurance/models/insurance_policy.py"
+      ]
+    },
+    {
+      "source": "domains/insurance/models/insurance_product.py",
+      "targets": [
+        "domains/insurance/models/insurance_product.py"
+      ]
+    },
+    {
+      "source": "domains/insurance/services/__init__.py",
+      "targets": [
+        "domains/insurance/services/__init__.py"
+      ]
+    },
+    {
+      "source": "domains/insurance/services/insurance_company_service.py",
+      "targets": [
+        "domains/insurance/services/insurance_company_service.py"
+      ]
+    },
+    {
+      "source": "domains/insurance/services/insurance_coverage_service.py",
+      "targets": [
+        "domains/insurance/services/insurance_coverage_service.py"
+      ]
+    },
+    {
+      "source": "domains/insurance/services/insurance_policy_service.py",
+      "targets": [
+        "domains/insurance/services/insurance_policy_service.py"
+      ]
+    },
+    {
+      "source": "domains/insurance/services/insurance_product_service.py",
+      "targets": [
+        "domains/insurance/services/insurance_product_service.py"
+      ]
+    },
+    {
+      "source": "domains/public_sector/__init__.py",
+      "targets": [
+        "domains/public_sector/__init__.py"
+      ]
+    },
+    {
+      "source": "domains/public_sector/generators/__init__.py",
+      "targets": [
+        "domains/public_sector/generators/__init__.py"
+      ]
+    },
+    {
+      "source": "domains/public_sector/generators/administration_office_generator.py",
+      "targets": [
+        "domains/public_sector/generators/administration_office_generator.py"
+      ]
+    },
+    {
+      "source": "domains/public_sector/generators/educational_institution_generator.py",
+      "targets": [
+        "domains/public_sector/generators/educational_institution_generator.py"
+      ]
+    },
+    {
+      "source": "domains/public_sector/generators/police_officer_generator.py",
+      "targets": [
+        "domains/public_sector/generators/police_officer_generator.py"
+      ]
+    },
+    {
+      "source": "domains/public_sector/models/__init__.py",
+      "targets": [
+        "domains/public_sector/models/__init__.py"
+      ]
+    },
+    {
+      "source": "domains/public_sector/models/administration_office.py",
+      "targets": [
+        "domains/public_sector/models/administration_office.py"
+      ]
+    },
+    {
+      "source": "domains/public_sector/models/educational_institution.py",
+      "targets": [
+        "domains/public_sector/models/educational_institution.py"
+      ]
+    },
+    {
+      "source": "domains/public_sector/models/police_officer.py",
+      "targets": [
+        "domains/public_sector/models/police_officer.py"
+      ]
+    },
+    {
+      "source": "domains/public_sector/services/__init__.py",
+      "targets": [
+        "domains/public_sector/services/__init__.py"
+      ]
+    },
+    {
+      "source": "domains/public_sector/services/administration_office_service.py",
+      "targets": [
+        "domains/public_sector/services/administration_office_service.py"
+      ]
+    },
+    {
+      "source": "domains/public_sector/services/educational_institution_service.py",
+      "targets": [
+        "domains/public_sector/services/educational_institution_service.py"
+      ]
+    },
+    {
+      "source": "domains/public_sector/services/police_officer_service.py",
+      "targets": [
+        "domains/public_sector/services/police_officer_service.py"
+      ]
+    },
+    {
+      "source": "domains/shared/__init__.py",
+      "targets": [
+        "domains/shared/__init__.py"
+      ]
+    },
+    {
+      "source": "domains/shared/converters/__init__.py",
+      "targets": [
+        "domains/shared/converters/__init__.py"
+      ]
+    },
+    {
+      "source": "domains/shared/converters/append_converter.py",
+      "targets": [
+        "domains/shared/converters/text/append_converter.py"
+      ]
+    },
+    {
+      "source": "domains/shared/converters/converter.py",
+      "targets": [
+        "domains/shared/converters/base/converter.py"
+      ]
+    },
+    {
+      "source": "domains/shared/converters/custom_converter.py",
+      "targets": [
+        "domains/shared/converters/structural/custom_converter.py"
+      ]
+    },
+    {
+      "source": "domains/shared/converters/cut_length_converter.py",
+      "targets": [
+        "domains/shared/converters/text/cut_length_converter.py"
+      ]
+    },
+    {
+      "source": "domains/shared/converters/date2timestamp_converter.py",
+      "targets": [
+        "domains/shared/converters/temporal/date2timestamp_converter.py"
+      ]
+    },
+    {
+      "source": "domains/shared/converters/date_format_converter.py",
+      "targets": [
+        "domains/shared/converters/temporal/date_format_converter.py"
+      ]
+    },
+    {
+      "source": "domains/shared/converters/hash_converter.py",
+      "targets": [
+        "domains/shared/converters/privacy/hash_converter.py"
+      ]
+    },
+    {
+      "source": "domains/shared/converters/java_hash_converter.py",
+      "targets": [
+        "domains/shared/converters/privacy/java_hash_converter.py"
+      ]
+    },
+    {
+      "source": "domains/shared/converters/lower_case_converter.py",
+      "targets": [
+        "domains/shared/converters/text/lower_case_converter.py"
+      ]
+    },
+    {
+      "source": "domains/shared/converters/mask_converter.py",
+      "targets": [
+        "domains/shared/converters/privacy/mask_converter.py"
+      ]
+    },
+    {
+      "source": "domains/shared/converters/middle_mask_converter.py",
+      "targets": [
+        "domains/shared/converters/privacy/middle_mask_converter.py"
+      ]
+    },
+    {
+      "source": "domains/shared/converters/remove_none_or_empty_element_converter.py",
+      "targets": [
+        "domains/shared/converters/structural/remove_none_or_empty_element_converter.py"
+      ]
+    },
+    {
+      "source": "domains/shared/converters/substring_converter.py",
+      "targets": [
+        "domains/shared/converters/text/substring_converter.py"
+      ]
+    },
+    {
+      "source": "domains/shared/converters/timestamp2date_converter.py",
+      "targets": [
+        "domains/shared/converters/temporal/timestamp2date_converter.py"
+      ]
+    },
+    {
+      "source": "domains/shared/converters/upper_case_converter.py",
+      "targets": [
+        "domains/shared/converters/text/upper_case_converter.py"
+      ]
+    },
+    {
+      "source": "domains/shared/demographics/__init__.py",
+      "targets": [
+        "domains/shared/demographics/__init__.py"
+      ]
+    },
+    {
+      "source": "domains/shared/demographics/api.py",
+      "targets": [
+        "domains/shared/demographics/api.py"
+      ]
+    },
+    {
+      "source": "domains/shared/demographics/loader.py",
+      "targets": [
+        "domains/shared/demographics/loader.py"
+      ]
+    },
+    {
+      "source": "domains/shared/demographics/profile.py",
+      "targets": [
+        "domains/shared/demographics/profile.py"
+      ]
+    },
+    {
+      "source": "domains/shared/demographics/profile_meta.py",
+      "targets": [
+        "domains/shared/demographics/profile_meta.py"
+      ]
+    },
+    {
+      "source": "domains/shared/demographics/sampler.py",
+      "targets": [
+        "domains/shared/demographics/sampler.py"
+      ]
+    },
+    {
+      "source": "domains/shared/determinism.py",
+      "targets": [
+        "domains/domain_core/runtime/determinism.py"
+      ]
+    },
+    {
+      "source": "domains/shared/examples/generate_address.py",
+      "targets": [
+        "resources/examples/generate_address.py"
+      ]
+    },
+    {
+      "source": "domains/shared/examples/generate_cities.py",
+      "targets": [
+        "resources/examples/generate_cities.py"
+      ]
+    },
+    {
+      "source": "domains/shared/examples/generate_companies.py",
+      "targets": [
+        "resources/examples/generate_companies.py"
+      ]
+    },
+    {
+      "source": "domains/shared/examples/generate_countries.py",
+      "targets": [
+        "resources/examples/generate_countries.py"
+      ]
+    },
+    {
+      "source": "domains/shared/examples/generate_people.py",
+      "targets": [
+        "resources/examples/generate_people.py"
+      ]
+    },
+    {
+      "source": "domains/shared/examples/generate_people_demographics.py",
+      "targets": [
+        "resources/examples/generate_people_demographics.py"
+      ]
+    },
+    {
+      "source": "domains/shared/generator_registry.py",
+      "targets": [
+        "domains/registry/generators.py"
+      ]
+    },
+    {
+      "source": "domains/shared/generators/__init__.py",
+      "targets": [
+        "domains/shared/generators/__init__.py"
+      ]
+    },
+    {
+      "source": "domains/shared/generators/address_generator.py",
+      "targets": [
+        "domains/shared/generators/address_generator.py"
+      ]
+    },
+    {
+      "source": "domains/shared/generators/city_generator.py",
+      "targets": [
+        "domains/shared/generators/city_generator.py"
+      ]
+    },
+    {
+      "source": "domains/shared/generators/company_generator.py",
+      "targets": [
+        "domains/shared/generators/company_generator.py"
+      ]
+    },
+    {
+      "source": "domains/shared/generators/country_generator.py",
+      "targets": [
+        "domains/shared/generators/country_generator.py"
+      ]
+    },
+    {
+      "source": "domains/shared/generators/person_generator.py",
+      "targets": [
+        "domains/shared/generators/person_generator.py"
+      ]
+    },
+    {
+      "source": "domains/shared/generators/region_groups.py",
+      "targets": [
+        "domains/shared/generators/region_groups.py"
+      ]
+    },
+    {
+      "source": "domains/shared/json_types.py",
+      "targets": [
+        "domains/domain_core/contracts/json_types.py"
+      ]
+    },
+    {
+      "source": "domains/shared/literal_generators/academic_title_generator.py",
+      "targets": [
+        "domains/shared/literal_generators/person/academic_title_generator.py"
+      ]
+    },
+    {
+      "source": "domains/shared/literal_generators/binary_generator.py",
+      "targets": [
+        "domains/shared/literal_generators/primitives/binary_generator.py"
+      ]
+    },
+    {
+      "source": "domains/shared/literal_generators/birthdate_generator.py",
+      "targets": [
+        "domains/shared/literal_generators/temporal/birthdate_generator.py"
+      ]
+    },
+    {
+      "source": "domains/shared/literal_generators/boolean_generator.py",
+      "targets": [
+        "domains/shared/literal_generators/primitives/boolean_generator.py"
+      ]
+    },
+    {
+      "source": "domains/shared/literal_generators/cnpj_generator.py",
+      "targets": [
+        "domains/shared/literal_generators/identity/codes/cnpj_generator.py"
+      ]
+    },
+    {
+      "source": "domains/shared/literal_generators/color_generators.py",
+      "targets": [
+        "domains/shared/literal_generators/primitives/color_generators.py"
+      ]
+    },
+    {
+      "source": "domains/shared/literal_generators/company_name_generator.py",
+      "targets": [
+        "domains/shared/literal_generators/business/company_name_generator.py"
+      ]
+    },
+    {
+      "source": "domains/shared/literal_generators/cpf_generator.py",
+      "targets": [
+        "domains/shared/literal_generators/identity/codes/cpf_generator.py"
+      ]
+    },
+    {
+      "source": "domains/shared/literal_generators/data_faker_generator.py",
+      "targets": [
+        "domains/shared/literal_generators/primitives/data_faker_generator.py"
+      ]
+    },
+    {
+      "source": "domains/shared/literal_generators/datetime_generator.py",
+      "targets": [
+        "domains/shared/literal_generators/temporal/datetime_generator.py"
+      ]
+    },
+    {
+      "source": "domains/shared/literal_generators/department_name_generator.py",
+      "targets": [
+        "domains/shared/literal_generators/business/department_name_generator.py"
+      ]
+    },
+    {
+      "source": "domains/shared/literal_generators/domain_generator.py",
+      "targets": [
+        "domains/shared/literal_generators/contact/domain_generator.py"
+      ]
+    },
+    {
+      "source": "domains/shared/literal_generators/ean_generator.py",
+      "targets": [
+        "domains/shared/literal_generators/identity/codes/ean_generator.py"
+      ]
+    },
+    {
+      "source": "domains/shared/literal_generators/email_address_generator.py",
+      "targets": [
+        "domains/shared/literal_generators/contact/email_address_generator.py"
+      ]
+    },
+    {
+      "source": "domains/shared/literal_generators/family_name_generator.py",
+      "targets": [
+        "domains/shared/literal_generators/person/family_name_generator.py"
+      ]
+    },
+    {
+      "source": "domains/shared/literal_generators/float_generator.py",
+      "targets": [
+        "domains/shared/literal_generators/numeric/float_generator.py"
+      ]
+    },
+    {
+      "source": "domains/shared/literal_generators/gender_generator.py",
+      "targets": [
+        "domains/shared/literal_generators/person/gender_generator.py"
+      ]
+    },
+    {
+      "source": "domains/shared/literal_generators/given_name_generator.py",
+      "targets": [
+        "domains/shared/literal_generators/person/given_name_generator.py"
+      ]
+    },
+    {
+      "source": "domains/shared/literal_generators/global_increment_generator.py",
+      "targets": [
+        "engine/runtime/tasks/values/construction/global_increment.py",
+        "engine/runtime/storage/global_increment.py"
+      ]
+    },
+    {
+      "source": "domains/shared/literal_generators/hash_generator.py",
+      "targets": [
+        "domains/shared/literal_generators/identity/security/hash_generator.py"
+      ]
+    },
+    {
+      "source": "domains/shared/literal_generators/increment_generator.py",
+      "targets": [
+        "domains/shared/literal_generators/numeric/increment_generator.py"
+      ]
+    },
+    {
+      "source": "domains/shared/literal_generators/integer_generator.py",
+      "targets": [
+        "domains/shared/literal_generators/numeric/integer_generator.py"
+      ]
+    },
+    {
+      "source": "domains/shared/literal_generators/nobility_title_generator.py",
+      "targets": [
+        "domains/shared/literal_generators/person/nobility_title_generator.py"
+      ]
+    },
+    {
+      "source": "domains/shared/literal_generators/number_sequences.py",
+      "targets": [
+        "domains/shared/literal_generators/numeric/number_sequences.py"
+      ]
+    },
+    {
+      "source": "domains/shared/literal_generators/password_generator.py",
+      "targets": [
+        "domains/shared/literal_generators/identity/security/password_generator.py"
+      ]
+    },
+    {
+      "source": "domains/shared/literal_generators/phone_number_generator.py",
+      "targets": [
+        "domains/shared/generators/phone_number_generator.py"
+      ]
+    },
+    {
+      "source": "domains/shared/literal_generators/prefixed_id_generator.py",
+      "targets": [
+        "domains/shared/literal_generators/identity/keys/prefixed_id_generator.py"
+      ]
+    },
+    {
+      "source": "domains/shared/literal_generators/sector_generator.py",
+      "targets": [
+        "domains/shared/literal_generators/business/sector_generator.py"
+      ]
+    },
+    {
+      "source": "domains/shared/literal_generators/ssn_generator.py",
+      "targets": [
+        "domains/shared/literal_generators/identity/codes/ssn_generator.py"
+      ]
+    },
+    {
+      "source": "domains/shared/literal_generators/state_transition_generator.py",
+      "targets": [
+        "domains/shared/literal_generators/primitives/state_transition_generator.py"
+      ]
+    },
+    {
+      "source": "domains/shared/literal_generators/street_name_generator.py",
+      "targets": [
+        "domains/shared/literal_generators/contact/street_name_generator.py"
+      ]
+    },
+    {
+      "source": "domains/shared/literal_generators/string_generator.py",
+      "targets": [
+        "domains/shared/literal_generators/primitives/string_generator.py"
+      ]
+    },
+    {
+      "source": "domains/shared/literal_generators/token_generator.py",
+      "targets": [
+        "domains/shared/literal_generators/identity/security/token_generator.py"
+      ]
+    },
+    {
+      "source": "domains/shared/literal_generators/url_generator.py",
+      "targets": [
+        "domains/shared/literal_generators/contact/url_generator.py"
+      ]
+    },
+    {
+      "source": "domains/shared/literal_generators/uuid_generator.py",
+      "targets": [
+        "domains/shared/literal_generators/identity/keys/uuid_generator.py"
+      ]
+    },
+    {
+      "source": "domains/shared/locale_registry.py",
+      "targets": [
+        "domains/shared/datasets/locale_registry.py"
+      ]
+    },
+    {
+      "source": "domains/shared/locales/__init__.py",
+      "targets": [
+        "domains/shared/datasets/locales/__init__.py"
+      ]
+    },
+    {
+      "source": "domains/shared/models/__init__.py",
+      "targets": [
+        "domains/shared/models/__init__.py"
+      ]
+    },
+    {
+      "source": "domains/shared/models/address.py",
+      "targets": [
+        "domains/shared/models/address.py"
+      ]
+    },
+    {
+      "source": "domains/shared/models/city.py",
+      "targets": [
+        "domains/shared/models/city.py"
+      ]
+    },
+    {
+      "source": "domains/shared/models/company.py",
+      "targets": [
+        "domains/shared/models/company.py"
+      ]
+    },
+    {
+      "source": "domains/shared/models/country.py",
+      "targets": [
+        "domains/shared/models/country.py"
+      ]
+    },
+    {
+      "source": "domains/shared/models/demographic_config.py",
+      "targets": [
+        "domains/shared/demographics/config.py"
+      ]
+    },
+    {
+      "source": "domains/shared/models/person.py",
+      "targets": [
+        "domains/shared/models/person.py"
+      ]
+    },
+    {
+      "source": "domains/shared/profile_components.py",
+      "targets": [
+        "domains/shared/datasets/profile_components.py"
+      ]
+    },
+    {
+      "source": "domains/shared/sampling.py",
+      "targets": [
+        "randomness.py"
+      ]
+    },
+    {
+      "source": "domains/shared/schema_registry.py",
+      "targets": [
+        "domains/registry/schema.py"
+      ]
+    },
+    {
+      "source": "domains/shared/services/__init__.py",
+      "targets": [
+        "domains/shared/services/__init__.py"
+      ]
+    },
+    {
+      "source": "domains/shared/services/address_api.py",
+      "targets": [
+        "domains/shared/use_cases/address_api.py"
+      ]
+    },
+    {
+      "source": "domains/shared/services/address_service.py",
+      "targets": [
+        "domains/shared/services/address_service.py"
+      ]
+    },
+    {
+      "source": "domains/shared/services/city_service.py",
+      "targets": [
+        "domains/shared/services/city_service.py"
+      ]
+    },
+    {
+      "source": "domains/shared/services/company_service.py",
+      "targets": [
+        "domains/shared/services/company_service.py"
+      ]
+    },
+    {
+      "source": "domains/shared/services/country_service.py",
+      "targets": [
+        "domains/shared/services/country_service.py"
+      ]
+    },
+    {
+      "source": "domains/shared/services/person_api.py",
+      "targets": [
+        "domains/shared/use_cases/person_api.py"
+      ]
+    },
+    {
+      "source": "domains/shared/services/person_service.py",
+      "targets": [
+        "domains/shared/services/person_service.py"
+      ]
+    },
+    {
+      "source": "domains/shared/utils/__init__.py",
+      "targets": [
+        "domains/shared/datasets/__init__.py"
+      ]
+    },
+    {
+      "source": "domains/shared/utils/dataset_loader.py",
+      "targets": [
+        "domains/shared/datasets/loader.py"
+      ]
+    },
+    {
+      "source": "domains/shared/utils/dataset_path.py",
+      "targets": [
+        "domains/domain_core/datasets/path.py"
+      ]
+    },
+    {
+      "source": "domains/shared/utils/random_source.py",
+      "targets": [
+        "randomness.py"
+      ]
+    },
+    {
+      "source": "domains/shared/utils/rng_uuid.py",
+      "targets": [
+        "domains/domain_core/runtime/rng_uuid.py"
+      ]
+    },
+    {
+      "source": "domains/shared/utils/supported_datasets.py",
+      "targets": [
+        "domains/domain_core/datasets/catalog.py"
+      ]
+    },
+    {
+      "source": "engine/__init__.py",
+      "targets": [
+        "engine/__init__.py"
+      ]
+    },
+    {
+      "source": "engine/dsl/__init__.py",
+      "targets": []
+    },
+    {
+      "source": "engine/dsl/api.py",
+      "targets": [
+        "engine/dsl/api.py",
+        "domains/registry/generators.py"
+      ]
+    },
+    {
+      "source": "engine/dsl/constants/__init__.py",
+      "targets": []
+    },
+    {
+      "source": "engine/dsl/constants/attribute_constants.py",
+      "targets": [
+        "engine/dsl/vocabulary/constants/attribute_constants.py"
+      ]
+    },
+    {
+      "source": "engine/dsl/constants/convention_constants.py",
+      "targets": [
+        "engine/dsl/vocabulary/constants/convention_constants.py"
+      ]
+    },
+    {
+      "source": "engine/dsl/constants/data_type_constants.py",
+      "targets": [
+        "engine/dsl/vocabulary/constants/data_type_constants.py"
+      ]
+    },
+    {
+      "source": "engine/dsl/constants/element_constants.py",
+      "targets": [
+        "engine/dsl/vocabulary/constants/element_constants.py"
+      ]
+    },
+    {
+      "source": "engine/dsl/constants/exporter_constants.py",
+      "targets": [
+        "engine/dsl/vocabulary/constants/exporter_constants.py"
+      ]
+    },
+    {
+      "source": "engine/dsl/contracts.py",
+      "targets": [
+        "domains/domain_core/contracts/generation.py",
+        "engine/io/contracts.py"
+      ]
+    },
+    {
+      "source": "engine/dsl/enums/__init__.py",
+      "targets": []
+    },
+    {
+      "source": "engine/dsl/enums/converter_enums.py",
+      "targets": [
+        "engine/dsl/vocabulary/enums/converter_enums.py"
+      ]
+    },
+    {
+      "source": "engine/dsl/enums/dbms_enums.py",
+      "targets": [
+        "engine/dsl/vocabulary/enums/dbms_enums.py"
+      ]
+    },
+    {
+      "source": "engine/dsl/enums/distribution_enums.py",
+      "targets": [
+        "engine/dsl/vocabulary/enums/distribution_enums.py"
+      ]
+    },
+    {
+      "source": "engine/dsl/enums/faker_enums.py",
+      "targets": [
+        "engine/dsl/vocabulary/enums/faker_enums.py"
+      ]
+    },
+    {
+      "source": "engine/dsl/enums/operation_enums.py",
+      "targets": [
+        "engine/dsl/vocabulary/enums/operation_enums.py"
+      ]
+    },
+    {
+      "source": "engine/dsl/model/__init__.py",
+      "targets": []
+    },
+    {
+      "source": "engine/dsl/model/array_model.py",
+      "targets": [
+        "engine/dsl/model/values/structured/array_model.py"
+      ]
+    },
+    {
+      "source": "engine/dsl/model/assert_model.py",
+      "targets": [
+        "engine/dsl/model/flow/commands/assert_model.py"
+      ]
+    },
+    {
+      "source": "engine/dsl/model/base_if_else_model.py",
+      "targets": [
+        "engine/dsl/model/flow/branches/base_if_else_model.py"
+      ]
+    },
+    {
+      "source": "engine/dsl/model/condition_model.py",
+      "targets": []
+    },
+    {
+      "source": "engine/dsl/model/constraints/__init__.py",
+      "targets": [
+        "engine/dsl/model/constraints/__init__.py"
+      ]
+    },
+    {
+      "source": "engine/dsl/model/constraints/capabilities.py",
+      "targets": [
+        "engine/dsl/model/constraints/capabilities.py"
+      ]
+    },
+    {
+      "source": "engine/dsl/model/constraints/facts.py",
+      "targets": [
+        "engine/dsl/model/constraints/facts.py"
+      ]
+    },
+    {
+      "source": "engine/dsl/model/constraints/registry.py",
+      "targets": [
+        "engine/dsl/model/constraints/registry.py"
+      ]
+    },
+    {
+      "source": "engine/dsl/model/constraints/serialization.py",
+      "targets": [
+        "engine/dsl/model/constraints/serialization.py"
+      ]
+    },
+    {
+      "source": "engine/dsl/model/constraints/types.py",
+      "targets": [
+        "engine/dsl/model/constraints/types.py"
+      ]
+    },
+    {
+      "source": "engine/dsl/model/database_model.py",
+      "targets": [
+        "engine/dsl/model/setup/database_model.py"
+      ]
+    },
+    {
+      "source": "engine/dsl/model/demographics_model.py",
+      "targets": [
+        "engine/dsl/model/setup/demographics_model.py"
+      ]
+    },
+    {
+      "source": "engine/dsl/model/element_model.py",
+      "targets": [
+        "engine/dsl/model/values/scalar/element_model.py"
+      ]
+    },
+    {
+      "source": "engine/dsl/model/element_registry.py",
+      "targets": [
+        "engine/dsl/model/registry.py"
+      ]
+    },
+    {
+      "source": "engine/dsl/model/else_if_model.py",
+      "targets": [
+        "engine/dsl/model/flow/branches/else_if_model.py"
+      ]
+    },
+    {
+      "source": "engine/dsl/model/else_model.py",
+      "targets": []
+    },
+    {
+      "source": "engine/dsl/model/execute_model.py",
+      "targets": [
+        "engine/dsl/model/flow/commands/execute_model.py"
+      ]
+    },
+    {
+      "source": "engine/dsl/model/generate_model.py",
+      "targets": [
+        "engine/dsl/model/generation/generate_model.py"
+      ]
+    },
+    {
+      "source": "engine/dsl/model/generator_model.py",
+      "targets": [
+        "engine/dsl/model/setup/generator_model.py"
+      ]
+    },
+    {
+      "source": "engine/dsl/model/if_model.py",
+      "targets": [
+        "engine/dsl/model/flow/branches/if_model.py"
+      ]
+    },
+    {
+      "source": "engine/dsl/model/include_model.py",
+      "targets": [
+        "engine/dsl/model/setup/include_model.py"
+      ]
+    },
+    {
+      "source": "engine/dsl/model/item_model.py",
+      "targets": [
+        "engine/dsl/model/values/structured/item_model.py"
+      ]
+    },
+    {
+      "source": "engine/dsl/model/key_model.py",
+      "targets": [
+        "engine/dsl/model/values/scalar/key_model.py"
+      ]
+    },
+    {
+      "source": "engine/dsl/model/list_model.py",
+      "targets": [
+        "engine/dsl/model/values/structured/list_model.py"
+      ]
+    },
+    {
+      "source": "engine/dsl/model/memstore_model.py",
+      "targets": [
+        "engine/dsl/model/setup/memstore_model.py"
+      ]
+    },
+    {
+      "source": "engine/dsl/model/model_util.py",
+      "targets": [
+        "engine/dsl/model/validation.py"
+      ]
+    },
+    {
+      "source": "engine/dsl/model/mongodb_model.py",
+      "targets": [
+        "engine/dsl/model/setup/mongodb_model.py"
+      ]
+    },
+    {
+      "source": "engine/dsl/model/nested_key_model.py",
+      "targets": [
+        "engine/dsl/model/values/structured/nested_key_model.py"
+      ]
+    },
+    {
+      "source": "engine/dsl/model/reference_field_model.py",
+      "targets": [
+        "engine/dsl/model/values/references/reference_field_model.py"
+      ]
+    },
+    {
+      "source": "engine/dsl/model/reference_model.py",
+      "targets": [
+        "engine/dsl/model/values/references/reference_model.py"
+      ]
+    },
+    {
+      "source": "engine/dsl/model/setup_model.py",
+      "targets": [
+        "engine/dsl/model/setup/setup_model.py"
+      ]
+    },
+    {
+      "source": "engine/dsl/model/state_machine_model.py",
+      "targets": [
+        "engine/dsl/model/setup/state_machine_model.py"
+      ]
+    },
+    {
+      "source": "engine/dsl/model/value_model.py",
+      "targets": [
+        "engine/dsl/model/values/scalar/value_model.py"
+      ]
+    },
+    {
+      "source": "engine/dsl/model/variable_model.py",
+      "targets": [
+        "engine/dsl/model/values/variables/variable_model.py"
+      ]
+    },
+    {
+      "source": "engine/dsl/model/while_model.py",
+      "targets": [
+        "engine/dsl/model/flow/loops/while_model.py"
+      ]
+    },
+    {
+      "source": "engine/dsl/parsers/__init__.py",
+      "targets": [
+        "engine/dsl/parsers/registry.py"
+      ]
+    },
+    {
+      "source": "engine/dsl/parsers/array_parser.py",
+      "targets": [
+        "engine/dsl/parsers/values/structured/array_parser.py"
+      ]
+    },
+    {
+      "source": "engine/dsl/parsers/assert_parser.py",
+      "targets": [
+        "engine/dsl/parsers/flow/commands/assert_parser.py"
+      ]
+    },
+    {
+      "source": "engine/dsl/parsers/condition_parser.py",
+      "targets": [
+        "engine/dsl/parsers/flow/branches/condition_parser.py"
+      ]
+    },
+    {
+      "source": "engine/dsl/parsers/database_parser.py",
+      "targets": [
+        "engine/dsl/parsers/setup/database_parser.py"
+      ]
+    },
+    {
+      "source": "engine/dsl/parsers/demographics_parser.py",
+      "targets": [
+        "engine/dsl/parsers/setup/demographics_parser.py"
+      ]
+    },
+    {
+      "source": "engine/dsl/parsers/descriptor_parser.py",
+      "targets": [
+        "engine/dsl/parsers/document/descriptor_parser.py"
+      ]
+    },
+    {
+      "source": "engine/dsl/parsers/echo_parser.py",
+      "targets": [
+        "engine/dsl/parsers/flow/commands/echo_parser.py"
+      ]
+    },
+    {
+      "source": "engine/dsl/parsers/element_parser.py",
+      "targets": [
+        "engine/dsl/parsers/values/scalar/element_parser.py"
+      ]
+    },
+    {
+      "source": "engine/dsl/parsers/else_if_parser.py",
+      "targets": [
+        "engine/dsl/parsers/flow/branches/else_if_parser.py"
+      ]
+    },
+    {
+      "source": "engine/dsl/parsers/else_parser.py",
+      "targets": [
+        "engine/dsl/parsers/flow/branches/else_parser.py"
+      ]
+    },
+    {
+      "source": "engine/dsl/parsers/execute_parser.py",
+      "targets": [
+        "engine/dsl/parsers/flow/commands/execute_parser.py"
+      ]
+    },
+    {
+      "source": "engine/dsl/parsers/generate_parser.py",
+      "targets": [
+        "engine/dsl/parsers/generation/generate_parser.py"
+      ]
+    },
+    {
+      "source": "engine/dsl/parsers/generator_parser.py",
+      "targets": [
+        "engine/dsl/parsers/setup/generator_parser.py"
+      ]
+    },
+    {
+      "source": "engine/dsl/parsers/if_else_base_parser.py",
+      "targets": [
+        "engine/dsl/parsers/flow/branches/if_else_base_parser.py"
+      ]
+    },
+    {
+      "source": "engine/dsl/parsers/if_parser.py",
+      "targets": [
+        "engine/dsl/parsers/flow/branches/if_parser.py"
+      ]
+    },
+    {
+      "source": "engine/dsl/parsers/include_parser.py",
+      "targets": [
+        "engine/dsl/parsers/setup/include_parser.py"
+      ]
+    },
+    {
+      "source": "engine/dsl/parsers/item_parser.py",
+      "targets": [
+        "engine/dsl/parsers/values/structured/item_parser.py"
+      ]
+    },
+    {
+      "source": "engine/dsl/parsers/key_parser.py",
+      "targets": [
+        "engine/dsl/parsers/values/scalar/key_parser.py"
+      ]
+    },
+    {
+      "source": "engine/dsl/parsers/list_parser.py",
+      "targets": [
+        "engine/dsl/parsers/values/structured/list_parser.py"
+      ]
+    },
+    {
+      "source": "engine/dsl/parsers/memstore_parser.py",
+      "targets": [
+        "engine/dsl/parsers/setup/memstore_parser.py"
+      ]
+    },
+    {
+      "source": "engine/dsl/parsers/mongodb_parser.py",
+      "targets": [
+        "engine/dsl/parsers/setup/mongodb_parser.py"
+      ]
+    },
+    {
+      "source": "engine/dsl/parsers/nested_key_parser.py",
+      "targets": [
+        "engine/dsl/parsers/values/structured/nested_key_parser.py"
+      ]
+    },
+    {
+      "source": "engine/dsl/parsers/parser_util.py",
+      "targets": [
+        "engine/dsl/parsers/base/dispatch.py",
+        "engine/dsl/parsers/base/client_config.py",
+        "engine/io/connection_config/properties.py"
+      ]
+    },
+    {
+      "source": "engine/dsl/parsers/reference_parser.py",
+      "targets": [
+        "engine/dsl/parsers/values/references/reference_parser.py"
+      ]
+    },
+    {
+      "source": "engine/dsl/parsers/setup_parser.py",
+      "targets": [
+        "engine/dsl/parsers/setup/setup_parser.py"
+      ]
+    },
+    {
+      "source": "engine/dsl/parsers/state_machine_parser.py",
+      "targets": [
+        "engine/dsl/parsers/setup/state_machine_parser.py"
+      ]
+    },
+    {
+      "source": "engine/dsl/parsers/statement_parser.py",
+      "targets": [
+        "engine/dsl/parsers/base/statement_parser.py"
+      ]
+    },
+    {
+      "source": "engine/dsl/parsers/variable_parser.py",
+      "targets": [
+        "engine/dsl/parsers/values/variables/variable_parser.py"
+      ]
+    },
+    {
+      "source": "engine/dsl/parsers/while_parser.py",
+      "targets": [
+        "engine/dsl/parsers/flow/loops/while_parser.py"
+      ]
+    },
+    {
+      "source": "engine/dsl/properties.py",
+      "targets": [
+        "engine/dsl/parsers/input/properties.py"
+      ]
+    },
+    {
+      "source": "engine/dsl/statements/__init__.py",
+      "targets": []
+    },
+    {
+      "source": "engine/dsl/statements/array_statement.py",
+      "targets": [
+        "engine/dsl/statements/values/structured/array_statement.py"
+      ]
+    },
+    {
+      "source": "engine/dsl/statements/assert_statement.py",
+      "targets": [
+        "engine/dsl/statements/flow/commands/assert_statement.py"
+      ]
+    },
+    {
+      "source": "engine/dsl/statements/composite_statement.py",
+      "targets": [
+        "engine/dsl/statements/base/composite_statement.py",
+        "engine/dsl/statements/traversal.py"
+      ]
+    },
+    {
+      "source": "engine/dsl/statements/condition_statement.py",
+      "targets": [
+        "engine/dsl/statements/flow/branches/condition_statement.py",
+        "engine/dsl/statements/traversal.py"
+      ]
+    },
+    {
+      "source": "engine/dsl/statements/database_statement.py",
+      "targets": [
+        "engine/dsl/statements/setup/database_statement.py"
+      ]
+    },
+    {
+      "source": "engine/dsl/statements/demographics_statement.py",
+      "targets": [
+        "engine/dsl/statements/setup/demographics_statement.py"
+      ]
+    },
+    {
+      "source": "engine/dsl/statements/echo_statement.py",
+      "targets": [
+        "engine/dsl/statements/flow/commands/echo_statement.py"
+      ]
+    },
+    {
+      "source": "engine/dsl/statements/element_statement.py",
+      "targets": [
+        "engine/dsl/statements/values/scalar/element_statement.py"
+      ]
+    },
+    {
+      "source": "engine/dsl/statements/else_if_statement.py",
+      "targets": [
+        "engine/dsl/statements/flow/branches/else_if_statement.py"
+      ]
+    },
+    {
+      "source": "engine/dsl/statements/else_statement.py",
+      "targets": [
+        "engine/dsl/statements/flow/branches/else_statement.py"
+      ]
+    },
+    {
+      "source": "engine/dsl/statements/execute_statement.py",
+      "targets": [
+        "engine/dsl/statements/flow/commands/execute_statement.py"
+      ]
+    },
+    {
+      "source": "engine/dsl/statements/generate_statement.py",
+      "targets": [
+        "engine/dsl/statements/generation/generate_statement.py",
+        "engine/dsl/statements/traversal.py"
+      ]
+    },
+    {
+      "source": "engine/dsl/statements/generator_statement.py",
+      "targets": [
+        "engine/dsl/statements/setup/generator_statement.py"
+      ]
+    },
+    {
+      "source": "engine/dsl/statements/if_statement.py",
+      "targets": [
+        "engine/dsl/statements/flow/branches/if_statement.py"
+      ]
+    },
+    {
+      "source": "engine/dsl/statements/include_statement.py",
+      "targets": [
+        "engine/dsl/statements/setup/include_statement.py"
+      ]
+    },
+    {
+      "source": "engine/dsl/statements/item_statement.py",
+      "targets": [
+        "engine/dsl/statements/values/structured/item_statement.py"
+      ]
+    },
+    {
+      "source": "engine/dsl/statements/key_statement.py",
+      "targets": [
+        "engine/dsl/statements/values/scalar/key_statement.py"
+      ]
+    },
+    {
+      "source": "engine/dsl/statements/list_statement.py",
+      "targets": [
+        "engine/dsl/statements/values/structured/list_statement.py"
+      ]
+    },
+    {
+      "source": "engine/dsl/statements/memstore_statement.py",
+      "targets": [
+        "engine/dsl/statements/setup/memstore_statement.py"
+      ]
+    },
+    {
+      "source": "engine/dsl/statements/mongodb_statement.py",
+      "targets": [
+        "engine/dsl/statements/setup/mongodb_statement.py"
+      ]
+    },
+    {
+      "source": "engine/dsl/statements/nested_key_statement.py",
+      "targets": [
+        "engine/dsl/statements/values/structured/nested_key_statement.py"
+      ]
+    },
+    {
+      "source": "engine/dsl/statements/reference_statement.py",
+      "targets": [
+        "engine/dsl/statements/values/references/reference_statement.py"
+      ]
+    },
+    {
+      "source": "engine/dsl/statements/setup_statement.py",
+      "targets": [
+        "engine/dsl/statements/setup/setup_statement.py"
+      ]
+    },
+    {
+      "source": "engine/dsl/statements/state_machine_statement.py",
+      "targets": [
+        "engine/dsl/statements/setup/state_machine_statement.py"
+      ]
+    },
+    {
+      "source": "engine/dsl/statements/statement.py",
+      "targets": [
+        "engine/dsl/statements/base/statement.py",
+        "engine/dsl/statements/traversal.py"
+      ]
+    },
+    {
+      "source": "engine/dsl/statements/statement_util.py",
+      "targets": [
+        "engine/dsl/statements/generation/targets.py",
+        "engine/io/data_sources/boundary/entities.py",
+        "engine/io/exporters/core/routing.py"
+      ]
+    },
+    {
+      "source": "engine/dsl/statements/variable_statement.py",
+      "targets": [
+        "engine/dsl/statements/values/variables/variable_statement.py"
+      ]
+    },
+    {
+      "source": "engine/dsl/statements/while_statement.py",
+      "targets": [
+        "engine/dsl/statements/flow/loops/while_statement.py"
+      ]
+    },
+    {
+      "source": "engine/dsl/timeseries.py",
+      "targets": [
+        "engine/dsl/model/generation/timeseries.py"
+      ]
+    },
+    {
+      "source": "engine/dsl/xml.py",
+      "targets": [
+        "engine/dsl/parsers/input/xml.py"
+      ]
+    },
+    {
+      "source": "engine/io/__init__.py",
+      "targets": [
+        "engine/io/__init__.py"
+      ]
+    },
+    {
+      "source": "engine/io/api.py",
+      "targets": [
+        "engine/io/api.py"
+      ]
+    },
+    {
+      "source": "engine/io/client_operations.py",
+      "targets": [
+        "engine/io/clients/operations.py"
+      ]
+    },
+    {
+      "source": "engine/io/clients/__init__.py",
+      "targets": [
+        "engine/io/clients/__init__.py"
+      ]
+    },
+    {
+      "source": "engine/io/clients/client.py",
+      "targets": [
+        "engine/io/clients/client.py"
+      ]
+    },
+    {
+      "source": "engine/io/clients/database_client.py",
+      "targets": [
+        "engine/io/clients/database_client.py"
+      ]
+    },
+    {
+      "source": "engine/io/clients/entity_serialization.py",
+      "targets": [
+        "engine/io/clients/entity_serialization.py"
+      ]
+    },
+    {
+      "source": "engine/io/clients/mongodb_client.py",
+      "targets": [
+        "engine/io/clients/mongodb_client.py"
+      ]
+    },
+    {
+      "source": "engine/io/clients/rdbms_client.py",
+      "targets": [
+        "engine/io/clients/rdbms_client.py"
+      ]
+    },
+    {
+      "source": "engine/io/clients/sql_dialect.py",
+      "targets": [
+        "engine/io/clients/sql_dialect.py"
+      ]
+    },
+    {
+      "source": "engine/io/connection_config/__init__.py",
+      "targets": [
+        "engine/io/connection_config/__init__.py"
+      ]
+    },
+    {
+      "source": "engine/io/connection_config/connection_config_base.py",
+      "targets": [
+        "engine/io/connection_config/connection_config_base.py"
+      ]
+    },
+    {
+      "source": "engine/io/connection_config/mongodb_connection_config.py",
+      "targets": [
+        "engine/io/connection_config/mongodb_connection_config.py"
+      ]
+    },
+    {
+      "source": "engine/io/connection_config/rdbms_connection_config.py",
+      "targets": [
+        "engine/io/connection_config/rdbms_connection_config.py"
+      ]
+    },
+    {
+      "source": "engine/io/contracts.py",
+      "targets": [
+        "engine/io/contracts.py",
+        "engine/io/data_sources/selection.py"
+      ]
+    },
+    {
+      "source": "engine/io/data_sources/__init__.py",
+      "targets": [
+        "engine/io/data_sources/__init__.py"
+      ]
+    },
+    {
+      "source": "engine/io/data_sources/data_source_registry.py",
+      "targets": [
+        "engine/io/data_sources/data_source_registry.py"
+      ]
+    },
+    {
+      "source": "engine/io/data_sources/weighted_data_source.py",
+      "targets": [
+        "engine/io/data_sources/weighted_data_source.py"
+      ]
+    },
+    {
+      "source": "engine/io/data_sources/weighted_entity_data_source.py",
+      "targets": [
+        "engine/io/data_sources/weighted_entity_data_source.py"
+      ]
+    },
+    {
+      "source": "engine/io/dataset_api.py",
+      "targets": [
+        "engine/io/files/api.py"
+      ]
+    },
+    {
+      "source": "engine/io/exporters/__init__.py",
+      "targets": [
+        "engine/io/exporters/__init__.py"
+      ]
+    },
+    {
+      "source": "engine/io/exporters/console_exporter.py",
+      "targets": [
+        "engine/io/exporters/diagnostics/console_exporter.py"
+      ]
+    },
+    {
+      "source": "engine/io/exporters/csv_exporter.py",
+      "targets": [
+        "engine/io/exporters/formats/csv_exporter.py"
+      ]
+    },
+    {
+      "source": "engine/io/exporters/database_exporter.py",
+      "targets": [
+        "engine/io/exporters/database/database_exporter.py"
+      ]
+    },
+    {
+      "source": "engine/io/exporters/dbunit_exporter.py",
+      "targets": [
+        "engine/io/exporters/formats/dbunit_exporter.py"
+      ]
+    },
+    {
+      "source": "engine/io/exporters/exporter.py",
+      "targets": [
+        "engine/io/exporters/core/exporter.py"
+      ]
+    },
+    {
+      "source": "engine/io/exporters/exporter_config.py",
+      "targets": [
+        "engine/io/exporters/core/exporter_config.py"
+      ]
+    },
+    {
+      "source": "engine/io/exporters/exporter_context.py",
+      "targets": [
+        "engine/io/exporters/core/exporter_context.py"
+      ]
+    },
+    {
+      "source": "engine/io/exporters/exporter_state_manager.py",
+      "targets": [
+        "engine/io/exporters/core/exporter_state_manager.py"
+      ]
+    },
+    {
+      "source": "engine/io/exporters/exporter_util.py",
+      "targets": [
+        "engine/io/exporters/registry.py",
+        "engine/io/exporters/core/serialization.py"
+      ]
+    },
+    {
+      "source": "engine/io/exporters/fixed_width_exporter.py",
+      "targets": [
+        "engine/io/exporters/formats/fixed_width_exporter.py"
+      ]
+    },
+    {
+      "source": "engine/io/exporters/json_exporter.py",
+      "targets": [
+        "engine/io/exporters/formats/json_exporter.py"
+      ]
+    },
+    {
+      "source": "engine/io/exporters/log_exporter.py",
+      "targets": [
+        "engine/io/exporters/diagnostics/log_exporter.py"
+      ]
+    },
+    {
+      "source": "engine/io/exporters/memstore.py",
+      "targets": [
+        "engine/io/exporters/memory/memstore.py"
+      ]
+    },
+    {
+      "source": "engine/io/exporters/mongodb_exporter.py",
+      "targets": [
+        "engine/io/exporters/database/mongodb_exporter.py"
+      ]
+    },
+    {
+      "source": "engine/io/exporters/smoke_export.py",
+      "targets": [
+        "engine/io/exporters/registry.py"
+      ]
+    },
+    {
+      "source": "engine/io/exporters/test_result_exporter.py",
+      "targets": [
+        "engine/io/exporters/diagnostics/test_result_exporter.py"
+      ]
+    },
+    {
+      "source": "engine/io/exporters/txt_exporter.py",
+      "targets": [
+        "engine/io/exporters/formats/txt_exporter.py"
+      ]
+    },
+    {
+      "source": "engine/io/exporters/unified_buffered_exporter.py",
+      "targets": [
+        "engine/io/exporters/core/unified_buffered_exporter.py"
+      ]
+    },
+    {
+      "source": "engine/io/exporters/xlsx_exporter.py",
+      "targets": [
+        "engine/io/exporters/formats/xlsx_exporter.py"
+      ]
+    },
+    {
+      "source": "engine/io/exporters/xml_exporter.py",
+      "targets": [
+        "engine/io/exporters/formats/xml_exporter.py"
+      ]
+    },
+    {
+      "source": "engine/io/file_cache.py",
+      "targets": [
+        "engine/io/files/cache.py"
+      ]
+    },
+    {
+      "source": "engine/io/files.py",
+      "targets": [
+        "engine/io/files/readers.py"
+      ]
+    },
+    {
+      "source": "engine/runtime/__init__.py",
+      "targets": [
+        "engine/runtime/__init__.py"
+      ]
+    },
+    {
+      "source": "engine/runtime/api.py",
+      "targets": [
+        "engine/runtime/api.py"
+      ]
+    },
+    {
+      "source": "engine/runtime/contexts/__init__.py",
+      "targets": [
+        "engine/runtime/contexts/__init__.py"
+      ]
+    },
+    {
+      "source": "engine/runtime/contexts/context.py",
+      "targets": [
+        "engine/runtime/contexts/context.py"
+      ]
+    },
+    {
+      "source": "engine/runtime/contexts/demographic_context.py",
+      "targets": [
+        "engine/runtime/contexts/demographic_context.py"
+      ]
+    },
+    {
+      "source": "engine/runtime/contexts/expression_globals.py",
+      "targets": [
+        "engine/runtime/contexts/expression_globals.py"
+      ]
+    },
+    {
+      "source": "engine/runtime/contexts/geniter_context.py",
+      "targets": [
+        "engine/runtime/contexts/geniter_context.py"
+      ]
+    },
+    {
+      "source": "engine/runtime/contexts/records.py",
+      "targets": [
+        "engine/runtime/contexts/records.py"
+      ]
+    },
+    {
+      "source": "engine/runtime/contexts/setup_context.py",
+      "targets": [
+        "engine/runtime/contexts/context.py"
+      ]
+    },
+    {
+      "source": "engine/runtime/contracts.py",
+      "targets": [
+        "engine/runtime/contracts.py"
+      ]
+    },
+    {
+      "source": "engine/runtime/counts.py",
+      "targets": [
+        "engine/runtime/tasks/base/counts.py"
+      ]
+    },
+    {
+      "source": "engine/runtime/generators/__init__.py",
+      "targets": []
+    },
+    {
+      "source": "engine/runtime/generators/factory.py",
+      "targets": [
+        "engine/runtime/tasks/values/construction/factory.py"
+      ]
+    },
+    {
+      "source": "engine/runtime/generators/sequence_table.py",
+      "targets": [
+        "engine/runtime/tasks/values/construction/sequence_table.py"
+      ]
+    },
+    {
+      "source": "engine/runtime/lifecycle/__init__.py",
+      "targets": [
+        "engine/runtime/lifecycle/__init__.py"
+      ]
+    },
+    {
+      "source": "engine/runtime/lifecycle/config.py",
+      "targets": [
+        "engine/runtime/lifecycle/config.py"
+      ]
+    },
+    {
+      "source": "engine/runtime/lifecycle/runner.py",
+      "targets": [
+        "engine/runtime/lifecycle/runner.py"
+      ]
+    },
+    {
+      "source": "engine/runtime/logging.py",
+      "targets": [
+        "engine/runtime/logging.py"
+      ]
+    },
+    {
+      "source": "engine/runtime/process.py",
+      "targets": [
+        "engine/runtime/process_titles.py"
+      ]
+    },
+    {
+      "source": "engine/runtime/scripting/__init__.py",
+      "targets": [
+        "engine/runtime/scripting/__init__.py"
+      ]
+    },
+    {
+      "source": "engine/runtime/scripting/evaluation.py",
+      "targets": [
+        "engine/runtime/scripting/evaluation.py"
+      ]
+    },
+    {
+      "source": "engine/runtime/scripting/plugins/__init__.py",
+      "targets": [
+        "engine/runtime/scripting/plugins/__init__.py"
+      ]
+    },
+    {
+      "source": "engine/runtime/sources/__init__.py",
+      "targets": []
+    },
+    {
+      "source": "engine/runtime/sources/chunk_source_reader.py",
+      "targets": [
+        "engine/runtime/tasks/sources/chunk_source_reader.py",
+        "engine/io/data_sources/chunk_reader.py"
+      ]
+    },
+    {
+      "source": "engine/runtime/sources/router.py",
+      "targets": [
+        "engine/runtime/tasks/sources/router.py",
+        "engine/io/data_sources/router.py",
+        "engine/io/exporters/core/routing.py"
+      ]
+    },
+    {
+      "source": "engine/runtime/sources/selection.py",
+      "targets": [
+        "engine/io/data_sources/selection.py"
+      ]
+    },
+    {
+      "source": "engine/runtime/sources/variable.py",
+      "targets": [
+        "engine/runtime/tasks/sources/variable.py",
+        "engine/io/data_sources/variable.py"
+      ]
+    },
+    {
+      "source": "engine/runtime/storage/__init__.py",
+      "targets": [
+        "engine/runtime/storage/__init__.py"
+      ]
+    },
+    {
+      "source": "engine/runtime/storage/memstore_manager.py",
+      "targets": [
+        "engine/runtime/storage/memstore_manager.py"
+      ]
+    },
+    {
+      "source": "engine/runtime/tasks/__init__.py",
+      "targets": [
+        "engine/runtime/tasks/__init__.py",
+        "engine/runtime/tasks/registry.py"
+      ]
+    },
+    {
+      "source": "engine/runtime/tasks/array_task.py",
+      "targets": [
+        "engine/runtime/tasks/values/structured/array_task.py"
+      ]
+    },
+    {
+      "source": "engine/runtime/tasks/assert_task.py",
+      "targets": [
+        "engine/runtime/tasks/flow/commands/assert_task.py"
+      ]
+    },
+    {
+      "source": "engine/runtime/tasks/condition_task.py",
+      "targets": [
+        "engine/runtime/tasks/flow/branches/condition_task.py"
+      ]
+    },
+    {
+      "source": "engine/runtime/tasks/database_task.py",
+      "targets": [
+        "engine/runtime/tasks/setup/database_task.py"
+      ]
+    },
+    {
+      "source": "engine/runtime/tasks/demographics_task.py",
+      "targets": [
+        "engine/runtime/tasks/setup/demographics_task.py"
+      ]
+    },
+    {
+      "source": "engine/runtime/tasks/echo_task.py",
+      "targets": [
+        "engine/runtime/tasks/flow/commands/echo_task.py"
+      ]
+    },
+    {
+      "source": "engine/runtime/tasks/element_task.py",
+      "targets": [
+        "engine/runtime/tasks/values/scalar/element_task.py"
+      ]
+    },
+    {
+      "source": "engine/runtime/tasks/else_if_task.py",
+      "targets": [
+        "engine/runtime/tasks/flow/branches/else_if_task.py"
+      ]
+    },
+    {
+      "source": "engine/runtime/tasks/else_task.py",
+      "targets": [
+        "engine/runtime/tasks/flow/branches/else_task.py"
+      ]
+    },
+    {
+      "source": "engine/runtime/tasks/entity_constructor.py",
+      "targets": [
+        "engine/runtime/tasks/values/construction/entity_constructor.py"
+      ]
+    },
+    {
+      "source": "engine/runtime/tasks/execute_task.py",
+      "targets": [
+        "engine/runtime/tasks/flow/commands/execute_task.py"
+      ]
+    },
+    {
+      "source": "engine/runtime/tasks/generate/__init__.py",
+      "targets": []
+    },
+    {
+      "source": "engine/runtime/tasks/generate/services/__init__.py",
+      "targets": []
+    },
+    {
+      "source": "engine/runtime/tasks/generate/services/policies/__init__.py",
+      "targets": []
+    },
+    {
+      "source": "engine/runtime/tasks/generate/services/policies/single_process_policy.py",
+      "targets": [
+        "engine/runtime/tasks/generate/policies/single_process_policy.py"
+      ]
+    },
+    {
+      "source": "engine/runtime/tasks/generate/task.py",
+      "targets": [
+        "engine/runtime/tasks/generate/task.py"
+      ]
+    },
+    {
+      "source": "engine/runtime/tasks/generate/workers/__init__.py",
+      "targets": []
+    },
+    {
+      "source": "engine/runtime/tasks/generate/workers/generate_worker.py",
+      "targets": [
+        "engine/runtime/tasks/generate/workers/generate_worker.py"
+      ]
+    },
+    {
+      "source": "engine/runtime/tasks/generate/workers/multiprocessing_generate_worker.py",
+      "targets": [
+        "engine/runtime/tasks/generate/workers/multiprocessing_generate_worker.py"
+      ]
+    },
+    {
+      "source": "engine/runtime/tasks/generate/workers/ray_generate_worker.py",
+      "targets": [
+        "engine/runtime/tasks/generate/workers/ray_generate_worker.py"
+      ]
+    },
+    {
+      "source": "engine/runtime/tasks/generator_task.py",
+      "targets": [
+        "engine/runtime/tasks/setup/generator_task.py"
+      ]
+    },
+    {
+      "source": "engine/runtime/tasks/if_else_base_task.py",
+      "targets": [
+        "engine/runtime/tasks/flow/branches/if_else_base_task.py"
+      ]
+    },
+    {
+      "source": "engine/runtime/tasks/if_task.py",
+      "targets": [
+        "engine/runtime/tasks/flow/branches/if_task.py"
+      ]
+    },
+    {
+      "source": "engine/runtime/tasks/include_task.py",
+      "targets": [
+        "engine/runtime/tasks/setup/include_task.py"
+      ]
+    },
+    {
+      "source": "engine/runtime/tasks/item_task.py",
+      "targets": [
+        "engine/runtime/tasks/values/structured/item_task.py"
+      ]
+    },
+    {
+      "source": "engine/runtime/tasks/key_task.py",
+      "targets": [
+        "engine/runtime/tasks/values/scalar/key_task.py"
+      ]
+    },
+    {
+      "source": "engine/runtime/tasks/key_variable_task.py",
+      "targets": [
+        "engine/runtime/tasks/values/key_variable_task.py"
+      ]
+    },
+    {
+      "source": "engine/runtime/tasks/list_task.py",
+      "targets": [
+        "engine/runtime/tasks/values/structured/list_task.py"
+      ]
+    },
+    {
+      "source": "engine/runtime/tasks/memstore_task.py",
+      "targets": [
+        "engine/runtime/tasks/setup/memstore_task.py"
+      ]
+    },
+    {
+      "source": "engine/runtime/tasks/mongodb_task.py",
+      "targets": [
+        "engine/runtime/tasks/setup/mongodb_task.py"
+      ]
+    },
+    {
+      "source": "engine/runtime/tasks/nested_key_task.py",
+      "targets": [
+        "engine/runtime/tasks/values/structured/nested_key_task.py"
+      ]
+    },
+    {
+      "source": "engine/runtime/tasks/reference_task.py",
+      "targets": [
+        "engine/runtime/tasks/values/references/reference_task.py"
+      ]
+    },
+    {
+      "source": "engine/runtime/tasks/setup_task.py",
+      "targets": [
+        "engine/runtime/tasks/setup/setup_task.py"
+      ]
+    },
+    {
+      "source": "engine/runtime/tasks/state_machine_task.py",
+      "targets": [
+        "engine/runtime/tasks/setup/state_machine_task.py"
+      ]
+    },
+    {
+      "source": "engine/runtime/tasks/task.py",
+      "targets": [
+        "engine/runtime/tasks/base/task.py"
+      ]
+    },
+    {
+      "source": "engine/runtime/tasks/task_factory.py",
+      "targets": [
+        "engine/runtime/tasks/base/dispatch.py"
+      ]
+    },
+    {
+      "source": "engine/runtime/tasks/task_util.py",
+      "targets": [
+        "engine/runtime/scripting/evaluation.py",
+        "engine/runtime/tasks/values/construction/converters.py",
+        "engine/runtime/tasks/generate/export_order.py",
+        "engine/io/exporters/core/serialization.py",
+        "engine/io/exporters/core/routing.py",
+        "engine/runtime/tasks/values/construction/factory.py"
+      ]
+    },
+    {
+      "source": "engine/runtime/tasks/variable_iterator.py",
+      "targets": [
+        "engine/runtime/tasks/values/variables/variable_iterator.py"
+      ]
+    },
+    {
+      "source": "engine/runtime/tasks/variable_task.py",
+      "targets": [
+        "engine/runtime/tasks/values/variables/variable_task.py"
+      ]
+    },
+    {
+      "source": "engine/runtime/tasks/while_task.py",
+      "targets": [
+        "engine/runtime/tasks/flow/loops/while_task.py"
+      ]
+    },
+    {
+      "source": "errors/__init__.py",
+      "targets": [
+        "errors/__init__.py"
+      ]
+    },
+    {
+      "source": "errors/base.py",
+      "targets": [
+        "errors/base.py"
+      ]
+    },
+    {
+      "source": "errors/catalog/__init__.py",
+      "targets": [
+        "errors/catalog/__init__.py"
+      ]
+    },
+    {
+      "source": "errors/codes.py",
+      "targets": [
+        "errors/codes.py"
+      ]
+    },
+    {
+      "source": "errors/factory.py",
+      "targets": [
+        "errors/factory.py"
+      ]
+    },
+    {
+      "source": "errors/formatters.py",
+      "targets": [
+        "errors/formatters.py"
+      ]
+    },
+    {
+      "source": "factory/datamimic_test_factory.py",
+      "targets": [
+        "interfaces/python/factory.py"
+      ]
+    },
+    {
+      "source": "factory/factory_config.py",
+      "targets": []
+    },
+    {
+      "source": "interfaces/__init__.py",
+      "targets": [
+        "interfaces/__init__.py"
+      ]
+    },
+    {
+      "source": "interfaces/api.py",
+      "targets": []
+    },
+    {
+      "source": "interfaces/cli/__init__.py",
+      "targets": [
+        "interfaces/cli/__init__.py"
+      ]
+    },
+    {
+      "source": "interfaces/cli/__main__.py",
+      "targets": [
+        "interfaces/cli/__main__.py"
+      ]
+    },
+    {
+      "source": "interfaces/cli/authoring.py",
+      "targets": [
+        "interfaces/cli/authoring.py"
+      ]
+    },
+    {
+      "source": "interfaces/cli/presenter.py",
+      "targets": [
+        "interfaces/cli/presenter.py"
+      ]
+    },
+    {
+      "source": "interfaces/cli/runtime.py",
+      "targets": [
+        "interfaces/cli/runtime.py"
+      ]
+    },
+    {
+      "source": "interfaces/contracts.py",
+      "targets": []
+    },
+    {
+      "source": "interfaces/demo.py",
+      "targets": [
+        "interfaces/demo.py"
+      ]
+    },
+    {
+      "source": "interfaces/mcp/__init__.py",
+      "targets": [
+        "interfaces/mcp/__init__.py"
+      ]
+    },
+    {
+      "source": "interfaces/mcp/cli.py",
+      "targets": [
+        "interfaces/mcp/cli.py"
+      ]
+    },
+    {
+      "source": "interfaces/mcp/server.py",
+      "targets": [
+        "interfaces/mcp/server.py"
+      ]
+    },
+    {
+      "source": "interfaces/project.py",
+      "targets": [
+        "interfaces/project.py"
+      ]
+    },
+    {
+      "source": "resources/__init__.py",
+      "targets": [
+        "resources/__init__.py"
+      ]
+    },
+    {
+      "source": "resources/api.py",
+      "targets": [
+        "resources/api.py"
+      ]
+    },
+    {
+      "source": "resources/demos/__init___.py",
+      "targets": [
+        "resources/demos/__init___.py"
+      ]
+    },
+    {
+      "source": "resources/demos/demo-clinical-trial/script/clinical_trial.scr.py",
+      "targets": [
+        "resources/demos/demo-clinical-trial/script/clinical_trial.scr.py"
+      ]
+    },
+    {
+      "source": "resources/demos/demo-custom-components/script/converter.scr.py",
+      "targets": [
+        "resources/demos/demo-custom-components/script/converter.scr.py"
+      ]
+    },
+    {
+      "source": "resources/demos/demo-custom-components/script/generator.scr.py",
+      "targets": [
+        "resources/demos/demo-custom-components/script/generator.scr.py"
+      ]
+    },
+    {
+      "source": "resources/demos/demo-custom-components/script/generator_glob.scr.py",
+      "targets": [
+        "resources/demos/demo-custom-components/script/generator_glob.scr.py"
+      ]
+    },
+    {
+      "source": "resources/demos/demo-datetime/script/py_script.scr.py",
+      "targets": [
+        "resources/demos/demo-datetime/script/py_script.scr.py"
+      ]
+    },
+    {
+      "source": "resources/demos/demo-db-mapping/script/lib_glob.scr.py",
+      "targets": [
+        "resources/demos/demo-db-mapping/script/lib_glob.scr.py"
+      ]
+    },
+    {
+      "source": "resources/demos/demo-finance/script/ledger.scr.py",
+      "targets": [
+        "resources/demos/demo-finance/script/ledger.scr.py"
+      ]
+    },
+    {
+      "source": "resources/demos/demo-py-scripting/script/lib.scr.py",
+      "targets": [
+        "resources/demos/demo-py-scripting/script/lib.scr.py"
+      ]
+    }
+  ],
+  "non_python_resource_policy": {
+    "unchanged_roots": [
+      "domains/shared/domain_data",
+      "domains/shared/schemas",
+      "resources/demos"
+    ],
+    "rule": "Preserve non-Python packaged assets at their existing owner unless an explicit source-snapshot relocation names them. target_directories describes Python concern directories, not every data-only subdirectory. Verify installed wheel resource inclusion and lookup separately.",
+    "obsolete_package_relocation": "Remove factory -> interfaces/python/factory: the destination is interfaces/python/factory.py, not a package. Mixed source package relocations cannot override the explicit per-module split/merge mapping."
+  },
+  "new_modules": [
+    {
+      "target": "engine/io/data_sources/boundary/models.py",
+      "reason": "Typed resolved source requests with no Context/Statement. Put new IO boundary contracts here rather than importing runtime context; actual request invariant earns module."
+    }
+  ],
+  "removed_modules": [
+    {
+      "source": "engine/runtime/generators/__init__.py",
+      "reason": "Empty package marker; construction has concrete modules."
+    },
+    {
+      "source": "engine/runtime/sources/__init__.py",
+      "reason": "Docstring-only package marker; source routing has concrete modules."
+    },
+    {
+      "source": "engine/runtime/tasks/generate/__init__.py",
+      "reason": "Docstring-only package marker; task composition stays in tasks/__init__.py."
+    },
+    {
+      "source": "engine/runtime/tasks/generate/services/policies/__init__.py",
+      "reason": "Docstring-only package marker; policies have concrete modules."
+    },
+    {
+      "source": "engine/runtime/tasks/generate/workers/__init__.py",
+      "reason": "Docstring-only package marker; workers have concrete modules."
+    },
+    {
+      "source": "engine/dsl/__init__.py",
+      "reason": "Docstring-only package marker; namespace package discovery covers the directory."
+    },
+    {
+      "source": "engine/dsl/constants/__init__.py",
+      "reason": "Docstring-only package marker; no executable or export responsibility."
+    },
+    {
+      "source": "engine/dsl/enums/__init__.py",
+      "reason": "Docstring-only package marker; no executable or export responsibility."
+    },
+    {
+      "source": "engine/dsl/model/__init__.py",
+      "reason": "Docstring-only package marker; no executable or export responsibility."
+    },
+    {
+      "source": "engine/dsl/statements/__init__.py",
+      "reason": "Docstring-only package marker; no executable or export responsibility."
+    },
+    {
+      "source": "engine/dsl/model/condition_model.py",
+      "reason": "Unused empty model; condition statements are built without it."
+    },
+    {
+      "source": "engine/dsl/model/else_model.py",
+      "reason": "Unused empty model; else statements are built without it."
+    },
+    {
+      "source": "interfaces/api.py",
+      "reason": "Forwarding only; migrate all consumers to runtime/authoring canonical entry."
+    },
+    {
+      "source": "interfaces/contracts.py",
+      "reason": "Forwarding only; import canonical contract directly."
+    },
+    {
+      "source": "factory/factory_config.py",
+      "reason": "Forwarding only; import runtime/contracts.py directly."
+    },
+    {
+      "source": "engine/runtime/tasks/generate/services/__init__.py",
+      "reason": "Docstring-only old grouping marker."
+    }
+  ],
+  "merges": [
+    {
+      "sources": [
+        "domains/shared/utils/random_source.py",
+        "domains/shared/sampling.py"
+      ],
+      "target": "randomness.py",
+      "reason": "Shared randomness leaf prevents IO/Domains cycle without wrappers or duplicated sampling math."
+    },
+    {
+      "sources": [
+        "engine/runtime/contexts/context.py",
+        "engine/runtime/contexts/setup_context.py"
+      ],
+      "target": "engine/runtime/contexts/context.py",
+      "reason": "Explicit closed execution-context class hierarchy; both classes retained."
+    }
+  ],
+  "mapping_application": "Each source occurs exactly once in effective_module_mapping. Empty targets means removal. More than one target means behavior split; shared destinations are deliberate merges, not collision waivers. Replace prior relocation for a split source. No source projection is permitted to infer target component ownership. Build physical file inventory as distinct targets plus new_modules; contract namespaces are not files.",
+  "source_split_operations": [
+    {
+      "source": "engine/runtime/tasks/__init__.py",
+      "bootstrap": "Retain package composition importing registry once, without reexports, aliases or mutable initialization flags. Spawned multiprocessing and Ray workers enter below the lifecycle runner.",
+      "registry": "Move existing ordered task registrations unchanged into registry.py. Implementations import explicit leaves, never the package initializer.",
+      "verification": "Cold spawn and Ray worker execution, unsupported statement failure, registry extension precedence and seeded replay. Parser registration differs: DescriptorParser composes it explicitly, so the old parsers initializer is removed."
+    },
+    {
+      "source": "engine/runtime/sources/router.py",
+      "runtime": "Evaluate scripts/selectors, derive stable seeds, resolve context/defaults/statement metadata and update root caches.",
+      "io": "Route resolved source family to readers/counts, select/window rows, ordered reference reads; exporter target classification moves IO/exporters/core/routing."
+    },
+    {
+      "source": "engine/runtime/sources/variable.py",
+      "runtime": "Evaluate selector templates; derive seed; resolve statement/defaults and choose execution binding mode.",
+      "io": "Load weighted/file/client rows and apply paging/distribution/uniqueness; return typed source result without runtime context."
+    },
+    {
+      "source": "engine/runtime/sources/chunk_source_reader.py",
+      "runtime": "Resolve statement plus context to one source request; retain execution lifecycle invocation.",
+      "io": "Own cached full pool or page reader and selection snapshot. Preserve exactly one pool load, stable seed, page bounds and exhaustion."
+    },
+    {
+      "source": "engine/io/contracts.py",
+      "retain": "Pagination/smoke-export and other IO data contracts.",
+      "move": "select_rows/select_row_iterator implementation to data_sources/selection.py."
+    },
+    {
+      "source": "engine/dsl/parsers/parser_util.py",
+      "retain": "Recursive dispatch in parsers/base/dispatch.py.",
+      "move": "Pure client config merge to parsers/base/client_config.py; on-demand credential profile filesystem loading to IO connection_config/properties.py."
+    }
+  ],
+  "boundary_type_review": {
+    "source": "test-artifacts/architecture/ce-recursive-target/architecture.json",
+    "raw_positions": 30,
+    "policy": "These are exact review records, not invented ArchKeel schema fields. Encode supported allowed_positions syntax in each owning contract. Do not preserve deleted interfaces allowances. Recompute observations after final implementation; scoped allowed opacity is not type proof.",
+    "positions": [
+      {
+        "rule_id": "IO-API-TYPES",
+        "qualified_name": "datamimic_ce.engine.io.api.smoke_export",
+        "position": "request",
+        "path": "request.descriptor_dir",
+        "annotation": "Path",
+        "action": "allow_exact_position",
+        "rationale": "Filesystem path is the actual local execution/IO contract; do not coerce to text.",
+        "evidence_ids": [
+          "EVD-63a73e3693b20e2b"
+        ]
+      },
+      {
+        "rule_id": "DSL-API-TYPES",
+        "qualified_name": "datamimic_ce.engine.dsl.api.resolved_allowed",
+        "position": "fact",
+        "path": "fact.allowed",
+        "annotation": "frozenset[str] | tuple[str, ...] | Callable[[], set[str]]",
+        "action": "allow_exact_position",
+        "rationale": "Canonical grammar accepts eager values or a typed zero-argument dynamic enum supplier; keep lazy resolution.",
+        "evidence_ids": [
+          "EVD-c07a37d2ca5a551c"
+        ]
+      },
+      {
+        "rule_id": "DOMAIN-API-TYPES",
+        "qualified_name": "datamimic_ce.domains.api.spawn_rng",
+        "position": "parent",
+        "annotation": "Random",
+        "action": "allow_exact_position",
+        "rationale": "Caller-owned RNG preserves deterministic stream identity and draw sequence.",
+        "evidence_ids": [
+          "EVD-bff8a4b8f85c7c76"
+        ]
+      },
+      {
+        "rule_id": "DSL-API-TYPES",
+        "qualified_name": "datamimic_ce.engine.dsl.api.parse_xml_file",
+        "position": "path",
+        "annotation": "Path",
+        "action": "allow_exact_position",
+        "rationale": "Filesystem path is the actual local execution/IO contract; do not coerce to text.",
+        "evidence_ids": [
+          "EVD-14bbc30d3c4fbf57"
+        ]
+      },
+      {
+        "rule_id": "RUNTIME-API-TYPES",
+        "qualified_name": "datamimic_ce.engine.runtime.api.create_run_session",
+        "position": "request",
+        "path": "request.descriptor_path",
+        "annotation": "Path",
+        "action": "allow_exact_position",
+        "rationale": "Filesystem path is the actual local execution/IO contract; do not coerce to text.",
+        "evidence_ids": [
+          "EVD-5daf8751c782bb96"
+        ]
+      },
+      {
+        "rule_id": "DOMAIN-API-TYPES",
+        "qualified_name": "datamimic_ce.domains.api.resolve_clock",
+        "position": "return",
+        "annotation": "datetime",
+        "action": "allow_exact_position",
+        "rationale": "Explicit datetime preserves temporal meaning; do not coerce to text.",
+        "evidence_ids": [
+          "EVD-c5bd4dc64629f67f"
+        ]
+      },
+      {
+        "rule_id": "DSL-API-TYPES",
+        "qualified_name": "datamimic_ce.engine.dsl.api.serialize_constraints",
+        "position": "constraints",
+        "path": "constraints.values",
+        "annotation": "frozenset[str] | tuple[str, ...] | Callable[[], set[str]]",
+        "action": "allow_exact_position",
+        "rationale": "Canonical grammar accepts eager values or a typed zero-argument dynamic enum supplier; keep lazy resolution.",
+        "evidence_ids": [
+          "EVD-2cf1c51eaa05aca4"
+        ]
+      },
+      {
+        "rule_id": "DSL-API-TYPES",
+        "qualified_name": "datamimic_ce.engine.dsl.api.get_model_class",
+        "position": "return",
+        "annotation": "type[BaseModel] | None",
+        "action": "allow_exact_position",
+        "rationale": "Grammar model discovery intentionally returns Pydantic model classes.",
+        "evidence_ids": [
+          "EVD-eba4c6c4948d2760"
+        ]
+      },
+      {
+        "rule_id": "INTERFACES-API-TYPES",
+        "qualified_name": "datamimic_ce.interfaces.api.create_run_session",
+        "position": "request",
+        "path": "request.descriptor_path",
+        "annotation": "Path",
+        "action": "remove_forwarder_no_allowance",
+        "rationale": "Filesystem path is the actual local execution/IO contract; do not coerce to text.",
+        "evidence_ids": [
+          "EVD-e3d3049ee030f9f7"
+        ]
+      },
+      {
+        "rule_id": "INTERFACES-API-TYPES",
+        "qualified_name": "datamimic_ce.interfaces.api.load_descriptor_properties",
+        "position": "descriptor_path",
+        "annotation": "Path",
+        "action": "remove_forwarder_no_allowance",
+        "rationale": "Filesystem path is the actual local execution/IO contract; do not coerce to text.",
+        "evidence_ids": [
+          "EVD-1adfc4f39a079bcd"
+        ]
+      },
+      {
+        "rule_id": "DSL-API-TYPES",
+        "qualified_name": "datamimic_ce.engine.dsl.api.parse_xml_source",
+        "position": "return",
+        "annotation": "etree._Element",
+        "action": "allow_exact_position",
+        "rationale": "XML parser intentionally exposes lxml trees inside the DSL processing boundary.",
+        "evidence_ids": [
+          "EVD-40e006c4114fd1dc"
+        ]
+      },
+      {
+        "rule_id": "DOMAIN-API-TYPES",
+        "qualified_name": "datamimic_ce.domains.api.spawn_rng",
+        "position": "return",
+        "annotation": "Random",
+        "action": "allow_exact_position",
+        "rationale": "Caller-owned RNG preserves deterministic stream identity and draw sequence.",
+        "evidence_ids": [
+          "EVD-bff8a4b8f85c7c76"
+        ]
+      },
+      {
+        "rule_id": "DSL-API-TYPES",
+        "qualified_name": "datamimic_ce.engine.dsl.api.element_constraints",
+        "position": "return",
+        "path": "return.values",
+        "annotation": "frozenset[str] | tuple[str, ...] | Callable[[], set[str]]",
+        "action": "allow_exact_position",
+        "rationale": "Canonical grammar accepts eager values or a typed zero-argument dynamic enum supplier; keep lazy resolution.",
+        "evidence_ids": [
+          "EVD-608130ae3ba0529f"
+        ]
+      },
+      {
+        "rule_id": "AUTHORING-API-TYPES",
+        "qualified_name": "datamimic_ce.authoring.api.run",
+        "position": "request",
+        "path": "request.xml",
+        "annotation": "StrictStr | None",
+        "action": "allow_exact_position",
+        "rationale": "Pydantic strict validation rejects coercions; retain the validated primitive boundary.",
+        "evidence_ids": [
+          "EVD-faa911a2ce7c59ee"
+        ]
+      },
+      {
+        "rule_id": "AUTHORING-API-TYPES",
+        "qualified_name": "datamimic_ce.authoring.api.check",
+        "position": "request",
+        "path": "request.xml",
+        "annotation": "StrictStr | None",
+        "action": "allow_exact_position",
+        "rationale": "Pydantic strict validation rejects coercions; retain the validated primitive boundary.",
+        "evidence_ids": [
+          "EVD-c2e5fbd28f0a29f0"
+        ]
+      },
+      {
+        "rule_id": "DOMAIN-API-TYPES",
+        "qualified_name": "datamimic_ce.domains.api.from_epoch_utc",
+        "position": "return",
+        "annotation": "datetime",
+        "action": "allow_exact_position",
+        "rationale": "Explicit datetime preserves temporal meaning; do not coerce to text.",
+        "evidence_ids": [
+          "EVD-8a71dd698aa1a89d"
+        ]
+      },
+      {
+        "rule_id": "DSL-API-TYPES",
+        "qualified_name": "datamimic_ce.engine.dsl.api.resolved_values",
+        "position": "fact",
+        "path": "fact.values",
+        "annotation": "frozenset[str] | tuple[str, ...] | Callable[[], set[str]]",
+        "action": "allow_exact_position",
+        "rationale": "Canonical grammar accepts eager values or a typed zero-argument dynamic enum supplier; keep lazy resolution.",
+        "evidence_ids": [
+          "EVD-8021e71042995209"
+        ]
+      },
+      {
+        "rule_id": "DSL-API-TYPES",
+        "qualified_name": "datamimic_ce.engine.dsl.api.serialize_constraints",
+        "position": "return",
+        "annotation": "list[JsonSchemaValue]",
+        "action": "allow_exact_position",
+        "rationale": "Constraint serialization intentionally exposes Pydantic JSON Schema values.",
+        "evidence_ids": [
+          "EVD-2cf1c51eaa05aca4"
+        ]
+      },
+      {
+        "rule_id": "RESOURCES-API-TYPES",
+        "qualified_name": "datamimic_ce.resources.api.demo_root",
+        "position": "return",
+        "annotation": "Traversable",
+        "action": "allow_exact_position",
+        "rationale": "Packaged resource access must work outside filesystem checkouts.",
+        "evidence_ids": [
+          "EVD-a6099dee8cad4d07"
+        ]
+      },
+      {
+        "rule_id": "DOMAIN-API-TYPES",
+        "qualified_name": "datamimic_ce.domains.api.to_epoch_utc",
+        "position": "value",
+        "annotation": "datetime",
+        "action": "allow_exact_position",
+        "rationale": "Explicit datetime preserves temporal meaning; do not coerce to text.",
+        "evidence_ids": [
+          "EVD-0bfba8cbf615442d"
+        ]
+      },
+      {
+        "rule_id": "DOMAIN-API-TYPES",
+        "qualified_name": "datamimic_ce.domains.api.get_entity_service_class",
+        "position": "return",
+        "annotation": "Callable[..., BaseDomainService] | None",
+        "action": "rename_then_allow_exact_position",
+        "target_qualified_name": "datamimic_ce.domains.api.get_entity_service_factory",
+        "target_annotation": "Callable[..., BaseDomainService] | None",
+        "rationale": "Concrete registered services have heterogeneous constructor signatures. This exact return position exposes dynamic DSL construction, not static argument proof; class identity remains available through EntitySpec.service_cls.",
+        "evidence_ids": [
+          "EVD-426a2720ef6c6695"
+        ]
+      },
+      {
+        "rule_id": "AUTHORING-API-TYPES",
+        "qualified_name": "datamimic_ce.authoring.api.scaffold",
+        "position": "request",
+        "path": "request.max_count",
+        "annotation": "StrictInt",
+        "action": "allow_exact_position",
+        "rationale": "Pydantic strict validation rejects coercions; retain the validated primitive boundary.",
+        "evidence_ids": [
+          "EVD-24c4acc31ecab87a"
+        ]
+      },
+      {
+        "rule_id": "DOMAIN-API-TYPES",
+        "qualified_name": "datamimic_ce.domains.api.derive_child_seed",
+        "position": "parent",
+        "annotation": "Random",
+        "action": "allow_exact_position",
+        "rationale": "Caller-owned RNG preserves deterministic stream identity and draw sequence.",
+        "evidence_ids": [
+          "EVD-6371cece47e72b6f"
+        ]
+      },
+      {
+        "rule_id": "RUNTIME-API-TYPES",
+        "qualified_name": "datamimic_ce.engine.runtime.api.run",
+        "position": "request",
+        "path": "request.descriptor_path",
+        "annotation": "Path",
+        "action": "allow_exact_position",
+        "rationale": "Filesystem path is the actual local execution/IO contract; do not coerce to text.",
+        "evidence_ids": [
+          "EVD-1d5664fbf8f5222a"
+        ]
+      },
+      {
+        "rule_id": "DSL-API-TYPES",
+        "qualified_name": "datamimic_ce.engine.dsl.api.parse_properties",
+        "position": "path",
+        "annotation": "Path",
+        "action": "allow_exact_position",
+        "rationale": "Filesystem path is the actual local execution/IO contract; do not coerce to text.",
+        "evidence_ids": [
+          "EVD-cef290e7292cbbd0"
+        ]
+      },
+      {
+        "rule_id": "RUNTIME-API-TYPES",
+        "qualified_name": "datamimic_ce.engine.runtime.api.load_descriptor_properties",
+        "position": "descriptor_path",
+        "annotation": "Path",
+        "action": "allow_exact_position",
+        "rationale": "Filesystem path is the actual local execution/IO contract; do not coerce to text.",
+        "evidence_ids": [
+          "EVD-1adfc4f39a079bcd"
+        ]
+      },
+      {
+        "rule_id": "DOMAIN-API-TYPES",
+        "qualified_name": "datamimic_ce.domains.api.load_demographic_profile",
+        "position": "directory",
+        "annotation": "Path",
+        "action": "allow_exact_position",
+        "rationale": "Filesystem path is the actual local execution/IO contract; do not coerce to text.",
+        "evidence_ids": [
+          "EVD-2b3f9dc8e1e91cbc"
+        ]
+      },
+      {
+        "rule_id": "DSL-API-TYPES",
+        "qualified_name": "datamimic_ce.engine.dsl.api.parse_xml_file",
+        "position": "return",
+        "annotation": "etree._Element",
+        "action": "allow_exact_position",
+        "rationale": "XML parser intentionally exposes lxml trees inside the DSL processing boundary.",
+        "evidence_ids": [
+          "EVD-14bbc30d3c4fbf57"
+        ]
+      },
+      {
+        "rule_id": "DOMAIN-API-TYPES",
+        "qualified_name": "datamimic_ce.domains.api.cumulated_index",
+        "position": "rng",
+        "annotation": "random.Random",
+        "action": "allow_exact_position",
+        "rationale": "Caller-owned RNG preserves deterministic stream identity and draw sequence.",
+        "evidence_ids": [
+          "EVD-2d7a1be78c93dee5"
+        ]
+      },
+      {
+        "rule_id": "INTERFACES-API-TYPES",
+        "qualified_name": "datamimic_ce.interfaces.api.run",
+        "position": "request",
+        "path": "request.descriptor_path",
+        "annotation": "Path",
+        "action": "remove_forwarder_no_allowance",
+        "rationale": "Filesystem path is the actual local execution/IO contract; do not coerce to text.",
+        "evidence_ids": [
+          "EVD-5c504c3dff7ca90f"
+        ]
+      }
+    ]
+  },
+  "implementation_slices": [
+    {
+      "id": "S1",
+      "scope": "Apply freeze to canonical contracts/mapping and source-snapshot validators.",
+      "acceptance": "22 future selector scopes; 17/17 unclear resolved; all 488 source modules have one mapping/removal; schema/source-coverage validation separate from pending physical target acceptance; Soll diagram reads canonical packages."
+    },
+    {
+      "id": "S2",
+      "scope": "Mechanical concern moves and imports; delete approved forwarding modules; keep actual package data.",
+      "acceptance": "No old module aliases; all targeted source consumers/docs/tests migrated; build wheel and installed-wheel domain/schema/example smoke tests; exact future file inventory."
+    },
+    {
+      "id": "S3",
+      "scope": "DSL setup families, parser composition/IO credential inversion and specialized traversal.",
+      "acceptance": "Grammar/discovery schema baseline unchanged; credential collision/mutation/conditional-load/fallback/include fixtures; runtime Include scopes; setup ordering; Condition branch traversal and descendant naming; no statement module SCC."
+    },
+    {
+      "id": "S4",
+      "scope": "Runtime contexts and utility behavior ownership; generator registration.",
+      "acceptance": "No contexts module SCC; seeded/unseeded expression streams and lazy Faker draw count unchanged; optional generator cache, global increment per-root reset and state-machine instances; nonbool condition failures; nested Execute locals; parent/child export order."
+    },
+    {
+      "id": "S5",
+      "scope": "IO source boundary and exporter routing.",
+      "acceptance": "No IO import or annotation of runtime Context or DSL Statement; source family count/read, selection/unique/cyclic, ordered paging, random pool load once, variable modes, reference cycle, Mongo upsert vs SQL/file behavior all pass positive and negative fixtures."
+    },
+    {
+      "id": "S6",
+      "scope": "Integrated physical/contract/behavior/packaging verification.",
+      "acceptance": "Exact file/module set, no stale imports, no unauthorized component edges/cycles, fresh boundary UNKNOWN classification, ruff and full-package mypy, relevant full unit suite, frozen behavioral fixtures and installed-wheel checks. External DB/remote CI reported separately if unavailable."
+    }
+  ],
+  "deferred_semantic_alignment": [
+    {
+      "id": "CE_EE_CREDENTIAL_PRECEDENCE",
+      "decision": "Preserve CE behavior for structural migration. EE descriptor-wins vs CE environment-wins requires an explicit later semantic change, not target completion.",
+      "required_evidence": "Same conflicting descriptor/environment/profile fixtures on both editions, explicit expected winner and migration note before changing CE."
+    }
+  ],
+  "verification_limits": [
+    "Static source/contract decision; not a second exhaustive source audit or executed equivalence suite.",
+    "EE inspected read-only in current checkout; no claim that EE already satisfies target or that its behavior should blindly replace CE.",
+    "Historical baseline stays unchanged; zero structural violations alone is not implementation acceptance."
+  ]
+}

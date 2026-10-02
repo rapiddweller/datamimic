@@ -1,0 +1,7 @@
+{
+  "after_digest": "3bee06b20cb849f6c231b504b8a604a1d23f5f1f6bd8f322a81908737d377df4",
+  "before_digest": "3bee06b20cb849f6c231b504b8a604a1d23f5f1f6bd8f322a81908737d377df4",
+  "decided_by": "experiment orchestrator",
+  "rationale": "Step 7A deleted dead root utilities and moved each live owner-obvious helper into an already-declared target component. The contract is unchanged; renamed findings reflect physical ownership only.",
+  "schema_version": "1.0.0"
+}

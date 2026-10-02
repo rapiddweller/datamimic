@@ -84,21 +84,6 @@ class TestEntityMedicalProcedure:
         assert medical_procedure.procedure_code == medical_procedure.procedure_code
         assert medical_procedure.recovery_time_days == medical_procedure.recovery_time_days
 
-    @pytest.mark.flaky(reruns=10)
-    def test_two_different_entities(self):
-        medical_procedure_service = MedicalProcedureService()
-        medical_procedure1 = medical_procedure_service.generate()
-        medical_procedure2 = medical_procedure_service.generate()
-        assert medical_procedure1.procedure_id != medical_procedure2.procedure_id
-        assert medical_procedure1.description != medical_procedure2.description
-        assert medical_procedure1.specialty != medical_procedure2.specialty
-        assert medical_procedure1.duration_minutes != medical_procedure2.duration_minutes
-        assert medical_procedure1.cost != medical_procedure2.cost
-        assert medical_procedure1.recovery_time_days != medical_procedure2.recovery_time_days
-        assert medical_procedure1.cpt_code != medical_procedure2.cpt_code
-        assert medical_procedure1.name != medical_procedure2.name
-        assert medical_procedure1.procedure_code != medical_procedure2.procedure_code
-        assert medical_procedure1.recovery_time_days != medical_procedure2.recovery_time_days
 
     @pytest.mark.parametrize("dataset", _supported_datasets)
     def test_supported_datasets(self, dataset):

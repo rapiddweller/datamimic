@@ -1,0 +1,7 @@
+{
+  "after_digest": "9e8355a411cdd8ab8b85966b1c81036da655ded862cbc04583a216d9c43acdbb",
+  "before_digest": "b7f4d3c33422ec56d1fbd3a134df1a1150fb1a2454fa27e3e5dd1b7e823b4592",
+  "decided_by": "experiment orchestrator",
+  "rationale": "The frozen target incorrectly treated packaged dataset parsing as domain logic. Domains own the dataset semantics, while parsing and caching cross only the narrow IO dataset facade; database IO remains outside the permitted path.",
+  "schema_version": "1.0.0"
+}

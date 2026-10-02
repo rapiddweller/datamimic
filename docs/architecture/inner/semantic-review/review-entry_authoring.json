@@ -1,0 +1,1585 @@
+{
+  "reviewer": "luna-entry-authoring",
+  "records": [
+    {
+      "id": "module:__init__.py",
+      "concern": "Der Paketstart lädt dotenv beim Import und beeinflusst damit auch Verbraucher ohne Runtime-Aufruf.",
+      "verdict": "change",
+      "reason": "Ein globaler Importeffekt gehört nicht zur Laufzeit-API; bei reinem Bibliotheksimport wird bereits der Prozesszustand verändert.",
+      "evidence": [
+        {
+          "path": "datamimic_ce/__init__.py",
+          "line": 7
+        }
+      ]
+    },
+    {
+      "id": "module:_compat.py",
+      "concern": "Das Modul stellt auf älteren Python-Versionen String-Enum- und Exhaustiveness-Helfer bereit.",
+      "verdict": "keep",
+      "reason": "Beide Shims füllen konkrete Standardbibliothekslücken für den unterstützten Python-Bereich.",
+      "evidence": [
+        {
+          "path": "datamimic_ce/_compat.py",
+          "line": 9
+        }
+      ]
+    },
+    {
+      "id": "module:authoring/__init__.py",
+      "concern": "Das Paket exportiert die kanonischen Intent-, Request- und Scaffold-Einstiege.",
+      "verdict": "keep",
+      "reason": "Der gebündelte Importpfad ist die dokumentierte Authoring-API und keine bloße interne Weiterleitung.",
+      "evidence": [
+        {
+          "path": "datamimic_ce/authoring/__init__.py",
+          "line": 3
+        }
+      ]
+    },
+    {
+      "id": "module:authoring/adapters/__init__.py",
+      "concern": "Das Paket markiert den Adapter-Namensraum, ohne eigene Authoring-Logik bereitzustellen.",
+      "verdict": "scaffold",
+      "reason": "Ein leeres Initialisierungsmodul ist Paket-Infrastruktur, kein eigenständiger fachlicher Baustein.",
+      "evidence": [
+        {
+          "path": "datamimic_ce/authoring/adapters/__init__.py",
+          "line": 1
+        }
+      ]
+    },
+    {
+      "id": "module:authoring/adapters/dryrun.py",
+      "concern": "Der Adapter begrenzt Counts, neutralisiert Seiteneffekte und kapselt den Runtime-Lauf samt vollständiger Capture-Evidenz.",
+      "verdict": "keep",
+      "reason": "Target-Neutralisierung, Worker-Abbruch und Capture gehören gemeinsam zur Sicherheitsgrenze des Authoring-Dry-Runs.",
+      "evidence": [
+        {
+          "path": "datamimic_ce/authoring/adapters/dryrun.py",
+          "line": 762
+        }
+      ]
+    },
+    {
+      "id": "module:authoring/adapters/engine_check.py",
+      "concern": "Der Adapter führt nach erfolgreichem Regel-Lint den Engine-Parser als zweite Validierungsautorität aus.",
+      "verdict": "keep",
+      "reason": "Ergänzt gezielt die aggregierenden Regeln um die fail-fast Parserprüfung, statt einen zweiten vollständigen Validator zu bauen.",
+      "evidence": [
+        {
+          "path": "datamimic_ce/authoring/adapters/engine_check.py",
+          "line": 40
+        }
+      ]
+    },
+    {
+      "id": "module:authoring/adapters/linter.py",
+      "concern": "Der Adapter lädt XML, aggregiert registrierte Diagnosen und ruft den Engine-Parser nur bei fehlerfreiem Regel-Lauf auf.",
+      "verdict": "keep",
+      "reason": "Die Reihenfolge verhindert doppelte Erstfehler und hält Lint-Aufruf samt Diagnosegrenze zusammen.",
+      "evidence": [
+        {
+          "path": "datamimic_ce/authoring/adapters/linter.py",
+          "line": 46
+        }
+      ]
+    },
+    {
+      "id": "module:authoring/adapters/xml_loader.py",
+      "concern": "Der Loader verwendet den gemeinsamen sicheren XML-Parser und übersetzt Syntax- oder DTD-Fehler in DM001-Diagnosen.",
+      "verdict": "keep",
+      "reason": "Eine gemeinsame Secure-XML-Grenze schützt Datei- und Inline-Eingaben identisch.",
+      "evidence": [
+        {
+          "path": "datamimic_ce/authoring/adapters/xml_loader.py",
+          "line": 20
+        }
+      ]
+    },
+    {
+      "id": "module:authoring/api.py",
+      "concern": "Die API bietet getypte Funktionen für Capabilities, Check, Reference, Run und Scaffold.",
+      "verdict": "keep",
+      "reason": "CLI und MCP nutzen denselben dünnen Einstieg in die Authoring-Anwendungsfälle.",
+      "evidence": [
+        {
+          "path": "datamimic_ce/authoring/api.py",
+          "line": 18
+        }
+      ]
+    },
+    {
+      "id": "module:authoring/application/__init__.py",
+      "concern": "Das Paket kennzeichnet die Authoring-Use-Cases, ohne zusätzliche Ausführungslogik einzuführen.",
+      "verdict": "scaffold",
+      "reason": "Der Initializer ist nur Namensraum-Infrastruktur; die Use-Cases liegen in konkreten Modulen.",
+      "evidence": [
+        {
+          "path": "datamimic_ce/authoring/application/__init__.py",
+          "line": 1
+        }
+      ]
+    },
+    {
+      "id": "module:authoring/application/acceptance.py",
+      "concern": "Die Auswertung prüft explizite und abgeleitete Erwartungen gegen dieselbe vollständige begrenzte Capture.",
+      "verdict": "keep",
+      "reason": "Unvollständige Capture-Fakten werden als nicht auswertbar behandelt statt aus Samples oder Namen zu raten.",
+      "evidence": [
+        {
+          "path": "datamimic_ce/authoring/application/acceptance.py",
+          "line": 1651
+        }
+      ]
+    },
+    {
+      "id": "module:authoring/application/compiler.py",
+      "concern": "Der Compiler übersetzt AuthoringSpecV1 in XML und einen typisierten Plan ohne Lint oder Runtime-Ausführung.",
+      "verdict": "keep",
+      "reason": "Die reine Übersetzung validiert gegen die Live-Registry und bleibt dadurch von Transportschritten getrennt.",
+      "evidence": [
+        {
+          "path": "datamimic_ce/authoring/application/compiler.py",
+          "line": 761
+        }
+      ]
+    },
+    {
+      "id": "module:authoring/application/intent_linter.py",
+      "concern": "Der Linter führt Intent-Regeln über Spezifikation und CompilePlan aus und entscheidet, ob Hinweise die Verifikation blockieren.",
+      "verdict": "keep",
+      "reason": "Er trennt Intent-Advisories von XML-Lint und Runtime-Akzeptanz.",
+      "evidence": [
+        {
+          "path": "datamimic_ce/authoring/application/intent_linter.py",
+          "line": 10
+        }
+      ]
+    },
+    {
+      "id": "module:authoring/application/intent_validation.py",
+      "concern": "Das Modul projiziert Pydantic-Validierungsfehler in pfadgenaue, reparierbare Intent-Issues.",
+      "verdict": "keep",
+      "reason": "Es nutzt Schema- und Variant-Metadaten, um dem Transport konkrete Reparaturformen statt Rohfehler zu geben.",
+      "evidence": [
+        {
+          "path": "datamimic_ce/authoring/application/intent_validation.py",
+          "line": 418
+        }
+      ]
+    },
+    {
+      "id": "module:authoring/application/service.py",
+      "concern": "Der Service orchestriert Spec-Prüfung, Kompilierung, Lint, einen begrenzten Lauf, Acceptance und optionale Nachweise.",
+      "verdict": "keep",
+      "reason": "Die Operation bleibt eine Transaktion über genau dieselbe Capture; CLI und MCP duplizieren sie nicht.",
+      "evidence": [
+        {
+          "path": "datamimic_ce/authoring/application/service.py",
+          "line": 192
+        }
+      ]
+    },
+    {
+      "id": "module:authoring/application/verification.py",
+      "concern": "Die Verifikationspolitik vergleicht Captures und formt Retry-, Smoke-Export- und Replay-Evidenz.",
+      "verdict": "keep",
+      "reason": "Sie wertet Evidenz aus, ohne XML-Parsing oder Transportzustand zu besitzen.",
+      "evidence": [
+        {
+          "path": "datamimic_ce/authoring/application/verification.py",
+          "line": 176
+        }
+      ]
+    },
+    {
+      "id": "module:authoring/contracts.py",
+      "concern": "Das Modul definiert externe Request-/Result-DTOs und zugleich CompilePlan-Typen, die in ScaffoldResult zurückgegeben werden.",
+      "verdict": "unclear",
+      "reason": "CompilePlan ist nicht rein intern, weil ScaffoldResult ihn serialisiert; eine Trennung darf die sichtbare Response-Versionierung nicht still verändern.",
+      "evidence": [
+        {
+          "path": "datamimic_ce/authoring/contracts.py",
+          "line": 1157
+        }
+      ]
+    },
+    {
+      "id": "module:authoring/domain/__init__.py",
+      "concern": "Das Paket kennzeichnet die Authoring-Vokabeln und Regeln ohne eigene Fachfunktion.",
+      "verdict": "scaffold",
+      "reason": "Der Initializer ist Namespace-Infrastruktur und kein separates Domain-Verhalten.",
+      "evidence": [
+        {
+          "path": "datamimic_ce/authoring/domain/__init__.py",
+          "line": 1
+        }
+      ]
+    },
+    {
+      "id": "module:authoring/domain/derived_facts.py",
+      "concern": "Die Funktion leitet Produkt-, Memstore- und Fremdschlüssel-Fakten aus dem CompilePlan für die Antwort ab.",
+      "verdict": "change",
+      "reason": "Das Ergebnis ist eine DTO-Projektion aus einem Anwendungsplan und keine eigenständige Fachregel; der vorgeschlagene Domain-Ort verwischt diese Richtung.",
+      "evidence": [
+        {
+          "path": "datamimic_ce/authoring/domain/derived_facts.py",
+          "line": 22
+        }
+      ],
+      "recommended_targets": [
+        "authoring/projection/derived_facts.py"
+      ]
+    },
+    {
+      "id": "module:authoring/domain/diagnostics.py",
+      "concern": "Die DTOs vereinheitlichen einzelne Diagnosen und Lintergebnisse für Authoring-Antworten.",
+      "verdict": "keep",
+      "reason": "CLI und MCP konsumieren dieselben stabilen Diagnosefelder und Summary-Regeln.",
+      "evidence": [
+        {
+          "path": "datamimic_ce/authoring/domain/diagnostics.py",
+          "line": 14
+        }
+      ]
+    },
+    {
+      "id": "module:authoring/domain/rule_catalog.py",
+      "concern": "Der Katalog hält DM-Regel-IDs, Severity, Fix-Hints und deren stabile Referenzprojektion zentral.",
+      "verdict": "keep",
+      "reason": "Kanonische Metadaten werden von Diagnoseausgabe und Verifikationspolitik gemeinsam abgefragt.",
+      "evidence": [
+        {
+          "path": "datamimic_ce/authoring/domain/rule_catalog.py",
+          "line": 579
+        }
+      ]
+    },
+    {
+      "id": "module:authoring/domain/rules/__init__.py",
+      "concern": "Das Paket stellt Gruppen von XML- und Intent-Regeln bereit, ohne eigene Regelentscheidung zu treffen.",
+      "verdict": "scaffold",
+      "reason": "Die Datei organisiert Importe; einzelne Regelgruppen tragen das Verhalten.",
+      "evidence": [
+        {
+          "path": "datamimic_ce/authoring/domain/rules/__init__.py",
+          "line": 1
+        }
+      ]
+    },
+    {
+      "id": "module:authoring/domain/rules/base.py",
+      "concern": "Die Basistypen geben XML-Regeln und Intent-Regeln getrennte Kontexte und Diagnoseerzeugung.",
+      "verdict": "keep",
+      "reason": "Unterschiedliche Eingabedomänen teilen nur den Diagnosevertrag, nicht einen ungetypten Universal-Kontext.",
+      "evidence": [
+        {
+          "path": "datamimic_ce/authoring/domain/rules/base.py",
+          "line": 27
+        }
+      ]
+    },
+    {
+      "id": "module:authoring/domain/rules/best_practice.py",
+      "concern": "Die Regeln warnen vor operationalen Default-Risiken wie Shuffle, fehlendem Seed und Full-Source-Laden.",
+      "verdict": "keep",
+      "reason": "Die gemeinsamen Hinweise beschreiben Best Practices, keine Schema- oder Intent-Validierung.",
+      "evidence": [
+        {
+          "path": "datamimic_ce/authoring/domain/rules/best_practice.py",
+          "line": 173
+        }
+      ]
+    },
+    {
+      "id": "module:authoring/domain/rules/cross_statement.py",
+      "concern": "Die Regeln prüfen Beziehungen zwischen Deklarationen, Quellen, Zielen und Include-Pfaden im XML-Baum.",
+      "verdict": "keep",
+      "reason": "Diese Prüfungen benötigen den Descriptor-weiten Kontext statt ein einzelnes Elementmodell.",
+      "evidence": [
+        {
+          "path": "datamimic_ce/authoring/domain/rules/cross_statement.py",
+          "line": 184
+        }
+      ]
+    },
+    {
+      "id": "module:authoring/domain/rules/intent_rules.py",
+      "concern": "Die Regeln prüfen Produktbeziehungen und Lieferbarkeit direkt auf AuthoringSpec und CompilePlan.",
+      "verdict": "keep",
+      "reason": "Sie bleiben von XML-Roundtrip und Runtime unabhängig und beurteilen deklarierte Intent-Semantik.",
+      "evidence": [
+        {
+          "path": "datamimic_ce/authoring/domain/rules/intent_rules.py",
+          "line": 30
+        }
+      ]
+    },
+    {
+      "id": "module:authoring/domain/rules/schema_facts.py",
+      "concern": "SchemaIndex und Attribut-/Elementbeschreibungen liefern die registrierte Grammatik an XML-Regeln.",
+      "verdict": "keep",
+      "reason": "Schemafakten sind reine Lesemodelle und dienen mehreren Regeln als gemeinsame Datenquelle.",
+      "evidence": [
+        {
+          "path": "datamimic_ce/authoring/domain/rules/schema_facts.py",
+          "line": 11
+        }
+      ]
+    },
+    {
+      "id": "module:authoring/domain/rules/schema_rules.py",
+      "concern": "Die Regeln vergleichen XML-Tags, Kinder und Attribute mit dem aus der Engine abgeleiteten Schema.",
+      "verdict": "keep",
+      "reason": "Die Strukturprüfungen teilen eine Schemaquelle, nicht eine zweite fest codierte DSL-Grammatik.",
+      "evidence": [
+        {
+          "path": "datamimic_ce/authoring/domain/rules/schema_rules.py",
+          "line": 58
+        }
+      ]
+    },
+    {
+      "id": "module:authoring/domain/rules/semantic_rules.py",
+      "concern": "Die Regeln prüfen bedingte DSL-Constraints und Wertebeziehungen anhand zentral registrierter Fakten.",
+      "verdict": "keep",
+      "reason": "Faktengetriebene Validierung bleibt wiederverwendbar für mehrere Tags und ergänzt die Strukturregeln.",
+      "evidence": [
+        {
+          "path": "datamimic_ce/authoring/domain/rules/semantic_rules.py",
+          "line": 327
+        }
+      ]
+    },
+    {
+      "id": "module:authoring/domain/schema.py",
+      "concern": "Das Modul projiziert Elementmodelle in einen SchemaIndex und stellt JSON-Schema für einzelne XML-Elemente bereit.",
+      "verdict": "keep",
+      "reason": "Die Projektion verwendet Modellattribute und Registry statt eine unabhängige Attributliste zu pflegen.",
+      "evidence": [
+        {
+          "path": "datamimic_ce/authoring/domain/schema.py",
+          "line": 47
+        }
+      ]
+    },
+    {
+      "id": "module:authoring/domain/script_semantics.py",
+      "concern": "Die Helfer prüfen DSL-Scope-Referenzen in Script-Feldausdrücken.",
+      "verdict": "keep",
+      "reason": "Die Analyse ist auf konkrete Scope- und Feldbezüge beschränkt und nicht als Python-Sandbox ausgegeben.",
+      "evidence": [
+        {
+          "path": "datamimic_ce/authoring/domain/script_semantics.py",
+          "line": 19
+        }
+      ]
+    },
+    {
+      "id": "module:authoring/projection/__init__.py",
+      "concern": "Das Paket kennzeichnet ausgabeseitige Authoring-Projektionen ohne eigene Fachfunktion.",
+      "verdict": "scaffold",
+      "reason": "Der Initializer ist Namespace-Infrastruktur; konkrete Referenzprojektionen liegen in Einzelmodulen.",
+      "evidence": [
+        {
+          "path": "datamimic_ce/authoring/projection/__init__.py",
+          "line": 1
+        }
+      ]
+    },
+    {
+      "id": "module:authoring/projection/reference.py",
+      "concern": "Das Modul rendert DSL-Übersicht und Elementreferenzen samt registrierten Constraints in Text.",
+      "verdict": "keep",
+      "reason": "Es projiziert vorhandene Engine-Registrydaten und erfindet keine parallele DSL-Dokumentation.",
+      "evidence": [
+        {
+          "path": "datamimic_ce/authoring/projection/reference.py",
+          "line": 165
+        }
+      ]
+    },
+    {
+      "id": "module:authoring/projection/reference_projection.py",
+      "concern": "Das Modul projiziert Authoring-Varianten, Schemas und Reparaturhinweise für typed Reference-Abfragen.",
+      "verdict": "keep",
+      "reason": "Die Antwort bleibt an Intent-DTOs gebunden; sie ist vom XML-Elementreferenztext getrennt.",
+      "evidence": [
+        {
+          "path": "datamimic_ce/authoring/projection/reference_projection.py",
+          "line": 120
+        }
+      ]
+    },
+    {
+      "id": "module:authoring/spec.py",
+      "concern": "AuthoringSpecV1 validiert die versionierte JSON-Intent-Sprache über diskriminierte Produkte, Felder und Erwartungen.",
+      "verdict": "keep",
+      "reason": "Das Modell ist der kanonische Eingabevertrag, den Compiler und Validierungsdiagnostik gemeinsam konsumieren.",
+      "evidence": [
+        {
+          "path": "datamimic_ce/authoring/spec.py",
+          "line": 193
+        }
+      ]
+    },
+    {
+      "id": "module:data_mimic_test.py",
+      "concern": "DataMimicTest kapselt eine RunSession und erlaubt Result-Capture nur im ausdrücklich aktivierten Testmodus.",
+      "verdict": "keep",
+      "reason": "Die Klasse ist ein Python-Testhelper und delegiert Ausführung an dieselbe Runtime-Session.",
+      "evidence": [
+        {
+          "path": "datamimic_ce/data_mimic_test.py",
+          "line": 19
+        }
+      ]
+    },
+    {
+      "id": "module:datamimic.py",
+      "concern": "DataMimic übersetzt Python-Parameter in RunRequest und hält die Session für execute und Capture.",
+      "verdict": "keep",
+      "reason": "Die Kompatible Python-Fassade delegiert an die gemeinsame Session-API statt Runtime intern nachzubauen.",
+      "evidence": [
+        {
+          "path": "datamimic_ce/datamimic.py",
+          "line": 21
+        }
+      ]
+    },
+    {
+      "id": "module:engine/__init__.py",
+      "concern": "Das Paket markiert den Engine-Namensraum ohne zusätzliche Engine-Logik.",
+      "verdict": "scaffold",
+      "reason": "Der Initializer ist nur Paket-Infrastruktur, keine eigene Runtime-Komponente.",
+      "evidence": [
+        {
+          "path": "datamimic_ce/engine/runtime/api.py",
+          "line": 34
+        }
+      ]
+    },
+    {
+      "id": "module:errors/__init__.py",
+      "concern": "Das Paket kennzeichnet den Namespace für Domainfehler und ihre Fabriken.",
+      "verdict": "scaffold",
+      "reason": "Der Initializer implementiert keine Fehlersemantik.",
+      "evidence": [
+        {
+          "path": "datamimic_ce/errors/__init__.py",
+          "line": 1
+        }
+      ]
+    },
+    {
+      "id": "module:errors/base.py",
+      "concern": "DomainError trägt typisierten Fehlercode, Nachricht, Kontext und serialisierbare Fehlerdaten.",
+      "verdict": "keep",
+      "reason": "Basisklasse und InvalidLocaleError teilen die konkrete Fehler-/Serialisierungsgrenze.",
+      "evidence": [
+        {
+          "path": "datamimic_ce/errors/base.py",
+          "line": 9
+        }
+      ]
+    },
+    {
+      "id": "module:errors/catalog/__init__.py",
+      "concern": "Der Katalog rendert den sprachabhängigen Text für den Locale-Fehler.",
+      "verdict": "keep",
+      "reason": "Die lokalisierte Meldung liegt getrennt vom typisierten Fehlerobjekt und bleibt ein klarer Textkatalog.",
+      "evidence": [
+        {
+          "path": "datamimic_ce/errors/catalog/__init__.py",
+          "line": 1
+        }
+      ]
+    },
+    {
+      "id": "module:errors/codes.py",
+      "concern": "Enums definieren stabile Domain- und allgemeine Fehlercodes.",
+      "verdict": "keep",
+      "reason": "Aufrufer vergleichen typisierte Codes statt Textmeldungen zu parsen.",
+      "evidence": [
+        {
+          "path": "datamimic_ce/errors/codes.py",
+          "line": 6
+        }
+      ]
+    },
+    {
+      "id": "module:errors/factory.py",
+      "concern": "Die Fabrik erzeugt InvalidLocaleError mit Code, Kontext und stabilen Metadaten.",
+      "verdict": "keep",
+      "reason": "Sie setzt die öffentliche Fehlerform an einer Stelle zusammen statt sie bei jedem Aufrufer zu duplizieren.",
+      "evidence": [
+        {
+          "path": "datamimic_ce/errors/factory.py",
+          "line": 6
+        }
+      ]
+    },
+    {
+      "id": "module:errors/formatters.py",
+      "concern": "Der Formatter erzeugt die sprachabhängige Invalid-Locale-Meldung.",
+      "verdict": "keep",
+      "reason": "Fehlertext bleibt von Fehleridentität und -kontext getrennt.",
+      "evidence": [
+        {
+          "path": "datamimic_ce/errors/formatters.py",
+          "line": 5
+        }
+      ]
+    },
+    {
+      "id": "module:factory/datamimic_test_factory.py",
+      "concern": "Die Factory startet eine testkonfigurierte RunSession und gibt einzelne oder gebündelte erzeugte Entities zurück.",
+      "verdict": "keep",
+      "reason": "Erzeugung und Capture laufen über die Runtime-API; diese Klasse ist die domänenspezifische Testkomfortschicht.",
+      "evidence": [
+        {
+          "path": "datamimic_ce/factory/datamimic_test_factory.py",
+          "line": 17
+        }
+      ]
+    },
+    {
+      "id": "module:factory/factory_config.py",
+      "concern": "Das Modul exportiert FactoryConfig unverändert aus dem kanonischen Transportvertrag.",
+      "verdict": "unclear",
+      "reason": "Die Weiterleitung ist nur dann eine eigene Python-API, wenn Verbraucher diesen Importpfad zugesichert bekommen; dafür belegt der Code allein keine Stabilitätszusage.",
+      "evidence": [
+        {
+          "path": "datamimic_ce/factory/factory_config.py",
+          "line": 8
+        }
+      ]
+    },
+    {
+      "id": "module:interfaces/__init__.py",
+      "concern": "Das Paket gruppiert CLI-, MCP- und Python-Einstiege, ohne Fachlogik einzuführen.",
+      "verdict": "scaffold",
+      "reason": "Der Initializer ist reine Namespace-Infrastruktur.",
+      "evidence": [
+        {
+          "path": "datamimic_ce/interfaces/__init__.py",
+          "line": 1
+        }
+      ]
+    },
+    {
+      "id": "module:interfaces/api.py",
+      "concern": "Die Runtime-Fassade exponiert RunSession-Erzeugung und vollen Descriptor-Lauf.",
+      "verdict": "keep",
+      "reason": "Ein einzelner Transport-Einstieg hält die Runtime intern hinter klaren Request-/Result-Typen.",
+      "evidence": [
+        {
+          "path": "datamimic_ce/interfaces/api.py",
+          "line": 9
+        }
+      ]
+    },
+    {
+      "id": "module:interfaces/cli/__init__.py",
+      "concern": "Das Modul deklariert Typer-Kommandos und delegiert deren Aktionen an CLI-Adapter.",
+      "verdict": "keep",
+      "reason": "Kommandos und Optionen bleiben als Prozessoberfläche gebündelt; Ausgabeformatierung ist ausgelagert.",
+      "evidence": [
+        {
+          "path": "datamimic_ce/interfaces/cli/__init__.py",
+          "line": 17
+        }
+      ]
+    },
+    {
+      "id": "module:interfaces/cli/__main__.py",
+      "concern": "Der Modulstart startet genau die deklarierte Typer-App.",
+      "verdict": "scaffold",
+      "reason": "Der Startdatei-Wrapper ist Prozess-Infrastruktur und keine separate CLI-Anwendung.",
+      "evidence": [
+        {
+          "path": "datamimic_ce/interfaces/cli/__main__.py",
+          "line": 1
+        }
+      ]
+    },
+    {
+      "id": "module:interfaces/cli/authoring.py",
+      "concern": "Der Adapter liest CLI-Eingaben, validiert Transportoptionen und ruft Authoring-Services auf.",
+      "verdict": "keep",
+      "reason": "Datei-/stdin-Parsing und Textoptionen sind transportbezogen; die Workflow-Logik bleibt im Service.",
+      "evidence": [
+        {
+          "path": "datamimic_ce/interfaces/cli/authoring.py",
+          "line": 119
+        }
+      ]
+    },
+    {
+      "id": "module:interfaces/cli/presenter.py",
+      "concern": "Der Presenter formatiert Run-, Lint-, Scaffold- und Demo-Antworten und setzt CLI-Fehlercodes.",
+      "verdict": "keep",
+      "reason": "Die textuelle Darstellung und Exit-Policy sind gemeinsam die beobachtbare CLI-Ausgabegrenze.",
+      "evidence": [
+        {
+          "path": "datamimic_ce/interfaces/cli/presenter.py",
+          "line": 80
+        }
+      ]
+    },
+    {
+      "id": "module:interfaces/cli/runtime.py",
+      "concern": "Die CLI-Aktionen vereinen Vollausführung, Systeminfo, Projektinitialisierung und Demo-Verwaltung.",
+      "verdict": "keep",
+      "reason": "Koordinator: Die kleinen CLI-Aktionen delegieren an getrennte Projekt-, Demo- und Runtime-Funktionen. Verschiedene Befehle rechtfertigen hier keine zusätzlichen Adapterpakete; der Dateiname runtime beschreibt allerdings nur einen Teil der Aufgaben.",
+      "evidence": [
+        {
+          "path": "datamimic_ce/interfaces/cli/runtime.py",
+          "line": 52
+        }
+      ],
+      "recommended_targets": []
+    },
+    {
+      "id": "module:interfaces/contracts.py",
+      "concern": "Das Modul exportiert stabile Runtime-Request-, Result-, Session- und Factory-Typnamen für Adapter.",
+      "verdict": "keep",
+      "reason": "Es legt eine explizite Transportgrenze statt direkter Engine-Verträge für Python- und CLI-Aufrufer fest.",
+      "evidence": [
+        {
+          "path": "datamimic_ce/interfaces/contracts.py",
+          "line": 3
+        }
+      ]
+    },
+    {
+      "id": "module:interfaces/demo.py",
+      "concern": "Die Helfer listen Demo-Namen für Autocomplete und kopieren ein ausgewähltes Paketdemo in den Arbeitsordner.",
+      "verdict": "keep",
+      "reason": "Kopierverhalten und Demo-Auswahl gehören zusammen zur CLI-Demo-Operation.",
+      "evidence": [
+        {
+          "path": "datamimic_ce/interfaces/demo.py",
+          "line": 14
+        }
+      ]
+    },
+    {
+      "id": "module:interfaces/mcp/__init__.py",
+      "concern": "Das Paket exportiert Servererstellung und Mounting als MCP-Einstieg.",
+      "verdict": "keep",
+      "reason": "Die beiden öffentlichen Funktionen beziehen sich auf dieselbe optionale Transportintegration.",
+      "evidence": [
+        {
+          "path": "datamimic_ce/interfaces/mcp/__init__.py",
+          "line": 3
+        }
+      ]
+    },
+    {
+      "id": "module:interfaces/mcp/cli.py",
+      "concern": "Die Typer-App startet den optionalen MCP-Server mit gewähltem Transport und Bind-Konfiguration.",
+      "verdict": "keep",
+      "reason": "Prozessoptionen und Serverstart sind die klare MCP-CLI-Grenze.",
+      "evidence": [
+        {
+          "path": "datamimic_ce/interfaces/mcp/cli.py",
+          "line": 57
+        }
+      ]
+    },
+    {
+      "id": "module:interfaces/mcp/server.py",
+      "concern": "Der Server adaptiert dieselben Authoring-Aufrufe asynchron und schützt den SSE-Zugang optional per API-Key.",
+      "verdict": "keep",
+      "reason": "Transport, Offloading synchroner Use-Cases und Mounting sind an einer HTTP/MCP-Grenze gebündelt.",
+      "evidence": [
+        {
+          "path": "datamimic_ce/interfaces/mcp/server.py",
+          "line": 48
+        }
+      ]
+    },
+    {
+      "id": "module:interfaces/project.py",
+      "concern": "Die Projektinitialisierung schreibt Verzeichnisse, README und ein fest eingebettetes XML-Modell.",
+      "verdict": "keep",
+      "reason": "Koordinator: Projektinitialisierung ist hier richtig zugeordnet. XML statt Intent-JSON ist ein separater Workflow-Befund, kein Beleg für einen falschen Modulort.",
+      "evidence": [
+        {
+          "path": "datamimic_ce/interfaces/project.py",
+          "line": 12
+        }
+      ],
+      "recommended_targets": [
+        "interfaces/project.py"
+      ]
+    },
+    {
+      "id": "module:resources/__init__.py",
+      "concern": "Das Paket markiert die mitgelieferten Demo- und Descriptor-Ressourcen.",
+      "verdict": "scaffold",
+      "reason": "Der Initializer ist Paket-Infrastruktur für importlib.resources.",
+      "evidence": [
+        {
+          "path": "datamimic_ce/resources/__init__.py",
+          "line": 1
+        }
+      ]
+    },
+    {
+      "id": "module:resources/api.py",
+      "concern": "Die API gibt den gepackten Demo-Root als Traversable zurück und enumeriert dessen Unterordner.",
+      "verdict": "keep",
+      "reason": "Traversable erhält Zugriff auch bei nicht-dateisystembasierten Installationen.",
+      "evidence": [
+        {
+          "path": "datamimic_ce/resources/api.py",
+          "line": 8
+        }
+      ]
+    },
+    {
+      "id": "module:resources/demos/__init___.py",
+      "concern": "Die Datei markiert den Bestand ausgelieferter Demos, ohne eigenes Verhalten.",
+      "verdict": "scaffold",
+      "reason": "Es ist eine Ressourcenmarkierung, kein separates fachliches Modul.",
+      "evidence": [
+        {
+          "path": "datamimic_ce/resources/demos/__init___.py",
+          "line": 1
+        }
+      ]
+    },
+    {
+      "id": "module:resources/demos/demo-clinical-trial/script/clinical_trial.scr.py",
+      "concern": "Das Skript erzeugt eine fest konfigurierte Patientenkohorte mit lokal gesetztem Seed und serialisiert die benötigten Felder.",
+      "verdict": "keep",
+      "reason": "Der reproduzierbare Beispielworkflow bleibt auf die klinische Demo begrenzt.",
+      "evidence": [
+        {
+          "path": "datamimic_ce/resources/demos/demo-clinical-trial/script/clinical_trial.scr.py",
+          "line": 8
+        }
+      ]
+    },
+    {
+      "id": "module:resources/demos/demo-custom-components/script/converter.scr.py",
+      "concern": "Das Skript zeigt benutzerdefinierte Converter für Maskierung, Normalisierung und Formatierung.",
+      "verdict": "keep",
+      "reason": "Alle Klassen implementieren dasselbe Converter-Erweiterungsmuster für das Demo-Descriptor.",
+      "evidence": [
+        {
+          "path": "datamimic_ce/resources/demos/demo-custom-components/script/converter.scr.py",
+          "line": 4
+        }
+      ]
+    },
+    {
+      "id": "module:resources/demos/demo-custom-components/script/generator.scr.py",
+      "concern": "Das Skript zeigt zusätzliche LiteralGenerator-Implementierungen für Werte wie Farbe, Adresse und Kennung.",
+      "verdict": "keep",
+      "reason": "Die Beispiele demonstrieren denselben Erweiterungspunkt, ohne eine Engine-Registry einzuführen.",
+      "evidence": [
+        {
+          "path": "datamimic_ce/resources/demos/demo-custom-components/script/generator.scr.py",
+          "line": 4
+        }
+      ]
+    },
+    {
+      "id": "module:resources/demos/demo-custom-components/script/generator_glob.scr.py",
+      "concern": "Das Skript zeigt global importierte Abhängigkeiten in mehreren benutzerdefinierten Generatoren.",
+      "verdict": "keep",
+      "reason": "Es demonstriert die separate globale Script-Ladeform derselben Generator-Extension.",
+      "evidence": [
+        {
+          "path": "datamimic_ce/resources/demos/demo-custom-components/script/generator_glob.scr.py",
+          "line": 10
+        }
+      ]
+    },
+    {
+      "id": "module:resources/demos/demo-datetime/script/py_script.scr.py",
+      "concern": "Die Hilfsfunktion verschiebt einen datetime-Wert um eine angegebene Anzahl Tage.",
+      "verdict": "keep",
+      "reason": "Die minimale Funktion illustriert Python-Scripting für die Datum-Demo ohne eigene Laufzeitabstraktion.",
+      "evidence": [
+        {
+          "path": "datamimic_ce/resources/demos/demo-datetime/script/py_script.scr.py",
+          "line": 4
+        }
+      ]
+    },
+    {
+      "id": "module:resources/demos/demo-db-mapping/script/lib_glob.scr.py",
+      "concern": "Das Beispiel verbindet einen benutzerdefinierten Converter mit einem Runtime-Client und SQL-basierter Mappingabfrage.",
+      "verdict": "keep",
+      "reason": "Die Datenbankkopplung ist bewusst Teil des optionalen DB-Mapping-Demos; sie gehört nicht in Authoring-Core-Logik.",
+      "evidence": [
+        {
+          "path": "datamimic_ce/resources/demos/demo-db-mapping/script/lib_glob.scr.py",
+          "line": 20
+        }
+      ]
+    },
+    {
+      "id": "module:resources/demos/demo-finance/script/ledger.scr.py",
+      "concern": "Die Funktion erzeugt Kontotransaktionen mit optionalem RNG-Seed und übernimmt sie in Wörterbuchzeilen.",
+      "verdict": "keep",
+      "reason": "Der Generator nutzt die Finance-Domainmodelle und bildet nur den Demo-spezifischen Ledger-Workflow.",
+      "evidence": [
+        {
+          "path": "datamimic_ce/resources/demos/demo-finance/script/ledger.scr.py",
+          "line": 10
+        }
+      ]
+    },
+    {
+      "id": "module:resources/demos/demo-py-scripting/script/lib.scr.py",
+      "concern": "Die Beispieldatei zeigt einfache Python-Arithmetik sowie die Umwandlung zufälliger Tabellendaten in JSON.",
+      "verdict": "keep",
+      "reason": "Die Funktionen sind Demonstrationsskripte und kein produktiver Generator- oder Datenzugriffsdienst.",
+      "evidence": [
+        {
+          "path": "datamimic_ce/resources/demos/demo-py-scripting/script/lib.scr.py",
+          "line": 1
+        }
+      ]
+    },
+    {
+      "id": "folder:",
+      "concern": "Der CE-Paketroot enthält Authoring, DSL/Runtime, Domaingeneratoren, Adapter und Ressourcen als getrennte Oberbereiche.",
+      "verdict": "keep",
+      "reason": "Die Top-Level-Grenzen spiegeln tatsächlich unterschiedliche Laufzeit- und Authoring-Aufgaben wider.",
+      "evidence": [
+        {
+          "path": "datamimic_ce/authoring/application/service.py",
+          "line": 192
+        }
+      ]
+    },
+    {
+      "id": "folder:authoring",
+      "concern": "Der Bereich bildet JSON-Intent über Regeln und Compiler bis zur begrenzten Verifikation ab.",
+      "verdict": "keep",
+      "reason": "Die Anwendung erzeugt XML und prüft es begrenzt; sie übernimmt nicht den späteren vollen Runtime-Lauf.",
+      "evidence": [
+        {
+          "path": "datamimic_ce/authoring/application/service.py",
+          "line": 192
+        }
+      ]
+    },
+    {
+      "id": "folder:authoring/adapters",
+      "concern": "Der Bereich bindet Authoring an sicheren XML-Parser, Engine-Lint und begrenzte Runtime-Capture.",
+      "verdict": "keep",
+      "reason": "Diese Integrationen liegen außerhalb der reinen Intent- und Acceptance-Logik.",
+      "evidence": [
+        {
+          "path": "datamimic_ce/authoring/adapters/linter.py",
+          "line": 46
+        }
+      ]
+    },
+    {
+      "id": "folder:authoring/application",
+      "concern": "Der Bereich orchestriert Authoring-Anwendungsfälle und enthält reine Compile-, Acceptance- und Verifikationspolitik.",
+      "verdict": "keep",
+      "reason": "Der Service koordiniert die voneinander getrennten Policy-Funktionen als eine Antworttransaktion.",
+      "evidence": [
+        {
+          "path": "datamimic_ce/authoring/application/service.py",
+          "line": 192
+        }
+      ]
+    },
+    {
+      "id": "folder:authoring/domain",
+      "concern": "Der Bereich enthält Intentmodell, Diagnosevokabular und Regeln; zugleich projiziert derived_facts CompilePlan in Antwort-DTOs.",
+      "verdict": "change",
+      "reason": "Die DTO-Projektion ist kein Domain-Invariant und sollte nicht mit Spec-Validierung und Regelwissen gruppiert werden.",
+      "evidence": [
+        {
+          "path": "datamimic_ce/authoring/domain/derived_facts.py",
+          "line": 22
+        }
+      ],
+      "recommended_targets": [
+        "authoring/domain",
+        "authoring/projection"
+      ]
+    },
+    {
+      "id": "folder:authoring/domain/rules",
+      "concern": "Die Regelgruppen prüfen XML-Struktur/Semantik sowie separat JSON-Intent-Beziehungen.",
+      "verdict": "keep",
+      "reason": "Die Basistypen halten dafür getrennte Kontexte, während der Regelkatalog IDs und Policies stabilisiert.",
+      "evidence": [
+        {
+          "path": "datamimic_ce/authoring/domain/rules/base.py",
+          "line": 27
+        }
+      ]
+    },
+    {
+      "id": "folder:authoring/projection",
+      "concern": "Der Bereich rendert sowohl XML-DSL-Referenzen als auch JSON-Intent-Schemas und Reparaturhinweise.",
+      "verdict": "keep",
+      "reason": "Koordinator: Beide Module projizieren vorhandenes Modellwissen für Reference-Aufrufe, ohne die fachlichen Regeln erneut zu besitzen. Getrennte Dateien erhalten die unterschiedlichen Eingabeformen; ein weiterer Namespace ist nicht begründet.",
+      "evidence": [
+        {
+          "path": "datamimic_ce/authoring/projection/reference.py",
+          "line": 165
+        }
+      ]
+    },
+    {
+      "id": "folder:engine",
+      "concern": "Der Bereich enthält Parser/Statements, Runtime-Ausführung und IO statt Authoring-Transport.",
+      "verdict": "keep",
+      "reason": "Der Runtime-Aufruf konsumiert den geparsten Descriptor getrennt vom JSON-Authoring-Service.",
+      "evidence": [
+        {
+          "path": "datamimic_ce/engine/runtime/api.py",
+          "line": 34
+        }
+      ]
+    },
+    {
+      "id": "folder:errors",
+      "concern": "Der Bereich modelliert Fehlercode, typisierte Domainfehler, Textkatalog und Konstruktion.",
+      "verdict": "keep",
+      "reason": "Fehleridentität und Lokalisierung haben getrennte Module, aber dieselbe Fehler-API.",
+      "evidence": [
+        {
+          "path": "datamimic_ce/errors/base.py",
+          "line": 9
+        }
+      ]
+    },
+    {
+      "id": "folder:errors/catalog",
+      "concern": "Der Bereich enthält locale-spezifische Fehlertexte.",
+      "verdict": "keep",
+      "reason": "Text bleibt getrennt von Code und Payload und kann unabhängig übersetzt werden.",
+      "evidence": [
+        {
+          "path": "datamimic_ce/errors/catalog/__init__.py",
+          "line": 1
+        }
+      ]
+    },
+    {
+      "id": "folder:interfaces",
+      "concern": "Der Bereich enthält Prozess-, Python- und MCP-Ränder statt fachlicher Authoring-/Runtime-Implementierung.",
+      "verdict": "keep",
+      "reason": "Die Adapter delegieren an gemeinsame Application- und Runtime-APIs.",
+      "evidence": [
+        {
+          "path": "datamimic_ce/interfaces/cli/__init__.py",
+          "line": 17
+        }
+      ]
+    },
+    {
+      "id": "folder:interfaces/cli",
+      "concern": "Der Bereich deklariert Prozesskommandos, liest CLI-Requests und formatiert beobachtbare Ausgaben.",
+      "verdict": "keep",
+      "reason": "Transportparsing und Prozess-Exitverhalten sind getrennt von Use-Case-Orchestrierung.",
+      "evidence": [
+        {
+          "path": "datamimic_ce/interfaces/cli/authoring.py",
+          "line": 119
+        }
+      ]
+    },
+    {
+      "id": "folder:interfaces/mcp",
+      "concern": "Der Bereich bietet optionale MCP-Tool- und HTTP/SSE-Transportadapter.",
+      "verdict": "keep",
+      "reason": "Server und Launcher bleiben von den kanonischen Authoring-Funktionen abhängig.",
+      "evidence": [
+        {
+          "path": "datamimic_ce/interfaces/mcp/server.py",
+          "line": 48
+        }
+      ]
+    },
+    {
+      "id": "folder:interfaces/python",
+      "concern": "Der Bereich bietet Python-Runtime- und Testzugänge über RunSession und FactoryConfig.",
+      "verdict": "keep",
+      "reason": "Nutzernahe Klassen delegieren an die gemeinsame Session-API statt einen eigenen Runner zu besitzen.",
+      "evidence": [
+        {
+          "path": "datamimic_ce/datamimic.py",
+          "line": 35
+        }
+      ]
+    },
+    {
+      "id": "folder:interfaces/python/factory",
+      "concern": "Der Bereich gruppiert Entity-Factory und FactoryConfig-Namen, wobei letzteres derzeit nur ein Forwarding ist.",
+      "verdict": "unclear",
+      "reason": "Die Nutzfunktion ist konkret; der zusätzliche Config-Importpfad verdient nur dann einen eigenen Zielort, wenn er als öffentliche API gilt.",
+      "evidence": [
+        {
+          "path": "datamimic_ce/factory/datamimic_test_factory.py",
+          "line": 29
+        }
+      ]
+    },
+    {
+      "id": "folder:resources",
+      "concern": "Der Bereich hält importierbare Demo-Ressourcen und ihre Traversable-API.",
+      "verdict": "keep",
+      "reason": "Die Ressourcen-API vermeidet Dateisystemannahmen für gepackte Installationen.",
+      "evidence": [
+        {
+          "path": "datamimic_ce/resources/api.py",
+          "line": 8
+        }
+      ]
+    },
+    {
+      "id": "folder:resources/demos",
+      "concern": "Der Bereich organisiert auslieferbare Beispiele samt XML-/Datendateien und benutzerdefinierten Skripten.",
+      "verdict": "keep",
+      "reason": "Demo-Metadaten und Kopierlogik arbeiten auf konkreten Unterordnern dieses Ressourcenroots.",
+      "evidence": [
+        {
+          "path": "datamimic_ce/resources/api.py",
+          "line": 13
+        }
+      ]
+    },
+    {
+      "id": "folder:resources/demos/demo-clinical-trial",
+      "concern": "Das Demo stellt ein klinisches Beispiel und die kohortenbildende Skriptfunktion bereit.",
+      "verdict": "keep",
+      "reason": "Die Funktion ruft gezielt PatientService mit klinischem Profil und begrenztem Seed auf.",
+      "evidence": [
+        {
+          "path": "datamimic_ce/resources/demos/demo-clinical-trial/script/clinical_trial.scr.py",
+          "line": 13
+        }
+      ]
+    },
+    {
+      "id": "folder:resources/demos/demo-clinical-trial/script",
+      "concern": "Der Skriptordner enthält den programmatischen Kohorten-Generator des klinischen Demos.",
+      "verdict": "keep",
+      "reason": "Das Skript verwendet die Domain-API nur innerhalb des Beispielpfads.",
+      "evidence": [
+        {
+          "path": "datamimic_ce/resources/demos/demo-clinical-trial/script/clinical_trial.scr.py",
+          "line": 15
+        }
+      ]
+    },
+    {
+      "id": "folder:resources/demos/demo-custom-components",
+      "concern": "Das Demo bündelt benutzerdefinierte Converter und LiteralGenerator-Beispiele.",
+      "verdict": "keep",
+      "reason": "Die Klassen illustrieren konkrete Erweiterungspunkte, statt neue Produktionsmechanik zu registrieren.",
+      "evidence": [
+        {
+          "path": "datamimic_ce/resources/demos/demo-custom-components/script/converter.scr.py",
+          "line": 4
+        }
+      ]
+    },
+    {
+      "id": "folder:resources/demos/demo-custom-components/script",
+      "concern": "Der Ordner demonstriert zwei Script-Ladevarianten für Converter und Generatoren.",
+      "verdict": "keep",
+      "reason": "Die Module teilen die Demo-Erweiterung, unterscheiden aber explizit globale Imports und lokale Importe.",
+      "evidence": [
+        {
+          "path": "datamimic_ce/resources/demos/demo-custom-components/script/generator_glob.scr.py",
+          "line": 1
+        }
+      ]
+    },
+    {
+      "id": "folder:resources/demos/demo-datetime",
+      "concern": "Das Demo stellt Datumsscripting über eine kleine datetime-Hilfsfunktion vor.",
+      "verdict": "keep",
+      "reason": "Die Funktion bearbeitet direkt den Datumstyp und hält keine projektspezifische Infrastruktur.",
+      "evidence": [
+        {
+          "path": "datamimic_ce/resources/demos/demo-datetime/script/py_script.scr.py",
+          "line": 4
+        }
+      ]
+    },
+    {
+      "id": "folder:resources/demos/demo-datetime/script",
+      "concern": "Der Skriptordner enthält eine einzelne Datumstransformation für das Demo.",
+      "verdict": "keep",
+      "reason": "Die Funktion bleibt auf die Addition von Tagen begrenzt.",
+      "evidence": [
+        {
+          "path": "datamimic_ce/resources/demos/demo-datetime/script/py_script.scr.py",
+          "line": 4
+        }
+      ]
+    },
+    {
+      "id": "folder:resources/demos/demo-db-mapping",
+      "concern": "Das Demo zeigt kundenspezifische Converter und Zugriff auf eine Mapping-Datenbank.",
+      "verdict": "keep",
+      "reason": "Der Runtime-Client wird über SetupContext aufgelöst und ist bewusst Beispieldomäne.",
+      "evidence": [
+        {
+          "path": "datamimic_ce/resources/demos/demo-db-mapping/script/lib_glob.scr.py",
+          "line": 20
+        }
+      ]
+    },
+    {
+      "id": "folder:resources/demos/demo-db-mapping/script",
+      "concern": "Der Skriptordner enthält Datenbank-Mapping-Converter und Hilfsfunktionen für dieses Demo.",
+      "verdict": "keep",
+      "reason": "Converter-Lebenszyklus und SQL-Abfrage werden innerhalb eines konkreten Integrationsbeispiels gezeigt.",
+      "evidence": [
+        {
+          "path": "datamimic_ce/resources/demos/demo-db-mapping/script/lib_glob.scr.py",
+          "line": 15
+        }
+      ]
+    },
+    {
+      "id": "folder:resources/demos/demo-finance",
+      "concern": "Das Demo komponiert Finance-Modelle zu einem kontobezogenen Transaktionsledger.",
+      "verdict": "keep",
+      "reason": "Die Beispielroutine gibt typisierte Transaktionen als einfache Zeilen aus.",
+      "evidence": [
+        {
+          "path": "datamimic_ce/resources/demos/demo-finance/script/ledger.scr.py",
+          "line": 18
+        }
+      ]
+    },
+    {
+      "id": "folder:resources/demos/demo-finance/script",
+      "concern": "Der Skriptordner enthält die seeded Ledger-Komposition des Finanzdemos.",
+      "verdict": "keep",
+      "reason": "Er verwendet die Finance-Generator-API ohne zusätzliche Runtime-Adapter.",
+      "evidence": [
+        {
+          "path": "datamimic_ce/resources/demos/demo-finance/script/ledger.scr.py",
+          "line": 19
+        }
+      ]
+    },
+    {
+      "id": "folder:resources/demos/demo-py-scripting",
+      "concern": "Das Demo demonstriert einfache Python-Funktionen und tabellarische JSON-Aufbereitung.",
+      "verdict": "keep",
+      "reason": "Der Ressourcenumfang bleibt ein Nutzerbeispiel und kein Authoring-Service.",
+      "evidence": [
+        {
+          "path": "datamimic_ce/resources/demos/demo-py-scripting/script/lib.scr.py",
+          "line": 9
+        }
+      ]
+    },
+    {
+      "id": "folder:resources/demos/demo-py-scripting/script",
+      "concern": "Der Skriptordner zeigt mathematische Funktionen und DataFrame→JSON-Verarbeitung.",
+      "verdict": "keep",
+      "reason": "Die Datei ist ein kohärenter, importierbarer Script-Example-Payload.",
+      "evidence": [
+        {
+          "path": "datamimic_ce/resources/demos/demo-py-scripting/script/lib.scr.py",
+          "line": 1
+        }
+      ]
+    },
+    {
+      "id": "folder:resources/examples",
+      "concern": "Der vorgeschlagene Examples-Ordner ist nicht Teil des von Ressourcen-API und Demo-CLI enumerierten Demos-Baums.",
+      "verdict": "unclear",
+      "reason": "Die einzige beobachtete Root-API adressiert resources/demos; für einen neuen Examples-Owner fehlt ein Verbraucher oder Paketvertrag.",
+      "evidence": [
+        {
+          "path": "datamimic_ce/resources/api.py",
+          "line": 8
+        }
+      ]
+    },
+    {
+      "id": "contract:interfaces/api",
+      "concern": "Die Runtime-Fassade bietet Session-Erzeugung und direkten Voll-Lauf über getypte Requests und Results.",
+      "verdict": "keep",
+      "reason": "Das ist ein konkreter Aufrufrand vor Lifecycle/Runner; ob die Fassade extern stabil ist, bleibt eine Versionierungsfrage.",
+      "evidence": [
+        {
+          "path": "datamimic_ce/interfaces/api.py",
+          "line": 9
+        }
+      ]
+    },
+    {
+      "id": "contract:interfaces/contracts",
+      "concern": "Der Vertrag exportiert stabile Adaptertypen für Run, Session, Factory und Plattformkonfiguration.",
+      "verdict": "keep",
+      "reason": "Python-Fassade und Testfactory konsumieren denselben Typzugriffspunkt.",
+      "evidence": [
+        {
+          "path": "datamimic_ce/interfaces/contracts.py",
+          "line": 3
+        }
+      ]
+    },
+    {
+      "id": "contract:interfaces/cli",
+      "concern": "Der CLI-Vertrag bindet Kommandos an Authoring- oder Runtime-Aktionen und gibt Exit-/Textverhalten aus.",
+      "verdict": "keep",
+      "reason": "Kommandodeklaration delegiert Workflow und Darstellung an getrennte Module.",
+      "evidence": [
+        {
+          "path": "datamimic_ce/interfaces/cli/__init__.py",
+          "line": 64
+        }
+      ]
+    },
+    {
+      "id": "contract:interfaces/mcp",
+      "concern": "Der MCP-Vertrag bietet Check, Run, Reference und Scaffold auf denselben Authoring-Request-/Result-Typen.",
+      "verdict": "keep",
+      "reason": "Die Handler rufen kanonische Funktionen auf und lagern synchrone Arbeit aus dem Eventloop aus.",
+      "evidence": [
+        {
+          "path": "datamimic_ce/interfaces/mcp/server.py",
+          "line": 52
+        }
+      ]
+    },
+    {
+      "id": "contract:interfaces/demo",
+      "concern": "Der Demo-Vertrag listet gebündelte Beispiele und kopiert Demo-Inhalte in einen Projektordner.",
+      "verdict": "keep",
+      "reason": "Der Ressourcenzugriff und die CLI-Auswahl bilden gemeinsam den beobachtbaren Demo-Workflow.",
+      "evidence": [
+        {
+          "path": "datamimic_ce/interfaces/demo.py",
+          "line": 14
+        }
+      ]
+    },
+    {
+      "id": "contract:interfaces/project",
+      "concern": "Der Projektvertrag prüft den Namen und legt Verzeichnisse, README sowie ein startfähiges Modell an.",
+      "verdict": "keep",
+      "reason": "Koordinator: Der Vertrag bündelt eine konkrete Projektanlage. Das gewählte Modellformat ist eine separate Produktentscheidung und verlangt keine neue Architekturgrenze.",
+      "evidence": [
+        {
+          "path": "datamimic_ce/interfaces/project.py",
+          "line": 12
+        }
+      ],
+      "recommended_targets": [
+        "interfaces/project.py"
+      ]
+    },
+    {
+      "id": "contract:authoring/api",
+      "concern": "Der Authoring-Einstieg bietet fünf getypte Operationen für Capabilities, Check, Reference, Run und Scaffold.",
+      "verdict": "keep",
+      "reason": "Beide Transportadapter teilen denselben öffentlichen Einstieg und duplizieren keine Ablauflogik.",
+      "evidence": [
+        {
+          "path": "datamimic_ce/authoring/api.py",
+          "line": 18
+        }
+      ]
+    },
+    {
+      "id": "contract:authoring/domain",
+      "concern": "Die Domain umfasst versioniertes Intentmodell, Regelvokabular und Diagnosen; derived_facts projiziert jedoch CompilePlan in Result-DTOs.",
+      "verdict": "change",
+      "reason": "Die DTO-Ableitung ist eine Antwortprojektion statt einer Domainregel und sollte aus dieser Grenze heraus.",
+      "evidence": [
+        {
+          "path": "datamimic_ce/authoring/domain/derived_facts.py",
+          "line": 22
+        }
+      ],
+      "recommended_targets": [
+        "authoring/domain",
+        "authoring/projection"
+      ]
+    },
+    {
+      "id": "contract:authoring/projection",
+      "concern": "Die Projektionen liefern DSL-Referenztext und typed Intent-Reference-Fragmente aus unterschiedlichen Quellen.",
+      "verdict": "keep",
+      "reason": "Koordinator: Die gemeinsame Verantwortung ist die lesbare Projektion kanonischer Modellinformationen; getrennte Implementierungsmodule dürfen dabei unterschiedliche Quellmodelle lesen.",
+      "evidence": [
+        {
+          "path": "datamimic_ce/authoring/projection/reference.py",
+          "line": 165
+        }
+      ]
+    },
+    {
+      "id": "contract:authoring/adapters",
+      "concern": "Die Adapter sichern und linten XML und führen den begrenzten Engine-Lauf mit neutralisierten Schreibzielen aus.",
+      "verdict": "keep",
+      "reason": "Diese Grenze verbindet Authoring-Nachweise mit Engine-Verhalten, bleibt aber getrennt von Runtime-Produktionsausführung.",
+      "evidence": [
+        {
+          "path": "datamimic_ce/authoring/adapters/dryrun.py",
+          "line": 762
+        }
+      ]
+    },
+    {
+      "id": "contract:authoring/application",
+      "concern": "Der Anwendungsbereich kompiliert, lintet, erfasst einen begrenzten Lauf, prüft Acceptance und baut Nachweise zusammen.",
+      "verdict": "keep",
+      "reason": "Die Use-Case-Antwort hängt an derselben einmaligen Capture; optionale Replay-Prüfung ist explizit eine zusätzliche Gate-Ausführung.",
+      "evidence": [
+        {
+          "path": "datamimic_ce/authoring/application/service.py",
+          "line": 192
+        }
+      ]
+    },
+    {
+      "id": "contract:errors/codes",
+      "concern": "Die Code-Enums geben Domain- und allgemeine Fehleridentitäten als typisierte Werte vor.",
+      "verdict": "keep",
+      "reason": "Fehlermeldungsformat bleibt getrennt, sodass Aufrufer nicht Text als Kontrollfluss benutzen.",
+      "evidence": [
+        {
+          "path": "datamimic_ce/errors/codes.py",
+          "line": 6
+        }
+      ]
+    },
+    {
+      "id": "contract:errors/base",
+      "concern": "Der Basistyp trägt Code, Nachricht, Pfad/Kontext und serialisierbare Zusatzdaten eines Domainfehlers.",
+      "verdict": "keep",
+      "reason": "Die Fehlerobjektgrenze ist konkret und wird für Transportserialisierung benötigt.",
+      "evidence": [
+        {
+          "path": "datamimic_ce/errors/base.py",
+          "line": 9
+        }
+      ]
+    },
+    {
+      "id": "contract:errors/catalog",
+      "concern": "Der Katalog liefert locale-spezifische Texte zu bekannten Domainfehlern.",
+      "verdict": "keep",
+      "reason": "Das Paket enthält Textprojektion statt Fehlercodes oder Konstruktion.",
+      "evidence": [
+        {
+          "path": "datamimic_ce/errors/catalog/__init__.py",
+          "line": 1
+        }
+      ]
+    },
+    {
+      "id": "contract:errors/formatters",
+      "concern": "Formatter bilden Eingabewerte in lesbare Meldungstexte ab.",
+      "verdict": "keep",
+      "reason": "Die Textform ist unabhängig von typisiertem Fehlerobjekt und maschinenlesbarem Code.",
+      "evidence": [
+        {
+          "path": "datamimic_ce/errors/formatters.py",
+          "line": 5
+        }
+      ]
+    },
+    {
+      "id": "contract:errors/factory",
+      "concern": "Die Fehlerfabrik erzeugt den typisierten InvalidLocaleError aus Locale und Diagnosekontext.",
+      "verdict": "keep",
+      "reason": "Kontext, Code und Formatierung werden an einer Erzeugungsstelle gekoppelt.",
+      "evidence": [
+        {
+          "path": "datamimic_ce/errors/factory.py",
+          "line": 6
+        }
+      ]
+    },
+    {
+      "id": "contract:interfaces",
+      "concern": "Die Schnittstellen bündeln CLI-Prozess, MCP-Transport, Python-Zugriff und Runtime-Fassade.",
+      "verdict": "keep",
+      "reason": "Die konkreten Adapter liegen in Unterpaketen; der gemeinsame Namespace ist kein zentraler Use-Case-Service.",
+      "evidence": [
+        {
+          "path": "datamimic_ce/interfaces/api.py",
+          "line": 13
+        }
+      ]
+    },
+    {
+      "id": "contract:python_api",
+      "concern": "Die Python-API bietet Runtime-Session, Test-Capture und Entity-Factory für Skripte und Tests.",
+      "verdict": "keep",
+      "reason": "Die Klassen delegieren an denselben Runtime-Request-Vertrag und unterscheiden Nutzungsmodi.",
+      "evidence": [
+        {
+          "path": "datamimic_ce/datamimic.py",
+          "line": 35
+        }
+      ]
+    },
+    {
+      "id": "contract:authoring",
+      "concern": "Authoring validiert versioniertes JSON-Intent, kompiliert XML und zertifiziert nur explizit geprüfte Anforderungen.",
+      "verdict": "keep",
+      "reason": "Der bounded Workflow endet vor dem eigenständigen vollständigen XML-Runtime-Lauf.",
+      "evidence": [
+        {
+          "path": "datamimic_ce/authoring/application/service.py",
+          "line": 292
+        }
+      ]
+    },
+    {
+      "id": "contract:dsl",
+      "concern": "Die DSL-Grenze trennt Attributvalidierung, XML-Parserübersetzung und Statements vor dem Runtime-Task-Dispatch.",
+      "verdict": "keep",
+      "reason": "Diese Phasen sind durch konkrete Aufrufer und getypte Übergabeobjekte unterscheidbar.",
+      "evidence": [
+        {
+          "path": "datamimic_ce/engine/dsl/parsers/descriptor_parser.py",
+          "line": 31
+        }
+      ]
+    },
+    {
+      "id": "contract:runtime",
+      "concern": "Die Runtime führt einen Descriptor über SetupContext, Task-Tree und Generate-Worker bis zu Ergebnissen aus.",
+      "verdict": "keep",
+      "reason": "Der Voll-Lauf ist vom neutralisierten bounded Authoring-Run und dessen Capture getrennt.",
+      "evidence": [
+        {
+          "path": "datamimic_ce/engine/runtime/api.py",
+          "line": 34
+        }
+      ]
+    },
+    {
+      "id": "contract:io",
+      "concern": "Die IO-Grenze stellt DataSources, Clients und Exporter für Runtime-Tasks bereit.",
+      "verdict": "keep",
+      "reason": "Importpfade und Writer sind echte Ausführungsadapter; Smoke-Export bleibt ein authoringseitiger Prüfverbraucher.",
+      "evidence": [
+        {
+          "path": "datamimic_ce/engine/io/api.py",
+          "line": 1
+        }
+      ]
+    },
+    {
+      "id": "contract:errors",
+      "concern": "Die Fehlergrenze verbindet stabile Codes, Domainfehler, Locale-Texte und Konstruktion.",
+      "verdict": "keep",
+      "reason": "Die konkreten Teilrollen sind getrennt, aber bilden gemeinsam maschinenlesbare und menschliche Fehlerantworten.",
+      "evidence": [
+        {
+          "path": "datamimic_ce/errors/base.py",
+          "line": 9
+        }
+      ]
+    },
+    {
+      "id": "contract:domains",
+      "concern": "Die Domain-API bündelt typisierte Demografie-/Finance-/Healthcare-Modelle und Generator-/Service-APIs für DSL und Python-Aufrufer.",
+      "verdict": "keep",
+      "reason": "Beispiel- und DSL-Verbraucher greifen über API/Fassade auf dieselben Domaingeneratoren zu.",
+      "evidence": [
+        {
+          "path": "datamimic_ce/domains/api.py",
+          "line": 56
+        }
+      ]
+    },
+    {
+      "id": "contract:resources",
+      "concern": "Die Ressourcen-API liefert gepackte Demo-Roots und enumerierbare Demos ohne Dateisystemzwang.",
+      "verdict": "keep",
+      "reason": "Die Traversable-Abstraktion funktioniert auch bei zip-basierten Installationen.",
+      "evidence": [
+        {
+          "path": "datamimic_ce/resources/api.py",
+          "line": 8
+        }
+      ]
+    },
+    {
+      "id": "contract:python_compat",
+      "concern": "Der Kompatibilitätsvertrag stellt StringEnum- und assert_never-Verhalten für Python-Versionen vor Standardbibliotheksverfügbarkeit bereit.",
+      "verdict": "keep",
+      "reason": "Die Shims kapseln zwei explizite Sprach-/Typing-Lücken statt eine legacy Importarchitektur nachzustellen.",
+      "evidence": [
+        {
+          "path": "datamimic_ce/_compat.py",
+          "line": 9
+        }
+      ]
+    }
+  ],
+  "findings": [
+    {
+      "title": "Projekt-Init startet neue Nutzer auf raw XML statt Intent-JSON",
+      "scenario": "Ein Entwickler nutzt `datamimic init` und erhält datamimic.xml als einziges Modell, obwohl der aktuelle Authoring-Workflow model.dm.json kompiliert und bounded prüft. Das lässt zwei unterschiedliche Einstiegspfade für neue Modelle stehen.",
+      "evidence": [
+        {
+          "path": "datamimic_ce/interfaces/cli/__init__.py",
+          "line": 122
+        },
+        {
+          "path": "datamimic_ce/interfaces/project.py",
+          "line": 14
+        },
+        {
+          "path": "datamimic_ce/authoring/application/service.py",
+          "line": 192
+        }
+      ],
+      "recommendation": "Projekt-Init auf ein minimales model.dm.json plus scaffold-Einstieg ausrichten oder raw XML ausdrücklich als Bestandsdescriptor-Pfad markieren."
+    },
+    {
+      "title": "CompilePlan ist zugleich internes Übersetzungsmodell und Teil der Scaffold-Antwort",
+      "scenario": "Ein CLI/MCP-Aufrufer erhält `compile_plan` in ScaffoldResult; Änderungen an Plan-DTOs verändern somit den beobachtbaren Response-Vertrag, obwohl der Compiler es als Intent-Abbild nutzt.",
+      "evidence": [
+        {
+          "path": "datamimic_ce/authoring/contracts.py",
+          "line": 1157
+        },
+        {
+          "path": "datamimic_ce/authoring/contracts.py",
+          "line": 1479
+        },
+        {
+          "path": "datamimic_ce/authoring/application/service.py",
+          "line": 329
+        }
+      ],
+      "recommendation": "Vor einer Contract-Aufteilung entscheiden, ob CompilePlan absichtlich öffentliche Antwortsemantik ist; andernfalls Ausgabeprojektion von internem Plan entkoppeln und Versionierung festlegen."
+    }
+  ],
+  "traces": [
+    "CLI scaffold → CLI-Datei-/Optionenadapter → authoring.api → service: JSON validieren → CompilePlan/XML → Intent-/XML-Lint → genau ein bounded Runtime-Capture → Acceptance auf vollständigen Fakten → optionale Smoke/Replay-Gates → ScaffoldResult. Evidence: datamimic_ce/interfaces/cli/__init__.py:64, datamimic_ce/interfaces/cli/authoring.py:119, datamimic_ce/authoring/application/service.py:192, datamimic_ce/authoring/application/service.py:292.",
+    "MCP Check/Run/Reference/Scaffold → authoring.api-Aufrufe via anyio.to_thread → dieselben Requests/Results wie CLI; der MCP-Adapter baut keinen zweiten Authoring-Workflow. Evidence: datamimic_ce/interfaces/mcp/server.py:48, datamimic_ce/interfaces/mcp/server.py:52.",
+    "CLI runtime run → interfaces.api.run → runtime.api.create_run_session/run → Descriptor-Lifecycle/Task-Ausführung → IO-Ziele und RunResult; dies ist der volle Runtime-Pfad und nicht der target-neutralisierte Authoring-Dry-Run. Evidence: datamimic_ce/interfaces/cli/runtime.py:117, datamimic_ce/interfaces/api.py:13, datamimic_ce/engine/runtime/api.py:34."
+  ],
+  "limitations": [
+    "Keine EE-Paritätsprüfung und kein vollständiger Runtime-Lauf im Rahmen dieser strukturellen Sichtprüfung durchgeführt.",
+    "Review bewertet vorgeschlagene Zielgrenzen statisch anhand der CE-Implementierung; externe API-Stabilitätszusagen wurden nicht unabhängig verifiziert.",
+    "Die vorgeschlagene resources/examples-Grenze hat in der aktuellen Traversable-/Demo-Enumeration keinen beobachteten Verbraucher."
+  ]
+}

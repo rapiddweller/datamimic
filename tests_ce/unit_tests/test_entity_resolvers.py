@@ -5,47 +5,60 @@ and the Mongo client derives the collection before it connects (empty data retur
 targetEntity/selector/type/missing branches are exercised with no server.
 """
 
-from types import SimpleNamespace
-
 import pytest
 
-from datamimic_ce.clients.mongodb_client import MongoDBClient
-from datamimic_ce.connection_config.mongodb_connection_config import MongoDBConnectionConfig
-from datamimic_ce.statements.statement_util import StatementUtil
+from datamimic_ce.engine.dsl.api import parse_consumer
+from datamimic_ce.engine.io.api import (
+    resolve_source_entity,
+    resolve_target_entity,
+)
+from datamimic_ce.engine.io.clients.mongodb_client import MongoDBClient
+from datamimic_ce.engine.io.connection_config.mongodb_connection_config import MongoDBConnectionConfig
+from datamimic_ce.engine.io.data_sources.boundary.entities import resolve_source_collection
+from datamimic_ce.engine.io.exporters.core.routing import resolve_target_entity_from_metadata
 
 
-def _stmt(source_entity=None, type_=None, name="stmt"):
-    return SimpleNamespace(source_entity=source_entity, type=type_, name=name)
+def test_parse_consumer_preserves_nested_arguments_and_deduplicates() -> None:
+    consumers = parse_consumer(
+        " CSV(chunk_size=2, encoding='utf-8'), MongoDB.upsert, CSV(chunk_size=2, encoding='utf-8') "
+    )
+    assert consumers == {
+        "CSV(chunk_size=2, encoding='utf-8')",
+        "MongoDB.upsert",
+    }
+    assert parse_consumer(None) == set()
+    assert parse_consumer(" , ") == set()
 
 
 # ---- resolve_source_entity: name-fallback families (RDBMS/memstore/nestedKey) ----
 
 
 def test_resolve_source_entity_precedence():
-    assert StatementUtil.resolve_source_entity(_stmt("ent", "typ", "nm")) == "ent"  # sourceEntity wins
-    assert StatementUtil.resolve_source_entity(_stmt(None, "typ", "nm")) == "typ"  # -> type
-    assert StatementUtil.resolve_source_entity(_stmt(None, None, "nm")) == "nm"  # -> name
+    assert resolve_source_entity("ent", "typ", "nm") == "ent"  # sourceEntity wins
+    assert resolve_source_entity(None, "typ", "nm") == "typ"  # -> type
+    assert resolve_source_entity(None, None, "nm") == "nm"  # -> name
+    assert resolve_source_entity(None, None, None) is None
 
 
 # ---- resolve_source_collection: explicit-only family (MongoDB), no name fallback ----
 
 
 def test_resolve_source_collection_precedence_and_no_name_fallback():
-    assert StatementUtil.resolve_source_collection(_stmt("ent", "typ", "nm")) == "ent"
-    assert StatementUtil.resolve_source_collection(_stmt(None, "typ", "nm")) == "typ"
-    assert StatementUtil.resolve_source_collection(_stmt(None, None, "nm")) is None  # name is NOT a fallback
+    assert resolve_source_collection("ent", "typ") == "ent"
+    assert resolve_source_collection(None, "typ") == "typ"
+    assert resolve_source_collection(None, None) is None  # name is NOT a fallback
 
 
 # ---- resolve_target_entity ----
 
 
 def test_resolve_target_entity_precedence_and_metadata():
-    assert StatementUtil.resolve_target_entity("ent", "typ", "nm") == "ent"
-    assert StatementUtil.resolve_target_entity(None, "typ", "nm") == "typ"
-    assert StatementUtil.resolve_target_entity(None, None, "nm") == "nm"
-    assert StatementUtil.resolve_target_entity_from_metadata("nm", {"target_entity": "ent"}) == "ent"
-    assert StatementUtil.resolve_target_entity_from_metadata("nm", {"type": "typ"}) == "typ"
-    assert StatementUtil.resolve_target_entity_from_metadata("nm", None) == "nm"
+    assert resolve_target_entity("ent", "typ", "nm") == "ent"
+    assert resolve_target_entity(None, "typ", "nm") == "typ"
+    assert resolve_target_entity(None, None, "nm") == "nm"
+    assert resolve_target_entity_from_metadata("nm", {"target_entity": "ent"}) == "ent"
+    assert resolve_target_entity_from_metadata("nm", {"type": "typ"}) == "typ"
+    assert resolve_target_entity_from_metadata("nm", None) == "nm"
 
 
 # ---- MongoDB collection dispatch (no live server: empty data returns before connecting) ----

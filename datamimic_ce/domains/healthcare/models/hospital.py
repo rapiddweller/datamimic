@@ -10,12 +10,11 @@ Hospital entity model.
 This module provides the Hospital entity model for generating realistic hospital data.
 """
 
-from typing import Any
 
-from datamimic_ce.domains.common.models.address import Address
 from datamimic_ce.domains.domain_core import BaseEntity
 from datamimic_ce.domains.domain_core.property_cache import property_cache
 from datamimic_ce.domains.healthcare.generators.hospital_generator import HospitalGenerator
+from datamimic_ce.domains.shared.models.address import Address
 
 
 class Hospital(BaseEntity):
@@ -33,7 +32,7 @@ class Hospital(BaseEntity):
         """
         rng = self._hospital_generator.rng
         suffix = "".join(rng.choice("0123456789ABCDEF") for _ in range(8))
-        return f"HOSP-{suffix}"
+        return self._claim_identifier("hospital_id", f"HOSP-{suffix}")
 
     @property
     @property_cache
@@ -235,7 +234,7 @@ class Hospital(BaseEntity):
         """
         return Address(self._hospital_generator.address_generator)
 
-    def to_dict(self) -> dict[str, Any]:
+    def to_dict(self) -> dict[str, object]:
         """Convert the hospital entity to a dictionary.
 
         Returns:

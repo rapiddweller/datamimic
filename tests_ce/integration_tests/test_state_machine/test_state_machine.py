@@ -16,7 +16,7 @@ from __future__ import annotations
 from collections import Counter
 from pathlib import Path
 
-from datamimic_ce.data_mimic_test import DataMimicTest
+from datamimic_ce.interfaces.python.data_mimic_test import DataMimicTest
 
 _TEST_DIR = Path(__file__).resolve().parent
 

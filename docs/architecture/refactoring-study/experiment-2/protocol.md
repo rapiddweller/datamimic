@@ -1,0 +1,122 @@
+# Experiment 2 protocol
+
+Written before implementation. Contract edits after freeze require a dated amendment explaining
+why the original target was wrong; an implementation difficulty is not a reason to weaken it.
+
+Current recursive target: [Amendment 19](amendment-19.md), corrected through the
+semantic freeze in [Amendment 20](amendment-20.md). Astra decides remaining
+ownership questions; Luna implements and Terra verifies independently. Frozen
+inputs below remain history, including the original checker and agent versions.
+
+[Amendment 80](amendment-80.md) corrects Authoring policy ownership: acceptance
+and verification live in Domain; canonical contracts own the existing capture
+records. Application still sequences execution and adapters still run it.
+
+## Fixed inputs
+
+| Input | Frozen value |
+|---|---|
+| Code | `development` at `a219163e533d661bcc7bda0faa5ecc77909ab5aa` |
+| Worktree | `/private/tmp/datamimic-architecture-experiment-2` |
+| Branch | `experiment/target-architecture-v2` |
+| Architecture checker | ArchKeel `0.6.0`, local tag `d14035b31ef2addac9cfea738a70d8643df2f7ae` |
+| Implementation agent | Luna, contract and baseline read-only |
+| Verification agent | Luna, production code and contract read-only |
+| Remote changes | none |
+
+## Acceptance contract
+
+1. `archkeel validate --baseline known-violations.json` never accepts new debt.
+2. Final `archkeel validate --baseline known-violations.json --json` passes with an empty
+   violation list, no new or resolved findings, complete coverage, zero violations, and zero
+   material unknown positions. Numeric budgets may be positive but never increase (Amendment 12).
+3. The exact root layout and component namespaces match `target-architecture.md`.
+4. Every component crossing uses its declared API and every API has checked boundary types.
+5. All existing XML descriptors still parse. Seeded descriptors produce byte-identical captured
+   output, except for proven domain-ID collision resolution (Amendment 15).
+   Unseeded descriptors retain outcome, product counts, row counts, and value shapes.
+   Amendment 13 replaces cross-run equality only for genuinely dynamic unseeded counts with
+   descriptor-defined ranges and same-run relationships; unknown shape remains unverified.
+   Amendment 50 requires field-presence evidence and rejects unknown or all-null shapes as proof.
+   Amendment 51 requires structural evidence for every unseeded export file; an
+   unsupported format cannot pass merely because its filename is unchanged.
+   Target-state reproducibility requires the same initial target state;
+   Amendment 16 separates generated-ID uniqueness from target constraints.
+6. Authoring schema, reference, capability, compiler, lint, and transport projections remain
+   identical unless an explicitly approved product change is recorded. Amendment 60 records
+   the narrow capability wording and package-version exception.
+7. Existing public CLI commands and documented Python entry points remain importable.
+8. Unit, API, factory, functional, integration, architecture, lint, and full-package mypy gates
+   pass. External-service tests run serially against already-running local services.
+9. The final report independently explores `Actual`, `Target`, and `Diff`. `Actual` comes from
+   observed source; `Target` comes only from declared contracts and target layout, never from
+   filtering observed edges; `Diff` compares the two. Each view remains explorable to deliberate
+   atomic leaves. A selected target component or module shows its responsibility sentence;
+   a searchable index exposes all sentences without opening every node.
+
+Items 3–4 require both physical and semantic completion. Layout scopes establish permitted tree
+shape only. An atomic semantic leaf is a declared target node for an independently meaningful
+policy, behavior, API, or cross-component boundary—not every filesystem directory. Its decision
+must be explicit in the containing machine-checked architecture contract, stating ownership,
+allowed dependency set, and public decision: a named API or deliberate `public: []`; an empty
+allowed-dependency set is valid. Grouping-only folders inherit their nearest parent's contract; do
+not create a contract per directory. Aggregate component cards do not stand in for independently
+meaningful children.
+
+Report four verdicts separately: structure reached (items 1–4 and 7), behavior preserved
+(items 5–6 and the relevant runtime tests), report explorability (item 9), and delivery ready
+(item 8, integrated checker, and remote CI). A structural pass does not imply the other three.
+The literal baseline-free command in the frozen protocol is inapplicable while measurement budgets
+are declared; Amendment 12 records the reason.
+
+## Per-step gate
+
+1. smallest coherent architecture slice;
+2. targeted test;
+3. descriptor and projection comparison for affected paths;
+4. ArchKeel baseline decreases and never grows;
+5. relevant broader suites, then `make lint` and `make typecheck`;
+6. diff review, experiment log, one local commit.
+
+The serial result is authoritative when xdist and serial execution disagree. No flaky descriptor is
+excluded from equivalence until repeated unchanged Step-0 runs demonstrate the instability and the
+evidence is logged.
+
+[The 2026-09-29 measurement amendment](amendment-2026-09-29-typed-cache-measurement.md)
+records one exact UNKNOWN-to-violation transition in Step 38. It permits retaining
+the correct annotation, not counting that step as gate-green or growing the
+accepted baseline. The final zero-violation and zero-unknown targets are unchanged.
+
+When the first real function is added to an API module, the same commit adds that module's
+`boundary_types` rule. The rule then remains mandatory. This is a narrowing, not permission to
+change the target.
+
+## Agent separation
+
+- The implementation agent changes production code and targeted tests for one approved slice.
+- The verification agent builds the Step-0 oracle, runs gates, and reports regressions. It does not
+  repair production code.
+- The orchestrator owns the contract, baseline, slice selection, acceptance, and commits.
+
+## Success and stop conditions
+
+Structural success means the declared target is reached, not merely that debt decreased.
+Behavioral and delivery verdicts remain separate. Stop and report instead of weakening the
+target when behavior cannot be proven, ArchKeel returns UNKNOWN for a required fact, or
+compatibility requires a product decision.
+
+## Known checker limit under test
+
+ArchKeel 0.6.0 can require target namespaces only after they exist as scanned packages. The freeze
+therefore adds empty target package markers before Step 0. It also returns `UNKNOWN` for
+`boundary_types` until a real facade function exists; those rules are activated with the first
+real function instead of adding dummy code. Both constraints are recorded as checker limits, not
+accepted architecture debt.
+
+Layout violations on an empty legacy `__init__.py` also lack the non-empty excerpt ArchKeel later
+requires for its own trace. The freeze adds ownership-only docstrings to the affected files so the
+same violations become traceable and baselineable.
+
+Target progress may remove a legacy package from a component's ownership list or promote a built
+API from `planned` to `public`; these are synchronized contract facts, not target changes. A target
+permission or restriction changes only through an amendment.

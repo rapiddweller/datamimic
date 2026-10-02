@@ -1,0 +1,228 @@
+{
+  "schema_version": "2.1.0",
+  "declarations": {
+    "modules": [
+      {
+        "path": "datamimic_ce/errors/__init__.py",
+        "responsibility": "The package marks the namespace for domain errors and their factories."
+      },
+      {
+        "path": "datamimic_ce/errors/base.py",
+        "responsibility": "DomainError carries a typed error code, message, context, and serializable error data."
+      },
+      {
+        "path": "datamimic_ce/errors/catalog/__init__.py",
+        "responsibility": "The catalog renders the locale-specific text for the locale error."
+      },
+      {
+        "path": "datamimic_ce/errors/codes.py",
+        "responsibility": "Enums define stable domain and general error codes."
+      },
+      {
+        "path": "datamimic_ce/errors/factory.py",
+        "responsibility": "The factory creates InvalidLocaleError with a code, context, and stable metadata."
+      },
+      {
+        "path": "datamimic_ce/errors/formatters.py",
+        "responsibility": "The formatter creates the locale-specific invalid-locale message."
+      }
+    ]
+  },
+  "components": [
+    {
+      "id": "ERRORS-CODES",
+      "label": "codes",
+      "role": "contract",
+      "packages": [
+        "datamimic_ce.errors.codes"
+      ],
+      "responsibilities": [
+        "Stable error-code vocabulary."
+      ],
+      "forbidden_responsibilities": [
+        "Select validation policy or depend on Runtime settings."
+      ],
+      "provenance": [
+        "docs/architecture/inner/target.md"
+      ],
+      "requires": [],
+      "public": [
+        "datamimic_ce.errors.codes"
+      ],
+      "decided_by": "agent"
+    },
+    {
+      "id": "ERRORS-BASE",
+      "label": "base",
+      "role": "contract",
+      "packages": [
+        "datamimic_ce.errors.base"
+      ],
+      "responsibilities": [
+        "Public error hierarchy."
+      ],
+      "forbidden_responsibilities": [
+        "Open resources or import concrete clients."
+      ],
+      "provenance": [
+        "docs/architecture/inner/target.md"
+      ],
+      "requires": [
+        {
+          "component": "codes",
+          "rationale": "Error types carry codes without runtime policy.",
+          "decided_by": "agent"
+        }
+      ],
+      "public": [
+        "datamimic_ce.errors.base"
+      ],
+      "decided_by": "agent"
+    },
+    {
+      "id": "ERRORS-CATALOG",
+      "label": "catalog",
+      "role": "foundation",
+      "packages": [
+        "datamimic_ce.errors.catalog"
+      ],
+      "responsibilities": [
+        "Canonical error message text."
+      ],
+      "forbidden_responsibilities": [
+        "Inspect runtime state or implement validation policy."
+      ],
+      "provenance": [
+        "docs/architecture/inner/target.md"
+      ],
+      "requires": [],
+      "public": [
+        "datamimic_ce.errors.catalog:invalid_locale_text"
+      ],
+      "decided_by": "agent"
+    },
+    {
+      "id": "ERRORS-FORMATTERS",
+      "label": "formatters",
+      "role": "component",
+      "packages": [
+        "datamimic_ce.errors.formatters"
+      ],
+      "responsibilities": [
+        "Stable error formatting."
+      ],
+      "forbidden_responsibilities": [
+        "Choose recovery policy or change error codes."
+      ],
+      "provenance": [
+        "docs/architecture/inner/target.md"
+      ],
+      "requires": [
+        {
+          "component": "catalog",
+          "rationale": "Formatters use the canonical message text.",
+          "decided_by": "agent"
+        },
+        {
+          "component": "codes",
+          "rationale": "Formatting preserves stable codes.",
+          "decided_by": "agent"
+        }
+      ],
+      "public": [
+        "datamimic_ce.errors.formatters"
+      ],
+      "decided_by": "agent"
+    },
+    {
+      "id": "ERRORS-FACTORY",
+      "label": "factory",
+      "role": "component",
+      "packages": [
+        "datamimic_ce.errors.factory"
+      ],
+      "responsibilities": [
+        "Error construction; no vendor IO mapping."
+      ],
+      "forbidden_responsibilities": [
+        "Catch vendor exceptions or decide whether a condition is an error."
+      ],
+      "provenance": [
+        "docs/architecture/inner/target.md"
+      ],
+      "requires": [
+        {
+          "component": "base",
+          "rationale": "Factories instantiate typed errors.",
+          "decided_by": "agent"
+        },
+        {
+          "component": "codes",
+          "rationale": "Factories select stable codes.",
+          "decided_by": "agent"
+        },
+        {
+          "component": "formatters",
+          "rationale": "Factories delegate message rendering.",
+          "decided_by": "agent"
+        }
+      ],
+      "public": [
+        "datamimic_ce.errors.factory"
+      ],
+      "decided_by": "agent"
+    }
+  ],
+  "rules": [
+    {
+      "id": "ERRORS-ASSIGNMENT",
+      "kind": "complete_assignment",
+      "source": "datamimic_ce.errors",
+      "rationale": "Every child implementation has one owner; parent initializer behavior is reviewed explicitly.",
+      "provenance": [
+        "docs/architecture/inner/target.md"
+      ],
+      "decided_by": "agent"
+    },
+    {
+      "id": "ERRORS-REQUIRES",
+      "kind": "complete_requires",
+      "include_type_checking": true,
+      "rationale": "Only the listed responsibility directions are permitted.",
+      "provenance": [
+        "docs/architecture/inner/target.md"
+      ],
+      "decided_by": "agent"
+    },
+    {
+      "id": "ERRORS-INTERFACES",
+      "kind": "interface_boundary",
+      "include_type_checking": true,
+      "rationale": "A dependency reaches explicit operations and types, not arbitrary implementation details.",
+      "provenance": [
+        "docs/architecture/inner/target.md"
+      ],
+      "decided_by": "agent"
+    },
+    {
+      "id": "ERRORS-ACYCLIC",
+      "kind": "no_component_cycles",
+      "rationale": "Lower layers do not import their consumers.",
+      "provenance": [
+        "docs/architecture/inner/target.md"
+      ],
+      "decided_by": "agent"
+    },
+    {
+      "id": "LAYOUT-ERRORS-CATALOG",
+      "kind": "root_layout",
+      "root": "datamimic_ce.errors.catalog",
+      "allowed_children": [],
+      "rationale": "Canonical error message text. Exact reviewed target children; no hidden extra modules.",
+      "provenance": [
+        "docs/architecture/inner/structure-review.json"
+      ],
+      "decided_by": "agent"
+    }
+  ]
+}

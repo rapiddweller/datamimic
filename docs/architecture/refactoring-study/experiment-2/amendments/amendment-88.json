@@ -1,0 +1,7 @@
+{
+  "after_digest": "8d2ceefc86424b7c9238960c2e95c6df5ac48cc78eed75d7fa51516e2bed5713",
+  "before_digest": "3f318cb9227bda983d863ae4f67e7851b89cbabf3b9e950be092fc764005684a",
+  "decided_by": "Astra (delegated architect)",
+  "rationale": "Declare existing internal use-case interfaces and exact Authoring initializer ownership. Keep source, external API, dependency rules and baseline unchanged; external API closure remains pending.",
+  "schema_version": "1.0.0"
+}

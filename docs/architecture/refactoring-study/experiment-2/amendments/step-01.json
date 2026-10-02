@@ -1,0 +1,7 @@
+{
+  "after_digest": "fb1973693dfc107920deb5882f881386ba054072af4478deb510dea355e85a95",
+  "before_digest": "80e24d436d3cae56aaf005d96fb1782d24e5621a48450cb52178f447b347111e",
+  "decided_by": "Alex (architect)",
+  "rationale": "Remove the deleted legacy services package from ownership; six findings only move with the same code to engine.runtime.evaluation while three physical-layout findings are eliminated.",
+  "schema_version": "1.0.0"
+}

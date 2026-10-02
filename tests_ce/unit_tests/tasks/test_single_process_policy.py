@@ -12,13 +12,13 @@ from unittest.mock import MagicMock
 
 import pytest
 
-from datamimic_ce.clients.rdbms_client import RdbmsClient
-from datamimic_ce.enums.dbms_enums import Dbms
-from datamimic_ce.statements.generate_statement import GenerateStatement
-from datamimic_ce.statements.key_statement import KeyStatement
-from datamimic_ce.statements.reference_statement import ReferenceStatement
-from datamimic_ce.statements.variable_statement import VariableStatement
-from datamimic_ce.tasks.single_process_policy import resolve_single_process
+from datamimic_ce.engine.dsl.api import GenerateStatement
+from datamimic_ce.engine.dsl.statements.values.references.reference_statement import ReferenceStatement
+from datamimic_ce.engine.dsl.statements.values.scalar.key_statement import KeyStatement
+from datamimic_ce.engine.dsl.statements.values.variables.variable_statement import VariableStatement
+from datamimic_ce.engine.dsl.vocabulary.enums.dbms_enums import Dbms
+from datamimic_ce.engine.io.clients.rdbms_client import RdbmsClient
+from datamimic_ce.engine.runtime.tasks.generate.policies.single_process_policy import resolve_single_process
 
 
 def _gen(children=(), unique=False, targets=()) -> MagicMock:
@@ -69,6 +69,25 @@ def test_seeded_generate_forces_single_process():
 def test_unseeded_generate_keeps_requested_workers():
     # no rngSeed -> determinism is not requested -> keep multiprocess
     assert resolve_single_process(_gen(), requested_workers=4, seeded=False) is None
+
+
+@pytest.mark.parametrize("identifier_format, expected", [(None, None), ("PAN", 1)])
+def test_domain_identifier_policy_parses_entity_constructor(
+    monkeypatch: pytest.MonkeyPatch, identifier_format: str | None, expected: int | None
+) -> None:
+    child = _child(VariableStatement)
+    child.entity = "Person(code='0012', mode=fast)"
+    spec = SimpleNamespace(attributes=[SimpleNamespace(unique_identifier_format=identifier_format)])
+    names: list[str] = []
+
+    def get_entity_spec(name: str) -> SimpleNamespace:
+        names.append(name)
+        return spec
+
+    monkeypatch.setattr("datamimic_ce.domains.api.get_entity_spec", get_entity_spec)
+
+    assert resolve_single_process(_gen(children=[child]), requested_workers=4) == expected
+    assert names == ["Person"]
 
 
 def test_mysql_sequence_generator_forces_single_process() -> None:

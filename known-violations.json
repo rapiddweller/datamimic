@@ -1,0 +1,11 @@
+{
+  "budgets": {
+    "calls_unresolved": 1278,
+    "cycle_edges": 11,
+    "private_crossings": 0,
+    "typing_positions": 143,
+    "untyped_private_accesses": 3
+  },
+  "schema_version": "1.3.0",
+  "violations": []
+}

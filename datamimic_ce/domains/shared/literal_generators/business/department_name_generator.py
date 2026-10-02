@@ -1,0 +1,55 @@
+# DATAMIMIC
+# Copyright (c) 2023-2025 Rapiddweller Asia Co., Ltd.
+# This software is licensed under the MIT License.
+# See LICENSE file for the full text of the license.
+# For questions and support, contact: info@rapiddweller.com
+
+import logging
+import random
+
+from datamimic_ce.domains.domain_core.base_literal_generator import BaseLiteralGenerator
+
+logger = logging.getLogger("DATAMIMIC")
+
+
+class DepartmentNameGenerator(BaseLiteralGenerator):
+    def __init__(self, locale: str | None = "en", rng: random.Random | None = None) -> None:
+        # Default department data (en)
+        self._department_data = [
+            "Accounting",
+            "Human Resources",
+            "Sales",
+            "Marketing",
+            "IT",
+            "Manufacturing",
+            "Logistics",
+            "Legal",
+            "Engineering",
+            "Finance",
+            "Customer Support",
+            "Operations",
+            "Research and Development",
+        ]
+        sp_locale = ("de", "en")
+        if locale == "de":
+            self._department_data = [
+                "Buchhaltung",
+                "Human Resources",
+                "Vertrieb",
+                "Marketing",
+                "IT",
+                "Fertigung",
+                "Logistik",
+                "Recht",
+                "Entwicklung",
+                "Finanzen",
+                "Kundensupport",
+                "Betrieb",
+                "Forschung und Entwicklung",
+            ]
+        elif locale not in sp_locale:
+            logger.info(f"Department name does not support locale '{locale}'. Change to department_en data")
+        super().__init__(rng=rng)
+
+    def generate(self) -> str:
+        return self._rng.choice(self._department_data)

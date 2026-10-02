@@ -2,8 +2,8 @@
 
 import pytest
 
-from datamimic_ce.domains.exceptions import DomainError
 from datamimic_ce.domains.facade import generate_domain
+from datamimic_ce.errors.base import DomainError
 
 
 def test_unknown_component_strict_mode(monkeypatch: pytest.MonkeyPatch) -> None:

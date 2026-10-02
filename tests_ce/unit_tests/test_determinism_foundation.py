@@ -10,7 +10,7 @@ import subprocess
 import sys
 from datetime import datetime, timezone
 
-from datamimic_ce.domains.domain_core.runtime import now_utc_naive, resolve_clock
+from datamimic_ce.domains.domain_core.runtime import from_epoch_utc, now_utc_naive, resolve_clock, to_epoch_utc
 from datamimic_ce.domains.domain_core.runtime.clock import DETERMINISTIC_ANCHOR
 
 # ---------- now_utc_naive / resolve_clock ----------------------------------
@@ -37,6 +37,12 @@ def test_resolve_clock_live_returns_recent_naive_utc() -> None:
     assert ts.tzinfo is None
     delta = abs((ts - datetime.now(timezone.utc).replace(tzinfo=None)).total_seconds())
     assert delta < 5.0
+
+
+def test_epoch_conversion_uses_a_fixed_utc_instant() -> None:
+    instant = datetime(2021, 2, 1, 10, 8, 4)
+    assert from_epoch_utc(1612174084) == instant
+    assert to_epoch_utc(instant) == 1612174084
 
 
 # ---------- Cross-process determinism --------------------------------------

@@ -7,7 +7,7 @@ import shutil
 from pathlib import Path
 
 import tests_ce.functional_tests.test_file_exporter.util_of_test_exporter as util
-from datamimic_ce.data_mimic_test import DataMimicTest
+from datamimic_ce.interfaces.python.data_mimic_test import DataMimicTest
 
 
 class TestExporter:

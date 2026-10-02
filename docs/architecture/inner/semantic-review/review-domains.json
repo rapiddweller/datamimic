@@ -1,0 +1,4757 @@
+{
+  "reviewer": "luna-domains",
+  "records": [
+    {
+  "id": "module:domains/__init__.py",
+  "concern": "Der Initializer markiert ein Python-Paket, enthält aber keine ausführbare Fachlogik.",
+  "verdict": "scaffold",
+  "reason": "Der Initializer stellt Package- oder Importmechanik bereit, enthält aber keine eigenständige Domain-Erzeugungslogik.",
+  "evidence": [
+    {
+      "path": "datamimic_ce/domains/__init__.py",
+      "line": 7
+    }
+  ],
+      "recommended_targets": []
+    },
+    {
+      "id": "module:domains/api.py",
+  "concern": "Die öffentliche Erweiterungs-API exportiert Literal-/Domain-Typen und projiziert den Generatorbestand auf Engine-Capabilities.",
+      "verdict": "keep",
+      "reason": "Die vorgeschlagene Facade bewahrt Imports, die Engine und Custom-Generator-Scripts tatsächlich verwenden.",
+      "evidence": [
+        {
+          "path": "datamimic_ce/domains/api.py",
+          "line": 56
+        }
+      ],
+      "recommended_targets": []
+    },
+    {
+  "id": "module:domains/domain_core/__init__.py",
+  "concern": "Der Initializer exportiert BaseEntity und BaseDomainService über den von Services und Tests verwendeten Core-Importpfad.",
+  "verdict": "scaffold",
+      "reason": "Die vorgesehene Zielgrenze passt zu den belegten Aufrufern und dem ausgeführten Verhalten.",
+      "evidence": [
+        {
+          "path": "datamimic_ce/domains/domain_core/__init__.py",
+          "line": 7
+        }
+      ],
+      "recommended_targets": []
+    },
+    {
+      "id": "module:domains/domain_core/attribute_catalog.py",
+      "concern": "Das Modul deklariert Entity-Felder mit echten Python-Typen und wiederverwendbare verschachtelte Adressfelder als Schema-SPOT.",
+      "verdict": "keep",
+      "reason": "Die vorgesehene Zielgrenze passt zu den belegten Aufrufern und dem ausgeführten Verhalten.",
+      "evidence": [
+        {
+          "path": "datamimic_ce/domains/domain_core/attribute_catalog.py",
+          "line": 32
+        }
+      ],
+      "recommended_targets": []
+    },
+    {
+      "id": "module:domains/domain_core/base_domain_generator.py",
+      "concern": "Die drei Basisklassen geben RNG, normalisierten Datensatz und einmalig fixierte Referenzzeit nur an Generatoren weiter, die sie benötigen.",
+      "verdict": "keep",
+      "reason": "Die vorgesehene Zielgrenze passt zu den belegten Aufrufern und dem ausgeführten Verhalten.",
+      "evidence": [
+        {
+          "path": "datamimic_ce/domains/domain_core/base_domain_generator.py",
+          "line": 43
+        }
+      ],
+      "recommended_targets": []
+    },
+    {
+      "id": "module:domains/domain_core/base_domain_service.py",
+      "concern": "Der gemeinsame Service bindet Modell und Generator, macht Feldschema und unterstützte Datensätze sichtbar und erzeugt einzelne oder mehrere Entities.",
+      "verdict": "keep",
+      "reason": "Die vorgesehene Zielgrenze passt zu den belegten Aufrufern und dem ausgeführten Verhalten.",
+      "evidence": [
+        {
+          "path": "datamimic_ce/domains/domain_core/base_domain_service.py",
+          "line": 18
+        }
+      ],
+      "recommended_targets": []
+    },
+    {
+      "id": "module:domains/domain_core/base_entity.py",
+      "concern": "Die Entity-Basis memoisiert Felder, hält Aliaszugriff kompatibel und vergibt formatgebundene eindeutige Schlüssel auch über verschachtelte Entities hinweg.",
+      "verdict": "change",
+      "reason": "BaseEntity führt Lazy-Cache, Aliaszugriff und Identifier-Registry-Bindung zur Laufzeit aus; es ist kein Typvertrag.",
+      "evidence": [
+        {
+          "path": "datamimic_ce/domains/domain_core/base_entity.py",
+          "line": 21
+        }
+      ],
+      "recommended_targets": [
+        "domains/domain_core/base_entity.py"
+      ]
+    },
+    {
+      "id": "module:domains/domain_core/base_literal_generator.py",
+      "concern": "Die Literal-Basis stellt atomaren Generatoren einen injizierbaren RNG bereit, den die Engine nach der Konstruktion neu binden kann.",
+      "verdict": "keep",
+      "reason": "Die vorgesehene Zielgrenze passt zu den belegten Aufrufern und dem ausgeführten Verhalten.",
+      "evidence": [
+        {
+          "path": "datamimic_ce/domains/domain_core/base_literal_generator.py",
+          "line": 25
+        }
+      ],
+      "recommended_targets": []
+    },
+    {
+      "id": "module:domains/domain_core/property_cache.py",
+      "concern": "Der Decorator cached erzeugte Entity-Properties im Feldcache, damit wiederholtes Lesen keine neuen Zufallswerte erzeugt.",
+      "verdict": "keep",
+      "reason": "Die vorgesehene Zielgrenze passt zu den belegten Aufrufern und dem ausgeführten Verhalten.",
+      "evidence": [
+        {
+          "path": "datamimic_ce/domains/domain_core/property_cache.py",
+          "line": 17
+        }
+      ],
+      "recommended_targets": []
+    },
+    {
+  "id": "module:domains/domain_core/runtime/__init__.py",
+  "concern": "Der Initializer bündelt RunSeed sowie RNG- und Clock-Funktionen als gemeinsame Runtime-Importoberfläche.",
+  "verdict": "scaffold",
+      "reason": "Die vorgesehene Zielgrenze passt zu den belegten Aufrufern und dem ausgeführten Verhalten.",
+      "evidence": [
+        {
+          "path": "datamimic_ce/domains/domain_core/runtime/__init__.py",
+          "line": 7
+        }
+      ],
+      "recommended_targets": []
+    },
+    {
+      "id": "module:domains/domain_core/runtime/clock.py",
+      "concern": "Das Modul vereinheitlicht UTC-Wanduhrzugriffe, eingefrorene Seed-Zeit und zeitzonenunabhängige Epoch-Konvertierung.",
+      "verdict": "keep",
+      "reason": "Die vorgesehene Zielgrenze passt zu den belegten Aufrufern und dem ausgeführten Verhalten.",
+      "evidence": [
+        {
+          "path": "datamimic_ce/domains/domain_core/runtime/clock.py",
+          "line": 27
+        }
+      ],
+      "recommended_targets": []
+    },
+    {
+      "id": "module:domains/domain_core/runtime/rng.py",
+      "concern": "Das Modul zieht reproduzierbare Kind-Seeds aus einem Eltern-RNG und erzeugt daraus getrennte RNG-Streams.",
+      "verdict": "keep",
+      "reason": "Die vorgesehene Zielgrenze passt zu den belegten Aufrufern und dem ausgeführten Verhalten.",
+      "evidence": [
+        {
+          "path": "datamimic_ce/domains/domain_core/runtime/rng.py",
+          "line": 11
+        }
+      ],
+      "recommended_targets": []
+    },
+    {
+      "id": "module:domains/domain_core/runtime/run_seed.py",
+      "concern": "RunSeed hält Seed oder Run-Entropie und leitet daraus workerübergreifend stabile Schlüssel je Verwendungszweck ab.",
+      "verdict": "keep",
+      "reason": "Die vorgesehene Zielgrenze passt zu den belegten Aufrufern und dem ausgeführten Verhalten.",
+      "evidence": [
+        {
+          "path": "datamimic_ce/domains/domain_core/runtime/run_seed.py",
+          "line": 17
+        }
+      ],
+      "recommended_targets": []
+    },
+    {
+  "id": "module:domains/ecommerce/__init__.py",
+  "concern": "Der Initializer markiert ein Python-Paket, enthält aber keine ausführbare Fachlogik.",
+  "verdict": "scaffold",
+  "reason": "Der Initializer stellt Package- oder Importmechanik bereit, enthält aber keine eigenständige Domain-Erzeugungslogik.",
+  "evidence": [
+    {
+      "path": "datamimic_ce/domains/ecommerce/__init__.py",
+      "line": 7
+    }
+  ],
+      "recommended_targets": []
+    },
+    {
+  "id": "module:domains/ecommerce/generators/__init__.py",
+  "concern": "Der Initializer markiert ein Python-Paket, enthält aber keine ausführbare Fachlogik.",
+  "verdict": "scaffold",
+  "reason": "Der Initializer stellt Package- oder Importmechanik bereit, enthält aber keine eigenständige Domain-Erzeugungslogik.",
+  "evidence": [
+    {
+      "path": "datamimic_ce/domains/ecommerce/generators/__init__.py",
+      "line": 7
+    }
+  ],
+      "recommended_targets": []
+    },
+    {
+      "id": "module:domains/ecommerce/generators/order_generator.py",
+      "concern": "Der OrderGenerator erzeugt synthetische Fachwerte über generate_order_date, get_order_status, get_payment_method und nutzt die erforderliche RNG-, Datensatz- oder Zeitbasis.",
+      "verdict": "keep",
+      "reason": "Die vorgesehene Zielgrenze passt zu den belegten Aufrufern und dem ausgeführten Verhalten.",
+      "evidence": [
+        {
+          "path": "datamimic_ce/domains/ecommerce/generators/order_generator.py",
+          "line": 17
+        }
+      ],
+      "recommended_targets": []
+    },
+    {
+      "id": "module:domains/ecommerce/generators/product_generator.py",
+      "concern": "Der ProductGenerator erzeugt synthetische Fachwerte über pick_rating, maybe_pick_trending_tag, get_product_data_by_data_type und nutzt die erforderliche RNG-, Datensatz- oder Zeitbasis.",
+      "verdict": "keep",
+      "reason": "Die vorgesehene Zielgrenze passt zu den belegten Aufrufern und dem ausgeführten Verhalten.",
+      "evidence": [
+        {
+          "path": "datamimic_ce/domains/ecommerce/generators/product_generator.py",
+          "line": 23
+        }
+      ],
+      "recommended_targets": []
+    },
+    {
+  "id": "module:domains/ecommerce/models/__init__.py",
+  "concern": "Der Initializer markiert ein Python-Paket, enthält aber keine ausführbare Fachlogik.",
+  "verdict": "scaffold",
+  "reason": "Der Initializer stellt Package- oder Importmechanik bereit, enthält aber keine eigenständige Domain-Erzeugungslogik.",
+  "evidence": [
+    {
+      "path": "datamimic_ce/domains/ecommerce/models/__init__.py",
+      "line": 7
+    }
+  ],
+      "recommended_targets": []
+    },
+    {
+      "id": "module:domains/ecommerce/models/order.py",
+      "concern": "Die Entity Order cached ihre erzeugten Felder (order_id, user_id, product_list, date, status) und serialisiert sie über to_dict.",
+      "verdict": "keep",
+      "reason": "Die vorgesehene Zielgrenze passt zu den belegten Aufrufern und dem ausgeführten Verhalten.",
+      "evidence": [
+        {
+          "path": "datamimic_ce/domains/ecommerce/models/order.py",
+          "line": 23
+        }
+      ],
+      "recommended_targets": []
+    },
+    {
+      "id": "module:domains/ecommerce/models/product.py",
+      "concern": "Die Entity Product cached ihre erzeugten Felder (product_id, category, brand, name, description) und serialisiert sie über to_dict.",
+      "verdict": "keep",
+      "reason": "Die vorgesehene Zielgrenze passt zu den belegten Aufrufern und dem ausgeführten Verhalten.",
+      "evidence": [
+        {
+          "path": "datamimic_ce/domains/ecommerce/models/product.py",
+          "line": 23
+        }
+      ],
+      "recommended_targets": []
+    },
+    {
+  "id": "module:domains/ecommerce/services/__init__.py",
+  "concern": "Der Initializer exportiert OrderService und ProductService für Paketimporte; Entity-Erzeugung bleibt in den Serviceklassen.",
+  "verdict": "scaffold",
+  "reason": "Der Initializer stellt Package- oder Importmechanik bereit, enthält aber keine eigenständige Domain-Erzeugungslogik.",
+  "evidence": [
+    {
+      "path": "datamimic_ce/domains/ecommerce/services/__init__.py",
+      "line": 14
+    }
+  ],
+      "recommended_targets": []
+    },
+    {
+      "id": "module:domains/ecommerce/services/order_service.py",
+      "concern": "Der OrderService bindet konkreten Generator und Modell und deklariert die für Registry und DSL sichtbaren Entity-Felder.",
+      "verdict": "keep",
+      "reason": "Die vorgesehene Zielgrenze passt zu den belegten Aufrufern und dem ausgeführten Verhalten.",
+      "evidence": [
+        {
+          "path": "datamimic_ce/domains/ecommerce/services/order_service.py",
+          "line": 43
+        }
+      ],
+      "recommended_targets": []
+    },
+    {
+      "id": "module:domains/ecommerce/services/product_service.py",
+      "concern": "Der ProductService bindet konkreten Generator und Modell und deklariert die für Registry und DSL sichtbaren Entity-Felder.",
+      "verdict": "keep",
+      "reason": "Die vorgesehene Zielgrenze passt zu den belegten Aufrufern und dem ausgeführten Verhalten.",
+      "evidence": [
+        {
+          "path": "datamimic_ce/domains/ecommerce/services/product_service.py",
+          "line": 36
+        }
+      ],
+      "recommended_targets": []
+    },
+    {
+      "id": "module:domains/entity_registry.py",
+      "concern": "Das Modul registriert ausgewählte Entity-Services, leitet Feldschemata ab und bedient die von der DSL verwendeten Namensaliase.",
+      "verdict": "keep",
+      "reason": "Die vorgesehene Zielgrenze passt zu den belegten Aufrufern und dem ausgeführten Verhalten.",
+      "evidence": [
+        {
+          "path": "datamimic_ce/domains/entity_registry.py",
+          "line": 21
+        }
+      ],
+      "recommended_targets": []
+    },
+    {
+      "id": "module:domains/facade.py",
+      "concern": "Die JSON-Facade prüft Domain-Anfragen, löst optionale Profile auf, baut typisierte Requests, ruft Generatoren auf und validiert die Antworten.",
+      "verdict": "change",
+      "reason": "API-Tests rufen generate_domain direkt auf; als Geschwistermodul bleibt der JSON-Anwendungspfad von Entity-Service-Discovery getrennt.",
+      "evidence": [
+        {
+          "path": "datamimic_ce/domains/facade.py",
+          "line": 40
+        }
+      ],
+      "recommended_targets": [
+        "domains/facade.py"
+      ]
+    },
+    {
+  "id": "module:domains/finance/__init__.py",
+  "concern": "Der Initializer exportiert Bank, BankAccount, CreditCard und Transaction als Paketoberfläche des Finanzmodells.",
+  "verdict": "scaffold",
+  "reason": "Der Initializer stellt Package- oder Importmechanik bereit, enthält aber keine eigenständige Domain-Erzeugungslogik.",
+  "evidence": [
+    {
+      "path": "datamimic_ce/domains/finance/__init__.py",
+      "line": 13
+    }
+  ],
+      "recommended_targets": []
+    },
+    {
+  "id": "module:domains/finance/generators/__init__.py",
+  "concern": "Der Initializer markiert ein Python-Paket, enthält aber keine ausführbare Fachlogik.",
+  "verdict": "scaffold",
+  "reason": "Der Initializer stellt Package- oder Importmechanik bereit, enthält aber keine eigenständige Domain-Erzeugungslogik.",
+  "evidence": [
+    {
+      "path": "datamimic_ce/domains/finance/generators/__init__.py",
+      "line": 7
+    }
+  ],
+      "recommended_targets": []
+    },
+    {
+      "id": "module:domains/finance/generators/bank_account_generator.py",
+      "concern": "Der BankAccountGenerator erzeugt synthetische Fachwerte über generate_created_date, generate_last_transaction_date, get_bank_account_types und nutzt die erforderliche RNG-, Datensatz- oder Zeitbasis.",
+      "verdict": "keep",
+      "reason": "Die vorgesehene Zielgrenze passt zu den belegten Aufrufern und dem ausgeführten Verhalten.",
+      "evidence": [
+        {
+          "path": "datamimic_ce/domains/finance/generators/bank_account_generator.py",
+          "line": 18
+        }
+      ],
+      "recommended_targets": []
+    },
+    {
+      "id": "module:domains/finance/generators/bank_generator.py",
+      "concern": "Der BankGenerator erzeugt synthetische Fachwerte über generate_bank_data und nutzt die erforderliche RNG-, Datensatz- oder Zeitbasis.",
+      "verdict": "keep",
+      "reason": "Die vorgesehene Zielgrenze passt zu den belegten Aufrufern und dem ausgeführten Verhalten.",
+      "evidence": [
+        {
+          "path": "datamimic_ce/domains/finance/generators/bank_generator.py",
+          "line": 14
+        }
+      ],
+      "recommended_targets": []
+    },
+    {
+      "id": "module:domains/finance/generators/credit_card_generator.py",
+      "concern": "Der CreditCardGenerator erzeugt synthetische Fachwerte über generate_card_type, get_card_specs und nutzt die erforderliche RNG-, Datensatz- oder Zeitbasis.",
+      "verdict": "keep",
+      "reason": "Die vorgesehene Zielgrenze passt zu den belegten Aufrufern und dem ausgeführten Verhalten.",
+      "evidence": [
+        {
+          "path": "datamimic_ce/domains/finance/generators/credit_card_generator.py",
+          "line": 24
+        }
+      ],
+      "recommended_targets": []
+    },
+    {
+      "id": "module:domains/finance/generators/transaction_generator.py",
+  "concern": "TransactionGenerator liest Buchungsdatensätze und verankert Transaktionszeit sowie Referenzwerte am injizierten RNG und an der aufgelösten Run-Uhr.",
+      "verdict": "keep",
+      "reason": "Die vorgesehene Zielgrenze passt zu den belegten Aufrufern und dem ausgeführten Verhalten.",
+      "evidence": [
+        {
+          "path": "datamimic_ce/domains/finance/generators/transaction_generator.py",
+          "line": 28
+        }
+      ],
+      "recommended_targets": []
+    },
+    {
+      "id": "module:domains/finance/luhn.py",
+      "concern": "Die Funktion berechnet die Luhn-Prüfziffer für formatierte Zahlungskennungen.",
+      "verdict": "keep",
+      "reason": "Die vorgesehene Zielgrenze passt zu den belegten Aufrufern und dem ausgeführten Verhalten.",
+      "evidence": [
+        {
+          "path": "datamimic_ce/domains/finance/luhn.py",
+          "line": 8
+        }
+      ],
+      "recommended_targets": []
+    },
+    {
+  "id": "module:domains/finance/models/__init__.py",
+  "concern": "Der Initializer markiert ein Python-Paket, enthält aber keine ausführbare Fachlogik.",
+  "verdict": "scaffold",
+  "reason": "Der Initializer stellt Package- oder Importmechanik bereit, enthält aber keine eigenständige Domain-Erzeugungslogik.",
+  "evidence": [
+    {
+      "path": "datamimic_ce/domains/finance/models/__init__.py",
+      "line": 7
+    }
+  ],
+      "recommended_targets": []
+    },
+    {
+      "id": "module:domains/finance/models/bank.py",
+      "concern": "Die Entity Bank cached ihre erzeugten Felder (bank_data, name, swift_code, routing_number, bank_code) und serialisiert sie über to_dict.",
+      "verdict": "keep",
+      "reason": "Die vorgesehene Zielgrenze passt zu den belegten Aufrufern und dem ausgeführten Verhalten.",
+      "evidence": [
+        {
+          "path": "datamimic_ce/domains/finance/models/bank.py",
+          "line": 9
+        }
+      ],
+      "recommended_targets": []
+    },
+    {
+      "id": "module:domains/finance/models/bank_account.py",
+      "concern": "Die Entity BankAccount cached ihre erzeugten Felder (bank_data, account_number, iban, account_type, balance) und serialisiert sie über to_dict.",
+      "verdict": "keep",
+      "reason": "Die vorgesehene Zielgrenze passt zu den belegten Aufrufern und dem ausgeführten Verhalten.",
+      "evidence": [
+        {
+          "path": "datamimic_ce/domains/finance/models/bank_account.py",
+          "line": 21
+        }
+      ],
+      "recommended_targets": []
+    },
+    {
+      "id": "module:domains/finance/models/credit_card.py",
+      "concern": "Die Entity CreditCard cached ihre erzeugten Felder (card_holder_data, bank_account_data, bank_data, card_type, card_number) und serialisiert sie über to_dict.",
+      "verdict": "keep",
+      "reason": "Die vorgesehene Zielgrenze passt zu den belegten Aufrufern und dem ausgeführten Verhalten.",
+      "evidence": [
+        {
+          "path": "datamimic_ce/domains/finance/models/credit_card.py",
+          "line": 24
+        }
+      ],
+      "recommended_targets": []
+    },
+    {
+      "id": "module:domains/finance/models/transaction.py",
+      "concern": "Die Entity Transaction cached ihre erzeugten Felder (transaction_id, account, transaction_date, amount, transaction_type) und serialisiert sie über to_dict.",
+      "verdict": "keep",
+      "reason": "Die vorgesehene Zielgrenze passt zu den belegten Aufrufern und dem ausgeführten Verhalten.",
+      "evidence": [
+        {
+          "path": "datamimic_ce/domains/finance/models/transaction.py",
+          "line": 22
+        }
+      ],
+      "recommended_targets": []
+    },
+    {
+  "id": "module:domains/finance/services/__init__.py",
+  "concern": "Der Initializer exportiert die vier Finanzservices, die ihre jeweiligen Modelle und Generatoren verbinden.",
+  "verdict": "scaffold",
+  "reason": "Der Initializer stellt Package- oder Importmechanik bereit, enthält aber keine eigenständige Domain-Erzeugungslogik.",
+  "evidence": [
+    {
+      "path": "datamimic_ce/domains/finance/services/__init__.py",
+      "line": 13
+    }
+  ],
+      "recommended_targets": []
+    },
+    {
+      "id": "module:domains/finance/services/bank_account_service.py",
+      "concern": "Der BankAccountService bindet konkreten Generator und Modell und deklariert die für Registry und DSL sichtbaren Entity-Felder.",
+      "verdict": "keep",
+      "reason": "Die vorgesehene Zielgrenze passt zu den belegten Aufrufern und dem ausgeführten Verhalten.",
+      "evidence": [
+        {
+          "path": "datamimic_ce/domains/finance/services/bank_account_service.py",
+          "line": 33
+        }
+      ],
+      "recommended_targets": []
+    },
+    {
+      "id": "module:domains/finance/services/bank_service.py",
+      "concern": "Der BankService bindet konkreten Generator und Modell und deklariert die für Registry und DSL sichtbaren Entity-Felder.",
+      "verdict": "keep",
+      "reason": "Die vorgesehene Zielgrenze passt zu den belegten Aufrufern und dem ausgeführten Verhalten.",
+      "evidence": [
+        {
+          "path": "datamimic_ce/domains/finance/services/bank_service.py",
+          "line": 28
+        }
+      ],
+      "recommended_targets": []
+    },
+    {
+      "id": "module:domains/finance/services/credit_card_service.py",
+      "concern": "Der CreditCardService bindet konkreten Generator und Modell und deklariert die für Registry und DSL sichtbaren Entity-Felder.",
+      "verdict": "keep",
+      "reason": "Die vorgesehene Zielgrenze passt zu den belegten Aufrufern und dem ausgeführten Verhalten.",
+      "evidence": [
+        {
+          "path": "datamimic_ce/domains/finance/services/credit_card_service.py",
+          "line": 39
+        }
+      ],
+      "recommended_targets": []
+    },
+    {
+      "id": "module:domains/finance/services/transaction_service.py",
+      "concern": "Der TransactionService bindet konkreten Generator und Modell und deklariert die für Registry und DSL sichtbaren Entity-Felder.",
+      "verdict": "keep",
+      "reason": "Die vorgesehene Zielgrenze passt zu den belegten Aufrufern und dem ausgeführten Verhalten.",
+      "evidence": [
+        {
+          "path": "datamimic_ce/domains/finance/services/transaction_service.py",
+          "line": 52
+        }
+      ],
+      "recommended_targets": []
+    },
+    {
+  "id": "module:domains/healthcare/__init__.py",
+  "concern": "Der Initializer exportiert ausgewählte Arzt-, Klinik- und Patientenmodelle samt Services für Paketimporte.",
+  "verdict": "scaffold",
+  "reason": "Der Initializer stellt Package- oder Importmechanik bereit, enthält aber keine eigenständige Domain-Erzeugungslogik.",
+  "evidence": [
+    {
+      "path": "datamimic_ce/domains/healthcare/__init__.py",
+      "line": 13
+    }
+  ],
+      "recommended_targets": []
+    },
+    {
+  "id": "module:domains/healthcare/generators/__init__.py",
+  "concern": "Der Initializer exportiert HospitalGenerator als Paketimport; die weiteren Generatoren bleiben über ihre Module importierbar.",
+  "verdict": "scaffold",
+  "reason": "Der Initializer stellt Package- oder Importmechanik bereit, enthält aber keine eigenständige Domain-Erzeugungslogik.",
+  "evidence": [
+    {
+      "path": "datamimic_ce/domains/healthcare/generators/__init__.py",
+      "line": 13
+    }
+  ],
+      "recommended_targets": []
+    },
+    {
+      "id": "module:domains/healthcare/generators/doctor_generator.py",
+      "concern": "Der DoctorGenerator erzeugt synthetische Fachwerte über generate_specialty, generate_medical_school, generate_certifications und nutzt die erforderliche RNG-, Datensatz- oder Zeitbasis.",
+      "verdict": "keep",
+      "reason": "Die vorgesehene Zielgrenze passt zu den belegten Aufrufern und dem ausgeführten Verhalten.",
+      "evidence": [
+        {
+          "path": "datamimic_ce/domains/healthcare/generators/doctor_generator.py",
+          "line": 36
+        }
+      ],
+      "recommended_targets": []
+    },
+    {
+      "id": "module:domains/healthcare/generators/hospital_generator.py",
+      "concern": "Der HospitalGenerator erzeugt synthetische Fachwerte über generate_hospital_name, get_hospital_type, generate_departments und nutzt die erforderliche RNG-, Datensatz- oder Zeitbasis.",
+      "verdict": "keep",
+      "reason": "Die vorgesehene Zielgrenze passt zu den belegten Aufrufern und dem ausgeführten Verhalten.",
+      "evidence": [
+        {
+          "path": "datamimic_ce/domains/healthcare/generators/hospital_generator.py",
+          "line": 22
+        }
+      ],
+      "recommended_targets": []
+    },
+    {
+      "id": "module:domains/healthcare/generators/medical_device_generator.py",
+  "concern": "MedicalDeviceGenerator erzeugt Geräte- und Wartungswerte aus Healthcare-Datensätzen und verknüpft Technikerwerte mit PersonGenerator.",
+      "verdict": "keep",
+      "reason": "Die vorgesehene Zielgrenze passt zu den belegten Aufrufern und dem ausgeführten Verhalten.",
+      "evidence": [
+        {
+          "path": "datamimic_ce/domains/healthcare/generators/medical_device_generator.py",
+          "line": 30
+        }
+      ],
+      "recommended_targets": []
+    },
+    {
+      "id": "module:domains/healthcare/generators/medical_procedure_generator.py",
+      "concern": "Der MedicalProcedureGenerator erzeugt synthetische Fachwerte über get_procedure_name, generate_procedure_description, generate_specialty und nutzt die erforderliche RNG-, Datensatz- oder Zeitbasis.",
+      "verdict": "keep",
+      "reason": "Die vorgesehene Zielgrenze passt zu den belegten Aufrufern und dem ausgeführten Verhalten.",
+      "evidence": [
+        {
+          "path": "datamimic_ce/domains/healthcare/generators/medical_procedure_generator.py",
+          "line": 25
+        }
+      ],
+      "recommended_targets": []
+    },
+    {
+      "id": "module:domains/healthcare/generators/patient_generator.py",
+      "concern": "Der PatientGenerator erzeugt synthetische Fachwerte über pick_blood_type, generate_age_appropriate_conditions, generate_insurance_provider und nutzt die erforderliche RNG-, Datensatz- oder Zeitbasis.",
+      "verdict": "keep",
+      "reason": "Die vorgesehene Zielgrenze passt zu den belegten Aufrufern und dem ausgeführten Verhalten.",
+      "evidence": [
+        {
+          "path": "datamimic_ce/domains/healthcare/generators/patient_generator.py",
+          "line": 37
+        }
+      ],
+      "recommended_targets": []
+    },
+    {
+  "id": "module:domains/healthcare/models/__init__.py",
+  "concern": "Der Initializer exportiert Doctor als Paketimport; die anderen Healthcare-Modelle bleiben in ihren Modulpfaden.",
+  "verdict": "scaffold",
+  "reason": "Der Initializer stellt Package- oder Importmechanik bereit, enthält aber keine eigenständige Domain-Erzeugungslogik.",
+  "evidence": [
+    {
+      "path": "datamimic_ce/domains/healthcare/models/__init__.py",
+      "line": 13
+    }
+  ],
+      "recommended_targets": []
+    },
+    {
+      "id": "module:domains/healthcare/models/doctor.py",
+      "concern": "Die Entity Doctor cached ihre erzeugten Felder (doctor_id, npi_number, license_number, person_data, given_name) und serialisiert sie über to_dict.",
+      "verdict": "keep",
+      "reason": "Die vorgesehene Zielgrenze passt zu den belegten Aufrufern und dem ausgeführten Verhalten.",
+      "evidence": [
+        {
+          "path": "datamimic_ce/domains/healthcare/models/doctor.py",
+          "line": 23
+        }
+      ],
+      "recommended_targets": []
+    },
+    {
+      "id": "module:domains/healthcare/models/hospital.py",
+      "concern": "Die Entity Hospital cached ihre erzeugten Felder (hospital_id, name, type, departments, services) und serialisiert sie über to_dict.",
+      "verdict": "keep",
+      "reason": "Die vorgesehene Zielgrenze passt zu den belegten Aufrufern und dem ausgeführten Verhalten.",
+      "evidence": [
+        {
+          "path": "datamimic_ce/domains/healthcare/models/hospital.py",
+          "line": 20
+        }
+      ],
+      "recommended_targets": []
+    },
+    {
+      "id": "module:domains/healthcare/models/medical_device.py",
+      "concern": "Die Entity MedicalDevice cached ihre erzeugten Felder (device_id, device_type, manufacturer, model_number, serial_number) und serialisiert sie über to_dict.",
+      "verdict": "keep",
+      "reason": "Die vorgesehene Zielgrenze passt zu den belegten Aufrufern und dem ausgeführten Verhalten.",
+      "evidence": [
+        {
+          "path": "datamimic_ce/domains/healthcare/models/medical_device.py",
+          "line": 20
+        }
+      ],
+      "recommended_targets": []
+    },
+    {
+      "id": "module:domains/healthcare/models/medical_procedure.py",
+      "concern": "Die Entity MedicalProcedure cached ihre erzeugten Felder (procedure_id, procedure_code, cpt_code, name, category) und serialisiert sie über to_dict.",
+      "verdict": "keep",
+      "reason": "Die vorgesehene Zielgrenze passt zu den belegten Aufrufern und dem ausgeführten Verhalten.",
+      "evidence": [
+        {
+          "path": "datamimic_ce/domains/healthcare/models/medical_procedure.py",
+          "line": 19
+        }
+      ],
+      "recommended_targets": []
+    },
+    {
+      "id": "module:domains/healthcare/models/patient.py",
+      "concern": "Die Entity Patient cached ihre erzeugten Felder (patient_id, medical_record_number, ssn, person_data, given_name) und serialisiert sie über to_dict.",
+      "verdict": "keep",
+      "reason": "Die vorgesehene Zielgrenze passt zu den belegten Aufrufern und dem ausgeführten Verhalten.",
+      "evidence": [
+        {
+          "path": "datamimic_ce/domains/healthcare/models/patient.py",
+          "line": 21
+        }
+      ],
+      "recommended_targets": []
+    },
+    {
+  "id": "module:domains/healthcare/services/__init__.py",
+  "concern": "Der Initializer bündelt die Healthcare-Serviceklassen für Registry- und Paketimporte.",
+  "verdict": "scaffold",
+  "reason": "Der Initializer stellt Package- oder Importmechanik bereit, enthält aber keine eigenständige Domain-Erzeugungslogik.",
+  "evidence": [
+    {
+      "path": "datamimic_ce/domains/healthcare/services/__init__.py",
+      "line": 13
+    }
+  ],
+      "recommended_targets": []
+    },
+    {
+      "id": "module:domains/healthcare/services/doctor_api.py",
+  "concern": "Die DoctorRequest-API übernimmt optionale Constraints und delegiert die Erzeugung an DoctorService, bevor sie das Entity-Ergebnis zurückgibt.",
+      "verdict": "keep",
+      "reason": "Die vorgesehene Zielgrenze passt zu den belegten Aufrufern und dem ausgeführten Verhalten.",
+      "evidence": [
+        {
+          "path": "datamimic_ce/domains/healthcare/services/doctor_api.py",
+          "line": 21
+        }
+      ],
+      "recommended_targets": []
+    },
+    {
+      "id": "module:domains/healthcare/services/doctor_service.py",
+      "concern": "Der DoctorService bindet konkreten Generator und Modell und deklariert die für Registry und DSL sichtbaren Entity-Felder.",
+      "verdict": "keep",
+      "reason": "Die vorgesehene Zielgrenze passt zu den belegten Aufrufern und dem ausgeführten Verhalten.",
+      "evidence": [
+        {
+          "path": "datamimic_ce/domains/healthcare/services/doctor_service.py",
+          "line": 55
+        }
+      ],
+      "recommended_targets": []
+    },
+    {
+      "id": "module:domains/healthcare/services/hospital_service.py",
+      "concern": "Der HospitalService bindet konkreten Generator und Modell und deklariert die für Registry und DSL sichtbaren Entity-Felder.",
+      "verdict": "keep",
+      "reason": "Die vorgesehene Zielgrenze passt zu den belegten Aufrufern und dem ausgeführten Verhalten.",
+      "evidence": [
+        {
+          "path": "datamimic_ce/domains/healthcare/services/hospital_service.py",
+          "line": 42
+        }
+      ],
+      "recommended_targets": []
+    },
+    {
+      "id": "module:domains/healthcare/services/medical_device_service.py",
+      "concern": "Der MedicalDeviceService bindet konkreten Generator und Modell und deklariert die für Registry und DSL sichtbaren Entity-Felder.",
+      "verdict": "keep",
+      "reason": "Die vorgesehene Zielgrenze passt zu den belegten Aufrufern und dem ausgeführten Verhalten.",
+      "evidence": [
+        {
+          "path": "datamimic_ce/domains/healthcare/services/medical_device_service.py",
+          "line": 38
+        }
+      ],
+      "recommended_targets": []
+    },
+    {
+      "id": "module:domains/healthcare/services/medical_procedure_service.py",
+      "concern": "Der MedicalProcedureService bindet konkreten Generator und Modell und deklariert die für Registry und DSL sichtbaren Entity-Felder.",
+      "verdict": "keep",
+      "reason": "Die vorgesehene Zielgrenze passt zu den belegten Aufrufern und dem ausgeführten Verhalten.",
+      "evidence": [
+        {
+          "path": "datamimic_ce/domains/healthcare/services/medical_procedure_service.py",
+          "line": 41
+        }
+      ],
+      "recommended_targets": []
+    },
+    {
+      "id": "module:domains/healthcare/services/patient_api.py",
+  "concern": "Die PatientRequest-API übernimmt Alters-/Profil-Constraints, leitet einen stabilen Personen-Identifier ab und ruft PatientService auf.",
+      "verdict": "keep",
+      "reason": "Die vorgesehene Zielgrenze passt zu den belegten Aufrufern und dem ausgeführten Verhalten.",
+      "evidence": [
+        {
+          "path": "datamimic_ce/domains/healthcare/services/patient_api.py",
+          "line": 21
+        }
+      ],
+      "recommended_targets": []
+    },
+    {
+      "id": "module:domains/healthcare/services/patient_service.py",
+      "concern": "Der PatientService bindet konkreten Generator und Modell und deklariert die für Registry und DSL sichtbaren Entity-Felder.",
+      "verdict": "keep",
+      "reason": "Die vorgesehene Zielgrenze passt zu den belegten Aufrufern und dem ausgeführten Verhalten.",
+      "evidence": [
+        {
+          "path": "datamimic_ce/domains/healthcare/services/patient_service.py",
+          "line": 51
+        }
+      ],
+      "recommended_targets": []
+    },
+    {
+  "id": "module:domains/insurance/__init__.py",
+  "concern": "Der Initializer markiert ein Python-Paket, enthält aber keine ausführbare Fachlogik.",
+  "verdict": "scaffold",
+  "reason": "Der Initializer stellt Package- oder Importmechanik bereit, enthält aber keine eigenständige Domain-Erzeugungslogik.",
+  "evidence": [
+    {
+      "path": "datamimic_ce/domains/insurance/__init__.py",
+      "line": 7
+    }
+  ],
+      "recommended_targets": []
+    },
+    {
+  "id": "module:domains/insurance/generators/__init__.py",
+  "concern": "Der Initializer markiert ein Python-Paket, enthält aber keine ausführbare Fachlogik.",
+  "verdict": "scaffold",
+  "reason": "Der Initializer stellt Package- oder Importmechanik bereit, enthält aber keine eigenständige Domain-Erzeugungslogik.",
+  "evidence": [
+    {
+      "path": "datamimic_ce/domains/insurance/generators/__init__.py",
+      "line": 7
+    }
+  ],
+      "recommended_targets": []
+    },
+    {
+      "id": "module:domains/insurance/generators/insurance_company_generator.py",
+      "concern": "Der InsuranceCompanyGenerator erzeugt synthetische Fachwerte über get_random_company und nutzt die erforderliche RNG-, Datensatz- oder Zeitbasis.",
+      "verdict": "keep",
+      "reason": "Die vorgesehene Zielgrenze passt zu den belegten Aufrufern und dem ausgeführten Verhalten.",
+      "evidence": [
+        {
+          "path": "datamimic_ce/domains/insurance/generators/insurance_company_generator.py",
+          "line": 9
+        }
+      ],
+      "recommended_targets": []
+    },
+    {
+      "id": "module:domains/insurance/generators/insurance_coverage_generator.py",
+      "concern": "Der InsuranceCoverageGenerator erzeugt synthetische Fachwerte über get_random_coverage und nutzt die erforderliche RNG-, Datensatz- oder Zeitbasis.",
+      "verdict": "keep",
+      "reason": "Die vorgesehene Zielgrenze passt zu den belegten Aufrufern und dem ausgeführten Verhalten.",
+      "evidence": [
+        {
+          "path": "datamimic_ce/domains/insurance/generators/insurance_coverage_generator.py",
+          "line": 9
+        }
+      ],
+      "recommended_targets": []
+    },
+    {
+      "id": "module:domains/insurance/generators/insurance_policy_generator.py",
+      "concern": "Der InsurancePolicyGenerator erzeugt synthetische Fachwerte über pick_premium_amount, pick_premium_frequency, pick_status und nutzt die erforderliche RNG-, Datensatz- oder Zeitbasis.",
+      "verdict": "keep",
+      "reason": "Die vorgesehene Zielgrenze passt zu den belegten Aufrufern und dem ausgeführten Verhalten.",
+      "evidence": [
+        {
+          "path": "datamimic_ce/domains/insurance/generators/insurance_policy_generator.py",
+          "line": 19
+        }
+      ],
+      "recommended_targets": []
+    },
+    {
+      "id": "module:domains/insurance/generators/insurance_product_generator.py",
+      "concern": "Der InsuranceProductGenerator erzeugt synthetische Fachwerte über get_random_product, pick_coverage_count und nutzt die erforderliche RNG-, Datensatz- oder Zeitbasis.",
+      "verdict": "keep",
+      "reason": "Die vorgesehene Zielgrenze passt zu den belegten Aufrufern und dem ausgeführten Verhalten.",
+      "evidence": [
+        {
+          "path": "datamimic_ce/domains/insurance/generators/insurance_product_generator.py",
+          "line": 9
+        }
+      ],
+      "recommended_targets": []
+    },
+    {
+  "id": "module:domains/insurance/models/__init__.py",
+  "concern": "Der Initializer markiert ein Python-Paket, enthält aber keine ausführbare Fachlogik.",
+  "verdict": "scaffold",
+  "reason": "Der Initializer stellt Package- oder Importmechanik bereit, enthält aber keine eigenständige Domain-Erzeugungslogik.",
+  "evidence": [
+    {
+      "path": "datamimic_ce/domains/insurance/models/__init__.py",
+      "line": 7
+    }
+  ],
+      "recommended_targets": []
+    },
+    {
+      "id": "module:domains/insurance/models/insurance_company.py",
+      "concern": "Die Entity InsuranceCompany cached ihre erzeugten Felder (id, company_data, name, code, founded_year) und serialisiert sie über to_dict.",
+      "verdict": "keep",
+      "reason": "Die vorgesehene Zielgrenze passt zu den belegten Aufrufern und dem ausgeführten Verhalten.",
+      "evidence": [
+        {
+          "path": "datamimic_ce/domains/insurance/models/insurance_company.py",
+          "line": 19
+        }
+      ],
+      "recommended_targets": []
+    },
+    {
+      "id": "module:domains/insurance/models/insurance_coverage.py",
+      "concern": "Die Entity InsuranceCoverage cached ihre erzeugten Felder (coverage_data, name, code, product_code, description) und serialisiert sie über to_dict.",
+      "verdict": "keep",
+      "reason": "Die vorgesehene Zielgrenze passt zu den belegten Aufrufern und dem ausgeführten Verhalten.",
+      "evidence": [
+        {
+          "path": "datamimic_ce/domains/insurance/models/insurance_coverage.py",
+          "line": 6
+        }
+      ],
+      "recommended_targets": []
+    },
+    {
+      "id": "module:domains/insurance/models/insurance_policy.py",
+      "concern": "Die Entity InsurancePolicy cached ihre erzeugten Felder (id, company, product, policy_holder, coverages) und serialisiert sie über to_dict.",
+      "verdict": "keep",
+      "reason": "Die vorgesehene Zielgrenze passt zu den belegten Aufrufern und dem ausgeführten Verhalten.",
+      "evidence": [
+        {
+          "path": "datamimic_ce/domains/insurance/models/insurance_policy.py",
+          "line": 14
+        }
+      ],
+      "recommended_targets": []
+    },
+    {
+      "id": "module:domains/insurance/models/insurance_product.py",
+      "concern": "Die Entity InsuranceProduct cached ihre erzeugten Felder (id, product_data, type, code, description) und serialisiert sie über to_dict.",
+      "verdict": "keep",
+      "reason": "Die vorgesehene Zielgrenze passt zu den belegten Aufrufern und dem ausgeführten Verhalten.",
+      "evidence": [
+        {
+          "path": "datamimic_ce/domains/insurance/models/insurance_product.py",
+          "line": 22
+        }
+      ],
+      "recommended_targets": []
+    },
+    {
+  "id": "module:domains/insurance/services/__init__.py",
+  "concern": "Der Initializer bündelt Company-, Coverage-, Policy- und Product-Serviceklassen für Paketimporte.",
+  "verdict": "scaffold",
+  "reason": "Der Initializer stellt Package- oder Importmechanik bereit, enthält aber keine eigenständige Domain-Erzeugungslogik.",
+  "evidence": [
+    {
+      "path": "datamimic_ce/domains/insurance/services/__init__.py",
+      "line": 15
+    }
+  ],
+      "recommended_targets": []
+    },
+    {
+      "id": "module:domains/insurance/services/insurance_company_service.py",
+      "concern": "Der InsuranceCompanyService bindet konkreten Generator und Modell und deklariert die für Registry und DSL sichtbaren Entity-Felder.",
+      "verdict": "keep",
+      "reason": "Die vorgesehene Zielgrenze passt zu den belegten Aufrufern und dem ausgeführten Verhalten.",
+      "evidence": [
+        {
+          "path": "datamimic_ce/domains/insurance/services/insurance_company_service.py",
+          "line": 33
+        }
+      ],
+      "recommended_targets": []
+    },
+    {
+      "id": "module:domains/insurance/services/insurance_coverage_service.py",
+      "concern": "Der InsuranceCoverageService bindet konkreten Generator und Modell und deklariert die für Registry und DSL sichtbaren Entity-Felder.",
+      "verdict": "keep",
+      "reason": "Die vorgesehene Zielgrenze passt zu den belegten Aufrufern und dem ausgeführten Verhalten.",
+      "evidence": [
+        {
+          "path": "datamimic_ce/domains/insurance/services/insurance_coverage_service.py",
+          "line": 33
+        }
+      ],
+      "recommended_targets": []
+    },
+    {
+      "id": "module:domains/insurance/services/insurance_policy_service.py",
+      "concern": "Der InsurancePolicyService bindet konkreten Generator und Modell und deklariert die für Registry und DSL sichtbaren Entity-Felder.",
+      "verdict": "keep",
+      "reason": "Die vorgesehene Zielgrenze passt zu den belegten Aufrufern und dem ausgeführten Verhalten.",
+      "evidence": [
+        {
+          "path": "datamimic_ce/domains/insurance/services/insurance_policy_service.py",
+          "line": 42
+        }
+      ],
+      "recommended_targets": []
+    },
+    {
+      "id": "module:domains/insurance/services/insurance_product_service.py",
+      "concern": "Der InsuranceProductService bindet konkreten Generator und Modell und deklariert die für Registry und DSL sichtbaren Entity-Felder.",
+      "verdict": "keep",
+      "reason": "Die vorgesehene Zielgrenze passt zu den belegten Aufrufern und dem ausgeführten Verhalten.",
+      "evidence": [
+        {
+          "path": "datamimic_ce/domains/insurance/services/insurance_product_service.py",
+          "line": 32
+        }
+      ],
+      "recommended_targets": []
+    },
+    {
+  "id": "module:domains/public_sector/__init__.py",
+  "concern": "Der Initializer markiert ein Python-Paket, enthält aber keine ausführbare Fachlogik.",
+  "verdict": "scaffold",
+  "reason": "Der Initializer stellt Package- oder Importmechanik bereit, enthält aber keine eigenständige Domain-Erzeugungslogik.",
+  "evidence": [
+    {
+      "path": "datamimic_ce/domains/public_sector/__init__.py",
+      "line": 7
+    }
+  ],
+      "recommended_targets": []
+    },
+    {
+  "id": "module:domains/public_sector/generators/__init__.py",
+  "concern": "Der Initializer markiert ein Python-Paket, enthält aber keine ausführbare Fachlogik.",
+  "verdict": "scaffold",
+  "reason": "Der Initializer stellt Package- oder Importmechanik bereit, enthält aber keine eigenständige Domain-Erzeugungslogik.",
+  "evidence": [
+    {
+      "path": "datamimic_ce/domains/public_sector/generators/__init__.py",
+      "line": 7
+    }
+  ],
+      "recommended_targets": []
+    },
+    {
+      "id": "module:domains/public_sector/generators/administration_office_generator.py",
+      "concern": "Der AdministrationOfficeGenerator erzeugt synthetische Fachwerte über pick_office_type, pick_jurisdiction_bucket, build_office_name und nutzt die erforderliche RNG-, Datensatz- oder Zeitbasis.",
+      "verdict": "keep",
+      "reason": "Die vorgesehene Zielgrenze passt zu den belegten Aufrufern und dem ausgeführten Verhalten.",
+      "evidence": [
+        {
+          "path": "datamimic_ce/domains/public_sector/generators/administration_office_generator.py",
+          "line": 34
+        }
+      ],
+      "recommended_targets": []
+    },
+    {
+      "id": "module:domains/public_sector/generators/educational_institution_generator.py",
+      "concern": "Der EducationalInstitutionGenerator erzeugt synthetische Fachwerte über pick_level, pick_accreditations, pick_institution_type und nutzt die erforderliche RNG-, Datensatz- oder Zeitbasis.",
+      "verdict": "keep",
+      "reason": "Die vorgesehene Zielgrenze passt zu den belegten Aufrufern und dem ausgeführten Verhalten.",
+      "evidence": [
+        {
+          "path": "datamimic_ce/domains/public_sector/generators/educational_institution_generator.py",
+          "line": 11
+        }
+      ],
+      "recommended_targets": []
+    },
+    {
+      "id": "module:domains/public_sector/generators/police_officer_generator.py",
+      "concern": "Der PoliceOfficerGenerator erzeugt synthetische Fachwerte über generate_hire_date, get_rank, get_department und nutzt die erforderliche RNG-, Datensatz- oder Zeitbasis.",
+      "verdict": "keep",
+      "reason": "Die vorgesehene Zielgrenze passt zu den belegten Aufrufern und dem ausgeführten Verhalten.",
+      "evidence": [
+        {
+          "path": "datamimic_ce/domains/public_sector/generators/police_officer_generator.py",
+          "line": 27
+        }
+      ],
+      "recommended_targets": []
+    },
+    {
+  "id": "module:domains/public_sector/models/__init__.py",
+  "concern": "Der Initializer markiert ein Python-Paket, enthält aber keine ausführbare Fachlogik.",
+  "verdict": "scaffold",
+  "reason": "Der Initializer stellt Package- oder Importmechanik bereit, enthält aber keine eigenständige Domain-Erzeugungslogik.",
+  "evidence": [
+    {
+      "path": "datamimic_ce/domains/public_sector/models/__init__.py",
+      "line": 7
+    }
+  ],
+      "recommended_targets": []
+    },
+    {
+      "id": "module:domains/public_sector/models/administration_office.py",
+      "concern": "Die Entity AdministrationOffice cached ihre erzeugten Felder (office_id, address, name, type, jurisdiction) und serialisiert sie über to_dict.",
+      "verdict": "keep",
+      "reason": "Die vorgesehene Zielgrenze passt zu den belegten Aufrufern und dem ausgeführten Verhalten.",
+      "evidence": [
+        {
+          "path": "datamimic_ce/domains/public_sector/models/administration_office.py",
+          "line": 22
+        }
+      ],
+      "recommended_targets": []
+    },
+    {
+      "id": "module:domains/public_sector/models/educational_institution.py",
+      "concern": "Die Entity EducationalInstitution cached ihre erzeugten Felder (institution_id, name, type, level, founding_year) und serialisiert sie über to_dict.",
+      "verdict": "keep",
+      "reason": "Die vorgesehene Zielgrenze passt zu den belegten Aufrufern und dem ausgeführten Verhalten.",
+      "evidence": [
+        {
+          "path": "datamimic_ce/domains/public_sector/models/educational_institution.py",
+          "line": 24
+        }
+      ],
+      "recommended_targets": []
+    },
+    {
+      "id": "module:domains/public_sector/models/police_officer.py",
+      "concern": "Die Entity PoliceOfficer cached ihre erzeugten Felder (police_officer_generator, officer_id, badge_number, person_data, given_name) und serialisiert sie über to_dict.",
+      "verdict": "keep",
+      "reason": "Die vorgesehene Zielgrenze passt zu den belegten Aufrufern und dem ausgeführten Verhalten.",
+      "evidence": [
+        {
+          "path": "datamimic_ce/domains/public_sector/models/police_officer.py",
+          "line": 23
+        }
+      ],
+      "recommended_targets": []
+    },
+    {
+  "id": "module:domains/public_sector/services/__init__.py",
+  "concern": "Der Initializer exportiert Verwaltungsstellen-, Bildungs- und Polizeiservices als Paketoberfläche.",
+  "verdict": "scaffold",
+  "reason": "Der Initializer stellt Package- oder Importmechanik bereit, enthält aber keine eigenständige Domain-Erzeugungslogik.",
+  "evidence": [
+    {
+      "path": "datamimic_ce/domains/public_sector/services/__init__.py",
+      "line": 13
+    }
+  ],
+      "recommended_targets": []
+    },
+    {
+      "id": "module:domains/public_sector/services/administration_office_service.py",
+      "concern": "Der AdministrationOfficeService bindet konkreten Generator und Modell und deklariert die für Registry und DSL sichtbaren Entity-Felder.",
+      "verdict": "keep",
+      "reason": "Die vorgesehene Zielgrenze passt zu den belegten Aufrufern und dem ausgeführten Verhalten.",
+      "evidence": [
+        {
+          "path": "datamimic_ce/domains/public_sector/services/administration_office_service.py",
+          "line": 48
+        }
+      ],
+      "recommended_targets": []
+    },
+    {
+      "id": "module:domains/public_sector/services/educational_institution_service.py",
+      "concern": "Der EducationalInstitutionService bindet konkreten Generator und Modell und deklariert die für Registry und DSL sichtbaren Entity-Felder.",
+      "verdict": "keep",
+      "reason": "Die vorgesehene Zielgrenze passt zu den belegten Aufrufern und dem ausgeführten Verhalten.",
+      "evidence": [
+        {
+          "path": "datamimic_ce/domains/public_sector/services/educational_institution_service.py",
+          "line": 49
+        }
+      ],
+      "recommended_targets": []
+    },
+    {
+      "id": "module:domains/public_sector/services/police_officer_service.py",
+      "concern": "Der PoliceOfficerService bindet konkreten Generator und Modell und deklariert die für Registry und DSL sichtbaren Entity-Felder.",
+      "verdict": "keep",
+      "reason": "Die vorgesehene Zielgrenze passt zu den belegten Aufrufern und dem ausgeführten Verhalten.",
+      "evidence": [
+        {
+          "path": "datamimic_ce/domains/public_sector/services/police_officer_service.py",
+          "line": 54
+        }
+      ],
+      "recommended_targets": []
+    },
+    {
+  "id": "module:domains/shared/__init__.py",
+  "concern": "Der Initializer markiert ein Python-Paket, enthält aber keine ausführbare Fachlogik.",
+  "verdict": "scaffold",
+  "reason": "Der Initializer stellt Package- oder Importmechanik bereit, enthält aber keine eigenständige Domain-Erzeugungslogik.",
+  "evidence": [
+    {
+      "path": "datamimic_ce/domains/shared/__init__.py",
+      "line": 7
+    }
+  ],
+      "recommended_targets": []
+    },
+    {
+  "id": "module:domains/shared/converters/__init__.py",
+  "concern": "Der Initializer markiert ein Python-Paket, enthält aber keine ausführbare Fachlogik.",
+  "verdict": "scaffold",
+  "reason": "Der Initializer stellt Package- oder Importmechanik bereit, enthält aber keine eigenständige Domain-Erzeugungslogik.",
+  "evidence": [
+    {
+      "path": "datamimic_ce/domains/shared/converters/__init__.py",
+      "line": 1
+    }
+  ],
+      "recommended_targets": []
+    },
+    {
+      "id": "module:domains/shared/converters/append_converter.py",
+      "concern": "Der AppendConverter transformiert in convert einen vorhandenen Wert für die DSL-Ausgabe, ohne ein Domain-Objekt zu erzeugen.",
+      "verdict": "keep",
+      "reason": "Die vorgesehene Zielgrenze passt zu den belegten Aufrufern und dem ausgeführten Verhalten.",
+      "evidence": [
+        {
+          "path": "datamimic_ce/domains/shared/converters/append_converter.py",
+          "line": 10
+        }
+      ],
+      "recommended_targets": []
+    },
+    {
+      "id": "module:domains/shared/converters/converter.py",
+      "concern": "Der Converter transformiert in convert einen vorhandenen Wert für die DSL-Ausgabe, ohne ein Domain-Objekt zu erzeugen.",
+      "verdict": "keep",
+      "reason": "Die vorgesehene Zielgrenze passt zu den belegten Aufrufern und dem ausgeführten Verhalten.",
+      "evidence": [
+        {
+          "path": "datamimic_ce/domains/shared/converters/converter.py",
+          "line": 10
+        }
+      ],
+      "recommended_targets": []
+    },
+    {
+      "id": "module:domains/shared/converters/custom_converter.py",
+      "concern": "Der CustomConverter transformiert in convert einen vorhandenen Wert für die DSL-Ausgabe, ohne ein Domain-Objekt zu erzeugen.",
+      "verdict": "keep",
+      "reason": "Die vorgesehene Zielgrenze passt zu den belegten Aufrufern und dem ausgeführten Verhalten.",
+      "evidence": [
+        {
+          "path": "datamimic_ce/domains/shared/converters/custom_converter.py",
+          "line": 10
+        }
+      ],
+      "recommended_targets": []
+    },
+    {
+      "id": "module:domains/shared/converters/cut_length_converter.py",
+      "concern": "Der CutLengthConverter transformiert in convert einen vorhandenen Wert für die DSL-Ausgabe, ohne ein Domain-Objekt zu erzeugen.",
+      "verdict": "keep",
+      "reason": "Die vorgesehene Zielgrenze passt zu den belegten Aufrufern und dem ausgeführten Verhalten.",
+      "evidence": [
+        {
+          "path": "datamimic_ce/domains/shared/converters/cut_length_converter.py",
+          "line": 10
+        }
+      ],
+      "recommended_targets": []
+    },
+    {
+      "id": "module:domains/shared/converters/date2timestamp_converter.py",
+      "concern": "Der Date2TimestampConverter transformiert in convert einen vorhandenen Wert für die DSL-Ausgabe, ohne ein Domain-Objekt zu erzeugen.",
+      "verdict": "keep",
+      "reason": "Die vorgesehene Zielgrenze passt zu den belegten Aufrufern und dem ausgeführten Verhalten.",
+      "evidence": [
+        {
+          "path": "datamimic_ce/domains/shared/converters/date2timestamp_converter.py",
+          "line": 13
+        }
+      ],
+      "recommended_targets": []
+    },
+    {
+      "id": "module:domains/shared/converters/date_format_converter.py",
+      "concern": "Der DateFormatConverter transformiert in convert einen vorhandenen Wert für die DSL-Ausgabe, ohne ein Domain-Objekt zu erzeugen.",
+      "verdict": "keep",
+      "reason": "Die vorgesehene Zielgrenze passt zu den belegten Aufrufern und dem ausgeführten Verhalten.",
+      "evidence": [
+        {
+          "path": "datamimic_ce/domains/shared/converters/date_format_converter.py",
+          "line": 12
+        }
+      ],
+      "recommended_targets": []
+    },
+    {
+      "id": "module:domains/shared/converters/hash_converter.py",
+      "concern": "Der HashConverter transformiert in convert einen vorhandenen Wert für die DSL-Ausgabe, ohne ein Domain-Objekt zu erzeugen.",
+      "verdict": "keep",
+      "reason": "Die vorgesehene Zielgrenze passt zu den belegten Aufrufern und dem ausgeführten Verhalten.",
+      "evidence": [
+        {
+          "path": "datamimic_ce/domains/shared/converters/hash_converter.py",
+          "line": 14
+        }
+      ],
+      "recommended_targets": []
+    },
+    {
+      "id": "module:domains/shared/converters/java_hash_converter.py",
+      "concern": "Der JavaHashConverter transformiert in convert einen vorhandenen Wert für die DSL-Ausgabe, ohne ein Domain-Objekt zu erzeugen.",
+      "verdict": "keep",
+      "reason": "Die vorgesehene Zielgrenze passt zu den belegten Aufrufern und dem ausgeführten Verhalten.",
+      "evidence": [
+        {
+          "path": "datamimic_ce/domains/shared/converters/java_hash_converter.py",
+          "line": 10
+        }
+      ],
+      "recommended_targets": []
+    },
+    {
+      "id": "module:domains/shared/converters/lower_case_converter.py",
+      "concern": "Der LowerCaseConverter transformiert in convert einen vorhandenen Wert für die DSL-Ausgabe, ohne ein Domain-Objekt zu erzeugen.",
+      "verdict": "keep",
+      "reason": "Die vorgesehene Zielgrenze passt zu den belegten Aufrufern und dem ausgeführten Verhalten.",
+      "evidence": [
+        {
+          "path": "datamimic_ce/domains/shared/converters/lower_case_converter.py",
+          "line": 10
+        }
+      ],
+      "recommended_targets": []
+    },
+    {
+      "id": "module:domains/shared/converters/mask_converter.py",
+      "concern": "Der MaskConverter transformiert in convert einen vorhandenen Wert für die DSL-Ausgabe, ohne ein Domain-Objekt zu erzeugen.",
+      "verdict": "keep",
+      "reason": "Die vorgesehene Zielgrenze passt zu den belegten Aufrufern und dem ausgeführten Verhalten.",
+      "evidence": [
+        {
+          "path": "datamimic_ce/domains/shared/converters/mask_converter.py",
+          "line": 10
+        }
+      ],
+      "recommended_targets": []
+    },
+    {
+      "id": "module:domains/shared/converters/middle_mask_converter.py",
+      "concern": "Der MiddleMaskConverter transformiert in convert einen vorhandenen Wert für die DSL-Ausgabe, ohne ein Domain-Objekt zu erzeugen.",
+      "verdict": "keep",
+      "reason": "Die vorgesehene Zielgrenze passt zu den belegten Aufrufern und dem ausgeführten Verhalten.",
+      "evidence": [
+        {
+          "path": "datamimic_ce/domains/shared/converters/middle_mask_converter.py",
+          "line": 10
+        }
+      ],
+      "recommended_targets": []
+    },
+    {
+      "id": "module:domains/shared/converters/remove_none_or_empty_element_converter.py",
+      "concern": "Der RemoveNoneOrEmptyElementConverter transformiert in convert einen vorhandenen Wert für die DSL-Ausgabe, ohne ein Domain-Objekt zu erzeugen.",
+      "verdict": "keep",
+      "reason": "Die vorgesehene Zielgrenze passt zu den belegten Aufrufern und dem ausgeführten Verhalten.",
+      "evidence": [
+        {
+          "path": "datamimic_ce/domains/shared/converters/remove_none_or_empty_element_converter.py",
+          "line": 12
+        }
+      ],
+      "recommended_targets": []
+    },
+    {
+      "id": "module:domains/shared/converters/substring_converter.py",
+      "concern": "Der SubstringConverter transformiert in convert einen vorhandenen Wert für die DSL-Ausgabe, ohne ein Domain-Objekt zu erzeugen.",
+      "verdict": "keep",
+      "reason": "Die vorgesehene Zielgrenze passt zu den belegten Aufrufern und dem ausgeführten Verhalten.",
+      "evidence": [
+        {
+          "path": "datamimic_ce/domains/shared/converters/substring_converter.py",
+          "line": 10
+        }
+      ],
+      "recommended_targets": []
+    },
+    {
+      "id": "module:domains/shared/converters/timestamp2date_converter.py",
+      "concern": "Der Timestamp2DateConverter transformiert in convert einen vorhandenen Wert für die DSL-Ausgabe, ohne ein Domain-Objekt zu erzeugen.",
+      "verdict": "keep",
+      "reason": "Die vorgesehene Zielgrenze passt zu den belegten Aufrufern und dem ausgeführten Verhalten.",
+      "evidence": [
+        {
+          "path": "datamimic_ce/domains/shared/converters/timestamp2date_converter.py",
+          "line": 13
+        }
+      ],
+      "recommended_targets": []
+    },
+    {
+      "id": "module:domains/shared/converters/upper_case_converter.py",
+      "concern": "Der UpperCaseConverter transformiert in convert einen vorhandenen Wert für die DSL-Ausgabe, ohne ein Domain-Objekt zu erzeugen.",
+      "verdict": "keep",
+      "reason": "Die vorgesehene Zielgrenze passt zu den belegten Aufrufern und dem ausgeführten Verhalten.",
+      "evidence": [
+        {
+          "path": "datamimic_ce/domains/shared/converters/upper_case_converter.py",
+          "line": 10
+        }
+      ],
+      "recommended_targets": []
+    },
+    {
+  "id": "module:domains/shared/demographics/__init__.py",
+  "concern": "Der Initializer exportiert Profilmodelle, Ladefunktion, Gruppenmetadaten und Sampler als öffentliche Demografie-API.",
+  "verdict": "scaffold",
+  "reason": "Der Initializer stellt Package- oder Importmechanik bereit, enthält aber keine eigenständige Domain-Erzeugungslogik.",
+  "evidence": [
+    {
+      "path": "datamimic_ce/domains/shared/demographics/__init__.py",
+      "line": 3
+    }
+  ],
+      "recommended_targets": []
+    },
+    {
+      "id": "module:domains/shared/demographics/api.py",
+      "concern": "Das Modul implementiert build_sampler_with_profile_groups und wird von Services oder Generatoren aufgerufen.",
+      "verdict": "keep",
+      "reason": "Die vorgesehene Zielgrenze passt zu den belegten Aufrufern und dem ausgeführten Verhalten.",
+      "evidence": [
+        {
+          "path": "datamimic_ce/domains/shared/demographics/api.py",
+          "line": 17
+        }
+      ],
+      "recommended_targets": []
+    },
+    {
+      "id": "module:domains/shared/demographics/loader.py",
+      "concern": "Das Modul implementiert DemographicProfileError, load_demographic_profile, _load_age_bands und wird von Services oder Generatoren aufgerufen.",
+      "verdict": "keep",
+      "reason": "Die vorgesehene Zielgrenze passt zu den belegten Aufrufern und dem ausgeführten Verhalten.",
+      "evidence": [
+        {
+          "path": "datamimic_ce/domains/shared/demographics/loader.py",
+          "line": 29
+        }
+      ],
+      "recommended_targets": []
+    },
+    {
+      "id": "module:domains/shared/demographics/profile.py",
+      "concern": "Das Modul implementiert DemographicProfileId, DemographicAgeBand, DemographicConditionRate und wird von Services oder Generatoren aufgerufen.",
+      "verdict": "keep",
+      "reason": "Die vorgesehene Zielgrenze passt zu den belegten Aufrufern und dem ausgeführten Verhalten.",
+      "evidence": [
+        {
+          "path": "datamimic_ce/domains/shared/demographics/profile.py",
+          "line": 11
+        }
+      ],
+      "recommended_targets": []
+    },
+    {
+      "id": "module:domains/shared/demographics/profile_meta.py",
+      "concern": "Das Modul implementiert _profile_rows, lookup_profile_row, profile_group_refs und wird von Services oder Generatoren aufgerufen.",
+      "verdict": "keep",
+      "reason": "Die vorgesehene Zielgrenze passt zu den belegten Aufrufern und dem ausgeführten Verhalten.",
+      "evidence": [
+        {
+          "path": "datamimic_ce/domains/shared/demographics/profile_meta.py",
+          "line": 18
+        }
+      ],
+      "recommended_targets": []
+    },
+    {
+      "id": "module:domains/shared/demographics/sampler.py",
+  "concern": "GroupRegistry lädt gewichtete Demografiegruppen, setzt Alters-/Geschlechtsmasken innerhalb ihrer Grenzen um und DemographicSampler zieht daraus Profile.",
+      "verdict": "keep",
+      "reason": "Die vorgesehene Zielgrenze passt zu den belegten Aufrufern und dem ausgeführten Verhalten.",
+      "evidence": [
+        {
+          "path": "datamimic_ce/domains/shared/demographics/sampler.py",
+          "line": 47
+        }
+      ],
+      "recommended_targets": []
+    },
+    {
+      "id": "module:domains/shared/determinism.py",
+      "concern": "Das Modul kanonisiert und hasht JSON, leitet stabile IDs und Profil-Seeds ab und stellt den seedbaren Service-RNG bereit.",
+      "verdict": "keep",
+      "reason": "Profil-Seed-Berechnung wird von der JSON-Facade aufgerufen; Kind-RNG und Run-Entropie haben getrennte Runtime-Aufrufer.",
+      "evidence": [
+        {
+          "path": "datamimic_ce/domains/shared/determinism.py",
+          "line": 16
+        }
+      ],
+      "recommended_targets": []
+    },
+    {
+      "id": "module:domains/shared/examples/generate_address.py",
+      "concern": "Das ausführbare Beispiel zeigt einen direkten Aufruf der öffentlichen Generator-API für ein kleines Datenset.",
+      "verdict": "keep",
+      "reason": "Die vorgesehene Zielgrenze passt zu den belegten Aufrufern und dem ausgeführten Verhalten.",
+      "evidence": [
+        {
+          "path": "datamimic_ce/domains/shared/examples/generate_address.py",
+          "line": 4
+        }
+      ],
+      "recommended_targets": []
+    },
+    {
+      "id": "module:domains/shared/examples/generate_cities.py",
+      "concern": "Das ausführbare Beispiel zeigt einen direkten Aufruf der öffentlichen Generator-API für ein kleines Datenset.",
+      "verdict": "keep",
+      "reason": "Die vorgesehene Zielgrenze passt zu den belegten Aufrufern und dem ausgeführten Verhalten.",
+      "evidence": [
+        {
+          "path": "datamimic_ce/domains/shared/examples/generate_cities.py",
+          "line": 6
+        }
+      ],
+      "recommended_targets": []
+    },
+    {
+      "id": "module:domains/shared/examples/generate_companies.py",
+      "concern": "Das ausführbare Beispiel zeigt einen direkten Aufruf der öffentlichen Generator-API für ein kleines Datenset.",
+      "verdict": "keep",
+      "reason": "Die vorgesehene Zielgrenze passt zu den belegten Aufrufern und dem ausgeführten Verhalten.",
+      "evidence": [
+        {
+          "path": "datamimic_ce/domains/shared/examples/generate_companies.py",
+          "line": 4
+        }
+      ],
+      "recommended_targets": []
+    },
+    {
+      "id": "module:domains/shared/examples/generate_countries.py",
+      "concern": "Das ausführbare Beispiel zeigt einen direkten Aufruf der öffentlichen Generator-API für ein kleines Datenset.",
+      "verdict": "keep",
+      "reason": "Die vorgesehene Zielgrenze passt zu den belegten Aufrufern und dem ausgeführten Verhalten.",
+      "evidence": [
+        {
+          "path": "datamimic_ce/domains/shared/examples/generate_countries.py",
+          "line": 4
+        }
+      ],
+      "recommended_targets": []
+    },
+    {
+      "id": "module:domains/shared/examples/generate_people.py",
+      "concern": "Das ausführbare Beispiel zeigt einen direkten Aufruf der öffentlichen Generator-API für ein kleines Datenset.",
+      "verdict": "keep",
+      "reason": "Die vorgesehene Zielgrenze passt zu den belegten Aufrufern und dem ausgeführten Verhalten.",
+      "evidence": [
+        {
+          "path": "datamimic_ce/domains/shared/examples/generate_people.py",
+          "line": 4
+        }
+      ],
+      "recommended_targets": []
+    },
+    {
+      "id": "module:domains/shared/examples/generate_people_demographics.py",
+      "concern": "Das ausführbare Beispiel zeigt einen direkten Aufruf der öffentlichen Generator-API für ein kleines Datenset.",
+      "verdict": "keep",
+      "reason": "Die vorgesehene Zielgrenze passt zu den belegten Aufrufern und dem ausgeführten Verhalten.",
+      "evidence": [
+        {
+          "path": "datamimic_ce/domains/shared/examples/generate_people_demographics.py",
+          "line": 17
+        }
+      ],
+      "recommended_targets": []
+    },
+    {
+      "id": "module:domains/shared/generator_registry.py",
+      "concern": "Das Modul registriert die explizit erlaubten Literal-Generatoren für DSL-Auflösung und Script-Zugriff.",
+      "verdict": "keep",
+      "reason": "Die vorgesehene Zielgrenze passt zu den belegten Aufrufern und dem ausgeführten Verhalten.",
+      "evidence": [
+        {
+          "path": "datamimic_ce/domains/shared/generator_registry.py",
+          "line": 15
+        }
+      ],
+      "recommended_targets": []
+    },
+    {
+  "id": "module:domains/shared/generators/__init__.py",
+  "concern": "Der Initializer markiert ein Python-Paket, enthält aber keine ausführbare Fachlogik.",
+  "verdict": "scaffold",
+  "reason": "Der Initializer stellt Package- oder Importmechanik bereit, enthält aber keine eigenständige Domain-Erzeugungslogik.",
+  "evidence": [
+    {
+      "path": "datamimic_ce/domains/shared/generators/__init__.py",
+      "line": 7
+    }
+  ],
+      "recommended_targets": []
+    },
+    {
+      "id": "module:domains/shared/generators/address_generator.py",
+  "concern": "AddressGenerator kombiniert geladene Adressdatensätze zu AddressRow-Werten; das TypedDict beschreibt nur die Ausgabezeilenform.",
+      "verdict": "keep",
+      "reason": "Die vorgesehene Zielgrenze passt zu den belegten Aufrufern und dem ausgeführten Verhalten.",
+      "evidence": [
+        {
+          "path": "datamimic_ce/domains/shared/generators/address_generator.py",
+          "line": 21
+        }
+      ],
+      "recommended_targets": []
+    },
+    {
+      "id": "module:domains/shared/generators/city_generator.py",
+  "concern": "CityGenerator liest Ortsdaten und erzeugt daraus CityRecord-Felder; das TypedDict beschreibt nur die Ausgabezeilenform.",
+      "verdict": "keep",
+      "reason": "Die vorgesehene Zielgrenze passt zu den belegten Aufrufern und dem ausgeführten Verhalten.",
+      "evidence": [
+        {
+          "path": "datamimic_ce/domains/shared/generators/city_generator.py",
+          "line": 17
+        }
+      ],
+      "recommended_targets": []
+    },
+    {
+      "id": "module:domains/shared/generators/company_generator.py",
+      "concern": "Der CompanyGenerator erzeugt synthetische Fachwerte über get_legal_form und nutzt die erforderliche RNG-, Datensatz- oder Zeitbasis.",
+      "verdict": "keep",
+      "reason": "Die vorgesehene Zielgrenze passt zu den belegten Aufrufern und dem ausgeführten Verhalten.",
+      "evidence": [
+        {
+          "path": "datamimic_ce/domains/shared/generators/company_generator.py",
+          "line": 21
+        }
+      ],
+      "recommended_targets": []
+    },
+    {
+      "id": "module:domains/shared/generators/country_generator.py",
+      "concern": "Der CountryGenerator erzeugt synthetische Fachwerte über load_country_data, get_country_by_iso_code, get_random_country und nutzt die erforderliche RNG-, Datensatz- oder Zeitbasis.",
+      "verdict": "keep",
+      "reason": "Die vorgesehene Zielgrenze passt zu den belegten Aufrufern und dem ausgeführten Verhalten.",
+      "evidence": [
+        {
+          "path": "datamimic_ce/domains/shared/generators/country_generator.py",
+          "line": 19
+        }
+      ],
+      "recommended_targets": []
+    },
+    {
+      "id": "module:domains/shared/generators/person_generator.py",
+      "concern": "Der PersonGenerator erzeugt synthetische Fachwerte über reserve_demographic_sample, generate_birthdate_for_age, get_salutation_data und nutzt die erforderliche RNG-, Datensatz- oder Zeitbasis.",
+      "verdict": "keep",
+      "reason": "Die vorgesehene Zielgrenze passt zu den belegten Aufrufern und dem ausgeführten Verhalten.",
+      "evidence": [
+        {
+          "path": "datamimic_ce/domains/shared/generators/person_generator.py",
+          "line": 30
+        }
+      ],
+      "recommended_targets": []
+    },
+    {
+      "id": "module:domains/shared/generators/region_groups.py",
+      "concern": "Das Modul implementiert konkrete Hilfen für Domain-Datenzugriff und wird von Services oder Generatoren aufgerufen.",
+      "verdict": "keep",
+      "reason": "Die vorgesehene Zielgrenze passt zu den belegten Aufrufern und dem ausgeführten Verhalten.",
+      "evidence": [
+        {
+          "path": "datamimic_ce/domains/shared/generators/region_groups.py",
+          "line": 7
+        }
+      ],
+      "recommended_targets": []
+    },
+    {
+      "id": "module:domains/shared/json_types.py",
+      "concern": "Die Typaliase beschreiben rekursive JSON-Werte der Domain-API ohne freie Any-Payloads.",
+      "verdict": "keep",
+      "reason": "Die vorgesehene Zielgrenze passt zu den belegten Aufrufern und dem ausgeführten Verhalten.",
+      "evidence": [
+        {
+          "path": "datamimic_ce/domains/shared/json_types.py",
+          "line": 7
+        }
+      ],
+      "recommended_targets": []
+    },
+    {
+      "id": "module:domains/shared/literal_generators/academic_title_generator.py",
+      "concern": "Der AcademicTitleGenerator erzeugt synthetische Fachwerte über generate, reset und nutzt die erforderliche RNG-, Datensatz- oder Zeitbasis.",
+      "verdict": "keep",
+      "reason": "Die vorgesehene Zielgrenze passt zu den belegten Aufrufern und dem ausgeführten Verhalten.",
+      "evidence": [
+        {
+          "path": "datamimic_ce/domains/shared/literal_generators/academic_title_generator.py",
+          "line": 18
+        }
+      ],
+      "recommended_targets": []
+    },
+    {
+      "id": "module:domains/shared/literal_generators/binary_generator.py",
+      "concern": "Der BinaryGenerator erzeugt synthetische Fachwerte über generate und nutzt die erforderliche RNG-, Datensatz- oder Zeitbasis.",
+      "verdict": "keep",
+      "reason": "Die vorgesehene Zielgrenze passt zu den belegten Aufrufern und dem ausgeführten Verhalten.",
+      "evidence": [
+        {
+          "path": "datamimic_ce/domains/shared/literal_generators/binary_generator.py",
+          "line": 24
+        }
+      ],
+      "recommended_targets": []
+    },
+    {
+      "id": "module:domains/shared/literal_generators/birthdate_generator.py",
+      "concern": "Der BirthdateGenerator erzeugt synthetische Fachwerte über generate, reset, convert_birthdate_to_age und nutzt die erforderliche RNG-, Datensatz- oder Zeitbasis.",
+      "verdict": "keep",
+      "reason": "Die vorgesehene Zielgrenze passt zu den belegten Aufrufern und dem ausgeführten Verhalten.",
+      "evidence": [
+        {
+          "path": "datamimic_ce/domains/shared/literal_generators/birthdate_generator.py",
+          "line": 14
+        }
+      ],
+      "recommended_targets": []
+    },
+    {
+      "id": "module:domains/shared/literal_generators/boolean_generator.py",
+      "concern": "Der BooleanGenerator erzeugt synthetische Fachwerte über generate und nutzt die erforderliche RNG-, Datensatz- oder Zeitbasis.",
+      "verdict": "keep",
+      "reason": "Die vorgesehene Zielgrenze passt zu den belegten Aufrufern und dem ausgeführten Verhalten.",
+      "evidence": [
+        {
+          "path": "datamimic_ce/domains/shared/literal_generators/boolean_generator.py",
+          "line": 12
+        }
+      ],
+      "recommended_targets": []
+    },
+    {
+      "id": "module:domains/shared/literal_generators/cnpj_generator.py",
+      "concern": "Der CNPJGenerator erzeugt synthetische Fachwerte über generate und nutzt die erforderliche RNG-, Datensatz- oder Zeitbasis.",
+      "verdict": "keep",
+      "reason": "Die vorgesehene Zielgrenze passt zu den belegten Aufrufern und dem ausgeführten Verhalten.",
+      "evidence": [
+        {
+          "path": "datamimic_ce/domains/shared/literal_generators/cnpj_generator.py",
+          "line": 13
+        }
+      ],
+      "recommended_targets": []
+    },
+    {
+      "id": "module:domains/shared/literal_generators/color_generators.py",
+      "concern": "Der ColorGenerator erzeugt synthetische Fachwerte über generate und nutzt die erforderliche RNG-, Datensatz- oder Zeitbasis.",
+      "verdict": "keep",
+      "reason": "Die vorgesehene Zielgrenze passt zu den belegten Aufrufern und dem ausgeführten Verhalten.",
+      "evidence": [
+        {
+          "path": "datamimic_ce/domains/shared/literal_generators/color_generators.py",
+          "line": 12
+        }
+      ],
+      "recommended_targets": []
+    },
+    {
+      "id": "module:domains/shared/literal_generators/company_name_generator.py",
+      "concern": "Der CompanyNameGenerator erzeugt synthetische Fachwerte über generate und nutzt die erforderliche RNG-, Datensatz- oder Zeitbasis.",
+      "verdict": "keep",
+      "reason": "Die vorgesehene Zielgrenze passt zu den belegten Aufrufern und dem ausgeführten Verhalten.",
+      "evidence": [
+        {
+          "path": "datamimic_ce/domains/shared/literal_generators/company_name_generator.py",
+          "line": 12
+        }
+      ],
+      "recommended_targets": []
+    },
+    {
+      "id": "module:domains/shared/literal_generators/cpf_generator.py",
+      "concern": "Der CPFGenerator erzeugt synthetische Fachwerte über generate und nutzt die erforderliche RNG-, Datensatz- oder Zeitbasis.",
+      "verdict": "keep",
+      "reason": "Die vorgesehene Zielgrenze passt zu den belegten Aufrufern und dem ausgeführten Verhalten.",
+      "evidence": [
+        {
+          "path": "datamimic_ce/domains/shared/literal_generators/cpf_generator.py",
+          "line": 13
+        }
+      ],
+      "recommended_targets": []
+    },
+    {
+      "id": "module:domains/shared/literal_generators/data_faker_generator.py",
+      "concern": "Der DataFakerGenerator erzeugt synthetische Fachwerte über generate und nutzt die erforderliche RNG-, Datensatz- oder Zeitbasis.",
+      "verdict": "keep",
+      "reason": "Die vorgesehene Zielgrenze passt zu den belegten Aufrufern und dem ausgeführten Verhalten.",
+      "evidence": [
+        {
+          "path": "datamimic_ce/domains/shared/literal_generators/data_faker_generator.py",
+          "line": 15
+        }
+      ],
+      "recommended_targets": []
+    },
+    {
+      "id": "module:domains/shared/literal_generators/datetime_generator.py",
+      "concern": "Der DateTimeGenerator erzeugt synthetische Fachwerte über generate, generate_date und nutzt die erforderliche RNG-, Datensatz- oder Zeitbasis.",
+      "verdict": "keep",
+      "reason": "Die vorgesehene Zielgrenze passt zu den belegten Aufrufern und dem ausgeführten Verhalten.",
+      "evidence": [
+        {
+          "path": "datamimic_ce/domains/shared/literal_generators/datetime_generator.py",
+          "line": 18
+        }
+      ],
+      "recommended_targets": []
+    },
+    {
+      "id": "module:domains/shared/literal_generators/department_name_generator.py",
+      "concern": "Der DepartmentNameGenerator erzeugt synthetische Fachwerte über generate und nutzt die erforderliche RNG-, Datensatz- oder Zeitbasis.",
+      "verdict": "keep",
+      "reason": "Die vorgesehene Zielgrenze passt zu den belegten Aufrufern und dem ausgeführten Verhalten.",
+      "evidence": [
+        {
+          "path": "datamimic_ce/domains/shared/literal_generators/department_name_generator.py",
+          "line": 15
+        }
+      ],
+      "recommended_targets": []
+    },
+    {
+      "id": "module:domains/shared/literal_generators/domain_generator.py",
+      "concern": "Der DomainGenerator erzeugt synthetische Fachwerte über generate, generate_with_company_name und nutzt die erforderliche RNG-, Datensatz- oder Zeitbasis.",
+      "verdict": "keep",
+      "reason": "Die vorgesehene Zielgrenze passt zu den belegten Aufrufern und dem ausgeführten Verhalten.",
+      "evidence": [
+        {
+          "path": "datamimic_ce/domains/shared/literal_generators/domain_generator.py",
+          "line": 17
+        }
+      ],
+      "recommended_targets": []
+    },
+    {
+      "id": "module:domains/shared/literal_generators/ean_generator.py",
+      "concern": "Der EANGenerator erzeugt synthetische Fachwerte über generate und nutzt die erforderliche RNG-, Datensatz- oder Zeitbasis.",
+      "verdict": "keep",
+      "reason": "Die vorgesehene Zielgrenze passt zu den belegten Aufrufern und dem ausgeführten Verhalten.",
+      "evidence": [
+        {
+          "path": "datamimic_ce/domains/shared/literal_generators/ean_generator.py",
+          "line": 20
+        }
+      ],
+      "recommended_targets": []
+    },
+    {
+      "id": "module:domains/shared/literal_generators/email_address_generator.py",
+      "concern": "Der EmailAddressGenerator erzeugt synthetische Fachwerte über generate, generate_with_company_name, generate_with_name und nutzt die erforderliche RNG-, Datensatz- oder Zeitbasis.",
+      "verdict": "keep",
+      "reason": "Die vorgesehene Zielgrenze passt zu den belegten Aufrufern und dem ausgeführten Verhalten.",
+      "evidence": [
+        {
+          "path": "datamimic_ce/domains/shared/literal_generators/email_address_generator.py",
+          "line": 15
+        }
+      ],
+      "recommended_targets": []
+    },
+    {
+      "id": "module:domains/shared/literal_generators/family_name_generator.py",
+      "concern": "Der FamilyNameGenerator erzeugt synthetische Fachwerte über generate und nutzt die erforderliche RNG-, Datensatz- oder Zeitbasis.",
+      "verdict": "keep",
+      "reason": "Die vorgesehene Zielgrenze passt zu den belegten Aufrufern und dem ausgeführten Verhalten.",
+      "evidence": [
+        {
+          "path": "datamimic_ce/domains/shared/literal_generators/family_name_generator.py",
+          "line": 15
+        }
+      ],
+      "recommended_targets": []
+    },
+    {
+      "id": "module:domains/shared/literal_generators/float_generator.py",
+      "concern": "Der FloatGenerator erzeugt synthetische Fachwerte über generate und nutzt die erforderliche RNG-, Datensatz- oder Zeitbasis.",
+      "verdict": "keep",
+      "reason": "Die vorgesehene Zielgrenze passt zu den belegten Aufrufern und dem ausgeführten Verhalten.",
+      "evidence": [
+        {
+          "path": "datamimic_ce/domains/shared/literal_generators/float_generator.py",
+          "line": 17
+        }
+      ],
+      "recommended_targets": []
+    },
+    {
+      "id": "module:domains/shared/literal_generators/gender_generator.py",
+      "concern": "Der GenderGenerator erzeugt synthetische Fachwerte über generate und nutzt die erforderliche RNG-, Datensatz- oder Zeitbasis.",
+      "verdict": "keep",
+      "reason": "Die vorgesehene Zielgrenze passt zu den belegten Aufrufern und dem ausgeführten Verhalten.",
+      "evidence": [
+        {
+          "path": "datamimic_ce/domains/shared/literal_generators/gender_generator.py",
+          "line": 12
+        }
+      ],
+      "recommended_targets": []
+    },
+    {
+      "id": "module:domains/shared/literal_generators/given_name_generator.py",
+      "concern": "Der GivenNameGenerator erzeugt synthetische Fachwerte über generate, generate_with_gender und nutzt die erforderliche RNG-, Datensatz- oder Zeitbasis.",
+      "verdict": "keep",
+      "reason": "Die vorgesehene Zielgrenze passt zu den belegten Aufrufern und dem ausgeführten Verhalten.",
+      "evidence": [
+        {
+          "path": "datamimic_ce/domains/shared/literal_generators/given_name_generator.py",
+          "line": 15
+        }
+      ],
+      "recommended_targets": []
+    },
+    {
+      "id": "module:domains/shared/literal_generators/global_increment_generator.py",
+  "concern": "GlobalIncrementGenerator bezieht pro generate-Aufruf den nächsten Wert aus einem Root-Context-Zähler; GlobalIncrementRegistry hält nur den mutablen Zählerzustand.",
+      "verdict": "unclear",
+      "reason": "Der Generator greift auf context.root zu und die Factory behandelt ihn per Sonderzweig wie SequenceTableGenerator; die Ablage als allgemeines Literal ist damit ungeklärt.",
+      "evidence": [
+        {
+          "path": "datamimic_ce/domains/shared/literal_generators/global_increment_generator.py",
+          "line": 26
+        },
+        {
+          "path": "datamimic_ce/engine/runtime/generators/factory.py",
+          "line": 136
+        }
+      ],
+      "recommended_targets": []
+    },
+    {
+      "id": "module:domains/shared/literal_generators/hash_generator.py",
+      "concern": "Der HashGenerator erzeugt synthetische Fachwerte über generate und nutzt die erforderliche RNG-, Datensatz- oder Zeitbasis.",
+      "verdict": "keep",
+      "reason": "Die vorgesehene Zielgrenze passt zu den belegten Aufrufern und dem ausgeführten Verhalten.",
+      "evidence": [
+        {
+          "path": "datamimic_ce/domains/shared/literal_generators/hash_generator.py",
+          "line": 7
+        }
+      ],
+      "recommended_targets": []
+    },
+    {
+      "id": "module:domains/shared/literal_generators/increment_generator.py",
+      "concern": "Der IncrementGenerator erzeugt synthetische Fachwerte über add_pagination, generate und nutzt die erforderliche RNG-, Datensatz- oder Zeitbasis.",
+      "verdict": "keep",
+      "reason": "Die vorgesehene Zielgrenze passt zu den belegten Aufrufern und dem ausgeführten Verhalten.",
+      "evidence": [
+        {
+          "path": "datamimic_ce/domains/shared/literal_generators/increment_generator.py",
+          "line": 11
+        }
+      ],
+      "recommended_targets": []
+    },
+    {
+      "id": "module:domains/shared/literal_generators/integer_generator.py",
+      "concern": "Der IntegerGenerator erzeugt synthetische Fachwerte über generate und nutzt die erforderliche RNG-, Datensatz- oder Zeitbasis.",
+      "verdict": "keep",
+      "reason": "Die vorgesehene Zielgrenze passt zu den belegten Aufrufern und dem ausgeführten Verhalten.",
+      "evidence": [
+        {
+          "path": "datamimic_ce/domains/shared/literal_generators/integer_generator.py",
+          "line": 16
+        }
+      ],
+      "recommended_targets": []
+    },
+    {
+      "id": "module:domains/shared/literal_generators/nobility_title_generator.py",
+      "concern": "Der NobilityTitleGenerator erzeugt synthetische Fachwerte über generate, generate_with_gender und nutzt die erforderliche RNG-, Datensatz- oder Zeitbasis.",
+      "verdict": "keep",
+      "reason": "Die vorgesehene Zielgrenze passt zu den belegten Aufrufern und dem ausgeführten Verhalten.",
+      "evidence": [
+        {
+          "path": "datamimic_ce/domains/shared/literal_generators/nobility_title_generator.py",
+          "line": 15
+        }
+      ],
+      "recommended_targets": []
+    },
+    {
+      "id": "module:domains/shared/literal_generators/number_sequences.py",
+  "concern": "build_number_sequence erzeugt Iteratoren für endliche Grid-Läufe, Shuffle-/Wedge-/Bitreverse-Folgen, Rekurrenzen und einen sättigenden RNG-Walk.",
+      "verdict": "keep",
+      "reason": "Die vorgesehene Zielgrenze passt zu den belegten Aufrufern und dem ausgeführten Verhalten.",
+      "evidence": [
+        {
+          "path": "datamimic_ce/domains/shared/literal_generators/number_sequences.py",
+          "line": 25
+        }
+      ],
+      "recommended_targets": []
+    },
+    {
+      "id": "module:domains/shared/literal_generators/password_generator.py",
+      "concern": "Der PasswordGenerator erzeugt synthetische Fachwerte über generate und nutzt die erforderliche RNG-, Datensatz- oder Zeitbasis.",
+      "verdict": "keep",
+      "reason": "Diese Klassen liefern seeded `random.Random`-Testwerte; die Zielrolle ist Literal-Testdatengenerierung, kein Kryptodienst.",
+      "evidence": [
+        {
+          "path": "datamimic_ce/domains/shared/literal_generators/password_generator.py",
+          "line": 12
+        }
+      ],
+      "recommended_targets": []
+    },
+    {
+      "id": "module:domains/shared/literal_generators/phone_number_generator.py",
+      "concern": "Der PhoneNumberGenerator erzeugt synthetische Fachwerte über generate und nutzt die erforderliche RNG-, Datensatz- oder Zeitbasis.",
+      "verdict": "keep",
+      "reason": "Die vorgesehene Zielgrenze passt zu den belegten Aufrufern und dem ausgeführten Verhalten.",
+      "evidence": [
+        {
+          "path": "datamimic_ce/domains/shared/literal_generators/phone_number_generator.py",
+          "line": 12
+        }
+      ],
+      "recommended_targets": []
+    },
+    {
+      "id": "module:domains/shared/literal_generators/prefixed_id_generator.py",
+      "concern": "Der PrefixedIdGenerator erzeugt synthetische Fachwerte über generate und nutzt die erforderliche RNG-, Datensatz- oder Zeitbasis.",
+      "verdict": "keep",
+      "reason": "Die vorgesehene Zielgrenze passt zu den belegten Aufrufern und dem ausgeführten Verhalten.",
+      "evidence": [
+        {
+          "path": "datamimic_ce/domains/shared/literal_generators/prefixed_id_generator.py",
+          "line": 13
+        }
+      ],
+      "recommended_targets": []
+    },
+    {
+      "id": "module:domains/shared/literal_generators/sector_generator.py",
+      "concern": "Der SectorGenerator erzeugt synthetische Fachwerte über generate und nutzt die erforderliche RNG-, Datensatz- oder Zeitbasis.",
+      "verdict": "keep",
+      "reason": "Die vorgesehene Zielgrenze passt zu den belegten Aufrufern und dem ausgeführten Verhalten.",
+      "evidence": [
+        {
+          "path": "datamimic_ce/domains/shared/literal_generators/sector_generator.py",
+          "line": 19
+        }
+      ],
+      "recommended_targets": []
+    },
+    {
+      "id": "module:domains/shared/literal_generators/ssn_generator.py",
+      "concern": "Der SSNGenerator erzeugt synthetische Fachwerte über generate und nutzt die erforderliche RNG-, Datensatz- oder Zeitbasis.",
+      "verdict": "keep",
+      "reason": "Die vorgesehene Zielgrenze passt zu den belegten Aufrufern und dem ausgeführten Verhalten.",
+      "evidence": [
+        {
+          "path": "datamimic_ce/domains/shared/literal_generators/ssn_generator.py",
+          "line": 13
+        }
+      ],
+      "recommended_targets": []
+    },
+    {
+      "id": "module:domains/shared/literal_generators/state_transition_generator.py",
+  "concern": "StateTransitionGenerator parst oder indexiert Übergangsregeln und liefert mit injiziertem RNG einen zustandsabhängigen Folgewert pro generate-Aufruf.",
+      "verdict": "keep",
+      "reason": "Die vorgesehene Zielgrenze passt zu den belegten Aufrufern und dem ausgeführten Verhalten.",
+      "evidence": [
+        {
+          "path": "datamimic_ce/domains/shared/literal_generators/state_transition_generator.py",
+          "line": 21
+        }
+      ],
+      "recommended_targets": []
+    },
+    {
+      "id": "module:domains/shared/literal_generators/street_name_generator.py",
+      "concern": "Der StreetNameGenerator erzeugt synthetische Fachwerte über generate und nutzt die erforderliche RNG-, Datensatz- oder Zeitbasis.",
+      "verdict": "keep",
+      "reason": "Die vorgesehene Zielgrenze passt zu den belegten Aufrufern und dem ausgeführten Verhalten.",
+      "evidence": [
+        {
+          "path": "datamimic_ce/domains/shared/literal_generators/street_name_generator.py",
+          "line": 16
+        }
+      ],
+      "recommended_targets": []
+    },
+    {
+      "id": "module:domains/shared/literal_generators/string_generator.py",
+      "concern": "Der StringGenerator erzeugt synthetische Fachwerte über generate, rnd_str_from_regex und nutzt die erforderliche RNG-, Datensatz- oder Zeitbasis.",
+      "verdict": "keep",
+      "reason": "Die vorgesehene Zielgrenze passt zu den belegten Aufrufern und dem ausgeführten Verhalten.",
+      "evidence": [
+        {
+          "path": "datamimic_ce/domains/shared/literal_generators/string_generator.py",
+          "line": 20
+        }
+      ],
+      "recommended_targets": []
+    },
+    {
+      "id": "module:domains/shared/literal_generators/token_generator.py",
+      "concern": "Der TokenGenerator erzeugt synthetische Fachwerte über generate und nutzt die erforderliche RNG-, Datensatz- oder Zeitbasis.",
+      "verdict": "keep",
+      "reason": "Diese Klassen liefern seeded `random.Random`-Testwerte; die Zielrolle ist Literal-Testdatengenerierung, kein Kryptodienst.",
+      "evidence": [
+        {
+          "path": "datamimic_ce/domains/shared/literal_generators/token_generator.py",
+          "line": 7
+        }
+      ],
+      "recommended_targets": []
+    },
+    {
+      "id": "module:domains/shared/literal_generators/url_generator.py",
+      "concern": "Der UrlGenerator erzeugt synthetische Fachwerte über generate und nutzt die erforderliche RNG-, Datensatz- oder Zeitbasis.",
+      "verdict": "keep",
+      "reason": "Die vorgesehene Zielgrenze passt zu den belegten Aufrufern und dem ausgeführten Verhalten.",
+      "evidence": [
+        {
+          "path": "datamimic_ce/domains/shared/literal_generators/url_generator.py",
+          "line": 13
+        }
+      ],
+      "recommended_targets": []
+    },
+    {
+      "id": "module:domains/shared/literal_generators/uuid_generator.py",
+      "concern": "Der UUIDGenerator erzeugt synthetische Fachwerte über generate und nutzt die erforderliche RNG-, Datensatz- oder Zeitbasis.",
+      "verdict": "keep",
+      "reason": "Die vorgesehene Zielgrenze passt zu den belegten Aufrufern und dem ausgeführten Verhalten.",
+      "evidence": [
+        {
+          "path": "datamimic_ce/domains/shared/literal_generators/uuid_generator.py",
+          "line": 11
+        }
+      ],
+      "recommended_targets": []
+    },
+    {
+      "id": "module:domains/shared/locale_registry.py",
+      "concern": "Das Modul ordnet Locale-Codes Datensätzen zu und liefert regionalspezifische Format- und Bedingungsüberschreibungen.",
+      "verdict": "keep",
+      "reason": "Die vorgesehene Zielgrenze passt zu den belegten Aufrufern und dem ausgeführten Verhalten.",
+      "evidence": [
+        {
+          "path": "datamimic_ce/domains/shared/locale_registry.py",
+          "line": 38
+        }
+      ],
+      "recommended_targets": []
+    },
+    {
+      "id": "module:domains/shared/locales/__init__.py",
+      "concern": "Das Modul lädt und cached typisierte Locale-Pakete samt Personen-, Adress-, Arzt- und Patientenwerten aus Datendateien.",
+      "verdict": "keep",
+      "reason": "Die Datei liest Locale-Datensätze, prüft unterstützte Codes und baut gecachte typisierte Packs; sie ist keine bloße Paketmarkierung.",
+      "evidence": [
+        {
+          "path": "datamimic_ce/domains/shared/locales/__init__.py",
+          "line": 23
+        }
+      ],
+      "recommended_targets": []
+    },
+    {
+  "id": "module:domains/shared/models/__init__.py",
+  "concern": "Der Initializer markiert ein Python-Paket, enthält aber keine ausführbare Fachlogik.",
+  "verdict": "scaffold",
+  "reason": "Der Initializer stellt Package- oder Importmechanik bereit, enthält aber keine eigenständige Domain-Erzeugungslogik.",
+  "evidence": [
+    {
+      "path": "datamimic_ce/domains/shared/models/__init__.py",
+      "line": 7
+    }
+  ],
+      "recommended_targets": []
+    },
+    {
+      "id": "module:domains/shared/models/address.py",
+      "concern": "Die Entity Address cached ihre erzeugten Felder (street, house_number, city_data, city, area) und serialisiert sie über to_dict.",
+      "verdict": "keep",
+      "reason": "Die vorgesehene Zielgrenze passt zu den belegten Aufrufern und dem ausgeführten Verhalten.",
+      "evidence": [
+        {
+          "path": "datamimic_ce/domains/shared/models/address.py",
+          "line": 13
+        }
+      ],
+      "recommended_targets": []
+    },
+    {
+      "id": "module:domains/shared/models/city.py",
+      "concern": "Die Entity City cached ihre erzeugten Felder (city_data, name, postal_code, area_code, state) und serialisiert sie über to_dict.",
+      "verdict": "keep",
+      "reason": "Die vorgesehene Zielgrenze passt zu den belegten Aufrufern und dem ausgeführten Verhalten.",
+      "evidence": [
+        {
+          "path": "datamimic_ce/domains/shared/models/city.py",
+          "line": 12
+        }
+      ],
+      "recommended_targets": []
+    },
+    {
+      "id": "module:domains/shared/models/company.py",
+      "concern": "Die Entity Company cached ihre erzeugten Felder (id, short_name, sector, legal_form, full_name) und serialisiert sie über to_dict.",
+      "verdict": "keep",
+      "reason": "Die vorgesehene Zielgrenze passt zu den belegten Aufrufern und dem ausgeführten Verhalten.",
+      "evidence": [
+        {
+          "path": "datamimic_ce/domains/shared/models/company.py",
+          "line": 14
+        }
+      ],
+      "recommended_targets": []
+    },
+    {
+      "id": "module:domains/shared/models/country.py",
+      "concern": "Die Entity Country cached ihre erzeugten Felder (iso_code, country_data, name, default_language_locale, phone_code) und serialisiert sie über to_dict.",
+      "verdict": "keep",
+      "reason": "Die vorgesehene Zielgrenze passt zu den belegten Aufrufern und dem ausgeführten Verhalten.",
+      "evidence": [
+        {
+          "path": "datamimic_ce/domains/shared/models/country.py",
+          "line": 12
+        }
+      ],
+      "recommended_targets": []
+    },
+    {
+      "id": "module:domains/shared/models/demographic_config.py",
+      "concern": "Die Entity DemographicConfig cached ihre erzeugten Felder (Entity-Eigenschaften) und serialisiert sie über to_dict.",
+      "verdict": "keep",
+      "reason": "Die vorgesehene Zielgrenze passt zu den belegten Aufrufern und dem ausgeführten Verhalten.",
+      "evidence": [
+        {
+          "path": "datamimic_ce/domains/shared/models/demographic_config.py",
+          "line": 10
+        }
+      ],
+      "recommended_targets": []
+    },
+    {
+      "id": "module:domains/shared/models/person.py",
+      "concern": "Die Entity Person cached ihre erzeugten Felder (gender, given_name, family_name, full_name, name) und serialisiert sie über to_dict.",
+      "verdict": "keep",
+      "reason": "Die vorgesehene Zielgrenze passt zu den belegten Aufrufern und dem ausgeführten Verhalten.",
+      "evidence": [
+        {
+          "path": "datamimic_ce/domains/shared/models/person.py",
+          "line": 23
+        }
+      ],
+      "recommended_targets": []
+    },
+    {
+      "id": "module:domains/shared/profile_components.py",
+      "concern": "Das Modul ordnet benannte Profilkomponenten konkreten Profilen und zusätzlichen Constraints zu.",
+      "verdict": "keep",
+      "reason": "Die vorgesehene Zielgrenze passt zu den belegten Aufrufern und dem ausgeführten Verhalten.",
+      "evidence": [
+        {
+          "path": "datamimic_ce/domains/shared/profile_components.py",
+          "line": 29
+        }
+      ],
+      "recommended_targets": []
+    },
+    {
+      "id": "module:domains/shared/sampling.py",
+      "concern": "Die Funktion wählt einen gewichteten Verteilungsindex mit einer festen Summenformel aus.",
+      "verdict": "keep",
+      "reason": "Die vorgesehene Zielgrenze passt zu den belegten Aufrufern und dem ausgeführten Verhalten.",
+      "evidence": [
+        {
+          "path": "datamimic_ce/domains/shared/sampling.py",
+          "line": 10
+        }
+      ],
+      "recommended_targets": []
+    },
+    {
+      "id": "module:domains/shared/schema_registry.py",
+      "concern": "Das Modul lädt versionierte JSON-Schemas und validiert Request- oder Response-Payloads an der JSON-Domain-Grenze.",
+      "verdict": "change",
+      "reason": "Nur domains/facade.py importiert diesen Loader; im Ziel unter registry würde JSON-Payload-Prüfung mit DSL-Entity-Discovery vermischt.",
+      "evidence": [
+        {
+          "path": "datamimic_ce/domains/shared/schema_registry.py",
+          "line": 18
+        }
+      ],
+      "recommended_targets": [
+        "domains/schema_registry.py"
+      ]
+    },
+    {
+  "id": "module:domains/shared/services/__init__.py",
+  "concern": "Der Initializer exportiert Address-, City-, Company-, Country- und Person-Services für Paketimporte.",
+  "verdict": "scaffold",
+  "reason": "Der Initializer stellt Package- oder Importmechanik bereit, enthält aber keine eigenständige Domain-Erzeugungslogik.",
+  "evidence": [
+    {
+      "path": "datamimic_ce/domains/shared/services/__init__.py",
+      "line": 13
+    }
+  ],
+      "recommended_targets": []
+    },
+    {
+      "id": "module:domains/shared/services/address_api.py",
+      "concern": "Der AddressConstraints bindet konkreten Generator und Modell und deklariert die für Registry und DSL sichtbaren Entity-Felder.",
+      "verdict": "keep",
+      "reason": "Die vorgesehene Zielgrenze passt zu den belegten Aufrufern und dem ausgeführten Verhalten.",
+      "evidence": [
+        {
+          "path": "datamimic_ce/domains/shared/services/address_api.py",
+          "line": 14
+        }
+      ],
+      "recommended_targets": []
+    },
+    {
+      "id": "module:domains/shared/services/address_service.py",
+      "concern": "Der AddressService bindet konkreten Generator und Modell und deklariert die für Registry und DSL sichtbaren Entity-Felder.",
+      "verdict": "keep",
+      "reason": "Die vorgesehene Zielgrenze passt zu den belegten Aufrufern und dem ausgeführten Verhalten.",
+      "evidence": [
+        {
+          "path": "datamimic_ce/domains/shared/services/address_service.py",
+          "line": 21
+        }
+      ],
+      "recommended_targets": []
+    },
+    {
+      "id": "module:domains/shared/services/city_service.py",
+      "concern": "Der CityService bindet konkreten Generator und Modell und deklariert die für Registry und DSL sichtbaren Entity-Felder.",
+      "verdict": "keep",
+      "reason": "Die vorgesehene Zielgrenze passt zu den belegten Aufrufern und dem ausgeführten Verhalten.",
+      "evidence": [
+        {
+          "path": "datamimic_ce/domains/shared/services/city_service.py",
+          "line": 30
+        }
+      ],
+      "recommended_targets": []
+    },
+    {
+      "id": "module:domains/shared/services/company_service.py",
+      "concern": "Der CompanyService bindet konkreten Generator und Modell und deklariert die für Registry und DSL sichtbaren Entity-Felder.",
+      "verdict": "keep",
+      "reason": "Die vorgesehene Zielgrenze passt zu den belegten Aufrufern und dem ausgeführten Verhalten.",
+      "evidence": [
+        {
+          "path": "datamimic_ce/domains/shared/services/company_service.py",
+          "line": 37
+        }
+      ],
+      "recommended_targets": []
+    },
+    {
+      "id": "module:domains/shared/services/country_service.py",
+      "concern": "Der CountryService bindet konkreten Generator und Modell und deklariert die für Registry und DSL sichtbaren Entity-Felder.",
+      "verdict": "keep",
+      "reason": "Die vorgesehene Zielgrenze passt zu den belegten Aufrufern und dem ausgeführten Verhalten.",
+      "evidence": [
+        {
+          "path": "datamimic_ce/domains/shared/services/country_service.py",
+          "line": 27
+        }
+      ],
+      "recommended_targets": []
+    },
+    {
+      "id": "module:domains/shared/services/person_api.py",
+  "concern": "Die PersonRequest-API führt Alters-/Geschlechts- und Profil-Constraints zusammen und erzeugt mit optionalem Profil-Seed eine Personen-Antwort.",
+      "verdict": "keep",
+      "reason": "Die vorgesehene Zielgrenze passt zu den belegten Aufrufern und dem ausgeführten Verhalten.",
+      "evidence": [
+        {
+          "path": "datamimic_ce/domains/shared/services/person_api.py",
+          "line": 24
+        }
+      ],
+      "recommended_targets": []
+    },
+    {
+      "id": "module:domains/shared/services/person_service.py",
+      "concern": "Der PersonService bindet konkreten Generator und Modell und deklariert die für Registry und DSL sichtbaren Entity-Felder.",
+      "verdict": "keep",
+      "reason": "Die vorgesehene Zielgrenze passt zu den belegten Aufrufern und dem ausgeführten Verhalten.",
+      "evidence": [
+        {
+          "path": "datamimic_ce/domains/shared/services/person_service.py",
+          "line": 39
+        }
+      ],
+      "recommended_targets": []
+    },
+    {
+  "id": "module:domains/shared/utils/__init__.py",
+  "concern": "Der Initializer markiert ein Python-Paket, enthält aber keine ausführbare Fachlogik.",
+  "verdict": "scaffold",
+  "reason": "Der Initializer stellt Package- oder Importmechanik bereit, enthält aber keine eigenständige Domain-Erzeugungslogik.",
+  "evidence": [
+    {
+      "path": "datamimic_ce/domains/shared/utils/__init__.py",
+      "line": 1
+    }
+  ],
+      "recommended_targets": []
+    },
+    {
+      "id": "module:domains/shared/utils/dataset_loader.py",
+  "concern": "dataset_loader prüft JSON-/CSV-Formen, liest gewichtete Tabellen, wählt Werte mit injizierten RNGs und cached Header-CSV-Daten.",
+      "verdict": "keep",
+      "reason": "Die vorgesehene Zielgrenze passt zu den belegten Aufrufern und dem ausgeführten Verhalten.",
+      "evidence": [
+        {
+          "path": "datamimic_ce/domains/shared/utils/dataset_loader.py",
+          "line": 24
+        }
+      ],
+      "recommended_targets": []
+    },
+    {
+      "id": "module:domains/shared/utils/dataset_path.py",
+      "concern": "Das Modul löst den Domain-Datenstamm samt Env-Override und US-Fallback auf und unterdrückt wiederholte Fallback-Warnungen.",
+      "verdict": "keep",
+      "reason": "Die vorgesehene Zielgrenze passt zu den belegten Aufrufern und dem ausgeführten Verhalten.",
+      "evidence": [
+        {
+          "path": "datamimic_ce/domains/shared/utils/dataset_path.py",
+          "line": 28
+        }
+      ],
+      "recommended_targets": []
+    },
+    {
+      "id": "module:domains/shared/utils/random_source.py",
+      "concern": "Das Protocol dokumentiert die von Generatoren benötigten Random-Operationen für typisierte RNG-Austauschbarkeit.",
+      "verdict": "keep",
+      "reason": "Die vorgesehene Zielgrenze passt zu den belegten Aufrufern und dem ausgeführten Verhalten.",
+      "evidence": [
+        {
+          "path": "datamimic_ce/domains/shared/utils/random_source.py",
+          "line": 11
+        }
+      ],
+      "recommended_targets": []
+    },
+    {
+      "id": "module:domains/shared/utils/rng_uuid.py",
+      "concern": "Die Funktion erzeugt UUIDs aus einem übergebenen Random-Stream, sodass UUID-Felder dieselbe Seed-Reproduzierbarkeit behalten.",
+      "verdict": "keep",
+      "reason": "Die vorgesehene Zielgrenze passt zu den belegten Aufrufern und dem ausgeführten Verhalten.",
+      "evidence": [
+        {
+          "path": "datamimic_ce/domains/shared/utils/rng_uuid.py",
+          "line": 16
+        }
+      ],
+      "recommended_targets": []
+    },
+    {
+      "id": "module:domains/shared/utils/supported_datasets.py",
+      "concern": "Das Modul ermittelt die gemeinsamen Datensatzcodes, für die alle einer Entity zugeordneten Dateien vorliegen.",
+      "verdict": "keep",
+      "reason": "Die vorgesehene Zielgrenze passt zu den belegten Aufrufern und dem ausgeführten Verhalten.",
+      "evidence": [
+        {
+          "path": "datamimic_ce/domains/shared/utils/supported_datasets.py",
+          "line": 10
+        }
+      ],
+      "recommended_targets": []
+    },
+    {
+      "id": "folder:domains",
+      "concern": "Der Paketstamm enthält JSON-Facade, DSL-Entity-Registry, gemeinsame Entity-Invarianten und vertikale Generatoren; die Namespace-Ebene selbst führt keinen Erzeugungspfad aus.",
+      "verdict": "keep",
+      "reason": "Vertikale Modelle, Generatoren und Services werden entlang derselben fachlichen Erzeugungskette benutzt.",
+      "evidence": [
+        {
+          "path": "datamimic_ce/domains/api.py",
+          "line": 56
+        },
+        {
+          "path": "datamimic_ce/domains/domain_core/attribute_catalog.py",
+          "line": 32
+        },
+        {
+          "path": "datamimic_ce/domains/domain_core/base_domain_generator.py",
+          "line": 43
+        },
+        {
+          "path": "datamimic_ce/domains/domain_core/base_domain_service.py",
+          "line": 18
+        }
+      ],
+      "recommended_targets": []
+    },
+    {
+      "id": "folder:domains/domain_core",
+      "concern": "Entity-Schema, Feldcache, Identifier-Bindung und Generatorbasen werden von vertikalen Services genutzt; RNG- und Clock-Entscheidungen sind als Runtime-SPOT separat aufrufbar.",
+      "verdict": "keep",
+      "reason": "Die vorgesehene Zielgrenze passt zu den belegten Aufrufern und dem ausgeführten Verhalten.",
+      "evidence": [
+        {
+          "path": "datamimic_ce/domains/domain_core/attribute_catalog.py",
+          "line": 32
+        },
+        {
+          "path": "datamimic_ce/domains/domain_core/base_domain_generator.py",
+          "line": 43
+        },
+        {
+          "path": "datamimic_ce/domains/domain_core/base_domain_service.py",
+          "line": 18
+        },
+        {
+          "path": "datamimic_ce/domains/domain_core/base_entity.py",
+          "line": 21
+        }
+      ],
+      "recommended_targets": []
+    },
+    {
+      "id": "folder:domains/domain_core/contracts",
+      "concern": "Feld-/JSON-Typen sind deklarativ, aber BaseEntity führt Feldcache und Identifier-Zustand zur Laufzeit aus.",
+      "verdict": "split",
+      "reason": "Die Zielgruppe mischt FieldSpec-/JSON-Typen mit dem ausführbaren BaseEntity-Cache und seiner Identifier-Bindung.",
+      "evidence": [
+        {
+          "path": "datamimic_ce/domains/domain_core/attribute_catalog.py",
+          "line": 32
+        },
+        {
+          "path": "datamimic_ce/domains/domain_core/base_entity.py",
+          "line": 21
+        },
+        {
+          "path": "datamimic_ce/domains/shared/json_types.py",
+          "line": 7
+        }
+      ],
+      "recommended_targets": [
+        "domains/domain_core/contracts/attribute_catalog.py",
+        "domains/shared/json_types.py",
+        "domains/domain_core/base_entity.py"
+      ]
+    },
+    {
+      "id": "folder:domains/domain_core/datasets",
+      "concern": "Domain-Datensatzpfade, Datensatzlader und unterstützte Codes liegen neben Domain-Core statt bei Locale- und Profilauflösung.",
+      "verdict": "change",
+      "reason": "Die Implementierungen unter shared/utils lösen und lesen Dateien und leiten verfügbare Codes ab; domain_core enthält dagegen Feld- und Generatorbasen.",
+      "evidence": [
+        {
+          "path": "datamimic_ce/domains/shared/utils/dataset_path.py",
+          "line": 28
+        },
+        {
+          "path": "datamimic_ce/domains/shared/utils/supported_datasets.py",
+          "line": 10
+        }
+      ],
+      "recommended_targets": []
+    },
+    {
+      "id": "folder:domains/domain_core/runtime",
+      "concern": "Entity-Schema, Feldcache, Identifier-Bindung und Generatorbasen werden von vertikalen Services genutzt; RNG- und Clock-Entscheidungen sind als Runtime-SPOT separat aufrufbar.",
+      "verdict": "keep",
+      "reason": "Die vorgesehene Zielgrenze passt zu den belegten Aufrufern und dem ausgeführten Verhalten.",
+      "evidence": [
+        {
+          "path": "datamimic_ce/domains/domain_core/runtime/clock.py",
+          "line": 27
+        },
+        {
+          "path": "datamimic_ce/domains/domain_core/runtime/rng.py",
+          "line": 11
+        },
+        {
+          "path": "datamimic_ce/domains/domain_core/runtime/run_seed.py",
+          "line": 17
+        },
+        {
+          "path": "datamimic_ce/domains/shared/determinism.py",
+          "line": 16
+        }
+      ],
+      "recommended_targets": []
+    },
+    {
+      "id": "folder:domains/ecommerce",
+      "concern": "Die E-Commerce-Komponente verbindet Produkte und Bestellungen mit Produktlisten, Adressen, Zahlungs- und Preisfeldern.",
+      "verdict": "keep",
+      "reason": "Die vorgesehene Zielgrenze passt zu den belegten Aufrufern und dem ausgeführten Verhalten.",
+      "evidence": [
+        {
+          "path": "datamimic_ce/domains/ecommerce/generators/order_generator.py",
+          "line": 17
+        },
+        {
+          "path": "datamimic_ce/domains/ecommerce/generators/product_generator.py",
+          "line": 23
+        },
+        {
+          "path": "datamimic_ce/domains/ecommerce/models/order.py",
+          "line": 23
+        },
+        {
+          "path": "datamimic_ce/domains/ecommerce/models/product.py",
+          "line": 23
+        }
+      ],
+      "recommended_targets": []
+    },
+    {
+      "id": "folder:domains/ecommerce/generators",
+      "concern": "Die Generatoren erzeugen konkrete Entity-Felder aus den benötigten RNG-, Zeit- und Datensatzabhängigkeiten.",
+      "verdict": "keep",
+      "reason": "Die vorgesehene Zielgrenze passt zu den belegten Aufrufern und dem ausgeführten Verhalten.",
+      "evidence": [
+        {
+          "path": "datamimic_ce/domains/ecommerce/generators/order_generator.py",
+          "line": 17
+        },
+        {
+          "path": "datamimic_ce/domains/ecommerce/generators/product_generator.py",
+          "line": 23
+        }
+      ],
+      "recommended_targets": []
+    },
+    {
+      "id": "folder:domains/ecommerce/models",
+      "concern": "Die Models halten gecachte Entity-Felder und ihre serialisierte Ausgabe für die jeweiligen Domain-Services.",
+      "verdict": "keep",
+      "reason": "Die vorgesehene Zielgrenze passt zu den belegten Aufrufern und dem ausgeführten Verhalten.",
+      "evidence": [
+        {
+          "path": "datamimic_ce/domains/ecommerce/models/order.py",
+          "line": 23
+        },
+        {
+          "path": "datamimic_ce/domains/ecommerce/models/product.py",
+          "line": 23
+        }
+      ],
+      "recommended_targets": []
+    },
+    {
+      "id": "folder:domains/ecommerce/services",
+      "concern": "Die Services verbinden Generator und Modell und stellen Feldschemata für Registry und Engine bereit.",
+      "verdict": "keep",
+      "reason": "Die vorgesehene Zielgrenze passt zu den belegten Aufrufern und dem ausgeführten Verhalten.",
+      "evidence": [
+        {
+          "path": "datamimic_ce/domains/ecommerce/services/order_service.py",
+          "line": 43
+        },
+        {
+          "path": "datamimic_ce/domains/ecommerce/services/product_service.py",
+          "line": 36
+        }
+      ],
+      "recommended_targets": []
+    },
+    {
+      "id": "folder:domains/finance",
+      "concern": "Die Finanzkomponente erzeugt Banken, Konten, Karten und Transaktionen mit zusammenhängenden Kennungs-, Betrags- und Zeitfeldern.",
+      "verdict": "keep",
+      "reason": "Die vorgesehene Zielgrenze passt zu den belegten Aufrufern und dem ausgeführten Verhalten.",
+      "evidence": [
+        {
+          "path": "datamimic_ce/domains/finance/generators/bank_account_generator.py",
+          "line": 18
+        },
+        {
+          "path": "datamimic_ce/domains/finance/generators/bank_generator.py",
+          "line": 14
+        },
+        {
+          "path": "datamimic_ce/domains/finance/generators/credit_card_generator.py",
+          "line": 24
+        },
+        {
+          "path": "datamimic_ce/domains/finance/generators/transaction_generator.py",
+          "line": 28
+        }
+      ],
+      "recommended_targets": []
+    },
+    {
+      "id": "folder:domains/finance/generators",
+      "concern": "Die Generatoren erzeugen konkrete Entity-Felder aus den benötigten RNG-, Zeit- und Datensatzabhängigkeiten.",
+      "verdict": "keep",
+      "reason": "Die vorgesehene Zielgrenze passt zu den belegten Aufrufern und dem ausgeführten Verhalten.",
+      "evidence": [
+        {
+          "path": "datamimic_ce/domains/finance/generators/bank_account_generator.py",
+          "line": 18
+        },
+        {
+          "path": "datamimic_ce/domains/finance/generators/bank_generator.py",
+          "line": 14
+        },
+        {
+          "path": "datamimic_ce/domains/finance/generators/credit_card_generator.py",
+          "line": 24
+        },
+        {
+          "path": "datamimic_ce/domains/finance/generators/transaction_generator.py",
+          "line": 28
+        }
+      ],
+      "recommended_targets": []
+    },
+    {
+      "id": "folder:domains/finance/models",
+      "concern": "Die Models halten gecachte Entity-Felder und ihre serialisierte Ausgabe für die jeweiligen Domain-Services.",
+      "verdict": "keep",
+      "reason": "Die vorgesehene Zielgrenze passt zu den belegten Aufrufern und dem ausgeführten Verhalten.",
+      "evidence": [
+        {
+          "path": "datamimic_ce/domains/finance/models/bank.py",
+          "line": 9
+        },
+        {
+          "path": "datamimic_ce/domains/finance/models/bank_account.py",
+          "line": 21
+        },
+        {
+          "path": "datamimic_ce/domains/finance/models/credit_card.py",
+          "line": 24
+        },
+        {
+          "path": "datamimic_ce/domains/finance/models/transaction.py",
+          "line": 22
+        }
+      ],
+      "recommended_targets": []
+    },
+    {
+      "id": "folder:domains/finance/services",
+      "concern": "Die Services verbinden Generator und Modell und stellen Feldschemata für Registry und Engine bereit.",
+      "verdict": "keep",
+      "reason": "Die vorgesehene Zielgrenze passt zu den belegten Aufrufern und dem ausgeführten Verhalten.",
+      "evidence": [
+        {
+          "path": "datamimic_ce/domains/finance/services/bank_account_service.py",
+          "line": 33
+        },
+        {
+          "path": "datamimic_ce/domains/finance/services/bank_service.py",
+          "line": 28
+        },
+        {
+          "path": "datamimic_ce/domains/finance/services/credit_card_service.py",
+          "line": 39
+        },
+        {
+          "path": "datamimic_ce/domains/finance/services/transaction_service.py",
+          "line": 52
+        }
+      ],
+      "recommended_targets": []
+    },
+    {
+      "id": "folder:domains/healthcare",
+      "concern": "Die Healthcare-Komponente verbindet Patienten-, Arzt-, Klinik-, Geräte- und Prozedurdaten mit Profil- und Altersregeln.",
+      "verdict": "keep",
+      "reason": "Die vorgesehene Zielgrenze passt zu den belegten Aufrufern und dem ausgeführten Verhalten.",
+      "evidence": [
+        {
+          "path": "datamimic_ce/domains/healthcare/generators/doctor_generator.py",
+          "line": 36
+        },
+        {
+          "path": "datamimic_ce/domains/healthcare/generators/hospital_generator.py",
+          "line": 22
+        },
+        {
+          "path": "datamimic_ce/domains/healthcare/generators/medical_device_generator.py",
+          "line": 30
+        },
+        {
+          "path": "datamimic_ce/domains/healthcare/generators/medical_procedure_generator.py",
+          "line": 25
+        }
+      ],
+      "recommended_targets": []
+    },
+    {
+      "id": "folder:domains/healthcare/generators",
+      "concern": "Die Generatoren erzeugen konkrete Entity-Felder aus den benötigten RNG-, Zeit- und Datensatzabhängigkeiten.",
+      "verdict": "keep",
+      "reason": "Die vorgesehene Zielgrenze passt zu den belegten Aufrufern und dem ausgeführten Verhalten.",
+      "evidence": [
+        {
+          "path": "datamimic_ce/domains/healthcare/generators/doctor_generator.py",
+          "line": 36
+        },
+        {
+          "path": "datamimic_ce/domains/healthcare/generators/hospital_generator.py",
+          "line": 22
+        },
+        {
+          "path": "datamimic_ce/domains/healthcare/generators/medical_device_generator.py",
+          "line": 30
+        },
+        {
+          "path": "datamimic_ce/domains/healthcare/generators/medical_procedure_generator.py",
+          "line": 25
+        }
+      ],
+      "recommended_targets": []
+    },
+    {
+      "id": "folder:domains/healthcare/models",
+      "concern": "Die Models halten gecachte Entity-Felder und ihre serialisierte Ausgabe für die jeweiligen Domain-Services.",
+      "verdict": "keep",
+      "reason": "Die vorgesehene Zielgrenze passt zu den belegten Aufrufern und dem ausgeführten Verhalten.",
+      "evidence": [
+        {
+          "path": "datamimic_ce/domains/healthcare/models/doctor.py",
+          "line": 23
+        },
+        {
+          "path": "datamimic_ce/domains/healthcare/models/hospital.py",
+          "line": 20
+        },
+        {
+          "path": "datamimic_ce/domains/healthcare/models/medical_device.py",
+          "line": 20
+        },
+        {
+          "path": "datamimic_ce/domains/healthcare/models/medical_procedure.py",
+          "line": 19
+        }
+      ],
+      "recommended_targets": []
+    },
+    {
+      "id": "folder:domains/healthcare/services",
+      "concern": "Die Services verbinden Generator und Modell und stellen Feldschemata für Registry und Engine bereit.",
+      "verdict": "keep",
+      "reason": "Die vorgesehene Zielgrenze passt zu den belegten Aufrufern und dem ausgeführten Verhalten.",
+      "evidence": [
+        {
+          "path": "datamimic_ce/domains/healthcare/services/doctor_api.py",
+          "line": 21
+        },
+        {
+          "path": "datamimic_ce/domains/healthcare/services/doctor_service.py",
+          "line": 55
+        },
+        {
+          "path": "datamimic_ce/domains/healthcare/services/hospital_service.py",
+          "line": 42
+        },
+        {
+          "path": "datamimic_ce/domains/healthcare/services/medical_device_service.py",
+          "line": 38
+        }
+      ],
+      "recommended_targets": []
+    },
+    {
+      "id": "folder:domains/insurance",
+      "concern": "Die Versicherungskomponente verbindet Versicherer, Produkte, Deckungen und Policen über verschachtelte Modelle und Generatoren.",
+      "verdict": "keep",
+      "reason": "Die vorgesehene Zielgrenze passt zu den belegten Aufrufern und dem ausgeführten Verhalten.",
+      "evidence": [
+        {
+          "path": "datamimic_ce/domains/insurance/generators/insurance_company_generator.py",
+          "line": 9
+        },
+        {
+          "path": "datamimic_ce/domains/insurance/generators/insurance_coverage_generator.py",
+          "line": 9
+        },
+        {
+          "path": "datamimic_ce/domains/insurance/generators/insurance_policy_generator.py",
+          "line": 19
+        },
+        {
+          "path": "datamimic_ce/domains/insurance/generators/insurance_product_generator.py",
+          "line": 9
+        }
+      ],
+      "recommended_targets": []
+    },
+    {
+      "id": "folder:domains/insurance/generators",
+      "concern": "Die Generatoren erzeugen konkrete Entity-Felder aus den benötigten RNG-, Zeit- und Datensatzabhängigkeiten.",
+      "verdict": "keep",
+      "reason": "Die vorgesehene Zielgrenze passt zu den belegten Aufrufern und dem ausgeführten Verhalten.",
+      "evidence": [
+        {
+          "path": "datamimic_ce/domains/insurance/generators/insurance_company_generator.py",
+          "line": 9
+        },
+        {
+          "path": "datamimic_ce/domains/insurance/generators/insurance_coverage_generator.py",
+          "line": 9
+        },
+        {
+          "path": "datamimic_ce/domains/insurance/generators/insurance_policy_generator.py",
+          "line": 19
+        },
+        {
+          "path": "datamimic_ce/domains/insurance/generators/insurance_product_generator.py",
+          "line": 9
+        }
+      ],
+      "recommended_targets": []
+    },
+    {
+      "id": "folder:domains/insurance/models",
+      "concern": "Die Models halten gecachte Entity-Felder und ihre serialisierte Ausgabe für die jeweiligen Domain-Services.",
+      "verdict": "keep",
+      "reason": "Die vorgesehene Zielgrenze passt zu den belegten Aufrufern und dem ausgeführten Verhalten.",
+      "evidence": [
+        {
+          "path": "datamimic_ce/domains/insurance/models/insurance_company.py",
+          "line": 19
+        },
+        {
+          "path": "datamimic_ce/domains/insurance/models/insurance_coverage.py",
+          "line": 6
+        },
+        {
+          "path": "datamimic_ce/domains/insurance/models/insurance_policy.py",
+          "line": 14
+        },
+        {
+          "path": "datamimic_ce/domains/insurance/models/insurance_product.py",
+          "line": 22
+        }
+      ],
+      "recommended_targets": []
+    },
+    {
+      "id": "folder:domains/insurance/services",
+      "concern": "Die Services verbinden Generator und Modell und stellen Feldschemata für Registry und Engine bereit.",
+      "verdict": "keep",
+      "reason": "Die vorgesehene Zielgrenze passt zu den belegten Aufrufern und dem ausgeführten Verhalten.",
+      "evidence": [
+        {
+          "path": "datamimic_ce/domains/insurance/services/insurance_company_service.py",
+          "line": 33
+        },
+        {
+          "path": "datamimic_ce/domains/insurance/services/insurance_coverage_service.py",
+          "line": 33
+        },
+        {
+          "path": "datamimic_ce/domains/insurance/services/insurance_policy_service.py",
+          "line": 42
+        },
+        {
+          "path": "datamimic_ce/domains/insurance/services/insurance_product_service.py",
+          "line": 32
+        }
+      ],
+      "recommended_targets": []
+    },
+    {
+      "id": "folder:domains/public_sector",
+      "concern": "Die Public-Sector-Komponente erzeugt Amts-, Bildungs- und Polizeidaten mit abgeleiteten Zeit- und Personenfeldern.",
+      "verdict": "keep",
+      "reason": "Die vorgesehene Zielgrenze passt zu den belegten Aufrufern und dem ausgeführten Verhalten.",
+      "evidence": [
+        {
+          "path": "datamimic_ce/domains/public_sector/generators/administration_office_generator.py",
+          "line": 34
+        },
+        {
+          "path": "datamimic_ce/domains/public_sector/generators/educational_institution_generator.py",
+          "line": 11
+        },
+        {
+          "path": "datamimic_ce/domains/public_sector/generators/police_officer_generator.py",
+          "line": 27
+        },
+        {
+          "path": "datamimic_ce/domains/public_sector/models/administration_office.py",
+          "line": 22
+        }
+      ],
+      "recommended_targets": []
+    },
+    {
+      "id": "folder:domains/public_sector/generators",
+      "concern": "Die Generatoren erzeugen konkrete Entity-Felder aus den benötigten RNG-, Zeit- und Datensatzabhängigkeiten.",
+      "verdict": "keep",
+      "reason": "Die vorgesehene Zielgrenze passt zu den belegten Aufrufern und dem ausgeführten Verhalten.",
+      "evidence": [
+        {
+          "path": "datamimic_ce/domains/public_sector/generators/administration_office_generator.py",
+          "line": 34
+        },
+        {
+          "path": "datamimic_ce/domains/public_sector/generators/educational_institution_generator.py",
+          "line": 11
+        },
+        {
+          "path": "datamimic_ce/domains/public_sector/generators/police_officer_generator.py",
+          "line": 27
+        }
+      ],
+      "recommended_targets": []
+    },
+    {
+      "id": "folder:domains/public_sector/models",
+      "concern": "Die Models halten gecachte Entity-Felder und ihre serialisierte Ausgabe für die jeweiligen Domain-Services.",
+      "verdict": "keep",
+      "reason": "Die vorgesehene Zielgrenze passt zu den belegten Aufrufern und dem ausgeführten Verhalten.",
+      "evidence": [
+        {
+          "path": "datamimic_ce/domains/public_sector/models/administration_office.py",
+          "line": 22
+        },
+        {
+          "path": "datamimic_ce/domains/public_sector/models/educational_institution.py",
+          "line": 24
+        },
+        {
+          "path": "datamimic_ce/domains/public_sector/models/police_officer.py",
+          "line": 23
+        }
+      ],
+      "recommended_targets": []
+    },
+    {
+      "id": "folder:domains/public_sector/services",
+      "concern": "Die Services verbinden Generator und Modell und stellen Feldschemata für Registry und Engine bereit.",
+      "verdict": "keep",
+      "reason": "Die vorgesehene Zielgrenze passt zu den belegten Aufrufern und dem ausgeführten Verhalten.",
+      "evidence": [
+        {
+          "path": "datamimic_ce/domains/public_sector/services/administration_office_service.py",
+          "line": 48
+        },
+        {
+          "path": "datamimic_ce/domains/public_sector/services/educational_institution_service.py",
+          "line": 49
+        },
+        {
+          "path": "datamimic_ce/domains/public_sector/services/police_officer_service.py",
+          "line": 54
+        }
+      ],
+      "recommended_targets": []
+    },
+    {
+      "id": "folder:domains/registry",
+      "concern": "Entity-Service-Discovery, JSON-Request-Facade und JSON-Schema-Prüfung sind drei Aufgaben; Registry darf nicht als Sammelziel dafür dienen.",
+      "verdict": "change",
+      "reason": "entity_registry inventarisiert DSL-Services, generate_domain validiert JSON-Anfrage/-Antwort; das Schema wird nur von der Facade geladen.",
+      "evidence": [
+        {
+          "path": "datamimic_ce/domains/entity_registry.py",
+          "line": 21
+        },
+        {
+          "path": "datamimic_ce/domains/facade.py",
+          "line": 40
+        },
+        {
+          "path": "datamimic_ce/domains/shared/schema_registry.py",
+          "line": 18
+        }
+      ],
+      "recommended_targets": [
+        "domains/entity_registry.py",
+        "domains/facade.py",
+        "domains/schema_registry.py"
+      ]
+    },
+    {
+      "id": "folder:domains/shared",
+      "concern": "Die Unterpakete bündeln Converter, Datensatz-/Locale-Lader, Demografie-Sampler, Entity-Generatoren und Services; der Elternpfad ist nur der gemeinsame Namespace.",
+      "verdict": "keep",
+      "reason": "Converter, Locale-Laden und Demografie-Sampling besitzen eigene Unterpakete; zusätzliche Namespace-Schichten bilden keine gemeinsame Laufzeitinvariante ab.",
+      "evidence": [
+        {
+          "path": "datamimic_ce/domains/shared/converters/append_converter.py",
+          "line": 10
+        },
+        {
+          "path": "datamimic_ce/domains/shared/converters/converter.py",
+          "line": 10
+        },
+        {
+          "path": "datamimic_ce/domains/shared/converters/custom_converter.py",
+          "line": 10
+        },
+        {
+          "path": "datamimic_ce/domains/shared/converters/cut_length_converter.py",
+          "line": 10
+        }
+      ],
+      "recommended_targets": []
+    },
+    {
+      "id": "folder:domains/shared/converters",
+      "concern": "Die Converter implementieren konkrete Text-, Zeit-, Maskierungs- und Strukturtransformationen für den Runtime-Converter-Vertrag.",
+      "verdict": "keep",
+      "reason": "Die vorgesehene Zielgrenze passt zu den belegten Aufrufern und dem ausgeführten Verhalten.",
+      "evidence": [
+        {
+          "path": "datamimic_ce/domains/shared/converters/append_converter.py",
+          "line": 10
+        },
+        {
+          "path": "datamimic_ce/domains/shared/converters/converter.py",
+          "line": 10
+        },
+        {
+          "path": "datamimic_ce/domains/shared/converters/custom_converter.py",
+          "line": 10
+        },
+        {
+          "path": "datamimic_ce/domains/shared/converters/cut_length_converter.py",
+          "line": 10
+        }
+      ],
+      "recommended_targets": []
+    },
+    {
+      "id": "folder:domains/shared/converters/base",
+      "concern": "Die Converter implementieren konkrete Text-, Zeit-, Maskierungs- und Strukturtransformationen für den Runtime-Converter-Vertrag.",
+      "verdict": "keep",
+      "reason": "Die vorgesehene Zielgrenze passt zu den belegten Aufrufern und dem ausgeführten Verhalten.",
+      "evidence": [
+        {
+          "path": "datamimic_ce/domains/shared/converters/converter.py",
+          "line": 10
+        }
+      ],
+      "recommended_targets": []
+    },
+    {
+      "id": "folder:domains/shared/converters/privacy",
+      "concern": "Die Converter implementieren konkrete Text-, Zeit-, Maskierungs- und Strukturtransformationen für den Runtime-Converter-Vertrag.",
+      "verdict": "keep",
+      "reason": "Die vorgesehene Zielgrenze passt zu den belegten Aufrufern und dem ausgeführten Verhalten.",
+      "evidence": [
+        {
+          "path": "datamimic_ce/domains/shared/converters/hash_converter.py",
+          "line": 14
+        },
+        {
+          "path": "datamimic_ce/domains/shared/converters/java_hash_converter.py",
+          "line": 10
+        },
+        {
+          "path": "datamimic_ce/domains/shared/converters/mask_converter.py",
+          "line": 10
+        },
+        {
+          "path": "datamimic_ce/domains/shared/converters/middle_mask_converter.py",
+          "line": 10
+        }
+      ],
+      "recommended_targets": []
+    },
+    {
+      "id": "folder:domains/shared/converters/structural",
+      "concern": "Die Converter implementieren konkrete Text-, Zeit-, Maskierungs- und Strukturtransformationen für den Runtime-Converter-Vertrag.",
+      "verdict": "keep",
+      "reason": "Die vorgesehene Zielgrenze passt zu den belegten Aufrufern und dem ausgeführten Verhalten.",
+      "evidence": [
+        {
+          "path": "datamimic_ce/domains/shared/converters/custom_converter.py",
+          "line": 10
+        },
+        {
+          "path": "datamimic_ce/domains/shared/converters/remove_none_or_empty_element_converter.py",
+          "line": 12
+        }
+      ],
+      "recommended_targets": []
+    },
+    {
+      "id": "folder:domains/shared/converters/temporal",
+      "concern": "Die Converter implementieren konkrete Text-, Zeit-, Maskierungs- und Strukturtransformationen für den Runtime-Converter-Vertrag.",
+      "verdict": "keep",
+      "reason": "Die vorgesehene Zielgrenze passt zu den belegten Aufrufern und dem ausgeführten Verhalten.",
+      "evidence": [
+        {
+          "path": "datamimic_ce/domains/shared/converters/date2timestamp_converter.py",
+          "line": 13
+        },
+        {
+          "path": "datamimic_ce/domains/shared/converters/date_format_converter.py",
+          "line": 12
+        },
+        {
+          "path": "datamimic_ce/domains/shared/converters/timestamp2date_converter.py",
+          "line": 13
+        }
+      ],
+      "recommended_targets": []
+    },
+    {
+      "id": "folder:domains/shared/converters/text",
+      "concern": "Die Converter implementieren konkrete Text-, Zeit-, Maskierungs- und Strukturtransformationen für den Runtime-Converter-Vertrag.",
+      "verdict": "keep",
+      "reason": "Die vorgesehene Zielgrenze passt zu den belegten Aufrufern und dem ausgeführten Verhalten.",
+      "evidence": [
+        {
+          "path": "datamimic_ce/domains/shared/converters/append_converter.py",
+          "line": 10
+        },
+        {
+          "path": "datamimic_ce/domains/shared/converters/cut_length_converter.py",
+          "line": 10
+        },
+        {
+          "path": "datamimic_ce/domains/shared/converters/lower_case_converter.py",
+          "line": 10
+        },
+        {
+          "path": "datamimic_ce/domains/shared/converters/substring_converter.py",
+          "line": 10
+        }
+      ],
+      "recommended_targets": []
+    },
+    {
+      "id": "folder:domains/shared/datasets",
+      "concern": "Datensatzfunktionen lösen und lesen Domain-Dateien und berechnen, für welche Codes alle einer Entity zugeordneten Dateien vorhanden sind.",
+      "verdict": "keep",
+      "reason": "Die vorgesehene Zielgrenze passt zu den belegten Aufrufern und dem ausgeführten Verhalten.",
+      "evidence": [
+        {
+          "path": "datamimic_ce/domains/shared/locale_registry.py",
+          "line": 38
+        },
+        {
+          "path": "datamimic_ce/domains/shared/profile_components.py",
+          "line": 29
+        },
+        {
+          "path": "datamimic_ce/domains/shared/utils/dataset_loader.py",
+          "line": 24
+        }
+      ],
+      "recommended_targets": []
+    },
+    {
+  "id": "folder:domains/shared/datasets/locales",
+  "concern": "Datensatzfunktionen lösen und lesen Domain-Dateien und berechnen, für welche Codes alle einer Entity zugeordneten Dateien vorhanden sind.",
+  "verdict": "keep",
+  "reason": "Die vorgesehene Zielgrenze passt zu den belegten Aufrufern und dem ausgeführten Verhalten.",
+  "evidence": [{"path":"datamimic_ce/domains/shared/locales/__init__.py","line":23},{"path":"datamimic_ce/domains/shared/utils/supported_datasets.py","line":16}],
+      "recommended_targets": []
+    },
+    {
+      "id": "folder:domains/shared/demographics",
+      "concern": "Profildatenlader und Sampler verbinden versionierte Metadaten und Gruppen mit Personen- und Patientenwerten.",
+      "verdict": "keep",
+      "reason": "Die vorgesehene Zielgrenze passt zu den belegten Aufrufern und dem ausgeführten Verhalten.",
+      "evidence": [
+        {
+          "path": "datamimic_ce/domains/shared/demographics/api.py",
+          "line": 17
+        },
+        {
+          "path": "datamimic_ce/domains/shared/demographics/loader.py",
+          "line": 29
+        },
+        {
+          "path": "datamimic_ce/domains/shared/demographics/profile.py",
+          "line": 11
+        },
+        {
+          "path": "datamimic_ce/domains/shared/demographics/profile_meta.py",
+          "line": 18
+        }
+      ],
+      "recommended_targets": []
+    },
+    {
+      "id": "folder:domains/shared/generators",
+      "concern": "Die Generatoren erzeugen konkrete Entity-Felder aus den benötigten RNG-, Zeit- und Datensatzabhängigkeiten.",
+      "verdict": "keep",
+      "reason": "Die vorgesehene Zielgrenze passt zu den belegten Aufrufern und dem ausgeführten Verhalten.",
+      "evidence": [
+        {
+          "path": "datamimic_ce/domains/shared/generators/address_generator.py",
+          "line": 21
+        },
+        {
+          "path": "datamimic_ce/domains/shared/generators/city_generator.py",
+          "line": 17
+        },
+        {
+          "path": "datamimic_ce/domains/shared/generators/company_generator.py",
+          "line": 21
+        },
+        {
+          "path": "datamimic_ce/domains/shared/generators/country_generator.py",
+          "line": 19
+        }
+      ],
+      "recommended_targets": []
+    },
+    {
+      "id": "folder:domains/shared/literal_generators",
+      "concern": "Die gemeinsame Registry macht atomare Generatoren für DSL-Namen auffindbar; ihre Werte reichen von Zahlen und Personendaten bis zu Prüfziffern und Zustandswechseln.",
+      "verdict": "keep",
+      "reason": "generator_registry liefert die explizit erlaubten Klassen für DSL- und Script-Auflösung; die Untergruppen trennen Wertefamilien ohne den gemeinsamen Discovery-Vertrag zu duplizieren.",
+      "evidence": [
+        {
+          "path": "datamimic_ce/domains/shared/generator_registry.py",
+          "line": 15
+        },
+        {
+          "path": "datamimic_ce/domains/shared/literal_generators/academic_title_generator.py",
+          "line": 18
+        },
+        {
+          "path": "datamimic_ce/domains/shared/literal_generators/binary_generator.py",
+          "line": 24
+        },
+        {
+          "path": "datamimic_ce/domains/shared/literal_generators/birthdate_generator.py",
+          "line": 14
+        }
+      ],
+      "recommended_targets": []
+    },
+    {
+      "id": "folder:domains/shared/literal_generators/business",
+      "concern": "Die Generatoren erzeugen Organisationswerte wie Unternehmensnamen, Abteilungen und Sektoren für mehrere Entity-Familien.",
+      "verdict": "keep",
+      "reason": "Die vorgesehene Zielgrenze passt zu den belegten Aufrufern und dem ausgeführten Verhalten.",
+      "evidence": [
+        {
+          "path": "datamimic_ce/domains/shared/literal_generators/company_name_generator.py",
+          "line": 12
+        },
+        {
+          "path": "datamimic_ce/domains/shared/literal_generators/department_name_generator.py",
+          "line": 15
+        },
+        {
+          "path": "datamimic_ce/domains/shared/literal_generators/sector_generator.py",
+          "line": 19
+        }
+      ],
+      "recommended_targets": []
+    },
+    {
+      "id": "folder:domains/shared/literal_generators/contact",
+      "concern": "Die Generatoren erzeugen Domain-, Email-, Telefon-, Straßen- und URL-Werte, teils mit Locale-Datensätzen.",
+      "verdict": "keep",
+      "reason": "Die vorgesehene Zielgrenze passt zu den belegten Aufrufern und dem ausgeführten Verhalten.",
+      "evidence": [
+        {
+          "path": "datamimic_ce/domains/shared/literal_generators/domain_generator.py",
+          "line": 17
+        },
+        {
+          "path": "datamimic_ce/domains/shared/literal_generators/email_address_generator.py",
+          "line": 15
+        },
+        {
+          "path": "datamimic_ce/domains/shared/literal_generators/phone_number_generator.py",
+          "line": 12
+        },
+        {
+          "path": "datamimic_ce/domains/shared/literal_generators/street_name_generator.py",
+          "line": 16
+        }
+      ],
+      "recommended_targets": []
+    },
+    {
+      "id": "folder:domains/shared/literal_generators/identity",
+      "concern": "Die Literal-Registry bündelt synthetische Identitätswerte; Untergruppen trennen Prüfziffern, ID-/UUID-Schlüssel und Hash-/Passwort-/Token-Testwerte.",
+      "verdict": "keep",
+      "reason": "Alle Kinder bleiben atomare Literal-Generatoren derselben DSL-Registry; Untergruppen trennen Wertefamilien ohne Sicherheitsversprechen.",
+      "evidence": [
+        {
+          "path": "datamimic_ce/domains/shared/literal_generators/cnpj_generator.py",
+          "line": 13
+        },
+        {
+          "path": "datamimic_ce/domains/shared/literal_generators/cpf_generator.py",
+          "line": 13
+        },
+        {
+          "path": "datamimic_ce/domains/shared/literal_generators/ean_generator.py",
+          "line": 20
+        },
+        {
+          "path": "datamimic_ce/domains/shared/literal_generators/hash_generator.py",
+          "line": 7
+        }
+      ],
+      "recommended_targets": []
+    },
+    {
+      "id": "folder:domains/shared/literal_generators/identity/codes",
+      "concern": "Die Komponenten mischen CPF/SSN/EAN-Prüfregeln, freie IDs, UUIDs, Hashes und synthetische Passwort-/Tokenwerte mit verschiedenen Wert- und Sicherheitsregeln.",
+      "verdict": "keep",
+      "reason": "Die vorgesehene Zielgrenze passt zu den belegten Aufrufern und dem ausgeführten Verhalten.",
+      "evidence": [
+        {
+          "path": "datamimic_ce/domains/shared/literal_generators/cnpj_generator.py",
+          "line": 13
+        },
+        {
+          "path": "datamimic_ce/domains/shared/literal_generators/cpf_generator.py",
+          "line": 13
+        },
+        {
+          "path": "datamimic_ce/domains/shared/literal_generators/ean_generator.py",
+          "line": 20
+        },
+        {
+          "path": "datamimic_ce/domains/shared/literal_generators/ssn_generator.py",
+          "line": 13
+        }
+      ],
+      "recommended_targets": []
+    },
+    {
+      "id": "folder:domains/shared/literal_generators/identity/keys",
+      "concern": "Die Komponenten mischen CPF/SSN/EAN-Prüfregeln, freie IDs, UUIDs, Hashes und synthetische Passwort-/Tokenwerte mit verschiedenen Wert- und Sicherheitsregeln.",
+      "verdict": "keep",
+      "reason": "Die vorgesehene Zielgrenze passt zu den belegten Aufrufern und dem ausgeführten Verhalten.",
+      "evidence": [
+        {
+          "path": "datamimic_ce/domains/shared/literal_generators/prefixed_id_generator.py",
+          "line": 13
+        },
+        {
+          "path": "datamimic_ce/domains/shared/literal_generators/uuid_generator.py",
+          "line": 11
+        }
+      ],
+      "recommended_targets": []
+    },
+    {
+      "id": "folder:domains/shared/literal_generators/identity/security",
+      "concern": "Diese Generatoren liefern synthetische Hash-, Passwort- und Token-Testwerte über die Literal-Schnittstelle; sie implementieren keinen Kryptodienst.",
+      "verdict": "change",
+      "reason": "Die Klassen teilen die Testdatenrolle und injizierbare RNG-Schnittstelle; die Bezeichnung sollte keine Sicherheitsgarantie nahelegen.",
+      "evidence": [
+        {
+          "path": "datamimic_ce/domains/shared/literal_generators/hash_generator.py",
+          "line": 7
+        },
+        {
+          "path": "datamimic_ce/domains/shared/literal_generators/password_generator.py",
+          "line": 12
+        },
+        {
+          "path": "datamimic_ce/domains/shared/literal_generators/token_generator.py",
+          "line": 7
+        }
+      ],
+      "recommended_targets": [
+        "domains/shared/literal_generators/identity/synthetic_values"
+      ]
+    },
+    {
+      "id": "folder:domains/shared/literal_generators/numeric",
+      "concern": "Die Gruppe enthält Zahlenbereiche, Inkremente und endliche Sequenzen; gemeinsam ist ihr primitiver Runtime-Generatorvertrag.",
+      "verdict": "keep",
+      "reason": "Die vorgesehene Zielgrenze passt zu den belegten Aufrufern und dem ausgeführten Verhalten.",
+      "evidence": [
+        {
+          "path": "datamimic_ce/domains/shared/literal_generators/float_generator.py",
+          "line": 17
+        },
+        {
+          "path": "datamimic_ce/domains/shared/literal_generators/global_increment_generator.py",
+          "line": 10
+        },
+        {
+          "path": "datamimic_ce/domains/shared/literal_generators/increment_generator.py",
+          "line": 11
+        },
+        {
+          "path": "datamimic_ce/domains/shared/literal_generators/integer_generator.py",
+          "line": 16
+        }
+      ],
+      "recommended_targets": []
+    },
+    {
+      "id": "folder:domains/shared/literal_generators/person",
+      "concern": "Die Generatoren erzeugen Vor- und Familiennamen, Geschlecht sowie Namenszusätze aus Personenlisten.",
+      "verdict": "keep",
+      "reason": "Die vorgesehene Zielgrenze passt zu den belegten Aufrufern und dem ausgeführten Verhalten.",
+      "evidence": [
+        {
+          "path": "datamimic_ce/domains/shared/literal_generators/academic_title_generator.py",
+          "line": 18
+        },
+        {
+          "path": "datamimic_ce/domains/shared/literal_generators/family_name_generator.py",
+          "line": 15
+        },
+        {
+          "path": "datamimic_ce/domains/shared/literal_generators/gender_generator.py",
+          "line": 12
+        },
+        {
+          "path": "datamimic_ce/domains/shared/literal_generators/given_name_generator.py",
+          "line": 15
+        }
+      ],
+      "recommended_targets": []
+    },
+    {
+      "id": "folder:domains/shared/literal_generators/primitives",
+      "concern": "Die Generatoren erzeugen einfache Zufallswerte, Faker-Werte und Zustandsübergänge unter derselben Literal-Schnittstelle.",
+      "verdict": "keep",
+      "reason": "Die vorgesehene Zielgrenze passt zu den belegten Aufrufern und dem ausgeführten Verhalten.",
+      "evidence": [
+        {
+          "path": "datamimic_ce/domains/shared/literal_generators/binary_generator.py",
+          "line": 24
+        },
+        {
+          "path": "datamimic_ce/domains/shared/literal_generators/boolean_generator.py",
+          "line": 12
+        },
+        {
+          "path": "datamimic_ce/domains/shared/literal_generators/color_generators.py",
+          "line": 12
+        },
+        {
+          "path": "datamimic_ce/domains/shared/literal_generators/data_faker_generator.py",
+          "line": 15
+        }
+      ],
+      "recommended_targets": []
+    },
+    {
+      "id": "folder:domains/shared/literal_generators/temporal",
+      "concern": "Die Generatoren liefern Geburtsdaten und Zeitwerte, die an deterministische Datensatz- und Clock-Regeln gebunden sind.",
+      "verdict": "keep",
+      "reason": "Die vorgesehene Zielgrenze passt zu den belegten Aufrufern und dem ausgeführten Verhalten.",
+      "evidence": [
+        {
+          "path": "datamimic_ce/domains/shared/literal_generators/birthdate_generator.py",
+          "line": 14
+        },
+        {
+          "path": "datamimic_ce/domains/shared/literal_generators/datetime_generator.py",
+          "line": 18
+        }
+      ],
+      "recommended_targets": []
+    },
+    {
+      "id": "folder:domains/shared/models",
+      "concern": "Die Models halten gecachte Entity-Felder und ihre serialisierte Ausgabe für die jeweiligen Domain-Services.",
+      "verdict": "keep",
+      "reason": "Die vorgesehene Zielgrenze passt zu den belegten Aufrufern und dem ausgeführten Verhalten.",
+      "evidence": [
+        {
+          "path": "datamimic_ce/domains/shared/models/address.py",
+          "line": 13
+        },
+        {
+          "path": "datamimic_ce/domains/shared/models/city.py",
+          "line": 12
+        },
+        {
+          "path": "datamimic_ce/domains/shared/models/company.py",
+          "line": 14
+        },
+        {
+          "path": "datamimic_ce/domains/shared/models/country.py",
+          "line": 12
+        }
+      ],
+      "recommended_targets": []
+    },
+    {
+      "id": "folder:domains/shared/services",
+      "concern": "Die Services verbinden Generator und Modell und stellen Feldschemata für Registry und Engine bereit.",
+      "verdict": "keep",
+      "reason": "Die vorgesehene Zielgrenze passt zu den belegten Aufrufern und dem ausgeführten Verhalten.",
+      "evidence": [
+        {
+          "path": "datamimic_ce/domains/shared/services/address_api.py",
+          "line": 14
+        },
+        {
+          "path": "datamimic_ce/domains/shared/services/address_service.py",
+          "line": 21
+        },
+        {
+          "path": "datamimic_ce/domains/shared/services/city_service.py",
+          "line": 30
+        },
+        {
+          "path": "datamimic_ce/domains/shared/services/company_service.py",
+          "line": 37
+        }
+      ],
+      "recommended_targets": []
+    },
+    {
+      "id": "contract:domains/shared/literal_generators/numeric",
+      "concern": "Die Gruppe enthält Zahlenbereiche, Inkremente und endliche Sequenzen; gemeinsam ist ihr primitiver Runtime-Generatorvertrag.",
+      "verdict": "keep",
+      "reason": "Die vorgesehene Zielgrenze passt zu den belegten Aufrufern und dem ausgeführten Verhalten.",
+      "evidence": [
+        {
+          "path": "datamimic_ce/domains/shared/literal_generators/float_generator.py",
+          "line": 17
+        },
+        {
+          "path": "datamimic_ce/domains/shared/literal_generators/global_increment_generator.py",
+          "line": 10
+        },
+        {
+          "path": "datamimic_ce/domains/shared/literal_generators/increment_generator.py",
+          "line": 11
+        },
+        {
+          "path": "datamimic_ce/domains/shared/literal_generators/integer_generator.py",
+          "line": 16
+        }
+      ],
+      "recommended_targets": []
+    },
+    {
+      "id": "contract:domains/shared/literal_generators/primitives",
+      "concern": "Die Generatoren erzeugen einfache Zufallswerte, Faker-Werte und Zustandsübergänge unter derselben Literal-Schnittstelle.",
+      "verdict": "keep",
+      "reason": "Die vorgesehene Zielgrenze passt zu den belegten Aufrufern und dem ausgeführten Verhalten.",
+      "evidence": [
+        {
+          "path": "datamimic_ce/domains/shared/literal_generators/binary_generator.py",
+          "line": 24
+        },
+        {
+          "path": "datamimic_ce/domains/shared/literal_generators/boolean_generator.py",
+          "line": 12
+        },
+        {
+          "path": "datamimic_ce/domains/shared/literal_generators/color_generators.py",
+          "line": 12
+        },
+        {
+          "path": "datamimic_ce/domains/shared/literal_generators/data_faker_generator.py",
+          "line": 15
+        }
+      ],
+      "recommended_targets": []
+    },
+    {
+      "id": "contract:domains/shared/literal_generators/identity",
+      "concern": "Die Literal-Registry bündelt synthetische Identitätswerte; Untergruppen trennen Prüfziffern, ID-/UUID-Schlüssel und Hash-/Passwort-/Token-Testwerte.",
+      "verdict": "keep",
+      "reason": "Alle Kinder bleiben atomare Literal-Generatoren derselben DSL-Registry; Untergruppen trennen Wertefamilien ohne Sicherheitsversprechen.",
+      "evidence": [
+        {
+          "path": "datamimic_ce/domains/shared/literal_generators/cnpj_generator.py",
+          "line": 13
+        },
+        {
+          "path": "datamimic_ce/domains/shared/literal_generators/cpf_generator.py",
+          "line": 13
+        },
+        {
+          "path": "datamimic_ce/domains/shared/literal_generators/ean_generator.py",
+          "line": 20
+        },
+        {
+          "path": "datamimic_ce/domains/shared/literal_generators/hash_generator.py",
+          "line": 7
+        }
+      ],
+      "recommended_targets": []
+    },
+    {
+      "id": "contract:domains/shared/literal_generators/temporal",
+      "concern": "Die Generatoren liefern Geburtsdaten und Zeitwerte, die an deterministische Datensatz- und Clock-Regeln gebunden sind.",
+      "verdict": "keep",
+      "reason": "Die vorgesehene Zielgrenze passt zu den belegten Aufrufern und dem ausgeführten Verhalten.",
+      "evidence": [
+        {
+          "path": "datamimic_ce/domains/shared/literal_generators/birthdate_generator.py",
+          "line": 14
+        },
+        {
+          "path": "datamimic_ce/domains/shared/literal_generators/datetime_generator.py",
+          "line": 18
+        }
+      ],
+      "recommended_targets": []
+    },
+    {
+      "id": "contract:domains/shared/literal_generators/person",
+      "concern": "Die Generatoren erzeugen Vor- und Familiennamen, Geschlecht sowie Namenszusätze aus Personenlisten.",
+      "verdict": "keep",
+      "reason": "Die vorgesehene Zielgrenze passt zu den belegten Aufrufern und dem ausgeführten Verhalten.",
+      "evidence": [
+        {
+          "path": "datamimic_ce/domains/shared/literal_generators/academic_title_generator.py",
+          "line": 18
+        },
+        {
+          "path": "datamimic_ce/domains/shared/literal_generators/family_name_generator.py",
+          "line": 15
+        },
+        {
+          "path": "datamimic_ce/domains/shared/literal_generators/gender_generator.py",
+          "line": 12
+        },
+        {
+          "path": "datamimic_ce/domains/shared/literal_generators/given_name_generator.py",
+          "line": 15
+        }
+      ],
+      "recommended_targets": []
+    },
+    {
+      "id": "contract:domains/shared/literal_generators/contact",
+      "concern": "Die Generatoren erzeugen Domain-, Email-, Telefon-, Straßen- und URL-Werte, teils mit Locale-Datensätzen.",
+      "verdict": "keep",
+      "reason": "Die vorgesehene Zielgrenze passt zu den belegten Aufrufern und dem ausgeführten Verhalten.",
+      "evidence": [
+        {
+          "path": "datamimic_ce/domains/shared/literal_generators/domain_generator.py",
+          "line": 17
+        },
+        {
+          "path": "datamimic_ce/domains/shared/literal_generators/email_address_generator.py",
+          "line": 15
+        },
+        {
+          "path": "datamimic_ce/domains/shared/literal_generators/phone_number_generator.py",
+          "line": 12
+        },
+        {
+          "path": "datamimic_ce/domains/shared/literal_generators/street_name_generator.py",
+          "line": 16
+        }
+      ],
+      "recommended_targets": []
+    },
+    {
+      "id": "contract:domains/shared/literal_generators/business",
+      "concern": "Die Generatoren erzeugen Organisationswerte wie Unternehmensnamen, Abteilungen und Sektoren für mehrere Entity-Familien.",
+      "verdict": "keep",
+      "reason": "Die vorgesehene Zielgrenze passt zu den belegten Aufrufern und dem ausgeführten Verhalten.",
+      "evidence": [
+        {
+          "path": "datamimic_ce/domains/shared/literal_generators/company_name_generator.py",
+          "line": 12
+        },
+        {
+          "path": "datamimic_ce/domains/shared/literal_generators/department_name_generator.py",
+          "line": 15
+        },
+        {
+          "path": "datamimic_ce/domains/shared/literal_generators/sector_generator.py",
+          "line": 19
+        }
+      ],
+      "recommended_targets": []
+    },
+    {
+      "id": "contract:domains/shared/literal_generators/registry",
+      "concern": "Die Komponente stellt konkret genutzte Domain-Funktionen bereit, deren Unterrollen durch die Implementierungen belegt sind.",
+      "verdict": "keep",
+      "reason": "Die vorgesehene Zielgrenze passt zu den belegten Aufrufern und dem ausgeführten Verhalten.",
+      "evidence": [
+        {
+          "path": "datamimic_ce/domains/shared/generator_registry.py",
+          "line": 15
+        }
+      ],
+      "recommended_targets": []
+    },
+    {
+      "id": "contract:domains/shared/converters/base",
+      "concern": "Die Converter implementieren konkrete Text-, Zeit-, Maskierungs- und Strukturtransformationen für den Runtime-Converter-Vertrag.",
+      "verdict": "keep",
+      "reason": "Die vorgesehene Zielgrenze passt zu den belegten Aufrufern und dem ausgeführten Verhalten.",
+      "evidence": [
+        {
+          "path": "datamimic_ce/domains/shared/converters/converter.py",
+          "line": 10
+        }
+      ],
+      "recommended_targets": []
+    },
+    {
+      "id": "contract:domains/shared/converters/text",
+      "concern": "Die Converter implementieren konkrete Text-, Zeit-, Maskierungs- und Strukturtransformationen für den Runtime-Converter-Vertrag.",
+      "verdict": "keep",
+      "reason": "Die vorgesehene Zielgrenze passt zu den belegten Aufrufern und dem ausgeführten Verhalten.",
+      "evidence": [
+        {
+          "path": "datamimic_ce/domains/shared/converters/append_converter.py",
+          "line": 10
+        },
+        {
+          "path": "datamimic_ce/domains/shared/converters/cut_length_converter.py",
+          "line": 10
+        },
+        {
+          "path": "datamimic_ce/domains/shared/converters/lower_case_converter.py",
+          "line": 10
+        },
+        {
+          "path": "datamimic_ce/domains/shared/converters/substring_converter.py",
+          "line": 10
+        }
+      ],
+      "recommended_targets": []
+    },
+    {
+      "id": "contract:domains/shared/converters/temporal",
+      "concern": "Die Converter implementieren konkrete Text-, Zeit-, Maskierungs- und Strukturtransformationen für den Runtime-Converter-Vertrag.",
+      "verdict": "keep",
+      "reason": "Die vorgesehene Zielgrenze passt zu den belegten Aufrufern und dem ausgeführten Verhalten.",
+      "evidence": [
+        {
+          "path": "datamimic_ce/domains/shared/converters/date2timestamp_converter.py",
+          "line": 13
+        },
+        {
+          "path": "datamimic_ce/domains/shared/converters/date_format_converter.py",
+          "line": 12
+        },
+        {
+          "path": "datamimic_ce/domains/shared/converters/timestamp2date_converter.py",
+          "line": 13
+        }
+      ],
+      "recommended_targets": []
+    },
+    {
+      "id": "contract:domains/shared/converters/privacy",
+      "concern": "Die Converter implementieren konkrete Text-, Zeit-, Maskierungs- und Strukturtransformationen für den Runtime-Converter-Vertrag.",
+      "verdict": "keep",
+      "reason": "Die vorgesehene Zielgrenze passt zu den belegten Aufrufern und dem ausgeführten Verhalten.",
+      "evidence": [
+        {
+          "path": "datamimic_ce/domains/shared/converters/hash_converter.py",
+          "line": 14
+        },
+        {
+          "path": "datamimic_ce/domains/shared/converters/java_hash_converter.py",
+          "line": 10
+        },
+        {
+          "path": "datamimic_ce/domains/shared/converters/mask_converter.py",
+          "line": 10
+        },
+        {
+          "path": "datamimic_ce/domains/shared/converters/middle_mask_converter.py",
+          "line": 10
+        }
+      ],
+      "recommended_targets": []
+    },
+    {
+      "id": "contract:domains/shared/converters/structural",
+      "concern": "Die Converter implementieren konkrete Text-, Zeit-, Maskierungs- und Strukturtransformationen für den Runtime-Converter-Vertrag.",
+      "verdict": "keep",
+      "reason": "Die vorgesehene Zielgrenze passt zu den belegten Aufrufern und dem ausgeführten Verhalten.",
+      "evidence": [
+        {
+          "path": "datamimic_ce/domains/shared/converters/custom_converter.py",
+          "line": 10
+        },
+        {
+          "path": "datamimic_ce/domains/shared/converters/remove_none_or_empty_element_converter.py",
+          "line": 12
+        }
+      ],
+      "recommended_targets": []
+    },
+    {
+      "id": "contract:domains/shared/models",
+      "concern": "Die Models halten gecachte Entity-Felder und ihre serialisierte Ausgabe für die jeweiligen Domain-Services.",
+      "verdict": "keep",
+      "reason": "Die vorgesehene Zielgrenze passt zu den belegten Aufrufern und dem ausgeführten Verhalten.",
+      "evidence": [
+        {
+          "path": "datamimic_ce/domains/shared/json_types.py",
+          "line": 7
+        },
+        {
+          "path": "datamimic_ce/domains/shared/models/address.py",
+          "line": 13
+        },
+        {
+          "path": "datamimic_ce/domains/shared/models/city.py",
+          "line": 12
+        },
+        {
+          "path": "datamimic_ce/domains/shared/models/company.py",
+          "line": 14
+        }
+      ],
+      "recommended_targets": []
+    },
+    {
+      "id": "contract:domains/shared/datasets",
+      "concern": "Datensatzfunktionen lösen und lesen Domain-Dateien und berechnen, für welche Codes alle einer Entity zugeordneten Dateien vorhanden sind.",
+      "verdict": "keep",
+      "reason": "Die vorgesehene Zielgrenze passt zu den belegten Aufrufern und dem ausgeführten Verhalten.",
+      "evidence": [
+        {
+          "path": "datamimic_ce/domains/shared/determinism.py",
+          "line": 16
+        },
+        {
+          "path": "datamimic_ce/domains/shared/locale_registry.py",
+          "line": 38
+        },
+        {
+          "path": "datamimic_ce/domains/shared/profile_components.py",
+          "line": 29
+        },
+        {
+          "path": "datamimic_ce/domains/shared/sampling.py",
+          "line": 10
+        }
+      ],
+      "recommended_targets": []
+    },
+    {
+      "id": "contract:domains/shared/generators",
+      "concern": "Die Generatoren erzeugen konkrete Entity-Felder aus den benötigten RNG-, Zeit- und Datensatzabhängigkeiten.",
+      "verdict": "keep",
+      "reason": "Die vorgesehene Zielgrenze passt zu den belegten Aufrufern und dem ausgeführten Verhalten.",
+      "evidence": [
+        {
+          "path": "datamimic_ce/domains/shared/generators/address_generator.py",
+          "line": 21
+        },
+        {
+          "path": "datamimic_ce/domains/shared/generators/city_generator.py",
+          "line": 17
+        },
+        {
+          "path": "datamimic_ce/domains/shared/generators/company_generator.py",
+          "line": 21
+        },
+        {
+          "path": "datamimic_ce/domains/shared/generators/country_generator.py",
+          "line": 19
+        }
+      ],
+      "recommended_targets": []
+    },
+    {
+      "id": "contract:domains/shared/services",
+      "concern": "Die Services verbinden Generator und Modell und stellen Feldschemata für Registry und Engine bereit.",
+      "verdict": "keep",
+      "reason": "Die vorgesehene Zielgrenze passt zu den belegten Aufrufern und dem ausgeführten Verhalten.",
+      "evidence": [
+        {
+          "path": "datamimic_ce/domains/shared/services/address_api.py",
+          "line": 14
+        },
+        {
+          "path": "datamimic_ce/domains/shared/services/address_service.py",
+          "line": 21
+        },
+        {
+          "path": "datamimic_ce/domains/shared/services/city_service.py",
+          "line": 30
+        },
+        {
+          "path": "datamimic_ce/domains/shared/services/company_service.py",
+          "line": 37
+        }
+      ],
+      "recommended_targets": []
+    },
+    {
+      "id": "contract:domains/shared/literal_generators",
+      "concern": "Die gemeinsame Registry macht atomare Generatoren für DSL-Namen auffindbar; ihre Werte reichen von Zahlen und Personendaten bis zu Prüfziffern und Zustandswechseln.",
+      "verdict": "keep",
+      "reason": "Die vorgesehene Zielgrenze passt zu den belegten Aufrufern und dem ausgeführten Verhalten.",
+      "evidence": [
+        {
+          "path": "datamimic_ce/domains/shared/generator_registry.py",
+          "line": 15
+        },
+        {
+          "path": "datamimic_ce/domains/shared/literal_generators/academic_title_generator.py",
+          "line": 18
+        },
+        {
+          "path": "datamimic_ce/domains/shared/literal_generators/binary_generator.py",
+          "line": 24
+        },
+        {
+          "path": "datamimic_ce/domains/shared/literal_generators/birthdate_generator.py",
+          "line": 14
+        }
+      ],
+      "recommended_targets": []
+    },
+    {
+      "id": "contract:domains/shared/converters",
+      "concern": "Die Converter implementieren konkrete Text-, Zeit-, Maskierungs- und Strukturtransformationen für den Runtime-Converter-Vertrag.",
+      "verdict": "keep",
+      "reason": "Die vorgesehene Zielgrenze passt zu den belegten Aufrufern und dem ausgeführten Verhalten.",
+      "evidence": [
+        {
+          "path": "datamimic_ce/domains/shared/converters/append_converter.py",
+          "line": 10
+        },
+        {
+          "path": "datamimic_ce/domains/shared/converters/converter.py",
+          "line": 10
+        },
+        {
+          "path": "datamimic_ce/domains/shared/converters/custom_converter.py",
+          "line": 10
+        },
+        {
+          "path": "datamimic_ce/domains/shared/converters/cut_length_converter.py",
+          "line": 10
+        }
+      ],
+      "recommended_targets": []
+    },
+    {
+      "id": "contract:domains/shared/demographics",
+      "concern": "Profildatenlader und Sampler verbinden versionierte Metadaten und Gruppen mit Personen- und Patientenwerten.",
+      "verdict": "keep",
+      "reason": "Die vorgesehene Zielgrenze passt zu den belegten Aufrufern und dem ausgeführten Verhalten.",
+      "evidence": [
+        {
+          "path": "datamimic_ce/domains/shared/demographics/api.py",
+          "line": 17
+        },
+        {
+          "path": "datamimic_ce/domains/shared/demographics/loader.py",
+          "line": 29
+        },
+        {
+          "path": "datamimic_ce/domains/shared/demographics/profile.py",
+          "line": 11
+        },
+        {
+          "path": "datamimic_ce/domains/shared/demographics/profile_meta.py",
+          "line": 18
+        }
+      ],
+      "recommended_targets": []
+    },
+    {
+      "id": "contract:domains/shared/schema",
+      "concern": "Der Schema-Loader prüft versionierte JSON-Payloads an der Anfrage- und Antwortgrenze.",
+      "verdict": "change",
+      "reason": "JSON-Schema-Prüfung gehört zum Aufruf von domains/facade.py, nicht zur Registry, die DSL-Entity-Services entdeckt.",
+      "evidence": [
+        {
+          "path": "datamimic_ce/domains/shared/schema_registry.py",
+          "line": 18
+        }
+      ],
+      "recommended_targets": [
+        "domains/schema_registry.py"
+      ]
+    },
+    {
+  "id": "contract:domains/shared/examples",
+  "concern": "Die Skripte zeigen ausführbare Aufrufe der öffentlichen Domain-Generatoren.",
+  "verdict": "keep",
+  "reason": "Die vorgesehene Zielgrenze passt zu den belegten Aufrufern und dem ausgeführten Verhalten.",
+  "evidence": [{"path":"datamimic_ce/domains/shared/examples/generate_address.py","line":4},{"path":"datamimic_ce/domains/shared/examples/generate_cities.py","line":6},{"path":"datamimic_ce/domains/shared/examples/generate_people_demographics.py","line":17}],
+      "recommended_targets": []
+    },
+    {
+      "id": "contract:domains/finance/models",
+      "concern": "Die Models halten gecachte Entity-Felder und ihre serialisierte Ausgabe für die jeweiligen Domain-Services.",
+      "verdict": "keep",
+      "reason": "Die vorgesehene Zielgrenze passt zu den belegten Aufrufern und dem ausgeführten Verhalten.",
+      "evidence": [
+        {
+          "path": "datamimic_ce/domains/finance/models/bank.py",
+          "line": 9
+        },
+        {
+          "path": "datamimic_ce/domains/finance/models/bank_account.py",
+          "line": 21
+        },
+        {
+          "path": "datamimic_ce/domains/finance/models/credit_card.py",
+          "line": 24
+        },
+        {
+          "path": "datamimic_ce/domains/finance/models/transaction.py",
+          "line": 22
+        }
+      ],
+      "recommended_targets": []
+    },
+    {
+      "id": "contract:domains/finance/generators",
+      "concern": "Die Generatoren erzeugen konkrete Entity-Felder aus den benötigten RNG-, Zeit- und Datensatzabhängigkeiten.",
+      "verdict": "keep",
+      "reason": "Die vorgesehene Zielgrenze passt zu den belegten Aufrufern und dem ausgeführten Verhalten.",
+      "evidence": [
+        {
+          "path": "datamimic_ce/domains/finance/generators/bank_account_generator.py",
+          "line": 18
+        },
+        {
+          "path": "datamimic_ce/domains/finance/generators/bank_generator.py",
+          "line": 14
+        },
+        {
+          "path": "datamimic_ce/domains/finance/generators/credit_card_generator.py",
+          "line": 24
+        },
+        {
+          "path": "datamimic_ce/domains/finance/generators/transaction_generator.py",
+          "line": 28
+        }
+      ],
+      "recommended_targets": []
+    },
+    {
+      "id": "contract:domains/finance/services",
+      "concern": "Die Services verbinden Generator und Modell und stellen Feldschemata für Registry und Engine bereit.",
+      "verdict": "keep",
+      "reason": "Die vorgesehene Zielgrenze passt zu den belegten Aufrufern und dem ausgeführten Verhalten.",
+      "evidence": [
+        {
+          "path": "datamimic_ce/domains/finance/services/bank_account_service.py",
+          "line": 33
+        },
+        {
+          "path": "datamimic_ce/domains/finance/services/bank_service.py",
+          "line": 28
+        },
+        {
+          "path": "datamimic_ce/domains/finance/services/credit_card_service.py",
+          "line": 39
+        },
+        {
+          "path": "datamimic_ce/domains/finance/services/transaction_service.py",
+          "line": 52
+        }
+      ],
+      "recommended_targets": []
+    },
+    {
+      "id": "contract:domains/finance/algorithms",
+      "concern": "Die Funktion berechnet die Luhn-Prüfziffer, die ein Zahlungskennungs-Generator nutzt.",
+      "verdict": "keep",
+      "reason": "Die vorgesehene Zielgrenze passt zu den belegten Aufrufern und dem ausgeführten Verhalten.",
+      "evidence": [
+        {
+          "path": "datamimic_ce/domains/finance/luhn.py",
+          "line": 8
+        }
+      ],
+      "recommended_targets": []
+    },
+    {
+      "id": "contract:domains/healthcare/models",
+      "concern": "Die Models halten gecachte Entity-Felder und ihre serialisierte Ausgabe für die jeweiligen Domain-Services.",
+      "verdict": "keep",
+      "reason": "Die vorgesehene Zielgrenze passt zu den belegten Aufrufern und dem ausgeführten Verhalten.",
+      "evidence": [
+        {
+          "path": "datamimic_ce/domains/healthcare/models/doctor.py",
+          "line": 23
+        },
+        {
+          "path": "datamimic_ce/domains/healthcare/models/hospital.py",
+          "line": 20
+        },
+        {
+          "path": "datamimic_ce/domains/healthcare/models/medical_device.py",
+          "line": 20
+        },
+        {
+          "path": "datamimic_ce/domains/healthcare/models/medical_procedure.py",
+          "line": 19
+        }
+      ],
+      "recommended_targets": []
+    },
+    {
+      "id": "contract:domains/healthcare/generators",
+      "concern": "Die Generatoren erzeugen konkrete Entity-Felder aus den benötigten RNG-, Zeit- und Datensatzabhängigkeiten.",
+      "verdict": "keep",
+      "reason": "Die vorgesehene Zielgrenze passt zu den belegten Aufrufern und dem ausgeführten Verhalten.",
+      "evidence": [
+        {
+          "path": "datamimic_ce/domains/healthcare/generators/doctor_generator.py",
+          "line": 36
+        },
+        {
+          "path": "datamimic_ce/domains/healthcare/generators/hospital_generator.py",
+          "line": 22
+        },
+        {
+          "path": "datamimic_ce/domains/healthcare/generators/medical_device_generator.py",
+          "line": 30
+        },
+        {
+          "path": "datamimic_ce/domains/healthcare/generators/medical_procedure_generator.py",
+          "line": 25
+        }
+      ],
+      "recommended_targets": []
+    },
+    {
+      "id": "contract:domains/healthcare/services",
+      "concern": "Die Services verbinden Generator und Modell und stellen Feldschemata für Registry und Engine bereit.",
+      "verdict": "keep",
+      "reason": "Die vorgesehene Zielgrenze passt zu den belegten Aufrufern und dem ausgeführten Verhalten.",
+      "evidence": [
+        {
+          "path": "datamimic_ce/domains/healthcare/services/doctor_api.py",
+          "line": 21
+        },
+        {
+          "path": "datamimic_ce/domains/healthcare/services/doctor_service.py",
+          "line": 55
+        },
+        {
+          "path": "datamimic_ce/domains/healthcare/services/hospital_service.py",
+          "line": 42
+        },
+        {
+          "path": "datamimic_ce/domains/healthcare/services/medical_device_service.py",
+          "line": 38
+        }
+      ],
+      "recommended_targets": []
+    },
+    {
+      "id": "contract:domains/insurance/models",
+      "concern": "Die Models halten gecachte Entity-Felder und ihre serialisierte Ausgabe für die jeweiligen Domain-Services.",
+      "verdict": "keep",
+      "reason": "Die vorgesehene Zielgrenze passt zu den belegten Aufrufern und dem ausgeführten Verhalten.",
+      "evidence": [
+        {
+          "path": "datamimic_ce/domains/insurance/models/insurance_company.py",
+          "line": 19
+        },
+        {
+          "path": "datamimic_ce/domains/insurance/models/insurance_coverage.py",
+          "line": 6
+        },
+        {
+          "path": "datamimic_ce/domains/insurance/models/insurance_policy.py",
+          "line": 14
+        },
+        {
+          "path": "datamimic_ce/domains/insurance/models/insurance_product.py",
+          "line": 22
+        }
+      ],
+      "recommended_targets": []
+    },
+    {
+      "id": "contract:domains/insurance/generators",
+      "concern": "Die Generatoren erzeugen konkrete Entity-Felder aus den benötigten RNG-, Zeit- und Datensatzabhängigkeiten.",
+      "verdict": "keep",
+      "reason": "Die vorgesehene Zielgrenze passt zu den belegten Aufrufern und dem ausgeführten Verhalten.",
+      "evidence": [
+        {
+          "path": "datamimic_ce/domains/insurance/generators/insurance_company_generator.py",
+          "line": 9
+        },
+        {
+          "path": "datamimic_ce/domains/insurance/generators/insurance_coverage_generator.py",
+          "line": 9
+        },
+        {
+          "path": "datamimic_ce/domains/insurance/generators/insurance_policy_generator.py",
+          "line": 19
+        },
+        {
+          "path": "datamimic_ce/domains/insurance/generators/insurance_product_generator.py",
+          "line": 9
+        }
+      ],
+      "recommended_targets": []
+    },
+    {
+      "id": "contract:domains/insurance/services",
+      "concern": "Die Services verbinden Generator und Modell und stellen Feldschemata für Registry und Engine bereit.",
+      "verdict": "keep",
+      "reason": "Die vorgesehene Zielgrenze passt zu den belegten Aufrufern und dem ausgeführten Verhalten.",
+      "evidence": [
+        {
+          "path": "datamimic_ce/domains/insurance/services/insurance_company_service.py",
+          "line": 33
+        },
+        {
+          "path": "datamimic_ce/domains/insurance/services/insurance_coverage_service.py",
+          "line": 33
+        },
+        {
+          "path": "datamimic_ce/domains/insurance/services/insurance_policy_service.py",
+          "line": 42
+        },
+        {
+          "path": "datamimic_ce/domains/insurance/services/insurance_product_service.py",
+          "line": 32
+        }
+      ],
+      "recommended_targets": []
+    },
+    {
+      "id": "contract:domains/ecommerce/models",
+      "concern": "Die Models halten gecachte Entity-Felder und ihre serialisierte Ausgabe für die jeweiligen Domain-Services.",
+      "verdict": "keep",
+      "reason": "Die vorgesehene Zielgrenze passt zu den belegten Aufrufern und dem ausgeführten Verhalten.",
+      "evidence": [
+        {
+          "path": "datamimic_ce/domains/ecommerce/models/order.py",
+          "line": 23
+        },
+        {
+          "path": "datamimic_ce/domains/ecommerce/models/product.py",
+          "line": 23
+        }
+      ],
+      "recommended_targets": []
+    },
+    {
+      "id": "contract:domains/ecommerce/generators",
+      "concern": "Die Generatoren erzeugen konkrete Entity-Felder aus den benötigten RNG-, Zeit- und Datensatzabhängigkeiten.",
+      "verdict": "keep",
+      "reason": "Die vorgesehene Zielgrenze passt zu den belegten Aufrufern und dem ausgeführten Verhalten.",
+      "evidence": [
+        {
+          "path": "datamimic_ce/domains/ecommerce/generators/order_generator.py",
+          "line": 17
+        },
+        {
+          "path": "datamimic_ce/domains/ecommerce/generators/product_generator.py",
+          "line": 23
+        }
+      ],
+      "recommended_targets": []
+    },
+    {
+      "id": "contract:domains/ecommerce/services",
+      "concern": "Die Services verbinden Generator und Modell und stellen Feldschemata für Registry und Engine bereit.",
+      "verdict": "keep",
+      "reason": "Die vorgesehene Zielgrenze passt zu den belegten Aufrufern und dem ausgeführten Verhalten.",
+      "evidence": [
+        {
+          "path": "datamimic_ce/domains/ecommerce/services/order_service.py",
+          "line": 43
+        },
+        {
+          "path": "datamimic_ce/domains/ecommerce/services/product_service.py",
+          "line": 36
+        }
+      ],
+      "recommended_targets": []
+    },
+    {
+      "id": "contract:domains/public_sector/models",
+      "concern": "Die Models halten gecachte Entity-Felder und ihre serialisierte Ausgabe für die jeweiligen Domain-Services.",
+      "verdict": "keep",
+      "reason": "Die vorgesehene Zielgrenze passt zu den belegten Aufrufern und dem ausgeführten Verhalten.",
+      "evidence": [
+        {
+          "path": "datamimic_ce/domains/public_sector/models/administration_office.py",
+          "line": 22
+        },
+        {
+          "path": "datamimic_ce/domains/public_sector/models/educational_institution.py",
+          "line": 24
+        },
+        {
+          "path": "datamimic_ce/domains/public_sector/models/police_officer.py",
+          "line": 23
+        }
+      ],
+      "recommended_targets": []
+    },
+    {
+      "id": "contract:domains/public_sector/generators",
+      "concern": "Die Generatoren erzeugen konkrete Entity-Felder aus den benötigten RNG-, Zeit- und Datensatzabhängigkeiten.",
+      "verdict": "keep",
+      "reason": "Die vorgesehene Zielgrenze passt zu den belegten Aufrufern und dem ausgeführten Verhalten.",
+      "evidence": [
+        {
+          "path": "datamimic_ce/domains/public_sector/generators/administration_office_generator.py",
+          "line": 34
+        },
+        {
+          "path": "datamimic_ce/domains/public_sector/generators/educational_institution_generator.py",
+          "line": 11
+        },
+        {
+          "path": "datamimic_ce/domains/public_sector/generators/police_officer_generator.py",
+          "line": 27
+        }
+      ],
+      "recommended_targets": []
+    },
+    {
+      "id": "contract:domains/public_sector/services",
+      "concern": "Die Services verbinden Generator und Modell und stellen Feldschemata für Registry und Engine bereit.",
+      "verdict": "keep",
+      "reason": "Die vorgesehene Zielgrenze passt zu den belegten Aufrufern und dem ausgeführten Verhalten.",
+      "evidence": [
+        {
+          "path": "datamimic_ce/domains/public_sector/services/administration_office_service.py",
+          "line": 48
+        },
+        {
+          "path": "datamimic_ce/domains/public_sector/services/educational_institution_service.py",
+          "line": 49
+        },
+        {
+          "path": "datamimic_ce/domains/public_sector/services/police_officer_service.py",
+          "line": 54
+        }
+      ],
+      "recommended_targets": []
+    },
+    {
+      "id": "contract:domains/api",
+      "concern": "Die JSON-Facade validiert Payloads und ruft typisierte Domainfunktionen auf; Entity-Service-Registry und Capability-Projection haben eigene Engine-Aufrufer.",
+      "verdict": "keep",
+      "reason": "Die vorgesehene Zielgrenze passt zu den belegten Aufrufern und dem ausgeführten Verhalten.",
+      "evidence": [
+        {
+          "path": "datamimic_ce/domains/api.py",
+          "line": 56
+        },
+        {
+          "path": "datamimic_ce/domains/entity_registry.py",
+          "line": 21
+        },
+        {
+          "path": "datamimic_ce/domains/facade.py",
+          "line": 40
+        }
+      ],
+      "recommended_targets": []
+    },
+    {
+      "id": "contract:domains/domain_core",
+      "concern": "Entity-Schema, Feldcache, Identifier-Bindung und Generatorbasen werden von vertikalen Services genutzt; RNG- und Clock-Entscheidungen sind als Runtime-SPOT separat aufrufbar.",
+      "verdict": "keep",
+      "reason": "Die vorgesehene Zielgrenze passt zu den belegten Aufrufern und dem ausgeführten Verhalten.",
+      "evidence": [
+        {
+          "path": "datamimic_ce/domains/domain_core/attribute_catalog.py",
+          "line": 32
+        },
+        {
+          "path": "datamimic_ce/domains/domain_core/base_domain_generator.py",
+          "line": 43
+        },
+        {
+          "path": "datamimic_ce/domains/domain_core/base_domain_service.py",
+          "line": 18
+        },
+        {
+          "path": "datamimic_ce/domains/domain_core/base_entity.py",
+          "line": 21
+        }
+      ],
+      "recommended_targets": []
+    },
+    {
+      "id": "contract:domains/shared",
+      "concern": "Die Unterpakete bündeln Converter, Datensatz-/Locale-Lader, Demografie-Sampler, Entity-Generatoren und Services; der Elternpfad ist nur der gemeinsame Namespace.",
+      "verdict": "keep",
+      "reason": "Converter, Locale-Laden und Demografie-Sampling besitzen eigene Unterpakete; zusätzliche Namespace-Schichten bilden keine gemeinsame Laufzeitinvariante ab.",
+      "evidence": [
+        {
+          "path": "datamimic_ce/domains/shared/converters/append_converter.py",
+          "line": 10
+        },
+        {
+          "path": "datamimic_ce/domains/shared/converters/converter.py",
+          "line": 10
+        },
+        {
+          "path": "datamimic_ce/domains/shared/converters/custom_converter.py",
+          "line": 10
+        },
+        {
+          "path": "datamimic_ce/domains/shared/converters/cut_length_converter.py",
+          "line": 10
+        }
+      ],
+      "recommended_targets": []
+    },
+    {
+      "id": "contract:domains/finance",
+      "concern": "Die Finanzkomponente erzeugt Banken, Konten, Karten und Transaktionen mit zusammenhängenden Kennungs-, Betrags- und Zeitfeldern.",
+      "verdict": "keep",
+      "reason": "Vertikale Modelle, Generatoren und Services werden entlang derselben fachlichen Erzeugungskette benutzt.",
+      "evidence": [
+        {
+          "path": "datamimic_ce/domains/finance/generators/bank_account_generator.py",
+          "line": 18
+        },
+        {
+          "path": "datamimic_ce/domains/finance/generators/bank_generator.py",
+          "line": 14
+        },
+        {
+          "path": "datamimic_ce/domains/finance/generators/credit_card_generator.py",
+          "line": 24
+        },
+        {
+          "path": "datamimic_ce/domains/finance/generators/transaction_generator.py",
+          "line": 28
+        }
+      ],
+      "recommended_targets": []
+    },
+    {
+      "id": "contract:domains/healthcare",
+      "concern": "Die Healthcare-Komponente verbindet Patienten-, Arzt-, Klinik-, Geräte- und Prozedurdaten mit Profil- und Altersregeln.",
+      "verdict": "keep",
+      "reason": "Vertikale Modelle, Generatoren und Services werden entlang derselben fachlichen Erzeugungskette benutzt.",
+      "evidence": [
+        {
+          "path": "datamimic_ce/domains/healthcare/generators/doctor_generator.py",
+          "line": 36
+        },
+        {
+          "path": "datamimic_ce/domains/healthcare/generators/hospital_generator.py",
+          "line": 22
+        },
+        {
+          "path": "datamimic_ce/domains/healthcare/generators/medical_device_generator.py",
+          "line": 30
+        },
+        {
+          "path": "datamimic_ce/domains/healthcare/generators/medical_procedure_generator.py",
+          "line": 25
+        }
+      ],
+      "recommended_targets": []
+    },
+    {
+      "id": "contract:domains/insurance",
+      "concern": "Die Versicherungskomponente verbindet Versicherer, Produkte, Deckungen und Policen über verschachtelte Modelle und Generatoren.",
+      "verdict": "keep",
+      "reason": "Vertikale Modelle, Generatoren und Services werden entlang derselben fachlichen Erzeugungskette benutzt.",
+      "evidence": [
+        {
+          "path": "datamimic_ce/domains/insurance/generators/insurance_company_generator.py",
+          "line": 9
+        },
+        {
+          "path": "datamimic_ce/domains/insurance/generators/insurance_coverage_generator.py",
+          "line": 9
+        },
+        {
+          "path": "datamimic_ce/domains/insurance/generators/insurance_policy_generator.py",
+          "line": 19
+        },
+        {
+          "path": "datamimic_ce/domains/insurance/generators/insurance_product_generator.py",
+          "line": 9
+        }
+      ],
+      "recommended_targets": []
+    },
+    {
+      "id": "contract:domains/ecommerce",
+      "concern": "Die E-Commerce-Komponente verbindet Produkte und Bestellungen mit Produktlisten, Adressen, Zahlungs- und Preisfeldern.",
+      "verdict": "keep",
+      "reason": "Vertikale Modelle, Generatoren und Services werden entlang derselben fachlichen Erzeugungskette benutzt.",
+      "evidence": [
+        {
+          "path": "datamimic_ce/domains/ecommerce/generators/order_generator.py",
+          "line": 17
+        },
+        {
+          "path": "datamimic_ce/domains/ecommerce/generators/product_generator.py",
+          "line": 23
+        },
+        {
+          "path": "datamimic_ce/domains/ecommerce/models/order.py",
+          "line": 23
+        },
+        {
+          "path": "datamimic_ce/domains/ecommerce/models/product.py",
+          "line": 23
+        }
+      ],
+      "recommended_targets": []
+    },
+    {
+      "id": "contract:domains/public_sector",
+      "concern": "Die Public-Sector-Komponente erzeugt Amts-, Bildungs- und Polizeidaten mit abgeleiteten Zeit- und Personenfeldern.",
+      "verdict": "keep",
+      "reason": "Vertikale Modelle, Generatoren und Services werden entlang derselben fachlichen Erzeugungskette benutzt.",
+      "evidence": [
+        {
+          "path": "datamimic_ce/domains/public_sector/generators/administration_office_generator.py",
+          "line": 34
+        },
+        {
+          "path": "datamimic_ce/domains/public_sector/generators/educational_institution_generator.py",
+          "line": 11
+        },
+        {
+          "path": "datamimic_ce/domains/public_sector/generators/police_officer_generator.py",
+          "line": 27
+        },
+        {
+          "path": "datamimic_ce/domains/public_sector/models/administration_office.py",
+          "line": 22
+        }
+      ],
+      "recommended_targets": []
+    }
+  ],
+  "findings": [
+    {
+      "title": "Die öffentliche Domains-API ist der kanonische Erweiterungspunkt",
+      "scenario": "Ein vorhandenes Generator-Script importiert BaseLiteralGenerator aus dem public Domain API-Modul; eine Entfernung dieses Re-Exports bricht den Descriptor-Aufruf vor der Datenerzeugung.",
+      "evidence": [
+        {
+          "path": "datamimic_ce/domains/api.py",
+          "line": 5
+        },
+        {
+          "path": "tests_ce/external_service_tests/datamimic_demo/demo-custom-components/script/generator.scr.py",
+          "line": 8
+        }
+      ],
+      "recommendation": "`domains/api.py` als öffentliche Erweiterungs-API behalten; Implementierungen nach ihren tatsächlichen Aufrufern trennen."
+    },
+    {
+      "title": "Identity-Untergruppen dürfen keine Security-Garantie suggerieren",
+      "scenario": "Ein Fixture braucht eine prüfzifferngültige CPF; ein anderes Passwort-/Token-Testwerte. Das ist eine sinnvolle Unterteilung innerhalb atomarer Literal-Generatoren, aber kein Kryptodienstvertrag.",
+      "evidence": [
+        {
+          "path": "datamimic_ce/domains/shared/literal_generators/cpf_generator.py",
+          "line": 12
+        },
+        {
+          "path": "datamimic_ce/domains/shared/literal_generators/password_generator.py",
+          "line": 12
+        },
+        {
+          "path": "datamimic_ce/domains/shared/literal_generators/token_generator.py",
+          "line": 7
+        }
+      ],
+      "recommendation": "Die Identity-Gruppe mit ihren Code-/Key-Untergruppen behalten und den Ordner `security` als synthetische Testwerte benennen."
+    },
+    {
+      "title": "Profil-Seeds und Runtime-RNGs sind verwandte, aber getrennte Determinismuspfade",
+      "scenario": "Ein Profilrequest leitet aus Domain/Profil/Facet einen Seed ab; der Engine-Lauf verteilt Seed oder Run-Entropie und Kind-RNGs an Worker.",
+      "evidence": [
+        {
+          "path": "datamimic_ce/domains/shared/determinism.py",
+          "line": 85
+        },
+        {
+          "path": "datamimic_ce/domains/domain_core/runtime/rng.py",
+          "line": 11
+        },
+        {
+          "path": "datamimic_ce/domains/domain_core/runtime/run_seed.py",
+          "line": 16
+        }
+      ],
+      "recommendation": "Profil-/Provenienzfunktionen bei der API lassen und Runtime-Seed/RNG-SPOTs gemeinsam auffindbar halten; `with_rng` erst nach Caller-Trace bewegen."
+    },
+    {
+      "title": "Schlüssel-Eindeutigkeit folgt dem Entity-Lebenszyklus",
+      "scenario": "Mehrere Policen oder Bestellungen in einem Engine-Lauf teilen eine Identifier-Registry; verschachtelte Entity-Schlüssel müssen denselben Claim-Kontext erben.",
+      "evidence": [
+        {
+          "path": "datamimic_ce/domains/domain_core/base_entity.py",
+          "line": 61
+        },
+        {
+          "path": "datamimic_ce/domains/domain_core/base_entity.py",
+          "line": 77
+        },
+        {
+          "path": "datamimic_ce/domains/domain_core/base_domain_service.py",
+          "line": 55
+        }
+      ],
+      "recommendation": "Identifier-Claim und Nested-Binding im Entity-Core halten, nicht anhand eines Schlüssel-Dateinamens verschieben."
+    }
+  ],
+  "traces": [
+    "GeneratorCapability -> domains.api.iter_generator_types() -> shared.generator_registry.generator_namespace() -> explizite Generator-Inventarliste -> Engine-Beschreibungen.",
+    "DSL Entity-Auflösung -> entity_registry.get_entity_service_class() -> explizite Service-Inventarliste -> BaseDomainService.generate() -> BaseEntity-Felder/ID-Registry -> Engine-EntityValue-Ausgabe.",
+    "JSON Domain-Aufruf -> domains.facade.generate_domain() -> Schema-Validierung/Profilauflösung/typisierter Request -> Domain-Generatorfunktion -> validierte kanonische JSON-Antwort.",
+    "Domain-Service -> Generator mit Setup-RNG/Datensatz/Clock -> gecachte Entity-Properties -> to_dict() -> stabile Entity-Daten."
+  ],
+  "limitations": [
+    "Die Bewertung ist statisch und caller/test-traced; die Domain-Module wurden nicht ausgeführt oder verschoben.",
+    "Gemeinsame CE/EE-Pfade belegen noch keine vollständige EE-Kompatibilität."
+  ]
+}

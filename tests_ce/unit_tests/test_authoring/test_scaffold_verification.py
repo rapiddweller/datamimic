@@ -9,27 +9,25 @@ import json
 
 from typer.testing import CliRunner
 
-import datamimic_ce.authoring.service as service_module
+import datamimic_ce.authoring.application.service as service_module
+from datamimic_ce.authoring.application.service import scaffold
 from datamimic_ce.authoring.contracts import (
     AuthoringStage,
+    CapturedProduct,
+    CapturedProducts,
+    CapturedRun,
     CaptureStatus,
     ProductCaptureEvidence,
     ReplayMismatchKind,
     RunResult,
     ScaffoldRequest,
     ScaffoldVerification,
+    SmokeExportCapture,
     VerificationGateStatus,
 )
-from datamimic_ce.authoring.diagnostics import Diagnostic, LintResult
-from datamimic_ce.authoring.dryrun import (
-    CapturedProduct,
-    CapturedProducts,
-    CapturedRun,
-    SmokeExportCapture,
-)
-from datamimic_ce.authoring.rule_catalog import RuleSeverity
-from datamimic_ce.authoring.service import scaffold
-from datamimic_ce.cli import app
+from datamimic_ce.authoring.domain.diagnostics import Diagnostic, LintResult
+from datamimic_ce.authoring.domain.rule_catalog import RuleSeverity
+from datamimic_ce.interfaces.cli import app
 
 
 def _spec(*, seed: int | None = 7, count: int = 2) -> dict[str, object]:

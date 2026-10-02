@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import pytest
 
-from datamimic_ce.domains.common.demographics.sampler import compose_weights, load_group_table
+from datamimic_ce.domains.shared.demographics.sampler import compose_weights, load_group_table
 
 
 def test_compose_weights_basic_normalization() -> None:
