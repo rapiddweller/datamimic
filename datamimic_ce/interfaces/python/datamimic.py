@@ -11,7 +11,6 @@ from datamimic_ce.engine.runtime.api import create_run_session
 from datamimic_ce.engine.runtime.contracts import (
     FactoryConfig,
     PlatformConfiguration,
-    PlatformProperties,
     RunRequest,
     RunSession,
     StatementTransformer,
@@ -36,9 +35,7 @@ class DataMimic:
             RunRequest(
                 descriptor_path=descriptor_path,
                 task_id=self._task_id,
-                platform_props=PlatformProperties.model_construct(root=platform_props)
-                if platform_props is not None
-                else None,
+                platform_props=platform_props,
                 platform_configs=PlatformConfiguration.model_construct(root=platform_configs)
                 if platform_configs is not None
                 else None,

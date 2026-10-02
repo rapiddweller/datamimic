@@ -1,0 +1,7 @@
+{
+  "after_digest": "c3378ba53a338855d7913a1503c62c5edb3ec843914751521e79e52db633a712",
+  "before_digest": "43f2209f4d8b06269a97e53ceddaa9c3c2d88957ba65c6d20b9f2b6f4a33c488",
+  "decided_by": "Astra (delegated architect)",
+  "rationale": "Remove the empty descriptor-properties wrapper; admit only the exact native string-map loader return and two request fields. Fixed controls, captured data policy and baseline stay unchanged.",
+  "schema_version": "1.0.0"
+}

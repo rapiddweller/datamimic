@@ -11,10 +11,6 @@ from pydantic import RootModel
 from datamimic_ce.engine.dsl.api import SetupStatement
 
 
-class PlatformProperties(RootModel[dict[str, str]]):
-    """Descriptor properties supplied by a transport."""
-
-
 class PlatformConfiguration(RootModel[dict[str, object]]):
     """Runtime configuration values supplied by a transport."""
 
@@ -47,7 +43,7 @@ StatementTransformer = Callable[[SetupStatement], None]
 class RunRequest:
     descriptor_path: Path
     task_id: str | None = None
-    platform_props: PlatformProperties | None = None
+    platform_props: dict[str, str] | None = None
     platform_configs: PlatformConfiguration | None = None
     test_mode: bool = False
     factory_config: FactoryConfig | None = None

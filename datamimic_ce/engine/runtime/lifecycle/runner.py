@@ -85,7 +85,7 @@ class RuntimeRunSession:
         request = self._request
         settings = get_settings()
         try:
-            properties = request.platform_props.root if request.platform_props is not None else None
+            properties = request.platform_props
             root_stmt = DescriptorParser.parse(
                 request.descriptor_path,
                 properties,

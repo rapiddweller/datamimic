@@ -2,15 +2,17 @@ import json
 from argparse import Namespace
 from decimal import Decimal
 from pathlib import Path
-from typing import Literal
+from typing import Literal, get_type_hints
+
+import pytest
 
 from datamimic_ce.engine.dsl.parsers.document.descriptor_parser import DescriptorParser
 from datamimic_ce.engine.dsl.statements.setup.setup_statement import SetupStatement
 from datamimic_ce.engine.runtime import api as runtime_api
+from datamimic_ce.engine.runtime import contracts as runtime_contracts
 from datamimic_ce.engine.runtime.contracts import (
     FactoryConfig,
     PlatformConfiguration,
-    PlatformProperties,
     RunRequest,
     RunResult,
     RunSession,
@@ -32,7 +34,7 @@ def test_runtime_run_capture_contract_permission_is_exact() -> None:
     capture_positions = [
         (entry["position"], entry["field_path"], entry["annotation"])
         for entry in allowed_positions
-        if entry["qualified_name"] == qualified_name
+        if entry["qualified_name"] == qualified_name and entry["position"] == "return"
     ]
 
     assert len(capture_positions) == 3
@@ -43,6 +45,70 @@ def test_runtime_run_capture_contract_permission_is_exact() -> None:
     }
     assert all("*" not in entry["qualified_name"] for entry in allowed_positions)
     assert all("*" not in entry["field_path"] for entry in allowed_positions)
+
+
+def test_runtime_property_contract_permissions_are_exact() -> None:
+    contract_path = Path(__file__).resolve().parents[3] / "architecture-contract.json"
+    contract = json.loads(contract_path.read_text(encoding="utf-8"))
+    rule = next(rule for rule in contract["rules"] if rule["id"] == "RUNTIME-API-TYPES")
+    allowed_positions = rule["allowed_positions"]
+    property_positions = {
+        (
+            entry["qualified_name"],
+            entry["position"],
+            entry["field_path"],
+            entry["annotation"],
+        )
+        for entry in allowed_positions
+        if (
+            entry["qualified_name"] == "datamimic_ce.engine.runtime.api.load_descriptor_properties"
+            and entry["position"] == "return"
+        )
+        or (
+            entry["qualified_name"]
+            in {
+                "datamimic_ce.engine.runtime.api.create_run_session",
+                "datamimic_ce.engine.runtime.api.run",
+            }
+            and entry["position"] == "request"
+            and entry.get("field_path") == "platform_props"
+        )
+    }
+
+    assert property_positions == {
+        (
+            "datamimic_ce.engine.runtime.api.load_descriptor_properties",
+            "return",
+            "",
+            "dict[str, str]",
+        ),
+        (
+            "datamimic_ce.engine.runtime.api.create_run_session",
+            "request",
+            "platform_props",
+            "dict[str, str]",
+        ),
+        (
+            "datamimic_ce.engine.runtime.api.run",
+            "request",
+            "platform_props",
+            "dict[str, str]",
+        ),
+    }
+    assert all("*" not in entry["qualified_name"] for entry in allowed_positions)
+    assert all("*" not in entry["field_path"] for entry in allowed_positions)
+
+
+def test_runtime_properties_wrapper_is_removed() -> None:
+    assert not hasattr(runtime_contracts, "PlatformProperties")
+
+
+def test_runtime_property_loader_has_native_return_annotation() -> None:
+    assert get_type_hints(runtime_api.load_descriptor_properties)["return"] == dict[str, str]
+
+
+def test_run_request_has_native_property_map_annotation() -> None:
+    assert get_type_hints(RunRequest)["platform_props"] == dict[str, str] | None
 
 
 class SessionStub:
@@ -228,11 +294,12 @@ def test_python_api_uses_runtime_request_and_preserves_factory_config(monkeypatc
         statement_transformer=transformer,
     )
 
+    assert captured[0].platform_props is properties
     assert captured == [
         RunRequest(
             descriptor_path=Path("descriptor.xml"),
             task_id="task-1",
-            platform_props=PlatformProperties.model_construct(root=properties),
+            platform_props=properties,
             platform_configs=PlatformConfiguration.model_construct(root=configuration),
             test_mode=True,
             factory_config=factory_config,
@@ -240,8 +307,6 @@ def test_python_api_uses_runtime_request_and_preserves_factory_config(monkeypatc
             statement_transformer=transformer,
         )
     ]
-    assert captured[0].platform_props is not None
-    assert captured[0].platform_props.root is properties
     assert captured[0].platform_configs is not None
     assert captured[0].platform_configs.root is configuration
     assert engine.parse_and_execute() is None
@@ -294,17 +359,63 @@ def test_runtime_session_uses_current_environment_for_parsing(tmp_path: Path, mo
     assert seen_environments == ["development"]
 
 
+@pytest.mark.parametrize(
+    "property_values",
+    [None, {}, {"tenant": "demo"}],
+    ids=["none", "empty", "populated"],
+)
+def test_runtime_session_forwards_same_properties_to_parser_and_setup_task(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+    property_values: dict[str, str] | None,
+) -> None:
+    descriptor = tmp_path / "descriptor.xml"
+    descriptor.write_text("<setup />", encoding="utf-8")
+    parsed_properties: list[dict[str, str] | None] = []
+    setup_properties: list[dict[str, str] | None] = []
+    original_parse = DescriptorParser.parse
+
+    def parse_descriptor(
+        path: Path,
+        properties: dict[str, str] | None,
+        environment: Literal["development", "production"],
+        *,
+        profile_loader: object,
+    ) -> SetupStatement:
+        parsed_properties.append(properties)
+        return original_parse(path, properties, environment, profile_loader=profile_loader)
+
+    class SetupTaskStub:
+        def __init__(self, *, properties: dict[str, str] | None, **_kwargs: object) -> None:
+            setup_properties.append(properties)
+
+        def execute(self) -> None:
+            pass
+
+    monkeypatch.setattr(runner.DescriptorParser, "parse", parse_descriptor)
+    monkeypatch.setattr(runner, "SetupTask", SetupTaskStub)
+    session = runner.create_run_session(
+        RunRequest(descriptor_path=descriptor, platform_props=property_values, test_mode=True)
+    )
+
+    session.execute()
+
+    assert len(parsed_properties) == len(setup_properties) == 1
+    assert parsed_properties[0] is property_values
+    assert setup_properties[0] is property_values
+
+
 def test_load_descriptor_properties_reads_found_file_and_defaults_when_missing(tmp_path: Path) -> None:
     descriptor = tmp_path / "model.xml"
     properties_file = tmp_path / "conf" / "environment.env.properties"
     properties_file.parent.mkdir()
     properties_file.write_text("# ignored\nuser = alice\nurl=https://example.test?a=b\n", encoding="utf-8")
 
-    assert runtime_api.load_descriptor_properties(descriptor).root == {
+    assert runtime_api.load_descriptor_properties(descriptor) == {
         "user": "alice",
         "url": "https://example.test?a=b",
     }
-    assert runtime_api.load_descriptor_properties(tmp_path / "missing" / "model.xml").root == {}
+    assert runtime_api.load_descriptor_properties(tmp_path / "missing" / "model.xml") == {}
 
 
 def test_load_descriptor_properties_preserves_parser_dictionary_identity(tmp_path: Path, monkeypatch) -> None:
@@ -320,7 +431,8 @@ def test_load_descriptor_properties_preserves_parser_dictionary_identity(tmp_pat
 
     result = runtime_api.load_descriptor_properties(descriptor)
 
-    assert result.root is properties
+    assert type(result) is dict
+    assert result is properties
     assert paths == [tmp_path / "conf" / "environment.env.properties"]
 
 
@@ -337,7 +449,7 @@ def test_cli_passes_descriptor_properties_through_runtime_adapter(tmp_path: Path
 
     assert len(requests) == 1
     assert requests[0].descriptor_path == descriptor.resolve()
-    assert requests[0].platform_props is not None
-    assert requests[0].platform_props.root == {"tenant": "demo"}
+    assert requests[0].platform_props == {"tenant": "demo"}
+    assert type(requests[0].platform_props) is dict
     assert requests[0].platform_configs is not None
     assert requests[0].platform_configs.root == {"mode": "test"}
