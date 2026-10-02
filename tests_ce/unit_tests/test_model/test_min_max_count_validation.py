@@ -4,6 +4,7 @@ import pytest
 from pydantic import ValidationError
 
 from datamimic_ce.engine.dsl.model.generation.generate_model import GenerateModel
+from datamimic_ce.engine.dsl.model.validation import check_min_max_count
 from datamimic_ce.engine.dsl.model.values.structured.nested_key_model import NestedKeyModel
 
 
@@ -69,3 +70,26 @@ def test_decimal_looking_count_strings_do_not_bypass_ordering(model, base):
 def test_infinite_count_values_are_rejected(model, base):
     with pytest.raises(ValidationError):
         model.model_validate({**base, "minCount": float("inf"), "maxCount": 10})
+
+
+def test_raw_count_comparison_coerces_temporarily_and_returns_original_mapping():
+    extension = {"raw": [1]}
+    values = {"minCount": "09", "maxCount": "10", "extension": extension}
+
+    result = check_min_max_count(values, "generate")
+
+    assert result is values
+    assert result == {"minCount": "09", "maxCount": "10", "extension": {"raw": [1]}}
+    assert result["minCount"] is values["minCount"]
+    assert result["extension"] is extension
+
+
+def test_raw_count_order_error_preserves_original_lexemes_and_mapping():
+    extension = {"raw": [1]}
+    values = {"minCount": "010", "maxCount": "9", "extension": extension}
+
+    with pytest.raises(ValueError, match=r"minCount.*value \(010\).*maxCount.*value \(9\)"):
+        check_min_max_count(values, "generate")
+
+    assert values == {"minCount": "010", "maxCount": "9", "extension": {"raw": [1]}}
+    assert values["extension"] is extension

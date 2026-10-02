@@ -14,6 +14,8 @@ Tests cover:
 - JSON schema injection via constraints_schema_extra
 """
 
+from typing import get_type_hints
+
 import pytest
 from pydantic import BaseModel, ConfigDict
 
@@ -30,7 +32,64 @@ from datamimic_ce.engine.dsl.model.constraints import (
     ValidValues,
     constraints_schema_extra,
 )
-from datamimic_ce.engine.dsl.model.validation import check_constraints
+from datamimic_ce.engine.dsl.model.validation import (
+    check_constraints,
+    check_exist_count,
+    check_min_max_count,
+    check_weights_require_values,
+)
+
+
+@pytest.mark.parametrize(
+    "validator",
+    [check_constraints, check_exist_count, check_weights_require_values, check_min_max_count],
+    ids=("constraints", "exist-count", "weights-require-values", "min-max-count"),
+)
+def test_public_validators_type_raw_attributes_as_open_dictionaries(validator):
+    hints = get_type_hints(validator)
+
+    assert hints["values"] == dict[str, object]
+    assert hints["return"] == dict[str, object]
+
+
+def test_constraint_success_returns_the_original_mapping_and_nested_values():
+    nested = {"items": [1, {"raw": "value"}]}
+    values = {"mode": "safe", "extension": nested}
+    fact = ValidValues(attr="mode", values=frozenset({"safe"}))
+
+    result = check_constraints(values, (fact,))
+
+    assert result is values
+    assert result["extension"] is nested
+
+
+def test_constraint_failure_does_not_mutate_original_mapping_or_nested_values():
+    nested = {"items": [1, {"raw": "value"}]}
+    values = {"mode": "unsafe", "extension": nested}
+    fact = ValidValues(attr="mode", values=frozenset({"safe"}))
+
+    with pytest.raises(ValueError, match="must be one of"):
+        check_constraints(values, (fact,))
+
+    assert values == {"mode": "unsafe", "extension": {"items": [1, {"raw": "value"}]}}
+    assert values["extension"] is nested
+
+
+@pytest.mark.parametrize(
+    ("validator", "values"),
+    [
+        (check_exist_count, {"count": "3", "extension": {"raw": [1]}}),
+        (check_weights_require_values, {"weights": "1,2", "values": "a,b", "extension": {"raw": [1]}}),
+    ],
+    ids=("exist-count", "weights-require-values"),
+)
+def test_delegating_validators_return_the_original_mapping(validator, values):
+    nested = values["extension"]
+
+    result = validator(values)
+
+    assert result is values
+    assert result["extension"] is nested
 
 
 class TestRequiredOneOf:
@@ -340,6 +399,15 @@ class TestValidValues:
         with pytest.raises(ValueError, match="must be one of"):
             check_constraints({"a": "invalid"}, (fact,))
 
+    def test_callable_values_are_not_resolved_when_attribute_is_absent(self):
+        def unexpected_resolution():
+            raise AssertionError("optional attribute must not resolve its value supplier")
+
+        values = {"other": "kept"}
+        fact = ValidValues(attr="a", values=unexpected_resolution)
+
+        assert check_constraints(values, (fact,)) is values
+
     def test_custom_message_used(self):
         """When message is set, it overrides the default."""
         fact = ValidValues(attr="a", values=frozenset({"x", "y"}), message="bad choice")
@@ -407,6 +475,30 @@ class TestAllowedValuesWhen:
         with pytest.raises(ValueError, match="must be one of"):
             check_constraints({"gate": "yes", "a": "z"}, (fact,))
 
+    @pytest.mark.parametrize(
+        ("gate", "fails"),
+        [(False, False), (True, True)],
+        ids=("false-skips", "true-applies"),
+    )
+    def test_boolean_gate_values_follow_boolean_truth(self, gate, fails):
+        fact = AllowedValuesWhen(attr="a", allowed=frozenset({"x"}), when_attr="gate", when_true=True)
+        values = {"gate": gate, "a": "z"}
+
+        if fails:
+            with pytest.raises(ValueError, match="must be one of"):
+                check_constraints(values, (fact,))
+        else:
+            assert check_constraints(values, (fact,)) is values
+
+    def test_callable_allowed_is_not_resolved_when_truthy_gate_is_closed(self):
+        def unexpected_resolution():
+            raise AssertionError("closed gate must not resolve its allowed-value supplier")
+
+        fact = AllowedValuesWhen(attr="a", allowed=unexpected_resolution, when_attr="gate", when_true=True)
+        values = {"gate": False, "a": "z"}
+
+        assert check_constraints(values, (fact,)) is values
+
     def test_callable_allowed_evaluated(self):
         """When allowed is a callable, it is evaluated at check time."""
 
@@ -459,14 +551,19 @@ class TestConstraintOrder:
     """Multiple constraints are checked in order; first violation raises."""
 
     def test_first_violation_raises(self):
-        """When multiple constraints exist, the first violation raises."""
+        """The first failing fact wins without mutating the supplied attributes."""
         constraints = (
-            RequiredOneOf(attrs=frozenset({"a", "b"}), message="fact1"),
+            RequiredOneOf(attrs=frozenset({"a"}), message="fact1"),
             MutuallyExclusive(attrs=frozenset({"c", "d"}), message="fact2"),
         )
-        # b is present (fact1 ok), but both c and d are present (fact2 fails)
-        with pytest.raises(ValueError, match="fact2"):
-            check_constraints({"b": "val", "c": "val", "d": "val"}, constraints)
+        nested = {"raw": ["kept"]}
+        values = {"c": "one", "d": "two", "extension": nested}
+
+        with pytest.raises(ValueError, match="fact1"):
+            check_constraints(values, constraints)
+
+        assert values == {"c": "one", "d": "two", "extension": {"raw": ["kept"]}}
+        assert values["extension"] is nested
 
     def test_multiple_constraints_success(self):
         """When all constraints pass, all are checked."""

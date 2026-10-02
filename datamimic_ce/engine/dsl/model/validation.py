@@ -5,6 +5,7 @@
 # For questions and support, contact: info@rapiddweller.com
 
 import re
+from collections.abc import Mapping
 from collections.abc import Set as AbstractSet
 
 from pydantic import TypeAdapter, ValidationError
@@ -53,21 +54,21 @@ def _attr_true(value: object) -> bool:
 
 
 def _constraint_gate_open(
-    values: dict,
+    values: Mapping[str, object],
     attr: str,
     when_true: bool,
 ) -> bool:
     return _attr_true(values.get(attr)) if when_true else attr in values
 
 
-def _required_one_of_error(values: dict, fact: RequiredOneOf) -> str | None:
+def _required_one_of_error(values: Mapping[str, object], fact: RequiredOneOf) -> str | None:
     if any(attr in values for attr in fact.attrs):
         return None
     attrs_str = ", ".join(sorted(fact.attrs))
     return fact.message or f"must define one of: {attrs_str}"
 
 
-def _mutually_exclusive_error(values: dict, fact: MutuallyExclusive) -> str | None:
+def _mutually_exclusive_error(values: Mapping[str, object], fact: MutuallyExclusive) -> str | None:
     present = [attr for attr in fact.attrs if attr in values]
     if len(present) <= 1:
         return None
@@ -76,7 +77,7 @@ def _mutually_exclusive_error(values: dict, fact: MutuallyExclusive) -> str | No
 
 
 def _mutually_exclusive_when_error(
-    values: dict,
+    values: Mapping[str, object],
     fact: MutuallyExclusiveWhen,
 ) -> str | None:
     if not _constraint_gate_open(values, fact.when_attr, fact.when_true):
@@ -90,7 +91,7 @@ def _mutually_exclusive_when_error(
     )
 
 
-def _requires_error(values: dict, fact: Requires) -> str | None:
+def _requires_error(values: Mapping[str, object], fact: Requires) -> str | None:
     if not _constraint_gate_open(values, fact.attr, fact.when_true):
         return None
     if any(need in values for need in fact.needs):
@@ -99,7 +100,7 @@ def _requires_error(values: dict, fact: Requires) -> str | None:
     return fact.message or (f"when '{fact.attr}' is present, at least one of [{needs_str}] must be present")
 
 
-def _requires_when_value_error(values: dict, fact: RequiresWhenValue) -> str | None:
+def _requires_when_value_error(values: Mapping[str, object], fact: RequiresWhenValue) -> str | None:
     if values.get(fact.when_attr) not in fact.when_values:
         return None
     if any(attr in values for attr in fact.unless):
@@ -113,7 +114,7 @@ def _requires_when_value_error(values: dict, fact: RequiresWhenValue) -> str | N
     )
 
 
-def _all_or_none_error(values: dict, fact: AllOrNone) -> str | None:
+def _all_or_none_error(values: Mapping[str, object], fact: AllOrNone) -> str | None:
     present = [attr for attr in fact.attrs if attr in values]
     if not present or len(present) == len(fact.attrs):
         return None
@@ -121,13 +122,13 @@ def _all_or_none_error(values: dict, fact: AllOrNone) -> str | None:
     return fact.message or f"either all of [{attrs_str}] must be present, or none"
 
 
-def _forbidden_attributes(values: dict, fact: Forbids) -> list[str]:
+def _forbidden_attributes(values: Mapping[str, object], fact: Forbids) -> list[str]:
     if fact.excludes_when_true:
         return [attr for attr in fact.excludes if _attr_true(values.get(attr))]
     return [attr for attr in fact.excludes if attr in values]
 
 
-def _forbids_error(values: dict, fact: Forbids) -> str | None:
+def _forbids_error(values: Mapping[str, object], fact: Forbids) -> str | None:
     if not _constraint_gate_open(values, fact.attr, fact.when_true):
         return None
     present = _forbidden_attributes(values, fact)
@@ -139,7 +140,7 @@ def _forbids_error(values: dict, fact: Forbids) -> str | None:
     )
 
 
-def _forbids_when_value_error(values: dict, fact: ForbidsWhenValue) -> str | None:
+def _forbids_when_value_error(values: Mapping[str, object], fact: ForbidsWhenValue) -> str | None:
     if values.get(fact.when_attr) not in fact.when_values:
         return None
     present = [attr for attr in fact.excludes if attr in values]
@@ -152,7 +153,7 @@ def _forbids_when_value_error(values: dict, fact: ForbidsWhenValue) -> str | Non
     )
 
 
-def _valid_values_error(values: dict, fact: ValidValues) -> str | None:
+def _valid_values_error(values: Mapping[str, object], fact: ValidValues) -> str | None:
     if fact.attr not in values:
         return None
     attr_value = values[fact.attr]
@@ -163,7 +164,7 @@ def _valid_values_error(values: dict, fact: ValidValues) -> str | None:
     return fact.message or (f"'{fact.attr}' value must be one of [{valid_str}], but got: '{attr_value}'")
 
 
-def _allowed_values_error(values: dict, fact: AllowedValuesWhen) -> str | None:
+def _allowed_values_error(values: Mapping[str, object], fact: AllowedValuesWhen) -> str | None:
     if not _constraint_gate_open(values, fact.when_attr, fact.when_true):
         return None
     if fact.attr not in values:
@@ -181,7 +182,7 @@ def _allowed_values_error(values: dict, fact: AllowedValuesWhen) -> str | None:
     )
 
 
-def _constraint_error(values: dict, fact: Constraint) -> str | None:
+def _constraint_error(values: Mapping[str, object], fact: Constraint) -> str | None:
     if isinstance(fact, RequiredOneOf):
         return _required_one_of_error(values, fact)
     if isinstance(fact, MutuallyExclusive):
@@ -203,7 +204,7 @@ def _constraint_error(values: dict, fact: Constraint) -> str | None:
     return _allowed_values_error(values, fact)
 
 
-def check_constraints(values: dict, constraints: tuple[Constraint, ...]) -> dict:
+def check_constraints(values: dict[str, object], constraints: tuple[Constraint, ...]) -> dict[str, object]:
     for fact in constraints:
         if fact.lint_only:
             continue
@@ -213,19 +214,19 @@ def check_constraints(values: dict, constraints: tuple[Constraint, ...]) -> dict
     return values
 
 
-def check_exist_count(values: dict) -> dict:
+def check_exist_count(values: dict[str, object]) -> dict[str, object]:
     from datamimic_ce.engine.dsl.model.constraints import EXIST_COUNT
 
     return check_constraints(values, (EXIST_COUNT,))
 
 
-def check_weights_require_values(values: dict) -> dict:
+def check_weights_require_values(values: dict[str, object]) -> dict[str, object]:
     from datamimic_ce.engine.dsl.model.constraints import WEIGHTS_REQUIRE_VALUES
 
     return check_constraints(values, (WEIGHTS_REQUIRE_VALUES,))
 
 
-def check_min_max_count(values: dict, element_tag: str) -> dict:
+def check_min_max_count(values: dict[str, object], element_tag: str) -> dict[str, object]:
     """Validate count versus minCount/maxCount, preserving raw XML semantics."""
     key_set = set(values.keys())
     if ATTR_COUNT in key_set:

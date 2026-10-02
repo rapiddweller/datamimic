@@ -117,13 +117,14 @@ def _engine_validation_diag(
     rule: type[Rule],
     ctx: LintContext,
     element: etree._Element,
-    check: "Callable[[dict[str, str]], object]",
+    check: "Callable[[dict[str, object]], dict[str, object]]",
     fix_context: str | None = None,
     severity: RuleSeverity | None = None,
 ) -> Diagnostic | None:
     """Run one engine-side validation against the element's attributes."""
     try:
-        check(dict(element.attrib))
+        attributes: dict[str, object] = dict(element.attrib)
+        check(attributes)
     except ValueError as err:
         return ctx.diag(
             rule,
@@ -135,10 +136,12 @@ def _engine_validation_diag(
     return None
 
 
-def _constraint_check(constraints: tuple[Constraint, ...]) -> Callable[[dict[str, str]], object]:
+def _constraint_check(
+    constraints: tuple[Constraint, ...],
+) -> Callable[[dict[str, object]], dict[str, object]]:
     """Bind a fact tuple into the one-argument check contract used by lint rules."""
 
-    def check(values: dict[str, str]) -> object:
+    def check(values: dict[str, object]) -> dict[str, object]:
         lint_constraints = tuple(replace(fact, lint_only=False) if fact.lint_only else fact for fact in constraints)
         return check_constraints(values, lint_constraints)
 
@@ -337,7 +340,7 @@ class CountBoundsConflict(Rule):
                 continue
             tag = str(element.tag)
 
-            def check_bounds(values: dict[str, str], _tag: str = tag) -> object:
+            def check_bounds(values: dict[str, object], _tag: str = tag) -> dict[str, object]:
                 return check_min_max_count(values, _tag)
 
             diag = _engine_validation_diag(

@@ -497,11 +497,118 @@
       "id": "DSL-API-TYPES",
       "kind": "boundary_types",
       "source": "datamimic_ce.engine.dsl.api",
-      "rationale": "The DSL facade exposes only builtins and declared DSL contract types.",
+      "rationale": "The DSL facade exposes declared contract types. Four pre-validation operations preserve raw string-keyed attribute dictionaries at exact reviewed positions; constraint facts remain closed types.",
       "provenance": [
-        "docs/architecture/refactoring-study/experiment-2/target-architecture.md"
+        "docs/architecture/refactoring-study/experiment-2/target-architecture.md",
+        "docs/architecture/refactoring-study/experiment-2/amendment-91.md"
       ],
-      "decided_by": "architect"
+      "decided_by": "architect",
+      "allowed_positions": [
+        {
+          "qualified_name": "datamimic_ce.engine.dsl.api.check_constraints",
+          "position": "values",
+          "field_path": "",
+          "annotation": "dict[str, object]"
+        },
+        {
+          "qualified_name": "datamimic_ce.engine.dsl.api.check_constraints",
+          "position": "return",
+          "field_path": "",
+          "annotation": "dict[str, object]"
+        },
+        {
+          "qualified_name": "datamimic_ce.engine.dsl.api.check_exist_count",
+          "position": "values",
+          "field_path": "",
+          "annotation": "dict[str, object]"
+        },
+        {
+          "qualified_name": "datamimic_ce.engine.dsl.api.check_exist_count",
+          "position": "return",
+          "field_path": "",
+          "annotation": "dict[str, object]"
+        },
+        {
+          "qualified_name": "datamimic_ce.engine.dsl.api.check_weights_require_values",
+          "position": "values",
+          "field_path": "",
+          "annotation": "dict[str, object]"
+        },
+        {
+          "qualified_name": "datamimic_ce.engine.dsl.api.check_weights_require_values",
+          "position": "return",
+          "field_path": "",
+          "annotation": "dict[str, object]"
+        },
+        {
+          "qualified_name": "datamimic_ce.engine.dsl.api.check_min_max_count",
+          "position": "values",
+          "field_path": "",
+          "annotation": "dict[str, object]"
+        },
+        {
+          "qualified_name": "datamimic_ce.engine.dsl.api.check_min_max_count",
+          "position": "return",
+          "field_path": "",
+          "annotation": "dict[str, object]"
+        },
+        {
+          "qualified_name": "datamimic_ce.engine.dsl.api.check_constraints",
+          "position": "values",
+          "field_path": "",
+          "annotation": "dict[str, object]",
+          "container_depth": 1
+        },
+        {
+          "qualified_name": "datamimic_ce.engine.dsl.api.check_constraints",
+          "position": "return",
+          "field_path": "",
+          "annotation": "dict[str, object]",
+          "container_depth": 1
+        },
+        {
+          "qualified_name": "datamimic_ce.engine.dsl.api.check_exist_count",
+          "position": "values",
+          "field_path": "",
+          "annotation": "dict[str, object]",
+          "container_depth": 1
+        },
+        {
+          "qualified_name": "datamimic_ce.engine.dsl.api.check_exist_count",
+          "position": "return",
+          "field_path": "",
+          "annotation": "dict[str, object]",
+          "container_depth": 1
+        },
+        {
+          "qualified_name": "datamimic_ce.engine.dsl.api.check_weights_require_values",
+          "position": "values",
+          "field_path": "",
+          "annotation": "dict[str, object]",
+          "container_depth": 1
+        },
+        {
+          "qualified_name": "datamimic_ce.engine.dsl.api.check_weights_require_values",
+          "position": "return",
+          "field_path": "",
+          "annotation": "dict[str, object]",
+          "container_depth": 1
+        },
+        {
+          "qualified_name": "datamimic_ce.engine.dsl.api.check_min_max_count",
+          "position": "values",
+          "field_path": "",
+          "annotation": "dict[str, object]",
+          "container_depth": 1
+        },
+        {
+          "qualified_name": "datamimic_ce.engine.dsl.api.check_min_max_count",
+          "position": "return",
+          "field_path": "",
+          "annotation": "dict[str, object]",
+          "container_depth": 1
+        }
+      ]
     },
     {
       "id": "DOMAIN-API-TYPES",

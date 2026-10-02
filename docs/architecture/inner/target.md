@@ -198,6 +198,19 @@ are local to their boundary and do not automatically publish through the parent.
 Concrete model and statement types are legitimate internal interfaces; concrete
 clients and exporter implementations are not the Runtime-facing API.
 
+The DSL pre-validation boundary is accepted for the bounded local slice. It
+accepts raw `dict[str, object]` attributes and returns the same dictionary;
+constraint facts remain closed
+types. ArchKeel 0.8.5 can express the outer dictionary and depth-1 opaque-value
+allowances at its eight input/return positions. Local bounded acceptance
+removed eight findings (103 -> 95), with no added or changed remaining finding;
+150 counted UNKNOWN remain, including lazy-supplier evidence. Opaque-value
+acceptance does not prove type closure. This slice passes, but whole-goal
+acceptance remains open.
+([Amendment 91](../refactoring-study/experiment-2/amendment-91.md),
+[ArchKeel #253](https://github.com/rapiddweller/archkeel/issues/253)).
+Typed model construction still decides descriptor validity.
+
 Authoring Domain owns acceptance/replay verdicts and canonical bounded-capture
 records in `contracts.py`. Application sequences runs; the dry-run adapter
 produces evidence. Policies never import the execution adapter. Its eight Domain
