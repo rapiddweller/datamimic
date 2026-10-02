@@ -15,7 +15,11 @@ from datamimic_ce.engine.runtime.storage.global_increment import GlobalIncrement
 from datamimic_ce.engine.runtime.storage.memstore_manager import MemstoreManager
 
 
-def _context(clients: dict | None = None) -> SetupContext:
+def _context(
+    clients: dict[str, Client] | None = None,
+    namespace: dict[str, object] | None = None,
+    global_variables: dict[str, object] | None = None,
+) -> SetupContext:
     return SetupContext(
         memstore_manager=MemstoreManager(),
         task_id="context-test",
@@ -32,8 +36,8 @@ def _context(clients: dict | None = None) -> SetupContext:
         default_line_separator="\n",
         clients=clients,
         properties={"nested": [1]},
-        namespace={"nested": [1]},
-        global_variables={"shared": [1]},
+        namespace={"nested": [1]} if namespace is None else namespace,
+        global_variables={"shared": [1]} if global_variables is None else global_variables,
         generators={"cached": [1]},
         run_seed=RunSeed.create(7),
     )
@@ -47,6 +51,7 @@ def test_setup_context_deepcopy_shares_globals_but_resets_runtime_state() -> Non
 
     copied = copy.deepcopy(context)
 
+    assert copied.memstore_manager is context.memstore_manager
     assert copied.global_variables is context.global_variables
     assert copied.properties == context.properties and copied.properties is not context.properties
     assert copied.namespace == context.namespace and copied.namespace is not context.namespace
@@ -211,3 +216,111 @@ def test_client_registry_propagates_non_type_error_from_deepcopy() -> None:
         copy.deepcopy(context)
 
     assert raised.value is error
+
+
+def test_setup_context_namespace_preserves_supplied_and_replacement_mapping_identity() -> None:
+    supplied = {"value": object()}
+    context = _context(namespace=supplied)
+
+    assert context.namespace is supplied
+
+    replacement = {"other": object()}
+    context.namespace = replacement
+
+    assert context.namespace is replacement
+
+
+def test_setup_context_preserves_identity_of_supplied_empty_maps() -> None:
+    namespace: dict[str, object] = {}
+    global_variables: dict[str, object] = {}
+    context = _context(namespace=namespace, global_variables=global_variables)
+
+    assert context.namespace is namespace
+    assert context.global_variables is global_variables
+
+
+def test_setup_context_namespace_copies_arbitrary_objects_and_classes() -> None:
+    class DynamicValue:
+        def __init__(self, value: int) -> None:
+            self.value = value
+
+    value = DynamicValue(7)
+    context = _context(namespace={"value": value, "type": DynamicValue})
+
+    copied = copy.deepcopy(context)
+
+    assert isinstance(copied.namespace["value"], DynamicValue)
+    assert copied.namespace["value"].value == 7
+    assert copied.namespace["type"] is DynamicValue
+
+
+def test_setup_context_namespace_copy_preserves_aliases() -> None:
+    shared = [1]
+    context = _context(namespace={"first": shared, "second": shared})
+
+    copied = copy.deepcopy(context)
+
+    assert copied.namespace["first"] is copied.namespace["second"]
+    assert copied.namespace["first"] is not shared
+
+
+def test_namespace_type_error_falls_back_to_original_in_single_process_mode() -> None:
+    class NonCopyable:
+        def __deepcopy__(self, memo: dict[int, object]) -> object:
+            raise TypeError("cannot copy namespace value")
+
+    value = NonCopyable()
+    context = _context(namespace={"value": value})
+
+    copied = copy.deepcopy(context)
+
+    assert copied.namespace["value"] is value
+
+
+def test_namespace_type_error_in_multiprocessing_preserves_cause() -> None:
+    class NonCopyable:
+        def __deepcopy__(self, memo: dict[int, object]) -> object:
+            raise TypeError("cannot copy namespace value")
+
+    context = _context(namespace={"value": NonCopyable()})
+    context.use_mp = True
+
+    with pytest.raises(Exception, match="Global imports are not supported in multiprocessing mode.") as raised:
+        copy.deepcopy(context)
+
+    assert isinstance(raised.value.__cause__, TypeError)
+    assert str(raised.value.__cause__) == "cannot copy namespace value"
+
+
+def test_namespace_deepcopy_propagates_non_type_error() -> None:
+    error = ValueError("invalid namespace state")
+
+    class InvalidValue:
+        def __deepcopy__(self, memo: dict[int, object]) -> object:
+            raise error
+
+    context = _context(namespace={"value": InvalidValue()})
+
+    with pytest.raises(ValueError) as raised:
+        copy.deepcopy(context)
+
+    assert raised.value is error
+
+
+def test_setup_context_state_annotations_describe_dynamic_namespace_and_copy_contract() -> None:
+    init_hints = get_type_hints(SetupContext.__init__)
+    assert init_hints.get("namespace") == dict[str, object] | None
+    assert init_hints.get("global_variables") == dict[str, object] | None
+    assert init_hints.get("return") is type(None)
+    assert get_type_hints(SetupContext.namespace.fget).get("return") == dict[str, object]
+    assert get_type_hints(SetupContext.namespace.fset).get("value") == dict[str, object]
+    assert get_type_hints(SetupContext.namespace.fset).get("return") is type(None)
+    assert get_type_hints(SetupContext.global_variables.fget).get("return") == dict[str, object]
+    assert get_type_hints(SetupContext.memstore_manager.fget).get("return") is MemstoreManager
+    assert get_type_hints(SetupContext.update_with_stmt).get("return") is type(None)
+    deepcopy_hints = get_type_hints(SetupContext.__deepcopy__)
+    assert deepcopy_hints.get("memo") == dict[int, object]
+    assert deepcopy_hints.get("return") is SetupContext
+    namespace_hints = get_type_hints(SetupContext._deepcopy_namespace)
+    assert namespace_hints.get("memo") == dict[int, object]
+    assert namespace_hints.get("return") == dict[str, object]

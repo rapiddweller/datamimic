@@ -77,7 +77,7 @@ def load_generate_source(
                 f"<generate> '{stmt.full_name}': offset= is only supported for file sources, not memstore '{source}'"
             )
         source_data = root.memstore_manager.get_memstore(source).get_data_by_type(
-            resolve_source_entity(stmt.source_entity, stmt.type, stmt.name), pagination, stmt.cyclic
+            resolve_source_entity(stmt.source_entity, stmt.type, stmt.name), pagination, bool(stmt.cyclic)
         )
     elif root.clients.get(source) is not None:
         if stmt.offset:

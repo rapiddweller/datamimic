@@ -21,6 +21,7 @@ from datamimic_ce.engine.io.data_sources.router import (
     window_nested_key_rows,
 )
 from datamimic_ce.engine.io.exporters.core import routing as io_exporter_routing
+from datamimic_ce.engine.io.exporters.memory.memstore import Memstore
 from datamimic_ce.engine.runtime.tasks.sources import chunk_source_reader
 from datamimic_ce.engine.runtime.tasks.sources import generate as generate_source_router
 from datamimic_ce.engine.runtime.tasks.sources import length as length_source_router
@@ -909,6 +910,53 @@ def _generate_source_context(source: str, client: object | None, memstore: Mock 
         clients={source: client} if client is not None else {},
     )
     return SimpleNamespace(root=root)
+
+
+@pytest.mark.parametrize(
+    ("cyclic", "expected_cyclic", "expected_ids"),
+    [(None, False, [2]), (False, False, [2]), (True, True, [2, 1, 2, 1])],
+)
+def test_generate_memstore_normalizes_cyclic_and_keeps_expected_row_ownership(
+    cyclic: bool | None, expected_cyclic: bool, expected_ids: list[int]
+) -> None:
+    stored_rows = [
+        {"id": 1, "nested": {"value": "first"}},
+        {"id": 2, "nested": {"value": "second"}},
+    ]
+    real_memstore = Memstore("source")
+    real_memstore.consume(("rows", stored_rows))
+    memstore = Mock(wraps=real_memstore)
+    context = _generate_source_context("source", None, memstore)
+    pagination = DataSourcePagination(skip=1, limit=4)
+
+    rows, build_from_source = generate_source_router.load_generate_source(
+        context,
+        _generate_source_statement(cyclic=cyclic, source_entity="rows"),
+        "source",
+        "|",
+        False,
+        None,
+        None,
+        pagination,
+    )
+
+    memstore.get_data_by_type.assert_called_once()
+    assert memstore.get_data_by_type.call_args.args[:2] == ("rows", pagination)
+    assert memstore.get_data_by_type.call_args.args[2] is expected_cyclic
+    assert build_from_source is True
+    assert [row["id"] for row in rows] == expected_ids
+    if cyclic:
+        assert all(row is not stored_rows[row["id"] - 1] for row in rows)
+        assert len({id(row) for row in rows}) == len(rows)
+        rows[0]["nested"]["value"] = "changed"
+        assert rows[2]["nested"]["value"] == "second"
+        assert stored_rows[1]["nested"]["value"] == "second"
+    else:
+        assert rows[0] is stored_rows[1]
+    assert stored_rows == [
+        {"id": 1, "nested": {"value": "first"}},
+        {"id": 2, "nested": {"value": "second"}},
+    ]
 
 
 def test_generate_mongodb_requires_selector_or_collection_before_reading(monkeypatch: pytest.MonkeyPatch) -> None:

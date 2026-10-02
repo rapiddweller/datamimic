@@ -196,8 +196,8 @@ class SetupContext(Context):
         clients: dict[str, Client] | None = None,
         data_source_len: dict[tuple[str | None, str | None], int] | None = None,
         properties: dict | None = None,
-        namespace: dict | None = None,
-        global_variables: dict | None = None,
+        namespace: dict[str, object] | None = None,
+        global_variables: dict[str, object] | None = None,
         generators: dict | None = None,
         default_source_scripted: bool | None = None,
         report_logging: bool = True,
@@ -206,7 +206,7 @@ class SetupContext(Context):
         domain_identifier_registry: IdentifierRegistry | None = None,
         runtime_environment: Literal["development", "production"] = "production",
         ray_debug: bool = False,
-    ):
+    ) -> None:
         # SetupContext is always its root_context
         super().__init__(self)
         self._descriptor_dir = descriptor_dir
@@ -239,7 +239,7 @@ class SetupContext(Context):
         self._test_mode = test_mode
         self._test_result_exporter = test_result_exporter
         self._generators = generators or {}
-        self._global_variables = {} if global_variables is None else global_variables
+        self._global_variables: dict[str, object] = {} if global_variables is None else global_variables
         self._num_process = num_process
         self._process_id: int | None = None
         self.global_increment_registry: GlobalIncrementRegistry | None = None
@@ -297,7 +297,7 @@ class SetupContext(Context):
             self._seeded_faker = Faker()
         return self._seeded_faker
 
-    def __deepcopy__(self, memo):
+    def __deepcopy__(self, memo: dict[int, object]) -> SetupContext:
         """
         Select which attributes should be deepcopy
         :param memo:
@@ -355,13 +355,13 @@ class SetupContext(Context):
                 copied_clients[key] = value  # Use the original object if deepcopy fails
         return copied_clients
 
-    def _deepcopy_namespace(self, memo):
+    def _deepcopy_namespace(self, memo: dict[int, object]) -> dict[str, object]:
         """
         Deepcopy namespace attribute, excluding non-pickleable objects.
         :param memo:
         :return:
         """
-        copied_namespace = {}
+        copied_namespace: dict[str, object] = {}
         for key, value in self._namespace.items():
             try:
                 copied_namespace[key] = copy.deepcopy(value, memo)
@@ -426,7 +426,7 @@ class SetupContext(Context):
         """
         return self._namespace.get(class_name)
 
-    def update_with_stmt(self, stmt: SetupStatement):
+    def update_with_stmt(self, stmt: SetupStatement) -> None:
         """
         Update new created setup_context with its own setup_stmt (propagate parent context props to sub context)
         :param stmt:
@@ -482,15 +482,15 @@ class SetupContext(Context):
         self._properties = value
 
     @property
-    def memstore_manager(self):
+    def memstore_manager(self) -> MemstoreManager:
         return self._memstore_manager
 
     @property
-    def namespace(self):
+    def namespace(self) -> dict[str, object]:
         return self._namespace
 
     @namespace.setter
-    def namespace(self, value):
+    def namespace(self, value: dict[str, object]) -> None:
         self._namespace = value
 
     @property
@@ -566,7 +566,7 @@ class SetupContext(Context):
         self._default_dataset = value
 
     @property
-    def global_variables(self) -> dict:
+    def global_variables(self) -> dict[str, object]:
         return self._global_variables
 
     @property

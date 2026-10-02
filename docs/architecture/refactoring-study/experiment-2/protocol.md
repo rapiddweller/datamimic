@@ -15,6 +15,10 @@ records. Application still sequences execution and adapters still run it.
 [Amendment 92](amendment-92.md) incorporates upstream's empty-Echo diagnostic
 correction; this intended error-to-continuation change is not output parity.
 
+[Amendment 93](amendment-93.md) retains seven exact setup-state annotation
+disclosures as a red checkpoint. It does not waive the newly measured debt
+or change any gate, baseline or final acceptance requirement.
+
 ## Fixed inputs
 
 | Input | Frozen value |
