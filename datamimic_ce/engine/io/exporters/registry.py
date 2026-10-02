@@ -188,8 +188,8 @@ def consume_memstore_target(
 
 def smoke_export(request: SmokeExportRequest) -> int:
     """Run one bounded buffered export for an authoring smoke check."""
-    params = request.params.root
-    rows = request.rows.root
+    params = request.params
+    rows = request.rows
     chunk_size = params.get("chunk_size")
     if chunk_size is not None and not isinstance(chunk_size, int):
         raise TypeError("chunk_size target option must be an integer")

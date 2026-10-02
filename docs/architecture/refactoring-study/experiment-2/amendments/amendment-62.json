@@ -1,0 +1,7 @@
+{
+  "after_digest": "43f2209f4d8b06269a97e53ceddaa9c3c2d88957ba65c6d20b9f2b6f4a33c488",
+  "before_digest": "8d2ceefc86424b7c9238960c2e95c6df5ac48cc78eed75d7fa51516e2bed5713",
+  "decided_by": "Astra (delegated architect)",
+  "rationale": "Remove the two empty smoke-export payload wrappers; permit only native rows and options at four exact IO request positions. Fixed controls, baseline and DSL behavior stay unchanged.",
+  "schema_version": "1.0.0"
+}

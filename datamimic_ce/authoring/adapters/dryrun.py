@@ -63,7 +63,7 @@ from datamimic_ce.authoring.contracts import (
 )
 from datamimic_ce.authoring.domain.diagnostics import Diagnostic, LintResult
 from datamimic_ce.authoring.domain.rule_catalog import RuleSeverity
-from datamimic_ce.engine.io.contracts import SmokeExportParameters, SmokeExportRequest, SmokeExportRows
+from datamimic_ce.engine.io.contracts import SmokeExportRequest
 
 RULE_RUNTIME_ERROR = "DM002"
 RULE_SIDE_EFFECT_REFUSAL = "DM003"
@@ -580,9 +580,9 @@ def _smoke_exporter(
                 task_id=task_id,
                 basename=basename,
                 full_name=full_name,
-                rows=SmokeExportRows.model_construct(root=rows),
+                rows=rows,
                 exporter_name=exporter_name,
-                params=SmokeExportParameters.model_construct(root=params),
+                params=params,
                 default_separator=default_separator,
                 default_line_separator=default_line_separator,
             )

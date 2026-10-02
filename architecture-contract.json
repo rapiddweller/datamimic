@@ -548,11 +548,38 @@
       "id": "IO-API-TYPES",
       "kind": "boundary_types",
       "source": "datamimic_ce.engine.io.api",
-      "rationale": "The IO facade accepts declared IO requests instead of exposing mutable exporter internals.",
+      "rationale": "The IO facade keeps fixed controls typed; smoke-export rows and exporter options are open DSL payloads at two reviewed request fields.",
       "provenance": [
-        "docs/architecture/refactoring-study/experiment-2/target-architecture.md"
+        "docs/architecture/refactoring-study/experiment-2/target-architecture.md",
+        "docs/architecture/refactoring-study/experiment-2/amendment-62.md"
       ],
-      "decided_by": "architect"
+      "decided_by": "architect",
+      "allowed_positions": [
+        {
+          "qualified_name": "datamimic_ce.engine.io.api.smoke_export",
+          "position": "request",
+          "field_path": "rows",
+          "annotation": "dict[str, object]"
+        },
+        {
+          "qualified_name": "datamimic_ce.engine.io.api.smoke_export",
+          "position": "request",
+          "field_path": "rows",
+          "annotation": "object"
+        },
+        {
+          "qualified_name": "datamimic_ce.engine.io.api.smoke_export",
+          "position": "request",
+          "field_path": "params",
+          "annotation": "dict[str, object]"
+        },
+        {
+          "qualified_name": "datamimic_ce.engine.io.api.smoke_export",
+          "position": "request",
+          "field_path": "params",
+          "annotation": "object"
+        }
+      ]
     },
     {
       "id": "AUTHORING-API-TYPES",

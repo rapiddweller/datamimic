@@ -5,8 +5,10 @@ from __future__ import annotations
 import importlib
 import json
 from pathlib import Path
+from typing import get_type_hints
 
 from datamimic_ce.engine.io import api as io_api
+from datamimic_ce.engine.io.contracts import SmokeExportRequest
 from datamimic_ce.engine.io.api import (
     database_count_table_length as direct_database_count_table_length,
 )
@@ -96,6 +98,18 @@ def test_io_api_exposes_exporter_context_support_type() -> None:
     contract = json.loads((ROOT / "architecture-contract.json").read_text(encoding="utf-8"))
     io_public = next(component["public"] for component in contract["components"] if component["id"] == "COMP-IO")
     assert all(not entry.startswith("datamimic_ce.engine.io.exporters.core.") for entry in io_public)
+
+
+def test_smoke_export_request_uses_native_payload_annotations() -> None:
+    annotations = get_type_hints(SmokeExportRequest)
+    assert annotations["rows"] == list[dict[str, object]]
+    assert annotations["params"] == dict[str, object]
+
+    contracts = importlib.import_module("datamimic_ce.engine.io.contracts")
+    assert "SmokeExportRows" not in contracts.__all__
+    assert "SmokeExportParameters" not in contracts.__all__
+    assert not hasattr(contracts, "SmokeExportRows")
+    assert not hasattr(contracts, "SmokeExportParameters")
 
 
 def test_exporter_registry_has_only_exact_memstore_visibility() -> None:

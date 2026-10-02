@@ -8,8 +8,6 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Protocol, TypedDict, TypeVar
 
-from pydantic import RootModel
-
 
 class ExportMetadata(TypedDict, total=False):
     target_entity: str
@@ -77,23 +75,15 @@ def select_row_iterator(
     return itertools.cycle(list(selected)[: end - start]) if cyclic else selected
 
 
-class SmokeExportRows(RootModel[list[dict[str, object]]]):
-    pass
-
-
-class SmokeExportParameters(RootModel[dict[str, object]]):
-    pass
-
-
 @dataclass(frozen=True)
 class SmokeExportRequest:
     descriptor_dir: Path
     task_id: str
     basename: str
     full_name: str
-    rows: SmokeExportRows
+    rows: list[dict[str, object]]
     exporter_name: str
-    params: SmokeExportParameters
+    params: dict[str, object]
     default_separator: str
     default_line_separator: str
 
@@ -103,9 +93,7 @@ __all__ = [
     "EntityValue",
     "ExportMetadata",
     "MemstoreSource",
-    "SmokeExportParameters",
     "SmokeExportRequest",
-    "SmokeExportRows",
     "select_row_iterator",
     "select_rows",
 ]
