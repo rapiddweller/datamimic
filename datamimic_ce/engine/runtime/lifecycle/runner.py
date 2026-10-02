@@ -26,15 +26,7 @@ class RuntimeRunSession:
         bootstrap_process_title()
         set_main_process_title(self._task_id, request.descriptor_path.name)
 
-        if request.args is None:
-            log_level = logging.INFO
-        else:
-            try:
-                configured_level = logging.getLevelName(request.args.log_level.upper())
-            except AttributeError:
-                configured_level = logging.INFO
-            log_level = configured_level if isinstance(configured_level, int) else logging.INFO
-        setup_logger(logger_name="DATAMIMIC", worker_name="MAIN", level=log_level)
+        setup_logger(logger_name="DATAMIMIC", worker_name="MAIN", level=request.log_level)
 
         self._request = request
         self._test_result_storage = TestResultExporter()

@@ -1,6 +1,6 @@
 """Typed inputs and outputs for a runtime descriptor execution."""
 
-import argparse
+import logging
 from collections.abc import Callable
 from dataclasses import dataclass
 from pathlib import Path
@@ -47,7 +47,7 @@ class RunRequest:
     platform_configs: PlatformConfiguration | None = None
     test_mode: bool = False
     factory_config: FactoryConfig | None = None
-    args: argparse.Namespace | None = None
+    log_level: int = logging.INFO
     statement_transformer: StatementTransformer | None = None
 
 

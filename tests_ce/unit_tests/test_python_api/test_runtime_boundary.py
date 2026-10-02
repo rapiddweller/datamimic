@@ -1,4 +1,5 @@
 import json
+import logging
 from argparse import Namespace
 from decimal import Decimal
 from pathlib import Path
@@ -109,6 +110,12 @@ def test_runtime_property_loader_has_native_return_annotation() -> None:
 
 def test_run_request_has_native_property_map_annotation() -> None:
     assert get_type_hints(RunRequest)["platform_props"] == dict[str, str] | None
+
+
+def test_run_request_has_integer_log_level_and_no_transport_args() -> None:
+    assert get_type_hints(RunRequest)["log_level"] is int
+    assert RunRequest.__dataclass_fields__["log_level"].default == logging.INFO
+    assert "args" not in RunRequest.__dataclass_fields__
 
 
 class SessionStub:
@@ -303,7 +310,7 @@ def test_python_api_uses_runtime_request_and_preserves_factory_config(monkeypatc
             platform_configs=PlatformConfiguration.model_construct(root=configuration),
             test_mode=True,
             factory_config=factory_config,
-            args=Namespace(log_level="DEBUG"),
+            log_level=logging.DEBUG,
             statement_transformer=transformer,
         )
     ]
@@ -312,6 +319,80 @@ def test_python_api_uses_runtime_request_and_preserves_factory_config(monkeypatc
     assert engine.parse_and_execute() is None
     assert session.executed
     assert engine.capture_test_result() is result
+
+
+@pytest.mark.parametrize(
+    ("args", "expected_level", "register_custom_level"),
+    [
+        (None, logging.INFO, False),
+        (Namespace(), logging.INFO, False),
+        (Namespace(log_level="unknown-level"), logging.INFO, False),
+        (Namespace(log_level=17), logging.INFO, False),
+        (Namespace(log_level="debug"), logging.DEBUG, False),
+        (Namespace(log_level="notice"), 25, True),
+    ],
+    ids=["none", "missing", "unknown", "non-string", "lowercase", "custom"],
+)
+def test_python_api_resolves_transport_log_level_before_real_runtime(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+    args: Namespace | None,
+    expected_level: int,
+    register_custom_level: bool,
+) -> None:
+    descriptor = tmp_path / "descriptor.xml"
+    descriptor.write_text("<setup />", encoding="utf-8")
+    observed_levels: list[int] = []
+    if register_custom_level:
+        monkeypatch.setattr(logging, "_nameToLevel", logging._nameToLevel.copy())
+        monkeypatch.setattr(logging, "_levelToName", logging._levelToName.copy())
+        logging.addLevelName(expected_level, "NOTICE")
+
+    monkeypatch.setattr(runner, "bootstrap_process_title", lambda: None)
+    monkeypatch.setattr(runner, "set_main_process_title", lambda _task_id, _descriptor: None)
+    monkeypatch.setattr(runner, "setup_logger", lambda *, level, **_kwargs: observed_levels.append(level))
+    monkeypatch.setattr(runner, "log_system_info", lambda: None)
+    monkeypatch.setattr(runner, "log_memory_info", lambda _root: None)
+
+    DataMimic(descriptor, args=args)
+
+    assert observed_levels == [expected_level]
+
+
+@pytest.mark.parametrize("log_level", [logging.NOTSET, 7], ids=["notset", "custom-integer"])
+def test_runtime_passes_direct_integer_log_level_unchanged(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+    log_level: int,
+) -> None:
+    descriptor = tmp_path / "descriptor.xml"
+    descriptor.write_text("<setup />", encoding="utf-8")
+    observed_levels: list[int] = []
+    monkeypatch.setattr(runner, "bootstrap_process_title", lambda: None)
+    monkeypatch.setattr(runner, "set_main_process_title", lambda _task_id, _descriptor: None)
+    monkeypatch.setattr(runner, "setup_logger", lambda *, level, **_kwargs: observed_levels.append(level))
+    monkeypatch.setattr(runner, "log_system_info", lambda: None)
+    monkeypatch.setattr(runner, "log_memory_info", lambda _root: None)
+
+    runner.create_run_session(RunRequest(descriptor_path=descriptor, log_level=log_level))
+
+    assert observed_levels == [log_level]
+
+
+def test_python_api_propagates_unexpected_log_level_conversion_error(monkeypatch) -> None:
+    class BrokenNamespace(Namespace):
+        @property
+        def log_level(self) -> str:
+            raise RuntimeError("broken log level")
+
+    monkeypatch.setattr(runner, "bootstrap_process_title", lambda: None)
+    monkeypatch.setattr(runner, "set_main_process_title", lambda _task_id, _descriptor: None)
+    monkeypatch.setattr(runner, "setup_logger", lambda **_kwargs: None)
+    monkeypatch.setattr(runner, "log_system_info", lambda: None)
+    monkeypatch.setattr(runner, "log_memory_info", lambda _root: None)
+
+    with pytest.raises(RuntimeError, match="broken log level"):
+        DataMimic(Path("descriptor.xml"), args=BrokenNamespace())
 
 
 def test_data_mimic_test_keeps_disabled_capture_error(monkeypatch) -> None:
