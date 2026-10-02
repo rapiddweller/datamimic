@@ -125,7 +125,7 @@ def plan_variable_source(
         prefix = stmt.variable_prefix or context.default_variable_prefix
         suffix = stmt.variable_suffix or context.default_variable_suffix
         client = context.get_client_by_id(source)
-        if not is_database_client(client):
+        if client is None or not is_database_client(client):
             raise ValueError(f"<variable> '{stmt.name}': 'selector' only works with 'source' database (MongoDB, SQL)")
         if stmt.iteration_selector is not None:
             return VariableSourcePlan(

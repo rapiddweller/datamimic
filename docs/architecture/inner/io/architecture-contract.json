@@ -32,7 +32,7 @@
       },
       {
         "path": "datamimic_ce/engine/io/clients/operations.py",
-        "responsibility": "This module groups typed database operations for connections, queries, pages, and sequences."
+        "responsibility": "Owns typed client creation, queries, paging, SQL scripts, sequences and disposal."
       },
       {
         "path": "datamimic_ce/engine/io/clients/rdbms_client.py",

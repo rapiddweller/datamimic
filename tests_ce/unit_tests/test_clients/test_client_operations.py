@@ -4,6 +4,8 @@ from unittest.mock import MagicMock, patch
 import pytest
 
 from datamimic_ce.engine.dsl.api import Dbms
+from datamimic_ce.engine.io import api as io_api
+from datamimic_ce.engine.io.clients import operations as client_operations
 from datamimic_ce.engine.io.clients.operations import count_query_length, create_mongodb_client, create_rdbms_client, database_get_by_page_with_query, database_get_random_rows_by_columns, is_database_client, is_mongodb_client, is_rdbms_client, mongodb_count_collection, rdbms_get_current_sequence_number, uses_mysql_sequence_storage
 from datamimic_ce.engine.io.clients.client import Client
 from datamimic_ce.engine.io.clients.database_client import DatabaseClient
@@ -75,3 +77,57 @@ def test_database_query_operation_forwards_pagination() -> None:
 
     assert database_get_by_page_with_query(rdbms, "select 1", pagination) is rows
     rdbms.get_by_page_with_query.assert_called_once_with("select 1", pagination)
+
+
+def test_execute_sql_script_is_exported_by_io_api() -> None:
+    assert io_api.execute_sql_script is client_operations.execute_sql_script
+    assert "execute_sql_script" in io_api.__all__
+
+
+def test_execute_sql_script_accepts_uninitialized_rdbms_and_preserves_query() -> None:
+    client = object.__new__(RdbmsClient)
+    calls: list[str] = []
+    client.execute_sql_script = calls.append
+    query = "  CREATE TABLE x (value TEXT);\nINSERT INTO x VALUES ('{literal}');  "
+
+    assert io_api.execute_sql_script(client, query) is None
+    assert calls == [query]
+
+
+def test_execute_sql_script_uses_rdbms_subclass_override_and_preserves_exception() -> None:
+    error = RuntimeError("driver failed")
+
+    class FailingRdbmsClient(RdbmsClient):
+        def execute_sql_script(self, query: str) -> None:
+            self.calls.append(query)
+            raise error
+
+    client = object.__new__(FailingRdbmsClient)
+    client.calls = []
+    query = "INSERT INTO x VALUES (7)"
+
+    with pytest.raises(RuntimeError) as raised:
+        io_api.execute_sql_script(client, query)
+
+    assert raised.value is error
+    assert client.calls == [query]
+
+
+def test_execute_sql_script_rejects_clients_outside_rdbms_without_calling_them() -> None:
+    calls: list[str] = []
+
+    class ClientOnlySqlClient(Client):
+        def execute_sql_script(self, query: str) -> None:
+            calls.append(query)
+
+    plain_client = Client()
+    plain_client.execute_sql_script = calls.append
+    mongo_client = object.__new__(MongoDBClient)
+    mongo_client.execute_sql_script = calls.append
+
+    for client in (plain_client, mongo_client, ClientOnlySqlClient()):
+        with pytest.raises(TypeError) as raised:
+            io_api.execute_sql_script(client, "SELECT 1")
+        assert str(raised.value) == "Client does not support SQL script execution"
+
+    assert calls == []

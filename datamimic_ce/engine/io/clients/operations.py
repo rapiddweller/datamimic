@@ -93,6 +93,12 @@ def rdbms_increase_sequence_number(
     client.increase_sequence_number(sequence, increment, table, column)
 
 
+def execute_sql_script(client: Client, query: str) -> None:
+    if not isinstance(client, RdbmsClient):
+        raise TypeError("Client does not support SQL script execution")
+    client.execute_sql_script(query)
+
+
 def dispose_client_engine(client: Client) -> None:
     if isinstance(client, RdbmsClient) and client.engine is not None:
         client.engine.dispose()

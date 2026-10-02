@@ -517,11 +517,12 @@
       "id": "RUNTIME-API-TYPES",
       "kind": "boundary_types",
       "source": "datamimic_ce.engine.runtime.api",
-      "rationale": "Runtime requests and results are declared; Context and SetupContext retain reviewed dynamic scripting state. Captured rows and descriptor property names stay open at exact positions; execution controls remain typed.",
+      "rationale": "Runtime requests and results are declared. Captures, descriptor properties and the typed client-ID registry use native maps at exact reviewed positions; execution controls remain typed.",
       "provenance": [
         "docs/architecture/refactoring-study/experiment-2/target-architecture.md",
         "docs/architecture/refactoring-study/experiment-2/amendment-82.md",
-        "docs/architecture/refactoring-study/experiment-2/amendment-89.md"
+        "docs/architecture/refactoring-study/experiment-2/amendment-89.md",
+        "docs/architecture/refactoring-study/experiment-2/amendment-90.md"
       ],
       "decided_by": "architect",
       "allowed_positions": [
@@ -560,6 +561,24 @@
           "position": "request",
           "field_path": "platform_props",
           "annotation": "dict[str, str]"
+        },
+        {
+          "qualified_name": "datamimic_ce.engine.runtime.api.SetupContext.__init__",
+          "position": "clients",
+          "field_path": "",
+          "annotation": "dict[str, Client] | None"
+        },
+        {
+          "qualified_name": "datamimic_ce.engine.runtime.api.SetupContext.clients",
+          "position": "return",
+          "field_path": "",
+          "annotation": "dict[str, Client]"
+        },
+        {
+          "qualified_name": "datamimic_ce.engine.runtime.api.SetupContext.clients",
+          "position": "value",
+          "field_path": "",
+          "annotation": "dict[str, Client]"
         }
       ]
     },

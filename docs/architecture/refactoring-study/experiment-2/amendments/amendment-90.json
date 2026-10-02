@@ -1,0 +1,7 @@
+{
+  "after_digest": "9f7026b846d872df12edf6dfa1ebe5c9e3174467cfb0e0971515ee9510ed999e",
+  "before_digest": "ad7ba9380784a7cbcc4576fd92525a4a05b92a12bd53e07218aec6a6e0724b30",
+  "decided_by": "Astra (delegated architect)",
+  "rationale": "Client IDs form a native typed mutable registry, not a fixed record. Admit exactly its constructor, getter and setter; preserve identity and reject object/Any maps elsewhere. No baseline or budget growth.",
+  "schema_version": "1.0.0"
+}
