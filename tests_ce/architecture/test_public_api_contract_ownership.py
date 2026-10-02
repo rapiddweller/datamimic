@@ -129,3 +129,36 @@ def test_state_machine_definition_is_generation_contract_owned() -> None:
         for component in domains["components"]
         if component["id"] != "DOMAINS-CORE"
     )
+
+
+def test_existing_entrypoints_have_explicit_inner_public_decisions() -> None:
+    root = _read_contract(ROOT / "architecture-contract.json")
+    tasks = _read_contract(ROOT / "docs/architecture/inner/runtime/tasks/architecture-contract.json")
+    shared = _read_contract(ROOT / "docs/architecture/inner/domains/shared/architecture-contract.json")
+    healthcare = _read_contract(ROOT / "docs/architecture/inner/domains/healthcare/architecture-contract.json")
+    authoring = _read_contract(ROOT / "docs/architecture/inner/authoring/architecture-contract.json")
+
+    assert _component(tasks, "TASKS-REGISTRY")["public"] == []
+
+    assert _component(shared, "SHARED-USE-CASES")["public"] == [
+        "datamimic_ce.domains.shared.use_cases.address_api:AddressRequest",
+        "datamimic_ce.domains.shared.use_cases.address_api:generate",
+        "datamimic_ce.domains.shared.use_cases.person_api:PersonRequest",
+        "datamimic_ce.domains.shared.use_cases.person_api:generate",
+    ]
+    assert _component(healthcare, "HEALTHCARE-USE-CASES")["public"] == [
+        "datamimic_ce.domains.healthcare.use_cases.doctor_api:DoctorRequest",
+        "datamimic_ce.domains.healthcare.use_cases.doctor_api:generate",
+        "datamimic_ce.domains.healthcare.use_cases.patient_api:PatientRequest",
+        "datamimic_ce.domains.healthcare.use_cases.patient_api:generate",
+    ]
+
+    api = _component(authoring, "AUTHORING-API")
+    assert api["packages"] == ["datamimic_ce.authoring.api"]
+    assert api["exact_modules"] == ["datamimic_ce.authoring"]
+    assert api["public"] == ["datamimic_ce.authoring.api"]
+    assert _component(root, "COMP-AUTHORING")["public"] == [
+        "datamimic_ce.authoring.api",
+        "datamimic_ce.authoring.contracts",
+        "datamimic_ce.authoring.spec:LeafFieldKind",
+    ]

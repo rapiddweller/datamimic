@@ -144,6 +144,9 @@
       "packages": [
         "datamimic_ce.authoring.api"
       ],
+      "exact_modules": [
+        "datamimic_ce.authoring"
+      ],
       "responsibilities": [
         "Exposes capabilities, check, reference, run, and scaffold as typed entry points that delegate to the authoring application."
       ],

@@ -324,6 +324,12 @@
           "decided_by": "agent"
         }
       ],
+      "public": [
+        "datamimic_ce.domains.shared.use_cases.address_api:AddressRequest",
+        "datamimic_ce.domains.shared.use_cases.address_api:generate",
+        "datamimic_ce.domains.shared.use_cases.person_api:PersonRequest",
+        "datamimic_ce.domains.shared.use_cases.person_api:generate"
+      ],
       "decided_by": "agent"
     },
     {

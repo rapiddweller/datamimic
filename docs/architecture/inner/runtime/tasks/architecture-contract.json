@@ -327,7 +327,8 @@
           "rationale": "Register concrete Statement-to-Task implementations once at lifecycle composition.",
           "decided_by": "agent"
         }
-      ]
+      ],
+      "public": []
     }
   ],
   "rules": [
