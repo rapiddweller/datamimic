@@ -287,6 +287,9 @@
       "packages": [
         "datamimic_ce.engine.runtime.tasks.registry"
       ],
+      "exact_modules": [
+        "datamimic_ce.engine.runtime.tasks"
+      ],
       "responsibilities": [
         "Concrete Statement-to-Task registration at execution composition root."
       ],

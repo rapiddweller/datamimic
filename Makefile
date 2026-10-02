@@ -3,7 +3,7 @@
 PACKAGE := datamimic_ce
 TESTS := tests_ce
 CE_COVERAGE_FILES := $(shell find $(PACKAGE) -type f -name '*.py')
-ARCHKEEL_SOURCE := archkeel==0.8.3
+ARCHKEEL_SOURCE := archkeel==0.8.4
 
 help:
 	@echo "Available targets:"
@@ -62,7 +62,7 @@ format:
 check: lint typecheck test
 
 architecture-definition-check:
-	uvx --python 3.11 --from pytest==8.3.5 pytest -q tests_ce/architecture/test_recursive_target_definition.py tests_ce/architecture/test_current_module_concerns.py tests_ce/architecture/test_exact_module_targets.py
+	uvx --python 3.11 --from pytest==8.3.5 pytest -q tests_ce/architecture/test_recursive_target_definition.py tests_ce/architecture/test_current_module_concerns.py tests_ce/architecture/test_exact_module_targets.py tests_ce/architecture/test_registry_entrypoints.py::test_registry_owns_exact_initializer_and_keeps_package_selector
 
 architecture-report:
 	uvx --python 3.11 --from '$(ARCHKEEL_SOURCE)' archkeel report --output test-artifacts/architecture/ce-recursive-target/architecture.json --json

@@ -9,6 +9,7 @@ import sys
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[2]
+TASKS_CONTRACT = ROOT / "docs/architecture/inner/runtime/tasks/architecture-contract.json"
 
 
 def _cli(cwd: Path, *arguments: str) -> subprocess.CompletedProcess[str]:
@@ -37,6 +38,16 @@ def _cold_script(cwd: Path, script: str) -> subprocess.CompletedProcess[str]:
         text=True,
         timeout=30,
     )
+
+
+def test_registry_owns_exact_initializer_and_keeps_package_selector() -> None:
+    contract = json.loads(TASKS_CONTRACT.read_text(encoding="utf-8"))
+    registry = next(
+        component for component in contract["components"] if component["id"] == "TASKS-REGISTRY"
+    )
+
+    assert registry["exact_modules"] == ["datamimic_ce.engine.runtime.tasks"]
+    assert registry["packages"] == ["datamimic_ce.engine.runtime.tasks.registry"]
 
 
 def test_cli_entrypoints_resolve_live_registries_outside_checkout(tmp_path: Path) -> None:
