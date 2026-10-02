@@ -40,7 +40,6 @@ from datamimic_ce.randomness import RandomSource
 class Context(ABC):
     def __init__(self, root_context: SetupContext):  # noqa: F821
         self._root = root_context
-        self._statement_start_times: dict[str, float] = {}
 
     @property
     def root(self) -> SetupContext:  # noqa: F821
@@ -50,14 +49,6 @@ class Context(ABC):
     @abstractmethod
     def rng(self) -> RandomSource:
         """The rng for randomness driven by this context (Random or random module)."""
-
-    @property
-    def statement_start_times(self) -> dict[str, float]:
-        return self._statement_start_times
-
-    @statement_start_times.setter
-    def statement_start_times(self, value: dict[str, float]) -> None:
-        self._statement_start_times = value
 
     def evaluate_python_expression(self, expr: str, local_namespace: dict[str, object] | None = None) -> object:
         """
