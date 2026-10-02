@@ -12,6 +12,9 @@ inputs below remain history, including the original checker and agent versions.
 and verification live in Domain; canonical contracts own the existing capture
 records. Application still sequences execution and adapters still run it.
 
+[Amendment 92](amendment-92.md) incorporates upstream's empty-Echo diagnostic
+correction; this intended error-to-continuation change is not output parity.
+
 ## Fixed inputs
 
 | Input | Frozen value |

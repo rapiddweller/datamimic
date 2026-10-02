@@ -13,5 +13,5 @@ class EchoStatement(Statement):
         self._value = value
 
     @property
-    def value(self):
+    def value(self) -> str | None:
         return self._value
