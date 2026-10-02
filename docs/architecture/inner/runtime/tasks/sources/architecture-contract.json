@@ -20,11 +20,11 @@
       },
       {
         "path": "datamimic_ce/engine/runtime/tasks/sources/reference.py",
-        "responsibility": "Loads and selects reference rows while applying runtime seed and distribution policy."
+        "responsibility": "Resolves reference options and runtime seed state for IO reads and selection, and identifies when rebuilt tasks need shared rotation."
       },
       {
         "path": "datamimic_ce/engine/runtime/tasks/sources/variable.py",
-        "responsibility": "Plans variable source execution modes and applies runtime-owned source policy."
+        "responsibility": "Plans variable source modes and adapts statement and runtime state to IO reads and row selection."
       }
     ]
   },
