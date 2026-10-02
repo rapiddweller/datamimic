@@ -624,12 +624,13 @@
       "id": "RUNTIME-API-TYPES",
       "kind": "boundary_types",
       "source": "datamimic_ce.engine.runtime.api",
-      "rationale": "Runtime requests and results are declared. Captures, descriptor properties and the typed client-ID registry use native maps at exact reviewed positions; execution controls remain typed.",
+      "rationale": "Fixed requests and execution controls stay typed. Captures, descriptor properties, the client registry, native Python state and copy memo use exact reviewed positions.",
       "provenance": [
         "docs/architecture/refactoring-study/experiment-2/target-architecture.md",
         "docs/architecture/refactoring-study/experiment-2/amendment-82.md",
         "docs/architecture/refactoring-study/experiment-2/amendment-89.md",
-        "docs/architecture/refactoring-study/experiment-2/amendment-90.md"
+        "docs/architecture/refactoring-study/experiment-2/amendment-90.md",
+        "docs/architecture/refactoring-study/experiment-2/amendment-95.md"
       ],
       "decided_by": "architect",
       "allowed_positions": [
@@ -686,6 +687,148 @@
           "position": "value",
           "field_path": "",
           "annotation": "dict[str, Client]"
+        },
+        {
+          "qualified_name": "datamimic_ce.engine.runtime.api.Context.evaluate_python_expression",
+          "position": "local_namespace",
+          "field_path": "",
+          "annotation": "dict[str, object] | None"
+        },
+        {
+          "qualified_name": "datamimic_ce.engine.runtime.api.Context.evaluate_python_expression",
+          "position": "local_namespace",
+          "field_path": "",
+          "annotation": "dict[str, object] | None",
+          "container_depth": 1
+        },
+        {
+          "qualified_name": "datamimic_ce.engine.runtime.api.Context.scope_content",
+          "position": "return",
+          "field_path": "",
+          "annotation": "dict[str, object]"
+        },
+        {
+          "qualified_name": "datamimic_ce.engine.runtime.api.Context.scope_content",
+          "position": "return",
+          "field_path": "",
+          "annotation": "dict[str, object]",
+          "container_depth": 1
+        },
+        {
+          "qualified_name": "datamimic_ce.engine.runtime.api.Context.get_content_variables_products",
+          "position": "return",
+          "field_path": "",
+          "annotation": "dict[str, object]"
+        },
+        {
+          "qualified_name": "datamimic_ce.engine.runtime.api.Context.get_content_variables_products",
+          "position": "return",
+          "field_path": "",
+          "annotation": "dict[str, object]",
+          "container_depth": 1
+        },
+        {
+          "qualified_name": "datamimic_ce.engine.runtime.api.SetupContext.__init__",
+          "position": "namespace",
+          "field_path": "",
+          "annotation": "dict[str, object] | None"
+        },
+        {
+          "qualified_name": "datamimic_ce.engine.runtime.api.SetupContext.__init__",
+          "position": "namespace",
+          "field_path": "",
+          "annotation": "dict[str, object] | None",
+          "container_depth": 1
+        },
+        {
+          "qualified_name": "datamimic_ce.engine.runtime.api.SetupContext.__init__",
+          "position": "global_variables",
+          "field_path": "",
+          "annotation": "dict[str, object] | None"
+        },
+        {
+          "qualified_name": "datamimic_ce.engine.runtime.api.SetupContext.__init__",
+          "position": "global_variables",
+          "field_path": "",
+          "annotation": "dict[str, object] | None",
+          "container_depth": 1
+        },
+        {
+          "qualified_name": "datamimic_ce.engine.runtime.api.SetupContext.namespace",
+          "position": "return",
+          "field_path": "",
+          "annotation": "dict[str, object]"
+        },
+        {
+          "qualified_name": "datamimic_ce.engine.runtime.api.SetupContext.namespace",
+          "position": "return",
+          "field_path": "",
+          "annotation": "dict[str, object]",
+          "container_depth": 1
+        },
+        {
+          "qualified_name": "datamimic_ce.engine.runtime.api.SetupContext.namespace",
+          "position": "value",
+          "field_path": "",
+          "annotation": "dict[str, object]"
+        },
+        {
+          "qualified_name": "datamimic_ce.engine.runtime.api.SetupContext.namespace",
+          "position": "value",
+          "field_path": "",
+          "annotation": "dict[str, object]",
+          "container_depth": 1
+        },
+        {
+          "qualified_name": "datamimic_ce.engine.runtime.api.SetupContext.global_variables",
+          "position": "return",
+          "field_path": "",
+          "annotation": "dict[str, object]"
+        },
+        {
+          "qualified_name": "datamimic_ce.engine.runtime.api.SetupContext.global_variables",
+          "position": "return",
+          "field_path": "",
+          "annotation": "dict[str, object]",
+          "container_depth": 1
+        },
+        {
+          "qualified_name": "datamimic_ce.engine.runtime.api.SetupContext.eval_namespace",
+          "position": "return",
+          "field_path": "",
+          "annotation": "dict[str, object]"
+        },
+        {
+          "qualified_name": "datamimic_ce.engine.runtime.api.SetupContext.eval_namespace",
+          "position": "return",
+          "field_path": "",
+          "annotation": "dict[str, object]",
+          "container_depth": 1
+        },
+        {
+          "qualified_name": "datamimic_ce.engine.runtime.api.SetupContext.__deepcopy__",
+          "position": "memo",
+          "field_path": "",
+          "annotation": "dict[int, object]"
+        },
+        {
+          "qualified_name": "datamimic_ce.engine.runtime.api.SetupContext.__deepcopy__",
+          "position": "memo",
+          "field_path": "",
+          "annotation": "dict[int, object]",
+          "container_depth": 1
+        },
+        {
+          "qualified_name": "datamimic_ce.engine.runtime.api.Context.evaluate_python_expression",
+          "position": "return",
+          "field_path": "",
+          "annotation": "object"
+        },
+        {
+          "qualified_name": "datamimic_ce.engine.runtime.api.SetupContext.get_dynamic_class",
+          "position": "return",
+          "field_path": "",
+          "annotation": "object | None"
         }
       ]
     },

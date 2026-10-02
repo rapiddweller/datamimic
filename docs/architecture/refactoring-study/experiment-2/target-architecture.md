@@ -148,6 +148,11 @@ Structure, and Review does not meet this report requirement.
 The construct rules do not prove that every internal annotation is complete: remaining typing
 signals and analyzer limits stay visible as quality measurements (Amendment 12).
 
+[Amendment 95](amendment-95.md) permits native Python scripting-state and copy
+memo only at reviewed exact Runtime positions. Fixed controls still require
+declared types; these permissions do not waive properties, generator-cache or
+other type debt. This is an explicit target correction, not a code improvement.
+
 ## Evidence at freeze
 
 - **FACT:** `development` has 22 root packages and 8 root Python modules.

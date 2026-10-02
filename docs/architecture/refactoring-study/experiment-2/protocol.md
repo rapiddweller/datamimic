@@ -22,6 +22,10 @@ or change any gate, baseline or final acceptance requirement.
 [Amendment 94](amendment-94.md) assigns the inert Domain namespace marker to
 its existing API owner without widening package selectors or public surfaces.
 
+[Amendment 95](amendment-95.md) recognizes exact native Python scripting-state
+and deepcopy-memo positions. This is a target correction, not source-debt
+reduction; unrelated type findings and UNKNOWNs remain subject to the gates.
+
 ## Fixed inputs
 
 | Input | Frozen value |

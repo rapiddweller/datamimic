@@ -13,6 +13,7 @@ from datamimic_ce.engine.io.exporters.diagnostics.test_result_exporter import Te
 from datamimic_ce.engine.runtime.contexts.context import SetupContext
 from datamimic_ce.engine.runtime.storage.global_increment import GlobalIncrementRegistry
 from datamimic_ce.engine.runtime.storage.memstore_manager import MemstoreManager
+from datamimic_ce.engine.runtime.tasks.values.construction.converters import create_converter_list
 
 
 def _context(
@@ -252,6 +253,37 @@ def test_setup_context_namespace_copies_arbitrary_objects_and_classes() -> None:
     assert isinstance(copied.namespace["value"], DynamicValue)
     assert copied.namespace["value"].value == 7
     assert copied.namespace["type"] is DynamicValue
+
+
+@pytest.mark.parametrize(
+    ("constructor", "message"),
+    [
+        ("ScriptValue", "Converter 'ScriptValue' is not callable"),
+        ("ScriptValue()", "Converter expression 'ScriptValue()' did not create a Converter"),
+    ],
+    ids=["without-parentheses", "with-parentheses"],
+)
+def test_scripted_class_and_instance_remain_native_and_non_converter_is_rejected(
+    constructor: str, message: str
+) -> None:
+    context = _context()
+    updated = context.eval_namespace(
+        "class ScriptValue:\n"
+        "    def __init__(self):\n"
+        "        self.value = 42\n"
+        "instance = ScriptValue()"
+    )
+    context.namespace.update(updated)
+
+    dynamic_class = context.get_dynamic_class("ScriptValue")
+    instance = context.namespace["instance"]
+    assert dynamic_class is updated["ScriptValue"]
+    assert instance is updated["instance"]
+    assert instance.__class__ is dynamic_class
+    assert context.evaluate_python_expression("instance.value") == 42
+    with pytest.raises(TypeError) as raised:
+        create_converter_list(context, constructor)
+    assert str(raised.value) == message
 
 
 def test_setup_context_namespace_copy_preserves_aliases() -> None:

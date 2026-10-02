@@ -100,6 +100,71 @@ def test_runtime_property_contract_permissions_are_exact() -> None:
     assert all("*" not in entry["field_path"] for entry in allowed_positions)
 
 
+def test_runtime_scripting_state_permissions_are_exact() -> None:
+    contract_path = Path(__file__).resolve().parents[3] / "architecture-contract.json"
+    contract = json.loads(contract_path.read_text(encoding="utf-8"))
+    rule = next(rule for rule in contract["rules"] if rule["id"] == "RUNTIME-API-TYPES")
+    allowed_positions = rule["allowed_positions"]
+    permissions = [
+        (
+            entry["qualified_name"],
+            entry["position"],
+            entry["field_path"],
+            entry["annotation"],
+            entry.get("container_depth"),
+        )
+        for entry in allowed_positions
+    ]
+    api = "datamimic_ce.engine.runtime.api."
+    map_permissions = {
+        (api + name, position, "", annotation, depth)
+        for name, position, annotation in (
+            ("Context.evaluate_python_expression", "local_namespace", "dict[str, object] | None"),
+            ("Context.scope_content", "return", "dict[str, object]"),
+            ("Context.get_content_variables_products", "return", "dict[str, object]"),
+            ("SetupContext.__init__", "namespace", "dict[str, object] | None"),
+            ("SetupContext.__init__", "global_variables", "dict[str, object] | None"),
+            ("SetupContext.namespace", "return", "dict[str, object]"),
+            ("SetupContext.namespace", "value", "dict[str, object]"),
+            ("SetupContext.global_variables", "return", "dict[str, object]"),
+            ("SetupContext.eval_namespace", "return", "dict[str, object]"),
+            ("SetupContext.__deepcopy__", "memo", "dict[int, object]"),
+        )
+        for depth in (None, 1)
+    } | {
+        (api + "Context.evaluate_python_expression", "return", "", "object", None),
+        (api + "SetupContext.get_dynamic_class", "return", "", "object | None", None),
+    }
+    legacy_permissions = {
+        (api + "run", "return", "captured", "dict[str, list[dict[str, object]]]", None),
+        (api + "run", "return", "captured", "dict[str, object]", None),
+        (api + "run", "return", "captured", "object", None),
+        (api + "load_descriptor_properties", "return", "", "dict[str, str]", None),
+        (api + "create_run_session", "request", "platform_props", "dict[str, str]", None),
+        (api + "run", "request", "platform_props", "dict[str, str]", None),
+        (api + "SetupContext.__init__", "clients", "", "dict[str, Client] | None", None),
+        (api + "SetupContext.clients", "return", "", "dict[str, Client]", None),
+        (api + "SetupContext.clients", "value", "", "dict[str, Client]", None),
+    }
+    scripting_names = {permission[0] for permission in map_permissions}
+    scripting_positions = {permission[1] for permission in map_permissions}
+    scripting_permissions = [
+        permission
+        for permission in permissions
+        if permission[0] in scripting_names and permission[1] in scripting_positions
+    ]
+    remaining_permissions = [
+        permission for permission in permissions if permission not in scripting_permissions
+    ]
+
+    assert len(scripting_permissions) == 22
+    assert set(scripting_permissions) == map_permissions
+    assert len(permissions) == len(set(permissions)) == 31
+    assert len(remaining_permissions) == 9
+    assert set(remaining_permissions) == legacy_permissions
+    assert all("*" not in permission[0] and "*" not in permission[2] for permission in permissions)
+
+
 def test_runtime_properties_wrapper_is_removed() -> None:
     assert not hasattr(runtime_contracts, "PlatformProperties")
 
