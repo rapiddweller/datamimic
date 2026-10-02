@@ -22,6 +22,10 @@ class EchoTask(CommonSubTask):
 
     def execute(self, ctx: Context):
         _value = self.statement.value
+        if _value is None:
+            logger.debug("Echo - ")
+            return
+
         #  check _value contain {} or not, evaluate data if true
         if re.search(r"{.*?}", _value):
             # if _value contain ' or " then add escaped character before it

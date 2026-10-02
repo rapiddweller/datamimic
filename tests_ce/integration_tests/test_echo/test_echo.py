@@ -28,3 +28,8 @@ class TestEcho:
     def test_variable_echo(self):
         test_engine = DataMimicTest(test_dir=self._test_dir, filename="variable_echo.xml")
         test_engine.test_with_timer()
+
+    def test_empty_echo(self):
+        test_engine = DataMimicTest(test_dir=self._test_dir, filename="empty_echo.xml")
+        test_engine.test_with_timer()
+
