@@ -162,3 +162,21 @@ def test_existing_entrypoints_have_explicit_inner_public_decisions() -> None:
         "datamimic_ce.authoring.contracts",
         "datamimic_ce.authoring.spec:LeafFieldKind",
     ]
+
+
+def test_domains_initializer_has_one_exact_owner_without_widening_api_selector() -> None:
+    module = "datamimic_ce.domains"
+    domains = _read_contract(ROOT / "docs/architecture/inner/domains/architecture-contract.json")
+    api = _component(domains, "DOMAINS-API")
+
+    assert api["packages"] == ["datamimic_ce.domains.api"]
+    assert api["exact_modules"] == [module]
+    assert [
+        component["id"]
+        for component in domains["components"]
+        if module in component.get("exact_modules", [])
+        or any(
+            module == package or module.startswith(f"{package}.")
+            for package in component.get("packages", [])
+        )
+    ] == ["DOMAINS-API"]

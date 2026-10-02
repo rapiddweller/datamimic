@@ -104,8 +104,11 @@
       "packages": [
         "datamimic_ce.domains.api"
       ],
+      "exact_modules": [
+        "datamimic_ce.domains"
+      ],
       "responsibilities": [
-        "Supported domain entry and capability composition."
+        "Own the domain namespace marker and compose supported domain entry points and capabilities."
       ],
       "forbidden_responsibilities": [
         "Own generator algorithms or runtime execution."

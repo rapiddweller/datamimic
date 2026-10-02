@@ -19,6 +19,9 @@ correction; this intended error-to-continuation change is not output parity.
 disclosures as a red checkpoint. It does not waive the newly measured debt
 or change any gate, baseline or final acceptance requirement.
 
+[Amendment 94](amendment-94.md) assigns the inert Domain namespace marker to
+its existing API owner without widening package selectors or public surfaces.
+
 ## Fixed inputs
 
 | Input | Frozen value |
