@@ -155,8 +155,11 @@
       "packages": [
         "datamimic_ce.domains.healthcare.services"
       ],
+      "exact_modules": [
+        "datamimic_ce.domains.healthcare"
+      ],
       "responsibilities": [
-        "Bind patient, doctor, hospital, procedure, and device generators to entity models and declare exposed fields and required datasets."
+        "Bind healthcare generators to entity models and declare exposed fields and required datasets; own the package initializer that re-exports selected models and services."
       ],
       "forbidden_responsibilities": [
         "Own generator algorithms or entity property behavior."

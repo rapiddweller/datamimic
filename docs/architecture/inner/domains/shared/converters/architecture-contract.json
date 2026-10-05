@@ -76,8 +76,11 @@
       "packages": [
         "datamimic_ce.domains.shared.converters.base"
       ],
+      "exact_modules": [
+        "datamimic_ce.domains.shared.converters"
+      ],
       "responsibilities": [
-        "Converter interface."
+        "Own the converter interface and the inert converter namespace marker."
       ],
       "forbidden_responsibilities": [
         "Implement a particular transformation"

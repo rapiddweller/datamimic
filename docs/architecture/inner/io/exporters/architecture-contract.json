@@ -108,8 +108,11 @@
       "packages": [
         "datamimic_ce.engine.io.exporters.core"
       ],
+      "exact_modules": [
+        "datamimic_ce.engine.io.exporters"
+      ],
       "responsibilities": [
-        "Exporter base, configuration, buffering, serialization, and target routing."
+        "Own exporter contracts, configuration, buffering, serialization, target routing, and the inert exporters namespace marker."
       ],
       "forbidden_responsibilities": [
         "Import concrete format exporters",

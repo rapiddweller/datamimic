@@ -29,6 +29,10 @@ reduction; unrelated type findings and UNKNOWNs remain subject to the gates.
 [Amendment 96](amendment-96.md) assigns the inert Runtime and IO namespace
 markers to their existing API owners. Child ownership and permissions stay fixed.
 
+[Amendment 97](amendment-97.md) assigns four reviewed initializers to existing
+model, service and shared-interface owners, preserving all permissions. The
+Errors assignment stops at a reproduced checker false-unused diagnosis.
+
 ## Fixed inputs
 
 | Input | Frozen value |

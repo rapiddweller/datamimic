@@ -185,7 +185,7 @@ def test_domains_initializer_has_one_exact_owner_without_widening_api_selector()
 
 
 @pytest.mark.parametrize(
-    ("path", "api_id", "root", "package_selector", "child_owners"),
+    ("path", "owner_id", "root", "package_selector", "child_owners"),
     [
         (
             "docs/architecture/inner/runtime/architecture-contract.json",
@@ -204,6 +204,68 @@ def test_domains_initializer_has_one_exact_owner_without_widening_api_selector()
             },
         ),
         (
+            "docs/architecture/inner/domains/finance/architecture-contract.json",
+            "FINANCE-MODELS",
+            "datamimic_ce.domains.finance",
+            [
+                "datamimic_ce.domains.finance.models",
+            ],
+            {
+                "datamimic_ce.domains.finance.models": "FINANCE-MODELS",
+                "datamimic_ce.domains.finance.generators": "FINANCE-GENERATORS",
+                "datamimic_ce.domains.finance.contracts": "FINANCE-CONTRACTS",
+                "datamimic_ce.domains.finance.services": "FINANCE-SERVICES",
+                "datamimic_ce.domains.finance.luhn": "FINANCE-ALGORITHMS",
+            },
+        ),
+        (
+            "docs/architecture/inner/domains/healthcare/architecture-contract.json",
+            "HEALTHCARE-SERVICES",
+            "datamimic_ce.domains.healthcare",
+            [
+                "datamimic_ce.domains.healthcare.services",
+            ],
+            {
+                "datamimic_ce.domains.healthcare.models": "HEALTHCARE-MODELS",
+                "datamimic_ce.domains.healthcare.generators": "HEALTHCARE-GENERATORS",
+                "datamimic_ce.domains.healthcare.services": "HEALTHCARE-SERVICES",
+                "datamimic_ce.domains.healthcare.use_cases": "HEALTHCARE-USE-CASES",
+            },
+        ),
+        (
+            "docs/architecture/inner/io/exporters/architecture-contract.json",
+            "EXPORTERS-CORE",
+            "datamimic_ce.engine.io.exporters",
+            [
+                "datamimic_ce.engine.io.exporters.core",
+            ],
+            {
+                "datamimic_ce.engine.io.exporters.core": "EXPORTERS-CORE",
+                "datamimic_ce.engine.io.exporters.formats": "EXPORTERS-FORMATS",
+                "datamimic_ce.engine.io.exporters.database": "EXPORTERS-DATABASE",
+                "datamimic_ce.engine.io.exporters.memory": "EXPORTERS-MEMORY",
+                "datamimic_ce.engine.io.exporters.diagnostics": "EXPORTERS-DIAGNOSTICS",
+                "datamimic_ce.engine.io.exporters.registry": "EXPORTERS-REGISTRY",
+                "datamimic_ce.engine.io.exporters.lifecycle": "EXPORTERS-LIFECYCLE",
+                "datamimic_ce.engine.io.exporters.session": "EXPORTERS-SESSION",
+            },
+        ),
+        (
+            "docs/architecture/inner/domains/shared/converters/architecture-contract.json",
+            "CONVERTERS-BASE",
+            "datamimic_ce.domains.shared.converters",
+            [
+                "datamimic_ce.domains.shared.converters.base",
+            ],
+            {
+                "datamimic_ce.domains.shared.converters.base": "CONVERTERS-BASE",
+                "datamimic_ce.domains.shared.converters.text": "CONVERTERS-TEXT",
+                "datamimic_ce.domains.shared.converters.temporal": "CONVERTERS-TEMPORAL",
+                "datamimic_ce.domains.shared.converters.privacy": "CONVERTERS-PRIVACY",
+                "datamimic_ce.domains.shared.converters.structural": "CONVERTERS-STRUCTURAL",
+            },
+        ),
+        (
             "docs/architecture/inner/io/architecture-contract.json",
             "IO-API",
             "datamimic_ce.engine.io",
@@ -219,24 +281,24 @@ def test_domains_initializer_has_one_exact_owner_without_widening_api_selector()
         ),
     ],
 )
-def test_runtime_and_io_initializers_have_exact_api_owners(
+def test_initializers_have_exact_existing_owners(
     path: str,
-    api_id: str,
+    owner_id: str,
     root: str,
     package_selector: list[str],
     child_owners: dict[str, str],
 ) -> None:
     contract = _read_contract(ROOT / path)
-    api = _component(contract, api_id)
+    owner = _component(contract, owner_id)
 
-    assert api["packages"] == package_selector
-    assert api.get("exact_modules") == [root]
+    assert owner["packages"] == package_selector
+    assert owner.get("exact_modules") == [root]
     assert [
         component["id"]
         for component in contract["components"]
         if root in component.get("exact_modules", [])
         or any(root == package or root.startswith(f"{package}.") for package in component.get("packages", []))
-    ] == [api_id]
+    ] == [owner_id]
 
     for child, expected_owner in child_owners.items():
         assert [

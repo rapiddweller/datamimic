@@ -292,6 +292,9 @@ Remaining limits are explicit:
 - ArchKeel 0.9.0 includes selected source initializers in nested ownership checks.
   Use `exact_modules` for a namespace's deliberate owner without claiming its
   descendants. Responsibility alone does not establish ownership or behavior.
+  [Amendment 97](../refactoring-study/experiment-2/amendment-97.md) records five
+  candidate owners: four can proceed, while Errors waits for a checker fix.
+  Five other initializer decisions remain open.
 - Static imports/types do not prove behavior, data-flow purity or dynamic loading.
   UNKNOWN is not PASS; narrow tests and source review remain necessary.
 - A package can pass its contract while a large function remains poorly factored.

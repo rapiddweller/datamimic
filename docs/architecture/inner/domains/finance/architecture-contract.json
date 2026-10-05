@@ -84,8 +84,11 @@
       "packages": [
         "datamimic_ce.domains.finance.models"
       ],
+      "exact_modules": [
+        "datamimic_ce.domains.finance"
+      ],
       "responsibilities": [
-        "Expose lazy Bank, BankAccount, CreditCard, and Transaction values, including linked account and merchant details."
+        "Expose lazy Bank, BankAccount, CreditCard, and Transaction models, including linked account and merchant details; own the package initializer that re-exports them."
       ],
       "forbidden_responsibilities": [
         "Generate dataset values directly or own service orchestration."
