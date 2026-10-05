@@ -26,6 +26,9 @@ its existing API owner without widening package selectors or public surfaces.
 and deepcopy-memo positions. This is a target correction, not source-debt
 reduction; unrelated type findings and UNKNOWNs remain subject to the gates.
 
+[Amendment 96](amendment-96.md) assigns the inert Runtime and IO namespace
+markers to their existing API owners. Child ownership and permissions stay fixed.
+
 ## Fixed inputs
 
 | Input | Frozen value |

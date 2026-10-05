@@ -276,7 +276,7 @@ buffered exporter names to its rule context; pure authoring rules do not import 
 
 ## Measurement and honesty
 
-ArchKeel **0.8.0** supports recursive `inside` contracts. Mounted boundaries
+Published ArchKeel **0.9.0** revalidation supports recursive `inside` contracts. Mounted boundaries
 declare complete assignment, explicit dependency directions, local interfaces
 and component acyclicity. One root module-cycle rule covers deeper imports,
 including `TYPE_CHECKING`; function-local imports do not erase a cycle.
@@ -289,9 +289,9 @@ Remaining limits are explicit:
 
 - `root_layout` forbids unexpected children but does not require absent ones.
   Keep the existing physical-presence check and compare the move map at completion.
-- `complete_assignment` exempts the selected source module. The review ledger
-  assigns initializer responsibility; this is not automatic proof that its behavior
-  obeys the intended boundary.
+- ArchKeel 0.9.0 includes selected source initializers in nested ownership checks.
+  Use `exact_modules` for a namespace's deliberate owner without claiming its
+  descendants. Responsibility alone does not establish ownership or behavior.
 - Static imports/types do not prove behavior, data-flow purity or dynamic loading.
   UNKNOWN is not PASS; narrow tests and source review remain necessary.
 - A package can pass its contract while a large function remains poorly factored.

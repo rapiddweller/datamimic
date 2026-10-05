@@ -92,8 +92,11 @@
       "packages": [
         "datamimic_ce.engine.runtime.api"
       ],
+      "exact_modules": [
+        "datamimic_ce.engine.runtime"
+      ],
       "responsibilities": [
-        "Public runtime lifecycle entry."
+        "Public runtime lifecycle entry; owns the inert runtime namespace marker."
       ],
       "forbidden_responsibilities": [
         "Own task execution or IO implementations."

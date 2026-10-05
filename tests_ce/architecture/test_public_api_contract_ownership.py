@@ -5,6 +5,8 @@ from __future__ import annotations
 import json
 from pathlib import Path
 
+import pytest
+
 ROOT = Path(__file__).resolve().parents[2]
 
 
@@ -180,3 +182,66 @@ def test_domains_initializer_has_one_exact_owner_without_widening_api_selector()
             for package in component.get("packages", [])
         )
     ] == ["DOMAINS-API"]
+
+
+@pytest.mark.parametrize(
+    ("path", "api_id", "root", "package_selector", "child_owners"),
+    [
+        (
+            "docs/architecture/inner/runtime/architecture-contract.json",
+            "RUNTIME-API",
+            "datamimic_ce.engine.runtime",
+            ["datamimic_ce.engine.runtime.api"],
+            {
+                "datamimic_ce.engine.runtime.contracts": "RUNTIME-CONTRACTS",
+                "datamimic_ce.engine.runtime.storage": "RUNTIME-STORAGE",
+                "datamimic_ce.engine.runtime.logging": "RUNTIME-LOGGING",
+                "datamimic_ce.engine.runtime.process_titles": "RUNTIME-LOGGING",
+                "datamimic_ce.engine.runtime.contexts": "RUNTIME-CONTEXTS",
+                "datamimic_ce.engine.runtime.tasks": "RUNTIME-TASKS",
+                "datamimic_ce.engine.runtime.lifecycle": "RUNTIME-LIFECYCLE",
+                "datamimic_ce.engine.runtime.scripting": "RUNTIME-EVALUATION",
+            },
+        ),
+        (
+            "docs/architecture/inner/io/architecture-contract.json",
+            "IO-API",
+            "datamimic_ce.engine.io",
+            ["datamimic_ce.engine.io.api"],
+            {
+                "datamimic_ce.engine.io.contracts": "IO-CONTRACTS",
+                "datamimic_ce.engine.io.clients": "IO-CLIENTS",
+                "datamimic_ce.engine.io.connection_config": "IO-CONNECTION-CONFIG",
+                "datamimic_ce.engine.io.data_sources": "IO-SOURCES",
+                "datamimic_ce.engine.io.exporters": "IO-EXPORTERS",
+                "datamimic_ce.engine.io.files": "IO-FILES",
+            },
+        ),
+    ],
+)
+def test_runtime_and_io_initializers_have_exact_api_owners(
+    path: str,
+    api_id: str,
+    root: str,
+    package_selector: list[str],
+    child_owners: dict[str, str],
+) -> None:
+    contract = _read_contract(ROOT / path)
+    api = _component(contract, api_id)
+
+    assert api["packages"] == package_selector
+    assert api.get("exact_modules") == [root]
+    assert [
+        component["id"]
+        for component in contract["components"]
+        if root in component.get("exact_modules", [])
+        or any(root == package or root.startswith(f"{package}.") for package in component.get("packages", []))
+    ] == [api_id]
+
+    for child, expected_owner in child_owners.items():
+        assert [
+            component["id"]
+            for component in contract["components"]
+            if child in component.get("exact_modules", [])
+            or any(child == package or child.startswith(f"{package}.") for package in component.get("packages", []))
+        ] == [expected_owner]

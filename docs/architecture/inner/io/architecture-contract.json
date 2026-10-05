@@ -128,8 +128,11 @@
       "packages": [
         "datamimic_ce.engine.io.api"
       ],
+      "exact_modules": [
+        "datamimic_ce.engine.io"
+      ],
       "responsibilities": [
-        "Exposes client lifecycle, resolved source reads and exporter operations to Runtime and Authoring."
+        "Exposes client lifecycle, resolved source reads and exporter operations to Runtime and Authoring; owns the inert IO namespace marker."
       ],
       "forbidden_responsibilities": [
         "Own connectors, source loading, or output writes."
