@@ -108,6 +108,11 @@ records one exact UNKNOWN-to-violation transition in Step 38. It permits retaini
 the correct annotation, not counting that step as gate-green or growing the
 accepted baseline. The final zero-violation and zero-unknown targets are unchanged.
 
+[Amendment 98](amendment-98.md) permits the bounded Step 106 native-properties
+annotation disclosure as a red checkpoint. No runtime statement, contract,
+baseline, descriptor or oracle changes. It does not waive its remaining map/object
+findings, inherited-surface UNKNOWNs or strict descriptor-comparison failures.
+
 When the first real function is added to an API module, the same commit adds that module's
 `boundary_types` rule. The rule then remains mandatory. This is a narrowing, not permission to
 change the target.

@@ -1,4 +1,7 @@
+import ast
 import copy
+import inspect
+import textwrap
 from pathlib import Path
 from typing import get_type_hints
 from unittest.mock import patch
@@ -6,13 +9,16 @@ from unittest.mock import patch
 import pytest
 
 from datamimic_ce.domains.api import RunSeed
+from datamimic_ce.engine.dsl.model.setup.include_model import IncludeModel
 from datamimic_ce.engine.dsl.model.setup.setup_model import SetupModel
+from datamimic_ce.engine.dsl.statements.setup.include_statement import IncludeStatement
 from datamimic_ce.engine.dsl.statements.setup.setup_statement import SetupStatement
 from datamimic_ce.engine.io.api import Client
 from datamimic_ce.engine.io.exporters.diagnostics.test_result_exporter import TestResultExporter
 from datamimic_ce.engine.runtime.contexts.context import SetupContext
 from datamimic_ce.engine.runtime.storage.global_increment import GlobalIncrementRegistry
 from datamimic_ce.engine.runtime.storage.memstore_manager import MemstoreManager
+from datamimic_ce.engine.runtime.tasks.setup.include_task import IncludeTask
 from datamimic_ce.engine.runtime.tasks.values.construction.converters import create_converter_list
 
 
@@ -20,6 +26,7 @@ def _context(
     clients: dict[str, Client] | None = None,
     namespace: dict[str, object] | None = None,
     global_variables: dict[str, object] | None = None,
+    properties: dict[str, object] | None = None,
 ) -> SetupContext:
     return SetupContext(
         memstore_manager=MemstoreManager(),
@@ -36,7 +43,7 @@ def _context(
         default_variable_suffix="__",
         default_line_separator="\n",
         clients=clients,
-        properties={"nested": [1]},
+        properties=properties,
         namespace={"nested": [1]} if namespace is None else namespace,
         global_variables={"shared": [1]} if global_variables is None else global_variables,
         generators={"cached": [1]},
@@ -45,7 +52,7 @@ def _context(
 
 
 def test_setup_context_deepcopy_shares_globals_but_resets_runtime_state() -> None:
-    context = _context()
+    context = _context(properties={"nested": [1]})
     original_rng = context.rng
     original_faker = context.seeded_faker
     context.global_increment_registry = GlobalIncrementRegistry()
@@ -55,6 +62,7 @@ def test_setup_context_deepcopy_shares_globals_but_resets_runtime_state() -> Non
     assert copied.memstore_manager is context.memstore_manager
     assert copied.global_variables is context.global_variables
     assert copied.properties == context.properties and copied.properties is not context.properties
+    assert copied.properties["nested"] is not context.properties["nested"]
     assert copied.namespace == context.namespace and copied.namespace is not context.namespace
     assert copied.generators == context.generators and copied.generators is not context.generators
     assert copied.run_seed is context.run_seed
@@ -62,6 +70,61 @@ def test_setup_context_deepcopy_shares_globals_but_resets_runtime_state() -> Non
     assert copied.rng.getrandbits(64) == original_rng.getrandbits(64)
     assert copied.seeded_faker is not original_faker
     assert copied.global_increment_registry is None
+
+
+def test_setup_context_deepcopy_preserves_shared_property_references_within_copy() -> None:
+    shared: list[object] = []
+    context = _context(properties={"first": shared, "second": shared})
+
+    copied = copy.deepcopy(context)
+
+    assert copied.properties is not context.properties
+    assert copied.properties["first"] is copied.properties["second"]
+    assert copied.properties["first"] is not shared
+
+
+def test_setup_context_properties_annotations_describe_mutable_object_mapping() -> None:
+    assert get_type_hints(SetupContext.__init__).get("properties") == dict[str, object] | None
+    assert get_type_hints(SetupContext.properties.fget).get("return") == dict[str, object]
+    assert get_type_hints(SetupContext.properties.fset).get("value") == dict[str, object]
+    assert get_type_hints(SetupContext.properties.fset).get("return") is type(None)
+
+    tree = ast.parse(textwrap.dedent(inspect.getsource(SetupContext.__init__)))
+    property_assignment = next(
+        node
+        for node in ast.walk(tree)
+        if isinstance(node, ast.AnnAssign)
+        and isinstance(node.target, ast.Attribute)
+        and isinstance(node.target.value, ast.Name)
+        and node.target.value.id == "self"
+        and node.target.attr == "_properties"
+    )
+    assert ast.unparse(property_assignment.annotation) == "dict[str, object]"
+
+
+@pytest.mark.parametrize("properties", [None, {}])
+def test_setup_context_properties_default_or_supplied_empty_mapping(properties) -> None:
+    context = _context(properties=properties)
+
+    if properties is None:
+        assert context.properties == {}
+        assert context.properties is not _context(properties=None).properties
+    else:
+        assert context.properties is properties
+
+
+def test_setup_context_properties_preserves_nonempty_and_replacement_identity() -> None:
+    nested = [1, {"enabled": True}]
+    supplied = {"quoting": 3, "nested": nested}
+    context = _context(properties=supplied)
+
+    assert context.properties is supplied
+    assert context.properties["quoting"] == 3
+    assert context.properties["nested"] is nested
+
+    replacement = {"replacement": ["value"]}
+    context.properties = replacement
+    assert context.properties is replacement
 
 
 def test_setup_context_deepcopy_isolates_domain_identifier_state() -> None:
@@ -109,6 +172,24 @@ def test_include_setup_merge_overrides_declared_defaults_but_preserves_run_seed(
     assert context.default_variable_prefix == "${"
     assert context.default_variable_suffix == "}"
     assert context.run_seed.value == 7
+
+
+def test_include_properties_merges_into_the_supplied_mapping_in_place(tmp_path: Path) -> None:
+    (tmp_path / "included.properties").write_text("existing=replaced\nadded=value\n", encoding="utf-8")
+    supplied = {"existing": "original", "quoting": 3, "nested": [1, {"key": "value"}]}
+    context = _context(properties=supplied)
+    context._descriptor_dir = tmp_path
+    task = IncludeTask(IncludeStatement(IncludeModel(uri="included.properties")))
+
+    task.execute(context)
+
+    assert context.properties is supplied
+    assert supplied == {
+        "existing": "replaced",
+        "added": "value",
+        "quoting": 3,
+        "nested": [1, {"key": "value"}],
+    }
 
 
 def test_include_setup_merge_preserves_scalars_when_statement_values_are_none() -> None:
