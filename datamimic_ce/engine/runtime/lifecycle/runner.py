@@ -109,7 +109,7 @@ class RuntimeRunSession:
         captured = self._test_result_storage.get_result() if request.test_mode else None
         return RunResult(captured)
 
-    def capture_test_result(self) -> dict[str, list[dict[str, object]]] | None:
+    def capture_test_result(self) -> dict[str, list[object]] | None:
         if self._request.test_mode:
             return self._test_result_storage.get_result()
         raise ValueError("Cannot capture test result in non-test mode") from None

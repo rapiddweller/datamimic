@@ -52,7 +52,10 @@ class DataMimicTestFactory:
 
         # Update custom data if provided
         if custom_data is not None:
-            result[0].update(custom_data)
+            row = result[0]
+            if not isinstance(row, dict):
+                raise TypeError("Factory custom_data requires dictionary rows")
+            row.update(custom_data)
 
         # Return the created entity
         return result[0]
@@ -92,6 +95,8 @@ class DataMimicTestFactory:
         # Update custom data if provided
         if custom_data is not None:
             for entity in result:
+                if not isinstance(entity, dict):
+                    raise TypeError("Factory custom_data requires dictionary rows")
                 entity.update(custom_data)
 
         # Return the created entities

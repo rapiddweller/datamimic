@@ -9,6 +9,7 @@ import pytest
 
 from datamimic_ce.engine.dsl.parsers.document.descriptor_parser import DescriptorParser
 from datamimic_ce.engine.dsl.statements.setup.setup_statement import SetupStatement
+from datamimic_ce.engine.io.exporters.diagnostics.test_result_exporter import TestResultExporter
 from datamimic_ce.engine.runtime import api as runtime_api
 from datamimic_ce.engine.runtime import contracts as runtime_contracts
 from datamimic_ce.engine.runtime.contracts import (
@@ -20,6 +21,7 @@ from datamimic_ce.engine.runtime.contracts import (
 )
 from datamimic_ce.engine.runtime.lifecycle import runner
 from datamimic_ce.engine.runtime.lifecycle.config import get_settings
+from datamimic_ce.engine.runtime.lifecycle.runner import RuntimeRunSession
 from datamimic_ce.interfaces.cli import runtime as cli_runtime
 from datamimic_ce.interfaces.python.data_mimic_test import DataMimicTest
 from datamimic_ce.interfaces.python.datamimic import DataMimic
@@ -183,8 +185,19 @@ def test_run_request_has_integer_log_level_and_no_transport_args() -> None:
     assert "args" not in RunRequest.__dataclass_fields__
 
 
+def test_capture_surfaces_annotate_native_rows_with_existing_optionality() -> None:
+    expected_capture = dict[str, list[object]] | None
+
+    assert get_type_hints(TestResultExporter.get_result)["return"] == dict[str, list[object]]
+    assert get_type_hints(RunResult)["captured"] == expected_capture
+    assert get_type_hints(RunSession.capture_test_result)["return"] == expected_capture
+    assert get_type_hints(RuntimeRunSession.capture_test_result)["return"] == expected_capture
+    assert get_type_hints(DataMimicTest.capture_result)["return"] == expected_capture
+    assert get_type_hints(DataMimic.capture_test_result)["return"] == expected_capture
+
+
 class SessionStub:
-    def __init__(self, captured: dict[str, list[dict[str, object]]] | None = None) -> None:
+    def __init__(self, captured: dict[str, list[object]] | None = None) -> None:
         self.executed = False
         self.captured = captured if captured is not None else {"entity": [{"id": 1}]}
 
@@ -192,7 +205,7 @@ class SessionStub:
         self.executed = True
         return RunResult(self.captured)
 
-    def capture_test_result(self) -> dict[str, list[dict[str, object]]] | None:
+    def capture_test_result(self) -> dict[str, list[object]] | None:
         return self.captured
 
 
@@ -280,6 +293,66 @@ def test_runtime_session_preserves_native_row_and_leaf_identity(tmp_path: Path) 
     assert again["rows"][0]["items"][0]["value"] == "mutated"
 
 
+def test_runtime_session_captures_explicit_and_lazy_scalar_rows_in_order(tmp_path: Path) -> None:
+    explicit_descriptor = tmp_path / "explicit.xml"
+    explicit_descriptor.write_text(
+        '<setup rngSeed="7"><generate name="rows" count="2" target="TestResultExporter">'
+        '<key name="#text" generator="IncrementGenerator"/></generate></setup>',
+        encoding="utf-8",
+    )
+    explicit_session = runner.create_run_session(
+        RunRequest(descriptor_path=explicit_descriptor, test_mode=True)
+    )
+
+    result = explicit_session.execute()
+    explicit_capture = explicit_session.capture_test_result()
+    explicit_rows = explicit_capture["rows"]
+
+    assert result.captured is explicit_capture
+    assert explicit_rows == [1, 2, {"#text": 1}, {"#text": 2}]
+    assert explicit_session.capture_test_result()["rows"] is explicit_rows
+
+    lazy_descriptor = tmp_path / "lazy.xml"
+    lazy_descriptor.write_text(
+        '<setup rngSeed="7"><generate name="rows" count="2">'
+        '<key name="#text" generator="IncrementGenerator"/></generate></setup>',
+        encoding="utf-8",
+    )
+    lazy_session = runner.create_run_session(RunRequest(descriptor_path=lazy_descriptor, test_mode=True))
+
+    lazy_capture = lazy_session.execute().captured
+    lazy_rows = lazy_capture["rows"]
+
+    assert lazy_rows == [{"#text": 1}, {"#text": 2}]
+    assert lazy_session.capture_test_result() is lazy_capture
+    assert lazy_session.capture_test_result()["rows"] is lazy_rows
+
+
+def test_runtime_session_keeps_nested_text_native_in_lazy_capture(tmp_path: Path) -> None:
+    descriptor = tmp_path / "descriptor.xml"
+    descriptor.write_text(
+        '<setup rngSeed="7"><generate name="rows" count="1">'
+        '<key name="id" constant="1"/>'
+        '<nestedKey name="label" type="dict"><key name="#text" constant="inner"/></nestedKey>'
+        "</generate></setup>",
+        encoding="utf-8",
+    )
+    session = runner.create_run_session(RunRequest(descriptor_path=descriptor, test_mode=True))
+
+    captured = session.execute().captured
+
+    assert captured == {"rows": [{"id": "1", "label": {"#text": "inner"}}]}
+    row = captured["rows"][0]
+    label = row["label"]
+    label["#text"] = "changed"
+    again = session.capture_test_result()
+
+    assert again is captured
+    assert again["rows"][0] is row
+    assert again["rows"][0]["label"] is label
+    assert again["rows"][0]["label"]["#text"] == "changed"
+
+
 def test_runtime_session_keeps_capture_disabled_outside_test_mode(tmp_path: Path) -> None:
     descriptor = tmp_path / "descriptor.xml"
     descriptor.write_text("<setup />", encoding="utf-8")
@@ -327,6 +400,174 @@ def test_factory_single_and_batch_keep_capture_identity_and_custom_data_mutable(
     assert all(row["metadata"] is custom_data["metadata"] for row in batch)
     batch[0]["metadata"]["labels"].append("batch")
     assert batch[1]["metadata"]["labels"] == ["single", "batch"]
+
+
+@pytest.mark.parametrize("custom_data", [{"extra": True}, {}], ids=["populated", "empty"])
+@pytest.mark.parametrize("method", ["create", "create_batch"], ids=["single", "batch"])
+@pytest.mark.parametrize("row_kind", ["list", "scalar", "none", "update-capable"])
+def test_factory_rejects_native_rows_only_when_overlay_is_supplied(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+    custom_data: dict[str, object],
+    method: str,
+    row_kind: str,
+) -> None:
+    update_calls: list[dict[str, object]] = []
+
+    class UpdateCapable:
+        def update(self, _other: dict[str, object]) -> None:
+            update_calls.append({"called": True})
+
+    native_row: object = {
+        "list": ["native", {"nested": []}],
+        "scalar": "native",
+        "none": None,
+        "update-capable": UpdateCapable(),
+    }[row_kind]
+    session = SessionStub({"entity": [native_row]})
+    monkeypatch.setattr("datamimic_ce.interfaces.python.factory.create_run_session", lambda _request: session)
+    factory = DataMimicTestFactory(tmp_path / "unused.xml", "entity")
+
+    if method == "create":
+        assert factory.create() is native_row
+        try:
+            factory.create(custom_data)
+        except Exception as error:
+            observed_error = error
+        else:
+            observed_error = None
+    else:
+        batch = factory.create_batch(1)
+        assert batch == [native_row]
+        assert batch[0] is native_row
+        try:
+            factory.create_batch(1, custom_data)
+        except Exception as error:
+            observed_error = error
+        else:
+            observed_error = None
+    assert update_calls == []
+    assert type(observed_error) is TypeError
+    assert str(observed_error) == "Factory custom_data requires dictionary rows"
+
+
+def test_factory_overlay_preserves_dict_row_update_override_and_error(tmp_path: Path, monkeypatch) -> None:
+    events: list[dict[str, object]] = []
+
+    class Row(dict):
+        def update(self, other) -> None:
+            events.append(self)
+            if other.get("fail"):
+                raise RuntimeError("row update failed")
+            super().update(other)
+
+    row = Row(id=1)
+    monkeypatch.setattr(
+        "datamimic_ce.interfaces.python.factory.create_run_session",
+        lambda _request: SessionStub({"entity": [row]}),
+    )
+    factory = DataMimicTestFactory(tmp_path / "unused.xml", "entity")
+
+    assert factory.create({}) is row
+    assert events == [row]
+    with pytest.raises(RuntimeError, match="^row update failed$"):
+        factory.create({"fail": True})
+    assert events == [row, row]
+
+
+def test_factory_batch_overlay_failure_keeps_prior_updates_and_stops_in_order(tmp_path: Path, monkeypatch) -> None:
+    class Row(dict):
+        def update(self, other) -> None:
+            if self["id"] == 2:
+                raise RuntimeError("second row failed")
+            super().update(other)
+
+    first, second, third = Row(id=1), Row(id=2), Row(id=3)
+    session = SessionStub({"entity": [first, second, third]})
+    monkeypatch.setattr("datamimic_ce.interfaces.python.factory.create_run_session", lambda _request: session)
+    factory = DataMimicTestFactory(tmp_path / "unused.xml", "entity")
+
+    with pytest.raises(RuntimeError, match="^second row failed$"):
+        factory.create_batch(3, {"extra": True})
+
+    assert first["extra"] is True
+    assert "extra" not in second
+    assert "extra" not in third
+
+
+def test_factory_mixed_batch_overlay_is_sequential_and_keeps_partial_mutation(tmp_path: Path, monkeypatch) -> None:
+    first = {"id": 1}
+    native = ["not a mapping"]
+    last = {"id": 3}
+    session = SessionStub({"entity": [first, native, last]})
+    monkeypatch.setattr("datamimic_ce.interfaces.python.factory.create_run_session", lambda _request: session)
+    factory = DataMimicTestFactory(tmp_path / "unused.xml", "entity")
+
+    with pytest.raises(TypeError, match="^Factory custom_data requires dictionary rows$"):
+        factory.create_batch(3, {"extra": True})
+
+    assert first == {"id": 1, "extra": True}
+    assert "id" not in native
+    assert last == {"id": 3}
+
+
+def test_factory_empty_batch_accepts_empty_overlay(tmp_path: Path, monkeypatch) -> None:
+    session = SessionStub({"entity": []})
+    monkeypatch.setattr("datamimic_ce.interfaces.python.factory.create_run_session", lambda _request: session)
+    factory = DataMimicTestFactory(tmp_path / "unused.xml", "entity")
+
+    assert factory.create_batch(0, {}) == []
+
+
+@pytest.mark.parametrize(
+    ("captured", "count", "method"),
+    [
+        (None, 1, "create"),
+        (None, 1, "create_batch"),
+        ({"other": [{"id": 1}]}, 1, "create"),
+        ({"other": [{"id": 1}]}, 1, "create_batch"),
+        ({"entity": [["native"], ["extra"]]}, 2, "create"),
+        ({"entity": [["native"]]}, 2, "create_batch"),
+    ],
+    ids=[
+        "create-capture-disabled",
+        "batch-capture-disabled",
+        "create-entity-missing",
+        "batch-entity-missing",
+        "create-count-mismatch",
+        "batch-count-mismatch",
+    ],
+)
+def test_factory_capture_and_count_assertions_precede_overlay_guard(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+    captured: dict[str, list[object]] | None,
+    count: int,
+    method: str,
+) -> None:
+    session = SessionStub()
+    session.captured = captured
+    monkeypatch.setattr("datamimic_ce.interfaces.python.factory.create_run_session", lambda _request: session)
+    factory = DataMimicTestFactory(tmp_path / "unused.xml", "entity")
+
+    with pytest.raises(AssertionError):
+        if method == "create":
+            factory.create({})
+        else:
+            factory.create_batch(count, {})
+
+
+def test_factory_real_xml_target_capture_count_assertion_precedes_overlay(tmp_path: Path) -> None:
+    descriptor = tmp_path / "descriptor.xml"
+    descriptor.write_text(
+        '<setup rngSeed="7"><generate name="entity" count="1" target="TestResultExporter">'
+        '<key name="id" constant="1"/></generate></setup>',
+        encoding="utf-8",
+    )
+    factory = DataMimicTestFactory(descriptor, "entity")
+
+    with pytest.raises(AssertionError):
+        factory.create({})
 
 
 def test_data_mimic_test_returns_native_capture(monkeypatch) -> None:

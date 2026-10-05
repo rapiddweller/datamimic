@@ -15,8 +15,8 @@ class TestResultExporter(Exporter):
 
     __test__ = False  # name starts with "Test" — tell pytest this is not a test class
 
-    def __init__(self):
-        self._storage = {}
+    def __init__(self) -> None:
+        self._storage: dict[str, list[object]] = {}
 
     def consume(self, product: tuple) -> None:
         """
@@ -28,7 +28,7 @@ class TestResultExporter(Exporter):
         name = name.split("|", 1)[-1].strip() if "|" in name else name
         self._storage[name] = self._storage.get(name, []) + data
 
-    def get_result(self) -> dict[str, list[dict]]:
+    def get_result(self) -> dict[str, list[object]]:
         """
         Capture data from storage
 

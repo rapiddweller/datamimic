@@ -56,7 +56,7 @@ class DataMimicTest:
         elapsed_time = end_time - start_time
         logger.info(f"The test took {elapsed_time} seconds to execute.")
 
-    def capture_result(self) -> dict[str, list[dict[str, object]]] | None:
+    def capture_result(self) -> dict[str, list[object]] | None:
         """
         Capture test data
         :return:

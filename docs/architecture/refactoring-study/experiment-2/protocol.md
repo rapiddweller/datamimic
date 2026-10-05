@@ -113,6 +113,11 @@ annotation disclosure as a red checkpoint. No runtime statement, contract,
 baseline, descriptor or oracle changes. It does not waive its remaining map/object
 findings, inherited-surface UNKNOWNs or strict descriptor-comparison failures.
 
+[Amendment 99](amendment-99.md) permits the bounded Step 107 native-capture
+checkpoint and its dictionary-only factory overlay decision. It retains the
+new boundary finding and strict oracle FAIL; no contract, baseline, allowance,
+descriptor or gate is relaxed. See [Step 107 evidence](step-107-capture.md).
+
 When the first real function is added to an API module, the same commit adds that module's
 `boundary_types` rule. The rule then remains mandatory. This is a narrowing, not permission to
 change the target.

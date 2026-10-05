@@ -53,7 +53,7 @@ class RunRequest:
 
 @dataclass(frozen=True)
 class RunResult:
-    captured: dict[str, list[dict[str, object]]] | None
+    captured: dict[str, list[object]] | None
 
 
 class RunSession(Protocol):
@@ -61,4 +61,4 @@ class RunSession(Protocol):
 
     def execute(self) -> RunResult: ...
 
-    def capture_test_result(self) -> dict[str, list[dict[str, object]]] | None: ...
+    def capture_test_result(self) -> dict[str, list[object]] | None: ...

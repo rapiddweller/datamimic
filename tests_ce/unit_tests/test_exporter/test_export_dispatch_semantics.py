@@ -326,6 +326,17 @@ def test_export_session_registers_targets_through_registry_factory() -> None:
     assert result.get_result() == {"products": [{"id": 1}]}
 
 
+def test_test_result_exporter_accepts_variadic_tuple_tail_and_keeps_rows() -> None:
+    result = TestResultExporter()
+    rows = [{"id": 1}]
+
+    result.consume(("products", rows, {"target_entity": "orders"}, "extra metadata"))
+
+    captured = result.get_result()
+    assert captured == {"products": rows}
+    assert captured["products"][0] is rows[0]
+
+
 def test_prepare_page_preserves_metadata_tuple_shape_and_original_rows() -> None:
     session = ExportSession(worker_id=1)
     rows = [{"payload": {"#text": "original"}}]
