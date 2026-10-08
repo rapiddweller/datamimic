@@ -9,6 +9,7 @@ mem.sumEntityColumn/mem.entityCount/mem.removeNotExistingIds). No DSL entry poin
 yet (that's the separate execute-namespace-binding fix) - unit-tested directly against the class."""
 
 import logging
+import math
 
 import pytest
 
@@ -29,7 +30,26 @@ class _FakeClient:
 def test_sum_entity_column_coerces_string_values():
     mem = Memstore("mem")
     mem.consume(("t", [{"count": "5"}, {"count": "3"}, {"count": "7"}]))
-    assert mem.sumEntityColumn("t", "count") == 15
+    total = mem.sumEntityColumn("t", "count")
+    assert total == 15
+    assert type(total) is int
+
+
+@pytest.mark.parametrize(
+    ("values", "expected"),
+    [(["1.25", "2"], 3.25), (["inf"], math.inf), (["nan"], math.nan)],
+)
+def test_sum_entity_column_returns_float_for_fractional_and_non_finite_totals(values, expected):
+    mem = Memstore("mem")
+    mem.consume(("t", [{"count": value} for value in values]))
+
+    total = mem.sumEntityColumn("t", "count")
+
+    assert type(total) is float
+    if math.isnan(expected):
+        assert math.isnan(total)
+    else:
+        assert total == expected
 
 
 def test_sum_entity_column_missing_type_is_zero():

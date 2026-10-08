@@ -51,7 +51,7 @@ class Memstore(Exporter):
             logger.error(f"Data having entity '{entity_name}' is empty in memstore")
         return 0
 
-    def consume(self, product: tuple):
+    def consume(self, product: tuple) -> None:
         """
         Write data into memstore
         :param product:
@@ -61,7 +61,7 @@ class Memstore(Exporter):
         data = product[1]
         self._storage[name] = self._storage.get(name, []) + data
 
-    def sumEntityColumn(self, product_type: str, column: str):
+    def sumEntityColumn(self, product_type: str, column: str) -> int | float:
         """Sum a numeric column across all rows of one type (migration parity). Values are coerced via
         float() - memstore rows sourced from CSV carry strings, not numbers. Non-numeric cells (a CSV
         may carry stray values, e.g. a placeholder) are skipped, not fatal, matching the legacy
