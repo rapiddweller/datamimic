@@ -12,12 +12,12 @@ class StateMachineStatement(Statement):
     list of weighted (from, to, weight) transitions."""
 
     def __init__(self, name: str, start: str | None, rules: list[tuple[str, str, float]]):
-        self._name = name
+        self._name: str = name
         self._start = start
         self._rules = rules
 
     @property
-    def name(self) -> str | None:
+    def name(self) -> str:
         return self._name
 
     @property

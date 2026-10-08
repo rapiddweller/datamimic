@@ -1,0 +1,208 @@
+{
+  "source_checkpoint": "29610097510031703455ab4de18eb2cfe2b7eb39",
+  "ledger_input_checkpoint": "c992ff064a81334ed157cd41b80da438eb419466",
+  "overall_acceptance": "FAIL",
+  "inventory_paths": 931,
+  "ledger_delta": {
+    "changed_paths": 12,
+    "unchanged_authoring_paths": 43,
+    "owner_evidence_paths": 55,
+    "other_paths_without_reviewed_owner_profile": 876,
+    "review_queues": {
+      "runnable": 572,
+      "external-service": 222,
+      "non-descriptor": 17,
+      "intentionally-invalid": 70,
+      "missing-xlsx-source": 9,
+      "authoring-fixture": 41
+    },
+    "retained": "original/control input identity, historical statuses, native tags, prior captures, unassessed c992 parity"
+  },
+  "profile": {
+    "selected_nodes": 15,
+    "descriptors": 12,
+    "missing_xlsx_source": 9,
+    "writers": 3,
+    "generated_workbooks": [
+      "fixture.xlsx (including intentionally invalid bytes)",
+      "people_fixture.xlsx (2 rows)",
+      "people_fixture_large.xlsx (12 rows)"
+    ],
+    "tracked_input_sha256": {
+      "tests_ce/integration_tests/test_xlsx_exporter/conftest.py": "a2bace498fec1091b23309be244d726ce9d6f77feae743212514f79fd0f4085b",
+      "tests_ce/integration_tests/test_xlsx_exporter/read_complex_cyclic.xml": "4a0afbc7bcc9432bfa16b7f5325db86a30a743a451658f53f254ee7a923e6d6d",
+      "tests_ce/integration_tests/test_xlsx_exporter/read_count_only.xml": "cb03c4d10235d3f532ddee18d514693b6363c347821ae84c7f5ffb3255007400",
+      "tests_ce/integration_tests/test_xlsx_exporter/read_cumulated_seeded.xml": "f837ffc4ee3290886d010e4cb62bc2e43e7f872460ed0524916493cf62268a64",
+      "tests_ce/integration_tests/test_xlsx_exporter/read_cyclic_paged.xml": "bdfdf867116b25432a131b9f5a32f8ef4bb2e8143dab5327745dc12b7a9901b4",
+      "tests_ce/integration_tests/test_xlsx_exporter/read_paged_ordered.xml": "b2df68531e501d6205db5de4fd6468347adb0f2883e2a626404ff71ee586b04a",
+      "tests_ce/integration_tests/test_xlsx_exporter/read_random_seeded.xml": "0b88b0ba9ba899e5cafe972bd15dfb5c4e87ea5892a8ae2e3b552e80b0ec3bba",
+      "tests_ce/integration_tests/test_xlsx_exporter/read_random_unseeded.xml": "9b146b3927db77667d072fc9d3a7ac9637d2109309543206b23a7ad39706b262",
+      "tests_ce/integration_tests/test_xlsx_exporter/read_xyz.xml": "86ead23b2529f53e43b0738fe987005c2822b1d7cfd9ca0b4fc6ce75a99b43ed",
+      "tests_ce/integration_tests/test_xlsx_exporter/test_xlsx_edge_cases.py": "c877415192e998c7c70584928ec4607a5401e880d30a12626906cbc4e0ed1f86",
+      "tests_ce/integration_tests/test_xlsx_exporter/test_xlsx_exporter.py": "f1a578b4ebc33c88001f9c21456ac725dbf346b7119e88b40a9263b536b71e54",
+      "tests_ce/integration_tests/test_xlsx_exporter/write_chunked.xml": "e83f17ee1ad678cb13c72d6d760b4ecb1f45a5416f358f06453d189baa046c6f",
+      "tests_ce/integration_tests/test_xlsx_exporter/write_edge.xml": "ceec3c25a4e3dde60fb8ad4e949ab81f643085f4a67fa7ac37d565c7c8ab8f44",
+      "tests_ce/integration_tests/test_xlsx_exporter/xlsx_export.xml": "bf20e45c36e6a90171a6e736eea5b6a493fd1f5f5ee3a9d812db38fcb7111746",
+      "tests_ce/integration_tests/test_xlsx_exporter/xlsx_read.xml": "9245ce894722cf6680c3ac7f5243a1bd7087aef6af592b7c6d8bafdc15a1f845"
+    },
+    "hash_scope": "12 XMLs, 2 owner test modules and conftest; generated XLSX ZIP bytes were not hashed or compared",
+    "source_inputs_match_checkpoints": [
+      "12d5e3a5e576b49a7191ad955807f96cf84d8e62",
+      "c65d0090b1d21ec78466e1adc609d60459d9d634",
+      "c992ff064a81334ed157cd41b80da438eb419466"
+    ],
+    "environment": "project Python3.11.12/openpyxl3.1.5; standard plugins; pytest -n0; explicit clone PYTHONPATH and development; pytest tmp_path/native bounded lifecycle",
+    "descriptor_owner_nodes": {
+      "tests_ce/integration_tests/test_xlsx_exporter/read_complex_cyclic.xml": [
+        "tests_ce/integration_tests/test_xlsx_exporter/test_xlsx_edge_cases.py::test_read_mixed_types_and_cyclic_transform"
+      ],
+      "tests_ce/integration_tests/test_xlsx_exporter/read_count_only.xml": [
+        "tests_ce/integration_tests/test_xlsx_exporter/test_xlsx_edge_cases.py::test_read_empty_file_yields_zero_rows",
+        "tests_ce/integration_tests/test_xlsx_exporter/test_xlsx_edge_cases.py::test_read_header_only_yields_zero_rows",
+        "tests_ce/integration_tests/test_xlsx_exporter/test_xlsx_edge_cases.py::test_read_blank_header_columns_are_dropped",
+        "tests_ce/integration_tests/test_xlsx_exporter/test_xlsx_edge_cases.py::test_read_invalid_file_raises_clear_error"
+      ],
+      "tests_ce/integration_tests/test_xlsx_exporter/read_cumulated_seeded.xml": [
+        "tests_ce/integration_tests/test_xlsx_exporter/test_xlsx_exporter.py::test_xlsx_cumulated_read_is_seeded_and_bell_weighted"
+      ],
+      "tests_ce/integration_tests/test_xlsx_exporter/read_cyclic_paged.xml": [
+        "tests_ce/integration_tests/test_xlsx_exporter/test_xlsx_exporter.py::test_xlsx_cyclic_read_wraps_across_pages"
+      ],
+      "tests_ce/integration_tests/test_xlsx_exporter/read_paged_ordered.xml": [
+        "tests_ce/integration_tests/test_xlsx_exporter/test_xlsx_exporter.py::test_xlsx_paged_ordered_read_preserves_source_order"
+      ],
+      "tests_ce/integration_tests/test_xlsx_exporter/read_random_seeded.xml": [
+        "tests_ce/integration_tests/test_xlsx_exporter/test_xlsx_exporter.py::test_xlsx_random_read_is_seeded_deterministic"
+      ],
+      "tests_ce/integration_tests/test_xlsx_exporter/read_random_unseeded.xml": [
+        "tests_ce/integration_tests/test_xlsx_exporter/test_xlsx_exporter.py::test_xlsx_random_read_is_unseeded_nondeterministic"
+      ],
+      "tests_ce/integration_tests/test_xlsx_exporter/read_xyz.xml": [
+        "tests_ce/integration_tests/test_xlsx_exporter/test_xlsx_edge_cases.py::test_read_ragged_rows_pad_and_truncate"
+      ],
+      "tests_ce/integration_tests/test_xlsx_exporter/write_chunked.xml": [
+        "tests_ce/integration_tests/test_xlsx_exporter/test_xlsx_edge_cases.py::test_write_multi_chunk_keeps_all_rows"
+      ],
+      "tests_ce/integration_tests/test_xlsx_exporter/write_edge.xml": [
+        "tests_ce/integration_tests/test_xlsx_exporter/test_xlsx_edge_cases.py::test_write_none_nested_and_list_cells"
+      ],
+      "tests_ce/integration_tests/test_xlsx_exporter/xlsx_export.xml": [
+        "tests_ce/integration_tests/test_xlsx_exporter/test_xlsx_exporter.py::test_xlsx_export_writes_a_valid_workbook"
+      ],
+      "tests_ce/integration_tests/test_xlsx_exporter/xlsx_read.xml": [
+        "tests_ce/integration_tests/test_xlsx_exporter/test_xlsx_exporter.py::test_xlsx_source_is_read_row_by_row"
+      ]
+    }
+  },
+  "runs": [
+    {
+      "commit": "12d5e3a5e576b49a7191ad955807f96cf84d8e62",
+      "returncode": 0,
+      "junit_totals": {
+        "tests": 15,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0
+      },
+      "environment": {
+        "PYTHONPATH": "/private/tmp/ce-resume-20261008/descriptor-expansion/baseline-12d5-source",
+        "RUNTIME_ENVIRONMENT": "development"
+      },
+      "log_sha256": "9ec73ff55038f9f90b1bd308e575f3901f612799cd03a647f0e7c939f052b4f6",
+      "junit_sha256": "fcd960dcfeedd36a9a712ba52c522d558cd9267d86f29bfb0e3b05bda4513090"
+    },
+    {
+      "commit": "c65d0090b1d21ec78466e1adc609d60459d9d634",
+      "returncode": 0,
+      "junit_totals": {
+        "tests": 15,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0
+      },
+      "environment": {
+        "PYTHONPATH": "/private/tmp/ce-resume-20261008/descriptor-expansion/current-c65-source",
+        "RUNTIME_ENVIRONMENT": "development"
+      },
+      "log_sha256": "79824da5ca54b076411d0c534d992fdf95eb5125e5a24f38c8a621af977b9bf8",
+      "junit_sha256": "2c2df49ee0d40d576d309091afd90b1ac7669d3ac47dbdc5f57553f073b1add8"
+    }
+  ],
+  "initial_attempt": {
+    "recorded": {
+      "returncode": 3,
+      "tests_started": false,
+      "reason": "pytest-rerunfailures could not bind localhost socket under workspace sandbox; same command rerun under authorized escalation"
+    },
+    "raw_stderr_retained": false,
+    "independent_raw_startup_diagnosis": "NOT_VERIFIED; final runs verified"
+  },
+  "limits": [
+    "Owner assertions only, not generic frozen-recorder acceptance.",
+    "Seeded replay asserted within each checkpoint, not cross-revision exact values.",
+    "Unseeded case asserts one valid permutation.",
+    "Invalid-workbook case accepts broad matching exception.",
+    "Selected cell/count/order assertions, not complete workbook or ZIP bytes.",
+    "Workbook handles not always explicitly closed; output temp retention not immediate cleanup proof.",
+    "Not an OS sandbox; standalone descriptor dependencies/isolation UNKNOWN.",
+    "c65 receipts not relabeled c992/current; original a219 behavior not established."
+  ],
+  "artifacts": {
+    "ledger-step120-xlsx-v2.jsonl": {
+      "path": "test-artifacts/architecture/ce-recursive-target/step-120-xlsx-evidence/ledger-step120-xlsx-v2.jsonl",
+      "sha256": "b5f0bde2d5ebe3838e0d89d3c1a8f99af2f9105abfbc99ce83c84142eccfd990"
+    },
+    "summary-step120-xlsx-v2.md": {
+      "path": "test-artifacts/architecture/ce-recursive-target/step-120-xlsx-evidence/summary-step120-xlsx-v2.md",
+      "sha256": "083c779c1fd361be334e08814165418d53768452bc87df48c591a3af087dad6f"
+    },
+    "selection.json": {
+      "path": "test-artifacts/architecture/ce-recursive-target/step-120-xlsx-evidence/selection.json",
+      "sha256": "4c5bdab39bd5decd678a386c1d0ea7b90cb3d0cc213f5465744bb1f8dc35c5c0"
+    },
+    "astra.md": {
+      "path": "test-artifacts/architecture/ce-recursive-target/step-120-xlsx-evidence/astra.md",
+      "sha256": "f5bd6fe724af4c42ec367c4c2dbd3d26e8d929417be405a2bec11bfb673a0638"
+    },
+    "preflight-independent.md": {
+      "path": "test-artifacts/architecture/ce-recursive-target/step-120-xlsx-evidence/preflight-independent.md",
+      "sha256": "fe6fb47d06d0f364e49c1e60f74c68b61f49e45ec8489d244c615d2fe269e62f"
+    },
+    "qa-first-pass.md": {
+      "path": "test-artifacts/architecture/ce-recursive-target/step-120-xlsx-evidence/qa-first-pass.md",
+      "sha256": "11a4124bbf270521974647b4bcd874101b0f1744f4c4591035e9c86cf1be2dda"
+    },
+    "runner-receipt.json": {
+      "path": "test-artifacts/architecture/ce-recursive-target/step-120-xlsx-evidence/runner-receipt.json",
+      "sha256": "3cdb5024994c8f1d9629b3e0cf91ce64180da6eb238476a9b7272cb7edf1bec4"
+    },
+    "execution-results.md": {
+      "path": "test-artifacts/architecture/ce-recursive-target/step-120-xlsx-evidence/execution-results.md",
+      "sha256": "d6cfc9834d4b9ad0612e5dae3ee187622b582d8f9c54d8517874ec15b99c4564"
+    },
+    "baseline12d5.log": {
+      "path": "test-artifacts/architecture/ce-recursive-target/step-120-xlsx-evidence/baseline12d5.log",
+      "sha256": "9ec73ff55038f9f90b1bd308e575f3901f612799cd03a647f0e7c939f052b4f6"
+    },
+    "candidatec65.log": {
+      "path": "test-artifacts/architecture/ce-recursive-target/step-120-xlsx-evidence/candidatec65.log",
+      "sha256": "79824da5ca54b076411d0c534d992fdf95eb5125e5a24f38c8a621af977b9bf8"
+    },
+    "junit-baseline12d5.xml": {
+      "path": "test-artifacts/architecture/ce-recursive-target/step-120-xlsx-evidence/junit-baseline12d5.xml",
+      "sha256": "fcd960dcfeedd36a9a712ba52c522d558cd9267d86f29bfb0e3b05bda4513090"
+    },
+    "junit-candidatec65.xml": {
+      "path": "test-artifacts/architecture/ce-recursive-target/step-120-xlsx-evidence/junit-candidatec65.xml",
+      "sha256": "2c2df49ee0d40d576d309091afd90b1ac7669d3ac47dbdc5f57553f073b1add8"
+    },
+    "qa-execution-countercheck.md": {
+      "path": "test-artifacts/architecture/ce-recursive-target/step-120-xlsx-evidence/qa-execution-countercheck.md",
+      "sha256": "f1e33a064f3287bc9bc28b49c85f669dd90efc26453611cf4fffa268c3a7be4b"
+    },
+    "qa-step120-v2-countercheck.md": {
+      "path": "test-artifacts/architecture/ce-recursive-target/step-120-xlsx-evidence/qa-step120-v2-countercheck.md",
+      "sha256": "2f50328a110dc56ade20fee39cae21505f9d3763978448a48b455951623ec42d"
+    }
+  }
+}

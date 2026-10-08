@@ -1,0 +1,338 @@
+{
+  "step": 121,
+  "source_checkpoint": "29610097510031703455ab4de18eb2cfe2b7eb39",
+  "source_dirty": true,
+  "source_path": "datamimic_ce/engine/dsl/statements/setup/state_machine_statement.py",
+  "source_sha256_before": "7169ccd23802f6396b07c897f78b12d7500a1f5527fe03745abbf08e01d973be",
+  "source_sha256_after": "92ee9c143256104323b572eef6bcbbbc14f3125dcd761eb6a284404b9211ce08",
+  "changes": [
+    "self._name: str = name",
+    "name getter: str | None -> str"
+  ],
+  "static_controls": {
+    "baseline": {
+      "exit_code": 0,
+      "files": 491
+    },
+    "registry_candidate": {
+      "exit_code": 2,
+      "errors": 3,
+      "files_with_errors": 2
+    },
+    "getter_only": {
+      "exit_code": 2,
+      "errors": 1
+    },
+    "getter_and_field": {
+      "exit_code": 0,
+      "files": 491
+    }
+  },
+  "tests": {
+    "before": {
+      "exit_code": 0,
+      "passed": 16,
+      "failed": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    "after": {
+      "exit_code": 0,
+      "passed": 16,
+      "failed": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    "selection": "state-machine-source-slice/selection.json",
+    "profile": "Project venv, standard plugins, -n0, explicit PYTHONPATH and RUNTIME_ENVIRONMENT=development; fresh scratch CWD; other environment inherited"
+  },
+  "capture": {
+    "descriptors": 3,
+    "inventory": 931,
+    "before_sha256": "4c55f65cd8f10ec90ae5fa355b986ce553becb25c918a8901a5d14afa42c522a",
+    "after_sha256": "4c55f65cd8f10ec90ae5fa355b986ce553becb25c918a8901a5d14afa42c522a",
+    "raw_bytes_equal": true,
+    "projections_equal": 4,
+    "comparator_exit_code": 0,
+    "differences": 0,
+    "tolerated_normalizations": 0,
+    "original_frozen_capability_expectation": "FAIL retained"
+  },
+  "local_checks": {
+    "ruff": "PASS",
+    "mypy": {
+      "status": "PASS",
+      "files": 491
+    },
+    "format": "PASS, one file already formatted",
+    "architecture_cycle_and_definition_make_exit_code": 0,
+    "definition_passed": 8,
+    "architecture_report_exit_code": 0
+  },
+  "architecture": {
+    "before_source": {
+      "dirty": true,
+      "git_head": "6433321f7aaacad98de88453cf873f230e39e831",
+      "scope": [
+        "datamimic_ce/**/*.py"
+      ],
+      "source_digest": "d5fdc6789839b6dabade4917eb545f6f9aa5bf0b82e71baca46f89c0be3625d6"
+    },
+    "after_source": {
+      "dirty": true,
+      "git_head": "29610097510031703455ab4de18eb2cfe2b7eb39",
+      "scope": [
+        "datamimic_ce/**/*.py"
+      ],
+      "source_digest": "a87c6685039f7b5d7ef95a6ee8cf92beebe1c3e562f0191918f84525d3015c5c"
+    },
+    "before_violations": 89,
+    "after_violations": 89,
+    "before_unknowns": 254,
+    "after_unknowns": 254,
+    "violation_ids_equal": true,
+    "unknown_ids_equal": true,
+    "module_ids_equal": true,
+    "measured_unknown_positions": 200,
+    "measured_cycle_edges": 2,
+    "declared_rules": "FAIL",
+    "before_packet_limitation": "Retained dirty HEAD643 observation; not freshly generated at pre-edit HEAD296"
+  },
+  "ci": {
+    "source_slice": "NOT_RUN_YET",
+    "preceding_head": "29610097510031703455ab4de18eb2cfe2b7eb39",
+    "runs": [
+      37751530217,
+      37751519506
+    ],
+    "per_run": {
+      "successful_jobs": 24,
+      "failed_architecture_jobs": 2,
+      "skipped_jobs": 2
+    }
+  },
+  "full_acceptance": "FAIL",
+  "artifacts": [
+    {
+      "path": "test-artifacts/architecture/ce-recursive-target/step-121-evidence/state-machine-source-slice/source-before.py",
+      "sha256": "7169ccd23802f6396b07c897f78b12d7500a1f5527fe03745abbf08e01d973be",
+      "bytes": 905
+    },
+    {
+      "path": "test-artifacts/architecture/ce-recursive-target/step-121-evidence/state-machine-source-slice/selection.json",
+      "sha256": "bd4918d2a035df4648ad5f4201110d1b92030638fb9723c1ac1def2ddd7f241b",
+      "bytes": 8444
+    },
+    {
+      "path": "test-artifacts/architecture/ce-recursive-target/step-121-evidence/state-machine-source-slice/run_phase.py",
+      "sha256": "757ca4f9e2a824c2decbefd18055a6e12d0c261292b91f761b49173ac6bc46f1",
+      "bytes": 1796
+    },
+    {
+      "path": "test-artifacts/architecture/ce-recursive-target/step-121-evidence/state-machine-source-slice/before-tests.log",
+      "sha256": "8e7331876774c206b3e3b04e935b749bfaab697e0b817d49dba9264300f43585",
+      "bytes": 191
+    },
+    {
+      "path": "test-artifacts/architecture/ce-recursive-target/step-121-evidence/state-machine-source-slice/after-tests.log",
+      "sha256": "ad8060252934ee5d7a69b15490b11e336db751a24705663533de9c0fa0a101c1",
+      "bytes": 190
+    },
+    {
+      "path": "test-artifacts/architecture/ce-recursive-target/step-121-evidence/state-machine-source-slice/before-tests.xml",
+      "sha256": "4abcf200a652efa7f1954639af4bbb53cb2917ecb87d313dcebd2b4fb7a156d4",
+      "bytes": 3228
+    },
+    {
+      "path": "test-artifacts/architecture/ce-recursive-target/step-121-evidence/state-machine-source-slice/after-tests.xml",
+      "sha256": "b26f5b32cb6254d80a5d1f15e241de14ebf9192b7ed4b81b1b53b1740e1d54c6",
+      "bytes": 3228
+    },
+    {
+      "path": "test-artifacts/architecture/ce-recursive-target/step-121-evidence/state-machine-source-slice/before-tests-receipt.json",
+      "sha256": "5f3265f943f78b5847f020c77cfd0141819cd15a4bce7c47682968bc8c08ba0b",
+      "bytes": 4090
+    },
+    {
+      "path": "test-artifacts/architecture/ce-recursive-target/step-121-evidence/state-machine-source-slice/after-tests-receipt.json",
+      "sha256": "db9bb994cd9f9ad1f358fd05820e0ccddb4df4a495c00c40ddf61aa61f40c7aa",
+      "bytes": 4086
+    },
+    {
+      "path": "test-artifacts/architecture/ce-recursive-target/step-121-evidence/state-machine-source-slice/before-capture.json",
+      "sha256": "4c55f65cd8f10ec90ae5fa355b986ce553becb25c918a8901a5d14afa42c522a",
+      "bytes": 778147
+    },
+    {
+      "path": "test-artifacts/architecture/ce-recursive-target/step-121-evidence/state-machine-source-slice/after-capture.json",
+      "sha256": "4c55f65cd8f10ec90ae5fa355b986ce553becb25c918a8901a5d14afa42c522a",
+      "bytes": 778147
+    },
+    {
+      "path": "test-artifacts/architecture/ce-recursive-target/step-121-evidence/state-machine-source-slice/before-capture.log",
+      "sha256": "3efec9a121f81d6e7e41c507611410ea6cadbb1af0d9092e7bbaa6bbbc7151f8",
+      "bytes": 630
+    },
+    {
+      "path": "test-artifacts/architecture/ce-recursive-target/step-121-evidence/state-machine-source-slice/after-capture.log",
+      "sha256": "3efec9a121f81d6e7e41c507611410ea6cadbb1af0d9092e7bbaa6bbbc7151f8",
+      "bytes": 630
+    },
+    {
+      "path": "test-artifacts/architecture/ce-recursive-target/step-121-evidence/state-machine-source-slice/before-capture-receipt.json",
+      "sha256": "4b0395b46ab985c8ba8b72fe1b397757c4974be7fb17941dc333ce0258c98df1",
+      "bytes": 1263
+    },
+    {
+      "path": "test-artifacts/architecture/ce-recursive-target/step-121-evidence/state-machine-source-slice/after-capture-receipt.json",
+      "sha256": "975dc90c570306759015574c68ef5e4f3f504234cfb60fd475cccfdbf752d0e7",
+      "bytes": 1259
+    },
+    {
+      "path": "test-artifacts/architecture/ce-recursive-target/step-121-evidence/state-machine-source-slice/comparator.log",
+      "sha256": "2fe4ee7b7db59dbacedf7676e613dcf5eb84161396cb1566ab216bd132d74df5",
+      "bytes": 90
+    },
+    {
+      "path": "test-artifacts/architecture/ce-recursive-target/step-121-evidence/state-machine-source-slice/local-checks.log",
+      "sha256": "f40c6e832eab9065e2ab8444bd8826182b58af7bdf4746ea347f8bbb32cd38e8",
+      "bytes": 213
+    },
+    {
+      "path": "test-artifacts/architecture/ce-recursive-target/step-121-evidence/state-machine-source-slice/architecture-report.log",
+      "sha256": "9094d3ed986173c15cc9f0425ca13d0939fd0c432f2abcf6168ec1ea575ce60b",
+      "bytes": 128692
+    },
+    {
+      "path": "test-artifacts/architecture/ce-recursive-target/step-121-evidence/state-machine-source-slice/architecture-guards.log",
+      "sha256": "eb58e0e11746ded28aa795ecb982ede00cb6dfd2b0a87aadc4d304a7162f745a",
+      "bytes": 671
+    },
+    {
+      "path": "test-artifacts/architecture/ce-recursive-target/step-121-evidence/state-machine-source-slice/architecture-comparison.json",
+      "sha256": "349168abde9ebc5b7735783ec2b9be1e7a3fc031568e56f17852f38293c415d7",
+      "bytes": 682
+    },
+    {
+      "path": "test-artifacts/architecture/ce-recursive-target/step-121-evidence/state-machine-source-slice/qa-countercheck.md",
+      "sha256": "e79b0baec441b8cd0a92dd173d61a9c63c494473ce6ef6f913df3b5d972e9c59",
+      "bytes": 3218
+    },
+    {
+      "path": "test-artifacts/architecture/ce-recursive-target/step-121-evidence/state-machine-source-slice/architecture-before/architecture.json",
+      "sha256": "cef821f609f3144b74c52818658f562dc593c7a449b15d30ad947caf444c5c6e",
+      "bytes": 15182883
+    },
+    {
+      "path": "test-artifacts/architecture/ce-recursive-target/step-121-evidence/state-machine-source-slice/architecture-before/architecture.report.html",
+      "sha256": "e8fe9239228ae546b12bb23a177d28dd669dc7aa8fb2ac9dec2ca06413c359c4",
+      "bytes": 1043338
+    },
+    {
+      "path": "test-artifacts/architecture/ce-recursive-target/step-121-evidence/state-machine-source-slice/architecture-before/architecture.detail.html",
+      "sha256": "9b2eeffe0ef58f47e3b7095eaacf9f1d9a2dca7657f317cb3b03ed921f8c8eb6",
+      "bytes": 23407191
+    },
+    {
+      "path": "test-artifacts/architecture/ce-recursive-target/step-121-evidence/state-machine-name-staticprobe/report.md",
+      "sha256": "0769b3541617076c08d778b55d531c83adc17a4cb69676f74f2e88dc49ae5c2c",
+      "bytes": 1481
+    },
+    {
+      "path": "test-artifacts/architecture/ce-recursive-target/step-121-evidence/state-machine-name-staticprobe/receipt.json",
+      "sha256": "3945b621d72b036762c677a991578b80bc581c09f501f01fa3133594e8445b75",
+      "bytes": 1786
+    },
+    {
+      "path": "test-artifacts/architecture/ce-recursive-target/step-121-evidence/state-machine-name-staticprobe/logs/candidate-getter-mypy.log",
+      "sha256": "ba21c74bdd89aab1ffe7fe231cba0ba6a7e2985d2d06dfa3647de91203ddc4bd",
+      "bytes": 367
+    },
+    {
+      "path": "test-artifacts/architecture/ce-recursive-target/step-121-evidence/state-machine-name-staticprobe/logs/candidate-getter-field-mypy.log",
+      "sha256": "89b5dd3e3139706e516b974856398d694ab074a577113c4751d9810c6b96f2eb",
+      "bytes": 170
+    },
+    {
+      "path": "test-artifacts/architecture/ce-recursive-target/step-121-evidence/setupcontext-staticprobe/report.md",
+      "sha256": "32ae13a898f76304c7d161ccbc2856ef30acbb03b605b1e42994105c382148c3",
+      "bytes": 2035
+    },
+    {
+      "path": "test-artifacts/architecture/ce-recursive-target/step-121-evidence/setupcontext-staticprobe/receipt.json",
+      "sha256": "ed7a13feb1d782f8bd0879f31c9efc04f24db7cf6e6ce578e6dfa57b96888001",
+      "bytes": 2115
+    },
+    {
+      "path": "test-artifacts/architecture/ce-recursive-target/step-121-evidence/setupcontext-staticprobe/baseline-sha256.txt",
+      "sha256": "3a60a9716ea7301f9b3888e76519c8c1cdb02b6b41fa41e7e490fa616d20369b",
+      "bytes": 61198
+    },
+    {
+      "path": "test-artifacts/architecture/ce-recursive-target/step-121-evidence/setupcontext-staticprobe/candidate-sha256.txt",
+      "sha256": "146fca0b102450684cec5b315c741e12eaeb066df92af9a92fb7c7ce2a946a40",
+      "bytes": 61198
+    },
+    {
+      "path": "test-artifacts/architecture/ce-recursive-target/step-121-evidence/setupcontext-staticprobe/logs/baseline-mypy.log",
+      "sha256": "89b5dd3e3139706e516b974856398d694ab074a577113c4751d9810c6b96f2eb",
+      "bytes": 170
+    },
+    {
+      "path": "test-artifacts/architecture/ce-recursive-target/step-121-evidence/setupcontext-staticprobe/logs/candidate-mypy.log",
+      "sha256": "a7ded942aa5609b9a1194a894bb5eccb456f41992dffc51a5233f3643812b772",
+      "bytes": 777
+    },
+    {
+      "path": "test-artifacts/architecture/ce-recursive-target/step-121-evidence/setupcontext-staticprobe/logs/python-version.txt",
+      "sha256": "6686a031f97b7da01afde25875337d3e5c4ee44e17c3996c5d4d175c0d731fe8",
+      "bytes": 15
+    },
+    {
+      "path": "test-artifacts/architecture/ce-recursive-target/step-121-evidence/setupcontext-staticprobe/logs/tool-version.txt",
+      "sha256": "d2c93d60e797aa9fa83021c79a1ba28820c095ed3b97a09bc0ef5c3319e90100",
+      "bytes": 28
+    },
+    {
+      "path": "test-artifacts/architecture/ce-recursive-target/step-121-evidence/runtime10-qa/state-machine-source-qa.md",
+      "sha256": "0906c9c88e994fa768680d778fa303d192d1ed6599771b334751ce3c48b74a58",
+      "bytes": 1744
+    },
+    {
+      "path": "test-artifacts/architecture/ce-recursive-target/step-121-evidence/runtime10-qa/state-machine-name-source-first-pass.md",
+      "sha256": "1d910f779c25e3b97030922c14dc157996536785574d6cc187a10e123a86a4bc",
+      "bytes": 2945
+    },
+    {
+      "path": "test-artifacts/architecture/ce-recursive-target/step-121-evidence/runtime10-qa/state-machine-cohort-preflight.md",
+      "sha256": "f79549f61105282ab99b779ca80111190a9b4b239a4a2ca6ba7c027b7515219b",
+      "bytes": 7726
+    },
+    {
+      "path": "test-artifacts/architecture/ce-recursive-target/step-121-evidence/runtime-boundary-audit/state-machine-decision.md",
+      "sha256": "b31106f592083016637d9b0eab698c90fde3bd1228a4188306153e2f2971d2c0",
+      "bytes": 6323
+    },
+    {
+      "path": "test-artifacts/architecture/ce-recursive-target/step-121-evidence/architecture-after/architecture.json",
+      "sha256": "7c215f05242e5130c00be57ff9349183f21286a9252c2c17324ce5f496a09188",
+      "bytes": 15182852
+    },
+    {
+      "path": "test-artifacts/architecture/ce-recursive-target/step-121-evidence/architecture-after/architecture.report.html",
+      "sha256": "d83f29bdd2fd78074bb26919af5fe06b8c04b2a53e79ca6fcb7c3d5cda587fd0",
+      "bytes": 1043338
+    },
+    {
+      "path": "test-artifacts/architecture/ce-recursive-target/step-121-evidence/architecture-after/architecture.detail.html",
+      "sha256": "ea589a308820fd9f61b277c798ef53673a69fc3858678635302838b478e9f795",
+      "bytes": 23407177
+    }
+  ],
+  "limits": [
+    "Getter annotation introspection intentionally changes; executable behavior is unchanged within reviewed checks.",
+    "Controlled AST/bytecode/instance/pickle checks do not prove arbitrary external introspection or custom serialization.",
+    "Selected owner assertions and three raw captures do not prove full DSL equivalence.",
+    "Mixed registry typing, frozen capability expectation, all-depth report navigation and broader contracts remain open."
+  ]
+}
