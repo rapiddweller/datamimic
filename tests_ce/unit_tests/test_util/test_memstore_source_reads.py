@@ -10,7 +10,7 @@ from datamimic_ce.engine.io.contracts import DataSourcePagination
 from datamimic_ce.engine.io.data_sources import router as io_source_router
 from datamimic_ce.engine.io.data_sources import variable as io_variable_sources
 from datamimic_ce.engine.io.data_sources.boundary.models import VariableSourceRequest
-from datamimic_ce.engine.io.exporters.memory.memstore import Memstore
+from datamimic_ce.engine.io.api import Memstore
 from datamimic_ce.engine.runtime.tasks.sources import generate as generate_source_router
 
 ROWS = [{"id": 1}, {"id": 2}, {"id": 3}]

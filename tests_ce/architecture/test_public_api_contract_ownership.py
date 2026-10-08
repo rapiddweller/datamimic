@@ -335,7 +335,6 @@ def test_domains_initializer_has_one_exact_owner_without_widening_api_selector()
                 "datamimic_ce.engine.io.exporters.core": "EXPORTERS-CORE",
                 "datamimic_ce.engine.io.exporters.formats": "EXPORTERS-FORMATS",
                 "datamimic_ce.engine.io.exporters.database": "EXPORTERS-DATABASE",
-                "datamimic_ce.engine.io.exporters.memory": "EXPORTERS-MEMORY",
                 "datamimic_ce.engine.io.exporters.diagnostics": "EXPORTERS-DIAGNOSTICS",
                 "datamimic_ce.engine.io.exporters.registry": "EXPORTERS-REGISTRY",
                 "datamimic_ce.engine.io.exporters.lifecycle": "EXPORTERS-LIFECYCLE",
@@ -364,6 +363,7 @@ def test_domains_initializer_has_one_exact_owner_without_widening_api_selector()
             ["datamimic_ce.engine.io.api"],
             {
                 "datamimic_ce.engine.io.contracts": "IO-CONTRACTS",
+                "datamimic_ce.engine.io.memstore": "IO-MEMSTORE",
                 "datamimic_ce.engine.io.clients": "IO-CLIENTS",
                 "datamimic_ce.engine.io.connection_config": "IO-CONNECTION-CONFIG",
                 "datamimic_ce.engine.io.data_sources": "IO-SOURCES",

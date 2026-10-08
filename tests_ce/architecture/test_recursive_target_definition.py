@@ -152,7 +152,7 @@ def _target_files(files: set[str], manifest: dict) -> dict[str, set[str]]:
         _assert_target_path(item["target"])
 
     output: dict[str, set[str]] = {}
-    split_destinations: set[str] = set()
+    split_destinations: dict[str, set[str]] = {}
     ordinary_destinations: dict[str, set[str]] = {}
     assert len({item["target"] for item in merge_items}) == len(merge_items), "duplicate merge target"
     merge_destinations = {
@@ -168,7 +168,8 @@ def _target_files(files: set[str], manifest: dict) -> dict[str, set[str]]:
             assert split.get("reason") and split["targets"], f"split requires targets and a reason: {source}"
             assert len(set(split["targets"])) == len(split["targets"])
             targets = split["targets"]
-            split_destinations.update(PurePosixPath(target).as_posix() for target in targets)
+            for target in targets:
+                split_destinations.setdefault(PurePosixPath(target).as_posix(), set()).add(source)
         elif source in merges:
             targets = [merges[source]["target"]]
         elif source in file_moves:
@@ -196,8 +197,10 @@ def _target_files(files: set[str], manifest: dict) -> dict[str, set[str]]:
     collisions = {target: sources for target, sources in output.items() if len(sources) > 1}
     assert all(
         (
-            sources == merge_destinations.get(target)
-            or (target in split_destinations and len(ordinary_destinations.get(target, set())) <= 1)
+            ordinary_destinations.get(target, set()) == merge_destinations[target]
+            and sources == merge_destinations[target] | split_destinations.get(target, set())
+            if target in merge_destinations
+            else target in split_destinations and len(ordinary_destinations.get(target, set())) <= 1
         )
         for target, sources in collisions.items()
     ), f"unexplained target collisions: {collisions}"
@@ -583,3 +586,43 @@ def test_recursive_target_definition_rejects_mapping_and_layout_false_greens(tmp
         assert not _physical_target_issues({"legacy.py"}, {"target.py": {"source.py"}})
     with pytest.raises(AssertionError, match="legacy or unowned modules"):
         assert not _physical_target_issues({"target.py", "legacy.py"}, {"target.py": {"source.py"}})
+
+
+@pytest.fixture
+def merged_split_mapping() -> tuple[set[str], dict]:
+    return {"a.py", "b.py", "split.py"}, {
+        "relocations": [],
+        "package_relocations": [],
+        "splits": [{"source": "split.py", "targets": ["target.py", "other.py"], "reason": "separate owners"}],
+        "removed_initializers": [],
+        "removed_modules": [],
+        "merges": [{"sources": ["a.py", "b.py"], "target": "target.py", "reason": "one combined owner"}],
+        "new_modules": [],
+    }
+
+
+def test_target_mapping_accepts_exact_merge_and_split_contributors(merged_split_mapping) -> None:
+    files, manifest = merged_split_mapping
+    assert _target_files(files, manifest) == {
+        "target.py": {"a.py", "b.py", "split.py"},
+        "other.py": {"split.py"},
+    }
+
+
+@pytest.mark.parametrize(
+    ("merge_sources", "relocations", "extra_files", "expected_error"),
+    [
+        (["a.py", "b.py"], [{"source": "extra.py", "target": "target.py"}], {"extra.py"}, "collisions"),
+        (["a.py"], [{"source": "b.py", "target": "target.py"}], set(), "collisions"),
+        (["a.py", "b.py", "split.py"], [], set(), "multiple selectors"),
+    ],
+    ids=["undeclared-ordinary", "incomplete-merge", "duplicate-split-merge-selector"],
+)
+def test_target_mapping_rejects_invalid_merge_and_split_contributors(
+    merged_split_mapping, merge_sources, relocations, extra_files, expected_error
+) -> None:
+    files, manifest = merged_split_mapping
+    manifest["merges"][0]["sources"] = merge_sources
+    manifest["relocations"] = relocations
+    with pytest.raises(AssertionError, match=expected_error):
+        _target_files(files | extra_files, manifest)

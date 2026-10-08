@@ -7,10 +7,6 @@
         "responsibility": "This empty initializer module adds no exporter responsibility."
       },
       {
-        "path": "datamimic_ce/engine/io/exporters/core/exporter.py",
-        "responsibility": "Provides the marker base class for exporter implementations."
-      },
-      {
         "path": "datamimic_ce/engine/io/exporters/core/exporter_config.py",
         "responsibility": "This module carries typed path, name, and run configuration for exporters."
       },
@@ -83,10 +79,6 @@
         "responsibility": "This module serializes generated records as XML."
       },
       {
-        "path": "datamimic_ce/engine/io/exporters/memory/memstore.py",
-        "responsibility": "This module stores and returns raw run-scoped memstore rows; IO owns source selection and paging."
-      },
-      {
         "path": "datamimic_ce/engine/io/exporters/lifecycle.py",
         "responsibility": "Finalizes buffered chunks, publishes completed artifacts, and removes run-specific temporary chunks."
       },
@@ -109,18 +101,18 @@
         "datamimic_ce.engine.io.exporters.core"
       ],
       "responsibilities": [
-        "Own exporter contracts, configuration, buffering, serialization, and target routing."
+        "Own exporter context protocols, configuration, buffering, output state, serialization and target routing."
       ],
       "forbidden_responsibilities": [
         "Import concrete format exporters",
         "Select exporters from target strings"
       ],
       "provenance": [
-        "docs/architecture/inner/target.md"
+        "docs/architecture/inner/target.md",
+        "docs/architecture/refactoring-study/experiment-2/amendment-168-memstore-data-owner.md"
       ],
       "requires": [],
       "public": [
-        "datamimic_ce.engine.io.exporters.core.exporter:Exporter",
         "datamimic_ce.engine.io.exporters.core.exporter_context:ExporterContext",
         "datamimic_ce.engine.io.exporters.core.exporter_config:ExporterConfig",
         "datamimic_ce.engine.io.exporters.core.exporter_state_manager:ExporterStateManager",
@@ -178,46 +170,19 @@
         "Select exporters or own file formats"
       ],
       "provenance": [
-        "docs/architecture/inner/target.md"
+        "docs/architecture/inner/target.md",
+        "docs/architecture/refactoring-study/experiment-2/amendment-168-memstore-data-owner.md"
       ],
       "requires": [
         {
           "component": "core",
-          "rationale": "Database exporters implement the shared exporter contract.",
+          "rationale": "Database write adapters resolve target entities through shared exporter routing.",
           "decided_by": "agent"
         }
       ],
       "public": [
         "datamimic_ce.engine.io.exporters.database.database_exporter:DatabaseExporter",
         "datamimic_ce.engine.io.exporters.database.mongodb_exporter:MongoDBExporter"
-      ],
-      "decided_by": "agent"
-    },
-    {
-      "id": "EXPORTERS-MEMORY",
-      "label": "memory",
-      "role": "component",
-      "packages": [
-        "datamimic_ce.engine.io.exporters.memory"
-      ],
-      "responsibilities": [
-        "Raw run-scoped storage; IO data-source operations own reads and selection."
-      ],
-      "forbidden_responsibilities": [
-        "Select exporters or own Runtime store lifecycle"
-      ],
-      "provenance": [
-        "docs/architecture/inner/target.md"
-      ],
-      "requires": [
-        {
-          "component": "core",
-          "rationale": "Memstore export implements the shared exporter contract.",
-          "decided_by": "agent"
-        }
-      ],
-      "public": [
-        "datamimic_ce.engine.io.exporters.memory.memstore:Memstore"
       ],
       "decided_by": "agent"
     },
@@ -235,15 +200,10 @@
         "Select exporters or own file/database formats"
       ],
       "provenance": [
-        "docs/architecture/inner/target.md"
+        "docs/architecture/inner/target.md",
+        "docs/architecture/refactoring-study/experiment-2/amendment-168-memstore-data-owner.md"
       ],
-      "requires": [
-        {
-          "component": "core",
-          "rationale": "Diagnostic exporters implement the shared exporter contract.",
-          "decided_by": "agent"
-        }
-      ],
+      "requires": [],
       "public": [
         "datamimic_ce.engine.io.exporters.diagnostics.console_exporter:ConsoleExporter",
         "datamimic_ce.engine.io.exporters.diagnostics.log_exporter:LogExporter",
@@ -268,7 +228,8 @@
         "Implement exporters or be re-exported as a facade for concrete classes"
       ],
       "provenance": [
-        "docs/architecture/inner/target.md"
+        "docs/architecture/inner/target.md",
+        "docs/architecture/refactoring-study/experiment-2/amendment-168-memstore-data-owner.md"
       ],
       "requires": [
         {
@@ -289,11 +250,6 @@
         {
           "component": "diagnostics",
           "rationale": "The registry binds console and diagnostic exporters.",
-          "decided_by": "agent"
-        },
-        {
-          "component": "memory",
-          "rationale": "Target construction resolves named memstores.",
           "decided_by": "agent"
         }
       ],
@@ -356,7 +312,8 @@
         "Construct exporters independently of the exporter registry"
       ],
       "provenance": [
-        "docs/architecture/inner/target.md"
+        "docs/architecture/inner/target.md",
+        "docs/architecture/refactoring-study/experiment-2/amendment-168-memstore-data-owner.md"
       ],
       "requires": [
         {
@@ -382,11 +339,6 @@
         {
           "component": "diagnostics",
           "rationale": "Page dispatch supports diagnostic exporters.",
-          "decided_by": "agent"
-        },
-        {
-          "component": "memory",
-          "rationale": "Page dispatch preserves lazy memstore handling.",
           "decided_by": "agent"
         }
       ],
@@ -441,7 +393,6 @@
       "kind": "root_layout",
       "root": "datamimic_ce.engine.io.exporters.core",
       "allowed_children": [
-        "datamimic_ce.engine.io.exporters.core.exporter",
         "datamimic_ce.engine.io.exporters.core.exporter_config",
         "datamimic_ce.engine.io.exporters.core.exporter_context",
         "datamimic_ce.engine.io.exporters.core.exporter_state_manager",
@@ -451,7 +402,8 @@
       ],
       "rationale": "Export contracts, buffers, serialization and target routing. Exact reviewed target children; no hidden extra modules.",
       "provenance": [
-        "docs/architecture/inner/structure-review.json"
+        "docs/architecture/inner/structure-review.json",
+        "docs/architecture/refactoring-study/experiment-2/amendment-168-memstore-data-owner.md"
       ],
       "decided_by": "agent"
     },
@@ -498,19 +450,6 @@
         "datamimic_ce.engine.io.exporters.formats.xml_exporter"
       ],
       "rationale": "File encodings, including DbUnit flat XML. Exact reviewed target children; no hidden extra modules.",
-      "provenance": [
-        "docs/architecture/inner/structure-review.json"
-      ],
-      "decided_by": "agent"
-    },
-    {
-      "id": "LAYOUT-ENGINE-IO-EXPORTERS-MEMORY",
-      "kind": "root_layout",
-      "root": "datamimic_ce.engine.io.exporters.memory",
-      "allowed_children": [
-        "datamimic_ce.engine.io.exporters.memory.memstore"
-      ],
-      "rationale": "Memstore writes. Exact reviewed target children; no hidden extra modules.",
       "provenance": [
         "docs/architecture/inner/structure-review.json"
       ],

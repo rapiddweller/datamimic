@@ -151,15 +151,19 @@ def test_smoke_export_request_uses_native_payload_annotations() -> None:
 
 
 def test_exporter_registry_has_only_exact_memstore_visibility() -> None:
+    io_contract = json.loads(
+        (ROOT / "docs/architecture/inner/io/architecture-contract.json").read_text(encoding="utf-8")
+    )
+    io_components = {component["id"]: component for component in io_contract["components"]}
+    assert io_components["IO-MEMSTORE"]["public"] == ["datamimic_ce.engine.io.memstore:Memstore"]
+    assert any(item["component"] == "memstore" for item in io_components["IO-EXPORTERS"]["requires"])
     contract = json.loads(
         (ROOT / "docs/architecture/inner/io/exporters/architecture-contract.json").read_text(encoding="utf-8")
     )
     components = {component["id"]: component for component in contract["components"]}
-    assert components["EXPORTERS-MEMORY"]["public"] == [
-        "datamimic_ce.engine.io.exporters.memory.memstore:Memstore"
-    ]
+    assert "EXPORTERS-MEMORY" not in components
     registry = components["EXPORTERS-REGISTRY"]
-    assert any(requirement["component"] == "memory" for requirement in registry["requires"])
+    assert all(item["component"] != "memory" for item in registry["requires"])
     assert all("Memstore" not in symbol for symbol in registry["public"])
 
 
@@ -183,3 +187,22 @@ def test_smoke_export_open_values_keep_their_container_shapes() -> None:
     hints = get_type_hints(SmokeExportRequest)
     assert hints["params"] == dict[str, object]
     assert hints["rows"] == list[dict[str, object]]
+
+
+def test_memstore_and_exporter_have_truthful_canonical_definitions() -> None:
+    import inspect
+
+    from datamimic_ce.engine.io import contracts, memstore
+
+    assert io_api.Memstore is memstore.Memstore
+    assert io_api.Exporter is contracts.Exporter
+    assert memstore.Memstore.__module__ == "datamimic_ce.engine.io.memstore"
+    assert contracts.Exporter.__module__ == "datamimic_ce.engine.io.contracts"
+    assert repr(memstore.Memstore) == "<class 'datamimic_ce.engine.io.memstore.Memstore'>"
+    assert repr(contracts.Exporter) == "<class 'datamimic_ce.engine.io.contracts.Exporter'>"
+    assert Path(inspect.getfile(memstore.Memstore)) == ROOT / "datamimic_ce/engine/io/memstore.py"
+    assert Path(inspect.getfile(contracts.Exporter)) == ROOT / "datamimic_ce/engine/io/contracts.py"
+    assert Path(memstore.__spec__.origin) == ROOT / "datamimic_ce/engine/io/memstore.py"
+    assert Path(contracts.__spec__.origin) == ROOT / "datamimic_ce/engine/io/contracts.py"
+    assert not (ROOT / "datamimic_ce/engine/io/exporters/memory/memstore.py").exists()
+    assert not (ROOT / "datamimic_ce/engine/io/exporters/core/exporter.py").exists()

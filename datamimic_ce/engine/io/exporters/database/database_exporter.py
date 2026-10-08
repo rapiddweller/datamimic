@@ -5,7 +5,7 @@
 # For questions and support, contact: info@rapiddweller.com
 
 from datamimic_ce.engine.io.clients.rdbms_client import RdbmsClient
-from datamimic_ce.engine.io.exporters.core.exporter import Exporter
+from datamimic_ce.engine.io.contracts import Exporter
 from datamimic_ce.engine.io.exporters.core.routing import resolve_target_entity_from_metadata
 
 

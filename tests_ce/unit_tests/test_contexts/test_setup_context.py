@@ -1,27 +1,34 @@
 import ast
 import copy
+import pickle
 import inspect
 import textwrap
 from pathlib import Path
 from typing import get_type_hints
 from unittest.mock import patch
 
+import dill
 import pytest
 
 from datamimic_ce.domains.api import RunSeed
 from datamimic_ce.engine.dsl.model.setup.include_model import IncludeModel
+from datamimic_ce.engine.dsl.model.setup.memstore_model import MemstoreModel
 from datamimic_ce.engine.dsl.model.setup.setup_model import SetupModel
 from datamimic_ce.engine.dsl.statements.setup.include_statement import IncludeStatement
+from datamimic_ce.engine.dsl.statements.setup.memstore_statement import MemstoreStatement
 from datamimic_ce.engine.dsl.statements.setup.setup_statement import SetupStatement
-from datamimic_ce.engine.io.api import Client, RegisteredClient
+from datamimic_ce.engine.io.api import Client, Exporter, Memstore, RegisteredClient
 from datamimic_ce.engine.dsl.vocabulary.enums.dbms_enums import Dbms
 from datamimic_ce.engine.io.clients.rdbms_client import RdbmsClient
 from datamimic_ce.engine.io.connection_config.rdbms_connection_config import RdbmsConnectionConfig
 from datamimic_ce.engine.io.exporters.diagnostics.test_result_exporter import TestResultExporter
+from datamimic_ce.engine.io.exporters import registry as exporter_registry
+from datamimic_ce.engine.io.exporters import session as export_session_module
 from datamimic_ce.engine.runtime.contexts.context import SetupContext
 from datamimic_ce.engine.runtime.storage.global_increment import GlobalIncrementRegistry
 from datamimic_ce.engine.runtime.storage.memstore_manager import MemstoreManager
 from datamimic_ce.engine.runtime.tasks.setup.include_task import IncludeTask
+from datamimic_ce.engine.runtime.tasks.setup.memstore_task import MemstoreTask
 from datamimic_ce.engine.runtime.tasks.values.construction.converters import create_converter_list
 
 
@@ -487,3 +494,67 @@ def test_setup_context_state_annotations_describe_dynamic_namespace_and_copy_con
     namespace_hints = get_type_hints(SetupContext._deepcopy_namespace)
     assert namespace_hints.get("memo") == dict[int, object]
     assert namespace_hints.get("return") == dict[str, object]
+
+
+
+
+def test_memstore_facade_manager_and_export_dispatch_share_canonical_classes() -> None:
+    context = _context(namespace={})
+    MemstoreTask(MemstoreStatement(MemstoreModel(id="mem"))).execute(context)
+    store = context.memstore_manager.get_memstore("mem")
+
+    assert context.namespace["mem"] is store
+    assert type(store) is Memstore
+    assert exporter_registry.Memstore is export_session_module.Memstore is Memstore
+    assert exporter_registry.Exporter is export_session_module.Exporter is Exporter
+    assert Memstore.__bases__ == (Exporter,)
+    assert Memstore.__mro__ == (Memstore, Exporter, object)
+    assert isinstance(store, Exporter)
+    for codec in (pickle, dill):
+        assert codec.loads(codec.dumps((Memstore, Exporter))) == (Memstore, Exporter)
+
+
+def test_setup_context_memstore_deepcopy_preserves_existing_manager_namespace_split() -> None:
+    context = _context(namespace={})
+    MemstoreTask(MemstoreStatement(MemstoreModel(id="mem"))).execute(context)
+    store = context.memstore_manager.get_memstore("mem")
+    context.namespace["alias"] = store
+    store.consume(("rows", [{"id": 1, "nested": []}]))
+
+    copied = copy.deepcopy(context)
+
+    assert copied.memstore_manager is context.memstore_manager
+    assert copied.memstore_manager.get_memstore("mem") is store
+    assert copied.namespace["mem"] is copied.namespace["alias"]
+    assert copied.namespace["mem"] is not store
+    copied.namespace["mem"].get_data_by_type("rows")[0]["nested"].append("copied")
+    assert store.get_data_by_type("rows") == [{"id": 1, "nested": []}]
+
+    restored = dill.loads(dill.dumps(copied))
+    assert restored.memstore_manager is not copied.memstore_manager
+    assert restored.namespace["mem"] is restored.namespace["alias"]
+    assert restored.namespace["mem"] is not restored.memstore_manager.get_memstore("mem")
+    assert type(restored.namespace["mem"]) is Memstore
+    assert restored.namespace["mem"].get_data_by_type("rows") == [{"id": 1, "nested": ["copied"]}]
+    assert restored.memstore_manager.get_memstore("mem").get_data_by_type("rows") == [{"id": 1, "nested": []}]
+
+
+@pytest.mark.parametrize("codec", [pickle, dill], ids=["pickle", "dill"])
+def test_registered_memstore_graph_serialization_preserves_internal_aliases(codec) -> None:
+    context = _context(namespace={})
+    MemstoreTask(MemstoreStatement(MemstoreModel(id="mem"))).execute(context)
+    store = context.memstore_manager.get_memstore("mem")
+    store.consume(("rows", [{"id": 1, "nested": []}]))
+    graph = {"manager": context.memstore_manager, "namespace": context.namespace, "store": store}
+
+    for restored in (copy.deepcopy(graph), codec.loads(codec.dumps(graph))):
+        restored_store = restored["store"]
+        assert restored_store is restored["namespace"]["mem"] is restored["manager"].get_memstore("mem")
+        assert restored_store is not store
+        assert type(restored_store) is Memstore
+        restored_store.get_data_by_type("rows")[0]["nested"].append("copied")
+        assert store.get_data_by_type("rows") == [{"id": 1, "nested": []}]
+
+
+# These are locally produced, same-checkpoint trusted serializations. The graph
+# round trip does not replace the actual SetupContext test or prove worker transport.

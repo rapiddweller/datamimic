@@ -161,7 +161,7 @@
         "datamimic_ce.engine.runtime.storage"
       ],
       "responsibilities": [
-        "Run/row storage primitives."
+        "Own run-scoped Memstore creation, registration and lookup by ID, and global increment counters."
       ],
       "forbidden_responsibilities": [
         "Schedule tasks or execute DSL expressions."
@@ -169,13 +169,7 @@
       "provenance": [
         "docs/architecture/inner/target.md"
       ],
-      "requires": [
-        {
-          "component": "contracts",
-          "rationale": "Storage uses runtime-owned value types.",
-          "decided_by": "agent"
-        }
-      ],
+      "requires": [],
       "public": [
         "datamimic_ce.engine.runtime.storage.global_increment:GlobalIncrementRegistry",
         "datamimic_ce.engine.runtime.storage.memstore_manager"

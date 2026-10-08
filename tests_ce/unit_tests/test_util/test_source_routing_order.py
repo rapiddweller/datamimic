@@ -22,7 +22,7 @@ from datamimic_ce.engine.io.data_sources.router import (
 )
 from datamimic_ce.engine.io.data_sources.selection import select_rows
 from datamimic_ce.engine.io.exporters.core import routing as io_exporter_routing
-from datamimic_ce.engine.io.exporters.memory.memstore import Memstore
+from datamimic_ce.engine.io.api import Memstore
 from datamimic_ce.engine.io.files.readers import weighted_csv_has_header
 from datamimic_ce.engine.runtime.tasks.sources import chunk_source_reader
 from datamimic_ce.engine.runtime.tasks.sources import generate as generate_source_router

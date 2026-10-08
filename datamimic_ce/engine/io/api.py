@@ -22,6 +22,7 @@ from datamimic_ce.engine.io.connection_config.properties import load_connection_
 from datamimic_ce.engine.io.connection_config.rdbms_connection_config import RdbmsConnectionConfig
 from datamimic_ce.engine.io.contracts import (
     DataSourcePagination,
+    Exporter,
     MemstoreSource,
     SmokeExportRequest,
 )
@@ -52,7 +53,6 @@ from datamimic_ce.engine.io.data_sources.selection import (
 from datamimic_ce.engine.io.data_sources.variable import read_variable_query, read_variable_source
 from datamimic_ce.engine.io.data_sources.weighted_data_source import WeightedDataSource
 from datamimic_ce.engine.io.data_sources.weighted_entity_data_source import WeightedEntityDataSource
-from datamimic_ce.engine.io.exporters.core.exporter import Exporter
 from datamimic_ce.engine.io.exporters.core.exporter_context import ExporterContext, MemstoreProvider
 from datamimic_ce.engine.io.exporters.core.routing import (
     has_mongodb_upsert_target,
@@ -64,7 +64,6 @@ from datamimic_ce.engine.io.exporters.lifecycle import (
     finalize_exporter_chunks,
     publish_exported_artifacts,
 )
-from datamimic_ce.engine.io.exporters.memory.memstore import Memstore
 from datamimic_ce.engine.io.exporters.registry import (
     buffered_exporter_names,
     capture_test_results,
@@ -72,6 +71,7 @@ from datamimic_ce.engine.io.exporters.registry import (
     smoke_export,
 )
 from datamimic_ce.engine.io.exporters.session import ExportSession
+from datamimic_ce.engine.io.memstore import Memstore
 
 __all__ = [
     "Client",

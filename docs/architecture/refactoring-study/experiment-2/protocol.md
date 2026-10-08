@@ -502,6 +502,21 @@ existing fixed Mongo configuration result. It preserves the native dictionary
 and separate client kwargs path; architecture permissions and open RDBMS payloads
 remain unchanged. Candidate verification is recorded in the amendment.
 
+[Amendment 168](amendment-168-memstore-data-owner.md) moves Memstore's raw storage
+and injected-client reconciliation to a distinct IO owner and its nominal marker
+to IO contracts. Preserve method/state/error behavior and the existing context
+copy split. No old-path shims; new module/serialization paths are disclosed.
+Step 141: nine-case and 122-case unit cohorts and six native cases (including
+SQLite) passed before/after. Integrated 38 physical/API/registry, 12 definition
+and four inner-target cases, Ruff, MyPy and pinned Pylint cycles passed.
+Global declared rules remain FAIL (89 violations, 200 unknown positions); the
+58 new baseline entries also occur at the original checkpoint. Machine amendment
+binding is OPEN: the writer produced no JSON. Astra reviewed and accepted the ten
+unamended classifications for this red checkpoint. The amendment records the
+exact command and remaining limits.
+Worker/historical compatibility, full DSL/EE acceptance and final-head CI remain
+open; no merge or baseline promotion.
+
 ## Agent separation
 
 - The implementation agent changes production code and targeted tests for one approved slice.

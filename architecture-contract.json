@@ -1175,11 +1175,13 @@
         "datamimic_ce.engine.io.contracts",
         "datamimic_ce.engine.io.data_sources",
         "datamimic_ce.engine.io.exporters",
-        "datamimic_ce.engine.io.files"
+        "datamimic_ce.engine.io.files",
+        "datamimic_ce.engine.io.memstore"
       ],
       "rationale": "Read, select, page and write external/in-memory data. Exact reviewed target children; no hidden extra modules.",
       "provenance": [
-        "docs/architecture/inner/structure-review.json"
+        "docs/architecture/inner/structure-review.json",
+        "docs/architecture/refactoring-study/experiment-2/amendment-168-memstore-data-owner.md"
       ],
       "decided_by": "agent"
     },

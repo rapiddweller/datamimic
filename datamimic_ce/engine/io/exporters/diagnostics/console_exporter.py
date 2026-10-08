@@ -4,7 +4,7 @@
 # See LICENSE file for the full text of the license.
 # For questions and support, contact: info@rapiddweller.com
 
-from datamimic_ce.engine.io.exporters.core.exporter import Exporter
+from datamimic_ce.engine.io.contracts import Exporter
 
 
 class ConsoleExporter(Exporter):

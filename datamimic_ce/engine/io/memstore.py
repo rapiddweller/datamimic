@@ -6,7 +6,7 @@
 
 import logging
 
-from datamimic_ce.engine.io.exporters.core.exporter import Exporter
+from datamimic_ce.engine.io.contracts import Exporter
 
 logger = logging.getLogger("DATAMIMIC")
 
@@ -80,8 +80,9 @@ class Memstore(Exporter):
 
     def removeNotExistingIds(self, product_type: str, id_col: str, ref_type: str, client) -> None:
         """Keep only the rows of `product_type` whose `id_col` value exists in `ref_type` as read
-        from an RDBMS `client` (migration parity: an inner-join filter). Mutates the stored rows in
-        place - no return value, matching the legacy imperative "remove" semantics. Both sides of
+        from an RDBMS `client` (migration parity: an inner-join filter). Replaces the outer stored list;
+        surviving row objects are retained.
+        No return value, matching the legacy imperative "remove" semantics. Both sides of
         the id comparison are string-coerced: `client`'s column is DB-typed (e.g. int), memstore
         rows sourced from CSV carry strings for the same logical id."""
         existing = {str(row[0]) for row in client.get_random_rows_by_columns(ref_type, [id_col])}

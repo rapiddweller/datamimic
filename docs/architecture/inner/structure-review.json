@@ -1864,10 +1864,6 @@
       "target": "engine/io/exporters/formats/dbunit_exporter.py"
     },
     {
-      "source": "engine/io/exporters/exporter.py",
-      "target": "engine/io/exporters/core/exporter.py"
-    },
-    {
       "source": "engine/io/exporters/exporter_config.py",
       "target": "engine/io/exporters/core/exporter_config.py"
     },
@@ -1893,7 +1889,7 @@
     },
     {
       "source": "engine/io/exporters/memstore.py",
-      "target": "engine/io/exporters/memory/memstore.py"
+      "target": "engine/io/memstore.py"
     },
     {
       "source": "engine/io/exporters/mongodb_exporter.py",
@@ -2235,10 +2231,6 @@
   ],
   "retained_over_seven": [
     {
-      "path": "engine/io/exporters",
-      "reason": "Shared primitives, four output families, target construction, worker page dispatch, and output completion are eight distinct owners. Session and lifecycle independently depend on registry; an extra grouping adds no ownership or dependency boundary."
-    },
-    {
       "path": "authoring/domain",
       "reason": "Eight distinct grammar, diagnostics and verdict-policy children. Acceptance and replay remain separate policies; a count-only folder adds no boundary and merging them creates a roughly 2,000-line mixed-policy module."
     },
@@ -2277,6 +2269,10 @@
     {
       "path": "engine/runtime/tasks/setup",
       "reason": "Ordered declarations/client registration/includes; not an eager preprocessing phase. These distinct owners remain together; a count-only wrapper adds no boundary."
+    },
+    {
+      "path": "engine/io",
+      "reason": "Eight distinct API, contracts, clients, connection settings, source selection, file access, exporters and mutable row-store owners. Reconciliation belongs to the row store; an extra hierarchy adds no boundary. See Amendment 168."
     }
   ],
   "removed_initializers": [
@@ -2348,6 +2344,14 @@
     }
   ],
   "merges": [
+    {
+      "sources": [
+        "engine/io/contracts.py",
+        "engine/io/exporters/exporter.py"
+      ],
+      "target": "engine/io/contracts.py",
+      "reason": "Existing IO contracts absorb the nominal marker shared by Memstore and exporters, avoiding a component cycle; the DSL contracts split remains separate."
+    },
     {
       "sources": [
         "domains/shared/utils/random_source.py",
@@ -2482,7 +2486,7 @@
     {"target": "engine/io/clients/client.py", "responsibility": "Provides the marker base class for database clients."},
     {"target": "engine/io/clients/entity_serialization.py", "responsibility": "Stringifies EntityValue instances before database writes."},
     {"target": "engine/io/clients/sql_dialect.py", "responsibility": "Builds dialect-aware count, column-probe, and page queries, and splits executable SQL scripts."},
-    {"target": "engine/io/contracts.py", "responsibility": "Defines context-free IO value types and the raw memstore read contract."},
+    {"target": "engine/io/contracts.py", "responsibility": "Defines context-free IO value types, the raw memstore read contract, and the nominal exporter marker."},
     {"target": "engine/io/data_sources/boundary/entities.py", "responsibility": "Resolves source entity and MongoDB collection names from descriptor fields at the IO boundary."},
     {"target": "engine/io/data_sources/boundary/models.py", "responsibility": "Defines typed source requests that carry resolved inputs without runtime context or statements."},
     {"target": "engine/io/data_sources/chunk_reader.py", "responsibility": "Selects unique or distributed rows from a loaded source pool and slices pages within one chunk."},
@@ -2491,7 +2495,6 @@
     {"target": "engine/io/clients/operations.py", "responsibility": "Owns typed client creation, queries, paging, RDBMS source-count failure translation, SQL scripts, sequences and disposal."},
     {"target": "engine/io/data_sources/variable.py", "responsibility": "Reads variable source pools or pages from resolved file, database, and memstore requests."},
     {"target": "engine/io/data_sources/weighted_entity_data_source.py", "responsibility": "Draws weighted entity dictionaries from a CSV source using the supplied RNG."},
-    {"target": "engine/io/exporters/core/exporter.py", "responsibility": "Provides the marker base class for exporter implementations."},
     {"target": "engine/io/exporters/core/exporter_state_manager.py", "responsibility": "Tracks each worker's exporter row counters and chunk index."},
     {"target": "engine/io/exporters/core/routing.py", "responsibility": "Resolves target entity names from metadata and detects MongoDB upsert targets."},
     {"target": "engine/io/exporters/core/serialization.py", "responsibility": "Converts XML-shaped dictionaries by dropping attribute keys and unwrapping text nodes."},
@@ -2520,6 +2523,7 @@
     {"target": "engine/runtime/tasks/values/construction/sequence_table.py", "responsibility": "Reserves and generates paginated values from relational sequence stores."},
     {"target": "engine/runtime/tasks/values/variable/task.py", "responsibility": "Executes variable statements by selecting their source mode and producing row values."},
     {"target": "randomness.py", "responsibility": "Defines the shared random-source protocol and a bell-shaped index sampler."},
-    {"target": "resources/examples/generate_people_demographics.py", "responsibility": "Demonstrates seeded person generation and demographic age constraints through PersonService."}
+    {"target": "resources/examples/generate_people_demographics.py", "responsibility": "Demonstrates seeded person generation and demographic age constraints through PersonService."},
+    {"target": "engine/io/memstore.py", "responsibility": "Stores raw run-scoped rows, aggregates them, and reconciles them through the caller-supplied client."}
   ]
 }

@@ -7,6 +7,10 @@ from pathlib import Path
 from typing import Protocol, TypedDict
 
 
+class Exporter:
+    pass
+
+
 class ExportMetadata(TypedDict, total=False):
     target_entity: str
     selector: str
@@ -64,6 +68,7 @@ class SmokeExportRequest:
 
 
 __all__ = [
+    "Exporter",
     "DataSourcePagination",
     "EntityValue",
     "ExportMetadata",

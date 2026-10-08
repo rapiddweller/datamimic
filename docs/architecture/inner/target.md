@@ -98,12 +98,13 @@ is a catch-all component.
           policies/             capability-based concurrency reduction; no services wrapper
     io/
       api.py  contracts.py
+      memstore.py               raw mutable rows, aggregation and injected-client reconciliation
       clients/                  connections, transport and vendor details
       connection_config/        typed connector settings
       data_sources/             read/count/selection/pagination policy
       files/                    narrow dataset API, readers and cache
       exporters/
-        core/  formats/  database/  memory/  diagnostics/
+        core/  formats/  database/  diagnostics/
         registry.py             exporter construction from target strings
         session.py              worker registration and page dispatch
         lifecycle.py            chunk finalization, artifact publication and temporary-file cleanup
@@ -140,9 +141,17 @@ is a catch-all component.
 DSL `flow/` uses the same branches/loops/commands families; DSL `values/`
 uses scalar/structured/references/variables families. These are grouping names,
 not a new DSL vocabulary. Keep model, parsing and statement layers separate.
-Exporters has eight deliberate owners: shared primitives, four output families,
+Exporters has seven deliberate owners: shared primitives, three output families,
 construction, worker page dispatch and completion. Session and lifecycle use
 registry independently; another grouping would add no boundary (amendment 86).
+IO retains eight distinct owners after separating the mutable Memstore from
+exporters. Runtime owns store registration/lifecycle; IO Memstore owns raw rows,
+aggregation and its existing caller-supplied client reconciliation. Generic source
+loading, paging and cyclic selection stay in IO/data_sources. The empty nominal
+Exporter marker lives in IO contracts to avoid a storage/exporter cycle.
+[Amendment 168](../refactoring-study/experiment-2/amendment-168-memstore-data-owner.md)
+records the exact no-shim move, changed Python module/serialization paths and
+separate behavior/worker acceptance. No old defining-module alias is retained.
 Every existing CE source scope, including namespace folders and initializer-only
 code, has a review entry; exact module moves take precedence over package moves.
 Unchanged leaf modules stay with their reviewed owner. Non-Python datasets keep

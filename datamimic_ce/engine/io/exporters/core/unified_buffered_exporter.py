@@ -5,7 +5,7 @@ import time
 from abc import ABC, abstractmethod
 from pathlib import Path
 
-from datamimic_ce.engine.io.exporters.core.exporter import Exporter
+from datamimic_ce.engine.io.contracts import Exporter
 from datamimic_ce.engine.io.exporters.core.exporter_config import ExporterConfig
 from datamimic_ce.engine.io.exporters.core.exporter_state_manager import ExporterStateManager
 

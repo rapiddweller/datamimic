@@ -112,6 +112,16 @@ graph TD
     runtime --> randomness
 ```
 
+## Memstore ownership correction
+
+[Amendment 168](amendment-168-memstore-data-owner.md) separates mutable stored rows
+from exporter dispatch: `engine.io.memstore` owns raw storage, aggregation and
+its existing injected-client reconciliation; Runtime retains store lifecycle.
+The shared nominal Exporter marker belongs to IO contracts. Generic source
+loading/selection stays in IO data_sources; exporters retain their source-read
+prohibition. Eight cohesive IO owners and seven exporter children need no
+additional hierarchy. Old defining modules are removed without shims.
+
 ## Completion evidence
 
 Physical layout, semantic target, observed conformance, report UX, and behavior are separate

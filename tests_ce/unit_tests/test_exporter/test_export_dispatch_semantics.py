@@ -19,7 +19,7 @@ from datamimic_ce.engine.dsl.model.generation.generate_model import GenerateMode
 from datamimic_ce.engine.io.api import ExportSession, buffered_exporter_names
 from datamimic_ce.engine.io.exporters import registry as exporter_registry
 from datamimic_ce.engine.io.exporters import session as export_session_module
-from datamimic_ce.engine.io.exporters.core.exporter import Exporter
+from datamimic_ce.engine.io.api import Exporter
 from datamimic_ce.engine.io.exporters.core.exporter_config import ExporterConfig
 from datamimic_ce.engine.io.exporters.database.mongodb_exporter import MongoDBExporter
 from datamimic_ce.engine.io.exporters.diagnostics.console_exporter import ConsoleExporter

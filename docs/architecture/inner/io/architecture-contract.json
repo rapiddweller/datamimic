@@ -64,7 +64,7 @@
       },
       {
         "path": "datamimic_ce/engine/io/contracts.py",
-        "responsibility": "Defines context-free IO value types and the raw memstore read contract."
+        "responsibility": "Defines context-free IO value types, the raw memstore read contract, and the nominal exporter marker."
       },
       {
         "path": "datamimic_ce/engine/io/data_sources/__init__.py",
@@ -113,6 +113,10 @@
       {
         "path": "datamimic_ce/engine/io/files/readers.py",
         "responsibility": "This module reads supported file formats and returns typed dataset and source rows."
+      },
+      {
+        "path": "datamimic_ce/engine/io/memstore.py",
+        "responsibility": "Stores raw run-scoped rows, aggregates them, and reconciles them through the caller-supplied client."
       }
     ]
   },
@@ -134,7 +138,8 @@
         "Own connectors, source loading, or output writes."
       ],
       "provenance": [
-        "docs/architecture/inner/target.md"
+        "docs/architecture/inner/target.md",
+        "docs/architecture/refactoring-study/experiment-2/amendment-168-memstore-data-owner.md"
       ],
       "requires": [
         {
@@ -161,6 +166,11 @@
           "component": "connection_config",
           "rationale": "Use resolved connector settings and on-demand property loading.",
           "decided_by": "agent"
+        },
+        {
+          "component": "memstore",
+          "rationale": "Publish the canonical Memstore through the existing IO facade.",
+          "decided_by": "agent"
         }
       ],
       "public": [
@@ -183,19 +193,21 @@
         "datamimic_ce.engine.io.contracts"
       ],
       "responsibilities": [
-        "Context-free IO value types for paging, raw memstore reads, and export requests."
+        "Context-free IO value types and the nominal exporter marker for paging, raw memstore reads and export requests."
       ],
       "forbidden_responsibilities": [
         "Instantiate clients or execute reads and writes."
       ],
       "provenance": [
-        "docs/architecture/inner/target.md"
+        "docs/architecture/inner/target.md",
+        "docs/architecture/refactoring-study/experiment-2/amendment-168-memstore-data-owner.md"
       ],
       "requires": [],
       "public": [
         "datamimic_ce.engine.io.contracts",
         "datamimic_ce.engine.io.contracts:EntityValue",
-        "datamimic_ce.engine.io.contracts:SqlScriptClient"
+        "datamimic_ce.engine.io.contracts:SqlScriptClient",
+        "datamimic_ce.engine.io.contracts:Exporter"
       ],
       "decided_by": "agent"
     },
@@ -322,7 +334,8 @@
         "Read source rows or execute runtime tasks."
       ],
       "provenance": [
-        "docs/architecture/inner/target.md"
+        "docs/architecture/inner/target.md",
+        "docs/architecture/refactoring-study/experiment-2/amendment-168-memstore-data-owner.md"
       ],
       "requires": [
         {
@@ -339,10 +352,14 @@
           "component": "files",
           "rationale": "File targets use the IO file implementation.",
           "decided_by": "agent"
+        },
+        {
+          "component": "memstore",
+          "rationale": "Registry and session use the canonical row store for named in-memory targets.",
+          "decided_by": "agent"
         }
       ],
       "public": [
-        "datamimic_ce.engine.io.exporters.core.exporter:Exporter",
         "datamimic_ce.engine.io.exporters.core.exporter_context:ExporterContext",
         "datamimic_ce.engine.io.exporters.core.exporter_context:MemstoreProvider",
         "datamimic_ce.engine.io.exporters.core.routing:resolve_target_entity",
@@ -355,7 +372,6 @@
         "datamimic_ce.engine.io.exporters.lifecycle:cleanup_exporter_chunks",
         "datamimic_ce.engine.io.exporters.registry:buffered_exporter_names",
         "datamimic_ce.engine.io.exporters.registry:smoke_export",
-        "datamimic_ce.engine.io.exporters.memory.memstore:Memstore",
         "datamimic_ce.engine.io.exporters.diagnostics.test_result_exporter:TestResultExporter"
       ],
       "decided_by": "agent",
@@ -384,6 +400,34 @@
         "datamimic_ce.engine.io.files.readers",
         "datamimic_ce.engine.io.files.readers:is_json_object",
         "datamimic_ce.engine.io.files.readers:is_json_records"
+      ],
+      "decided_by": "agent"
+    },
+    {
+      "id": "IO-MEMSTORE",
+      "label": "memstore",
+      "role": "component",
+      "packages": [
+        "datamimic_ce.engine.io.memstore"
+      ],
+      "responsibilities": [
+        "Own mutable run-scoped rows, raw access, aggregation and reconciliation using the caller-supplied client query."
+      ],
+      "forbidden_responsibilities": [
+        "Construct connectors, implement SQL, load generic sources, choose exporters or own Runtime store lifecycle."
+      ],
+      "provenance": [
+        "docs/architecture/refactoring-study/experiment-2/amendment-168-memstore-data-owner.md"
+      ],
+      "requires": [
+        {
+          "component": "contracts",
+          "rationale": "Memstore derives from the shared nominal exporter marker.",
+          "decided_by": "agent"
+        }
+      ],
+      "public": [
+        "datamimic_ce.engine.io.memstore:Memstore"
       ],
       "decided_by": "agent"
     }
@@ -506,13 +550,13 @@
         "datamimic_ce.engine.io.exporters.diagnostics",
         "datamimic_ce.engine.io.exporters.formats",
         "datamimic_ce.engine.io.exporters.lifecycle",
-        "datamimic_ce.engine.io.exporters.memory",
         "datamimic_ce.engine.io.exporters.registry",
         "datamimic_ce.engine.io.exporters.session"
       ],
       "rationale": "Output routing, serialization and write adapters. Exact reviewed target children; no hidden extra modules.",
       "provenance": [
-        "docs/architecture/inner/structure-review.json"
+        "docs/architecture/inner/structure-review.json",
+        "docs/architecture/refactoring-study/experiment-2/amendment-168-memstore-data-owner.md"
       ],
       "decided_by": "agent"
     },

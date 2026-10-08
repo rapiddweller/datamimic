@@ -23,8 +23,7 @@ from datamimic_ce.engine.dsl.vocabulary.enums.operation_enums import ExportOpera
 from datamimic_ce.engine.io.clients.client import RegisteredClient
 from datamimic_ce.engine.io.clients.mongodb_client import MongoDBClient
 from datamimic_ce.engine.io.clients.rdbms_client import RdbmsClient
-from datamimic_ce.engine.io.contracts import SmokeExportRequest
-from datamimic_ce.engine.io.exporters.core.exporter import Exporter
+from datamimic_ce.engine.io.contracts import Exporter, SmokeExportRequest
 from datamimic_ce.engine.io.exporters.core.exporter_config import ExporterConfig
 from datamimic_ce.engine.io.exporters.core.exporter_context import ExporterContext
 from datamimic_ce.engine.io.exporters.core.exporter_state_manager import ExporterStateManager
@@ -42,7 +41,7 @@ from datamimic_ce.engine.io.exporters.formats.json_exporter import JsonExporter
 from datamimic_ce.engine.io.exporters.formats.txt_exporter import TXTExporter
 from datamimic_ce.engine.io.exporters.formats.xlsx_exporter import XLSXExporter
 from datamimic_ce.engine.io.exporters.formats.xml_exporter import XMLExporter
-from datamimic_ce.engine.io.exporters.memory.memstore import Memstore
+from datamimic_ce.engine.io.memstore import Memstore
 
 _BufferedExporterFactory = Callable[[ExporterConfig, dict], UnifiedBufferedExporter]
 _BUFFERED_EXPORTERS: dict[str, _BufferedExporterFactory] = {

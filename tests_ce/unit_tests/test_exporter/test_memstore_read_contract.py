@@ -4,7 +4,7 @@ import pytest
 
 from datamimic_ce.engine.io.contracts import DataSourcePagination
 from datamimic_ce.engine.io.data_sources.router import read_generate_memstore_source
-from datamimic_ce.engine.io.exporters.memory.memstore import Memstore
+from datamimic_ce.engine.io.api import Memstore
 
 
 def test_raw_getter_returns_live_list_and_distinguishes_empty_from_missing() -> None:

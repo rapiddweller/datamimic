@@ -2,7 +2,7 @@ from pathlib import Path
 from typing import Protocol
 
 from datamimic_ce.engine.io.clients.client import ClientNames, RegisteredClient
-from datamimic_ce.engine.io.exporters.core.exporter import Exporter
+from datamimic_ce.engine.io.contracts import Exporter
 
 
 class MemstoreProvider(Protocol):
