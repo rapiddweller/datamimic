@@ -481,6 +481,10 @@ native exception without a redundant log; no other error or gate changes.
 scope hint under a dated projection decision. Native resolution and error messages
 remain unchanged; no oracle or architecture allowance changes.
 
+[Step 130](step-130-original-determinism.md) records original/current owner tests
+and eleven three-way seeded digest equalities. Five unseeded strict gaps and
+full931 acceptance remain open; no target or oracle changes.
+
 ## Agent separation
 
 - The implementation agent changes production code and targeted tests for one approved slice.
