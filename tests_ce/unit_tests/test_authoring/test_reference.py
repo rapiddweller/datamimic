@@ -51,6 +51,14 @@ def test_reference_targets_come_from_registry() -> None:
     assert all(name in text for name in buffered_exporter_names())
 
 
+def test_execute_target_capability_documents_sql_client_path() -> None:
+    target = capabilities_manifest()["elements"]["execute"]["attributes"]["target"]
+    assert target["description"] == (
+        "Client id to run the script against, required for type='sql' (e.g. a <database> id); "
+        "ctx.root.clients[target].execute_sql_script(...) executes the SQL text."
+    )
+
+
 def test_element_reference_uses_registered_schema() -> None:
     text = reference(ReferenceTopic.ELEMENT, "generate")
     assert "Attributes:" in text and "Children:" in text

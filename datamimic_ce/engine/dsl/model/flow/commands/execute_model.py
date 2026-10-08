@@ -40,7 +40,8 @@ class ExecuteModel(BaseModel):
     )
     target: str | None = Field(
         None,
-        description="Client id to run SQL against, required for type='sql' (for example a <database> id).",
+        description="Client id to run the script against, required for type='sql' (e.g. a <database> id); "
+        "ctx.root.clients[target].execute_sql_script(...) executes the SQL text.",
         examples=["sourceDB"],
     )
     type: str | None = Field(
