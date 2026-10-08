@@ -7,7 +7,7 @@ from collections.abc import Mapping
 
 from datamimic_ce.engine.dsl.vocabulary.constants.attribute_constants import META_TARGET_ENTITY, META_TYPE
 from datamimic_ce.engine.dsl.vocabulary.enums.operation_enums import ExportOperation
-from datamimic_ce.engine.io.clients.client import RegisteredClient
+from datamimic_ce.engine.io.clients.client import ClientLookup
 from datamimic_ce.engine.io.clients.operations import is_mongodb_client
 from datamimic_ce.engine.io.contracts import ExportMetadata
 
@@ -23,7 +23,7 @@ def resolve_target_entity_from_metadata(name: str, metadata: ExportMetadata | Ma
     return resolve_target_entity(md.get(META_TARGET_ENTITY), md.get(META_TYPE), name)
 
 
-def has_mongodb_upsert_target(targets: set[str], clients: Mapping[str, RegisteredClient]) -> bool:
+def has_mongodb_upsert_target(targets: set[str], clients: ClientLookup) -> bool:
     for target in targets:
         if "." in target:
             consumer, operation = target.split(".", 1)

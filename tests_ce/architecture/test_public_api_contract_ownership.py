@@ -28,6 +28,16 @@ def test_cli_and_mcp_remain_commands_without_component_local_public_apis() -> No
     assert _component(interfaces, "TRANSPORT-MCP").get("public", []) == []
 
 
+def test_client_lookup_is_declared_at_io_boundary_and_owned_by_clients() -> None:
+    symbol = "datamimic_ce.engine.io.clients.client:ClientLookup"
+    root = _read_contract(ROOT / "architecture-contract.json")
+    assert _component(root, "COMP-IO")["public"].count(symbol) == 1
+    assert symbol not in root["declarations"]["public_api"]
+    assert all(symbol not in component["public"] for component in root["components"] if component["id"] != "COMP-IO")
+    io = _read_contract(ROOT / "docs/architecture/inner/io/architecture-contract.json")
+    assert symbol.split(":", 1)[0] in _component(io, "IO-CLIENTS")["public"]
+
+
 def test_generate_domain_is_root_public_api_and_domain_api_sibling_stays_public() -> None:
     symbol = "datamimic_ce.domains.facade:generate_domain"
     return_alias = "datamimic_ce.domains.domain_core.contracts.json_types:JsonObject"

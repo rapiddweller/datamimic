@@ -5,6 +5,7 @@
 # For questions and support, contact: info@rapiddweller.com
 
 from abc import ABC
+from typing import Protocol
 
 from datamimic_ce.engine.io.contracts import SqlScriptClient
 
@@ -14,3 +15,7 @@ class Client(ABC):  # noqa: B024
 
 
 RegisteredClient = Client | SqlScriptClient
+
+
+class ClientLookup(Protocol):
+    def get(self, key: str, /) -> RegisteredClient | None: ...

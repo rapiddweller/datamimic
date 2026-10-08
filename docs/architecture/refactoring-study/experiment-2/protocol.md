@@ -465,6 +465,10 @@ When the first real function is added to an API module, the same commit adds tha
 `boundary_types` rule. The rule then remains mandatory. This is a narrowing, not permission to
 change the target.
 
+[Amendment 161](amendment-161-client-lookup-boundary.md) declares the exact
+client lookup Protocol at the root IO boundary. Existing registry arguments,
+Runtime calls and routing behavior remain unchanged; no allowance is added.
+
 ## Agent separation
 
 - The implementation agent changes production code and targeted tests for one approved slice.

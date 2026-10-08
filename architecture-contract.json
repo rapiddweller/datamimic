@@ -228,7 +228,8 @@
         "task orchestration"
       ],
       "provenance": [
-        "docs/architecture/refactoring-study/experiment-2/target-architecture.md"
+        "docs/architecture/refactoring-study/experiment-2/target-architecture.md",
+        "docs/architecture/refactoring-study/experiment-2/amendment-161-client-lookup-boundary.md"
       ],
       "requires": [
         {
@@ -253,7 +254,8 @@
         "datamimic_ce.engine.io.contracts",
         "datamimic_ce.engine.io.contracts:EntityValue",
         "datamimic_ce.engine.io.contracts:SqlScriptClient",
-        "datamimic_ce.engine.io.files.api"
+        "datamimic_ce.engine.io.files.api",
+        "datamimic_ce.engine.io.clients.client:ClientLookup"
       ],
       "planned": [],
       "decided_by": "agent"
