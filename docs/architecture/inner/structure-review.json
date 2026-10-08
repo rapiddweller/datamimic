@@ -617,8 +617,7 @@
       ],
       "target": "engine",
       "disposition": "retain",
-      "rationale": "Single responsibility; retain owner-local modules. Public crossings use the enclosing contract.",
-      "initializer_owner": "engine"
+      "rationale": "Single responsibility; retain owner-local modules. Public crossings use the enclosing contract."
     },
     {
       "path": "engine/dsl",
@@ -2276,6 +2275,10 @@
     }
   ],
   "removed_initializers": [
+    {
+      "source": "engine/__init__.py",
+      "reason": "Empty grouping marker; DSL, IO and Runtime retain their own modules under an implicit Engine namespace."
+    },
     {
       "source": "interfaces/__init__.py",
       "reason": "Docstring-only grouping marker; CLI, MCP and Python adapters retain their concrete owners in the existing namespace package."

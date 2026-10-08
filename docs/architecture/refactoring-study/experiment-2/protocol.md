@@ -575,8 +575,17 @@ No ledger promotion or full DSL/EE/worker/serialization acceptance.
 
 Step 146: Amendment 170 changes only the two responsibility sentences. Source, public
 interfaces, dependency grants, selectors, rules, baseline, oracle and agent labels are
-unchanged. Exact-commit CI remains pending. Parent introspection, EE/other Python versions, full DSL/worker
+unchanged. Prior `7c152d47` push/PR CI each completed with 24 successful jobs, two
+architecture failures and two skips. Parent introspection, EE/other Python versions, full DSL/worker
 compatibility and machine binding (#415) remain UNKNOWN.
+
+Step 147: [Amendment 171](amendment-171-engine-namespace.md) retains the regular
+root and removes only the empty Engine marker. Independent QA accepted the bounded
+installed-wheel pair and local checks. Global FAIL and the root ownership gap
+remain; one declarations widening is unbound, machine binding OPEN (#415).
+Final-head CI is pending. External discovery, whole leaf environment, other Python
+versions, EE and full DSL/worker compatibility remain UNKNOWN; detailed proof and
+limits live in Amendment171. No broader semantic acceptance or ledger promotion.
 
 ## Agent separation
 

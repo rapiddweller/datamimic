@@ -31,8 +31,11 @@ CLI and MCP executable startup load only the startup cwd `.env` with
 prepare their own environment. Runtime settings resolve on use. Descriptor
 `.env.properties` lookup remains separate. This deliberately changes the old
 import-time bootstrap behavior ([Amendment 68](../refactoring-study/experiment-2/amendment-68.md)).
-The empty `engine/__init__.py` is namespace scaffolding; neither initializer
-is a catch-all component.
+The regular root package remains the installed-distribution origin anchor. Engine
+is an implicit grouping namespace; DSL, IO and Runtime retain their own modules.
+Neither grouping introduces a catch-all component. External Engine introspection/discovery compatibility,
+other Python versions and EE packaging remain UNKNOWN
+([Amendment 171](../refactoring-study/experiment-2/amendment-171-engine-namespace.md)).
 Interfaces is an implicit grouping namespace; CLI, MCP, demo, project and Python
 retain their existing owners. Active CLI/MCP initializers and descendant entrypoints
 remain. Parent package introspection changes; external discovery compatibility and

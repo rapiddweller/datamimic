@@ -1392,10 +1392,6 @@
         "responsibility": "This module provides String Enum and exhaustiveness helpers for older Python versions."
       },
       {
-        "path": "datamimic_ce/engine/__init__.py",
-        "responsibility": "The package marks the engine namespace without adding engine logic."
-      },
-      {
         "path": "datamimic_ce/randomness.py",
         "responsibility": "Defines the shared random-source protocol and a bell-shaped index sampler."
       },

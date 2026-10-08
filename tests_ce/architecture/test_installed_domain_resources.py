@@ -29,6 +29,7 @@ from importlib.metadata import distribution
 from pathlib import Path
 
 import datamimic_ce
+import datamimic_ce.engine as engine
 import datamimic_ce.interfaces as interfaces
 import datamimic_ce.interfaces.cli as cli
 import datamimic_ce.interfaces.mcp as mcp
@@ -44,6 +45,9 @@ from datamimic_ce.interfaces.mcp.server import create_server as defined_server, 
 from datamimic_ce.interfaces.python.datamimic import DataMimic
 from datamimic_ce.interfaces.python.data_mimic_test import DataMimicTest
 from datamimic_ce.interfaces.python.factory import DataMimicTestFactory
+import datamimic_ce.engine.dsl.api as dsl_api
+import datamimic_ce.engine.io.api as io_api
+import datamimic_ce.engine.runtime.api as runtime_api
 from datamimic_ce.resources.api import demo_root
 
 assert app is defined_app and create_server is defined_server and mount_mcp is defined_mount
@@ -52,7 +56,10 @@ for cls, module in [(DataMimic, "datamimic"), (DataMimicTest, "data_mimic_test")
 entrypoints = {entry.name: entry for entry in distribution("datamimic_ce").entry_points}
 assert entrypoints["datamimic"].load() is cli_main
 assert entrypoints["datamimic-mcp"].load() is mcp_main
+assert datamimic_ce.__file__ is not None
 installed_root = Path(datamimic_ce.__file__).resolve().parent.parent
+assert list(engine.__path__) == [str(installed_root / "datamimic_ce" / "engine")]
+assert callable(dsl_api.DescriptorParser) and callable(io_api.Memstore) and callable(runtime_api.create_run_session)
 from datamimic_ce.domains.domain_core.datasets.path import dataset_path
 from datamimic_ce.domains.registry.schema import load_schema
 from datamimic_ce.domains.shared.literal_generators.person.given_name_generator import GivenNameGenerator
@@ -62,6 +69,8 @@ result = {
     "package": str(Path(datamimic_ce.__file__).resolve()),
     "interfaces_path": str(Path(next(iter(interfaces.__path__))).resolve()),
     "interfaces_namespace": str(interfaces.__file__ is None),
+    "engine_path": str(Path(next(iter(engine.__path__))).resolve()),
+    "engine_namespace": str(engine.__file__ is None),
     "demo_resource": str(demo_root().joinpath("demo-ecommerce", "datamimic.xml").is_file()),
     "dataset": str(dataset.resolve()),
     "dataset_exists": str(dataset.is_file()),
@@ -142,6 +151,8 @@ def test_moved_domain_resources_work_from_an_installed_wheel(tmp_path: Path) -> 
 
     assert Path(installed["interfaces_path"]) == installation / "datamimic_ce" / "interfaces"
     assert installed["interfaces_namespace"] == str(not (PACKAGE / "interfaces" / "__init__.py").exists())
+    assert Path(installed["engine_path"]) == installation / "datamimic_ce" / "engine"
+    assert installed["engine_namespace"] == str(not (PACKAGE / "engine" / "__init__.py").exists())
     assert installed["demo_resource"] == "True"
     environment = dict(os.environ, PYTHONPATH=str(installation))
     for command in ["datamimic", "datamimic-mcp"]:
