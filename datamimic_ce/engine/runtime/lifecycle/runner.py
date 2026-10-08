@@ -50,7 +50,6 @@ class RuntimeRunSession:
                 break
 
         if entity_stmt is None:
-            logger.error(f"Entity name '{factory_config.entity_name}' not found in the XML model")
             raise ValueError(f"Entity name '{factory_config.entity_name}' not found in the XML model")
 
         if entity_stmt.count is not None:

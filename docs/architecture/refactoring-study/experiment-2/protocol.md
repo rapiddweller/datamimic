@@ -473,6 +473,10 @@ Runtime calls and routing behavior remain unchanged; no allowance is added.
 client names Protocol at the root IO boundary. Exporter dispatch and diagnostics
 remain unchanged; no allowance is added.
 
+[Amendment 163](amendment-163-factory-error-log-ownership.md) gives the execution
+boundary one ERROR record for a missing factory entity. Validation retains its
+native exception without a redundant log; no other error or gate changes.
+
 ## Agent separation
 
 - The implementation agent changes production code and targeted tests for one approved slice.
