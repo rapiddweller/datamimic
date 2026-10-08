@@ -72,6 +72,7 @@ exported_data/
 
 # Test artifacts
 test_artifacts/
+/test-artifacts/
 
 # Environment configuration
 

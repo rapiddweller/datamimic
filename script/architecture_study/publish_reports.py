@@ -4,6 +4,7 @@ import argparse
 import html
 import json
 import re
+import shutil
 import stat
 import zipfile
 from pathlib import Path
@@ -110,10 +111,6 @@ def publish(archive: Path, site: Path, event: dict, prs: list[dict]) -> str:
                     page(f'<meta http-equiv="refresh" content="0;url={link}"><a href="{link}">PR #{number} review</a>'),
                     encoding="utf-8",
                 )
-    # ponytail: one complete Pages tree; fail visibly at the hosting limit, never discard history.
-    size = sum(path.stat().st_size for path in site.rglob("*") if path.is_file() and path.name != ".git")
-    if size > 900 * 1024 * 1024:
-        raise ValueError("Pages archive exceeds 900 MiB; report history was not deleted")
     links = sorted(
         site.glob("runs/*/*/metadata.json"), key=lambda path: tuple(map(int, path.parts[-3:-1])), reverse=True
     )
@@ -133,6 +130,61 @@ def publish(archive: Path, site: Path, event: dict, prs: list[dict]) -> str:
     return relative + "/"
 
 
+def project_pages(archive: Path, output: Path, current: str, open_prs: list[int]) -> None:
+    """Keep interactive history online; large historical evidence remains in Git."""
+    full = {current.rstrip("/")}
+    for number in open_prs:
+        latest = archive / "pr" / str(number) / "metadata.json"
+        if latest.exists():
+            identity = json.loads(latest.read_text())
+            full.add(f"runs/{identity['run_id']}/{identity['run_attempt']}")
+
+    def ignored(path: str, names: list[str]) -> set[str]:
+        relative = Path(path).relative_to(archive).as_posix()
+        excluded = {".git"}
+        if re.fullmatch(r"runs/[0-9]+/[0-9]+", relative) and relative not in full:
+            excluded.update({"architecture.json", "architecture.detail.html"})
+        return set(names) & excluded
+
+    shutil.copytree(archive, output, ignore=ignored)
+    for run in output.glob("runs/*/*"):
+        relative = str(run.relative_to(output))
+        if relative in full:
+            continue
+        raw = f"https://raw.githubusercontent.com/rapiddweller/datamimic/architecture-reports/{relative}/"
+        report_path = run / "architecture.report.html"
+        report = report_path.read_text(encoding="utf-8")
+
+        def update_links(match: re.Match, raw_url: str = raw) -> str:
+            data = json.loads(match[2])
+            data["atlas"]["architecture_href"] = raw_url + "architecture.json"
+            # Full-detail routes retain their fragments and open an explicit download page.
+            data["atlas"]["detail_page"] = "architecture.detail.html"
+            return match[1] + json.dumps(data, separators=(",", ":")).replace("<", "\\u003c") + match[3]
+
+        report = re.sub(
+            r'(<script\b[^>]*\bid="flow-data"[^>]*>)(.*?)(</script>)', update_links, report, flags=re.DOTALL
+        )
+        report = report.replace('href="architecture.json"', f'href="{raw}architecture.json"')
+        banner = '<aside role="note">Historical review: JSON and full detail are archived downloads.</aside>'
+        report_path.write_text(report.replace("<body>", "<body>" + banner, 1), encoding="utf-8")
+        (run / "index.html").write_text(
+            (run / "index.html").read_text().replace('href="architecture.json"', f'href="{raw}architecture.json"'),
+            encoding="utf-8",
+        )
+        (run / "architecture.detail.html").write_text(
+            page(
+                "<h1>Historical full detail</h1><p>The original evidence is unchanged in the report archive.</p>"
+                f'<p><a href="{raw}architecture.detail.html" download>Download original full-detail HTML</a></p>'
+                "<p>Save the file and open it locally for its full drill-down view.</p>"
+            ),
+            encoding="utf-8",
+        )
+    # ponytail: native Pages has a finite site budget; fail visibly rather than delete evidence.
+    if sum(path.stat().st_size for path in output.rglob("*") if path.is_file()) > 900 * 1024 * 1024:
+        raise ValueError("Pages projection exceeds 900 MiB; original report history was not deleted")
+
+
 def page(body: str) -> str:
     return (
         '<!doctype html><html lang="en"><meta charset="utf-8"><title>DATAMIMIC architecture review</title><body>'
@@ -147,5 +199,9 @@ if __name__ == "__main__":
     parser.add_argument("--site", type=Path, required=True)
     parser.add_argument("--event", type=Path, required=True)
     parser.add_argument("--prs", type=Path, required=True)
+    parser.add_argument("--pages", type=Path, required=True)
+    parser.add_argument("--open-prs", type=Path, required=True)
     args = parser.parse_args()
-    print(publish(args.archive, args.site, json.loads(args.event.read_text()), json.loads(args.prs.read_text())))
+    current = publish(args.archive, args.site, json.loads(args.event.read_text()), json.loads(args.prs.read_text()))
+    project_pages(args.site, args.pages, current, json.loads(args.open_prs.read_text()))
+    print(current)

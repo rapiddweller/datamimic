@@ -55,6 +55,8 @@ jobs:
           gh api "repos/$REPOSITORY/actions/artifacts/$artifact/zip" > "$RUNNER_TEMP/report.zip"
           gh api "repos/$REPOSITORY/commits/$SOURCE_SHA/pulls" --paginate --slurp \
             --jq 'add' > "$RUNNER_TEMP/prs.json"
+          gh api "repos/$REPOSITORY/pulls?state=open&per_page=100" --paginate --slurp \
+            --jq 'add | map(.number)' > "$RUNNER_TEMP/open-prs.json"
           echo "available=true" >> "$GITHUB_OUTPUT"
 
       - name: Restore persistent report history
@@ -79,7 +81,8 @@ jobs:
         run: |
           python3 script/architecture_study/publish_reports.py \
             --event "$GITHUB_EVENT_PATH" --archive "$RUNNER_TEMP/report.zip" \
-            --site "$SITE" --prs "$RUNNER_TEMP/prs.json"
+            --site "$SITE" --prs "$RUNNER_TEMP/prs.json" \
+            --pages "$RUNNER_TEMP/architecture-pages" --open-prs "$RUNNER_TEMP/open-prs.json"
           git -C "$SITE" add --all
           if ! git -C "$SITE" diff --cached --quiet; then
             git -C "$SITE" commit -m "Archive architecture review $SOURCE_RUN/$SOURCE_ATTEMPT"
@@ -90,7 +93,7 @@ jobs:
         if: steps.evidence.outputs.available == 'true'
         uses: actions/upload-pages-artifact@v4
         with:
-          path: ${{ runner.temp }}/architecture-site
+          path: ${{ runner.temp }}/architecture-pages
 
   deploy:
     needs: archive

@@ -1,7 +1,9 @@
 """Publish reports without losing red results, provenance, or older reviews."""
 
+import hashlib
 import importlib.util
 import json
+import re
 import stat
 import zipfile
 from pathlib import Path
@@ -80,6 +82,14 @@ def replace_member(path, name, content, mode=None):
 
 def tree_bytes(path):
     return {item.relative_to(path).as_posix(): item.read_bytes() for item in path.rglob("*") if item.is_file()}
+
+
+def tree_digests(path):
+    return {
+        item.relative_to(path).as_posix(): hashlib.sha256(item.read_bytes()).hexdigest()
+        for item in path.rglob("*")
+        if item.is_file()
+    }
 
 
 def test_red_report_is_downloadable_and_history_survives_stale_run(tmp_path):
@@ -247,3 +257,128 @@ def test_older_attempt_does_not_replace_pr_latest(tmp_path):
     assert (site / "pr/274/index.html").read_bytes() == latest_before
     assert "runs/10/2/" in latest_before.decode()
     assert (site / "runs/10/1/index.html").exists()
+
+
+def test_pages_keeps_current_details_and_archived_reviews_without_changing_evidence(tmp_path):
+    module = publisher()
+    site = tmp_path / "archive"
+    first = event()
+    path = archive(tmp_path / "old.zip", first)
+    projection = {
+        "atlas": {"architecture_href": "architecture.json", "detail_page": "architecture.detail.html"},
+        "components": [{"id": "runtime", "responsibility": "Execute statements."}],
+    }
+    report = '<html><body><script id="flow-data" type="application/json">' + json.dumps(projection) + "</script></body>"
+    replace_member(path, "architecture.report.html", report.encode())
+    module.publish(path, site, first, [])
+    second = event(11, sha="b" * 40)
+    module.publish(
+        archive(tmp_path / "current.zip", second), site, second, [{"number": 274, "head": {"sha": "b" * 40}}]
+    )
+    original = tree_bytes(site)
+    output = tmp_path / "pages"
+
+    module.project_pages(site, output, "runs/11/1/", [274])
+
+    assert tree_bytes(site) == original
+    assert (output / "runs/11/1/architecture.detail.html").read_bytes() == original[
+        "runs/11/1/architecture.detail.html"
+    ]
+    historical = (output / "runs/10/1/architecture.report.html").read_text()
+    assert "Historical review" in historical
+    assert "Execute statements." in historical
+    assert (
+        "https://raw.githubusercontent.com/rapiddweller/datamimic/architecture-reports/runs/10/1/architecture.json"
+        in historical
+    )
+    assert not (output / "runs/10/1/architecture.json").exists()
+    landing = (output / "runs/10/1/architecture.detail.html").read_text()
+    assert "Download" in landing
+    assert "raw.githubusercontent.com" in landing
+
+
+def test_open_pr_latest_keeps_full_detail_when_another_run_is_current(tmp_path):
+    module = publisher()
+    site = tmp_path / "archive"
+    first = event()
+    module.publish(archive(tmp_path / "pr.zip", first), site, first, [{"number": 274, "head": {"sha": SHA}}])
+    second = event(11, sha="b" * 40)
+    module.publish(archive(tmp_path / "other.zip", second), site, second, [])
+    output = tmp_path / "pages"
+
+    module.project_pages(site, output, "runs/11/1/", [274])
+
+    assert (output / "runs/10/1/architecture.json").read_bytes() == (site / "runs/10/1/architecture.json").read_bytes()
+    assert (output / "runs/10/1/architecture.detail.html").read_bytes() == (
+        site / "runs/10/1/architecture.detail.html"
+    ).read_bytes()
+
+
+def test_pages_projection_preserves_flow_data_and_archive_evidence(tmp_path):
+    module = publisher()
+    site = tmp_path / "archive"
+    current = site / "runs/11/1"
+    historical = site / "runs/10/1"
+    current.mkdir(parents=True)
+    historical.mkdir(parents=True)
+    historical_data = {
+        "atlas": {
+            "architecture_href": "architecture.json",
+            "detail_page": "architecture.detail.html",
+            "components": [{"id": "runtime", "responsibility": "Execute statements."}],
+            "qa_escape_probe": "<img src=x onerror=alert(1)>",
+        },
+        "navigation": {"main_href": "index.html"},
+    }
+    report = (
+        '<!doctype html><html><body><a href="architecture.json">JSON</a>'
+        '<script id="flow-data" type="application/json">' + json.dumps(historical_data) + "</script></body></html>"
+    )
+    old_files = {
+        "architecture.report.html": report,
+        "architecture.json": '{"historical":true}',
+        "architecture.detail.html": "original historical details",
+        "validation.json": '{"declared_rules":"FAIL"}',
+        "metadata.json": '{"run_id":10,"run_attempt":1}',
+    }
+    current_files = {
+        "architecture.report.html": "<!doctype html><html><body>current report</body></html>",
+        "architecture.json": '{"current":true}',
+        "architecture.detail.html": "current full details",
+        "validation.json": '{"declared_rules":"UNKNOWN"}',
+        "metadata.json": '{"run_id":11,"run_attempt":1}',
+    }
+    for name, content in old_files.items():
+        (historical / name).write_text(content, encoding="utf-8")
+    for name, content in current_files.items():
+        (current / name).write_text(content, encoding="utf-8")
+    for run in (historical, current):
+        (run / "index.html").write_text('<a href="architecture.json">JSON</a>', encoding="utf-8")
+    latest = site / "pr/274"
+    latest.mkdir(parents=True)
+    (latest / "metadata.json").write_text('{"run_id":11,"run_attempt":1}', encoding="utf-8")
+
+    archived_before = tree_digests(site)
+    output = tmp_path / "pages"
+
+    module.project_pages(site, output, "runs/11/1/", [274])
+
+    assert tree_digests(site) == archived_before
+    for name, content in current_files.items():
+        assert (output / "runs/11/1" / name).read_bytes() == content.encode("utf-8")
+    historical_page = (output / "runs/10/1/architecture.report.html").read_text(encoding="utf-8")
+    projected = re.search(r'(<script\b[^>]*\bid="flow-data"[^>]*>)(.*?)(</script>)', historical_page, re.DOTALL)
+    assert projected is not None
+    assert "<" not in projected[2]
+    projected_data = json.loads(projected[2])
+    expected_data = json.loads(json.dumps(historical_data))
+    expected_data["atlas"]["architecture_href"] = (
+        "https://raw.githubusercontent.com/rapiddweller/datamimic/architecture-reports/runs/10/1/architecture.json"
+    )
+    assert projected_data == expected_data
+    assert "\\u003cimg" in projected[2]
+    assert "Historical review" in historical_page
+    assert not (output / "runs/10/1/architecture.json").exists()
+    detail_landing = (output / "runs/10/1/architecture.detail.html").read_text(encoding="utf-8")
+    assert "Download original full-detail HTML" in detail_landing
+    assert "runs/10/1/architecture.detail.html" in detail_landing
