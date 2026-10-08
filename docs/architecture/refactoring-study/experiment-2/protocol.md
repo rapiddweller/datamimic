@@ -469,6 +469,10 @@ change the target.
 client lookup Protocol at the root IO boundary. Existing registry arguments,
 Runtime calls and routing behavior remain unchanged; no allowance is added.
 
+[Amendment 162](amendment-162-client-names-boundary.md) declares the exact
+client names Protocol at the root IO boundary. Exporter dispatch and diagnostics
+remain unchanged; no allowance is added.
+
 ## Agent separation
 
 - The implementation agent changes production code and targeted tests for one approved slice.

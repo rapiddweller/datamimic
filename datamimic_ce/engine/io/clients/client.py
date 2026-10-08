@@ -5,6 +5,7 @@
 # For questions and support, contact: info@rapiddweller.com
 
 from abc import ABC
+from collections.abc import Iterable
 from typing import Protocol
 
 from datamimic_ce.engine.io.contracts import SqlScriptClient
@@ -19,3 +20,9 @@ RegisteredClient = Client | SqlScriptClient
 
 class ClientLookup(Protocol):
     def get(self, key: str, /) -> RegisteredClient | None: ...
+
+
+class ClientNames(Protocol):
+    def __contains__(self, client_id: str, /) -> bool: ...
+
+    def keys(self) -> Iterable[str]: ...

@@ -28,8 +28,9 @@ def test_cli_and_mcp_remain_commands_without_component_local_public_apis() -> No
     assert _component(interfaces, "TRANSPORT-MCP").get("public", []) == []
 
 
-def test_client_lookup_is_declared_at_io_boundary_and_owned_by_clients() -> None:
-    symbol = "datamimic_ce.engine.io.clients.client:ClientLookup"
+@pytest.mark.parametrize("name", ["ClientLookup", "ClientNames"])
+def test_client_registry_contracts_are_declared_at_io_boundary_and_owned_by_clients(name: str) -> None:
+    symbol = f"datamimic_ce.engine.io.clients.client:{name}"
     root = _read_contract(ROOT / "architecture-contract.json")
     assert _component(root, "COMP-IO")["public"].count(symbol) == 1
     assert symbol not in root["declarations"]["public_api"]

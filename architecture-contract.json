@@ -229,7 +229,8 @@
       ],
       "provenance": [
         "docs/architecture/refactoring-study/experiment-2/target-architecture.md",
-        "docs/architecture/refactoring-study/experiment-2/amendment-161-client-lookup-boundary.md"
+        "docs/architecture/refactoring-study/experiment-2/amendment-161-client-lookup-boundary.md",
+        "docs/architecture/refactoring-study/experiment-2/amendment-162-client-names-boundary.md"
       ],
       "requires": [
         {
@@ -255,7 +256,8 @@
         "datamimic_ce.engine.io.contracts:EntityValue",
         "datamimic_ce.engine.io.contracts:SqlScriptClient",
         "datamimic_ce.engine.io.files.api",
-        "datamimic_ce.engine.io.clients.client:ClientLookup"
+        "datamimic_ce.engine.io.clients.client:ClientLookup",
+        "datamimic_ce.engine.io.clients.client:ClientNames"
       ],
       "planned": [],
       "decided_by": "agent"

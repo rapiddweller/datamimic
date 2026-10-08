@@ -1,8 +1,7 @@
-from collections.abc import Mapping
 from pathlib import Path
 from typing import Protocol
 
-from datamimic_ce.engine.io.clients.client import RegisteredClient
+from datamimic_ce.engine.io.clients.client import ClientNames, RegisteredClient
 from datamimic_ce.engine.io.exporters.core.exporter import Exporter
 
 
@@ -16,7 +15,7 @@ class MemstoreProvider(Protocol):
 
 class ExporterContext(Protocol):
     @property
-    def clients(self) -> Mapping[str, RegisteredClient]: ...
+    def clients(self) -> ClientNames: ...
 
     @property
     def memstore_manager(self) -> MemstoreProvider: ...
