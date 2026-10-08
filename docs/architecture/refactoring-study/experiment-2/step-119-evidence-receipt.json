@@ -1,0 +1,213 @@
+{
+  "source_checkpoint": "c992ff064a81334ed157cd41b80da438eb419466",
+  "overall_acceptance": "FAIL",
+  "inventory_paths": 931,
+  "historical_raw": {
+    "path": "test-artifacts/architecture/target-refactor/qa-baseline/step0-before.json",
+    "sha256": "f7a0f48cb97d457b9507dd0ec6c6a87840becf85b27f9835c5108b8f4e8a9e6b",
+    "commit": "3b844b5083e5af89269ef917bc0614601d30cf61",
+    "paths": 930,
+    "statuses": {
+      "UNRUNNABLE": 76,
+      "CAPTURED": 454,
+      "UNVERIFIED": 322,
+      "NOT-A-DESCRIPTOR": 16,
+      "EXPECTED-ERROR": 62
+    },
+    "captured_seeded": 88
+  },
+  "input_identity": {
+    "original_control": "a219163e533d661bcc7bda0faa5ecc77909ab5aa",
+    "matching_xml_paths": 930,
+    "mapping": "datamimic_ce/demos/ -> datamimic_ce/resources/demos/",
+    "added_xml": "tests_ce/integration_tests/test_echo/empty_echo.xml",
+    "limit": "XML identity only; no claim about other resources or runtime target state"
+  },
+  "review_queues": {
+    "runnable": 572,
+    "external-service": 222,
+    "non-descriptor": 17,
+    "intentionally-invalid": 70,
+    "missing-xlsx-source": 9,
+    "authoring-fixture": 41
+  },
+  "owner_profile": {
+    "physical_fixtures": 43,
+    "native_authoring_tag": 42,
+    "exclusive_authoring_queue": 41,
+    "selected_nodes": 45,
+    "runs": [
+      {
+        "commit": "12d5e3a5e576b49a7191ad955807f96cf84d8e62",
+        "passed": 45,
+        "errors": 0,
+        "failures": 0,
+        "skipped": 0,
+        "environment": {
+          "PYTHONPATH": "/tmp/ce-resume-20261008/descriptor-expansion/baseline-12d5-source",
+          "RUNTIME_ENVIRONMENT": "development"
+        }
+      },
+      {
+        "commit": "c65d0090b1d21ec78466e1adc609d60459d9d634",
+        "passed": 45,
+        "errors": 0,
+        "failures": 0,
+        "skipped": 0,
+        "environment": {
+          "PYTHONPATH": "/tmp/ce-resume-20261008/descriptor-expansion/current-c65-source",
+          "RUNTIME_ENVIRONMENT": "development"
+        }
+      }
+    ],
+    "profile": "project Python3.11.12; serial pytest -n0; standard plugins; reviewed native bounded child processes/temp exports; DB/Mongo owners lint only",
+    "additional_model_sha256": "368eee559fd8226d5ea05c475113457f8f47b05d4958d7aac381724463ddea00",
+    "unreviewed_inputs": 888,
+    "limits": "Required diagnostic subsets and selected counts/failures/cleanup, not complete diagnostic or output-byte parity. c65 identity retained; c992 only documentation changes."
+  },
+  "recent_raw_comparisons": {
+    "paths": 26,
+    "captured": 23,
+    "expected_error": 1,
+    "unverified": 2,
+    "current_c992_parity": "NOT_ASSESSED"
+  },
+  "hash_profile": {
+    "descriptors": [
+      {
+        "baseline_status": "CAPTURED",
+        "candidate_status": "CAPTURED",
+        "path": "tests_ce/integration_tests/test_hash_converter/hash_seeded.xml",
+        "record_equal": true,
+        "recorder_static_count": 10,
+        "runtime_observed_rows": null,
+        "seeded": true,
+        "seeded_result_digest_equal": true,
+        "xml_count": 10
+      },
+      {
+        "baseline_status": "CAPTURED",
+        "candidate_status": "CAPTURED",
+        "path": "tests_ce/integration_tests/test_hash_converter/hash_seeded_other.xml",
+        "record_equal": true,
+        "recorder_static_count": 10,
+        "runtime_observed_rows": null,
+        "seeded": true,
+        "seeded_result_digest_equal": true,
+        "xml_count": 10
+      },
+      {
+        "baseline_status": "CAPTURED",
+        "candidate_status": "CAPTURED",
+        "path": "tests_ce/integration_tests/test_hash_converter/hash_unseeded.xml",
+        "record_equal": true,
+        "recorder_static_count": 10,
+        "runtime_observed_rows": 10,
+        "seeded": false,
+        "seeded_result_digest_equal": null,
+        "xml_count": 10
+      }
+    ],
+    "comparator_returncode": 1,
+    "differing_projection_leaf": "elements.execute.attributes.target.description",
+    "other_projections_equal": 3,
+    "owner_passed_per_checkpoint": 2,
+    "limits": "For each descriptor, XML count=10 matches the recorder inventory static count=10. The unseeded recorder directly observes products.hashed.rows=10. Seeded records contain exact result digests but omit runtime row counts, so the seeded runtime row count is not directly observed by this capture. Base64/workers not proved."
+  },
+  "ci": {
+    "head": "c992ff064a81334ed157cd41b80da438eb419466",
+    "run_ids": [
+      37746956307,
+      37746949546
+    ],
+    "each": {
+      "success": 24,
+      "failure": 2,
+      "skipped": 2
+    },
+    "failed_jobs": [
+      "Architecture review report",
+      "ArchKeel architecture contract"
+    ],
+    "pr_scanned_merge": "c74190ce1cc624c8ba6c0667b643d83371bd2112",
+    "source_digest": "d5fdc6789839b6dabade4917eb545f6f9aa5bf0b82e71baca46f89c0be3625d6"
+  },
+  "artifacts": {
+    "ledger": {
+      "path": "test-artifacts/architecture/ce-recursive-target/step-119-evidence/ledger.jsonl",
+      "sha256": "700e09432cfdae1642f4c23a267d7a33261f3717b5fe8fcb890d89ba157054f2"
+    },
+    "summary": {
+      "path": "test-artifacts/architecture/ce-recursive-target/step-119-evidence/summary.md",
+      "sha256": "dcd1d4135c6495039392044b9ed7ac48d90d34586c6763ceb1702ef33035288d"
+    },
+    "owner_map": {
+      "path": "test-artifacts/architecture/ce-recursive-target/step-119-evidence/authoring-owner-map.json",
+      "sha256": "fb9c3ca10c8792cdf476a9af0e1af2706c9bbad3451614d03b3e461028162856"
+    },
+    "authoring_tests": {
+      "path": "test-artifacts/architecture/ce-recursive-target/step-119-evidence/authoring-tests.json",
+      "sha256": "b5ea96eeec1d258ef6bfdd7a716efe65b01250ab0a103c0d3a6ed5f69e4a037e"
+    },
+    "approved_nodes": {
+      "path": "test-artifacts/architecture/ce-recursive-target/step-119-evidence/approved-nodes.json",
+      "sha256": "89db204afc64659a41f41cf84cdc4c52cba78bb7c0c232b9fb75b2c160fb98d1"
+    },
+    "authoring_qa": {
+      "path": "test-artifacts/architecture/ce-recursive-target/step-119-evidence/authoring-qa.md",
+      "sha256": "bec716a23d25d141764a5d240ec4cb3da778aa1a8f3e62597aa828c54b799448"
+    },
+    "ledger_qa": {
+      "path": "test-artifacts/architecture/ce-recursive-target/step-119-evidence/ledger-firstpass-qa.md",
+      "sha256": "b55fdeca86ae419142c6993d882a0b740ec1ebf12c3acf227712db4a567e023f"
+    },
+    "astra_review": {
+      "path": "test-artifacts/architecture/ce-recursive-target/step-119-evidence/astra-review.md",
+      "sha256": "72b61ab1fefabecb64277437dc404169341d453a00394e68546d0a4efc439050"
+    },
+    "hash_baseline": {
+      "path": "test-artifacts/architecture/ce-recursive-target/step-119-evidence/hash-baseline.json",
+      "sha256": "806192950b2d0286fda398c6993164db80ebe1d4b27aab050eb1e9f4b2a1ae76"
+    },
+    "hash_candidate": {
+      "path": "test-artifacts/architecture/ce-recursive-target/step-119-evidence/hash-c65.json",
+      "sha256": "4e541882514afa4c17631f84d6a6a9657fd80ba82bf278775ec81afcf0c4ee22"
+    },
+    "hash_execution": {
+      "path": "test-artifacts/architecture/ce-recursive-target/step-119-evidence/hash-execution.json",
+      "sha256": "2247388ec81fdb379ef57d3f9cacec7632cb5270cacbf4e84bdafd4e30265952"
+    },
+    "hash_tests": {
+      "path": "test-artifacts/architecture/ce-recursive-target/step-119-evidence/hash-tests.json",
+      "sha256": "7a0da9f56e21e9dcf5a2ecbe50b465508c21028a846f2da28fece5809d63bd71"
+    },
+    "hash_qa": {
+      "path": "test-artifacts/architecture/ce-recursive-target/step-119-evidence/hash-qa.md",
+      "sha256": "ec55e540bd04eb9f160e5814589a89809bdfbba31c4c05f8be5923c479d54135"
+    },
+    "ci_pr": {
+      "path": "test-artifacts/architecture/ce-recursive-target/step-119-evidence/ci-pr.json",
+      "sha256": "d628770e1aadfe2cc8e4da42ac94d2f6f62cc263d2e04682cea5a58fa0187e8b"
+    },
+    "ci_push": {
+      "path": "test-artifacts/architecture/ce-recursive-target/step-119-evidence/ci-push.json",
+      "sha256": "3e82d9cd7b3a2cedd1abf2339f477b63eff39ee3be041946226f68cdf33d1356"
+    },
+    "authoring_baseline_12d5_log": {
+      "path": "test-artifacts/architecture/ce-recursive-target/step-119-evidence/authoring-baseline_12d5.log",
+      "sha256": "dc8b19750a8e228807abe3a193696a8f83a5649703088b07b580b78d6b3b78a8"
+    },
+    "authoring_baseline_12d5_xml": {
+      "path": "test-artifacts/architecture/ce-recursive-target/step-119-evidence/authoring-baseline_12d5.xml",
+      "sha256": "0e3a8a6d2cefc910bc9a1574d97ce843d72188d405c21220eec1830c5bf7ac18"
+    },
+    "authoring_candidate_c65_log": {
+      "path": "test-artifacts/architecture/ce-recursive-target/step-119-evidence/authoring-candidate_c65.log",
+      "sha256": "8b397fe9f862ce5a543d647c6b812bef459662deb9e4c8661f4955b1ade72ff1"
+    },
+    "authoring_candidate_c65_xml": {
+      "path": "test-artifacts/architecture/ce-recursive-target/step-119-evidence/authoring-candidate_c65.xml",
+      "sha256": "472ad561f5289b2940fb711751d37b16a45eaaf04917d10c2d58729186661e1e"
+    }
+  }
+}
