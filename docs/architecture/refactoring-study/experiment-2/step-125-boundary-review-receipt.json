@@ -1,0 +1,84 @@
+{
+  "step": 125,
+  "source_digest": "0a38fc3bb6db247d724ceff17b294c0253ebba2d48b4f6f212c0a231f7d80ccb",
+  "source_checkpoint": "99d32a6fcdec96619b3ad9887769e8730e39b010",
+  "source_dirty": true,
+  "boundary_finding_count": 87,
+  "unique_boundary_ids": 87,
+  "family_counts": {
+    "authoring_json_samples": 2,
+    "converter_open_values": 19,
+    "demographic_keyed_data": 18,
+    "dsl_mapping_inputs_and_aliases": 2,
+    "finance_account_compatibility": 1,
+    "io_open_rows_and_export_payloads": 35,
+    "runtime_requests_state_and_captures": 10
+  },
+  "unreviewed_boundary_ids": [],
+  "resolved_by_review": 0,
+  "waived": 0,
+  "other_findings": [
+    "remaining SQL cast violation",
+    "interfaces initializer ownership violation"
+  ],
+  "measured_scalars": {
+    "calls_unresolved": 1231,
+    "coverage_failures": 0,
+    "cycle_edges": 2,
+    "private_crossings": 0,
+    "typing_positions": 143,
+    "unknown_positions": 200,
+    "untyped_private_accesses": 0,
+    "violations": 89
+  },
+  "canonical_unknown_count": 254,
+  "full_acceptance": "FAIL",
+  "constraints": "No oracle, baseline, contract or pinned-tool edits. Precise DTO-field/depth tool support is deferred; honest semantic correction needs its own dated decision.",
+  "remaining_source_obligations": [
+    "SQL/mixed-registry compatible typing",
+    "Patient catalog metadata",
+    "coupled DatabaseClient/Memstore extension typing",
+    "EE transfers and full physical responsibilities"
+  ],
+  "behavioral_evidence": {
+    "inventory": 931,
+    "reviewed_owner_profiles": 66,
+    "unknown_owner_profiles": 865,
+    "original_control_parity": "NOT_FULLY_ASSESSED"
+  },
+  "ci_preceding_head": "99d32a6fcdec96619b3ad9887769e8730e39b010",
+  "ci_preceding_per_run": {
+    "success": 24,
+    "architecture_failure": 2,
+    "skipped": 2
+  },
+  "ci_combined_source": "NOT_RUN_YET",
+  "coverage_validation": {
+    "current_violations": 89,
+    "boundary_ids_found": 87,
+    "missing_boundary_ids": [],
+    "non_boundary_ids": [
+      "VIO-31239609a250f0ce",
+      "VIO-4149fbc7ce2d56d8"
+    ]
+  },
+  "artifacts": [
+    {"path": "test-artifacts/architecture/ce-recursive-target/step-125-evidence/runtime-boundary-audit/astra.md", "sha256": "8889ee1292503639f5e146df2481102964475c37d3359fd2f69432ca9ca7e9e4"},
+    {"path": "test-artifacts/architecture/ce-recursive-target/step-125-evidence/runtime-boundary-audit/classification.json", "sha256": "c30539bcd535603c9c7eab05fbdd2ee5049446331862187c003d9f3e6532ad95"},
+    {"path": "test-artifacts/architecture/ce-recursive-target/step-125-evidence/demographic-boundary-audit/astra.md", "sha256": "93d615d08893444595bdf31e6438bbb61115200b6cbce11ad4693f8e4fc35d7d"},
+    {"path": "test-artifacts/architecture/ce-recursive-target/step-125-evidence/demographic-boundary-audit/classification.json", "sha256": "bbf9c2f759703ae130e099b1d6839f23e97fd24684a4c7b8371ef4b470753d06"},
+    {"path": "test-artifacts/architecture/ce-recursive-target/step-125-evidence/io-boundary-audit/astra.md", "sha256": "32912fdf6b6581148deaab2928d0c2875aae7f677f56728516748916aa87e6e2"},
+    {"path": "test-artifacts/architecture/ce-recursive-target/step-125-evidence/io-boundary-audit/classification.json", "sha256": "d5080fa2eaa8d84762c62073e203244253664e542da91d9aab8feb41d21fdf83"},
+    {"path": "test-artifacts/architecture/ce-recursive-target/step-125-evidence/final-boundary-audit/astra.md", "sha256": "2396044a0a774b7147ca9385b462eee1001fb29dd5c0ecf4d3c12799473e1dd6"},
+    {"path": "test-artifacts/architecture/ce-recursive-target/step-125-evidence/final-boundary-audit/classification.json", "sha256": "d4a93a2fcd69d25ae59bbdbec0b1bf7c9d97cbe797243cd7dc1b3105079e1cae"},
+    {"path": "test-artifacts/architecture/ce-recursive-target/step-125-evidence/final-boundary-audit/coverage-87.json", "sha256": "5d61559859d0f2973ec31855d78940b5e74cab1ca387e5dd03b3c1743aa544f7"},
+    {"path": "test-artifacts/architecture/ce-recursive-target/step-125-evidence/prior/step-117-boundary-families.json", "sha256": "fff401c31b90e623e33d601976b080e730a2e15d3b3841122eccfda0ec4e7cda"},
+    {"path": "test-artifacts/architecture/ce-recursive-target/step-125-evidence/ci-99d32a6f-pr.json", "sha256": "8200d6d22498c38cba49f6ac6dd16bb07c154836669f315fcf00f1c36501f36a"},
+    {"path": "test-artifacts/architecture/ce-recursive-target/step-125-evidence/ci-99d32a6f-push.json", "sha256": "b0fa859c1ab2c388b46a12f2ded346f1dac627adf4fca024969cc7ba0dfc4817"},
+    {"path": "test-artifacts/architecture/ce-recursive-target/step-125-evidence/architecture-current.json", "sha256": "503114561d7b71730519a58d564b549454f2ec4b401ccb55f3ebed430e520245"},
+    {"path": "test-artifacts/architecture/ce-recursive-target/step-125-evidence/converter/astra.md", "sha256": "e3edbbe29b3a167533d1d4ba07b923cf18bad8086060ff4e32f602a7140a4a13"},
+    {"path": "test-artifacts/architecture/ce-recursive-target/step-125-evidence/converter/qa.md", "sha256": "64e632d8816d63473a28db1fbc308fc22b9c4f41a058c47ed3634cd51bf74709"},
+    {"path": "test-artifacts/architecture/ce-recursive-target/step-125-evidence/converter/qa-countercheck.md", "sha256": "47330313d03a392c2ac35195e48a52375c679a17d7c2834cb31d26585a127dea"},
+    {"path": "test-artifacts/architecture/ce-recursive-target/step-125-evidence/prior/step-117-converter-boundary-decision.md", "sha256": "33fba51b111b4e2387cd15b8fcbea264b4917e98af863ac9a9b93841a5f5aa3c"}
+  ]
+}

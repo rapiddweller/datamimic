@@ -1,0 +1,153 @@
+{
+  "step": 124,
+  "source_checkpoint": "99d32a6fcdec96619b3ad9887769e8730e39b010",
+  "source_dirty": true,
+  "source_path": "datamimic_ce/engine/io/files/readers.py",
+  "source_before_sha256": "53758291f41ce379ded1bbeadea6eb704ff2bd4ba8445c24e2116f1a8f3acfe7",
+  "source_after_sha256": "fd69302b38d972996c7863ce3b5abe7a0575bc920948b76858f283fa3dbe4136",
+  "change": "Only XLSX return annotation list[dict] -> list[dict[str,object]]; no body/parameter/import/consumer change",
+  "comparison": {
+    "tests": {
+      "before": {
+        "cases": 15,
+        "failures": 0,
+        "errors": 0,
+        "skips": 0
+      },
+      "after": {
+        "cases": 15,
+        "failures": 0,
+        "errors": 0,
+        "skips": 0
+      }
+    },
+    "probe_logs_equal": true,
+    "workbook_sha256": "53677ce22e1ece64e453c57f99135c9ab6e042d0d85c2ccbf09e97d74b127659",
+    "projection_objects_equal": true
+  },
+  "checks": {
+    "full_mypy_files": 491,
+    "ruff_check": "PASS",
+    "mypy": "PASS",
+    "format": "FAIL, same pre-existing unrelated CSV signature under same config",
+    "cycle_check": "PASS",
+    "definition_cases": 8,
+    "report_exit_code": 0
+  },
+  "architecture": {
+    "before_source": {
+      "dirty": true,
+      "git_head": "99d32a6fcdec96619b3ad9887769e8730e39b010",
+      "scope": [
+        "datamimic_ce/**/*.py"
+      ],
+      "source_digest": "fce6663f7b59b6d99644030c082c4475ad0e58656558ed7796552d3c0084ca1e"
+    },
+    "after_source": {
+      "dirty": true,
+      "git_head": "99d32a6fcdec96619b3ad9887769e8730e39b010",
+      "scope": [
+        "datamimic_ce/**/*.py"
+      ],
+      "source_digest": "0a38fc3bb6db247d724ceff17b294c0253ebba2d48b4f6f212c0a231f7d80ccb"
+    },
+    "violations": {
+      "before": 89,
+      "after": 89,
+      "full_records_equal": true,
+      "removed": [],
+      "added": [],
+      "changed": []
+    },
+    "unknowns": {
+      "before": 254,
+      "after": 254,
+      "full_records_equal": true,
+      "removed": [],
+      "added": [],
+      "changed": []
+    },
+    "modules": {
+      "before": 491,
+      "after": 491,
+      "full_records_equal": true,
+      "removed": [],
+      "added": [],
+      "changed": []
+    },
+    "measured_scalars": {
+      "calls_unresolved": 1231,
+      "coverage_failures": 0,
+      "cycle_edges": 2,
+      "private_crossings": 0,
+      "typing_positions": 143,
+      "unknown_positions": 200,
+      "untyped_private_accesses": 0,
+      "violations": 89
+    },
+    "declared_rules": "FAIL"
+  },
+  "projection_scope": "Unchanged verify_step0.projections() only; no generic descriptor execution. Full current content equal; expected frozen capability hash still differs.",
+  "owner_scope": "Exact Step120 15 native cases/12 XML inputs; tests generate XLSX fixtures under tmp_path. Assertions are selected cells/counts/order, within-phase replay, chunk coverage; not cross-phase complete workbook or ZIP proof.",
+  "probe_scope": "Same immutable workbook; native cells, blank headers, padding; separate independent collision/error mirror controls. Not arbitrary provider/exporter proof.",
+  "full_acceptance": "FAIL",
+  "ci_combined_source": "NOT_RUN_YET",
+  "artifacts": [
+    {"path": "test-artifacts/architecture/ce-recursive-target/step-124-evidence/source-slice/after-probe-receipt.json", "sha256": "6a23365c4bd4f3037ac6129a286b674c1af5394090ad2f59e75391a07288ae2c"},
+    {"path": "test-artifacts/architecture/ce-recursive-target/step-124-evidence/source-slice/after-probe.log", "sha256": "e9df7f2be65babc1db2e8d0a6eb4c6462d7c735990c4b5ad61d6061a21e147b2"},
+    {"path": "test-artifacts/architecture/ce-recursive-target/step-124-evidence/source-slice/after-projections-receipt.json", "sha256": "2d96d608a13148419c28cabe349f77d4cfc211b109c7848d19bd63be86af12b8"},
+    {"path": "test-artifacts/architecture/ce-recursive-target/step-124-evidence/source-slice/after-projections.json", "sha256": "e2606aa402500d59a87d3be49b42d5279f50b02763b896683c988343f94f1f4b"},
+    {"path": "test-artifacts/architecture/ce-recursive-target/step-124-evidence/source-slice/after-tests-receipt.json", "sha256": "5541030a6708cbfd670034511fb24be5fa85c3ffdaf62856929c44410804e875"},
+    {"path": "test-artifacts/architecture/ce-recursive-target/step-124-evidence/source-slice/after-tests.log", "sha256": "567e2cd06ddce1e4dc213171b7d5b0953424dccd62e431126b8db0ccb14fdda6"},
+    {"path": "test-artifacts/architecture/ce-recursive-target/step-124-evidence/source-slice/after-tests.xml", "sha256": "9dee960541163b2658313fbc5ff2e993267c8afc2e8636f3cf145251d4462982"},
+    {"path": "test-artifacts/architecture/ce-recursive-target/step-124-evidence/source-slice/architecture-before/architecture.detail.html", "sha256": "358b504281f5d41ea76729325e73a7170675b7510390f32d7fcb2e9bd10eba7f"},
+    {"path": "test-artifacts/architecture/ce-recursive-target/step-124-evidence/source-slice/architecture-before/architecture.json", "sha256": "f4a43c972096ae54cec311d125ec93d78d2886af710176778b05192a782e57cb"},
+    {"path": "test-artifacts/architecture/ce-recursive-target/step-124-evidence/source-slice/architecture-before/architecture.report.html", "sha256": "56491a3c6828d0b01bf6509aba21accef50d6ecefa78eede9b93083340d631c5"},
+    {"path": "test-artifacts/architecture/ce-recursive-target/step-124-evidence/source-slice/architecture-comparison.json", "sha256": "c3b684bec05624511444e4a86c929a9c8e79ecbf8d6a7c9d6703770168c7b5a5"},
+    {"path": "test-artifacts/architecture/ce-recursive-target/step-124-evidence/source-slice/baseline-format-diff.log", "sha256": "048370c7f0a1ec5ea6579e3afc8582ebc0e69263649db56df3cdd27612a68db1"},
+    {"path": "test-artifacts/architecture/ce-recursive-target/step-124-evidence/source-slice/before-probe-receipt.json", "sha256": "9b20a13a036afa16d0452529b8fe0f2715081a31ebd6249bf614fd9f4249af62"},
+    {"path": "test-artifacts/architecture/ce-recursive-target/step-124-evidence/source-slice/before-probe.log", "sha256": "e9df7f2be65babc1db2e8d0a6eb4c6462d7c735990c4b5ad61d6061a21e147b2"},
+    {"path": "test-artifacts/architecture/ce-recursive-target/step-124-evidence/source-slice/before-projections-receipt.json", "sha256": "5f4ce80cd101ba642f00485371f51386163058b42c4f3e9ccb8035b3b8b0ac9d"},
+    {"path": "test-artifacts/architecture/ce-recursive-target/step-124-evidence/source-slice/before-projections.json", "sha256": "e2606aa402500d59a87d3be49b42d5279f50b02763b896683c988343f94f1f4b"},
+    {"path": "test-artifacts/architecture/ce-recursive-target/step-124-evidence/source-slice/before-tests-receipt.json", "sha256": "5a0ce58ec67ba63648700bfbce8f52354ba794b220650aa0d67d3baf47f79fb7"},
+    {"path": "test-artifacts/architecture/ce-recursive-target/step-124-evidence/source-slice/before-tests.log", "sha256": "92d4a791da82941cc69a7f809dc1ad63fd56e4aad81ceb1f081f6e38f7518618"},
+    {"path": "test-artifacts/architecture/ce-recursive-target/step-124-evidence/source-slice/before-tests.xml", "sha256": "f0c0e8903bfe55f490cf4ff19066ec209b9b43228ba5f49c2e37b37b62207bc0"},
+    {"path": "test-artifacts/architecture/ce-recursive-target/step-124-evidence/source-slice/checks-receipt.json", "sha256": "dcf8873e10be85c008aaa2b67a543b1fbe88b9b409f21f7d44066c1fdd8498a1"},
+    {"path": "test-artifacts/architecture/ce-recursive-target/step-124-evidence/source-slice/comparison.json", "sha256": "a82c1ddd0d18ce3bb5e4048b465f371c13cd5dce78040027e6237583ddb660b3"},
+    {"path": "test-artifacts/architecture/ce-recursive-target/step-124-evidence/source-slice/format.log", "sha256": "a25e9ba8bd99075f48205783dff7cd3dbfbc45470da291bcd700ef96dfbe3107"},
+    {"path": "test-artifacts/architecture/ce-recursive-target/step-124-evidence/source-slice/guards.log", "sha256": "5e17741384c05bf819969b6c695dba88d3d9a11d147d2235487fb55c3a96c4d0"},
+    {"path": "test-artifacts/architecture/ce-recursive-target/step-124-evidence/source-slice/native-cells.xlsx", "sha256": "53677ce22e1ece64e453c57f99135c9ab6e042d0d85c2ccbf09e97d74b127659"},
+    {"path": "test-artifacts/architecture/ce-recursive-target/step-124-evidence/source-slice/package.log", "sha256": "ede7e8a01bbf51ba34cabf9c40adc123ff5553691c8b6232b868368a5e445a37"},
+    {"path": "test-artifacts/architecture/ce-recursive-target/step-124-evidence/source-slice/prepare.py", "sha256": "00b012a6d05ac8f5a2b1535aa5553794eee4731deaf72e49c0037d3ae79e3fc5"},
+    {"path": "test-artifacts/architecture/ce-recursive-target/step-124-evidence/source-slice/probe.py", "sha256": "82fd95aa9a20bb6b7867eb90966f8ef1998f78c56b02c6e410e8f00dec5510d5"},
+    {"path": "test-artifacts/architecture/ce-recursive-target/step-124-evidence/source-slice/remaining-checks-receipt.json", "sha256": "9536f91009f26ed0bbcfde034f4233010ecfcea601de48857186ad53c7e979f5"},
+    {"path": "test-artifacts/architecture/ce-recursive-target/step-124-evidence/source-slice/report.log", "sha256": "9094d3ed986173c15cc9f0425ca13d0939fd0c432f2abcf6168ec1ea575ce60b"},
+    {"path": "test-artifacts/architecture/ce-recursive-target/step-124-evidence/source-slice/run_checks.py", "sha256": "20b369964858e033c78da1a573a7091362639ae3e1fe37386332e02840f218fb"},
+    {"path": "test-artifacts/architecture/ce-recursive-target/step-124-evidence/source-slice/run_phase.py", "sha256": "373dfc7d6c433d64148b695521769d0048097af314095a99d696c6223048e99e"},
+    {"path": "test-artifacts/architecture/ce-recursive-target/step-124-evidence/source-slice/run_probe.py", "sha256": "4b610b02fd698ff60f8f25944242e4805edc619d1adc4e8acd67e060b08456ec"},
+    {"path": "test-artifacts/architecture/ce-recursive-target/step-124-evidence/source-slice/run_projections.py", "sha256": "db672482bde91356c03b018ded606ac724d5bef1d57ba53089e0d1a2b01519ef"},
+    {"path": "test-artifacts/architecture/ce-recursive-target/step-124-evidence/source-slice/selection.json", "sha256": "868f0c90f51bf77fac02d56e766b67c7b90ac32684af676412ba3f5e7b0ccfce"},
+    {"path": "test-artifacts/architecture/ce-recursive-target/step-124-evidence/source-slice/source-before.py", "sha256": "53758291f41ce379ded1bbeadea6eb704ff2bd4ba8445c24e2116f1a8f3acfe7"},
+    {"path": "test-artifacts/architecture/ce-recursive-target/step-124-evidence/qa/qa-first-pass.md", "sha256": "05a5bb18838a7e7ef3410698bde52ffd576c0dfd4f65539a5d635f498d528e41"},
+    {"path": "test-artifacts/architecture/ce-recursive-target/step-124-evidence/qa/qa-countercheck.md", "sha256": "0ece14195b4b92246646fef757db8c758670a4717b0d872af58eb40c509f140b"},
+    {"path": "test-artifacts/architecture/ce-recursive-target/step-124-evidence/independent/implementation.md", "sha256": "84170fc29eff052d5587cb0b549208d653efd9eee51d03618092a2eb090fc80d"},
+    {"path": "test-artifacts/architecture/ce-recursive-target/step-124-evidence/independent/receipts/baseline-lint.log", "sha256": "8e039709aec25615f9a415af6d3a49706b245cb9037d359599c3793981503bdb"},
+    {"path": "test-artifacts/architecture/ce-recursive-target/step-124-evidence/independent/receipts/baseline-source-manifest.json", "sha256": "025a373a7d21cd9dc6b7e936e452ea3635c38f5fefc6623751ccfe2522f445e1"},
+    {"path": "test-artifacts/architecture/ce-recursive-target/step-124-evidence/independent/receipts/baseline-typecheck.log", "sha256": "8918dcec64c04dc79c3cc647a58ca7f6e4a332ad1a6baf007fe6a4007cc45557"},
+    {"path": "test-artifacts/architecture/ce-recursive-target/step-124-evidence/independent/receipts/candidate-lint.log", "sha256": "8e039709aec25615f9a415af6d3a49706b245cb9037d359599c3793981503bdb"},
+    {"path": "test-artifacts/architecture/ce-recursive-target/step-124-evidence/independent/receipts/candidate-source-manifest.json", "sha256": "eb0c2402731f8836ed311b13f84af73f6acd4545901e9e41df2951c386e33b00"},
+    {"path": "test-artifacts/architecture/ce-recursive-target/step-124-evidence/independent/receipts/candidate-typecheck.log", "sha256": "8918dcec64c04dc79c3cc647a58ca7f6e4a332ad1a6baf007fe6a4007cc45557"},
+    {"path": "test-artifacts/architecture/ce-recursive-target/step-124-evidence/independent/receipts/check-receipt.json", "sha256": "30ed8847b15d1e9c11fec99e3067974066ddeac2299f85aa70f7de6c9ffb7d36"},
+    {"path": "test-artifacts/architecture/ce-recursive-target/step-124-evidence/independent/receipts/runtime-receipt.json", "sha256": "d3c0852a5c3f3485ab00980a6d3531eb59a3b727bf4bb23acb2fc6197fd295b8"},
+    {"path": "test-artifacts/architecture/ce-recursive-target/step-124-evidence/independent/runtime/probe.py", "sha256": "9d14763052bc1622f9ab2c60fc4333d5327cb65dc2bf13fbab4f816248d41bac"},
+    {"path": "test-artifacts/architecture/ce-recursive-target/step-124-evidence/independent/runtime/native-cells.xlsx", "sha256": "53677ce22e1ece64e453c57f99135c9ab6e042d0d85c2ccbf09e97d74b127659"},
+    {"path": "test-artifacts/architecture/ce-recursive-target/step-124-evidence/independent/runtime/baseline.json", "sha256": "3e1b6c6e72a912677987c9ebc028388f225a335e0ebd35e6c984e6844f578bb5"},
+    {"path": "test-artifacts/architecture/ce-recursive-target/step-124-evidence/independent/runtime/candidate.json", "sha256": "78e3e302adc380851279ad9684d0c22552095185a2da532488a5801e5c8c76ad"},
+    {"path": "test-artifacts/architecture/ce-recursive-target/step-124-evidence/independent/runtime/header-errors-probe.py", "sha256": "6e0a2cbb3c5f38152a47cac5ceab1400ffa50c99de629ffa3f8d7bc9cec0fefb"},
+    {"path": "test-artifacts/architecture/ce-recursive-target/step-124-evidence/independent/runtime/header-errors-baseline.json", "sha256": "51f908d6e23a3d3683c22a9d5f720ca1c409ca67e84c91c34550c9f54cc5a374"},
+    {"path": "test-artifacts/architecture/ce-recursive-target/step-124-evidence/independent/runtime/header-errors-candidate.json", "sha256": "bb3246a0fffc091156ca9e5aac7382520ca10f92dd0247a509dadfa526dd4823"},
+    {"path": "test-artifacts/architecture/ce-recursive-target/step-124-evidence/architecture-after/architecture.json", "sha256": "503114561d7b71730519a58d564b549454f2ec4b401ccb55f3ebed430e520245"},
+    {"path": "test-artifacts/architecture/ce-recursive-target/step-124-evidence/architecture-after/architecture.report.html", "sha256": "5ce495119512b4bd04e1ad4524d2db463a84e4dfcc5bda2fb384b570651600dd"},
+    {"path": "test-artifacts/architecture/ce-recursive-target/step-124-evidence/architecture-after/architecture.detail.html", "sha256": "6c547693bd808dbac2bbcc4e7cd55d718d037e4e21f83bfb2cfb78cf62b2c8e0"}
+  ]
+}

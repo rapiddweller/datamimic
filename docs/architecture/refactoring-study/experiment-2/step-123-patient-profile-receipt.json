@@ -1,0 +1,242 @@
+{
+  "step": 123,
+  "source_checkpoint": "99d32a6fcdec96619b3ad9887769e8730e39b010",
+  "source_path": "datamimic_ce/domains/healthcare/models/patient.py",
+  "source_sha256_before": "25d0186b167a22071f058f1d1e153948b9adf5416152b96977fe25f6d7c3103a",
+  "source_sha256_after": "5ef774959dcbf8997007e920c3c88693afa02022e4dcb7b173650bddc2357397",
+  "change": "collections.abc.Mapping import and getter dict[str,float] -> Mapping[str,float]; body/decorators unchanged",
+  "tests": {
+    "before": {
+      "cases": 28,
+      "failed": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    "after": {
+      "cases": 28,
+      "failed": 0,
+      "errors": 0,
+      "skipped": 0
+    }
+  },
+  "probe": {
+    "exit_code_before": 0,
+    "exit_code_after": 0,
+    "output_bytes_equal": true,
+    "script_sha256": "6def78fde0fe9f861b1fc23590c3b90167d56c532ccd60e511c90641218d62ed",
+    "scope": "identity across realPerson/Patient services; mutation Person/dict and Patient/customMapping; to_dict otherfields prefilled; stdlibJSON only; local dataset reads possible"
+  },
+  "captures": {
+    "inventory_equal": true,
+    "projections_sha256_equal": {
+      "capabilities": true,
+      "compiler": true,
+      "reference_authoring": true,
+      "reference_scaffold": true
+    },
+    "records": {
+      "tests_ce/integration_tests/test_entity/patient.xml": {
+        "before_status": "UNVERIFIED",
+        "after_status": "UNVERIFIED",
+        "before_reason": "UNVERIFIED: nested list cardinality evidence is missing or mismatched for de_patients",
+        "after_reason": "UNVERIFIED: nested list cardinality evidence is missing or mismatched for de_patients",
+        "before_after_equal": false,
+        "baseline_self_equivalent": false,
+        "product_rows": {
+          "de_patients": 5,
+          "patients": 10,
+          "seeded_senior_patients": 5,
+          "us_patients": 5
+        },
+        "shape_compatible_to_self": {
+          "de_patients": true,
+          "patients": true,
+          "seeded_senior_patients": true,
+          "us_patients": true
+        }
+      },
+      "tests_ce/integration_tests/test_entity/person_demographic.xml": {
+        "before_status": "CAPTURED",
+        "after_status": "CAPTURED",
+        "before_reason": null,
+        "after_reason": null,
+        "before_after_equal": true,
+        "baseline_self_equivalent": false,
+        "product_rows": {
+          "seeded_persons_fixed_age": 3
+        },
+        "shape_compatible_to_self": {
+          "seeded_persons_fixed_age": false
+        }
+      }
+    },
+    "strict_pair_exit_code": 1,
+    "baseline_self_exit_code": 1,
+    "before_sha256": "892d9b3f13548c804e43e3ab19ccce6c0ba503ebeac9c1802edecf770a3b288c",
+    "after_sha256": "7922bee69914a254a802dce066d40cf0137f549db5311560b07f6463582312f8",
+    "raw_bytes_equal": false,
+    "frozen_capability_expectation": "FAIL retained"
+  },
+  "local_check_returncodes": {
+    "package": 0,
+    "format": 0,
+    "guards": 0,
+    "report": 0
+  },
+  "architecture": {
+    "before_source": {
+      "dirty": true,
+      "git_head": "29610097510031703455ab4de18eb2cfe2b7eb39",
+      "scope": [
+        "datamimic_ce/**/*.py"
+      ],
+      "source_digest": "a87c6685039f7b5d7ef95a6ee8cf92beebe1c3e562f0191918f84525d3015c5c"
+    },
+    "after_source": {
+      "dirty": true,
+      "git_head": "99d32a6fcdec96619b3ad9887769e8730e39b010",
+      "scope": [
+        "datamimic_ce/**/*.py"
+      ],
+      "source_digest": "fce6663f7b59b6d99644030c082c4475ad0e58656558ed7796552d3c0084ca1e"
+    },
+    "violations": {
+      "before": 89,
+      "after": 89,
+      "full_records_equal": true,
+      "ids_equal": true
+    },
+    "unknowns": {
+      "before": 254,
+      "after": 254,
+      "full_records_equal": false,
+      "ids_equal": false
+    },
+    "modules": {
+      "before": 491,
+      "after": 491,
+      "full_records_equal": true,
+      "ids_equal": true
+    }
+  },
+  "unknown_delta": {
+    "removed": [
+      {
+        "id": "UNKNOWN-API-SURFACE-05138fa7cdc5743c",
+        "evidence_class": "UNKNOWN",
+        "area": "api_surface",
+        "kind": "api_surface_limit",
+        "title": "Public API fields cannot be fully resolved: class_body_control_flow",
+        "subjects": [
+          "datamimic_ce.domains.healthcare:Patient"
+        ],
+        "evidence_ids": [
+          "EVD-aae4055f1e013ca5"
+        ],
+        "rule_ids": [],
+        "fact_ids": [
+          "SYM-7b9ca405396bcdd2"
+        ],
+        "provenance": [],
+        "data": {
+          "module": "datamimic_ce.domains.healthcare",
+          "name": "Patient",
+          "reason": "class_body_control_flow"
+        }
+      }
+    ],
+    "added": [
+      {
+        "id": "UNKNOWN-API-SURFACE-3efc316c7d54c515",
+        "evidence_class": "UNKNOWN",
+        "area": "api_surface",
+        "kind": "api_surface_limit",
+        "title": "Public API fields cannot be fully resolved: class_body_control_flow",
+        "subjects": [
+          "datamimic_ce.domains.healthcare:Patient"
+        ],
+        "evidence_ids": [
+          "EVD-886875b715dcbdbc"
+        ],
+        "rule_ids": [],
+        "fact_ids": [
+          "SYM-bb257caf357c3bdb"
+        ],
+        "provenance": [],
+        "data": {
+          "module": "datamimic_ce.domains.healthcare",
+          "name": "Patient",
+          "reason": "class_body_control_flow"
+        }
+      }
+    ],
+    "changed": []
+  },
+  "catalog": "Existing str|dict metadata remains open; bare Mapping class is representable but not changed in this slice",
+  "full_acceptance": "FAIL",
+  "ci_source_slice": "NOT_RUN_YET",
+  "architecture_measured_scalars": {
+    "calls_unresolved": 1231,
+    "coverage_failures": 0,
+    "cycle_edges": 2,
+    "private_crossings": 0,
+    "typing_positions": 143,
+    "unknown_positions": 200,
+    "untyped_private_accesses": 0,
+    "violations": 89
+  },
+  "artifacts": [
+    {"path": "test-artifacts/architecture/ce-recursive-target/step-123-evidence/source-slice/after-capture-receipt.json", "sha256": "4161877ed23613e9f89dd78acda3970b9fee22fd227099f80ff7d95ccbb3ff49"},
+    {"path": "test-artifacts/architecture/ce-recursive-target/step-123-evidence/source-slice/after-capture.json", "sha256": "7922bee69914a254a802dce066d40cf0137f549db5311560b07f6463582312f8"},
+    {"path": "test-artifacts/architecture/ce-recursive-target/step-123-evidence/source-slice/after-capture.log", "sha256": "20fd8bbda8d960d68d5bf093586cb785179fb63b937580133cd21bf384347d42"},
+    {"path": "test-artifacts/architecture/ce-recursive-target/step-123-evidence/source-slice/after-probe-receipt.json", "sha256": "53ca8e8bf1c1ec1d85f0a839f94a8e906db26373c7bc759fc4bfadc966e05778"},
+    {"path": "test-artifacts/architecture/ce-recursive-target/step-123-evidence/source-slice/after-probe.log", "sha256": "377d0c1d80adf7e10f0622e109916bd398bc496d9c89c4da4e562a524c2e8623"},
+    {"path": "test-artifacts/architecture/ce-recursive-target/step-123-evidence/source-slice/after-tests-receipt.json", "sha256": "3564458464b742c5070f0cb9b7454ee787faf3bbe8157b22f2652d37b8904288"},
+    {"path": "test-artifacts/architecture/ce-recursive-target/step-123-evidence/source-slice/after-tests.log", "sha256": "9e20ffb696bb58055a7df36be92d20a88e5eff5794d1977e62cb16287819a162"},
+    {"path": "test-artifacts/architecture/ce-recursive-target/step-123-evidence/source-slice/after-tests.xml", "sha256": "b6b988e23d49add3c094bf4201f85b5397bc0d48724b1608a8f6b45a2adb5752"},
+    {"path": "test-artifacts/architecture/ce-recursive-target/step-123-evidence/source-slice/architecture-before/architecture.detail.html", "sha256": "ea589a308820fd9f61b277c798ef53673a69fc3858678635302838b478e9f795"},
+    {"path": "test-artifacts/architecture/ce-recursive-target/step-123-evidence/source-slice/architecture-before/architecture.json", "sha256": "7c215f05242e5130c00be57ff9349183f21286a9252c2c17324ce5f496a09188"},
+    {"path": "test-artifacts/architecture/ce-recursive-target/step-123-evidence/source-slice/architecture-before/architecture.report.html", "sha256": "d83f29bdd2fd78074bb26919af5fe06b8c04b2a53e79ca6fcb7c3d5cda587fd0"},
+    {"path": "test-artifacts/architecture/ce-recursive-target/step-123-evidence/source-slice/architecture-comparison.json", "sha256": "279aebc0db1b5808dfe54e347a1faf2bba2bc97e20fe9a73f985c177b6beebc8"},
+    {"path": "test-artifacts/architecture/ce-recursive-target/step-123-evidence/source-slice/baseline-self-comparator.log", "sha256": "65b1a5ae0cf5f3299a4c4993cd06107ccfe42074eda08df587757adb0b8f6dab"},
+    {"path": "test-artifacts/architecture/ce-recursive-target/step-123-evidence/source-slice/before-capture-receipt.json", "sha256": "d9a0ff298fbe03e2d094d9699083d6a649b8d0b36bfd2a96874e577ad3676186"},
+    {"path": "test-artifacts/architecture/ce-recursive-target/step-123-evidence/source-slice/before-capture.json", "sha256": "892d9b3f13548c804e43e3ab19ccce6c0ba503ebeac9c1802edecf770a3b288c"},
+    {"path": "test-artifacts/architecture/ce-recursive-target/step-123-evidence/source-slice/before-capture.log", "sha256": "20fd8bbda8d960d68d5bf093586cb785179fb63b937580133cd21bf384347d42"},
+    {"path": "test-artifacts/architecture/ce-recursive-target/step-123-evidence/source-slice/before-probe-receipt.json", "sha256": "2b65ef960ff9fe3b374fd7ed1f151fc127adc3ecf2e42b164249cfa0c2a0a6e8"},
+    {"path": "test-artifacts/architecture/ce-recursive-target/step-123-evidence/source-slice/before-probe.log", "sha256": "377d0c1d80adf7e10f0622e109916bd398bc496d9c89c4da4e562a524c2e8623"},
+    {"path": "test-artifacts/architecture/ce-recursive-target/step-123-evidence/source-slice/before-tests-receipt.json", "sha256": "1a0b45a88714ea3bca7dba44f6aa9836a794659292b5f1e366383040178cc6eb"},
+    {"path": "test-artifacts/architecture/ce-recursive-target/step-123-evidence/source-slice/before-tests.log", "sha256": "7224a96f7591fe08abb04d0965946f872055e656e155cc4718c4dd4993b4973e"},
+    {"path": "test-artifacts/architecture/ce-recursive-target/step-123-evidence/source-slice/before-tests.xml", "sha256": "f6795f24e6a0c7f5cb153c7be65d5e13f76f9ed3ad1bb85b2f268a848ff48590"},
+    {"path": "test-artifacts/architecture/ce-recursive-target/step-123-evidence/source-slice/capture-analysis.json", "sha256": "cb54cdcfc006a9c1902eb2001ed7b02df871a6780773bd65a158a32faa21dc2b"},
+    {"path": "test-artifacts/architecture/ce-recursive-target/step-123-evidence/source-slice/checks-receipt.json", "sha256": "4dfa004da3f3bc1c3b87bc70038358ff61a5f384fd6a1e50a4f35324d289c5f8"},
+    {"path": "test-artifacts/architecture/ce-recursive-target/step-123-evidence/source-slice/comparator.log", "sha256": "65b1a5ae0cf5f3299a4c4993cd06107ccfe42074eda08df587757adb0b8f6dab"},
+    {"path": "test-artifacts/architecture/ce-recursive-target/step-123-evidence/source-slice/format.log", "sha256": "fd2299c9f1c6dc869070883e281051bfe93aacf66c1a3b0069f45b4aa410ca50"},
+    {"path": "test-artifacts/architecture/ce-recursive-target/step-123-evidence/source-slice/guards.log", "sha256": "888babce6d014d95c4a6ca91ee24c2a34c9d2a15ee581f00690f5854a9415a63"},
+    {"path": "test-artifacts/architecture/ce-recursive-target/step-123-evidence/source-slice/package.log", "sha256": "ede7e8a01bbf51ba34cabf9c40adc123ff5553691c8b6232b868368a5e445a37"},
+    {"path": "test-artifacts/architecture/ce-recursive-target/step-123-evidence/source-slice/prepare.py", "sha256": "4933af331b399fe6c3a4ac29261465c9f7231b399595db420c20b6c122589b79"},
+    {"path": "test-artifacts/architecture/ce-recursive-target/step-123-evidence/source-slice/qa-final-countercheck.md", "sha256": "8a8f554d4bca0b5be83aa28329c75411fb6d300ec23718244183511f979e83e2"},
+    {"path": "test-artifacts/architecture/ce-recursive-target/step-123-evidence/source-slice/report.log", "sha256": "9094d3ed986173c15cc9f0425ca13d0939fd0c432f2abcf6168ec1ea575ce60b"},
+    {"path": "test-artifacts/architecture/ce-recursive-target/step-123-evidence/source-slice/run_checks.py", "sha256": "ca8409047baf53c9cecf3589f347e4ca9845ebb06b1495cd28e57662898eed2f"},
+    {"path": "test-artifacts/architecture/ce-recursive-target/step-123-evidence/source-slice/run_phase.py", "sha256": "b16e75dc8d1fcfc8a66d9159c30ee58e6ebda75100415346a7c0ab88e50fec13"},
+    {"path": "test-artifacts/architecture/ce-recursive-target/step-123-evidence/source-slice/run_probe.py", "sha256": "3a5650c19fb4bbb1370f0ff5245f9c16ba90e0c8732575fffa8c2a43f37cfa43"},
+    {"path": "test-artifacts/architecture/ce-recursive-target/step-123-evidence/source-slice/selection.json", "sha256": "5b787b01d6e4b3a64ae4ad656141693bd26e18fa7003fc59706ee229e51c7ec8"},
+    {"path": "test-artifacts/architecture/ce-recursive-target/step-123-evidence/source-slice/source-before.py", "sha256": "25d0186b167a22071f058f1d1e153948b9adf5416152b96977fe25f6d7c3103a"},
+    {"path": "test-artifacts/architecture/ce-recursive-target/step-123-evidence/source-slice/unknown-delta.json", "sha256": "46537d35a0f517f2841d748eec3035cc5e8cce1b487f0ed88f0a002a0d0605ed"},
+    {"path": "test-artifacts/architecture/ce-recursive-target/step-123-evidence/qa/qa-first-pass.md", "sha256": "eb1e04f1946be34bdf5742dad92da25115a614a963b21ed436e2e3ae2f8efc63"},
+    {"path": "test-artifacts/architecture/ce-recursive-target/step-123-evidence/qa/qa-catalog-correction.md", "sha256": "93d19167c38ce81e1537ab0ff0685a3924f93dc525e089f80557f957cf7c7d52"},
+    {"path": "test-artifacts/architecture/ce-recursive-target/step-123-evidence/qa/qa-source-preflight.md", "sha256": "c94a48c518928f57a8f1a7157a780255c363d0e093c8cd8a8f87c1e41b5b02d2"},
+    {"path": "test-artifacts/architecture/ce-recursive-target/step-123-evidence/qa/probe/probe.py", "sha256": "6def78fde0fe9f861b1fc23590c3b90167d56c532ccd60e511c90641218d62ed"},
+    {"path": "test-artifacts/architecture/ce-recursive-target/step-123-evidence/qa/probe/probe.log", "sha256": "377d0c1d80adf7e10f0622e109916bd398bc496d9c89c4da4e562a524c2e8623"},
+    {"path": "test-artifacts/architecture/ce-recursive-target/step-123-evidence/qa/probe/receipt.json", "sha256": "1b2e5d5f160e960ff3f2bf70cddb1141b124447c92155757dfee4ab10c926254"},
+    {"path": "test-artifacts/architecture/ce-recursive-target/step-123-evidence/static-probe/independent-first-pass.md", "sha256": "45c9e0c7f54e43bcd7f9190e3cf0f3425e0199ede0256515b5d39b18e5871cad"},
+    {"path": "test-artifacts/architecture/ce-recursive-target/step-123-evidence/static-probe/countercheck.md", "sha256": "86e5fbf640c4b3ac5075e8b1fa491986eee25389bc109be8472e47753375f617"},
+    {"path": "test-artifacts/architecture/ce-recursive-target/step-123-evidence/static-probe/baseline.log", "sha256": "89b5dd3e3139706e516b974856398d694ab074a577113c4751d9810c6b96f2eb"},
+    {"path": "test-artifacts/architecture/ce-recursive-target/step-123-evidence/static-probe/candidate.log", "sha256": "89b5dd3e3139706e516b974856398d694ab074a577113c4751d9810c6b96f2eb"},
+    {"path": "test-artifacts/architecture/ce-recursive-target/step-123-evidence/demographic-review/astra.md", "sha256": "93d615d08893444595bdf31e6438bbb61115200b6cbce11ad4693f8e4fc35d7d"},
+    {"path": "test-artifacts/architecture/ce-recursive-target/step-123-evidence/demographic-review/classification.json", "sha256": "bbf9c2f759703ae130e099b1d6839f23e97fd24684a4c7b8371ef4b470753d06"},
+    {"path": "test-artifacts/architecture/ce-recursive-target/step-123-evidence/architecture-after/architecture.json", "sha256": "f4a43c972096ae54cec311d125ec93d78d2886af710176778b05192a782e57cb"},
+    {"path": "test-artifacts/architecture/ce-recursive-target/step-123-evidence/architecture-after/architecture.report.html", "sha256": "56491a3c6828d0b01bf6509aba21accef50d6ecefa78eede9b93083340d631c5"},
+    {"path": "test-artifacts/architecture/ce-recursive-target/step-123-evidence/architecture-after/architecture.detail.html", "sha256": "358b504281f5d41ea76729325e73a7170675b7510390f32d7fcb2e9bd10eba7f"},
+    {"path": "test-artifacts/architecture/ce-recursive-target/step-123-evidence/source-slice/qa-final-countercheck.md", "sha256": "8a8f554d4bca0b5be83aa28329c75411fb6d300ec23718244183511f979e83e2"}
+  ]
+}

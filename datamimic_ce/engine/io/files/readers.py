@@ -138,7 +138,7 @@ class FileUtil:
         return processed_data
 
     @staticmethod
-    def read_xlsx_to_dict_list(file_path: Path, sheet_name: str | None = None) -> list[dict]:
+    def read_xlsx_to_dict_list(file_path: Path, sheet_name: str | None = None) -> list[dict[str, object]]:
         """Read the first row of an .xlsx sheet as the header and each following row as a dict.
 
         Robust to real-world sheets: an empty sheet/file yields []; blank header cells are not turned

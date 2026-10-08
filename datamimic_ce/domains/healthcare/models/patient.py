@@ -11,6 +11,7 @@ This module provides the Patient entity model for generating realistic patient d
 """
 
 import datetime
+from collections.abc import Mapping
 
 from datamimic_ce.domains.domain_core import BaseEntity
 from datamimic_ce.domains.domain_core.property_cache import property_cache
@@ -134,7 +135,7 @@ class Patient(BaseEntity):
 
     @property
     @property_cache
-    def transaction_profile(self) -> str | dict[str, float] | None:
+    def transaction_profile(self) -> str | Mapping[str, float] | None:
         """Expose the transaction profile for downstream consumers."""
 
         return self.person_data.transaction_profile
