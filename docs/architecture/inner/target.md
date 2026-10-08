@@ -33,6 +33,10 @@ prepare their own environment. Runtime settings resolve on use. Descriptor
 import-time bootstrap behavior ([Amendment 68](../refactoring-study/experiment-2/amendment-68.md)).
 The empty `engine/__init__.py` is namespace scaffolding; neither initializer
 is a catch-all component.
+Interfaces is an implicit grouping namespace; CLI, MCP, demo, project and Python
+retain their existing owners. Active CLI/MCP initializers and descendant entrypoints
+remain. Parent package introspection changes; external discovery compatibility and
+EE wheel discovery remain UNKNOWN ([Amendment 169](../refactoring-study/experiment-2/amendment-169-interfaces-namespace.md)).
 
 ## Physical target
 

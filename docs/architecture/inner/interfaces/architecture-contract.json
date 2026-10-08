@@ -3,10 +3,6 @@
   "declarations": {
     "modules": [
       {
-        "path": "datamimic_ce/interfaces/__init__.py",
-        "responsibility": "The package groups CLI, MCP, and Python entrypoints without adding domain logic."
-      },
-      {
         "path": "datamimic_ce/interfaces/cli/__init__.py",
         "responsibility": "The CLI package exposes the app lazily so executable startup can load its environment first."
       },

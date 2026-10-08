@@ -1,4 +1,4 @@
-"""Installed-wheel regression for moved domain resources."""
+"""Installed-wheel regression for namespace entrypoints and moved resources."""
 
 from __future__ import annotations
 
@@ -24,9 +24,35 @@ def _run_installed(installation: Path, working_directory: Path, *, domain_data: 
         environment["DATAMIMIC_DOMAIN_DATA"] = str(domain_data)
     script = """
 import json
+import sys
+from importlib.metadata import distribution
 from pathlib import Path
 
 import datamimic_ce
+import datamimic_ce.interfaces as interfaces
+import datamimic_ce.interfaces.cli as cli
+import datamimic_ce.interfaces.mcp as mcp
+
+assert "datamimic_ce.interfaces.cli._app" not in sys.modules
+assert "datamimic_ce.interfaces.mcp.server" not in sys.modules
+from datamimic_ce.interfaces.cli import app
+from datamimic_ce.interfaces.cli._app import app as defined_app
+from datamimic_ce.interfaces.cli.__main__ import main as cli_main
+from datamimic_ce.interfaces.mcp import create_server, mount_mcp
+from datamimic_ce.interfaces.mcp.cli import main as mcp_main
+from datamimic_ce.interfaces.mcp.server import create_server as defined_server, mount_mcp as defined_mount
+from datamimic_ce.interfaces.python.datamimic import DataMimic
+from datamimic_ce.interfaces.python.data_mimic_test import DataMimicTest
+from datamimic_ce.interfaces.python.factory import DataMimicTestFactory
+from datamimic_ce.resources.api import demo_root
+
+assert app is defined_app and create_server is defined_server and mount_mcp is defined_mount
+for cls, module in [(DataMimic, "datamimic"), (DataMimicTest, "data_mimic_test"), (DataMimicTestFactory, "factory")]:
+    assert cls.__module__ == "datamimic_ce.interfaces.python." + module
+entrypoints = {entry.name: entry for entry in distribution("datamimic_ce").entry_points}
+assert entrypoints["datamimic"].load() is cli_main
+assert entrypoints["datamimic-mcp"].load() is mcp_main
+installed_root = Path(datamimic_ce.__file__).resolve().parent.parent
 from datamimic_ce.domains.domain_core.datasets.path import dataset_path
 from datamimic_ce.domains.registry.schema import load_schema
 from datamimic_ce.domains.shared.literal_generators.person.given_name_generator import GivenNameGenerator
@@ -34,11 +60,21 @@ from datamimic_ce.domains.shared.literal_generators.person.given_name_generator 
 dataset = dataset_path("common", "person", "givenName_male_US.csv")
 result = {
     "package": str(Path(datamimic_ce.__file__).resolve()),
+    "interfaces_path": str(Path(next(iter(interfaces.__path__))).resolve()),
+    "interfaces_namespace": str(interfaces.__file__ is None),
+    "demo_resource": str(demo_root().joinpath("demo-ecommerce", "datamimic.xml").is_file()),
     "dataset": str(dataset.resolve()),
     "dataset_exists": str(dataset.is_file()),
     "name": GivenNameGenerator(dataset="US", gender="male").generate() if dataset.is_file() else "",
     "schema": type(load_schema("person", "request", "v1")).__name__,
 }
+for name, module in list(sys.modules.items()):
+    if name == "datamimic_ce" or name.startswith("datamimic_ce."):
+        if module.__file__ is not None:
+            assert Path(module.__file__).resolve().is_relative_to(installed_root)
+            assert Path(module.__spec__.origin).resolve() == Path(module.__file__).resolve()
+        else:
+            assert all(Path(path).resolve().is_relative_to(installed_root) for path in module.__path__)
 print(json.dumps(result))
 """
     result = subprocess.run(
@@ -48,6 +84,7 @@ print(json.dumps(result))
         check=True,
         capture_output=True,
         text=True,
+        timeout=120,
     )
     return json.loads(result.stdout)
 
@@ -64,6 +101,7 @@ def test_moved_domain_resources_work_from_an_installed_wheel(tmp_path: Path) -> 
         [UV, "build", "--out-dir", str(wheel_directory)],
         cwd=ROOT,
         check=True,
+        timeout=120,
     )
     wheel = next(wheel_directory.glob("*.whl"))
     with zipfile.ZipFile(wheel) as archive:
@@ -77,6 +115,7 @@ def test_moved_domain_resources_work_from_an_installed_wheel(tmp_path: Path) -> 
     subprocess.run(
         [UV, "pip", "install", "--python", sys.executable, "--no-deps", "--target", str(installation), str(wheel)],
         check=True,
+        timeout=120,
     )
 
     installed = _run_installed(installation, outside_checkout)
@@ -100,3 +139,19 @@ def test_moved_domain_resources_work_from_an_installed_wheel(tmp_path: Path) -> 
     assert Path(missing["dataset"]) == missing_override / "common" / "person" / "givenName_male_US.csv"
     assert missing["dataset_exists"] == "False"
     assert not missing["name"]
+
+    assert Path(installed["interfaces_path"]) == installation / "datamimic_ce" / "interfaces"
+    assert installed["interfaces_namespace"] == str(not (PACKAGE / "interfaces" / "__init__.py").exists())
+    assert installed["demo_resource"] == "True"
+    environment = dict(os.environ, PYTHONPATH=str(installation))
+    for command in ["datamimic", "datamimic-mcp"]:
+        result = subprocess.run(
+            [str(installation / "bin" / command), "--help"],
+            cwd=outside_checkout,
+            env=environment,
+            check=True,
+            capture_output=True,
+            text=True,
+            timeout=30,
+        )
+        assert "Usage:" in result.stdout

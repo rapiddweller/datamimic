@@ -126,3 +126,11 @@ the entity is missing. Scripts that need paging or cyclic reads should use the
 DSL source path (`source="mem"`, `type="…"`, with `pageSize` or `cyclic`) so IO
 owns selection; do not pass paging policy to the raw getter. `offset` remains
 file-only for Generate sources.
+
+## Interfaces namespace
+
+[Amendment 169](../refactoring-study/experiment-2/amendment-169-interfaces-namespace.md)
+removes CE's docstring-only Interfaces marker while retaining all five adapter
+owners and active CLI/MCP initializers. The shared grouping needs no placeholder;
+CE setuptools namespace proof does not establish EE Maturin wheel discovery.
+Parent introspection/discovery compatibility remains UNKNOWN.

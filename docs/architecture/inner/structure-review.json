@@ -2277,6 +2277,10 @@
   ],
   "removed_initializers": [
     {
+      "source": "interfaces/__init__.py",
+      "reason": "Docstring-only grouping marker; CLI, MCP and Python adapters retain their concrete owners in the existing namespace package."
+    },
+    {
       "source": "engine/runtime/generators/__init__.py",
       "reason": "Empty marker; value construction lives in the namespace package's modules."
     },

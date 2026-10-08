@@ -528,7 +528,41 @@ no widening; validation retains the same 61 baseline failures with exactly those
 two unused diagnostics removed (19 remain). Source digest, measurements and rule
 assessments stay unchanged: FAIL, 89 violations, 200 unknown positions. Contract
 digest and IO-FILES declarations reflect the two removals. Step 141's machine
-binding stays OPEN. CI-ONLY VERIFICATION: exact final-head checks are pending.
+binding stays OPEN. CI-ONLY VERIFICATION: exact `fd1c866f` PR run `37839138594`
+and push run `37839131790` completed; only the two architecture jobs failed.
+
+Step 143: original `a219163e` → current `fd1c866f` passed the four selected seeded
+file-owner cases, with eight complete returned captures equal at both checkpoints.
+This excludes discarded product metadata and broader DSL/worker/EE semantics;
+no ledger promotion. Both `fd1c866f` CI runs completed with two architecture failures.
+
+Step 144: [Amendment 169](amendment-169-interfaces-namespace.md) retains the five
+Interfaces owners and active CLI/MCP initializers. Baseline owner 1 PASS retains
+its alias-counting observer FAIL; additive config completion made no new
+build/install/pytest calls, and candidate owner 1 PASS followed. Package payloads
+1683 → 1682 differ only by the marker; bounded installed API/resource/config proof
+and Ruff/MyPy (489), definition/inner-target/Pylint gates passed in the disposable
+candidate clone. Its known-baseline and unamended against-`fd1c866f` validation remain exit 2
+(88 violations, 200 measured UNKNOWN positions, 60 failures; 57 new entries, zero resolved), with no widening and null machine
+amendment status; no writer was used.
+The disposable candidate report has observation/coverage PASS and declared FAIL;
+254 canonical unknowns are distinct from 200 measured UNKNOWN positions. Recorded-packet
+Interfaces filter selects zero violations and all five adapter IDs; global
+root/engine gaps/UNKNOWNs and viewer issue #408 remain. Three negative guard checks
+passed; the initial scope-error diagnostic remains retained. Final-head CI is
+pending. On 2026-10-09, published ArchKeel 1.0.0 onboarding was reread; the full report followed by
+recorded-packet filters preserves the global verdict. Candidate declaration
+coverage: 25 mounted contracts/150 components have nonblank responsibility text,
+but all 150 components and 629/643 decision declarations remain agent-authored.
+Reviewed entrypoint → Authoring/Runtime and Memstore ownership is coherent; whole
+recursive semantic responsibility and architect confirmation remain incomplete.
+Open wording refinements: IO's context-reading prohibition must reflect the
+approved [IO-owned ExporterContext allowance](../../inner/semantic-review/astra-target-decision.md);
+[RUNTIME-API's responsibility](../../inner/runtime/architecture-contract.json)
+understates its declared context/generator-capability/properties/environment surface
+in [runtime/api.py](../../../../datamimic_ce/engine/runtime/api.py). Existing permissions
+are unchanged. Parent introspection, EE/other Python versions, full DSL/worker
+compatibility and machine binding (#415) remain UNKNOWN.
 
 ## Agent separation
 
