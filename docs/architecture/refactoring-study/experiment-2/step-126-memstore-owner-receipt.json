@@ -1,0 +1,251 @@
+{
+  "step": 126,
+  "source_checkpoint": "b0cef82aa2fb87bf3d0a3879c253b0eca3f60475",
+  "control_checkpoint": "12d5e3a5e576b49a7191ad955807f96cf84d8e62",
+  "source_edits": 0,
+  "committed_xml": 5,
+  "temporary_owner_descriptor": 1,
+  "selected_inputs_with_native_profile": 13,
+  "owner_cases_per_checkpoint": 6,
+  "failures_errors_skips_per_checkpoint": 0,
+  "ledger": {
+    "base_sha256": "5c44e675d52cec3f1d0d9c7d4c438ca749a68457ab672b149dc8257aabc8e1f2",
+    "ledger_sha256": "367023b59a1a377568fe2195d366ff1cb99a0d329bef4d6eac2b5e9530370c55",
+    "paths": 931,
+    "changed_paths": [
+      "tests_ce/integration_tests/test_memstore_api/test_memstore_remove_not_existing_ids.xml",
+      "tests_ce/integration_tests/test_memstore_api/test_memstore_sum_and_count.xml",
+      "tests_ce/integration_tests/test_memstore_api/test_memstore_sum_lenient.xml",
+      "tests_ce/integration_tests/test_memstore_api/test_memstore_variable_script_access.xml",
+      "tests_ce/integration_tests/test_memstore_api/test_wgt_ent_csv_iterate.xml"
+    ],
+    "byte_identical_rows": 926,
+    "reviewed_owner_profiles": 71,
+    "remaining_unknown_owner_profiles": 860,
+    "historical_and_c992_fields": "preserved",
+    "full_acceptance": "FAIL"
+  },
+  "effective_profile": "Identical tracked native development SQLite profile; overrides XML path; fresh disposable clones, unchanged HOME. Native cleanup removes DB and fixture output/db.",
+  "parity_scope": "Existing unseeded owner assertions at actual12d5/b0. No exact dataset/full persisted target-state/originala219 runtime parity established. Historical4CAPTURED/1UNVERIFIED and c992 parity remain unchanged.",
+  "ci_checkpoint": "b0cef82aa2fb87bf3d0a3879c253b0eca3f60475",
+  "ci_per_run": {
+    "success": 24,
+    "architecture_failure": 2,
+    "skipped": 2
+  },
+  "ci_run_ids": [
+    37761390918,
+    37761382518
+  ],
+  "full_acceptance": "FAIL",
+  "artifacts": [
+    {
+      "path": "test-artifacts/architecture/ce-recursive-target/step-126-evidence/actual-clone-preflight.json",
+      "sha256": "172a66bd6ad35fd780014da77e7922a79e32ea00b3a0350cc8ecadaa03a2d7ba"
+    },
+    {
+      "path": "test-artifacts/architecture/ce-recursive-target/step-126-evidence/actual-clone-preflight.md",
+      "sha256": "77a81a5d5558a4f9994c4a3c8820253246d333bd36209d7db6f5559fcad4102f"
+    },
+    {
+      "path": "test-artifacts/architecture/ce-recursive-target/step-126-evidence/astra-runtime-decision.md",
+      "sha256": "c1635eb700f880156a46c6051528a8c0d2b46c9d0051490f4352805bfac6fed2"
+    },
+    {
+      "path": "test-artifacts/architecture/ce-recursive-target/step-126-evidence/astra-runtime-final.md",
+      "sha256": "858c1acae1bb053ba2945071b4a28c1e18ee19855419033bd162a13739f783c7"
+    },
+    {
+      "path": "test-artifacts/architecture/ce-recursive-target/step-126-evidence/ci-b0cef82a-pr.json",
+      "sha256": "20d1933dc3ad3976adc34f873980891e9aee0ceb27e1a4705ac8637e977f1af8"
+    },
+    {
+      "path": "test-artifacts/architecture/ce-recursive-target/step-126-evidence/ci-b0cef82a-push.json",
+      "sha256": "3bb9bf86ea3fa2e9bb942a50826eee047fe6321ea207c8838a159a78094174a2"
+    },
+    {
+      "path": "test-artifacts/architecture/ce-recursive-target/step-126-evidence/countercheck.md",
+      "sha256": "aef5cd01ed0fda156657fbe4d11bcb5373c2d5ce4ead22a900d63c7437d7cd95"
+    },
+    {
+      "path": "test-artifacts/architecture/ce-recursive-target/step-126-evidence/impl-first-pass.md",
+      "sha256": "3fa11c233685c7bead74f787f9f38858212f413d53fa38e7a16ed89e0f4055b5"
+    },
+    {
+      "path": "test-artifacts/architecture/ce-recursive-target/step-126-evidence/join_ledger.py",
+      "sha256": "80bdb917c25c9b4f30a18b6754cc9b6b658e02608db27500b33c31645079a419"
+    },
+    {
+      "path": "test-artifacts/architecture/ce-recursive-target/step-126-evidence/join_ledger_v2.py",
+      "sha256": "94cf71578f8c1ae06fa3f5b6e1857e39edd10b3f3bfeca7dc998731cbd42b541"
+    },
+    {
+      "path": "test-artifacts/architecture/ce-recursive-target/step-126-evidence/ledger-delta-v2.json",
+      "sha256": "e0f37e328d43a20488b74de0c213479f31499e6919aa77801a5c2b988b256a05"
+    },
+    {
+      "path": "test-artifacts/architecture/ce-recursive-target/step-126-evidence/ledger-delta.json",
+      "sha256": "45cd25eb5aa53763aa539cf025651a67a8bccf7042199dfd132b2a3fe6da65d2"
+    },
+    {
+      "path": "test-artifacts/architecture/ce-recursive-target/step-126-evidence/ledger-step126-memstore-v2.jsonl",
+      "sha256": "367023b59a1a377568fe2195d366ff1cb99a0d329bef4d6eac2b5e9530370c55"
+    },
+    {
+      "path": "test-artifacts/architecture/ce-recursive-target/step-126-evidence/ledger-step126-memstore.jsonl",
+      "sha256": "20f4c156be8b55854135d78f20ba8740b4afd46877a57d5c46ca5661e22d3c25"
+    },
+    {
+      "path": "test-artifacts/architecture/ce-recursive-target/step-126-evidence/owner-runs/candidate.junit.xml",
+      "sha256": "bbb1d4c48bb4cc6cc4bbef2c9ae1436b0a4d885058df036b8becc8924bb9e0c9"
+    },
+    {
+      "path": "test-artifacts/architecture/ce-recursive-target/step-126-evidence/owner-runs/candidate.preflight.json",
+      "sha256": "1e238c557551aec526c3fe9c63bc13a338088789015c964c90b1615c631628da"
+    },
+    {
+      "path": "test-artifacts/architecture/ce-recursive-target/step-126-evidence/owner-runs/candidate.preflight.stderr.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "test-artifacts/architecture/ce-recursive-target/step-126-evidence/owner-runs/candidate.stderr.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "test-artifacts/architecture/ce-recursive-target/step-126-evidence/owner-runs/candidate.stdout.log",
+      "sha256": "1e16de77d5bb6dd419e83a0a54ca5b241cb3266084a4d2a2aa37e5884168db2e"
+    },
+    {
+      "path": "test-artifacts/architecture/ce-recursive-target/step-126-evidence/owner-runs/control.junit.xml",
+      "sha256": "039faf1f0b08f68952457632f5f61420deddc6fd63f3405be420b50e8d07cb72"
+    },
+    {
+      "path": "test-artifacts/architecture/ce-recursive-target/step-126-evidence/owner-runs/control.preflight.json",
+      "sha256": "61149b0ae00c836873d6d0be63d47696085050663e9391728efb1878066f727a"
+    },
+    {
+      "path": "test-artifacts/architecture/ce-recursive-target/step-126-evidence/owner-runs/control.preflight.stderr.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "test-artifacts/architecture/ce-recursive-target/step-126-evidence/owner-runs/control.stderr.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "test-artifacts/architecture/ce-recursive-target/step-126-evidence/owner-runs/control.stdout.log",
+      "sha256": "c989393f3887c1766893d3c9872ef90c2c2004ce1f4d85b01b9bc0b2b9071dbe"
+    },
+    {
+      "path": "test-artifacts/architecture/ce-recursive-target/step-126-evidence/owner-runs/receipt.json",
+      "sha256": "5a78883ed83624ccf99202e83721df516fe6cc45fcf9d68e10c972e1585cf198"
+    },
+    {
+      "path": "test-artifacts/architecture/ce-recursive-target/step-126-evidence/preflight.md",
+      "sha256": "56ffc5b3e3589b90b5391348c21523129a6093d75fe0854f65f9e24844a5f5c8"
+    },
+    {
+      "path": "test-artifacts/architecture/ce-recursive-target/step-126-evidence/profile-preflight/candidate.json",
+      "sha256": "1e238c557551aec526c3fe9c63bc13a338088789015c964c90b1615c631628da"
+    },
+    {
+      "path": "test-artifacts/architecture/ce-recursive-target/step-126-evidence/profile-preflight/candidate.stderr.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "test-artifacts/architecture/ce-recursive-target/step-126-evidence/profile-preflight/control.json",
+      "sha256": "61149b0ae00c836873d6d0be63d47696085050663e9391728efb1878066f727a"
+    },
+    {
+      "path": "test-artifacts/architecture/ce-recursive-target/step-126-evidence/profile-preflight/control.stderr.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "test-artifacts/architecture/ce-recursive-target/step-126-evidence/profile-preflight/independent_check.py",
+      "sha256": "069d2f37888124fe9a91ca2b99fa85c3951e49d79102ea835f5ebc2d65f6b328"
+    },
+    {
+      "path": "test-artifacts/architecture/ce-recursive-target/step-126-evidence/profile-preflight/qa-candidate.json",
+      "sha256": "087308ca0382ea7db20ce45f63abe3b8f20bb3877c335268133fb332396ced32"
+    },
+    {
+      "path": "test-artifacts/architecture/ce-recursive-target/step-126-evidence/profile-preflight/qa-control.json",
+      "sha256": "b348bdf5498a579650f89ee30531604937c1a12063740e1909d48c798632442d"
+    },
+    {
+      "path": "test-artifacts/architecture/ce-recursive-target/step-126-evidence/profile-preflight/receipt.json",
+      "sha256": "c6bbaba642b997f96555d6b097f7cffced8e469791c7396543192b03c5c9a239"
+    },
+    {
+      "path": "test-artifacts/architecture/ce-recursive-target/step-126-evidence/profile-review-astra.json",
+      "sha256": "82ff7a508e16b46b35608f5cbebe0177ce55afbf3895505fb17ec448375e0b0b"
+    },
+    {
+      "path": "test-artifacts/architecture/ce-recursive-target/step-126-evidence/profile_probe.py",
+      "sha256": "6380edec6efff3323ba1beb20a6984e4f439867097fea4b5201b4a6a10b2c768"
+    },
+    {
+      "path": "test-artifacts/architecture/ce-recursive-target/step-126-evidence/proposal-v2.md",
+      "sha256": "c68b7a5e486307602ee46d9700c38fb044b90ca1a6ec1774478837a8a159fcb6"
+    },
+    {
+      "path": "test-artifacts/architecture/ce-recursive-target/step-126-evidence/proposal.md",
+      "sha256": "a6126922ede9ae8ec06616c81ec2a8963684fe129262be2c53f9ac76765b8c01"
+    },
+    {
+      "path": "test-artifacts/architecture/ce-recursive-target/step-126-evidence/qa-countercheck.md",
+      "sha256": "d7a755603dfcb9e982f00679f2affb77750dc8900b272f351ca758d6b7296b4c"
+    },
+    {
+      "path": "test-artifacts/architecture/ce-recursive-target/step-126-evidence/qa-first-pass.md",
+      "sha256": "4367a4abbc310219037e477458f88cdb3735c30805eec70cb5f9e0e79dd58843"
+    },
+    {
+      "path": "test-artifacts/architecture/ce-recursive-target/step-126-evidence/qa-runtime-ledger-v2.json",
+      "sha256": "ee15a23078f343d84d1e72bc15b13f2fbb2f19820831edc75d5958ad0b2c013c"
+    },
+    {
+      "path": "test-artifacts/architecture/ce-recursive-target/step-126-evidence/qa-runtime-ledger-v2.md",
+      "sha256": "d438ab10c531b846e1b4aa94bb152fa3bcd10d9e6e39d2d02f1f2bd842f1553d"
+    },
+    {
+      "path": "test-artifacts/architecture/ce-recursive-target/step-126-evidence/qa-runtime-ledger.json",
+      "sha256": "8f3bc9eec58c092d435d336f4822b9596c071c0a6fa7457e866d459eec0963f2"
+    },
+    {
+      "path": "test-artifacts/architecture/ce-recursive-target/step-126-evidence/qa-runtime-ledger.md",
+      "sha256": "de8683f86ab585d979ca2f6409adbfbb66996bd64030c220b93edf59cfe80faa"
+    },
+    {
+      "path": "test-artifacts/architecture/ce-recursive-target/step-126-evidence/root-execution-decision.md",
+      "sha256": "6dc0ed54c09da0ef570861649a513076069cfb28b5d472843290b662879464e2"
+    },
+    {
+      "path": "test-artifacts/architecture/ce-recursive-target/step-126-evidence/root-postrun-check.json",
+      "sha256": "eb4cc946a630c98592b6861d2b67c45ed0a574d68cce4ce62077756c5e08f260"
+    },
+    {
+      "path": "test-artifacts/architecture/ce-recursive-target/step-126-evidence/root-run.stderr.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "test-artifacts/architecture/ce-recursive-target/step-126-evidence/root-run.stdout.log",
+      "sha256": "856db6871efcf62c409041a86423a25a665122bb5833b947b27bcd3ddd4af58f"
+    },
+    {
+      "path": "test-artifacts/architecture/ce-recursive-target/step-126-evidence/run_cohort.py",
+      "sha256": "5c5c70a5891c58a538fcc446e0ea4c2fdaf46b4d20a998534fc0de31011dc5ec"
+    },
+    {
+      "path": "test-artifacts/architecture/ce-recursive-target/step-126-evidence/run_preflight.py",
+      "sha256": "8d8b6a63faf133ad159cb808553918a804558fe2185798a5f2d7d35d4dbed47b"
+    },
+    {
+      "path": "test-artifacts/architecture/ce-recursive-target/step-126-evidence/selection-v2.json",
+      "sha256": "bb3b652d572d6d06ff2f0e5b2e33a747bc1954b18334a2378c83af053ca4d341"
+    },
+    {
+      "path": "test-artifacts/architecture/ce-recursive-target/step-126-evidence/selection.json",
+      "sha256": "63a86e070faff7463de9ef1fa611bdda0e3be2ae63e7c555b107decc2fbb1c49"
+    }
+  ]
+}
