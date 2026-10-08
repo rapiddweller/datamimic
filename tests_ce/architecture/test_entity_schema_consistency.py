@@ -15,7 +15,9 @@ the contract is ``emitted_keys ⊆ declared_names``.
 
 from __future__ import annotations
 
+import json
 from random import Random
+from types import MappingProxyType
 
 import pytest
 
@@ -25,7 +27,10 @@ from datamimic_ce.domains.finance.generators.transaction_generator import Transa
 from datamimic_ce.domains.finance.models.bank_account import BankAccount
 from datamimic_ce.domains.finance.models.transaction import Transaction
 from datamimic_ce.domains.finance.services.transaction_service import TRANSACTION_SCHEMA
+from datamimic_ce.domains.healthcare.services.patient_service import PatientService
 from datamimic_ce.domains.registry.entities import list_entity_specs
+from datamimic_ce.domains.shared.demographics.config import DemographicConfig
+from datamimic_ce.domains.shared.services.person_service import PersonService
 
 _SEED = 20260521
 
@@ -96,3 +101,37 @@ def test_unlinked_transaction_omits_account() -> None:
     transaction = Transaction(TransactionGenerator(rng=Random(_SEED)))
 
     assert "account" not in transaction.to_dict()
+
+
+@pytest.mark.parametrize("service_type", (PersonService, PatientService))
+@pytest.mark.parametrize("profile_kind", ("none", "string", "dict", "mapping"))
+def test_configured_transaction_profile_matches_schema(service_type, profile_kind: str) -> None:
+    backing = {"daily": 0.5}
+    profile = {
+        "none": None,
+        "string": "student",
+        "dict": backing,
+        "mapping": MappingProxyType(backing),
+    }[profile_kind]
+    service = service_type(
+        dataset="US", demographic_config=DemographicConfig(transaction_profile=profile), rng=Random(_SEED)
+    )
+    entity = service.generate()
+    value = entity.transaction_profile
+    assert value is profile
+
+    if profile_kind in ("dict", "mapping"):
+        backing["daily"] = 0.75
+        assert entity.transaction_profile is value
+        assert value["daily"] == 0.75
+    if profile_kind == "mapping":
+        with pytest.raises(TypeError, match="not JSON serializable"):
+            json.dumps(value)
+    else:
+        expected_json = {"none": "null", "string": '"student"', "dict": '{"daily": 0.75}'}
+        assert json.dumps(value) == expected_json[profile_kind]
+
+    spec = next(field for field in service.attribute_specs() if field.name == "transaction_profile")
+    assert _type_matches(value, spec), f"{type(value).__name__} does not satisfy {spec.data_type}"
+    if profile_kind == "mapping":
+        assert entity.to_dict()["transaction_profile"] is value

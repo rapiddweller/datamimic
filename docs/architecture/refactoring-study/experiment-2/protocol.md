@@ -485,6 +485,12 @@ remain unchanged; no oracle or architecture allowance changes.
 and eleven three-way seeded digest equalities. Five unseeded strict gaps and
 full931 acceptance remain open; no target or oracle changes.
 
+[Amendment 165](amendment-165-transaction-profile-catalog.md) permits the two
+transaction-profile catalog and reference corrections and matching model-doc
+rows. Runtime Mapping identity and native serialization behavior remain unchanged;
+[Step 132](step-132-transaction-profile-catalog.md) records bounded local verification.
+Full DSL and architecture acceptance remain open.
+
 ## Agent separation
 
 - The implementation agent changes production code and targeted tests for one approved slice.

@@ -10,6 +10,7 @@ Patient service.
 This module provides the PatientService class for generating and managing patient data.
 """
 
+from collections.abc import Mapping
 from datetime import datetime
 from random import Random
 
@@ -42,7 +43,7 @@ PATIENT_SCHEMA = EntitySchema(
         field("emergency_contact", dict, "Emergency contact details."),
         field("insurance_provider", str, "Insurance provider name."),
         field("insurance_policy_number", str, "Insurance policy number."),
-        field("transaction_profile", (str, dict), "Spending/transaction behaviour profile.", optional=True),
+        field("transaction_profile", (str, Mapping), "Spending/transaction behaviour profile.", optional=True),
         field("primary_doctor", dict, "Primary doctor details (present when assigned)."),
     ),
 )

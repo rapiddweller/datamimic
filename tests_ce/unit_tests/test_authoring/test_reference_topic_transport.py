@@ -54,3 +54,18 @@ def test_every_authoring_reference_category_has_cli_and_service_parity(
     cli_result = CliRunner().invoke(app, ["reference", "authoring", "--category", category.value])
     assert cli_result.exit_code == 0, cli_result.stdout
     assert cli_result.stdout.strip()
+
+
+@pytest.mark.parametrize("entity", ("Person", "Patient"))
+def test_named_reference_describes_mapping_transaction_profile(entity: str) -> None:
+    from datamimic_ce.authoring.api import reference as authoring_reference
+
+    result = authoring_reference(ReferenceRequest(topic=ReferenceTopic.ENTITIES, name=entity))
+    assert result.ok is True
+    assert result.content is not None
+    profile_lines = [line for line in result.content.splitlines() if line.startswith("- transaction_profile?")]
+    assert profile_lines == ["- transaction_profile?: (<class 'str'>, <class 'collections.abc.Mapping'>)"]
+
+    cli_result = CliRunner().invoke(app, ["reference", "entities", entity])
+    assert cli_result.exit_code == 0, cli_result.stdout
+    assert cli_result.stdout == result.content + "\n"

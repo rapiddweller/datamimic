@@ -5,6 +5,7 @@
 # For questions and support, contact: info@rapiddweller.com
 
 
+from collections.abc import Mapping
 from datetime import datetime
 from random import Random
 
@@ -31,7 +32,7 @@ PERSON_SCHEMA = EntitySchema(
         field("academic_title", str, "Academic title, if any.", optional=True),
         field("salutation", str, "Salutation form."),
         field("nobility_title", str, "Nobility title, if any.", optional=True),
-        field("transaction_profile", (str, dict), "Spending/transaction behaviour profile.", optional=True),
+        field("transaction_profile", (str, Mapping), "Spending/transaction behaviour profile.", optional=True),
     ),
 )
 
