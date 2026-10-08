@@ -517,6 +517,19 @@ exact command and remaining limits.
 Worker/historical compatibility, full DSL/EE acceptance and final-head CI remain
 open; no merge or baseline promotion.
 
+Step 142 (2026-10-08): retire only IO-FILES' explicit `is_json_object` and
+`is_json_records` selectors after [Step 109](step-109-source-owners.md) moved
+cross-owner JSON classification into readers. The whole readers module remains
+public; function names, bodies and calls stay unchanged. This retires redundant
+explicit obligations, not Python access. [Amendment 33](amendment-33.md) remains
+historical. LOCAL VERIFIED: 12 definition and four inner-target cases, Pylint,
+Ruff and MyPy (490 files) passed. Unamended comparison against `637fedbd` reports
+no widening; validation retains the same 61 baseline failures with exactly those
+two unused diagnostics removed (19 remain). Source digest, measurements and rule
+assessments stay unchanged: FAIL, 89 violations, 200 unknown positions. Contract
+digest and IO-FILES declarations reflect the two removals. Step 141's machine
+binding stays OPEN. CI-ONLY VERIFICATION: exact final-head checks are pending.
+
 ## Agent separation
 
 - The implementation agent changes production code and targeted tests for one approved slice.
