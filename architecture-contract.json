@@ -223,7 +223,7 @@
         "Read, select, page and write external/in-memory data."
       ],
       "forbidden_responsibilities": [
-        "reading runtime context",
+        "Depend on concrete Runtime context or DSL statement types, or access caller context beyond the approved IO-owned ExporterContext protocol.",
         "evaluating expressions",
         "task orchestration"
       ],

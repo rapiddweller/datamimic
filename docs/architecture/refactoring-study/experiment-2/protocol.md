@@ -549,19 +549,33 @@ The disposable candidate report has observation/coverage PASS and declared FAIL;
 254 canonical unknowns are distinct from 200 measured UNKNOWN positions. Recorded-packet
 Interfaces filter selects zero violations and all five adapter IDs; global
 root/engine gaps/UNKNOWNs and viewer issue #408 remain. Three negative guard checks
-passed; the initial scope-error diagnostic remains retained. Final-head CI is
-pending. On 2026-10-09, published ArchKeel 1.0.0 onboarding was reread; the full report followed by
+passed; the initial scope-error diagnostic remains retained. Final-head `4eaede0a` push/PR CI completed: 24 successful jobs, two architecture
+failures and two skips each. PR scanned synthetic merge `53980602`; both source
+digests and native validation measurements match the local report. On 2026-10-09, published ArchKeel 1.0.0 onboarding was reread; the full report followed by
 recorded-packet filters preserves the global verdict. Candidate declaration
 coverage: 25 mounted contracts/150 components have nonblank responsibility text,
 but all 150 components and 629/643 decision declarations remain agent-authored.
 Reviewed entrypoint → Authoring/Runtime and Memstore ownership is coherent; whole
 recursive semantic responsibility and architect confirmation remain incomplete.
-Open wording refinements: IO's context-reading prohibition must reflect the
-approved [IO-owned ExporterContext allowance](../../inner/semantic-review/astra-target-decision.md);
-[RUNTIME-API's responsibility](../../inner/runtime/architecture-contract.json)
-understates its declared context/generator-capability/properties/environment surface
-in [runtime/api.py](../../../../datamimic_ce/engine/runtime/api.py). Existing permissions
-are unchanged. Parent introspection, EE/other Python versions, full DSL/worker
+[Amendment 170](amendment-170-responsibility-wording.md) reconciles the two responsibility
+sentences with the approved IO-owned ExporterContext boundary and existing Runtime API
+surface. Source, permissions and agent decision labels remain unchanged; whole semantic
+responsibility acceptance remains open. Actual against-base validation reports two
+unbound prose-field widenings; Astra accepts this RED checkpoint, while machine binding
+stays OPEN (#415). The fresh report retains identical 88 violations/254 canonical unknowns
+and 200 measured UNKNOWN positions; full Ruff/MyPy and 12 definition cases pass.
+
+Step 145: original `a219163e` → current `4eaede0a` passed nine existing cases in one
+uniqueness owner: ten descriptor attempts, six complete captures and four matching
+native exception graphs/stages per endpoint. A failed sandbox collection remains retained
+(config/logger imported, no selected test); four separately reviewed access-context phases
+then passed once each. NullQuota produced no null rows, so that branch remains UNKNOWN.
+Original-only DEFAULT_LOGGER and physical traceback paths remain explicit differences.
+No ledger promotion or full DSL/EE/worker/serialization acceptance.
+
+Step 146: Amendment 170 changes only the two responsibility sentences. Source, public
+interfaces, dependency grants, selectors, rules, baseline, oracle and agent labels are
+unchanged. Exact-commit CI remains pending. Parent introspection, EE/other Python versions, full DSL/worker
 compatibility and machine binding (#415) remain UNKNOWN.
 
 ## Agent separation

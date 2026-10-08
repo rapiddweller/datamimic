@@ -96,7 +96,7 @@
         "datamimic_ce.engine.runtime"
       ],
       "responsibilities": [
-        "Public runtime lifecycle entry and inert runtime package initializer."
+        "Expose runtime lifecycle entry points, context types, generator capabilities, descriptor properties and environment access; own the inert Runtime package initializer."
       ],
       "forbidden_responsibilities": [
         "Own task execution or IO implementations."
