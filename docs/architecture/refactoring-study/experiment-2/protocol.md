@@ -491,6 +491,12 @@ rows. Runtime Mapping identity and native serialization behavior remain unchange
 [Step 132](step-132-transaction-profile-catalog.md) records bounded local verification.
 Full DSL and architecture acceptance remain open.
 
+[Amendment 166](amendment-166-native-scope-guidance.md) permits only the native
+scope-guidance suffix and three ordinary message expectations. Local verification
+and independent candidate review are recorded there. All 19
+historical message rows and unchanged comparator outcomes remain visible; full
+acceptance and Step 131's separate native profile stay unchanged.
+
 ## Agent separation
 
 - The implementation agent changes production code and targeted tests for one approved slice.

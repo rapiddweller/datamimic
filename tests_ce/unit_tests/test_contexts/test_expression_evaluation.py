@@ -69,15 +69,19 @@ def test_expression_rejects_non_values(expression: str, message: str) -> None:
         (
             "missing",
             "Failed while evaluate 'missing': name 'missing' is not defined in this scope; "
-            "a same-scope sibling resolves bare (or via this.) - check the name; "
-            "an ANCESTOR scope's name needs parent./root., it does not resolve bare",
+            "check spelling, definition order and value shape; current-scope names can resolve bare, "
+            "but existing outermost bare names win collisions; intermediate ancestor names need qualification; "
+            "use this.name for the current scope, parent.name for the immediate enclosing record, "
+            "or root.name for an outermost field when these aliases are available, or use a qualified scope path",
             NameError,
         ),
         (
             "record.missing",
             "Failed while evaluate 'record.missing': missing attribute 'missing'; "
-            "a same-scope sibling resolves bare (or via this.) - check the name; "
-            "an ANCESTOR scope's name needs parent./root., it does not resolve bare",
+            "check spelling, definition order and value shape; current-scope names can resolve bare, "
+            "but existing outermost bare names win collisions; intermediate ancestor names need qualification; "
+            "use this.name for the current scope, parent.name for the immediate enclosing record, "
+            "or root.name for an outermost field when these aliases are available, or use a qualified scope path",
             AttributeError,
         ),
         (

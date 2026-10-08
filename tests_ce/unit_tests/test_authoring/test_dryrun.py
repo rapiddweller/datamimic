@@ -516,8 +516,10 @@ def test_dm002_scope_hint_matches_native_nested_scope_rules() -> None:
     assert diagnostic.message == (
         "Dry-run failed: Failed when execute script of element 'bare_mid_from_leaf': "
         "Failed while evaluate 'mid': name 'mid' is not defined in this scope; "
-        "a same-scope sibling resolves bare (or via this.) - check the name; "
-        "an ANCESTOR scope's name needs parent./root., it does not resolve bare"
+        "check spelling, definition order and value shape; current-scope names can resolve bare, "
+        "but existing outermost bare names win collisions; intermediate ancestor names need qualification; "
+        "use this.name for the current scope, parent.name for the immediate enclosing record, "
+        "or root.name for an outermost field when these aliases are available, or use a qualified scope path"
     )
     assert diagnostic.fix_hint == (
         "A script may reference an unavailable name or an unexpected value structure. "
