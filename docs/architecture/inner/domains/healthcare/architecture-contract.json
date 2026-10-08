@@ -12,23 +12,23 @@
       },
       {
         "path": "datamimic_ce/domains/healthcare/generators/doctor_generator.py",
-        "responsibility": "DoctorGenerator generates synthetic domain values through generate_specialty, generate_medical_school, and generate_certifications, using the required RNG, dataset, or clock basis."
+        "responsibility": "DoctorGenerator generates doctor-ID candidates, specialties, medical schools, certifications, NPI and license numbers, office hours, and new-patient acceptance status; candidate, NPI, license-number, office-hour, and acceptance sampling honor the public RNG accessor."
       },
       {
         "path": "datamimic_ce/domains/healthcare/generators/hospital_generator.py",
-        "responsibility": "HospitalGenerator generates synthetic domain values through generate_hospital_name, get_hospital_type, and generate_departments, using the required RNG, dataset, or clock basis."
+        "responsibility": "HospitalGenerator generates hospital-ID candidates and owns capacity, founding year, services, emergency and teaching status, and operational details; BaseEntity owns unique ID allocation, and the founding-year calculation uses its anchored reference clock."
       },
       {
         "path": "datamimic_ce/domains/healthcare/generators/medical_device_generator.py",
-        "responsibility": "MedicalDeviceGenerator generates equipment and maintenance values from healthcare datasets and links technician values to PersonGenerator."
+        "responsibility": "MedicalDeviceGenerator generates device-ID candidates, other equipment identifiers, and maintenance values using the configured dataset, RNG, and reference clock; BaseEntity owns unique device-ID allocation, and this generator links technician values to PersonGenerator."
       },
       {
         "path": "datamimic_ce/domains/healthcare/generators/medical_procedure_generator.py",
-        "responsibility": "MedicalProcedureGenerator generates synthetic domain values through get_procedure_name, generate_procedure_description, and generate_specialty, using the required RNG, dataset, or clock basis."
+        "responsibility": "MedicalProcedureGenerator generates procedure-ID candidates and independently callable procedure codes, names, descriptions, specialties, duration, surgical-status, diagnostic-status, preventive-status, and anesthesia values; it does not own MedicalProcedure's coupled cached cost calculation or unique-ID allocation."
       },
       {
         "path": "datamimic_ce/domains/healthcare/generators/patient_generator.py",
-        "responsibility": "PatientGenerator generates synthetic domain values through pick_blood_type, generate_age_appropriate_conditions, and generate_insurance_provider, using the required RNG, dataset, or clock basis."
+        "responsibility": "PatientGenerator generates patient-ID candidates, medical-record and insurance-policy numbers, Social Security numbers, height from supplied age and gender, weight from supplied age and height, blood types, age-appropriate conditions, and insurance providers using the required RNG, dataset, or clock basis."
       },
       {
         "path": "datamimic_ce/domains/healthcare/models/__init__.py",
@@ -44,11 +44,11 @@
       },
       {
         "path": "datamimic_ce/domains/healthcare/models/medical_device.py",
-        "responsibility": "MedicalDevice tracks equipment identity, assignment, lifecycle dates, status, usage, and maintenance history."
+        "responsibility": "MedicalDevice tracks equipment identity, assignment, lifecycle dates, status, usage, and maintenance history, and owns cached specifications because their draws interleave with lazy device-type access and generator helpers."
       },
       {
         "path": "datamimic_ce/domains/healthcare/models/medical_procedure.py",
-        "responsibility": "MedicalProcedure describes a coded clinical service with specialty, duration, cost, clinical flags, and recovery time."
+        "responsibility": "MedicalProcedure exposes a coded clinical service, retains lazy access to its claimed procedure ID, and owns its cached cost calculation because it is coupled to lazy clinical-property evaluation."
       },
       {
         "path": "datamimic_ce/domains/healthcare/models/patient.py",
@@ -97,10 +97,10 @@
         "datamimic_ce.domains.healthcare.models"
       ],
       "responsibilities": [
-        "Expose lazy patient and doctor demographics plus hospital, procedure, and medical-device clinical and operational fields."
+        "Expose lazy patient and doctor demographics plus hospital, procedure, and medical-device clinical and operational fields; MedicalProcedure owns its coupled cached cost calculation, and MedicalDevice owns cached specifications because their evaluation interleaves lazy reads and generator draws."
       ],
       "forbidden_responsibilities": [
-        "Generate dataset values directly or own service orchestration."
+        "Generate independent values directly or own service orchestration."
       ],
       "provenance": [
         "docs/architecture/inner/target.md"
@@ -129,7 +129,7 @@
         "datamimic_ce.domains.healthcare.generators"
       ],
       "responsibilities": [
-        "Generate patient demographics and conditions, doctor credentials, hospital services, procedure details, and device lifecycle history."
+        "Generate patient-ID candidates, medical-record and insurance-policy numbers, Social Security numbers, patient height from age and gender and weight from age and height, patient demographics and conditions, doctor credentials, doctor-ID candidates and office hours, hospital-ID and device-ID candidates, hospital services and capacity, procedure-ID candidates and details, and equipment lifecycle history; BaseEntity owns unique ID allocation."
       ],
       "forbidden_responsibilities": [
         "Import healthcare models or services."
@@ -156,7 +156,10 @@
         "datamimic_ce.domains.healthcare.services"
       ],
       "responsibilities": [
-        "Bind patient, doctor, hospital, procedure, and device generators to entity models and declare exposed fields and required datasets."
+        "Bind healthcare generators to entity models, declare exposed fields and datasets, and maintain package-level model and service exports."
+      ],
+      "exact_modules": [
+        "datamimic_ce.domains.healthcare"
       ],
       "forbidden_responsibilities": [
         "Own generator algorithms or entity property behavior."

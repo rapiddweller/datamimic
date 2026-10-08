@@ -52,9 +52,8 @@ class EducationalInstitution(BaseEntity):
         Returns:
             A unique identifier for the institution.
         """
-        rng = self._educational_institution_generator.rng
-        suffix = "".join(rng.choice("0123456789ABCDEF") for _ in range(8))
-        return self._claim_identifier("institution_id", f"EDU-{suffix}")
+        candidate = self._educational_institution_generator.generate_institution_id_candidate()
+        return self._claim_identifier("institution_id", candidate)
 
     @property
     @property_cache
@@ -64,78 +63,11 @@ class EducationalInstitution(BaseEntity):
         Returns:
             The institution name.
         """
-        # Get city or address information for naming
         city = self.address.city
         state = self.address.state
-
-        # Generate institution name based on type and level
         institution_type = self.type
         level = self.level
-
-        # Name formats
-        name_formats = []
-
-        if "University" in institution_type:
-            name_formats = [
-                f"{city} University",
-                f"University of {city}",
-                f"{state} State University",
-                f"{city} Technical University",
-                f"{city} Metropolitan University",
-            ]
-        elif "College" in institution_type:
-            name_formats = [
-                f"{city} College",
-                f"{city} Community College",
-                f"{state} College",
-                f"{city} Technical College",
-                f"{city} Liberal Arts College",
-            ]
-        elif "School" in institution_type:
-            if "Elementary" in level:
-                name_formats = [
-                    f"{city} Elementary School",
-                    f"{city} Primary School",
-                    f"{city} Academy",
-                    f"Washington Elementary School of {city}",
-                    "Lincoln Elementary School",
-                ]
-            elif "Middle" in level:
-                name_formats = [
-                    f"{city} Middle School",
-                    f"{city} Intermediate School",
-                    f"{city} Junior High School",
-                    "Jefferson Middle School",
-                    "Roosevelt Middle School",
-                ]
-            elif "High" in level:
-                name_formats = [
-                    f"{city} High School",
-                    f"{city} Senior High School",
-                    f"{state} High School",
-                    "Kennedy High School",
-                    "Roosevelt High School",
-                ]
-            else:
-                name_formats = [
-                    f"{city} Academy",
-                    f"{city} School",
-                    f"{city} {level} School",
-                    f"{state} Academy",
-                    f"Central School of {city}",
-                ]
-
-        if not name_formats:
-            name_formats = [
-                f"{city} Education Center",
-                f"{city} Learning Institute",
-                f"{city} Academy",
-                f"{state} Institute",
-                f"Central Institute of {city}",
-            ]
-
-        #  domain RNG must be deterministic via generator
-        return self._educational_institution_generator.rng.choice(name_formats)
+        return self._educational_institution_generator.generate_name(city, state, institution_type, level)
 
     @property
     @property_cache
@@ -192,23 +124,7 @@ class EducationalInstitution(BaseEntity):
         """
         institution_type = self.type
         level = self.level
-
-        # Adjust student count ranges based on institution type and level
-        if "University" in institution_type:
-            return self._educational_institution_generator.rng.randint(5000, 40000)
-        elif "College" in institution_type:
-            return self._educational_institution_generator.rng.randint(1000, 15000)
-        elif "School" in institution_type:
-            if "Elementary" in level:
-                return self._educational_institution_generator.rng.randint(200, 800)
-            elif "Middle" in level:
-                return self._educational_institution_generator.rng.randint(300, 1000)
-            elif "High" in level:
-                return self._educational_institution_generator.rng.randint(500, 2500)
-            else:
-                return self._educational_institution_generator.rng.randint(200, 1500)
-        else:
-            return self._educational_institution_generator.rng.randint(100, 5000)
+        return self._educational_institution_generator.generate_student_count(institution_type, level)
 
     @property
     @property_cache
@@ -219,11 +135,7 @@ class EducationalInstitution(BaseEntity):
             The number of staff members.
         """
         student_count = self.student_count
-        student_to_staff_ratio = self._educational_institution_generator.rng.uniform(
-            10, 25
-        )  # Average student-to-staff ratio
-
-        return max(5, int(student_count / student_to_staff_ratio))
+        return self._educational_institution_generator.generate_staff_count(student_count)
 
     @property
     @property_cache
@@ -284,21 +196,7 @@ class EducationalInstitution(BaseEntity):
             A list of programs.
         """
         level = self.level
-        # Map level to slug
-        if "Elementary" in level:
-            slug = "elementary"
-        elif "Middle" in level:
-            slug = "middle_school"
-        elif "High" in level:
-            slug = "high_school"
-        elif any(k in level for k in ("Higher", "Undergraduate", "Graduate", "Postgraduate")):
-            slug = "higher_education"
-        elif any(k in level for k in ("Vocational", "Technical")):
-            slug = "vocational"
-        else:
-            slug = "k12"
-
-        return self._educational_institution_generator.pick_programs(slug, start=Path(__file__))
+        return self._educational_institution_generator.generate_programs(level, start=Path(__file__))
 
     @property
     @property_cache

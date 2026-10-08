@@ -77,7 +77,10 @@
         "datamimic_ce.domains.shared.converters.base"
       ],
       "responsibilities": [
-        "Converter interface."
+        "Defines the converter interface and owns the legacy converter package marker."
+      ],
+      "exact_modules": [
+        "datamimic_ce.domains.shared.converters"
       ],
       "forbidden_responsibilities": [
         "Implement a particular transformation"

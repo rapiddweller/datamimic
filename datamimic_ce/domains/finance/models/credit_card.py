@@ -15,7 +15,6 @@ from datetime import datetime
 from datamimic_ce.domains.domain_core import BaseEntity
 from datamimic_ce.domains.domain_core.property_cache import property_cache
 from datamimic_ce.domains.finance.generators.credit_card_generator import CreditCardGenerator
-from datamimic_ce.domains.finance.luhn import luhn_check_digit
 from datamimic_ce.domains.finance.models.bank import Bank
 from datamimic_ce.domains.finance.models.bank_account import BankAccount
 from datamimic_ce.domains.shared.models.person import Person
@@ -49,19 +48,7 @@ class CreditCard(BaseEntity):
     @property
     @property_cache
     def card_number(self) -> str:
-        #  construct card number using dataset-specific card specs (prefix + length)
-        specs = self._credit_card_generator.get_card_specs()
-        prefix = specs.get("prefix", "")
-        total_len = specs.get("length", 16)
-        remaining = max(0, total_len - len(prefix))
-        if remaining == 0:
-            #  degenerate spec: prefix fills the whole length, no room for a check digit
-            return prefix
-        # Fill all but the last position randomly (generator RNG so rngSeed descriptors
-        # replay), then set the last digit to the Luhn check digit (ISO/IEC 7812-1).
-        random_digits = "".join(str(self._credit_card_generator.rng.randint(0, 9)) for _ in range(remaining - 1))
-        payload = f"{prefix}{random_digits}"
-        return f"{payload}{luhn_check_digit(payload)}"
+        return self._credit_card_generator.generate_card_number()
 
     @property
     @property_cache
@@ -81,36 +68,27 @@ class CreditCard(BaseEntity):
     @property
     @property_cache
     def cvv(self) -> str:
-        #  honor dataset-specific cvv length from card types table
-        specs = self._credit_card_generator.get_card_specs()
-        cvv_len = specs.get("cvv_length", 3)
-        digits = [str(self._credit_card_generator.rng.randint(0, 9)) for _ in range(cvv_len)]
-        return "".join(digits)
+        return self._credit_card_generator.generate_security_code()
 
     @property
     @property_cache
     def cvc_number(self) -> str:
-        #  keep CVC aligned with cvv length
-        specs = self._credit_card_generator.get_card_specs()
-        cvv_len = specs.get("cvv_length", 3)
-        digits = [str(self._credit_card_generator.rng.randint(0, 9)) for _ in range(cvv_len)]
-        return "".join(digits)
+        return self._credit_card_generator.generate_security_code()
 
     @property
     @property_cache
     def is_active(self) -> bool:
-        #  use generator RNG; avoid accessing private attrs
-        return self._credit_card_generator.rng.choice([True, False])
+        return self._credit_card_generator.generate_is_active()
 
     @property
     @property_cache
     def credit_limit(self) -> float:
-        return self._credit_card_generator.rng.uniform(1000, 999999)
+        return self._credit_card_generator.generate_credit_limit()
 
     @property
     @property_cache
     def current_balance(self) -> float:
-        return self._credit_card_generator.rng.uniform(100, 999999)
+        return self._credit_card_generator.generate_current_balance()
 
     @property
     @property_cache

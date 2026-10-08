@@ -51,9 +51,8 @@ class MedicalDevice(BaseEntity):
         Returns:
             A string representing a device ID.
         """
-        rng = self._medical_device_generator.rng
-        suffix = "".join(str(rng.randint(0, 9)) for _ in range(8))
-        return self._claim_identifier("device_id", f"DEV-{suffix}")
+        candidate = self._medical_device_generator.generate_device_id_candidate()
+        return self._claim_identifier("device_id", candidate)
 
     @property
     @property_cache
@@ -83,10 +82,7 @@ class MedicalDevice(BaseEntity):
         Returns:
             A string representing a model number.
         """
-        rng = self._medical_device_generator.rng
-        letters = "".join(rng.choice("ABCDEFGHIJKLMNOPQRSTUVWXYZ") for _ in range(2))
-        digits = "".join(str(rng.randint(0, 9)) for _ in range(4))
-        return f"{letters}{digits}"
+        return self._medical_device_generator.generate_model_number()
 
     @property
     @property_cache
@@ -96,12 +92,7 @@ class MedicalDevice(BaseEntity):
         Returns:
             A string representing a serial number.
         """
-        # Format: MFG-YYYY-XXXXXXXX
-        year = self._medical_device_generator.rng.randint(2010, self._medical_device_generator.reference_now.year)
-        rng = self._medical_device_generator.rng
-        alphabet = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
-        random_part = "".join(rng.choice(alphabet) for _ in range(8))
-        return f"MFG-{year}-{random_part}"
+        return self._medical_device_generator.generate_serial_number()
 
     @property
     @property_cache

@@ -26,7 +26,7 @@ from datamimic_ce.domains.api import (
     spawn_rng,
 )
 from datamimic_ce.engine.dsl.api import SetupStatement
-from datamimic_ce.engine.io.api import Client, ExportSession, TestResultExporter, dispose_client_engine
+from datamimic_ce.engine.io.api import ExportSession, RegisteredClient, TestResultExporter, dispose_client_engine
 from datamimic_ce.engine.runtime.contexts.demographic_context import DemographicContext
 from datamimic_ce.engine.runtime.logging import logger
 from datamimic_ce.engine.runtime.scripting import evaluation
@@ -202,7 +202,7 @@ class SetupContext(Context):
         default_variable_prefix: str,
         default_variable_suffix: str,
         default_line_separator: str | None,
-        clients: dict | None = None,
+        clients: dict[str, RegisteredClient] | None = None,
         data_source_len: dict[tuple[str | None, str | None], int] | None = None,
         properties: dict | None = None,
         namespace: dict | None = None,
@@ -219,7 +219,7 @@ class SetupContext(Context):
         # SetupContext is always its root_context
         super().__init__(self)
         self._descriptor_dir = descriptor_dir
-        self._clients = {} if clients is None else clients
+        self._clients: dict[str, RegisteredClient] = {} if clients is None else clients
         self._data_source_len: dict[tuple[str | None, str | None], int] = (
             {} if data_source_len is None else data_source_len
         )
@@ -349,7 +349,7 @@ class SetupContext(Context):
     def domain_identifier_registry(self) -> IdentifierRegistry:
         return self._domain_identifier_registry
 
-    def _deepcopy_clients(self, memo):
+    def _deepcopy_clients(self, memo) -> dict[str, RegisteredClient]:
         """
         Deepcopy clients attribute, excluding non-pickleable objects.
         :param memo:
@@ -471,11 +471,11 @@ class SetupContext(Context):
         self._demographic_context = context
 
     @property
-    def clients(self) -> dict:
+    def clients(self) -> dict[str, RegisteredClient]:
         return self._clients
 
     @clients.setter
-    def clients(self, value) -> None:
+    def clients(self, value: dict[str, RegisteredClient]) -> None:
         self._clients = value
 
     @property
@@ -639,7 +639,7 @@ class SetupContext(Context):
     def default_encoding(self) -> str:
         return self._default_encoding
 
-    def add_client(self, client_id: str, client: Client):
+    def add_client(self, client_id: str, client: RegisteredClient) -> None:
         """
         Add client info to context
         :param client_id:
@@ -654,7 +654,7 @@ class SetupContext(Context):
         # of statement order.
         self._namespace[client_id] = client
 
-    def get_client_by_id(self, client_id: str):
+    def get_client_by_id(self, client_id: str) -> RegisteredClient | None:
         """
         Get client using id defined in descriptor file
         :param client_id:

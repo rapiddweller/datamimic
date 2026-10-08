@@ -34,12 +34,7 @@ class Address(BaseEntity):
     @property
     @property_cache
     def house_number(self) -> str:
-        # Use generator rng to keep determinism
-        #  deterministic RNG via generator; models must not import random
-        rng = self._address_generator.rng
-        house_number = str(rng.randint(1, 9999))
-        postfix = rng.choices(["", "A", "B", "C", "bis", "ter"], weights=[0.7, 0.1, 0.1, 0.05, 0.05, 0.05])[0]
-        return f"{house_number}{postfix}"
+        return self._address_generator.generate_house_number()
 
     @property
     @property_cache

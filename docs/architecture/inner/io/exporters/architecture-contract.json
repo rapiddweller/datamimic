@@ -84,7 +84,7 @@
       },
       {
         "path": "datamimic_ce/engine/io/exporters/memory/memstore.py",
-        "responsibility": "This module stores generated products in the run-scoped memstore."
+        "responsibility": "This module stores and returns raw run-scoped memstore rows; IO owns source selection and paging."
       },
       {
         "path": "datamimic_ce/engine/io/exporters/lifecycle.py",
@@ -201,7 +201,7 @@
         "datamimic_ce.engine.io.exporters.memory"
       ],
       "responsibilities": [
-        "Memstore writes."
+        "Raw run-scoped storage; IO data-source operations own reads and selection."
       ],
       "forbidden_responsibilities": [
         "Select exporters or own Runtime store lifecycle"
@@ -258,8 +258,11 @@
       "packages": [
         "datamimic_ce.engine.io.exporters.registry"
       ],
+      "exact_modules": [
+        "datamimic_ce.engine.io.exporters"
+      ],
       "responsibilities": [
-        "Constructs exporters from target strings and supports capture, memstore writes, and bounded smoke exports."
+        "Constructs exporters from target strings, supports capture, memstore writes, and bounded smoke exports, and owns the inert package initializer."
       ],
       "forbidden_responsibilities": [
         "Implement exporters or be re-exported as a facade for concrete classes"
@@ -398,7 +401,7 @@
       "id": "EXPORTERS-ASSIGNMENT",
       "kind": "complete_assignment",
       "source": "datamimic_ce.engine.io.exporters",
-      "rationale": "Every exporter implementation and assembly module has one owner.",
+      "rationale": "Every exporter implementation, assembly module, and the inert package initializer has one owner.",
       "provenance": [
         "docs/architecture/inner/target.md"
       ],

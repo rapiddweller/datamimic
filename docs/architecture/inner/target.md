@@ -213,8 +213,17 @@ root facade. Removing its documented `FileUtil` import is a deliberate CE 5.0
 Python import break, without a shim ([Amendment 81](../refactoring-study/experiment-2/amendment-81.md)).
 Open reader values remain unchanged; the file facade is not yet covered by the
 root boundary-type rule. Fewer root findings do not prove better reader typing.
+Exporter sessions call the registry only to construct target exporters; target
+construction has no dependency on session state.
+The parent IO facade does not publish registry, exporter config, worker state,
+buffered implementation, or exporter-list construction; those remain at their
+owning modules. Runtime's crossing operation is `ExportSession`.
 Runtime source-selection operations cross into IO through `io.api`; the
 selection algorithms remain owned by IO data sources.
+For SQL statements, Runtime selects the configured target and IO invokes it
+through the `SqlScriptClient` capability. Do not restrict injected clients to
+`RdbmsClient` or probe the capability before calling it; preserve one direct
+method lookup and the method's native failure behavior.
 Target-call syntax is parsed by DSL input code. The linter adapter supplies
 buffered exporter names to its rule context; pure authoring rules do not import IO.
 
@@ -241,7 +250,21 @@ buffered exporter names to its rule context; pure authoring rules do not import 
 - Keep lazy domain entities distinct from passive types: services compose entities
   and generators; entity properties may use generators, never the reverse.
   Move shared `DemographicConfig` to `shared/demographics/config.py` so generators
-  do not import the entity-model layer. Do not change evaluation order or RNG draws.
+  do not import the entity-model layer. Model ownership is a narrow exception for
+  cached properties whose extraction would change observable lazy reads or RNG
+  order; generators own independent rules over resolved inputs. Preserve public
+  getter/access and RNG order. The current exceptions are:
+  - `Order.discount_amount` draws eligibility before resolving `product_list` and
+    prices, then draws the discount rate.
+  - `EducationalInstitution.founding_year` reads the reference year first and
+    conditionally reads the public `type` property for its age range; keep that
+    lazy access at the property rather than pre-resolving it as generator input.
+  - `MedicalDevice.specifications` draws common values before lazy `device_type`
+    access, then interleaves type-specific draws with generator helpers.
+  - `MedicalProcedure.cost` is already model-owned because its cached calculation
+    reads other lazy clinical properties between RNG draws.
+  These cases do not grant general permission for models to generate independent
+  values; any additional exception needs its own evidence and target decision.
 - `IncludeTask` stays with Setup because it executes an included descriptor's Setup;
   putting it under Flow would introduce a reverse orchestration dependency.
 - Drop Generate's empty `services/` wrapper. Policies sit directly beside workers;
@@ -250,6 +273,14 @@ buffered exporter names to its rule context; pure authoring rules do not import 
   not an import of the client SQL identifier parser.
 - Retain grammar definitions at their typed owners. Split EE DSL contract
   models, parser binding, runtime reflection and bundle assembly by ownership.
+- Keep validation semantics in DSL. `ModelUtil` is public only inside the
+  DSL-model boundary for sibling models; it is not part of the parent DSL
+  contract or `dsl.api`. Publish only the named validation functions needed by
+  Authoring through `dsl.api`. Raw XML attributes remain an open mapping until
+  model validation; do not present them as already validated DTOs.
+- Treat the CE count-bound comparison bug as a separate behavior change. Do
+  not fold the EE correction into a structural move before Alt/Neu descriptor
+  results and the invalid-input behavior are reviewed.
 - Narrow current IO/Runtime facades: a renamed concrete class is not a typed
   operation boundary. Existing root type findings remain visible.
 - Keep Runtime source adapters split by operation: generate loading, source

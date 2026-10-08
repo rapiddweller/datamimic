@@ -4,21 +4,22 @@ from collections.abc import Iterable
 
 from datamimic_ce.engine.dsl.vocabulary.constants.element_constants import EL_VARIABLE
 from datamimic_ce.engine.dsl.vocabulary.source_capabilities import SourceFileFormat, source_file_format_for
-from datamimic_ce.engine.io.clients.client import Client
+from datamimic_ce.engine.io.clients.client import RegisteredClient
 from datamimic_ce.engine.io.clients.operations import (
     database_count_query_length,
     database_get_by_page_with_query,
     database_get_by_page_with_type,
     is_database_client,
 )
-from datamimic_ce.engine.io.contracts import DataSourcePagination, MemstoreSource, select_row_iterator, select_rows
+from datamimic_ce.engine.io.contracts import DataSourcePagination, MemstoreSource
 from datamimic_ce.engine.io.data_sources.boundary.entities import resolve_source_entity
 from datamimic_ce.engine.io.data_sources.boundary.models import VariableSourceRequest
+from datamimic_ce.engine.io.data_sources.selection import select_row_iterator, select_rows
 from datamimic_ce.engine.io.files.readers import FileUtil
 
 
 def read_variable_query(
-    client: Client,
+    client: RegisteredClient,
     rendered_selector: str,
     pagination: DataSourcePagination | None,
     *,
@@ -43,7 +44,7 @@ def read_variable_query(
 
 def read_variable_source(
     request: VariableSourceRequest,
-    client: Client | None,
+    client: RegisteredClient | None,
     memstore: MemstoreSource | None,
     pagination: DataSourcePagination | None,
 ) -> Iterable[object] | None:
@@ -82,7 +83,7 @@ def read_variable_source(
         product_type = resolve_source_entity(request.source_entity, request.source_type, request.name)
         if request.materialize_full_pool:
             return memstore.get_all_data_by_type(product_type)
-        return memstore.get_data_by_type(product_type, pagination, request.cyclic)
+        return select_rows(memstore.get_data_by_type(product_type), pagination, request.cyclic)
 
     raise ValueError(f"Cannot find memstore '{request.source}' for <variable> '{request.name}'")
 

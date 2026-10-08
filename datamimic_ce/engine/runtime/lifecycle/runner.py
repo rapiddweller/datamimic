@@ -9,7 +9,7 @@ import uuid
 # Must be set before importing Ray through runtime tasks.
 os.environ["RAY_DEDUP_LOGS"] = "0"
 
-from datamimic_ce.engine.dsl.api import DescriptorParser, GenerateStatement, SetupStatement
+from datamimic_ce.engine.dsl.api import DescriptorParser, SetupStatement, find_generate_statement_by_name
 from datamimic_ce.engine.io.api import TestResultExporter, load_connection_profile
 from datamimic_ce.engine.runtime.contracts import FactoryConfig, RunRequest, RunResult
 from datamimic_ce.engine.runtime.lifecycle.config import get_settings
@@ -39,25 +39,13 @@ class RuntimeRunSession:
             logger.error(f"Invalid descriptor file path: {request.descriptor_path}")
             raise ValueError(f"Invalid file path: {request.descriptor_path}")
 
-    @staticmethod
-    def _get_stmt_by_entity_name(stmt: object, factory_config: FactoryConfig) -> GenerateStatement | None:
-        if not isinstance(stmt, GenerateStatement):
-            return None
-        if stmt.name == factory_config.entity_name:
-            return stmt
-        for sub_stmt in stmt.sub_statements:
-            result = RuntimeRunSession._get_stmt_by_entity_name(sub_stmt, factory_config)
-            if result is not None:
-                return result
-        return None
-
     def _validate_xml_model(self, root_stmt: SetupStatement, factory_config: FactoryConfig) -> None:
         if root_stmt.num_process is not None and root_stmt.num_process > 1:
             logger.warning("Multiple processes are not supported in factory mode")
 
         entity_stmt = None
         for stmt in root_stmt.sub_statements:
-            entity_stmt = self._get_stmt_by_entity_name(stmt, factory_config)
+            entity_stmt = find_generate_statement_by_name(stmt, factory_config.entity_name)
             if entity_stmt is not None:
                 break
 

@@ -8,8 +8,8 @@ from random import Random
 from datamimic_ce.engine.dsl.api import EL_VARIABLE, VariableStatement
 from datamimic_ce.engine.dsl.vocabulary.source_capabilities import SourceFileFormat, source_file_format_for
 from datamimic_ce.engine.io.api import (
-    Client,
     DataSourcePagination,
+    RegisteredClient,
     VariableSourceRequest,
     WeightedEntityDataSource,
     get_distributed_data,
@@ -39,7 +39,7 @@ class VariableSourcePlan:
 
     kind: VariableSourcePlanKind
     data: Iterable[object] | None = None
-    client: Client | None = None
+    client: RegisteredClient | None = None
     weighted_source: WeightedEntityDataSource | None = None
     selector: str | None = None
     prefix: str = ""
@@ -184,7 +184,7 @@ def plan_variable_source(
 
 def load_variable_iteration_selector(
     context: Context,
-    client: Client,
+    client: RegisteredClient,
     selector: str,
     prefix: str,
     suffix: str,

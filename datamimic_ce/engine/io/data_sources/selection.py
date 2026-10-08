@@ -4,6 +4,8 @@
 # See LICENSE file for the full text of the license.
 # For questions and support, contact: info@rapiddweller.com
 
+import copy
+import itertools
 from collections.abc import Iterable, Iterator
 from random import Random
 from typing import TypeVar
@@ -13,6 +15,30 @@ from datamimic_ce.engine.io.contracts import DataSourcePagination
 from datamimic_ce.randomness import RandomSource, cumulated_index
 
 T = TypeVar("T")
+
+
+def select_rows(
+    data: Iterable[T], pagination: DataSourcePagination | None, cyclic: bool = False, offset: int = 0
+) -> list[T]:
+    """Apply one IO-owned page window, including cyclic wrap after an offset."""
+    if offset:
+        data = list(data)[offset:]
+    start = 0 if pagination is None else pagination.skip
+    end = len(list(data)) if pagination is None else pagination.skip + pagination.limit
+    source: Iterable[T] = itertools.cycle(data) if cyclic else data
+    rows = itertools.islice(source, start, end)
+    return [copy.deepcopy(row) for row in rows] if cyclic else list(rows)
+
+
+def select_row_iterator(
+    data: Iterable[T], pagination: DataSourcePagination | None, cyclic: bool = False
+) -> Iterator[T]:
+    """Return the selected page as an iterator, repeating only that page when cyclic."""
+    start = 0 if pagination is None else pagination.skip
+    end = len(list(data)) if pagination is None else pagination.skip + pagination.limit
+    source: Iterable[T] = itertools.cycle(data) if cyclic else data
+    selected = itertools.islice(source, start, end)
+    return itertools.cycle(list(selected)[: end - start]) if cyclic else selected
 
 
 def unique_values(pool: Iterable[T], rng: RandomSource) -> list[T]:

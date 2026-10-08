@@ -79,6 +79,12 @@ class AddressGenerator(DatasetAwareDomainGenerator):
             self._row_cache[dataset] = self._build_row(dataset)
         return self._row_cache[dataset]
 
+    def generate_house_number(self) -> str:
+        rng = self.rng
+        house_number = str(rng.randint(1, 9999))
+        postfix = rng.choices(["", "A", "B", "C", "bis", "ter"], weights=[0.7, 0.1, 0.1, 0.05, 0.05, 0.05])[0]
+        return f"{house_number}{postfix}"
+
     @property
     def company_name_generator(self) -> CompanyNameGenerator:
         """Get the company name generator.

@@ -131,6 +131,50 @@ class DoctorGenerator(ClockAnchoredDomainGenerator):
             pool = [(v, wt) for (v, wt) in pool if v != chosen]
         return picks
 
+    def generate_accepting_new_patients(self) -> bool:
+        """Draw whether the doctor accepts new patients."""
+        return self.rng.random() < 0.8
+
+    def generate_npi_number(self) -> str:
+        """Generate a ten-digit NPI value from the shared RNG."""
+        rng = self.rng
+        return "".join(str(rng.randint(0, 9)) for _ in range(10))
+
+    def generate_license_number(self) -> str:
+        """Generate a medical license number from the shared RNG."""
+        rng = self.rng
+        letters = "".join(rng.choice("ABCDEFGHIJKLMNOPQRSTUVWXYZ") for _ in range(2))
+        digits = "".join(str(rng.randint(0, 9)) for _ in range(6))
+        return f"{letters}-{digits}"
+
+    def generate_doctor_id_candidate(self) -> str:
+        rng = self.rng
+        suffix = "".join(rng.choice("0123456789ABCDEF") for _ in range(8))
+        return f"DOC-{suffix}"
+
+    def generate_office_hours(self) -> dict[str, str]:
+        days = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday"]
+        hours = {}
+
+        rng = self.rng
+        for day in days:
+            if rng.random() < 0.9:
+                start_hour = rng.randint(7, 10)
+                end_hour = rng.randint(16, 19)
+                hours[day] = f"{start_hour:02d}:00 - {end_hour:02d}:00"
+            else:
+                hours[day] = "Closed"
+
+        for day in ["Saturday", "Sunday"]:
+            if rng.random() < 0.3:
+                start_hour = rng.randint(8, 11)
+                end_hour = rng.randint(14, 17)
+                hours[day] = f"{start_hour:02d}:00 - {end_hour:02d}:00"
+            else:
+                hours[day] = "Closed"
+
+        return hours
+
     # Helper to pick a graduation year with anti-repetition
     def pick_graduation_year(self, age: int) -> int:
         year_now = self._reference_now.year

@@ -1,6 +1,6 @@
 """Runtime-facing data-source and client boundary."""
 
-from datamimic_ce.engine.io.clients.client import Client
+from datamimic_ce.engine.io.clients.client import Client, RegisteredClient
 from datamimic_ce.engine.io.clients.operations import (
     count_query_length,
     create_mongodb_client,
@@ -8,6 +8,7 @@ from datamimic_ce.engine.io.clients.operations import (
     database_count_table_length,
     database_get_by_page_with_query,
     dispose_client_engine,
+    execute_sql_script,
     is_database_client,
     rdbms_get_current_sequence_number,
     rdbms_increase_sequence_number,
@@ -20,7 +21,6 @@ from datamimic_ce.engine.io.contracts import (
     DataSourcePagination,
     MemstoreSource,
     SmokeExportRequest,
-    select_row_iterator,
 )
 from datamimic_ce.engine.io.data_sources.boundary.entities import resolve_source_entity
 from datamimic_ce.engine.io.data_sources.boundary.models import (
@@ -34,6 +34,7 @@ from datamimic_ce.engine.io.data_sources.router import (
     count_source,
     read_generate_database_source,
     read_generate_file_source,
+    read_generate_memstore_source,
     read_nested_key_source,
     read_reference_rows,
     select_reference_rows,
@@ -42,6 +43,7 @@ from datamimic_ce.engine.io.data_sources.router import (
 from datamimic_ce.engine.io.data_sources.selection import (
     get_distributed_data,
     get_unique_data,
+    select_row_iterator,
     unique_value_iter,
 )
 from datamimic_ce.engine.io.data_sources.variable import read_variable_query, read_variable_source
@@ -70,6 +72,7 @@ from datamimic_ce.engine.io.exporters.session import ExportSession
 
 __all__ = [
     "Client",
+    "RegisteredClient",
     "ChunkSourceWindow",
     "DataSourcePagination",
     "ExporterContext",
@@ -105,11 +108,13 @@ __all__ = [
     "database_count_table_length",
     "database_get_by_page_with_query",
     "dispose_client_engine",
+    "execute_sql_script",
     "is_database_client",
     "resolve_source_entity",
     "read_nested_key_source",
     "read_generate_database_source",
     "read_generate_file_source",
+    "read_generate_memstore_source",
     "read_reference_rows",
     "read_variable_query",
     "read_variable_source",

@@ -65,7 +65,7 @@ def test_missing_optional_entity_remains_strict_for_rows_and_lenient_for_length(
     with caplog.at_level(logging.ERROR, logger="DATAMIMIC"), pytest.raises(
         KeyError, match="Data naming 'None' is empty in memstore"
     ):
-        mem.get_data_by_type(None, None, cyclic=False)
+        mem.get_data_by_type(None)
     assert "Data naming 'None' is empty in memstore" in caplog.messages[0]
 
     caplog.clear()

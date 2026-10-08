@@ -70,8 +70,7 @@ class BankAccount(BaseEntity):
     @property
     @property_cache
     def balance(self) -> float:
-        #  use generator RNG for determinism in tests
-        return self._bank_account_generator.rng.uniform(0, 1000000)
+        return self._bank_account_generator.generate_balance()
 
     @balance.setter
     def balance(self, value: float) -> None:

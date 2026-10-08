@@ -60,7 +60,7 @@
       },
       {
         "path": "datamimic_ce/domains/shared/generators/address_generator.py",
-        "responsibility": "Resolves country-specific address sub-generators per row, including region-group selection."
+        "responsibility": "Resolves country-specific address sub-generators per row and generates house numbers using its configured RNG."
       },
       {
         "path": "datamimic_ce/domains/shared/generators/city_generator.py",
@@ -68,7 +68,7 @@
       },
       {
         "path": "datamimic_ce/domains/shared/generators/company_generator.py",
-        "responsibility": "CompanyGenerator generates synthetic domain values through get_legal_form, using the required RNG, dataset, or clock basis."
+        "responsibility": "CompanyGenerator generates legal forms and URL schemes using its configured dataset and RNG."
       },
       {
         "path": "datamimic_ce/domains/shared/generators/country_generator.py",
@@ -76,7 +76,7 @@
       },
       {
         "path": "datamimic_ce/domains/shared/generators/person_generator.py",
-        "responsibility": "PersonGenerator generates synthetic domain values through reserve_demographic_sample, generate_birthdate_for_age, and get_salutation_data, using the required RNG, dataset, or clock basis."
+        "responsibility": "PersonGenerator reserves demographic samples and owns gender normalization and fallback, birthdate generation, and salutation data access."
       },
       {
         "path": "datamimic_ce/domains/shared/generators/phone_number_generator.py",
@@ -92,7 +92,7 @@
       },
       {
         "path": "datamimic_ce/domains/shared/models/address.py",
-        "responsibility": "The Address entity caches its generated fields (street, house_number, city_data, city, area) and serializes them with to_dict."
+        "responsibility": "The Address entity caches generated field values, including house_number, and serializes them with to_dict."
       },
       {
         "path": "datamimic_ce/domains/shared/models/city.py",
@@ -100,7 +100,7 @@
       },
       {
         "path": "datamimic_ce/domains/shared/models/company.py",
-        "responsibility": "The Company entity caches its generated fields (id, short_name, sector, legal_form, full_name) and serializes them with to_dict."
+        "responsibility": "Company caches generated identity and contact values, composes its URL from the cached email domain, and serializes values with to_dict."
       },
       {
         "path": "datamimic_ce/domains/shared/models/country.py",
@@ -262,7 +262,10 @@
         "datamimic_ce.domains.shared.services"
       ],
       "responsibilities": [
-        "Registered shared entity construction services."
+        "Owns registered shared entity construction services and the inert shared-package initializer."
+      ],
+      "exact_modules": [
+        "datamimic_ce.domains.shared"
       ],
       "forbidden_responsibilities": [
         "Implement scalar generator algorithms or execute runtime statements."

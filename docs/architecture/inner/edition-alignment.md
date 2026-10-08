@@ -47,6 +47,11 @@ algorithms and stronger tests; this CE move does not claim EE conformance.
 
 Keep the existing operations and typed values as the public seams; moves must
 not add a facade feature or synchronization framework.
+Both editions place client operations under `engine/io/clients` and run state
+under `engine/runtime/contexts`. This does not make their lifecycles identical:
+CE currently constructs clients during setup and copies live handles for workers;
+EE registers configurations and creates clients lazily. Preserve each behavior
+until a separately verified semantic migration is approved.
 
 | Boundary | Stable operations and types | Evidence |
 |---|---|---|
@@ -110,3 +115,14 @@ evidence that EE has moved. CE keeps its current Runtime generator map: a workin
 XML converter reads `root.generators[id].start`. Separating that map needs an
 explicit scripting decision. Named-alias reuse is tracked in CE issue #279;
 neither registration nor seeded values change in this ownership step.
+
+## CE 5.0 Memstore read API
+
+The old `get_data_by_type(entity, pagination, cyclic)` call is removed. Use
+`get_data_by_type(entity)` for strict raw access: it returns the live stored
+list, raises `KeyError` for a missing entity, and returns `[]` for an existing
+empty entity. `get_all_data_by_type(entity)` is lenient and returns `[]` when
+the entity is missing. Scripts that need paging or cyclic reads should use the
+DSL source path (`source="mem"`, `type="…"`, with `pageSize` or `cyclic`) so IO
+owns selection; do not pass paging policy to the raw getter. `offset` remains
+file-only for Generate sources.

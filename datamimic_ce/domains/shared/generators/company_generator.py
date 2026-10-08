@@ -84,6 +84,9 @@ class CompanyGenerator(DatasetAwareDomainGenerator):
         """
         return self._sector_generator
 
+    def generate_url_scheme(self) -> str:
+        return self.rng.choice(["http", "https"])
+
     def get_legal_form(self) -> str:
         """Get a legal form.
 

@@ -3,6 +3,7 @@ from pathlib import Path
 
 from datamimic_ce.domains.domain_core.base_domain_generator import DatasetAwareDomainGenerator
 from datamimic_ce.domains.domain_core.datasets.path import dataset_path
+from datamimic_ce.domains.domain_core.runtime.rng_uuid import uuid4_from_random
 from datamimic_ce.domains.shared.datasets.loader import read_weighted_records
 
 
@@ -23,6 +24,9 @@ class InsuranceCompanyGenerator(DatasetAwareDomainGenerator):
         super().__init__(dataset=dataset, rng=rng)
         self._last_company_code: str | None = None
         self._last_founded_year: str | None = None
+
+    def generate_id_candidate(self) -> str:
+        return uuid4_from_random(self.rng)
 
     def get_random_company(self) -> dict[str, str]:
         #  use unified dataset path helper

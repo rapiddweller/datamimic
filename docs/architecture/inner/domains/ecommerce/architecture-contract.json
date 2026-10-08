@@ -12,11 +12,11 @@
       },
       {
         "path": "datamimic_ce/domains/ecommerce/generators/order_generator.py",
-        "responsibility": "OrderGenerator generates synthetic domain values through generate_order_date, get_order_status, and get_payment_method, using the required RNG, dataset, or clock basis."
+        "responsibility": "OrderGenerator generates order and user ID values, order values, and billing-address reuse decisions, including product counts, taxes, coupon codes, dates, status, payment, and shipping choices from its configured RNG, dataset, and clock."
       },
       {
         "path": "datamimic_ce/domains/ecommerce/generators/product_generator.py",
-        "responsibility": "ProductGenerator generates synthetic domain values through pick_rating, maybe_pick_trending_tag, and get_product_data_by_data_type, using the required RNG, dataset, or clock basis."
+        "responsibility": "ProductGenerator generates product ID candidates, names, descriptions, SKUs, and other values from its configured RNG and datasets."
       },
       {
         "path": "datamimic_ce/domains/ecommerce/models/__init__.py",
@@ -24,7 +24,7 @@
       },
       {
         "path": "datamimic_ce/domains/ecommerce/models/order.py",
-        "responsibility": "Order represents a buyer's purchase, including line items, payment, pricing, and shipping details."
+        "responsibility": "Order represents a buyer's purchase and owns its cached discount calculation because eligibility and rate draws interleave with lazy product and price access, preserving getter and RNG order."
       },
       {
         "path": "datamimic_ce/domains/ecommerce/models/product.py",
@@ -82,7 +82,7 @@
         "datamimic_ce.domains.ecommerce.generators"
       ],
       "responsibilities": [
-        "Generate category-based product attributes and order dates, statuses, payment and shipping choices, currencies, and costs."
+        "Generate category-based product attributes including ID candidates and SKUs, order and user ID values, and order counts, dates, statuses, payment and shipping choices, currencies, and costs."
       ],
       "forbidden_responsibilities": [
         "Import commerce models or services."
@@ -105,7 +105,10 @@
         "datamimic_ce.domains.ecommerce.services"
       ],
       "responsibilities": [
-        "Bind Product and Order generators to their models and declare DSL-visible fields and country datasets."
+        "Bind Product and Order generators to their models, declare DSL-visible fields and country datasets, and own the inert package initializer."
+      ],
+      "exact_modules": [
+        "datamimic_ce.domains.ecommerce"
       ],
       "forbidden_responsibilities": [
         "Implement generator algorithms or bypass entity models."

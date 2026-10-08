@@ -2,6 +2,7 @@ import pytest
 
 from datamimic_ce.engine.io.api import smoke_export
 from datamimic_ce.engine.io.contracts import SmokeExportRequest
+from datamimic_ce.engine.io.exporters import registry
 from datamimic_ce.engine.io.exporters import registry as exporter_registry
 
 
@@ -58,6 +59,55 @@ def test_smoke_export_uses_setup_defaults_and_target_precedence(
     artifacts = list(tmp_path.glob(f"temp_result_smoke_test_pid_1_exporter_{exporter.lower()}_product_rows/*"))
     assert len(artifacts) == 1
     assert artifacts[0].read_bytes() == expected
+
+
+def test_smoke_export_forwards_dynamic_payloads_and_exporter_failures(tmp_path, monkeypatch) -> None:
+    opaque_row_value = object()
+    opaque_param_value = object()
+    rows = [{"id": 1, "nested": {"items": [opaque_row_value]}}]
+    params = {"custom_option": {"value": opaque_param_value}}
+    observed = {}
+
+    class RecordingExporter:
+        def __init__(self, _config, received_params):
+            observed["params"] = received_params
+
+        def consume(self, batch, full_name, _state_manager):
+            observed["batch"] = batch
+            observed["full_name"] = full_name
+
+        def finalize_chunks(self, _worker_id):
+            pass
+
+        def count_buffered_rows(self, _worker_id):
+            return 1
+
+    monkeypatch.setitem(registry._BUFFERED_EXPORTERS, "CSV", RecordingExporter)
+    request = SmokeExportRequest(
+        descriptor_dir=tmp_path,
+        task_id="smoke_test",
+        basename="rows",
+        full_name="rows",
+        rows=rows,
+        exporter_name="CSV",
+        params=params,
+        default_separator="|",
+        default_line_separator="\n",
+    )
+
+    assert smoke_export(request) == 1
+    assert observed["params"]["custom_option"]["value"] is opaque_param_value
+    assert observed["batch"][1] is rows
+    assert observed["batch"][1][0]["nested"]["items"][0] is opaque_row_value
+    assert observed["full_name"] == "rows"
+
+    class FailingExporter(RecordingExporter):
+        def consume(self, _batch, _full_name, _state_manager):
+            raise RuntimeError("export failed")
+
+    monkeypatch.setitem(registry._BUFFERED_EXPORTERS, "CSV", FailingExporter)
+    with pytest.raises(RuntimeError, match="export failed"):
+        smoke_export(request)
 
 
 def test_smoke_export_preserves_nested_values_and_copies_only_exporter_options(

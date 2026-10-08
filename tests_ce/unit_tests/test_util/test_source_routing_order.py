@@ -749,8 +749,20 @@ def test_generate_prefers_memstore_while_variable_prefers_client_for_same_source
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     source_id = "shared"
-    memstore = Mock()
-    memstore.get_data_by_type.return_value = [{"id": "memstore"}]
+
+    class RawMemstore:
+        def get_data_by_type(self, product_type: str) -> list[dict[str, str]]:
+            assert product_type == "rows"
+            return [{"id": "memstore"}]
+
+    memstore = RawMemstore()
+    io_memstore_read = Mock(return_value=[{"id": "memstore"}])
+    monkeypatch.setattr(
+        generate_source_router,
+        "read_generate_memstore_source",
+        io_memstore_read,
+        raising=False,
+    )
     client = object()
     root = SimpleNamespace(
         descriptor_dir=Path("/descriptor"),
@@ -776,13 +788,12 @@ def test_generate_prefers_memstore_while_variable_prefers_client_for_same_source
         targets=set(),
     )
 
+    pagination = DataSourcePagination(skip=0, limit=1)
     rows, _ = generate_source_router.load_generate_source(
-        generate_context, generate, source_id, "|", False, 0, 1, DataSourcePagination(skip=0, limit=1)
+        generate_context, generate, source_id, "|", False, 0, 1, pagination
     )
     assert rows == [{"id": "memstore"}]
-    memstore.get_data_by_type.assert_called_once()
-    product_type, pagination, cyclic = memstore.get_data_by_type.call_args.args
-    assert (product_type, pagination.skip, pagination.limit, cyclic) == ("rows", 0, 1, False)
+    io_memstore_read.assert_called_once_with(memstore, "rows", pagination, False)
 
     database_rows = Mock(return_value=[{"id": "client"}])
     monkeypatch.setattr(variable_sources, "is_database_client", lambda value: value is client)

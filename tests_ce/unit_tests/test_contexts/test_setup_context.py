@@ -4,6 +4,10 @@ from pathlib import Path
 from datamimic_ce.domains.api import RunSeed
 from datamimic_ce.engine.dsl.model.setup.setup_model import SetupModel
 from datamimic_ce.engine.dsl.statements.setup.setup_statement import SetupStatement
+from datamimic_ce.engine.dsl.vocabulary.enums.dbms_enums import Dbms
+from datamimic_ce.engine.io.clients.client import Client
+from datamimic_ce.engine.io.clients.rdbms_client import RdbmsClient
+from datamimic_ce.engine.io.connection_config.rdbms_connection_config import RdbmsConnectionConfig
 from datamimic_ce.engine.io.exporters.diagnostics.test_result_exporter import TestResultExporter
 from datamimic_ce.engine.runtime.contexts.context import SetupContext
 from datamimic_ce.engine.runtime.storage.global_increment import GlobalIncrementRegistry
@@ -64,6 +68,53 @@ def test_setup_context_deepcopy_isolates_domain_identifier_state() -> None:
     assert copied_registry.claim("TinyEntity", "id", "IDA", "ID[A-C]{1}") == "IDB"
     assert copied_registry.claim("TinyEntity", "id", "IDA", "ID[A-C]{1}") == "IDC"
     assert registry.claim("TinyEntity", "id", "IDA", "ID[A-C]{1}") == "IDB"
+
+
+def test_add_client_registers_lookup_and_script_namespace_identity() -> None:
+    context = _context()
+    client = Client()
+
+    context.add_client("db", client)
+
+    assert context.clients["db"] is client
+    assert context.get_client_by_id("db") is client
+    assert context.get_client_by_id("missing") is None
+    assert context.evaluate_python_expression("db") is client
+    assert context.eval_namespace("script_client = db")["script_client"] is client
+
+
+def test_setup_context_deepcopy_preserves_client_alias_and_disposes_engine(tmp_path, monkeypatch) -> None:
+    monkeypatch.chdir(tmp_path)
+    client = RdbmsClient(
+        RdbmsConnectionConfig(
+            dbms=Dbms.SQLITE,
+            host=None,
+            port=None,
+            user=None,
+            password=None,
+            database="context-copy",
+            db_schema=None,
+        ),
+        task_id="context-test",
+    )
+    engine = client._create_engine()
+    dispose_calls = []
+    dispose = engine.dispose
+
+    def track_dispose(*args, **kwargs):
+        dispose_calls.append(True)
+        return dispose(*args, **kwargs)
+
+    monkeypatch.setattr(engine, "dispose", track_dispose)
+    context = _context()
+    context.add_client("db", client)
+
+    copied = copy.deepcopy(context)
+
+    assert dispose_calls == [True]
+    assert client.engine is None
+    assert copied.clients["db"] is copied.namespace["db"]
+    assert copied.clients["db"] is not client
 
 
 def test_include_setup_merge_overrides_declared_defaults_but_preserves_run_seed() -> None:

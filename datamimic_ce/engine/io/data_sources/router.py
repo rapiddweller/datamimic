@@ -12,7 +12,7 @@ from datamimic_ce.engine.dsl.vocabulary.source_capabilities import (
     source_file_format,
     source_file_format_for,
 )
-from datamimic_ce.engine.io.clients.client import Client
+from datamimic_ce.engine.io.clients.client import RegisteredClient
 from datamimic_ce.engine.io.clients.operations import (
     database_count_query_length,
     database_count_table_length,
@@ -23,7 +23,7 @@ from datamimic_ce.engine.io.clients.operations import (
     is_rdbms_client,
     mongodb_count_collection,
 )
-from datamimic_ce.engine.io.contracts import DataSourcePagination, MemstoreSource, select_rows
+from datamimic_ce.engine.io.contracts import DataSourcePagination, MemstoreSource
 from datamimic_ce.engine.io.data_sources.boundary.entities import resolve_source_collection, resolve_source_entity
 from datamimic_ce.engine.io.data_sources.boundary.models import (
     CountSourceRequest,
@@ -31,7 +31,7 @@ from datamimic_ce.engine.io.data_sources.boundary.models import (
     GenerateFileSourceRequest,
 )
 from datamimic_ce.engine.io.data_sources.data_source_registry import DataSourceRegistry
-from datamimic_ce.engine.io.data_sources.selection import get_distributed_data, get_unique_data
+from datamimic_ce.engine.io.data_sources.selection import get_distributed_data, get_unique_data, select_rows
 from datamimic_ce.engine.io.files.readers import FileUtil
 from datamimic_ce.randomness import RandomSource
 
@@ -42,7 +42,7 @@ T = TypeVar("T")
 def count_source(
     request: CountSourceRequest,
     memstore: MemstoreSource | None,
-    client: Client | None,
+    client: RegisteredClient | None,
 ) -> int | None:
     """Count a source in historical file, memstore, then client precedence."""
     source_format = source_file_format_for(request.element, request.source, request.source_type)
@@ -157,7 +157,7 @@ def read_generate_file_source(request: GenerateFileSourceRequest) -> GenerateFil
 
 
 def read_generate_database_source(
-    client: Client,
+    client: RegisteredClient,
     selector: str | None,
     entity: str,
     collection: str | None,
@@ -185,6 +185,16 @@ def read_generate_database_source(
     raise ValueError(f"Cannot load data from client: {type(client).__name__}")
 
 
+def read_generate_memstore_source(
+    memstore: MemstoreSource,
+    entity: str | None,
+    pagination: DataSourcePagination | None,
+    cyclic: bool | None,
+) -> list[dict[str, object]]:
+    """Read and select one <generate> pool from raw memstore rows."""
+    return select_rows(memstore.get_data_by_type(entity), pagination, bool(cyclic))
+
+
 def read_nested_key_source(
     descriptor_dir: Path,
     source_expression: str,
@@ -205,8 +215,10 @@ def read_nested_key_source(
         if source_format is SourceFileFormat.JSON:
             return FileUtil.read_json_to_list(descriptor_dir / source)
         if memstore is not None:
-            return memstore.get_data_by_type(
-                resolve_source_entity(source_entity, source_type, name), None, bool(cyclic)
+            return select_rows(
+                memstore.get_data_by_type(resolve_source_entity(source_entity, source_type, name)),
+                None,
+                bool(cyclic),
             )
         raise ValueError(f"Invalid source '{source}' of nestedkey '{name}'")
 
@@ -216,7 +228,9 @@ def read_nested_key_source(
         raise ValueError(f"Source of nestedkey having type as 'dict' does not support format {source}")
 
     if memstore is not None:
-        return memstore.get_data_by_type(resolve_source_entity(source_entity, source_type, name), None, bool(cyclic))
+        return select_rows(
+            memstore.get_data_by_type(resolve_source_entity(source_entity, source_type, name)), None, bool(cyclic)
+        )
     raise ValueError(f"Cannot load data from source '{source_expression}' of <nestedKey> '{name}'")
 
 
@@ -227,7 +241,7 @@ def window_nested_key_rows(data: list[T], count: int | None, cyclic: bool | None
 
 
 def read_reference_rows(
-    client: Client | None,
+    client: RegisteredClient | None,
     source: str,
     source_type: str,
     source_keys: list[str],
@@ -298,6 +312,7 @@ __all__ = [
     "count_source",
     "read_generate_file_source",
     "read_generate_database_source",
+    "read_generate_memstore_source",
     "read_nested_key_source",
     "read_reference_rows",
     "select_reference_rows",

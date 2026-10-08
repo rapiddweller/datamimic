@@ -79,6 +79,46 @@ class PatientGenerator(DatasetAwareDomainGenerator):
         """
         return self._person_generator
 
+    def generate_patient_id_candidate(self) -> str:
+        rng = self.rng
+        suffix = "".join(rng.choice("0123456789ABCDEF") for _ in range(8))
+        return f"PAT-{suffix}"
+
+    def generate_medical_record_number(self) -> str:
+        rng = self.rng
+        suffix = "".join(rng.choice("0123456789ABCDEF") for _ in range(8))
+        return f"MRN-{suffix}"
+
+    def generate_ssn(self) -> str:
+        rng = self.rng
+        digits = [str(rng.randint(0, 9)) for _ in range(9)]
+        return f"{''.join(digits[:3])}-{''.join(digits[3:5])}-{''.join(digits[5:])}"
+
+    def generate_insurance_policy_number(self) -> str:
+        rng = self.rng
+        prefix = "".join(rng.choice("ABCDEFGHIJKLMNOPQRSTUVWXYZ") for _ in range(3))
+        digits = "".join(str(rng.randint(0, 9)) for _ in range(8))
+        return f"{prefix}-{digits}"
+
+    def generate_height_cm(self, gender: str, age: int) -> float:
+        rng = self.rng
+        if age < 18:
+            if gender == "Male":
+                return round(rng.uniform(90 + (age * 5), 110 + (age * 5)), 1)
+            return round(rng.uniform(90 + (age * 4.8), 110 + (age * 4.8)), 1)
+        if gender == "Male":
+            return round(rng.uniform(160, 190), 1)
+        return round(rng.uniform(150, 175), 1)
+
+    def generate_weight_kg(self, age: int, height_cm: float) -> float:
+        rng = self.rng
+        base_bmi = rng.uniform(16, 24) if age < 18 else rng.uniform(18.5, 29.9)
+        height_m = height_cm / 100
+        weight = base_bmi * (height_m**2)
+        weight_variation = weight * 0.1
+        weight += rng.uniform(-weight_variation, weight_variation)
+        return round(weight, 1)
+
     @property
     def demographic_config(self) -> DemographicConfig:
         """Expose the demographic overrides applied to this generator."""

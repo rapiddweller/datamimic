@@ -55,9 +55,8 @@ class PoliceOfficer(BaseEntity):
         Returns:
             A unique identifier for the officer.
         """
-        rng = self.police_officer_generator.rng
-        suffix = "".join(rng.choice("0123456789ABCDEF") for _ in range(8))
-        return self._claim_identifier("officer_id", f"OFF-{suffix}")
+        candidate = self.police_officer_generator.generate_officer_id_candidate()
+        return self._claim_identifier("officer_id", candidate)
 
     @property
     @property_cache
@@ -67,8 +66,7 @@ class PoliceOfficer(BaseEntity):
         Returns:
             A badge number.
         """
-        rng = self.police_officer_generator.rng
-        return "".join(str(rng.randint(0, 9)) for _ in range(4))
+        return self.police_officer_generator.generate_badge_number()
 
     @property
     @property_cache

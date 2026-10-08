@@ -230,7 +230,9 @@ def _contracts() -> dict[str, list[set[str]]]:
                 root = rule["root"]
                 assert any(root == scope or root.startswith(scope + ".") for scope in mount_scopes), (path, root)
                 scope = root.removeprefix("datamimic_ce").strip(".").replace(".", "/") or "."
-                layouts.setdefault(scope, []).append(set(rule["allowed_children"]))
+                children = rule["allowed_children"]
+                assert len(children) == len(set(children)), f"{path}: duplicate root_layout child"
+                layouts.setdefault(scope, []).append(set(children))
         for component in contract["components"]:
             if component.get("inside"):
                 visit(ROOT / component["inside"], inside=True, mount_scopes=tuple(component["packages"]))
@@ -315,6 +317,175 @@ def test_recursive_target_definition_covers_sources_and_mounts() -> None:
     excluded_files = {file for file in all_files - files}
     layouts = _contracts()
     _check_layouts(layouts, set(targets), excluded_files)
+
+
+def test_package_initializers_have_exact_inner_owners() -> None:
+    expected = {
+        "docs/architecture/inner/domains/architecture-contract.json": (
+            "api",
+            "datamimic_ce.domains",
+            ["datamimic_ce.domains.api"],
+            "domains/api",
+        ),
+        "docs/architecture/inner/domains/healthcare/architecture-contract.json": (
+            "services",
+            "datamimic_ce.domains.healthcare",
+            ["datamimic_ce.domains.healthcare.services"],
+            "domains/healthcare/services",
+        ),
+        "docs/architecture/inner/domains/finance/architecture-contract.json": (
+            "models",
+            "datamimic_ce.domains.finance",
+            ["datamimic_ce.domains.finance.models"],
+            "domains/finance/models",
+        ),
+        "docs/architecture/inner/domains/shared/architecture-contract.json": (
+            "services",
+            "datamimic_ce.domains.shared",
+            ["datamimic_ce.domains.shared.services"],
+            "domains/shared/services",
+        ),
+        "docs/architecture/inner/domains/shared/converters/architecture-contract.json": (
+            "base",
+            "datamimic_ce.domains.shared.converters",
+            ["datamimic_ce.domains.shared.converters.base"],
+            "domains/shared/converters/base",
+        ),
+        "docs/architecture/inner/domains/ecommerce/architecture-contract.json": (
+            "services",
+            "datamimic_ce.domains.ecommerce",
+            ["datamimic_ce.domains.ecommerce.services"],
+            "domains/ecommerce/services",
+        ),
+        "docs/architecture/inner/domains/public_sector/architecture-contract.json": (
+            "services",
+            "datamimic_ce.domains.public_sector",
+            ["datamimic_ce.domains.public_sector.services"],
+            "domains/public_sector/services",
+        ),
+        "docs/architecture/inner/domains/insurance/architecture-contract.json": (
+            "services",
+            "datamimic_ce.domains.insurance",
+            ["datamimic_ce.domains.insurance.services"],
+            "domains/insurance/services",
+        ),
+        "docs/architecture/inner/runtime/architecture-contract.json": (
+            "api",
+            "datamimic_ce.engine.runtime",
+            ["datamimic_ce.engine.runtime.api"],
+            "engine/runtime/api",
+        ),
+        "docs/architecture/inner/io/architecture-contract.json": (
+            "api",
+            "datamimic_ce.engine.io",
+            ["datamimic_ce.engine.io.api"],
+            "engine/io/api",
+        ),
+        "docs/architecture/inner/io/exporters/architecture-contract.json": (
+            "registry",
+            "datamimic_ce.engine.io.exporters",
+            ["datamimic_ce.engine.io.exporters.registry"],
+            "engine/io/exporters/registry",
+        ),
+        "docs/architecture/inner/errors/architecture-contract.json": (
+            "factory",
+            "datamimic_ce.errors",
+            ["datamimic_ce.errors.factory"],
+            "errors/factory",
+        ),
+    }
+
+    def assert_exact_owner(
+        contract: dict, expected_owner: tuple[str, str, list[str], str]
+    ) -> None:
+        components = {component["label"]: component for component in contract["components"]}
+        owner, module, packages, _ = expected_owner
+        component = components[owner]
+        assert component["packages"] == packages
+        assert component.get("exact_modules", []) == [module]
+        assert sum(
+            module in candidate.get("exact_modules", [])
+            or any(
+                module == package or module.startswith(package + ".")
+                for package in candidate["packages"]
+            )
+            for candidate in contract["components"]
+        ) == 1, module
+
+    manifest = json.loads(MANIFEST.read_text(encoding="utf-8"))
+    reviews = {item["path"]: item for item in manifest["package_reviews"]}
+    for relative_path, expected_owner in expected.items():
+        contract = json.loads((ROOT / relative_path).read_text(encoding="utf-8"))
+        assert_exact_owner(contract, expected_owner)
+        _, module, _, target = expected_owner
+        scope = module.removeprefix("datamimic_ce.").replace(".", "/")
+        assert reviews[scope]["initializer_owner"] == target, scope
+
+    healthcare_path = next(
+        path for path in expected if path.endswith("/healthcare/architecture-contract.json")
+    )
+    broad_selector = json.loads((ROOT / healthcare_path).read_text(encoding="utf-8"))
+    services = next(item for item in broad_selector["components"] if item["label"] == "services")
+    services["packages"].append("datamimic_ce.domains.healthcare")
+    with pytest.raises(AssertionError):
+        assert_exact_owner(broad_selector, expected[healthcare_path])
+
+    runtime_path = "docs/architecture/inner/runtime/architecture-contract.json"
+    broad_selector = json.loads((ROOT / runtime_path).read_text(encoding="utf-8"))
+    api = next(item for item in broad_selector["components"] if item["label"] == "api")
+    api["packages"].append("datamimic_ce.engine.runtime")
+    with pytest.raises(AssertionError):
+        assert_exact_owner(broad_selector, expected[runtime_path])
+
+    missing_owner = json.loads((ROOT / runtime_path).read_text(encoding="utf-8"))
+    api = next(item for item in missing_owner["components"] if item["label"] == "api")
+    api["exact_modules"].remove("datamimic_ce.engine.runtime")
+    with pytest.raises(AssertionError):
+        assert_exact_owner(missing_owner, expected[runtime_path])
+
+    extra_exact_module = json.loads((ROOT / runtime_path).read_text(encoding="utf-8"))
+    api = next(item for item in extra_exact_module["components"] if item["label"] == "api")
+    api["exact_modules"].append("datamimic_ce.engine.runtime.unowned")
+    with pytest.raises(AssertionError):
+        assert_exact_owner(extra_exact_module, expected[runtime_path])
+
+    exporters_path = "docs/architecture/inner/io/exporters/architecture-contract.json"
+    broad_selector = json.loads((ROOT / exporters_path).read_text(encoding="utf-8"))
+    registry = next(item for item in broad_selector["components"] if item["label"] == "registry")
+    registry["packages"].append("datamimic_ce.engine.io.exporters")
+    with pytest.raises(AssertionError):
+        assert_exact_owner(broad_selector, expected[exporters_path])
+
+    missing_owner = json.loads((ROOT / exporters_path).read_text(encoding="utf-8"))
+    registry = next(item for item in missing_owner["components"] if item["label"] == "registry")
+    registry["exact_modules"].remove("datamimic_ce.engine.io.exporters")
+    with pytest.raises(AssertionError):
+        assert_exact_owner(missing_owner, expected[exporters_path])
+
+    extra_exact_module = json.loads((ROOT / exporters_path).read_text(encoding="utf-8"))
+    registry = next(item for item in extra_exact_module["components"] if item["label"] == "registry")
+    registry["exact_modules"].append("datamimic_ce.engine.io.exporters.unowned")
+    with pytest.raises(AssertionError):
+        assert_exact_owner(extra_exact_module, expected[exporters_path])
+
+    errors_path = "docs/architecture/inner/errors/architecture-contract.json"
+    broad_selector = json.loads((ROOT / errors_path).read_text(encoding="utf-8"))
+    factory = next(item for item in broad_selector["components"] if item["label"] == "factory")
+    factory["packages"].append("datamimic_ce.errors")
+    with pytest.raises(AssertionError):
+        assert_exact_owner(broad_selector, expected[errors_path])
+
+    missing_owner = json.loads((ROOT / errors_path).read_text(encoding="utf-8"))
+    factory = next(item for item in missing_owner["components"] if item["label"] == "factory")
+    factory["exact_modules"].remove("datamimic_ce.errors")
+    with pytest.raises(AssertionError):
+        assert_exact_owner(missing_owner, expected[errors_path])
+
+    extra_exact_module = json.loads((ROOT / errors_path).read_text(encoding="utf-8"))
+    factory = next(item for item in extra_exact_module["components"] if item["label"] == "factory")
+    factory["exact_modules"].append("datamimic_ce.errors.unowned")
+    with pytest.raises(AssertionError):
+        assert_exact_owner(extra_exact_module, expected[errors_path])
 
 
 def test_recursive_target_definition_rejects_mapping_and_layout_false_greens(tmp_path: Path) -> None:

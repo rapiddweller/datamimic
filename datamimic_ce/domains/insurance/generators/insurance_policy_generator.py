@@ -9,6 +9,7 @@ import random
 from pathlib import Path
 
 from datamimic_ce.domains.domain_core.base_domain_generator import DatasetAwareDomainGenerator
+from datamimic_ce.domains.domain_core.runtime.rng_uuid import uuid4_from_random
 from datamimic_ce.domains.insurance.generators.insurance_company_generator import InsuranceCompanyGenerator
 from datamimic_ce.domains.insurance.generators.insurance_coverage_generator import InsuranceCoverageGenerator
 from datamimic_ce.domains.insurance.generators.insurance_product_generator import InsuranceProductGenerator
@@ -57,6 +58,12 @@ class InsurancePolicyGenerator(DatasetAwareDomainGenerator):
         self._datetime_generator = DateTimeGenerator(random=True, rng=self._derive_rng())
         # Track last picks to avoid immediate repetition in tests without rerun plugin
         self._last_status: str | None = None
+
+    def generate_id_candidate(self) -> str:
+        return uuid4_from_random(self.rng)
+
+    def generate_coverage_count(self) -> int:
+        return self.rng.randint(1, 3)
 
     @property
     def insurance_company_generator(self) -> InsuranceCompanyGenerator:

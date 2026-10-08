@@ -92,8 +92,11 @@
       "packages": [
         "datamimic_ce.engine.runtime.api"
       ],
+      "exact_modules": [
+        "datamimic_ce.engine.runtime"
+      ],
       "responsibilities": [
-        "Public runtime lifecycle entry."
+        "Public runtime lifecycle entry and inert runtime package initializer."
       ],
       "forbidden_responsibilities": [
         "Own task execution or IO implementations."
@@ -383,7 +386,7 @@
       "id": "RUNTIME-ASSIGNMENT",
       "kind": "complete_assignment",
       "source": "datamimic_ce.engine.runtime",
-      "rationale": "Every implementation below this boundary has one declared owner; initializer behavior is reviewed separately.",
+      "rationale": "Every implementation and the inert package initializer have one declared owner.",
       "provenance": [
         "docs/architecture/inner/target.md"
       ],

@@ -1,0 +1,2510 @@
+[
+  {
+    "id": "module:__init__.py",
+    "kind": "module",
+    "path": "__init__.py",
+    "lane": "entry_authoring",
+    "targets": [
+      "__init__.py"
+    ]
+  },
+  {
+    "id": "module:_compat.py",
+    "kind": "module",
+    "path": "_compat.py",
+    "lane": "entry_authoring",
+    "targets": [
+      "_compat.py"
+    ]
+  },
+  {
+    "id": "module:authoring/__init__.py",
+    "kind": "module",
+    "path": "authoring/__init__.py",
+    "lane": "entry_authoring",
+    "targets": [
+      "authoring/__init__.py"
+    ]
+  },
+  {
+    "id": "module:authoring/adapters/__init__.py",
+    "kind": "module",
+    "path": "authoring/adapters/__init__.py",
+    "lane": "entry_authoring",
+    "targets": [
+      "authoring/adapters/__init__.py"
+    ]
+  },
+  {
+    "id": "module:authoring/adapters/dryrun.py",
+    "kind": "module",
+    "path": "authoring/adapters/dryrun.py",
+    "lane": "entry_authoring",
+    "targets": [
+      "authoring/adapters/dryrun.py"
+    ]
+  },
+  {
+    "id": "module:authoring/adapters/engine_check.py",
+    "kind": "module",
+    "path": "authoring/adapters/engine_check.py",
+    "lane": "entry_authoring",
+    "targets": [
+      "authoring/adapters/engine_check.py"
+    ]
+  },
+  {
+    "id": "module:authoring/adapters/linter.py",
+    "kind": "module",
+    "path": "authoring/adapters/linter.py",
+    "lane": "entry_authoring",
+    "targets": [
+      "authoring/adapters/linter.py"
+    ]
+  },
+  {
+    "id": "module:authoring/adapters/xml_loader.py",
+    "kind": "module",
+    "path": "authoring/adapters/xml_loader.py",
+    "lane": "entry_authoring",
+    "targets": [
+      "authoring/adapters/xml_loader.py"
+    ]
+  },
+  {
+    "id": "module:authoring/api.py",
+    "kind": "module",
+    "path": "authoring/api.py",
+    "lane": "entry_authoring",
+    "targets": [
+      "authoring/api.py"
+    ]
+  },
+  {
+    "id": "module:authoring/application/__init__.py",
+    "kind": "module",
+    "path": "authoring/application/__init__.py",
+    "lane": "entry_authoring",
+    "targets": [
+      "authoring/application/__init__.py"
+    ]
+  },
+  {
+    "id": "module:authoring/application/acceptance.py",
+    "kind": "module",
+    "path": "authoring/application/acceptance.py",
+    "lane": "entry_authoring",
+    "targets": [
+      "authoring/application/acceptance.py"
+    ]
+  },
+  {
+    "id": "module:authoring/application/compiler.py",
+    "kind": "module",
+    "path": "authoring/application/compiler.py",
+    "lane": "entry_authoring",
+    "targets": [
+      "authoring/application/compiler.py"
+    ]
+  },
+  {
+    "id": "module:authoring/application/intent_linter.py",
+    "kind": "module",
+    "path": "authoring/application/intent_linter.py",
+    "lane": "entry_authoring",
+    "targets": [
+      "authoring/application/intent_linter.py"
+    ]
+  },
+  {
+    "id": "module:authoring/application/intent_validation.py",
+    "kind": "module",
+    "path": "authoring/application/intent_validation.py",
+    "lane": "entry_authoring",
+    "targets": [
+      "authoring/application/intent_validation.py"
+    ]
+  },
+  {
+    "id": "module:authoring/application/service.py",
+    "kind": "module",
+    "path": "authoring/application/service.py",
+    "lane": "entry_authoring",
+    "targets": [
+      "authoring/application/service.py"
+    ]
+  },
+  {
+    "id": "module:authoring/application/verification.py",
+    "kind": "module",
+    "path": "authoring/application/verification.py",
+    "lane": "entry_authoring",
+    "targets": [
+      "authoring/application/verification.py"
+    ]
+  },
+  {
+    "id": "module:authoring/contracts.py",
+    "kind": "module",
+    "path": "authoring/contracts.py",
+    "lane": "entry_authoring",
+    "targets": [
+      "authoring/contracts.py"
+    ]
+  },
+  {
+    "id": "module:authoring/domain/__init__.py",
+    "kind": "module",
+    "path": "authoring/domain/__init__.py",
+    "lane": "entry_authoring",
+    "targets": [
+      "authoring/domain/__init__.py"
+    ]
+  },
+  {
+    "id": "module:authoring/domain/derived_facts.py",
+    "kind": "module",
+    "path": "authoring/domain/derived_facts.py",
+    "lane": "entry_authoring",
+    "targets": [
+      "authoring/domain/derived_facts.py"
+    ]
+  },
+  {
+    "id": "module:authoring/domain/diagnostics.py",
+    "kind": "module",
+    "path": "authoring/domain/diagnostics.py",
+    "lane": "entry_authoring",
+    "targets": [
+      "authoring/domain/diagnostics.py"
+    ]
+  },
+  {
+    "id": "module:authoring/domain/rule_catalog.py",
+    "kind": "module",
+    "path": "authoring/domain/rule_catalog.py",
+    "lane": "entry_authoring",
+    "targets": [
+      "authoring/domain/rule_catalog.py"
+    ]
+  },
+  {
+    "id": "module:authoring/domain/rules/__init__.py",
+    "kind": "module",
+    "path": "authoring/domain/rules/__init__.py",
+    "lane": "entry_authoring",
+    "targets": [
+      "authoring/domain/rules/__init__.py"
+    ]
+  },
+  {
+    "id": "module:authoring/domain/rules/base.py",
+    "kind": "module",
+    "path": "authoring/domain/rules/base.py",
+    "lane": "entry_authoring",
+    "targets": [
+      "authoring/domain/rules/base.py"
+    ]
+  },
+  {
+    "id": "module:authoring/domain/rules/best_practice.py",
+    "kind": "module",
+    "path": "authoring/domain/rules/best_practice.py",
+    "lane": "entry_authoring",
+    "targets": [
+      "authoring/domain/rules/best_practice.py"
+    ]
+  },
+  {
+    "id": "module:authoring/domain/rules/cross_statement.py",
+    "kind": "module",
+    "path": "authoring/domain/rules/cross_statement.py",
+    "lane": "entry_authoring",
+    "targets": [
+      "authoring/domain/rules/cross_statement.py"
+    ]
+  },
+  {
+    "id": "module:authoring/domain/rules/intent_rules.py",
+    "kind": "module",
+    "path": "authoring/domain/rules/intent_rules.py",
+    "lane": "entry_authoring",
+    "targets": [
+      "authoring/domain/rules/intent_rules.py"
+    ]
+  },
+  {
+    "id": "module:authoring/domain/rules/schema_facts.py",
+    "kind": "module",
+    "path": "authoring/domain/rules/schema_facts.py",
+    "lane": "entry_authoring",
+    "targets": [
+      "authoring/domain/rules/schema_facts.py"
+    ]
+  },
+  {
+    "id": "module:authoring/domain/rules/schema_rules.py",
+    "kind": "module",
+    "path": "authoring/domain/rules/schema_rules.py",
+    "lane": "entry_authoring",
+    "targets": [
+      "authoring/domain/rules/schema_rules.py"
+    ]
+  },
+  {
+    "id": "module:authoring/domain/rules/semantic_rules.py",
+    "kind": "module",
+    "path": "authoring/domain/rules/semantic_rules.py",
+    "lane": "entry_authoring",
+    "targets": [
+      "authoring/domain/rules/semantic_rules.py"
+    ]
+  },
+  {
+    "id": "module:authoring/domain/schema.py",
+    "kind": "module",
+    "path": "authoring/domain/schema.py",
+    "lane": "entry_authoring",
+    "targets": [
+      "authoring/domain/schema.py"
+    ]
+  },
+  {
+    "id": "module:authoring/domain/script_semantics.py",
+    "kind": "module",
+    "path": "authoring/domain/script_semantics.py",
+    "lane": "entry_authoring",
+    "targets": [
+      "authoring/domain/script_semantics.py"
+    ]
+  },
+  {
+    "id": "module:authoring/projection/__init__.py",
+    "kind": "module",
+    "path": "authoring/projection/__init__.py",
+    "lane": "entry_authoring",
+    "targets": [
+      "authoring/projection/__init__.py"
+    ]
+  },
+  {
+    "id": "module:authoring/projection/reference.py",
+    "kind": "module",
+    "path": "authoring/projection/reference.py",
+    "lane": "entry_authoring",
+    "targets": [
+      "authoring/projection/reference.py"
+    ]
+  },
+  {
+    "id": "module:authoring/projection/reference_projection.py",
+    "kind": "module",
+    "path": "authoring/projection/reference_projection.py",
+    "lane": "entry_authoring",
+    "targets": [
+      "authoring/projection/reference_projection.py"
+    ]
+  },
+  {
+    "id": "module:authoring/spec.py",
+    "kind": "module",
+    "path": "authoring/spec.py",
+    "lane": "entry_authoring",
+    "targets": [
+      "authoring/spec.py"
+    ]
+  },
+  {
+    "id": "module:data_mimic_test.py",
+    "kind": "module",
+    "path": "data_mimic_test.py",
+    "lane": "entry_authoring",
+    "targets": [
+      "interfaces/python/data_mimic_test.py"
+    ]
+  },
+  {
+    "id": "module:datamimic.py",
+    "kind": "module",
+    "path": "datamimic.py",
+    "lane": "entry_authoring",
+    "targets": [
+      "interfaces/python/datamimic.py"
+    ]
+  },
+  {
+    "id": "module:engine/__init__.py",
+    "kind": "module",
+    "path": "engine/__init__.py",
+    "lane": "entry_authoring",
+    "targets": [
+      "engine/__init__.py"
+    ]
+  },
+  {
+    "id": "module:errors/__init__.py",
+    "kind": "module",
+    "path": "errors/__init__.py",
+    "lane": "entry_authoring",
+    "targets": [
+      "errors/__init__.py"
+    ]
+  },
+  {
+    "id": "module:errors/base.py",
+    "kind": "module",
+    "path": "errors/base.py",
+    "lane": "entry_authoring",
+    "targets": [
+      "errors/base.py"
+    ]
+  },
+  {
+    "id": "module:errors/catalog/__init__.py",
+    "kind": "module",
+    "path": "errors/catalog/__init__.py",
+    "lane": "entry_authoring",
+    "targets": [
+      "errors/catalog/__init__.py"
+    ]
+  },
+  {
+    "id": "module:errors/codes.py",
+    "kind": "module",
+    "path": "errors/codes.py",
+    "lane": "entry_authoring",
+    "targets": [
+      "errors/codes.py"
+    ]
+  },
+  {
+    "id": "module:errors/factory.py",
+    "kind": "module",
+    "path": "errors/factory.py",
+    "lane": "entry_authoring",
+    "targets": [
+      "errors/factory.py"
+    ]
+  },
+  {
+    "id": "module:errors/formatters.py",
+    "kind": "module",
+    "path": "errors/formatters.py",
+    "lane": "entry_authoring",
+    "targets": [
+      "errors/formatters.py"
+    ]
+  },
+  {
+    "id": "module:factory/datamimic_test_factory.py",
+    "kind": "module",
+    "path": "factory/datamimic_test_factory.py",
+    "lane": "entry_authoring",
+    "targets": [
+      "interfaces/python/factory/datamimic_test_factory.py"
+    ]
+  },
+  {
+    "id": "module:factory/factory_config.py",
+    "kind": "module",
+    "path": "factory/factory_config.py",
+    "lane": "entry_authoring",
+    "targets": [
+      "interfaces/python/factory/factory_config.py"
+    ]
+  },
+  {
+    "id": "module:interfaces/__init__.py",
+    "kind": "module",
+    "path": "interfaces/__init__.py",
+    "lane": "entry_authoring",
+    "targets": [
+      "interfaces/__init__.py"
+    ]
+  },
+  {
+    "id": "module:interfaces/api.py",
+    "kind": "module",
+    "path": "interfaces/api.py",
+    "lane": "entry_authoring",
+    "targets": [
+      "interfaces/api.py"
+    ]
+  },
+  {
+    "id": "module:interfaces/cli/__init__.py",
+    "kind": "module",
+    "path": "interfaces/cli/__init__.py",
+    "lane": "entry_authoring",
+    "targets": [
+      "interfaces/cli/__init__.py"
+    ]
+  },
+  {
+    "id": "module:interfaces/cli/__main__.py",
+    "kind": "module",
+    "path": "interfaces/cli/__main__.py",
+    "lane": "entry_authoring",
+    "targets": [
+      "interfaces/cli/__main__.py"
+    ]
+  },
+  {
+    "id": "module:interfaces/cli/authoring.py",
+    "kind": "module",
+    "path": "interfaces/cli/authoring.py",
+    "lane": "entry_authoring",
+    "targets": [
+      "interfaces/cli/authoring.py"
+    ]
+  },
+  {
+    "id": "module:interfaces/cli/presenter.py",
+    "kind": "module",
+    "path": "interfaces/cli/presenter.py",
+    "lane": "entry_authoring",
+    "targets": [
+      "interfaces/cli/presenter.py"
+    ]
+  },
+  {
+    "id": "module:interfaces/cli/runtime.py",
+    "kind": "module",
+    "path": "interfaces/cli/runtime.py",
+    "lane": "entry_authoring",
+    "targets": [
+      "interfaces/cli/runtime.py"
+    ]
+  },
+  {
+    "id": "module:interfaces/contracts.py",
+    "kind": "module",
+    "path": "interfaces/contracts.py",
+    "lane": "entry_authoring",
+    "targets": [
+      "interfaces/contracts.py"
+    ]
+  },
+  {
+    "id": "module:interfaces/demo.py",
+    "kind": "module",
+    "path": "interfaces/demo.py",
+    "lane": "entry_authoring",
+    "targets": [
+      "interfaces/demo.py"
+    ]
+  },
+  {
+    "id": "module:interfaces/mcp/__init__.py",
+    "kind": "module",
+    "path": "interfaces/mcp/__init__.py",
+    "lane": "entry_authoring",
+    "targets": [
+      "interfaces/mcp/__init__.py"
+    ]
+  },
+  {
+    "id": "module:interfaces/mcp/cli.py",
+    "kind": "module",
+    "path": "interfaces/mcp/cli.py",
+    "lane": "entry_authoring",
+    "targets": [
+      "interfaces/mcp/cli.py"
+    ]
+  },
+  {
+    "id": "module:interfaces/mcp/server.py",
+    "kind": "module",
+    "path": "interfaces/mcp/server.py",
+    "lane": "entry_authoring",
+    "targets": [
+      "interfaces/mcp/server.py"
+    ]
+  },
+  {
+    "id": "module:interfaces/project.py",
+    "kind": "module",
+    "path": "interfaces/project.py",
+    "lane": "entry_authoring",
+    "targets": [
+      "interfaces/project.py"
+    ]
+  },
+  {
+    "id": "module:resources/__init__.py",
+    "kind": "module",
+    "path": "resources/__init__.py",
+    "lane": "entry_authoring",
+    "targets": [
+      "resources/__init__.py"
+    ]
+  },
+  {
+    "id": "module:resources/api.py",
+    "kind": "module",
+    "path": "resources/api.py",
+    "lane": "entry_authoring",
+    "targets": [
+      "resources/api.py"
+    ]
+  },
+  {
+    "id": "module:resources/demos/__init___.py",
+    "kind": "module",
+    "path": "resources/demos/__init___.py",
+    "lane": "entry_authoring",
+    "targets": [
+      "resources/demos/__init___.py"
+    ]
+  },
+  {
+    "id": "module:resources/demos/demo-clinical-trial/script/clinical_trial.scr.py",
+    "kind": "module",
+    "path": "resources/demos/demo-clinical-trial/script/clinical_trial.scr.py",
+    "lane": "entry_authoring",
+    "targets": [
+      "resources/demos/demo-clinical-trial/script/clinical_trial.scr.py"
+    ]
+  },
+  {
+    "id": "module:resources/demos/demo-custom-components/script/converter.scr.py",
+    "kind": "module",
+    "path": "resources/demos/demo-custom-components/script/converter.scr.py",
+    "lane": "entry_authoring",
+    "targets": [
+      "resources/demos/demo-custom-components/script/converter.scr.py"
+    ]
+  },
+  {
+    "id": "module:resources/demos/demo-custom-components/script/generator.scr.py",
+    "kind": "module",
+    "path": "resources/demos/demo-custom-components/script/generator.scr.py",
+    "lane": "entry_authoring",
+    "targets": [
+      "resources/demos/demo-custom-components/script/generator.scr.py"
+    ]
+  },
+  {
+    "id": "module:resources/demos/demo-custom-components/script/generator_glob.scr.py",
+    "kind": "module",
+    "path": "resources/demos/demo-custom-components/script/generator_glob.scr.py",
+    "lane": "entry_authoring",
+    "targets": [
+      "resources/demos/demo-custom-components/script/generator_glob.scr.py"
+    ]
+  },
+  {
+    "id": "module:resources/demos/demo-datetime/script/py_script.scr.py",
+    "kind": "module",
+    "path": "resources/demos/demo-datetime/script/py_script.scr.py",
+    "lane": "entry_authoring",
+    "targets": [
+      "resources/demos/demo-datetime/script/py_script.scr.py"
+    ]
+  },
+  {
+    "id": "module:resources/demos/demo-db-mapping/script/lib_glob.scr.py",
+    "kind": "module",
+    "path": "resources/demos/demo-db-mapping/script/lib_glob.scr.py",
+    "lane": "entry_authoring",
+    "targets": [
+      "resources/demos/demo-db-mapping/script/lib_glob.scr.py"
+    ]
+  },
+  {
+    "id": "module:resources/demos/demo-finance/script/ledger.scr.py",
+    "kind": "module",
+    "path": "resources/demos/demo-finance/script/ledger.scr.py",
+    "lane": "entry_authoring",
+    "targets": [
+      "resources/demos/demo-finance/script/ledger.scr.py"
+    ]
+  },
+  {
+    "id": "module:resources/demos/demo-py-scripting/script/lib.scr.py",
+    "kind": "module",
+    "path": "resources/demos/demo-py-scripting/script/lib.scr.py",
+    "lane": "entry_authoring",
+    "targets": [
+      "resources/demos/demo-py-scripting/script/lib.scr.py"
+    ]
+  },
+  {
+    "id": "folder:",
+    "kind": "folder",
+    "path": "",
+    "lane": "entry_authoring",
+    "sources": [
+      "__init__.py",
+      "_compat.py",
+      "authoring/__init__.py",
+      "authoring/adapters/__init__.py",
+      "authoring/adapters/dryrun.py",
+      "authoring/adapters/engine_check.py",
+      "authoring/adapters/linter.py",
+      "authoring/adapters/xml_loader.py",
+      "authoring/api.py",
+      "authoring/application/__init__.py",
+      "authoring/application/acceptance.py",
+      "authoring/application/compiler.py",
+      "authoring/application/intent_linter.py",
+      "authoring/application/intent_validation.py",
+      "authoring/application/service.py",
+      "authoring/application/verification.py",
+      "authoring/contracts.py",
+      "authoring/domain/__init__.py",
+      "authoring/domain/derived_facts.py",
+      "authoring/domain/diagnostics.py",
+      "authoring/domain/rule_catalog.py",
+      "authoring/domain/rules/__init__.py",
+      "authoring/domain/rules/base.py",
+      "authoring/domain/rules/best_practice.py",
+      "authoring/domain/rules/cross_statement.py",
+      "authoring/domain/rules/intent_rules.py",
+      "authoring/domain/rules/schema_facts.py",
+      "authoring/domain/rules/schema_rules.py",
+      "authoring/domain/rules/semantic_rules.py",
+      "authoring/domain/schema.py",
+      "authoring/domain/script_semantics.py",
+      "authoring/projection/__init__.py",
+      "authoring/projection/reference.py",
+      "authoring/projection/reference_projection.py",
+      "authoring/spec.py",
+      "data_mimic_test.py",
+      "datamimic.py",
+      "domains/__init__.py",
+      "domains/api.py",
+      "domains/domain_core/__init__.py",
+      "domains/domain_core/attribute_catalog.py",
+      "domains/domain_core/base_domain_generator.py",
+      "domains/domain_core/base_domain_service.py",
+      "domains/domain_core/base_entity.py",
+      "domains/domain_core/base_literal_generator.py",
+      "domains/domain_core/property_cache.py",
+      "domains/domain_core/runtime/__init__.py",
+      "domains/domain_core/runtime/clock.py",
+      "domains/domain_core/runtime/rng.py",
+      "domains/domain_core/runtime/run_seed.py",
+      "domains/ecommerce/__init__.py",
+      "domains/ecommerce/generators/__init__.py",
+      "domains/ecommerce/generators/order_generator.py",
+      "domains/ecommerce/generators/product_generator.py",
+      "domains/ecommerce/models/__init__.py",
+      "domains/ecommerce/models/order.py",
+      "domains/ecommerce/models/product.py",
+      "domains/ecommerce/services/__init__.py",
+      "domains/ecommerce/services/order_service.py",
+      "domains/ecommerce/services/product_service.py",
+      "domains/entity_registry.py",
+      "domains/facade.py",
+      "domains/finance/__init__.py",
+      "domains/finance/generators/__init__.py",
+      "domains/finance/generators/bank_account_generator.py",
+      "domains/finance/generators/bank_generator.py",
+      "domains/finance/generators/credit_card_generator.py",
+      "domains/finance/generators/transaction_generator.py",
+      "domains/finance/luhn.py",
+      "domains/finance/models/__init__.py",
+      "domains/finance/models/bank.py",
+      "domains/finance/models/bank_account.py",
+      "domains/finance/models/credit_card.py",
+      "domains/finance/models/transaction.py",
+      "domains/finance/services/__init__.py",
+      "domains/finance/services/bank_account_service.py",
+      "domains/finance/services/bank_service.py",
+      "domains/finance/services/credit_card_service.py",
+      "domains/finance/services/transaction_service.py",
+      "domains/healthcare/__init__.py",
+      "domains/healthcare/generators/__init__.py",
+      "domains/healthcare/generators/doctor_generator.py",
+      "domains/healthcare/generators/hospital_generator.py",
+      "domains/healthcare/generators/medical_device_generator.py",
+      "domains/healthcare/generators/medical_procedure_generator.py",
+      "domains/healthcare/generators/patient_generator.py",
+      "domains/healthcare/models/__init__.py",
+      "domains/healthcare/models/doctor.py",
+      "domains/healthcare/models/hospital.py",
+      "domains/healthcare/models/medical_device.py",
+      "domains/healthcare/models/medical_procedure.py",
+      "domains/healthcare/models/patient.py",
+      "domains/healthcare/services/__init__.py",
+      "domains/healthcare/services/doctor_api.py",
+      "domains/healthcare/services/doctor_service.py",
+      "domains/healthcare/services/hospital_service.py",
+      "domains/healthcare/services/medical_device_service.py",
+      "domains/healthcare/services/medical_procedure_service.py",
+      "domains/healthcare/services/patient_api.py",
+      "domains/healthcare/services/patient_service.py",
+      "domains/insurance/__init__.py",
+      "domains/insurance/generators/__init__.py",
+      "domains/insurance/generators/insurance_company_generator.py",
+      "domains/insurance/generators/insurance_coverage_generator.py",
+      "domains/insurance/generators/insurance_policy_generator.py",
+      "domains/insurance/generators/insurance_product_generator.py",
+      "domains/insurance/models/__init__.py",
+      "domains/insurance/models/insurance_company.py",
+      "domains/insurance/models/insurance_coverage.py",
+      "domains/insurance/models/insurance_policy.py",
+      "domains/insurance/models/insurance_product.py",
+      "domains/insurance/services/__init__.py",
+      "domains/insurance/services/insurance_company_service.py",
+      "domains/insurance/services/insurance_coverage_service.py",
+      "domains/insurance/services/insurance_policy_service.py",
+      "domains/insurance/services/insurance_product_service.py",
+      "domains/public_sector/__init__.py",
+      "domains/public_sector/generators/__init__.py",
+      "domains/public_sector/generators/administration_office_generator.py",
+      "domains/public_sector/generators/educational_institution_generator.py",
+      "domains/public_sector/generators/police_officer_generator.py",
+      "domains/public_sector/models/__init__.py",
+      "domains/public_sector/models/administration_office.py",
+      "domains/public_sector/models/educational_institution.py",
+      "domains/public_sector/models/police_officer.py",
+      "domains/public_sector/services/__init__.py",
+      "domains/public_sector/services/administration_office_service.py",
+      "domains/public_sector/services/educational_institution_service.py",
+      "domains/public_sector/services/police_officer_service.py",
+      "domains/shared/__init__.py",
+      "domains/shared/converters/__init__.py",
+      "domains/shared/converters/append_converter.py",
+      "domains/shared/converters/converter.py",
+      "domains/shared/converters/custom_converter.py",
+      "domains/shared/converters/cut_length_converter.py",
+      "domains/shared/converters/date2timestamp_converter.py",
+      "domains/shared/converters/date_format_converter.py",
+      "domains/shared/converters/hash_converter.py",
+      "domains/shared/converters/java_hash_converter.py",
+      "domains/shared/converters/lower_case_converter.py",
+      "domains/shared/converters/mask_converter.py",
+      "domains/shared/converters/middle_mask_converter.py",
+      "domains/shared/converters/remove_none_or_empty_element_converter.py",
+      "domains/shared/converters/substring_converter.py",
+      "domains/shared/converters/timestamp2date_converter.py",
+      "domains/shared/converters/upper_case_converter.py",
+      "domains/shared/demographics/__init__.py",
+      "domains/shared/demographics/api.py",
+      "domains/shared/demographics/loader.py",
+      "domains/shared/demographics/profile.py",
+      "domains/shared/demographics/profile_meta.py",
+      "domains/shared/demographics/sampler.py",
+      "domains/shared/determinism.py",
+      "domains/shared/examples/generate_address.py",
+      "domains/shared/examples/generate_cities.py",
+      "domains/shared/examples/generate_companies.py",
+      "domains/shared/examples/generate_countries.py",
+      "domains/shared/examples/generate_people.py",
+      "domains/shared/examples/generate_people_demographics.py",
+      "domains/shared/generator_registry.py",
+      "domains/shared/generators/__init__.py",
+      "domains/shared/generators/address_generator.py",
+      "domains/shared/generators/city_generator.py",
+      "domains/shared/generators/company_generator.py",
+      "domains/shared/generators/country_generator.py",
+      "domains/shared/generators/person_generator.py",
+      "domains/shared/generators/region_groups.py",
+      "domains/shared/json_types.py",
+      "domains/shared/literal_generators/academic_title_generator.py",
+      "domains/shared/literal_generators/binary_generator.py",
+      "domains/shared/literal_generators/birthdate_generator.py",
+      "domains/shared/literal_generators/boolean_generator.py",
+      "domains/shared/literal_generators/cnpj_generator.py",
+      "domains/shared/literal_generators/color_generators.py",
+      "domains/shared/literal_generators/company_name_generator.py",
+      "domains/shared/literal_generators/cpf_generator.py",
+      "domains/shared/literal_generators/data_faker_generator.py",
+      "domains/shared/literal_generators/datetime_generator.py",
+      "domains/shared/literal_generators/department_name_generator.py",
+      "domains/shared/literal_generators/domain_generator.py",
+      "domains/shared/literal_generators/ean_generator.py",
+      "domains/shared/literal_generators/email_address_generator.py",
+      "domains/shared/literal_generators/family_name_generator.py",
+      "domains/shared/literal_generators/float_generator.py",
+      "domains/shared/literal_generators/gender_generator.py",
+      "domains/shared/literal_generators/given_name_generator.py",
+      "domains/shared/literal_generators/global_increment_generator.py",
+      "domains/shared/literal_generators/hash_generator.py",
+      "domains/shared/literal_generators/increment_generator.py",
+      "domains/shared/literal_generators/integer_generator.py",
+      "domains/shared/literal_generators/nobility_title_generator.py",
+      "domains/shared/literal_generators/number_sequences.py",
+      "domains/shared/literal_generators/password_generator.py",
+      "domains/shared/literal_generators/phone_number_generator.py",
+      "domains/shared/literal_generators/prefixed_id_generator.py",
+      "domains/shared/literal_generators/sector_generator.py",
+      "domains/shared/literal_generators/ssn_generator.py",
+      "domains/shared/literal_generators/state_transition_generator.py",
+      "domains/shared/literal_generators/street_name_generator.py",
+      "domains/shared/literal_generators/string_generator.py",
+      "domains/shared/literal_generators/token_generator.py",
+      "domains/shared/literal_generators/url_generator.py",
+      "domains/shared/literal_generators/uuid_generator.py",
+      "domains/shared/locale_registry.py",
+      "domains/shared/locales/__init__.py",
+      "domains/shared/models/__init__.py",
+      "domains/shared/models/address.py",
+      "domains/shared/models/city.py",
+      "domains/shared/models/company.py",
+      "domains/shared/models/country.py",
+      "domains/shared/models/demographic_config.py",
+      "domains/shared/models/person.py",
+      "domains/shared/profile_components.py",
+      "domains/shared/sampling.py",
+      "domains/shared/schema_registry.py",
+      "domains/shared/services/__init__.py",
+      "domains/shared/services/address_api.py",
+      "domains/shared/services/address_service.py",
+      "domains/shared/services/city_service.py",
+      "domains/shared/services/company_service.py",
+      "domains/shared/services/country_service.py",
+      "domains/shared/services/person_api.py",
+      "domains/shared/services/person_service.py",
+      "domains/shared/utils/__init__.py",
+      "domains/shared/utils/dataset_loader.py",
+      "domains/shared/utils/dataset_path.py",
+      "domains/shared/utils/random_source.py",
+      "domains/shared/utils/rng_uuid.py",
+      "domains/shared/utils/supported_datasets.py",
+      "engine/__init__.py",
+      "engine/dsl/__init__.py",
+      "engine/dsl/api.py",
+      "engine/dsl/constants/__init__.py",
+      "engine/dsl/constants/attribute_constants.py",
+      "engine/dsl/constants/convention_constants.py",
+      "engine/dsl/constants/data_type_constants.py",
+      "engine/dsl/constants/element_constants.py",
+      "engine/dsl/constants/exporter_constants.py",
+      "engine/dsl/contracts.py",
+      "engine/dsl/enums/__init__.py",
+      "engine/dsl/enums/converter_enums.py",
+      "engine/dsl/enums/dbms_enums.py",
+      "engine/dsl/enums/distribution_enums.py",
+      "engine/dsl/enums/faker_enums.py",
+      "engine/dsl/enums/operation_enums.py",
+      "engine/dsl/model/__init__.py",
+      "engine/dsl/model/array_model.py",
+      "engine/dsl/model/assert_model.py",
+      "engine/dsl/model/base_if_else_model.py",
+      "engine/dsl/model/condition_model.py",
+      "engine/dsl/model/constraints/__init__.py",
+      "engine/dsl/model/constraints/capabilities.py",
+      "engine/dsl/model/constraints/facts.py",
+      "engine/dsl/model/constraints/registry.py",
+      "engine/dsl/model/constraints/serialization.py",
+      "engine/dsl/model/constraints/types.py",
+      "engine/dsl/model/database_model.py",
+      "engine/dsl/model/demographics_model.py",
+      "engine/dsl/model/element_model.py",
+      "engine/dsl/model/element_registry.py",
+      "engine/dsl/model/else_if_model.py",
+      "engine/dsl/model/else_model.py",
+      "engine/dsl/model/execute_model.py",
+      "engine/dsl/model/generate_model.py",
+      "engine/dsl/model/generator_model.py",
+      "engine/dsl/model/if_model.py",
+      "engine/dsl/model/include_model.py",
+      "engine/dsl/model/item_model.py",
+      "engine/dsl/model/key_model.py",
+      "engine/dsl/model/list_model.py",
+      "engine/dsl/model/memstore_model.py",
+      "engine/dsl/model/model_util.py",
+      "engine/dsl/model/mongodb_model.py",
+      "engine/dsl/model/nested_key_model.py",
+      "engine/dsl/model/reference_field_model.py",
+      "engine/dsl/model/reference_model.py",
+      "engine/dsl/model/setup_model.py",
+      "engine/dsl/model/state_machine_model.py",
+      "engine/dsl/model/value_model.py",
+      "engine/dsl/model/variable_model.py",
+      "engine/dsl/model/while_model.py",
+      "engine/dsl/parsers/__init__.py",
+      "engine/dsl/parsers/array_parser.py",
+      "engine/dsl/parsers/assert_parser.py",
+      "engine/dsl/parsers/condition_parser.py",
+      "engine/dsl/parsers/database_parser.py",
+      "engine/dsl/parsers/demographics_parser.py",
+      "engine/dsl/parsers/descriptor_parser.py",
+      "engine/dsl/parsers/echo_parser.py",
+      "engine/dsl/parsers/element_parser.py",
+      "engine/dsl/parsers/else_if_parser.py",
+      "engine/dsl/parsers/else_parser.py",
+      "engine/dsl/parsers/execute_parser.py",
+      "engine/dsl/parsers/generate_parser.py",
+      "engine/dsl/parsers/generator_parser.py",
+      "engine/dsl/parsers/if_else_base_parser.py",
+      "engine/dsl/parsers/if_parser.py",
+      "engine/dsl/parsers/include_parser.py",
+      "engine/dsl/parsers/item_parser.py",
+      "engine/dsl/parsers/key_parser.py",
+      "engine/dsl/parsers/list_parser.py",
+      "engine/dsl/parsers/memstore_parser.py",
+      "engine/dsl/parsers/mongodb_parser.py",
+      "engine/dsl/parsers/nested_key_parser.py",
+      "engine/dsl/parsers/parser_util.py",
+      "engine/dsl/parsers/reference_parser.py",
+      "engine/dsl/parsers/setup_parser.py",
+      "engine/dsl/parsers/state_machine_parser.py",
+      "engine/dsl/parsers/statement_parser.py",
+      "engine/dsl/parsers/variable_parser.py",
+      "engine/dsl/parsers/while_parser.py",
+      "engine/dsl/properties.py",
+      "engine/dsl/statements/__init__.py",
+      "engine/dsl/statements/array_statement.py",
+      "engine/dsl/statements/assert_statement.py",
+      "engine/dsl/statements/composite_statement.py",
+      "engine/dsl/statements/condition_statement.py",
+      "engine/dsl/statements/database_statement.py",
+      "engine/dsl/statements/demographics_statement.py",
+      "engine/dsl/statements/echo_statement.py",
+      "engine/dsl/statements/element_statement.py",
+      "engine/dsl/statements/else_if_statement.py",
+      "engine/dsl/statements/else_statement.py",
+      "engine/dsl/statements/execute_statement.py",
+      "engine/dsl/statements/generate_statement.py",
+      "engine/dsl/statements/generator_statement.py",
+      "engine/dsl/statements/if_statement.py",
+      "engine/dsl/statements/include_statement.py",
+      "engine/dsl/statements/item_statement.py",
+      "engine/dsl/statements/key_statement.py",
+      "engine/dsl/statements/list_statement.py",
+      "engine/dsl/statements/memstore_statement.py",
+      "engine/dsl/statements/mongodb_statement.py",
+      "engine/dsl/statements/nested_key_statement.py",
+      "engine/dsl/statements/reference_statement.py",
+      "engine/dsl/statements/setup_statement.py",
+      "engine/dsl/statements/state_machine_statement.py",
+      "engine/dsl/statements/statement.py",
+      "engine/dsl/statements/statement_util.py",
+      "engine/dsl/statements/variable_statement.py",
+      "engine/dsl/statements/while_statement.py",
+      "engine/dsl/timeseries.py",
+      "engine/dsl/xml.py",
+      "engine/io/__init__.py",
+      "engine/io/api.py",
+      "engine/io/client_operations.py",
+      "engine/io/clients/__init__.py",
+      "engine/io/clients/client.py",
+      "engine/io/clients/database_client.py",
+      "engine/io/clients/entity_serialization.py",
+      "engine/io/clients/mongodb_client.py",
+      "engine/io/clients/rdbms_client.py",
+      "engine/io/clients/sql_dialect.py",
+      "engine/io/connection_config/__init__.py",
+      "engine/io/connection_config/connection_config_base.py",
+      "engine/io/connection_config/mongodb_connection_config.py",
+      "engine/io/connection_config/rdbms_connection_config.py",
+      "engine/io/contracts.py",
+      "engine/io/data_sources/__init__.py",
+      "engine/io/data_sources/data_source_registry.py",
+      "engine/io/data_sources/weighted_data_source.py",
+      "engine/io/data_sources/weighted_entity_data_source.py",
+      "engine/io/dataset_api.py",
+      "engine/io/exporters/__init__.py",
+      "engine/io/exporters/console_exporter.py",
+      "engine/io/exporters/csv_exporter.py",
+      "engine/io/exporters/database_exporter.py",
+      "engine/io/exporters/dbunit_exporter.py",
+      "engine/io/exporters/exporter.py",
+      "engine/io/exporters/exporter_config.py",
+      "engine/io/exporters/exporter_context.py",
+      "engine/io/exporters/exporter_state_manager.py",
+      "engine/io/exporters/exporter_util.py",
+      "engine/io/exporters/fixed_width_exporter.py",
+      "engine/io/exporters/json_exporter.py",
+      "engine/io/exporters/log_exporter.py",
+      "engine/io/exporters/memstore.py",
+      "engine/io/exporters/mongodb_exporter.py",
+      "engine/io/exporters/smoke_export.py",
+      "engine/io/exporters/test_result_exporter.py",
+      "engine/io/exporters/txt_exporter.py",
+      "engine/io/exporters/unified_buffered_exporter.py",
+      "engine/io/exporters/xlsx_exporter.py",
+      "engine/io/exporters/xml_exporter.py",
+      "engine/io/file_cache.py",
+      "engine/io/files.py",
+      "engine/runtime/__init__.py",
+      "engine/runtime/api.py",
+      "engine/runtime/contexts/__init__.py",
+      "engine/runtime/contexts/context.py",
+      "engine/runtime/contexts/demographic_context.py",
+      "engine/runtime/contexts/expression_globals.py",
+      "engine/runtime/contexts/geniter_context.py",
+      "engine/runtime/contexts/records.py",
+      "engine/runtime/contexts/setup_context.py",
+      "engine/runtime/contracts.py",
+      "engine/runtime/counts.py",
+      "engine/runtime/generators/__init__.py",
+      "engine/runtime/generators/factory.py",
+      "engine/runtime/generators/sequence_table.py",
+      "engine/runtime/lifecycle/__init__.py",
+      "engine/runtime/lifecycle/config.py",
+      "engine/runtime/lifecycle/runner.py",
+      "engine/runtime/logging.py",
+      "engine/runtime/process.py",
+      "engine/runtime/scripting/__init__.py",
+      "engine/runtime/scripting/evaluation.py",
+      "engine/runtime/scripting/plugins/__init__.py",
+      "engine/runtime/sources/__init__.py",
+      "engine/runtime/sources/chunk_source_reader.py",
+      "engine/runtime/sources/router.py",
+      "engine/runtime/sources/selection.py",
+      "engine/runtime/sources/variable.py",
+      "engine/runtime/storage/__init__.py",
+      "engine/runtime/storage/memstore_manager.py",
+      "engine/runtime/tasks/__init__.py",
+      "engine/runtime/tasks/array_task.py",
+      "engine/runtime/tasks/assert_task.py",
+      "engine/runtime/tasks/condition_task.py",
+      "engine/runtime/tasks/database_task.py",
+      "engine/runtime/tasks/demographics_task.py",
+      "engine/runtime/tasks/echo_task.py",
+      "engine/runtime/tasks/element_task.py",
+      "engine/runtime/tasks/else_if_task.py",
+      "engine/runtime/tasks/else_task.py",
+      "engine/runtime/tasks/entity_constructor.py",
+      "engine/runtime/tasks/execute_task.py",
+      "engine/runtime/tasks/generate/__init__.py",
+      "engine/runtime/tasks/generate/services/policies/__init__.py",
+      "engine/runtime/tasks/generate/services/policies/single_process_policy.py",
+      "engine/runtime/tasks/generate/task.py",
+      "engine/runtime/tasks/generate/workers/__init__.py",
+      "engine/runtime/tasks/generate/workers/generate_worker.py",
+      "engine/runtime/tasks/generate/workers/multiprocessing_generate_worker.py",
+      "engine/runtime/tasks/generate/workers/ray_generate_worker.py",
+      "engine/runtime/tasks/generator_task.py",
+      "engine/runtime/tasks/if_else_base_task.py",
+      "engine/runtime/tasks/if_task.py",
+      "engine/runtime/tasks/include_task.py",
+      "engine/runtime/tasks/item_task.py",
+      "engine/runtime/tasks/key_task.py",
+      "engine/runtime/tasks/key_variable_task.py",
+      "engine/runtime/tasks/list_task.py",
+      "engine/runtime/tasks/memstore_task.py",
+      "engine/runtime/tasks/mongodb_task.py",
+      "engine/runtime/tasks/nested_key_task.py",
+      "engine/runtime/tasks/reference_task.py",
+      "engine/runtime/tasks/setup_task.py",
+      "engine/runtime/tasks/state_machine_task.py",
+      "engine/runtime/tasks/task.py",
+      "engine/runtime/tasks/task_factory.py",
+      "engine/runtime/tasks/task_util.py",
+      "engine/runtime/tasks/variable_iterator.py",
+      "engine/runtime/tasks/variable_task.py",
+      "engine/runtime/tasks/while_task.py",
+      "errors/__init__.py",
+      "errors/base.py",
+      "errors/catalog/__init__.py",
+      "errors/codes.py",
+      "errors/factory.py",
+      "errors/formatters.py",
+      "factory/datamimic_test_factory.py",
+      "factory/factory_config.py",
+      "interfaces/__init__.py",
+      "interfaces/api.py",
+      "interfaces/cli/__init__.py",
+      "interfaces/cli/__main__.py",
+      "interfaces/cli/authoring.py",
+      "interfaces/cli/presenter.py",
+      "interfaces/cli/runtime.py",
+      "interfaces/contracts.py",
+      "interfaces/demo.py",
+      "interfaces/mcp/__init__.py",
+      "interfaces/mcp/cli.py",
+      "interfaces/mcp/server.py",
+      "interfaces/project.py",
+      "resources/__init__.py",
+      "resources/api.py",
+      "resources/demos/__init___.py",
+      "resources/demos/demo-clinical-trial/script/clinical_trial.scr.py",
+      "resources/demos/demo-custom-components/script/converter.scr.py",
+      "resources/demos/demo-custom-components/script/generator.scr.py",
+      "resources/demos/demo-custom-components/script/generator_glob.scr.py",
+      "resources/demos/demo-datetime/script/py_script.scr.py",
+      "resources/demos/demo-db-mapping/script/lib_glob.scr.py",
+      "resources/demos/demo-finance/script/ledger.scr.py",
+      "resources/demos/demo-py-scripting/script/lib.scr.py"
+    ]
+  },
+  {
+    "id": "folder:authoring",
+    "kind": "folder",
+    "path": "authoring",
+    "lane": "entry_authoring",
+    "sources": [
+      "authoring/__init__.py",
+      "authoring/adapters/__init__.py",
+      "authoring/adapters/dryrun.py",
+      "authoring/adapters/engine_check.py",
+      "authoring/adapters/linter.py",
+      "authoring/adapters/xml_loader.py",
+      "authoring/api.py",
+      "authoring/application/__init__.py",
+      "authoring/application/acceptance.py",
+      "authoring/application/compiler.py",
+      "authoring/application/intent_linter.py",
+      "authoring/application/intent_validation.py",
+      "authoring/application/service.py",
+      "authoring/application/verification.py",
+      "authoring/contracts.py",
+      "authoring/domain/__init__.py",
+      "authoring/domain/derived_facts.py",
+      "authoring/domain/diagnostics.py",
+      "authoring/domain/rule_catalog.py",
+      "authoring/domain/rules/__init__.py",
+      "authoring/domain/rules/base.py",
+      "authoring/domain/rules/best_practice.py",
+      "authoring/domain/rules/cross_statement.py",
+      "authoring/domain/rules/intent_rules.py",
+      "authoring/domain/rules/schema_facts.py",
+      "authoring/domain/rules/schema_rules.py",
+      "authoring/domain/rules/semantic_rules.py",
+      "authoring/domain/schema.py",
+      "authoring/domain/script_semantics.py",
+      "authoring/projection/__init__.py",
+      "authoring/projection/reference.py",
+      "authoring/projection/reference_projection.py",
+      "authoring/spec.py"
+    ]
+  },
+  {
+    "id": "folder:authoring/adapters",
+    "kind": "folder",
+    "path": "authoring/adapters",
+    "lane": "entry_authoring",
+    "sources": [
+      "authoring/adapters/__init__.py",
+      "authoring/adapters/dryrun.py",
+      "authoring/adapters/engine_check.py",
+      "authoring/adapters/linter.py",
+      "authoring/adapters/xml_loader.py"
+    ]
+  },
+  {
+    "id": "folder:authoring/application",
+    "kind": "folder",
+    "path": "authoring/application",
+    "lane": "entry_authoring",
+    "sources": [
+      "authoring/application/__init__.py",
+      "authoring/application/acceptance.py",
+      "authoring/application/compiler.py",
+      "authoring/application/intent_linter.py",
+      "authoring/application/intent_validation.py",
+      "authoring/application/service.py",
+      "authoring/application/verification.py"
+    ]
+  },
+  {
+    "id": "folder:authoring/domain",
+    "kind": "folder",
+    "path": "authoring/domain",
+    "lane": "entry_authoring",
+    "sources": [
+      "authoring/domain/__init__.py",
+      "authoring/domain/derived_facts.py",
+      "authoring/domain/diagnostics.py",
+      "authoring/domain/rule_catalog.py",
+      "authoring/domain/rules/__init__.py",
+      "authoring/domain/rules/base.py",
+      "authoring/domain/rules/best_practice.py",
+      "authoring/domain/rules/cross_statement.py",
+      "authoring/domain/rules/intent_rules.py",
+      "authoring/domain/rules/schema_facts.py",
+      "authoring/domain/rules/schema_rules.py",
+      "authoring/domain/rules/semantic_rules.py",
+      "authoring/domain/schema.py",
+      "authoring/domain/script_semantics.py"
+    ]
+  },
+  {
+    "id": "folder:authoring/domain/rules",
+    "kind": "folder",
+    "path": "authoring/domain/rules",
+    "lane": "entry_authoring",
+    "sources": [
+      "authoring/domain/rules/__init__.py",
+      "authoring/domain/rules/base.py",
+      "authoring/domain/rules/best_practice.py",
+      "authoring/domain/rules/cross_statement.py",
+      "authoring/domain/rules/intent_rules.py",
+      "authoring/domain/rules/schema_facts.py",
+      "authoring/domain/rules/schema_rules.py",
+      "authoring/domain/rules/semantic_rules.py"
+    ]
+  },
+  {
+    "id": "folder:authoring/projection",
+    "kind": "folder",
+    "path": "authoring/projection",
+    "lane": "entry_authoring",
+    "sources": [
+      "authoring/projection/__init__.py",
+      "authoring/projection/reference.py",
+      "authoring/projection/reference_projection.py"
+    ]
+  },
+  {
+    "id": "folder:engine",
+    "kind": "folder",
+    "path": "engine",
+    "lane": "entry_authoring",
+    "sources": [
+      "engine/__init__.py",
+      "engine/dsl/__init__.py",
+      "engine/dsl/api.py",
+      "engine/dsl/constants/__init__.py",
+      "engine/dsl/constants/attribute_constants.py",
+      "engine/dsl/constants/convention_constants.py",
+      "engine/dsl/constants/data_type_constants.py",
+      "engine/dsl/constants/element_constants.py",
+      "engine/dsl/constants/exporter_constants.py",
+      "engine/dsl/contracts.py",
+      "engine/dsl/enums/__init__.py",
+      "engine/dsl/enums/converter_enums.py",
+      "engine/dsl/enums/dbms_enums.py",
+      "engine/dsl/enums/distribution_enums.py",
+      "engine/dsl/enums/faker_enums.py",
+      "engine/dsl/enums/operation_enums.py",
+      "engine/dsl/model/__init__.py",
+      "engine/dsl/model/array_model.py",
+      "engine/dsl/model/assert_model.py",
+      "engine/dsl/model/base_if_else_model.py",
+      "engine/dsl/model/condition_model.py",
+      "engine/dsl/model/constraints/__init__.py",
+      "engine/dsl/model/constraints/capabilities.py",
+      "engine/dsl/model/constraints/facts.py",
+      "engine/dsl/model/constraints/registry.py",
+      "engine/dsl/model/constraints/serialization.py",
+      "engine/dsl/model/constraints/types.py",
+      "engine/dsl/model/database_model.py",
+      "engine/dsl/model/demographics_model.py",
+      "engine/dsl/model/element_model.py",
+      "engine/dsl/model/element_registry.py",
+      "engine/dsl/model/else_if_model.py",
+      "engine/dsl/model/else_model.py",
+      "engine/dsl/model/execute_model.py",
+      "engine/dsl/model/generate_model.py",
+      "engine/dsl/model/generator_model.py",
+      "engine/dsl/model/if_model.py",
+      "engine/dsl/model/include_model.py",
+      "engine/dsl/model/item_model.py",
+      "engine/dsl/model/key_model.py",
+      "engine/dsl/model/list_model.py",
+      "engine/dsl/model/memstore_model.py",
+      "engine/dsl/model/model_util.py",
+      "engine/dsl/model/mongodb_model.py",
+      "engine/dsl/model/nested_key_model.py",
+      "engine/dsl/model/reference_field_model.py",
+      "engine/dsl/model/reference_model.py",
+      "engine/dsl/model/setup_model.py",
+      "engine/dsl/model/state_machine_model.py",
+      "engine/dsl/model/value_model.py",
+      "engine/dsl/model/variable_model.py",
+      "engine/dsl/model/while_model.py",
+      "engine/dsl/parsers/__init__.py",
+      "engine/dsl/parsers/array_parser.py",
+      "engine/dsl/parsers/assert_parser.py",
+      "engine/dsl/parsers/condition_parser.py",
+      "engine/dsl/parsers/database_parser.py",
+      "engine/dsl/parsers/demographics_parser.py",
+      "engine/dsl/parsers/descriptor_parser.py",
+      "engine/dsl/parsers/echo_parser.py",
+      "engine/dsl/parsers/element_parser.py",
+      "engine/dsl/parsers/else_if_parser.py",
+      "engine/dsl/parsers/else_parser.py",
+      "engine/dsl/parsers/execute_parser.py",
+      "engine/dsl/parsers/generate_parser.py",
+      "engine/dsl/parsers/generator_parser.py",
+      "engine/dsl/parsers/if_else_base_parser.py",
+      "engine/dsl/parsers/if_parser.py",
+      "engine/dsl/parsers/include_parser.py",
+      "engine/dsl/parsers/item_parser.py",
+      "engine/dsl/parsers/key_parser.py",
+      "engine/dsl/parsers/list_parser.py",
+      "engine/dsl/parsers/memstore_parser.py",
+      "engine/dsl/parsers/mongodb_parser.py",
+      "engine/dsl/parsers/nested_key_parser.py",
+      "engine/dsl/parsers/parser_util.py",
+      "engine/dsl/parsers/reference_parser.py",
+      "engine/dsl/parsers/setup_parser.py",
+      "engine/dsl/parsers/state_machine_parser.py",
+      "engine/dsl/parsers/statement_parser.py",
+      "engine/dsl/parsers/variable_parser.py",
+      "engine/dsl/parsers/while_parser.py",
+      "engine/dsl/properties.py",
+      "engine/dsl/statements/__init__.py",
+      "engine/dsl/statements/array_statement.py",
+      "engine/dsl/statements/assert_statement.py",
+      "engine/dsl/statements/composite_statement.py",
+      "engine/dsl/statements/condition_statement.py",
+      "engine/dsl/statements/database_statement.py",
+      "engine/dsl/statements/demographics_statement.py",
+      "engine/dsl/statements/echo_statement.py",
+      "engine/dsl/statements/element_statement.py",
+      "engine/dsl/statements/else_if_statement.py",
+      "engine/dsl/statements/else_statement.py",
+      "engine/dsl/statements/execute_statement.py",
+      "engine/dsl/statements/generate_statement.py",
+      "engine/dsl/statements/generator_statement.py",
+      "engine/dsl/statements/if_statement.py",
+      "engine/dsl/statements/include_statement.py",
+      "engine/dsl/statements/item_statement.py",
+      "engine/dsl/statements/key_statement.py",
+      "engine/dsl/statements/list_statement.py",
+      "engine/dsl/statements/memstore_statement.py",
+      "engine/dsl/statements/mongodb_statement.py",
+      "engine/dsl/statements/nested_key_statement.py",
+      "engine/dsl/statements/reference_statement.py",
+      "engine/dsl/statements/setup_statement.py",
+      "engine/dsl/statements/state_machine_statement.py",
+      "engine/dsl/statements/statement.py",
+      "engine/dsl/statements/statement_util.py",
+      "engine/dsl/statements/variable_statement.py",
+      "engine/dsl/statements/while_statement.py",
+      "engine/dsl/timeseries.py",
+      "engine/dsl/xml.py",
+      "engine/io/__init__.py",
+      "engine/io/api.py",
+      "engine/io/client_operations.py",
+      "engine/io/clients/__init__.py",
+      "engine/io/clients/client.py",
+      "engine/io/clients/database_client.py",
+      "engine/io/clients/entity_serialization.py",
+      "engine/io/clients/mongodb_client.py",
+      "engine/io/clients/rdbms_client.py",
+      "engine/io/clients/sql_dialect.py",
+      "engine/io/connection_config/__init__.py",
+      "engine/io/connection_config/connection_config_base.py",
+      "engine/io/connection_config/mongodb_connection_config.py",
+      "engine/io/connection_config/rdbms_connection_config.py",
+      "engine/io/contracts.py",
+      "engine/io/data_sources/__init__.py",
+      "engine/io/data_sources/data_source_registry.py",
+      "engine/io/data_sources/weighted_data_source.py",
+      "engine/io/data_sources/weighted_entity_data_source.py",
+      "engine/io/dataset_api.py",
+      "engine/io/exporters/__init__.py",
+      "engine/io/exporters/console_exporter.py",
+      "engine/io/exporters/csv_exporter.py",
+      "engine/io/exporters/database_exporter.py",
+      "engine/io/exporters/dbunit_exporter.py",
+      "engine/io/exporters/exporter.py",
+      "engine/io/exporters/exporter_config.py",
+      "engine/io/exporters/exporter_context.py",
+      "engine/io/exporters/exporter_state_manager.py",
+      "engine/io/exporters/exporter_util.py",
+      "engine/io/exporters/fixed_width_exporter.py",
+      "engine/io/exporters/json_exporter.py",
+      "engine/io/exporters/log_exporter.py",
+      "engine/io/exporters/memstore.py",
+      "engine/io/exporters/mongodb_exporter.py",
+      "engine/io/exporters/smoke_export.py",
+      "engine/io/exporters/test_result_exporter.py",
+      "engine/io/exporters/txt_exporter.py",
+      "engine/io/exporters/unified_buffered_exporter.py",
+      "engine/io/exporters/xlsx_exporter.py",
+      "engine/io/exporters/xml_exporter.py",
+      "engine/io/file_cache.py",
+      "engine/io/files.py",
+      "engine/runtime/__init__.py",
+      "engine/runtime/api.py",
+      "engine/runtime/contexts/__init__.py",
+      "engine/runtime/contexts/context.py",
+      "engine/runtime/contexts/demographic_context.py",
+      "engine/runtime/contexts/expression_globals.py",
+      "engine/runtime/contexts/geniter_context.py",
+      "engine/runtime/contexts/records.py",
+      "engine/runtime/contexts/setup_context.py",
+      "engine/runtime/contracts.py",
+      "engine/runtime/counts.py",
+      "engine/runtime/generators/__init__.py",
+      "engine/runtime/generators/factory.py",
+      "engine/runtime/generators/sequence_table.py",
+      "engine/runtime/lifecycle/__init__.py",
+      "engine/runtime/lifecycle/config.py",
+      "engine/runtime/lifecycle/runner.py",
+      "engine/runtime/logging.py",
+      "engine/runtime/process.py",
+      "engine/runtime/scripting/__init__.py",
+      "engine/runtime/scripting/evaluation.py",
+      "engine/runtime/scripting/plugins/__init__.py",
+      "engine/runtime/sources/__init__.py",
+      "engine/runtime/sources/chunk_source_reader.py",
+      "engine/runtime/sources/router.py",
+      "engine/runtime/sources/selection.py",
+      "engine/runtime/sources/variable.py",
+      "engine/runtime/storage/__init__.py",
+      "engine/runtime/storage/memstore_manager.py",
+      "engine/runtime/tasks/__init__.py",
+      "engine/runtime/tasks/array_task.py",
+      "engine/runtime/tasks/assert_task.py",
+      "engine/runtime/tasks/condition_task.py",
+      "engine/runtime/tasks/database_task.py",
+      "engine/runtime/tasks/demographics_task.py",
+      "engine/runtime/tasks/echo_task.py",
+      "engine/runtime/tasks/element_task.py",
+      "engine/runtime/tasks/else_if_task.py",
+      "engine/runtime/tasks/else_task.py",
+      "engine/runtime/tasks/entity_constructor.py",
+      "engine/runtime/tasks/execute_task.py",
+      "engine/runtime/tasks/generate/__init__.py",
+      "engine/runtime/tasks/generate/services/policies/__init__.py",
+      "engine/runtime/tasks/generate/services/policies/single_process_policy.py",
+      "engine/runtime/tasks/generate/task.py",
+      "engine/runtime/tasks/generate/workers/__init__.py",
+      "engine/runtime/tasks/generate/workers/generate_worker.py",
+      "engine/runtime/tasks/generate/workers/multiprocessing_generate_worker.py",
+      "engine/runtime/tasks/generate/workers/ray_generate_worker.py",
+      "engine/runtime/tasks/generator_task.py",
+      "engine/runtime/tasks/if_else_base_task.py",
+      "engine/runtime/tasks/if_task.py",
+      "engine/runtime/tasks/include_task.py",
+      "engine/runtime/tasks/item_task.py",
+      "engine/runtime/tasks/key_task.py",
+      "engine/runtime/tasks/key_variable_task.py",
+      "engine/runtime/tasks/list_task.py",
+      "engine/runtime/tasks/memstore_task.py",
+      "engine/runtime/tasks/mongodb_task.py",
+      "engine/runtime/tasks/nested_key_task.py",
+      "engine/runtime/tasks/reference_task.py",
+      "engine/runtime/tasks/setup_task.py",
+      "engine/runtime/tasks/state_machine_task.py",
+      "engine/runtime/tasks/task.py",
+      "engine/runtime/tasks/task_factory.py",
+      "engine/runtime/tasks/task_util.py",
+      "engine/runtime/tasks/variable_iterator.py",
+      "engine/runtime/tasks/variable_task.py",
+      "engine/runtime/tasks/while_task.py"
+    ]
+  },
+  {
+    "id": "folder:errors",
+    "kind": "folder",
+    "path": "errors",
+    "lane": "entry_authoring",
+    "sources": [
+      "errors/__init__.py",
+      "errors/base.py",
+      "errors/catalog/__init__.py",
+      "errors/codes.py",
+      "errors/factory.py",
+      "errors/formatters.py"
+    ]
+  },
+  {
+    "id": "folder:errors/catalog",
+    "kind": "folder",
+    "path": "errors/catalog",
+    "lane": "entry_authoring",
+    "sources": [
+      "errors/catalog/__init__.py"
+    ]
+  },
+  {
+    "id": "folder:interfaces",
+    "kind": "folder",
+    "path": "interfaces",
+    "lane": "entry_authoring",
+    "sources": [
+      "data_mimic_test.py",
+      "datamimic.py",
+      "factory/datamimic_test_factory.py",
+      "factory/factory_config.py",
+      "interfaces/__init__.py",
+      "interfaces/api.py",
+      "interfaces/cli/__init__.py",
+      "interfaces/cli/__main__.py",
+      "interfaces/cli/authoring.py",
+      "interfaces/cli/presenter.py",
+      "interfaces/cli/runtime.py",
+      "interfaces/contracts.py",
+      "interfaces/demo.py",
+      "interfaces/mcp/__init__.py",
+      "interfaces/mcp/cli.py",
+      "interfaces/mcp/server.py",
+      "interfaces/project.py"
+    ]
+  },
+  {
+    "id": "folder:interfaces/cli",
+    "kind": "folder",
+    "path": "interfaces/cli",
+    "lane": "entry_authoring",
+    "sources": [
+      "interfaces/cli/__init__.py",
+      "interfaces/cli/__main__.py",
+      "interfaces/cli/authoring.py",
+      "interfaces/cli/presenter.py",
+      "interfaces/cli/runtime.py"
+    ]
+  },
+  {
+    "id": "folder:interfaces/mcp",
+    "kind": "folder",
+    "path": "interfaces/mcp",
+    "lane": "entry_authoring",
+    "sources": [
+      "interfaces/mcp/__init__.py",
+      "interfaces/mcp/cli.py",
+      "interfaces/mcp/server.py"
+    ]
+  },
+  {
+    "id": "folder:interfaces/python",
+    "kind": "folder",
+    "path": "interfaces/python",
+    "lane": "entry_authoring",
+    "sources": [
+      "data_mimic_test.py",
+      "datamimic.py",
+      "factory/datamimic_test_factory.py",
+      "factory/factory_config.py"
+    ]
+  },
+  {
+    "id": "folder:interfaces/python/factory",
+    "kind": "folder",
+    "path": "interfaces/python/factory",
+    "lane": "entry_authoring",
+    "sources": [
+      "factory/datamimic_test_factory.py",
+      "factory/factory_config.py"
+    ]
+  },
+  {
+    "id": "folder:resources",
+    "kind": "folder",
+    "path": "resources",
+    "lane": "entry_authoring",
+    "sources": [
+      "domains/shared/examples/generate_address.py",
+      "domains/shared/examples/generate_cities.py",
+      "domains/shared/examples/generate_companies.py",
+      "domains/shared/examples/generate_countries.py",
+      "domains/shared/examples/generate_people.py",
+      "domains/shared/examples/generate_people_demographics.py",
+      "resources/__init__.py",
+      "resources/api.py",
+      "resources/demos/__init___.py",
+      "resources/demos/demo-clinical-trial/script/clinical_trial.scr.py",
+      "resources/demos/demo-custom-components/script/converter.scr.py",
+      "resources/demos/demo-custom-components/script/generator.scr.py",
+      "resources/demos/demo-custom-components/script/generator_glob.scr.py",
+      "resources/demos/demo-datetime/script/py_script.scr.py",
+      "resources/demos/demo-db-mapping/script/lib_glob.scr.py",
+      "resources/demos/demo-finance/script/ledger.scr.py",
+      "resources/demos/demo-py-scripting/script/lib.scr.py"
+    ]
+  },
+  {
+    "id": "folder:resources/demos",
+    "kind": "folder",
+    "path": "resources/demos",
+    "lane": "entry_authoring",
+    "sources": [
+      "resources/demos/__init___.py",
+      "resources/demos/demo-clinical-trial/script/clinical_trial.scr.py",
+      "resources/demos/demo-custom-components/script/converter.scr.py",
+      "resources/demos/demo-custom-components/script/generator.scr.py",
+      "resources/demos/demo-custom-components/script/generator_glob.scr.py",
+      "resources/demos/demo-datetime/script/py_script.scr.py",
+      "resources/demos/demo-db-mapping/script/lib_glob.scr.py",
+      "resources/demos/demo-finance/script/ledger.scr.py",
+      "resources/demos/demo-py-scripting/script/lib.scr.py"
+    ]
+  },
+  {
+    "id": "folder:resources/demos/demo-clinical-trial",
+    "kind": "folder",
+    "path": "resources/demos/demo-clinical-trial",
+    "lane": "entry_authoring",
+    "sources": [
+      "resources/demos/demo-clinical-trial/script/clinical_trial.scr.py"
+    ]
+  },
+  {
+    "id": "folder:resources/demos/demo-clinical-trial/script",
+    "kind": "folder",
+    "path": "resources/demos/demo-clinical-trial/script",
+    "lane": "entry_authoring",
+    "sources": [
+      "resources/demos/demo-clinical-trial/script/clinical_trial.scr.py"
+    ]
+  },
+  {
+    "id": "folder:resources/demos/demo-custom-components",
+    "kind": "folder",
+    "path": "resources/demos/demo-custom-components",
+    "lane": "entry_authoring",
+    "sources": [
+      "resources/demos/demo-custom-components/script/converter.scr.py",
+      "resources/demos/demo-custom-components/script/generator.scr.py",
+      "resources/demos/demo-custom-components/script/generator_glob.scr.py"
+    ]
+  },
+  {
+    "id": "folder:resources/demos/demo-custom-components/script",
+    "kind": "folder",
+    "path": "resources/demos/demo-custom-components/script",
+    "lane": "entry_authoring",
+    "sources": [
+      "resources/demos/demo-custom-components/script/converter.scr.py",
+      "resources/demos/demo-custom-components/script/generator.scr.py",
+      "resources/demos/demo-custom-components/script/generator_glob.scr.py"
+    ]
+  },
+  {
+    "id": "folder:resources/demos/demo-datetime",
+    "kind": "folder",
+    "path": "resources/demos/demo-datetime",
+    "lane": "entry_authoring",
+    "sources": [
+      "resources/demos/demo-datetime/script/py_script.scr.py"
+    ]
+  },
+  {
+    "id": "folder:resources/demos/demo-datetime/script",
+    "kind": "folder",
+    "path": "resources/demos/demo-datetime/script",
+    "lane": "entry_authoring",
+    "sources": [
+      "resources/demos/demo-datetime/script/py_script.scr.py"
+    ]
+  },
+  {
+    "id": "folder:resources/demos/demo-db-mapping",
+    "kind": "folder",
+    "path": "resources/demos/demo-db-mapping",
+    "lane": "entry_authoring",
+    "sources": [
+      "resources/demos/demo-db-mapping/script/lib_glob.scr.py"
+    ]
+  },
+  {
+    "id": "folder:resources/demos/demo-db-mapping/script",
+    "kind": "folder",
+    "path": "resources/demos/demo-db-mapping/script",
+    "lane": "entry_authoring",
+    "sources": [
+      "resources/demos/demo-db-mapping/script/lib_glob.scr.py"
+    ]
+  },
+  {
+    "id": "folder:resources/demos/demo-finance",
+    "kind": "folder",
+    "path": "resources/demos/demo-finance",
+    "lane": "entry_authoring",
+    "sources": [
+      "resources/demos/demo-finance/script/ledger.scr.py"
+    ]
+  },
+  {
+    "id": "folder:resources/demos/demo-finance/script",
+    "kind": "folder",
+    "path": "resources/demos/demo-finance/script",
+    "lane": "entry_authoring",
+    "sources": [
+      "resources/demos/demo-finance/script/ledger.scr.py"
+    ]
+  },
+  {
+    "id": "folder:resources/demos/demo-py-scripting",
+    "kind": "folder",
+    "path": "resources/demos/demo-py-scripting",
+    "lane": "entry_authoring",
+    "sources": [
+      "resources/demos/demo-py-scripting/script/lib.scr.py"
+    ]
+  },
+  {
+    "id": "folder:resources/demos/demo-py-scripting/script",
+    "kind": "folder",
+    "path": "resources/demos/demo-py-scripting/script",
+    "lane": "entry_authoring",
+    "sources": [
+      "resources/demos/demo-py-scripting/script/lib.scr.py"
+    ]
+  },
+  {
+    "id": "folder:resources/examples",
+    "kind": "folder",
+    "path": "resources/examples",
+    "lane": "entry_authoring",
+    "sources": [
+      "domains/shared/examples/generate_address.py",
+      "domains/shared/examples/generate_cities.py",
+      "domains/shared/examples/generate_companies.py",
+      "domains/shared/examples/generate_countries.py",
+      "domains/shared/examples/generate_people.py",
+      "domains/shared/examples/generate_people_demographics.py"
+    ]
+  },
+  {
+    "id": "contract:interfaces/api",
+    "kind": "contract",
+    "path": "interfaces/api",
+    "lane": "entry_authoring",
+    "contract": "docs/architecture/inner/interfaces/architecture-contract.json",
+    "sources": [
+      "interfaces/api.py"
+    ]
+  },
+  {
+    "id": "contract:interfaces/contracts",
+    "kind": "contract",
+    "path": "interfaces/contracts",
+    "lane": "entry_authoring",
+    "contract": "docs/architecture/inner/interfaces/architecture-contract.json",
+    "sources": [
+      "interfaces/contracts.py"
+    ]
+  },
+  {
+    "id": "contract:interfaces/cli",
+    "kind": "contract",
+    "path": "interfaces/cli",
+    "lane": "entry_authoring",
+    "contract": "docs/architecture/inner/interfaces/architecture-contract.json",
+    "sources": [
+      "interfaces/cli/__init__.py",
+      "interfaces/cli/__main__.py",
+      "interfaces/cli/authoring.py",
+      "interfaces/cli/presenter.py",
+      "interfaces/cli/runtime.py"
+    ]
+  },
+  {
+    "id": "contract:interfaces/mcp",
+    "kind": "contract",
+    "path": "interfaces/mcp",
+    "lane": "entry_authoring",
+    "contract": "docs/architecture/inner/interfaces/architecture-contract.json",
+    "sources": [
+      "interfaces/mcp/__init__.py",
+      "interfaces/mcp/cli.py",
+      "interfaces/mcp/server.py"
+    ]
+  },
+  {
+    "id": "contract:interfaces/demo",
+    "kind": "contract",
+    "path": "interfaces/demo",
+    "lane": "entry_authoring",
+    "contract": "docs/architecture/inner/interfaces/architecture-contract.json",
+    "sources": [
+      "interfaces/demo.py"
+    ]
+  },
+  {
+    "id": "contract:interfaces/project",
+    "kind": "contract",
+    "path": "interfaces/project",
+    "lane": "entry_authoring",
+    "contract": "docs/architecture/inner/interfaces/architecture-contract.json",
+    "sources": [
+      "interfaces/project.py"
+    ]
+  },
+  {
+    "id": "contract:authoring/api",
+    "kind": "contract",
+    "path": "authoring/api",
+    "lane": "entry_authoring",
+    "contract": "docs/architecture/inner/authoring/architecture-contract.json",
+    "sources": [
+      "authoring/api.py"
+    ]
+  },
+  {
+    "id": "contract:authoring/domain",
+    "kind": "contract",
+    "path": "authoring/domain",
+    "lane": "entry_authoring",
+    "contract": "docs/architecture/inner/authoring/architecture-contract.json",
+    "sources": [
+      "authoring/contracts.py",
+      "authoring/domain/__init__.py",
+      "authoring/domain/derived_facts.py",
+      "authoring/domain/diagnostics.py",
+      "authoring/domain/rule_catalog.py",
+      "authoring/domain/rules/__init__.py",
+      "authoring/domain/rules/base.py",
+      "authoring/domain/rules/best_practice.py",
+      "authoring/domain/rules/cross_statement.py",
+      "authoring/domain/rules/intent_rules.py",
+      "authoring/domain/rules/schema_facts.py",
+      "authoring/domain/rules/schema_rules.py",
+      "authoring/domain/rules/semantic_rules.py",
+      "authoring/domain/schema.py",
+      "authoring/domain/script_semantics.py",
+      "authoring/spec.py"
+    ]
+  },
+  {
+    "id": "contract:authoring/projection",
+    "kind": "contract",
+    "path": "authoring/projection",
+    "lane": "entry_authoring",
+    "contract": "docs/architecture/inner/authoring/architecture-contract.json",
+    "sources": [
+      "authoring/projection/__init__.py",
+      "authoring/projection/reference.py",
+      "authoring/projection/reference_projection.py"
+    ]
+  },
+  {
+    "id": "contract:authoring/adapters",
+    "kind": "contract",
+    "path": "authoring/adapters",
+    "lane": "entry_authoring",
+    "contract": "docs/architecture/inner/authoring/architecture-contract.json",
+    "sources": [
+      "authoring/adapters/__init__.py",
+      "authoring/adapters/dryrun.py",
+      "authoring/adapters/engine_check.py",
+      "authoring/adapters/linter.py",
+      "authoring/adapters/xml_loader.py"
+    ]
+  },
+  {
+    "id": "contract:authoring/application",
+    "kind": "contract",
+    "path": "authoring/application",
+    "lane": "entry_authoring",
+    "contract": "docs/architecture/inner/authoring/architecture-contract.json",
+    "sources": [
+      "authoring/application/__init__.py",
+      "authoring/application/acceptance.py",
+      "authoring/application/compiler.py",
+      "authoring/application/intent_linter.py",
+      "authoring/application/intent_validation.py",
+      "authoring/application/service.py",
+      "authoring/application/verification.py"
+    ]
+  },
+  {
+    "id": "contract:errors/codes",
+    "kind": "contract",
+    "path": "errors/codes",
+    "lane": "entry_authoring",
+    "contract": "docs/architecture/inner/errors/architecture-contract.json",
+    "sources": [
+      "errors/codes.py"
+    ]
+  },
+  {
+    "id": "contract:errors/base",
+    "kind": "contract",
+    "path": "errors/base",
+    "lane": "entry_authoring",
+    "contract": "docs/architecture/inner/errors/architecture-contract.json",
+    "sources": [
+      "errors/base.py"
+    ]
+  },
+  {
+    "id": "contract:errors/catalog",
+    "kind": "contract",
+    "path": "errors/catalog",
+    "lane": "entry_authoring",
+    "contract": "docs/architecture/inner/errors/architecture-contract.json",
+    "sources": [
+      "errors/catalog/__init__.py"
+    ]
+  },
+  {
+    "id": "contract:errors/formatters",
+    "kind": "contract",
+    "path": "errors/formatters",
+    "lane": "entry_authoring",
+    "contract": "docs/architecture/inner/errors/architecture-contract.json",
+    "sources": [
+      "errors/formatters.py"
+    ]
+  },
+  {
+    "id": "contract:errors/factory",
+    "kind": "contract",
+    "path": "errors/factory",
+    "lane": "entry_authoring",
+    "contract": "docs/architecture/inner/errors/architecture-contract.json",
+    "sources": [
+      "errors/factory.py"
+    ]
+  },
+  {
+    "id": "contract:interfaces",
+    "kind": "contract",
+    "path": "interfaces",
+    "lane": "entry_authoring",
+    "contract": "architecture-contract.json",
+    "sources": [
+      "interfaces/__init__.py",
+      "interfaces/api.py",
+      "interfaces/cli/__init__.py",
+      "interfaces/cli/__main__.py",
+      "interfaces/cli/authoring.py",
+      "interfaces/cli/presenter.py",
+      "interfaces/cli/runtime.py",
+      "interfaces/contracts.py",
+      "interfaces/demo.py",
+      "interfaces/mcp/__init__.py",
+      "interfaces/mcp/cli.py",
+      "interfaces/mcp/server.py",
+      "interfaces/project.py"
+    ]
+  },
+  {
+    "id": "contract:python_api",
+    "kind": "contract",
+    "path": "python_api",
+    "lane": "entry_authoring",
+    "contract": "architecture-contract.json",
+    "sources": [
+      "data_mimic_test.py",
+      "datamimic.py",
+      "factory/datamimic_test_factory.py",
+      "factory/factory_config.py"
+    ]
+  },
+  {
+    "id": "contract:authoring",
+    "kind": "contract",
+    "path": "authoring",
+    "lane": "entry_authoring",
+    "contract": "architecture-contract.json",
+    "sources": [
+      "authoring/__init__.py",
+      "authoring/adapters/__init__.py",
+      "authoring/adapters/dryrun.py",
+      "authoring/adapters/engine_check.py",
+      "authoring/adapters/linter.py",
+      "authoring/adapters/xml_loader.py",
+      "authoring/api.py",
+      "authoring/application/__init__.py",
+      "authoring/application/acceptance.py",
+      "authoring/application/compiler.py",
+      "authoring/application/intent_linter.py",
+      "authoring/application/intent_validation.py",
+      "authoring/application/service.py",
+      "authoring/application/verification.py",
+      "authoring/contracts.py",
+      "authoring/domain/__init__.py",
+      "authoring/domain/derived_facts.py",
+      "authoring/domain/diagnostics.py",
+      "authoring/domain/rule_catalog.py",
+      "authoring/domain/rules/__init__.py",
+      "authoring/domain/rules/base.py",
+      "authoring/domain/rules/best_practice.py",
+      "authoring/domain/rules/cross_statement.py",
+      "authoring/domain/rules/intent_rules.py",
+      "authoring/domain/rules/schema_facts.py",
+      "authoring/domain/rules/schema_rules.py",
+      "authoring/domain/rules/semantic_rules.py",
+      "authoring/domain/schema.py",
+      "authoring/domain/script_semantics.py",
+      "authoring/projection/__init__.py",
+      "authoring/projection/reference.py",
+      "authoring/projection/reference_projection.py",
+      "authoring/spec.py"
+    ]
+  },
+  {
+    "id": "contract:dsl",
+    "kind": "contract",
+    "path": "dsl",
+    "lane": "entry_authoring",
+    "contract": "architecture-contract.json",
+    "sources": [
+      "engine/dsl/__init__.py",
+      "engine/dsl/api.py",
+      "engine/dsl/constants/__init__.py",
+      "engine/dsl/constants/attribute_constants.py",
+      "engine/dsl/constants/convention_constants.py",
+      "engine/dsl/constants/data_type_constants.py",
+      "engine/dsl/constants/element_constants.py",
+      "engine/dsl/constants/exporter_constants.py",
+      "engine/dsl/contracts.py",
+      "engine/dsl/enums/__init__.py",
+      "engine/dsl/enums/converter_enums.py",
+      "engine/dsl/enums/dbms_enums.py",
+      "engine/dsl/enums/distribution_enums.py",
+      "engine/dsl/enums/faker_enums.py",
+      "engine/dsl/enums/operation_enums.py",
+      "engine/dsl/model/__init__.py",
+      "engine/dsl/model/array_model.py",
+      "engine/dsl/model/assert_model.py",
+      "engine/dsl/model/base_if_else_model.py",
+      "engine/dsl/model/condition_model.py",
+      "engine/dsl/model/constraints/__init__.py",
+      "engine/dsl/model/constraints/capabilities.py",
+      "engine/dsl/model/constraints/facts.py",
+      "engine/dsl/model/constraints/registry.py",
+      "engine/dsl/model/constraints/serialization.py",
+      "engine/dsl/model/constraints/types.py",
+      "engine/dsl/model/database_model.py",
+      "engine/dsl/model/demographics_model.py",
+      "engine/dsl/model/element_model.py",
+      "engine/dsl/model/element_registry.py",
+      "engine/dsl/model/else_if_model.py",
+      "engine/dsl/model/else_model.py",
+      "engine/dsl/model/execute_model.py",
+      "engine/dsl/model/generate_model.py",
+      "engine/dsl/model/generator_model.py",
+      "engine/dsl/model/if_model.py",
+      "engine/dsl/model/include_model.py",
+      "engine/dsl/model/item_model.py",
+      "engine/dsl/model/key_model.py",
+      "engine/dsl/model/list_model.py",
+      "engine/dsl/model/memstore_model.py",
+      "engine/dsl/model/model_util.py",
+      "engine/dsl/model/mongodb_model.py",
+      "engine/dsl/model/nested_key_model.py",
+      "engine/dsl/model/reference_field_model.py",
+      "engine/dsl/model/reference_model.py",
+      "engine/dsl/model/setup_model.py",
+      "engine/dsl/model/state_machine_model.py",
+      "engine/dsl/model/value_model.py",
+      "engine/dsl/model/variable_model.py",
+      "engine/dsl/model/while_model.py",
+      "engine/dsl/parsers/__init__.py",
+      "engine/dsl/parsers/array_parser.py",
+      "engine/dsl/parsers/assert_parser.py",
+      "engine/dsl/parsers/condition_parser.py",
+      "engine/dsl/parsers/database_parser.py",
+      "engine/dsl/parsers/demographics_parser.py",
+      "engine/dsl/parsers/descriptor_parser.py",
+      "engine/dsl/parsers/echo_parser.py",
+      "engine/dsl/parsers/element_parser.py",
+      "engine/dsl/parsers/else_if_parser.py",
+      "engine/dsl/parsers/else_parser.py",
+      "engine/dsl/parsers/execute_parser.py",
+      "engine/dsl/parsers/generate_parser.py",
+      "engine/dsl/parsers/generator_parser.py",
+      "engine/dsl/parsers/if_else_base_parser.py",
+      "engine/dsl/parsers/if_parser.py",
+      "engine/dsl/parsers/include_parser.py",
+      "engine/dsl/parsers/item_parser.py",
+      "engine/dsl/parsers/key_parser.py",
+      "engine/dsl/parsers/list_parser.py",
+      "engine/dsl/parsers/memstore_parser.py",
+      "engine/dsl/parsers/mongodb_parser.py",
+      "engine/dsl/parsers/nested_key_parser.py",
+      "engine/dsl/parsers/parser_util.py",
+      "engine/dsl/parsers/reference_parser.py",
+      "engine/dsl/parsers/setup_parser.py",
+      "engine/dsl/parsers/state_machine_parser.py",
+      "engine/dsl/parsers/statement_parser.py",
+      "engine/dsl/parsers/variable_parser.py",
+      "engine/dsl/parsers/while_parser.py",
+      "engine/dsl/properties.py",
+      "engine/dsl/statements/__init__.py",
+      "engine/dsl/statements/array_statement.py",
+      "engine/dsl/statements/assert_statement.py",
+      "engine/dsl/statements/composite_statement.py",
+      "engine/dsl/statements/condition_statement.py",
+      "engine/dsl/statements/database_statement.py",
+      "engine/dsl/statements/demographics_statement.py",
+      "engine/dsl/statements/echo_statement.py",
+      "engine/dsl/statements/element_statement.py",
+      "engine/dsl/statements/else_if_statement.py",
+      "engine/dsl/statements/else_statement.py",
+      "engine/dsl/statements/execute_statement.py",
+      "engine/dsl/statements/generate_statement.py",
+      "engine/dsl/statements/generator_statement.py",
+      "engine/dsl/statements/if_statement.py",
+      "engine/dsl/statements/include_statement.py",
+      "engine/dsl/statements/item_statement.py",
+      "engine/dsl/statements/key_statement.py",
+      "engine/dsl/statements/list_statement.py",
+      "engine/dsl/statements/memstore_statement.py",
+      "engine/dsl/statements/mongodb_statement.py",
+      "engine/dsl/statements/nested_key_statement.py",
+      "engine/dsl/statements/reference_statement.py",
+      "engine/dsl/statements/setup_statement.py",
+      "engine/dsl/statements/state_machine_statement.py",
+      "engine/dsl/statements/statement.py",
+      "engine/dsl/statements/statement_util.py",
+      "engine/dsl/statements/variable_statement.py",
+      "engine/dsl/statements/while_statement.py",
+      "engine/dsl/timeseries.py",
+      "engine/dsl/xml.py"
+    ]
+  },
+  {
+    "id": "contract:runtime",
+    "kind": "contract",
+    "path": "runtime",
+    "lane": "entry_authoring",
+    "contract": "architecture-contract.json",
+    "sources": [
+      "engine/runtime/__init__.py",
+      "engine/runtime/api.py",
+      "engine/runtime/contexts/__init__.py",
+      "engine/runtime/contexts/context.py",
+      "engine/runtime/contexts/demographic_context.py",
+      "engine/runtime/contexts/expression_globals.py",
+      "engine/runtime/contexts/geniter_context.py",
+      "engine/runtime/contexts/records.py",
+      "engine/runtime/contexts/setup_context.py",
+      "engine/runtime/contracts.py",
+      "engine/runtime/counts.py",
+      "engine/runtime/generators/__init__.py",
+      "engine/runtime/generators/factory.py",
+      "engine/runtime/generators/sequence_table.py",
+      "engine/runtime/lifecycle/__init__.py",
+      "engine/runtime/lifecycle/config.py",
+      "engine/runtime/lifecycle/runner.py",
+      "engine/runtime/logging.py",
+      "engine/runtime/process.py",
+      "engine/runtime/scripting/__init__.py",
+      "engine/runtime/scripting/evaluation.py",
+      "engine/runtime/scripting/plugins/__init__.py",
+      "engine/runtime/sources/__init__.py",
+      "engine/runtime/sources/chunk_source_reader.py",
+      "engine/runtime/sources/router.py",
+      "engine/runtime/sources/selection.py",
+      "engine/runtime/sources/variable.py",
+      "engine/runtime/storage/__init__.py",
+      "engine/runtime/storage/memstore_manager.py",
+      "engine/runtime/tasks/__init__.py",
+      "engine/runtime/tasks/array_task.py",
+      "engine/runtime/tasks/assert_task.py",
+      "engine/runtime/tasks/condition_task.py",
+      "engine/runtime/tasks/database_task.py",
+      "engine/runtime/tasks/demographics_task.py",
+      "engine/runtime/tasks/echo_task.py",
+      "engine/runtime/tasks/element_task.py",
+      "engine/runtime/tasks/else_if_task.py",
+      "engine/runtime/tasks/else_task.py",
+      "engine/runtime/tasks/entity_constructor.py",
+      "engine/runtime/tasks/execute_task.py",
+      "engine/runtime/tasks/generate/__init__.py",
+      "engine/runtime/tasks/generate/services/__init__.py",
+      "engine/runtime/tasks/generate/services/policies/__init__.py",
+      "engine/runtime/tasks/generate/services/policies/single_process_policy.py",
+      "engine/runtime/tasks/generate/task.py",
+      "engine/runtime/tasks/generate/workers/__init__.py",
+      "engine/runtime/tasks/generate/workers/generate_worker.py",
+      "engine/runtime/tasks/generate/workers/multiprocessing_generate_worker.py",
+      "engine/runtime/tasks/generate/workers/ray_generate_worker.py",
+      "engine/runtime/tasks/generator_task.py",
+      "engine/runtime/tasks/if_else_base_task.py",
+      "engine/runtime/tasks/if_task.py",
+      "engine/runtime/tasks/include_task.py",
+      "engine/runtime/tasks/item_task.py",
+      "engine/runtime/tasks/key_task.py",
+      "engine/runtime/tasks/key_variable_task.py",
+      "engine/runtime/tasks/list_task.py",
+      "engine/runtime/tasks/memstore_task.py",
+      "engine/runtime/tasks/mongodb_task.py",
+      "engine/runtime/tasks/nested_key_task.py",
+      "engine/runtime/tasks/reference_task.py",
+      "engine/runtime/tasks/setup_task.py",
+      "engine/runtime/tasks/state_machine_task.py",
+      "engine/runtime/tasks/task.py",
+      "engine/runtime/tasks/task_factory.py",
+      "engine/runtime/tasks/task_util.py",
+      "engine/runtime/tasks/variable_iterator.py",
+      "engine/runtime/tasks/variable_task.py",
+      "engine/runtime/tasks/while_task.py"
+    ]
+  },
+  {
+    "id": "contract:io",
+    "kind": "contract",
+    "path": "io",
+    "lane": "entry_authoring",
+    "contract": "architecture-contract.json",
+    "sources": [
+      "engine/io/__init__.py",
+      "engine/io/api.py",
+      "engine/io/client_operations.py",
+      "engine/io/clients/__init__.py",
+      "engine/io/clients/client.py",
+      "engine/io/clients/database_client.py",
+      "engine/io/clients/entity_serialization.py",
+      "engine/io/clients/mongodb_client.py",
+      "engine/io/clients/rdbms_client.py",
+      "engine/io/clients/sql_dialect.py",
+      "engine/io/connection_config/__init__.py",
+      "engine/io/connection_config/connection_config_base.py",
+      "engine/io/connection_config/mongodb_connection_config.py",
+      "engine/io/connection_config/rdbms_connection_config.py",
+      "engine/io/contracts.py",
+      "engine/io/data_sources/__init__.py",
+      "engine/io/data_sources/data_source_registry.py",
+      "engine/io/data_sources/weighted_data_source.py",
+      "engine/io/data_sources/weighted_entity_data_source.py",
+      "engine/io/dataset_api.py",
+      "engine/io/exporters/__init__.py",
+      "engine/io/exporters/console_exporter.py",
+      "engine/io/exporters/csv_exporter.py",
+      "engine/io/exporters/database_exporter.py",
+      "engine/io/exporters/dbunit_exporter.py",
+      "engine/io/exporters/exporter.py",
+      "engine/io/exporters/exporter_config.py",
+      "engine/io/exporters/exporter_context.py",
+      "engine/io/exporters/exporter_state_manager.py",
+      "engine/io/exporters/exporter_util.py",
+      "engine/io/exporters/fixed_width_exporter.py",
+      "engine/io/exporters/json_exporter.py",
+      "engine/io/exporters/log_exporter.py",
+      "engine/io/exporters/memstore.py",
+      "engine/io/exporters/mongodb_exporter.py",
+      "engine/io/exporters/smoke_export.py",
+      "engine/io/exporters/test_result_exporter.py",
+      "engine/io/exporters/txt_exporter.py",
+      "engine/io/exporters/unified_buffered_exporter.py",
+      "engine/io/exporters/xlsx_exporter.py",
+      "engine/io/exporters/xml_exporter.py",
+      "engine/io/file_cache.py",
+      "engine/io/files.py"
+    ]
+  },
+  {
+    "id": "contract:errors",
+    "kind": "contract",
+    "path": "errors",
+    "lane": "entry_authoring",
+    "contract": "architecture-contract.json",
+    "sources": [
+      "errors/__init__.py",
+      "errors/base.py",
+      "errors/catalog/__init__.py",
+      "errors/codes.py",
+      "errors/factory.py",
+      "errors/formatters.py"
+    ]
+  },
+  {
+    "id": "contract:domains",
+    "kind": "contract",
+    "path": "domains",
+    "lane": "entry_authoring",
+    "contract": "architecture-contract.json",
+    "sources": [
+      "domains/__init__.py",
+      "domains/api.py",
+      "domains/domain_core/__init__.py",
+      "domains/domain_core/attribute_catalog.py",
+      "domains/domain_core/base_domain_generator.py",
+      "domains/domain_core/base_domain_service.py",
+      "domains/domain_core/base_entity.py",
+      "domains/domain_core/base_literal_generator.py",
+      "domains/domain_core/property_cache.py",
+      "domains/domain_core/runtime/__init__.py",
+      "domains/domain_core/runtime/clock.py",
+      "domains/domain_core/runtime/rng.py",
+      "domains/domain_core/runtime/run_seed.py",
+      "domains/ecommerce/__init__.py",
+      "domains/ecommerce/generators/__init__.py",
+      "domains/ecommerce/generators/order_generator.py",
+      "domains/ecommerce/generators/product_generator.py",
+      "domains/ecommerce/models/__init__.py",
+      "domains/ecommerce/models/order.py",
+      "domains/ecommerce/models/product.py",
+      "domains/ecommerce/services/__init__.py",
+      "domains/ecommerce/services/order_service.py",
+      "domains/ecommerce/services/product_service.py",
+      "domains/entity_registry.py",
+      "domains/facade.py",
+      "domains/finance/__init__.py",
+      "domains/finance/generators/__init__.py",
+      "domains/finance/generators/bank_account_generator.py",
+      "domains/finance/generators/bank_generator.py",
+      "domains/finance/generators/credit_card_generator.py",
+      "domains/finance/generators/transaction_generator.py",
+      "domains/finance/luhn.py",
+      "domains/finance/models/__init__.py",
+      "domains/finance/models/bank.py",
+      "domains/finance/models/bank_account.py",
+      "domains/finance/models/credit_card.py",
+      "domains/finance/models/transaction.py",
+      "domains/finance/services/__init__.py",
+      "domains/finance/services/bank_account_service.py",
+      "domains/finance/services/bank_service.py",
+      "domains/finance/services/credit_card_service.py",
+      "domains/finance/services/transaction_service.py",
+      "domains/healthcare/__init__.py",
+      "domains/healthcare/generators/__init__.py",
+      "domains/healthcare/generators/doctor_generator.py",
+      "domains/healthcare/generators/hospital_generator.py",
+      "domains/healthcare/generators/medical_device_generator.py",
+      "domains/healthcare/generators/medical_procedure_generator.py",
+      "domains/healthcare/generators/patient_generator.py",
+      "domains/healthcare/models/__init__.py",
+      "domains/healthcare/models/doctor.py",
+      "domains/healthcare/models/hospital.py",
+      "domains/healthcare/models/medical_device.py",
+      "domains/healthcare/models/medical_procedure.py",
+      "domains/healthcare/models/patient.py",
+      "domains/healthcare/services/__init__.py",
+      "domains/healthcare/services/doctor_api.py",
+      "domains/healthcare/services/doctor_service.py",
+      "domains/healthcare/services/hospital_service.py",
+      "domains/healthcare/services/medical_device_service.py",
+      "domains/healthcare/services/medical_procedure_service.py",
+      "domains/healthcare/services/patient_api.py",
+      "domains/healthcare/services/patient_service.py",
+      "domains/insurance/__init__.py",
+      "domains/insurance/generators/__init__.py",
+      "domains/insurance/generators/insurance_company_generator.py",
+      "domains/insurance/generators/insurance_coverage_generator.py",
+      "domains/insurance/generators/insurance_policy_generator.py",
+      "domains/insurance/generators/insurance_product_generator.py",
+      "domains/insurance/models/__init__.py",
+      "domains/insurance/models/insurance_company.py",
+      "domains/insurance/models/insurance_coverage.py",
+      "domains/insurance/models/insurance_policy.py",
+      "domains/insurance/models/insurance_product.py",
+      "domains/insurance/services/__init__.py",
+      "domains/insurance/services/insurance_company_service.py",
+      "domains/insurance/services/insurance_coverage_service.py",
+      "domains/insurance/services/insurance_policy_service.py",
+      "domains/insurance/services/insurance_product_service.py",
+      "domains/public_sector/__init__.py",
+      "domains/public_sector/generators/__init__.py",
+      "domains/public_sector/generators/administration_office_generator.py",
+      "domains/public_sector/generators/educational_institution_generator.py",
+      "domains/public_sector/generators/police_officer_generator.py",
+      "domains/public_sector/models/__init__.py",
+      "domains/public_sector/models/administration_office.py",
+      "domains/public_sector/models/educational_institution.py",
+      "domains/public_sector/models/police_officer.py",
+      "domains/public_sector/services/__init__.py",
+      "domains/public_sector/services/administration_office_service.py",
+      "domains/public_sector/services/educational_institution_service.py",
+      "domains/public_sector/services/police_officer_service.py",
+      "domains/shared/__init__.py",
+      "domains/shared/converters/__init__.py",
+      "domains/shared/converters/append_converter.py",
+      "domains/shared/converters/converter.py",
+      "domains/shared/converters/custom_converter.py",
+      "domains/shared/converters/cut_length_converter.py",
+      "domains/shared/converters/date2timestamp_converter.py",
+      "domains/shared/converters/date_format_converter.py",
+      "domains/shared/converters/hash_converter.py",
+      "domains/shared/converters/java_hash_converter.py",
+      "domains/shared/converters/lower_case_converter.py",
+      "domains/shared/converters/mask_converter.py",
+      "domains/shared/converters/middle_mask_converter.py",
+      "domains/shared/converters/remove_none_or_empty_element_converter.py",
+      "domains/shared/converters/substring_converter.py",
+      "domains/shared/converters/timestamp2date_converter.py",
+      "domains/shared/converters/upper_case_converter.py",
+      "domains/shared/demographics/__init__.py",
+      "domains/shared/demographics/api.py",
+      "domains/shared/demographics/loader.py",
+      "domains/shared/demographics/profile.py",
+      "domains/shared/demographics/profile_meta.py",
+      "domains/shared/demographics/sampler.py",
+      "domains/shared/determinism.py",
+      "domains/shared/examples/generate_address.py",
+      "domains/shared/examples/generate_cities.py",
+      "domains/shared/examples/generate_companies.py",
+      "domains/shared/examples/generate_countries.py",
+      "domains/shared/examples/generate_people.py",
+      "domains/shared/examples/generate_people_demographics.py",
+      "domains/shared/generator_registry.py",
+      "domains/shared/generators/__init__.py",
+      "domains/shared/generators/address_generator.py",
+      "domains/shared/generators/city_generator.py",
+      "domains/shared/generators/company_generator.py",
+      "domains/shared/generators/country_generator.py",
+      "domains/shared/generators/person_generator.py",
+      "domains/shared/generators/region_groups.py",
+      "domains/shared/json_types.py",
+      "domains/shared/literal_generators/academic_title_generator.py",
+      "domains/shared/literal_generators/binary_generator.py",
+      "domains/shared/literal_generators/birthdate_generator.py",
+      "domains/shared/literal_generators/boolean_generator.py",
+      "domains/shared/literal_generators/cnpj_generator.py",
+      "domains/shared/literal_generators/color_generators.py",
+      "domains/shared/literal_generators/company_name_generator.py",
+      "domains/shared/literal_generators/cpf_generator.py",
+      "domains/shared/literal_generators/data_faker_generator.py",
+      "domains/shared/literal_generators/datetime_generator.py",
+      "domains/shared/literal_generators/department_name_generator.py",
+      "domains/shared/literal_generators/domain_generator.py",
+      "domains/shared/literal_generators/ean_generator.py",
+      "domains/shared/literal_generators/email_address_generator.py",
+      "domains/shared/literal_generators/family_name_generator.py",
+      "domains/shared/literal_generators/float_generator.py",
+      "domains/shared/literal_generators/gender_generator.py",
+      "domains/shared/literal_generators/given_name_generator.py",
+      "domains/shared/literal_generators/global_increment_generator.py",
+      "domains/shared/literal_generators/hash_generator.py",
+      "domains/shared/literal_generators/increment_generator.py",
+      "domains/shared/literal_generators/integer_generator.py",
+      "domains/shared/literal_generators/nobility_title_generator.py",
+      "domains/shared/literal_generators/number_sequences.py",
+      "domains/shared/literal_generators/password_generator.py",
+      "domains/shared/literal_generators/phone_number_generator.py",
+      "domains/shared/literal_generators/prefixed_id_generator.py",
+      "domains/shared/literal_generators/sector_generator.py",
+      "domains/shared/literal_generators/ssn_generator.py",
+      "domains/shared/literal_generators/state_transition_generator.py",
+      "domains/shared/literal_generators/street_name_generator.py",
+      "domains/shared/literal_generators/string_generator.py",
+      "domains/shared/literal_generators/token_generator.py",
+      "domains/shared/literal_generators/url_generator.py",
+      "domains/shared/literal_generators/uuid_generator.py",
+      "domains/shared/locale_registry.py",
+      "domains/shared/locales/__init__.py",
+      "domains/shared/models/__init__.py",
+      "domains/shared/models/address.py",
+      "domains/shared/models/city.py",
+      "domains/shared/models/company.py",
+      "domains/shared/models/country.py",
+      "domains/shared/models/demographic_config.py",
+      "domains/shared/models/person.py",
+      "domains/shared/profile_components.py",
+      "domains/shared/sampling.py",
+      "domains/shared/schema_registry.py",
+      "domains/shared/services/__init__.py",
+      "domains/shared/services/address_api.py",
+      "domains/shared/services/address_service.py",
+      "domains/shared/services/city_service.py",
+      "domains/shared/services/company_service.py",
+      "domains/shared/services/country_service.py",
+      "domains/shared/services/person_api.py",
+      "domains/shared/services/person_service.py",
+      "domains/shared/utils/__init__.py",
+      "domains/shared/utils/dataset_loader.py",
+      "domains/shared/utils/dataset_path.py",
+      "domains/shared/utils/random_source.py",
+      "domains/shared/utils/rng_uuid.py",
+      "domains/shared/utils/supported_datasets.py"
+    ]
+  },
+  {
+    "id": "contract:resources",
+    "kind": "contract",
+    "path": "resources",
+    "lane": "entry_authoring",
+    "contract": "architecture-contract.json",
+    "sources": [
+      "resources/__init__.py",
+      "resources/api.py",
+      "resources/demos/__init___.py",
+      "resources/demos/demo-clinical-trial/script/clinical_trial.scr.py",
+      "resources/demos/demo-custom-components/script/converter.scr.py",
+      "resources/demos/demo-custom-components/script/generator.scr.py",
+      "resources/demos/demo-custom-components/script/generator_glob.scr.py",
+      "resources/demos/demo-datetime/script/py_script.scr.py",
+      "resources/demos/demo-db-mapping/script/lib_glob.scr.py",
+      "resources/demos/demo-finance/script/ledger.scr.py",
+      "resources/demos/demo-py-scripting/script/lib.scr.py"
+    ]
+  },
+  {
+    "id": "contract:python_compat",
+    "kind": "contract",
+    "path": "python_compat",
+    "lane": "entry_authoring",
+    "contract": "architecture-contract.json",
+    "sources": [
+      "_compat.py"
+    ]
+  }
+]

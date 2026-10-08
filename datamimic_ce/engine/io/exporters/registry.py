@@ -20,7 +20,7 @@ from datamimic_ce.engine.dsl.vocabulary.constants.exporter_constants import (
     EXPORTER_XML,
 )
 from datamimic_ce.engine.dsl.vocabulary.enums.operation_enums import ExportOperation
-from datamimic_ce.engine.io.clients.client import Client
+from datamimic_ce.engine.io.clients.client import RegisteredClient
 from datamimic_ce.engine.io.clients.mongodb_client import MongoDBClient
 from datamimic_ce.engine.io.clients.rdbms_client import RdbmsClient
 from datamimic_ce.engine.io.contracts import SmokeExportRequest
@@ -101,7 +101,7 @@ def create_exporter_list(
     return consumers_with_operation, consumers_without_operation
 
 
-def _create_exporter_from_client(client: Client | None, client_name: str) -> Exporter:
+def _create_exporter_from_client(client: RegisteredClient | None, client_name: str) -> Exporter:
     if isinstance(client, MongoDBClient):
         return MongoDBExporter(client)
     if isinstance(client, RdbmsClient):

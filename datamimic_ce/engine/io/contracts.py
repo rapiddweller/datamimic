@@ -1,12 +1,10 @@
 """Typed requests accepted by the IO boundary."""
 
-import copy
-import itertools
 from abc import ABC, abstractmethod
-from collections.abc import Iterable, Iterator, Mapping
+from collections.abc import Mapping
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Protocol, TypedDict, TypeVar
+from typing import Protocol, TypedDict
 
 
 class ExportMetadata(TypedDict, total=False):
@@ -41,38 +39,15 @@ class MemstoreSource(Protocol):
 
     def get_all_data_by_type(self, product_type: str) -> list[dict[str, object]]: ...
 
-    def get_data_by_type(
-        self, product_type: str | None, pagination: DataSourcePagination | None, cyclic: bool
-    ) -> list[dict[str, object]]: ...
+    def get_data_by_type(self, product_type: str | None) -> list[dict[str, object]]: ...
 
     def get_data_len_by_type(self, entity_name: str | None) -> int: ...
 
 
-_Row = TypeVar("_Row")
+class SqlScriptClient(Protocol):
+    """Client capability required to execute a SQL script."""
 
-
-def select_rows(
-    data: Iterable[_Row], pagination: DataSourcePagination | None, cyclic: bool = False, offset: int = 0
-) -> list[_Row]:
-    """Apply one IO-owned page window, including cyclic wrap after an offset."""
-    if offset:
-        data = list(data)[offset:]
-    start = 0 if pagination is None else pagination.skip
-    end = len(list(data)) if pagination is None else pagination.skip + pagination.limit
-    source: Iterable[_Row] = itertools.cycle(data) if cyclic else data
-    rows = itertools.islice(source, start, end)
-    return [copy.deepcopy(row) for row in rows] if cyclic else list(rows)
-
-
-def select_row_iterator(
-    data: Iterable[_Row], pagination: DataSourcePagination | None, cyclic: bool = False
-) -> Iterator[_Row]:
-    """Return the selected page as an iterator, repeating only that page when cyclic."""
-    start = 0 if pagination is None else pagination.skip
-    end = len(list(data)) if pagination is None else pagination.skip + pagination.limit
-    source: Iterable[_Row] = itertools.cycle(data) if cyclic else data
-    selected = itertools.islice(source, start, end)
-    return itertools.cycle(list(selected)[: end - start]) if cyclic else selected
+    def execute_sql_script(self, query: str, /) -> None: ...
 
 
 @dataclass(frozen=True)
@@ -93,7 +68,6 @@ __all__ = [
     "EntityValue",
     "ExportMetadata",
     "MemstoreSource",
+    "SqlScriptClient",
     "SmokeExportRequest",
-    "select_row_iterator",
-    "select_rows",
 ]

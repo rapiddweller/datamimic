@@ -136,7 +136,7 @@
       "target": "domains",
       "disposition": "regroup",
       "rationale": "Reviewed overload; target groups follow responsibility, not a numerical quota. See relocations and mounted contracts.",
-      "initializer_owner": "domains"
+      "initializer_owner": "domains/api"
     },
     {
       "path": "domains/domain_core",
@@ -176,7 +176,7 @@
       "target": "domains/ecommerce",
       "disposition": "retain",
       "rationale": "Single responsibility; retain owner-local modules. Public crossings use the enclosing contract.",
-      "initializer_owner": "domains/ecommerce"
+      "initializer_owner": "domains/ecommerce/services"
     },
     {
       "path": "domains/ecommerce/generators",
@@ -222,7 +222,7 @@
       "target": "domains/finance",
       "disposition": "retain",
       "rationale": "Single responsibility; retain owner-local modules. Public crossings use the enclosing contract.",
-      "initializer_owner": "domains/finance"
+      "initializer_owner": "domains/finance/models"
     },
     {
       "path": "domains/finance/generators",
@@ -273,7 +273,7 @@
       "target": "domains/healthcare",
       "disposition": "retain",
       "rationale": "Single responsibility; retain owner-local modules. Public crossings use the enclosing contract.",
-      "initializer_owner": "domains/healthcare"
+      "initializer_owner": "domains/healthcare/services"
     },
     {
       "path": "domains/healthcare/generators",
@@ -329,7 +329,7 @@
       "target": "domains/insurance",
       "disposition": "retain",
       "rationale": "Single responsibility; retain owner-local modules. Public crossings use the enclosing contract.",
-      "initializer_owner": "domains/insurance"
+      "initializer_owner": "domains/insurance/services"
     },
     {
       "path": "domains/insurance/generators",
@@ -380,7 +380,7 @@
       "target": "domains/public_sector",
       "disposition": "retain",
       "rationale": "Single responsibility; retain owner-local modules. Public crossings use the enclosing contract.",
-      "initializer_owner": "domains/public_sector"
+      "initializer_owner": "domains/public_sector/services"
     },
     {
       "path": "domains/public_sector/generators",
@@ -391,7 +391,7 @@
       ],
       "target": "domains/public_sector/generators",
       "disposition": "retain",
-      "rationale": "Keep the vertical's data models, generation and dataset services separate; no cross-vertical imports.",
+      "rationale": "Keep public-sector value policies in owner-local generators; models retain entity state and lazy caches, and services remain separate. No cross-vertical imports.",
       "initializer_owner": "domains/public_sector/generators"
     },
     {
@@ -441,7 +441,7 @@
       "target": "domains/shared",
       "disposition": "regroup",
       "rationale": "Reviewed overload; target groups follow responsibility, not a numerical quota. See relocations and mounted contracts.",
-      "initializer_owner": "domains/shared"
+      "initializer_owner": "domains/shared/services"
     },
     {
       "path": "domains/shared/converters",
@@ -465,7 +465,7 @@
       "target": "domains/shared/converters",
       "disposition": "regroup",
       "rationale": "Reviewed overload; target groups follow responsibility, not a numerical quota. See relocations and mounted contracts.",
-      "initializer_owner": "domains/shared/converters"
+      "initializer_owner": "domains/shared/converters/base"
     },
     {
       "path": "domains/shared/demographics",
@@ -812,7 +812,7 @@
       "target": "engine/io",
       "disposition": "regroup",
       "rationale": "Reviewed overload; target groups follow responsibility, not a numerical quota. See relocations and mounted contracts.",
-      "initializer_owner": "engine/io"
+      "initializer_owner": "engine/io/api"
     },
     {
       "path": "engine/io/clients",
@@ -880,7 +880,7 @@
       "target": "engine/io/exporters",
       "disposition": "regroup",
       "rationale": "Reviewed overload; target groups follow responsibility, not a numerical quota. See relocations and mounted contracts.",
-      "initializer_owner": "engine/io/exporters"
+      "initializer_owner": "engine/io/exporters/registry"
     },
     {
       "path": "engine/runtime",
@@ -901,7 +901,7 @@
       "target": "engine/runtime",
       "disposition": "regroup",
       "rationale": "Reviewed overload; target groups follow responsibility, not a numerical quota. See relocations and mounted contracts.",
-      "initializer_owner": "engine/runtime"
+      "initializer_owner": "engine/runtime/api"
     },
     {
       "path": "engine/runtime/contexts",
@@ -1079,7 +1079,7 @@
       "target": "errors",
       "disposition": "retain",
       "rationale": "Single responsibility; retain owner-local modules. Public crossings use the enclosing contract.",
-      "initializer_owner": "errors"
+      "initializer_owner": "errors/factory"
     },
     {
       "path": "errors/catalog",
@@ -2390,41 +2390,46 @@
     {"target": "interfaces/mcp/__init__.py", "responsibility": "The MCP package exposes server entrypoints lazily without initializing the application graph."},
     {"target": "interfaces/mcp/cli.py", "responsibility": "The MCP executable loads the working-directory environment, then selects transport and bind configuration."},
     {"target": "engine/dsl/model/validation.py", "responsibility": "Provides shared raw-attribute validation functions and internal ModelUtil checks for DSL models."},
-    {"target": "authoring/adapters/reference.py", "responsibility": "Builds bounded DSL and typed authoring references from engine registries and authoring schemas."},
+    {"target": "authoring/adapters/reference.py", "responsibility": "Projects DSL facts, authoring schemas, and Domain/Runtime generator capabilities into bounded reference responses."},
     {"target": "authoring/contracts.py", "responsibility": "Defines canonical Authoring requests, results, compiler plans and full bounded-capture evidence records."},
     {"target": "authoring/adapters/dryrun.py", "responsibility": "Bounds execution, neutralizes side effects and produces complete capture evidence using canonical Authoring records."},
     {"target": "authoring/domain/acceptance.py", "responsibility": "Evaluates explicit and derived expectations against the same full bounded capture."},
     {"target": "authoring/domain/verification.py", "responsibility": "Compares captures and derives retry, smoke-export and replay evidence without executing a run."},
     {"target": "authoring/domain/derived_facts.py", "responsibility": "Derives product, memstore, and foreign-key facts from CompilePlan for scaffold responses and intent rules."},
-    {"target": "domains/ecommerce/models/order.py", "responsibility": "Order represents a buyer's purchase, including line items, payment, pricing, and shipping details."},
+    {"target": "domains/ecommerce/generators/order_generator.py", "responsibility": "OrderGenerator generates order and user ID values, order values, and billing-address reuse decisions, including product counts, taxes, coupon codes, dates, status, payment, and shipping choices from its configured RNG, dataset, and clock."},
+    {"target": "domains/ecommerce/models/order.py", "responsibility": "Order represents a buyer's purchase and owns its cached discount calculation because eligibility and rate draws interleave with lazy product and price access, preserving getter and RNG order."},
     {"target": "domains/ecommerce/models/product.py", "responsibility": "Product represents a catalog item with category, brand, descriptive, pricing, inventory, and merchandising attributes."},
     {"target": "domains/domain_core/contracts/generation.py", "responsibility": "Defines generator capability metadata, immutable state-machine definitions and transition rules for domain generation."},
-    {"target": "domains/finance/models/bank.py", "responsibility": "Bank exposes institution identity, payment-network identifiers, routing data, and customer-service contact."},
+    {"target": "domains/finance/models/bank.py", "responsibility": "Bank exposes cached institution identity, payment-network identifiers, routing data, and customer-service contact from BankGenerator."},
+    {"target": "domains/finance/generators/bank_generator.py", "responsibility": "BankGenerator generates bank records, BIC and BIN identifiers, and customer-service phone numbers from its configured dataset and RNG."},
     {"target": "domains/finance/models/bank_account.py", "responsibility": "BankAccount links bank details to account identifiers, balances, currency, and account lifecycle dates."},
     {"target": "domains/finance/models/credit_card.py", "responsibility": "CreditCard links cardholder, account, and bank data with card credentials, limits, balances, and dates."},
-    {"target": "domains/finance/models/transaction.py", "responsibility": "Transaction records an account-linked payment event with amount, classification, merchant, status, channel, and location."},
+    {"target": "domains/finance/models/transaction.py", "responsibility": "Transaction caches and claims its unique ID and records an account-linked payment event with amount, classification, merchant, status, channel, and location."},
     {"target": "domains/finance/contracts.py", "responsibility": "Defines finance-owned typed payloads for generated values and serialized account and transaction records."},
     {"target": "domains/registry/generators.py", "responsibility": "Registers built-in domain generators and exposes their capability metadata to DSL expressions."},
     {"target": "domains/healthcare/models/doctor.py", "responsibility": "Doctor combines professional identity and credentials with specialty, hospital affiliation, availability, and contact details."},
     {"target": "domains/healthcare/models/hospital.py", "responsibility": "Hospital represents a care facility with services, capacity, accreditation, operating attributes, and contact details."},
-    {"target": "domains/healthcare/models/medical_device.py", "responsibility": "MedicalDevice tracks equipment identity, assignment, lifecycle dates, status, usage, and maintenance history."},
-    {"target": "domains/healthcare/models/medical_procedure.py", "responsibility": "MedicalProcedure describes a coded clinical service with specialty, duration, cost, clinical flags, and recovery time."},
+    {"target": "domains/healthcare/models/medical_device.py", "responsibility": "MedicalDevice tracks equipment identity, assignment, lifecycle dates, status, usage, and maintenance history, and owns cached specifications because their draws interleave with lazy device-type access and generator helpers."},
+    {"target": "domains/healthcare/models/medical_procedure.py", "responsibility": "MedicalProcedure exposes a coded clinical service, retains lazy access to its claimed procedure ID, and owns its cached cost calculation because it is coupled to lazy clinical-property evaluation."},
     {"target": "domains/healthcare/models/patient.py", "responsibility": "Patient combines stable identity and demographics with clinical, body-measurement, insurance, and care-contact data."},
     {"target": "domains/healthcare/use_cases/doctor_api.py", "responsibility": "Validates locale-backed specialty and license constraints, then generates doctor JSON from a DoctorRequest."},
     {"target": "domains/healthcare/use_cases/patient_api.py", "responsibility": "Generates patient JSON from locale-backed age and condition constraints, with optional profile-seed control and a stable identifier."},
-    {"target": "domains/insurance/models/insurance_company.py", "responsibility": "InsuranceCompany represents an insurer with source company data, identity, code, founding year, headquarters, and website."},
+    {"target": "domains/insurance/models/insurance_company.py", "responsibility": "InsuranceCompany exposes cached insurer identity and source company data, code, founding year, headquarters, and website."},
     {"target": "domains/insurance/models/insurance_coverage.py", "responsibility": "InsuranceCoverage defines a product-linked benefit with descriptive details and minimum and maximum coverage."},
-    {"target": "domains/insurance/models/insurance_policy.py", "responsibility": "InsurancePolicy links insurer, product, policyholder, and coverages with premium, term, and status data."},
-    {"target": "domains/insurance/models/insurance_product.py", "responsibility": "InsuranceProduct represents a coded insurance offering with type, description, and available coverages."},
-    {"target": "domains/public_sector/models/administration_office.py", "responsibility": "AdministrationOffice represents a jurisdictional office with address, staffing, budget, hours, services, departments, and leadership."},
-    {"target": "domains/public_sector/models/educational_institution.py", "responsibility": "EducationalInstitution describes a school with type, level, population, programs, accreditation, facilities, and contact details."},
-    {"target": "domains/public_sector/models/police_officer.py", "responsibility": "PoliceOfficer combines officer identity and personal details with assignment, rank, service history, credentials, and shift."},
+    {"target": "domains/insurance/models/insurance_policy.py", "responsibility": "InsurancePolicy exposes a cached identity and links insurer, product, policyholder, and coverages with premium, term, and status data."},
+    {"target": "domains/insurance/models/insurance_product.py", "responsibility": "InsuranceProduct exposes a cached identity and a coded insurance offering with type, description, and available coverages."},
+    {"target": "domains/public_sector/generators/administration_office_generator.py", "responsibility": "AdministrationOfficeGenerator generates office-ID candidates, jurisdiction values, founding years, budgets, operating hours, and email-department names, including type-based policies and cross-office hours variation."},
+    {"target": "domains/public_sector/models/administration_office.py", "responsibility": "AdministrationOffice resolves and caches office fields, composes contact details, and claims unique office IDs; fields include address, staffing, budget, hours, services, departments, and leadership."},
+    {"target": "domains/public_sector/generators/educational_institution_generator.py", "responsibility": "EducationalInstitutionGenerator creates institution-ID candidates, selects institution names and program categories and student/staff counts, and generates levels, accreditations, and types using its configured RNG and dataset."},
+    {"target": "domains/public_sector/models/educational_institution.py", "responsibility": "EducationalInstitution claims unique institution IDs, resolves and caches school type, level, population, programs, accreditation, facilities, and contact details, and owns founding-year calculation because it conditionally resolves lazy type while preserving getter and RNG order."},
+    {"target": "domains/public_sector/models/police_officer.py", "responsibility": "PoliceOfficer exposes cached officer identity and personal details with assignment, rank, service history, credentials, and shift."},
     {"target": "domains/shared/datasets/loader.py", "responsibility": "Loads CSV and JSON domain datasets and provides weighted selection helpers for generators."},
     {"target": "domains/shared/demographics/config.py", "responsibility": "Defines immutable demographic overrides and applies default age bounds."},
     {"target": "domains/shared/demographics/loader.py", "responsibility": "Loads and validates demographic age-band and condition-rate CSVs into a profile."},
     {"target": "domains/shared/demographics/profile.py", "responsibility": "Defines demographic profile IDs, age bands, condition rates, and lookup helpers."},
     {"target": "domains/shared/demographics/profile_meta.py", "responsibility": "Loads profile metadata and resolves group references for a dataset profile."},
-    {"target": "domains/shared/generators/address_generator.py", "responsibility": "Resolves country-specific address sub-generators per row, including region-group selection."},
+    {"target": "domains/shared/generators/address_generator.py", "responsibility": "Resolves country-specific address sub-generators per row and generates house numbers using its configured RNG."},
+    {"target": "domains/shared/generators/person_generator.py", "responsibility": "PersonGenerator reserves demographic samples and owns gender normalization and fallback, birthdate generation, and salutation data access."},
     {"target": "domains/shared/generators/region_groups.py", "responsibility": "Maps region aliases to concrete country datasets for address generation."},
     {"target": "domains/shared/use_cases/address_api.py", "responsibility": "Generates locale-backed address JSON and applies country and postal-code constraints."},
     {"target": "domains/shared/use_cases/person_api.py", "responsibility": "Generates locale-backed person JSON from age and sex constraints, with optional profile-seed control."},
@@ -2457,7 +2462,7 @@
     {"target": "engine/dsl/statements/setup/memstore_statement.py", "responsibility": "Carries the configured memstore id as a named setup statement."},
     {"target": "engine/dsl/statements/setup/mongodb_statement.py", "responsibility": "Carries a MongoDB connection model and exposes its configured id."},
     {"target": "engine/dsl/statements/setup/setup_statement.py", "responsibility": "Carries setup-wide defaults and runtime options in the composite setup node."},
-    {"target": "engine/dsl/statements/traversal.py", "responsibility": "Traverses statement ancestry and branches to resolve enclosing generation relationships."},
+    {"target": "engine/dsl/statements/traversal.py", "responsibility": "Queries statement ancestry and Generate trees, including pre-run entity-name lookup without entering other composites."},
     {"target": "engine/dsl/statements/values/references/reference_statement.py", "responsibility": "Carries source-selection settings and source-column to target-field mappings for references."},
     {"target": "engine/dsl/statements/values/scalar/element_statement.py", "responsibility": "Carries one named scalar element's value-generation settings."},
     {"target": "engine/dsl/statements/values/scalar/key_statement.py", "responsibility": "Carries one named key's value-generation constraints and settings in a composite statement."},
@@ -2472,7 +2477,7 @@
     {"target": "engine/io/clients/client.py", "responsibility": "Provides the marker base class for database clients."},
     {"target": "engine/io/clients/entity_serialization.py", "responsibility": "Stringifies EntityValue instances before database writes."},
     {"target": "engine/io/clients/sql_dialect.py", "responsibility": "Builds dialect-aware count, column-probe, and page queries, and splits executable SQL scripts."},
-    {"target": "engine/io/contracts.py", "responsibility": "Defines IO paging, memstore, entity-value, export-routing and smoke-export contracts plus shared page selection."},
+    {"target": "engine/io/contracts.py", "responsibility": "Defines context-free IO value types and the raw memstore read contract."},
     {"target": "engine/io/data_sources/boundary/entities.py", "responsibility": "Resolves source entity and MongoDB collection names from descriptor fields at the IO boundary."},
     {"target": "engine/io/data_sources/boundary/models.py", "responsibility": "Defines typed source requests that carry resolved inputs without runtime context or statements."},
     {"target": "engine/io/data_sources/chunk_reader.py", "responsibility": "Selects unique or distributed rows from a loaded source pool and slices pages within one chunk."},
@@ -2495,7 +2500,7 @@
     {"target": "engine/runtime/tasks/__init__.py", "responsibility": "Imports the task registry at package load so statement handlers are registered before dispatch."},
     {"target": "engine/runtime/tasks/flow/commands/execute_task.py", "responsibility": "Executes Python, SQL, and Bash for setup or nested-key statements, including setup statements included from generate."},
     {"target": "engine/runtime/tasks/generate/export_order.py", "responsibility": "Dispatches generated pages to exporters in parent-child order appropriate to the export operation."},
-    {"target": "engine/runtime/tasks/registry.py", "responsibility": "Owns the ordered bindings from DSL statement types to runtime task implementations."},
+    {"target": "engine/runtime/tasks/registry.py", "responsibility": "Registers statement-type handlers for runtime task creation."},
     {"target": "engine/runtime/tasks/sources/chunk_source_reader.py", "responsibility": "Coordinates chunked source reads for runtime source tasks."},
     {"target": "engine/runtime/tasks/sources/generate.py", "responsibility": "Resolves generate statement inputs and adapts runtime context to file, memstore, and database reads."},
     {"target": "engine/runtime/tasks/sources/length.py", "responsibility": "Calculates and caches source lengths used by runtime setup and iteration tasks."},

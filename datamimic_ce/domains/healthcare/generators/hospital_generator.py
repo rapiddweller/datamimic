@@ -89,6 +89,44 @@ class HospitalGenerator(ClockAnchoredDomainGenerator):
         self._last_type = choice
         return choice
 
+    def generate_hospital_id_candidate(self) -> str:
+        rng = self.rng
+        suffix = "".join(rng.choice("0123456789ABCDEF") for _ in range(8))
+        return f"HOSP-{suffix}"
+
+    def generate_bed_count(self, hospital_type: str) -> int:
+        if hospital_type == "Specialty":
+            # Specialty hospitals tend to be smaller
+            return self.rng.randint(50, 200)
+        if hospital_type == "Community":
+            # Community hospitals are medium-sized
+            return self.rng.randint(100, 300)
+        if hospital_type == "Teaching":
+            # Teaching hospitals tend to be larger
+            return self.rng.randint(300, 1000)
+        # General hospitals vary in size
+        return self.rng.randint(100, 500)
+
+    def generate_staff_count(self, bed_count: int) -> int:
+        staff_ratio = self.rng.uniform(2.0, 4.0)
+        return int(bed_count * staff_ratio)
+
+    def generate_founding_year(self) -> int:
+        current_year = self.reference_now.year
+        return self.rng.randint(current_year - 150, current_year - 5)
+
+    def generate_emergency_services(self, hospital_type: str) -> bool:
+        if hospital_type == "Specialty":
+            return self.rng.random() < 0.3
+        return self.rng.random() < 0.9
+
+    def generate_teaching_status(self, hospital_type: str) -> bool:
+        if hospital_type == "Teaching":
+            return True
+        if hospital_type == "General":
+            return self.rng.random() < 0.3
+        return self.rng.random() < 0.1
+
     def generate_departments(self, hospital_type: str, count: int | None = None) -> list[str]:
         """Generate a list of hospital departments.
 

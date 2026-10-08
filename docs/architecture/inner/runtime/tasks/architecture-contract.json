@@ -20,7 +20,7 @@
       },
       {
         "path": "datamimic_ce/engine/runtime/tasks/registry.py",
-        "responsibility": "Owns the ordered bindings from DSL statement types to runtime task implementations."
+        "responsibility": "Registers statement-type handlers for runtime task creation."
       },
       {
         "path": "datamimic_ce/engine/runtime/tasks/setup/database_task.py",

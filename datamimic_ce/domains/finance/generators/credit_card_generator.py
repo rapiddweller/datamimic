@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, TypedDict
 
 if TYPE_CHECKING:
     from datamimic_ce.domains.shared.demographics.config import DemographicConfig
@@ -16,9 +16,17 @@ from pathlib import Path
 from datamimic_ce.domains.domain_core.base_domain_generator import DatasetAwareDomainGenerator
 from datamimic_ce.domains.domain_core.datasets.path import dataset_path
 from datamimic_ce.domains.finance.generators.bank_account_generator import BankAccountGenerator
+from datamimic_ce.domains.finance.luhn import luhn_check_digit
 from datamimic_ce.domains.shared.datasets.loader import read_csv_rows
 from datamimic_ce.domains.shared.generators.person_generator import PersonGenerator
 from datamimic_ce.domains.shared.literal_generators.temporal.datetime_generator import DateTimeGenerator
+
+
+class CardSpec(TypedDict):
+    type: str
+    prefix: str
+    length: int
+    cvv_length: int
 
 
 class CreditCardGenerator(DatasetAwareDomainGenerator):
@@ -45,7 +53,7 @@ class CreditCardGenerator(DatasetAwareDomainGenerator):
             rng=self._derive_rng(),
         )
         self._card_types_cache: list[tuple] | None = None
-        self._card_specs: dict | None = None
+        self._card_specs: CardSpec | None = None
 
     @property
     def person_generator(self) -> PersonGenerator:
@@ -63,13 +71,39 @@ class CreditCardGenerator(DatasetAwareDomainGenerator):
         #  keep API returning type, but use dataset-specific specs
         return self.get_card_specs()["type"]
 
+    def generate_card_number(self) -> str:
+        specs = self.get_card_specs()
+        prefix = specs.get("prefix", "")
+        total_len = specs.get("length", 16)
+        remaining = max(0, total_len - len(prefix))
+        if remaining == 0:
+            return prefix
+        random_digits = "".join(str(self.rng.randint(0, 9)) for _ in range(remaining - 1))
+        payload = f"{prefix}{random_digits}"
+        return f"{payload}{luhn_check_digit(payload)}"
+
+    def generate_security_code(self) -> str:
+        specs = self.get_card_specs()
+        cvv_len = specs.get("cvv_length", 3)
+        digits = [str(self.rng.randint(0, 9)) for _ in range(cvv_len)]
+        return "".join(digits)
+
+    def generate_is_active(self) -> bool:
+        return self.rng.choice([True, False])
+
+    def generate_credit_limit(self) -> float:
+        return self.rng.uniform(1000, 999999)
+
+    def generate_current_balance(self) -> float:
+        return self.rng.uniform(100, 999999)
+
     def _load_card_types(self) -> list[tuple]:
         if self._card_types_cache is None:
             file_path = dataset_path("finance", "credit_card", f"card_types_{self._dataset}.csv", start=Path(__file__))
             self._card_types_cache = read_csv_rows(file_path)[1:]
         return self._card_types_cache
 
-    def get_card_specs(self) -> dict:
+    def get_card_specs(self) -> CardSpec:
         """
         Pick and cache a weighted card specification from dataset file.
         Returns: {type, prefix, length:int, cvv_length:int}

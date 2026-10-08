@@ -16,19 +16,19 @@
       },
       {
         "path": "datamimic_ce/domains/finance/generators/bank_account_generator.py",
-        "responsibility": "BankAccountGenerator generates synthetic domain values through generate_created_date, generate_last_transaction_date, and get_bank_account_types, using the required RNG, dataset, or clock basis."
+        "responsibility": "BankAccountGenerator generates account balances, account types, and dates using its configured RNG and resolved clock."
       },
       {
         "path": "datamimic_ce/domains/finance/generators/bank_generator.py",
-        "responsibility": "BankGenerator generates synthetic domain values through generate_bank_data, using the required RNG, dataset, or clock basis."
+        "responsibility": "BankGenerator generates bank records, BIC and BIN identifiers, and customer-service phone numbers from its configured dataset and RNG."
       },
       {
         "path": "datamimic_ce/domains/finance/generators/credit_card_generator.py",
-        "responsibility": "CreditCardGenerator generates synthetic domain values through generate_card_type and get_card_specs, using the required RNG, dataset, or clock basis."
+        "responsibility": "CreditCardGenerator selects card specifications and generates card credentials, status, credit limits, and balances using its configured RNG."
       },
       {
         "path": "datamimic_ce/domains/finance/generators/transaction_generator.py",
-        "responsibility": "TransactionGenerator reads transaction records and anchors transaction time and reference values to the injected RNG and resolved run clock."
+        "responsibility": "TransactionGenerator generates transaction values and ID candidates, including weighted international status, and anchors transaction time and reference values to the injected RNG and resolved run clock."
       },
       {
         "path": "datamimic_ce/domains/finance/luhn.py",
@@ -40,7 +40,7 @@
       },
       {
         "path": "datamimic_ce/domains/finance/models/bank.py",
-        "responsibility": "Bank exposes institution identity, payment-network identifiers, routing data, and customer-service contact."
+        "responsibility": "Bank exposes cached institution identity, payment-network identifiers, routing data, and customer-service contact from BankGenerator."
       },
       {
         "path": "datamimic_ce/domains/finance/models/bank_account.py",
@@ -52,7 +52,7 @@
       },
       {
         "path": "datamimic_ce/domains/finance/models/transaction.py",
-        "responsibility": "Transaction records an account-linked payment event with amount, classification, merchant, status, channel, and location."
+        "responsibility": "Transaction caches and claims its unique ID and records an account-linked payment event with amount, classification, merchant, status, channel, and location."
       },
       {
         "path": "datamimic_ce/domains/finance/services/__init__.py",
@@ -85,7 +85,10 @@
         "datamimic_ce.domains.finance.models"
       ],
       "responsibilities": [
-        "Expose lazy Bank, BankAccount, CreditCard, and Transaction values, including linked account and merchant details."
+        "Expose lazy Bank, BankAccount, CreditCard, and Transaction values, including linked account and merchant details, and maintain their package-level exports."
+      ],
+      "exact_modules": [
+        "datamimic_ce.domains.finance"
       ],
       "forbidden_responsibilities": [
         "Generate dataset values directly or own service orchestration."
@@ -97,11 +100,6 @@
         {
           "component": "generators",
           "rationale": "Finance entities delegate value creation and computed properties to generators.",
-          "decided_by": "agent"
-        },
-        {
-          "component": "algorithms",
-          "rationale": "Credit-card number construction uses the Luhn check-digit primitive.",
           "decided_by": "agent"
         },
         {
@@ -126,7 +124,7 @@
         "datamimic_ce.domains.finance.generators"
       ],
       "responsibilities": [
-        "Generate bank and account identifiers, card specifications, and transactions with categorized amounts, merchants, currencies, and dates."
+        "Generate bank and account identifiers and balances, bank contact values, card credentials, status, credit limits and balances, and transactions with categorized amounts, merchants, currencies, and dates."
       ],
       "forbidden_responsibilities": [
         "Import finance models or services."
@@ -135,6 +133,11 @@
         "docs/architecture/inner/target.md"
       ],
       "requires": [
+        {
+          "component": "algorithms",
+          "rationale": "CreditCardGenerator uses the Luhn check-digit primitive when generating card numbers.",
+          "decided_by": "agent"
+        },
         {
           "component": "contracts",
           "rationale": "Generator result signatures use finance-owned payload contracts.",

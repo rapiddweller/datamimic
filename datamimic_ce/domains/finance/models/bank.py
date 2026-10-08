@@ -1,8 +1,6 @@
 from datamimic_ce.domains.domain_core import BaseEntity
 from datamimic_ce.domains.domain_core.property_cache import property_cache
 from datamimic_ce.domains.finance.generators.bank_generator import BankGenerator
-from datamimic_ce.domains.shared.generators.phone_number_generator import PhoneNumberGenerator
-from datamimic_ce.domains.shared.literal_generators.primitives.string_generator import StringGenerator
 
 
 class Bank(BaseEntity):
@@ -14,7 +12,7 @@ class Bank(BaseEntity):
 
     @property
     @property_cache
-    def bank_data(self) -> dict:
+    def bank_data(self) -> dict[str, str]:
         return self._bank_generator.generate_bank_data()
 
     @property
@@ -40,25 +38,17 @@ class Bank(BaseEntity):
     @property
     @property_cache
     def bic(self) -> str:
-        # Basic 8-char BIC: 4 letters bank + 2-letter country + 2 alnum location
-        country = self._bank_generator.dataset
-        pattern = f"[A-Z]{{4}}{country}[A-Z0-9]{{2}}"
-        return StringGenerator.rnd_str_from_regex(pattern, rng=self._bank_generator.rng)
+        return self._bank_generator.generate_bic()
 
     @property
     @property_cache
     def bin(self) -> str:
-        return StringGenerator.rnd_str_from_regex("[0-9]{4}", rng=self._bank_generator.rng)
+        return self._bank_generator.generate_bin()
 
     @property
     @property_cache
     def customer_service_phone(self) -> str:
-        """Get a customer service phone number for the bank.
-
-        Returns:
-            A formatted phone number string.
-        """
-        return PhoneNumberGenerator(dataset=self._bank_generator.dataset, rng=self._bank_generator.rng).generate()
+        return self._bank_generator.generate_customer_service_phone()
 
     def to_dict(self) -> dict[str, object]:
         return {

@@ -41,15 +41,7 @@ class Person(BaseEntity):
             The gender of the person.
         """
         sample_sex = self._demographic_sample.sex
-        if sample_sex is not None:
-            normalized = sample_sex.strip().upper()
-            if normalized.startswith("F"):
-                return "female"
-            if normalized.startswith("M"):
-                return "male"
-            if normalized.startswith("O"):
-                return "other"
-        return self._person_generator.gender_generator.generate()
+        return self._person_generator.generate_gender(sample_sex)
 
     @property
     @property_cache
@@ -181,10 +173,7 @@ class Person(BaseEntity):
         Returns:
             The birthdate of the person.
         """
-        if self._demographic_sample.age is not None:
-            # Align birthdate with demographic priors so age property matches sampled intent.
-            return self._person_generator.generate_birthdate_for_age(self._demographic_sample.age)
-        return self._person_generator.birthdate_generator.generate()
+        return self._person_generator.generate_birthdate(self._demographic_sample.age)
 
     @property
     @property_cache

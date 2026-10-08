@@ -2,6 +2,7 @@ import random
 from pathlib import Path
 
 from datamimic_ce.domains.domain_core.base_domain_generator import DatasetAwareDomainGenerator
+from datamimic_ce.domains.domain_core.runtime.rng_uuid import uuid4_from_random
 from datamimic_ce.domains.insurance.generators.insurance_coverage_generator import InsuranceCoverageGenerator
 from datamimic_ce.domains.shared.datasets.loader import pick_one_weighted, read_weighted_records
 
@@ -26,6 +27,9 @@ class InsuranceProductGenerator(DatasetAwareDomainGenerator):
             rng=self._derive_rng(),
         )
         self._last_product_type: str | None = None
+
+    def generate_id_candidate(self) -> str:
+        return uuid4_from_random(self.rng)
 
     @property
     def insurance_coverage_generator(self) -> InsuranceCoverageGenerator:

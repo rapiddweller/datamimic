@@ -12,15 +12,15 @@
       },
       {
         "path": "datamimic_ce/domains/public_sector/generators/administration_office_generator.py",
-        "responsibility": "AdministrationOfficeGenerator generates synthetic domain values through pick_office_type, pick_jurisdiction_bucket, and build_office_name, using the required RNG, dataset, or clock basis."
+        "responsibility": "AdministrationOfficeGenerator generates office-ID candidates, jurisdiction values, founding years, budgets, operating hours, and email-department names, including type-based policies and cross-office hours variation."
       },
       {
         "path": "datamimic_ce/domains/public_sector/generators/educational_institution_generator.py",
-        "responsibility": "EducationalInstitutionGenerator generates synthetic domain values through pick_level, pick_accreditations, and pick_institution_type, using the required RNG, dataset, or clock basis."
+        "responsibility": "EducationalInstitutionGenerator creates institution-ID candidates, selects institution names and program categories and student/staff counts, and generates levels, accreditations, and types using its configured RNG and dataset."
       },
       {
         "path": "datamimic_ce/domains/public_sector/generators/police_officer_generator.py",
-        "responsibility": "PoliceOfficerGenerator generates synthetic domain values through generate_hire_date, get_rank, and get_department, using the required RNG, dataset, or clock basis."
+        "responsibility": "PoliceOfficerGenerator creates officer-ID candidates and generates badge numbers, hire dates, ranks, and departments using its configured RNG, dataset, or clock basis."
       },
       {
         "path": "datamimic_ce/domains/public_sector/models/__init__.py",
@@ -28,15 +28,15 @@
       },
       {
         "path": "datamimic_ce/domains/public_sector/models/administration_office.py",
-        "responsibility": "AdministrationOffice represents a jurisdictional office with address, staffing, budget, hours, services, departments, and leadership."
+        "responsibility": "AdministrationOffice resolves and caches office fields, composes contact details, and claims unique office IDs; fields include address, staffing, budget, hours, services, departments, and leadership."
       },
       {
         "path": "datamimic_ce/domains/public_sector/models/educational_institution.py",
-        "responsibility": "EducationalInstitution describes a school with type, level, population, programs, accreditation, facilities, and contact details."
+        "responsibility": "EducationalInstitution claims unique institution IDs, resolves and caches school type, level, population, programs, accreditation, facilities, and contact details, and owns founding-year calculation because it conditionally resolves lazy type while preserving getter and RNG order."
       },
       {
         "path": "datamimic_ce/domains/public_sector/models/police_officer.py",
-        "responsibility": "PoliceOfficer combines officer identity and personal details with assignment, rank, service history, credentials, and shift."
+        "responsibility": "PoliceOfficer exposes cached officer identity and personal details with assignment, rank, service history, credentials, and shift."
       },
       {
         "path": "datamimic_ce/domains/public_sector/services/__init__.py",
@@ -65,7 +65,7 @@
         "datamimic_ce.domains.public_sector.models"
       ],
       "responsibilities": [
-        "Expose lazy government-office, educational-institution, and police-officer records with jurisdiction, public-service, facility, and personnel fields."
+        "Expose lazy government-office, educational-institution, and police-officer records with cached identity, founding year, jurisdiction, public-service, facility, and personnel fields."
       ],
       "forbidden_responsibilities": [
         "Generate dataset values directly or own service orchestration."
@@ -95,7 +95,7 @@
         "datamimic_ce.domains.public_sector.generators"
       ],
       "responsibilities": [
-        "Generate jurisdiction-aware office operations, institution programs and facilities, and officer ranks, assignments, and qualifications."
+        "Generate office founding years, jurisdictions, budgets, operating hours, and email-department names; officer-ID candidates; institution names, staffing, student counts, programs, and facilities; and officer badge numbers, ranks, assignments, and qualifications."
       ],
       "forbidden_responsibilities": [
         "Import public-sector models or services."
@@ -119,7 +119,10 @@
         "datamimic_ce.domains.public_sector.services"
       ],
       "responsibilities": [
-        "Bind office, education, and police models to generators and declare DSL fields and required datasets."
+        "Bind office, education, and police models to generators, declare DSL fields and datasets, and own the inert package initializer."
+      ],
+      "exact_modules": [
+        "datamimic_ce.domains.public_sector"
       ],
       "forbidden_responsibilities": [
         "Implement generator algorithms or bypass entity models."
