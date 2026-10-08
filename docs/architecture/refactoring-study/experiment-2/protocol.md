@@ -497,6 +497,11 @@ and independent candidate review are recorded there. All 19
 historical message rows and unchanged comparator outcomes remain visible; full
 acceptance and Step 131's separate native profile stay unchanged.
 
+[Amendment 167](amendment-167-mongo-connection-values.md) names and publishes the
+existing fixed Mongo configuration result. It preserves the native dictionary
+and separate client kwargs path; architecture permissions and open RDBMS payloads
+remain unchanged. Candidate verification is recorded in the amendment.
+
 ## Agent separation
 
 - The implementation agent changes production code and targeted tests for one approved slice.

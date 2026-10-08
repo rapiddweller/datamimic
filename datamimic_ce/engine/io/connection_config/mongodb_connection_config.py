@@ -5,9 +5,19 @@
 # For questions and support, contact: info@rapiddweller.com
 
 
+from typing import TypedDict
+
 from pydantic import BaseModel, ConfigDict
 
 from datamimic_ce.engine.io.connection_config.connection_config_base import ConnectionConfig
+
+
+class MongoDBConnectionValues(TypedDict):
+    host: str
+    port: int
+    database: str
+    user: str | None
+    password: str | None
 
 
 class MongoDBConnectionConfig(BaseModel, ConnectionConfig):
@@ -23,7 +33,7 @@ class MongoDBConnectionConfig(BaseModel, ConnectionConfig):
 
     model_config = ConfigDict(extra="allow")
 
-    def get_connection_config(self):
+    def get_connection_config(self) -> MongoDBConnectionValues:
         return {
             "host": self.host,
             "port": self.port,

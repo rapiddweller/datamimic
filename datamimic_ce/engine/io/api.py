@@ -14,7 +14,10 @@ from datamimic_ce.engine.io.clients.operations import (
     rdbms_increase_sequence_number,
     uses_mysql_sequence_storage,
 )
-from datamimic_ce.engine.io.connection_config.mongodb_connection_config import MongoDBConnectionConfig
+from datamimic_ce.engine.io.connection_config.mongodb_connection_config import (
+    MongoDBConnectionConfig,
+    MongoDBConnectionValues,
+)
 from datamimic_ce.engine.io.connection_config.properties import load_connection_profile
 from datamimic_ce.engine.io.connection_config.rdbms_connection_config import RdbmsConnectionConfig
 from datamimic_ce.engine.io.contracts import (
@@ -83,6 +86,7 @@ __all__ = [
     "consume_memstore_target",
     "finalize_exporter_chunks",
     "MongoDBConnectionConfig",
+    "MongoDBConnectionValues",
     "load_connection_profile",
     "MemstoreSource",
     "MemstoreProvider",
