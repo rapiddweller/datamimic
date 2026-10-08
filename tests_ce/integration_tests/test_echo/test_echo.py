@@ -66,3 +66,7 @@ class TestEcho:
 
         assert expected_log in logged
         assert engine.capture_result()["after"] == [{"v": "ok"}]
+
+    def test_empty_echo(self):
+        test_engine = DataMimicTest(test_dir=self._test_dir, filename="empty_echo.xml")
+        test_engine.test_with_timer()

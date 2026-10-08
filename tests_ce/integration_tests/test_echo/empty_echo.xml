@@ -1,0 +1,7 @@
+<setup rngSeed="7">
+    <echo/>
+    <echo></echo>
+    <echo>   </echo>
+    <echo>Normal echo text</echo>
+    <echo>Echo with quotes 'single' and "double"</echo>
+</setup>
