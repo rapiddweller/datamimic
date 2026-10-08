@@ -1,0 +1,3557 @@
+[
+  {
+    "id": "module:domains/__init__.py",
+    "kind": "module",
+    "path": "domains/__init__.py",
+    "lane": "domains",
+    "targets": [
+      "domains/__init__.py"
+    ]
+  },
+  {
+    "id": "module:domains/api.py",
+    "kind": "module",
+    "path": "domains/api.py",
+    "lane": "domains",
+    "targets": [
+      "domains/api.py"
+    ]
+  },
+  {
+    "id": "module:domains/domain_core/__init__.py",
+    "kind": "module",
+    "path": "domains/domain_core/__init__.py",
+    "lane": "domains",
+    "targets": [
+      "domains/domain_core/__init__.py"
+    ]
+  },
+  {
+    "id": "module:domains/domain_core/attribute_catalog.py",
+    "kind": "module",
+    "path": "domains/domain_core/attribute_catalog.py",
+    "lane": "domains",
+    "targets": [
+      "domains/domain_core/contracts/attribute_catalog.py"
+    ]
+  },
+  {
+    "id": "module:domains/domain_core/base_domain_generator.py",
+    "kind": "module",
+    "path": "domains/domain_core/base_domain_generator.py",
+    "lane": "domains",
+    "targets": [
+      "domains/domain_core/base_domain_generator.py"
+    ]
+  },
+  {
+    "id": "module:domains/domain_core/base_domain_service.py",
+    "kind": "module",
+    "path": "domains/domain_core/base_domain_service.py",
+    "lane": "domains",
+    "targets": [
+      "domains/domain_core/base_domain_service.py"
+    ]
+  },
+  {
+    "id": "module:domains/domain_core/base_entity.py",
+    "kind": "module",
+    "path": "domains/domain_core/base_entity.py",
+    "lane": "domains",
+    "targets": [
+      "domains/domain_core/contracts/base_entity.py"
+    ]
+  },
+  {
+    "id": "module:domains/domain_core/base_literal_generator.py",
+    "kind": "module",
+    "path": "domains/domain_core/base_literal_generator.py",
+    "lane": "domains",
+    "targets": [
+      "domains/domain_core/base_literal_generator.py"
+    ]
+  },
+  {
+    "id": "module:domains/domain_core/property_cache.py",
+    "kind": "module",
+    "path": "domains/domain_core/property_cache.py",
+    "lane": "domains",
+    "targets": [
+      "domains/domain_core/property_cache.py"
+    ]
+  },
+  {
+    "id": "module:domains/domain_core/runtime/__init__.py",
+    "kind": "module",
+    "path": "domains/domain_core/runtime/__init__.py",
+    "lane": "domains",
+    "targets": [
+      "domains/domain_core/runtime/__init__.py"
+    ]
+  },
+  {
+    "id": "module:domains/domain_core/runtime/clock.py",
+    "kind": "module",
+    "path": "domains/domain_core/runtime/clock.py",
+    "lane": "domains",
+    "targets": [
+      "domains/domain_core/runtime/clock.py"
+    ]
+  },
+  {
+    "id": "module:domains/domain_core/runtime/rng.py",
+    "kind": "module",
+    "path": "domains/domain_core/runtime/rng.py",
+    "lane": "domains",
+    "targets": [
+      "domains/domain_core/runtime/rng.py"
+    ]
+  },
+  {
+    "id": "module:domains/domain_core/runtime/run_seed.py",
+    "kind": "module",
+    "path": "domains/domain_core/runtime/run_seed.py",
+    "lane": "domains",
+    "targets": [
+      "domains/domain_core/runtime/run_seed.py"
+    ]
+  },
+  {
+    "id": "module:domains/ecommerce/__init__.py",
+    "kind": "module",
+    "path": "domains/ecommerce/__init__.py",
+    "lane": "domains",
+    "targets": [
+      "domains/ecommerce/__init__.py"
+    ]
+  },
+  {
+    "id": "module:domains/ecommerce/generators/__init__.py",
+    "kind": "module",
+    "path": "domains/ecommerce/generators/__init__.py",
+    "lane": "domains",
+    "targets": [
+      "domains/ecommerce/generators/__init__.py"
+    ]
+  },
+  {
+    "id": "module:domains/ecommerce/generators/order_generator.py",
+    "kind": "module",
+    "path": "domains/ecommerce/generators/order_generator.py",
+    "lane": "domains",
+    "targets": [
+      "domains/ecommerce/generators/order_generator.py"
+    ]
+  },
+  {
+    "id": "module:domains/ecommerce/generators/product_generator.py",
+    "kind": "module",
+    "path": "domains/ecommerce/generators/product_generator.py",
+    "lane": "domains",
+    "targets": [
+      "domains/ecommerce/generators/product_generator.py"
+    ]
+  },
+  {
+    "id": "module:domains/ecommerce/models/__init__.py",
+    "kind": "module",
+    "path": "domains/ecommerce/models/__init__.py",
+    "lane": "domains",
+    "targets": [
+      "domains/ecommerce/models/__init__.py"
+    ]
+  },
+  {
+    "id": "module:domains/ecommerce/models/order.py",
+    "kind": "module",
+    "path": "domains/ecommerce/models/order.py",
+    "lane": "domains",
+    "targets": [
+      "domains/ecommerce/models/order.py"
+    ]
+  },
+  {
+    "id": "module:domains/ecommerce/models/product.py",
+    "kind": "module",
+    "path": "domains/ecommerce/models/product.py",
+    "lane": "domains",
+    "targets": [
+      "domains/ecommerce/models/product.py"
+    ]
+  },
+  {
+    "id": "module:domains/ecommerce/services/__init__.py",
+    "kind": "module",
+    "path": "domains/ecommerce/services/__init__.py",
+    "lane": "domains",
+    "targets": [
+      "domains/ecommerce/services/__init__.py"
+    ]
+  },
+  {
+    "id": "module:domains/ecommerce/services/order_service.py",
+    "kind": "module",
+    "path": "domains/ecommerce/services/order_service.py",
+    "lane": "domains",
+    "targets": [
+      "domains/ecommerce/services/order_service.py"
+    ]
+  },
+  {
+    "id": "module:domains/ecommerce/services/product_service.py",
+    "kind": "module",
+    "path": "domains/ecommerce/services/product_service.py",
+    "lane": "domains",
+    "targets": [
+      "domains/ecommerce/services/product_service.py"
+    ]
+  },
+  {
+    "id": "module:domains/entity_registry.py",
+    "kind": "module",
+    "path": "domains/entity_registry.py",
+    "lane": "domains",
+    "targets": [
+      "domains/registry/entities.py"
+    ]
+  },
+  {
+    "id": "module:domains/facade.py",
+    "kind": "module",
+    "path": "domains/facade.py",
+    "lane": "domains",
+    "targets": [
+      "domains/registry/facade.py"
+    ]
+  },
+  {
+    "id": "module:domains/finance/__init__.py",
+    "kind": "module",
+    "path": "domains/finance/__init__.py",
+    "lane": "domains",
+    "targets": [
+      "domains/finance/__init__.py"
+    ]
+  },
+  {
+    "id": "module:domains/finance/generators/__init__.py",
+    "kind": "module",
+    "path": "domains/finance/generators/__init__.py",
+    "lane": "domains",
+    "targets": [
+      "domains/finance/generators/__init__.py"
+    ]
+  },
+  {
+    "id": "module:domains/finance/generators/bank_account_generator.py",
+    "kind": "module",
+    "path": "domains/finance/generators/bank_account_generator.py",
+    "lane": "domains",
+    "targets": [
+      "domains/finance/generators/bank_account_generator.py"
+    ]
+  },
+  {
+    "id": "module:domains/finance/generators/bank_generator.py",
+    "kind": "module",
+    "path": "domains/finance/generators/bank_generator.py",
+    "lane": "domains",
+    "targets": [
+      "domains/finance/generators/bank_generator.py"
+    ]
+  },
+  {
+    "id": "module:domains/finance/generators/credit_card_generator.py",
+    "kind": "module",
+    "path": "domains/finance/generators/credit_card_generator.py",
+    "lane": "domains",
+    "targets": [
+      "domains/finance/generators/credit_card_generator.py"
+    ]
+  },
+  {
+    "id": "module:domains/finance/generators/transaction_generator.py",
+    "kind": "module",
+    "path": "domains/finance/generators/transaction_generator.py",
+    "lane": "domains",
+    "targets": [
+      "domains/finance/generators/transaction_generator.py"
+    ]
+  },
+  {
+    "id": "module:domains/finance/luhn.py",
+    "kind": "module",
+    "path": "domains/finance/luhn.py",
+    "lane": "domains",
+    "targets": [
+      "domains/finance/luhn.py"
+    ]
+  },
+  {
+    "id": "module:domains/finance/models/__init__.py",
+    "kind": "module",
+    "path": "domains/finance/models/__init__.py",
+    "lane": "domains",
+    "targets": [
+      "domains/finance/models/__init__.py"
+    ]
+  },
+  {
+    "id": "module:domains/finance/models/bank.py",
+    "kind": "module",
+    "path": "domains/finance/models/bank.py",
+    "lane": "domains",
+    "targets": [
+      "domains/finance/models/bank.py"
+    ]
+  },
+  {
+    "id": "module:domains/finance/models/bank_account.py",
+    "kind": "module",
+    "path": "domains/finance/models/bank_account.py",
+    "lane": "domains",
+    "targets": [
+      "domains/finance/models/bank_account.py"
+    ]
+  },
+  {
+    "id": "module:domains/finance/models/credit_card.py",
+    "kind": "module",
+    "path": "domains/finance/models/credit_card.py",
+    "lane": "domains",
+    "targets": [
+      "domains/finance/models/credit_card.py"
+    ]
+  },
+  {
+    "id": "module:domains/finance/models/transaction.py",
+    "kind": "module",
+    "path": "domains/finance/models/transaction.py",
+    "lane": "domains",
+    "targets": [
+      "domains/finance/models/transaction.py"
+    ]
+  },
+  {
+    "id": "module:domains/finance/services/__init__.py",
+    "kind": "module",
+    "path": "domains/finance/services/__init__.py",
+    "lane": "domains",
+    "targets": [
+      "domains/finance/services/__init__.py"
+    ]
+  },
+  {
+    "id": "module:domains/finance/services/bank_account_service.py",
+    "kind": "module",
+    "path": "domains/finance/services/bank_account_service.py",
+    "lane": "domains",
+    "targets": [
+      "domains/finance/services/bank_account_service.py"
+    ]
+  },
+  {
+    "id": "module:domains/finance/services/bank_service.py",
+    "kind": "module",
+    "path": "domains/finance/services/bank_service.py",
+    "lane": "domains",
+    "targets": [
+      "domains/finance/services/bank_service.py"
+    ]
+  },
+  {
+    "id": "module:domains/finance/services/credit_card_service.py",
+    "kind": "module",
+    "path": "domains/finance/services/credit_card_service.py",
+    "lane": "domains",
+    "targets": [
+      "domains/finance/services/credit_card_service.py"
+    ]
+  },
+  {
+    "id": "module:domains/finance/services/transaction_service.py",
+    "kind": "module",
+    "path": "domains/finance/services/transaction_service.py",
+    "lane": "domains",
+    "targets": [
+      "domains/finance/services/transaction_service.py"
+    ]
+  },
+  {
+    "id": "module:domains/healthcare/__init__.py",
+    "kind": "module",
+    "path": "domains/healthcare/__init__.py",
+    "lane": "domains",
+    "targets": [
+      "domains/healthcare/__init__.py"
+    ]
+  },
+  {
+    "id": "module:domains/healthcare/generators/__init__.py",
+    "kind": "module",
+    "path": "domains/healthcare/generators/__init__.py",
+    "lane": "domains",
+    "targets": [
+      "domains/healthcare/generators/__init__.py"
+    ]
+  },
+  {
+    "id": "module:domains/healthcare/generators/doctor_generator.py",
+    "kind": "module",
+    "path": "domains/healthcare/generators/doctor_generator.py",
+    "lane": "domains",
+    "targets": [
+      "domains/healthcare/generators/doctor_generator.py"
+    ]
+  },
+  {
+    "id": "module:domains/healthcare/generators/hospital_generator.py",
+    "kind": "module",
+    "path": "domains/healthcare/generators/hospital_generator.py",
+    "lane": "domains",
+    "targets": [
+      "domains/healthcare/generators/hospital_generator.py"
+    ]
+  },
+  {
+    "id": "module:domains/healthcare/generators/medical_device_generator.py",
+    "kind": "module",
+    "path": "domains/healthcare/generators/medical_device_generator.py",
+    "lane": "domains",
+    "targets": [
+      "domains/healthcare/generators/medical_device_generator.py"
+    ]
+  },
+  {
+    "id": "module:domains/healthcare/generators/medical_procedure_generator.py",
+    "kind": "module",
+    "path": "domains/healthcare/generators/medical_procedure_generator.py",
+    "lane": "domains",
+    "targets": [
+      "domains/healthcare/generators/medical_procedure_generator.py"
+    ]
+  },
+  {
+    "id": "module:domains/healthcare/generators/patient_generator.py",
+    "kind": "module",
+    "path": "domains/healthcare/generators/patient_generator.py",
+    "lane": "domains",
+    "targets": [
+      "domains/healthcare/generators/patient_generator.py"
+    ]
+  },
+  {
+    "id": "module:domains/healthcare/models/__init__.py",
+    "kind": "module",
+    "path": "domains/healthcare/models/__init__.py",
+    "lane": "domains",
+    "targets": [
+      "domains/healthcare/models/__init__.py"
+    ]
+  },
+  {
+    "id": "module:domains/healthcare/models/doctor.py",
+    "kind": "module",
+    "path": "domains/healthcare/models/doctor.py",
+    "lane": "domains",
+    "targets": [
+      "domains/healthcare/models/doctor.py"
+    ]
+  },
+  {
+    "id": "module:domains/healthcare/models/hospital.py",
+    "kind": "module",
+    "path": "domains/healthcare/models/hospital.py",
+    "lane": "domains",
+    "targets": [
+      "domains/healthcare/models/hospital.py"
+    ]
+  },
+  {
+    "id": "module:domains/healthcare/models/medical_device.py",
+    "kind": "module",
+    "path": "domains/healthcare/models/medical_device.py",
+    "lane": "domains",
+    "targets": [
+      "domains/healthcare/models/medical_device.py"
+    ]
+  },
+  {
+    "id": "module:domains/healthcare/models/medical_procedure.py",
+    "kind": "module",
+    "path": "domains/healthcare/models/medical_procedure.py",
+    "lane": "domains",
+    "targets": [
+      "domains/healthcare/models/medical_procedure.py"
+    ]
+  },
+  {
+    "id": "module:domains/healthcare/models/patient.py",
+    "kind": "module",
+    "path": "domains/healthcare/models/patient.py",
+    "lane": "domains",
+    "targets": [
+      "domains/healthcare/models/patient.py"
+    ]
+  },
+  {
+    "id": "module:domains/healthcare/services/__init__.py",
+    "kind": "module",
+    "path": "domains/healthcare/services/__init__.py",
+    "lane": "domains",
+    "targets": [
+      "domains/healthcare/services/__init__.py"
+    ]
+  },
+  {
+    "id": "module:domains/healthcare/services/doctor_api.py",
+    "kind": "module",
+    "path": "domains/healthcare/services/doctor_api.py",
+    "lane": "domains",
+    "targets": [
+      "domains/healthcare/services/doctor_api.py"
+    ]
+  },
+  {
+    "id": "module:domains/healthcare/services/doctor_service.py",
+    "kind": "module",
+    "path": "domains/healthcare/services/doctor_service.py",
+    "lane": "domains",
+    "targets": [
+      "domains/healthcare/services/doctor_service.py"
+    ]
+  },
+  {
+    "id": "module:domains/healthcare/services/hospital_service.py",
+    "kind": "module",
+    "path": "domains/healthcare/services/hospital_service.py",
+    "lane": "domains",
+    "targets": [
+      "domains/healthcare/services/hospital_service.py"
+    ]
+  },
+  {
+    "id": "module:domains/healthcare/services/medical_device_service.py",
+    "kind": "module",
+    "path": "domains/healthcare/services/medical_device_service.py",
+    "lane": "domains",
+    "targets": [
+      "domains/healthcare/services/medical_device_service.py"
+    ]
+  },
+  {
+    "id": "module:domains/healthcare/services/medical_procedure_service.py",
+    "kind": "module",
+    "path": "domains/healthcare/services/medical_procedure_service.py",
+    "lane": "domains",
+    "targets": [
+      "domains/healthcare/services/medical_procedure_service.py"
+    ]
+  },
+  {
+    "id": "module:domains/healthcare/services/patient_api.py",
+    "kind": "module",
+    "path": "domains/healthcare/services/patient_api.py",
+    "lane": "domains",
+    "targets": [
+      "domains/healthcare/services/patient_api.py"
+    ]
+  },
+  {
+    "id": "module:domains/healthcare/services/patient_service.py",
+    "kind": "module",
+    "path": "domains/healthcare/services/patient_service.py",
+    "lane": "domains",
+    "targets": [
+      "domains/healthcare/services/patient_service.py"
+    ]
+  },
+  {
+    "id": "module:domains/insurance/__init__.py",
+    "kind": "module",
+    "path": "domains/insurance/__init__.py",
+    "lane": "domains",
+    "targets": [
+      "domains/insurance/__init__.py"
+    ]
+  },
+  {
+    "id": "module:domains/insurance/generators/__init__.py",
+    "kind": "module",
+    "path": "domains/insurance/generators/__init__.py",
+    "lane": "domains",
+    "targets": [
+      "domains/insurance/generators/__init__.py"
+    ]
+  },
+  {
+    "id": "module:domains/insurance/generators/insurance_company_generator.py",
+    "kind": "module",
+    "path": "domains/insurance/generators/insurance_company_generator.py",
+    "lane": "domains",
+    "targets": [
+      "domains/insurance/generators/insurance_company_generator.py"
+    ]
+  },
+  {
+    "id": "module:domains/insurance/generators/insurance_coverage_generator.py",
+    "kind": "module",
+    "path": "domains/insurance/generators/insurance_coverage_generator.py",
+    "lane": "domains",
+    "targets": [
+      "domains/insurance/generators/insurance_coverage_generator.py"
+    ]
+  },
+  {
+    "id": "module:domains/insurance/generators/insurance_policy_generator.py",
+    "kind": "module",
+    "path": "domains/insurance/generators/insurance_policy_generator.py",
+    "lane": "domains",
+    "targets": [
+      "domains/insurance/generators/insurance_policy_generator.py"
+    ]
+  },
+  {
+    "id": "module:domains/insurance/generators/insurance_product_generator.py",
+    "kind": "module",
+    "path": "domains/insurance/generators/insurance_product_generator.py",
+    "lane": "domains",
+    "targets": [
+      "domains/insurance/generators/insurance_product_generator.py"
+    ]
+  },
+  {
+    "id": "module:domains/insurance/models/__init__.py",
+    "kind": "module",
+    "path": "domains/insurance/models/__init__.py",
+    "lane": "domains",
+    "targets": [
+      "domains/insurance/models/__init__.py"
+    ]
+  },
+  {
+    "id": "module:domains/insurance/models/insurance_company.py",
+    "kind": "module",
+    "path": "domains/insurance/models/insurance_company.py",
+    "lane": "domains",
+    "targets": [
+      "domains/insurance/models/insurance_company.py"
+    ]
+  },
+  {
+    "id": "module:domains/insurance/models/insurance_coverage.py",
+    "kind": "module",
+    "path": "domains/insurance/models/insurance_coverage.py",
+    "lane": "domains",
+    "targets": [
+      "domains/insurance/models/insurance_coverage.py"
+    ]
+  },
+  {
+    "id": "module:domains/insurance/models/insurance_policy.py",
+    "kind": "module",
+    "path": "domains/insurance/models/insurance_policy.py",
+    "lane": "domains",
+    "targets": [
+      "domains/insurance/models/insurance_policy.py"
+    ]
+  },
+  {
+    "id": "module:domains/insurance/models/insurance_product.py",
+    "kind": "module",
+    "path": "domains/insurance/models/insurance_product.py",
+    "lane": "domains",
+    "targets": [
+      "domains/insurance/models/insurance_product.py"
+    ]
+  },
+  {
+    "id": "module:domains/insurance/services/__init__.py",
+    "kind": "module",
+    "path": "domains/insurance/services/__init__.py",
+    "lane": "domains",
+    "targets": [
+      "domains/insurance/services/__init__.py"
+    ]
+  },
+  {
+    "id": "module:domains/insurance/services/insurance_company_service.py",
+    "kind": "module",
+    "path": "domains/insurance/services/insurance_company_service.py",
+    "lane": "domains",
+    "targets": [
+      "domains/insurance/services/insurance_company_service.py"
+    ]
+  },
+  {
+    "id": "module:domains/insurance/services/insurance_coverage_service.py",
+    "kind": "module",
+    "path": "domains/insurance/services/insurance_coverage_service.py",
+    "lane": "domains",
+    "targets": [
+      "domains/insurance/services/insurance_coverage_service.py"
+    ]
+  },
+  {
+    "id": "module:domains/insurance/services/insurance_policy_service.py",
+    "kind": "module",
+    "path": "domains/insurance/services/insurance_policy_service.py",
+    "lane": "domains",
+    "targets": [
+      "domains/insurance/services/insurance_policy_service.py"
+    ]
+  },
+  {
+    "id": "module:domains/insurance/services/insurance_product_service.py",
+    "kind": "module",
+    "path": "domains/insurance/services/insurance_product_service.py",
+    "lane": "domains",
+    "targets": [
+      "domains/insurance/services/insurance_product_service.py"
+    ]
+  },
+  {
+    "id": "module:domains/public_sector/__init__.py",
+    "kind": "module",
+    "path": "domains/public_sector/__init__.py",
+    "lane": "domains",
+    "targets": [
+      "domains/public_sector/__init__.py"
+    ]
+  },
+  {
+    "id": "module:domains/public_sector/generators/__init__.py",
+    "kind": "module",
+    "path": "domains/public_sector/generators/__init__.py",
+    "lane": "domains",
+    "targets": [
+      "domains/public_sector/generators/__init__.py"
+    ]
+  },
+  {
+    "id": "module:domains/public_sector/generators/administration_office_generator.py",
+    "kind": "module",
+    "path": "domains/public_sector/generators/administration_office_generator.py",
+    "lane": "domains",
+    "targets": [
+      "domains/public_sector/generators/administration_office_generator.py"
+    ]
+  },
+  {
+    "id": "module:domains/public_sector/generators/educational_institution_generator.py",
+    "kind": "module",
+    "path": "domains/public_sector/generators/educational_institution_generator.py",
+    "lane": "domains",
+    "targets": [
+      "domains/public_sector/generators/educational_institution_generator.py"
+    ]
+  },
+  {
+    "id": "module:domains/public_sector/generators/police_officer_generator.py",
+    "kind": "module",
+    "path": "domains/public_sector/generators/police_officer_generator.py",
+    "lane": "domains",
+    "targets": [
+      "domains/public_sector/generators/police_officer_generator.py"
+    ]
+  },
+  {
+    "id": "module:domains/public_sector/models/__init__.py",
+    "kind": "module",
+    "path": "domains/public_sector/models/__init__.py",
+    "lane": "domains",
+    "targets": [
+      "domains/public_sector/models/__init__.py"
+    ]
+  },
+  {
+    "id": "module:domains/public_sector/models/administration_office.py",
+    "kind": "module",
+    "path": "domains/public_sector/models/administration_office.py",
+    "lane": "domains",
+    "targets": [
+      "domains/public_sector/models/administration_office.py"
+    ]
+  },
+  {
+    "id": "module:domains/public_sector/models/educational_institution.py",
+    "kind": "module",
+    "path": "domains/public_sector/models/educational_institution.py",
+    "lane": "domains",
+    "targets": [
+      "domains/public_sector/models/educational_institution.py"
+    ]
+  },
+  {
+    "id": "module:domains/public_sector/models/police_officer.py",
+    "kind": "module",
+    "path": "domains/public_sector/models/police_officer.py",
+    "lane": "domains",
+    "targets": [
+      "domains/public_sector/models/police_officer.py"
+    ]
+  },
+  {
+    "id": "module:domains/public_sector/services/__init__.py",
+    "kind": "module",
+    "path": "domains/public_sector/services/__init__.py",
+    "lane": "domains",
+    "targets": [
+      "domains/public_sector/services/__init__.py"
+    ]
+  },
+  {
+    "id": "module:domains/public_sector/services/administration_office_service.py",
+    "kind": "module",
+    "path": "domains/public_sector/services/administration_office_service.py",
+    "lane": "domains",
+    "targets": [
+      "domains/public_sector/services/administration_office_service.py"
+    ]
+  },
+  {
+    "id": "module:domains/public_sector/services/educational_institution_service.py",
+    "kind": "module",
+    "path": "domains/public_sector/services/educational_institution_service.py",
+    "lane": "domains",
+    "targets": [
+      "domains/public_sector/services/educational_institution_service.py"
+    ]
+  },
+  {
+    "id": "module:domains/public_sector/services/police_officer_service.py",
+    "kind": "module",
+    "path": "domains/public_sector/services/police_officer_service.py",
+    "lane": "domains",
+    "targets": [
+      "domains/public_sector/services/police_officer_service.py"
+    ]
+  },
+  {
+    "id": "module:domains/shared/__init__.py",
+    "kind": "module",
+    "path": "domains/shared/__init__.py",
+    "lane": "domains",
+    "targets": [
+      "domains/shared/__init__.py"
+    ]
+  },
+  {
+    "id": "module:domains/shared/converters/__init__.py",
+    "kind": "module",
+    "path": "domains/shared/converters/__init__.py",
+    "lane": "domains",
+    "targets": [
+      "domains/shared/converters/__init__.py"
+    ]
+  },
+  {
+    "id": "module:domains/shared/converters/append_converter.py",
+    "kind": "module",
+    "path": "domains/shared/converters/append_converter.py",
+    "lane": "domains",
+    "targets": [
+      "domains/shared/converters/text/append_converter.py"
+    ]
+  },
+  {
+    "id": "module:domains/shared/converters/converter.py",
+    "kind": "module",
+    "path": "domains/shared/converters/converter.py",
+    "lane": "domains",
+    "targets": [
+      "domains/shared/converters/base/converter.py"
+    ]
+  },
+  {
+    "id": "module:domains/shared/converters/custom_converter.py",
+    "kind": "module",
+    "path": "domains/shared/converters/custom_converter.py",
+    "lane": "domains",
+    "targets": [
+      "domains/shared/converters/structural/custom_converter.py"
+    ]
+  },
+  {
+    "id": "module:domains/shared/converters/cut_length_converter.py",
+    "kind": "module",
+    "path": "domains/shared/converters/cut_length_converter.py",
+    "lane": "domains",
+    "targets": [
+      "domains/shared/converters/text/cut_length_converter.py"
+    ]
+  },
+  {
+    "id": "module:domains/shared/converters/date2timestamp_converter.py",
+    "kind": "module",
+    "path": "domains/shared/converters/date2timestamp_converter.py",
+    "lane": "domains",
+    "targets": [
+      "domains/shared/converters/temporal/date2timestamp_converter.py"
+    ]
+  },
+  {
+    "id": "module:domains/shared/converters/date_format_converter.py",
+    "kind": "module",
+    "path": "domains/shared/converters/date_format_converter.py",
+    "lane": "domains",
+    "targets": [
+      "domains/shared/converters/temporal/date_format_converter.py"
+    ]
+  },
+  {
+    "id": "module:domains/shared/converters/hash_converter.py",
+    "kind": "module",
+    "path": "domains/shared/converters/hash_converter.py",
+    "lane": "domains",
+    "targets": [
+      "domains/shared/converters/privacy/hash_converter.py"
+    ]
+  },
+  {
+    "id": "module:domains/shared/converters/java_hash_converter.py",
+    "kind": "module",
+    "path": "domains/shared/converters/java_hash_converter.py",
+    "lane": "domains",
+    "targets": [
+      "domains/shared/converters/privacy/java_hash_converter.py"
+    ]
+  },
+  {
+    "id": "module:domains/shared/converters/lower_case_converter.py",
+    "kind": "module",
+    "path": "domains/shared/converters/lower_case_converter.py",
+    "lane": "domains",
+    "targets": [
+      "domains/shared/converters/text/lower_case_converter.py"
+    ]
+  },
+  {
+    "id": "module:domains/shared/converters/mask_converter.py",
+    "kind": "module",
+    "path": "domains/shared/converters/mask_converter.py",
+    "lane": "domains",
+    "targets": [
+      "domains/shared/converters/privacy/mask_converter.py"
+    ]
+  },
+  {
+    "id": "module:domains/shared/converters/middle_mask_converter.py",
+    "kind": "module",
+    "path": "domains/shared/converters/middle_mask_converter.py",
+    "lane": "domains",
+    "targets": [
+      "domains/shared/converters/privacy/middle_mask_converter.py"
+    ]
+  },
+  {
+    "id": "module:domains/shared/converters/remove_none_or_empty_element_converter.py",
+    "kind": "module",
+    "path": "domains/shared/converters/remove_none_or_empty_element_converter.py",
+    "lane": "domains",
+    "targets": [
+      "domains/shared/converters/structural/remove_none_or_empty_element_converter.py"
+    ]
+  },
+  {
+    "id": "module:domains/shared/converters/substring_converter.py",
+    "kind": "module",
+    "path": "domains/shared/converters/substring_converter.py",
+    "lane": "domains",
+    "targets": [
+      "domains/shared/converters/text/substring_converter.py"
+    ]
+  },
+  {
+    "id": "module:domains/shared/converters/timestamp2date_converter.py",
+    "kind": "module",
+    "path": "domains/shared/converters/timestamp2date_converter.py",
+    "lane": "domains",
+    "targets": [
+      "domains/shared/converters/temporal/timestamp2date_converter.py"
+    ]
+  },
+  {
+    "id": "module:domains/shared/converters/upper_case_converter.py",
+    "kind": "module",
+    "path": "domains/shared/converters/upper_case_converter.py",
+    "lane": "domains",
+    "targets": [
+      "domains/shared/converters/text/upper_case_converter.py"
+    ]
+  },
+  {
+    "id": "module:domains/shared/demographics/__init__.py",
+    "kind": "module",
+    "path": "domains/shared/demographics/__init__.py",
+    "lane": "domains",
+    "targets": [
+      "domains/shared/demographics/__init__.py"
+    ]
+  },
+  {
+    "id": "module:domains/shared/demographics/api.py",
+    "kind": "module",
+    "path": "domains/shared/demographics/api.py",
+    "lane": "domains",
+    "targets": [
+      "domains/shared/demographics/api.py"
+    ]
+  },
+  {
+    "id": "module:domains/shared/demographics/loader.py",
+    "kind": "module",
+    "path": "domains/shared/demographics/loader.py",
+    "lane": "domains",
+    "targets": [
+      "domains/shared/demographics/loader.py"
+    ]
+  },
+  {
+    "id": "module:domains/shared/demographics/profile.py",
+    "kind": "module",
+    "path": "domains/shared/demographics/profile.py",
+    "lane": "domains",
+    "targets": [
+      "domains/shared/demographics/profile.py"
+    ]
+  },
+  {
+    "id": "module:domains/shared/demographics/profile_meta.py",
+    "kind": "module",
+    "path": "domains/shared/demographics/profile_meta.py",
+    "lane": "domains",
+    "targets": [
+      "domains/shared/demographics/profile_meta.py"
+    ]
+  },
+  {
+    "id": "module:domains/shared/demographics/sampler.py",
+    "kind": "module",
+    "path": "domains/shared/demographics/sampler.py",
+    "lane": "domains",
+    "targets": [
+      "domains/shared/demographics/sampler.py"
+    ]
+  },
+  {
+    "id": "module:domains/shared/determinism.py",
+    "kind": "module",
+    "path": "domains/shared/determinism.py",
+    "lane": "domains",
+    "targets": [
+      "domains/domain_core/runtime/determinism.py"
+    ]
+  },
+  {
+    "id": "module:domains/shared/examples/generate_address.py",
+    "kind": "module",
+    "path": "domains/shared/examples/generate_address.py",
+    "lane": "domains",
+    "targets": [
+      "resources/examples/generate_address.py"
+    ]
+  },
+  {
+    "id": "module:domains/shared/examples/generate_cities.py",
+    "kind": "module",
+    "path": "domains/shared/examples/generate_cities.py",
+    "lane": "domains",
+    "targets": [
+      "resources/examples/generate_cities.py"
+    ]
+  },
+  {
+    "id": "module:domains/shared/examples/generate_companies.py",
+    "kind": "module",
+    "path": "domains/shared/examples/generate_companies.py",
+    "lane": "domains",
+    "targets": [
+      "resources/examples/generate_companies.py"
+    ]
+  },
+  {
+    "id": "module:domains/shared/examples/generate_countries.py",
+    "kind": "module",
+    "path": "domains/shared/examples/generate_countries.py",
+    "lane": "domains",
+    "targets": [
+      "resources/examples/generate_countries.py"
+    ]
+  },
+  {
+    "id": "module:domains/shared/examples/generate_people.py",
+    "kind": "module",
+    "path": "domains/shared/examples/generate_people.py",
+    "lane": "domains",
+    "targets": [
+      "resources/examples/generate_people.py"
+    ]
+  },
+  {
+    "id": "module:domains/shared/examples/generate_people_demographics.py",
+    "kind": "module",
+    "path": "domains/shared/examples/generate_people_demographics.py",
+    "lane": "domains",
+    "targets": [
+      "resources/examples/generate_people_demographics.py"
+    ]
+  },
+  {
+    "id": "module:domains/shared/generator_registry.py",
+    "kind": "module",
+    "path": "domains/shared/generator_registry.py",
+    "lane": "domains",
+    "targets": [
+      "domains/shared/literal_generators/registry.py"
+    ]
+  },
+  {
+    "id": "module:domains/shared/generators/__init__.py",
+    "kind": "module",
+    "path": "domains/shared/generators/__init__.py",
+    "lane": "domains",
+    "targets": [
+      "domains/shared/generators/__init__.py"
+    ]
+  },
+  {
+    "id": "module:domains/shared/generators/address_generator.py",
+    "kind": "module",
+    "path": "domains/shared/generators/address_generator.py",
+    "lane": "domains",
+    "targets": [
+      "domains/shared/generators/address_generator.py"
+    ]
+  },
+  {
+    "id": "module:domains/shared/generators/city_generator.py",
+    "kind": "module",
+    "path": "domains/shared/generators/city_generator.py",
+    "lane": "domains",
+    "targets": [
+      "domains/shared/generators/city_generator.py"
+    ]
+  },
+  {
+    "id": "module:domains/shared/generators/company_generator.py",
+    "kind": "module",
+    "path": "domains/shared/generators/company_generator.py",
+    "lane": "domains",
+    "targets": [
+      "domains/shared/generators/company_generator.py"
+    ]
+  },
+  {
+    "id": "module:domains/shared/generators/country_generator.py",
+    "kind": "module",
+    "path": "domains/shared/generators/country_generator.py",
+    "lane": "domains",
+    "targets": [
+      "domains/shared/generators/country_generator.py"
+    ]
+  },
+  {
+    "id": "module:domains/shared/generators/person_generator.py",
+    "kind": "module",
+    "path": "domains/shared/generators/person_generator.py",
+    "lane": "domains",
+    "targets": [
+      "domains/shared/generators/person_generator.py"
+    ]
+  },
+  {
+    "id": "module:domains/shared/generators/region_groups.py",
+    "kind": "module",
+    "path": "domains/shared/generators/region_groups.py",
+    "lane": "domains",
+    "targets": [
+      "domains/shared/generators/region_groups.py"
+    ]
+  },
+  {
+    "id": "module:domains/shared/json_types.py",
+    "kind": "module",
+    "path": "domains/shared/json_types.py",
+    "lane": "domains",
+    "targets": [
+      "domains/domain_core/contracts/json_types.py"
+    ]
+  },
+  {
+    "id": "module:domains/shared/literal_generators/academic_title_generator.py",
+    "kind": "module",
+    "path": "domains/shared/literal_generators/academic_title_generator.py",
+    "lane": "domains",
+    "targets": [
+      "domains/shared/literal_generators/person/academic_title_generator.py"
+    ]
+  },
+  {
+    "id": "module:domains/shared/literal_generators/binary_generator.py",
+    "kind": "module",
+    "path": "domains/shared/literal_generators/binary_generator.py",
+    "lane": "domains",
+    "targets": [
+      "domains/shared/literal_generators/primitives/binary_generator.py"
+    ]
+  },
+  {
+    "id": "module:domains/shared/literal_generators/birthdate_generator.py",
+    "kind": "module",
+    "path": "domains/shared/literal_generators/birthdate_generator.py",
+    "lane": "domains",
+    "targets": [
+      "domains/shared/literal_generators/temporal/birthdate_generator.py"
+    ]
+  },
+  {
+    "id": "module:domains/shared/literal_generators/boolean_generator.py",
+    "kind": "module",
+    "path": "domains/shared/literal_generators/boolean_generator.py",
+    "lane": "domains",
+    "targets": [
+      "domains/shared/literal_generators/primitives/boolean_generator.py"
+    ]
+  },
+  {
+    "id": "module:domains/shared/literal_generators/cnpj_generator.py",
+    "kind": "module",
+    "path": "domains/shared/literal_generators/cnpj_generator.py",
+    "lane": "domains",
+    "targets": [
+      "domains/shared/literal_generators/identity/codes/cnpj_generator.py"
+    ]
+  },
+  {
+    "id": "module:domains/shared/literal_generators/color_generators.py",
+    "kind": "module",
+    "path": "domains/shared/literal_generators/color_generators.py",
+    "lane": "domains",
+    "targets": [
+      "domains/shared/literal_generators/primitives/color_generators.py"
+    ]
+  },
+  {
+    "id": "module:domains/shared/literal_generators/company_name_generator.py",
+    "kind": "module",
+    "path": "domains/shared/literal_generators/company_name_generator.py",
+    "lane": "domains",
+    "targets": [
+      "domains/shared/literal_generators/business/company_name_generator.py"
+    ]
+  },
+  {
+    "id": "module:domains/shared/literal_generators/cpf_generator.py",
+    "kind": "module",
+    "path": "domains/shared/literal_generators/cpf_generator.py",
+    "lane": "domains",
+    "targets": [
+      "domains/shared/literal_generators/identity/codes/cpf_generator.py"
+    ]
+  },
+  {
+    "id": "module:domains/shared/literal_generators/data_faker_generator.py",
+    "kind": "module",
+    "path": "domains/shared/literal_generators/data_faker_generator.py",
+    "lane": "domains",
+    "targets": [
+      "domains/shared/literal_generators/primitives/data_faker_generator.py"
+    ]
+  },
+  {
+    "id": "module:domains/shared/literal_generators/datetime_generator.py",
+    "kind": "module",
+    "path": "domains/shared/literal_generators/datetime_generator.py",
+    "lane": "domains",
+    "targets": [
+      "domains/shared/literal_generators/temporal/datetime_generator.py"
+    ]
+  },
+  {
+    "id": "module:domains/shared/literal_generators/department_name_generator.py",
+    "kind": "module",
+    "path": "domains/shared/literal_generators/department_name_generator.py",
+    "lane": "domains",
+    "targets": [
+      "domains/shared/literal_generators/business/department_name_generator.py"
+    ]
+  },
+  {
+    "id": "module:domains/shared/literal_generators/domain_generator.py",
+    "kind": "module",
+    "path": "domains/shared/literal_generators/domain_generator.py",
+    "lane": "domains",
+    "targets": [
+      "domains/shared/literal_generators/contact/domain_generator.py"
+    ]
+  },
+  {
+    "id": "module:domains/shared/literal_generators/ean_generator.py",
+    "kind": "module",
+    "path": "domains/shared/literal_generators/ean_generator.py",
+    "lane": "domains",
+    "targets": [
+      "domains/shared/literal_generators/identity/codes/ean_generator.py"
+    ]
+  },
+  {
+    "id": "module:domains/shared/literal_generators/email_address_generator.py",
+    "kind": "module",
+    "path": "domains/shared/literal_generators/email_address_generator.py",
+    "lane": "domains",
+    "targets": [
+      "domains/shared/literal_generators/contact/email_address_generator.py"
+    ]
+  },
+  {
+    "id": "module:domains/shared/literal_generators/family_name_generator.py",
+    "kind": "module",
+    "path": "domains/shared/literal_generators/family_name_generator.py",
+    "lane": "domains",
+    "targets": [
+      "domains/shared/literal_generators/person/family_name_generator.py"
+    ]
+  },
+  {
+    "id": "module:domains/shared/literal_generators/float_generator.py",
+    "kind": "module",
+    "path": "domains/shared/literal_generators/float_generator.py",
+    "lane": "domains",
+    "targets": [
+      "domains/shared/literal_generators/numeric/float_generator.py"
+    ]
+  },
+  {
+    "id": "module:domains/shared/literal_generators/gender_generator.py",
+    "kind": "module",
+    "path": "domains/shared/literal_generators/gender_generator.py",
+    "lane": "domains",
+    "targets": [
+      "domains/shared/literal_generators/person/gender_generator.py"
+    ]
+  },
+  {
+    "id": "module:domains/shared/literal_generators/given_name_generator.py",
+    "kind": "module",
+    "path": "domains/shared/literal_generators/given_name_generator.py",
+    "lane": "domains",
+    "targets": [
+      "domains/shared/literal_generators/person/given_name_generator.py"
+    ]
+  },
+  {
+    "id": "module:domains/shared/literal_generators/global_increment_generator.py",
+    "kind": "module",
+    "path": "domains/shared/literal_generators/global_increment_generator.py",
+    "lane": "domains",
+    "targets": [
+      "domains/shared/literal_generators/numeric/global_increment_generator.py"
+    ]
+  },
+  {
+    "id": "module:domains/shared/literal_generators/hash_generator.py",
+    "kind": "module",
+    "path": "domains/shared/literal_generators/hash_generator.py",
+    "lane": "domains",
+    "targets": [
+      "domains/shared/literal_generators/identity/security/hash_generator.py"
+    ]
+  },
+  {
+    "id": "module:domains/shared/literal_generators/increment_generator.py",
+    "kind": "module",
+    "path": "domains/shared/literal_generators/increment_generator.py",
+    "lane": "domains",
+    "targets": [
+      "domains/shared/literal_generators/numeric/increment_generator.py"
+    ]
+  },
+  {
+    "id": "module:domains/shared/literal_generators/integer_generator.py",
+    "kind": "module",
+    "path": "domains/shared/literal_generators/integer_generator.py",
+    "lane": "domains",
+    "targets": [
+      "domains/shared/literal_generators/numeric/integer_generator.py"
+    ]
+  },
+  {
+    "id": "module:domains/shared/literal_generators/nobility_title_generator.py",
+    "kind": "module",
+    "path": "domains/shared/literal_generators/nobility_title_generator.py",
+    "lane": "domains",
+    "targets": [
+      "domains/shared/literal_generators/person/nobility_title_generator.py"
+    ]
+  },
+  {
+    "id": "module:domains/shared/literal_generators/number_sequences.py",
+    "kind": "module",
+    "path": "domains/shared/literal_generators/number_sequences.py",
+    "lane": "domains",
+    "targets": [
+      "domains/shared/literal_generators/numeric/number_sequences.py"
+    ]
+  },
+  {
+    "id": "module:domains/shared/literal_generators/password_generator.py",
+    "kind": "module",
+    "path": "domains/shared/literal_generators/password_generator.py",
+    "lane": "domains",
+    "targets": [
+      "domains/shared/literal_generators/identity/security/password_generator.py"
+    ]
+  },
+  {
+    "id": "module:domains/shared/literal_generators/phone_number_generator.py",
+    "kind": "module",
+    "path": "domains/shared/literal_generators/phone_number_generator.py",
+    "lane": "domains",
+    "targets": [
+      "domains/shared/literal_generators/contact/phone_number_generator.py"
+    ]
+  },
+  {
+    "id": "module:domains/shared/literal_generators/prefixed_id_generator.py",
+    "kind": "module",
+    "path": "domains/shared/literal_generators/prefixed_id_generator.py",
+    "lane": "domains",
+    "targets": [
+      "domains/shared/literal_generators/identity/keys/prefixed_id_generator.py"
+    ]
+  },
+  {
+    "id": "module:domains/shared/literal_generators/sector_generator.py",
+    "kind": "module",
+    "path": "domains/shared/literal_generators/sector_generator.py",
+    "lane": "domains",
+    "targets": [
+      "domains/shared/literal_generators/business/sector_generator.py"
+    ]
+  },
+  {
+    "id": "module:domains/shared/literal_generators/ssn_generator.py",
+    "kind": "module",
+    "path": "domains/shared/literal_generators/ssn_generator.py",
+    "lane": "domains",
+    "targets": [
+      "domains/shared/literal_generators/identity/codes/ssn_generator.py"
+    ]
+  },
+  {
+    "id": "module:domains/shared/literal_generators/state_transition_generator.py",
+    "kind": "module",
+    "path": "domains/shared/literal_generators/state_transition_generator.py",
+    "lane": "domains",
+    "targets": [
+      "domains/shared/literal_generators/primitives/state_transition_generator.py"
+    ]
+  },
+  {
+    "id": "module:domains/shared/literal_generators/street_name_generator.py",
+    "kind": "module",
+    "path": "domains/shared/literal_generators/street_name_generator.py",
+    "lane": "domains",
+    "targets": [
+      "domains/shared/literal_generators/contact/street_name_generator.py"
+    ]
+  },
+  {
+    "id": "module:domains/shared/literal_generators/string_generator.py",
+    "kind": "module",
+    "path": "domains/shared/literal_generators/string_generator.py",
+    "lane": "domains",
+    "targets": [
+      "domains/shared/literal_generators/primitives/string_generator.py"
+    ]
+  },
+  {
+    "id": "module:domains/shared/literal_generators/token_generator.py",
+    "kind": "module",
+    "path": "domains/shared/literal_generators/token_generator.py",
+    "lane": "domains",
+    "targets": [
+      "domains/shared/literal_generators/identity/security/token_generator.py"
+    ]
+  },
+  {
+    "id": "module:domains/shared/literal_generators/url_generator.py",
+    "kind": "module",
+    "path": "domains/shared/literal_generators/url_generator.py",
+    "lane": "domains",
+    "targets": [
+      "domains/shared/literal_generators/contact/url_generator.py"
+    ]
+  },
+  {
+    "id": "module:domains/shared/literal_generators/uuid_generator.py",
+    "kind": "module",
+    "path": "domains/shared/literal_generators/uuid_generator.py",
+    "lane": "domains",
+    "targets": [
+      "domains/shared/literal_generators/identity/keys/uuid_generator.py"
+    ]
+  },
+  {
+    "id": "module:domains/shared/locale_registry.py",
+    "kind": "module",
+    "path": "domains/shared/locale_registry.py",
+    "lane": "domains",
+    "targets": [
+      "domains/shared/datasets/locale_registry.py"
+    ]
+  },
+  {
+    "id": "module:domains/shared/locales/__init__.py",
+    "kind": "module",
+    "path": "domains/shared/locales/__init__.py",
+    "lane": "domains",
+    "targets": [
+      "domains/shared/datasets/locales/__init__.py"
+    ]
+  },
+  {
+    "id": "module:domains/shared/models/__init__.py",
+    "kind": "module",
+    "path": "domains/shared/models/__init__.py",
+    "lane": "domains",
+    "targets": [
+      "domains/shared/models/__init__.py"
+    ]
+  },
+  {
+    "id": "module:domains/shared/models/address.py",
+    "kind": "module",
+    "path": "domains/shared/models/address.py",
+    "lane": "domains",
+    "targets": [
+      "domains/shared/models/address.py"
+    ]
+  },
+  {
+    "id": "module:domains/shared/models/city.py",
+    "kind": "module",
+    "path": "domains/shared/models/city.py",
+    "lane": "domains",
+    "targets": [
+      "domains/shared/models/city.py"
+    ]
+  },
+  {
+    "id": "module:domains/shared/models/company.py",
+    "kind": "module",
+    "path": "domains/shared/models/company.py",
+    "lane": "domains",
+    "targets": [
+      "domains/shared/models/company.py"
+    ]
+  },
+  {
+    "id": "module:domains/shared/models/country.py",
+    "kind": "module",
+    "path": "domains/shared/models/country.py",
+    "lane": "domains",
+    "targets": [
+      "domains/shared/models/country.py"
+    ]
+  },
+  {
+    "id": "module:domains/shared/models/demographic_config.py",
+    "kind": "module",
+    "path": "domains/shared/models/demographic_config.py",
+    "lane": "domains",
+    "targets": [
+      "domains/shared/demographics/config.py"
+    ]
+  },
+  {
+    "id": "module:domains/shared/models/person.py",
+    "kind": "module",
+    "path": "domains/shared/models/person.py",
+    "lane": "domains",
+    "targets": [
+      "domains/shared/models/person.py"
+    ]
+  },
+  {
+    "id": "module:domains/shared/profile_components.py",
+    "kind": "module",
+    "path": "domains/shared/profile_components.py",
+    "lane": "domains",
+    "targets": [
+      "domains/shared/datasets/profile_components.py"
+    ]
+  },
+  {
+    "id": "module:domains/shared/sampling.py",
+    "kind": "module",
+    "path": "domains/shared/sampling.py",
+    "lane": "domains",
+    "targets": [
+      "domains/domain_core/runtime/sampling.py"
+    ]
+  },
+  {
+    "id": "module:domains/shared/schema_registry.py",
+    "kind": "module",
+    "path": "domains/shared/schema_registry.py",
+    "lane": "domains",
+    "targets": [
+      "domains/registry/schema.py"
+    ]
+  },
+  {
+    "id": "module:domains/shared/services/__init__.py",
+    "kind": "module",
+    "path": "domains/shared/services/__init__.py",
+    "lane": "domains",
+    "targets": [
+      "domains/shared/services/__init__.py"
+    ]
+  },
+  {
+    "id": "module:domains/shared/services/address_api.py",
+    "kind": "module",
+    "path": "domains/shared/services/address_api.py",
+    "lane": "domains",
+    "targets": [
+      "domains/shared/services/address_api.py"
+    ]
+  },
+  {
+    "id": "module:domains/shared/services/address_service.py",
+    "kind": "module",
+    "path": "domains/shared/services/address_service.py",
+    "lane": "domains",
+    "targets": [
+      "domains/shared/services/address_service.py"
+    ]
+  },
+  {
+    "id": "module:domains/shared/services/city_service.py",
+    "kind": "module",
+    "path": "domains/shared/services/city_service.py",
+    "lane": "domains",
+    "targets": [
+      "domains/shared/services/city_service.py"
+    ]
+  },
+  {
+    "id": "module:domains/shared/services/company_service.py",
+    "kind": "module",
+    "path": "domains/shared/services/company_service.py",
+    "lane": "domains",
+    "targets": [
+      "domains/shared/services/company_service.py"
+    ]
+  },
+  {
+    "id": "module:domains/shared/services/country_service.py",
+    "kind": "module",
+    "path": "domains/shared/services/country_service.py",
+    "lane": "domains",
+    "targets": [
+      "domains/shared/services/country_service.py"
+    ]
+  },
+  {
+    "id": "module:domains/shared/services/person_api.py",
+    "kind": "module",
+    "path": "domains/shared/services/person_api.py",
+    "lane": "domains",
+    "targets": [
+      "domains/shared/services/person_api.py"
+    ]
+  },
+  {
+    "id": "module:domains/shared/services/person_service.py",
+    "kind": "module",
+    "path": "domains/shared/services/person_service.py",
+    "lane": "domains",
+    "targets": [
+      "domains/shared/services/person_service.py"
+    ]
+  },
+  {
+    "id": "module:domains/shared/utils/__init__.py",
+    "kind": "module",
+    "path": "domains/shared/utils/__init__.py",
+    "lane": "domains",
+    "targets": [
+      "domains/shared/datasets/__init__.py"
+    ]
+  },
+  {
+    "id": "module:domains/shared/utils/dataset_loader.py",
+    "kind": "module",
+    "path": "domains/shared/utils/dataset_loader.py",
+    "lane": "domains",
+    "targets": [
+      "domains/shared/datasets/loader.py"
+    ]
+  },
+  {
+    "id": "module:domains/shared/utils/dataset_path.py",
+    "kind": "module",
+    "path": "domains/shared/utils/dataset_path.py",
+    "lane": "domains",
+    "targets": [
+      "domains/domain_core/datasets/path.py"
+    ]
+  },
+  {
+    "id": "module:domains/shared/utils/random_source.py",
+    "kind": "module",
+    "path": "domains/shared/utils/random_source.py",
+    "lane": "domains",
+    "targets": [
+      "domains/domain_core/runtime/random_source.py"
+    ]
+  },
+  {
+    "id": "module:domains/shared/utils/rng_uuid.py",
+    "kind": "module",
+    "path": "domains/shared/utils/rng_uuid.py",
+    "lane": "domains",
+    "targets": [
+      "domains/domain_core/runtime/rng_uuid.py"
+    ]
+  },
+  {
+    "id": "module:domains/shared/utils/supported_datasets.py",
+    "kind": "module",
+    "path": "domains/shared/utils/supported_datasets.py",
+    "lane": "domains",
+    "targets": [
+      "domains/domain_core/datasets/catalog.py"
+    ]
+  },
+  {
+    "id": "folder:domains",
+    "kind": "folder",
+    "path": "domains",
+    "lane": "domains",
+    "sources": [
+      "domains/__init__.py",
+      "domains/api.py",
+      "domains/domain_core/__init__.py",
+      "domains/domain_core/attribute_catalog.py",
+      "domains/domain_core/base_domain_generator.py",
+      "domains/domain_core/base_domain_service.py",
+      "domains/domain_core/base_entity.py",
+      "domains/domain_core/base_literal_generator.py",
+      "domains/domain_core/property_cache.py",
+      "domains/domain_core/runtime/__init__.py",
+      "domains/domain_core/runtime/clock.py",
+      "domains/domain_core/runtime/rng.py",
+      "domains/domain_core/runtime/run_seed.py",
+      "domains/ecommerce/__init__.py",
+      "domains/ecommerce/generators/__init__.py",
+      "domains/ecommerce/generators/order_generator.py",
+      "domains/ecommerce/generators/product_generator.py",
+      "domains/ecommerce/models/__init__.py",
+      "domains/ecommerce/models/order.py",
+      "domains/ecommerce/models/product.py",
+      "domains/ecommerce/services/__init__.py",
+      "domains/ecommerce/services/order_service.py",
+      "domains/ecommerce/services/product_service.py",
+      "domains/entity_registry.py",
+      "domains/facade.py",
+      "domains/finance/__init__.py",
+      "domains/finance/generators/__init__.py",
+      "domains/finance/generators/bank_account_generator.py",
+      "domains/finance/generators/bank_generator.py",
+      "domains/finance/generators/credit_card_generator.py",
+      "domains/finance/generators/transaction_generator.py",
+      "domains/finance/luhn.py",
+      "domains/finance/models/__init__.py",
+      "domains/finance/models/bank.py",
+      "domains/finance/models/bank_account.py",
+      "domains/finance/models/credit_card.py",
+      "domains/finance/models/transaction.py",
+      "domains/finance/services/__init__.py",
+      "domains/finance/services/bank_account_service.py",
+      "domains/finance/services/bank_service.py",
+      "domains/finance/services/credit_card_service.py",
+      "domains/finance/services/transaction_service.py",
+      "domains/healthcare/__init__.py",
+      "domains/healthcare/generators/__init__.py",
+      "domains/healthcare/generators/doctor_generator.py",
+      "domains/healthcare/generators/hospital_generator.py",
+      "domains/healthcare/generators/medical_device_generator.py",
+      "domains/healthcare/generators/medical_procedure_generator.py",
+      "domains/healthcare/generators/patient_generator.py",
+      "domains/healthcare/models/__init__.py",
+      "domains/healthcare/models/doctor.py",
+      "domains/healthcare/models/hospital.py",
+      "domains/healthcare/models/medical_device.py",
+      "domains/healthcare/models/medical_procedure.py",
+      "domains/healthcare/models/patient.py",
+      "domains/healthcare/services/__init__.py",
+      "domains/healthcare/services/doctor_api.py",
+      "domains/healthcare/services/doctor_service.py",
+      "domains/healthcare/services/hospital_service.py",
+      "domains/healthcare/services/medical_device_service.py",
+      "domains/healthcare/services/medical_procedure_service.py",
+      "domains/healthcare/services/patient_api.py",
+      "domains/healthcare/services/patient_service.py",
+      "domains/insurance/__init__.py",
+      "domains/insurance/generators/__init__.py",
+      "domains/insurance/generators/insurance_company_generator.py",
+      "domains/insurance/generators/insurance_coverage_generator.py",
+      "domains/insurance/generators/insurance_policy_generator.py",
+      "domains/insurance/generators/insurance_product_generator.py",
+      "domains/insurance/models/__init__.py",
+      "domains/insurance/models/insurance_company.py",
+      "domains/insurance/models/insurance_coverage.py",
+      "domains/insurance/models/insurance_policy.py",
+      "domains/insurance/models/insurance_product.py",
+      "domains/insurance/services/__init__.py",
+      "domains/insurance/services/insurance_company_service.py",
+      "domains/insurance/services/insurance_coverage_service.py",
+      "domains/insurance/services/insurance_policy_service.py",
+      "domains/insurance/services/insurance_product_service.py",
+      "domains/public_sector/__init__.py",
+      "domains/public_sector/generators/__init__.py",
+      "domains/public_sector/generators/administration_office_generator.py",
+      "domains/public_sector/generators/educational_institution_generator.py",
+      "domains/public_sector/generators/police_officer_generator.py",
+      "domains/public_sector/models/__init__.py",
+      "domains/public_sector/models/administration_office.py",
+      "domains/public_sector/models/educational_institution.py",
+      "domains/public_sector/models/police_officer.py",
+      "domains/public_sector/services/__init__.py",
+      "domains/public_sector/services/administration_office_service.py",
+      "domains/public_sector/services/educational_institution_service.py",
+      "domains/public_sector/services/police_officer_service.py",
+      "domains/shared/__init__.py",
+      "domains/shared/converters/__init__.py",
+      "domains/shared/converters/append_converter.py",
+      "domains/shared/converters/converter.py",
+      "domains/shared/converters/custom_converter.py",
+      "domains/shared/converters/cut_length_converter.py",
+      "domains/shared/converters/date2timestamp_converter.py",
+      "domains/shared/converters/date_format_converter.py",
+      "domains/shared/converters/hash_converter.py",
+      "domains/shared/converters/java_hash_converter.py",
+      "domains/shared/converters/lower_case_converter.py",
+      "domains/shared/converters/mask_converter.py",
+      "domains/shared/converters/middle_mask_converter.py",
+      "domains/shared/converters/remove_none_or_empty_element_converter.py",
+      "domains/shared/converters/substring_converter.py",
+      "domains/shared/converters/timestamp2date_converter.py",
+      "domains/shared/converters/upper_case_converter.py",
+      "domains/shared/demographics/__init__.py",
+      "domains/shared/demographics/api.py",
+      "domains/shared/demographics/loader.py",
+      "domains/shared/demographics/profile.py",
+      "domains/shared/demographics/profile_meta.py",
+      "domains/shared/demographics/sampler.py",
+      "domains/shared/determinism.py",
+      "domains/shared/generator_registry.py",
+      "domains/shared/generators/__init__.py",
+      "domains/shared/generators/address_generator.py",
+      "domains/shared/generators/city_generator.py",
+      "domains/shared/generators/company_generator.py",
+      "domains/shared/generators/country_generator.py",
+      "domains/shared/generators/person_generator.py",
+      "domains/shared/generators/region_groups.py",
+      "domains/shared/json_types.py",
+      "domains/shared/literal_generators/academic_title_generator.py",
+      "domains/shared/literal_generators/binary_generator.py",
+      "domains/shared/literal_generators/birthdate_generator.py",
+      "domains/shared/literal_generators/boolean_generator.py",
+      "domains/shared/literal_generators/cnpj_generator.py",
+      "domains/shared/literal_generators/color_generators.py",
+      "domains/shared/literal_generators/company_name_generator.py",
+      "domains/shared/literal_generators/cpf_generator.py",
+      "domains/shared/literal_generators/data_faker_generator.py",
+      "domains/shared/literal_generators/datetime_generator.py",
+      "domains/shared/literal_generators/department_name_generator.py",
+      "domains/shared/literal_generators/domain_generator.py",
+      "domains/shared/literal_generators/ean_generator.py",
+      "domains/shared/literal_generators/email_address_generator.py",
+      "domains/shared/literal_generators/family_name_generator.py",
+      "domains/shared/literal_generators/float_generator.py",
+      "domains/shared/literal_generators/gender_generator.py",
+      "domains/shared/literal_generators/given_name_generator.py",
+      "domains/shared/literal_generators/global_increment_generator.py",
+      "domains/shared/literal_generators/hash_generator.py",
+      "domains/shared/literal_generators/increment_generator.py",
+      "domains/shared/literal_generators/integer_generator.py",
+      "domains/shared/literal_generators/nobility_title_generator.py",
+      "domains/shared/literal_generators/number_sequences.py",
+      "domains/shared/literal_generators/password_generator.py",
+      "domains/shared/literal_generators/phone_number_generator.py",
+      "domains/shared/literal_generators/prefixed_id_generator.py",
+      "domains/shared/literal_generators/sector_generator.py",
+      "domains/shared/literal_generators/ssn_generator.py",
+      "domains/shared/literal_generators/state_transition_generator.py",
+      "domains/shared/literal_generators/street_name_generator.py",
+      "domains/shared/literal_generators/string_generator.py",
+      "domains/shared/literal_generators/token_generator.py",
+      "domains/shared/literal_generators/url_generator.py",
+      "domains/shared/literal_generators/uuid_generator.py",
+      "domains/shared/locale_registry.py",
+      "domains/shared/locales/__init__.py",
+      "domains/shared/models/__init__.py",
+      "domains/shared/models/address.py",
+      "domains/shared/models/city.py",
+      "domains/shared/models/company.py",
+      "domains/shared/models/country.py",
+      "domains/shared/models/demographic_config.py",
+      "domains/shared/models/person.py",
+      "domains/shared/profile_components.py",
+      "domains/shared/sampling.py",
+      "domains/shared/schema_registry.py",
+      "domains/shared/services/__init__.py",
+      "domains/shared/services/address_api.py",
+      "domains/shared/services/address_service.py",
+      "domains/shared/services/city_service.py",
+      "domains/shared/services/company_service.py",
+      "domains/shared/services/country_service.py",
+      "domains/shared/services/person_api.py",
+      "domains/shared/services/person_service.py",
+      "domains/shared/utils/__init__.py",
+      "domains/shared/utils/dataset_loader.py",
+      "domains/shared/utils/dataset_path.py",
+      "domains/shared/utils/random_source.py",
+      "domains/shared/utils/rng_uuid.py",
+      "domains/shared/utils/supported_datasets.py"
+    ]
+  },
+  {
+    "id": "folder:domains/domain_core",
+    "kind": "folder",
+    "path": "domains/domain_core",
+    "lane": "domains",
+    "sources": [
+      "domains/domain_core/__init__.py",
+      "domains/domain_core/attribute_catalog.py",
+      "domains/domain_core/base_domain_generator.py",
+      "domains/domain_core/base_domain_service.py",
+      "domains/domain_core/base_entity.py",
+      "domains/domain_core/base_literal_generator.py",
+      "domains/domain_core/property_cache.py",
+      "domains/domain_core/runtime/__init__.py",
+      "domains/domain_core/runtime/clock.py",
+      "domains/domain_core/runtime/rng.py",
+      "domains/domain_core/runtime/run_seed.py",
+      "domains/shared/determinism.py",
+      "domains/shared/json_types.py",
+      "domains/shared/sampling.py",
+      "domains/shared/utils/dataset_path.py",
+      "domains/shared/utils/random_source.py",
+      "domains/shared/utils/rng_uuid.py",
+      "domains/shared/utils/supported_datasets.py"
+    ]
+  },
+  {
+    "id": "folder:domains/domain_core/contracts",
+    "kind": "folder",
+    "path": "domains/domain_core/contracts",
+    "lane": "domains",
+    "sources": [
+      "domains/domain_core/attribute_catalog.py",
+      "domains/domain_core/base_entity.py",
+      "domains/shared/json_types.py"
+    ]
+  },
+  {
+    "id": "folder:domains/domain_core/datasets",
+    "kind": "folder",
+    "path": "domains/domain_core/datasets",
+    "lane": "domains",
+    "sources": [
+      "domains/shared/utils/dataset_path.py",
+      "domains/shared/utils/supported_datasets.py"
+    ]
+  },
+  {
+    "id": "folder:domains/domain_core/runtime",
+    "kind": "folder",
+    "path": "domains/domain_core/runtime",
+    "lane": "domains",
+    "sources": [
+      "domains/domain_core/runtime/__init__.py",
+      "domains/domain_core/runtime/clock.py",
+      "domains/domain_core/runtime/rng.py",
+      "domains/domain_core/runtime/run_seed.py",
+      "domains/shared/determinism.py",
+      "domains/shared/sampling.py",
+      "domains/shared/utils/random_source.py",
+      "domains/shared/utils/rng_uuid.py"
+    ]
+  },
+  {
+    "id": "folder:domains/ecommerce",
+    "kind": "folder",
+    "path": "domains/ecommerce",
+    "lane": "domains",
+    "sources": [
+      "domains/ecommerce/__init__.py",
+      "domains/ecommerce/generators/__init__.py",
+      "domains/ecommerce/generators/order_generator.py",
+      "domains/ecommerce/generators/product_generator.py",
+      "domains/ecommerce/models/__init__.py",
+      "domains/ecommerce/models/order.py",
+      "domains/ecommerce/models/product.py",
+      "domains/ecommerce/services/__init__.py",
+      "domains/ecommerce/services/order_service.py",
+      "domains/ecommerce/services/product_service.py"
+    ]
+  },
+  {
+    "id": "folder:domains/ecommerce/generators",
+    "kind": "folder",
+    "path": "domains/ecommerce/generators",
+    "lane": "domains",
+    "sources": [
+      "domains/ecommerce/generators/__init__.py",
+      "domains/ecommerce/generators/order_generator.py",
+      "domains/ecommerce/generators/product_generator.py"
+    ]
+  },
+  {
+    "id": "folder:domains/ecommerce/models",
+    "kind": "folder",
+    "path": "domains/ecommerce/models",
+    "lane": "domains",
+    "sources": [
+      "domains/ecommerce/models/__init__.py",
+      "domains/ecommerce/models/order.py",
+      "domains/ecommerce/models/product.py"
+    ]
+  },
+  {
+    "id": "folder:domains/ecommerce/services",
+    "kind": "folder",
+    "path": "domains/ecommerce/services",
+    "lane": "domains",
+    "sources": [
+      "domains/ecommerce/services/__init__.py",
+      "domains/ecommerce/services/order_service.py",
+      "domains/ecommerce/services/product_service.py"
+    ]
+  },
+  {
+    "id": "folder:domains/finance",
+    "kind": "folder",
+    "path": "domains/finance",
+    "lane": "domains",
+    "sources": [
+      "domains/finance/__init__.py",
+      "domains/finance/generators/__init__.py",
+      "domains/finance/generators/bank_account_generator.py",
+      "domains/finance/generators/bank_generator.py",
+      "domains/finance/generators/credit_card_generator.py",
+      "domains/finance/generators/transaction_generator.py",
+      "domains/finance/luhn.py",
+      "domains/finance/models/__init__.py",
+      "domains/finance/models/bank.py",
+      "domains/finance/models/bank_account.py",
+      "domains/finance/models/credit_card.py",
+      "domains/finance/models/transaction.py",
+      "domains/finance/services/__init__.py",
+      "domains/finance/services/bank_account_service.py",
+      "domains/finance/services/bank_service.py",
+      "domains/finance/services/credit_card_service.py",
+      "domains/finance/services/transaction_service.py"
+    ]
+  },
+  {
+    "id": "folder:domains/finance/generators",
+    "kind": "folder",
+    "path": "domains/finance/generators",
+    "lane": "domains",
+    "sources": [
+      "domains/finance/generators/__init__.py",
+      "domains/finance/generators/bank_account_generator.py",
+      "domains/finance/generators/bank_generator.py",
+      "domains/finance/generators/credit_card_generator.py",
+      "domains/finance/generators/transaction_generator.py"
+    ]
+  },
+  {
+    "id": "folder:domains/finance/models",
+    "kind": "folder",
+    "path": "domains/finance/models",
+    "lane": "domains",
+    "sources": [
+      "domains/finance/models/__init__.py",
+      "domains/finance/models/bank.py",
+      "domains/finance/models/bank_account.py",
+      "domains/finance/models/credit_card.py",
+      "domains/finance/models/transaction.py"
+    ]
+  },
+  {
+    "id": "folder:domains/finance/services",
+    "kind": "folder",
+    "path": "domains/finance/services",
+    "lane": "domains",
+    "sources": [
+      "domains/finance/services/__init__.py",
+      "domains/finance/services/bank_account_service.py",
+      "domains/finance/services/bank_service.py",
+      "domains/finance/services/credit_card_service.py",
+      "domains/finance/services/transaction_service.py"
+    ]
+  },
+  {
+    "id": "folder:domains/healthcare",
+    "kind": "folder",
+    "path": "domains/healthcare",
+    "lane": "domains",
+    "sources": [
+      "domains/healthcare/__init__.py",
+      "domains/healthcare/generators/__init__.py",
+      "domains/healthcare/generators/doctor_generator.py",
+      "domains/healthcare/generators/hospital_generator.py",
+      "domains/healthcare/generators/medical_device_generator.py",
+      "domains/healthcare/generators/medical_procedure_generator.py",
+      "domains/healthcare/generators/patient_generator.py",
+      "domains/healthcare/models/__init__.py",
+      "domains/healthcare/models/doctor.py",
+      "domains/healthcare/models/hospital.py",
+      "domains/healthcare/models/medical_device.py",
+      "domains/healthcare/models/medical_procedure.py",
+      "domains/healthcare/models/patient.py",
+      "domains/healthcare/services/__init__.py",
+      "domains/healthcare/services/doctor_api.py",
+      "domains/healthcare/services/doctor_service.py",
+      "domains/healthcare/services/hospital_service.py",
+      "domains/healthcare/services/medical_device_service.py",
+      "domains/healthcare/services/medical_procedure_service.py",
+      "domains/healthcare/services/patient_api.py",
+      "domains/healthcare/services/patient_service.py"
+    ]
+  },
+  {
+    "id": "folder:domains/healthcare/generators",
+    "kind": "folder",
+    "path": "domains/healthcare/generators",
+    "lane": "domains",
+    "sources": [
+      "domains/healthcare/generators/__init__.py",
+      "domains/healthcare/generators/doctor_generator.py",
+      "domains/healthcare/generators/hospital_generator.py",
+      "domains/healthcare/generators/medical_device_generator.py",
+      "domains/healthcare/generators/medical_procedure_generator.py",
+      "domains/healthcare/generators/patient_generator.py"
+    ]
+  },
+  {
+    "id": "folder:domains/healthcare/models",
+    "kind": "folder",
+    "path": "domains/healthcare/models",
+    "lane": "domains",
+    "sources": [
+      "domains/healthcare/models/__init__.py",
+      "domains/healthcare/models/doctor.py",
+      "domains/healthcare/models/hospital.py",
+      "domains/healthcare/models/medical_device.py",
+      "domains/healthcare/models/medical_procedure.py",
+      "domains/healthcare/models/patient.py"
+    ]
+  },
+  {
+    "id": "folder:domains/healthcare/services",
+    "kind": "folder",
+    "path": "domains/healthcare/services",
+    "lane": "domains",
+    "sources": [
+      "domains/healthcare/services/__init__.py",
+      "domains/healthcare/services/doctor_api.py",
+      "domains/healthcare/services/doctor_service.py",
+      "domains/healthcare/services/hospital_service.py",
+      "domains/healthcare/services/medical_device_service.py",
+      "domains/healthcare/services/medical_procedure_service.py",
+      "domains/healthcare/services/patient_api.py",
+      "domains/healthcare/services/patient_service.py"
+    ]
+  },
+  {
+    "id": "folder:domains/insurance",
+    "kind": "folder",
+    "path": "domains/insurance",
+    "lane": "domains",
+    "sources": [
+      "domains/insurance/__init__.py",
+      "domains/insurance/generators/__init__.py",
+      "domains/insurance/generators/insurance_company_generator.py",
+      "domains/insurance/generators/insurance_coverage_generator.py",
+      "domains/insurance/generators/insurance_policy_generator.py",
+      "domains/insurance/generators/insurance_product_generator.py",
+      "domains/insurance/models/__init__.py",
+      "domains/insurance/models/insurance_company.py",
+      "domains/insurance/models/insurance_coverage.py",
+      "domains/insurance/models/insurance_policy.py",
+      "domains/insurance/models/insurance_product.py",
+      "domains/insurance/services/__init__.py",
+      "domains/insurance/services/insurance_company_service.py",
+      "domains/insurance/services/insurance_coverage_service.py",
+      "domains/insurance/services/insurance_policy_service.py",
+      "domains/insurance/services/insurance_product_service.py"
+    ]
+  },
+  {
+    "id": "folder:domains/insurance/generators",
+    "kind": "folder",
+    "path": "domains/insurance/generators",
+    "lane": "domains",
+    "sources": [
+      "domains/insurance/generators/__init__.py",
+      "domains/insurance/generators/insurance_company_generator.py",
+      "domains/insurance/generators/insurance_coverage_generator.py",
+      "domains/insurance/generators/insurance_policy_generator.py",
+      "domains/insurance/generators/insurance_product_generator.py"
+    ]
+  },
+  {
+    "id": "folder:domains/insurance/models",
+    "kind": "folder",
+    "path": "domains/insurance/models",
+    "lane": "domains",
+    "sources": [
+      "domains/insurance/models/__init__.py",
+      "domains/insurance/models/insurance_company.py",
+      "domains/insurance/models/insurance_coverage.py",
+      "domains/insurance/models/insurance_policy.py",
+      "domains/insurance/models/insurance_product.py"
+    ]
+  },
+  {
+    "id": "folder:domains/insurance/services",
+    "kind": "folder",
+    "path": "domains/insurance/services",
+    "lane": "domains",
+    "sources": [
+      "domains/insurance/services/__init__.py",
+      "domains/insurance/services/insurance_company_service.py",
+      "domains/insurance/services/insurance_coverage_service.py",
+      "domains/insurance/services/insurance_policy_service.py",
+      "domains/insurance/services/insurance_product_service.py"
+    ]
+  },
+  {
+    "id": "folder:domains/public_sector",
+    "kind": "folder",
+    "path": "domains/public_sector",
+    "lane": "domains",
+    "sources": [
+      "domains/public_sector/__init__.py",
+      "domains/public_sector/generators/__init__.py",
+      "domains/public_sector/generators/administration_office_generator.py",
+      "domains/public_sector/generators/educational_institution_generator.py",
+      "domains/public_sector/generators/police_officer_generator.py",
+      "domains/public_sector/models/__init__.py",
+      "domains/public_sector/models/administration_office.py",
+      "domains/public_sector/models/educational_institution.py",
+      "domains/public_sector/models/police_officer.py",
+      "domains/public_sector/services/__init__.py",
+      "domains/public_sector/services/administration_office_service.py",
+      "domains/public_sector/services/educational_institution_service.py",
+      "domains/public_sector/services/police_officer_service.py"
+    ]
+  },
+  {
+    "id": "folder:domains/public_sector/generators",
+    "kind": "folder",
+    "path": "domains/public_sector/generators",
+    "lane": "domains",
+    "sources": [
+      "domains/public_sector/generators/__init__.py",
+      "domains/public_sector/generators/administration_office_generator.py",
+      "domains/public_sector/generators/educational_institution_generator.py",
+      "domains/public_sector/generators/police_officer_generator.py"
+    ]
+  },
+  {
+    "id": "folder:domains/public_sector/models",
+    "kind": "folder",
+    "path": "domains/public_sector/models",
+    "lane": "domains",
+    "sources": [
+      "domains/public_sector/models/__init__.py",
+      "domains/public_sector/models/administration_office.py",
+      "domains/public_sector/models/educational_institution.py",
+      "domains/public_sector/models/police_officer.py"
+    ]
+  },
+  {
+    "id": "folder:domains/public_sector/services",
+    "kind": "folder",
+    "path": "domains/public_sector/services",
+    "lane": "domains",
+    "sources": [
+      "domains/public_sector/services/__init__.py",
+      "domains/public_sector/services/administration_office_service.py",
+      "domains/public_sector/services/educational_institution_service.py",
+      "domains/public_sector/services/police_officer_service.py"
+    ]
+  },
+  {
+    "id": "folder:domains/registry",
+    "kind": "folder",
+    "path": "domains/registry",
+    "lane": "domains",
+    "sources": [
+      "domains/entity_registry.py",
+      "domains/facade.py",
+      "domains/shared/schema_registry.py"
+    ]
+  },
+  {
+    "id": "folder:domains/shared",
+    "kind": "folder",
+    "path": "domains/shared",
+    "lane": "domains",
+    "sources": [
+      "domains/shared/__init__.py",
+      "domains/shared/converters/__init__.py",
+      "domains/shared/converters/append_converter.py",
+      "domains/shared/converters/converter.py",
+      "domains/shared/converters/custom_converter.py",
+      "domains/shared/converters/cut_length_converter.py",
+      "domains/shared/converters/date2timestamp_converter.py",
+      "domains/shared/converters/date_format_converter.py",
+      "domains/shared/converters/hash_converter.py",
+      "domains/shared/converters/java_hash_converter.py",
+      "domains/shared/converters/lower_case_converter.py",
+      "domains/shared/converters/mask_converter.py",
+      "domains/shared/converters/middle_mask_converter.py",
+      "domains/shared/converters/remove_none_or_empty_element_converter.py",
+      "domains/shared/converters/substring_converter.py",
+      "domains/shared/converters/timestamp2date_converter.py",
+      "domains/shared/converters/upper_case_converter.py",
+      "domains/shared/demographics/__init__.py",
+      "domains/shared/demographics/api.py",
+      "domains/shared/demographics/loader.py",
+      "domains/shared/demographics/profile.py",
+      "domains/shared/demographics/profile_meta.py",
+      "domains/shared/demographics/sampler.py",
+      "domains/shared/generator_registry.py",
+      "domains/shared/generators/__init__.py",
+      "domains/shared/generators/address_generator.py",
+      "domains/shared/generators/city_generator.py",
+      "domains/shared/generators/company_generator.py",
+      "domains/shared/generators/country_generator.py",
+      "domains/shared/generators/person_generator.py",
+      "domains/shared/generators/region_groups.py",
+      "domains/shared/literal_generators/academic_title_generator.py",
+      "domains/shared/literal_generators/binary_generator.py",
+      "domains/shared/literal_generators/birthdate_generator.py",
+      "domains/shared/literal_generators/boolean_generator.py",
+      "domains/shared/literal_generators/cnpj_generator.py",
+      "domains/shared/literal_generators/color_generators.py",
+      "domains/shared/literal_generators/company_name_generator.py",
+      "domains/shared/literal_generators/cpf_generator.py",
+      "domains/shared/literal_generators/data_faker_generator.py",
+      "domains/shared/literal_generators/datetime_generator.py",
+      "domains/shared/literal_generators/department_name_generator.py",
+      "domains/shared/literal_generators/domain_generator.py",
+      "domains/shared/literal_generators/ean_generator.py",
+      "domains/shared/literal_generators/email_address_generator.py",
+      "domains/shared/literal_generators/family_name_generator.py",
+      "domains/shared/literal_generators/float_generator.py",
+      "domains/shared/literal_generators/gender_generator.py",
+      "domains/shared/literal_generators/given_name_generator.py",
+      "domains/shared/literal_generators/global_increment_generator.py",
+      "domains/shared/literal_generators/hash_generator.py",
+      "domains/shared/literal_generators/increment_generator.py",
+      "domains/shared/literal_generators/integer_generator.py",
+      "domains/shared/literal_generators/nobility_title_generator.py",
+      "domains/shared/literal_generators/number_sequences.py",
+      "domains/shared/literal_generators/password_generator.py",
+      "domains/shared/literal_generators/phone_number_generator.py",
+      "domains/shared/literal_generators/prefixed_id_generator.py",
+      "domains/shared/literal_generators/sector_generator.py",
+      "domains/shared/literal_generators/ssn_generator.py",
+      "domains/shared/literal_generators/state_transition_generator.py",
+      "domains/shared/literal_generators/street_name_generator.py",
+      "domains/shared/literal_generators/string_generator.py",
+      "domains/shared/literal_generators/token_generator.py",
+      "domains/shared/literal_generators/url_generator.py",
+      "domains/shared/literal_generators/uuid_generator.py",
+      "domains/shared/locale_registry.py",
+      "domains/shared/locales/__init__.py",
+      "domains/shared/models/__init__.py",
+      "domains/shared/models/address.py",
+      "domains/shared/models/city.py",
+      "domains/shared/models/company.py",
+      "domains/shared/models/country.py",
+      "domains/shared/models/demographic_config.py",
+      "domains/shared/models/person.py",
+      "domains/shared/profile_components.py",
+      "domains/shared/services/__init__.py",
+      "domains/shared/services/address_api.py",
+      "domains/shared/services/address_service.py",
+      "domains/shared/services/city_service.py",
+      "domains/shared/services/company_service.py",
+      "domains/shared/services/country_service.py",
+      "domains/shared/services/person_api.py",
+      "domains/shared/services/person_service.py",
+      "domains/shared/utils/__init__.py",
+      "domains/shared/utils/dataset_loader.py"
+    ]
+  },
+  {
+    "id": "folder:domains/shared/converters",
+    "kind": "folder",
+    "path": "domains/shared/converters",
+    "lane": "domains",
+    "sources": [
+      "domains/shared/converters/__init__.py",
+      "domains/shared/converters/append_converter.py",
+      "domains/shared/converters/converter.py",
+      "domains/shared/converters/custom_converter.py",
+      "domains/shared/converters/cut_length_converter.py",
+      "domains/shared/converters/date2timestamp_converter.py",
+      "domains/shared/converters/date_format_converter.py",
+      "domains/shared/converters/hash_converter.py",
+      "domains/shared/converters/java_hash_converter.py",
+      "domains/shared/converters/lower_case_converter.py",
+      "domains/shared/converters/mask_converter.py",
+      "domains/shared/converters/middle_mask_converter.py",
+      "domains/shared/converters/remove_none_or_empty_element_converter.py",
+      "domains/shared/converters/substring_converter.py",
+      "domains/shared/converters/timestamp2date_converter.py",
+      "domains/shared/converters/upper_case_converter.py"
+    ]
+  },
+  {
+    "id": "folder:domains/shared/converters/base",
+    "kind": "folder",
+    "path": "domains/shared/converters/base",
+    "lane": "domains",
+    "sources": [
+      "domains/shared/converters/converter.py"
+    ]
+  },
+  {
+    "id": "folder:domains/shared/converters/privacy",
+    "kind": "folder",
+    "path": "domains/shared/converters/privacy",
+    "lane": "domains",
+    "sources": [
+      "domains/shared/converters/hash_converter.py",
+      "domains/shared/converters/java_hash_converter.py",
+      "domains/shared/converters/mask_converter.py",
+      "domains/shared/converters/middle_mask_converter.py"
+    ]
+  },
+  {
+    "id": "folder:domains/shared/converters/structural",
+    "kind": "folder",
+    "path": "domains/shared/converters/structural",
+    "lane": "domains",
+    "sources": [
+      "domains/shared/converters/custom_converter.py",
+      "domains/shared/converters/remove_none_or_empty_element_converter.py"
+    ]
+  },
+  {
+    "id": "folder:domains/shared/converters/temporal",
+    "kind": "folder",
+    "path": "domains/shared/converters/temporal",
+    "lane": "domains",
+    "sources": [
+      "domains/shared/converters/date2timestamp_converter.py",
+      "domains/shared/converters/date_format_converter.py",
+      "domains/shared/converters/timestamp2date_converter.py"
+    ]
+  },
+  {
+    "id": "folder:domains/shared/converters/text",
+    "kind": "folder",
+    "path": "domains/shared/converters/text",
+    "lane": "domains",
+    "sources": [
+      "domains/shared/converters/append_converter.py",
+      "domains/shared/converters/cut_length_converter.py",
+      "domains/shared/converters/lower_case_converter.py",
+      "domains/shared/converters/substring_converter.py",
+      "domains/shared/converters/upper_case_converter.py"
+    ]
+  },
+  {
+    "id": "folder:domains/shared/datasets",
+    "kind": "folder",
+    "path": "domains/shared/datasets",
+    "lane": "domains",
+    "sources": [
+      "domains/shared/locale_registry.py",
+      "domains/shared/locales/__init__.py",
+      "domains/shared/profile_components.py",
+      "domains/shared/utils/__init__.py",
+      "domains/shared/utils/dataset_loader.py"
+    ]
+  },
+  {
+    "id": "folder:domains/shared/datasets/locales",
+    "kind": "folder",
+    "path": "domains/shared/datasets/locales",
+    "lane": "domains",
+    "sources": [
+      "domains/shared/locales/__init__.py"
+    ]
+  },
+  {
+    "id": "folder:domains/shared/demographics",
+    "kind": "folder",
+    "path": "domains/shared/demographics",
+    "lane": "domains",
+    "sources": [
+      "domains/shared/demographics/__init__.py",
+      "domains/shared/demographics/api.py",
+      "domains/shared/demographics/loader.py",
+      "domains/shared/demographics/profile.py",
+      "domains/shared/demographics/profile_meta.py",
+      "domains/shared/demographics/sampler.py",
+      "domains/shared/models/demographic_config.py"
+    ]
+  },
+  {
+    "id": "folder:domains/shared/generators",
+    "kind": "folder",
+    "path": "domains/shared/generators",
+    "lane": "domains",
+    "sources": [
+      "domains/shared/generators/__init__.py",
+      "domains/shared/generators/address_generator.py",
+      "domains/shared/generators/city_generator.py",
+      "domains/shared/generators/company_generator.py",
+      "domains/shared/generators/country_generator.py",
+      "domains/shared/generators/person_generator.py",
+      "domains/shared/generators/region_groups.py"
+    ]
+  },
+  {
+    "id": "folder:domains/shared/literal_generators",
+    "kind": "folder",
+    "path": "domains/shared/literal_generators",
+    "lane": "domains",
+    "sources": [
+      "domains/shared/generator_registry.py",
+      "domains/shared/literal_generators/academic_title_generator.py",
+      "domains/shared/literal_generators/binary_generator.py",
+      "domains/shared/literal_generators/birthdate_generator.py",
+      "domains/shared/literal_generators/boolean_generator.py",
+      "domains/shared/literal_generators/cnpj_generator.py",
+      "domains/shared/literal_generators/color_generators.py",
+      "domains/shared/literal_generators/company_name_generator.py",
+      "domains/shared/literal_generators/cpf_generator.py",
+      "domains/shared/literal_generators/data_faker_generator.py",
+      "domains/shared/literal_generators/datetime_generator.py",
+      "domains/shared/literal_generators/department_name_generator.py",
+      "domains/shared/literal_generators/domain_generator.py",
+      "domains/shared/literal_generators/ean_generator.py",
+      "domains/shared/literal_generators/email_address_generator.py",
+      "domains/shared/literal_generators/family_name_generator.py",
+      "domains/shared/literal_generators/float_generator.py",
+      "domains/shared/literal_generators/gender_generator.py",
+      "domains/shared/literal_generators/given_name_generator.py",
+      "domains/shared/literal_generators/global_increment_generator.py",
+      "domains/shared/literal_generators/hash_generator.py",
+      "domains/shared/literal_generators/increment_generator.py",
+      "domains/shared/literal_generators/integer_generator.py",
+      "domains/shared/literal_generators/nobility_title_generator.py",
+      "domains/shared/literal_generators/number_sequences.py",
+      "domains/shared/literal_generators/password_generator.py",
+      "domains/shared/literal_generators/phone_number_generator.py",
+      "domains/shared/literal_generators/prefixed_id_generator.py",
+      "domains/shared/literal_generators/sector_generator.py",
+      "domains/shared/literal_generators/ssn_generator.py",
+      "domains/shared/literal_generators/state_transition_generator.py",
+      "domains/shared/literal_generators/street_name_generator.py",
+      "domains/shared/literal_generators/string_generator.py",
+      "domains/shared/literal_generators/token_generator.py",
+      "domains/shared/literal_generators/url_generator.py",
+      "domains/shared/literal_generators/uuid_generator.py"
+    ]
+  },
+  {
+    "id": "folder:domains/shared/literal_generators/business",
+    "kind": "folder",
+    "path": "domains/shared/literal_generators/business",
+    "lane": "domains",
+    "sources": [
+      "domains/shared/literal_generators/company_name_generator.py",
+      "domains/shared/literal_generators/department_name_generator.py",
+      "domains/shared/literal_generators/sector_generator.py"
+    ]
+  },
+  {
+    "id": "folder:domains/shared/literal_generators/contact",
+    "kind": "folder",
+    "path": "domains/shared/literal_generators/contact",
+    "lane": "domains",
+    "sources": [
+      "domains/shared/literal_generators/domain_generator.py",
+      "domains/shared/literal_generators/email_address_generator.py",
+      "domains/shared/literal_generators/phone_number_generator.py",
+      "domains/shared/literal_generators/street_name_generator.py",
+      "domains/shared/literal_generators/url_generator.py"
+    ]
+  },
+  {
+    "id": "folder:domains/shared/literal_generators/identity",
+    "kind": "folder",
+    "path": "domains/shared/literal_generators/identity",
+    "lane": "domains",
+    "sources": [
+      "domains/shared/literal_generators/cnpj_generator.py",
+      "domains/shared/literal_generators/cpf_generator.py",
+      "domains/shared/literal_generators/ean_generator.py",
+      "domains/shared/literal_generators/hash_generator.py",
+      "domains/shared/literal_generators/password_generator.py",
+      "domains/shared/literal_generators/prefixed_id_generator.py",
+      "domains/shared/literal_generators/ssn_generator.py",
+      "domains/shared/literal_generators/token_generator.py",
+      "domains/shared/literal_generators/uuid_generator.py"
+    ]
+  },
+  {
+    "id": "folder:domains/shared/literal_generators/identity/codes",
+    "kind": "folder",
+    "path": "domains/shared/literal_generators/identity/codes",
+    "lane": "domains",
+    "sources": [
+      "domains/shared/literal_generators/cnpj_generator.py",
+      "domains/shared/literal_generators/cpf_generator.py",
+      "domains/shared/literal_generators/ean_generator.py",
+      "domains/shared/literal_generators/ssn_generator.py"
+    ]
+  },
+  {
+    "id": "folder:domains/shared/literal_generators/identity/keys",
+    "kind": "folder",
+    "path": "domains/shared/literal_generators/identity/keys",
+    "lane": "domains",
+    "sources": [
+      "domains/shared/literal_generators/prefixed_id_generator.py",
+      "domains/shared/literal_generators/uuid_generator.py"
+    ]
+  },
+  {
+    "id": "folder:domains/shared/literal_generators/identity/security",
+    "kind": "folder",
+    "path": "domains/shared/literal_generators/identity/security",
+    "lane": "domains",
+    "sources": [
+      "domains/shared/literal_generators/hash_generator.py",
+      "domains/shared/literal_generators/password_generator.py",
+      "domains/shared/literal_generators/token_generator.py"
+    ]
+  },
+  {
+    "id": "folder:domains/shared/literal_generators/numeric",
+    "kind": "folder",
+    "path": "domains/shared/literal_generators/numeric",
+    "lane": "domains",
+    "sources": [
+      "domains/shared/literal_generators/float_generator.py",
+      "domains/shared/literal_generators/global_increment_generator.py",
+      "domains/shared/literal_generators/increment_generator.py",
+      "domains/shared/literal_generators/integer_generator.py",
+      "domains/shared/literal_generators/number_sequences.py"
+    ]
+  },
+  {
+    "id": "folder:domains/shared/literal_generators/person",
+    "kind": "folder",
+    "path": "domains/shared/literal_generators/person",
+    "lane": "domains",
+    "sources": [
+      "domains/shared/literal_generators/academic_title_generator.py",
+      "domains/shared/literal_generators/family_name_generator.py",
+      "domains/shared/literal_generators/gender_generator.py",
+      "domains/shared/literal_generators/given_name_generator.py",
+      "domains/shared/literal_generators/nobility_title_generator.py"
+    ]
+  },
+  {
+    "id": "folder:domains/shared/literal_generators/primitives",
+    "kind": "folder",
+    "path": "domains/shared/literal_generators/primitives",
+    "lane": "domains",
+    "sources": [
+      "domains/shared/literal_generators/binary_generator.py",
+      "domains/shared/literal_generators/boolean_generator.py",
+      "domains/shared/literal_generators/color_generators.py",
+      "domains/shared/literal_generators/data_faker_generator.py",
+      "domains/shared/literal_generators/state_transition_generator.py",
+      "domains/shared/literal_generators/string_generator.py"
+    ]
+  },
+  {
+    "id": "folder:domains/shared/literal_generators/temporal",
+    "kind": "folder",
+    "path": "domains/shared/literal_generators/temporal",
+    "lane": "domains",
+    "sources": [
+      "domains/shared/literal_generators/birthdate_generator.py",
+      "domains/shared/literal_generators/datetime_generator.py"
+    ]
+  },
+  {
+    "id": "folder:domains/shared/models",
+    "kind": "folder",
+    "path": "domains/shared/models",
+    "lane": "domains",
+    "sources": [
+      "domains/shared/models/__init__.py",
+      "domains/shared/models/address.py",
+      "domains/shared/models/city.py",
+      "domains/shared/models/company.py",
+      "domains/shared/models/country.py",
+      "domains/shared/models/person.py"
+    ]
+  },
+  {
+    "id": "folder:domains/shared/services",
+    "kind": "folder",
+    "path": "domains/shared/services",
+    "lane": "domains",
+    "sources": [
+      "domains/shared/services/__init__.py",
+      "domains/shared/services/address_api.py",
+      "domains/shared/services/address_service.py",
+      "domains/shared/services/city_service.py",
+      "domains/shared/services/company_service.py",
+      "domains/shared/services/country_service.py",
+      "domains/shared/services/person_api.py",
+      "domains/shared/services/person_service.py"
+    ]
+  },
+  {
+    "id": "contract:domains/shared/literal_generators/numeric",
+    "kind": "contract",
+    "path": "domains/shared/literal_generators/numeric",
+    "lane": "domains",
+    "contract": "docs/architecture/inner/domains/shared/literal_generators/architecture-contract.json",
+    "sources": [
+      "domains/shared/literal_generators/float_generator.py",
+      "domains/shared/literal_generators/global_increment_generator.py",
+      "domains/shared/literal_generators/increment_generator.py",
+      "domains/shared/literal_generators/integer_generator.py",
+      "domains/shared/literal_generators/number_sequences.py"
+    ]
+  },
+  {
+    "id": "contract:domains/shared/literal_generators/primitives",
+    "kind": "contract",
+    "path": "domains/shared/literal_generators/primitives",
+    "lane": "domains",
+    "contract": "docs/architecture/inner/domains/shared/literal_generators/architecture-contract.json",
+    "sources": [
+      "domains/shared/literal_generators/binary_generator.py",
+      "domains/shared/literal_generators/boolean_generator.py",
+      "domains/shared/literal_generators/color_generators.py",
+      "domains/shared/literal_generators/data_faker_generator.py",
+      "domains/shared/literal_generators/state_transition_generator.py",
+      "domains/shared/literal_generators/string_generator.py"
+    ]
+  },
+  {
+    "id": "contract:domains/shared/literal_generators/identity",
+    "kind": "contract",
+    "path": "domains/shared/literal_generators/identity",
+    "lane": "domains",
+    "contract": "docs/architecture/inner/domains/shared/literal_generators/architecture-contract.json",
+    "sources": [
+      "domains/shared/literal_generators/cnpj_generator.py",
+      "domains/shared/literal_generators/cpf_generator.py",
+      "domains/shared/literal_generators/ean_generator.py",
+      "domains/shared/literal_generators/hash_generator.py",
+      "domains/shared/literal_generators/password_generator.py",
+      "domains/shared/literal_generators/prefixed_id_generator.py",
+      "domains/shared/literal_generators/ssn_generator.py",
+      "domains/shared/literal_generators/token_generator.py",
+      "domains/shared/literal_generators/uuid_generator.py"
+    ]
+  },
+  {
+    "id": "contract:domains/shared/literal_generators/temporal",
+    "kind": "contract",
+    "path": "domains/shared/literal_generators/temporal",
+    "lane": "domains",
+    "contract": "docs/architecture/inner/domains/shared/literal_generators/architecture-contract.json",
+    "sources": [
+      "domains/shared/literal_generators/birthdate_generator.py",
+      "domains/shared/literal_generators/datetime_generator.py"
+    ]
+  },
+  {
+    "id": "contract:domains/shared/literal_generators/person",
+    "kind": "contract",
+    "path": "domains/shared/literal_generators/person",
+    "lane": "domains",
+    "contract": "docs/architecture/inner/domains/shared/literal_generators/architecture-contract.json",
+    "sources": [
+      "domains/shared/literal_generators/academic_title_generator.py",
+      "domains/shared/literal_generators/family_name_generator.py",
+      "domains/shared/literal_generators/gender_generator.py",
+      "domains/shared/literal_generators/given_name_generator.py",
+      "domains/shared/literal_generators/nobility_title_generator.py"
+    ]
+  },
+  {
+    "id": "contract:domains/shared/literal_generators/contact",
+    "kind": "contract",
+    "path": "domains/shared/literal_generators/contact",
+    "lane": "domains",
+    "contract": "docs/architecture/inner/domains/shared/literal_generators/architecture-contract.json",
+    "sources": [
+      "domains/shared/literal_generators/domain_generator.py",
+      "domains/shared/literal_generators/email_address_generator.py",
+      "domains/shared/literal_generators/phone_number_generator.py",
+      "domains/shared/literal_generators/street_name_generator.py",
+      "domains/shared/literal_generators/url_generator.py"
+    ]
+  },
+  {
+    "id": "contract:domains/shared/literal_generators/business",
+    "kind": "contract",
+    "path": "domains/shared/literal_generators/business",
+    "lane": "domains",
+    "contract": "docs/architecture/inner/domains/shared/literal_generators/architecture-contract.json",
+    "sources": [
+      "domains/shared/literal_generators/company_name_generator.py",
+      "domains/shared/literal_generators/department_name_generator.py",
+      "domains/shared/literal_generators/sector_generator.py"
+    ]
+  },
+  {
+    "id": "contract:domains/shared/literal_generators/registry",
+    "kind": "contract",
+    "path": "domains/shared/literal_generators/registry",
+    "lane": "domains",
+    "contract": "docs/architecture/inner/domains/shared/literal_generators/architecture-contract.json",
+    "sources": [
+      "domains/shared/generator_registry.py"
+    ]
+  },
+  {
+    "id": "contract:domains/shared/converters/base",
+    "kind": "contract",
+    "path": "domains/shared/converters/base",
+    "lane": "domains",
+    "contract": "docs/architecture/inner/domains/shared/converters/architecture-contract.json",
+    "sources": [
+      "domains/shared/converters/converter.py"
+    ]
+  },
+  {
+    "id": "contract:domains/shared/converters/text",
+    "kind": "contract",
+    "path": "domains/shared/converters/text",
+    "lane": "domains",
+    "contract": "docs/architecture/inner/domains/shared/converters/architecture-contract.json",
+    "sources": [
+      "domains/shared/converters/append_converter.py",
+      "domains/shared/converters/cut_length_converter.py",
+      "domains/shared/converters/lower_case_converter.py",
+      "domains/shared/converters/substring_converter.py",
+      "domains/shared/converters/upper_case_converter.py"
+    ]
+  },
+  {
+    "id": "contract:domains/shared/converters/temporal",
+    "kind": "contract",
+    "path": "domains/shared/converters/temporal",
+    "lane": "domains",
+    "contract": "docs/architecture/inner/domains/shared/converters/architecture-contract.json",
+    "sources": [
+      "domains/shared/converters/date2timestamp_converter.py",
+      "domains/shared/converters/date_format_converter.py",
+      "domains/shared/converters/timestamp2date_converter.py"
+    ]
+  },
+  {
+    "id": "contract:domains/shared/converters/privacy",
+    "kind": "contract",
+    "path": "domains/shared/converters/privacy",
+    "lane": "domains",
+    "contract": "docs/architecture/inner/domains/shared/converters/architecture-contract.json",
+    "sources": [
+      "domains/shared/converters/hash_converter.py",
+      "domains/shared/converters/java_hash_converter.py",
+      "domains/shared/converters/mask_converter.py",
+      "domains/shared/converters/middle_mask_converter.py"
+    ]
+  },
+  {
+    "id": "contract:domains/shared/converters/structural",
+    "kind": "contract",
+    "path": "domains/shared/converters/structural",
+    "lane": "domains",
+    "contract": "docs/architecture/inner/domains/shared/converters/architecture-contract.json",
+    "sources": [
+      "domains/shared/converters/custom_converter.py",
+      "domains/shared/converters/remove_none_or_empty_element_converter.py"
+    ]
+  },
+  {
+    "id": "contract:domains/shared/models",
+    "kind": "contract",
+    "path": "domains/shared/models",
+    "lane": "domains",
+    "contract": "docs/architecture/inner/domains/shared/architecture-contract.json",
+    "sources": [
+      "domains/shared/json_types.py",
+      "domains/shared/models/__init__.py",
+      "domains/shared/models/address.py",
+      "domains/shared/models/city.py",
+      "domains/shared/models/company.py",
+      "domains/shared/models/country.py",
+      "domains/shared/models/demographic_config.py",
+      "domains/shared/models/person.py"
+    ]
+  },
+  {
+    "id": "contract:domains/shared/datasets",
+    "kind": "contract",
+    "path": "domains/shared/datasets",
+    "lane": "domains",
+    "contract": "docs/architecture/inner/domains/shared/architecture-contract.json",
+    "sources": [
+      "domains/shared/determinism.py",
+      "domains/shared/locale_registry.py",
+      "domains/shared/locales/__init__.py",
+      "domains/shared/profile_components.py",
+      "domains/shared/sampling.py",
+      "domains/shared/utils/__init__.py",
+      "domains/shared/utils/dataset_loader.py",
+      "domains/shared/utils/dataset_path.py",
+      "domains/shared/utils/random_source.py",
+      "domains/shared/utils/rng_uuid.py",
+      "domains/shared/utils/supported_datasets.py"
+    ]
+  },
+  {
+    "id": "contract:domains/shared/generators",
+    "kind": "contract",
+    "path": "domains/shared/generators",
+    "lane": "domains",
+    "contract": "docs/architecture/inner/domains/shared/architecture-contract.json",
+    "sources": [
+      "domains/shared/generators/__init__.py",
+      "domains/shared/generators/address_generator.py",
+      "domains/shared/generators/city_generator.py",
+      "domains/shared/generators/company_generator.py",
+      "domains/shared/generators/country_generator.py",
+      "domains/shared/generators/person_generator.py",
+      "domains/shared/generators/region_groups.py"
+    ]
+  },
+  {
+    "id": "contract:domains/shared/services",
+    "kind": "contract",
+    "path": "domains/shared/services",
+    "lane": "domains",
+    "contract": "docs/architecture/inner/domains/shared/architecture-contract.json",
+    "sources": [
+      "domains/shared/services/__init__.py",
+      "domains/shared/services/address_api.py",
+      "domains/shared/services/address_service.py",
+      "domains/shared/services/city_service.py",
+      "domains/shared/services/company_service.py",
+      "domains/shared/services/country_service.py",
+      "domains/shared/services/person_api.py",
+      "domains/shared/services/person_service.py"
+    ]
+  },
+  {
+    "id": "contract:domains/shared/literal_generators",
+    "kind": "contract",
+    "path": "domains/shared/literal_generators",
+    "lane": "domains",
+    "contract": "docs/architecture/inner/domains/shared/architecture-contract.json",
+    "sources": [
+      "domains/shared/generator_registry.py",
+      "domains/shared/literal_generators/academic_title_generator.py",
+      "domains/shared/literal_generators/binary_generator.py",
+      "domains/shared/literal_generators/birthdate_generator.py",
+      "domains/shared/literal_generators/boolean_generator.py",
+      "domains/shared/literal_generators/cnpj_generator.py",
+      "domains/shared/literal_generators/color_generators.py",
+      "domains/shared/literal_generators/company_name_generator.py",
+      "domains/shared/literal_generators/cpf_generator.py",
+      "domains/shared/literal_generators/data_faker_generator.py",
+      "domains/shared/literal_generators/datetime_generator.py",
+      "domains/shared/literal_generators/department_name_generator.py",
+      "domains/shared/literal_generators/domain_generator.py",
+      "domains/shared/literal_generators/ean_generator.py",
+      "domains/shared/literal_generators/email_address_generator.py",
+      "domains/shared/literal_generators/family_name_generator.py",
+      "domains/shared/literal_generators/float_generator.py",
+      "domains/shared/literal_generators/gender_generator.py",
+      "domains/shared/literal_generators/given_name_generator.py",
+      "domains/shared/literal_generators/global_increment_generator.py",
+      "domains/shared/literal_generators/hash_generator.py",
+      "domains/shared/literal_generators/increment_generator.py",
+      "domains/shared/literal_generators/integer_generator.py",
+      "domains/shared/literal_generators/nobility_title_generator.py",
+      "domains/shared/literal_generators/number_sequences.py",
+      "domains/shared/literal_generators/password_generator.py",
+      "domains/shared/literal_generators/phone_number_generator.py",
+      "domains/shared/literal_generators/prefixed_id_generator.py",
+      "domains/shared/literal_generators/sector_generator.py",
+      "domains/shared/literal_generators/ssn_generator.py",
+      "domains/shared/literal_generators/state_transition_generator.py",
+      "domains/shared/literal_generators/street_name_generator.py",
+      "domains/shared/literal_generators/string_generator.py",
+      "domains/shared/literal_generators/token_generator.py",
+      "domains/shared/literal_generators/url_generator.py",
+      "domains/shared/literal_generators/uuid_generator.py"
+    ]
+  },
+  {
+    "id": "contract:domains/shared/converters",
+    "kind": "contract",
+    "path": "domains/shared/converters",
+    "lane": "domains",
+    "contract": "docs/architecture/inner/domains/shared/architecture-contract.json",
+    "sources": [
+      "domains/shared/converters/__init__.py",
+      "domains/shared/converters/append_converter.py",
+      "domains/shared/converters/converter.py",
+      "domains/shared/converters/custom_converter.py",
+      "domains/shared/converters/cut_length_converter.py",
+      "domains/shared/converters/date2timestamp_converter.py",
+      "domains/shared/converters/date_format_converter.py",
+      "domains/shared/converters/hash_converter.py",
+      "domains/shared/converters/java_hash_converter.py",
+      "domains/shared/converters/lower_case_converter.py",
+      "domains/shared/converters/mask_converter.py",
+      "domains/shared/converters/middle_mask_converter.py",
+      "domains/shared/converters/remove_none_or_empty_element_converter.py",
+      "domains/shared/converters/substring_converter.py",
+      "domains/shared/converters/timestamp2date_converter.py",
+      "domains/shared/converters/upper_case_converter.py"
+    ]
+  },
+  {
+    "id": "contract:domains/shared/demographics",
+    "kind": "contract",
+    "path": "domains/shared/demographics",
+    "lane": "domains",
+    "contract": "docs/architecture/inner/domains/shared/architecture-contract.json",
+    "sources": [
+      "domains/shared/demographics/__init__.py",
+      "domains/shared/demographics/api.py",
+      "domains/shared/demographics/loader.py",
+      "domains/shared/demographics/profile.py",
+      "domains/shared/demographics/profile_meta.py",
+      "domains/shared/demographics/sampler.py",
+      "domains/shared/models/demographic_config.py"
+    ]
+  },
+  {
+    "id": "contract:domains/shared/schema",
+    "kind": "contract",
+    "path": "domains/shared/schema",
+    "lane": "domains",
+    "contract": "docs/architecture/inner/domains/shared/architecture-contract.json",
+    "sources": [
+      "domains/shared/schema_registry.py"
+    ]
+  },
+  {
+    "id": "contract:domains/shared/examples",
+    "kind": "contract",
+    "path": "domains/shared/examples",
+    "lane": "domains",
+    "contract": "docs/architecture/inner/domains/shared/architecture-contract.json",
+    "sources": [
+      "domains/shared/examples/generate_address.py",
+      "domains/shared/examples/generate_cities.py",
+      "domains/shared/examples/generate_companies.py",
+      "domains/shared/examples/generate_countries.py",
+      "domains/shared/examples/generate_people.py",
+      "domains/shared/examples/generate_people_demographics.py"
+    ]
+  },
+  {
+    "id": "contract:domains/finance/models",
+    "kind": "contract",
+    "path": "domains/finance/models",
+    "lane": "domains",
+    "contract": "docs/architecture/inner/domains/finance/architecture-contract.json",
+    "sources": [
+      "domains/finance/models/__init__.py",
+      "domains/finance/models/bank.py",
+      "domains/finance/models/bank_account.py",
+      "domains/finance/models/credit_card.py",
+      "domains/finance/models/transaction.py"
+    ]
+  },
+  {
+    "id": "contract:domains/finance/generators",
+    "kind": "contract",
+    "path": "domains/finance/generators",
+    "lane": "domains",
+    "contract": "docs/architecture/inner/domains/finance/architecture-contract.json",
+    "sources": [
+      "domains/finance/generators/__init__.py",
+      "domains/finance/generators/bank_account_generator.py",
+      "domains/finance/generators/bank_generator.py",
+      "domains/finance/generators/credit_card_generator.py",
+      "domains/finance/generators/transaction_generator.py"
+    ]
+  },
+  {
+    "id": "contract:domains/finance/services",
+    "kind": "contract",
+    "path": "domains/finance/services",
+    "lane": "domains",
+    "contract": "docs/architecture/inner/domains/finance/architecture-contract.json",
+    "sources": [
+      "domains/finance/services/__init__.py",
+      "domains/finance/services/bank_account_service.py",
+      "domains/finance/services/bank_service.py",
+      "domains/finance/services/credit_card_service.py",
+      "domains/finance/services/transaction_service.py"
+    ]
+  },
+  {
+    "id": "contract:domains/finance/algorithms",
+    "kind": "contract",
+    "path": "domains/finance/algorithms",
+    "lane": "domains",
+    "contract": "docs/architecture/inner/domains/finance/architecture-contract.json",
+    "sources": [
+      "domains/finance/luhn.py"
+    ]
+  },
+  {
+    "id": "contract:domains/healthcare/models",
+    "kind": "contract",
+    "path": "domains/healthcare/models",
+    "lane": "domains",
+    "contract": "docs/architecture/inner/domains/healthcare/architecture-contract.json",
+    "sources": [
+      "domains/healthcare/models/__init__.py",
+      "domains/healthcare/models/doctor.py",
+      "domains/healthcare/models/hospital.py",
+      "domains/healthcare/models/medical_device.py",
+      "domains/healthcare/models/medical_procedure.py",
+      "domains/healthcare/models/patient.py"
+    ]
+  },
+  {
+    "id": "contract:domains/healthcare/generators",
+    "kind": "contract",
+    "path": "domains/healthcare/generators",
+    "lane": "domains",
+    "contract": "docs/architecture/inner/domains/healthcare/architecture-contract.json",
+    "sources": [
+      "domains/healthcare/generators/__init__.py",
+      "domains/healthcare/generators/doctor_generator.py",
+      "domains/healthcare/generators/hospital_generator.py",
+      "domains/healthcare/generators/medical_device_generator.py",
+      "domains/healthcare/generators/medical_procedure_generator.py",
+      "domains/healthcare/generators/patient_generator.py"
+    ]
+  },
+  {
+    "id": "contract:domains/healthcare/services",
+    "kind": "contract",
+    "path": "domains/healthcare/services",
+    "lane": "domains",
+    "contract": "docs/architecture/inner/domains/healthcare/architecture-contract.json",
+    "sources": [
+      "domains/healthcare/services/__init__.py",
+      "domains/healthcare/services/doctor_api.py",
+      "domains/healthcare/services/doctor_service.py",
+      "domains/healthcare/services/hospital_service.py",
+      "domains/healthcare/services/medical_device_service.py",
+      "domains/healthcare/services/medical_procedure_service.py",
+      "domains/healthcare/services/patient_api.py",
+      "domains/healthcare/services/patient_service.py"
+    ]
+  },
+  {
+    "id": "contract:domains/insurance/models",
+    "kind": "contract",
+    "path": "domains/insurance/models",
+    "lane": "domains",
+    "contract": "docs/architecture/inner/domains/insurance/architecture-contract.json",
+    "sources": [
+      "domains/insurance/models/__init__.py",
+      "domains/insurance/models/insurance_company.py",
+      "domains/insurance/models/insurance_coverage.py",
+      "domains/insurance/models/insurance_policy.py",
+      "domains/insurance/models/insurance_product.py"
+    ]
+  },
+  {
+    "id": "contract:domains/insurance/generators",
+    "kind": "contract",
+    "path": "domains/insurance/generators",
+    "lane": "domains",
+    "contract": "docs/architecture/inner/domains/insurance/architecture-contract.json",
+    "sources": [
+      "domains/insurance/generators/__init__.py",
+      "domains/insurance/generators/insurance_company_generator.py",
+      "domains/insurance/generators/insurance_coverage_generator.py",
+      "domains/insurance/generators/insurance_policy_generator.py",
+      "domains/insurance/generators/insurance_product_generator.py"
+    ]
+  },
+  {
+    "id": "contract:domains/insurance/services",
+    "kind": "contract",
+    "path": "domains/insurance/services",
+    "lane": "domains",
+    "contract": "docs/architecture/inner/domains/insurance/architecture-contract.json",
+    "sources": [
+      "domains/insurance/services/__init__.py",
+      "domains/insurance/services/insurance_company_service.py",
+      "domains/insurance/services/insurance_coverage_service.py",
+      "domains/insurance/services/insurance_policy_service.py",
+      "domains/insurance/services/insurance_product_service.py"
+    ]
+  },
+  {
+    "id": "contract:domains/ecommerce/models",
+    "kind": "contract",
+    "path": "domains/ecommerce/models",
+    "lane": "domains",
+    "contract": "docs/architecture/inner/domains/ecommerce/architecture-contract.json",
+    "sources": [
+      "domains/ecommerce/models/__init__.py",
+      "domains/ecommerce/models/order.py",
+      "domains/ecommerce/models/product.py"
+    ]
+  },
+  {
+    "id": "contract:domains/ecommerce/generators",
+    "kind": "contract",
+    "path": "domains/ecommerce/generators",
+    "lane": "domains",
+    "contract": "docs/architecture/inner/domains/ecommerce/architecture-contract.json",
+    "sources": [
+      "domains/ecommerce/generators/__init__.py",
+      "domains/ecommerce/generators/order_generator.py",
+      "domains/ecommerce/generators/product_generator.py"
+    ]
+  },
+  {
+    "id": "contract:domains/ecommerce/services",
+    "kind": "contract",
+    "path": "domains/ecommerce/services",
+    "lane": "domains",
+    "contract": "docs/architecture/inner/domains/ecommerce/architecture-contract.json",
+    "sources": [
+      "domains/ecommerce/services/__init__.py",
+      "domains/ecommerce/services/order_service.py",
+      "domains/ecommerce/services/product_service.py"
+    ]
+  },
+  {
+    "id": "contract:domains/public_sector/models",
+    "kind": "contract",
+    "path": "domains/public_sector/models",
+    "lane": "domains",
+    "contract": "docs/architecture/inner/domains/public_sector/architecture-contract.json",
+    "sources": [
+      "domains/public_sector/models/__init__.py",
+      "domains/public_sector/models/administration_office.py",
+      "domains/public_sector/models/educational_institution.py",
+      "domains/public_sector/models/police_officer.py"
+    ]
+  },
+  {
+    "id": "contract:domains/public_sector/generators",
+    "kind": "contract",
+    "path": "domains/public_sector/generators",
+    "lane": "domains",
+    "contract": "docs/architecture/inner/domains/public_sector/architecture-contract.json",
+    "sources": [
+      "domains/public_sector/generators/__init__.py",
+      "domains/public_sector/generators/administration_office_generator.py",
+      "domains/public_sector/generators/educational_institution_generator.py",
+      "domains/public_sector/generators/police_officer_generator.py"
+    ]
+  },
+  {
+    "id": "contract:domains/public_sector/services",
+    "kind": "contract",
+    "path": "domains/public_sector/services",
+    "lane": "domains",
+    "contract": "docs/architecture/inner/domains/public_sector/architecture-contract.json",
+    "sources": [
+      "domains/public_sector/services/__init__.py",
+      "domains/public_sector/services/administration_office_service.py",
+      "domains/public_sector/services/educational_institution_service.py",
+      "domains/public_sector/services/police_officer_service.py"
+    ]
+  },
+  {
+    "id": "contract:domains/api",
+    "kind": "contract",
+    "path": "domains/api",
+    "lane": "domains",
+    "contract": "docs/architecture/inner/domains/architecture-contract.json",
+    "sources": [
+      "domains/api.py",
+      "domains/entity_registry.py",
+      "domains/facade.py"
+    ]
+  },
+  {
+    "id": "contract:domains/domain_core",
+    "kind": "contract",
+    "path": "domains/domain_core",
+    "lane": "domains",
+    "contract": "docs/architecture/inner/domains/architecture-contract.json",
+    "sources": [
+      "domains/domain_core/__init__.py",
+      "domains/domain_core/attribute_catalog.py",
+      "domains/domain_core/base_domain_generator.py",
+      "domains/domain_core/base_domain_service.py",
+      "domains/domain_core/base_entity.py",
+      "domains/domain_core/base_literal_generator.py",
+      "domains/domain_core/property_cache.py",
+      "domains/domain_core/runtime/__init__.py",
+      "domains/domain_core/runtime/clock.py",
+      "domains/domain_core/runtime/rng.py",
+      "domains/domain_core/runtime/run_seed.py"
+    ]
+  },
+  {
+    "id": "contract:domains/shared",
+    "kind": "contract",
+    "path": "domains/shared",
+    "lane": "domains",
+    "contract": "docs/architecture/inner/domains/architecture-contract.json",
+    "sources": [
+      "domains/shared/__init__.py",
+      "domains/shared/converters/__init__.py",
+      "domains/shared/converters/append_converter.py",
+      "domains/shared/converters/converter.py",
+      "domains/shared/converters/custom_converter.py",
+      "domains/shared/converters/cut_length_converter.py",
+      "domains/shared/converters/date2timestamp_converter.py",
+      "domains/shared/converters/date_format_converter.py",
+      "domains/shared/converters/hash_converter.py",
+      "domains/shared/converters/java_hash_converter.py",
+      "domains/shared/converters/lower_case_converter.py",
+      "domains/shared/converters/mask_converter.py",
+      "domains/shared/converters/middle_mask_converter.py",
+      "domains/shared/converters/remove_none_or_empty_element_converter.py",
+      "domains/shared/converters/substring_converter.py",
+      "domains/shared/converters/timestamp2date_converter.py",
+      "domains/shared/converters/upper_case_converter.py",
+      "domains/shared/demographics/__init__.py",
+      "domains/shared/demographics/api.py",
+      "domains/shared/demographics/loader.py",
+      "domains/shared/demographics/profile.py",
+      "domains/shared/demographics/profile_meta.py",
+      "domains/shared/demographics/sampler.py",
+      "domains/shared/determinism.py",
+      "domains/shared/examples/generate_address.py",
+      "domains/shared/examples/generate_cities.py",
+      "domains/shared/examples/generate_companies.py",
+      "domains/shared/examples/generate_countries.py",
+      "domains/shared/examples/generate_people.py",
+      "domains/shared/examples/generate_people_demographics.py",
+      "domains/shared/generator_registry.py",
+      "domains/shared/generators/__init__.py",
+      "domains/shared/generators/address_generator.py",
+      "domains/shared/generators/city_generator.py",
+      "domains/shared/generators/company_generator.py",
+      "domains/shared/generators/country_generator.py",
+      "domains/shared/generators/person_generator.py",
+      "domains/shared/generators/region_groups.py",
+      "domains/shared/json_types.py",
+      "domains/shared/literal_generators/academic_title_generator.py",
+      "domains/shared/literal_generators/binary_generator.py",
+      "domains/shared/literal_generators/birthdate_generator.py",
+      "domains/shared/literal_generators/boolean_generator.py",
+      "domains/shared/literal_generators/cnpj_generator.py",
+      "domains/shared/literal_generators/color_generators.py",
+      "domains/shared/literal_generators/company_name_generator.py",
+      "domains/shared/literal_generators/cpf_generator.py",
+      "domains/shared/literal_generators/data_faker_generator.py",
+      "domains/shared/literal_generators/datetime_generator.py",
+      "domains/shared/literal_generators/department_name_generator.py",
+      "domains/shared/literal_generators/domain_generator.py",
+      "domains/shared/literal_generators/ean_generator.py",
+      "domains/shared/literal_generators/email_address_generator.py",
+      "domains/shared/literal_generators/family_name_generator.py",
+      "domains/shared/literal_generators/float_generator.py",
+      "domains/shared/literal_generators/gender_generator.py",
+      "domains/shared/literal_generators/given_name_generator.py",
+      "domains/shared/literal_generators/global_increment_generator.py",
+      "domains/shared/literal_generators/hash_generator.py",
+      "domains/shared/literal_generators/increment_generator.py",
+      "domains/shared/literal_generators/integer_generator.py",
+      "domains/shared/literal_generators/nobility_title_generator.py",
+      "domains/shared/literal_generators/number_sequences.py",
+      "domains/shared/literal_generators/password_generator.py",
+      "domains/shared/literal_generators/phone_number_generator.py",
+      "domains/shared/literal_generators/prefixed_id_generator.py",
+      "domains/shared/literal_generators/sector_generator.py",
+      "domains/shared/literal_generators/ssn_generator.py",
+      "domains/shared/literal_generators/state_transition_generator.py",
+      "domains/shared/literal_generators/street_name_generator.py",
+      "domains/shared/literal_generators/string_generator.py",
+      "domains/shared/literal_generators/token_generator.py",
+      "domains/shared/literal_generators/url_generator.py",
+      "domains/shared/literal_generators/uuid_generator.py",
+      "domains/shared/locale_registry.py",
+      "domains/shared/locales/__init__.py",
+      "domains/shared/models/__init__.py",
+      "domains/shared/models/address.py",
+      "domains/shared/models/city.py",
+      "domains/shared/models/company.py",
+      "domains/shared/models/country.py",
+      "domains/shared/models/demographic_config.py",
+      "domains/shared/models/person.py",
+      "domains/shared/profile_components.py",
+      "domains/shared/sampling.py",
+      "domains/shared/schema_registry.py",
+      "domains/shared/services/__init__.py",
+      "domains/shared/services/address_api.py",
+      "domains/shared/services/address_service.py",
+      "domains/shared/services/city_service.py",
+      "domains/shared/services/company_service.py",
+      "domains/shared/services/country_service.py",
+      "domains/shared/services/person_api.py",
+      "domains/shared/services/person_service.py",
+      "domains/shared/utils/__init__.py",
+      "domains/shared/utils/dataset_loader.py",
+      "domains/shared/utils/dataset_path.py",
+      "domains/shared/utils/random_source.py",
+      "domains/shared/utils/rng_uuid.py",
+      "domains/shared/utils/supported_datasets.py"
+    ]
+  },
+  {
+    "id": "contract:domains/finance",
+    "kind": "contract",
+    "path": "domains/finance",
+    "lane": "domains",
+    "contract": "docs/architecture/inner/domains/architecture-contract.json",
+    "sources": [
+      "domains/finance/__init__.py",
+      "domains/finance/generators/__init__.py",
+      "domains/finance/generators/bank_account_generator.py",
+      "domains/finance/generators/bank_generator.py",
+      "domains/finance/generators/credit_card_generator.py",
+      "domains/finance/generators/transaction_generator.py",
+      "domains/finance/luhn.py",
+      "domains/finance/models/__init__.py",
+      "domains/finance/models/bank.py",
+      "domains/finance/models/bank_account.py",
+      "domains/finance/models/credit_card.py",
+      "domains/finance/models/transaction.py",
+      "domains/finance/services/__init__.py",
+      "domains/finance/services/bank_account_service.py",
+      "domains/finance/services/bank_service.py",
+      "domains/finance/services/credit_card_service.py",
+      "domains/finance/services/transaction_service.py"
+    ]
+  },
+  {
+    "id": "contract:domains/healthcare",
+    "kind": "contract",
+    "path": "domains/healthcare",
+    "lane": "domains",
+    "contract": "docs/architecture/inner/domains/architecture-contract.json",
+    "sources": [
+      "domains/healthcare/__init__.py",
+      "domains/healthcare/generators/__init__.py",
+      "domains/healthcare/generators/doctor_generator.py",
+      "domains/healthcare/generators/hospital_generator.py",
+      "domains/healthcare/generators/medical_device_generator.py",
+      "domains/healthcare/generators/medical_procedure_generator.py",
+      "domains/healthcare/generators/patient_generator.py",
+      "domains/healthcare/models/__init__.py",
+      "domains/healthcare/models/doctor.py",
+      "domains/healthcare/models/hospital.py",
+      "domains/healthcare/models/medical_device.py",
+      "domains/healthcare/models/medical_procedure.py",
+      "domains/healthcare/models/patient.py",
+      "domains/healthcare/services/__init__.py",
+      "domains/healthcare/services/doctor_api.py",
+      "domains/healthcare/services/doctor_service.py",
+      "domains/healthcare/services/hospital_service.py",
+      "domains/healthcare/services/medical_device_service.py",
+      "domains/healthcare/services/medical_procedure_service.py",
+      "domains/healthcare/services/patient_api.py",
+      "domains/healthcare/services/patient_service.py"
+    ]
+  },
+  {
+    "id": "contract:domains/insurance",
+    "kind": "contract",
+    "path": "domains/insurance",
+    "lane": "domains",
+    "contract": "docs/architecture/inner/domains/architecture-contract.json",
+    "sources": [
+      "domains/insurance/__init__.py",
+      "domains/insurance/generators/__init__.py",
+      "domains/insurance/generators/insurance_company_generator.py",
+      "domains/insurance/generators/insurance_coverage_generator.py",
+      "domains/insurance/generators/insurance_policy_generator.py",
+      "domains/insurance/generators/insurance_product_generator.py",
+      "domains/insurance/models/__init__.py",
+      "domains/insurance/models/insurance_company.py",
+      "domains/insurance/models/insurance_coverage.py",
+      "domains/insurance/models/insurance_policy.py",
+      "domains/insurance/models/insurance_product.py",
+      "domains/insurance/services/__init__.py",
+      "domains/insurance/services/insurance_company_service.py",
+      "domains/insurance/services/insurance_coverage_service.py",
+      "domains/insurance/services/insurance_policy_service.py",
+      "domains/insurance/services/insurance_product_service.py"
+    ]
+  },
+  {
+    "id": "contract:domains/ecommerce",
+    "kind": "contract",
+    "path": "domains/ecommerce",
+    "lane": "domains",
+    "contract": "docs/architecture/inner/domains/architecture-contract.json",
+    "sources": [
+      "domains/ecommerce/__init__.py",
+      "domains/ecommerce/generators/__init__.py",
+      "domains/ecommerce/generators/order_generator.py",
+      "domains/ecommerce/generators/product_generator.py",
+      "domains/ecommerce/models/__init__.py",
+      "domains/ecommerce/models/order.py",
+      "domains/ecommerce/models/product.py",
+      "domains/ecommerce/services/__init__.py",
+      "domains/ecommerce/services/order_service.py",
+      "domains/ecommerce/services/product_service.py"
+    ]
+  },
+  {
+    "id": "contract:domains/public_sector",
+    "kind": "contract",
+    "path": "domains/public_sector",
+    "lane": "domains",
+    "contract": "docs/architecture/inner/domains/architecture-contract.json",
+    "sources": [
+      "domains/public_sector/__init__.py",
+      "domains/public_sector/generators/__init__.py",
+      "domains/public_sector/generators/administration_office_generator.py",
+      "domains/public_sector/generators/educational_institution_generator.py",
+      "domains/public_sector/generators/police_officer_generator.py",
+      "domains/public_sector/models/__init__.py",
+      "domains/public_sector/models/administration_office.py",
+      "domains/public_sector/models/educational_institution.py",
+      "domains/public_sector/models/police_officer.py",
+      "domains/public_sector/services/__init__.py",
+      "domains/public_sector/services/administration_office_service.py",
+      "domains/public_sector/services/educational_institution_service.py",
+      "domains/public_sector/services/police_officer_service.py"
+    ]
+  }
+]

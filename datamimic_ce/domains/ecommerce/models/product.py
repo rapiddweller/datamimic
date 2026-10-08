@@ -15,7 +15,6 @@ from pathlib import Path
 from datamimic_ce.domains.domain_core import BaseEntity
 from datamimic_ce.domains.domain_core.property_cache import property_cache
 from datamimic_ce.domains.ecommerce.generators.product_generator import ProductGenerator
-from datamimic_ce.domains.shared.literal_generators.primitives.string_generator import StringGenerator
 
 # NOTE: No dataset I/O in model; all loading done in ProductGenerator
 
@@ -50,12 +49,7 @@ class Product(BaseEntity):
         Returns:
             A unique product ID
         """
-        #  use shared PrefixedIdGenerator for prefixed ID without separator
-        from datamimic_ce.domains.shared.literal_generators.identity.keys.prefixed_id_generator import (
-            PrefixedIdGenerator,
-        )
-
-        candidate = PrefixedIdGenerator("PROD", "[A-Z0-9]{8}", separator="", rng=self._product_generator.rng).generate()
+        candidate = self._product_generator.generate_product_id_candidate()
         return self._claim_identifier("product_id", candidate)
 
     @property
@@ -88,19 +82,7 @@ class Product(BaseEntity):
         """
         category = self.category
         brand = self.brand
-        adjective = self._product_generator.get_product_data_by_data_type("product_adjectives")
-        noun = self._product_generator.get_product_data_by_data_type(f"product_nouns_{category}")
-        if not noun:
-            raise ValueError(f"No product nouns for category {category!r} (data type 'product_nouns_{category}')")
-
-        #  deterministic RNG via generator; avoid module random
-        patterns = (
-            f"{brand} {adjective} {noun}",
-            f"{adjective} {noun} by {brand}",
-            f"{brand} {noun}",
-            f"{adjective} {brand} {noun}",
-        )
-        return self._product_generator.rng.choice(list(patterns))
+        return self._product_generator.generate_name(category, brand)
 
     @property
     @property_cache
@@ -112,16 +94,7 @@ class Product(BaseEntity):
         """
         name = self.name
         category = self.category
-        # Get category features
-        selected_features = self._product_generator.get_random_features(category, min_feature=2, max_feature=3)
-        # Create description
-        description = f"{name} - {', '.join(selected_features)}. "
-        description += (
-            f"This premium {category.lower().replace('_', ' ')} product offers exceptional quality and value. "
-        )
-        # Add random benefit
-        description += self._product_generator.get_product_data_by_data_type("product_benefits")
-        return description
+        return self._product_generator.generate_description(name, category)
 
     @property
     @property_cache
@@ -150,13 +123,7 @@ class Product(BaseEntity):
         Returns:
             A Stock Keeping Unit identifier
         """
-        # Format: BRAND-CATEGORY-RANDOM
-        brand_code = self.brand[:3].upper()
-        category_code = self.category[:3].upper()
-        #  use common StringGenerator for numeric segment
-        random_code = StringGenerator.rnd_str_from_regex("[0-9]{6}", rng=self._product_generator.rng)
-
-        return f"{brand_code}-{category_code}-{random_code}"
+        return self._product_generator.generate_sku(self.brand, self.category)
 
     @property
     @property_cache

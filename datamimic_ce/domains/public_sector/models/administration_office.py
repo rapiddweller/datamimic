@@ -49,9 +49,8 @@ class AdministrationOffice(BaseEntity):
         Returns:
             A unique identifier for the office.
         """
-        rng = self._administration_office_generator.rng
-        suffix = "".join(rng.choice("0123456789ABCDEF") for _ in range(8))
-        return self._claim_identifier("office_id", f"ADM-{suffix}")
+        candidate = self._administration_office_generator.generate_office_id_candidate()
+        return self._claim_identifier("office_id", candidate)
 
     @property
     @property_cache
@@ -106,30 +105,7 @@ class AdministrationOffice(BaseEntity):
         office_type = self.type
         city = self.address.city
         state = self.address.state
-
-        gen = self._administration_office_generator
-        # direct mapping by type
-        if "Municipal" in office_type or "City" in office_type:
-            res = f"City of {city}"
-        elif "County" in office_type:
-            res = f"{city} County"
-        elif "State" in office_type:
-            res = f"State of {state}"
-        elif "Federal" in office_type:
-            res = "Federal"
-        else:
-            # For specialized agencies, determine jurisdiction type from dataset
-            pick = gen.pick_jurisdiction_bucket()
-            if pick == "city":
-                res = f"City of {city}"
-            elif pick == "county":
-                res = f"{city} County"
-            elif pick == "state":
-                res = f"State of {state}"
-            else:
-                res = "Federal"
-
-        return res
+        return self._administration_office_generator.generate_jurisdiction(office_type, city, state)
 
     @property
     @property_cache
@@ -141,25 +117,7 @@ class AdministrationOffice(BaseEntity):
         """
         current_year = self._administration_office_generator.reference_now.year
         office_type = self.type
-
-        # Different ranges based on type
-        if "Federal" in office_type:
-            # Federal offices tend to be older
-            min_age = 20
-            max_age = 200
-        elif "State" in office_type:
-            # State offices also have history
-            min_age = 15
-            max_age = 150
-        elif "County" in office_type:
-            min_age = 10
-            max_age = 100
-        else:
-            # Local and specialized offices tend to be newer
-            min_age = 5
-            max_age = 75
-
-        return current_year - self._administration_office_generator.rng.randint(min_age, max_age)
+        return self._administration_office_generator.generate_founding_year(office_type, current_year)
 
     @property
     @property_cache
@@ -181,30 +139,7 @@ class AdministrationOffice(BaseEntity):
         """
         office_type = self.type
         staff_count = self.staff_count
-
-        # Budget calculation based on staff size and office type
-        # Base budget per staff member (salary, benefits, overhead)
-        rng = self._administration_office_generator.rng
-        base_per_staff = rng.uniform(80000, 120000)
-
-        # Additional budget based on office type
-        if "Federal" in office_type:
-            multiplier = rng.uniform(1.5, 3.0)
-        elif "State" in office_type:
-            multiplier = rng.uniform(1.2, 2.0)
-        elif "County" in office_type:
-            multiplier = rng.uniform(1.0, 1.5)
-        else:
-            multiplier = rng.uniform(0.8, 1.2)
-
-        # Calculate total budget
-        budget = staff_count * base_per_staff * multiplier
-
-        # Add some randomization
-        budget *= rng.uniform(0.9, 1.1)
-
-        # Round to nearest thousand
-        return round(budget / 1000) * 1000
+        return self._administration_office_generator.generate_annual_budget(office_type, staff_count)
 
     @property
     @property_cache
@@ -214,69 +149,7 @@ class AdministrationOffice(BaseEntity):
         Returns:
             A dictionary mapping days to hours.
         """
-        # Load time slots via generator helper (WHY: keep models pure; I/O in generator)
-        (
-            weekdays,
-            wd_w,
-            opens,
-            open_w,
-            closes,
-            close_w,
-            ext_closes,
-            ext_close_w,
-            sat_opens,
-            sat_open_w,
-            sat_closes,
-            sat_close_w,
-        ) = self._administration_office_generator.load_hours_datasets()
-
-        hours: dict[str, str] = {}
-
-        # Most government offices have standard hours on weekdays
-        rng = self._administration_office_generator.rng
-        standard_open = rng.choices(opens, weights=open_w, k=1)[0]
-        standard_close = rng.choices(closes, weights=close_w, k=1)[0]
-
-        # Set weekday hours
-        for day in weekdays:
-            hours[day] = f"{standard_open} - {standard_close}"
-
-        # Some offices have extended hours one day a week
-        if rng.random() < 0.3:  # 30% chance
-            extended_day = rng.choices(weekdays, weights=wd_w, k=1)[0]
-            extended_close = rng.choices(ext_closes, weights=ext_close_w, k=1)[0]
-            hours[extended_day] = f"{standard_open} - {extended_close}"
-
-        # Some offices are open on Saturday
-        if rng.random() < 0.2:  # 20% chance
-            saturday_open = rng.choices(sat_opens, weights=sat_open_w, k=1)[0]
-            saturday_close = rng.choices(sat_closes, weights=sat_close_w, k=1)[0]
-            hours["Saturday"] = f"{saturday_open} - {saturday_close}"
-        else:
-            hours["Saturday"] = "Closed"
-
-        # Almost all government offices are closed on Sunday
-        hours["Sunday"] = "Closed"
-
-        # Reduce chance of identical hours across consecutive entities
-        sig = tuple(sorted(hours.items()))
-        gen = self._administration_office_generator
-        if gen.last_hours_signature == sig:
-            # Nudge schedule by adding or changing an extended day or Saturday hours
-            # Prefer adding an extended day if not already present
-            candidates = [d for d, v in hours.items() if v != "Closed"]
-            if candidates:
-                extended_day = rng.choice(candidates)
-                extended_close = rng.choices(ext_closes, weights=ext_close_w, k=1)[0]
-                hours[extended_day] = f"{standard_open} - {extended_close}"
-            else:
-                # Make Saturday open briefly
-                saturday_open = rng.choices(sat_opens, weights=sat_open_w, k=1)[0]
-                saturday_close = rng.choices(sat_closes, weights=sat_close_w, k=1)[0]
-                hours["Saturday"] = f"{saturday_open} - {saturday_close}"
-            sig = tuple(sorted(hours.items()))
-        gen.last_hours_signature = sig
-        return hours
+        return self._administration_office_generator.generate_hours_of_operation()
 
     @property
     @property_cache
@@ -312,31 +185,8 @@ class AdministrationOffice(BaseEntity):
         # Extract domain from website
         website = self.website
         domain = website.replace("https://www.", "")
-
-        # Determine department from office type
         office_type = self.type.lower()
-
-        if "tax" in office_type:
-            department = "tax"
-        elif "motor" in office_type or "dmv" in office_type:
-            department = "dmv"
-        elif "social" in office_type or "welfare" in office_type:
-            department = "socialservices"
-        elif "permit" in office_type or "licens" in office_type:
-            department = "permits"
-        elif "election" in office_type:
-            department = "elections"
-        elif "health" in office_type:
-            department = "health"
-        elif "housing" in office_type:
-            department = "housing"
-        elif "environment" in office_type:
-            department = "environment"
-        elif "planning" in office_type or "development" in office_type:
-            department = "planning"
-        else:
-            department = "info"
-
+        department = self._administration_office_generator.get_email_department(office_type)
         return f"{department}@{domain}"
 
     @property

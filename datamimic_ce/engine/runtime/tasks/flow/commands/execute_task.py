@@ -6,9 +6,11 @@
 
 import subprocess  # noqa: S404
 import textwrap
+from typing import cast
 
 from datamimic_ce.engine.dsl.api import ExecuteStatement
 from datamimic_ce.engine.io.api import execute_sql_script
+from datamimic_ce.engine.io.contracts import SqlScriptClient
 from datamimic_ce.engine.runtime.contexts.context import Context
 from datamimic_ce.engine.runtime.contexts.geniter_context import GenIterContext
 from datamimic_ce.engine.runtime.logging import logger
@@ -62,8 +64,9 @@ class ExecuteTask(SetupSubTask):
             content = evaluated_content
         target = self._statement.target
         if target is None:
-            raise KeyError(None)
-        execute_sql_script(ctx.root.clients[target], content)
+            raise KeyError(target)
+        client = ctx.root.clients[target]
+        execute_sql_script(cast(SqlScriptClient, client), content)
 
     def _run_bash(self, ctx: Context, code: str) -> None:
         """Run a shell command. VERBATIM — no variable interpolation, so no generated data flows into the

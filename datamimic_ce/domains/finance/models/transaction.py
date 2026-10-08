@@ -17,7 +17,6 @@ from datamimic_ce.domains.domain_core.property_cache import property_cache
 from datamimic_ce.domains.finance.contracts import TransactionData
 from datamimic_ce.domains.finance.generators.transaction_generator import TransactionGenerator
 from datamimic_ce.domains.finance.models.bank_account import BankAccount
-from datamimic_ce.domains.shared.literal_generators.primitives.string_generator import StringGenerator
 
 
 class Transaction(BaseEntity):
@@ -48,7 +47,7 @@ class Transaction(BaseEntity):
         Returns:
             A unique identifier for the transaction.
         """
-        candidate = StringGenerator.rnd_str_from_regex("[A-Z0-9]{16}", rng=self._transaction_generator.rng)
+        candidate = self._transaction_generator.generate_transaction_id_candidate()
         return self._claim_identifier("transaction_id", candidate)
 
     @property
@@ -182,7 +181,7 @@ class Transaction(BaseEntity):
         Returns:
             True if the transaction is international, False otherwise.
         """
-        return self._transaction_generator.rng.choices([True, False], weights=[10, 90], k=1)[0]
+        return self._transaction_generator.generate_is_international()
 
     @property
     @property_cache

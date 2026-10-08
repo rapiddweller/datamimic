@@ -64,7 +64,7 @@
       },
       {
         "path": "datamimic_ce/engine/io/contracts.py",
-        "responsibility": "Defines IO paging, memstore, entity-value, export-routing and smoke-export contracts plus shared page selection."
+        "responsibility": "Defines context-free IO value types and the raw memstore read contract."
       },
       {
         "path": "datamimic_ce/engine/io/data_sources/__init__.py",
@@ -92,7 +92,7 @@
       },
       {
         "path": "datamimic_ce/engine/io/data_sources/selection.py",
-        "responsibility": "This module applies seeded source distribution and uniqueness; key tasks use it as well."
+        "responsibility": "This module applies source distribution, uniqueness, and row-window selection."
       },
       {
         "path": "datamimic_ce/engine/io/data_sources/variable.py",
@@ -132,7 +132,7 @@
         "datamimic_ce.engine.io"
       ],
       "responsibilities": [
-        "Exposes client lifecycle, resolved source reads and exporter operations to Runtime and Authoring; owns the inert IO namespace marker."
+        "Exposes client lifecycle, resolved source reads and exporter operations to Runtime and Authoring; owns the inert IO package initializer."
       ],
       "forbidden_responsibilities": [
         "Own connectors, source loading, or output writes."
@@ -169,8 +169,12 @@
       ],
       "public": [
         "datamimic_ce.engine.io.api",
+        "datamimic_ce.engine.io.api:RegisteredClient",
+        "datamimic_ce.engine.io.api:execute_sql_script",
         "datamimic_ce.engine.io.api:get_distributed_data",
         "datamimic_ce.engine.io.api:get_unique_data",
+        "datamimic_ce.engine.io.api:read_generate_memstore_source",
+        "datamimic_ce.engine.io.api:select_row_iterator",
         "datamimic_ce.engine.io.api:unique_value_iter"
       ],
       "decided_by": "agent"
@@ -183,7 +187,7 @@
         "datamimic_ce.engine.io.contracts"
       ],
       "responsibilities": [
-        "Context-free IO value contracts and neutral row windows."
+        "Context-free IO value types for paging, raw memstore reads, and export requests."
       ],
       "forbidden_responsibilities": [
         "Instantiate clients or execute reads and writes."
@@ -195,8 +199,7 @@
       "public": [
         "datamimic_ce.engine.io.contracts",
         "datamimic_ce.engine.io.contracts:EntityValue",
-        "datamimic_ce.engine.io.contracts:select_row_iterator",
-        "datamimic_ce.engine.io.contracts:select_rows"
+        "datamimic_ce.engine.io.contracts:SqlScriptClient"
       ],
       "decided_by": "agent"
     },
@@ -301,6 +304,7 @@
         "datamimic_ce.engine.io.data_sources.router",
         "datamimic_ce.engine.io.data_sources.selection:get_distributed_data",
         "datamimic_ce.engine.io.data_sources.selection:get_unique_data",
+        "datamimic_ce.engine.io.data_sources.selection:select_row_iterator",
         "datamimic_ce.engine.io.data_sources.selection:unique_value_iter",
         "datamimic_ce.engine.io.data_sources.variable",
         "datamimic_ce.engine.io.data_sources.weighted_data_source",
@@ -403,7 +407,7 @@
       "id": "IO-ASSIGNMENT",
       "kind": "complete_assignment",
       "source": "datamimic_ce.engine.io",
-      "rationale": "Every implementation below this boundary has one declared owner; initializer behavior is reviewed separately.",
+      "rationale": "Every implementation and the inert package initializer have one declared owner.",
       "provenance": [
         "docs/architecture/inner/target.md"
       ],

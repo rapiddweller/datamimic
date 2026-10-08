@@ -101,9 +101,7 @@ class Company(BaseEntity):
         Returns:
             The URL of the company
         """
-        #  use generator RNG; avoid private attrs and module random
-        rng = self._company_generator.rng
-        scheme = rng.choice(["http", "https"])
+        scheme = self._company_generator.generate_url_scheme()
         company_email_domain = self.email.split("@")[1]
         return f"{scheme}://{company_email_domain}"
 

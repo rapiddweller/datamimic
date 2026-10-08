@@ -26,7 +26,7 @@ from datamimic_ce.domains.api import (
     spawn_rng,
 )
 from datamimic_ce.engine.dsl.api import SetupStatement
-from datamimic_ce.engine.io.api import Client, ExportSession, TestResultExporter, dispose_client_engine
+from datamimic_ce.engine.io.api import ExportSession, RegisteredClient, TestResultExporter, dispose_client_engine
 from datamimic_ce.engine.runtime.contexts.demographic_context import DemographicContext
 from datamimic_ce.engine.runtime.logging import logger
 from datamimic_ce.engine.runtime.scripting import evaluation
@@ -193,7 +193,7 @@ class SetupContext(Context):
         default_variable_prefix: str,
         default_variable_suffix: str,
         default_line_separator: str | None,
-        clients: dict[str, Client] | None = None,
+        clients: dict[str, RegisteredClient] | None = None,
         data_source_len: dict[tuple[str | None, str | None], int] | None = None,
         properties: dict[str, object] | None = None,
         namespace: dict[str, object] | None = None,
@@ -210,7 +210,7 @@ class SetupContext(Context):
         # SetupContext is always its root_context
         super().__init__(self)
         self._descriptor_dir = descriptor_dir
-        self._clients: dict[str, Client] = {} if clients is None else clients
+        self._clients: dict[str, RegisteredClient] = {} if clients is None else clients
         self._data_source_len: dict[tuple[str | None, str | None], int] = (
             {} if data_source_len is None else data_source_len
         )
@@ -340,13 +340,13 @@ class SetupContext(Context):
     def domain_identifier_registry(self) -> IdentifierRegistry:
         return self._domain_identifier_registry
 
-    def _deepcopy_clients(self, memo: dict[int, object]) -> dict[str, Client]:
+    def _deepcopy_clients(self, memo: dict[int, object]) -> dict[str, RegisteredClient]:
         """
         Deepcopy clients attribute, excluding non-pickleable objects.
         :param memo:
         :return:
         """
-        copied_clients: dict[str, Client] = {}
+        copied_clients: dict[str, RegisteredClient] = {}
         for key, value in self._clients.items():
             try:
                 copied_clients[key] = copy.deepcopy(value, memo)
@@ -462,11 +462,11 @@ class SetupContext(Context):
         self._demographic_context = context
 
     @property
-    def clients(self) -> dict[str, Client]:
+    def clients(self) -> dict[str, RegisteredClient]:
         return self._clients
 
     @clients.setter
-    def clients(self, value: dict[str, Client]) -> None:
+    def clients(self, value: dict[str, RegisteredClient]) -> None:
         self._clients = value
 
     @property
@@ -630,7 +630,7 @@ class SetupContext(Context):
     def default_encoding(self) -> str:
         return self._default_encoding
 
-    def add_client(self, client_id: str, client: Client) -> None:
+    def add_client(self, client_id: str, client: RegisteredClient) -> None:
         """
         Add client info to context
         :param client_id:
@@ -645,7 +645,7 @@ class SetupContext(Context):
         # of statement order.
         self._namespace[client_id] = client
 
-    def get_client_by_id(self, client_id: str) -> Client | None:
+    def get_client_by_id(self, client_id: str) -> RegisteredClient | None:
         """
         Get client using id defined in descriptor file
         :param client_id:

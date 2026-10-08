@@ -70,6 +70,10 @@ class TransactionGenerator(ClockAnchoredDomainGenerator):
         assert isinstance(gen, dt.datetime)
         return gen
 
+    def generate_is_international(self) -> bool:
+        """Draw whether a transaction is international."""
+        return self.rng.choices([True, False], weights=[10, 90], k=1)[0]
+
     def _get_base_path(self, subdirectory: str) -> Path:
         """Get base path for domain data files.
 
@@ -255,6 +259,9 @@ class TransactionGenerator(ClockAnchoredDomainGenerator):
             A random alphanumeric reference number.
         """
         return StringGenerator.rnd_str_from_regex("[A-Z0-9]{10,12}", rng=self._rng)
+
+    def generate_transaction_id_candidate(self) -> str:
+        return StringGenerator.rnd_str_from_regex("[A-Z0-9]{16}", rng=self.rng)
 
     def get_currency(self) -> CurrencyData:
         """Get currency information based on the current dataset.

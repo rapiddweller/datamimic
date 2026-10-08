@@ -1,6 +1,27 @@
 import pickle
 
+import datamimic_ce.errors as package_errors
 from datamimic_ce.errors import DomainError, DomainErrorCode, ErrorCode, InvalidLocaleError
+from datamimic_ce.errors.base import DomainError as BaseDomainError
+from datamimic_ce.errors.base import InvalidLocaleError as BaseInvalidLocaleError
+from datamimic_ce.errors.codes import DomainErrorCode as CodesDomainErrorCode
+from datamimic_ce.errors.codes import ErrorCode as CodesErrorCode
+from datamimic_ce.errors.factory import invalid_locale_error
+
+
+def test_package_error_exports_keep_their_defining_objects() -> None:
+    assert package_errors.__all__ == [
+        "DomainError",
+        "DomainErrorCode",
+        "ErrorCode",
+        "InvalidLocaleError",
+        "invalid_locale_error",
+    ]
+    assert package_errors.DomainError is BaseDomainError
+    assert package_errors.InvalidLocaleError is BaseInvalidLocaleError
+    assert package_errors.DomainErrorCode is CodesDomainErrorCode
+    assert package_errors.ErrorCode is CodesErrorCode
+    assert package_errors.invalid_locale_error is invalid_locale_error
 
 
 def test_domain_error_round_trip_keeps_legacy_empty_string() -> None:

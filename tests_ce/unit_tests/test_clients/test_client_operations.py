@@ -6,10 +6,22 @@ import pytest
 from datamimic_ce.engine.dsl.api import Dbms
 from datamimic_ce.engine.io import api as io_api
 from datamimic_ce.engine.io.clients import operations as client_operations
-from datamimic_ce.engine.io.clients.operations import count_query_length, create_mongodb_client, create_rdbms_client, database_get_by_page_with_query, database_get_random_rows_by_columns, is_database_client, is_mongodb_client, is_rdbms_client, mongodb_count_collection, rdbms_get_current_sequence_number, uses_mysql_sequence_storage
 from datamimic_ce.engine.io.clients.client import Client
 from datamimic_ce.engine.io.clients.database_client import DatabaseClient
 from datamimic_ce.engine.io.clients.mongodb_client import MongoDBClient
+from datamimic_ce.engine.io.clients.operations import (
+    count_query_length,
+    create_mongodb_client,
+    create_rdbms_client,
+    database_get_by_page_with_query,
+    database_get_random_rows_by_columns,
+    is_database_client,
+    is_mongodb_client,
+    is_rdbms_client,
+    mongodb_count_collection,
+    rdbms_get_current_sequence_number,
+    uses_mysql_sequence_storage,
+)
 from datamimic_ce.engine.io.clients.rdbms_client import RdbmsClient
 from datamimic_ce.engine.io.connection_config.mongodb_connection_config import MongoDBConnectionConfig
 from datamimic_ce.engine.io.connection_config.rdbms_connection_config import RdbmsConnectionConfig
@@ -113,21 +125,29 @@ def test_execute_sql_script_uses_rdbms_subclass_override_and_preserves_exception
     assert client.calls == [query]
 
 
-def test_execute_sql_script_rejects_clients_outside_rdbms_without_calling_them() -> None:
-    calls: list[str] = []
+def test_execute_sql_script_accepts_injected_capability_and_preserves_query() -> None:
+    class InjectedSqlClient:
+        def __init__(self) -> None:
+            self.queries: list[str] = []
 
-    class ClientOnlySqlClient(Client):
         def execute_sql_script(self, query: str) -> None:
-            calls.append(query)
+            self.queries.append(query)
 
-    plain_client = Client()
-    plain_client.execute_sql_script = calls.append
-    mongo_client = object.__new__(MongoDBClient)
-    mongo_client.execute_sql_script = calls.append
+    client = InjectedSqlClient()
+    query = "  SELECT '{literal}';  "
 
-    for client in (plain_client, mongo_client, ClientOnlySqlClient()):
-        with pytest.raises(TypeError) as raised:
-            io_api.execute_sql_script(client, "SELECT 1")
-        assert str(raised.value) == "Client does not support SQL script execution"
+    assert io_api.execute_sql_script(client, query) is None
+    assert client.queries == [query]
 
-    assert calls == []
+
+def test_execute_sql_script_preserves_injected_client_exception_identity() -> None:
+    error = RuntimeError("injected client failed")
+
+    class FailingInjectedSqlClient:
+        def execute_sql_script(self, query: str) -> None:
+            raise error
+
+    with pytest.raises(RuntimeError) as raised:
+        io_api.execute_sql_script(FailingInjectedSqlClient(), "SELECT 1")
+
+    assert raised.value is error

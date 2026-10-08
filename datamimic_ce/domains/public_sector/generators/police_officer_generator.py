@@ -111,6 +111,15 @@ class PoliceOfficerGenerator(ClockAnchoredDomainGenerator):
         values = [row["rank"] for row in loaded_data]
         return self._rng.choices(values, weights=loaded_weights, k=1)[0]
 
+    def generate_badge_number(self) -> str:
+        rng = self.rng
+        return "".join(str(rng.randint(0, 9)) for _ in range(4))
+
+    def generate_officer_id_candidate(self) -> str:
+        rng = self.rng
+        suffix = "".join(rng.choice("0123456789ABCDEF") for _ in range(8))
+        return f"OFF-{suffix}"
+
     def get_department(self) -> str:
         """Get a random department.
 

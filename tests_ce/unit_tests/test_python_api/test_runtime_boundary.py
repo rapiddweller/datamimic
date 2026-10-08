@@ -148,6 +148,29 @@ def test_runtime_scripting_state_permissions_are_exact() -> None:
         (api + "SetupContext.clients", "return", "", "dict[str, Client]", None),
         (api + "SetupContext.clients", "value", "", "dict[str, Client]", None),
     }
+    demographic_permissions = {
+        (
+            api + "SetupContext.__init__",
+            "demographic_context",
+            "overrides.transaction_profile",
+            "Mapping[str, float]",
+            None,
+        ),
+        (
+            api + "SetupContext.demographic_context",
+            "return",
+            "overrides.transaction_profile",
+            "Mapping[str, float]",
+            None,
+        ),
+        (
+            api + "SetupContext.set_demographic_context",
+            "context",
+            "overrides.transaction_profile",
+            "Mapping[str, float]",
+            None,
+        ),
+    }
     scripting_names = {permission[0] for permission in map_permissions}
     scripting_positions = {permission[1] for permission in map_permissions}
     scripting_permissions = [
@@ -156,12 +179,17 @@ def test_runtime_scripting_state_permissions_are_exact() -> None:
         if permission[0] in scripting_names and permission[1] in scripting_positions
     ]
     remaining_permissions = [
-        permission for permission in permissions if permission not in scripting_permissions
+        permission
+        for permission in permissions
+        if permission not in scripting_permissions and permission not in demographic_permissions
     ]
 
     assert len(scripting_permissions) == 22
     assert set(scripting_permissions) == map_permissions
-    assert len(permissions) == len(set(permissions)) == 31
+    assert len(permissions) == len(set(permissions)) == 34
+    assert {
+        permission for permission in permissions if permission in demographic_permissions
+    } == demographic_permissions
     assert len(remaining_permissions) == 9
     assert set(remaining_permissions) == legacy_permissions
     assert all("*" not in permission[0] and "*" not in permission[2] for permission in permissions)

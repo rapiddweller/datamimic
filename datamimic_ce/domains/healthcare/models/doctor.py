@@ -49,10 +49,8 @@ class Doctor(BaseEntity):
         Returns:
             A unique identifier for the doctor.
         """
-        #  use shared PrefixedIdGenerator for prefixed short ID format
-        rng = self._doctor_generator.rng
-        suffix = "".join(rng.choice("0123456789ABCDEF") for _ in range(8))
-        return self._claim_identifier("doctor_id", f"DOC-{suffix}")
+        candidate = self._doctor_generator.generate_doctor_id_candidate()
+        return self._claim_identifier("doctor_id", candidate)
 
     @property
     @property_cache
@@ -62,8 +60,7 @@ class Doctor(BaseEntity):
         Returns:
             A 10-digit NPI number.
         """
-        rng = self._doctor_generator.rng
-        return "".join(str(rng.randint(0, 9)) for _ in range(10))
+        return self._doctor_generator.generate_npi_number()
 
     @property
     @property_cache
@@ -73,10 +70,7 @@ class Doctor(BaseEntity):
         Returns:
             A medical license number.
         """
-        rng = self._doctor_generator.rng
-        letters = "".join(rng.choice("ABCDEFGHIJKLMNOPQRSTUVWXYZ") for _ in range(2))
-        digits = "".join(str(rng.randint(0, 9)) for _ in range(6))
-        return f"{letters}-{digits}"
+        return self._doctor_generator.generate_license_number()
 
     @property
     @property_cache
@@ -218,7 +212,7 @@ class Doctor(BaseEntity):
         Returns:
             True if the doctor is accepting new patients, False otherwise.
         """
-        return self._doctor_generator.rng.random() < 0.8  # 80% chance of accepting new patients
+        return self._doctor_generator.generate_accepting_new_patients()
 
     @property
     @property_cache
@@ -228,28 +222,7 @@ class Doctor(BaseEntity):
         Returns:
             A dictionary mapping days to hours.
         """
-        days = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday"]
-        hours = {}
-
-        rng = self._doctor_generator.rng
-        for day in days:
-            if rng.random() < 0.9:  # 90% chance of working on a weekday
-                start_hour = rng.randint(7, 10)
-                end_hour = rng.randint(16, 19)
-                hours[day] = f"{start_hour:02d}:00 - {end_hour:02d}:00"
-            else:
-                hours[day] = "Closed"
-
-        # Weekend hours
-        for day in ["Saturday", "Sunday"]:
-            if rng.random() < 0.3:  # 30% chance of working on a weekend
-                start_hour = rng.randint(8, 11)
-                end_hour = rng.randint(14, 17)
-                hours[day] = f"{start_hour:02d}:00 - {end_hour:02d}:00"
-            else:
-                hours[day] = "Closed"
-
-        return hours
+        return self._doctor_generator.generate_office_hours()
 
     @property
     @property_cache

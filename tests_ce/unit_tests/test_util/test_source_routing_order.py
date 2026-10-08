@@ -750,8 +750,20 @@ def test_generate_prefers_memstore_while_variable_prefers_client_for_same_source
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     source_id = "shared"
-    memstore = Mock()
-    memstore.get_data_by_type.return_value = [{"id": "memstore"}]
+
+    class RawMemstore:
+        def get_data_by_type(self, product_type: str) -> list[dict[str, str]]:
+            assert product_type == "rows"
+            return [{"id": "memstore"}]
+
+    memstore = RawMemstore()
+    io_memstore_read = Mock(return_value=[{"id": "memstore"}])
+    monkeypatch.setattr(
+        generate_source_router,
+        "read_generate_memstore_source",
+        io_memstore_read,
+        raising=False,
+    )
     client = object()
     root = SimpleNamespace(
         descriptor_dir=Path("/descriptor"),
@@ -777,13 +789,12 @@ def test_generate_prefers_memstore_while_variable_prefers_client_for_same_source
         targets=set(),
     )
 
+    pagination = DataSourcePagination(skip=0, limit=1)
     rows, _ = generate_source_router.load_generate_source(
-        generate_context, generate, source_id, "|", False, 0, 1, DataSourcePagination(skip=0, limit=1)
+        generate_context, generate, source_id, "|", False, 0, 1, pagination
     )
     assert rows == [{"id": "memstore"}]
-    memstore.get_data_by_type.assert_called_once()
-    product_type, pagination, cyclic = memstore.get_data_by_type.call_args.args
-    assert (product_type, pagination.skip, pagination.limit, cyclic) == ("rows", 0, 1, False)
+    io_memstore_read.assert_called_once_with(memstore, "rows", pagination, False)
 
     database_rows = Mock(return_value=[{"id": "client"}])
     monkeypatch.setattr(variable_sources, "is_database_client", lambda value: value is client)
@@ -917,7 +928,7 @@ def _generate_source_context(source: str, client: object | None, memstore: Mock 
     [(None, False, [2]), (False, False, [2]), (True, True, [2, 1, 2, 1])],
 )
 def test_generate_memstore_normalizes_cyclic_and_keeps_expected_row_ownership(
-    cyclic: bool | None, expected_cyclic: bool, expected_ids: list[int]
+    monkeypatch: pytest.MonkeyPatch, cyclic: bool | None, expected_cyclic: bool, expected_ids: list[int]
 ) -> None:
     stored_rows = [
         {"id": 1, "nested": {"value": "first"}},
@@ -928,6 +939,8 @@ def test_generate_memstore_normalizes_cyclic_and_keeps_expected_row_ownership(
     memstore = Mock(wraps=real_memstore)
     context = _generate_source_context("source", None, memstore)
     pagination = DataSourcePagination(skip=1, limit=4)
+    select_rows = Mock(wraps=io_source_router.select_rows)
+    monkeypatch.setattr(io_source_router, "select_rows", select_rows)
 
     rows, build_from_source = generate_source_router.load_generate_source(
         context,
@@ -940,9 +953,9 @@ def test_generate_memstore_normalizes_cyclic_and_keeps_expected_row_ownership(
         pagination,
     )
 
-    memstore.get_data_by_type.assert_called_once()
-    assert memstore.get_data_by_type.call_args.args[:2] == ("rows", pagination)
-    assert memstore.get_data_by_type.call_args.args[2] is expected_cyclic
+    memstore.get_data_by_type.assert_called_once_with("rows")
+    select_rows.assert_called_once_with(stored_rows, pagination, expected_cyclic)
+    assert select_rows.call_args.args[2] is expected_cyclic
     assert build_from_source is True
     assert [row["id"] for row in rows] == expected_ids
     if cyclic:

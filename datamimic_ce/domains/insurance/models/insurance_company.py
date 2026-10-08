@@ -12,7 +12,6 @@ This module defines the insurance company model for the insurance domain.
 
 from datamimic_ce.domains.domain_core import BaseEntity
 from datamimic_ce.domains.domain_core.property_cache import property_cache
-from datamimic_ce.domains.domain_core.runtime.rng_uuid import uuid4_from_random
 from datamimic_ce.domains.insurance.generators.insurance_company_generator import InsuranceCompanyGenerator
 
 
@@ -26,7 +25,8 @@ class InsuranceCompany(BaseEntity):
     @property
     @property_cache
     def id(self) -> str:
-        return self._claim_identifier("id", uuid4_from_random(self._insurance_company_generator.rng))
+        candidate = self._insurance_company_generator.generate_id_candidate()
+        return self._claim_identifier("id", candidate)
 
     @property
     @property_cache

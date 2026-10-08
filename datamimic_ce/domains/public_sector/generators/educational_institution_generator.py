@@ -55,6 +55,94 @@ class EducationalInstitutionGenerator(ClockAnchoredDomainGenerator):
     def email_generator(self) -> EmailAddressGenerator:
         return self._email_generator
 
+    def generate_institution_id_candidate(self) -> str:
+        rng = self.rng
+        suffix = "".join(rng.choice("0123456789ABCDEF") for _ in range(8))
+        return f"EDU-{suffix}"
+
+    def generate_name(self, city: str, state: str, institution_type: str, level: str) -> str:
+        if "University" in institution_type:
+            name_formats = [
+                f"{city} University",
+                f"University of {city}",
+                f"{state} State University",
+                f"{city} Technical University",
+                f"{city} Metropolitan University",
+            ]
+        elif "College" in institution_type:
+            name_formats = [
+                f"{city} College",
+                f"{city} Community College",
+                f"{state} College",
+                f"{city} Technical College",
+                f"{city} Liberal Arts College",
+            ]
+        elif "School" in institution_type:
+            if "Elementary" in level:
+                name_formats = [
+                    f"{city} Elementary School",
+                    f"{city} Primary School",
+                    f"{city} Academy",
+                    f"Washington Elementary School of {city}",
+                    "Lincoln Elementary School",
+                ]
+            elif "Middle" in level:
+                name_formats = [
+                    f"{city} Middle School",
+                    f"{city} Intermediate School",
+                    f"{city} Junior High School",
+                    "Jefferson Middle School",
+                    "Roosevelt Middle School",
+                ]
+            elif "High" in level:
+                name_formats = [
+                    f"{city} High School",
+                    f"{city} Senior High School",
+                    f"{state} High School",
+                    "Kennedy High School",
+                    "Roosevelt High School",
+                ]
+            else:
+                name_formats = [
+                    f"{city} Academy",
+                    f"{city} School",
+                    f"{city} {level} School",
+                    f"{state} Academy",
+                    f"Central School of {city}",
+                ]
+        else:
+            name_formats = [
+                f"{city} Education Center",
+                f"{city} Learning Institute",
+                f"{city} Academy",
+                f"{state} Institute",
+                f"Central Institute of {city}",
+            ]
+
+        return self.rng.choice(name_formats)
+
+    def generate_student_count(self, institution_type: str, level: str) -> int:
+        rng = self.rng
+        if "University" in institution_type:
+            return rng.randint(5000, 40000)
+        elif "College" in institution_type:
+            return rng.randint(1000, 15000)
+        elif "School" in institution_type:
+            if "Elementary" in level:
+                return rng.randint(200, 800)
+            elif "Middle" in level:
+                return rng.randint(300, 1000)
+            elif "High" in level:
+                return rng.randint(500, 2500)
+            else:
+                return rng.randint(200, 1500)
+        else:
+            return rng.randint(100, 5000)
+
+    def generate_staff_count(self, student_count: int) -> int:
+        student_to_staff_ratio = self.rng.uniform(10, 25)  # Average student-to-staff ratio
+        return max(5, int(student_count / student_to_staff_ratio))
+
     #  centralize level picking so we can avoid immediate repetition while
     # staying dataset-driven. The model calls into this helper.
     def pick_level(self, institution_type: str, *, start: Path) -> str:
@@ -133,6 +221,22 @@ class EducationalInstitutionGenerator(ClockAnchoredDomainGenerator):
         choice = pick_one_weighted_no_repeat(self._rng, values, weights, last=self._last_institution_type)
         self._last_institution_type = choice
         return choice
+
+    def generate_programs(self, level: str, *, start: Path) -> list[str]:
+        if "Elementary" in level:
+            slug = "elementary"
+        elif "Middle" in level:
+            slug = "middle_school"
+        elif "High" in level:
+            slug = "high_school"
+        elif any(k in level for k in ("Higher", "Undergraduate", "Graduate", "Postgraduate")):
+            slug = "higher_education"
+        elif any(k in level for k in ("Vocational", "Technical")):
+            slug = "vocational"
+        else:
+            slug = "k12"
+
+        return self.pick_programs(slug, start=start)
 
     # Helper: programs selection, weighted without replacement
     def pick_programs(self, slug: str, *, start: Path) -> list[str]:

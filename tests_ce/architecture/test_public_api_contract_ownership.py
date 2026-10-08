@@ -108,6 +108,87 @@ def test_statement_branch_and_memstore_manager_are_root_component_declarations()
     ]
 
 
+def test_finance_model_api_types_are_declared_at_their_owning_boundaries() -> None:
+    model_symbols = {
+        "datamimic_ce.domains.finance.models.bank:Bank",
+        "datamimic_ce.domains.finance.generators.bank_account_generator:BankAccountGenerator",
+    }
+    contract_symbols = {
+        f"datamimic_ce.domains.finance.contracts:{name}"
+        for name in (
+            "BankAccountData",
+            "CurrencyData",
+            "GeneratedTransactionData",
+            "TransactionData",
+            "TransactionTypeData",
+        )
+    }
+    symbols = model_symbols | contract_symbols
+    root = _read_contract(ROOT / "architecture-contract.json")
+    root_domains = _component(root, "COMP-DOMAINS")["public"]
+    assert all(root_domains.count(symbol) == 1 for symbol in symbols)
+    assert symbols.isdisjoint(root["declarations"]["public_api"])
+    assert all(
+        symbols.isdisjoint(component.get("public", []))
+        for component in root["components"]
+        if component["id"] != "COMP-DOMAINS"
+    )
+
+    domains = _read_contract(ROOT / "docs/architecture/inner/domains/architecture-contract.json")
+    finance = _component(domains, "DOMAINS-FINANCE")["public"]
+    assert all(finance.count(symbol) == 1 for symbol in symbols)
+    assert all(
+        symbols.isdisjoint(component.get("public", []))
+        for component in domains["components"]
+        if component["id"] != "DOMAINS-FINANCE"
+    )
+
+    inner = _read_contract(ROOT / "docs/architecture/inner/domains/finance/architecture-contract.json")
+    contracts = _component(inner, "FINANCE-CONTRACTS")["public"]
+    assert all(contracts.count(symbol) == 1 for symbol in contract_symbols)
+    assert all(
+        contract_symbols.isdisjoint(component.get("public", []))
+        for component in inner["components"]
+        if component["id"] != "FINANCE-CONTRACTS"
+    )
+    assert "contracts" in {
+        entry["component"] for entry in _component(inner, "FINANCE-MODELS")["requires"]
+    }
+
+
+def test_demographic_context_is_runtime_owned_and_not_root_public() -> None:
+    from datamimic_ce.engine.runtime import api as runtime_api
+    from datamimic_ce.engine.runtime.contexts.demographic_context import DemographicContext
+
+    assert "DemographicContext" in runtime_api.__all__
+    assert runtime_api.DemographicContext is DemographicContext
+
+    runtime_api_module = "datamimic_ce.engine.runtime.api"
+    context_module = "datamimic_ce.engine.runtime.contexts.demographic_context"
+    root = _read_contract(ROOT / "architecture-contract.json")
+    runtime = _component(root, "COMP-RUNTIME")["public"]
+    assert runtime_api_module in runtime
+    assert context_module not in root["declarations"]["public_api"]
+    assert all(
+        runtime_api_module not in component.get("public", [])
+        and context_module not in component.get("public", [])
+        for component in root["components"]
+        if component["id"] != "COMP-RUNTIME"
+    )
+
+    inner = _read_contract(ROOT / "docs/architecture/inner/runtime/architecture-contract.json")
+    runtime_api = _component(inner, "RUNTIME-API")["public"]
+    runtime_contexts = _component(inner, "RUNTIME-CONTEXTS")["public"]
+    assert runtime_api_module in runtime_api
+    assert context_module in runtime_contexts
+    assert all(
+        runtime_api_module not in component.get("public", [])
+        and context_module not in component.get("public", [])
+        for component in inner["components"]
+        if component["id"] not in {"RUNTIME-API", "RUNTIME-CONTEXTS"}
+    )
+
+
 def test_facade_records_keep_their_existing_owner_modules() -> None:
     from datamimic_ce.engine.dsl.api import TimeSeriesNamespace
     from datamimic_ce.engine.runtime.api import DemographicContext
@@ -234,10 +315,10 @@ def test_domains_initializer_has_one_exact_owner_without_widening_api_selector()
         ),
         (
             "docs/architecture/inner/io/exporters/architecture-contract.json",
-            "EXPORTERS-CORE",
+            "EXPORTERS-REGISTRY",
             "datamimic_ce.engine.io.exporters",
             [
-                "datamimic_ce.engine.io.exporters.core",
+                "datamimic_ce.engine.io.exporters.registry",
             ],
             {
                 "datamimic_ce.engine.io.exporters.core": "EXPORTERS-CORE",
@@ -307,3 +388,38 @@ def test_initializers_have_exact_existing_owners(
             if child in component.get("exact_modules", [])
             or any(child == package or child.startswith(f"{package}.") for package in component.get("packages", []))
         ] == [expected_owner]
+
+def test_model_util_stays_inside_dsl_model_boundary() -> None:
+    from datamimic_ce.engine.dsl import api as dsl_api
+    from datamimic_ce.engine.dsl.model import validation
+
+    model_util = "datamimic_ce.engine.dsl.model.validation:ModelUtil"
+    validation_names = {
+        "check_constraints",
+        "check_exist_count",
+        "check_is_digit_or_script",
+        "check_min_max_count",
+        "check_weights_require_values",
+    }
+    validation_symbols = {
+        f"datamimic_ce.engine.dsl.model.validation:{name}" for name in validation_names
+    }
+
+    model = _read_contract(ROOT / "docs/architecture/inner/dsl/model/architecture-contract.json")
+    assert model_util in _component(model, "MODEL-VALIDATION")["public"]
+
+    dsl = _read_contract(ROOT / "docs/architecture/inner/dsl/architecture-contract.json")
+    parent_public = _component(dsl, "DSL-MODELS")["public"]
+    assert model_util not in parent_public
+    assert {symbol for symbol in parent_public if symbol.startswith("datamimic_ce.engine.dsl.model.validation:")} == (
+        validation_symbols
+    )
+
+    assert set(dsl_api.__all__) >= validation_names
+    assert "ModelUtil" not in dsl_api.__all__
+    assert not hasattr(dsl_api, "ModelUtil")
+    assert dsl_api.check_constraints is validation.check_constraints
+    assert dsl_api.check_exist_count is validation.check_exist_count
+    assert dsl_api.check_is_digit_or_script is validation.check_is_digit_or_script
+    assert dsl_api.check_min_max_count is validation.check_min_max_count
+    assert dsl_api.check_weights_require_values is validation.check_weights_require_values

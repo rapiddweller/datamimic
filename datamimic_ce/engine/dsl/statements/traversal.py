@@ -28,6 +28,19 @@ def get_nearest_generate_statement(statement: Statement) -> GenerateStatement | 
     return None
 
 
+def find_generate_statement_by_name(statement: Statement, entity_name: str) -> GenerateStatement | None:
+    """Find a named Generate node before execution, without entering other composites."""
+    if not isinstance(statement, GenerateStatement):
+        return None
+    if statement.name == entity_name:
+        return statement
+    for sub_statement in statement.sub_statements:
+        result = find_generate_statement_by_name(sub_statement, entity_name)
+        if result is not None:
+            return result
+    return None
+
+
 def retrieve_sub_statement_by_fullname(statement: CompositeStatement, name: str) -> GenerateStatement | None:
     """Resolve a generate by its full name through executed conditional branches."""
     if not isinstance(statement, GenerateStatement):

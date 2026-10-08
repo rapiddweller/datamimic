@@ -6,7 +6,6 @@
 
 import logging
 
-from datamimic_ce.engine.io.contracts import DataSourcePagination, select_rows
 from datamimic_ce.engine.io.exporters.core.exporter import Exporter
 
 logger = logging.getLogger("DATAMIMIC")
@@ -30,18 +29,14 @@ class Memstore(Exporter):
         """
         return self._storage.get(product_type, [])
 
-    def get_data_by_type(self, product_type: str | None, pagination: DataSourcePagination | None, cyclic: bool):
+    def get_data_by_type(self, product_type: str | None):
         """
-        Get data in memstore by data type and pagination
+        Get raw data in memstore by data type.
         :param product_type:
-        :param pagination:
-        :param cyclic:
         :return:
         """
         try:
-            return select_rows(
-                data=self._storage[product_type], cyclic=cyclic, pagination=pagination
-            )
+            return self._storage[product_type]
         except KeyError as e:
             logger.error(f"Data naming '{product_type}' is empty in memstore: {e}")
             raise KeyError(f"Data naming '{product_type}' is empty in memstore") from e

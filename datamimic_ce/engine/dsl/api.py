@@ -64,6 +64,7 @@ from datamimic_ce.engine.dsl.statements.setup.mongodb_statement import MongoDBSt
 from datamimic_ce.engine.dsl.statements.setup.setup_statement import SetupStatement
 from datamimic_ce.engine.dsl.statements.setup.state_machine_statement import StateMachineStatement
 from datamimic_ce.engine.dsl.statements.traversal import (
+    find_generate_statement_by_name,
     get_nearest_generate_statement,
     retrieve_executed_sub_gen_statement_by_name,
     retrieve_sub_statement_by_fullname,
@@ -286,6 +287,7 @@ __all__ = [
     "canonical_tag",
     "element_aliases",
     "element_constraints",
+    "find_generate_statement_by_name",
     "get_model_class",
     "get_nearest_generate_statement",
     "get_valid_children",

@@ -12,6 +12,8 @@ from datamimic_ce.domains.shared.datasets.loader import (
     read_headered_csv,
 )
 from datamimic_ce.domains.shared.generators.address_generator import AddressGenerator
+from datamimic_ce.domains.shared.literal_generators.identity.keys import prefixed_id_generator
+from datamimic_ce.domains.shared.literal_generators.primitives.string_generator import StringGenerator
 
 
 class OrderGenerator(ClockAnchoredDomainGenerator):
@@ -56,6 +58,16 @@ class OrderGenerator(ClockAnchoredDomainGenerator):
         assert isinstance(val, dt.datetime)
         return val
 
+    def generate_order_id_candidate(self) -> str:
+        return prefixed_id_generator.PrefixedIdGenerator(
+            "ORD", "[A-Z0-9]{8}", separator="", rng=self.rng
+        ).generate()
+
+    def generate_user_id(self) -> str:
+        return prefixed_id_generator.PrefixedIdGenerator(
+            "USER", "[A-Z0-9]{8}", separator="", rng=self.rng
+        ).generate()
+
     def get_order_status(self) -> str:
         return self._pick_from_weighted_csv(f"order_statuses_{self._dataset}.csv", value_col="status")
 
@@ -67,6 +79,16 @@ class OrderGenerator(ClockAnchoredDomainGenerator):
 
     def get_currency_code(self) -> str:
         return self._pick_from_weighted_csv(f"currencies_{self._dataset}.csv", value_col="code")
+
+    def generate_tax_amount(self, subtotal: float) -> float:
+        tax_rate = self.rng.uniform(0.05, 0.12)
+        return round(subtotal * tax_rate, 2)
+
+    def generate_product_count(self) -> int:
+        return self.rng.randint(1, 10)
+
+    def should_reuse_shipping_address_for_billing(self) -> bool:
+        return self.rng.random() < 0.8
 
     def get_shipping_amount(self, shipping_method: str) -> float:
         # Load method rows, then pick bounds for the selected method
@@ -90,6 +112,11 @@ class OrderGenerator(ClockAnchoredDomainGenerator):
             "ecommerce", "order", "coupon_prefixes.csv", dataset=self._dataset, start=Path(__file__)
         )
         return pick_one_weighted(self._rng, values, weights)
+
+    def generate_coupon_code(self) -> str:
+        prefix = self.pick_coupon_prefix()
+        code = StringGenerator.rnd_str_from_regex("[A-Z0-9]{6}", rng=self.rng)
+        return f"{prefix}{code}"
 
     def maybe_pick_note(self) -> str | None:
         if self._rng.random() >= 0.2:

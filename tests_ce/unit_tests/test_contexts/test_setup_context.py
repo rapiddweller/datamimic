@@ -13,7 +13,10 @@ from datamimic_ce.engine.dsl.model.setup.include_model import IncludeModel
 from datamimic_ce.engine.dsl.model.setup.setup_model import SetupModel
 from datamimic_ce.engine.dsl.statements.setup.include_statement import IncludeStatement
 from datamimic_ce.engine.dsl.statements.setup.setup_statement import SetupStatement
-from datamimic_ce.engine.io.api import Client
+from datamimic_ce.engine.io.api import Client, RegisteredClient
+from datamimic_ce.engine.dsl.vocabulary.enums.dbms_enums import Dbms
+from datamimic_ce.engine.io.clients.rdbms_client import RdbmsClient
+from datamimic_ce.engine.io.connection_config.rdbms_connection_config import RdbmsConnectionConfig
 from datamimic_ce.engine.io.exporters.diagnostics.test_result_exporter import TestResultExporter
 from datamimic_ce.engine.runtime.contexts.context import SetupContext
 from datamimic_ce.engine.runtime.storage.global_increment import GlobalIncrementRegistry
@@ -23,7 +26,7 @@ from datamimic_ce.engine.runtime.tasks.values.construction.converters import cre
 
 
 def _context(
-    clients: dict[str, Client] | None = None,
+    clients: dict[str, RegisteredClient] | None = None,
     namespace: dict[str, object] | None = None,
     global_variables: dict[str, object] | None = None,
     properties: dict[str, object] | None = None,
@@ -141,6 +144,53 @@ def test_setup_context_deepcopy_isolates_domain_identifier_state() -> None:
     assert registry.claim("TinyEntity", "id", "IDA", "ID[A-C]{1}") == "IDB"
 
 
+def test_add_client_registers_lookup_and_script_namespace_identity() -> None:
+    context = _context()
+    client = Client()
+
+    context.add_client("db", client)
+
+    assert context.clients["db"] is client
+    assert context.get_client_by_id("db") is client
+    assert context.get_client_by_id("missing") is None
+    assert context.evaluate_python_expression("db") is client
+    assert context.eval_namespace("script_client = db")["script_client"] is client
+
+
+def test_setup_context_deepcopy_preserves_client_alias_and_disposes_engine(tmp_path, monkeypatch) -> None:
+    monkeypatch.chdir(tmp_path)
+    client = RdbmsClient(
+        RdbmsConnectionConfig(
+            dbms=Dbms.SQLITE,
+            host=None,
+            port=None,
+            user=None,
+            password=None,
+            database="context-copy",
+            db_schema=None,
+        ),
+        task_id="context-test",
+    )
+    engine = client._create_engine()
+    dispose_calls = []
+    dispose = engine.dispose
+
+    def track_dispose(*args, **kwargs):
+        dispose_calls.append(True)
+        return dispose(*args, **kwargs)
+
+    monkeypatch.setattr(engine, "dispose", track_dispose)
+    context = _context()
+    context.add_client("db", client)
+
+    copied = copy.deepcopy(context)
+
+    assert dispose_calls == [True]
+    assert client.engine is None
+    assert copied.clients["db"] is copied.namespace["db"]
+    assert copied.clients["db"] is not client
+
+
 def test_include_setup_merge_overrides_declared_defaults_but_preserves_run_seed() -> None:
     context = _context()
     statement = SetupStatement(
@@ -225,15 +275,15 @@ def test_client_registry_keeps_mapping_and_client_identity() -> None:
 
 
 def test_client_registry_annotations_describe_client_mapping() -> None:
-    assert get_type_hints(SetupContext.__init__).get("clients") == dict[str, Client] | None
-    assert get_type_hints(SetupContext.clients.fget).get("return") == dict[str, Client]
-    assert get_type_hints(SetupContext.clients.fset).get("value") == dict[str, Client]
-    assert get_type_hints(SetupContext.add_client).get("client") is Client
+    assert get_type_hints(SetupContext.__init__).get("clients") == dict[str, RegisteredClient] | None
+    assert get_type_hints(SetupContext.clients.fget).get("return") == dict[str, RegisteredClient]
+    assert get_type_hints(SetupContext.clients.fset).get("value") == dict[str, RegisteredClient]
+    assert get_type_hints(SetupContext.add_client).get("client") is RegisteredClient
     assert get_type_hints(SetupContext.add_client).get("return") is type(None)
-    assert get_type_hints(SetupContext.get_client_by_id).get("return") == Client | None
+    assert get_type_hints(SetupContext.get_client_by_id).get("return") == RegisteredClient | None
     deepcopy_clients_hints = get_type_hints(SetupContext._deepcopy_clients)
     assert deepcopy_clients_hints.get("memo") == dict[int, object]
-    assert deepcopy_clients_hints.get("return") == dict[str, Client]
+    assert deepcopy_clients_hints.get("return") == dict[str, RegisteredClient]
 
 
 def test_client_registry_disposes_before_copy_and_preserves_shared_memo() -> None:

@@ -3,7 +3,6 @@ from pathlib import Path
 
 from datamimic_ce.domains.domain_core import BaseEntity
 from datamimic_ce.domains.domain_core.property_cache import property_cache
-from datamimic_ce.domains.domain_core.runtime.rng_uuid import uuid4_from_random
 from datamimic_ce.domains.insurance.generators.insurance_policy_generator import InsurancePolicyGenerator
 from datamimic_ce.domains.insurance.models.insurance_company import InsuranceCompany
 from datamimic_ce.domains.insurance.models.insurance_coverage import InsuranceCoverage
@@ -21,7 +20,8 @@ class InsurancePolicy(BaseEntity):
     @property
     @property_cache
     def id(self) -> str:
-        return self._claim_identifier("id", uuid4_from_random(self.insurance_policy_generator.rng))
+        candidate = self.insurance_policy_generator.generate_id_candidate()
+        return self._claim_identifier("id", candidate)
 
     @property
     @property_cache
@@ -54,10 +54,10 @@ class InsurancePolicy(BaseEntity):
     @property
     @property_cache
     def coverages(self) -> list[InsuranceCoverage]:
-        rng = self.insurance_policy_generator.rng
+        count = self.insurance_policy_generator.generate_coverage_count()
         return [
             InsuranceCoverage(self.insurance_policy_generator.insurance_coverage_generator)
-            for _ in range(rng.randint(1, 3))
+            for _ in range(count)
         ]
 
     @property

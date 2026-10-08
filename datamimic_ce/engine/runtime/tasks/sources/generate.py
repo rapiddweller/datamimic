@@ -12,6 +12,7 @@ from datamimic_ce.engine.io.api import (
     has_mongodb_upsert_target,
     read_generate_database_source,
     read_generate_file_source,
+    read_generate_memstore_source,
     resolve_source_entity,
 )
 from datamimic_ce.engine.runtime.contexts.context import SetupContext
@@ -76,8 +77,11 @@ def load_generate_source(
             raise ValueError(
                 f"<generate> '{stmt.full_name}': offset= is only supported for file sources, not memstore '{source}'"
             )
-        source_data = root.memstore_manager.get_memstore(source).get_data_by_type(
-            resolve_source_entity(stmt.source_entity, stmt.type, stmt.name), pagination, bool(stmt.cyclic)
+        source_data = read_generate_memstore_source(
+            root.memstore_manager.get_memstore(source),
+            resolve_source_entity(stmt.source_entity, stmt.type, stmt.name),
+            pagination,
+            stmt.cyclic,
         )
     elif root.clients.get(source) is not None:
         if stmt.offset:

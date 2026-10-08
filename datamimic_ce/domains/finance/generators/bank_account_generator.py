@@ -83,6 +83,9 @@ class BankAccountGenerator(ClockAnchoredDomainGenerator):
         self._last_account_type = choice
         return choice
 
+    def generate_balance(self) -> float:
+        return self.rng.uniform(0, 1000000)
+
     def get_currency(self) -> str:
         file_path = dataset_path("ecommerce", f"currencies_{self.dataset}.csv", start=Path(__file__))
         raw_rows = read_csv_rows(file_path)

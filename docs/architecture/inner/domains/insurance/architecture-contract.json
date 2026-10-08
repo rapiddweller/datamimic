@@ -12,7 +12,7 @@
       },
       {
         "path": "datamimic_ce/domains/insurance/generators/insurance_company_generator.py",
-        "responsibility": "InsuranceCompanyGenerator generates synthetic domain values through get_random_company, using the required RNG, dataset, or clock basis."
+        "responsibility": "InsuranceCompanyGenerator creates UUID identity candidates and generates insurer records through get_random_company, using the required RNG and dataset."
       },
       {
         "path": "datamimic_ce/domains/insurance/generators/insurance_coverage_generator.py",
@@ -20,11 +20,11 @@
       },
       {
         "path": "datamimic_ce/domains/insurance/generators/insurance_policy_generator.py",
-        "responsibility": "InsurancePolicyGenerator generates synthetic domain values through pick_premium_amount, pick_premium_frequency, and pick_status, using the required RNG, dataset, or clock basis."
+        "responsibility": "InsurancePolicyGenerator creates UUID identity candidates, selects coverage counts, and generates policy premiums, frequencies, and statuses through its dataset-backed operations."
       },
       {
         "path": "datamimic_ce/domains/insurance/generators/insurance_product_generator.py",
-        "responsibility": "InsuranceProductGenerator generates synthetic domain values through get_random_product and pick_coverage_count, using the required RNG, dataset, or clock basis."
+        "responsibility": "InsuranceProductGenerator creates UUID identity candidates and generates product records and coverage counts through get_random_product and pick_coverage_count, using the required RNG and dataset."
       },
       {
         "path": "datamimic_ce/domains/insurance/models/__init__.py",
@@ -32,7 +32,7 @@
       },
       {
         "path": "datamimic_ce/domains/insurance/models/insurance_company.py",
-        "responsibility": "InsuranceCompany represents an insurer with source company data, identity, code, founding year, headquarters, and website."
+        "responsibility": "InsuranceCompany exposes cached insurer identity and source company data, code, founding year, headquarters, and website."
       },
       {
         "path": "datamimic_ce/domains/insurance/models/insurance_coverage.py",
@@ -40,11 +40,11 @@
       },
       {
         "path": "datamimic_ce/domains/insurance/models/insurance_policy.py",
-        "responsibility": "InsurancePolicy links insurer, product, policyholder, and coverages with premium, term, and status data."
+        "responsibility": "InsurancePolicy exposes a cached identity and links insurer, product, policyholder, and coverages with premium, term, and status data."
       },
       {
         "path": "datamimic_ce/domains/insurance/models/insurance_product.py",
-        "responsibility": "InsuranceProduct represents a coded insurance offering with type, description, and available coverages."
+        "responsibility": "InsuranceProduct exposes a cached identity and a coded insurance offering with type, description, and available coverages."
       },
       {
         "path": "datamimic_ce/domains/insurance/services/__init__.py",
@@ -77,7 +77,7 @@
         "datamimic_ce.domains.insurance.models"
       ],
       "responsibilities": [
-        "Expose insurer, product, coverage, and policy data, including the policyholder, nested company and product, coverage list, premium, term, and status."
+        "Expose insurer, product, coverage, and policy data, including cached identities, policyholder, nested company and product, coverage list, premium, term, and status."
       ],
       "forbidden_responsibilities": [
         "Generate dataset values directly or own service orchestration."
@@ -108,7 +108,7 @@
         "datamimic_ce.domains.insurance.generators"
       ],
       "responsibilities": [
-        "Generate weighted insurer, product, and coverage records plus policy premiums, terms, and statuses; define the fixed coverage output record."
+        "Generate UUID identity candidates, weighted insurer, product, and coverage records, policy coverage counts, premiums, terms, and statuses; define the fixed coverage output record."
       ],
       "forbidden_responsibilities": [
         "Import insurance models or services."
@@ -134,7 +134,10 @@
         "datamimic_ce.domains.insurance.services"
       ],
       "responsibilities": [
-        "Bind company, product, coverage, and policy generators to their models and declare policy nested schemas, fields, and datasets."
+        "Bind company, product, coverage, and policy generators to models, declare policy schemas, fields and datasets, and own the inert package initializer."
+      ],
+      "exact_modules": [
+        "datamimic_ce.domains.insurance"
       ],
       "forbidden_responsibilities": [
         "Implement generator algorithms or bypass entity models."

@@ -124,9 +124,25 @@ class PersonGenerator(DatasetAwareDomainGenerator):
         generator = BirthdateGenerator(min_age=age, max_age=age, rng=self._derive_rng())
         return generator.generate()
 
+    def generate_birthdate(self, sample_age: int | None) -> datetime:
+        if sample_age is not None:
+            return self.generate_birthdate_for_age(sample_age)
+        return self.birthdate_generator.generate()
+
     @property
     def gender_generator(self) -> GenderGenerator:
         return self._gender_generator
+
+    def generate_gender(self, sample_sex: str | None) -> str:
+        if sample_sex is not None:
+            normalized = sample_sex.strip().upper()
+            if normalized.startswith("F"):
+                return "female"
+            if normalized.startswith("M"):
+                return "male"
+            if normalized.startswith("O"):
+                return "other"
+        return self.gender_generator.generate()
 
     @property
     def given_name_generator(self) -> GivenNameGenerator:

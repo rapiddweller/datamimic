@@ -24,7 +24,7 @@
       },
       {
         "path": "datamimic_ce/authoring/adapters/reference.py",
-        "responsibility": "Builds bounded DSL and typed authoring references from engine registries and authoring schemas."
+        "responsibility": "Projects DSL facts, authoring schemas, and Domain/Runtime generator capabilities into bounded reference responses."
       },
       {
         "path": "datamimic_ce/authoring/adapters/xml_loader.py",

@@ -15,6 +15,7 @@ Tests cover:
 """
 
 from typing import get_type_hints
+from types import MappingProxyType
 
 import pytest
 from pydantic import BaseModel, ConfigDict
@@ -131,6 +132,43 @@ class TestRequiredOneOf:
         # Would fail if not skipped, but doesn't because it's lint_only
         result = check_constraints({}, (fact,))
         assert result == {}
+
+
+class TestConstraintMappingBoundary:
+    def test_returns_read_only_mapping_by_identity_and_preserves_unknown_objects(self):
+        marker = object()
+        values = MappingProxyType({"unknown": marker, "a": marker})
+        fact = MutuallyExclusive(attrs=frozenset({"a", "b"}))
+
+        result = check_constraints(values, (fact,))
+
+        assert result is values
+        assert result["unknown"] is marker
+
+    def test_failure_preserves_input_and_value_error_message(self):
+        marker = object()
+        values = {"a": marker}
+        before = values.copy()
+        fact = Requires(attr="a", needs=frozenset({"b"}))
+
+        with pytest.raises(ValueError, match=r"^when 'a' is present, at least one of \[b\] must be present$"):
+            check_constraints(values, (fact,))
+
+        assert values == before
+        assert values["a"] is marker
+
+    def test_lint_only_returns_original_mapping(self):
+        values = MappingProxyType({"a": "value"})
+        fact = RequiredOneOf(attrs=frozenset({"b"}), lint_only=True)
+
+        assert check_constraints(values, (fact,)) is values
+
+    def test_constraint_wrappers_return_original_mapping(self):
+        count_values = MappingProxyType({"count": "1"})
+        weighted_values = MappingProxyType({"weights": "1", "values": "x"})
+
+        assert check_exist_count(count_values) is count_values
+        assert check_weights_require_values(weighted_values) is weighted_values
 
 
 class TestMutuallyExclusive:

@@ -4,7 +4,7 @@
     "modules": [
       {
         "path": "datamimic_ce/errors/__init__.py",
-        "responsibility": "The package marks the namespace for domain errors and their factories."
+        "responsibility": "Re-exports the stable error classes, codes, and factory as the package API."
       },
       {
         "path": "datamimic_ce/errors/base.py",
@@ -141,8 +141,11 @@
       "packages": [
         "datamimic_ce.errors.factory"
       ],
+      "exact_modules": [
+        "datamimic_ce.errors"
+      ],
       "responsibilities": [
-        "Error construction; no vendor IO mapping."
+        "Constructs typed errors and composes the existing package-level error exports; no vendor IO mapping."
       ],
       "forbidden_responsibilities": [
         "Catch vendor exceptions or decide whether a condition is an error."
@@ -178,7 +181,7 @@
       "id": "ERRORS-ASSIGNMENT",
       "kind": "complete_assignment",
       "source": "datamimic_ce.errors",
-      "rationale": "Every child implementation has one owner; parent initializer behavior is reviewed explicitly.",
+      "rationale": "Every child implementation and the package-level error facade has one declared owner.",
       "provenance": [
         "docs/architecture/inner/target.md"
       ],

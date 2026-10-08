@@ -8,9 +8,9 @@ from typing import TypeVar
 
 import pytest
 
-from datamimic_ce.domains.domain_core.contracts.attribute_catalog import field
 from datamimic_ce.domains.domain_core.base_domain_generator import BaseDomainGenerator
 from datamimic_ce.domains.domain_core.base_entity import BaseEntity, IdentifierRegistry
+from datamimic_ce.domains.domain_core.contracts.attribute_catalog import field
 from datamimic_ce.domains.ecommerce.services.order_service import OrderService
 from datamimic_ce.domains.ecommerce.services.product_service import ProductService
 from datamimic_ce.domains.finance.services.transaction_service import TransactionService
@@ -208,7 +208,7 @@ def test_schema_declares_only_the_approved_unique_identifier(
 
 
 def test_nested_policy_company_and_product_ids_are_unique_after_collision(monkeypatch: pytest.MonkeyPatch) -> None:
-    from datamimic_ce.domains.insurance.models import insurance_company, insurance_product
+    from datamimic_ce.domains.insurance.generators import insurance_company_generator, insurance_product_generator
 
     def duplicate_then_unique():
         calls = 0
@@ -221,8 +221,8 @@ def test_nested_policy_company_and_product_ids_are_unique_after_collision(monkey
 
         return candidate
 
-    monkeypatch.setattr(insurance_company, "uuid4_from_random", duplicate_then_unique())
-    monkeypatch.setattr(insurance_product, "uuid4_from_random", duplicate_then_unique())
+    monkeypatch.setattr(insurance_company_generator, "uuid4_from_random", duplicate_then_unique())
+    monkeypatch.setattr(insurance_product_generator, "uuid4_from_random", duplicate_then_unique())
     service = InsurancePolicyService(rng=Random(7))
     policies = service.generate_batch(3)
 

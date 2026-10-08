@@ -32,6 +32,11 @@ class MedicalProcedureGenerator(DatasetAwareDomainGenerator):
         self._last_specialty: str | None = None
         self._last_recovery_time: int | None = None
 
+    def generate_procedure_id_candidate(self) -> str:
+        rng = self.rng
+        suffix = "".join(rng.choice("0123456789ABCDEF") for _ in range(8))
+        return f"PROC-{suffix}"
+
     def get_procedure_name(self, category: str, specialty: str, is_surgical: bool, is_diagnostic: bool) -> str:
         """Generate a procedure name using dataset patterns and components."""
         patterns, pw = read_weighted_values(
@@ -138,6 +143,47 @@ class MedicalProcedureGenerator(DatasetAwareDomainGenerator):
             dataset_path("healthcare", "medical", f"procedure_categories_{self._dataset}.csv", start=Path(__file__))
         )
         return self._rng.choices(values, weights=w, k=1)[0]
+
+    def generate_duration_minutes(self, is_surgical: bool) -> int:
+        """Generate a duration using the procedure's cached surgical status."""
+        if is_surgical:
+            return self.rng.randint(30, 240)
+        return self.rng.randint(10, 120)
+
+    def generate_procedure_code(self) -> str:
+        """Generate a procedure code from five sequential random digits."""
+        rng = self.rng
+        digits = "".join(str(rng.randint(0, 9)) for _ in range(5))
+        return f"P{digits}"
+
+    def generate_cpt_code(self) -> str:
+        """Generate a CPT code with a non-zero first digit."""
+        rng = self.rng
+        first = str(rng.randint(1, 9))
+        rest = "".join(str(rng.randint(0, 9)) for _ in range(4))
+        return f"{first}{rest}"
+
+    def generate_is_surgical(self) -> bool:
+        """Draw whether the procedure is surgical."""
+        return self.rng.random() < 0.3
+
+    def generate_requires_anesthesia(self, is_surgical: bool) -> bool:
+        """Draw anesthesia requirement based on the procedure's surgical status."""
+        if is_surgical:
+            return self.rng.random() < 0.9
+        return self.rng.random() < 0.2
+
+    def generate_is_preventive(self, is_surgical: bool) -> bool:
+        """Draw preventive status based on the procedure's surgical status."""
+        if is_surgical:
+            return self.rng.random() < 0.05
+        return self.rng.random() < 0.3
+
+    def generate_is_diagnostic(self, is_surgical: bool) -> bool:
+        """Draw diagnostic status based on the procedure's surgical status."""
+        if is_surgical:
+            return self.rng.random() < 0.2
+        return self.rng.random() < 0.7
 
     # Helper to pick recovery time with anti-repetition
     def pick_recovery_time(self, is_surgical: bool) -> int:

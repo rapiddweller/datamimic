@@ -30,9 +30,8 @@ class Hospital(BaseEntity):
         Returns:
             A unique identifier for the hospital.
         """
-        rng = self._hospital_generator.rng
-        suffix = "".join(rng.choice("0123456789ABCDEF") for _ in range(8))
-        return self._claim_identifier("hospital_id", f"HOSP-{suffix}")
+        candidate = self._hospital_generator.generate_hospital_id_candidate()
+        return self._claim_identifier("hospital_id", candidate)
 
     @property
     @property_cache
@@ -85,19 +84,7 @@ class Hospital(BaseEntity):
         Returns:
             The number of beds in the hospital.
         """
-        hospital_type = self.type
-        if hospital_type == "Specialty":
-            # Specialty hospitals tend to be smaller
-            return self._hospital_generator.rng.randint(50, 200)
-        elif hospital_type == "Community":
-            # Community hospitals are medium-sized
-            return self._hospital_generator.rng.randint(100, 300)
-        elif hospital_type == "Teaching":
-            # Teaching hospitals tend to be larger
-            return self._hospital_generator.rng.randint(300, 1000)
-        else:
-            # General hospitals vary in size
-            return self._hospital_generator.rng.randint(100, 500)
+        return self._hospital_generator.generate_bed_count(self.type)
 
     @property
     @property_cache
@@ -107,10 +94,7 @@ class Hospital(BaseEntity):
         Returns:
             The number of staff members in the hospital.
         """
-        bed_count = self.bed_count
-        staff_ratio = self._hospital_generator.rng.uniform(2.0, 4.0)
-
-        return int(bed_count * staff_ratio)
+        return self._hospital_generator.generate_staff_count(self.bed_count)
 
     @property
     @property_cache
@@ -120,10 +104,7 @@ class Hospital(BaseEntity):
         Returns:
             The year the hospital was founded.
         """
-        current_year = self._hospital_generator.reference_now.year
-
-        # Most hospitals were founded in the last 150 years
-        return self._hospital_generator.rng.randint(current_year - 150, current_year - 5)
+        return self._hospital_generator.generate_founding_year()
 
     @property
     @property_cache
@@ -143,12 +124,7 @@ class Hospital(BaseEntity):
         Returns:
             True if the hospital offers emergency services, False otherwise.
         """
-        if self.type == "Specialty":
-            # Specialty hospitals are less likely to have emergency services
-            return self._hospital_generator.rng.random() < 0.3
-        else:
-            # Other hospital types usually have emergency services
-            return self._hospital_generator.rng.random() < 0.9
+        return self._hospital_generator.generate_emergency_services(self.type)
 
     @property
     @property_cache
@@ -158,16 +134,7 @@ class Hospital(BaseEntity):
         Returns:
             True if the hospital is a teaching hospital, False otherwise.
         """
-        hospital_type = self.type
-        if hospital_type == "Teaching":
-            # Teaching hospitals are always teaching hospitals
-            return True
-        elif hospital_type == "General":
-            # Some general hospitals are teaching hospitals
-            return self._hospital_generator.rng.random() < 0.3
-        else:
-            # Other hospital types are rarely teaching hospitals
-            return self._hospital_generator.rng.random() < 0.1
+        return self._hospital_generator.generate_teaching_status(self.type)
 
     @property
     @property_cache

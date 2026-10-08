@@ -6,6 +6,11 @@
 
 from abc import ABC
 
+from datamimic_ce.engine.io.contracts import SqlScriptClient
+
 
 class Client(ABC):  # noqa: B024
     pass
+
+
+RegisteredClient = Client | SqlScriptClient

@@ -23,11 +23,11 @@ from datamimic_ce.engine.dsl.api import (
     Statement,
     VariableStatement,
 )
-from datamimic_ce.engine.io.api import Client, uses_mysql_sequence_storage
+from datamimic_ce.engine.io.api import RegisteredClient, uses_mysql_sequence_storage
 from datamimic_ce.engine.runtime.logging import logger
 from datamimic_ce.engine.runtime.tasks.values.construction.entity_constructor import parse_constructor_string
 
-ClientMap = Mapping[str, Client]
+ClientMap = Mapping[str, RegisteredClient]
 
 
 def _is_global_constraint(stmt: Statement) -> bool:

@@ -84,7 +84,7 @@
       },
       {
         "path": "datamimic_ce/engine/dsl/statements/traversal.py",
-        "responsibility": "Traverses statement ancestry and branches to resolve enclosing generation relationships."
+        "responsibility": "Queries statement ancestry and Generate trees, including pre-run entity-name lookup without entering other composites."
       },
       {
         "path": "datamimic_ce/engine/dsl/statements/values/references/reference_statement.py",
@@ -292,9 +292,10 @@
         "datamimic_ce.engine.dsl.statements.traversal"
       ],
       "responsibilities": [
-        "High-level Generate/Condition-aware tree queries."
+        "High-level Generate/Condition-aware tree queries and pre-run named Generate lookup."
       ],
       "public": [
+        "datamimic_ce.engine.dsl.statements.traversal:find_generate_statement_by_name",
         "datamimic_ce.engine.dsl.statements.traversal:get_nearest_generate_statement",
         "datamimic_ce.engine.dsl.statements.traversal:retrieve_executed_sub_gen_statement_by_name",
         "datamimic_ce.engine.dsl.statements.traversal:retrieve_sub_statement_by_fullname"

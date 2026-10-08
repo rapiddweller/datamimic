@@ -111,6 +111,11 @@ class MedicalDeviceGenerator(ClockAnchoredDomainGenerator):
         weights: list[float] = [float(w) for w in loaded_data[1].tolist()]
         return self._rng.choices(values, weights=weights, k=1)[0]
 
+    def generate_device_id_candidate(self) -> str:
+        rng = self.rng
+        suffix = "".join(str(rng.randint(0, 9)) for _ in range(8))
+        return f"DEV-{suffix}"
+
     def generate_manufacturer(self) -> str:
         file_path = dataset_path("healthcare", "medical", f"manufacturers_{self._dataset}.csv", start=Path(__file__))
         loaded_data = read_weighted_dataframe(file_path)
@@ -119,6 +124,20 @@ class MedicalDeviceGenerator(ClockAnchoredDomainGenerator):
         choice = pick_one_weighted_no_repeat(self._rng, values, weights, last=self._last_manufacturer)
         self._last_manufacturer = choice
         return choice
+
+    def generate_model_number(self) -> str:
+        rng = self.rng
+        letters = "".join(rng.choice("ABCDEFGHIJKLMNOPQRSTUVWXYZ") for _ in range(2))
+        digits = "".join(str(rng.randint(0, 9)) for _ in range(4))
+        return f"{letters}{digits}"
+
+    def generate_serial_number(self) -> str:
+        # Format: MFG-YYYY-XXXXXXXX
+        year = self.rng.randint(2010, self.reference_now.year)
+        rng = self.rng
+        alphabet = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
+        random_part = "".join(rng.choice(alphabet) for _ in range(8))
+        return f"MFG-{year}-{random_part}"
 
     def generate_device_status(self) -> str:
         file_path = dataset_path("healthcare", "medical", f"device_statuses_{self._dataset}.csv", start=Path(__file__))

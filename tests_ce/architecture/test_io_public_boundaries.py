@@ -8,7 +8,6 @@ from pathlib import Path
 from typing import get_type_hints
 
 from datamimic_ce.engine.io import api as io_api
-from datamimic_ce.engine.io.contracts import SmokeExportRequest
 from datamimic_ce.engine.io.api import (
     database_count_table_length as direct_database_count_table_length,
 )
@@ -18,6 +17,7 @@ from datamimic_ce.engine.io.api import (
 from datamimic_ce.engine.io.api import (
     is_database_client as direct_is_database_client,
 )
+from datamimic_ce.engine.io.contracts import SmokeExportRequest
 
 ROOT = Path(__file__).resolve().parents[2]
 
@@ -62,12 +62,38 @@ def test_io_root_hides_client_and_collection_operations_but_keeps_owners() -> No
 
 def test_io_root_retains_live_database_script_operations() -> None:
     operations = importlib.import_module("datamimic_ce.engine.io.clients.operations")
+    contracts = importlib.import_module("datamimic_ce.engine.io.contracts")
     assert direct_database_count_table_length is operations.database_count_table_length
     assert direct_database_get_by_page_with_query is operations.database_get_by_page_with_query
     assert direct_is_database_client is operations.is_database_client
     assert io_api.database_count_table_length is direct_database_count_table_length
     assert io_api.database_get_by_page_with_query is direct_database_get_by_page_with_query
     assert io_api.is_database_client is direct_is_database_client
+    assert "execute_sql_script" in io_api.__all__
+    assert io_api.execute_sql_script is operations.execute_sql_script
+    assert "RegisteredClient" in io_api.__all__
+    assert contracts.SqlScriptClient.__module__ == "datamimic_ce.engine.io.contracts"
+    contract = json.loads(
+        (ROOT / "docs/architecture/inner/io/architecture-contract.json").read_text(encoding="utf-8")
+    )
+    io_api_component = next(component for component in contract["components"] if component["id"] == "IO-API")
+    assert "datamimic_ce.engine.io.api:RegisteredClient" in io_api_component["public"]
+    assert "datamimic_ce.engine.io.api:execute_sql_script" in io_api_component["public"]
+    contracts_component = next(component for component in contract["components"] if component["id"] == "IO-CONTRACTS")
+    assert "datamimic_ce.engine.io.contracts:SqlScriptClient" in contracts_component["public"]
+
+
+def test_io_root_exposes_only_the_runtime_used_row_iterator() -> None:
+    selection = importlib.import_module("datamimic_ce.engine.io.data_sources.selection")
+    assert "select_row_iterator" in io_api.__all__
+    assert io_api.select_row_iterator is selection.select_row_iterator
+    assert "select_rows" not in io_api.__all__
+
+    contract = json.loads(
+        (ROOT / "docs/architecture/inner/io/architecture-contract.json").read_text(encoding="utf-8")
+    )
+    io_api_component = next(component for component in contract["components"] if component["id"] == "IO-API")
+    assert "datamimic_ce.engine.io.api:select_row_iterator" in io_api_component["public"]
 
 
 def test_io_api_does_not_reexport_unused_concrete_exporters() -> None:
@@ -123,3 +149,25 @@ def test_exporter_registry_has_only_exact_memstore_visibility() -> None:
     registry = components["EXPORTERS-REGISTRY"]
     assert any(requirement["component"] == "memory" for requirement in registry["requires"])
     assert all("Memstore" not in symbol for symbol in registry["public"])
+
+
+def test_nested_exporter_contract_keeps_internal_owners() -> None:
+    contract = json.loads(
+        (ROOT / "docs/architecture/inner/io/exporters/architecture-contract.json").read_text(encoding="utf-8")
+    )
+    components = {component["id"]: component for component in contract["components"]}
+    assert {
+        "datamimic_ce.engine.io.exporters.core.exporter_config:ExporterConfig",
+        "datamimic_ce.engine.io.exporters.core.exporter_state_manager:ExporterStateManager",
+        "datamimic_ce.engine.io.exporters.core.unified_buffered_exporter:UnifiedBufferedExporter",
+    } <= set(components["EXPORTERS-CORE"]["public"])
+    assert (
+        "datamimic_ce.engine.io.exporters.registry:create_exporter_list"
+        in components["EXPORTERS-REGISTRY"]["public"]
+    )
+
+
+def test_smoke_export_open_values_keep_their_container_shapes() -> None:
+    hints = get_type_hints(SmokeExportRequest)
+    assert hints["params"] == dict[str, object]
+    assert hints["rows"] == list[dict[str, object]]

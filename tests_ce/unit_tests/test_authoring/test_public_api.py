@@ -8,6 +8,7 @@ from datamimic_ce.authoring.application.service import scaffold
 from datamimic_ce.authoring.domain.diagnostics import LintResult
 from datamimic_ce.authoring.domain.rule_catalog import RuleSeverity
 from datamimic_ce.authoring.spec import ExactCountExpectation, ExpectationIntent
+from datamimic_ce.engine.dsl import api as dsl_api
 from datamimic_ce.engine.dsl.api import TimeSeriesNamespace
 from datamimic_ce.engine.dsl.model.generation.timeseries import TimeSeriesNamespace as InternalTimeSeriesNamespace
 from datamimic_ce.engine.runtime.api import Context, DemographicContext, SetupContext
@@ -50,6 +51,11 @@ def test_runtime_and_dsl_api_export_types_by_identity() -> None:
     assert SetupContext is InternalSetupContext
     assert DemographicContext is InternalDemographicContext
     assert TimeSeriesNamespace is InternalTimeSeriesNamespace
+
+
+def test_dsl_api_exports_time_series_namespace_by_identity() -> None:
+    assert dsl_api.TimeSeriesNamespace is TimeSeriesNamespace
+    assert "TimeSeriesNamespace" in dsl_api.__all__
 
 
 def test_scaffold_document_keeps_json_shape() -> None:

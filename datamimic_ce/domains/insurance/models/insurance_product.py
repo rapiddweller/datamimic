@@ -14,7 +14,6 @@ from pathlib import Path
 
 from datamimic_ce.domains.domain_core import BaseEntity
 from datamimic_ce.domains.domain_core.property_cache import property_cache
-from datamimic_ce.domains.domain_core.runtime.rng_uuid import uuid4_from_random
 from datamimic_ce.domains.insurance.generators.insurance_product_generator import InsuranceProductGenerator
 from datamimic_ce.domains.insurance.models.insurance_coverage import InsuranceCoverage
 
@@ -29,7 +28,8 @@ class InsuranceProduct(BaseEntity):
     @property
     @property_cache
     def id(self) -> str:
-        return self._claim_identifier("id", uuid4_from_random(self._insurance_product_generator.rng))
+        candidate = self._insurance_product_generator.generate_id_candidate()
+        return self._claim_identifier("id", candidate)
 
     @property
     @property_cache

@@ -249,8 +249,10 @@
       ],
       "public": [
         "datamimic_ce.engine.io.api",
+        "datamimic_ce.engine.io.api:RegisteredClient",
         "datamimic_ce.engine.io.contracts",
         "datamimic_ce.engine.io.contracts:EntityValue",
+        "datamimic_ce.engine.io.contracts:SqlScriptClient",
         "datamimic_ce.engine.io.files.api"
       ],
       "planned": [],
@@ -497,10 +499,11 @@
       "id": "DSL-API-TYPES",
       "kind": "boundary_types",
       "source": "datamimic_ce.engine.dsl.api",
-      "rationale": "The DSL facade exposes declared contract types. Four pre-validation operations preserve raw string-keyed attribute dictionaries at exact reviewed positions; constraint facts remain closed types.",
+      "rationale": "The DSL facade exposes declared contract types. Four pre-validation operations preserve raw string-keyed attribute dictionaries at exact reviewed positions; constraint facts remain closed types. parse_properties returns an open map for arbitrary user keys.",
       "provenance": [
         "docs/architecture/refactoring-study/experiment-2/target-architecture.md",
-        "docs/architecture/refactoring-study/experiment-2/amendment-91.md"
+        "docs/architecture/refactoring-study/experiment-2/amendment-91.md",
+        "docs/architecture/refactoring-study/experiment-2/amendment-77.md"
       ],
       "decided_by": "architect",
       "allowed_positions": [
@@ -607,6 +610,12 @@
           "field_path": "",
           "annotation": "dict[str, object]",
           "container_depth": 1
+        },
+        {
+          "qualified_name": "datamimic_ce.engine.dsl.api.parse_properties",
+          "position": "return",
+          "field_path": "",
+          "annotation": "dict[str, str]"
         }
       ]
     },
@@ -627,6 +636,7 @@
       "rationale": "Fixed requests and execution controls stay typed. Captures, descriptor properties, the client registry, native Python state and copy memo use exact reviewed positions.",
       "provenance": [
         "docs/architecture/refactoring-study/experiment-2/target-architecture.md",
+        "docs/architecture/refactoring-study/experiment-2/amendment-70.md",
         "docs/architecture/refactoring-study/experiment-2/amendment-82.md",
         "docs/architecture/refactoring-study/experiment-2/amendment-89.md",
         "docs/architecture/refactoring-study/experiment-2/amendment-90.md",
@@ -634,6 +644,24 @@
       ],
       "decided_by": "architect",
       "allowed_positions": [
+        {
+          "qualified_name": "datamimic_ce.engine.runtime.api.SetupContext.__init__",
+          "position": "demographic_context",
+          "field_path": "overrides.transaction_profile",
+          "annotation": "Mapping[str, float]"
+        },
+        {
+          "qualified_name": "datamimic_ce.engine.runtime.api.SetupContext.demographic_context",
+          "position": "return",
+          "field_path": "overrides.transaction_profile",
+          "annotation": "Mapping[str, float]"
+        },
+        {
+          "qualified_name": "datamimic_ce.engine.runtime.api.SetupContext.set_demographic_context",
+          "position": "context",
+          "field_path": "overrides.transaction_profile",
+          "annotation": "Mapping[str, float]"
+        },
         {
           "qualified_name": "datamimic_ce.engine.runtime.api.run",
           "position": "return",
@@ -836,16 +864,29 @@
       "id": "IO-API-TYPES",
       "kind": "boundary_types",
       "source": "datamimic_ce.engine.io.api",
-      "rationale": "The IO facade keeps fixed controls typed; smoke-export rows and exporter options are open DSL payloads at two reviewed request fields.",
+      "rationale": "The IO facade keeps fixed controls typed; smoke-export rows/options and connection profiles remain open payloads at reviewed positions.",
       "provenance": [
         "docs/architecture/refactoring-study/experiment-2/target-architecture.md",
-        "docs/architecture/refactoring-study/experiment-2/amendment-62.md"
+        "docs/architecture/refactoring-study/experiment-2/amendment-62.md",
+        "docs/architecture/refactoring-study/experiment-2/amendment-77.md"
       ],
       "decided_by": "architect",
       "allowed_positions": [
         {
           "qualified_name": "datamimic_ce.engine.io.api.smoke_export",
           "position": "request",
+          "field_path": "params",
+          "annotation": "dict[str, object]"
+        },
+        {
+          "qualified_name": "datamimic_ce.engine.io.api.smoke_export",
+          "position": "request",
+          "field_path": "params",
+          "annotation": "object"
+        },
+        {
+          "qualified_name": "datamimic_ce.engine.io.api.smoke_export",
+          "position": "request",
           "field_path": "rows",
           "annotation": "dict[str, object]"
         },
@@ -856,16 +897,10 @@
           "annotation": "object"
         },
         {
-          "qualified_name": "datamimic_ce.engine.io.api.smoke_export",
-          "position": "request",
-          "field_path": "params",
-          "annotation": "dict[str, object]"
-        },
-        {
-          "qualified_name": "datamimic_ce.engine.io.api.smoke_export",
-          "position": "request",
-          "field_path": "params",
-          "annotation": "object"
+          "qualified_name": "datamimic_ce.engine.io.api.load_connection_profile",
+          "position": "return",
+          "field_path": "",
+          "annotation": "dict[str, str]"
         }
       ]
     },
@@ -1239,11 +1274,15 @@
       "datamimic_ce.interfaces.python.data_mimic_test:DataMimicTest",
       "datamimic_ce.interfaces.python.factory:DataMimicTestFactory",
       "datamimic_ce.domains.domain_core.contracts.json_types:JsonObject",
-      "datamimic_ce.domains.facade:generate_domain"
+      "datamimic_ce.domains.facade:generate_domain",
+      "datamimic_ce.domains.finance:CreditCard",
+      "datamimic_ce.domains.healthcare:Doctor",
+      "datamimic_ce.domains.healthcare:Patient"
     ],
     "public_api_provenance": [
       "docs/architecture/refactoring-study/experiment-2/target-architecture.md",
-      "README.md"
+      "README.md",
+      "docs/architecture/refactoring-study/experiment-2/amendment-63.md"
     ],
     "public_commands": [
       {
