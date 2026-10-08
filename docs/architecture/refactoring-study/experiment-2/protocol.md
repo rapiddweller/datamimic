@@ -477,6 +477,10 @@ remain unchanged; no allowance is added.
 boundary one ERROR record for a missing factory entity. Validation retains its
 native exception without a redundant log; no other error or gate changes.
 
+[Amendment 164](amendment-164-authoring-scope-hint.md) corrects the public Authoring
+scope hint under a dated projection decision. Native resolution and error messages
+remain unchanged; no oracle or architecture allowance changes.
+
 ## Agent separation
 
 - The implementation agent changes production code and targeted tests for one approved slice.

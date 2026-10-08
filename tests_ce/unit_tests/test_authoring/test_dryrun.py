@@ -482,6 +482,54 @@ def test_dm002_runtime_errors_carry_actionable_hints() -> None:
     assert "this." in hint2 and "parent." in hint2
 
 
+def test_dm002_scope_hint_matches_native_nested_scope_rules() -> None:
+    positive_xml = """<setup rngSeed="1">
+        <generate name="outer" count="1" target="JSON">
+            <nestedKey name="inner" type="list" count="1">
+                <variable name="sibling" constant="sibling_value"/>
+                <key name="copied" script="sibling"/>
+            </nestedKey>
+        </generate>
+    </setup>"""
+    positive = dry_run_source(positive_xml, max_count=2, sample_rows=2)
+    assert positive.ok and positive.stage is AuthoringStage.RUN
+    assert positive.products[0].sample[0]["inner"][0]["copied"] == "sibling_value"
+
+    negative_xml = """<setup rngSeed="1">
+        <generate name="outer" count="1" target="JSON">
+            <nestedKey name="middle" type="list" count="1">
+                <variable name="mid" constant="middle_value"/>
+                <nestedKey name="leaf" type="list" count="1">
+                    <key name="bare_mid_from_leaf" script="mid"/>
+                </nestedKey>
+            </nestedKey>
+        </generate>
+    </setup>"""
+    negative = dry_run_source(negative_xml, max_count=2, sample_rows=2)
+    assert not negative.ok and negative.stage is AuthoringStage.RUN
+    assert len(negative.diagnostics) == 1
+    diagnostic = negative.diagnostics[0]
+    assert diagnostic.rule == "DM002"
+    assert diagnostic.severity.value == "error"
+    assert diagnostic.element == "setup"
+    assert diagnostic.path == "/setup"
+    assert diagnostic.message == (
+        "Dry-run failed: Failed when execute script of element 'bare_mid_from_leaf': "
+        "Failed while evaluate 'mid': name 'mid' is not defined in this scope; "
+        "a same-scope sibling resolves bare (or via this.) - check the name; "
+        "an ANCESTOR scope's name needs parent./root., it does not resolve bare"
+    )
+    assert diagnostic.fix_hint == (
+        "A script may reference an unavailable name or an unexpected value structure. "
+        "Check spelling, definition order, and value shape. Names in the current scope can "
+        "resolve bare or via this.name; existing outermost bare names take precedence on "
+        "collisions. Use parent.name for the immediate enclosing scope, root.name for an "
+        "outermost field, or a qualified scope path to select the intended value. "
+        "Intermediate ancestor names are not automatically available bare. CSV columns "
+        "arrive as strings (cast: int(parent.col))."
+    )
+
+
 def test_variable_literal_generator_evaluates_in_scripts() -> None:
     # review-181 issue 4 claimed <variable generator="IncrementGenerator"/> parses but
     # never evaluates. It DOES evaluate — the original failure was a bare name inside a

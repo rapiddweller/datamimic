@@ -157,11 +157,11 @@ _MAX_PRODUCTS = 20  # generate statements per descriptor are few; a generous cap
 # lint->fix loop — a weak model cannot recover from "Dry-run failed: <traceback>").
 # (substring in str(err)) -> hint
 _SCOPE_HINT = (
-    "A script references a name that is not in scope. Inside a nested <generate>/"
-    "<nestedKey>, record-local names need this. (this.my_key, this.my_var) — bare names "
-    "only resolve at the top level; use parent.field / root.field for enclosing records. "
-    "Also check the name is defined earlier and note CSV columns arrive as strings "
-    "(cast: int(parent.col))."
+    "A script may reference an unavailable name or an unexpected value structure. Check spelling, definition order,"
+    " and value shape. Names in the current scope can resolve bare or via this.name; existing outermost bare names"
+    " take precedence on collisions. Use parent.name for the immediate enclosing scope, root.name for an"
+    " outermost field, or a qualified scope path to select the intended value. Intermediate ancestor names are"
+    " not automatically available bare. CSV columns arrive as strings (cast: int(parent.col))."
 )
 _RUNTIME_HINTS: tuple[tuple[str, str], ...] = (
     (
