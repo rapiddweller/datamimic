@@ -8,6 +8,7 @@
 
 from pathlib import Path
 from unittest.mock import Mock
+from xml.parsers.expat import ExpatError
 
 import pytest
 
@@ -16,8 +17,8 @@ from datamimic_ce.engine.dsl.statements.values.structured.nested_key_statement i
 from datamimic_ce.engine.dsl.statements.values.variables.variable_statement import VariableStatement
 from datamimic_ce.engine.dsl.vocabulary.source_capabilities import SourceFileFormat, source_capabilities
 from datamimic_ce.engine.io.data_sources import router as io_source_router
-from datamimic_ce.engine.io.data_sources.data_source_registry import DataSourceRegistry
 from datamimic_ce.engine.io.files.api import FileUtil
+from datamimic_ce.engine.io.files.readers import load_source_rows
 from datamimic_ce.engine.runtime.tasks.sources.length import set_data_source_length
 
 
@@ -77,7 +78,7 @@ def test_length_classification_uses_every_central_file_suffix(
     statement = _statement(statement_type, f"rows{file_format.value}", source_type or "rows")
     generic = Mock(return_value=[{}, {}])
     dbunit = Mock(return_value=[{}, {}, {}])
-    monkeypatch.setattr(DataSourceRegistry, "_get_source", generic)
+    monkeypatch.setattr(io_source_router, "load_source_rows", generic)
     monkeypatch.setattr(FileUtil, "read_dbunit_to_dict_list", dbunit)
 
     set_data_source_length(context, statement)
@@ -89,7 +90,7 @@ def test_length_classification_uses_every_central_file_suffix(
         generic.assert_not_called()
     else:
         assert root.data_source_len[cache_key] == 2
-        generic.assert_called_once_with(f"/descriptor/rows{file_format.value}", "|", file_format)
+        generic.assert_called_once_with(Path(f"/descriptor/rows{file_format.value}"), "|", file_format)
         dbunit.assert_not_called()
 
 
@@ -104,7 +105,7 @@ def test_nonfile_source_still_uses_memstore_classification(
     root.memstore_manager.contain.return_value = True
     root.memstore_manager.get_memstore.return_value = memstore
     generic = Mock(return_value=[])
-    monkeypatch.setattr(DataSourceRegistry, "_get_source", generic)
+    monkeypatch.setattr(io_source_router, "load_source_rows", generic)
 
     set_data_source_length(context, statement)
 
@@ -120,12 +121,12 @@ def test_supported_file_length_never_inspects_memstore_or_client(monkeypatch: py
     reader = Mock(return_value=[{}, {}])
     root.memstore_manager.contain.side_effect = AssertionError("file sources must bypass memstore")
     root.get_client_by_id.side_effect = AssertionError("file sources must bypass clients")
-    monkeypatch.setattr(DataSourceRegistry, "_get_source", reader)
+    monkeypatch.setattr(io_source_router, "load_source_rows", reader)
 
     set_data_source_length(context, statement)
 
     assert root.data_source_len == {("consumer", "rows.csv"): 2}
-    reader.assert_called_once_with("/descriptor/rows.csv", "|", SourceFileFormat.CSV)
+    reader.assert_called_once_with(Path("/descriptor/rows.csv"), "|", SourceFileFormat.CSV)
 
 
 def test_cached_source_length_skips_reader(monkeypatch: pytest.MonkeyPatch) -> None:
@@ -134,7 +135,7 @@ def test_cached_source_length_skips_reader(monkeypatch: pytest.MonkeyPatch) -> N
     root.data_source_len[("consumer", "rows.csv")] = 7
     reader = Mock()
 
-    monkeypatch.setattr(DataSourceRegistry, "_get_source", reader)
+    monkeypatch.setattr(io_source_router, "load_source_rows", reader)
     set_data_source_length(context, statement)
 
     assert root.data_source_len == {("consumer", "rows.csv"): 7}
@@ -149,7 +150,7 @@ def test_generate_offset_is_applied_before_source_length_cache(
     statement = _statement(GenerateStatement, "rows.csv", "rows")
     statement._offset = offset
     reader = Mock(return_value=[{}, {}, {}, {}, {}])
-    monkeypatch.setattr(DataSourceRegistry, "_get_source", reader)
+    monkeypatch.setattr(io_source_router, "load_source_rows", reader)
 
     set_data_source_length(context, statement)
 
@@ -206,7 +207,7 @@ def test_xml_source_rows_are_normalised_once(tmp_path: Path, xml: str, rows: lis
     path = tmp_path / "source.xml"
     path.write_text(xml, encoding="utf-8")
 
-    assert DataSourceRegistry._get_source(str(path), ",", SourceFileFormat.XML) == rows
+    assert load_source_rows(path, ",", SourceFileFormat.XML) == rows
 
 
 def test_text_only_xml_item_is_rejected_instead_of_dropped(tmp_path: Path) -> None:
@@ -214,4 +215,12 @@ def test_text_only_xml_item_is_rejected_instead_of_dropped(tmp_path: Path) -> No
     path.write_text("<list><item>Hello</item></list>", encoding="utf-8")
 
     with pytest.raises(ValueError, match="text-only <item>"):
-        DataSourceRegistry._get_source(str(path), ",", SourceFileFormat.XML)
+        load_source_rows(path, ",", SourceFileFormat.XML)
+
+
+def test_malformed_xml_source_is_rejected(tmp_path: Path) -> None:
+    path = tmp_path / "source.xml"
+    path.write_text("<list><item>", encoding="utf-8")
+
+    with pytest.raises(ExpatError):
+        load_source_rows(path, ",", SourceFileFormat.XML)

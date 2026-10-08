@@ -35,7 +35,6 @@ INTERNAL_EXPORT_HELPERS = {
 }
 
 INTERNAL_IO_TYPES = {
-    "DataSourceRegistry": "datamimic_ce.engine.io.data_sources.data_source_registry",
     "ExporterConfig": "datamimic_ce.engine.io.exporters.core.exporter_config",
     "ExporterStateManager": "datamimic_ce.engine.io.exporters.core.exporter_state_manager",
     "UnifiedBufferedExporter": "datamimic_ce.engine.io.exporters.core.unified_buffered_exporter",
@@ -52,9 +51,22 @@ IO_ONLY_CLIENT_AND_COLLECTION_BINDINGS = {
     "resolve_source_collection": "datamimic_ce.engine.io.data_sources.boundary.entities",
 }
 
+IO_INTERNAL_SOURCE_BINDINGS = {
+    "load_source_rows": "datamimic_ce.engine.io.files.readers",
+    "weighted_csv_has_header": "datamimic_ce.engine.io.files.readers",
+    "rdbms_count_source_query": "datamimic_ce.engine.io.clients.operations",
+}
+
 
 def test_io_root_hides_client_and_collection_operations_but_keeps_owners() -> None:
     for name, owner_name in IO_ONLY_CLIENT_AND_COLLECTION_BINDINGS.items():
+        assert name not in io_api.__all__
+        assert not hasattr(io_api, name)
+        assert hasattr(importlib.import_module(owner_name), name)
+
+
+def test_io_source_helpers_stay_internal_to_their_owners() -> None:
+    for name, owner_name in IO_INTERNAL_SOURCE_BINDINGS.items():
         assert name not in io_api.__all__
         assert not hasattr(io_api, name)
         assert hasattr(importlib.import_module(owner_name), name)

@@ -32,7 +32,7 @@
       },
       {
         "path": "datamimic_ce/engine/io/clients/operations.py",
-        "responsibility": "Owns typed client creation, queries, paging, SQL scripts, sequences and disposal."
+        "responsibility": "Owns typed client creation, queries, paging, RDBMS source-count failure translation, SQL scripts, sequences and disposal."
       },
       {
         "path": "datamimic_ce/engine/io/clients/rdbms_client.py",
@@ -83,12 +83,8 @@
         "responsibility": "Selects unique or distributed rows from a loaded source pool and slices pages within one chunk."
       },
       {
-        "path": "datamimic_ce/engine/io/data_sources/data_source_registry.py",
-        "responsibility": "Loads and pages supported file sources; exposes an RDBMS query-count helper."
-      },
-      {
         "path": "datamimic_ce/engine/io/data_sources/router.py",
-        "responsibility": "Counts sources and routes generate, nested-key, and reference reads to file, database, or memstore readers, applying row selection."
+        "responsibility": "Counts sources, routes generate, nested-key, and reference reads to file, database, or memstore sources, and applies row selection."
       },
       {
         "path": "datamimic_ce/engine/io/data_sources/selection.py",
@@ -116,7 +112,7 @@
       },
       {
         "path": "datamimic_ce/engine/io/files/readers.py",
-        "responsibility": "This module reads supported file formats and returns typed dataset rows."
+        "responsibility": "This module reads supported file formats and returns typed dataset and source rows."
       }
     ]
   },
@@ -474,7 +470,6 @@
       "allowed_children": [
         "datamimic_ce.engine.io.data_sources.boundary",
         "datamimic_ce.engine.io.data_sources.chunk_reader",
-        "datamimic_ce.engine.io.data_sources.data_source_registry",
         "datamimic_ce.engine.io.data_sources.router",
         "datamimic_ce.engine.io.data_sources.selection",
         "datamimic_ce.engine.io.data_sources.variable",

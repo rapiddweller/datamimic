@@ -47,8 +47,8 @@ class SourceCapability:
     """One runtime-supported ``source=`` context.
 
     ``source_type`` narrows shape-sensitive consumers such as ``nestedKey``.
-    ``DataSourceRegistry`` owns runtime loading and routing; this fact owns which
-    source kinds and suffixes that boundary allows each element to dispatch.
+    File readers own source decoding and the data-source router owns runtime
+    dispatch; this fact owns which source kinds and suffixes each element allows.
     """
 
     element: str

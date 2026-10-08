@@ -1,9 +1,10 @@
 import json
+from json import JSONDecodeError
 
 import pytest
 
 from datamimic_ce.engine.dsl.vocabulary.source_capabilities import SourceFileFormat
-from datamimic_ce.engine.io.data_sources.data_source_registry import DataSourceRegistry
+from datamimic_ce.engine.io.files.readers import load_source_rows
 
 
 @pytest.mark.parametrize(
@@ -19,7 +20,7 @@ def test_json_source_accepts_object_and_record_list_shapes(tmp_path, value, expe
     path = tmp_path / "source.json"
     path.write_text(json.dumps(value), encoding="utf-8")
 
-    assert DataSourceRegistry._get_source(str(path), ",", SourceFileFormat.JSON) == expected
+    assert load_source_rows(path, ",", SourceFileFormat.JSON) == expected
 
 
 @pytest.mark.parametrize(
@@ -32,4 +33,12 @@ def test_json_source_rejects_non_record_shapes(tmp_path, value) -> None:
     path.write_text(json.dumps(value), encoding="utf-8")
 
     with pytest.raises(ValueError, match="must contain a list of objects or a dictionary"):
-        DataSourceRegistry._get_source(str(path), ",", SourceFileFormat.JSON)
+        load_source_rows(path, ",", SourceFileFormat.JSON)
+
+
+def test_malformed_json_source_is_rejected(tmp_path) -> None:
+    path = tmp_path / "source.json"
+    path.write_text('{"id":', encoding="utf-8")
+
+    with pytest.raises(JSONDecodeError):
+        load_source_rows(path, ",", SourceFileFormat.JSON)

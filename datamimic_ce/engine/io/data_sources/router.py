@@ -22,6 +22,7 @@ from datamimic_ce.engine.io.clients.operations import (
     is_mongodb_client,
     is_rdbms_client,
     mongodb_count_collection,
+    rdbms_count_source_query,
 )
 from datamimic_ce.engine.io.contracts import DataSourcePagination, MemstoreSource
 from datamimic_ce.engine.io.data_sources.boundary.entities import resolve_source_collection, resolve_source_entity
@@ -30,9 +31,8 @@ from datamimic_ce.engine.io.data_sources.boundary.models import (
     GenerateFileSource,
     GenerateFileSourceRequest,
 )
-from datamimic_ce.engine.io.data_sources.data_source_registry import DataSourceRegistry
 from datamimic_ce.engine.io.data_sources.selection import get_distributed_data, get_unique_data, select_rows
-from datamimic_ce.engine.io.files.readers import FileUtil
+from datamimic_ce.engine.io.files.readers import FileUtil, load_source_rows, weighted_csv_has_header
 from datamimic_ce.randomness import RandomSource
 
 logger = logging.getLogger("DATAMIMIC")
@@ -51,8 +51,8 @@ def count_source(
         return len(FileUtil.read_dbunit_to_dict_list(request.descriptor_dir / request.source, entity))
     if source_format is not None:
         return len(
-            DataSourceRegistry._get_source(
-                str(request.descriptor_dir / request.source),
+            load_source_rows(
+                request.descriptor_dir / request.source,
                 request.separator or request.default_separator,
                 source_format,
             )
@@ -69,13 +69,9 @@ def count_source(
     iteration_selector = request.iteration_selector
     if is_rdbms_client(client):
         if selector is not None:
-            return DataSourceRegistry.rdbms_count_query_length(
-                client, selector, request.source, "selector"
-            )
+            return rdbms_count_source_query(client, selector, request.source, "selector")
         if iteration_selector is not None:
-            return DataSourceRegistry.rdbms_count_query_length(
-                client, iteration_selector, request.source, "iterationSelector"
-            )
+            return rdbms_count_source_query(client, iteration_selector, request.source, "iterationSelector")
         if request.source_entity is not None or request.source_type is not None:
             entity = resolve_source_entity(request.source_entity, request.source_type, request.name)
             return database_count_table_length(client, entity)
@@ -113,7 +109,7 @@ def read_generate_file_source(request: GenerateFileSourceRequest) -> GenerateFil
     file_format = source_file_format_for(EL_GENERATE, request.source)
     if (
         source_file_format(request.source) is SourceFileFormat.WEIGHTED_CSV
-        and not DataSourceRegistry._weighted_csv_has_header(file_path, request.separator)
+        and not weighted_csv_has_header(file_path, request.separator)
     ):
         raise ValueError(
             f"<generate> '{request.name}': source '{request.source}' is a headerless weighted "
@@ -126,33 +122,18 @@ def read_generate_file_source(request: GenerateFileSourceRequest) -> GenerateFil
 
     if file_format is SourceFileFormat.DBUNIT_XML:
         rows = FileUtil.read_dbunit_to_dict_list(file_path, request.source_entity or request.name)[request.offset :]
-    elif file_format is SourceFileFormat.CSV:
-        rows = DataSourceRegistry.load_csv_file(
-            file_path=file_path,
-            separator=request.separator,
-            cyclic=request.cyclic,
-            start_idx=request.start_idx,
-            end_idx=request.end_idx,
-            offset=request.offset,
-        )
-    elif file_format is SourceFileFormat.JSON:
-        rows = DataSourceRegistry.load_json_file(
-            file_path, request.cyclic, request.start_idx, request.end_idx, offset=request.offset
-        )
-    elif file_format is SourceFileFormat.XLSX:
-        rows = DataSourceRegistry.load_xlsx_file(
-            file_path, request.cyclic, request.start_idx, request.end_idx, offset=request.offset
-        )
-    elif file_format is SourceFileFormat.FIXED_WIDTH:
-        rows = DataSourceRegistry.load_fixed_width_file(
-            file_path, request.cyclic, request.start_idx, request.end_idx, offset=request.offset
-        )
-    elif file_format is SourceFileFormat.XML:
-        rows = DataSourceRegistry.load_xml_file(
-            file_path, request.cyclic, request.start_idx, request.end_idx, offset=request.offset
-        )
     else:
-        return None
+        pagination = (
+            DataSourcePagination(request.start_idx, request.end_idx - request.start_idx)
+            if request.start_idx is not None and request.end_idx is not None
+            else None
+        )
+        rows = select_rows(
+            load_source_rows(file_path, request.separator if file_format is SourceFileFormat.CSV else ",", file_format),
+            pagination,
+            False if request.cyclic is None else request.cyclic,
+            request.offset,
+        )
     return GenerateFileSource(file_format, rows)
 
 

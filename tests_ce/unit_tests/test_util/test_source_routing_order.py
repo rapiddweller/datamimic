@@ -1,5 +1,6 @@
 """Event-order contracts at the source-routing boundary."""
 
+from inspect import signature
 from pathlib import Path
 from types import SimpleNamespace
 from unittest.mock import Mock, call
@@ -14,14 +15,15 @@ from datamimic_ce.engine.io.data_sources import chunk_reader
 from datamimic_ce.engine.io.data_sources import router as io_source_router
 from datamimic_ce.engine.io.data_sources import variable as io_variable_sources
 from datamimic_ce.engine.io.data_sources.boundary.models import GenerateFileSource, GenerateFileSourceRequest
-from datamimic_ce.engine.io.data_sources.data_source_registry import DataSourceRegistry
 from datamimic_ce.engine.io.data_sources.router import (
     read_generate_file_source,
     select_reference_rows,
     window_nested_key_rows,
 )
+from datamimic_ce.engine.io.data_sources.selection import select_rows
 from datamimic_ce.engine.io.exporters.core import routing as io_exporter_routing
 from datamimic_ce.engine.io.exporters.memory.memstore import Memstore
+from datamimic_ce.engine.io.files.readers import weighted_csv_has_header
 from datamimic_ce.engine.runtime.tasks.sources import chunk_source_reader
 from datamimic_ce.engine.runtime.tasks.sources import generate as generate_source_router
 from datamimic_ce.engine.runtime.tasks.sources import length as length_source_router
@@ -323,9 +325,10 @@ def test_generate_csv_reads_one_chunk_then_templates_against_root(monkeypatch: p
         type=None,
         source_entity=None,
     )
-    load_csv = Mock(return_value=[{"code": "<<value>>"}])
+    source_rows = [{"code": "<<value>>"}]
+    file_source = Mock(return_value=GenerateFileSource(SourceFileFormat.CSV, source_rows))
     template = Mock(return_value=[{"code": "expanded"}])
-    monkeypatch.setattr(DataSourceRegistry, "load_csv_file", load_csv)
+    monkeypatch.setattr(generate_source_router, "read_generate_file_source", file_source)
     monkeypatch.setattr(generate_source_router, "evaluate_source_template", template)
 
     rows, build_from_source = generate_source_router.load_generate_source(
@@ -341,15 +344,108 @@ def test_generate_csv_reads_one_chunk_then_templates_against_root(monkeypatch: p
 
     assert rows == [{"code": "expanded"}]
     assert build_from_source is True
-    load_csv.assert_called_once_with(
-        file_path=Path("/descriptor/rows.csv"),
-        separator="|",
-        cyclic=False,
-        start_idx=5,
-        end_idx=10,
-        offset=3,
+    file_source.assert_called_once_with(
+        GenerateFileSourceRequest("rows.csv", Path("/descriptor"), "products", "|", False, 5, 10, 3, "products")
     )
-    template.assert_called_once_with(root, [{"code": "<<value>>"}], "<<", ">>")
+    template.assert_called_once()
+    template_context, template_rows, prefix, suffix = template.call_args.args
+    assert template_context is root
+    assert template_rows is source_rows
+    assert (prefix, suffix) == ("<<", ">>")
+
+
+@pytest.mark.parametrize(
+    "file_format",
+    [
+        SourceFileFormat.CSV,
+        SourceFileFormat.JSON,
+        SourceFileFormat.XLSX,
+        SourceFileFormat.FIXED_WIDTH,
+        SourceFileFormat.XML,
+    ],
+)
+def test_generate_file_source_loads_once_then_selects_the_original_rows(
+    monkeypatch: pytest.MonkeyPatch, tmp_path: Path, file_format: SourceFileFormat
+) -> None:
+    pool = [{"id": index} for index in range(5)]
+    path = tmp_path / f"rows{file_format.value}"
+    load = Mock(return_value=pool)
+    selection_calls: list[dict[str, object]] = []
+
+    def select(*args: object, **kwargs: object) -> list[dict]:
+        bound = signature(select_rows).bind(*args, **kwargs)
+        selection_calls.append(bound.arguments)
+        return select_rows(*args, **kwargs)
+
+    monkeypatch.setattr(io_source_router, "load_source_rows", load)
+    monkeypatch.setattr(io_source_router, "select_rows", select)
+
+    result = read_generate_file_source(
+        GenerateFileSourceRequest(path.name, tmp_path, "rows", "|", False, 1, 3, 1, None)
+    )
+
+    assert result is not None
+    assert result.file_format is file_format
+    assert result.rows == [pool[2], pool[3]]
+    assert result.rows[0] is pool[2]
+    separator = "|" if file_format is SourceFileFormat.CSV else ","
+    load.assert_called_once_with(path, separator, file_format)
+    assert len(selection_calls) == 1
+    assert selection_calls[0]["data"] is pool
+    pagination = selection_calls[0]["pagination"]
+    assert isinstance(pagination, DataSourcePagination)
+    assert (pagination.skip, pagination.limit) == (1, 2)
+    assert selection_calls[0]["cyclic"] is False
+    assert selection_calls[0]["offset"] == 1
+
+
+@pytest.mark.parametrize(("start_idx", "end_idx"), [(None, None), (2, None), (None, 2)])
+def test_generate_file_source_partial_bounds_and_none_cyclic_are_unwindowed(
+    monkeypatch: pytest.MonkeyPatch,
+    tmp_path: Path,
+    start_idx: int | None,
+    end_idx: int | None,
+) -> None:
+    pool = [{"id": 0}, {"id": 1}]
+    selection_calls: list[dict[str, object]] = []
+
+    def select(*args: object, **kwargs: object) -> list[dict]:
+        bound = signature(select_rows).bind(*args, **kwargs)
+        selection_calls.append(bound.arguments)
+        return select_rows(*args, **kwargs)
+
+    monkeypatch.setattr(io_source_router, "load_source_rows", Mock(return_value=pool))
+    monkeypatch.setattr(io_source_router, "select_rows", select)
+
+    result = read_generate_file_source(
+        GenerateFileSourceRequest("rows.csv", tmp_path, "rows", "|", None, start_idx, end_idx, 0, None)
+    )
+
+    assert result is not None
+    assert result.rows[0] is pool[0]
+    assert len(selection_calls) == 1
+    assert selection_calls[0]["pagination"] is None
+    assert selection_calls[0]["cyclic"] is False
+    assert selection_calls[0]["offset"] == 0
+
+
+def test_generate_file_source_cyclic_window_deepcopies_wrapped_rows(
+    monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+) -> None:
+    pool = [{"id": 0, "nested": {"value": "original"}}, {"id": 1}]
+    monkeypatch.setattr(io_source_router, "load_source_rows", Mock(return_value=pool))
+
+    result = read_generate_file_source(
+        GenerateFileSourceRequest("rows.json", tmp_path, "rows", "|", True, 0, 3, 0, None)
+    )
+
+    assert result is not None
+    assert [row["id"] for row in result.rows] == [0, 1, 0]
+    assert result.rows[0] is not pool[0]
+    assert result.rows[2] is not result.rows[0]
+    result.rows[2]["nested"]["value"] = "changed"
+    assert result.rows[0]["nested"]["value"] == "original"
+    assert pool[0]["nested"]["value"] == "original"
 
 
 def test_generate_file_io_preserves_weighted_suffix_fallbacks(tmp_path: Path) -> None:
@@ -359,6 +455,9 @@ def test_generate_file_io_preserves_weighted_suffix_fallbacks(tmp_path: Path) ->
     weighted_entity.write_text("id,name,weight\n1,Cheap,80\n2,Expensive,20\n", encoding="utf-8")
     headerless_weight = tmp_path / "headerless.wgt.csv"
     headerless_weight.write_text("true|80\nfalse|20\n", encoding="utf-8")
+
+    assert weighted_csv_has_header(headered_weight, "|") is True
+    assert weighted_csv_has_header(headerless_weight, "|") is False
 
     weighted_rows = read_generate_file_source(
         GenerateFileSourceRequest(headered_weight.name, tmp_path, "values", "|", False, None, None, 0, None)
@@ -385,7 +484,7 @@ def test_generate_dbunit_file_uses_name_fallback_and_offset(tmp_path: Path) -> N
     descriptor.write_text("<dataset><rows id='1'/><rows id='2'/><rows id='3'/></dataset>", encoding="utf-8")
 
     result = read_generate_file_source(
-        GenerateFileSourceRequest(descriptor.name, tmp_path, "rows", "|", False, None, None, 1, None)
+        GenerateFileSourceRequest(descriptor.name, tmp_path, "rows", "|", False, 0, 1, 1, None)
     )
 
     assert result is not None

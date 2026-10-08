@@ -1,6 +1,9 @@
 """Operations that runtime tasks may perform without depending on client classes."""
 
+import logging
 from typing import TypeGuard
+
+from sqlalchemy.exc import OperationalError, ProgrammingError
 
 from datamimic_ce.engine.dsl.vocabulary.enums.dbms_enums import Dbms
 from datamimic_ce.engine.io.clients.client import Client, RegisteredClient
@@ -10,6 +13,8 @@ from datamimic_ce.engine.io.clients.rdbms_client import RdbmsClient
 from datamimic_ce.engine.io.connection_config.mongodb_connection_config import MongoDBConnectionConfig
 from datamimic_ce.engine.io.connection_config.rdbms_connection_config import RdbmsConnectionConfig
 from datamimic_ce.engine.io.contracts import DataSourcePagination, SqlScriptClient
+
+logger = logging.getLogger("DATAMIMIC")
 
 
 def create_rdbms_client(config: RdbmsConnectionConfig, task_id: str) -> Client:
@@ -40,6 +45,17 @@ def count_query_length(client: RegisteredClient, query: str) -> int | None:
     if not isinstance(client, DatabaseClient):
         return None
     return client.count_query_length(query)
+
+
+def rdbms_count_source_query(client: RegisteredClient, query: str, source_str: str, query_label: str) -> int | None:
+    """Return an RDBMS source count, logging query failures and returning None."""
+    if not isinstance(client, RdbmsClient):
+        raise TypeError("Client is not an RDBMS client")
+    try:
+        return client.count_query_length(query=query)
+    except (ProgrammingError, OperationalError):
+        logger.error(f"Cannot get length of database source '{source_str}' with {query_label} '{query}'")
+        return None
 
 
 def database_count_query_length(client: RegisteredClient, query: str) -> int:

@@ -2083,6 +2083,15 @@
   "package_relocations": [],
   "splits": [
     {
+      "source": "engine/io/data_sources/data_source_registry.py",
+      "targets": [
+        "engine/io/files/readers.py",
+        "engine/io/clients/operations.py",
+        "engine/io/data_sources/router.py"
+      ],
+      "reason": "File decoding belongs to readers, RDBMS count failure translation to client operations, and source routing and row selection to the router."
+    },
+    {
       "source": "engine/runtime/tasks/variable_task.py",
       "targets": [
         "engine/runtime/tasks/values/variable/task.py",
@@ -2260,10 +2269,6 @@
     {
       "path": "engine/dsl/statements/setup",
       "reason": "Setup/client/include/generator/state-machine/demographics state. These distinct owners remain together; a count-only wrapper adds no boundary."
-    },
-    {
-      "path": "engine/io/data_sources",
-      "reason": "Source resolution, distribution, uniqueness, cyclic windows, paging and pool lifetime. These distinct owners remain together; a count-only wrapper adds no boundary."
     },
     {
       "path": "engine/runtime",
@@ -2481,8 +2486,9 @@
     {"target": "engine/io/data_sources/boundary/entities.py", "responsibility": "Resolves source entity and MongoDB collection names from descriptor fields at the IO boundary."},
     {"target": "engine/io/data_sources/boundary/models.py", "responsibility": "Defines typed source requests that carry resolved inputs without runtime context or statements."},
     {"target": "engine/io/data_sources/chunk_reader.py", "responsibility": "Selects unique or distributed rows from a loaded source pool and slices pages within one chunk."},
-    {"target": "engine/io/data_sources/data_source_registry.py", "responsibility": "Loads and pages supported file sources; exposes an RDBMS query-count helper."},
-    {"target": "engine/io/data_sources/router.py", "responsibility": "Counts sources and routes generate, nested-key, and reference reads to file, database, or memstore readers, applying row selection."},
+    {"target": "engine/io/data_sources/router.py", "responsibility": "Counts sources, routes generate, nested-key, and reference reads to file, database, or memstore sources, and applies row selection."},
+    {"target": "engine/io/files/readers.py", "responsibility": "This module reads supported file formats and returns typed dataset and source rows."},
+    {"target": "engine/io/clients/operations.py", "responsibility": "Owns typed client creation, queries, paging, RDBMS source-count failure translation, SQL scripts, sequences and disposal."},
     {"target": "engine/io/data_sources/variable.py", "responsibility": "Reads variable source pools or pages from resolved file, database, and memstore requests."},
     {"target": "engine/io/data_sources/weighted_entity_data_source.py", "responsibility": "Draws weighted entity dictionaries from a CSV source using the supplied RNG."},
     {"target": "engine/io/exporters/core/exporter.py", "responsibility": "Provides the marker base class for exporter implementations."},
