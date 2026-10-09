@@ -256,7 +256,7 @@
         "datamimic_ce.engine.runtime.tasks.sources"
       ],
       "responsibilities": [
-        "Statement/context resolution and IO request adaptation only."
+        "Statement/context resolution and source input/result adaptation through IO and Runtime evaluation operations."
       ],
       "forbidden_responsibilities": [
         "Own generic IO clients or exporter policy"

@@ -669,6 +669,21 @@ records Astra's explicit parser/Runtime-evaluation responsibility decision and E
 differences. No EE migration is implemented. Raw pair and architecture evidence:
 `/tmp/ce-resume-20261008/next-slice-159/`.
 
+Step 160: independent Astra and QA review retains the nested-source physical split.
+TASKS-SOURCES' parent responsibility now includes existing result adaptation:
+Runtime templates source rows before requesting IO distribution. The old
+"IO request adaptation only" omitted that child operation. No source, grants,
+public selectors or forbidden responsibilities change. Eight retained Step141
+routing/window cases pass at each checkpoint; current candidate source/test bytes
+match. This is bounded reuse, not full native nested-DSL acceptance.
+The supporting 151-owner evidence join distinguishes historical, transformed and
+current evidence; it does not approve every owner. Definition 13 PASS. The fresh
+published report preserves all 58 findings, 200 measured/254 canonical UNKNOWNs,
+488 module records and the 151-component/25-level structure. Unamended comparison
+against `889578f` exits 2: baseline-new32/resolved0 and one responsibility-prose
+widening, reviewed by Astra but still machine-unbound. Existing holds remain.
+Evidence: `/tmp/ce-resume-20261008/next-slice-160/`. New-head CI pending.
+
 ## Agent separation
 
 - The implementation agent changes production code and targeted tests for one approved slice.
