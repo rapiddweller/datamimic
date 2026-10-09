@@ -583,9 +583,23 @@ Step 147: [Amendment 171](amendment-171-engine-namespace.md) retains the regular
 root and removes only the empty Engine marker. Independent QA accepted the bounded
 installed-wheel pair and local checks. Global FAIL and the root ownership gap
 remain; one declarations widening is unbound, machine binding OPEN (#415).
-Final-head CI is pending. External discovery, whole leaf environment, other Python
+Exact `a52c70ca` push/PR CI each completed with 24 successful jobs, two architecture
+failures and two skips. External discovery, whole leaf environment, other Python
 versions, EE and full DSL/worker compatibility remain UNKNOWN; detailed proof and
 limits live in Amendment171. No broader semantic acceptance or ledger promotion.
+
+Step 148: original `a219163e` → current `a52c70ca` passed four existing count-range
+cases per endpoint: seven helper attempts, six complete captures and one matching
+native error graph/parser stage. Independent QA accepted all three full replays and
+six endpoint capture comparisons. Per-parent linkage, independent RNG draws,
+parallel workers, other ranges and full DSL/EE behavior remain UNKNOWN; no ledger promotion.
+
+Step 149: [Amendment 172](amendment-172-interfaces-domain-rationale.md) corrects only
+Interfaces' existing Domains dependency rationale after a bounded six-component,
+14-file review. Permissions and agent labels stay unchanged. Ruff/MyPy and definition
+checks pass; fresh report findings/source digest are unchanged and against-base adds
+no widening. Global FAIL, the root gap and full semantic/human acceptance of all 150
+agent components remain open; exact results and limits live in Amendment172. New-head CI pending.
 
 ## Agent separation
 

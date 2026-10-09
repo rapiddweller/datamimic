@@ -31,7 +31,7 @@
         },
         {
           "component": "domains",
-          "rationale": "The Python interface exposes domain generation."
+          "rationale": "CLI version and system-information commands read library version metadata through the Domains API."
         },
         {
           "component": "resources",
