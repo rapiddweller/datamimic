@@ -31,7 +31,9 @@ CLI and MCP executable startup load only the startup cwd `.env` with
 prepare their own environment. Runtime settings resolve on use. Descriptor
 `.env.properties` lookup remains separate. This deliberately changes the old
 import-time bootstrap behavior ([Amendment 68](../refactoring-study/experiment-2/amendment-68.md)).
-The regular root package remains the installed-distribution origin anchor. Engine
+The regular root package remains the installed-distribution origin anchor, owned only
+as exact module `datamimic_ce` by `distribution`, without descendant scope or grants
+([Amendment 173](../refactoring-study/experiment-2/amendment-173-root-distribution-owner.md)). Engine
 is an implicit grouping namespace; DSL, IO and Runtime retain their own modules.
 Neither grouping introduces a catch-all component. External Engine introspection/discovery compatibility,
 other Python versions and EE packaging remain UNKNOWN

@@ -457,6 +457,32 @@
         "docs/architecture/inner/semantic-review/astra-target-decision.md"
       ],
       "requires": []
+    },
+    {
+      "id": "COMP-DISTRIBUTION",
+      "label": "distribution",
+      "role": "component",
+      "packages": [],
+      "exact_modules": [
+        "datamimic_ce"
+      ],
+      "responsibilities": [
+        "Own the inert regular CE package initializer that anchors installed-distribution origin."
+      ],
+      "forbidden_responsibilities": [
+        "configuration loading",
+        "application execution or API re-exports",
+        "descendant modules, packaging workflows, or general utilities"
+      ],
+      "provenance": [
+        "docs/architecture/inner/structure-review.json",
+        "docs/architecture/refactoring-study/experiment-2/amendment-68.md",
+        "docs/architecture/refactoring-study/experiment-2/amendment-173-root-distribution-owner.md"
+      ],
+      "requires": [],
+      "public": [],
+      "planned": [],
+      "decided_by": "agent"
     }
   ],
   "rules": [

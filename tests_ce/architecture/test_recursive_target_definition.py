@@ -324,6 +324,7 @@ def test_recursive_target_definition_covers_sources_and_mounts() -> None:
 
 def test_package_initializers_have_exact_inner_owners() -> None:
     expected = {
+        "architecture-contract.json": ("distribution", "datamimic_ce", [], "distribution"),
         "docs/architecture/inner/domains/architecture-contract.json": (
             "api",
             "datamimic_ce.domains",
@@ -403,6 +404,7 @@ def test_package_initializers_have_exact_inner_owners() -> None:
     ) -> None:
         components = {component["label"]: component for component in contract["components"]}
         owner, module, packages, _ = expected_owner
+        assert owner in components, f"missing initializer owner: {owner}"
         component = components[owner]
         assert component["packages"] == packages
         assert component.get("exact_modules", []) == [module]
@@ -421,8 +423,24 @@ def test_package_initializers_have_exact_inner_owners() -> None:
         contract = json.loads((ROOT / relative_path).read_text(encoding="utf-8"))
         assert_exact_owner(contract, expected_owner)
         _, module, _, target = expected_owner
-        scope = module.removeprefix("datamimic_ce.").replace(".", "/")
+        scope = "." if module == "datamimic_ce" else module.removeprefix("datamimic_ce.").replace(".", "/")
         assert reviews[scope]["initializer_owner"] == target, scope
+
+    root = json.loads((ROOT / "architecture-contract.json").read_text(encoding="utf-8"))
+    for mutation in ("broad", "extra", "missing", "duplicate"):
+        invalid = json.loads(json.dumps(root))
+        distribution = next(item for item in invalid["components"] if item["label"] == "distribution")
+        if mutation == "broad":
+            distribution["packages"] = ["datamimic_ce"]
+        elif mutation == "extra":
+            distribution["exact_modules"].append("datamimic_ce._compat")
+        elif mutation == "missing":
+            invalid["components"].remove(distribution)
+        else:
+            duplicate = dict(distribution, id="COMP-DUPLICATE", label="duplicate")
+            invalid["components"].append(duplicate)
+        with pytest.raises(AssertionError):
+            assert_exact_owner(invalid, expected["architecture-contract.json"])
 
     healthcare_path = next(
         path for path in expected if path.endswith("/healthcare/architecture-contract.json")

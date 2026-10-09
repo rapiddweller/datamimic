@@ -599,7 +599,16 @@ Interfaces' existing Domains dependency rationale after a bounded six-component,
 14-file review. Permissions and agent labels stay unchanged. Ruff/MyPy and definition
 checks pass; fresh report findings/source digest are unchanged and against-base adds
 no widening. Global FAIL, the root gap and full semantic/human acceptance of all 150
-agent components remain open; exact results and limits live in Amendment172. New-head CI pending.
+agent components remain open; exact results and limits live in Amendment172.
+Both exact-c769 CI runs completed: 24 success, two architecture failures and two skips each.
+
+Step 150: [Amendment 173](amendment-173-root-distribution-owner.md) assigns the retained
+inert root initializer to an exact distribution owner; no descendants, source or grants change.
+Isolated ownership REDs and Main definition 13 PASS, Ruff/MyPy PASS are verified.
+The full projection closes only the root gap; decoded global findings remain unchanged.
+Unamended against-c769 retains one component-presence widening; global FAIL, machine
+binding and whole-target semantic acceptance remain open. New-head CI pending; details
+and limits live in Amendment173.
 
 ## Agent separation
 

@@ -5,6 +5,8 @@ from __future__ import annotations
 import json
 from pathlib import Path
 
+import pytest
+
 from tests_ce.architecture.test_exact_module_targets import _declared_modules
 from tests_ce.architecture.test_recursive_target_definition import (
     _files_at,
@@ -48,6 +50,47 @@ def _ambiguous_targets(manifest: dict) -> set[str]:
         | {merge["target"] for merge in manifest["merges"]}
         | {module["target"] for module in manifest["new_modules"]}
     )
+
+
+def _assert_component_targets(component: dict, current: set[str]) -> None:
+    target_scopes = {"."}
+    module_names = set()
+    for target in current:
+        parts = target.removesuffix(".py").split("/")
+        target_scopes.update("/".join(parts[:index]) for index in range(1, len(parts) + 1))
+        if parts[-1] == "__init__":
+            parts.pop()
+        module_names.add(".".join(["datamimic_ce", *parts]))
+    assert component.get("packages") or component.get("exact_modules"), (
+        f"missing component target: {component['id']}"
+    )
+    for target in component["packages"]:
+        scope = target.removeprefix("datamimic_ce").strip(".").replace(".", "/") or "."
+        assert scope in target_scopes, f"missing component target: {component['id']} -> {target}"
+    for module in component.get("exact_modules", []):
+        assert module in module_names, f"missing exact component module: {component['id']} -> {module}"
+
+
+def test_component_targets_require_real_package_or_exact_module_sources() -> None:
+    current = {"__init__.py", "engine/io/api.py", "engine/runtime/__init__.py"}
+    _assert_component_targets(
+        {
+            "id": "exact-only",
+            "packages": [],
+            "exact_modules": ["datamimic_ce", "datamimic_ce.engine.io.api", "datamimic_ce.engine.runtime"],
+        },
+        current,
+    )
+    for packages, exact_modules in (
+        ([], []),
+        ([], ["datamimic_ce.absent"]),
+        ([], ["datamimic_ce.engine"]),
+        (["datamimic_ce.absent"], []),
+    ):
+        with pytest.raises(AssertionError):
+            _assert_component_targets(
+                {"id": "invalid", "packages": packages, "exact_modules": exact_modules}, current
+            )
 
 
 def test_current_modules_and_components_have_a_target_and_one_sentence_concern() -> None:
@@ -101,15 +144,8 @@ def test_current_modules_and_components_have_a_target_and_one_sentence_concern()
 
     components = _components()
     assert len({component["id"] for component in components}) == len(components), "duplicate component target"
-    target_scopes = {"."}
-    for target in current:
-        parts = target.removesuffix(".py").split("/")
-        target_scopes.update("/".join(parts[:index]) for index in range(1, len(parts) + 1))
     for component in components:
-        assert component.get("packages"), f"missing component target: {component['id']}"
-        for target in component["packages"]:
-            scope = target.removeprefix("datamimic_ce").strip(".").replace(".", "/") or "."
-            assert scope in target_scopes, f"missing component target: {component['id']} -> {target}"
+        _assert_component_targets(component, current)
         responsibilities = component.get("responsibilities", [])
         assert len(responsibilities) == 1, f"component needs one responsibility sentence: {component['id']}"
         responsibility = responsibilities[0]
