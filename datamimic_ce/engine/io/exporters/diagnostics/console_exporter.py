@@ -4,6 +4,8 @@
 # See LICENSE file for the full text of the license.
 # For questions and support, contact: info@rapiddweller.com
 
+import sys
+
 from datamimic_ce.engine.io.contracts import Exporter
 
 
@@ -21,3 +23,4 @@ class ConsoleExporter(Exporter):
         data = product[1]
         for row in data:
             print(f"{name}: {row}")
+        sys.stdout.flush()

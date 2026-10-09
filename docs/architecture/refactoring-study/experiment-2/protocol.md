@@ -684,6 +684,23 @@ against `889578f` exits 2: baseline-new32/resolved0 and one responsibility-prose
 widening, reviewed by Astra but still machine-unbound. Existing holds remain.
 Evidence: `/tmp/ce-resume-20261008/next-slice-160/`. New-head CI pending.
 
+Step 163: ConsoleExporter flushes stdout once after a successful page, including
+empty pages. Existing writes and iteration stay unchanged; their failures skip
+the final flush. Flush errors propagate through the existing dispatcher. This is
+an explicit IO delivery correction; custom write-only streams may now fail.
+Step 162's failed Console receipt remains: full captures matched, but five output
+rows were absent. A controlled buffer/termination test establishes the loss
+mechanism, not the actual failed worker's buffer state or migration causality.
+Focused regression: 4 failed/2 passed before; all 116 exporter tests pass after.
+Ruff and full MyPy (488 files) pass. One changed-current native Include run preserves
+the original complete 15-row capture byte-for-byte and emits all 15 Console rows
+with the unchanged two-worker,
+unseeded input. Environment/source snapshots and process cleanup pass.
+The fresh ArchKeel report retains exactly 58 violations and 254 canonical UNKNOWNs
+(200 measured positions); contracts, ownership and unresolved calls are unchanged.
+Full DSL/worker/EE and whole-goal acceptance are not implied. Independent review
+and raw evidence: `/tmp/ce-resume-20261008/next-slice-163/`.
+
 ## Agent separation
 
 - The implementation agent changes production code and targeted tests for one approved slice.
