@@ -660,10 +660,11 @@
       "id": "DOMAIN-API-TYPES",
       "kind": "boundary_types",
       "source": "datamimic_ce.domains.api",
-      "rationale": "The domain facade exposes declared generator classes through a typed iterator, never an untyped registry dictionary. DemographicSampler.provenance_descriptor returns a fresh snapshot of its recorded normalized resource-path to provenance-digest string map; paths are data keys, not fixed record fields.",
+      "rationale": "The domain facade exposes declared generator classes through a typed iterator, never an untyped registry dictionary. DemographicSampler.provenance_descriptor returns a fresh snapshot of its recorded normalized resource-path to provenance-digest string map; paths are data keys, not fixed record fields. Converter extension APIs receive and may return native Python values; arbitrary input acceptance and method-local validation preserve substitutability, extension results and native errors. Only the enumerated direct object/object-or-None positions admit opacity; existing precise specialized outputs and fixed control signatures remain required.",
       "provenance": [
         "docs/architecture/refactoring-study/experiment-2/target-architecture.md",
-        "docs/architecture/refactoring-study/experiment-2/amendment-175-demographic-provenance-map.md"
+        "docs/architecture/refactoring-study/experiment-2/amendment-175-demographic-provenance-map.md",
+        "docs/architecture/refactoring-study/experiment-2/amendment-177-converter-value-boundaries.md"
       ],
       "decided_by": "agent",
       "allowed_positions": [
@@ -672,6 +673,120 @@
           "position": "return",
           "field_path": "",
           "annotation": "dict[str, str]"
+        },
+        {
+          "qualified_name": "datamimic_ce.domains.api.Date2TimestampConverter.convert",
+          "position": "value",
+          "field_path": "",
+          "annotation": "object"
+        },
+        {
+          "qualified_name": "datamimic_ce.domains.api.CustomConverter.__init__",
+          "position": "ctx",
+          "field_path": "",
+          "annotation": "object | None"
+        },
+        {
+          "qualified_name": "datamimic_ce.domains.api.CutLengthConverter.convert",
+          "position": "value",
+          "field_path": "",
+          "annotation": "object"
+        },
+        {
+          "qualified_name": "datamimic_ce.domains.api.CustomConverter.convert",
+          "position": "value",
+          "field_path": "",
+          "annotation": "object"
+        },
+        {
+          "qualified_name": "datamimic_ce.domains.api.Converter.convert",
+          "position": "value",
+          "field_path": "",
+          "annotation": "object"
+        },
+        {
+          "qualified_name": "datamimic_ce.domains.api.CustomConverter.convert",
+          "position": "return",
+          "field_path": "",
+          "annotation": "object | None"
+        },
+        {
+          "qualified_name": "datamimic_ce.domains.api.JavaHashConverter.convert",
+          "position": "value",
+          "field_path": "",
+          "annotation": "object"
+        },
+        {
+          "qualified_name": "datamimic_ce.domains.api.HashConverter.convert",
+          "position": "value",
+          "field_path": "",
+          "annotation": "object"
+        },
+        {
+          "qualified_name": "datamimic_ce.domains.api.Converter.convert",
+          "position": "return",
+          "field_path": "",
+          "annotation": "object"
+        },
+        {
+          "qualified_name": "datamimic_ce.domains.api.SubstringConverter.convert",
+          "position": "value",
+          "field_path": "",
+          "annotation": "object"
+        },
+        {
+          "qualified_name": "datamimic_ce.domains.api.DateFormatConverter.convert",
+          "position": "value",
+          "field_path": "",
+          "annotation": "object"
+        },
+        {
+          "qualified_name": "datamimic_ce.domains.api.MaskConverter.convert",
+          "position": "value",
+          "field_path": "",
+          "annotation": "object"
+        },
+        {
+          "qualified_name": "datamimic_ce.domains.api.UpperCaseConverter.convert",
+          "position": "value",
+          "field_path": "",
+          "annotation": "object"
+        },
+        {
+          "qualified_name": "datamimic_ce.domains.api.RemoveNoneOrEmptyElementConverter.convert",
+          "position": "return",
+          "field_path": "",
+          "annotation": "object"
+        },
+        {
+          "qualified_name": "datamimic_ce.domains.api.RemoveNoneOrEmptyElementConverter.convert",
+          "position": "value",
+          "field_path": "",
+          "annotation": "object"
+        },
+        {
+          "qualified_name": "datamimic_ce.domains.api.AppendConverter.convert",
+          "position": "value",
+          "field_path": "",
+          "annotation": "object"
+        },
+        {
+          "qualified_name": "datamimic_ce.domains.api.Timestamp2DateConverter.convert",
+          "position": "value",
+          "field_path": "",
+          "annotation": "object"
+        },
+        {
+          "qualified_name": "datamimic_ce.domains.api.MiddleMaskConverter.convert",
+          "position": "value",
+          "field_path": "",
+          "annotation": "object"
+        },
+        {
+          "qualified_name": "datamimic_ce.domains.api.LowerCaseConverter.convert",
+          "position": "value",
+          "field_path": "",
+          "annotation": "object"
         }
       ]
     },
@@ -679,16 +794,17 @@
       "id": "RUNTIME-API-TYPES",
       "kind": "boundary_types",
       "source": "datamimic_ce.engine.runtime.api",
-      "rationale": "Fixed requests and execution controls stay typed. Captures, descriptor properties, the client registry, native Python state and copy memo use exact reviewed positions.",
+      "rationale": "Fixed requests and execution controls stay typed. Captures, descriptor properties, the client registry, native Python state and copy memo use exact reviewed positions. Runtime owns native registries keyed by declared client IDs and by statement/source identities. Their exact RegisteredClient and tuple-to-count mapping contracts preserve mutable registry identity without fixed-field wrappers.",
       "provenance": [
         "docs/architecture/refactoring-study/experiment-2/target-architecture.md",
         "docs/architecture/refactoring-study/experiment-2/amendment-70.md",
         "docs/architecture/refactoring-study/experiment-2/amendment-82.md",
         "docs/architecture/refactoring-study/experiment-2/amendment-89.md",
         "docs/architecture/refactoring-study/experiment-2/amendment-90.md",
-        "docs/architecture/refactoring-study/experiment-2/amendment-95.md"
+        "docs/architecture/refactoring-study/experiment-2/amendment-95.md",
+        "docs/architecture/refactoring-study/experiment-2/amendment-176-native-map-boundaries.md"
       ],
-      "decided_by": "architect",
+      "decided_by": "agent",
       "allowed_positions": [
         {
           "qualified_name": "datamimic_ce.engine.runtime.api.SetupContext.__init__",
@@ -748,19 +864,19 @@
           "qualified_name": "datamimic_ce.engine.runtime.api.SetupContext.__init__",
           "position": "clients",
           "field_path": "",
-          "annotation": "dict[str, Client] | None"
+          "annotation": "dict[str, RegisteredClient] | None"
         },
         {
           "qualified_name": "datamimic_ce.engine.runtime.api.SetupContext.clients",
           "position": "return",
           "field_path": "",
-          "annotation": "dict[str, Client]"
+          "annotation": "dict[str, RegisteredClient]"
         },
         {
           "qualified_name": "datamimic_ce.engine.runtime.api.SetupContext.clients",
           "position": "value",
           "field_path": "",
-          "annotation": "dict[str, Client]"
+          "annotation": "dict[str, RegisteredClient]"
         },
         {
           "qualified_name": "datamimic_ce.engine.runtime.api.Context.evaluate_python_expression",
@@ -903,6 +1019,18 @@
           "position": "return",
           "field_path": "",
           "annotation": "object | None"
+        },
+        {
+          "qualified_name": "datamimic_ce.engine.runtime.api.SetupContext.__init__",
+          "position": "data_source_len",
+          "field_path": "",
+          "annotation": "dict[tuple[str | None, str | None], int] | None"
+        },
+        {
+          "qualified_name": "datamimic_ce.engine.runtime.api.SetupContext.data_source_len",
+          "position": "return",
+          "field_path": "",
+          "annotation": "dict[tuple[str | None, str | None], int]"
         }
       ]
     },
@@ -910,13 +1038,14 @@
       "id": "IO-API-TYPES",
       "kind": "boundary_types",
       "source": "datamimic_ce.engine.io.api",
-      "rationale": "The IO facade keeps fixed controls typed; smoke-export rows/options and connection profiles remain open payloads at reviewed positions.",
+      "rationale": "The IO facade keeps fixed controls typed; smoke-export rows/options and connection profiles remain open payloads at reviewed positions. WeightedEntityDataSource returns a selected native string-valued row keyed by input CSV headers; headers are data keys, and row aliasing remains observable.",
       "provenance": [
         "docs/architecture/refactoring-study/experiment-2/target-architecture.md",
         "docs/architecture/refactoring-study/experiment-2/amendment-62.md",
-        "docs/architecture/refactoring-study/experiment-2/amendment-77.md"
+        "docs/architecture/refactoring-study/experiment-2/amendment-77.md",
+        "docs/architecture/refactoring-study/experiment-2/amendment-176-native-map-boundaries.md"
       ],
-      "decided_by": "architect",
+      "decided_by": "agent",
       "allowed_positions": [
         {
           "qualified_name": "datamimic_ce.engine.io.api.smoke_export",
@@ -944,6 +1073,12 @@
         },
         {
           "qualified_name": "datamimic_ce.engine.io.api.load_connection_profile",
+          "position": "return",
+          "field_path": "",
+          "annotation": "dict[str, str]"
+        },
+        {
+          "qualified_name": "datamimic_ce.engine.io.api.WeightedEntityDataSource.generate",
           "position": "return",
           "field_path": "",
           "annotation": "dict[str, str]"

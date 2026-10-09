@@ -631,6 +631,18 @@ all remaining finding/UNKNOWN records are exact. Ownership and dependency grants
 unchanged. Two unamended widenings remain unbound; machine binding and whole-target
 semantic acceptance stay open. CI pending; scope and limits live in Amendment175.
 
+Step 157: [Amendment 176](amendment-176-native-map-boundaries.md) corrects exact
+native registry/cache/CSV map boundaries; [Amendment 177](amendment-177-converter-value-boundaries.md)
+declares the 19 reviewed direct converter value/context positions. Astra approved
+both families with independent review. This changes target policy only; source,
+public/dependency grants, baseline and oracle stay unchanged. DTO/depth enforcement remains
+deferred. Matcher 23 positives/83 negatives, Ruff/MyPy and definition 13 PASS.
+The combined report removes exactly 23 findings: global FAIL63 / 200 measured /
+254 canonical UNKNOWN, with all remaining records exact. Projection retains
+151 components/25 levels/zero gaps. Five unamended widenings remain; machine
+binding and full-goal acceptance stay open. New-head CI pending; evidence and
+limits are recorded in the amendments.
+
 ## Agent separation
 
 - The implementation agent changes production code and targeted tests for one approved slice.
