@@ -529,13 +529,14 @@
       "id": "DSL-API-TYPES",
       "kind": "boundary_types",
       "source": "datamimic_ce.engine.dsl.api",
-      "rationale": "The DSL facade exposes declared contract types. Four pre-validation operations preserve raw string-keyed attribute dictionaries at exact reviewed positions; constraint facts remain closed types. parse_properties returns an open map for arbitrary user keys.",
+      "rationale": "The DSL facade exposes declared contract types. Four pre-validation operations preserve raw string-keyed attribute dictionaries at exact reviewed positions; constraint facts remain closed types. parse_properties returns an open map for arbitrary user keys. element_aliases returns a fresh alias-to-canonical string map from the owned built-in and extension registry; its keys are vocabulary data, not fixed record fields.",
       "provenance": [
         "docs/architecture/refactoring-study/experiment-2/target-architecture.md",
         "docs/architecture/refactoring-study/experiment-2/amendment-91.md",
-        "docs/architecture/refactoring-study/experiment-2/amendment-77.md"
+        "docs/architecture/refactoring-study/experiment-2/amendment-77.md",
+        "docs/architecture/refactoring-study/experiment-2/amendment-174-dsl-alias-map.md"
       ],
-      "decided_by": "architect",
+      "decided_by": "agent",
       "allowed_positions": [
         {
           "qualified_name": "datamimic_ce.engine.dsl.api.check_constraints",
@@ -643,6 +644,12 @@
         },
         {
           "qualified_name": "datamimic_ce.engine.dsl.api.parse_properties",
+          "position": "return",
+          "field_path": "",
+          "annotation": "dict[str, str]"
+        },
+        {
+          "qualified_name": "datamimic_ce.engine.dsl.api.element_aliases",
           "position": "return",
           "field_path": "",
           "annotation": "dict[str, str]"

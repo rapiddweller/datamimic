@@ -607,8 +607,20 @@ inert root initializer to an exact distribution owner; no descendants, source or
 Isolated ownership REDs and Main definition 13 PASS, Ruff/MyPy PASS are verified.
 The full projection closes only the root gap; decoded global findings remain unchanged.
 Unamended against-c769 retains one component-presence widening; global FAIL, machine
-binding and whole-target semantic acceptance remain open. New-head CI pending; details
-and limits live in Amendment173.
+binding and whole-target semantic acceptance remain open. Exact-1226 push/PR CI each
+completed with 24 successful jobs, two architecture failures and two skips. Separate
+report artifacts match all local findings; neither contract-job log contains its
+native result packet. That job's native cause remains UNKNOWN; details live in Amendment173.
+
+Step 151: [Amendment 174](amendment-174-dsl-alias-map.md) allows only the existing
+DSL alias lookup's exact `dict[str, str]` return; no source, dependency grant or other
+allowance changes. The amended rule's agent attribution is explicitly rule-wide.
+Matcher one positive/seven negatives, definition 13 PASS and Ruff/MyPy PASS are verified.
+Only the alias finding disappears: global FAIL87, 200 measured/254 canonical UNKNOWN;
+every remaining finding/UNKNOWN record is exact. The full projection retains 151
+components, 25 contract levels and zero gaps. Two unamended widenings remain unbound;
+machine binding and whole-target semantic acceptance stay open. New-head CI pending;
+proof and limits live in Amendment174.
 
 ## Agent separation
 
