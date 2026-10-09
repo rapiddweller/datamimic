@@ -655,6 +655,20 @@ and full unit suite 2,307 PASS (11 skipped, one expected failure). Both prior CI
 runs failed that test and the two architecture jobs. One current-batch widening
 remains unbound; CSV extraction and DTO/depth holds remain. New-head CI pending.
 
+Step 159: one existing dynamic-properties Include test ran once at original
+`a219163e` and delivered `c5ffb85b`, with independent profile and result review.
+Both passed; full captures (only seven `g` rows with `r="EU"`) and actual property
+parser returns (`product_count="7", region="EU"`) are byte-identical. Source/input,
+dependency and environment checks passed; native objects were returned unchanged,
+observers restored and both owned process groups fully cleaned up. This adds one
+bounded positive CE proof, not final-context, XML-include, cache/error, worker or
+full DSL/EE acceptance. The descriptor ledger is unchanged. Source/contract remain
+at Step158's measured FAIL58 / 200 measured / 254 canonical UNKNOWN.
+[Edition alignment](../../inner/edition-alignment.md#setupinclude-target-clarification)
+records Astra's explicit parser/Runtime-evaluation responsibility decision and EE
+differences. No EE migration is implemented. Raw pair and architecture evidence:
+`/tmp/ce-resume-20261008/next-slice-159/`.
+
 ## Agent separation
 
 - The implementation agent changes production code and targeted tests for one approved slice.

@@ -134,3 +134,29 @@ removes CE's docstring-only Interfaces marker while retaining all five adapter
 owners and active CLI/MCP initializers. The shared grouping needs no placeholder;
 CE setuptools namespace proof does not establish EE Maturin wheel discovery.
 Parent introspection/discovery compatibility remains UNKNOWN.
+
+## Setup/Include target clarification
+
+2026-10-09, Astra decision. Reviewed CE `c5ffb85b` and EE `ead501a8`;
+the earlier snapshots above remain historical. No EE migration is implemented.
+
+- EE statements belong to DSL; their current Runtime grouping is migration debt.
+- Existing Runtime evaluation owns SAFE_GLOBALS, request overlays and the distinct
+  parse-time condition operation. DSL keeps include order, visible properties and
+  stored enablement decisions. Document composition supplies the narrow operation
+  to parsing, including nested parsing; no new service or globals catalogue.
+- Preserve base globals, exact boolean checks, structured errors and false-condition
+  handling before file reads. Ordinary context evaluation is not interchangeable:
+  it can introduce request bindings and different scope/errors. Review every direct
+  parser caller before wiring the operation; no fallback Runtime import or global
+  callback provider in DSL.
+- Preserve EE conditions, property overlays, path containment/rebinding and error
+  behavior. CE's include results do not certify these EE features.
+
+LOCAL VERIFIED: static owner/caller review. One existing CE dynamic-properties test
+also passed once at original `a219163e` and current `c5ffb85b`: its complete seven
+`{"r":"EU"}` rows and native parser return `{"product_count":"7","region":"EU"}`
+were byte-identical. This is parser-return evidence, not complete context, XML
+include, cache/error, worker, full DSL or EE acceptance. Independent QA accepted
+the pair; receipts are under `/tmp/ce-resume-20261008/next-slice-159/`.
+CI-ONLY VERIFICATION: this comparison was local; no EE runtime checks were run.
