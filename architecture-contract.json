@@ -660,11 +660,20 @@
       "id": "DOMAIN-API-TYPES",
       "kind": "boundary_types",
       "source": "datamimic_ce.domains.api",
-      "rationale": "The domain facade exposes declared generator classes through a typed iterator, never an untyped registry dictionary.",
+      "rationale": "The domain facade exposes declared generator classes through a typed iterator, never an untyped registry dictionary. DemographicSampler.provenance_descriptor returns a fresh snapshot of its recorded normalized resource-path to provenance-digest string map; paths are data keys, not fixed record fields.",
       "provenance": [
-        "docs/architecture/refactoring-study/experiment-2/target-architecture.md"
+        "docs/architecture/refactoring-study/experiment-2/target-architecture.md",
+        "docs/architecture/refactoring-study/experiment-2/amendment-175-demographic-provenance-map.md"
       ],
-      "decided_by": "architect"
+      "decided_by": "agent",
+      "allowed_positions": [
+        {
+          "qualified_name": "datamimic_ce.domains.api.DemographicSampler.provenance_descriptor",
+          "position": "return",
+          "field_path": "",
+          "annotation": "dict[str, str]"
+        }
+      ]
     },
     {
       "id": "RUNTIME-API-TYPES",

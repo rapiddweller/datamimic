@@ -622,6 +622,15 @@ components, 25 contract levels and zero gaps. Two unamended widenings remain unb
 machine binding and whole-target semantic acceptance stay open. New-head CI pending;
 proof and limits live in Amendment174.
 
+Step 154: [Amendment 175](amendment-175-demographic-provenance-map.md) permits only
+the existing demographic provenance map's exact return, with rule-wide agent
+attribution. No source, ownership, dependency grant or other allowance changes.
+Matcher one positive/eight negatives, Ruff/MyPy and definition 13 PASS are verified.
+Only that finding disappears: global FAIL86 / 200 measured / 254 canonical UNKNOWN;
+all remaining finding/UNKNOWN records are exact. Ownership and dependency grants remain
+unchanged. Two unamended widenings remain unbound; machine binding and whole-target
+semantic acceptance stay open. CI pending; scope and limits live in Amendment175.
+
 ## Agent separation
 
 - The implementation agent changes production code and targeted tests for one approved slice.
