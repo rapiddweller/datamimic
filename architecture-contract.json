@@ -660,11 +660,12 @@
       "id": "DOMAIN-API-TYPES",
       "kind": "boundary_types",
       "source": "datamimic_ce.domains.api",
-      "rationale": "The domain facade exposes declared generator classes through a typed iterator, never an untyped registry dictionary. DemographicSampler.provenance_descriptor returns a fresh snapshot of its recorded normalized resource-path to provenance-digest string map; paths are data keys, not fixed record fields. Converter extension APIs receive and may return native Python values; arbitrary input acceptance and method-local validation preserve substitutability, extension results and native errors. Only the enumerated direct object/object-or-None positions admit opacity; existing precise specialized outputs and fixed control signatures remain required.",
+      "rationale": "The domain facade exposes declared generator classes through a typed iterator, never an untyped registry dictionary. DemographicSampler.provenance_descriptor returns a fresh snapshot of its recorded normalized resource-path to provenance-digest string map; paths are data keys, not fixed record fields. Converter extension APIs receive and may return native Python values; arbitrary input acceptance and method-local validation preserve substitutability, extension results and native errors. Only the enumerated direct object/object-or-None positions admit opacity; existing precise specialized outputs and fixed control signatures remain required. Demographic sampling owns dataset-keyed weight distributions and accepts a non-owning metadata mapping of string keys to string-or-None group references. The three enumerated weight accessors return fresh dictionaries keyed by age interval, condition name, or SexKey; these are maps, not fixed records. This allowance does not validate raw CSV producers or accept malformed-row type mismatches. Transaction generation accepts an optional opaque account hint. Its existing truthiness and CurrencyAccount capability check selects account currency; non-account or falsey inputs retain generated-currency fallback. Only the enumerated direct bank_account input admits opacity; GeneratedTransactionData and other control/output signatures remain precise.",
       "provenance": [
         "docs/architecture/refactoring-study/experiment-2/target-architecture.md",
         "docs/architecture/refactoring-study/experiment-2/amendment-175-demographic-provenance-map.md",
-        "docs/architecture/refactoring-study/experiment-2/amendment-177-converter-value-boundaries.md"
+        "docs/architecture/refactoring-study/experiment-2/amendment-177-converter-value-boundaries.md",
+        "docs/architecture/refactoring-study/experiment-2/amendment-178-demographic-finance-boundaries.md"
       ],
       "decided_by": "agent",
       "allowed_positions": [
@@ -787,6 +788,36 @@
           "position": "value",
           "field_path": "",
           "annotation": "object"
+        },
+        {
+          "qualified_name": "datamimic_ce.domains.api.DemographicSampler.age_band_weights",
+          "position": "return",
+          "annotation": "dict[tuple[int, int], float]",
+          "field_path": ""
+        },
+        {
+          "qualified_name": "datamimic_ce.domains.api.DemographicSampler.condition_weights",
+          "position": "return",
+          "annotation": "dict[str, float]",
+          "field_path": ""
+        },
+        {
+          "qualified_name": "datamimic_ce.domains.api.DemographicSampler.sex_weights",
+          "position": "return",
+          "annotation": "dict[SexKey, float]",
+          "field_path": ""
+        },
+        {
+          "qualified_name": "datamimic_ce.domains.api.DemographicSampler.apply_profile_groups",
+          "position": "profile_row",
+          "annotation": "Mapping[str, str | None]",
+          "field_path": ""
+        },
+        {
+          "qualified_name": "datamimic_ce.domains.api.TransactionGenerator.generate_transaction_data",
+          "position": "bank_account",
+          "annotation": "object | None",
+          "field_path": ""
         }
       ]
     },

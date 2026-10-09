@@ -144,9 +144,17 @@ def test_runtime_scripting_state_permissions_are_exact() -> None:
         (api + "load_descriptor_properties", "return", "", "dict[str, str]", None),
         (api + "create_run_session", "request", "platform_props", "dict[str, str]", None),
         (api + "run", "request", "platform_props", "dict[str, str]", None),
-        (api + "SetupContext.__init__", "clients", "", "dict[str, Client] | None", None),
-        (api + "SetupContext.clients", "return", "", "dict[str, Client]", None),
-        (api + "SetupContext.clients", "value", "", "dict[str, Client]", None),
+        (api + "SetupContext.__init__", "clients", "", "dict[str, RegisteredClient] | None", None),
+        (api + "SetupContext.clients", "return", "", "dict[str, RegisteredClient]", None),
+        (api + "SetupContext.clients", "value", "", "dict[str, RegisteredClient]", None),
+        (
+            api + "SetupContext.__init__",
+            "data_source_len",
+            "",
+            "dict[tuple[str | None, str | None], int] | None",
+            None,
+        ),
+        (api + "SetupContext.data_source_len", "return", "", "dict[tuple[str | None, str | None], int]", None),
     }
     demographic_permissions = {
         (
@@ -186,11 +194,11 @@ def test_runtime_scripting_state_permissions_are_exact() -> None:
 
     assert len(scripting_permissions) == 22
     assert set(scripting_permissions) == map_permissions
-    assert len(permissions) == len(set(permissions)) == 34
+    assert len(permissions) == len(set(permissions)) == 36
     assert {
         permission for permission in permissions if permission in demographic_permissions
     } == demographic_permissions
-    assert len(remaining_permissions) == 9
+    assert len(remaining_permissions) == 11
     assert set(remaining_permissions) == legacy_permissions
     assert all("*" not in permission[0] and "*" not in permission[2] for permission in permissions)
 

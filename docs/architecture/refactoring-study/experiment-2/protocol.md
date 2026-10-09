@@ -643,6 +643,18 @@ The combined report removes exactly 23 findings: global FAIL63 / 200 measured /
 binding and full-goal acceptance stay open. New-head CI pending; evidence and
 limits are recorded in the amendments.
 
+Step 158: [Amendment 178](amendment-178-demographic-finance-boundaries.md) accepts
+four exact demographic map positions and one optional finance account input,
+with independent architecture, matcher and QA review. Source and ownership
+remain unchanged. Only these five findings disappear: FAIL58 / 200 measured /
+254 canonical UNKNOWN; all remaining finding/UNKNOWN records are exact and
+151 components/25 levels retain their structure.
+Matcher 5 positives/84 negatives and definition 13 PASS. Step157's missed exact
+Runtime contract expectation was reproduced and synchronized; Runtime tests 62
+and full unit suite 2,307 PASS (11 skipped, one expected failure). Both prior CI
+runs failed that test and the two architecture jobs. One current-batch widening
+remains unbound; CSV extraction and DTO/depth holds remain. New-head CI pending.
+
 ## Agent separation
 
 - The implementation agent changes production code and targeted tests for one approved slice.
