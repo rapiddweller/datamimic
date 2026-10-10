@@ -875,6 +875,16 @@ reviewed profiles and 806 UNKNOWN inputs; historical oracle and `c992` fields
 are unchanged. The failed first original startup remains explicit, with zero
 descriptor executions. This does not establish full DSL/EE parity.
 
+Step 173 candidate: [Amendment 187](amendment-187-properties-source-contract.md)
+applies the approved mutable string/native Properties union across its source
+chain. Published ArchKeel 1.1.1 confirms exact union allowances. The candidate
+report has 17 findings versus the prior 20, with no added findings and 254
+UNKNOWN IDs retained. Three existing inherited-surface UNKNOWN texts reflect
+the new getter/setter annotation. Local verification passed 119 focused,
+2,345 CE unit and 13 definition tests, Ruff and full MyPy. Native validation
+still exits 2 with 19 diagnostics and 11 baseline-new groups. Independent QA
+and current-head CI remain open; this is not target or DSL acceptance.
+
 ## Agent separation
 
 - The implementation agent changes production code and targeted tests for one approved slice.
