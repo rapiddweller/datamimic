@@ -14,8 +14,10 @@ list to become empty. Numeric budgets remain separate, non-increasing quality ra
 - CLI and MCP live in separate `interfaces/cli/` and `interfaces/mcp/` packages;
   CLI command modules do not sprawl across `interfaces/`.
 - shipped demos move below `resources`.
-- `datamimic.py`, `data_mimic_test.py`, and `factory/` stay as documented Python entry points but
-  own no engine behavior.
+- Python entry points live in `interfaces/python/{datamimic.py,data_mimic_test.py,factory.py}`
+  and own no engine behavior. Old Python import paths have no compatibility shims
+  ([Amendment 20](amendment-20.md)); descriptor compatibility is a separate behavior gate.
+- `randomness.py` owns the shared RNG protocol and weighted-index primitive.
 - `_compat.py` stays because Python 3.10 is supported. It contains compatibility primitives only.
 - there is no `services`, `utils`, `foundation`, or other miscellaneous target component.
 - `domains` reads packaged datasets only through `engine.io.dataset_api`; database IO remains
@@ -35,18 +37,26 @@ datamimic_ce/
 ├── interfaces/
 │   ├── cli/
 │   ├── mcp/
-│   ├── api.py
-│   ├── contracts.py
+│   ├── python/
+│   │   ├── datamimic.py
+│   │   ├── data_mimic_test.py
+│   │   └── factory.py
 │   ├── demo.py
 │   └── project.py
+├── randomness.py
 ├── resources/
-├── factory/              # documented Python compatibility entry point
-├── datamimic.py          # documented Python compatibility entry point
-├── data_mimic_test.py    # documented test helper entry point
-├── _compat.py            # Python 3.10 compatibility only
-├── __init__.py
+├── _compat.py            # Python-version primitives
+├── __init__.py           # inert installed-distribution origin anchor
 └── py.typed
 ```
+
+Engine and Interfaces are implicit grouping namespaces; their child APIs and active
+initializers retain their own owners. The regular root initializer belongs only to
+the exact-module `distribution` component, with no descendant scope, public API or
+dependencies. Namespace discovery, other Python versions and EE packaging remain
+unproven ([Amendment 169](amendment-169-interfaces-namespace.md),
+[171](amendment-171-engine-namespace.md),
+[173](amendment-173-root-distribution-owner.md)).
 
 ## Target dependencies
 
@@ -125,8 +135,9 @@ additional hierarchy. Old defining modules are removed without shims.
 ## Completion evidence
 
 Physical layout, semantic target, observed conformance, report UX, and behavior are separate
-acceptance claims. The current inventory has 146 `root_layout` scopes, 22 contracts, and 21 mounts;
-these establish physical coverage, not the semantics of each leaf. An atomic semantic leaf is a
+acceptance claims. The current inventory has 148 `root_layout` scopes, 25 contracts, 24 mounts
+and 151 components. All component decisions remain agent-authored; these counts establish
+physical coverage, not semantic acceptance. An atomic semantic leaf is a
 declared target node for an independently meaningful policy, behavior, API, or cross-component
 boundary—not every filesystem directory. Its decision must be explicit in the containing
 machine-checked architecture contract: ownership, an allowed dependency set (possibly empty), and a
@@ -145,11 +156,11 @@ Structure, and Review does not meet this report requirement.
 
 - every Python module has exactly one owner;
 - every component edge is explicit and the graph is acyclic;
-- cross-component imports use `api.py` or `contracts.py`;
+- cross-component imports use the APIs explicitly declared by their owners;
 - public boundary signatures use declared, component-owned types;
 - explicit `Any`, casts, type ignores, and unapproved reflection are forbidden; four named
   DSL/runtime `__getattr__` adapters are exact exceptions;
-- closed-vocabulary routing uses enums, verified by focused tests because ArchKeel 0.6.0 cannot
+- closed-vocabulary routing uses enums, verified by focused tests because the original ArchKeel 0.6.0 could not
   distinguish dispatch from ordinary string-value comparisons;
 - dynamic execution is allowed only in the two explicit runtime owners;
 - the root allow-list is exact.

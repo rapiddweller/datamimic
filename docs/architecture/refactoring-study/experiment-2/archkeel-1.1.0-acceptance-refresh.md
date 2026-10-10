@@ -49,3 +49,20 @@ change. Evidence: `/tmp/ce-resume-20261010/report-acceptance-08609839/`,
 
 CI-ONLY VERIFICATION: no additional UI or serializer CI. Full CE DSL/EE,
 structural conformance and architecture acceptance remain open.
+
+## Completed checkpoint CI
+
+At `c9680c37d5da4c72b8656114e4693a494ab0af96`, push run
+[38025442625](https://github.com/rapiddweller/datamimic/actions/runs/38025442625)
+and PR run [38025447386](https://github.com/rapiddweller/datamimic/actions/runs/38025447386)
+completed. Unit, integration, external-service, functional, factory and API jobs,
+build, lint/typecheck, wheel smoke and seeded determinism checks passed. E2E and
+release jobs skipped. This is current-suite evidence, not original/current DSL parity.
+
+Both architecture jobs in each run remain red. Their saved reports preserve the
+local Step170 result: 22 violations, 254 canonical / 200 measured UNKNOWNs,
+488/488 parsed files, 19 usage diagnostics and 14 baseline-new groups. Push scans
+the exact head; PR scans synthetic merge `f08d2b9be48911164dd1ce9b7500672577b93bc2`.
+LOCAL VERIFIED: canonical artifact comparison. CI-ONLY VERIFICATION: the named
+remote jobs; no local rerun is implied. Receipts:
+`/tmp/ce-resume-20261010/ci-c9680c37/`.
