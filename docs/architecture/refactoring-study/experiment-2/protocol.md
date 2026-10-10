@@ -894,8 +894,9 @@ findings (17 → 13); all other findings and 254 canonical UNKNOWN records
 remain exact. The source digest is unchanged and declared rules still FAIL.
 LOCAL VERIFIED: exact negative controls, selector RED→GREEN, 81 focused checks
 (11 existing skips), 13 definition checks, Ruff and full MyPy pass. CI-ONLY
-VERIFICATION: pending. The separate Annotated-wrapper checker defect #434
-remains open; this step proves only the unwrapped CE annotation.
+VERIFICATION: pending. The published 1.1.1 checker still has the separate
+Annotated-wrapper defect #434; its fix and the related #435 fix merged after
+the release. This step proves only the unwrapped CE annotation.
 Native validation still exits 2 with 19 usage diagnostics and 9 baseline-new
 groups; it is not target acceptance.
 
