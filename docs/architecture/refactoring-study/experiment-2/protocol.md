@@ -1028,14 +1028,22 @@ promotion follows.
 
 Step 194: [Worker/policy ownership](step-194-workers-policy-ownership.md) accepts
 the existing separate semantic leaves after Astra and independent static QA.
-No source, permission or contract change is justified. Conditional uniqueness
-remains a separate unproved candidate.
+No source, permission or contract change is justified. Its separate conditional
+uniqueness candidate is investigated in Step 196.
 
 Step 195: [Sampled report controls](step-195-report-controls.md) checks normal
 Tab/Enter and pan/zoom/fit on representative scenes, with light/dark viewport
 samples. The misleading reset label is tracked in
 [ArchKeel #442](https://github.com/rapiddweller/archkeel/issues/442).
 Exhaustive UI acceptance remains open; the frozen report was not regenerated.
+
+Step 196: [Conditional unique keys](step-196-conditional-unique-keys.md) repeats
+values in both serial and real two-worker execution; the direct control remains
+distinct. Independent raw QA confirms the bounded current-only result. The
+inline-key case extends existing [CE #282](https://github.com/rapiddweller/datamimic/issues/282)
+instead of adding a duplicate. Iterator reset remains a hypothesis; historical
+behavior, exhaustion and regression attribution were not tested. No source fix
+or corpus promotion follows.
 
 CI at `a939a929` completed with 48 successes, five failures and five skips.
 Four failures are architecture jobs. The PR service job has a Mongo worker-export

@@ -1,0 +1,57 @@
+{
+  "actual_pool_workers": 2,
+  "conditional_parallel_distinct": 9,
+  "conditional_serial_distinct": 9,
+  "corpus_ledger_promotion": false,
+  "current_source_head": "7e9e897350cdb86b1f7efca1bdc1706fffa898bc",
+  "direct_control_distinct": 16,
+  "historical_runtime_verified": false,
+  "independent_qa": {
+    "report": {
+      "path": "/tmp/ce-condition-unique-independent-qa-20261010/qa-report.json",
+      "sha256": "7ae8729a430053b349da0a612730f420988d045737268f5ecfb47ffa7869fd87"
+    },
+    "review": {
+      "path": "/tmp/ce-condition-unique-independent-qa-20261010/qa-review.md",
+      "sha256": "932402adaf0d8877ceec2dff8b877de8960277f5745a2a9b2051072021305d5d"
+    }
+  },
+  "integration_review": {
+    "receipt.json": {
+      "path": "/tmp/ce-condition-unique-independent-qa-20261010/integration/receipt.json",
+      "sha256": "32886ff1c3338dfe0669b603d9b540f18bcbef9efa6dd1fb57acc5e6986b1bb9"
+    },
+    "review.md": {
+      "path": "/tmp/ce-condition-unique-independent-qa-20261010/integration/review.md",
+      "sha256": "0720a8691a6bb20b0fc4eb5a091fd8171163f2bbfbb91c247d936a46db240eb1"
+    }
+  },
+  "issue": {
+    "comment_body": {
+      "path": "/tmp/ce-issue282-inline-key-comment-20261010.md",
+      "sha256": "62b61c7234260d4f8896745ab822f22e3e30da7c28d811cc29949e772e380a38"
+    },
+    "deduplication": "existing CE282 extended with inline-key case",
+    "exact_readback": {
+      "path": "/tmp/ce-issue282-key-issue-readback-20261010.json",
+      "sha256": "a0700426def459ffd6040489c1104c65530fbeabc211f31e7fc95f1d4c5608cb"
+    },
+    "url": "https://github.com/rapiddweller/datamimic/issues/282#issuecomment-6097790836"
+  },
+  "matching_primary_production_head": "a939a92905cb22146a4b545f708713ed734872b0",
+  "native_runs": 3,
+  "producer_receipt": {
+    "path": "/tmp/ce-condition-unique-20261010/receipt.json",
+    "sha256": "db6e8adcadf416cb2c3e894fafc66be7c482f4d9834f79f563f88b23e1f4ea04"
+  },
+  "refactor_regression_proven": false,
+  "result_note": {
+    "path": "/tmp/ce-condition-unique-20261010/result.md",
+    "sha256": "502cab4ad729eb0e5147e72c640cef2bd5889cb4c03cc7b00cabc39613f3b2bc"
+  },
+  "root_cause_exclusively_proven": false,
+  "row_count_each": 16,
+  "source_change": false,
+  "status": "accepted_current_only_product_defect_evidence",
+  "step": 196
+}
