@@ -1,0 +1,4 @@
+[scan]
+roots = ["datamimic_ce"]
+namespace = "datamimic_ce"
+contract = "architecture-contract.json"

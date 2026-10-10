@@ -1,0 +1,4098 @@
+{
+  "status": "CANDIDATE_PENDING_INDEPENDENT_QA",
+  "original_head": "a219163e533d661bcc7bda0faa5ecc77909ab5aa",
+  "current_source_head": "5c218f8fb4832723618f79e6c1f4b2342c09f0c5",
+  "evidence_branch_base": "5c218f8fb4832723618f79e6c1f4b2342c09f0c5",
+  "run_plan": {
+    "path": "/private/tmp/ce-dsl-step185-20261010/run-plan.json",
+    "sha256": "6a6d4e53010d47ce38cd505931c5595eaefad4c9ec53fc979256e9f0af934645"
+  },
+  "profiles": [
+    {
+      "case": "hash",
+      "nodeid": "tests_ce/integration_tests/test_hash_converter/test_hash_converter.py::test_seed_is_the_key",
+      "xml_order": [
+        "tests_ce/integration_tests/test_hash_converter/hash_seeded.xml",
+        "tests_ce/integration_tests/test_hash_converter/hash_seeded.xml",
+        "tests_ce/integration_tests/test_hash_converter/hash_seeded_other.xml"
+      ],
+      "new_xml": [
+        "tests_ce/integration_tests/test_hash_converter/hash_seeded.xml",
+        "tests_ce/integration_tests/test_hash_converter/hash_seeded_other.xml"
+      ],
+      "shapes": [
+        [
+          "hashed",
+          10
+        ],
+        [
+          "hashed",
+          10
+        ],
+        [
+          "hashed",
+          10
+        ]
+      ],
+      "source_owner": {
+        "original": {
+          "blob": "4898cddf2fc0f9887d7b1d76d0949e90e560b798",
+          "sha256": "c80c430cb5db233e9885985522e6c01c0b2c768b97712745e292736254f2d1a2"
+        },
+        "current": {
+          "blob": "04eac8cd6647282d1b5409bd4a5a2fc7dc6b92df",
+          "sha256": "a3b51eddd56fe47709fc278a0df27950d339cba9b20c47f17b8347ae4fd33871"
+        }
+      },
+      "source_xml": {
+        "tests_ce/integration_tests/test_hash_converter/hash_seeded.xml": {
+          "sha256": "37aa78de309d051410cccbb72c915006f08b85134fce5f2e0a1281ad31e95ac2",
+          "blob": "63d887ef186c9c3a150dcf95273cc9e58124e31d"
+        },
+        "tests_ce/integration_tests/test_hash_converter/hash_seeded_other.xml": {
+          "sha256": "0c7ae250654982ebfa1781f2da4ff9d6278e2e649f1d8b0a3a0f90dd1d3449d1",
+          "blob": "b0c829ce5389e1d5f3d85e798d5721aead04c6d5"
+        }
+      },
+      "source_fixtures": {},
+      "preflight": {
+        "path": "/private/tmp/ce-dsl-step185-20261010/cases/hash/preflight.json",
+        "sha256": "0db7335c51fbe4ca0e937a14fa77b29890dc71fada8d2e0342acf8d32c789d5e"
+      },
+      "comparison": {
+        "path": "/private/tmp/ce-dsl-step185-20261010/cases/hash/comparison.json",
+        "sha256": "0e30433dab8a7647e42ce58607dc5f8116eb9ba7a8d64ed898d47c70795e7b09"
+      },
+      "ordered_complete_typed_capture_sha256": [
+        "325a0db8f76c00a998bc9d2cd30c50cdb3f63d26c1b6336f6e63b673858a1c2f",
+        "325a0db8f76c00a998bc9d2cd30c50cdb3f63d26c1b6336f6e63b673858a1c2f",
+        "5b52d22dc56c147c8e06feb08093cdd548d5cd7eeae917a3ed69dc20c9f7d80a"
+      ],
+      "runs": {
+        "original": {
+          "collection": {
+            "parent": {
+              "path": "/private/tmp/ce-dsl-step185-20261010/cases/hash/runs/original/collection-socket-capable/parent-receipt.json",
+              "sha256": "489024b39af32f78c1910704a0cfa69c2872767bb411e3d5ecc68e45efadc4c9"
+            },
+            "child": {
+              "path": "/private/tmp/ce-dsl-step185-20261010/cases/hash/runs/original/collection-socket-capable/child/child-receipt.json",
+              "sha256": "6fd27941988b6335564aa7a98d2584d3cb65d35a36e94402df786e79678f24e3"
+            },
+            "stdout": {
+              "path": "/private/tmp/ce-dsl-step185-20261010/cases/hash/runs/original/collection-socket-capable/stdout.raw",
+              "sha256": "a2dbf8c7d734cc35d9270b144a547d1ce05075c7744c730cbb5a4d5d8a6f716d"
+            },
+            "stderr": {
+              "path": "/private/tmp/ce-dsl-step185-20261010/cases/hash/runs/original/collection-socket-capable/stderr.raw",
+              "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+            },
+            "opened_path_count": 2032,
+            "module_origin_count": 250
+          },
+          "native": {
+            "parent": {
+              "path": "/private/tmp/ce-dsl-step185-20261010/cases/hash/runs/original/native-socket-capable/parent-receipt.json",
+              "sha256": "4ce5492a4c39bb0628e4207a5b5b2cf398352dbefd45a2b9a00b5cf608da8606"
+            },
+            "child": {
+              "path": "/private/tmp/ce-dsl-step185-20261010/cases/hash/runs/original/native-socket-capable/child/child-receipt.json",
+              "sha256": "a69d72cbcdbb5dbf9c36f180ac1f810efc9c8c8bf65512910eb163a09b4e24f8"
+            },
+            "stdout": {
+              "path": "/private/tmp/ce-dsl-step185-20261010/cases/hash/runs/original/native-socket-capable/stdout.raw",
+              "sha256": "698357a5392a517d121eebb2459d74e8b711d7b67c8c68e24e3cf0c015996e8d"
+            },
+            "stderr": {
+              "path": "/private/tmp/ce-dsl-step185-20261010/cases/hash/runs/original/native-socket-capable/stderr.raw",
+              "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+            },
+            "opened_path_count": 1885,
+            "module_origin_count": 275,
+            "junit": {
+              "path": "/private/tmp/ce-dsl-step185-20261010/cases/hash/runs/original/native-socket-capable/child/junit.xml",
+              "sha256": "9d7b887b3699e4cddf1bc7876e9d99c379e855858220bebedc797743f1dc176d"
+            },
+            "captures": [
+              {
+                "path": "/private/tmp/ce-dsl-step185-20261010/cases/hash/runs/original/native-socket-capable/child/capture-1.json",
+                "sha256": "325a0db8f76c00a998bc9d2cd30c50cdb3f63d26c1b6336f6e63b673858a1c2f"
+              },
+              {
+                "path": "/private/tmp/ce-dsl-step185-20261010/cases/hash/runs/original/native-socket-capable/child/capture-2.json",
+                "sha256": "325a0db8f76c00a998bc9d2cd30c50cdb3f63d26c1b6336f6e63b673858a1c2f"
+              },
+              {
+                "path": "/private/tmp/ce-dsl-step185-20261010/cases/hash/runs/original/native-socket-capable/child/capture-3.json",
+                "sha256": "5b52d22dc56c147c8e06feb08093cdd548d5cd7eeae917a3ed69dc20c9f7d80a"
+              }
+            ],
+            "stable_log_messages": [
+              {
+                "level": "INFO",
+                "message": "Starting DATAMIMIC Process"
+              },
+              {
+                "level": "INFO",
+                "message": "DATAMIMIC CE lib version: 4.3.1.dev246+dirty"
+              },
+              {
+                "level": "INFO",
+                "message": "System name: Darwin"
+              },
+              {
+                "level": "INFO",
+                "message": "<volatile Process ID>"
+              },
+              {
+                "level": "INFO",
+                "message": "<volatile Current working directory>"
+              },
+              {
+                "level": "INFO",
+                "message": "Platform: darwin"
+              },
+              {
+                "level": "INFO",
+                "message": "Python version: 3.11.12 (main, Apr  9 2025, 03:49:53) [Clang 20.1.0 ]"
+              },
+              {
+                "level": "INFO",
+                "message": "Number of CPU cores: 18"
+              },
+              {
+                "level": "INFO",
+                "message": "CPU architecture: arm64"
+              },
+              {
+                "level": "INFO",
+                "message": "RAM size: 48.00 GB"
+              },
+              {
+                "level": "INFO",
+                "message": "<volatile Task ID>"
+              },
+              {
+                "level": "INFO",
+                "message": "Using default page size 10 for processing by page"
+              },
+              {
+                "level": "INFO",
+                "message": "Worker 1 processing page 1/1"
+              },
+              {
+                "level": "INFO",
+                "message": "<volatile timing>"
+              },
+              {
+                "level": "INFO",
+                "message": "<volatile timing>"
+              },
+              {
+                "level": "INFO",
+                "message": "<volatile timing>"
+              },
+              {
+                "level": "INFO",
+                "message": "<volatile test duration>"
+              },
+              {
+                "level": "INFO",
+                "message": "Starting DATAMIMIC Process"
+              },
+              {
+                "level": "INFO",
+                "message": "DATAMIMIC CE lib version: 4.3.1.dev246+dirty"
+              },
+              {
+                "level": "INFO",
+                "message": "System name: Darwin"
+              },
+              {
+                "level": "INFO",
+                "message": "<volatile Process ID>"
+              },
+              {
+                "level": "INFO",
+                "message": "<volatile Current working directory>"
+              },
+              {
+                "level": "INFO",
+                "message": "Platform: darwin"
+              },
+              {
+                "level": "INFO",
+                "message": "Python version: 3.11.12 (main, Apr  9 2025, 03:49:53) [Clang 20.1.0 ]"
+              },
+              {
+                "level": "INFO",
+                "message": "Number of CPU cores: 18"
+              },
+              {
+                "level": "INFO",
+                "message": "CPU architecture: arm64"
+              },
+              {
+                "level": "INFO",
+                "message": "RAM size: 48.00 GB"
+              },
+              {
+                "level": "INFO",
+                "message": "<volatile Task ID>"
+              },
+              {
+                "level": "INFO",
+                "message": "Using default page size 10 for processing by page"
+              },
+              {
+                "level": "INFO",
+                "message": "Worker 1 processing page 1/1"
+              },
+              {
+                "level": "INFO",
+                "message": "<volatile timing>"
+              },
+              {
+                "level": "INFO",
+                "message": "<volatile timing>"
+              },
+              {
+                "level": "INFO",
+                "message": "<volatile timing>"
+              },
+              {
+                "level": "INFO",
+                "message": "<volatile test duration>"
+              },
+              {
+                "level": "INFO",
+                "message": "Starting DATAMIMIC Process"
+              },
+              {
+                "level": "INFO",
+                "message": "DATAMIMIC CE lib version: 4.3.1.dev246+dirty"
+              },
+              {
+                "level": "INFO",
+                "message": "System name: Darwin"
+              },
+              {
+                "level": "INFO",
+                "message": "<volatile Process ID>"
+              },
+              {
+                "level": "INFO",
+                "message": "<volatile Current working directory>"
+              },
+              {
+                "level": "INFO",
+                "message": "Platform: darwin"
+              },
+              {
+                "level": "INFO",
+                "message": "Python version: 3.11.12 (main, Apr  9 2025, 03:49:53) [Clang 20.1.0 ]"
+              },
+              {
+                "level": "INFO",
+                "message": "Number of CPU cores: 18"
+              },
+              {
+                "level": "INFO",
+                "message": "CPU architecture: arm64"
+              },
+              {
+                "level": "INFO",
+                "message": "RAM size: 48.00 GB"
+              },
+              {
+                "level": "INFO",
+                "message": "<volatile Task ID>"
+              },
+              {
+                "level": "INFO",
+                "message": "Using default page size 10 for processing by page"
+              },
+              {
+                "level": "INFO",
+                "message": "Worker 1 processing page 1/1"
+              },
+              {
+                "level": "INFO",
+                "message": "<volatile timing>"
+              },
+              {
+                "level": "INFO",
+                "message": "<volatile timing>"
+              },
+              {
+                "level": "INFO",
+                "message": "<volatile timing>"
+              },
+              {
+                "level": "INFO",
+                "message": "<volatile test duration>"
+              }
+            ],
+            "diagnostics": [],
+            "audited_text_write_count": 12,
+            "attempted_tmp_directory_open": 1,
+            "call_stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+          }
+        },
+        "current": {
+          "collection": {
+            "parent": {
+              "path": "/private/tmp/ce-dsl-step185-20261010/cases/hash/runs/current/collection-socket-capable/parent-receipt.json",
+              "sha256": "531ef7d045c6588eb30b963fef6fbaeefd1b94f8456e6d631ced487a420bac77"
+            },
+            "child": {
+              "path": "/private/tmp/ce-dsl-step185-20261010/cases/hash/runs/current/collection-socket-capable/child/child-receipt.json",
+              "sha256": "0aee4f5c419779f3e0e83d4092b784a3fd2e93abd8027942e3692bc3db511457"
+            },
+            "stdout": {
+              "path": "/private/tmp/ce-dsl-step185-20261010/cases/hash/runs/current/collection-socket-capable/stdout.raw",
+              "sha256": "1323b88fc496d5da1759d859f60486bab5f8716c7fd5e8f3641a9e124d595dae"
+            },
+            "stderr": {
+              "path": "/private/tmp/ce-dsl-step185-20261010/cases/hash/runs/current/collection-socket-capable/stderr.raw",
+              "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+            },
+            "opened_path_count": 2355,
+            "module_origin_count": 351
+          },
+          "native": {
+            "parent": {
+              "path": "/private/tmp/ce-dsl-step185-20261010/cases/hash/runs/current/native-socket-capable/parent-receipt.json",
+              "sha256": "ff44bc87be3831e13f30cd81fc7de3448e07108a5bf7d357498c7395f3a011b6"
+            },
+            "child": {
+              "path": "/private/tmp/ce-dsl-step185-20261010/cases/hash/runs/current/native-socket-capable/child/child-receipt.json",
+              "sha256": "b46385056971da56d1d785bb4a3239e29c60b3c7ed1cdae2bd45e030a51483bb"
+            },
+            "stdout": {
+              "path": "/private/tmp/ce-dsl-step185-20261010/cases/hash/runs/current/native-socket-capable/stdout.raw",
+              "sha256": "31388adf5b7bd083003a4f3c88f47c121b433c2af7c2401867d4d6cf33313d6f"
+            },
+            "stderr": {
+              "path": "/private/tmp/ce-dsl-step185-20261010/cases/hash/runs/current/native-socket-capable/stderr.raw",
+              "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+            },
+            "opened_path_count": 2027,
+            "module_origin_count": 356,
+            "junit": {
+              "path": "/private/tmp/ce-dsl-step185-20261010/cases/hash/runs/current/native-socket-capable/child/junit.xml",
+              "sha256": "5749b26a406aa1e0b154bbe9251c49f9d325966d83ca9a4ea950eec678d4277f"
+            },
+            "captures": [
+              {
+                "path": "/private/tmp/ce-dsl-step185-20261010/cases/hash/runs/current/native-socket-capable/child/capture-1.json",
+                "sha256": "325a0db8f76c00a998bc9d2cd30c50cdb3f63d26c1b6336f6e63b673858a1c2f"
+              },
+              {
+                "path": "/private/tmp/ce-dsl-step185-20261010/cases/hash/runs/current/native-socket-capable/child/capture-2.json",
+                "sha256": "325a0db8f76c00a998bc9d2cd30c50cdb3f63d26c1b6336f6e63b673858a1c2f"
+              },
+              {
+                "path": "/private/tmp/ce-dsl-step185-20261010/cases/hash/runs/current/native-socket-capable/child/capture-3.json",
+                "sha256": "5b52d22dc56c147c8e06feb08093cdd548d5cd7eeae917a3ed69dc20c9f7d80a"
+              }
+            ],
+            "stable_log_messages": [
+              {
+                "level": "INFO",
+                "message": "Starting DATAMIMIC Process"
+              },
+              {
+                "level": "INFO",
+                "message": "DATAMIMIC CE lib version: 4.3.1.dev246+dirty"
+              },
+              {
+                "level": "INFO",
+                "message": "System name: Darwin"
+              },
+              {
+                "level": "INFO",
+                "message": "<volatile Process ID>"
+              },
+              {
+                "level": "INFO",
+                "message": "<volatile Current working directory>"
+              },
+              {
+                "level": "INFO",
+                "message": "Platform: darwin"
+              },
+              {
+                "level": "INFO",
+                "message": "Python version: 3.11.12 (main, Apr  9 2025, 03:49:53) [Clang 20.1.0 ]"
+              },
+              {
+                "level": "INFO",
+                "message": "Number of CPU cores: 18"
+              },
+              {
+                "level": "INFO",
+                "message": "CPU architecture: arm64"
+              },
+              {
+                "level": "INFO",
+                "message": "RAM size: 48.00 GB"
+              },
+              {
+                "level": "INFO",
+                "message": "<volatile Task ID>"
+              },
+              {
+                "level": "INFO",
+                "message": "Using default page size 10 for processing by page"
+              },
+              {
+                "level": "INFO",
+                "message": "Worker 1 processing page 1/1"
+              },
+              {
+                "level": "INFO",
+                "message": "<volatile timing>"
+              },
+              {
+                "level": "INFO",
+                "message": "<volatile timing>"
+              },
+              {
+                "level": "INFO",
+                "message": "<volatile timing>"
+              },
+              {
+                "level": "INFO",
+                "message": "<volatile test duration>"
+              },
+              {
+                "level": "INFO",
+                "message": "Starting DATAMIMIC Process"
+              },
+              {
+                "level": "INFO",
+                "message": "DATAMIMIC CE lib version: 4.3.1.dev246+dirty"
+              },
+              {
+                "level": "INFO",
+                "message": "System name: Darwin"
+              },
+              {
+                "level": "INFO",
+                "message": "<volatile Process ID>"
+              },
+              {
+                "level": "INFO",
+                "message": "<volatile Current working directory>"
+              },
+              {
+                "level": "INFO",
+                "message": "Platform: darwin"
+              },
+              {
+                "level": "INFO",
+                "message": "Python version: 3.11.12 (main, Apr  9 2025, 03:49:53) [Clang 20.1.0 ]"
+              },
+              {
+                "level": "INFO",
+                "message": "Number of CPU cores: 18"
+              },
+              {
+                "level": "INFO",
+                "message": "CPU architecture: arm64"
+              },
+              {
+                "level": "INFO",
+                "message": "RAM size: 48.00 GB"
+              },
+              {
+                "level": "INFO",
+                "message": "<volatile Task ID>"
+              },
+              {
+                "level": "INFO",
+                "message": "Using default page size 10 for processing by page"
+              },
+              {
+                "level": "INFO",
+                "message": "Worker 1 processing page 1/1"
+              },
+              {
+                "level": "INFO",
+                "message": "<volatile timing>"
+              },
+              {
+                "level": "INFO",
+                "message": "<volatile timing>"
+              },
+              {
+                "level": "INFO",
+                "message": "<volatile timing>"
+              },
+              {
+                "level": "INFO",
+                "message": "<volatile test duration>"
+              },
+              {
+                "level": "INFO",
+                "message": "Starting DATAMIMIC Process"
+              },
+              {
+                "level": "INFO",
+                "message": "DATAMIMIC CE lib version: 4.3.1.dev246+dirty"
+              },
+              {
+                "level": "INFO",
+                "message": "System name: Darwin"
+              },
+              {
+                "level": "INFO",
+                "message": "<volatile Process ID>"
+              },
+              {
+                "level": "INFO",
+                "message": "<volatile Current working directory>"
+              },
+              {
+                "level": "INFO",
+                "message": "Platform: darwin"
+              },
+              {
+                "level": "INFO",
+                "message": "Python version: 3.11.12 (main, Apr  9 2025, 03:49:53) [Clang 20.1.0 ]"
+              },
+              {
+                "level": "INFO",
+                "message": "Number of CPU cores: 18"
+              },
+              {
+                "level": "INFO",
+                "message": "CPU architecture: arm64"
+              },
+              {
+                "level": "INFO",
+                "message": "RAM size: 48.00 GB"
+              },
+              {
+                "level": "INFO",
+                "message": "<volatile Task ID>"
+              },
+              {
+                "level": "INFO",
+                "message": "Using default page size 10 for processing by page"
+              },
+              {
+                "level": "INFO",
+                "message": "Worker 1 processing page 1/1"
+              },
+              {
+                "level": "INFO",
+                "message": "<volatile timing>"
+              },
+              {
+                "level": "INFO",
+                "message": "<volatile timing>"
+              },
+              {
+                "level": "INFO",
+                "message": "<volatile timing>"
+              },
+              {
+                "level": "INFO",
+                "message": "<volatile test duration>"
+              }
+            ],
+            "diagnostics": [],
+            "audited_text_write_count": 12,
+            "attempted_tmp_directory_open": 1,
+            "call_stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+          }
+        }
+      },
+      "excluded_attempts": {
+        "preparation": {
+          "preflight": {
+            "path": "/private/tmp/ce-dsl-step185-20261010/cases/hash/excluded-preflight-global/preflight.json",
+            "sha256": "7acc9b3045e1144eb4ac5974048dd660e43acd0513c2c3237c350bd79537b3c0"
+          },
+          "preflight_sha": {
+            "path": "/private/tmp/ce-dsl-step185-20261010/cases/hash/excluded-preflight-global/preflight.sha.json",
+            "sha256": "56b5e64556c3373f1a7c6beb25c12d62fcc087f21872f814ac41e8d13b763feb"
+          },
+          "reason": {
+            "path": "/private/tmp/ce-dsl-step185-20261010/cases/hash/excluded-preflight-global/reason.json",
+            "sha256": "114aa668083b7160441a5726ac7ffa02dd1d6ed4cd0b89f49c95c084ff5ccc18"
+          }
+        },
+        "sandbox_collection": {
+          "parent": {
+            "path": "/private/tmp/ce-dsl-step185-20261010/cases/hash/runs/original/collection-host-capable/parent-receipt.json",
+            "sha256": "9b1d2c093349e5758b893bd35d751fdc016882f6039d3598185ff12bbcf61d24"
+          },
+          "child": {
+            "path": "/private/tmp/ce-dsl-step185-20261010/cases/hash/runs/original/collection-host-capable/child/child-receipt.json",
+            "sha256": "364e8f721907751036703d66d34012407f0e26a72e8494a6b8443409cb77f7ec"
+          },
+          "stdout": {
+            "path": "/private/tmp/ce-dsl-step185-20261010/cases/hash/runs/original/collection-host-capable/stdout.raw",
+            "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+          },
+          "stderr": {
+            "path": "/private/tmp/ce-dsl-step185-20261010/cases/hash/runs/original/collection-host-capable/stderr.raw",
+            "sha256": "c3934dbd718ac1f146d0cf7d4e400478e01247353a8ea1f88e5abdb13d259044"
+          }
+        }
+      },
+      "owner_test_passed_once_per_endpoint": true,
+      "stable_logs_equal": true,
+      "diagnostics_equal": true,
+      "stdout_equal": true
+    },
+    {
+      "case": "window",
+      "nodeid": "tests_ce/integration_tests/test_timeseries/test_timeseries.py::test_window_prefix_is_stable_across_window_sizes",
+      "xml_order": [
+        "tests_ce/integration_tests/test_timeseries/window_short.xml",
+        "tests_ce/integration_tests/test_timeseries/window_long.xml"
+      ],
+      "new_xml": [
+        "tests_ce/integration_tests/test_timeseries/window_short.xml",
+        "tests_ce/integration_tests/test_timeseries/window_long.xml"
+      ],
+      "shapes": [
+        [
+          "rows",
+          24
+        ],
+        [
+          "rows",
+          168
+        ]
+      ],
+      "source_owner": {
+        "original": {
+          "blob": "5930b2da3ea03b50e0b11d21bfc34b59993f5590",
+          "sha256": "afdbd023c869c24fd1f04c55ae70a985bbd9eb9e99142c366783c1ef6fe8b362"
+        },
+        "current": {
+          "blob": "d1796bfd957882710b6dfe49fbfc11c8bb233f4d",
+          "sha256": "d8c1179a070bc80f85cbd81d2ff4ae2e7a1cc1da16e88221732dde120b4bf6b9"
+        }
+      },
+      "source_xml": {
+        "tests_ce/integration_tests/test_timeseries/window_short.xml": {
+          "sha256": "f64a290899da0346ba86f04c10665a3a2b49f77c76ca758b62e087f3f8b97ce9",
+          "blob": "b43721ab143653ce1650151b00f0524af79c44ac"
+        },
+        "tests_ce/integration_tests/test_timeseries/window_long.xml": {
+          "sha256": "6271f842ab0b0d60739ba4fe49b4009bbd387a72633bbb3d3628dc66123488b7",
+          "blob": "df5b5a2a42de607de4af9bbf43bdd9bc981ac7cc"
+        }
+      },
+      "source_fixtures": {},
+      "preflight": {
+        "path": "/private/tmp/ce-dsl-step185-20261010/cases/window/preflight.json",
+        "sha256": "85be7a0c722e65edd40e729eb1ecc3df1b21ce0dd2e117dfbcf7a7c306dd48e4"
+      },
+      "comparison": {
+        "path": "/private/tmp/ce-dsl-step185-20261010/cases/window/comparison.json",
+        "sha256": "eb4640b59fc439595192e251f2885a7fe39b803ab8330c9a27a1c06351cd8c93"
+      },
+      "ordered_complete_typed_capture_sha256": [
+        "a96c3630f86e6edb8e439b685b8a29979e66c37ff3508b973e9c58f50286a8d6",
+        "e9406c1a3234488a5e188dddaa55a6f7c5d5f50e684226b48f9b5c726340cec5"
+      ],
+      "runs": {
+        "original": {
+          "collection": {
+            "parent": {
+              "path": "/private/tmp/ce-dsl-step185-20261010/cases/window/runs/original/collection-socket-capable/parent-receipt.json",
+              "sha256": "a6edd5d0b5ccdc8fa38ecb71d6ee66de25765290562956ffad7bc71eb9d9d56c"
+            },
+            "child": {
+              "path": "/private/tmp/ce-dsl-step185-20261010/cases/window/runs/original/collection-socket-capable/child/child-receipt.json",
+              "sha256": "1ba84c2c4920b7beaff33cfd29cd231b1db14fe73013e44aab457ed31b1923fe"
+            },
+            "stdout": {
+              "path": "/private/tmp/ce-dsl-step185-20261010/cases/window/runs/original/collection-socket-capable/stdout.raw",
+              "sha256": "b7d9c3bbc0bf7c41bd8f38abf1848e57761ddb0c9ff7ae4b7b78f7aa1bf28af6"
+            },
+            "stderr": {
+              "path": "/private/tmp/ce-dsl-step185-20261010/cases/window/runs/original/collection-socket-capable/stderr.raw",
+              "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+            },
+            "opened_path_count": 1787,
+            "module_origin_count": 250
+          },
+          "native": {
+            "parent": {
+              "path": "/private/tmp/ce-dsl-step185-20261010/cases/window/runs/original/native-socket-capable/parent-receipt.json",
+              "sha256": "939bda0c4ca851a0ba84ad70743555bd0b1c466bbb1e1f85707ef4fd2ec87161"
+            },
+            "child": {
+              "path": "/private/tmp/ce-dsl-step185-20261010/cases/window/runs/original/native-socket-capable/child/child-receipt.json",
+              "sha256": "b793d5e636db5d6cbad70316bcb699ed771e80b6f7f56411b187fddf94efa653"
+            },
+            "stdout": {
+              "path": "/private/tmp/ce-dsl-step185-20261010/cases/window/runs/original/native-socket-capable/stdout.raw",
+              "sha256": "bbcf4e2630eceec3c2315bf71ad3421601d8d6354a34a57e34b6d261ab88f183"
+            },
+            "stderr": {
+              "path": "/private/tmp/ce-dsl-step185-20261010/cases/window/runs/original/native-socket-capable/stderr.raw",
+              "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+            },
+            "opened_path_count": 1858,
+            "module_origin_count": 275,
+            "junit": {
+              "path": "/private/tmp/ce-dsl-step185-20261010/cases/window/runs/original/native-socket-capable/child/junit.xml",
+              "sha256": "20b3e4c1fca6bfb9606e799497fb1a5552c5181a26c70fc059a5527f57075534"
+            },
+            "captures": [
+              {
+                "path": "/private/tmp/ce-dsl-step185-20261010/cases/window/runs/original/native-socket-capable/child/capture-1.json",
+                "sha256": "a96c3630f86e6edb8e439b685b8a29979e66c37ff3508b973e9c58f50286a8d6"
+              },
+              {
+                "path": "/private/tmp/ce-dsl-step185-20261010/cases/window/runs/original/native-socket-capable/child/capture-2.json",
+                "sha256": "e9406c1a3234488a5e188dddaa55a6f7c5d5f50e684226b48f9b5c726340cec5"
+              }
+            ],
+            "stable_log_messages": [
+              {
+                "level": "INFO",
+                "message": "Starting DATAMIMIC Process"
+              },
+              {
+                "level": "INFO",
+                "message": "DATAMIMIC CE lib version: 4.3.1.dev246+dirty"
+              },
+              {
+                "level": "INFO",
+                "message": "System name: Darwin"
+              },
+              {
+                "level": "INFO",
+                "message": "<volatile Process ID>"
+              },
+              {
+                "level": "INFO",
+                "message": "<volatile Current working directory>"
+              },
+              {
+                "level": "INFO",
+                "message": "Platform: darwin"
+              },
+              {
+                "level": "INFO",
+                "message": "Python version: 3.11.12 (main, Apr  9 2025, 03:49:53) [Clang 20.1.0 ]"
+              },
+              {
+                "level": "INFO",
+                "message": "Number of CPU cores: 18"
+              },
+              {
+                "level": "INFO",
+                "message": "CPU architecture: arm64"
+              },
+              {
+                "level": "INFO",
+                "message": "RAM size: 48.00 GB"
+              },
+              {
+                "level": "INFO",
+                "message": "<volatile Task ID>"
+              },
+              {
+                "level": "INFO",
+                "message": "Using default page size 24 for processing by page"
+              },
+              {
+                "level": "INFO",
+                "message": "Worker 1 processing page 1/1"
+              },
+              {
+                "level": "INFO",
+                "message": "<volatile timing>"
+              },
+              {
+                "level": "INFO",
+                "message": "<volatile timing>"
+              },
+              {
+                "level": "INFO",
+                "message": "<volatile timing>"
+              },
+              {
+                "level": "INFO",
+                "message": "<volatile test duration>"
+              },
+              {
+                "level": "INFO",
+                "message": "Starting DATAMIMIC Process"
+              },
+              {
+                "level": "INFO",
+                "message": "DATAMIMIC CE lib version: 4.3.1.dev246+dirty"
+              },
+              {
+                "level": "INFO",
+                "message": "System name: Darwin"
+              },
+              {
+                "level": "INFO",
+                "message": "<volatile Process ID>"
+              },
+              {
+                "level": "INFO",
+                "message": "<volatile Current working directory>"
+              },
+              {
+                "level": "INFO",
+                "message": "Platform: darwin"
+              },
+              {
+                "level": "INFO",
+                "message": "Python version: 3.11.12 (main, Apr  9 2025, 03:49:53) [Clang 20.1.0 ]"
+              },
+              {
+                "level": "INFO",
+                "message": "Number of CPU cores: 18"
+              },
+              {
+                "level": "INFO",
+                "message": "CPU architecture: arm64"
+              },
+              {
+                "level": "INFO",
+                "message": "RAM size: 48.00 GB"
+              },
+              {
+                "level": "INFO",
+                "message": "<volatile Task ID>"
+              },
+              {
+                "level": "INFO",
+                "message": "Using default page size 168 for processing by page"
+              },
+              {
+                "level": "INFO",
+                "message": "Worker 1 processing page 1/1"
+              },
+              {
+                "level": "INFO",
+                "message": "<volatile timing>"
+              },
+              {
+                "level": "INFO",
+                "message": "<volatile timing>"
+              },
+              {
+                "level": "INFO",
+                "message": "<volatile timing>"
+              },
+              {
+                "level": "INFO",
+                "message": "<volatile test duration>"
+              }
+            ],
+            "diagnostics": [],
+            "audited_text_write_count": 11,
+            "attempted_tmp_directory_open": 1,
+            "call_stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+          }
+        },
+        "current": {
+          "collection": {
+            "parent": {
+              "path": "/private/tmp/ce-dsl-step185-20261010/cases/window/runs/current/collection-socket-capable/parent-receipt.json",
+              "sha256": "2c989a8558f24459ac4af03e4ab9eae04c2c5323afa45923d474d3efb22de651"
+            },
+            "child": {
+              "path": "/private/tmp/ce-dsl-step185-20261010/cases/window/runs/current/collection-socket-capable/child/child-receipt.json",
+              "sha256": "0d897daa1e3c830b98ddb6eb84c007eac2ccbb1b1ff1b91367d1a87388c2ebe5"
+            },
+            "stdout": {
+              "path": "/private/tmp/ce-dsl-step185-20261010/cases/window/runs/current/collection-socket-capable/stdout.raw",
+              "sha256": "ded7a1078c8dd023b9fb7f27c7010668caa18c5eccca692381d7c47492f16588"
+            },
+            "stderr": {
+              "path": "/private/tmp/ce-dsl-step185-20261010/cases/window/runs/current/collection-socket-capable/stderr.raw",
+              "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+            },
+            "opened_path_count": 2004,
+            "module_origin_count": 351
+          },
+          "native": {
+            "parent": {
+              "path": "/private/tmp/ce-dsl-step185-20261010/cases/window/runs/current/native-socket-capable/parent-receipt.json",
+              "sha256": "b173370c5b2d30b5ae4f50f6c6244b018292bb6e67677b30e9236d32fa3c40e1"
+            },
+            "child": {
+              "path": "/private/tmp/ce-dsl-step185-20261010/cases/window/runs/current/native-socket-capable/child/child-receipt.json",
+              "sha256": "867e8fd3f2000bfca94fa3b1936b751df60ec5c089ade7fbfbe7b0601d0f1695"
+            },
+            "stdout": {
+              "path": "/private/tmp/ce-dsl-step185-20261010/cases/window/runs/current/native-socket-capable/stdout.raw",
+              "sha256": "ebf3fa8655800124655d612448f14e79c4ec09d2a7fe537f8c28ded3f451da0c"
+            },
+            "stderr": {
+              "path": "/private/tmp/ce-dsl-step185-20261010/cases/window/runs/current/native-socket-capable/stderr.raw",
+              "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+            },
+            "opened_path_count": 2020,
+            "module_origin_count": 356,
+            "junit": {
+              "path": "/private/tmp/ce-dsl-step185-20261010/cases/window/runs/current/native-socket-capable/child/junit.xml",
+              "sha256": "194773c844d2ad7ee51c69bc0e48acc91b42c5a7df21758194f9d13e994df531"
+            },
+            "captures": [
+              {
+                "path": "/private/tmp/ce-dsl-step185-20261010/cases/window/runs/current/native-socket-capable/child/capture-1.json",
+                "sha256": "a96c3630f86e6edb8e439b685b8a29979e66c37ff3508b973e9c58f50286a8d6"
+              },
+              {
+                "path": "/private/tmp/ce-dsl-step185-20261010/cases/window/runs/current/native-socket-capable/child/capture-2.json",
+                "sha256": "e9406c1a3234488a5e188dddaa55a6f7c5d5f50e684226b48f9b5c726340cec5"
+              }
+            ],
+            "stable_log_messages": [
+              {
+                "level": "INFO",
+                "message": "Starting DATAMIMIC Process"
+              },
+              {
+                "level": "INFO",
+                "message": "DATAMIMIC CE lib version: 4.3.1.dev246+dirty"
+              },
+              {
+                "level": "INFO",
+                "message": "System name: Darwin"
+              },
+              {
+                "level": "INFO",
+                "message": "<volatile Process ID>"
+              },
+              {
+                "level": "INFO",
+                "message": "<volatile Current working directory>"
+              },
+              {
+                "level": "INFO",
+                "message": "Platform: darwin"
+              },
+              {
+                "level": "INFO",
+                "message": "Python version: 3.11.12 (main, Apr  9 2025, 03:49:53) [Clang 20.1.0 ]"
+              },
+              {
+                "level": "INFO",
+                "message": "Number of CPU cores: 18"
+              },
+              {
+                "level": "INFO",
+                "message": "CPU architecture: arm64"
+              },
+              {
+                "level": "INFO",
+                "message": "RAM size: 48.00 GB"
+              },
+              {
+                "level": "INFO",
+                "message": "<volatile Task ID>"
+              },
+              {
+                "level": "INFO",
+                "message": "Using default page size 24 for processing by page"
+              },
+              {
+                "level": "INFO",
+                "message": "Worker 1 processing page 1/1"
+              },
+              {
+                "level": "INFO",
+                "message": "<volatile timing>"
+              },
+              {
+                "level": "INFO",
+                "message": "<volatile timing>"
+              },
+              {
+                "level": "INFO",
+                "message": "<volatile timing>"
+              },
+              {
+                "level": "INFO",
+                "message": "<volatile test duration>"
+              },
+              {
+                "level": "INFO",
+                "message": "Starting DATAMIMIC Process"
+              },
+              {
+                "level": "INFO",
+                "message": "DATAMIMIC CE lib version: 4.3.1.dev246+dirty"
+              },
+              {
+                "level": "INFO",
+                "message": "System name: Darwin"
+              },
+              {
+                "level": "INFO",
+                "message": "<volatile Process ID>"
+              },
+              {
+                "level": "INFO",
+                "message": "<volatile Current working directory>"
+              },
+              {
+                "level": "INFO",
+                "message": "Platform: darwin"
+              },
+              {
+                "level": "INFO",
+                "message": "Python version: 3.11.12 (main, Apr  9 2025, 03:49:53) [Clang 20.1.0 ]"
+              },
+              {
+                "level": "INFO",
+                "message": "Number of CPU cores: 18"
+              },
+              {
+                "level": "INFO",
+                "message": "CPU architecture: arm64"
+              },
+              {
+                "level": "INFO",
+                "message": "RAM size: 48.00 GB"
+              },
+              {
+                "level": "INFO",
+                "message": "<volatile Task ID>"
+              },
+              {
+                "level": "INFO",
+                "message": "Using default page size 168 for processing by page"
+              },
+              {
+                "level": "INFO",
+                "message": "Worker 1 processing page 1/1"
+              },
+              {
+                "level": "INFO",
+                "message": "<volatile timing>"
+              },
+              {
+                "level": "INFO",
+                "message": "<volatile timing>"
+              },
+              {
+                "level": "INFO",
+                "message": "<volatile timing>"
+              },
+              {
+                "level": "INFO",
+                "message": "<volatile test duration>"
+              }
+            ],
+            "diagnostics": [],
+            "audited_text_write_count": 11,
+            "attempted_tmp_directory_open": 1,
+            "call_stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+          }
+        }
+      },
+      "excluded_attempts": {
+        "preparation": {
+          "preflight": {
+            "path": "/private/tmp/ce-dsl-step185-20261010/cases/window/excluded-preflight-global/preflight.json",
+            "sha256": "5f1315f016b527ad1d918b1c858b4ec4f1ff7844cfea18998807611e9c21cb8f"
+          },
+          "preflight_sha": {
+            "path": "/private/tmp/ce-dsl-step185-20261010/cases/window/excluded-preflight-global/preflight.sha.json",
+            "sha256": "348044b79c59f655ad54dafe2c0ceb63bb874af4f563400d7462c9affff249c1"
+          },
+          "reason": {
+            "path": "/private/tmp/ce-dsl-step185-20261010/cases/window/excluded-preflight-global/reason.json",
+            "sha256": "114aa668083b7160441a5726ac7ffa02dd1d6ed4cd0b89f49c95c084ff5ccc18"
+          }
+        }
+      },
+      "owner_test_passed_once_per_endpoint": true,
+      "stable_logs_equal": true,
+      "diagnostics_equal": true,
+      "stdout_equal": true
+    },
+    {
+      "case": "pagination",
+      "nodeid": "tests_ce/integration_tests/test_timeseries/test_timeseries.py::test_pagination_does_not_affect_output",
+      "xml_order": [
+        "tests_ce/integration_tests/test_timeseries/basic_one_series.xml",
+        "tests_ce/integration_tests/test_timeseries/basic_one_series_paginated.xml"
+      ],
+      "new_xml": [
+        "tests_ce/integration_tests/test_timeseries/basic_one_series_paginated.xml"
+      ],
+      "shapes": [
+        [
+          "rows",
+          24
+        ],
+        [
+          "rows",
+          24
+        ]
+      ],
+      "source_owner": {
+        "original": {
+          "blob": "5930b2da3ea03b50e0b11d21bfc34b59993f5590",
+          "sha256": "afdbd023c869c24fd1f04c55ae70a985bbd9eb9e99142c366783c1ef6fe8b362"
+        },
+        "current": {
+          "blob": "d1796bfd957882710b6dfe49fbfc11c8bb233f4d",
+          "sha256": "d8c1179a070bc80f85cbd81d2ff4ae2e7a1cc1da16e88221732dde120b4bf6b9"
+        }
+      },
+      "source_xml": {
+        "tests_ce/integration_tests/test_timeseries/basic_one_series.xml": {
+          "sha256": "4d366d51f4445931b964db742a45bac7c0786f33da9febdc2108a106c51a5e7a",
+          "blob": "357bb0d5bb07cc13bc3b10d1526afb3261482404"
+        },
+        "tests_ce/integration_tests/test_timeseries/basic_one_series_paginated.xml": {
+          "sha256": "c481fb8b60533616dcf2f69ea8aaaf731dfe867045eee2ed4775d1351fe26c57",
+          "blob": "c63927462ba16da3afa974f526eff18d0f6b0b5e"
+        }
+      },
+      "source_fixtures": {},
+      "preflight": {
+        "path": "/private/tmp/ce-dsl-step185-20261010/cases/pagination/preflight.json",
+        "sha256": "7967d508d2bf3ef1a5a4a91f0fb5f7a2d0d7d4cd2379b98cf325a79e5eb2bdac"
+      },
+      "comparison": {
+        "path": "/private/tmp/ce-dsl-step185-20261010/cases/pagination/comparison.json",
+        "sha256": "7bbdf52876abdda1414b6740a9187ef71360d5347ba43a01c95e7648f5d6ed74"
+      },
+      "ordered_complete_typed_capture_sha256": [
+        "f02b65cd95f44cd925c44ce0654a98556986f1fafb42636aae59e1662694732b",
+        "f02b65cd95f44cd925c44ce0654a98556986f1fafb42636aae59e1662694732b"
+      ],
+      "runs": {
+        "original": {
+          "collection": {
+            "parent": {
+              "path": "/private/tmp/ce-dsl-step185-20261010/cases/pagination/runs/original/collection-socket-capable/parent-receipt.json",
+              "sha256": "a1215e6154cfc17e14c16037af5296b06ebefb49c7ce47307da60050a6457c4e"
+            },
+            "child": {
+              "path": "/private/tmp/ce-dsl-step185-20261010/cases/pagination/runs/original/collection-socket-capable/child/child-receipt.json",
+              "sha256": "c5699d077c4e04c6d347636fcc962fc227b35af8ef2dd3078df2ad9cc0bd0df2"
+            },
+            "stdout": {
+              "path": "/private/tmp/ce-dsl-step185-20261010/cases/pagination/runs/original/collection-socket-capable/stdout.raw",
+              "sha256": "c7018a399456c3ac81c30ec81927cc4cc162f3553c355390172347b1fbefc353"
+            },
+            "stderr": {
+              "path": "/private/tmp/ce-dsl-step185-20261010/cases/pagination/runs/original/collection-socket-capable/stderr.raw",
+              "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+            },
+            "opened_path_count": 1785,
+            "module_origin_count": 250
+          },
+          "native": {
+            "parent": {
+              "path": "/private/tmp/ce-dsl-step185-20261010/cases/pagination/runs/original/native-socket-capable/parent-receipt.json",
+              "sha256": "7b0708f35da3ebc556199df8360746b2929cf3698615b9a5bb6d66ef18230a13"
+            },
+            "child": {
+              "path": "/private/tmp/ce-dsl-step185-20261010/cases/pagination/runs/original/native-socket-capable/child/child-receipt.json",
+              "sha256": "7991b9d17e74eaeca1cd916324035c50f8a69a2ba0e4d9f6a35cbb7b9be2dda6"
+            },
+            "stdout": {
+              "path": "/private/tmp/ce-dsl-step185-20261010/cases/pagination/runs/original/native-socket-capable/stdout.raw",
+              "sha256": "7dcff5cc8413c12357670de06e4e6ab3dd2257f9fdfb7c861abe56f9bec1bf13"
+            },
+            "stderr": {
+              "path": "/private/tmp/ce-dsl-step185-20261010/cases/pagination/runs/original/native-socket-capable/stderr.raw",
+              "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+            },
+            "opened_path_count": 1858,
+            "module_origin_count": 275,
+            "junit": {
+              "path": "/private/tmp/ce-dsl-step185-20261010/cases/pagination/runs/original/native-socket-capable/child/junit.xml",
+              "sha256": "bc93fc47b5367d011654c3519e087cf3ccda89ae411399698a81761f7934534f"
+            },
+            "captures": [
+              {
+                "path": "/private/tmp/ce-dsl-step185-20261010/cases/pagination/runs/original/native-socket-capable/child/capture-1.json",
+                "sha256": "f02b65cd95f44cd925c44ce0654a98556986f1fafb42636aae59e1662694732b"
+              },
+              {
+                "path": "/private/tmp/ce-dsl-step185-20261010/cases/pagination/runs/original/native-socket-capable/child/capture-2.json",
+                "sha256": "f02b65cd95f44cd925c44ce0654a98556986f1fafb42636aae59e1662694732b"
+              }
+            ],
+            "stable_log_messages": [
+              {
+                "level": "INFO",
+                "message": "Starting DATAMIMIC Process"
+              },
+              {
+                "level": "INFO",
+                "message": "DATAMIMIC CE lib version: 4.3.1.dev246+dirty"
+              },
+              {
+                "level": "INFO",
+                "message": "System name: Darwin"
+              },
+              {
+                "level": "INFO",
+                "message": "<volatile Process ID>"
+              },
+              {
+                "level": "INFO",
+                "message": "<volatile Current working directory>"
+              },
+              {
+                "level": "INFO",
+                "message": "Platform: darwin"
+              },
+              {
+                "level": "INFO",
+                "message": "Python version: 3.11.12 (main, Apr  9 2025, 03:49:53) [Clang 20.1.0 ]"
+              },
+              {
+                "level": "INFO",
+                "message": "Number of CPU cores: 18"
+              },
+              {
+                "level": "INFO",
+                "message": "CPU architecture: arm64"
+              },
+              {
+                "level": "INFO",
+                "message": "RAM size: 48.00 GB"
+              },
+              {
+                "level": "INFO",
+                "message": "<volatile Task ID>"
+              },
+              {
+                "level": "INFO",
+                "message": "Using default page size 24 for processing by page"
+              },
+              {
+                "level": "INFO",
+                "message": "Worker 1 processing page 1/1"
+              },
+              {
+                "level": "INFO",
+                "message": "<volatile timing>"
+              },
+              {
+                "level": "INFO",
+                "message": "<volatile timing>"
+              },
+              {
+                "level": "INFO",
+                "message": "<volatile timing>"
+              },
+              {
+                "level": "INFO",
+                "message": "<volatile test duration>"
+              },
+              {
+                "level": "INFO",
+                "message": "Starting DATAMIMIC Process"
+              },
+              {
+                "level": "INFO",
+                "message": "DATAMIMIC CE lib version: 4.3.1.dev246+dirty"
+              },
+              {
+                "level": "INFO",
+                "message": "System name: Darwin"
+              },
+              {
+                "level": "INFO",
+                "message": "<volatile Process ID>"
+              },
+              {
+                "level": "INFO",
+                "message": "<volatile Current working directory>"
+              },
+              {
+                "level": "INFO",
+                "message": "Platform: darwin"
+              },
+              {
+                "level": "INFO",
+                "message": "Python version: 3.11.12 (main, Apr  9 2025, 03:49:53) [Clang 20.1.0 ]"
+              },
+              {
+                "level": "INFO",
+                "message": "Number of CPU cores: 18"
+              },
+              {
+                "level": "INFO",
+                "message": "CPU architecture: arm64"
+              },
+              {
+                "level": "INFO",
+                "message": "RAM size: 48.00 GB"
+              },
+              {
+                "level": "INFO",
+                "message": "<volatile Task ID>"
+              },
+              {
+                "level": "WARN",
+                "message": "Using low page size 5 (< 100) may cause performance issues"
+              },
+              {
+                "level": "INFO",
+                "message": "Worker 1 processing page 1/5"
+              },
+              {
+                "level": "INFO",
+                "message": "<volatile timing>"
+              },
+              {
+                "level": "INFO",
+                "message": "<volatile timing>"
+              },
+              {
+                "level": "INFO",
+                "message": "Worker 1 processing page 2/5"
+              },
+              {
+                "level": "INFO",
+                "message": "<volatile timing>"
+              },
+              {
+                "level": "INFO",
+                "message": "<volatile timing>"
+              },
+              {
+                "level": "INFO",
+                "message": "Worker 1 processing page 3/5"
+              },
+              {
+                "level": "INFO",
+                "message": "<volatile timing>"
+              },
+              {
+                "level": "INFO",
+                "message": "<volatile timing>"
+              },
+              {
+                "level": "INFO",
+                "message": "Worker 1 processing page 4/5"
+              },
+              {
+                "level": "INFO",
+                "message": "<volatile timing>"
+              },
+              {
+                "level": "INFO",
+                "message": "<volatile timing>"
+              },
+              {
+                "level": "INFO",
+                "message": "Worker 1 processing page 5/5"
+              },
+              {
+                "level": "INFO",
+                "message": "<volatile timing>"
+              },
+              {
+                "level": "INFO",
+                "message": "<volatile timing>"
+              },
+              {
+                "level": "INFO",
+                "message": "<volatile timing>"
+              },
+              {
+                "level": "INFO",
+                "message": "<volatile test duration>"
+              }
+            ],
+            "diagnostics": [
+              {
+                "level": "WARN",
+                "message": "Using low page size 5 (< 100) may cause performance issues"
+              }
+            ],
+            "audited_text_write_count": 11,
+            "attempted_tmp_directory_open": 1,
+            "call_stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+          }
+        },
+        "current": {
+          "collection": {
+            "parent": {
+              "path": "/private/tmp/ce-dsl-step185-20261010/cases/pagination/runs/current/collection-socket-capable/parent-receipt.json",
+              "sha256": "1cc31f5d580fb308cdee34238e08b3988952a0d58b91dbe8a219a1870e211e85"
+            },
+            "child": {
+              "path": "/private/tmp/ce-dsl-step185-20261010/cases/pagination/runs/current/collection-socket-capable/child/child-receipt.json",
+              "sha256": "edaf3c2e4dfa0e6173a400266c6ef60ef799aef7da13b71b84dcdccefb8b444f"
+            },
+            "stdout": {
+              "path": "/private/tmp/ce-dsl-step185-20261010/cases/pagination/runs/current/collection-socket-capable/stdout.raw",
+              "sha256": "b5d832f0c196b16b18c2d5a2cf40c82d9e8f8908fe04a18fc80fd2df94b67731"
+            },
+            "stderr": {
+              "path": "/private/tmp/ce-dsl-step185-20261010/cases/pagination/runs/current/collection-socket-capable/stderr.raw",
+              "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+            },
+            "opened_path_count": 2002,
+            "module_origin_count": 351
+          },
+          "native": {
+            "parent": {
+              "path": "/private/tmp/ce-dsl-step185-20261010/cases/pagination/runs/current/native-socket-capable/parent-receipt.json",
+              "sha256": "9e9abbd72d86206c52f352fe280d7311144b3145f1762f1cdbd8b2ae91db8fa7"
+            },
+            "child": {
+              "path": "/private/tmp/ce-dsl-step185-20261010/cases/pagination/runs/current/native-socket-capable/child/child-receipt.json",
+              "sha256": "76a6dc52c9504c47c9ecf02d63209eac547f21e2501800df95f922e22fa3bafa"
+            },
+            "stdout": {
+              "path": "/private/tmp/ce-dsl-step185-20261010/cases/pagination/runs/current/native-socket-capable/stdout.raw",
+              "sha256": "b881b175a5d378aedd126abb3756444ecdc2309f775f841b650d9c24f4121e2d"
+            },
+            "stderr": {
+              "path": "/private/tmp/ce-dsl-step185-20261010/cases/pagination/runs/current/native-socket-capable/stderr.raw",
+              "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+            },
+            "opened_path_count": 2020,
+            "module_origin_count": 356,
+            "junit": {
+              "path": "/private/tmp/ce-dsl-step185-20261010/cases/pagination/runs/current/native-socket-capable/child/junit.xml",
+              "sha256": "c2f24f53a0baf9cf3c99ef302d56663494ebc3f057d9421abbbc6d9d7a5411c1"
+            },
+            "captures": [
+              {
+                "path": "/private/tmp/ce-dsl-step185-20261010/cases/pagination/runs/current/native-socket-capable/child/capture-1.json",
+                "sha256": "f02b65cd95f44cd925c44ce0654a98556986f1fafb42636aae59e1662694732b"
+              },
+              {
+                "path": "/private/tmp/ce-dsl-step185-20261010/cases/pagination/runs/current/native-socket-capable/child/capture-2.json",
+                "sha256": "f02b65cd95f44cd925c44ce0654a98556986f1fafb42636aae59e1662694732b"
+              }
+            ],
+            "stable_log_messages": [
+              {
+                "level": "INFO",
+                "message": "Starting DATAMIMIC Process"
+              },
+              {
+                "level": "INFO",
+                "message": "DATAMIMIC CE lib version: 4.3.1.dev246+dirty"
+              },
+              {
+                "level": "INFO",
+                "message": "System name: Darwin"
+              },
+              {
+                "level": "INFO",
+                "message": "<volatile Process ID>"
+              },
+              {
+                "level": "INFO",
+                "message": "<volatile Current working directory>"
+              },
+              {
+                "level": "INFO",
+                "message": "Platform: darwin"
+              },
+              {
+                "level": "INFO",
+                "message": "Python version: 3.11.12 (main, Apr  9 2025, 03:49:53) [Clang 20.1.0 ]"
+              },
+              {
+                "level": "INFO",
+                "message": "Number of CPU cores: 18"
+              },
+              {
+                "level": "INFO",
+                "message": "CPU architecture: arm64"
+              },
+              {
+                "level": "INFO",
+                "message": "RAM size: 48.00 GB"
+              },
+              {
+                "level": "INFO",
+                "message": "<volatile Task ID>"
+              },
+              {
+                "level": "INFO",
+                "message": "Using default page size 24 for processing by page"
+              },
+              {
+                "level": "INFO",
+                "message": "Worker 1 processing page 1/1"
+              },
+              {
+                "level": "INFO",
+                "message": "<volatile timing>"
+              },
+              {
+                "level": "INFO",
+                "message": "<volatile timing>"
+              },
+              {
+                "level": "INFO",
+                "message": "<volatile timing>"
+              },
+              {
+                "level": "INFO",
+                "message": "<volatile test duration>"
+              },
+              {
+                "level": "INFO",
+                "message": "Starting DATAMIMIC Process"
+              },
+              {
+                "level": "INFO",
+                "message": "DATAMIMIC CE lib version: 4.3.1.dev246+dirty"
+              },
+              {
+                "level": "INFO",
+                "message": "System name: Darwin"
+              },
+              {
+                "level": "INFO",
+                "message": "<volatile Process ID>"
+              },
+              {
+                "level": "INFO",
+                "message": "<volatile Current working directory>"
+              },
+              {
+                "level": "INFO",
+                "message": "Platform: darwin"
+              },
+              {
+                "level": "INFO",
+                "message": "Python version: 3.11.12 (main, Apr  9 2025, 03:49:53) [Clang 20.1.0 ]"
+              },
+              {
+                "level": "INFO",
+                "message": "Number of CPU cores: 18"
+              },
+              {
+                "level": "INFO",
+                "message": "CPU architecture: arm64"
+              },
+              {
+                "level": "INFO",
+                "message": "RAM size: 48.00 GB"
+              },
+              {
+                "level": "INFO",
+                "message": "<volatile Task ID>"
+              },
+              {
+                "level": "WARN",
+                "message": "Using low page size 5 (< 100) may cause performance issues"
+              },
+              {
+                "level": "INFO",
+                "message": "Worker 1 processing page 1/5"
+              },
+              {
+                "level": "INFO",
+                "message": "<volatile timing>"
+              },
+              {
+                "level": "INFO",
+                "message": "<volatile timing>"
+              },
+              {
+                "level": "INFO",
+                "message": "Worker 1 processing page 2/5"
+              },
+              {
+                "level": "INFO",
+                "message": "<volatile timing>"
+              },
+              {
+                "level": "INFO",
+                "message": "<volatile timing>"
+              },
+              {
+                "level": "INFO",
+                "message": "Worker 1 processing page 3/5"
+              },
+              {
+                "level": "INFO",
+                "message": "<volatile timing>"
+              },
+              {
+                "level": "INFO",
+                "message": "<volatile timing>"
+              },
+              {
+                "level": "INFO",
+                "message": "Worker 1 processing page 4/5"
+              },
+              {
+                "level": "INFO",
+                "message": "<volatile timing>"
+              },
+              {
+                "level": "INFO",
+                "message": "<volatile timing>"
+              },
+              {
+                "level": "INFO",
+                "message": "Worker 1 processing page 5/5"
+              },
+              {
+                "level": "INFO",
+                "message": "<volatile timing>"
+              },
+              {
+                "level": "INFO",
+                "message": "<volatile timing>"
+              },
+              {
+                "level": "INFO",
+                "message": "<volatile timing>"
+              },
+              {
+                "level": "INFO",
+                "message": "<volatile test duration>"
+              }
+            ],
+            "diagnostics": [
+              {
+                "level": "WARN",
+                "message": "Using low page size 5 (< 100) may cause performance issues"
+              }
+            ],
+            "audited_text_write_count": 11,
+            "attempted_tmp_directory_open": 1,
+            "call_stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+          }
+        }
+      },
+      "excluded_attempts": {
+        "preparation": {
+          "preflight": {
+            "path": "/private/tmp/ce-dsl-step185-20261010/cases/pagination/excluded-preflight-global/preflight.json",
+            "sha256": "6d20df0c41e076cb665e557bfb5c9897e1f3a9a2a6b03f7e44bcbe745075a26c"
+          },
+          "preflight_sha": {
+            "path": "/private/tmp/ce-dsl-step185-20261010/cases/pagination/excluded-preflight-global/preflight.sha.json",
+            "sha256": "591a615b14d3d10536e779ef9ee4209b70f38932a0c3f5d1a9c41e6df6ed1934"
+          },
+          "reason": {
+            "path": "/private/tmp/ce-dsl-step185-20261010/cases/pagination/excluded-preflight-global/reason.json",
+            "sha256": "114aa668083b7160441a5726ac7ffa02dd1d6ed4cd0b89f49c95c084ff5ccc18"
+          }
+        }
+      },
+      "owner_test_passed_once_per_endpoint": true,
+      "stable_logs_equal": true,
+      "diagnostics_equal": true,
+      "stdout_equal": true
+    },
+    {
+      "case": "csv",
+      "nodeid": "tests_ce/integration_tests/test_source_read_determinism/test_source_read_determinism.py::test_seeded_random_read_replays_identically",
+      "xml_order": [
+        "tests_ce/integration_tests/test_source_read_determinism/random_seeded.xml",
+        "tests_ce/integration_tests/test_source_read_determinism/random_seeded.xml"
+      ],
+      "new_xml": [
+        "tests_ce/integration_tests/test_source_read_determinism/random_seeded.xml"
+      ],
+      "shapes": [
+        [
+          "rows",
+          12
+        ],
+        [
+          "rows",
+          12
+        ]
+      ],
+      "source_owner": {
+        "original": {
+          "blob": "b2230cba85afd6d42f027d909bf86e2f430edfe6",
+          "sha256": "8e83587244b2ab35bfd9f1045696ad77f20aede6280ef55a4190aca167c479a2"
+        },
+        "current": {
+          "blob": "54278f2d25a8f77fbea3041b9f7c08f51ab92a9e",
+          "sha256": "46814aa7982f1f056f19792fdd52539b182bc13b4ce0df09e548feaac1a3b4a5"
+        }
+      },
+      "source_xml": {
+        "tests_ce/integration_tests/test_source_read_determinism/random_seeded.xml": {
+          "sha256": "a12a458188e47e59e5568ff1e0fe3e8cc426e3e8900bd22b875db7f5fb18ee61",
+          "blob": "048159cdbfcb534f3b52a1e13863317e5183df6f"
+        }
+      },
+      "source_fixtures": {
+        "tests_ce/integration_tests/test_source_read_determinism/source.csv": {
+          "sha256": "59ee66313624d7641f35f28ecb94c108e8cac58a3d6437a1aae811509b2e139c",
+          "blob": "00b7636798ff222fa30ad116eef9c7f82ac99e66"
+        }
+      },
+      "preflight": {
+        "path": "/private/tmp/ce-dsl-step185-20261010/cases/csv/preflight.json",
+        "sha256": "7f1b828ce27e8d617ece13eef79284fbfcc0869fe77af602e8c724fb21893f76"
+      },
+      "comparison": {
+        "path": "/private/tmp/ce-dsl-step185-20261010/cases/csv/comparison.json",
+        "sha256": "b1354a5b2820913872cb02f2e7861c74280a1ef3187f37d5ab96952860525ccb"
+      },
+      "ordered_complete_typed_capture_sha256": [
+        "d02bed68b2e4e3c182fe8a74cac2a908e57bbd722b4a90edb640f972ff3d65bb",
+        "d02bed68b2e4e3c182fe8a74cac2a908e57bbd722b4a90edb640f972ff3d65bb"
+      ],
+      "runs": {
+        "original": {
+          "collection": {
+            "parent": {
+              "path": "/private/tmp/ce-dsl-step185-20261010/cases/csv/runs/original/collection-socket-capable/parent-receipt.json",
+              "sha256": "031a2b695ee29207e7db4f153315a489176175d121271a39dc315802aea6b30a"
+            },
+            "child": {
+              "path": "/private/tmp/ce-dsl-step185-20261010/cases/csv/runs/original/collection-socket-capable/child/child-receipt.json",
+              "sha256": "3c22b5c7b568d47eaf59eea19cb7f6a4e1fcd550703fe95c7537d1cea0dbd6d4"
+            },
+            "stdout": {
+              "path": "/private/tmp/ce-dsl-step185-20261010/cases/csv/runs/original/collection-socket-capable/stdout.raw",
+              "sha256": "f230cd59172a393fb12100887b5367cad6351ef9ab86297454d77e22202bff9c"
+            },
+            "stderr": {
+              "path": "/private/tmp/ce-dsl-step185-20261010/cases/csv/runs/original/collection-socket-capable/stderr.raw",
+              "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+            },
+            "opened_path_count": 1787,
+            "module_origin_count": 250
+          },
+          "native": {
+            "parent": {
+              "path": "/private/tmp/ce-dsl-step185-20261010/cases/csv/runs/original/native-socket-capable/parent-receipt.json",
+              "sha256": "1895a52840c5798399cc9f90b548c706286e2d2d7504cf8dedce5823968de88a"
+            },
+            "child": {
+              "path": "/private/tmp/ce-dsl-step185-20261010/cases/csv/runs/original/native-socket-capable/child/child-receipt.json",
+              "sha256": "5e3571994ccebbc716c867c89436cb80ae021b2126f2ffe26ced978be1c045bb"
+            },
+            "stdout": {
+              "path": "/private/tmp/ce-dsl-step185-20261010/cases/csv/runs/original/native-socket-capable/stdout.raw",
+              "sha256": "091ecf37a4cd325d41ea13dc5ac1b0e8adf3c48c78ea9abf0dcb7eb8eee910ef"
+            },
+            "stderr": {
+              "path": "/private/tmp/ce-dsl-step185-20261010/cases/csv/runs/original/native-socket-capable/stderr.raw",
+              "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+            },
+            "opened_path_count": 1858,
+            "module_origin_count": 275,
+            "junit": {
+              "path": "/private/tmp/ce-dsl-step185-20261010/cases/csv/runs/original/native-socket-capable/child/junit.xml",
+              "sha256": "efebe2a0288a5c741e25cd782126cd4dbe8542d8ac4cd1e565c3fb7521e1804f"
+            },
+            "captures": [
+              {
+                "path": "/private/tmp/ce-dsl-step185-20261010/cases/csv/runs/original/native-socket-capable/child/capture-1.json",
+                "sha256": "d02bed68b2e4e3c182fe8a74cac2a908e57bbd722b4a90edb640f972ff3d65bb"
+              },
+              {
+                "path": "/private/tmp/ce-dsl-step185-20261010/cases/csv/runs/original/native-socket-capable/child/capture-2.json",
+                "sha256": "d02bed68b2e4e3c182fe8a74cac2a908e57bbd722b4a90edb640f972ff3d65bb"
+              }
+            ],
+            "stable_log_messages": [
+              {
+                "level": "INFO",
+                "message": "Starting DATAMIMIC Process"
+              },
+              {
+                "level": "INFO",
+                "message": "DATAMIMIC CE lib version: 4.3.1.dev246+dirty"
+              },
+              {
+                "level": "INFO",
+                "message": "System name: Darwin"
+              },
+              {
+                "level": "INFO",
+                "message": "<volatile Process ID>"
+              },
+              {
+                "level": "INFO",
+                "message": "<volatile Current working directory>"
+              },
+              {
+                "level": "INFO",
+                "message": "Platform: darwin"
+              },
+              {
+                "level": "INFO",
+                "message": "Python version: 3.11.12 (main, Apr  9 2025, 03:49:53) [Clang 20.1.0 ]"
+              },
+              {
+                "level": "INFO",
+                "message": "Number of CPU cores: 18"
+              },
+              {
+                "level": "INFO",
+                "message": "CPU architecture: arm64"
+              },
+              {
+                "level": "INFO",
+                "message": "RAM size: 48.00 GB"
+              },
+              {
+                "level": "INFO",
+                "message": "<volatile Task ID>"
+              },
+              {
+                "level": "INFO",
+                "message": "Using default page size 12 for processing by page"
+              },
+              {
+                "level": "INFO",
+                "message": "Worker 1 processing page 1/1"
+              },
+              {
+                "level": "INFO",
+                "message": "<volatile timing>"
+              },
+              {
+                "level": "INFO",
+                "message": "<volatile timing>"
+              },
+              {
+                "level": "INFO",
+                "message": "<volatile timing>"
+              },
+              {
+                "level": "INFO",
+                "message": "<volatile test duration>"
+              },
+              {
+                "level": "INFO",
+                "message": "Starting DATAMIMIC Process"
+              },
+              {
+                "level": "INFO",
+                "message": "DATAMIMIC CE lib version: 4.3.1.dev246+dirty"
+              },
+              {
+                "level": "INFO",
+                "message": "System name: Darwin"
+              },
+              {
+                "level": "INFO",
+                "message": "<volatile Process ID>"
+              },
+              {
+                "level": "INFO",
+                "message": "<volatile Current working directory>"
+              },
+              {
+                "level": "INFO",
+                "message": "Platform: darwin"
+              },
+              {
+                "level": "INFO",
+                "message": "Python version: 3.11.12 (main, Apr  9 2025, 03:49:53) [Clang 20.1.0 ]"
+              },
+              {
+                "level": "INFO",
+                "message": "Number of CPU cores: 18"
+              },
+              {
+                "level": "INFO",
+                "message": "CPU architecture: arm64"
+              },
+              {
+                "level": "INFO",
+                "message": "RAM size: 48.00 GB"
+              },
+              {
+                "level": "INFO",
+                "message": "<volatile Task ID>"
+              },
+              {
+                "level": "INFO",
+                "message": "Using default page size 12 for processing by page"
+              },
+              {
+                "level": "INFO",
+                "message": "Worker 1 processing page 1/1"
+              },
+              {
+                "level": "INFO",
+                "message": "<volatile timing>"
+              },
+              {
+                "level": "INFO",
+                "message": "<volatile timing>"
+              },
+              {
+                "level": "INFO",
+                "message": "<volatile timing>"
+              },
+              {
+                "level": "INFO",
+                "message": "<volatile test duration>"
+              }
+            ],
+            "diagnostics": [],
+            "audited_text_write_count": 11,
+            "attempted_tmp_directory_open": 1,
+            "call_stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+          }
+        },
+        "current": {
+          "collection": {
+            "parent": {
+              "path": "/private/tmp/ce-dsl-step185-20261010/cases/csv/runs/current/collection-socket-capable/parent-receipt.json",
+              "sha256": "723d07120eb6e594d43416159c23b19bef960e154b4abba84d6ffc9f00a9aaf9"
+            },
+            "child": {
+              "path": "/private/tmp/ce-dsl-step185-20261010/cases/csv/runs/current/collection-socket-capable/child/child-receipt.json",
+              "sha256": "0e69a76380a85a3d78aa87b012bad7a350f2d18db7ff6ab5e26dc42426f95fa3"
+            },
+            "stdout": {
+              "path": "/private/tmp/ce-dsl-step185-20261010/cases/csv/runs/current/collection-socket-capable/stdout.raw",
+              "sha256": "2f291f4f0b22feee4b108232e7185ee408cb75cdb417ce1d83c2d9cf3c147bc5"
+            },
+            "stderr": {
+              "path": "/private/tmp/ce-dsl-step185-20261010/cases/csv/runs/current/collection-socket-capable/stderr.raw",
+              "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+            },
+            "opened_path_count": 2004,
+            "module_origin_count": 351
+          },
+          "native": {
+            "parent": {
+              "path": "/private/tmp/ce-dsl-step185-20261010/cases/csv/runs/current/native-socket-capable/parent-receipt.json",
+              "sha256": "88f1618f820e52a8d49236316f62aa8c5a51337b27b7732411708c1725dfc5f7"
+            },
+            "child": {
+              "path": "/private/tmp/ce-dsl-step185-20261010/cases/csv/runs/current/native-socket-capable/child/child-receipt.json",
+              "sha256": "39481de7dd75f10f039cc5c5be595335a2588b4ce80935d299acc79e1dd765c0"
+            },
+            "stdout": {
+              "path": "/private/tmp/ce-dsl-step185-20261010/cases/csv/runs/current/native-socket-capable/stdout.raw",
+              "sha256": "577443540971ff05f9a38dc77ac060913c3858b150343adc79e55c4b4311d363"
+            },
+            "stderr": {
+              "path": "/private/tmp/ce-dsl-step185-20261010/cases/csv/runs/current/native-socket-capable/stderr.raw",
+              "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+            },
+            "opened_path_count": 2020,
+            "module_origin_count": 356,
+            "junit": {
+              "path": "/private/tmp/ce-dsl-step185-20261010/cases/csv/runs/current/native-socket-capable/child/junit.xml",
+              "sha256": "55cbc9e712cd7232cbb4b9010e67b4d332701ac8aa635cf38a465edf2c4b69c8"
+            },
+            "captures": [
+              {
+                "path": "/private/tmp/ce-dsl-step185-20261010/cases/csv/runs/current/native-socket-capable/child/capture-1.json",
+                "sha256": "d02bed68b2e4e3c182fe8a74cac2a908e57bbd722b4a90edb640f972ff3d65bb"
+              },
+              {
+                "path": "/private/tmp/ce-dsl-step185-20261010/cases/csv/runs/current/native-socket-capable/child/capture-2.json",
+                "sha256": "d02bed68b2e4e3c182fe8a74cac2a908e57bbd722b4a90edb640f972ff3d65bb"
+              }
+            ],
+            "stable_log_messages": [
+              {
+                "level": "INFO",
+                "message": "Starting DATAMIMIC Process"
+              },
+              {
+                "level": "INFO",
+                "message": "DATAMIMIC CE lib version: 4.3.1.dev246+dirty"
+              },
+              {
+                "level": "INFO",
+                "message": "System name: Darwin"
+              },
+              {
+                "level": "INFO",
+                "message": "<volatile Process ID>"
+              },
+              {
+                "level": "INFO",
+                "message": "<volatile Current working directory>"
+              },
+              {
+                "level": "INFO",
+                "message": "Platform: darwin"
+              },
+              {
+                "level": "INFO",
+                "message": "Python version: 3.11.12 (main, Apr  9 2025, 03:49:53) [Clang 20.1.0 ]"
+              },
+              {
+                "level": "INFO",
+                "message": "Number of CPU cores: 18"
+              },
+              {
+                "level": "INFO",
+                "message": "CPU architecture: arm64"
+              },
+              {
+                "level": "INFO",
+                "message": "RAM size: 48.00 GB"
+              },
+              {
+                "level": "INFO",
+                "message": "<volatile Task ID>"
+              },
+              {
+                "level": "INFO",
+                "message": "Using default page size 12 for processing by page"
+              },
+              {
+                "level": "INFO",
+                "message": "Worker 1 processing page 1/1"
+              },
+              {
+                "level": "INFO",
+                "message": "<volatile timing>"
+              },
+              {
+                "level": "INFO",
+                "message": "<volatile timing>"
+              },
+              {
+                "level": "INFO",
+                "message": "<volatile timing>"
+              },
+              {
+                "level": "INFO",
+                "message": "<volatile test duration>"
+              },
+              {
+                "level": "INFO",
+                "message": "Starting DATAMIMIC Process"
+              },
+              {
+                "level": "INFO",
+                "message": "DATAMIMIC CE lib version: 4.3.1.dev246+dirty"
+              },
+              {
+                "level": "INFO",
+                "message": "System name: Darwin"
+              },
+              {
+                "level": "INFO",
+                "message": "<volatile Process ID>"
+              },
+              {
+                "level": "INFO",
+                "message": "<volatile Current working directory>"
+              },
+              {
+                "level": "INFO",
+                "message": "Platform: darwin"
+              },
+              {
+                "level": "INFO",
+                "message": "Python version: 3.11.12 (main, Apr  9 2025, 03:49:53) [Clang 20.1.0 ]"
+              },
+              {
+                "level": "INFO",
+                "message": "Number of CPU cores: 18"
+              },
+              {
+                "level": "INFO",
+                "message": "CPU architecture: arm64"
+              },
+              {
+                "level": "INFO",
+                "message": "RAM size: 48.00 GB"
+              },
+              {
+                "level": "INFO",
+                "message": "<volatile Task ID>"
+              },
+              {
+                "level": "INFO",
+                "message": "Using default page size 12 for processing by page"
+              },
+              {
+                "level": "INFO",
+                "message": "Worker 1 processing page 1/1"
+              },
+              {
+                "level": "INFO",
+                "message": "<volatile timing>"
+              },
+              {
+                "level": "INFO",
+                "message": "<volatile timing>"
+              },
+              {
+                "level": "INFO",
+                "message": "<volatile timing>"
+              },
+              {
+                "level": "INFO",
+                "message": "<volatile test duration>"
+              }
+            ],
+            "diagnostics": [],
+            "audited_text_write_count": 11,
+            "attempted_tmp_directory_open": 1,
+            "call_stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+          }
+        }
+      },
+      "excluded_attempts": {
+        "preparation": {
+          "preflight": {
+            "path": "/private/tmp/ce-dsl-step185-20261010/cases/csv/excluded-preflight-global/preflight.json",
+            "sha256": "ef7720bca107bc1ae11a89be10ad3665e80a82a5851548edc638f1b9cb2f1862"
+          },
+          "preflight_sha": {
+            "path": "/private/tmp/ce-dsl-step185-20261010/cases/csv/excluded-preflight-global/preflight.sha.json",
+            "sha256": "5268503ca1bacb1a1a638337c3526978065deb55d247dbd105b79aa0b554dc39"
+          },
+          "reason": {
+            "path": "/private/tmp/ce-dsl-step185-20261010/cases/csv/excluded-preflight-global/reason.json",
+            "sha256": "114aa668083b7160441a5726ac7ffa02dd1d6ed4cd0b89f49c95c084ff5ccc18"
+          }
+        }
+      },
+      "owner_test_passed_once_per_endpoint": true,
+      "stable_logs_equal": true,
+      "diagnostics_equal": true,
+      "stdout_equal": true
+    },
+    {
+      "case": "ent",
+      "nodeid": "tests_ce/integration_tests/test_source_read_determinism/test_source_read_determinism.py::test_ent_csv_seeded_replays_identically",
+      "xml_order": [
+        "tests_ce/integration_tests/test_source_read_determinism/ent_csv_seeded.xml",
+        "tests_ce/integration_tests/test_source_read_determinism/ent_csv_seeded.xml"
+      ],
+      "new_xml": [
+        "tests_ce/integration_tests/test_source_read_determinism/ent_csv_seeded.xml"
+      ],
+      "shapes": [
+        [
+          "rows",
+          12
+        ],
+        [
+          "rows",
+          12
+        ]
+      ],
+      "source_owner": {
+        "original": {
+          "blob": "b2230cba85afd6d42f027d909bf86e2f430edfe6",
+          "sha256": "8e83587244b2ab35bfd9f1045696ad77f20aede6280ef55a4190aca167c479a2"
+        },
+        "current": {
+          "blob": "54278f2d25a8f77fbea3041b9f7c08f51ab92a9e",
+          "sha256": "46814aa7982f1f056f19792fdd52539b182bc13b4ce0df09e548feaac1a3b4a5"
+        }
+      },
+      "source_xml": {
+        "tests_ce/integration_tests/test_source_read_determinism/ent_csv_seeded.xml": {
+          "sha256": "e5e151254257685e5e96b070d5a2cc9101b9f67744bc2f1c675b219e3698eed4",
+          "blob": "862325b63e9d8c842063496eec44c4c882410959"
+        }
+      },
+      "source_fixtures": {
+        "tests_ce/integration_tests/test_source_read_determinism/data/people.ent.csv": {
+          "sha256": "82d360b156a0dbf8b146987d4b1db9f633e41dde7a845d3fa239f16d7eb9c4f7",
+          "blob": "bc9f6773e6333340e82125a43f2f061cd421e36b"
+        }
+      },
+      "preflight": {
+        "path": "/private/tmp/ce-dsl-step185-20261010/cases/ent/preflight.json",
+        "sha256": "3a0cb6e79594e0f55ae44c6318dcf2eefd1b5f5c116e62fb6c09f521905c4190"
+      },
+      "comparison": {
+        "path": "/private/tmp/ce-dsl-step185-20261010/cases/ent/comparison.json",
+        "sha256": "5c9cda269b26580d21dfa56cf7f53edd376a1430cb09dde8202c1a691e6e2d91"
+      },
+      "ordered_complete_typed_capture_sha256": [
+        "d234185e5327f45b91e2b20c68cfd77fa56e19d7903a731c51d512447154e410",
+        "d234185e5327f45b91e2b20c68cfd77fa56e19d7903a731c51d512447154e410"
+      ],
+      "runs": {
+        "original": {
+          "collection": {
+            "parent": {
+              "path": "/private/tmp/ce-dsl-step185-20261010/cases/ent/runs/original/collection-socket-capable/parent-receipt.json",
+              "sha256": "6d8b236b9f1cac38ea5d96aeee3401602d94c27d2fe3a8a7c1a9450c35a90cb2"
+            },
+            "child": {
+              "path": "/private/tmp/ce-dsl-step185-20261010/cases/ent/runs/original/collection-socket-capable/child/child-receipt.json",
+              "sha256": "028f5dbcd18830bab6f47a29b5a8169214a6329019bb3ebd15380137879bb24d"
+            },
+            "stdout": {
+              "path": "/private/tmp/ce-dsl-step185-20261010/cases/ent/runs/original/collection-socket-capable/stdout.raw",
+              "sha256": "6a553baee1a7702eafb17cdde7e1fcd85dca8817e2edf13f8e9ff820fc2d3066"
+            },
+            "stderr": {
+              "path": "/private/tmp/ce-dsl-step185-20261010/cases/ent/runs/original/collection-socket-capable/stderr.raw",
+              "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+            },
+            "opened_path_count": 1785,
+            "module_origin_count": 250
+          },
+          "native": {
+            "parent": {
+              "path": "/private/tmp/ce-dsl-step185-20261010/cases/ent/runs/original/native-socket-capable/parent-receipt.json",
+              "sha256": "d9da9b7d035b02979d24995ef92a7ed7e2aaf78de22f017f9119b953d0551d6c"
+            },
+            "child": {
+              "path": "/private/tmp/ce-dsl-step185-20261010/cases/ent/runs/original/native-socket-capable/child/child-receipt.json",
+              "sha256": "b0547084fd91867555496ddf7fe15250fdf56f2b9cb90227396bf3a1007ad67f"
+            },
+            "stdout": {
+              "path": "/private/tmp/ce-dsl-step185-20261010/cases/ent/runs/original/native-socket-capable/stdout.raw",
+              "sha256": "5eb4e372243df5498b1b11feb78fd3befea7176c1cd1efaf91072379e05dd215"
+            },
+            "stderr": {
+              "path": "/private/tmp/ce-dsl-step185-20261010/cases/ent/runs/original/native-socket-capable/stderr.raw",
+              "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+            },
+            "opened_path_count": 1856,
+            "module_origin_count": 274,
+            "junit": {
+              "path": "/private/tmp/ce-dsl-step185-20261010/cases/ent/runs/original/native-socket-capable/child/junit.xml",
+              "sha256": "3959770531b39a398864ea25302758f8205aad3b584f039ca37e751938fcf7cc"
+            },
+            "captures": [
+              {
+                "path": "/private/tmp/ce-dsl-step185-20261010/cases/ent/runs/original/native-socket-capable/child/capture-1.json",
+                "sha256": "d234185e5327f45b91e2b20c68cfd77fa56e19d7903a731c51d512447154e410"
+              },
+              {
+                "path": "/private/tmp/ce-dsl-step185-20261010/cases/ent/runs/original/native-socket-capable/child/capture-2.json",
+                "sha256": "d234185e5327f45b91e2b20c68cfd77fa56e19d7903a731c51d512447154e410"
+              }
+            ],
+            "stable_log_messages": [
+              {
+                "level": "INFO",
+                "message": "Starting DATAMIMIC Process"
+              },
+              {
+                "level": "INFO",
+                "message": "DATAMIMIC CE lib version: 4.3.1.dev246+dirty"
+              },
+              {
+                "level": "INFO",
+                "message": "System name: Darwin"
+              },
+              {
+                "level": "INFO",
+                "message": "<volatile Process ID>"
+              },
+              {
+                "level": "INFO",
+                "message": "<volatile Current working directory>"
+              },
+              {
+                "level": "INFO",
+                "message": "Platform: darwin"
+              },
+              {
+                "level": "INFO",
+                "message": "Python version: 3.11.12 (main, Apr  9 2025, 03:49:53) [Clang 20.1.0 ]"
+              },
+              {
+                "level": "INFO",
+                "message": "Number of CPU cores: 18"
+              },
+              {
+                "level": "INFO",
+                "message": "CPU architecture: arm64"
+              },
+              {
+                "level": "INFO",
+                "message": "RAM size: 48.00 GB"
+              },
+              {
+                "level": "INFO",
+                "message": "<volatile Task ID>"
+              },
+              {
+                "level": "INFO",
+                "message": "Using default page size 12 for processing by page"
+              },
+              {
+                "level": "INFO",
+                "message": "Worker 1 processing page 1/1"
+              },
+              {
+                "level": "INFO",
+                "message": "<volatile timing>"
+              },
+              {
+                "level": "INFO",
+                "message": "<volatile timing>"
+              },
+              {
+                "level": "INFO",
+                "message": "<volatile timing>"
+              },
+              {
+                "level": "INFO",
+                "message": "<volatile test duration>"
+              },
+              {
+                "level": "INFO",
+                "message": "Starting DATAMIMIC Process"
+              },
+              {
+                "level": "INFO",
+                "message": "DATAMIMIC CE lib version: 4.3.1.dev246+dirty"
+              },
+              {
+                "level": "INFO",
+                "message": "System name: Darwin"
+              },
+              {
+                "level": "INFO",
+                "message": "<volatile Process ID>"
+              },
+              {
+                "level": "INFO",
+                "message": "<volatile Current working directory>"
+              },
+              {
+                "level": "INFO",
+                "message": "Platform: darwin"
+              },
+              {
+                "level": "INFO",
+                "message": "Python version: 3.11.12 (main, Apr  9 2025, 03:49:53) [Clang 20.1.0 ]"
+              },
+              {
+                "level": "INFO",
+                "message": "Number of CPU cores: 18"
+              },
+              {
+                "level": "INFO",
+                "message": "CPU architecture: arm64"
+              },
+              {
+                "level": "INFO",
+                "message": "RAM size: 48.00 GB"
+              },
+              {
+                "level": "INFO",
+                "message": "<volatile Task ID>"
+              },
+              {
+                "level": "INFO",
+                "message": "Using default page size 12 for processing by page"
+              },
+              {
+                "level": "INFO",
+                "message": "Worker 1 processing page 1/1"
+              },
+              {
+                "level": "INFO",
+                "message": "<volatile timing>"
+              },
+              {
+                "level": "INFO",
+                "message": "<volatile timing>"
+              },
+              {
+                "level": "INFO",
+                "message": "<volatile timing>"
+              },
+              {
+                "level": "INFO",
+                "message": "<volatile test duration>"
+              }
+            ],
+            "diagnostics": [],
+            "audited_text_write_count": 11,
+            "attempted_tmp_directory_open": 1,
+            "call_stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+          }
+        },
+        "current": {
+          "collection": {
+            "parent": {
+              "path": "/private/tmp/ce-dsl-step185-20261010/cases/ent/runs/current/collection-socket-capable/parent-receipt.json",
+              "sha256": "fa467439751d4fc6035ab1e59d89e707dd5693cf64b7724fdcdf1f130951b127"
+            },
+            "child": {
+              "path": "/private/tmp/ce-dsl-step185-20261010/cases/ent/runs/current/collection-socket-capable/child/child-receipt.json",
+              "sha256": "46dfd54042f52623fe07ddd6ecccfe05349392c18e0ea131227ebc4ed2533bf3"
+            },
+            "stdout": {
+              "path": "/private/tmp/ce-dsl-step185-20261010/cases/ent/runs/current/collection-socket-capable/stdout.raw",
+              "sha256": "2e82a9105b93a75716128141fc807661b59d269b10cb5750cc4eb4dd92e8888f"
+            },
+            "stderr": {
+              "path": "/private/tmp/ce-dsl-step185-20261010/cases/ent/runs/current/collection-socket-capable/stderr.raw",
+              "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+            },
+            "opened_path_count": 2002,
+            "module_origin_count": 351
+          },
+          "native": {
+            "parent": {
+              "path": "/private/tmp/ce-dsl-step185-20261010/cases/ent/runs/current/native-socket-capable/parent-receipt.json",
+              "sha256": "0e38aa706b556f7e6282290f5eedd9e363c2796ba0941601d09a6cba6fc9c008"
+            },
+            "child": {
+              "path": "/private/tmp/ce-dsl-step185-20261010/cases/ent/runs/current/native-socket-capable/child/child-receipt.json",
+              "sha256": "b6a635ba7dfa455afefb43c4904754d273ec0889c87b5f29e17763682b7681a2"
+            },
+            "stdout": {
+              "path": "/private/tmp/ce-dsl-step185-20261010/cases/ent/runs/current/native-socket-capable/stdout.raw",
+              "sha256": "4f80824b92c009caff58a1c1f0a5b24028128b873e9f035fd7988110f16bcfcb"
+            },
+            "stderr": {
+              "path": "/private/tmp/ce-dsl-step185-20261010/cases/ent/runs/current/native-socket-capable/stderr.raw",
+              "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+            },
+            "opened_path_count": 2020,
+            "module_origin_count": 356,
+            "junit": {
+              "path": "/private/tmp/ce-dsl-step185-20261010/cases/ent/runs/current/native-socket-capable/child/junit.xml",
+              "sha256": "f7ac22f050e24641f4d6ab8deab2005ffa0ef1dc1a4417dd6d6a6197ef9a7117"
+            },
+            "captures": [
+              {
+                "path": "/private/tmp/ce-dsl-step185-20261010/cases/ent/runs/current/native-socket-capable/child/capture-1.json",
+                "sha256": "d234185e5327f45b91e2b20c68cfd77fa56e19d7903a731c51d512447154e410"
+              },
+              {
+                "path": "/private/tmp/ce-dsl-step185-20261010/cases/ent/runs/current/native-socket-capable/child/capture-2.json",
+                "sha256": "d234185e5327f45b91e2b20c68cfd77fa56e19d7903a731c51d512447154e410"
+              }
+            ],
+            "stable_log_messages": [
+              {
+                "level": "INFO",
+                "message": "Starting DATAMIMIC Process"
+              },
+              {
+                "level": "INFO",
+                "message": "DATAMIMIC CE lib version: 4.3.1.dev246+dirty"
+              },
+              {
+                "level": "INFO",
+                "message": "System name: Darwin"
+              },
+              {
+                "level": "INFO",
+                "message": "<volatile Process ID>"
+              },
+              {
+                "level": "INFO",
+                "message": "<volatile Current working directory>"
+              },
+              {
+                "level": "INFO",
+                "message": "Platform: darwin"
+              },
+              {
+                "level": "INFO",
+                "message": "Python version: 3.11.12 (main, Apr  9 2025, 03:49:53) [Clang 20.1.0 ]"
+              },
+              {
+                "level": "INFO",
+                "message": "Number of CPU cores: 18"
+              },
+              {
+                "level": "INFO",
+                "message": "CPU architecture: arm64"
+              },
+              {
+                "level": "INFO",
+                "message": "RAM size: 48.00 GB"
+              },
+              {
+                "level": "INFO",
+                "message": "<volatile Task ID>"
+              },
+              {
+                "level": "INFO",
+                "message": "Using default page size 12 for processing by page"
+              },
+              {
+                "level": "INFO",
+                "message": "Worker 1 processing page 1/1"
+              },
+              {
+                "level": "INFO",
+                "message": "<volatile timing>"
+              },
+              {
+                "level": "INFO",
+                "message": "<volatile timing>"
+              },
+              {
+                "level": "INFO",
+                "message": "<volatile timing>"
+              },
+              {
+                "level": "INFO",
+                "message": "<volatile test duration>"
+              },
+              {
+                "level": "INFO",
+                "message": "Starting DATAMIMIC Process"
+              },
+              {
+                "level": "INFO",
+                "message": "DATAMIMIC CE lib version: 4.3.1.dev246+dirty"
+              },
+              {
+                "level": "INFO",
+                "message": "System name: Darwin"
+              },
+              {
+                "level": "INFO",
+                "message": "<volatile Process ID>"
+              },
+              {
+                "level": "INFO",
+                "message": "<volatile Current working directory>"
+              },
+              {
+                "level": "INFO",
+                "message": "Platform: darwin"
+              },
+              {
+                "level": "INFO",
+                "message": "Python version: 3.11.12 (main, Apr  9 2025, 03:49:53) [Clang 20.1.0 ]"
+              },
+              {
+                "level": "INFO",
+                "message": "Number of CPU cores: 18"
+              },
+              {
+                "level": "INFO",
+                "message": "CPU architecture: arm64"
+              },
+              {
+                "level": "INFO",
+                "message": "RAM size: 48.00 GB"
+              },
+              {
+                "level": "INFO",
+                "message": "<volatile Task ID>"
+              },
+              {
+                "level": "INFO",
+                "message": "Using default page size 12 for processing by page"
+              },
+              {
+                "level": "INFO",
+                "message": "Worker 1 processing page 1/1"
+              },
+              {
+                "level": "INFO",
+                "message": "<volatile timing>"
+              },
+              {
+                "level": "INFO",
+                "message": "<volatile timing>"
+              },
+              {
+                "level": "INFO",
+                "message": "<volatile timing>"
+              },
+              {
+                "level": "INFO",
+                "message": "<volatile test duration>"
+              }
+            ],
+            "diagnostics": [],
+            "audited_text_write_count": 11,
+            "attempted_tmp_directory_open": 1,
+            "call_stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+          }
+        }
+      },
+      "excluded_attempts": {
+        "preparation": {
+          "preflight": {
+            "path": "/private/tmp/ce-dsl-step185-20261010/cases/ent/excluded-preflight-global/preflight.json",
+            "sha256": "abed3fc08c5f2872094ba4b07522655623653661824f3226708eef0ea791edaf"
+          },
+          "preflight_sha": {
+            "path": "/private/tmp/ce-dsl-step185-20261010/cases/ent/excluded-preflight-global/preflight.sha.json",
+            "sha256": "960c16b0ec0266ac3e5b1d1e493d51e2b58096f079105c61d1ac2f97ffefee6e"
+          },
+          "reason": {
+            "path": "/private/tmp/ce-dsl-step185-20261010/cases/ent/excluded-preflight-global/reason.json",
+            "sha256": "114aa668083b7160441a5726ac7ffa02dd1d6ed4cd0b89f49c95c084ff5ccc18"
+          }
+        }
+      },
+      "owner_test_passed_once_per_endpoint": true,
+      "stable_logs_equal": true,
+      "diagnostics_equal": true,
+      "stdout_equal": true
+    },
+    {
+      "case": "json",
+      "nodeid": "tests_ce/integration_tests/test_source_read_determinism/test_source_read_determinism.py::test_json_seeded_replays_identically",
+      "xml_order": [
+        "tests_ce/integration_tests/test_source_read_determinism/json_seeded.xml",
+        "tests_ce/integration_tests/test_source_read_determinism/json_seeded.xml"
+      ],
+      "new_xml": [
+        "tests_ce/integration_tests/test_source_read_determinism/json_seeded.xml"
+      ],
+      "shapes": [
+        [
+          "rows",
+          12
+        ],
+        [
+          "rows",
+          12
+        ]
+      ],
+      "source_owner": {
+        "original": {
+          "blob": "b2230cba85afd6d42f027d909bf86e2f430edfe6",
+          "sha256": "8e83587244b2ab35bfd9f1045696ad77f20aede6280ef55a4190aca167c479a2"
+        },
+        "current": {
+          "blob": "54278f2d25a8f77fbea3041b9f7c08f51ab92a9e",
+          "sha256": "46814aa7982f1f056f19792fdd52539b182bc13b4ce0df09e548feaac1a3b4a5"
+        }
+      },
+      "source_xml": {
+        "tests_ce/integration_tests/test_source_read_determinism/json_seeded.xml": {
+          "sha256": "a807f14805c67b712259737d623eae95e35e7b69eb00507d16fb85a018e4ec76",
+          "blob": "d64b5d2afd3570e99619462c3382fe7f3b38e0e0"
+        }
+      },
+      "source_fixtures": {
+        "tests_ce/integration_tests/test_source_read_determinism/data/people.json": {
+          "sha256": "55ac3e9df0c35c3c5f91063304667eff8b30bfccecf8408a9f255c012d09bb54",
+          "blob": "2794d227394baa302c44bbec18f22ba58db48203"
+        }
+      },
+      "preflight": {
+        "path": "/private/tmp/ce-dsl-step185-20261010/cases/json/preflight.json",
+        "sha256": "10764ded9a2fcf61863900b1a3cb89aac35bfd2f143798481fc0be29d067e057"
+      },
+      "comparison": {
+        "path": "/private/tmp/ce-dsl-step185-20261010/cases/json/comparison.json",
+        "sha256": "8255138450a775a4e55e1d24762146ea6d9f28c13da7261781464343b603b8e1"
+      },
+      "ordered_complete_typed_capture_sha256": [
+        "d234185e5327f45b91e2b20c68cfd77fa56e19d7903a731c51d512447154e410",
+        "d234185e5327f45b91e2b20c68cfd77fa56e19d7903a731c51d512447154e410"
+      ],
+      "runs": {
+        "original": {
+          "collection": {
+            "parent": {
+              "path": "/private/tmp/ce-dsl-step185-20261010/cases/json/runs/original/collection-socket-capable/parent-receipt.json",
+              "sha256": "5576d880d30a4ac2e352b9c375978a4546042d07d1f6f7faf2e42d135cdf40b1"
+            },
+            "child": {
+              "path": "/private/tmp/ce-dsl-step185-20261010/cases/json/runs/original/collection-socket-capable/child/child-receipt.json",
+              "sha256": "5067e22a6b3694f6f07ea1cce2a8a2bea0bebbbf14852514a4182da8555b49c1"
+            },
+            "stdout": {
+              "path": "/private/tmp/ce-dsl-step185-20261010/cases/json/runs/original/collection-socket-capable/stdout.raw",
+              "sha256": "f836ac87150f9b5efb309f22acb50fe33671fe1f9f2d92eee40215c8da62a9ec"
+            },
+            "stderr": {
+              "path": "/private/tmp/ce-dsl-step185-20261010/cases/json/runs/original/collection-socket-capable/stderr.raw",
+              "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+            },
+            "opened_path_count": 1785,
+            "module_origin_count": 250
+          },
+          "native": {
+            "parent": {
+              "path": "/private/tmp/ce-dsl-step185-20261010/cases/json/runs/original/native-socket-capable/parent-receipt.json",
+              "sha256": "5f5820afa33fdccf5bdf33195e97fd0ad336a10ea241576097bd5693be7342e2"
+            },
+            "child": {
+              "path": "/private/tmp/ce-dsl-step185-20261010/cases/json/runs/original/native-socket-capable/child/child-receipt.json",
+              "sha256": "9556f5a3a4a3f3e4b83f5bb3a8425114452fe7ce4d7671bdc86e71662b1e9d97"
+            },
+            "stdout": {
+              "path": "/private/tmp/ce-dsl-step185-20261010/cases/json/runs/original/native-socket-capable/stdout.raw",
+              "sha256": "48da9c1f2f94f9d751433136adc2ead024ecb279c64a6790afb4c7b18bf9787d"
+            },
+            "stderr": {
+              "path": "/private/tmp/ce-dsl-step185-20261010/cases/json/runs/original/native-socket-capable/stderr.raw",
+              "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+            },
+            "opened_path_count": 1858,
+            "module_origin_count": 275,
+            "junit": {
+              "path": "/private/tmp/ce-dsl-step185-20261010/cases/json/runs/original/native-socket-capable/child/junit.xml",
+              "sha256": "e33d5519d1cc8810caac59a947eff8102ffd9a55f21bf822a42460b116988d72"
+            },
+            "captures": [
+              {
+                "path": "/private/tmp/ce-dsl-step185-20261010/cases/json/runs/original/native-socket-capable/child/capture-1.json",
+                "sha256": "d234185e5327f45b91e2b20c68cfd77fa56e19d7903a731c51d512447154e410"
+              },
+              {
+                "path": "/private/tmp/ce-dsl-step185-20261010/cases/json/runs/original/native-socket-capable/child/capture-2.json",
+                "sha256": "d234185e5327f45b91e2b20c68cfd77fa56e19d7903a731c51d512447154e410"
+              }
+            ],
+            "stable_log_messages": [
+              {
+                "level": "INFO",
+                "message": "Starting DATAMIMIC Process"
+              },
+              {
+                "level": "INFO",
+                "message": "DATAMIMIC CE lib version: 4.3.1.dev246+dirty"
+              },
+              {
+                "level": "INFO",
+                "message": "System name: Darwin"
+              },
+              {
+                "level": "INFO",
+                "message": "<volatile Process ID>"
+              },
+              {
+                "level": "INFO",
+                "message": "<volatile Current working directory>"
+              },
+              {
+                "level": "INFO",
+                "message": "Platform: darwin"
+              },
+              {
+                "level": "INFO",
+                "message": "Python version: 3.11.12 (main, Apr  9 2025, 03:49:53) [Clang 20.1.0 ]"
+              },
+              {
+                "level": "INFO",
+                "message": "Number of CPU cores: 18"
+              },
+              {
+                "level": "INFO",
+                "message": "CPU architecture: arm64"
+              },
+              {
+                "level": "INFO",
+                "message": "RAM size: 48.00 GB"
+              },
+              {
+                "level": "INFO",
+                "message": "<volatile Task ID>"
+              },
+              {
+                "level": "INFO",
+                "message": "Using default page size 12 for processing by page"
+              },
+              {
+                "level": "INFO",
+                "message": "Worker 1 processing page 1/1"
+              },
+              {
+                "level": "INFO",
+                "message": "<volatile timing>"
+              },
+              {
+                "level": "INFO",
+                "message": "<volatile timing>"
+              },
+              {
+                "level": "INFO",
+                "message": "<volatile timing>"
+              },
+              {
+                "level": "INFO",
+                "message": "<volatile test duration>"
+              },
+              {
+                "level": "INFO",
+                "message": "Starting DATAMIMIC Process"
+              },
+              {
+                "level": "INFO",
+                "message": "DATAMIMIC CE lib version: 4.3.1.dev246+dirty"
+              },
+              {
+                "level": "INFO",
+                "message": "System name: Darwin"
+              },
+              {
+                "level": "INFO",
+                "message": "<volatile Process ID>"
+              },
+              {
+                "level": "INFO",
+                "message": "<volatile Current working directory>"
+              },
+              {
+                "level": "INFO",
+                "message": "Platform: darwin"
+              },
+              {
+                "level": "INFO",
+                "message": "Python version: 3.11.12 (main, Apr  9 2025, 03:49:53) [Clang 20.1.0 ]"
+              },
+              {
+                "level": "INFO",
+                "message": "Number of CPU cores: 18"
+              },
+              {
+                "level": "INFO",
+                "message": "CPU architecture: arm64"
+              },
+              {
+                "level": "INFO",
+                "message": "RAM size: 48.00 GB"
+              },
+              {
+                "level": "INFO",
+                "message": "<volatile Task ID>"
+              },
+              {
+                "level": "INFO",
+                "message": "Using default page size 12 for processing by page"
+              },
+              {
+                "level": "INFO",
+                "message": "Worker 1 processing page 1/1"
+              },
+              {
+                "level": "INFO",
+                "message": "<volatile timing>"
+              },
+              {
+                "level": "INFO",
+                "message": "<volatile timing>"
+              },
+              {
+                "level": "INFO",
+                "message": "<volatile timing>"
+              },
+              {
+                "level": "INFO",
+                "message": "<volatile test duration>"
+              }
+            ],
+            "diagnostics": [],
+            "audited_text_write_count": 11,
+            "attempted_tmp_directory_open": 1,
+            "call_stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+          }
+        },
+        "current": {
+          "collection": {
+            "parent": {
+              "path": "/private/tmp/ce-dsl-step185-20261010/cases/json/runs/current/collection-socket-capable/parent-receipt.json",
+              "sha256": "484b2d85ab65aeae4e74d2383341a5af9d67bf67dc985a1db82520600c48b490"
+            },
+            "child": {
+              "path": "/private/tmp/ce-dsl-step185-20261010/cases/json/runs/current/collection-socket-capable/child/child-receipt.json",
+              "sha256": "9062027c15756c13d1382bc60d71c76584698fba57f0e3d3f16502a68de93011"
+            },
+            "stdout": {
+              "path": "/private/tmp/ce-dsl-step185-20261010/cases/json/runs/current/collection-socket-capable/stdout.raw",
+              "sha256": "13d9309abf8ef5284cbbe769ea780121e8b3ac045194778c4af19b3f6f822c24"
+            },
+            "stderr": {
+              "path": "/private/tmp/ce-dsl-step185-20261010/cases/json/runs/current/collection-socket-capable/stderr.raw",
+              "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+            },
+            "opened_path_count": 2002,
+            "module_origin_count": 351
+          },
+          "native": {
+            "parent": {
+              "path": "/private/tmp/ce-dsl-step185-20261010/cases/json/runs/current/native-socket-capable/parent-receipt.json",
+              "sha256": "945552d78341849d1be104931366bdcad5a6d09075c868885aa4d6b2e807e99e"
+            },
+            "child": {
+              "path": "/private/tmp/ce-dsl-step185-20261010/cases/json/runs/current/native-socket-capable/child/child-receipt.json",
+              "sha256": "74a55c95099ee4a398055df1459b861e5b6d005f4fc69c34dbba30685ab35229"
+            },
+            "stdout": {
+              "path": "/private/tmp/ce-dsl-step185-20261010/cases/json/runs/current/native-socket-capable/stdout.raw",
+              "sha256": "d7a4e9ec9bb3ef5d1fb88df3a72b45ae5a19e4918d33410ad5ebd40662df82cf"
+            },
+            "stderr": {
+              "path": "/private/tmp/ce-dsl-step185-20261010/cases/json/runs/current/native-socket-capable/stderr.raw",
+              "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+            },
+            "opened_path_count": 2020,
+            "module_origin_count": 356,
+            "junit": {
+              "path": "/private/tmp/ce-dsl-step185-20261010/cases/json/runs/current/native-socket-capable/child/junit.xml",
+              "sha256": "f95eaf3cdc754a9f668537b809a95832c82151c159df479aaa86d17e6e27a48d"
+            },
+            "captures": [
+              {
+                "path": "/private/tmp/ce-dsl-step185-20261010/cases/json/runs/current/native-socket-capable/child/capture-1.json",
+                "sha256": "d234185e5327f45b91e2b20c68cfd77fa56e19d7903a731c51d512447154e410"
+              },
+              {
+                "path": "/private/tmp/ce-dsl-step185-20261010/cases/json/runs/current/native-socket-capable/child/capture-2.json",
+                "sha256": "d234185e5327f45b91e2b20c68cfd77fa56e19d7903a731c51d512447154e410"
+              }
+            ],
+            "stable_log_messages": [
+              {
+                "level": "INFO",
+                "message": "Starting DATAMIMIC Process"
+              },
+              {
+                "level": "INFO",
+                "message": "DATAMIMIC CE lib version: 4.3.1.dev246+dirty"
+              },
+              {
+                "level": "INFO",
+                "message": "System name: Darwin"
+              },
+              {
+                "level": "INFO",
+                "message": "<volatile Process ID>"
+              },
+              {
+                "level": "INFO",
+                "message": "<volatile Current working directory>"
+              },
+              {
+                "level": "INFO",
+                "message": "Platform: darwin"
+              },
+              {
+                "level": "INFO",
+                "message": "Python version: 3.11.12 (main, Apr  9 2025, 03:49:53) [Clang 20.1.0 ]"
+              },
+              {
+                "level": "INFO",
+                "message": "Number of CPU cores: 18"
+              },
+              {
+                "level": "INFO",
+                "message": "CPU architecture: arm64"
+              },
+              {
+                "level": "INFO",
+                "message": "RAM size: 48.00 GB"
+              },
+              {
+                "level": "INFO",
+                "message": "<volatile Task ID>"
+              },
+              {
+                "level": "INFO",
+                "message": "Using default page size 12 for processing by page"
+              },
+              {
+                "level": "INFO",
+                "message": "Worker 1 processing page 1/1"
+              },
+              {
+                "level": "INFO",
+                "message": "<volatile timing>"
+              },
+              {
+                "level": "INFO",
+                "message": "<volatile timing>"
+              },
+              {
+                "level": "INFO",
+                "message": "<volatile timing>"
+              },
+              {
+                "level": "INFO",
+                "message": "<volatile test duration>"
+              },
+              {
+                "level": "INFO",
+                "message": "Starting DATAMIMIC Process"
+              },
+              {
+                "level": "INFO",
+                "message": "DATAMIMIC CE lib version: 4.3.1.dev246+dirty"
+              },
+              {
+                "level": "INFO",
+                "message": "System name: Darwin"
+              },
+              {
+                "level": "INFO",
+                "message": "<volatile Process ID>"
+              },
+              {
+                "level": "INFO",
+                "message": "<volatile Current working directory>"
+              },
+              {
+                "level": "INFO",
+                "message": "Platform: darwin"
+              },
+              {
+                "level": "INFO",
+                "message": "Python version: 3.11.12 (main, Apr  9 2025, 03:49:53) [Clang 20.1.0 ]"
+              },
+              {
+                "level": "INFO",
+                "message": "Number of CPU cores: 18"
+              },
+              {
+                "level": "INFO",
+                "message": "CPU architecture: arm64"
+              },
+              {
+                "level": "INFO",
+                "message": "RAM size: 48.00 GB"
+              },
+              {
+                "level": "INFO",
+                "message": "<volatile Task ID>"
+              },
+              {
+                "level": "INFO",
+                "message": "Using default page size 12 for processing by page"
+              },
+              {
+                "level": "INFO",
+                "message": "Worker 1 processing page 1/1"
+              },
+              {
+                "level": "INFO",
+                "message": "<volatile timing>"
+              },
+              {
+                "level": "INFO",
+                "message": "<volatile timing>"
+              },
+              {
+                "level": "INFO",
+                "message": "<volatile timing>"
+              },
+              {
+                "level": "INFO",
+                "message": "<volatile test duration>"
+              }
+            ],
+            "diagnostics": [],
+            "audited_text_write_count": 11,
+            "attempted_tmp_directory_open": 1,
+            "call_stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+          }
+        }
+      },
+      "excluded_attempts": {
+        "preparation": {
+          "preflight": {
+            "path": "/private/tmp/ce-dsl-step185-20261010/cases/json/excluded-preflight-global/preflight.json",
+            "sha256": "6e6a893bc6be43a1fc153c7e7d1bd53b3f57c7e9b818984ab5b6bf0952b4cd19"
+          },
+          "preflight_sha": {
+            "path": "/private/tmp/ce-dsl-step185-20261010/cases/json/excluded-preflight-global/preflight.sha.json",
+            "sha256": "807dec9ffe30e1f05b463221ecea06ee6d327d0df515bc696632c9ba43ac5d7d"
+          },
+          "reason": {
+            "path": "/private/tmp/ce-dsl-step185-20261010/cases/json/excluded-preflight-global/reason.json",
+            "sha256": "114aa668083b7160441a5726ac7ffa02dd1d6ed4cd0b89f49c95c084ff5ccc18"
+          }
+        }
+      },
+      "owner_test_passed_once_per_endpoint": true,
+      "stable_logs_equal": true,
+      "diagnostics_equal": true,
+      "stdout_equal": true
+    },
+    {
+      "case": "cascade",
+      "nodeid": "tests_ce/integration_tests/test_source_read_determinism/test_source_read_determinism.py::test_cascade_seeded_replays_identically",
+      "xml_order": [
+        "tests_ce/integration_tests/test_source_read_determinism/cascade_seeded.xml",
+        "tests_ce/integration_tests/test_source_read_determinism/cascade_seeded.xml"
+      ],
+      "new_xml": [
+        "tests_ce/integration_tests/test_source_read_determinism/cascade_seeded.xml"
+      ],
+      "shapes": [
+        [
+          "outer",
+          3
+        ],
+        [
+          "outer",
+          3
+        ]
+      ],
+      "source_owner": {
+        "original": {
+          "blob": "b2230cba85afd6d42f027d909bf86e2f430edfe6",
+          "sha256": "8e83587244b2ab35bfd9f1045696ad77f20aede6280ef55a4190aca167c479a2"
+        },
+        "current": {
+          "blob": "54278f2d25a8f77fbea3041b9f7c08f51ab92a9e",
+          "sha256": "46814aa7982f1f056f19792fdd52539b182bc13b4ce0df09e548feaac1a3b4a5"
+        }
+      },
+      "source_xml": {
+        "tests_ce/integration_tests/test_source_read_determinism/cascade_seeded.xml": {
+          "sha256": "3a5174bb6f5e6ea9766be7430a37bba9ba3ce75550736777e57b1ae18142e846",
+          "blob": "5253027fd4bb2546daa8f71601a2600eb87c46fa"
+        }
+      },
+      "source_fixtures": {
+        "tests_ce/integration_tests/test_source_read_determinism/data/people.ent.csv": {
+          "sha256": "82d360b156a0dbf8b146987d4b1db9f633e41dde7a845d3fa239f16d7eb9c4f7",
+          "blob": "bc9f6773e6333340e82125a43f2f061cd421e36b"
+        }
+      },
+      "preflight": {
+        "path": "/private/tmp/ce-dsl-step185-20261010/cases/cascade/preflight.json",
+        "sha256": "718d2b9114ffd665e498adf7b200853b111822827dad46a079cebfec3d38609b"
+      },
+      "comparison": {
+        "path": "/private/tmp/ce-dsl-step185-20261010/cases/cascade/comparison.json",
+        "sha256": "d2a6e17851de1ffa3a5d3d805da9332fd56a28f603f00f3194c379221fab2c0c"
+      },
+      "ordered_complete_typed_capture_sha256": [
+        "1703af0ddaa0b101fa95ac492e9f48097a56165f7a08986359bf17edf4078c36",
+        "1703af0ddaa0b101fa95ac492e9f48097a56165f7a08986359bf17edf4078c36"
+      ],
+      "runs": {
+        "original": {
+          "collection": {
+            "parent": {
+              "path": "/private/tmp/ce-dsl-step185-20261010/cases/cascade/runs/original/collection-socket-capable/parent-receipt.json",
+              "sha256": "5cb03fbf454b72d80317f516d1be5845fd83b64fec5a587bd40e18d774fa2fe6"
+            },
+            "child": {
+              "path": "/private/tmp/ce-dsl-step185-20261010/cases/cascade/runs/original/collection-socket-capable/child/child-receipt.json",
+              "sha256": "8d1823996f6a56b9591b73cc66df0a4bc50b8a9acdf4f35cd349e393e0218c4e"
+            },
+            "stdout": {
+              "path": "/private/tmp/ce-dsl-step185-20261010/cases/cascade/runs/original/collection-socket-capable/stdout.raw",
+              "sha256": "986c4829692ae46ee6dcd71300b5c0d3c1aeff0159378b04c762d2bea40e2fc5"
+            },
+            "stderr": {
+              "path": "/private/tmp/ce-dsl-step185-20261010/cases/cascade/runs/original/collection-socket-capable/stderr.raw",
+              "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+            },
+            "opened_path_count": 1785,
+            "module_origin_count": 250
+          },
+          "native": {
+            "parent": {
+              "path": "/private/tmp/ce-dsl-step185-20261010/cases/cascade/runs/original/native-socket-capable/parent-receipt.json",
+              "sha256": "01ea1d3bac16729769bd4916944b35336a8c310bfb26080d87f34fda4a65b74c"
+            },
+            "child": {
+              "path": "/private/tmp/ce-dsl-step185-20261010/cases/cascade/runs/original/native-socket-capable/child/child-receipt.json",
+              "sha256": "35e16fba02912bd41faddddf189a0afeae39d614da36c427ce5d9d5ef278bf50"
+            },
+            "stdout": {
+              "path": "/private/tmp/ce-dsl-step185-20261010/cases/cascade/runs/original/native-socket-capable/stdout.raw",
+              "sha256": "90aee51e271393f050e8d95f8e255d62c8effcb30142e248903cb74be928c5f5"
+            },
+            "stderr": {
+              "path": "/private/tmp/ce-dsl-step185-20261010/cases/cascade/runs/original/native-socket-capable/stderr.raw",
+              "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+            },
+            "opened_path_count": 2044,
+            "module_origin_count": 337,
+            "junit": {
+              "path": "/private/tmp/ce-dsl-step185-20261010/cases/cascade/runs/original/native-socket-capable/child/junit.xml",
+              "sha256": "980c6b0bacc00fd850e5d211065498fb6c2c66ffa969d166baefc055d4bb7f51"
+            },
+            "captures": [
+              {
+                "path": "/private/tmp/ce-dsl-step185-20261010/cases/cascade/runs/original/native-socket-capable/child/capture-1.json",
+                "sha256": "1703af0ddaa0b101fa95ac492e9f48097a56165f7a08986359bf17edf4078c36"
+              },
+              {
+                "path": "/private/tmp/ce-dsl-step185-20261010/cases/cascade/runs/original/native-socket-capable/child/capture-2.json",
+                "sha256": "1703af0ddaa0b101fa95ac492e9f48097a56165f7a08986359bf17edf4078c36"
+              }
+            ],
+            "stable_log_messages": [
+              {
+                "level": "INFO",
+                "message": "Starting DATAMIMIC Process"
+              },
+              {
+                "level": "INFO",
+                "message": "DATAMIMIC CE lib version: 4.3.1.dev246+dirty"
+              },
+              {
+                "level": "INFO",
+                "message": "System name: Darwin"
+              },
+              {
+                "level": "INFO",
+                "message": "<volatile Process ID>"
+              },
+              {
+                "level": "INFO",
+                "message": "<volatile Current working directory>"
+              },
+              {
+                "level": "INFO",
+                "message": "Platform: darwin"
+              },
+              {
+                "level": "INFO",
+                "message": "Python version: 3.11.12 (main, Apr  9 2025, 03:49:53) [Clang 20.1.0 ]"
+              },
+              {
+                "level": "INFO",
+                "message": "Number of CPU cores: 18"
+              },
+              {
+                "level": "INFO",
+                "message": "CPU architecture: arm64"
+              },
+              {
+                "level": "INFO",
+                "message": "RAM size: 48.00 GB"
+              },
+              {
+                "level": "INFO",
+                "message": "<volatile Task ID>"
+              },
+              {
+                "level": "INFO",
+                "message": "Using default page size 3 for processing by page"
+              },
+              {
+                "level": "INFO",
+                "message": "Worker 1 processing page 1/1"
+              },
+              {
+                "level": "INFO",
+                "message": "<volatile timing>"
+              },
+              {
+                "level": "INFO",
+                "message": "<volatile timing>"
+              },
+              {
+                "level": "INFO",
+                "message": "<volatile timing>"
+              },
+              {
+                "level": "INFO",
+                "message": "<volatile test duration>"
+              },
+              {
+                "level": "INFO",
+                "message": "Starting DATAMIMIC Process"
+              },
+              {
+                "level": "INFO",
+                "message": "DATAMIMIC CE lib version: 4.3.1.dev246+dirty"
+              },
+              {
+                "level": "INFO",
+                "message": "System name: Darwin"
+              },
+              {
+                "level": "INFO",
+                "message": "<volatile Process ID>"
+              },
+              {
+                "level": "INFO",
+                "message": "<volatile Current working directory>"
+              },
+              {
+                "level": "INFO",
+                "message": "Platform: darwin"
+              },
+              {
+                "level": "INFO",
+                "message": "Python version: 3.11.12 (main, Apr  9 2025, 03:49:53) [Clang 20.1.0 ]"
+              },
+              {
+                "level": "INFO",
+                "message": "Number of CPU cores: 18"
+              },
+              {
+                "level": "INFO",
+                "message": "CPU architecture: arm64"
+              },
+              {
+                "level": "INFO",
+                "message": "RAM size: 48.00 GB"
+              },
+              {
+                "level": "INFO",
+                "message": "<volatile Task ID>"
+              },
+              {
+                "level": "INFO",
+                "message": "Using default page size 3 for processing by page"
+              },
+              {
+                "level": "INFO",
+                "message": "Worker 1 processing page 1/1"
+              },
+              {
+                "level": "INFO",
+                "message": "<volatile timing>"
+              },
+              {
+                "level": "INFO",
+                "message": "<volatile timing>"
+              },
+              {
+                "level": "INFO",
+                "message": "<volatile timing>"
+              },
+              {
+                "level": "INFO",
+                "message": "<volatile test duration>"
+              }
+            ],
+            "diagnostics": [],
+            "audited_text_write_count": 11,
+            "attempted_tmp_directory_open": 1,
+            "call_stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+          }
+        },
+        "current": {
+          "collection": {
+            "parent": {
+              "path": "/private/tmp/ce-dsl-step185-20261010/cases/cascade/runs/current/collection-socket-capable/parent-receipt.json",
+              "sha256": "9103b024fb2ae7207d58565c96dace19dc26e0e20118c423681b8c4ebb9888c4"
+            },
+            "child": {
+              "path": "/private/tmp/ce-dsl-step185-20261010/cases/cascade/runs/current/collection-socket-capable/child/child-receipt.json",
+              "sha256": "8df8d654becb528271efa4df510d1a61d73659898c04b7d683d5f56c7625e39c"
+            },
+            "stdout": {
+              "path": "/private/tmp/ce-dsl-step185-20261010/cases/cascade/runs/current/collection-socket-capable/stdout.raw",
+              "sha256": "c95c0b329475e720f85f7e507f0e6d01aeb38180b8300a6c5dc2a863681dec36"
+            },
+            "stderr": {
+              "path": "/private/tmp/ce-dsl-step185-20261010/cases/cascade/runs/current/collection-socket-capable/stderr.raw",
+              "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+            },
+            "opened_path_count": 2002,
+            "module_origin_count": 351
+          },
+          "native": {
+            "parent": {
+              "path": "/private/tmp/ce-dsl-step185-20261010/cases/cascade/runs/current/native-socket-capable/parent-receipt.json",
+              "sha256": "47f9def70dffaba8e915bfb751dbb828bbc5c27c8b6331b040c766a6b12162ac"
+            },
+            "child": {
+              "path": "/private/tmp/ce-dsl-step185-20261010/cases/cascade/runs/current/native-socket-capable/child/child-receipt.json",
+              "sha256": "f0d2b5455fddcf0db0d51e2dfdcdd6e8c0b751e389794689d75fdfd3b7d73a64"
+            },
+            "stdout": {
+              "path": "/private/tmp/ce-dsl-step185-20261010/cases/cascade/runs/current/native-socket-capable/stdout.raw",
+              "sha256": "f87a843111f2965f80b8aee233378a8da70ae3b1e7043c2e50efa4605e02a3b0"
+            },
+            "stderr": {
+              "path": "/private/tmp/ce-dsl-step185-20261010/cases/cascade/runs/current/native-socket-capable/stderr.raw",
+              "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+            },
+            "opened_path_count": 2068,
+            "module_origin_count": 372,
+            "junit": {
+              "path": "/private/tmp/ce-dsl-step185-20261010/cases/cascade/runs/current/native-socket-capable/child/junit.xml",
+              "sha256": "05752ca100dbe720dc7fd726da15817212b09bcf4c4a4ef872e993eb3094789b"
+            },
+            "captures": [
+              {
+                "path": "/private/tmp/ce-dsl-step185-20261010/cases/cascade/runs/current/native-socket-capable/child/capture-1.json",
+                "sha256": "1703af0ddaa0b101fa95ac492e9f48097a56165f7a08986359bf17edf4078c36"
+              },
+              {
+                "path": "/private/tmp/ce-dsl-step185-20261010/cases/cascade/runs/current/native-socket-capable/child/capture-2.json",
+                "sha256": "1703af0ddaa0b101fa95ac492e9f48097a56165f7a08986359bf17edf4078c36"
+              }
+            ],
+            "stable_log_messages": [
+              {
+                "level": "INFO",
+                "message": "Starting DATAMIMIC Process"
+              },
+              {
+                "level": "INFO",
+                "message": "DATAMIMIC CE lib version: 4.3.1.dev246+dirty"
+              },
+              {
+                "level": "INFO",
+                "message": "System name: Darwin"
+              },
+              {
+                "level": "INFO",
+                "message": "<volatile Process ID>"
+              },
+              {
+                "level": "INFO",
+                "message": "<volatile Current working directory>"
+              },
+              {
+                "level": "INFO",
+                "message": "Platform: darwin"
+              },
+              {
+                "level": "INFO",
+                "message": "Python version: 3.11.12 (main, Apr  9 2025, 03:49:53) [Clang 20.1.0 ]"
+              },
+              {
+                "level": "INFO",
+                "message": "Number of CPU cores: 18"
+              },
+              {
+                "level": "INFO",
+                "message": "CPU architecture: arm64"
+              },
+              {
+                "level": "INFO",
+                "message": "RAM size: 48.00 GB"
+              },
+              {
+                "level": "INFO",
+                "message": "<volatile Task ID>"
+              },
+              {
+                "level": "INFO",
+                "message": "Using default page size 3 for processing by page"
+              },
+              {
+                "level": "INFO",
+                "message": "Worker 1 processing page 1/1"
+              },
+              {
+                "level": "INFO",
+                "message": "<volatile timing>"
+              },
+              {
+                "level": "INFO",
+                "message": "<volatile timing>"
+              },
+              {
+                "level": "INFO",
+                "message": "<volatile timing>"
+              },
+              {
+                "level": "INFO",
+                "message": "<volatile test duration>"
+              },
+              {
+                "level": "INFO",
+                "message": "Starting DATAMIMIC Process"
+              },
+              {
+                "level": "INFO",
+                "message": "DATAMIMIC CE lib version: 4.3.1.dev246+dirty"
+              },
+              {
+                "level": "INFO",
+                "message": "System name: Darwin"
+              },
+              {
+                "level": "INFO",
+                "message": "<volatile Process ID>"
+              },
+              {
+                "level": "INFO",
+                "message": "<volatile Current working directory>"
+              },
+              {
+                "level": "INFO",
+                "message": "Platform: darwin"
+              },
+              {
+                "level": "INFO",
+                "message": "Python version: 3.11.12 (main, Apr  9 2025, 03:49:53) [Clang 20.1.0 ]"
+              },
+              {
+                "level": "INFO",
+                "message": "Number of CPU cores: 18"
+              },
+              {
+                "level": "INFO",
+                "message": "CPU architecture: arm64"
+              },
+              {
+                "level": "INFO",
+                "message": "RAM size: 48.00 GB"
+              },
+              {
+                "level": "INFO",
+                "message": "<volatile Task ID>"
+              },
+              {
+                "level": "INFO",
+                "message": "Using default page size 3 for processing by page"
+              },
+              {
+                "level": "INFO",
+                "message": "Worker 1 processing page 1/1"
+              },
+              {
+                "level": "INFO",
+                "message": "<volatile timing>"
+              },
+              {
+                "level": "INFO",
+                "message": "<volatile timing>"
+              },
+              {
+                "level": "INFO",
+                "message": "<volatile timing>"
+              },
+              {
+                "level": "INFO",
+                "message": "<volatile test duration>"
+              }
+            ],
+            "diagnostics": [],
+            "audited_text_write_count": 11,
+            "attempted_tmp_directory_open": 1,
+            "call_stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+          }
+        }
+      },
+      "excluded_attempts": {
+        "preparation": {
+          "preflight": {
+            "path": "/private/tmp/ce-dsl-step185-20261010/cases/cascade/excluded-preflight-global/preflight.json",
+            "sha256": "5ee7b8ea9073913b64273d2a53826b7e80147b1de4cbf166191752f2b738fe4d"
+          },
+          "preflight_sha": {
+            "path": "/private/tmp/ce-dsl-step185-20261010/cases/cascade/excluded-preflight-global/preflight.sha.json",
+            "sha256": "13480d1702a1d979d90fb79ba3b0f041cc8004ad93884e15675f26bbcd159a4a"
+          },
+          "reason": {
+            "path": "/private/tmp/ce-dsl-step185-20261010/cases/cascade/excluded-preflight-global/reason.json",
+            "sha256": "114aa668083b7160441a5726ac7ffa02dd1d6ed4cd0b89f49c95c084ff5ccc18"
+          }
+        }
+      },
+      "owner_test_passed_once_per_endpoint": true,
+      "stable_logs_equal": true,
+      "diagnostics_equal": true,
+      "stdout_equal": true
+    },
+    {
+      "case": "unique",
+      "nodeid": "tests_ce/integration_tests/test_unique_values/test_unique_values.py::test_values_are_distinct_and_seed_reproducible",
+      "xml_order": [
+        "tests_ce/integration_tests/test_unique_values/unique_values.xml",
+        "tests_ce/integration_tests/test_unique_values/unique_values.xml"
+      ],
+      "new_xml": [
+        "tests_ce/integration_tests/test_unique_values/unique_values.xml"
+      ],
+      "shapes": [
+        [
+          "people",
+          5
+        ],
+        [
+          "people",
+          5
+        ]
+      ],
+      "source_owner": {
+        "original": {
+          "blob": "deb1dfb32411af915ca1bb82d34688bfa5bff113",
+          "sha256": "fa113dcbbbc247d16d9092fb14ebd9906338ae9da3fda2d5392abfb4d911648e"
+        },
+        "current": {
+          "blob": "1d6c324264ad3daef9fab9afa605692b7d61c941",
+          "sha256": "3418e6c0bc57e29367efd93dde4655713a48072b0a01948c7d3af41af2c4cad0"
+        }
+      },
+      "source_xml": {
+        "tests_ce/integration_tests/test_unique_values/unique_values.xml": {
+          "sha256": "d9e5144adc101235a013b1b962f83abdc89caf88c93b21f8840f615057e5913b",
+          "blob": "7664e4f93777b40eb92af6c0b0753de429ce2be2"
+        }
+      },
+      "source_fixtures": {},
+      "preflight": {
+        "path": "/private/tmp/ce-dsl-step185-20261010/cases/unique/preflight.json",
+        "sha256": "642020877da18ad067ed51799f87d171004f576dafe4d0b49262d087ea0bf849"
+      },
+      "comparison": {
+        "path": "/private/tmp/ce-dsl-step185-20261010/cases/unique/comparison.json",
+        "sha256": "ac1f0bdc3581e18774144fc641354ae9ab1c258ab2aa5be726183f44efecf22a"
+      },
+      "ordered_complete_typed_capture_sha256": [
+        "0cfd962095a675f96c918014cd0bd810af8f4bc633acd87c05aa6d4e1f9331d0",
+        "0cfd962095a675f96c918014cd0bd810af8f4bc633acd87c05aa6d4e1f9331d0"
+      ],
+      "runs": {
+        "original": {
+          "collection": {
+            "parent": {
+              "path": "/private/tmp/ce-dsl-step185-20261010/cases/unique/runs/original/collection-socket-capable/parent-receipt.json",
+              "sha256": "eceb1af1cc5acfeac39e38208a48bdffca9c9ec8ab8f61cf73eb22771a02e754"
+            },
+            "child": {
+              "path": "/private/tmp/ce-dsl-step185-20261010/cases/unique/runs/original/collection-socket-capable/child/child-receipt.json",
+              "sha256": "baf9989f7710533086b4e5feba910dac6d72e55932d1bb2678ed52e777fbc5ab"
+            },
+            "stdout": {
+              "path": "/private/tmp/ce-dsl-step185-20261010/cases/unique/runs/original/collection-socket-capable/stdout.raw",
+              "sha256": "2609edcebe5ca7fe2d3fbb957135eb444feba4be3b2aa4ddd81c431eb5da11ee"
+            },
+            "stderr": {
+              "path": "/private/tmp/ce-dsl-step185-20261010/cases/unique/runs/original/collection-socket-capable/stderr.raw",
+              "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+            },
+            "opened_path_count": 1787,
+            "module_origin_count": 250
+          },
+          "native": {
+            "parent": {
+              "path": "/private/tmp/ce-dsl-step185-20261010/cases/unique/runs/original/native-socket-capable/parent-receipt.json",
+              "sha256": "c0a7191cedac771ba502e164af125ba21c15d7ceaaa5cd49d62ff36a44a9e736"
+            },
+            "child": {
+              "path": "/private/tmp/ce-dsl-step185-20261010/cases/unique/runs/original/native-socket-capable/child/child-receipt.json",
+              "sha256": "821a150b3b972a0afdaf7e6b57e9639d16f9cb7c2a153db8cef67afc38a966e8"
+            },
+            "stdout": {
+              "path": "/private/tmp/ce-dsl-step185-20261010/cases/unique/runs/original/native-socket-capable/stdout.raw",
+              "sha256": "6c237cad706bab7b64cd88701ed31b6b206432f891b104d445d1c56550875117"
+            },
+            "stderr": {
+              "path": "/private/tmp/ce-dsl-step185-20261010/cases/unique/runs/original/native-socket-capable/stderr.raw",
+              "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+            },
+            "opened_path_count": 1857,
+            "module_origin_count": 275,
+            "junit": {
+              "path": "/private/tmp/ce-dsl-step185-20261010/cases/unique/runs/original/native-socket-capable/child/junit.xml",
+              "sha256": "51d3216abb00ff2352285c2048dc3daa9d9689aec8408cb4642dde38510f2ddc"
+            },
+            "captures": [
+              {
+                "path": "/private/tmp/ce-dsl-step185-20261010/cases/unique/runs/original/native-socket-capable/child/capture-1.json",
+                "sha256": "0cfd962095a675f96c918014cd0bd810af8f4bc633acd87c05aa6d4e1f9331d0"
+              },
+              {
+                "path": "/private/tmp/ce-dsl-step185-20261010/cases/unique/runs/original/native-socket-capable/child/capture-2.json",
+                "sha256": "0cfd962095a675f96c918014cd0bd810af8f4bc633acd87c05aa6d4e1f9331d0"
+              }
+            ],
+            "stable_log_messages": [
+              {
+                "level": "INFO",
+                "message": "Starting DATAMIMIC Process"
+              },
+              {
+                "level": "INFO",
+                "message": "DATAMIMIC CE lib version: 4.3.1.dev246+dirty"
+              },
+              {
+                "level": "INFO",
+                "message": "System name: Darwin"
+              },
+              {
+                "level": "INFO",
+                "message": "<volatile Process ID>"
+              },
+              {
+                "level": "INFO",
+                "message": "<volatile Current working directory>"
+              },
+              {
+                "level": "INFO",
+                "message": "Platform: darwin"
+              },
+              {
+                "level": "INFO",
+                "message": "Python version: 3.11.12 (main, Apr  9 2025, 03:49:53) [Clang 20.1.0 ]"
+              },
+              {
+                "level": "INFO",
+                "message": "Number of CPU cores: 18"
+              },
+              {
+                "level": "INFO",
+                "message": "CPU architecture: arm64"
+              },
+              {
+                "level": "INFO",
+                "message": "RAM size: 48.00 GB"
+              },
+              {
+                "level": "INFO",
+                "message": "<volatile Task ID>"
+              },
+              {
+                "level": "INFO",
+                "message": "Using default page size 5 for processing by page"
+              },
+              {
+                "level": "INFO",
+                "message": "Worker 1 processing page 1/1"
+              },
+              {
+                "level": "INFO",
+                "message": "<volatile timing>"
+              },
+              {
+                "level": "INFO",
+                "message": "<volatile timing>"
+              },
+              {
+                "level": "INFO",
+                "message": "<volatile timing>"
+              },
+              {
+                "level": "INFO",
+                "message": "<volatile test duration>"
+              },
+              {
+                "level": "INFO",
+                "message": "Starting DATAMIMIC Process"
+              },
+              {
+                "level": "INFO",
+                "message": "DATAMIMIC CE lib version: 4.3.1.dev246+dirty"
+              },
+              {
+                "level": "INFO",
+                "message": "System name: Darwin"
+              },
+              {
+                "level": "INFO",
+                "message": "<volatile Process ID>"
+              },
+              {
+                "level": "INFO",
+                "message": "<volatile Current working directory>"
+              },
+              {
+                "level": "INFO",
+                "message": "Platform: darwin"
+              },
+              {
+                "level": "INFO",
+                "message": "Python version: 3.11.12 (main, Apr  9 2025, 03:49:53) [Clang 20.1.0 ]"
+              },
+              {
+                "level": "INFO",
+                "message": "Number of CPU cores: 18"
+              },
+              {
+                "level": "INFO",
+                "message": "CPU architecture: arm64"
+              },
+              {
+                "level": "INFO",
+                "message": "RAM size: 48.00 GB"
+              },
+              {
+                "level": "INFO",
+                "message": "<volatile Task ID>"
+              },
+              {
+                "level": "INFO",
+                "message": "Using default page size 5 for processing by page"
+              },
+              {
+                "level": "INFO",
+                "message": "Worker 1 processing page 1/1"
+              },
+              {
+                "level": "INFO",
+                "message": "<volatile timing>"
+              },
+              {
+                "level": "INFO",
+                "message": "<volatile timing>"
+              },
+              {
+                "level": "INFO",
+                "message": "<volatile timing>"
+              },
+              {
+                "level": "INFO",
+                "message": "<volatile test duration>"
+              }
+            ],
+            "diagnostics": [],
+            "audited_text_write_count": 11,
+            "attempted_tmp_directory_open": 1,
+            "call_stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+          }
+        },
+        "current": {
+          "collection": {
+            "parent": {
+              "path": "/private/tmp/ce-dsl-step185-20261010/cases/unique/runs/current/collection-socket-capable/parent-receipt.json",
+              "sha256": "65c5674ee359a37823adcbfd0f183a8b8068c5367bd14e9b6cfef1c9c3d6fb61"
+            },
+            "child": {
+              "path": "/private/tmp/ce-dsl-step185-20261010/cases/unique/runs/current/collection-socket-capable/child/child-receipt.json",
+              "sha256": "b687b313850ca3ace318f0155e99a02e5706cb6488c625e4fc5c3b324872952e"
+            },
+            "stdout": {
+              "path": "/private/tmp/ce-dsl-step185-20261010/cases/unique/runs/current/collection-socket-capable/stdout.raw",
+              "sha256": "6fb99c49d08ce7edb5f4d16683cf22148d7ec635fbc4eb196471e5160f5ee546"
+            },
+            "stderr": {
+              "path": "/private/tmp/ce-dsl-step185-20261010/cases/unique/runs/current/collection-socket-capable/stderr.raw",
+              "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+            },
+            "opened_path_count": 2004,
+            "module_origin_count": 351
+          },
+          "native": {
+            "parent": {
+              "path": "/private/tmp/ce-dsl-step185-20261010/cases/unique/runs/current/native-socket-capable/parent-receipt.json",
+              "sha256": "41143e8d4586329276cda6fb1dd9701fb4ce57c7a8659d76b4671b13a9e0d976"
+            },
+            "child": {
+              "path": "/private/tmp/ce-dsl-step185-20261010/cases/unique/runs/current/native-socket-capable/child/child-receipt.json",
+              "sha256": "87d959e94625b0d81a21e73cec89360c06eaa08b9ac4e499939cbe623803a26f"
+            },
+            "stdout": {
+              "path": "/private/tmp/ce-dsl-step185-20261010/cases/unique/runs/current/native-socket-capable/stdout.raw",
+              "sha256": "18dbf1d3cbdf1c452cda6f63618bbdb475872ca4c5ea5ce8aaee0ab93c75aabc"
+            },
+            "stderr": {
+              "path": "/private/tmp/ce-dsl-step185-20261010/cases/unique/runs/current/native-socket-capable/stderr.raw",
+              "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+            },
+            "opened_path_count": 2019,
+            "module_origin_count": 356,
+            "junit": {
+              "path": "/private/tmp/ce-dsl-step185-20261010/cases/unique/runs/current/native-socket-capable/child/junit.xml",
+              "sha256": "57625efaac53a4794c79e8669403ab82a04a23123ed653e71bee8a89492b7416"
+            },
+            "captures": [
+              {
+                "path": "/private/tmp/ce-dsl-step185-20261010/cases/unique/runs/current/native-socket-capable/child/capture-1.json",
+                "sha256": "0cfd962095a675f96c918014cd0bd810af8f4bc633acd87c05aa6d4e1f9331d0"
+              },
+              {
+                "path": "/private/tmp/ce-dsl-step185-20261010/cases/unique/runs/current/native-socket-capable/child/capture-2.json",
+                "sha256": "0cfd962095a675f96c918014cd0bd810af8f4bc633acd87c05aa6d4e1f9331d0"
+              }
+            ],
+            "stable_log_messages": [
+              {
+                "level": "INFO",
+                "message": "Starting DATAMIMIC Process"
+              },
+              {
+                "level": "INFO",
+                "message": "DATAMIMIC CE lib version: 4.3.1.dev246+dirty"
+              },
+              {
+                "level": "INFO",
+                "message": "System name: Darwin"
+              },
+              {
+                "level": "INFO",
+                "message": "<volatile Process ID>"
+              },
+              {
+                "level": "INFO",
+                "message": "<volatile Current working directory>"
+              },
+              {
+                "level": "INFO",
+                "message": "Platform: darwin"
+              },
+              {
+                "level": "INFO",
+                "message": "Python version: 3.11.12 (main, Apr  9 2025, 03:49:53) [Clang 20.1.0 ]"
+              },
+              {
+                "level": "INFO",
+                "message": "Number of CPU cores: 18"
+              },
+              {
+                "level": "INFO",
+                "message": "CPU architecture: arm64"
+              },
+              {
+                "level": "INFO",
+                "message": "RAM size: 48.00 GB"
+              },
+              {
+                "level": "INFO",
+                "message": "<volatile Task ID>"
+              },
+              {
+                "level": "INFO",
+                "message": "Using default page size 5 for processing by page"
+              },
+              {
+                "level": "INFO",
+                "message": "Worker 1 processing page 1/1"
+              },
+              {
+                "level": "INFO",
+                "message": "<volatile timing>"
+              },
+              {
+                "level": "INFO",
+                "message": "<volatile timing>"
+              },
+              {
+                "level": "INFO",
+                "message": "<volatile timing>"
+              },
+              {
+                "level": "INFO",
+                "message": "<volatile test duration>"
+              },
+              {
+                "level": "INFO",
+                "message": "Starting DATAMIMIC Process"
+              },
+              {
+                "level": "INFO",
+                "message": "DATAMIMIC CE lib version: 4.3.1.dev246+dirty"
+              },
+              {
+                "level": "INFO",
+                "message": "System name: Darwin"
+              },
+              {
+                "level": "INFO",
+                "message": "<volatile Process ID>"
+              },
+              {
+                "level": "INFO",
+                "message": "<volatile Current working directory>"
+              },
+              {
+                "level": "INFO",
+                "message": "Platform: darwin"
+              },
+              {
+                "level": "INFO",
+                "message": "Python version: 3.11.12 (main, Apr  9 2025, 03:49:53) [Clang 20.1.0 ]"
+              },
+              {
+                "level": "INFO",
+                "message": "Number of CPU cores: 18"
+              },
+              {
+                "level": "INFO",
+                "message": "CPU architecture: arm64"
+              },
+              {
+                "level": "INFO",
+                "message": "RAM size: 48.00 GB"
+              },
+              {
+                "level": "INFO",
+                "message": "<volatile Task ID>"
+              },
+              {
+                "level": "INFO",
+                "message": "Using default page size 5 for processing by page"
+              },
+              {
+                "level": "INFO",
+                "message": "Worker 1 processing page 1/1"
+              },
+              {
+                "level": "INFO",
+                "message": "<volatile timing>"
+              },
+              {
+                "level": "INFO",
+                "message": "<volatile timing>"
+              },
+              {
+                "level": "INFO",
+                "message": "<volatile timing>"
+              },
+              {
+                "level": "INFO",
+                "message": "<volatile test duration>"
+              }
+            ],
+            "diagnostics": [],
+            "audited_text_write_count": 11,
+            "attempted_tmp_directory_open": 1,
+            "call_stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+          }
+        }
+      },
+      "excluded_attempts": {
+        "preparation": {
+          "preflight": {
+            "path": "/private/tmp/ce-dsl-step185-20261010/cases/unique/excluded-preflight-global/preflight.json",
+            "sha256": "6df5f736d179851998df0c2925909375f8eb4b251c518c977132d1c0c41e7d01"
+          },
+          "preflight_sha": {
+            "path": "/private/tmp/ce-dsl-step185-20261010/cases/unique/excluded-preflight-global/preflight.sha.json",
+            "sha256": "c2e90825190f72907339cd59a906c8f3fd49fa9d8cdae74813ebf47ba70bb62c"
+          },
+          "reason": {
+            "path": "/private/tmp/ce-dsl-step185-20261010/cases/unique/excluded-preflight-global/reason.json",
+            "sha256": "114aa668083b7160441a5726ac7ffa02dd1d6ed4cd0b89f49c95c084ff5ccc18"
+          }
+        }
+      },
+      "owner_test_passed_once_per_endpoint": true,
+      "stable_logs_equal": true,
+      "diagnostics_equal": true,
+      "stdout_equal": true
+    }
+  ],
+  "base_ledger": {
+    "path": "/tmp/ce-dsl-step184-20261010/ledger-step184-v1.jsonl",
+    "sha256": "e32e9da6e854161a2753714cc8506c7cd5a67885a9c0ef6ecdac5adc4e9d841a"
+  },
+  "candidate_ledger": {
+    "path": "/private/tmp/ce-dsl-step185-20261010/ledger-step185-v1.jsonl",
+    "sha256": "ca55d4c04ddf5f14fac72e6530ad57e4cc5e4791bccd8e01224f1f736567a163"
+  },
+  "ledger_candidate_receipt": {
+    "path": "/private/tmp/ce-dsl-step185-20261010/ledger-candidate-receipt.json",
+    "sha256": "0c6a6e90e57a9213cd7b173215052b7910e59f5ba0393a68aaba5c7fee3f02b3"
+  },
+  "protocol_note": {
+    "path": "/private/tmp/ce-dsl-step185-20261010/protocol.md",
+    "sha256": "5198a50d022fd896ff1368c2f7afe7927ace8d1c876120f93b4d86c35f6f8363"
+  },
+  "step_note_sha256": "c8af90f9c01b1b50ecd3bf37220d91c7a51635b3e21529c9603120ccb73ee1a6",
+  "ledger_rows": 931,
+  "reviewed_candidate": 166,
+  "unknown_candidate": 765,
+  "changed_raw_lines": 10,
+  "unchanged_raw_lines": 921,
+  "historical_oracle_c992_comparator_unchanged": true,
+  "protected_primary_unchanged": true,
+  "frozen_oracle_parity": "NOT_ESTABLISHED",
+  "independent_qa": "PASS",
+  "independent_qa_report": {
+    "path": "/tmp/ce-dsl-step185-independent-qa-20261010/qa-review.md",
+    "sha256": "e024bb467ad209b4bfdc5a583507e7ccd0452174bd5697d931dc573db0b8843f"
+  },
+  "independent_log_comparison": {
+    "path": "/tmp/ce-dsl-step185-independent-qa-20261010/qa-report.json",
+    "sha256": "c67a316ed67eefd541e20bd566a1e9a3b732387b4c3e954d4434b9951d2d389a"
+  }
+}

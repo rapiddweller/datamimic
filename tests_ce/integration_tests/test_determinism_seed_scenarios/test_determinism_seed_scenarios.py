@@ -42,8 +42,9 @@ from typing import TypedDict
 
 import pytest
 
-from datamimic_ce.data_mimic_test import DataMimicTest
-from datamimic_ce.domains.domain_core.generator_registry import generator_namespace
+from datamimic_ce.domains.api import iter_generator_capabilities as domain_generator_capabilities
+from datamimic_ce.engine.runtime.api import iter_generator_capabilities as runtime_generator_capabilities
+from datamimic_ce.interfaces.python.data_mimic_test import DataMimicTest
 from tests_ce.integration_tests.dsl_model_builder import build_all_entities_seeded_xml
 
 _TEST_DIR = Path(__file__).resolve().parent
@@ -173,7 +174,7 @@ _REPO_ROOT = _TEST_DIR.parents[2]
 _RUN_IN_FRESH_PROCESS = """
 import json, sys
 from pathlib import Path
-from datamimic_ce.data_mimic_test import DataMimicTest
+from datamimic_ce.interfaces.python.data_mimic_test import DataMimicTest
 engine = DataMimicTest(test_dir=Path(sys.argv[1]), filename=sys.argv[2], capture_test_result=True)
 engine.test_with_timer()
 result = json.dumps(engine.capture_result(), default=str, ensure_ascii=False, separators=(",", ":"), sort_keys=True)
@@ -216,7 +217,11 @@ def _run_in_fresh_process(filename: str) -> dict[str, object]:
 def test_replay_model_covers_every_literal_generator() -> None:
     model = (_TEST_DIR / "replay_all_seeded.xml").read_text(encoding="utf-8")
     used = set(re.findall(r'generator="([A-Za-z]+Generator)', model))
-    assert set(generator_namespace()) - {"SequenceTableGenerator"} == used
+    available = {
+        capability.name
+        for capability in (*domain_generator_capabilities(), *runtime_generator_capabilities())
+    }
+    assert available - {"SequenceTableGenerator"} == used
 
 
 def test_every_seeded_path_replays_across_processes() -> None:

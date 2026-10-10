@@ -1,0 +1,7 @@
+{
+  "after_digest": "dcd31fcba0845669637847bf083d3abadd41b57f031eb02d524bfde0bee7cdfa",
+  "before_digest": "9a81f46434f8c9b612ade0fd541520b8e35388bd09751c894856d73c76f014c5",
+  "decided_by": "Astra (delegated architecture decision)",
+  "rationale": "Move the existing immutable StateMachineDef to its Domain core generation contract and declare exactly that owner export; no runtime policy, rule, baseline, budget or allowance change.",
+  "schema_version": "1.0.0"
+}

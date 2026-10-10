@@ -1,0 +1,7 @@
+{
+  "after_digest": "097f3073ca6997c10ed8a14920ad456aa74e0c8976a9bdeccbcee7011b7b51ea",
+  "before_digest": "f6518d458365cc72a620e005e6231dde635817a64595612c7b55d140a69dd57a",
+  "decided_by": "experiment orchestrator",
+  "rationale": "Step 08C14 implements the frozen typed Authoring facade and removes the final private component crossings; no dependency permission is added.",
+  "schema_version": "1.0.0"
+}

@@ -20,12 +20,14 @@ import inspect
 from typing import ClassVar
 
 from lxml import etree
+import pytest
 from pydantic import BaseModel
 
-from datamimic_ce.authoring.diagnostics import Diagnostic
-from datamimic_ce.authoring.linter import _run_rules, lint_source
-from datamimic_ce.authoring.schema import build_schema_index
-from datamimic_ce.model.constraints import (
+from datamimic_ce.authoring.adapters.linter import _run_rules, lint_source
+from datamimic_ce.authoring.domain.diagnostics import Diagnostic
+from datamimic_ce.authoring.domain.schema import build_schema_index
+from datamimic_ce.engine.dsl.api import check_min_max_count
+from datamimic_ce.engine.dsl.model.constraints import (
     AllOrNone,
     AllowedValuesWhen,
     Constraint,
@@ -38,11 +40,7 @@ from datamimic_ce.model.constraints import (
     RequiresWhenValue,
     ValidValues,
 )
-from datamimic_ce.model.element_registry import (
-    ElementDefinition,
-    register_element_extension,
-    unregister_element_extension,
-)
+from datamimic_ce.engine.dsl.model.registry import ElementDefinition, register_element_extension, unregister_element_extension
 
 _TAG = "syntheticelement"
 
@@ -160,6 +158,20 @@ def test_mode_gated_facts_lint_generically() -> None:
     assert "DM221" not in _rules_fired('alpha="1" shape="list" count="2"')
 
 
+def test_count_order_lint_keeps_dm201_error_for_reversed_raw_xml_bounds() -> None:
+    raw_bounds = {"minCount": "010", "maxCount": "9"}
+    with pytest.raises(ValueError, match=r"value \(010\).*value \(9\)"):
+        check_min_max_count(raw_bounds, "generate")
+
+    diagnostics = _lint_rules_xml(
+        '<setup rngSeed="1"><generate name="g" source="rows.csv" minCount="010" maxCount="9"/></setup>'
+    )
+
+    count_errors = [diag for diag in diagnostics if diag.rule == "DM201"]
+    assert len(count_errors) == 1
+    assert count_errors[0].severity.value == "error"
+
+
 def test_nestedkey_default_guidance_is_warning_not_runtime_error() -> None:
     result = lint_source(
         '<setup rngSeed="1"><generate name="g" count="1">'
@@ -211,7 +223,7 @@ def test_schema_index_is_clean_after_gate() -> None:
 def test_rule_modules_have_no_model_specific_wiring() -> None:
     """Belt and braces: the rules must read facts from the schema index, never from
     specific model modules — a private constant import is exactly the P1 this gate kills."""
-    from datamimic_ce.authoring.rules import best_practice, cross_statement, schema_rules, semantic_rules
+    from datamimic_ce.authoring.domain.rules import best_practice, cross_statement, schema_rules, semantic_rules
 
     for module in (schema_rules, semantic_rules, best_practice, cross_statement):
         source = inspect.getsource(module)

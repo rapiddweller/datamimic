@@ -1,0 +1,2067 @@
+[
+  {
+    "id": "module:engine/io/__init__.py",
+    "kind": "module",
+    "path": "engine/io/__init__.py",
+    "lane": "execution_io",
+    "targets": [
+      "engine/io/__init__.py"
+    ]
+  },
+  {
+    "id": "module:engine/io/api.py",
+    "kind": "module",
+    "path": "engine/io/api.py",
+    "lane": "execution_io",
+    "targets": [
+      "engine/io/api.py"
+    ]
+  },
+  {
+    "id": "module:engine/io/client_operations.py",
+    "kind": "module",
+    "path": "engine/io/client_operations.py",
+    "lane": "execution_io",
+    "targets": [
+      "engine/io/clients/operations.py"
+    ]
+  },
+  {
+    "id": "module:engine/io/clients/__init__.py",
+    "kind": "module",
+    "path": "engine/io/clients/__init__.py",
+    "lane": "execution_io",
+    "targets": [
+      "engine/io/clients/__init__.py"
+    ]
+  },
+  {
+    "id": "module:engine/io/clients/client.py",
+    "kind": "module",
+    "path": "engine/io/clients/client.py",
+    "lane": "execution_io",
+    "targets": [
+      "engine/io/clients/client.py"
+    ]
+  },
+  {
+    "id": "module:engine/io/clients/database_client.py",
+    "kind": "module",
+    "path": "engine/io/clients/database_client.py",
+    "lane": "execution_io",
+    "targets": [
+      "engine/io/clients/database_client.py"
+    ]
+  },
+  {
+    "id": "module:engine/io/clients/entity_serialization.py",
+    "kind": "module",
+    "path": "engine/io/clients/entity_serialization.py",
+    "lane": "execution_io",
+    "targets": [
+      "engine/io/clients/entity_serialization.py"
+    ]
+  },
+  {
+    "id": "module:engine/io/clients/mongodb_client.py",
+    "kind": "module",
+    "path": "engine/io/clients/mongodb_client.py",
+    "lane": "execution_io",
+    "targets": [
+      "engine/io/clients/mongodb_client.py"
+    ]
+  },
+  {
+    "id": "module:engine/io/clients/rdbms_client.py",
+    "kind": "module",
+    "path": "engine/io/clients/rdbms_client.py",
+    "lane": "execution_io",
+    "targets": [
+      "engine/io/clients/rdbms_client.py"
+    ]
+  },
+  {
+    "id": "module:engine/io/clients/sql_dialect.py",
+    "kind": "module",
+    "path": "engine/io/clients/sql_dialect.py",
+    "lane": "execution_io",
+    "targets": [
+      "engine/io/clients/sql_dialect.py"
+    ]
+  },
+  {
+    "id": "module:engine/io/connection_config/__init__.py",
+    "kind": "module",
+    "path": "engine/io/connection_config/__init__.py",
+    "lane": "execution_io",
+    "targets": [
+      "engine/io/connection_config/__init__.py"
+    ]
+  },
+  {
+    "id": "module:engine/io/connection_config/connection_config_base.py",
+    "kind": "module",
+    "path": "engine/io/connection_config/connection_config_base.py",
+    "lane": "execution_io",
+    "targets": [
+      "engine/io/connection_config/connection_config_base.py"
+    ]
+  },
+  {
+    "id": "module:engine/io/connection_config/mongodb_connection_config.py",
+    "kind": "module",
+    "path": "engine/io/connection_config/mongodb_connection_config.py",
+    "lane": "execution_io",
+    "targets": [
+      "engine/io/connection_config/mongodb_connection_config.py"
+    ]
+  },
+  {
+    "id": "module:engine/io/connection_config/rdbms_connection_config.py",
+    "kind": "module",
+    "path": "engine/io/connection_config/rdbms_connection_config.py",
+    "lane": "execution_io",
+    "targets": [
+      "engine/io/connection_config/rdbms_connection_config.py"
+    ]
+  },
+  {
+    "id": "module:engine/io/contracts.py",
+    "kind": "module",
+    "path": "engine/io/contracts.py",
+    "lane": "execution_io",
+    "targets": [
+      "engine/io/contracts.py"
+    ]
+  },
+  {
+    "id": "module:engine/io/data_sources/__init__.py",
+    "kind": "module",
+    "path": "engine/io/data_sources/__init__.py",
+    "lane": "execution_io",
+    "targets": [
+      "engine/io/data_sources/__init__.py"
+    ]
+  },
+  {
+    "id": "module:engine/io/data_sources/data_source_registry.py",
+    "kind": "module",
+    "path": "engine/io/data_sources/data_source_registry.py",
+    "lane": "execution_io",
+    "targets": [
+      "engine/io/data_sources/data_source_registry.py"
+    ]
+  },
+  {
+    "id": "module:engine/io/data_sources/weighted_data_source.py",
+    "kind": "module",
+    "path": "engine/io/data_sources/weighted_data_source.py",
+    "lane": "execution_io",
+    "targets": [
+      "engine/io/data_sources/weighted_data_source.py"
+    ]
+  },
+  {
+    "id": "module:engine/io/data_sources/weighted_entity_data_source.py",
+    "kind": "module",
+    "path": "engine/io/data_sources/weighted_entity_data_source.py",
+    "lane": "execution_io",
+    "targets": [
+      "engine/io/data_sources/weighted_entity_data_source.py"
+    ]
+  },
+  {
+    "id": "module:engine/io/dataset_api.py",
+    "kind": "module",
+    "path": "engine/io/dataset_api.py",
+    "lane": "execution_io",
+    "targets": [
+      "engine/io/files/api.py"
+    ]
+  },
+  {
+    "id": "module:engine/io/exporters/__init__.py",
+    "kind": "module",
+    "path": "engine/io/exporters/__init__.py",
+    "lane": "execution_io",
+    "targets": [
+      "engine/io/exporters/__init__.py"
+    ]
+  },
+  {
+    "id": "module:engine/io/exporters/console_exporter.py",
+    "kind": "module",
+    "path": "engine/io/exporters/console_exporter.py",
+    "lane": "execution_io",
+    "targets": [
+      "engine/io/exporters/diagnostics/console_exporter.py"
+    ]
+  },
+  {
+    "id": "module:engine/io/exporters/csv_exporter.py",
+    "kind": "module",
+    "path": "engine/io/exporters/csv_exporter.py",
+    "lane": "execution_io",
+    "targets": [
+      "engine/io/exporters/formats/csv_exporter.py"
+    ]
+  },
+  {
+    "id": "module:engine/io/exporters/database_exporter.py",
+    "kind": "module",
+    "path": "engine/io/exporters/database_exporter.py",
+    "lane": "execution_io",
+    "targets": [
+      "engine/io/exporters/database/database_exporter.py"
+    ]
+  },
+  {
+    "id": "module:engine/io/exporters/dbunit_exporter.py",
+    "kind": "module",
+    "path": "engine/io/exporters/dbunit_exporter.py",
+    "lane": "execution_io",
+    "targets": [
+      "engine/io/exporters/database/dbunit_exporter.py"
+    ]
+  },
+  {
+    "id": "module:engine/io/exporters/exporter.py",
+    "kind": "module",
+    "path": "engine/io/exporters/exporter.py",
+    "lane": "execution_io",
+    "targets": [
+      "engine/io/exporters/core/exporter.py"
+    ]
+  },
+  {
+    "id": "module:engine/io/exporters/exporter_config.py",
+    "kind": "module",
+    "path": "engine/io/exporters/exporter_config.py",
+    "lane": "execution_io",
+    "targets": [
+      "engine/io/exporters/core/exporter_config.py"
+    ]
+  },
+  {
+    "id": "module:engine/io/exporters/exporter_context.py",
+    "kind": "module",
+    "path": "engine/io/exporters/exporter_context.py",
+    "lane": "execution_io",
+    "targets": [
+      "engine/io/exporters/core/exporter_context.py"
+    ]
+  },
+  {
+    "id": "module:engine/io/exporters/exporter_state_manager.py",
+    "kind": "module",
+    "path": "engine/io/exporters/exporter_state_manager.py",
+    "lane": "execution_io",
+    "targets": [
+      "engine/io/exporters/core/exporter_state_manager.py"
+    ]
+  },
+  {
+    "id": "module:engine/io/exporters/exporter_util.py",
+    "kind": "module",
+    "path": "engine/io/exporters/exporter_util.py",
+    "lane": "execution_io",
+    "targets": [
+      "engine/io/exporters/registry.py",
+      "engine/io/exporters/core/serialization.py"
+    ]
+  },
+  {
+    "id": "module:engine/io/exporters/fixed_width_exporter.py",
+    "kind": "module",
+    "path": "engine/io/exporters/fixed_width_exporter.py",
+    "lane": "execution_io",
+    "targets": [
+      "engine/io/exporters/formats/fixed_width_exporter.py"
+    ]
+  },
+  {
+    "id": "module:engine/io/exporters/json_exporter.py",
+    "kind": "module",
+    "path": "engine/io/exporters/json_exporter.py",
+    "lane": "execution_io",
+    "targets": [
+      "engine/io/exporters/formats/json_exporter.py"
+    ]
+  },
+  {
+    "id": "module:engine/io/exporters/log_exporter.py",
+    "kind": "module",
+    "path": "engine/io/exporters/log_exporter.py",
+    "lane": "execution_io",
+    "targets": [
+      "engine/io/exporters/diagnostics/log_exporter.py"
+    ]
+  },
+  {
+    "id": "module:engine/io/exporters/memstore.py",
+    "kind": "module",
+    "path": "engine/io/exporters/memstore.py",
+    "lane": "execution_io",
+    "targets": [
+      "engine/io/exporters/memory/memstore.py"
+    ]
+  },
+  {
+    "id": "module:engine/io/exporters/mongodb_exporter.py",
+    "kind": "module",
+    "path": "engine/io/exporters/mongodb_exporter.py",
+    "lane": "execution_io",
+    "targets": [
+      "engine/io/exporters/database/mongodb_exporter.py"
+    ]
+  },
+  {
+    "id": "module:engine/io/exporters/smoke_export.py",
+    "kind": "module",
+    "path": "engine/io/exporters/smoke_export.py",
+    "lane": "execution_io",
+    "targets": [
+      "engine/io/exporters/diagnostics/smoke_export.py"
+    ]
+  },
+  {
+    "id": "module:engine/io/exporters/test_result_exporter.py",
+    "kind": "module",
+    "path": "engine/io/exporters/test_result_exporter.py",
+    "lane": "execution_io",
+    "targets": [
+      "engine/io/exporters/diagnostics/test_result_exporter.py"
+    ]
+  },
+  {
+    "id": "module:engine/io/exporters/txt_exporter.py",
+    "kind": "module",
+    "path": "engine/io/exporters/txt_exporter.py",
+    "lane": "execution_io",
+    "targets": [
+      "engine/io/exporters/formats/txt_exporter.py"
+    ]
+  },
+  {
+    "id": "module:engine/io/exporters/unified_buffered_exporter.py",
+    "kind": "module",
+    "path": "engine/io/exporters/unified_buffered_exporter.py",
+    "lane": "execution_io",
+    "targets": [
+      "engine/io/exporters/core/unified_buffered_exporter.py"
+    ]
+  },
+  {
+    "id": "module:engine/io/exporters/xlsx_exporter.py",
+    "kind": "module",
+    "path": "engine/io/exporters/xlsx_exporter.py",
+    "lane": "execution_io",
+    "targets": [
+      "engine/io/exporters/formats/xlsx_exporter.py"
+    ]
+  },
+  {
+    "id": "module:engine/io/exporters/xml_exporter.py",
+    "kind": "module",
+    "path": "engine/io/exporters/xml_exporter.py",
+    "lane": "execution_io",
+    "targets": [
+      "engine/io/exporters/formats/xml_exporter.py"
+    ]
+  },
+  {
+    "id": "module:engine/io/file_cache.py",
+    "kind": "module",
+    "path": "engine/io/file_cache.py",
+    "lane": "execution_io",
+    "targets": [
+      "engine/io/files/cache.py"
+    ]
+  },
+  {
+    "id": "module:engine/io/files.py",
+    "kind": "module",
+    "path": "engine/io/files.py",
+    "lane": "execution_io",
+    "targets": [
+      "engine/io/files/readers.py"
+    ]
+  },
+  {
+    "id": "module:engine/runtime/__init__.py",
+    "kind": "module",
+    "path": "engine/runtime/__init__.py",
+    "lane": "execution_io",
+    "targets": [
+      "engine/runtime/__init__.py"
+    ]
+  },
+  {
+    "id": "module:engine/runtime/api.py",
+    "kind": "module",
+    "path": "engine/runtime/api.py",
+    "lane": "execution_io",
+    "targets": [
+      "engine/runtime/api.py"
+    ]
+  },
+  {
+    "id": "module:engine/runtime/contexts/__init__.py",
+    "kind": "module",
+    "path": "engine/runtime/contexts/__init__.py",
+    "lane": "execution_io",
+    "targets": [
+      "engine/runtime/contexts/__init__.py"
+    ]
+  },
+  {
+    "id": "module:engine/runtime/contexts/context.py",
+    "kind": "module",
+    "path": "engine/runtime/contexts/context.py",
+    "lane": "execution_io",
+    "targets": [
+      "engine/runtime/contexts/context.py"
+    ]
+  },
+  {
+    "id": "module:engine/runtime/contexts/demographic_context.py",
+    "kind": "module",
+    "path": "engine/runtime/contexts/demographic_context.py",
+    "lane": "execution_io",
+    "targets": [
+      "engine/runtime/contexts/demographic_context.py"
+    ]
+  },
+  {
+    "id": "module:engine/runtime/contexts/expression_globals.py",
+    "kind": "module",
+    "path": "engine/runtime/contexts/expression_globals.py",
+    "lane": "execution_io",
+    "targets": [
+      "engine/runtime/contexts/expression_globals.py"
+    ]
+  },
+  {
+    "id": "module:engine/runtime/contexts/geniter_context.py",
+    "kind": "module",
+    "path": "engine/runtime/contexts/geniter_context.py",
+    "lane": "execution_io",
+    "targets": [
+      "engine/runtime/contexts/geniter_context.py"
+    ]
+  },
+  {
+    "id": "module:engine/runtime/contexts/records.py",
+    "kind": "module",
+    "path": "engine/runtime/contexts/records.py",
+    "lane": "execution_io",
+    "targets": [
+      "engine/runtime/contexts/records.py"
+    ]
+  },
+  {
+    "id": "module:engine/runtime/contexts/setup_context.py",
+    "kind": "module",
+    "path": "engine/runtime/contexts/setup_context.py",
+    "lane": "execution_io",
+    "targets": [
+      "engine/runtime/contexts/setup_context.py"
+    ]
+  },
+  {
+    "id": "module:engine/runtime/contracts.py",
+    "kind": "module",
+    "path": "engine/runtime/contracts.py",
+    "lane": "execution_io",
+    "targets": [
+      "engine/runtime/contracts.py"
+    ]
+  },
+  {
+    "id": "module:engine/runtime/counts.py",
+    "kind": "module",
+    "path": "engine/runtime/counts.py",
+    "lane": "execution_io",
+    "targets": [
+      "engine/runtime/tasks/base/counts.py"
+    ]
+  },
+  {
+    "id": "module:engine/runtime/generators/__init__.py",
+    "kind": "module",
+    "path": "engine/runtime/generators/__init__.py",
+    "lane": "execution_io",
+    "targets": [
+      "engine/runtime/tasks/values/construction/__init__.py"
+    ]
+  },
+  {
+    "id": "module:engine/runtime/generators/factory.py",
+    "kind": "module",
+    "path": "engine/runtime/generators/factory.py",
+    "lane": "execution_io",
+    "targets": [
+      "engine/runtime/tasks/values/construction/factory.py"
+    ]
+  },
+  {
+    "id": "module:engine/runtime/generators/sequence_table.py",
+    "kind": "module",
+    "path": "engine/runtime/generators/sequence_table.py",
+    "lane": "execution_io",
+    "targets": [
+      "engine/runtime/tasks/values/construction/sequence_table.py"
+    ]
+  },
+  {
+    "id": "module:engine/runtime/lifecycle/__init__.py",
+    "kind": "module",
+    "path": "engine/runtime/lifecycle/__init__.py",
+    "lane": "execution_io",
+    "targets": [
+      "engine/runtime/lifecycle/__init__.py"
+    ]
+  },
+  {
+    "id": "module:engine/runtime/lifecycle/config.py",
+    "kind": "module",
+    "path": "engine/runtime/lifecycle/config.py",
+    "lane": "execution_io",
+    "targets": [
+      "engine/runtime/lifecycle/config.py"
+    ]
+  },
+  {
+    "id": "module:engine/runtime/lifecycle/runner.py",
+    "kind": "module",
+    "path": "engine/runtime/lifecycle/runner.py",
+    "lane": "execution_io",
+    "targets": [
+      "engine/runtime/lifecycle/runner.py"
+    ]
+  },
+  {
+    "id": "module:engine/runtime/logging.py",
+    "kind": "module",
+    "path": "engine/runtime/logging.py",
+    "lane": "execution_io",
+    "targets": [
+      "engine/runtime/logging.py"
+    ]
+  },
+  {
+    "id": "module:engine/runtime/process.py",
+    "kind": "module",
+    "path": "engine/runtime/process.py",
+    "lane": "execution_io",
+    "targets": [
+      "engine/runtime/lifecycle/process.py"
+    ]
+  },
+  {
+    "id": "module:engine/runtime/scripting/__init__.py",
+    "kind": "module",
+    "path": "engine/runtime/scripting/__init__.py",
+    "lane": "execution_io",
+    "targets": [
+      "engine/runtime/scripting/__init__.py"
+    ]
+  },
+  {
+    "id": "module:engine/runtime/scripting/evaluation.py",
+    "kind": "module",
+    "path": "engine/runtime/scripting/evaluation.py",
+    "lane": "execution_io",
+    "targets": [
+      "engine/runtime/scripting/evaluation.py"
+    ]
+  },
+  {
+    "id": "module:engine/runtime/scripting/plugins/__init__.py",
+    "kind": "module",
+    "path": "engine/runtime/scripting/plugins/__init__.py",
+    "lane": "execution_io",
+    "targets": [
+      "engine/runtime/scripting/plugins/__init__.py"
+    ]
+  },
+  {
+    "id": "module:engine/runtime/sources/__init__.py",
+    "kind": "module",
+    "path": "engine/runtime/sources/__init__.py",
+    "lane": "execution_io",
+    "targets": [
+      "engine/runtime/tasks/sources/__init__.py"
+    ]
+  },
+  {
+    "id": "module:engine/runtime/sources/chunk_source_reader.py",
+    "kind": "module",
+    "path": "engine/runtime/sources/chunk_source_reader.py",
+    "lane": "execution_io",
+    "targets": [
+      "engine/runtime/tasks/sources/chunk_source_reader.py"
+    ]
+  },
+  {
+    "id": "module:engine/runtime/sources/router.py",
+    "kind": "module",
+    "path": "engine/runtime/sources/router.py",
+    "lane": "execution_io",
+    "targets": [
+      "engine/runtime/tasks/sources/router.py"
+    ]
+  },
+  {
+    "id": "module:engine/runtime/sources/selection.py",
+    "kind": "module",
+    "path": "engine/runtime/sources/selection.py",
+    "lane": "execution_io",
+    "targets": [
+      "engine/io/data_sources/selection.py"
+    ]
+  },
+  {
+    "id": "module:engine/runtime/sources/variable.py",
+    "kind": "module",
+    "path": "engine/runtime/sources/variable.py",
+    "lane": "execution_io",
+    "targets": [
+      "engine/runtime/tasks/sources/variable.py"
+    ]
+  },
+  {
+    "id": "module:engine/runtime/storage/__init__.py",
+    "kind": "module",
+    "path": "engine/runtime/storage/__init__.py",
+    "lane": "execution_io",
+    "targets": [
+      "engine/runtime/storage/__init__.py"
+    ]
+  },
+  {
+    "id": "module:engine/runtime/storage/memstore_manager.py",
+    "kind": "module",
+    "path": "engine/runtime/storage/memstore_manager.py",
+    "lane": "execution_io",
+    "targets": [
+      "engine/runtime/storage/memstore_manager.py"
+    ]
+  },
+  {
+    "id": "module:engine/runtime/tasks/__init__.py",
+    "kind": "module",
+    "path": "engine/runtime/tasks/__init__.py",
+    "lane": "execution_io",
+    "targets": [
+      "engine/runtime/tasks/registry.py"
+    ]
+  },
+  {
+    "id": "module:engine/runtime/tasks/array_task.py",
+    "kind": "module",
+    "path": "engine/runtime/tasks/array_task.py",
+    "lane": "execution_io",
+    "targets": [
+      "engine/runtime/tasks/values/structured/array_task.py"
+    ]
+  },
+  {
+    "id": "module:engine/runtime/tasks/assert_task.py",
+    "kind": "module",
+    "path": "engine/runtime/tasks/assert_task.py",
+    "lane": "execution_io",
+    "targets": [
+      "engine/runtime/tasks/flow/commands/assert_task.py"
+    ]
+  },
+  {
+    "id": "module:engine/runtime/tasks/condition_task.py",
+    "kind": "module",
+    "path": "engine/runtime/tasks/condition_task.py",
+    "lane": "execution_io",
+    "targets": [
+      "engine/runtime/tasks/flow/branches/condition_task.py"
+    ]
+  },
+  {
+    "id": "module:engine/runtime/tasks/database_task.py",
+    "kind": "module",
+    "path": "engine/runtime/tasks/database_task.py",
+    "lane": "execution_io",
+    "targets": [
+      "engine/runtime/tasks/setup/database_task.py"
+    ]
+  },
+  {
+    "id": "module:engine/runtime/tasks/demographics_task.py",
+    "kind": "module",
+    "path": "engine/runtime/tasks/demographics_task.py",
+    "lane": "execution_io",
+    "targets": [
+      "engine/runtime/tasks/setup/demographics_task.py"
+    ]
+  },
+  {
+    "id": "module:engine/runtime/tasks/echo_task.py",
+    "kind": "module",
+    "path": "engine/runtime/tasks/echo_task.py",
+    "lane": "execution_io",
+    "targets": [
+      "engine/runtime/tasks/flow/commands/echo_task.py"
+    ]
+  },
+  {
+    "id": "module:engine/runtime/tasks/element_task.py",
+    "kind": "module",
+    "path": "engine/runtime/tasks/element_task.py",
+    "lane": "execution_io",
+    "targets": [
+      "engine/runtime/tasks/values/scalar/element_task.py"
+    ]
+  },
+  {
+    "id": "module:engine/runtime/tasks/else_if_task.py",
+    "kind": "module",
+    "path": "engine/runtime/tasks/else_if_task.py",
+    "lane": "execution_io",
+    "targets": [
+      "engine/runtime/tasks/flow/branches/else_if_task.py"
+    ]
+  },
+  {
+    "id": "module:engine/runtime/tasks/else_task.py",
+    "kind": "module",
+    "path": "engine/runtime/tasks/else_task.py",
+    "lane": "execution_io",
+    "targets": [
+      "engine/runtime/tasks/flow/branches/else_task.py"
+    ]
+  },
+  {
+    "id": "module:engine/runtime/tasks/entity_constructor.py",
+    "kind": "module",
+    "path": "engine/runtime/tasks/entity_constructor.py",
+    "lane": "execution_io",
+    "targets": [
+      "engine/runtime/tasks/values/construction/entity_constructor.py"
+    ]
+  },
+  {
+    "id": "module:engine/runtime/tasks/execute_task.py",
+    "kind": "module",
+    "path": "engine/runtime/tasks/execute_task.py",
+    "lane": "execution_io",
+    "targets": [
+      "engine/runtime/tasks/flow/commands/execute_task.py"
+    ]
+  },
+  {
+    "id": "module:engine/runtime/tasks/generate/__init__.py",
+    "kind": "module",
+    "path": "engine/runtime/tasks/generate/__init__.py",
+    "lane": "execution_io",
+    "targets": [
+      "engine/runtime/tasks/generate/__init__.py"
+    ]
+  },
+  {
+    "id": "module:engine/runtime/tasks/generate/services/__init__.py",
+    "kind": "module",
+    "path": "engine/runtime/tasks/generate/services/__init__.py",
+    "lane": "execution_io",
+    "targets": []
+  },
+  {
+    "id": "module:engine/runtime/tasks/generate/services/policies/__init__.py",
+    "kind": "module",
+    "path": "engine/runtime/tasks/generate/services/policies/__init__.py",
+    "lane": "execution_io",
+    "targets": [
+      "engine/runtime/tasks/generate/policies/__init__.py"
+    ]
+  },
+  {
+    "id": "module:engine/runtime/tasks/generate/services/policies/single_process_policy.py",
+    "kind": "module",
+    "path": "engine/runtime/tasks/generate/services/policies/single_process_policy.py",
+    "lane": "execution_io",
+    "targets": [
+      "engine/runtime/tasks/generate/policies/single_process_policy.py"
+    ]
+  },
+  {
+    "id": "module:engine/runtime/tasks/generate/task.py",
+    "kind": "module",
+    "path": "engine/runtime/tasks/generate/task.py",
+    "lane": "execution_io",
+    "targets": [
+      "engine/runtime/tasks/generate/task.py"
+    ]
+  },
+  {
+    "id": "module:engine/runtime/tasks/generate/workers/__init__.py",
+    "kind": "module",
+    "path": "engine/runtime/tasks/generate/workers/__init__.py",
+    "lane": "execution_io",
+    "targets": [
+      "engine/runtime/tasks/generate/workers/__init__.py"
+    ]
+  },
+  {
+    "id": "module:engine/runtime/tasks/generate/workers/generate_worker.py",
+    "kind": "module",
+    "path": "engine/runtime/tasks/generate/workers/generate_worker.py",
+    "lane": "execution_io",
+    "targets": [
+      "engine/runtime/tasks/generate/workers/generate_worker.py"
+    ]
+  },
+  {
+    "id": "module:engine/runtime/tasks/generate/workers/multiprocessing_generate_worker.py",
+    "kind": "module",
+    "path": "engine/runtime/tasks/generate/workers/multiprocessing_generate_worker.py",
+    "lane": "execution_io",
+    "targets": [
+      "engine/runtime/tasks/generate/workers/multiprocessing_generate_worker.py"
+    ]
+  },
+  {
+    "id": "module:engine/runtime/tasks/generate/workers/ray_generate_worker.py",
+    "kind": "module",
+    "path": "engine/runtime/tasks/generate/workers/ray_generate_worker.py",
+    "lane": "execution_io",
+    "targets": [
+      "engine/runtime/tasks/generate/workers/ray_generate_worker.py"
+    ]
+  },
+  {
+    "id": "module:engine/runtime/tasks/generator_task.py",
+    "kind": "module",
+    "path": "engine/runtime/tasks/generator_task.py",
+    "lane": "execution_io",
+    "targets": [
+      "engine/runtime/tasks/values/scalar/generator_task.py"
+    ]
+  },
+  {
+    "id": "module:engine/runtime/tasks/if_else_base_task.py",
+    "kind": "module",
+    "path": "engine/runtime/tasks/if_else_base_task.py",
+    "lane": "execution_io",
+    "targets": [
+      "engine/runtime/tasks/flow/branches/if_else_base_task.py"
+    ]
+  },
+  {
+    "id": "module:engine/runtime/tasks/if_task.py",
+    "kind": "module",
+    "path": "engine/runtime/tasks/if_task.py",
+    "lane": "execution_io",
+    "targets": [
+      "engine/runtime/tasks/flow/branches/if_task.py"
+    ]
+  },
+  {
+    "id": "module:engine/runtime/tasks/include_task.py",
+    "kind": "module",
+    "path": "engine/runtime/tasks/include_task.py",
+    "lane": "execution_io",
+    "targets": [
+      "engine/runtime/tasks/setup/include_task.py"
+    ]
+  },
+  {
+    "id": "module:engine/runtime/tasks/item_task.py",
+    "kind": "module",
+    "path": "engine/runtime/tasks/item_task.py",
+    "lane": "execution_io",
+    "targets": [
+      "engine/runtime/tasks/values/structured/item_task.py"
+    ]
+  },
+  {
+    "id": "module:engine/runtime/tasks/key_task.py",
+    "kind": "module",
+    "path": "engine/runtime/tasks/key_task.py",
+    "lane": "execution_io",
+    "targets": [
+      "engine/runtime/tasks/values/scalar/key_task.py"
+    ]
+  },
+  {
+    "id": "module:engine/runtime/tasks/key_variable_task.py",
+    "kind": "module",
+    "path": "engine/runtime/tasks/key_variable_task.py",
+    "lane": "execution_io",
+    "targets": [
+      "engine/runtime/tasks/values/variables/key_variable_task.py"
+    ]
+  },
+  {
+    "id": "module:engine/runtime/tasks/list_task.py",
+    "kind": "module",
+    "path": "engine/runtime/tasks/list_task.py",
+    "lane": "execution_io",
+    "targets": [
+      "engine/runtime/tasks/values/structured/list_task.py"
+    ]
+  },
+  {
+    "id": "module:engine/runtime/tasks/memstore_task.py",
+    "kind": "module",
+    "path": "engine/runtime/tasks/memstore_task.py",
+    "lane": "execution_io",
+    "targets": [
+      "engine/runtime/tasks/setup/memstore_task.py"
+    ]
+  },
+  {
+    "id": "module:engine/runtime/tasks/mongodb_task.py",
+    "kind": "module",
+    "path": "engine/runtime/tasks/mongodb_task.py",
+    "lane": "execution_io",
+    "targets": [
+      "engine/runtime/tasks/setup/mongodb_task.py"
+    ]
+  },
+  {
+    "id": "module:engine/runtime/tasks/nested_key_task.py",
+    "kind": "module",
+    "path": "engine/runtime/tasks/nested_key_task.py",
+    "lane": "execution_io",
+    "targets": [
+      "engine/runtime/tasks/values/structured/nested_key_task.py"
+    ]
+  },
+  {
+    "id": "module:engine/runtime/tasks/reference_task.py",
+    "kind": "module",
+    "path": "engine/runtime/tasks/reference_task.py",
+    "lane": "execution_io",
+    "targets": [
+      "engine/runtime/tasks/values/references/reference_task.py"
+    ]
+  },
+  {
+    "id": "module:engine/runtime/tasks/setup_task.py",
+    "kind": "module",
+    "path": "engine/runtime/tasks/setup_task.py",
+    "lane": "execution_io",
+    "targets": [
+      "engine/runtime/tasks/setup/setup_task.py"
+    ]
+  },
+  {
+    "id": "module:engine/runtime/tasks/state_machine_task.py",
+    "kind": "module",
+    "path": "engine/runtime/tasks/state_machine_task.py",
+    "lane": "execution_io",
+    "targets": [
+      "engine/runtime/tasks/flow/loops/state_machine_task.py"
+    ]
+  },
+  {
+    "id": "module:engine/runtime/tasks/task.py",
+    "kind": "module",
+    "path": "engine/runtime/tasks/task.py",
+    "lane": "execution_io",
+    "targets": [
+      "engine/runtime/tasks/base/task.py"
+    ]
+  },
+  {
+    "id": "module:engine/runtime/tasks/task_factory.py",
+    "kind": "module",
+    "path": "engine/runtime/tasks/task_factory.py",
+    "lane": "execution_io",
+    "targets": [
+      "engine/runtime/tasks/base/dispatch.py"
+    ]
+  },
+  {
+    "id": "module:engine/runtime/tasks/task_util.py",
+    "kind": "module",
+    "path": "engine/runtime/tasks/task_util.py",
+    "lane": "execution_io",
+    "targets": [
+      "engine/runtime/tasks/base/dispatch.py",
+      "engine/runtime/scripting/evaluation.py",
+      "engine/runtime/tasks/values/construction/converters.py",
+      "engine/runtime/tasks/generate/export_order.py",
+      "engine/io/exporters/core/serialization.py",
+      "engine/runtime/tasks/values/construction/factory.py"
+    ]
+  },
+  {
+    "id": "module:engine/runtime/tasks/variable_iterator.py",
+    "kind": "module",
+    "path": "engine/runtime/tasks/variable_iterator.py",
+    "lane": "execution_io",
+    "targets": [
+      "engine/runtime/tasks/values/variables/variable_iterator.py"
+    ]
+  },
+  {
+    "id": "module:engine/runtime/tasks/variable_task.py",
+    "kind": "module",
+    "path": "engine/runtime/tasks/variable_task.py",
+    "lane": "execution_io",
+    "targets": [
+      "engine/runtime/tasks/values/variables/variable_task.py"
+    ]
+  },
+  {
+    "id": "module:engine/runtime/tasks/while_task.py",
+    "kind": "module",
+    "path": "engine/runtime/tasks/while_task.py",
+    "lane": "execution_io",
+    "targets": [
+      "engine/runtime/tasks/flow/loops/while_task.py"
+    ]
+  },
+  {
+    "id": "folder:engine/io",
+    "kind": "folder",
+    "path": "engine/io",
+    "lane": "execution_io",
+    "sources": [
+      "engine/io/__init__.py",
+      "engine/io/api.py",
+      "engine/io/client_operations.py",
+      "engine/io/clients/__init__.py",
+      "engine/io/clients/client.py",
+      "engine/io/clients/database_client.py",
+      "engine/io/clients/entity_serialization.py",
+      "engine/io/clients/mongodb_client.py",
+      "engine/io/clients/rdbms_client.py",
+      "engine/io/clients/sql_dialect.py",
+      "engine/io/connection_config/__init__.py",
+      "engine/io/connection_config/connection_config_base.py",
+      "engine/io/connection_config/mongodb_connection_config.py",
+      "engine/io/connection_config/rdbms_connection_config.py",
+      "engine/io/contracts.py",
+      "engine/io/data_sources/__init__.py",
+      "engine/io/data_sources/data_source_registry.py",
+      "engine/io/data_sources/weighted_data_source.py",
+      "engine/io/data_sources/weighted_entity_data_source.py",
+      "engine/io/dataset_api.py",
+      "engine/io/exporters/__init__.py",
+      "engine/io/exporters/console_exporter.py",
+      "engine/io/exporters/csv_exporter.py",
+      "engine/io/exporters/database_exporter.py",
+      "engine/io/exporters/dbunit_exporter.py",
+      "engine/io/exporters/exporter.py",
+      "engine/io/exporters/exporter_config.py",
+      "engine/io/exporters/exporter_context.py",
+      "engine/io/exporters/exporter_state_manager.py",
+      "engine/io/exporters/exporter_util.py",
+      "engine/io/exporters/fixed_width_exporter.py",
+      "engine/io/exporters/json_exporter.py",
+      "engine/io/exporters/log_exporter.py",
+      "engine/io/exporters/memstore.py",
+      "engine/io/exporters/mongodb_exporter.py",
+      "engine/io/exporters/smoke_export.py",
+      "engine/io/exporters/test_result_exporter.py",
+      "engine/io/exporters/txt_exporter.py",
+      "engine/io/exporters/unified_buffered_exporter.py",
+      "engine/io/exporters/xlsx_exporter.py",
+      "engine/io/exporters/xml_exporter.py",
+      "engine/io/file_cache.py",
+      "engine/io/files.py",
+      "engine/runtime/sources/selection.py",
+      "engine/runtime/tasks/task_util.py"
+    ]
+  },
+  {
+    "id": "folder:engine/io/clients",
+    "kind": "folder",
+    "path": "engine/io/clients",
+    "lane": "execution_io",
+    "sources": [
+      "engine/io/client_operations.py",
+      "engine/io/clients/__init__.py",
+      "engine/io/clients/client.py",
+      "engine/io/clients/database_client.py",
+      "engine/io/clients/entity_serialization.py",
+      "engine/io/clients/mongodb_client.py",
+      "engine/io/clients/rdbms_client.py",
+      "engine/io/clients/sql_dialect.py"
+    ]
+  },
+  {
+    "id": "folder:engine/io/connection_config",
+    "kind": "folder",
+    "path": "engine/io/connection_config",
+    "lane": "execution_io",
+    "sources": [
+      "engine/io/connection_config/__init__.py",
+      "engine/io/connection_config/connection_config_base.py",
+      "engine/io/connection_config/mongodb_connection_config.py",
+      "engine/io/connection_config/rdbms_connection_config.py"
+    ]
+  },
+  {
+    "id": "folder:engine/io/data_sources",
+    "kind": "folder",
+    "path": "engine/io/data_sources",
+    "lane": "execution_io",
+    "sources": [
+      "engine/io/data_sources/__init__.py",
+      "engine/io/data_sources/data_source_registry.py",
+      "engine/io/data_sources/weighted_data_source.py",
+      "engine/io/data_sources/weighted_entity_data_source.py",
+      "engine/runtime/sources/selection.py"
+    ]
+  },
+  {
+    "id": "folder:engine/io/exporters",
+    "kind": "folder",
+    "path": "engine/io/exporters",
+    "lane": "execution_io",
+    "sources": [
+      "engine/io/exporters/__init__.py",
+      "engine/io/exporters/console_exporter.py",
+      "engine/io/exporters/csv_exporter.py",
+      "engine/io/exporters/database_exporter.py",
+      "engine/io/exporters/dbunit_exporter.py",
+      "engine/io/exporters/exporter.py",
+      "engine/io/exporters/exporter_config.py",
+      "engine/io/exporters/exporter_context.py",
+      "engine/io/exporters/exporter_state_manager.py",
+      "engine/io/exporters/exporter_util.py",
+      "engine/io/exporters/fixed_width_exporter.py",
+      "engine/io/exporters/json_exporter.py",
+      "engine/io/exporters/log_exporter.py",
+      "engine/io/exporters/memstore.py",
+      "engine/io/exporters/mongodb_exporter.py",
+      "engine/io/exporters/smoke_export.py",
+      "engine/io/exporters/test_result_exporter.py",
+      "engine/io/exporters/txt_exporter.py",
+      "engine/io/exporters/unified_buffered_exporter.py",
+      "engine/io/exporters/xlsx_exporter.py",
+      "engine/io/exporters/xml_exporter.py",
+      "engine/runtime/tasks/task_util.py"
+    ]
+  },
+  {
+    "id": "folder:engine/io/exporters/core",
+    "kind": "folder",
+    "path": "engine/io/exporters/core",
+    "lane": "execution_io",
+    "sources": [
+      "engine/io/exporters/exporter.py",
+      "engine/io/exporters/exporter_config.py",
+      "engine/io/exporters/exporter_context.py",
+      "engine/io/exporters/exporter_state_manager.py",
+      "engine/io/exporters/exporter_util.py",
+      "engine/io/exporters/unified_buffered_exporter.py",
+      "engine/runtime/tasks/task_util.py"
+    ]
+  },
+  {
+    "id": "folder:engine/io/exporters/database",
+    "kind": "folder",
+    "path": "engine/io/exporters/database",
+    "lane": "execution_io",
+    "sources": [
+      "engine/io/exporters/database_exporter.py",
+      "engine/io/exporters/dbunit_exporter.py",
+      "engine/io/exporters/mongodb_exporter.py"
+    ]
+  },
+  {
+    "id": "folder:engine/io/exporters/diagnostics",
+    "kind": "folder",
+    "path": "engine/io/exporters/diagnostics",
+    "lane": "execution_io",
+    "sources": [
+      "engine/io/exporters/console_exporter.py",
+      "engine/io/exporters/log_exporter.py",
+      "engine/io/exporters/smoke_export.py",
+      "engine/io/exporters/test_result_exporter.py"
+    ]
+  },
+  {
+    "id": "folder:engine/io/exporters/formats",
+    "kind": "folder",
+    "path": "engine/io/exporters/formats",
+    "lane": "execution_io",
+    "sources": [
+      "engine/io/exporters/csv_exporter.py",
+      "engine/io/exporters/fixed_width_exporter.py",
+      "engine/io/exporters/json_exporter.py",
+      "engine/io/exporters/txt_exporter.py",
+      "engine/io/exporters/xlsx_exporter.py",
+      "engine/io/exporters/xml_exporter.py"
+    ]
+  },
+  {
+    "id": "folder:engine/io/exporters/memory",
+    "kind": "folder",
+    "path": "engine/io/exporters/memory",
+    "lane": "execution_io",
+    "sources": [
+      "engine/io/exporters/memstore.py"
+    ]
+  },
+  {
+    "id": "folder:engine/io/files",
+    "kind": "folder",
+    "path": "engine/io/files",
+    "lane": "execution_io",
+    "sources": [
+      "engine/io/dataset_api.py",
+      "engine/io/file_cache.py",
+      "engine/io/files.py"
+    ]
+  },
+  {
+    "id": "folder:engine/runtime",
+    "kind": "folder",
+    "path": "engine/runtime",
+    "lane": "execution_io",
+    "sources": [
+      "engine/runtime/__init__.py",
+      "engine/runtime/api.py",
+      "engine/runtime/contexts/__init__.py",
+      "engine/runtime/contexts/context.py",
+      "engine/runtime/contexts/demographic_context.py",
+      "engine/runtime/contexts/expression_globals.py",
+      "engine/runtime/contexts/geniter_context.py",
+      "engine/runtime/contexts/records.py",
+      "engine/runtime/contexts/setup_context.py",
+      "engine/runtime/contracts.py",
+      "engine/runtime/counts.py",
+      "engine/runtime/generators/__init__.py",
+      "engine/runtime/generators/factory.py",
+      "engine/runtime/generators/sequence_table.py",
+      "engine/runtime/lifecycle/__init__.py",
+      "engine/runtime/lifecycle/config.py",
+      "engine/runtime/lifecycle/runner.py",
+      "engine/runtime/logging.py",
+      "engine/runtime/process.py",
+      "engine/runtime/scripting/__init__.py",
+      "engine/runtime/scripting/evaluation.py",
+      "engine/runtime/scripting/plugins/__init__.py",
+      "engine/runtime/sources/__init__.py",
+      "engine/runtime/sources/chunk_source_reader.py",
+      "engine/runtime/sources/router.py",
+      "engine/runtime/sources/variable.py",
+      "engine/runtime/storage/__init__.py",
+      "engine/runtime/storage/memstore_manager.py",
+      "engine/runtime/tasks/__init__.py",
+      "engine/runtime/tasks/array_task.py",
+      "engine/runtime/tasks/assert_task.py",
+      "engine/runtime/tasks/condition_task.py",
+      "engine/runtime/tasks/database_task.py",
+      "engine/runtime/tasks/demographics_task.py",
+      "engine/runtime/tasks/echo_task.py",
+      "engine/runtime/tasks/element_task.py",
+      "engine/runtime/tasks/else_if_task.py",
+      "engine/runtime/tasks/else_task.py",
+      "engine/runtime/tasks/entity_constructor.py",
+      "engine/runtime/tasks/execute_task.py",
+      "engine/runtime/tasks/generate/__init__.py",
+      "engine/runtime/tasks/generate/services/policies/__init__.py",
+      "engine/runtime/tasks/generate/services/policies/single_process_policy.py",
+      "engine/runtime/tasks/generate/task.py",
+      "engine/runtime/tasks/generate/workers/__init__.py",
+      "engine/runtime/tasks/generate/workers/generate_worker.py",
+      "engine/runtime/tasks/generate/workers/multiprocessing_generate_worker.py",
+      "engine/runtime/tasks/generate/workers/ray_generate_worker.py",
+      "engine/runtime/tasks/generator_task.py",
+      "engine/runtime/tasks/if_else_base_task.py",
+      "engine/runtime/tasks/if_task.py",
+      "engine/runtime/tasks/include_task.py",
+      "engine/runtime/tasks/item_task.py",
+      "engine/runtime/tasks/key_task.py",
+      "engine/runtime/tasks/key_variable_task.py",
+      "engine/runtime/tasks/list_task.py",
+      "engine/runtime/tasks/memstore_task.py",
+      "engine/runtime/tasks/mongodb_task.py",
+      "engine/runtime/tasks/nested_key_task.py",
+      "engine/runtime/tasks/reference_task.py",
+      "engine/runtime/tasks/setup_task.py",
+      "engine/runtime/tasks/state_machine_task.py",
+      "engine/runtime/tasks/task.py",
+      "engine/runtime/tasks/task_factory.py",
+      "engine/runtime/tasks/task_util.py",
+      "engine/runtime/tasks/variable_iterator.py",
+      "engine/runtime/tasks/variable_task.py",
+      "engine/runtime/tasks/while_task.py"
+    ]
+  },
+  {
+    "id": "folder:engine/runtime/contexts",
+    "kind": "folder",
+    "path": "engine/runtime/contexts",
+    "lane": "execution_io",
+    "sources": [
+      "engine/runtime/contexts/__init__.py",
+      "engine/runtime/contexts/context.py",
+      "engine/runtime/contexts/demographic_context.py",
+      "engine/runtime/contexts/expression_globals.py",
+      "engine/runtime/contexts/geniter_context.py",
+      "engine/runtime/contexts/records.py",
+      "engine/runtime/contexts/setup_context.py"
+    ]
+  },
+  {
+    "id": "folder:engine/runtime/lifecycle",
+    "kind": "folder",
+    "path": "engine/runtime/lifecycle",
+    "lane": "execution_io",
+    "sources": [
+      "engine/runtime/lifecycle/__init__.py",
+      "engine/runtime/lifecycle/config.py",
+      "engine/runtime/lifecycle/runner.py",
+      "engine/runtime/process.py"
+    ]
+  },
+  {
+    "id": "folder:engine/runtime/scripting",
+    "kind": "folder",
+    "path": "engine/runtime/scripting",
+    "lane": "execution_io",
+    "sources": [
+      "engine/runtime/scripting/__init__.py",
+      "engine/runtime/scripting/evaluation.py",
+      "engine/runtime/scripting/plugins/__init__.py",
+      "engine/runtime/tasks/task_util.py"
+    ]
+  },
+  {
+    "id": "folder:engine/runtime/scripting/plugins",
+    "kind": "folder",
+    "path": "engine/runtime/scripting/plugins",
+    "lane": "execution_io",
+    "sources": [
+      "engine/runtime/scripting/plugins/__init__.py"
+    ]
+  },
+  {
+    "id": "folder:engine/runtime/storage",
+    "kind": "folder",
+    "path": "engine/runtime/storage",
+    "lane": "execution_io",
+    "sources": [
+      "engine/runtime/storage/__init__.py",
+      "engine/runtime/storage/memstore_manager.py"
+    ]
+  },
+  {
+    "id": "folder:engine/runtime/tasks",
+    "kind": "folder",
+    "path": "engine/runtime/tasks",
+    "lane": "execution_io",
+    "sources": [
+      "engine/runtime/counts.py",
+      "engine/runtime/generators/__init__.py",
+      "engine/runtime/generators/factory.py",
+      "engine/runtime/generators/sequence_table.py",
+      "engine/runtime/sources/__init__.py",
+      "engine/runtime/sources/chunk_source_reader.py",
+      "engine/runtime/sources/router.py",
+      "engine/runtime/sources/variable.py",
+      "engine/runtime/tasks/__init__.py",
+      "engine/runtime/tasks/array_task.py",
+      "engine/runtime/tasks/assert_task.py",
+      "engine/runtime/tasks/condition_task.py",
+      "engine/runtime/tasks/database_task.py",
+      "engine/runtime/tasks/demographics_task.py",
+      "engine/runtime/tasks/echo_task.py",
+      "engine/runtime/tasks/element_task.py",
+      "engine/runtime/tasks/else_if_task.py",
+      "engine/runtime/tasks/else_task.py",
+      "engine/runtime/tasks/entity_constructor.py",
+      "engine/runtime/tasks/execute_task.py",
+      "engine/runtime/tasks/generate/__init__.py",
+      "engine/runtime/tasks/generate/services/policies/__init__.py",
+      "engine/runtime/tasks/generate/services/policies/single_process_policy.py",
+      "engine/runtime/tasks/generate/task.py",
+      "engine/runtime/tasks/generate/workers/__init__.py",
+      "engine/runtime/tasks/generate/workers/generate_worker.py",
+      "engine/runtime/tasks/generate/workers/multiprocessing_generate_worker.py",
+      "engine/runtime/tasks/generate/workers/ray_generate_worker.py",
+      "engine/runtime/tasks/generator_task.py",
+      "engine/runtime/tasks/if_else_base_task.py",
+      "engine/runtime/tasks/if_task.py",
+      "engine/runtime/tasks/include_task.py",
+      "engine/runtime/tasks/item_task.py",
+      "engine/runtime/tasks/key_task.py",
+      "engine/runtime/tasks/key_variable_task.py",
+      "engine/runtime/tasks/list_task.py",
+      "engine/runtime/tasks/memstore_task.py",
+      "engine/runtime/tasks/mongodb_task.py",
+      "engine/runtime/tasks/nested_key_task.py",
+      "engine/runtime/tasks/reference_task.py",
+      "engine/runtime/tasks/setup_task.py",
+      "engine/runtime/tasks/state_machine_task.py",
+      "engine/runtime/tasks/task.py",
+      "engine/runtime/tasks/task_factory.py",
+      "engine/runtime/tasks/task_util.py",
+      "engine/runtime/tasks/variable_iterator.py",
+      "engine/runtime/tasks/variable_task.py",
+      "engine/runtime/tasks/while_task.py"
+    ]
+  },
+  {
+    "id": "folder:engine/runtime/tasks/base",
+    "kind": "folder",
+    "path": "engine/runtime/tasks/base",
+    "lane": "execution_io",
+    "sources": [
+      "engine/runtime/counts.py",
+      "engine/runtime/tasks/task.py",
+      "engine/runtime/tasks/task_factory.py",
+      "engine/runtime/tasks/task_util.py"
+    ]
+  },
+  {
+    "id": "folder:engine/runtime/tasks/flow",
+    "kind": "folder",
+    "path": "engine/runtime/tasks/flow",
+    "lane": "execution_io",
+    "sources": [
+      "engine/runtime/tasks/assert_task.py",
+      "engine/runtime/tasks/condition_task.py",
+      "engine/runtime/tasks/echo_task.py",
+      "engine/runtime/tasks/else_if_task.py",
+      "engine/runtime/tasks/else_task.py",
+      "engine/runtime/tasks/execute_task.py",
+      "engine/runtime/tasks/if_else_base_task.py",
+      "engine/runtime/tasks/if_task.py",
+      "engine/runtime/tasks/state_machine_task.py",
+      "engine/runtime/tasks/while_task.py"
+    ]
+  },
+  {
+    "id": "folder:engine/runtime/tasks/flow/branches",
+    "kind": "folder",
+    "path": "engine/runtime/tasks/flow/branches",
+    "lane": "execution_io",
+    "sources": [
+      "engine/runtime/tasks/condition_task.py",
+      "engine/runtime/tasks/else_if_task.py",
+      "engine/runtime/tasks/else_task.py",
+      "engine/runtime/tasks/if_else_base_task.py",
+      "engine/runtime/tasks/if_task.py"
+    ]
+  },
+  {
+    "id": "folder:engine/runtime/tasks/flow/commands",
+    "kind": "folder",
+    "path": "engine/runtime/tasks/flow/commands",
+    "lane": "execution_io",
+    "sources": [
+      "engine/runtime/tasks/assert_task.py",
+      "engine/runtime/tasks/echo_task.py",
+      "engine/runtime/tasks/execute_task.py"
+    ]
+  },
+  {
+    "id": "folder:engine/runtime/tasks/flow/loops",
+    "kind": "folder",
+    "path": "engine/runtime/tasks/flow/loops",
+    "lane": "execution_io",
+    "sources": [
+      "engine/runtime/tasks/state_machine_task.py",
+      "engine/runtime/tasks/while_task.py"
+    ]
+  },
+  {
+    "id": "folder:engine/runtime/tasks/generate",
+    "kind": "folder",
+    "path": "engine/runtime/tasks/generate",
+    "lane": "execution_io",
+    "sources": [
+      "engine/runtime/tasks/generate/__init__.py",
+      "engine/runtime/tasks/generate/services/policies/__init__.py",
+      "engine/runtime/tasks/generate/services/policies/single_process_policy.py",
+      "engine/runtime/tasks/generate/task.py",
+      "engine/runtime/tasks/generate/workers/__init__.py",
+      "engine/runtime/tasks/generate/workers/generate_worker.py",
+      "engine/runtime/tasks/generate/workers/multiprocessing_generate_worker.py",
+      "engine/runtime/tasks/generate/workers/ray_generate_worker.py",
+      "engine/runtime/tasks/task_util.py"
+    ]
+  },
+  {
+    "id": "folder:engine/runtime/tasks/generate/policies",
+    "kind": "folder",
+    "path": "engine/runtime/tasks/generate/policies",
+    "lane": "execution_io",
+    "sources": [
+      "engine/runtime/tasks/generate/services/policies/__init__.py",
+      "engine/runtime/tasks/generate/services/policies/single_process_policy.py"
+    ]
+  },
+  {
+    "id": "folder:engine/runtime/tasks/generate/workers",
+    "kind": "folder",
+    "path": "engine/runtime/tasks/generate/workers",
+    "lane": "execution_io",
+    "sources": [
+      "engine/runtime/tasks/generate/workers/__init__.py",
+      "engine/runtime/tasks/generate/workers/generate_worker.py",
+      "engine/runtime/tasks/generate/workers/multiprocessing_generate_worker.py",
+      "engine/runtime/tasks/generate/workers/ray_generate_worker.py"
+    ]
+  },
+  {
+    "id": "folder:engine/runtime/tasks/setup",
+    "kind": "folder",
+    "path": "engine/runtime/tasks/setup",
+    "lane": "execution_io",
+    "sources": [
+      "engine/runtime/tasks/database_task.py",
+      "engine/runtime/tasks/demographics_task.py",
+      "engine/runtime/tasks/include_task.py",
+      "engine/runtime/tasks/memstore_task.py",
+      "engine/runtime/tasks/mongodb_task.py",
+      "engine/runtime/tasks/setup_task.py"
+    ]
+  },
+  {
+    "id": "folder:engine/runtime/tasks/sources",
+    "kind": "folder",
+    "path": "engine/runtime/tasks/sources",
+    "lane": "execution_io",
+    "sources": [
+      "engine/runtime/sources/__init__.py",
+      "engine/runtime/sources/chunk_source_reader.py",
+      "engine/runtime/sources/router.py",
+      "engine/runtime/sources/variable.py"
+    ]
+  },
+  {
+    "id": "folder:engine/runtime/tasks/values",
+    "kind": "folder",
+    "path": "engine/runtime/tasks/values",
+    "lane": "execution_io",
+    "sources": [
+      "engine/runtime/generators/__init__.py",
+      "engine/runtime/generators/factory.py",
+      "engine/runtime/generators/sequence_table.py",
+      "engine/runtime/tasks/array_task.py",
+      "engine/runtime/tasks/element_task.py",
+      "engine/runtime/tasks/entity_constructor.py",
+      "engine/runtime/tasks/generator_task.py",
+      "engine/runtime/tasks/item_task.py",
+      "engine/runtime/tasks/key_task.py",
+      "engine/runtime/tasks/key_variable_task.py",
+      "engine/runtime/tasks/list_task.py",
+      "engine/runtime/tasks/nested_key_task.py",
+      "engine/runtime/tasks/reference_task.py",
+      "engine/runtime/tasks/task_util.py",
+      "engine/runtime/tasks/variable_iterator.py",
+      "engine/runtime/tasks/variable_task.py"
+    ]
+  },
+  {
+    "id": "folder:engine/runtime/tasks/values/construction",
+    "kind": "folder",
+    "path": "engine/runtime/tasks/values/construction",
+    "lane": "execution_io",
+    "sources": [
+      "engine/runtime/generators/__init__.py",
+      "engine/runtime/generators/factory.py",
+      "engine/runtime/generators/sequence_table.py",
+      "engine/runtime/tasks/entity_constructor.py",
+      "engine/runtime/tasks/task_util.py"
+    ]
+  },
+  {
+    "id": "folder:engine/runtime/tasks/values/references",
+    "kind": "folder",
+    "path": "engine/runtime/tasks/values/references",
+    "lane": "execution_io",
+    "sources": [
+      "engine/runtime/tasks/reference_task.py"
+    ]
+  },
+  {
+    "id": "folder:engine/runtime/tasks/values/scalar",
+    "kind": "folder",
+    "path": "engine/runtime/tasks/values/scalar",
+    "lane": "execution_io",
+    "sources": [
+      "engine/runtime/tasks/element_task.py",
+      "engine/runtime/tasks/generator_task.py",
+      "engine/runtime/tasks/key_task.py"
+    ]
+  },
+  {
+    "id": "folder:engine/runtime/tasks/values/structured",
+    "kind": "folder",
+    "path": "engine/runtime/tasks/values/structured",
+    "lane": "execution_io",
+    "sources": [
+      "engine/runtime/tasks/array_task.py",
+      "engine/runtime/tasks/item_task.py",
+      "engine/runtime/tasks/list_task.py",
+      "engine/runtime/tasks/nested_key_task.py"
+    ]
+  },
+  {
+    "id": "folder:engine/runtime/tasks/values/variables",
+    "kind": "folder",
+    "path": "engine/runtime/tasks/values/variables",
+    "lane": "execution_io",
+    "sources": [
+      "engine/runtime/tasks/key_variable_task.py",
+      "engine/runtime/tasks/variable_iterator.py",
+      "engine/runtime/tasks/variable_task.py"
+    ]
+  },
+  {
+    "id": "contract:runtime/tasks/generate/orchestration",
+    "kind": "contract",
+    "path": "runtime/tasks/generate/orchestration",
+    "lane": "execution_io",
+    "contract": "docs/architecture/inner/runtime/tasks/generate/architecture-contract.json",
+    "sources": [
+      "engine/runtime/tasks/generate/task.py"
+    ]
+  },
+  {
+    "id": "contract:runtime/tasks/generate/workers",
+    "kind": "contract",
+    "path": "runtime/tasks/generate/workers",
+    "lane": "execution_io",
+    "contract": "docs/architecture/inner/runtime/tasks/generate/architecture-contract.json",
+    "sources": [
+      "engine/runtime/tasks/generate/workers/__init__.py",
+      "engine/runtime/tasks/generate/workers/generate_worker.py",
+      "engine/runtime/tasks/generate/workers/multiprocessing_generate_worker.py",
+      "engine/runtime/tasks/generate/workers/ray_generate_worker.py"
+    ]
+  },
+  {
+    "id": "contract:runtime/tasks/generate/policies",
+    "kind": "contract",
+    "path": "runtime/tasks/generate/policies",
+    "lane": "execution_io",
+    "contract": "docs/architecture/inner/runtime/tasks/generate/architecture-contract.json",
+    "sources": [
+      "engine/runtime/tasks/generate/services/__init__.py",
+      "engine/runtime/tasks/generate/services/policies/__init__.py",
+      "engine/runtime/tasks/generate/services/policies/single_process_policy.py"
+    ]
+  },
+  {
+    "id": "contract:runtime/tasks/base",
+    "kind": "contract",
+    "path": "runtime/tasks/base",
+    "lane": "execution_io",
+    "contract": "docs/architecture/inner/runtime/tasks/architecture-contract.json",
+    "sources": [
+      "engine/runtime/counts.py",
+      "engine/runtime/tasks/task.py",
+      "engine/runtime/tasks/task_factory.py",
+      "engine/runtime/tasks/task_util.py"
+    ]
+  },
+  {
+    "id": "contract:runtime/tasks/setup",
+    "kind": "contract",
+    "path": "runtime/tasks/setup",
+    "lane": "execution_io",
+    "contract": "docs/architecture/inner/runtime/tasks/architecture-contract.json",
+    "sources": [
+      "engine/runtime/tasks/database_task.py",
+      "engine/runtime/tasks/demographics_task.py",
+      "engine/runtime/tasks/include_task.py",
+      "engine/runtime/tasks/memstore_task.py",
+      "engine/runtime/tasks/mongodb_task.py",
+      "engine/runtime/tasks/setup_task.py"
+    ]
+  },
+  {
+    "id": "contract:runtime/tasks/generate",
+    "kind": "contract",
+    "path": "runtime/tasks/generate",
+    "lane": "execution_io",
+    "contract": "docs/architecture/inner/runtime/tasks/architecture-contract.json",
+    "sources": [
+      "engine/runtime/tasks/generate/__init__.py",
+      "engine/runtime/tasks/generate/services/__init__.py",
+      "engine/runtime/tasks/generate/services/policies/__init__.py",
+      "engine/runtime/tasks/generate/services/policies/single_process_policy.py",
+      "engine/runtime/tasks/generate/task.py",
+      "engine/runtime/tasks/generate/workers/__init__.py",
+      "engine/runtime/tasks/generate/workers/generate_worker.py",
+      "engine/runtime/tasks/generate/workers/multiprocessing_generate_worker.py",
+      "engine/runtime/tasks/generate/workers/ray_generate_worker.py"
+    ]
+  },
+  {
+    "id": "contract:runtime/tasks/values",
+    "kind": "contract",
+    "path": "runtime/tasks/values",
+    "lane": "execution_io",
+    "contract": "docs/architecture/inner/runtime/tasks/architecture-contract.json",
+    "sources": [
+      "engine/runtime/generators/__init__.py",
+      "engine/runtime/generators/factory.py",
+      "engine/runtime/generators/sequence_table.py",
+      "engine/runtime/tasks/array_task.py",
+      "engine/runtime/tasks/element_task.py",
+      "engine/runtime/tasks/entity_constructor.py",
+      "engine/runtime/tasks/generator_task.py",
+      "engine/runtime/tasks/item_task.py",
+      "engine/runtime/tasks/key_task.py",
+      "engine/runtime/tasks/key_variable_task.py",
+      "engine/runtime/tasks/list_task.py",
+      "engine/runtime/tasks/nested_key_task.py",
+      "engine/runtime/tasks/reference_task.py",
+      "engine/runtime/tasks/variable_iterator.py",
+      "engine/runtime/tasks/variable_task.py"
+    ]
+  },
+  {
+    "id": "contract:runtime/tasks/flow",
+    "kind": "contract",
+    "path": "runtime/tasks/flow",
+    "lane": "execution_io",
+    "contract": "docs/architecture/inner/runtime/tasks/architecture-contract.json",
+    "sources": [
+      "engine/runtime/tasks/assert_task.py",
+      "engine/runtime/tasks/condition_task.py",
+      "engine/runtime/tasks/echo_task.py",
+      "engine/runtime/tasks/else_if_task.py",
+      "engine/runtime/tasks/else_task.py",
+      "engine/runtime/tasks/execute_task.py",
+      "engine/runtime/tasks/if_else_base_task.py",
+      "engine/runtime/tasks/if_task.py",
+      "engine/runtime/tasks/state_machine_task.py",
+      "engine/runtime/tasks/while_task.py"
+    ]
+  },
+  {
+    "id": "contract:runtime/tasks/sources",
+    "kind": "contract",
+    "path": "runtime/tasks/sources",
+    "lane": "execution_io",
+    "contract": "docs/architecture/inner/runtime/tasks/architecture-contract.json",
+    "sources": [
+      "engine/runtime/sources/__init__.py",
+      "engine/runtime/sources/chunk_source_reader.py",
+      "engine/runtime/sources/router.py",
+      "engine/runtime/sources/selection.py",
+      "engine/runtime/sources/variable.py"
+    ]
+  },
+  {
+    "id": "contract:runtime/api",
+    "kind": "contract",
+    "path": "runtime/api",
+    "lane": "execution_io",
+    "contract": "docs/architecture/inner/runtime/architecture-contract.json",
+    "sources": [
+      "engine/runtime/api.py"
+    ]
+  },
+  {
+    "id": "contract:runtime/contracts",
+    "kind": "contract",
+    "path": "runtime/contracts",
+    "lane": "execution_io",
+    "contract": "docs/architecture/inner/runtime/architecture-contract.json",
+    "sources": [
+      "engine/runtime/contracts.py"
+    ]
+  },
+  {
+    "id": "contract:runtime/storage",
+    "kind": "contract",
+    "path": "runtime/storage",
+    "lane": "execution_io",
+    "contract": "docs/architecture/inner/runtime/architecture-contract.json",
+    "sources": [
+      "engine/runtime/storage/__init__.py",
+      "engine/runtime/storage/memstore_manager.py"
+    ]
+  },
+  {
+    "id": "contract:runtime/logging",
+    "kind": "contract",
+    "path": "runtime/logging",
+    "lane": "execution_io",
+    "contract": "docs/architecture/inner/runtime/architecture-contract.json",
+    "sources": [
+      "engine/runtime/logging.py"
+    ]
+  },
+  {
+    "id": "contract:runtime/evaluation",
+    "kind": "contract",
+    "path": "runtime/evaluation",
+    "lane": "execution_io",
+    "contract": "docs/architecture/inner/runtime/architecture-contract.json",
+    "sources": [
+      "engine/runtime/scripting/__init__.py",
+      "engine/runtime/scripting/evaluation.py",
+      "engine/runtime/scripting/plugins/__init__.py"
+    ]
+  },
+  {
+    "id": "contract:runtime/contexts",
+    "kind": "contract",
+    "path": "runtime/contexts",
+    "lane": "execution_io",
+    "contract": "docs/architecture/inner/runtime/architecture-contract.json",
+    "sources": [
+      "engine/runtime/contexts/__init__.py",
+      "engine/runtime/contexts/context.py",
+      "engine/runtime/contexts/demographic_context.py",
+      "engine/runtime/contexts/expression_globals.py",
+      "engine/runtime/contexts/geniter_context.py",
+      "engine/runtime/contexts/records.py",
+      "engine/runtime/contexts/setup_context.py"
+    ]
+  },
+  {
+    "id": "contract:runtime/tasks",
+    "kind": "contract",
+    "path": "runtime/tasks",
+    "lane": "execution_io",
+    "contract": "docs/architecture/inner/runtime/architecture-contract.json",
+    "sources": [
+      "engine/runtime/counts.py",
+      "engine/runtime/generators/__init__.py",
+      "engine/runtime/generators/factory.py",
+      "engine/runtime/generators/sequence_table.py",
+      "engine/runtime/sources/__init__.py",
+      "engine/runtime/sources/chunk_source_reader.py",
+      "engine/runtime/sources/router.py",
+      "engine/runtime/sources/selection.py",
+      "engine/runtime/sources/variable.py",
+      "engine/runtime/tasks/__init__.py",
+      "engine/runtime/tasks/array_task.py",
+      "engine/runtime/tasks/assert_task.py",
+      "engine/runtime/tasks/condition_task.py",
+      "engine/runtime/tasks/database_task.py",
+      "engine/runtime/tasks/demographics_task.py",
+      "engine/runtime/tasks/echo_task.py",
+      "engine/runtime/tasks/element_task.py",
+      "engine/runtime/tasks/else_if_task.py",
+      "engine/runtime/tasks/else_task.py",
+      "engine/runtime/tasks/entity_constructor.py",
+      "engine/runtime/tasks/execute_task.py",
+      "engine/runtime/tasks/generate/__init__.py",
+      "engine/runtime/tasks/generate/services/__init__.py",
+      "engine/runtime/tasks/generate/services/policies/__init__.py",
+      "engine/runtime/tasks/generate/services/policies/single_process_policy.py",
+      "engine/runtime/tasks/generate/task.py",
+      "engine/runtime/tasks/generate/workers/__init__.py",
+      "engine/runtime/tasks/generate/workers/generate_worker.py",
+      "engine/runtime/tasks/generate/workers/multiprocessing_generate_worker.py",
+      "engine/runtime/tasks/generate/workers/ray_generate_worker.py",
+      "engine/runtime/tasks/generator_task.py",
+      "engine/runtime/tasks/if_else_base_task.py",
+      "engine/runtime/tasks/if_task.py",
+      "engine/runtime/tasks/include_task.py",
+      "engine/runtime/tasks/item_task.py",
+      "engine/runtime/tasks/key_task.py",
+      "engine/runtime/tasks/key_variable_task.py",
+      "engine/runtime/tasks/list_task.py",
+      "engine/runtime/tasks/memstore_task.py",
+      "engine/runtime/tasks/mongodb_task.py",
+      "engine/runtime/tasks/nested_key_task.py",
+      "engine/runtime/tasks/reference_task.py",
+      "engine/runtime/tasks/setup_task.py",
+      "engine/runtime/tasks/state_machine_task.py",
+      "engine/runtime/tasks/task.py",
+      "engine/runtime/tasks/task_factory.py",
+      "engine/runtime/tasks/task_util.py",
+      "engine/runtime/tasks/variable_iterator.py",
+      "engine/runtime/tasks/variable_task.py",
+      "engine/runtime/tasks/while_task.py"
+    ]
+  },
+  {
+    "id": "contract:runtime/lifecycle",
+    "kind": "contract",
+    "path": "runtime/lifecycle",
+    "lane": "execution_io",
+    "contract": "docs/architecture/inner/runtime/architecture-contract.json",
+    "sources": [
+      "engine/runtime/lifecycle/__init__.py",
+      "engine/runtime/lifecycle/config.py",
+      "engine/runtime/lifecycle/runner.py",
+      "engine/runtime/process.py"
+    ]
+  },
+  {
+    "id": "contract:io/exporters/core",
+    "kind": "contract",
+    "path": "io/exporters/core",
+    "lane": "execution_io",
+    "contract": "docs/architecture/inner/io/exporters/architecture-contract.json",
+    "sources": [
+      "engine/io/exporters/exporter.py",
+      "engine/io/exporters/exporter_config.py",
+      "engine/io/exporters/exporter_context.py",
+      "engine/io/exporters/exporter_state_manager.py",
+      "engine/io/exporters/unified_buffered_exporter.py"
+    ]
+  },
+  {
+    "id": "contract:io/exporters/formats",
+    "kind": "contract",
+    "path": "io/exporters/formats",
+    "lane": "execution_io",
+    "contract": "docs/architecture/inner/io/exporters/architecture-contract.json",
+    "sources": [
+      "engine/io/exporters/csv_exporter.py",
+      "engine/io/exporters/fixed_width_exporter.py",
+      "engine/io/exporters/json_exporter.py",
+      "engine/io/exporters/txt_exporter.py",
+      "engine/io/exporters/xlsx_exporter.py",
+      "engine/io/exporters/xml_exporter.py"
+    ]
+  },
+  {
+    "id": "contract:io/exporters/database",
+    "kind": "contract",
+    "path": "io/exporters/database",
+    "lane": "execution_io",
+    "contract": "docs/architecture/inner/io/exporters/architecture-contract.json",
+    "sources": [
+      "engine/io/exporters/database_exporter.py",
+      "engine/io/exporters/dbunit_exporter.py",
+      "engine/io/exporters/mongodb_exporter.py"
+    ]
+  },
+  {
+    "id": "contract:io/exporters/memory",
+    "kind": "contract",
+    "path": "io/exporters/memory",
+    "lane": "execution_io",
+    "contract": "docs/architecture/inner/io/exporters/architecture-contract.json",
+    "sources": [
+      "engine/io/exporters/memstore.py"
+    ]
+  },
+  {
+    "id": "contract:io/exporters/diagnostics",
+    "kind": "contract",
+    "path": "io/exporters/diagnostics",
+    "lane": "execution_io",
+    "contract": "docs/architecture/inner/io/exporters/architecture-contract.json",
+    "sources": [
+      "engine/io/exporters/console_exporter.py",
+      "engine/io/exporters/log_exporter.py",
+      "engine/io/exporters/smoke_export.py",
+      "engine/io/exporters/test_result_exporter.py"
+    ]
+  },
+  {
+    "id": "contract:io/exporters/registry",
+    "kind": "contract",
+    "path": "io/exporters/registry",
+    "lane": "execution_io",
+    "contract": "docs/architecture/inner/io/exporters/architecture-contract.json",
+    "sources": [
+      "engine/io/exporters/exporter_util.py"
+    ]
+  },
+  {
+    "id": "contract:io/api",
+    "kind": "contract",
+    "path": "io/api",
+    "lane": "execution_io",
+    "contract": "docs/architecture/inner/io/architecture-contract.json",
+    "sources": [
+      "engine/io/api.py",
+      "engine/io/dataset_api.py"
+    ]
+  },
+  {
+    "id": "contract:io/contracts",
+    "kind": "contract",
+    "path": "io/contracts",
+    "lane": "execution_io",
+    "contract": "docs/architecture/inner/io/architecture-contract.json",
+    "sources": [
+      "engine/io/contracts.py"
+    ]
+  },
+  {
+    "id": "contract:io/clients",
+    "kind": "contract",
+    "path": "io/clients",
+    "lane": "execution_io",
+    "contract": "docs/architecture/inner/io/architecture-contract.json",
+    "sources": [
+      "engine/io/client_operations.py",
+      "engine/io/clients/__init__.py",
+      "engine/io/clients/client.py",
+      "engine/io/clients/database_client.py",
+      "engine/io/clients/entity_serialization.py",
+      "engine/io/clients/mongodb_client.py",
+      "engine/io/clients/rdbms_client.py",
+      "engine/io/clients/sql_dialect.py",
+      "engine/io/connection_config/__init__.py",
+      "engine/io/connection_config/connection_config_base.py",
+      "engine/io/connection_config/mongodb_connection_config.py",
+      "engine/io/connection_config/rdbms_connection_config.py"
+    ]
+  },
+  {
+    "id": "contract:io/data_sources",
+    "kind": "contract",
+    "path": "io/data_sources",
+    "lane": "execution_io",
+    "contract": "docs/architecture/inner/io/architecture-contract.json",
+    "sources": [
+      "engine/io/data_sources/__init__.py",
+      "engine/io/data_sources/data_source_registry.py",
+      "engine/io/data_sources/weighted_data_source.py",
+      "engine/io/data_sources/weighted_entity_data_source.py"
+    ]
+  },
+  {
+    "id": "contract:io/exporters",
+    "kind": "contract",
+    "path": "io/exporters",
+    "lane": "execution_io",
+    "contract": "docs/architecture/inner/io/architecture-contract.json",
+    "sources": [
+      "engine/io/exporters/__init__.py",
+      "engine/io/exporters/console_exporter.py",
+      "engine/io/exporters/csv_exporter.py",
+      "engine/io/exporters/database_exporter.py",
+      "engine/io/exporters/dbunit_exporter.py",
+      "engine/io/exporters/exporter.py",
+      "engine/io/exporters/exporter_config.py",
+      "engine/io/exporters/exporter_context.py",
+      "engine/io/exporters/exporter_state_manager.py",
+      "engine/io/exporters/exporter_util.py",
+      "engine/io/exporters/fixed_width_exporter.py",
+      "engine/io/exporters/json_exporter.py",
+      "engine/io/exporters/log_exporter.py",
+      "engine/io/exporters/memstore.py",
+      "engine/io/exporters/mongodb_exporter.py",
+      "engine/io/exporters/smoke_export.py",
+      "engine/io/exporters/test_result_exporter.py",
+      "engine/io/exporters/txt_exporter.py",
+      "engine/io/exporters/unified_buffered_exporter.py",
+      "engine/io/exporters/xlsx_exporter.py",
+      "engine/io/exporters/xml_exporter.py"
+    ]
+  },
+  {
+    "id": "contract:io/files",
+    "kind": "contract",
+    "path": "io/files",
+    "lane": "execution_io",
+    "contract": "docs/architecture/inner/io/architecture-contract.json",
+    "sources": [
+      "engine/io/file_cache.py",
+      "engine/io/files.py"
+    ]
+  }
+]

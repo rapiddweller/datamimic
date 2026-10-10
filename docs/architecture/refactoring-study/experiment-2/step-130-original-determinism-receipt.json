@@ -1,0 +1,1148 @@
+{
+  "step": 130,
+  "source_edits": 0,
+  "source_checkpoints": {
+    "original_a219": "a219163e533d661bcc7bda0faa5ecc77909ab5aa",
+    "current_e7": "e7abf836838291373d8c1ed1f2d7e6e5e0db8500",
+    "frozen_actual_3b844": "3b844b5083e5af89269ef917bc0614601d30cf61"
+  },
+  "native_cases": {
+    "original": 20,
+    "current": 21,
+    "failures_errors_skips": 0,
+    "retries": 0
+  },
+  "captures": {
+    "per_checkpoint": 16,
+    "actual_inventory_original": 930,
+    "actual_inventory_current": 931,
+    "successful_child_streams_and_raw_rows_retained": false,
+    "producers": "unchanged Git3b helper bound to a219; unchanged e7 helper bound to e7; seeded normalize/output_digest AST equal; unseeded shape helpers differ"
+  },
+  "comparison_counts": {
+    "selected": 16,
+    "seeded": 11,
+    "seeded_three_way_exact_equal": 11,
+    "strict_original_current_pass": 11,
+    "strict_frozen_current_pass": 11,
+    "unseeded_common_field_equal": 5
+  },
+  "unseeded_strict_comparisons": "5 FAIL; old presence/output-schema/nested evidence absent; common-field equality remains supplemental only",
+  "ledger": {
+    "base_sha256": "367023b59a1a377568fe2195d366ff1cb99a0d329bef4d6eac2b5e9530370c55",
+    "final_sha256": "e77f2f6ad19f0774415e6c4eeb4163777f84b26bd09e68ed223601561187c918",
+    "rows": 931,
+    "changed_paths": [
+      "tests_ce/integration_tests/test_seeded_determinism/datetime_generator.xml",
+      "tests_ce/integration_tests/test_seeded_determinism/domain_generators.xml",
+      "tests_ce/integration_tests/test_seeded_determinism/domain_generators_mp.xml",
+      "tests_ce/integration_tests/test_seeded_determinism/entity_values.xml",
+      "tests_ce/integration_tests/test_seeded_determinism/entity_values_mp.xml",
+      "tests_ce/integration_tests/test_seeded_determinism/float_generator.xml",
+      "tests_ce/integration_tests/test_seeded_determinism/int_generator.xml",
+      "tests_ce/integration_tests/test_seeded_determinism/int_generator_mp.xml",
+      "tests_ce/integration_tests/test_seeded_determinism/source_random.xml",
+      "tests_ce/integration_tests/test_seeded_determinism/source_random_mp.xml",
+      "tests_ce/integration_tests/test_seeded_determinism/two_generators.xml",
+      "tests_ce/integration_tests/test_seeded_determinism/unseeded_datetime.xml",
+      "tests_ce/integration_tests/test_seeded_determinism/unseeded_domain.xml",
+      "tests_ce/integration_tests/test_seeded_determinism/unseeded_entity.xml",
+      "tests_ce/integration_tests/test_seeded_determinism/unseeded_integer.xml",
+      "tests_ce/integration_tests/test_seeded_determinism/unseeded_source.xml"
+    ],
+    "other_rows_byte_identical": 915,
+    "prior_reviewed71_untouched": true,
+    "reviewed_profiles": 87,
+    "unknown_profiles": 844,
+    "changed_fields_only": [
+      "input_dependencies",
+      "input_review_status",
+      "isolation",
+      "isolation_review_status",
+      "seeded_determinism_supplemental_evidence"
+    ],
+    "old_history_c992_parity_and_receipts_preserved": true,
+    "full_acceptance": "FAIL"
+  },
+  "profile": "Existing project venv; explicit development; clone imports and disposable local temp staging; unchanged HOME/TZ/seeds/clocks/dataset; resource hashes are identity, not dynamic read trace; standalone isolation remains UNKNOWN; no OS sandbox claim",
+  "ci": {
+    "associated_source_checkpoint": "e7abf836838291373d8c1ed1f2d7e6e5e0db8500",
+    "run_ids": {
+      "pr": 37772198248,
+      "push": 37772188692
+    },
+    "each_run": {
+      "success": 24,
+      "architecture_failure": 2,
+      "skipped": 2
+    },
+    "actual_manifest_compare_each": "8/8 PASS; all 16 PR/push JSON payloads equal; selected golden scope only, not full931",
+    "pr_checkout_caveat": "default actions/checkout uses merge ref; API headSha associates e7; push default uses event commit; manifests lack independent checkout SHA",
+    "later_documentation_checkpoint": "not yet verified by CI"
+  },
+  "architecture": {
+    "pinned_version": "1.0.0",
+    "source_digest": "bdf76fc592b0330e66b2569beec4d9c9ab39df26b8c359619cd4b1527dba366b",
+    "modules": 491,
+    "violations": 89,
+    "canonical_unknowns": 254,
+    "measured_unknown_positions": 200,
+    "acceptance": "FAIL",
+    "all_depth_target_navigation": "FAIL/UNKNOWN preserved; module Target unavailable"
+  },
+  "preserved_failed_attempts": "importv1 incorrect original Settings path loaded main editable module; importv2 omitted namespace search paths; first collection socket denial before test cases; console receipt_path metadata error; QA historical-recorder/driver prose corrected append-only; no failed assertion retried",
+  "full_acceptance": "FAIL",
+  "remaining": "full931 behavior; physical/contracts conformance; all-depth Actual/Target/Diff navigation; required EE transfer; assessed UNKNOWNs",
+  "artifacts": [
+    {
+      "path": "test-artifacts/architecture/ce-recursive-target/step-130-evidence/baseline/ledger-step126-memstore-v2.jsonl",
+      "sha256": "367023b59a1a377568fe2195d366ff1cb99a0d329bef4d6eac2b5e9530370c55",
+      "bytes": 3086641,
+      "source_path": "/tmp/ce-resume-20261008/next-slice-126/ledger-step126-memstore-v2.jsonl"
+    },
+    {
+      "path": "test-artifacts/architecture/ce-recursive-target/step-130-evidence/baseline/step0-before.json",
+      "sha256": "f7a0f48cb97d457b9507dd0ec6c6a87840becf85b27f9835c5108b8f4e8a9e6b",
+      "bytes": 1670365,
+      "source_path": "/Users/akell/PycharmProjects/development-v2/datamimic/test-artifacts/architecture/target-refactor/qa-baseline/step0-before.json"
+    },
+    {
+      "path": "test-artifacts/architecture/ce-recursive-target/step-130-evidence/ci/ci-e7abf836-pr-latest.json",
+      "sha256": "101840ac00e464a97040d8335817603741945af3673eb5b2caab2365794d266b",
+      "bytes": 59729,
+      "source_path": "/tmp/ce-resume-20261008/ci-e7abf836-pr-latest.json"
+    },
+    {
+      "path": "test-artifacts/architecture/ce-recursive-target/step-130-evidence/ci/ci-e7abf836-pr-seeded-runtime-artifact-receipt.json",
+      "sha256": "67535593902940737d2cc36639c70634b0c1d2e1eb0be0fa11437a83505f0e2a",
+      "bytes": 4927,
+      "source_path": "/tmp/ce-resume-20261008/ci-e7abf836-pr-seeded-runtime-artifact-receipt.json"
+    },
+    {
+      "path": "test-artifacts/architecture/ce-recursive-target/step-130-evidence/ci/ci-e7abf836-pr-seeded-runtime-artifacts/seeded-runtime-hashes-ubuntu-py310-utc/runtime-determinism-manifest.json",
+      "sha256": "2ac387d107f94dcdc9dd494f7ef02e4cd2ccdc12e476501079c1902d04a9563f",
+      "bytes": 961,
+      "source_path": "/tmp/ce-resume-20261008/ci-e7abf836-pr-seeded-runtime-artifacts/seeded-runtime-hashes-ubuntu-py310-utc/runtime-determinism-manifest.json"
+    },
+    {
+      "path": "test-artifacts/architecture/ce-recursive-target/step-130-evidence/ci/ci-e7abf836-pr-seeded-runtime-artifacts/seeded-runtime-hashes-ubuntu-py310-utc/runtime-environment.txt",
+      "sha256": "9296da05d54d743342bf3f41e9935f2d728c89c66a22b4402ca4171578d936e0",
+      "bytes": 2071,
+      "source_path": "/tmp/ce-resume-20261008/ci-e7abf836-pr-seeded-runtime-artifacts/seeded-runtime-hashes-ubuntu-py310-utc/runtime-environment.txt"
+    },
+    {
+      "path": "test-artifacts/architecture/ce-recursive-target/step-130-evidence/ci/ci-e7abf836-pr-seeded-runtime-artifacts/seeded-runtime-hashes-ubuntu-py311-los-angeles/runtime-determinism-manifest.json",
+      "sha256": "2ac387d107f94dcdc9dd494f7ef02e4cd2ccdc12e476501079c1902d04a9563f",
+      "bytes": 961,
+      "source_path": "/tmp/ce-resume-20261008/ci-e7abf836-pr-seeded-runtime-artifacts/seeded-runtime-hashes-ubuntu-py311-los-angeles/runtime-determinism-manifest.json"
+    },
+    {
+      "path": "test-artifacts/architecture/ce-recursive-target/step-130-evidence/ci/ci-e7abf836-pr-seeded-runtime-artifacts/seeded-runtime-hashes-ubuntu-py311-los-angeles/runtime-environment.txt",
+      "sha256": "33ccdfc9cb5bf17896667342c72a7b9a2a7c9967dc9791934fa286c0f17bd205",
+      "bytes": 2028,
+      "source_path": "/tmp/ce-resume-20261008/ci-e7abf836-pr-seeded-runtime-artifacts/seeded-runtime-hashes-ubuntu-py311-los-angeles/runtime-environment.txt"
+    },
+    {
+      "path": "test-artifacts/architecture/ce-recursive-target/step-130-evidence/ci/ci-e7abf836-pr-seeded-runtime-artifacts/seeded-runtime-hashes-ubuntu-py311-utc-lowest-direct/runtime-determinism-manifest.json",
+      "sha256": "2ac387d107f94dcdc9dd494f7ef02e4cd2ccdc12e476501079c1902d04a9563f",
+      "bytes": 961,
+      "source_path": "/tmp/ce-resume-20261008/ci-e7abf836-pr-seeded-runtime-artifacts/seeded-runtime-hashes-ubuntu-py311-utc-lowest-direct/runtime-determinism-manifest.json"
+    },
+    {
+      "path": "test-artifacts/architecture/ce-recursive-target/step-130-evidence/ci/ci-e7abf836-pr-seeded-runtime-artifacts/seeded-runtime-hashes-ubuntu-py311-utc-lowest-direct/runtime-environment.txt",
+      "sha256": "9562b6909163019d1cf22482b0fd1ab23806aae282cfd09e843ba04e3f11d61f",
+      "bytes": 1970,
+      "source_path": "/tmp/ce-resume-20261008/ci-e7abf836-pr-seeded-runtime-artifacts/seeded-runtime-hashes-ubuntu-py311-utc-lowest-direct/runtime-environment.txt"
+    },
+    {
+      "path": "test-artifacts/architecture/ce-recursive-target/step-130-evidence/ci/ci-e7abf836-pr-seeded-runtime-artifacts/seeded-runtime-hashes-ubuntu-py311-utc/runtime-determinism-manifest.json",
+      "sha256": "2ac387d107f94dcdc9dd494f7ef02e4cd2ccdc12e476501079c1902d04a9563f",
+      "bytes": 961,
+      "source_path": "/tmp/ce-resume-20261008/ci-e7abf836-pr-seeded-runtime-artifacts/seeded-runtime-hashes-ubuntu-py311-utc/runtime-determinism-manifest.json"
+    },
+    {
+      "path": "test-artifacts/architecture/ce-recursive-target/step-130-evidence/ci/ci-e7abf836-pr-seeded-runtime-artifacts/seeded-runtime-hashes-ubuntu-py311-utc/runtime-environment.txt",
+      "sha256": "33ccdfc9cb5bf17896667342c72a7b9a2a7c9967dc9791934fa286c0f17bd205",
+      "bytes": 2028,
+      "source_path": "/tmp/ce-resume-20261008/ci-e7abf836-pr-seeded-runtime-artifacts/seeded-runtime-hashes-ubuntu-py311-utc/runtime-environment.txt"
+    },
+    {
+      "path": "test-artifacts/architecture/ce-recursive-target/step-130-evidence/ci/ci-e7abf836-pr-seeded-runtime-artifacts/seeded-runtime-hashes-ubuntu-py312-utc/runtime-determinism-manifest.json",
+      "sha256": "2ac387d107f94dcdc9dd494f7ef02e4cd2ccdc12e476501079c1902d04a9563f",
+      "bytes": 961,
+      "source_path": "/tmp/ce-resume-20261008/ci-e7abf836-pr-seeded-runtime-artifacts/seeded-runtime-hashes-ubuntu-py312-utc/runtime-determinism-manifest.json"
+    },
+    {
+      "path": "test-artifacts/architecture/ce-recursive-target/step-130-evidence/ci/ci-e7abf836-pr-seeded-runtime-artifacts/seeded-runtime-hashes-ubuntu-py312-utc/runtime-environment.txt",
+      "sha256": "af2f556feeccee7aa2ce11b0d249d1b11bfdcb222092b17aea00f90c3600b356",
+      "bytes": 2028,
+      "source_path": "/tmp/ce-resume-20261008/ci-e7abf836-pr-seeded-runtime-artifacts/seeded-runtime-hashes-ubuntu-py312-utc/runtime-environment.txt"
+    },
+    {
+      "path": "test-artifacts/architecture/ce-recursive-target/step-130-evidence/ci/ci-e7abf836-pr-seeded-runtime-artifacts/seeded-runtime-hashes-ubuntu-py313-utc/runtime-determinism-manifest.json",
+      "sha256": "2ac387d107f94dcdc9dd494f7ef02e4cd2ccdc12e476501079c1902d04a9563f",
+      "bytes": 961,
+      "source_path": "/tmp/ce-resume-20261008/ci-e7abf836-pr-seeded-runtime-artifacts/seeded-runtime-hashes-ubuntu-py313-utc/runtime-determinism-manifest.json"
+    },
+    {
+      "path": "test-artifacts/architecture/ce-recursive-target/step-130-evidence/ci/ci-e7abf836-pr-seeded-runtime-artifacts/seeded-runtime-hashes-ubuntu-py313-utc/runtime-environment.txt",
+      "sha256": "62f0095957beda71fbd8efd5094e7dec77dc223f552fb488a329e0f9a1443ca2",
+      "bytes": 2028,
+      "source_path": "/tmp/ce-resume-20261008/ci-e7abf836-pr-seeded-runtime-artifacts/seeded-runtime-hashes-ubuntu-py313-utc/runtime-environment.txt"
+    },
+    {
+      "path": "test-artifacts/architecture/ce-recursive-target/step-130-evidence/ci/ci-e7abf836-pr-seeded-runtime-artifacts/seeded-runtime-hashes-windows-py311-pacific/runtime-determinism-manifest.json",
+      "sha256": "6ca7609c93b96025456eca2495b59fdc212884ee3aa0c0e02d9ba6340543cc7b",
+      "bytes": 962,
+      "source_path": "/tmp/ce-resume-20261008/ci-e7abf836-pr-seeded-runtime-artifacts/seeded-runtime-hashes-windows-py311-pacific/runtime-determinism-manifest.json"
+    },
+    {
+      "path": "test-artifacts/architecture/ce-recursive-target/step-130-evidence/ci/ci-e7abf836-pr-seeded-runtime-artifacts/seeded-runtime-hashes-windows-py311-pacific/runtime-environment.txt",
+      "sha256": "a9cc44ef1b317529c14b6a4d447bfc0d6c8f3c8d52752ca4de9d2b9ed082f430",
+      "bytes": 2095,
+      "source_path": "/tmp/ce-resume-20261008/ci-e7abf836-pr-seeded-runtime-artifacts/seeded-runtime-hashes-windows-py311-pacific/runtime-environment.txt"
+    },
+    {
+      "path": "test-artifacts/architecture/ce-recursive-target/step-130-evidence/ci/ci-e7abf836-pr-seeded-runtime-artifacts/seeded-runtime-hashes-windows-py311-utc/runtime-determinism-manifest.json",
+      "sha256": "6ca7609c93b96025456eca2495b59fdc212884ee3aa0c0e02d9ba6340543cc7b",
+      "bytes": 962,
+      "source_path": "/tmp/ce-resume-20261008/ci-e7abf836-pr-seeded-runtime-artifacts/seeded-runtime-hashes-windows-py311-utc/runtime-determinism-manifest.json"
+    },
+    {
+      "path": "test-artifacts/architecture/ce-recursive-target/step-130-evidence/ci/ci-e7abf836-pr-seeded-runtime-artifacts/seeded-runtime-hashes-windows-py311-utc/runtime-environment.txt",
+      "sha256": "a9cc44ef1b317529c14b6a4d447bfc0d6c8f3c8d52752ca4de9d2b9ed082f430",
+      "bytes": 2095,
+      "source_path": "/tmp/ce-resume-20261008/ci-e7abf836-pr-seeded-runtime-artifacts/seeded-runtime-hashes-windows-py311-utc/runtime-environment.txt"
+    },
+    {
+      "path": "test-artifacts/architecture/ce-recursive-target/step-130-evidence/ci/ci-e7abf836-pr-seeded-runtime-compare.stderr",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0,
+      "source_path": "/tmp/ce-resume-20261008/ci-e7abf836-pr-seeded-runtime-compare.stderr"
+    },
+    {
+      "path": "test-artifacts/architecture/ce-recursive-target/step-130-evidence/ci/ci-e7abf836-pr-seeded-runtime-compare.stdout",
+      "sha256": "01424d73ac15d42d0db8a79d4cbae10c34da5fa6252d79222247ef21bdca512b",
+      "bytes": 4699,
+      "source_path": "/tmp/ce-resume-20261008/ci-e7abf836-pr-seeded-runtime-compare.stdout"
+    },
+    {
+      "path": "test-artifacts/architecture/ce-recursive-target/step-130-evidence/ci/ci-e7abf836-push-latest.json",
+      "sha256": "abf8262e35b975f3c8d88d77e53b66c278c626c0a536a5adf690f0c408e4fe3a",
+      "bytes": 59729,
+      "source_path": "/tmp/ce-resume-20261008/ci-e7abf836-push-latest.json"
+    },
+    {
+      "path": "test-artifacts/architecture/ce-recursive-target/step-130-evidence/ci/ci-e7abf836-push-seeded-runtime-artifact-receipt.json",
+      "sha256": "6e56167203ebdeec4563cf7870c4e0d719ffef26631a80b89dbd95e7196ef8b1",
+      "bytes": 4764,
+      "source_path": "/tmp/ce-resume-20261008/ci-e7abf836-push-seeded-runtime-artifact-receipt.json"
+    },
+    {
+      "path": "test-artifacts/architecture/ce-recursive-target/step-130-evidence/ci/ci-e7abf836-push-seeded-runtime-artifacts/seeded-runtime-hashes-ubuntu-py310-utc/runtime-determinism-manifest.json",
+      "sha256": "2ac387d107f94dcdc9dd494f7ef02e4cd2ccdc12e476501079c1902d04a9563f",
+      "bytes": 961,
+      "source_path": "/tmp/ce-resume-20261008/ci-e7abf836-push-seeded-runtime-artifacts/seeded-runtime-hashes-ubuntu-py310-utc/runtime-determinism-manifest.json"
+    },
+    {
+      "path": "test-artifacts/architecture/ce-recursive-target/step-130-evidence/ci/ci-e7abf836-push-seeded-runtime-artifacts/seeded-runtime-hashes-ubuntu-py310-utc/runtime-environment.txt",
+      "sha256": "9296da05d54d743342bf3f41e9935f2d728c89c66a22b4402ca4171578d936e0",
+      "bytes": 2071,
+      "source_path": "/tmp/ce-resume-20261008/ci-e7abf836-push-seeded-runtime-artifacts/seeded-runtime-hashes-ubuntu-py310-utc/runtime-environment.txt"
+    },
+    {
+      "path": "test-artifacts/architecture/ce-recursive-target/step-130-evidence/ci/ci-e7abf836-push-seeded-runtime-artifacts/seeded-runtime-hashes-ubuntu-py311-los-angeles/runtime-determinism-manifest.json",
+      "sha256": "2ac387d107f94dcdc9dd494f7ef02e4cd2ccdc12e476501079c1902d04a9563f",
+      "bytes": 961,
+      "source_path": "/tmp/ce-resume-20261008/ci-e7abf836-push-seeded-runtime-artifacts/seeded-runtime-hashes-ubuntu-py311-los-angeles/runtime-determinism-manifest.json"
+    },
+    {
+      "path": "test-artifacts/architecture/ce-recursive-target/step-130-evidence/ci/ci-e7abf836-push-seeded-runtime-artifacts/seeded-runtime-hashes-ubuntu-py311-los-angeles/runtime-environment.txt",
+      "sha256": "6e86b6299b5b37881eb544ea381886f8470b91c1a087dbc8936ab7e5d4dcc479",
+      "bytes": 2028,
+      "source_path": "/tmp/ce-resume-20261008/ci-e7abf836-push-seeded-runtime-artifacts/seeded-runtime-hashes-ubuntu-py311-los-angeles/runtime-environment.txt"
+    },
+    {
+      "path": "test-artifacts/architecture/ce-recursive-target/step-130-evidence/ci/ci-e7abf836-push-seeded-runtime-artifacts/seeded-runtime-hashes-ubuntu-py311-utc-lowest-direct/runtime-determinism-manifest.json",
+      "sha256": "2ac387d107f94dcdc9dd494f7ef02e4cd2ccdc12e476501079c1902d04a9563f",
+      "bytes": 961,
+      "source_path": "/tmp/ce-resume-20261008/ci-e7abf836-push-seeded-runtime-artifacts/seeded-runtime-hashes-ubuntu-py311-utc-lowest-direct/runtime-determinism-manifest.json"
+    },
+    {
+      "path": "test-artifacts/architecture/ce-recursive-target/step-130-evidence/ci/ci-e7abf836-push-seeded-runtime-artifacts/seeded-runtime-hashes-ubuntu-py311-utc-lowest-direct/runtime-environment.txt",
+      "sha256": "9562b6909163019d1cf22482b0fd1ab23806aae282cfd09e843ba04e3f11d61f",
+      "bytes": 1970,
+      "source_path": "/tmp/ce-resume-20261008/ci-e7abf836-push-seeded-runtime-artifacts/seeded-runtime-hashes-ubuntu-py311-utc-lowest-direct/runtime-environment.txt"
+    },
+    {
+      "path": "test-artifacts/architecture/ce-recursive-target/step-130-evidence/ci/ci-e7abf836-push-seeded-runtime-artifacts/seeded-runtime-hashes-ubuntu-py311-utc/runtime-determinism-manifest.json",
+      "sha256": "2ac387d107f94dcdc9dd494f7ef02e4cd2ccdc12e476501079c1902d04a9563f",
+      "bytes": 961,
+      "source_path": "/tmp/ce-resume-20261008/ci-e7abf836-push-seeded-runtime-artifacts/seeded-runtime-hashes-ubuntu-py311-utc/runtime-determinism-manifest.json"
+    },
+    {
+      "path": "test-artifacts/architecture/ce-recursive-target/step-130-evidence/ci/ci-e7abf836-push-seeded-runtime-artifacts/seeded-runtime-hashes-ubuntu-py311-utc/runtime-environment.txt",
+      "sha256": "33ccdfc9cb5bf17896667342c72a7b9a2a7c9967dc9791934fa286c0f17bd205",
+      "bytes": 2028,
+      "source_path": "/tmp/ce-resume-20261008/ci-e7abf836-push-seeded-runtime-artifacts/seeded-runtime-hashes-ubuntu-py311-utc/runtime-environment.txt"
+    },
+    {
+      "path": "test-artifacts/architecture/ce-recursive-target/step-130-evidence/ci/ci-e7abf836-push-seeded-runtime-artifacts/seeded-runtime-hashes-ubuntu-py312-utc/runtime-determinism-manifest.json",
+      "sha256": "2ac387d107f94dcdc9dd494f7ef02e4cd2ccdc12e476501079c1902d04a9563f",
+      "bytes": 961,
+      "source_path": "/tmp/ce-resume-20261008/ci-e7abf836-push-seeded-runtime-artifacts/seeded-runtime-hashes-ubuntu-py312-utc/runtime-determinism-manifest.json"
+    },
+    {
+      "path": "test-artifacts/architecture/ce-recursive-target/step-130-evidence/ci/ci-e7abf836-push-seeded-runtime-artifacts/seeded-runtime-hashes-ubuntu-py312-utc/runtime-environment.txt",
+      "sha256": "af2f556feeccee7aa2ce11b0d249d1b11bfdcb222092b17aea00f90c3600b356",
+      "bytes": 2028,
+      "source_path": "/tmp/ce-resume-20261008/ci-e7abf836-push-seeded-runtime-artifacts/seeded-runtime-hashes-ubuntu-py312-utc/runtime-environment.txt"
+    },
+    {
+      "path": "test-artifacts/architecture/ce-recursive-target/step-130-evidence/ci/ci-e7abf836-push-seeded-runtime-artifacts/seeded-runtime-hashes-ubuntu-py313-utc/runtime-determinism-manifest.json",
+      "sha256": "2ac387d107f94dcdc9dd494f7ef02e4cd2ccdc12e476501079c1902d04a9563f",
+      "bytes": 961,
+      "source_path": "/tmp/ce-resume-20261008/ci-e7abf836-push-seeded-runtime-artifacts/seeded-runtime-hashes-ubuntu-py313-utc/runtime-determinism-manifest.json"
+    },
+    {
+      "path": "test-artifacts/architecture/ce-recursive-target/step-130-evidence/ci/ci-e7abf836-push-seeded-runtime-artifacts/seeded-runtime-hashes-ubuntu-py313-utc/runtime-environment.txt",
+      "sha256": "62f0095957beda71fbd8efd5094e7dec77dc223f552fb488a329e0f9a1443ca2",
+      "bytes": 2028,
+      "source_path": "/tmp/ce-resume-20261008/ci-e7abf836-push-seeded-runtime-artifacts/seeded-runtime-hashes-ubuntu-py313-utc/runtime-environment.txt"
+    },
+    {
+      "path": "test-artifacts/architecture/ce-recursive-target/step-130-evidence/ci/ci-e7abf836-push-seeded-runtime-artifacts/seeded-runtime-hashes-windows-py311-pacific/runtime-determinism-manifest.json",
+      "sha256": "6ca7609c93b96025456eca2495b59fdc212884ee3aa0c0e02d9ba6340543cc7b",
+      "bytes": 962,
+      "source_path": "/tmp/ce-resume-20261008/ci-e7abf836-push-seeded-runtime-artifacts/seeded-runtime-hashes-windows-py311-pacific/runtime-determinism-manifest.json"
+    },
+    {
+      "path": "test-artifacts/architecture/ce-recursive-target/step-130-evidence/ci/ci-e7abf836-push-seeded-runtime-artifacts/seeded-runtime-hashes-windows-py311-pacific/runtime-environment.txt",
+      "sha256": "a9cc44ef1b317529c14b6a4d447bfc0d6c8f3c8d52752ca4de9d2b9ed082f430",
+      "bytes": 2095,
+      "source_path": "/tmp/ce-resume-20261008/ci-e7abf836-push-seeded-runtime-artifacts/seeded-runtime-hashes-windows-py311-pacific/runtime-environment.txt"
+    },
+    {
+      "path": "test-artifacts/architecture/ce-recursive-target/step-130-evidence/ci/ci-e7abf836-push-seeded-runtime-artifacts/seeded-runtime-hashes-windows-py311-utc/runtime-determinism-manifest.json",
+      "sha256": "6ca7609c93b96025456eca2495b59fdc212884ee3aa0c0e02d9ba6340543cc7b",
+      "bytes": 962,
+      "source_path": "/tmp/ce-resume-20261008/ci-e7abf836-push-seeded-runtime-artifacts/seeded-runtime-hashes-windows-py311-utc/runtime-determinism-manifest.json"
+    },
+    {
+      "path": "test-artifacts/architecture/ce-recursive-target/step-130-evidence/ci/ci-e7abf836-push-seeded-runtime-artifacts/seeded-runtime-hashes-windows-py311-utc/runtime-environment.txt",
+      "sha256": "a9cc44ef1b317529c14b6a4d447bfc0d6c8f3c8d52752ca4de9d2b9ed082f430",
+      "bytes": 2095,
+      "source_path": "/tmp/ce-resume-20261008/ci-e7abf836-push-seeded-runtime-artifacts/seeded-runtime-hashes-windows-py311-utc/runtime-environment.txt"
+    },
+    {
+      "path": "test-artifacts/architecture/ce-recursive-target/step-130-evidence/ci/ci-e7abf836-push-seeded-runtime-compare.stderr",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0,
+      "source_path": "/tmp/ce-resume-20261008/ci-e7abf836-push-seeded-runtime-compare.stderr"
+    },
+    {
+      "path": "test-artifacts/architecture/ce-recursive-target/step-130-evidence/ci/ci-e7abf836-push-seeded-runtime-compare.stdout",
+      "sha256": "01424d73ac15d42d0db8a79d4cbae10c34da5fa6252d79222247ef21bdca512b",
+      "bytes": 4699,
+      "source_path": "/tmp/ce-resume-20261008/ci-e7abf836-push-seeded-runtime-compare.stdout"
+    },
+    {
+      "path": "test-artifacts/architecture/ce-recursive-target/step-130-evidence/e7-report/architecture.detail.html",
+      "sha256": "a2561beeb74f6bd585beb7772d9d7b2989de8faf0c2a9e50d40a60964ed0fff5",
+      "bytes": 23406552,
+      "source_path": "/tmp/ce-resume-20261008/checkpoint-e7abf836/architecture.detail.html"
+    },
+    {
+      "path": "test-artifacts/architecture/ce-recursive-target/step-130-evidence/e7-report/architecture.json",
+      "sha256": "0ab83eb7957ac24962c4ebe0df62fe44ea6553b3308bd92b0c846cd5c8336fe8",
+      "bytes": 15182590,
+      "source_path": "/tmp/ce-resume-20261008/checkpoint-e7abf836/architecture.json"
+    },
+    {
+      "path": "test-artifacts/architecture/ce-recursive-target/step-130-evidence/e7-report/architecture.report.html",
+      "sha256": "896f3b4e97225f8d3e4076b5d7b539e41702c93c2f7520c59658a646dcd46d8b",
+      "bytes": 1043338,
+      "source_path": "/tmp/ce-resume-20261008/checkpoint-e7abf836/architecture.report.html"
+    },
+    {
+      "path": "test-artifacts/architecture/ce-recursive-target/step-130-evidence/e7-report/receipt.json",
+      "sha256": "0b39bc79d8968ce54445a81f5c13e14a2d6223fe6a6c287c0ddfc4d097a601a3",
+      "bytes": 190597,
+      "source_path": "/tmp/ce-resume-20261008/checkpoint-e7abf836/receipt.json"
+    },
+    {
+      "path": "test-artifacts/architecture/ce-recursive-target/step-130-evidence/e7-report/report.log",
+      "sha256": "ca2e1ac4b2ae3b8f4de91f2549767a901b75040b36252e6c545e1f4bf442e629",
+      "bytes": 128692,
+      "source_path": "/tmp/ce-resume-20261008/checkpoint-e7abf836/report.log"
+    },
+    {
+      "path": "test-artifacts/architecture/ce-recursive-target/step-130-evidence/final-reviews/final-ledger-decision.md",
+      "sha256": "be0d6051c2b13f1268f29a102daf2d38dd9984a59fbf2576c397ab7f68ccb5a7",
+      "bytes": 1843,
+      "source_path": "/tmp/ce-resume-20261008/next-slice-130/final-ledger-decision.md"
+    },
+    {
+      "path": "test-artifacts/architecture/ce-recursive-target/step-130-evidence/final-reviews/qa/final-curation-review.json",
+      "sha256": "b55584219a2e2f1396ff06217e97231c05c28b5d92a3792329d0cdf0198dbadb",
+      "bytes": 1438,
+      "source_path": "/tmp/ce-resume-20261008/next-slice-130/qa/final-curation-review.json"
+    },
+    {
+      "path": "test-artifacts/architecture/ce-recursive-target/step-130-evidence/final-reviews/qa/final-curation-review.md",
+      "sha256": "b47a2b585b7aea11445f68d813a1711312021e90c18d57003b68944da47eb0fc",
+      "bytes": 1979,
+      "source_path": "/tmp/ce-resume-20261008/next-slice-130/qa/final-curation-review.md"
+    },
+    {
+      "path": "test-artifacts/architecture/ce-recursive-target/step-130-evidence/producers/current-compare_step0.py",
+      "sha256": "ede23f3e166de051763aa58c98e101788717bc9993b93e62e6f5800cc08b1edf",
+      "bytes": 25300,
+      "source_path": "/Users/akell/PycharmProjects/development-v2/datamimic/script/architecture_study/compare_step0.py"
+    },
+    {
+      "path": "test-artifacts/architecture/ce-recursive-target/step-130-evidence/producers/current-verify_step0.py",
+      "sha256": "89a2b5482c21d2387e0a226426b1c09cff842211155f790a4f6537ab30807d42",
+      "bytes": 41066,
+      "source_path": "/Users/akell/PycharmProjects/development-v2/datamimic/script/architecture_study/verify_step0.py"
+    },
+    {
+      "path": "test-artifacts/architecture/ce-recursive-target/step-130-evidence/step130/astra-namespace-gate-amendment.md",
+      "sha256": "a3c7ae0370e27914d170ea6745329703a83e1bf99af46f964d6b3fbb0d4a0440",
+      "bytes": 2405,
+      "source_path": "/tmp/ce-resume-20261008/next-slice-130/astra-namespace-gate-amendment.md"
+    },
+    {
+      "path": "test-artifacts/architecture/ce-recursive-target/step-130-evidence/step130/astra-profile-decision.json",
+      "sha256": "49bfb7f35cac19d5bab538003ce0c4f5c07f791897b1bb3240dbc540d988e280",
+      "bytes": 12500,
+      "source_path": "/tmp/ce-resume-20261008/next-slice-130/astra-profile-decision.json"
+    },
+    {
+      "path": "test-artifacts/architecture/ce-recursive-target/step-130-evidence/step130/astra-profile-decision.md",
+      "sha256": "820127a79a07266c8b199f7edb3aa3cab0ea4a034171e2dd6965658017162870",
+      "bytes": 8142,
+      "source_path": "/tmp/ce-resume-20261008/next-slice-130/astra-profile-decision.md"
+    },
+    {
+      "path": "test-artifacts/architecture/ce-recursive-target/step-130-evidence/step130/final-proof-decision.md",
+      "sha256": "e88ced0d9cb0c344f365f441bfbdc178ac1a999d1bdb3886cd44afd7617c7119",
+      "bytes": 5825,
+      "source_path": "/tmp/ce-resume-20261008/next-slice-130/final-proof-decision.md"
+    },
+    {
+      "path": "test-artifacts/architecture/ce-recursive-target/step-130-evidence/step130/historical-3b-verify_step0.py",
+      "sha256": "09483123417a8254db54eb66eb14f68f898c1da60403ac384bbe08e7a4e5e809",
+      "bytes": 25308,
+      "source_path": "/tmp/ce-resume-20261008/next-slice-130/historical-3b-verify_step0.py"
+    },
+    {
+      "path": "test-artifacts/architecture/ce-recursive-target/step-130-evidence/step130/impl/build.log",
+      "sha256": "c94d0ccf374d6ac1c6b90ff02abb68c3a5f96580d90adcff20d8ae552e085b10",
+      "bytes": 4937,
+      "source_path": "/tmp/ce-resume-20261008/next-slice-130/impl/build.log"
+    },
+    {
+      "path": "test-artifacts/architecture/ce-recursive-target/step-130-evidence/step130/impl/build_case_xml_mapping.py",
+      "sha256": "0f07b3e1f8fd59d85a49b194d30e6f3c86a15927dfe47401068e5f51334c1bba",
+      "bytes": 3884,
+      "source_path": "/tmp/ce-resume-20261008/next-slice-130/impl/build_case_xml_mapping.py"
+    },
+    {
+      "path": "test-artifacts/architecture/ce-recursive-target/step-130-evidence/step130/impl/build_firstpass.py",
+      "sha256": "2269bb54cfa53cf3faa591c06683302d15c46d9a7e98c557f1e0d3e2ba39dda3",
+      "bytes": 10272,
+      "source_path": "/tmp/ce-resume-20261008/next-slice-130/impl/build_firstpass.py"
+    },
+    {
+      "path": "test-artifacts/architecture/ce-recursive-target/step-130-evidence/step130/impl/capture_clone_manifests.py",
+      "sha256": "61d46ff9ac2e22a0fc30d604667114d4a4c42cc9771fe809c3138284c6c563ac",
+      "bytes": 2842,
+      "source_path": "/tmp/ce-resume-20261008/next-slice-130/impl/capture_clone_manifests.py"
+    },
+    {
+      "path": "test-artifacts/architecture/ce-recursive-target/step-130-evidence/step130/impl/case-xml-mapping.json",
+      "sha256": "fb12de7aef349c758e76365960a2079c80d8773b86b6da594856cd544ad5a8ac",
+      "bytes": 15022,
+      "source_path": "/tmp/ce-resume-20261008/next-slice-130/impl/case-xml-mapping.json"
+    },
+    {
+      "path": "test-artifacts/architecture/ce-recursive-target/step-130-evidence/step130/impl/clone-and-import-preflight.md",
+      "sha256": "9c5891e585a9789d49cabf85f5a5cf7b7d68c978aadd2813e35469607d889816",
+      "bytes": 2575,
+      "source_path": "/tmp/ce-resume-20261008/next-slice-130/impl/clone-and-import-preflight.md"
+    },
+    {
+      "path": "test-artifacts/architecture/ce-recursive-target/step-130-evidence/step130/impl/clone-and-import-receipt.json",
+      "sha256": "617fcb2087b53f20882c53aebd30c6e9a399179547c4d1a2dd6f8a1c780650ed",
+      "bytes": 726526,
+      "source_path": "/tmp/ce-resume-20261008/next-slice-130/impl/clone-and-import-receipt.json"
+    },
+    {
+      "path": "test-artifacts/architecture/ce-recursive-target/step-130-evidence/step130/impl/clone-manifests.json",
+      "sha256": "c859792a18fcfe39ecc1fce6cfc60ec227ea1d0173803bd8108b8b7c5132f864",
+      "bytes": 676599,
+      "source_path": "/tmp/ce-resume-20261008/next-slice-130/impl/clone-manifests.json"
+    },
+    {
+      "path": "test-artifacts/architecture/ce-recursive-target/step-130-evidence/step130/impl/collection-wrapper-summary-correction.json",
+      "sha256": "d6f366d7fda5cc36643ccf3284608e145c6e4080d60b8c73faef67fc2fb71c2d",
+      "bytes": 336,
+      "source_path": "/tmp/ce-resume-20261008/next-slice-130/impl/collection-wrapper-summary-correction.json"
+    },
+    {
+      "path": "test-artifacts/architecture/ce-recursive-target/step-130-evidence/step130/impl/gate1-collect-local-socket/current/collect.xml",
+      "sha256": "ce10b1566408ea3252d51bdc82758c58230ea3bbd2be27e5a57e207617807b82",
+      "bytes": 219,
+      "source_path": "/tmp/ce-resume-20261008/next-slice-130/impl/gate1-collect-local-socket/current/collect.xml"
+    },
+    {
+      "path": "test-artifacts/architecture/ce-recursive-target/step-130-evidence/step130/impl/gate1-collect-local-socket/current/receipt.json",
+      "sha256": "0261b1f5eae6d153843e9ae279b0e8204c897fc1b5fcc85abf3b7c8b3e8fd8d4",
+      "bytes": 680355,
+      "source_path": "/tmp/ce-resume-20261008/next-slice-130/impl/gate1-collect-local-socket/current/receipt.json"
+    },
+    {
+      "path": "test-artifacts/architecture/ce-recursive-target/step-130-evidence/step130/impl/gate1-collect-local-socket/current/stderr.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0,
+      "source_path": "/tmp/ce-resume-20261008/next-slice-130/impl/gate1-collect-local-socket/current/stderr.log"
+    },
+    {
+      "path": "test-artifacts/architecture/ce-recursive-target/step-130-evidence/step130/impl/gate1-collect-local-socket/current/stdout.log",
+      "sha256": "2a17b69dc1205b6fdd2eb5e416f0ab09d848d6cbe8ea3e8713e1484e3a2ec6f8",
+      "bytes": 3134,
+      "source_path": "/tmp/ce-resume-20261008/next-slice-130/impl/gate1-collect-local-socket/current/stdout.log"
+    },
+    {
+      "path": "test-artifacts/architecture/ce-recursive-target/step-130-evidence/step130/impl/gate1-collect-local-socket/original/collect.xml",
+      "sha256": "a743a684a10ae7c05ff169c290893a823efc792ada24e771ca88808d4628fae5",
+      "bytes": 219,
+      "source_path": "/tmp/ce-resume-20261008/next-slice-130/impl/gate1-collect-local-socket/original/collect.xml"
+    },
+    {
+      "path": "test-artifacts/architecture/ce-recursive-target/step-130-evidence/step130/impl/gate1-collect-local-socket/original/receipt.json",
+      "sha256": "f9c994487c17839effb97d06a50cf9d005d9e097253f8069bc907e46f18b9d7c",
+      "bytes": 640135,
+      "source_path": "/tmp/ce-resume-20261008/next-slice-130/impl/gate1-collect-local-socket/original/receipt.json"
+    },
+    {
+      "path": "test-artifacts/architecture/ce-recursive-target/step-130-evidence/step130/impl/gate1-collect-local-socket/original/stderr.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0,
+      "source_path": "/tmp/ce-resume-20261008/next-slice-130/impl/gate1-collect-local-socket/original/stderr.log"
+    },
+    {
+      "path": "test-artifacts/architecture/ce-recursive-target/step-130-evidence/step130/impl/gate1-collect-local-socket/original/stdout.log",
+      "sha256": "395e59dc5af62211bf866b2199daebf17499ee70532025dc38070eff367a9cbc",
+      "bytes": 3003,
+      "source_path": "/tmp/ce-resume-20261008/next-slice-130/impl/gate1-collect-local-socket/original/stdout.log"
+    },
+    {
+      "path": "test-artifacts/architecture/ce-recursive-target/step-130-evidence/step130/impl/gate1-collect/original/receipt.json",
+      "sha256": "6b2980b5cdae1ecdcd7e3bc8c12f4c6745e371e5ad5ea33029208d421872be45",
+      "bytes": 636884,
+      "source_path": "/tmp/ce-resume-20261008/next-slice-130/impl/gate1-collect/original/receipt.json"
+    },
+    {
+      "path": "test-artifacts/architecture/ce-recursive-target/step-130-evidence/step130/impl/gate1-collect/original/stderr.log",
+      "sha256": "9fa0f15f1f0437f90f03d292374fbd33b57d21447185b4bf443155d5e1c38a7b",
+      "bytes": 2184,
+      "source_path": "/tmp/ce-resume-20261008/next-slice-130/impl/gate1-collect/original/stderr.log"
+    },
+    {
+      "path": "test-artifacts/architecture/ce-recursive-target/step-130-evidence/step130/impl/gate1-collect/original/stdout.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0,
+      "source_path": "/tmp/ce-resume-20261008/next-slice-130/impl/gate1-collect/original/stdout.log"
+    },
+    {
+      "path": "test-artifacts/architecture/ce-recursive-target/step-130-evidence/step130/impl/gate2-gate3-driver-preparation.md",
+      "sha256": "f5f2acf7641dddf1851c730f758db1d745203163e02403eb3cf91ebece0cf9b2",
+      "bytes": 5723,
+      "source_path": "/tmp/ce-resume-20261008/next-slice-130/impl/gate2-gate3-driver-preparation.md"
+    },
+    {
+      "path": "test-artifacts/architecture/ce-recursive-target/step-130-evidence/step130/impl/gate2-native/current/collected-nodeids.json",
+      "sha256": "04b50eb38dc94edff1b7a6b6ab8891ff8b49ed188fc59a3e3c3f6723af949636",
+      "bytes": 3090,
+      "source_path": "/tmp/ce-resume-20261008/next-slice-130/impl/gate2-native/current/collected-nodeids.json"
+    },
+    {
+      "path": "test-artifacts/architecture/ce-recursive-target/step-130-evidence/step130/impl/gate2-native/current/junit.xml",
+      "sha256": "518a6d2c72fe040840fb333098328d8283a0f7eb843e36973656e3becb70fcb2",
+      "bytes": 4052,
+      "source_path": "/tmp/ce-resume-20261008/next-slice-130/impl/gate2-native/current/junit.xml"
+    },
+    {
+      "path": "test-artifacts/architecture/ce-recursive-target/step-130-evidence/step130/impl/gate2-native/current/module-origins.json",
+      "sha256": "8d6a576344016f4dbf4ca3f73d0e233730fdd0e2d5e8237ce89704b22a824312",
+      "bytes": 217317,
+      "source_path": "/tmp/ce-resume-20261008/next-slice-130/impl/gate2-native/current/module-origins.json"
+    },
+    {
+      "path": "test-artifacts/architecture/ce-recursive-target/step-130-evidence/step130/impl/gate2-native/current/receipt.json",
+      "sha256": "b3426de6efee6eb18b23f91f4a10cf91f8ca2547618d8bd94b30e2e659299972",
+      "bytes": 678608,
+      "source_path": "/tmp/ce-resume-20261008/next-slice-130/impl/gate2-native/current/receipt.json"
+    },
+    {
+      "path": "test-artifacts/architecture/ce-recursive-target/step-130-evidence/step130/impl/gate2-native/current/stderr.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0,
+      "source_path": "/tmp/ce-resume-20261008/next-slice-130/impl/gate2-native/current/stderr.log"
+    },
+    {
+      "path": "test-artifacts/architecture/ce-recursive-target/step-130-evidence/step130/impl/gate2-native/current/stdout.log",
+      "sha256": "9584e654ebc5b031bcc766b12d3d13251b32bbebeff0a52f420519c062efc8e8",
+      "bytes": 206,
+      "source_path": "/tmp/ce-resume-20261008/next-slice-130/impl/gate2-native/current/stdout.log"
+    },
+    {
+      "path": "test-artifacts/architecture/ce-recursive-target/step-130-evidence/step130/impl/gate2-native/original/collected-nodeids.json",
+      "sha256": "f48b5f26f02bcf69bb3802f3708d1bb945d0f27055fd1d7e8c159909a63586a7",
+      "bytes": 2953,
+      "source_path": "/tmp/ce-resume-20261008/next-slice-130/impl/gate2-native/original/collected-nodeids.json"
+    },
+    {
+      "path": "test-artifacts/architecture/ce-recursive-target/step-130-evidence/step130/impl/gate2-native/original/junit.xml",
+      "sha256": "b696b4086cd80433b830223637a81efe9d3dcab73bae581d43b9c06232c2412a",
+      "bytes": 3880,
+      "source_path": "/tmp/ce-resume-20261008/next-slice-130/impl/gate2-native/original/junit.xml"
+    },
+    {
+      "path": "test-artifacts/architecture/ce-recursive-target/step-130-evidence/step130/impl/gate2-native/original/module-origins.json",
+      "sha256": "f4b137c0e8c2097d7573ce647928715ff9847ff896089392fa158a16344fdceb",
+      "bytes": 150133,
+      "source_path": "/tmp/ce-resume-20261008/next-slice-130/impl/gate2-native/original/module-origins.json"
+    },
+    {
+      "path": "test-artifacts/architecture/ce-recursive-target/step-130-evidence/step130/impl/gate2-native/original/receipt.json",
+      "sha256": "606efe53696ea1aac592620e76e948c62de28b496fbf767dfef4455fb2d64cb2",
+      "bytes": 638254,
+      "source_path": "/tmp/ce-resume-20261008/next-slice-130/impl/gate2-native/original/receipt.json"
+    },
+    {
+      "path": "test-artifacts/architecture/ce-recursive-target/step-130-evidence/step130/impl/gate2-native/original/stderr.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0,
+      "source_path": "/tmp/ce-resume-20261008/next-slice-130/impl/gate2-native/original/stderr.log"
+    },
+    {
+      "path": "test-artifacts/architecture/ce-recursive-target/step-130-evidence/step130/impl/gate2-native/original/stdout.log",
+      "sha256": "76cf1cc8879a5e0113f3e795333dc4760869846346de027bfae43ae75b8c152c",
+      "bytes": 207,
+      "source_path": "/tmp/ce-resume-20261008/next-slice-130/impl/gate2-native/original/stdout.log"
+    },
+    {
+      "path": "test-artifacts/architecture/ce-recursive-target/step-130-evidence/step130/impl/gate3-current.stderr",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0,
+      "source_path": "/tmp/ce-resume-20261008/next-slice-130/impl/gate3-current.stderr"
+    },
+    {
+      "path": "test-artifacts/architecture/ce-recursive-target/step-130-evidence/step130/impl/gate3-current.stdout",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0,
+      "source_path": "/tmp/ce-resume-20261008/next-slice-130/impl/gate3-current.stdout"
+    },
+    {
+      "path": "test-artifacts/architecture/ce-recursive-target/step-130-evidence/step130/impl/gate3-original.stderr",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0,
+      "source_path": "/tmp/ce-resume-20261008/next-slice-130/impl/gate3-original.stderr"
+    },
+    {
+      "path": "test-artifacts/architecture/ce-recursive-target/step-130-evidence/step130/impl/gate3-original.stdout",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0,
+      "source_path": "/tmp/ce-resume-20261008/next-slice-130/impl/gate3-original.stdout"
+    },
+    {
+      "path": "test-artifacts/architecture/ce-recursive-target/step-130-evidence/step130/impl/gate3-recorder/current/actual-inventory.json",
+      "sha256": "dd461737faf27152a7474183995819ab5f03afbf84c8d209846f4747ddc72a89",
+      "bytes": 466926,
+      "source_path": "/tmp/ce-resume-20261008/next-slice-130/impl/gate3-recorder/current/actual-inventory.json"
+    },
+    {
+      "path": "test-artifacts/architecture/ce-recursive-target/step-130-evidence/step130/impl/gate3-recorder/current/driver.log",
+      "sha256": "d5c847efd5d865fd777c59c3867143caad76cde3afbdb6f5d4cf1c59c6f887b7",
+      "bytes": 124,
+      "source_path": "/tmp/ce-resume-20261008/next-slice-130/impl/gate3-recorder/current/driver.log"
+    },
+    {
+      "path": "test-artifacts/architecture/ce-recursive-target/step-130-evidence/step130/impl/gate3-recorder/current/receipt.json",
+      "sha256": "5024af786f8e99ef6d8dc1fffcfdcfe85aeebcab4ea263fbb99a0d4776e9ca82",
+      "bytes": 680088,
+      "source_path": "/tmp/ce-resume-20261008/next-slice-130/impl/gate3-recorder/current/receipt.json"
+    },
+    {
+      "path": "test-artifacts/architecture/ce-recursive-target/step-130-evidence/step130/impl/gate3-recorder/current/returned-records.json",
+      "sha256": "8b18bc95728ebecc9fc8e2899e4348c8c8cff007a8caa80fa3913b1357a965be",
+      "bytes": 13964,
+      "source_path": "/tmp/ce-resume-20261008/next-slice-130/impl/gate3-recorder/current/returned-records.json"
+    },
+    {
+      "path": "test-artifacts/architecture/ce-recursive-target/step-130-evidence/step130/impl/gate3-recorder/original/actual-inventory.json",
+      "sha256": "146bac53bbd8094030a53ca8a7c5b14679ae48548b6730b733def616470e3810",
+      "bytes": 460449,
+      "source_path": "/tmp/ce-resume-20261008/next-slice-130/impl/gate3-recorder/original/actual-inventory.json"
+    },
+    {
+      "path": "test-artifacts/architecture/ce-recursive-target/step-130-evidence/step130/impl/gate3-recorder/original/driver.log",
+      "sha256": "fadd5157c3f8cb175426328697a389b3d1c9db992af86437fdd148713025245e",
+      "bytes": 125,
+      "source_path": "/tmp/ce-resume-20261008/next-slice-130/impl/gate3-recorder/original/driver.log"
+    },
+    {
+      "path": "test-artifacts/architecture/ce-recursive-target/step-130-evidence/step130/impl/gate3-recorder/original/receipt.json",
+      "sha256": "33aff8993e7d918bd2d5b908d74bcd39a5c001e244f07be3b2a52c9dba4fc6b9",
+      "bytes": 639866,
+      "source_path": "/tmp/ce-resume-20261008/next-slice-130/impl/gate3-recorder/original/receipt.json"
+    },
+    {
+      "path": "test-artifacts/architecture/ce-recursive-target/step-130-evidence/step130/impl/gate3-recorder/original/returned-records.json",
+      "sha256": "6f81259b06bfe85a369d4eb1625324f402470e3f308c20a0e80d30a1658ad10c",
+      "bytes": 12025,
+      "source_path": "/tmp/ce-resume-20261008/next-slice-130/impl/gate3-recorder/original/returned-records.json"
+    },
+    {
+      "path": "test-artifacts/architecture/ce-recursive-target/step-130-evidence/step130/impl/import-current.stderr",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0,
+      "source_path": "/tmp/ce-resume-20261008/next-slice-130/impl/import-current.stderr"
+    },
+    {
+      "path": "test-artifacts/architecture/ce-recursive-target/step-130-evidence/step130/impl/import-current.stdout",
+      "sha256": "e63276aae09b969b0757b436b1cc22d88a866c96568508047b60b01340d4d896",
+      "bytes": 1988,
+      "source_path": "/tmp/ce-resume-20261008/next-slice-130/impl/import-current.stdout"
+    },
+    {
+      "path": "test-artifacts/architecture/ce-recursive-target/step-130-evidence/step130/impl/import-original.stderr",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0,
+      "source_path": "/tmp/ce-resume-20261008/next-slice-130/impl/import-original.stderr"
+    },
+    {
+      "path": "test-artifacts/architecture/ce-recursive-target/step-130-evidence/step130/impl/import-original.stdout",
+      "sha256": "40e500e2ebeba9875c1032a90e9963f23e3513f49a4c901836adba711cd2936b",
+      "bytes": 1945,
+      "source_path": "/tmp/ce-resume-20261008/next-slice-130/impl/import-original.stdout"
+    },
+    {
+      "path": "test-artifacts/architecture/ce-recursive-target/step-130-evidence/step130/impl/import-preflight-review.json",
+      "sha256": "138494bc29b6bbb44311f8cefdaa9e53a4008ec6d9480b789ada38a278610249",
+      "bytes": 92977,
+      "source_path": "/tmp/ce-resume-20261008/next-slice-130/impl/import-preflight-review.json"
+    },
+    {
+      "path": "test-artifacts/architecture/ce-recursive-target/step-130-evidence/step130/impl/import-preflight-v2.json",
+      "sha256": "c28bed2fda32592a2a2201b12d40e4701bb3a9cc07742c20a52c5d62d0075378",
+      "bytes": 13758,
+      "source_path": "/tmp/ce-resume-20261008/next-slice-130/impl/import-preflight-v2.json"
+    },
+    {
+      "path": "test-artifacts/architecture/ce-recursive-target/step-130-evidence/step130/impl/import-preflight-v3-summary.json",
+      "sha256": "ea2f1cf8bf682aa60712e244b375e310d1156d6f971006c660b02b0f6327b51b",
+      "bytes": 83613,
+      "source_path": "/tmp/ce-resume-20261008/next-slice-130/impl/import-preflight-v3-summary.json"
+    },
+    {
+      "path": "test-artifacts/architecture/ce-recursive-target/step-130-evidence/step130/impl/import-preflight-v3-summary.md",
+      "sha256": "0eb342f4462ba24a5677165de504ae5484347b02318f9c021402fa9b40814d3f",
+      "bytes": 2561,
+      "source_path": "/tmp/ce-resume-20261008/next-slice-130/impl/import-preflight-v3-summary.md"
+    },
+    {
+      "path": "test-artifacts/architecture/ce-recursive-target/step-130-evidence/step130/impl/import-preflight-v3.json",
+      "sha256": "c983c01821cc15276c875eadabfe80799e233458cb0668c08f26aa25b0a4bbe0",
+      "bytes": 2145266,
+      "source_path": "/tmp/ce-resume-20261008/next-slice-130/impl/import-preflight-v3.json"
+    },
+    {
+      "path": "test-artifacts/architecture/ce-recursive-target/step-130-evidence/step130/impl/import-preflight.json",
+      "sha256": "2c84e50ada82ff3528fdeadb6e387f1f73bae46e2b01270991d6bf813f29ac1f",
+      "bytes": 7209,
+      "source_path": "/tmp/ce-resume-20261008/next-slice-130/impl/import-preflight.json"
+    },
+    {
+      "path": "test-artifacts/architecture/ce-recursive-target/step-130-evidence/step130/impl/import-v2-original.stderr",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0,
+      "source_path": "/tmp/ce-resume-20261008/next-slice-130/impl/import-v2-original.stderr"
+    },
+    {
+      "path": "test-artifacts/architecture/ce-recursive-target/step-130-evidence/step130/impl/import-v2-original.stdout",
+      "sha256": "b4f81a4871af59c591b3f6d4cd1dded4d7a371ac0b8a557b92e5bef407907937",
+      "bytes": 83138,
+      "source_path": "/tmp/ce-resume-20261008/next-slice-130/impl/import-v2-original.stdout"
+    },
+    {
+      "path": "test-artifacts/architecture/ce-recursive-target/step-130-evidence/step130/impl/import-v3-current.stderr",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0,
+      "source_path": "/tmp/ce-resume-20261008/next-slice-130/impl/import-v3-current.stderr"
+    },
+    {
+      "path": "test-artifacts/architecture/ce-recursive-target/step-130-evidence/step130/impl/import-v3-current.stdout",
+      "sha256": "7758dc80466ff818c8dd1dec9e98a3f12bacc7911e5cc876368d84bef265483c",
+      "bytes": 323680,
+      "source_path": "/tmp/ce-resume-20261008/next-slice-130/impl/import-v3-current.stdout"
+    },
+    {
+      "path": "test-artifacts/architecture/ce-recursive-target/step-130-evidence/step130/impl/import-v3-original.stderr",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0,
+      "source_path": "/tmp/ce-resume-20261008/next-slice-130/impl/import-v3-original.stderr"
+    },
+    {
+      "path": "test-artifacts/architecture/ce-recursive-target/step-130-evidence/step130/impl/import-v3-original.stdout",
+      "sha256": "f464af3beb312294f414cc1b4b413ad82c3fd33e8d35d3154957acd78c2b5174",
+      "bytes": 174766,
+      "source_path": "/tmp/ce-resume-20261008/next-slice-130/impl/import-v3-original.stdout"
+    },
+    {
+      "path": "test-artifacts/architecture/ce-recursive-target/step-130-evidence/step130/impl/independent-first-pass.json",
+      "sha256": "b161c105d8ac3e5c0f61ff7fc1578b7ca2268c3a61a30eb43497b1b47e3d3e88",
+      "bytes": 106637,
+      "source_path": "/tmp/ce-resume-20261008/next-slice-130/impl/independent-first-pass.json"
+    },
+    {
+      "path": "test-artifacts/architecture/ce-recursive-target/step-130-evidence/step130/impl/independent-first-pass.md",
+      "sha256": "895122a6f9075770d1ddddc687cc08318249f94419e38042b6009d57cd7249f7",
+      "bytes": 6872,
+      "source_path": "/tmp/ce-resume-20261008/next-slice-130/impl/independent-first-pass.md"
+    },
+    {
+      "path": "test-artifacts/architecture/ce-recursive-target/step-130-evidence/step130/impl/join_step130_seeded_determinism.py",
+      "sha256": "73a8f2c3d0385d27c7bc19210a52ca63a5eb87291e0e0fedbb91824e05d3fd14",
+      "bytes": 19189,
+      "source_path": "/tmp/ce-resume-20261008/next-slice-130/impl/join_step130_seeded_determinism.py"
+    },
+    {
+      "path": "test-artifacts/architecture/ce-recursive-target/step-130-evidence/step130/impl/join_step130_seeded_determinism_v2.py",
+      "sha256": "3238075bebdf3a54eab47119eb94c1ebcd39c619af4e2df37d676ca8790518d1",
+      "bytes": 22932,
+      "source_path": "/tmp/ce-resume-20261008/next-slice-130/impl/join_step130_seeded_determinism_v2.py"
+    },
+    {
+      "path": "test-artifacts/architecture/ce-recursive-target/step-130-evidence/step130/impl/ledger-step130-v1-generation.stdout",
+      "sha256": "1bf8bd1945939a46d88748a0d40ca9682702f1d7dae8e5ee6ea1316fab49ef3a",
+      "bytes": 473,
+      "source_path": "/tmp/ce-resume-20261008/next-slice-130/impl/ledger-step130-v1-generation.stdout"
+    },
+    {
+      "path": "test-artifacts/architecture/ce-recursive-target/step-130-evidence/step130/impl/ledger-step130-v1-readback.md",
+      "sha256": "a88885cabb3c1866e568a00df589027dc395a33d30af1081e2f8901f94d48b6c",
+      "bytes": 1830,
+      "source_path": "/tmp/ce-resume-20261008/next-slice-130/impl/ledger-step130-v1-readback.md"
+    },
+    {
+      "path": "test-artifacts/architecture/ce-recursive-target/step-130-evidence/step130/impl/ledger-step130-v1-summary.md",
+      "sha256": "5898d0fff5245709037a494c1d5d453f4c4ed5d23c97590a3cb89a6d89b21836",
+      "bytes": 1484,
+      "source_path": "/tmp/ce-resume-20261008/next-slice-130/impl/ledger-step130-v1-summary.md"
+    },
+    {
+      "path": "test-artifacts/architecture/ce-recursive-target/step-130-evidence/step130/impl/ledger-step130-v1-validation.json",
+      "sha256": "010c50d7797c8b24716462339d09ac11cd73697c2a025d1e193f150aba084d39",
+      "bytes": 6446,
+      "source_path": "/tmp/ce-resume-20261008/next-slice-130/impl/ledger-step130-v1-validation.json"
+    },
+    {
+      "path": "test-artifacts/architecture/ce-recursive-target/step-130-evidence/step130/impl/ledger-step130-v1.jsonl",
+      "sha256": "fa0046ab5562a9cbc9b254ace41c70e53c65dc933f40f6d15125750273316966",
+      "bytes": 3194658,
+      "source_path": "/tmp/ce-resume-20261008/next-slice-130/impl/ledger-step130-v1.jsonl"
+    },
+    {
+      "path": "test-artifacts/architecture/ce-recursive-target/step-130-evidence/step130/impl/ledger-step130-v2-generation.stdout",
+      "sha256": "9a09efaaed525ba8916c5c6dc05b825bd741bc4d78681fed718cb9d5da2d001a",
+      "bytes": 511,
+      "source_path": "/tmp/ce-resume-20261008/next-slice-130/impl/ledger-step130-v2-generation.stdout"
+    },
+    {
+      "path": "test-artifacts/architecture/ce-recursive-target/step-130-evidence/step130/impl/ledger-step130-v2-readback.md",
+      "sha256": "ee4e69b1a987f14418b92ab3da520eb7b7cd3c8a794a752aaf64c1c8436cb1ef",
+      "bytes": 1088,
+      "source_path": "/tmp/ce-resume-20261008/next-slice-130/impl/ledger-step130-v2-readback.md"
+    },
+    {
+      "path": "test-artifacts/architecture/ce-recursive-target/step-130-evidence/step130/impl/ledger-step130-v2-validation.json",
+      "sha256": "07b28123d8852ec8b218a066d69723f6a3096117a78faabb52a8e2dc2647d304",
+      "bytes": 7440,
+      "source_path": "/tmp/ce-resume-20261008/next-slice-130/impl/ledger-step130-v2-validation.json"
+    },
+    {
+      "path": "test-artifacts/architecture/ce-recursive-target/step-130-evidence/step130/impl/ledger-step130-v2.jsonl",
+      "sha256": "e77f2f6ad19f0774415e6c4eeb4163777f84b26bd09e68ed223601561187c918",
+      "bytes": 3194785,
+      "source_path": "/tmp/ce-resume-20261008/next-slice-130/impl/ledger-step130-v2.jsonl"
+    },
+    {
+      "path": "test-artifacts/architecture/ce-recursive-target/step-130-evidence/step130/impl/native_pass_child.py",
+      "sha256": "72862668d4eaea29cbb5782433dff05ccc449f575ddee184cab336c053c0fc01",
+      "bytes": 4841,
+      "source_path": "/tmp/ce-resume-20261008/next-slice-130/impl/native_pass_child.py"
+    },
+    {
+      "path": "test-artifacts/architecture/ce-recursive-target/step-130-evidence/step130/impl/native_pass_child_v1.py",
+      "sha256": "e7b039e6af6ef69e5a0f64728c547d84749ef0e6b9a08dc7736fcc38e4b58e8c",
+      "bytes": 3917,
+      "source_path": "/tmp/ce-resume-20261008/next-slice-130/impl/native_pass_child_v1.py"
+    },
+    {
+      "path": "test-artifacts/architecture/ce-recursive-target/step-130-evidence/step130/impl/native_pass_driver.py",
+      "sha256": "e9f93f3c659f94e8ef8e24a3fd6de11089be66a00e9a17d5422de89ac2b380d2",
+      "bytes": 7446,
+      "source_path": "/tmp/ce-resume-20261008/next-slice-130/impl/native_pass_driver.py"
+    },
+    {
+      "path": "test-artifacts/architecture/ce-recursive-target/step-130-evidence/step130/impl/preflight_import.py",
+      "sha256": "3e92529cfeeb511a1387fd07bbc984ad3e0477f2df8480bb9fc40d1a9ce882b8",
+      "bytes": 2167,
+      "source_path": "/tmp/ce-resume-20261008/next-slice-130/impl/preflight_import.py"
+    },
+    {
+      "path": "test-artifacts/architecture/ce-recursive-target/step-130-evidence/step130/impl/preflight_import_v2.py",
+      "sha256": "f92299b777a88da7b5217562747dd5f58274d984148cada249c9a2ee55b431ff",
+      "bytes": 4217,
+      "source_path": "/tmp/ce-resume-20261008/next-slice-130/impl/preflight_import_v2.py"
+    },
+    {
+      "path": "test-artifacts/architecture/ce-recursive-target/step-130-evidence/step130/impl/preflight_import_v3.py",
+      "sha256": "d862638b34ae5f4de87fcc80f39e91ebfd2c042e0d77529ede738380412ce1c7",
+      "bytes": 7382,
+      "source_path": "/tmp/ce-resume-20261008/next-slice-130/impl/preflight_import_v3.py"
+    },
+    {
+      "path": "test-artifacts/architecture/ce-recursive-target/step-130-evidence/step130/impl/recorder_capture_driver.py",
+      "sha256": "d5b050c3b7d2bdead1f7c6232c028dbdeab07a0afb8f4c5b3f87c28185979c97",
+      "bytes": 9607,
+      "source_path": "/tmp/ce-resume-20261008/next-slice-130/impl/recorder_capture_driver.py"
+    },
+    {
+      "path": "test-artifacts/architecture/ce-recursive-target/step-130-evidence/step130/impl/run_collect_gate1.py",
+      "sha256": "46c66df368c25313489ca1c06e295fdc0072b9d97b7db622d4b076d59984072c",
+      "bytes": 6513,
+      "source_path": "/tmp/ce-resume-20261008/next-slice-130/impl/run_collect_gate1.py"
+    },
+    {
+      "path": "test-artifacts/architecture/ce-recursive-target/step-130-evidence/step130/impl/run_collect_gate1_local_socket.py",
+      "sha256": "e227d7f70bd467bdc1fa621ce0885d856b5fa04b6a15b0da910420bc57947783",
+      "bytes": 6556,
+      "source_path": "/tmp/ce-resume-20261008/next-slice-130/impl/run_collect_gate1_local_socket.py"
+    },
+    {
+      "path": "test-artifacts/architecture/ce-recursive-target/step-130-evidence/step130/impl/run_import_preflight.py",
+      "sha256": "3a299b890f44bb97c623ca87e24411b0ad3e48ff08f4656ed75fbb8aa336d212",
+      "bytes": 1857,
+      "source_path": "/tmp/ce-resume-20261008/next-slice-130/impl/run_import_preflight.py"
+    },
+    {
+      "path": "test-artifacts/architecture/ce-recursive-target/step-130-evidence/step130/impl/run_import_preflight_v2.py",
+      "sha256": "6091403f1fb163cd4321406c45fcb5ac7a3d0d797efb8775909f3e1b2f99d3e6",
+      "bytes": 4533,
+      "source_path": "/tmp/ce-resume-20261008/next-slice-130/impl/run_import_preflight_v2.py"
+    },
+    {
+      "path": "test-artifacts/architecture/ce-recursive-target/step-130-evidence/step130/impl/run_import_preflight_v3.py",
+      "sha256": "404d532041920ff8670b561f45d7961d48815c0227851e63d2f3d4f5d9e527fb",
+      "bytes": 5889,
+      "source_path": "/tmp/ce-resume-20261008/next-slice-130/impl/run_import_preflight_v3.py"
+    },
+    {
+      "path": "test-artifacts/architecture/ce-recursive-target/step-130-evidence/step130/impl/wrapper-proposal.md",
+      "sha256": "ec17e0607c169e80e1346e192c33a0ece804812890f1e864d1fec4894b6bc54b",
+      "bytes": 6379,
+      "source_path": "/tmp/ce-resume-20261008/next-slice-130/impl/wrapper-proposal.md"
+    },
+    {
+      "path": "test-artifacts/architecture/ce-recursive-target/step-130-evidence/step130/proposal.md",
+      "sha256": "13b95c34fa29271b55ff909d4eb3712af938f8c6c74e478158abbcd6924be211",
+      "bytes": 4694,
+      "source_path": "/tmp/ce-resume-20261008/next-slice-130/proposal.md"
+    },
+    {
+      "path": "test-artifacts/architecture/ce-recursive-target/step-130-evidence/step130/qa/build_firstpass.py",
+      "sha256": "5600e069be84a701c4985a9fa6446d674f701c9f50776e762850d917a6904fc9",
+      "bytes": 19253,
+      "source_path": "/tmp/ce-resume-20261008/next-slice-130/qa/build_firstpass.py"
+    },
+    {
+      "path": "test-artifacts/architecture/ce-recursive-target/step-130-evidence/step130/qa/build_supplement.py",
+      "sha256": "56aef1ef7099f07f740cd4a5219a7d379f6855cb32329abc16b2c17d83a397c7",
+      "bytes": 14266,
+      "source_path": "/tmp/ce-resume-20261008/next-slice-130/qa/build_supplement.py"
+    },
+    {
+      "path": "test-artifacts/architecture/ce-recursive-target/step-130-evidence/step130/qa/collection-countercheck.md",
+      "sha256": "3b92436e440cf9ed04f5f97142003553e83c85a7ce153c5a9cee03d56c7cb986",
+      "bytes": 2395,
+      "source_path": "/tmp/ce-resume-20261008/next-slice-130/qa/collection-countercheck.md"
+    },
+    {
+      "path": "test-artifacts/architecture/ce-recursive-target/step-130-evidence/step130/qa/final-ledger-countercheck.json",
+      "sha256": "a6efe1c01b3a2a3334a5663b9d678589fbde745baebed3a334882237862a1279",
+      "bytes": 1460,
+      "source_path": "/tmp/ce-resume-20261008/next-slice-130/qa/final-ledger-countercheck.json"
+    },
+    {
+      "path": "test-artifacts/architecture/ce-recursive-target/step-130-evidence/step130/qa/final-ledger-countercheck.md",
+      "sha256": "2b7453711d115efc774cf54ad64f3849048c55eccddb59981f87b40a949ab553",
+      "bytes": 2166,
+      "source_path": "/tmp/ce-resume-20261008/next-slice-130/qa/final-ledger-countercheck.md"
+    },
+    {
+      "path": "test-artifacts/architecture/ce-recursive-target/step-130-evidence/step130/qa/gate2-gate3-driver-review.md",
+      "sha256": "7a6cd66f1b4eeffd16f6edbb49ec5e31eaea43a8a7d23c9da38eb7f75888b7c3",
+      "bytes": 3052,
+      "source_path": "/tmp/ce-resume-20261008/next-slice-130/qa/gate2-gate3-driver-review.md"
+    },
+    {
+      "path": "test-artifacts/architecture/ce-recursive-target/step-130-evidence/step130/qa/gate2-native-countercheck.md",
+      "sha256": "f37492973e9c8d3d35683651ab25ffb2dc94a257afd68a923132b1ddd696aece",
+      "bytes": 2871,
+      "source_path": "/tmp/ce-resume-20261008/next-slice-130/qa/gate2-native-countercheck.md"
+    },
+    {
+      "path": "test-artifacts/architecture/ce-recursive-target/step-130-evidence/step130/qa/gate3-independent-review.json",
+      "sha256": "96b162a1b31c5156d8d0c39b05b03140a5257af6ad55c08fd6155553214ae161",
+      "bytes": 8280,
+      "source_path": "/tmp/ce-resume-20261008/next-slice-130/qa/gate3-independent-review.json"
+    },
+    {
+      "path": "test-artifacts/architecture/ce-recursive-target/step-130-evidence/step130/qa/gate3-independent-review.md",
+      "sha256": "0fb7b78d2128f9d15d83e2e4d6bef760c157f10f6f827cc9dfc1a5b0bde16472",
+      "bytes": 2920,
+      "source_path": "/tmp/ce-resume-20261008/next-slice-130/qa/gate3-independent-review.md"
+    },
+    {
+      "path": "test-artifacts/architecture/ce-recursive-target/step-130-evidence/step130/qa/independent-first-pass.json",
+      "sha256": "b45d7c74bc4cfef19331c888997898ab2efafc96a5e3e3b70ef502624ad7b7da",
+      "bytes": 40922,
+      "source_path": "/tmp/ce-resume-20261008/next-slice-130/qa/independent-first-pass.json"
+    },
+    {
+      "path": "test-artifacts/architecture/ce-recursive-target/step-130-evidence/step130/qa/independent-first-pass.md",
+      "sha256": "5983db22a8bdda85ba4f0695f93d6f8df2034e6ce5d6771a869b606510a32e14",
+      "bytes": 5338,
+      "source_path": "/tmp/ce-resume-20261008/next-slice-130/qa/independent-first-pass.md"
+    },
+    {
+      "path": "test-artifacts/architecture/ce-recursive-target/step-130-evidence/step130/qa/profile-countercheck.md",
+      "sha256": "6c1de9651c828a02dba54e8e611779edb8edc5439f781d54c71f510c5db7541c",
+      "bytes": 4468,
+      "source_path": "/tmp/ce-resume-20261008/next-slice-130/qa/profile-countercheck.md"
+    },
+    {
+      "path": "test-artifacts/architecture/ce-recursive-target/step-130-evidence/step130/qa/profile-v3-countercheck.md",
+      "sha256": "f40ac00fcaf7355ca6ed33d077f993232f2071902157b25a7d088c8b2ed9c31c",
+      "bytes": 2030,
+      "source_path": "/tmp/ce-resume-20261008/next-slice-130/qa/profile-v3-countercheck.md"
+    },
+    {
+      "path": "test-artifacts/architecture/ce-recursive-target/step-130-evidence/step130/qa/supplemental-correction.json",
+      "sha256": "3da0290c473f53d1e17e20b205abd2c4cf92b55d896163628e0cdb9316fee3d3",
+      "bytes": 1780,
+      "source_path": "/tmp/ce-resume-20261008/next-slice-130/qa/supplemental-correction.json"
+    },
+    {
+      "path": "test-artifacts/architecture/ce-recursive-target/step-130-evidence/step130/qa/supplemental-readonly.json",
+      "sha256": "9ad73ec3159156359882c51d2a03a54c5e140308c200568828991a00606cc2d0",
+      "bytes": 16177,
+      "source_path": "/tmp/ce-resume-20261008/next-slice-130/qa/supplemental-readonly.json"
+    },
+    {
+      "path": "test-artifacts/architecture/ce-recursive-target/step-130-evidence/step130/qa/supplemental-readonly.md",
+      "sha256": "0a838be5ee9df2d47381f53b4b23c33ac0367779c3c222e792e81f05804ff908",
+      "bytes": 6456,
+      "source_path": "/tmp/ce-resume-20261008/next-slice-130/qa/supplemental-readonly.md"
+    },
+    {
+      "path": "test-artifacts/architecture/ce-recursive-target/step-130-evidence/step130/root-clone-manifest-validation.json",
+      "sha256": "71a74e0ff871ee320af9479435b5647881c8585cab77de5526961de0701f6157",
+      "bytes": 521,
+      "source_path": "/tmp/ce-resume-20261008/next-slice-130/root-clone-manifest-validation.json"
+    },
+    {
+      "path": "test-artifacts/architecture/ce-recursive-target/step-130-evidence/step130/root-collection-validation.json",
+      "sha256": "bb1a14041e8f3e9db331b3d6aa9e93496d51a2917238a05ec393836ab55907fb",
+      "bytes": 6888,
+      "source_path": "/tmp/ce-resume-20261008/next-slice-130/root-collection-validation.json"
+    },
+    {
+      "path": "test-artifacts/architecture/ce-recursive-target/step-130-evidence/step130/root-final-ledger-references-validation.json",
+      "sha256": "605c3b36e58a4c3c391a698f1fb4adf4c01732de149d50167ac6653a78a27f23",
+      "bytes": 155,
+      "source_path": "/tmp/ce-resume-20261008/next-slice-130/root-final-ledger-references-validation.json"
+    },
+    {
+      "path": "test-artifacts/architecture/ce-recursive-target/step-130-evidence/step130/root-final-ledger-validation.json",
+      "sha256": "b29bae6c6ce96a0969f3e9dd1afc8f270b333dbdd31fdaae8b3a6530ab7ee7ed",
+      "bytes": 1866,
+      "source_path": "/tmp/ce-resume-20261008/next-slice-130/root-final-ledger-validation.json"
+    },
+    {
+      "path": "test-artifacts/architecture/ce-recursive-target/step-130-evidence/step130/root-frozen-selected16.json",
+      "sha256": "b3710ebf8418eb62464511158648cd3872e637c7729a784df42b2491a1d4bbca",
+      "bytes": 11731,
+      "source_path": "/tmp/ce-resume-20261008/next-slice-130/root-frozen-selected16.json"
+    },
+    {
+      "path": "test-artifacts/architecture/ce-recursive-target/step-130-evidence/step130/root-gate2-native-validation.json",
+      "sha256": "a423ca50faf4ab7f7dafbd8e87816f0d2c4554ef57f7a9afa26fae9b7b116197",
+      "bytes": 1099,
+      "source_path": "/tmp/ce-resume-20261008/next-slice-130/root-gate2-native-validation.json"
+    },
+    {
+      "path": "test-artifacts/architecture/ce-recursive-target/step-130-evidence/step130/root-gate2-prelaunch.json",
+      "sha256": "e0e7848b263926be421b9515d347b5aec4f5e67382391b87b9d829d31da310d6",
+      "bytes": 1290,
+      "source_path": "/tmp/ce-resume-20261008/next-slice-130/root-gate2-prelaunch.json"
+    },
+    {
+      "path": "test-artifacts/architecture/ce-recursive-target/step-130-evidence/step130/root-gate3-prelaunch.json",
+      "sha256": "20d84597cc68592638c7aaf7453affe6e1d57a04276d9636e6410da4e0e2755a",
+      "bytes": 713,
+      "source_path": "/tmp/ce-resume-20261008/next-slice-130/root-gate3-prelaunch.json"
+    },
+    {
+      "path": "test-artifacts/architecture/ce-recursive-target/step-130-evidence/step130/root-import-v3-validation.json",
+      "sha256": "1d2568e433987a9f75f22bce0a81b8d2a4db04ce1003c6f4307fd41acd2b58cd",
+      "bytes": 391,
+      "source_path": "/tmp/ce-resume-20261008/next-slice-130/root-import-v3-validation.json"
+    },
+    {
+      "path": "test-artifacts/architecture/ce-recursive-target/step-130-evidence/step130/root-input-resource-four-checkpoint-validation.json",
+      "sha256": "c9cc6565dc96ea1df1d2a53f6e4dba17888851d81a5d0087035daccde280d5a3",
+      "bytes": 26802,
+      "source_path": "/tmp/ce-resume-20261008/next-slice-130/root-input-resource-four-checkpoint-validation.json"
+    },
+    {
+      "path": "test-artifacts/architecture/ce-recursive-target/step-130-evidence/step130/root-recorder-static-comparison.json",
+      "sha256": "a3188b41ae39fc484c7e7f772ab55e2ea96cef610012fb2d5a2d4cee0c324b31",
+      "bytes": 1145,
+      "source_path": "/tmp/ce-resume-20261008/next-slice-130/root-recorder-static-comparison.json"
+    },
+    {
+      "path": "test-artifacts/architecture/ce-recursive-target/step-130-evidence/step130/root-seeded-unseeded-comparison.json",
+      "sha256": "ed295f6ae4485ad7c98198c312b9dd773cc69e758870b6a53a5db3d29d83e870",
+      "bytes": 33688,
+      "source_path": "/tmp/ce-resume-20261008/next-slice-130/root-seeded-unseeded-comparison.json"
+    },
+    {
+      "path": "test-artifacts/architecture/ce-recursive-target/step-130-evidence/step130/selection.json",
+      "sha256": "4ed030e653257a53fc781b2b9f91c7a1343bcda2247a999cf9a3ffcd78af35e8",
+      "bytes": 6171,
+      "source_path": "/tmp/ce-resume-20261008/next-slice-130/selection.json"
+    }
+  ],
+  "final_review": {
+    "independent_curated_entries_verified": 171,
+    "final_entries_after_review_notes": 174,
+    "bounded_delivery_approved": true,
+    "review_notes_appended_without_changing_prior_evidence": true
+  }
+}

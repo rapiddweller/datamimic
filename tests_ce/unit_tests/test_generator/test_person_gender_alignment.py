@@ -5,15 +5,16 @@ from __future__ import annotations
 
 from collections import Counter
 from datetime import datetime
+from hashlib import sha256
 from random import Random
 
 import pytest
 
-from datamimic_ce.domains.common.demographics.sampler import DemographicSample
-from datamimic_ce.domains.common.generators.address_generator import AddressRow
-from datamimic_ce.domains.common.generators.person_generator import PersonGenerator
-from datamimic_ce.domains.common.models.address import Address
-from datamimic_ce.domains.common.models.person import Person
+from datamimic_ce.domains.shared.demographics.sampler import DemographicSample
+from datamimic_ce.domains.shared.generators.address_generator import AddressRow
+from datamimic_ce.domains.shared.generators.person_generator import PersonGenerator
+from datamimic_ce.domains.shared.models.address import Address
+from datamimic_ce.domains.shared.models.person import Person
 
 PRIMARY_DATASETS = ("DE", "US", "VN")
 
@@ -148,6 +149,9 @@ class _SentinelAddressGenerator:
     def resolve_row(self) -> AddressRow:
         return self._row
 
+    def generate_house_number(self) -> str:
+        return "11A"
+
 
 class _StaticCityGenerator:
     def get_random_city(self) -> dict[str, str]:
@@ -180,6 +184,14 @@ class _SentinelPersonGenerator:
         self.generated_birthdates.append(age)
         return datetime(2020 - age, 1, 1)
 
+    def generate_birthdate(self, sample_age: int | None) -> datetime:
+        assert sample_age == 32
+        return self.generate_birthdate_for_age(sample_age)
+
+    def generate_gender(self, sample_sex: str | None) -> str:
+        assert sample_sex == " FEMALE"
+        return "female"
+
     def generate_with_name(self, given_name: str, family_name: str) -> str:
         return f"{given_name.lower()}.{family_name.lower()}@example.com"
 
@@ -206,6 +218,230 @@ def test_person_gender_normalizes_common_codes(dataset: str, sex: str, expected:
     person = Person(generator)
 
     assert person.gender == expected
+
+
+@pytest.mark.parametrize(
+    ("sex", "expected", "fallback_reads"),
+    [
+        (" female ", "female", 0),
+        ("M", "male", 0),
+        ("other", "other", 0),
+        ("", "fallback", 1),
+        ("unknown", "fallback", 1),
+        (None, "fallback", 1),
+    ],
+)
+def test_generator_gender_resolution_uses_fallback_only_for_unrecognized_labels(
+    sex: str | None, expected: str, fallback_reads: int
+) -> None:
+    events: list[str] = []
+
+    class FallbackGenerator:
+        def generate(self) -> str:
+            events.append("generate")
+            return "fallback"
+
+    class AccessObservedPersonGenerator(PersonGenerator):
+        @property
+        def gender_generator(self) -> FallbackGenerator:
+            events.append("gender_generator")
+            return fallback
+
+    fallback = FallbackGenerator()
+    generator = AccessObservedPersonGenerator(dataset="US", rng=Random(143))
+
+    assert generator.generate_gender(sex) == expected
+    assert events == (["gender_generator", "generate"] if fallback_reads else [])
+
+
+@pytest.mark.parametrize(
+    ("sex", "expected"),
+    [
+        (" f ", "female"),
+        ("m", "male"),
+        ("oTher", "other"),
+        ("", "fallback"),
+        ("unknown", "fallback"),
+        (None, "fallback"),
+    ],
+)
+def test_person_delegates_gender_resolution_to_generator(
+    monkeypatch: pytest.MonkeyPatch, sex: str | None, expected: str
+) -> None:
+    generator = PersonGenerator(dataset="US", rng=Random(144))
+    sample = DemographicSample(age=None, sex=sex, conditions=frozenset())
+    monkeypatch.setattr(generator, "reserve_demographic_sample", lambda: sample)
+    calls: list[str | None] = []
+
+    def generate_gender(sample_sex: str | None) -> str:
+        calls.append(sample_sex)
+        return "male" if expected == "fallback" else expected
+
+    monkeypatch.setattr(generator, "generate_gender", generate_gender, raising=False)
+    person = Person(generator)
+
+    assert person.gender == ("male" if expected == "fallback" else expected)
+    assert calls == [sex]
+    assert person.gender == ("male" if expected == "fallback" else expected)
+    assert calls == [sex]
+
+
+def test_person_gender_resolution_failure_retries_same_reserved_sample(monkeypatch: pytest.MonkeyPatch) -> None:
+    generator = PersonGenerator(dataset="US", rng=Random(145))
+    sample = DemographicSample(age=31, sex="unknown", conditions=frozenset({"asthma"}))
+    reserved: list[DemographicSample] = []
+    monkeypatch.setattr(generator, "reserve_demographic_sample", lambda: reserved.append(sample) or sample)
+    calls: list[str | None] = []
+
+    def generate_gender(sample_sex: str | None) -> str:
+        calls.append(sample_sex)
+        if len(calls) == 1:
+            raise RuntimeError("gender generation failed")
+        return "other"
+
+    monkeypatch.setattr(generator, "generate_gender", generate_gender, raising=False)
+    person = Person(generator)
+    assert reserved == [sample]
+
+    with pytest.raises(RuntimeError, match="gender generation failed"):
+        _ = person.gender
+    assert person.gender == "other"
+    assert person.gender == "other"
+    assert calls == ["unknown", "unknown"]
+    assert reserved == [sample]
+    assert person.demographic_sample is sample
+
+
+def test_person_fallback_failure_retries_public_gender_generator(monkeypatch: pytest.MonkeyPatch) -> None:
+    events: list[str] = []
+    failure = RuntimeError("fallback failed")
+
+    class FailOnceGenderGenerator:
+        def generate(self) -> str:
+            events.append("generate")
+            if events.count("generate") == 1:
+                raise failure
+            return "other"
+
+    fallback = FailOnceGenderGenerator()
+
+    class AccessObservedPersonGenerator(PersonGenerator):
+        @property
+        def gender_generator(self) -> FailOnceGenderGenerator:
+            events.append("accessor")
+            return fallback
+
+    generator = AccessObservedPersonGenerator(dataset="US", rng=Random(145))
+    sample = DemographicSample(age=31, sex="unknown", conditions=frozenset({"asthma"}))
+    reserved: list[DemographicSample] = []
+    monkeypatch.setattr(generator, "reserve_demographic_sample", lambda: reserved.append(sample) or sample)
+    person = Person(generator)
+
+    with pytest.raises(RuntimeError) as raised:
+        _ = person.gender
+    assert raised.value is failure
+    assert "gender" not in person._field_cache
+    assert person.demographic_sample is sample
+
+    assert person.gender == "other"
+    assert person.gender == "other"
+    assert events == ["accessor", "generate", "accessor", "generate"]
+    assert reserved == [sample]
+    assert person._field_cache["gender"] == "other"
+
+
+def test_person_construction_reserves_one_independent_sample_per_person(monkeypatch: pytest.MonkeyPatch) -> None:
+    generator = PersonGenerator(dataset="US", rng=Random(146))
+    events: list[tuple[str, object]] = []
+    samples = [
+        DemographicSample(age=20, sex="female", conditions=frozenset()),
+        DemographicSample(age=40, sex="male", conditions=frozenset()),
+    ]
+
+    def reserve() -> DemographicSample:
+        sample = samples[len([event for event in events if event[0] == "reserve"])]
+        events.append(("reserve", sample))
+        return sample
+
+    def generate_gender(sample_sex: str | None) -> str:
+        events.append(("gender", sample_sex))
+        return "female" if sample_sex == "female" else "male"
+
+    monkeypatch.setattr(generator, "reserve_demographic_sample", reserve)
+    monkeypatch.setattr(generator, "generate_gender", generate_gender, raising=False)
+    first = Person(generator)
+    second = Person(generator)
+
+    assert first.demographic_sample is samples[0]
+    assert second.demographic_sample is samples[1]
+    assert events == [("reserve", samples[0]), ("reserve", samples[1])]
+    assert first.gender == "female"
+    assert second.gender == "male"
+    assert first.gender == "female"
+    assert events == [
+        ("reserve", samples[0]),
+        ("reserve", samples[1]),
+        ("gender", "female"),
+        ("gender", "male"),
+    ]
+
+
+def test_person_construction_samples_age_sex_then_conditions_once_per_person() -> None:
+    events: list[tuple[object, ...]] = []
+
+    class Sampler:
+        def sample_age_sex(self, rng: Random) -> tuple[int, str]:  # noqa: ARG002
+            events.append(("age_sex",))
+            return 35, "female"
+
+        def sample_conditions(self, age: int, sex: str, rng: Random) -> frozenset[str]:  # noqa: ARG002
+            events.append(("conditions", age, sex))
+            return frozenset({"sampled"})
+
+    generator = PersonGenerator(dataset="US", rng=Random(147), demographic_sampler=Sampler())
+    first = Person(generator)
+    second = Person(generator)
+
+    assert events == [
+        ("age_sex",),
+        ("conditions", 35, "female"),
+        ("age_sex",),
+        ("conditions", 35, "female"),
+    ]
+    assert first.demographic_sample == DemographicSample(35, "female", frozenset({"sampled"}))
+    assert second.demographic_sample == DemographicSample(35, "female", frozenset({"sampled"}))
+    assert first.demographic_sample is not second.demographic_sample
+
+
+def _rng_fingerprint(rng: Random) -> str:
+    return sha256(repr(rng.getstate()).encode()).hexdigest()
+
+
+@pytest.mark.parametrize("first_property", ["gender", "given_name"])
+def test_seeded_gender_and_given_name_order_preserves_child_rng_states(first_property: str) -> None:
+    rng = Random(144)
+    generator = PersonGenerator(dataset="US", rng=rng)
+    person = Person(generator)
+    assert _rng_fingerprint(rng) == "18e325880289637ddf2cd116951a267cc985b20967fb80726fd8d82095ad46b2"
+
+    if first_property == "gender":
+        assert person.gender == "female"
+        assert _rng_fingerprint(generator.gender_generator.rng) == (
+            "9264ffb27aba7f335cf155386754ebb128de7ec798dad3c53da347bd492f9724"
+        )
+        assert person.given_name == "Ruth"
+    else:
+        assert person.given_name == "Ruth"
+        assert person.gender == "female"
+
+    assert person.gender == "female"
+    assert person.given_name == "Ruth"
+    assert _rng_fingerprint(generator.gender_generator.rng) == (
+        "9264ffb27aba7f335cf155386754ebb128de7ec798dad3c53da347bd492f9724"
+    )
+    assert _rng_fingerprint(generator.given_name_generator.rng) == (
+        "9f67abe89ac45e9af55819e2e0894375726ba7c203a4355096a2771efe79d7ce"
+    )
 
 
 def test_person_relations_use_demographic_sample_and_cache() -> None:

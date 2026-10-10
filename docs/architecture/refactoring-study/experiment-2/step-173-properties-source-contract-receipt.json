@@ -1,0 +1,31 @@
+{
+  "report_source_head": "63d86ccbb9fd42b3c7453c139542178bbea468d0",
+  "implementation_commit": "b89d8c8d0eab2d8170372e2c91d540e8ae898f1b",
+  "tool": "published ArchKeel 1.1.1",
+  "evidence_root": "/tmp/ce-resume-20261010",
+  "prior_integrated_report_file": "properties-source-prior-integrated.json",
+  "prior_integrated_report_sha256": "fff13617d7550459e18eed704a90710cf045616c7d271b2450cfe9b7672539cc",
+  "source_before_contract_report_file": "properties-source-before.json",
+  "source_before_contract_report_sha256": "9bbb628cec29aeb539faf1748a85465c3129399bc85dfafcc13f3059460b692f",
+  "source_after_contract_report_file": "properties-source-after.json",
+  "source_after_contract_report_sha256": "e9dc7e17dce7368dc3e783a5f75c4055b54b436e492e2b3c3a3de9920176cce2",
+  "source_digest_before_after_contract": "c9e1c15f0095ce63f40e7cebb193b06e091fc483e3d52870f94f0aea2f0f783c",
+  "candidate_violations_before_contract": 29,
+  "candidate_violations_after_contract": 17,
+  "prior_integrated_violations": 20,
+  "removed_prior_violation_ids": [
+    "VIO-87ded6dff7589f0d",
+    "VIO-917ff569b70e2f64",
+    "VIO-d282b5b5d7c35a4e"
+  ],
+  "added_violations": 0,
+  "surviving_prior_violation_records_equal": true,
+  "canonical_unknown_ids": 254,
+  "unknown_ids_equal": true,
+  "unknown_records_changed_annotation_only": 3,
+  "declared_rules_after": "FAIL",
+  "native_validate_exit_code": 2,
+  "native_validate_usage_diagnostics": 19,
+  "native_validate_baseline_new": 11,
+  "native_validate_baseline_resolved": 0
+}

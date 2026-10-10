@@ -1,0 +1,7 @@
+{
+  "after_digest": "3f318cb9227bda983d863ae4f67e7851b89cbabf3b9e950be092fc764005684a",
+  "before_digest": "8b589ab13d5d8dfe1f34e3b4a5ab25ea98355aea7729ed35db0f9e09b3093de9",
+  "decided_by": "Astra (delegated architect)",
+  "rationale": "Assign only the existing executable Task package initializer to its Registry composition owner. Keep descendant owners, public interfaces, requirements, rules and baseline fixed.",
+  "schema_version": "1.0.0"
+}

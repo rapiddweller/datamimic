@@ -11,7 +11,7 @@ ordered+cyclic wrap, unique). Single-key references cover the shop-demo need
 
 from pathlib import Path
 
-from datamimic_ce.data_mimic_test import DataMimicTest
+from datamimic_ce.interfaces.python.data_mimic_test import DataMimicTest
 
 _TEST_DIR = Path(__file__).resolve().parent
 _POOL = set(range(1, 13))  # seeded customer_ids 1..12 (crosses the single/double-digit boundary)
@@ -87,8 +87,8 @@ def test_mongodb_reference_dotted_composite_rejected():
     composite <field> must raise, not silently mis-pair rows."""
     import pytest
 
-    from datamimic_ce.clients.mongodb_client import MongoDBClient
-    from datamimic_ce.connection_config.mongodb_connection_config import MongoDBConnectionConfig
+    from datamimic_ce.engine.io.clients.mongodb_client import MongoDBClient
+    from datamimic_ce.engine.io.connection_config.mongodb_connection_config import MongoDBConnectionConfig
 
     client = MongoDBClient(credential=MongoDBConnectionConfig(host="unreachable.invalid", port=27017, database="x"))
     with pytest.raises(ValueError, match="dotted"):

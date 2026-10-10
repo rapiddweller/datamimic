@@ -1,0 +1,59 @@
+{
+  "audit": {
+    "path": "/tmp/ce-report-keyboard-20261010/audit.md",
+    "sha256": "434239cca5cf605bb717e1266a549bab2bd09823ddd69c651847b3de5479ca58"
+  },
+  "browser_receipt": {
+    "path": "/tmp/ce-report-keyboard-20261010/receipt.json",
+    "sha256": "cb1c7bc74f0630a9983297dd7467313bf7300f3a71dc7077f1025cea511b7e2c"
+  },
+  "enter_checks": 41,
+  "graph_control_states": 11,
+  "input_artifacts": {
+    "analyzer": {
+      "code_digest": "52d31c8f54409d5319f7984928d1635296f3f34ae941123c0c27b035e0bde2cf",
+      "name": "archkeel-python-analyzer",
+      "version": "0.74.0"
+    },
+    "contract": {
+      "digest": "ad6c5454acaf6b13e3f0512f526c0c563e0721f108397400dfbfb91c2bd3e0c0",
+      "path": "architecture-contract.json",
+      "schema_version": "2.1.0"
+    },
+    "files": {
+      "/tmp/ce-report-topology-20261010/frozen/architecture.detail.html": "191f0e8c90ee6626a3b3d74012be4ea59412e521eaac59640a76ffd326aef12f",
+      "/tmp/ce-report-topology-20261010/frozen/architecture.json": "f06bfb0813ed352a816cafd5d55d1621ac11e80786481d60129dbb96b22589ca",
+      "/tmp/ce-report-topology-20261010/frozen/architecture.report.html": "18f3446336fbf03b2ba02f79f55b93a8a43e37153201463a4caaba8a1c524d9b"
+    },
+    "source": {
+      "dirty": true,
+      "git_head": "72202ba02f99e31e737b852043e32822a2e7d4f7",
+      "scope": [
+        "datamimic_ce/**/*.py"
+      ],
+      "source_digest": "c9e1c15f0095ce63f40e7cebb193b06e091fc483e3d52870f94f0aea2f0f783c"
+    }
+  },
+  "integration_review": {
+    "path": "/tmp/ce-report-keyboard-20261010/integration-review.json",
+    "sha256": "ccb582217317a3633e226e088cff131144fadd58a9e3ef8b311801147bc721b5"
+  },
+  "issue": {
+    "body": {
+      "path": "/tmp/archkeel-reset-label-issue-20261010.md",
+      "sha256": "1aed98df077cfe699eeea10201f44e8f6dfe7c08f3be9213ea25425c6bd93184"
+    },
+    "exact_readback": {
+      "path": "/tmp/archkeel-reset-label-442-readback-20261010.json",
+      "sha256": "ad5cad4b63f214f20306119b515ff09f93627fd3bf1aedf822be21a5e72357e9"
+    },
+    "url": "https://github.com/rapiddweller/archkeel/issues/442"
+  },
+  "report_rescan": false,
+  "source_change": false,
+  "status": "accepted_representative_controls_with_open_label_defect",
+  "step": 195,
+  "tab_states": 15,
+  "universal_ui_acceptance": false,
+  "viewport_samples": 8
+}

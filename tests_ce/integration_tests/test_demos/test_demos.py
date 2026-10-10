@@ -11,7 +11,7 @@ from pathlib import Path
 
 import pytest
 
-from datamimic_ce.data_mimic_test import DataMimicTest
+from datamimic_ce.interfaces.python.data_mimic_test import DataMimicTest
 
 # Configure logging
 logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(name)s - %(levelname)s - %(message)s")
@@ -21,7 +21,7 @@ logger = logging.getLogger(__name__)
 class TestDemos:
     _test_dir = Path(__file__).resolve().parent
     _project_root = Path.cwd()
-    _demos_dir = _project_root / "datamimic_ce" / "demos"
+    _demos_dir = _project_root / "datamimic_ce" / "resources" / "demos"
 
     def setup_method(self):
         """Setup method run before each test."""

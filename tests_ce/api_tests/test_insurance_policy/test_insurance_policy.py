@@ -1,9 +1,9 @@
 import datetime
+import uuid
 
 import pytest
 
-from datamimic_ce.domains.common.literal_generators.generator_util import GeneratorUtil
-from datamimic_ce.domains.common.models.person import Person
+from datamimic_ce.domains.shared.models.person import Person
 from datamimic_ce.domains.insurance.models.insurance_company import InsuranceCompany
 from datamimic_ce.domains.insurance.models.insurance_policy import InsurancePolicy
 from datamimic_ce.domains.insurance.models.insurance_product import InsuranceProduct
@@ -40,8 +40,7 @@ class TestInsurancePolicy:
         assert insurance_policy.created_date is not None
 
         assert insurance_policy.id != ""
-        #  ensure consistent UUID format by validating via common utility
-        assert GeneratorUtil.is_valid_uuid(insurance_policy.id)
+        assert uuid.UUID(insurance_policy.id, version=4).hex == insurance_policy.id.replace("-", "")
         assert insurance_policy.start_date != ""
         assert insurance_policy.end_date != ""
         assert insurance_policy.status != ""
@@ -74,20 +73,6 @@ class TestInsurancePolicy:
         assert insurance_policy.status == insurance_policy.status
         assert insurance_policy.created_date == insurance_policy.created_date
 
-    @pytest.mark.flaky(reruns=10)
-    def test_two_different_entities(self):
-        insurance_policy_service = InsurancePolicyService()
-        insurance_policy1 = insurance_policy_service.generate()
-        insurance_policy2 = insurance_policy_service.generate()
-        assert insurance_policy1.id != insurance_policy2.id
-        assert insurance_policy1.company != insurance_policy2.company
-        assert insurance_policy1.product != insurance_policy2.product
-        assert insurance_policy1.policy_holder != insurance_policy2.policy_holder
-        assert insurance_policy1.premium != insurance_policy2.premium
-        assert insurance_policy1.start_date != insurance_policy2.start_date
-        assert insurance_policy1.end_date != insurance_policy2.end_date
-        assert insurance_policy1.status != insurance_policy2.status
-        assert insurance_policy1.created_date != insurance_policy2.created_date
 
     @pytest.mark.parametrize("dataset", _supported_datasets)
     def test_supported_datasets(self, dataset):

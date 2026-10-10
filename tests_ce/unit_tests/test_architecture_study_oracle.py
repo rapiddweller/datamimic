@@ -1,0 +1,1267 @@
+from __future__ import annotations
+
+import copy
+import json
+import os
+import shutil
+import subprocess
+import sys
+import xml.etree.ElementTree as ET
+from pathlib import Path
+from types import SimpleNamespace
+
+import pytest
+
+from script.architecture_study import compare_step0, verify_step0
+from script.architecture_study.compare_step0 import (
+    _CAPABILITY_OLD_VERSION,
+    _CAPABILITY_WORDING_CHANGES,
+    capability_projection_equivalent,
+    changed_fields,
+    comparable,
+    equivalent,
+    inventory_by_path,
+    projections_equivalent,
+    shape_compatible,
+)
+from script.architecture_study.verify_step0 import CHILD, REPO, RESULT_PREFIX, inventory, run_descriptor
+
+_EXPECTED_CAPABILITY_WORDING_CHANGES = {
+    ("rules", "35", "provenance"): (
+        "ExporterUtil target parser and ExportOperation enum.",
+        "DSL target parser and ExportOperation enum.",
+    ),
+    ("rules", "36", "provenance"): (
+        "TaskUtil source dispatch contract.", "Source routing contract."
+    ),
+    ("elements", "generate", "attributes", "sourceEntity", "description"): (
+        "Explicit physical entity to read/write (table/collection). "
+        "Precedence: sourceEntity/targetEntity -> type -> name; absent -> existing behaviour. "
+        "See StatementUtil.resolve_source/target_entity.",
+        "Explicit physical entity to read/write (table/collection). "
+        "Precedence: sourceEntity/targetEntity -> type -> name; absent -> existing behaviour.",
+    ),
+    ("elements", "generate", "attributes", "targetEntity", "description"): (
+        "Explicit physical entity to read/write (table/collection). "
+        "Precedence: sourceEntity/targetEntity -> type -> name; absent -> existing behaviour. "
+        "See StatementUtil.resolve_source/target_entity.",
+        "Explicit physical entity to read/write (table/collection). "
+        "Precedence: sourceEntity/targetEntity -> type -> name; absent -> existing behaviour.",
+    ),
+    ("elements", "variable", "attributes", "type", "description"): (
+        "Normally a scalar cast for a generated value (e.g. 'int', 'string'). "
+        "When 'source' is also set, this instead selects which source-backed statement's rows to read "
+        "(a producer name, not a type) — see "
+        "StatementUtil.resolve_source_entity's sourceEntity -> type -> name fallback.",
+        "Normally a scalar cast for a generated value (e.g. 'int', 'string'). "
+        "When 'source' is also set, this instead selects which source-backed statement's rows to read "
+        "(a producer name, not a type); sourceEntity -> type -> name is the fallback.",
+    ),
+    ("elements", "iterate", "attributes", "sourceEntity", "description"): (
+        "Explicit physical entity to read/write (table/collection). "
+        "Precedence: sourceEntity/targetEntity -> type -> name; absent -> existing behaviour. "
+        "See StatementUtil.resolve_source/target_entity.",
+        "Explicit physical entity to read/write (table/collection). "
+        "Precedence: sourceEntity/targetEntity -> type -> name; absent -> existing behaviour.",
+    ),
+    ("elements", "iterate", "attributes", "targetEntity", "description"): (
+        "Explicit physical entity to read/write (table/collection). "
+        "Precedence: sourceEntity/targetEntity -> type -> name; absent -> existing behaviour. "
+        "See StatementUtil.resolve_source/target_entity.",
+        "Explicit physical entity to read/write (table/collection). "
+        "Precedence: sourceEntity/targetEntity -> type -> name; absent -> existing behaviour.",
+    ),
+}
+
+
+def _projection(content: str) -> dict[str, object]:
+    import hashlib
+
+    encoded = content.encode("utf-8")
+    return {"content": content, "bytes": len(encoded), "sha256": hashlib.sha256(encoded).hexdigest()}
+
+
+def _capability_pair() -> tuple[dict[str, object], dict[str, object]]:
+    import json
+
+    old: dict[str, object] = {"schema_version": _CAPABILITY_OLD_VERSION}
+    new: dict[str, object] = {"schema_version": compare_step0.captured_package_version()}
+    for document, attributes in (
+        (old, {}),
+        (new, {
+            "from": {"required": True, "type": "str"},
+            "to": {"required": True, "type": "str"},
+            "weight": {"required": False, "type": "float"},
+        }),
+    ):
+        document.setdefault("elements", {}).setdefault("transition", {})["attributes"] = attributes
+    for path, (before, after) in _EXPECTED_CAPABILITY_WORDING_CHANGES.items():
+        for document, wording in ((old, before), (new, after)):
+            parent: object = document
+            for part in path[:-1]:
+                if isinstance(parent, dict):
+                    parent = parent.setdefault(part, []) if part == "rules" else parent.setdefault(part, {})
+                elif isinstance(parent, list):
+                    while len(parent) <= int(part):
+                        parent.append({})
+                    parent = parent[int(part)]
+            if isinstance(parent, list):
+                while len(parent) <= int(path[-1]):
+                    parent.append({})
+                parent[int(path[-1])] = wording
+            else:
+                parent[path[-1]] = wording
+    return json.loads(json.dumps(old)), json.loads(json.dumps(new))
+
+
+def test_capability_projection_accepts_amendment_60_and_transition_grammar() -> None:
+    import json
+
+    assert _CAPABILITY_WORDING_CHANGES == _EXPECTED_CAPABILITY_WORDING_CHANGES
+    old, new = _capability_pair()
+    old_item, new_item = _projection(json.dumps(old)), _projection(json.dumps(new))
+    original = copy.deepcopy((old_item, new_item))
+    assert capability_projection_equivalent(
+        old_item, new_item
+    )
+    assert (old_item, new_item) == original
+
+
+@pytest.mark.parametrize(
+    "attributes",
+    [
+        {
+            "from": {"required": True, "type": "int"},
+            "to": {"required": True, "type": "str"},
+            "weight": {"required": False, "type": "float"},
+        },
+        {
+            "from": {"required": False, "type": "str"},
+            "to": {"required": True, "type": "str"},
+            "weight": {"required": False, "type": "float"},
+        },
+        {"from": {"required": True, "type": "str"}, "weight": {"required": False, "type": "float"}},
+        {
+            "from": {"required": True, "type": "str"},
+            "to": {"required": True, "type": "str"},
+            "weight": {"required": False},
+        },
+        {
+            "from": {"required": True, "type": "str"},
+            "to": {"required": True, "type": "str"},
+            "weight": {"required": False, "type": "float", "default": 1.0},
+        },
+        {
+            "from": {"required": True, "type": "str"},
+            "to": {"required": True, "type": "str"},
+            "weight": {"required": False, "type": "float"},
+            "extra": {"required": False, "type": "str"},
+        },
+    ],
+)
+def test_capability_projection_rejects_unapproved_transition_grammar(attributes: dict[str, object]) -> None:
+    old, new = _capability_pair()
+    new["elements"]["transition"]["attributes"] = attributes
+    assert not capability_projection_equivalent(_projection(json.dumps(old)), _projection(json.dumps(new)))
+
+
+def test_capability_projection_rejects_nonempty_frozen_transition_grammar() -> None:
+    old, new = _capability_pair()
+    old["elements"]["transition"]["attributes"] = {"from": {"required": True, "type": "str"}}
+    assert not capability_projection_equivalent(_projection(json.dumps(old)), _projection(json.dumps(new)))
+
+
+@pytest.mark.parametrize("path", list(_EXPECTED_CAPABILITY_WORDING_CHANGES))
+def test_capability_projection_rejects_third_wording(path: tuple[str, ...]) -> None:
+    old, new = _capability_pair()
+    item: object = new
+    for part in path[:-1]:
+        item = item[int(part)] if isinstance(item, list) else item[part]
+    assert isinstance(item, dict)
+    item[path[-1]] = "unreviewed wording"
+    assert not capability_projection_equivalent(
+        _projection(json.dumps(old)), _projection(json.dumps(new))
+    )
+
+
+@pytest.mark.parametrize(
+    "mutation",
+    [
+        {"elements": {"generate": {"attributes": {"unlisted": "change"}}}},
+        {"elements": {"generate": {"attributes": {"count": {"type": "changed"}}}}},
+        {"elements": {"generate": {"attributes": {"count": {"enum": ["changed"]}}}}},
+        {"elements": {"generate": {"attributes": {"count": {"required": True}}}}},
+        {"rules": [{"severity": "changed"}]},
+        {"schema_version": "not-the-installed-version"},
+    ],
+)
+def test_capability_projection_rejects_unlisted_change(mutation: dict[str, object]) -> None:
+    import json
+
+    old, new = _capability_pair()
+    new.update(mutation)
+    assert not capability_projection_equivalent(
+        _projection(json.dumps(old)), _projection(json.dumps(new))
+    )
+
+
+@pytest.mark.parametrize("replacement", [None, ""])
+def test_capability_projection_rejects_null_or_invalid_version(replacement: object) -> None:
+    import json
+
+    old, new = _capability_pair()
+    new["schema_version"] = replacement
+    assert not capability_projection_equivalent(
+        _projection(json.dumps(old)), _projection(json.dumps(new))
+    )
+
+    new.pop("schema_version")
+    assert not capability_projection_equivalent(
+        _projection(json.dumps(old)), _projection(json.dumps(new))
+    )
+
+
+def test_capability_projection_rejects_missing_installed_metadata(monkeypatch: pytest.MonkeyPatch) -> None:
+    old, new = _capability_pair()
+    monkeypatch.setattr(compare_step0, "captured_package_version", lambda: None)
+    assert not capability_projection_equivalent(
+        _projection(json.dumps(old)), _projection(json.dumps(new))
+    )
+
+
+@pytest.mark.parametrize("metadata", ["bad-hash", 0])
+def test_capability_projection_rejects_corrupt_capture_metadata(metadata: object) -> None:
+    import json
+
+    old, new = _capability_pair()
+    old_item, new_item = _projection(json.dumps(old)), _projection(json.dumps(new))
+    if metadata == "bad-hash":
+        old_item["sha256"] = "bad"
+    else:
+        old_item["bytes"] = 0
+    assert not capability_projection_equivalent(old_item, new_item)
+
+
+def test_projection_comparison_keeps_non_capabilities_byte_exact() -> None:
+    import json
+
+    old, new = _capability_pair()
+    before = {"capabilities": _projection(json.dumps(old)), "compiler": _projection("same")}
+    after = {"capabilities": _projection(json.dumps(new)), "compiler": _projection("different")}
+
+    assert not projections_equivalent(before, after)
+
+
+@pytest.mark.parametrize("changed", ["compiler", "reference_authoring", "reference_scaffold"])
+def test_other_projections_must_remain_byte_exact(changed: str) -> None:
+    old, new = _capability_pair()
+    before = {name: _projection("same") for name in ("compiler", "reference_authoring", "reference_scaffold")}
+    after = copy.deepcopy(before)
+    before["capabilities"] = _projection(json.dumps(old))
+    after["capabilities"] = _projection(json.dumps(new))
+    assert projections_equivalent(before, after)
+    after[changed] = _projection("different")
+    assert not projections_equivalent(before, after)
+
+
+def test_projection_comparison_requires_all_projections() -> None:
+    assert not projections_equivalent({"compiler": _projection("same")}, {"compiler": _projection("same")})
+
+
+def test_shape_rejects_missing_object_field() -> None:
+    before = {"type": "object", "fields": {"id": "int", "name": "str"}}
+    after = {"type": "object", "fields": {"id": "int"}}
+
+    assert not shape_compatible(before, after)
+
+
+def test_shape_rejects_missing_union_alternative() -> None:
+    before = {"type": "union", "values": ["int", "str"]}
+    after = {"type": "union", "values": ["int"]}
+
+    assert not shape_compatible(before, after)
+
+
+def test_shape_rejects_changed_union_member_even_when_both_allow_null() -> None:
+    before = {"type": "union", "values": ["int", "null"]}
+    after = {"type": "union", "values": ["str", "null"]}
+
+    assert not shape_compatible(before, after)
+
+
+def test_shape_rejects_unknown_against_concrete_type() -> None:
+    assert not shape_compatible("unknown", "int")
+
+
+def test_shape_accepts_optional_field_presence_variance() -> None:
+    before = {
+        "type": "object",
+        "fields": {"name": "str"},
+        "presence_counts": {"name": {"present": 1, "total": 4}},
+    }
+    after = {
+        "type": "object",
+        "fields": {"name": "str"},
+        "presence_counts": {"name": {"present": 2, "total": 4}},
+    }
+
+    assert shape_compatible(before, after)
+
+
+def test_shape_accepts_nested_optional_field_presence_variance() -> None:
+    def shape(car_present: int) -> dict:
+        return {
+            "type": "object",
+            "fields": {
+                "pet": {
+                    "type": "object",
+                    "fields": {
+                        "car": {
+                            "type": "object",
+                            "fields": {"maker": "str"},
+                            "presence_counts": {
+                                "maker": {"present": car_present, "total": car_present}
+                            },
+                        }
+                    },
+                    "presence_counts": {"car": {"present": car_present, "total": 5}},
+                }
+            },
+            "presence_counts": {"pet": {"present": 5, "total": 5}},
+        }
+
+    assert shape_compatible(shape(1), shape(2))
+
+
+@pytest.mark.parametrize(
+    ("before_count", "after_count"),
+    [(1, 4), (4, 1)],
+)
+def test_shape_rejects_required_optional_field_change(before_count: int, after_count: int) -> None:
+    def shape(present: int) -> dict:
+        return {
+            "type": "object",
+            "fields": {"name": "str"},
+            "presence_counts": {"name": {"present": present, "total": 4}},
+        }
+
+    assert not shape_compatible(shape(before_count), shape(after_count))
+
+
+@pytest.mark.parametrize(
+    ("present", "total"),
+    [(0, 4), (5, 4), (1.5, 4), (1, 0)],
+)
+def test_shape_rejects_invalid_presence_counts(present: int | float, total: int) -> None:
+    invalid_shape = {
+        "type": "object",
+        "fields": {"name": "str"},
+        "presence_counts": {"name": {"present": present, "total": total}},
+    }
+
+    assert not shape_compatible(invalid_shape, invalid_shape)
+
+
+def test_shape_does_not_accept_legacy_object_without_presence_metadata() -> None:
+    legacy_shape = {"type": "object", "fields": {"id": "int"}}
+
+    assert not shape_compatible(legacy_shape, legacy_shape)
+
+
+def test_shape_does_not_accept_incomplete_presence_metadata() -> None:
+    incomplete_shape = {
+        "type": "object",
+        "fields": {"id": "int", "name": "str"},
+        "presence_counts": {"id": {"present": 2, "total": 2}},
+    }
+
+    assert not shape_compatible(incomplete_shape, incomplete_shape)
+
+
+def test_shape_does_not_accept_legacy_object_values_without_presence_metadata() -> None:
+    legacy_map_shape = {"type": "object", "values": "int"}
+
+    assert not shape_compatible(legacy_map_shape, legacy_map_shape)
+
+
+def test_shape_accepts_null_sample_when_field_and_concrete_type_remain() -> None:
+    before = {
+        "type": "object",
+        "fields": {"nickname": {"type": "union", "values": ["int", "null"]}},
+        "presence_counts": {"nickname": {"present": 2, "total": 2}},
+    }
+    after = {
+        "type": "object",
+        "fields": {"nickname": "int"},
+        "presence_counts": {"nickname": {"present": 2, "total": 2}},
+    }
+
+    assert shape_compatible(before, after)
+
+
+def test_shape_does_not_accept_all_null_against_concrete_type() -> None:
+    before = {
+        "type": "object",
+        "fields": {"nickname": "null"},
+        "presence_counts": {"nickname": {"present": 2, "total": 2}},
+    }
+    after = {
+        "type": "object",
+        "fields": {"nickname": "int"},
+        "presence_counts": {"nickname": {"present": 2, "total": 2}},
+    }
+
+    assert not shape_compatible(before, after)
+
+
+def test_shape_does_not_accept_identical_all_null_field_as_structural_proof() -> None:
+    all_null_shape = {
+        "type": "object",
+        "fields": {"nickname": "null"},
+        "presence_counts": {"nickname": {"present": 2, "total": 2}},
+    }
+
+    assert not shape_compatible(all_null_shape, all_null_shape)
+
+
+def test_child_records_actual_rows_for_dynamic_count(tmp_path: Path) -> None:
+    descriptor = tmp_path / "count_expression.xml"
+    shutil.copy2(REPO / "tests_ce/integration_tests/test_count_expression/count_expression.xml", descriptor)
+    env = {**os.environ, "PYTHONPATH": str(REPO)}
+    result = subprocess.run(
+        [sys.executable, "-c", CHILD, str(descriptor)],
+        cwd=REPO,
+        env=env,
+        check=True,
+        capture_output=True,
+        text=True,
+        timeout=30,
+    )
+
+    record_line = next(line for line in result.stdout.splitlines() if line.startswith(RESULT_PREFIX))
+    record = json.loads(record_line.removeprefix(RESULT_PREFIX))
+    assert record["outcome"] == "ok"
+    assert record["products"]["orders"]["rows"] == 12
+    assert record["products"]["orders"]["value_shape"]["presence_counts"]["i"] == {
+        "present": 12,
+        "total": 12,
+    }
+
+
+def test_child_captures_from_pre_move_checkout_layout(tmp_path: Path) -> None:
+    package = tmp_path / "datamimic_ce"
+    package.mkdir()
+    (package / "__init__.py").write_text("", encoding="utf-8")
+    (package / "data_mimic_test.py").write_text(
+        "class DataMimicTest:\n"
+        "    task_id = None\n"
+        "    def __init__(self, **kwargs): pass\n"
+        "    def test_with_timer(self): pass\n"
+        "    def capture_result(self): return {'sample': [{'value': 1}]}\n",
+        encoding="utf-8",
+    )
+    statements = package / "engine/dsl/statements"
+    statements.mkdir(parents=True)
+    (statements / "statement_util.py").write_text(
+        "class StatementUtil:\n"
+        "    @staticmethod\n"
+        "    def parse_consumer(value): return set()\n",
+        encoding="utf-8",
+    )
+    descriptor = tmp_path / "sample.xml"
+    descriptor.write_text("<setup/>", encoding="utf-8")
+    result = subprocess.run(
+        [sys.executable, "-c", CHILD, str(descriptor)],
+        cwd=tmp_path,
+        env={**os.environ, "PYTHONPATH": str(tmp_path)},
+        check=True,
+        capture_output=True,
+        text=True,
+        timeout=30,
+    )
+    record_line = next(line for line in result.stdout.splitlines() if line.startswith(RESULT_PREFIX))
+    record = json.loads(record_line.removeprefix(RESULT_PREFIX))
+    assert record["outcome"] == "ok"
+    assert record["products"]["sample"]["rows"] == 1
+
+
+def test_child_capture_and_comparison_reject_nested_field_removal(tmp_path: Path) -> None:
+    descriptor = tmp_path / "nested.xml"
+    descriptor.write_text(
+        '<setup><generate name="orders" count="2" target="">'
+        '<key name="order_id" generator="IncrementGenerator"/>'
+        '<nestedKey name="items" type="list" count="2">'
+        '<key name="line_no" generator="IncrementGenerator"/>'
+        '<key name="amount" type="int" min="10" max="20"/>'
+        "</nestedKey></generate></setup>",
+        encoding="utf-8",
+    )
+    result = subprocess.run(
+        [sys.executable, "-c", CHILD, str(descriptor)],
+        cwd=tmp_path,
+        env={**os.environ, "PYTHONPATH": str(REPO)},
+        check=True,
+        capture_output=True,
+        text=True,
+        timeout=30,
+    )
+
+    record_line = next(line for line in result.stdout.splitlines() if line.startswith(RESULT_PREFIX))
+    record = json.loads(record_line.removeprefix(RESULT_PREFIX))
+    shape = record["products"]["orders"]["value_shape"]
+    item_shape = shape["fields"]["items"]["items"]
+    assert set(item_shape["fields"]) == {"amount", "line_no"}
+
+    changed_shape = copy.deepcopy(shape)
+    del changed_shape["fields"]["items"]["items"]["fields"]["line_no"]
+    assert not shape_compatible(shape, changed_shape)
+
+
+@pytest.mark.parametrize(
+    ("chunk_size", "root_type", "file_count"), [(None, "array", 1), (1, "object", 2)]
+)
+def test_child_captures_json_output_schema_for_list_and_object_roots(
+    tmp_path: Path, chunk_size: int | None, root_type: str, file_count: int
+) -> None:
+    source = REPO / "tests_ce/integration_tests/test_export_uri/json_uri.xml"
+    descriptor = tmp_path / source.name
+    root = ET.parse(source).getroot()
+    if chunk_size is not None:
+        root.find("generate").set("target", f"JSON(chunk_size={chunk_size})")
+    ET.ElementTree(root).write(descriptor, encoding="unicode")
+    result = subprocess.run(
+        [sys.executable, "-c", CHILD, str(descriptor)],
+        cwd=tmp_path,
+        env={**os.environ, "PYTHONPATH": str(REPO)},
+        check=True,
+        capture_output=True,
+        text=True,
+        timeout=30,
+    )
+
+    record_line = next(line for line in result.stdout.splitlines() if line.startswith(RESULT_PREFIX))
+    record = json.loads(record_line.removeprefix(RESULT_PREFIX))
+    schemas = record["output_schemas"]
+    assert len(schemas) == file_count
+    for file_shape in schemas.values():
+        assert file_shape["type"] == root_type
+        row_shape = file_shape["items"] if root_type == "array" else file_shape
+        assert row_shape["fields"] == {"n": "str"}
+
+
+def test_unseeded_xml_capture_records_expanded_tags_and_child_order(tmp_path: Path) -> None:
+    source = REPO / "tests_ce/integration_tests/consumer_xml/test_generate_single_item_xml.xml"
+    descriptor = tmp_path / source.name
+    shutil.copy2(source, descriptor)
+
+    _, record = run_descriptor(
+        {"path": str(descriptor), "category": ["runnable"], "evidence": []}
+    )
+
+    assert record["status"] == "CAPTURED"
+    assert record["output_schema_expected"] is True
+    schema = record["output_schemas"]["xml_single_item.xml"]
+    assert schema["type"] == "xml"
+    assert schema["root"] == "{http://example.com/course}course"
+    root_children = schema["elements"]["children"]
+    assert [child["element"]["name"] for child in root_children] == [
+        "{http://example.com/course}title",
+        "{http://example.com/chapter}chapter",
+    ]
+    chapter = root_children[1]["element"]
+    assert chapter["name"] == "{http://example.com/chapter}chapter"
+    assert [child["element"]["name"] for child in chapter["children"]] == [
+        "{http://example.com/chapter}title",
+        "{http://example.com/lesson}lesson",
+    ]
+
+
+def _unseeded_json_record(schema: dict[str, object] | None) -> dict[str, object]:
+    record: dict[str, object] = {
+        "status": "CAPTURED",
+        "category": ["runnable"],
+        "outcome": "ok",
+        "seeded": False,
+        "products": {
+            "rows": {
+                "rows": 1,
+                "value_shape": {
+                    "type": "object",
+                    "fields": {"n": "str"},
+                    "presence_counts": {"n": {"present": 1, "total": 1}},
+                },
+            }
+        },
+        "output_files": ["rows.json" if schema is not None else "rows.txt"],
+    }
+    if schema is not None:
+        record["output_schemas"] = {record["output_files"][0]: schema}
+    return record
+
+
+def test_unseeded_comparison_rejects_deleted_json_output_field() -> None:
+    before_schema = {
+        "type": "array",
+        "items": {
+            "type": "object",
+            "fields": {"n": "str"},
+            "presence_counts": {"n": {"present": 1, "total": 1}},
+        },
+        "length": 1,
+    }
+    after_schema = {
+        "type": "array",
+        "items": {"type": "object", "fields": {}, "presence_counts": {}},
+        "length": 1,
+    }
+
+    baseline = _unseeded_json_record(before_schema)
+    assert equivalent(baseline, baseline)
+    assert not equivalent(_unseeded_json_record(before_schema), _unseeded_json_record(after_schema))
+
+
+def _xml_output_record(schema: dict[str, object] | None) -> dict[str, object]:
+    record: dict[str, object] = {
+        "status": "CAPTURED",
+        "category": ["runnable"],
+        "outcome": "ok",
+        "seeded": False,
+        # The in-memory product capture is deliberately identical across XML variants.
+        "products": {
+            "rows": {
+                "rows": 2,
+                "value_shape": {
+                    "type": "object",
+                    "fields": {"n": "str"},
+                    "presence_counts": {"n": {"present": 2, "total": 2}},
+                },
+            }
+        },
+        "output_files": ["rows.xml"],
+    }
+    if schema is not None:
+        record["output_schemas"] = {"rows.xml": schema}
+    return record
+
+
+def _xml_schema(
+    *, root: str = "{urn:rows}rows", child: str = "{urn:rows}row",
+    attribute: str = "id", child_order: tuple[str, ...] | None = None, record_count: int = 2,
+) -> dict[str, object]:
+    child_order = child_order or ("{urn:rows}id", "{urn:rows}name")
+    return {
+        "type": "xml",
+        "root": root,
+        "root_child_count": record_count,
+        "element_counts": {root: 1, child: record_count, **{tag: record_count for tag in child_order}},
+        "elements": {
+            "name": root,
+            "attributes": [],
+            "text": False,
+            "children": [
+                {
+                    "count": record_count,
+                    "element": {
+                        "name": child,
+                        "attributes": [attribute],
+                        "text": False,
+                        "children": [
+                            {
+                                "count": 1,
+                                "element": {"name": tag, "attributes": [], "text": True, "children": []},
+                            }
+                            for tag in child_order
+                        ],
+                    },
+                }
+            ],
+        },
+    }
+
+
+def test_unseeded_xml_comparison_ignores_text_values_but_keeps_structure() -> None:
+    schema = _xml_schema()
+
+    assert equivalent(_xml_output_record(schema), _xml_output_record(copy.deepcopy(schema)))
+
+
+@pytest.mark.parametrize(
+    "changed_schema",
+    [
+        _xml_schema(child="{urn:rows}other"),
+        _xml_schema(attribute="key"),
+        _xml_schema(root="{urn:other}rows"),
+        _xml_schema(child_order=("{urn:rows}name", "{urn:rows}id")),
+        _xml_schema(record_count=1),
+    ],
+    ids=["child-removal", "attribute-removal", "namespace-tag", "child-order", "record-count"],
+)
+def test_unseeded_xml_comparison_rejects_structural_export_changes(
+    changed_schema: dict[str, object],
+) -> None:
+    assert not equivalent(_xml_output_record(_xml_schema()), _xml_output_record(changed_schema))
+
+
+def test_unseeded_xml_comparison_rejects_swapped_children_across_same_tag_siblings() -> None:
+    def sibling(attribute: str, child: str) -> dict[str, object]:
+        return {
+            "name": "{urn:rows}row",
+            "attributes": [attribute],
+            "text": False,
+            "children": [
+                {
+                    "count": 1,
+                    "element": {"name": child, "attributes": [], "text": True, "children": []},
+                }
+            ],
+        }
+
+    def schema(rows: list[dict[str, object]]) -> dict[str, object]:
+        return {
+            "type": "xml",
+            "root": "{urn:rows}rows",
+            "root_child_count": 2,
+            "element_counts": {
+                "{urn:rows}rows": 1,
+                "{urn:rows}row": 2,
+                "{urn:rows}left": 1,
+                "{urn:rows}right": 1,
+            },
+            "elements": {
+                "name": "{urn:rows}rows",
+                "attributes": [],
+                "text": False,
+                "children": [{"count": 1, "element": row} for row in rows],
+            },
+        }
+
+    original = schema([sibling("left-id", "{urn:rows}left"), sibling("right-id", "{urn:rows}right")])
+    swapped = schema([sibling("left-id", "{urn:rows}right"), sibling("right-id", "{urn:rows}left")])
+
+    assert not equivalent(_xml_output_record(original), _xml_output_record(swapped))
+
+
+def test_unseeded_xml_comparison_requires_existing_well_formed_schema_evidence() -> None:
+    baseline = _xml_output_record(_xml_schema())
+    no_schema = _xml_output_record(None)
+    malformed_schema = _xml_output_record({"type": "xml", "elements": "not-an-element-map"})
+    missing_file = copy.deepcopy(baseline)
+    missing_file["output_files"] = []
+
+    assert not equivalent(baseline, no_schema)
+    assert not equivalent(baseline, malformed_schema)
+    assert not equivalent(malformed_schema, malformed_schema)
+    assert not equivalent(baseline, missing_file)
+
+
+def test_unseeded_xml_comparison_rejects_boolean_as_element_count() -> None:
+    malformed = _xml_schema(record_count=1)
+    malformed["root_child_count"] = True
+    malformed["element_counts"]["{urn:rows}rows"] = True
+    record = _xml_output_record(malformed)
+
+    assert not equivalent(record, record)
+
+
+def test_seeded_xml_capture_still_requires_exact_output_digest() -> None:
+    before = {
+        "status": "CAPTURED", "category": ["runnable"], "outcome": "ok", "seeded": True,
+        "result_output_digest": "a" * 64,
+    }
+    after = {**before, "result_output_digest": "b" * 64}
+
+    assert equivalent(before, before)
+    assert not equivalent(before, after)
+
+
+def test_unseeded_comparison_rejects_deleted_nested_json_key() -> None:
+    before_schema = {
+        "type": "object",
+        "fields": {
+            "payload": {
+                "type": "object",
+                "fields": {"child_id": "str"},
+                "presence_counts": {"child_id": {"present": 1, "total": 1}},
+            }
+        },
+        "presence_counts": {"payload": {"present": 1, "total": 1}},
+        "length": 1,
+    }
+    after_schema = {
+        "type": "object",
+        "fields": {"payload": {"type": "object", "fields": {}, "presence_counts": {}}},
+        "presence_counts": {"payload": {"present": 1, "total": 1}},
+        "length": 1,
+    }
+
+    baseline = _unseeded_json_record(before_schema)
+    assert equivalent(baseline, baseline)
+    assert not equivalent(_unseeded_json_record(before_schema), _unseeded_json_record(after_schema))
+
+
+def test_unseeded_comparison_requires_schema_for_unsupported_text_output() -> None:
+    incomplete = _unseeded_json_record(None)
+
+    assert not equivalent(incomplete, incomplete)
+    assert changed_fields(comparable(incomplete), comparable(incomplete)) == "incomplete evidence"
+
+
+def test_identical_unverified_service_record_is_not_parity_proof() -> None:
+    unverified = {
+        "status": "UNVERIFIED",
+        "category": ["runnable", "external-service"],
+        "reason": "UNVERIFIED: service inventory unavailable",
+        "evidence": ["tests_ce/external_service_tests/test_db.py"],
+    }
+
+    assert not equivalent(unverified, unverified)
+
+
+@pytest.mark.parametrize(
+    "status", ["UNRUNNABLE", "UNEXPECTED-SUCCESS"],
+)
+def test_identical_non_success_status_is_not_parity_proof(status: str) -> None:
+    record = {
+        "status": status,
+        "category": ["runnable"],
+        "outcome": "ok" if status == "UNEXPECTED-SUCCESS" else "timeout",
+        "seeded": status == "UNEXPECTED-SUCCESS",
+        "result_output_digest": "same" if status == "UNEXPECTED-SUCCESS" else None,
+    }
+
+    assert not equivalent(record, record)
+
+
+@pytest.mark.parametrize("digest", [None, ""])
+def test_seeded_capture_requires_nonempty_output_digest(digest: str | None) -> None:
+    record = {
+        "status": "CAPTURED",
+        "category": ["runnable"],
+        "outcome": "ok",
+        "seeded": True,
+        "result_output_digest": digest,
+    }
+
+    assert not equivalent(record, record)
+
+
+@pytest.mark.parametrize("outcome", [None, "timeout"])
+def test_captured_record_requires_ok_outcome(outcome: str | None) -> None:
+    record = {
+        "status": "CAPTURED",
+        "category": ["runnable"],
+        "outcome": outcome,
+        "seeded": False,
+    }
+
+    assert not equivalent(record, record)
+
+
+def test_unseeded_ndjson_capture_is_unverified_without_schema(tmp_path: Path) -> None:
+    source = REPO / "tests_ce/integration_tests/test_export_uri/json_uri.xml"
+    descriptor = tmp_path / source.name
+    root = ET.parse(source).getroot()
+    root.find("generate").set("target", "JSON(use_ndjson=True)")
+    ET.ElementTree(root).write(descriptor, encoding="unicode")
+
+    _, record = run_descriptor(
+        {"path": str(descriptor), "category": ["runnable"], "evidence": []}
+    )
+
+    assert record["status"] == "UNVERIFIED"
+    assert "schema" in record["reason"].lower()
+    assert not equivalent(record, record)
+
+
+def test_empty_json_array_export_is_unverified_without_concrete_schema(tmp_path: Path) -> None:
+    source = REPO / "tests_ce/integration_tests/test_export_uri/json_uri.xml"
+    descriptor = tmp_path / source.name
+    root = ET.parse(source).getroot()
+    root.find("generate").set("count", "0")
+    ET.ElementTree(root).write(descriptor, encoding="unicode")
+
+    _, record = run_descriptor(
+        {"path": str(descriptor), "category": ["runnable"], "evidence": []}
+    )
+
+    assert record["status"] == "UNVERIFIED"
+    assert "schema" in record["reason"].lower()
+
+
+def test_zero_row_configured_json_export_is_unverified_without_file(tmp_path: Path) -> None:
+    source = REPO / "tests_ce/integration_tests/test_export_uri/json_uri.xml"
+    descriptor = tmp_path / source.name
+    root = ET.parse(source).getroot()
+    generate = root.find("generate")
+    generate.set("count", "0")
+    generate.set("target", "JSON(chunk_size=1)")
+    ET.ElementTree(root).write(descriptor, encoding="unicode")
+
+    _, record = run_descriptor(
+        {"path": str(descriptor), "category": ["runnable"], "evidence": []}
+    )
+
+    assert record["status"] == "UNVERIFIED"
+    assert "schema" in record["reason"].lower()
+
+
+def test_nested_empty_json_array_export_is_unverified(tmp_path: Path) -> None:
+    descriptor = tmp_path / "nested_empty.xml"
+    descriptor.write_text(
+        '<setup><generate name="rows" count="1" target="JSON" exportUri="out">'
+        '<key name="id" generator="IncrementGenerator"/>'
+        '<nestedKey name="items" type="list" count="0">'
+        '<key name="value" constant="x"/>'
+        "</nestedKey></generate></setup>",
+        encoding="utf-8",
+    )
+
+    _, record = run_descriptor(
+        {"path": str(descriptor), "category": ["runnable"], "evidence": []}
+    )
+
+    assert record["status"] == "UNVERIFIED"
+    assert "schema" in record["reason"].lower()
+
+
+def test_all_null_json_field_export_is_unverified(tmp_path: Path) -> None:
+    descriptor = tmp_path / "all_null.xml"
+    (tmp_path / "input.json").write_text('[{"id": null}]', encoding="utf-8")
+    descriptor.write_text(
+        '<setup><generate name="rows" source="input.json" count="1" '
+        'target="JSON" exportUri="out" distribution="ordered"/></setup>',
+        encoding="utf-8",
+    )
+
+    _, record = run_descriptor(
+        {"path": str(descriptor), "category": ["runnable"], "evidence": []}
+    )
+
+    assert record["status"] == "UNVERIFIED"
+    assert "schema" in record["reason"].lower()
+
+
+def test_unseeded_json_output_schema_rejects_row_loss() -> None:
+    before = _unseeded_json_record(
+        {
+            "type": "array",
+            "items": {
+                "type": "object",
+                "fields": {"n": "str"},
+                "presence_counts": {"n": {"present": 1, "total": 1}},
+            },
+            "length": 2,
+        }
+    )
+    after = _unseeded_json_record(
+        {
+            "type": "array",
+            "items": {
+                "type": "object",
+                "fields": {"n": "str"},
+                "presence_counts": {"n": {"present": 1, "total": 1}},
+            },
+            "length": 1,
+        }
+    )
+    # Product results are held constant to prove the exported file itself is checked.
+    before["products"] = after["products"]
+
+    assert not equivalent(before, after)
+
+
+def test_unseeded_json_comparison_rejects_nested_array_cardinality_change(tmp_path: Path) -> None:
+    def capture(item_count: int) -> dict[str, object]:
+        case_dir = tmp_path / str(item_count)
+        case_dir.mkdir()
+        descriptor = case_dir / "nested.json.xml"
+        descriptor.write_text(
+            '<setup><generate name="rows" count="1" target="JSON" exportUri="out">'
+            '<key name="id" generator="IncrementGenerator"/>'
+            f'<nestedKey name="items" type="list" count="{item_count}">'
+            '<key name="value" constant="x"/>'
+            "</nestedKey></generate></setup>",
+            encoding="utf-8",
+        )
+        _, record = run_descriptor({"path": str(descriptor), "category": ["runnable"], "evidence": []})
+        return record
+
+    one_item = capture(1)
+    two_items = capture(2)
+
+    assert one_item["products"]["rows"]["rows"] == two_items["products"]["rows"]["rows"] == 1
+    assert shape_compatible(
+        one_item["products"]["rows"]["value_shape"], two_items["products"]["rows"]["value_shape"]
+    )
+    assert shape_compatible(one_item["output_schemas"]["out/rows.json"], two_items["output_schemas"]["out/rows.json"])
+    assert not equivalent(one_item, two_items)
+
+
+def test_unseeded_json_comparison_accepts_scalar_value_variation(tmp_path: Path) -> None:
+    def capture(value: str, case_dir: Path) -> dict[str, object]:
+        case_dir.mkdir()
+        descriptor = case_dir / "scalar.xml"
+        descriptor.write_text(
+            '<setup><generate name="rows" count="1" target="JSON" exportUri="out">'
+            f'<key name="n" constant="{value}"/>'
+            "</generate></setup>",
+            encoding="utf-8",
+        )
+        _, record = run_descriptor({"path": str(descriptor), "category": ["runnable"], "evidence": []})
+        return record
+
+    before = capture("first scalar", tmp_path / "first")
+    after = capture("second scalar", tmp_path / "second")
+
+    assert equivalent(before, after)
+
+
+def test_unseeded_nested_cardinality_rejects_missing_parent_evidence() -> None:
+    schema = {
+        "type": "array",
+        "items": {
+            "type": "object",
+            "fields": {
+                "items": {
+                    "type": "array",
+                    "items": {
+                        "type": "object",
+                        "fields": {"value": "str"},
+                        "presence_counts": {"value": {"present": 1, "total": 1}},
+                    },
+                }
+            },
+            "presence_counts": {"items": {"present": 2, "total": 2}},
+        },
+        "length": 2,
+        "nested_cardinalities": {"/items": [2, 2]},
+    }
+    expected = _unseeded_json_record(schema)
+    expected["products"]["rows"]["rows"] = 2
+    expected["products"]["rows"]["value_shape"] = schema["items"]
+    expected["products"]["rows"]["nested_cardinalities"] = {"/items": [2, 2]}
+
+    actual = copy.deepcopy(expected)
+    actual["output_schemas"]["rows.json"]["nested_cardinalities"] = {"/items": [2]}
+    actual["products"]["rows"]["nested_cardinalities"] = {"/items": [2]}
+
+    assert shape_compatible(expected["products"]["rows"]["value_shape"], actual["products"]["rows"]["value_shape"])
+    assert not equivalent(expected, actual)
+
+
+def test_unseeded_per_parent_cardinality_checks_each_parent_not_only_total(tmp_path: Path) -> None:
+    def capture(name: str, count: str) -> dict[str, object]:
+        case_dir = tmp_path / name
+        case_dir.mkdir()
+        descriptor = case_dir / "nested.xml"
+        descriptor.write_text(
+            '<setup><generate name="rows" count="2" target="JSON" exportUri="out">'
+            '<key name="id" generator="IncrementGenerator"/>'
+            '<key name="item_count" script="1 if id == 1 else 3"/>'
+            f'<nestedKey name="items" type="list" count="{count}">'
+            '<key name="value" constant="x"/>'
+            "</nestedKey></generate></setup>",
+            encoding="utf-8",
+        )
+        _, record = run_descriptor({"path": str(descriptor), "category": ["runnable"], "evidence": []})
+        return record
+
+    expected = capture("expected", "2")
+    actual = capture("actual", "{item_count}")
+
+    assert expected["products"]["rows"]["rows"] == actual["products"]["rows"]["rows"] == 2
+    assert shape_compatible(
+        expected["products"]["rows"]["value_shape"], actual["products"]["rows"]["value_shape"]
+    )
+    assert expected["status"] == "CAPTURED"
+    assert actual["status"] == "UNVERIFIED"
+    assert not equivalent(expected, actual)
+
+
+@pytest.mark.parametrize(
+    "nested",
+    [
+        '<key name="item_count" generator="IntegerGenerator(min=1,max=3)"/>'
+        '<nestedKey name="items" type="list" count="{item_count}"><key name="value" constant="x"/></nestedKey>',
+        '<nestedKey name="items" type="list" count="2" condition="id == 1">'
+        '<key name="value" constant="x"/></nestedKey>',
+        '<key name="item_count" script="1 if id == 1 else 3"/>'
+        '<nestedKey name="items" type="list" count="{item_count}"><key name="value" constant="x"/></nestedKey>',
+    ],
+    ids=["generated-count", "conditional-list", "script-count"],
+)
+def test_unseeded_nonliteral_nested_cardinality_is_unverified(tmp_path: Path, nested: str) -> None:
+    descriptor = tmp_path / "dynamic_nested.xml"
+    descriptor.write_text(
+        '<setup><generate name="rows" count="2" target="JSON" exportUri="out">'
+        '<key name="id" generator="IncrementGenerator"/>'
+        f"{nested}</generate></setup>",
+        encoding="utf-8",
+    )
+
+    _, record = run_descriptor({"path": str(descriptor), "category": ["runnable"], "evidence": []})
+
+    assert record["status"] == "UNVERIFIED"
+    assert "cardinal" in record["reason"].lower()
+
+
+def test_unseeded_nested_array_without_legacy_cardinality_evidence_is_not_a_pass() -> None:
+    legacy = _unseeded_json_record(
+        {
+            "type": "array",
+            "items": {
+                "type": "object",
+                "fields": {
+                    "items": {
+                        "type": "array",
+                        "items": "str",
+                    }
+                },
+                "presence_counts": {"items": {"present": 1, "total": 1}},
+            },
+            "length": 1,
+        }
+    )
+
+    assert not equivalent(legacy, legacy)
+
+
+def test_properties_include_does_not_make_fixed_nested_cardinality_unknown(tmp_path: Path) -> None:
+    (tmp_path / "settings.properties").write_text("label=example\n", encoding="utf-8")
+    descriptor = tmp_path / "with_properties.xml"
+    descriptor.write_text(
+        '<setup><include uri="settings.properties"/>'
+        '<generate name="rows" count="2" target="JSON" exportUri="out">'
+        '<nestedKey name="items" type="list" count="2">'
+        '<key name="value" constant="x"/>'
+        "</nestedKey></generate></setup>",
+        encoding="utf-8",
+    )
+
+    _, record = run_descriptor({"path": str(descriptor), "category": ["runnable"], "evidence": []})
+
+    assert record["status"] == "CAPTURED"
+
+
+def test_child_rejects_import_outside_its_pythonpath_root(tmp_path: Path) -> None:
+    descriptor = tmp_path / "safe.xml"
+    descriptor.write_text(
+        '<setup><generate name="items" count="1" target="">'
+        '<key name="id" generator="IncrementGenerator"/>'
+        "</generate></setup>",
+        encoding="utf-8",
+    )
+    env = {**os.environ, "PYTHONPATH": str(tmp_path / "empty-pythonpath")}
+    (tmp_path / "empty-pythonpath").mkdir()
+    result = subprocess.run(
+        [sys.executable, "-c", CHILD, str(descriptor)],
+        cwd=tmp_path,
+        env=env,
+        capture_output=True,
+        text=True,
+        timeout=30,
+    )
+
+    output = result.stdout + result.stderr
+    assert result.returncode != 0 or RESULT_PREFIX not in result.stdout
+    assert "PYTHONPATH" in output or "import root" in output.lower()
+
+
+def test_evidence_line_moves_are_ignored_by_inventory_and_comparable() -> None:
+    before_evidence = [
+        "tests_ce/test_rows.py:10 tests orders; assertions at tests_ce/test_rows.py:14"
+    ]
+    after_evidence = [
+        "tests_ce/test_rows.py:20 tests orders; assertions at tests_ce/test_rows.py:24"
+    ]
+    before = {"path": "tests_ce/orders.xml", "category": ["runnable"], "evidence": before_evidence}
+    after = {"path": "tests_ce/orders.xml", "category": ["runnable"], "evidence": after_evidence}
+
+    assert inventory_by_path([before]) == inventory_by_path([after])
+    assert comparable({**before, "status": "UNVERIFIED"}) == comparable(
+        {**after, "status": "UNVERIFIED"}
+    )
+
+
+def test_evidence_normalization_preserves_test_path_and_semantics() -> None:
+    evidence = "tests_ce/test_rows.py:10 tests orders; assertions at tests_ce/test_rows.py:14"
+    baseline = {"path": "tests_ce/orders.xml", "category": ["runnable"], "evidence": [evidence]}
+    changed_path = {**baseline, "evidence": [evidence.replace("test_rows.py", "test_other.py")]}
+    changed_semantics = {**baseline, "evidence": [evidence.replace("tests orders", "tests users")]}
+
+    assert inventory_by_path([baseline]) != inventory_by_path([changed_path])
+    assert inventory_by_path([baseline]) != inventory_by_path([changed_semantics])
+    for changed in (changed_path, changed_semantics):
+        assert comparable({**baseline, "status": "UNVERIFIED"}) != comparable(
+            {**changed, "status": "UNVERIFIED"}
+        )
+
+
+def _inventory_one_descriptor(tmp_path: Path, monkeypatch: pytest.MonkeyPatch, relative: str, xml: str) -> dict:
+    descriptor = tmp_path / relative
+    descriptor.parent.mkdir(parents=True, exist_ok=True)
+    descriptor.write_text(xml, encoding="utf-8")
+    monkeypatch.setattr(verify_step0, "REPO", tmp_path)
+    monkeypatch.setattr(
+        verify_step0.subprocess,
+        "run",
+        lambda *_args, **_kwargs: SimpleNamespace(stdout=relative),
+    )
+    return inventory()[0]
+
+
+@pytest.mark.parametrize(
+    ("relative", "clients", "expected_category"),
+    [
+        ("tests_ce/integration_tests/local.xml", '<database id="one" dbms="sqlite"/>', "runnable"),
+        (
+            "tests_ce/integration_tests/local.xml",
+            '<database id="one" dbms="sqlite"/><database id="two" dbms="sqlite"/>',
+            "runnable",
+        ),
+        ("tests_ce/integration_tests/remote.xml", '<database id="db" dbms="postgresql"/>', "external-service"),
+        ("tests_ce/integration_tests/unknown.xml", '<database id="db"/>', "external-service"),
+        ("tests_ce/integration_tests/unknown.xml", '<database id="db" dbms="SQLITE"/>', "external-service"),
+        (
+            "tests_ce/integration_tests/mixed.xml",
+            '<database id="local" dbms="sqlite"/><database id="remote" dbms="postgresql"/>',
+            "external-service",
+        ),
+        (
+            "tests_ce/integration_tests/mixed.xml",
+            '<database id="local" dbms="sqlite"/><mongodb id="remote"/>',
+            "external-service",
+        ),
+        ("tests_ce/integration_tests/mongo.xml", '<mongodb id="mongo"/>', "external-service"),
+        ("tests_ce/integration_tests/kafka.xml", '<kafka id="events"/>', "external-service"),
+        ("tests_ce/integration_tests/object.xml", '<object-storage id="bucket"/>', "external-service"),
+        (
+            "tests_ce/external_service_tests/local.xml",
+            '<database id="db" dbms="sqlite"/>',
+            "external-service",
+        ),
+        (
+            "tests_ce/integration_tests/namespaced.xml",
+            '<remote:mongodb xmlns:remote="urn:clients" id="mongo"/>',
+            "external-service",
+        ),
+        ("tests_ce/integration_tests/cased.xml", '<MongoDB id="mongo"/>', "external-service"),
+    ],
+)
+def test_inventory_gates_unknown_or_external_clients_but_allows_local_sqlite(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+    relative: str,
+    clients: str,
+    expected_category: str,
+) -> None:
+    record = _inventory_one_descriptor(
+        tmp_path,
+        monkeypatch,
+        relative,
+        f"<setup>{clients}<generate name='rows' count='1'/></setup>",
+    )
+
+    assert expected_category in record["category"]
+    if expected_category == "runnable":
+        assert "external-service" not in record["category"]

@@ -1,0 +1,7 @@
+{
+  "after_digest": "3bee06b20cb849f6c231b504b8a604a1d23f5f1f6bd8f322a81908737d377df4",
+  "before_digest": "99febc13a98c371b5b2213993aa26dcfdfaadfbd8690fb5a10143124f158afe4",
+  "decided_by": "experiment orchestrator",
+  "rationale": "Step 6 moved converters, shipped demos, CLI and MCP into their already-declared target namespaces. Contract ownership lists now name only the target packages; no dependency permission or rule was weakened.",
+  "schema_version": "1.0.0"
+}

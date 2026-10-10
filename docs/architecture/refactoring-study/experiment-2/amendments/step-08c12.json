@@ -1,0 +1,7 @@
+{
+  "after_digest": "f6518d458365cc72a620e005e6231dde635817a64595612c7b55d140a69dd57a",
+  "before_digest": "b0bc24ff2bf7f3a32757cbcec81f95e040f67af620e1d7057f7d9cb8be2a959e",
+  "decided_by": "experiment orchestrator",
+  "rationale": "Step 08C12 implements the frozen typed IO facade, keeps the exporter registry private, and removes the interfaces-to-IO edge; no dependency permission is added.",
+  "schema_version": "1.0.0"
+}

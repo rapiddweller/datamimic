@@ -1,0 +1,424 @@
+{
+  "step": 128,
+  "actual_working_head": "03bd23d9fcc6ee9deadce4d20ef7bd3e9a0f7d3c",
+  "source_dirty": true,
+  "production_delta": "Exactly one inner logger.error expression removed from RuntimeRunSession._validate_xml_model.",
+  "runner_before_sha256": "7764efce026084a96e3deec800870ed3c284af47793c0106eb9d90b4ac356944",
+  "runner_after_sha256": "c4c7b2cee3c78aef8db731a1b7039aef9a77aceac5769537167d8e4a35eebb79",
+  "final_test_sha256": "0fdaeaf1f12a800a841aa5c3df701caa48bd503a714bf42a7d87cf94a11a8154",
+  "native_probe_delta": "Each real create/create_batch(2): two ERROR LogRecords -> one existing outer ERROR; builtins.ValueError class/args/text/cause/context/suppress_context unchanged.",
+  "semantics": "Amendment163; exact factory failure ownership only, no global log-once rule or CE/EE stream parity.",
+  "local_checks": {
+    "broader_runtime_error_logging_cases": {
+      "tests": 91,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    "final_factory_cases": {
+      "tests": 6,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    "baseline_negative_control": {
+      "tests": 2,
+      "failures": 2,
+      "errors": 0,
+      "skipped": 0
+    },
+    "final_test_ast_equal_to_negative_control": true,
+    "package_ruff_mypy": "PASS;491 Python source files",
+    "final_changed_file_style_format": "PASS",
+    "cycle_check": "PASS",
+    "definition_tests": 8,
+    "inner_target_tests": 4,
+    "strict_architecture_make_returncode": 2,
+    "strict_architecture_verdict": "FAIL"
+  },
+  "architecture_comparison": {
+    "before_source": {
+      "dirty": true,
+      "git_head": "03bd23d9fcc6ee9deadce4d20ef7bd3e9a0f7d3c",
+      "scope": [
+        "datamimic_ce/**/*.py"
+      ],
+      "source_digest": "0a38fc3bb6db247d724ceff17b294c0253ebba2d48b4f6f212c0a231f7d80ccb"
+    },
+    "after_source": {
+      "dirty": true,
+      "git_head": "03bd23d9fcc6ee9deadce4d20ef7bd3e9a0f7d3c",
+      "scope": [
+        "datamimic_ce/**/*.py"
+      ],
+      "source_digest": "331838d86a4d135f8d8c8021ea484f6eae69c57da7b5d4a4979eac054172731b"
+    },
+    "counts": {
+      "modules": [
+        491,
+        491
+      ],
+      "violations": [
+        89,
+        89
+      ],
+      "unknowns": [
+        254,
+        254
+      ],
+      "calls": [
+        11669,
+        11668
+      ]
+    },
+    "equal_arrays": {
+      "modules": true,
+      "violations": true,
+      "unknowns": false
+    },
+    "full_acceptance": "FAIL",
+    "violations_removed_ids": [],
+    "violations_added_ids": [],
+    "violations_changed_common_ids": [],
+    "unknowns_removed_ids": [],
+    "unknowns_added_ids": [],
+    "unknowns_changed_common_ids": [
+      "UNKNOWN-PYTHON-DYNAMIC-CALLS"
+    ]
+  },
+  "remaining_measured_unknown_positions": 200,
+  "remaining_canonical_unknowns": 254,
+  "evidence_limits": [
+    "No generated dataset/full persisted target-state/originala219 runtime proof; temporary empty XML adds no inventory row.",
+    "QA observer is a temporary StreamHandler that suppresses emission; no native stderr-routing assertion.",
+    "Early QA native_factory_probe.json is edited derived metadata, not raw output; labeledv2 raw bytes are preserved.",
+    "Initial implementation hypothesis about empty str was wrong; actual ValueError text is nonempty.",
+    "QA prose naming execute as deletion site is qualified by exact _validate_xml_model source diff.",
+    "Initial style failures retained; final formatter changed only whitespace with identical test AST.",
+    "No baseline/oracle/contract/grant/tool version change."
+  ],
+  "ci_for_source_correction": "NOT_RUN_YET",
+  "full_acceptance": "FAIL",
+  "artifacts": [
+    {
+      "path": "test-artifacts/architecture/ce-recursive-target/step-128-evidence/after-architecture-check.log",
+      "sha256": "ff5bcc7ea809da8ec026f8977104c22db0279d6d21639a6f3db94e330d1315a9"
+    },
+    {
+      "path": "test-artifacts/architecture/ce-recursive-target/step-128-evidence/after-architecture-report.log",
+      "sha256": "ca2e1ac4b2ae3b8f4de91f2549767a901b75040b36252e6c545e1f4bf442e629"
+    },
+    {
+      "path": "test-artifacts/architecture/ce-recursive-target/step-128-evidence/after-architecture.json",
+      "sha256": "93db97db29dac45e6c636ef170f05698e310948744705f4227a33c15281f2c45"
+    },
+    {
+      "path": "test-artifacts/architecture/ce-recursive-target/step-128-evidence/after-changed-file-format.log",
+      "sha256": "343921745e8a852b72a8dec9ab44f0bdd9c655a5a663d945be3cc4175e3f4813"
+    },
+    {
+      "path": "test-artifacts/architecture/ce-recursive-target/step-128-evidence/after-changed-file-style.log",
+      "sha256": "82047857dea0afec998c3e7718869e74f5c3d0390f7fcf1a575aa7a9d2ccd816"
+    },
+    {
+      "path": "test-artifacts/architecture/ce-recursive-target/step-128-evidence/after-checks-receipt.json",
+      "sha256": "a372d0170e9adbeaef45f77843210a56739bda25f329ae5cfdc65dc86ff20d1e"
+    },
+    {
+      "path": "test-artifacts/architecture/ce-recursive-target/step-128-evidence/after-lint-typecheck.log",
+      "sha256": "ede7e8a01bbf51ba34cabf9c40adc123ff5553691c8b6232b868368a5e445a37"
+    },
+    {
+      "path": "test-artifacts/architecture/ce-recursive-target/step-128-evidence/architecture-comparison.json",
+      "sha256": "ce228a7b7645b68f1fb75f41b9ef9d031cf19e0a119a2b4cfc19dbf09e56679e"
+    },
+    {
+      "path": "test-artifacts/architecture/ce-recursive-target/step-128-evidence/astra-curation-final128.md",
+      "sha256": "1a782591d35d8dd0a1cabcf914ee220798c0c69ee19cf8e6aa55620151c2e591"
+    },
+    {
+      "path": "test-artifacts/architecture/ce-recursive-target/step-128-evidence/astra-final128.md",
+      "sha256": "7164a1677ff9c2ed0e9c445bd669a70cbb3e7031f0fd6c8ca5868e19aab519c2"
+    },
+    {
+      "path": "test-artifacts/architecture/ce-recursive-target/step-128-evidence/astra-phase2-approval.md",
+      "sha256": "1a1f3139ac9d9478e4961d166f91e26ebc75cbf350a19d326264d1625547036d"
+    },
+    {
+      "path": "test-artifacts/architecture/ce-recursive-target/step-128-evidence/before-architecture-receipt.json",
+      "sha256": "06c8a9b2fd5b97d52d59f38ae2ec82890191b4d9d2a1ea04dce4e0983e3dbde9"
+    },
+    {
+      "path": "test-artifacts/architecture/ce-recursive-target/step-128-evidence/before-architecture-report.log",
+      "sha256": "9094d3ed986173c15cc9f0425ca13d0939fd0c432f2abcf6168ec1ea575ce60b"
+    },
+    {
+      "path": "test-artifacts/architecture/ce-recursive-target/step-128-evidence/before-architecture.json",
+      "sha256": "6ebbcba7004ae506277cbcadc1ec7fe48c0989d5b0fc69b17dcff53b42c9b6e4"
+    },
+    {
+      "path": "test-artifacts/architecture/ce-recursive-target/step-128-evidence/final-factory.log",
+      "sha256": "bc7916d382e07f3daf757e630ac0b0bd478a4ef3372eb8a283d0c700412ca6ff"
+    },
+    {
+      "path": "test-artifacts/architecture/ce-recursive-target/step-128-evidence/final-format.log",
+      "sha256": "c36dd63ef8e3fe98bd162263909fe71ba5cf0c787c5a865ef12269c1f142be6d"
+    },
+    {
+      "path": "test-artifacts/architecture/ce-recursive-target/step-128-evidence/final-green-junit.xml",
+      "sha256": "73a901a626089f0782709af748d50c7597ab294efa8603d4baa1ea79c0471d3d"
+    },
+    {
+      "path": "test-artifacts/architecture/ce-recursive-target/step-128-evidence/final-red-checkout.stderr",
+      "sha256": "81aed061d18c7e210975b057b8e5b65478ebc4a32e544737e5d80155057a399c"
+    },
+    {
+      "path": "test-artifacts/architecture/ce-recursive-target/step-128-evidence/final-red-checkout.stdout",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "test-artifacts/architecture/ce-recursive-target/step-128-evidence/final-red-clone.stderr",
+      "sha256": "5e827e311677582d0062ff2cf944f80a6aeab8a0a0f3d7190f811f38f455e883"
+    },
+    {
+      "path": "test-artifacts/architecture/ce-recursive-target/step-128-evidence/final-red-clone.stdout",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "test-artifacts/architecture/ce-recursive-target/step-128-evidence/final-red-junit.xml",
+      "sha256": "bb14662b466f2571d4c36f3c70a99a9f8f7cb18ce828ff6b8f5adb12b7084737"
+    },
+    {
+      "path": "test-artifacts/architecture/ce-recursive-target/step-128-evidence/final-red-receipt.json",
+      "sha256": "012870a5fbac9b0a38a273d06af9cff6608f494bad0a44b582a6aa037c7dd00b"
+    },
+    {
+      "path": "test-artifacts/architecture/ce-recursive-target/step-128-evidence/final-red.stderr",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "test-artifacts/architecture/ce-recursive-target/step-128-evidence/final-red.stdout",
+      "sha256": "6e1e963e638eb29965e6d2bc22c53292491e96c13b1be0bfc84933e2cf8f7bd1"
+    },
+    {
+      "path": "test-artifacts/architecture/ce-recursive-target/step-128-evidence/final-style-green-receipt.json",
+      "sha256": "ce508694ef0079ea1d46c522015300495635a50d359619bcfc362b65b20bbce4"
+    },
+    {
+      "path": "test-artifacts/architecture/ce-recursive-target/step-128-evidence/final-style.log",
+      "sha256": "74ff0c5c75a96bb80b270cc25f66b27478fd68bdec052373fcfaca895b44d18a"
+    },
+    {
+      "path": "test-artifacts/architecture/ce-recursive-target/step-128-evidence/final-v2-factory.log",
+      "sha256": "9ada5f926e1a45c3508393019434628322bbc848ee906b9560ce36a46ae48cee"
+    },
+    {
+      "path": "test-artifacts/architecture/ce-recursive-target/step-128-evidence/final-v2-format.log",
+      "sha256": "3bc53bf3e981a98a34a852e175bf9b77af841edea74fca595d9aedcbaf9a4938"
+    },
+    {
+      "path": "test-artifacts/architecture/ce-recursive-target/step-128-evidence/final-v2-green-junit.xml",
+      "sha256": "372d2b9590731cf5aa77d78b4601923938215b3d8056025c6516d9048483b1e4"
+    },
+    {
+      "path": "test-artifacts/architecture/ce-recursive-target/step-128-evidence/final-v2-style-green-receipt.json",
+      "sha256": "c67af1b82ae26224d69a73387da3d1465aaa44c9b5703e901d65cee95f6f37b7"
+    },
+    {
+      "path": "test-artifacts/architecture/ce-recursive-target/step-128-evidence/final-v2-style.log",
+      "sha256": "82b3e6a6c090a57601d22943bd23fca9218d1031dbe5a7b754092f9a156b4f18"
+    },
+    {
+      "path": "test-artifacts/architecture/ce-recursive-target/step-128-evidence/green-junit.xml",
+      "sha256": "a4a696a065b6833937d4149b28799236a84621d5fd41e556d0cd4d25bd4d81a4"
+    },
+    {
+      "path": "test-artifacts/architecture/ce-recursive-target/step-128-evidence/green-receipt.json",
+      "sha256": "9d47c85f0bebff8057f2e24139d25c1cbbfa31901ec4a305d7181dd665ed8537"
+    },
+    {
+      "path": "test-artifacts/architecture/ce-recursive-target/step-128-evidence/green.stderr.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "test-artifacts/architecture/ce-recursive-target/step-128-evidence/green.stdout.log",
+      "sha256": "8ef9916af7b04660b30bc2a158cd2b503b8d4cacadb2ddfddce34cb18fceb8f9"
+    },
+    {
+      "path": "test-artifacts/architecture/ce-recursive-target/step-128-evidence/impl/fixture/descriptor.xml",
+      "sha256": "cdd616729dbe70dd6ec870fdc8ed10d9a36b31998c91e88ae12790e8876b69de"
+    },
+    {
+      "path": "test-artifacts/architecture/ce-recursive-target/step-128-evidence/impl/impl-first-pass.json",
+      "sha256": "9cbf6edd936acbc44a0ba290039d04f86b52e3167c9e0aa8d3ec8f1f0a658795"
+    },
+    {
+      "path": "test-artifacts/architecture/ce-recursive-target/step-128-evidence/impl/impl-first-pass.md",
+      "sha256": "104fe837ee01c9b806dd14ef171423c82f2b98f2deb02487d6e138992f98980d"
+    },
+    {
+      "path": "test-artifacts/architecture/ce-recursive-target/step-128-evidence/impl/native-before-probe/probe.stderr.log",
+      "sha256": "a9b85f897423f9334660021432863f7330de84fc62435e8185cd21d9f20a67db"
+    },
+    {
+      "path": "test-artifacts/architecture/ce-recursive-target/step-128-evidence/impl/native-before-probe/probe.stdout.json",
+      "sha256": "f449b21475efa7fd5bbb65d6aec08e7deb84f31733b1ed00295a5e5ebaa6ebf7"
+    },
+    {
+      "path": "test-artifacts/architecture/ce-recursive-target/step-128-evidence/impl/native-before-probe/receipt.json",
+      "sha256": "0a622afad3889921aa6db035fc2832a190c91bfa6d1193c4f355fa09e2e1e8c6"
+    },
+    {
+      "path": "test-artifacts/architecture/ce-recursive-target/step-128-evidence/impl/native-before-probe/result.md",
+      "sha256": "b88e319e9ce335bcb6e48e5b504fb1de371ad20a6f008a6835e3e1f622505bbc"
+    },
+    {
+      "path": "test-artifacts/architecture/ce-recursive-target/step-128-evidence/impl/native_probe.py",
+      "sha256": "560568d7b3368040bb7fa3e2739b1309bf232979007bceb16ff10364c8e1d03d"
+    },
+    {
+      "path": "test-artifacts/architecture/ce-recursive-target/step-128-evidence/impl/production-delta.json",
+      "sha256": "b453cd260d02204940d067fa39e7cd6b3bfe583daaba097265858e000972f3c1"
+    },
+    {
+      "path": "test-artifacts/architecture/ce-recursive-target/step-128-evidence/impl/production-delta.md",
+      "sha256": "f31a0bb52b1c3846605fe03552b4edf807eb2bf9287215ec76513ed300d5c0af"
+    },
+    {
+      "path": "test-artifacts/architecture/ce-recursive-target/step-128-evidence/impl/regression-ready-v2.json",
+      "sha256": "5c0ec1372d16e5bd9b5f323d9044f6642ebd5843c734923352730cf39f0dfd7a"
+    },
+    {
+      "path": "test-artifacts/architecture/ce-recursive-target/step-128-evidence/impl/regression-ready-v3.json",
+      "sha256": "164077e104efcfb0acd71d6e70f094cdf80c014f2bea2a610ff819334d821a3d"
+    },
+    {
+      "path": "test-artifacts/architecture/ce-recursive-target/step-128-evidence/impl/regression-ready.json",
+      "sha256": "e7f25bc650248cb8a657706a95fc3358a30e63c9f50d503c68b9d2486633307e"
+    },
+    {
+      "path": "test-artifacts/architecture/ce-recursive-target/step-128-evidence/impl/run_probe.py",
+      "sha256": "92407db85a2f0ddfe011ebb16a70631d4056e3b445fb284e7bcab5dab6dc18a8"
+    },
+    {
+      "path": "test-artifacts/architecture/ce-recursive-target/step-128-evidence/impl/test-style-fix-receipt.json",
+      "sha256": "df932b78a40428d37ae6d496d6b4839f64492d4998f6bd74dc2f9cba6a4ba886"
+    },
+    {
+      "path": "test-artifacts/architecture/ce-recursive-target/step-128-evidence/proposal.md",
+      "sha256": "d3f55640ffb2dd10b0fb922c29d4f482539d78f26a393391a2fd1954f01e0175"
+    },
+    {
+      "path": "test-artifacts/architecture/ce-recursive-target/step-128-evidence/qa/native_factory_probe.json",
+      "sha256": "0e4ea006010fdcea2a9c39c62745b94890302b52e42f53a739028d7c059f9012"
+    },
+    {
+      "path": "test-artifacts/architecture/ce-recursive-target/step-128-evidence/qa/native_factory_probe.py",
+      "sha256": "21ba253481007ea6a0705ba79dc7e38ae8ad55835754eca110c76450e0800140"
+    },
+    {
+      "path": "test-artifacts/architecture/ce-recursive-target/step-128-evidence/qa/native_factory_probe.stderr.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "test-artifacts/architecture/ce-recursive-target/step-128-evidence/qa/native_factory_probe_after_v2.receipt.json",
+      "sha256": "cc0c71b6a9d0d99cf8bd2e840de63fd6d1d0fb4dbf6e51b29b6bd829313eaa15"
+    },
+    {
+      "path": "test-artifacts/architecture/ce-recursive-target/step-128-evidence/qa/native_factory_probe_after_v2.stderr",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "test-artifacts/architecture/ce-recursive-target/step-128-evidence/qa/native_factory_probe_after_v2.stdout",
+      "sha256": "a3510f4f9ab5b1a0956ae73b8741f9088e1f55df5d61a7ec96edec5b6fff6299"
+    },
+    {
+      "path": "test-artifacts/architecture/ce-recursive-target/step-128-evidence/qa/native_factory_probe_v2.py",
+      "sha256": "39b9dafcb81c44fa828054d90c225a972e50c4dd2bf093f283322ed48cfd62bd"
+    },
+    {
+      "path": "test-artifacts/architecture/ce-recursive-target/step-128-evidence/qa/native_factory_probe_v2.receipt.json",
+      "sha256": "9280e434c74cb1e5f5eb939e49cc0c68540cccb002c7efa9e718727e2e73edd0"
+    },
+    {
+      "path": "test-artifacts/architecture/ce-recursive-target/step-128-evidence/qa/native_factory_probe_v2.stderr",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "test-artifacts/architecture/ce-recursive-target/step-128-evidence/qa/native_factory_probe_v2.stdout",
+      "sha256": "efb50e62e7910a760ce471bc68627d744872c3bdf10b0b147f1b355624cd036d"
+    },
+    {
+      "path": "test-artifacts/architecture/ce-recursive-target/step-128-evidence/qa/qa-after-v2.md",
+      "sha256": "5471145f190e9eb118ee95ec69a551aa6ff85629d4e9d1f98ae7f88cd37aacff"
+    },
+    {
+      "path": "test-artifacts/architecture/ce-recursive-target/step-128-evidence/qa/qa-curation-final128.json",
+      "sha256": "92089aadf9da5e5da557f358fd2c58d56cc2824e51e4551f1fb08b1b858e18bb"
+    },
+    {
+      "path": "test-artifacts/architecture/ce-recursive-target/step-128-evidence/qa/qa-curation-final128.md",
+      "sha256": "963c7863bdc998946ff014f4d5fb0f130b1e33b519b35e201bf4ac68daf3f7e6"
+    },
+    {
+      "path": "test-artifacts/architecture/ce-recursive-target/step-128-evidence/qa/qa-final-review.json",
+      "sha256": "7e309e7d335b884c240062332c5dd3d1ceb9da45bf5df41d44a93611ed142812"
+    },
+    {
+      "path": "test-artifacts/architecture/ce-recursive-target/step-128-evidence/qa/qa-final-review.md",
+      "sha256": "af41dd8af5156054b54ac14296b7cfa6154d9be16241d35ab011da90d00c0e42"
+    },
+    {
+      "path": "test-artifacts/architecture/ce-recursive-target/step-128-evidence/qa/qa-first-pass.md",
+      "sha256": "dc13ffad7648dd8cbc8cfd194fdcac91d6de76b4c2d3e652be9ba1e1f5fb584a"
+    },
+    {
+      "path": "test-artifacts/architecture/ce-recursive-target/step-128-evidence/qa/qa-native-probe-v2.md",
+      "sha256": "3cc32b891f9d44dc0491a3d1c75a0fbc4439621ff3b674b0968763eea776e191"
+    },
+    {
+      "path": "test-artifacts/architecture/ce-recursive-target/step-128-evidence/qa/qa-native-probe.json",
+      "sha256": "3bd8aeb4f197f2757d66557bc8ee914e180609f2ee98846ee6ebff1209746b26"
+    },
+    {
+      "path": "test-artifacts/architecture/ce-recursive-target/step-128-evidence/qa/qa-native-probe.md",
+      "sha256": "8f822430b1255dd7fb29bf4d627786f7ae9120a6e2a2d6eb7d741b3b632e1e24"
+    },
+    {
+      "path": "test-artifacts/architecture/ce-recursive-target/step-128-evidence/red-junit.xml",
+      "sha256": "f6be9dd5ae510545f38d70c2a22764bf0cf14f012592cb50d91ceb73ff3f84ea"
+    },
+    {
+      "path": "test-artifacts/architecture/ce-recursive-target/step-128-evidence/red-receipt.json",
+      "sha256": "02a72f35d589eae6378a73382df6283985880b992f1d7d9c4ff8864ff5298228"
+    },
+    {
+      "path": "test-artifacts/architecture/ce-recursive-target/step-128-evidence/red.stderr.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "test-artifacts/architecture/ce-recursive-target/step-128-evidence/red.stdout.log",
+      "sha256": "998d4da8d1b11a2c4f23e5f479adab9b70d8448ad5b9ce1cfad11f9eade8d3ff"
+    },
+    {
+      "path": "test-artifacts/architecture/ce-recursive-target/step-128-evidence/regression-red-test.py",
+      "sha256": "7fef076be30ac59d7cd6db0b6108812c3970809e441b9d829d02b19a28653c09"
+    },
+    {
+      "path": "test-artifacts/architecture/ce-recursive-target/step-128-evidence/rendered/architecture.detail.html",
+      "sha256": "f516efbda2b8f7884dde871e34bf16fe74e3f6bad194bf597605a142c9bd4924"
+    },
+    {
+      "path": "test-artifacts/architecture/ce-recursive-target/step-128-evidence/rendered/architecture.report.html",
+      "sha256": "faaf98ea1dad0da3605ba63df028bf45460f41bc9f02a867db620fa7435f615a"
+    },
+    {
+      "path": "test-artifacts/architecture/ce-recursive-target/step-128-evidence/selection.json",
+      "sha256": "2369a973949caa04e923b09d82ff49e090d23e212cf726847780d3d4e654efff"
+    },
+    {
+      "path": "test-artifacts/architecture/ce-recursive-target/step-128-evidence/test-final-format-receipt.json",
+      "sha256": "e216d9fe4f934b92373d298d19dd3d1f39e69064e32fa41f8b566d2da6eca0b8"
+    }
+  ]
+}

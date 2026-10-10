@@ -26,7 +26,7 @@ DATAMIMIC provides domain services across various industries:
 ### Common Services
 
 ```python
-from datamimic_ce.domains.common.services.person_service import PersonService
+from datamimic_ce.domains.api import PersonService
 
 # Generate a single person
 person_service = PersonService()
@@ -120,4 +120,4 @@ for patient in patients:
 2. **Use batch generation** when creating multiple entities
 3. **Access entity properties** directly (they're cached automatically)
 4. **Leverage domain-specific properties** for realistic scenarios
-5. **Compose services** to create complex relationships 
+5. **Compose services** to create complex relationships

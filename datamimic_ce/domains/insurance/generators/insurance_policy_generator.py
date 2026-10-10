@@ -3,17 +3,18 @@ from __future__ import annotations
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
-    from datamimic_ce.domains.common.models.demographic_config import DemographicConfig
+    from datamimic_ce.domains.shared.demographics.config import DemographicConfig
 
 import random
 from pathlib import Path
 
-from datamimic_ce.domains.common.generators.person_generator import PersonGenerator
-from datamimic_ce.domains.common.literal_generators.datetime_generator import DateTimeGenerator
 from datamimic_ce.domains.domain_core.base_domain_generator import DatasetAwareDomainGenerator
+from datamimic_ce.domains.domain_core.runtime.rng_uuid import uuid4_from_random
 from datamimic_ce.domains.insurance.generators.insurance_company_generator import InsuranceCompanyGenerator
 from datamimic_ce.domains.insurance.generators.insurance_coverage_generator import InsuranceCoverageGenerator
 from datamimic_ce.domains.insurance.generators.insurance_product_generator import InsuranceProductGenerator
+from datamimic_ce.domains.shared.generators.person_generator import PersonGenerator
+from datamimic_ce.domains.shared.literal_generators.temporal.datetime_generator import DateTimeGenerator
 
 
 class InsurancePolicyGenerator(DatasetAwareDomainGenerator):
@@ -46,7 +47,7 @@ class InsurancePolicyGenerator(DatasetAwareDomainGenerator):
         )
         #  Thread demographic constraints and RNG to person generation used by policy holder
         if demographic_config is None:
-            from datamimic_ce.domains.common.models.demographic_config import DemographicConfig as _DC
+            from datamimic_ce.domains.shared.demographics.config import DemographicConfig as _DC
 
             demographic_config = _DC()
         self._person_generator = PersonGenerator(
@@ -57,6 +58,12 @@ class InsurancePolicyGenerator(DatasetAwareDomainGenerator):
         self._datetime_generator = DateTimeGenerator(random=True, rng=self._derive_rng())
         # Track last picks to avoid immediate repetition in tests without rerun plugin
         self._last_status: str | None = None
+
+    def generate_id_candidate(self) -> str:
+        return uuid4_from_random(self.rng)
+
+    def generate_coverage_count(self) -> int:
+        return self.rng.randint(1, 3)
 
     @property
     def insurance_company_generator(self) -> InsuranceCompanyGenerator:
@@ -80,7 +87,7 @@ class InsurancePolicyGenerator(DatasetAwareDomainGenerator):
 
     #  Centralize dataset I/O and weighted picks in generator per SOC/SPOT
     def pick_premium_amount(self, *, start_path: Path) -> float:
-        from datamimic_ce.domains.utils.dataset_loader import load_weighted_values_try_dataset, pick_one_weighted
+        from datamimic_ce.domains.shared.datasets.loader import load_weighted_values_try_dataset, pick_one_weighted
 
         values, weights = load_weighted_values_try_dataset(
             "insurance", "policy", "premium_buckets.csv", dataset=self._dataset, start=start_path
@@ -97,7 +104,7 @@ class InsurancePolicyGenerator(DatasetAwareDomainGenerator):
         return round(self._rng.uniform(min(lo, hi), max(lo, hi)), 2)
 
     def pick_premium_frequency(self, *, start_path: Path) -> str:
-        from datamimic_ce.domains.utils.dataset_loader import load_weighted_values_try_dataset, pick_one_weighted
+        from datamimic_ce.domains.shared.datasets.loader import load_weighted_values_try_dataset, pick_one_weighted
 
         values, weights = load_weighted_values_try_dataset(
             "insurance", "policy", "premium_frequencies.csv", dataset=self._dataset, start=start_path
@@ -105,7 +112,7 @@ class InsurancePolicyGenerator(DatasetAwareDomainGenerator):
         return pick_one_weighted(self._rng, values, weights)
 
     def pick_status(self, *, start_path: Path) -> str:
-        from datamimic_ce.domains.utils.dataset_loader import (
+        from datamimic_ce.domains.shared.datasets.loader import (
             load_weighted_values_try_dataset,
             pick_one_weighted_no_repeat,
         )

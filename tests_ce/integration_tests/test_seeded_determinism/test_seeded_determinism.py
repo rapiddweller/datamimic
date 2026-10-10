@@ -10,7 +10,7 @@ from pathlib import Path
 
 import pytest
 
-from datamimic_ce.data_mimic_test import DataMimicTest
+from datamimic_ce.interfaces.python.data_mimic_test import DataMimicTest
 
 _TEST_DIR = Path(__file__).resolve().parent
 
@@ -142,3 +142,11 @@ def test_unseeded_generation_is_random(filename, keys):
     leaking in and silently making 'random' output fixed."""
     first, second = _run_twice(filename, keys)
     assert first != second
+
+
+def test_unseeded_source_keeps_the_same_output_structure() -> None:
+    first = _run("unseeded_source.xml")
+    second = _run("unseeded_source.xml")
+
+    assert len(first) == len(second) == 12
+    assert all(set(row) == {"v"} and isinstance(row["v"], str) for row in first + second)

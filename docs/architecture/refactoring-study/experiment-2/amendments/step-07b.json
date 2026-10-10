@@ -1,0 +1,7 @@
+{
+  "after_digest": "3bee06b20cb849f6c231b504b8a604a1d23f5f1f6bd8f322a81908737d377df4",
+  "before_digest": "3bee06b20cb849f6c231b504b8a604a1d23f5f1f6bd8f322a81908737d377df4",
+  "decided_by": "experiment orchestrator",
+  "rationale": "Step 7B moved file IO into the already-declared IO component and project scaffolding into interfaces. The contract is unchanged; renamed findings reflect physical ownership only.",
+  "schema_version": "1.0.0"
+}

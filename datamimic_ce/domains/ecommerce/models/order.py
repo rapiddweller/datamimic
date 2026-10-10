@@ -11,14 +11,12 @@ This module provides a model for representing an e-commerce order.
 """
 
 import datetime
-from typing import Any
 
-from datamimic_ce.domains.common.literal_generators.string_generator import StringGenerator
-from datamimic_ce.domains.common.models.address import Address
 from datamimic_ce.domains.domain_core import BaseEntity
 from datamimic_ce.domains.domain_core.property_cache import property_cache
 from datamimic_ce.domains.ecommerce.generators.order_generator import OrderGenerator
 from datamimic_ce.domains.ecommerce.models.product import Product
+from datamimic_ce.domains.shared.models.address import Address
 
 
 class Order(BaseEntity):
@@ -50,10 +48,8 @@ class Order(BaseEntity):
         Returns:
             A unique order ID
         """
-        #  use shared PrefixedIdGenerator for prefixed ID without separator
-        from datamimic_ce.domains.common.literal_generators.prefixed_id_generator import PrefixedIdGenerator
-
-        return PrefixedIdGenerator("ORD", "[A-Z0-9]{8}", separator="", rng=self._order_generator.rng).generate()
+        candidate = self._order_generator.generate_order_id_candidate()
+        return self._claim_identifier("order_id", candidate)
 
     @property
     @property_cache
@@ -61,12 +57,9 @@ class Order(BaseEntity):
         """Get the user ID.
 
         Returns:
-            A unique user ID
+            A user ID
         """
-        #  use shared PrefixedIdGenerator for prefixed ID without separator
-        from datamimic_ce.domains.common.literal_generators.prefixed_id_generator import PrefixedIdGenerator
-
-        return PrefixedIdGenerator("USER", "[A-Z0-9]{8}", separator="", rng=self._order_generator.rng).generate()
+        return self._order_generator.generate_user_id()
 
     @property
     @property_cache
@@ -76,8 +69,8 @@ class Order(BaseEntity):
         Returns:
             A list of products with quantities and prices
         """
-        rng = self._order_generator.rng
-        return [Product(self._order_generator.product_generator) for _ in range(rng.randint(1, 10))]
+        count = self._order_generator.generate_product_count()
+        return [Product(self._order_generator.product_generator) for _ in range(count)]
 
     @product_list.setter
     def product_list(self, value: list[Product]) -> None:
@@ -166,10 +159,9 @@ class Order(BaseEntity):
         Returns:
             A billing address dictionary
         """
-        # 80% chance billing address is same as shipping
-        # Otherwise generate a different address
-        rng = self._order_generator.rng
-        return self.shipping_address if rng.random() < 0.8 else Address(self._order_generator.address_generator)
+        if self._order_generator.should_reuse_shipping_address_for_billing():
+            return self.shipping_address
+        return Address(self._order_generator.address_generator)
 
     @property
     @property_cache
@@ -191,9 +183,7 @@ class Order(BaseEntity):
         """
         # Calculate subtotal from product list
         subtotal = sum(product.price for product in self.product_list)
-        # Apply tax rate (5-12%)
-        tax_rate = self._order_generator.rng.uniform(0.05, 0.12)
-        return round(subtotal * tax_rate, 2)
+        return self._order_generator.generate_tax_amount(subtotal)
 
     @property
     @property_cache
@@ -235,10 +225,7 @@ class Order(BaseEntity):
         """
         if self.discount_amount > 0:
             # Generate a coupon code if there's a discount (delegate to generator)
-            prefix = self._order_generator.pick_coupon_prefix()
-            #  use shared StringGenerator for code part
-            code = StringGenerator.rnd_str_from_regex("[A-Z0-9]{6}", rng=self._order_generator.rng)
-            return f"{prefix}{code}"
+            return self._order_generator.generate_coupon_code()
         return None
 
     @property
@@ -264,7 +251,7 @@ class Order(BaseEntity):
         # Add tax and shipping, subtract discount
         return round(subtotal + self.tax_amount + self.shipping_amount - self.discount_amount, 2)
 
-    def to_dict(self) -> dict[str, Any]:
+    def to_dict(self) -> dict[str, object]:
         """Convert the order to a dictionary.
 
         Returns:

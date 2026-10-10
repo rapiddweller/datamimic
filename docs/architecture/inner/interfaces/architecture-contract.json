@@ -1,0 +1,267 @@
+{
+  "schema_version": "2.1.0",
+  "declarations": {
+    "modules": [
+      {
+        "path": "datamimic_ce/interfaces/cli/__init__.py",
+        "responsibility": "The CLI package exposes the app lazily so executable startup can load its environment first."
+      },
+      {
+        "path": "datamimic_ce/interfaces/cli/__main__.py",
+        "responsibility": "Executable CLI startup loads the working-directory environment before importing and running the app."
+      },
+      {
+        "path": "datamimic_ce/interfaces/cli/_app.py",
+        "responsibility": "Declares Typer commands and delegates each operation to its CLI adapter."
+      },
+      {
+        "path": "datamimic_ce/interfaces/cli/authoring.py",
+        "responsibility": "The adapter reads CLI inputs, validates transport options, and calls authoring services."
+      },
+      {
+        "path": "datamimic_ce/interfaces/cli/presenter.py",
+        "responsibility": "The presenter formats run, lint, scaffold, and demo responses and sets CLI error codes."
+      },
+      {
+        "path": "datamimic_ce/interfaces/cli/runtime.py",
+        "responsibility": "The CLI commands cover full execution, system information, project initialization, and demo management."
+      },
+      {
+        "path": "datamimic_ce/interfaces/demo.py",
+        "responsibility": "The helpers list demo names for autocomplete and copy a selected packaged demo into the working directory."
+      },
+      {
+        "path": "datamimic_ce/interfaces/mcp/__init__.py",
+        "responsibility": "The MCP package exposes server entrypoints lazily without initializing the application graph."
+      },
+      {
+        "path": "datamimic_ce/interfaces/mcp/cli.py",
+        "responsibility": "The MCP executable loads the working-directory environment, then selects transport and bind configuration."
+      },
+      {
+        "path": "datamimic_ce/interfaces/mcp/server.py",
+        "responsibility": "The server adapts the same authoring calls asynchronously and can protect SSE access with an API key."
+      },
+      {
+        "path": "datamimic_ce/interfaces/project.py",
+        "responsibility": "Project initialization writes directories, a README, and a fixed embedded XML model."
+      },
+      {
+        "path": "datamimic_ce/interfaces/python/data_mimic_test.py",
+        "responsibility": "DataMimicTest wraps a RunSession and permits result capture only when test mode is explicitly enabled."
+      },
+      {
+        "path": "datamimic_ce/interfaces/python/datamimic.py",
+        "responsibility": "DataMimic translates Python parameters into RunRequest and retains the session for execute and capture."
+      },
+      {
+        "path": "datamimic_ce/interfaces/python/factory.py",
+        "responsibility": "The factory starts a test-configured RunSession and returns individual or batched generated entities."
+      }
+    ]
+  },
+  "components": [
+    {
+      "id": "TRANSPORT-CLI",
+      "label": "cli",
+      "role": "interface",
+      "packages": [
+        "datamimic_ce.interfaces.cli"
+      ],
+      "responsibilities": [
+        "CLI request/response adaptation."
+      ],
+      "forbidden_responsibilities": [
+        "Implement DSL validation, execution policy or connector operations."
+      ],
+      "provenance": [
+        "docs/architecture/inner/target.md"
+      ],
+      "requires": [
+        {
+          "component": "demo",
+          "rationale": "Demo commands materialize bundled examples.",
+          "decided_by": "agent"
+        },
+        {
+          "component": "project",
+          "rationale": "Project commands create the requested workspace.",
+          "decided_by": "agent"
+        }
+      ],
+      "public": [],
+      "decided_by": "agent"
+    },
+    {
+      "id": "TRANSPORT-MCP",
+      "label": "mcp",
+      "role": "interface",
+      "packages": [
+        "datamimic_ce.interfaces.mcp"
+      ],
+      "responsibilities": [
+        "Optional MCP request/response adaptation."
+      ],
+      "forbidden_responsibilities": [
+        "Implement independent Authoring workflows or unrestricted execution."
+      ],
+      "provenance": [
+        "docs/architecture/inner/target.md"
+      ],
+      "requires": [],
+      "public": [],
+      "decided_by": "agent"
+    },
+    {
+      "id": "TRANSPORT-DEMO",
+      "label": "demo",
+      "role": "component",
+      "packages": [
+        "datamimic_ce.interfaces.demo"
+      ],
+      "responsibilities": [
+        "Demo workflow entry."
+      ],
+      "forbidden_responsibilities": [
+        "Execute descriptors while discovering or copying demos."
+      ],
+      "provenance": [
+        "docs/architecture/inner/target.md"
+      ],
+      "requires": [],
+      "public": [
+        "datamimic_ce.interfaces.demo"
+      ],
+      "decided_by": "agent"
+    },
+    {
+      "id": "TRANSPORT-PROJECT",
+      "label": "project",
+      "role": "component",
+      "packages": [
+        "datamimic_ce.interfaces.project"
+      ],
+      "responsibilities": [
+        "Project creation entry."
+      ],
+      "forbidden_responsibilities": [
+        "Own runtime execution or mutate an unrelated workspace."
+      ],
+      "provenance": [
+        "docs/architecture/inner/target.md"
+      ],
+      "requires": [],
+      "public": [
+        "datamimic_ce.interfaces.project"
+      ],
+      "decided_by": "agent"
+    },
+    {
+      "id": "TRANSPORT-PYTHON",
+      "label": "python",
+      "packages": [
+        "datamimic_ce.interfaces.python"
+      ],
+      "responsibilities": [
+        "Python caller/test-factory adaptation; factory.py is a module."
+      ],
+      "public": [],
+      "decided_by": "agent",
+      "role": "component",
+      "forbidden_responsibilities": [
+        "Implement descriptor parsing, runtime execution policy, or domain generation algorithms."
+      ],
+      "provenance": [
+        "docs/architecture/inner/semantic-review/astra-target-decision.md"
+      ],
+      "requires": []
+    }
+  ],
+  "rules": [
+    {
+      "id": "TRANSPORT-ASSIGNMENT",
+      "kind": "complete_assignment",
+      "source": "datamimic_ce.interfaces",
+      "rationale": "Every child implementation has one owner; parent initializer behavior is reviewed explicitly.",
+      "provenance": [
+        "docs/architecture/inner/target.md"
+      ],
+      "decided_by": "agent"
+    },
+    {
+      "id": "TRANSPORT-REQUIRES",
+      "kind": "complete_requires",
+      "include_type_checking": true,
+      "rationale": "Only the listed responsibility directions are permitted.",
+      "provenance": [
+        "docs/architecture/inner/target.md"
+      ],
+      "decided_by": "agent"
+    },
+    {
+      "id": "TRANSPORT-INTERFACES",
+      "kind": "interface_boundary",
+      "include_type_checking": true,
+      "rationale": "A dependency reaches explicit operations and types, not arbitrary implementation details.",
+      "provenance": [
+        "docs/architecture/inner/target.md"
+      ],
+      "decided_by": "agent"
+    },
+    {
+      "id": "TRANSPORT-ACYCLIC",
+      "kind": "no_component_cycles",
+      "rationale": "Lower layers do not import their consumers.",
+      "provenance": [
+        "docs/architecture/inner/target.md"
+      ],
+      "decided_by": "agent"
+    },
+    {
+      "id": "LAYOUT-INTERFACES-CLI",
+      "kind": "root_layout",
+      "root": "datamimic_ce.interfaces.cli",
+      "allowed_children": [
+        "datamimic_ce.interfaces.cli._app",
+        "datamimic_ce.interfaces.cli.__main__",
+        "datamimic_ce.interfaces.cli.authoring",
+        "datamimic_ce.interfaces.cli.presenter",
+        "datamimic_ce.interfaces.cli.runtime"
+      ],
+      "rationale": "CLI request/response adaptation. Exact reviewed target children; no hidden extra modules.",
+      "provenance": [
+        "docs/architecture/inner/structure-review.json"
+      ],
+      "decided_by": "agent"
+    },
+    {
+      "id": "LAYOUT-INTERFACES-MCP",
+      "kind": "root_layout",
+      "root": "datamimic_ce.interfaces.mcp",
+      "allowed_children": [
+        "datamimic_ce.interfaces.mcp.cli",
+        "datamimic_ce.interfaces.mcp.server"
+      ],
+      "rationale": "Optional MCP request/response adaptation. Exact reviewed target children; no hidden extra modules.",
+      "provenance": [
+        "docs/architecture/inner/structure-review.json"
+      ],
+      "decided_by": "agent"
+    },
+    {
+      "id": "LAYOUT-INTERFACES-PYTHON",
+      "kind": "root_layout",
+      "root": "datamimic_ce.interfaces.python",
+      "allowed_children": [
+        "datamimic_ce.interfaces.python.data_mimic_test",
+        "datamimic_ce.interfaces.python.datamimic",
+        "datamimic_ce.interfaces.python.factory"
+      ],
+      "rationale": "Python caller/test-factory adaptation; factory.py is a module. Exact reviewed target children; no hidden extra modules.",
+      "provenance": [
+        "docs/architecture/inner/structure-review.json"
+      ],
+      "decided_by": "agent"
+    }
+  ]
+}

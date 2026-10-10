@@ -1,0 +1,42 @@
+{
+  "amendment_writer": {
+    "amendment_status": null,
+    "baseline_new": 9,
+    "baseline_resolved": 0,
+    "binding_written": false,
+    "exit_code": 2,
+    "usage_unknown_diagnostics": 19
+  },
+  "canonical_unknowns": 254,
+  "contract_changed_fields": [
+    "RUNTIME-LIFECYCLE.responsibilities",
+    "LAYOUT-ENGINE-RUNTIME-LIFECYCLE.rationale"
+  ],
+  "decision": "Astra: KEEP three-module RUNTIME-LIFECYCLE; clarify actual CE ownership",
+  "definition_checks_passed": 13,
+  "full_behavior_concurrency_proven": false,
+  "independent_qa": {
+    "/tmp/ce-step190-191-independent-qa-20261010/qa-report.json": "05eb1b5f614b8af3408687ad220a84b60c967fd0039aafa3e0b8ec8f6942c384",
+    "/tmp/ce-step190-191-independent-qa-20261010/qa-review.md": "202ec3db4f7c78e13a34fb36a3256c9f77e23b56c316017b81f15aad06ef5355"
+  },
+  "observed_report_sections_equal": 20,
+  "pins": {
+    "/tmp/ce-astra-next-inner-20261010.md": "29917e9ad8c09d0ec8c9e98dbfd4c4ad531fd6e064f92be86bc4674b06323ba7",
+    "/tmp/ce-step191-amendment-writer-20261010.json": "1eff874458caeca50e6c33d354830fd2c046f2f712d9a323984d5a8b3f4cfbf0",
+    "/tmp/ce-step191-definition-20261010.log": "2cf12376638cb86e9678bd7816a7b129c8e70088fb81ecd6e467ae4cfbb129bd",
+    "/tmp/ce-step191-report-20261010.log": "b35632039f66b4562cb5a69b6d32677bfc7d23a10df17bd15cd25f08add7508e",
+    "/tmp/ce-step191-root-20261010/after.json": "f06bfb0813ed352a816cafd5d55d1621ac11e80786481d60129dbb96b22589ca",
+    "/tmp/ce-step191-root-20261010/comparison.json": "8300158efcedd23889c8866e8887d5328e17700431bd420e5ae662f50365011e"
+  },
+  "predicates_permissions_modules_unchanged": true,
+  "production_change": false,
+  "source_files": {
+    "datamimic_ce/engine/runtime/lifecycle/__init__.py": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "datamimic_ce/engine/runtime/lifecycle/config.py": "cc50e6d059d0fd85039dfea150ac55c9a97ead5e7f46f81f36ba9f630a002d2a",
+    "datamimic_ce/engine/runtime/lifecycle/runner.py": "c4c7b2cee3c78aef8db731a1b7039aef9a77aceac5769537167d8e4a35eebb79"
+  },
+  "source_head": "72202ba02f99e31e737b852043e32822a2e7d4f7",
+  "status": "accepted_static_ownership_with_machine_binding_open",
+  "step": 191,
+  "violations": 13
+}

@@ -1,0 +1,283 @@
+{
+  "additional_owner_input": {
+    "baseline_candidate_equal": true,
+    "path": "tests_ce/integration_tests/test_decimal_json/model.dm.json",
+    "purpose": "One-row scaffold input used by selected decimal owner test, not another tracked XML descriptor.",
+    "sha256": "814ba90ea313f19bc3ce7f9f0a68d79b487ce52256a713e82e0bfdf17458df1b"
+  },
+  "baseline_capture_sha256": "36001b7380f016cba0e5d5cdb0917bbe66263c7a8d4579bcb6a301f7192b561d",
+  "baseline_commit": "12d5e3a5e576b49a7191ad955807f96cf84d8e62",
+  "candidate_capture_sha256": "4f962a678cd6f9b60203fc04a29c5a247b22149ed5177e448e024f0e9b46206d",
+  "candidate_commit": "c65d0090b1d21ec78466e1adc609d60459d9d634",
+  "capture_exits": {
+    "baseline": 0,
+    "current": 0
+  },
+  "comparator_exit": 1,
+  "comparator_result": "10 descriptors compared; 1 differences; 0 normalized or optional-shape variances tolerated\nDIFFERENT projections: capabilities",
+  "comparator_sha256": "ede23f3e166de051763aa58c98e101788717bc9993b93e62e6f5800cc08b1edf",
+  "descriptors": [
+    {
+      "baseline_status": "CAPTURED",
+      "candidate_status": "CAPTURED",
+      "input_sha256": {
+        "tests_ce/integration_tests/test_exporter_matrix/roundtrip.xml": {
+          "bytes": 1500,
+          "sha256": "32cd792ce3fd0cf2f65e4a45766b621e3f8cd41ba79867cf60093810f15fdf64"
+        },
+        "tests_ce/integration_tests/test_exporter_matrix/test_exporter_matrix.py": {
+          "bytes": 7712,
+          "sha256": "d9afe82ede907d0c3d8a1f6ff7149e5932b495e17db3cc218c0bf7a643d275dd"
+        }
+      },
+      "observed_rows": {
+        "exhausted": 6,
+        "ordered_cyclic": 15,
+        "random_cyclic": 15,
+        "seed_rows": 6,
+        "unique_pages": 6
+      },
+      "path": "tests_ce/integration_tests/test_exporter_matrix/roundtrip.xml",
+      "records_equal": true,
+      "seeded": false
+    },
+    {
+      "baseline_status": "CAPTURED",
+      "candidate_status": "CAPTURED",
+      "input_sha256": {
+        "tests_ce/integration_tests/test_csv_header_trim/data/padded.csv": {
+          "bytes": 105,
+          "sha256": "5ac73b632cf5ca3b01d3ce787f81fc72256dcc65eea4f6ab6db8087653a22081"
+        },
+        "tests_ce/integration_tests/test_csv_header_trim/test_csv_header_trim_dsl.py": {
+          "bytes": 1364,
+          "sha256": "3b1bd0c9c714c92094a7af660a1cb4706ecefe73145bdca5936b84f61fc0f518"
+        },
+        "tests_ce/integration_tests/test_csv_header_trim/test_header_trim.xml": {
+          "bytes": 404,
+          "sha256": "74d132214157f376963e7faffbdf1bb5cd43b72776a316e51d84ab3c345e8376"
+        }
+      },
+      "observed_rows": {
+        "products": 2
+      },
+      "path": "tests_ce/integration_tests/test_csv_header_trim/test_header_trim.xml",
+      "records_equal": true,
+      "seeded": false
+    },
+    {
+      "baseline_status": "CAPTURED",
+      "candidate_status": "CAPTURED",
+      "input_sha256": {
+        "tests_ce/integration_tests/test_data_source_length_collision/collision.xml": {
+          "bytes": 595,
+          "sha256": "412f6cfc92291683c8df99d0146794d287ab0df11c5d3afcbe302a14eb44e83a"
+        },
+        "tests_ce/integration_tests/test_data_source_length_collision/data/products_a.csv": {
+          "bytes": 31,
+          "sha256": "8b3369371795ad302e7a36f83b1ca46b74946ee59bd074fbe73f220cd6890cf0"
+        },
+        "tests_ce/integration_tests/test_data_source_length_collision/data/products_b.csv": {
+          "bytes": 39,
+          "sha256": "c6940bd5b1fb56a66316db293cc1548a881e7746b7ccc8d995baf41f5d6f0da3"
+        },
+        "tests_ce/integration_tests/test_data_source_length_collision/test_data_source_length_collision.py": {
+          "bytes": 1186,
+          "sha256": "00a42cbed079caf1e9781643cdcf0b5f078704e448730f649060322bc5fe9b43"
+        }
+      },
+      "observed_rows": {},
+      "path": "tests_ce/integration_tests/test_data_source_length_collision/collision.xml",
+      "records_equal": true,
+      "seeded": true
+    },
+    {
+      "baseline_status": "CAPTURED",
+      "candidate_status": "CAPTURED",
+      "input_sha256": {
+        "tests_ce/integration_tests/test_unique_source/codes.csv": {
+          "bytes": 15,
+          "sha256": "f17647596aa6b093028a68e1f807b6369870182d6e54a59c1b79e92314cf691a"
+        },
+        "tests_ce/integration_tests/test_unique_source/test_unique_source.py": {
+          "bytes": 4076,
+          "sha256": "7b042a899e1d9cac6a88b72f6d61ec49745bda085ac2b3d46ea7244a65ee45e0"
+        },
+        "tests_ce/integration_tests/test_unique_source/unique_source_csv.xml": {
+          "bytes": 287,
+          "sha256": "bc6a288b752939ed020a03a6ccba6956914ced71ff66d153b7fe3f7aeb543d99"
+        }
+      },
+      "observed_rows": {},
+      "path": "tests_ce/integration_tests/test_unique_source/unique_source_csv.xml",
+      "records_equal": true,
+      "seeded": true
+    },
+    {
+      "baseline_status": "CAPTURED",
+      "candidate_status": "CAPTURED",
+      "input_sha256": {
+        "tests_ce/integration_tests/test_unique_source/codes.csv": {
+          "bytes": 15,
+          "sha256": "f17647596aa6b093028a68e1f807b6369870182d6e54a59c1b79e92314cf691a"
+        },
+        "tests_ce/integration_tests/test_unique_source/generate_unique_csv.xml": {
+          "bytes": 198,
+          "sha256": "5fb96c3666d83c3cc51aa4a7a18deca5a4eedfd6d3078dc6dd314fb8ea53df78"
+        },
+        "tests_ce/integration_tests/test_unique_source/test_unique_source.py": {
+          "bytes": 4076,
+          "sha256": "7b042a899e1d9cac6a88b72f6d61ec49745bda085ac2b3d46ea7244a65ee45e0"
+        }
+      },
+      "observed_rows": {},
+      "path": "tests_ce/integration_tests/test_unique_source/generate_unique_csv.xml",
+      "records_equal": true,
+      "seeded": true
+    },
+    {
+      "baseline_status": "CAPTURED",
+      "candidate_status": "CAPTURED",
+      "input_sha256": {
+        "tests_ce/integration_tests/test_decimal_json/datamimic.xml": {
+          "bytes": 242,
+          "sha256": "af016ce0e258683788e78f274c7ae616f77c0cbefece5db0bb1752b74384f71f"
+        },
+        "tests_ce/integration_tests/test_decimal_json/test_decimal_json.py": {
+          "bytes": 3001,
+          "sha256": "b22d1a1480ae9ea2a883a8067717af949b8aab731a740aa7557c87d96a203e44"
+        }
+      },
+      "observed_rows": {},
+      "path": "tests_ce/integration_tests/test_decimal_json/datamimic.xml",
+      "records_equal": true,
+      "seeded": true
+    },
+    {
+      "baseline_status": "CAPTURED",
+      "candidate_status": "CAPTURED",
+      "input_sha256": {
+        "tests_ce/integration_tests/test_export_uri/json_uri.xml": {
+          "bytes": 128,
+          "sha256": "6a712c30c22259d5bf8e0fdb317c714f30081b7c6d1225699cccc4d75e5e8679"
+        },
+        "tests_ce/integration_tests/test_export_uri/test_export_uri.py": {
+          "bytes": 1546,
+          "sha256": "275ae5e8bfa76fa9987e9ced570e3d9ca7f26aa38ea94a8c8234509b01a860c6"
+        }
+      },
+      "observed_rows": {
+        "rows": 2
+      },
+      "path": "tests_ce/integration_tests/test_export_uri/json_uri.xml",
+      "records_equal": true,
+      "seeded": false
+    },
+    {
+      "baseline_status": "CAPTURED",
+      "candidate_status": "CAPTURED",
+      "input_sha256": {
+        "tests_ce/integration_tests/test_timeseries/basic_one_series.xml": {
+          "bytes": 773,
+          "sha256": "4d366d51f4445931b964db742a45bac7c0786f33da9febdc2108a106c51a5e7a"
+        },
+        "tests_ce/integration_tests/test_timeseries/test_timeseries.py": {
+          "bytes": 11543,
+          "sha256": "d8c1179a070bc80f85cbd81d2ff4ae2e7a1cc1da16e88221732dde120b4bf6b9"
+        }
+      },
+      "observed_rows": {
+        "rows": 24
+      },
+      "path": "tests_ce/integration_tests/test_timeseries/basic_one_series.xml",
+      "records_equal": true,
+      "seeded": false
+    },
+    {
+      "baseline_status": "CAPTURED",
+      "candidate_status": "CAPTURED",
+      "input_sha256": {
+        "tests_ce/integration_tests/test_timeseries/multi_series.xml": {
+          "bytes": 614,
+          "sha256": "bb0a84b506d6806048f56dc1906498134dd6aa3f2281f6a33e19059c5f45a612"
+        },
+        "tests_ce/integration_tests/test_timeseries/test_timeseries.py": {
+          "bytes": 11543,
+          "sha256": "d8c1179a070bc80f85cbd81d2ff4ae2e7a1cc1da16e88221732dde120b4bf6b9"
+        }
+      },
+      "observed_rows": {
+        "rows": 18
+      },
+      "path": "tests_ce/integration_tests/test_timeseries/multi_series.xml",
+      "records_equal": true,
+      "seeded": false
+    },
+    {
+      "baseline_status": "CAPTURED",
+      "candidate_status": "CAPTURED",
+      "input_sha256": {
+        "tests_ce/integration_tests/test_xml_template/test_xml_template.py": {
+          "bytes": 1432,
+          "sha256": "9441b4c7cfc33557ec8105d0baad8699e422f997fee867ba863236e9a58d3475"
+        },
+        "tests_ce/integration_tests/test_xml_template/test_xml_template_script.xml": {
+          "bytes": 950,
+          "sha256": "4cad5f545b1825ede732a1e82db8e1aea2383bd8d0b530b016f895a91a7766ea"
+        }
+      },
+      "observed_rows": {
+        "book": 1
+      },
+      "path": "tests_ce/integration_tests/test_xml_template/test_xml_template_script.xml",
+      "records_equal": true,
+      "seeded": false
+    }
+  ],
+  "inventory_count": 931,
+  "owner_tests": {
+    "independent_qa_results": {
+      "baseline_passed": 12,
+      "candidate_passed": 12,
+      "disabled_plugins": [
+        "rerunfailures"
+      ],
+      "runtime_environment": "Not explicitly set"
+    },
+    "nodes": [
+      "tests_ce/integration_tests/test_exporter_matrix/test_exporter_matrix.py::test_write_read_roundtrip_through_every_pagination_mode",
+      "tests_ce/integration_tests/test_csv_header_trim/test_csv_header_trim_dsl.py::test_padded_headers_resolve_in_scripts_and_values_stay_untouched",
+      "tests_ce/integration_tests/test_data_source_length_collision/test_data_source_length_collision.py::test_same_name_different_source_lengths_do_not_collide",
+      "tests_ce/integration_tests/test_unique_source/test_unique_source.py::test_unique_distinct_from_source_and_seed_reproducible[csv]",
+      "tests_ce/integration_tests/test_unique_source/test_unique_source.py::test_generate_source_unique_distinct_and_reproducible",
+      "tests_ce/integration_tests/test_decimal_json/test_decimal_json.py::test_cli_scaffold_and_runtime_json_preserve_decimal_value",
+      "tests_ce/integration_tests/test_export_uri/test_export_uri.py::test_exporturi_works_for_json_too",
+      "tests_ce/integration_tests/test_timeseries/test_timeseries.py::test_basic_single_series_progresses_through_24_hours",
+      "tests_ce/integration_tests/test_timeseries/test_timeseries.py::test_basic_single_series_replays_identically",
+      "tests_ce/integration_tests/test_timeseries/test_timeseries.py::test_multi_series_loop_order_is_contiguous_per_series",
+      "tests_ce/integration_tests/test_timeseries/test_timeseries.py::test_multi_series_replays_identically",
+      "tests_ce/integration_tests/test_xml_template/test_xml_template.py::TestXMLTemplate::test_xml_template_script"
+    ],
+    "root_profile": {
+      "disabled_plugins": [],
+      "import_root": "Each scratch clone",
+      "runtime_environment": "development",
+      "serial": true
+    },
+    "root_results": {
+      "12d5e3a5e576b49a7191ad955807f96cf84d8e62": {
+        "exit": 0,
+        "passed": 12
+      },
+      "c65d0090b1d21ec78466e1adc609d60459d9d634": {
+        "exit": 0,
+        "passed": 12
+      }
+    }
+  },
+  "recorder_sha256": "89a2b5482c21d2387e0a226426b1c09cff842211155f790a4f6537ab30807d42",
+  "scope": "Supplemental comparison against12d5 checkpoint; original frozen13 records and oracle unchanged; no full931 parity claim.",
+  "seeded_count": 4,
+  "selected_count": 10,
+  "unseeded_count": 6
+}

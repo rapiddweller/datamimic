@@ -14,19 +14,20 @@ from functools import cache
 from pathlib import Path
 from random import Random
 
-from datamimic_ce.domains.common.demographics.sampler import DemographicSample, DemographicSampler
-from datamimic_ce.domains.common.generators.person_generator import PersonGenerator
-from datamimic_ce.domains.common.literal_generators.family_name_generator import FamilyNameGenerator
-from datamimic_ce.domains.common.literal_generators.given_name_generator import GivenNameGenerator
-from datamimic_ce.domains.common.literal_generators.phone_number_generator import PhoneNumberGenerator
-from datamimic_ce.domains.common.models.demographic_config import DemographicConfig
 from datamimic_ce.domains.domain_core.base_domain_generator import DatasetAwareDomainGenerator
-from datamimic_ce.domains.utils.dataset_loader import (
+from datamimic_ce.domains.domain_core.datasets.path import dataset_path
+from datamimic_ce.domains.shared.datasets.loader import (
     load_weighted_values_try_dataset,
     pick_one_weighted_no_repeat,
+    read_weighted_records,
+    read_weighted_values,
 )
-from datamimic_ce.domains.utils.dataset_path import dataset_path
-from datamimic_ce.utils.file_util import FileUtil
+from datamimic_ce.domains.shared.demographics.config import DemographicConfig
+from datamimic_ce.domains.shared.demographics.sampler import DemographicSample, DemographicSampler
+from datamimic_ce.domains.shared.generators.person_generator import PersonGenerator
+from datamimic_ce.domains.shared.generators.phone_number_generator import PhoneNumberGenerator
+from datamimic_ce.domains.shared.literal_generators.person.family_name_generator import FamilyNameGenerator
+from datamimic_ce.domains.shared.literal_generators.person.given_name_generator import GivenNameGenerator
 
 _CONDITION_DATA_DIR = dataset_path("healthcare", "medical", start=Path(__file__))
 # Directory for emergency relationships CSVs; test may monkeypatch this.
@@ -77,6 +78,46 @@ class PatientGenerator(DatasetAwareDomainGenerator):
             The person generator.
         """
         return self._person_generator
+
+    def generate_patient_id_candidate(self) -> str:
+        rng = self.rng
+        suffix = "".join(rng.choice("0123456789ABCDEF") for _ in range(8))
+        return f"PAT-{suffix}"
+
+    def generate_medical_record_number(self) -> str:
+        rng = self.rng
+        suffix = "".join(rng.choice("0123456789ABCDEF") for _ in range(8))
+        return f"MRN-{suffix}"
+
+    def generate_ssn(self) -> str:
+        rng = self.rng
+        digits = [str(rng.randint(0, 9)) for _ in range(9)]
+        return f"{''.join(digits[:3])}-{''.join(digits[3:5])}-{''.join(digits[5:])}"
+
+    def generate_insurance_policy_number(self) -> str:
+        rng = self.rng
+        prefix = "".join(rng.choice("ABCDEFGHIJKLMNOPQRSTUVWXYZ") for _ in range(3))
+        digits = "".join(str(rng.randint(0, 9)) for _ in range(8))
+        return f"{prefix}-{digits}"
+
+    def generate_height_cm(self, gender: str, age: int) -> float:
+        rng = self.rng
+        if age < 18:
+            if gender == "Male":
+                return round(rng.uniform(90 + (age * 5), 110 + (age * 5)), 1)
+            return round(rng.uniform(90 + (age * 4.8), 110 + (age * 4.8)), 1)
+        if gender == "Male":
+            return round(rng.uniform(160, 190), 1)
+        return round(rng.uniform(150, 175), 1)
+
+    def generate_weight_kg(self, age: int, height_cm: float) -> float:
+        rng = self.rng
+        base_bmi = rng.uniform(16, 24) if age < 18 else rng.uniform(18.5, 29.9)
+        height_m = height_cm / 100
+        weight = base_bmi * (height_m**2)
+        weight_variation = weight * 0.1
+        weight += rng.uniform(-weight_variation, weight_variation)
+        return round(weight, 1)
 
     @property
     def demographic_config(self) -> DemographicConfig:
@@ -169,9 +210,9 @@ class PatientGenerator(DatasetAwareDomainGenerator):
         file_path = dataset_path(
             "healthcare", "medical", f"insurance_providers_{self._dataset}.csv", start=Path(__file__)
         )
-        loaded_data = FileUtil.read_weight_csv(file_path)
+        values, weights = read_weighted_values(file_path)
         # Reuse the injected RNG to keep sampling reproducible under tests.
-        return self._rng.choices(loaded_data[0], weights=loaded_data[1], k=1)[0]  # type: ignore
+        return self._rng.choices(values, weights=weights, k=1)[0]
 
     def get_allergies(self) -> list[str]:
         # Determine how many allergies to generate (most people have 0-3)
@@ -185,7 +226,7 @@ class PatientGenerator(DatasetAwareDomainGenerator):
             return []
 
         file_path = dataset_path("healthcare", "medical", f"allergies_{self._dataset}.csv", start=Path(__file__))
-        wgt, loaded_data = FileUtil.read_csv_having_weight_column(file_path, "weight")
+        wgt, loaded_data = read_weighted_records(file_path, "weight")
 
         # Sample allergies with consistent randomness for downstream assertions.
         random_choices = self._rng.choices(loaded_data, weights=wgt, k=num_allergies)
@@ -209,7 +250,7 @@ class PatientGenerator(DatasetAwareDomainGenerator):
             return []
 
         file_path = dataset_path("healthcare", "medical", f"medications_{self._dataset}.csv", start=Path(__file__))
-        wgt, loaded_data = FileUtil.read_csv_having_weight_column(file_path, "weight")
+        wgt, loaded_data = read_weighted_records(file_path, "weight")
 
         # Align medication sampling with the shared RNG for deterministic seeds.
         random_choices = self._rng.choices(loaded_data, weights=wgt, k=num_medications)
@@ -367,7 +408,7 @@ def _load_emergency_relationships(dataset: str) -> tuple[list[str], list[float]]
 
     # Use dataset_path so US fallback and single-warning logging is applied consistently
     path = dataset_path("healthcare", "medical", f"emergency_relationships_{dataset}.csv", start=Path(__file__))
-    values, weights = FileUtil.read_wgt_file(file_path=path)
+    values, weights = read_weighted_values(file_path=path)
 
     cache[dataset] = (values, weights)
     return values, weights

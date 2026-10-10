@@ -1,0 +1,145 @@
+{
+  "status": "ACCEPTED_INDEPENDENT_QA",
+  "original_head": "a219163e533d661bcc7bda0faa5ecc77909ab5aa",
+  "current_head": "16b8e12514624e53397e28b90cf1adc3007a7960",
+  "nodeid": "tests_ce/integration_tests/test_id_alias/test_id_alias.py::test_id_equals_key",
+  "xml_order": [
+    "tests_ce/integration_tests/test_id_alias/id_equivalence.xml"
+  ],
+  "base_ledger": {
+    "path": "/tmp/ce-dsl-comment-20261010/ledger-step176-v1.jsonl",
+    "sha256": "9fa0a48fab8de48438902c8a5c114179ef15bd9a072fca816e53b1c250ff804b"
+  },
+  "candidate_ledger": {
+    "path": "/private/tmp/ce-dsl-id-alias-20261010/ledger-step178-v1.jsonl",
+    "sha256": "04b94db60d5278033d1c3494828a10c99ecdabff42c0145d7b6a20d8b17a8f2b"
+  },
+  "ledger_candidate_receipt": {
+    "path": "/tmp/ce-dsl-id-alias-20261010/ledger-candidate-receipt.json",
+    "sha256": "defde994180b3a812b5eabf172135c3948ce6cd327784754ae0d026440abf9db"
+  },
+  "comparison": {
+    "path": "/tmp/ce-dsl-id-alias-20261010/comparison.json",
+    "sha256": "a64854466850f02380fbff64b9200191c895c122f2c64cebd9b5480364a05a79"
+  },
+  "preflight": {
+    "path": "/tmp/ce-dsl-id-alias-20261010/preflight.json",
+    "sha256": "f43755e29ef77592e3833775d89214bc941d9f721bb0340aa8bfb6cfbe06fc8d"
+  },
+  "protocol_note": {
+    "path": "/tmp/ce-dsl-id-alias-20261010/protocol.md",
+    "sha256": "2a0e558144bc461950a93d60eb4f837e63273e92c5317710a3888aa8d1178501"
+  },
+  "step_note_sha256": "725b8807fad9a6d338fc272b34647f67773d37a7733b7c9aad185ff3c97c7aa7",
+  "collection_original": {
+    "parent": {
+      "path": "/private/tmp/ce-dsl-id-alias-20261010/runs/original/collection-host-capable/parent-receipt.json",
+      "sha256": "56a0fa7415fb228bef4c6eec3905e6f01976cf8487e6094d9c83b92181854227"
+    },
+    "child": {
+      "path": "/private/tmp/ce-dsl-id-alias-20261010/runs/original/collection-host-capable/child/child-receipt.json",
+      "sha256": "74eebf1d00a228e01c91e4bb7de0283d89e2c8ac7d51134d0bbf1f6d1a98da1e"
+    },
+    "stdout": {
+      "path": "/private/tmp/ce-dsl-id-alias-20261010/runs/original/collection-host-capable/stdout.raw",
+      "sha256": "35aad340cb7357ffd3db810f1896124a1b0e2347bcdd7fbf64604e797060226a"
+    },
+    "stderr": {
+      "path": "/private/tmp/ce-dsl-id-alias-20261010/runs/original/collection-host-capable/stderr.raw",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "junit": null,
+    "captures": [],
+    "opened_path_count": 2037,
+    "module_origin_count": 250
+  },
+  "collection_current": {
+    "parent": {
+      "path": "/private/tmp/ce-dsl-id-alias-20261010/runs/current/collection-host-capable/parent-receipt.json",
+      "sha256": "a99256c9f9bfb253f021456fc0474931041e6dea71ed6e4c437074525b65a57f"
+    },
+    "child": {
+      "path": "/private/tmp/ce-dsl-id-alias-20261010/runs/current/collection-host-capable/child/child-receipt.json",
+      "sha256": "2131feed359026bbf65372fed7160d8696262c97499ceafd89cf84837f430c03"
+    },
+    "stdout": {
+      "path": "/private/tmp/ce-dsl-id-alias-20261010/runs/current/collection-host-capable/stdout.raw",
+      "sha256": "b4956835f6bab2271a6e8192ba1e3494bcdd4e8a52128a03617658cd04063ff4"
+    },
+    "stderr": {
+      "path": "/private/tmp/ce-dsl-id-alias-20261010/runs/current/collection-host-capable/stderr.raw",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "junit": null,
+    "captures": [],
+    "opened_path_count": 2355,
+    "module_origin_count": 351
+  },
+  "native_original": {
+    "parent": {
+      "path": "/private/tmp/ce-dsl-id-alias-20261010/runs/original/native-host-capable/parent-receipt.json",
+      "sha256": "a03252303302465df94566a6ffec230460373f6049ee993c2c794ecf5427c3bb"
+    },
+    "child": {
+      "path": "/private/tmp/ce-dsl-id-alias-20261010/runs/original/native-host-capable/child/child-receipt.json",
+      "sha256": "7e4315257ebba3d1e805591fcc12558119bb21f4aa41e6f33e0d85d894b88532"
+    },
+    "stdout": {
+      "path": "/private/tmp/ce-dsl-id-alias-20261010/runs/original/native-host-capable/stdout.raw",
+      "sha256": "201f03ac14f5963f727fcbefb5b1b58a99c38dec63f4049f561aade0a424536a"
+    },
+    "stderr": {
+      "path": "/private/tmp/ce-dsl-id-alias-20261010/runs/original/native-host-capable/stderr.raw",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "junit": {
+      "path": "/private/tmp/ce-dsl-id-alias-20261010/runs/original/native-host-capable/child/junit.xml",
+      "sha256": "62c831274222b2a762c8366befdedbdb943ffa01b07dabae4cb6534937778f70"
+    },
+    "captures": [
+      {
+        "path": "/private/tmp/ce-dsl-id-alias-20261010/runs/original/native-host-capable/child/capture-1.json",
+        "sha256": "0271d66ff78e705b502c1b669e74e059774dcfb5d80cf2f77a3aabfe93e62235"
+      }
+    ],
+    "opened_path_count": 2072,
+    "module_origin_count": 339
+  },
+  "native_current": {
+    "parent": {
+      "path": "/private/tmp/ce-dsl-id-alias-20261010/runs/current/native-host-capable/parent-receipt.json",
+      "sha256": "51b72b21a55985f3873f0eea3e7416806b2ed0dcb556d733f736989595a5723c"
+    },
+    "child": {
+      "path": "/private/tmp/ce-dsl-id-alias-20261010/runs/current/native-host-capable/child/child-receipt.json",
+      "sha256": "8dd67a527c08b2b9fd9103127372d461f21697b600bc385371acf83d6b1e0630"
+    },
+    "stdout": {
+      "path": "/private/tmp/ce-dsl-id-alias-20261010/runs/current/native-host-capable/stdout.raw",
+      "sha256": "dec47aaa69fe84cd161183e711b06bf1ca38110701ce6afab38afa353c90d12c"
+    },
+    "stderr": {
+      "path": "/private/tmp/ce-dsl-id-alias-20261010/runs/current/native-host-capable/stderr.raw",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "junit": {
+      "path": "/private/tmp/ce-dsl-id-alias-20261010/runs/current/native-host-capable/child/junit.xml",
+      "sha256": "cb14347c8ca0dee68372b1edbac7412e9d35e03cd5df491ad3416db91529885b"
+    },
+    "captures": [
+      {
+        "path": "/private/tmp/ce-dsl-id-alias-20261010/runs/current/native-host-capable/child/capture-1.json",
+        "sha256": "0271d66ff78e705b502c1b669e74e059774dcfb5d80cf2f77a3aabfe93e62235"
+      }
+    ],
+    "opened_path_count": 2070,
+    "module_origin_count": 372
+  },
+  "complete_capture_sha256": "0271d66ff78e705b502c1b669e74e059774dcfb5d80cf2f77a3aabfe93e62235",
+  "ledger_rows": 931,
+  "reviewed_candidate": 128,
+  "unknown_candidate": 803,
+  "unchanged_raw_lines": 930,
+  "frozen_oracle_parity": "NOT_ESTABLISHED",
+  "independent_qa": "PASS"
+}

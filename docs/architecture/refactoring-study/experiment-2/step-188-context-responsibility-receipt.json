@@ -1,0 +1,79 @@
+{
+  "after": "Own the Context/SetupContext hierarchy and row state, and carry the active demographic profile, sampler, overrides and RNG.",
+  "all_other_contract_values_equal": true,
+  "artifacts": {
+    "after_report": {
+      "bytes": 15193603,
+      "path": "/tmp/ce-step188-root-20261010/after.json",
+      "sha256": "774e9b548f5b75101187812b2983b5445dc9329ae69a36b773e3ebae7b956d36"
+    },
+    "before_report": {
+      "bytes": 15193532,
+      "path": "/tmp/ce-step186-root-20261010/architecture.json",
+      "sha256": "ddcee84fc77b19dd03ae7df517c20c113a3d453798eb8f9bb01826aa7730b1b0"
+    },
+    "comparison": {
+      "bytes": 2272,
+      "path": "/tmp/ce-step188-root-20261010/comparison.json",
+      "sha256": "b577227fc4da312e633aebc9806559b243f0ca5064815af25bc077d37a56529c"
+    },
+    "definition_tests": {
+      "bytes": 551,
+      "path": "/tmp/ce-step188-definition-20261010.log",
+      "sha256": "65fb2f6ecd9c7b86816c6b73ea11effcceb76f572804655e27b7bdf5e87dd67c"
+    },
+    "lint_types": {
+      "bytes": 213,
+      "path": "/tmp/ce-step187-188-lint-types-20261010.log",
+      "sha256": "b6118e992c5e3f9d698f8adf33f9ce2aec93b1556c280030ad244bc09b6ae37d"
+    },
+    "native_writer": {
+      "bytes": 141736,
+      "path": "/tmp/ce-step188-amendment-writer-20261010.json",
+      "sha256": "bb85765f5ce5f12f68df911845348a108cfc213196fe245421a610c5903cebf6"
+    },
+    "report_command": {
+      "bytes": 132637,
+      "path": "/tmp/ce-arch-report-step188-20261010.log",
+      "sha256": "7ffa86109a9b43f18d9a08ed74b898ac1d9d79d830ffe847e6798da857d04285"
+    },
+    "writer_help": {
+      "bytes": 4528,
+      "path": "/tmp/ce-step188-validate-help.txt",
+      "sha256": "bf0f2b76ffacf30cd251d32c4b007ac749b6cbce22af76f3f623039113a1173e"
+    }
+  },
+  "base_head": "7e9e897350cdb86b1f7efca1bdc1706fffa898bc",
+  "baseline_new": 9,
+  "baseline_resolved": 0,
+  "before": "Closed Context/SetupContext hierarchy and row state.",
+  "canonical_unknowns": 254,
+  "changed_contract": "docs/architecture/inner/runtime/architecture-contract.json",
+  "changed_pointer": "/components/4/responsibilities/0",
+  "ci_only_verification": "pending for this correction",
+  "decision": "Astra, delegated architect",
+  "declared_rules": "FAIL",
+  "full_target_accepted": false,
+  "independent_qa": {
+    "qa-report.json": {
+      "bytes": 12776,
+      "path": "/tmp/ce-step188-independent-qa-20261010/qa-report.json",
+      "sha256": "0fe1f3a1a26a9c1a878269cf1a0f159b76299d84ebe62312801d3082184eafb8"
+    },
+    "qa-review.md": {
+      "bytes": 2886,
+      "path": "/tmp/ce-step188-independent-qa-20261010/qa-review.md",
+      "sha256": "67da15966e2e1422075beebd23d174e8323238136ceb73fd3b76b6b5010c7dc4"
+    }
+  },
+  "native_amendment_status": null,
+  "native_usage_unknown_diagnostics": 19,
+  "native_widening": "responsibilities",
+  "native_writer_exit": 2,
+  "requested_machine_amendment": "docs/architecture/refactoring-study/experiment-2/amendment-189-context-responsibility.json",
+  "requested_machine_amendment_exists": false,
+  "source_api_permissions_baseline_unchanged": true,
+  "status": "ARCHITECT_APPROVED_CLARIFICATION_MACHINE_BINDING_OPEN",
+  "step": 188,
+  "violations": 13
+}

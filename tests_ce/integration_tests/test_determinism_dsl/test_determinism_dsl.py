@@ -31,7 +31,7 @@ from __future__ import annotations
 
 from pathlib import Path
 
-from datamimic_ce.data_mimic_test import DataMimicTest
+from datamimic_ce.interfaces.python.data_mimic_test import DataMimicTest
 from tests_ce.integration_tests.dsl_model_builder import build_all_entities_seeded_xml
 
 _MODEL_FILENAME = "all_entities_seeded.xml"

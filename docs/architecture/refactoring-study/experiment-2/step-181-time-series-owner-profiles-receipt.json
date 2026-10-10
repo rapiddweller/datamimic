@@ -1,0 +1,1438 @@
+{
+  "status": "ACCEPTED_INDEPENDENT_QA",
+  "original_head": "a219163e533d661bcc7bda0faa5ecc77909ab5aa",
+  "current_source_head": "c2d40e4d65fb95c0d52731e57857a9f33c75a50f",
+  "evidence_branch_base": "ae8542a9bc609ab372745279b36cf0ce61c56610",
+  "run_plan": {
+    "path": "/tmp/ce-dsl-step181-20261010/run-plan.json",
+    "sha256": "14e5c904e5c59faee67360ea60e0617937ab25b0e3e0413b260b35d9696335f8"
+  },
+  "profiles": [
+    {
+      "case": "basic",
+      "nodeid": "tests_ce/integration_tests/test_timeseries/test_timeseries.py::test_basic_single_series_progresses_through_24_hours",
+      "xml_order": [
+        "tests_ce/integration_tests/test_timeseries/basic_one_series.xml"
+      ],
+      "source_owner": {
+        "original": {
+          "blob": "5930b2da3ea03b50e0b11d21bfc34b59993f5590",
+          "sha256": "afdbd023c869c24fd1f04c55ae70a985bbd9eb9e99142c366783c1ef6fe8b362"
+        },
+        "current": {
+          "blob": "d1796bfd957882710b6dfe49fbfc11c8bb233f4d",
+          "sha256": "d8c1179a070bc80f85cbd81d2ff4ae2e7a1cc1da16e88221732dde120b4bf6b9"
+        }
+      },
+      "source_xml": {
+        "tests_ce/integration_tests/test_timeseries/basic_one_series.xml": {
+          "sha256": "4d366d51f4445931b964db742a45bac7c0786f33da9febdc2108a106c51a5e7a",
+          "blob": "357bb0d5bb07cc13bc3b10d1526afb3261482404"
+        }
+      },
+      "preflight": {
+        "path": "/tmp/ce-dsl-step181-20261010/cases/basic/preflight.json",
+        "sha256": "72b3c8fd306bc75af38c5206f1e27c7a04e9b43bb9ca9928cedb09f8c1d703f1"
+      },
+      "comparison": {
+        "path": "/tmp/ce-dsl-step181-20261010/cases/basic/comparison.json",
+        "sha256": "fcbaf6512d621e9a482c0972837cc8a26aa4e9ee745f09b3aac37edeff3545e7"
+      },
+      "collection_original": {
+        "parent": {
+          "path": "/private/tmp/ce-dsl-step181-20261010/cases/basic/runs/original/collection-host-capable/parent-receipt.json",
+          "sha256": "63d1e81f808d7958360df33b139a9d8e19f8eb57fa6f0ac94ccccc939d0e7221"
+        },
+        "child": {
+          "path": "/private/tmp/ce-dsl-step181-20261010/cases/basic/runs/original/collection-host-capable/child/child-receipt.json",
+          "sha256": "261e82132c80de43ac896ec4a108436b4a08f60051f3f2baa92bc910f8efed79"
+        },
+        "stdout": {
+          "path": "/private/tmp/ce-dsl-step181-20261010/cases/basic/runs/original/collection-host-capable/stdout.raw",
+          "sha256": "3c12b3cc8bd11869e20cf08c2229a341e56a37b736286c3abc97fc0e4253bf55"
+        },
+        "stderr": {
+          "path": "/private/tmp/ce-dsl-step181-20261010/cases/basic/runs/original/collection-host-capable/stderr.raw",
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        "junit": null,
+        "captures": [],
+        "opened_path_count": 2037,
+        "module_origin_count": 250
+      },
+      "collection_current": {
+        "parent": {
+          "path": "/private/tmp/ce-dsl-step181-20261010/cases/basic/runs/current/collection-host-capable/parent-receipt.json",
+          "sha256": "7a072f7c8b7c4c1b89dab47f9268b3683f0ead64fa059e47e39e960128b20ab3"
+        },
+        "child": {
+          "path": "/private/tmp/ce-dsl-step181-20261010/cases/basic/runs/current/collection-host-capable/child/child-receipt.json",
+          "sha256": "b85916f6c4297e65dea56ad91f3f47bb915507aba4ddec3b0ed32639f3d6e009"
+        },
+        "stdout": {
+          "path": "/private/tmp/ce-dsl-step181-20261010/cases/basic/runs/current/collection-host-capable/stdout.raw",
+          "sha256": "c2bd1ae80b65bd9b5132696846bf9cb2d6305c3daea622a134ca67a8d8998d82"
+        },
+        "stderr": {
+          "path": "/private/tmp/ce-dsl-step181-20261010/cases/basic/runs/current/collection-host-capable/stderr.raw",
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        "junit": null,
+        "captures": [],
+        "opened_path_count": 2088,
+        "module_origin_count": 351
+      },
+      "native_original": {
+        "parent": {
+          "path": "/private/tmp/ce-dsl-step181-20261010/cases/basic/runs/original/native-host-capable/parent-receipt.json",
+          "sha256": "24837b8c8a9ffcf5e79d43c5e12b7f96113111b70ba55756e1b4f9afe77a5fe2"
+        },
+        "child": {
+          "path": "/private/tmp/ce-dsl-step181-20261010/cases/basic/runs/original/native-host-capable/child/child-receipt.json",
+          "sha256": "7f88d1217d844f954a4a0159a9ac479a117442f0637f83a412454940f85671ac"
+        },
+        "stdout": {
+          "path": "/private/tmp/ce-dsl-step181-20261010/cases/basic/runs/original/native-host-capable/stdout.raw",
+          "sha256": "cc84c1d2b6b63acd7c88e7f1795553a702e999c40922a2efab430b933f2ac545"
+        },
+        "stderr": {
+          "path": "/private/tmp/ce-dsl-step181-20261010/cases/basic/runs/original/native-host-capable/stderr.raw",
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        "junit": {
+          "path": "/private/tmp/ce-dsl-step181-20261010/cases/basic/runs/original/native-host-capable/child/junit.xml",
+          "sha256": "ccd552391aeeb4f02cd7a94ba543c6a76b39109716cc2f771dc7f5a9cb37897a"
+        },
+        "captures": [
+          {
+            "path": "/private/tmp/ce-dsl-step181-20261010/cases/basic/runs/original/native-host-capable/child/capture-1.json",
+            "sha256": "f02b65cd95f44cd925c44ce0654a98556986f1fafb42636aae59e1662694732b"
+          }
+        ],
+        "opened_path_count": 1880,
+        "module_origin_count": 275
+      },
+      "native_current": {
+        "parent": {
+          "path": "/private/tmp/ce-dsl-step181-20261010/cases/basic/runs/current/native-host-capable/parent-receipt.json",
+          "sha256": "e46086a882ab76a47148e45945ed8bb58fe51ce90fcf1e3ba3f2d234d266e4fa"
+        },
+        "child": {
+          "path": "/private/tmp/ce-dsl-step181-20261010/cases/basic/runs/current/native-host-capable/child/child-receipt.json",
+          "sha256": "43bd56fa54e8e095bae30e4ecd0270afd871599f49489eb3a3dc6f5c89137638"
+        },
+        "stdout": {
+          "path": "/private/tmp/ce-dsl-step181-20261010/cases/basic/runs/current/native-host-capable/stdout.raw",
+          "sha256": "04eed0d29d2e3d5571e7243249723c7e9c4fe8514123077ad223a973e1a87687"
+        },
+        "stderr": {
+          "path": "/private/tmp/ce-dsl-step181-20261010/cases/basic/runs/current/native-host-capable/stderr.raw",
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        "junit": {
+          "path": "/private/tmp/ce-dsl-step181-20261010/cases/basic/runs/current/native-host-capable/child/junit.xml",
+          "sha256": "7a5b9069e7434f922aaa17fa0fa830f23282e2438ac40123c189cfaa2280dee1"
+        },
+        "captures": [
+          {
+            "path": "/private/tmp/ce-dsl-step181-20261010/cases/basic/runs/current/native-host-capable/child/capture-1.json",
+            "sha256": "f02b65cd95f44cd925c44ce0654a98556986f1fafb42636aae59e1662694732b"
+          }
+        ],
+        "opened_path_count": 2017,
+        "module_origin_count": 356
+      },
+      "complete_capture_sha256": "f02b65cd95f44cd925c44ce0654a98556986f1fafb42636aae59e1662694732b",
+      "owner_test_passed_once_per_endpoint": true,
+      "failed_attempts": []
+    },
+    {
+      "case": "seconds",
+      "nodeid": "tests_ce/integration_tests/test_timeseries/test_timeseries.py::test_interval_seconds",
+      "xml_order": [
+        "tests_ce/integration_tests/test_timeseries/interval_seconds.xml"
+      ],
+      "source_owner": {
+        "original": {
+          "blob": "5930b2da3ea03b50e0b11d21bfc34b59993f5590",
+          "sha256": "afdbd023c869c24fd1f04c55ae70a985bbd9eb9e99142c366783c1ef6fe8b362"
+        },
+        "current": {
+          "blob": "d1796bfd957882710b6dfe49fbfc11c8bb233f4d",
+          "sha256": "d8c1179a070bc80f85cbd81d2ff4ae2e7a1cc1da16e88221732dde120b4bf6b9"
+        }
+      },
+      "source_xml": {
+        "tests_ce/integration_tests/test_timeseries/interval_seconds.xml": {
+          "sha256": "41514df903f1dd4060e26cb9248eac8e8f32fce7d2b40d89c94cd629d86b707b",
+          "blob": "61a83e808f5b60fae314f34af212369adb734a03"
+        }
+      },
+      "preflight": {
+        "path": "/tmp/ce-dsl-step181-20261010/cases/seconds/preflight.json",
+        "sha256": "376783c8cb93a3882c7b170e76cbae7e4be759d2cfc8e899490a9f4fe0c8540a"
+      },
+      "comparison": {
+        "path": "/tmp/ce-dsl-step181-20261010/cases/seconds/comparison.json",
+        "sha256": "f999069ac3d1490dab63bb84745c42f6f58a711611e53a9bebf4bae49f4f3cbd"
+      },
+      "collection_original": {
+        "parent": {
+          "path": "/private/tmp/ce-dsl-step181-20261010/cases/seconds/runs/original/collection-host-capable/parent-receipt.json",
+          "sha256": "1295b16561e6f67809e8bb64067548e8ed47f6fa79c7a5b2c8a80e983124340c"
+        },
+        "child": {
+          "path": "/private/tmp/ce-dsl-step181-20261010/cases/seconds/runs/original/collection-host-capable/child/child-receipt.json",
+          "sha256": "ea1273d2020b9b3b8c596dfba7b8bc25ed5535c39183460b8c6c12029dbf0c90"
+        },
+        "stdout": {
+          "path": "/private/tmp/ce-dsl-step181-20261010/cases/seconds/runs/original/collection-host-capable/stdout.raw",
+          "sha256": "5201c2fb6f0b702e3f96e114d4e58d22d034545ff1745e5c96b15c3feaf46ee5"
+        },
+        "stderr": {
+          "path": "/private/tmp/ce-dsl-step181-20261010/cases/seconds/runs/original/collection-host-capable/stderr.raw",
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        "junit": null,
+        "captures": [],
+        "opened_path_count": 1785,
+        "module_origin_count": 250
+      },
+      "collection_current": {
+        "parent": {
+          "path": "/private/tmp/ce-dsl-step181-20261010/cases/seconds/runs/current/collection-host-capable/parent-receipt.json",
+          "sha256": "6a4c832e0e155c01bfbc293f500026a94589185f73be1f9edc634420ea42d4eb"
+        },
+        "child": {
+          "path": "/private/tmp/ce-dsl-step181-20261010/cases/seconds/runs/current/collection-host-capable/child/child-receipt.json",
+          "sha256": "0f368ff7e7d8981970db2344690770b6d7338882b6ddee6836a1795b461c230e"
+        },
+        "stdout": {
+          "path": "/private/tmp/ce-dsl-step181-20261010/cases/seconds/runs/current/collection-host-capable/stdout.raw",
+          "sha256": "36cd8378f175ca80e4a4fa1a00ee91987a62c679a9c4028623a6d864f795eecc"
+        },
+        "stderr": {
+          "path": "/private/tmp/ce-dsl-step181-20261010/cases/seconds/runs/current/collection-host-capable/stderr.raw",
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        "junit": null,
+        "captures": [],
+        "opened_path_count": 2348,
+        "module_origin_count": 351
+      },
+      "native_original": {
+        "parent": {
+          "path": "/private/tmp/ce-dsl-step181-20261010/cases/seconds/runs/original/native-host-capable/parent-receipt.json",
+          "sha256": "79fef0ecb07e00d37a9d69edc7640d088aab81e1a9fff2f92eeac771d518cdab"
+        },
+        "child": {
+          "path": "/private/tmp/ce-dsl-step181-20261010/cases/seconds/runs/original/native-host-capable/child/child-receipt.json",
+          "sha256": "e7448302cac19201d352a6ff4893cbf5d1a2f954f2ad0c46df53e929aca7e345"
+        },
+        "stdout": {
+          "path": "/private/tmp/ce-dsl-step181-20261010/cases/seconds/runs/original/native-host-capable/stdout.raw",
+          "sha256": "ae29dbb3c2bff45f28f31a4ffe88921c2666bb370d19b02c556d8918e72f3654"
+        },
+        "stderr": {
+          "path": "/private/tmp/ce-dsl-step181-20261010/cases/seconds/runs/original/native-host-capable/stderr.raw",
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        "junit": {
+          "path": "/private/tmp/ce-dsl-step181-20261010/cases/seconds/runs/original/native-host-capable/child/junit.xml",
+          "sha256": "9f0df5cd5ee15f80127b6f6e73a9ba96b5aaf9c1bab7fd555fcfb233493f7f72"
+        },
+        "captures": [
+          {
+            "path": "/private/tmp/ce-dsl-step181-20261010/cases/seconds/runs/original/native-host-capable/child/capture-1.json",
+            "sha256": "e74f7f1dd538722c2cfbc934ce3ca4e203554ab23991da30cc5d3d90465f9a8f"
+          }
+        ],
+        "opened_path_count": 1855,
+        "module_origin_count": 275
+      },
+      "native_current": {
+        "parent": {
+          "path": "/private/tmp/ce-dsl-step181-20261010/cases/seconds/runs/current/native-host-capable/parent-receipt.json",
+          "sha256": "79f0f5d13e07d28234fe2350bc9b6f397bab621955d6bf5a303bbb822cb17cf9"
+        },
+        "child": {
+          "path": "/private/tmp/ce-dsl-step181-20261010/cases/seconds/runs/current/native-host-capable/child/child-receipt.json",
+          "sha256": "879c6268610b824ec60178f833025bef571ab86a8aadad1f0e01b6b0c8bfe9c5"
+        },
+        "stdout": {
+          "path": "/private/tmp/ce-dsl-step181-20261010/cases/seconds/runs/current/native-host-capable/stdout.raw",
+          "sha256": "c0555e5703899f368d379b656258917237fb3fca1087c0be000ae21cd6c419e5"
+        },
+        "stderr": {
+          "path": "/private/tmp/ce-dsl-step181-20261010/cases/seconds/runs/current/native-host-capable/stderr.raw",
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        "junit": {
+          "path": "/private/tmp/ce-dsl-step181-20261010/cases/seconds/runs/current/native-host-capable/child/junit.xml",
+          "sha256": "3e17a44941d3f4c545ea2398d8b4fbf9b075563dec000f3d831d24584506ba5c"
+        },
+        "captures": [
+          {
+            "path": "/private/tmp/ce-dsl-step181-20261010/cases/seconds/runs/current/native-host-capable/child/capture-1.json",
+            "sha256": "e74f7f1dd538722c2cfbc934ce3ca4e203554ab23991da30cc5d3d90465f9a8f"
+          }
+        ],
+        "opened_path_count": 2022,
+        "module_origin_count": 356
+      },
+      "complete_capture_sha256": "e74f7f1dd538722c2cfbc934ce3ca4e203554ab23991da30cc5d3d90465f9a8f",
+      "owner_test_passed_once_per_endpoint": true,
+      "failed_attempts": []
+    },
+    {
+      "case": "milliseconds",
+      "nodeid": "tests_ce/integration_tests/test_timeseries/test_timeseries.py::test_interval_milliseconds",
+      "xml_order": [
+        "tests_ce/integration_tests/test_timeseries/interval_milliseconds.xml"
+      ],
+      "source_owner": {
+        "original": {
+          "blob": "5930b2da3ea03b50e0b11d21bfc34b59993f5590",
+          "sha256": "afdbd023c869c24fd1f04c55ae70a985bbd9eb9e99142c366783c1ef6fe8b362"
+        },
+        "current": {
+          "blob": "d1796bfd957882710b6dfe49fbfc11c8bb233f4d",
+          "sha256": "d8c1179a070bc80f85cbd81d2ff4ae2e7a1cc1da16e88221732dde120b4bf6b9"
+        }
+      },
+      "source_xml": {
+        "tests_ce/integration_tests/test_timeseries/interval_milliseconds.xml": {
+          "sha256": "dc7a11f9090a68587600d413711a9f29c7b7a4a58a3f3244e2bae770aa4778fe",
+          "blob": "a2982e6bf72c6e33cfe6ba289e213a050641951c"
+        }
+      },
+      "preflight": {
+        "path": "/tmp/ce-dsl-step181-20261010/cases/milliseconds/preflight.json",
+        "sha256": "1006438c1c5327a5e0e157b065aee9251e6811ff03cfa08c3f06dac9498485b7"
+      },
+      "comparison": {
+        "path": "/tmp/ce-dsl-step181-20261010/cases/milliseconds/comparison.json",
+        "sha256": "94181a7c7b5f9db9834a1e8f47580f77f6b999055a3ef45e19cf1f29b6a2e10f"
+      },
+      "collection_original": {
+        "parent": {
+          "path": "/private/tmp/ce-dsl-step181-20261010/cases/milliseconds/runs/original/collection-host-capable/parent-receipt.json",
+          "sha256": "95b93ce2922b646f5c57fe2ba4429e536d846836cc6fe92eab9f36529c2a86d3"
+        },
+        "child": {
+          "path": "/private/tmp/ce-dsl-step181-20261010/cases/milliseconds/runs/original/collection-host-capable/child/child-receipt.json",
+          "sha256": "e698884ec96510ceb1955529da9cb540f6f0d5fccd2ab2706e550b896be9b720"
+        },
+        "stdout": {
+          "path": "/private/tmp/ce-dsl-step181-20261010/cases/milliseconds/runs/original/collection-host-capable/stdout.raw",
+          "sha256": "78c49eac4552ebe7a30e92f0dcc5fe83f63348f3d04f5ff42ef28f6695eeae74"
+        },
+        "stderr": {
+          "path": "/private/tmp/ce-dsl-step181-20261010/cases/milliseconds/runs/original/collection-host-capable/stderr.raw",
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        "junit": null,
+        "captures": [],
+        "opened_path_count": 1785,
+        "module_origin_count": 250
+      },
+      "collection_current": {
+        "parent": {
+          "path": "/private/tmp/ce-dsl-step181-20261010/cases/milliseconds/runs/current/collection-host-capable/parent-receipt.json",
+          "sha256": "37d12f82cace9d949c7ab6d517b56332231620022eb5ccb57af6671155ae9176"
+        },
+        "child": {
+          "path": "/private/tmp/ce-dsl-step181-20261010/cases/milliseconds/runs/current/collection-host-capable/child/child-receipt.json",
+          "sha256": "140019774214fdb2b890b833d95701fa3ded148a0ac1f9b20043e91f224d32fe"
+        },
+        "stdout": {
+          "path": "/private/tmp/ce-dsl-step181-20261010/cases/milliseconds/runs/current/collection-host-capable/stdout.raw",
+          "sha256": "ac64728260675290a1801946d912c7d7adacce7f6b8e11fbacf9c2582506af53"
+        },
+        "stderr": {
+          "path": "/private/tmp/ce-dsl-step181-20261010/cases/milliseconds/runs/current/collection-host-capable/stderr.raw",
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        "junit": null,
+        "captures": [],
+        "opened_path_count": 2002,
+        "module_origin_count": 351
+      },
+      "native_original": {
+        "parent": {
+          "path": "/private/tmp/ce-dsl-step181-20261010/cases/milliseconds/runs/original/native-host-capable/parent-receipt.json",
+          "sha256": "e592ce9aceca6f8cffbf650eaa886203fe8f1289d04d6d19d8ae30e6b2b8baca"
+        },
+        "child": {
+          "path": "/private/tmp/ce-dsl-step181-20261010/cases/milliseconds/runs/original/native-host-capable/child/child-receipt.json",
+          "sha256": "de9e32f6f0400a464fae7f6f49a4f7a221a938cbea8f3e30a1a8a6f3fb0de782"
+        },
+        "stdout": {
+          "path": "/private/tmp/ce-dsl-step181-20261010/cases/milliseconds/runs/original/native-host-capable/stdout.raw",
+          "sha256": "704d36ed887f9ec0d4e6336ebfbb499283a0c8e7ddac2b73e47bf2e03b8fcffa"
+        },
+        "stderr": {
+          "path": "/private/tmp/ce-dsl-step181-20261010/cases/milliseconds/runs/original/native-host-capable/stderr.raw",
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        "junit": {
+          "path": "/private/tmp/ce-dsl-step181-20261010/cases/milliseconds/runs/original/native-host-capable/child/junit.xml",
+          "sha256": "cd3709e77983d1ff7ed43a6fa5b198778e5fb869d806b343f9482caebfdfa151"
+        },
+        "captures": [
+          {
+            "path": "/private/tmp/ce-dsl-step181-20261010/cases/milliseconds/runs/original/native-host-capable/child/capture-1.json",
+            "sha256": "ef1f171f670dbb48f0f20dbf95aada167c8c6ace9dec01dd343726392dfe8bb8"
+          }
+        ],
+        "opened_path_count": 1855,
+        "module_origin_count": 275
+      },
+      "native_current": {
+        "parent": {
+          "path": "/private/tmp/ce-dsl-step181-20261010/cases/milliseconds/runs/current/native-host-capable/parent-receipt.json",
+          "sha256": "cd3ae619b871c7bcada00294137c98fa2697c4a57ecf0394a7a00bf1ccd5d829"
+        },
+        "child": {
+          "path": "/private/tmp/ce-dsl-step181-20261010/cases/milliseconds/runs/current/native-host-capable/child/child-receipt.json",
+          "sha256": "6efb8e7999bb789b5fedf72f9ac472bae32d43eadc49ade3daf14b22921bb56e"
+        },
+        "stdout": {
+          "path": "/private/tmp/ce-dsl-step181-20261010/cases/milliseconds/runs/current/native-host-capable/stdout.raw",
+          "sha256": "e9f99a7307864068b54f0d1fac9ff12f0447790fbf47b6b3ccb719eb586d0b0c"
+        },
+        "stderr": {
+          "path": "/private/tmp/ce-dsl-step181-20261010/cases/milliseconds/runs/current/native-host-capable/stderr.raw",
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        "junit": {
+          "path": "/private/tmp/ce-dsl-step181-20261010/cases/milliseconds/runs/current/native-host-capable/child/junit.xml",
+          "sha256": "5d7d8b720a3c0c89797984e640c0becb3f870e972051e11c1f7a75cc149b5eca"
+        },
+        "captures": [
+          {
+            "path": "/private/tmp/ce-dsl-step181-20261010/cases/milliseconds/runs/current/native-host-capable/child/capture-1.json",
+            "sha256": "ef1f171f670dbb48f0f20dbf95aada167c8c6ace9dec01dd343726392dfe8bb8"
+          }
+        ],
+        "opened_path_count": 2017,
+        "module_origin_count": 356
+      },
+      "complete_capture_sha256": "ef1f171f670dbb48f0f20dbf95aada167c8c6ace9dec01dd343726392dfe8bb8",
+      "owner_test_passed_once_per_endpoint": true,
+      "failed_attempts": []
+    },
+    {
+      "case": "microseconds",
+      "nodeid": "tests_ce/integration_tests/test_timeseries/test_timeseries.py::test_interval_microseconds_is_finest_supported_resolution",
+      "xml_order": [
+        "tests_ce/integration_tests/test_timeseries/interval_microseconds.xml"
+      ],
+      "source_owner": {
+        "original": {
+          "blob": "5930b2da3ea03b50e0b11d21bfc34b59993f5590",
+          "sha256": "afdbd023c869c24fd1f04c55ae70a985bbd9eb9e99142c366783c1ef6fe8b362"
+        },
+        "current": {
+          "blob": "d1796bfd957882710b6dfe49fbfc11c8bb233f4d",
+          "sha256": "d8c1179a070bc80f85cbd81d2ff4ae2e7a1cc1da16e88221732dde120b4bf6b9"
+        }
+      },
+      "source_xml": {
+        "tests_ce/integration_tests/test_timeseries/interval_microseconds.xml": {
+          "sha256": "d08c148aec8a31e855ae436e7c54e597b0270bdcf0df4f361f56c78ac9d9c438",
+          "blob": "da9c909812ac6e5f5d5fbf05e29338dfa43fae78"
+        }
+      },
+      "preflight": {
+        "path": "/tmp/ce-dsl-step181-20261010/cases/microseconds/preflight.json",
+        "sha256": "46360ebc5085982ab17c276e5b807e7ae31d89efea640f71a816ff20a7decaa0"
+      },
+      "comparison": {
+        "path": "/tmp/ce-dsl-step181-20261010/cases/microseconds/comparison.json",
+        "sha256": "2db671b755f3d0712727f519ee5fcf441cfec9fe59b3d30ca94f927468e21b53"
+      },
+      "collection_original": {
+        "parent": {
+          "path": "/private/tmp/ce-dsl-step181-20261010/cases/microseconds/runs/original/collection-host-capable/parent-receipt.json",
+          "sha256": "a45712f17d80d8a8ddc8c864c714790b41bf25a41a4a2006731ffa5f5c518748"
+        },
+        "child": {
+          "path": "/private/tmp/ce-dsl-step181-20261010/cases/microseconds/runs/original/collection-host-capable/child/child-receipt.json",
+          "sha256": "f926ba8f783a462a01ab80690f19d71d624d5bc067d98c1179fd587d96c0ed5e"
+        },
+        "stdout": {
+          "path": "/private/tmp/ce-dsl-step181-20261010/cases/microseconds/runs/original/collection-host-capable/stdout.raw",
+          "sha256": "9fce65850b4e1021962246aad7a4b3288d99a41c96299edee70614c401c1f25e"
+        },
+        "stderr": {
+          "path": "/private/tmp/ce-dsl-step181-20261010/cases/microseconds/runs/original/collection-host-capable/stderr.raw",
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        "junit": null,
+        "captures": [],
+        "opened_path_count": 1785,
+        "module_origin_count": 250
+      },
+      "collection_current": {
+        "parent": {
+          "path": "/private/tmp/ce-dsl-step181-20261010/cases/microseconds/runs/current/collection-host-capable/parent-receipt.json",
+          "sha256": "9cf61610dbbc08e7f39c19e69210887eca15a0e3f992fe71e852a23035bc8d07"
+        },
+        "child": {
+          "path": "/private/tmp/ce-dsl-step181-20261010/cases/microseconds/runs/current/collection-host-capable/child/child-receipt.json",
+          "sha256": "b7eca5275202f0ade315ce44444b3ec9453061b5bbfd392596cf156626296eac"
+        },
+        "stdout": {
+          "path": "/private/tmp/ce-dsl-step181-20261010/cases/microseconds/runs/current/collection-host-capable/stdout.raw",
+          "sha256": "582cdf93fa7a33d8954b1e8d21b339fbd755489417e9d64a62b6d32128421726"
+        },
+        "stderr": {
+          "path": "/private/tmp/ce-dsl-step181-20261010/cases/microseconds/runs/current/collection-host-capable/stderr.raw",
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        "junit": null,
+        "captures": [],
+        "opened_path_count": 2002,
+        "module_origin_count": 351
+      },
+      "native_original": {
+        "parent": {
+          "path": "/private/tmp/ce-dsl-step181-20261010/cases/microseconds/runs/original/native-host-capable/parent-receipt.json",
+          "sha256": "666a60c77c4852975df34100b15a9e950dbdac396a3f0936790fdcab27b367b3"
+        },
+        "child": {
+          "path": "/private/tmp/ce-dsl-step181-20261010/cases/microseconds/runs/original/native-host-capable/child/child-receipt.json",
+          "sha256": "0d9c54afb61eb2f8c74231f07e2ac016b618d0bca55a6cc6aa78b9624e49042e"
+        },
+        "stdout": {
+          "path": "/private/tmp/ce-dsl-step181-20261010/cases/microseconds/runs/original/native-host-capable/stdout.raw",
+          "sha256": "a99fb575d1886ae27915e57fa0188d58e464687c04c1fd2996600fc1cdc1126a"
+        },
+        "stderr": {
+          "path": "/private/tmp/ce-dsl-step181-20261010/cases/microseconds/runs/original/native-host-capable/stderr.raw",
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        "junit": {
+          "path": "/private/tmp/ce-dsl-step181-20261010/cases/microseconds/runs/original/native-host-capable/child/junit.xml",
+          "sha256": "1156f5e2d2854b0090fb3dbfe1c72da6cba7111f5c811078084d9bb56dff703d"
+        },
+        "captures": [
+          {
+            "path": "/private/tmp/ce-dsl-step181-20261010/cases/microseconds/runs/original/native-host-capable/child/capture-1.json",
+            "sha256": "de4086bc8a6eecc952dad782efb95d851b0f6a4a2ab1de1037efeb477a2f14f3"
+          }
+        ],
+        "opened_path_count": 1855,
+        "module_origin_count": 275
+      },
+      "native_current": {
+        "parent": {
+          "path": "/private/tmp/ce-dsl-step181-20261010/cases/microseconds/runs/current/native-host-capable/parent-receipt.json",
+          "sha256": "7ee016b2c7307f5f5919977399e44201d353ae4f3f8cf0e05bd0a998724d547a"
+        },
+        "child": {
+          "path": "/private/tmp/ce-dsl-step181-20261010/cases/microseconds/runs/current/native-host-capable/child/child-receipt.json",
+          "sha256": "cf61a9b517e3f8c700fcbf09d87c7bfe65abdec5324854c12c408ae423247ce3"
+        },
+        "stdout": {
+          "path": "/private/tmp/ce-dsl-step181-20261010/cases/microseconds/runs/current/native-host-capable/stdout.raw",
+          "sha256": "50cfd83d5d142a776c18d45acb34f51d10f187f3b46e1f2605bd949392548e97"
+        },
+        "stderr": {
+          "path": "/private/tmp/ce-dsl-step181-20261010/cases/microseconds/runs/current/native-host-capable/stderr.raw",
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        "junit": {
+          "path": "/private/tmp/ce-dsl-step181-20261010/cases/microseconds/runs/current/native-host-capable/child/junit.xml",
+          "sha256": "26b90aaa17a14ebae5243ffe43d2a14ea5b042eae965160ac845e5077170b5ca"
+        },
+        "captures": [
+          {
+            "path": "/private/tmp/ce-dsl-step181-20261010/cases/microseconds/runs/current/native-host-capable/child/capture-1.json",
+            "sha256": "de4086bc8a6eecc952dad782efb95d851b0f6a4a2ab1de1037efeb477a2f14f3"
+          }
+        ],
+        "opened_path_count": 2017,
+        "module_origin_count": 356
+      },
+      "complete_capture_sha256": "de4086bc8a6eecc952dad782efb95d851b0f6a4a2ab1de1037efeb477a2f14f3",
+      "owner_test_passed_once_per_endpoint": true,
+      "failed_attempts": []
+    },
+    {
+      "case": "multi",
+      "nodeid": "tests_ce/integration_tests/test_timeseries/test_timeseries.py::test_multi_series_loop_order_is_contiguous_per_series",
+      "xml_order": [
+        "tests_ce/integration_tests/test_timeseries/multi_series.xml"
+      ],
+      "source_owner": {
+        "original": {
+          "blob": "5930b2da3ea03b50e0b11d21bfc34b59993f5590",
+          "sha256": "afdbd023c869c24fd1f04c55ae70a985bbd9eb9e99142c366783c1ef6fe8b362"
+        },
+        "current": {
+          "blob": "d1796bfd957882710b6dfe49fbfc11c8bb233f4d",
+          "sha256": "d8c1179a070bc80f85cbd81d2ff4ae2e7a1cc1da16e88221732dde120b4bf6b9"
+        }
+      },
+      "source_xml": {
+        "tests_ce/integration_tests/test_timeseries/multi_series.xml": {
+          "sha256": "bb0a84b506d6806048f56dc1906498134dd6aa3f2281f6a33e19059c5f45a612",
+          "blob": "026d22debe300429b2dd49b6d1b975e26c5a5d66"
+        }
+      },
+      "preflight": {
+        "path": "/tmp/ce-dsl-step181-20261010/cases/multi/preflight.json",
+        "sha256": "12d79c3c088f916422f1e3f1b38f219872f78282d868257da2bd98861980dacb"
+      },
+      "comparison": {
+        "path": "/tmp/ce-dsl-step181-20261010/cases/multi/comparison.json",
+        "sha256": "3df78263870377fe74d0e1e23d27d5303be019e3cb0cdea430c9aaf9a747350c"
+      },
+      "collection_original": {
+        "parent": {
+          "path": "/private/tmp/ce-dsl-step181-20261010/cases/multi/runs/original/collection-host-capable/parent-receipt.json",
+          "sha256": "7c9334478623d2d679705b64e84f4bf8620daf78534ec78f31ef90ffba4c22f2"
+        },
+        "child": {
+          "path": "/private/tmp/ce-dsl-step181-20261010/cases/multi/runs/original/collection-host-capable/child/child-receipt.json",
+          "sha256": "5eae500dca6ca82f65b3507f7949c04718f98b7fc342f3d0709038108469b1b9"
+        },
+        "stdout": {
+          "path": "/private/tmp/ce-dsl-step181-20261010/cases/multi/runs/original/collection-host-capable/stdout.raw",
+          "sha256": "7dbb3ea8984b9b5b9e70c054faab8518b3db916e04483876b9e1975c32012d59"
+        },
+        "stderr": {
+          "path": "/private/tmp/ce-dsl-step181-20261010/cases/multi/runs/original/collection-host-capable/stderr.raw",
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        "junit": null,
+        "captures": [],
+        "opened_path_count": 1785,
+        "module_origin_count": 250
+      },
+      "collection_current": {
+        "parent": {
+          "path": "/private/tmp/ce-dsl-step181-20261010/cases/multi/runs/current/collection-host-capable/parent-receipt.json",
+          "sha256": "b1044a91c3edf4f612a5c8d63634d4f9b3acbb5c28af6bc3693a9fe67bd9cebc"
+        },
+        "child": {
+          "path": "/private/tmp/ce-dsl-step181-20261010/cases/multi/runs/current/collection-host-capable/child/child-receipt.json",
+          "sha256": "aeffa71f3e195545b405336a584c9298dc315f1dbc273e359879a92dd7dd162d"
+        },
+        "stdout": {
+          "path": "/private/tmp/ce-dsl-step181-20261010/cases/multi/runs/current/collection-host-capable/stdout.raw",
+          "sha256": "2299e42967738c2147d797718833201eb18154434d96419a63b44b8f9d8e6289"
+        },
+        "stderr": {
+          "path": "/private/tmp/ce-dsl-step181-20261010/cases/multi/runs/current/collection-host-capable/stderr.raw",
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        "junit": null,
+        "captures": [],
+        "opened_path_count": 2002,
+        "module_origin_count": 351
+      },
+      "native_original": {
+        "parent": {
+          "path": "/private/tmp/ce-dsl-step181-20261010/cases/multi/runs/original/native-host-capable/parent-receipt.json",
+          "sha256": "bee5a9a7e5ef56c3758d7acd2235b4c3fc695d423555acca31dc3b64e75d0eea"
+        },
+        "child": {
+          "path": "/private/tmp/ce-dsl-step181-20261010/cases/multi/runs/original/native-host-capable/child/child-receipt.json",
+          "sha256": "eb24d517a5751d255f385e0216958170254eb53fb7cb8a25f9ea558c1962d74b"
+        },
+        "stdout": {
+          "path": "/private/tmp/ce-dsl-step181-20261010/cases/multi/runs/original/native-host-capable/stdout.raw",
+          "sha256": "a51cc05df54fc1823ea8107f0a36a2c1c39501df656a854ec42b8ff413b7b1f2"
+        },
+        "stderr": {
+          "path": "/private/tmp/ce-dsl-step181-20261010/cases/multi/runs/original/native-host-capable/stderr.raw",
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        "junit": {
+          "path": "/private/tmp/ce-dsl-step181-20261010/cases/multi/runs/original/native-host-capable/child/junit.xml",
+          "sha256": "4d8a8f0c50ca210553796184caf36497923cbced9dd20529076a71bcc21d8c62"
+        },
+        "captures": [
+          {
+            "path": "/private/tmp/ce-dsl-step181-20261010/cases/multi/runs/original/native-host-capable/child/capture-1.json",
+            "sha256": "15bd4f277320cc2a24e18d3e02eb8feedcf95b1bae91c1f111ef346c6ecca44b"
+          }
+        ],
+        "opened_path_count": 1855,
+        "module_origin_count": 275
+      },
+      "native_current": {
+        "parent": {
+          "path": "/private/tmp/ce-dsl-step181-20261010/cases/multi/runs/current/native-host-capable/parent-receipt.json",
+          "sha256": "e38bd9ce092d04012213e2cf9421c0100821efc4061119a9193f67c80294d32c"
+        },
+        "child": {
+          "path": "/private/tmp/ce-dsl-step181-20261010/cases/multi/runs/current/native-host-capable/child/child-receipt.json",
+          "sha256": "e41485386fb35fe654ffba4171ef3147f6dbb161a5268b78e823a99c970a388b"
+        },
+        "stdout": {
+          "path": "/private/tmp/ce-dsl-step181-20261010/cases/multi/runs/current/native-host-capable/stdout.raw",
+          "sha256": "c15474044a6ab4aaccee9224849471feb4c35cb99bb8b01a8c9fa8b3fa00c083"
+        },
+        "stderr": {
+          "path": "/private/tmp/ce-dsl-step181-20261010/cases/multi/runs/current/native-host-capable/stderr.raw",
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        "junit": {
+          "path": "/private/tmp/ce-dsl-step181-20261010/cases/multi/runs/current/native-host-capable/child/junit.xml",
+          "sha256": "c0e710763a4427e28c6b764e03ace726538a6ee4d1bf64acadcbc477e7359738"
+        },
+        "captures": [
+          {
+            "path": "/private/tmp/ce-dsl-step181-20261010/cases/multi/runs/current/native-host-capable/child/capture-1.json",
+            "sha256": "15bd4f277320cc2a24e18d3e02eb8feedcf95b1bae91c1f111ef346c6ecca44b"
+          }
+        ],
+        "opened_path_count": 2017,
+        "module_origin_count": 356
+      },
+      "complete_capture_sha256": "15bd4f277320cc2a24e18d3e02eb8feedcf95b1bae91c1f111ef346c6ecca44b",
+      "owner_test_passed_once_per_endpoint": true,
+      "failed_attempts": []
+    },
+    {
+      "case": "logs",
+      "nodeid": "tests_ce/integration_tests/test_timeseries/test_timeseries.py::test_log_stream_without_id_column",
+      "xml_order": [
+        "tests_ce/integration_tests/test_timeseries/use_case_log_stream.xml"
+      ],
+      "source_owner": {
+        "original": {
+          "blob": "5930b2da3ea03b50e0b11d21bfc34b59993f5590",
+          "sha256": "afdbd023c869c24fd1f04c55ae70a985bbd9eb9e99142c366783c1ef6fe8b362"
+        },
+        "current": {
+          "blob": "d1796bfd957882710b6dfe49fbfc11c8bb233f4d",
+          "sha256": "d8c1179a070bc80f85cbd81d2ff4ae2e7a1cc1da16e88221732dde120b4bf6b9"
+        }
+      },
+      "source_xml": {
+        "tests_ce/integration_tests/test_timeseries/use_case_log_stream.xml": {
+          "sha256": "b6df19ea90fb75cc59c6763c167e835ea5bc66c69481164e60701ec2b7c4652a",
+          "blob": "ffedead1fdc2407cbe7b66339d0d0cde3012ad01"
+        }
+      },
+      "preflight": {
+        "path": "/tmp/ce-dsl-step181-20261010/cases/logs/preflight.json",
+        "sha256": "03cd26cabec07517a55f8e59fc40490ae2d299ef467e288d315a67431b20dfde"
+      },
+      "comparison": {
+        "path": "/tmp/ce-dsl-step181-20261010/cases/logs/comparison.json",
+        "sha256": "6be6b35f7166a86a9ba9f94ad6b68356ef3a1301d3a83b3898ec8a764f80a8b5"
+      },
+      "collection_original": {
+        "parent": {
+          "path": "/private/tmp/ce-dsl-step181-20261010/cases/logs/runs/original/collection-host-capable/parent-receipt.json",
+          "sha256": "5bb63ef55260fc74894cd804ff1e2fa50594d25816e70347a6fba915306df4a9"
+        },
+        "child": {
+          "path": "/private/tmp/ce-dsl-step181-20261010/cases/logs/runs/original/collection-host-capable/child/child-receipt.json",
+          "sha256": "095cac15c5882a36b021aafa629285a8f30287cfc2af332827226b89d7128f40"
+        },
+        "stdout": {
+          "path": "/private/tmp/ce-dsl-step181-20261010/cases/logs/runs/original/collection-host-capable/stdout.raw",
+          "sha256": "240a8efddb911d3e1138615654b441443f04546b1d3b835107b18c16abc8d24d"
+        },
+        "stderr": {
+          "path": "/private/tmp/ce-dsl-step181-20261010/cases/logs/runs/original/collection-host-capable/stderr.raw",
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        "junit": null,
+        "captures": [],
+        "opened_path_count": 1785,
+        "module_origin_count": 250
+      },
+      "collection_current": {
+        "parent": {
+          "path": "/private/tmp/ce-dsl-step181-20261010/cases/logs/runs/current/collection-host-capable/parent-receipt.json",
+          "sha256": "a9ace8d58738713e940060d9a551f2ed4f5b5c4ea0c248fa18d7241fcdef75b3"
+        },
+        "child": {
+          "path": "/private/tmp/ce-dsl-step181-20261010/cases/logs/runs/current/collection-host-capable/child/child-receipt.json",
+          "sha256": "49de3b18afddf10b87089646264ed12e206b5f702f5825c7adc6336668132aee"
+        },
+        "stdout": {
+          "path": "/private/tmp/ce-dsl-step181-20261010/cases/logs/runs/current/collection-host-capable/stdout.raw",
+          "sha256": "281e98ebb20c8698ff0d4ffeac090e5f20c701d3cdb85d3613988f24e675b5ac"
+        },
+        "stderr": {
+          "path": "/private/tmp/ce-dsl-step181-20261010/cases/logs/runs/current/collection-host-capable/stderr.raw",
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        "junit": null,
+        "captures": [],
+        "opened_path_count": 2002,
+        "module_origin_count": 351
+      },
+      "native_original": {
+        "parent": {
+          "path": "/private/tmp/ce-dsl-step181-20261010/cases/logs/runs/original/native-host-capable/parent-receipt.json",
+          "sha256": "c5cc86ec58c0c2058cc8ae2a511496bc46059f7ead0b2c1c8a09384988c28691"
+        },
+        "child": {
+          "path": "/private/tmp/ce-dsl-step181-20261010/cases/logs/runs/original/native-host-capable/child/child-receipt.json",
+          "sha256": "2f83fa400bdf4096cdf8d8a9b6676af9100b51ec2f0a74b231d8140ff789fa80"
+        },
+        "stdout": {
+          "path": "/private/tmp/ce-dsl-step181-20261010/cases/logs/runs/original/native-host-capable/stdout.raw",
+          "sha256": "79d6af89e7998161809dceedf03abb0217a1736012863328fd062a634e81889a"
+        },
+        "stderr": {
+          "path": "/private/tmp/ce-dsl-step181-20261010/cases/logs/runs/original/native-host-capable/stderr.raw",
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        "junit": {
+          "path": "/private/tmp/ce-dsl-step181-20261010/cases/logs/runs/original/native-host-capable/child/junit.xml",
+          "sha256": "0d5669f3ddac67ea2a2301a68f87a7520a3532f6bf9db1f039f5707296406727"
+        },
+        "captures": [
+          {
+            "path": "/private/tmp/ce-dsl-step181-20261010/cases/logs/runs/original/native-host-capable/child/capture-1.json",
+            "sha256": "da643bff618a0eeeb8bd482385063781282d3de0c3063cb6651f0910c20562c0"
+          }
+        ],
+        "opened_path_count": 1855,
+        "module_origin_count": 275
+      },
+      "native_current": {
+        "parent": {
+          "path": "/private/tmp/ce-dsl-step181-20261010/cases/logs/runs/current/native-host-capable/parent-receipt.json",
+          "sha256": "4c44fa0b4f55c69e34c459c7d49672074c30be5cd366c15c8e9ebfb7883dd5bf"
+        },
+        "child": {
+          "path": "/private/tmp/ce-dsl-step181-20261010/cases/logs/runs/current/native-host-capable/child/child-receipt.json",
+          "sha256": "2d44cde18db8ec846174ac72b8fbbbadbaa10498173cfb496d409a6fcfe8956d"
+        },
+        "stdout": {
+          "path": "/private/tmp/ce-dsl-step181-20261010/cases/logs/runs/current/native-host-capable/stdout.raw",
+          "sha256": "2c539d6ed0e04509e0725c7485b51ba558b17f17ba1c301586e0cb4500272d05"
+        },
+        "stderr": {
+          "path": "/private/tmp/ce-dsl-step181-20261010/cases/logs/runs/current/native-host-capable/stderr.raw",
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        "junit": {
+          "path": "/private/tmp/ce-dsl-step181-20261010/cases/logs/runs/current/native-host-capable/child/junit.xml",
+          "sha256": "e33aa1a958a1669fbaa4282fad4a610eaaae6f5238859c928a6248cea7287dc3"
+        },
+        "captures": [
+          {
+            "path": "/private/tmp/ce-dsl-step181-20261010/cases/logs/runs/current/native-host-capable/child/capture-1.json",
+            "sha256": "da643bff618a0eeeb8bd482385063781282d3de0c3063cb6651f0910c20562c0"
+          }
+        ],
+        "opened_path_count": 2017,
+        "module_origin_count": 356
+      },
+      "complete_capture_sha256": "da643bff618a0eeeb8bd482385063781282d3de0c3063cb6651f0910c20562c0",
+      "owner_test_passed_once_per_endpoint": true,
+      "failed_attempts": []
+    },
+    {
+      "case": "condition",
+      "nodeid": "tests_ce/integration_tests/test_timeseries/test_timeseries.py::test_composes_with_key_condition",
+      "xml_order": [
+        "tests_ce/integration_tests/test_timeseries/composition_condition.xml"
+      ],
+      "source_owner": {
+        "original": {
+          "blob": "5930b2da3ea03b50e0b11d21bfc34b59993f5590",
+          "sha256": "afdbd023c869c24fd1f04c55ae70a985bbd9eb9e99142c366783c1ef6fe8b362"
+        },
+        "current": {
+          "blob": "d1796bfd957882710b6dfe49fbfc11c8bb233f4d",
+          "sha256": "d8c1179a070bc80f85cbd81d2ff4ae2e7a1cc1da16e88221732dde120b4bf6b9"
+        }
+      },
+      "source_xml": {
+        "tests_ce/integration_tests/test_timeseries/composition_condition.xml": {
+          "sha256": "9f7201cc2fb53c2702058239e6df24aa9ce2bab86ae67e07f8035d17f19a666a",
+          "blob": "1712698d5e43854dbad4462f58afc2f9d776fbcb"
+        }
+      },
+      "preflight": {
+        "path": "/tmp/ce-dsl-step181-20261010/cases/condition/preflight.json",
+        "sha256": "f558e79a9074fcc7f89b07ace0917c2732a7cdf50e04a92900aa43a210f4c913"
+      },
+      "comparison": {
+        "path": "/tmp/ce-dsl-step181-20261010/cases/condition/comparison.json",
+        "sha256": "b4ac17cdb63d0493ab56c8d157a10988f227f82198fb4323a62296e5abe11b00"
+      },
+      "collection_original": {
+        "parent": {
+          "path": "/private/tmp/ce-dsl-step181-20261010/cases/condition/runs/original/collection-host-capable/parent-receipt.json",
+          "sha256": "d36008d88804f25a61f4bc5291060f0b64be9cdf49f9d551321020357c50c6f6"
+        },
+        "child": {
+          "path": "/private/tmp/ce-dsl-step181-20261010/cases/condition/runs/original/collection-host-capable/child/child-receipt.json",
+          "sha256": "d57d7489af82a031636ba03f0eae1ccae980f73744c1ff49f886c6863f9b0a5d"
+        },
+        "stdout": {
+          "path": "/private/tmp/ce-dsl-step181-20261010/cases/condition/runs/original/collection-host-capable/stdout.raw",
+          "sha256": "005a2d4ed79a48f71c4fa8917e81af55b6c65d13d8dbcf261905561d1e3ab5dd"
+        },
+        "stderr": {
+          "path": "/private/tmp/ce-dsl-step181-20261010/cases/condition/runs/original/collection-host-capable/stderr.raw",
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        "junit": null,
+        "captures": [],
+        "opened_path_count": 1785,
+        "module_origin_count": 250
+      },
+      "collection_current": {
+        "parent": {
+          "path": "/private/tmp/ce-dsl-step181-20261010/cases/condition/runs/current/collection-host-capable/parent-receipt.json",
+          "sha256": "b6325b1951bd6e6319ce3349acb8a272a1c940515e438a7a13a4c619bd4a4a55"
+        },
+        "child": {
+          "path": "/private/tmp/ce-dsl-step181-20261010/cases/condition/runs/current/collection-host-capable/child/child-receipt.json",
+          "sha256": "492af6447c62a5f658853f192d85fd0543f2e6e29513c3b262994504f8f0ed70"
+        },
+        "stdout": {
+          "path": "/private/tmp/ce-dsl-step181-20261010/cases/condition/runs/current/collection-host-capable/stdout.raw",
+          "sha256": "5413b6608c2a3c4a87eb0006344359fa8e560d4d9385d0a57f512902e4339183"
+        },
+        "stderr": {
+          "path": "/private/tmp/ce-dsl-step181-20261010/cases/condition/runs/current/collection-host-capable/stderr.raw",
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        "junit": null,
+        "captures": [],
+        "opened_path_count": 2002,
+        "module_origin_count": 351
+      },
+      "native_original": {
+        "parent": {
+          "path": "/private/tmp/ce-dsl-step181-20261010/cases/condition/runs/original/native-host-capable/parent-receipt.json",
+          "sha256": "30759a0bc90b2939d1949b73c9646c0882a75552e0b896ef51accf463534bd5c"
+        },
+        "child": {
+          "path": "/private/tmp/ce-dsl-step181-20261010/cases/condition/runs/original/native-host-capable/child/child-receipt.json",
+          "sha256": "9ad9299eeb95a96a8d06a1adea05a6a212dc46687f173bca9d93af19d3566338"
+        },
+        "stdout": {
+          "path": "/private/tmp/ce-dsl-step181-20261010/cases/condition/runs/original/native-host-capable/stdout.raw",
+          "sha256": "1d061c0a24f29c7149c3209604664203b431d4c3b3123869ecce20f4d2d6b531"
+        },
+        "stderr": {
+          "path": "/private/tmp/ce-dsl-step181-20261010/cases/condition/runs/original/native-host-capable/stderr.raw",
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        "junit": {
+          "path": "/private/tmp/ce-dsl-step181-20261010/cases/condition/runs/original/native-host-capable/child/junit.xml",
+          "sha256": "932fa399d38f92edb75ec502b78d23501eb79fc3f7369d984b2a1e813a748c9c"
+        },
+        "captures": [
+          {
+            "path": "/private/tmp/ce-dsl-step181-20261010/cases/condition/runs/original/native-host-capable/child/capture-1.json",
+            "sha256": "b65ef5f0f31c2dd8a5b750120a049f2415dc0a38fc6f374e61e7418a8f91ebb3"
+          }
+        ],
+        "opened_path_count": 1855,
+        "module_origin_count": 275
+      },
+      "native_current": {
+        "parent": {
+          "path": "/private/tmp/ce-dsl-step181-20261010/cases/condition/runs/current/native-host-capable/parent-receipt.json",
+          "sha256": "2556208f225d4e5004738cc859ef989d3e659e7e7ea319b8f7b50001b9a3345a"
+        },
+        "child": {
+          "path": "/private/tmp/ce-dsl-step181-20261010/cases/condition/runs/current/native-host-capable/child/child-receipt.json",
+          "sha256": "9368bb7736d1b77f80cf27a165190f3ff869438bf3fbf006a83c6ca071946fba"
+        },
+        "stdout": {
+          "path": "/private/tmp/ce-dsl-step181-20261010/cases/condition/runs/current/native-host-capable/stdout.raw",
+          "sha256": "884009faaa6e2495fce23dff1823ee05134d89fc3faa25042e7ba6e8aba4b90d"
+        },
+        "stderr": {
+          "path": "/private/tmp/ce-dsl-step181-20261010/cases/condition/runs/current/native-host-capable/stderr.raw",
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        "junit": {
+          "path": "/private/tmp/ce-dsl-step181-20261010/cases/condition/runs/current/native-host-capable/child/junit.xml",
+          "sha256": "f1c8d645e2a99273991653e45e70e10ee38c6778124bb9941929ed8993a8ac09"
+        },
+        "captures": [
+          {
+            "path": "/private/tmp/ce-dsl-step181-20261010/cases/condition/runs/current/native-host-capable/child/capture-1.json",
+            "sha256": "b65ef5f0f31c2dd8a5b750120a049f2415dc0a38fc6f374e61e7418a8f91ebb3"
+          }
+        ],
+        "opened_path_count": 2017,
+        "module_origin_count": 356
+      },
+      "complete_capture_sha256": "b65ef5f0f31c2dd8a5b750120a049f2415dc0a38fc6f374e61e7418a8f91ebb3",
+      "owner_test_passed_once_per_endpoint": true,
+      "failed_attempts": []
+    },
+    {
+      "case": "nested",
+      "nodeid": "tests_ce/integration_tests/test_timeseries/test_timeseries.py::test_composes_with_nested_key",
+      "xml_order": [
+        "tests_ce/integration_tests/test_timeseries/composition_nested_key.xml"
+      ],
+      "source_owner": {
+        "original": {
+          "blob": "5930b2da3ea03b50e0b11d21bfc34b59993f5590",
+          "sha256": "afdbd023c869c24fd1f04c55ae70a985bbd9eb9e99142c366783c1ef6fe8b362"
+        },
+        "current": {
+          "blob": "d1796bfd957882710b6dfe49fbfc11c8bb233f4d",
+          "sha256": "d8c1179a070bc80f85cbd81d2ff4ae2e7a1cc1da16e88221732dde120b4bf6b9"
+        }
+      },
+      "source_xml": {
+        "tests_ce/integration_tests/test_timeseries/composition_nested_key.xml": {
+          "sha256": "a48339fa79bf7829815f645acbd4f0d17a3fa845fe2184fbbb4b25bcc462ba01",
+          "blob": "6a046c528a4af0c603b77c74e76c38afc2be9e2b"
+        }
+      },
+      "preflight": {
+        "path": "/tmp/ce-dsl-step181-20261010/cases/nested/preflight.json",
+        "sha256": "65c1d69c08c77868355c540383b988a2f1c6cc2ed20463aac6653e1f03d091c7"
+      },
+      "comparison": {
+        "path": "/tmp/ce-dsl-step181-20261010/cases/nested/comparison.json",
+        "sha256": "2a71c3b61328fd595b3064f2913f2a51ee1a9479f6b6e56b2b64609d7259f44f"
+      },
+      "collection_original": {
+        "parent": {
+          "path": "/private/tmp/ce-dsl-step181-20261010/cases/nested/runs/original/collection-host-capable/parent-receipt.json",
+          "sha256": "197f4ace4713e68c3a937a92f1eeb32d1fa47044c0174bdd105503c476620c9e"
+        },
+        "child": {
+          "path": "/private/tmp/ce-dsl-step181-20261010/cases/nested/runs/original/collection-host-capable/child/child-receipt.json",
+          "sha256": "24d3962690abe287c4646e4fbf1e82dfe75305a73723746e225adb547acff910"
+        },
+        "stdout": {
+          "path": "/private/tmp/ce-dsl-step181-20261010/cases/nested/runs/original/collection-host-capable/stdout.raw",
+          "sha256": "63377174d32c2e9964d9573ddf52b35f049a70edc241f6a52df7aecd8198adaf"
+        },
+        "stderr": {
+          "path": "/private/tmp/ce-dsl-step181-20261010/cases/nested/runs/original/collection-host-capable/stderr.raw",
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        "junit": null,
+        "captures": [],
+        "opened_path_count": 1785,
+        "module_origin_count": 250
+      },
+      "collection_current": {
+        "parent": {
+          "path": "/private/tmp/ce-dsl-step181-20261010/cases/nested/runs/current/collection-host-capable/parent-receipt.json",
+          "sha256": "6a373c05d81dbc2c015e7ad7a07d9d7ab1e42b8bb4084a18400604385d9f75b4"
+        },
+        "child": {
+          "path": "/private/tmp/ce-dsl-step181-20261010/cases/nested/runs/current/collection-host-capable/child/child-receipt.json",
+          "sha256": "e961f870b866d73263e221bcf1f577a4bbb24d1247e0b9ab31f85ce8a87db241"
+        },
+        "stdout": {
+          "path": "/private/tmp/ce-dsl-step181-20261010/cases/nested/runs/current/collection-host-capable/stdout.raw",
+          "sha256": "0d99a8f033db1c8fb777d6c14b97c4e0aaa04237466c7cdbca91c4398a71305f"
+        },
+        "stderr": {
+          "path": "/private/tmp/ce-dsl-step181-20261010/cases/nested/runs/current/collection-host-capable/stderr.raw",
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        "junit": null,
+        "captures": [],
+        "opened_path_count": 2002,
+        "module_origin_count": 351
+      },
+      "native_original": {
+        "parent": {
+          "path": "/private/tmp/ce-dsl-step181-20261010/cases/nested/runs/original/native-host-capable/parent-receipt.json",
+          "sha256": "33c5ab2161093619c8ddbc4298867f86d2a80fea8e53e46a85ec6af2af4d248f"
+        },
+        "child": {
+          "path": "/private/tmp/ce-dsl-step181-20261010/cases/nested/runs/original/native-host-capable/child/child-receipt.json",
+          "sha256": "82972993546cf49ae54f6f3004b2a8c986bc51f42d9d1f07d8de40f5cec3e89c"
+        },
+        "stdout": {
+          "path": "/private/tmp/ce-dsl-step181-20261010/cases/nested/runs/original/native-host-capable/stdout.raw",
+          "sha256": "08fa884d387004eca468972b90707949aba09d58bd89fe4b2d0f23d72ca26d08"
+        },
+        "stderr": {
+          "path": "/private/tmp/ce-dsl-step181-20261010/cases/nested/runs/original/native-host-capable/stderr.raw",
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        "junit": {
+          "path": "/private/tmp/ce-dsl-step181-20261010/cases/nested/runs/original/native-host-capable/child/junit.xml",
+          "sha256": "e94f3fd48af1726ba912bb7d4797c7370b1dd34cde7726875ff8913ae4246113"
+        },
+        "captures": [
+          {
+            "path": "/private/tmp/ce-dsl-step181-20261010/cases/nested/runs/original/native-host-capable/child/capture-1.json",
+            "sha256": "02be0fbe1472f620d59443fec1b4650672a263ab165a4b3c569556d17261bb7b"
+          }
+        ],
+        "opened_path_count": 1858,
+        "module_origin_count": 276
+      },
+      "native_current": {
+        "parent": {
+          "path": "/private/tmp/ce-dsl-step181-20261010/cases/nested/runs/current/native-host-capable/parent-receipt.json",
+          "sha256": "aeb524826493d1a387e7b332ac7b6a8e3883e7c808bf1709e71e38bcb068762d"
+        },
+        "child": {
+          "path": "/private/tmp/ce-dsl-step181-20261010/cases/nested/runs/current/native-host-capable/child/child-receipt.json",
+          "sha256": "af0f156a2b7c640bfb516bbb3ab27c40ddd559b54b95a4ec1568d90a6af9e2b1"
+        },
+        "stdout": {
+          "path": "/private/tmp/ce-dsl-step181-20261010/cases/nested/runs/current/native-host-capable/stdout.raw",
+          "sha256": "8746354e8a3ac79b032cd68606bb71ffa4e416dd78434d548728d8f9d3d45df2"
+        },
+        "stderr": {
+          "path": "/private/tmp/ce-dsl-step181-20261010/cases/nested/runs/current/native-host-capable/stderr.raw",
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        "junit": {
+          "path": "/private/tmp/ce-dsl-step181-20261010/cases/nested/runs/current/native-host-capable/child/junit.xml",
+          "sha256": "255655fad23a9d05b337d25e58e39096c45644e61f3ebb68df12091715cc58c7"
+        },
+        "captures": [
+          {
+            "path": "/private/tmp/ce-dsl-step181-20261010/cases/nested/runs/current/native-host-capable/child/capture-1.json",
+            "sha256": "02be0fbe1472f620d59443fec1b4650672a263ab165a4b3c569556d17261bb7b"
+          }
+        ],
+        "opened_path_count": 2017,
+        "module_origin_count": 356
+      },
+      "complete_capture_sha256": "02be0fbe1472f620d59443fec1b4650672a263ab165a4b3c569556d17261bb7b",
+      "owner_test_passed_once_per_endpoint": true,
+      "failed_attempts": []
+    },
+    {
+      "case": "stock",
+      "nodeid": "tests_ce/integration_tests/test_timeseries/test_timeseries.py::test_stock_tickers_use_case",
+      "xml_order": [
+        "tests_ce/integration_tests/test_timeseries/use_case_stock_ticks.xml"
+      ],
+      "source_owner": {
+        "original": {
+          "blob": "5930b2da3ea03b50e0b11d21bfc34b59993f5590",
+          "sha256": "afdbd023c869c24fd1f04c55ae70a985bbd9eb9e99142c366783c1ef6fe8b362"
+        },
+        "current": {
+          "blob": "d1796bfd957882710b6dfe49fbfc11c8bb233f4d",
+          "sha256": "d8c1179a070bc80f85cbd81d2ff4ae2e7a1cc1da16e88221732dde120b4bf6b9"
+        }
+      },
+      "source_xml": {
+        "tests_ce/integration_tests/test_timeseries/use_case_stock_ticks.xml": {
+          "sha256": "9ee0388d6045fd117ab03637095a0d8923dad1b338b0ac528ef9e1f9e1e0e818",
+          "blob": "f55b164add6f6acdb64c82dd6e766c667db93288"
+        }
+      },
+      "preflight": {
+        "path": "/tmp/ce-dsl-step181-20261010/cases/stock/preflight.json",
+        "sha256": "578ffb6fd06acacc0b83c99ac8176b1426fa716bbd01fbe9ba9e6a8041fdd68d"
+      },
+      "comparison": {
+        "path": "/tmp/ce-dsl-step181-20261010/cases/stock/comparison.json",
+        "sha256": "9eaa483f158ca1e5784ba8ba5e29099a48b6f17799358fe89ba9b800c5c53aa6"
+      },
+      "collection_original": {
+        "parent": {
+          "path": "/private/tmp/ce-dsl-step181-20261010/cases/stock/runs/original/collection-host-capable/parent-receipt.json",
+          "sha256": "01a705e9b74aaa04351de48618b4cdec7c11973860e59cbf04b2cb61ae1b8fca"
+        },
+        "child": {
+          "path": "/private/tmp/ce-dsl-step181-20261010/cases/stock/runs/original/collection-host-capable/child/child-receipt.json",
+          "sha256": "0a13c51b42f475a31661c3a34a1e88b354ed707cd8e5eef63525fea2cc6fed6e"
+        },
+        "stdout": {
+          "path": "/private/tmp/ce-dsl-step181-20261010/cases/stock/runs/original/collection-host-capable/stdout.raw",
+          "sha256": "ce7b3051d3f381e1009e0fe1cd3eb97edf1111bc2432cddcf1796ac00dec953c"
+        },
+        "stderr": {
+          "path": "/private/tmp/ce-dsl-step181-20261010/cases/stock/runs/original/collection-host-capable/stderr.raw",
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        "junit": null,
+        "captures": [],
+        "opened_path_count": 1785,
+        "module_origin_count": 250
+      },
+      "collection_current": {
+        "parent": {
+          "path": "/private/tmp/ce-dsl-step181-20261010/cases/stock/runs/current/collection-host-capable/parent-receipt.json",
+          "sha256": "a7d27ade9c287b09ebdb83d32413240118ba9a54934690a6297541b3dbed81e5"
+        },
+        "child": {
+          "path": "/private/tmp/ce-dsl-step181-20261010/cases/stock/runs/current/collection-host-capable/child/child-receipt.json",
+          "sha256": "3a9cffc976eef26ece22bec1d6834b13fed364eb2bdee7a5664ec7ee32bd405a"
+        },
+        "stdout": {
+          "path": "/private/tmp/ce-dsl-step181-20261010/cases/stock/runs/current/collection-host-capable/stdout.raw",
+          "sha256": "9608e3ba7c4fcbf153c858fbd165f3b425461c6049078be6a44e9587e7cc1ff6"
+        },
+        "stderr": {
+          "path": "/private/tmp/ce-dsl-step181-20261010/cases/stock/runs/current/collection-host-capable/stderr.raw",
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        "junit": null,
+        "captures": [],
+        "opened_path_count": 2002,
+        "module_origin_count": 351
+      },
+      "native_original": {
+        "parent": {
+          "path": "/private/tmp/ce-dsl-step181-20261010/cases/stock/runs/original/native-host-capable/parent-receipt.json",
+          "sha256": "e8a700ac1d534d2d546166ecb7ee90213d2d183ede15dd8c53012e7db205cf2f"
+        },
+        "child": {
+          "path": "/private/tmp/ce-dsl-step181-20261010/cases/stock/runs/original/native-host-capable/child/child-receipt.json",
+          "sha256": "cc30611cdd29d45baaa61b7e18651a0f0beb518d1672c25e1bfaf56b0d003888"
+        },
+        "stdout": {
+          "path": "/private/tmp/ce-dsl-step181-20261010/cases/stock/runs/original/native-host-capable/stdout.raw",
+          "sha256": "54198b9778de2ef3dafabb09eeb37fae7cc7c29da377f3783fff5ab784a92563"
+        },
+        "stderr": {
+          "path": "/private/tmp/ce-dsl-step181-20261010/cases/stock/runs/original/native-host-capable/stderr.raw",
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        "junit": {
+          "path": "/private/tmp/ce-dsl-step181-20261010/cases/stock/runs/original/native-host-capable/child/junit.xml",
+          "sha256": "1cdd8275c7d202d13c72ebf27e4024eec75cf777192daf369d2a07550284d403"
+        },
+        "captures": [
+          {
+            "path": "/private/tmp/ce-dsl-step181-20261010/cases/stock/runs/original/native-host-capable/child/capture-1.json",
+            "sha256": "cbdfa96074a3e42468a4d6bdf24c35566c9d6b3d9f8261d94eeab90495aceda9"
+          }
+        ],
+        "opened_path_count": 1855,
+        "module_origin_count": 275
+      },
+      "native_current": {
+        "parent": {
+          "path": "/private/tmp/ce-dsl-step181-20261010/cases/stock/runs/current/native-host-capable/parent-receipt.json",
+          "sha256": "6c7e45717a351e998288d841684a11c03d4fcebd592f2ccfc6aebf0f36649ef7"
+        },
+        "child": {
+          "path": "/private/tmp/ce-dsl-step181-20261010/cases/stock/runs/current/native-host-capable/child/child-receipt.json",
+          "sha256": "9c515b8a985af9de45b93a8a150975cb7f33e1d841db00a31676723591545772"
+        },
+        "stdout": {
+          "path": "/private/tmp/ce-dsl-step181-20261010/cases/stock/runs/current/native-host-capable/stdout.raw",
+          "sha256": "d7dfbe3a846db35a591d12543273b95e9c46002ae23e099c3696a094f86cc209"
+        },
+        "stderr": {
+          "path": "/private/tmp/ce-dsl-step181-20261010/cases/stock/runs/current/native-host-capable/stderr.raw",
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        "junit": {
+          "path": "/private/tmp/ce-dsl-step181-20261010/cases/stock/runs/current/native-host-capable/child/junit.xml",
+          "sha256": "c07365edeb0655cb182c9ebc00c818aa8b11c808720c103491ba1d54d480a0fb"
+        },
+        "captures": [
+          {
+            "path": "/private/tmp/ce-dsl-step181-20261010/cases/stock/runs/current/native-host-capable/child/capture-1.json",
+            "sha256": "cbdfa96074a3e42468a4d6bdf24c35566c9d6b3d9f8261d94eeab90495aceda9"
+          }
+        ],
+        "opened_path_count": 2017,
+        "module_origin_count": 356
+      },
+      "complete_capture_sha256": "cbdfa96074a3e42468a4d6bdf24c35566c9d6b3d9f8261d94eeab90495aceda9",
+      "owner_test_passed_once_per_endpoint": true,
+      "failed_attempts": []
+    },
+    {
+      "case": "seasonal",
+      "nodeid": "tests_ce/integration_tests/test_timeseries/test_timeseries.py::test_seasonal_pattern_has_diurnal_shape",
+      "xml_order": [
+        "tests_ce/integration_tests/test_timeseries/seasonal.xml"
+      ],
+      "source_owner": {
+        "original": {
+          "blob": "5930b2da3ea03b50e0b11d21bfc34b59993f5590",
+          "sha256": "afdbd023c869c24fd1f04c55ae70a985bbd9eb9e99142c366783c1ef6fe8b362"
+        },
+        "current": {
+          "blob": "d1796bfd957882710b6dfe49fbfc11c8bb233f4d",
+          "sha256": "d8c1179a070bc80f85cbd81d2ff4ae2e7a1cc1da16e88221732dde120b4bf6b9"
+        }
+      },
+      "source_xml": {
+        "tests_ce/integration_tests/test_timeseries/seasonal.xml": {
+          "sha256": "99ed1c68fedd7a04796970c374005ddb014f7fbd7214126295d37bfc00d79da9",
+          "blob": "ae581819ed2a4c282ed3388c961e7dbd36ff6c36"
+        }
+      },
+      "preflight": {
+        "path": "/tmp/ce-dsl-step181-20261010/cases/seasonal/preflight.json",
+        "sha256": "2df932df3375806ece782371d7a12b55be0c7393e576336382896e4ddeb6cf9e"
+      },
+      "comparison": {
+        "path": "/tmp/ce-dsl-step181-20261010/cases/seasonal/comparison.json",
+        "sha256": "74538e4ae1209a23778d2488b9354d0c78cf46c93fc73a7c72d81594e85d4284"
+      },
+      "collection_original": {
+        "parent": {
+          "path": "/private/tmp/ce-dsl-step181-20261010/cases/seasonal/runs/original/collection-host-capable/parent-receipt.json",
+          "sha256": "2a48d0b0b3e803ad288bd6bd195332ba0fa93909cdc6d226cd882ef311eb35f6"
+        },
+        "child": {
+          "path": "/private/tmp/ce-dsl-step181-20261010/cases/seasonal/runs/original/collection-host-capable/child/child-receipt.json",
+          "sha256": "6157d7633b5fd634b8f12bdec4f83884b86bc26fc3935b716e032bedfff63a89"
+        },
+        "stdout": {
+          "path": "/private/tmp/ce-dsl-step181-20261010/cases/seasonal/runs/original/collection-host-capable/stdout.raw",
+          "sha256": "c20b5dad04a67270e41a4d2e02f6046c947a0546012056eff8f4166ae691f429"
+        },
+        "stderr": {
+          "path": "/private/tmp/ce-dsl-step181-20261010/cases/seasonal/runs/original/collection-host-capable/stderr.raw",
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        "junit": null,
+        "captures": [],
+        "opened_path_count": 1785,
+        "module_origin_count": 250
+      },
+      "collection_current": {
+        "parent": {
+          "path": "/private/tmp/ce-dsl-step181-20261010/cases/seasonal/runs/current/collection-host-capable/parent-receipt.json",
+          "sha256": "ab73c4cdd149153db57d5db354e31b35db212966e5dac522e8723b4f2d77549e"
+        },
+        "child": {
+          "path": "/private/tmp/ce-dsl-step181-20261010/cases/seasonal/runs/current/collection-host-capable/child/child-receipt.json",
+          "sha256": "793b41554b033da1870b51daf8abb8cb5f2bf580e5a450b9695a2dadce01d93a"
+        },
+        "stdout": {
+          "path": "/private/tmp/ce-dsl-step181-20261010/cases/seasonal/runs/current/collection-host-capable/stdout.raw",
+          "sha256": "c7a262e3104819923d3d0843bb6d7c84250f350b0ecbdf825d6816bc257355c3"
+        },
+        "stderr": {
+          "path": "/private/tmp/ce-dsl-step181-20261010/cases/seasonal/runs/current/collection-host-capable/stderr.raw",
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        "junit": null,
+        "captures": [],
+        "opened_path_count": 2002,
+        "module_origin_count": 351
+      },
+      "native_original": {
+        "parent": {
+          "path": "/private/tmp/ce-dsl-step181-20261010/cases/seasonal/runs/original/native-host-capable/parent-receipt.json",
+          "sha256": "cc0724bbeed80bf6871de74c122e846e5bc04759ba4c0abc12aad573eef92774"
+        },
+        "child": {
+          "path": "/private/tmp/ce-dsl-step181-20261010/cases/seasonal/runs/original/native-host-capable/child/child-receipt.json",
+          "sha256": "b29132c99751b9dda0c0017a5addd4c5e15e27eeadea8665d91e6a2ff2d73d0a"
+        },
+        "stdout": {
+          "path": "/private/tmp/ce-dsl-step181-20261010/cases/seasonal/runs/original/native-host-capable/stdout.raw",
+          "sha256": "7798a05feb54f08885ac2851f207df554393452bfb2151272dbdeed8b59d2c51"
+        },
+        "stderr": {
+          "path": "/private/tmp/ce-dsl-step181-20261010/cases/seasonal/runs/original/native-host-capable/stderr.raw",
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        "junit": {
+          "path": "/private/tmp/ce-dsl-step181-20261010/cases/seasonal/runs/original/native-host-capable/child/junit.xml",
+          "sha256": "bf366d4c202e4f607e49f140a2188f5c8aea09984d86025481c95a1379ef06fa"
+        },
+        "captures": [
+          {
+            "path": "/private/tmp/ce-dsl-step181-20261010/cases/seasonal/runs/original/native-host-capable/child/capture-1.json",
+            "sha256": "27ffc119d817bca6b0f3961b858ed9e12be5f37dee4ae4dd777336bcef4f923f"
+          }
+        ],
+        "opened_path_count": 1855,
+        "module_origin_count": 275
+      },
+      "native_current": {
+        "parent": {
+          "path": "/private/tmp/ce-dsl-step181-20261010/cases/seasonal/runs/current/native-host-capable/parent-receipt.json",
+          "sha256": "d55dfd4421b0c6d85cd8df2632828ec9e9cfc116f6c7dc909b8daead1f2e6444"
+        },
+        "child": {
+          "path": "/private/tmp/ce-dsl-step181-20261010/cases/seasonal/runs/current/native-host-capable/child/child-receipt.json",
+          "sha256": "23e5db180c5327cee44c19f886c313e71c13c346dae52ab32a21613b56aa5a42"
+        },
+        "stdout": {
+          "path": "/private/tmp/ce-dsl-step181-20261010/cases/seasonal/runs/current/native-host-capable/stdout.raw",
+          "sha256": "334c70ac2fd18090e74f4d246e44bf4ae721eab2eca3379b9fa5582e1a1661a5"
+        },
+        "stderr": {
+          "path": "/private/tmp/ce-dsl-step181-20261010/cases/seasonal/runs/current/native-host-capable/stderr.raw",
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        "junit": {
+          "path": "/private/tmp/ce-dsl-step181-20261010/cases/seasonal/runs/current/native-host-capable/child/junit.xml",
+          "sha256": "9673db51a5c42ec694c1fdc25eca501c8105b666c8db843256c998c0d0fec249"
+        },
+        "captures": [
+          {
+            "path": "/private/tmp/ce-dsl-step181-20261010/cases/seasonal/runs/current/native-host-capable/child/capture-1.json",
+            "sha256": "27ffc119d817bca6b0f3961b858ed9e12be5f37dee4ae4dd777336bcef4f923f"
+          }
+        ],
+        "opened_path_count": 2017,
+        "module_origin_count": 356
+      },
+      "complete_capture_sha256": "27ffc119d817bca6b0f3961b858ed9e12be5f37dee4ae4dd777336bcef4f923f",
+      "owner_test_passed_once_per_endpoint": true,
+      "failed_attempts": []
+    }
+  ],
+  "base_ledger": {
+    "path": "/tmp/ce-dsl-step180-20261010/ledger-step180-v1.jsonl",
+    "sha256": "e9db21429f5f5956c981d3d639be0b46a016965484211b7dbaed27bee0b8980a"
+  },
+  "candidate_ledger": {
+    "path": "/private/tmp/ce-dsl-step181-20261010/ledger-step181-v1.jsonl",
+    "sha256": "556f612fa56766b5281cfd9e83b624d91681189257d88b0a74d37a95b93f9749"
+  },
+  "ledger_candidate_receipt": {
+    "path": "/tmp/ce-dsl-step181-20261010/ledger-candidate-receipt.json",
+    "sha256": "e909598c21c40a635fdda5b97b0d51500f98ea7d0402e90c49a07d82bded9863"
+  },
+  "protocol_note": {
+    "path": "/tmp/ce-dsl-step181-20261010/protocol.md",
+    "sha256": "7af234dadcbc3425f93644c25a04140411225fc55738af7f7442b1278d8dcb0f"
+  },
+  "step_note_sha256": "98b8ade297faa039ab099c7b6801f070243f24c961f876729f00db0f46b6c686",
+  "ledger_rows": 931,
+  "reviewed_candidate": 141,
+  "unknown_candidate": 790,
+  "unchanged_raw_lines": 921,
+  "historical_oracle_c992_unchanged": true,
+  "protected_primary_unchanged": true,
+  "frozen_oracle_parity": "NOT_ESTABLISHED",
+  "independent_qa": "PASS",
+  "independent_qa_report": {
+    "path": "/tmp/ce-dsl-step181-independent-qa-20261010/qa-review.md",
+    "sha256": "19b1fbf769cf775188ba92d11396f2927cac138c7bc128ace246944d923bee4a"
+  },
+  "step179_to_step180_selected_raw_bridge": {
+    "status": "TEN_SELECTED_RAW_LINES_IDENTICAL",
+    "step179_ledger_sha256": "52e51167b46a5b1b4ee0a469ef613774dc25507dade75fc6338613a3837673ab",
+    "step180_ledger_sha256": "e9db21429f5f5956c981d3d639be0b46a016965484211b7dbaed27bee0b8980a",
+    "selected_paths": [
+      "tests_ce/integration_tests/test_timeseries/basic_one_series.xml",
+      "tests_ce/integration_tests/test_timeseries/interval_seconds.xml",
+      "tests_ce/integration_tests/test_timeseries/interval_milliseconds.xml",
+      "tests_ce/integration_tests/test_timeseries/interval_microseconds.xml",
+      "tests_ce/integration_tests/test_timeseries/multi_series.xml",
+      "tests_ce/integration_tests/test_timeseries/use_case_log_stream.xml",
+      "tests_ce/integration_tests/test_timeseries/composition_condition.xml",
+      "tests_ce/integration_tests/test_timeseries/composition_nested_key.xml",
+      "tests_ce/integration_tests/test_timeseries/use_case_stock_ticks.xml",
+      "tests_ce/integration_tests/test_timeseries/seasonal.xml"
+    ]
+  }
+}

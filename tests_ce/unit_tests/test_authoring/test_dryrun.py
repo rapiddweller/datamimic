@@ -7,21 +7,25 @@
 """Dry-run: capped, capture-only execution with the safety gates."""
 
 import json
+import os
+import tempfile
 from multiprocessing.connection import Connection
 from pathlib import Path
 
 import pytest
 
-import datamimic_ce.authoring.dryrun as dryrun_module
+import datamimic_ce.authoring.adapters.dryrun as dryrun_module
+from datamimic_ce.authoring.adapters.dryrun import dry_run_source, dry_run_source_captured
+from datamimic_ce.authoring.application.service import compile_document, scaffold
 from datamimic_ce.authoring.contracts import (
     AuthoringStage,
     ScaffoldRequest,
     ScaffoldVerification,
     VerificationGateStatus,
 )
-from datamimic_ce.authoring.dryrun import dry_run_source, dry_run_source_captured
-from datamimic_ce.authoring.service import compile_document, scaffold
-from datamimic_ce.exporters.json_exporter import JsonExporter
+from datamimic_ce.engine.io.exporters.formats.json_exporter import JsonExporter
+from datamimic_ce.engine.runtime.api import create_run_session
+from datamimic_ce.engine.runtime.contracts import RunRequest
 
 _PIPELINE = """<setup rngSeed="1">
     <memstore id="mem"/>
@@ -49,6 +53,32 @@ def _short_write_worker(
 ) -> None:
     JsonExporter._write_data_to_buffer = _short_write_json
     dryrun_module._engine_process_worker(path, max_count, allow_side_effects, smoke_export, send_connection)
+
+
+def _observe_smoke_artifact_worker(
+    path: Path,
+    max_count: int,
+    allow_side_effects: bool,
+    smoke_export: bool,
+    send_connection: Connection,
+) -> None:
+    receipt = os.environ.get("DATAMIMIC_SMOKE_ARTIFACT_RECEIPT")
+    original_cleanup = tempfile.TemporaryDirectory.cleanup
+
+    def observe_cleanup(directory) -> None:
+        try:
+            smoke_dir = Path(directory.name)
+            if receipt is not None and smoke_dir.name.startswith("datamimic_smoke_"):
+                for artifact in smoke_dir.glob("temp_result_*_exporter_*_product_*/*"):
+                    Path(receipt).write_bytes(artifact.read_bytes())
+        finally:
+            original_cleanup(directory)
+
+    tempfile.TemporaryDirectory.cleanup = observe_cleanup
+    try:
+        dryrun_module._engine_process_worker(path, max_count, allow_side_effects, smoke_export, send_connection)
+    finally:
+        tempfile.TemporaryDirectory.cleanup = original_cleanup
 
 
 def test_dry_run_caps_counts_strips_targets_keeps_memstore(tmp_path: Path, monkeypatch) -> None:
@@ -100,6 +130,59 @@ def test_dry_run_refuses_execute_without_allow() -> None:
     assert [d.rule for d in result.diagnostics] == ["DM003"]
 
 
+@pytest.mark.parametrize(
+    "body",
+    [
+        '<include uri="included.xml"/>',
+        '<generate name="rows" count="1"><include uri="included.xml"/></generate>',
+    ],
+)
+def test_dry_run_refuses_execute_in_included_descriptor(tmp_path: Path, body: str) -> None:
+    marker = tmp_path / "executed.txt"
+    script = tmp_path / "marker.scr.py"
+    script.write_text(
+        f"from pathlib import Path\nPath({str(marker)!r}).write_text('executed')\n",
+        encoding="utf-8",
+    )
+    included = tmp_path / "included.xml"
+    included.write_text('<setup><execute uri="marker.scr.py"/></setup>', encoding="utf-8")
+    descriptor = tmp_path / "datamimic.xml"
+    descriptor.write_text(f"<setup>{body}</setup>", encoding="utf-8")
+
+    result = dryrun_module.dry_run_captured(descriptor).result
+
+    assert not marker.exists()
+    assert not result.ok and result.stage is AuthoringStage.RUN
+    assert [diagnostic.rule for diagnostic in result.diagnostics] == ["DM003"]
+
+
+def test_dry_run_refuses_unbounded_include_even_when_side_effects_allowed(tmp_path: Path) -> None:
+    (tmp_path / "included.xml").write_text(
+        '<setup><generate name="rows" count="20"><key name="id" constant="1"/></generate></setup>',
+        encoding="utf-8",
+    )
+    descriptor = tmp_path / "datamimic.xml"
+    descriptor.write_text('<setup><include uri="included.xml"/></setup>', encoding="utf-8")
+
+    result = dryrun_module.dry_run_captured(descriptor, max_count=1, allow_side_effects=True).result
+
+    assert not result.ok and [diagnostic.rule for diagnostic in result.diagnostics] == ["DM003"]
+
+
+def test_dry_run_keeps_properties_include(tmp_path: Path) -> None:
+    (tmp_path / "values.properties").write_text("limit=1\n", encoding="utf-8")
+    descriptor = tmp_path / "datamimic.xml"
+    descriptor.write_text(
+        '<setup><include uri="values.properties"/>'
+        '<generate name="rows" count="1"><key name="id" constant="1"/></generate></setup>',
+        encoding="utf-8",
+    )
+
+    result = dryrun_module.dry_run_captured(descriptor).result
+
+    assert result.ok
+
+
 def test_dry_run_maps_runtime_error_to_dm002() -> None:
     # lints clean (source file simply missing at runtime) -> DM002 with hint
     xml = """<setup rngSeed="1">
@@ -136,6 +219,121 @@ def test_smoke_export_passes_and_leaves_no_files(tmp_path: Path, monkeypatch) ->
     assert run.smoke_export.attempted_exporters == 9
     assert run.smoke_export.failed_exporters == 0
     assert not list(tmp_path.iterdir())  # smoke writes never leave the temp dir
+
+
+@pytest.mark.parametrize(
+    ("exporter", "xml", "expected"),
+    [
+        (
+            "CSV",
+            '<setup rngSeed="17"><generate name="rows" count="2" target="CSV">'
+            '<key name="id" generator="IncrementGenerator"/><key name="label" constant="x"/>'
+            "</generate></setup>",
+            b"id|label\r\n1|x\r\n2|x\r\n",
+        ),
+        (
+            "CSV",
+            '<setup rngSeed="17" defaultSeparator=""><generate name="rows" count="2" target="CSV">'
+            '<key name="id" generator="IncrementGenerator"/><key name="label" constant="x"/>'
+            "</generate></setup>",
+            b"id|label\r\n1|x\r\n2|x\r\n",
+        ),
+        (
+            "CSV",
+            '<setup rngSeed="17" defaultSeparator=";"><generate name="rows" count="2" target="CSV">'
+            '<key name="id" generator="IncrementGenerator"/><key name="label" constant="x"/>'
+            "</generate></setup>",
+            b"id;label\r\n1;x\r\n2;x\r\n",
+        ),
+        (
+            "CSV",
+            '<setup rngSeed="17" defaultSeparator="||"><generate name="rows" count="2" target="CSV(delimiter=\';\')">'
+            '<key name="id" generator="IncrementGenerator"/><key name="label" constant="x"/>'
+            "</generate></setup>",
+            b"id;label\r\n1;x\r\n2;x\r\n",
+        ),
+        (
+            "CSV",
+            '<setup rngSeed="17"><generate name="parents" count="2" target="ConsoleExporter">'
+            '<key name="id" generator="IncrementGenerator"/><generate name="children" count="1" target="CSV">'
+            '<key name="parent_id" script="parent.id"/><key name="label" constant="x"/>'
+            "</generate></generate></setup>",
+            b"parent_id|label\r\n1|x\r\n2|x\r\n",
+        ),
+        (
+            "TXT",
+            '<setup rngSeed="17"><generate name="rows" count="2" target="TXT">'
+            '<key name="id" generator="IncrementGenerator"/></generate></setup>',
+            b"rows: {'id': 1}\nrows: {'id': 2}\n",
+        ),
+        (
+            "TXT",
+            '<setup rngSeed="17" defaultSeparator=";" defaultLineSeparator=";">'
+            '<generate name="rows" count="2" target="TXT">'
+            '<key name="id" generator="IncrementGenerator"/></generate></setup>',
+            b"rows: {'id': 1};rows: {'id': 2};",
+        ),
+        (
+            "TXT",
+            '<setup rngSeed="17" defaultLineSeparator="\\r\\n">'
+            '<generate name="rows" count="2" target="TXT">'
+            '<key name="id" generator="IncrementGenerator"/></generate></setup>',
+            b"rows: {'id': 1}\r\nrows: {'id': 2}\r\n",
+        ),
+        (
+            "TXT",
+            '<setup rngSeed="17" defaultSeparator="||" defaultLineSeparator="\\r\\n">'
+            '<generate name="rows" count="2" target="TXT(separator=\':\', line_terminator=\';\')">'
+            '<key name="id" generator="IncrementGenerator"/></generate></setup>',
+            b"rows: {'id': 1};rows: {'id': 2};",
+        ),
+    ],
+)
+def test_smoke_export_uses_setup_defaults_and_matches_runtime_artifact(
+    tmp_path: Path,
+    monkeypatch,
+    exporter: str,
+    xml: str,
+    expected: bytes,
+) -> None:
+    monkeypatch.chdir(tmp_path)
+    monkeypatch.setenv("DATAMIMIC_SMOKE_ARTIFACT_RECEIPT", str(tmp_path / "smoke-artifact.bin"))
+    monkeypatch.setattr(dryrun_module, "_engine_process_worker", _observe_smoke_artifact_worker)
+    smoked = dry_run_source_captured(xml, smoke_export=True)
+
+    assert smoked.result.ok, [(d.rule, d.message) for d in smoked.result.diagnostics]
+    assert (tmp_path / "smoke-artifact.bin").read_bytes() == expected
+    assert {path.name for path in tmp_path.iterdir()} == {"smoke-artifact.bin"}
+
+    descriptor = tmp_path / "descriptor.xml"
+    descriptor.write_text(xml, encoding="utf-8")
+    create_run_session(
+        RunRequest(descriptor_path=descriptor, task_id="real_export", test_mode=True)
+    ).execute()
+    artifacts = sorted((tmp_path / "output" / "real_export").glob(f"*.{exporter.lower()}"))
+    assert len(artifacts) == 1
+    assert artifacts[0].read_bytes() == expected
+
+
+def test_smoke_export_rejects_multichar_setup_csv_separator_like_runtime(tmp_path: Path, monkeypatch) -> None:
+    monkeypatch.chdir(tmp_path)
+    xml = """<setup rngSeed="17" defaultSeparator="||">
+        <generate name="rows" count="2" target="CSV">
+            <key name="id" generator="IncrementGenerator"/>
+            <key name="label" constant="x"/>
+        </generate>
+    </setup>"""
+
+    smoked = dry_run_source_captured(xml, smoke_export=True)
+
+    assert not smoked.result.ok
+    assert [diagnostic.rule for diagnostic in smoked.result.diagnostics] == ["DM002"]
+    assert smoked.smoke_export.failed_exporters == 1
+    descriptor = tmp_path / "descriptor.xml"
+    descriptor.write_text(xml, encoding="utf-8")
+    with pytest.raises(ValueError, match="delimiter.*1-character"):
+        create_run_session(RunRequest(descriptor_path=descriptor, task_id="real_export")).execute()
+    assert not list(tmp_path.glob("output/*/*.csv"))
 
 
 @pytest.mark.parametrize(
@@ -282,6 +480,56 @@ def test_dm002_runtime_errors_carry_actionable_hints() -> None:
     # the hint must teach the scope rule (this./parent.), the top real-world cause
     hint2 = result2.diagnostics[0].fix_hint
     assert "this." in hint2 and "parent." in hint2
+
+
+def test_dm002_scope_hint_matches_native_nested_scope_rules() -> None:
+    positive_xml = """<setup rngSeed="1">
+        <generate name="outer" count="1" target="JSON">
+            <nestedKey name="inner" type="list" count="1">
+                <variable name="sibling" constant="sibling_value"/>
+                <key name="copied" script="sibling"/>
+            </nestedKey>
+        </generate>
+    </setup>"""
+    positive = dry_run_source(positive_xml, max_count=2, sample_rows=2)
+    assert positive.ok and positive.stage is AuthoringStage.RUN
+    assert positive.products[0].sample[0]["inner"][0]["copied"] == "sibling_value"
+
+    negative_xml = """<setup rngSeed="1">
+        <generate name="outer" count="1" target="JSON">
+            <nestedKey name="middle" type="list" count="1">
+                <variable name="mid" constant="middle_value"/>
+                <nestedKey name="leaf" type="list" count="1">
+                    <key name="bare_mid_from_leaf" script="mid"/>
+                </nestedKey>
+            </nestedKey>
+        </generate>
+    </setup>"""
+    negative = dry_run_source(negative_xml, max_count=2, sample_rows=2)
+    assert not negative.ok and negative.stage is AuthoringStage.RUN
+    assert len(negative.diagnostics) == 1
+    diagnostic = negative.diagnostics[0]
+    assert diagnostic.rule == "DM002"
+    assert diagnostic.severity.value == "error"
+    assert diagnostic.element == "setup"
+    assert diagnostic.path == "/setup"
+    assert diagnostic.message == (
+        "Dry-run failed: Failed when execute script of element 'bare_mid_from_leaf': "
+        "Failed while evaluate 'mid': name 'mid' is not defined in this scope; "
+        "check spelling, definition order and value shape; current-scope names can resolve bare, "
+        "but existing outermost bare names win collisions; intermediate ancestor names need qualification; "
+        "use this.name for the current scope, parent.name for the immediate enclosing record, "
+        "or root.name for an outermost field when these aliases are available, or use a qualified scope path"
+    )
+    assert diagnostic.fix_hint == (
+        "A script may reference an unavailable name or an unexpected value structure. "
+        "Check spelling, definition order, and value shape. Names in the current scope can "
+        "resolve bare or via this.name; existing outermost bare names take precedence on "
+        "collisions. Use parent.name for the immediate enclosing scope, root.name for an "
+        "outermost field, or a qualified scope path to select the intended value. "
+        "Intermediate ancestor names are not automatically available bare. CSV columns "
+        "arrive as strings (cast: int(parent.col))."
+    )
 
 
 def test_variable_literal_generator_evaluates_in_scripts() -> None:

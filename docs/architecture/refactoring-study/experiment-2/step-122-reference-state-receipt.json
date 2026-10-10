@@ -1,0 +1,51 @@
+{
+  "step": 122,
+  "ledger_sha256": "5c44e675d52cec3f1d0d9c7d4c438ca749a68457ab672b149dc8257aabc8e1f2",
+  "starting_ledger_sha256": "b5f0bde2d5ebe3838e0d89d3c1a8f99af2f9105abfbc99ce83c84142eccfd990",
+  "paths": 931,
+  "changed_rows": 11,
+  "byte_identical_rows": 920,
+  "reviewed_owner_profiles": 66,
+  "remaining_unknown_owner_profiles": 865,
+  "reference": {
+    "descriptors": 8,
+    "owner_cases_per_checkpoint": 9,
+    "checkpoint_commits": [
+      "12d5e3a5e576b49a7191ad955807f96cf84d8e62",
+      "c65d0090b1d21ec78466e1adc609d60459d9d634"
+    ],
+    "failures": 0,
+    "errors": 0,
+    "skips": 0,
+    "negative_assertions": "broad Exception with message match; no concrete class established",
+    "profile": "native SQLite/ref_dist_db; profile paths absent; fresh scratch CWD; SQL drops/recreates local items table",
+    "standalone_safety": "UNKNOWN; native configuration can redirect the SQL"
+  },
+  "state_evidence": "Step121 source/capture receipt retains actual296 phase hashes;99d statement bytes match after only",
+  "preserved": "historical statuses, queues, identities, c992 parity, previous55 reviewed rows",
+  "full_acceptance": "FAIL",
+  "artifacts": [
+    {"path": "test-artifacts/architecture/ce-recursive-target/step-122-evidence/ledger/ledger-step121-ref-state-v2.jsonl", "sha256": "5c44e675d52cec3f1d0d9c7d4c438ca749a68457ab672b149dc8257aabc8e1f2"},
+    {"path": "test-artifacts/architecture/ce-recursive-target/step-122-evidence/ledger/summary-step121-ref-state-v2.md", "sha256": "aa0c282b949a41b1b3d6a0ae1588b884cbc8dcb0611952880b016608400c4810"},
+    {"path": "test-artifacts/architecture/ce-recursive-target/step-122-evidence/ledger/delta-step121-ref-state-v2.json", "sha256": "20753462729478193ca9259c9ffcf7b14cad570b1df6025cb475146d868c2d74"},
+    {"path": "test-artifacts/architecture/ce-recursive-target/step-122-evidence/ledger/integrate_ref_state.py", "sha256": "41fc0295d6958a4368e76ce375d0569cfae232a58b2a623dbe0a092d453b7643"},
+    {"path": "test-artifacts/architecture/ce-recursive-target/step-122-evidence/ledger/qa-step121-countercheck.md", "sha256": "c7dbd25b43eb365bcc8a3e80256f2cb4253ebfb28eba49c4fd42ed0367b9e76d"},
+    {"path": "test-artifacts/architecture/ce-recursive-target/step-122-evidence/reference/reference-cohort-proposal.json", "sha256": "4646b422f1cc94231d72f744d5a5c501ad791c1c0801582ba049f688ecd1d925"},
+    {"path": "test-artifacts/architecture/ce-recursive-target/step-122-evidence/reference/reference-execution-decision.md", "sha256": "df953fd10e763a8d83d421a14b038a18a970cba78165d738bd8c04c0a7f15612"},
+    {"path": "test-artifacts/architecture/ce-recursive-target/step-122-evidence/reference/preflight-independent.md", "sha256": "bd890c076762ef9ae4c93c0ff157c6ef2c47a835c02dd60fbe5bd5dcf7f84514"},
+    {"path": "test-artifacts/architecture/ce-recursive-target/step-122-evidence/reference/qa-preflight-first-pass.md", "sha256": "1e9fceb70fef4e9370b3e55d771499f1b0ed20bed1141d2ac4c90452188c900d"},
+    {"path": "test-artifacts/architecture/ce-recursive-target/step-122-evidence/reference/qa-preflight-fresh-cwd.md", "sha256": "5d9cb2712bcb29132bdd1266f5e3892c6b18483bee8b70722e70a55b3c9fee81"},
+    {"path": "test-artifacts/architecture/ce-recursive-target/step-122-evidence/reference/qa-execution-countercheck.md", "sha256": "874841e29b978a2cd3db2c6abe23263bb2ef7c9c3cf9326dcebfd1d90d7b12d5"},
+    {"path": "test-artifacts/architecture/ce-recursive-target/step-122-evidence/reference/execution-results.md", "sha256": "9bf7d698943cf317572926cebbf8a47eb63ae2a7db009219417f6b969262efc9"},
+    {"path": "test-artifacts/architecture/ce-recursive-target/step-122-evidence/reference/execution-receipt.json", "sha256": "7976d826ad54279713ab4c1c403bfed82d24e2de94a47dfdead33c61df135d5a"},
+    {"path": "test-artifacts/architecture/ce-recursive-target/step-122-evidence/reference/preflight-baseline-before-run.json", "sha256": "7356523aa38ee8c7af6b762c83df9850095213887cc0a3ac5082bf67be4981f5"},
+    {"path": "test-artifacts/architecture/ce-recursive-target/step-122-evidence/reference/preflight-candidate-before-run.json", "sha256": "c4a13195eddf2eb9974193e519637e187a374011b819f7b84d8109d6777ff431"},
+    {"path": "test-artifacts/architecture/ce-recursive-target/step-122-evidence/reference/run-baseline.log", "sha256": "9fa0f15f1f0437f90f03d292374fbd33b57d21447185b4bf443155d5e1c38a7b"},
+    {"path": "test-artifacts/architecture/ce-recursive-target/step-122-evidence/reference/run-baseline-12d5.log", "sha256": "08f7eeed4b1a35294f035859347a303e3732564fb080f4c2677a024a1295cded"},
+    {"path": "test-artifacts/architecture/ce-recursive-target/step-122-evidence/reference/run-candidate-c65.log", "sha256": "35fbe938e17d082cfea3cf764e4d039f5a5540fb12c632addce4b25b9ea79886"},
+    {"path": "test-artifacts/architecture/ce-recursive-target/step-122-evidence/reference/results-baseline-12d5.xml", "sha256": "947a2da885c96b73f74e978060bb8e66416c2d43b529ffc08fcd44070c5c2e61"},
+    {"path": "test-artifacts/architecture/ce-recursive-target/step-122-evidence/reference/results-candidate-c65.xml", "sha256": "2a5ba85b5c025a43feb9561c49dffa85554a961c23d399345674646594d3342c"},
+    {"path": "test-artifacts/architecture/ce-recursive-target/step-122-evidence/reference/fresh-cwd-baseline-12d5/db/ref_dist_db.sqlite", "sha256": "3262f7a1a4285d37f62fa63b333e91840f2ba0354fe7219412d076d6e15f147e"},
+    {"path": "test-artifacts/architecture/ce-recursive-target/step-122-evidence/reference/fresh-cwd-candidate-c65/db/ref_dist_db.sqlite", "sha256": "3262f7a1a4285d37f62fa63b333e91840f2ba0354fe7219412d076d6e15f147e"}
+  ]
+}

@@ -1,0 +1,140 @@
+{
+  "status": "ACCEPTED_INDEPENDENT_QA",
+  "original_head": "a219163e533d661bcc7bda0faa5ecc77909ab5aa",
+  "current_head": "019f9cbc4925f8b4e882fff514e9eca5af9d7d7c",
+  "nodeid": "tests_ce/integration_tests/test_comment_noop/test_comment_noop.py::test_comment_is_noop",
+  "xml_order": [
+    "tests_ce/integration_tests/test_comment_noop/comment_noop.xml",
+    "tests_ce/integration_tests/test_comment_noop/comment_baseline.xml"
+  ],
+  "base_ledger": {
+    "path": "/tmp/ce-resume-20261010/dsl-next-175/impl/ledger-step175-v1.jsonl",
+    "sha256": "caa70f800784107dfcf264abc880edc5926eb5b2ed67991b9ea61a33fde43f62"
+  },
+  "candidate_ledger": {
+    "path": "/private/tmp/ce-dsl-comment-20261010/ledger-step176-v1.jsonl",
+    "sha256": "9fa0a48fab8de48438902c8a5c114179ef15bd9a072fca816e53b1c250ff804b"
+  },
+  "ledger_candidate_receipt": {
+    "path": "/tmp/ce-dsl-comment-20261010/ledger-candidate-receipt.json",
+    "sha256": "be3357c1e5539652914231011c63cef55d0ecf95cf339c2a9bc3552b447b7cd5"
+  },
+  "comparison": {
+    "path": "/tmp/ce-dsl-comment-20261010/comparison.json",
+    "sha256": "663442dfbdf7a9bda613f61cc3d43767fae05002d7edba87034c9aeb386cfcff"
+  },
+  "preflight": {
+    "path": "/tmp/ce-dsl-comment-20261010/preflight.json",
+    "sha256": "511b519c26ea296cdd264885e15928c07b87cacae704c436f206d71bf3dd350a"
+  },
+  "failed_original_pre_collection": [
+    {
+      "parent": {
+        "path": "/private/tmp/ce-dsl-comment-20261010/runs/original/collection/parent-receipt.json",
+        "sha256": "56c2475ace85a000a2d7e26f36e472f98d15dd0121b08a523bf678750f2577cf"
+      },
+      "child": null,
+      "stderr": {
+        "path": "/private/tmp/ce-dsl-comment-20261010/runs/original/collection/stderr.raw",
+        "sha256": "5e6ca9dc388cf5cfc19066af60aa2b9223df1efd33fecde1dd8380a28fb7e0e7"
+      },
+      "collected_items": 0,
+      "descriptor_executions": 0
+    },
+    {
+      "parent": {
+        "path": "/private/tmp/ce-dsl-comment-20261010/runs/original/collection-path-canonical/parent-receipt.json",
+        "sha256": "d5a6382bed73179ffb024c4fe063aee7ed41b18be11940887781b0f483e29ab1"
+      },
+      "child": {
+        "path": "/private/tmp/ce-dsl-comment-20261010/runs/original/collection-path-canonical/child/child-receipt.json",
+        "sha256": "911ce9d3eccfdf8650cb4698d5e897dda58703bc7b3ba5f9e15602220924bcad"
+      },
+      "stderr": {
+        "path": "/private/tmp/ce-dsl-comment-20261010/runs/original/collection-path-canonical/stderr.raw",
+        "sha256": "ef33cb043651e89050c298725f122aa8543ed3da62dec616e3f8f6718b6d9058"
+      },
+      "collected_items": 0,
+      "descriptor_executions": 0
+    }
+  ],
+  "native_original": {
+    "parent": {
+      "path": "/private/tmp/ce-dsl-comment-20261010/runs/original/native-host-capable/parent-receipt.json",
+      "sha256": "38ccb6892dbe8b1eef5f008e29080ed7b91a1da6fb5c041ea3cf31838d4a34d7"
+    },
+    "child": {
+      "path": "/private/tmp/ce-dsl-comment-20261010/runs/original/native-host-capable/child/child-receipt.json",
+      "sha256": "1c7428da41cc97b6eeea395cac55b2a561884ee9f72f59a75bc5372ae7101510"
+    },
+    "stdout": {
+      "path": "/private/tmp/ce-dsl-comment-20261010/runs/original/native-host-capable/stdout.raw",
+      "sha256": "64049c176b239891a0fcb7955b32cce29a81e2fa912b30639c0a32b714dbc2cc"
+    },
+    "stderr": {
+      "path": "/private/tmp/ce-dsl-comment-20261010/runs/original/native-host-capable/stderr.raw",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "junit": {
+      "path": "/private/tmp/ce-dsl-comment-20261010/runs/original/native-host-capable/child/junit.xml",
+      "sha256": "cdbf09efa24604f1e2e7d73694deac5c00fb6c7d4e440f9bd25ae370eadaf43e"
+    },
+    "captures": [
+      {
+        "path": "/private/tmp/ce-dsl-comment-20261010/runs/original/native-host-capable/child/capture-1.json",
+        "sha256": "7fc4c0a3d6ed1f86b1eae489f7a9fe8dde1c24ddec494c035419584892df9632"
+      },
+      {
+        "path": "/private/tmp/ce-dsl-comment-20261010/runs/original/native-host-capable/child/capture-2.json",
+        "sha256": "7fc4c0a3d6ed1f86b1eae489f7a9fe8dde1c24ddec494c035419584892df9632"
+      }
+    ],
+    "opened_path_count": 2066,
+    "module_origin_count": 336
+  },
+  "native_current": {
+    "parent": {
+      "path": "/private/tmp/ce-dsl-comment-20261010/runs/current/native-host-capable/parent-receipt.json",
+      "sha256": "23babfba8b51c5e5091e18af7f4f18d062419a0cc659c12e34d30750bfcf15bd"
+    },
+    "child": {
+      "path": "/private/tmp/ce-dsl-comment-20261010/runs/current/native-host-capable/child/child-receipt.json",
+      "sha256": "adfb16b580f8d6ff26537302cfad1b5962f19e73e405a04d55343063015213fc"
+    },
+    "stdout": {
+      "path": "/private/tmp/ce-dsl-comment-20261010/runs/current/native-host-capable/stdout.raw",
+      "sha256": "1bf5607bc79b2731922ebcf95d41f4fb16fcce48cf7ed63833c4123699585d43"
+    },
+    "stderr": {
+      "path": "/private/tmp/ce-dsl-comment-20261010/runs/current/native-host-capable/stderr.raw",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "junit": {
+      "path": "/private/tmp/ce-dsl-comment-20261010/runs/current/native-host-capable/child/junit.xml",
+      "sha256": "8a5e9b874647a491f72c9289089fa0391e4e6cef422933aa7009af1b361feb9d"
+    },
+    "captures": [
+      {
+        "path": "/private/tmp/ce-dsl-comment-20261010/runs/current/native-host-capable/child/capture-1.json",
+        "sha256": "7fc4c0a3d6ed1f86b1eae489f7a9fe8dde1c24ddec494c035419584892df9632"
+      },
+      {
+        "path": "/private/tmp/ce-dsl-comment-20261010/runs/current/native-host-capable/child/capture-2.json",
+        "sha256": "7fc4c0a3d6ed1f86b1eae489f7a9fe8dde1c24ddec494c035419584892df9632"
+      }
+    ],
+    "opened_path_count": 2073,
+    "module_origin_count": 372
+  },
+  "complete_capture_sha256": "7fc4c0a3d6ed1f86b1eae489f7a9fe8dde1c24ddec494c035419584892df9632",
+  "ledger_rows": 931,
+  "reviewed_candidate": 127,
+  "unknown_candidate": 804,
+  "unchanged_raw_lines": 929,
+  "frozen_oracle_parity": "NOT_ESTABLISHED",
+  "independent_qa": "PASS after correction of duplicate stale protocol-note hash; all 25 path pins, source/dependency identities, native runs, captures, ledger rows, and protected files independently checked",
+  "protocol_note": {
+    "path": "/tmp/ce-dsl-comment-20261010/protocol.md",
+    "sha256": "8378614223782bac61cb77eef9f6434b7f04a321d8512ba793ccb7af69ce0885"
+  }
+}

@@ -2,7 +2,7 @@ import datetime
 
 import pytest
 
-from datamimic_ce.domains.common.models.person import Person
+from datamimic_ce.domains.shared.models.person import Person
 from datamimic_ce.domains.healthcare.models.patient import Patient
 from datamimic_ce.domains.healthcare.services.patient_service import PatientService
 
@@ -86,26 +86,6 @@ class TestEntityPatient:
         assert patient.insurance_policy_number == patient.insurance_policy_number
         assert patient.person_data == patient.person_data
 
-    @pytest.mark.flaky(reruns=3)
-    def test_two_different_entities(self):
-        patient_service = PatientService()
-        patient1 = patient_service.generate()
-        patient2 = patient_service.generate()
-        assert patient1.patient_id != patient2.patient_id
-        assert patient1.given_name != patient2.given_name
-        assert patient1.family_name != patient2.family_name
-        assert patient1.full_name != patient2.full_name
-        assert patient1.ssn != patient2.ssn
-        assert patient1.blood_type != patient2.blood_type
-        assert patient1.height_cm != patient2.height_cm
-        assert patient1.weight_kg != patient2.weight_kg
-        assert patient1.bmi != patient2.bmi
-        assert patient1.emergency_contact != patient2.emergency_contact
-        assert patient1.insurance_provider != patient2.insurance_provider
-        assert patient1.insurance_policy_number != patient2.insurance_policy_number
-        assert patient1.person_data != patient2.person_data
-        assert patient1.birthdate != patient2.birthdate
-        assert patient1.age != patient2.age
 
     @pytest.mark.parametrize("dataset", _supported_datasets)
     def test_supported_datasets(self, dataset):

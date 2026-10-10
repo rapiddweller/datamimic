@@ -1,0 +1,2196 @@
+[
+  {
+    "id": "module:engine/dsl/__init__.py",
+    "kind": "module",
+    "path": "engine/dsl/__init__.py",
+    "lane": "dsl",
+    "targets": [
+      "engine/dsl/__init__.py"
+    ]
+  },
+  {
+    "id": "module:engine/dsl/api.py",
+    "kind": "module",
+    "path": "engine/dsl/api.py",
+    "lane": "dsl",
+    "targets": [
+      "engine/dsl/api.py"
+    ]
+  },
+  {
+    "id": "module:engine/dsl/constants/__init__.py",
+    "kind": "module",
+    "path": "engine/dsl/constants/__init__.py",
+    "lane": "dsl",
+    "targets": [
+      "engine/dsl/vocabulary/constants/__init__.py"
+    ]
+  },
+  {
+    "id": "module:engine/dsl/constants/attribute_constants.py",
+    "kind": "module",
+    "path": "engine/dsl/constants/attribute_constants.py",
+    "lane": "dsl",
+    "targets": [
+      "engine/dsl/vocabulary/constants/attribute_constants.py"
+    ]
+  },
+  {
+    "id": "module:engine/dsl/constants/convention_constants.py",
+    "kind": "module",
+    "path": "engine/dsl/constants/convention_constants.py",
+    "lane": "dsl",
+    "targets": [
+      "engine/dsl/vocabulary/constants/convention_constants.py"
+    ]
+  },
+  {
+    "id": "module:engine/dsl/constants/data_type_constants.py",
+    "kind": "module",
+    "path": "engine/dsl/constants/data_type_constants.py",
+    "lane": "dsl",
+    "targets": [
+      "engine/dsl/vocabulary/constants/data_type_constants.py"
+    ]
+  },
+  {
+    "id": "module:engine/dsl/constants/element_constants.py",
+    "kind": "module",
+    "path": "engine/dsl/constants/element_constants.py",
+    "lane": "dsl",
+    "targets": [
+      "engine/dsl/vocabulary/constants/element_constants.py"
+    ]
+  },
+  {
+    "id": "module:engine/dsl/constants/exporter_constants.py",
+    "kind": "module",
+    "path": "engine/dsl/constants/exporter_constants.py",
+    "lane": "dsl",
+    "targets": [
+      "engine/dsl/vocabulary/constants/exporter_constants.py"
+    ]
+  },
+  {
+    "id": "module:engine/dsl/contracts.py",
+    "kind": "module",
+    "path": "engine/dsl/contracts.py",
+    "lane": "dsl",
+    "targets": [
+      "engine/dsl/contracts.py"
+    ]
+  },
+  {
+    "id": "module:engine/dsl/enums/__init__.py",
+    "kind": "module",
+    "path": "engine/dsl/enums/__init__.py",
+    "lane": "dsl",
+    "targets": [
+      "engine/dsl/vocabulary/enums/__init__.py"
+    ]
+  },
+  {
+    "id": "module:engine/dsl/enums/converter_enums.py",
+    "kind": "module",
+    "path": "engine/dsl/enums/converter_enums.py",
+    "lane": "dsl",
+    "targets": [
+      "engine/dsl/vocabulary/enums/converter_enums.py"
+    ]
+  },
+  {
+    "id": "module:engine/dsl/enums/dbms_enums.py",
+    "kind": "module",
+    "path": "engine/dsl/enums/dbms_enums.py",
+    "lane": "dsl",
+    "targets": [
+      "engine/dsl/vocabulary/enums/dbms_enums.py"
+    ]
+  },
+  {
+    "id": "module:engine/dsl/enums/distribution_enums.py",
+    "kind": "module",
+    "path": "engine/dsl/enums/distribution_enums.py",
+    "lane": "dsl",
+    "targets": [
+      "engine/dsl/vocabulary/enums/distribution_enums.py"
+    ]
+  },
+  {
+    "id": "module:engine/dsl/enums/faker_enums.py",
+    "kind": "module",
+    "path": "engine/dsl/enums/faker_enums.py",
+    "lane": "dsl",
+    "targets": [
+      "engine/dsl/vocabulary/enums/faker_enums.py"
+    ]
+  },
+  {
+    "id": "module:engine/dsl/enums/operation_enums.py",
+    "kind": "module",
+    "path": "engine/dsl/enums/operation_enums.py",
+    "lane": "dsl",
+    "targets": [
+      "engine/dsl/vocabulary/enums/operation_enums.py"
+    ]
+  },
+  {
+    "id": "module:engine/dsl/model/__init__.py",
+    "kind": "module",
+    "path": "engine/dsl/model/__init__.py",
+    "lane": "dsl",
+    "targets": [
+      "engine/dsl/model/__init__.py"
+    ]
+  },
+  {
+    "id": "module:engine/dsl/model/array_model.py",
+    "kind": "module",
+    "path": "engine/dsl/model/array_model.py",
+    "lane": "dsl",
+    "targets": [
+      "engine/dsl/model/values/structured/array_model.py"
+    ]
+  },
+  {
+    "id": "module:engine/dsl/model/assert_model.py",
+    "kind": "module",
+    "path": "engine/dsl/model/assert_model.py",
+    "lane": "dsl",
+    "targets": [
+      "engine/dsl/model/flow/commands/assert_model.py"
+    ]
+  },
+  {
+    "id": "module:engine/dsl/model/base_if_else_model.py",
+    "kind": "module",
+    "path": "engine/dsl/model/base_if_else_model.py",
+    "lane": "dsl",
+    "targets": [
+      "engine/dsl/model/flow/branches/base_if_else_model.py"
+    ]
+  },
+  {
+    "id": "module:engine/dsl/model/condition_model.py",
+    "kind": "module",
+    "path": "engine/dsl/model/condition_model.py",
+    "lane": "dsl",
+    "targets": [
+      "engine/dsl/model/flow/branches/condition_model.py"
+    ]
+  },
+  {
+    "id": "module:engine/dsl/model/constraints/__init__.py",
+    "kind": "module",
+    "path": "engine/dsl/model/constraints/__init__.py",
+    "lane": "dsl",
+    "targets": [
+      "engine/dsl/model/constraints/__init__.py"
+    ]
+  },
+  {
+    "id": "module:engine/dsl/model/constraints/capabilities.py",
+    "kind": "module",
+    "path": "engine/dsl/model/constraints/capabilities.py",
+    "lane": "dsl",
+    "targets": [
+      "engine/dsl/model/constraints/capabilities.py"
+    ]
+  },
+  {
+    "id": "module:engine/dsl/model/constraints/facts.py",
+    "kind": "module",
+    "path": "engine/dsl/model/constraints/facts.py",
+    "lane": "dsl",
+    "targets": [
+      "engine/dsl/model/constraints/facts.py"
+    ]
+  },
+  {
+    "id": "module:engine/dsl/model/constraints/registry.py",
+    "kind": "module",
+    "path": "engine/dsl/model/constraints/registry.py",
+    "lane": "dsl",
+    "targets": [
+      "engine/dsl/model/constraints/registry.py"
+    ]
+  },
+  {
+    "id": "module:engine/dsl/model/constraints/serialization.py",
+    "kind": "module",
+    "path": "engine/dsl/model/constraints/serialization.py",
+    "lane": "dsl",
+    "targets": [
+      "engine/dsl/model/constraints/serialization.py"
+    ]
+  },
+  {
+    "id": "module:engine/dsl/model/constraints/types.py",
+    "kind": "module",
+    "path": "engine/dsl/model/constraints/types.py",
+    "lane": "dsl",
+    "targets": [
+      "engine/dsl/model/constraints/types.py"
+    ]
+  },
+  {
+    "id": "module:engine/dsl/model/database_model.py",
+    "kind": "module",
+    "path": "engine/dsl/model/database_model.py",
+    "lane": "dsl",
+    "targets": [
+      "engine/dsl/model/resources/database_model.py"
+    ]
+  },
+  {
+    "id": "module:engine/dsl/model/demographics_model.py",
+    "kind": "module",
+    "path": "engine/dsl/model/demographics_model.py",
+    "lane": "dsl",
+    "targets": [
+      "engine/dsl/model/generation/demographics_model.py"
+    ]
+  },
+  {
+    "id": "module:engine/dsl/model/element_model.py",
+    "kind": "module",
+    "path": "engine/dsl/model/element_model.py",
+    "lane": "dsl",
+    "targets": [
+      "engine/dsl/model/base/element_model.py"
+    ]
+  },
+  {
+    "id": "module:engine/dsl/model/element_registry.py",
+    "kind": "module",
+    "path": "engine/dsl/model/element_registry.py",
+    "lane": "dsl",
+    "targets": [
+      "engine/dsl/model/registry.py"
+    ]
+  },
+  {
+    "id": "module:engine/dsl/model/else_if_model.py",
+    "kind": "module",
+    "path": "engine/dsl/model/else_if_model.py",
+    "lane": "dsl",
+    "targets": [
+      "engine/dsl/model/flow/branches/else_if_model.py"
+    ]
+  },
+  {
+    "id": "module:engine/dsl/model/else_model.py",
+    "kind": "module",
+    "path": "engine/dsl/model/else_model.py",
+    "lane": "dsl",
+    "targets": [
+      "engine/dsl/model/flow/branches/else_model.py"
+    ]
+  },
+  {
+    "id": "module:engine/dsl/model/execute_model.py",
+    "kind": "module",
+    "path": "engine/dsl/model/execute_model.py",
+    "lane": "dsl",
+    "targets": [
+      "engine/dsl/model/flow/commands/execute_model.py"
+    ]
+  },
+  {
+    "id": "module:engine/dsl/model/generate_model.py",
+    "kind": "module",
+    "path": "engine/dsl/model/generate_model.py",
+    "lane": "dsl",
+    "targets": [
+      "engine/dsl/model/generation/generate_model.py"
+    ]
+  },
+  {
+    "id": "module:engine/dsl/model/generator_model.py",
+    "kind": "module",
+    "path": "engine/dsl/model/generator_model.py",
+    "lane": "dsl",
+    "targets": [
+      "engine/dsl/model/values/scalar/generator_model.py"
+    ]
+  },
+  {
+    "id": "module:engine/dsl/model/if_model.py",
+    "kind": "module",
+    "path": "engine/dsl/model/if_model.py",
+    "lane": "dsl",
+    "targets": [
+      "engine/dsl/model/flow/branches/if_model.py"
+    ]
+  },
+  {
+    "id": "module:engine/dsl/model/include_model.py",
+    "kind": "module",
+    "path": "engine/dsl/model/include_model.py",
+    "lane": "dsl",
+    "targets": [
+      "engine/dsl/model/resources/include_model.py"
+    ]
+  },
+  {
+    "id": "module:engine/dsl/model/item_model.py",
+    "kind": "module",
+    "path": "engine/dsl/model/item_model.py",
+    "lane": "dsl",
+    "targets": [
+      "engine/dsl/model/values/structured/item_model.py"
+    ]
+  },
+  {
+    "id": "module:engine/dsl/model/key_model.py",
+    "kind": "module",
+    "path": "engine/dsl/model/key_model.py",
+    "lane": "dsl",
+    "targets": [
+      "engine/dsl/model/values/scalar/key_model.py"
+    ]
+  },
+  {
+    "id": "module:engine/dsl/model/list_model.py",
+    "kind": "module",
+    "path": "engine/dsl/model/list_model.py",
+    "lane": "dsl",
+    "targets": [
+      "engine/dsl/model/values/structured/list_model.py"
+    ]
+  },
+  {
+    "id": "module:engine/dsl/model/memstore_model.py",
+    "kind": "module",
+    "path": "engine/dsl/model/memstore_model.py",
+    "lane": "dsl",
+    "targets": [
+      "engine/dsl/model/resources/memstore_model.py"
+    ]
+  },
+  {
+    "id": "module:engine/dsl/model/model_util.py",
+    "kind": "module",
+    "path": "engine/dsl/model/model_util.py",
+    "lane": "dsl",
+    "targets": [
+      "engine/dsl/model/base/model_util.py"
+    ]
+  },
+  {
+    "id": "module:engine/dsl/model/mongodb_model.py",
+    "kind": "module",
+    "path": "engine/dsl/model/mongodb_model.py",
+    "lane": "dsl",
+    "targets": [
+      "engine/dsl/model/resources/mongodb_model.py"
+    ]
+  },
+  {
+    "id": "module:engine/dsl/model/nested_key_model.py",
+    "kind": "module",
+    "path": "engine/dsl/model/nested_key_model.py",
+    "lane": "dsl",
+    "targets": [
+      "engine/dsl/model/values/structured/nested_key_model.py"
+    ]
+  },
+  {
+    "id": "module:engine/dsl/model/reference_field_model.py",
+    "kind": "module",
+    "path": "engine/dsl/model/reference_field_model.py",
+    "lane": "dsl",
+    "targets": [
+      "engine/dsl/model/values/references/reference_field_model.py"
+    ]
+  },
+  {
+    "id": "module:engine/dsl/model/reference_model.py",
+    "kind": "module",
+    "path": "engine/dsl/model/reference_model.py",
+    "lane": "dsl",
+    "targets": [
+      "engine/dsl/model/values/references/reference_model.py"
+    ]
+  },
+  {
+    "id": "module:engine/dsl/model/setup_model.py",
+    "kind": "module",
+    "path": "engine/dsl/model/setup_model.py",
+    "lane": "dsl",
+    "targets": [
+      "engine/dsl/model/resources/setup_model.py"
+    ]
+  },
+  {
+    "id": "module:engine/dsl/model/state_machine_model.py",
+    "kind": "module",
+    "path": "engine/dsl/model/state_machine_model.py",
+    "lane": "dsl",
+    "targets": [
+      "engine/dsl/model/flow/loops/state_machine_model.py"
+    ]
+  },
+  {
+    "id": "module:engine/dsl/model/value_model.py",
+    "kind": "module",
+    "path": "engine/dsl/model/value_model.py",
+    "lane": "dsl",
+    "targets": [
+      "engine/dsl/model/values/scalar/value_model.py"
+    ]
+  },
+  {
+    "id": "module:engine/dsl/model/variable_model.py",
+    "kind": "module",
+    "path": "engine/dsl/model/variable_model.py",
+    "lane": "dsl",
+    "targets": [
+      "engine/dsl/model/values/variables/variable_model.py"
+    ]
+  },
+  {
+    "id": "module:engine/dsl/model/while_model.py",
+    "kind": "module",
+    "path": "engine/dsl/model/while_model.py",
+    "lane": "dsl",
+    "targets": [
+      "engine/dsl/model/flow/loops/while_model.py"
+    ]
+  },
+  {
+    "id": "module:engine/dsl/parsers/__init__.py",
+    "kind": "module",
+    "path": "engine/dsl/parsers/__init__.py",
+    "lane": "dsl",
+    "targets": [
+      "engine/dsl/parsers/registry.py"
+    ]
+  },
+  {
+    "id": "module:engine/dsl/parsers/array_parser.py",
+    "kind": "module",
+    "path": "engine/dsl/parsers/array_parser.py",
+    "lane": "dsl",
+    "targets": [
+      "engine/dsl/parsers/values/structured/array_parser.py"
+    ]
+  },
+  {
+    "id": "module:engine/dsl/parsers/assert_parser.py",
+    "kind": "module",
+    "path": "engine/dsl/parsers/assert_parser.py",
+    "lane": "dsl",
+    "targets": [
+      "engine/dsl/parsers/flow/commands/assert_parser.py"
+    ]
+  },
+  {
+    "id": "module:engine/dsl/parsers/condition_parser.py",
+    "kind": "module",
+    "path": "engine/dsl/parsers/condition_parser.py",
+    "lane": "dsl",
+    "targets": [
+      "engine/dsl/parsers/flow/branches/condition_parser.py"
+    ]
+  },
+  {
+    "id": "module:engine/dsl/parsers/database_parser.py",
+    "kind": "module",
+    "path": "engine/dsl/parsers/database_parser.py",
+    "lane": "dsl",
+    "targets": [
+      "engine/dsl/parsers/resources/database_parser.py"
+    ]
+  },
+  {
+    "id": "module:engine/dsl/parsers/demographics_parser.py",
+    "kind": "module",
+    "path": "engine/dsl/parsers/demographics_parser.py",
+    "lane": "dsl",
+    "targets": [
+      "engine/dsl/parsers/generation/demographics_parser.py"
+    ]
+  },
+  {
+    "id": "module:engine/dsl/parsers/descriptor_parser.py",
+    "kind": "module",
+    "path": "engine/dsl/parsers/descriptor_parser.py",
+    "lane": "dsl",
+    "targets": [
+      "engine/dsl/parsers/document/descriptor_parser.py"
+    ]
+  },
+  {
+    "id": "module:engine/dsl/parsers/echo_parser.py",
+    "kind": "module",
+    "path": "engine/dsl/parsers/echo_parser.py",
+    "lane": "dsl",
+    "targets": [
+      "engine/dsl/parsers/flow/commands/echo_parser.py"
+    ]
+  },
+  {
+    "id": "module:engine/dsl/parsers/element_parser.py",
+    "kind": "module",
+    "path": "engine/dsl/parsers/element_parser.py",
+    "lane": "dsl",
+    "targets": [
+      "engine/dsl/parsers/values/scalar/element_parser.py"
+    ]
+  },
+  {
+    "id": "module:engine/dsl/parsers/else_if_parser.py",
+    "kind": "module",
+    "path": "engine/dsl/parsers/else_if_parser.py",
+    "lane": "dsl",
+    "targets": [
+      "engine/dsl/parsers/flow/branches/else_if_parser.py"
+    ]
+  },
+  {
+    "id": "module:engine/dsl/parsers/else_parser.py",
+    "kind": "module",
+    "path": "engine/dsl/parsers/else_parser.py",
+    "lane": "dsl",
+    "targets": [
+      "engine/dsl/parsers/flow/branches/else_parser.py"
+    ]
+  },
+  {
+    "id": "module:engine/dsl/parsers/execute_parser.py",
+    "kind": "module",
+    "path": "engine/dsl/parsers/execute_parser.py",
+    "lane": "dsl",
+    "targets": [
+      "engine/dsl/parsers/flow/commands/execute_parser.py"
+    ]
+  },
+  {
+    "id": "module:engine/dsl/parsers/generate_parser.py",
+    "kind": "module",
+    "path": "engine/dsl/parsers/generate_parser.py",
+    "lane": "dsl",
+    "targets": [
+      "engine/dsl/parsers/generation/generate_parser.py"
+    ]
+  },
+  {
+    "id": "module:engine/dsl/parsers/generator_parser.py",
+    "kind": "module",
+    "path": "engine/dsl/parsers/generator_parser.py",
+    "lane": "dsl",
+    "targets": [
+      "engine/dsl/parsers/values/scalar/generator_parser.py"
+    ]
+  },
+  {
+    "id": "module:engine/dsl/parsers/if_else_base_parser.py",
+    "kind": "module",
+    "path": "engine/dsl/parsers/if_else_base_parser.py",
+    "lane": "dsl",
+    "targets": [
+      "engine/dsl/parsers/flow/branches/if_else_base_parser.py"
+    ]
+  },
+  {
+    "id": "module:engine/dsl/parsers/if_parser.py",
+    "kind": "module",
+    "path": "engine/dsl/parsers/if_parser.py",
+    "lane": "dsl",
+    "targets": [
+      "engine/dsl/parsers/flow/branches/if_parser.py"
+    ]
+  },
+  {
+    "id": "module:engine/dsl/parsers/include_parser.py",
+    "kind": "module",
+    "path": "engine/dsl/parsers/include_parser.py",
+    "lane": "dsl",
+    "targets": [
+      "engine/dsl/parsers/resources/include_parser.py"
+    ]
+  },
+  {
+    "id": "module:engine/dsl/parsers/item_parser.py",
+    "kind": "module",
+    "path": "engine/dsl/parsers/item_parser.py",
+    "lane": "dsl",
+    "targets": [
+      "engine/dsl/parsers/values/structured/item_parser.py"
+    ]
+  },
+  {
+    "id": "module:engine/dsl/parsers/key_parser.py",
+    "kind": "module",
+    "path": "engine/dsl/parsers/key_parser.py",
+    "lane": "dsl",
+    "targets": [
+      "engine/dsl/parsers/values/scalar/key_parser.py"
+    ]
+  },
+  {
+    "id": "module:engine/dsl/parsers/list_parser.py",
+    "kind": "module",
+    "path": "engine/dsl/parsers/list_parser.py",
+    "lane": "dsl",
+    "targets": [
+      "engine/dsl/parsers/values/structured/list_parser.py"
+    ]
+  },
+  {
+    "id": "module:engine/dsl/parsers/memstore_parser.py",
+    "kind": "module",
+    "path": "engine/dsl/parsers/memstore_parser.py",
+    "lane": "dsl",
+    "targets": [
+      "engine/dsl/parsers/resources/memstore_parser.py"
+    ]
+  },
+  {
+    "id": "module:engine/dsl/parsers/mongodb_parser.py",
+    "kind": "module",
+    "path": "engine/dsl/parsers/mongodb_parser.py",
+    "lane": "dsl",
+    "targets": [
+      "engine/dsl/parsers/resources/mongodb_parser.py"
+    ]
+  },
+  {
+    "id": "module:engine/dsl/parsers/nested_key_parser.py",
+    "kind": "module",
+    "path": "engine/dsl/parsers/nested_key_parser.py",
+    "lane": "dsl",
+    "targets": [
+      "engine/dsl/parsers/values/structured/nested_key_parser.py"
+    ]
+  },
+  {
+    "id": "module:engine/dsl/parsers/parser_util.py",
+    "kind": "module",
+    "path": "engine/dsl/parsers/parser_util.py",
+    "lane": "dsl",
+    "targets": [
+      "engine/dsl/parsers/base/dispatch.py",
+      "engine/dsl/parsers/document/credentials.py"
+    ]
+  },
+  {
+    "id": "module:engine/dsl/parsers/reference_parser.py",
+    "kind": "module",
+    "path": "engine/dsl/parsers/reference_parser.py",
+    "lane": "dsl",
+    "targets": [
+      "engine/dsl/parsers/values/references/reference_parser.py"
+    ]
+  },
+  {
+    "id": "module:engine/dsl/parsers/setup_parser.py",
+    "kind": "module",
+    "path": "engine/dsl/parsers/setup_parser.py",
+    "lane": "dsl",
+    "targets": [
+      "engine/dsl/parsers/resources/setup_parser.py"
+    ]
+  },
+  {
+    "id": "module:engine/dsl/parsers/state_machine_parser.py",
+    "kind": "module",
+    "path": "engine/dsl/parsers/state_machine_parser.py",
+    "lane": "dsl",
+    "targets": [
+      "engine/dsl/parsers/flow/loops/state_machine_parser.py"
+    ]
+  },
+  {
+    "id": "module:engine/dsl/parsers/statement_parser.py",
+    "kind": "module",
+    "path": "engine/dsl/parsers/statement_parser.py",
+    "lane": "dsl",
+    "targets": [
+      "engine/dsl/parsers/base/statement_parser.py"
+    ]
+  },
+  {
+    "id": "module:engine/dsl/parsers/variable_parser.py",
+    "kind": "module",
+    "path": "engine/dsl/parsers/variable_parser.py",
+    "lane": "dsl",
+    "targets": [
+      "engine/dsl/parsers/values/variables/variable_parser.py"
+    ]
+  },
+  {
+    "id": "module:engine/dsl/parsers/while_parser.py",
+    "kind": "module",
+    "path": "engine/dsl/parsers/while_parser.py",
+    "lane": "dsl",
+    "targets": [
+      "engine/dsl/parsers/flow/loops/while_parser.py"
+    ]
+  },
+  {
+    "id": "module:engine/dsl/properties.py",
+    "kind": "module",
+    "path": "engine/dsl/properties.py",
+    "lane": "dsl",
+    "targets": [
+      "engine/dsl/parsers/document/properties.py"
+    ]
+  },
+  {
+    "id": "module:engine/dsl/statements/__init__.py",
+    "kind": "module",
+    "path": "engine/dsl/statements/__init__.py",
+    "lane": "dsl",
+    "targets": [
+      "engine/dsl/statements/__init__.py"
+    ]
+  },
+  {
+    "id": "module:engine/dsl/statements/array_statement.py",
+    "kind": "module",
+    "path": "engine/dsl/statements/array_statement.py",
+    "lane": "dsl",
+    "targets": [
+      "engine/dsl/statements/values/structured/array_statement.py"
+    ]
+  },
+  {
+    "id": "module:engine/dsl/statements/assert_statement.py",
+    "kind": "module",
+    "path": "engine/dsl/statements/assert_statement.py",
+    "lane": "dsl",
+    "targets": [
+      "engine/dsl/statements/flow/commands/assert_statement.py"
+    ]
+  },
+  {
+    "id": "module:engine/dsl/statements/composite_statement.py",
+    "kind": "module",
+    "path": "engine/dsl/statements/composite_statement.py",
+    "lane": "dsl",
+    "targets": [
+      "engine/dsl/statements/base/composite_statement.py"
+    ]
+  },
+  {
+    "id": "module:engine/dsl/statements/condition_statement.py",
+    "kind": "module",
+    "path": "engine/dsl/statements/condition_statement.py",
+    "lane": "dsl",
+    "targets": [
+      "engine/dsl/statements/flow/branches/condition_statement.py"
+    ]
+  },
+  {
+    "id": "module:engine/dsl/statements/database_statement.py",
+    "kind": "module",
+    "path": "engine/dsl/statements/database_statement.py",
+    "lane": "dsl",
+    "targets": [
+      "engine/dsl/statements/resources/database_statement.py"
+    ]
+  },
+  {
+    "id": "module:engine/dsl/statements/demographics_statement.py",
+    "kind": "module",
+    "path": "engine/dsl/statements/demographics_statement.py",
+    "lane": "dsl",
+    "targets": [
+      "engine/dsl/statements/generation/demographics_statement.py"
+    ]
+  },
+  {
+    "id": "module:engine/dsl/statements/echo_statement.py",
+    "kind": "module",
+    "path": "engine/dsl/statements/echo_statement.py",
+    "lane": "dsl",
+    "targets": [
+      "engine/dsl/statements/flow/commands/echo_statement.py"
+    ]
+  },
+  {
+    "id": "module:engine/dsl/statements/element_statement.py",
+    "kind": "module",
+    "path": "engine/dsl/statements/element_statement.py",
+    "lane": "dsl",
+    "targets": [
+      "engine/dsl/statements/values/scalar/element_statement.py"
+    ]
+  },
+  {
+    "id": "module:engine/dsl/statements/else_if_statement.py",
+    "kind": "module",
+    "path": "engine/dsl/statements/else_if_statement.py",
+    "lane": "dsl",
+    "targets": [
+      "engine/dsl/statements/flow/branches/else_if_statement.py"
+    ]
+  },
+  {
+    "id": "module:engine/dsl/statements/else_statement.py",
+    "kind": "module",
+    "path": "engine/dsl/statements/else_statement.py",
+    "lane": "dsl",
+    "targets": [
+      "engine/dsl/statements/flow/branches/else_statement.py"
+    ]
+  },
+  {
+    "id": "module:engine/dsl/statements/execute_statement.py",
+    "kind": "module",
+    "path": "engine/dsl/statements/execute_statement.py",
+    "lane": "dsl",
+    "targets": [
+      "engine/dsl/statements/flow/commands/execute_statement.py"
+    ]
+  },
+  {
+    "id": "module:engine/dsl/statements/generate_statement.py",
+    "kind": "module",
+    "path": "engine/dsl/statements/generate_statement.py",
+    "lane": "dsl",
+    "targets": [
+      "engine/dsl/statements/generation/generate_statement.py"
+    ]
+  },
+  {
+    "id": "module:engine/dsl/statements/generator_statement.py",
+    "kind": "module",
+    "path": "engine/dsl/statements/generator_statement.py",
+    "lane": "dsl",
+    "targets": [
+      "engine/dsl/statements/values/scalar/generator_statement.py"
+    ]
+  },
+  {
+    "id": "module:engine/dsl/statements/if_statement.py",
+    "kind": "module",
+    "path": "engine/dsl/statements/if_statement.py",
+    "lane": "dsl",
+    "targets": [
+      "engine/dsl/statements/flow/branches/if_statement.py"
+    ]
+  },
+  {
+    "id": "module:engine/dsl/statements/include_statement.py",
+    "kind": "module",
+    "path": "engine/dsl/statements/include_statement.py",
+    "lane": "dsl",
+    "targets": [
+      "engine/dsl/statements/resources/include_statement.py"
+    ]
+  },
+  {
+    "id": "module:engine/dsl/statements/item_statement.py",
+    "kind": "module",
+    "path": "engine/dsl/statements/item_statement.py",
+    "lane": "dsl",
+    "targets": [
+      "engine/dsl/statements/values/structured/item_statement.py"
+    ]
+  },
+  {
+    "id": "module:engine/dsl/statements/key_statement.py",
+    "kind": "module",
+    "path": "engine/dsl/statements/key_statement.py",
+    "lane": "dsl",
+    "targets": [
+      "engine/dsl/statements/values/scalar/key_statement.py"
+    ]
+  },
+  {
+    "id": "module:engine/dsl/statements/list_statement.py",
+    "kind": "module",
+    "path": "engine/dsl/statements/list_statement.py",
+    "lane": "dsl",
+    "targets": [
+      "engine/dsl/statements/values/structured/list_statement.py"
+    ]
+  },
+  {
+    "id": "module:engine/dsl/statements/memstore_statement.py",
+    "kind": "module",
+    "path": "engine/dsl/statements/memstore_statement.py",
+    "lane": "dsl",
+    "targets": [
+      "engine/dsl/statements/resources/memstore_statement.py"
+    ]
+  },
+  {
+    "id": "module:engine/dsl/statements/mongodb_statement.py",
+    "kind": "module",
+    "path": "engine/dsl/statements/mongodb_statement.py",
+    "lane": "dsl",
+    "targets": [
+      "engine/dsl/statements/resources/mongodb_statement.py"
+    ]
+  },
+  {
+    "id": "module:engine/dsl/statements/nested_key_statement.py",
+    "kind": "module",
+    "path": "engine/dsl/statements/nested_key_statement.py",
+    "lane": "dsl",
+    "targets": [
+      "engine/dsl/statements/values/structured/nested_key_statement.py"
+    ]
+  },
+  {
+    "id": "module:engine/dsl/statements/reference_statement.py",
+    "kind": "module",
+    "path": "engine/dsl/statements/reference_statement.py",
+    "lane": "dsl",
+    "targets": [
+      "engine/dsl/statements/values/references/reference_statement.py"
+    ]
+  },
+  {
+    "id": "module:engine/dsl/statements/setup_statement.py",
+    "kind": "module",
+    "path": "engine/dsl/statements/setup_statement.py",
+    "lane": "dsl",
+    "targets": [
+      "engine/dsl/statements/resources/setup_statement.py"
+    ]
+  },
+  {
+    "id": "module:engine/dsl/statements/state_machine_statement.py",
+    "kind": "module",
+    "path": "engine/dsl/statements/state_machine_statement.py",
+    "lane": "dsl",
+    "targets": [
+      "engine/dsl/statements/flow/loops/state_machine_statement.py"
+    ]
+  },
+  {
+    "id": "module:engine/dsl/statements/statement.py",
+    "kind": "module",
+    "path": "engine/dsl/statements/statement.py",
+    "lane": "dsl",
+    "targets": [
+      "engine/dsl/statements/base/statement.py"
+    ]
+  },
+  {
+    "id": "module:engine/dsl/statements/statement_util.py",
+    "kind": "module",
+    "path": "engine/dsl/statements/statement_util.py",
+    "lane": "dsl",
+    "targets": [
+      "engine/dsl/statements/base/statement_util.py"
+    ]
+  },
+  {
+    "id": "module:engine/dsl/statements/variable_statement.py",
+    "kind": "module",
+    "path": "engine/dsl/statements/variable_statement.py",
+    "lane": "dsl",
+    "targets": [
+      "engine/dsl/statements/values/variables/variable_statement.py"
+    ]
+  },
+  {
+    "id": "module:engine/dsl/statements/while_statement.py",
+    "kind": "module",
+    "path": "engine/dsl/statements/while_statement.py",
+    "lane": "dsl",
+    "targets": [
+      "engine/dsl/statements/flow/loops/while_statement.py"
+    ]
+  },
+  {
+    "id": "module:engine/dsl/timeseries.py",
+    "kind": "module",
+    "path": "engine/dsl/timeseries.py",
+    "lane": "dsl",
+    "targets": [
+      "engine/dsl/model/generation/timeseries.py"
+    ]
+  },
+  {
+    "id": "module:engine/dsl/xml.py",
+    "kind": "module",
+    "path": "engine/dsl/xml.py",
+    "lane": "dsl",
+    "targets": [
+      "engine/dsl/parsers/document/xml.py"
+    ]
+  },
+  {
+    "id": "folder:engine/dsl",
+    "kind": "folder",
+    "path": "engine/dsl",
+    "lane": "dsl",
+    "sources": [
+      "engine/dsl/__init__.py",
+      "engine/dsl/api.py",
+      "engine/dsl/constants/__init__.py",
+      "engine/dsl/constants/attribute_constants.py",
+      "engine/dsl/constants/convention_constants.py",
+      "engine/dsl/constants/data_type_constants.py",
+      "engine/dsl/constants/element_constants.py",
+      "engine/dsl/constants/exporter_constants.py",
+      "engine/dsl/contracts.py",
+      "engine/dsl/enums/__init__.py",
+      "engine/dsl/enums/converter_enums.py",
+      "engine/dsl/enums/dbms_enums.py",
+      "engine/dsl/enums/distribution_enums.py",
+      "engine/dsl/enums/faker_enums.py",
+      "engine/dsl/enums/operation_enums.py",
+      "engine/dsl/model/__init__.py",
+      "engine/dsl/model/array_model.py",
+      "engine/dsl/model/assert_model.py",
+      "engine/dsl/model/base_if_else_model.py",
+      "engine/dsl/model/condition_model.py",
+      "engine/dsl/model/constraints/__init__.py",
+      "engine/dsl/model/constraints/capabilities.py",
+      "engine/dsl/model/constraints/facts.py",
+      "engine/dsl/model/constraints/registry.py",
+      "engine/dsl/model/constraints/serialization.py",
+      "engine/dsl/model/constraints/types.py",
+      "engine/dsl/model/database_model.py",
+      "engine/dsl/model/demographics_model.py",
+      "engine/dsl/model/element_model.py",
+      "engine/dsl/model/element_registry.py",
+      "engine/dsl/model/else_if_model.py",
+      "engine/dsl/model/else_model.py",
+      "engine/dsl/model/execute_model.py",
+      "engine/dsl/model/generate_model.py",
+      "engine/dsl/model/generator_model.py",
+      "engine/dsl/model/if_model.py",
+      "engine/dsl/model/include_model.py",
+      "engine/dsl/model/item_model.py",
+      "engine/dsl/model/key_model.py",
+      "engine/dsl/model/list_model.py",
+      "engine/dsl/model/memstore_model.py",
+      "engine/dsl/model/model_util.py",
+      "engine/dsl/model/mongodb_model.py",
+      "engine/dsl/model/nested_key_model.py",
+      "engine/dsl/model/reference_field_model.py",
+      "engine/dsl/model/reference_model.py",
+      "engine/dsl/model/setup_model.py",
+      "engine/dsl/model/state_machine_model.py",
+      "engine/dsl/model/value_model.py",
+      "engine/dsl/model/variable_model.py",
+      "engine/dsl/model/while_model.py",
+      "engine/dsl/parsers/__init__.py",
+      "engine/dsl/parsers/array_parser.py",
+      "engine/dsl/parsers/assert_parser.py",
+      "engine/dsl/parsers/condition_parser.py",
+      "engine/dsl/parsers/database_parser.py",
+      "engine/dsl/parsers/demographics_parser.py",
+      "engine/dsl/parsers/descriptor_parser.py",
+      "engine/dsl/parsers/echo_parser.py",
+      "engine/dsl/parsers/element_parser.py",
+      "engine/dsl/parsers/else_if_parser.py",
+      "engine/dsl/parsers/else_parser.py",
+      "engine/dsl/parsers/execute_parser.py",
+      "engine/dsl/parsers/generate_parser.py",
+      "engine/dsl/parsers/generator_parser.py",
+      "engine/dsl/parsers/if_else_base_parser.py",
+      "engine/dsl/parsers/if_parser.py",
+      "engine/dsl/parsers/include_parser.py",
+      "engine/dsl/parsers/item_parser.py",
+      "engine/dsl/parsers/key_parser.py",
+      "engine/dsl/parsers/list_parser.py",
+      "engine/dsl/parsers/memstore_parser.py",
+      "engine/dsl/parsers/mongodb_parser.py",
+      "engine/dsl/parsers/nested_key_parser.py",
+      "engine/dsl/parsers/parser_util.py",
+      "engine/dsl/parsers/reference_parser.py",
+      "engine/dsl/parsers/setup_parser.py",
+      "engine/dsl/parsers/state_machine_parser.py",
+      "engine/dsl/parsers/statement_parser.py",
+      "engine/dsl/parsers/variable_parser.py",
+      "engine/dsl/parsers/while_parser.py",
+      "engine/dsl/properties.py",
+      "engine/dsl/statements/__init__.py",
+      "engine/dsl/statements/array_statement.py",
+      "engine/dsl/statements/assert_statement.py",
+      "engine/dsl/statements/composite_statement.py",
+      "engine/dsl/statements/condition_statement.py",
+      "engine/dsl/statements/database_statement.py",
+      "engine/dsl/statements/demographics_statement.py",
+      "engine/dsl/statements/echo_statement.py",
+      "engine/dsl/statements/element_statement.py",
+      "engine/dsl/statements/else_if_statement.py",
+      "engine/dsl/statements/else_statement.py",
+      "engine/dsl/statements/execute_statement.py",
+      "engine/dsl/statements/generate_statement.py",
+      "engine/dsl/statements/generator_statement.py",
+      "engine/dsl/statements/if_statement.py",
+      "engine/dsl/statements/include_statement.py",
+      "engine/dsl/statements/item_statement.py",
+      "engine/dsl/statements/key_statement.py",
+      "engine/dsl/statements/list_statement.py",
+      "engine/dsl/statements/memstore_statement.py",
+      "engine/dsl/statements/mongodb_statement.py",
+      "engine/dsl/statements/nested_key_statement.py",
+      "engine/dsl/statements/reference_statement.py",
+      "engine/dsl/statements/setup_statement.py",
+      "engine/dsl/statements/state_machine_statement.py",
+      "engine/dsl/statements/statement.py",
+      "engine/dsl/statements/statement_util.py",
+      "engine/dsl/statements/variable_statement.py",
+      "engine/dsl/statements/while_statement.py",
+      "engine/dsl/timeseries.py",
+      "engine/dsl/xml.py"
+    ]
+  },
+  {
+    "id": "folder:engine/dsl/model",
+    "kind": "folder",
+    "path": "engine/dsl/model",
+    "lane": "dsl",
+    "sources": [
+      "engine/dsl/model/__init__.py",
+      "engine/dsl/model/array_model.py",
+      "engine/dsl/model/assert_model.py",
+      "engine/dsl/model/base_if_else_model.py",
+      "engine/dsl/model/condition_model.py",
+      "engine/dsl/model/constraints/__init__.py",
+      "engine/dsl/model/constraints/capabilities.py",
+      "engine/dsl/model/constraints/facts.py",
+      "engine/dsl/model/constraints/registry.py",
+      "engine/dsl/model/constraints/serialization.py",
+      "engine/dsl/model/constraints/types.py",
+      "engine/dsl/model/database_model.py",
+      "engine/dsl/model/demographics_model.py",
+      "engine/dsl/model/element_model.py",
+      "engine/dsl/model/element_registry.py",
+      "engine/dsl/model/else_if_model.py",
+      "engine/dsl/model/else_model.py",
+      "engine/dsl/model/execute_model.py",
+      "engine/dsl/model/generate_model.py",
+      "engine/dsl/model/generator_model.py",
+      "engine/dsl/model/if_model.py",
+      "engine/dsl/model/include_model.py",
+      "engine/dsl/model/item_model.py",
+      "engine/dsl/model/key_model.py",
+      "engine/dsl/model/list_model.py",
+      "engine/dsl/model/memstore_model.py",
+      "engine/dsl/model/model_util.py",
+      "engine/dsl/model/mongodb_model.py",
+      "engine/dsl/model/nested_key_model.py",
+      "engine/dsl/model/reference_field_model.py",
+      "engine/dsl/model/reference_model.py",
+      "engine/dsl/model/setup_model.py",
+      "engine/dsl/model/state_machine_model.py",
+      "engine/dsl/model/value_model.py",
+      "engine/dsl/model/variable_model.py",
+      "engine/dsl/model/while_model.py",
+      "engine/dsl/timeseries.py"
+    ]
+  },
+  {
+    "id": "folder:engine/dsl/model/base",
+    "kind": "folder",
+    "path": "engine/dsl/model/base",
+    "lane": "dsl",
+    "sources": [
+      "engine/dsl/model/element_model.py",
+      "engine/dsl/model/model_util.py"
+    ]
+  },
+  {
+    "id": "folder:engine/dsl/model/constraints",
+    "kind": "folder",
+    "path": "engine/dsl/model/constraints",
+    "lane": "dsl",
+    "sources": [
+      "engine/dsl/model/constraints/__init__.py",
+      "engine/dsl/model/constraints/capabilities.py",
+      "engine/dsl/model/constraints/facts.py",
+      "engine/dsl/model/constraints/registry.py",
+      "engine/dsl/model/constraints/serialization.py",
+      "engine/dsl/model/constraints/types.py"
+    ]
+  },
+  {
+    "id": "folder:engine/dsl/model/flow",
+    "kind": "folder",
+    "path": "engine/dsl/model/flow",
+    "lane": "dsl",
+    "sources": [
+      "engine/dsl/model/assert_model.py",
+      "engine/dsl/model/base_if_else_model.py",
+      "engine/dsl/model/condition_model.py",
+      "engine/dsl/model/else_if_model.py",
+      "engine/dsl/model/else_model.py",
+      "engine/dsl/model/execute_model.py",
+      "engine/dsl/model/if_model.py",
+      "engine/dsl/model/state_machine_model.py",
+      "engine/dsl/model/while_model.py"
+    ]
+  },
+  {
+    "id": "folder:engine/dsl/model/flow/branches",
+    "kind": "folder",
+    "path": "engine/dsl/model/flow/branches",
+    "lane": "dsl",
+    "sources": [
+      "engine/dsl/model/base_if_else_model.py",
+      "engine/dsl/model/condition_model.py",
+      "engine/dsl/model/else_if_model.py",
+      "engine/dsl/model/else_model.py",
+      "engine/dsl/model/if_model.py"
+    ]
+  },
+  {
+    "id": "folder:engine/dsl/model/flow/commands",
+    "kind": "folder",
+    "path": "engine/dsl/model/flow/commands",
+    "lane": "dsl",
+    "sources": [
+      "engine/dsl/model/assert_model.py",
+      "engine/dsl/model/execute_model.py"
+    ]
+  },
+  {
+    "id": "folder:engine/dsl/model/flow/loops",
+    "kind": "folder",
+    "path": "engine/dsl/model/flow/loops",
+    "lane": "dsl",
+    "sources": [
+      "engine/dsl/model/state_machine_model.py",
+      "engine/dsl/model/while_model.py"
+    ]
+  },
+  {
+    "id": "folder:engine/dsl/model/generation",
+    "kind": "folder",
+    "path": "engine/dsl/model/generation",
+    "lane": "dsl",
+    "sources": [
+      "engine/dsl/model/demographics_model.py",
+      "engine/dsl/model/generate_model.py",
+      "engine/dsl/timeseries.py"
+    ]
+  },
+  {
+    "id": "folder:engine/dsl/model/resources",
+    "kind": "folder",
+    "path": "engine/dsl/model/resources",
+    "lane": "dsl",
+    "sources": [
+      "engine/dsl/model/database_model.py",
+      "engine/dsl/model/include_model.py",
+      "engine/dsl/model/memstore_model.py",
+      "engine/dsl/model/mongodb_model.py",
+      "engine/dsl/model/setup_model.py"
+    ]
+  },
+  {
+    "id": "folder:engine/dsl/model/values",
+    "kind": "folder",
+    "path": "engine/dsl/model/values",
+    "lane": "dsl",
+    "sources": [
+      "engine/dsl/model/array_model.py",
+      "engine/dsl/model/generator_model.py",
+      "engine/dsl/model/item_model.py",
+      "engine/dsl/model/key_model.py",
+      "engine/dsl/model/list_model.py",
+      "engine/dsl/model/nested_key_model.py",
+      "engine/dsl/model/reference_field_model.py",
+      "engine/dsl/model/reference_model.py",
+      "engine/dsl/model/value_model.py",
+      "engine/dsl/model/variable_model.py"
+    ]
+  },
+  {
+    "id": "folder:engine/dsl/model/values/references",
+    "kind": "folder",
+    "path": "engine/dsl/model/values/references",
+    "lane": "dsl",
+    "sources": [
+      "engine/dsl/model/reference_field_model.py",
+      "engine/dsl/model/reference_model.py"
+    ]
+  },
+  {
+    "id": "folder:engine/dsl/model/values/scalar",
+    "kind": "folder",
+    "path": "engine/dsl/model/values/scalar",
+    "lane": "dsl",
+    "sources": [
+      "engine/dsl/model/generator_model.py",
+      "engine/dsl/model/key_model.py",
+      "engine/dsl/model/value_model.py"
+    ]
+  },
+  {
+    "id": "folder:engine/dsl/model/values/structured",
+    "kind": "folder",
+    "path": "engine/dsl/model/values/structured",
+    "lane": "dsl",
+    "sources": [
+      "engine/dsl/model/array_model.py",
+      "engine/dsl/model/item_model.py",
+      "engine/dsl/model/list_model.py",
+      "engine/dsl/model/nested_key_model.py"
+    ]
+  },
+  {
+    "id": "folder:engine/dsl/model/values/variables",
+    "kind": "folder",
+    "path": "engine/dsl/model/values/variables",
+    "lane": "dsl",
+    "sources": [
+      "engine/dsl/model/variable_model.py"
+    ]
+  },
+  {
+    "id": "folder:engine/dsl/parsers",
+    "kind": "folder",
+    "path": "engine/dsl/parsers",
+    "lane": "dsl",
+    "sources": [
+      "engine/dsl/parsers/__init__.py",
+      "engine/dsl/parsers/array_parser.py",
+      "engine/dsl/parsers/assert_parser.py",
+      "engine/dsl/parsers/condition_parser.py",
+      "engine/dsl/parsers/database_parser.py",
+      "engine/dsl/parsers/demographics_parser.py",
+      "engine/dsl/parsers/descriptor_parser.py",
+      "engine/dsl/parsers/echo_parser.py",
+      "engine/dsl/parsers/element_parser.py",
+      "engine/dsl/parsers/else_if_parser.py",
+      "engine/dsl/parsers/else_parser.py",
+      "engine/dsl/parsers/execute_parser.py",
+      "engine/dsl/parsers/generate_parser.py",
+      "engine/dsl/parsers/generator_parser.py",
+      "engine/dsl/parsers/if_else_base_parser.py",
+      "engine/dsl/parsers/if_parser.py",
+      "engine/dsl/parsers/include_parser.py",
+      "engine/dsl/parsers/item_parser.py",
+      "engine/dsl/parsers/key_parser.py",
+      "engine/dsl/parsers/list_parser.py",
+      "engine/dsl/parsers/memstore_parser.py",
+      "engine/dsl/parsers/mongodb_parser.py",
+      "engine/dsl/parsers/nested_key_parser.py",
+      "engine/dsl/parsers/parser_util.py",
+      "engine/dsl/parsers/reference_parser.py",
+      "engine/dsl/parsers/setup_parser.py",
+      "engine/dsl/parsers/state_machine_parser.py",
+      "engine/dsl/parsers/statement_parser.py",
+      "engine/dsl/parsers/variable_parser.py",
+      "engine/dsl/parsers/while_parser.py",
+      "engine/dsl/properties.py",
+      "engine/dsl/xml.py"
+    ]
+  },
+  {
+    "id": "folder:engine/dsl/parsers/base",
+    "kind": "folder",
+    "path": "engine/dsl/parsers/base",
+    "lane": "dsl",
+    "sources": [
+      "engine/dsl/parsers/parser_util.py",
+      "engine/dsl/parsers/statement_parser.py"
+    ]
+  },
+  {
+    "id": "folder:engine/dsl/parsers/document",
+    "kind": "folder",
+    "path": "engine/dsl/parsers/document",
+    "lane": "dsl",
+    "sources": [
+      "engine/dsl/parsers/descriptor_parser.py",
+      "engine/dsl/parsers/parser_util.py",
+      "engine/dsl/properties.py",
+      "engine/dsl/xml.py"
+    ]
+  },
+  {
+    "id": "folder:engine/dsl/parsers/flow",
+    "kind": "folder",
+    "path": "engine/dsl/parsers/flow",
+    "lane": "dsl",
+    "sources": [
+      "engine/dsl/parsers/assert_parser.py",
+      "engine/dsl/parsers/condition_parser.py",
+      "engine/dsl/parsers/echo_parser.py",
+      "engine/dsl/parsers/else_if_parser.py",
+      "engine/dsl/parsers/else_parser.py",
+      "engine/dsl/parsers/execute_parser.py",
+      "engine/dsl/parsers/if_else_base_parser.py",
+      "engine/dsl/parsers/if_parser.py",
+      "engine/dsl/parsers/state_machine_parser.py",
+      "engine/dsl/parsers/while_parser.py"
+    ]
+  },
+  {
+    "id": "folder:engine/dsl/parsers/flow/branches",
+    "kind": "folder",
+    "path": "engine/dsl/parsers/flow/branches",
+    "lane": "dsl",
+    "sources": [
+      "engine/dsl/parsers/condition_parser.py",
+      "engine/dsl/parsers/else_if_parser.py",
+      "engine/dsl/parsers/else_parser.py",
+      "engine/dsl/parsers/if_else_base_parser.py",
+      "engine/dsl/parsers/if_parser.py"
+    ]
+  },
+  {
+    "id": "folder:engine/dsl/parsers/flow/commands",
+    "kind": "folder",
+    "path": "engine/dsl/parsers/flow/commands",
+    "lane": "dsl",
+    "sources": [
+      "engine/dsl/parsers/assert_parser.py",
+      "engine/dsl/parsers/echo_parser.py",
+      "engine/dsl/parsers/execute_parser.py"
+    ]
+  },
+  {
+    "id": "folder:engine/dsl/parsers/flow/loops",
+    "kind": "folder",
+    "path": "engine/dsl/parsers/flow/loops",
+    "lane": "dsl",
+    "sources": [
+      "engine/dsl/parsers/state_machine_parser.py",
+      "engine/dsl/parsers/while_parser.py"
+    ]
+  },
+  {
+    "id": "folder:engine/dsl/parsers/generation",
+    "kind": "folder",
+    "path": "engine/dsl/parsers/generation",
+    "lane": "dsl",
+    "sources": [
+      "engine/dsl/parsers/demographics_parser.py",
+      "engine/dsl/parsers/generate_parser.py"
+    ]
+  },
+  {
+    "id": "folder:engine/dsl/parsers/resources",
+    "kind": "folder",
+    "path": "engine/dsl/parsers/resources",
+    "lane": "dsl",
+    "sources": [
+      "engine/dsl/parsers/database_parser.py",
+      "engine/dsl/parsers/include_parser.py",
+      "engine/dsl/parsers/memstore_parser.py",
+      "engine/dsl/parsers/mongodb_parser.py",
+      "engine/dsl/parsers/setup_parser.py"
+    ]
+  },
+  {
+    "id": "folder:engine/dsl/parsers/values",
+    "kind": "folder",
+    "path": "engine/dsl/parsers/values",
+    "lane": "dsl",
+    "sources": [
+      "engine/dsl/parsers/array_parser.py",
+      "engine/dsl/parsers/element_parser.py",
+      "engine/dsl/parsers/generator_parser.py",
+      "engine/dsl/parsers/item_parser.py",
+      "engine/dsl/parsers/key_parser.py",
+      "engine/dsl/parsers/list_parser.py",
+      "engine/dsl/parsers/nested_key_parser.py",
+      "engine/dsl/parsers/reference_parser.py",
+      "engine/dsl/parsers/variable_parser.py"
+    ]
+  },
+  {
+    "id": "folder:engine/dsl/parsers/values/references",
+    "kind": "folder",
+    "path": "engine/dsl/parsers/values/references",
+    "lane": "dsl",
+    "sources": [
+      "engine/dsl/parsers/reference_parser.py"
+    ]
+  },
+  {
+    "id": "folder:engine/dsl/parsers/values/scalar",
+    "kind": "folder",
+    "path": "engine/dsl/parsers/values/scalar",
+    "lane": "dsl",
+    "sources": [
+      "engine/dsl/parsers/element_parser.py",
+      "engine/dsl/parsers/generator_parser.py",
+      "engine/dsl/parsers/key_parser.py"
+    ]
+  },
+  {
+    "id": "folder:engine/dsl/parsers/values/structured",
+    "kind": "folder",
+    "path": "engine/dsl/parsers/values/structured",
+    "lane": "dsl",
+    "sources": [
+      "engine/dsl/parsers/array_parser.py",
+      "engine/dsl/parsers/item_parser.py",
+      "engine/dsl/parsers/list_parser.py",
+      "engine/dsl/parsers/nested_key_parser.py"
+    ]
+  },
+  {
+    "id": "folder:engine/dsl/parsers/values/variables",
+    "kind": "folder",
+    "path": "engine/dsl/parsers/values/variables",
+    "lane": "dsl",
+    "sources": [
+      "engine/dsl/parsers/variable_parser.py"
+    ]
+  },
+  {
+    "id": "folder:engine/dsl/statements",
+    "kind": "folder",
+    "path": "engine/dsl/statements",
+    "lane": "dsl",
+    "sources": [
+      "engine/dsl/statements/__init__.py",
+      "engine/dsl/statements/array_statement.py",
+      "engine/dsl/statements/assert_statement.py",
+      "engine/dsl/statements/composite_statement.py",
+      "engine/dsl/statements/condition_statement.py",
+      "engine/dsl/statements/database_statement.py",
+      "engine/dsl/statements/demographics_statement.py",
+      "engine/dsl/statements/echo_statement.py",
+      "engine/dsl/statements/element_statement.py",
+      "engine/dsl/statements/else_if_statement.py",
+      "engine/dsl/statements/else_statement.py",
+      "engine/dsl/statements/execute_statement.py",
+      "engine/dsl/statements/generate_statement.py",
+      "engine/dsl/statements/generator_statement.py",
+      "engine/dsl/statements/if_statement.py",
+      "engine/dsl/statements/include_statement.py",
+      "engine/dsl/statements/item_statement.py",
+      "engine/dsl/statements/key_statement.py",
+      "engine/dsl/statements/list_statement.py",
+      "engine/dsl/statements/memstore_statement.py",
+      "engine/dsl/statements/mongodb_statement.py",
+      "engine/dsl/statements/nested_key_statement.py",
+      "engine/dsl/statements/reference_statement.py",
+      "engine/dsl/statements/setup_statement.py",
+      "engine/dsl/statements/state_machine_statement.py",
+      "engine/dsl/statements/statement.py",
+      "engine/dsl/statements/statement_util.py",
+      "engine/dsl/statements/variable_statement.py",
+      "engine/dsl/statements/while_statement.py"
+    ]
+  },
+  {
+    "id": "folder:engine/dsl/statements/base",
+    "kind": "folder",
+    "path": "engine/dsl/statements/base",
+    "lane": "dsl",
+    "sources": [
+      "engine/dsl/statements/composite_statement.py",
+      "engine/dsl/statements/statement.py",
+      "engine/dsl/statements/statement_util.py"
+    ]
+  },
+  {
+    "id": "folder:engine/dsl/statements/flow",
+    "kind": "folder",
+    "path": "engine/dsl/statements/flow",
+    "lane": "dsl",
+    "sources": [
+      "engine/dsl/statements/assert_statement.py",
+      "engine/dsl/statements/condition_statement.py",
+      "engine/dsl/statements/echo_statement.py",
+      "engine/dsl/statements/else_if_statement.py",
+      "engine/dsl/statements/else_statement.py",
+      "engine/dsl/statements/execute_statement.py",
+      "engine/dsl/statements/if_statement.py",
+      "engine/dsl/statements/state_machine_statement.py",
+      "engine/dsl/statements/while_statement.py"
+    ]
+  },
+  {
+    "id": "folder:engine/dsl/statements/flow/branches",
+    "kind": "folder",
+    "path": "engine/dsl/statements/flow/branches",
+    "lane": "dsl",
+    "sources": [
+      "engine/dsl/statements/condition_statement.py",
+      "engine/dsl/statements/else_if_statement.py",
+      "engine/dsl/statements/else_statement.py",
+      "engine/dsl/statements/if_statement.py"
+    ]
+  },
+  {
+    "id": "folder:engine/dsl/statements/flow/commands",
+    "kind": "folder",
+    "path": "engine/dsl/statements/flow/commands",
+    "lane": "dsl",
+    "sources": [
+      "engine/dsl/statements/assert_statement.py",
+      "engine/dsl/statements/echo_statement.py",
+      "engine/dsl/statements/execute_statement.py"
+    ]
+  },
+  {
+    "id": "folder:engine/dsl/statements/flow/loops",
+    "kind": "folder",
+    "path": "engine/dsl/statements/flow/loops",
+    "lane": "dsl",
+    "sources": [
+      "engine/dsl/statements/state_machine_statement.py",
+      "engine/dsl/statements/while_statement.py"
+    ]
+  },
+  {
+    "id": "folder:engine/dsl/statements/generation",
+    "kind": "folder",
+    "path": "engine/dsl/statements/generation",
+    "lane": "dsl",
+    "sources": [
+      "engine/dsl/statements/demographics_statement.py",
+      "engine/dsl/statements/generate_statement.py"
+    ]
+  },
+  {
+    "id": "folder:engine/dsl/statements/resources",
+    "kind": "folder",
+    "path": "engine/dsl/statements/resources",
+    "lane": "dsl",
+    "sources": [
+      "engine/dsl/statements/database_statement.py",
+      "engine/dsl/statements/include_statement.py",
+      "engine/dsl/statements/memstore_statement.py",
+      "engine/dsl/statements/mongodb_statement.py",
+      "engine/dsl/statements/setup_statement.py"
+    ]
+  },
+  {
+    "id": "folder:engine/dsl/statements/values",
+    "kind": "folder",
+    "path": "engine/dsl/statements/values",
+    "lane": "dsl",
+    "sources": [
+      "engine/dsl/statements/array_statement.py",
+      "engine/dsl/statements/element_statement.py",
+      "engine/dsl/statements/generator_statement.py",
+      "engine/dsl/statements/item_statement.py",
+      "engine/dsl/statements/key_statement.py",
+      "engine/dsl/statements/list_statement.py",
+      "engine/dsl/statements/nested_key_statement.py",
+      "engine/dsl/statements/reference_statement.py",
+      "engine/dsl/statements/variable_statement.py"
+    ]
+  },
+  {
+    "id": "folder:engine/dsl/statements/values/references",
+    "kind": "folder",
+    "path": "engine/dsl/statements/values/references",
+    "lane": "dsl",
+    "sources": [
+      "engine/dsl/statements/reference_statement.py"
+    ]
+  },
+  {
+    "id": "folder:engine/dsl/statements/values/scalar",
+    "kind": "folder",
+    "path": "engine/dsl/statements/values/scalar",
+    "lane": "dsl",
+    "sources": [
+      "engine/dsl/statements/element_statement.py",
+      "engine/dsl/statements/generator_statement.py",
+      "engine/dsl/statements/key_statement.py"
+    ]
+  },
+  {
+    "id": "folder:engine/dsl/statements/values/structured",
+    "kind": "folder",
+    "path": "engine/dsl/statements/values/structured",
+    "lane": "dsl",
+    "sources": [
+      "engine/dsl/statements/array_statement.py",
+      "engine/dsl/statements/item_statement.py",
+      "engine/dsl/statements/list_statement.py",
+      "engine/dsl/statements/nested_key_statement.py"
+    ]
+  },
+  {
+    "id": "folder:engine/dsl/statements/values/variables",
+    "kind": "folder",
+    "path": "engine/dsl/statements/values/variables",
+    "lane": "dsl",
+    "sources": [
+      "engine/dsl/statements/variable_statement.py"
+    ]
+  },
+  {
+    "id": "folder:engine/dsl/vocabulary",
+    "kind": "folder",
+    "path": "engine/dsl/vocabulary",
+    "lane": "dsl",
+    "sources": [
+      "engine/dsl/constants/__init__.py",
+      "engine/dsl/constants/attribute_constants.py",
+      "engine/dsl/constants/convention_constants.py",
+      "engine/dsl/constants/data_type_constants.py",
+      "engine/dsl/constants/element_constants.py",
+      "engine/dsl/constants/exporter_constants.py",
+      "engine/dsl/enums/__init__.py",
+      "engine/dsl/enums/converter_enums.py",
+      "engine/dsl/enums/dbms_enums.py",
+      "engine/dsl/enums/distribution_enums.py",
+      "engine/dsl/enums/faker_enums.py",
+      "engine/dsl/enums/operation_enums.py"
+    ]
+  },
+  {
+    "id": "folder:engine/dsl/vocabulary/constants",
+    "kind": "folder",
+    "path": "engine/dsl/vocabulary/constants",
+    "lane": "dsl",
+    "sources": [
+      "engine/dsl/constants/__init__.py",
+      "engine/dsl/constants/attribute_constants.py",
+      "engine/dsl/constants/convention_constants.py",
+      "engine/dsl/constants/data_type_constants.py",
+      "engine/dsl/constants/element_constants.py",
+      "engine/dsl/constants/exporter_constants.py"
+    ]
+  },
+  {
+    "id": "folder:engine/dsl/vocabulary/enums",
+    "kind": "folder",
+    "path": "engine/dsl/vocabulary/enums",
+    "lane": "dsl",
+    "sources": [
+      "engine/dsl/enums/__init__.py",
+      "engine/dsl/enums/converter_enums.py",
+      "engine/dsl/enums/dbms_enums.py",
+      "engine/dsl/enums/distribution_enums.py",
+      "engine/dsl/enums/faker_enums.py",
+      "engine/dsl/enums/operation_enums.py"
+    ]
+  },
+  {
+    "id": "contract:dsl/model/base",
+    "kind": "contract",
+    "path": "dsl/model/base",
+    "lane": "dsl",
+    "contract": "docs/architecture/inner/dsl/model/architecture-contract.json",
+    "sources": [
+      "engine/dsl/model/element_model.py",
+      "engine/dsl/model/model_util.py"
+    ]
+  },
+  {
+    "id": "contract:dsl/model/constraints",
+    "kind": "contract",
+    "path": "dsl/model/constraints",
+    "lane": "dsl",
+    "contract": "docs/architecture/inner/dsl/model/architecture-contract.json",
+    "sources": [
+      "engine/dsl/model/constraints/__init__.py",
+      "engine/dsl/model/constraints/capabilities.py",
+      "engine/dsl/model/constraints/facts.py",
+      "engine/dsl/model/constraints/registry.py",
+      "engine/dsl/model/constraints/serialization.py",
+      "engine/dsl/model/constraints/types.py"
+    ]
+  },
+  {
+    "id": "contract:dsl/model/flow",
+    "kind": "contract",
+    "path": "dsl/model/flow",
+    "lane": "dsl",
+    "contract": "docs/architecture/inner/dsl/model/architecture-contract.json",
+    "sources": [
+      "engine/dsl/model/assert_model.py",
+      "engine/dsl/model/base_if_else_model.py",
+      "engine/dsl/model/condition_model.py",
+      "engine/dsl/model/else_if_model.py",
+      "engine/dsl/model/else_model.py",
+      "engine/dsl/model/execute_model.py",
+      "engine/dsl/model/if_model.py",
+      "engine/dsl/model/state_machine_model.py",
+      "engine/dsl/model/while_model.py"
+    ]
+  },
+  {
+    "id": "contract:dsl/model/values",
+    "kind": "contract",
+    "path": "dsl/model/values",
+    "lane": "dsl",
+    "contract": "docs/architecture/inner/dsl/model/architecture-contract.json",
+    "sources": [
+      "engine/dsl/model/array_model.py",
+      "engine/dsl/model/generator_model.py",
+      "engine/dsl/model/item_model.py",
+      "engine/dsl/model/key_model.py",
+      "engine/dsl/model/list_model.py",
+      "engine/dsl/model/nested_key_model.py",
+      "engine/dsl/model/reference_field_model.py",
+      "engine/dsl/model/reference_model.py",
+      "engine/dsl/model/value_model.py",
+      "engine/dsl/model/variable_model.py"
+    ]
+  },
+  {
+    "id": "contract:dsl/model/resources",
+    "kind": "contract",
+    "path": "dsl/model/resources",
+    "lane": "dsl",
+    "contract": "docs/architecture/inner/dsl/model/architecture-contract.json",
+    "sources": [
+      "engine/dsl/model/database_model.py",
+      "engine/dsl/model/include_model.py",
+      "engine/dsl/model/memstore_model.py",
+      "engine/dsl/model/mongodb_model.py",
+      "engine/dsl/model/setup_model.py"
+    ]
+  },
+  {
+    "id": "contract:dsl/model/generation",
+    "kind": "contract",
+    "path": "dsl/model/generation",
+    "lane": "dsl",
+    "contract": "docs/architecture/inner/dsl/model/architecture-contract.json",
+    "sources": [
+      "engine/dsl/model/demographics_model.py",
+      "engine/dsl/model/generate_model.py",
+      "engine/dsl/timeseries.py"
+    ]
+  },
+  {
+    "id": "contract:dsl/model/registry",
+    "kind": "contract",
+    "path": "dsl/model/registry",
+    "lane": "dsl",
+    "contract": "docs/architecture/inner/dsl/model/architecture-contract.json",
+    "sources": [
+      "engine/dsl/model/element_registry.py"
+    ]
+  },
+  {
+    "id": "contract:dsl/statements/base",
+    "kind": "contract",
+    "path": "dsl/statements/base",
+    "lane": "dsl",
+    "contract": "docs/architecture/inner/dsl/statements/architecture-contract.json",
+    "sources": [
+      "engine/dsl/statements/composite_statement.py",
+      "engine/dsl/statements/statement.py",
+      "engine/dsl/statements/statement_util.py"
+    ]
+  },
+  {
+    "id": "contract:dsl/statements/flow",
+    "kind": "contract",
+    "path": "dsl/statements/flow",
+    "lane": "dsl",
+    "contract": "docs/architecture/inner/dsl/statements/architecture-contract.json",
+    "sources": [
+      "engine/dsl/statements/assert_statement.py",
+      "engine/dsl/statements/condition_statement.py",
+      "engine/dsl/statements/echo_statement.py",
+      "engine/dsl/statements/else_if_statement.py",
+      "engine/dsl/statements/else_statement.py",
+      "engine/dsl/statements/execute_statement.py",
+      "engine/dsl/statements/if_statement.py",
+      "engine/dsl/statements/state_machine_statement.py",
+      "engine/dsl/statements/while_statement.py"
+    ]
+  },
+  {
+    "id": "contract:dsl/statements/values",
+    "kind": "contract",
+    "path": "dsl/statements/values",
+    "lane": "dsl",
+    "contract": "docs/architecture/inner/dsl/statements/architecture-contract.json",
+    "sources": [
+      "engine/dsl/statements/array_statement.py",
+      "engine/dsl/statements/element_statement.py",
+      "engine/dsl/statements/generator_statement.py",
+      "engine/dsl/statements/item_statement.py",
+      "engine/dsl/statements/key_statement.py",
+      "engine/dsl/statements/list_statement.py",
+      "engine/dsl/statements/nested_key_statement.py",
+      "engine/dsl/statements/reference_statement.py",
+      "engine/dsl/statements/variable_statement.py"
+    ]
+  },
+  {
+    "id": "contract:dsl/statements/resources",
+    "kind": "contract",
+    "path": "dsl/statements/resources",
+    "lane": "dsl",
+    "contract": "docs/architecture/inner/dsl/statements/architecture-contract.json",
+    "sources": [
+      "engine/dsl/statements/database_statement.py",
+      "engine/dsl/statements/include_statement.py",
+      "engine/dsl/statements/memstore_statement.py",
+      "engine/dsl/statements/mongodb_statement.py",
+      "engine/dsl/statements/setup_statement.py"
+    ]
+  },
+  {
+    "id": "contract:dsl/statements/generation",
+    "kind": "contract",
+    "path": "dsl/statements/generation",
+    "lane": "dsl",
+    "contract": "docs/architecture/inner/dsl/statements/architecture-contract.json",
+    "sources": [
+      "engine/dsl/statements/demographics_statement.py",
+      "engine/dsl/statements/generate_statement.py"
+    ]
+  },
+  {
+    "id": "contract:dsl/parsers/base",
+    "kind": "contract",
+    "path": "dsl/parsers/base",
+    "lane": "dsl",
+    "contract": "docs/architecture/inner/dsl/parsers/architecture-contract.json",
+    "sources": [
+      "engine/dsl/parsers/statement_parser.py"
+    ]
+  },
+  {
+    "id": "contract:dsl/parsers/flow",
+    "kind": "contract",
+    "path": "dsl/parsers/flow",
+    "lane": "dsl",
+    "contract": "docs/architecture/inner/dsl/parsers/architecture-contract.json",
+    "sources": [
+      "engine/dsl/parsers/assert_parser.py",
+      "engine/dsl/parsers/condition_parser.py",
+      "engine/dsl/parsers/echo_parser.py",
+      "engine/dsl/parsers/else_if_parser.py",
+      "engine/dsl/parsers/else_parser.py",
+      "engine/dsl/parsers/execute_parser.py",
+      "engine/dsl/parsers/if_else_base_parser.py",
+      "engine/dsl/parsers/if_parser.py",
+      "engine/dsl/parsers/state_machine_parser.py",
+      "engine/dsl/parsers/while_parser.py"
+    ]
+  },
+  {
+    "id": "contract:dsl/parsers/values",
+    "kind": "contract",
+    "path": "dsl/parsers/values",
+    "lane": "dsl",
+    "contract": "docs/architecture/inner/dsl/parsers/architecture-contract.json",
+    "sources": [
+      "engine/dsl/parsers/array_parser.py",
+      "engine/dsl/parsers/element_parser.py",
+      "engine/dsl/parsers/generator_parser.py",
+      "engine/dsl/parsers/item_parser.py",
+      "engine/dsl/parsers/key_parser.py",
+      "engine/dsl/parsers/list_parser.py",
+      "engine/dsl/parsers/nested_key_parser.py",
+      "engine/dsl/parsers/reference_parser.py",
+      "engine/dsl/parsers/variable_parser.py"
+    ]
+  },
+  {
+    "id": "contract:dsl/parsers/resources",
+    "kind": "contract",
+    "path": "dsl/parsers/resources",
+    "lane": "dsl",
+    "contract": "docs/architecture/inner/dsl/parsers/architecture-contract.json",
+    "sources": [
+      "engine/dsl/parsers/database_parser.py",
+      "engine/dsl/parsers/include_parser.py",
+      "engine/dsl/parsers/memstore_parser.py",
+      "engine/dsl/parsers/mongodb_parser.py",
+      "engine/dsl/parsers/setup_parser.py"
+    ]
+  },
+  {
+    "id": "contract:dsl/parsers/generation",
+    "kind": "contract",
+    "path": "dsl/parsers/generation",
+    "lane": "dsl",
+    "contract": "docs/architecture/inner/dsl/parsers/architecture-contract.json",
+    "sources": [
+      "engine/dsl/parsers/demographics_parser.py",
+      "engine/dsl/parsers/generate_parser.py"
+    ]
+  },
+  {
+    "id": "contract:dsl/parsers/registry",
+    "kind": "contract",
+    "path": "dsl/parsers/registry",
+    "lane": "dsl",
+    "contract": "docs/architecture/inner/dsl/parsers/architecture-contract.json",
+    "sources": [
+      "engine/dsl/parsers/parser_util.py"
+    ]
+  },
+  {
+    "id": "contract:dsl/parsers/document",
+    "kind": "contract",
+    "path": "dsl/parsers/document",
+    "lane": "dsl",
+    "contract": "docs/architecture/inner/dsl/parsers/architecture-contract.json",
+    "sources": [
+      "engine/dsl/parsers/descriptor_parser.py"
+    ]
+  },
+  {
+    "id": "contract:dsl/api",
+    "kind": "contract",
+    "path": "dsl/api",
+    "lane": "dsl",
+    "contract": "docs/architecture/inner/dsl/architecture-contract.json",
+    "sources": [
+      "engine/dsl/api.py"
+    ]
+  },
+  {
+    "id": "contract:dsl/contracts",
+    "kind": "contract",
+    "path": "dsl/contracts",
+    "lane": "dsl",
+    "contract": "docs/architecture/inner/dsl/architecture-contract.json",
+    "sources": [
+      "engine/dsl/contracts.py"
+    ]
+  },
+  {
+    "id": "contract:dsl/vocabulary",
+    "kind": "contract",
+    "path": "dsl/vocabulary",
+    "lane": "dsl",
+    "contract": "docs/architecture/inner/dsl/architecture-contract.json",
+    "sources": [
+      "engine/dsl/constants/__init__.py",
+      "engine/dsl/constants/attribute_constants.py",
+      "engine/dsl/constants/convention_constants.py",
+      "engine/dsl/constants/data_type_constants.py",
+      "engine/dsl/constants/element_constants.py",
+      "engine/dsl/constants/exporter_constants.py",
+      "engine/dsl/enums/__init__.py",
+      "engine/dsl/enums/converter_enums.py",
+      "engine/dsl/enums/dbms_enums.py",
+      "engine/dsl/enums/distribution_enums.py",
+      "engine/dsl/enums/faker_enums.py",
+      "engine/dsl/enums/operation_enums.py"
+    ]
+  },
+  {
+    "id": "contract:dsl/model",
+    "kind": "contract",
+    "path": "dsl/model",
+    "lane": "dsl",
+    "contract": "docs/architecture/inner/dsl/architecture-contract.json",
+    "sources": [
+      "engine/dsl/model/__init__.py",
+      "engine/dsl/model/array_model.py",
+      "engine/dsl/model/assert_model.py",
+      "engine/dsl/model/base_if_else_model.py",
+      "engine/dsl/model/condition_model.py",
+      "engine/dsl/model/constraints/__init__.py",
+      "engine/dsl/model/constraints/capabilities.py",
+      "engine/dsl/model/constraints/facts.py",
+      "engine/dsl/model/constraints/registry.py",
+      "engine/dsl/model/constraints/serialization.py",
+      "engine/dsl/model/constraints/types.py",
+      "engine/dsl/model/database_model.py",
+      "engine/dsl/model/demographics_model.py",
+      "engine/dsl/model/element_model.py",
+      "engine/dsl/model/element_registry.py",
+      "engine/dsl/model/else_if_model.py",
+      "engine/dsl/model/else_model.py",
+      "engine/dsl/model/execute_model.py",
+      "engine/dsl/model/generate_model.py",
+      "engine/dsl/model/generator_model.py",
+      "engine/dsl/model/if_model.py",
+      "engine/dsl/model/include_model.py",
+      "engine/dsl/model/item_model.py",
+      "engine/dsl/model/key_model.py",
+      "engine/dsl/model/list_model.py",
+      "engine/dsl/model/memstore_model.py",
+      "engine/dsl/model/model_util.py",
+      "engine/dsl/model/mongodb_model.py",
+      "engine/dsl/model/nested_key_model.py",
+      "engine/dsl/model/reference_field_model.py",
+      "engine/dsl/model/reference_model.py",
+      "engine/dsl/model/setup_model.py",
+      "engine/dsl/model/state_machine_model.py",
+      "engine/dsl/model/value_model.py",
+      "engine/dsl/model/variable_model.py",
+      "engine/dsl/model/while_model.py",
+      "engine/dsl/timeseries.py"
+    ]
+  },
+  {
+    "id": "contract:dsl/statements",
+    "kind": "contract",
+    "path": "dsl/statements",
+    "lane": "dsl",
+    "contract": "docs/architecture/inner/dsl/architecture-contract.json",
+    "sources": [
+      "engine/dsl/statements/__init__.py",
+      "engine/dsl/statements/array_statement.py",
+      "engine/dsl/statements/assert_statement.py",
+      "engine/dsl/statements/composite_statement.py",
+      "engine/dsl/statements/condition_statement.py",
+      "engine/dsl/statements/database_statement.py",
+      "engine/dsl/statements/demographics_statement.py",
+      "engine/dsl/statements/echo_statement.py",
+      "engine/dsl/statements/element_statement.py",
+      "engine/dsl/statements/else_if_statement.py",
+      "engine/dsl/statements/else_statement.py",
+      "engine/dsl/statements/execute_statement.py",
+      "engine/dsl/statements/generate_statement.py",
+      "engine/dsl/statements/generator_statement.py",
+      "engine/dsl/statements/if_statement.py",
+      "engine/dsl/statements/include_statement.py",
+      "engine/dsl/statements/item_statement.py",
+      "engine/dsl/statements/key_statement.py",
+      "engine/dsl/statements/list_statement.py",
+      "engine/dsl/statements/memstore_statement.py",
+      "engine/dsl/statements/mongodb_statement.py",
+      "engine/dsl/statements/nested_key_statement.py",
+      "engine/dsl/statements/reference_statement.py",
+      "engine/dsl/statements/setup_statement.py",
+      "engine/dsl/statements/state_machine_statement.py",
+      "engine/dsl/statements/statement.py",
+      "engine/dsl/statements/statement_util.py",
+      "engine/dsl/statements/variable_statement.py",
+      "engine/dsl/statements/while_statement.py"
+    ]
+  },
+  {
+    "id": "contract:dsl/parsers",
+    "kind": "contract",
+    "path": "dsl/parsers",
+    "lane": "dsl",
+    "contract": "docs/architecture/inner/dsl/architecture-contract.json",
+    "sources": [
+      "engine/dsl/parsers/__init__.py",
+      "engine/dsl/parsers/array_parser.py",
+      "engine/dsl/parsers/assert_parser.py",
+      "engine/dsl/parsers/condition_parser.py",
+      "engine/dsl/parsers/database_parser.py",
+      "engine/dsl/parsers/demographics_parser.py",
+      "engine/dsl/parsers/descriptor_parser.py",
+      "engine/dsl/parsers/echo_parser.py",
+      "engine/dsl/parsers/element_parser.py",
+      "engine/dsl/parsers/else_if_parser.py",
+      "engine/dsl/parsers/else_parser.py",
+      "engine/dsl/parsers/execute_parser.py",
+      "engine/dsl/parsers/generate_parser.py",
+      "engine/dsl/parsers/generator_parser.py",
+      "engine/dsl/parsers/if_else_base_parser.py",
+      "engine/dsl/parsers/if_parser.py",
+      "engine/dsl/parsers/include_parser.py",
+      "engine/dsl/parsers/item_parser.py",
+      "engine/dsl/parsers/key_parser.py",
+      "engine/dsl/parsers/list_parser.py",
+      "engine/dsl/parsers/memstore_parser.py",
+      "engine/dsl/parsers/mongodb_parser.py",
+      "engine/dsl/parsers/nested_key_parser.py",
+      "engine/dsl/parsers/parser_util.py",
+      "engine/dsl/parsers/reference_parser.py",
+      "engine/dsl/parsers/setup_parser.py",
+      "engine/dsl/parsers/state_machine_parser.py",
+      "engine/dsl/parsers/statement_parser.py",
+      "engine/dsl/parsers/variable_parser.py",
+      "engine/dsl/parsers/while_parser.py",
+      "engine/dsl/properties.py",
+      "engine/dsl/xml.py"
+    ]
+  }
+]

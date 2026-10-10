@@ -17,7 +17,7 @@ from datamimic_ce.authoring.contracts import (
     ScaffoldResult,
     UniqueAcceptanceResult,
 )
-from datamimic_ce.authoring.service import scaffold
+from datamimic_ce.authoring.application.service import scaffold
 
 _TEST_DIR = Path(__file__).resolve().parent
 _REPO_ROOT = _TEST_DIR.parents[2]
@@ -32,7 +32,7 @@ _CALLER_INVALID_LIST = _TEST_DIR / "caller-invalid-list-field.json"
 
 def _run_cli(*args: str, expect_success: bool = True) -> ScaffoldResult:
     result = subprocess.run(
-        [sys.executable, "-m", "datamimic_ce.cli", *args],
+        [sys.executable, "-m", "datamimic_ce.interfaces.cli", *args],
         cwd=_REPO_ROOT,
         check=False,
         capture_output=True,

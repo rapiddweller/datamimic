@@ -1,0 +1,318 @@
+{
+  "schema_version": "2.1.0",
+  "declarations": {
+    "modules": [
+      {
+        "path": "datamimic_ce/domains/shared/converters/__init__.py",
+        "responsibility": "The package initializer marks a Python package and contains no executable domain logic."
+      },
+      {
+        "path": "datamimic_ce/domains/shared/converters/base/converter.py",
+        "responsibility": "Converter transforms an existing value in convert for DSL output without creating a domain object."
+      },
+      {
+        "path": "datamimic_ce/domains/shared/converters/privacy/hash_converter.py",
+        "responsibility": "HashConverter transforms an existing value in convert for DSL output without creating a domain object."
+      },
+      {
+        "path": "datamimic_ce/domains/shared/converters/privacy/java_hash_converter.py",
+        "responsibility": "JavaHashConverter transforms an existing value in convert for DSL output without creating a domain object."
+      },
+      {
+        "path": "datamimic_ce/domains/shared/converters/privacy/mask_converter.py",
+        "responsibility": "MaskConverter transforms an existing value in convert for DSL output without creating a domain object."
+      },
+      {
+        "path": "datamimic_ce/domains/shared/converters/privacy/middle_mask_converter.py",
+        "responsibility": "MiddleMaskConverter transforms an existing value in convert for DSL output without creating a domain object."
+      },
+      {
+        "path": "datamimic_ce/domains/shared/converters/structural/custom_converter.py",
+        "responsibility": "CustomConverter transforms an existing value in convert for DSL output without creating a domain object."
+      },
+      {
+        "path": "datamimic_ce/domains/shared/converters/structural/remove_none_or_empty_element_converter.py",
+        "responsibility": "RemoveNoneOrEmptyElementConverter transforms an existing value in convert for DSL output without creating a domain object."
+      },
+      {
+        "path": "datamimic_ce/domains/shared/converters/temporal/date2timestamp_converter.py",
+        "responsibility": "Date2TimestampConverter transforms an existing value in convert for DSL output without creating a domain object."
+      },
+      {
+        "path": "datamimic_ce/domains/shared/converters/temporal/date_format_converter.py",
+        "responsibility": "DateFormatConverter transforms an existing value in convert for DSL output without creating a domain object."
+      },
+      {
+        "path": "datamimic_ce/domains/shared/converters/temporal/timestamp2date_converter.py",
+        "responsibility": "Timestamp2DateConverter transforms an existing value in convert for DSL output without creating a domain object."
+      },
+      {
+        "path": "datamimic_ce/domains/shared/converters/text/append_converter.py",
+        "responsibility": "AppendConverter transforms an existing value in convert for DSL output without creating a domain object."
+      },
+      {
+        "path": "datamimic_ce/domains/shared/converters/text/cut_length_converter.py",
+        "responsibility": "CutLengthConverter transforms an existing value in convert for DSL output without creating a domain object."
+      },
+      {
+        "path": "datamimic_ce/domains/shared/converters/text/lower_case_converter.py",
+        "responsibility": "LowerCaseConverter transforms an existing value in convert for DSL output without creating a domain object."
+      },
+      {
+        "path": "datamimic_ce/domains/shared/converters/text/substring_converter.py",
+        "responsibility": "SubstringConverter transforms an existing value in convert for DSL output without creating a domain object."
+      },
+      {
+        "path": "datamimic_ce/domains/shared/converters/text/upper_case_converter.py",
+        "responsibility": "UpperCaseConverter transforms an existing value in convert for DSL output without creating a domain object."
+      }
+    ]
+  },
+  "components": [
+    {
+      "id": "CONVERTERS-BASE",
+      "label": "base",
+      "role": "foundation",
+      "packages": [
+        "datamimic_ce.domains.shared.converters.base"
+      ],
+      "exact_modules": [
+        "datamimic_ce.domains.shared.converters"
+      ],
+      "responsibilities": [
+        "Own the converter interface and the inert converter namespace marker."
+      ],
+      "forbidden_responsibilities": [
+        "Implement a particular transformation"
+      ],
+      "provenance": [
+        "docs/architecture/inner/target.md"
+      ],
+      "requires": [],
+      "public": [
+        "datamimic_ce.domains.shared.converters.base.converter:Converter"
+      ],
+      "decided_by": "agent"
+    },
+    {
+      "id": "CONVERTERS-TEXT",
+      "label": "text",
+      "role": "component",
+      "packages": [
+        "datamimic_ce.domains.shared.converters.text"
+      ],
+      "responsibilities": [
+        "Text transformations."
+      ],
+      "forbidden_responsibilities": [
+        "Own date/time or privacy transformations"
+      ],
+      "provenance": [
+        "docs/architecture/inner/target.md"
+      ],
+      "requires": [
+        {
+          "component": "base",
+          "rationale": "Text transformations implement the converter protocol.",
+          "decided_by": "agent"
+        }
+      ],
+      "public": [],
+      "decided_by": "agent"
+    },
+    {
+      "id": "CONVERTERS-TEMPORAL",
+      "label": "temporal",
+      "role": "component",
+      "packages": [
+        "datamimic_ce.domains.shared.converters.temporal"
+      ],
+      "responsibilities": [
+        "Date/time representation transformations."
+      ],
+      "forbidden_responsibilities": [
+        "Own text or privacy transformations"
+      ],
+      "provenance": [
+        "docs/architecture/inner/target.md"
+      ],
+      "requires": [
+        {
+          "component": "base",
+          "rationale": "Temporal transformations implement the converter protocol.",
+          "decided_by": "agent"
+        }
+      ],
+      "public": [],
+      "decided_by": "agent"
+    },
+    {
+      "id": "CONVERTERS-PRIVACY",
+      "label": "privacy",
+      "role": "component",
+      "packages": [
+        "datamimic_ce.domains.shared.converters.privacy"
+      ],
+      "responsibilities": [
+        "Masking and hashing transformations; no blanket security guarantee."
+      ],
+      "forbidden_responsibilities": [
+        "Own text or date/time transformations"
+      ],
+      "provenance": [
+        "docs/architecture/inner/target.md"
+      ],
+      "requires": [
+        {
+          "component": "base",
+          "rationale": "Privacy transformations implement the converter protocol.",
+          "decided_by": "agent"
+        }
+      ],
+      "public": [],
+      "decided_by": "agent"
+    },
+    {
+      "id": "CONVERTERS-STRUCTURAL",
+      "label": "structural",
+      "role": "component",
+      "packages": [
+        "datamimic_ce.domains.shared.converters.structural"
+      ],
+      "responsibilities": [
+        "Custom and structural value transformations."
+      ],
+      "forbidden_responsibilities": [
+        "Own converter registration policy"
+      ],
+      "provenance": [
+        "docs/architecture/inner/target.md"
+      ],
+      "requires": [
+        {
+          "component": "base",
+          "rationale": "Structural transformations implement the converter protocol.",
+          "decided_by": "agent"
+        }
+      ],
+      "public": [],
+      "decided_by": "agent"
+    }
+  ],
+  "rules": [
+    {
+      "id": "CONVERTERS-ASSIGNMENT",
+      "kind": "complete_assignment",
+      "source": "datamimic_ce.domains.shared.converters",
+      "rationale": "Every converter implementation has one transformation owner.",
+      "provenance": [
+        "docs/architecture/inner/target.md"
+      ],
+      "decided_by": "agent"
+    },
+    {
+      "id": "CONVERTERS-REQUIRES-COMPLETE",
+      "kind": "complete_requires",
+      "include_type_checking": true,
+      "rationale": "Transformations implement only the shared converter protocol and do not depend on other transformation families.",
+      "provenance": [
+        "docs/architecture/inner/target.md"
+      ],
+      "decided_by": "agent"
+    },
+    {
+      "id": "CONVERTERS-NO-COMPONENT-CYCLES",
+      "kind": "no_component_cycles",
+      "rationale": "Converter implementations and protocol remain acyclic.",
+      "provenance": [
+        "docs/architecture/inner/target.md"
+      ],
+      "decided_by": "agent"
+    },
+    {
+      "id": "CONVERTERS-INTERFACE-BOUNDARY",
+      "kind": "interface_boundary",
+      "include_type_checking": true,
+      "rationale": "The converter protocol is the cross-family interface; individual implementations remain private outside their owning family.",
+      "provenance": [
+        "docs/architecture/inner/target.md"
+      ],
+      "decided_by": "agent"
+    },
+    {
+      "id": "LAYOUT-DOMAINS-SHARED-CONVERTERS-BASE",
+      "kind": "root_layout",
+      "root": "datamimic_ce.domains.shared.converters.base",
+      "allowed_children": [
+        "datamimic_ce.domains.shared.converters.base.converter"
+      ],
+      "rationale": "Converter interface. Exact reviewed target children; no hidden extra modules.",
+      "provenance": [
+        "docs/architecture/inner/structure-review.json"
+      ],
+      "decided_by": "agent"
+    },
+    {
+      "id": "LAYOUT-DOMAINS-SHARED-CONVERTERS-PRIVACY",
+      "kind": "root_layout",
+      "root": "datamimic_ce.domains.shared.converters.privacy",
+      "allowed_children": [
+        "datamimic_ce.domains.shared.converters.privacy.hash_converter",
+        "datamimic_ce.domains.shared.converters.privacy.java_hash_converter",
+        "datamimic_ce.domains.shared.converters.privacy.mask_converter",
+        "datamimic_ce.domains.shared.converters.privacy.middle_mask_converter"
+      ],
+      "rationale": "Masking and hashing transformations; no blanket security guarantee. Exact reviewed target children; no hidden extra modules.",
+      "provenance": [
+        "docs/architecture/inner/structure-review.json"
+      ],
+      "decided_by": "agent"
+    },
+    {
+      "id": "LAYOUT-DOMAINS-SHARED-CONVERTERS-STRUCTURAL",
+      "kind": "root_layout",
+      "root": "datamimic_ce.domains.shared.converters.structural",
+      "allowed_children": [
+        "datamimic_ce.domains.shared.converters.structural.custom_converter",
+        "datamimic_ce.domains.shared.converters.structural.remove_none_or_empty_element_converter"
+      ],
+      "rationale": "Custom and structural value transformations. Exact reviewed target children; no hidden extra modules.",
+      "provenance": [
+        "docs/architecture/inner/structure-review.json"
+      ],
+      "decided_by": "agent"
+    },
+    {
+      "id": "LAYOUT-DOMAINS-SHARED-CONVERTERS-TEMPORAL",
+      "kind": "root_layout",
+      "root": "datamimic_ce.domains.shared.converters.temporal",
+      "allowed_children": [
+        "datamimic_ce.domains.shared.converters.temporal.date2timestamp_converter",
+        "datamimic_ce.domains.shared.converters.temporal.date_format_converter",
+        "datamimic_ce.domains.shared.converters.temporal.timestamp2date_converter"
+      ],
+      "rationale": "Date/time representation transformations. Exact reviewed target children; no hidden extra modules.",
+      "provenance": [
+        "docs/architecture/inner/structure-review.json"
+      ],
+      "decided_by": "agent"
+    },
+    {
+      "id": "LAYOUT-DOMAINS-SHARED-CONVERTERS-TEXT",
+      "kind": "root_layout",
+      "root": "datamimic_ce.domains.shared.converters.text",
+      "allowed_children": [
+        "datamimic_ce.domains.shared.converters.text.append_converter",
+        "datamimic_ce.domains.shared.converters.text.cut_length_converter",
+        "datamimic_ce.domains.shared.converters.text.lower_case_converter",
+        "datamimic_ce.domains.shared.converters.text.substring_converter",
+        "datamimic_ce.domains.shared.converters.text.upper_case_converter"
+      ],
+      "rationale": "Text transformations. Exact reviewed target children; no hidden extra modules.",
+      "provenance": [
+        "docs/architecture/inner/structure-review.json"
+      ],
+      "decided_by": "agent"
+    }
+  ]
+}

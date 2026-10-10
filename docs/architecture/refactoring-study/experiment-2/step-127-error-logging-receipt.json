@@ -1,0 +1,46 @@
+{
+  "step": 127,
+  "ce_source_checkpoint": "b0cef82aa2fb87bf3d0a3879c253b0eca3f60475",
+  "ee_readonly_checkpoint": "ead501a895df8fa0fd92f98158940e8e88873a79",
+  "audit": "Independent source/caller/test-owner review; no runtime/test execution in this audit.",
+  "concrete_followup": "Missing factory entity duplicate logging; verified/corrected separately in Step128.",
+  "full_transfer_acceptance": "OPEN; scope review does not establish all required transfers or CE/EE error/stream equivalence.",
+  "artifacts": [
+    {
+      "path": "test-artifacts/architecture/ce-recursive-target/step-127-evidence/astra-final-decision.md",
+      "sha256": "49e4a8c093c1a1e6d19b2017bad6114167504d0525817e74d3837649bca599ae"
+    },
+    {
+      "path": "test-artifacts/architecture/ce-recursive-target/step-127-evidence/countercheck.md",
+      "sha256": "223b22fcd3fc43f2ea62ee4883197956954a6486c36665490c7e0f23ba461296"
+    },
+    {
+      "path": "test-artifacts/architecture/ce-recursive-target/step-127-evidence/impl-first-pass.json",
+      "sha256": "0d67ed95ea3a6c494897fe37e7ea2344b2a7ae055f698a921b87590287ec49bf"
+    },
+    {
+      "path": "test-artifacts/architecture/ce-recursive-target/step-127-evidence/impl-first-pass.md",
+      "sha256": "c56637d1cb9234394c9b2cfa18c3404f8e28cec82978ab7aee523e59511cbcc3"
+    },
+    {
+      "path": "test-artifacts/architecture/ce-recursive-target/step-127-evidence/proposal.md",
+      "sha256": "f03324ea2c5f80eb937261adf0447f8480ffb5f194b2aeb5a7aac5133348fa86"
+    },
+    {
+      "path": "test-artifacts/architecture/ce-recursive-target/step-127-evidence/qa-countercheck.md",
+      "sha256": "681be42d4d6b0c6b8e91fc32c2ec360e6859732c1df8d81ae22aa5d9d12583af"
+    },
+    {
+      "path": "test-artifacts/architecture/ce-recursive-target/step-127-evidence/qa-first-pass.json",
+      "sha256": "4d55d234e5c64835fede2146bc967cb911f9b9d365fd875a643725e8c22e44fc"
+    },
+    {
+      "path": "test-artifacts/architecture/ce-recursive-target/step-127-evidence/qa-first-pass.md",
+      "sha256": "d027717a72a831a5aa4db5360b206a5607164ac9cccdb5f930b7a59dea561d17"
+    },
+    {
+      "path": "test-artifacts/architecture/ce-recursive-target/step-127-evidence/selection.json",
+      "sha256": "5b92bc11d074d170deb0f530d2fa4836eb6e1ae21e22f5776a7972ee8a1accc0"
+    }
+  ]
+}

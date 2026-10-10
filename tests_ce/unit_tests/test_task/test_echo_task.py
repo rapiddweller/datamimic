@@ -7,10 +7,10 @@
 import xml.etree.ElementTree as ET
 from unittest.mock import MagicMock, patch
 
-from datamimic_ce.contexts.context import Context
-from datamimic_ce.parsers.echo_parser import EchoParser
-from datamimic_ce.statements.echo_statement import EchoStatement
-from datamimic_ce.tasks.echo_task import EchoTask
+from datamimic_ce.engine.dsl.parsers.flow.commands.echo_parser import EchoParser
+from datamimic_ce.engine.dsl.statements.flow.commands.echo_statement import EchoStatement
+from datamimic_ce.engine.runtime.contexts.context import Context
+from datamimic_ce.engine.runtime.tasks.flow.commands.echo_task import EchoTask
 
 
 class TestEchoTask:
@@ -42,7 +42,7 @@ class TestEchoTask:
         assert isinstance(statement, EchoStatement)
         assert statement.value == "Hello {name}"
 
-    @patch("datamimic_ce.tasks.echo_task.logger")
+    @patch("datamimic_ce.engine.runtime.tasks.flow.commands.echo_task.logger")
     def test_execute_none_value(self, mock_logger):
         ctx = MagicMock(spec=Context)
         task = EchoTask(EchoStatement(None))
@@ -50,7 +50,7 @@ class TestEchoTask:
         mock_logger.debug.assert_called_once_with("Echo - ")
         ctx.evaluate_python_expression.assert_not_called()
 
-    @patch("datamimic_ce.tasks.echo_task.logger")
+    @patch("datamimic_ce.engine.runtime.tasks.flow.commands.echo_task.logger")
     def test_execute_empty_string(self, mock_logger):
         ctx = MagicMock(spec=Context)
         task = EchoTask(EchoStatement(""))
@@ -58,7 +58,7 @@ class TestEchoTask:
         mock_logger.debug.assert_called_once_with("Echo - ")
         ctx.evaluate_python_expression.assert_not_called()
 
-    @patch("datamimic_ce.tasks.echo_task.logger")
+    @patch("datamimic_ce.engine.runtime.tasks.flow.commands.echo_task.logger")
     def test_execute_whitespace_string(self, mock_logger):
         ctx = MagicMock(spec=Context)
         task = EchoTask(EchoStatement("   "))
@@ -66,7 +66,7 @@ class TestEchoTask:
         mock_logger.debug.assert_called_once_with("Echo -    ")
         ctx.evaluate_python_expression.assert_not_called()
 
-    @patch("datamimic_ce.tasks.echo_task.logger")
+    @patch("datamimic_ce.engine.runtime.tasks.flow.commands.echo_task.logger")
     def test_execute_plain_text(self, mock_logger):
         ctx = MagicMock(spec=Context)
         task = EchoTask(EchoStatement("Simple message"))
@@ -74,7 +74,7 @@ class TestEchoTask:
         mock_logger.debug.assert_called_once_with("Echo - Simple message")
         ctx.evaluate_python_expression.assert_not_called()
 
-    @patch("datamimic_ce.tasks.echo_task.logger")
+    @patch("datamimic_ce.engine.runtime.tasks.flow.commands.echo_task.logger")
     def test_execute_interpolation(self, mock_logger):
         ctx = MagicMock(spec=Context)
         ctx.evaluate_python_expression.return_value = "Hello World"
@@ -83,7 +83,7 @@ class TestEchoTask:
         ctx.evaluate_python_expression.assert_called_once_with("f'Hello {name}'")
         mock_logger.debug.assert_called_once_with("Echo - Hello World")
 
-    @patch("datamimic_ce.tasks.echo_task.logger")
+    @patch("datamimic_ce.engine.runtime.tasks.flow.commands.echo_task.logger")
     def test_execute_interpolation_with_quotes(self, mock_logger):
         ctx = MagicMock(spec=Context)
         ctx.evaluate_python_expression.return_value = 'User: "Alice" / \'Admin\''
@@ -92,7 +92,7 @@ class TestEchoTask:
         ctx.evaluate_python_expression.assert_called_once_with("f'User: \\\"{user}\\\" / \\\'{role}\\\''")
         mock_logger.debug.assert_called_once_with('Echo - User: "Alice" / \'Admin\'')
 
-    @patch("datamimic_ce.tasks.echo_task.logger")
+    @patch("datamimic_ce.engine.runtime.tasks.flow.commands.echo_task.logger")
     def test_execute_failing_placeholder(self, mock_logger):
         ctx = MagicMock(spec=Context)
         ctx.evaluate_python_expression.side_effect = Exception("name 'unknown_var' is not defined")

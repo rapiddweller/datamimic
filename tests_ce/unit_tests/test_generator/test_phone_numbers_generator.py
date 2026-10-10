@@ -5,11 +5,24 @@
 # For questions and support, contact: info@rapiddweller.com
 
 
+import random
 
-from datamimic_ce.domains.common.literal_generators.phone_number_generator import PhoneNumberGenerator
+from datamimic_ce.domains.shared.generators.phone_number_generator import PhoneNumberGenerator
 
 
 class TestPhoneNumberGenerator:
+    def test_seeded_generator_preserves_rng_and_constructor_output(self):
+        rng = random.Random(12345)
+        generator = PhoneNumberGenerator(dataset="de", rng=rng)
+
+        assert generator.rng is rng
+        assert generator.dataset == "DE"
+        assert [generator.generate() for _ in range(3)] == [
+            "+49-2695-114515",
+            "+49-9154-390945",
+            "+49-4133-171303",
+        ]
+
     def test_phone_number_generator(self):
         for _ in range(10):
             phone_number = PhoneNumberGenerator().generate()

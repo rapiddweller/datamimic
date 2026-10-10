@@ -66,7 +66,7 @@ Person
 ├── phone: str
 ├── mobile_phone: str
 ├── address: Address
-├── transaction_profile: str | dict[str, float] | None
+├── transaction_profile: str | Mapping[str, float] | None
 ├── demographic_sample: DemographicSample
 ├── academic_title: str
 ├── salutation: str
@@ -171,7 +171,7 @@ Patient
 ├── insurance_provider: str
 ├── insurance_policy_number: str
 ├── primary_doctor: Doctor | None
-└── transaction_profile: str | dict[str, float] | None
+└── transaction_profile: str | Mapping[str, float] | None
 ```
 
 #### Doctor

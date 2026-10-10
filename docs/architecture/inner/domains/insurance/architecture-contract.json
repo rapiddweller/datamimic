@@ -1,0 +1,258 @@
+{
+  "schema_version": "2.1.0",
+  "declarations": {
+    "modules": [
+      {
+        "path": "datamimic_ce/domains/insurance/__init__.py",
+        "responsibility": "The package initializer marks a Python package and contains no executable domain logic."
+      },
+      {
+        "path": "datamimic_ce/domains/insurance/generators/__init__.py",
+        "responsibility": "The package initializer marks a Python package and contains no executable domain logic."
+      },
+      {
+        "path": "datamimic_ce/domains/insurance/generators/insurance_company_generator.py",
+        "responsibility": "InsuranceCompanyGenerator creates UUID identity candidates and generates insurer records through get_random_company, using the required RNG and dataset."
+      },
+      {
+        "path": "datamimic_ce/domains/insurance/generators/insurance_coverage_generator.py",
+        "responsibility": "InsuranceCoverageGenerator generates synthetic domain values through get_random_coverage, using the required RNG, dataset, or clock basis."
+      },
+      {
+        "path": "datamimic_ce/domains/insurance/generators/insurance_policy_generator.py",
+        "responsibility": "InsurancePolicyGenerator creates UUID identity candidates, selects coverage counts, and generates policy premiums, frequencies, and statuses through its dataset-backed operations."
+      },
+      {
+        "path": "datamimic_ce/domains/insurance/generators/insurance_product_generator.py",
+        "responsibility": "InsuranceProductGenerator creates UUID identity candidates and generates product records and coverage counts through get_random_product and pick_coverage_count, using the required RNG and dataset."
+      },
+      {
+        "path": "datamimic_ce/domains/insurance/models/__init__.py",
+        "responsibility": "The package initializer marks a Python package and contains no executable domain logic."
+      },
+      {
+        "path": "datamimic_ce/domains/insurance/models/insurance_company.py",
+        "responsibility": "InsuranceCompany exposes cached insurer identity and source company data, code, founding year, headquarters, and website."
+      },
+      {
+        "path": "datamimic_ce/domains/insurance/models/insurance_coverage.py",
+        "responsibility": "InsuranceCoverage defines a product-linked benefit with descriptive details and minimum and maximum coverage."
+      },
+      {
+        "path": "datamimic_ce/domains/insurance/models/insurance_policy.py",
+        "responsibility": "InsurancePolicy exposes a cached identity and links insurer, product, policyholder, and coverages with premium, term, and status data."
+      },
+      {
+        "path": "datamimic_ce/domains/insurance/models/insurance_product.py",
+        "responsibility": "InsuranceProduct exposes a cached identity and a coded insurance offering with type, description, and available coverages."
+      },
+      {
+        "path": "datamimic_ce/domains/insurance/services/__init__.py",
+        "responsibility": "The initializer groups the company, coverage, policy, and product service classes for package imports."
+      },
+      {
+        "path": "datamimic_ce/domains/insurance/services/insurance_company_service.py",
+        "responsibility": "InsuranceCompanyService binds its concrete generator and model and declares the entity fields exposed to the registry and DSL."
+      },
+      {
+        "path": "datamimic_ce/domains/insurance/services/insurance_coverage_service.py",
+        "responsibility": "InsuranceCoverageService binds its concrete generator and model and declares the entity fields exposed to the registry and DSL."
+      },
+      {
+        "path": "datamimic_ce/domains/insurance/services/insurance_policy_service.py",
+        "responsibility": "InsurancePolicyService binds its concrete generator and model and declares the entity fields exposed to the registry and DSL."
+      },
+      {
+        "path": "datamimic_ce/domains/insurance/services/insurance_product_service.py",
+        "responsibility": "InsuranceProductService binds its concrete generator and model and declares the entity fields exposed to the registry and DSL."
+      }
+    ]
+  },
+  "components": [
+    {
+      "id": "INSURANCE-MODELS",
+      "label": "models",
+      "role": "component",
+      "packages": [
+        "datamimic_ce.domains.insurance.models"
+      ],
+      "responsibilities": [
+        "Expose insurer, product, coverage, and policy data, including cached identities, policyholder, nested company and product, coverage list, premium, term, and status."
+      ],
+      "forbidden_responsibilities": [
+        "Generate dataset values directly or own service orchestration."
+      ],
+      "provenance": [
+        "docs/architecture/inner/target.md"
+      ],
+      "requires": [
+        {
+          "component": "generators",
+          "rationale": "Insurance entities resolve computed values through their generators.",
+          "decided_by": "agent"
+        }
+      ],
+      "public": [
+        "datamimic_ce.domains.insurance.models.insurance_company:InsuranceCompany",
+        "datamimic_ce.domains.insurance.models.insurance_coverage:InsuranceCoverage",
+        "datamimic_ce.domains.insurance.models.insurance_policy:InsurancePolicy",
+        "datamimic_ce.domains.insurance.models.insurance_product:InsuranceProduct"
+      ],
+      "decided_by": "agent"
+    },
+    {
+      "id": "INSURANCE-GENERATORS",
+      "label": "generators",
+      "role": "component",
+      "packages": [
+        "datamimic_ce.domains.insurance.generators"
+      ],
+      "responsibilities": [
+        "Generate UUID identity candidates, weighted insurer, product, and coverage records, policy coverage counts, premiums, terms, and statuses; define the fixed coverage output record."
+      ],
+      "forbidden_responsibilities": [
+        "Import insurance models or services."
+      ],
+      "provenance": [
+        "docs/architecture/inner/target.md"
+      ],
+      "requires": [],
+      "public": [
+        "datamimic_ce.domains.insurance.generators.insurance_company_generator:InsuranceCompanyGenerator",
+        "datamimic_ce.domains.insurance.generators.insurance_coverage_generator:InsuranceCoverageData",
+        "datamimic_ce.domains.insurance.generators.insurance_coverage_generator:InsuranceCoverageGenerator",
+        "datamimic_ce.domains.insurance.generators.insurance_policy_generator:InsurancePolicyGenerator",
+        "datamimic_ce.domains.insurance.generators.insurance_product_generator:InsuranceProductGenerator"
+      ],
+      "decided_by": "agent"
+    },
+    {
+      "id": "INSURANCE-SERVICES",
+      "label": "services",
+      "role": "component",
+      "packages": [
+        "datamimic_ce.domains.insurance.services"
+      ],
+      "responsibilities": [
+        "Bind company, product, coverage, and policy generators to models, declare policy schemas, fields and datasets, and own the inert package initializer."
+      ],
+      "exact_modules": [
+        "datamimic_ce.domains.insurance"
+      ],
+      "forbidden_responsibilities": [
+        "Implement generator algorithms or bypass entity models."
+      ],
+      "provenance": [
+        "docs/architecture/inner/target.md"
+      ],
+      "requires": [
+        {
+          "component": "models",
+          "rationale": "Services return insurance entities.",
+          "decided_by": "agent"
+        },
+        {
+          "component": "generators",
+          "rationale": "Services instantiate domain generators.",
+          "decided_by": "agent"
+        }
+      ],
+      "public": [
+        "datamimic_ce.domains.insurance.services.insurance_company_service:InsuranceCompanyService",
+        "datamimic_ce.domains.insurance.services.insurance_coverage_service:InsuranceCoverageService",
+        "datamimic_ce.domains.insurance.services.insurance_policy_service:InsurancePolicyService",
+        "datamimic_ce.domains.insurance.services.insurance_product_service:InsuranceProductService"
+      ],
+      "decided_by": "agent"
+    }
+  ],
+  "rules": [
+    {
+      "id": "INSURANCE-ASSIGNMENT",
+      "kind": "complete_assignment",
+      "source": "datamimic_ce.domains.insurance",
+      "rationale": "Each insurance implementation module has one semantic owner; the package initializer is the source module.",
+      "provenance": [
+        "docs/architecture/inner/target.md"
+      ],
+      "decided_by": "agent"
+    },
+    {
+      "id": "INSURANCE-REQUIRES",
+      "kind": "complete_requires",
+      "include_type_checking": true,
+      "rationale": "Entities and services may consume generators; generator-to-entity and generator-to-service dependencies remain disallowed.",
+      "provenance": [
+        "docs/architecture/inner/target.md"
+      ],
+      "decided_by": "agent"
+    },
+    {
+      "id": "INSURANCE-INTERFACES",
+      "kind": "interface_boundary",
+      "include_type_checking": true,
+      "rationale": "Only entity, generator, and service types cross family boundaries.",
+      "provenance": [
+        "docs/architecture/inner/target.md"
+      ],
+      "decided_by": "agent"
+    },
+    {
+      "id": "INSURANCE-ACYCLIC",
+      "kind": "no_component_cycles",
+      "rationale": "Insurance ownership flows from generators to entities and services, without reverse generator dependencies.",
+      "provenance": [
+        "docs/architecture/inner/target.md"
+      ],
+      "decided_by": "agent"
+    },
+    {
+      "id": "LAYOUT-DOMAINS-INSURANCE-GENERATORS",
+      "kind": "root_layout",
+      "root": "datamimic_ce.domains.insurance.generators",
+      "allowed_children": [
+        "datamimic_ce.domains.insurance.generators.insurance_company_generator",
+        "datamimic_ce.domains.insurance.generators.insurance_coverage_generator",
+        "datamimic_ce.domains.insurance.generators.insurance_policy_generator",
+        "datamimic_ce.domains.insurance.generators.insurance_product_generator"
+      ],
+      "rationale": "Value algorithms; must not import entity models/services. Exact reviewed target children; no hidden extra modules.",
+      "provenance": [
+        "docs/architecture/inner/structure-review.json"
+      ],
+      "decided_by": "agent"
+    },
+    {
+      "id": "LAYOUT-DOMAINS-INSURANCE-MODELS",
+      "kind": "root_layout",
+      "root": "datamimic_ce.domains.insurance.models",
+      "allowed_children": [
+        "datamimic_ce.domains.insurance.models.insurance_company",
+        "datamimic_ce.domains.insurance.models.insurance_coverage",
+        "datamimic_ce.domains.insurance.models.insurance_policy",
+        "datamimic_ce.domains.insurance.models.insurance_product"
+      ],
+      "rationale": "Lazy domain entities; may call generators for computed values. Exact reviewed target children; no hidden extra modules.",
+      "provenance": [
+        "docs/architecture/inner/structure-review.json"
+      ],
+      "decided_by": "agent"
+    },
+    {
+      "id": "LAYOUT-DOMAINS-INSURANCE-SERVICES",
+      "kind": "root_layout",
+      "root": "datamimic_ce.domains.insurance.services",
+      "allowed_children": [
+        "datamimic_ce.domains.insurance.services.insurance_company_service",
+        "datamimic_ce.domains.insurance.services.insurance_coverage_service",
+        "datamimic_ce.domains.insurance.services.insurance_policy_service",
+        "datamimic_ce.domains.insurance.services.insurance_product_service"
+      ],
+      "rationale": "Domain construction workflows using models and generators. Exact reviewed target children; no hidden extra modules.",
+      "provenance": [
+        "docs/architecture/inner/structure-review.json"
+      ],
+      "decided_by": "agent"
+    }
+  ]
+}

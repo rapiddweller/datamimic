@@ -1,0 +1,1955 @@
+{
+  "schema_version": "2.1.0",
+  "components": [
+    {
+      "id": "COMP-INTERFACES",
+      "label": "interfaces",
+      "role": "interface",
+      "packages": [
+        "datamimic_ce.interfaces"
+      ],
+      "namespace": "datamimic_ce.interfaces",
+      "responsibilities": [
+        "Transport and Python caller adaptation; no execution policy."
+      ],
+      "forbidden_responsibilities": [
+        "descriptor execution",
+        "DSL ownership",
+        "database or exporter implementation"
+      ],
+      "provenance": [
+        "docs/architecture/refactoring-study/experiment-2/target-architecture.md"
+      ],
+      "requires": [
+        {
+          "component": "authoring",
+          "rationale": "Interfaces expose authoring use cases."
+        },
+        {
+          "component": "runtime",
+          "rationale": "Interfaces start descriptor execution through the runtime API."
+        },
+        {
+          "component": "domains",
+          "rationale": "CLI version and system-information commands read library version metadata through the Domains API."
+        },
+        {
+          "component": "resources",
+          "rationale": "The CLI discovers shipped examples through the resource API."
+        },
+        {
+          "component": "python_compat",
+          "rationale": "Interfaces support the package's Python 3.10 floor."
+        }
+      ],
+      "public": [],
+      "planned": [],
+      "decided_by": "agent",
+      "inside": "docs/architecture/inner/interfaces/architecture-contract.json"
+    },
+    {
+      "id": "COMP-AUTHORING",
+      "label": "authoring",
+      "role": "component",
+      "packages": [
+        "datamimic_ce.authoring"
+      ],
+      "namespace": "datamimic_ce.authoring",
+      "inside": "docs/architecture/inner/authoring/architecture-contract.json",
+      "responsibilities": [
+        "Compile intent and run bounded verification transactions."
+      ],
+      "forbidden_responsibilities": [
+        "a second DSL vocabulary",
+        "direct execution internals",
+        "transport-specific behavior"
+      ],
+      "provenance": [
+        "docs/architecture/refactoring-study/experiment-2/target-architecture.md"
+      ],
+      "requires": [
+        {
+          "component": "dsl",
+          "rationale": "Authoring derives executable syntax and capabilities from the DSL owner."
+        },
+        {
+          "component": "runtime",
+          "rationale": "Bounded verification executes only through the runtime API."
+        },
+        {
+          "component": "io",
+          "rationale": "Authoring projects supported sources and targets from their owner."
+        },
+        {
+          "component": "domains",
+          "rationale": "Authoring projects domain capabilities from their owner."
+        },
+        {
+          "component": "python_compat",
+          "rationale": "Authoring supports the package's Python 3.10 floor."
+        }
+      ],
+      "public": [
+        "datamimic_ce.authoring.api",
+        "datamimic_ce.authoring.contracts",
+        "datamimic_ce.authoring.spec:LeafFieldKind"
+      ],
+      "planned": [],
+      "decided_by": "agent"
+    },
+    {
+      "id": "COMP-DSL",
+      "label": "dsl",
+      "role": "contract",
+      "packages": [
+        "datamimic_ce.engine.dsl"
+      ],
+      "namespace": "datamimic_ce.engine.dsl",
+      "inside": "docs/architecture/inner/dsl/architecture-contract.json",
+      "responsibilities": [
+        "Validate descriptor vocabulary and construct execution statements."
+      ],
+      "forbidden_responsibilities": [
+        "descriptor execution",
+        "IO implementation",
+        "authoring intent"
+      ],
+      "provenance": [
+        "docs/architecture/refactoring-study/experiment-2/target-architecture.md"
+      ],
+      "requires": [
+        {
+          "component": "python_compat",
+          "rationale": "DSL enums support the package's Python 3.10 floor."
+        }
+      ],
+      "public": [
+        "datamimic_ce.engine.dsl.api",
+        "datamimic_ce.engine.dsl.statements.base.composite_statement:ConditionBranchStatement",
+        "datamimic_ce.engine.dsl.model.constraints.types:Constraint",
+        "datamimic_ce.engine.dsl.parsers.input.properties:parse_properties",
+        "datamimic_ce.engine.dsl.parsers.input.target:parse_function_string",
+        "datamimic_ce.engine.dsl.parsers.input.xml:DTDForbiddenError",
+        "datamimic_ce.engine.dsl.parsers.input.xml:parse_xml_file",
+        "datamimic_ce.engine.dsl.vocabulary.constants.attribute_constants:META_SELECTOR",
+        "datamimic_ce.engine.dsl.vocabulary.constants.attribute_constants:META_TARGET_ENTITY",
+        "datamimic_ce.engine.dsl.vocabulary.constants.attribute_constants:META_TYPE",
+        "datamimic_ce.engine.dsl.vocabulary.constants.data_type_constants:DATA_TYPE_DICT",
+        "datamimic_ce.engine.dsl.vocabulary.constants.data_type_constants:DATA_TYPE_LIST",
+        "datamimic_ce.engine.dsl.vocabulary.constants.element_constants:EL_GENERATE",
+        "datamimic_ce.engine.dsl.vocabulary.constants.element_constants:EL_VARIABLE",
+        "datamimic_ce.engine.dsl.vocabulary.constants.element_constants:EL_NESTED_KEY",
+        "datamimic_ce.engine.dsl.vocabulary.constants.exporter_constants:EXPORTER_CONSOLE_EXPORTER",
+        "datamimic_ce.engine.dsl.vocabulary.constants.exporter_constants:EXPORTER_CSV",
+        "datamimic_ce.engine.dsl.vocabulary.constants.exporter_constants:EXPORTER_DBUNIT",
+        "datamimic_ce.engine.dsl.vocabulary.constants.exporter_constants:EXPORTER_FIXED_WIDTH",
+        "datamimic_ce.engine.dsl.vocabulary.constants.exporter_constants:EXPORTER_JSON",
+        "datamimic_ce.engine.dsl.vocabulary.constants.exporter_constants:EXPORTER_LOG_EXPORTER",
+        "datamimic_ce.engine.dsl.vocabulary.constants.exporter_constants:EXPORTER_TEST_RESULT_EXPORTER",
+        "datamimic_ce.engine.dsl.vocabulary.constants.exporter_constants:EXPORTER_TXT",
+        "datamimic_ce.engine.dsl.vocabulary.constants.exporter_constants:EXPORTER_XLSX",
+        "datamimic_ce.engine.dsl.vocabulary.constants.exporter_constants:EXPORTER_XML",
+        "datamimic_ce.engine.dsl.vocabulary.enums.dbms_enums:Dbms",
+        "datamimic_ce.engine.dsl.vocabulary.enums.operation_enums:ExportOperation",
+        "datamimic_ce.engine.dsl.vocabulary.enums.converter_enums",
+        "datamimic_ce.engine.dsl.vocabulary.enums.distribution_enums",
+        "datamimic_ce.engine.dsl.vocabulary.enums.faker_enums",
+        "datamimic_ce.engine.dsl.vocabulary.source_capabilities"
+      ],
+      "planned": [],
+      "decided_by": "agent"
+    },
+    {
+      "id": "COMP-RUNTIME",
+      "label": "runtime",
+      "role": "component",
+      "packages": [
+        "datamimic_ce.engine.runtime"
+      ],
+      "namespace": "datamimic_ce.engine.runtime",
+      "inside": "docs/architecture/inner/runtime/architecture-contract.json",
+      "responsibilities": [
+        "Execute statements; own run, row and worker state."
+      ],
+      "forbidden_responsibilities": [
+        "database driver details",
+        "export format implementation",
+        "domain generation logic"
+      ],
+      "provenance": [
+        "docs/architecture/refactoring-study/experiment-2/target-architecture.md"
+      ],
+      "requires": [
+        {
+          "component": "dsl",
+          "rationale": "Runtime executes typed DSL statements."
+        },
+        {
+          "component": "io",
+          "rationale": "Runtime reads and writes only through the IO API."
+        },
+        {
+          "component": "domains",
+          "rationale": "Runtime invokes domain generators through the domain API."
+        },
+        {
+          "component": "python_compat",
+          "rationale": "Runtime supports the package's Python 3.10 floor."
+        },
+        {
+          "component": "randomness",
+          "rationale": "Use the shared RNG protocol and weighted-index primitive; no generator or run lifecycle dependency.",
+          "decided_by": "agent"
+        }
+      ],
+      "public": [
+        "datamimic_ce.engine.runtime.api",
+        "datamimic_ce.engine.runtime.contracts",
+        "datamimic_ce.engine.runtime.storage.memstore_manager:MemstoreManager"
+      ],
+      "planned": [],
+      "decided_by": "agent"
+    },
+    {
+      "id": "COMP-IO",
+      "label": "io",
+      "role": "component",
+      "packages": [
+        "datamimic_ce.engine.io"
+      ],
+      "namespace": "datamimic_ce.engine.io",
+      "inside": "docs/architecture/inner/io/architecture-contract.json",
+      "responsibilities": [
+        "Read, select, page and write external/in-memory data."
+      ],
+      "forbidden_responsibilities": [
+        "Depend on concrete Runtime context or DSL statement types, or access caller context beyond the approved IO-owned ExporterContext protocol.",
+        "evaluating expressions",
+        "task orchestration"
+      ],
+      "provenance": [
+        "docs/architecture/refactoring-study/experiment-2/target-architecture.md",
+        "docs/architecture/refactoring-study/experiment-2/amendment-161-client-lookup-boundary.md",
+        "docs/architecture/refactoring-study/experiment-2/amendment-162-client-names-boundary.md"
+      ],
+      "requires": [
+        {
+          "component": "dsl",
+          "rationale": "IO accepts typed DSL-owned source and target descriptions.",
+          "through": [
+            "datamimic_ce.engine.dsl.vocabulary",
+            "datamimic_ce.engine.dsl.parsers.input.properties",
+            "datamimic_ce.engine.dsl.parsers.input.target",
+            "datamimic_ce.engine.dsl.parsers.input.xml"
+          ]
+        },
+        {
+          "component": "randomness",
+          "rationale": "Use the shared RNG protocol and weighted-index primitive; no generator or run lifecycle dependency.",
+          "decided_by": "agent"
+        }
+      ],
+      "public": [
+        "datamimic_ce.engine.io.api",
+        "datamimic_ce.engine.io.api:RegisteredClient",
+        "datamimic_ce.engine.io.contracts",
+        "datamimic_ce.engine.io.contracts:EntityValue",
+        "datamimic_ce.engine.io.contracts:SqlScriptClient",
+        "datamimic_ce.engine.io.files.api",
+        "datamimic_ce.engine.io.clients.client:ClientLookup",
+        "datamimic_ce.engine.io.clients.client:ClientNames"
+      ],
+      "planned": [],
+      "decided_by": "agent"
+    },
+    {
+      "id": "COMP-ERRORS",
+      "label": "errors",
+      "role": "foundation",
+      "packages": [
+        "datamimic_ce.errors"
+      ],
+      "namespace": "datamimic_ce.errors",
+      "responsibilities": [
+        "Stable public error types, codes, formatting and construction."
+      ],
+      "forbidden_responsibilities": [
+        "component-specific validation policy",
+        "runtime logging configuration"
+      ],
+      "provenance": [
+        "docs/architecture/inner/target.md"
+      ],
+      "requires": [],
+      "public": [
+        "datamimic_ce.errors",
+        "datamimic_ce.errors.base"
+      ],
+      "decided_by": "agent",
+      "inside": "docs/architecture/inner/errors/architecture-contract.json"
+    },
+    {
+      "id": "COMP-DOMAINS",
+      "label": "domains",
+      "role": "component",
+      "packages": [
+        "datamimic_ce.domains"
+      ],
+      "namespace": "datamimic_ce.domains",
+      "inside": "docs/architecture/inner/domains/architecture-contract.json",
+      "responsibilities": [
+        "Generate business values/entities and load their domain datasets."
+      ],
+      "forbidden_responsibilities": [
+        "runtime context access",
+        "database access",
+        "expression evaluation"
+      ],
+      "provenance": [
+        "docs/architecture/refactoring-study/experiment-2/target-architecture.md"
+      ],
+      "requires": [
+        {
+          "component": "errors",
+          "rationale": "Domain services raise stable shared errors."
+        },
+        {
+          "component": "dsl",
+          "rationale": "Domain generators use the canonical DSL vocabulary enums.",
+          "through": [
+            "datamimic_ce.engine.dsl.vocabulary.enums.distribution_enums",
+            "datamimic_ce.engine.dsl.vocabulary.enums.converter_enums",
+            "datamimic_ce.engine.dsl.vocabulary.enums.faker_enums"
+          ]
+        },
+        {
+          "component": "io",
+          "through": [
+            "datamimic_ce.engine.io.files.api",
+            "datamimic_ce.engine.io.contracts"
+          ],
+          "rationale": "Domain-owned packaged datasets use the narrow file-dataset IO surface."
+        },
+        {
+          "component": "randomness",
+          "rationale": "Use the shared RNG protocol and weighted-index primitive; no generator or run lifecycle dependency.",
+          "decided_by": "agent"
+        }
+      ],
+      "public": [
+        "datamimic_ce.domains.api",
+        "datamimic_ce.domains.api:BaseDomainService",
+        "datamimic_ce.domains.api:AddressService",
+        "datamimic_ce.domains.api:CityService",
+        "datamimic_ce.domains.api:CompanyService",
+        "datamimic_ce.domains.api:CountryService",
+        "datamimic_ce.domains.api:DemographicConfig",
+        "datamimic_ce.domains.api:IdentifierRegistry",
+        "datamimic_ce.domains.api:PersonService",
+        "datamimic_ce.domains.shared.models.address:Address",
+        "datamimic_ce.domains.shared.models.city:City",
+        "datamimic_ce.domains.shared.models.company:Company",
+        "datamimic_ce.domains.shared.models.country:Country",
+        "datamimic_ce.domains.shared.models.person:Person",
+        "datamimic_ce.domains.healthcare.models.patient:Patient",
+        "datamimic_ce.domains.finance.contracts:BankAccountData",
+        "datamimic_ce.domains.finance.contracts:GeneratedTransactionData",
+        "datamimic_ce.domains.finance.contracts:TransactionData",
+        "datamimic_ce.domains.finance.contracts:TransactionTypeData",
+        "datamimic_ce.domains.finance.contracts:CurrencyData",
+        "datamimic_ce.domains.finance.models.bank:Bank",
+        "datamimic_ce.domains.finance.generators.bank_account_generator:BankAccountGenerator",
+        "datamimic_ce.domains.domain_core.contracts.attribute_catalog:FieldSpec",
+        "datamimic_ce.domains.domain_core.contracts.generation",
+        "datamimic_ce.domains.shared.demographics.profile:DemographicProfile",
+        "datamimic_ce.domains.shared.demographics.profile:DemographicAgeBand",
+        "datamimic_ce.domains.shared.demographics.profile:DemographicConditionRate"
+      ],
+      "planned": [],
+      "decided_by": "agent"
+    },
+    {
+      "id": "COMP-RESOURCES",
+      "label": "resources",
+      "role": "projection",
+      "packages": [
+        "datamimic_ce.resources"
+      ],
+      "namespace": "datamimic_ce.resources",
+      "responsibilities": [
+        "Packaged runnable demos/examples and resource access."
+      ],
+      "forbidden_responsibilities": [
+        "being imported by engine code",
+        "owning reusable product behavior"
+      ],
+      "provenance": [
+        "docs/architecture/refactoring-study/experiment-2/target-architecture.md"
+      ],
+      "requires": [
+        {
+          "component": "dsl",
+          "rationale": "Example scripts may implement DSL extension contracts."
+        },
+        {
+          "component": "runtime",
+          "rationale": "Example scripts may receive typed runtime context."
+        },
+        {
+          "component": "io",
+          "rationale": "Example scripts may use typed IO contracts."
+        },
+        {
+          "component": "domains",
+          "rationale": "Examples exercise public domain generators."
+        }
+      ],
+      "public": [
+        "datamimic_ce.resources.api"
+      ],
+      "planned": [],
+      "decided_by": "agent"
+    },
+    {
+      "id": "COMP-PYTHON-COMPAT",
+      "label": "python_compat",
+      "role": "foundation",
+      "packages": [
+        "datamimic_ce._compat"
+      ],
+      "responsibilities": [
+        "Existing interpreter compatibility only; not old import aliases."
+      ],
+      "forbidden_responsibilities": [
+        "product behavior",
+        "configuration",
+        "general utilities"
+      ],
+      "provenance": [
+        "docs/architecture/refactoring-study/experiment-2/target-architecture.md"
+      ],
+      "requires": [],
+      "public": [
+        "datamimic_ce._compat:StrEnum",
+        "datamimic_ce._compat:assert_never"
+      ],
+      "decided_by": "agent"
+    },
+    {
+      "id": "COMP-RANDOMNESS",
+      "label": "randomness",
+      "packages": [
+        "datamimic_ce.randomness"
+      ],
+      "responsibilities": [
+        "Actual shared RNG structural contract and cumulated-index primitive, below Domain, IO and Runtime; no lifecycle or generation policy."
+      ],
+      "public": [
+        "datamimic_ce.randomness:RandomSource",
+        "datamimic_ce.randomness:cumulated_index"
+      ],
+      "decided_by": "agent",
+      "role": "component",
+      "forbidden_responsibilities": [
+        "Own seed policy or orchestration of generation runs."
+      ],
+      "provenance": [
+        "docs/architecture/inner/semantic-review/astra-target-decision.md"
+      ],
+      "requires": []
+    },
+    {
+      "id": "COMP-DISTRIBUTION",
+      "label": "distribution",
+      "role": "component",
+      "packages": [],
+      "exact_modules": [
+        "datamimic_ce"
+      ],
+      "responsibilities": [
+        "Own the inert regular CE package initializer that anchors installed-distribution origin."
+      ],
+      "forbidden_responsibilities": [
+        "configuration loading",
+        "application execution or API re-exports",
+        "descendant modules, packaging workflows, or general utilities"
+      ],
+      "provenance": [
+        "docs/architecture/inner/structure-review.json",
+        "docs/architecture/refactoring-study/experiment-2/amendment-68.md",
+        "docs/architecture/refactoring-study/experiment-2/amendment-173-root-distribution-owner.md"
+      ],
+      "requires": [],
+      "public": [],
+      "planned": [],
+      "decided_by": "agent"
+    }
+  ],
+  "rules": [
+    {
+      "id": "ASSIGNMENT-COMPLETE",
+      "kind": "complete_assignment",
+      "source": "datamimic_ce",
+      "rationale": "Every product module has exactly one semantic owner.",
+      "provenance": [
+        "docs/architecture/refactoring-study/experiment-2/target-architecture.md"
+      ],
+      "decided_by": "architect"
+    },
+    {
+      "id": "REQUIRES-COMPLETE",
+      "kind": "complete_requires",
+      "include_type_checking": true,
+      "rationale": "Every component dependency is explicit; absence forbids the edge.",
+      "provenance": [
+        "docs/architecture/refactoring-study/experiment-2/target-architecture.md"
+      ],
+      "decided_by": "architect"
+    },
+    {
+      "id": "NO-COMPONENT-CYCLES",
+      "kind": "no_component_cycles",
+      "rationale": "The component graph must remain acyclic.",
+      "provenance": [
+        "docs/architecture/refactoring-study/experiment-2/target-architecture.md"
+      ],
+      "decided_by": "architect"
+    },
+    {
+      "id": "INTERFACES-ONLY",
+      "kind": "interface_boundary",
+      "include_type_checking": true,
+      "rationale": "Cross-component imports use the owning component's declared API.",
+      "provenance": [
+        "docs/architecture/refactoring-study/experiment-2/target-architecture.md"
+      ],
+      "decided_by": "architect"
+    },
+    {
+      "id": "DSL-API-TYPES",
+      "kind": "boundary_types",
+      "source": "datamimic_ce.engine.dsl.api",
+      "rationale": "The DSL facade exposes declared contract types. Four pre-validation operations preserve raw string-keyed attribute dictionaries at exact reviewed positions; constraint facts remain closed types. parse_properties returns an open map for arbitrary user keys. element_aliases returns a fresh alias-to-canonical string map from the owned built-in and extension registry; its keys are vocabulary data, not fixed record fields. DescriptorParser accepts exact mutable string or native Properties maps; only the native value leaf accepts opacity.",
+      "provenance": [
+        "docs/architecture/refactoring-study/experiment-2/target-architecture.md",
+        "docs/architecture/refactoring-study/experiment-2/amendment-91.md",
+        "docs/architecture/refactoring-study/experiment-2/amendment-77.md",
+        "docs/architecture/refactoring-study/experiment-2/amendment-174-dsl-alias-map.md",
+        "docs/architecture/refactoring-study/experiment-2/amendment-187-properties-source-contract.md"
+      ],
+      "decided_by": "agent",
+      "allowed_positions": [
+        {
+          "qualified_name": "datamimic_ce.engine.dsl.api.check_constraints",
+          "position": "values",
+          "field_path": "",
+          "annotation": "dict[str, object]"
+        },
+        {
+          "qualified_name": "datamimic_ce.engine.dsl.api.check_constraints",
+          "position": "return",
+          "field_path": "",
+          "annotation": "dict[str, object]"
+        },
+        {
+          "qualified_name": "datamimic_ce.engine.dsl.api.check_exist_count",
+          "position": "values",
+          "field_path": "",
+          "annotation": "dict[str, object]"
+        },
+        {
+          "qualified_name": "datamimic_ce.engine.dsl.api.check_exist_count",
+          "position": "return",
+          "field_path": "",
+          "annotation": "dict[str, object]"
+        },
+        {
+          "qualified_name": "datamimic_ce.engine.dsl.api.check_weights_require_values",
+          "position": "values",
+          "field_path": "",
+          "annotation": "dict[str, object]"
+        },
+        {
+          "qualified_name": "datamimic_ce.engine.dsl.api.check_weights_require_values",
+          "position": "return",
+          "field_path": "",
+          "annotation": "dict[str, object]"
+        },
+        {
+          "qualified_name": "datamimic_ce.engine.dsl.api.check_min_max_count",
+          "position": "values",
+          "field_path": "",
+          "annotation": "dict[str, object]"
+        },
+        {
+          "qualified_name": "datamimic_ce.engine.dsl.api.check_min_max_count",
+          "position": "return",
+          "field_path": "",
+          "annotation": "dict[str, object]"
+        },
+        {
+          "qualified_name": "datamimic_ce.engine.dsl.api.check_constraints",
+          "position": "values",
+          "field_path": "",
+          "annotation": "dict[str, object]",
+          "container_depth": 1
+        },
+        {
+          "qualified_name": "datamimic_ce.engine.dsl.api.check_constraints",
+          "position": "return",
+          "field_path": "",
+          "annotation": "dict[str, object]",
+          "container_depth": 1
+        },
+        {
+          "qualified_name": "datamimic_ce.engine.dsl.api.check_exist_count",
+          "position": "values",
+          "field_path": "",
+          "annotation": "dict[str, object]",
+          "container_depth": 1
+        },
+        {
+          "qualified_name": "datamimic_ce.engine.dsl.api.check_exist_count",
+          "position": "return",
+          "field_path": "",
+          "annotation": "dict[str, object]",
+          "container_depth": 1
+        },
+        {
+          "qualified_name": "datamimic_ce.engine.dsl.api.check_weights_require_values",
+          "position": "values",
+          "field_path": "",
+          "annotation": "dict[str, object]",
+          "container_depth": 1
+        },
+        {
+          "qualified_name": "datamimic_ce.engine.dsl.api.check_weights_require_values",
+          "position": "return",
+          "field_path": "",
+          "annotation": "dict[str, object]",
+          "container_depth": 1
+        },
+        {
+          "qualified_name": "datamimic_ce.engine.dsl.api.check_min_max_count",
+          "position": "values",
+          "field_path": "",
+          "annotation": "dict[str, object]",
+          "container_depth": 1
+        },
+        {
+          "qualified_name": "datamimic_ce.engine.dsl.api.check_min_max_count",
+          "position": "return",
+          "field_path": "",
+          "annotation": "dict[str, object]",
+          "container_depth": 1
+        },
+        {
+          "qualified_name": "datamimic_ce.engine.dsl.api.parse_properties",
+          "position": "return",
+          "field_path": "",
+          "annotation": "dict[str, str]"
+        },
+        {
+          "qualified_name": "datamimic_ce.engine.dsl.api.element_aliases",
+          "position": "return",
+          "field_path": "",
+          "annotation": "dict[str, str]"
+        },
+        {
+          "qualified_name": "datamimic_ce.engine.dsl.api.DescriptorParser.parse",
+          "position": "properties",
+          "field_path": "",
+          "annotation": "dict[str, str] | dict[str, object] | None"
+        },
+        {
+          "qualified_name": "datamimic_ce.engine.dsl.api.DescriptorParser.parse",
+          "position": "properties",
+          "field_path": "",
+          "annotation": "dict[str, str] | dict[str, object] | None",
+          "container_depth": 1
+        }
+      ]
+    },
+    {
+      "id": "DOMAIN-API-TYPES",
+      "kind": "boundary_types",
+      "source": "datamimic_ce.domains.api",
+      "rationale": "The domain facade exposes declared generator classes through a typed iterator, never an untyped registry dictionary. DemographicSampler.provenance_descriptor returns a fresh snapshot of its recorded normalized resource-path to provenance-digest string map; paths are data keys, not fixed record fields. Converter extension APIs receive and may return native Python values; arbitrary input acceptance and method-local validation preserve substitutability, extension results and native errors. Only the enumerated direct object/object-or-None positions admit opacity; existing precise specialized outputs and fixed control signatures remain required. Demographic sampling owns dataset-keyed weight distributions and accepts a non-owning metadata mapping of string keys to string-or-None group references. The three enumerated weight accessors return fresh dictionaries keyed by age interval, condition name, or SexKey; these are maps, not fixed records. This allowance does not validate raw CSV producers or accept malformed-row type mismatches. Transaction generation accepts an optional opaque account hint. Its existing truthiness and CurrencyAccount capability check selects account currency; non-account or falsey inputs retain generated-currency fallback. Only the enumerated direct bank_account input admits opacity; GeneratedTransactionData and other control/output signatures remain precise. Demographic records retain data-keyed transaction weights, sex-indexed age bands and condition-indexed rates with their concrete value types; fixed fields stay typed. The literal-generator base is an extension result boundary: implementations own native result types, and Runtime keeps method-local handling. Only BaseLiteralGenerator.generate admits direct result opacity; specialized returns remain precise.",
+      "provenance": [
+        "docs/architecture/refactoring-study/experiment-2/target-architecture.md",
+        "docs/architecture/refactoring-study/experiment-2/amendment-175-demographic-provenance-map.md",
+        "docs/architecture/refactoring-study/experiment-2/amendment-177-converter-value-boundaries.md",
+        "docs/architecture/refactoring-study/experiment-2/amendment-178-demographic-finance-boundaries.md",
+        "docs/architecture/refactoring-study/experiment-2/amendment-182-demographic-map-contracts.md",
+        "docs/architecture/refactoring-study/experiment-2/amendment-206-native-literal-result.md"
+      ],
+      "decided_by": "agent",
+      "allowed_positions": [
+        {
+          "qualified_name": "datamimic_ce.domains.api.DemographicSampler.provenance_descriptor",
+          "position": "return",
+          "field_path": "",
+          "annotation": "dict[str, str]"
+        },
+        {
+          "qualified_name": "datamimic_ce.domains.api.Date2TimestampConverter.convert",
+          "position": "value",
+          "field_path": "",
+          "annotation": "object"
+        },
+        {
+          "qualified_name": "datamimic_ce.domains.api.CustomConverter.__init__",
+          "position": "ctx",
+          "field_path": "",
+          "annotation": "object | None"
+        },
+        {
+          "qualified_name": "datamimic_ce.domains.api.CutLengthConverter.convert",
+          "position": "value",
+          "field_path": "",
+          "annotation": "object"
+        },
+        {
+          "qualified_name": "datamimic_ce.domains.api.CustomConverter.convert",
+          "position": "value",
+          "field_path": "",
+          "annotation": "object"
+        },
+        {
+          "qualified_name": "datamimic_ce.domains.api.Converter.convert",
+          "position": "value",
+          "field_path": "",
+          "annotation": "object"
+        },
+        {
+          "qualified_name": "datamimic_ce.domains.api.CustomConverter.convert",
+          "position": "return",
+          "field_path": "",
+          "annotation": "object | None"
+        },
+        {
+          "qualified_name": "datamimic_ce.domains.api.JavaHashConverter.convert",
+          "position": "value",
+          "field_path": "",
+          "annotation": "object"
+        },
+        {
+          "qualified_name": "datamimic_ce.domains.api.HashConverter.convert",
+          "position": "value",
+          "field_path": "",
+          "annotation": "object"
+        },
+        {
+          "qualified_name": "datamimic_ce.domains.api.Converter.convert",
+          "position": "return",
+          "field_path": "",
+          "annotation": "object"
+        },
+        {
+          "qualified_name": "datamimic_ce.domains.api.SubstringConverter.convert",
+          "position": "value",
+          "field_path": "",
+          "annotation": "object"
+        },
+        {
+          "qualified_name": "datamimic_ce.domains.api.DateFormatConverter.convert",
+          "position": "value",
+          "field_path": "",
+          "annotation": "object"
+        },
+        {
+          "qualified_name": "datamimic_ce.domains.api.MaskConverter.convert",
+          "position": "value",
+          "field_path": "",
+          "annotation": "object"
+        },
+        {
+          "qualified_name": "datamimic_ce.domains.api.UpperCaseConverter.convert",
+          "position": "value",
+          "field_path": "",
+          "annotation": "object"
+        },
+        {
+          "qualified_name": "datamimic_ce.domains.api.RemoveNoneOrEmptyElementConverter.convert",
+          "position": "return",
+          "field_path": "",
+          "annotation": "object"
+        },
+        {
+          "qualified_name": "datamimic_ce.domains.api.RemoveNoneOrEmptyElementConverter.convert",
+          "position": "value",
+          "field_path": "",
+          "annotation": "object"
+        },
+        {
+          "qualified_name": "datamimic_ce.domains.api.AppendConverter.convert",
+          "position": "value",
+          "field_path": "",
+          "annotation": "object"
+        },
+        {
+          "qualified_name": "datamimic_ce.domains.api.Timestamp2DateConverter.convert",
+          "position": "value",
+          "field_path": "",
+          "annotation": "object"
+        },
+        {
+          "qualified_name": "datamimic_ce.domains.api.MiddleMaskConverter.convert",
+          "position": "value",
+          "field_path": "",
+          "annotation": "object"
+        },
+        {
+          "qualified_name": "datamimic_ce.domains.api.LowerCaseConverter.convert",
+          "position": "value",
+          "field_path": "",
+          "annotation": "object"
+        },
+        {
+          "qualified_name": "datamimic_ce.domains.api.DemographicSampler.age_band_weights",
+          "position": "return",
+          "annotation": "dict[tuple[int, int], float]",
+          "field_path": ""
+        },
+        {
+          "qualified_name": "datamimic_ce.domains.api.DemographicSampler.condition_weights",
+          "position": "return",
+          "annotation": "dict[str, float]",
+          "field_path": ""
+        },
+        {
+          "qualified_name": "datamimic_ce.domains.api.DemographicSampler.sex_weights",
+          "position": "return",
+          "annotation": "dict[SexKey, float]",
+          "field_path": ""
+        },
+        {
+          "qualified_name": "datamimic_ce.domains.api.DemographicSampler.apply_profile_groups",
+          "position": "profile_row",
+          "annotation": "Mapping[str, str | None]",
+          "field_path": ""
+        },
+        {
+          "qualified_name": "datamimic_ce.domains.api.TransactionGenerator.generate_transaction_data",
+          "position": "bank_account",
+          "annotation": "object | None",
+          "field_path": ""
+        },
+        {
+          "qualified_name": "datamimic_ce.domains.api.DemographicConfig.with_defaults",
+          "position": "return",
+          "field_path": "transaction_profile",
+          "annotation": "str | Mapping[str, float] | None"
+        },
+        {
+          "qualified_name": "datamimic_ce.domains.api.PersonService.__init__",
+          "position": "demographic_config",
+          "field_path": "transaction_profile",
+          "annotation": "str | Mapping[str, float] | None"
+        },
+        {
+          "qualified_name": "datamimic_ce.domains.api.PatientService.__init__",
+          "position": "demographic_config",
+          "field_path": "transaction_profile",
+          "annotation": "str | Mapping[str, float] | None"
+        },
+        {
+          "qualified_name": "datamimic_ce.domains.api.load_demographic_profile",
+          "position": "return",
+          "field_path": "age_bands",
+          "annotation": "Mapping[SexKey, tuple[DemographicAgeBand, ...]]"
+        },
+        {
+          "qualified_name": "datamimic_ce.domains.api.load_demographic_profile",
+          "position": "return",
+          "field_path": "condition_rates",
+          "annotation": "Mapping[str, tuple[DemographicConditionRate, ...]]"
+        },
+        {
+          "qualified_name": "datamimic_ce.domains.api.DemographicSampler.__init__",
+          "position": "profile",
+          "field_path": "age_bands",
+          "annotation": "Mapping[SexKey, tuple[DemographicAgeBand, ...]]"
+        },
+        {
+          "qualified_name": "datamimic_ce.domains.api.DemographicSampler.__init__",
+          "position": "profile",
+          "field_path": "condition_rates",
+          "annotation": "Mapping[str, tuple[DemographicConditionRate, ...]]"
+        },
+        {
+          "qualified_name": "datamimic_ce.domains.api.BaseLiteralGenerator.generate",
+          "position": "return",
+          "field_path": "",
+          "annotation": "object"
+        }
+      ]
+    },
+    {
+      "id": "RUNTIME-API-TYPES",
+      "kind": "boundary_types",
+      "source": "datamimic_ce.engine.runtime.api",
+      "rationale": "Fixed requests and execution controls stay typed. Captures, descriptor properties, the client registry, native Python state and copy memo use exact reviewed positions. Runtime accepts mutable string-loader or native Properties maps at its request and SetupContext boundaries; only native values accept opacity. Runtime owns native registries keyed by declared client IDs and by statement/source identities. Their exact RegisteredClient and tuple-to-count mapping contracts preserve mutable registry identity without fixed-field wrappers. Runtime installs and forwards Domain demographic records with the complete named-profile, typed-weight-map or None contract.",
+      "provenance": [
+        "docs/architecture/refactoring-study/experiment-2/target-architecture.md",
+        "docs/architecture/refactoring-study/experiment-2/amendment-70.md",
+        "docs/architecture/refactoring-study/experiment-2/amendment-82.md",
+        "docs/architecture/refactoring-study/experiment-2/amendment-89.md",
+        "docs/architecture/refactoring-study/experiment-2/amendment-90.md",
+        "docs/architecture/refactoring-study/experiment-2/amendment-95.md",
+        "docs/architecture/refactoring-study/experiment-2/amendment-176-native-map-boundaries.md",
+        "docs/architecture/refactoring-study/experiment-2/amendment-180-runtime-capture-selectors.md",
+        "docs/architecture/refactoring-study/experiment-2/amendment-182-demographic-map-contracts.md",
+        "docs/architecture/refactoring-study/experiment-2/amendment-186-runtime-properties-policy.md",
+        "docs/architecture/refactoring-study/experiment-2/amendment-187-properties-source-contract.md"
+      ],
+      "decided_by": "agent",
+      "allowed_positions": [
+        {
+          "qualified_name": "datamimic_ce.engine.runtime.api.SetupContext.__init__",
+          "position": "demographic_context",
+          "field_path": "overrides.transaction_profile",
+          "annotation": "str | Mapping[str, float] | None"
+        },
+        {
+          "qualified_name": "datamimic_ce.engine.runtime.api.SetupContext.demographic_context",
+          "position": "return",
+          "field_path": "overrides.transaction_profile",
+          "annotation": "str | Mapping[str, float] | None"
+        },
+        {
+          "qualified_name": "datamimic_ce.engine.runtime.api.SetupContext.set_demographic_context",
+          "position": "context",
+          "field_path": "overrides.transaction_profile",
+          "annotation": "str | Mapping[str, float] | None"
+        },
+        {
+          "qualified_name": "datamimic_ce.engine.runtime.api.run",
+          "position": "return",
+          "field_path": "captured",
+          "annotation": "dict[str, list[object]] | None"
+        },
+        {
+          "qualified_name": "datamimic_ce.engine.runtime.api.run",
+          "position": "return",
+          "field_path": "captured",
+          "annotation": "dict[str, list[object]] | None",
+          "container_depth": 2
+        },
+        {
+          "qualified_name": "datamimic_ce.engine.runtime.api.load_descriptor_properties",
+          "position": "return",
+          "field_path": "",
+          "annotation": "dict[str, str]"
+        },
+        {
+          "qualified_name": "datamimic_ce.engine.runtime.api.create_run_session",
+          "position": "request",
+          "field_path": "platform_props",
+          "annotation": "dict[str, str] | dict[str, object] | None"
+        },
+        {
+          "qualified_name": "datamimic_ce.engine.runtime.api.create_run_session",
+          "position": "request",
+          "field_path": "platform_props",
+          "annotation": "dict[str, str] | dict[str, object] | None",
+          "container_depth": 1
+        },
+        {
+          "qualified_name": "datamimic_ce.engine.runtime.api.run",
+          "position": "request",
+          "field_path": "platform_props",
+          "annotation": "dict[str, str] | dict[str, object] | None"
+        },
+        {
+          "qualified_name": "datamimic_ce.engine.runtime.api.run",
+          "position": "request",
+          "field_path": "platform_props",
+          "annotation": "dict[str, str] | dict[str, object] | None",
+          "container_depth": 1
+        },
+        {
+          "qualified_name": "datamimic_ce.engine.runtime.api.SetupContext.__init__",
+          "position": "clients",
+          "field_path": "",
+          "annotation": "dict[str, RegisteredClient] | None"
+        },
+        {
+          "qualified_name": "datamimic_ce.engine.runtime.api.SetupContext.clients",
+          "position": "return",
+          "field_path": "",
+          "annotation": "dict[str, RegisteredClient]"
+        },
+        {
+          "qualified_name": "datamimic_ce.engine.runtime.api.SetupContext.clients",
+          "position": "value",
+          "field_path": "",
+          "annotation": "dict[str, RegisteredClient]"
+        },
+        {
+          "qualified_name": "datamimic_ce.engine.runtime.api.Context.evaluate_python_expression",
+          "position": "local_namespace",
+          "field_path": "",
+          "annotation": "dict[str, object] | None"
+        },
+        {
+          "qualified_name": "datamimic_ce.engine.runtime.api.Context.evaluate_python_expression",
+          "position": "local_namespace",
+          "field_path": "",
+          "annotation": "dict[str, object] | None",
+          "container_depth": 1
+        },
+        {
+          "qualified_name": "datamimic_ce.engine.runtime.api.Context.scope_content",
+          "position": "return",
+          "field_path": "",
+          "annotation": "dict[str, object]"
+        },
+        {
+          "qualified_name": "datamimic_ce.engine.runtime.api.Context.scope_content",
+          "position": "return",
+          "field_path": "",
+          "annotation": "dict[str, object]",
+          "container_depth": 1
+        },
+        {
+          "qualified_name": "datamimic_ce.engine.runtime.api.Context.get_content_variables_products",
+          "position": "return",
+          "field_path": "",
+          "annotation": "dict[str, object]"
+        },
+        {
+          "qualified_name": "datamimic_ce.engine.runtime.api.Context.get_content_variables_products",
+          "position": "return",
+          "field_path": "",
+          "annotation": "dict[str, object]",
+          "container_depth": 1
+        },
+        {
+          "qualified_name": "datamimic_ce.engine.runtime.api.SetupContext.__init__",
+          "position": "namespace",
+          "field_path": "",
+          "annotation": "dict[str, object] | None"
+        },
+        {
+          "qualified_name": "datamimic_ce.engine.runtime.api.SetupContext.__init__",
+          "position": "namespace",
+          "field_path": "",
+          "annotation": "dict[str, object] | None",
+          "container_depth": 1
+        },
+        {
+          "qualified_name": "datamimic_ce.engine.runtime.api.SetupContext.__init__",
+          "position": "global_variables",
+          "field_path": "",
+          "annotation": "dict[str, object] | None"
+        },
+        {
+          "qualified_name": "datamimic_ce.engine.runtime.api.SetupContext.__init__",
+          "position": "global_variables",
+          "field_path": "",
+          "annotation": "dict[str, object] | None",
+          "container_depth": 1
+        },
+        {
+          "qualified_name": "datamimic_ce.engine.runtime.api.SetupContext.namespace",
+          "position": "return",
+          "field_path": "",
+          "annotation": "dict[str, object]"
+        },
+        {
+          "qualified_name": "datamimic_ce.engine.runtime.api.SetupContext.namespace",
+          "position": "return",
+          "field_path": "",
+          "annotation": "dict[str, object]",
+          "container_depth": 1
+        },
+        {
+          "qualified_name": "datamimic_ce.engine.runtime.api.SetupContext.namespace",
+          "position": "value",
+          "field_path": "",
+          "annotation": "dict[str, object]"
+        },
+        {
+          "qualified_name": "datamimic_ce.engine.runtime.api.SetupContext.namespace",
+          "position": "value",
+          "field_path": "",
+          "annotation": "dict[str, object]",
+          "container_depth": 1
+        },
+        {
+          "qualified_name": "datamimic_ce.engine.runtime.api.SetupContext.global_variables",
+          "position": "return",
+          "field_path": "",
+          "annotation": "dict[str, object]"
+        },
+        {
+          "qualified_name": "datamimic_ce.engine.runtime.api.SetupContext.global_variables",
+          "position": "return",
+          "field_path": "",
+          "annotation": "dict[str, object]",
+          "container_depth": 1
+        },
+        {
+          "qualified_name": "datamimic_ce.engine.runtime.api.SetupContext.eval_namespace",
+          "position": "return",
+          "field_path": "",
+          "annotation": "dict[str, object]"
+        },
+        {
+          "qualified_name": "datamimic_ce.engine.runtime.api.SetupContext.eval_namespace",
+          "position": "return",
+          "field_path": "",
+          "annotation": "dict[str, object]",
+          "container_depth": 1
+        },
+        {
+          "qualified_name": "datamimic_ce.engine.runtime.api.SetupContext.__deepcopy__",
+          "position": "memo",
+          "field_path": "",
+          "annotation": "dict[int, object]"
+        },
+        {
+          "qualified_name": "datamimic_ce.engine.runtime.api.SetupContext.__deepcopy__",
+          "position": "memo",
+          "field_path": "",
+          "annotation": "dict[int, object]",
+          "container_depth": 1
+        },
+        {
+          "qualified_name": "datamimic_ce.engine.runtime.api.Context.evaluate_python_expression",
+          "position": "return",
+          "field_path": "",
+          "annotation": "object"
+        },
+        {
+          "qualified_name": "datamimic_ce.engine.runtime.api.SetupContext.get_dynamic_class",
+          "position": "return",
+          "field_path": "",
+          "annotation": "object | None"
+        },
+        {
+          "qualified_name": "datamimic_ce.engine.runtime.api.SetupContext.__init__",
+          "position": "data_source_len",
+          "field_path": "",
+          "annotation": "dict[tuple[str | None, str | None], int] | None"
+        },
+        {
+          "qualified_name": "datamimic_ce.engine.runtime.api.SetupContext.data_source_len",
+          "position": "return",
+          "field_path": "",
+          "annotation": "dict[tuple[str | None, str | None], int]"
+        },
+        {
+          "qualified_name": "datamimic_ce.engine.runtime.api.SetupContext.__init__",
+          "position": "properties",
+          "field_path": "",
+          "annotation": "dict[str, str] | dict[str, object] | None"
+        },
+        {
+          "qualified_name": "datamimic_ce.engine.runtime.api.SetupContext.__init__",
+          "position": "properties",
+          "field_path": "",
+          "annotation": "dict[str, str] | dict[str, object] | None",
+          "container_depth": 1
+        }
+      ]
+    },
+    {
+      "id": "IO-API-TYPES",
+      "kind": "boundary_types",
+      "source": "datamimic_ce.engine.io.api",
+      "rationale": "The IO facade keeps fixed controls typed; smoke-export rows/options and connection profiles remain open payloads at reviewed positions. WeightedEntityDataSource returns a selected native string-valued row keyed by input CSV headers; headers are data keys, and row aliasing remains observable. Native source rows and capture values retain their reviewed map/list forms; IO owns storage and row transport while Runtime owns lifecycle and timing. ExportSession accepts native XML dictionaries with string keys; IO owns conversion and dispatch, preserving the original XML page. Product maps retain their inner string-keyed row dictionaries and native values at the exact reviewed depths. Variable-source returns retain one opaque native Iterable element, including None; this exact facade grant does not cover the plan DTO or prove type closure.",
+      "provenance": [
+        "docs/architecture/refactoring-study/experiment-2/target-architecture.md",
+        "docs/architecture/refactoring-study/experiment-2/amendment-62.md",
+        "docs/architecture/refactoring-study/experiment-2/amendment-77.md",
+        "docs/architecture/refactoring-study/experiment-2/amendment-176-native-map-boundaries.md",
+        "docs/architecture/refactoring-study/experiment-2/amendment-179-smoke-export-dto-selectors.md",
+        "docs/architecture/refactoring-study/experiment-2/amendment-181-native-io-rows.md",
+        "docs/architecture/refactoring-study/experiment-2/amendment-183-native-xml-rows.md",
+        "docs/architecture/refactoring-study/experiment-2/amendment-185-product-map-boundaries.md",
+        "docs/architecture/refactoring-study/experiment-2/amendment-188-product-map-depth.md",
+        "docs/architecture/refactoring-study/experiment-2/amendment-203-variable-query-rows.md",
+        "docs/architecture/refactoring-study/experiment-2/amendment-209-native-variable-return.md"
+      ],
+      "decided_by": "agent",
+      "allowed_positions": [
+        {
+          "qualified_name": "datamimic_ce.engine.io.api.smoke_export",
+          "position": "request",
+          "field_path": "params",
+          "annotation": "dict[str, object]"
+        },
+        {
+          "qualified_name": "datamimic_ce.engine.io.api.smoke_export",
+          "position": "request",
+          "field_path": "params",
+          "annotation": "dict[str, object]",
+          "container_depth": 1
+        },
+        {
+          "qualified_name": "datamimic_ce.engine.io.api.smoke_export",
+          "position": "request",
+          "field_path": "rows",
+          "annotation": "list[dict[str, object]]"
+        },
+        {
+          "qualified_name": "datamimic_ce.engine.io.api.smoke_export",
+          "position": "request",
+          "field_path": "rows",
+          "annotation": "list[dict[str, object]]",
+          "container_depth": 2
+        },
+        {
+          "qualified_name": "datamimic_ce.engine.io.api.load_connection_profile",
+          "position": "return",
+          "field_path": "",
+          "annotation": "dict[str, str]"
+        },
+        {
+          "qualified_name": "datamimic_ce.engine.io.api.WeightedEntityDataSource.generate",
+          "position": "return",
+          "field_path": "",
+          "annotation": "dict[str, str]"
+        },
+        {
+          "qualified_name": "datamimic_ce.engine.io.api.TestResultExporter.get_result",
+          "position": "return",
+          "field_path": "",
+          "annotation": "dict[str, list[object]]"
+        },
+        {
+          "qualified_name": "datamimic_ce.engine.io.api.TestResultExporter.get_result",
+          "position": "return",
+          "field_path": "",
+          "annotation": "dict[str, list[object]]",
+          "container_depth": 2
+        },
+        {
+          "qualified_name": "datamimic_ce.engine.io.api.MemstoreSource.get_all_data_by_type",
+          "position": "return",
+          "field_path": "",
+          "annotation": "list[dict[str, object]]"
+        },
+        {
+          "qualified_name": "datamimic_ce.engine.io.api.MemstoreSource.get_all_data_by_type",
+          "position": "return",
+          "field_path": "",
+          "annotation": "list[dict[str, object]]",
+          "container_depth": 2
+        },
+        {
+          "qualified_name": "datamimic_ce.engine.io.api.MemstoreSource.get_data_by_type",
+          "position": "return",
+          "field_path": "",
+          "annotation": "list[dict[str, object]]"
+        },
+        {
+          "qualified_name": "datamimic_ce.engine.io.api.MemstoreSource.get_data_by_type",
+          "position": "return",
+          "field_path": "",
+          "annotation": "list[dict[str, object]]",
+          "container_depth": 2
+        },
+        {
+          "qualified_name": "datamimic_ce.engine.io.api.read_generate_memstore_source",
+          "position": "return",
+          "field_path": "",
+          "annotation": "list[dict[str, object]]"
+        },
+        {
+          "qualified_name": "datamimic_ce.engine.io.api.read_generate_memstore_source",
+          "position": "return",
+          "field_path": "",
+          "annotation": "list[dict[str, object]]",
+          "container_depth": 2
+        },
+        {
+          "qualified_name": "datamimic_ce.engine.io.api.ChunkSourceWindow.__init__",
+          "position": "pool",
+          "field_path": "",
+          "annotation": "list[dict[str, object]]"
+        },
+        {
+          "qualified_name": "datamimic_ce.engine.io.api.ChunkSourceWindow.__init__",
+          "position": "pool",
+          "field_path": "",
+          "annotation": "list[dict[str, object]]",
+          "container_depth": 2
+        },
+        {
+          "qualified_name": "datamimic_ce.engine.io.api.ChunkSourceWindow.read_page",
+          "position": "return",
+          "field_path": "",
+          "annotation": "list[dict[str, object]]"
+        },
+        {
+          "qualified_name": "datamimic_ce.engine.io.api.ChunkSourceWindow.read_page",
+          "position": "return",
+          "field_path": "",
+          "annotation": "list[dict[str, object]]",
+          "container_depth": 2
+        },
+        {
+          "qualified_name": "datamimic_ce.engine.io.api.read_generate_database_source",
+          "position": "return",
+          "field_path": "",
+          "annotation": "list[dict[str, object]]"
+        },
+        {
+          "qualified_name": "datamimic_ce.engine.io.api.read_generate_database_source",
+          "position": "return",
+          "field_path": "",
+          "annotation": "list[dict[str, object]]",
+          "container_depth": 2
+        },
+        {
+          "qualified_name": "datamimic_ce.engine.io.api.read_reference_rows",
+          "position": "return",
+          "field_path": "",
+          "annotation": "list[dict[str, object]]"
+        },
+        {
+          "qualified_name": "datamimic_ce.engine.io.api.read_reference_rows",
+          "position": "return",
+          "field_path": "",
+          "annotation": "list[dict[str, object]]",
+          "container_depth": 2
+        },
+        {
+          "qualified_name": "datamimic_ce.engine.io.api.ExportSession.prepare_page",
+          "position": "xml_rows",
+          "field_path": "",
+          "annotation": "list[dict[str, object]]"
+        },
+        {
+          "qualified_name": "datamimic_ce.engine.io.api.ExportSession.prepare_page",
+          "position": "xml_rows",
+          "field_path": "",
+          "annotation": "list[dict[str, object]]",
+          "container_depth": 2
+        },
+        {
+          "qualified_name": "datamimic_ce.engine.io.api.capture_test_results",
+          "position": "products",
+          "field_path": "",
+          "annotation": "Mapping[str, list[dict[str, object]]]"
+        },
+        {
+          "qualified_name": "datamimic_ce.engine.io.api.consume_memstore_target",
+          "position": "products",
+          "field_path": "",
+          "annotation": "Mapping[str, list[dict[str, object]]]"
+        },
+        {
+          "qualified_name": "datamimic_ce.engine.io.api.capture_test_results",
+          "position": "products",
+          "field_path": "",
+          "annotation": "Mapping[str, list[dict[str, object]]]",
+          "mapping_depth": 2
+        },
+        {
+          "qualified_name": "datamimic_ce.engine.io.api.capture_test_results",
+          "position": "products",
+          "field_path": "",
+          "annotation": "Mapping[str, list[dict[str, object]]]",
+          "mapping_depth": 2,
+          "container_depth": 3
+        },
+        {
+          "qualified_name": "datamimic_ce.engine.io.api.consume_memstore_target",
+          "position": "products",
+          "field_path": "",
+          "annotation": "Mapping[str, list[dict[str, object]]]",
+          "mapping_depth": 2
+        },
+        {
+          "qualified_name": "datamimic_ce.engine.io.api.consume_memstore_target",
+          "position": "products",
+          "field_path": "",
+          "annotation": "Mapping[str, list[dict[str, object]]]",
+          "mapping_depth": 2,
+          "container_depth": 3
+        },
+        {
+          "qualified_name": "datamimic_ce.engine.io.api.read_variable_query",
+          "position": "return",
+          "field_path": "",
+          "annotation": "list[dict[str, object]]"
+        },
+        {
+          "qualified_name": "datamimic_ce.engine.io.api.read_variable_query",
+          "position": "return",
+          "field_path": "",
+          "annotation": "list[dict[str, object]]",
+          "container_depth": 2
+        },
+        {
+          "qualified_name": "datamimic_ce.engine.io.api.read_variable_source",
+          "position": "return",
+          "field_path": "",
+          "annotation": "Iterable[object] | None",
+          "container_depth": 1
+        }
+      ]
+    },
+    {
+      "id": "AUTHORING-API-TYPES",
+      "kind": "boundary_types",
+      "source": "datamimic_ce.authoring.api",
+      "rationale": "The Authoring facade exposes typed application requests and results rather than implementation modules.",
+      "provenance": [
+        "docs/architecture/refactoring-study/experiment-2/target-architecture.md",
+        "docs/architecture/refactoring-study/experiment-2/amendment-11.md",
+        "docs/architecture/refactoring-study/experiment-2/amendment-184-authoring-sample-shapes.md"
+      ],
+      "decided_by": "architect",
+      "allowed_positions": [
+        {
+          "qualified_name": "datamimic_ce.authoring.api.run",
+          "position": "return",
+          "field_path": "products.sample",
+          "annotation": "list[dict[str, JsonValue]]"
+        },
+        {
+          "qualified_name": "datamimic_ce.authoring.api.scaffold",
+          "position": "return",
+          "field_path": "issues.repair.corrected_fragment",
+          "annotation": "dict[str, JsonValue]"
+        },
+        {
+          "qualified_name": "datamimic_ce.authoring.api.scaffold",
+          "position": "return",
+          "field_path": "products.sample",
+          "annotation": "list[dict[str, JsonValue]]"
+        },
+        {
+          "qualified_name": "datamimic_ce.authoring.api.scaffold",
+          "position": "return",
+          "field_path": "acceptance.results.observed_counts",
+          "annotation": "dict[str, int] | None"
+        }
+      ]
+    },
+    {
+      "id": "RESOURCES-API-TYPES",
+      "kind": "boundary_types",
+      "source": "datamimic_ce.resources.api",
+      "rationale": "The resource facade exposes typed packaged-resource access rather than string-based package discovery.",
+      "provenance": [
+        "docs/architecture/refactoring-study/experiment-2/target-architecture.md"
+      ],
+      "decided_by": "architect"
+    },
+    {
+      "id": "NO-MAGIC-CONTROL-FLOW",
+      "kind": "forbidden_construct",
+      "source": "datamimic_ce",
+      "constructs": [
+        "any_annotation",
+        "cast",
+        "delattr",
+        "dunder_dict",
+        "hasattr",
+        "setattr",
+        "type_ignore",
+        "vars"
+      ],
+      "rationale": "Public behavior uses explicit types and avoids reflective escape hatches.",
+      "provenance": [
+        "docs/architecture/refactoring-study/experiment-2/target-architecture.md"
+      ],
+      "decided_by": "architect"
+    },
+    {
+      "id": "NO-GETATTR-COMPATIBILITY-ADAPTERS",
+      "kind": "forbidden_construct",
+      "source": "datamimic_ce",
+      "constructs": [
+        "getattr"
+      ],
+      "exact_sources": [
+        "datamimic_ce.domains.domain_core.base_entity.BaseEntity.__getattr__",
+        "datamimic_ce.engine.runtime.scripting.expression_globals._EvalProxy.__getattr__",
+        "datamimic_ce.engine.runtime.scripting.expression_globals._SeededFaker.__getattr__",
+        "datamimic_ce.engine.runtime.tasks.values.variable.iterator.VariableIterator.__getattr__"
+      ],
+      "rationale": "Only these DSL/runtime compatibility adapters may forward dynamic attributes; every other getattr remains forbidden.",
+      "provenance": [
+        "docs/architecture/refactoring-study/experiment-2/amendment-10.md"
+      ],
+      "decided_by": "architect"
+    },
+    {
+      "id": "DYNAMIC-EXECUTION-OWNERS",
+      "kind": "forbidden_construct",
+      "source": "datamimic_ce",
+      "constructs": [
+        "dynamic_import",
+        "eval",
+        "exec"
+      ],
+      "allowed_sources": [
+        "datamimic_ce.engine.runtime.scripting.evaluation",
+        "datamimic_ce.engine.runtime.scripting.plugins"
+      ],
+      "rationale": "Dynamic execution is isolated in scripting's expression and plugin owners.",
+      "provenance": [
+        "docs/architecture/refactoring-study/experiment-2/target-architecture.md"
+      ],
+      "decided_by": "architect"
+    },
+    {
+      "id": "NO-MODULE-CYCLES",
+      "kind": "no_component_cycles",
+      "level": "module",
+      "rationale": "No production module cycles, including type-only imports; a green component graph is insufficient.",
+      "provenance": [
+        "docs/architecture/inner/target.md"
+      ],
+      "decided_by": "agent"
+    },
+    {
+      "id": "PURE-INTENT-NO-RUNTIME",
+      "kind": "forbidden_dependency",
+      "source": "datamimic_ce.authoring.domain",
+      "target": "datamimic_ce.engine.runtime",
+      "include_type_checking": true,
+      "rationale": "Intent and validation facts must remain runtime-free; bounded execution is an adapter concern.",
+      "provenance": [
+        "docs/architecture/inner/target.md"
+      ],
+      "decided_by": "agent"
+    },
+    {
+      "id": "PURE-INTENT-NO-IO",
+      "kind": "forbidden_dependency",
+      "source": "datamimic_ce.authoring.domain",
+      "target": "datamimic_ce.engine.io",
+      "include_type_checking": true,
+      "rationale": "Intent cannot open sources or construct clients.",
+      "provenance": [
+        "docs/architecture/inner/target.md"
+      ],
+      "decided_by": "agent"
+    },
+    {
+      "id": "PROJECTION-NO-RUNTIME",
+      "kind": "forbidden_dependency",
+      "source": "datamimic_ce.authoring.projection",
+      "target": "datamimic_ce.engine.runtime",
+      "include_type_checking": true,
+      "rationale": "Runtime reflection belongs in a capability adapter; projections render supplied facts.",
+      "provenance": [
+        "docs/architecture/inner/target.md"
+      ],
+      "decided_by": "agent"
+    },
+    {
+      "id": "TASKS-NO-CLIENTS",
+      "kind": "forbidden_dependency",
+      "source": "datamimic_ce.engine.runtime.tasks",
+      "target": "datamimic_ce.engine.io.clients",
+      "include_type_checking": true,
+      "rationale": "Task orchestration delegates IO operations; it never imports concrete clients, even for typing.",
+      "provenance": [
+        "docs/architecture/inner/target.md"
+      ],
+      "decided_by": "agent"
+    },
+    {
+      "id": "LAYOUT-ROOT",
+      "kind": "root_layout",
+      "root": "datamimic_ce",
+      "allowed_children": [
+        "datamimic_ce._compat",
+        "datamimic_ce.authoring",
+        "datamimic_ce.domains",
+        "datamimic_ce.engine",
+        "datamimic_ce.errors",
+        "datamimic_ce.interfaces",
+        "datamimic_ce.randomness",
+        "datamimic_ce.resources"
+      ],
+      "rationale": "Distribution and engine ownership. Exact reviewed target children; no hidden extra modules.",
+      "provenance": [
+        "docs/architecture/inner/structure-review.json"
+      ],
+      "decided_by": "agent"
+    },
+    {
+      "id": "LAYOUT-AUTHORING",
+      "kind": "root_layout",
+      "root": "datamimic_ce.authoring",
+      "allowed_children": [
+        "datamimic_ce.authoring.adapters",
+        "datamimic_ce.authoring.api",
+        "datamimic_ce.authoring.application",
+        "datamimic_ce.authoring.contracts",
+        "datamimic_ce.authoring.domain",
+        "datamimic_ce.authoring.projection",
+        "datamimic_ce.authoring.spec"
+      ],
+      "rationale": "Compile intent and run bounded verification transactions. Exact reviewed target children; no hidden extra modules.",
+      "provenance": [
+        "docs/architecture/inner/structure-review.json"
+      ],
+      "decided_by": "agent"
+    },
+    {
+      "id": "LAYOUT-DOMAINS",
+      "kind": "root_layout",
+      "root": "datamimic_ce.domains",
+      "allowed_children": [
+        "datamimic_ce.domains.api",
+        "datamimic_ce.domains.domain_core",
+        "datamimic_ce.domains.ecommerce",
+        "datamimic_ce.domains.facade",
+        "datamimic_ce.domains.finance",
+        "datamimic_ce.domains.healthcare",
+        "datamimic_ce.domains.insurance",
+        "datamimic_ce.domains.public_sector",
+        "datamimic_ce.domains.registry",
+        "datamimic_ce.domains.shared"
+      ],
+      "rationale": "Generate business values/entities and load their domain datasets. Exact reviewed target children; no hidden extra modules.",
+      "provenance": [
+        "docs/architecture/inner/structure-review.json"
+      ],
+      "decided_by": "agent"
+    },
+    {
+      "id": "LAYOUT-ENGINE",
+      "kind": "root_layout",
+      "root": "datamimic_ce.engine",
+      "allowed_children": [
+        "datamimic_ce.engine.dsl",
+        "datamimic_ce.engine.io",
+        "datamimic_ce.engine.runtime"
+      ],
+      "rationale": "Physical aggregate of the named owned components; no additional service/API. Exact reviewed target children; no hidden extra modules.",
+      "provenance": [
+        "docs/architecture/inner/structure-review.json"
+      ],
+      "decided_by": "agent"
+    },
+    {
+      "id": "LAYOUT-ENGINE-DSL",
+      "kind": "root_layout",
+      "root": "datamimic_ce.engine.dsl",
+      "allowed_children": [
+        "datamimic_ce.engine.dsl.api",
+        "datamimic_ce.engine.dsl.model",
+        "datamimic_ce.engine.dsl.parsers",
+        "datamimic_ce.engine.dsl.statements",
+        "datamimic_ce.engine.dsl.vocabulary"
+      ],
+      "rationale": "Validate descriptor vocabulary and construct execution statements. Exact reviewed target children; no hidden extra modules.",
+      "provenance": [
+        "docs/architecture/inner/structure-review.json"
+      ],
+      "decided_by": "agent"
+    },
+    {
+      "id": "LAYOUT-ENGINE-IO",
+      "kind": "root_layout",
+      "root": "datamimic_ce.engine.io",
+      "allowed_children": [
+        "datamimic_ce.engine.io.api",
+        "datamimic_ce.engine.io.clients",
+        "datamimic_ce.engine.io.connection_config",
+        "datamimic_ce.engine.io.contracts",
+        "datamimic_ce.engine.io.data_sources",
+        "datamimic_ce.engine.io.exporters",
+        "datamimic_ce.engine.io.files",
+        "datamimic_ce.engine.io.memstore"
+      ],
+      "rationale": "Read, select, page and write external/in-memory data. Exact reviewed target children; no hidden extra modules.",
+      "provenance": [
+        "docs/architecture/inner/structure-review.json",
+        "docs/architecture/refactoring-study/experiment-2/amendment-168-memstore-data-owner.md"
+      ],
+      "decided_by": "agent"
+    },
+    {
+      "id": "LAYOUT-ENGINE-RUNTIME",
+      "kind": "root_layout",
+      "root": "datamimic_ce.engine.runtime",
+      "allowed_children": [
+        "datamimic_ce.engine.runtime.api",
+        "datamimic_ce.engine.runtime.contexts",
+        "datamimic_ce.engine.runtime.contracts",
+        "datamimic_ce.engine.runtime.lifecycle",
+        "datamimic_ce.engine.runtime.logging",
+        "datamimic_ce.engine.runtime.process_titles",
+        "datamimic_ce.engine.runtime.scripting",
+        "datamimic_ce.engine.runtime.storage",
+        "datamimic_ce.engine.runtime.tasks"
+      ],
+      "rationale": "Execute statements; own run, row and worker state. Exact reviewed target children; no hidden extra modules.",
+      "provenance": [
+        "docs/architecture/inner/structure-review.json"
+      ],
+      "decided_by": "agent"
+    },
+    {
+      "id": "LAYOUT-ERRORS",
+      "kind": "root_layout",
+      "root": "datamimic_ce.errors",
+      "allowed_children": [
+        "datamimic_ce.errors.base",
+        "datamimic_ce.errors.catalog",
+        "datamimic_ce.errors.codes",
+        "datamimic_ce.errors.factory",
+        "datamimic_ce.errors.formatters"
+      ],
+      "rationale": "Stable public error types, codes, formatting and construction. Exact reviewed target children; no hidden extra modules.",
+      "provenance": [
+        "docs/architecture/inner/structure-review.json"
+      ],
+      "decided_by": "agent"
+    },
+    {
+      "id": "LAYOUT-INTERFACES",
+      "kind": "root_layout",
+      "root": "datamimic_ce.interfaces",
+      "allowed_children": [
+        "datamimic_ce.interfaces.cli",
+        "datamimic_ce.interfaces.demo",
+        "datamimic_ce.interfaces.mcp",
+        "datamimic_ce.interfaces.project",
+        "datamimic_ce.interfaces.python"
+      ],
+      "rationale": "Transport and Python caller adaptation; no execution policy. Exact reviewed target children; no hidden extra modules.",
+      "provenance": [
+        "docs/architecture/inner/structure-review.json"
+      ],
+      "decided_by": "agent"
+    },
+    {
+      "id": "LAYOUT-RESOURCES",
+      "kind": "root_layout",
+      "root": "datamimic_ce.resources",
+      "allowed_children": [
+        "datamimic_ce.resources.api",
+        "datamimic_ce.resources.demos",
+        "datamimic_ce.resources.examples"
+      ],
+      "rationale": "Packaged runnable demos/examples and resource access. Exact reviewed target children; no hidden extra modules.",
+      "provenance": [
+        "docs/architecture/inner/structure-review.json"
+      ],
+      "decided_by": "agent"
+    },
+    {
+      "id": "LAYOUT-RESOURCES-EXAMPLES",
+      "kind": "root_layout",
+      "root": "datamimic_ce.resources.examples",
+      "allowed_children": [
+        "datamimic_ce.resources.examples.generate_address",
+        "datamimic_ce.resources.examples.generate_cities",
+        "datamimic_ce.resources.examples.generate_companies",
+        "datamimic_ce.resources.examples.generate_countries",
+        "datamimic_ce.resources.examples.generate_people",
+        "datamimic_ce.resources.examples.generate_people_demographics"
+      ],
+      "rationale": "Packaged runnable demos/examples and resource access. Exact reviewed target children; no hidden extra modules.",
+      "provenance": [
+        "docs/architecture/inner/structure-review.json"
+      ],
+      "decided_by": "agent"
+    }
+  ],
+  "declarations": {
+    "public_api": [
+      "datamimic_ce.interfaces.python.datamimic:DataMimic",
+      "datamimic_ce.interfaces.python.data_mimic_test:DataMimicTest",
+      "datamimic_ce.interfaces.python.factory:DataMimicTestFactory",
+      "datamimic_ce.domains.domain_core.contracts.json_types:JsonObject",
+      "datamimic_ce.domains.facade:generate_domain",
+      "datamimic_ce.domains.finance:CreditCard",
+      "datamimic_ce.domains.healthcare:Doctor",
+      "datamimic_ce.domains.healthcare:Patient"
+    ],
+    "public_api_provenance": [
+      "docs/architecture/refactoring-study/experiment-2/target-architecture.md",
+      "README.md",
+      "docs/architecture/refactoring-study/experiment-2/amendment-63.md"
+    ],
+    "public_commands": [
+      {
+        "id": "CMD-DATAMIMIC",
+        "command": "datamimic",
+        "description": "Author, inspect, and execute DATAMIMIC models.",
+        "provenance": [
+          "pyproject.toml"
+        ]
+      },
+      {
+        "id": "CMD-MCP",
+        "command": "datamimic-mcp",
+        "description": "Run the optional MCP adapter.",
+        "provenance": [
+          "pyproject.toml"
+        ]
+      }
+    ],
+    "paths": [
+      {
+        "id": "PATH-AUTHORING",
+        "label": "Intent to verified descriptor",
+        "kind": "write",
+        "steps": [
+          "interfaces",
+          "authoring",
+          "dsl",
+          "runtime"
+        ],
+        "provenance": [
+          "docs/architecture/refactoring-study/experiment-2/target-architecture.md"
+        ]
+      },
+      {
+        "id": "PATH-EXECUTION",
+        "label": "Descriptor execution",
+        "kind": "write",
+        "steps": [
+          "interfaces",
+          "runtime",
+          "dsl",
+          "domains",
+          "io"
+        ],
+        "provenance": [
+          "docs/architecture/refactoring-study/experiment-2/target-architecture.md"
+        ]
+      }
+    ],
+    "spot_owners": [
+      {
+        "id": "SPOT-DSL-VOCABULARY",
+        "label": "Executable DSL vocabulary",
+        "owner": "datamimic_ce.engine.dsl.api",
+        "responsibility": "Publish the canonical element, constraint, and capability facts projected by Authoring.",
+        "provenance": [
+          "docs/architecture/refactoring-study/experiment-2/target-architecture.md"
+        ]
+      }
+    ],
+    "measurement_budgets": [
+      {
+        "name": "cycle_edges",
+        "provenance": [
+          "docs/architecture/refactoring-study/experiment-2/protocol.md"
+        ]
+      },
+      {
+        "name": "private_crossings",
+        "provenance": [
+          "docs/architecture/refactoring-study/experiment-2/protocol.md"
+        ]
+      },
+      {
+        "name": "typing_positions",
+        "provenance": [
+          "docs/architecture/refactoring-study/experiment-2/protocol.md"
+        ]
+      },
+      {
+        "name": "calls_unresolved",
+        "provenance": [
+          "docs/architecture/refactoring-study/experiment-2/protocol.md"
+        ]
+      },
+      {
+        "name": "untyped_private_accesses",
+        "provenance": [
+          "docs/architecture/refactoring-study/experiment-2/protocol.md"
+        ]
+      }
+    ],
+    "modules": [
+      {
+        "path": "datamimic_ce/__init__.py",
+        "responsibility": "The package initializer exposes the CE namespace without loading configuration or mutating the process environment."
+      },
+      {
+        "path": "datamimic_ce/_compat.py",
+        "responsibility": "This module provides String Enum and exhaustiveness helpers for older Python versions."
+      },
+      {
+        "path": "datamimic_ce/randomness.py",
+        "responsibility": "Defines the shared random-source protocol and a bell-shaped index sampler."
+      },
+      {
+        "path": "datamimic_ce/resources/__init__.py",
+        "responsibility": "The package marks the bundled demo and descriptor resources."
+      },
+      {
+        "path": "datamimic_ce/resources/api.py",
+        "responsibility": "The API returns the packaged demo root as a Traversable and lists its subdirectories."
+      },
+      {
+        "path": "datamimic_ce/resources/demos/__init___.py",
+        "responsibility": "This legacy file contains only a docstring and does not initialize the demo directory."
+      },
+      {
+        "path": "datamimic_ce/resources/demos/demo-clinical-trial/script/clinical_trial.scr.py",
+        "responsibility": "The script generates a fixed-configuration patient cohort with a locally set seed and serializes the required fields."
+      },
+      {
+        "path": "datamimic_ce/resources/demos/demo-custom-components/script/converter.scr.py",
+        "responsibility": "The script demonstrates custom converters for masking, normalization, and formatting."
+      },
+      {
+        "path": "datamimic_ce/resources/demos/demo-custom-components/script/generator.scr.py",
+        "responsibility": "The script demonstrates additional LiteralGenerator implementations for values such as color, address, and identifier."
+      },
+      {
+        "path": "datamimic_ce/resources/demos/demo-custom-components/script/generator_glob.scr.py",
+        "responsibility": "The script demonstrates globally imported dependencies in several custom generators."
+      },
+      {
+        "path": "datamimic_ce/resources/demos/demo-datetime/script/py_script.scr.py",
+        "responsibility": "The helper function shifts a datetime value by a specified number of days."
+      },
+      {
+        "path": "datamimic_ce/resources/demos/demo-db-mapping/script/lib_glob.scr.py",
+        "responsibility": "The example connects a custom converter to a runtime client and an SQL-based mapping query."
+      },
+      {
+        "path": "datamimic_ce/resources/demos/demo-finance/script/ledger.scr.py",
+        "responsibility": "The function generates account transactions with an optional RNG seed and stores them in dictionary rows."
+      },
+      {
+        "path": "datamimic_ce/resources/demos/demo-py-scripting/script/lib.scr.py",
+        "responsibility": "The example file demonstrates basic Python arithmetic and converts random table data to JSON."
+      },
+      {
+        "path": "datamimic_ce/resources/examples/generate_address.py",
+        "responsibility": "Demonstrates single and batch address generation through AddressService."
+      },
+      {
+        "path": "datamimic_ce/resources/examples/generate_cities.py",
+        "responsibility": "Demonstrates batch city generation through CityService."
+      },
+      {
+        "path": "datamimic_ce/resources/examples/generate_companies.py",
+        "responsibility": "Demonstrates batch company generation through CompanyService."
+      },
+      {
+        "path": "datamimic_ce/resources/examples/generate_countries.py",
+        "responsibility": "Demonstrates batch country generation through CountryService."
+      },
+      {
+        "path": "datamimic_ce/resources/examples/generate_people.py",
+        "responsibility": "Demonstrates configurable-size batch person generation through PersonService."
+      },
+      {
+        "path": "datamimic_ce/resources/examples/generate_people_demographics.py",
+        "responsibility": "Demonstrates seeded person generation and demographic age constraints through PersonService."
+      }
+    ]
+  }
+}

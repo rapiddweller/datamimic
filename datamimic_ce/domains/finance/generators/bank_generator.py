@@ -7,9 +7,10 @@ import random
 from pathlib import Path
 
 from datamimic_ce.domains.domain_core.base_domain_generator import DatasetAwareDomainGenerator
-from datamimic_ce.domains.utils.dataset_loader import pick_one_weighted_no_repeat
-from datamimic_ce.domains.utils.dataset_path import dataset_path
-from datamimic_ce.utils.file_util import FileUtil
+from datamimic_ce.domains.domain_core.datasets.path import dataset_path
+from datamimic_ce.domains.shared.datasets.loader import pick_one_weighted_no_repeat, read_headered_csv
+from datamimic_ce.domains.shared.generators.phone_number_generator import PhoneNumberGenerator
+from datamimic_ce.domains.shared.literal_generators.primitives.string_generator import StringGenerator
 
 
 class BankGenerator(DatasetAwareDomainGenerator):
@@ -22,10 +23,10 @@ class BankGenerator(DatasetAwareDomainGenerator):
         # Track last pick to avoid immediate repetition in single process
         self._last_bank_name: str | None = None
 
-    def generate_bank_data(self) -> dict:
+    def generate_bank_data(self) -> dict[str, str]:
         #  centralized dataset path
         file_path = dataset_path("finance", "bank", f"banks_{self._dataset}.csv", start=Path(__file__))
-        header_dict, loaded_data = FileUtil.read_csv_to_dict_of_tuples_with_header(file_path, delimiter=",")
+        header_dict, loaded_data = read_headered_csv(file_path, delimiter=",")
 
         name_idx = header_dict["name"]
         wgt_idx = header_dict["weight"]
@@ -41,3 +42,14 @@ class BankGenerator(DatasetAwareDomainGenerator):
             "swift_code": bank_data[header_dict["swift_code"]],
             "routing_number": bank_data[header_dict["routing_number"]] if "routing_number" in header_dict else "",
         }
+
+    def generate_bic(self) -> str:
+        # Basic 8-char BIC: 4 letters bank + 2-letter country + 2 alnum location
+        pattern = f"[A-Z]{{4}}{self.dataset}[A-Z0-9]{{2}}"
+        return StringGenerator.rnd_str_from_regex(pattern, rng=self.rng)
+
+    def generate_bin(self) -> str:
+        return StringGenerator.rnd_str_from_regex("[0-9]{4}", rng=self.rng)
+
+    def generate_customer_service_phone(self) -> str:
+        return PhoneNumberGenerator(dataset=self.dataset, rng=self.rng).generate()

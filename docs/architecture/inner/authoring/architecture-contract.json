@@ -1,0 +1,478 @@
+{
+  "schema_version": "2.1.0",
+  "declarations": {
+    "modules": [
+      {
+        "path": "datamimic_ce/authoring/__init__.py",
+        "responsibility": "The package exports the canonical intent, request, and scaffold entrypoints."
+      },
+      {
+        "path": "datamimic_ce/authoring/adapters/__init__.py",
+        "responsibility": "The package marks the adapter namespace and provides no authoring logic of its own."
+      },
+      {
+        "path": "datamimic_ce/authoring/adapters/dryrun.py",
+        "responsibility": "Bounds execution, neutralizes side effects and produces complete capture evidence using canonical Authoring records."
+      },
+      {
+        "path": "datamimic_ce/authoring/adapters/engine_check.py",
+        "responsibility": "After rule lint succeeds, the adapter runs the engine parser as a second validation authority."
+      },
+      {
+        "path": "datamimic_ce/authoring/adapters/linter.py",
+        "responsibility": "The adapter loads XML, aggregates registered diagnostics, and calls the engine parser only when rule checks pass."
+      },
+      {
+        "path": "datamimic_ce/authoring/adapters/reference.py",
+        "responsibility": "Projects DSL facts, authoring schemas, and Domain/Runtime generator capabilities into bounded reference responses."
+      },
+      {
+        "path": "datamimic_ce/authoring/adapters/xml_loader.py",
+        "responsibility": "The loader uses the shared safe XML parser and converts syntax or DTD errors into DM001 diagnostics."
+      },
+      {
+        "path": "datamimic_ce/authoring/api.py",
+        "responsibility": "The API provides typed functions for capabilities, check, reference, run, and scaffold."
+      },
+      {
+        "path": "datamimic_ce/authoring/application/__init__.py",
+        "responsibility": "The package marks the authoring use cases without adding execution logic."
+      },
+      {
+        "path": "datamimic_ce/authoring/domain/acceptance.py",
+        "responsibility": "Evaluates explicit and derived expectations against the same full bounded capture."
+      },
+      {
+        "path": "datamimic_ce/authoring/application/compiler.py",
+        "responsibility": "The compiler translates AuthoringSpecV1 into XML and a typed plan without linting or runtime execution."
+      },
+      {
+        "path": "datamimic_ce/authoring/application/intent_linter.py",
+        "responsibility": "The linter applies intent rules to the specification and CompilePlan and decides whether findings block verification."
+      },
+      {
+        "path": "datamimic_ce/authoring/application/intent_validation.py",
+        "responsibility": "This module projects Pydantic validation errors into path-specific, repairable intent issues."
+      },
+      {
+        "path": "datamimic_ce/authoring/application/service.py",
+        "responsibility": "The service orchestrates spec validation, compilation, linting, a bounded run, acceptance, and optional evidence."
+      },
+      {
+        "path": "datamimic_ce/authoring/domain/verification.py",
+        "responsibility": "Compares captures and derives retry, smoke-export and replay evidence without executing a run."
+      },
+      {
+        "path": "datamimic_ce/authoring/contracts.py",
+        "responsibility": "Defines canonical Authoring requests, results, compiler plans and full bounded-capture evidence records."
+      },
+      {
+        "path": "datamimic_ce/authoring/domain/__init__.py",
+        "responsibility": "The package marks the authoring vocabulary and rules without adding domain behavior."
+      },
+      {
+        "path": "datamimic_ce/authoring/domain/derived_facts.py",
+        "responsibility": "Derives product, memstore, and foreign-key facts from CompilePlan for scaffold responses and intent rules."
+      },
+      {
+        "path": "datamimic_ce/authoring/domain/diagnostics.py",
+        "responsibility": "The DTOs standardize individual diagnostics and lint results for authoring responses."
+      },
+      {
+        "path": "datamimic_ce/authoring/domain/rule_catalog.py",
+        "responsibility": "The catalog centrally maintains DM rule IDs, severity, fix hints, and their stable reference projection."
+      },
+      {
+        "path": "datamimic_ce/authoring/domain/rules/__init__.py",
+        "responsibility": "The package provides groups of XML and intent rules without making rule decisions itself."
+      },
+      {
+        "path": "datamimic_ce/authoring/domain/rules/base.py",
+        "responsibility": "The base types give XML rules and intent rules separate contexts and diagnostic creation."
+      },
+      {
+        "path": "datamimic_ce/authoring/domain/rules/best_practice.py",
+        "responsibility": "The rules warn about operational default risks such as shuffling, a missing seed, and loading the full source."
+      },
+      {
+        "path": "datamimic_ce/authoring/domain/rules/cross_statement.py",
+        "responsibility": "The rules check relationships between declarations, sources, targets, and include paths in the XML tree."
+      },
+      {
+        "path": "datamimic_ce/authoring/domain/rules/intent_rules.py",
+        "responsibility": "The rules check product relationships and deliverability directly in AuthoringSpec and CompilePlan."
+      },
+      {
+        "path": "datamimic_ce/authoring/domain/rules/schema_facts.py",
+        "responsibility": "SchemaIndex and attribute and element descriptions provide the registered grammar to XML rules."
+      },
+      {
+        "path": "datamimic_ce/authoring/domain/rules/schema_rules.py",
+        "responsibility": "The rules compare XML tags, children, and attributes with the schema derived from the engine."
+      },
+      {
+        "path": "datamimic_ce/authoring/domain/rules/semantic_rules.py",
+        "responsibility": "The rules check conditional DSL constraints and value relationships against centrally registered facts."
+      },
+      {
+        "path": "datamimic_ce/authoring/domain/schema.py",
+        "responsibility": "This module projects element models into a SchemaIndex and provides JSON Schema for individual XML elements."
+      },
+      {
+        "path": "datamimic_ce/authoring/domain/script_semantics.py",
+        "responsibility": "The helpers check DSL scope references in script field expressions."
+      },
+      {
+        "path": "datamimic_ce/authoring/projection/__init__.py",
+        "responsibility": "The package marks output-side authoring projections without adding domain behavior."
+      },
+      {
+        "path": "datamimic_ce/authoring/projection/reference_projection.py",
+        "responsibility": "This module projects authoring variants, schemas, and repair hints for typed reference queries."
+      },
+      {
+        "path": "datamimic_ce/authoring/spec.py",
+        "responsibility": "AuthoringSpecV1 validates the versioned JSON intent language through discriminated products, fields, and expectations."
+      }
+    ]
+  },
+  "components": [
+    {
+      "id": "AUTHORING-API",
+      "label": "api",
+      "role": "interface",
+      "packages": [
+        "datamimic_ce.authoring.api"
+      ],
+      "exact_modules": [
+        "datamimic_ce.authoring"
+      ],
+      "responsibilities": [
+        "Exposes capabilities, check, reference, run, and scaffold as typed entry points that delegate to the authoring application."
+      ],
+      "forbidden_responsibilities": [
+        "Own compilation, verification, or transport behavior."
+      ],
+      "provenance": [
+        "docs/architecture/inner/target.md"
+      ],
+      "requires": [
+        {
+          "component": "domain",
+          "rationale": "Public signatures use authoring-owned types.",
+          "decided_by": "agent"
+        },
+        {
+          "component": "application",
+          "rationale": "The facade delegates authoring workflows.",
+          "decided_by": "agent"
+        }
+      ],
+      "public": [
+        "datamimic_ce.authoring.api"
+      ],
+      "decided_by": "agent"
+    },
+    {
+      "id": "AUTHORING-DOMAIN",
+      "label": "domain",
+      "role": "contract",
+      "packages": [
+        "datamimic_ce.authoring.contracts",
+        "datamimic_ce.authoring.spec",
+        "datamimic_ce.authoring.domain"
+      ],
+      "responsibilities": [
+        "Observable request/result contracts, intent specification, diagnostics, acceptance facts and pure rules; one domain aggregate without a DTO/rule component cycle."
+      ],
+      "forbidden_responsibilities": [
+        "Import Runtime or IO",
+        "Parse files or execute descriptors"
+      ],
+      "provenance": [
+        "docs/architecture/inner/target.md"
+      ],
+      "requires": [],
+      "public": [
+        "datamimic_ce.authoring.contracts",
+        "datamimic_ce.authoring.spec",
+        "datamimic_ce.authoring.spec:AllowedValuesExpectation",
+        "datamimic_ce.authoring.spec:ConstantField",
+        "datamimic_ce.authoring.spec:DecimalRangeField",
+        "datamimic_ce.authoring.spec:ExactCountExpectation",
+        "datamimic_ce.authoring.spec:FileExportTarget",
+        "datamimic_ce.authoring.spec:FileSource",
+        "datamimic_ce.authoring.spec:ForeignKeyExpectation",
+        "datamimic_ce.authoring.spec:ForeignKeyRole",
+        "datamimic_ce.authoring.spec:GeneratedProduct",
+        "datamimic_ce.authoring.spec:IdentifierRole",
+        "datamimic_ce.authoring.spec:IncrementField",
+        "datamimic_ce.authoring.spec:IntegerRangeField",
+        "datamimic_ce.authoring.spec:MemstoreSource",
+        "datamimic_ce.authoring.spec:MemstoreTarget",
+        "datamimic_ce.authoring.spec:NestedGeneratedProduct",
+        "datamimic_ce.authoring.spec:NestedListField",
+        "datamimic_ce.authoring.spec:PatternField",
+        "datamimic_ce.authoring.spec:PerParentCountExpectation",
+        "datamimic_ce.authoring.spec:PersonEmailField",
+        "datamimic_ce.authoring.spec:PersonNameField",
+        "datamimic_ce.authoring.spec:RangeExpectation",
+        "datamimic_ce.authoring.spec:RowConditionExpectation",
+        "datamimic_ce.authoring.spec:ScriptField",
+        "datamimic_ce.authoring.spec:SourceProduct",
+        "datamimic_ce.authoring.spec:StringLengthField",
+        "datamimic_ce.authoring.spec:TimeSeriesProduct",
+        "datamimic_ce.authoring.spec:TimestampRole",
+        "datamimic_ce.authoring.spec:UniqueExpectation",
+        "datamimic_ce.authoring.spec:ValueRole",
+        "datamimic_ce.authoring.spec:ValuesField",
+        "datamimic_ce.authoring.spec:WeightedField",
+        "datamimic_ce.authoring.domain.acceptance:evaluate_acceptance",
+        "datamimic_ce.authoring.domain.derived_facts:derive_facts",
+        "datamimic_ce.authoring.domain.diagnostics",
+        "datamimic_ce.authoring.domain.rule_catalog",
+        "datamimic_ce.authoring.domain.rules:ALL_INTENT_RULES",
+        "datamimic_ce.authoring.domain.rules:ALL_RULES",
+        "datamimic_ce.authoring.domain.rules.base",
+        "datamimic_ce.authoring.domain.rules.schema_facts",
+        "datamimic_ce.authoring.domain.schema",
+        "datamimic_ce.authoring.domain.script_semantics",
+        "datamimic_ce.authoring.domain.verification:blocked_replay",
+        "datamimic_ce.authoring.domain.verification:blocked_verification",
+        "datamimic_ce.authoring.domain.verification:max_count_remediations",
+        "datamimic_ce.authoring.domain.verification:replay_evidence",
+        "datamimic_ce.authoring.domain.verification:replay_not_requested",
+        "datamimic_ce.authoring.domain.verification:smoke_export_evidence",
+        "datamimic_ce.authoring.domain.verification:unseeded_replay_evidence"
+      ],
+      "decided_by": "agent"
+    },
+    {
+      "id": "AUTHORING-PROJECTION",
+      "label": "projection",
+      "role": "projection",
+      "packages": [
+        "datamimic_ce.authoring.projection"
+      ],
+      "responsibilities": [
+        "Build typed authoring-reference variants from canonical intent facts."
+      ],
+      "forbidden_responsibilities": [
+        "Define a second DSL catalog or execute a run."
+      ],
+      "provenance": [
+        "docs/architecture/inner/target.md"
+      ],
+      "requires": [
+        {
+          "component": "domain",
+          "rationale": "Projections render authoring-owned facts and types.",
+          "decided_by": "agent"
+        }
+      ],
+      "public": [
+        "datamimic_ce.authoring.projection.reference_projection"
+      ],
+      "decided_by": "agent"
+    },
+    {
+      "id": "AUTHORING-ADAPTERS",
+      "label": "adapters",
+      "role": "component",
+      "packages": [
+        "datamimic_ce.authoring.adapters"
+      ],
+      "responsibilities": [
+        "Bounded runtime/filesystem adapters and runtime-backed reference/capability views."
+      ],
+      "forbidden_responsibilities": [
+        "Own intent or duplicate executable DSL definitions."
+      ],
+      "provenance": [
+        "docs/architecture/inner/target.md"
+      ],
+      "requires": [
+        {
+          "component": "domain",
+          "rationale": "Adapters consume typed intent and diagnostics.",
+          "decided_by": "agent"
+        },
+        {
+          "component": "projection",
+          "rationale": "Reference responses render canonical authoring-intent projections.",
+          "decided_by": "agent"
+        }
+      ],
+      "public": [
+        "datamimic_ce.authoring.adapters.dryrun",
+        "datamimic_ce.authoring.adapters.linter",
+        "datamimic_ce.authoring.adapters.reference"
+      ],
+      "decided_by": "agent"
+    },
+    {
+      "id": "AUTHORING-APPLICATION",
+      "label": "application",
+      "role": "component",
+      "packages": [
+        "datamimic_ce.authoring.application"
+      ],
+      "responsibilities": [
+        "Compile/check/run/scaffold transaction coordination."
+      ],
+      "forbidden_responsibilities": [
+        "Define new grammar facts or directly execute Runtime internals."
+      ],
+      "provenance": [
+        "docs/architecture/inner/target.md"
+      ],
+      "requires": [
+        {
+          "component": "domain",
+          "rationale": "Workflows operate on typed authoring requests and results.",
+          "decided_by": "agent"
+        },
+        {
+          "component": "projection",
+          "rationale": "Validation uses canonical reference projections.",
+          "decided_by": "agent"
+        },
+        {
+          "component": "adapters",
+          "rationale": "Workflows delegate compilation and bounded checks.",
+          "decided_by": "agent"
+        }
+      ],
+      "public": [
+        "datamimic_ce.authoring.application.service"
+      ],
+      "decided_by": "agent"
+    }
+  ],
+  "rules": [
+    {
+      "id": "AUTHORING-REQUIRES-COMPLETE",
+      "kind": "complete_requires",
+      "include_type_checking": true,
+      "rationale": "Pure intent and rules must not depend on file or execution adapters.",
+      "provenance": [
+        "docs/architecture/inner/target.md"
+      ],
+      "decided_by": "agent"
+    },
+    {
+      "id": "AUTHORING-ASSIGNMENT",
+      "kind": "complete_assignment",
+      "source": "datamimic_ce.authoring",
+      "rationale": "Every implementation below this boundary has one declared owner; initializer behavior is reviewed separately.",
+      "provenance": [
+        "docs/architecture/inner/target.md"
+      ],
+      "decided_by": "agent"
+    },
+    {
+      "id": "AUTHORING-INTERFACES",
+      "kind": "interface_boundary",
+      "include_type_checking": true,
+      "rationale": "Sibling components use explicit entry points; a permitted direction does not publish all internals.",
+      "provenance": [
+        "docs/architecture/inner/target.md"
+      ],
+      "decided_by": "agent"
+    },
+    {
+      "id": "AUTHORING-ACYCLIC",
+      "kind": "no_component_cycles",
+      "rationale": "Responsibility layers must not require one another in both directions.",
+      "provenance": [
+        "docs/architecture/inner/target.md"
+      ],
+      "decided_by": "agent"
+    },
+    {
+      "id": "LAYOUT-AUTHORING-ADAPTERS",
+      "kind": "root_layout",
+      "root": "datamimic_ce.authoring.adapters",
+      "allowed_children": [
+        "datamimic_ce.authoring.adapters.dryrun",
+        "datamimic_ce.authoring.adapters.engine_check",
+        "datamimic_ce.authoring.adapters.linter",
+        "datamimic_ce.authoring.adapters.reference",
+        "datamimic_ce.authoring.adapters.xml_loader"
+      ],
+      "rationale": "Bounded runtime/filesystem execution adapters and runtime-backed reference/capability views. Exact reviewed target children; no hidden extra modules.",
+      "provenance": [
+        "docs/architecture/inner/structure-review.json"
+      ],
+      "decided_by": "agent"
+    },
+    {
+      "id": "LAYOUT-AUTHORING-APPLICATION",
+      "kind": "root_layout",
+      "root": "datamimic_ce.authoring.application",
+      "allowed_children": [
+        "datamimic_ce.authoring.application.compiler",
+        "datamimic_ce.authoring.application.intent_linter",
+        "datamimic_ce.authoring.application.intent_validation",
+        "datamimic_ce.authoring.application.service"
+      ],
+      "rationale": "Compile/check/run/scaffold transaction coordination. Exact reviewed target children; no hidden extra modules.",
+      "provenance": [
+        "docs/architecture/inner/structure-review.json"
+      ],
+      "decided_by": "agent"
+    },
+    {
+      "id": "LAYOUT-AUTHORING-DOMAIN",
+      "kind": "root_layout",
+      "root": "datamimic_ce.authoring.domain",
+      "allowed_children": [
+        "datamimic_ce.authoring.domain.acceptance",
+        "datamimic_ce.authoring.domain.derived_facts",
+        "datamimic_ce.authoring.domain.diagnostics",
+        "datamimic_ce.authoring.domain.rule_catalog",
+        "datamimic_ce.authoring.domain.rules",
+        "datamimic_ce.authoring.domain.schema",
+        "datamimic_ce.authoring.domain.script_semantics",
+        "datamimic_ce.authoring.domain.verification"
+      ],
+      "rationale": "Intent specification, diagnostics, acceptance facts and pure rules. Exact reviewed target children; no hidden extra modules.",
+      "provenance": [
+        "docs/architecture/inner/structure-review.json"
+      ],
+      "decided_by": "agent"
+    },
+    {
+      "id": "LAYOUT-AUTHORING-DOMAIN-RULES",
+      "kind": "root_layout",
+      "root": "datamimic_ce.authoring.domain.rules",
+      "allowed_children": [
+        "datamimic_ce.authoring.domain.rules.base",
+        "datamimic_ce.authoring.domain.rules.best_practice",
+        "datamimic_ce.authoring.domain.rules.cross_statement",
+        "datamimic_ce.authoring.domain.rules.intent_rules",
+        "datamimic_ce.authoring.domain.rules.schema_facts",
+        "datamimic_ce.authoring.domain.rules.schema_rules",
+        "datamimic_ce.authoring.domain.rules.semantic_rules"
+      ],
+      "rationale": "Intent specification, diagnostics, acceptance facts and pure rules. Exact reviewed target children; no hidden extra modules.",
+      "provenance": [
+        "docs/architecture/inner/structure-review.json"
+      ],
+      "decided_by": "agent"
+    },
+    {
+      "id": "LAYOUT-AUTHORING-PROJECTION",
+      "kind": "root_layout",
+      "root": "datamimic_ce.authoring.projection",
+      "allowed_children": [
+        "datamimic_ce.authoring.projection.reference_projection"
+      ],
+      "rationale": "Build typed authoring-reference variants from canonical intent facts. Exact reviewed target children; no hidden extra modules.",
+      "provenance": [
+        "docs/architecture/inner/structure-review.json"
+      ],
+      "decided_by": "agent"
+    }
+  ]
+}
