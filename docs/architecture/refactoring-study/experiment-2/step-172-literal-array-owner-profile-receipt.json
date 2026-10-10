@@ -1,0 +1,16 @@
+{
+  "base_ledger_sha256": "98c64152110df0eed9b954f110dabd9170ca5e4d52f8c5de27bd90393a7a9900",
+  "accepted_ledger_sha256": "caa70f800784107dfcf264abc880edc5926eb5b2ed67991b9ea61a33fde43f62",
+  "ledger_rows": 931,
+  "reviewed_owner_profiles": 125,
+  "unknown_inputs": 806,
+  "unchanged_raw_lines": 925,
+  "evidence_root": "/tmp/ce-resume-20261010/dsl-next-175",
+  "first_original_startup_failure_sha256": "a32fc98ad2aa53fc0cb42c34052ec6477eaf18e6a82f17f0385ef5293229639e",
+  "original_native_receipt_sha256": "87d2cb3ecead56f758f96f1bd0fb553ec4657a72504e4e41b4b7bd82770c41be",
+  "current_native_receipt_sha256": "91bf97a9bc955fed071fe59f3d0467b5c14b5a76539770dfcae40558026f21a6",
+  "native_equality_qa_sha256": "2f608f8e16680d8857f5fade3a926c43552feabaf9d079d979ffd3629ff063bc",
+  "ledger_qa_sha256": "083cba00e291ba24d46940764a4a98bd2fc1554f317b1c868ae721943395c567",
+  "ledger_qa_receipt_sha256": "61064ea5de51aa9935f587e325f6c28d188b401436e26568aca346816e01751f",
+  "frozen_oracle_parity": "NOT_ESTABLISHED"
+}

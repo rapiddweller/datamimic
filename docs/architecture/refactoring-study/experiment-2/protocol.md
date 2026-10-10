@@ -856,14 +856,24 @@ SetupContext property findings; the other 20 records, 254 canonical/200
 measured UNKNOWNs and source observations remain unchanged. LOCAL VERIFIED:
 the exact guard RED→GREEN, three native/falsy/error characterizations, 115
 focused tests, 13 definition checks, 2341 CE unit tests (11 skipped, one
-expected failure), Ruff and full MyPy (488 files) PASS. The Makefile's uvx
-launcher cannot access its
-shared cache here; direct published 1.1.1 report and project-venv checks were
-used. Published-CLI source and selector negatives preserve neighboring
-findings/UNKNOWNs. Native baseline validation exits 2 with the same 19
+expected failure), Ruff and full MyPy (488 files) PASS. The isolated worktree's
+Makefile uvx launcher could not access its shared cache; the published 1.1.1
+report and project-venv checks ran directly. After integration, the Makefile
+definition target passed all 13 checks at the experiment head. Published-CLI
+negatives retain neighboring findings and UNKNOWNs. Native baseline validation
+exits 2 with the same 19
 diagnostics and 14 baseline-new groups; no machine amendment is emitted.
-Independent QA and candidate CI remain open. Full DSL/EE and target acceptance
-remain open.
+The integrated `b56432e2` report matches the candidate packet in every section
+except `source.git_head`; its source digest and 20 findings are unchanged.
+Independent QA passed the bounded slice; candidate CI remains open. The full
+Properties source contract and target acceptance remain open.
+
+Step 172: [Literal-array owner profile](step-172-literal-array-owner-profile.md)
+accepts six exact existing owner cases at `a219163e` and `c9680c37` after
+independent native and ledger review. The accepted effective ledger has 125
+reviewed profiles and 806 UNKNOWN inputs; historical oracle and `c992` fields
+are unchanged. The failed first original startup remains explicit, with zero
+descriptor executions. This does not establish full DSL/EE parity.
 
 ## Agent separation
 
