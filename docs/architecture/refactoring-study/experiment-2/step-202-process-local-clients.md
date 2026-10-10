@@ -26,7 +26,9 @@ The original six-case batch remains failed. A separate two-target packet changes
 only fresh resource names and PostgreSQL's profile schema to match its owned
 schema. No production fix or original-case retry occurs. The unchanged profile
 merger overwrites explicit descriptor attributes; offline conflict/empty-profile
-controls establish [CE #291](https://github.com/rapiddweller/datamimic/issues/291).
+controls establish that behavior. Environment property files are the preferred
+connection-configuration source. [CE #291](https://github.com/rapiddweller/datamimic/issues/291)
+tracks documentation/UX clarity, not a proven need to change conflict precedence.
 
 Four original source cases and two corrected targets retain six ordered native
 rows/types, helper counts and Step 201 aliases. Each MP receiver constructs its

@@ -257,7 +257,7 @@
         "datamimic_ce.engine.io.connection_config"
       ],
       "responsibilities": [
-        "Connection settings and on-demand property-file loading."
+        "Connection settings and on-demand property-file loading. Environment env.properties files are the preferred source for CE database/MongoDB connection parameters; DSL elements declare and reference clients. This preference does not change existing conflict precedence."
       ],
       "public": [
         "datamimic_ce.engine.io.connection_config.mongodb_connection_config",
@@ -270,7 +270,8 @@
         "Open client connections, select source rows, or register clients in runtime context."
       ],
       "provenance": [
-        "docs/architecture/inner/semantic-review/astra-target-decision.md"
+        "docs/architecture/inner/semantic-review/astra-target-decision.md",
+        "docs/architecture/refactoring-study/experiment-2/amendment-202-descriptor-client-transfer.md"
       ],
       "requires": []
     },

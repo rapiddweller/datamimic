@@ -19,3 +19,9 @@ Memstore and prepared generator state remain native.
 These are implementation decisions, not acceptance evidence. Actual process
 ownership, DSL parity and failures require the Step 202 tests and service proof.
 Arbitrary custom captures/reducers and Ray process isolation remain UNKNOWN.
+
+User clarification: environment `env.properties` files are the preferred source
+for CE database/MongoDB connection parameters; DSL elements declare/reference
+clients. Resolve configuration before worker-local construction. This preference
+does not change existing conflict precedence. Kafka/RabbitMQ topic configuration
+in exporter/importer DSL belongs to EE and is outside this CE slice.
