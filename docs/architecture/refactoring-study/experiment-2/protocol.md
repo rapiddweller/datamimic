@@ -926,6 +926,13 @@ accepted ledger now has 129/931 reviewed profiles and 802 UNKNOWN inputs; its
 other 930 rows and historical oracle fields are unchanged. Standalone XML,
 frozen-oracle parity, other descriptors and EE remain UNKNOWN.
 
+Step 180: [Setup-expression owner profiles](step-180-setup-expression-owner-profiles.md)
+add two unchanged native inputs after independent QA. Their complete typed
+captures match at original `a219163e` and current `c2d40e4d`. The accepted
+ledger has 131/931 reviewed profiles and 800 UNKNOWN inputs; its other 929
+rows and historical oracle fields are unchanged. Standalone XML, frozen-oracle
+parity, other descriptors and EE remain UNKNOWN.
+
 The `PreparedPage` alias positions remain on hold. Published ArchKeel 1.1.1
 and main `b70a730a` retain all four findings under exact alias selectors;
 the equivalent inline annotation permits only the two contained maps.
