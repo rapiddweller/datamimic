@@ -1,4 +1,4 @@
-.PHONY: help install test test-unit test-integration test-functional coverage coverage-unit typecheck lint format check architecture-check architecture-definition-check architecture-report architecture-cycle-check clean
+.PHONY: help install test test-unit test-integration test-functional coverage coverage-unit typecheck lint format check architecture-check architecture-definition-check architecture-version architecture-report architecture-validation-receipt architecture-cycle-check clean
 
 PACKAGE := datamimic_ce
 TESTS := tests_ce
@@ -66,6 +66,13 @@ architecture-definition-check:
 
 architecture-report:
 	uvx --python 3.11 --from '$(ARCHKEEL_SOURCE)' archkeel report --output test-artifacts/architecture/ce-recursive-target/architecture.json --json
+
+architecture-version:
+	@version="$$(uvx --python 3.11 --from '$(ARCHKEEL_SOURCE)' archkeel --version)" && test "$$version" = 'archkeel $(patsubst archkeel==%,%,$(ARCHKEEL_SOURCE))' && printf '%s\n' "$${version#archkeel }"
+
+architecture-validation-receipt:
+	mkdir -p test-artifacts/architecture/ce-recursive-target
+	uvx --python 3.11 --from '$(ARCHKEEL_SOURCE)' archkeel validate --baseline known-violations.json --json > test-artifacts/architecture/ce-recursive-target/validation.json
 
 architecture-check: architecture-cycle-check architecture-definition-check
 	uvx --python 3.11 --from pytest==8.3.5 pytest -q tests_ce/architecture/test_inner_architecture_target.py
