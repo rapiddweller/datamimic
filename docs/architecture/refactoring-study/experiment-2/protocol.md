@@ -1157,7 +1157,8 @@ instances. Parent resources and caller-owned injections retain their ownership.
 [Evidence](step-202-process-local-clients.md) accepts four original source/helper
 cases and two separately corrected-profile targets. The original target failure
 remains recorded; [CE #291](https://github.com/rapiddweller/datamimic/issues/291)
-tracks profile values overriding explicit descriptor attributes. Six permanent
+tracks preferred environment property-file configuration and current conflict
+precedence documentation. Six permanent
 service regressions and two existing PostgreSQL sequence regressions pass.
 
 The architecture still has 13 unchanged semantic findings and 200 scalar UNKNOWNs.
@@ -1175,6 +1176,19 @@ Fresh canonical comparison removes only this finding: **12 violations remain**,
 with all 254 canonical UNKNOWN records (200 scalar positions) unchanged.
 No ownership/dependency/baseline change or DSL-ledger promotion. External static
 contracts, full native type closure and the whole CE/EE target remain open.
+
+## Step 204 — native distribution owner profiles
+
+[Evidence](step-204-native-distributions.md) admits eight independently reviewed
+owner-profile rows: **174/931 reviewed, 757 UNKNOWN**. Sixteen once-only native
+calls compare complete output and error graphs at the frozen original/current
+commits. The other 923 raw ledger lines and all historical evidence stay exact.
+Ten raw harness postcheck failures remain preserved under a separately reviewed
+cumulative-stderr acceptance amendment; native phases passed without retries.
+[CE #292](https://github.com/rapiddweller/datamimic/issues/292) tracks a masked
+numeric-type test; [CE #293](https://github.com/rapiddweller/datamimic/issues/293)
+tracks `None:` in model-level diagnostics. No production or contract change;
+12 semantic findings and 254 canonical UNKNOWN records remain.
 
 ## Agent separation
 

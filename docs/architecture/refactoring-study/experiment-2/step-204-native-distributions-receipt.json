@@ -1,0 +1,255 @@
+{
+  "primary_source_commit": "1adb6cee624f66a602eb033c83d1cf597c6cad9a",
+  "native_producing_commits": {
+    "original": "a219163e533d661bcc7bda0faa5ecc77909ab5aa",
+    "current": "9e6667e105dcf436ccd15c334b977bc6442e390e"
+  },
+  "verdict": "SPEC_PASS_QUALITY_PASS_GO_EXACT_OWNER_PROFILES",
+  "final_admission": "Independent reviewer confirmed accepted hash, eight status-only changes, 923 unchanged raw baseline lines and final counts.",
+  "source_bridge": "Return-annotation-only AST equivalence; receipts are not relabeled as primary executions.",
+  "counts": {
+    "descriptors": 931,
+    "reviewed_before": 166,
+    "reviewed_after": 174,
+    "unknown_after": 757,
+    "changed_rows": 8,
+    "unchanged_baseline_raw_lines": 923,
+    "native_owner_calls": 16,
+    "engine_executions": 20,
+    "pytest_phases_passed": 48,
+    "captures": 10,
+    "captured_rows_across_endpoints": 1886,
+    "capture_pairs": 5,
+    "error_graph_pairs": 5,
+    "raw_parent_pass": 6,
+    "raw_parent_fail_retained_no_retry": 10
+  },
+  "accepted_ledger": "/tmp/ce-step204-ledger.jsonl",
+  "changed_existing_fields": [
+    "input_review_status",
+    "input_dependencies",
+    "isolation_review_status",
+    "isolation"
+  ],
+  "fresh_evidence_field": "native_distribution_owner_evidence",
+  "admitted_evidence_status": "ACCEPTED_EXACT_OWNER_PROFILE",
+  "native_reruns": 0,
+  "production_changes": 0,
+  "harness_acceptance": "Producing v3; read-only v4 cumulative-stderr acceptance preserves ten literal failures and checks exact frozen assertion and plugin equality.",
+  "local_verification": {
+    "ruff": "PASS",
+    "mypy": "PASS_488_FILES",
+    "v4_comparison": "PASS_8_PAIRS",
+    "v4_controls": {
+      "positive": 6,
+      "negative": 15
+    },
+    "independent_raw_review": "PASS",
+    "ledger_admission": "PASS_STATUS_ONLY"
+  },
+  "ci": {
+    "head": "1adb6cee624f66a602eb033c83d1cf597c6cad9a",
+    "run_url": "https://github.com/rapiddweller/datamimic/actions/runs/38069660474",
+    "read_at": "2026-10-10",
+    "scope": "Connector returns first page, latest attempt; all28 returned jobs completed. This is CI evidence for 1adb6cee, not future evidence commits.",
+    "jobs": [
+      {
+        "id": 114264308376,
+        "name": "setup",
+        "conclusion": "success"
+      },
+      {
+        "id": 114264308419,
+        "name": "Build",
+        "conclusion": "success"
+      },
+      {
+        "id": 114264308451,
+        "name": "Architecture review report",
+        "conclusion": "failure"
+      },
+      {
+        "id": 114264308493,
+        "name": "ArchKeel architecture contract",
+        "conclusion": "failure"
+      },
+      {
+        "id": 114264308500,
+        "name": "Seeded runtime determinism on ubuntu-22.04 Python 3.11 (America/Los_Angeles, highest)",
+        "conclusion": "success"
+      },
+      {
+        "id": 114264308519,
+        "name": "Seeded runtime determinism on windows-latest Python 3.11 (Pacific Standard Time, highest)",
+        "conclusion": "success"
+      },
+      {
+        "id": 114264308550,
+        "name": "Seeded runtime determinism on ubuntu-22.04 Python 3.13 (Etc/UTC, highest)",
+        "conclusion": "success"
+      },
+      {
+        "id": 114264308566,
+        "name": "Seeded runtime determinism on ubuntu-22.04 Python 3.10 (Etc/UTC, highest)",
+        "conclusion": "success"
+      },
+      {
+        "id": 114264308624,
+        "name": "Seeded runtime determinism on windows-latest Python 3.11 (UTC, highest)",
+        "conclusion": "success"
+      },
+      {
+        "id": 114264308627,
+        "name": "Seeded runtime determinism on ubuntu-22.04 Python 3.11 (Etc/UTC, highest)",
+        "conclusion": "success"
+      },
+      {
+        "id": 114264308658,
+        "name": "Seeded runtime determinism on ubuntu-22.04 Python 3.11 (Etc/UTC, lowest-direct)",
+        "conclusion": "success"
+      },
+      {
+        "id": 114264308665,
+        "name": "Seeded runtime determinism on ubuntu-22.04 Python 3.12 (Etc/UTC, highest)",
+        "conclusion": "success"
+      },
+      {
+        "id": 114264352548,
+        "name": "install_dependencies",
+        "conclusion": "success"
+      },
+      {
+        "id": 114264435606,
+        "name": "Python 3.12 wheel smoke test",
+        "conclusion": "success"
+      },
+      {
+        "id": 114264435617,
+        "name": "Python 3.10 wheel smoke test",
+        "conclusion": "success"
+      },
+      {
+        "id": 114264435668,
+        "name": "Python 3.13 wheel smoke test",
+        "conclusion": "success"
+      },
+      {
+        "id": 114264523578,
+        "name": "Compare seeded runtime determinism hashes across matrix cells",
+        "conclusion": "success"
+      },
+      {
+        "id": 114264568565,
+        "name": "functional_test",
+        "conclusion": "success"
+      },
+      {
+        "id": 114264568577,
+        "name": "unit_test",
+        "conclusion": "success"
+      },
+      {
+        "id": 114264568601,
+        "name": "integration_test",
+        "conclusion": "success"
+      },
+      {
+        "id": 114264568619,
+        "name": "ruff",
+        "conclusion": "success"
+      },
+      {
+        "id": 114264568620,
+        "name": "mypy",
+        "conclusion": "success"
+      },
+      {
+        "id": 114264568641,
+        "name": "external_service_test",
+        "conclusion": "success"
+      },
+      {
+        "id": 114264568666,
+        "name": "api_test",
+        "conclusion": "success"
+      },
+      {
+        "id": 114264568684,
+        "name": "factory_test",
+        "conclusion": "success"
+      },
+      {
+        "id": 114266845345,
+        "name": "sonarcloud_analysis",
+        "conclusion": "success"
+      },
+      {
+        "id": 114266846474,
+        "name": "E2E Test on ${{ matrix.os }} ${{ matrix.arch }}",
+        "conclusion": "skipped"
+      },
+      {
+        "id": 114266847294,
+        "name": "release",
+        "conclusion": "skipped"
+      }
+    ],
+    "counts": {
+      "success": 24,
+      "failure": 2,
+      "skipped": 2
+    },
+    "failed_gate_observations": {
+      "declared_rules": "FAIL",
+      "observation_complete": "PASS",
+      "violations": 12,
+      "unknown_positions": 200,
+      "coverage_failures": 0,
+      "cycle_edges": 2,
+      "calls_unresolved": 1246
+    },
+    "acceptance": "Runtime CI passes; architecture target remains unmet. Report exit0 is not target acceptance; native validate exit2."
+  },
+  "canonical_architecture": {
+    "violations": 12,
+    "unknown_records": 254,
+    "scalar_unknown_positions": 200,
+    "target_reached": false
+  },
+  "issues": [
+    "https://github.com/rapiddweller/datamimic/issues/292",
+    "https://github.com/rapiddweller/datamimic/issues/293"
+  ],
+  "evidence_hashes": {
+    "/private/tmp/ce-dsl-step185-20261010/ledger-step185-v1.jsonl": "ca55d4c04ddf5f14fac72e6530ad57e4cc5e4791bccd8e01224f1f736567a163",
+    "/tmp/ce-step204-candidate-ledger.jsonl": "1e28aac1798ae8973ef5f88dbdd5491e52f46da7e4881f419f281a7e0e691905",
+    "/tmp/ce-step204-ledger.jsonl": "041f667da887a64e7cd4cc5130882cac2c473bd72fcb47bf45f56d65acb377d3",
+    "/tmp/ce-step204-independent-native-acceptance.md": "8117f19a3ccb02e27d3920257f0c4f083c7b6c9a23fc0dfd3b70bc5d4d891dd4",
+    "/tmp/ce-step204-independent-native-raw-checks.json": "8e221ce57506c2c521659588ff829dff095268be4ce3ca08fe3cec9c1c779cba",
+    "/tmp/ce-step204-independent-plugin-identity-review.md": "daafb1b3251717993bfe3b18ae60038c484750ea0c9a27703a4e488396b54235",
+    "/tmp/ce-step204-independent-cumulative-stderr-review.md": "b975f92ce779cb0b6a38e4932dca86ff21ff653d0101334423fd0e8ab9626794",
+    "/tmp/ce-step204-source-bridge.json": "777fd0843d761f3162b56ef3d3fc6cd128043dbc4f33e5ef063dbf14b2b6d599",
+    "/tmp/ce-step204-ci-1adb.json": "54cd2acf674df7c415ba3363f66374ab44df6eb245be1dd10427da730fcdc1ae",
+    "/tmp/ce-step204-lint.log": "7e5b09fffa6bf87bbc9f62d88c9aa3ac11c3e5744b26341510464d5b40e76605",
+    "/tmp/ce-step204-typecheck.log": "d98f831c644386c6c2ecc50d87510f2a0cd66e575be912fc1e3e08246e1b88b4",
+    "/tmp/ce-step204-native-distribution-20261010/preflight.json": "7b547acb9b99956578deac02cacbd65d654f3f6884ce212085fa009d214b31d3",
+    "/tmp/ce-step204-native-distribution-20261010/collection-driver-v2.json": "2010ea95e35ac28e75b46127a94c33dc2380ed7b0231573cb206e239bc6668d6",
+    "/tmp/ce-step204-native-distribution-20261010/collection-inventory-v3.json": "88769a344daf2db801d926152200c6323aa1a8cb35e0fbfff95a46e9730a7845",
+    "/tmp/ce-step204-native-distribution-20261010/native-driver-v3.json": "4b875c158878a7af40d4772f2bc324de2f3df79de056d3e663b07998ba850ae0",
+    "/tmp/ce-step204-native-distribution-20261010/native-remaining-driver-v4.json": "cfca22185f694ab20f3f153abe05bfc67b0ce13107c8cc4527699e114a90681b",
+    "/tmp/ce-step204-native-distribution-20261010/review-authorization-v3.json": "341b98b25a5aadaa0adcbfc7bd11295195f6afd17cf7810a9b41f412398b1c17",
+    "/tmp/ce-step204-native-distribution-20261010/review-authorization-cumulative-stderr-v4.json": "49fd0b7e209f12a6d4dd44a0ce5f06772da1a447e34d0ee20d78e582c74455d9",
+    "/tmp/ce-step204-native-distribution-20261010/compare_v4.py": "726922d9d0263739774a6c6a4d76d910f845cdb0458cf3d2c33178aad39a82f6",
+    "/tmp/ce-step204-native-distribution-20261010/comparison-v4.json": "86b28298dee2ecc357c021d662f1ab63b1fe784be900a1b78843c0f4cb23d5ec",
+    "/tmp/ce-step204-native-distribution-20261010/cumulative-stderr-amendment-v4.json": "0d41a74f63cca4f886788517843c280106eb144369e2b781483fb1a17cadd482",
+    "/tmp/ce-step204-native-distribution-20261010/cumulative-stderr-selfcheck-v4.json": "3aa3f7fdc29bf68e6e56bbf01779ce5b2f6e649b9d9d4fda7167b6d30dec296e"
+  },
+  "limits": [
+    "wrong_type owner proves missing-range rejection, not numeric-type guard",
+    "native receipts belong to frozen producing commits",
+    "standalone exporter and universal OS/dependency closure UNKNOWN",
+    "successful multiprocessing and statistical semantics unproved",
+    "full DSL/CE/EE target acceptance open",
+    "raw evidence remains local, not a durable CI artifact"
+  ]
+}
