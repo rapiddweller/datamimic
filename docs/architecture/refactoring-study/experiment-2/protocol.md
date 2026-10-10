@@ -933,6 +933,20 @@ ledger has 131/931 reviewed profiles and 800 UNKNOWN inputs; its other 929
 rows and historical oracle fields are unchanged. Standalone XML, frozen-oracle
 parity, other descriptors and EE remain UNKNOWN.
 
+Step 181: [Time-series owner profiles](step-181-time-series-owner-profiles.md)
+add ten unchanged fixed-window native inputs after independent QA. All 20 exact
+runs passed, and each complete typed capture matches across original `a219163e`
+and current source `c2d40e4d`. The accepted ledger has 141/931 reviewed profiles
+and 790 UNKNOWN inputs; its other 921 rows and historical oracle fields are
+unchanged. Standalone XML, frozen-oracle parity, other descriptors and EE remain
+UNKNOWN.
+
+The cached XML file-row path now has two [behavior tests](../../../../tests_ce/unit_tests/test_io_files.py):
+a document with an integer key and native value retains both identities, while
+a cached non-dict root raises the existing error. This characterizes the
+current contract; it does not narrow `GenerateFileSource.rows` or clear
+`VIO-e19f8ef35076b9cf`.
+
 The `PreparedPage` alias positions remain on hold. Published ArchKeel 1.1.1
 and main `b70a730a` retain all four findings under exact alias selectors;
 the equivalent inline annotation permits only the two contained maps.
