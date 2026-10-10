@@ -992,6 +992,13 @@ Independent QA verifies all raw bytes and the exhaustive delta. The historical
 comparator's cross-revision FAIL remains; both self-comparisons pass. Public
 diagnostics, lint/transport and full item-6 acceptance remain open.
 
+Step 188: [Amendment 189](amendment-189-context-responsibility.md) clarifies
+RUNTIME-CONTEXTS' existing demographic run-state ownership. Astra and independent
+QA confirm the one-sentence change and unchanged source, APIs, permissions and
+all observed findings. Thirteen definition checks, Ruff and full MyPy pass.
+The native amendment writer still exits 2 with 19 usage-UNKNOWN diagnostics;
+it writes no binding. This clarification does not clear architecture debt.
+
 CI at `5c218f8f` remains red: four architecture jobs and one external-service
 job failed. The latter has two Mongo worker server-selection timeouts
 (162 passed, four skipped); the parallel same-head job passed all 164 tests.

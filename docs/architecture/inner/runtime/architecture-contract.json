@@ -208,7 +208,7 @@
         "datamimic_ce.engine.runtime.contexts"
       ],
       "responsibilities": [
-        "Closed Context/SetupContext hierarchy and row state."
+        "Own the Context/SetupContext hierarchy and row state, and carry the active demographic profile, sampler, overrides and RNG."
       ],
       "forbidden_responsibilities": [
         "Start workers or construct external clients."
