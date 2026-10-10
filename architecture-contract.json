@@ -1162,7 +1162,8 @@
         "docs/architecture/refactoring-study/experiment-2/amendment-181-native-io-rows.md",
         "docs/architecture/refactoring-study/experiment-2/amendment-183-native-xml-rows.md",
         "docs/architecture/refactoring-study/experiment-2/amendment-185-product-map-boundaries.md",
-        "docs/architecture/refactoring-study/experiment-2/amendment-188-product-map-depth.md"
+        "docs/architecture/refactoring-study/experiment-2/amendment-188-product-map-depth.md",
+        "docs/architecture/refactoring-study/experiment-2/amendment-203-variable-query-rows.md"
       ],
       "decided_by": "agent",
       "allowed_positions": [
@@ -1362,6 +1363,19 @@
           "annotation": "Mapping[str, list[dict[str, object]]]",
           "mapping_depth": 2,
           "container_depth": 3
+        },
+        {
+          "qualified_name": "datamimic_ce.engine.io.api.read_variable_query",
+          "position": "return",
+          "field_path": "",
+          "annotation": "list[dict[str, object]]"
+        },
+        {
+          "qualified_name": "datamimic_ce.engine.io.api.read_variable_query",
+          "position": "return",
+          "field_path": "",
+          "annotation": "list[dict[str, object]]",
+          "container_depth": 2
         }
       ]
     },

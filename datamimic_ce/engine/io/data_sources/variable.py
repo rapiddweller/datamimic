@@ -26,7 +26,7 @@ def read_variable_query(
     full_pool: bool,
     cached_length: int | None,
     cyclic: bool,
-) -> Iterable[object]:
+) -> list[dict[str, object]]:
     """Read a selector-backed variable pool or its requested page."""
     if full_pool:
         return database_get_by_page_with_query(client, rendered_selector)

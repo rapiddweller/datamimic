@@ -204,6 +204,7 @@ def test_smoke_export_open_values_keep_their_container_shapes() -> None:
 
 
 def test_io_native_payload_permissions_keep_exact_shapes_and_depths() -> None:
+    assert get_type_hints(io_api.read_variable_query)["return"] == list[dict[str, object]]
     assert get_type_hints(io_api.TestResultExporter.get_result)["return"] == dict[str, list[object]]
     assert get_type_hints(io_api.MemstoreSource.get_all_data_by_type)["return"] == list[dict[str, object]]
     assert get_type_hints(io_api.MemstoreSource.get_data_by_type)["return"] == list[dict[str, object]]
@@ -298,7 +299,18 @@ def test_io_native_payload_permissions_keep_exact_shapes_and_depths() -> None:
                 {**selector, "mapping_depth": 2, "container_depth": 3},
             ]
         )
+    selector = {
+        "qualified_name": "datamimic_ce.engine.io.api.read_variable_query",
+        "position": "return",
+        "field_path": "",
+        "annotation": "list[dict[str, object]]",
+    }
+    expected.extend([selector, {**selector, "container_depth": 2}])
     assert rule["allowed_positions"] == expected
+    assert (
+        "docs/architecture/refactoring-study/experiment-2/amendment-203-variable-query-rows.md"
+        in rule["provenance"]
+    )
 
 
 def test_export_session_keeps_native_xml_rows_and_converted_scalar_rows() -> None:

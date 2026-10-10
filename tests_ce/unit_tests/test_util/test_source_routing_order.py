@@ -1,17 +1,24 @@
 """Event-order contracts at the source-routing boundary."""
 
+from datetime import date, datetime
 from decimal import Decimal
 from inspect import signature
 from pathlib import Path
 from types import SimpleNamespace
-from unittest.mock import Mock, call
+from unittest.mock import MagicMock, Mock, call
 
 import pytest
+from bson.decimal128 import Decimal128
+from sqlalchemy import create_engine
 
 from datamimic_ce.engine.dsl.statements.values.variables.variable_statement import VariableStatement
 from datamimic_ce.engine.dsl.vocabulary.enums.distribution_enums import SourceDistribution
 from datamimic_ce.engine.dsl.vocabulary.source_capabilities import SourceFileFormat
 from datamimic_ce.engine.io.api import Memstore
+from datamimic_ce.engine.io.clients.database_client import DatabaseClient
+from datamimic_ce.engine.io.clients.mongodb_client import MongoDBClient
+from datamimic_ce.engine.io.clients.rdbms_client import RdbmsClient
+from datamimic_ce.engine.io.connection_config.rdbms_connection_config import RdbmsConnectionConfig
 from datamimic_ce.engine.io.contracts import DataSourcePagination
 from datamimic_ce.engine.io.data_sources import chunk_reader
 from datamimic_ce.engine.io.data_sources import router as io_source_router
@@ -1181,3 +1188,258 @@ def test_chunk_source_reader_delegates_database_page_to_generate_source(monkeypa
     assert actual[:4] == (client, "select 7", "products", None)
     assert (actual[4].skip, actual[4].limit) == (2, 2)
     assert actual[5:] == (False,)
+
+
+class _VariableQueryClient(DatabaseClient):
+    def __init__(self, rows: list) -> None:
+        super().__init__(None)
+        self.calls = Mock()
+        self.calls.read.return_value = rows
+        self.calls.count.return_value = len(rows)
+
+    def get_by_page_with_query(self, original_query: str, pagination: DataSourcePagination | None = None) -> list:
+        return self.calls.read(original_query, pagination)
+
+    def count_query_length(self, query: str) -> int:
+        return self.calls.count(query)
+
+    def get_by_page_with_type(self, table_name: str, pagination: DataSourcePagination | None = None) -> list:
+        raise AssertionError("query reader must not read a table")
+
+    def count_table_length(self, table_name: str) -> int:
+        raise AssertionError("query reader must not count a table")
+
+    def get(self, query: str) -> list:
+        raise AssertionError("query reader must use the paginated client operation")
+
+
+@pytest.mark.parametrize(
+    ("full_pool", "cached_length", "page", "cyclic", "expected_ids", "read_page", "same_list"),
+    [
+        (True, None, (5, 9), True, [1, 2], None, True),
+        (False, 2, (0, 2), False, [1, 2], (0, 2), True),
+        (False, None, (0, 2), False, [1, 2], (0, 2), True),
+        (False, 2, None, False, [1, 2], (0, 2), False),
+        (False, None, None, True, [1, 2], (0, 2), False),
+        (False, 2, (1, 4), True, [2, 1, 2, 1], (0, 2), False),
+        (False, None, (0, 3), True, [1, 2, 1], (0, 2), False),
+        (False, 2, (0, 0), False, [], (0, 0), True),
+        (False, 2, (0, 0), True, [], (0, 0), True),
+    ],
+)
+def test_variable_query_keeps_native_rows_order_and_ownership(
+    full_pool: bool,
+    cached_length: int | None,
+    page: tuple[int, int] | None,
+    cyclic: bool,
+    expected_ids: list[int],
+    read_page: tuple[int, int] | None,
+    same_list: bool,
+) -> None:
+    amount, day, blob = Decimal("1.25"), date(2026, 10, 10), b"native"
+    nested = {"tags": ["native", None]}
+    pool = [{"id": index, "amount": amount, "day": day, "blob": blob, "nested": nested} for index in [1, 2]]
+    client = _VariableQueryClient(pool)
+    if page == (0, 0):
+        client.calls.read.return_value = []
+    pagination = None if page is None else DataSourcePagination(skip=page[0], limit=page[1])
+
+    rows = io_variable_sources.read_variable_query(
+        client,
+        "SELECT rendered",
+        pagination,
+        full_pool=full_pool,
+        cached_length=cached_length,
+        cyclic=cyclic,
+    )
+
+    assert [row["id"] for row in rows] == expected_ids
+    expected_calls = [] if full_pool or cached_length is not None else [call.count("SELECT rendered")]
+    actual_page = client.calls.read.call_args.args[1]
+    assert actual_page is None if read_page is None else (actual_page.skip, actual_page.limit) == read_page
+    expected_calls.append(call.read("SELECT rendered", actual_page))
+    assert client.calls.mock_calls == expected_calls
+    if same_list:
+        assert rows is client.calls.read.return_value
+        if pagination is not None and not full_pool:
+            assert actual_page is pagination
+    else:
+        assert rows is not pool
+    for row in rows:
+        assert row["amount"] == amount and isinstance(row["amount"], Decimal)
+        assert row["day"] == day and isinstance(row["day"], date)
+        assert row["blob"] == blob and isinstance(row["blob"], bytes)
+        if cyclic and not same_list:
+            assert row is not pool[row["id"] - 1]
+            assert row["nested"] is not nested
+        else:
+            assert row is pool[row["id"] - 1]
+            assert row["amount"] is amount and row["day"] is day and row["blob"] is blob
+            assert row["nested"] is nested
+    if cyclic and not same_list and rows:
+        assert len({id(row) for row in rows}) == len(rows)
+        assert len({id(row["nested"]) for row in rows}) == len(rows)
+        rows[0]["nested"]["tags"].append("changed")
+        assert nested == {"tags": ["native", None]}
+        assert all(row["nested"] == nested for row in rows[1:])
+
+
+@pytest.mark.parametrize("cyclic", [False, True])
+@pytest.mark.parametrize("page", [None, (0, 0), (3, 4)])
+def test_variable_query_empty_pool_stays_empty(cyclic: bool, page: tuple[int, int] | None) -> None:
+    client = _VariableQueryClient([])
+    pagination = None if page is None else DataSourcePagination(skip=page[0], limit=page[1])
+    assert (
+        io_variable_sources.read_variable_query(
+            client,
+            "SELECT empty",
+            pagination,
+            full_pool=False,
+            cached_length=None,
+            cyclic=cyclic,
+        )
+        == []
+    )
+    assert client.calls.mock_calls[0] == call.count("SELECT empty")
+    assert len(client.calls.mock_calls) == 2
+    query, actual_page = client.calls.read.call_args.args
+    assert query == "SELECT empty"
+    expected_page = (0, 0) if page is None or cyclic else page
+    assert (actual_page.skip, actual_page.limit) == expected_page
+
+
+@pytest.mark.parametrize("stage", ["count", "read"])
+def test_variable_query_preserves_original_exception_and_order(stage: str) -> None:
+    client = _VariableQueryClient([])
+    error = RuntimeError("native driver failure")
+    failing_operation = client.calls.count if stage == "count" else client.calls.read
+    failing_operation.side_effect = error
+    page = DataSourcePagination(skip=0, limit=1)
+    with pytest.raises(RuntimeError) as raised:
+        io_variable_sources.read_variable_query(
+            client,
+            "SELECT broken",
+            page,
+            full_pool=False,
+            cached_length=None,
+            cyclic=False,
+        )
+    assert raised.value is error
+    assert client.calls.mock_calls == (
+        [call.count("SELECT broken")]
+        if stage == "count"
+        else [call.count("SELECT broken"), call.read("SELECT broken", page)]
+    )
+
+
+@pytest.mark.parametrize("full_pool", [False, True])
+def test_variable_query_does_not_narrow_custom_scalar_client_at_runtime(full_pool: bool) -> None:
+    scalars = [Decimal("2.5"), b"native", None, [1, 2]]
+    client = _VariableQueryClient(scalars)
+    page = DataSourcePagination(skip=0, limit=4)
+    rows = io_variable_sources.read_variable_query(
+        client,
+        "SELECT custom",
+        page,
+        full_pool=full_pool,
+        cached_length=4,
+        cyclic=False,
+    )
+    assert rows is scalars
+    assert all(result is original for result, original in zip(rows, scalars, strict=True))
+    assert client.calls.mock_calls == [call.read("SELECT custom", None if full_pool else page)]
+
+
+@pytest.mark.parametrize("full_pool", [False, True])
+def test_variable_query_native_sqlite_returns_named_native_cells(full_pool: bool) -> None:
+    credential = RdbmsConnectionConfig(
+        dbms="sqlite",
+        database=":memory:",
+        host=None,
+        port=None,
+        user=None,
+        password=None,
+        db_schema=None,
+    )
+    client = RdbmsClient(credential)
+    engine = create_engine("sqlite://")
+    client.engine = engine
+    try:
+        rows = io_variable_sources.read_variable_query(
+            client,
+            "SELECT 7 AS chosen_column, x'0061' AS payload, NULL AS missing",
+            DataSourcePagination(skip=0, limit=1),
+            full_pool=full_pool,
+            cached_length=None,
+            cyclic=False,
+        )
+        assert rows == [{"chosen_column": 7, "payload": b"\x00a", "missing": None}]
+        assert isinstance(rows, list) and isinstance(rows[0], dict)
+        assert isinstance(rows[0]["payload"], bytes)
+    finally:
+        engine.dispose()
+
+
+@pytest.mark.parametrize("query_kind", ["find", "aggregate"])
+@pytest.mark.parametrize("page", [None, (1, 1), (0, 0)])
+def test_variable_query_mongo_driver_seam_retains_document_shape_and_page(
+    monkeypatch: pytest.MonkeyPatch,
+    query_kind: str,
+    page: tuple[int, int] | None,
+) -> None:
+    documents = [
+        {
+            "id": index,
+            "amount": Decimal128("1.25"),
+            "day": datetime(2026, 10, 10),
+            "payload": b"native",
+            "nested": {"tags": [None, "native"]},
+        }
+        for index in range(3)
+    ]
+    connection = MagicMock()
+    connection.__enter__.return_value = connection
+    collection = connection["db"]["rows"]
+    cursor = MagicMock()
+    cursor.skip.return_value = cursor
+    cursor.limit.return_value = cursor
+    cursor.__iter__.side_effect = lambda: iter(documents if page is None else documents[page[0] : sum(page)])
+    collection.find.return_value = cursor
+    collection.aggregate.return_value = iter(documents)
+    client = MongoDBClient(SimpleNamespace(database="db"))
+    monkeypatch.setattr(client, "_create_connection", lambda: connection)
+    pagination = None if page is None else DataSourcePagination(skip=page[0], limit=page[1])
+    query = (
+        "find: 'rows', filter: {}, projection: {id: 1}" if query_kind == "find" else "aggregate: 'rows', pipeline: []"
+    )
+
+    rows = io_variable_sources.read_variable_query(
+        client,
+        query,
+        pagination,
+        full_pool=page is None,
+        cached_length=3,
+        cyclic=False,
+    )
+
+    expected_ids = list(range(3)) if page is None else list(range(3))[page[0] : sum(page)]
+    assert isinstance(rows, list) and [row["id"] for row in rows] == expected_ids
+    for row in rows:
+        assert isinstance(row, dict) and row["amount"] == Decimal("1.25")
+        assert isinstance(row["amount"], Decimal) and isinstance(row["day"], datetime)
+        assert row["payload"] == b"native" and row["nested"] == {"tags": [None, "native"]}
+    if query_kind == "aggregate":
+        collection.aggregate.assert_called_once_with([{"$sort": {"_id": 1}}])
+        collection.find.assert_not_called()
+        cursor.skip.assert_not_called()
+        cursor.limit.assert_not_called()
+    elif page == (0, 0):
+        collection.find.assert_not_called()
+    else:
+        collection.find.assert_called_once_with({}, {"id": 1})
+        if page is None:
+            cursor.skip.assert_not_called()
+            cursor.limit.assert_not_called()
+        else:
+            cursor.skip.assert_called_once_with(page[0])
+            cursor.limit.assert_called_once_with(page[1])
