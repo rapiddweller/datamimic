@@ -1147,6 +1147,23 @@ reproduced as UNKNOWN while its unquoted equivalent is decidable;
 the union, broad-object and missing-symbol controls. Other forward references
 remain outside that proven scope.
 
+## Step 202 — bounded process-local client implementation
+
+[Amendment 202](amendment-202-descriptor-client-transfer.md) implements the
+descriptor-owned setup/include/spawn path in existing owners. Typed recipes replace
+clients in three separate worker graphs; native receivers create and release local
+instances. Parent resources and caller-owned injections retain their ownership.
+
+[Evidence](step-202-process-local-clients.md) accepts four original source/helper
+cases and two separately corrected-profile targets. The original target failure
+remains recorded; [CE #291](https://github.com/rapiddweller/datamimic/issues/291)
+tracks profile values overriding explicit descriptor attributes. Six permanent
+service regressions and two existing PostgreSQL sequence regressions pass.
+
+The architecture still has 13 unchanged semantic findings and 200 scalar UNKNOWNs.
+No permission weakening or DSL-ledger promotion. Ray, arbitrary captures and the
+remaining CE/EE behavioral/target scope remain open; this is not `TARGET_REACHED`.
+
 ## Agent separation
 
 - The implementation agent changes production code and targeted tests for one approved slice.
