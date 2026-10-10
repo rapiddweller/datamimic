@@ -6,6 +6,7 @@
 
 import random
 import unittest
+from decimal import Decimal
 from random import Random
 from types import SimpleNamespace
 from unittest.mock import MagicMock, patch
@@ -182,21 +183,51 @@ class TestReferenceTask(unittest.TestCase):
         self.rdbms_client.get_random_rows_by_columns.assert_not_called()
 
     def test_source_loader_maps_columns_and_consumes_one_stable_seed(self):
-        self.statement.source_keys = ["source_id", "source_name"]
-        self.statement.targets = ["id", "name"]
+        self.statement.source_keys = ["source_id", "source_name", "source_amount", "source_nested"]
+        self.statement.targets = ["id", "name", "amount", "nested"]
         self.statement.full_name = "customer_reference"
         self.statement.unique = False
         self.statement.distribution = "ordered"
         self.statement.cyclic = False
-        self.rdbms_client.get_random_rows_by_columns.return_value = [(1, "Ada"), (2, "Bert"), (3, "Cam")]
+        amount = Decimal("1.25")
+        nested = {"tags": ["native", None]}
+        source_rows = [(1, "Ada", amount, nested), (2, "Bert", None, None), (3, "Cam", amount, nested)]
+        self.rdbms_client.get_random_rows_by_columns.return_value = source_rows
 
         rows = load_reference_source(self.context, self.statement, self.pagination)
 
-        assert rows == [{"id": 1, "name": "Ada"}, {"id": 2, "name": "Bert"}]
+        assert rows == [
+            {"id": 1, "name": "Ada", "amount": amount, "nested": nested},
+            {"id": 2, "name": "Bert", "amount": None, "nested": None},
+        ]
+        assert rows is not source_rows
+        assert isinstance(rows[0], dict)
+        assert rows[0]["amount"] is amount
+        assert rows[0]["nested"] is nested
         self.rdbms_client.get_random_rows_by_columns.assert_called_once_with(
-            "test_type", ["source_id", "source_name"]
+            "test_type", ["source_id", "source_name", "source_amount", "source_nested"]
         )
         self.context.root.stable_distribution_seed.assert_called_once_with("customer_reference")
+
+    def test_source_loader_rejects_fewer_cells_than_targets(self):
+        self.statement.source_keys = ["source_id", "source_amount"]
+        self.statement.targets = ["id", "amount"]
+        self.rdbms_client.get_random_rows_by_columns.return_value = [(1,)]
+
+        with self.assertRaisesRegex(ValueError, r"zip\(\) argument 2 is shorter than argument 1"):
+            load_reference_source(self.context, self.statement, self.pagination)
+
+        self.context.root.stable_distribution_seed.assert_not_called()
+
+    def test_source_loader_rejects_more_cells_than_targets(self):
+        self.statement.source_keys = ["source_id", "source_amount"]
+        self.statement.targets = ["id", "amount"]
+        self.rdbms_client.get_random_rows_by_columns.return_value = [(1, Decimal("1.25"), None)]
+
+        with self.assertRaisesRegex(ValueError, r"zip\(\) argument 2 is longer than argument 1"):
+            load_reference_source(self.context, self.statement, self.pagination)
+
+        self.context.root.stable_distribution_seed.assert_not_called()
 
     def test_random_reference_uses_one_seed_and_one_choice_per_page_row(self):
         self.statement.full_name = "customer_reference"

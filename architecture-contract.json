@@ -1065,13 +1065,14 @@
       "id": "IO-API-TYPES",
       "kind": "boundary_types",
       "source": "datamimic_ce.engine.io.api",
-      "rationale": "The IO facade keeps fixed controls typed; smoke-export rows/options and connection profiles remain open payloads at reviewed positions. WeightedEntityDataSource returns a selected native string-valued row keyed by input CSV headers; headers are data keys, and row aliasing remains observable.",
+      "rationale": "The IO facade keeps fixed controls typed; smoke-export rows/options and connection profiles remain open payloads at reviewed positions. WeightedEntityDataSource returns a selected native string-valued row keyed by input CSV headers; headers are data keys, and row aliasing remains observable. Native source rows and capture values retain their reviewed map/list forms; IO owns storage and row transport while Runtime owns lifecycle and timing.",
       "provenance": [
         "docs/architecture/refactoring-study/experiment-2/target-architecture.md",
         "docs/architecture/refactoring-study/experiment-2/amendment-62.md",
         "docs/architecture/refactoring-study/experiment-2/amendment-77.md",
         "docs/architecture/refactoring-study/experiment-2/amendment-176-native-map-boundaries.md",
-        "docs/architecture/refactoring-study/experiment-2/amendment-179-smoke-export-dto-selectors.md"
+        "docs/architecture/refactoring-study/experiment-2/amendment-179-smoke-export-dto-selectors.md",
+        "docs/architecture/refactoring-study/experiment-2/amendment-181-native-io-rows.md"
       ],
       "decided_by": "agent",
       "allowed_positions": [
@@ -1112,6 +1113,110 @@
           "position": "return",
           "field_path": "",
           "annotation": "dict[str, str]"
+        },
+        {
+          "qualified_name": "datamimic_ce.engine.io.api.TestResultExporter.get_result",
+          "position": "return",
+          "field_path": "",
+          "annotation": "dict[str, list[object]]"
+        },
+        {
+          "qualified_name": "datamimic_ce.engine.io.api.TestResultExporter.get_result",
+          "position": "return",
+          "field_path": "",
+          "annotation": "dict[str, list[object]]",
+          "container_depth": 2
+        },
+        {
+          "qualified_name": "datamimic_ce.engine.io.api.MemstoreSource.get_all_data_by_type",
+          "position": "return",
+          "field_path": "",
+          "annotation": "list[dict[str, object]]"
+        },
+        {
+          "qualified_name": "datamimic_ce.engine.io.api.MemstoreSource.get_all_data_by_type",
+          "position": "return",
+          "field_path": "",
+          "annotation": "list[dict[str, object]]",
+          "container_depth": 2
+        },
+        {
+          "qualified_name": "datamimic_ce.engine.io.api.MemstoreSource.get_data_by_type",
+          "position": "return",
+          "field_path": "",
+          "annotation": "list[dict[str, object]]"
+        },
+        {
+          "qualified_name": "datamimic_ce.engine.io.api.MemstoreSource.get_data_by_type",
+          "position": "return",
+          "field_path": "",
+          "annotation": "list[dict[str, object]]",
+          "container_depth": 2
+        },
+        {
+          "qualified_name": "datamimic_ce.engine.io.api.read_generate_memstore_source",
+          "position": "return",
+          "field_path": "",
+          "annotation": "list[dict[str, object]]"
+        },
+        {
+          "qualified_name": "datamimic_ce.engine.io.api.read_generate_memstore_source",
+          "position": "return",
+          "field_path": "",
+          "annotation": "list[dict[str, object]]",
+          "container_depth": 2
+        },
+        {
+          "qualified_name": "datamimic_ce.engine.io.api.ChunkSourceWindow.__init__",
+          "position": "pool",
+          "field_path": "",
+          "annotation": "list[dict[str, object]]"
+        },
+        {
+          "qualified_name": "datamimic_ce.engine.io.api.ChunkSourceWindow.__init__",
+          "position": "pool",
+          "field_path": "",
+          "annotation": "list[dict[str, object]]",
+          "container_depth": 2
+        },
+        {
+          "qualified_name": "datamimic_ce.engine.io.api.ChunkSourceWindow.read_page",
+          "position": "return",
+          "field_path": "",
+          "annotation": "list[dict[str, object]]"
+        },
+        {
+          "qualified_name": "datamimic_ce.engine.io.api.ChunkSourceWindow.read_page",
+          "position": "return",
+          "field_path": "",
+          "annotation": "list[dict[str, object]]",
+          "container_depth": 2
+        },
+        {
+          "qualified_name": "datamimic_ce.engine.io.api.read_generate_database_source",
+          "position": "return",
+          "field_path": "",
+          "annotation": "list[dict[str, object]]"
+        },
+        {
+          "qualified_name": "datamimic_ce.engine.io.api.read_generate_database_source",
+          "position": "return",
+          "field_path": "",
+          "annotation": "list[dict[str, object]]",
+          "container_depth": 2
+        },
+        {
+          "qualified_name": "datamimic_ce.engine.io.api.read_reference_rows",
+          "position": "return",
+          "field_path": "",
+          "annotation": "list[dict[str, object]]"
+        },
+        {
+          "qualified_name": "datamimic_ce.engine.io.api.read_reference_rows",
+          "position": "return",
+          "field_path": "",
+          "annotation": "list[dict[str, object]]",
+          "container_depth": 2
         }
       ]
     },

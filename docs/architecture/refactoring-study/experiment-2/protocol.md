@@ -737,6 +737,27 @@ pending. Full DSL/EE acceptance remains open. Evidence:
 The [publication review](publication-unknown-review.md) traces all 19 validation
 diagnostics to an explicit checker proof limit; none is silently waived.
 
+Step 166: [Amendment 181](amendment-181-native-io-rows.md) explicitly permits
+native IO source rows and capture at eight exact positions. Six existing
+selectors remain; 16 map/native-value selectors are added. IO owns row transport
+and storage, Runtime lifecycle and timing. Fixed controls, product envelopes,
+aliases, Iterables, Properties and SQL retain their separate open contracts.
+Production, EE, ownership, baseline and oracle remain unchanged.
+Fresh ArchKeel 1.1.0 report: FAIL37 (53 → 37; IO31 → 15), 200 measured UNKNOWN
+positions and 488/488 parsed files. LOCAL VERIFIED: contract guard RED→GREEN
+with identical bytes; 170 relevant tests pass. After an import-order-only fix,
+the affected 53 tests and changed-test Ruff pass. Definition 13 PASS; package
+Ruff and full MyPy PASS. Independent QA preserves all 37 remaining findings and
+254 canonical UNKNOWNs exactly, with unchanged source facts and 151 components /
+25 levels. The 16 new allowance facts include eight with accepted opacity.
+Matcher checks: 80 negative cases and four broad-control checks in one source
+fixture PASS. Native amendment validation preserves the
+IO widening but exits 2 with the same 19 usage-UNKNOWNs and 23 baseline-new
+groups; no machine amendment is emitted. CI-ONLY VERIFICATION: the parent
+`0142679f` architecture job reproduces known local failures; new-head checks
+pending. Full DSL/EE acceptance remains open. Evidence:
+`/tmp/ce-resume-20261010/next-slice-166/`.
+
 ## Agent separation
 
 - The implementation agent changes production code and targeted tests for one approved slice.

@@ -202,6 +202,81 @@ def test_smoke_export_open_values_keep_their_container_shapes() -> None:
     assert {"field_path": "rows", "annotation": "list[dict[str, object]]", "container_depth": 2} in selectors
 
 
+def test_io_native_payload_permissions_keep_exact_shapes_and_depths() -> None:
+    assert get_type_hints(io_api.TestResultExporter.get_result)["return"] == dict[str, list[object]]
+    assert get_type_hints(io_api.MemstoreSource.get_all_data_by_type)["return"] == list[dict[str, object]]
+    assert get_type_hints(io_api.MemstoreSource.get_data_by_type)["return"] == list[dict[str, object]]
+    assert get_type_hints(io_api.read_generate_memstore_source)["return"] == list[dict[str, object]]
+    assert get_type_hints(io_api.ChunkSourceWindow.__init__)["pool"] == list[dict[str, object]]
+    assert get_type_hints(io_api.ChunkSourceWindow.read_page)["return"] == list[dict[str, object]]
+    assert get_type_hints(io_api.read_generate_database_source)["return"] == list[dict[str, object]]
+    assert get_type_hints(io_api.read_reference_rows)["return"] == list[dict[str, object]]
+
+    contract = json.loads((ROOT / "architecture-contract.json").read_text(encoding="utf-8"))
+    rule = next(rule for rule in contract["rules"] if rule["id"] == "IO-API-TYPES")
+    expected = [
+        {
+            "qualified_name": "datamimic_ce.engine.io.api.smoke_export",
+            "position": "request",
+            "field_path": "params",
+            "annotation": "dict[str, object]",
+        },
+        {
+            "qualified_name": "datamimic_ce.engine.io.api.smoke_export",
+            "position": "request",
+            "field_path": "params",
+            "annotation": "dict[str, object]",
+            "container_depth": 1,
+        },
+        {
+            "qualified_name": "datamimic_ce.engine.io.api.smoke_export",
+            "position": "request",
+            "field_path": "rows",
+            "annotation": "list[dict[str, object]]",
+        },
+        {
+            "qualified_name": "datamimic_ce.engine.io.api.smoke_export",
+            "position": "request",
+            "field_path": "rows",
+            "annotation": "list[dict[str, object]]",
+            "container_depth": 2,
+        },
+        {
+            "qualified_name": "datamimic_ce.engine.io.api.load_connection_profile",
+            "position": "return",
+            "field_path": "",
+            "annotation": "dict[str, str]",
+        },
+        {
+            "qualified_name": "datamimic_ce.engine.io.api.WeightedEntityDataSource.generate",
+            "position": "return",
+            "field_path": "",
+            "annotation": "dict[str, str]",
+        },
+    ]
+    for name, position, annotation in [
+        ("TestResultExporter.get_result", "return", "dict[str, list[object]]"),
+        ("MemstoreSource.get_all_data_by_type", "return", "list[dict[str, object]]"),
+        ("MemstoreSource.get_data_by_type", "return", "list[dict[str, object]]"),
+        ("read_generate_memstore_source", "return", "list[dict[str, object]]"),
+        ("ChunkSourceWindow.__init__", "pool", "list[dict[str, object]]"),
+        ("ChunkSourceWindow.read_page", "return", "list[dict[str, object]]"),
+        ("read_generate_database_source", "return", "list[dict[str, object]]"),
+        ("read_reference_rows", "return", "list[dict[str, object]]"),
+    ]:
+        selector = {
+            "qualified_name": f"datamimic_ce.engine.io.api.{name}",
+            "position": position,
+            "field_path": "",
+            "annotation": annotation,
+        }
+        expected.extend([selector, {**selector, "container_depth": 2}])
+
+    assert len(rule["allowed_positions"]) == 22
+    for selector in expected:
+        assert selector in rule["allowed_positions"]
+
+
 def test_memstore_and_exporter_have_truthful_canonical_definitions() -> None:
     import inspect
 

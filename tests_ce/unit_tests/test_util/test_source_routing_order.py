@@ -1,5 +1,6 @@
 """Event-order contracts at the source-routing boundary."""
 
+from decimal import Decimal
 from inspect import signature
 from pathlib import Path
 from types import SimpleNamespace
@@ -10,6 +11,7 @@ import pytest
 from datamimic_ce.engine.dsl.statements.values.variables.variable_statement import VariableStatement
 from datamimic_ce.engine.dsl.vocabulary.enums.distribution_enums import SourceDistribution
 from datamimic_ce.engine.dsl.vocabulary.source_capabilities import SourceFileFormat
+from datamimic_ce.engine.io.api import Memstore
 from datamimic_ce.engine.io.contracts import DataSourcePagination
 from datamimic_ce.engine.io.data_sources import chunk_reader
 from datamimic_ce.engine.io.data_sources import router as io_source_router
@@ -22,7 +24,6 @@ from datamimic_ce.engine.io.data_sources.router import (
 )
 from datamimic_ce.engine.io.data_sources.selection import select_rows
 from datamimic_ce.engine.io.exporters.core import routing as io_exporter_routing
-from datamimic_ce.engine.io.api import Memstore
 from datamimic_ce.engine.io.files.readers import weighted_csv_has_header
 from datamimic_ce.engine.runtime.tasks.sources import chunk_source_reader
 from datamimic_ce.engine.runtime.tasks.sources import generate as generate_source_router
@@ -765,15 +766,26 @@ def test_chunk_cumulated_source_loads_once_and_slices_the_chunk_window(monkeypat
         name="products",
         cyclic=True,
     )
-    pool = [{"id": index} for index in range(5)]
-    selected = [{"id": index} for index in range(4)]
+    amount = Decimal("1.25")
+    nested = {"tags": ["native", None]}
+    pool = [{"id": index, "amount": amount, "nested": nested} for index in range(5)]
+    selected = pool[:4]
     load = Mock(return_value=(pool, True))
     distribute = Mock(return_value=selected)
     monkeypatch.setattr(chunk_source_reader, "load_generate_source", load)
     monkeypatch.setattr(chunk_reader, "get_distributed_data", distribute)
 
     reader = ChunkSourceReader(context, statement, chunk_start=6, chunk_end=10)
-    assert reader.read_page(6, 8) == (selected[:2], True)
+    first_page, build_from_source = reader.read_page(6, 8)
+    assert first_page == selected[:2]
+    assert build_from_source is True
+    assert first_page is not selected
+    assert first_page[0] is pool[0]
+    assert first_page[0]["amount"] is amount
+    assert first_page[0]["nested"] is nested
+    repeated_page, _ = reader.read_page(6, 8)
+    assert repeated_page is not first_page
+    assert repeated_page[0] is first_page[0]
     assert reader.read_page(8, 10) == (selected[2:], True)
 
     load.assert_called_once_with(context, statement, "rows.csv", "|", False, None, None, None)
@@ -970,8 +982,11 @@ def test_generate_database_io_uses_resolved_selector_or_entity_and_page(
     expected_entity: str | None,
 ) -> None:
     client = object()
-    query = Mock(return_value=[{"id": 1}])
-    entity_read = Mock(return_value=[{"id": 1}])
+    amount = Decimal("1.25")
+    nested = {"tags": ["native", None]}
+    source_rows = [{"id": 1, "amount": amount, "nested": nested}, {"id": 2, "amount": None}]
+    query = Mock(return_value=source_rows)
+    entity_read = Mock(return_value=source_rows)
     monkeypatch.setattr(io_source_router, "is_mongodb_client", lambda _: is_mongo)
     monkeypatch.setattr(io_source_router, "is_rdbms_client", lambda _: not is_mongo)
     monkeypatch.setattr(io_source_router, "database_get_by_page_with_query", query)
@@ -982,7 +997,10 @@ def test_generate_database_io_uses_resolved_selector_or_entity_and_page(
         client, selector, entity, collection, pagination, False
     )
 
-    assert rows == [{"id": 1}]
+    assert rows is source_rows
+    assert rows[0] is source_rows[0]
+    assert rows[0]["amount"] is amount
+    assert rows[0]["nested"] is nested
     if expected_query is not None:
         query.assert_called_once_with(client, expected_query, pagination)
         entity_read.assert_not_called()
