@@ -883,7 +883,8 @@ UNKNOWN IDs retained. Three existing inherited-surface UNKNOWN texts reflect
 the new getter/setter annotation. Local verification passed 119 focused,
 2,345 CE unit and 13 definition tests, Ruff and full MyPy. Native validation
 still exits 2 with 19 diagnostics and 11 baseline-new groups. Independent QA
-and current-head CI remain open; this is not target or DSL acceptance.
+found no blocking issue; its missing prior-report path is pinned in the receipt.
+Current-head CI remains open; this is not target or DSL acceptance.
 
 ## Agent separation
 
