@@ -1,0 +1,97 @@
+{
+  "step": 209,
+  "base": "6ef3e3ec7bbfda06a7378a5f182db3479b2dbe75",
+  "checker_pin_commit": "5021105261b1b8bc229bf5d6ce8a6661c9fc9d27",
+  "source_commit": "d74188fb7b43036b13d486c9aae9bafc28e2f0a2",
+  "checker": "archkeel==1.1.2",
+  "published_wheel_sha256": "0579fe3bce1da5e06690688a87721864989d0df054816be3bd1a2e81bd71890d",
+  "release_url": "https://github.com/rapiddweller/archkeel/releases/tag/1.1.2",
+  "source_freeze_sha256": "fbd050d25924a6243fe6d29cddbdbbd410eecd2193ff08f37109406e9552727d",
+  "production_changed": false,
+  "recursive_contracts_changed": false,
+  "baseline_changed": false,
+  "before_pin_allowance_report_sha256": {
+    "before-111": "3b235009c7340008d62a2f3701e2eedf163b159384393dc2534cd29dfb33fff9",
+    "pin-112": "8a990ce09809582b08c806b5e9a2613d6ab3dae2ca28a641f39c636e8628f513",
+    "allowance-112": "bfdf09c11304b970bf9056a5463c24e5bdfe30b13061260ff93fc35784ea276b"
+  },
+  "committed_report": {
+    "source_commit": "d74188fb7b43036b13d486c9aae9bafc28e2f0a2",
+    "source": {
+      "dirty": false,
+      "git_head": "d74188fb7b43036b13d486c9aae9bafc28e2f0a2",
+      "scope": [
+        "datamimic_ce/**/*.py"
+      ],
+      "source_digest": "d344983a4e6adb510d62ba741c2cd5498b6ee795d4c048444eafe7a970dee42c"
+    },
+    "owned_session": 96347,
+    "report_exit": 0,
+    "report_sha256": "eef9dda2d223196404f9057bf6d1a544b4ddbb62a77f61aaff754e13fbd54af5",
+    "stdout_sha256": "6fb451e447676503d6644cc45366c42d5a00cdad8b2f3d669bff710419fb6a10",
+    "all_non_source_sections_match_frozen_allowance": true,
+    "findings": 11,
+    "canonical_unknowns": 253,
+    "measured_unknown_positions": 199,
+    "declared_rules": "FAIL"
+  },
+  "canonical_delta": {
+    "removed_finding": "VIO-5f21145a7626be68",
+    "added_accepted_opacity": "TYPE-61f7b8005d6e2197",
+    "findings": [
+      12,
+      12,
+      11
+    ],
+    "canonical_unknowns": [
+      253,
+      253,
+      253
+    ],
+    "measured_unknown_positions": [
+      199,
+      199,
+      199
+    ],
+    "old_io_facts_provenance_only": 14
+  },
+  "local_verification": {
+    "published_source_controls": {
+      "positive": 2,
+      "negative": 15,
+      "counterfactual_ir": false
+    },
+    "focused_pass": 166,
+    "unit_pass": 2424,
+    "unit_skipped": 11,
+    "unit_xfailed": 1,
+    "ruff": "PASS",
+    "mypy_files": 488,
+    "architecture_definition_pass": 13
+  },
+  "native_amendment": {
+    "writer_exit": 2,
+    "writer_artifact": false,
+    "validation_exit": 2,
+    "amendment_status": "valid",
+    "widenings": [],
+    "usage_unknown": 19,
+    "baseline_new": 7,
+    "baseline_resolved": 0,
+    "declared_rules": "FAIL",
+    "tampered_digest_refusals": 4
+  },
+  "review_sha256": {
+    "/private/tmp/ce209-independent-review.md": "180c720b0a984f508d608a69b41237c743aa367ecc0c8220bc20537331b0f4e8",
+    "/private/tmp/ce209-astra-architecture-review.md": "9926541d819d52f8d28febeb38245294f98cad772d7d126432a42f8df5619285"
+  },
+  "raw_evidence": "/private/tmp/ce-step209-native-variable-209-20261010/.superpowers/sdd/ce-step209-execution-plan/artifacts",
+  "raw_manifest_sha256": "2965283c19e01ac58cd889f99f49745c1a29853ba25c1069a8ab837f71e3d921",
+  "ci_step209": "not run at receipt creation",
+  "scope_limits": [
+    "No production runtime changes",
+    "No DSL or external-service rerun",
+    "No type-closure or serialization proof",
+    "No CE/EE architecture acceptance"
+  ]
+}
