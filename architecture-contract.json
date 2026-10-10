@@ -833,7 +833,8 @@
         "docs/architecture/refactoring-study/experiment-2/amendment-89.md",
         "docs/architecture/refactoring-study/experiment-2/amendment-90.md",
         "docs/architecture/refactoring-study/experiment-2/amendment-95.md",
-        "docs/architecture/refactoring-study/experiment-2/amendment-176-native-map-boundaries.md"
+        "docs/architecture/refactoring-study/experiment-2/amendment-176-native-map-boundaries.md",
+        "docs/architecture/refactoring-study/experiment-2/amendment-180-runtime-capture-selectors.md"
       ],
       "decided_by": "agent",
       "allowed_positions": [
@@ -859,19 +860,14 @@
           "qualified_name": "datamimic_ce.engine.runtime.api.run",
           "position": "return",
           "field_path": "captured",
-          "annotation": "dict[str, list[dict[str, object]]]"
+          "annotation": "dict[str, list[object]] | None"
         },
         {
           "qualified_name": "datamimic_ce.engine.runtime.api.run",
           "position": "return",
           "field_path": "captured",
-          "annotation": "dict[str, object]"
-        },
-        {
-          "qualified_name": "datamimic_ce.engine.runtime.api.run",
-          "position": "return",
-          "field_path": "captured",
-          "annotation": "object"
+          "annotation": "dict[str, list[object]] | None",
+          "container_depth": 2
         },
         {
           "qualified_name": "datamimic_ce.engine.runtime.api.load_descriptor_properties",

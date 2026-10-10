@@ -35,16 +35,15 @@ def test_runtime_run_capture_contract_permission_is_exact() -> None:
     allowed_positions = rule["allowed_positions"]
     qualified_name = "datamimic_ce.engine.runtime.api.run"
     capture_positions = [
-        (entry["position"], entry["field_path"], entry["annotation"])
+        (entry["position"], entry["field_path"], entry["annotation"], entry.get("container_depth"))
         for entry in allowed_positions
         if entry["qualified_name"] == qualified_name and entry["position"] == "return"
     ]
 
-    assert len(capture_positions) == 3
+    assert len(capture_positions) == 2
     assert set(capture_positions) == {
-        ("return", "captured", "dict[str, list[dict[str, object]]]"),
-        ("return", "captured", "dict[str, object]"),
-        ("return", "captured", "object"),
+        ("return", "captured", "dict[str, list[object]] | None", None),
+        ("return", "captured", "dict[str, list[object]] | None", 2),
     }
     assert all("*" not in entry["qualified_name"] for entry in allowed_positions)
     assert all("*" not in entry["field_path"] for entry in allowed_positions)
@@ -138,9 +137,8 @@ def test_runtime_scripting_state_permissions_are_exact() -> None:
         (api + "SetupContext.get_dynamic_class", "return", "", "object | None", None),
     }
     legacy_permissions = {
-        (api + "run", "return", "captured", "dict[str, list[dict[str, object]]]", None),
-        (api + "run", "return", "captured", "dict[str, object]", None),
-        (api + "run", "return", "captured", "object", None),
+        (api + "run", "return", "captured", "dict[str, list[object]] | None", None),
+        (api + "run", "return", "captured", "dict[str, list[object]] | None", 2),
         (api + "load_descriptor_properties", "return", "", "dict[str, str]", None),
         (api + "create_run_session", "request", "platform_props", "dict[str, str]", None),
         (api + "run", "request", "platform_props", "dict[str, str]", None),
@@ -194,11 +192,11 @@ def test_runtime_scripting_state_permissions_are_exact() -> None:
 
     assert len(scripting_permissions) == 22
     assert set(scripting_permissions) == map_permissions
-    assert len(permissions) == len(set(permissions)) == 36
+    assert len(permissions) == len(set(permissions)) == 35
     assert {
         permission for permission in permissions if permission in demographic_permissions
     } == demographic_permissions
-    assert len(remaining_permissions) == 11
+    assert len(remaining_permissions) == 10
     assert set(remaining_permissions) == legacy_permissions
     assert all("*" not in permission[0] and "*" not in permission[2] for permission in permissions)
 

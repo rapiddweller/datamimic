@@ -717,6 +717,26 @@ remains open. Baseline and oracle are unchanged. CI-ONLY VERIFICATION: new-head
 checks pending. Full DSL/EE acceptance is not established. Evidence:
 `/tmp/ce-resume-20261010/`.
 
+Step 165: [Amendment 180](amendment-180-runtime-capture-selectors.md) explicitly
+supersedes Amendment 99's permission freeze only for `run.return.captured`.
+Two complete nullable selectors replace three stale entries; Runtime owns the
+result shape and IO the live capture collection. Production, other grants,
+ownership, baseline and oracle stay unchanged. Fresh report: FAIL53 (Runtime
+10 → 8), 200 measured UNKNOWN positions, 488/488 parsed files.
+Independent QA preserves the other 53 findings and all 254 canonical UNKNOWNs
+exactly; nine matcher controls and one fixed-control source fixture pass.
+LOCAL VERIFIED: both existing contract guards first fail against the old
+contract; all 62 Runtime boundary tests then pass with frozen test bytes.
+Definition 13 PASS, Ruff and full MyPy (488 files) PASS. Native amendment
+validation retains the widening but exits 2 with the same 19 usage-UNKNOWNs;
+no machine amendment is emitted. CI-ONLY VERIFICATION: at parent `cd6b1666`,
+both architecture jobs reproduce known local failures and the report artifact
+is uploaded successfully; the receipt-validation step fails. New-head checks
+pending. Full DSL/EE acceptance remains open. Evidence:
+`/tmp/ce-resume-20261010/next-slice-165/` and `../ci-cd6b1666/`.
+The [publication review](publication-unknown-review.md) traces all 19 validation
+diagnostics to an explicit checker proof limit; none is silently waived.
+
 ## Agent separation
 
 - The implementation agent changes production code and targeted tests for one approved slice.
