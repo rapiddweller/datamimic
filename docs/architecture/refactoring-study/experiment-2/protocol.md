@@ -887,7 +887,7 @@ found no blocking issue; its missing prior-report path is pinned in the receipt.
 Both exact-head CI runs at `019f9cbc` completed: ordinary jobs passed; the two
 architecture jobs failed at the open zero target. This is not target or DSL acceptance.
 
-Step 174 candidate: [Amendment 188](amendment-188-product-map-depth.md)
+Step 174: [Amendment 188](amendment-188-product-map-depth.md)
 adds four exact inner-map/native-value allowances for the two existing IO
 product envelopes. Published ArchKeel 1.1.1 removes only the four named
 findings (17 → 13); all other findings and 254 canonical UNKNOWN records
@@ -895,9 +895,21 @@ remain exact. The source digest is unchanged and declared rules still FAIL.
 LOCAL VERIFIED: exact negative controls, selector RED→GREEN, 81 focused checks
 (11 existing skips), 13 definition checks, Ruff and full MyPy pass. CI-ONLY
 VERIFICATION: pending. The separate Annotated-wrapper checker defect #434
-remains open; this candidate proves only the unwrapped CE annotation.
+remains open; this step proves only the unwrapped CE annotation.
 Native validation still exits 2 with 19 usage diagnostics and 9 baseline-new
 groups; it is not target acceptance.
+
+Step 176: [Comment owner profile](step-176-comment-owner-profile.md) adds two
+unchanged native owner inputs after independent QA. Four complete typed captures
+match across original/current; the accepted ledger now has 127/931 reviewed
+profiles and 804 UNKNOWN inputs. Two failed original pre-collection attempts
+remain in the receipt; neither executed a descriptor. Frozen-oracle parity,
+other descriptors and EE remain UNKNOWN.
+
+Step 177: [ArchKeel 1.1.1 report navigation](step-177-archkeel-111-report-acceptance.md)
+passes all 456 Actual/Target/Diff scope states and reconciles 151 components
+and 488 physical target paths. The browser matrix is pinned to `019f9cbc`;
+the integrated Step 174 report is separately compared at `0e0b709c`.
 
 ## Agent separation
 
