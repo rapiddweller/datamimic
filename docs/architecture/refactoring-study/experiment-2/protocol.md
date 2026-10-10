@@ -1213,6 +1213,15 @@ UNKNOWNs, 199 scalar positions**. Accepted opacity is not native type closure.
 Native validation retains 19 usage UNKNOWNs and exit 2 despite a valid amendment.
 No DSL admission: **174/931 reviewed, 757 UNKNOWN**. Full CE/EE acceptance is open.
 
+## Step 208 — six native while owner profiles
+
+[Evidence](step-208-native-while.md) records independent final native GO for six
+exact a219/9e owner profiles, with 12 calls/14 executions/8 captures/32 rows/
+6 errors/36 passing phases. Independent docs/ledger GO and six status-only
+admissions yield **180/931 reviewed, 751 UNKNOWN**. Primary b2 runtime/introspection and
+full CE/EE acceptance remain unproved. Canonical counts stay 12 violations,
+253 UNKNOWNs/199 scalar positions; Step 207 is deferred and unintegrated.
+
 ## Agent separation
 
 - The implementation agent changes production code and targeted tests for one approved slice.

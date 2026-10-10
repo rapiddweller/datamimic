@@ -62,3 +62,8 @@ LOCAL VERIFIED: complete input join; independent ledger/owner reviews;
 CI-ONLY VERIFICATION: both `c992` workflows completed with 24 successful jobs,
 two failed architecture jobs and two skipped jobs each. PR artifact scans merge
 `c74190ce`, not direct `c992`; its source digest matches current production.
+
+Step 208's [six native while profiles](step-208-native-while.md) preserve all
+historical/oracle/c992 evidence and 925 other raw lines. Final native GO supports
+only exact a219/9e input/isolation profiles. Independent docs/ledger GO and
+status-only admission yield **180/931 reviewed, 751 UNKNOWN**. Raw evidence is local; primary b2 runtime remains unproved.
