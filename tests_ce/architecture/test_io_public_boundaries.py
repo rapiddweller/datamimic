@@ -285,6 +285,19 @@ def test_io_native_payload_permissions_keep_exact_shapes_and_depths() -> None:
         }
         for name in ["capture_test_results", "consume_memstore_target"]
     )
+    for name in ["capture_test_results", "consume_memstore_target"]:
+        selector = {
+            "qualified_name": f"datamimic_ce.engine.io.api.{name}",
+            "position": "products",
+            "field_path": "",
+            "annotation": "Mapping[str, list[dict[str, object]]]",
+        }
+        expected.extend(
+            [
+                {**selector, "mapping_depth": 2},
+                {**selector, "mapping_depth": 2, "container_depth": 3},
+            ]
+        )
     assert rule["allowed_positions"] == expected
 
 

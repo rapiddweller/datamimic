@@ -1152,7 +1152,7 @@
       "id": "IO-API-TYPES",
       "kind": "boundary_types",
       "source": "datamimic_ce.engine.io.api",
-      "rationale": "The IO facade keeps fixed controls typed; smoke-export rows/options and connection profiles remain open payloads at reviewed positions. WeightedEntityDataSource returns a selected native string-valued row keyed by input CSV headers; headers are data keys, and row aliasing remains observable. Native source rows and capture values retain their reviewed map/list forms; IO owns storage and row transport while Runtime owns lifecycle and timing. ExportSession accepts native XML dictionaries with string keys; IO owns conversion and dispatch, preserving the original XML page.",
+      "rationale": "The IO facade keeps fixed controls typed; smoke-export rows/options and connection profiles remain open payloads at reviewed positions. WeightedEntityDataSource returns a selected native string-valued row keyed by input CSV headers; headers are data keys, and row aliasing remains observable. Native source rows and capture values retain their reviewed map/list forms; IO owns storage and row transport while Runtime owns lifecycle and timing. ExportSession accepts native XML dictionaries with string keys; IO owns conversion and dispatch, preserving the original XML page. Product maps retain their inner string-keyed row dictionaries and native values at the exact reviewed depths.",
       "provenance": [
         "docs/architecture/refactoring-study/experiment-2/target-architecture.md",
         "docs/architecture/refactoring-study/experiment-2/amendment-62.md",
@@ -1161,7 +1161,8 @@
         "docs/architecture/refactoring-study/experiment-2/amendment-179-smoke-export-dto-selectors.md",
         "docs/architecture/refactoring-study/experiment-2/amendment-181-native-io-rows.md",
         "docs/architecture/refactoring-study/experiment-2/amendment-183-native-xml-rows.md",
-        "docs/architecture/refactoring-study/experiment-2/amendment-185-product-map-boundaries.md"
+        "docs/architecture/refactoring-study/experiment-2/amendment-185-product-map-boundaries.md",
+        "docs/architecture/refactoring-study/experiment-2/amendment-188-product-map-depth.md"
       ],
       "decided_by": "agent",
       "allowed_positions": [
@@ -1331,6 +1332,36 @@
           "position": "products",
           "field_path": "",
           "annotation": "Mapping[str, list[dict[str, object]]]"
+        },
+        {
+          "qualified_name": "datamimic_ce.engine.io.api.capture_test_results",
+          "position": "products",
+          "field_path": "",
+          "annotation": "Mapping[str, list[dict[str, object]]]",
+          "mapping_depth": 2
+        },
+        {
+          "qualified_name": "datamimic_ce.engine.io.api.capture_test_results",
+          "position": "products",
+          "field_path": "",
+          "annotation": "Mapping[str, list[dict[str, object]]]",
+          "mapping_depth": 2,
+          "container_depth": 3
+        },
+        {
+          "qualified_name": "datamimic_ce.engine.io.api.consume_memstore_target",
+          "position": "products",
+          "field_path": "",
+          "annotation": "Mapping[str, list[dict[str, object]]]",
+          "mapping_depth": 2
+        },
+        {
+          "qualified_name": "datamimic_ce.engine.io.api.consume_memstore_target",
+          "position": "products",
+          "field_path": "",
+          "annotation": "Mapping[str, list[dict[str, object]]]",
+          "mapping_depth": 2,
+          "container_depth": 3
         }
       ]
     },
