@@ -304,7 +304,7 @@
         "datamimic_ce.engine.runtime.lifecycle"
       ],
       "responsibilities": [
-        "Run configuration, session/run orchestration and cleanup."
+        "Own run configuration and session orchestration, including descriptor parsing, setup execution and test-result capture."
       ],
       "forbidden_responsibilities": [
         "Implement source connectors or DSL grammar."
@@ -429,7 +429,7 @@
         "datamimic_ce.engine.runtime.lifecycle.config",
         "datamimic_ce.engine.runtime.lifecycle.runner"
       ],
-      "rationale": "Run configuration, session/run orchestration and cleanup. Exact reviewed target children; no hidden extra modules.",
+      "rationale": "Own run configuration and session orchestration, including descriptor parsing, setup execution and test-result capture. Exact reviewed target children; no hidden extra modules.",
       "provenance": [
         "docs/architecture/inner/structure-review.json"
       ],
