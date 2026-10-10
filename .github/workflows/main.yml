@@ -90,8 +90,8 @@ jobs:
 
       - name: Confirm pinned ArchKeel version
         run: |
-          version="$(uvx --python 3.11 --from 'archkeel==1.1.0' archkeel --version)"
-          test "$version" = "archkeel 1.1.0"
+          version="$(uvx --python 3.11 --from 'archkeel==1.1.1' archkeel --version)"
+          test "$version" = "archkeel 1.1.1"
           echo "$version"
 
       - name: Write report metadata
@@ -100,7 +100,7 @@ jobs:
           RUN_ID: ${{ github.run_id }}
           RUN_ATTEMPT: ${{ github.run_attempt }}
           HEAD_SHA: ${{ github.event.pull_request.head.sha || github.sha }}
-          ARCHKEEL_VERSION: '1.1.0'
+          ARCHKEEL_VERSION: '1.1.1'
         run: |
           python - <<'PY'
           import json
@@ -127,7 +127,7 @@ jobs:
       - name: Capture native validation receipt
         if: ${{ !cancelled() }}
         run: >-
-          uvx --python 3.11 --from 'archkeel==1.1.0' archkeel validate
+          uvx --python 3.11 --from 'archkeel==1.1.1' archkeel validate
           --baseline known-violations.json --json
           > test-artifacts/architecture/ce-recursive-target/validation.json
 
