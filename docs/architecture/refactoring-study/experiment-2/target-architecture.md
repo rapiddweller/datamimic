@@ -169,6 +169,11 @@ Structure, and Review does not meet this report requirement.
 The construct rules do not prove that every internal annotation is complete: remaining typing
 signals and analyzer limits stay visible as quality measurements (Amendment 12).
 
+[Amendment 188](amendment-188-product-map-depth.md) permits the inner row maps
+and native values at two exact IO product positions. The candidate still has
+13 declared findings and 254 canonical UNKNOWN records; target acceptance
+remains open.
+
 [Amendment 95](amendment-95.md) permits native Python scripting-state and copy
 memo only at reviewed exact Runtime positions. Fixed controls still require
 declared types; these permissions do not waive properties, generator-cache or

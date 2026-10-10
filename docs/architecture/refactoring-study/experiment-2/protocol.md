@@ -886,6 +886,18 @@ still exits 2 with 19 diagnostics and 11 baseline-new groups. Independent QA
 found no blocking issue; its missing prior-report path is pinned in the receipt.
 Current-head CI remains open; this is not target or DSL acceptance.
 
+Step 174 candidate: [Amendment 188](amendment-188-product-map-depth.md)
+adds four exact inner-map/native-value allowances for the two existing IO
+product envelopes. Published ArchKeel 1.1.1 removes only the four named
+findings (17 → 13); all other findings and 254 canonical UNKNOWN records
+remain exact. The source digest is unchanged and declared rules still FAIL.
+LOCAL VERIFIED: exact negative controls, selector RED→GREEN, 81 focused checks
+(11 existing skips), 13 definition checks, Ruff and full MyPy pass. CI-ONLY
+VERIFICATION: pending. The separate Annotated-wrapper checker defect #434
+remains open; this candidate proves only the unwrapped CE annotation.
+Native validation still exits 2 with 19 usage diagnostics and 9 baseline-new
+groups; it is not target acceptance.
+
 ## Agent separation
 
 - The implementation agent changes production code and targeted tests for one approved slice.
