@@ -941,6 +941,14 @@ and 790 UNKNOWN inputs; its other 921 rows and historical oracle fields are
 unchanged. Standalone XML, frozen-oracle parity, other descriptors and EE remain
 UNKNOWN.
 
+Step 182: [In-memory owner profiles](step-182-in-memory-owner-profiles.md)
+add five unchanged scope and unique-value inputs after independent QA. All ten
+exact runs passed, and each complete typed capture matches across original
+`a219163e` and current source `203975b6`. The accepted ledger has 146/931
+reviewed profiles and 785 UNKNOWN inputs; its other 926 rows and historical
+oracle fields are unchanged. Standalone XML, frozen-oracle parity, other
+descriptors and EE remain UNKNOWN.
+
 The cached XML file-row path now has two [behavior tests](../../../../tests_ce/unit_tests/test_io_files.py):
 a document with an integer key and native value retains both identities, while
 a cached non-dict root raises the existing error. This characterizes the
