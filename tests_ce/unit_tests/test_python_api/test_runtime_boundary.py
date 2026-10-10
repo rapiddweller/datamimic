@@ -154,6 +154,10 @@ def test_runtime_scripting_state_permissions_are_exact() -> None:
         ),
         (api + "SetupContext.data_source_len", "return", "", "dict[tuple[str | None, str | None], int]", None),
     }
+    property_permissions = {
+        (api + "SetupContext.__init__", "properties", "", "dict[str, object] | None", None),
+        (api + "SetupContext.__init__", "properties", "", "dict[str, object] | None", 1),
+    }
     demographic_permissions = {
         (
             api + "SetupContext.__init__",
@@ -192,12 +196,12 @@ def test_runtime_scripting_state_permissions_are_exact() -> None:
 
     assert len(scripting_permissions) == 22
     assert set(scripting_permissions) == map_permissions
-    assert len(permissions) == len(set(permissions)) == 35
+    assert len(permissions) == len(set(permissions)) == 37
     assert {
         permission for permission in permissions if permission in demographic_permissions
     } == demographic_permissions
-    assert len(remaining_permissions) == 10
-    assert set(remaining_permissions) == legacy_permissions
+    assert len(remaining_permissions) == 12
+    assert set(remaining_permissions) == legacy_permissions | property_permissions
     assert all("*" not in permission[0] and "*" not in permission[2] for permission in permissions)
 
 

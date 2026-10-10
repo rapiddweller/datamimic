@@ -93,6 +93,20 @@ def test_setup_context_deepcopy_preserves_shared_property_references_within_copy
     assert copied.properties["first"] is not shared
 
 
+def test_setup_context_deepcopy_propagates_noncopyable_property_error() -> None:
+    class NonCopyable:
+        def __deepcopy__(self, memo: dict[int, object]) -> object:
+            raise TypeError("cannot copy property value")
+
+    value = NonCopyable()
+    context = _context(properties={"value": value})
+
+    with pytest.raises(TypeError, match="^cannot copy property value$"):
+        copy.deepcopy(context)
+
+    assert context.properties["value"] is value
+
+
 def test_setup_context_properties_annotations_describe_mutable_object_mapping() -> None:
     assert get_type_hints(SetupContext.__init__).get("properties") == dict[str, object] | None
     assert get_type_hints(SetupContext.properties.fget).get("return") == dict[str, object]

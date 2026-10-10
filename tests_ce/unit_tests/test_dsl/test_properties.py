@@ -48,6 +48,20 @@ def test_parse_properties_caches_lines_by_path_and_returns_fresh_dict(tmp_path: 
     assert first is not second
 
 
+def test_direct_and_dotted_falsy_property_substitution_remains_asymmetric() -> None:
+    attributes: dict[str, object] = {"direct": "{value}", "dotted": "{outer.value}"}
+
+    resolved = dispatch.retrieve_element_attributes(attributes, {"value": 0, "outer": {"value": 0}})
+
+    assert resolved is attributes
+    assert resolved == {"direct": 0, "dotted": "{outer.value}"}
+
+
+def test_dotted_property_scalar_intermediate_raises_attribute_error() -> None:
+    with pytest.raises(AttributeError, match="'int' object has no attribute 'get'"):
+        dispatch.retrieve_element_attributes({"dotted": "{outer.value}"}, {"outer": 1})
+
+
 @pytest.mark.parametrize(
     ("runtime_environment", "environment_name"),
     [("development", "local"), ("production", "environment")],

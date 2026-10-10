@@ -846,6 +846,25 @@ The [1.1.0 acceptance refresh](archkeel-1.1.0-acceptance-refresh.md) records
 full declared-component navigation coverage and the current UNKNOWN review.
 The RDBMS annotation proposal remains on hold after a serializer counterexample.
 
+Step 171: [Amendment 186](amendment-186-runtime-properties-policy.md) permits
+only the outer and native-value positions of `SetupContext.__init__.properties`.
+The 35 previous Runtime selectors remain exact. This policy accepts one opaque
+native value; it does not close the full Properties source-type obligation from
+Slice 168. Production, baseline, budgets, oracle and SQL155 are unchanged.
+Published ArchKeel 1.1.1 reports FAIL20 (22 → 20), removing only the two
+SetupContext property findings; the other 20 records, 254 canonical/200
+measured UNKNOWNs and source observations remain unchanged. LOCAL VERIFIED:
+the exact guard RED→GREEN, three native/falsy/error characterizations, 115
+focused tests, 13 definition checks, 2341 CE unit tests (11 skipped, one
+expected failure), Ruff and full MyPy (488 files) PASS. The Makefile's uvx
+launcher cannot access its
+shared cache here; direct published 1.1.1 report and project-venv checks were
+used. Published-CLI source and selector negatives preserve neighboring
+findings/UNKNOWNs. Native baseline validation exits 2 with the same 19
+diagnostics and 14 baseline-new groups; no machine amendment is emitted.
+Independent QA and candidate CI remain open. Full DSL/EE and target acceptance
+remain open.
+
 ## Agent separation
 
 - The implementation agent changes production code and targeted tests for one approved slice.

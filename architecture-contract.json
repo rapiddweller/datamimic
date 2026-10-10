@@ -868,7 +868,7 @@
       "id": "RUNTIME-API-TYPES",
       "kind": "boundary_types",
       "source": "datamimic_ce.engine.runtime.api",
-      "rationale": "Fixed requests and execution controls stay typed. Captures, descriptor properties, the client registry, native Python state and copy memo use exact reviewed positions. Runtime owns native registries keyed by declared client IDs and by statement/source identities. Their exact RegisteredClient and tuple-to-count mapping contracts preserve mutable registry identity without fixed-field wrappers. Runtime installs and forwards Domain demographic records with the complete named-profile, typed-weight-map or None contract.",
+      "rationale": "Fixed requests and execution controls stay typed. Captures, descriptor properties, the client registry, native Python state and copy memo use exact reviewed positions. Runtime holds mutable user-keyed native properties at its SetupContext constructor; this permission does not prove the whole Properties source chain. Runtime owns native registries keyed by declared client IDs and by statement/source identities. Their exact RegisteredClient and tuple-to-count mapping contracts preserve mutable registry identity without fixed-field wrappers. Runtime installs and forwards Domain demographic records with the complete named-profile, typed-weight-map or None contract.",
       "provenance": [
         "docs/architecture/refactoring-study/experiment-2/target-architecture.md",
         "docs/architecture/refactoring-study/experiment-2/amendment-70.md",
@@ -878,7 +878,8 @@
         "docs/architecture/refactoring-study/experiment-2/amendment-95.md",
         "docs/architecture/refactoring-study/experiment-2/amendment-176-native-map-boundaries.md",
         "docs/architecture/refactoring-study/experiment-2/amendment-180-runtime-capture-selectors.md",
-        "docs/architecture/refactoring-study/experiment-2/amendment-182-demographic-map-contracts.md"
+        "docs/architecture/refactoring-study/experiment-2/amendment-182-demographic-map-contracts.md",
+        "docs/architecture/refactoring-study/experiment-2/amendment-186-runtime-properties-policy.md"
       ],
       "decided_by": "agent",
       "allowed_positions": [
@@ -1102,6 +1103,19 @@
           "position": "return",
           "field_path": "",
           "annotation": "dict[tuple[str | None, str | None], int]"
+        },
+        {
+          "qualified_name": "datamimic_ce.engine.runtime.api.SetupContext.__init__",
+          "position": "properties",
+          "field_path": "",
+          "annotation": "dict[str, object] | None"
+        },
+        {
+          "qualified_name": "datamimic_ce.engine.runtime.api.SetupContext.__init__",
+          "position": "properties",
+          "field_path": "",
+          "annotation": "dict[str, object] | None",
+          "container_depth": 1
         }
       ]
     },
