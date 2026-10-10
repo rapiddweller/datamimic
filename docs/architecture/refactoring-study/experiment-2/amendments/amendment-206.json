@@ -1,0 +1,9 @@
+{
+  "after_baseline_digest": "166f55bec9ce690900e35b99b8f2cd91d3cb12a0fc2328b235512d65cd48d69e",
+  "after_digest": "6efe8a8f3534f60e028373befe652144207e7a33ec2b7ed7a112ba231d7f2016",
+  "before_baseline_digest": "166f55bec9ce690900e35b99b8f2cd91d3cb12a0fc2328b235512d65cd48d69e",
+  "before_digest": "3ad34a7a736a59e9adcd447758c265a1260050a14237a2eca7743f545de24683",
+  "decided_by": "agent, delegated by Astra",
+  "rationale": "Literal-generator base is a native extension result boundary. Admit only its direct object return; specialized returns remain precise.",
+  "schema_version": "2.0.0"
+}

@@ -674,13 +674,14 @@
       "id": "DOMAIN-API-TYPES",
       "kind": "boundary_types",
       "source": "datamimic_ce.domains.api",
-      "rationale": "The domain facade exposes declared generator classes through a typed iterator, never an untyped registry dictionary. DemographicSampler.provenance_descriptor returns a fresh snapshot of its recorded normalized resource-path to provenance-digest string map; paths are data keys, not fixed record fields. Converter extension APIs receive and may return native Python values; arbitrary input acceptance and method-local validation preserve substitutability, extension results and native errors. Only the enumerated direct object/object-or-None positions admit opacity; existing precise specialized outputs and fixed control signatures remain required. Demographic sampling owns dataset-keyed weight distributions and accepts a non-owning metadata mapping of string keys to string-or-None group references. The three enumerated weight accessors return fresh dictionaries keyed by age interval, condition name, or SexKey; these are maps, not fixed records. This allowance does not validate raw CSV producers or accept malformed-row type mismatches. Transaction generation accepts an optional opaque account hint. Its existing truthiness and CurrencyAccount capability check selects account currency; non-account or falsey inputs retain generated-currency fallback. Only the enumerated direct bank_account input admits opacity; GeneratedTransactionData and other control/output signatures remain precise. Demographic records retain data-keyed transaction weights, sex-indexed age bands and condition-indexed rates with their concrete value types; fixed fields stay typed.",
+      "rationale": "The domain facade exposes declared generator classes through a typed iterator, never an untyped registry dictionary. DemographicSampler.provenance_descriptor returns a fresh snapshot of its recorded normalized resource-path to provenance-digest string map; paths are data keys, not fixed record fields. Converter extension APIs receive and may return native Python values; arbitrary input acceptance and method-local validation preserve substitutability, extension results and native errors. Only the enumerated direct object/object-or-None positions admit opacity; existing precise specialized outputs and fixed control signatures remain required. Demographic sampling owns dataset-keyed weight distributions and accepts a non-owning metadata mapping of string keys to string-or-None group references. The three enumerated weight accessors return fresh dictionaries keyed by age interval, condition name, or SexKey; these are maps, not fixed records. This allowance does not validate raw CSV producers or accept malformed-row type mismatches. Transaction generation accepts an optional opaque account hint. Its existing truthiness and CurrencyAccount capability check selects account currency; non-account or falsey inputs retain generated-currency fallback. Only the enumerated direct bank_account input admits opacity; GeneratedTransactionData and other control/output signatures remain precise. Demographic records retain data-keyed transaction weights, sex-indexed age bands and condition-indexed rates with their concrete value types; fixed fields stay typed. The literal-generator base is an extension result boundary: implementations own native result types, and Runtime keeps method-local handling. Only BaseLiteralGenerator.generate admits direct result opacity; specialized returns remain precise.",
       "provenance": [
         "docs/architecture/refactoring-study/experiment-2/target-architecture.md",
         "docs/architecture/refactoring-study/experiment-2/amendment-175-demographic-provenance-map.md",
         "docs/architecture/refactoring-study/experiment-2/amendment-177-converter-value-boundaries.md",
         "docs/architecture/refactoring-study/experiment-2/amendment-178-demographic-finance-boundaries.md",
-        "docs/architecture/refactoring-study/experiment-2/amendment-182-demographic-map-contracts.md"
+        "docs/architecture/refactoring-study/experiment-2/amendment-182-demographic-map-contracts.md",
+        "docs/architecture/refactoring-study/experiment-2/amendment-206-native-literal-result.md"
       ],
       "decided_by": "agent",
       "allowed_positions": [
@@ -875,6 +876,12 @@
           "position": "profile",
           "field_path": "condition_rates",
           "annotation": "Mapping[str, tuple[DemographicConditionRate, ...]]"
+        },
+        {
+          "qualified_name": "datamimic_ce.domains.api.BaseLiteralGenerator.generate",
+          "position": "return",
+          "field_path": "",
+          "annotation": "object"
         }
       ]
     },
