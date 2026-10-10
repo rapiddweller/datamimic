@@ -1019,6 +1019,30 @@ Class/method Target and exhaustive topology remain unproved. The conditional
 JSON export failure is reproduced with its direct-child control and tracked in
 [CE #288](https://github.com/rapiddweller/datamimic/issues/288).
 
+Step 193: [Real stdlib worker profiles](step-193-real-workers.md) compare six
+shared owner-body executions: eight Pools and 16 executing spawn workers,
+matching ordered typed captures and exact named JSON bytes. Independent QA
+checks raw evidence and rejecting controls. Serialized callable/generator
+registries are empty; nonempty transfer and full parity remain open. No ledger
+promotion follows.
+
+Step 194: [Worker/policy ownership](step-194-workers-policy-ownership.md) accepts
+the existing separate semantic leaves after Astra and independent static QA.
+No source, permission or contract change is justified. Conditional uniqueness
+remains a separate unproved candidate.
+
+Step 195: [Sampled report controls](step-195-report-controls.md) checks normal
+Tab/Enter and pan/zoom/fit on representative scenes, with light/dark viewport
+samples. The misleading reset label is tracked in
+[ArchKeel #442](https://github.com/rapiddweller/archkeel/issues/442).
+Exhaustive UI acceptance remains open; the frozen report was not regenerated.
+
+CI at `a939a929` completed with 48 successes, five failures and five skips.
+Four failures are architecture jobs. The PR service job has a Mongo worker-export
+timeout (163 passed, four skipped); its same-head push control passes all 164.
+[CE #281 evidence](https://github.com/rapiddweller/datamimic/issues/281#issuecomment-6097664531)
+records the new path without assuming it shares the source-read failures' cause.
+
 CI at `5c218f8f` remains red: four architecture jobs and one external-service
 job failed. The latter has two Mongo worker server-selection timeouts
 (162 passed, four skipped); the parallel same-head job passed all 164 tests.
