@@ -1,0 +1,35 @@
+{
+  "all_semantic_scopes_accepted": false,
+  "audit": {
+    "bytes": 13249,
+    "path": "/tmp/ce-astra-workers-ownership-20261010.md",
+    "sha256": "b7199d8594f0d554aa68ffaec1bae7c24e141b320d86780b742e18c877223eea"
+  },
+  "behavioral_parity_proven": false,
+  "ci_only_verification": "none",
+  "condition_unique_defect_proven": false,
+  "contract_change": false,
+  "decision": "Astra: KEEP GENERATE-WORKERS and GENERATE-POLICIES as separate semantic leaves",
+  "independent_qa": {
+    "qa-report.json": {
+      "path": "/tmp/ce-step194-independent-qa-20261010/qa-report.json",
+      "sha256": "ea2179782c98e50b604049abcaf61d7d0a6eaecbb8ca8fc3bc1d950f70bc6e12"
+    },
+    "qa-review.md": {
+      "path": "/tmp/ce-step194-independent-qa-20261010/qa-review.md",
+      "sha256": "e937571e3416726ef957f120a5ab462b868720731a5959707d0eaa6836e2f14d"
+    }
+  },
+  "production_change": false,
+  "reviewed_source_head": "a939a92905cb22146a4b545f708713ed734872b0",
+  "runtime_execution": false,
+  "source_and_contract_files": {
+    "datamimic_ce/engine/runtime/tasks/generate/policies/single_process_policy.py": "750b164d2857d0b68402d31318f9dd64c9eed8248286368e7104e70ae0ea7e4b",
+    "datamimic_ce/engine/runtime/tasks/generate/workers/generate_worker.py": "dc1e72a69e87485620dd55e49449370cef49b8b89fe3fb3d8e501d5703ccf78b",
+    "datamimic_ce/engine/runtime/tasks/generate/workers/multiprocessing_generate_worker.py": "e032bab29b32c34cb6ff6f31faf08e0423f14f85ff9c290fe7402c281bb8fb99",
+    "datamimic_ce/engine/runtime/tasks/generate/workers/ray_generate_worker.py": "79037553f3c0aef057adfc348fc5ab60c9ba24de306ae850551d2c8f457cf07f",
+    "docs/architecture/inner/runtime/tasks/generate/architecture-contract.json": "847cd83f775befebca0dd8b41e5dd75a9bda36b4c057056cb0277f04d22682cb"
+  },
+  "status": "accepted_static_ownership_review_with_behavioral_limits",
+  "step": 194
+}
