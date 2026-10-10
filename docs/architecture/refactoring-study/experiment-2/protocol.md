@@ -1201,6 +1201,18 @@ positions remain. Categories route review, not blanket exemptions.
 separate native-Iterable prerequisite. No CE source/contract/gate change;
 12 violations and full CE/EE acceptance remain open.
 
+## Step 206 — native literal-generator extension result
+
+[Amendment 206](amendment-206-native-literal-result.md) declares the existing
+native result at the abstract generator boundary without changing its body.
+[Evidence](step-206-native-literal-result.md) records independent review,
+2410 unit passes, 62 focused passes and exact published 1.1.1 selector controls.
+Fresh primary measurement retains all 12 findings and 252 other UNKNOWN records;
+one missing annotation disappears and its aggregate updates: **253 canonical
+UNKNOWNs, 199 scalar positions**. Accepted opacity is not native type closure.
+Native validation retains 19 usage UNKNOWNs and exit 2 despite a valid amendment.
+No DSL admission: **174/931 reviewed, 757 UNKNOWN**. Full CE/EE acceptance is open.
+
 ## Agent separation
 
 - The implementation agent changes production code and targeted tests for one approved slice.

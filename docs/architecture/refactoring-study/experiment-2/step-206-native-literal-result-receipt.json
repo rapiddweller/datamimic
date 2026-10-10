@@ -1,0 +1,88 @@
+{
+  "integrated_source_head": "7f0f6cd8b2f9104f152d3a2d42d8c89acffbda5f",
+  "reviewed_source_head": "1d5738c15630e4b99a7c4a08ce414391f96bb580",
+  "base": "41edef734cae0b2eb0ad470d23733636b1da5cd1",
+  "published_version": "1.1.1",
+  "source": {
+    "dirty": true,
+    "git_head": "7f0f6cd8b2f9104f152d3a2d42d8c89acffbda5f",
+    "scope": [
+      "datamimic_ce/**/*.py"
+    ],
+    "source_digest": "d344983a4e6adb510d62ba741c2cd5498b6ee795d4c048444eafe7a970dee42c"
+  },
+  "analyzer": {
+    "code_digest": "52d31c8f54409d5319f7984928d1635296f3f34ae941123c0c27b035e0bde2cf",
+    "name": "archkeel-python-analyzer",
+    "version": "0.74.0"
+  },
+  "counts": {
+    "violations": 12,
+    "canonical_unknowns": 253,
+    "scalar_unknown_positions": 199
+  },
+  "declared_rules": "FAIL",
+  "report_exit_code": 0,
+  "coverage": {
+    "ast_coverage_percent": 100.0,
+    "call_resolution_percent": 73.85,
+    "calls_analyzed": 11807,
+    "calls_partially_resolved": 1841,
+    "calls_resolved": 8720,
+    "calls_unresolved": 1246,
+    "failures": [],
+    "files_discovered": 488,
+    "files_parsed": 488,
+    "files_read": 488,
+    "rules": "PASS",
+    "status": "PASS"
+  },
+  "canonical_sections_equal_to_reviewed_candidate": [
+    "violations",
+    "unknowns",
+    "typing_signals",
+    "dependency_edges",
+    "modules",
+    "packages",
+    "imports",
+    "calls",
+    "references",
+    "bindings",
+    "constructs",
+    "contexts",
+    "context_evidence",
+    "coverage",
+    "cycles",
+    "symbols",
+    "contract"
+  ],
+  "core_hashes": {
+    "datamimic_ce/domains/domain_core/base_literal_generator.py": "d2dfc1e79987035ed4e46198d06fa4ab4b06b213f86145181ea0a836d7726cd5",
+    "architecture-contract.json": "35242d8c9d6fd31f2d95a4b190f2d5043e7d6a61f6c397489298a9e3c362cf7b",
+    "docs/architecture/refactoring-study/experiment-2/amendment-206-native-literal-result.md": "9014ad9090135e0e3d4d447407455eaa4e2e0a79d6a27d96f4ee4d467b92b1a1",
+    "docs/architecture/refactoring-study/experiment-2/amendments/amendment-206.json": "8f26076777cbf5157b67b5902d78b38de82819e99fe843b1cf0b2290291eda04",
+    "tests_ce/unit_tests/test_literal_result_contract.py": "8d41f4ae62aa72c5c7327d78dab33c993b56cdfe043fecfa634df9a23969aa5e"
+  },
+  "evidence_manifest_sha256": "8822170e828c00a439a93b27cbd27422706ef849cb98fed0916f0cb1d932359b",
+  "review_sha256": "e467c79c2135c09444f295f57bc7956ec82ba1e2a355e8b1e1bf6c8115d898eb",
+  "committed_review_sha256": "01a92e329af142d65cd47c378f1a49995c5e034a8dc1fefdaccd4e31e0c0374b",
+  "primary_report_path": "/Users/akell/PycharmProjects/development-v2/datamimic/test-artifacts/architecture/ce-recursive-target/architecture.json",
+  "primary_report_sha256": "52050f77e03695dc61308231b2a0f4d834eab5763af8ec562946d774372b4c27",
+  "raw_comparison_receipt_sha256": "50602c61fe7c9e9019575a50fc83e4b588fd79ca5896f46b18adb0e009468f14",
+  "original_findings_retained": true,
+  "removed_missing_annotation": "UNKNOWN-BOUNDARY-TYPE-POSITION-7638515636007cd2",
+  "accepted_opacity_fact": "TYPE-153a934f43c0a4c0",
+  "dsl_reviewed": 174,
+  "dsl_total": 931,
+  "dsl_unknown": 757,
+  "native_validation_exit_code": 2,
+  "native_validation_usage_unknown": 19,
+  "amendment_status": "valid",
+  "ci_status": "pending",
+  "limits": [
+    "accepted opacity, not native type closure",
+    "native validation retains usage UNKNOWNs and declared FAIL",
+    "no new DSL native admission",
+    "no full CE/EE target acceptance"
+  ]
+}
