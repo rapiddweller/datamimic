@@ -701,6 +701,22 @@ The fresh ArchKeel report retains exactly 58 violations and 254 canonical UNKNOW
 Full DSL/worker/EE and whole-goal acceptance are not implied. Independent review
 and raw evidence: `/tmp/ce-resume-20261008/next-slice-163/`.
 
+Step 164: project Makefile and main CI now pin published ArchKeel 1.1.0
+(`cb1a09e9`). Independent comparison preserves all 58 findings, 254 canonical
+UNKNOWNs and the 151-component/25-level structure; bounded browser navigation
+passes. [Amendment 179](amendment-179-smoke-export-dto-selectors.md) then corrects
+three exact DTO selectors for the already accepted native smoke-export payloads.
+The fresh report has 55 findings (IO 34 → 31), 200 measured UNKNOWN positions,
+100% AST coverage and unchanged production source. Declared rules still FAIL.
+Independent QA retains all 55 remaining findings and 254 canonical UNKNOWNs
+exactly; nine negative matcher controls pass.
+LOCAL VERIFIED: 36 IO/export/caller tests, 13 definition checks, Ruff and full
+MyPy (488 files). Native amendment validation retains the widening but exits 2
+with 19 usage-UNKNOWN diagnostics and no amendment artifact; machine binding
+remains open. Baseline and oracle are unchanged. CI-ONLY VERIFICATION: new-head
+checks pending. Full DSL/EE acceptance is not established. Evidence:
+`/tmp/ce-resume-20261010/`.
+
 ## Agent separation
 
 - The implementation agent changes production code and targeted tests for one approved slice.

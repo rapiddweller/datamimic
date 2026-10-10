@@ -1074,7 +1074,8 @@
         "docs/architecture/refactoring-study/experiment-2/target-architecture.md",
         "docs/architecture/refactoring-study/experiment-2/amendment-62.md",
         "docs/architecture/refactoring-study/experiment-2/amendment-77.md",
-        "docs/architecture/refactoring-study/experiment-2/amendment-176-native-map-boundaries.md"
+        "docs/architecture/refactoring-study/experiment-2/amendment-176-native-map-boundaries.md",
+        "docs/architecture/refactoring-study/experiment-2/amendment-179-smoke-export-dto-selectors.md"
       ],
       "decided_by": "agent",
       "allowed_positions": [
@@ -1088,19 +1089,21 @@
           "qualified_name": "datamimic_ce.engine.io.api.smoke_export",
           "position": "request",
           "field_path": "params",
-          "annotation": "object"
+          "annotation": "dict[str, object]",
+          "container_depth": 1
         },
         {
           "qualified_name": "datamimic_ce.engine.io.api.smoke_export",
           "position": "request",
           "field_path": "rows",
-          "annotation": "dict[str, object]"
+          "annotation": "list[dict[str, object]]"
         },
         {
           "qualified_name": "datamimic_ce.engine.io.api.smoke_export",
           "position": "request",
           "field_path": "rows",
-          "annotation": "object"
+          "annotation": "list[dict[str, object]]",
+          "container_depth": 2
         },
         {
           "qualified_name": "datamimic_ce.engine.io.api.load_connection_profile",

@@ -188,6 +188,19 @@ def test_smoke_export_open_values_keep_their_container_shapes() -> None:
     assert hints["params"] == dict[str, object]
     assert hints["rows"] == list[dict[str, object]]
 
+    contract = json.loads((ROOT / "architecture-contract.json").read_text(encoding="utf-8"))
+    rule = next(rule for rule in contract["rules"] if rule["id"] == "IO-API-TYPES")
+    selectors = [
+        {key: value for key, value in item.items() if key not in {"qualified_name", "position"}}
+        for item in rule["allowed_positions"]
+        if item["qualified_name"] == "datamimic_ce.engine.io.api.smoke_export" and item["position"] == "request"
+    ]
+    assert len(selectors) == 4
+    assert {"field_path": "params", "annotation": "dict[str, object]"} in selectors
+    assert {"field_path": "params", "annotation": "dict[str, object]", "container_depth": 1} in selectors
+    assert {"field_path": "rows", "annotation": "list[dict[str, object]]"} in selectors
+    assert {"field_path": "rows", "annotation": "list[dict[str, object]]", "container_depth": 2} in selectors
+
 
 def test_memstore_and_exporter_have_truthful_canonical_definitions() -> None:
     import inspect
