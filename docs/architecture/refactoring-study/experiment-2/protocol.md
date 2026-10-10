@@ -919,6 +919,13 @@ ledger now has 128/931 reviewed profiles and 803 UNKNOWN inputs; its other 930
 rows and historical oracle fields are unchanged. Standalone XML, frozen-oracle
 parity, other descriptors and EE remain UNKNOWN.
 
+Step 179: [Substring owner profile](step-179-substring-owner-profile.md) adds
+one unchanged native owner input after independent QA. The complete typed
+one-row capture matches at original `a219163e` and current `1e7d97df`. The
+accepted ledger now has 129/931 reviewed profiles and 802 UNKNOWN inputs; its
+other 930 rows and historical oracle fields are unchanged. Standalone XML,
+frozen-oracle parity, other descriptors and EE remain UNKNOWN.
+
 ## Agent separation
 
 - The implementation agent changes production code and targeted tests for one approved slice.
