@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from decimal import Decimal
 from types import SimpleNamespace
 
 import pytest
@@ -16,10 +17,10 @@ from datamimic_ce.engine.dsl.api import (
     GenerateStatement,
 )
 from datamimic_ce.engine.dsl.model.generation.generate_model import GenerateModel
-from datamimic_ce.engine.io.api import ExportSession, buffered_exporter_names
+from datamimic_ce.engine.io.api import Exporter, ExportSession, buffered_exporter_names
+from datamimic_ce.engine.io.contracts import ExportMetadata
 from datamimic_ce.engine.io.exporters import registry as exporter_registry
 from datamimic_ce.engine.io.exporters import session as export_session_module
-from datamimic_ce.engine.io.api import Exporter
 from datamimic_ce.engine.io.exporters.core.exporter_config import ExporterConfig
 from datamimic_ce.engine.io.exporters.database.mongodb_exporter import MongoDBExporter
 from datamimic_ce.engine.io.exporters.diagnostics.console_exporter import ConsoleExporter
@@ -108,6 +109,8 @@ def test_xml_receives_original_rows_while_other_buffered_exporters_receive_conve
     )
 
     assert received_xml[0][0] == ("products", source_rows)
+    assert received_xml[0][0][1] is source_rows
+    assert received_xml[0][0][1][0] is source_rows[0]
     assert received_json[0][0] == ("products", [{"payload": "original"}])
 
 
@@ -339,18 +342,67 @@ def test_test_result_exporter_accepts_variadic_tuple_tail_and_keeps_rows() -> No
 
 def test_prepare_page_preserves_metadata_tuple_shape_and_original_rows() -> None:
     session = ExportSession(worker_id=1)
-    rows = [{"payload": {"#text": "original"}}]
-    session._register_exporters("products", [], [])
+    native = object()
+    nested = object()
+    price = Decimal("1.20")
+    rows: list[dict[str, object]] = [
+        {"#text": native},
+        {"price": price, "child": {"#text": nested}, "items": [{"#text": nested}], "@flag": "x"},
+    ]
+    metadata: ExportMetadata = {"target_entity": "orders"}
+    result = TestResultExporter()
+    session._register_exporters("products", [], [result])
 
     without_metadata, original_rows = session.prepare_page("products", "products", rows, {})
-    with_metadata, metadata_rows = session.prepare_page(
-        "products", "products", rows, {"target_entity": "orders"}
-    )
+    page = session.prepare_page("products", "products", rows, metadata)
+    with_metadata, metadata_rows = page
 
-    assert without_metadata == ("products", [{"payload": "original"}])
-    assert with_metadata == ("products", [{"payload": "original"}], {"target_entity": "orders"})
+    converted = [native, {"price": price, "child": nested, "items": [nested]}]
+    assert without_metadata == ("products", converted)
+    assert with_metadata == ("products", converted, metadata)
+    assert with_metadata[2] is metadata
+    assert with_metadata[1][0] is native
+    assert with_metadata[1][1]["price"] is price
+    assert with_metadata[1][1]["child"] is nested
+    assert with_metadata[1][1]["items"][0] is nested
     assert original_rows is rows
     assert metadata_rows is rows
+    assert metadata_rows[0]["#text"] is native
+    assert metadata_rows[1]["child"]["#text"] is nested
+
+    session.dispatch_page("products", page)
+    captured = result.get_result()["products"]
+    assert captured == converted
+    assert captured[0] is native
+    assert captured[1] is with_metadata[1][1]
+    assert session.prepare_page("products", "products", [], {})[0] == ("products", [])
+
+
+@pytest.mark.parametrize("rows, error", [([{1: "bad"}], AttributeError), ([object()], TypeError)])
+def test_prepare_page_preserves_invalid_raw_row_errors(rows, error) -> None:
+    session = ExportSession(worker_id=1)
+    session._register_exporters("products", [], [])
+
+    with pytest.raises(error) as raised:
+        session.prepare_page("products", "products", rows, {})
+
+    assert raised.value.__cause__ is None
+
+
+def test_prepare_page_preserves_dictionary_subclass_errors() -> None:
+    failure = RuntimeError("native items failure")
+
+    class BrokenDict(dict):
+        def items(self):
+            raise failure
+
+    session = ExportSession(worker_id=1)
+    session._register_exporters("products", [], [])
+
+    with pytest.raises(RuntimeError) as raised:
+        session.prepare_page("products", "products", [BrokenDict()], {})
+
+    assert raised.value is failure
 
 
 def test_missing_registration_fails_before_nested_writes() -> None:

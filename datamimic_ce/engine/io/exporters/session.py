@@ -31,7 +31,7 @@ class _ProductExporters(TypedDict):
 
 
 PreparedPage = tuple[
-    tuple[str, list[object]] | tuple[str, list[object], ExportMetadata], list[dict]
+    tuple[str, list[object]] | tuple[str, list[object], ExportMetadata], list[dict[str, object]]
 ]
 
 
@@ -74,7 +74,7 @@ class ExportSession:
         self,
         full_name: str,
         product_name: str,
-        xml_rows: list[dict],
+        xml_rows: list[dict[str, object]],
         metadata: ExportMetadata,
     ) -> PreparedPage:
         json_rows = [convert_xml_dict_to_json_dict(row) for row in xml_rows]
@@ -98,7 +98,7 @@ class ExportSession:
 
 def consume_exporters(
     json_product: tuple,
-    xml_rows: list[dict],
+    xml_rows: list[dict[str, object]],
     full_name: str,
     exporters_with_operation: list[tuple[Exporter, ExportOperation]],
     exporters_without_operation: list[Exporter],

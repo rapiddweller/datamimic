@@ -263,6 +263,7 @@ def test_io_native_payload_permissions_keep_exact_shapes_and_depths() -> None:
         ("ChunkSourceWindow.read_page", "return", "list[dict[str, object]]"),
         ("read_generate_database_source", "return", "list[dict[str, object]]"),
         ("read_reference_rows", "return", "list[dict[str, object]]"),
+        ("ExportSession.prepare_page", "xml_rows", "list[dict[str, object]]"),
     ]:
         selector = {
             "qualified_name": f"datamimic_ce.engine.io.api.{name}",
@@ -272,9 +273,28 @@ def test_io_native_payload_permissions_keep_exact_shapes_and_depths() -> None:
         }
         expected.extend([selector, {**selector, "container_depth": 2}])
 
-    assert len(rule["allowed_positions"]) == 22
+    assert len(rule["allowed_positions"]) == 24
     for selector in expected:
         assert selector in rule["allowed_positions"]
+
+
+def test_export_session_keeps_native_xml_rows_and_converted_scalar_rows() -> None:
+    from datamimic_ce.engine.io.contracts import ExportMetadata
+    from datamimic_ce.engine.io.exporters.session import PreparedPage, consume_exporters
+    from datamimic_ce.engine.runtime.tasks.generate import export_order
+
+    assert get_type_hints(io_api.ExportSession.prepare_page)["xml_rows"] == list[dict[str, object]]
+    assert get_type_hints(consume_exporters)["xml_rows"] == list[dict[str, object]]
+    assert PreparedPage == tuple[
+        tuple[str, list[object]] | tuple[str, list[object], ExportMetadata], list[dict[str, object]]
+    ]
+    assert get_type_hints(io_api.ExportSession.prepare_page)["return"] == PreparedPage
+    assert get_type_hints(io_api.ExportSession.prepare_page)["metadata"] is ExportMetadata
+    assert get_type_hints(io_api.ExportSession.dispatch_page)["prepared_page"] == PreparedPage
+    assert get_type_hints(export_order.export_product_by_page)["xml_result"] == dict[str, list[dict[str, object]]]
+    assert get_type_hints(export_order._export_nested_products_by_page)["xml_result"] == dict[
+        str, list[dict[str, object]]
+    ]
 
 
 def test_memstore_and_exporter_have_truthful_canonical_definitions() -> None:

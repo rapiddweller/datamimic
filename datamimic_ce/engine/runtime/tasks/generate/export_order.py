@@ -17,7 +17,7 @@ from datamimic_ce.engine.io.contracts import ExportMetadata
 
 def export_product_by_page(
     stmt: GenerateStatement,
-    xml_result: dict[str, list[dict]],
+    xml_result: dict[str, list[dict[str, object]]],
     export_session: ExportSession,
 ) -> None:
     """Dispatch a page and recurse in dependency-safe parent/child order."""
@@ -45,7 +45,7 @@ def export_product_by_page(
 
 def _export_nested_products_by_page(
     sub_stmt: object,
-    xml_result: dict[str, list[dict]],
+    xml_result: dict[str, list[dict[str, object]]],
     export_session: ExportSession,
 ) -> None:
     if isinstance(sub_stmt, GenerateStatement):

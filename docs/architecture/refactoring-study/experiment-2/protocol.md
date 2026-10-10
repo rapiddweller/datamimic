@@ -777,6 +777,29 @@ no machine amendment is emitted. CI-ONLY VERIFICATION: new-head checks pending.
 Full DSL/EE and automatic Finance weighting are not established. Evidence:
 `/tmp/ce-resume-20261010/next-slice-167/`.
 
+Step 168: [Amendment 183](amendment-183-native-xml-rows.md) types ExportSession's
+raw XML rows as native string-keyed dictionaries. Exactly five annotations in
+two production files change; function bodies, converted scalar rows, tuple
+forms and metadata remain unchanged. Two exact IO selectors permit only the
+`prepare_page.xml_rows` map and its native value at depth 2. Alias findings,
+Properties and Cache remain open; SQL155, EE, ownership, baseline and oracle
+are unchanged. Fresh ArchKeel 1.1.0 report: FAIL26 (27 → 26), 200 measured UNKNOWNs
+and 488/488 parsed files. Independent comparison preserves all 254 canonical
+UNKNOWNs and 24 unaffected findings exactly; two alias-internal bare-map findings
+become precise map findings. Two new allowance facts include one accepted opacity.
+LOCAL VERIFIED: native dispatch characterizations pass before source edits;
+both new guards fail, then 32 focused checks pass with identical test bytes.
+After one AST-identical assertion line wrap, 157 relevant tests pass with one
+expected failure. Definition 13 PASS via project venv after the Make target's
+uvx cache permission failure; package/changed-test Ruff and full MyPy PASS.
+Explicit-source type probes accept native rows and reject four incompatible
+caller cases. Bare internal producers and external typed callers remain
+unproven. Independent QA: 45 tests, native identity/error probes and 20 selector/
+alias counterexamples PASS. Native amendment validation retains the IO widening
+but exits 2 with the same 19 usage-UNKNOWNs and 16 baseline-new groups; no machine
+amendment is emitted. CI-ONLY VERIFICATION: new-head checks pending; no full DSL/EE
+acceptance. Evidence: `/tmp/ce-resume-20261010/next-slice-170/`.
+
 ## Agent separation
 
 - The implementation agent changes production code and targeted tests for one approved slice.
