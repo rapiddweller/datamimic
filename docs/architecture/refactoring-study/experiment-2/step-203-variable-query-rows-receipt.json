@@ -1,0 +1,128 @@
+{
+  "source_commit": "5c5989d37fcc02cb51e64a181638e38a9a77bdea",
+  "reviewed_candidate": "72ed6c33ef3b3c311cd24dc8bf89187c039d4a07",
+  "tracked_tree": "aa1126e78e5cfe4b7e25a7088bb2c93d0c8adaba",
+  "independent_verdict": "GO",
+  "source_file_hashes": {
+    "architecture-contract.json": "cdc85b37930a2ae9d26d9bb580b796c2ddc5f484984c9517fd3857c49eed18f1",
+    "datamimic_ce/engine/io/data_sources/variable.py": "51af47132c481cae7f1b4d32ae7e4ff1f30422f0acdf1e14ba985269f626165e",
+    "docs/architecture/refactoring-study/experiment-2/amendment-203-variable-query-rows.md": "40bef617788ce54e6e8fa40e07a5758d3df21e1d6eaf0d9ba2b848ab95e9ee9c",
+    "tests_ce/architecture/test_io_public_boundaries.py": "97a70927269f6146c9fd94766da56b423adcb8671dd024f0cdebf107ef5ec894",
+    "tests_ce/unit_tests/test_util/test_source_routing_order.py": "f9b743e3a549ec91f64f6536dd4506a40df25263ffd65da15f3966ae364a2c80"
+  },
+  "evidence_hashes": {
+    "/tmp/ce-step203-astra-next-slice.md": "3cf893fe38a15882406b1f24ddae0f5f7cfebb3eac62f5be1efe84cafb4bd436",
+    "/tmp/ce-step203-variable-query-plan.md": "dd5bb871affd8f1a12ba9a029cabf2cde5cf5e05c4d9733109fa0b19414469db",
+    "/tmp/ce-step203-implementation-report.md": "3e0d2c0b42895c3e6b2d775ed302ee4f7d9d2bc19badaa459ff631b546de90b0",
+    "/tmp/ce-step203-final-independent-review.md": "2767bc7e92339e7c44829d7d77432fa8c275f90b82a9dbd5dde923dd5038666b",
+    "/tmp/ce-step203-matcher-qa-report.md": "f6dab5746af3ba78a87cff4965f313122c7f2fdf16e20d3a4382f7f8da2083fb",
+    "/tmp/ce-step203-matcher-qa/raw-packet.json": "b553d26eace352fd8cf80b626cb5dad0698616e35eca2a796ac1d5f1005e7ad0",
+    "/tmp/ce-step203-matcher-qa/raw-receipts.json": "d3d0eb0f413cb0450b16a002abb508b088e773a3006295adff2e67aec55b45b0",
+    "/tmp/ce-step203-matcher-qa/verify.py": "bc99f2575d05f72d776d447401a70ccffadb7bf66777a390b36c303ee437a050",
+    "/tmp/ce-step203-root-report-comparison.json": "4451b8529b22c80ea33aa18ce98fa5b5785e0b72faeada20c9bdd4d0b37f5bf7",
+    "/tmp/ce-step203-baseline-architecture.json": "b22b27c69e0c243d94bfa5a422911f687337fa0bf82f402a99aa62f477b454a4",
+    "/tmp/ce-step203-candidate-architecture.json": "667dc5a6449c6d7a80f26854ddb8cb48134aa574ae865e36d7ddcfd41de62169",
+    "/tmp/ce-step203-receipts/architecture-definition.log": "65fb2f6ecd9c7b86816c6b73ea11effcceb76f572804655e27b7bdf5e87dd67c",
+    "/tmp/ce-step203-receipts/architecture-report.log": "06e4b3f3e223c986bde701afbf22a0f810a4fa9ba8a6afb2a4853f84858f3aa5",
+    "/tmp/ce-step203-receipts/behavior-fixture-initial.log": "a35d672654793495362ce437cef154ed6783447dcefb85d7735763d0ca68a67c",
+    "/tmp/ce-step203-receipts/behavior-old-source.log": "c23bd0bfc7e5cdea26faf71da2b84f2866ccf7ef0994846dee6de4a733ee9f39",
+    "/tmp/ce-step203-receipts/canonical-delta.log": "68a4c6e17db318fe1e5810c194c0ec385fa381da20141a521313b75a90a2f486",
+    "/tmp/ce-step203-receipts/diff-check.log": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "/tmp/ce-step203-receipts/executable-ast.log": "c6e9af4686cd2409624e8f5a6128b8df562fe9f2670926876774ca7bf068b20e",
+    "/tmp/ce-step203-receipts/focused-final.log": "9fa657f834c9f22b3475d410a3efc71a025e1df642908a5f1f054cb55729159d",
+    "/tmp/ce-step203-receipts/focused-green.log": "448c9efc866d543ab0ba0210407fed7bb5d82f5f825e55a5bb34fb0413f46693",
+    "/tmp/ce-step203-receipts/lint.log": "7e5b09fffa6bf87bbc9f62d88c9aa3ac11c3e5744b26341510464d5b40e76605",
+    "/tmp/ce-step203-receipts/normal-plugins.log": "a57ad6e1d822afec45dde9b0e746bfa2228b7ff216c1d296326e6fb51c8323ae",
+    "/tmp/ce-step203-receipts/selector-old-contract-red.log": "0058a76ce3722bea782980099963854f8b662d48432e86d56b6151eb6ea43f30",
+    "/tmp/ce-step203-receipts/signature-old-source-red.log": "d73340d400447a71a5c05e801d27ddb379c69f5c2e977809dd34fbb282c138c5",
+    "/tmp/ce-step203-receipts/test-unit.log": "b5d8acbedf95af3f5dbf033b9148552ca885f309ad4c5a511e55226a6d95cecf",
+    "/tmp/ce-step203-receipts/tests-lint.log": "82b3e6a6c090a57601d22943bd23fca9218d1031dbe5a7b754092f9a156b4f18",
+    "/tmp/ce-step203-receipts/typecheck.log": "d98f831c644386c6c2ecc50d87510f2a0cd66e575be912fc1e3e08246e1b88b4",
+    "/tmp/ce-step203-receipts/architecture-definition.exit": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa",
+    "/tmp/ce-step203-receipts/architecture-report.exit": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa",
+    "/tmp/ce-step203-receipts/behavior-old-source.exit": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa",
+    "/tmp/ce-step203-receipts/canonical-delta.exit": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa",
+    "/tmp/ce-step203-receipts/diff-check.exit": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa",
+    "/tmp/ce-step203-receipts/focused-final.exit": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa",
+    "/tmp/ce-step203-receipts/focused-green.exit": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa",
+    "/tmp/ce-step203-receipts/lint.exit": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa",
+    "/tmp/ce-step203-receipts/selector-old-contract-red.exit": "4355a46b19d348dc2f57c046f8ef63d4538ebb936000f3c9ee954a27460dd865",
+    "/tmp/ce-step203-receipts/signature-old-source-red.exit": "4355a46b19d348dc2f57c046f8ef63d4538ebb936000f3c9ee954a27460dd865",
+    "/tmp/ce-step203-receipts/test-unit.exit": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa",
+    "/tmp/ce-step203-receipts/tests-lint.exit": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa",
+    "/tmp/ce-step203-receipts/typecheck.exit": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa",
+    "/tmp/ce-step203-receipts/canonical-delta.json": "4db65e7e8fbc94a45265b5f4f292cbadeae09c8ad501aa375fef3f9a979a69a2",
+    "/tmp/ce-step203-receipts/committed-snapshot.json": "ab9887b46cce422255c7d270adbbccd5502ea373b99d944dc5d0e8605f31d0a2"
+  },
+  "change": "One query return annotation and two explicitly amended native-row selectors; executable source AST unchanged.",
+  "canonical_delta": {
+    "before": 13,
+    "after": 12,
+    "removed": {
+      "id": "VIO-e960f35246e5f66f",
+      "evidence_class": "VIOLATION",
+      "area": "type_architecture",
+      "kind": "boundary_types",
+      "title": "datamimic_ce.engine.io.api.read_variable_query returns Iterable[object] holding object instead of a typed model",
+      "subjects": [
+        "datamimic_ce.engine.io.api",
+        "datamimic_ce.engine.io.api.read_variable_query"
+      ],
+      "evidence_ids": [
+        "EVD-c8c71350a1e17f76"
+      ],
+      "rule_ids": [
+        "IO-API-TYPES"
+      ],
+      "fact_ids": [
+        "SYM-d3c0224bacc04ea8"
+      ],
+      "provenance": [],
+      "data": {
+        "annotation": "Iterable[object]",
+        "container_depth": 1,
+        "module": "datamimic_ce.engine.io.api",
+        "nested_annotation": "object",
+        "position": "return",
+        "qualified_name": "datamimic_ce.engine.io.api.read_variable_query",
+        "reason": "holding object instead of a typed model",
+        "source": "datamimic_ce.engine.io.api"
+      }
+    },
+    "remaining_violations_exact": true,
+    "canonical_unknowns": 254,
+    "scalar_unknowns": 200,
+    "unknown_records_exact": true,
+    "structural_equal": {
+      "dependency_edges": true,
+      "packages": true,
+      "modules": true,
+      "imports": true,
+      "cycles": true,
+      "coverage": true,
+      "path_observations": true,
+      "scope_observations": true
+    }
+  },
+  "local_verification": {
+    "old_source_behavior_passed": 80,
+    "focused_final_passed": 185,
+    "unit_passed": 2399,
+    "unit_skipped": 11,
+    "unit_xfailed": 1,
+    "unit_warnings": 2,
+    "definition_passed": 13,
+    "mypy_files": 488,
+    "ruff": "PASS",
+    "matcher_cli_report_cases": 20,
+    "matcher_cli_validate_cases": 20
+  },
+  "accepted_opacity": "Native row cell values at this exact return depth only.",
+  "limits": [
+    "External typed consumers/custom-client static row contracts UNKNOWN; scalar client runtime pass-through retained.",
+    "Mongo driver seam verified, live Mongo service parity unproven.",
+    "Machine-bound widening artifact not established.",
+    "Full DSL/EE/target acceptance remains open; ledger166 reviewed765 UNKNOWN unchanged."
+  ],
+  "ci_only_verification": "Pending for integrated delivery; no whole-goal completion."
+}

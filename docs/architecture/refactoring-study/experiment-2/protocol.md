@@ -1164,6 +1164,18 @@ The architecture still has 13 unchanged semantic findings and 200 scalar UNKNOWN
 No permission weakening or DSL-ledger promotion. Ray, arbitrary captures and the
 remaining CE/EE behavioral/target scope remain open; this is not `TARGET_REACHED`.
 
+## Step 203 — selector-backed variable row contract
+
+[Amendment 203](amendment-203-variable-query-rows.md) declares native query rows
+at one exact return boundary, with explicit cell opacity. The executable source
+is unchanged; custom scalar clients retain runtime identity and errors.
+[Evidence](step-203-variable-query-rows.md) records independent GO, 2399 unit
+passes, 185 final focused checks and 20 positive/negative checker fixtures.
+Fresh canonical comparison removes only this finding: **12 violations remain**,
+with all 254 canonical UNKNOWN records (200 scalar positions) unchanged.
+No ownership/dependency/baseline change or DSL-ledger promotion. External static
+contracts, full native type closure and the whole CE/EE target remain open.
+
 ## Agent separation
 
 - The implementation agent changes production code and targeted tests for one approved slice.
