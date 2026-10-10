@@ -43,7 +43,7 @@ StatementTransformer = Callable[[SetupStatement], None]
 class RunRequest:
     descriptor_path: Path
     task_id: str | None = None
-    platform_props: dict[str, str] | None = None
+    platform_props: dict[str, str] | dict[str, object] | None = None
     platform_configs: PlatformConfiguration | None = None
     test_mode: bool = False
     factory_config: FactoryConfig | None = None

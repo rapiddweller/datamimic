@@ -23,7 +23,7 @@ class DataMimic:
         self,
         descriptor_path: Path,
         task_id: str | None = None,
-        platform_props: dict[str, str] | None = None,
+        platform_props: dict[str, str] | dict[str, object] | None = None,
         platform_configs: dict | None = None,
         test_mode: bool = False,
         factory_config: FactoryConfig | None = None,

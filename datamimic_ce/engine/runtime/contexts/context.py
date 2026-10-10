@@ -195,7 +195,7 @@ class SetupContext(Context):
         default_line_separator: str | None,
         clients: dict[str, RegisteredClient] | None = None,
         data_source_len: dict[tuple[str | None, str | None], int] | None = None,
-        properties: dict[str, object] | None = None,
+        properties: dict[str, str] | dict[str, object] | None = None,
         namespace: dict[str, object] | None = None,
         global_variables: dict[str, object] | None = None,
         generators: dict | None = None,
@@ -217,7 +217,7 @@ class SetupContext(Context):
         # Per-statement distribution seed, computed once and reused across a statement's pages so
         # paginated sub-task selection (random / cumulated / unique) stays globally consistent.
         self._distribution_seed_cache: dict[str | None, int] = {}
-        self._properties: dict[str, object] = {} if properties is None else properties
+        self._properties: dict[str, str] | dict[str, object] = {} if properties is None else properties
         self._memstore_manager = memstore_manager
         self._namespace: dict[str, object] = {} if namespace is None else namespace
         self._accept_unknown_simple_types = True
@@ -474,11 +474,11 @@ class SetupContext(Context):
         return self._data_source_len
 
     @property
-    def properties(self) -> dict[str, object]:
+    def properties(self) -> dict[str, str] | dict[str, object]:
         return self._properties
 
     @properties.setter
-    def properties(self, value: dict[str, object]) -> None:
+    def properties(self, value: dict[str, str] | dict[str, object]) -> None:
         self._properties = value
 
     @property

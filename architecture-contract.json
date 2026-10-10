@@ -529,12 +529,13 @@
       "id": "DSL-API-TYPES",
       "kind": "boundary_types",
       "source": "datamimic_ce.engine.dsl.api",
-      "rationale": "The DSL facade exposes declared contract types. Four pre-validation operations preserve raw string-keyed attribute dictionaries at exact reviewed positions; constraint facts remain closed types. parse_properties returns an open map for arbitrary user keys. element_aliases returns a fresh alias-to-canonical string map from the owned built-in and extension registry; its keys are vocabulary data, not fixed record fields.",
+      "rationale": "The DSL facade exposes declared contract types. Four pre-validation operations preserve raw string-keyed attribute dictionaries at exact reviewed positions; constraint facts remain closed types. parse_properties returns an open map for arbitrary user keys. element_aliases returns a fresh alias-to-canonical string map from the owned built-in and extension registry; its keys are vocabulary data, not fixed record fields. DescriptorParser accepts exact mutable string or native Properties maps; only the native value leaf accepts opacity.",
       "provenance": [
         "docs/architecture/refactoring-study/experiment-2/target-architecture.md",
         "docs/architecture/refactoring-study/experiment-2/amendment-91.md",
         "docs/architecture/refactoring-study/experiment-2/amendment-77.md",
-        "docs/architecture/refactoring-study/experiment-2/amendment-174-dsl-alias-map.md"
+        "docs/architecture/refactoring-study/experiment-2/amendment-174-dsl-alias-map.md",
+        "docs/architecture/refactoring-study/experiment-2/amendment-187-properties-source-contract.md"
       ],
       "decided_by": "agent",
       "allowed_positions": [
@@ -653,6 +654,19 @@
           "position": "return",
           "field_path": "",
           "annotation": "dict[str, str]"
+        },
+        {
+          "qualified_name": "datamimic_ce.engine.dsl.api.DescriptorParser.parse",
+          "position": "properties",
+          "field_path": "",
+          "annotation": "dict[str, str] | dict[str, object] | None"
+        },
+        {
+          "qualified_name": "datamimic_ce.engine.dsl.api.DescriptorParser.parse",
+          "position": "properties",
+          "field_path": "",
+          "annotation": "dict[str, str] | dict[str, object] | None",
+          "container_depth": 1
         }
       ]
     },
@@ -868,7 +882,7 @@
       "id": "RUNTIME-API-TYPES",
       "kind": "boundary_types",
       "source": "datamimic_ce.engine.runtime.api",
-      "rationale": "Fixed requests and execution controls stay typed. Captures, descriptor properties, the client registry, native Python state and copy memo use exact reviewed positions. Runtime holds mutable user-keyed native properties at its SetupContext constructor; this permission does not prove the whole Properties source chain. Runtime owns native registries keyed by declared client IDs and by statement/source identities. Their exact RegisteredClient and tuple-to-count mapping contracts preserve mutable registry identity without fixed-field wrappers. Runtime installs and forwards Domain demographic records with the complete named-profile, typed-weight-map or None contract.",
+      "rationale": "Fixed requests and execution controls stay typed. Captures, descriptor properties, the client registry, native Python state and copy memo use exact reviewed positions. Runtime accepts mutable string-loader or native Properties maps at its request and SetupContext boundaries; only native values accept opacity. Runtime owns native registries keyed by declared client IDs and by statement/source identities. Their exact RegisteredClient and tuple-to-count mapping contracts preserve mutable registry identity without fixed-field wrappers. Runtime installs and forwards Domain demographic records with the complete named-profile, typed-weight-map or None contract.",
       "provenance": [
         "docs/architecture/refactoring-study/experiment-2/target-architecture.md",
         "docs/architecture/refactoring-study/experiment-2/amendment-70.md",
@@ -879,7 +893,8 @@
         "docs/architecture/refactoring-study/experiment-2/amendment-176-native-map-boundaries.md",
         "docs/architecture/refactoring-study/experiment-2/amendment-180-runtime-capture-selectors.md",
         "docs/architecture/refactoring-study/experiment-2/amendment-182-demographic-map-contracts.md",
-        "docs/architecture/refactoring-study/experiment-2/amendment-186-runtime-properties-policy.md"
+        "docs/architecture/refactoring-study/experiment-2/amendment-186-runtime-properties-policy.md",
+        "docs/architecture/refactoring-study/experiment-2/amendment-187-properties-source-contract.md"
       ],
       "decided_by": "agent",
       "allowed_positions": [
@@ -924,13 +939,27 @@
           "qualified_name": "datamimic_ce.engine.runtime.api.create_run_session",
           "position": "request",
           "field_path": "platform_props",
-          "annotation": "dict[str, str]"
+          "annotation": "dict[str, str] | dict[str, object] | None"
+        },
+        {
+          "qualified_name": "datamimic_ce.engine.runtime.api.create_run_session",
+          "position": "request",
+          "field_path": "platform_props",
+          "annotation": "dict[str, str] | dict[str, object] | None",
+          "container_depth": 1
         },
         {
           "qualified_name": "datamimic_ce.engine.runtime.api.run",
           "position": "request",
           "field_path": "platform_props",
-          "annotation": "dict[str, str]"
+          "annotation": "dict[str, str] | dict[str, object] | None"
+        },
+        {
+          "qualified_name": "datamimic_ce.engine.runtime.api.run",
+          "position": "request",
+          "field_path": "platform_props",
+          "annotation": "dict[str, str] | dict[str, object] | None",
+          "container_depth": 1
         },
         {
           "qualified_name": "datamimic_ce.engine.runtime.api.SetupContext.__init__",
@@ -1108,13 +1137,13 @@
           "qualified_name": "datamimic_ce.engine.runtime.api.SetupContext.__init__",
           "position": "properties",
           "field_path": "",
-          "annotation": "dict[str, object] | None"
+          "annotation": "dict[str, str] | dict[str, object] | None"
         },
         {
           "qualified_name": "datamimic_ce.engine.runtime.api.SetupContext.__init__",
           "position": "properties",
           "field_path": "",
-          "annotation": "dict[str, object] | None",
+          "annotation": "dict[str, str] | dict[str, object] | None",
           "container_depth": 1
         }
       ]

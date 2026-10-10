@@ -60,6 +60,7 @@ def test_runtime_property_contract_permissions_are_exact() -> None:
             entry["position"],
             entry["field_path"],
             entry["annotation"],
+            entry.get("container_depth"),
         )
         for entry in allowed_positions
         if (
@@ -83,18 +84,35 @@ def test_runtime_property_contract_permissions_are_exact() -> None:
             "return",
             "",
             "dict[str, str]",
+            None,
         ),
         (
             "datamimic_ce.engine.runtime.api.create_run_session",
             "request",
             "platform_props",
-            "dict[str, str]",
+            "dict[str, str] | dict[str, object] | None",
+            None,
+        ),
+        (
+            "datamimic_ce.engine.runtime.api.create_run_session",
+            "request",
+            "platform_props",
+            "dict[str, str] | dict[str, object] | None",
+            1,
         ),
         (
             "datamimic_ce.engine.runtime.api.run",
             "request",
             "platform_props",
-            "dict[str, str]",
+            "dict[str, str] | dict[str, object] | None",
+            None,
+        ),
+        (
+            "datamimic_ce.engine.runtime.api.run",
+            "request",
+            "platform_props",
+            "dict[str, str] | dict[str, object] | None",
+            1,
         ),
     }
     assert all("*" not in entry["qualified_name"] for entry in allowed_positions)
@@ -140,8 +158,6 @@ def test_runtime_scripting_state_permissions_are_exact() -> None:
         (api + "run", "return", "captured", "dict[str, list[object]] | None", None),
         (api + "run", "return", "captured", "dict[str, list[object]] | None", 2),
         (api + "load_descriptor_properties", "return", "", "dict[str, str]", None),
-        (api + "create_run_session", "request", "platform_props", "dict[str, str]", None),
-        (api + "run", "request", "platform_props", "dict[str, str]", None),
         (api + "SetupContext.__init__", "clients", "", "dict[str, RegisteredClient] | None", None),
         (api + "SetupContext.clients", "return", "", "dict[str, RegisteredClient]", None),
         (api + "SetupContext.clients", "value", "", "dict[str, RegisteredClient]", None),
@@ -155,8 +171,12 @@ def test_runtime_scripting_state_permissions_are_exact() -> None:
         (api + "SetupContext.data_source_len", "return", "", "dict[tuple[str | None, str | None], int]", None),
     }
     property_permissions = {
-        (api + "SetupContext.__init__", "properties", "", "dict[str, object] | None", None),
-        (api + "SetupContext.__init__", "properties", "", "dict[str, object] | None", 1),
+        (api + "SetupContext.__init__", "properties", "", "dict[str, str] | dict[str, object] | None", None),
+        (api + "SetupContext.__init__", "properties", "", "dict[str, str] | dict[str, object] | None", 1),
+        (api + "create_run_session", "request", "platform_props", "dict[str, str] | dict[str, object] | None", None),
+        (api + "create_run_session", "request", "platform_props", "dict[str, str] | dict[str, object] | None", 1),
+        (api + "run", "request", "platform_props", "dict[str, str] | dict[str, object] | None", None),
+        (api + "run", "request", "platform_props", "dict[str, str] | dict[str, object] | None", 1),
     }
     demographic_permissions = {
         (
@@ -196,11 +216,11 @@ def test_runtime_scripting_state_permissions_are_exact() -> None:
 
     assert len(scripting_permissions) == 22
     assert set(scripting_permissions) == map_permissions
-    assert len(permissions) == len(set(permissions)) == 37
+    assert len(permissions) == len(set(permissions)) == 39
     assert {
         permission for permission in permissions if permission in demographic_permissions
     } == demographic_permissions
-    assert len(remaining_permissions) == 12
+    assert len(remaining_permissions) == 14
     assert set(remaining_permissions) == legacy_permissions | property_permissions
     assert all("*" not in permission[0] and "*" not in permission[2] for permission in permissions)
 
@@ -214,7 +234,9 @@ def test_runtime_property_loader_has_native_return_annotation() -> None:
 
 
 def test_run_request_has_native_property_map_annotation() -> None:
-    assert get_type_hints(RunRequest)["platform_props"] == dict[str, str] | None
+    native_properties = dict[str, str] | dict[str, object] | None
+    assert get_type_hints(DataMimic.__init__)["platform_props"] == native_properties
+    assert get_type_hints(RunRequest)["platform_props"] == native_properties
 
 
 def test_run_request_has_integer_log_level_and_no_transport_args() -> None:
@@ -786,23 +808,23 @@ def test_runtime_session_uses_current_environment_for_parsing(tmp_path: Path, mo
 
 @pytest.mark.parametrize(
     "property_values",
-    [None, {}, {"tenant": "demo"}],
-    ids=["none", "empty", "populated"],
+    [None, {}, {"tenant": "demo"}, {"port": 47017, "nested": [1]}],
+    ids=["none", "empty", "populated", "native"],
 )
 def test_runtime_session_forwards_same_properties_to_parser_and_setup_task(
     tmp_path: Path,
     monkeypatch: pytest.MonkeyPatch,
-    property_values: dict[str, str] | None,
+    property_values: dict[str, str] | dict[str, object] | None,
 ) -> None:
     descriptor = tmp_path / "descriptor.xml"
     descriptor.write_text("<setup />", encoding="utf-8")
-    parsed_properties: list[dict[str, str] | None] = []
-    setup_properties: list[dict[str, str] | None] = []
+    parsed_properties: list[dict[str, str] | dict[str, object] | None] = []
+    setup_properties: list[dict[str, str] | dict[str, object] | None] = []
     original_parse = DescriptorParser.parse
 
     def parse_descriptor(
         path: Path,
-        properties: dict[str, str] | None,
+        properties: dict[str, str] | dict[str, object] | None,
         environment: Literal["development", "production"],
         *,
         profile_loader: object,
@@ -811,7 +833,7 @@ def test_runtime_session_forwards_same_properties_to_parser_and_setup_task(
         return original_parse(path, properties, environment, profile_loader=profile_loader)
 
     class SetupTaskStub:
-        def __init__(self, *, properties: dict[str, str] | None, **_kwargs: object) -> None:
+        def __init__(self, *, properties: dict[str, str] | dict[str, object] | None, **_kwargs: object) -> None:
             setup_properties.append(properties)
 
         def execute(self) -> None:

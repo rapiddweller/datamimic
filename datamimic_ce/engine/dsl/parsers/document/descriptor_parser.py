@@ -22,7 +22,7 @@ class DescriptorParser:
     @staticmethod
     def parse(
         descriptor_file_path: Path,
-        properties: dict | None,
+        properties: dict[str, str] | dict[str, object] | None,
         runtime_environment: Literal["development", "production"],
         *,
         profile_loader: ConnectionProfileLoader,

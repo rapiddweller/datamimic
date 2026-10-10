@@ -32,7 +32,7 @@ class StatementParser(ABC):
     def __init__(
         self,
         element: XmlElement,
-        env_properties: dict[str, str] | None,
+        env_properties: dict[str, str] | dict[str, object] | None,
         valid_element_tag: str,
     ):
         self._element: XmlElement = element
@@ -47,7 +47,7 @@ class StatementParser(ABC):
         self._validate_statement_name()
 
     @property
-    def properties(self) -> dict[str, str] | None:
+    def properties(self) -> dict[str, str] | dict[str, object] | None:
         return self._properties
 
     @property
@@ -146,7 +146,7 @@ class StatementParser(ABC):
                 )
 
     def validate_attributes(
-        self, model: type[BaseModelRelativeClass], fulfilled_credentials: dict | None = None
+        self, model: type[BaseModelRelativeClass], fulfilled_credentials: dict[str, object] | None = None
     ) -> BaseModelRelativeClass:
         """
         Validate XML model attributes

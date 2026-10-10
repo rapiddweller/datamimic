@@ -24,7 +24,7 @@ class SetupParser(StatementParser):
     def __init__(
         self,
         element: XmlElement,
-        properties: dict | None,
+        properties: dict[str, str] | dict[str, object] | None,
         runtime_environment: Literal["development", "production"],
     ):
         super().__init__(

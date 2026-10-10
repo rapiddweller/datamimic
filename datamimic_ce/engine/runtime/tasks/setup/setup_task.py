@@ -23,7 +23,7 @@ class SetupTask:
         setup_stmt: SetupStatement,
         memstore_manager: MemstoreManager | None,
         task_id: str,
-        properties: dict | None,
+        properties: dict[str, str] | dict[str, object] | None,
         test_mode: bool,
         test_result_storage: TestResultExporter,
         descriptor_dir: Path,

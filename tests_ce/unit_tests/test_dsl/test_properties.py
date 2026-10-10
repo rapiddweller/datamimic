@@ -1,5 +1,6 @@
+import json
 from pathlib import Path
-from typing import Literal
+from typing import Literal, get_type_hints
 from xml.etree import ElementTree as ET
 
 import pytest
@@ -8,9 +9,11 @@ from datamimic_ce.engine.dsl.api import Statement, parse_properties
 from datamimic_ce.engine.dsl.model.setup.include_model import IncludeModel
 from datamimic_ce.engine.dsl.parsers.base import dispatch
 from datamimic_ce.engine.dsl.parsers.base.client_config import fulfill_credentials
+from datamimic_ce.engine.dsl.parsers.base.statement_parser import StatementParser
 from datamimic_ce.engine.dsl.parsers.document.descriptor_parser import DescriptorParser
 from datamimic_ce.engine.dsl.parsers.generation.generate_parser import GenerateParser
 from datamimic_ce.engine.dsl.parsers.input import properties as property_input
+from datamimic_ce.engine.dsl.parsers.setup.setup_parser import SetupParser
 from datamimic_ce.engine.dsl.statements.setup.include_statement import IncludeStatement
 from datamimic_ce.engine.dsl.statements.setup.mongodb_statement import MongoDBStatement
 from datamimic_ce.engine.io.api import load_connection_profile
@@ -18,6 +21,7 @@ from datamimic_ce.engine.io.files.api import FileUtil
 from datamimic_ce.engine.runtime.contexts.context import SetupContext
 from datamimic_ce.engine.runtime.tasks.base.task import SetupSubTask
 from datamimic_ce.engine.runtime.tasks.setup.include_task import IncludeTask
+from datamimic_ce.engine.runtime.tasks.setup.setup_task import SetupTask
 
 
 def test_parse_properties_preserves_comment_and_value_semantics(tmp_path: Path) -> None:
@@ -46,6 +50,40 @@ def test_parse_properties_caches_lines_by_path_and_returns_fresh_dict(tmp_path: 
     assert first == {"key": "first"}
     assert second == {"key": "first"}
     assert first is not second
+
+
+def test_descriptor_properties_union_has_exact_boundary_permissions() -> None:
+    contract_path = Path(__file__).resolve().parents[3] / "architecture-contract.json"
+    contract = json.loads(contract_path.read_text(encoding="utf-8"))
+    rule = next(rule for rule in contract["rules"] if rule["id"] == "DSL-API-TYPES")
+    permissions = [
+        (entry["position"], entry["field_path"], entry["annotation"], entry.get("container_depth"))
+        for entry in rule["allowed_positions"]
+        if entry["qualified_name"] == "datamimic_ce.engine.dsl.api.DescriptorParser.parse"
+    ]
+
+    assert permissions == [
+        ("properties", "", "dict[str, str] | dict[str, object] | None", None),
+        ("properties", "", "dict[str, str] | dict[str, object] | None", 1),
+    ]
+
+
+def test_properties_source_chain_uses_the_same_mutable_union() -> None:
+    nullable = dict[str, str] | dict[str, object] | None
+    required = dict[str, str] | dict[str, object]
+
+    for entry in (
+        DescriptorParser.parse,
+        SetupParser.__init__,
+        StatementParser.__init__,
+        dispatch.parse_sub_elements,
+        dispatch.retrieve_element_attributes,
+        SetupTask.__init__,
+    ):
+        name = "env_properties" if entry is StatementParser.__init__ else "properties"
+        assert get_type_hints(entry)[name] == nullable
+    assert get_type_hints(StatementParser.properties.fget)["return"] == nullable
+    assert get_type_hints(dispatch.get_parser_by_element)["properties"] == required
 
 
 def test_direct_and_dotted_falsy_property_substitution_remains_asymmetric() -> None:
@@ -129,6 +167,31 @@ def test_credentials_merge_descriptor_then_truthy_platform_then_descriptor_profi
     assert credentials["password"] == "profile-password"
     assert platform_props["store.db.user"] == "profile-user"
     assert platform_props["store.db.password"] == "profile-password"
+
+
+def test_credentials_preserve_native_property_values_and_typed_output(tmp_path: Path) -> None:
+    native_option = object()
+    platform_props: dict[str, object] = {"store.db.port": 47017, "store.db.option": native_option}
+    descriptor_attr = {"id": "store", "port": "descriptor-port"}
+
+    credentials = fulfill_credentials(
+        descriptor_dir=tmp_path,
+        descriptor_attr=descriptor_attr,
+        env_props=platform_props,
+        system_type="db",
+        runtime_environment="production",
+        profile_loader=lambda _path, _environment: {"store.db.user": "profile-user"},
+    )
+
+    assert credentials["port"] == 47017
+    assert type(credentials["port"]) is int
+    assert credentials["option"] is native_option
+    assert credentials["user"] == "profile-user"
+    assert descriptor_attr == {"id": "store", "port": "descriptor-port"}
+    assert platform_props["store.db.user"] == "profile-user"
+    hints = get_type_hints(fulfill_credentials)
+    assert hints["env_props"] == dict[str, str] | dict[str, object] | None
+    assert hints["return"] == dict[str, object]
 
 
 def test_empty_platform_properties_do_not_alias_or_mutate_when_profile_is_loaded(tmp_path: Path) -> None:

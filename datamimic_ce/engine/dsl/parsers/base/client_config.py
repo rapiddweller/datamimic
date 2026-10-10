@@ -1,6 +1,5 @@
 """Credential attribute merging for database and MongoDB descriptor parsers."""
 
-import copy
 import logging
 from collections.abc import Callable
 from pathlib import Path
@@ -16,11 +15,11 @@ ConnectionProfileLoader = Callable[[Path, str], dict[str, str]]
 def fulfill_credentials(
     descriptor_dir: Path,
     descriptor_attr: dict[str, str],
-    env_props: dict[str, str] | None,
+    env_props: dict[str, str] | dict[str, object] | None,
     system_type: str,
     runtime_environment: Literal["development", "production"],
     profile_loader: ConnectionProfileLoader,
-) -> dict[str, str]:
+) -> dict[str, object]:
     environment = (
         descriptor_attr.get(ATTR_ENVIRONMENT)
         or ("local" if runtime_environment == "development" else None)
@@ -38,7 +37,7 @@ def fulfill_credentials(
     if environment and system:
         conf_props.update(profile_loader(descriptor_dir, environment))
 
-    credentials = copy.deepcopy(descriptor_attr)
+    credentials: dict[str, object] = dict(descriptor_attr)
     for attr_key, attr_value in conf_props.items():
         if attr_key.startswith(f"{system}.{system_type}.") and attr_value is not None:
             attr_name = "".join(attr_key.split(".")[2:])

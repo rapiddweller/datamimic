@@ -108,9 +108,10 @@ def test_setup_context_deepcopy_propagates_noncopyable_property_error() -> None:
 
 
 def test_setup_context_properties_annotations_describe_mutable_object_mapping() -> None:
-    assert get_type_hints(SetupContext.__init__).get("properties") == dict[str, object] | None
-    assert get_type_hints(SetupContext.properties.fget).get("return") == dict[str, object]
-    assert get_type_hints(SetupContext.properties.fset).get("value") == dict[str, object]
+    native_properties = dict[str, str] | dict[str, object]
+    assert get_type_hints(SetupContext.__init__).get("properties") == native_properties | None
+    assert get_type_hints(SetupContext.properties.fget).get("return") == native_properties
+    assert get_type_hints(SetupContext.properties.fset).get("value") == native_properties
     assert get_type_hints(SetupContext.properties.fset).get("return") is type(None)
 
     tree = ast.parse(textwrap.dedent(inspect.getsource(SetupContext.__init__)))
@@ -123,7 +124,7 @@ def test_setup_context_properties_annotations_describe_mutable_object_mapping() 
         and node.target.value.id == "self"
         and node.target.attr == "_properties"
     )
-    assert ast.unparse(property_assignment.annotation) == "dict[str, object]"
+    assert ast.unparse(property_assignment.annotation) == "dict[str, str] | dict[str, object]"
 
 
 @pytest.mark.parametrize("properties", [None, {}])

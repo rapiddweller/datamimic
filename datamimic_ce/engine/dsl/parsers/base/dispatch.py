@@ -65,7 +65,7 @@ def get_valid_sub_elements_set_by_tag(ele_tag: str) -> set[str] | None:
 
 def get_parser_by_element(
     element: XmlElement,
-    properties: dict[str, str],
+    properties: dict[str, str] | dict[str, object],
     runtime_environment: Literal["development", "production"] = "production",
 ) -> _Parser:
     from datamimic_ce.engine.dsl.model.registry import canonical_tag, get_element_definition
@@ -87,7 +87,7 @@ def get_parser_by_element(
 def parse_sub_elements(
     descriptor_dir: Path,
     element: XmlElement,
-    properties: dict[str, str] | None,
+    properties: dict[str, str] | dict[str, object] | None,
     parent_stmt: Statement,
     runtime_environment: Literal["development", "production"] = "production",
     *,
@@ -173,7 +173,9 @@ def parse_sub_elements(
     return result
 
 
-def retrieve_element_attributes(attributes: dict[str, object], properties: dict[str, str] | None) -> dict[str, object]:
+def retrieve_element_attributes(
+    attributes: dict[str, object], properties: dict[str, str] | dict[str, object] | None
+) -> dict[str, object]:
     if properties is None:
         return attributes
 
