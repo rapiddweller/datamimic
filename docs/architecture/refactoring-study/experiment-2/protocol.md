@@ -1089,6 +1089,20 @@ CI at `b8e7342f` completed with 50 successes, four architecture-job failures
 and four skips; both external-service jobs passed. The evidence-only successor
 requires its own CI. Successful outputs do not accept client ownership.
 
+Step 201: [Captured clients](step-201-captured-client-compatibility.md) records
+eight original/current PostgreSQL/Mongo serial and parallel runs. Four pairs
+match exact typed outputs/counts; serial aliases match, while parallel default
+and closure share a client distinct from the registered namespace client.
+This observable identity constrains reconstruction; blanket rejection or graph
+merging is not accepted. Original Mongo has two main wrapper constructors versus
+current one, so complete lifecycle parity is not claimed. Client-free transport
+remains unmet; no source, target permission or corpus coverage changes.
+
+CI at `ed95b22d` completed with 48 successes, five failures and five skips.
+Four failures are architecture jobs; one Mongo worker source-read timeout is
+recorded in CE #281 with a passing same-head service control. CE #290 separately
+records the pre-existing Mongo integer-count API mismatch.
+
 CI at `f1308a30` completed with 50 successes, four architecture-job failures
 and four skips. Both external-service jobs passed. The evidence-only successor
 still requires its own CI; no whole-experiment acceptance follows.
