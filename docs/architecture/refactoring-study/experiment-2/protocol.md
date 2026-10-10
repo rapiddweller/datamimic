@@ -976,6 +976,15 @@ logger/task fields. Whole timing-message masking is insufficient alone.
 Standalone XML, frozen-oracle parity, full transient effects and EE remain
 UNKNOWN.
 
+CI at `5c218f8f` remains red: four architecture jobs and one external-service
+job failed. The latter has two Mongo worker server-selection timeouts
+(162 passed, four skipped); the parallel same-head job passed all 164 tests.
+Mongo accepted other connections and health checks during both waits. The
+underlying cause remains UNKNOWN; no timeout, retry or production change is
+justified by these observations. [Failed job](https://github.com/rapiddweller/datamimic/actions/runs/38047800676/job/114200974166)
+and [same-head control](https://github.com/rapiddweller/datamimic/actions/runs/38047797544)
+remain separate from the local owner-profile evidence.
+
 The cached XML file-row path now has two [behavior tests](../../../../tests_ce/unit_tests/test_io_files.py):
 a document with an integer key and native value retains both identities, while
 a cached non-dict root raises the existing error. This characterizes the
