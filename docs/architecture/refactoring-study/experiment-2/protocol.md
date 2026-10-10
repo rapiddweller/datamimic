@@ -1190,6 +1190,17 @@ numeric-type test; [CE #293](https://github.com/rapiddweller/datamimic/issues/29
 tracks `None:` in model-level diagnostics. No production or contract change;
 12 semantic findings and 254 canonical UNKNOWN records remain.
 
+## Step 205 — refresh current UNKNOWN dispositions
+
+[Current assessment](step-205-current-unknowns.md) and
+[ID inventory](step-205-unknown-disposition.json) retain all 254 canonical
+UNKNOWNs/200 scalar positions. Independent QA and Astra replace stale Mongo,
+Properties, Memstore and surface-identity assessments; six missing-annotation
+positions remain. Categories route review, not blanket exemptions.
+[ArchKeel #443](https://github.com/rapiddweller/archkeel/issues/443) is the
+separate native-Iterable prerequisite. No CE source/contract/gate change;
+12 violations and full CE/EE acceptance remain open.
+
 ## Agent separation
 
 - The implementation agent changes production code and targeted tests for one approved slice.

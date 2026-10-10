@@ -1,0 +1,558 @@
+{
+  "verdict": "CURRENT_UNKNOWN_DISPOSITIONS_RECONCILED_UNKNOWN_RETAINED",
+  "head": "3484b3186f3be2c35415d8b49f9079d688406b43",
+  "source": {
+    "dirty": true,
+    "git_head": "3484b3186f3be2c35415d8b49f9079d688406b43",
+    "scope": [
+      "datamimic_ce/**/*.py"
+    ],
+    "source_digest": "92b306def9e3a0f6b5c4861c0bb02f8757c1f42a5f05d1d85c0bf70e03236844"
+  },
+  "analyzer": {
+    "code_digest": "52d31c8f54409d5319f7984928d1635296f3f34ae941123c0c27b035e0bde2cf",
+    "name": "archkeel-python-analyzer",
+    "version": "0.74.0"
+  },
+  "published_version": "1.1.1",
+  "counts": {
+    "canonical_records": 254,
+    "measured_unknown_positions": 200,
+    "measured_by_rule": {
+      "DSL-API-TYPES": 70,
+      "IO-API-TYPES": 31,
+      "DOMAIN-API-TYPES": 46,
+      "RUNTIME-API-TYPES": 49
+    },
+    "by_kind": {
+      "api_surface_limit": 4,
+      "boundary_type_position": 234,
+      "boundary_type_route": 8,
+      "boundary_type_limit": 6,
+      "context_alias_limit": 1,
+      "dynamic_call_limit": 1
+    },
+    "boundary_position_by_reason": {
+      "external_type": 46,
+      "inherited_surface": 135,
+      "generic": 11,
+      "ambiguous_facade": 8,
+      "other": 15,
+      "forward_reference": 5,
+      "dotted_name": 8,
+      "missing_annotation": 6
+    },
+    "by_classification": {
+      "decorated_class_surface_limit": 3,
+      "external_json_alias_limit": 1,
+      "stdlib_type_limit": 39,
+      "property_binding_limit": 69,
+      "generic_type_limit": 11,
+      "inherited_method_inventory_limit": 66,
+      "overload_route_limit": 9,
+      "type_variable_limit": 14,
+      "forward_reference_limit": 5,
+      "stdlib_dotted_type_limit": 6,
+      "source_contract_obligation": 6,
+      "external_or_validated_alias_limit": 7,
+      "external_dotted_type_limit": 2,
+      "callable_alias_limit": 1,
+      "constant_reexport_route_limit": 7,
+      "aggregate_receipt": 6,
+      "global_observation_limit": 2
+    }
+  },
+  "source_obligations": [
+    {
+      "owner": "Statement.get_parent_full_name",
+      "file": "datamimic_ce/engine/dsl/statements/base/statement.py",
+      "line": 47,
+      "signature": "def get_parent_full_name(self):",
+      "return_annotation": null,
+      "client_annotation": null,
+      "file_sha256": "f7037ed25bebc436b404aef9db223e4dad55f9f7b19eb51cfeefb572185ebf2f",
+      "status": "source_contract_obligation_retained"
+    },
+    {
+      "owner": "MongoDBConnectionConfig.get_connection_config",
+      "file": "datamimic_ce/engine/io/connection_config/mongodb_connection_config.py",
+      "line": 36,
+      "signature": "def get_connection_config(self) -> MongoDBConnectionValues:",
+      "return_annotation": "MongoDBConnectionValues",
+      "client_annotation": null,
+      "file_sha256": "9a240c7131c7f4b2d736611f232f60e2c8d54f1928578bbdf04917b7ce24bef1",
+      "status": "annotation_added_native_dict_preserved"
+    },
+    {
+      "owner": "RdbmsConnectionConfig.get_connection_config",
+      "file": "datamimic_ce/engine/io/connection_config/rdbms_connection_config.py",
+      "line": 29,
+      "signature": "def get_connection_config(self):",
+      "return_annotation": null,
+      "client_annotation": null,
+      "file_sha256": "e67831e38c4721f3047651975c9b356f341c900125e3de07d86614a03a2c3d86",
+      "status": "source_contract_obligation_retained"
+    },
+    {
+      "owner": "BaseLiteralGenerator.generate",
+      "file": "datamimic_ce/domains/domain_core/base_literal_generator.py",
+      "line": 45,
+      "signature": "def generate(self):",
+      "return_annotation": null,
+      "client_annotation": null,
+      "file_sha256": "de61d26fa301fbf8d9f4652530bf8c5d4410eb253ff0aae14409f2f98269e708",
+      "status": "source_contract_obligation_retained"
+    },
+    {
+      "owner": "Memstore.get_all_data_by_type",
+      "file": "datamimic_ce/engine/io/memstore.py",
+      "line": 24,
+      "signature": "def get_all_data_by_type(self, product_type: str):",
+      "return_annotation": null,
+      "client_annotation": null,
+      "file_sha256": "24a1adc3c85959ddd04e9dbafc1489b37a160e42115c24a7a4053849fd3fb711",
+      "status": "source_contract_obligation_retained"
+    },
+    {
+      "owner": "Memstore.get_data_by_type",
+      "file": "datamimic_ce/engine/io/memstore.py",
+      "line": 32,
+      "signature": "def get_data_by_type(self, product_type: str | None):",
+      "return_annotation": null,
+      "client_annotation": null,
+      "file_sha256": "24a1adc3c85959ddd04e9dbafc1489b37a160e42115c24a7a4053849fd3fb711",
+      "status": "source_contract_obligation_retained"
+    },
+    {
+      "owner": "Memstore.removeNotExistingIds",
+      "file": "datamimic_ce/engine/io/memstore.py",
+      "line": 81,
+      "signature": "def removeNotExistingIds(self, product_type: str, id_col: str, ref_type: str, client) -> None:",
+      "return_annotation": "None",
+      "client_annotation": null,
+      "file_sha256": "24a1adc3c85959ddd04e9dbafc1489b37a160e42115c24a7a4053849fd3fb711",
+      "status": "source_contract_obligation_retained"
+    }
+  ],
+  "source_limits": [
+    "Source bodies and signatures inspected for the seven prior obligations; no owner/test rerun.",
+    "Other groups retain prior bounded disposition, with complete packet/evidence drift inspected; inherited/property/callable records may still conceal source type debt.",
+    "Historical19 interface.usage_unknown diagnostics are separate validation evidence on published1.1.0, not current canonical UNKNOWNs or scalar positions.",
+    "No whole-source audit, runtime/CI verification, contract/oracle/baseline/source changes."
+  ],
+  "historical_usage_unknown": {
+    "report": "/private/tmp/ce-resume-20261010/after-dto-1.1.0/architecture.json",
+    "source": {
+      "dirty": true,
+      "git_head": "cb1a09e982361dd9a14122952a4682b63ec2f273",
+      "scope": [
+        "datamimic_ce/**/*.py"
+      ],
+      "source_digest": "594fa2d2f0f4ea021b8e8553a41d4d22677e041f18428c9bfbd299e8cedb52d4"
+    },
+    "diagnostic_count": 19,
+    "distinct_models": 15,
+    "status": "OPEN_HISTORICAL_SEPARATE_NOT_CURRENT_REVALIDATED",
+    "mapping_asserted": true
+  },
+  "known_analyzer_issue_ids": {
+    "440": [
+      "UNKNOWN-BOUNDARY-TYPE-POSITION-1084f9474384f587",
+      "UNKNOWN-BOUNDARY-TYPE-POSITION-2db4d1593ed6871e",
+      "UNKNOWN-BOUNDARY-TYPE-POSITION-6ba8d0936427aa9d",
+      "UNKNOWN-BOUNDARY-TYPE-POSITION-6bba609e8a9e355f",
+      "UNKNOWN-BOUNDARY-TYPE-POSITION-6dcb5b1d7b6315e1",
+      "UNKNOWN-BOUNDARY-TYPE-POSITION-7da2ae0b1c2c180f",
+      "UNKNOWN-BOUNDARY-TYPE-POSITION-8e686f1cfa7c1053",
+      "UNKNOWN-BOUNDARY-TYPE-POSITION-cff7c484ef08cc6b",
+      "UNKNOWN-BOUNDARY-TYPE-ROUTE-674b0fbacf1b7def"
+    ],
+    "441": [
+      "UNKNOWN-BOUNDARY-TYPE-POSITION-ddb91f6ccc73db50"
+    ]
+  },
+  "assessment_status": "ALL_REMAIN_UNKNOWN; categories are review routes, not blanket checker defects or exemptions.",
+  "reconciliation": {
+    "common_ids": 252,
+    "removed_ids": [
+      "UNKNOWN-API-SURFACE-05138fa7cdc5743c",
+      "UNKNOWN-BOUNDARY-TYPE-POSITION-26a937c9847ff5d9"
+    ],
+    "added_ids": [
+      "UNKNOWN-API-SURFACE-3efc316c7d54c515",
+      "UNKNOWN-BOUNDARY-TYPE-POSITION-4d4f7de8b4c37539"
+    ],
+    "common_complete_record_changed": 71,
+    "common_complete_record_unchanged": 181,
+    "common_semantic_record_changed": 5,
+    "common_linked_evidence_changed": 68,
+    "meaningful_linked_excerpt_or_file_set_changed": 7,
+    "current_linked_excerpt_verified": 196
+  },
+  "disposition_ids": {
+    "aggregate_receipt": [
+      "UNKNOWN-BOUNDARY-TYPES-740afb90c4487173",
+      "UNKNOWN-BOUNDARY-TYPES-7bd62f12a70f63ec",
+      "UNKNOWN-BOUNDARY-TYPES-db0782b9873b6c83",
+      "UNKNOWN-BOUNDARY-TYPES-e238f6c49f5c3de8",
+      "UNKNOWN-BOUNDARY-TYPES-e5f8a7020449fcee",
+      "UNKNOWN-BOUNDARY-TYPES-f445331027bfe957"
+    ],
+    "callable_alias_limit": [
+      "UNKNOWN-BOUNDARY-TYPE-POSITION-9d9f68655b08ff1b"
+    ],
+    "constant_reexport_route_limit": [
+      "UNKNOWN-BOUNDARY-TYPE-ROUTE-1a4d17fe20465c1a",
+      "UNKNOWN-BOUNDARY-TYPE-ROUTE-2a6199a74c496fa7",
+      "UNKNOWN-BOUNDARY-TYPE-ROUTE-3d80f20158bac2a2",
+      "UNKNOWN-BOUNDARY-TYPE-ROUTE-5ee0032b54ab58aa",
+      "UNKNOWN-BOUNDARY-TYPE-ROUTE-7e8b9de3d7939bff",
+      "UNKNOWN-BOUNDARY-TYPE-ROUTE-7ed461ea8f5d4081",
+      "UNKNOWN-BOUNDARY-TYPE-ROUTE-fe933666c3683722"
+    ],
+    "decorated_class_surface_limit": [
+      "UNKNOWN-API-SURFACE-097fe5b868784c82",
+      "UNKNOWN-API-SURFACE-3efc316c7d54c515",
+      "UNKNOWN-API-SURFACE-bf7aa0d3ee853572"
+    ],
+    "external_dotted_type_limit": [
+      "UNKNOWN-BOUNDARY-TYPE-POSITION-54926b283c960565",
+      "UNKNOWN-BOUNDARY-TYPE-POSITION-db9b600ef5817326"
+    ],
+    "external_json_alias_limit": [
+      "UNKNOWN-API-SURFACE-bd0c0339fa4b6c1e"
+    ],
+    "external_or_validated_alias_limit": [
+      "UNKNOWN-BOUNDARY-TYPE-POSITION-43d5ebe480180485",
+      "UNKNOWN-BOUNDARY-TYPE-POSITION-77aee7c3ac0929f8",
+      "UNKNOWN-BOUNDARY-TYPE-POSITION-7888c0051ab4b603",
+      "UNKNOWN-BOUNDARY-TYPE-POSITION-886a2527bb45e6e6",
+      "UNKNOWN-BOUNDARY-TYPE-POSITION-99cb626b5c57b1c1",
+      "UNKNOWN-BOUNDARY-TYPE-POSITION-ad5b516a7654fc7b",
+      "UNKNOWN-BOUNDARY-TYPE-POSITION-c2124a0c8f61643e"
+    ],
+    "forward_reference_limit": [
+      "UNKNOWN-BOUNDARY-TYPE-POSITION-1339d415e4c3daa5",
+      "UNKNOWN-BOUNDARY-TYPE-POSITION-223b55349d0f5075",
+      "UNKNOWN-BOUNDARY-TYPE-POSITION-9d8fb1e4e907c263",
+      "UNKNOWN-BOUNDARY-TYPE-POSITION-aab3569db0191341",
+      "UNKNOWN-BOUNDARY-TYPE-POSITION-ddb91f6ccc73db50"
+    ],
+    "generic_type_limit": [
+      "UNKNOWN-BOUNDARY-TYPE-POSITION-07f51ae306c82153",
+      "UNKNOWN-BOUNDARY-TYPE-POSITION-098a98111caf9386",
+      "UNKNOWN-BOUNDARY-TYPE-POSITION-2a1949a2e0945d08",
+      "UNKNOWN-BOUNDARY-TYPE-POSITION-383e75cfd54fa20d",
+      "UNKNOWN-BOUNDARY-TYPE-POSITION-6125d058360e31fc",
+      "UNKNOWN-BOUNDARY-TYPE-POSITION-7ef35f25bc8ab438",
+      "UNKNOWN-BOUNDARY-TYPE-POSITION-c12b1a01bba96cdb",
+      "UNKNOWN-BOUNDARY-TYPE-POSITION-cb2e825b374b2159",
+      "UNKNOWN-BOUNDARY-TYPE-POSITION-d86e6844126ff8f2",
+      "UNKNOWN-BOUNDARY-TYPE-POSITION-efbecfb04b53346a",
+      "UNKNOWN-BOUNDARY-TYPE-POSITION-f618985553362946"
+    ],
+    "global_observation_limit": [
+      "UNKNOWN-CONTEXT-DATAFLOW",
+      "UNKNOWN-PYTHON-DYNAMIC-CALLS"
+    ],
+    "inherited_method_inventory_limit": [
+      "UNKNOWN-BOUNDARY-TYPE-POSITION-09789f436c1bba46",
+      "UNKNOWN-BOUNDARY-TYPE-POSITION-0f10b14c3f59f2b7",
+      "UNKNOWN-BOUNDARY-TYPE-POSITION-11347f0958e2d8ab",
+      "UNKNOWN-BOUNDARY-TYPE-POSITION-1561fcdb411e6cc7",
+      "UNKNOWN-BOUNDARY-TYPE-POSITION-16a9218a38f21e23",
+      "UNKNOWN-BOUNDARY-TYPE-POSITION-171a349dc482b166",
+      "UNKNOWN-BOUNDARY-TYPE-POSITION-17c5e4b2b9054b2d",
+      "UNKNOWN-BOUNDARY-TYPE-POSITION-19f5a705bdf18ec4",
+      "UNKNOWN-BOUNDARY-TYPE-POSITION-1afcd0d8e4222e10",
+      "UNKNOWN-BOUNDARY-TYPE-POSITION-1dd7dbbad671215d",
+      "UNKNOWN-BOUNDARY-TYPE-POSITION-1fcccee1b4df192e",
+      "UNKNOWN-BOUNDARY-TYPE-POSITION-218e1e783ec24c13",
+      "UNKNOWN-BOUNDARY-TYPE-POSITION-23cdb8304b276110",
+      "UNKNOWN-BOUNDARY-TYPE-POSITION-271b130b70b58268",
+      "UNKNOWN-BOUNDARY-TYPE-POSITION-3096245875bdb874",
+      "UNKNOWN-BOUNDARY-TYPE-POSITION-33fab1fe35773ecb",
+      "UNKNOWN-BOUNDARY-TYPE-POSITION-37778a951d317c8b",
+      "UNKNOWN-BOUNDARY-TYPE-POSITION-494a369cf9d50403",
+      "UNKNOWN-BOUNDARY-TYPE-POSITION-4a99961c530e4651",
+      "UNKNOWN-BOUNDARY-TYPE-POSITION-4c4904a69431de91",
+      "UNKNOWN-BOUNDARY-TYPE-POSITION-4d4f7de8b4c37539",
+      "UNKNOWN-BOUNDARY-TYPE-POSITION-4eb13dcdbf4ce815",
+      "UNKNOWN-BOUNDARY-TYPE-POSITION-50106a05d3babcc2",
+      "UNKNOWN-BOUNDARY-TYPE-POSITION-58091d5f5a3bca98",
+      "UNKNOWN-BOUNDARY-TYPE-POSITION-5a07dc9662bc4467",
+      "UNKNOWN-BOUNDARY-TYPE-POSITION-5c065b92f226a122",
+      "UNKNOWN-BOUNDARY-TYPE-POSITION-5c0d945a370110e5",
+      "UNKNOWN-BOUNDARY-TYPE-POSITION-5c67d311696685a8",
+      "UNKNOWN-BOUNDARY-TYPE-POSITION-64d6b1e7e96a39a5",
+      "UNKNOWN-BOUNDARY-TYPE-POSITION-6b1f58f7e5aae8da",
+      "UNKNOWN-BOUNDARY-TYPE-POSITION-74d167260a024cef",
+      "UNKNOWN-BOUNDARY-TYPE-POSITION-78f4d68c8b96a636",
+      "UNKNOWN-BOUNDARY-TYPE-POSITION-7f2a7f0836095be4",
+      "UNKNOWN-BOUNDARY-TYPE-POSITION-834e718a57e2474d",
+      "UNKNOWN-BOUNDARY-TYPE-POSITION-8924c8ea808d8b6f",
+      "UNKNOWN-BOUNDARY-TYPE-POSITION-8ae58c1ea1ede8d8",
+      "UNKNOWN-BOUNDARY-TYPE-POSITION-8fdd68d8995ada8f",
+      "UNKNOWN-BOUNDARY-TYPE-POSITION-9015ea57a7a25de1",
+      "UNKNOWN-BOUNDARY-TYPE-POSITION-93e64930604dfdcb",
+      "UNKNOWN-BOUNDARY-TYPE-POSITION-956133298d90ca41",
+      "UNKNOWN-BOUNDARY-TYPE-POSITION-962e6731e5b18646",
+      "UNKNOWN-BOUNDARY-TYPE-POSITION-9647c653757ac98e",
+      "UNKNOWN-BOUNDARY-TYPE-POSITION-a145d91796e79fbd",
+      "UNKNOWN-BOUNDARY-TYPE-POSITION-a1bffe4d938fcb0b",
+      "UNKNOWN-BOUNDARY-TYPE-POSITION-a5ee7f07955ee826",
+      "UNKNOWN-BOUNDARY-TYPE-POSITION-a777159f0969d61b",
+      "UNKNOWN-BOUNDARY-TYPE-POSITION-ae07a9c5bb1d78b9",
+      "UNKNOWN-BOUNDARY-TYPE-POSITION-b3a57bf339ee95c5",
+      "UNKNOWN-BOUNDARY-TYPE-POSITION-b3aa5aa3ef833a94",
+      "UNKNOWN-BOUNDARY-TYPE-POSITION-b6ed63a8046f09fe",
+      "UNKNOWN-BOUNDARY-TYPE-POSITION-b8180c12b12060ea",
+      "UNKNOWN-BOUNDARY-TYPE-POSITION-bec12f36baf3e51c",
+      "UNKNOWN-BOUNDARY-TYPE-POSITION-bf4c0eb413c5c4e1",
+      "UNKNOWN-BOUNDARY-TYPE-POSITION-d44a29d75ba44724",
+      "UNKNOWN-BOUNDARY-TYPE-POSITION-d499fd3012d253be",
+      "UNKNOWN-BOUNDARY-TYPE-POSITION-dbcb0d5db3783878",
+      "UNKNOWN-BOUNDARY-TYPE-POSITION-dca24cf1bc9da58d",
+      "UNKNOWN-BOUNDARY-TYPE-POSITION-e74eee4992a2bee4",
+      "UNKNOWN-BOUNDARY-TYPE-POSITION-ed637defd3f8f3a1",
+      "UNKNOWN-BOUNDARY-TYPE-POSITION-ef755d6dd1187ff1",
+      "UNKNOWN-BOUNDARY-TYPE-POSITION-f01dee990b605772",
+      "UNKNOWN-BOUNDARY-TYPE-POSITION-f5054d6fb273a49d",
+      "UNKNOWN-BOUNDARY-TYPE-POSITION-f9a95b4c21fea4e0",
+      "UNKNOWN-BOUNDARY-TYPE-POSITION-fc7197f8e2afb597",
+      "UNKNOWN-BOUNDARY-TYPE-POSITION-fe68122f2ce93900",
+      "UNKNOWN-BOUNDARY-TYPE-POSITION-ffe02ed6aa1c3c57"
+    ],
+    "overload_route_limit": [
+      "UNKNOWN-BOUNDARY-TYPE-POSITION-1084f9474384f587",
+      "UNKNOWN-BOUNDARY-TYPE-POSITION-2db4d1593ed6871e",
+      "UNKNOWN-BOUNDARY-TYPE-POSITION-6ba8d0936427aa9d",
+      "UNKNOWN-BOUNDARY-TYPE-POSITION-6bba609e8a9e355f",
+      "UNKNOWN-BOUNDARY-TYPE-POSITION-6dcb5b1d7b6315e1",
+      "UNKNOWN-BOUNDARY-TYPE-POSITION-7da2ae0b1c2c180f",
+      "UNKNOWN-BOUNDARY-TYPE-POSITION-8e686f1cfa7c1053",
+      "UNKNOWN-BOUNDARY-TYPE-POSITION-cff7c484ef08cc6b",
+      "UNKNOWN-BOUNDARY-TYPE-ROUTE-674b0fbacf1b7def"
+    ],
+    "property_binding_limit": [
+      "UNKNOWN-BOUNDARY-TYPE-POSITION-031a3e60166f2c40",
+      "UNKNOWN-BOUNDARY-TYPE-POSITION-072a61056b7df66d",
+      "UNKNOWN-BOUNDARY-TYPE-POSITION-0edfbe9b8e3d2d52",
+      "UNKNOWN-BOUNDARY-TYPE-POSITION-0f2f31fec8388112",
+      "UNKNOWN-BOUNDARY-TYPE-POSITION-0f785829a3cf453b",
+      "UNKNOWN-BOUNDARY-TYPE-POSITION-104639c1c2909429",
+      "UNKNOWN-BOUNDARY-TYPE-POSITION-104c80423ac9667e",
+      "UNKNOWN-BOUNDARY-TYPE-POSITION-122e0262d4acb75f",
+      "UNKNOWN-BOUNDARY-TYPE-POSITION-14054786c87d9feb",
+      "UNKNOWN-BOUNDARY-TYPE-POSITION-177a6dc655536070",
+      "UNKNOWN-BOUNDARY-TYPE-POSITION-19f9433f64db2bfd",
+      "UNKNOWN-BOUNDARY-TYPE-POSITION-1d3283c039427ae7",
+      "UNKNOWN-BOUNDARY-TYPE-POSITION-22a2f3c329262489",
+      "UNKNOWN-BOUNDARY-TYPE-POSITION-22a6563be34d614d",
+      "UNKNOWN-BOUNDARY-TYPE-POSITION-27608b380a51f96a",
+      "UNKNOWN-BOUNDARY-TYPE-POSITION-2aeb5eacb9eddcd4",
+      "UNKNOWN-BOUNDARY-TYPE-POSITION-3238a70b33c74f0d",
+      "UNKNOWN-BOUNDARY-TYPE-POSITION-32c0b286f2828d14",
+      "UNKNOWN-BOUNDARY-TYPE-POSITION-34abee33f26d972f",
+      "UNKNOWN-BOUNDARY-TYPE-POSITION-39fc6e99009823d3",
+      "UNKNOWN-BOUNDARY-TYPE-POSITION-432e850cb5b8cbb0",
+      "UNKNOWN-BOUNDARY-TYPE-POSITION-444b2c4c363c0276",
+      "UNKNOWN-BOUNDARY-TYPE-POSITION-461944100ff3d463",
+      "UNKNOWN-BOUNDARY-TYPE-POSITION-47e19a35c2e739ca",
+      "UNKNOWN-BOUNDARY-TYPE-POSITION-4a6aec4c6326c019",
+      "UNKNOWN-BOUNDARY-TYPE-POSITION-4c8a11100bee6f39",
+      "UNKNOWN-BOUNDARY-TYPE-POSITION-4e2e2984c0ed8dd7",
+      "UNKNOWN-BOUNDARY-TYPE-POSITION-51aa3b845653548f",
+      "UNKNOWN-BOUNDARY-TYPE-POSITION-5280cd333eb976c5",
+      "UNKNOWN-BOUNDARY-TYPE-POSITION-569ef1c8f07611b7",
+      "UNKNOWN-BOUNDARY-TYPE-POSITION-5b0699721c0548e5",
+      "UNKNOWN-BOUNDARY-TYPE-POSITION-5b56bdb7fe670a5b",
+      "UNKNOWN-BOUNDARY-TYPE-POSITION-5d8496b7b6015376",
+      "UNKNOWN-BOUNDARY-TYPE-POSITION-6397748b06e36087",
+      "UNKNOWN-BOUNDARY-TYPE-POSITION-6445aa608973f0f3",
+      "UNKNOWN-BOUNDARY-TYPE-POSITION-6473a586f74c2f68",
+      "UNKNOWN-BOUNDARY-TYPE-POSITION-64da0239b650e7ba",
+      "UNKNOWN-BOUNDARY-TYPE-POSITION-69b602a560f06790",
+      "UNKNOWN-BOUNDARY-TYPE-POSITION-6a55738c879fa5ed",
+      "UNKNOWN-BOUNDARY-TYPE-POSITION-705ade210fcbbdc8",
+      "UNKNOWN-BOUNDARY-TYPE-POSITION-756f92459122f5c7",
+      "UNKNOWN-BOUNDARY-TYPE-POSITION-7a118b1f0751a302",
+      "UNKNOWN-BOUNDARY-TYPE-POSITION-7ddaf82da240a182",
+      "UNKNOWN-BOUNDARY-TYPE-POSITION-81c687f4a2801b47",
+      "UNKNOWN-BOUNDARY-TYPE-POSITION-86ab8530fe231540",
+      "UNKNOWN-BOUNDARY-TYPE-POSITION-86ca50d7143ce663",
+      "UNKNOWN-BOUNDARY-TYPE-POSITION-87bffff1d52fdcb6",
+      "UNKNOWN-BOUNDARY-TYPE-POSITION-8c42680e3902646d",
+      "UNKNOWN-BOUNDARY-TYPE-POSITION-8d8ad6df8d9a9105",
+      "UNKNOWN-BOUNDARY-TYPE-POSITION-92a60fa84bffc8fa",
+      "UNKNOWN-BOUNDARY-TYPE-POSITION-9379a68893ebc770",
+      "UNKNOWN-BOUNDARY-TYPE-POSITION-9f84e866680c837e",
+      "UNKNOWN-BOUNDARY-TYPE-POSITION-ab43883d937833c2",
+      "UNKNOWN-BOUNDARY-TYPE-POSITION-ad6ca73cc1264cc9",
+      "UNKNOWN-BOUNDARY-TYPE-POSITION-b509f956013b0a65",
+      "UNKNOWN-BOUNDARY-TYPE-POSITION-b5afaef97f38ede2",
+      "UNKNOWN-BOUNDARY-TYPE-POSITION-ba82317a503168e0",
+      "UNKNOWN-BOUNDARY-TYPE-POSITION-c0eed86ef57a44ef",
+      "UNKNOWN-BOUNDARY-TYPE-POSITION-cfb3060900bf8620",
+      "UNKNOWN-BOUNDARY-TYPE-POSITION-d4fd5b436ac417dd",
+      "UNKNOWN-BOUNDARY-TYPE-POSITION-d9bbad309a93188e",
+      "UNKNOWN-BOUNDARY-TYPE-POSITION-da692d7974fbfe89",
+      "UNKNOWN-BOUNDARY-TYPE-POSITION-ebb3a5158b3588b7",
+      "UNKNOWN-BOUNDARY-TYPE-POSITION-ed06de0f3fdc8f34",
+      "UNKNOWN-BOUNDARY-TYPE-POSITION-ef61ce5ac53566ee",
+      "UNKNOWN-BOUNDARY-TYPE-POSITION-f109dcc51f2a279b",
+      "UNKNOWN-BOUNDARY-TYPE-POSITION-f47cba7697103f42",
+      "UNKNOWN-BOUNDARY-TYPE-POSITION-f49853c726c7e5de",
+      "UNKNOWN-BOUNDARY-TYPE-POSITION-f62d17f6e309f23d"
+    ],
+    "source_contract_obligation": [
+      "UNKNOWN-BOUNDARY-TYPE-POSITION-21ed92d464a88f7c",
+      "UNKNOWN-BOUNDARY-TYPE-POSITION-7638515636007cd2",
+      "UNKNOWN-BOUNDARY-TYPE-POSITION-844aad32733e6b57",
+      "UNKNOWN-BOUNDARY-TYPE-POSITION-b46539b39643885f",
+      "UNKNOWN-BOUNDARY-TYPE-POSITION-fb89cb4d48b5e5bd",
+      "UNKNOWN-BOUNDARY-TYPE-POSITION-fbe4ded2eb4dfd6a"
+    ],
+    "stdlib_dotted_type_limit": [
+      "UNKNOWN-BOUNDARY-TYPE-POSITION-16971751e56855d8",
+      "UNKNOWN-BOUNDARY-TYPE-POSITION-862a63b294d431e7",
+      "UNKNOWN-BOUNDARY-TYPE-POSITION-8a82890dda270798",
+      "UNKNOWN-BOUNDARY-TYPE-POSITION-b67afb9350df3bbc",
+      "UNKNOWN-BOUNDARY-TYPE-POSITION-c8b9d81ae9b3d91f",
+      "UNKNOWN-BOUNDARY-TYPE-POSITION-f5e031f2e43037fc"
+    ],
+    "stdlib_type_limit": [
+      "UNKNOWN-BOUNDARY-TYPE-POSITION-006aad5a6288c516",
+      "UNKNOWN-BOUNDARY-TYPE-POSITION-07420409299cad0a",
+      "UNKNOWN-BOUNDARY-TYPE-POSITION-0f6e302f946057af",
+      "UNKNOWN-BOUNDARY-TYPE-POSITION-11c337f1282f7ed9",
+      "UNKNOWN-BOUNDARY-TYPE-POSITION-16483ca5881d8b6d",
+      "UNKNOWN-BOUNDARY-TYPE-POSITION-1aeb682ed3546912",
+      "UNKNOWN-BOUNDARY-TYPE-POSITION-1c4e7759bffbc41f",
+      "UNKNOWN-BOUNDARY-TYPE-POSITION-1e1c2d52b8ebdcf5",
+      "UNKNOWN-BOUNDARY-TYPE-POSITION-2394867c1012fa49",
+      "UNKNOWN-BOUNDARY-TYPE-POSITION-2596f3714abb15bc",
+      "UNKNOWN-BOUNDARY-TYPE-POSITION-3175c3f52a2808ea",
+      "UNKNOWN-BOUNDARY-TYPE-POSITION-369bed7e0f019b49",
+      "UNKNOWN-BOUNDARY-TYPE-POSITION-5d139cc32240e652",
+      "UNKNOWN-BOUNDARY-TYPE-POSITION-7566bd7b7685b73a",
+      "UNKNOWN-BOUNDARY-TYPE-POSITION-7800a03a69330230",
+      "UNKNOWN-BOUNDARY-TYPE-POSITION-7c1654e9548b9f62",
+      "UNKNOWN-BOUNDARY-TYPE-POSITION-82d3ad24561387a5",
+      "UNKNOWN-BOUNDARY-TYPE-POSITION-85ca1136863633e2",
+      "UNKNOWN-BOUNDARY-TYPE-POSITION-87388729d7d545a7",
+      "UNKNOWN-BOUNDARY-TYPE-POSITION-97e8f992d0d6bc78",
+      "UNKNOWN-BOUNDARY-TYPE-POSITION-98ebe2434bfe34d4",
+      "UNKNOWN-BOUNDARY-TYPE-POSITION-9c516e677956f0f7",
+      "UNKNOWN-BOUNDARY-TYPE-POSITION-a1bad40460f2bed7",
+      "UNKNOWN-BOUNDARY-TYPE-POSITION-a35a56b88adb238c",
+      "UNKNOWN-BOUNDARY-TYPE-POSITION-a83610af48cd67f3",
+      "UNKNOWN-BOUNDARY-TYPE-POSITION-aff3cb6e53b4dfa4",
+      "UNKNOWN-BOUNDARY-TYPE-POSITION-b73d1bc7c1dedd40",
+      "UNKNOWN-BOUNDARY-TYPE-POSITION-bc33ddf5ca92ba24",
+      "UNKNOWN-BOUNDARY-TYPE-POSITION-bed664f2759b4b8b",
+      "UNKNOWN-BOUNDARY-TYPE-POSITION-c661fc4b05037785",
+      "UNKNOWN-BOUNDARY-TYPE-POSITION-cc96309adc2a8025",
+      "UNKNOWN-BOUNDARY-TYPE-POSITION-ceae239c470881a6",
+      "UNKNOWN-BOUNDARY-TYPE-POSITION-d0ff66da709bddd9",
+      "UNKNOWN-BOUNDARY-TYPE-POSITION-d5b8b94d0f4d2958",
+      "UNKNOWN-BOUNDARY-TYPE-POSITION-ddf0924a559c9e3f",
+      "UNKNOWN-BOUNDARY-TYPE-POSITION-e3a76ab2e81eef53",
+      "UNKNOWN-BOUNDARY-TYPE-POSITION-e3bb47f89ffb6c1b",
+      "UNKNOWN-BOUNDARY-TYPE-POSITION-eed4a3dfb716074d",
+      "UNKNOWN-BOUNDARY-TYPE-POSITION-f253b98f4f7fccdf"
+    ],
+    "type_variable_limit": [
+      "UNKNOWN-BOUNDARY-TYPE-POSITION-11657edbd7e9f495",
+      "UNKNOWN-BOUNDARY-TYPE-POSITION-1f6699e0d644c8a9",
+      "UNKNOWN-BOUNDARY-TYPE-POSITION-406c1804a8306260",
+      "UNKNOWN-BOUNDARY-TYPE-POSITION-428ba72b79ed5157",
+      "UNKNOWN-BOUNDARY-TYPE-POSITION-44339a24f8eeb868",
+      "UNKNOWN-BOUNDARY-TYPE-POSITION-65824dc2749b1813",
+      "UNKNOWN-BOUNDARY-TYPE-POSITION-696fc97243f6a1c1",
+      "UNKNOWN-BOUNDARY-TYPE-POSITION-7e160041d9e01aab",
+      "UNKNOWN-BOUNDARY-TYPE-POSITION-b0fe147e3832808f",
+      "UNKNOWN-BOUNDARY-TYPE-POSITION-b32896b85e9a03be",
+      "UNKNOWN-BOUNDARY-TYPE-POSITION-b62e9c3d9a60e505",
+      "UNKNOWN-BOUNDARY-TYPE-POSITION-cb5dc26c549bf996",
+      "UNKNOWN-BOUNDARY-TYPE-POSITION-d29db2b86739ca9e",
+      "UNKNOWN-BOUNDARY-TYPE-POSITION-e9f2a054bc20e368"
+    ]
+  },
+  "assessment_texts": {
+    "aggregate_receipt": [
+      "Aggregate references current detailed positions; no extra scalar count. Current positions/decided/reason inventory replaces the old totals."
+    ],
+    "callable_alias_limit": [
+      "ConnectionProfileLoader aliases Callable[[Path,str],dict[str,str]]; underlying dictionary remains real boundary debt."
+    ],
+    "constant_reexport_route_limit": [
+      "Explicit imported route preserved; constant/overload target is not resolved as a supported facade signature. No missing import inferred."
+    ],
+    "decorated_class_surface_limit": [
+      "Patient/Doctor/CreditCard have no class-level if/for/try; conservative flag also covers unproven decorator/property bindings. Not a control-flow source defect."
+    ],
+    "external_dotted_type_limit": [
+      "Existing qualified Random or lxml etree._Element identity is not proof of a missing source type. Do not change imports solely to manipulate classification."
+    ],
+    "external_json_alias_limit": [
+      "JsonObject is an explicit dict[str,pydantic.JsonValue] alias; recursive external alias and open JSON shape remain unproved."
+    ],
+    "external_or_validated_alias_limit": [
+      "Retain real library/validation type; scalar ratchet excludes external_type but canonical uncertainty stays. Alias expansion may reveal additional shape obligations."
+    ],
+    "forward_reference_limit": [
+      "Quoted/self references are existing Python types; source syntax changes would not improve the contract."
+    ],
+    "generic_type_limit": [
+      "Existing Callable/type/TypeGuard/generic shape unsupported at this route; no invented protocol or erased generic semantics."
+    ],
+    "global_observation_limit": [
+      "Context alias completeness remains unproved; outside the scalar UNKNOWN ratchet. The separate current dynamic-call record reports 1246 unresolved calls.",
+      "Current packet reports 1246 unresolved calls, formerly 1231. This global disclaimer is not a scalar UNKNOWN position and does not prove any call-safe behavior."
+    ],
+    "inherited_method_inventory_limit": [
+      "MongoDBConnectionValues is a native five-key TypedDict. Its inherited method inventory is unresolved, not a missing getter annotation. Retain UNKNOWN; no forwarding copies or source slice justified.",
+      "Scanner cannot establish complete binding/inherited surface. Existing annotations may still contain real broad-map or missing-type debt; classifying this reason does not validate the whole signature."
+    ],
+    "overload_route_limit": [
+      "Explicit imported route preserved; constant/overload target is not resolved as a supported facade signature. No missing import inferred.",
+      "resolve_source_entity has two @overload signatures and one implementation. Keep name-to-return nullability correlation and precedence."
+    ],
+    "property_binding_limit": [
+      "Current declared property getter/setter annotation is dict[str, str] | dict[str, object]. Binding remains UNKNOWN; broad dictionary payload debt is explicit. Retain signatures, no forwarding copy or PASS conversion.",
+      "Scanner cannot establish complete binding/inherited surface. Existing annotations may still contain real broad-map or missing-type debt; classifying this reason does not validate the whole signature."
+    ],
+    "source_contract_obligation": [
+      "BaseModel.model_dump preserves extra=allow arbitrary engine configuration. RdbmsClient filters items into SQLAlchemy kwargs, including nested connect_args/execution_options. Closed scalar map is false; model return changes payload. Current signature remains missing; current owner/body inspected, no behavioral rerun.",
+      "Calls injected client.get_random_rows_by_columns once, consumes row[0], converts IDs to str and filters raw dictionaries. Fake client tests and direct scripts require structural injection. DatabaseClient lacks that method; existing IO helper restricts concrete classes. A new row/reader protocol requires an independently justified value contract, not checker-only scaffolding. Current signature remains missing; current owner/body inspected, no behavioral rerun.",
+      "Open extension result remains unannotated. Current subclass enumeration cannot justify a closed scalar union. A native-object return is a possible future explicit contract, subject to complete consumer/subclass review, characterization and a precise target decision; it is not approved or implemented by this inventory.",
+      "Returns live mutable stored rows and preserves the existing missing-key KeyError message, logging and cause chain. Open consume/storage payloads remain unproved by the MemstoreSource read protocol; no closed DTO or identity/mutation change approved. Current return signature remains unannotated; no behavioral rerun.",
+      "Returns original stored rows or empty list, without validating row shape. Same open storage/model issue as get_data_by_type; no fabricated closed model. Current signature remains missing; current owner/body inspected, no behavioral rerun.",
+      "str return is correct on success, but full_name is str|None and annotation activates None.split checking; preserve native AttributeError. No internal caller found; no guard/coercion/suppression approved. Current signature remains missing; current owner/body inspected, no behavioral rerun."
+    ],
+    "stdlib_dotted_type_limit": [
+      "Existing qualified Random or lxml etree._Element identity is not proof of a missing source type. Do not change imports solely to manipulate classification."
+    ],
+    "stdlib_type_limit": [
+      "Retain real library/validation type; scalar ratchet excludes external_type but canonical uncertainty stays. Alias expansion may reveal additional shape obligations."
+    ],
+    "type_variable_limit": [
+      "TypeVar preserves input/output identity or generated model type; object/concrete narrowing would discard real semantics."
+    ]
+  },
+  "evidence_hashes": {
+    "/tmp/ce-step205-unknown-review/report.md": "937c942505a62b053e26e1b212f912703c3b9dc2dbc5812bb1246662e7c43988",
+    "/tmp/ce-step205-unknown-review/reconciliation.json": "ea7f8d345ea9b976aca1aec4587e127ba516d1681fba7b76979296b136252f28",
+    "/tmp/ce-step205-unknown-review/dispositions.json": "b4f48bfb66f76cb593c0652e7355e618e0dddbfce4a804105942ae1fbe0a8230",
+    "/tmp/ce-step205-unknown-review/reconciliation-full.json": "8553a86532ddefdbb11352b4b9716e1463a98d561f1d0e2ae51b7e206489bdda",
+    "/tmp/ce-step205-unknown-review/reconcile.py": "728de99617d96d94e75759a40db38cbd16af001f2d6af8184eb01c09ca99efa1",
+    "/tmp/ce-step205-unknown-review/current-unknowns.json": "acbbce1738a2987005eb3ae0aa93377acaf744a69c34377a88c218c982909db7",
+    "/tmp/ce-step205-unknown-review/assertion-output.txt": "a854c015b9a1f761891d34de3b18a41700043cdc100e4c16b13fce75e77652f0",
+    "/tmp/ce-step205-unknown-review/astra-disposition.md": "ee2156e415d529ad0df2ef45dac824cb2f1c55f78f57d919835591522bb0bd17",
+    "/tmp/ce-step205-astra-decision.md": "4a23c55ed6f474b12f15d507f96550b9b6cc26e62e0854c8f0b85eb6c837b766",
+    "/tmp/ce-step205-current-architecture.json": "83f930043bc2b54e17fb03b3ecfeb8a019f33188f22cd3e865335d811dcce7c9"
+  },
+  "native_iterable_prerequisite": "https://github.com/rapiddweller/archkeel/issues/443",
+  "changes": "Evidence and disposition refresh only; no source, contract, baseline or gate changes."
+}
