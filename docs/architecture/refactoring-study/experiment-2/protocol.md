@@ -1076,6 +1076,19 @@ CI at `586a36f2` completed with 50 successes, four architecture-job failures
 and four skips; both external-service jobs passed. New target declarations
 require their own checks and do not clear the existing violations or UNKNOWNs.
 
+Step 200: [Local client ownership](step-200-local-client-observation.md)
+records four current-only PostgreSQL/MongoDB serial and parallel executions.
+Each returns six ordered typed rows; both parallel cases use two actual spawn
+workers. Independent raw QA confirms output, process/resource cleanup and nine
+rejecting evidence controls. Parent-created wrappers are still copied and
+restored in workers: Amendment 199's client-free transport target is not met.
+This extends CE #289, without a new DSL defect, parity claim or corpus promotion.
+No production source or architecture permission changes.
+
+CI at `b8e7342f` completed with 50 successes, four architecture-job failures
+and four skips; both external-service jobs passed. The evidence-only successor
+requires its own CI. Successful outputs do not accept client ownership.
+
 CI at `f1308a30` completed with 50 successes, four architecture-job failures
 and four skips. Both external-service jobs passed. The evidence-only successor
 still requires its own CI; no whole-experiment acceptance follows.
