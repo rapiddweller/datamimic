@@ -967,6 +967,15 @@ source `3a723812`. The accepted ledger has **156/931** reviewed profiles and
 [Amendment 166](amendment-166-native-scope-guidance.md). Standalone XML,
 frozen-oracle parity, other descriptors and EE remain UNKNOWN.
 
+Step 185: [Seeded owner profiles](step-185-seeded-owner-profiles.md) adds ten
+XML rows after independent QA of eight native owners and 17 capture pairs.
+The accepted ledger has **166/931** reviewed profiles and **765 UNKNOWN**;
+921 other rows and historical oracle fields remain unchanged. Acceptance
+uses the stricter independent log comparison preserving product/count and
+logger/task fields. Whole timing-message masking is insufficient alone.
+Standalone XML, frozen-oracle parity, full transient effects and EE remain
+UNKNOWN.
+
 The cached XML file-row path now has two [behavior tests](../../../../tests_ce/unit_tests/test_io_files.py):
 a document with an integer key and native value retains both identities, while
 a cached non-dict root raises the existing error. This characterizes the
@@ -986,6 +995,11 @@ The static `resolve_source_entity` overload re-export also remains UNKNOWN;
 [ArchKeel #440](https://github.com/rapiddweller/archkeel/issues/440) records
 direct/facade and broad-return negative controls. Its possible CE gain is
 conditional on an exact-source rerun after a checker fix.
+The quoted built-in input of `SourceDistribution.coerce` is independently
+reproduced as UNKNOWN while its unquoted equivalent is decidable;
+[ArchKeel #441](https://github.com/rapiddweller/archkeel/issues/441) records
+the union, broad-object and missing-symbol controls. Other forward references
+remain outside that proven scope.
 
 ## Agent separation
 
