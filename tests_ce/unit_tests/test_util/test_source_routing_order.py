@@ -1443,3 +1443,152 @@ def test_variable_query_mongo_driver_seam_retains_document_shape_and_page(
         else:
             cursor.skip.assert_called_once_with(page[0])
             cursor.limit.assert_called_once_with(page[1])
+
+
+@pytest.mark.parametrize("source_kind", ["file", "database", "memstore"])
+@pytest.mark.parametrize("full_pool", [False, True])
+def test_variable_source_preserves_native_values_and_pool_identity(monkeypatch, source_kind, full_pool):
+    from datamimic_ce.engine.io.api import VariableSourceRequest, read_variable_source
+
+    sentinel = object()
+    values = [None, 7, Decimal("1.25"), date(2026, 10, 10), b"native", sentinel, {"nested": [sentinel]}]
+    read = Mock(return_value=values)
+    client = _VariableQueryClient([]) if source_kind in {"file", "database"} else None
+    if source_kind == "database":
+        monkeypatch.setattr(client, "get_by_page_with_type", read)
+    memstore = SimpleNamespace(get_all_data_by_type=read, get_data_by_type=read) if source_kind == "memstore" else None
+    monkeypatch.setattr(io_variable_sources.FileUtil, "read_xlsx_to_dict_list", read)
+    request = VariableSourceRequest(
+        source="native.xlsx" if source_kind == "file" else "native",
+        descriptor_dir=Path("/descriptor"), separator="|", source_entity="rows", source_type=None,
+        name="native", materialize_full_pool=full_pool, cyclic=False,
+    )
+    page = DataSourcePagination(skip=0, limit=len(values))
+
+    result = read_variable_source(request, client, memstore, page)
+
+    assert result is not None
+    if full_pool or source_kind == "database":
+        assert result is values
+    assert all(actual is expected for actual, expected in zip(result, values, strict=True))
+    if source_kind == "file":
+        read.assert_called_once_with(Path("/descriptor/native.xlsx"))
+    elif source_kind == "database":
+        read.assert_called_once_with("rows", None if full_pool else page)
+    else:
+        read.assert_called_once_with("rows")
+
+
+def test_variable_source_explicit_page_defers_consumption_and_retains_iterator_and_error(monkeypatch):
+    from datamimic_ce.engine.io.api import VariableSourceRequest, read_variable_source
+
+    events = []
+    sentinel = object()
+    error = RuntimeError("native next")
+
+    def values():
+        events.append("first")
+        yield sentinel
+        events.append("error")
+        raise error
+
+    original = values()
+    monkeypatch.setattr(io_variable_sources.FileUtil, "read_xlsx_to_dict_list", lambda _: original)
+    request = VariableSourceRequest(
+        source="native.xlsx", descriptor_dir=Path("/descriptor"), separator="|",
+        source_entity="rows", source_type=None, name="native", materialize_full_pool=False, cyclic=False,
+    )
+    page = DataSourcePagination(skip=0, limit=2)
+    selected = read_variable_source(request, None, None, page)
+    statement = SimpleNamespace(distribution=SourceDistribution.ORDERED, unique=False)
+    plan = variable_sources._variable_data_plan(None, statement, selected, page, force_full_pool=False)
+
+    assert plan.data is selected
+    assert events == []
+    assert next(plan.data) is sentinel
+    assert events == ["first"]
+    with pytest.raises(RuntimeError) as caught:
+        next(plan.data)
+    assert caught.value is error and caught.value.__cause__ is None
+    assert events == ["first", "error"]
+
+
+@pytest.mark.parametrize("stage", ["file", "database", "memstore"])
+def test_variable_source_preserves_native_reader_error_identity(monkeypatch, stage):
+    from datamimic_ce.engine.io.api import VariableSourceRequest, read_variable_source
+
+    cause = ValueError("native cause")
+    error = RuntimeError("native reader")
+    error.__cause__ = cause
+    read = Mock(side_effect=error)
+    client = _VariableQueryClient([]) if stage == "database" else None
+    if client is not None:
+        monkeypatch.setattr(client, "get_by_page_with_type", read)
+    memstore = SimpleNamespace(get_data_by_type=read) if stage == "memstore" else None
+    monkeypatch.setattr(io_variable_sources.FileUtil, "read_xlsx_to_dict_list", read)
+    request = VariableSourceRequest(
+        source="native.xlsx" if stage == "file" else "native", descriptor_dir=Path("/descriptor"), separator="|",
+        source_entity="rows", source_type=None, name="native", materialize_full_pool=False, cyclic=False,
+    )
+    with pytest.raises(RuntimeError) as caught:
+        read_variable_source(request, client, memstore, DataSourcePagination(skip=0, limit=1))
+    assert caught.value is error and caught.value.__cause__ is cause
+    assert caught.value.args == ("native reader",)
+    assert read.call_count == 1
+
+
+def test_variable_source_real_json_retains_scalar_and_nested_list_items(tmp_path):
+    from datamimic_ce.engine.io.api import VariableSourceRequest, read_variable_source
+
+    path = tmp_path / "native.json"
+    path.write_text('[null, 7, [1, {"nested": [true, "value"]}]]', encoding="utf-8")
+    request = VariableSourceRequest(
+        source=path.name, descriptor_dir=tmp_path, separator="|", source_entity="rows", source_type=None,
+        name="native", materialize_full_pool=False, cyclic=False,
+    )
+    assert list(read_variable_source(request, None, None, DataSourcePagination(skip=0, limit=3))) == [
+        None, 7, [1, {"nested": [True, "value"]}]
+    ]
+
+
+def test_variable_source_none_missing_memstore_cause_and_unsupported_client():
+    from datamimic_ce.engine.io.api import VariableSourceRequest, read_variable_source
+
+    request = VariableSourceRequest(
+        source="native", descriptor_dir=Path("/descriptor"), separator="|", source_entity=None, source_type=None,
+        name=None, materialize_full_pool=False, cyclic=False,
+    )
+    client = _VariableQueryClient([])
+    assert read_variable_source(request, client, None, None) is None
+    assert client.calls.mock_calls == []
+    with pytest.raises(ValueError) as unsupported:
+        read_variable_source(request, object(), None, None)
+    assert unsupported.value.args == ("Cannot get data from source 'native' of <variable> 'None'",)
+    with pytest.raises(KeyError) as missing:
+        read_variable_source(request, None, Memstore("native"), None)
+    assert missing.value.args == ("Data naming 'None' is empty in memstore",)
+    assert isinstance(missing.value.__cause__, KeyError) and missing.value.__cause__.args == (None,)
+
+
+@pytest.mark.parametrize("source_kind", ["file", "memstore"])
+def test_variable_source_cyclic_page_keeps_file_repetition_and_memstore_copies(monkeypatch, source_kind):
+    from datamimic_ce.engine.io.api import VariableSourceRequest, read_variable_source
+
+    rows = [{"nested": [1]}, {"nested": [2]}]
+    read = Mock(return_value=rows)
+    monkeypatch.setattr(io_variable_sources.FileUtil, "read_xlsx_to_dict_list", read)
+    memstore = SimpleNamespace(get_data_by_type=read) if source_kind == "memstore" else None
+    request = VariableSourceRequest(
+        source="native.xlsx" if source_kind == "file" else "native", descriptor_dir=Path("/descriptor"), separator="|",
+        source_entity="rows", source_type=None, name="native", materialize_full_pool=False, cyclic=True,
+    )
+    result = read_variable_source(request, None, memstore, DataSourcePagination(skip=1, limit=3))
+    selected = [next(result) for _ in range(6)] if source_kind == "file" else list(result)
+    assert selected[:3] == [rows[1], rows[0], rows[1]]
+    if source_kind == "file":
+        assert selected[0] is rows[1] and selected[3] is selected[0]
+    else:
+        assert selected[0] is not rows[1] and selected[0] is not selected[2]
+        selected[0]["nested"].append(3)
+        assert rows[1] == selected[2] == {"nested": [2]}
+    assert read.call_count == 1

@@ -1,0 +1,9 @@
+{
+  "after_baseline_digest": "166f55bec9ce690900e35b99b8f2cd91d3cb12a0fc2328b235512d65cd48d69e",
+  "after_digest": "d8c1804a5b0006fd68fd743c6c1708282fa74f23963412a5f62a0c4e3d432692",
+  "before_baseline_digest": "166f55bec9ce690900e35b99b8f2cd91d3cb12a0fc2328b235512d65cd48d69e",
+  "before_digest": "6efe8a8f3534f60e028373befe652144207e7a33ec2b7ed7a112ba231d7f2016",
+  "decided_by": "agent, delegated by Astra",
+  "rationale": "Variable-source IO facade preserves one opaque native Iterable element; only the exact return is admitted, not the plan DTO or type closure.",
+  "schema_version": "2.0.0"
+}

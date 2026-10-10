@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import importlib
 import json
-from collections.abc import Mapping
+from collections.abc import Iterable, Mapping
 from pathlib import Path
 from typing import get_type_hints
 
@@ -306,6 +306,13 @@ def test_io_native_payload_permissions_keep_exact_shapes_and_depths() -> None:
         "annotation": "list[dict[str, object]]",
     }
     expected.extend([selector, {**selector, "container_depth": 2}])
+    expected.append({
+        "qualified_name": "datamimic_ce.engine.io.api.read_variable_source",
+        "position": "return",
+        "field_path": "",
+        "annotation": "Iterable[object] | None",
+        "container_depth": 1,
+    })
     assert rule["allowed_positions"] == expected
     assert (
         "docs/architecture/refactoring-study/experiment-2/amendment-203-variable-query-rows.md"
@@ -349,3 +356,13 @@ def test_memstore_and_exporter_have_truthful_canonical_definitions() -> None:
     assert Path(contracts.__spec__.origin) == ROOT / "datamimic_ce/engine/io/contracts.py"
     assert not (ROOT / "datamimic_ce/engine/io/exporters/memory/memstore.py").exists()
     assert not (ROOT / "datamimic_ce/engine/io/exporters/core/exporter.py").exists()
+
+
+def test_variable_source_native_return_is_the_exact_public_owner() -> None:
+    owner = importlib.import_module("datamimic_ce.engine.io.data_sources.variable")
+    assert io_api.read_variable_source is owner.read_variable_source
+    assert "read_variable_source" in io_api.__all__
+    assert get_type_hints(io_api.read_variable_source)["return"] == Iterable[object] | None
+    contract = json.loads((ROOT / "architecture-contract.json").read_text(encoding="utf-8"))
+    rule = next(rule for rule in contract["rules"] if rule["id"] == "IO-API-TYPES")
+    assert "docs/architecture/refactoring-study/experiment-2/amendment-209-native-variable-return.md" in rule["provenance"]
