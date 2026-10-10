@@ -912,6 +912,13 @@ passes all 456 Actual/Target/Diff scope states and reconciles 151 components
 and 488 physical target paths. The browser matrix is pinned to `019f9cbc`;
 the integrated Step 174 report is separately compared at `0e0b709c`.
 
+Step 178: [ID-alias owner profile](step-178-id-alias-owner-profile.md) adds one
+unchanged native owner input after independent QA. The complete typed five-row
+capture matches at original `a219163e` and current `16b8e125`. The accepted
+ledger now has 128/931 reviewed profiles and 803 UNKNOWN inputs; its other 930
+rows and historical oracle fields are unchanged. Standalone XML, frozen-oracle
+parity, other descriptors and EE remain UNKNOWN.
+
 ## Agent separation
 
 - The implementation agent changes production code and targeted tests for one approved slice.
