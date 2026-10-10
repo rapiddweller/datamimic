@@ -999,6 +999,12 @@ all observed findings. Thirteen definition checks, Ruff and full MyPy pass.
 The native amendment writer still exits 2 with 19 usage-UNKNOWN diagnostics;
 it writes no binding. This clarification does not clear architecture debt.
 
+Step 189: [Value-construction review](step-189-values-construction-review.md)
+accepts the existing six-module `VALUES-CONSTRUCTION` grouping as one deliberate
+semantic leaf after Astra's caller/state/IO audit. Existing independently owned
+Domain, Context, Storage and IO boundaries remain. No new component or code
+change is warranted; behavioral and concurrency evidence remain separate.
+
 CI at `5c218f8f` remains red: four architecture jobs and one external-service
 job failed. The latter has two Mongo worker server-selection timeouts
 (162 passed, four skipped); the parallel same-head job passed all 164 tests.
