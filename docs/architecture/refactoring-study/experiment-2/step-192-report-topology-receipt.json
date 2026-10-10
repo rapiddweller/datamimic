@@ -1,0 +1,50 @@
+{
+  "browser_failures": 0,
+  "browser_page_errors": 0,
+  "browser_states": 13,
+  "ce_issue": "https://github.com/rapiddweller/datamimic/issues/288",
+  "deepest_component_views": 3,
+  "frozen_artifact_hash_checks": {
+    "/tmp/ce-report-topology-20261010/frozen/architecture.detail.html": true,
+    "/tmp/ce-report-topology-20261010/frozen/architecture.json": true,
+    "/tmp/ce-report-topology-20261010/frozen/architecture.report.html": true
+  },
+  "normal_drilldowns": 3,
+  "outputs": {
+    "artifact-race.json": "f57493967a0a446943e7d3b0346edf8ff1e4b0d336cc45382d7a31d555278db5",
+    "audit.md": "611ee0e5f83156d2b1735ffd8a45847b90e07249be1ab3050b96df07e779e2e6",
+    "browser.cjs": "3052ce726295fe287d69353be2761663fa880f6d9731049ee70b1ab8fa5acc53",
+    "browser.json": "c4ea4ca67381a1a9d40420dc10526937a20798dcc2df3d63af4ca4818baee629",
+    "navigation.cjs": "cf75a47491ef0507d3afb46747df3f2dd11a0559da68b90411825e91517b1e5a",
+    "navigation.json": "7719955ae7561a68c4833c8ab7a32eb2d106c91072089f453eff7ef60dc7579a",
+    "reconcile.py": "a40001d7777b4a9b6bc4f403dcc52de8e606f0febb4ac6e19b24388048a56b45",
+    "reconciliation.json": "e205c1de261b179ffc846035cebefdd1e18f43a51f80a2ad37dd64934332e4aa",
+    "representative-projections.json": "3e1ceb55ef4714db9460824b00e67323ccba7eb39a99200faa8f5b20076971c1"
+  },
+  "pins": {
+    "/tmp/ce-conditional-export-20261010/receipt.json": "3f7ab3aab2e903345486c65608a6dcdd9b37c24bca195546145439882f09a62d",
+    "/tmp/ce-conditional-export-issue-20261010.md": "e4fff30f850746f31671b8e502995749051ec02c029af6b23fcdca327766bde1",
+    "/tmp/ce-report-topology-20261010/artifact-race.json": "f57493967a0a446943e7d3b0346edf8ff1e4b0d336cc45382d7a31d555278db5",
+    "/tmp/ce-report-topology-20261010/audit.md": "611ee0e5f83156d2b1735ffd8a45847b90e07249be1ab3050b96df07e779e2e6",
+    "/tmp/ce-report-topology-20261010/browser.cjs": "3052ce726295fe287d69353be2761663fa880f6d9731049ee70b1ab8fa5acc53",
+    "/tmp/ce-report-topology-20261010/browser.json": "c4ea4ca67381a1a9d40420dc10526937a20798dcc2df3d63af4ca4818baee629",
+    "/tmp/ce-report-topology-20261010/frozen/architecture.detail.html": "191f0e8c90ee6626a3b3d74012be4ea59412e521eaac59640a76ffd326aef12f",
+    "/tmp/ce-report-topology-20261010/frozen/architecture.json": "f06bfb0813ed352a816cafd5d55d1621ac11e80786481d60129dbb96b22589ca",
+    "/tmp/ce-report-topology-20261010/frozen/architecture.report.html": "18f3446336fbf03b2ba02f79f55b93a8a43e37153201463a4caaba8a1c524d9b",
+    "/tmp/ce-report-topology-20261010/navigation.cjs": "cf75a47491ef0507d3afb46747df3f2dd11a0559da68b90411825e91517b1e5a",
+    "/tmp/ce-report-topology-20261010/navigation.json": "7719955ae7561a68c4833c8ab7a32eb2d106c91072089f453eff7ef60dc7579a",
+    "/tmp/ce-report-topology-20261010/receipt.json": "6e905333b08337c1c1370f96813757366542899238f45a38d2b2da642abc763c",
+    "/tmp/ce-report-topology-20261010/reconcile.py": "a40001d7777b4a9b6bc4f403dcc52de8e606f0febb4ac6e19b24388048a56b45",
+    "/tmp/ce-report-topology-20261010/reconciliation.json": "e205c1de261b179ffc846035cebefdd1e18f43a51f80a2ad37dd64934332e4aa",
+    "/tmp/ce-report-topology-20261010/representative-projections.json": "3e1ceb55ef4714db9460824b00e67323ccba7eb39a99200faa8f5b20076971c1"
+  },
+  "published_111_assets": {
+    "flow.js": "5e59424f2f95efbd991d28ea4cb120dbe14b0f2368e3dde24bd9992a4f8696b5",
+    "report-scene.js": "d6f333b30019bbbff15fa51d4a2499cb0d30bd49fd0e3dda2984259abdc7b6df"
+  },
+  "return_preserves_scope": "file:///tmp/ce-report-topology-20261010/frozen/architecture.detail.html?module=MOD-1c63401001c38ba0&scope=SYM-2e7ac5fe27a50f15&return_scope=&return_view=diagram&view=diagram&theme=light",
+  "status": "accepted_recorded_topology_with_partial_runtime_and_unmodeled_lower_target",
+  "step": 192,
+  "target_hides_unmodeled_graph": true,
+  "whole_goal_accepted": false
+}

@@ -1005,6 +1005,20 @@ semantic leaf after Astra's caller/state/IO audit. Existing independently owned
 Domain, Context, Storage and IO boundaries remain. No new component or code
 change is warranted; behavioral and concurrency evidence remain separate.
 
+Step 190: [Selected scope diagnostics](step-190-scope-projection-evidence.md)
+accepts only the approved hint/suffix differences and matching control behavior.
+Historical strict comparisons remain DIFFERENT; no ledger promotion.
+
+Step 191: [Amendment 190](amendment-190-lifecycle-responsibility.md) accepts
+the lifecycle leaf and corrects two ownership prose fields. Cleanup remains
+owned by GenerateTask and IO; the native amendment binding is still unavailable.
+
+Step 192: [Recorded report topology](step-192-report-topology.md) preserves
+all recorded symbols/sites and verifies representative lower navigation.
+Class/method Target and exhaustive topology remain unproved. The conditional
+JSON export failure is reproduced with its direct-child control and tracked in
+[CE #288](https://github.com/rapiddweller/datamimic/issues/288).
+
 CI at `5c218f8f` remains red: four architecture jobs and one external-service
 job failed. The latter has two Mongo worker server-selection timeouts
 (162 passed, four skipped); the parallel same-head job passed all 164 tests.
