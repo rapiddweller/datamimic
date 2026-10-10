@@ -34,6 +34,10 @@ unproved. No full DSL/EE or standalone XML parity follows from this amendment.
 LOCAL VERIFIED: 119 focused tests, 2,345 CE unit tests (11 skipped, one expected
 failure), 13 definition checks, Ruff, full MyPy, published 1.1.1 union controls
 and full report comparison. Native validation exits 2 with 19 unchanged usage
-diagnostics and 11 baseline-new groups. CI-ONLY VERIFICATION: pending.
+diagnostics and 11 baseline-new groups. CI-ONLY VERIFICATION: both exact-head
+`019f9cbc` runs ([first](https://github.com/rapiddweller/datamimic/actions/runs/38038847145),
+[second](https://github.com/rapiddweller/datamimic/actions/runs/38038851779))
+completed; ordinary jobs passed and the two architecture jobs failed at the
+open zero target.
 An isolated MyPy probe accepts typed string/native dictionaries and rejects
 `dict[str, int]`, read-only `Mapping`, and object writes through the union.

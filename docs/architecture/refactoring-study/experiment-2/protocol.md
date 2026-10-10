@@ -884,7 +884,8 @@ the new getter/setter annotation. Local verification passed 119 focused,
 2,345 CE unit and 13 definition tests, Ruff and full MyPy. Native validation
 still exits 2 with 19 diagnostics and 11 baseline-new groups. Independent QA
 found no blocking issue; its missing prior-report path is pinned in the receipt.
-Current-head CI remains open; this is not target or DSL acceptance.
+Both exact-head CI runs at `019f9cbc` completed: ordinary jobs passed; the two
+architecture jobs failed at the open zero target. This is not target or DSL acceptance.
 
 Step 174 candidate: [Amendment 188](amendment-188-product-map-depth.md)
 adds four exact inner-map/native-value allowances for the two existing IO
