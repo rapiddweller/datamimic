@@ -958,6 +958,15 @@ fields are unchanged. The seeded null-quota run emitted no nulls, so quota
 frequency remains unproved. Standalone XML, frozen-oracle parity, other
 descriptors and EE remain UNKNOWN.
 
+Step 184: [Binary and scalar owner profiles](step-184-in-memory-owner-profiles.md)
+add seven unchanged native inputs after independent QA. Their 14 exact runs
+and complete typed captures match across original `a219163e` and current
+source `3a723812`. The accepted ledger has **156/931** reviewed profiles and
+**775 UNKNOWN**; 924 other rows and historical oracle fields are unchanged.
+`echo_robust` stays UNKNOWN because its WARN wording differs under approved
+[Amendment 166](amendment-166-native-scope-guidance.md). Standalone XML,
+frozen-oracle parity, other descriptors and EE remain UNKNOWN.
+
 The cached XML file-row path now has two [behavior tests](../../../../tests_ce/unit_tests/test_io_files.py):
 a document with an integer key and native value retains both identities, while
 a cached non-dict root raises the existing error. This characterizes the
@@ -973,6 +982,10 @@ decision: its direct annotation also remains red. Published 1.1.1 rejects
 exact permissions for the named and inline heterogeneous typed-map union;
 [ArchKeel #439](https://github.com/rapiddweller/archkeel/issues/439) records
 the independent positive and negative controls. No CE rule is widened.
+The static `resolve_source_entity` overload re-export also remains UNKNOWN;
+[ArchKeel #440](https://github.com/rapiddweller/archkeel/issues/440) records
+direct/facade and broad-return negative controls. Its possible CE gain is
+conditional on an exact-source rerun after a checker fix.
 
 ## Agent separation
 
