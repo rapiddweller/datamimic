@@ -1,0 +1,455 @@
+{
+  "status": "ACCEPTED_INDEPENDENT_QA",
+  "original_head": "a219163e533d661bcc7bda0faa5ecc77909ab5aa",
+  "current_source_head": "a92c12495e5b321a8779bb1ae3229092b760ff72",
+  "evidence_branch_base": "a92c12495e5b321a8779bb1ae3229092b760ff72",
+  "run_plan": {
+    "path": "/private/tmp/ce-dsl-step183-20261010/run-plan.json",
+    "sha256": "8e5e3d9e5f1c516c514c5b79d3bf0bebfba03ceb95631070f9305d6bd06d3189"
+  },
+  "profiles": [
+    {
+      "case": "unique_null",
+      "nodeid": "tests_ce/integration_tests/test_unique_values/test_unique_values.py::test_unique_composes_with_null_quota",
+      "xml_order": [
+        "tests_ce/integration_tests/test_unique_values/unique_null_quota.xml"
+      ],
+      "source_owner": {
+        "original": {
+          "blob": "deb1dfb32411af915ca1bb82d34688bfa5bff113",
+          "sha256": "fa113dcbbbc247d16d9092fb14ebd9906338ae9da3fda2d5392abfb4d911648e"
+        },
+        "current": {
+          "blob": "1d6c324264ad3daef9fab9afa605692b7d61c941",
+          "sha256": "3418e6c0bc57e29367efd93dde4655713a48072b0a01948c7d3af41af2c4cad0"
+        }
+      },
+      "source_xml": {
+        "tests_ce/integration_tests/test_unique_values/unique_null_quota.xml": {
+          "sha256": "0c01e894c43b31f28477d78c2817e6a61b2e1f946fe4deb31ab52437f4a8c5e4",
+          "blob": "bb43122088f2d418230daaa63636e0af739f403f"
+        }
+      },
+      "preflight": {
+        "path": "/private/tmp/ce-dsl-step183-20261010/cases/unique_null/preflight.json",
+        "sha256": "5ed9bc2f18ea1a5c6ba56bd4c76f91e8a5932f7be01e178941713fb36abfa519"
+      },
+      "comparison": {
+        "path": "/private/tmp/ce-dsl-step183-20261010/cases/unique_null/comparison.json",
+        "sha256": "956a667dcff9679c53e405b4986478caaaaa0479124425beda6400e61da68f89"
+      },
+      "complete_capture_sha256": "3e7face204707b95bc22f3ad812ad6da743f3e1aa90527f90934a3c024ab70d0",
+      "owner_test_passed_once_per_endpoint": true,
+      "failed_attempts": [],
+      "collection_original": {
+        "parent": {
+          "path": "/private/tmp/ce-dsl-step183-20261010/cases/unique_null/runs/original/collection-host-capable/parent-receipt.json",
+          "sha256": "a51a07653bb7f4a60b45cd3ce07d2ac9664e8baefa2eea977b04ab3c88bd99e2"
+        },
+        "child": {
+          "path": "/private/tmp/ce-dsl-step183-20261010/cases/unique_null/runs/original/collection-host-capable/child/child-receipt.json",
+          "sha256": "eae2f8a79b790eb860a5c5984da10767e26f487c95dff5fae83d0386d8c2b5ac"
+        },
+        "stdout": {
+          "path": "/private/tmp/ce-dsl-step183-20261010/cases/unique_null/runs/original/collection-host-capable/stdout.raw",
+          "sha256": "9b94c72b2bf841d39cd1b997f8906a05dd5c6dea76e525cc7658084bda55eb20"
+        },
+        "stderr": {
+          "path": "/private/tmp/ce-dsl-step183-20261010/cases/unique_null/runs/original/collection-host-capable/stderr.raw",
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        "junit": null,
+        "captures": [],
+        "opened_path_count": 2037,
+        "module_origin_count": 250
+      },
+      "collection_current": {
+        "parent": {
+          "path": "/private/tmp/ce-dsl-step183-20261010/cases/unique_null/runs/current/collection-host-capable/parent-receipt.json",
+          "sha256": "98f0b95c625755470ff8a2d20f773c45727f1c7bd18172728dca97b74b7ac854"
+        },
+        "child": {
+          "path": "/private/tmp/ce-dsl-step183-20261010/cases/unique_null/runs/current/collection-host-capable/child/child-receipt.json",
+          "sha256": "894f6139613237a296ff64a4a7bd67f962bb0a00672278fb74898d6dcb55a84d"
+        },
+        "stdout": {
+          "path": "/private/tmp/ce-dsl-step183-20261010/cases/unique_null/runs/current/collection-host-capable/stdout.raw",
+          "sha256": "775a1549aa52f901eb8ae0e840a462892f0035d57c3797c40de01fcfd7a6f3de"
+        },
+        "stderr": {
+          "path": "/private/tmp/ce-dsl-step183-20261010/cases/unique_null/runs/current/collection-host-capable/stderr.raw",
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        "junit": null,
+        "captures": [],
+        "opened_path_count": 2355,
+        "module_origin_count": 351
+      },
+      "native_original": {
+        "parent": {
+          "path": "/private/tmp/ce-dsl-step183-20261010/cases/unique_null/runs/original/native-host-capable/parent-receipt.json",
+          "sha256": "39f2d2dd233452593565f6dc4fcefe7c489d0e3b35cc80542d3cc23645117b27"
+        },
+        "child": {
+          "path": "/private/tmp/ce-dsl-step183-20261010/cases/unique_null/runs/original/native-host-capable/child/child-receipt.json",
+          "sha256": "b362fb371a1820d2932b231a2cef136d049c4d420d63c91066fa7ff33a913c32"
+        },
+        "stdout": {
+          "path": "/private/tmp/ce-dsl-step183-20261010/cases/unique_null/runs/original/native-host-capable/stdout.raw",
+          "sha256": "896601d6b054e778b128d75f00d63a148dc1d6320d9f242e8a1786d65913a0d9"
+        },
+        "stderr": {
+          "path": "/private/tmp/ce-dsl-step183-20261010/cases/unique_null/runs/original/native-host-capable/stderr.raw",
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        "junit": {
+          "path": "/private/tmp/ce-dsl-step183-20261010/cases/unique_null/runs/original/native-host-capable/child/junit.xml",
+          "sha256": "0d2bb5d5be8e919b407dda95e443e8d3c533df60e946213f05b62b9e8d9d60f5"
+        },
+        "captures": [
+          {
+            "path": "/private/tmp/ce-dsl-step183-20261010/cases/unique_null/runs/original/native-host-capable/child/capture-1.json",
+            "sha256": "3e7face204707b95bc22f3ad812ad6da743f3e1aa90527f90934a3c024ab70d0"
+          }
+        ],
+        "opened_path_count": 1880,
+        "module_origin_count": 275
+      },
+      "native_current": {
+        "parent": {
+          "path": "/private/tmp/ce-dsl-step183-20261010/cases/unique_null/runs/current/native-host-capable/parent-receipt.json",
+          "sha256": "a93535749f9bf7312ea8ee8816fda5394cb12c7e958eeefe3efbaacc6a0cb5a0"
+        },
+        "child": {
+          "path": "/private/tmp/ce-dsl-step183-20261010/cases/unique_null/runs/current/native-host-capable/child/child-receipt.json",
+          "sha256": "2cbb7f290e68a3e8856cafd9ea78deb6d4bb4f6769b3128e656b7c9488e706e7"
+        },
+        "stdout": {
+          "path": "/private/tmp/ce-dsl-step183-20261010/cases/unique_null/runs/current/native-host-capable/stdout.raw",
+          "sha256": "f096d76c41b4912a7cc625d8cf8d7c8e413fbd043b1023efe47ab59098b60621"
+        },
+        "stderr": {
+          "path": "/private/tmp/ce-dsl-step183-20261010/cases/unique_null/runs/current/native-host-capable/stderr.raw",
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        "junit": {
+          "path": "/private/tmp/ce-dsl-step183-20261010/cases/unique_null/runs/current/native-host-capable/child/junit.xml",
+          "sha256": "a9652e8301e0ccb737732b5fad967f385d871b3f5ce56ab8ed8dc75d92369ef4"
+        },
+        "captures": [
+          {
+            "path": "/private/tmp/ce-dsl-step183-20261010/cases/unique_null/runs/current/native-host-capable/child/capture-1.json",
+            "sha256": "3e7face204707b95bc22f3ad812ad6da743f3e1aa90527f90934a3c024ab70d0"
+          }
+        ],
+        "opened_path_count": 2022,
+        "module_origin_count": 356
+      }
+    },
+    {
+      "case": "unique_ean",
+      "nodeid": "tests_ce/integration_tests/test_unique_values/test_unique_values.py::test_ean_generator_unique_forwarding",
+      "xml_order": [
+        "tests_ce/integration_tests/test_unique_values/unique_ean_generator.xml"
+      ],
+      "source_owner": {
+        "original": {
+          "blob": "deb1dfb32411af915ca1bb82d34688bfa5bff113",
+          "sha256": "fa113dcbbbc247d16d9092fb14ebd9906338ae9da3fda2d5392abfb4d911648e"
+        },
+        "current": {
+          "blob": "1d6c324264ad3daef9fab9afa605692b7d61c941",
+          "sha256": "3418e6c0bc57e29367efd93dde4655713a48072b0a01948c7d3af41af2c4cad0"
+        }
+      },
+      "source_xml": {
+        "tests_ce/integration_tests/test_unique_values/unique_ean_generator.xml": {
+          "sha256": "3e3a7013e09b234c3e5974716c72a857c94dd336d1305d3f870715b399364cdb",
+          "blob": "68652b94a86e473a51949f987237715c1a90f945"
+        }
+      },
+      "preflight": {
+        "path": "/private/tmp/ce-dsl-step183-20261010/cases/unique_ean/preflight.json",
+        "sha256": "9c47b9710ebe49f5f8e4d7353dc549aebff96b6a3d88755fae0339ac7c3221d8"
+      },
+      "comparison": {
+        "path": "/private/tmp/ce-dsl-step183-20261010/cases/unique_ean/comparison.json",
+        "sha256": "d24fb9a844a8f36c7ef3193d285dcbd852432ee5ab9e7e1ef344c2f05c918d18"
+      },
+      "complete_capture_sha256": "40dc852307b7ed67c27d6c52e062184fbaac6435a22ce0248fec203c6d01a014",
+      "owner_test_passed_once_per_endpoint": true,
+      "failed_attempts": [],
+      "collection_original": {
+        "parent": {
+          "path": "/private/tmp/ce-dsl-step183-20261010/cases/unique_ean/runs/original/collection-host-capable/parent-receipt.json",
+          "sha256": "0ed6d2d1cfddcb437a2bb134d77884ff57d9096e540b504fc3e49a1be9914265"
+        },
+        "child": {
+          "path": "/private/tmp/ce-dsl-step183-20261010/cases/unique_ean/runs/original/collection-host-capable/child/child-receipt.json",
+          "sha256": "f3220d4f35902cbee30e53cf526aebcacbac85bc8c689d4959fcc45824422a41"
+        },
+        "stdout": {
+          "path": "/private/tmp/ce-dsl-step183-20261010/cases/unique_ean/runs/original/collection-host-capable/stdout.raw",
+          "sha256": "d4001f565c50da271ecc3cbdb9f7770c2895a3f393e596488ad915b8fde0ac7c"
+        },
+        "stderr": {
+          "path": "/private/tmp/ce-dsl-step183-20261010/cases/unique_ean/runs/original/collection-host-capable/stderr.raw",
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        "junit": null,
+        "captures": [],
+        "opened_path_count": 1785,
+        "module_origin_count": 250
+      },
+      "collection_current": {
+        "parent": {
+          "path": "/private/tmp/ce-dsl-step183-20261010/cases/unique_ean/runs/current/collection-host-capable/parent-receipt.json",
+          "sha256": "8f9c64eccf4e40930747ca8895cdf660e9a577ba8b926f17e44065b49fcfdc65"
+        },
+        "child": {
+          "path": "/private/tmp/ce-dsl-step183-20261010/cases/unique_ean/runs/current/collection-host-capable/child/child-receipt.json",
+          "sha256": "d36d08a5e0484c4052229cfbf431f165879d9b6e0e93add7ff31ae62b9bdbe38"
+        },
+        "stdout": {
+          "path": "/private/tmp/ce-dsl-step183-20261010/cases/unique_ean/runs/current/collection-host-capable/stdout.raw",
+          "sha256": "e4299dab2da8c328f52bd63e51b15083174eb44d9d21740c13a1904d0147b1d4"
+        },
+        "stderr": {
+          "path": "/private/tmp/ce-dsl-step183-20261010/cases/unique_ean/runs/current/collection-host-capable/stderr.raw",
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        "junit": null,
+        "captures": [],
+        "opened_path_count": 2002,
+        "module_origin_count": 351
+      },
+      "native_original": {
+        "parent": {
+          "path": "/private/tmp/ce-dsl-step183-20261010/cases/unique_ean/runs/original/native-host-capable/parent-receipt.json",
+          "sha256": "ed2a4cd93f8ccd5bd28c4905a6bffcfb2fc5df4a2389eddaf35804ff2e840978"
+        },
+        "child": {
+          "path": "/private/tmp/ce-dsl-step183-20261010/cases/unique_ean/runs/original/native-host-capable/child/child-receipt.json",
+          "sha256": "100fbaf8d146b8991a21f033638040dc628ddfe99114b7038afe1e21ed94fe57"
+        },
+        "stdout": {
+          "path": "/private/tmp/ce-dsl-step183-20261010/cases/unique_ean/runs/original/native-host-capable/stdout.raw",
+          "sha256": "cd309e09f86752abd1325f1d33c4113e0d14cac9249167b9995be746a1ecec8d"
+        },
+        "stderr": {
+          "path": "/private/tmp/ce-dsl-step183-20261010/cases/unique_ean/runs/original/native-host-capable/stderr.raw",
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        "junit": {
+          "path": "/private/tmp/ce-dsl-step183-20261010/cases/unique_ean/runs/original/native-host-capable/child/junit.xml",
+          "sha256": "5e366ae0609e0c377ca6ff7357ebb95047f131d0f49edee415f3fb65dae2c42d"
+        },
+        "captures": [
+          {
+            "path": "/private/tmp/ce-dsl-step183-20261010/cases/unique_ean/runs/original/native-host-capable/child/capture-1.json",
+            "sha256": "40dc852307b7ed67c27d6c52e062184fbaac6435a22ce0248fec203c6d01a014"
+          }
+        ],
+        "opened_path_count": 2038,
+        "module_origin_count": 336
+      },
+      "native_current": {
+        "parent": {
+          "path": "/private/tmp/ce-dsl-step183-20261010/cases/unique_ean/runs/current/native-host-capable/parent-receipt.json",
+          "sha256": "6afb817198068a1bc84eab461918aa3c0615b5d1800c0fa619ca6ebf340f4f00"
+        },
+        "child": {
+          "path": "/private/tmp/ce-dsl-step183-20261010/cases/unique_ean/runs/current/native-host-capable/child/child-receipt.json",
+          "sha256": "3fa88740f3e64d4371235b9f59c471795bb8b6dec7f610cd0aedcfb03d092170"
+        },
+        "stdout": {
+          "path": "/private/tmp/ce-dsl-step183-20261010/cases/unique_ean/runs/current/native-host-capable/stdout.raw",
+          "sha256": "c0cbe7b69e18391d62fe8a0f811158da9320dac05a75a93fbc5481350ede89f0"
+        },
+        "stderr": {
+          "path": "/private/tmp/ce-dsl-step183-20261010/cases/unique_ean/runs/current/native-host-capable/stderr.raw",
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        "junit": {
+          "path": "/private/tmp/ce-dsl-step183-20261010/cases/unique_ean/runs/current/native-host-capable/child/junit.xml",
+          "sha256": "4cbd2e3e40598b43d12c46edc29530ecd483b93180a50b28759a7cc55c758b4e"
+        },
+        "captures": [
+          {
+            "path": "/private/tmp/ce-dsl-step183-20261010/cases/unique_ean/runs/current/native-host-capable/child/capture-1.json",
+            "sha256": "40dc852307b7ed67c27d6c52e062184fbaac6435a22ce0248fec203c6d01a014"
+          }
+        ],
+        "opened_path_count": 2065,
+        "module_origin_count": 372
+      }
+    },
+    {
+      "case": "numeric",
+      "nodeid": "tests_ce/integration_tests/test_numeric_range/test_numeric_range.py::test_native_numeric_range_respects_bounds_and_type",
+      "xml_order": [
+        "tests_ce/integration_tests/test_numeric_range/numeric_range.xml"
+      ],
+      "source_owner": {
+        "original": {
+          "blob": "dd161968fd1592f5f3bf947d65872f0a53d04232",
+          "sha256": "f0e3f8d84ffc70e9a10e4de778eb41800b4bb69778f3f99988fa76b19333ba21"
+        },
+        "current": {
+          "blob": "9d66a4201ede8e0c89765d142faf7a35b2f9147d",
+          "sha256": "b1f9969b1ecb5d4e7e0f6e14f0bea620f9a9da3502dfae3ad2f098242ccd2829"
+        }
+      },
+      "source_xml": {
+        "tests_ce/integration_tests/test_numeric_range/numeric_range.xml": {
+          "sha256": "1ed9c782882c57bc5af7cafee4e3333cd12e8c367974b7e0de7d442c8a3c4249",
+          "blob": "318544783c49646a0ca5796d91105f2ba761afb9"
+        }
+      },
+      "preflight": {
+        "path": "/private/tmp/ce-dsl-step183-20261010/cases/numeric/preflight.json",
+        "sha256": "8736b58d3cf830e56c21f23a24a5259d84b4f71cbf881c3b445732fa4157b93a"
+      },
+      "comparison": {
+        "path": "/private/tmp/ce-dsl-step183-20261010/cases/numeric/comparison.json",
+        "sha256": "7fbeed5c1e5c19ff252ec4752bb5816b6236f03390603d953378644cfde42f42"
+      },
+      "complete_capture_sha256": "60af968bc40ed74ff604e2eb4937cd66e6ae4fdf618a7fcc9b62437439ae0920",
+      "owner_test_passed_once_per_endpoint": true,
+      "failed_attempts": [],
+      "collection_original": {
+        "parent": {
+          "path": "/private/tmp/ce-dsl-step183-20261010/cases/numeric/runs/original/collection-host-capable/parent-receipt.json",
+          "sha256": "fc344cb21112fd7980473402a0022b4e4113761496d02c121c7d5fb7a112ff44"
+        },
+        "child": {
+          "path": "/private/tmp/ce-dsl-step183-20261010/cases/numeric/runs/original/collection-host-capable/child/child-receipt.json",
+          "sha256": "9afb5fae3f3b38afc483c60a8c632c40c8c5f2d6e38510515b07648a9aab3638"
+        },
+        "stdout": {
+          "path": "/private/tmp/ce-dsl-step183-20261010/cases/numeric/runs/original/collection-host-capable/stdout.raw",
+          "sha256": "20792713bd576c2f7999e09db8bc0a547429dafd498f8db0bab4f6828f277e2c"
+        },
+        "stderr": {
+          "path": "/private/tmp/ce-dsl-step183-20261010/cases/numeric/runs/original/collection-host-capable/stderr.raw",
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        "junit": null,
+        "captures": [],
+        "opened_path_count": 1787,
+        "module_origin_count": 250
+      },
+      "collection_current": {
+        "parent": {
+          "path": "/private/tmp/ce-dsl-step183-20261010/cases/numeric/runs/current/collection-host-capable/parent-receipt.json",
+          "sha256": "f851451fda028f5d8486d9293d484e0cc11de0438570ea9ed06c96e19aace6da"
+        },
+        "child": {
+          "path": "/private/tmp/ce-dsl-step183-20261010/cases/numeric/runs/current/collection-host-capable/child/child-receipt.json",
+          "sha256": "869260048a721a097432e19b64de39cef3f378d1cde84e7f526f6607172c7ef4"
+        },
+        "stdout": {
+          "path": "/private/tmp/ce-dsl-step183-20261010/cases/numeric/runs/current/collection-host-capable/stdout.raw",
+          "sha256": "d37ccf347716439859e2a2c0103df2bdc4661dedb1bf85566cf26048a512285c"
+        },
+        "stderr": {
+          "path": "/private/tmp/ce-dsl-step183-20261010/cases/numeric/runs/current/collection-host-capable/stderr.raw",
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        "junit": null,
+        "captures": [],
+        "opened_path_count": 2004,
+        "module_origin_count": 351
+      },
+      "native_original": {
+        "parent": {
+          "path": "/private/tmp/ce-dsl-step183-20261010/cases/numeric/runs/original/native-host-capable/parent-receipt.json",
+          "sha256": "693edde57278a103250f63939534e4e6fb96f20a41b51fbe75cfc08e92771c04"
+        },
+        "child": {
+          "path": "/private/tmp/ce-dsl-step183-20261010/cases/numeric/runs/original/native-host-capable/child/child-receipt.json",
+          "sha256": "2df3a6f017b0a68e269ec2ca57f18e0dfceedbe377876f45f2bbccf60ab0bce1"
+        },
+        "stdout": {
+          "path": "/private/tmp/ce-dsl-step183-20261010/cases/numeric/runs/original/native-host-capable/stdout.raw",
+          "sha256": "8812143acb5cf50695c6cd71b3eba9fc1d7e2e13349a6018fb1a4a355e1ec7ab"
+        },
+        "stderr": {
+          "path": "/private/tmp/ce-dsl-step183-20261010/cases/numeric/runs/original/native-host-capable/stderr.raw",
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        "junit": {
+          "path": "/private/tmp/ce-dsl-step183-20261010/cases/numeric/runs/original/native-host-capable/child/junit.xml",
+          "sha256": "cc858f9c89e25bd23daa083bd8c459ca65fdbce55d36eb33a652d12e07898390"
+        },
+        "captures": [
+          {
+            "path": "/private/tmp/ce-dsl-step183-20261010/cases/numeric/runs/original/native-host-capable/child/capture-1.json",
+            "sha256": "60af968bc40ed74ff604e2eb4937cd66e6ae4fdf618a7fcc9b62437439ae0920"
+          }
+        ],
+        "opened_path_count": 1977,
+        "module_origin_count": 336
+      },
+      "native_current": {
+        "parent": {
+          "path": "/private/tmp/ce-dsl-step183-20261010/cases/numeric/runs/current/native-host-capable/parent-receipt.json",
+          "sha256": "6c2e9af5b1f7433805650317d8e727142047edf3401b2b70a3b913130ea79be8"
+        },
+        "child": {
+          "path": "/private/tmp/ce-dsl-step183-20261010/cases/numeric/runs/current/native-host-capable/child/child-receipt.json",
+          "sha256": "faa01d4a0902f9cb711aed48019e2324f0e36ebd22ed557760d0e3632f2df482"
+        },
+        "stdout": {
+          "path": "/private/tmp/ce-dsl-step183-20261010/cases/numeric/runs/current/native-host-capable/stdout.raw",
+          "sha256": "278bdb38aadf50f5cb67930ec599c146dfe00c6f311c7ca466474851451413a4"
+        },
+        "stderr": {
+          "path": "/private/tmp/ce-dsl-step183-20261010/cases/numeric/runs/current/native-host-capable/stderr.raw",
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        "junit": {
+          "path": "/private/tmp/ce-dsl-step183-20261010/cases/numeric/runs/current/native-host-capable/child/junit.xml",
+          "sha256": "762e6d7c3a9f34e09ca59f79679323496e3a0bfcbd8667e9baf1f7b8251445fb"
+        },
+        "captures": [
+          {
+            "path": "/private/tmp/ce-dsl-step183-20261010/cases/numeric/runs/current/native-host-capable/child/capture-1.json",
+            "sha256": "60af968bc40ed74ff604e2eb4937cd66e6ae4fdf618a7fcc9b62437439ae0920"
+          }
+        ],
+        "opened_path_count": 2049,
+        "module_origin_count": 372
+      }
+    }
+  ],
+  "base_ledger": {
+    "path": "/tmp/ce-dsl-step182-20261010/ledger-step182-v1.jsonl",
+    "sha256": "2adbfeb95db123cedf6381cf5f5ba0007a2b72b4f5cb6088712c057632e376f5"
+  },
+  "candidate_ledger": {
+    "path": "/private/tmp/ce-dsl-step183-20261010/ledger-step183-v1.jsonl",
+    "sha256": "30e282a7aae418e544477177d13dc177686ef2220294eb56bdc2cd5864f234ef"
+  },
+  "ledger_candidate_receipt": {
+    "path": "/private/tmp/ce-dsl-step183-20261010/ledger-candidate-receipt.json",
+    "sha256": "69f2efc3071697d3a27a4350d0e153a3a6167e2fa6986166206f51060ca98b70"
+  },
+  "protocol_note": {
+    "path": "/private/tmp/ce-dsl-step183-20261010/protocol.md",
+    "sha256": "4dd5ad91d02db6e960f3e41cfc820753964a0e06a6aa7560cf60fbc66a3da0f0"
+  },
+  "step_note_sha256": "dd0f7cb4f6b92eda21b18e7aa83c6788c827e81d0cd4ed2c033a7bf9bfa18a15",
+  "ledger_rows": 931,
+  "reviewed_candidate": 149,
+  "unknown_candidate": 782,
+  "unchanged_raw_lines": 928,
+  "historical_oracle_c992_unchanged": true,
+  "protected_primary_unchanged": true,
+  "frozen_oracle_parity": "NOT_ESTABLISHED",
+  "independent_qa": "PASS",
+  "independent_qa_report": {
+    "path": "/tmp/ce-dsl-step183-independent-qa-20261010/qa-review.md",
+    "sha256": "1d6d440b9e39fa5732ebee915b466888a5e5e3cc83210fd4ed07e14316d89b44"
+  }
+}
