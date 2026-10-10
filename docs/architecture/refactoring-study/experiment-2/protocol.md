@@ -976,6 +976,15 @@ logger/task fields. Whole timing-message masking is insufficient alone.
 Standalone XML, frozen-oracle parity, full transient effects and EE remain
 UNKNOWN.
 
+Step 186: [Five unseeded shape comparisons](step-186-unseeded-shape-bridge.md)
+pass against fresh original/current captures with the same observation schema.
+Independent QA verifies ten native cases, ten recorder captures and 20 rejecting
+controls. Historical five FAILs and the **166/931 reviewed, 765 UNKNOWN** ledger
+are unchanged. Fresh ArchKeel at `1244afff` still reports 13 violations and 254
+canonical UNKNOWNs. That head's CI finished with 50 successful checks, four
+architecture failures and four skips; both external-service jobs passed.
+The earlier Mongo failure remains unresolved in [CE #281](https://github.com/rapiddweller/datamimic/issues/281).
+
 CI at `5c218f8f` remains red: four architecture jobs and one external-service
 job failed. The latter has two Mongo worker server-selection timeouts
 (162 passed, four skipped); the parallel same-head job passed all 164 tests.
