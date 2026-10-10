@@ -3,14 +3,11 @@
 # This software is licensed under the MIT License.
 # See LICENSE file for the full text of the license.
 # For questions and support, contact: info@rapiddweller.com
-import copy
-
 from datamimic_ce.engine.dsl.api import DescriptorParser, IncludeStatement, parse_properties
 from datamimic_ce.engine.io.api import load_connection_profile
 from datamimic_ce.engine.runtime.contexts.context import SetupContext
 from datamimic_ce.engine.runtime.contexts.geniter_context import GenIterContext
-from datamimic_ce.engine.runtime.tasks.base.dispatch import create_task
-from datamimic_ce.engine.runtime.tasks.base.task import CommonSubTask, SetupSubTask
+from datamimic_ce.engine.runtime.tasks.base.task import CommonSubTask
 
 
 class IncludeTask(CommonSubTask):
@@ -53,6 +50,8 @@ class IncludeTask(CommonSubTask):
         :param uri:
         :return:
         """
+        from datamimic_ce.engine.runtime.tasks.setup.setup_task import SetupTask
+
         # Case 1: Check if uri is a properties file
         if uri.endswith(".properties"):
             # Import properties into context
@@ -60,8 +59,6 @@ class IncludeTask(CommonSubTask):
             ctx.properties.update(new_props)
         # Case 2: Check if uri is a descriptor file
         elif uri.endswith(".xml"):
-            from datamimic_ce.engine.runtime.tasks.setup.setup_task import SetupTask
-
             # Parse and execute descriptor file
             sub_setup_stmt = DescriptorParser.parse(
                 ctx.descriptor_dir / self.statement.uri,
@@ -82,6 +79,8 @@ class IncludeTask(CommonSubTask):
         """
         root_ctx = ctx.root
         if uri.endswith(".xml"):
+            from datamimic_ce.engine.runtime.tasks.setup.setup_task import SetupTask
+
             # Parse and execute descriptor file
             sub_setup_stmt = DescriptorParser.parse(
                 root_ctx.descriptor_dir / uri,
@@ -90,7 +89,7 @@ class IncludeTask(CommonSubTask):
                 profile_loader=load_connection_profile,
             )
             # Use copy of parent_context as child_context
-            copied_root_context = copy.deepcopy(root_ctx)
+            copied_root_context = SetupTask._copy_include_context(root_ctx)
 
             # Update root_context with attributes defined in sub-setup statement
             copied_root_context.update_with_stmt(sub_setup_stmt)
@@ -98,11 +97,6 @@ class IncludeTask(CommonSubTask):
             copied_root_context.global_variables.update(ctx.current_variables)
             copied_root_context.global_variables.update(ctx.current_product)
 
-            for stmt in sub_setup_stmt.sub_statements:
-                task = create_task(stmt, copied_root_context)
-                if isinstance(task, SetupSubTask | CommonSubTask):
-                    task.execute(copied_root_context)
-                else:
-                    raise TypeError(f"Unsupported setup task type: {type(task).__name__}")
+            SetupTask.execute_statements(sub_setup_stmt, copied_root_context)
         else:
             raise ValueError(f"Unsupported include file type: {uri} inside <generate>. Only .xml is supported")

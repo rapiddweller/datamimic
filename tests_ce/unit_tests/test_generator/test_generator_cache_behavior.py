@@ -114,25 +114,19 @@ def test_global_increment_registry_preserves_key_scope_and_registered_start(setu
 
 
 def test_deepcopy_of_cached_global_increment_preserves_legacy_copy_graph(
-    setup_context: SetupContext, monkeypatch: pytest.MonkeyPatch
+    setup_context: SetupContext,
 ) -> None:
     generator = GlobalIncrementGenerator("parent.id", setup_context)
     setup_context.generators["parent.id"] = generator
     client = object()
     setup_context.clients["client"] = client
-    dispose_calls: list[object] = []
-    monkeypatch.setattr(
-        "datamimic_ce.engine.runtime.contexts.context.dispose_client_engine",
-        dispose_calls.append,
-    )
-
     assert generator.generate() == 1
     copied = copy.deepcopy(setup_context)
     copied_generator = copied.generators["parent.id"]
 
-    assert dispose_calls == [client, client]
+    assert copied.clients["client"] is not client
     assert copied.global_increment_registry is None
-    assert hasattr(copied_generator, "_context")
+    assert not hasattr(copied_generator, "_context")
     assert copied_generator.generate() == 2
     assert generator.generate() == 2
     assert GlobalIncrementGenerator("parent.id", setup_context).generate() == 3

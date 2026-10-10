@@ -4,10 +4,10 @@
 # See LICENSE file for the full text of the license.
 # For questions and support, contact: info@rapiddweller.com
 import multiprocessing
+from contextlib import suppress
 
 from datamimic_ce.engine.dsl.api import GenerateStatement
-from datamimic_ce.engine.runtime.contexts.context import SetupContext
-from datamimic_ce.engine.runtime.contexts.geniter_context import GenIterContext
+from datamimic_ce.engine.runtime.contexts.context import WorkerContextPayload
 from datamimic_ce.engine.runtime.tasks.generate.workers.generate_worker import GenerateWorker
 
 
@@ -18,7 +18,7 @@ class MultiprocessingGenerateWorker(GenerateWorker):
 
     def mp_process(
         self,
-        copied_context: SetupContext | GenIterContext,
+        copied_context: WorkerContextPayload,
         statement: GenerateStatement,
         chunks: list[tuple[int, int]],
         page_size: int,
@@ -27,7 +27,7 @@ class MultiprocessingGenerateWorker(GenerateWorker):
         Multiprocessing process for generating, exporting data by page, and merging result.
         """
         # Execute generate task using multiprocessing
-        with multiprocessing.Pool(processes=len(chunks)) as pool:
+        with multiprocessing.get_context("spawn").Pool(processes=len(chunks)) as pool:
             mp_result = pool.map(
                 self.mp_wrapper,
                 [
@@ -59,20 +59,32 @@ class MultiprocessingGenerateWorker(GenerateWorker):
         from datamimic_ce.engine.runtime.tasks.generate.workers.generate_worker import GenerateWorker
 
         # Unpack arguments
-        context, stmt, worker_id, chunk_start, chunk_end, page_size = args
+        payload, stmt, worker_id, chunk_start, chunk_end, page_size = args
 
-        from datamimic_ce.engine.runtime.process_titles import set_generate_worker_process_title
+        context = None
+        try:
+            context = GenerateWorker.deserialize_worker_context(payload)
 
-        set_generate_worker_process_title(
-            worker_id=worker_id,
-            task_id=context.root.task_id,
-            statement=stmt.full_name,
-            chunk=(chunk_start, chunk_end),
-        )
+            from datamimic_ce.engine.runtime.process_titles import set_generate_worker_process_title
 
-        # Preprocess serializable objects
-        GenerateWorker.mp_preprocess(context, worker_id)
+            set_generate_worker_process_title(
+                worker_id=worker_id,
+                task_id=context.root.task_id,
+                statement=stmt.full_name,
+                chunk=(chunk_start, chunk_end),
+            )
 
-        return GenerateWorker.generate_and_export_data_by_chunk(
-            context, stmt, worker_id, chunk_start, chunk_end, page_size
-        )
+            GenerateWorker.mp_preprocess(context, worker_id)
+
+            result = GenerateWorker.generate_and_export_data_by_chunk(
+                context, stmt, worker_id, chunk_start, chunk_end, page_size
+            )
+        except BaseException:
+            if context is not None:
+                with suppress(BaseException):
+                    GenerateWorker.cleanup_worker_context(context)
+            raise
+        else:
+            if context is not None:
+                GenerateWorker.cleanup_worker_context(context)
+            return result

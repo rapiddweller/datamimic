@@ -219,14 +219,15 @@
         "datamimic_ce.engine.io.clients"
       ],
       "responsibilities": [
-        "Own database operations and client construction from typed configurations, process-local reuse and cleanup, with live clients, connections and engines confined to their owning execution process."
+        "Own database operations and client construction from typed configurations, process-local reuse and cleanup, with live clients, connections and engines confined to their owning execution process. Preserve native wrapper state in same-process include clones without sharing live engines or disposing parent resources."
       ],
       "forbidden_responsibilities": [
         "Choose source rows or exporter policy."
       ],
       "provenance": [
         "docs/architecture/inner/target.md",
-        "docs/architecture/refactoring-study/experiment-2/amendment-199-process-local-clients.md"
+        "docs/architecture/refactoring-study/experiment-2/amendment-199-process-local-clients.md",
+        "docs/architecture/refactoring-study/experiment-2/amendment-202-descriptor-client-transfer.md"
       ],
       "requires": [
         {

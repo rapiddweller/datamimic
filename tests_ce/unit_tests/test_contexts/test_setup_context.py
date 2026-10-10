@@ -179,7 +179,7 @@ def test_add_client_registers_lookup_and_script_namespace_identity() -> None:
     assert context.eval_namespace("script_client = db")["script_client"] is client
 
 
-def test_setup_context_deepcopy_preserves_client_alias_and_disposes_engine(tmp_path, monkeypatch) -> None:
+def test_setup_context_deepcopy_preserves_client_alias_without_disposing_engine(tmp_path, monkeypatch) -> None:
     monkeypatch.chdir(tmp_path)
     client = RdbmsClient(
         RdbmsConnectionConfig(
@@ -207,10 +207,9 @@ def test_setup_context_deepcopy_preserves_client_alias_and_disposes_engine(tmp_p
 
     copied = copy.deepcopy(context)
 
-    assert dispose_calls == [True]
-    assert client.engine is None
-    assert copied.clients["db"] is copied.namespace["db"]
-    assert copied.clients["db"] is not client
+    assert dispose_calls == []
+    assert client.engine is engine
+    assert copied.clients["db"] is copied.namespace["db"] is client
 
 
 def test_include_setup_merge_overrides_declared_defaults_but_preserves_run_seed() -> None:
@@ -308,7 +307,7 @@ def test_client_registry_annotations_describe_client_mapping() -> None:
     assert deepcopy_clients_hints.get("return") == dict[str, RegisteredClient]
 
 
-def test_client_registry_disposes_before_copy_and_preserves_shared_memo() -> None:
+def test_client_registry_copy_does_not_dispose_callers_and_preserves_shared_memo() -> None:
     events: list[str] = []
 
     class CopyableClient(Client):
@@ -325,17 +324,9 @@ def test_client_registry_disposes_before_copy_and_preserves_shared_memo() -> Non
     context.add_client("db-first", first)
     context.add_client("db-second", second)
 
-    def dispose(value):
-        if isinstance(value, CopyableClient):
-            events.append(f"dispose:{value.name}")
+    copied = copy.deepcopy(context)
 
-    with patch(
-        "datamimic_ce.engine.runtime.contexts.context.dispose_client_engine",
-        side_effect=dispose,
-    ):
-        copied = copy.deepcopy(context)
-
-    assert events == ["dispose:first", "dispose:second", "copy:first", "copy:second"]
+    assert events == ["copy:first", "copy:second"]
     assert copied.clients["db-first"] is copied._namespace["db-first"]
     assert copied.clients["db-second"] is copied._namespace["db-second"]
     assert copied.clients["db-first"] is not first

@@ -1,4 +1,4 @@
-from unittest.mock import MagicMock, patch
+from unittest.mock import MagicMock
 
 from datamimic_ce.engine.dsl.model.setup.database_model import DatabaseModel
 from datamimic_ce.engine.dsl.model.setup.mongodb_model import MongoDBModel
@@ -25,20 +25,13 @@ def test_database_task_builds_io_config_from_dsl_model() -> None:
         )
     )
     context = MagicMock(spec=SetupContext)
-    context.task_id = "task"
-    client = object()
+    DatabaseTask(statement).execute(context)
 
-    with patch(
-        "datamimic_ce.engine.runtime.tasks.setup.database_task.create_rdbms_client", return_value=client
-    ) as create_client:
-        DatabaseTask(statement).execute(context)
-
-    config = create_client.call_args.args[0]
+    config = context.register_client_config.call_args.args[1]
     assert isinstance(config, RdbmsConnectionConfig)
     assert config.host == "localhost"
     assert config.port == 5432
-    create_client.assert_called_once_with(config, "task")
-    context.add_client.assert_called_once_with("db", client)
+    context.register_client_config.assert_called_once_with("db", config)
 
 
 def test_mongodb_task_builds_io_config_without_statement_side_effects() -> None:
@@ -48,13 +41,9 @@ def test_mongodb_task_builds_io_config_without_statement_side_effects() -> None:
     assert not hasattr(statement, "_mongodb_client")
 
     context = MagicMock(spec=SetupContext)
-    client = object()
-    with patch(
-        "datamimic_ce.engine.runtime.tasks.setup.mongodb_task.create_mongodb_client", return_value=client
-    ) as create_client:
-        MongoDBTask(statement).execute(context)
+    MongoDBTask(statement).execute(context)
 
-    config = create_client.call_args.args[0]
+    config = context.register_client_config.call_args.args[1]
     assert isinstance(config, MongoDBConnectionConfig)
     assert config.port == 27017
-    context.add_client.assert_called_once_with("mongo", client)
+    context.register_client_config.assert_called_once_with("mongo", config)

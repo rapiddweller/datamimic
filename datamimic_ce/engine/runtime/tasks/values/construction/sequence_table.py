@@ -60,7 +60,6 @@ class SequenceTableGenerator(BaseLiteralGenerator):
 
     Attributes:
         _stmt: The statement (KeyStatement or VariableStatement) containing sequence configuration
-        _context: The context object containing configuration and state
         _source_name: Name of the database source
         _start: Starting sequence number for this generator instance
         _current: Current sequence number
@@ -92,7 +91,6 @@ class SequenceTableGenerator(BaseLiteralGenerator):
             AttributeError: If database client is not properly configured
         """
         self._stmt = stmt
-        self._context = context
         self._process_id: int | None = None
         self._current: int | None = None
         self._end: int | None = None

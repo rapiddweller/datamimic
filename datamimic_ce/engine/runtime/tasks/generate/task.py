@@ -4,11 +4,8 @@
 # See LICENSE file for the full text of the license.
 # For questions and support, contact: info@rapiddweller.com
 
-import copy
 import math
 from typing import Protocol
-
-import dill
 
 from datamimic_ce.engine.dsl.api import CompositeStatement, GenerateStatement, KeyStatement, Statement
 from datamimic_ce.engine.io.api import (
@@ -21,7 +18,7 @@ from datamimic_ce.engine.io.api import (
     publish_exported_artifacts,
     resolve_target_entity,
 )
-from datamimic_ce.engine.runtime.contexts.context import Context, SetupContext
+from datamimic_ce.engine.runtime.contexts.context import Context, SetupContext, WorkerContextPayload
 from datamimic_ce.engine.runtime.contexts.geniter_context import GenIterContext
 from datamimic_ce.engine.runtime.logging import gen_timer, logger
 from datamimic_ce.engine.runtime.scripting.evaluation import interpolate_variables
@@ -29,6 +26,7 @@ from datamimic_ce.engine.runtime.tasks.base.counts import get_int_count, resolve
 from datamimic_ce.engine.runtime.tasks.base.dispatch import create_task
 from datamimic_ce.engine.runtime.tasks.base.task import CommonSubTask
 from datamimic_ce.engine.runtime.tasks.generate.policies.single_process_policy import resolve_single_process
+from datamimic_ce.engine.runtime.tasks.generate.workers.generate_worker import GenerateWorker
 from datamimic_ce.engine.runtime.tasks.sources.length import data_source_cache_key, set_data_source_length
 
 
@@ -254,13 +252,7 @@ class GenerateTask(CommonSubTask):
                 if isinstance(context, SetupContext) and num_workers > 1:
                     self._reject_positional_sequences_under_mp()
                     # Serialize context for Ray multiprocessing
-                    copied_context = copy.deepcopy(context)
-                    ns_funcs = {k: v for k, v in copied_context.root.namespace.items() if callable(v)}
-                    for func in ns_funcs:
-                        copied_context.root.namespace.pop(func)
-                    copied_context.root.namespace_functions = dill.dumps(ns_funcs)
-                    copied_context.root.serialized_generators = dill.dumps(copied_context.root.generators)
-                    copied_context.root.generators = {}
+                    copied_context = GenerateWorker.serialize_worker_context(context)
 
                     # Determine chunk data indices based on chunk size and required data count
                     # then populate to workers, such as (0, 1000), (1000, 2000), etc.
@@ -275,7 +267,7 @@ class GenerateTask(CommonSubTask):
                     class _MpWorker(Protocol):
                         def mp_process(
                             self,
-                            copied_context: SetupContext | GenIterContext,
+                            copied_context: WorkerContextPayload,
                             statement: GenerateStatement,
                             chunks: list[tuple[int, int]],
                             page_size: int,
@@ -323,8 +315,6 @@ class GenerateTask(CommonSubTask):
                 else:
                     # If inner gen_stmt, pass worker_id from outermost gen_stmt to inner gen_stmt
                     worker_id = context.worker_id if isinstance(context, GenIterContext) else 1
-                    from datamimic_ce.engine.runtime.tasks.generate.workers.generate_worker import GenerateWorker
-
                     merged_result = GenerateWorker.generate_and_export_data_by_chunk(
                         context, self._statement, worker_id, 0, count, page_size
                     )

@@ -21,7 +21,6 @@ class GlobalIncrementGenerator(BaseLiteralGenerator):
         self._registry = registry
         if qualified_key not in self._registry.counters:
             self._registry.register(qualified_key)
-        self._context = context
 
     def generate(self) -> int:
         return self._registry.next(self.qualified_key)

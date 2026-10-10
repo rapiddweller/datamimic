@@ -2,6 +2,7 @@
 
 from datamimic_ce.engine.io.clients.client import Client, RegisteredClient
 from datamimic_ce.engine.io.clients.operations import (
+    clone_client_for_include,
     count_query_length,
     create_mongodb_client,
     create_rdbms_client,
@@ -75,6 +76,7 @@ from datamimic_ce.engine.io.memstore import Memstore
 
 __all__ = [
     "Client",
+    "clone_client_for_include",
     "RegisteredClient",
     "ChunkSourceWindow",
     "DataSourcePagination",

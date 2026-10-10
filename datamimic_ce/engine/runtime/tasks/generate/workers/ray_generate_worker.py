@@ -4,11 +4,12 @@
 # See LICENSE file for the full text of the license.
 # For questions and support, contact: info@rapiddweller.com
 
+from contextlib import suppress
+
 import ray
 
 from datamimic_ce.engine.dsl.api import GenerateStatement
-from datamimic_ce.engine.runtime.contexts.context import SetupContext
-from datamimic_ce.engine.runtime.contexts.geniter_context import GenIterContext
+from datamimic_ce.engine.runtime.contexts.context import WorkerContextPayload
 from datamimic_ce.engine.runtime.tasks.generate.workers.generate_worker import GenerateWorker
 
 
@@ -19,7 +20,7 @@ class RayGenerateWorker(GenerateWorker):
 
     def mp_process(
         self,
-        copied_context: SetupContext | GenIterContext,
+        copied_context: WorkerContextPayload,
         statement: GenerateStatement,
         chunks: list[tuple[int, int]],
         page_size: int,
@@ -53,7 +54,7 @@ class RayGenerateWorker(GenerateWorker):
     @staticmethod
     @ray.remote
     def ray_process(
-        context: SetupContext | GenIterContext,
+        payload: WorkerContextPayload,
         stmt: GenerateStatement,
         worker_id: int,
         chunk_start: int,
@@ -63,9 +64,17 @@ class RayGenerateWorker(GenerateWorker):
         """
         Ray remote function to generate and export data by page in multiprocessing.
         """
-        # Preprocess serializable objects
-        GenerateWorker.mp_preprocess(context, worker_id)
+        context = GenerateWorker.deserialize_worker_context(payload)
+        try:
+            GenerateWorker.mp_preprocess(context, worker_id)
 
-        return GenerateWorker.generate_and_export_data_by_chunk(
-            context, stmt, worker_id, chunk_start, chunk_end, page_size
-        )
+            result = GenerateWorker.generate_and_export_data_by_chunk(
+                context, stmt, worker_id, chunk_start, chunk_end, page_size
+            )
+        except BaseException:
+            with suppress(BaseException):
+                GenerateWorker.cleanup_worker_context(context)
+            raise
+        else:
+            GenerateWorker.cleanup_worker_context(context)
+            return result

@@ -1,5 +1,6 @@
 """Operations that runtime tasks may perform without depending on client classes."""
 
+import copy
 import logging
 from typing import TypeGuard
 
@@ -23,6 +24,15 @@ def create_rdbms_client(config: RdbmsConnectionConfig, task_id: str) -> Client:
 
 def create_mongodb_client(config: MongoDBConnectionConfig) -> Client:
     return MongoDBClient(config)
+
+
+def clone_client_for_include(client: RegisteredClient) -> RegisteredClient:
+    if isinstance(client, RdbmsClient):
+        memo = {id(client.engine): None} if client.engine is not None else {}
+        return copy.deepcopy(client, memo)
+    if isinstance(client, MongoDBClient):
+        return copy.deepcopy(client)
+    raise TypeError(f"Cannot clone unsupported descriptor client: {type(client).__name__}")
 
 
 def execute_sql_script(client: SqlScriptClient, query: str) -> None:

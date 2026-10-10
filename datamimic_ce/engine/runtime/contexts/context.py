@@ -9,10 +9,12 @@ from __future__ import annotations  # Enable forward declarations
 import copy
 import random
 import secrets
+import weakref
 from abc import ABC, abstractmethod
+from dataclasses import dataclass
 from pathlib import Path
 from random import Random
-from typing import Literal
+from typing import Literal, TypeAlias
 
 from faker import Faker
 
@@ -26,7 +28,13 @@ from datamimic_ce.domains.api import (
     spawn_rng,
 )
 from datamimic_ce.engine.dsl.api import SetupStatement
-from datamimic_ce.engine.io.api import ExportSession, RegisteredClient, TestResultExporter, dispose_client_engine
+from datamimic_ce.engine.io.api import (
+    ExportSession,
+    MongoDBConnectionConfig,
+    RdbmsConnectionConfig,
+    RegisteredClient,
+    TestResultExporter,
+)
 from datamimic_ce.engine.runtime.contexts.demographic_context import DemographicContext
 from datamimic_ce.engine.runtime.logging import logger
 from datamimic_ce.engine.runtime.scripting import evaluation
@@ -35,6 +43,23 @@ from datamimic_ce.engine.runtime.scripting.plugins import execute_script
 from datamimic_ce.engine.runtime.storage.global_increment import GlobalIncrementRegistry
 from datamimic_ce.engine.runtime.storage.memstore_manager import MemstoreManager
 from datamimic_ce.randomness import RandomSource
+
+ClientConfig: TypeAlias = RdbmsConnectionConfig | MongoDBConnectionConfig
+
+
+@dataclass(frozen=True)
+class DescriptorClientRef:
+    token: int
+
+
+@dataclass(frozen=True)
+class WorkerContextPayload:
+    task_id: str
+    context: bytes
+    namespace_functions: bytes
+    generators: bytes
+    client_configs: dict[int, ClientConfig]
+    client_bindings: dict[str, int]
 
 
 class Context(ABC):
@@ -211,6 +236,10 @@ class SetupContext(Context):
         super().__init__(self)
         self._descriptor_dir = descriptor_dir
         self._clients: dict[str, RegisteredClient] = {} if clients is None else clients
+        self._pending_client_configs: dict[str, ClientConfig] = {}
+        self._descriptor_client_bindings: dict[str, int] = {}
+        self._descriptor_client_history: list[tuple[weakref.ReferenceType[RegisteredClient], ClientConfig]] = []
+        self._owned_descriptor_clients: list[RegisteredClient] = []
         self._data_source_len: dict[tuple[str | None, str | None], int] = (
             {} if data_source_len is None else data_source_len
         )
@@ -252,6 +281,7 @@ class SetupContext(Context):
         self._default_source_scripted = default_source_scripted
         self._report_logging = report_logging
         self._export_session: ExportSession | None = None
+        self._namespace_functions: bytes | None = None
         self._serialized_generators: bytes | None = None
         self._demographic_context = demographic_context
         self._run_seed = run_seed if run_seed is not None else RunSeed.create(None)
@@ -303,11 +333,8 @@ class SetupContext(Context):
         :param memo:
         :return:
         """
-        for _key, value in self._clients.items():
-            dispose_client_engine(value)
-
         # Create a new instance of SetupContext with the copied attributes
-        return SetupContext(
+        copied = SetupContext(
             task_id=self._task_id,
             memstore_manager=self._memstore_manager,
             use_mp=copy.deepcopy(self._use_mp, memo),
@@ -335,6 +362,20 @@ class SetupContext(Context):
             runtime_environment=self.runtime_environment,
             ray_debug=self.ray_debug,
         )
+        memo[id(self)] = copied
+        copied._pending_client_configs = copy.deepcopy(self._pending_client_configs, memo)
+        copied._descriptor_client_bindings = copy.deepcopy(self._descriptor_client_bindings, memo)
+        history = self._descriptor_client_history
+        if id(history) in memo:
+            history_copy = memo[id(history)]
+            if not isinstance(history_copy, list):
+                raise TypeError("Descriptor client history memo must be a list")
+            copied._descriptor_client_history = history_copy
+        else:
+            copied._descriptor_client_history = copy.deepcopy(history, memo)
+            memo[id(history)] = copied._descriptor_client_history
+        copied._owned_descriptor_clients = copy.deepcopy(self._owned_descriptor_clients, memo)
+        return copied
 
     @property
     def domain_identifier_registry(self) -> IdentifierRegistry:
@@ -350,9 +391,11 @@ class SetupContext(Context):
         for key, value in self._clients.items():
             try:
                 copied_clients[key] = copy.deepcopy(value, memo)
+                memo[id(value)] = copied_clients[key]
             except TypeError as e:
                 logger.warning(f"Cannot deepcopy client '{key}': {e}")
                 copied_clients[key] = value  # Use the original object if deepcopy fails
+                memo[id(value)] = value
         return copied_clients
 
     def _deepcopy_namespace(self, memo: dict[int, object]) -> dict[str, object]:
@@ -468,6 +511,12 @@ class SetupContext(Context):
     @clients.setter
     def clients(self, value: dict[str, RegisteredClient]) -> None:
         self._clients = value
+        self._descriptor_client_bindings = {
+            client_id: token
+            for client_id, token in self._descriptor_client_bindings.items()
+            if client_id in value
+            and self._descriptor_client_history[token][0]() is value[client_id]
+        }
 
     @property
     def data_source_len(self) -> dict[tuple[str | None, str | None], int]:
@@ -638,12 +687,62 @@ class SetupContext(Context):
         :return:
         """
         self._clients[client_id] = client
+        self._pending_client_configs.pop(client_id, None)
+        self._descriptor_client_bindings.pop(client_id, None)
         # Also bind by id into the script namespace (migration parity: <execute>/<variable script=>
         # can reference a declared <database>/<mongodb> id directly, e.g. `db.something()`) - both
         # eval_namespace (copies self._namespace wholesale) and evaluate_python_expression's scope
         # building read from this same dict, so this covers both script-evaluation paths regardless
         # of statement order.
         self._namespace[client_id] = client
+
+    def register_client_config(self, client_id: str, config: ClientConfig) -> None:
+        if not isinstance(config, RdbmsConnectionConfig | MongoDBConnectionConfig):
+            raise TypeError("Descriptor client config must be a typed RDBMS or MongoDB config")
+        self._pending_client_configs[client_id] = config
+
+    def record_descriptor_client(self, client_id: str, client: RegisteredClient, config: ClientConfig) -> None:
+        if not isinstance(config, RdbmsConnectionConfig | MongoDBConnectionConfig):
+            raise TypeError("Descriptor client config must be a typed RDBMS or MongoDB config")
+        token = self._record_descriptor_reference(client, config)
+        self._descriptor_client_bindings[client_id] = token
+        self._pending_client_configs.pop(client_id, None)
+        self._clients[client_id] = client
+        self._namespace[client_id] = client
+        if all(owned is not client for owned in self._owned_descriptor_clients):
+            self._owned_descriptor_clients.append(client)
+
+    def _record_descriptor_reference(self, client: RegisteredClient, config: ClientConfig) -> int:
+        for token, (client_ref, _known_config) in enumerate(self._descriptor_client_history):
+            if client_ref() is client:
+                return token
+        token = len(self._descriptor_client_history)
+        self._descriptor_client_history.append((weakref.ref(client), config))
+        if all(owned is not client for owned in self._owned_descriptor_clients):
+            self._owned_descriptor_clients.append(client)
+        return token
+
+    def take_owned_descriptor_clients(self) -> list[RegisteredClient]:
+        clients, self._owned_descriptor_clients = self._owned_descriptor_clients, []
+        return clients
+
+    def worker_projection(self) -> SetupContext:
+        memo: dict[int, object] = {}
+        for token, (client_ref, _config) in enumerate(self._descriptor_client_history):
+            client = client_ref()
+            if client is not None:
+                memo[id(client)] = DescriptorClientRef(token)
+        projected = copy.deepcopy(self, memo)
+        projected._global_variables = copy.deepcopy(self._global_variables, memo)
+        projected._clients = {}
+        projected._test_result_exporter = TestResultExporter()
+        projected._owned_descriptor_clients = []
+        projected._descriptor_client_bindings = {}
+        projected._descriptor_client_history = []
+        projected._pending_client_configs = {}
+        projected._export_session = None
+        projected._serialized_generators = None
+        return projected
 
     def get_client_by_id(self, client_id: str) -> RegisteredClient | None:
         """

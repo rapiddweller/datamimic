@@ -5,6 +5,9 @@
 # For questions and support, contact: info@rapiddweller.com
 import copy
 import os
+import pickle
+from contextlib import suppress
+from io import BytesIO
 
 import dill
 
@@ -12,9 +15,20 @@ from datamimic_ce.engine.dsl.api import CompositeStatement, ConditionStatement, 
 from datamimic_ce.engine.io.api import (
     DataSourcePagination,
     ExportSession,
+    MongoDBConnectionConfig,
+    RdbmsConnectionConfig,
+    RegisteredClient,
+    create_mongodb_client,
+    create_rdbms_client,
+    dispose_client_engine,
     resolve_target_entity,
 )
-from datamimic_ce.engine.runtime.contexts.context import SetupContext
+from datamimic_ce.engine.runtime.contexts.context import (
+    ClientConfig,
+    DescriptorClientRef,
+    SetupContext,
+    WorkerContextPayload,
+)
 from datamimic_ce.engine.runtime.contexts.geniter_context import GenIterContext
 from datamimic_ce.engine.runtime.logging import gen_timer, logger, setup_logger
 from datamimic_ce.engine.runtime.scripting.evaluation import evaluate_source_template
@@ -29,6 +43,159 @@ class GenerateWorker:
     """
     Worker class for generating and exporting data by page in single process.
     """
+
+    @staticmethod
+    def serialize_worker_context(context: SetupContext) -> WorkerContextPayload:
+        configs = {
+            token: config
+            for token, (client_ref, config) in enumerate(context._descriptor_client_history)
+            if client_ref() is not None
+        }
+        tokens = {
+            id(client): token
+            for token, (client_ref, _config) in enumerate(context._descriptor_client_history)
+            if (client := client_ref()) is not None
+        }
+        bindings = {
+            client_id: tokens[id(client)]
+            for client_id, client in context.clients.items()
+            if id(client) in tokens
+        }
+        projected = context.worker_projection()
+        namespace_functions = {key: value for key, value in projected.namespace.items() if callable(value)}
+        for key in namespace_functions:
+            projected.namespace.pop(key)
+        generators = projected.generators
+        projected.generators = {}
+
+        seen: set[int] = set()
+
+        def dump_graph(value: object) -> bytes:
+            stream = BytesIO()
+
+            class ClientReferencePickler(dill.Pickler):
+                def persistent_id(self, obj: object) -> object | None:
+                    token = obj.token if isinstance(obj, DescriptorClientRef) else tokens.get(id(obj))
+                    if token is None:
+                        return None
+                    seen.add(token)
+                    return ("descriptor-client", token)
+
+            ClientReferencePickler(
+                stream,
+                protocol=dill.settings["protocol"],
+                byref=dill.settings["byref"],
+                fmode=dill.settings["fmode"],
+                recurse=dill.settings["recurse"],
+            ).dump(value)
+            return stream.getvalue()
+
+        context_bytes = dump_graph(projected)
+        namespace_bytes = dump_graph(namespace_functions)
+        generators_bytes = dump_graph(generators)
+        payload_tokens = seen | set(bindings.values())
+        return WorkerContextPayload(
+            task_id=context.task_id,
+            context=context_bytes,
+            namespace_functions=namespace_bytes,
+            generators=generators_bytes,
+            client_configs={token: configs[token] for token in payload_tokens},
+            client_bindings=bindings,
+        )
+
+    @staticmethod
+    def deserialize_worker_context(payload: WorkerContextPayload) -> SetupContext:
+        created: list[tuple[RegisteredClient, ClientConfig]] = []
+
+        def load_graph(
+            blob: bytes, configs: dict[int, ClientConfig]
+        ) -> tuple[object, dict[int, RegisteredClient]]:
+            graph_clients: dict[int, RegisteredClient] = {}
+            stream = BytesIO(blob)
+
+            class ClientReferenceUnpickler(dill.Unpickler):
+                def persistent_load(self, persistent_id: object) -> object:
+                    if not isinstance(persistent_id, tuple) or len(persistent_id) != 2:
+                        raise pickle.UnpicklingError(f"Unknown descriptor client reference: {persistent_id!r}")
+                    kind, token = persistent_id
+                    if not isinstance(kind, str) or not isinstance(token, int):
+                        raise pickle.UnpicklingError(f"Unknown descriptor client reference: {persistent_id!r}")
+                    if kind != "descriptor-client" or token not in configs:
+                        raise pickle.UnpicklingError(f"Unknown descriptor client reference: {persistent_id!r}")
+                    if token not in graph_clients:
+                        config = configs[token]
+                        if isinstance(config, RdbmsConnectionConfig):
+                            client = create_rdbms_client(config, payload.task_id)
+                        elif isinstance(config, MongoDBConnectionConfig):
+                            client = create_mongodb_client(config)
+                        else:
+                            raise pickle.UnpicklingError(
+                                f"Unsupported descriptor client config: {type(config).__name__}"
+                            )
+                        graph_clients[token] = client
+                        created.append((client, config))
+                    return graph_clients[token]
+
+            return ClientReferenceUnpickler(stream).load(), graph_clients
+
+        try:
+            context_object, context_clients = load_graph(payload.context, payload.client_configs)
+            if not isinstance(context_object, SetupContext):
+                raise pickle.UnpicklingError("Worker context graph did not contain SetupContext")
+            namespace_functions, _function_clients = load_graph(payload.namespace_functions, payload.client_configs)
+            if not isinstance(namespace_functions, dict):
+                raise pickle.UnpicklingError("Worker namespace graph did not contain a mapping")
+            generators, _generator_clients = load_graph(payload.generators, payload.client_configs)
+            if not isinstance(generators, dict):
+                raise pickle.UnpicklingError("Worker generators graph did not contain a mapping")
+            context_object.namespace.update(namespace_functions)
+            context_object.generators = generators
+            context_object._clients = {}
+            for client_id, token in payload.client_bindings.items():
+                client = context_clients.get(token)
+                config = payload.client_configs[token]
+                if client is None:
+                    if isinstance(config, RdbmsConnectionConfig):
+                        client = create_rdbms_client(config, payload.task_id)
+                    elif isinstance(config, MongoDBConnectionConfig):
+                        client = create_mongodb_client(config)
+                    else:
+                        raise TypeError(f"Unsupported descriptor client config: {type(config).__name__}")
+                    context_clients[token] = client
+                    created.append((client, config))
+                context_object._clients[client_id] = client
+                context_object._descriptor_client_bindings[client_id] = context_object._record_descriptor_reference(
+                    client, config
+                )
+            for client, config in created:
+                context_object._record_descriptor_reference(client, config)
+        except BaseException:
+            with suppress(BaseException):
+                GenerateWorker._cleanup_created_clients(created)
+            raise
+        return context_object
+
+    @staticmethod
+    def _cleanup_created_clients(clients: list[tuple[RegisteredClient, ClientConfig]]) -> None:
+        first_error: BaseException | None = None
+        for client, _config in clients:
+            try:
+                dispose_client_engine(client)
+            except BaseException as error:
+                if first_error is None:
+                    first_error = error
+        if first_error is not None:
+            raise first_error
+
+    @staticmethod
+    def cleanup_worker_context(context: SetupContext) -> None:
+        owned = context.take_owned_descriptor_clients()
+        clients = [
+            (client, config)
+            for client_ref, config in context._descriptor_client_history
+            if (client := client_ref()) is not None and any(client is current for current in owned)
+        ]
+        GenerateWorker._cleanup_created_clients(clients)
 
     @staticmethod
     def generate_and_export_data_by_chunk(
@@ -261,9 +428,3 @@ class GenerateWorker:
         # separating workers' id ranges was the shared DB sequence's own atomic advance, which
         # isn't a real guarantee once the per-process math is supposed to keep ranges apart.
         context.root.process_id = worker_id - 1
-
-        # Deserialize multiprocessing arguments
-        if context.root.namespace_functions is not None:
-            context.root.namespace.update(dill.loads(context.root.namespace_functions))
-        if context.root.serialized_generators is not None:
-            context.root.generators = dill.loads(context.root.serialized_generators)

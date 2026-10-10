@@ -5,7 +5,7 @@
 # For questions and support, contact: info@rapiddweller.com
 
 from datamimic_ce.engine.dsl.api import MongoDBStatement
-from datamimic_ce.engine.io.api import MongoDBConnectionConfig, create_mongodb_client
+from datamimic_ce.engine.io.api import MongoDBConnectionConfig
 from datamimic_ce.engine.runtime.contexts.context import SetupContext
 from datamimic_ce.engine.runtime.tasks.base.task import SetupSubTask
 
@@ -20,7 +20,4 @@ class MongoDBTask(SetupSubTask):
 
     def execute(self, ctx: SetupContext):
         connection_config = MongoDBConnectionConfig(**self._statement.model.model_dump())
-        ctx.add_client(
-            self._statement.mongodb_id,
-            create_mongodb_client(connection_config),
-        )
+        ctx.register_client_config(self._statement.mongodb_id, connection_config)
