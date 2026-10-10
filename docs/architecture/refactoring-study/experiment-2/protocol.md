@@ -842,6 +842,10 @@ Native amendment validation exits 2 with the same 19 usage-UNKNOWN diagnostics,
 emitted. CI-ONLY VERIFICATION: new-head checks pending. Full DSL/EE acceptance
 remains open. Evidence: `/tmp/ce-resume-20261010/next-slice-172/`.
 
+The [1.1.0 acceptance refresh](archkeel-1.1.0-acceptance-refresh.md) records
+full declared-component navigation coverage and the current UNKNOWN review.
+The RDBMS annotation proposal remains on hold after a serializer counterexample.
+
 ## Agent separation
 
 - The implementation agent changes production code and targeted tests for one approved slice.
