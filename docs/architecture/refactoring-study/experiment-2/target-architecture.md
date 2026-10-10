@@ -20,7 +20,7 @@ list to become empty. Numeric budgets remain separate, non-increasing quality ra
 - `randomness.py` owns the shared RNG protocol and weighted-index primitive.
 - `_compat.py` stays because Python 3.10 is supported. It contains compatibility primitives only.
 - there is no `services`, `utils`, `foundation`, or other miscellaneous target component.
-- `domains` reads packaged datasets only through `engine.io.dataset_api`; database IO remains
+- `domains` reads packaged datasets only through `engine.io.files.api`; database IO remains
   forbidden there.
 
 ## Target package root
