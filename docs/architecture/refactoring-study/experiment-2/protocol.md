@@ -820,6 +820,28 @@ UNKNOWNs and 14 baseline-new groups; no machine amendment is emitted.
 CI-ONLY VERIFICATION: new-head checks pending. No full DSL/EE acceptance.
 Evidence: `/tmp/ce-resume-20261010/next-slice-171/`.
 
+Step 170: [Amendment 185](amendment-185-product-map-boundaries.md) permits only
+the outer `Mapping[str, list[dict[str, object]]]` at the two IO capture/Memstore
+`products` parameters. Two selectors are appended to the unchanged 24; inner
+row maps and native values remain open. Production, baseline, budgets, oracle
+and SQL155 are unchanged. LOCAL VERIFIED: native dispatch 27 PASS before the
+contract edit; exact guard RED→GREEN with identical test bytes. Selected cohort:
+91 PASS / 11 existing Ray-rework skips, including nine passing SP/MP capture,
+zero-count and nested Memstore cases. Package/changed-test Ruff, full MyPy
+(488 files) and 13 definition checks PASS; the latter use the project venv after
+uvx cache access fails. Isolated source controls retain inner/fixed-control
+findings and reject changed outer keys/containers. No live-worker proof is added.
+The single published 1.1.0 report confirms FAIL22 (24 → 22), preserving all
+22 remaining findings and 254 canonical / 200 measured UNKNOWNs exactly.
+Source, symbols, topology, calls and coverage (488/488) remain unchanged.
+Two new outer allowance facts add no opacity; 11 existing facts gain only
+Amendment 185 provenance. Independent QA: four tests, five native probes,
+seven wrong-selector pairs, two removals and six source-shape controls PASS.
+Native amendment validation exits 2 with the same 19 usage-UNKNOWN diagnostics,
+14 baseline-new groups and the IO widening retained; no machine amendment is
+emitted. CI-ONLY VERIFICATION: new-head checks pending. Full DSL/EE acceptance
+remains open. Evidence: `/tmp/ce-resume-20261010/next-slice-172/`.
+
 ## Agent separation
 
 - The implementation agent changes production code and targeted tests for one approved slice.

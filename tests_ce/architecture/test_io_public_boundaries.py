@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import importlib
 import json
+from collections.abc import Mapping
 from pathlib import Path
 from typing import get_type_hints
 
@@ -211,6 +212,8 @@ def test_io_native_payload_permissions_keep_exact_shapes_and_depths() -> None:
     assert get_type_hints(io_api.ChunkSourceWindow.read_page)["return"] == list[dict[str, object]]
     assert get_type_hints(io_api.read_generate_database_source)["return"] == list[dict[str, object]]
     assert get_type_hints(io_api.read_reference_rows)["return"] == list[dict[str, object]]
+    assert get_type_hints(io_api.capture_test_results)["products"] == Mapping[str, list[dict[str, object]]]
+    assert get_type_hints(io_api.consume_memstore_target)["products"] == Mapping[str, list[dict[str, object]]]
 
     contract = json.loads((ROOT / "architecture-contract.json").read_text(encoding="utf-8"))
     rule = next(rule for rule in contract["rules"] if rule["id"] == "IO-API-TYPES")
@@ -273,9 +276,16 @@ def test_io_native_payload_permissions_keep_exact_shapes_and_depths() -> None:
         }
         expected.extend([selector, {**selector, "container_depth": 2}])
 
-    assert len(rule["allowed_positions"]) == 24
-    for selector in expected:
-        assert selector in rule["allowed_positions"]
+    expected.extend(
+        {
+            "qualified_name": f"datamimic_ce.engine.io.api.{name}",
+            "position": "products",
+            "field_path": "",
+            "annotation": "Mapping[str, list[dict[str, object]]]",
+        }
+        for name in ["capture_test_results", "consume_memstore_target"]
+    )
+    assert rule["allowed_positions"] == expected
 
 
 def test_export_session_keeps_native_xml_rows_and_converted_scalar_rows() -> None:

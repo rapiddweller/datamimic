@@ -1117,7 +1117,8 @@
         "docs/architecture/refactoring-study/experiment-2/amendment-176-native-map-boundaries.md",
         "docs/architecture/refactoring-study/experiment-2/amendment-179-smoke-export-dto-selectors.md",
         "docs/architecture/refactoring-study/experiment-2/amendment-181-native-io-rows.md",
-        "docs/architecture/refactoring-study/experiment-2/amendment-183-native-xml-rows.md"
+        "docs/architecture/refactoring-study/experiment-2/amendment-183-native-xml-rows.md",
+        "docs/architecture/refactoring-study/experiment-2/amendment-185-product-map-boundaries.md"
       ],
       "decided_by": "agent",
       "allowed_positions": [
@@ -1275,6 +1276,18 @@
           "field_path": "",
           "annotation": "list[dict[str, object]]",
           "container_depth": 2
+        },
+        {
+          "qualified_name": "datamimic_ce.engine.io.api.capture_test_results",
+          "position": "products",
+          "field_path": "",
+          "annotation": "Mapping[str, list[dict[str, object]]]"
+        },
+        {
+          "qualified_name": "datamimic_ce.engine.io.api.consume_memstore_target",
+          "position": "products",
+          "field_path": "",
+          "annotation": "Mapping[str, list[dict[str, object]]]"
         }
       ]
     },

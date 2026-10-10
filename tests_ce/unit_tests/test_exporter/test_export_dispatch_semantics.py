@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from decimal import Decimal
-from types import SimpleNamespace
+from types import MappingProxyType, SimpleNamespace
 
 import pytest
 
@@ -17,7 +17,7 @@ from datamimic_ce.engine.dsl.api import (
     GenerateStatement,
 )
 from datamimic_ce.engine.dsl.model.generation.generate_model import GenerateModel
-from datamimic_ce.engine.io.api import Exporter, ExportSession, buffered_exporter_names
+from datamimic_ce.engine.io.api import Exporter, ExportSession, Memstore, buffered_exporter_names
 from datamimic_ce.engine.io.contracts import ExportMetadata
 from datamimic_ce.engine.io.exporters import registry as exporter_registry
 from datamimic_ce.engine.io.exporters import session as export_session_module
@@ -56,7 +56,7 @@ def test_lazy_capture_rejects_wrong_exporter_type() -> None:
     context = SimpleNamespace(test_result_exporter=Exporter())
 
     with pytest.raises(TypeError, match="Test capture requires TestResultExporter"):
-        exporter_registry.capture_test_results(context, {"rows": []})
+        exporter_registry.capture_test_results(context, None)
 
 
 def test_memstore_write_rejects_wrong_exporter_type() -> None:
@@ -65,6 +65,131 @@ def test_memstore_write_rejects_wrong_exporter_type() -> None:
 
     with pytest.raises(TypeError, match="Memstore target requires Memstore exporter"):
         exporter_registry.consume_memstore_target(context, ["mem"], None, None, "rows", "rows", {"rows": []})
+
+
+def test_capture_preserves_read_only_product_order_and_native_row_identity() -> None:
+    exporter = TestResultExporter()
+    context = SimpleNamespace(test_result_exporter=exporter)
+    native = object()
+    row = {"value": native, "amount": Decimal("1.25")}
+    rows = [row]
+    products = MappingProxyType({"parent| rows |detail ": rows, "empty": []})
+
+    exporter_registry.capture_test_results(context, products)
+    first = exporter.get_result()["rows |detail"]
+    assert list(exporter.get_result()) == ["rows |detail", "empty"]
+    assert first is not rows and first[0] is row
+    assert first[0]["value"] is native
+    assert first[0]["amount"] is row["amount"]
+
+    exporter_registry.capture_test_results(context, products)
+    current = exporter.get_result()["rows |detail"]
+    assert current is not first and current == [row, row]
+    assert all(item is row for item in current)
+    assert rows == [row]
+
+
+def test_capture_retains_earlier_writes_when_later_rows_fail_concatenation() -> None:
+    exporter = TestResultExporter()
+    context = SimpleNamespace(test_result_exporter=exporter)
+    row = {"value": object()}
+
+    with pytest.raises(TypeError, match="concatenate"):
+        exporter_registry.capture_test_results(context, {"first": [row], "broken": (row,), "last": []})
+
+    assert list(exporter.get_result()) == ["first"]
+    assert exporter.get_result()["first"][0] is row
+
+
+def test_capture_preserves_native_mapping_error() -> None:
+    failure = RuntimeError("items failure")
+
+    class BrokenItems(dict):
+        def items(self):
+            raise failure
+
+    context = SimpleNamespace(test_result_exporter=TestResultExporter())
+    with pytest.raises(RuntimeError) as caught:
+        exporter_registry.capture_test_results(context, BrokenItems())
+    assert caught.value is failure
+
+
+@pytest.mark.parametrize(
+    ("target_entity", "product_type", "entity"),
+    [("target", "type", "target"), (None, "type", "type"), ("", "type", "type"), (None, "", "name")],
+)
+def test_memstore_uses_first_known_target_and_entity_priority_with_native_rows(
+    target_entity, product_type, entity
+) -> None:
+    stores = {name: Memstore(name) for name in ["first", "second"]}
+    manager = SimpleNamespace(contain=stores.__contains__, get_memstore=stores.__getitem__)
+    context = SimpleNamespace(memstore_manager=manager)
+    native = object()
+    row = {"value": native}
+    rows = [row]
+    products = MappingProxyType({"full": rows})
+
+    exporter_registry.consume_memstore_target(
+        context, ["unknown", "first", "second"], target_entity, product_type, "name", "full", products
+    )
+    first = stores["first"].get_data_by_type(entity)
+    assert first is not rows and first[0] is row and first[0]["value"] is native
+    assert stores["second"].get_all_data_by_type(entity) == []
+
+    exporter_registry.consume_memstore_target(
+        context, ["first"], target_entity, product_type, "name", "full", products
+    )
+    current = stores["first"].get_data_by_type(entity)
+    assert current is not first and current == [row, row]
+    assert all(item is row for item in current)
+
+
+def test_memstore_registers_missing_product_as_empty() -> None:
+    store = Memstore("mem")
+    manager = SimpleNamespace(contain=lambda _target: True, get_memstore=lambda _target: store)
+    context = SimpleNamespace(memstore_manager=manager)
+
+    exporter_registry.consume_memstore_target(
+        context, ["mem"], None, None, "rows", "missing", MappingProxyType({})
+    )
+
+    assert store.get_data_by_type("rows") == []
+
+
+def test_memstore_reads_mapping_only_after_finding_target_and_before_exporter_check() -> None:
+    failure = RuntimeError("get failure")
+
+    class BrokenGet(dict):
+        def get(self, *args):
+            raise failure
+
+    fetched = []
+    manager = SimpleNamespace(
+        contain=lambda target: target == "mem", get_memstore=lambda target: fetched.append(target) or Exporter()
+    )
+    context = SimpleNamespace(memstore_manager=manager)
+
+    exporter_registry.consume_memstore_target(context, ["unknown"], None, None, "rows", "full", BrokenGet())
+    with pytest.raises(RuntimeError) as caught:
+        exporter_registry.consume_memstore_target(context, ["mem"], None, None, "rows", "full", BrokenGet())
+
+    assert caught.value is failure
+    assert fetched == []
+
+
+def test_memstore_preserves_previous_rows_when_concatenation_fails() -> None:
+    store = Memstore("mem")
+    row = {"value": object()}
+    store.consume(("rows", [row]))
+    previous = store.get_data_by_type("rows")
+    manager = SimpleNamespace(contain=lambda _target: True, get_memstore=lambda _target: store)
+    context = SimpleNamespace(memstore_manager=manager)
+
+    with pytest.raises(TypeError, match="concatenate"):
+        exporter_registry.consume_memstore_target(context, ["mem"], None, None, "rows", "full", {"full": (row,)})
+
+    assert store.get_data_by_type("rows") is previous
+    assert previous[0] is row
 
 
 def test_mongodb_upsert_replaces_rows_for_subsequent_plain_exporter(monkeypatch: pytest.MonkeyPatch) -> None:
