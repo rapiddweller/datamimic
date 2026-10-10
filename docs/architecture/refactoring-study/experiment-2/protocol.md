@@ -926,6 +926,13 @@ accepted ledger now has 129/931 reviewed profiles and 802 UNKNOWN inputs; its
 other 930 rows and historical oracle fields are unchanged. Standalone XML,
 frozen-oracle parity, other descriptors and EE remain UNKNOWN.
 
+The `PreparedPage` alias positions remain on hold. Published ArchKeel 1.1.1
+and main `b70a730a` retain all four findings under exact alias selectors;
+the equivalent inline annotation permits only the two contained maps.
+[ArchKeel #438](https://github.com/rapiddweller/archkeel/issues/438) records
+the positive and negative controls. `GroupMask` needs a separate union-shape
+decision: its direct annotation also remains red.
+
 ## Agent separation
 
 - The implementation agent changes production code and targeted tests for one approved slice.
