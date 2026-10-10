@@ -1,0 +1,41 @@
+{
+  "all_semantic_scopes_accepted": false,
+  "audit": {
+    "path": "/tmp/ce-astra-source-adapters-20261010.md",
+    "sha256": "a82ade9d4c8324ca60ca475bb6d7938bd1980190cc991c9db77d0bcab13e1f43"
+  },
+  "behavioral_parity_proven": false,
+  "ci_only_verification": "none",
+  "contract_change": false,
+  "decision": "Astra and independent QA: KEEP all six existing source adapters",
+  "dynamic_generate_defect_proven": false,
+  "ee_read_only_head": "ead501a895df8fa0fd92f98158940e8e88873a79",
+  "independent_qa": {
+    "receipt.json": {
+      "path": "/tmp/ce-step198-source-independent-qa-20261010/receipt.json",
+      "sha256": "39d1cce855148b01673ed9e541348c4004dc4525993dff746a5c1bc79b387f54"
+    },
+    "review.md": {
+      "path": "/tmp/ce-step198-source-independent-qa-20261010/review.md",
+      "sha256": "bc788e4aa755dc287b6147dd3467e16dffd32732d97cb29e323f3ee60644c52a"
+    }
+  },
+  "production_change": false,
+  "reviewed_source_head": "f1308a30acdafa7109ccd61949b2b3e8029a38c0",
+  "runtime_execution": false,
+  "source_and_contract_files": {
+    "datamimic_ce/engine/runtime/tasks/sources/chunk_source_reader.py": "a2f6c4ad8297b38d9bd022db6818d01a1a84d8d01b934b991a286747dcd5ea8c",
+    "datamimic_ce/engine/runtime/tasks/sources/generate.py": "5bae37ecea421e312624763847c2b6a3b7c560c0700470962adac26ae42c7ab3",
+    "datamimic_ce/engine/runtime/tasks/sources/length.py": "38a3a36dc3f442b8e73093163e6911ec1c69329f6bbe8d230d3e77acc553b462",
+    "datamimic_ce/engine/runtime/tasks/sources/nested.py": "74efc6fc019941039da94df67794168ed9ab1b62333d850aa5fa153a713212f8",
+    "datamimic_ce/engine/runtime/tasks/sources/reference.py": "6d2bcc730a745bd1393c6b063a19b1a3f4671277ec889a848dc9f521a41e6e93",
+    "datamimic_ce/engine/runtime/tasks/sources/variable.py": "3accc3e4c226bf3e2317a6f683bed5164ecb9a59cb8cf30a73eeb0bcdcfa9dc8",
+    "docs/architecture/inner/runtime/tasks/sources/architecture-contract.json": "e171f5cafecee363d34c5dfd7c0be8e3c606844215333a17fa5bd0ba7716aed2"
+  },
+  "source_capability_catalog": {
+    "path": "/Users/akell/PycharmProjects/development-v2/datamimic/datamimic_ce/engine/dsl/vocabulary/source_capabilities.py",
+    "sha256": "f81e73b995c4c55132602acebc479fd40ff7cbc5ae164c4391859e371f290208"
+  },
+  "status": "accepted_static_ownership_review_with_behavioral_limits",
+  "step": 198
+}

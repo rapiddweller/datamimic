@@ -1045,6 +1045,24 @@ instead of adding a duplicate. Iterator reset remains a hypothesis; historical
 behavior, exhaustion and regression attribution were not tested. No source fix
 or corpus promotion follows.
 
+Step 197: [Nonempty live worker payloads](step-197-live-worker-payloads.md)
+compares two fresh XML executions across original/current: four actual spawn
+workers restore and use a helper and cached state machine, with equal ordered
+typed outputs. Independent raw QA confirms byte/state/call bindings and rejecting
+controls. Persistence, other payloads/platforms and full parity remain open.
+No new CE defect, source change or corpus promotion follows.
+
+Step 198: [Source-adapter ownership](step-198-source-adapter-ownership.md)
+accepts all six existing leaves after Astra and independent static QA. Preserve
+native values, routing precedence, seed lifetimes and task-owned state. No source,
+contract or additional decomposition is needed; behavioral acceptance is separate.
+The Generate brace-source suspicion has no declared dynamic-source capability
+and is not a confirmed defect.
+
+CI at `f1308a30` completed with 50 successes, four architecture-job failures
+and four skips. Both external-service jobs passed. The evidence-only successor
+still requires its own CI; no whole-experiment acceptance follows.
+
 CI at `a939a929` completed with 48 successes, five failures and five skips.
 Four failures are architecture jobs. The PR service job has a Mongo worker-export
 timeout (163 passed, four skipped); its same-head push control passes all 164.

@@ -1,0 +1,49 @@
+{
+  "actual_spawn_executing_workers": 4,
+  "ci_only_verification": "none",
+  "complete_dsl_parity_proven": false,
+  "corpus_ledger_promotion": false,
+  "current_source_head": "7e9e897350cdb86b1f7efca1bdc1706fffa898bc",
+  "independent_preflight_qa": {
+    "path": "/tmp/ce-step197-payload-independent-qa-20261010/preflight-review.json",
+    "sha256": "27a4fce934eb1209ec537f95b4d169203beeb324de0d61d32fb9d610ec866b38"
+  },
+  "independent_qa": {
+    "qa-report.json": {
+      "path": "/tmp/ce-step197-payload-independent-qa-20261010/qa-report.json",
+      "sha256": "a736d9d0e88fdf84dde88c1eaef593f35b0db92144229c5a4cae3eb49f1b676a"
+    },
+    "qa-review.md": {
+      "path": "/tmp/ce-step197-payload-independent-qa-20261010/qa-review.md",
+      "sha256": "5319ae10c3f5bfb228567b984319d0b6859d5a55c8a037af16b6b37c81c66652"
+    }
+  },
+  "independent_rejecting_controls": 16,
+  "matching_primary_production_head": "f1308a30acdafa7109ccd61949b2b3e8029a38c0",
+  "native_cache_key": "rows|status|payloadWalk",
+  "native_retries": 0,
+  "native_runs": 2,
+  "new_ce_defect_found": false,
+  "nonempty_live_payloads_verified": true,
+  "ordered_typed_capture_parity": true,
+  "original_source_head": "a219163e533d661bcc7bda0faa5ecc77909ab5aa",
+  "persisted_pickle_compatibility_proven": false,
+  "preflight": {
+    "path": "/tmp/ce-step197-payloads-20261010/preflight.json",
+    "sha256": "6fee61f59e6e0374bada71af12aebf49700e385842278de1484fa268fc192b2b"
+  },
+  "preflight_prose_correction": "rows.status|payloadWalk was prose only; actual observed key rows|status|payloadWalk governs raw checks. Frozen preflight remains unchanged.",
+  "producer_receipt": {
+    "path": "/tmp/ce-step197-payloads-20261010/receipt.json",
+    "sha256": "6746d93750253660bea909175314f0ba22e9795ca259d7ef7faa08445ad21ccf"
+  },
+  "producer_rejecting_controls": 48,
+  "producer_result": {
+    "path": "/tmp/ce-step197-payloads-20261010/result.md",
+    "sha256": "7021f9fada5b2db81e7e3425c609f08ceba4d8f151f6594f11fd6aa6558b5d20"
+  },
+  "rows_each": 6,
+  "source_change": false,
+  "status": "accepted_bounded_live_payload_parity",
+  "step": 197
+}
