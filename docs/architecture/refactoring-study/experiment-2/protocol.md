@@ -969,7 +969,10 @@ and main `b70a730a` retain all four findings under exact alias selectors;
 the equivalent inline annotation permits only the two contained maps.
 [ArchKeel #438](https://github.com/rapiddweller/archkeel/issues/438) records
 the positive and negative controls. `GroupMask` needs a separate union-shape
-decision: its direct annotation also remains red.
+decision: its direct annotation also remains red. Published 1.1.1 rejects
+exact permissions for the named and inline heterogeneous typed-map union;
+[ArchKeel #439](https://github.com/rapiddweller/archkeel/issues/439) records
+the independent positive and negative controls. No CE rule is widened.
 
 ## Agent separation
 
