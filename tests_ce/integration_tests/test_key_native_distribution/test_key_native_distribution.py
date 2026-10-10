@@ -73,7 +73,7 @@ def test_distribution_without_min_max_is_rejected():
 
 def test_distribution_on_non_numeric_key_is_rejected():
     engine = DataMimicTest(_dir, "test_distribution_wrong_type.xml", capture_test_result=True)
-    with pytest.raises(ValueError, match="(?i)distribution"):
+    with pytest.raises(ValueError, match="requires type='int', 'float', or 'decimal', not 'string'"):
         engine.test_with_timer()
 
 
