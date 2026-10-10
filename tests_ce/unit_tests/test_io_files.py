@@ -3,6 +3,9 @@ from typing import get_type_hints
 
 import pytest
 
+from datamimic_ce.engine.dsl.vocabulary.source_capabilities import SourceFileFormat
+from datamimic_ce.engine.io.data_sources.boundary.models import GenerateFileSourceRequest
+from datamimic_ce.engine.io.data_sources.router import read_generate_file_source
 from datamimic_ce.engine.io.files.cache import FileContentStorage
 from datamimic_ce.engine.io.files.readers import FileUtil
 
@@ -38,6 +41,50 @@ def test_read_json_to_list_rejects_non_list_roots(tmp_path):
 
     with pytest.raises(ValueError, match="must contain a list of objects"):
         FileUtil.read_json_to_list(path)
+
+
+def test_generate_xml_source_preserves_cached_document_identity(tmp_path):
+    path = tmp_path / "cached.xml"
+    sentinel = object()
+    document = {42: sentinel}
+    cache_key = str(path)
+    assert cache_key not in FileContentStorage._file_data_cache
+
+    try:
+        assert FileContentStorage.load_file_with_custom_func(cache_key, lambda: document) is document
+        assert FileContentStorage.load_file_with_custom_func(cache_key, lambda: pytest.fail("cache miss")) is document
+        source = read_generate_file_source(
+            GenerateFileSourceRequest(path.name, tmp_path, "rows", "|", False, None, None, 0, None)
+        )
+
+        assert not path.exists()
+        assert source is not None
+        assert source.file_format is SourceFileFormat.XML
+        assert source.rows[0] is document
+        assert source.rows[0][42] is sentinel
+    finally:
+        FileContentStorage._file_data_cache.pop(cache_key, None)
+
+
+def test_generate_xml_source_rejects_cached_non_dict_document(tmp_path):
+    path = tmp_path / "cached.xml"
+    cache_key = str(path)
+    rows = [42]
+    assert cache_key not in FileContentStorage._file_data_cache
+
+    try:
+        assert FileContentStorage.load_file_with_custom_func(cache_key, lambda: rows) is rows
+        with pytest.raises(ValueError) as exc_info:
+            read_generate_file_source(
+                GenerateFileSourceRequest(path.name, tmp_path, "rows", "|", False, None, None, 0, None)
+            )
+
+        assert not path.exists()
+        assert exc_info.value.args == (f"XML source '{path}' must have a document root",)
+        assert FileContentStorage.load_file_with_cache(cache_key) is rows
+        assert rows == [42]
+    finally:
+        FileContentStorage._file_data_cache.pop(cache_key, None)
 
 
 def test_csv_raw_reader_caches_quoted_rows(tmp_path):
