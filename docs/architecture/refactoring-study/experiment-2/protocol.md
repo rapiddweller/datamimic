@@ -949,6 +949,15 @@ reviewed profiles and 785 UNKNOWN inputs; its other 926 rows and historical
 oracle fields are unchanged. Standalone XML, frozen-oracle parity, other
 descriptors and EE remain UNKNOWN.
 
+Step 183: [In-memory key owner profiles](step-183-in-memory-key-owner-profiles.md)
+add three unchanged native inputs after independent QA. All six exact runs
+passed, and their complete typed captures match across original `a219163e`
+and current source `a92c1249`. The accepted ledger has 149/931 reviewed
+profiles and 782 UNKNOWN inputs; its other 928 rows and historical oracle
+fields are unchanged. The seeded null-quota run emitted no nulls, so quota
+frequency remains unproved. Standalone XML, frozen-oracle parity, other
+descriptors and EE remain UNKNOWN.
+
 The cached XML file-row path now has two [behavior tests](../../../../tests_ce/unit_tests/test_io_files.py):
 a document with an integer key and native value retains both identities, while
 a cached non-dict root raises the existing error. This characterizes the
