@@ -985,6 +985,13 @@ canonical UNKNOWNs. That head's CI finished with 50 successful checks, four
 architecture failures and four skips; both external-service jobs passed.
 The earlier Mongo failure remains unresolved in [CE #281](https://github.com/rapiddweller/datamimic/issues/281).
 
+Step 187: [Four public projection comparisons](step-187-projection-capture.md)
+establish byte-identical compiler and reference outputs. Capabilities have only
+the exact approved Amendment 60 wording and transition-attribute differences.
+Independent QA verifies all raw bytes and the exhaustive delta. The historical
+comparator's cross-revision FAIL remains; both self-comparisons pass. Public
+diagnostics, lint/transport and full item-6 acceptance remain open.
+
 CI at `5c218f8f` remains red: four architecture jobs and one external-service
 job failed. The latter has two Mongo worker server-selection timeouts
 (162 passed, four skipped); the parallel same-head job passed all 164 tests.

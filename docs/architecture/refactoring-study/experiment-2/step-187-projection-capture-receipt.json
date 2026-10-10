@@ -1,0 +1,386 @@
+{
+  "acceptance_results": {
+    "capabilities": "APPROVED_DIFFERENCE",
+    "compiler": "EQUAL",
+    "reference_authoring": "EQUAL",
+    "reference_scaffold": "EQUAL",
+    "unchanged_historical_cross_comparator": "FAIL"
+  },
+  "approved_path_level_content_audit": "7 Amendment60 wording paths plus transition attributes; no other content delta",
+  "cases": {
+    "current": {
+      "files": {
+        "capabilities.exit.json": {
+          "bytes": 287,
+          "path": "/tmp/ce-step187-20261010/captures/current/capabilities.exit.json",
+          "sha256": "43e67d6ddd13d658a1fbe10d1292db1805c45cfcde9e91236f68d39de9fb27cf"
+        },
+        "capabilities.stderr": {
+          "bytes": 0,
+          "path": "/tmp/ce-step187-20261010/captures/current/capabilities.stderr",
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        "capabilities.stdout": {
+          "bytes": 187027,
+          "path": "/tmp/ce-step187-20261010/captures/current/capabilities.stdout",
+          "sha256": "783b2fc7cc5d8ffc4976fb39647189c1e99b5a871800a94b1a8b3f2791c93578"
+        },
+        "compiler.xml": {
+          "bytes": 195,
+          "path": "/tmp/ce-step187-20261010/captures/current/compiler.xml",
+          "sha256": "91f12fdc3e56205d7cf356c9d3fc91bf2d0d9334cfe8bb42abe1309f19beac65"
+        },
+        "driver.stderr": {
+          "bytes": 0,
+          "path": "/tmp/ce-step187-20261010/captures/current/driver.stderr",
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        "driver.stdout": {
+          "bytes": 0,
+          "path": "/tmp/ce-step187-20261010/captures/current/driver.stdout",
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        "metadata.json": {
+          "bytes": 3099,
+          "path": "/tmp/ce-step187-20261010/captures/current/metadata.json",
+          "sha256": "8939ccf5ff2dae9f9cd145ee0907f6cea7938e094df5f921c183d9144beadb32"
+        },
+        "parent-receipt.json": {
+          "bytes": 3259,
+          "path": "/tmp/ce-step187-20261010/captures/current/parent-receipt.json",
+          "sha256": "63ce1970fdf5550357cef25b8e7e90d12b7f336ccf99d3fbae714c291149fe04"
+        },
+        "projection-record.json": {
+          "bytes": 272178,
+          "path": "/tmp/ce-step187-20261010/captures/current/projection-record.json",
+          "sha256": "159cc14b3ae9817cf6b85ceb0341cc13f7b297f5b9a1b0f0839d08506c791ae0"
+        },
+        "reference_authoring.exit.json": {
+          "bytes": 294,
+          "path": "/tmp/ce-step187-20261010/captures/current/reference_authoring.exit.json",
+          "sha256": "7a2aaae6d0b1fb5e356b5e8ff3f89a8c6b26bd0d3c09a9841854fd8a6a17bb4b"
+        },
+        "reference_authoring.stderr": {
+          "bytes": 0,
+          "path": "/tmp/ce-step187-20261010/captures/current/reference_authoring.stderr",
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        "reference_authoring.stdout": {
+          "bytes": 8757,
+          "path": "/tmp/ce-step187-20261010/captures/current/reference_authoring.stdout",
+          "sha256": "7c99444c15b8a869c4b1b213c758488042ef8cd84ca559dd4e91b2da4a2778f1"
+        },
+        "reference_scaffold.exit.json": {
+          "bytes": 292,
+          "path": "/tmp/ce-step187-20261010/captures/current/reference_scaffold.exit.json",
+          "sha256": "b09639501d6bc5b8e1b7ff56d5df4d7b8d091868b350e1e156eceb99a9f47342"
+        },
+        "reference_scaffold.stderr": {
+          "bytes": 0,
+          "path": "/tmp/ce-step187-20261010/captures/current/reference_scaffold.stderr",
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        "reference_scaffold.stdout": {
+          "bytes": 49316,
+          "path": "/tmp/ce-step187-20261010/captures/current/reference_scaffold.stdout",
+          "sha256": "82cefda9179a7bdd8125011c82a98cb1a22faa6a9439fe88bf2038a975025d50"
+        }
+      },
+      "head": "7e9e897350cdb86b1f7efca1bdc1706fffa898bc",
+      "recorder_copy": {
+        "bytes": 41066,
+        "path": "/tmp/ce-step187-20261010/recorder/current.py",
+        "sha256": "89a2b5482c21d2387e0a226426b1c09cff842211155f790a4f6537ab30807d42"
+      },
+      "tree": "586e25b15a709a685cdc81669b85e8bdeecd35c2"
+    },
+    "original": {
+      "files": {
+        "capabilities.exit.json": {
+          "bytes": 277,
+          "path": "/tmp/ce-step187-20261010/captures/original/capabilities.exit.json",
+          "sha256": "e05ac1f71600493aeed7b287b46e1b989314ce7e1da37795e127be52dedf3b3d"
+        },
+        "capabilities.stderr": {
+          "bytes": 0,
+          "path": "/tmp/ce-step187-20261010/captures/original/capabilities.stderr",
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        "capabilities.stdout": {
+          "bytes": 187027,
+          "path": "/tmp/ce-step187-20261010/captures/original/capabilities.stdout",
+          "sha256": "ea0ea2ef7a278fc31a4765bf5c04d4385a7220588202e77071611b30ad17f94b"
+        },
+        "compiler.xml": {
+          "bytes": 195,
+          "path": "/tmp/ce-step187-20261010/captures/original/compiler.xml",
+          "sha256": "91f12fdc3e56205d7cf356c9d3fc91bf2d0d9334cfe8bb42abe1309f19beac65"
+        },
+        "driver.stderr": {
+          "bytes": 0,
+          "path": "/tmp/ce-step187-20261010/captures/original/driver.stderr",
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        "driver.stdout": {
+          "bytes": 0,
+          "path": "/tmp/ce-step187-20261010/captures/original/driver.stdout",
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        "metadata.json": {
+          "bytes": 3048,
+          "path": "/tmp/ce-step187-20261010/captures/original/metadata.json",
+          "sha256": "96ffbea730ca00ad76348f59fabcf383b3bee39b666a51931c312766663d792c"
+        },
+        "parent-receipt.json": {
+          "bytes": 3262,
+          "path": "/tmp/ce-step187-20261010/captures/original/parent-receipt.json",
+          "sha256": "c522118370f82f20dc4e0b3870835e60d567f16c33d23d0208391ff73ef2c15d"
+        },
+        "projection-record.json": {
+          "bytes": 272142,
+          "path": "/tmp/ce-step187-20261010/captures/original/projection-record.json",
+          "sha256": "5d21bed2609db7a546fa3dbd59d2aa3e34b8b0004099f61b8b7c2d3da3585904"
+        },
+        "reference_authoring.exit.json": {
+          "bytes": 284,
+          "path": "/tmp/ce-step187-20261010/captures/original/reference_authoring.exit.json",
+          "sha256": "f9005ace06251ae72f9cf6c1a40591695151ad45ae529577e725cda101da581b"
+        },
+        "reference_authoring.stderr": {
+          "bytes": 0,
+          "path": "/tmp/ce-step187-20261010/captures/original/reference_authoring.stderr",
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        "reference_authoring.stdout": {
+          "bytes": 8757,
+          "path": "/tmp/ce-step187-20261010/captures/original/reference_authoring.stdout",
+          "sha256": "7c99444c15b8a869c4b1b213c758488042ef8cd84ca559dd4e91b2da4a2778f1"
+        },
+        "reference_scaffold.exit.json": {
+          "bytes": 282,
+          "path": "/tmp/ce-step187-20261010/captures/original/reference_scaffold.exit.json",
+          "sha256": "1dc1e4e845aedab7eefd9ae7873832dacf50074c7efc56298d8fbdfe59610cb7"
+        },
+        "reference_scaffold.stderr": {
+          "bytes": 0,
+          "path": "/tmp/ce-step187-20261010/captures/original/reference_scaffold.stderr",
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        "reference_scaffold.stdout": {
+          "bytes": 49316,
+          "path": "/tmp/ce-step187-20261010/captures/original/reference_scaffold.stdout",
+          "sha256": "82cefda9179a7bdd8125011c82a98cb1a22faa6a9439fe88bf2038a975025d50"
+        }
+      },
+      "head": "a219163e533d661bcc7bda0faa5ecc77909ab5aa",
+      "recorder_copy": {
+        "bytes": 41054,
+        "path": "/tmp/ce-step187-20261010/recorder/original.py",
+        "sha256": "8e1a9285f039a37ba3b11f2a1a7c13560308cee4ee71ea505ef629a169aafc6a"
+      },
+      "tree": "2ccd47d7860cab3ad513bd8fd31d7e6e71697b46"
+    }
+  },
+  "ci_only_verification": "none for this candidate",
+  "cli_calls": {
+    "current": 3,
+    "original": 3
+  },
+  "comparator": {
+    "bytes": 25300,
+    "path": "/tmp/ce-step187-20261010/current/script/architecture_study/compare_step0.py",
+    "sha256": "ede23f3e166de051763aa58c98e101788717bc9993b93e62e6f5800cc08b1edf"
+  },
+  "compiler_calls": {
+    "current": 1,
+    "original": 1
+  },
+  "contract_sources": {
+    "amendment-2026-09-29-transition-grammar.md": {
+      "bytes": 994,
+      "path": "/tmp/ce-step187-20261010/current/docs/architecture/refactoring-study/experiment-2/amendment-2026-09-29-transition-grammar.md",
+      "sha256": "33e9deeaf5176841631b65736cf4c24cac60611bd635b7921726672fb7760071"
+    },
+    "amendment-60.md": {
+      "bytes": 1811,
+      "path": "/tmp/ce-step187-20261010/current/docs/architecture/refactoring-study/experiment-2/amendment-60.md",
+      "sha256": "1c0ad6c164a6caa1b6a429d9524f11c1b46abe8828ce3360e21d6822277c513e"
+    },
+    "amendment-68.md": {
+      "bytes": 881,
+      "path": "/tmp/ce-step187-20261010/current/docs/architecture/refactoring-study/experiment-2/amendment-68.md",
+      "sha256": "33236a4b8425b3a0d4bb241a64920ab797180e6ef40d07afc75ef38c3b246557"
+    },
+    "step-73-projection-identity.md": {
+      "bytes": 1902,
+      "path": "/tmp/ce-step187-20261010/current/docs/architecture/refactoring-study/experiment-2/step-73-projection-identity.md",
+      "sha256": "acf61998b72faa15c267677ef2cb750d5849b0e2bb7f5284c77ae7055136ecff"
+    }
+  },
+  "exact_approved_differences": [
+    {
+      "approval": "Amendment 60",
+      "approved_values_exact": true,
+      "current": "Explicit physical entity to read/write (table/collection). Precedence: sourceEntity/targetEntity -> type -> name; absent -> existing behaviour.",
+      "old": "Explicit physical entity to read/write (table/collection). Precedence: sourceEntity/targetEntity -> type -> name; absent -> existing behaviour. See StatementUtil.resolve_source/target_entity.",
+      "path": "elements/generate/attributes/sourceEntity/description"
+    },
+    {
+      "approval": "Amendment 60",
+      "approved_values_exact": true,
+      "current": "Explicit physical entity to read/write (table/collection). Precedence: sourceEntity/targetEntity -> type -> name; absent -> existing behaviour.",
+      "old": "Explicit physical entity to read/write (table/collection). Precedence: sourceEntity/targetEntity -> type -> name; absent -> existing behaviour. See StatementUtil.resolve_source/target_entity.",
+      "path": "elements/generate/attributes/targetEntity/description"
+    },
+    {
+      "approval": "Amendment 60",
+      "approved_values_exact": true,
+      "current": "Explicit physical entity to read/write (table/collection). Precedence: sourceEntity/targetEntity -> type -> name; absent -> existing behaviour.",
+      "old": "Explicit physical entity to read/write (table/collection). Precedence: sourceEntity/targetEntity -> type -> name; absent -> existing behaviour. See StatementUtil.resolve_source/target_entity.",
+      "path": "elements/iterate/attributes/sourceEntity/description"
+    },
+    {
+      "approval": "Amendment 60",
+      "approved_values_exact": true,
+      "current": "Explicit physical entity to read/write (table/collection). Precedence: sourceEntity/targetEntity -> type -> name; absent -> existing behaviour.",
+      "old": "Explicit physical entity to read/write (table/collection). Precedence: sourceEntity/targetEntity -> type -> name; absent -> existing behaviour. See StatementUtil.resolve_source/target_entity.",
+      "path": "elements/iterate/attributes/targetEntity/description"
+    },
+    {
+      "approval": "Amendment 60",
+      "approved_values_exact": true,
+      "current": "Normally a scalar cast for a generated value (e.g. 'int', 'string'). When 'source' is also set, this instead selects which source-backed statement's rows to read (a producer name, not a type); sourceEntity -> type -> name is the fallback.",
+      "old": "Normally a scalar cast for a generated value (e.g. 'int', 'string'). When 'source' is also set, this instead selects which source-backed statement's rows to read (a producer name, not a type) \u2014 see StatementUtil.resolve_source_entity's sourceEntity -> type -> name fallback.",
+      "path": "elements/variable/attributes/type/description"
+    },
+    {
+      "approval": "Amendment 60",
+      "approved_values_exact": true,
+      "current": "DSL target parser and ExportOperation enum.",
+      "old": "ExporterUtil target parser and ExportOperation enum.",
+      "path": "rules/35/provenance"
+    },
+    {
+      "approval": "Amendment 60",
+      "approved_values_exact": true,
+      "current": "Source routing contract.",
+      "old": "TaskUtil source dispatch contract.",
+      "path": "rules/36/provenance"
+    },
+    {
+      "approval": "amendment-2026-09-29-transition-grammar.md",
+      "approved_values_exact": true,
+      "current": {
+        "from": {
+          "required": true,
+          "type": "str"
+        },
+        "to": {
+          "required": true,
+          "type": "str"
+        },
+        "weight": {
+          "required": false,
+          "type": "float"
+        }
+      },
+      "old": {},
+      "path": "elements/transition/attributes"
+    }
+  ],
+  "historical_oracle_and_ledger_modified": false,
+  "independent_qa": {
+    "check_projections.py": {
+      "bytes": 6888,
+      "path": "/tmp/ce-step187-independent-qa-20261010/check_projections.py",
+      "sha256": "219994c5b49bf7b7a4489849f43234c914b251223011035fea379cdc742cc498"
+    },
+    "independent-checks.json": {
+      "bytes": 9066,
+      "path": "/tmp/ce-step187-independent-qa-20261010/independent-checks.json",
+      "sha256": "f34c7b34d85016164fa1ee7e50a774c9a987af87eab0cd23a2f2d315c9c0ed87"
+    },
+    "qa-report.json": {
+      "bytes": 7688,
+      "path": "/tmp/ce-step187-independent-qa-20261010/qa-report.json",
+      "sha256": "5dd2905a31dbdb47215e1000a459d780ebfb18eea55489220e3eb9815f1e038e"
+    },
+    "qa-review.md": {
+      "bytes": 3304,
+      "path": "/tmp/ce-step187-independent-qa-20261010/qa-review.md",
+      "sha256": "288cefe984f9087b453c96231d0697449bdbc1e8d944803d6b5db262682ef5c0"
+    }
+  },
+  "limits": [
+    "cross-revision strict comparator FAIL retained: old-version migration pin 4.3.1.dev89+dirty versus captured installed 4.3.1.dev246+dirty",
+    "approved content-diff audit is independent of strict comparator result",
+    "shared-venv installed metadata is not historical original package metadata",
+    "environment values and full transient effects not compared",
+    "Amendment68 dotenv startup unexercised because clone cwd has no .env",
+    "lint/transport, Person/Patient, native scope diagnostics, EE and full CE acceptance outside scope"
+  ],
+  "native_projection_invocations": {
+    "current": 1,
+    "original": 1
+  },
+  "producer_note": {
+    "bytes": 2944,
+    "path": "/tmp/ce-step187-20261010/step-187-projection-capture.md",
+    "sha256": "ff6719606fccb17643edd8803c4109773cdff41165a52b58b3425c12d9b85b45"
+  },
+  "producer_receipt": {
+    "bytes": 12301,
+    "path": "/tmp/ce-step187-20261010/step-187-receipt.json",
+    "sha256": "da2a5f3d1ec90b50b73fde755b122b2f4ea000b4071cd0d0ce6c98231a028481"
+  },
+  "recorder_main_or_descriptor_executed": false,
+  "recorder_source": {
+    "bytes": 41066,
+    "path": "/Users/akell/PycharmProjects/development-v2/datamimic/script/architecture_study/verify_step0.py",
+    "sha256": "89a2b5482c21d2387e0a226426b1c09cff842211155f790a4f6537ab30807d42"
+  },
+  "root_lint_types": {
+    "bytes": 213,
+    "path": "/tmp/ce-step187-188-lint-types-20261010.log",
+    "sha256": "b6118e992c5e3f9d698f8adf33f9ce2aec93b1556c280030ad244bc09b6ae37d"
+  },
+  "source_heads": {
+    "current": "7e9e897350cdb86b1f7efca1bdc1706fffa898bc",
+    "original": "a219163e533d661bcc7bda0faa5ecc77909ab5aa"
+  },
+  "status": "ACCEPTED_BOUNDED_PUBLIC_PROJECTION_RESULTS",
+  "step": 187,
+  "summary_artifacts": {
+    "environment-profile.json": {
+      "bytes": 18661,
+      "path": "/tmp/ce-step187-20261010/environment-profile.json",
+      "sha256": "7ed9af4bc5b6257cb42c9998ef1440112588dd61c29ec4fdfd280a95348a8158"
+    },
+    "harness.py": {
+      "bytes": 9525,
+      "path": "/tmp/ce-step187-20261010/harness.py",
+      "sha256": "dab21cba9185b814dc07b3c30d14cac94e5d351d5d20ed73201527cde3aa6365"
+    },
+    "preflight.json": {
+      "bytes": 2605,
+      "path": "/tmp/ce-step187-20261010/preflight.json",
+      "sha256": "cd475bf6877601319fd6bc7af4deab0325a8934ba20129c0b274fce2abf0fbec"
+    },
+    "projection-comparison.json": {
+      "bytes": 5142,
+      "path": "/tmp/ce-step187-20261010/projection-comparison.json",
+      "sha256": "070530f75b12ea000b8fb6ea22cb0e957b6726f8a87c0f907bc8f307f20fd765"
+    },
+    "projection-controls.json": {
+      "bytes": 366,
+      "path": "/tmp/ce-step187-20261010/projection-controls.json",
+      "sha256": "f321eafd6d6672b1fbb3db97d8e567ee27ac2e3d4f7f5fdfeacd4ba65f940637"
+    },
+    "side-effects.json": {
+      "bytes": 2564,
+      "path": "/tmp/ce-step187-20261010/side-effects.json",
+      "sha256": "15af6d19eefd13e7649685b76c01ba0af694ad174d3c90f4ab5c52a02082c5e8"
+    }
+  },
+  "unchanged_comparator_result": "FAIL"
+}
