@@ -208,13 +208,14 @@
         "datamimic_ce.engine.runtime.contexts"
       ],
       "responsibilities": [
-        "Own the Context/SetupContext hierarchy and row state, and carry the active demographic profile, sampler, overrides and RNG."
+        "Own Context/SetupContext, row and demographic state, and a minimal worker-state projection separate from include cloning that excludes live clients, parent client caches and client references in namespaces or captured state."
       ],
       "forbidden_responsibilities": [
         "Start workers or construct external clients."
       ],
       "provenance": [
-        "docs/architecture/inner/target.md"
+        "docs/architecture/inner/target.md",
+        "docs/architecture/refactoring-study/experiment-2/amendment-199-process-local-clients.md"
       ],
       "requires": [
         {
@@ -304,13 +305,14 @@
         "datamimic_ce.engine.runtime.lifecycle"
       ],
       "responsibilities": [
-        "Own run configuration and session orchestration, including descriptor parsing, setup execution and test-result capture."
+        "Own run configuration, parsing, session orchestration and capture, treating main as the executor for ordered serial setup, preparation and single-process work, and coordinating cleanup of clients owned by that execution through IO."
       ],
       "forbidden_responsibilities": [
         "Implement source connectors or DSL grammar."
       ],
       "provenance": [
-        "docs/architecture/inner/target.md"
+        "docs/architecture/inner/target.md",
+        "docs/architecture/refactoring-study/experiment-2/amendment-199-process-local-clients.md"
       ],
       "requires": [
         {

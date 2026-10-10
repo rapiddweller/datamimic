@@ -49,9 +49,12 @@ Keep the existing operations and typed values as the public seams; moves must
 not add a facade feature or synchronization framework.
 Both editions place client operations under `engine/io/clients` and run state
 under `engine/runtime/contexts`. This does not make their lifecycles identical:
-CE currently constructs clients during setup and copies live handles for workers;
-EE registers configurations and creates clients lazily. Preserve each behavior
-until a separately verified semantic migration is approved.
+CE currently constructs client wrappers during setup and copies them for workers;
+EE registers configurations and creates clients lazily. The shared target is
+process-local client ownership, including main as the serial executor, as declared
+in [Amendment 199](../refactoring-study/experiment-2/amendment-199-process-local-clients.md).
+CE migration requires independent behavior and process-isolation proof; EE
+conformance is not established by this decision.
 
 | Boundary | Stable operations and types | Evidence |
 |---|---|---|

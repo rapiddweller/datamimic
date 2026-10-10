@@ -24,7 +24,7 @@
       },
       {
         "path": "datamimic_ce/engine/runtime/tasks/setup/database_task.py",
-        "responsibility": "This module creates and registers a relational client during setup."
+        "responsibility": "Registers validated relational connection configuration during ordered setup."
       },
       {
         "path": "datamimic_ce/engine/runtime/tasks/setup/demographics_task.py",
@@ -44,7 +44,7 @@
       },
       {
         "path": "datamimic_ce/engine/runtime/tasks/setup/mongodb_task.py",
-        "responsibility": "This module creates and registers a MongoDB client during setup."
+        "responsibility": "Registers validated MongoDB connection configuration during ordered setup."
       },
       {
         "path": "datamimic_ce/engine/runtime/tasks/setup/setup_task.py",
@@ -94,14 +94,15 @@
         "datamimic_ce.engine.runtime.tasks.setup"
       ],
       "responsibilities": [
-        "Ordered declarations/client registration/includes; not an eager preprocessing phase."
+        "Execute ordered setup declarations and includes, registering typed connection configurations without constructing clients merely for registration or worker transfer."
       ],
       "forbidden_responsibilities": [
         "Own Generate worker policy",
         "Construct database clients directly"
       ],
       "provenance": [
-        "docs/architecture/inner/target.md"
+        "docs/architecture/inner/target.md",
+        "docs/architecture/refactoring-study/experiment-2/amendment-199-process-local-clients.md"
       ],
       "requires": [
         {
@@ -431,9 +432,10 @@
         "datamimic_ce.engine.runtime.tasks.setup.setup_task",
         "datamimic_ce.engine.runtime.tasks.setup.state_machine_task"
       ],
-      "rationale": "Ordered declarations/client registration/includes; not an eager preprocessing phase. Exact reviewed target children; no hidden extra modules.",
+      "rationale": "Ordered declarations, connection-configuration registration and includes; not an eager preprocessing phase. Exact reviewed target children; no hidden extra modules.",
       "provenance": [
-        "docs/architecture/inner/structure-review.json"
+        "docs/architecture/inner/structure-review.json",
+        "docs/architecture/refactoring-study/experiment-2/amendment-199-process-local-clients.md"
       ],
       "decided_by": "agent"
     }

@@ -1059,6 +1059,23 @@ contract or additional decomposition is needed; behavioral acceptance is separat
 The Generate brace-source suspicion has no declared dynamic-source capability
 and is not a confirmed defect.
 
+Step 199: [Process-local clients](amendment-199-process-local-clients.md)
+supersedes D11's eager registration target after the user clarified that main
+is the worker for serial phases. Six component responsibilities and two setup
+module declarations now require configuration registration, execution-local
+clients and client-free worker transfer. Independent source QA confirms the
+current MP mismatch, tracked in [CE #289](https://github.com/rapiddweller/datamimic/issues/289).
+Runtime migration, process proof and behavioral acceptance remain open; static
+contracts cannot prove ownership. Earlier worker/source KEEP groupings stand,
+but their selected behavior evidence does not accept this new boundary.
+The local definition check passes 13 tests. The fresh ArchKeel report parses
+488/488 files but still reports FAIL, 13 violations and 200 measured UNKNOWN
+positions. No debt or runtime acceptance is cleared by these target sentences.
+
+CI at `586a36f2` completed with 50 successes, four architecture-job failures
+and four skips; both external-service jobs passed. New target declarations
+require their own checks and do not clear the existing violations or UNKNOWNs.
+
 CI at `f1308a30` completed with 50 successes, four architecture-job failures
 and four skips. Both external-service jobs passed. The evidence-only successor
 still requires its own CI; no whole-experiment acceptance follows.

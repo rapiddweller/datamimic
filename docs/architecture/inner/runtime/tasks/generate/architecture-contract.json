@@ -37,13 +37,14 @@
         "datamimic_ce.engine.runtime.tasks.generate.task"
       ],
       "responsibilities": [
-        "Row-generation orchestration and worker selection."
+        "Resolve counts and worker plans, preserve ordered serial preparation and sequence reservation in main, and dispatch only required native inputs and prepared state without live clients to parallel workers."
       ],
       "forbidden_responsibilities": [
         "Connect clients or duplicate source/exporter algorithms."
       ],
       "provenance": [
-        "docs/architecture/inner/target.md"
+        "docs/architecture/inner/target.md",
+        "docs/architecture/refactoring-study/experiment-2/amendment-199-process-local-clients.md"
       ],
       "requires": [
         {
@@ -70,13 +71,14 @@
         "datamimic_ce.engine.runtime.tasks.generate.workers"
       ],
       "responsibilities": [
-        "Worker execution and process handoff."
+        "Execute assigned chunks, bind declared clients to instances owned by the executing process, return required results, and release owned client resources through IO without transferring live clients or parent client caches."
       ],
       "forbidden_responsibilities": [
         "Parse descriptors or choose capability policy."
       ],
       "provenance": [
-        "docs/architecture/inner/target.md"
+        "docs/architecture/inner/target.md",
+        "docs/architecture/refactoring-study/experiment-2/amendment-199-process-local-clients.md"
       ],
       "requires": [
         {
