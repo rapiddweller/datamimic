@@ -96,6 +96,76 @@ def test_demographic_profile_records_are_owned_by_domains_not_global_public_api(
     assert symbols.isdisjoint(root["declarations"]["public_api"])
 
 
+def test_domain_type_permissions_keep_exact_demographic_maps() -> None:
+    root = _read_contract(ROOT / "architecture-contract.json")
+    rule = next(rule for rule in root["rules"] if rule["id"] == "DOMAIN-API-TYPES")
+    entries = rule["allowed_positions"]
+    assert all(set(entry) == {"qualified_name", "position", "field_path", "annotation"} for entry in entries)
+    permissions = [
+        (entry["qualified_name"], entry["position"], entry["field_path"], entry["annotation"])
+        for entry in entries
+    ]
+    api = "datamimic_ce.domains.api."
+    expected = {
+        (api + name, position, path, annotation)
+        for name, position, path, annotation in (
+            ("DemographicSampler.provenance_descriptor", "return", "", "dict[str, str]"),
+            ("Date2TimestampConverter.convert", "value", "", "object"),
+            ("CustomConverter.__init__", "ctx", "", "object | None"),
+            ("CutLengthConverter.convert", "value", "", "object"),
+            ("CustomConverter.convert", "value", "", "object"),
+            ("Converter.convert", "value", "", "object"),
+            ("CustomConverter.convert", "return", "", "object | None"),
+            ("JavaHashConverter.convert", "value", "", "object"),
+            ("HashConverter.convert", "value", "", "object"),
+            ("Converter.convert", "return", "", "object"),
+            ("SubstringConverter.convert", "value", "", "object"),
+            ("DateFormatConverter.convert", "value", "", "object"),
+            ("MaskConverter.convert", "value", "", "object"),
+            ("UpperCaseConverter.convert", "value", "", "object"),
+            ("RemoveNoneOrEmptyElementConverter.convert", "return", "", "object"),
+            ("RemoveNoneOrEmptyElementConverter.convert", "value", "", "object"),
+            ("AppendConverter.convert", "value", "", "object"),
+            ("Timestamp2DateConverter.convert", "value", "", "object"),
+            ("MiddleMaskConverter.convert", "value", "", "object"),
+            ("LowerCaseConverter.convert", "value", "", "object"),
+            ("DemographicSampler.age_band_weights", "return", "", "dict[tuple[int, int], float]"),
+            ("DemographicSampler.condition_weights", "return", "", "dict[str, float]"),
+            ("DemographicSampler.sex_weights", "return", "", "dict[SexKey, float]"),
+            ("DemographicSampler.apply_profile_groups", "profile_row", "", "Mapping[str, str | None]"),
+            ("TransactionGenerator.generate_transaction_data", "bank_account", "", "object | None"),
+            ("DemographicConfig.with_defaults", "return", "transaction_profile", "str | Mapping[str, float] | None"),
+            ("PersonService.__init__", "demographic_config", "transaction_profile", "str | Mapping[str, float] | None"),
+            (
+                "PatientService.__init__",
+                "demographic_config",
+                "transaction_profile",
+                "str | Mapping[str, float] | None",
+            ),
+            (
+                "load_demographic_profile", "return", "age_bands", "Mapping[SexKey, tuple[DemographicAgeBand, ...]]"
+            ),
+            (
+                "load_demographic_profile",
+                "return",
+                "condition_rates",
+                "Mapping[str, tuple[DemographicConditionRate, ...]]",
+            ),
+            (
+                "DemographicSampler.__init__", "profile", "age_bands", "Mapping[SexKey, tuple[DemographicAgeBand, ...]]"
+            ),
+            (
+                "DemographicSampler.__init__",
+                "profile",
+                "condition_rates",
+                "Mapping[str, tuple[DemographicConditionRate, ...]]",
+            ),
+        )
+    }
+    assert len(permissions) == len(set(permissions)) == 32
+    assert set(permissions) == expected
+
+
 def test_statement_branch_and_memstore_manager_are_root_component_declarations() -> None:
     owners = {
         "COMP-DSL": "datamimic_ce.engine.dsl.statements.base.composite_statement:ConditionBranchStatement",

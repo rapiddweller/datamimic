@@ -113,9 +113,13 @@ def test_configured_transaction_profile_matches_schema(service_type, profile_kin
         "dict": backing,
         "mapping": MappingProxyType(backing),
     }[profile_kind]
-    service = service_type(
-        dataset="US", demographic_config=DemographicConfig(transaction_profile=profile), rng=Random(_SEED)
-    )
+    config = DemographicConfig(transaction_profile=profile)
+    defaulted = config.with_defaults(default_age_min=30, default_age_max=50)
+    assert defaulted is not config
+    assert defaulted.transaction_profile is profile
+    assert (defaulted.age_min, defaulted.age_max) == (30, 50)
+    assert (config.age_min, config.age_max) == (None, None)
+    service = service_type(dataset="US", demographic_config=config, rng=Random(_SEED))
     entity = service.generate()
     value = entity.transaction_profile
     assert value is profile

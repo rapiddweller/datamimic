@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from pathlib import Path
 from random import Random
+from types import MappingProxyType
 
 import pytest
 
@@ -9,11 +10,18 @@ from datamimic_ce.domains.api import IdentifierRegistry
 from datamimic_ce.domains.finance.services.bank_account_service import BankAccountService
 from datamimic_ce.domains.healthcare.services.patient_service import PatientService
 from datamimic_ce.domains.shared.demographics.config import DemographicConfig
+from datamimic_ce.domains.shared.demographics.profile import (
+    DemographicAgeBand,
+    DemographicProfile,
+    DemographicProfileId,
+)
+from datamimic_ce.domains.shared.demographics.sampler import DemographicSampler
 from datamimic_ce.domains.shared.services.person_service import PersonService
 from datamimic_ce.engine.dsl.api import Statement
 from datamimic_ce.engine.dsl.model.values.variables.variable_model import VariableModel
 from datamimic_ce.engine.dsl.statements.values.variables.variable_statement import VariableStatement
 from datamimic_ce.engine.runtime.contexts.context import SetupContext
+from datamimic_ce.engine.runtime.contexts.demographic_context import DemographicContext
 from datamimic_ce.engine.runtime.tasks.values.construction.entity import create_entity_generator
 from datamimic_ce.engine.runtime.tasks.values.construction.entity_constructor import parse_constructor_string
 
@@ -25,7 +33,7 @@ def test_constructor_arguments_keep_literal_types_and_string_fallback():
     )
 
 
-def _context() -> SetupContext:
+def _context(demographic_context: DemographicContext | None = None) -> SetupContext:
     return SetupContext(
         memstore_manager=None,
         task_id="constructor-test",
@@ -40,6 +48,7 @@ def _context() -> SetupContext:
         default_variable_prefix="",
         default_variable_suffix="",
         default_line_separator=None,
+        demographic_context=demographic_context,
     )
 
 
@@ -70,6 +79,42 @@ def test_dynamic_entity_constructor_resolves_builtin_service(entity: str, servic
 def test_dynamic_entity_constructor_preserves_explicit_invalid_kwargs() -> None:
     with pytest.raises(TypeError, match="unexpected keyword argument 'invalid'"):
         create_entity_generator(_context(), "Person(invalid=1)", "US", _statement())
+
+
+@pytest.mark.parametrize("entity", ("Person", "Patient"))
+@pytest.mark.parametrize("profile_kind", ("none", "string", "dict", "mapping"))
+def test_dynamic_entity_constructor_keeps_installed_transaction_profile(entity: str, profile_kind: str) -> None:
+    backing = {"daily": 0.5}
+    transaction_profile = {
+        "none": None,
+        "string": "student",
+        "dict": backing,
+        "mapping": MappingProxyType(backing),
+    }[profile_kind]
+    profile = DemographicProfile(
+        DemographicProfileId("US", "v1"),
+        {None: (DemographicAgeBand(None, 30, 30, 1.0),)},
+        {},
+    )
+    demographic_context = DemographicContext(
+        profile.profile_id,
+        DemographicSampler(profile),
+        DemographicConfig(transaction_profile=transaction_profile),
+        Random(7),
+    )
+    assert _context(demographic_context).demographic_context is demographic_context
+    context = _context()
+    assert context.demographic_context is None
+    context.set_demographic_context(demographic_context)
+    assert context.demographic_context is demographic_context
+
+    service = create_entity_generator(context, entity, "US", _statement())
+    value = service.generate().transaction_profile
+
+    assert value is transaction_profile
+    if profile_kind in ("dict", "mapping"):
+        backing["daily"] = 0.75
+        assert value["daily"] == 0.75
 
 
 def test_dynamic_entity_constructor_injects_only_signature_supported_overrides(monkeypatch: pytest.MonkeyPatch) -> None:

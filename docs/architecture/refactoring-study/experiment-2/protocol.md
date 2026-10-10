@@ -758,6 +758,25 @@ groups; no machine amendment is emitted. CI-ONLY VERIFICATION: the parent
 pending. Full DSL/EE acceptance remains open. Evidence:
 `/tmp/ce-resume-20261010/next-slice-166/`.
 
+Step 167: [Amendment 182](amendment-182-demographic-map-contracts.md) permits
+seven exact Domain map fields and corrects three Runtime selectors to the full
+named-profile / weight-map / None union. Domain owns the existing demographic
+records, validation and sampling; Runtime installs and forwards its context.
+Fixed fields remain typed. No new object opacity, production, EE, ownership,
+baseline or oracle change. Fresh ArchKeel 1.1.0: FAIL27 (37 → 27; Domain10 → 3,
+Runtime8 → 5), 200 measured UNKNOWNs and 488/488 parsed files. Independent
+comparison preserves all 27 remaining findings, 254 canonical UNKNOWNs, source
+facts and 151 components / 25 levels; ten allowance facts add no opacity.
+LOCAL VERIFIED: 18 behavior characterizations pass before the contract change;
+both exact guards fail, then all 114 selected tests pass with identical bytes.
+Definition 13 PASS, package/changed-test Ruff and full MyPy PASS. Independent
+prechecks pass 92 matcher counterexamples and four source-fixture variants for
+fixed fields and broad map keys/values. Native amendment validation retains both
+widenings but exits 2 with the same 19 usage-UNKNOWNs and 16 baseline-new groups;
+no machine amendment is emitted. CI-ONLY VERIFICATION: new-head checks pending.
+Full DSL/EE and automatic Finance weighting are not established. Evidence:
+`/tmp/ce-resume-20261010/next-slice-167/`.
+
 ## Agent separation
 
 - The implementation agent changes production code and targeted tests for one approved slice.
