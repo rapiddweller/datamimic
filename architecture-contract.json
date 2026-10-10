@@ -1285,7 +1285,8 @@
       "rationale": "The Authoring facade exposes typed application requests and results rather than implementation modules.",
       "provenance": [
         "docs/architecture/refactoring-study/experiment-2/target-architecture.md",
-        "docs/architecture/refactoring-study/experiment-2/amendment-11.md"
+        "docs/architecture/refactoring-study/experiment-2/amendment-11.md",
+        "docs/architecture/refactoring-study/experiment-2/amendment-184-authoring-sample-shapes.md"
       ],
       "decided_by": "architect",
       "allowed_positions": [
@@ -1293,7 +1294,7 @@
           "qualified_name": "datamimic_ce.authoring.api.run",
           "position": "return",
           "field_path": "products.sample",
-          "annotation": "dict[str, JsonValue]"
+          "annotation": "list[dict[str, JsonValue]]"
         },
         {
           "qualified_name": "datamimic_ce.authoring.api.scaffold",
@@ -1305,7 +1306,7 @@
           "qualified_name": "datamimic_ce.authoring.api.scaffold",
           "position": "return",
           "field_path": "products.sample",
-          "annotation": "dict[str, JsonValue]"
+          "annotation": "list[dict[str, JsonValue]]"
         },
         {
           "qualified_name": "datamimic_ce.authoring.api.scaffold",

@@ -800,6 +800,26 @@ but exits 2 with the same 19 usage-UNKNOWNs and 16 baseline-new groups; no machi
 amendment is emitted. CI-ONLY VERIFICATION: new-head checks pending; no full DSL/EE
 acceptance. Evidence: `/tmp/ce-resume-20261010/next-slice-170/`.
 
+Step 169: [Amendment 184](amendment-184-authoring-sample-shapes.md) corrects only
+the two existing Authoring `products.sample` selectors to their complete
+`list[dict[str, JsonValue]]` annotation. The four-selector contract remains
+exact; no depth/native-object allowance, production, schema, transport,
+baseline, budget or oracle change. GroupMask, Properties, Cache and SQL155
+retain their separate scope. Fresh ArchKeel 1.1.0: FAIL24 (26 → 24), 200 measured
+UNKNOWNs and 488/488 parsed files. Independent comparison preserves all 24
+remaining findings, all 254 canonical UNKNOWNs, existing facts and source data
+exactly; two new sample facts add no opacity.
+LOCAL VERIFIED: exact guard RED→GREEN with identical test bytes;
+108 relevant Authoring/dry-run/scaffold/CLI/MCP tests PASS. Definition 13 PASS
+via project venv after the Make target's uvx cache permission failure;
+package/changed-test Ruff and full MyPy (488 files) PASS.
+Independent QA: eight tests, eight wrong-selector pairs and two single-selector
+removals PASS; sibling and fixed-control findings unchanged. Native amendment
+validation retains the Authoring widening but exits 2 with the same 19 usage-
+UNKNOWNs and 14 baseline-new groups; no machine amendment is emitted.
+CI-ONLY VERIFICATION: new-head checks pending. No full DSL/EE acceptance.
+Evidence: `/tmp/ce-resume-20261010/next-slice-171/`.
+
 ## Agent separation
 
 - The implementation agent changes production code and targeted tests for one approved slice.
