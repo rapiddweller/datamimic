@@ -1159,7 +1159,7 @@
       "id": "IO-API-TYPES",
       "kind": "boundary_types",
       "source": "datamimic_ce.engine.io.api",
-      "rationale": "The IO facade keeps fixed controls typed; smoke-export rows/options and connection profiles remain open payloads at reviewed positions. WeightedEntityDataSource returns a selected native string-valued row keyed by input CSV headers; headers are data keys, and row aliasing remains observable. Native source rows and capture values retain their reviewed map/list forms; IO owns storage and row transport while Runtime owns lifecycle and timing. ExportSession accepts native XML dictionaries with string keys; IO owns conversion and dispatch, preserving the original XML page. Product maps retain their inner string-keyed row dictionaries and native values at the exact reviewed depths. Variable-source returns retain one opaque native Iterable element, including None; this exact facade grant does not cover the plan DTO or prove type closure.",
+      "rationale": "The IO facade keeps fixed controls typed; smoke-export rows/options and connection profiles remain open payloads at reviewed positions. WeightedEntityDataSource returns a selected native string-valued row keyed by input CSV headers; headers are data keys, and row aliasing remains observable. Native source rows and capture values retain their reviewed map/list forms; IO owns storage and row transport while Runtime owns lifecycle and timing. ExportSession accepts native XML dictionaries with string keys; IO owns conversion and dispatch, preserving the original XML page. Product maps retain their inner string-keyed row dictionaries and native values at the exact reviewed depths. Variable-source returns retain one opaque native Iterable element, including None; this exact facade grant does not cover the plan DTO or prove type closure. Nested-key JSON reads retain the unique native string-keyed object root at the exact full return signature.",
       "provenance": [
         "docs/architecture/refactoring-study/experiment-2/target-architecture.md",
         "docs/architecture/refactoring-study/experiment-2/amendment-62.md",
@@ -1171,7 +1171,8 @@
         "docs/architecture/refactoring-study/experiment-2/amendment-185-product-map-boundaries.md",
         "docs/architecture/refactoring-study/experiment-2/amendment-188-product-map-depth.md",
         "docs/architecture/refactoring-study/experiment-2/amendment-203-variable-query-rows.md",
-        "docs/architecture/refactoring-study/experiment-2/amendment-209-native-variable-return.md"
+        "docs/architecture/refactoring-study/experiment-2/amendment-209-native-variable-return.md",
+        "docs/architecture/refactoring-study/experiment-2/amendment-210-nested-json-root.md"
       ],
       "decided_by": "agent",
       "allowed_positions": [
@@ -1391,6 +1392,12 @@
           "field_path": "",
           "annotation": "Iterable[object] | None",
           "container_depth": 1
+        },
+        {
+          "qualified_name": "datamimic_ce.engine.io.api.read_nested_key_source",
+          "position": "return",
+          "field_path": "",
+          "annotation": "list[dict[str, str]] | list[JsonValue] | dict[str, JsonValue] | list[dict[str, object]]"
         }
       ]
     },

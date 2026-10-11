@@ -313,6 +313,12 @@ def test_io_native_payload_permissions_keep_exact_shapes_and_depths() -> None:
         "annotation": "Iterable[object] | None",
         "container_depth": 1,
     })
+    expected.append({
+        "qualified_name": "datamimic_ce.engine.io.api.read_nested_key_source",
+        "position": "return",
+        "field_path": "",
+        "annotation": "list[dict[str, str]] | list[JsonValue] | dict[str, JsonValue] | list[dict[str, object]]",
+    })
     assert rule["allowed_positions"] == expected
     assert (
         "docs/architecture/refactoring-study/experiment-2/amendment-203-variable-query-rows.md"
