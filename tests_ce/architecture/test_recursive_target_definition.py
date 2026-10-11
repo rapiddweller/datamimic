@@ -227,7 +227,8 @@ def _contracts() -> dict[str, list[set[str]]]:
             mounted.add(path)
         active.add(path)
         contract = json.loads(path.read_text(encoding="utf-8"))
-        assert contract.get("schema_version") == "2.1.0"
+        inner_version = "2.2.0" if path == ROOT / "docs/architecture/inner/runtime/architecture-contract.json" else "2.1.0"
+        assert contract.get("schema_version") == (inner_version if inside else "3.3.0")
         for rule in contract["rules"]:
             if rule["kind"] == "root_layout":
                 root = rule["root"]

@@ -1,0 +1,753 @@
+{
+  "status": "published_adoption_review_accepted",
+  "reviewed_by": "Astra",
+  "review_reference": "docs/architecture/refactoring-study/experiment-2/completion.md",
+  "source_digest": "81f86023ad58442a08dd77cf72e9524a24c91b0466aa46645b732cc4f393d428",
+  "contract_digest": "289d6c0ee28d75e53e7ed8d057edbd66dd4004c5c362b6cccf5f7c095e0f7745",
+  "analyzer_digest": "7106e3595fa7df9269cb43ee280f9c557659db7bda171b1f65ff5619ab54aa24",
+  "unknowns_digest": "612725aab375502e431b6b295381e9ec123d709bd8c96b0e4ec0273c9189847d",
+  "groups": [
+    {
+      "classification": "aggregate_receipt",
+      "reason": "Aggregate references current detailed positions; no extra scalar count. Current positions/decided/reason inventory replaces the old totals.",
+      "ids": [
+        "UNKNOWN-BOUNDARY-TYPES-740afb90c4487173",
+        "UNKNOWN-BOUNDARY-TYPES-7bd62f12a70f63ec",
+        "UNKNOWN-BOUNDARY-TYPES-db0782b9873b6c83",
+        "UNKNOWN-BOUNDARY-TYPES-e238f6c49f5c3de8",
+        "UNKNOWN-BOUNDARY-TYPES-e5f8a7020449fcee",
+        "UNKNOWN-BOUNDARY-TYPES-f445331027bfe957"
+      ]
+    },
+    {
+      "classification": "callable_alias_limit",
+      "reason": "ConnectionProfileLoader aliases Callable[[Path,str],dict[str,str]]; underlying dictionary remains real boundary debt.",
+      "ids": [
+        "UNKNOWN-BOUNDARY-TYPE-POSITION-9d9f68655b08ff1b"
+      ]
+    },
+    {
+      "classification": "constant_reexport_route_limit",
+      "reason": "Explicit imported route preserved; constant/overload target is not resolved as a supported facade signature. No missing import inferred.",
+      "ids": [
+        "UNKNOWN-BOUNDARY-TYPE-ROUTE-1a4d17fe20465c1a",
+        "UNKNOWN-BOUNDARY-TYPE-ROUTE-2a6199a74c496fa7",
+        "UNKNOWN-BOUNDARY-TYPE-ROUTE-3d80f20158bac2a2",
+        "UNKNOWN-BOUNDARY-TYPE-ROUTE-5ee0032b54ab58aa",
+        "UNKNOWN-BOUNDARY-TYPE-ROUTE-7e8b9de3d7939bff",
+        "UNKNOWN-BOUNDARY-TYPE-ROUTE-7ed461ea8f5d4081",
+        "UNKNOWN-BOUNDARY-TYPE-ROUTE-fe933666c3683722"
+      ]
+    },
+    {
+      "classification": "decorated_class_surface_limit",
+      "reason": "Patient/Doctor/CreditCard have no class-level if/for/try; conservative flag also covers unproven decorator/property bindings. Not a control-flow source defect.",
+      "ids": [
+        "UNKNOWN-API-SURFACE-097fe5b868784c82",
+        "UNKNOWN-API-SURFACE-3efc316c7d54c515",
+        "UNKNOWN-API-SURFACE-bf7aa0d3ee853572"
+      ]
+    },
+    {
+      "classification": "external_dotted_type_limit",
+      "reason": "Existing qualified Random or lxml etree._Element identity is not proof of a missing source type. Do not change imports solely to manipulate classification.",
+      "ids": [
+        "UNKNOWN-BOUNDARY-TYPE-POSITION-54926b283c960565",
+        "UNKNOWN-BOUNDARY-TYPE-POSITION-db9b600ef5817326"
+      ]
+    },
+    {
+      "classification": "external_or_validated_alias_limit",
+      "reason": "Retain real library/validation type; scalar ratchet excludes external_type but canonical uncertainty stays. Alias expansion may reveal additional shape obligations.",
+      "ids": [
+        "UNKNOWN-BOUNDARY-TYPE-POSITION-43d5ebe480180485",
+        "UNKNOWN-BOUNDARY-TYPE-POSITION-77aee7c3ac0929f8",
+        "UNKNOWN-BOUNDARY-TYPE-POSITION-7888c0051ab4b603",
+        "UNKNOWN-BOUNDARY-TYPE-POSITION-886a2527bb45e6e6",
+        "UNKNOWN-BOUNDARY-TYPE-POSITION-99cb626b5c57b1c1",
+        "UNKNOWN-BOUNDARY-TYPE-POSITION-ad5b516a7654fc7b",
+        "UNKNOWN-BOUNDARY-TYPE-POSITION-c2124a0c8f61643e"
+      ]
+    },
+    {
+      "classification": "forward_reference_limit",
+      "reason": "Quoted/self references are existing Python types; source syntax changes would not improve the contract.",
+      "ids": [
+        "UNKNOWN-BOUNDARY-TYPE-POSITION-1339d415e4c3daa5",
+        "UNKNOWN-BOUNDARY-TYPE-POSITION-223b55349d0f5075",
+        "UNKNOWN-BOUNDARY-TYPE-POSITION-9d8fb1e4e907c263",
+        "UNKNOWN-BOUNDARY-TYPE-POSITION-aab3569db0191341"
+      ]
+    },
+    {
+      "classification": "generic_type_limit",
+      "reason": "Existing Callable/type/TypeGuard/generic shape unsupported at this route; no invented protocol or erased generic semantics.",
+      "ids": [
+        "UNKNOWN-BOUNDARY-TYPE-POSITION-07f51ae306c82153",
+        "UNKNOWN-BOUNDARY-TYPE-POSITION-098a98111caf9386",
+        "UNKNOWN-BOUNDARY-TYPE-POSITION-2a1949a2e0945d08",
+        "UNKNOWN-BOUNDARY-TYPE-POSITION-383e75cfd54fa20d",
+        "UNKNOWN-BOUNDARY-TYPE-POSITION-6125d058360e31fc",
+        "UNKNOWN-BOUNDARY-TYPE-POSITION-7ef35f25bc8ab438",
+        "UNKNOWN-BOUNDARY-TYPE-POSITION-c12b1a01bba96cdb",
+        "UNKNOWN-BOUNDARY-TYPE-POSITION-cb2e825b374b2159",
+        "UNKNOWN-BOUNDARY-TYPE-POSITION-d86e6844126ff8f2",
+        "UNKNOWN-BOUNDARY-TYPE-POSITION-efbecfb04b53346a",
+        "UNKNOWN-BOUNDARY-TYPE-POSITION-f618985553362946"
+      ]
+    },
+    {
+      "classification": "global_observation_limit",
+      "reason": "Current global context and dynamic-call completeness is unproved; 1246 unresolved calls are distinct from scalar boundary positions.",
+      "ids": [
+        "UNKNOWN-CONTEXT-DATAFLOW",
+        "UNKNOWN-PYTHON-DYNAMIC-CALLS"
+      ]
+    },
+    {
+      "classification": "inherited_method_inventory_limit",
+      "reason": "MongoDBConnectionValues is a native five-key TypedDict. Its inherited method inventory is unresolved, not a missing getter annotation. Retain UNKNOWN; no forwarding copies or source slice justified. Scanner cannot establish complete binding/inherited surface. Existing annotations may still contain real broad-map or missing-type debt; classifying this reason does not validate the whole signature.",
+      "ids": [
+        "UNKNOWN-BOUNDARY-TYPE-POSITION-09789f436c1bba46",
+        "UNKNOWN-BOUNDARY-TYPE-POSITION-0f10b14c3f59f2b7",
+        "UNKNOWN-BOUNDARY-TYPE-POSITION-11347f0958e2d8ab",
+        "UNKNOWN-BOUNDARY-TYPE-POSITION-1561fcdb411e6cc7",
+        "UNKNOWN-BOUNDARY-TYPE-POSITION-16a9218a38f21e23",
+        "UNKNOWN-BOUNDARY-TYPE-POSITION-171a349dc482b166",
+        "UNKNOWN-BOUNDARY-TYPE-POSITION-17c5e4b2b9054b2d",
+        "UNKNOWN-BOUNDARY-TYPE-POSITION-19f5a705bdf18ec4",
+        "UNKNOWN-BOUNDARY-TYPE-POSITION-1afcd0d8e4222e10",
+        "UNKNOWN-BOUNDARY-TYPE-POSITION-1dd7dbbad671215d",
+        "UNKNOWN-BOUNDARY-TYPE-POSITION-1fcccee1b4df192e",
+        "UNKNOWN-BOUNDARY-TYPE-POSITION-218e1e783ec24c13",
+        "UNKNOWN-BOUNDARY-TYPE-POSITION-23cdb8304b276110",
+        "UNKNOWN-BOUNDARY-TYPE-POSITION-271b130b70b58268",
+        "UNKNOWN-BOUNDARY-TYPE-POSITION-3096245875bdb874",
+        "UNKNOWN-BOUNDARY-TYPE-POSITION-33fab1fe35773ecb",
+        "UNKNOWN-BOUNDARY-TYPE-POSITION-37778a951d317c8b",
+        "UNKNOWN-BOUNDARY-TYPE-POSITION-494a369cf9d50403",
+        "UNKNOWN-BOUNDARY-TYPE-POSITION-4a99961c530e4651",
+        "UNKNOWN-BOUNDARY-TYPE-POSITION-4c4904a69431de91",
+        "UNKNOWN-BOUNDARY-TYPE-POSITION-4d4f7de8b4c37539",
+        "UNKNOWN-BOUNDARY-TYPE-POSITION-4eb13dcdbf4ce815",
+        "UNKNOWN-BOUNDARY-TYPE-POSITION-50106a05d3babcc2",
+        "UNKNOWN-BOUNDARY-TYPE-POSITION-58091d5f5a3bca98",
+        "UNKNOWN-BOUNDARY-TYPE-POSITION-5a07dc9662bc4467",
+        "UNKNOWN-BOUNDARY-TYPE-POSITION-5c065b92f226a122",
+        "UNKNOWN-BOUNDARY-TYPE-POSITION-5c0d945a370110e5",
+        "UNKNOWN-BOUNDARY-TYPE-POSITION-5c67d311696685a8",
+        "UNKNOWN-BOUNDARY-TYPE-POSITION-64d6b1e7e96a39a5",
+        "UNKNOWN-BOUNDARY-TYPE-POSITION-6b1f58f7e5aae8da",
+        "UNKNOWN-BOUNDARY-TYPE-POSITION-74d167260a024cef",
+        "UNKNOWN-BOUNDARY-TYPE-POSITION-78f4d68c8b96a636",
+        "UNKNOWN-BOUNDARY-TYPE-POSITION-7f2a7f0836095be4",
+        "UNKNOWN-BOUNDARY-TYPE-POSITION-834e718a57e2474d",
+        "UNKNOWN-BOUNDARY-TYPE-POSITION-8924c8ea808d8b6f",
+        "UNKNOWN-BOUNDARY-TYPE-POSITION-8ae58c1ea1ede8d8",
+        "UNKNOWN-BOUNDARY-TYPE-POSITION-8fdd68d8995ada8f",
+        "UNKNOWN-BOUNDARY-TYPE-POSITION-9015ea57a7a25de1",
+        "UNKNOWN-BOUNDARY-TYPE-POSITION-93e64930604dfdcb",
+        "UNKNOWN-BOUNDARY-TYPE-POSITION-956133298d90ca41",
+        "UNKNOWN-BOUNDARY-TYPE-POSITION-962e6731e5b18646",
+        "UNKNOWN-BOUNDARY-TYPE-POSITION-9647c653757ac98e",
+        "UNKNOWN-BOUNDARY-TYPE-POSITION-a145d91796e79fbd",
+        "UNKNOWN-BOUNDARY-TYPE-POSITION-a1bffe4d938fcb0b",
+        "UNKNOWN-BOUNDARY-TYPE-POSITION-a5ee7f07955ee826",
+        "UNKNOWN-BOUNDARY-TYPE-POSITION-a777159f0969d61b",
+        "UNKNOWN-BOUNDARY-TYPE-POSITION-ae07a9c5bb1d78b9",
+        "UNKNOWN-BOUNDARY-TYPE-POSITION-b3a57bf339ee95c5",
+        "UNKNOWN-BOUNDARY-TYPE-POSITION-b3aa5aa3ef833a94",
+        "UNKNOWN-BOUNDARY-TYPE-POSITION-b6ed63a8046f09fe",
+        "UNKNOWN-BOUNDARY-TYPE-POSITION-b8180c12b12060ea",
+        "UNKNOWN-BOUNDARY-TYPE-POSITION-bec12f36baf3e51c",
+        "UNKNOWN-BOUNDARY-TYPE-POSITION-bf4c0eb413c5c4e1",
+        "UNKNOWN-BOUNDARY-TYPE-POSITION-d44a29d75ba44724",
+        "UNKNOWN-BOUNDARY-TYPE-POSITION-d499fd3012d253be",
+        "UNKNOWN-BOUNDARY-TYPE-POSITION-dbcb0d5db3783878",
+        "UNKNOWN-BOUNDARY-TYPE-POSITION-dca24cf1bc9da58d",
+        "UNKNOWN-BOUNDARY-TYPE-POSITION-e74eee4992a2bee4",
+        "UNKNOWN-BOUNDARY-TYPE-POSITION-ed637defd3f8f3a1",
+        "UNKNOWN-BOUNDARY-TYPE-POSITION-ef755d6dd1187ff1",
+        "UNKNOWN-BOUNDARY-TYPE-POSITION-f01dee990b605772",
+        "UNKNOWN-BOUNDARY-TYPE-POSITION-f5054d6fb273a49d",
+        "UNKNOWN-BOUNDARY-TYPE-POSITION-f9a95b4c21fea4e0",
+        "UNKNOWN-BOUNDARY-TYPE-POSITION-fc7197f8e2afb597",
+        "UNKNOWN-BOUNDARY-TYPE-POSITION-fe68122f2ce93900",
+        "UNKNOWN-BOUNDARY-TYPE-POSITION-ffe02ed6aa1c3c57"
+      ]
+    },
+    {
+      "classification": "property_binding_limit",
+      "reason": "Current property/inherited binding is not proven. Its reported annotation is ''. This does not certify its value shape; broad-map or missing-type debt must remain visible. The missing setter value annotation is Source debt, not solely a checker limitation.",
+      "ids": [
+        "UNKNOWN-BOUNDARY-TYPE-POSITION-8c42680e3902646d"
+      ]
+    },
+    {
+      "classification": "property_binding_limit",
+      "reason": "Current property/inherited binding is not proven. Its reported annotation is 'ExportSession | None'. This does not certify its value shape; broad-map or missing-type debt must remain visible.",
+      "ids": [
+        "UNKNOWN-BOUNDARY-TYPE-POSITION-5280cd333eb976c5",
+        "UNKNOWN-BOUNDARY-TYPE-POSITION-6445aa608973f0f3"
+      ]
+    },
+    {
+      "classification": "property_binding_limit",
+      "reason": "Current property/inherited binding is not proven. Its reported annotation is 'None'. This does not certify its value shape; broad-map or missing-type debt must remain visible.",
+      "ids": [
+        "UNKNOWN-BOUNDARY-TYPE-POSITION-104c80423ac9667e",
+        "UNKNOWN-BOUNDARY-TYPE-POSITION-14054786c87d9feb",
+        "UNKNOWN-BOUNDARY-TYPE-POSITION-19f9433f64db2bfd",
+        "UNKNOWN-BOUNDARY-TYPE-POSITION-22a6563be34d614d",
+        "UNKNOWN-BOUNDARY-TYPE-POSITION-2aeb5eacb9eddcd4",
+        "UNKNOWN-BOUNDARY-TYPE-POSITION-39fc6e99009823d3",
+        "UNKNOWN-BOUNDARY-TYPE-POSITION-432e850cb5b8cbb0",
+        "UNKNOWN-BOUNDARY-TYPE-POSITION-47e19a35c2e739ca",
+        "UNKNOWN-BOUNDARY-TYPE-POSITION-4e2e2984c0ed8dd7",
+        "UNKNOWN-BOUNDARY-TYPE-POSITION-5b0699721c0548e5",
+        "UNKNOWN-BOUNDARY-TYPE-POSITION-6397748b06e36087",
+        "UNKNOWN-BOUNDARY-TYPE-POSITION-756f92459122f5c7",
+        "UNKNOWN-BOUNDARY-TYPE-POSITION-81c687f4a2801b47",
+        "UNKNOWN-BOUNDARY-TYPE-POSITION-86ca50d7143ce663",
+        "UNKNOWN-BOUNDARY-TYPE-POSITION-8d8ad6df8d9a9105",
+        "UNKNOWN-BOUNDARY-TYPE-POSITION-9379a68893ebc770",
+        "UNKNOWN-BOUNDARY-TYPE-POSITION-9f84e866680c837e",
+        "UNKNOWN-BOUNDARY-TYPE-POSITION-ad6ca73cc1264cc9",
+        "UNKNOWN-BOUNDARY-TYPE-POSITION-b509f956013b0a65",
+        "UNKNOWN-BOUNDARY-TYPE-POSITION-d9bbad309a93188e",
+        "UNKNOWN-BOUNDARY-TYPE-POSITION-ebb3a5158b3588b7",
+        "UNKNOWN-BOUNDARY-TYPE-POSITION-f47cba7697103f42",
+        "UNKNOWN-BOUNDARY-TYPE-POSITION-f62d17f6e309f23d"
+      ]
+    },
+    {
+      "classification": "property_binding_limit",
+      "reason": "Current property/inherited binding is not proven. Its reported annotation is 'bool | None'. This does not certify its value shape; broad-map or missing-type debt must remain visible.",
+      "ids": [
+        "UNKNOWN-BOUNDARY-TYPE-POSITION-7ddaf82da240a182",
+        "UNKNOWN-BOUNDARY-TYPE-POSITION-92a60fa84bffc8fa"
+      ]
+    },
+    {
+      "classification": "property_binding_limit",
+      "reason": "Current property/inherited binding is not proven. Its reported annotation is 'bool'. This does not certify its value shape; broad-map or missing-type debt must remain visible.",
+      "ids": [
+        "UNKNOWN-BOUNDARY-TYPE-POSITION-461944100ff3d463",
+        "UNKNOWN-BOUNDARY-TYPE-POSITION-ab43883d937833c2"
+      ]
+    },
+    {
+      "classification": "property_binding_limit",
+      "reason": "Current property/inherited binding is not proven. Its reported annotation is 'bytes | None'. This does not certify its value shape; broad-map or missing-type debt must remain visible.",
+      "ids": [
+        "UNKNOWN-BOUNDARY-TYPE-POSITION-34abee33f26d972f",
+        "UNKNOWN-BOUNDARY-TYPE-POSITION-569ef1c8f07611b7",
+        "UNKNOWN-BOUNDARY-TYPE-POSITION-da692d7974fbfe89",
+        "UNKNOWN-BOUNDARY-TYPE-POSITION-f109dcc51f2a279b"
+      ]
+    },
+    {
+      "classification": "property_binding_limit",
+      "reason": "Current property/inherited binding is not proven. Its reported annotation is 'dict'. This does not certify its value shape; broad-map or missing-type debt must remain visible.",
+      "ids": [
+        "UNKNOWN-BOUNDARY-TYPE-POSITION-32c0b286f2828d14"
+      ]
+    },
+    {
+      "classification": "property_binding_limit",
+      "reason": "Current property/inherited binding is not proven. Its reported annotation is 'dict[str, RegisteredClient]'. This does not certify its value shape; broad-map or missing-type debt must remain visible.",
+      "ids": [
+        "UNKNOWN-BOUNDARY-TYPE-POSITION-27608b380a51f96a",
+        "UNKNOWN-BOUNDARY-TYPE-POSITION-ba82317a503168e0"
+      ]
+    },
+    {
+      "classification": "property_binding_limit",
+      "reason": "Current property/inherited binding is not proven. Its reported annotation is 'dict[str, object]'. This does not certify its value shape; broad-map or missing-type debt must remain visible.",
+      "ids": [
+        "UNKNOWN-BOUNDARY-TYPE-POSITION-122e0262d4acb75f",
+        "UNKNOWN-BOUNDARY-TYPE-POSITION-444b2c4c363c0276"
+      ]
+    },
+    {
+      "classification": "property_binding_limit",
+      "reason": "Current property/inherited binding is not proven. Its reported annotation is 'dict[str, str] | dict[str, object]'. This does not certify its value shape; broad-map or missing-type debt must remain visible.",
+      "ids": [
+        "UNKNOWN-BOUNDARY-TYPE-POSITION-0edfbe9b8e3d2d52",
+        "UNKNOWN-BOUNDARY-TYPE-POSITION-6473a586f74c2f68"
+      ]
+    },
+    {
+      "classification": "property_binding_limit",
+      "reason": "Current property/inherited binding is not proven. Its reported annotation is 'float'. This does not certify its value shape; broad-map or missing-type debt must remain visible.",
+      "ids": [
+        "UNKNOWN-BOUNDARY-TYPE-POSITION-6a55738c879fa5ed",
+        "UNKNOWN-BOUNDARY-TYPE-POSITION-87bffff1d52fdcb6"
+      ]
+    },
+    {
+      "classification": "property_binding_limit",
+      "reason": "Current property/inherited binding is not proven. Its reported annotation is 'int | None'. This does not certify its value shape; broad-map or missing-type debt must remain visible.",
+      "ids": [
+        "UNKNOWN-BOUNDARY-TYPE-POSITION-0f2f31fec8388112",
+        "UNKNOWN-BOUNDARY-TYPE-POSITION-177a6dc655536070",
+        "UNKNOWN-BOUNDARY-TYPE-POSITION-22a2f3c329262489",
+        "UNKNOWN-BOUNDARY-TYPE-POSITION-51aa3b845653548f",
+        "UNKNOWN-BOUNDARY-TYPE-POSITION-5d8496b7b6015376",
+        "UNKNOWN-BOUNDARY-TYPE-POSITION-64da0239b650e7ba",
+        "UNKNOWN-BOUNDARY-TYPE-POSITION-c0eed86ef57a44ef",
+        "UNKNOWN-BOUNDARY-TYPE-POSITION-cfb3060900bf8620"
+      ]
+    },
+    {
+      "classification": "property_binding_limit",
+      "reason": "Current property/inherited binding is not proven. Its reported annotation is 'list[Statement]'. This does not certify its value shape; broad-map or missing-type debt must remain visible.",
+      "ids": [
+        "UNKNOWN-BOUNDARY-TYPE-POSITION-5b56bdb7fe670a5b",
+        "UNKNOWN-BOUNDARY-TYPE-POSITION-86ab8530fe231540"
+      ]
+    },
+    {
+      "classification": "property_binding_limit",
+      "reason": "Current property/inherited binding is not proven. Its reported annotation is 'random.Random'. This does not certify its value shape; broad-map or missing-type debt must remain visible.",
+      "ids": [
+        "UNKNOWN-BOUNDARY-TYPE-POSITION-072a61056b7df66d",
+        "UNKNOWN-BOUNDARY-TYPE-POSITION-ef61ce5ac53566ee"
+      ]
+    },
+    {
+      "classification": "property_binding_limit",
+      "reason": "Current property/inherited binding is not proven. Its reported annotation is 'set[str]'. This does not certify its value shape; broad-map or missing-type debt must remain visible.",
+      "ids": [
+        "UNKNOWN-BOUNDARY-TYPE-POSITION-104639c1c2909429",
+        "UNKNOWN-BOUNDARY-TYPE-POSITION-1d3283c039427ae7"
+      ]
+    },
+    {
+      "classification": "property_binding_limit",
+      "reason": "Current property/inherited binding is not proven. Its reported annotation is 'str | None'. This does not certify its value shape; broad-map or missing-type debt must remain visible.",
+      "ids": [
+        "UNKNOWN-BOUNDARY-TYPE-POSITION-3238a70b33c74f0d",
+        "UNKNOWN-BOUNDARY-TYPE-POSITION-4a6aec4c6326c019"
+      ]
+    },
+    {
+      "classification": "property_binding_limit",
+      "reason": "Current property/inherited binding is not proven. Its reported annotation is 'str'. This does not certify its value shape; broad-map or missing-type debt must remain visible.",
+      "ids": [
+        "UNKNOWN-BOUNDARY-TYPE-POSITION-031a3e60166f2c40",
+        "UNKNOWN-BOUNDARY-TYPE-POSITION-0f785829a3cf453b",
+        "UNKNOWN-BOUNDARY-TYPE-POSITION-4c8a11100bee6f39",
+        "UNKNOWN-BOUNDARY-TYPE-POSITION-69b602a560f06790",
+        "UNKNOWN-BOUNDARY-TYPE-POSITION-705ade210fcbbdc8",
+        "UNKNOWN-BOUNDARY-TYPE-POSITION-7a118b1f0751a302",
+        "UNKNOWN-BOUNDARY-TYPE-POSITION-b5afaef97f38ede2",
+        "UNKNOWN-BOUNDARY-TYPE-POSITION-d4fd5b436ac417dd",
+        "UNKNOWN-BOUNDARY-TYPE-POSITION-ed06de0f3fdc8f34",
+        "UNKNOWN-BOUNDARY-TYPE-POSITION-f49853c726c7e5de"
+      ]
+    },
+    {
+      "classification": "source_contract_obligation",
+      "reason": "BaseModel.model_dump preserves extra=allow arbitrary engine configuration. RdbmsClient filters items into SQLAlchemy kwargs, including nested connect_args/execution_options. Closed scalar map is false; model return changes payload. Current signature remains missing; current owner/body inspected, no behavioral rerun.",
+      "ids": [
+        "UNKNOWN-BOUNDARY-TYPE-POSITION-fbe4ded2eb4dfd6a"
+      ]
+    },
+    {
+      "classification": "source_contract_obligation",
+      "reason": "Calls injected client.get_random_rows_by_columns once, consumes row[0], converts IDs to str and filters raw dictionaries. Fake client tests and direct scripts require structural injection. DatabaseClient lacks that method; existing IO helper restricts concrete classes. A new row/reader protocol requires an independently justified value contract, not checker-only scaffolding. Current signature remains missing; current owner/body inspected, no behavioral rerun.",
+      "ids": [
+        "UNKNOWN-BOUNDARY-TYPE-POSITION-844aad32733e6b57"
+      ]
+    },
+    {
+      "classification": "source_contract_obligation",
+      "reason": "Returns live mutable stored rows and preserves the existing missing-key KeyError message, logging and cause chain. Open consume/storage payloads remain unproved by the MemstoreSource read protocol; no closed DTO or identity/mutation change approved. Current return signature remains unannotated; no behavioral rerun.",
+      "ids": [
+        "UNKNOWN-BOUNDARY-TYPE-POSITION-b46539b39643885f"
+      ]
+    },
+    {
+      "classification": "source_contract_obligation",
+      "reason": "Returns original stored rows or empty list, without validating row shape. Same open storage/model issue as get_data_by_type; no fabricated closed model. Current signature remains missing; current owner/body inspected, no behavioral rerun.",
+      "ids": [
+        "UNKNOWN-BOUNDARY-TYPE-POSITION-fb89cb4d48b5e5bd"
+      ]
+    },
+    {
+      "classification": "source_contract_obligation",
+      "reason": "str return is correct on success, but full_name is str|None and annotation activates None.split checking; preserve native AttributeError. No internal caller found; no guard/coercion/suppression approved. Current signature remains missing; current owner/body inspected, no behavioral rerun.",
+      "ids": [
+        "UNKNOWN-BOUNDARY-TYPE-POSITION-21ed92d464a88f7c"
+      ]
+    },
+    {
+      "classification": "stdlib_dotted_type_limit",
+      "reason": "Existing qualified Random or lxml etree._Element identity is not proof of a missing source type. Do not change imports solely to manipulate classification.",
+      "ids": [
+        "UNKNOWN-BOUNDARY-TYPE-POSITION-16971751e56855d8",
+        "UNKNOWN-BOUNDARY-TYPE-POSITION-862a63b294d431e7",
+        "UNKNOWN-BOUNDARY-TYPE-POSITION-8a82890dda270798",
+        "UNKNOWN-BOUNDARY-TYPE-POSITION-b67afb9350df3bbc",
+        "UNKNOWN-BOUNDARY-TYPE-POSITION-c8b9d81ae9b3d91f",
+        "UNKNOWN-BOUNDARY-TYPE-POSITION-f5e031f2e43037fc"
+      ]
+    },
+    {
+      "classification": "stdlib_type_limit",
+      "reason": "Retain real library/validation type; scalar ratchet excludes external_type but canonical uncertainty stays. Alias expansion may reveal additional shape obligations.",
+      "ids": [
+        "UNKNOWN-BOUNDARY-TYPE-POSITION-006aad5a6288c516",
+        "UNKNOWN-BOUNDARY-TYPE-POSITION-07420409299cad0a",
+        "UNKNOWN-BOUNDARY-TYPE-POSITION-0f6e302f946057af",
+        "UNKNOWN-BOUNDARY-TYPE-POSITION-11c337f1282f7ed9",
+        "UNKNOWN-BOUNDARY-TYPE-POSITION-16483ca5881d8b6d",
+        "UNKNOWN-BOUNDARY-TYPE-POSITION-1aeb682ed3546912",
+        "UNKNOWN-BOUNDARY-TYPE-POSITION-1c4e7759bffbc41f",
+        "UNKNOWN-BOUNDARY-TYPE-POSITION-1e1c2d52b8ebdcf5",
+        "UNKNOWN-BOUNDARY-TYPE-POSITION-2394867c1012fa49",
+        "UNKNOWN-BOUNDARY-TYPE-POSITION-2596f3714abb15bc",
+        "UNKNOWN-BOUNDARY-TYPE-POSITION-3175c3f52a2808ea",
+        "UNKNOWN-BOUNDARY-TYPE-POSITION-369bed7e0f019b49",
+        "UNKNOWN-BOUNDARY-TYPE-POSITION-5d139cc32240e652",
+        "UNKNOWN-BOUNDARY-TYPE-POSITION-7566bd7b7685b73a",
+        "UNKNOWN-BOUNDARY-TYPE-POSITION-7800a03a69330230",
+        "UNKNOWN-BOUNDARY-TYPE-POSITION-7c1654e9548b9f62",
+        "UNKNOWN-BOUNDARY-TYPE-POSITION-82d3ad24561387a5",
+        "UNKNOWN-BOUNDARY-TYPE-POSITION-85ca1136863633e2",
+        "UNKNOWN-BOUNDARY-TYPE-POSITION-87388729d7d545a7",
+        "UNKNOWN-BOUNDARY-TYPE-POSITION-97e8f992d0d6bc78",
+        "UNKNOWN-BOUNDARY-TYPE-POSITION-98ebe2434bfe34d4",
+        "UNKNOWN-BOUNDARY-TYPE-POSITION-9c516e677956f0f7",
+        "UNKNOWN-BOUNDARY-TYPE-POSITION-a1bad40460f2bed7",
+        "UNKNOWN-BOUNDARY-TYPE-POSITION-a35a56b88adb238c",
+        "UNKNOWN-BOUNDARY-TYPE-POSITION-a83610af48cd67f3",
+        "UNKNOWN-BOUNDARY-TYPE-POSITION-aff3cb6e53b4dfa4",
+        "UNKNOWN-BOUNDARY-TYPE-POSITION-b73d1bc7c1dedd40",
+        "UNKNOWN-BOUNDARY-TYPE-POSITION-bc33ddf5ca92ba24",
+        "UNKNOWN-BOUNDARY-TYPE-POSITION-bed664f2759b4b8b",
+        "UNKNOWN-BOUNDARY-TYPE-POSITION-c661fc4b05037785",
+        "UNKNOWN-BOUNDARY-TYPE-POSITION-cc96309adc2a8025",
+        "UNKNOWN-BOUNDARY-TYPE-POSITION-ceae239c470881a6",
+        "UNKNOWN-BOUNDARY-TYPE-POSITION-d0ff66da709bddd9",
+        "UNKNOWN-BOUNDARY-TYPE-POSITION-d5b8b94d0f4d2958",
+        "UNKNOWN-BOUNDARY-TYPE-POSITION-ddf0924a559c9e3f",
+        "UNKNOWN-BOUNDARY-TYPE-POSITION-e3a76ab2e81eef53",
+        "UNKNOWN-BOUNDARY-TYPE-POSITION-e3bb47f89ffb6c1b",
+        "UNKNOWN-BOUNDARY-TYPE-POSITION-eed4a3dfb716074d",
+        "UNKNOWN-BOUNDARY-TYPE-POSITION-f253b98f4f7fccdf"
+      ]
+    },
+    {
+      "classification": "type_variable_limit",
+      "reason": "TypeVar preserves input/output identity or generated model type; object/concrete narrowing would discard real semantics.",
+      "ids": [
+        "UNKNOWN-BOUNDARY-TYPE-POSITION-11657edbd7e9f495",
+        "UNKNOWN-BOUNDARY-TYPE-POSITION-1f6699e0d644c8a9",
+        "UNKNOWN-BOUNDARY-TYPE-POSITION-406c1804a8306260",
+        "UNKNOWN-BOUNDARY-TYPE-POSITION-428ba72b79ed5157",
+        "UNKNOWN-BOUNDARY-TYPE-POSITION-44339a24f8eeb868",
+        "UNKNOWN-BOUNDARY-TYPE-POSITION-65824dc2749b1813",
+        "UNKNOWN-BOUNDARY-TYPE-POSITION-696fc97243f6a1c1",
+        "UNKNOWN-BOUNDARY-TYPE-POSITION-7e160041d9e01aab",
+        "UNKNOWN-BOUNDARY-TYPE-POSITION-b0fe147e3832808f",
+        "UNKNOWN-BOUNDARY-TYPE-POSITION-b32896b85e9a03be",
+        "UNKNOWN-BOUNDARY-TYPE-POSITION-b62e9c3d9a60e505",
+        "UNKNOWN-BOUNDARY-TYPE-POSITION-cb5dc26c549bf996",
+        "UNKNOWN-BOUNDARY-TYPE-POSITION-d29db2b86739ca9e",
+        "UNKNOWN-BOUNDARY-TYPE-POSITION-e9f2a054bc20e368"
+      ]
+    },
+    {
+      "classification": "uncertain_alias_binding",
+      "reason": "Annotated discriminated union retains category-to-kind correlation and Pydantic validation. Prove binding and supported Annotated metadata, without erasing discriminator or replacing the result with an open map.",
+      "ids": [
+        "UNKNOWN-BOUNDARY-TYPE-POSITION-09f6b80e79e7695f",
+        "UNKNOWN-BOUNDARY-TYPE-POSITION-2b96a76af66c156b"
+      ]
+    },
+    {
+      "classification": "uncertain_alias_binding",
+      "reason": "Client | SqlScriptClient preserves heterogeneous client implementations; prove the relevant binding and callable surface before expanding. Do not narrow the registry or infer all clients share one database API.",
+      "ids": [
+        "UNKNOWN-BOUNDARY-TYPE-POSITION-08ad9b9d956f3aff",
+        "UNKNOWN-BOUNDARY-TYPE-POSITION-1ca687995b416c42",
+        "UNKNOWN-BOUNDARY-TYPE-POSITION-23b2e7ea5eafe012",
+        "UNKNOWN-BOUNDARY-TYPE-POSITION-2888693e312e694f",
+        "UNKNOWN-BOUNDARY-TYPE-POSITION-2fa97ce404a1e09d",
+        "UNKNOWN-BOUNDARY-TYPE-POSITION-2fc7ffad7953a4ba",
+        "UNKNOWN-BOUNDARY-TYPE-POSITION-38b10d5e94bf47e9",
+        "UNKNOWN-BOUNDARY-TYPE-POSITION-4053f8785a9fa317",
+        "UNKNOWN-BOUNDARY-TYPE-POSITION-499095ae6c849211",
+        "UNKNOWN-BOUNDARY-TYPE-POSITION-4f17a623f73da339",
+        "UNKNOWN-BOUNDARY-TYPE-POSITION-69d53701b2d3845c",
+        "UNKNOWN-BOUNDARY-TYPE-POSITION-80cbf3ab97d18bde",
+        "UNKNOWN-BOUNDARY-TYPE-POSITION-81d4d2aad14a169b",
+        "UNKNOWN-BOUNDARY-TYPE-POSITION-880c83e1e744ca76",
+        "UNKNOWN-BOUNDARY-TYPE-POSITION-8c18c6e37d5ac6f0",
+        "UNKNOWN-BOUNDARY-TYPE-POSITION-9bc6566cef0ddcbe",
+        "UNKNOWN-BOUNDARY-TYPE-POSITION-9cba3a7a54711ec4",
+        "UNKNOWN-BOUNDARY-TYPE-POSITION-d0a3d378fe614a18",
+        "UNKNOWN-BOUNDARY-TYPE-POSITION-da01b0f6c8f8da74",
+        "UNKNOWN-BOUNDARY-TYPE-POSITION-db551a7972bfabd9",
+        "UNKNOWN-BOUNDARY-TYPE-POSITION-de227646ce1f0811"
+      ]
+    },
+    {
+      "classification": "uncertain_alias_binding",
+      "reason": "Dictionary alternatives use str, tuple interval, and SexKey keys with float weights. Preserve key correlations and mapping behavior; establish alias binding before body-dependent verdicts or precise permissions.",
+      "ids": [
+        "UNKNOWN-BOUNDARY-TYPE-POSITION-1a2f0ac4b83db719"
+      ]
+    },
+    {
+      "classification": "uncertain_alias_binding",
+      "reason": "Native prepared export tuple carries object values, metadata and mutable dict rows. Body is visibly broad but current escaped alias binding is unproved; no body-derived FAIL or grant. Preserve ownership, row identity and exporter behavior.",
+      "ids": [
+        "UNKNOWN-BOUNDARY-TYPE-POSITION-7b5ad38256894734",
+        "UNKNOWN-BOUNDARY-TYPE-POSITION-8958397e43ff0828"
+      ]
+    },
+    {
+      "classification": "uncertain_alias_binding",
+      "reason": "RdbmsConnectionConfig | MongoDBConnectionConfig preserves engine configuration alternatives; prove alias binding and constituent surface. Native nested configuration values remain unrestricted.",
+      "ids": [
+        "UNKNOWN-BOUNDARY-TYPE-POSITION-76a2f343dc40db7f",
+        "UNKNOWN-BOUNDARY-TYPE-POSITION-f2c95ea1f9e1527c"
+      ]
+    },
+    {
+      "classification": "uncertain_alias_binding",
+      "reason": "Recursive quoted JsonValue = scalar | list[JsonValue] | dict[str, JsonValue] is not a proven closed checker algebra. Preserve recursive native JSON, arbitrary keys and list/scalar alternatives; no blanket JSON grant.",
+      "ids": [
+        "UNKNOWN-BOUNDARY-TYPE-POSITION-1c57880c66cf05a2"
+      ]
+    },
+    {
+      "classification": "uncertain_alias_binding",
+      "reason": "StateTransitionRule identity is reexported as Rule. Establish alias binding and model surface; preserve transition ordering and conditions.",
+      "ids": [
+        "UNKNOWN-BOUNDARY-TYPE-POSITION-6d1c3cb4950381d4"
+      ]
+    },
+    {
+      "classification": "uncertain_alias_binding",
+      "reason": "dict[str, pydantic.JsonValue] depends on external recursive value algebra. Prove binding and recursive library model; do not infer scalar-only JSON or close arbitrary object keys.",
+      "ids": [
+        "UNKNOWN-API-SURFACE-40bca825c62ac014"
+      ]
+    },
+    {
+      "classification": "uncertain_alias_binding",
+      "reason": "str | None models the existing unknown-sex category. Preserve None semantics; establish alias binding before assuming a closed key algebra.",
+      "ids": [
+        "UNKNOWN-BOUNDARY-TYPE-POSITION-2960e685580ff0ee",
+        "UNKNOWN-BOUNDARY-TYPE-POSITION-60afdb4335f66fdb",
+        "UNKNOWN-BOUNDARY-TYPE-POSITION-6f05729162fe9b5e",
+        "UNKNOWN-BOUNDARY-TYPE-POSITION-871b1d4eea147890",
+        "UNKNOWN-BOUNDARY-TYPE-POSITION-bed44ab427b0954a",
+        "UNKNOWN-BOUNDARY-TYPE-POSITION-cc350779e01d8a7a"
+      ]
+    },
+    {
+      "classification": "uncertain_alias_binding",
+      "reason": "type | tuple[type, ...] retains Python type catalogue semantics. Prove binding and supported type-object algebra; object or concrete scalar replacement would lose meaning.",
+      "ids": [
+        "UNKNOWN-BOUNDARY-TYPE-POSITION-109e0d262371d8b5",
+        "UNKNOWN-BOUNDARY-TYPE-POSITION-3dd699b11d18cb15",
+        "UNKNOWN-BOUNDARY-TYPE-POSITION-b76deb94fca311c9",
+        "UNKNOWN-BOUNDARY-TYPE-POSITION-d1eaea201e26afd8",
+        "UNKNOWN-BOUNDARY-TYPE-POSITION-e99a418a63ea41ac",
+        "UNKNOWN-BOUNDARY-TYPE-POSITION-e9d9e28306151cf3",
+        "UNKNOWN-BOUNDARY-TYPE-POSITION-f24ae27309d4ceef"
+      ]
+    }
+  ],
+  "source_contract_debt_ids": [
+    "UNKNOWN-BOUNDARY-TYPE-POSITION-21ed92d464a88f7c",
+    "UNKNOWN-BOUNDARY-TYPE-POSITION-844aad32733e6b57",
+    "UNKNOWN-BOUNDARY-TYPE-POSITION-8c42680e3902646d",
+    "UNKNOWN-BOUNDARY-TYPE-POSITION-b46539b39643885f",
+    "UNKNOWN-BOUNDARY-TYPE-POSITION-fb89cb4d48b5e5bd",
+    "UNKNOWN-BOUNDARY-TYPE-POSITION-fbe4ded2eb4dfd6a"
+  ],
+  "scope": "286 exact UNKNOWN records in 45 independently assessed groups; five primary Source-contract debts and one setter debt retained. All 20 exact publication-usage diagnostics are assessed uncertainty. UNKNOWN is not PASS. Published ArchKeel2.0.0 adoption evidence accepted for the bounded CE architecture slice; repository gate and delivery remain separate.",
+  "validation_digest": "6cd9862c4bf21edf9c0ced0bc3709ea269d05877e6096ec14b50960530e66a76",
+  "validation_unknowns": {
+    "classification": "assessed_publication_usage_unproved",
+    "reason": "Each of15 concrete domain model types is the type argument of its registered BaseDomainService subclass. BaseDomainService.generate returns T and generate_batch returns list[T]; inherited/facade substitution remains statically unproved. These19 publication positions are assessed uncertainty, not unused exports or proof of complete model fields. Four are repeated at enclosing contract levels. Preserve exact pointers and all records. LeafFieldKind is explicitly used by public LeafFieldPlan.kind (contracts.py:576), with real construction in application/compiler.py:533. Canonical facts retain LeafFieldPlan source_member_binding_static=false and class_body_control_flow=true, and LeafFieldKind source_member_binding_static=false. The exact name is therefore a publication candidate, not proven unused or proven used. #476 correctly preserves usage UNKNOWN; it grants neither alias-body certainty nor field-boundary PASS. This assessed static-publication limit is acceptable under the user rule; no Source obligation or debt is erased.",
+    "diagnostics": [
+      {
+        "code": "interface.usage_unknown",
+        "kind": "contract_invalid",
+        "pointer": "/components/1/public/2",
+        "remedy": "Resolve the publication route or inherited bases before classifying this entry as used or unused.",
+        "subject": "datamimic_ce.authoring.spec:LeafFieldKind",
+        "unknown_claim": "An unproven publication or inherited signature may expose this public entry."
+      },
+      {
+        "code": "interface.usage_unknown",
+        "kind": "contract_invalid",
+        "pointer": "/components/6/inside/components/4/public/20",
+        "remedy": "Resolve the publication route or inherited bases before classifying this entry as used or unused.",
+        "subject": "datamimic_ce.domains.shared.models.city:City",
+        "unknown_claim": "An unproven publication or inherited signature may expose this public entry."
+      },
+      {
+        "code": "interface.usage_unknown",
+        "kind": "contract_invalid",
+        "pointer": "/components/6/inside/components/4/public/21",
+        "remedy": "Resolve the publication route or inherited bases before classifying this entry as used or unused.",
+        "subject": "datamimic_ce.domains.shared.models.company:Company",
+        "unknown_claim": "An unproven publication or inherited signature may expose this public entry."
+      },
+      {
+        "code": "interface.usage_unknown",
+        "kind": "contract_invalid",
+        "pointer": "/components/6/inside/components/4/public/22",
+        "remedy": "Resolve the publication route or inherited bases before classifying this entry as used or unused.",
+        "subject": "datamimic_ce.domains.shared.models.country:Country",
+        "unknown_claim": "An unproven publication or inherited signature may expose this public entry."
+      },
+      {
+        "code": "interface.usage_unknown",
+        "kind": "contract_invalid",
+        "pointer": "/components/6/inside/components/5/public/2",
+        "remedy": "Resolve the publication route or inherited bases before classifying this entry as used or unused.",
+        "subject": "datamimic_ce.domains.finance.models.credit_card:CreditCard",
+        "unknown_claim": "An unproven publication or inherited signature may expose this public entry."
+      },
+      {
+        "code": "interface.usage_unknown",
+        "kind": "contract_invalid",
+        "pointer": "/components/6/inside/components/6/public/0",
+        "remedy": "Resolve the publication route or inherited bases before classifying this entry as used or unused.",
+        "subject": "datamimic_ce.domains.healthcare.models.doctor:Doctor",
+        "unknown_claim": "An unproven publication or inherited signature may expose this public entry."
+      },
+      {
+        "code": "interface.usage_unknown",
+        "kind": "contract_invalid",
+        "pointer": "/components/6/inside/components/6/public/1",
+        "remedy": "Resolve the publication route or inherited bases before classifying this entry as used or unused.",
+        "subject": "datamimic_ce.domains.healthcare.models.hospital:Hospital",
+        "unknown_claim": "An unproven publication or inherited signature may expose this public entry."
+      },
+      {
+        "code": "interface.usage_unknown",
+        "kind": "contract_invalid",
+        "pointer": "/components/6/inside/components/6/public/2",
+        "remedy": "Resolve the publication route or inherited bases before classifying this entry as used or unused.",
+        "subject": "datamimic_ce.domains.healthcare.models.medical_device:MedicalDevice",
+        "unknown_claim": "An unproven publication or inherited signature may expose this public entry."
+      },
+      {
+        "code": "interface.usage_unknown",
+        "kind": "contract_invalid",
+        "pointer": "/components/6/inside/components/6/public/3",
+        "remedy": "Resolve the publication route or inherited bases before classifying this entry as used or unused.",
+        "subject": "datamimic_ce.domains.healthcare.models.medical_procedure:MedicalProcedure",
+        "unknown_claim": "An unproven publication or inherited signature may expose this public entry."
+      },
+      {
+        "code": "interface.usage_unknown",
+        "kind": "contract_invalid",
+        "pointer": "/components/6/inside/components/6/public/4",
+        "remedy": "Resolve the publication route or inherited bases before classifying this entry as used or unused.",
+        "subject": "datamimic_ce.domains.healthcare.models.patient:Patient",
+        "unknown_claim": "An unproven publication or inherited signature may expose this public entry."
+      },
+      {
+        "code": "interface.usage_unknown",
+        "kind": "contract_invalid",
+        "pointer": "/components/6/inside/components/7/public/2",
+        "remedy": "Resolve the publication route or inherited bases before classifying this entry as used or unused.",
+        "subject": "datamimic_ce.domains.insurance.models.insurance_policy:InsurancePolicy",
+        "unknown_claim": "An unproven publication or inherited signature may expose this public entry."
+      },
+      {
+        "code": "interface.usage_unknown",
+        "kind": "contract_invalid",
+        "pointer": "/components/6/inside/components/8/public/0",
+        "remedy": "Resolve the publication route or inherited bases before classifying this entry as used or unused.",
+        "subject": "datamimic_ce.domains.ecommerce.models.order:Order",
+        "unknown_claim": "An unproven publication or inherited signature may expose this public entry."
+      },
+      {
+        "code": "interface.usage_unknown",
+        "kind": "contract_invalid",
+        "pointer": "/components/6/inside/components/8/public/1",
+        "remedy": "Resolve the publication route or inherited bases before classifying this entry as used or unused.",
+        "subject": "datamimic_ce.domains.ecommerce.models.product:Product",
+        "unknown_claim": "An unproven publication or inherited signature may expose this public entry."
+      },
+      {
+        "code": "interface.usage_unknown",
+        "kind": "contract_invalid",
+        "pointer": "/components/6/inside/components/9/public/0",
+        "remedy": "Resolve the publication route or inherited bases before classifying this entry as used or unused.",
+        "subject": "datamimic_ce.domains.public_sector.models.administration_office:AdministrationOffice",
+        "unknown_claim": "An unproven publication or inherited signature may expose this public entry."
+      },
+      {
+        "code": "interface.usage_unknown",
+        "kind": "contract_invalid",
+        "pointer": "/components/6/inside/components/9/public/1",
+        "remedy": "Resolve the publication route or inherited bases before classifying this entry as used or unused.",
+        "subject": "datamimic_ce.domains.public_sector.models.educational_institution:EducationalInstitution",
+        "unknown_claim": "An unproven publication or inherited signature may expose this public entry."
+      },
+      {
+        "code": "interface.usage_unknown",
+        "kind": "contract_invalid",
+        "pointer": "/components/6/inside/components/9/public/2",
+        "remedy": "Resolve the publication route or inherited bases before classifying this entry as used or unused.",
+        "subject": "datamimic_ce.domains.public_sector.models.police_officer:PoliceOfficer",
+        "unknown_claim": "An unproven publication or inherited signature may expose this public entry."
+      },
+      {
+        "code": "interface.usage_unknown",
+        "kind": "contract_invalid",
+        "pointer": "/components/6/public/10",
+        "remedy": "Resolve the publication route or inherited bases before classifying this entry as used or unused.",
+        "subject": "datamimic_ce.domains.shared.models.city:City",
+        "unknown_claim": "An unproven publication or inherited signature may expose this public entry."
+      },
+      {
+        "code": "interface.usage_unknown",
+        "kind": "contract_invalid",
+        "pointer": "/components/6/public/11",
+        "remedy": "Resolve the publication route or inherited bases before classifying this entry as used or unused.",
+        "subject": "datamimic_ce.domains.shared.models.company:Company",
+        "unknown_claim": "An unproven publication or inherited signature may expose this public entry."
+      },
+      {
+        "code": "interface.usage_unknown",
+        "kind": "contract_invalid",
+        "pointer": "/components/6/public/12",
+        "remedy": "Resolve the publication route or inherited bases before classifying this entry as used or unused.",
+        "subject": "datamimic_ce.domains.shared.models.country:Country",
+        "unknown_claim": "An unproven publication or inherited signature may expose this public entry."
+      },
+      {
+        "code": "interface.usage_unknown",
+        "kind": "contract_invalid",
+        "pointer": "/components/6/public/14",
+        "remedy": "Resolve the publication route or inherited bases before classifying this entry as used or unused.",
+        "subject": "datamimic_ce.domains.healthcare.models.patient:Patient",
+        "unknown_claim": "An unproven publication or inherited signature may expose this public entry."
+      }
+    ]
+  },
+  "producer_origin": {
+    "kind": "published_pypi_installation",
+    "version": "2.0.0",
+    "registry": "https://pypi.org/project/archkeel/2.0.0/",
+    "wheel_sha256": "cd7f5f52fdd78cab564c2a43bed2dd5d9496b7c45fc06d6f8573851ed36b10b6",
+    "python": "3.11.12",
+    "published_registry_install_verified": true,
+    "payload_files_equal_to_admitted_artifact": 160
+  },
+  "activation_condition": "Satisfied for this exact published-package and CE evidence: installed payload bytes equal the admitted artifact; fresh full validation, UNKNOWN contents/order and Source/Target/analyzer identities match. Any substantive future change requires renewed review."
+}

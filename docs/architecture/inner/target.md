@@ -22,9 +22,11 @@ overrides must match the contract declarations.
 Every current CE Python module has a target path and a candidate responsibility
 sentence: one-to-one moves inherit the historical source concern from
 `semantic-review/review-*.json`; revised modules have explicit
-`target_module_concerns` in the structure review. `architecture-definition-check`
-checks coverage, not semantic correctness. The sentences are native ArchKeel
-target declarations, but they are not yet individually accepted. The root
+`target_module_concerns` in the structure review. Ownership and migration intent
+are decided by the semantic target decision
+and subsequent named amendments. Module declarations encode that intent;
+coverage checks do not establish semantic correctness or completed migration.
+Member and relationship assertions cover only explicitly authored slices. The root
 `__init__.py` is an inert package initializer, not an environment owner.
 CLI and MCP executable startup load only the startup cwd `.env` with
 `override=False` before reading settings or transport defaults. Library callers
@@ -431,7 +433,10 @@ typed intent-reference projection stays runtime-free.
    Check shared behavior against the frozen EE implementation before changing CE
    semantics. CE output preservation alone does not establish EE semantic alignment.
 4. Final CE gate: every target path reached, no unowned modules, no forbidden/private
-   crossings, zero module cycles, no material UNKNOWN, full descriptor/service suite.
+   crossings, no executable import cycles, zero violations and independently
+   assessed remaining UNKNOWNs. Use the agreed ordinary unit, integration,
+   functional and available-service suites; record skipped or unavailable vendor
+   cases explicitly. This bounded acceptance does not prove every descriptor/backend.
    Preserve seeded values within CE with identical initial resources/targets;
    unseeded runs retain outcome, counts/declared ranges and structure.
 5. Apply the same physical map to EE with its existing, stronger tests intact.

@@ -1,5 +1,5 @@
 {
-  "schema_version": "2.1.0",
+  "schema_version": "3.3.0",
   "components": [
     {
       "id": "COMP-INTERFACES",
@@ -901,7 +901,8 @@
         "docs/architecture/refactoring-study/experiment-2/amendment-180-runtime-capture-selectors.md",
         "docs/architecture/refactoring-study/experiment-2/amendment-182-demographic-map-contracts.md",
         "docs/architecture/refactoring-study/experiment-2/amendment-186-runtime-properties-policy.md",
-        "docs/architecture/refactoring-study/experiment-2/amendment-187-properties-source-contract.md"
+        "docs/architecture/refactoring-study/experiment-2/amendment-187-properties-source-contract.md",
+        "docs/architecture/refactoring-study/experiment-2/amendment-213-native-open-payloads.md"
       ],
       "decided_by": "agent",
       "allowed_positions": [
@@ -972,7 +973,8 @@
           "qualified_name": "datamimic_ce.engine.runtime.api.SetupContext.__init__",
           "position": "clients",
           "field_path": "",
-          "annotation": "dict[str, RegisteredClient] | None"
+          "annotation": "dict[str, RegisteredClient] | None",
+          "literal_mapping_arm": "dict[str, RegisteredClient]"
         },
         {
           "qualified_name": "datamimic_ce.engine.runtime.api.SetupContext.clients",
@@ -1152,6 +1154,13 @@
           "field_path": "",
           "annotation": "dict[str, str] | dict[str, object] | None",
           "container_depth": 1
+        },
+        {
+          "qualified_name": "datamimic_ce.engine.runtime.api.SetupContext.__init__",
+          "position": "generators",
+          "field_path": "",
+          "annotation": "dict | None",
+          "native_mapping": true
         }
       ]
     },
@@ -1159,7 +1168,7 @@
       "id": "IO-API-TYPES",
       "kind": "boundary_types",
       "source": "datamimic_ce.engine.io.api",
-      "rationale": "The IO facade keeps fixed controls typed; smoke-export rows/options and connection profiles remain open payloads at reviewed positions. WeightedEntityDataSource returns a selected native string-valued row keyed by input CSV headers; headers are data keys, and row aliasing remains observable. Native source rows and capture values retain their reviewed map/list forms; IO owns storage and row transport while Runtime owns lifecycle and timing. ExportSession accepts native XML dictionaries with string keys; IO owns conversion and dispatch, preserving the original XML page. Product maps retain their inner string-keyed row dictionaries and native values at the exact reviewed depths. Variable-source returns retain one opaque native Iterable element, including None; this exact facade grant does not cover the plan DTO or prove type closure. Nested-key JSON reads retain the unique native string-keyed object root at the exact full return signature.",
+      "rationale": "The IO facade keeps fixed controls typed; smoke-export rows/options and connection profiles remain open payloads at reviewed positions. WeightedEntityDataSource returns a selected native string-valued row keyed by input CSV headers; headers are data keys, and row aliasing remains observable. Native source rows and capture values retain their reviewed map/list forms; IO owns storage and row transport while Runtime owns lifecycle and timing. ExportSession accepts native XML dictionaries with string keys; IO owns conversion and dispatch, preserving the original XML page. Product maps retain their inner string-keyed row dictionaries and native values at the exact reviewed depths. Variable-source returns retain one opaque native Iterable element, including None; this exact facade grant does not cover the plan DTO or prove type closure. Nested-key JSON reads retain the unique native string-keyed object root at the exact full return signature. Nested-key literal-arm permissions select the JSON object root and immediate CSV/Memstore row maps. Only the exact Memstore arm admits its native object leaf at depth 2; recursive JSON and other object leaves retain their verdicts. File-source rows and the Runtime generator registry retain their exact reviewed open-map boundaries.",
       "provenance": [
         "docs/architecture/refactoring-study/experiment-2/target-architecture.md",
         "docs/architecture/refactoring-study/experiment-2/amendment-62.md",
@@ -1172,7 +1181,9 @@
         "docs/architecture/refactoring-study/experiment-2/amendment-188-product-map-depth.md",
         "docs/architecture/refactoring-study/experiment-2/amendment-203-variable-query-rows.md",
         "docs/architecture/refactoring-study/experiment-2/amendment-209-native-variable-return.md",
-        "docs/architecture/refactoring-study/experiment-2/amendment-210-nested-json-root.md"
+        "docs/architecture/refactoring-study/experiment-2/amendment-210-nested-json-root.md",
+        "docs/architecture/refactoring-study/experiment-2/amendment-211-nested-native-map-arms.md",
+        "docs/architecture/refactoring-study/experiment-2/amendment-213-native-open-payloads.md"
       ],
       "decided_by": "agent",
       "allowed_positions": [
@@ -1397,7 +1408,37 @@
           "qualified_name": "datamimic_ce.engine.io.api.read_nested_key_source",
           "position": "return",
           "field_path": "",
-          "annotation": "list[dict[str, str]] | list[JsonValue] | dict[str, JsonValue] | list[dict[str, object]]"
+          "annotation": "list[dict[str, str]] | list[JsonValue] | dict[str, JsonValue] | list[dict[str, object]]",
+          "literal_mapping_arm": "dict[str, JsonValue]"
+        },
+        {
+          "qualified_name": "datamimic_ce.engine.io.api.read_nested_key_source",
+          "position": "return",
+          "field_path": "",
+          "annotation": "list[dict[str, str]] | list[JsonValue] | dict[str, JsonValue] | list[dict[str, object]]",
+          "literal_mapping_arm": "list[dict[str, str]]"
+        },
+        {
+          "qualified_name": "datamimic_ce.engine.io.api.read_nested_key_source",
+          "position": "return",
+          "field_path": "",
+          "annotation": "list[dict[str, str]] | list[JsonValue] | dict[str, JsonValue] | list[dict[str, object]]",
+          "literal_mapping_arm": "list[dict[str, object]]"
+        },
+        {
+          "qualified_name": "datamimic_ce.engine.io.api.read_nested_key_source",
+          "position": "return",
+          "field_path": "",
+          "annotation": "list[dict[str, str]] | list[JsonValue] | dict[str, JsonValue] | list[dict[str, object]]",
+          "literal_mapping_arm": "list[dict[str, object]]",
+          "container_depth": 2
+        },
+        {
+          "qualified_name": "datamimic_ce.engine.io.api.read_generate_file_source",
+          "position": "return",
+          "field_path": "rows",
+          "annotation": "list[dict]",
+          "native_mapping": true
         }
       ]
     },
@@ -1455,7 +1496,6 @@
       "source": "datamimic_ce",
       "constructs": [
         "any_annotation",
-        "cast",
         "delattr",
         "dunder_dict",
         "hasattr",
@@ -1466,6 +1506,23 @@
       "rationale": "Public behavior uses explicit types and avoids reflective escape hatches.",
       "provenance": [
         "docs/architecture/refactoring-study/experiment-2/target-architecture.md"
+      ],
+      "decided_by": "architect"
+    },
+    {
+      "id": "NO-UNPROVEN-CASTS",
+      "kind": "forbidden_construct",
+      "source": "datamimic_ce",
+      "constructs": [
+        "cast"
+      ],
+      "exact_sources": [
+        "datamimic_ce.engine.runtime.tasks.flow.commands.execute_task.ExecuteTask._run_sql"
+      ],
+      "rationale": "Casts remain forbidden except inside the existing dynamic SQL dispatch function. Preserve injected clients, one method lookup and native errors; this function-wide exception proves no SQL capability or runtime success.",
+      "provenance": [
+        "docs/architecture/refactoring-study/experiment-2/amendment-155-execute-task-sql-capability.md",
+        "docs/architecture/refactoring-study/experiment-2/amendment-212-sql-dispatch-exception.md"
       ],
       "decided_by": "architect"
     },

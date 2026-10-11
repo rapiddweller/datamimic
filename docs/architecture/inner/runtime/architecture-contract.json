@@ -1,5 +1,5 @@
 {
-  "schema_version": "2.1.0",
+  "schema_version": "2.2.0",
   "declarations": {
     "modules": [
       {
@@ -82,7 +82,192 @@
         "path": "datamimic_ce/engine/runtime/storage/memstore_manager.py",
         "responsibility": "This module manages run-scoped memstore handles and their lifecycle."
       }
-    ]
+    ],
+    "uml": {
+      "schema_version": "1.1.0",
+      "entities": [
+        {
+          "id": "datamimic_ce.engine.runtime.contracts",
+          "kind": "module",
+          "qualified_name": "datamimic_ce.engine.runtime.contracts",
+          "language": "python",
+          "parent_id": "RUNTIME-CONTRACTS",
+          "presence": "planned",
+          "responsibilities": [
+            "Expose one descriptor execution and explicit test-result capture to Python entry points."
+          ],
+          "provenance": [
+            "docs/architecture/inner/runtime/session-target.md"
+          ]
+        },
+        {
+          "id": "datamimic_ce.engine.runtime.contracts.RunSession",
+          "kind": "interface",
+          "qualified_name": "datamimic_ce.engine.runtime.contracts.RunSession",
+          "language": "python",
+          "parent_id": "datamimic_ce.engine.runtime.contracts",
+          "presence": "planned",
+          "responsibilities": [
+            "Expose one descriptor execution and explicit test-result capture to Python entry points."
+          ],
+          "provenance": [
+            "docs/architecture/inner/runtime/session-target.md"
+          ],
+          "visibility": {
+            "kind": "public",
+            "basis": "declared"
+          }
+        },
+        {
+          "id": "datamimic_ce.engine.runtime.contracts.RunSession.execute",
+          "kind": "method",
+          "qualified_name": "datamimic_ce.engine.runtime.contracts.RunSession.execute",
+          "language": "python",
+          "parent_id": "datamimic_ce.engine.runtime.contracts.RunSession",
+          "presence": "planned",
+          "responsibilities": [
+            "Execute the configured descriptor and return the runtime-owned result."
+          ],
+          "provenance": [
+            "docs/architecture/inner/runtime/session-target.md"
+          ],
+          "visibility": {
+            "kind": "public",
+            "basis": "declared"
+          },
+          "signature": {
+            "parameters": [
+              {
+                "name": "self",
+                "annotation": null,
+                "kind": "positional",
+                "default_known": true
+              }
+            ],
+            "returns": "RunResult"
+          }
+        },
+        {
+          "id": "datamimic_ce.engine.runtime.contracts.RunSession.capture_test_result",
+          "kind": "method",
+          "qualified_name": "datamimic_ce.engine.runtime.contracts.RunSession.capture_test_result",
+          "language": "python",
+          "parent_id": "datamimic_ce.engine.runtime.contracts.RunSession",
+          "presence": "planned",
+          "responsibilities": [
+            "Expose native captured product columns in test mode; preserve rejection outside test mode."
+          ],
+          "provenance": [
+            "docs/architecture/inner/runtime/session-target.md"
+          ],
+          "visibility": {
+            "kind": "public",
+            "basis": "declared"
+          },
+          "signature": {
+            "parameters": [
+              {
+                "name": "self",
+                "annotation": null,
+                "kind": "positional",
+                "default_known": true
+              }
+            ],
+            "returns": "dict[str, list[object]] | None"
+          }
+        },
+        {
+          "id": "datamimic_ce.engine.runtime.lifecycle.runner",
+          "kind": "module",
+          "qualified_name": "datamimic_ce.engine.runtime.lifecycle.runner",
+          "language": "python",
+          "parent_id": "RUNTIME-LIFECYCLE",
+          "presence": "planned",
+          "responsibilities": [
+            "Own descriptor execution and run-local capture behind the runtime session port."
+          ],
+          "provenance": [
+            "docs/architecture/inner/runtime/session-target.md"
+          ]
+        },
+        {
+          "id": "datamimic_ce.engine.runtime.lifecycle.runner.RuntimeRunSession",
+          "kind": "class",
+          "qualified_name": "datamimic_ce.engine.runtime.lifecycle.runner.RuntimeRunSession",
+          "language": "python",
+          "parent_id": "datamimic_ce.engine.runtime.lifecycle.runner",
+          "presence": "planned",
+          "responsibilities": [
+            "Own descriptor execution and run-local capture behind the runtime session port."
+          ],
+          "provenance": [
+            "docs/architecture/inner/runtime/session-target.md"
+          ],
+          "visibility": {
+            "kind": "public",
+            "basis": "declared"
+          }
+        },
+        {
+          "id": "datamimic_ce.engine.runtime.lifecycle.runner.RuntimeRunSession.execute",
+          "kind": "method",
+          "qualified_name": "datamimic_ce.engine.runtime.lifecycle.runner.RuntimeRunSession.execute",
+          "language": "python",
+          "parent_id": "datamimic_ce.engine.runtime.lifecycle.runner.RuntimeRunSession",
+          "presence": "planned",
+          "responsibilities": [
+            "Execute the configured descriptor and return the runtime-owned result."
+          ],
+          "provenance": [
+            "docs/architecture/inner/runtime/session-target.md"
+          ],
+          "visibility": {
+            "kind": "public",
+            "basis": "declared"
+          },
+          "signature": {
+            "parameters": [
+              {
+                "name": "self",
+                "annotation": null,
+                "kind": "positional",
+                "default_known": true
+              }
+            ],
+            "returns": "RunResult"
+          }
+        },
+        {
+          "id": "datamimic_ce.engine.runtime.lifecycle.runner.RuntimeRunSession.capture_test_result",
+          "kind": "method",
+          "qualified_name": "datamimic_ce.engine.runtime.lifecycle.runner.RuntimeRunSession.capture_test_result",
+          "language": "python",
+          "parent_id": "datamimic_ce.engine.runtime.lifecycle.runner.RuntimeRunSession",
+          "presence": "planned",
+          "responsibilities": [
+            "Expose native captured product columns in test mode; preserve rejection outside test mode."
+          ],
+          "provenance": [
+            "docs/architecture/inner/runtime/session-target.md"
+          ],
+          "visibility": {
+            "kind": "public",
+            "basis": "declared"
+          },
+          "signature": {
+            "parameters": [
+              {
+                "name": "self",
+                "annotation": null,
+                "kind": "positional",
+                "default_known": true
+              }
+            ],
+            "returns": "dict[str, list[object]] | None"
+          }
+        }
+      ]
+    }
   },
   "components": [
     {

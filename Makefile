@@ -3,7 +3,10 @@
 PACKAGE := datamimic_ce
 TESTS := tests_ce
 CE_COVERAGE_FILES := $(shell find $(PACKAGE) -type f -name '*.py')
-ARCHKEEL_SOURCE := archkeel==1.1.2
+ARCHKEEL_SOURCE := archkeel==2.0.0
+# The independent receipt includes the exact Python runtime.
+ARCHKEEL_PYTHON := 3.11.12
+ARCHITECTURE_DIR := test-artifacts/architecture/ce-recursive-target
 
 help:
 	@echo "Available targets:"
@@ -65,19 +68,22 @@ architecture-definition-check:
 	uvx --python 3.11 --from pytest==8.3.5 pytest -q tests_ce/architecture/test_recursive_target_definition.py tests_ce/architecture/test_current_module_concerns.py tests_ce/architecture/test_exact_module_targets.py tests_ce/architecture/test_registry_entrypoints.py::test_registry_owns_exact_initializer_and_keeps_package_selector tests_ce/architecture/test_public_api_contract_ownership.py::test_existing_entrypoints_have_explicit_inner_public_decisions
 
 architecture-report:
-	uvx --python 3.11 --from '$(ARCHKEEL_SOURCE)' archkeel report --output test-artifacts/architecture/ce-recursive-target/architecture.json --json
+	uvx --python $(ARCHKEEL_PYTHON) --from '$(ARCHKEEL_SOURCE)' archkeel report --output $(ARCHITECTURE_DIR)/architecture.json --json
 
 architecture-version:
-	@version="$$(uvx --python 3.11 --from '$(ARCHKEEL_SOURCE)' archkeel --version)" && test "$$version" = 'archkeel $(patsubst archkeel==%,%,$(ARCHKEEL_SOURCE))' && printf '%s\n' "$${version#archkeel }"
+	@version="$$(uvx --python $(ARCHKEEL_PYTHON) --from '$(ARCHKEEL_SOURCE)' archkeel --version)" && test "$$version" = 'archkeel $(patsubst archkeel==%,%,$(ARCHKEEL_SOURCE))' && printf '%s\n' "$${version#archkeel }"
 
 architecture-validation-receipt:
-	mkdir -p test-artifacts/architecture/ce-recursive-target
-	uvx --python 3.11 --from '$(ARCHKEEL_SOURCE)' archkeel validate --baseline known-violations.json --json > test-artifacts/architecture/ce-recursive-target/validation.json
+	mkdir -p $(ARCHITECTURE_DIR)
+	# Preserve exit-2 diagnostics for the independently reviewed completion policy.
+	@uvx --python $(ARCHKEEL_PYTHON) --from '$(ARCHKEEL_SOURCE)' archkeel validate --baseline known-violations.json --json > $(ARCHITECTURE_DIR)/validation.json; status=$$?; test "$$status" -eq 0 || test "$$status" -eq 2
 
 architecture-check: architecture-cycle-check architecture-definition-check
 	uvx --python 3.11 --from pytest==8.3.5 pytest -q tests_ce/architecture/test_inner_architecture_target.py
 	# ArchKeel ratchets type-only/package SCC edges; Pylint checks executable import cycles.
-	uvx --python 3.11 --from '$(ARCHKEEL_SOURCE)' archkeel validate --baseline known-violations.json --json | python3 -c 'import json, sys; raw = sys.stdin.read(); print(raw, end=""); report = json.loads(raw); measurements = report.get("measurements") or {}; scalars = measurements.get("scalars") or {}; coverage = report.get("coverage") or {}; valid = report.get("exit_code") == 0 and report.get("declared_rules") == "PASS" and report.get("observation_complete") == "PASS" and coverage.get("status") == "PASS" and scalars.get("violations") == 0 and scalars.get("unknown_positions") == 0 and report.get("baseline_new") == 0 and report.get("baseline_resolved") == 0; sys.exit(0 if valid else 1)'
+	$(MAKE) architecture-validation-receipt architecture-report
+	uvx --python $(ARCHKEEL_PYTHON) --from '$(ARCHKEEL_SOURCE)' archkeel report --input $(ARCHITECTURE_DIR)/architecture.json --only architecture --full --json > $(ARCHITECTURE_DIR)/completion.json
+	uvx --python 3.11 --from pytest==8.3.5 python tests_ce/architecture/completion_gate.py $(ARCHITECTURE_DIR)/validation.json $(ARCHITECTURE_DIR)/completion.json docs/architecture/refactoring-study/experiment-2/completion-unknowns.json
 
 architecture-cycle-check:
 	uvx --python 3.11 --from pylint==3.3.7 pylint --disable=all --enable=cyclic-import --persistent=n --score=n datamimic_ce
