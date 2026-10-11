@@ -454,7 +454,9 @@ def weighted_csv_has_header(file_path: Path, separator: str) -> bool:
     return bool(rows) and len(rows[0]) > 1 and not FileUtil._parses_as_float(rows[0][1])
 
 
-def load_source_rows(file_path: Path, csv_separator: str, source_format: SourceFileFormat) -> list[dict]:
+def load_source_rows(
+    file_path: Path, csv_separator: str, source_format: SourceFileFormat
+) -> list[dict[str, str]] | list[dict[str, object]] | list[dict[str, JsonValue]] | list[dict[object, object]]:
     """Decode one supported source file into rows without applying a row window."""
     key = str(file_path)
     logger.debug(f"Load source {key} from file")

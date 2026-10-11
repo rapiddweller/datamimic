@@ -1,6 +1,7 @@
 """Route scalar source requests to IO-owned readers and row selectors."""
 
 import logging
+from collections.abc import Iterable
 from pathlib import Path
 from typing import TypeVar
 
@@ -120,6 +121,7 @@ def read_generate_file_source(request: GenerateFileSourceRequest) -> GenerateFil
     if file_format is None:
         return None
 
+    rows: list[dict]
     if file_format is SourceFileFormat.DBUNIT_XML:
         rows = FileUtil.read_dbunit_to_dict_list(file_path, request.source_entity or request.name)[request.offset :]
     else:
@@ -128,8 +130,11 @@ def read_generate_file_source(request: GenerateFileSourceRequest) -> GenerateFil
             if request.start_idx is not None and request.end_idx is not None
             else None
         )
+        loaded: Iterable[dict] = load_source_rows(
+            file_path, request.separator if file_format is SourceFileFormat.CSV else ",", file_format
+        )
         rows = select_rows(
-            load_source_rows(file_path, request.separator if file_format is SourceFileFormat.CSV else ",", file_format),
+            loaded,
             pagination,
             False if request.cyclic is None else request.cyclic,
             request.offset,
