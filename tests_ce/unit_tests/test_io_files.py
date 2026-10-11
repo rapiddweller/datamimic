@@ -5,9 +5,72 @@ import pytest
 
 from datamimic_ce.engine.dsl.vocabulary.source_capabilities import SourceFileFormat
 from datamimic_ce.engine.io.data_sources.boundary.models import GenerateFileSourceRequest
-from datamimic_ce.engine.io.data_sources.router import read_generate_file_source
+from datamimic_ce.engine.io.data_sources.router import read_generate_file_source, read_nested_key_source
 from datamimic_ce.engine.io.files.cache import FileContentStorage
 from datamimic_ce.engine.io.files.readers import FileUtil
+
+
+def test_nested_source_return_preserves_producer_container_types():
+    assert get_type_hints(read_nested_key_source)["return"] == (
+        get_type_hints(FileUtil.read_csv_to_dict_list)["return"]
+        | get_type_hints(FileUtil.read_json_to_list)["return"]
+        | get_type_hints(FileUtil.read_json_to_dict)["return"]
+        | list[dict[str, object]]
+    )
+
+
+@pytest.mark.parametrize(
+    ("source_type", "value"),
+    [
+        ("list", [1, "scalar", None, {"nested": [True, 2.5]}]),
+        ("list", []),
+        ("dict", {"nested": [1, None, {"value": False}]}),
+        ("dict", {}),
+    ],
+)
+def test_nested_json_source_preserves_cached_root_identity(tmp_path, source_type, value):
+    path = tmp_path / "items.json"
+    path.write_text(json.dumps(value), encoding="utf-8")
+    cached = FileUtil.read_json(path)
+
+    result = read_nested_key_source(
+        tmp_path, path.name, path.name, source_type, None, "items", None, "|", True, None
+    )
+
+    assert result == value
+    assert result is cached
+
+
+@pytest.mark.parametrize("separator", [None, ";"])
+def test_nested_csv_source_keeps_separator_string_cells_and_order(tmp_path, separator):
+    path = tmp_path / "items.csv"
+    delimiter = separator or "|"
+    path.write_text(f"id{delimiter}name\n007{delimiter}Ada\n008{delimiter}Grace\n", encoding="utf-8")
+
+    assert read_nested_key_source(
+        tmp_path, path.name, path.name, "list", None, "items", separator, "|", False, None
+    ) == [{"id": "007", "name": "Ada"}, {"id": "008", "name": "Grace"}]
+
+
+@pytest.mark.parametrize(
+    ("source", "source_type", "contents", "error", "message"),
+    [
+        ("missing.json", "list", None, FileNotFoundError, "JSON file not found"),
+        ("missing.csv", "list", None, FileNotFoundError, "CSV file not found"),
+        ("items.json", "list", "{", json.JSONDecodeError, "Expecting property name"),
+        ("items.json", "list", "{}", ValueError, "must contain a list of objects"),
+        ("items.json", "dict", "[]", ValueError, "must contain a dictionary"),
+        ("items.csv", "dict", None, ValueError, "does not support format items.csv"),
+        ("items.unknown", "list", None, ValueError, "Invalid source 'items.unknown'"),
+        ("items.unknown", None, None, ValueError, "Cannot load data from source"),
+    ],
+)
+def test_nested_source_keeps_native_errors(tmp_path, source, source_type, contents, error, message):
+    if contents is not None:
+        (tmp_path / source).write_text(contents, encoding="utf-8")
+
+    with pytest.raises(error, match=message):
+        read_nested_key_source(tmp_path, source, source, source_type, None, "items", None, "|", False, None)
 
 
 @pytest.mark.parametrize(

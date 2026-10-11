@@ -32,7 +32,7 @@ from datamimic_ce.engine.io.data_sources.boundary.models import (
     GenerateFileSourceRequest,
 )
 from datamimic_ce.engine.io.data_sources.selection import get_distributed_data, get_unique_data, select_rows
-from datamimic_ce.engine.io.files.readers import FileUtil, load_source_rows, weighted_csv_has_header
+from datamimic_ce.engine.io.files.readers import FileUtil, JsonValue, load_source_rows, weighted_csv_has_header
 from datamimic_ce.randomness import RandomSource
 
 logger = logging.getLogger("DATAMIMIC")
@@ -187,7 +187,7 @@ def read_nested_key_source(
     default_separator: str,
     cyclic: bool | None,
     memstore: MemstoreSource | None,
-) -> object:
+) -> list[dict[str, str]] | list[JsonValue] | dict[str, JsonValue] | list[dict[str, object]]:
     """Read a resolved nested-key source without carrying DSL statements or context."""
     source_format = source_file_format_for(EL_NESTED_KEY, source, source_type)
     if source_type == DATA_TYPE_LIST:

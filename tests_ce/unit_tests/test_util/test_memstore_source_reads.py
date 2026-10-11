@@ -1,16 +1,17 @@
 """Memstore is raw storage; IO owns source windows and Runtime owns orchestration."""
 
+from decimal import Decimal
 from pathlib import Path
 from types import SimpleNamespace
 from unittest.mock import Mock
 
 import pytest
 
+from datamimic_ce.engine.io.api import Memstore
 from datamimic_ce.engine.io.contracts import DataSourcePagination
 from datamimic_ce.engine.io.data_sources import router as io_source_router
 from datamimic_ce.engine.io.data_sources import variable as io_variable_sources
 from datamimic_ce.engine.io.data_sources.boundary.models import VariableSourceRequest
-from datamimic_ce.engine.io.api import Memstore
 from datamimic_ce.engine.runtime.tasks.sources import generate as generate_source_router
 
 ROWS = [{"id": 1}, {"id": 2}, {"id": 3}]
@@ -115,6 +116,38 @@ def test_nested_key_memstore_source_reads_raw_rows_for_io_owned_windowing() -> N
     )
 
     assert rows == ROWS
+
+
+@pytest.mark.parametrize("source_type", ["list", None])
+@pytest.mark.parametrize("cyclic", [False, True])
+def test_nested_key_memstore_keeps_native_values_and_copy_policy(source_type, cyclic) -> None:
+    sentinel = object()
+    row = {"amount": Decimal("1.25"), "sentinel": sentinel, "nested": [1, {"value": 2}]}
+    memstore = _RawMemstore([row])
+
+    result = io_source_router.read_nested_key_source(
+        Path("/descriptor"), "mem", "mem", source_type, "rows", "rows", None, "|", cyclic, memstore
+    )
+
+    assert isinstance(result, list)
+    assert len(result) == 1
+    assert result is not memstore.rows["rows"]
+    assert result[0]["amount"] == Decimal("1.25")
+    assert result[0]["nested"] == row["nested"]
+    if cyclic:
+        assert result[0] is not row
+        assert result[0]["nested"] is not row["nested"]
+        assert result[0]["sentinel"] is not sentinel
+    else:
+        assert result[0] is row
+        assert result[0]["sentinel"] is sentinel
+
+
+def test_nested_key_missing_memstore_entity_keeps_strict_error() -> None:
+    with pytest.raises(KeyError, match="Data naming 'missing' is empty in memstore"):
+        io_source_router.read_nested_key_source(
+            Path("/descriptor"), "mem", "mem", "list", "missing", "rows", None, "|", False, _RawMemstore()
+        )
 
 
 def test_runtime_generate_routes_memstore_reads_through_io_facade(monkeypatch: pytest.MonkeyPatch) -> None:
