@@ -101,7 +101,8 @@ def event(run=10, attempt=1, sha=SHA):
             "run_attempt": attempt,
             "head_sha": sha,
             "head_repository": {"full_name": "rapiddweller/datamimic"},
-            "name": "Github Datamimic CE CI",
+            "name": "ake2l is running Github Datamimic CE CI on rapiddweller/datamimic",
+            "path": ".github/workflows/main.yml",
             "status": "completed",
             "event": "pull_request",
         },
@@ -195,6 +196,23 @@ def test_mismatched_identity_cannot_publish(tmp_path, changes):
     source = event()
     with pytest.raises(ValueError):
         publisher().publish(archive(tmp_path / "bad.zip", source, **changes), tmp_path / "site", source, [])
+    assert not (tmp_path / "site/runs").exists()
+
+
+@pytest.mark.parametrize(
+    "changes",
+    [
+        {"path": ".github/workflows/other.yml"},
+        {"path": None},
+        {"status": "in_progress"},
+        {"head_repository": {"full_name": "other/repository"}},
+    ],
+)
+def test_untrusted_or_incomplete_workflow_cannot_publish(tmp_path, changes):
+    source = event()
+    source["workflow_run"].update(changes)
+    with pytest.raises(ValueError, match="Only completed same-repository CI reports"):
+        publisher().publish(archive(tmp_path / "untrusted.zip", source), tmp_path / "site", source, [])
     assert not (tmp_path / "site/runs").exists()
 
 
