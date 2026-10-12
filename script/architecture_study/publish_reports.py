@@ -30,7 +30,7 @@ def publish(archive: Path, site: Path, event: dict, prs: list[dict]) -> str:
     run = event["workflow_run"]
     repository = event["repository"]["full_name"]
     if (
-        run["name"] != "Github Datamimic CE CI"
+        run.get("path") != ".github/workflows/main.yml"
         or run["status"] != "completed"
         or run["head_repository"]["full_name"] != repository
     ):
