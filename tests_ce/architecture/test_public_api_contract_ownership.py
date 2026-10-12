@@ -109,6 +109,7 @@ def test_domain_type_permissions_keep_exact_demographic_maps() -> None:
     expected = {
         (api + name, position, path, annotation)
         for name, position, path, annotation in (
+            ("BaseLiteralGenerator.generate", "return", "", "object"),
             ("DemographicSampler.provenance_descriptor", "return", "", "dict[str, str]"),
             ("Date2TimestampConverter.convert", "value", "", "object"),
             ("CustomConverter.__init__", "ctx", "", "object | None"),
@@ -162,7 +163,7 @@ def test_domain_type_permissions_keep_exact_demographic_maps() -> None:
             ),
         )
     }
-    assert len(permissions) == len(set(permissions)) == 32
+    assert len(permissions) == len(set(permissions)) == len(expected)
     assert set(permissions) == expected
 
 
