@@ -1,6 +1,5 @@
 """Publish reports without losing red results, provenance, or older reviews."""
 
-import hashlib
 import importlib.util
 import json
 import os
@@ -24,9 +23,13 @@ SHA = "a" * 40
         ("", "Unit tests", 0, "false"),
         ("", "Architecture review report", 1, None),
         ("42", "API failure", 9, None),
+        ("42", "Older run", 0, "false"),
+        ("42", "Older attempt", 0, "false"),
+        ("42", "Invalid latest", 1, None),
+        ("42", "Manual latest", 0, "true"),
     ],
 )
-def test_download_step_handles_paginated_metadata_and_missing_artifacts(
+def test_download_step_only_accepts_latest_run_and_handles_missing_artifacts(
     tmp_path, artifact, job, expected_status, available
 ):
     workflow = SCRIPT.parents[2] / ".github/workflows/architecture-pages.yml"
@@ -43,13 +46,19 @@ if [[ "$*" == *--slurp* && "$*" == *--jq* ]]; then
   exit 1
 fi
 case "$2" in
+  */workflows/main.yml/runs\\?*)
+    [[ "$REPORT_JOB" != 'API failure' ]] || exit 9
+    case "$REPORT_JOB" in
+      'Older run') printf '2/1' ;;
+      'Older attempt') printf '1/2' ;;
+      'Invalid latest') printf 'null/null' ;;
+      'Manual latest') printf '2/3' ;;
+      *) printf '1/1' ;;
+    esac ;;
   */artifacts) printf '%s' "$REPORT_ARTIFACT" ;;
   */jobs) printf '[{"jobs":[{"name":"Other"}]},{"jobs":[{"name":"%s"}]}]' "$REPORT_JOB" ;;
   */artifacts/*/zip) printf 'report archive' ;;
-  */commits/*/pulls)
-    [[ "$REPORT_JOB" != 'API failure' ]] || exit 9
-    printf '[[{"number":7}],[{"number":8}]]' ;;
-  */pulls\\?*) printf '[[{"number":9}],[{"number":10}]]' ;;
+  */actions/runs/[0-9]*) printf '{"id":%s}' "${2##*/}" ;;
   *) exit 2 ;;
 esac
 """)
@@ -64,7 +73,7 @@ esac
             "REPOSITORY": "owner/repo",
             "SOURCE_RUN": "1",
             "SOURCE_ATTEMPT": "1",
-            "SOURCE_SHA": SHA,
+            "GITHUB_EVENT_NAME": "workflow_dispatch" if job == "Manual latest" else "workflow_run",
             "RUNNER_TEMP": str(tmp_path),
             "GITHUB_OUTPUT": str(tmp_path / "output"),
             "GITHUB_STEP_SUMMARY": str(tmp_path / "summary"),
@@ -80,9 +89,15 @@ esac
         assert not (tmp_path / "output").exists()
         if not artifact:
             assert "artifact is absent or expired" in result.stderr
-    if artifact and expected_status == 0:
-        assert json.loads((tmp_path / "prs.json").read_text()) == [{"number": 7}, {"number": 8}]
-        assert json.loads((tmp_path / "open-prs.json").read_text()) == [9, 10]
+        if job == "Invalid latest":
+            assert "Cannot identify the latest development run" in result.stderr
+    if available == "true":
+        assert (tmp_path / "report.zip").read_text() == "report archive"
+        source = json.loads((tmp_path / "source-event.json").read_text())
+        assert source["repository"]["full_name"] == "owner/repo"
+        assert source["workflow_run"]["id"] == (2 if job == "Manual latest" else 1)
+    else:
+        assert not (tmp_path / "report.zip").exists()
 
 
 def publisher():
@@ -104,7 +119,8 @@ def event(run=10, attempt=1, sha=SHA):
             "name": "ake2l is running Github Datamimic CE CI on rapiddweller/datamimic",
             "path": ".github/workflows/main.yml",
             "status": "completed",
-            "event": "pull_request",
+            "event": "push",
+            "head_branch": "development",
         },
     }
 
@@ -156,37 +172,22 @@ def tree_bytes(path):
     return {item.relative_to(path).as_posix(): item.read_bytes() for item in path.rglob("*") if item.is_file()}
 
 
-def tree_digests(path):
-    return {
-        item.relative_to(path).as_posix(): hashlib.sha256(item.read_bytes()).hexdigest()
-        for item in path.rglob("*")
-        if item.is_file()
-    }
-
-
-def test_red_report_is_downloadable_and_history_survives_stale_run(tmp_path):
+def test_only_current_snapshot_is_published_with_native_explorer_and_unchanged_evidence(tmp_path):
     module = publisher()
+    source = event()
+    path = archive(tmp_path / "report.zip", source)
     site = tmp_path / "site"
-    first = event()
-    module.publish(archive(tmp_path / "first.zip", first), site, first, [{"number": 274, "head": {"sha": SHA}}])
-    receipt = site / "runs/10/1/validation.json"
-    assert json.loads(receipt.read_text())["observation_complete"] == "UNKNOWN"
-    assert "FAIL" in (site / "runs/10/1/index.html").read_text()
-    assert "202" in (site / "runs/10/1/index.html").read_text()
-    assert f"ArchKeel {module.configured_archkeel_version()}" in (site / "runs/10/1/index.html").read_text()
-    saved = receipt.read_bytes()
-    next_sha = "b" * 40
-    newer = event(11, sha=next_sha)
-    module.publish(archive(tmp_path / "next.zip", newer), site, newer, [{"number": 274, "head": {"sha": next_sha}}])
-    latest = (site / "pr/274/index.html").read_text()
-    assert "../../runs/11/1/" in latest
-    module.publish(archive(tmp_path / "retry.zip", first), site, first, [{"number": 274, "head": {"sha": next_sha}}])
-    assert (site / "pr/274/index.html").read_text() == latest
-    assert receipt.read_bytes() == saved
-    retry = event(11, 2, next_sha)
-    module.publish(archive(tmp_path / "attempt.zip", retry), site, retry, [])
-    assert (site / "runs/11/1/index.html").is_file()
-    assert (site / "runs/11/2/index.html").is_file()
+
+    module.publish(path, site, source)
+
+    assert {item.name for item in site.iterdir()} == module.FILES | {"index.html", ".nojekyll"}
+    with zipfile.ZipFile(path) as zipped:
+        for name in module.FILES:
+            assert (site / name).read_bytes() == zipped.read(name)
+    assert (site / "index.html").read_bytes() == (site / "architecture.report.html").read_bytes()
+    assert json.loads((site / "validation.json").read_text())["declared_rules"] == "FAIL"
+    assert not (site / "runs").exists()
+    assert not (site / "pr").exists()
 
 
 @pytest.mark.parametrize(
@@ -195,8 +196,8 @@ def test_red_report_is_downloadable_and_history_survives_stale_run(tmp_path):
 def test_mismatched_identity_cannot_publish(tmp_path, changes):
     source = event()
     with pytest.raises(ValueError):
-        publisher().publish(archive(tmp_path / "bad.zip", source, **changes), tmp_path / "site", source, [])
-    assert not (tmp_path / "site/runs").exists()
+        publisher().publish(archive(tmp_path / "bad.zip", source, **changes), tmp_path / "site", source)
+    assert not (tmp_path / "site").exists()
 
 
 @pytest.mark.parametrize(
@@ -205,15 +206,17 @@ def test_mismatched_identity_cannot_publish(tmp_path, changes):
         {"path": ".github/workflows/other.yml"},
         {"path": None},
         {"status": "in_progress"},
+        {"head_branch": "feature"},
+        {"event": "pull_request"},
         {"head_repository": {"full_name": "other/repository"}},
     ],
 )
 def test_untrusted_or_incomplete_workflow_cannot_publish(tmp_path, changes):
     source = event()
     source["workflow_run"].update(changes)
-    with pytest.raises(ValueError, match="Only completed same-repository CI reports"):
-        publisher().publish(archive(tmp_path / "untrusted.zip", source), tmp_path / "site", source, [])
-    assert not (tmp_path / "site/runs").exists()
+    with pytest.raises(ValueError, match="Only completed development CI reports"):
+        publisher().publish(archive(tmp_path / "untrusted.zip", source), tmp_path / "site", source)
+    assert not (tmp_path / "site").exists()
 
 
 @pytest.mark.parametrize("name,mode", [("../outside", 0), ("/absolute", 0), ("setup.py", 0), ("link", stat.S_IFLNK)])
@@ -225,9 +228,9 @@ def test_archive_cannot_write_or_execute_unexpected_files(tmp_path, name, mode):
         member.external_attr = mode << 16
         zipped.writestr(member, "sentinel")
     with pytest.raises(ValueError):
-        publisher().publish(path, tmp_path / "site", source, [])
+        publisher().publish(path, tmp_path / "site", source)
     assert not (tmp_path / "outside").exists()
-    assert not (tmp_path / "site/runs").exists()
+    assert not (tmp_path / "site").exists()
 
 
 def test_incomplete_report_cannot_replace_an_existing_review(tmp_path):
@@ -236,8 +239,8 @@ def test_incomplete_report_cannot_replace_an_existing_review(tmp_path):
     with zipfile.ZipFile(path, "w") as zipped:
         zipped.writestr("architecture.json", "{}")
     with pytest.raises(ValueError):
-        publisher().publish(path, tmp_path / "site", source, [])
-    assert not (tmp_path / "site/runs").exists()
+        publisher().publish(path, tmp_path / "site", source)
+    assert not (tmp_path / "site").exists()
 
 
 @pytest.mark.parametrize("name", ["metadata.json", "architecture.json", "validation.json"])
@@ -247,8 +250,8 @@ def test_malformed_json_cannot_publish(tmp_path, name):
     replace_member(path, name, b"{truncated")
 
     with pytest.raises(ValueError):
-        publisher().publish(path, tmp_path / "site", source, [])
-    assert not (tmp_path / "site/runs").exists()
+        publisher().publish(path, tmp_path / "site", source)
+    assert not (tmp_path / "site").exists()
 
 
 def test_non_utf8_html_cannot_publish(tmp_path):
@@ -257,8 +260,8 @@ def test_non_utf8_html_cannot_publish(tmp_path):
     replace_member(path, "architecture.report.html", b"\xff\xfe")
 
     with pytest.raises(ValueError):
-        publisher().publish(path, tmp_path / "site", source, [])
-    assert not (tmp_path / "site/runs").exists()
+        publisher().publish(path, tmp_path / "site", source)
+    assert not (tmp_path / "site").exists()
 
 
 @pytest.mark.parametrize("field", ["report_sha", "push_scan_sha"])
@@ -278,8 +281,8 @@ def test_report_scan_identity_must_match_metadata_and_push_head(tmp_path, field)
         path = archive(tmp_path / "mixed-scan.zip", source, scanned_sha="b" * 40)
 
     with pytest.raises(ValueError):
-        publisher().publish(path, tmp_path / "site", source, [])
-    assert not (tmp_path / "site/runs").exists()
+        publisher().publish(path, tmp_path / "site", source)
+    assert not (tmp_path / "site").exists()
 
 
 def test_duplicate_archive_member_cannot_publish(tmp_path):
@@ -289,8 +292,8 @@ def test_duplicate_archive_member_cannot_publish(tmp_path):
         zipped.writestr("architecture.json", json.dumps({"source": {"git_head": SHA}}))
 
     with pytest.raises(ValueError):
-        publisher().publish(path, tmp_path / "site", source, [])
-    assert not (tmp_path / "site/runs").exists()
+        publisher().publish(path, tmp_path / "site", source)
+    assert not (tmp_path / "site").exists()
 
 
 def test_allowlisted_report_symlink_cannot_publish(tmp_path):
@@ -300,177 +303,19 @@ def test_allowlisted_report_symlink_cannot_publish(tmp_path):
     replace_member(path, "architecture.json", report, stat.S_IFLNK | 0o777)
 
     with pytest.raises(ValueError):
-        publisher().publish(path, tmp_path / "site", source, [])
-    assert not (tmp_path / "site/runs").exists()
+        publisher().publish(path, tmp_path / "site", source)
+    assert not (tmp_path / "site").exists()
 
 
-def test_identical_run_attempt_is_idempotent(tmp_path):
-    source = event()
-    path = archive(tmp_path / "same.zip", source)
-    site = tmp_path / "site"
-    module = publisher()
-    assert module.publish(path, site, source, [{"number": 274, "head": {"sha": SHA}}]) == "runs/10/1/"
-    before = tree_bytes(site)
-
-    assert module.publish(path, site, source, [{"number": 274, "head": {"sha": SHA}}]) == "runs/10/1/"
-    assert tree_bytes(site) == before
-
-
-def test_different_content_for_same_run_attempt_preserves_first_publication(tmp_path):
-    source = event()
-    original = archive(tmp_path / "original.zip", source)
-    changed = archive(tmp_path / "changed.zip", source)
-    with zipfile.ZipFile(changed) as zipped:
-        receipt = json.loads(zipped.read("validation.json"))
-    receipt["measurements"]["scalars"]["violations"] = 92
-    replace_member(changed, "validation.json", json.dumps(receipt).encode())
-
-    site = tmp_path / "site"
-    module = publisher()
-    prs = [{"number": 274, "head": {"sha": SHA}}]
-    module.publish(original, site, source, prs)
-    before = tree_bytes(site)
-    with pytest.raises(ValueError):
-        module.publish(changed, site, source, prs)
-    assert tree_bytes(site) == before
-
-
-def test_older_attempt_does_not_replace_pr_latest(tmp_path):
+def test_nonempty_destination_is_rejected_without_changing_its_current_snapshot(tmp_path):
     module = publisher()
     site = tmp_path / "site"
-    prs = [{"number": 274, "head": {"sha": SHA}}]
-    second = event(10, 2)
-    first = event(10, 1)
-    module.publish(archive(tmp_path / "attempt-2.zip", second), site, second, prs)
-    latest_before = (site / "pr/274/index.html").read_bytes()
-
-    module.publish(archive(tmp_path / "attempt-1.zip", first), site, first, prs)
-
-    assert (site / "pr/274/index.html").read_bytes() == latest_before
-    assert "runs/10/2/" in latest_before.decode()
-    assert (site / "runs/10/1/index.html").exists()
-
-
-def test_pages_keeps_current_details_and_archived_reviews_without_changing_evidence(tmp_path):
-    module = publisher()
-    site = tmp_path / "archive"
     first = event()
-    path = archive(tmp_path / "old.zip", first)
-    projection = {
-        "atlas": {"architecture_href": "architecture.json", "detail_page": "architecture.detail.html"},
-        "components": [{"id": "runtime", "responsibility": "Execute statements."}],
-    }
-    report = '<html><body><script id="flow-data" type="application/json">' + json.dumps(projection) + "</script></body>"
-    replace_member(path, "architecture.report.html", report.encode())
-    module.publish(path, site, first, [])
-    second = event(11, sha="b" * 40)
-    module.publish(
-        archive(tmp_path / "current.zip", second), site, second, [{"number": 274, "head": {"sha": "b" * 40}}]
-    )
-    original = tree_bytes(site)
-    output = tmp_path / "pages"
+    module.publish(archive(tmp_path / "first.zip", first), site, first)
+    before = tree_bytes(site)
+    newer = event(run=11)
 
-    module.project_pages(site, output, "runs/11/1/", [274])
+    with pytest.raises(ValueError, match="empty site"):
+        module.publish(archive(tmp_path / "new.zip", newer), site, newer)
 
-    assert tree_bytes(site) == original
-    assert (output / "runs/11/1/architecture.detail.html").read_bytes() == original[
-        "runs/11/1/architecture.detail.html"
-    ]
-    historical = (output / "runs/10/1/architecture.report.html").read_text()
-    assert "Historical review" in historical
-    assert "Execute statements." in historical
-    assert (
-        "https://raw.githubusercontent.com/rapiddweller/datamimic/architecture-reports/runs/10/1/architecture.json"
-        in historical
-    )
-    assert not (output / "runs/10/1/architecture.json").exists()
-    landing = (output / "runs/10/1/architecture.detail.html").read_text()
-    assert "Download" in landing
-    assert "raw.githubusercontent.com" in landing
-
-
-def test_open_pr_latest_keeps_full_detail_when_another_run_is_current(tmp_path):
-    module = publisher()
-    site = tmp_path / "archive"
-    first = event()
-    module.publish(archive(tmp_path / "pr.zip", first), site, first, [{"number": 274, "head": {"sha": SHA}}])
-    second = event(11, sha="b" * 40)
-    module.publish(archive(tmp_path / "other.zip", second), site, second, [])
-    output = tmp_path / "pages"
-
-    module.project_pages(site, output, "runs/11/1/", [274])
-
-    assert (output / "runs/10/1/architecture.json").read_bytes() == (site / "runs/10/1/architecture.json").read_bytes()
-    assert (output / "runs/10/1/architecture.detail.html").read_bytes() == (
-        site / "runs/10/1/architecture.detail.html"
-    ).read_bytes()
-
-
-def test_pages_projection_preserves_flow_data_and_archive_evidence(tmp_path):
-    module = publisher()
-    site = tmp_path / "archive"
-    current = site / "runs/11/1"
-    historical = site / "runs/10/1"
-    current.mkdir(parents=True)
-    historical.mkdir(parents=True)
-    historical_data = {
-        "atlas": {
-            "architecture_href": "architecture.json",
-            "detail_page": "architecture.detail.html",
-            "components": [{"id": "runtime", "responsibility": "Execute statements."}],
-            "qa_escape_probe": "<img src=x onerror=alert(1)>",
-        },
-        "navigation": {"main_href": "index.html"},
-    }
-    report = (
-        '<!doctype html><html><body><a href="architecture.json">JSON</a>'
-        '<script id="flow-data" type="application/json">' + json.dumps(historical_data) + "</script></body></html>"
-    )
-    old_files = {
-        "architecture.report.html": report,
-        "architecture.json": '{"historical":true}',
-        "architecture.detail.html": "original historical details",
-        "validation.json": '{"declared_rules":"FAIL"}',
-        "metadata.json": '{"run_id":10,"run_attempt":1}',
-    }
-    current_files = {
-        "architecture.report.html": "<!doctype html><html><body>current report</body></html>",
-        "architecture.json": '{"current":true}',
-        "architecture.detail.html": "current full details",
-        "validation.json": '{"declared_rules":"UNKNOWN"}',
-        "metadata.json": '{"run_id":11,"run_attempt":1}',
-    }
-    for name, content in old_files.items():
-        (historical / name).write_text(content, encoding="utf-8")
-    for name, content in current_files.items():
-        (current / name).write_text(content, encoding="utf-8")
-    for run in (historical, current):
-        (run / "index.html").write_text('<a href="architecture.json">JSON</a>', encoding="utf-8")
-    latest = site / "pr/274"
-    latest.mkdir(parents=True)
-    (latest / "metadata.json").write_text('{"run_id":11,"run_attempt":1}', encoding="utf-8")
-
-    archived_before = tree_digests(site)
-    output = tmp_path / "pages"
-
-    module.project_pages(site, output, "runs/11/1/", [274])
-
-    assert tree_digests(site) == archived_before
-    for name, content in current_files.items():
-        assert (output / "runs/11/1" / name).read_bytes() == content.encode("utf-8")
-    historical_page = (output / "runs/10/1/architecture.report.html").read_text(encoding="utf-8")
-    projected = re.search(r'(<script\b[^>]*\bid="flow-data"[^>]*>)(.*?)(</script>)', historical_page, re.DOTALL)
-    assert projected is not None
-    assert "<" not in projected[2]
-    projected_data = json.loads(projected[2])
-    expected_data = json.loads(json.dumps(historical_data))
-    expected_data["atlas"]["architecture_href"] = (
-        "https://raw.githubusercontent.com/rapiddweller/datamimic/architecture-reports/runs/10/1/architecture.json"
-    )
-    assert projected_data == expected_data
-    assert "\\u003cimg" in projected[2]
-    assert "Historical review" in historical_page
-    assert not (output / "runs/10/1/architecture.json").exists()
-    detail_landing = (output / "runs/10/1/architecture.detail.html").read_text(encoding="utf-8")
-    assert "Download original full-detail HTML" in detail_landing
-    assert "runs/10/1/architecture.detail.html" in detail_landing
+    assert tree_bytes(site) == before

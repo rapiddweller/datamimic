@@ -1,6 +1,7 @@
-name: Publish architecture reviews
+name: Publish development architecture
 
 on:
+  workflow_dispatch:
   workflow_run:
     workflows: [Github Datamimic CE CI]
     types: [completed]
@@ -14,24 +15,27 @@ concurrency:
   cancel-in-progress: false
 
 jobs:
-  archive:
-    if: github.event.workflow_run.head_repository.full_name == github.repository
+  publish:
+    if: >-
+      github.event_name == 'workflow_dispatch' ||
+      (github.event.workflow_run.head_repository.full_name == github.repository &&
+      github.event.workflow_run.head_branch == 'development' &&
+      (github.event.workflow_run.event == 'push' || github.event.workflow_run.event == 'workflow_dispatch'))
     runs-on: ubuntu-22.04
     permissions:
       actions: read
-      contents: write
+      contents: read
     outputs:
       available: ${{ steps.evidence.outputs.available }}
     env:
       GH_TOKEN: ${{ github.token }}
       SOURCE_RUN: ${{ github.event.workflow_run.id }}
       SOURCE_ATTEMPT: ${{ github.event.workflow_run.run_attempt }}
-      SOURCE_SHA: ${{ github.event.workflow_run.head_sha }}
     steps:
       - name: Checkout trusted publisher
         uses: actions/checkout@v5
         with:
-          ref: ${{ github.event.repository.default_branch }}
+          ref: development
 
       - name: Download this attempt's report data
         id: evidence
@@ -39,6 +43,18 @@ jobs:
           REPOSITORY: ${{ github.repository }}
         run: |
           set -o pipefail
+          latest=$(gh api "repos/$REPOSITORY/actions/workflows/main.yml/runs?branch=development&status=completed&per_page=100" \
+            --jq '.workflow_runs | map(select(.event == "push" or .event == "workflow_dispatch")) | first | "\(.id)/\(.run_attempt)"')
+          [[ "$latest" =~ ^[0-9]+/[0-9]+$ ]] || { echo "Cannot identify the latest development run" >&2; exit 1; }
+          if [[ "$GITHUB_EVENT_NAME" == workflow_dispatch ]]; then
+            SOURCE_RUN="${latest%/*}"
+            SOURCE_ATTEMPT="${latest#*/}"
+          fi
+          if [[ "$latest" != "$SOURCE_RUN/$SOURCE_ATTEMPT" ]]; then
+            echo "available=false" >> "$GITHUB_OUTPUT"
+            echo "Skipped superseded development run $SOURCE_RUN/$SOURCE_ATTEMPT; latest is $latest." >> "$GITHUB_STEP_SUMMARY"
+            exit 0
+          fi
           artifact=$(gh api "repos/$REPOSITORY/actions/runs/$SOURCE_RUN/artifacts" --paginate \
             --jq ".artifacts[] | select(.name == \"architecture-report-$SOURCE_ATTEMPT\" and .expired == false) | .id")
           if [[ -z "$artifact" ]]; then
@@ -49,56 +65,32 @@ jobs:
               exit 1
             fi
             echo "available=false" >> "$GITHUB_OUTPUT"
-            echo "Not published: the report job did not run in source attempt $SOURCE_RUN/$SOURCE_ATTEMPT (legacy workflow or partial rerun)." >> "$GITHUB_STEP_SUMMARY"
+            echo "No architecture report was produced by development run $SOURCE_RUN/$SOURCE_ATTEMPT." >> "$GITHUB_STEP_SUMMARY"
             exit 0
           fi
           [[ "$artifact" =~ ^[0-9]+$ ]] || { echo "Expected exactly one report artifact for this attempt"; exit 1; }
           gh api "repos/$REPOSITORY/actions/artifacts/$artifact/zip" > "$RUNNER_TEMP/report.zip"
-          gh api "repos/$REPOSITORY/commits/$SOURCE_SHA/pulls" --paginate --slurp \
-            | jq 'add' > "$RUNNER_TEMP/prs.json"
-          gh api "repos/$REPOSITORY/pulls?state=open&per_page=100" --paginate --slurp \
-            | jq 'add | map(.number)' > "$RUNNER_TEMP/open-prs.json"
+          gh api "repos/$REPOSITORY/actions/runs/$SOURCE_RUN" \
+            | jq --arg repository "$REPOSITORY" '{repository: {full_name: $repository}, workflow_run: .}' \
+            > "$RUNNER_TEMP/source-event.json"
           echo "available=true" >> "$GITHUB_OUTPUT"
 
-      - name: Restore persistent report history
-        if: steps.evidence.outputs.available == 'true'
-        run: |
-          SITE="$RUNNER_TEMP/architecture-site"
-          echo "SITE=$SITE" >> "$GITHUB_ENV"
-          git config user.name "github-actions[bot]"
-          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          existing=$(git ls-remote origin refs/heads/architecture-reports)
-          if [[ -n "$existing" ]]; then
-            git fetch origin refs/heads/architecture-reports
-            git worktree add --detach "$SITE" FETCH_HEAD
-          else
-            tree=$(git hash-object -w -t tree /dev/null)
-            commit=$(git commit-tree "$tree" -m "Initialize architecture report archive")
-            git worktree add --detach "$SITE" "$commit"
-          fi
-
-      - name: Validate and append report (data only)
+      - name: Build current architecture page
         if: steps.evidence.outputs.available == 'true'
         run: |
           python3 script/architecture_study/publish_reports.py \
-            --event "$GITHUB_EVENT_PATH" --archive "$RUNNER_TEMP/report.zip" \
-            --site "$SITE" --prs "$RUNNER_TEMP/prs.json" \
-            --pages "$RUNNER_TEMP/architecture-pages" --open-prs "$RUNNER_TEMP/open-prs.json"
-          git -C "$SITE" add --all
-          if ! git -C "$SITE" diff --cached --quiet; then
-            git -C "$SITE" commit -m "Archive architecture review $SOURCE_RUN/$SOURCE_ATTEMPT"
-            git -C "$SITE" push origin HEAD:refs/heads/architecture-reports
-          fi
+            --event "$RUNNER_TEMP/source-event.json" --archive "$RUNNER_TEMP/report.zip" \
+            --site "$RUNNER_TEMP/architecture-pages"
 
-      - name: Upload complete Pages site
+      - name: Upload current architecture page
         if: steps.evidence.outputs.available == 'true'
         uses: actions/upload-pages-artifact@v4
         with:
           path: ${{ runner.temp }}/architecture-pages
 
   deploy:
-    needs: archive
-    if: needs.archive.outputs.available == 'true'
+    needs: publish
+    if: needs.publish.outputs.available == 'true'
     runs-on: ubuntu-22.04
     permissions:
       pages: write
@@ -107,13 +99,11 @@ jobs:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
     steps:
-      - name: Deploy reports
+      - name: Deploy current architecture
         id: deployment
         uses: actions/deploy-pages@v4
-      - name: Link the published review
+      - name: Link the current architecture
         env:
           PAGE_URL: ${{ steps.deployment.outputs.page_url }}
-          SOURCE_RUN: ${{ github.event.workflow_run.id }}
-          SOURCE_ATTEMPT: ${{ github.event.workflow_run.run_attempt }}
         run: |
-          echo "Architecture review: ${PAGE_URL}runs/$SOURCE_RUN/$SOURCE_ATTEMPT/" >> "$GITHUB_STEP_SUMMARY"
+          echo "Current development architecture: $PAGE_URL" >> "$GITHUB_STEP_SUMMARY"
