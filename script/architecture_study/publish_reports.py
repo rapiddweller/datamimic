@@ -18,6 +18,14 @@ FILES = {
 }
 
 
+def configured_archkeel_version() -> str:
+    makefile = Path(__file__).resolve().parents[2] / "Makefile"
+    pin = re.search(r"^ARCHKEEL_SOURCE := archkeel==(\S+)$", makefile.read_text(), re.MULTILINE)
+    if pin is None:
+        raise ValueError("Makefile must pin the approved ArchKeel version")
+    return pin[1]
+
+
 def publish(archive: Path, site: Path, event: dict, prs: list[dict]) -> str:
     run = event["workflow_run"]
     repository = event["repository"]["full_name"]
@@ -47,7 +55,7 @@ def publish(archive: Path, site: Path, event: dict, prs: list[dict]) -> str:
         "run_id": run["id"],
         "run_attempt": run["run_attempt"],
         "head_sha": run["head_sha"],
-        "archkeel_version": "1.0.0",
+        "archkeel_version": configured_archkeel_version(),
     }
     if any(metadata.get(key) != value for key, value in expected.items()):
         raise ValueError("Report identity does not match the triggering CI run")
@@ -80,7 +88,8 @@ def publish(archive: Path, site: Path, event: dict, prs: list[dict]) -> str:
     unknown = html.escape(str(scalars.get("unknown_positions", "not measured")))
     violations = html.escape(str(scalars.get("violations", "not measured")))
     receipt = (
-        f"<h1>DATAMIMIC architecture review</h1><p>ArchKeel 1.0.0 · Run {run['id']}, attempt {run['run_attempt']}</p>"
+        f"<h1>DATAMIMIC architecture review</h1><p>ArchKeel {html.escape(expected['archkeel_version'])} "
+        f"· Run {run['id']}, attempt {run['run_attempt']}</p>"
         f"<p>Head: <code>{run['head_sha']}</code><br>Scanned: <code>{scanned}</code></p>"
         f"<p>Rules: {verdict} · Violations: {violations} · UNKNOWN positions: {unknown}</p>"
         "<p>Report publication is not architecture acceptance. Target completion remains subject to review.</p>"

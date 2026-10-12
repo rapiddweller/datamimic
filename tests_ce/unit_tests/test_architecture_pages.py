@@ -3,8 +3,11 @@
 import hashlib
 import importlib.util
 import json
+import os
 import re
 import stat
+import subprocess
+import textwrap
 import zipfile
 from pathlib import Path
 
@@ -12,6 +15,74 @@ import pytest
 
 SCRIPT = Path(__file__).resolve().parents[2] / "script/architecture_study/publish_reports.py"
 SHA = "a" * 40
+
+
+@pytest.mark.parametrize(
+    "artifact,job,expected_status,available",
+    [
+        ("42", "Architecture review report", 0, "true"),
+        ("", "Unit tests", 0, "false"),
+        ("", "Architecture review report", 1, None),
+        ("42", "API failure", 9, None),
+    ],
+)
+def test_download_step_handles_paginated_metadata_and_missing_artifacts(
+    tmp_path, artifact, job, expected_status, available
+):
+    workflow = SCRIPT.parents[2] / ".github/workflows/architecture-pages.yml"
+    download = re.search(
+        r"- name: Download this attempt's report data.*?run: \|\n(.*?)\n      - name:",
+        workflow.read_text(),
+        re.DOTALL,
+    )
+    assert download is not None
+    gh = tmp_path / "gh"
+    gh.write_text("""#!/bin/bash
+if [[ "$*" == *--slurp* && "$*" == *--jq* ]]; then
+  echo 'the --slurp option is not supported with --jq' >&2
+  exit 1
+fi
+case "$2" in
+  */artifacts) printf '%s' "$REPORT_ARTIFACT" ;;
+  */jobs) printf '[{"jobs":[{"name":"Other"}]},{"jobs":[{"name":"%s"}]}]' "$REPORT_JOB" ;;
+  */artifacts/*/zip) printf 'report archive' ;;
+  */commits/*/pulls)
+    [[ "$REPORT_JOB" != 'API failure' ]] || exit 9
+    printf '[[{"number":7}],[{"number":8}]]' ;;
+  */pulls\\?*) printf '[[{"number":9}],[{"number":10}]]' ;;
+  *) exit 2 ;;
+esac
+""")
+    gh.chmod(0o755)
+    result = subprocess.run(
+        ["bash", "-e", "-c", textwrap.dedent(download[1])],
+        env={
+            **os.environ,
+            "PATH": f"{tmp_path}:{os.environ['PATH']}",
+            "REPORT_ARTIFACT": artifact,
+            "REPORT_JOB": job,
+            "REPOSITORY": "owner/repo",
+            "SOURCE_RUN": "1",
+            "SOURCE_ATTEMPT": "1",
+            "SOURCE_SHA": SHA,
+            "RUNNER_TEMP": str(tmp_path),
+            "GITHUB_OUTPUT": str(tmp_path / "output"),
+            "GITHUB_STEP_SUMMARY": str(tmp_path / "summary"),
+        },
+        capture_output=True,
+        text=True,
+        check=False,
+    )
+    assert result.returncode == expected_status, result.stderr
+    if available is not None:
+        assert (tmp_path / "output").read_text() == f"available={available}\n"
+    else:
+        assert not (tmp_path / "output").exists()
+        if not artifact:
+            assert "artifact is absent or expired" in result.stderr
+    if artifact and expected_status == 0:
+        assert json.loads((tmp_path / "prs.json").read_text()) == [{"number": 7}, {"number": 8}]
+        assert json.loads((tmp_path / "open-prs.json").read_text()) == [9, 10]
 
 
 def publisher():
@@ -45,7 +116,7 @@ def archive(path, source, **changes):
         "run_attempt": run["run_attempt"],
         "head_sha": run["head_sha"],
         "scanned_sha": run["head_sha"],
-        "archkeel_version": "1.0.0",
+        "archkeel_version": "2.0.0",
     }
     metadata.update(changes)
     files = {
@@ -101,6 +172,7 @@ def test_red_report_is_downloadable_and_history_survives_stale_run(tmp_path):
     assert json.loads(receipt.read_text())["observation_complete"] == "UNKNOWN"
     assert "FAIL" in (site / "runs/10/1/index.html").read_text()
     assert "202" in (site / "runs/10/1/index.html").read_text()
+    assert f"ArchKeel {module.configured_archkeel_version()}" in (site / "runs/10/1/index.html").read_text()
     saved = receipt.read_bytes()
     next_sha = "b" * 40
     newer = event(11, sha=next_sha)
@@ -116,7 +188,9 @@ def test_red_report_is_downloadable_and_history_survives_stale_run(tmp_path):
     assert (site / "runs/11/2/index.html").is_file()
 
 
-@pytest.mark.parametrize("changes", [{"run_id": 99}, {"head_sha": "b" * 40}, {"archkeel_version": "0.8.5"}])
+@pytest.mark.parametrize(
+    "changes", [{"run_id": 99}, {"head_sha": "b" * 40}, {"archkeel_version": "0.8.5"}, {"archkeel_version": "1.0.0"}]
+)
 def test_mismatched_identity_cannot_publish(tmp_path, changes):
     source = event()
     with pytest.raises(ValueError):
