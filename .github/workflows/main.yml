@@ -144,14 +144,12 @@ jobs:
       - name: Add report links to run summary
         if: always()
         env:
-          RUN_ID: ${{ github.run_id }}
-          RUN_ATTEMPT: ${{ github.run_attempt }}
           ARTIFACT_URL: ${{ steps.upload_architecture_report.outputs.artifact-url }}
         run: |
           {
             echo '## Architecture review report'
             echo
-            echo "Publication pending: https://rapiddweller.github.io/datamimic/runs/${RUN_ID}/${RUN_ATTEMPT}/"
+            echo "Current development architecture: https://rapiddweller.github.io/datamimic/"
             if [ -n "$ARTIFACT_URL" ]; then
               echo
               echo "[Download report artifact](${ARTIFACT_URL})"

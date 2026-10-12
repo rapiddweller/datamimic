@@ -17,6 +17,8 @@
 [![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](https://github.com/rapiddweller/datamimic/blob/development/LICENSE)
 [![MCP Ready](https://img.shields.io/badge/MCP-ready-8A2BE2.svg)](https://github.com/rapiddweller/datamimic/blob/development/docs/mcp_quickstart.md)
 
+[**Current development architecture**](https://rapiddweller.github.io/datamimic/) — explore the observed structure, target and differences with ArchKeel.
+
 ---
 
 ## What is DATAMIMIC?
