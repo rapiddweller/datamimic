@@ -54,8 +54,8 @@ Engine and Interfaces are implicit grouping namespaces; their child APIs and act
 initializers retain their own owners. The regular root initializer belongs only to
 the exact-module `distribution` component, with no descendant scope, public API or
 dependencies. Namespace discovery, other Python versions and EE packaging remain
-unproven ([Amendment 169](amendment-169-interfaces-namespace.md),
-[171](amendment-171-engine-namespace.md),
+unproven ([Amendment 169](https://github.com/rapiddweller/datamimic/blob/384b7723d950d8b312b1080d23ffd89a5343c9b0/docs/architecture/refactoring-study/experiment-2/amendment-169-interfaces-namespace.md),
+[171](https://github.com/rapiddweller/datamimic/blob/384b7723d950d8b312b1080d23ffd89a5343c9b0/docs/architecture/refactoring-study/experiment-2/amendment-171-engine-namespace.md),
 [173](amendment-173-root-distribution-owner.md)).
 
 ## Target dependencies

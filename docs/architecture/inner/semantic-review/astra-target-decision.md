@@ -15,7 +15,7 @@ This decision supersedes the tentative ownership proposals in the four semantic
 reviews. It resolves all 17 `unclear` entries. It does not rewrite the historical
 773-entry baseline or certify the current layout.
 
-[Machine-readable freeze inputs](astra-target-decisions.json) contain the exact
+[Machine-readable freeze inputs](https://github.com/rapiddweller/datamimic/blob/384b7723d950d8b312b1080d23ffd89a5343c9b0/docs/architecture/inner/semantic-review/astra-target-decisions.json) contain the exact
 22 contract scopes, future package selectors, 488 source-module dispositions,
 158 Python-directory concerns, boundary-type decisions, and implementation slices.
 They are migration inputs, not a second live architecture contract.

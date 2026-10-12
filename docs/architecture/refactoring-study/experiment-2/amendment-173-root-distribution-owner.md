@@ -7,7 +7,7 @@ public and requires lists. The inert regular initializer anchors installed-distr
 origin; the existing wheel owner checks its `__file__` and installed module/spec paths.
 The source review already records this distribution responsibility.
 
-This supersedes only [Amendment 171](amendment-171-engine-namespace.md)'s unresolved-root
+This supersedes only [Amendment 171](https://github.com/rapiddweller/datamimic/blob/384b7723d950d8b312b1080d23ffd89a5343c9b0/docs/architecture/refactoring-study/experiment-2/amendment-171-engine-namespace.md)'s unresolved-root
 ownership clause. Preserve its namespace decision and compatibility limits, and
 [Amendment 68](amendment-68.md)'s import purity. No descendant ownership, catch-all,
 physical package, product/configuration change, API or dependency grant is added.

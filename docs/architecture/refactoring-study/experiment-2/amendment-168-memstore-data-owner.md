@@ -84,5 +84,5 @@ uvx --python 3.11 --from archkeel==1.0.0 archkeel validate --against 14821e5e665
 Full DSL/EE acceptance, historical old-path/metadata/introspection and
 persisted-object compatibility, and live or mixed-release workers remain UNKNOWN.
 No merge or baseline/oracle/ledger promotion. See the [target](target-architecture.md),
-[protocol](protocol.md) and [report acceptance](step-113-report-acceptance.md) for
+[protocol](protocol.md) and [report acceptance](https://github.com/rapiddweller/datamimic/blob/384b7723d950d8b312b1080d23ffd89a5343c9b0/docs/architecture/refactoring-study/experiment-2/step-113-report-acceptance.md) for
 separate overall gates. CI-ONLY VERIFICATION: exact final-head CI remains pending.

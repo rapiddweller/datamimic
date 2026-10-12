@@ -1,0 +1,20 @@
+{
+  "archive_members_verified": 3676,
+  "stored_hash_references_verified": 345,
+  "architecture_definition_tests_passed": 13,
+  "observation_complete": true,
+  "files_parsed": 488,
+  "violations": 0,
+  "unknown_records": 286,
+  "source_digest": "81f86023ad58442a08dd77cf72e9524a24c91b0466aa46645b732cc4f393d428",
+  "target_digest": "289d6c0ee28d75e53e7ed8d057edbd66dd4004c5c362b6cccf5f7c095e0f7745",
+  "analyzer_digest": "7106e3595fa7df9269cb43ee280f9c557659db7bda171b1f65ff5619ab54aa24",
+  "generated_reports_in_git_archive": 0,
+  "runtime_reruns": 0,
+  "new_ci_runs": 0,
+  "extended_architecture_tests_passed": 1680,
+  "extended_architecture_tests_skipped": 14,
+  "baseline_stale_test_reproduced": true,
+  "stale_test_counterexamples_rejected": 3,
+  "independent_review": "Astra: GO, no blocking findings"
+}

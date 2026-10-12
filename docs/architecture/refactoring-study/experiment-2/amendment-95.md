@@ -42,5 +42,5 @@ Keep old/corrected observations and require exact removed findings, permission
 evidence, unchanged UNKNOWNs and failing negative selector/type probes before
 checkpoint. Whole-experiment acceptance remains open.
 
-Evidence: [implementation plan](step-103-scripting-state-plan.md); independent
+Evidence: [implementation plan](https://github.com/rapiddweller/datamimic/blob/384b7723d950d8b312b1080d23ffd89a5343c9b0/docs/architecture/refactoring-study/experiment-2/step-103-scripting-state-plan.md); independent
 source trace and decision at `/private/tmp/ce-next-boundary-decision.md`.

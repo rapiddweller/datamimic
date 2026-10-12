@@ -132,7 +132,7 @@ file-only for Generate sources.
 
 ## Interfaces namespace
 
-[Amendment 169](../refactoring-study/experiment-2/amendment-169-interfaces-namespace.md)
+[Amendment 169](https://github.com/rapiddweller/datamimic/blob/384b7723d950d8b312b1080d23ffd89a5343c9b0/docs/architecture/refactoring-study/experiment-2/amendment-169-interfaces-namespace.md)
 removes CE's docstring-only Interfaces marker while retaining all five adapter
 owners and active CLI/MCP initializers. The shared grouping needs no placeholder;
 CE setuptools namespace proof does not establish EE Maturin wheel discovery.

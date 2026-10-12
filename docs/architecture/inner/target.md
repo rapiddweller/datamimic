@@ -39,11 +39,11 @@ as exact module `datamimic_ce` by `distribution`, without descendant scope or gr
 is an implicit grouping namespace; DSL, IO and Runtime retain their own modules.
 Neither grouping introduces a catch-all component. External Engine introspection/discovery compatibility,
 other Python versions and EE packaging remain UNKNOWN
-([Amendment 171](../refactoring-study/experiment-2/amendment-171-engine-namespace.md)).
+([Amendment 171](https://github.com/rapiddweller/datamimic/blob/384b7723d950d8b312b1080d23ffd89a5343c9b0/docs/architecture/refactoring-study/experiment-2/amendment-171-engine-namespace.md)).
 Interfaces is an implicit grouping namespace; CLI, MCP, demo, project and Python
 retain their existing owners. Active CLI/MCP initializers and descendant entrypoints
 remain. Parent package introspection changes; external discovery compatibility and
-EE wheel discovery remain UNKNOWN ([Amendment 169](../refactoring-study/experiment-2/amendment-169-interfaces-namespace.md)).
+EE wheel discovery remain UNKNOWN ([Amendment 169](https://github.com/rapiddweller/datamimic/blob/384b7723d950d8b312b1080d23ffd89a5343c9b0/docs/architecture/refactoring-study/experiment-2/amendment-169-interfaces-namespace.md)).
 
 ## Physical target
 
@@ -235,7 +235,7 @@ Authoring Domain owns acceptance/replay verdicts and canonical bounded-capture
 records in `contracts.py`. Application sequences runs; the dry-run adapter
 produces evidence. Policies never import the execution adapter. Its eight Domain
 children are a reviewed cohesion exception, not an automatic seven-child limit
-([Amendment 80](../refactoring-study/experiment-2/amendment-80.md)).
+([Amendment 80](https://github.com/rapiddweller/datamimic/blob/384b7723d950d8b312b1080d23ffd89a5343c9b0/docs/architecture/refactoring-study/experiment-2/amendment-80.md)).
 
 The IO facade drops five unused concrete exporter re-exports; live runtime
 consumers still use its Memstore and TestResultExporter types.
@@ -244,7 +244,7 @@ use the published row-loading operation. The exporter registry's Memstore
 dependency is declared at IO-MEMSTORE.
 File readers are published through `engine.io.files.api`, not the Runtime-facing
 root facade. Removing its documented `FileUtil` import is a deliberate CE 5.0
-Python import break, without a shim ([Amendment 81](../refactoring-study/experiment-2/amendment-81.md)).
+Python import break, without a shim ([Amendment 81](https://github.com/rapiddweller/datamimic/blob/384b7723d950d8b312b1080d23ffd89a5343c9b0/docs/architecture/refactoring-study/experiment-2/amendment-81.md)).
 Open reader values remain unchanged; the file facade is not yet covered by the
 root boundary-type rule. Fewer root findings do not prove better reader typing.
 Exporter sessions call the registry only to construct target exporters; target
@@ -344,7 +344,7 @@ Remaining limits are explicit:
 - ArchKeel 0.9.0 includes selected source initializers in nested ownership checks.
   Use `exact_modules` for a namespace's deliberate owner without claiming its
   descendants. Responsibility alone does not establish ownership or behavior.
-  [Amendment 97](../refactoring-study/experiment-2/amendment-97.md) records five
+  [Amendment 97](https://github.com/rapiddweller/datamimic/blob/384b7723d950d8b312b1080d23ffd89a5343c9b0/docs/architecture/refactoring-study/experiment-2/amendment-97.md) records five
   candidate owners: four can proceed, while Errors waits for a checker fix.
   Five other initializer decisions remain open.
 - Static imports/types do not prove behavior, data-flow purity or dynamic loading.

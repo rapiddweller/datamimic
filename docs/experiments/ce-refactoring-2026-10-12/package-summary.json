@@ -1,0 +1,14 @@
+{
+  "archive_name": "experiment-documents-and-evidence.zip",
+  "payload_files": 3676,
+  "tracked_original_documents": 525,
+  "additional_prose_files": 2078,
+  "zip_bytes": 21740678,
+  "sha256": "758f42e850082d0593a020e0caacb8c3dd3a1c553eb024d514d52466fb73c081",
+  "excluded_archkeel_reports": 3994,
+  "excluded_report_bytes": 12472272545,
+  "private_configuration_files": 22,
+  "source_snapshots": "local only",
+  "all_345_stored_hash_references_match_existing_local_files": true,
+  "storage_decision": "User: reports local only; experiment prose/evidence ZIP in Git."
+}

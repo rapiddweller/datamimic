@@ -22,7 +22,7 @@ was checked with the frozen union fixture: 7 findings without grants, 3 with
 outer grants, 1 with native-leaf grants; the fixed control and four UNKNOWN
 records remain equal.
 
-The [candidate receipt](step-173-properties-source-contract-receipt.json) pins
+The [candidate receipt](https://github.com/rapiddweller/datamimic/blob/384b7723d950d8b312b1080d23ffd89a5343c9b0/docs/architecture/refactoring-study/experiment-2/step-173-properties-source-contract-receipt.json) pins
 the full CE reports. Against the prior 20-finding packet, the candidate has 17
 findings and no added finding. All surviving findings match exactly. The 254
 UNKNOWN IDs remain; three existing UNKNOWN texts change because the inherited

@@ -26,7 +26,7 @@ The full report moves from 17 to 13 findings by removing only
 `VIO-0cb2e65d6c7b8020`, `VIO-50a941c5eac71c66`,
 `VIO-8dcaf88aaa1dfabf`, and `VIO-eeff7c478475b871`. All surviving records,
 all 254 canonical UNKNOWN records, and the source digest match exactly.
-`declared_rules` remains FAIL. The [receipt](step-174-product-map-depth-receipt.json)
+`declared_rules` remains FAIL. The [receipt](https://github.com/rapiddweller/datamimic/blob/384b7723d950d8b312b1080d23ffd89a5343c9b0/docs/architecture/refactoring-study/experiment-2/step-174-product-map-depth-receipt.json)
 pins reports and local gates.
 
 LOCAL VERIFIED: selector guard RED then GREEN; 81 focused checks pass with 11
