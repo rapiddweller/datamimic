@@ -14,7 +14,7 @@ from datetime import datetime
 from random import Random
 
 from datamimic_ce.domains.domain_core import BaseDomainService
-from datamimic_ce.domains.domain_core.attribute_catalog import (
+from datamimic_ce.domains.domain_core.contracts.attribute_catalog import (
     EntitySchema,
     FieldSpec,
     address_group,
@@ -28,7 +28,7 @@ from datamimic_ce.domains.public_sector.models.educational_institution import Ed
 EDUCATIONAL_INSTITUTION_SCHEMA = EntitySchema(
     "EducationalInstitution",
     (
-        field("institution_id", str, "Unique institution identifier."),
+        field("institution_id", str, "Unique institution identifier.", unique_identifier_format="EDU-[0-9A-F]{8}"),
         field("name", str, "Institution name."),
         field("type", str, "Institution type."),
         field("level", str, "Education level."),

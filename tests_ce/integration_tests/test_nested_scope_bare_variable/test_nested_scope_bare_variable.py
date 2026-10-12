@@ -8,8 +8,8 @@ from pathlib import Path
 
 import pytest
 
-from datamimic_ce.data_mimic_test import DataMimicTest
-from datamimic_ce.factory.datamimic_test_factory import DataMimicTestFactory
+from datamimic_ce.interfaces.python.data_mimic_test import DataMimicTest
+from datamimic_ce.interfaces.python.factory import DataMimicTestFactory
 
 _dir = Path(__file__).resolve().parent
 

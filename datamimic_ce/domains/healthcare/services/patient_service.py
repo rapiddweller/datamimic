@@ -10,20 +10,21 @@ Patient service.
 This module provides the PatientService class for generating and managing patient data.
 """
 
+from collections.abc import Mapping
 from datetime import datetime
 from random import Random
 
-from datamimic_ce.domains.common.demographics.sampler import DemographicSampler
-from datamimic_ce.domains.common.models.demographic_config import DemographicConfig
 from datamimic_ce.domains.domain_core import BaseDomainService
-from datamimic_ce.domains.domain_core.attribute_catalog import EntitySchema, FieldSpec, field
+from datamimic_ce.domains.domain_core.contracts.attribute_catalog import EntitySchema, FieldSpec, field
 from datamimic_ce.domains.healthcare.generators.patient_generator import PatientGenerator
 from datamimic_ce.domains.healthcare.models.patient import Patient
+from datamimic_ce.domains.shared.demographics.config import DemographicConfig
+from datamimic_ce.domains.shared.demographics.sampler import DemographicSampler
 
 PATIENT_SCHEMA = EntitySchema(
     "Patient",
     (
-        field("patient_id", str, "Unique patient identifier."),
+        field("patient_id", str, "Unique patient identifier.", unique_identifier_format="PAT-[0-9A-F]{8}"),
         field("medical_record_number", str, "Medical record number."),
         field("ssn", str, "Social security number."),
         field("given_name", str, "First (given) name."),
@@ -42,7 +43,7 @@ PATIENT_SCHEMA = EntitySchema(
         field("emergency_contact", dict, "Emergency contact details."),
         field("insurance_provider", str, "Insurance provider name."),
         field("insurance_policy_number", str, "Insurance policy number."),
-        field("transaction_profile", (str, dict), "Spending/transaction behaviour profile.", optional=True),
+        field("transaction_profile", (str, Mapping), "Spending/transaction behaviour profile.", optional=True),
         field("primary_doctor", dict, "Primary doctor details (present when assigned)."),
     ),
 )

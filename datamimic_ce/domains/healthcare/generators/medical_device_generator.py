@@ -6,24 +6,36 @@
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, TypedDict
 
 if TYPE_CHECKING:
-    from datamimic_ce.domains.common.models.demographic_config import DemographicConfig
+    from datamimic_ce.domains.shared.demographics.config import DemographicConfig
 
 import datetime
 import random
 from pathlib import Path
 
-from datamimic_ce.domains.common.generators.person_generator import PersonGenerator
 from datamimic_ce.domains.domain_core.base_domain_generator import ClockAnchoredDomainGenerator
-from datamimic_ce.domains.utils.dataset_loader import (
+from datamimic_ce.domains.domain_core.datasets.path import dataset_path
+from datamimic_ce.domains.shared.datasets.loader import (
     load_weighted_values_try_dataset,
     pick_one_weighted,
     pick_one_weighted_no_repeat,
+    read_weighted_dataframe,
+    read_weighted_values,
 )
-from datamimic_ce.domains.utils.dataset_path import dataset_path
-from datamimic_ce.utils.file_util import FileUtil
+from datamimic_ce.domains.shared.generators.person_generator import PersonGenerator
+
+
+class MaintenanceRecord(TypedDict):
+    date: str
+    technician: str
+    type: str
+    parts_replaced: list[str]
+    cost: float
+    duration_hours: float
+    result: str
+    notes: str
 
 
 class MedicalDeviceGenerator(ClockAnchoredDomainGenerator):
@@ -37,7 +49,7 @@ class MedicalDeviceGenerator(ClockAnchoredDomainGenerator):
         super().__init__(dataset=dataset, rng=rng, reference_now=reference_now)
         #  thread demographic constraints to person details used in usage logs/technicians
         if demographic_config is None:
-            from datamimic_ce.domains.common.models.demographic_config import DemographicConfig as _DC
+            from datamimic_ce.domains.shared.demographics.config import DemographicConfig as _DC
 
             demographic_config = _DC()
         self._person_generator = PersonGenerator(
@@ -53,7 +65,7 @@ class MedicalDeviceGenerator(ClockAnchoredDomainGenerator):
 
     # Date helpers to keep model pure and deterministic
     def generate_manufacture_date(self) -> str:
-        from datamimic_ce.domains.common.literal_generators.datetime_generator import DateTimeGenerator
+        from datamimic_ce.domains.shared.literal_generators.temporal.datetime_generator import DateTimeGenerator
 
         now = self._reference_now
         min_dt = (now - datetime.timedelta(days=3650)).strftime("%Y-%m-%d %H:%M:%S")
@@ -63,7 +75,7 @@ class MedicalDeviceGenerator(ClockAnchoredDomainGenerator):
         return dt.strftime("%Y-%m-%d")
 
     def generate_expiration_date(self) -> str:
-        from datamimic_ce.domains.common.literal_generators.datetime_generator import DateTimeGenerator
+        from datamimic_ce.domains.shared.literal_generators.temporal.datetime_generator import DateTimeGenerator
 
         now = self._reference_now
         min_dt = (now + datetime.timedelta(days=365)).strftime("%Y-%m-%d %H:%M:%S")
@@ -73,7 +85,7 @@ class MedicalDeviceGenerator(ClockAnchoredDomainGenerator):
         return dt.strftime("%Y-%m-%d")
 
     def generate_last_maintenance_date(self) -> str:
-        from datamimic_ce.domains.common.literal_generators.datetime_generator import DateTimeGenerator
+        from datamimic_ce.domains.shared.literal_generators.temporal.datetime_generator import DateTimeGenerator
 
         now = self._reference_now
         min_dt = (now - datetime.timedelta(days=180)).strftime("%Y-%m-%d %H:%M:%S")
@@ -83,7 +95,7 @@ class MedicalDeviceGenerator(ClockAnchoredDomainGenerator):
         return dt.strftime("%Y-%m-%d")
 
     def generate_next_maintenance_date(self) -> str:
-        from datamimic_ce.domains.common.literal_generators.datetime_generator import DateTimeGenerator
+        from datamimic_ce.domains.shared.literal_generators.temporal.datetime_generator import DateTimeGenerator
 
         now = self._reference_now
         min_dt = (now + datetime.timedelta(days=1)).strftime("%Y-%m-%d %H:%M:%S")
@@ -94,30 +106,49 @@ class MedicalDeviceGenerator(ClockAnchoredDomainGenerator):
 
     def generate_device_type(self) -> str:
         file_path = dataset_path("healthcare", "medical", f"device_types_{self._dataset}.csv", start=Path(__file__))
-        loaded_data = FileUtil.read_weight_csv(file_path)
+        loaded_data = read_weighted_dataframe(file_path)
         values: list[str] = [str(v) for v in loaded_data[0].tolist() if v is not None]
         weights: list[float] = [float(w) for w in loaded_data[1].tolist()]
         return self._rng.choices(values, weights=weights, k=1)[0]
 
+    def generate_device_id_candidate(self) -> str:
+        rng = self.rng
+        suffix = "".join(str(rng.randint(0, 9)) for _ in range(8))
+        return f"DEV-{suffix}"
+
     def generate_manufacturer(self) -> str:
         file_path = dataset_path("healthcare", "medical", f"manufacturers_{self._dataset}.csv", start=Path(__file__))
-        loaded_data = FileUtil.read_weight_csv(file_path)
+        loaded_data = read_weighted_dataframe(file_path)
         values: list[str] = [str(v) for v in loaded_data[0].tolist() if v is not None]
         weights: list[float] = [float(w) for w in loaded_data[1].tolist()]
         choice = pick_one_weighted_no_repeat(self._rng, values, weights, last=self._last_manufacturer)
         self._last_manufacturer = choice
         return choice
 
+    def generate_model_number(self) -> str:
+        rng = self.rng
+        letters = "".join(rng.choice("ABCDEFGHIJKLMNOPQRSTUVWXYZ") for _ in range(2))
+        digits = "".join(str(rng.randint(0, 9)) for _ in range(4))
+        return f"{letters}{digits}"
+
+    def generate_serial_number(self) -> str:
+        # Format: MFG-YYYY-XXXXXXXX
+        year = self.rng.randint(2010, self.reference_now.year)
+        rng = self.rng
+        alphabet = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
+        random_part = "".join(rng.choice(alphabet) for _ in range(8))
+        return f"MFG-{year}-{random_part}"
+
     def generate_device_status(self) -> str:
         file_path = dataset_path("healthcare", "medical", f"device_statuses_{self._dataset}.csv", start=Path(__file__))
-        loaded_data = FileUtil.read_weight_csv(file_path)
+        loaded_data = read_weighted_dataframe(file_path)
         values: list[str] = [str(v) for v in loaded_data[0].tolist() if v is not None]
         weights: list[float] = [float(w) for w in loaded_data[1].tolist()]
         return self._rng.choices(values, weights=weights, k=1)[0]
 
     def generate_location(self) -> str:
         file_path = dataset_path("healthcare", "medical", f"locations_{self._dataset}.csv", start=Path(__file__))
-        loaded_data = FileUtil.read_weight_csv(file_path)
+        loaded_data = read_weighted_dataframe(file_path)
         values: list[str] = [str(v) for v in loaded_data[0].tolist() if v is not None]
         weights: list[float] = [float(w) for w in loaded_data[1].tolist()]
         return self._rng.choices(values, weights=weights, k=1)[0]
@@ -160,7 +191,7 @@ class MedicalDeviceGenerator(ClockAnchoredDomainGenerator):
         num_logs = self._rng.randint(3, 10)
 
         # Start date for logs (between 1 and 2 years ago)
-        from datamimic_ce.domains.common.literal_generators.datetime_generator import DateTimeGenerator
+        from datamimic_ce.domains.shared.literal_generators.temporal.datetime_generator import DateTimeGenerator
 
         now = self._reference_now
         min_dt = (now - datetime.timedelta(days=730)).strftime("%Y-%m-%d %H:%M:%S")
@@ -197,13 +228,13 @@ class MedicalDeviceGenerator(ClockAnchoredDomainGenerator):
         """
         from pathlib import Path
 
-        from datamimic_ce.domains.utils.dataset_path import dataset_path
-        from datamimic_ce.utils.file_util import FileUtil
+        from datamimic_ce.domains.domain_core.datasets.path import dataset_path
+        from datamimic_ce.domains.shared.datasets.loader import read_weighted_values
 
         dtype = device_type.lower()
         # Base purposes
         base_path = dataset_path("healthcare", "medical", f"usage_purposes_{self._dataset}.csv", start=Path(__file__))
-        base_vals, base_w = FileUtil.read_wgt_file(base_path)
+        base_vals, base_w = read_weighted_values(base_path)
         # Device-specific purposes (optional)
         specific_vals: list[str] = []
         specific_w: list[float] = []
@@ -220,7 +251,7 @@ class MedicalDeviceGenerator(ClockAnchoredDomainGenerator):
                 start=Path(__file__),
             )
             try:
-                specific_vals, specific_w = FileUtil.read_wgt_file(spec_path)
+                specific_vals, specific_w = read_weighted_values(spec_path)
             except FileNotFoundError:
                 specific_vals, specific_w = [], []  #  device-specific overrides are optional per dataset
         values = base_vals + specific_vals
@@ -235,30 +266,30 @@ class MedicalDeviceGenerator(ClockAnchoredDomainGenerator):
         """
         from pathlib import Path
 
-        from datamimic_ce.domains.utils.dataset_path import dataset_path
-        from datamimic_ce.utils.file_util import FileUtil
+        from datamimic_ce.domains.domain_core.datasets.path import dataset_path
+        from datamimic_ce.domains.shared.datasets.loader import read_weighted_values
 
         path = dataset_path("healthcare", "medical", f"usage_notes_{self._dataset}.csv", start=Path(__file__))
-        values, weights = FileUtil.read_wgt_file(path)
+        values, weights = read_weighted_values(path)
 
         # 20% chance of no notes
         if self._rng.random() < 0.2:
             return ""
         return self._rng.choices(values, weights=weights, k=1)[0]
 
-    def generate_maintenance_history(self) -> list[dict[str, Any]]:
+    def generate_maintenance_history(self) -> list[MaintenanceRecord]:
         """Generate maintenance history for the device.
 
         Returns:
             A list of dictionaries representing maintenance history.
         """
-        history = []
+        history: list[MaintenanceRecord] = []
 
         # Generate between 2 and 8 maintenance records
         num_records = self._rng.randint(2, 8)
 
         # Start date for maintenance (between 1 and 3 years ago)
-        from datamimic_ce.domains.common.literal_generators.datetime_generator import DateTimeGenerator
+        from datamimic_ce.domains.shared.literal_generators.temporal.datetime_generator import DateTimeGenerator
 
         now = self._reference_now
         min_dt = (now - datetime.timedelta(days=1095)).strftime("%Y-%m-%d %H:%M:%S")
@@ -275,7 +306,7 @@ class MedicalDeviceGenerator(ClockAnchoredDomainGenerator):
                 break
 
             # Generate a maintenance record
-            maintenance_record = {
+            maintenance_record: MaintenanceRecord = {
                 "date": current_date.strftime("%Y-%m-%d"),
                 "technician": self._generate_technician_name(),
                 "type": self._generate_maintenance_type(),
@@ -297,7 +328,7 @@ class MedicalDeviceGenerator(ClockAnchoredDomainGenerator):
             A string representing a technician name.
         """
         # Use the existing PersonGenerator for realistic technician names
-        from datamimic_ce.domains.common.models.person import Person
+        from datamimic_ce.domains.shared.models.person import Person
 
         person = Person(self._person_generator)
         return f"{person.given_name} {person.family_name}"
@@ -309,7 +340,7 @@ class MedicalDeviceGenerator(ClockAnchoredDomainGenerator):
             A string representing a maintenance type.
         """
         path = dataset_path("healthcare", "medical", f"maintenance_types_{self._dataset}.csv", start=Path(__file__))
-        values, w = FileUtil.read_wgt_file(path)
+        values, w = read_weighted_values(path)
         return self._rng.choices(values, weights=w, k=1)[0]
 
     def _generate_parts_replaced(self) -> list[str]:
@@ -319,7 +350,7 @@ class MedicalDeviceGenerator(ClockAnchoredDomainGenerator):
             A list of strings representing parts replaced.
         """
         path = dataset_path("healthcare", "medical", f"maintenance_parts_{self._dataset}.csv", start=Path(__file__))
-        values, _ = FileUtil.read_wgt_file(path)
+        values, _ = read_weighted_values(path)
 
         # 40% chance of no parts replaced
         if self._rng.random() < 0.4:
@@ -359,7 +390,7 @@ class MedicalDeviceGenerator(ClockAnchoredDomainGenerator):
         """
         #  remove hardcoded values; source from dataset for localization and consistency
         path = dataset_path("healthcare", "medical", f"maintenance_results_{self._dataset}.csv", start=Path(__file__))
-        values, w = FileUtil.read_wgt_file(path)
+        values, w = read_weighted_values(path)
         return self._rng.choices(values, weights=w, k=1)[0]
 
     def _generate_maintenance_notes(self) -> str:
@@ -370,7 +401,7 @@ class MedicalDeviceGenerator(ClockAnchoredDomainGenerator):
         """
         #  remove hardcoded values; source from dataset for localization and consistency
         path = dataset_path("healthcare", "medical", f"maintenance_notes_{self._dataset}.csv", start=Path(__file__))
-        values, w = FileUtil.read_wgt_file(path)
+        values, w = read_weighted_values(path)
 
         # 10% chance of no notes
         if self._rng.random() < 0.1:

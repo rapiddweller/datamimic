@@ -13,11 +13,13 @@ the operational logger globally — a merge review caught exactly that regressio
 import logging
 from unittest.mock import Mock
 
+import pytest
 from sqlalchemy.exc import OperationalError, ProgrammingError
 
-from datamimic_ce.clients.rdbms_client import RdbmsClient
-from datamimic_ce.data_sources.data_source_registry import DataSourceRegistry
-from datamimic_ce.statements.variable_statement import VariableStatement
+from datamimic_ce.engine.dsl.statements.values.variables.variable_statement import VariableStatement
+from datamimic_ce.engine.io.clients.operations import rdbms_count_source_query
+from datamimic_ce.engine.io.clients.rdbms_client import RdbmsClient
+from datamimic_ce.engine.runtime.tasks.sources.length import set_data_source_length
 
 
 def _ctx_and_stmt_for_db_source(count_error: Exception) -> tuple[Mock, VariableStatement]:
@@ -55,7 +57,33 @@ def test_db_count_query_failure_logs_at_error_level(caplog, monkeypatch) -> None
         ctx, stmt = _ctx_and_stmt_for_db_source(exc)
         with caplog.at_level(logging.ERROR, logger="DATAMIMIC"):
             caplog.clear()
-            DataSourceRegistry.set_data_source_length(ctx, stmt)
+            set_data_source_length(ctx, stmt)
         error_records = [r for r in caplog.records if r.levelno == logging.ERROR]
         assert error_records, f"{type(exc).__name__}: count-query failure produced no ERROR log record"
         assert "Cannot get length of database source" in error_records[0].getMessage()
+
+
+def test_count_query_rejects_non_rdbms_client() -> None:
+    with pytest.raises(TypeError, match="not an RDBMS"):
+        rdbms_count_source_query(Mock(), "SELECT 1", "db", "selector")
+
+
+def test_count_query_failure_returns_none_at_io_owner(caplog, monkeypatch) -> None:
+    monkeypatch.setattr(logging.getLogger("DATAMIMIC"), "propagate", True)
+    client, exc = Mock(spec=RdbmsClient), OperationalError("stmt", {}, Exception("db down"))
+    client.count_query_length.side_effect = exc
+
+    with caplog.at_level(logging.ERROR, logger="DATAMIMIC"):
+        caplog.clear()
+        result = rdbms_count_source_query(client, "SELECT count(*) FROM broken", "db", "selector")
+
+    assert result is None
+    assert any(record.levelno == logging.ERROR for record in caplog.records)
+
+
+def test_count_query_propagates_unexpected_errors() -> None:
+    client = Mock(spec=RdbmsClient)
+    client.count_query_length.side_effect = RuntimeError("unexpected")
+
+    with pytest.raises(RuntimeError, match="unexpected"):
+        rdbms_count_source_query(client, "SELECT 1", "db", "selector")

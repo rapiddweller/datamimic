@@ -10,7 +10,6 @@ Medical Procedure entity model.
 This module provides the MedicalProcedure entity model for generating realistic medical procedure data.
 """
 
-from typing import Any
 
 from datamimic_ce.domains.domain_core import BaseEntity
 from datamimic_ce.domains.domain_core.property_cache import property_cache
@@ -44,9 +43,8 @@ class MedicalProcedure(BaseEntity):
         Returns:
             A unique identifier for the procedure.
         """
-        rng = self._medical_procedure_generator.rng
-        suffix = "".join(rng.choice("0123456789ABCDEF") for _ in range(8))
-        return f"PROC-{suffix}"
+        candidate = self._medical_procedure_generator.generate_procedure_id_candidate()
+        return self._claim_identifier("procedure_id", candidate)
 
     @property
     @property_cache
@@ -56,9 +54,7 @@ class MedicalProcedure(BaseEntity):
         Returns:
             A procedure code.
         """
-        rng = self._medical_procedure_generator.rng
-        digits = "".join(str(rng.randint(0, 9)) for _ in range(5))
-        return f"P{digits}"
+        return self._medical_procedure_generator.generate_procedure_code()
 
     @property
     @property_cache
@@ -68,10 +64,7 @@ class MedicalProcedure(BaseEntity):
         Returns:
             A CPT code.
         """
-        rng = self._medical_procedure_generator.rng
-        first = str(rng.randint(1, 9))
-        rest = "".join(str(rng.randint(0, 9)) for _ in range(4))
-        return f"{first}{rest}"
+        return self._medical_procedure_generator.generate_cpt_code()
 
     @property
     @property_cache
@@ -125,13 +118,7 @@ class MedicalProcedure(BaseEntity):
         Returns:
             The procedure duration in minutes.
         """
-        # Duration depends on whether the procedure is surgical
-        if self.is_surgical:
-            # Surgical procedures tend to be longer
-            return self._medical_procedure_generator.rng.randint(30, 240)  # 30 minutes to 4 hours
-        else:
-            # Non-surgical procedures tend to be shorter
-            return self._medical_procedure_generator.rng.randint(10, 120)  # 10 minutes to 2 hours
+        return self._medical_procedure_generator.generate_duration_minutes(self.is_surgical)
 
     @property
     @property_cache
@@ -172,11 +159,7 @@ class MedicalProcedure(BaseEntity):
         Returns:
             True if the procedure requires anesthesia, False otherwise.
         """
-        # Surgical procedures usually require anesthesia
-        if self.is_surgical:
-            return self._medical_procedure_generator.rng.random() < 0.9  # 90% chance
-        else:
-            return self._medical_procedure_generator.rng.random() < 0.2  # 20% chance
+        return self._medical_procedure_generator.generate_requires_anesthesia(self.is_surgical)
 
     @property
     @property_cache
@@ -186,7 +169,7 @@ class MedicalProcedure(BaseEntity):
         Returns:
             True if the procedure is surgical, False otherwise.
         """
-        return self._medical_procedure_generator.rng.random() < 0.3
+        return self._medical_procedure_generator.generate_is_surgical()
 
     @property
     @property_cache
@@ -196,12 +179,7 @@ class MedicalProcedure(BaseEntity):
         Returns:
             True if the procedure is diagnostic, False otherwise.
         """
-        # About 50% of procedures are diagnostic
-        # Surgical procedures are less likely to be diagnostic
-        if self.is_surgical:
-            return self._medical_procedure_generator.rng.random() < 0.2  # 20% chance
-        else:
-            return self._medical_procedure_generator.rng.random() < 0.7  # 70% chance
+        return self._medical_procedure_generator.generate_is_diagnostic(self.is_surgical)
 
     @property
     @property_cache
@@ -211,12 +189,7 @@ class MedicalProcedure(BaseEntity):
         Returns:
             True if the procedure is preventive, False otherwise.
         """
-        # About 20% of procedures are preventive
-        # Surgical procedures are less likely to be preventive
-        if self.is_surgical:
-            return self._medical_procedure_generator.rng.random() < 0.05  # 5% chance
-        else:
-            return self._medical_procedure_generator.rng.random() < 0.3  # 30% chance
+        return self._medical_procedure_generator.generate_is_preventive(self.is_surgical)
 
     @property
     @property_cache
@@ -229,7 +202,7 @@ class MedicalProcedure(BaseEntity):
         # Recovery time depends on whether the procedure is surgical
         return self._medical_procedure_generator.pick_recovery_time(self.is_surgical)
 
-    def to_dict(self) -> dict[str, Any]:
+    def to_dict(self) -> dict[str, object]:
         """Convert the medical procedure entity to a dictionary.
 
         Returns:

@@ -15,17 +15,18 @@ import random
 from pathlib import Path
 from typing import TypeVar
 
-from datamimic_ce.domains.common.generators.address_generator import AddressGenerator
-from datamimic_ce.domains.common.literal_generators.family_name_generator import FamilyNameGenerator
-from datamimic_ce.domains.common.literal_generators.given_name_generator import GivenNameGenerator
-from datamimic_ce.domains.common.literal_generators.phone_number_generator import PhoneNumberGenerator
 from datamimic_ce.domains.domain_core.base_domain_generator import ClockAnchoredDomainGenerator
-from datamimic_ce.domains.utils.dataset_loader import (
+from datamimic_ce.domains.domain_core.datasets.path import dataset_path
+from datamimic_ce.domains.shared.datasets.loader import (
     load_weighted_values_try_dataset,
     pick_one_weighted_no_repeat,
+    read_headered_csv,
+    read_weighted_values,
 )
-from datamimic_ce.domains.utils.dataset_path import dataset_path
-from datamimic_ce.utils.file_util import FileUtil
+from datamimic_ce.domains.shared.generators.address_generator import AddressGenerator
+from datamimic_ce.domains.shared.generators.phone_number_generator import PhoneNumberGenerator
+from datamimic_ce.domains.shared.literal_generators.person.family_name_generator import FamilyNameGenerator
+from datamimic_ce.domains.shared.literal_generators.person.given_name_generator import GivenNameGenerator
 
 T = TypeVar("T")  # Define a type variable for generic typing
 
@@ -89,6 +90,11 @@ class AdministrationOfficeGenerator(ClockAnchoredDomainGenerator):
     def given_name_generator(self) -> GivenNameGenerator:
         return self._given_name_generator
 
+    def generate_office_id_candidate(self) -> str:
+        rng = self.rng
+        suffix = "".join(rng.choice("0123456789ABCDEF") for _ in range(8))
+        return f"ADM-{suffix}"
+
     @property
     def last_hours_signature(self) -> tuple[tuple[str, str], ...] | None:
         """Signature of the previously generated hours, for cross-entity anti-repeat."""
@@ -124,9 +130,28 @@ class AdministrationOfficeGenerator(ClockAnchoredDomainGenerator):
         self._last_jurisdiction = pick
         return pick.lower()
 
+    def generate_jurisdiction(self, office_type: str, city: str, state: str) -> str:
+        if "Municipal" in office_type or "City" in office_type:
+            return f"City of {city}"
+        elif "County" in office_type:
+            return f"{city} County"
+        elif "State" in office_type:
+            return f"State of {state}"
+        elif "Federal" in office_type:
+            return "Federal"
+
+        pick = self.pick_jurisdiction_bucket()
+        if pick == "city":  # noqa: SIM116 - format only the selected jurisdiction
+            return f"City of {city}"
+        elif pick == "county":
+            return f"{city} County"
+        elif pick == "state":
+            return f"State of {state}"
+        return "Federal"
+
     # Helper: build office name using dataset patterns (US fallback handled by dataset_path)
     def build_office_name(self, city: str, state: str, office_type: str, jurisdiction: str) -> str:
-        from datamimic_ce.domains.utils.dataset_loader import load_weighted_values_try_dataset
+        from datamimic_ce.domains.shared.datasets.loader import load_weighted_values_try_dataset
 
         patterns, w = load_weighted_values_try_dataset(
             "public_sector", "administration", "name_patterns.csv", dataset=self._dataset, start=Path(__file__)
@@ -138,23 +163,23 @@ class AdministrationOfficeGenerator(ClockAnchoredDomainGenerator):
     def load_hours_datasets(self):
         start = Path(__file__)
         wd_path = dataset_path("public_sector", "administration", f"weekdays_{self._dataset}.csv", start=start)
-        weekdays, wd_w = FileUtil.read_wgt_file(wd_path)
+        weekdays, wd_w = read_weighted_values(wd_path)
         open_path = dataset_path("public_sector", "administration", f"open_times_{self._dataset}.csv", start=start)
-        opens, open_w = FileUtil.read_wgt_file(open_path)
+        opens, open_w = read_weighted_values(open_path)
         close_path = dataset_path("public_sector", "administration", f"close_times_{self._dataset}.csv", start=start)
-        closes, close_w = FileUtil.read_wgt_file(close_path)
+        closes, close_w = read_weighted_values(close_path)
         ext_close_path = dataset_path(
             "public_sector", "administration", f"extended_close_times_{self._dataset}.csv", start=start
         )
-        ext_closes, ext_close_w = FileUtil.read_wgt_file(ext_close_path)
+        ext_closes, ext_close_w = read_weighted_values(ext_close_path)
         sat_open_path = dataset_path(
             "public_sector", "administration", f"saturday_open_times_{self._dataset}.csv", start=start
         )
-        sat_opens, sat_open_w = FileUtil.read_wgt_file(sat_open_path)
+        sat_opens, sat_open_w = read_weighted_values(sat_open_path)
         sat_close_path = dataset_path(
             "public_sector", "administration", f"saturday_close_times_{self._dataset}.csv", start=start
         )
-        sat_closes, sat_close_w = FileUtil.read_wgt_file(sat_close_path)
+        sat_closes, sat_close_w = read_weighted_values(sat_close_path)
         return (
             weekdays,
             wd_w,
@@ -170,18 +195,101 @@ class AdministrationOfficeGenerator(ClockAnchoredDomainGenerator):
             sat_close_w,
         )
 
+    def generate_hours_of_operation(self) -> dict[str, str]:
+        """Generate operating hours and retain the cross-office anti-repeat signature."""
+        (
+            weekdays,
+            wd_w,
+            opens,
+            open_w,
+            closes,
+            close_w,
+            ext_closes,
+            ext_close_w,
+            sat_opens,
+            sat_open_w,
+            sat_closes,
+            sat_close_w,
+        ) = self.load_hours_datasets()
+
+        hours: dict[str, str] = {}
+
+        # Keep dataset loading before the shared RNG is accessed.
+        rng = self.rng
+        standard_open = rng.choices(opens, weights=open_w, k=1)[0]
+        standard_close = rng.choices(closes, weights=close_w, k=1)[0]
+
+        for day in weekdays:
+            hours[day] = f"{standard_open} - {standard_close}"
+
+        if rng.random() < 0.3:
+            extended_day = rng.choices(weekdays, weights=wd_w, k=1)[0]
+            extended_close = rng.choices(ext_closes, weights=ext_close_w, k=1)[0]
+            hours[extended_day] = f"{standard_open} - {extended_close}"
+
+        if rng.random() < 0.2:
+            saturday_open = rng.choices(sat_opens, weights=sat_open_w, k=1)[0]
+            saturday_close = rng.choices(sat_closes, weights=sat_close_w, k=1)[0]
+            hours["Saturday"] = f"{saturday_open} - {saturday_close}"
+        else:
+            hours["Saturday"] = "Closed"
+
+        hours["Sunday"] = "Closed"
+
+        signature = tuple(sorted(hours.items()))
+        if self.last_hours_signature == signature:
+            candidates = [day for day, value in hours.items() if value != "Closed"]
+            if candidates:
+                extended_day = rng.choice(candidates)
+                extended_close = rng.choices(ext_closes, weights=ext_close_w, k=1)[0]
+                hours[extended_day] = f"{standard_open} - {extended_close}"
+            else:
+                saturday_open = rng.choices(sat_opens, weights=sat_open_w, k=1)[0]
+                saturday_close = rng.choices(sat_closes, weights=sat_close_w, k=1)[0]
+                hours["Saturday"] = f"{saturday_open} - {saturday_close}"
+            signature = tuple(sorted(hours.items()))
+        self.last_hours_signature = signature
+        return hours
+
+    def _founding_age_bounds(self, office_type: str) -> tuple[int, int]:
+        if "Federal" in office_type:
+            return 20, 200
+        elif "State" in office_type:
+            return 15, 150
+        elif "County" in office_type:
+            return 10, 100
+        return 5, 75
+
     # Helper: founding year based on office type ranges (deterministic via rng)
     def pick_founding_year(self, office_type: str) -> int:
         year = self._reference_now.year
-        if "Federal" in office_type:
-            min_age, max_age = 20, 200
-        elif "State" in office_type:
-            min_age, max_age = 15, 150
-        elif "County" in office_type:
-            min_age, max_age = 10, 100
-        else:
-            min_age, max_age = 5, 75
+        min_age, max_age = self._founding_age_bounds(office_type)
         return year - self._rng.randint(min_age, max_age)
+
+    def generate_founding_year(self, office_type: str, current_year: int) -> int:
+        min_age, max_age = self._founding_age_bounds(office_type)
+        return current_year - self.rng.randint(min_age, max_age)
+
+    def get_email_department(self, office_type_lower: str) -> str:
+        if "tax" in office_type_lower:
+            return "tax"
+        elif "motor" in office_type_lower or "dmv" in office_type_lower:
+            return "dmv"
+        elif "social" in office_type_lower or "welfare" in office_type_lower:
+            return "socialservices"
+        elif "permit" in office_type_lower or "licens" in office_type_lower:
+            return "permits"
+        elif "election" in office_type_lower:
+            return "elections"
+        elif "health" in office_type_lower:
+            return "health"
+        elif "housing" in office_type_lower:
+            return "housing"
+        elif "environment" in office_type_lower:
+            return "environment"
+        elif "planning" in office_type_lower or "development" in office_type_lower:
+            return "planning"
+        return "info"
 
     # Helper: pick staff count deterministically by office type, avoiding an
     # immediate repeat across consecutive entities (state owned here, not in the model).
@@ -203,10 +311,27 @@ class AdministrationOfficeGenerator(ClockAnchoredDomainGenerator):
         self._last_staff_count = val
         return val
 
+    def generate_annual_budget(self, office_type: str, staff_count: int) -> int:
+        rng = self.rng
+        base_per_staff = rng.uniform(80000, 120000)
+
+        if "Federal" in office_type:
+            multiplier = rng.uniform(1.5, 3.0)
+        elif "State" in office_type:
+            multiplier = rng.uniform(1.2, 2.0)
+        elif "County" in office_type:
+            multiplier = rng.uniform(1.0, 1.5)
+        else:
+            multiplier = rng.uniform(0.8, 1.2)
+
+        budget = staff_count * base_per_staff * multiplier
+        budget *= rng.uniform(0.9, 1.1)
+        return round(budget / 1000) * 1000
+
     # Helper: services from agencies dataset
     def pick_services(self, *, start: Path) -> list[str]:
         # Agencies file is headered; pick by weight and return names
-        header, rows = FileUtil.read_csv_to_dict_of_tuples_with_header(
+        header, rows = read_headered_csv(
             dataset_path("public_sector", "administration", f"agencies_{self._dataset}.csv", start=start),
             ",",
         )
@@ -214,7 +339,7 @@ class AdministrationOfficeGenerator(ClockAnchoredDomainGenerator):
         w_idx = header.get("weight")
         if name_idx is None or w_idx is None:
             # Fallback to headerless interpretation if structure unexpected
-            from datamimic_ce.domains.utils.dataset_loader import load_weighted_values_try_dataset
+            from datamimic_ce.domains.shared.datasets.loader import load_weighted_values_try_dataset
 
             values, w = load_weighted_values_try_dataset(
                 "public_sector", "administration", "agencies.csv", dataset=self._dataset, start=start
@@ -242,7 +367,7 @@ class AdministrationOfficeGenerator(ClockAnchoredDomainGenerator):
 
     # Helper: departments from roles dataset
     def pick_departments(self, *, start: Path) -> list[str]:
-        from datamimic_ce.domains.utils.dataset_loader import load_weighted_values_try_dataset
+        from datamimic_ce.domains.shared.datasets.loader import load_weighted_values_try_dataset
 
         values, w = load_weighted_values_try_dataset(
             "public_sector", "administration", "roles.csv", dataset=self._dataset, start=start
@@ -254,7 +379,7 @@ class AdministrationOfficeGenerator(ClockAnchoredDomainGenerator):
 
     # Helper: leadership roles mapped to generated names
     def build_leadership(self, *, start: Path) -> dict[str, str]:
-        from datamimic_ce.domains.utils.dataset_loader import load_weighted_values_try_dataset
+        from datamimic_ce.domains.shared.datasets.loader import load_weighted_values_try_dataset
 
         roles, w = load_weighted_values_try_dataset(
             "public_sector", "administration", "roles.csv", dataset=self._dataset, start=start
@@ -271,7 +396,7 @@ class AdministrationOfficeGenerator(ClockAnchoredDomainGenerator):
     # Helper: website builder; choose suffix by dataset for extensibility
     def build_website(self, jurisdiction: str) -> str:
         # Build domain via dataset-driven DomainGenerator to avoid static TLD mappings
-        from datamimic_ce.domains.common.literal_generators.domain_generator import DomainGenerator
+        from datamimic_ce.domains.shared.literal_generators.contact.domain_generator import DomainGenerator
 
         domain_generator = DomainGenerator(dataset=self._dataset, rng=self._derive_rng())
         domain = domain_generator.generate().lower()
@@ -280,7 +405,7 @@ class AdministrationOfficeGenerator(ClockAnchoredDomainGenerator):
     # Helper: email builder from dataset roles; local-part from role slug
     def build_email(self, office_type: str, website_url: str, *, start: Path) -> str:
         # Use roles dataset to derive a local-part; domain is derived from dataset-driven website
-        from datamimic_ce.domains.utils.dataset_loader import load_weighted_values_try_dataset
+        from datamimic_ce.domains.shared.datasets.loader import load_weighted_values_try_dataset
 
         roles, w = load_weighted_values_try_dataset(
             "public_sector", "administration", "roles.csv", dataset=self._dataset, start=start

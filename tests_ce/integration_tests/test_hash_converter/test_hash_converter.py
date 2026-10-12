@@ -10,7 +10,7 @@ random key. Never the plain, recomputable digest of the value."""
 import hashlib
 from pathlib import Path
 
-from datamimic_ce.data_mimic_test import DataMimicTest
+from datamimic_ce.interfaces.python.data_mimic_test import DataMimicTest
 
 _TEST_DIR = Path(__file__).resolve().parent
 _UNKEYED = hashlib.sha256(b"max.mustermann@example.com").hexdigest()

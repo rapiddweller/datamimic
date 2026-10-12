@@ -1,0 +1,128 @@
+from __future__ import annotations
+
+import hashlib
+import importlib.metadata
+import json
+import platform
+import random
+import uuid
+from collections.abc import Iterable
+from dataclasses import asdict, is_dataclass
+from datetime import datetime, timezone
+from pathlib import Path
+from typing import Literal, TypedDict
+
+
+def get_datamimic_lib_version(lib_name: str = "datamimic-ce") -> str | None:
+    """Get DATAMIMIC library version."""
+    try:
+        return importlib.metadata.version(lib_name)
+    except importlib.metadata.PackageNotFoundError:
+        return "unknown"
+
+
+class DeterminismProof(TypedDict):
+    algorithm: Literal["uuid5+sha256"]
+    seed_canonical: str
+    content_hash: str
+    engine_version: str
+    python_version: str
+    faker_version: str
+
+
+def canonicalize(obj: object) -> object:
+    """Recursively sort mapping keys for deterministic JSON output."""
+    if is_dataclass(obj) and not isinstance(obj, type):
+        obj = asdict(obj)
+    if isinstance(obj, dict):
+        return {key: canonicalize(obj[key]) for key in sorted(obj)}
+    if isinstance(obj, list):
+        return [canonicalize(item) for item in obj]
+    return obj
+
+
+def canonical_json(obj: object) -> bytes:
+    canonical = canonicalize(obj)
+    return json.dumps(canonical, separators=(",", ":"), ensure_ascii=False).encode("utf-8")
+
+
+def hash_bytes(data: bytes) -> str:
+    return hashlib.sha256(data).hexdigest()
+
+
+def determinism_proof(seed: int, content_hash: str) -> DeterminismProof:
+    return {
+        "algorithm": "uuid5+sha256",
+        "seed_canonical": str(seed),
+        "content_hash": content_hash,
+        "engine_version": get_datamimic_lib_version() or "unknown",
+        "python_version": platform.python_version(),
+        "faker_version": get_datamimic_lib_version("faker") or "unknown",
+    }
+
+
+def stable_uuid(namespace: str, *parts: object) -> str:
+    base_uuid = uuid.uuid5(uuid.NAMESPACE_URL, namespace)
+    name = "::".join(str(part) for part in parts)
+    return str(uuid.uuid5(base_uuid, name))
+
+
+def derive_seed(seed_any: object) -> int:
+    if isinstance(seed_any, int):
+        return seed_any
+    if isinstance(seed_any, str) and seed_any.isdigit():
+        return int(seed_any)
+    digest = hashlib.sha256(str(seed_any).encode("utf-8")).digest()
+    return int.from_bytes(digest[:8], "big", signed=False)
+
+
+def mix_seed(seed: int, *parts: object) -> int:
+    components: Iterable[str] = [str(seed), *[str(part) for part in parts]]
+    digest = hashlib.sha256("::".join(components).encode("utf-8")).digest()
+    return int.from_bytes(digest[:8], "big", signed=False)
+
+
+def derive_profile_seed(domain: str, profile_id: str, facet: str) -> int:
+    """Mix profile metadata into deterministic seeds (rule 4)."""
+
+    base = derive_seed(f"{domain}:{facet}")
+    return mix_seed(base, profile_id)
+
+
+def compute_provenance_hash(paths: Iterable[str]) -> str:
+    """Return a SHA-256 hash capturing the provenance of the provided files."""
+
+    digest = hashlib.sha256()
+    for raw_path in sorted(paths):
+        path = Path(raw_path)
+        digest.update(path.as_posix().encode("utf-8"))
+        if path.exists():
+            digest.update(path.read_bytes())
+        else:
+            digest.update(b"<missing>")
+    return digest.hexdigest()
+
+
+def frozen_clock(iso_datetime: str) -> datetime:
+    normalized = iso_datetime.replace("Z", "+00:00")
+    dt = datetime.fromisoformat(normalized)
+    if dt.tzinfo is None:
+        dt = dt.replace(tzinfo=timezone.utc)
+    return dt.astimezone(timezone.utc)
+
+
+class RandomLike(random.Random):
+    """Wrapper around random.Random to make the dependency explicit."""
+
+
+def with_rng(seed: int) -> RandomLike:
+    """Seed-driven rng entry point used by service-layer code.
+
+    Lives here next to the seed helpers (``derive_seed`` / ``mix_seed``) but is
+    also re-exported from ``datamimic_ce.domains.domain_core.runtime`` so
+    callers searching the rng SPOT find one address. ``spawn_rng(parent)``
+    in ``runtime.rng`` is the fork-from-parent counterpart.
+    """
+    rng = RandomLike()
+    rng.seed(seed, version=2)
+    return rng

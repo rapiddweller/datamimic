@@ -1,7 +1,12 @@
-.PHONY: help install test test-unit test-integration test-functional coverage typecheck lint format check clean
+.PHONY: help install test test-unit test-integration test-functional coverage coverage-unit typecheck lint format check architecture-check architecture-definition-check architecture-version architecture-report architecture-validation-receipt architecture-cycle-check clean
 
 PACKAGE := datamimic_ce
 TESTS := tests_ce
+CE_COVERAGE_FILES := $(shell find $(PACKAGE) -type f -name '*.py')
+ARCHKEEL_SOURCE := archkeel==2.0.0
+# The independent receipt includes the exact Python runtime.
+ARCHKEEL_PYTHON := 3.11.12
+ARCHITECTURE_DIR := test-artifacts/architecture/ce-recursive-target
 
 help:
 	@echo "Available targets:"
@@ -11,10 +16,15 @@ help:
 	@echo "  test-integration  Run integration tests only"
 	@echo "  test-functional   Run functional tests only"
 	@echo "  coverage          Run tests with coverage report for $(PACKAGE)"
+	@echo "  coverage-unit     Run unit tests with complete CE coverage and regression floor"
 	@echo "  typecheck         Run mypy against $(PACKAGE)"
-	@echo "  lint              Run ruff and pylint against $(PACKAGE)"
+	@echo "  lint              Run ruff against $(PACKAGE)"
 	@echo "  format            Auto-format code with ruff"
 	@echo "  check             Run lint, typecheck, and tests"
+	@echo "  architecture-check Validate the physical, dependency, and ArchKeel architecture gates"
+	@echo "  architecture-definition-check Validate recursive target coverage and move-map consistency"
+	@echo "  architecture-report Generate the current ArchKeel HTML and JSON report"
+	@echo "  architecture-cycle-check Check module imports with pinned Pylint"
 	@echo "  clean             Remove caches and build artifacts"
 
 install:
@@ -37,18 +47,46 @@ coverage:
 	coverage report --include="$(PACKAGE)/*"
 	coverage html --include="$(PACKAGE)/*"
 
+coverage-unit:
+	coverage run --source=$(PACKAGE) -m pytest $(TESTS)/unit_tests -n 0
+	@coverage report --format=total --omit='$(PACKAGE)/resources/examples/*.py,$(PACKAGE)/resources/demos/**/*.py,$(PACKAGE)/interfaces/demo.py' --fail-under=65.74 $(CE_COVERAGE_FILES)
+	@coverage xml --omit='$(PACKAGE)/resources/examples/*.py,$(PACKAGE)/resources/demos/**/*.py,$(PACKAGE)/interfaces/demo.py' $(CE_COVERAGE_FILES)
+
 typecheck:
 	mypy $(PACKAGE)
 
 lint:
 	ruff check $(PACKAGE)
-	pylint $(PACKAGE)
 
 format:
 	ruff format $(PACKAGE)
 	ruff check --fix $(PACKAGE)
 
 check: lint typecheck test
+
+architecture-definition-check:
+	uvx --python 3.11 --from pytest==8.3.5 pytest -q tests_ce/architecture/test_recursive_target_definition.py tests_ce/architecture/test_current_module_concerns.py tests_ce/architecture/test_exact_module_targets.py tests_ce/architecture/test_registry_entrypoints.py::test_registry_owns_exact_initializer_and_keeps_package_selector tests_ce/architecture/test_public_api_contract_ownership.py::test_existing_entrypoints_have_explicit_inner_public_decisions
+
+architecture-report:
+	uvx --python $(ARCHKEEL_PYTHON) --from '$(ARCHKEEL_SOURCE)' archkeel report --output $(ARCHITECTURE_DIR)/architecture.json --json
+
+architecture-version:
+	@version="$$(uvx --python $(ARCHKEEL_PYTHON) --from '$(ARCHKEEL_SOURCE)' archkeel --version)" && test "$$version" = 'archkeel $(patsubst archkeel==%,%,$(ARCHKEEL_SOURCE))' && printf '%s\n' "$${version#archkeel }"
+
+architecture-validation-receipt:
+	mkdir -p $(ARCHITECTURE_DIR)
+	# Preserve exit-2 diagnostics for the independently reviewed completion policy.
+	@uvx --python $(ARCHKEEL_PYTHON) --from '$(ARCHKEEL_SOURCE)' archkeel validate --baseline known-violations.json --json > $(ARCHITECTURE_DIR)/validation.json; status=$$?; test "$$status" -eq 0 || test "$$status" -eq 2
+
+architecture-check: architecture-cycle-check architecture-definition-check
+	uvx --python 3.11 --from pytest==8.3.5 pytest -q tests_ce/architecture/test_inner_architecture_target.py
+	# ArchKeel ratchets type-only/package SCC edges; Pylint checks executable import cycles.
+	$(MAKE) architecture-validation-receipt architecture-report
+	uvx --python $(ARCHKEEL_PYTHON) --from '$(ARCHKEEL_SOURCE)' archkeel report --input $(ARCHITECTURE_DIR)/architecture.json --only architecture --full --json > $(ARCHITECTURE_DIR)/completion.json
+	uvx --python 3.11 --from pytest==8.3.5 python tests_ce/architecture/completion_gate.py $(ARCHITECTURE_DIR)/validation.json $(ARCHITECTURE_DIR)/completion.json docs/architecture/refactoring-study/experiment-2/completion-unknowns.json
+
+architecture-cycle-check:
+	uvx --python 3.11 --from pylint==3.3.7 pylint --disable=all --enable=cyclic-import --persistent=n --score=n datamimic_ce
 
 clean:
 	rm -rf .pytest_cache .mypy_cache .ruff_cache htmlcov .coverage coverage.xml

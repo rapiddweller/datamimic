@@ -15,19 +15,22 @@ from __future__ import annotations
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
-    from datamimic_ce.domains.common.demographics.sampler import DemographicSampler
-    from datamimic_ce.domains.common.models.demographic_config import DemographicConfig
+    from datamimic_ce.domains.shared.demographics.config import DemographicConfig
+    from datamimic_ce.domains.shared.demographics.sampler import DemographicSampler
 
 import datetime
 import random
 from pathlib import Path
 
-from datamimic_ce.domains.common.generators.person_generator import PersonGenerator
 from datamimic_ce.domains.domain_core.base_domain_generator import ClockAnchoredDomainGenerator
+from datamimic_ce.domains.domain_core.datasets.path import dataset_path
 from datamimic_ce.domains.healthcare.generators.hospital_generator import HospitalGenerator
-from datamimic_ce.domains.utils.dataset_loader import pick_one_weighted_no_repeat
-from datamimic_ce.domains.utils.dataset_path import dataset_path
-from datamimic_ce.utils.file_util import FileUtil
+from datamimic_ce.domains.shared.datasets.loader import (
+    pick_one_weighted_no_repeat,
+    read_weighted_records,
+    read_weighted_values,
+)
+from datamimic_ce.domains.shared.generators.person_generator import PersonGenerator
 
 
 class DoctorGenerator(ClockAnchoredDomainGenerator):
@@ -42,7 +45,7 @@ class DoctorGenerator(ClockAnchoredDomainGenerator):
         reference_now: datetime.datetime | None = None,
     ):
         super().__init__(dataset=dataset, rng=rng, reference_now=reference_now)
-        from datamimic_ce.domains.common.models.demographic_config import DemographicConfig as _DC
+        from datamimic_ce.domains.shared.demographics.config import DemographicConfig as _DC
 
         demo = demographic_config if demographic_config is not None else _DC()
         self._person_generator = PersonGenerator(
@@ -75,7 +78,7 @@ class DoctorGenerator(ClockAnchoredDomainGenerator):
             A medical specialty.
         """
         file_path = dataset_path("healthcare", "medical", f"specialties_{self._dataset}.csv", start=Path(__file__))
-        wgt, loaded_data = FileUtil.read_csv_having_weight_column(file_path, "weight")
+        wgt, loaded_data = read_weighted_records(file_path, "weight")
         values = [item["specialty"] for item in loaded_data]
         weights = [float(w) for w in wgt]
         choice = pick_one_weighted_no_repeat(self._rng, values, weights, last=self._last_specialty)
@@ -91,17 +94,17 @@ class DoctorGenerator(ClockAnchoredDomainGenerator):
         #  prefer dataset-specific medical_schools; gracefully fallback to institutions datasets
         try:
             path = dataset_path("healthcare", "medical", f"medical_schools_{self._dataset}.csv", start=Path(__file__))
-            values, w = FileUtil.read_wgt_file(path)
+            values, w = read_weighted_values(path)
         except FileNotFoundError:
             try:
                 inst_path = dataset_path(
                     "healthcare", "medical", f"institutions_{self._dataset}.csv", start=Path(__file__)
                 )
-                values, w = FileUtil.read_wgt_file(inst_path)
+                values, w = read_weighted_values(inst_path)
             except FileNotFoundError:
                 # final fallback: US institutions if present
                 inst_us = dataset_path("healthcare", "medical", "institutions_US.csv", start=Path(__file__))
-                values, w = FileUtil.read_wgt_file(inst_us)
+                values, w = read_weighted_values(inst_us)
         weights = [float(wi) for wi in w]
         choice = pick_one_weighted_no_repeat(self._rng, values, weights, last=self._last_med_school)
         self._last_med_school = choice
@@ -114,7 +117,7 @@ class DoctorGenerator(ClockAnchoredDomainGenerator):
             A list of certifications.
         """
         file_path = dataset_path("healthcare", "medical", f"certifications_{self._dataset}.csv", start=Path(__file__))
-        wgt, loaded_data = FileUtil.read_csv_having_weight_column(file_path, "weight")
+        wgt, loaded_data = read_weighted_records(file_path, "weight")
         # choose 1-3 certifications
         k = self._rng.randint(1, 3)
         # simple weighted picks without replacement
@@ -127,6 +130,50 @@ class DoctorGenerator(ClockAnchoredDomainGenerator):
             picks.append(chosen)
             pool = [(v, wt) for (v, wt) in pool if v != chosen]
         return picks
+
+    def generate_accepting_new_patients(self) -> bool:
+        """Draw whether the doctor accepts new patients."""
+        return self.rng.random() < 0.8
+
+    def generate_npi_number(self) -> str:
+        """Generate a ten-digit NPI value from the shared RNG."""
+        rng = self.rng
+        return "".join(str(rng.randint(0, 9)) for _ in range(10))
+
+    def generate_license_number(self) -> str:
+        """Generate a medical license number from the shared RNG."""
+        rng = self.rng
+        letters = "".join(rng.choice("ABCDEFGHIJKLMNOPQRSTUVWXYZ") for _ in range(2))
+        digits = "".join(str(rng.randint(0, 9)) for _ in range(6))
+        return f"{letters}-{digits}"
+
+    def generate_doctor_id_candidate(self) -> str:
+        rng = self.rng
+        suffix = "".join(rng.choice("0123456789ABCDEF") for _ in range(8))
+        return f"DOC-{suffix}"
+
+    def generate_office_hours(self) -> dict[str, str]:
+        days = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday"]
+        hours = {}
+
+        rng = self.rng
+        for day in days:
+            if rng.random() < 0.9:
+                start_hour = rng.randint(7, 10)
+                end_hour = rng.randint(16, 19)
+                hours[day] = f"{start_hour:02d}:00 - {end_hour:02d}:00"
+            else:
+                hours[day] = "Closed"
+
+        for day in ["Saturday", "Sunday"]:
+            if rng.random() < 0.3:
+                start_hour = rng.randint(8, 11)
+                end_hour = rng.randint(14, 17)
+                hours[day] = f"{start_hour:02d}:00 - {end_hour:02d}:00"
+            else:
+                hours[day] = "Closed"
+
+        return hours
 
     # Helper to pick a graduation year with anti-repetition
     def pick_graduation_year(self, age: int) -> int:

@@ -4,9 +4,11 @@
 # See LICENSE file for the full text of the license.
 # For questions and support, contact: info@rapiddweller.com
 
+import pytest
 
-from datamimic_ce.domains.common.models.city import City
-from datamimic_ce.domains.common.services.city_service import CityService
+from datamimic_ce.domains.shared.generators.city_generator import CityGenerator, CityRecord
+from datamimic_ce.domains.shared.models.city import City
+from datamimic_ce.domains.shared.services.city_service import CityService
 
 
 class TestCityGenerator:
@@ -85,3 +87,52 @@ class TestCityGenerator:
             generated_city = city_service.generate()
             if generated_city.name_extension is not None:
                 assert isinstance(generated_city.name_extension, str)
+
+    @pytest.mark.parametrize(
+        ("population", "expected"),
+        [("290736", 290736), ("", None), (None, None)],
+    )
+    def test_population_nullable_conversion_and_dict(
+        self,
+        monkeypatch: pytest.MonkeyPatch,
+        population: str | None,
+        expected: int | None,
+    ) -> None:
+        record: CityRecord = {
+            "name": "Karlsruhe",
+            "postal_code": "76131",
+            "area_code": "721",
+            "state": "BW",
+            "language": "de",
+            "population": population,
+            "name_extension": "",
+            "country": "Deutschland",
+            "country_code": "DE",
+        }
+        generator = CityGenerator(dataset="DE")
+        monkeypatch.setattr(generator, "get_random_city", lambda: record)
+
+        city = City(generator)
+        result = city.to_dict()
+
+        assert "population" in result
+        assert result["population"] == expected
+        assert type(result["population"]) is type(expected)
+
+    def test_population_rejects_malformed_numeric_value(self, monkeypatch: pytest.MonkeyPatch) -> None:
+        record: CityRecord = {
+            "name": "Karlsruhe",
+            "postal_code": "76131",
+            "area_code": "721",
+            "state": "BW",
+            "language": "de",
+            "population": "not-a-number",
+            "name_extension": "",
+            "country": "Deutschland",
+            "country_code": "DE",
+        }
+        generator = CityGenerator(dataset="DE")
+        monkeypatch.setattr(generator, "get_random_city", lambda: record)
+
+        with pytest.raises(ValueError):
+            City(generator).to_dict()

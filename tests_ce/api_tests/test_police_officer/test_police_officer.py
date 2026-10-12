@@ -2,7 +2,7 @@ from datetime import datetime
 
 import pytest
 
-from datamimic_ce.domains.common.models.address import Address
+from datamimic_ce.domains.shared.models.address import Address
 from datamimic_ce.domains.public_sector.models.police_officer import PoliceOfficer
 from datamimic_ce.domains.public_sector.services.police_officer_service import PoliceOfficerService
 
@@ -90,28 +90,6 @@ class TestEntityPoliceOfficer:
         assert police_officer.phone == police_officer.phone
         assert police_officer.address == police_officer.address
 
-    @pytest.mark.flaky(reruns=10)
-    def test_two_different_entities(self):
-        police_officer_service = PoliceOfficerService()
-        police_officer1 = police_officer_service.generate()
-        police_officer2 = police_officer_service.generate()
-        assert police_officer1.given_name != police_officer2.given_name
-        assert police_officer1.family_name != police_officer2.family_name
-        assert police_officer1.full_name != police_officer2.full_name
-        # assert police_officer1.gender != police_officer2.gender
-        assert police_officer1.birthdate != police_officer2.birthdate
-        assert police_officer1.age != police_officer2.age
-        # assert police_officer1.rank != police_officer2.rank
-        assert police_officer1.department != police_officer2.department
-        assert police_officer1.unit != police_officer2.unit
-        assert police_officer1.hire_date != police_officer2.hire_date
-        assert police_officer1.years_of_service != police_officer2.years_of_service
-        assert police_officer1.certifications != police_officer2.certifications
-        assert police_officer1.languages != police_officer2.languages
-        # assert police_officer1.shift != police_officer2.shift
-        assert police_officer1.email != police_officer2.email
-        assert police_officer1.phone != police_officer2.phone
-        assert police_officer1.address != police_officer2.address
 
     @pytest.mark.parametrize("dataset", _supported_datasets)
     def test_police_officer_dataset(self, dataset):

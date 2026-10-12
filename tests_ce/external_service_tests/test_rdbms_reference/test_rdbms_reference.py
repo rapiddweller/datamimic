@@ -11,7 +11,7 @@ same tuple path - see test_mongodb_reference for the MongoDB counterpart of this
 
 from pathlib import Path
 
-from datamimic_ce.data_mimic_test import DataMimicTest
+from datamimic_ce.interfaces.python.data_mimic_test import DataMimicTest
 
 _TEST_DIR = Path(__file__).resolve().parent
 _POOL = set(range(1, 13))  # seeded customer_ids 1..12 (crosses the single/double-digit boundary)

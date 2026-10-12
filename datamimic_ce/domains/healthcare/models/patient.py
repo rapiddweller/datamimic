@@ -11,12 +11,12 @@ This module provides the Patient entity model for generating realistic patient d
 """
 
 import datetime
-from typing import Any
+from collections.abc import Mapping
 
-from datamimic_ce.domains.common.models.person import Person
 from datamimic_ce.domains.domain_core import BaseEntity
 from datamimic_ce.domains.domain_core.property_cache import property_cache
 from datamimic_ce.domains.healthcare.generators.patient_generator import PatientGenerator
+from datamimic_ce.domains.shared.models.person import Person
 
 
 class Patient(BaseEntity):
@@ -50,9 +50,8 @@ class Patient(BaseEntity):
         Returns:
             A unique identifier for the patient.
         """
-        rng = self._patient_generator.rng
-        suffix = "".join(rng.choice("0123456789ABCDEF") for _ in range(8))
-        return f"PAT-{suffix}"
+        candidate = self._patient_generator.generate_patient_id_candidate()
+        return self._claim_identifier("patient_id", candidate)
 
     @property
     @property_cache
@@ -62,9 +61,7 @@ class Patient(BaseEntity):
         Returns:
             A medical record number.
         """
-        rng = self._patient_generator.rng
-        suffix = "".join(rng.choice("0123456789ABCDEF") for _ in range(8))
-        return f"MRN-{suffix}"
+        return self._patient_generator.generate_medical_record_number()
 
     @property
     @property_cache
@@ -74,9 +71,7 @@ class Patient(BaseEntity):
         Returns:
             A social security number.
         """
-        rng = self._patient_generator.rng
-        digits = [str(rng.randint(0, 9)) for _ in range(9)]
-        return f"{''.join(digits[:3])}-{''.join(digits[3:5])}-{''.join(digits[5:])}"
+        return self._patient_generator.generate_ssn()
 
     @property
     @property_cache
@@ -140,7 +135,7 @@ class Patient(BaseEntity):
 
     @property
     @property_cache
-    def transaction_profile(self) -> str | dict[str, float] | None:
+    def transaction_profile(self) -> str | Mapping[str, float] | None:
         """Expose the transaction profile for downstream consumers."""
 
         return self.person_data.transaction_profile
@@ -174,23 +169,9 @@ class Patient(BaseEntity):
         Returns:
             The patient's height in centimeters.
         """
-        # Generate height based on gender and age
         gender = self.gender
         age = self.age
-
-        rng = self._patient_generator.rng  #  use generator RNG via property; avoid private attr
-        if age < 18:
-            # Children and teenagers
-            if gender == "Male":
-                return round(rng.uniform(90 + (age * 5), 110 + (age * 5)), 1)
-            else:
-                return round(rng.uniform(90 + (age * 4.8), 110 + (age * 4.8)), 1)
-        else:
-            # Adults
-            if gender == "Male":
-                return round(rng.uniform(160, 190), 1)
-            else:
-                return round(rng.uniform(150, 175), 1)
+        return self._patient_generator.generate_height_cm(gender, age)
 
     @property
     @property_cache
@@ -200,25 +181,9 @@ class Patient(BaseEntity):
         Returns:
             The patient's weight in kilograms.
         """
-        # Generate weight based on gender, age, and height
         age = self.age
         height_cm = self.height_cm
-
-        # Calculate a base weight using BMI formula (weight = BMI * height^2)
-        # Use a normal BMI range (18.5 - 29.9)
-        rng = self._patient_generator.rng
-        base_bmi = rng.uniform(16, 24) if age < 18 else rng.uniform(18.5, 29.9)
-
-        # Calculate weight from BMI and height
-        # BMI = weight(kg) / height(m)^2
-        height_m = height_cm / 100
-        weight = base_bmi * (height_m**2)
-
-        # Add some random variation
-        weight_variation = weight * 0.1  # 10% variation
-        weight += rng.uniform(-weight_variation, weight_variation)
-
-        return round(weight, 1)
+        return self._patient_generator.generate_weight_kg(age, height_cm)
 
     @property
     @property_cache
@@ -292,10 +257,7 @@ class Patient(BaseEntity):
         Returns:
             The patient's insurance policy number.
         """
-        rng = self._patient_generator.rng
-        prefix = "".join(rng.choice("ABCDEFGHIJKLMNOPQRSTUVWXYZ") for _ in range(3))
-        digits = "".join(str(rng.randint(0, 9)) for _ in range(8))
-        return f"{prefix}-{digits}"
+        return self._patient_generator.generate_insurance_policy_number()
 
     @property
     def primary_doctor(self):
@@ -315,7 +277,7 @@ class Patient(BaseEntity):
         """
         self._field_cache["primary_doctor"] = value
 
-    def to_dict(self) -> dict[str, Any]:
+    def to_dict(self) -> dict[str, object]:
         """Convert the patient entity to a dictionary.
 
         Returns:

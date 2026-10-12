@@ -12,9 +12,9 @@ from pathlib import Path
 
 import pytest
 
-import datamimic_ce.authoring.dryrun as dryrun_module
+import datamimic_ce.authoring.adapters.dryrun as dryrun_module
+from datamimic_ce.authoring.adapters.dryrun import dry_run_captured, dry_run_source
 from datamimic_ce.authoring.contracts import CaptureStatus
-from datamimic_ce.authoring.dryrun import dry_run_captured, dry_run_source
 
 
 def test_nested_generate_count_is_bounded_per_parent() -> None:
@@ -76,6 +76,34 @@ def test_finite_file_source_at_limit_is_noncomplete(tmp_path: Path) -> None:
     assert not product.capture.complete
     assert product.capture.requested == 3
     assert product.capture.observed == product.capture.limit == 1
+
+
+def test_file_source_count_failure_remains_unknown(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    descriptor = tmp_path / "datamimic.xml"
+    descriptor.write_text(
+        '<setup rngSeed="1"><generate name="rows" source="rows.csv" '
+        'distribution="ordered" target="ConsoleExporter"/></setup>',
+        encoding="utf-8",
+    )
+    from datamimic_ce.engine.dsl.parsers.document.descriptor_parser import DescriptorParser
+    from datamimic_ce.engine.io.api import load_connection_profile
+
+    def fail_count(*_args: object) -> int:
+        raise OSError("count unavailable")
+
+    monkeypatch.setattr("datamimic_ce.engine.io.api.count_source", fail_count)
+    stmt = DescriptorParser.parse(
+        descriptor,
+        None,
+        "production",
+        profile_loader=load_connection_profile,
+    ).sub_statements[0]
+
+    assert dryrun_module._source_row_count(
+        stmt,
+        descriptor_dir=tmp_path,
+        default_separator="|",
+    ) is None
 
 
 def test_dynamic_and_ranged_counts_are_bounded() -> None:

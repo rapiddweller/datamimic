@@ -36,7 +36,7 @@ from pathlib import Path
 
 import pytest
 
-from datamimic_ce.data_mimic_test import DataMimicTest
+from datamimic_ce.interfaces.python.data_mimic_test import DataMimicTest
 
 _TEST_DIR = Path(__file__).resolve().parent
 
@@ -104,6 +104,28 @@ def test_replays_identically_under_seed(case: SourceMatrixCase):
     a, b = _run(case.descriptor), _run(case.descriptor)
     for product in ("ordered", "random", "cumulated"):
         assert _vals(a, product) == _vals(b, product)
+
+
+def test_sql_selector_cyclic_pages_wrap_without_changing_order(tmp_path: Path):
+    (tmp_path / "seed.sql").write_text(
+        "DROP TABLE IF EXISTS items; CREATE TABLE items (v INTEGER); "
+        "INSERT INTO items (v) VALUES (0), (1), (2);",
+        encoding="utf-8",
+    )
+    (tmp_path / "datamimic.xml").write_text(
+        f'<setup rngSeed="42"><database id="db" database="selector_{tmp_path.name}" dbms="sqlite"/>'
+        '<execute uri="seed.sql" target="db"/>'
+        '<generate name="rows" count="8" pageSize="4" target="">'
+        '<variable name="row" source="db" selector="SELECT v FROM items ORDER BY v" '
+        'distribution="ordered" cyclic="true"/>'
+        '<key name="v" script="row.v"/></generate></setup>',
+        encoding="utf-8",
+    )
+    engine = DataMimicTest(test_dir=tmp_path, filename="datamimic.xml", capture_test_result=True)
+
+    engine.test_with_timer()
+
+    assert [row["v"] for row in engine.capture_result()["rows"]] == [0, 1, 2, 0, 1, 2, 0, 1]
 
 
 def test_source_matrix_manifest_is_complete_and_uses_committed_descriptors():

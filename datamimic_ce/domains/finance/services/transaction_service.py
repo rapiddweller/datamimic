@@ -14,14 +14,15 @@ from datetime import datetime
 from random import Random
 
 from datamimic_ce.domains.domain_core import BaseDomainService
-from datamimic_ce.domains.domain_core.attribute_catalog import EntitySchema, FieldSpec, field, group
+from datamimic_ce.domains.domain_core.contracts.attribute_catalog import EntitySchema, FieldSpec, field, group
 from datamimic_ce.domains.finance.generators.transaction_generator import TransactionGenerator
 from datamimic_ce.domains.finance.models.transaction import Transaction
+from datamimic_ce.domains.finance.services.bank_account_service import BANK_ACCOUNT_SCHEMA
 
 TRANSACTION_SCHEMA = EntitySchema(
     "Transaction",
     (
-        field("transaction_id", str, "Unique transaction identifier."),
+        field("transaction_id", str, "Unique transaction identifier.", unique_identifier_format="[A-Z0-9]{16}"),
         field("transaction_date", datetime, "Date and time of the transaction."),
         field("amount", float, "Transaction amount."),
         field("transaction_type", str, "Transaction type."),
@@ -38,11 +39,8 @@ TRANSACTION_SCHEMA = EntitySchema(
         field("direction", str, "Transaction direction (debit/credit)."),
         group(
             "account",
-            "Associated account summary (present when an account is linked).",
-            (
-                field("account_number", str, "Account number."),
-                field("account_type", str, "Account type."),
-            ),
+            "Associated bank account details (present when an account is linked).",
+            BANK_ACCOUNT_SCHEMA.fields,
             optional=True,
         ),
     ),

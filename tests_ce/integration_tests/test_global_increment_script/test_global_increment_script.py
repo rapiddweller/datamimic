@@ -6,7 +6,7 @@
 
 from pathlib import Path
 
-from datamimic_ce.factory.datamimic_test_factory import DataMimicTestFactory
+from datamimic_ce.interfaces.python.factory import DataMimicTestFactory
 
 _test_dir = Path(__file__).resolve().parent
 customer_factory = DataMimicTestFactory(_test_dir / "datamimic.xml", "customers")

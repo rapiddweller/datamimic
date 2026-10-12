@@ -1,0 +1,48 @@
+import random
+from unittest.mock import MagicMock
+
+from datamimic_ce.engine.io.api import has_mongodb_upsert_target
+from datamimic_ce.engine.io.clients.mongodb_client import MongoDBClient
+from datamimic_ce.engine.runtime.contexts.context import Context
+from datamimic_ce.engine.runtime.tasks.base.counts import get_int_count, resolve_count
+
+
+def test_get_int_count_handles_missing_digits_and_expression() -> None:
+    context = MagicMock(spec=Context)
+    context.evaluate_python_expression.return_value = 12
+
+    assert get_int_count(None, context) is None
+    assert get_int_count("42", context) == 42
+    assert get_int_count("{value * 3}", context) == 12
+    context.evaluate_python_expression.assert_called_once_with("value * 3")
+
+
+def test_resolve_count_preserves_explicit_and_bounded_counts() -> None:
+    rng = random.Random(7)
+
+    assert resolve_count(4, 8, 9, rng) == 4
+    assert resolve_count(None, 8, 9, rng) in range(8, 10)
+    assert resolve_count(None, None, 3, rng) in range(0, 4)
+    assert resolve_count(None, 3, None, rng) in range(3, 9)
+    assert resolve_count(None, None, None, rng) is None
+
+
+def test_resolve_count_draws_only_for_a_range() -> None:
+    rng = MagicMock()
+    rng.randint.return_value = 5
+
+    assert resolve_count(4, 3, 7, rng) == 4
+    rng.randint.assert_not_called()
+
+    assert resolve_count(None, 3, 7, rng) == 5
+    rng.randint.assert_called_once_with(3, 7)
+
+
+def test_has_mongodb_upsert_target_requires_upsert_operation_and_mongo_client() -> None:
+    clients = {"mongodb": MagicMock(spec=MongoDBClient)}
+
+    assert has_mongodb_upsert_target({"mongodb.upsert"}, clients)
+    assert not has_mongodb_upsert_target({"mongodb.delete"}, clients)
+    assert not has_mongodb_upsert_target({"mongodb.upsert.extra"}, clients)
+    assert not has_mongodb_upsert_target({"missing.upsert"}, clients)
+    assert not has_mongodb_upsert_target({"mongodb.upsert"}, {"mongodb": object()})

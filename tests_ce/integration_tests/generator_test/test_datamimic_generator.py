@@ -7,7 +7,7 @@
 
 from pathlib import Path
 
-from datamimic_ce.data_mimic_test import DataMimicTest
+from datamimic_ce.interfaces.python.data_mimic_test import DataMimicTest
 
 
 class TestDatamimicGenerator:
@@ -23,7 +23,11 @@ class TestDatamimicGenerator:
 
     def test_datamimic_demo_generator(self):
         datamimic_dir = (
-            Path(__file__).resolve().parent.parent.parent.parent / "datamimic_ce" / "demos" / "overview-generator"
+            Path(__file__).resolve().parent.parent.parent.parent
+            / "datamimic_ce"
+            / "resources"
+            / "demos"
+            / "overview-generator"
         )
         engine = DataMimicTest(test_dir=datamimic_dir, filename="datamimic.xml")
         engine.test_with_timer()

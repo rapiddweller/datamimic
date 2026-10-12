@@ -13,20 +13,20 @@ import pytest
 from lxml import etree
 from typer.testing import CliRunner
 
+from datamimic_ce.authoring.adapters.reference import capabilities_manifest, reference
 from datamimic_ce.authoring.contracts import ReferenceTopic
-from datamimic_ce.authoring.diagnostics import Diagnostic
-from datamimic_ce.authoring.reference import capabilities_manifest, reference
-from datamimic_ce.authoring.rule_catalog import (
+from datamimic_ce.authoring.domain.diagnostics import Diagnostic
+from datamimic_ce.authoring.domain.rule_catalog import (
     AUTHORING_RULE_DEFINITIONS,
     RuleSeverity,
     authoring_rule_definitions,
     serialize_rule_definition,
 )
-from datamimic_ce.authoring.rules import ALL_INTENT_RULES, ALL_RULES
-from datamimic_ce.authoring.rules.base import IntentLintContext, LintContext
-from datamimic_ce.authoring.schema import build_schema_index
-from datamimic_ce.cli import app
-from datamimic_ce.enums.distribution_enums import POSITIONAL_NUMBER_SEQUENCES, NumberDistribution
+from datamimic_ce.authoring.domain.rules import ALL_INTENT_RULES, ALL_RULES
+from datamimic_ce.authoring.domain.rules.base import IntentLintContext, LintContext
+from datamimic_ce.authoring.domain.schema import build_schema_index
+from datamimic_ce.engine.dsl.vocabulary.enums.distribution_enums import POSITIONAL_NUMBER_SEQUENCES, NumberDistribution
+from datamimic_ce.interfaces.cli import app
 
 
 def test_every_evaluator_points_to_exactly_one_complete_catalog_definition() -> None:
@@ -139,7 +139,7 @@ def test_evaluators_cannot_replace_catalog_message_or_fix_hint() -> None:
     assert not violations, f"evaluators must project catalog-owned diagnostics: {violations}"
 
     root = etree.fromstring(b"<setup/>")
-    ctx = LintContext(root, build_schema_index())
+    ctx = LintContext(root, build_schema_index(), frozenset())
     for rule in ALL_RULES:
         diagnostic = ctx.diag(
             rule,

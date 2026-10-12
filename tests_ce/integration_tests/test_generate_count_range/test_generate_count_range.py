@@ -7,7 +7,7 @@
 """minCount/maxCount on <generate> (legacy-style random row count).
 
 Surface: engine (datamimic_ce). Mirrors the existing <nestedKey> minCount/maxCount
-behaviour; count resolution is the single shared StatementUtil.resolve_count.
+behaviour; count resolution is shared by the runtime tasks.
 """
 
 from __future__ import annotations
@@ -16,7 +16,7 @@ from pathlib import Path
 
 import pytest
 
-from datamimic_ce.data_mimic_test import DataMimicTest
+from datamimic_ce.interfaces.python.data_mimic_test import DataMimicTest
 
 _TEST_DIR = Path(__file__).resolve().parent
 

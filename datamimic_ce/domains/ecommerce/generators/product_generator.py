@@ -14,10 +14,12 @@ import random
 from pathlib import Path
 
 from datamimic_ce.domains.domain_core.base_domain_generator import DatasetAwareDomainGenerator
-from datamimic_ce.domains.utils.dataset_loader import (
+from datamimic_ce.domains.shared.datasets.loader import (
     load_weighted_values_try_dataset,
     pick_one_weighted,
 )
+from datamimic_ce.domains.shared.literal_generators.identity.keys import prefixed_id_generator
+from datamimic_ce.domains.shared.literal_generators.primitives.string_generator import StringGenerator
 
 
 class ProductGenerator(DatasetAwareDomainGenerator):
@@ -37,6 +39,40 @@ class ProductGenerator(DatasetAwareDomainGenerator):
         super().__init__(dataset=dataset, rng=rng)
         self._min_price = min(min_price, max_price)
         self._max_price = max(min_price, max_price)
+
+    def generate_sku(self, brand: str, category: str) -> str:
+        brand_code = brand[:3].upper()
+        category_code = category[:3].upper()
+        random_code = StringGenerator.rnd_str_from_regex("[0-9]{6}", rng=self.rng)
+        return f"{brand_code}-{category_code}-{random_code}"
+
+    def generate_product_id_candidate(self) -> str:
+        return prefixed_id_generator.PrefixedIdGenerator(
+            "PROD", "[A-Z0-9]{8}", separator="", rng=self.rng
+        ).generate()
+
+    def generate_name(self, category: str, brand: str) -> str:
+        adjective = self.get_product_data_by_data_type("product_adjectives")
+        noun = self.get_product_data_by_data_type(f"product_nouns_{category}")
+        if not noun:
+            raise ValueError(f"No product nouns for category {category!r} (data type 'product_nouns_{category}')")
+
+        patterns = (
+            f"{brand} {adjective} {noun}",
+            f"{adjective} {noun} by {brand}",
+            f"{brand} {noun}",
+            f"{adjective} {brand} {noun}",
+        )
+        return self.rng.choice(list(patterns))
+
+    def generate_description(self, name: str, category: str) -> str:
+        selected_features = self.get_random_features(category, min_feature=2, max_feature=3)
+        description = f"{name} - {', '.join(selected_features)}. "
+        description += (
+            f"This premium {category.lower().replace('_', ' ')} product offers exceptional quality and value. "
+        )
+        description += self.get_product_data_by_data_type("product_benefits")
+        return description
 
     # Helper: pick rating bucket and apply half-star tweak
     def pick_rating(self, *, start: Path) -> float:
@@ -91,12 +127,12 @@ class ProductGenerator(DatasetAwareDomainGenerator):
             "currencies",
             "product_benefits",
         }:
-            from datamimic_ce.domains.utils.dataset_path import dataset_path
-            from datamimic_ce.utils.file_util import FileUtil
+            from datamimic_ce.domains.domain_core.datasets.path import dataset_path
+            from datamimic_ce.domains.shared.datasets.loader import read_headered_csv
 
             file_name = f"{data_type.lower()}_{self._dataset}.csv"
             file_path = dataset_path("ecommerce", file_name, start=Path(__file__))
-            header_dict, loaded_data = FileUtil.read_csv_to_dict_of_tuples_with_header(file_path, delimiter=",")
+            header_dict, loaded_data = read_headered_csv(file_path, delimiter=",")
             w_idx = header_dict.get("weight")
             if w_idx is not None:
                 chosen = self._rng.choices(loaded_data, weights=[float(row[w_idx]) for row in loaded_data], k=1)[0]
@@ -157,9 +193,9 @@ class ProductGenerator(DatasetAwareDomainGenerator):
 
     @staticmethod
     def _load_product_json(file_name):
-        #  Keep JSON helper for non-weighted structured data; paths resolved via dataset_path in FileUtil
-        from datamimic_ce.domains.utils.dataset_path import dataset_path
-        from datamimic_ce.utils.file_util import FileUtil
+        # Keep JSON helper for non-weighted structured data.
+        from datamimic_ce.domains.domain_core.datasets.path import dataset_path
+        from datamimic_ce.domains.shared.datasets.loader import read_json_data
 
         file_path = dataset_path("ecommerce", "product", f"{file_name}.json", start=Path(__file__))
-        return FileUtil.read_json(file_path)
+        return read_json_data(file_path)

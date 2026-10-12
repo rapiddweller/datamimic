@@ -13,7 +13,7 @@ from pathlib import Path
 
 import pytest
 
-from datamimic_ce.data_mimic_test import DataMimicTest
+from datamimic_ce.interfaces.python.data_mimic_test import DataMimicTest
 
 _dir = Path(__file__).resolve().parent
 # data/rows.csv: ids 1..5

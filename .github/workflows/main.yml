@@ -4,19 +4,16 @@ on:
   push:
     branches:
       - development
+      - experiment/target-architecture-v2
     tags:
       - '[0-9]+.[0-9]+.[0-9]+'
-    # Docs-only changes don't need the pipeline. Path filters are NOT evaluated for
-    # tag pushes, so releases always run.
-    paths:
-      - '**'
-      - '!**.md'
   pull_request:
     branches:
       - '*'
-    paths:
-      - '**'
-      - '!**.md'
+  workflow_dispatch:
+
+permissions:
+  contents: read
 
 env:
   RUNTIME_ENVIRONMENT: production
@@ -54,6 +51,115 @@ jobs:
           path: build.env
           if-no-files-found: error
           retention-days: 1
+
+  archkeel_check:
+    name: ArchKeel architecture contract
+    runs-on: ubuntu-22.04
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+      - name: Set up Python 3.11
+        uses: actions/setup-python@v6
+        with:
+          python-version: '3.11'
+      - name: Install uv
+        uses: astral-sh/setup-uv@v8.1.0
+      - name: Validate architecture contract
+        run: make architecture-check
+
+  architecture_report:
+    name: Architecture review report
+    runs-on: ubuntu-22.04
+    permissions:
+      contents: read
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+
+      - name: Set up Python 3.11
+        uses: actions/setup-python@v6
+        with:
+          python-version: '3.11'
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v8.1.0
+
+      - name: Confirm pinned ArchKeel version
+        run: |
+          version="$(make --no-print-directory --silent architecture-version)"
+          echo "ARCHKEEL_VERSION=$version" >> "$GITHUB_ENV"
+          echo "archkeel $version"
+
+      - name: Write report metadata
+        env:
+          REPOSITORY: ${{ github.repository }}
+          RUN_ID: ${{ github.run_id }}
+          RUN_ATTEMPT: ${{ github.run_attempt }}
+          HEAD_SHA: ${{ github.event.pull_request.head.sha || github.sha }}
+        run: |
+          python - <<'PY'
+          import json
+          import os
+          import subprocess
+          from pathlib import Path
+
+          report_dir = Path("test-artifacts/architecture/ce-recursive-target")
+          report_dir.mkdir(parents=True, exist_ok=True)
+          metadata = {
+              "repository": os.environ["REPOSITORY"],
+              "run_id": int(os.environ["RUN_ID"]),
+              "run_attempt": int(os.environ["RUN_ATTEMPT"]),
+              "head_sha": os.environ["HEAD_SHA"],
+              "scanned_sha": subprocess.check_output(["git", "rev-parse", "HEAD"], text=True).strip(),
+              "archkeel_version": os.environ["ARCHKEEL_VERSION"],
+          }
+          (report_dir / "metadata.json").write_text(json.dumps(metadata, indent=2) + "\n")
+          PY
+
+      - name: Generate architecture report
+        run: make architecture-report
+
+      - name: Capture native validation receipt
+        if: ${{ !cancelled() }}
+        run: make architecture-validation-receipt
+
+      - name: Upload architecture report evidence
+        id: upload_architecture_report
+        if: always()
+        uses: actions/upload-artifact@v6
+        with:
+          name: architecture-report-${{ github.run_attempt }}
+          path: |
+            test-artifacts/architecture/ce-recursive-target/architecture.json
+            test-artifacts/architecture/ce-recursive-target/architecture.report.html
+            test-artifacts/architecture/ce-recursive-target/architecture.detail.html
+            test-artifacts/architecture/ce-recursive-target/validation.json
+            test-artifacts/architecture/ce-recursive-target/metadata.json
+          if-no-files-found: error
+
+      - name: Add report links to run summary
+        if: always()
+        env:
+          RUN_ID: ${{ github.run_id }}
+          RUN_ATTEMPT: ${{ github.run_attempt }}
+          ARTIFACT_URL: ${{ steps.upload_architecture_report.outputs.artifact-url }}
+        run: |
+          {
+            echo '## Architecture review report'
+            echo
+            echo "Publication pending: https://rapiddweller.github.io/datamimic/runs/${RUN_ID}/${RUN_ATTEMPT}/"
+            if [ -n "$ARTIFACT_URL" ]; then
+              echo
+              echo "[Download report artifact](${ARTIFACT_URL})"
+            else
+              echo
+              echo 'Artifact upload unavailable.'
+            fi
+          } >> "$GITHUB_STEP_SUMMARY"
 
   install_dependencies:
     runs-on: ubuntu-22.04
@@ -192,7 +298,7 @@ jobs:
       - name: Install and import built package
         run: |
           python -m pip install dist/*.whl
-          python -c "import datamimic_ce; import datamimic_ce.authoring.contracts; import datamimic_ce.cli"
+          python -c "import datamimic_ce; import datamimic_ce.authoring.contracts; import datamimic_ce.interfaces.cli"
           datamimic --help
 
   python_312_smoke:
@@ -212,7 +318,7 @@ jobs:
       - name: Install and import built package
         run: |
           python -m pip install dist/*.whl
-          python -c "import datamimic_ce; import datamimic_ce.authoring.contracts; import datamimic_ce.cli"
+          python -c "import datamimic_ce; import datamimic_ce.authoring.contracts; import datamimic_ce.interfaces.cli"
           datamimic --help
 
   python_313_smoke:
@@ -232,7 +338,7 @@ jobs:
       - name: Install and import built package
         run: |
           python -m pip install dist/*.whl
-          python -c "import datamimic_ce; import datamimic_ce.authoring.contracts; import datamimic_ce.cli"
+          python -c "import datamimic_ce; import datamimic_ce.authoring.contracts; import datamimic_ce.interfaces.cli"
           datamimic --help
 
   runtime_determinism_matrix:
@@ -382,7 +488,7 @@ jobs:
       - name: Setup git
         run: |
           apt-get update
-          apt-get install -y git
+          apt-get install -y git make
           git config --global --add safe.directory $(realpath .)
       - name: Checkout repository
         uses: actions/checkout@v5
@@ -396,7 +502,8 @@ jobs:
       - name: Run unit tests with coverage
         run: |
           . .venv/bin/activate
-          uv run pytest tests_ce/unit_tests/ tests_ce/architecture/test_facade_determinism.py tests_ce/architecture/test_runtime_determinism_manifest.py --cov --cov-report=xml
+          uv run make coverage-unit
+          uv run pytest tests_ce/architecture/test_facade_determinism.py tests_ce/architecture/test_runtime_determinism_manifest.py tests_ce/architecture/test_installed_domain_resources.py
         shell: bash
       - name: Upload coverage report
         uses: actions/upload-artifact@v6
@@ -660,6 +767,8 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
 
       - name: Download unit test coverage report
         uses: actions/download-artifact@v7
@@ -828,7 +937,7 @@ jobs:
   release:
     if: startsWith(github.ref, 'refs/tags/')
     runs-on: ubuntu-22.04
-    needs: [e2e_test, runtime_determinism_fan_in, mypy, ruff, python_310_smoke]
+    needs: [e2e_test, runtime_determinism_fan_in, mypy, ruff, python_310_smoke, archkeel_check]
     environment:
       name: pypi
       url: https://pypi.org/p/datamimic-ce

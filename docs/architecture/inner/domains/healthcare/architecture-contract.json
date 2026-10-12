@@ -1,0 +1,323 @@
+{
+  "schema_version": "2.1.0",
+  "declarations": {
+    "modules": [
+      {
+        "path": "datamimic_ce/domains/healthcare/__init__.py",
+        "responsibility": "The initializer exports selected doctor, hospital, and patient models with their services for package imports."
+      },
+      {
+        "path": "datamimic_ce/domains/healthcare/generators/__init__.py",
+        "responsibility": "The initializer exports HospitalGenerator for package imports; the other generators remain importable from their modules."
+      },
+      {
+        "path": "datamimic_ce/domains/healthcare/generators/doctor_generator.py",
+        "responsibility": "DoctorGenerator generates doctor-ID candidates, specialties, medical schools, certifications, NPI and license numbers, office hours, and new-patient acceptance status; candidate, NPI, license-number, office-hour, and acceptance sampling honor the public RNG accessor."
+      },
+      {
+        "path": "datamimic_ce/domains/healthcare/generators/hospital_generator.py",
+        "responsibility": "HospitalGenerator generates hospital-ID candidates and owns capacity, founding year, services, emergency and teaching status, and operational details; BaseEntity owns unique ID allocation, and the founding-year calculation uses its anchored reference clock."
+      },
+      {
+        "path": "datamimic_ce/domains/healthcare/generators/medical_device_generator.py",
+        "responsibility": "MedicalDeviceGenerator generates device-ID candidates, other equipment identifiers, and maintenance values using the configured dataset, RNG, and reference clock; BaseEntity owns unique device-ID allocation, and this generator links technician values to PersonGenerator."
+      },
+      {
+        "path": "datamimic_ce/domains/healthcare/generators/medical_procedure_generator.py",
+        "responsibility": "MedicalProcedureGenerator generates procedure-ID candidates and independently callable procedure codes, names, descriptions, specialties, duration, surgical-status, diagnostic-status, preventive-status, and anesthesia values; it does not own MedicalProcedure's coupled cached cost calculation or unique-ID allocation."
+      },
+      {
+        "path": "datamimic_ce/domains/healthcare/generators/patient_generator.py",
+        "responsibility": "PatientGenerator generates patient-ID candidates, medical-record and insurance-policy numbers, Social Security numbers, height from supplied age and gender, weight from supplied age and height, blood types, age-appropriate conditions, and insurance providers using the required RNG, dataset, or clock basis."
+      },
+      {
+        "path": "datamimic_ce/domains/healthcare/models/__init__.py",
+        "responsibility": "The initializer exports Doctor for package imports; the other healthcare models remain in their module paths."
+      },
+      {
+        "path": "datamimic_ce/domains/healthcare/models/doctor.py",
+        "responsibility": "Doctor combines professional identity and credentials with specialty, hospital affiliation, availability, and contact details."
+      },
+      {
+        "path": "datamimic_ce/domains/healthcare/models/hospital.py",
+        "responsibility": "Hospital represents a care facility with services, capacity, accreditation, operating attributes, and contact details."
+      },
+      {
+        "path": "datamimic_ce/domains/healthcare/models/medical_device.py",
+        "responsibility": "MedicalDevice tracks equipment identity, assignment, lifecycle dates, status, usage, and maintenance history, and owns cached specifications because their draws interleave with lazy device-type access and generator helpers."
+      },
+      {
+        "path": "datamimic_ce/domains/healthcare/models/medical_procedure.py",
+        "responsibility": "MedicalProcedure exposes a coded clinical service, retains lazy access to its claimed procedure ID, and owns its cached cost calculation because it is coupled to lazy clinical-property evaluation."
+      },
+      {
+        "path": "datamimic_ce/domains/healthcare/models/patient.py",
+        "responsibility": "Patient combines stable identity and demographics with clinical, body-measurement, insurance, and care-contact data."
+      },
+      {
+        "path": "datamimic_ce/domains/healthcare/services/__init__.py",
+        "responsibility": "The initializer groups the healthcare service classes for registry and package imports."
+      },
+      {
+        "path": "datamimic_ce/domains/healthcare/services/doctor_service.py",
+        "responsibility": "DoctorService binds its concrete generator and model and declares the entity fields exposed to the registry and DSL."
+      },
+      {
+        "path": "datamimic_ce/domains/healthcare/services/hospital_service.py",
+        "responsibility": "HospitalService binds its concrete generator and model and declares the entity fields exposed to the registry and DSL."
+      },
+      {
+        "path": "datamimic_ce/domains/healthcare/services/medical_device_service.py",
+        "responsibility": "MedicalDeviceService binds its concrete generator and model and declares the entity fields exposed to the registry and DSL."
+      },
+      {
+        "path": "datamimic_ce/domains/healthcare/services/medical_procedure_service.py",
+        "responsibility": "MedicalProcedureService binds its concrete generator and model and declares the entity fields exposed to the registry and DSL."
+      },
+      {
+        "path": "datamimic_ce/domains/healthcare/services/patient_service.py",
+        "responsibility": "PatientService binds its concrete generator and model and declares the entity fields exposed to the registry and DSL."
+      },
+      {
+        "path": "datamimic_ce/domains/healthcare/use_cases/doctor_api.py",
+        "responsibility": "Validates locale-backed specialty and license constraints, then generates doctor JSON from a DoctorRequest."
+      },
+      {
+        "path": "datamimic_ce/domains/healthcare/use_cases/patient_api.py",
+        "responsibility": "Generates patient JSON from locale-backed age and condition constraints, with optional profile-seed control and a stable identifier."
+      }
+    ]
+  },
+  "components": [
+    {
+      "id": "HEALTHCARE-MODELS",
+      "label": "models",
+      "role": "component",
+      "packages": [
+        "datamimic_ce.domains.healthcare.models"
+      ],
+      "responsibilities": [
+        "Expose lazy patient and doctor demographics plus hospital, procedure, and medical-device clinical and operational fields; MedicalProcedure owns its coupled cached cost calculation, and MedicalDevice owns cached specifications because their evaluation interleaves lazy reads and generator draws."
+      ],
+      "forbidden_responsibilities": [
+        "Generate independent values directly or own service orchestration."
+      ],
+      "provenance": [
+        "docs/architecture/inner/target.md"
+      ],
+      "requires": [
+        {
+          "component": "generators",
+          "rationale": "Healthcare entities delegate computed values to domain generators.",
+          "decided_by": "agent"
+        }
+      ],
+      "public": [
+        "datamimic_ce.domains.healthcare.models.doctor:Doctor",
+        "datamimic_ce.domains.healthcare.models.hospital:Hospital",
+        "datamimic_ce.domains.healthcare.models.medical_device:MedicalDevice",
+        "datamimic_ce.domains.healthcare.models.medical_procedure:MedicalProcedure",
+        "datamimic_ce.domains.healthcare.models.patient:Patient"
+      ],
+      "decided_by": "agent"
+    },
+    {
+      "id": "HEALTHCARE-GENERATORS",
+      "label": "generators",
+      "role": "component",
+      "packages": [
+        "datamimic_ce.domains.healthcare.generators"
+      ],
+      "responsibilities": [
+        "Generate patient-ID candidates, medical-record and insurance-policy numbers, Social Security numbers, patient height from age and gender and weight from age and height, patient demographics and conditions, doctor credentials, doctor-ID candidates and office hours, hospital-ID and device-ID candidates, hospital services and capacity, procedure-ID candidates and details, and equipment lifecycle history; BaseEntity owns unique ID allocation."
+      ],
+      "forbidden_responsibilities": [
+        "Import healthcare models or services."
+      ],
+      "provenance": [
+        "docs/architecture/inner/target.md"
+      ],
+      "requires": [],
+      "public": [
+        "datamimic_ce.domains.healthcare.generators.doctor_generator:DoctorGenerator",
+        "datamimic_ce.domains.healthcare.generators.hospital_generator:HospitalGenerator",
+        "datamimic_ce.domains.healthcare.generators.medical_device_generator:MedicalDeviceGenerator",
+        "datamimic_ce.domains.healthcare.generators.medical_device_generator:MaintenanceRecord",
+        "datamimic_ce.domains.healthcare.generators.medical_procedure_generator:MedicalProcedureGenerator",
+        "datamimic_ce.domains.healthcare.generators.patient_generator:PatientGenerator"
+      ],
+      "decided_by": "agent"
+    },
+    {
+      "id": "HEALTHCARE-SERVICES",
+      "label": "services",
+      "role": "component",
+      "packages": [
+        "datamimic_ce.domains.healthcare.services"
+      ],
+      "exact_modules": [
+        "datamimic_ce.domains.healthcare"
+      ],
+      "responsibilities": [
+        "Bind healthcare generators to entity models and declare exposed fields and required datasets; own the package initializer that re-exports selected models and services."
+      ],
+      "forbidden_responsibilities": [
+        "Own generator algorithms or entity property behavior."
+      ],
+      "provenance": [
+        "docs/architecture/inner/target.md"
+      ],
+      "requires": [
+        {
+          "component": "models",
+          "rationale": "Services return typed healthcare entities.",
+          "decided_by": "agent"
+        },
+        {
+          "component": "generators",
+          "rationale": "Services delegate value creation to domain generators.",
+          "decided_by": "agent"
+        }
+      ],
+      "public": [
+        "datamimic_ce.domains.healthcare.services.doctor_service:DoctorService",
+        "datamimic_ce.domains.healthcare.services.hospital_service:HospitalService",
+        "datamimic_ce.domains.healthcare.services.medical_device_service:MedicalDeviceService",
+        "datamimic_ce.domains.healthcare.services.medical_procedure_service:MedicalProcedureService",
+        "datamimic_ce.domains.healthcare.services.patient_service:PatientService"
+      ],
+      "decided_by": "agent"
+    },
+    {
+      "id": "HEALTHCARE-USE-CASES",
+      "label": "use_cases",
+      "role": "component",
+      "packages": [
+        "datamimic_ce.domains.healthcare.use_cases"
+      ],
+      "responsibilities": [
+        "Standalone deterministic JSON doctor and patient use cases."
+      ],
+      "forbidden_responsibilities": [
+        "Own entity construction services or runtime execution."
+      ],
+      "provenance": [
+        "docs/architecture/inner/target.md"
+      ],
+      "requires": [],
+      "public": [
+        "datamimic_ce.domains.healthcare.use_cases.doctor_api:DoctorRequest",
+        "datamimic_ce.domains.healthcare.use_cases.doctor_api:generate",
+        "datamimic_ce.domains.healthcare.use_cases.patient_api:PatientRequest",
+        "datamimic_ce.domains.healthcare.use_cases.patient_api:generate"
+      ],
+      "decided_by": "agent"
+    }
+  ],
+  "rules": [
+    {
+      "id": "HEALTHCARE-ASSIGNMENT",
+      "kind": "complete_assignment",
+      "source": "datamimic_ce.domains.healthcare",
+      "rationale": "Each healthcare implementation module has one semantic owner; the package initializer is the source module.",
+      "provenance": [
+        "docs/architecture/inner/target.md"
+      ],
+      "decided_by": "agent"
+    },
+    {
+      "id": "HEALTHCARE-REQUIRES",
+      "kind": "complete_requires",
+      "include_type_checking": true,
+      "rationale": "Entities and services may consume generators; generator-to-entity and generator-to-service dependencies remain disallowed.",
+      "provenance": [
+        "docs/architecture/inner/target.md"
+      ],
+      "decided_by": "agent"
+    },
+    {
+      "id": "HEALTHCARE-INTERFACES",
+      "kind": "interface_boundary",
+      "include_type_checking": true,
+      "rationale": "Expose entity/generator/service operations and the request types/functions consumed by the domain facade; expose the typed maintenance record used by MedicalDevice.",
+      "provenance": [
+        "docs/architecture/inner/target.md"
+      ],
+      "decided_by": "agent"
+    },
+    {
+      "id": "HEALTHCARE-ACYCLIC",
+      "kind": "no_component_cycles",
+      "rationale": "Healthcare ownership flows from generators to entities and services, without reverse generator dependencies.",
+      "provenance": [
+        "docs/architecture/inner/target.md"
+      ],
+      "decided_by": "agent"
+    },
+    {
+      "id": "LAYOUT-DOMAINS-HEALTHCARE-GENERATORS",
+      "kind": "root_layout",
+      "root": "datamimic_ce.domains.healthcare.generators",
+      "allowed_children": [
+        "datamimic_ce.domains.healthcare.generators.doctor_generator",
+        "datamimic_ce.domains.healthcare.generators.hospital_generator",
+        "datamimic_ce.domains.healthcare.generators.medical_device_generator",
+        "datamimic_ce.domains.healthcare.generators.medical_procedure_generator",
+        "datamimic_ce.domains.healthcare.generators.patient_generator"
+      ],
+      "rationale": "Value algorithms; must not import entity models/services. Exact reviewed target children; no hidden extra modules.",
+      "provenance": [
+        "docs/architecture/inner/structure-review.json"
+      ],
+      "decided_by": "agent"
+    },
+    {
+      "id": "LAYOUT-DOMAINS-HEALTHCARE-MODELS",
+      "kind": "root_layout",
+      "root": "datamimic_ce.domains.healthcare.models",
+      "allowed_children": [
+        "datamimic_ce.domains.healthcare.models.doctor",
+        "datamimic_ce.domains.healthcare.models.hospital",
+        "datamimic_ce.domains.healthcare.models.medical_device",
+        "datamimic_ce.domains.healthcare.models.medical_procedure",
+        "datamimic_ce.domains.healthcare.models.patient"
+      ],
+      "rationale": "Lazy domain entities; may call generators for computed values. Exact reviewed target children; no hidden extra modules.",
+      "provenance": [
+        "docs/architecture/inner/structure-review.json"
+      ],
+      "decided_by": "agent"
+    },
+    {
+      "id": "LAYOUT-DOMAINS-HEALTHCARE-SERVICES",
+      "kind": "root_layout",
+      "root": "datamimic_ce.domains.healthcare.services",
+      "allowed_children": [
+        "datamimic_ce.domains.healthcare.services.doctor_service",
+        "datamimic_ce.domains.healthcare.services.hospital_service",
+        "datamimic_ce.domains.healthcare.services.medical_device_service",
+        "datamimic_ce.domains.healthcare.services.medical_procedure_service",
+        "datamimic_ce.domains.healthcare.services.patient_service"
+      ],
+      "rationale": "Registered entity construction services. Exact reviewed target children; no hidden extra modules.",
+      "provenance": [
+        "docs/architecture/inner/structure-review.json"
+      ],
+      "decided_by": "agent"
+    },
+    {
+      "id": "LAYOUT-DOMAINS-HEALTHCARE-USE-CASES",
+      "kind": "root_layout",
+      "root": "datamimic_ce.domains.healthcare.use_cases",
+      "allowed_children": [
+        "datamimic_ce.domains.healthcare.use_cases.doctor_api",
+        "datamimic_ce.domains.healthcare.use_cases.patient_api"
+      ],
+      "rationale": "Standalone deterministic JSON use cases. Exact reviewed target children; no hidden extra modules.",
+      "provenance": [
+        "docs/architecture/inner/structure-review.json"
+      ],
+      "decided_by": "agent"
+    }
+  ]
+}

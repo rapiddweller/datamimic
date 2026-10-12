@@ -1,35 +1,34 @@
+import copy
 import uuid
 from pathlib import Path
 
 import pytest
 
-from datamimic_ce.clients.rdbms_client import RdbmsClient
-from datamimic_ce.contexts.setup_context import SetupContext
-from datamimic_ce.data_sources.data_source_pagination import DataSourcePagination
-from datamimic_ce.domains.common.literal_generators.generator_util import GeneratorUtil
-from datamimic_ce.enums.dbms_enums import Dbms
-from datamimic_ce.exporters.test_result_exporter import TestResultExporter
-from datamimic_ce.product_storage.memstore_manager import MemstoreManager
+from datamimic_ce.engine.dsl.api import GenerateStatement
+from datamimic_ce.engine.dsl.vocabulary.enums.dbms_enums import Dbms
+from datamimic_ce.engine.io.clients.rdbms_client import RdbmsClient
+from datamimic_ce.engine.io.contracts import DataSourcePagination
+from datamimic_ce.engine.io.exporters.diagnostics.test_result_exporter import TestResultExporter
+from datamimic_ce.engine.runtime.contexts.context import SetupContext
+from datamimic_ce.engine.runtime.storage.memstore_manager import MemstoreManager
+from datamimic_ce.engine.runtime.tasks.values.construction.factory import GeneratorUtil
+from datamimic_ce.engine.runtime.tasks.values.construction.global_increment import GlobalIncrementGenerator
 
 
-class DummyRootGenStmt:
+class DummyRootGenStmt(GenerateStatement):
     def __init__(self, type_: str = "generate", count: int = 10, num_process: int | None = None):
-        self.type = type_
-        self.count = count
-        self.num_process = num_process
+        self._type = type_
+        self._count = count
+        self._num_process = num_process
 
 
 class DummyStmt:
     """Minimal statement stub with the attributes used by generators."""
 
-    def __init__(self, name: str, parent=None, database: str | None = None, root_gen=None):
+    def __init__(self, name: str, parent_stmt=None, database: str | None = None, root_gen=None):
         self.name = name
-        self.parent = parent
+        self.parent_stmt = parent_stmt if parent_stmt is not None else root_gen
         self.database = database
-        self._root_gen = root_gen
-
-    def get_root_generate_statement(self):
-        return self._root_gen
 
 
 class DummyCredential:
@@ -87,16 +86,50 @@ def test_global_increment_generator_uses_cache_key(setup_context: SetupContext):
 
     # Build a simple parent chain to exercise qualified key logic
     root = DummyStmt("root")
-    mid = DummyStmt("mid", parent=root)
-    leaf = DummyStmt("leaf", parent=mid)
+    mid = DummyStmt("mid", parent_stmt=root)
+    leaf = DummyStmt("leaf", parent_stmt=mid)
 
     g1 = util.create_generator("GlobalIncrementGenerator", stmt=leaf, key="mykey")
     g2 = util.create_generator("GlobalIncrementGenerator", stmt=leaf, key="mykey")
 
     assert g1 is g2
+    assert [g1.generate(), g2.generate()] == [1, 2]
     assert "mykey" in setup_context.generators
     # Ensure no duplicate entry under raw generator string
     assert "GlobalIncrementGenerator" not in setup_context.generators
+
+
+def test_global_increment_registry_preserves_key_scope_and_registered_start(setup_context: SetupContext):
+    first = GlobalIncrementGenerator("parent.id", setup_context)
+    same_key = GlobalIncrementGenerator("parent.id", setup_context)
+    distinct_key = GlobalIncrementGenerator("parent.code", setup_context)
+
+    assert [first.generate(), first.generate(), same_key.generate()] == [1, 2, 3]
+    assert distinct_key.generate() == 1
+
+    registry = setup_context.global_increment_registry
+    assert registry is not None
+    registry.register("configured", start=17)
+    assert GlobalIncrementGenerator("configured", setup_context).generate() == 17
+
+
+def test_deepcopy_of_cached_global_increment_preserves_legacy_copy_graph(
+    setup_context: SetupContext,
+) -> None:
+    generator = GlobalIncrementGenerator("parent.id", setup_context)
+    setup_context.generators["parent.id"] = generator
+    client = object()
+    setup_context.clients["client"] = client
+    assert generator.generate() == 1
+    copied = copy.deepcopy(setup_context)
+    copied_generator = copied.generators["parent.id"]
+
+    assert copied.clients["client"] is not client
+    assert copied.global_increment_registry is None
+    assert not hasattr(copied_generator, "_context")
+    assert copied_generator.generate() == 2
+    assert generator.generate() == 2
+    assert GlobalIncrementGenerator("parent.id", setup_context).generate() == 3
 
 
 def test_sequence_table_generator_uses_cache_key(setup_context: SetupContext):
@@ -105,7 +138,7 @@ def test_sequence_table_generator_uses_cache_key(setup_context: SetupContext):
     util = GeneratorUtil(context=setup_context)
 
     root_gen = DummyRootGenStmt(type_="gen", count=5)
-    stmt = DummyStmt(name="id", parent=None, database="db1", root_gen=root_gen)
+    stmt = DummyStmt(name="id", parent_stmt=None, database="db1", root_gen=root_gen)
 
     # Pagination is what makes the instance generation-ready; only such instances are cached
     # (an unpaginated one, as built by GenerateTask.pre_execute, must NOT poison the cache).
@@ -126,7 +159,7 @@ def test_sequence_table_generator_unpaginated_instance_is_not_cached(setup_conte
     util = GeneratorUtil(context=setup_context)
 
     root_gen = DummyRootGenStmt(type_="gen", count=5)
-    stmt = DummyStmt(name="id", parent=None, database="db1", root_gen=root_gen)
+    stmt = DummyStmt(name="id", parent_stmt=None, database="db1", root_gen=root_gen)
 
     unpaginated = util.create_generator("SequenceTableGenerator", stmt=stmt, key="seq:t:id")
     assert "seq:t:id" not in setup_context.generators
@@ -185,7 +218,7 @@ def test_sequence_table_generator_pagination_monotonic_and_bounded(setup_context
     util = GeneratorUtil(context=setup_context)
 
     root_gen = DummyRootGenStmt(type_="gen", count=10)
-    stmt = DummyStmt(name="id", parent=None, database="db1", root_gen=root_gen)
+    stmt = DummyStmt(name="id", parent_stmt=None, database="db1", root_gen=root_gen)
 
     pagination = DataSourcePagination(skip=2, limit=3)
     gen = util.create_generator("SequenceTableGenerator", stmt=stmt, key="seq:orders:id:p", pagination=pagination)
@@ -259,8 +292,8 @@ def test_sequence_table_generator_multi_process_partitions_non_overlapping():
     ctx1 = mk_ctx(1)
 
     root_gen = DummyRootGenStmt(type_="gen", count=10)
-    stmt0 = DummyStmt(name="id", parent=None, database="db1", root_gen=root_gen)
-    stmt1 = DummyStmt(name="id", parent=None, database="db1", root_gen=root_gen)
+    stmt0 = DummyStmt(name="id", parent_stmt=None, database="db1", root_gen=root_gen)
+    stmt1 = DummyStmt(name="id", parent_stmt=None, database="db1", root_gen=root_gen)
 
     # Use a small limit to keep expectations clear
     pagination = DataSourcePagination(skip=0, limit=4)

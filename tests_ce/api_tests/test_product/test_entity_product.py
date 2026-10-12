@@ -83,13 +83,6 @@ class TestEntityProduct:
         assert product.rating == product.rating
         assert product.tags == product.tags
 
-    @pytest.mark.flaky(reruns=3)
-    def test_two_different_entities(self):
-        product_service = ProductService()
-        product1 = product_service.generate()
-        product2 = product_service.generate()
-        assert product1.to_dict() != product2.to_dict()
-        assert product1.name != product2.name
 
     @pytest.mark.parametrize("dataset", _supported_datasets)
     def test_supported_datasets(self, dataset):

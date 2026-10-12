@@ -152,7 +152,7 @@ Beds: 349
 
 ## Dataset-driven behavior
 
-All doctor/hospital/patient attributes are selected from existing datasets located under `datamimic_ce/domains/domain_data/healthcare/medical/*_{CC}.csv`. Models do not read files directly; generators handle I/O and apply weights. Set `DATAMIMIC_STRICT_DATASET=1` to validate presence of localized files during development.
+All doctor/hospital/patient attributes are selected from existing datasets located under `datamimic_ce/domains/shared/domain_data/healthcare/medical/*_{CC}.csv`. Models do not read files directly; generators handle I/O and apply weights. Set `DATAMIMIC_STRICT_DATASET=1` to validate presence of localized files during development.
 
 ## Advanced Usage: Creating a Patient Cohort
 

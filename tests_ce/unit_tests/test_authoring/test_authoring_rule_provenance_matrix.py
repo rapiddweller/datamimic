@@ -36,12 +36,12 @@ from pathlib import Path
 
 import pytest
 
-from datamimic_ce.authoring.reference import capabilities_manifest
-from datamimic_ce.enums.distribution_enums import NumberDistribution, SourceDistribution
-from datamimic_ce.model.constraints import element_constraints, serialize_constraints
-from datamimic_ce.model.generate_model import GenerateModel
-from datamimic_ce.model.nested_key_model import NestedKeyModel
-from datamimic_ce.utils.file_util import FileUtil
+from datamimic_ce.authoring.adapters.reference import capabilities_manifest
+from datamimic_ce.engine.dsl.model.constraints import element_constraints, serialize_constraints
+from datamimic_ce.engine.dsl.model.generation.generate_model import GenerateModel
+from datamimic_ce.engine.dsl.model.values.structured.nested_key_model import NestedKeyModel
+from datamimic_ce.engine.dsl.vocabulary.enums.distribution_enums import NumberDistribution, SourceDistribution
+from datamimic_ce.engine.io.files.api import FileUtil
 
 CE_SOURCE_DISTRIBUTIONS = frozenset({"random", "ordered", "cumulated"})
 EE_ONLY_SOURCE_DISTRIBUTIONS = frozenset({"round_robin", "reservoir", "weighted", "stratified"})

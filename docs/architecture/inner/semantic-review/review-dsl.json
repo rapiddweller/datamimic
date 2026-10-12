@@ -1,0 +1,2541 @@
+{
+  "reviewer": "luna-dsl",
+  "records": [
+    {
+      "id": "module:engine/dsl/__init__.py",
+      "concern": "Der Initializer enthält keine eigenständige DSL-Fachlogik und ist nur Paket-/Exportmechanik.",
+      "verdict": "scaffold",
+      "reason": "Eine weitere Komponentengrenze würde hier keinen Parser-, Modell- oder Runtime-Vertrag hinzufügen.",
+      "evidence": [
+        {
+          "path": "datamimic_ce/engine/dsl/__init__.py",
+          "line": 1
+        }
+      ]
+    },
+    {
+      "id": "module:engine/dsl/api.py",
+      "concern": "Die API exportiert DSL-Kompatibilitätstypen aus Modellen, Parsern, Statements und Constraints; sie ist eine öffentliche Fassade und keine einzelne DSL-Fachschicht.",
+      "verdict": "keep",
+      "reason": "Aufrufer importieren DescriptorParser und Statement-/Enumtypen über `engine.dsl.api`; die Aggregation ist durch den public export boundary begründet.",
+      "evidence": [
+        {
+          "path": "datamimic_ce/engine/dsl/api.py",
+          "line": 151
+        }
+      ]
+    },
+    {
+      "id": "module:engine/dsl/constants/__init__.py",
+      "concern": "Der Initializer enthält keine eigenständige DSL-Fachlogik und ist nur Paket-/Exportmechanik.",
+      "verdict": "scaffold",
+      "reason": "Eine weitere Komponentengrenze würde hier keinen Parser-, Modell- oder Runtime-Vertrag hinzufügen.",
+      "evidence": [
+        {
+          "path": "datamimic_ce/engine/dsl/constants/__init__.py",
+          "line": 1
+        }
+      ]
+    },
+    {
+      "id": "module:engine/dsl/constants/attribute_constants.py",
+      "concern": "Die Konstanten definieren konkrete XML-Attribut-, Element-, Datentyp- oder Exporter-Tokens, die Modelle und Parser gemeinsam lesen.",
+      "verdict": "keep",
+      "reason": "Das Vocabulary-Ziel hält unveränderliche Schreibweisen außerhalb der ausführenden Komponenten.",
+      "evidence": [
+        {
+          "path": "datamimic_ce/engine/dsl/constants/attribute_constants.py",
+          "line": 8
+        }
+      ]
+    },
+    {
+      "id": "module:engine/dsl/constants/convention_constants.py",
+      "concern": "Die Konstanten definieren konkrete XML-Attribut-, Element-, Datentyp- oder Exporter-Tokens, die Modelle und Parser gemeinsam lesen.",
+      "verdict": "keep",
+      "reason": "Das Vocabulary-Ziel hält unveränderliche Schreibweisen außerhalb der ausführenden Komponenten.",
+      "evidence": [
+        {
+          "path": "datamimic_ce/engine/dsl/constants/convention_constants.py",
+          "line": 1
+        }
+      ]
+    },
+    {
+      "id": "module:engine/dsl/constants/data_type_constants.py",
+      "concern": "Die Konstanten definieren konkrete XML-Attribut-, Element-, Datentyp- oder Exporter-Tokens, die Modelle und Parser gemeinsam lesen.",
+      "verdict": "keep",
+      "reason": "Das Vocabulary-Ziel hält unveränderliche Schreibweisen außerhalb der ausführenden Komponenten.",
+      "evidence": [
+        {
+          "path": "datamimic_ce/engine/dsl/constants/data_type_constants.py",
+          "line": 1
+        }
+      ]
+    },
+    {
+      "id": "module:engine/dsl/constants/element_constants.py",
+      "concern": "Die Konstanten definieren konkrete XML-Attribut-, Element-, Datentyp- oder Exporter-Tokens, die Modelle und Parser gemeinsam lesen.",
+      "verdict": "keep",
+      "reason": "Das Vocabulary-Ziel hält unveränderliche Schreibweisen außerhalb der ausführenden Komponenten.",
+      "evidence": [
+        {
+          "path": "datamimic_ce/engine/dsl/constants/element_constants.py",
+          "line": 1
+        }
+      ]
+    },
+    {
+      "id": "module:engine/dsl/constants/exporter_constants.py",
+      "concern": "Die Konstanten definieren konkrete XML-Attribut-, Element-, Datentyp- oder Exporter-Tokens, die Modelle und Parser gemeinsam lesen.",
+      "verdict": "keep",
+      "reason": "Das Vocabulary-Ziel hält unveränderliche Schreibweisen außerhalb der ausführenden Komponenten.",
+      "evidence": [
+        {
+          "path": "datamimic_ce/engine/dsl/constants/exporter_constants.py",
+          "line": 1
+        }
+      ]
+    },
+    {
+      "id": "module:engine/dsl/contracts.py",
+      "concern": "Die Datei bündelt drei grenzüberschreitende Typen: EntityValue-Interface, GeneratorCapability-Dataclass und StateTransitionRule-Alias; nur zwei davon sind konkrete Boundary-Werte.",
+      "verdict": "unclear",
+      "reason": "Die Gruppierung verdient keine zusätzliche Unterarchitektur; Registry und capability consumers hängen an den konkreten Typen.",
+      "evidence": [
+        {
+          "path": "datamimic_ce/engine/dsl/contracts.py",
+          "line": 9
+        }
+      ]
+    },
+    {
+      "id": "module:engine/dsl/enums/__init__.py",
+      "concern": "Der Initializer enthält keine eigenständige DSL-Fachlogik und ist nur Paket-/Exportmechanik.",
+      "verdict": "scaffold",
+      "reason": "Eine weitere Komponentengrenze würde hier keinen Parser-, Modell- oder Runtime-Vertrag hinzufügen.",
+      "evidence": [
+        {
+          "path": "datamimic_ce/engine/dsl/enums/__init__.py",
+          "line": 1
+        }
+      ]
+    },
+    {
+      "id": "module:engine/dsl/enums/converter_enums.py",
+      "concern": "Das Enum stellt ein typisiertes DSL-Vokabular bereit, das Parser oder Runtime nach dem Einlesen statt Rohstrings verwenden.",
+      "verdict": "keep",
+      "reason": "Die Vocabulary-Zuordnung passt, sofern die fachlich getrennten Enum-Typen nicht zu einem Mega-Enum zusammengeführt werden.",
+      "evidence": [
+        {
+          "path": "datamimic_ce/engine/dsl/enums/converter_enums.py",
+          "line": 11
+        }
+      ]
+    },
+    {
+      "id": "module:engine/dsl/enums/dbms_enums.py",
+      "concern": "Das Enum stellt ein typisiertes DSL-Vokabular bereit, das Parser oder Runtime nach dem Einlesen statt Rohstrings verwenden.",
+      "verdict": "keep",
+      "reason": "Die Vocabulary-Zuordnung passt, sofern die fachlich getrennten Enum-Typen nicht zu einem Mega-Enum zusammengeführt werden.",
+      "evidence": [
+        {
+          "path": "datamimic_ce/engine/dsl/enums/dbms_enums.py",
+          "line": 11
+        }
+      ]
+    },
+    {
+      "id": "module:engine/dsl/enums/distribution_enums.py",
+      "concern": "Das Enum stellt ein typisiertes DSL-Vokabular bereit, das Parser oder Runtime nach dem Einlesen statt Rohstrings verwenden.",
+      "verdict": "keep",
+      "reason": "Die Vocabulary-Zuordnung passt, sofern die fachlich getrennten Enum-Typen nicht zu einem Mega-Enum zusammengeführt werden.",
+      "evidence": [
+        {
+          "path": "datamimic_ce/engine/dsl/enums/distribution_enums.py",
+          "line": 11
+        }
+      ]
+    },
+    {
+      "id": "module:engine/dsl/enums/faker_enums.py",
+      "concern": "Das Enum stellt ein typisiertes DSL-Vokabular bereit, das Parser oder Runtime nach dem Einlesen statt Rohstrings verwenden.",
+      "verdict": "keep",
+      "reason": "Die Vocabulary-Zuordnung passt, sofern die fachlich getrennten Enum-Typen nicht zu einem Mega-Enum zusammengeführt werden.",
+      "evidence": [
+        {
+          "path": "datamimic_ce/engine/dsl/enums/faker_enums.py",
+          "line": 11
+        }
+      ]
+    },
+    {
+      "id": "module:engine/dsl/enums/operation_enums.py",
+      "concern": "Das Enum stellt ein typisiertes DSL-Vokabular bereit, das Parser oder Runtime nach dem Einlesen statt Rohstrings verwenden.",
+      "verdict": "keep",
+      "reason": "Die Vocabulary-Zuordnung passt, sofern die fachlich getrennten Enum-Typen nicht zu einem Mega-Enum zusammengeführt werden.",
+      "evidence": [
+        {
+          "path": "datamimic_ce/engine/dsl/enums/operation_enums.py",
+          "line": 11
+        }
+      ]
+    },
+    {
+      "id": "module:engine/dsl/model/__init__.py",
+      "concern": "Der Initializer enthält keine eigenständige DSL-Fachlogik und ist nur Paket-/Exportmechanik.",
+      "verdict": "scaffold",
+      "reason": "Eine weitere Komponentengrenze würde hier keinen Parser-, Modell- oder Runtime-Vertrag hinzufügen.",
+      "evidence": [
+        {
+          "path": "datamimic_ce/engine/dsl/model/__init__.py",
+          "line": 1
+        }
+      ]
+    },
+    {
+      "id": "module:engine/dsl/model/array_model.py",
+      "concern": "Das Pydantic-Modell validiert den XML-Attributvertrag und hält die Felder, die der zugehörige Parser in sein Statement überführt.",
+      "verdict": "keep",
+      "reason": "Die Ziel-Untergruppe muss die tatsächliche Eingabeform des Modells abbilden, nicht allein die gemeinsame Pydantic-Basis.",
+      "evidence": [
+        {
+          "path": "datamimic_ce/engine/dsl/model/array_model.py",
+          "line": 22
+        }
+      ]
+    },
+    {
+      "id": "module:engine/dsl/model/assert_model.py",
+      "concern": "Das Pydantic-Modell validiert den XML-Attributvertrag und hält die Felder, die der zugehörige Parser in sein Statement überführt.",
+      "verdict": "keep",
+      "reason": "Die Ziel-Untergruppe muss die tatsächliche Eingabeform des Modells abbilden, nicht allein die gemeinsame Pydantic-Basis.",
+      "evidence": [
+        {
+          "path": "datamimic_ce/engine/dsl/model/assert_model.py",
+          "line": 14
+        }
+      ]
+    },
+    {
+      "id": "module:engine/dsl/model/base_if_else_model.py",
+      "concern": "Das Pydantic-Modell validiert den XML-Attributvertrag und hält die Felder, die der zugehörige Parser in sein Statement überführt.",
+      "verdict": "keep",
+      "reason": "Die Ziel-Untergruppe muss die tatsächliche Eingabeform des Modells abbilden, nicht allein die gemeinsame Pydantic-Basis.",
+      "evidence": [
+        {
+          "path": "datamimic_ce/engine/dsl/model/base_if_else_model.py",
+          "line": 16
+        }
+      ]
+    },
+    {
+      "id": "module:engine/dsl/model/condition_model.py",
+      "concern": "Das Pydantic-Modell validiert den XML-Attributvertrag und hält die Felder, die der zugehörige Parser in sein Statement überführt.",
+      "verdict": "keep",
+      "reason": "Die Ziel-Untergruppe muss die tatsächliche Eingabeform des Modells abbilden, nicht allein die gemeinsame Pydantic-Basis.",
+      "evidence": [
+        {
+          "path": "datamimic_ce/engine/dsl/model/condition_model.py",
+          "line": 11
+        }
+      ]
+    },
+    {
+      "id": "module:engine/dsl/model/constraints/__init__.py",
+      "concern": "Der Initializer enthält keine eigenständige DSL-Fachlogik und ist nur Paket-/Exportmechanik.",
+      "verdict": "scaffold",
+      "reason": "Eine weitere Komponentengrenze würde hier keinen Parser-, Modell- oder Runtime-Vertrag hinzufügen.",
+      "evidence": [
+        {
+          "path": "datamimic_ce/engine/dsl/model/constraints/__init__.py",
+          "line": 1
+        }
+      ]
+    },
+    {
+      "id": "module:engine/dsl/model/constraints/capabilities.py",
+      "concern": "Die SourceCapability-Fakten entscheiden Format- und Client-/Memstore-Eignung; sie beschreiben Datenquellfamilien statt einzelne Attributregeln.",
+      "verdict": "keep",
+      "reason": "Authoring und Validierung rufen dieselben Source-Eigenschaften über die öffentlichen Hilfen ab.",
+      "evidence": [
+        {
+          "path": "datamimic_ce/engine/dsl/model/constraints/capabilities.py",
+          "line": 31
+        }
+      ]
+    },
+    {
+      "id": "module:engine/dsl/model/constraints/facts.py",
+      "concern": "Die Datei deklariert konkrete, wiederverwendete Attributregeln je DSL-Element, darunter unabhängige Source- und Numeric-Distribution-Verträge.",
+      "verdict": "keep",
+      "reason": "Modelle, Linter und Authoring projizieren dieselben Fact-Objekte; Aufteilen nach Tag würde die Single-Source-Regeln verteilen.",
+      "evidence": [
+        {
+          "path": "datamimic_ce/engine/dsl/model/constraints/facts.py",
+          "line": 210
+        }
+      ]
+    },
+    {
+      "id": "module:engine/dsl/model/constraints/registry.py",
+      "concern": "Die Registry ordnet alle Tags ihren Fact-Tupeln zu und revidiert Extension-Registrierungen bei Änderungen.",
+      "verdict": "keep",
+      "reason": "ModelUtil und JSON Schema fragen genau dieses Mapping ab; die Kopplung an ElementRegistry hält die Extension-Transaktion atomar.",
+      "evidence": [
+        {
+          "path": "datamimic_ce/engine/dsl/model/constraints/registry.py",
+          "line": 56
+        }
+      ]
+    },
+    {
+      "id": "module:engine/dsl/model/constraints/serialization.py",
+      "concern": "Serialisierung übersetzt getypte Constraint-Objekte in Schema-/Reference-Payloads mit discriminators.",
+      "verdict": "keep",
+      "reason": "Schema und CLI-Manifeste teilen dieselbe Darstellung, daher ist die Grenze eigenständig und wiederverwendet.",
+      "evidence": [
+        {
+          "path": "datamimic_ce/engine/dsl/model/constraints/serialization.py",
+          "line": 31
+        }
+      ]
+    },
+    {
+      "id": "module:engine/dsl/model/constraints/types.py",
+      "concern": "Die frozen Dataclasses definieren zehn Constraint-Formen und typisierte Resolver für dynamische erlaubte Werte.",
+      "verdict": "keep",
+      "reason": "Facts, Validatoren und Schema-Projektion verwenden diese Union als gemeinsamen Regelvertrag.",
+      "evidence": [
+        {
+          "path": "datamimic_ce/engine/dsl/model/constraints/types.py",
+          "line": 17
+        }
+      ]
+    },
+    {
+      "id": "module:engine/dsl/model/database_model.py",
+      "concern": "Das Pydantic-Modell validiert den XML-Attributvertrag und hält die Felder, die der zugehörige Parser in sein Statement überführt.",
+      "verdict": "keep",
+      "reason": "Die Ziel-Untergruppe muss die tatsächliche Eingabeform des Modells abbilden, nicht allein die gemeinsame Pydantic-Basis.",
+      "evidence": [
+        {
+          "path": "datamimic_ce/engine/dsl/model/database_model.py",
+          "line": 16
+        }
+      ]
+    },
+    {
+      "id": "module:engine/dsl/model/demographics_model.py",
+      "concern": "Das Pydantic-Modell validiert den XML-Attributvertrag und hält die Felder, die der zugehörige Parser in sein Statement überführt.",
+      "verdict": "keep",
+      "reason": "Die Ziel-Untergruppe muss die tatsächliche Eingabeform des Modells abbilden, nicht allein die gemeinsame Pydantic-Basis.",
+      "evidence": [
+        {
+          "path": "datamimic_ce/engine/dsl/model/demographics_model.py",
+          "line": 12
+        }
+      ]
+    },
+    {
+      "id": "module:engine/dsl/model/element_model.py",
+      "concern": "Das Pydantic-Modell validiert den XML-Attributvertrag und hält die Felder, die der zugehörige Parser in sein Statement überführt.",
+      "verdict": "keep",
+      "reason": "Die Ziel-Untergruppe muss die tatsächliche Eingabeform des Modells abbilden, nicht allein die gemeinsame Pydantic-Basis.",
+      "evidence": [
+        {
+          "path": "datamimic_ce/engine/dsl/model/element_model.py",
+          "line": 11
+        }
+      ]
+    },
+    {
+      "id": "module:engine/dsl/model/element_registry.py",
+      "concern": "Das Registry hält Child-Grammatik, `<iterate>/<id>`-Aliase, Model-Lookup und atomare Extension-Constraint-Registrierung zusammen.",
+      "verdict": "keep",
+      "reason": "ParserUtil und Schema/Authoring verwenden denselben dynamischen Grammatikstand; separate Registry-Stücke müssten Revision und Rollback konsistent halten.",
+      "evidence": [
+        {
+          "path": "datamimic_ce/engine/dsl/model/element_registry.py",
+          "line": 61
+        }
+      ]
+    },
+    {
+      "id": "module:engine/dsl/model/else_if_model.py",
+      "concern": "Das Pydantic-Modell validiert den XML-Attributvertrag und hält die Felder, die der zugehörige Parser in sein Statement überführt.",
+      "verdict": "keep",
+      "reason": "Die Ziel-Untergruppe muss die tatsächliche Eingabeform des Modells abbilden, nicht allein die gemeinsame Pydantic-Basis.",
+      "evidence": [
+        {
+          "path": "datamimic_ce/engine/dsl/model/else_if_model.py",
+          "line": 11
+        }
+      ]
+    },
+    {
+      "id": "module:engine/dsl/model/else_model.py",
+      "concern": "Das Pydantic-Modell validiert den XML-Attributvertrag und hält die Felder, die der zugehörige Parser in sein Statement überführt.",
+      "verdict": "keep",
+      "reason": "Die Ziel-Untergruppe muss die tatsächliche Eingabeform des Modells abbilden, nicht allein die gemeinsame Pydantic-Basis.",
+      "evidence": [
+        {
+          "path": "datamimic_ce/engine/dsl/model/else_model.py",
+          "line": 11
+        }
+      ]
+    },
+    {
+      "id": "module:engine/dsl/model/execute_model.py",
+      "concern": "Das Pydantic-Modell validiert den XML-Attributvertrag und hält die Felder, die der zugehörige Parser in sein Statement überführt.",
+      "verdict": "keep",
+      "reason": "Die Ziel-Untergruppe muss die tatsächliche Eingabeform des Modells abbilden, nicht allein die gemeinsame Pydantic-Basis.",
+      "evidence": [
+        {
+          "path": "datamimic_ce/engine/dsl/model/execute_model.py",
+          "line": 22
+        }
+      ]
+    },
+    {
+      "id": "module:engine/dsl/model/generate_model.py",
+      "concern": "Das Pydantic-Modell validiert den XML-Attributvertrag und hält die Felder, die der zugehörige Parser in sein Statement überführt.",
+      "verdict": "keep",
+      "reason": "Die Ziel-Untergruppe muss die tatsächliche Eingabeform des Modells abbilden, nicht allein die gemeinsame Pydantic-Basis.",
+      "evidence": [
+        {
+          "path": "datamimic_ce/engine/dsl/model/generate_model.py",
+          "line": 55
+        }
+      ]
+    },
+    {
+      "id": "module:engine/dsl/model/generator_model.py",
+      "concern": "`<generator>` ist eine benannte Setupdefinition, die Keys/Variablen später konsumieren; sie ist kein einzelner Skalarwert.",
+      "verdict": "change",
+      "reason": "Die aktuelle scalar-Zuordnung ist falsch; ob die neue gemeinsame Setup-Definitionsgrenze unter generation oder Setup-Konfiguration liegt, ist durch diesen Code nicht entschieden.",
+      "evidence": [
+        {
+          "path": "datamimic_ce/engine/dsl/model/generator_model.py",
+          "line": 15
+        }
+      ]
+    },
+    {
+      "id": "module:engine/dsl/model/if_model.py",
+      "concern": "Das Pydantic-Modell validiert den XML-Attributvertrag und hält die Felder, die der zugehörige Parser in sein Statement überführt.",
+      "verdict": "keep",
+      "reason": "Die Ziel-Untergruppe muss die tatsächliche Eingabeform des Modells abbilden, nicht allein die gemeinsame Pydantic-Basis.",
+      "evidence": [
+        {
+          "path": "datamimic_ce/engine/dsl/model/if_model.py",
+          "line": 11
+        }
+      ]
+    },
+    {
+      "id": "module:engine/dsl/model/include_model.py",
+      "concern": "Das Pydantic-Modell validiert den XML-Attributvertrag und hält die Felder, die der zugehörige Parser in sein Statement überführt.",
+      "verdict": "keep",
+      "reason": "Die Ziel-Untergruppe muss die tatsächliche Eingabeform des Modells abbilden, nicht allein die gemeinsame Pydantic-Basis.",
+      "evidence": [
+        {
+          "path": "datamimic_ce/engine/dsl/model/include_model.py",
+          "line": 15
+        }
+      ]
+    },
+    {
+      "id": "module:engine/dsl/model/item_model.py",
+      "concern": "Das Pydantic-Modell validiert den XML-Attributvertrag und hält die Felder, die der zugehörige Parser in sein Statement überführt.",
+      "verdict": "keep",
+      "reason": "Die Ziel-Untergruppe muss die tatsächliche Eingabeform des Modells abbilden, nicht allein die gemeinsame Pydantic-Basis.",
+      "evidence": [
+        {
+          "path": "datamimic_ce/engine/dsl/model/item_model.py",
+          "line": 15
+        }
+      ]
+    },
+    {
+      "id": "module:engine/dsl/model/key_model.py",
+      "concern": "Das Pydantic-Modell validiert den XML-Attributvertrag und hält die Felder, die der zugehörige Parser in sein Statement überführt.",
+      "verdict": "keep",
+      "reason": "Die Ziel-Untergruppe muss die tatsächliche Eingabeform des Modells abbilden, nicht allein die gemeinsame Pydantic-Basis.",
+      "evidence": [
+        {
+          "path": "datamimic_ce/engine/dsl/model/key_model.py",
+          "line": 63
+        }
+      ]
+    },
+    {
+      "id": "module:engine/dsl/model/list_model.py",
+      "concern": "Das Pydantic-Modell validiert den XML-Attributvertrag und hält die Felder, die der zugehörige Parser in sein Statement überführt.",
+      "verdict": "keep",
+      "reason": "Die Ziel-Untergruppe muss die tatsächliche Eingabeform des Modells abbilden, nicht allein die gemeinsame Pydantic-Basis.",
+      "evidence": [
+        {
+          "path": "datamimic_ce/engine/dsl/model/list_model.py",
+          "line": 15
+        }
+      ]
+    },
+    {
+      "id": "module:engine/dsl/model/memstore_model.py",
+      "concern": "Das Pydantic-Modell validiert den XML-Attributvertrag und hält die Felder, die der zugehörige Parser in sein Statement überführt.",
+      "verdict": "keep",
+      "reason": "Die Ziel-Untergruppe muss die tatsächliche Eingabeform des Modells abbilden, nicht allein die gemeinsame Pydantic-Basis.",
+      "evidence": [
+        {
+          "path": "datamimic_ce/engine/dsl/model/memstore_model.py",
+          "line": 15
+        }
+      ]
+    },
+    {
+      "id": "module:engine/dsl/model/model_util.py",
+      "concern": "ModelUtil führt Constraint-Fakten aus und behält außerdem bestehende typspezifische Modellvalidierer; es ist Validierungsmechanik, kein BaseModel.",
+      "verdict": "keep",
+      "reason": "Pydantic-Modelle rufen check_constraints/check_valid_attributes zentral auf; Verschieben in model/base darf keine fachlichen Facts aufnehmen.",
+      "evidence": [
+        {
+          "path": "datamimic_ce/engine/dsl/model/model_util.py",
+          "line": 45
+        }
+      ]
+    },
+    {
+      "id": "module:engine/dsl/model/mongodb_model.py",
+      "concern": "Das Pydantic-Modell validiert den XML-Attributvertrag und hält die Felder, die der zugehörige Parser in sein Statement überführt.",
+      "verdict": "keep",
+      "reason": "Die Ziel-Untergruppe muss die tatsächliche Eingabeform des Modells abbilden, nicht allein die gemeinsame Pydantic-Basis.",
+      "evidence": [
+        {
+          "path": "datamimic_ce/engine/dsl/model/mongodb_model.py",
+          "line": 14
+        }
+      ]
+    },
+    {
+      "id": "module:engine/dsl/model/nested_key_model.py",
+      "concern": "Das Pydantic-Modell validiert den XML-Attributvertrag und hält die Felder, die der zugehörige Parser in sein Statement überführt.",
+      "verdict": "keep",
+      "reason": "Die Ziel-Untergruppe muss die tatsächliche Eingabeform des Modells abbilden, nicht allein die gemeinsame Pydantic-Basis.",
+      "evidence": [
+        {
+          "path": "datamimic_ce/engine/dsl/model/nested_key_model.py",
+          "line": 48
+        }
+      ]
+    },
+    {
+      "id": "module:engine/dsl/model/reference_field_model.py",
+      "concern": "Das Pydantic-Modell validiert den XML-Attributvertrag und hält die Felder, die der zugehörige Parser in sein Statement überführt.",
+      "verdict": "keep",
+      "reason": "Die Ziel-Untergruppe muss die tatsächliche Eingabeform des Modells abbilden, nicht allein die gemeinsame Pydantic-Basis.",
+      "evidence": [
+        {
+          "path": "datamimic_ce/engine/dsl/model/reference_field_model.py",
+          "line": 15
+        }
+      ]
+    },
+    {
+      "id": "module:engine/dsl/model/reference_model.py",
+      "concern": "Das Pydantic-Modell validiert den XML-Attributvertrag und hält die Felder, die der zugehörige Parser in sein Statement überführt.",
+      "verdict": "keep",
+      "reason": "Die Ziel-Untergruppe muss die tatsächliche Eingabeform des Modells abbilden, nicht allein die gemeinsame Pydantic-Basis.",
+      "evidence": [
+        {
+          "path": "datamimic_ce/engine/dsl/model/reference_model.py",
+          "line": 33
+        }
+      ]
+    },
+    {
+      "id": "module:engine/dsl/model/setup_model.py",
+      "concern": "Das Pydantic-Modell validiert den XML-Attributvertrag und hält die Felder, die der zugehörige Parser in sein Statement überführt.",
+      "verdict": "keep",
+      "reason": "Die Ziel-Untergruppe muss die tatsächliche Eingabeform des Modells abbilden, nicht allein die gemeinsame Pydantic-Basis.",
+      "evidence": [
+        {
+          "path": "datamimic_ce/engine/dsl/model/setup_model.py",
+          "line": 27
+        }
+      ]
+    },
+    {
+      "id": "module:engine/dsl/model/state_machine_model.py",
+      "concern": "Das Modell beschreibt ID, Startzustand und Übergänge einer Setup-Definition, die später als Generatorreferenz verwendet wird.",
+      "verdict": "change",
+      "reason": "Die aktuelle flow/loops-Zuordnung ist falsch; ob die Definition bei generation oder in einer gemeinsamen Setup-Konfiguration liegt, bleibt offen.",
+      "evidence": [
+        {
+          "path": "datamimic_ce/engine/dsl/model/state_machine_model.py",
+          "line": 15
+        }
+      ]
+    },
+    {
+      "id": "module:engine/dsl/model/value_model.py",
+      "concern": "Das Pydantic-Modell validiert den XML-Attributvertrag und hält die Felder, die der zugehörige Parser in sein Statement überführt.",
+      "verdict": "keep",
+      "reason": "Die Ziel-Untergruppe muss die tatsächliche Eingabeform des Modells abbilden, nicht allein die gemeinsame Pydantic-Basis.",
+      "evidence": [
+        {
+          "path": "datamimic_ce/engine/dsl/model/value_model.py",
+          "line": 16
+        }
+      ]
+    },
+    {
+      "id": "module:engine/dsl/model/variable_model.py",
+      "concern": "Das Pydantic-Modell validiert den XML-Attributvertrag und hält die Felder, die der zugehörige Parser in sein Statement überführt.",
+      "verdict": "keep",
+      "reason": "Die Ziel-Untergruppe muss die tatsächliche Eingabeform des Modells abbilden, nicht allein die gemeinsame Pydantic-Basis.",
+      "evidence": [
+        {
+          "path": "datamimic_ce/engine/dsl/model/variable_model.py",
+          "line": 61
+        }
+      ]
+    },
+    {
+      "id": "module:engine/dsl/model/while_model.py",
+      "concern": "Das Pydantic-Modell validiert den XML-Attributvertrag und hält die Felder, die der zugehörige Parser in sein Statement überführt.",
+      "verdict": "keep",
+      "reason": "Die Ziel-Untergruppe muss die tatsächliche Eingabeform des Modells abbilden, nicht allein die gemeinsame Pydantic-Basis.",
+      "evidence": [
+        {
+          "path": "datamimic_ce/engine/dsl/model/while_model.py",
+          "line": 14
+        }
+      ]
+    },
+    {
+      "id": "module:engine/dsl/parsers/__init__.py",
+      "concern": "Der Initializer enthält keine eigenständige DSL-Fachlogik und ist nur Paket-/Exportmechanik.",
+      "verdict": "scaffold",
+      "reason": "Eine weitere Komponentengrenze würde hier keinen Parser-, Modell- oder Runtime-Vertrag hinzufügen.",
+      "evidence": [
+        {
+          "path": "datamimic_ce/engine/dsl/parsers/__init__.py",
+          "line": 1
+        }
+      ]
+    },
+    {
+      "id": "module:engine/dsl/parsers/array_parser.py",
+      "concern": "Der Parser prüft das konkrete XML-Element, validiert sein Modell und erzeugt das Statement für den Runtime-Task.",
+      "verdict": "keep",
+      "reason": "Die Parser-Untergruppe passt, wenn sie nach der erzeugten DSL-Semantik und nicht nur nach ähnlichen Methodensignaturen gebildet ist.",
+      "evidence": [
+        {
+          "path": "datamimic_ce/engine/dsl/parsers/array_parser.py",
+          "line": 20
+        }
+      ]
+    },
+    {
+      "id": "module:engine/dsl/parsers/assert_parser.py",
+      "concern": "Der Parser prüft das konkrete XML-Element, validiert sein Modell und erzeugt das Statement für den Runtime-Task.",
+      "verdict": "keep",
+      "reason": "Die Parser-Untergruppe passt, wenn sie nach der erzeugten DSL-Semantik und nicht nur nach ähnlichen Methodensignaturen gebildet ist.",
+      "evidence": [
+        {
+          "path": "datamimic_ce/engine/dsl/parsers/assert_parser.py",
+          "line": 17
+        }
+      ]
+    },
+    {
+      "id": "module:engine/dsl/parsers/condition_parser.py",
+      "concern": "Der Parser prüft das konkrete XML-Element, validiert sein Modell und erzeugt das Statement für den Runtime-Task.",
+      "verdict": "keep",
+      "reason": "Die Parser-Untergruppe passt, wenn sie nach der erzeugten DSL-Semantik und nicht nur nach ähnlichen Methodensignaturen gebildet ist.",
+      "evidence": [
+        {
+          "path": "datamimic_ce/engine/dsl/parsers/condition_parser.py",
+          "line": 21
+        }
+      ]
+    },
+    {
+      "id": "module:engine/dsl/parsers/database_parser.py",
+      "concern": "Der Parser prüft das konkrete XML-Element, validiert sein Modell und erzeugt das Statement für den Runtime-Task.",
+      "verdict": "keep",
+      "reason": "Die Parser-Untergruppe passt, wenn sie nach der erzeugten DSL-Semantik und nicht nur nach ähnlichen Methodensignaturen gebildet ist.",
+      "evidence": [
+        {
+          "path": "datamimic_ce/engine/dsl/parsers/database_parser.py",
+          "line": 17
+        }
+      ]
+    },
+    {
+      "id": "module:engine/dsl/parsers/demographics_parser.py",
+      "concern": "Der Parser prüft das konkrete XML-Element, validiert sein Modell und erzeugt das Statement für den Runtime-Task.",
+      "verdict": "keep",
+      "reason": "Die Parser-Untergruppe passt, wenn sie nach der erzeugten DSL-Semantik und nicht nur nach ähnlichen Methodensignaturen gebildet ist.",
+      "evidence": [
+        {
+          "path": "datamimic_ce/engine/dsl/parsers/demographics_parser.py",
+          "line": 15
+        }
+      ]
+    },
+    {
+      "id": "module:engine/dsl/parsers/descriptor_parser.py",
+      "concern": "DescriptorParser liest die Descriptordatei als alleinigen Entry Point und delegiert den Root an SetupParser.",
+      "verdict": "keep",
+      "reason": "CLI/Runtime erhalten ein SetupStatement; die Dokumentgrenze ist enger als rekursive Child-Dispatch.",
+      "evidence": [
+        {
+          "path": "datamimic_ce/engine/dsl/parsers/descriptor_parser.py",
+          "line": 16
+        }
+      ]
+    },
+    {
+      "id": "module:engine/dsl/parsers/echo_parser.py",
+      "concern": "Der Parser prüft das konkrete XML-Element, validiert sein Modell und erzeugt das Statement für den Runtime-Task.",
+      "verdict": "keep",
+      "reason": "Die Parser-Untergruppe passt, wenn sie nach der erzeugten DSL-Semantik und nicht nur nach ähnlichen Methodensignaturen gebildet ist.",
+      "evidence": [
+        {
+          "path": "datamimic_ce/engine/dsl/parsers/echo_parser.py",
+          "line": 16
+        }
+      ]
+    },
+    {
+      "id": "module:engine/dsl/parsers/element_parser.py",
+      "concern": "Der Parser prüft das konkrete XML-Element, validiert sein Modell und erzeugt das Statement für den Runtime-Task.",
+      "verdict": "keep",
+      "reason": "Die Parser-Untergruppe passt, wenn sie nach der erzeugten DSL-Semantik und nicht nur nach ähnlichen Methodensignaturen gebildet ist.",
+      "evidence": [
+        {
+          "path": "datamimic_ce/engine/dsl/parsers/element_parser.py",
+          "line": 16
+        }
+      ]
+    },
+    {
+      "id": "module:engine/dsl/parsers/else_if_parser.py",
+      "concern": "Der Parser prüft das konkrete XML-Element, validiert sein Modell und erzeugt das Statement für den Runtime-Task.",
+      "verdict": "keep",
+      "reason": "Die Parser-Untergruppe passt, wenn sie nach der erzeugten DSL-Semantik und nicht nur nach ähnlichen Methodensignaturen gebildet ist.",
+      "evidence": [
+        {
+          "path": "datamimic_ce/engine/dsl/parsers/else_if_parser.py",
+          "line": 13
+        }
+      ]
+    },
+    {
+      "id": "module:engine/dsl/parsers/else_parser.py",
+      "concern": "Der Parser prüft das konkrete XML-Element, validiert sein Modell und erzeugt das Statement für den Runtime-Task.",
+      "verdict": "keep",
+      "reason": "Die Parser-Untergruppe passt, wenn sie nach der erzeugten DSL-Semantik und nicht nur nach ähnlichen Methodensignaturen gebildet ist.",
+      "evidence": [
+        {
+          "path": "datamimic_ce/engine/dsl/parsers/else_parser.py",
+          "line": 13
+        }
+      ]
+    },
+    {
+      "id": "module:engine/dsl/parsers/execute_parser.py",
+      "concern": "Der Parser prüft das konkrete XML-Element, validiert sein Modell und erzeugt das Statement für den Runtime-Task.",
+      "verdict": "keep",
+      "reason": "Die Parser-Untergruppe passt, wenn sie nach der erzeugten DSL-Semantik und nicht nur nach ähnlichen Methodensignaturen gebildet ist.",
+      "evidence": [
+        {
+          "path": "datamimic_ce/engine/dsl/parsers/execute_parser.py",
+          "line": 18
+        }
+      ]
+    },
+    {
+      "id": "module:engine/dsl/parsers/generate_parser.py",
+      "concern": "Der Parser prüft das konkrete XML-Element, validiert sein Modell und erzeugt das Statement für den Runtime-Task.",
+      "verdict": "keep",
+      "reason": "Die Parser-Untergruppe passt, wenn sie nach der erzeugten DSL-Semantik und nicht nur nach ähnlichen Methodensignaturen gebildet ist.",
+      "evidence": [
+        {
+          "path": "datamimic_ce/engine/dsl/parsers/generate_parser.py",
+          "line": 24
+        }
+      ]
+    },
+    {
+      "id": "module:engine/dsl/parsers/generator_parser.py",
+      "concern": "Der Parser übersetzt eine Setup-Definition in GeneratorStatement; er parst keinen skalaren Datensatzwert.",
+      "verdict": "change",
+      "reason": "Die aktuelle values-Zuordnung ist falsch; Parser/Modell/Statement brauchen einen gemeinsamen Definitionsort, dessen Paketname aus dem Laufzeitpfad noch nicht folgt.",
+      "evidence": [
+        {
+          "path": "datamimic_ce/engine/dsl/parsers/generator_parser.py",
+          "line": 15
+        }
+      ]
+    },
+    {
+      "id": "module:engine/dsl/parsers/if_else_base_parser.py",
+      "concern": "Der Parser prüft das konkrete XML-Element, validiert sein Modell und erzeugt das Statement für den Runtime-Task.",
+      "verdict": "keep",
+      "reason": "Die Parser-Untergruppe passt, wenn sie nach der erzeugten DSL-Semantik und nicht nur nach ähnlichen Methodensignaturen gebildet ist.",
+      "evidence": [
+        {
+          "path": "datamimic_ce/engine/dsl/parsers/if_else_base_parser.py",
+          "line": 22
+        }
+      ]
+    },
+    {
+      "id": "module:engine/dsl/parsers/if_parser.py",
+      "concern": "Der Parser prüft das konkrete XML-Element, validiert sein Modell und erzeugt das Statement für den Runtime-Task.",
+      "verdict": "keep",
+      "reason": "Die Parser-Untergruppe passt, wenn sie nach der erzeugten DSL-Semantik und nicht nur nach ähnlichen Methodensignaturen gebildet ist.",
+      "evidence": [
+        {
+          "path": "datamimic_ce/engine/dsl/parsers/if_parser.py",
+          "line": 13
+        }
+      ]
+    },
+    {
+      "id": "module:engine/dsl/parsers/include_parser.py",
+      "concern": "Der Parser prüft das konkrete XML-Element, validiert sein Modell und erzeugt das Statement für den Runtime-Task.",
+      "verdict": "keep",
+      "reason": "Die Parser-Untergruppe passt, wenn sie nach der erzeugten DSL-Semantik und nicht nur nach ähnlichen Methodensignaturen gebildet ist.",
+      "evidence": [
+        {
+          "path": "datamimic_ce/engine/dsl/parsers/include_parser.py",
+          "line": 14
+        }
+      ]
+    },
+    {
+      "id": "module:engine/dsl/parsers/item_parser.py",
+      "concern": "Der Parser prüft das konkrete XML-Element, validiert sein Modell und erzeugt das Statement für den Runtime-Task.",
+      "verdict": "keep",
+      "reason": "Die Parser-Untergruppe passt, wenn sie nach der erzeugten DSL-Semantik und nicht nur nach ähnlichen Methodensignaturen gebildet ist.",
+      "evidence": [
+        {
+          "path": "datamimic_ce/engine/dsl/parsers/item_parser.py",
+          "line": 17
+        }
+      ]
+    },
+    {
+      "id": "module:engine/dsl/parsers/key_parser.py",
+      "concern": "Der Parser prüft das konkrete XML-Element, validiert sein Modell und erzeugt das Statement für den Runtime-Task.",
+      "verdict": "keep",
+      "reason": "Die Parser-Untergruppe passt, wenn sie nach der erzeugten DSL-Semantik und nicht nur nach ähnlichen Methodensignaturen gebildet ist.",
+      "evidence": [
+        {
+          "path": "datamimic_ce/engine/dsl/parsers/key_parser.py",
+          "line": 19
+        }
+      ]
+    },
+    {
+      "id": "module:engine/dsl/parsers/list_parser.py",
+      "concern": "Der Parser prüft das konkrete XML-Element, validiert sein Modell und erzeugt das Statement für den Runtime-Task.",
+      "verdict": "keep",
+      "reason": "Die Parser-Untergruppe passt, wenn sie nach der erzeugten DSL-Semantik und nicht nur nach ähnlichen Methodensignaturen gebildet ist.",
+      "evidence": [
+        {
+          "path": "datamimic_ce/engine/dsl/parsers/list_parser.py",
+          "line": 17
+        }
+      ]
+    },
+    {
+      "id": "module:engine/dsl/parsers/memstore_parser.py",
+      "concern": "Der Parser prüft das konkrete XML-Element, validiert sein Modell und erzeugt das Statement für den Runtime-Task.",
+      "verdict": "keep",
+      "reason": "Die Parser-Untergruppe passt, wenn sie nach der erzeugten DSL-Semantik und nicht nur nach ähnlichen Methodensignaturen gebildet ist.",
+      "evidence": [
+        {
+          "path": "datamimic_ce/engine/dsl/parsers/memstore_parser.py",
+          "line": 14
+        }
+      ]
+    },
+    {
+      "id": "module:engine/dsl/parsers/mongodb_parser.py",
+      "concern": "Der Parser prüft das konkrete XML-Element, validiert sein Modell und erzeugt das Statement für den Runtime-Task.",
+      "verdict": "keep",
+      "reason": "Die Parser-Untergruppe passt, wenn sie nach der erzeugten DSL-Semantik und nicht nur nach ähnlichen Methodensignaturen gebildet ist.",
+      "evidence": [
+        {
+          "path": "datamimic_ce/engine/dsl/parsers/mongodb_parser.py",
+          "line": 18
+        }
+      ]
+    },
+    {
+      "id": "module:engine/dsl/parsers/nested_key_parser.py",
+      "concern": "Der Parser prüft das konkrete XML-Element, validiert sein Modell und erzeugt das Statement für den Runtime-Task.",
+      "verdict": "keep",
+      "reason": "Die Parser-Untergruppe passt, wenn sie nach der erzeugten DSL-Semantik und nicht nur nach ähnlichen Methodensignaturen gebildet ist.",
+      "evidence": [
+        {
+          "path": "datamimic_ce/engine/dsl/parsers/nested_key_parser.py",
+          "line": 18
+        }
+      ]
+    },
+    {
+      "id": "module:engine/dsl/parsers/parser_util.py",
+      "concern": "ParserUtil kombiniert rekursiven Unterbaum-Dispatch mit Credential-Sourcing aus Runtime-Environment und Properties-Dateien.",
+      "verdict": "split",
+      "reason": "Dispatch läuft in Methoden 79–187, Credential-Auflösung in 223–307; die beiden Verantwortungen haben getrennte Änderungsgründe.",
+      "evidence": [
+        {
+          "path": "datamimic_ce/engine/dsl/parsers/parser_util.py",
+          "line": 44
+        }
+      ],
+      "recommended_targets": [
+        "engine/dsl/parsers/base/dispatch.py",
+        "engine/dsl/parsers/document/credentials.py"
+      ]
+    },
+    {
+      "id": "module:engine/dsl/parsers/reference_parser.py",
+      "concern": "Der Parser prüft das konkrete XML-Element, validiert sein Modell und erzeugt das Statement für den Runtime-Task.",
+      "verdict": "keep",
+      "reason": "Die Parser-Untergruppe passt, wenn sie nach der erzeugten DSL-Semantik und nicht nur nach ähnlichen Methodensignaturen gebildet ist.",
+      "evidence": [
+        {
+          "path": "datamimic_ce/engine/dsl/parsers/reference_parser.py",
+          "line": 17
+        }
+      ]
+    },
+    {
+      "id": "module:engine/dsl/parsers/setup_parser.py",
+      "concern": "Der Parser prüft das konkrete XML-Element, validiert sein Modell und erzeugt das Statement für den Runtime-Task.",
+      "verdict": "keep",
+      "reason": "Die Parser-Untergruppe passt, wenn sie nach der erzeugten DSL-Semantik und nicht nur nach ähnlichen Methodensignaturen gebildet ist.",
+      "evidence": [
+        {
+          "path": "datamimic_ce/engine/dsl/parsers/setup_parser.py",
+          "line": 19
+        }
+      ]
+    },
+    {
+      "id": "module:engine/dsl/parsers/state_machine_parser.py",
+      "concern": "Der Parser validiert gewichtete Übergänge und erstellt eine benannte Definition, die später als Generator verwendet wird.",
+      "verdict": "change",
+      "reason": "Die aktuelle flow/loops-Zuordnung ist falsch; der gemeinsame Ort mit anderen Setup-Definitionen ist zu entscheiden.",
+      "evidence": [
+        {
+          "path": "datamimic_ce/engine/dsl/parsers/state_machine_parser.py",
+          "line": 16
+        }
+      ]
+    },
+    {
+      "id": "module:engine/dsl/parsers/statement_parser.py",
+      "concern": "StatementParser vereinheitlicht XML-Tag-/Child-Prüfung, Properties-Substitution und Pydantic-Fehlerübersetzung für konkrete Parser.",
+      "verdict": "keep",
+      "reason": "Alle konkreten Parser rufen validate_attributes auf; eine gemeinsame Parser-Vertragsgrenze ist real.",
+      "evidence": [
+        {
+          "path": "datamimic_ce/engine/dsl/parsers/statement_parser.py",
+          "line": 21
+        }
+      ]
+    },
+    {
+      "id": "module:engine/dsl/parsers/variable_parser.py",
+      "concern": "Der Parser prüft das konkrete XML-Element, validiert sein Modell und erzeugt das Statement für den Runtime-Task.",
+      "verdict": "keep",
+      "reason": "Die Parser-Untergruppe passt, wenn sie nach der erzeugten DSL-Semantik und nicht nur nach ähnlichen Methodensignaturen gebildet ist.",
+      "evidence": [
+        {
+          "path": "datamimic_ce/engine/dsl/parsers/variable_parser.py",
+          "line": 16
+        }
+      ]
+    },
+    {
+      "id": "module:engine/dsl/parsers/while_parser.py",
+      "concern": "Der Parser prüft das konkrete XML-Element, validiert sein Modell und erzeugt das Statement für den Runtime-Task.",
+      "verdict": "keep",
+      "reason": "Die Parser-Untergruppe passt, wenn sie nach der erzeugten DSL-Semantik und nicht nur nach ähnlichen Methodensignaturen gebildet ist.",
+      "evidence": [
+        {
+          "path": "datamimic_ce/engine/dsl/parsers/while_parser.py",
+          "line": 21
+        }
+      ]
+    },
+    {
+      "id": "module:engine/dsl/properties.py",
+      "concern": "parse_properties lädt gecachte Java-Properties-Zeilen und mappt key=value Paare; das ist Konfigurationsdatei-Parsing.",
+      "verdict": "keep",
+      "reason": "IncludeParser und Credential-Auflösung konsumieren diese Funktion, sodass sie bei Dokument-/Config-Eingabe bleibt.",
+      "evidence": [
+        {
+          "path": "datamimic_ce/engine/dsl/properties.py",
+          "line": 5
+        }
+      ]
+    },
+    {
+      "id": "module:engine/dsl/statements/__init__.py",
+      "concern": "Der Initializer enthält keine eigenständige DSL-Fachlogik und ist nur Paket-/Exportmechanik.",
+      "verdict": "scaffold",
+      "reason": "Eine weitere Komponentengrenze würde hier keinen Parser-, Modell- oder Runtime-Vertrag hinzufügen.",
+      "evidence": [
+        {
+          "path": "datamimic_ce/engine/dsl/statements/__init__.py",
+          "line": 1
+        }
+      ]
+    },
+    {
+      "id": "module:engine/dsl/statements/array_statement.py",
+      "concern": "Das Statement übernimmt validierte Modellwerte und hält Parent-/Child-Beziehungen oder Runtime-Konfiguration bis zum Task-Aufbau fest.",
+      "verdict": "keep",
+      "reason": "Die Zuordnung passt, wenn aktive Baum-/Scope-Semantik nicht mit bloßer Wertdeklaration verwechselt wird.",
+      "evidence": [
+        {
+          "path": "datamimic_ce/engine/dsl/statements/array_statement.py",
+          "line": 13
+        }
+      ]
+    },
+    {
+      "id": "module:engine/dsl/statements/assert_statement.py",
+      "concern": "Das Statement übernimmt validierte Modellwerte und hält Parent-/Child-Beziehungen oder Runtime-Konfiguration bis zum Task-Aufbau fest.",
+      "verdict": "keep",
+      "reason": "Die Zuordnung passt, wenn aktive Baum-/Scope-Semantik nicht mit bloßer Wertdeklaration verwechselt wird.",
+      "evidence": [
+        {
+          "path": "datamimic_ce/engine/dsl/statements/assert_statement.py",
+          "line": 12
+        }
+      ]
+    },
+    {
+      "id": "module:engine/dsl/statements/composite_statement.py",
+      "concern": "Das Statement übernimmt validierte Modellwerte und hält Parent-/Child-Beziehungen oder Runtime-Konfiguration bis zum Task-Aufbau fest.",
+      "verdict": "keep",
+      "reason": "Die Zuordnung passt, wenn aktive Baum-/Scope-Semantik nicht mit bloßer Wertdeklaration verwechselt wird.",
+      "evidence": [
+        {
+          "path": "datamimic_ce/engine/dsl/statements/composite_statement.py",
+          "line": 17
+        }
+      ]
+    },
+    {
+      "id": "module:engine/dsl/statements/condition_statement.py",
+      "concern": "Das Statement übernimmt validierte Modellwerte und hält Parent-/Child-Beziehungen oder Runtime-Konfiguration bis zum Task-Aufbau fest.",
+      "verdict": "keep",
+      "reason": "Die Zuordnung passt, wenn aktive Baum-/Scope-Semantik nicht mit bloßer Wertdeklaration verwechselt wird.",
+      "evidence": [
+        {
+          "path": "datamimic_ce/engine/dsl/statements/condition_statement.py",
+          "line": 20
+        }
+      ]
+    },
+    {
+      "id": "module:engine/dsl/statements/database_statement.py",
+      "concern": "Das Statement übernimmt validierte Modellwerte und hält Parent-/Child-Beziehungen oder Runtime-Konfiguration bis zum Task-Aufbau fest.",
+      "verdict": "keep",
+      "reason": "Die Zuordnung passt, wenn aktive Baum-/Scope-Semantik nicht mit bloßer Wertdeklaration verwechselt wird.",
+      "evidence": [
+        {
+          "path": "datamimic_ce/engine/dsl/statements/database_statement.py",
+          "line": 12
+        }
+      ]
+    },
+    {
+      "id": "module:engine/dsl/statements/demographics_statement.py",
+      "concern": "Das Statement übernimmt validierte Modellwerte und hält Parent-/Child-Beziehungen oder Runtime-Konfiguration bis zum Task-Aufbau fest.",
+      "verdict": "keep",
+      "reason": "Die Zuordnung passt, wenn aktive Baum-/Scope-Semantik nicht mit bloßer Wertdeklaration verwechselt wird.",
+      "evidence": [
+        {
+          "path": "datamimic_ce/engine/dsl/statements/demographics_statement.py",
+          "line": 10
+        }
+      ]
+    },
+    {
+      "id": "module:engine/dsl/statements/echo_statement.py",
+      "concern": "Das Statement übernimmt validierte Modellwerte und hält Parent-/Child-Beziehungen oder Runtime-Konfiguration bis zum Task-Aufbau fest.",
+      "verdict": "keep",
+      "reason": "Die Zuordnung passt, wenn aktive Baum-/Scope-Semantik nicht mit bloßer Wertdeklaration verwechselt wird.",
+      "evidence": [
+        {
+          "path": "datamimic_ce/engine/dsl/statements/echo_statement.py",
+          "line": 11
+        }
+      ]
+    },
+    {
+      "id": "module:engine/dsl/statements/element_statement.py",
+      "concern": "Das Statement übernimmt validierte Modellwerte und hält Parent-/Child-Beziehungen oder Runtime-Konfiguration bis zum Task-Aufbau fest.",
+      "verdict": "keep",
+      "reason": "Die Zuordnung passt, wenn aktive Baum-/Scope-Semantik nicht mit bloßer Wertdeklaration verwechselt wird.",
+      "evidence": [
+        {
+          "path": "datamimic_ce/engine/dsl/statements/element_statement.py",
+          "line": 12
+        }
+      ]
+    },
+    {
+      "id": "module:engine/dsl/statements/else_if_statement.py",
+      "concern": "Das Statement übernimmt validierte Modellwerte und hält Parent-/Child-Beziehungen oder Runtime-Konfiguration bis zum Task-Aufbau fest.",
+      "verdict": "keep",
+      "reason": "Die Zuordnung passt, wenn aktive Baum-/Scope-Semantik nicht mit bloßer Wertdeklaration verwechselt wird.",
+      "evidence": [
+        {
+          "path": "datamimic_ce/engine/dsl/statements/else_if_statement.py",
+          "line": 12
+        }
+      ]
+    },
+    {
+      "id": "module:engine/dsl/statements/else_statement.py",
+      "concern": "Das Statement übernimmt validierte Modellwerte und hält Parent-/Child-Beziehungen oder Runtime-Konfiguration bis zum Task-Aufbau fest.",
+      "verdict": "keep",
+      "reason": "Die Zuordnung passt, wenn aktive Baum-/Scope-Semantik nicht mit bloßer Wertdeklaration verwechselt wird.",
+      "evidence": [
+        {
+          "path": "datamimic_ce/engine/dsl/statements/else_statement.py",
+          "line": 11
+        }
+      ]
+    },
+    {
+      "id": "module:engine/dsl/statements/execute_statement.py",
+      "concern": "Das Statement übernimmt validierte Modellwerte und hält Parent-/Child-Beziehungen oder Runtime-Konfiguration bis zum Task-Aufbau fest.",
+      "verdict": "keep",
+      "reason": "Die Zuordnung passt, wenn aktive Baum-/Scope-Semantik nicht mit bloßer Wertdeklaration verwechselt wird.",
+      "evidence": [
+        {
+          "path": "datamimic_ce/engine/dsl/statements/execute_statement.py",
+          "line": 12
+        }
+      ]
+    },
+    {
+      "id": "module:engine/dsl/statements/generate_statement.py",
+      "concern": "Das Statement übernimmt validierte Modellwerte und hält Parent-/Child-Beziehungen oder Runtime-Konfiguration bis zum Task-Aufbau fest.",
+      "verdict": "keep",
+      "reason": "Die Zuordnung passt, wenn aktive Baum-/Scope-Semantik nicht mit bloßer Wertdeklaration verwechselt wird.",
+      "evidence": [
+        {
+          "path": "datamimic_ce/engine/dsl/statements/generate_statement.py",
+          "line": 22
+        }
+      ]
+    },
+    {
+      "id": "module:engine/dsl/statements/generator_statement.py",
+      "concern": "Das Statement trägt Name und Konstruktor-Ausdruck einer wiederverwendbaren Setup-Definition statt eines erzeugten Feldwerts.",
+      "verdict": "change",
+      "reason": "Die aktuelle values-Zuordnung ist falsch; der passende Nachbar zu StateMachine/Demographics muss als Setup-Definitionsvertrag entschieden werden.",
+      "evidence": [
+        {
+          "path": "datamimic_ce/engine/dsl/statements/generator_statement.py",
+          "line": 12
+        }
+      ]
+    },
+    {
+      "id": "module:engine/dsl/statements/if_statement.py",
+      "concern": "Das Statement übernimmt validierte Modellwerte und hält Parent-/Child-Beziehungen oder Runtime-Konfiguration bis zum Task-Aufbau fest.",
+      "verdict": "keep",
+      "reason": "Die Zuordnung passt, wenn aktive Baum-/Scope-Semantik nicht mit bloßer Wertdeklaration verwechselt wird.",
+      "evidence": [
+        {
+          "path": "datamimic_ce/engine/dsl/statements/if_statement.py",
+          "line": 13
+        }
+      ]
+    },
+    {
+      "id": "module:engine/dsl/statements/include_statement.py",
+      "concern": "Das Statement übernimmt validierte Modellwerte und hält Parent-/Child-Beziehungen oder Runtime-Konfiguration bis zum Task-Aufbau fest.",
+      "verdict": "keep",
+      "reason": "Die Zuordnung passt, wenn aktive Baum-/Scope-Semantik nicht mit bloßer Wertdeklaration verwechselt wird.",
+      "evidence": [
+        {
+          "path": "datamimic_ce/engine/dsl/statements/include_statement.py",
+          "line": 12
+        }
+      ]
+    },
+    {
+      "id": "module:engine/dsl/statements/item_statement.py",
+      "concern": "Das Statement übernimmt validierte Modellwerte und hält Parent-/Child-Beziehungen oder Runtime-Konfiguration bis zum Task-Aufbau fest.",
+      "verdict": "keep",
+      "reason": "Die Zuordnung passt, wenn aktive Baum-/Scope-Semantik nicht mit bloßer Wertdeklaration verwechselt wird.",
+      "evidence": [
+        {
+          "path": "datamimic_ce/engine/dsl/statements/item_statement.py",
+          "line": 12
+        }
+      ]
+    },
+    {
+      "id": "module:engine/dsl/statements/key_statement.py",
+      "concern": "Das Statement übernimmt validierte Modellwerte und hält Parent-/Child-Beziehungen oder Runtime-Konfiguration bis zum Task-Aufbau fest.",
+      "verdict": "keep",
+      "reason": "Die Zuordnung passt, wenn aktive Baum-/Scope-Semantik nicht mit bloßer Wertdeklaration verwechselt wird.",
+      "evidence": [
+        {
+          "path": "datamimic_ce/engine/dsl/statements/key_statement.py",
+          "line": 12
+        }
+      ]
+    },
+    {
+      "id": "module:engine/dsl/statements/list_statement.py",
+      "concern": "Das Statement übernimmt validierte Modellwerte und hält Parent-/Child-Beziehungen oder Runtime-Konfiguration bis zum Task-Aufbau fest.",
+      "verdict": "keep",
+      "reason": "Die Zuordnung passt, wenn aktive Baum-/Scope-Semantik nicht mit bloßer Wertdeklaration verwechselt wird.",
+      "evidence": [
+        {
+          "path": "datamimic_ce/engine/dsl/statements/list_statement.py",
+          "line": 12
+        }
+      ]
+    },
+    {
+      "id": "module:engine/dsl/statements/memstore_statement.py",
+      "concern": "Das Statement übernimmt validierte Modellwerte und hält Parent-/Child-Beziehungen oder Runtime-Konfiguration bis zum Task-Aufbau fest.",
+      "verdict": "keep",
+      "reason": "Die Zuordnung passt, wenn aktive Baum-/Scope-Semantik nicht mit bloßer Wertdeklaration verwechselt wird.",
+      "evidence": [
+        {
+          "path": "datamimic_ce/engine/dsl/statements/memstore_statement.py",
+          "line": 12
+        }
+      ]
+    },
+    {
+      "id": "module:engine/dsl/statements/mongodb_statement.py",
+      "concern": "Das Statement übernimmt validierte Modellwerte und hält Parent-/Child-Beziehungen oder Runtime-Konfiguration bis zum Task-Aufbau fest.",
+      "verdict": "keep",
+      "reason": "Die Zuordnung passt, wenn aktive Baum-/Scope-Semantik nicht mit bloßer Wertdeklaration verwechselt wird.",
+      "evidence": [
+        {
+          "path": "datamimic_ce/engine/dsl/statements/mongodb_statement.py",
+          "line": 12
+        }
+      ]
+    },
+    {
+      "id": "module:engine/dsl/statements/nested_key_statement.py",
+      "concern": "Das Statement übernimmt validierte Modellwerte und hält Parent-/Child-Beziehungen oder Runtime-Konfiguration bis zum Task-Aufbau fest.",
+      "verdict": "keep",
+      "reason": "Die Zuordnung passt, wenn aktive Baum-/Scope-Semantik nicht mit bloßer Wertdeklaration verwechselt wird.",
+      "evidence": [
+        {
+          "path": "datamimic_ce/engine/dsl/statements/nested_key_statement.py",
+          "line": 14
+        }
+      ]
+    },
+    {
+      "id": "module:engine/dsl/statements/reference_statement.py",
+      "concern": "Das Statement übernimmt validierte Modellwerte und hält Parent-/Child-Beziehungen oder Runtime-Konfiguration bis zum Task-Aufbau fest.",
+      "verdict": "keep",
+      "reason": "Die Zuordnung passt, wenn aktive Baum-/Scope-Semantik nicht mit bloßer Wertdeklaration verwechselt wird.",
+      "evidence": [
+        {
+          "path": "datamimic_ce/engine/dsl/statements/reference_statement.py",
+          "line": 15
+        }
+      ]
+    },
+    {
+      "id": "module:engine/dsl/statements/setup_statement.py",
+      "concern": "Das Statement übernimmt validierte Modellwerte und hält Parent-/Child-Beziehungen oder Runtime-Konfiguration bis zum Task-Aufbau fest.",
+      "verdict": "keep",
+      "reason": "Die Zuordnung passt, wenn aktive Baum-/Scope-Semantik nicht mit bloßer Wertdeklaration verwechselt wird.",
+      "evidence": [
+        {
+          "path": "datamimic_ce/engine/dsl/statements/setup_statement.py",
+          "line": 14
+        }
+      ]
+    },
+    {
+      "id": "module:engine/dsl/statements/state_machine_statement.py",
+      "concern": "Das Statement hält Übergangsregeln einer Setup-Definition, nicht die Ausführung eines Kontrollfluss-Loops.",
+      "verdict": "change",
+      "reason": "Die aktuelle flow/loops-Zuordnung ist falsch; der Zielvertrag sollte dieselbe Setup-Definitionsgrenze wie Generator/Demographics verwenden.",
+      "evidence": [
+        {
+          "path": "datamimic_ce/engine/dsl/statements/state_machine_statement.py",
+          "line": 12
+        }
+      ]
+    },
+    {
+      "id": "module:engine/dsl/statements/statement.py",
+      "concern": "Das Statement übernimmt validierte Modellwerte und hält Parent-/Child-Beziehungen oder Runtime-Konfiguration bis zum Task-Aufbau fest.",
+      "verdict": "keep",
+      "reason": "Die Zuordnung passt, wenn aktive Baum-/Scope-Semantik nicht mit bloßer Wertdeklaration verwechselt wird.",
+      "evidence": [
+        {
+          "path": "datamimic_ce/engine/dsl/statements/statement.py",
+          "line": 17
+        }
+      ]
+    },
+    {
+      "id": "module:engine/dsl/statements/statement_util.py",
+      "concern": "StatementUtil enthält zwei Entity-Fallback-Resolver sowie Parser-unabhängiges Consumer-String-Splitting.",
+      "verdict": "unclear",
+      "reason": "Die Resolver werden von IO-Runtime genutzt, während parse_consumer beim Statement-Einlesen hilft; Boundary-Owner könnte nach Consumerlage neu bewertet werden.",
+      "evidence": [
+        {
+          "path": "datamimic_ce/engine/dsl/statements/statement_util.py",
+          "line": 13
+        }
+      ]
+    },
+    {
+      "id": "module:engine/dsl/statements/variable_statement.py",
+      "concern": "Das Statement übernimmt validierte Modellwerte und hält Parent-/Child-Beziehungen oder Runtime-Konfiguration bis zum Task-Aufbau fest.",
+      "verdict": "keep",
+      "reason": "Die Zuordnung passt, wenn aktive Baum-/Scope-Semantik nicht mit bloßer Wertdeklaration verwechselt wird.",
+      "evidence": [
+        {
+          "path": "datamimic_ce/engine/dsl/statements/variable_statement.py",
+          "line": 14
+        }
+      ]
+    },
+    {
+      "id": "module:engine/dsl/statements/while_statement.py",
+      "concern": "Das Statement übernimmt validierte Modellwerte und hält Parent-/Child-Beziehungen oder Runtime-Konfiguration bis zum Task-Aufbau fest.",
+      "verdict": "keep",
+      "reason": "Die Zuordnung passt, wenn aktive Baum-/Scope-Semantik nicht mit bloßer Wertdeklaration verwechselt wird.",
+      "evidence": [
+        {
+          "path": "datamimic_ce/engine/dsl/statements/while_statement.py",
+          "line": 12
+        }
+      ]
+    },
+    {
+      "id": "module:engine/dsl/timeseries.py",
+      "concern": "TimeSeriesConfig validiert ISO-Zeiten und Dauer und berechnet den Tick/Series-Index für GenerateStatement.",
+      "verdict": "keep",
+      "reason": "Generate-Iteration konsumiert dieselbe Config und reserviert den `ts` Namespace; generation ist passender als ein eigenständiger DSL-Wert.",
+      "evidence": [
+        {
+          "path": "datamimic_ce/engine/dsl/timeseries.py",
+          "line": 37
+        }
+      ]
+    },
+    {
+      "id": "module:engine/dsl/xml.py",
+      "concern": "Das Modul erzeugt sichere XML-Parser, prüft DOCTYPE vor dem Parsen und bietet Quellen-/Datei-Entry-Points.",
+      "verdict": "keep",
+      "reason": "DescriptorParser nutzt parse_xml_file und die Source-Hilfe schützt beide Parsing-Wege vor unsicherer DTD-Verarbeitung.",
+      "evidence": [
+        {
+          "path": "datamimic_ce/engine/dsl/xml.py",
+          "line": 11
+        }
+      ]
+    },
+    {
+      "id": "folder:engine/dsl",
+      "concern": "Die DSL-Fassade, Grammatik, Parser und Statement-Baum sind unterschiedliche Rollen; ein gemeinsamer Oberordner ist nur Paketgrenze.",
+      "verdict": "scaffold",
+      "reason": "Evidence: API aggregiert öffentliche Typen, während Registry die Grammatik und Parser den Baumaufbau verantworten.",
+      "evidence": [
+        {
+          "path": "datamimic_ce/engine/dsl/api.py",
+          "line": 151
+        },
+        {
+          "path": "datamimic_ce/engine/dsl/model/element_registry.py",
+          "line": 80
+        },
+        {
+          "path": "datamimic_ce/engine/dsl/parsers/descriptor_parser.py",
+          "line": 31
+        }
+      ]
+    },
+    {
+      "id": "folder:engine/dsl/model",
+      "concern": "Modelle, Regel-Fakten und Registry haben verschiedene Aufgaben; das Oberverzeichnis darf nicht als einzelne Fachkomponente gelten.",
+      "verdict": "scaffold",
+      "reason": "Die Pydantic-Modelle rufen Constraints auf, Registry und Validatoren bleiben getrennte Verantwortungen.",
+      "evidence": [
+        {
+          "path": "datamimic_ce/engine/dsl/model/generate_model.py",
+          "line": 58
+        },
+        {
+          "path": "datamimic_ce/engine/dsl/model/constraints/registry.py",
+          "line": 93
+        }
+      ]
+    },
+    {
+      "id": "folder:engine/dsl/model/base",
+      "concern": "ElementModel ist nur KeyModel-Unterklasse, während ModelUtil die zentrale Attribut- und Constraint-Validierung trägt; beides ist keine homogene Basisschicht.",
+      "verdict": "unclear",
+      "reason": "Ein leeres Alias-Modell verdient keinen eigenen Basiskern neben dem Validierungswerkzeug.",
+      "evidence": [
+        {
+          "path": "datamimic_ce/engine/dsl/model/element_model.py",
+          "line": 11
+        }
+      ]
+    },
+    {
+      "id": "folder:engine/dsl/model/constraints",
+      "concern": "Die Constraints umfassen deklarative Fakten, ausführbare Validierung, JSON-Schema-Serialisierung und Source-Capabilities; der Sammelordner ist breit, die Unterpakete sind aber echte Verantwortungen.",
+      "verdict": "keep",
+      "reason": "Facts/Types/Registry/Serialization werden gemeinsam aus `__init__` exportiert; keine Aufteilung nach Dateinamen ohne Verbraucherprüfung.",
+      "evidence": [
+        {
+          "path": "datamimic_ce/engine/dsl/model/constraints/types.py",
+          "line": 16
+        },
+        {
+          "path": "datamimic_ce/engine/dsl/model/constraints/facts.py",
+          "line": 15
+        }
+      ]
+    },
+    {
+      "id": "folder:engine/dsl/model/flow",
+      "concern": "Branches und Loops passen zusammen, aber Assert/Execute sind Setup- oder Laufzeitaktionen und nicht dieselbe Semantik wie Bedingungssteuerung.",
+      "verdict": "unclear",
+      "reason": "Assert kann sowohl Setup- als auch Datensatzscope haben, Execute arbeitet mit Codequellen und Interpretertypen.",
+      "evidence": [
+        {
+          "path": "datamimic_ce/engine/dsl/model/assert_model.py",
+          "line": 14
+        }
+      ]
+    },
+    {
+      "id": "folder:engine/dsl/model/flow/branches",
+      "concern": "If/else Branches tragen Bedingungen; ConditionStatement verfolgt zusätzlich tatsächlich ausgeführte Branches für spätere Statement-Auflösung.",
+      "verdict": "keep",
+      "reason": "Die Laufzeitzustandsverfolgung in ConditionStatement unterscheidet sich von den reinen Bedingungsmodellen.",
+      "evidence": [
+        {
+          "path": "datamimic_ce/engine/dsl/model/base_if_else_model.py",
+          "line": 16
+        }
+      ]
+    },
+    {
+      "id": "folder:engine/dsl/model/flow/commands",
+      "concern": "Die Modelle prüfen Descriptor-Aktionen für Assertions, Meldungen und explizite Codeausführung.",
+      "verdict": "keep",
+      "reason": "Koordinator nach Astra-Challenge: Unterschiedliche Aktionen dürfen eine Befehlsfamilie bilden; ihre getrennten Modelle bewahren die jeweiligen Validierungsregeln. Ein zusätzlicher Namespace ist nicht begründet.",
+      "evidence": [
+        {
+          "path": "datamimic_ce/engine/dsl/model/assert_model.py",
+          "line": 14
+        }
+      ]
+    },
+    {
+      "id": "folder:engine/dsl/model/flow/loops",
+      "concern": "While ist ein per-Datensatz-Kontrollflussloop, StateMachine ist eine benannte Übergangsdefinition, die als Generator konsumiert wird.",
+      "verdict": "change",
+      "reason": "StateMachine muss aus flow/loops heraus; generation/declarations oder ein gemeinsamer Setup-Konfigurationsbereich sind plausible, aber noch offene Ziele.",
+      "evidence": [
+        {
+          "path": "datamimic_ce/engine/dsl/model/state_machine_model.py",
+          "line": 15
+        }
+      ]
+    },
+    {
+      "id": "folder:engine/dsl/model/generation",
+      "concern": "GenerateModel beschreibt die Produktiteration; TimeSeriesConfig modelliert ihre Ticks, DemographicsModel konfiguriert setupweit das Sampling generierter Entities.",
+      "verdict": "keep",
+      "reason": "Generator/StateMachine sind setupweit registrierte Definitionen; ihre Aufnahme hier wäre plausibel, aber Setup-Konfiguration ist eine konkurrierende Paketgrenze.",
+      "evidence": [
+        {
+          "path": "datamimic_ce/engine/dsl/model/generate_model.py",
+          "line": 58
+        },
+        {
+          "path": "datamimic_ce/engine/dsl/model/demographics_model.py",
+          "line": 11
+        }
+      ]
+    },
+    {
+      "id": "folder:engine/dsl/model/resources",
+      "concern": "Connection-, Include-, Memstore- und Setupmodelle initialisieren Laufzeitressourcen oder globale Setupkonfiguration, keine Datensatzwerte.",
+      "verdict": "keep",
+      "reason": "SetupStatement übernimmt dieselben defaults für Context-Erstellung; diese Ressourcenbündelung ist kohärent.",
+      "evidence": [
+        {
+          "path": "datamimic_ce/engine/dsl/model/database_model.py",
+          "line": 15
+        },
+        {
+          "path": "datamimic_ce/engine/dsl/model/setup_model.py",
+          "line": 26
+        }
+      ]
+    },
+    {
+      "id": "folder:engine/dsl/model/values",
+      "concern": "Key, Variable und verschachtelte Werte erzeugen oder beschreiben Datensatzfelder; Referenzen sind dabei Source-Lookups und sollten als eigene Untergruppe bleiben.",
+      "verdict": "change",
+      "reason": "Die Generator- und StateMachine-Modelle sind wiederverwendbare Definitionen statt Feldwertformen.",
+      "evidence": [
+        {
+          "path": "datamimic_ce/engine/dsl/model/key_model.py",
+          "line": 61
+        },
+        {
+          "path": "datamimic_ce/engine/dsl/model/reference_model.py",
+          "line": 32
+        }
+      ]
+    },
+    {
+      "id": "folder:engine/dsl/model/values/references",
+      "concern": "ReferenceModel und ReferenceFieldModel bilden Quelle sowie Spalten-zu-Feld-Zuordnung für referenzierte Datensätze ab.",
+      "verdict": "keep",
+      "reason": "ReferenceParser normalisiert Legacy-Einzelfeld und Composite-Felder in denselben Statementvertrag.",
+      "evidence": [
+        {
+          "path": "datamimic_ce/engine/dsl/model/reference_field_model.py",
+          "line": 15
+        }
+      ]
+    },
+    {
+      "id": "folder:engine/dsl/model/values/scalar",
+      "concern": "KeyModel beschreibt Feldwertquellen; GeneratorModel beschreibt dagegen eine benannte Setupdefinition, die viele Felder wiederverwenden können.",
+      "verdict": "change",
+      "reason": "GeneratorModel muss aus scalar heraus; der gemeinsame Ablageort mit StateMachine/Demographics ist aber durch die jetzigen Proposals nicht belegt.",
+      "evidence": [
+        {
+          "path": "datamimic_ce/engine/dsl/model/key_model.py",
+          "line": 61
+        },
+        {
+          "path": "datamimic_ce/engine/dsl/model/generator_model.py",
+          "line": 14
+        }
+      ]
+    },
+    {
+      "id": "folder:engine/dsl/model/values/structured",
+      "concern": "Array/List/Item/NestedKey erzeugen zusammengesetzte Datensatzwerte; sie sind eine kohärente strukturelle Formfamilie.",
+      "verdict": "keep",
+      "reason": "ArrayParser behandelt literal children, während List/Item Statements die feste Listenstruktur tragen.",
+      "evidence": [
+        {
+          "path": "datamimic_ce/engine/dsl/model/array_model.py",
+          "line": 22
+        }
+      ]
+    },
+    {
+      "id": "folder:engine/dsl/model/values/variables",
+      "concern": "VariableModel deckt generierte Skalarwerte sowie source-backed Rows und Entity-Objekte ab; der Name ist breiter als reine Variablenbindung.",
+      "verdict": "unclear",
+      "reason": "Die Variable kann Source, Entity, Generator und Script tragen; keine Unterteilung ohne genauere Runtime-Owner-Prüfung.",
+      "evidence": [
+        {
+          "path": "datamimic_ce/engine/dsl/model/variable_model.py",
+          "line": 61
+        }
+      ]
+    },
+    {
+      "id": "folder:engine/dsl/parsers",
+      "concern": "Parserklassen bauen Statements, während ParserUtil auch Properties/Connection-Credentials lädt; das Paket ist als Obergrenze nur Infrastruktur.",
+      "verdict": "scaffold",
+      "reason": "Die konkreten Parser delegieren Attribute an Modelle und rekursive Struktur an ParserUtil.",
+      "evidence": [
+        {
+          "path": "datamimic_ce/engine/dsl/parsers/descriptor_parser.py",
+          "line": 15
+        },
+        {
+          "path": "datamimic_ce/engine/dsl/parsers/parser_util.py",
+          "line": 79
+        }
+      ]
+    },
+    {
+      "id": "folder:engine/dsl/parsers/base",
+      "concern": "StatementParser validiert Elementform, Attribute und Fehlerübersetzung; die abstrahierte Basisklasse hat viele Parser-Aufrufer.",
+      "verdict": "keep",
+      "reason": "Das ist eine reale Parser-Vertragsgrenze, sofern konkrete Parser weiter dieselbe Basismethode nutzen.",
+      "evidence": [
+        {
+          "path": "datamimic_ce/engine/dsl/parsers/statement_parser.py",
+          "line": 20
+        }
+      ]
+    },
+    {
+      "id": "folder:engine/dsl/parsers/document",
+      "concern": "DescriptorParser liest XML und startet SetupParser; Properties und XML-Datei-Parsing sind Eingabegrenzen.",
+      "verdict": "change",
+      "reason": "Credential-Auflösung ist derzeit daneben in ParserUtil und gehört fachlich zur document/config-Eingabe.",
+      "evidence": [
+        {
+          "path": "datamimic_ce/engine/dsl/parsers/descriptor_parser.py",
+          "line": 15
+        },
+        {
+          "path": "datamimic_ce/engine/dsl/properties.py",
+          "line": 21
+        }
+      ]
+    },
+    {
+      "id": "folder:engine/dsl/parsers/flow",
+      "concern": "ConditionParser validiert Branch-Reihenfolge; IfElseBaseParser baut Branch-Unterbäume; WhileParser baut Loop-Bodies.",
+      "verdict": "change",
+      "reason": "StateMachineParser ist dagegen Generator-Definition statt Ausführungskontrolle.",
+      "evidence": [
+        {
+          "path": "datamimic_ce/engine/dsl/parsers/condition_parser.py",
+          "line": 20
+        },
+        {
+          "path": "datamimic_ce/engine/dsl/parsers/state_machine_parser.py",
+          "line": 15
+        }
+      ]
+    },
+    {
+      "id": "folder:engine/dsl/parsers/flow/branches",
+      "concern": "ConditionParser prüft genau eine `if`, nachfolgende `else-if` und abschließendes `else`; gemeinsame Branch-Parser bauen dann Bodies.",
+      "verdict": "keep",
+      "reason": "Die Parser teilen geordnete Branch-Semantik und Elternkontextauflösung.",
+      "evidence": [
+        {
+          "path": "datamimic_ce/engine/dsl/parsers/condition_parser.py",
+          "line": 21
+        }
+      ]
+    },
+    {
+      "id": "folder:engine/dsl/parsers/flow/commands",
+      "concern": "Die Parser übersetzen XML-Befehle für Assertions, Meldungen und Codeausführung in ihre validierten Statements.",
+      "verdict": "keep",
+      "reason": "Koordinator nach Astra-Challenge: Die gemeinsame Rolle ist die Übersetzung expliziter Descriptor-Aktionen; einzelne Parser müssen dafür keine gemeinsame fachliche Regel besitzen.",
+      "evidence": [
+        {
+          "path": "datamimic_ce/engine/dsl/parsers/assert_parser.py",
+          "line": 17
+        }
+      ]
+    },
+    {
+      "id": "folder:engine/dsl/parsers/flow/loops",
+      "concern": "WhileParser baut wiederholte Bodies; StateMachineParser liest statische gewichtete Übergänge für eine Setup-Definition.",
+      "verdict": "change",
+      "reason": "StateMachineParser muss aus flow/loops heraus; der Zielvertrag mit Generator/Demographics bleibt eine Paketentscheidung.",
+      "evidence": [
+        {
+          "path": "datamimic_ce/engine/dsl/parsers/while_parser.py",
+          "line": 20
+        },
+        {
+          "path": "datamimic_ce/engine/dsl/parsers/state_machine_parser.py",
+          "line": 15
+        }
+      ]
+    },
+    {
+      "id": "folder:engine/dsl/parsers/generation",
+      "concern": "GenerateParser normalisiert `<iterate>` und prüft Timeseries-Schattennamen; DemographicsParser löst Profilpfade auf.",
+      "verdict": "keep",
+      "reason": "Beide produzieren setup-/generation-relevante Statements, aber die erzeugte Datenreihe gehört einer anderen Runtime-Stufe.",
+      "evidence": [
+        {
+          "path": "datamimic_ce/engine/dsl/parsers/demographics_parser.py",
+          "line": 15
+        }
+      ]
+    },
+    {
+      "id": "folder:engine/dsl/parsers/resources",
+      "concern": "Der Ressourcen-Parservertrag bildet Connection-, Memstore- und Include-Angaben in Setup-Statements ab.",
+      "verdict": "unclear",
+      "reason": "IncludeParser validiert nur die Pfadangabe und erzeugt ein Statement; Properties-Übersetzung liegt im ParserUtil-Siblingdispatch, XML-Include-Ausführung im IncludeTask. Die gemeinsame Zielgrenze der übrigen Ressourcenparser bleibt daher zu klären.",
+      "evidence": [
+        {
+          "path": "datamimic_ce/engine/dsl/parsers/database_parser.py",
+          "line": 17
+        }
+      ]
+    },
+    {
+      "id": "folder:engine/dsl/parsers/values",
+      "concern": "Key, Variable, NestedKey, Reference und Array Parser formen Feldwerte, doch GeneratorParser erzeugt eine Setupdefinition statt eines Feldwerts.",
+      "verdict": "change",
+      "reason": "GeneratorParser in `engine/dsl/parsers/generation` verschieben.",
+      "evidence": [
+        {
+          "path": "datamimic_ce/engine/dsl/parsers/key_parser.py",
+          "line": 18
+        },
+        {
+          "path": "datamimic_ce/engine/dsl/parsers/generator_parser.py",
+          "line": 14
+        }
+      ]
+    },
+    {
+      "id": "folder:engine/dsl/parsers/values/references",
+      "concern": "ReferenceParser validiert Source-Key/Field-Form und normalisiert die Legacy-Form vor dem Statement-Aufbau.",
+      "verdict": "keep",
+      "reason": "Diese Source-Mapping-Regel ist spezifisch für Referenzwerte.",
+      "evidence": [
+        {
+          "path": "datamimic_ce/engine/dsl/parsers/reference_parser.py",
+          "line": 17
+        }
+      ]
+    },
+    {
+      "id": "folder:engine/dsl/parsers/values/scalar",
+      "concern": "KeyParser parst einen Feldgenerator, GeneratorParser registriert aber ein benanntes Setupobjekt und wird später von Keys wiederverwendet.",
+      "verdict": "change",
+      "reason": "GeneratorParser muss aus scalar heraus; ein gemeinsamer Setup-Definitionsbereich ist Kandidat, aber noch keine feststehende Ablageentscheidung.",
+      "evidence": [
+        {
+          "path": "datamimic_ce/engine/dsl/parsers/key_parser.py",
+          "line": 18
+        },
+        {
+          "path": "datamimic_ce/engine/dsl/parsers/generator_parser.py",
+          "line": 14
+        }
+      ]
+    },
+    {
+      "id": "folder:engine/dsl/parsers/values/structured",
+      "concern": "Array/List/Item/NestedKey Parser validieren verschachtelte Formen und bauen Composite-Statements.",
+      "verdict": "keep",
+      "reason": "Literal Array children sind eigens validierte Werte, aber bleiben Teil der strukturierten Array-Eingabe.",
+      "evidence": [
+        {
+          "path": "datamimic_ce/engine/dsl/parsers/array_parser.py",
+          "line": 20
+        }
+      ]
+    },
+    {
+      "id": "folder:engine/dsl/parsers/values/variables",
+      "concern": "VariableParser erzeugt VariableStatement samt Parent/Setup-Scope; der Parser ist klein, aber die Scope-Übergabe ist sein Verhalten.",
+      "verdict": "keep",
+      "reason": "ParserUtil entscheidet Setup-vs-record call shape, was im Dispatch liegt.",
+      "evidence": [
+        {
+          "path": "datamimic_ce/engine/dsl/parsers/variable_parser.py",
+          "line": 16
+        }
+      ]
+    },
+    {
+      "id": "folder:engine/dsl/statements",
+      "concern": "Statements sind parse-time Repräsentationen für Runtime-Tasks; die Obergruppe ersetzt keine semantischen Aufgabenfamilien.",
+      "verdict": "scaffold",
+      "reason": "Einige Statements führen Parent-/Branch-Laufzeitzustand, andere halten nur XML-Konfiguration.",
+      "evidence": [
+        {
+          "path": "datamimic_ce/engine/dsl/statements/statement.py",
+          "line": 16
+        },
+        {
+          "path": "datamimic_ce/engine/dsl/statements/generate_statement.py",
+          "line": 20
+        }
+      ]
+    },
+    {
+      "id": "folder:engine/dsl/statements/base",
+      "concern": "Statement verwaltet Namen/Elternpfad; CompositeStatement hält Children und Branch-Parent-Normalisierung.",
+      "verdict": "keep",
+      "reason": "Diese Baumsemantik bildet eine echte gemeinsame Laufzeitgrenze.",
+      "evidence": [
+        {
+          "path": "datamimic_ce/engine/dsl/statements/statement.py",
+          "line": 16
+        },
+        {
+          "path": "datamimic_ce/engine/dsl/statements/composite_statement.py",
+          "line": 16
+        }
+      ]
+    },
+    {
+      "id": "folder:engine/dsl/statements/flow",
+      "concern": "Condition hält ausgeführte Branches nach, While hält ein Guard-Limit, Execute/Echo/Assert repräsentieren andere Task-Aktionen.",
+      "verdict": "unclear",
+      "reason": "Die breite Flow-Gruppe bündelt Steuerfluss mit Setup-/Qualitätsaktionen.",
+      "evidence": [
+        {
+          "path": "datamimic_ce/engine/dsl/statements/condition_statement.py",
+          "line": 19
+        },
+        {
+          "path": "datamimic_ce/engine/dsl/statements/state_machine_statement.py",
+          "line": 11
+        }
+      ]
+    },
+    {
+      "id": "folder:engine/dsl/statements/flow/branches",
+      "concern": "ConditionStatement speichert ausgeführte Branches für spätere Subgenerate-Suche; Branch-Statements normalisieren die Elternbeziehung.",
+      "verdict": "keep",
+      "reason": "Das ist mehr als ein Feldträger und rechtfertigt den Branch-Kern.",
+      "evidence": [
+        {
+          "path": "datamimic_ce/engine/dsl/statements/condition_statement.py",
+          "line": 20
+        }
+      ]
+    },
+    {
+      "id": "folder:engine/dsl/statements/flow/commands",
+      "concern": "Die Statements tragen die Parameter für Assertions, Meldungen und explizite Codeausführung bis zur Runtime.",
+      "verdict": "keep",
+      "reason": "Koordinator nach Astra-Challenge: Eine Befehlsfamilie ist als Gruppierung kohärent; unterschiedliche Ausführungs- und Fehlerpfade bleiben in getrennten Statementtypen sichtbar.",
+      "evidence": [
+        {
+          "path": "datamimic_ce/engine/dsl/statements/assert_statement.py",
+          "line": 12
+        }
+      ]
+    },
+    {
+      "id": "folder:engine/dsl/statements/flow/loops",
+      "concern": "WhileStatement enthält Guard und Max-Iterationsgrenze; StateMachineStatement trägt statische Übergangsregeln für Generatorbau.",
+      "verdict": "change",
+      "reason": "StateMachineStatement muss aus flow/loops heraus; generation/declarations ist eine mögliche Gruppe, aber setupweite Deklarationen können einen besseren gemeinsamen Owner bilden.",
+      "evidence": [
+        {
+          "path": "datamimic_ce/engine/dsl/statements/while_statement.py",
+          "line": 11
+        },
+        {
+          "path": "datamimic_ce/engine/dsl/statements/state_machine_statement.py",
+          "line": 11
+        }
+      ]
+    },
+    {
+      "id": "folder:engine/dsl/statements/generation",
+      "concern": "GenerateStatement trägt Produktiteration und Target-Konfiguration; DemographicsStatement installiert das Samplingprofil vor Feldgenerierung.",
+      "verdict": "keep",
+      "reason": "Generator-/StateMachine-Statements sind ebenfalls setupweit, aber der gemeinsame Ort kann generation oder Setup-Definitionen heißen; dafür fehlt noch eine explizite Paketentscheidung.",
+      "evidence": [
+        {
+          "path": "datamimic_ce/engine/dsl/statements/demographics_statement.py",
+          "line": 10
+        }
+      ]
+    },
+    {
+      "id": "folder:engine/dsl/statements/resources",
+      "concern": "SetupStatement hält Kontextdefaults; Connection-, Memstore- und Include-Statements halten Ressourcen- bzw. Dateireferenzen.",
+      "verdict": "keep",
+      "reason": "Die gemeinsamen Verbraucher sind Setup-Tasks, nicht Datensatzproduktion.",
+      "evidence": [
+        {
+          "path": "datamimic_ce/engine/dsl/statements/database_statement.py",
+          "line": 12
+        }
+      ]
+    },
+    {
+      "id": "folder:engine/dsl/statements/values",
+      "concern": "KeyStatement/VariableStatement erzeugen Runtime-Feldinhalte, während GeneratorStatement eine setupweite wiederverwendbare Definition repräsentiert.",
+      "verdict": "change",
+      "reason": "GeneratorStatement zu `engine/dsl/statements/generation` verschieben.",
+      "evidence": [
+        {
+          "path": "datamimic_ce/engine/dsl/statements/key_statement.py",
+          "line": 11
+        },
+        {
+          "path": "datamimic_ce/engine/dsl/statements/generator_statement.py",
+          "line": 11
+        }
+      ]
+    },
+    {
+      "id": "folder:engine/dsl/statements/values/references",
+      "concern": "ReferenceStatement normalisiert mehrere Source-Spalten in Ziel-Feldzuordnungen und bietet Legacy-Einzelfeldzugriff.",
+      "verdict": "keep",
+      "reason": "Das ist ein eigener Mapping-Vertrag innerhalb der Field-Werte.",
+      "evidence": [
+        {
+          "path": "datamimic_ce/engine/dsl/statements/reference_statement.py",
+          "line": 15
+        }
+      ]
+    },
+    {
+      "id": "folder:engine/dsl/statements/values/scalar",
+      "concern": "KeyStatement ist ein pro-Feld-Wertauftrag; GeneratorStatement registriert eine Definition setupweit.",
+      "verdict": "change",
+      "reason": "GeneratorStatement muss aus scalar heraus; ein gemeinsamer Setup-Definitionsbereich mit Generator-/StateMachine-Deklarationen ist erst zu bestätigen.",
+      "evidence": [
+        {
+          "path": "datamimic_ce/engine/dsl/statements/key_statement.py",
+          "line": 11
+        },
+        {
+          "path": "datamimic_ce/engine/dsl/statements/generator_statement.py",
+          "line": 11
+        }
+      ]
+    },
+    {
+      "id": "folder:engine/dsl/statements/values/structured",
+      "concern": "NestedKey/List/Item/Array-Statements erhalten Children und Formdaten, aus denen ein zusammengesetzter Wert gebaut wird.",
+      "verdict": "keep",
+      "reason": "Die Parent-/Child-Struktur rechtfertigt die gemeinsame Untergruppe.",
+      "evidence": [
+        {
+          "path": "datamimic_ce/engine/dsl/statements/array_statement.py",
+          "line": 13
+        }
+      ]
+    },
+    {
+      "id": "folder:engine/dsl/statements/values/variables",
+      "concern": "VariableStatement bündelt source-, entity-, generator- und script-basierte Bindung samt global-vs-record scope.",
+      "verdict": "keep",
+      "reason": "Es ist ein eigener Ausführungsinput und nicht bloß ein scalar Key.",
+      "evidence": [
+        {
+          "path": "datamimic_ce/engine/dsl/statements/variable_statement.py",
+          "line": 14
+        }
+      ]
+    },
+    {
+      "id": "folder:engine/dsl/vocabulary",
+      "concern": "Konstanten und Enums definieren XML-Schreibweisen sowie typisierte Wertvokabulare; der Oberordner ist nur ihre Paketgrenze.",
+      "verdict": "scaffold",
+      "reason": "Die jeweiligen Verbraucher importieren die Tokens unabhängig von Parsing und Runtime.",
+      "evidence": [
+        {
+          "path": "datamimic_ce/engine/dsl/constants/attribute_constants.py",
+          "line": 8
+        },
+        {
+          "path": "datamimic_ce/engine/dsl/enums/distribution_enums.py",
+          "line": 10
+        }
+      ]
+    },
+    {
+      "id": "folder:engine/dsl/vocabulary/constants",
+      "concern": "Attributnamen, Tags, Datentypen und Exporternamen sind stabile XML-Vokabularwerte ohne Ausführungslogik.",
+      "verdict": "keep",
+      "reason": "Sie bilden einen passenden gemeinsamen Vertrag für Parser/Modelle.",
+      "evidence": [
+        {
+          "path": "datamimic_ce/engine/dsl/constants/attribute_constants.py",
+          "line": 8
+        },
+        {
+          "path": "datamimic_ce/engine/dsl/constants/element_constants.py",
+          "line": 7
+        }
+      ]
+    },
+    {
+      "id": "folder:engine/dsl/vocabulary/enums",
+      "concern": "Converter/DBMS/Distribution/Operation-Enums typisieren mehrere voneinander unabhängige Regelbereiche.",
+      "verdict": "keep",
+      "reason": "Ein Vocabulary-Paket ist angemessen, aber kein gemeinsamer Domänenenum.",
+      "evidence": [
+        {
+          "path": "datamimic_ce/engine/dsl/enums/converter_enums.py",
+          "line": 10
+        },
+        {
+          "path": "datamimic_ce/engine/dsl/enums/distribution_enums.py",
+          "line": 10
+        }
+      ]
+    },
+    {
+      "id": "contract:dsl/model/base",
+      "concern": "Das Vertragsbündel verbindet ein leeres `<element>`-Alias-Modell mit einem Validierungswerkzeug, das Constraints ausführt und Eingabewerte normalisiert.",
+      "verdict": "unclear",
+      "reason": "ElementModel erweitert nur KeyModel, während ModelUtil globale Validatoren und Fact-Auswertung bereitstellt; die gemeinsame „base“-Grenze folgt keiner gemeinsamen Modellverantwortung.",
+      "evidence": [
+        {
+          "path": "datamimic_ce/engine/dsl/model/element_model.py",
+          "line": 10
+        },
+        {
+          "path": "datamimic_ce/engine/dsl/model/model_util.py",
+          "line": 205
+        }
+      ]
+    },
+    {
+      "id": "contract:dsl/model/constraints",
+      "concern": "Regel-Fakten, Source-Capabilities, Registry und Serialisierung sind verschieden, aber ihre Konsumenten projizieren denselben zentralen Attributvertrag.",
+      "verdict": "keep",
+      "reason": "Unterdateien behalten ihre getrennten Rollen; das Exportmodul ist nur der gemeinsame Zugriffspunkt.",
+      "evidence": [
+        {
+          "path": "datamimic_ce/engine/dsl/model/constraints/facts.py",
+          "line": 15
+        },
+        {
+          "path": "datamimic_ce/engine/dsl/model/constraints/serialization.py",
+          "line": 31
+        }
+      ]
+    },
+    {
+      "id": "contract:dsl/model/flow",
+      "concern": "Der Flow-Modellvertrag validiert Attribute für Verzweigungen, Schleifen und ausführbare DSL-Aktionen.",
+      "verdict": "change",
+      "reason": "StateMachineModel/Parser/Statement separat unter generation führen und Flows nach tatsächlichem Verhalten gliedern.",
+      "evidence": [
+        {
+          "path": "datamimic_ce/engine/dsl/model/state_machine_model.py",
+          "line": 14
+        },
+        {
+          "path": "datamimic_ce/engine/dsl/model/execute_model.py",
+          "line": 25
+        },
+        {
+          "path": "datamimic_ce/engine/dsl/model/while_model.py",
+          "line": 13
+        }
+      ]
+    },
+    {
+      "id": "contract:dsl/model/values",
+      "concern": "Der Werte-Modellvertrag validiert Feldattribute für Schlüssel, Variablen und zusammengesetzte Feldwerte.",
+      "verdict": "change",
+      "reason": "GeneratorModel aus dem Wertevertrag nehmen; der Ersatzvertrag für Setup-Definitionen muss vor Umzug mit StateMachine abgestimmt werden.",
+      "evidence": [
+        {
+          "path": "datamimic_ce/engine/dsl/model/key_model.py",
+          "line": 61
+        },
+        {
+          "path": "datamimic_ce/engine/dsl/model/generator_model.py",
+          "line": 14
+        }
+      ]
+    },
+    {
+      "id": "contract:dsl/model/resources",
+      "concern": "Das Modell validiert Datenbank-, MongoDB-, Memstore- und Include-Attribute als Setup-Eingaben.",
+      "verdict": "unclear",
+      "reason": "Die statische Properties-Wirkung liegt im ParserUtil-Geschwisterdispatch; IncludeParser selbst validiert Attribute und erzeugt IncludeStatement. XML-Includes werden erst vom IncludeTask geparst und ausgeführt.",
+      "evidence": [
+        {
+          "path": "datamimic_ce/engine/dsl/model/database_model.py",
+          "line": 15
+        },
+        {
+          "path": "datamimic_ce/engine/dsl/model/include_model.py",
+          "line": 14
+        }
+      ]
+    },
+    {
+      "id": "contract:dsl/model/generation",
+      "concern": "Generate/TimeSeries definieren Produktiterationen, während DemographicsModel das Setup-Sampling für erzeugte Entity-Werte bereitstellt.",
+      "verdict": "keep",
+      "reason": "Diese Aufgaben gehören zur Erzeugung; Generator-/StateMachine-Definitionen könnten hier ergänzt werden, falls kein gemeinsamer Setup-Definitionsvertrag gewählt wird.",
+      "evidence": [
+        {
+          "path": "datamimic_ce/engine/dsl/model/generate_model.py",
+          "line": 58
+        },
+        {
+          "path": "datamimic_ce/engine/dsl/model/demographics_model.py",
+          "line": 11
+        },
+        {
+          "path": "datamimic_ce/engine/dsl/model/state_machine_model.py",
+          "line": 14
+        }
+      ]
+    },
+    {
+      "id": "contract:dsl/model/registry",
+      "concern": "ElementRegistry hält Tag-/Alias-/Child-Grammatik und koppelt Extension-Registrierungen atomar an die Constraint-Registry.",
+      "verdict": "keep",
+      "reason": "Parser-Dispatch und Schema-Lookup lesen dieselbe Grammatik, also ist diese einzelne Registry-Komponente eine reale Vertragsgrenze.",
+      "evidence": [
+        {
+          "path": "datamimic_ce/engine/dsl/model/element_registry.py",
+          "line": 264
+        }
+      ]
+    },
+    {
+      "id": "contract:dsl/statements/base",
+      "concern": "Statement/CompositeStatement bilden Identität und Child-Baum; StatementUtil löst daneben physische Read-/Write-Entities sowie Consumer-Suffixe auf.",
+      "verdict": "split",
+      "reason": "Die Entity-Resolver haben Runtime-IO-Verbraucher, während der AST-Baum nur Names/Parents besitzt; diese Utilities sind keine Statement-Basisinvariante.",
+      "evidence": [
+        {
+          "path": "datamimic_ce/engine/dsl/statements/statement.py",
+          "line": 16
+        },
+        {
+          "path": "datamimic_ce/engine/dsl/statements/statement_util.py",
+          "line": 13
+        },
+        {
+          "path": "datamimic_ce/engine/dsl/statements/statement_util.py",
+          "line": 44
+        }
+      ]
+    },
+    {
+      "id": "contract:dsl/statements/flow",
+      "concern": "Der Flow-Statementvertrag trägt Bedingungen, Verzweigungen, Schleifen und Aktionen für die Runtime-Ausführung.",
+      "verdict": "change",
+      "reason": "StateMachineModel/Parser/Statement separat unter generation führen und Flows nach tatsächlichem Verhalten gliedern.",
+      "evidence": [
+        {
+          "path": "datamimic_ce/engine/dsl/statements/condition_statement.py",
+          "line": 19
+        },
+        {
+          "path": "datamimic_ce/engine/dsl/statements/state_machine_statement.py",
+          "line": 11
+        },
+        {
+          "path": "datamimic_ce/engine/dsl/statements/execute_statement.py",
+          "line": 11
+        }
+      ]
+    },
+    {
+      "id": "contract:dsl/statements/values",
+      "concern": "Der Werte-Statementvertrag hält validierte Felddefinitionen bis zum Runtime-Task-Dispatch.",
+      "verdict": "change",
+      "reason": "GeneratorStatement aus dem Wertevertrag nehmen; Ersatzvertrag gemeinsam mit StateMachine- und Sampling-Statements wählen.",
+      "evidence": [
+        {
+          "path": "datamimic_ce/engine/dsl/statements/key_statement.py",
+          "line": 11
+        },
+        {
+          "path": "datamimic_ce/engine/dsl/statements/generator_statement.py",
+          "line": 11
+        }
+      ]
+    },
+    {
+      "id": "contract:dsl/statements/resources",
+      "concern": "Connection-Statements halten validierte Connection-Modelle, SetupStatement hält globale Defaults und IncludeStatement trägt XML-/Properties-Dateipfade.",
+      "verdict": "keep",
+      "reason": "Diese Formen werden als Setup-Tasks vor Generation konsumiert; die Gruppe ist nach Setup-Lebenszyklus stimmig.",
+      "evidence": [
+        {
+          "path": "datamimic_ce/engine/dsl/statements/setup_statement.py",
+          "line": 13
+        },
+        {
+          "path": "datamimic_ce/engine/dsl/statements/include_statement.py",
+          "line": 11
+        }
+      ]
+    },
+    {
+      "id": "contract:dsl/statements/generation",
+      "concern": "GenerateStatement trägt Iterations-/Quell-/Target-Konfiguration; DemographicsStatement installiert das Setup-Samplingprofil für erzeugte Entities.",
+      "verdict": "keep",
+      "reason": "Beide steuern Erzeugung; Generator- und StateMachine-Definitionen können dazugehören, sofern der gemeinsame Setup-Definitionsvertrag nicht separat geführt wird.",
+      "evidence": [
+        {
+          "path": "datamimic_ce/engine/dsl/statements/generate_statement.py",
+          "line": 25
+        },
+        {
+          "path": "datamimic_ce/engine/dsl/statements/demographics_statement.py",
+          "line": 9
+        },
+        {
+          "path": "datamimic_ce/engine/runtime/tasks/__init__.py",
+          "line": 127
+        }
+      ]
+    },
+    {
+      "id": "contract:dsl/parsers/base",
+      "concern": "StatementParser validiert Element-/Child-Struktur und führt Pydantic-Fehler in DSL-Fehler über; konkrete Parser erben ihn direkt.",
+      "verdict": "keep",
+      "reason": "Das ist eine echte Basisklasse, die ParserUtil-Dispatch wird separat geprüft.",
+      "evidence": [
+        {
+          "path": "datamimic_ce/engine/dsl/parsers/statement_parser.py",
+          "line": 20
+        }
+      ]
+    },
+    {
+      "id": "contract:dsl/parsers/flow",
+      "concern": "Der Flow-Parservertrag übersetzt Bedingungen, Branches, Schleifen und Aktions-XML in typisierte Statements.",
+      "verdict": "change",
+      "reason": "StateMachineModel/Parser/Statement separat unter generation führen und Flows nach tatsächlichem Verhalten gliedern.",
+      "evidence": [
+        {
+          "path": "datamimic_ce/engine/dsl/parsers/condition_parser.py",
+          "line": 20
+        },
+        {
+          "path": "datamimic_ce/engine/dsl/parsers/state_machine_parser.py",
+          "line": 15
+        },
+        {
+          "path": "datamimic_ce/engine/dsl/parsers/execute_parser.py",
+          "line": 17
+        }
+      ]
+    },
+    {
+      "id": "contract:dsl/parsers/values",
+      "concern": "Der Werte-Parservertrag übersetzt Feld-XML samt Typ- und Quellenattributen in Feld-Statements.",
+      "verdict": "change",
+      "reason": "GeneratorParser aus dem Wertevertrag nehmen; Setup-Definitionskomponente gemeinsam mit Generator-/StateMachine-Parsers festlegen.",
+      "evidence": [
+        {
+          "path": "datamimic_ce/engine/dsl/parsers/key_parser.py",
+          "line": 18
+        },
+        {
+          "path": "datamimic_ce/engine/dsl/parsers/generator_parser.py",
+          "line": 14
+        }
+      ]
+    },
+    {
+      "id": "contract:dsl/parsers/resources",
+      "concern": "Der Ressourcen-Parservertrag bildet Connection-, Memstore- und Include-Angaben sowie den Setup-Root in Statements ab.",
+      "verdict": "unclear",
+      "reason": "Das Ziel bündelt verschiedene Setup-Eingaben, aber IncludeParser führt keine Datei-I/O aus: ParserUtil lädt statische Properties für spätere Geschwister, IncludeTask führt XML-Includes erst zur Laufzeit aus.",
+      "evidence": [
+        {
+          "path": "datamimic_ce/engine/dsl/parsers/database_parser.py",
+          "line": 16
+        },
+        {
+          "path": "datamimic_ce/engine/dsl/parsers/setup_parser.py",
+          "line": 18
+        },
+        {
+          "path": "datamimic_ce/engine/dsl/parsers/include_parser.py",
+          "line": 13
+        }
+      ]
+    },
+    {
+      "id": "contract:dsl/parsers/generation",
+      "concern": "GenerateParser verarbeitet Generate-/Iterate-Alias und Timeseries-Namespace; DemographicsParser löst Profilverzeichnisse auf.",
+      "verdict": "unclear",
+      "reason": "Das sind beide parse-time Erweiterungen für Datenerzeugung, aber Profilpfadauflösung bleibt setupweite Konfiguration.",
+      "evidence": [
+        {
+          "path": "datamimic_ce/engine/dsl/parsers/generate_parser.py",
+          "line": 23
+        },
+        {
+          "path": "datamimic_ce/engine/dsl/parsers/demographics_parser.py",
+          "line": 14
+        }
+      ]
+    },
+    {
+      "id": "contract:dsl/parsers/registry",
+      "concern": "ParserUtil bündelt Dispatcher und Credential-Auflösung, sodass der Vertrag zwei nicht zusammengehörende Parser-Verantwortungen fasst.",
+      "verdict": "split",
+      "reason": "Den Parser-Dispatch und die Document-Credential-Auflösung als getrennte Verträge führen.",
+      "evidence": [
+        {
+          "path": "datamimic_ce/engine/dsl/parsers/parser_util.py",
+          "line": 79
+        },
+        {
+          "path": "datamimic_ce/engine/dsl/parsers/parser_util.py",
+          "line": 223
+        }
+      ]
+    },
+    {
+      "id": "contract:dsl/parsers/document",
+      "concern": "DescriptorParser liest XML und delegiert SetupParser; Credential-Auflösung und Properties-Dateien laufen durch ParserUtil/parse_properties.",
+      "verdict": "change",
+      "reason": "Die Dokumenteingabe ist die reale Grenze, Credentials gehören nach Split dorthin, rekursiver Statement-Dispatch nicht.",
+      "evidence": [
+        {
+          "path": "datamimic_ce/engine/dsl/parsers/descriptor_parser.py",
+          "line": 20
+        },
+        {
+          "path": "datamimic_ce/engine/dsl/parsers/parser_util.py",
+          "line": 223
+        }
+      ]
+    },
+    {
+      "id": "contract:dsl/api",
+      "concern": "`engine.dsl.api` bündelt die importierte DSL-Vertragsfläche für Runtime und Authoring an einem konkreten Modul.",
+      "verdict": "keep",
+      "reason": "Authoring-Schema/Regeln und Runtime-Quellen importieren ihre typisierten DSL-Typen über diese Fassade; Stabilitätszusage für externe Nutzer ist davon getrennt und hier nicht belegt.",
+      "evidence": [
+        {
+          "path": "datamimic_ce/engine/dsl/api.py",
+          "line": 1
+        },
+        {
+          "path": "datamimic_ce/authoring/domain/schema.py",
+          "line": 18
+        },
+        {
+          "path": "datamimic_ce/engine/runtime/sources/router.py",
+          "line": 5
+        }
+      ]
+    },
+    {
+      "id": "contract:dsl/contracts",
+      "concern": "Die drei Typen sind nur teilweise gleichartig: EntityValue ist ein Interface, GeneratorCapability ein Capability-Projektionswert und StateTransitionRule ein Tupelalias.",
+      "verdict": "unclear",
+      "reason": "Bei Beibehaltung die Datei als öffentliche Typ-Fassade behandeln, nicht als gemeinsame Runtime-Domäne.",
+      "evidence": [
+        {
+          "path": "datamimic_ce/engine/dsl/contracts.py",
+          "line": 9
+        },
+        {
+          "path": "datamimic_ce/engine/dsl/contracts.py",
+          "line": 15
+        }
+      ]
+    },
+    {
+      "id": "contract:dsl/vocabulary",
+      "concern": "Das Vokabular umfasst Strings und typisierte Enums aus mehreren DSL-Verbrauchsbereichen, aber alle Werte definieren stabile Eingabeschreibweisen.",
+      "verdict": "keep",
+      "reason": "Als gemeinsam konsumierte Token-Grenze behalten; Enums nicht semantisch zu einer Domäne zusammenziehen.",
+      "evidence": [
+        {
+          "path": "datamimic_ce/engine/dsl/constants/attribute_constants.py",
+          "line": 8
+        },
+        {
+          "path": "datamimic_ce/engine/dsl/enums/distribution_enums.py",
+          "line": 10
+        }
+      ]
+    },
+    {
+      "id": "contract:dsl/model",
+      "concern": "Der Modellvertrag validiert Setup-, Ressourcen-, Feld-, Ablauf- und Generierungsattribute vor der Parser-Übersetzung.",
+      "verdict": "keep",
+      "reason": "Modelle rufen ModelUtil und die Constraint-Fakten auf; der gemeinsame Attributvertrag begrenzt alle DSL-Eingaben vor der Parser-Übersetzung.",
+      "evidence": [
+        {
+          "path": "datamimic_ce/engine/dsl/model/generate_model.py",
+          "line": 58
+        },
+        {
+          "path": "datamimic_ce/engine/dsl/model/variable_model.py",
+          "line": 59
+        },
+        {
+          "path": "datamimic_ce/engine/dsl/model/model_util.py",
+          "line": 205
+        }
+      ]
+    },
+    {
+      "id": "contract:dsl/statements",
+      "concern": "Der Statementvertrag trägt validierte Descriptor-Semantik und Parent-/Child-Kontext bis zum Runtime-Task-Dispatch.",
+      "verdict": "keep",
+      "reason": "Task-Dispatch konsumiert konkrete Statementtypen; Generate und Condition bewahren zusätzlich den Produkt- und Branch-Kontext, den Ausführung benötigt.",
+      "evidence": [
+        {
+          "path": "datamimic_ce/engine/dsl/statements/statement.py",
+          "line": 16
+        },
+        {
+          "path": "datamimic_ce/engine/dsl/statements/generate_statement.py",
+          "line": 25
+        },
+        {
+          "path": "datamimic_ce/engine/runtime/tasks/__init__.py",
+          "line": 157
+        }
+      ]
+    },
+    {
+      "id": "contract:dsl/parsers",
+      "concern": "Der Parservertrag übersetzt XML und Eigenschaften in validierte Statement-Bäume samt Eltern-/Kindregeln.",
+      "verdict": "keep",
+      "reason": "DescriptorParser startet SetupParser, ParserUtil dispatcht Kinder und konkrete Parser wenden ihre Modelle an; das ist die parse-time Transformationsgrenze.",
+      "evidence": [
+        {
+          "path": "datamimic_ce/engine/dsl/parsers/descriptor_parser.py",
+          "line": 31
+        },
+        {
+          "path": "datamimic_ce/engine/dsl/parsers/parser_util.py",
+          "line": 126
+        },
+        {
+          "path": "datamimic_ce/engine/dsl/parsers/statement_parser.py",
+          "line": 147
+        }
+      ]
+    }
+  ],
+  "findings": [
+    {
+      "title": "Generator ist Definition plus Setup-Registrierung, kein Skalarwert",
+      "scenario": "Ein Modell deklariert `<generator name=\"idgen\" .../>` und mehrere `<key generator=\"idgen\"/>` Felder verwenden diese Registrierung. Die Architektur ordnet den Runtime-Task `GeneratorTask` dem Wertpfad zu, obwohl er als SetupSubTask nur den Generator im Context erstellt.",
+      "evidence": [
+        {
+          "path": "datamimic_ce/engine/runtime/tasks/generator_task.py",
+          "line": 13
+        },
+        {
+          "path": "datamimic_ce/engine/runtime/tasks/generator_task.py",
+          "line": 25
+        },
+        {
+          "path": "datamimic_ce/engine/runtime/tasks/__init__.py",
+          "line": 172
+        },
+        {
+          "path": "datamimic_ce/engine/dsl/model/generator_model.py",
+          "line": 14
+        },
+        {
+          "path": "tests_ce/integration_tests/generator_test/test_generator_caching.py",
+          "line": 84
+        }
+      ],
+      "recommendation": "GeneratorTask in runtime/tasks lassen; GeneratorModel/Parser/Statement aus values/scalar herauslösen und einen gemeinsamen Setup-Definitionsvertrag mit StateMachine festlegen (generation/declarations ist Kandidat, noch keine bestätigte Ablage)."
+    },
+    {
+      "title": "State-machine-Übergänge sind Generator-Konfiguration",
+      "scenario": "Eine `<state-machine>` wird in Setup einmal geparst und später über einen Key/Variable Generator-Namen referenziert; die Übergänge beschreiben den zu erzeugenden Ablauf, nicht den umgebenden DSL-Kontrollfluss.",
+      "evidence": [
+        {
+          "path": "datamimic_ce/engine/dsl/model/state_machine_model.py",
+          "line": 14
+        },
+        {
+          "path": "datamimic_ce/engine/dsl/parsers/state_machine_parser.py",
+          "line": 22
+        },
+        {
+          "path": "datamimic_ce/engine/dsl/parsers/state_machine_parser.py",
+          "line": 41
+        },
+        {
+          "path": "datamimic_ce/engine/dsl/model/element_registry.py",
+          "line": 202
+        }
+      ],
+      "recommendation": "StateMachineModel/Parser/Statement aus flow/loops herauslösen; dieselbe Setup-Definitionsentscheidung wie für Generator treffen, While im Kontrollfluss belassen."
+    },
+    {
+      "title": "ParserUtil mischt Rekursion und Zugangsdaten",
+      "scenario": "Beim Lesen eines Descriptors muss ParserUtil rekursiv Generate-/Condition-Statements aufbauen; beim Einlesen einer Datenbankverbindung sucht dieselbe Klasse Zugangsdaten aus Plattform-Properties und Konfigurationsdateien.",
+      "evidence": [
+        {
+          "path": "datamimic_ce/engine/dsl/parsers/parser_util.py",
+          "line": 79
+        },
+        {
+          "path": "datamimic_ce/engine/dsl/parsers/parser_util.py",
+          "line": 105
+        },
+        {
+          "path": "datamimic_ce/engine/dsl/parsers/parser_util.py",
+          "line": 223
+        },
+        {
+          "path": "datamimic_ce/engine/dsl/parsers/database_parser.py",
+          "line": 39
+        }
+      ],
+      "recommendation": "Parser-Auswahl/rekursiven Baumaufbau und Credential-Auflösung in die bereits vorgeschlagenen dispatch- und document/credentials-Ziele teilen."
+    },
+    {
+      "title": "Verschachtelte Feldwerte bleiben Struktur, keine Ausführungssteuerung",
+      "scenario": "`<nestedKey>`, `<list>` oder `<array>` werden in Generate-Datensätzen als zusammengesetzte Feldwerte gebaut; `<condition>` und `<while>` dagegen wählen oder wiederholen Child-Statements.",
+      "evidence": [
+        {
+          "path": "datamimic_ce/engine/dsl/model/element_registry.py",
+          "line": 143
+        },
+        {
+          "path": "datamimic_ce/engine/dsl/parsers/nested_key_parser.py",
+          "line": 37
+        },
+        {
+          "path": "datamimic_ce/engine/dsl/parsers/list_parser.py",
+          "line": 36
+        },
+        {
+          "path": "datamimic_ce/engine/dsl/parsers/while_parser.py",
+          "line": 41
+        }
+      ],
+      "recommendation": "Die vorgeschlagene Trennung `values/structured` von `flow` beibehalten; nur die Generator-Deklarationen herauslösen."
+    }
+  ],
+  "traces": [
+    "XML-Datei → parse_xml_file → DescriptorParser.parse → SetupParser.parse → ParserUtil.parse_sub_elements → konkreter Parser → Pydantic-Modell → Statement-Baum; Evidence: datamimic_ce/engine/dsl/parsers/descriptor_parser.py:31, datamimic_ce/engine/dsl/parsers/setup_parser.py:43, datamimic_ce/engine/dsl/parsers/parser_util.py:126.",
+    "Generator-Deklaration → ParserUtil Setup-Kind-Dispatch → GeneratorParser → GeneratorModel → GeneratorStatement → create_task(GeneratorStatement) → GeneratorTask.execute → GeneratorUtil.create_generator → SetupContext; Evidence: datamimic_ce/engine/dsl/parsers/parser_util.py:144, datamimic_ce/engine/dsl/parsers/generator_parser.py:30, datamimic_ce/engine/runtime/tasks/__init__.py:172, datamimic_ce/engine/runtime/tasks/generator_task.py:25.",
+    "State-machine XML → StateMachineParser.validates transitions → StateMachineStatement.rules → task factory/StateMachineTask → StateTransitionGenerator registration → `<key>/<variable generator=...>`; Evidence: datamimic_ce/engine/dsl/parsers/state_machine_parser.py:22, datamimic_ce/engine/dsl/statements/state_machine_statement.py:15, datamimic_ce/engine/runtime/tasks/__init__.py:178."
+  ],
+  "limitations": [
+    "Alle 113 in workset-dsl.json gelisteten DSL-Module, 45 Zielordner und 25 Vertragsknoten wurden auf ihre Codeverantwortung geprüft; Parser/Task-Aufrufpfade wurden lokal verfolgt.",
+    "Keine Dateien außerhalb dieser Review-JSON wurden geändert; keine Runtime-Ausführung gegen externe Datenbanken oder MongoDB durchgeführt.",
+    "Die vorgeschlagenen Pfade bleiben Entwurf; dieses Ergebnis belegt Semantik an der aktuellen CE-Revision, keine erfolgreiche Migration oder Import-Kompatibilität nach einem Umzug."
+  ]
+}

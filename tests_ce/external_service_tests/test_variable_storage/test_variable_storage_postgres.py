@@ -13,7 +13,7 @@ bug (storage= must ignore pageSize and load the whole table) would be caught."""
 
 from pathlib import Path
 
-from datamimic_ce.data_mimic_test import DataMimicTest
+from datamimic_ce.interfaces.python.data_mimic_test import DataMimicTest
 
 _TEST_DIR = Path(__file__).resolve().parent
 _POOL = set(range(1, 16))  # seeded row_ids 1..15

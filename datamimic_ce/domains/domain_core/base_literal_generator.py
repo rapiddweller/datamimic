@@ -42,6 +42,6 @@ class BaseLiteralGenerator(ABC):
         self._rng = value
 
     @abstractmethod
-    def generate(self):
+    def generate(self) -> object:
         """Generate a random literal value."""
         raise NotImplementedError("Subclasses must implement this method")

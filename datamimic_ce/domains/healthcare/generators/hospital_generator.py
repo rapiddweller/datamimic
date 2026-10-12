@@ -14,9 +14,9 @@ import datetime
 import random
 from pathlib import Path
 
-from datamimic_ce.domains.common.generators.address_generator import AddressGenerator
-from datamimic_ce.domains.common.literal_generators.phone_number_generator import PhoneNumberGenerator
 from datamimic_ce.domains.domain_core.base_domain_generator import ClockAnchoredDomainGenerator
+from datamimic_ce.domains.shared.generators.address_generator import AddressGenerator
+from datamimic_ce.domains.shared.generators.phone_number_generator import PhoneNumberGenerator
 
 
 class HospitalGenerator(ClockAnchoredDomainGenerator):
@@ -66,7 +66,7 @@ class HospitalGenerator(ClockAnchoredDomainGenerator):
             A hospital name.
         """
         # Load name patterns from dataset
-        from datamimic_ce.domains.utils.dataset_loader import load_weighted_values_try_dataset
+        from datamimic_ce.domains.shared.datasets.loader import load_weighted_values_try_dataset
 
         patterns, w = load_weighted_values_try_dataset(
             "healthcare", "hospital", "name_patterns.csv", dataset=self._dataset, start=Path(__file__)
@@ -77,7 +77,7 @@ class HospitalGenerator(ClockAnchoredDomainGenerator):
         return pattern.format(city=city, state=state)
 
     def get_hospital_type(self):
-        from datamimic_ce.domains.utils.dataset_loader import (
+        from datamimic_ce.domains.shared.datasets.loader import (
             load_weighted_values_try_dataset,
             pick_one_weighted_no_repeat,
         )
@@ -88,6 +88,44 @@ class HospitalGenerator(ClockAnchoredDomainGenerator):
         choice = pick_one_weighted_no_repeat(self._rng, values, w, last=self._last_type)
         self._last_type = choice
         return choice
+
+    def generate_hospital_id_candidate(self) -> str:
+        rng = self.rng
+        suffix = "".join(rng.choice("0123456789ABCDEF") for _ in range(8))
+        return f"HOSP-{suffix}"
+
+    def generate_bed_count(self, hospital_type: str) -> int:
+        if hospital_type == "Specialty":
+            # Specialty hospitals tend to be smaller
+            return self.rng.randint(50, 200)
+        if hospital_type == "Community":
+            # Community hospitals are medium-sized
+            return self.rng.randint(100, 300)
+        if hospital_type == "Teaching":
+            # Teaching hospitals tend to be larger
+            return self.rng.randint(300, 1000)
+        # General hospitals vary in size
+        return self.rng.randint(100, 500)
+
+    def generate_staff_count(self, bed_count: int) -> int:
+        staff_ratio = self.rng.uniform(2.0, 4.0)
+        return int(bed_count * staff_ratio)
+
+    def generate_founding_year(self) -> int:
+        current_year = self.reference_now.year
+        return self.rng.randint(current_year - 150, current_year - 5)
+
+    def generate_emergency_services(self, hospital_type: str) -> bool:
+        if hospital_type == "Specialty":
+            return self.rng.random() < 0.3
+        return self.rng.random() < 0.9
+
+    def generate_teaching_status(self, hospital_type: str) -> bool:
+        if hospital_type == "Teaching":
+            return True
+        if hospital_type == "General":
+            return self.rng.random() < 0.3
+        return self.rng.random() < 0.1
 
     def generate_departments(self, hospital_type: str, count: int | None = None) -> list[str]:
         """Generate a list of hospital departments.
@@ -102,7 +140,7 @@ class HospitalGenerator(ClockAnchoredDomainGenerator):
 
         # Switch to dataset-driven departments
         slug = hospital_type.lower().replace(" ", "_").replace("'", "")
-        from datamimic_ce.domains.utils.dataset_loader import load_weighted_values_try_dataset
+        from datamimic_ce.domains.shared.datasets.loader import load_weighted_values_try_dataset
 
         try:
             values, w = load_weighted_values_try_dataset(
@@ -136,7 +174,7 @@ class HospitalGenerator(ClockAnchoredDomainGenerator):
     def generate_services(self, hospital_type: str, departments: list[str], count: int | None = None) -> list[str]:
         """Generate a list of hospital services from datasets (no hardcoded fallbacks)."""
         slug = hospital_type.lower().replace(" ", "_").replace("'", "")
-        from datamimic_ce.domains.utils.dataset_loader import load_weighted_values_try_dataset
+        from datamimic_ce.domains.shared.datasets.loader import load_weighted_values_try_dataset
 
         try:
             values, w = load_weighted_values_try_dataset(
@@ -170,7 +208,7 @@ class HospitalGenerator(ClockAnchoredDomainGenerator):
     def generate_accreditation(self, hospital_type: str) -> list[str]:
         """Generate a list of hospital accreditations from datasets."""
         slug = hospital_type.lower().replace(" ", "_").replace("'", "")
-        from datamimic_ce.domains.utils.dataset_loader import load_weighted_values_try_dataset
+        from datamimic_ce.domains.shared.datasets.loader import load_weighted_values_try_dataset
 
         try:
             values, w = load_weighted_values_try_dataset(

@@ -9,7 +9,7 @@ from pathlib import Path
 
 import pytest
 
-from datamimic_ce.data_mimic_test import DataMimicTest
+from datamimic_ce.interfaces.python.data_mimic_test import DataMimicTest
 
 _TEST_DIR = Path(__file__).resolve().parent
 
@@ -31,7 +31,7 @@ def test_inline_sql_seeds_a_table():
 
 
 def test_inline_bash_runs_and_warns_about_determinism():
-    from datamimic_ce.tasks import execute_task
+    from datamimic_ce.engine.runtime.tasks.flow.commands import execute_task
 
     execute_task._bash_warned = False  # let the one-time nudge fire in this test
     messages: list[str] = []

@@ -7,14 +7,14 @@
 from random import Random
 
 from datamimic_ce.domains.domain_core import BaseDomainService
-from datamimic_ce.domains.domain_core.attribute_catalog import EntitySchema, FieldSpec, field
+from datamimic_ce.domains.domain_core.contracts.attribute_catalog import EntitySchema, FieldSpec, field
 from datamimic_ce.domains.ecommerce.generators.product_generator import ProductGenerator
 from datamimic_ce.domains.ecommerce.models.product import Product
 
 PRODUCT_SCHEMA = EntitySchema(
     "Product",
     (
-        field("product_id", str, "Unique product identifier."),
+        field("product_id", str, "Unique product identifier.", unique_identifier_format="PROD[A-Z0-9]{8}"),
         field("name", str, "Product name."),
         field("description", str, "Product description."),
         field("price", float, "Product price."),

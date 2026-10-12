@@ -15,12 +15,22 @@ the contract is ``emitted_keys ⊆ declared_names``.
 
 from __future__ import annotations
 
+import json
 from random import Random
+from types import MappingProxyType
 
 import pytest
 
-from datamimic_ce.domains.domain_core.attribute_catalog import FieldSpec
-from datamimic_ce.domains.domain_core.entity_registry import list_entity_specs
+from datamimic_ce.domains.domain_core.contracts.attribute_catalog import FieldSpec
+from datamimic_ce.domains.finance.generators.bank_account_generator import BankAccountGenerator
+from datamimic_ce.domains.finance.generators.transaction_generator import TransactionGenerator
+from datamimic_ce.domains.finance.models.bank_account import BankAccount
+from datamimic_ce.domains.finance.models.transaction import Transaction
+from datamimic_ce.domains.finance.services.transaction_service import TRANSACTION_SCHEMA
+from datamimic_ce.domains.healthcare.services.patient_service import PatientService
+from datamimic_ce.domains.registry.entities import list_entity_specs
+from datamimic_ce.domains.shared.demographics.config import DemographicConfig
+from datamimic_ce.domains.shared.services.person_service import PersonService
 
 _SEED = 20260521
 
@@ -71,3 +81,61 @@ def test_emitted_value_types_match_schema(spec) -> None:
         f"{spec.entity} schema type(s) disagree with emitted values: {mismatches} "
         f"— fix the EntitySchema field type or the generator."
     )
+
+
+def test_linked_transaction_account_matches_nested_schema() -> None:
+    transaction = Transaction(
+        TransactionGenerator(rng=Random(_SEED)),
+        BankAccount(BankAccountGenerator(rng=Random(_SEED))),
+    )
+    account = transaction.to_dict()["account"]
+    account_spec = next(field for field in TRANSACTION_SCHEMA.fields if field.name == "account")
+
+    assert isinstance(account, dict)
+    declared = {field.name: field for field in account_spec.children}
+    assert set(account) == set(declared)
+    assert all(_type_matches(value, declared[name]) for name, value in account.items())
+
+
+def test_unlinked_transaction_omits_account() -> None:
+    transaction = Transaction(TransactionGenerator(rng=Random(_SEED)))
+
+    assert "account" not in transaction.to_dict()
+
+
+@pytest.mark.parametrize("service_type", (PersonService, PatientService))
+@pytest.mark.parametrize("profile_kind", ("none", "string", "dict", "mapping"))
+def test_configured_transaction_profile_matches_schema(service_type, profile_kind: str) -> None:
+    backing = {"daily": 0.5}
+    profile = {
+        "none": None,
+        "string": "student",
+        "dict": backing,
+        "mapping": MappingProxyType(backing),
+    }[profile_kind]
+    config = DemographicConfig(transaction_profile=profile)
+    defaulted = config.with_defaults(default_age_min=30, default_age_max=50)
+    assert defaulted is not config
+    assert defaulted.transaction_profile is profile
+    assert (defaulted.age_min, defaulted.age_max) == (30, 50)
+    assert (config.age_min, config.age_max) == (None, None)
+    service = service_type(dataset="US", demographic_config=config, rng=Random(_SEED))
+    entity = service.generate()
+    value = entity.transaction_profile
+    assert value is profile
+
+    if profile_kind in ("dict", "mapping"):
+        backing["daily"] = 0.75
+        assert entity.transaction_profile is value
+        assert value["daily"] == 0.75
+    if profile_kind == "mapping":
+        with pytest.raises(TypeError, match="not JSON serializable"):
+            json.dumps(value)
+    else:
+        expected_json = {"none": "null", "string": '"student"', "dict": '{"daily": 0.75}'}
+        assert json.dumps(value) == expected_json[profile_kind]
+
+    spec = next(field for field in service.attribute_specs() if field.name == "transaction_profile")
+    assert _type_matches(value, spec), f"{type(value).__name__} does not satisfy {spec.data_type}"
+    if profile_kind == "mapping":
+        assert entity.to_dict()["transaction_profile"] is value

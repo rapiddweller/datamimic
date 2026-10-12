@@ -17,7 +17,7 @@ import random
 
 import pytest
 
-from datamimic_ce.domains.common.literal_generators.state_transition_generator import StateTransitionGenerator
+from datamimic_ce.domains.shared.literal_generators.primitives.state_transition_generator import StateTransitionGenerator
 
 
 def test_weighted_branch_distribution():
@@ -34,6 +34,21 @@ def test_start_is_first_source_and_terminal_restarts():
     gen = StateTransitionGenerator("a->b, b->c")  # c is terminal
     seq = [gen.generate() for _ in range(6)]
     assert seq == ["a", "b", "c", "a", "b", "c"]
+
+
+def test_generation_contract_state_machine_definition_is_shared_and_immutable():
+    from dataclasses import FrozenInstanceError
+
+    from datamimic_ce.domains import api
+    from datamimic_ce.domains.domain_core.contracts.generation import StateMachineDef
+
+    definition = StateMachineDef(rules=(("a", "b", 1.0), ("b", "a", 1.0)), start="a")
+    generator = StateTransitionGenerator(definition.rules, start=definition.start)
+
+    assert api.StateMachineDef is StateMachineDef
+    assert [generator.generate() for _ in range(3)] == ["a", "b", "a"]
+    with pytest.raises(FrozenInstanceError):
+        definition.start = "b"
 
 
 @pytest.mark.parametrize("bad", ["open", "a->b, oops", "->b", "a->"])

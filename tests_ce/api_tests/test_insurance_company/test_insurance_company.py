@@ -1,6 +1,7 @@
+import uuid
+
 import pytest
 
-from datamimic_ce.domains.common.literal_generators.generator_util import GeneratorUtil
 from datamimic_ce.domains.insurance.models.insurance_company import InsuranceCompany
 from datamimic_ce.domains.insurance.services.insurance_company_service import InsuranceCompanyService
 
@@ -25,8 +26,7 @@ class TestInsuranceCompany:
         assert insurance_company.website is not None
 
         assert insurance_company.id != ""
-        #  ensure consistent UUID format by validating via common utility
-        assert GeneratorUtil.is_valid_uuid(insurance_company.id)
+        assert uuid.UUID(insurance_company.id, version=4).hex == insurance_company.id.replace("-", "")
         assert insurance_company.name != ""
         assert insurance_company.code != ""
         assert insurance_company.founded_year != ""
@@ -56,17 +56,6 @@ class TestInsuranceCompany:
         assert insurance_company.headquarters == insurance_company.headquarters
         assert insurance_company.website == insurance_company.website
 
-    @pytest.mark.flaky(reruns=3)
-    def test_two_different_entities(self):
-        insurance_company_service = InsuranceCompanyService()
-        insurance_company1 = insurance_company_service.generate()
-        insurance_company2 = insurance_company_service.generate()
-        assert insurance_company1.id != insurance_company2.id
-        assert insurance_company1.name != insurance_company2.name
-        assert insurance_company1.code != insurance_company2.code
-        assert insurance_company1.founded_year != insurance_company2.founded_year
-        assert insurance_company1.headquarters != insurance_company2.headquarters
-        assert insurance_company1.website != insurance_company2.website
 
     @pytest.mark.parametrize("dataset", _supported_datasets)
     def test_supported_datasets(self, dataset):

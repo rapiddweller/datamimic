@@ -1,6 +1,6 @@
 from pathlib import Path
 
-from datamimic_ce.factory.datamimic_test_factory import DataMimicTestFactory
+from datamimic_ce.interfaces.python.factory import DataMimicTestFactory
 
 
 class CustomerFactory(DataMimicTestFactory):

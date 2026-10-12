@@ -6,14 +6,24 @@
 
 import random
 import unittest
+from decimal import Decimal
 from random import Random
+from types import SimpleNamespace
 from unittest.mock import MagicMock, patch
 
-from datamimic_ce.clients.rdbms_client import RdbmsClient
-from datamimic_ce.contexts.geniter_context import GenIterContext
-from datamimic_ce.data_sources.data_source_pagination import DataSourcePagination
-from datamimic_ce.statements.reference_statement import ReferenceStatement
-from datamimic_ce.tasks.reference_task import ReferenceTask
+from datamimic_ce.engine.dsl import api as dsl_api
+from datamimic_ce.engine.dsl.statements.values.references.reference_statement import ReferenceField, ReferenceStatement
+from datamimic_ce.engine.io.api import DataSourcePagination
+from datamimic_ce.engine.io.clients.database_client import DatabaseClient
+from datamimic_ce.engine.io.clients.rdbms_client import RdbmsClient
+from datamimic_ce.engine.runtime.contexts.geniter_context import GenIterContext
+from datamimic_ce.engine.runtime.tasks.sources.reference import load_reference_source
+from datamimic_ce.engine.runtime.tasks.values.reference.task import ReferenceTask
+
+
+def test_api_reference_field_is_canonical_type():
+    assert dsl_api.ReferenceField is ReferenceField
+    assert "ReferenceField" in dsl_api.__all__
 
 
 class TestReferenceTask(unittest.TestCase):
@@ -36,7 +46,7 @@ class TestReferenceTask(unittest.TestCase):
         # ReferenceTask reads ctx.rng directly; the random module exposes the
         # same callable API as a Random instance, so it works as a drop-in.
         self.context.rng = random
-        # unique selection routes via DataSourceRegistry.get_unique_data (stable per-statement seed).
+        # Unique selection uses the statement's stable distribution seed.
         self.context.root.stable_distribution_seed.return_value = 42
         self.rdbms_client = MagicMock(spec=RdbmsClient)
         self.context.root.clients.get.return_value = self.rdbms_client
@@ -62,6 +72,14 @@ class TestReferenceTask(unittest.TestCase):
 
         message = str(context.exception)
         self.assertIn("RDBMS and MongoDB are supported", message)
+
+    def test_execute_unsupported_database_client(self):
+        """A generic database client is not a supported reference source."""
+        self.context.root.clients.get.return_value = MagicMock(spec=DatabaseClient)
+        task = ReferenceTask(self.statement)
+
+        with self.assertRaisesRegex(ValueError, "RDBMS and MongoDB are supported"):
+            task.execute(self.context)
 
     def test_execute_empty_dataset(self):
         """Test execution with empty dataset."""
@@ -155,7 +173,7 @@ class TestReferenceTask(unittest.TestCase):
         task = ReferenceTask(self.statement, self.pagination)
 
         with patch(
-            "datamimic_ce.tasks.reference_task.DataSourceRegistry.load_reference_source",
+            "datamimic_ce.engine.runtime.tasks.values.reference.task.load_reference_source",
             return_value=selected,
         ) as load_reference_source:
             assert task.execute(self.context) == 17
@@ -163,6 +181,103 @@ class TestReferenceTask(unittest.TestCase):
 
         load_reference_source.assert_called_once_with(self.context, self.statement, self.pagination)
         self.rdbms_client.get_random_rows_by_columns.assert_not_called()
+
+    def test_source_loader_maps_columns_and_consumes_one_stable_seed(self):
+        self.statement.source_keys = ["source_id", "source_name", "source_amount", "source_nested"]
+        self.statement.targets = ["id", "name", "amount", "nested"]
+        self.statement.full_name = "customer_reference"
+        self.statement.unique = False
+        self.statement.distribution = "ordered"
+        self.statement.cyclic = False
+        amount = Decimal("1.25")
+        nested = {"tags": ["native", None]}
+        source_rows = [(1, "Ada", amount, nested), (2, "Bert", None, None), (3, "Cam", amount, nested)]
+        self.rdbms_client.get_random_rows_by_columns.return_value = source_rows
+
+        rows = load_reference_source(self.context, self.statement, self.pagination)
+
+        assert rows == [
+            {"id": 1, "name": "Ada", "amount": amount, "nested": nested},
+            {"id": 2, "name": "Bert", "amount": None, "nested": None},
+        ]
+        assert rows is not source_rows
+        assert isinstance(rows[0], dict)
+        assert rows[0]["amount"] is amount
+        assert rows[0]["nested"] is nested
+        self.rdbms_client.get_random_rows_by_columns.assert_called_once_with(
+            "test_type", ["source_id", "source_name", "source_amount", "source_nested"]
+        )
+        self.context.root.stable_distribution_seed.assert_called_once_with("customer_reference")
+
+    def test_source_loader_rejects_fewer_cells_than_targets(self):
+        self.statement.source_keys = ["source_id", "source_amount"]
+        self.statement.targets = ["id", "amount"]
+        self.rdbms_client.get_random_rows_by_columns.return_value = [(1,)]
+
+        with self.assertRaisesRegex(ValueError, r"zip\(\) argument 2 is shorter than argument 1"):
+            load_reference_source(self.context, self.statement, self.pagination)
+
+        self.context.root.stable_distribution_seed.assert_not_called()
+
+    def test_source_loader_rejects_more_cells_than_targets(self):
+        self.statement.source_keys = ["source_id", "source_amount"]
+        self.statement.targets = ["id", "amount"]
+        self.rdbms_client.get_random_rows_by_columns.return_value = [(1, Decimal("1.25"), None)]
+
+        with self.assertRaisesRegex(ValueError, r"zip\(\) argument 2 is longer than argument 1"):
+            load_reference_source(self.context, self.statement, self.pagination)
+
+        self.context.root.stable_distribution_seed.assert_not_called()
+
+    def test_random_reference_uses_one_seed_and_one_choice_per_page_row(self):
+        self.statement.full_name = "customer_reference"
+        self.statement.unique = False
+        self.statement.distribution = None
+        self.statement.cyclic = False
+        self.pagination.limit = 3
+        self.context.rng = MagicMock()
+        self.context.rng.choice.side_effect = lambda records: records[0]
+        self.rdbms_client.get_random_rows_by_columns.return_value = [(1,), (2,)]
+
+        rows = load_reference_source(self.context, self.statement, self.pagination)
+
+        assert rows == [{"test_name": 1}] * 3
+        self.context.root.stable_distribution_seed.assert_called_once_with("customer_reference")
+        assert self.context.rng.choice.call_count == 3
+
+    def test_random_reference_nonpositive_window_does_not_access_rng(self):
+        self.statement.full_name = "customer_reference"
+        self.statement.unique = False
+        self.statement.distribution = None
+        self.statement.cyclic = False
+        self.rdbms_client.get_random_rows_by_columns.return_value = [(1,), (2,)]
+        context_without_rng = SimpleNamespace(root=self.context.root)
+
+        for limit in (0, -1):
+            self.pagination.limit = limit
+            self.context.root.stable_distribution_seed.reset_mock()
+
+            rows = load_reference_source(context_without_rng, self.statement, self.pagination)
+
+            assert rows == []
+            self.context.root.stable_distribution_seed.assert_called_once_with("customer_reference")
+
+    def test_unpaged_cyclic_reference_shares_root_rotation_across_rebuilt_tasks(self):
+        self.statement.cyclic = True
+        self.statement.full_name = "customer_reference"
+        self.context.root.generators = {}
+        first = ReferenceTask(self.statement)
+        second = ReferenceTask(self.statement)
+
+        with patch(
+            "datamimic_ce.engine.runtime.tasks.values.reference.task.load_reference_source",
+            return_value=[{"test_name": "Ada"}, {"test_name": "Bert"}],
+        ) as load_reference_source:
+            assert first.execute(self.context) == "Ada"
+            assert second.execute(self.context) == "Bert"
+
+        load_reference_source.assert_called_once_with(self.context, self.statement, None)
+        assert "<reference>-cycle|customer_reference" in self.context.root.generators
 
 
 if __name__ == "__main__":

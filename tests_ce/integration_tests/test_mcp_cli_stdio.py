@@ -21,7 +21,7 @@ def anyio_backend() -> str:
 @pytest.mark.anyio
 async def test_cli_stdio_authoring_roundtrip(anyio_backend: str) -> None:
     transport = PythonStdioTransport(
-        script_path=ROOT / "datamimic_ce/mcp/cli.py",
+        script_path=ROOT / "datamimic_ce/interfaces/mcp/cli.py",
         args=["--transport", "stdio"],
         python_cmd=sys.executable,
         cwd=str(ROOT),

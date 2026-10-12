@@ -4,7 +4,7 @@ import pytest
 from starlette.requests import Request
 from starlette.responses import Response
 
-from datamimic_ce.mcp.server import APIKeyMiddleware, build_sse_app, create_server
+from datamimic_ce.interfaces.mcp.server import APIKeyMiddleware, build_sse_app, create_server
 
 
 @pytest.fixture

@@ -4,12 +4,15 @@
 # See LICENSE file for the full text of the license.
 # For questions and support, contact: info@rapiddweller.com
 
-from typing import Any, TypeVar
+from typing import TypeVar
 
-from datamimic_ce.domains.common.models.person import Person
 from datamimic_ce.domains.domain_core import BaseEntity
 from datamimic_ce.domains.domain_core.property_cache import property_cache
-from datamimic_ce.domains.healthcare.generators.medical_device_generator import MedicalDeviceGenerator
+from datamimic_ce.domains.healthcare.generators.medical_device_generator import (
+    MaintenanceRecord,
+    MedicalDeviceGenerator,
+)
+from datamimic_ce.domains.shared.models.person import Person
 
 T = TypeVar("T")
 
@@ -48,9 +51,8 @@ class MedicalDevice(BaseEntity):
         Returns:
             A string representing a device ID.
         """
-        rng = self._medical_device_generator.rng
-        suffix = "".join(str(rng.randint(0, 9)) for _ in range(8))
-        return f"DEV-{suffix}"
+        candidate = self._medical_device_generator.generate_device_id_candidate()
+        return self._claim_identifier("device_id", candidate)
 
     @property
     @property_cache
@@ -80,10 +82,7 @@ class MedicalDevice(BaseEntity):
         Returns:
             A string representing a model number.
         """
-        rng = self._medical_device_generator.rng
-        letters = "".join(rng.choice("ABCDEFGHIJKLMNOPQRSTUVWXYZ") for _ in range(2))
-        digits = "".join(str(rng.randint(0, 9)) for _ in range(4))
-        return f"{letters}{digits}"
+        return self._medical_device_generator.generate_model_number()
 
     @property
     @property_cache
@@ -93,12 +92,7 @@ class MedicalDevice(BaseEntity):
         Returns:
             A string representing a serial number.
         """
-        # Format: MFG-YYYY-XXXXXXXX
-        year = self._medical_device_generator.rng.randint(2010, self._medical_device_generator.reference_now.year)
-        rng = self._medical_device_generator.rng
-        alphabet = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
-        random_part = "".join(rng.choice(alphabet) for _ in range(8))
-        return f"MFG-{year}-{random_part}"
+        return self._medical_device_generator.generate_serial_number()
 
     @property
     @property_cache
@@ -225,7 +219,7 @@ class MedicalDevice(BaseEntity):
 
     @property
     @property_cache
-    def maintenance_history(self) -> list[dict[str, Any]]:
+    def maintenance_history(self) -> list[MaintenanceRecord]:
         """Generate device maintenance history.
 
         Returns:
@@ -233,7 +227,7 @@ class MedicalDevice(BaseEntity):
         """
         return self._medical_device_generator.generate_maintenance_history()
 
-    def to_dict(self) -> dict[str, Any]:
+    def to_dict(self) -> dict[str, object]:
         """Convert the medical device to a dictionary.
 
         Returns:

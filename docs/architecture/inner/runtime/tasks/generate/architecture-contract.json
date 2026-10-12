@@ -1,0 +1,211 @@
+{
+  "schema_version": "2.1.0",
+  "declarations": {
+    "modules": [
+      {
+        "path": "datamimic_ce/engine/runtime/tasks/generate/export_order.py",
+        "responsibility": "Dispatches generated pages to exporters in parent-child order appropriate to the export operation."
+      },
+      {
+        "path": "datamimic_ce/engine/runtime/tasks/generate/policies/single_process_policy.py",
+        "responsibility": "This module reduces parallelism when required by the seed, uniqueness, deletion, domain IDs, or MySQL sequences."
+      },
+      {
+        "path": "datamimic_ce/engine/runtime/tasks/generate/task.py",
+        "responsibility": "This module resolves the count and worker plan, starts workers, and coordinates product export."
+      },
+      {
+        "path": "datamimic_ce/engine/runtime/tasks/generate/workers/generate_worker.py",
+        "responsibility": "This module generates pages in a worker, runs row tasks, and exports results."
+      },
+      {
+        "path": "datamimic_ce/engine/runtime/tasks/generate/workers/multiprocessing_generate_worker.py",
+        "responsibility": "This module runs generate chunks in local multiprocessing processes."
+      },
+      {
+        "path": "datamimic_ce/engine/runtime/tasks/generate/workers/ray_generate_worker.py",
+        "responsibility": "This module runs generate chunks through the optional Ray runtime."
+      }
+    ]
+  },
+  "components": [
+    {
+      "id": "GENERATE-ORCHESTRATION",
+      "label": "orchestration",
+      "role": "component",
+      "packages": [
+        "datamimic_ce.engine.runtime.tasks.generate.task"
+      ],
+      "responsibilities": [
+        "Resolve counts and worker plans, preserve ordered serial preparation and sequence reservation in main, and dispatch only required native inputs and prepared state without live clients to parallel workers."
+      ],
+      "forbidden_responsibilities": [
+        "Connect clients or duplicate source/exporter algorithms."
+      ],
+      "provenance": [
+        "docs/architecture/inner/target.md",
+        "docs/architecture/refactoring-study/experiment-2/amendment-199-process-local-clients.md"
+      ],
+      "requires": [
+        {
+          "component": "workers",
+          "rationale": "Orchestration selects the execution worker.",
+          "decided_by": "agent"
+        },
+        {
+          "component": "policies",
+          "rationale": "The scheduling decision consumes capability policy.",
+          "decided_by": "agent"
+        }
+      ],
+      "public": [
+        "datamimic_ce.engine.runtime.tasks.generate.task:GenerateTask"
+      ],
+      "decided_by": "agent"
+    },
+    {
+      "id": "GENERATE-WORKERS",
+      "label": "workers",
+      "role": "component",
+      "packages": [
+        "datamimic_ce.engine.runtime.tasks.generate.workers"
+      ],
+      "responsibilities": [
+        "Execute assigned chunks, bind declared clients to instances owned by the executing process, return required results, and release owned client resources through IO without transferring live clients or parent client caches."
+      ],
+      "forbidden_responsibilities": [
+        "Parse descriptors or choose capability policy."
+      ],
+      "provenance": [
+        "docs/architecture/inner/target.md",
+        "docs/architecture/refactoring-study/experiment-2/amendment-199-process-local-clients.md"
+      ],
+      "requires": [
+        {
+          "component": "export_order",
+          "rationale": "Workers dispatch completed pages in dependency-safe order.",
+          "decided_by": "agent"
+        }
+      ],
+      "public": [
+        "datamimic_ce.engine.runtime.tasks.generate.workers.generate_worker:GenerateWorker",
+        "datamimic_ce.engine.runtime.tasks.generate.workers.multiprocessing_generate_worker:MultiprocessingGenerateWorker",
+        "datamimic_ce.engine.runtime.tasks.generate.workers.ray_generate_worker:RayGenerateWorker"
+      ],
+      "decided_by": "agent"
+    },
+    {
+      "id": "GENERATE-EXPORT-ORDER",
+      "label": "export_order",
+      "role": "component",
+      "packages": [
+        "datamimic_ce.engine.runtime.tasks.generate.export_order"
+      ],
+      "responsibilities": [
+        "Write parent and child pages in dependency-safe order."
+      ],
+      "forbidden_responsibilities": [
+        "Select workers or construct concrete exporters."
+      ],
+      "provenance": [
+        "docs/architecture/refactoring-study/experiment-2/amendment-24.md"
+      ],
+      "requires": [],
+      "public": [
+        "datamimic_ce.engine.runtime.tasks.generate.export_order:export_product_by_page"
+      ],
+      "decided_by": "agent"
+    },
+    {
+      "id": "GENERATE-POLICIES",
+      "label": "policies",
+      "role": "component",
+      "packages": [
+        "datamimic_ce.engine.runtime.tasks.generate.policies"
+      ],
+      "responsibilities": [
+        "Determine capability-based concurrency reduction and explain single-process requirements."
+      ],
+      "forbidden_responsibilities": [
+        "Execute rows, access clients directly or start workers."
+      ],
+      "provenance": [
+        "docs/architecture/inner/target.md"
+      ],
+      "requires": [],
+      "public": [
+        "datamimic_ce.engine.runtime.tasks.generate.policies.single_process_policy:resolve_single_process"
+      ],
+      "decided_by": "agent"
+    }
+  ],
+  "rules": [
+    {
+      "id": "GENERATE-ASSIGNMENT",
+      "kind": "complete_assignment",
+      "source": "datamimic_ce.engine.runtime.tasks.generate",
+      "rationale": "Every child implementation has one owner; parent initializer behavior is reviewed explicitly.",
+      "provenance": [
+        "docs/architecture/inner/target.md"
+      ],
+      "decided_by": "agent"
+    },
+    {
+      "id": "GENERATE-REQUIRES",
+      "kind": "complete_requires",
+      "include_type_checking": true,
+      "rationale": "Only the listed responsibility directions are permitted.",
+      "provenance": [
+        "docs/architecture/inner/target.md"
+      ],
+      "decided_by": "agent"
+    },
+    {
+      "id": "GENERATE-INTERFACES",
+      "kind": "interface_boundary",
+      "include_type_checking": true,
+      "rationale": "A dependency reaches explicit operations and types, not arbitrary implementation details.",
+      "provenance": [
+        "docs/architecture/inner/target.md"
+      ],
+      "decided_by": "agent"
+    },
+    {
+      "id": "GENERATE-ACYCLIC",
+      "kind": "no_component_cycles",
+      "rationale": "Lower layers do not import their consumers.",
+      "provenance": [
+        "docs/architecture/inner/target.md"
+      ],
+      "decided_by": "agent"
+    },
+    {
+      "id": "LAYOUT-ENGINE-RUNTIME-TASKS-GENERATE-POLICIES",
+      "kind": "root_layout",
+      "root": "datamimic_ce.engine.runtime.tasks.generate.policies",
+      "allowed_children": [
+        "datamimic_ce.engine.runtime.tasks.generate.policies.single_process_policy"
+      ],
+      "rationale": "Capability-based concurrency reduction. Exact reviewed target children; no hidden extra modules.",
+      "provenance": [
+        "docs/architecture/inner/structure-review.json"
+      ],
+      "decided_by": "agent"
+    },
+    {
+      "id": "LAYOUT-ENGINE-RUNTIME-TASKS-GENERATE-WORKERS",
+      "kind": "root_layout",
+      "root": "datamimic_ce.engine.runtime.tasks.generate.workers",
+      "allowed_children": [
+        "datamimic_ce.engine.runtime.tasks.generate.workers.generate_worker",
+        "datamimic_ce.engine.runtime.tasks.generate.workers.multiprocessing_generate_worker",
+        "datamimic_ce.engine.runtime.tasks.generate.workers.ray_generate_worker"
+      ],
+      "rationale": "Worker execution and process handoff. Exact reviewed target children; no hidden extra modules.",
+      "provenance": [
+        "docs/architecture/inner/structure-review.json"
+      ],
+      "decided_by": "agent"
+    }
+  ]
+}
