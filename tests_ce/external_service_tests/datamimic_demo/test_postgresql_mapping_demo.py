@@ -7,7 +7,8 @@ import psycopg2
 import pytest
 from psycopg2 import sql
 
-from datamimic_ce.engine.dsl.api import parse_properties
+from datamimic_ce.engine.io.api import load_connection_profile
+from datamimic_ce.engine.runtime.api import runtime_environment
 from datamimic_ce.interfaces.python.data_mimic_test import DataMimicTest
 
 ROOT = Path(__file__).resolve().parents[3]
@@ -19,7 +20,8 @@ def postgres_demo(tmp_path: Path, request: pytest.FixtureRequest) -> Iterator[tu
     path, systems = request.param
     demo = tmp_path / "demo"
     copytree(ROOT / path, demo)
-    config = parse_properties(ROOT / "local.env.properties")
+    environment = "local" if runtime_environment() == "development" else "environment"
+    config = load_connection_profile(ROOT / "tests_ce/external_service_tests/test_mongodb", environment)
     credentials = {key: config[f"postgres.db.{key}"] for key in ("host", "port", "user", "password")}
     admin = psycopg2.connect(**credentials, dbname=config["postgres.db.database"], connect_timeout=5)
     admin.autocommit = True
