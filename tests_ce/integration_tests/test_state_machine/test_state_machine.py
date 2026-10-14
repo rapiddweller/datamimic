@@ -232,3 +232,73 @@ def test_named_alias_continues_through_nested_parent_and_page_boundaries(tmp_pat
     </generate>'''
     captured = _run_xml(tmp_path, _MACHINE + _ALIAS, fields, count=3)
     assert [r["state"] for r in captured["children"]] == ["open", "closed"] * 4 + ["open"]
+
+
+def test_named_global_increment_alias_initializes_declaration_scope(tmp_path):
+    declarations = '''<generator name="counter" generator="GlobalIncrementGenerator"/>
+        <generator name="second" generator="counter"/>'''
+    fields = '''<key name="id" generator="counter"/>
+        <variable name="next" generator="second"/>
+        <key name="next_id" script="next"/>
+        <generate name="children" count="2" pageSize="1" target="">
+            <key name="id" generator="counter"/>
+            <key name="direct" generator="GlobalIncrementGenerator"/>
+        </generate>'''
+    # Seeded/single-process on the common base: this declaration/lookup regression
+    # must work independently of global-counter worker scheduling (#276).
+    captured = _run_xml(tmp_path, declarations, fields, count=5)
+    rows, children = captured["rows"], captured["children"]
+    assert [row["id"] for row in rows] == [1, 5, 9, 13, 17]
+    assert [row["next_id"] for row in rows] == [2, 6, 10, 14, 18]
+    assert [row["id"] for row in children] == [3, 4, 7, 8, 11, 12, 15, 16, 19, 20]
+    assert [row["direct"] for row in children] == list(range(1, 11))
+    assert captured == _run_xml(tmp_path, declarations, fields, count=5, page_size=3)
+
+
+def test_unseeded_named_alias_shares_one_walk_per_worker(tmp_path):
+    import os
+
+    markers = tmp_path / "workers"
+    markers.mkdir()
+    # Wait for both real workers to enter their chunks, so a fast first worker
+    # cannot consume both tiny chunks before the second process has started.
+    (tmp_path / "helpers.py").write_text(
+        "def worker_pid():\n"
+        "    import os, time\n"
+        "    from pathlib import Path\n"
+        f"    markers = Path({str(markers)!r})\n"
+        "    (markers / str(os.getpid())).touch()\n"
+        "    deadline = time.monotonic() + 15\n"
+        "    while len(list(markers.iterdir())) < 2:\n"
+        "        if time.monotonic() > deadline:\n"
+        "            raise RuntimeError('second alias worker did not start')\n"
+        "        time.sleep(0.01)\n"
+        "    return os.getpid()\n"
+    )
+    machine = '<state-machine id="life" start="s0">' + "".join(
+        f'<transition from="s{i}" to="s{i+1}"/>' for i in range(12)
+    ) + '</state-machine>'
+    descriptor = tmp_path / "worker_alias.xml"
+    descriptor.write_text(
+        '<setup multiprocessing="True" numProcess="2">'
+        '<execute type="python" uri="helpers.py"/>' + machine + _ALIAS +
+        '<generate name="rows" count="8" pageSize="2" mpPlatform="multiprocessing" target="">'
+        '<key name="pid" script="worker_pid()"/>'
+        '<key name="first" generator="alias"/>'
+        '<variable name="next" generator="alias"/>'
+        '<key name="second" script="next"/>'
+        '<key name="direct" generator="life"/>'
+        '</generate></setup>'
+    )
+    engine = DataMimicTest(test_dir=tmp_path, filename=descriptor.name, capture_test_result=True)
+    engine.test_with_timer()
+    rows = engine.capture_result()["rows"]
+    pids = {row["pid"] for row in rows}
+    assert len(pids) == 2
+    assert os.getpid() not in pids
+    for pid in pids:
+        worker_rows = [row for row in rows if row["pid"] == pid]
+        assert [(row["first"], row["second"]) for row in worker_rows] == [
+            ("s0", "s1"), ("s2", "s3"), ("s4", "s5"), ("s6", "s7")
+        ]
+        assert [row["direct"] for row in worker_rows] == ["s0", "s1", "s2", "s3"]
