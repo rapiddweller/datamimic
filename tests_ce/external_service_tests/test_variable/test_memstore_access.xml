@@ -7,7 +7,7 @@
 
     <generate name="user_2" count="3" target="ConsoleExporter">
         <variable name="use_mem" type="user" source="mem"/>
-        <key name="id" script="mem.get_data_by_type('user').id"/>
+        <key name="id" script="use_mem.id"/>
         <key name="name" script="use_mem.name"/>
     </generate>
 </setup>
