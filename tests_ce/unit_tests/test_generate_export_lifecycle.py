@@ -373,3 +373,108 @@ def test_zero_count_memstore_product_is_read_back_as_empty(tmp_path: Path) -> No
     engine.test_with_timer()
 
     assert engine.capture_result() == {"rows": [], "copy": []}
+
+
+@pytest.mark.parametrize("workers", [1, 2])
+@pytest.mark.parametrize("active", ["if", "else-if", "else"])
+def test_conditional_export_routes_only_the_executed_same_named_child(
+    tmp_path: Path, workers: int, active: str
+) -> None:
+    def child(uri: str) -> str:
+        return (
+            '<generate name="children" count="3" target="JSON(chunk_size=2)" '
+            f'exportUri="{uri}"><key name="id" generator="IncrementGenerator"/></generate>'
+        )
+
+    descriptor = tmp_path / "same_name.xml"
+    descriptor.write_text(
+        f'<setup numProcess="{workers}"><generate name="parents" count="{workers}" target=""><condition>'
+        f'<if condition="{active == "if"}">{child("right" if active == "if" else "wrong_if")}</if>'
+        f'<else-if condition="{active == "else-if"}">'
+        f'{child("right" if active == "else-if" else "wrong_else_if")}</else-if>'
+        f'<else>{child("right" if active == "else" else "wrong_else")}</else>'
+        '</condition></generate></setup>',
+        encoding="utf-8",
+    )
+    DataMimicTest(tmp_path, descriptor.name).test_with_timer()
+    output = tmp_path / "output"
+    assert sorted(path.name for path in output.iterdir()) == ["right"]
+    files = sorted((output / "right").glob("children*.json"))
+    assert len(files) == 2 * workers
+    assert sorted(row["id"] for path in files for row in json.loads(path.read_text())) == sorted([1, 2, 3] * workers)
+
+
+@pytest.mark.parametrize("workers", [1, 2])
+def test_inactive_conditional_export_does_not_initialize_target(tmp_path: Path, workers: int) -> None:
+    descriptor = tmp_path / "inactive.xml"
+    descriptor.write_text(
+        f'<setup numProcess="{workers}"><generate name="parents" count="2" target="">'
+        '<condition><if condition="False">'
+        '<generate name="children" count="3" target="unused_db" exportUri="inactive">'
+        '<key name="id" generator="IncrementGenerator"/></generate>'
+        '</if></condition></generate></setup>',
+        encoding="utf-8",
+    )
+    DataMimicTest(tmp_path, descriptor.name).test_with_timer()
+    assert not (tmp_path / "output").exists()
+    assert not list(tmp_path.glob("temp_result_*"))
+
+
+@pytest.mark.parametrize("page_size", [1, 4])
+@pytest.mark.parametrize("workers", [1, 2])
+def test_same_named_conditional_exports_keep_rows_with_their_active_destination(
+    tmp_path: Path, page_size: int, workers: int
+) -> None:
+    descriptor = tmp_path / "alternating.xml"
+    descriptor.write_text(
+        f'<setup numProcess="{workers}"><generate name="parents" count="4" pageSize="{page_size}" target="">'
+        '<key name="id" generator="IncrementGenerator"/><condition><if condition="id % 2 == 1">'
+        '<generate name="children" count="1" target="JSON(chunk_size=2)" exportUri="odd">'
+        '<key name="parent_id" script="parent.id"/></generate></if><else>'
+        '<generate name="children" count="1" target="JSON(chunk_size=2)" exportUri="even">'
+        '<key name="parent_id" script="parent.id"/></generate>'
+        '</else></condition></generate></setup>',
+        encoding="utf-8",
+    )
+    DataMimicTest(tmp_path, descriptor.name).test_with_timer()
+    for uri, expected in [("odd", [1, 3]), ("even", [2, 4])]:
+        files = sorted((tmp_path / "output" / uri).glob("children*.json"))
+        assert sorted(row["parent_id"] for path in files for row in json.loads(path.read_text())) == expected
+
+
+def test_direct_csv_pages_keep_the_first_learned_columns(tmp_path: Path) -> None:
+    descriptor = tmp_path / "csv_pages.xml"
+    descriptor.write_text(
+        '<setup multiprocessing="0"><generate name="rows" count="2" pageSize="1" '
+        'target="CSV(chunk_size=5)" exportUri="results">'
+        '<key name="id" generator="IncrementGenerator"/><condition>'
+        '<if condition="id == 1"><key name="a" constant="A"/></if>'
+        '<else><key name="b" constant="B"/></else></condition></generate></setup>',
+        encoding="utf-8",
+    )
+    DataMimicTest(tmp_path, descriptor.name).test_with_timer()
+    assert (tmp_path / "output/results/rows_0.csv").read_text() == "id|a\n1|A\n2|\n"
+
+
+def test_reactivated_same_named_csv_branches_keep_their_own_learned_columns(tmp_path: Path) -> None:
+    def child(uri: str, first_id: int, first_field: str, later_field: str) -> str:
+        return (
+            f'<generate name="children" count="1" target="CSV(chunk_size=5)" exportUri="{uri}">'
+            '<key name="parent_id" script="parent.id"/><condition>'
+            f'<if condition="parent.id == {first_id}"><key name="{first_field}" constant="first"/></if>'
+            f'<else><key name="{later_field}" constant="later"/></else></condition></generate>'
+        )
+
+    descriptor = tmp_path / "csv_branches.xml"
+    descriptor.write_text(
+        '<setup multiprocessing="0"><generate name="parents" count="4" pageSize="1" target="">'
+        '<key name="id" generator="IncrementGenerator"/><condition><if condition="id % 2 == 1">'
+        + child("odd", 1, "a", "b")
+        + "</if><else>"
+        + child("even", 2, "c", "d")
+        + "</else></condition></generate></setup>",
+        encoding="utf-8",
+    )
+    DataMimicTest(tmp_path, descriptor.name).test_with_timer()
+    assert (tmp_path / "output/odd/children_0.csv").read_text() == "parent_id|a\n1|first\n3|\n"
+    assert (tmp_path / "output/even/children_0.csv").read_text() == "parent_id|c\n2|first\n4|\n"

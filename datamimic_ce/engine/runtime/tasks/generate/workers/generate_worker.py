@@ -30,6 +30,7 @@ from datamimic_ce.engine.runtime.contexts.context import (
     WorkerContextPayload,
 )
 from datamimic_ce.engine.runtime.contexts.geniter_context import GenIterContext
+from datamimic_ce.engine.runtime.contexts.products import GenerationResult, NestedExport
 from datamimic_ce.engine.runtime.logging import gen_timer, logger, setup_logger
 from datamimic_ce.engine.runtime.scripting.evaluation import evaluate_source_template
 from datamimic_ce.engine.runtime.tasks.base.dispatch import create_task
@@ -220,7 +221,8 @@ class GenerateWorker:
         # Determine chunk data range, like (0, 1000), (1000, 2000), etc.
         index_chunk = [(i, min(i + page_size, chunk_end)) for i in range(chunk_start, chunk_end, page_size)]
 
-        result: dict = {}
+        result = GenerationResult()
+        result.record_export(stmt, worker_id)
 
         root_context = context.root
         export_session = root_context.export_session
@@ -233,6 +235,7 @@ class GenerateWorker:
             product_name=resolve_target_entity(stmt.target_entity, None, stmt.name),
             export_uri=stmt.export_uri,
             targets=list(stmt.targets),
+            execution_id=str(id(stmt)),
         )
 
         # Keys the outermost run must accumulate across pages: everything in test mode,
@@ -265,8 +268,13 @@ class GenerateWorker:
                 # statement's page export, which writes the parent's rows first and then recurses into
                 # the children - exporting here would land child rows
                 # in the DB before their parent exists and break child->parent FK constraints.
-                if not isinstance(context, GenIterContext):
-                    export_product_by_page(stmt, result_dict, export_session)
+                if isinstance(context, GenIterContext):
+                    context.pending_exports.append(
+                        NestedExport(stmt, result_dict[stmt.full_name], result_dict.nested_exports)
+                    )
+                else:
+                    export_product_by_page(stmt, result_dict, export_session, root_context)
+                result.merge_exports(result_dict)
 
             # Collect result for later capturing (keep_keys None -> keep everything)
             for key in result_dict.keys() if keep_keys is None else keep_keys & result_dict.keys():
@@ -301,7 +309,7 @@ class GenerateWorker:
         page_end: int,
         worker_id: int,
         source_reader: ChunkSourceReader,
-    ) -> dict[str, list]:
+    ) -> GenerationResult:
         """
         (IMPORTANT: Only to be used as Ray multiprocessing function)
         This function is used to generate data for a single process, includes steps:
@@ -336,7 +344,7 @@ class GenerateWorker:
         )
 
         # Store temp result
-        product_holder: dict[str, list] = {}
+        product_holder = GenerationResult()
         result = []
 
         # Parsed once per page when in time-series mode; None otherwise.
@@ -401,6 +409,7 @@ class GenerateWorker:
                     ctx.current_product = evaluated_product
 
                 result.append(ctx.current_product)
+                product_holder.nested_exports.extend(ctx.pending_exports)
             except StopIteration:
                 # Stop generating data if one of datasource reach the end
                 logger.info(
@@ -411,6 +420,14 @@ class GenerateWorker:
 
         # 4. Return product for later export
         product_holder[stmt.full_name] = result
+
+        def record_nested(export: NestedExport) -> None:
+            product_holder.record_export(export.statement, worker_id)
+            for child in export.children:
+                record_nested(child)
+
+        for export in product_holder.nested_exports:
+            record_nested(export)
         return product_holder
 
     @staticmethod
