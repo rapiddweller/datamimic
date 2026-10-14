@@ -169,8 +169,19 @@ def test_other_generators_keep_requested_workers(expression):
     assert resolve_single_process(_gen(children=[key]), requested_workers=2) is None
 
 
-def test_only_referenced_global_increment_alias_forces_serial():
+@pytest.mark.parametrize("relabel_policy", [False, True])
+def test_only_referenced_global_increment_alias_forces_serial(monkeypatch, relabel_policy):
+    from dataclasses import replace
+
+    from datamimic_ce.engine.runtime.tasks.generate.policies import single_process_policy
     from datamimic_ce.engine.runtime.tasks.values.construction.global_increment import GlobalIncrementGenerator
+
+    if relabel_policy:
+        monkeypatch.setattr(
+            single_process_policy,
+            "POLICIES",
+            tuple(replace(policy, feature="descriptive label") for policy in single_process_policy.POLICIES),
+        )
 
     # Named instances are already resolved in setup, including inherited includes.
     root = SimpleNamespace(global_increment_registry=None)

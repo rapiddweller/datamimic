@@ -187,7 +187,7 @@ def resolve_single_process(
     for policy in POLICIES:
         applies = (
             _uses_global_increment(stmt, seeded, resolved_clients, generators=generators)
-            if policy.feature == "global-increment"
+            if policy.applies is _uses_global_increment
             else policy.applies(stmt, seeded, resolved_clients)
         )
         if not applies:
