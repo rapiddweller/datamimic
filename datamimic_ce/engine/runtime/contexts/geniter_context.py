@@ -19,13 +19,18 @@ class GenIterContext(Context):
     Must be sub-context of SetupContext or another GenerateContext.
     """
 
-    def __init__(self, parent: Context, current_name: str, rng: Random | None = None):
+    def __init__(
+        self, parent: Context, current_name: str, rng: Random | None = None, unique_cursors: dict | None = None
+    ):
         super().__init__(parent.root)
         self._parent = parent
         self._current_name = current_name
         self._current_product: dict = {}
         self._current_variables: dict = {}
         self._worker_id: int | None = None
+        if unique_cursors is None:
+            unique_cursors = parent.unique_cursors if isinstance(parent, GenIterContext) else {}
+        self.unique_cursors: dict = unique_cursors
         # Fork once per iter so siblings get independent reproducible streams.
         if rng is not None:
             self._rng: Random | None = rng

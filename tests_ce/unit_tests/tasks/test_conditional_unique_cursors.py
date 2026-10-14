@@ -151,3 +151,63 @@ def test_unique_values_do_not_block_later_include_or_multiprocessing(tmp_path: P
     assert len(result["first"]) == 1
     assert result["included"] == [{"code": "included"}]
     assert sorted(row["id"] for row in result["later"]) == [1, 2, 3, 4]
+
+
+@pytest.mark.parametrize("wrapped", [False, True], ids=["direct", "conditional"])
+@pytest.mark.parametrize("kind", ["key", "reference"])
+def test_unique_cursor_is_scoped_to_each_nested_generate_invocation(
+    tmp_path: Path, reference_setup: str, wrapped: bool, kind: str
+) -> None:
+    field = '<key name="fk" type="int" values="1,2,3,4" unique="true"/>' if kind == "key" else _reference()
+    body = reference_setup + '<generate name="parents" count="2" target="">'
+    body += '<key name="id" generator="IncrementGenerator"/>'
+    body += '<generate name="children" count="4" pageSize="2" target="">'
+    body += '<key name="parent_id" script="parent.id"/>' + _conditional(field, wrapped)
+    body += "</generate></generate>"
+    rows = _run(tmp_path, body)["children"]
+    assert len(rows) == 8
+    for parent in (1, 2):
+        assert sorted(row["fk"] for row in rows if row["parent_id"] == parent) == [1, 2, 3, 4]
+
+
+@pytest.mark.parametrize("wrapped", [False, True], ids=["direct", "conditional"])
+@pytest.mark.parametrize("scripted", [False, True], ids=["generated-list", "scripted-list"])
+def test_unique_cursor_is_scoped_to_each_nested_list_invocation(
+    tmp_path: Path, reference_setup: str, wrapped: bool, scripted: bool
+) -> None:
+    field = '<key name="fk" type="int" values="1,2,3,4" unique="true"/>'
+    body = reference_setup + '<generate name="parents" count="2" target="">'
+    source = 'script="[{}, {}, {}, {}]"' if scripted else 'type="list"'
+    body += f'<nestedKey name="children" count="4" {source}>' + _conditional(field, wrapped)
+    body += "</nestedKey></generate>"
+    rows = _run(tmp_path, body)["parents"]
+    assert len(rows) == 2
+    for row in rows:
+        assert sorted(child["fk"] for child in row["children"]) == [1, 2, 3, 4]
+
+
+def test_setup_unique_variable_remains_available_to_later_generates(tmp_path: Path) -> None:
+    body = '<variable name="chosen" values="\'A\'" unique="true"/>'
+    body += '<generate name="first" count="1" target=""><key name="value" script="chosen"/></generate>'
+    body += '<generate name="later" count="2" numProcess="2" target="">'
+    body += '<key name="value" script="chosen"/></generate>'
+    result = _run(tmp_path, body, seed=False)
+    assert result == {"first": [{"value": "A"}], "later": [{"value": "A"}, {"value": "A"}]}
+
+
+@pytest.mark.parametrize("wrapped", [False, True], ids=["direct", "conditional"])
+@pytest.mark.parametrize("nested_list", [False, True], ids=["generate", "nested-list"])
+def test_nested_unique_pool_still_fails_when_one_invocation_overdraws(
+    tmp_path: Path, wrapped: bool, nested_list: bool
+) -> None:
+    body = '<generate name="parents" count="2" target="">'
+    body += (
+        '<nestedKey name="children" type="list" count="3">'
+        if nested_list
+        else '<generate name="children" count="3" pageSize="1" target="">'
+    )
+    body += _conditional('<key name="code" type="int" values="1,2" unique="true"/>', wrapped)
+    body += '</nestedKey>' if nested_list else '</generate>'
+    body += '</generate>'
+    with pytest.raises(ValueError, match="unique"):
+        _run(tmp_path, body)

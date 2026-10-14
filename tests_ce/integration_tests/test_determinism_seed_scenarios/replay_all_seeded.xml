@@ -42,6 +42,7 @@
         <key name="g_UUIDGenerator" generator="UUIDGenerator"/>
         <key name="g_UrlGenerator" generator="UrlGenerator"/>
         <key name="weighted_values" values="'A','B','C'" weights="0.1,0.3,0.6"/>
+        <!-- One invocation spans automatic pages; the finite pool must not restart at row four. -->
         <key name="unique_values" values="'A','B','C','D','E'" unique="true"/>
         <key name="shuffle_int" type="int" min="1" max="5" distribution="shuffle"/>
     </generate>

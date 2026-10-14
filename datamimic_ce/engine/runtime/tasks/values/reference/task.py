@@ -39,12 +39,16 @@ class ReferenceTask(GenSubTask):
                     if self._statement.unique
                     else f"<reference>-cycle|{self._statement.full_name}"
                 )
-                shared = ctx.root.generators.get(key)
+                if self._statement.unique:
+                    cursors = ctx.unique_cursors if isinstance(ctx, GenIterContext) else {}
+                else:
+                    cursors = ctx.root.generators
+                shared = cursors.get(key)
                 if shared is None:
                     shared = self._init_iterator(ctx)
                     if not self._statement.unique:
                         shared = itertools.cycle(shared)
-                    ctx.root.generators[key] = shared
+                    cursors[key] = shared
                 self._iterator = shared
             else:
                 self._iterator = self._init_iterator(ctx)

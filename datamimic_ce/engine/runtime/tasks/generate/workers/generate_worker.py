@@ -221,6 +221,8 @@ class GenerateWorker:
         index_chunk = [(i, min(i + page_size, chunk_end)) for i in range(chunk_start, chunk_end, page_size)]
 
         result: dict = {}
+        # One finite selection scope per generate invocation, shared by all its pages.
+        unique_cursors: dict = {}
 
         root_context = context.root
         export_session = root_context.export_session
@@ -256,7 +258,7 @@ class GenerateWorker:
                 timer_result["records_count"] = page_end - page_start
                 # Generate product
                 result_dict = GenerateWorker._generate_product_by_page_in_single_process(
-                    context, stmt, page_start, page_end, worker_id, source_reader
+                    context, stmt, page_start, page_end, worker_id, source_reader, unique_cursors
                 )
 
             with gen_timer("export", root_context.report_logging, stmt.full_name) as timer_result:
@@ -301,6 +303,7 @@ class GenerateWorker:
         page_end: int,
         worker_id: int,
         source_reader: ChunkSourceReader,
+        unique_cursors: dict,
     ) -> dict[str, list]:
         """
         (IMPORTANT: Only to be used as Ray multiprocessing function)
@@ -345,7 +348,7 @@ class GenerateWorker:
         # 3: Modify/Generate data by executing sub-tasks
         for idx in range(processed_data_count):
             # Create sub-context for each product record creation
-            ctx = GenIterContext(context, stmt.name)
+            ctx = GenIterContext(context, stmt.name, unique_cursors=unique_cursors)
             # Get current worker_id from outermost gen_stmt
             ctx.worker_id = worker_id
 
