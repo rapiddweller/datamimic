@@ -49,6 +49,10 @@ class EducationalInstitution(BaseEntity):
     def institution_id(self) -> str:
         """Get the institution ID.
 
+        Unique per entity type and field within one service instance or descriptor run,
+        including includes. Direct construction, separate runs and existing target data
+        are outside this guarantee.
+
         Returns:
             A unique identifier for the institution.
         """

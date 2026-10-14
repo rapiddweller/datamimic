@@ -48,6 +48,10 @@ class MedicalDevice(BaseEntity):
     def device_id(self) -> str:
         """Generate a unique device ID.
 
+        Unique per entity type and field within one service instance or descriptor run,
+        including includes. Direct construction, separate runs and existing target data
+        are outside this guarantee.
+
         Returns:
             A string representing a device ID.
         """
