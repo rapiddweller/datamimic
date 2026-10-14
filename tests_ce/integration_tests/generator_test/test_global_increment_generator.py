@@ -120,3 +120,20 @@ def test_global_increment_xml_attributes_continue_across_pages(tmp_path):
     fields = '<key name="value" constant="text"><element name="id" generator="GlobalIncrementGenerator"/></key>'
     captured = _run_descriptor(tmp_path, "multiprocessing", fields)
     assert [row["value"]["@id"] for row in captured["rows"]] == list(range(1, 9))
+
+
+def test_repeated_includes_keep_independent_counter_contexts(tmp_path):
+    (tmp_path / "included.xml").write_text('''<setup multiprocessing="True" numProcess="2">
+        <generate name="rows" count="2" pageSize="1" target="">
+            <key name="id" generator="GlobalIncrementGenerator"/>
+        </generate>
+    </setup>''')
+    (tmp_path / "includes.xml").write_text('''<setup>
+        <include uri="included.xml"/>
+        <include uri="included.xml"/>
+    </setup>''')
+    engine = DataMimicTest(test_dir=tmp_path, filename="includes.xml", capture_test_result=True)
+    engine.test_with_timer()
+    # Includes clone their owning root setup context; they do not share a
+    # descriptor-wide counter just because the qualified field names match.
+    assert [row["id"] for row in engine.capture_result()["rows"]] == [1, 2, 1, 2]

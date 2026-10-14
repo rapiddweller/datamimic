@@ -65,7 +65,10 @@ class FooGenerator(BaseDomainGenerator):
 `GlobalIncrementGenerator` emits a monotonic sequence starting at 1 for each
 qualified generator field in one root setup context. Pages and repeated nested
 parents continue that field's counter. Distinct qualified fields have separate
-counters, so their values can overlap; a new run starts fresh.
+counters, so their values can overlap; a new run starts fresh. Included setup
+files clone their owning root context and keep independent counter state. For
+example, including the same two-row descriptor twice can emit `1, 2, 1, 2` for
+the same qualified field; this is not a descriptor-wide uniqueness guarantee.
 
 CE executes a generate containing this generator in one process, including when
 it appears in nested generates, conditions, nested keys or XML attributes. This

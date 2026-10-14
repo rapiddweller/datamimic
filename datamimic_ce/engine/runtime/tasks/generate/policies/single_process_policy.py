@@ -152,7 +152,7 @@ POLICIES: tuple[SingleProcessPolicy, ...] = (
     SingleProcessPolicy(
         feature="global-increment",
         applies=_uses_global_increment,
-        reason="GlobalIncrementGenerator keeps each qualified counter unique across the run, including nested pages",
+        reason="GlobalIncrementGenerator counters are local to one root setup context, including pages",
         ee_scalable=False,
     ),
     SingleProcessPolicy(
