@@ -1,12 +1,12 @@
 {
   "status": "current_source_architecture_review_accepted",
   "reviewed_by": "Astra",
-  "review_reference": "docs/architecture/refactoring-study/experiment-2/issue-230-architecture-review.md",
+  "review_reference": "docs/architecture/refactoring-study/experiment-2/issue-269-architecture-review.md",
   "contract_digest": "289d6c0ee28d75e53e7ed8d057edbd66dd4004c5c362b6cccf5f7c095e0f7745",
   "analyzer_digest": "7106e3595fa7df9269cb43ee280f9c557659db7bda171b1f65ff5619ab54aa24",
-  "source_digest": "06c32701ddf4746bbda5421a698c8dd6846a3dce857e398e68e34d3f92a02256",
-  "unknowns_digest": "24ddb8f5895a2ef5e22177cf8c0da79d0d0cafe2e41e4566385c97127eb5df60",
-  "validation_digest": "97d9c93ef96d1226d784973b1392585d635a2b6be1e8a5f1537cbd8d476ce132",
+  "source_digest": "b1db1a38e6c16cd3b5e237f4a0281db0bfb0b43d1f8a954866b60ee0f15f7d12",
+  "unknowns_digest": "4b7ca3167103048065945d266141a8d162de4af26c936d71feda4efa86c9edca",
+  "validation_digest": "326ce659dd255e3c4f2eb2dd9e6218522f9741d1690de475b551006cee008477",
   "groups": [
     {
       "classification": "aggregate_receipt",
@@ -72,8 +72,21 @@
       "current_review": {
         "group_index": 3,
         "record_count": 3,
-        "records_digest": "6dd3c717afcf68839bf9085f3d5e7d0a0c04187c6e462d4f1d2919caddbac944",
-        "changed_records": [],
+        "records_digest": "0d9845cbc6248f7c6fe4c1e0d3395c6a538f74fe0e1493803870b5954f65bcc5",
+        "changed_records": [
+          {
+            "id": "UNKNOWN-API-SURFACE-097fe5b868784c82",
+            "fields": [
+              "evidence_ids"
+            ]
+          },
+          {
+            "id": "UNKNOWN-API-SURFACE-3efc316c7d54c515",
+            "fields": [
+              "evidence_ids"
+            ]
+          }
+        ],
         "decision": "retain_assessed_UNKNOWN"
       }
     },
@@ -155,7 +168,7 @@
     },
     {
       "classification": "global_observation_limit",
-      "reason": "Global context dataflow and dynamic-call coverage remain bounded by the scanner. Direct annotations and selected self-field/constructor bindings do not prove arbitrary runtime values or every callable target; the current unresolved-call count is retained as measured uncertainty separately from scalar boundary positions. Current unresolved calls: 1249 (base 1246). The three additional unresolved calls are entry.partition, name.isidentifier and value.isidentifier in the CLI option adapter. Input annotations and partition semantics establish string receivers on the reviewed path; scanner inference remains incomplete. HashConverter inherited-surface evidence changed with its body/documentation, without changing its base or public signature.",
+      "reason": "Global context dataflow and dynamic-call coverage remain bounded by the scanner. Direct annotations and selected self-field/constructor bindings do not prove arbitrary runtime values or every callable target; the current unresolved-call count is retained as measured uncertainty separately from scalar boundary positions. Current unresolved calls: 1246 (base 1246). Three UNKNOWN evidence references changed for Doctor, Patient and Transaction after identifier documentation edits. Their annotations, bases, subjects and classifications are unchanged. Other unresolved call differences reduce to comprehension source-line shifts; the unresolved total remains 1246.",
       "ids": [
         "UNKNOWN-CONTEXT-DATAFLOW",
         "UNKNOWN-PYTHON-DYNAMIC-CALLS"
@@ -163,15 +176,8 @@
       "current_review": {
         "group_index": 8,
         "record_count": 2,
-        "records_digest": "f305fd779e76fd1c3366562f9343f6340f1a6a6191691e38dc8f9f208ccc68d3",
-        "changed_records": [
-          {
-            "id": "UNKNOWN-PYTHON-DYNAMIC-CALLS",
-            "fields": [
-              "data"
-            ]
-          }
-        ],
+        "records_digest": "26c0280582a3643e3f8c564cac27ef317e8da6c724b2189bfe91cce3d5e45d10",
+        "changed_records": [],
         "decision": "retain_assessed_UNKNOWN"
       }
     },
@@ -249,10 +255,10 @@
       "current_review": {
         "group_index": 9,
         "record_count": 66,
-        "records_digest": "cceae70eb1dff71fde0e0edda93ef2f57f2374c48409adeb233191c35e88afaf",
+        "records_digest": "796bea2073d2a9bc0a8b7417b6350922542dca4bb8ea833fdecaa5dbc11bac47",
         "changed_records": [
           {
-            "id": "UNKNOWN-BOUNDARY-TYPE-POSITION-f9a95b4c21fea4e0",
+            "id": "UNKNOWN-BOUNDARY-TYPE-POSITION-d499fd3012d253be",
             "fields": [
               "evidence_ids"
             ]
@@ -1080,32 +1086,38 @@
   "independent_review": {
     "reviewer_role": "Astra",
     "agent_task": "/root/architecture_ci_review",
-    "reviewed_at_utc": "2026-10-14T05:42:01.631560+00:00",
+    "reviewed_at_utc": "2026-10-14T05:42:02.114822+00:00",
     "base_commit": "6520b70d671295e17af159614127e19e9a5715d8",
-    "analyzed_head": "b5e57c0889ac4bdb310c0d2e30871610986f639a",
+    "analyzed_head": "bd59c376b29f1cb4be5d7123030049974eef020e",
     "prior_review_digest": "909b9680afc7772447b984ae5b3030be62f0b3634788c41ed2f922ded3dbad45",
     "decision": "GO",
-    "source_assessment": "CLI owns repeatable argument/environment adaptation and passes merged native properties to the existing RunRequest boundary. HashConverter keeps keyed-hash validation in its Domain owner. No execution policy moves into CLI, no new dependency edge or public facade shape is introduced; additional unresolved CLI/library calls remain bounded static uncertainty.",
-    "delta_assessment": "The three additional unresolved calls are entry.partition, name.isidentifier and value.isidentifier in the CLI option adapter. Input annotations and partition semantics establish string receivers on the reviewed path; scanner inference remains incomplete. HashConverter inherited-surface evidence changed with its body/documentation, without changing its base or public signature.",
+    "source_assessment": "Domain identifier descriptions now state the actual run/service scope. SetupTask adds the identifier registry to include-copy memo, preserving one same-process allocation identity; worker copying remains distinct. Single-process policy traverses IncludeStatement through the DSL API rather than eagerly executing dynamic includes. Ownership remains in Domains and Runtime, with no new facade contracts.",
+    "delta_assessment": "Three UNKNOWN evidence references changed for Doctor, Patient and Transaction after identifier documentation edits. Their annotations, bases, subjects and classifications are unchanged. Other unresolved call differences reduce to comprehension source-line shifts; the unresolved total remains 1246.",
     "record_changes": [
       {
-        "id": "UNKNOWN-BOUNDARY-TYPE-POSITION-f9a95b4c21fea4e0",
+        "id": "UNKNOWN-API-SURFACE-097fe5b868784c82",
         "fields": [
           "evidence_ids"
         ]
       },
       {
-        "id": "UNKNOWN-PYTHON-DYNAMIC-CALLS",
+        "id": "UNKNOWN-API-SURFACE-3efc316c7d54c515",
         "fields": [
-          "data"
+          "evidence_ids"
+        ]
+      },
+      {
+        "id": "UNKNOWN-BOUNDARY-TYPE-POSITION-d499fd3012d253be",
+        "fields": [
+          "evidence_ids"
         ]
       }
     ],
     "raw_artifact_sha256": {
-      "validation.json": "9f17567b48a29f54366f03dd6e199edd35a081102a52391cd9b57365be537e37",
-      "architecture.json": "ad48cbcc56cdd0be256cd4fe214d98265acddca358bd414bb8ae413711891e65",
-      "completion.json": "ec003cf16a944ff1a692b445e21504262f5c7407cc7abb6a96f3c9d36dbf18db",
-      "provenance.json": "a4005da1ce0369347eb4ed1db654ff221aefd5b2b9cc5d1ee0e618333ec7a55c"
+      "validation.json": "52c88113d43b5577bb07c09b38cfe49e70f637a4ea2d0fdf22185e54562936ec",
+      "architecture.json": "3440d9dcaf3c45ed7a1634378789d4ef1bff92aee80e798cc92bc162bba7648b",
+      "completion.json": "3956947b1ea964e1ed4cbc5ca8a6dc727073e55db9b246cc355af0f954054b5c",
+      "provenance.json": "75118982f745c697bfe0c16e0168820a95520f5c536ea7e78f7b447d10375d76"
     },
     "limitations": [
       "Static architecture review only; no behavioral rerun by this reviewer.",

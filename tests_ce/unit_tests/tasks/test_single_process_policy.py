@@ -13,6 +13,8 @@ from unittest.mock import MagicMock
 import pytest
 
 from datamimic_ce.engine.dsl.api import GenerateStatement
+from datamimic_ce.engine.dsl.model.setup.include_model import IncludeModel
+from datamimic_ce.engine.dsl.statements.setup.include_statement import IncludeStatement
 from datamimic_ce.engine.dsl.statements.values.references.reference_statement import ReferenceStatement
 from datamimic_ce.engine.dsl.statements.values.scalar.key_statement import KeyStatement
 from datamimic_ce.engine.dsl.statements.values.variables.variable_statement import VariableStatement
@@ -69,6 +71,15 @@ def test_seeded_generate_forces_single_process():
 def test_unseeded_generate_keeps_requested_workers():
     # no rngSeed -> determinism is not requested -> keep multiprocess
     assert resolve_single_process(_gen(), requested_workers=4, seeded=False) is None
+
+
+@pytest.mark.parametrize("uri", ["unopened.xml", "{path_determined_per_parent}"])
+@pytest.mark.parametrize("nested", [False, True])
+def test_deferred_include_keeps_identifier_allocation_in_one_process(uri: str, nested: bool) -> None:
+    include = IncludeStatement(IncludeModel(uri=uri))
+    children = [_gen(children=[include])] if nested else [include]
+
+    assert resolve_single_process(_gen(children=children), requested_workers=2) == 1
 
 
 @pytest.mark.parametrize("identifier_format, expected", [(None, None), ("PAN", 1)])

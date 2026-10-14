@@ -47,6 +47,10 @@ class Patient(BaseEntity):
     def patient_id(self) -> str:
         """Get the patient ID.
 
+        Unique per entity type and field within one service instance or descriptor run,
+        including includes. Direct construction, separate runs and existing target data
+        are outside this guarantee.
+
         Returns:
             A unique identifier for the patient.
         """

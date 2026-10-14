@@ -18,6 +18,7 @@ from dataclasses import dataclass
 from datamimic_ce.engine.dsl.api import (
     CompositeStatement,
     GenerateStatement,
+    IncludeStatement,
     KeyStatement,
     ReferenceStatement,
     Statement,
@@ -59,6 +60,10 @@ def _uses_domain_identifiers(stmt: GenerateStatement, seeded: bool, clients: Cli
     stack: list[Statement] = [stmt]
     while stack:
         current = stack.pop()
+        # Included descriptors are resolved at execution time and may allocate identifiers.
+        # Keep their enclosing generate serial without evaluating dynamic includes early.
+        if isinstance(current, IncludeStatement):
+            return True
         if isinstance(current, VariableStatement) and current.entity is not None:
             entity_name, _kwargs = parse_constructor_string(current.entity)
             spec = get_entity_spec(entity_name)
@@ -128,7 +133,7 @@ POLICIES: tuple[SingleProcessPolicy, ...] = (
     SingleProcessPolicy(
         feature="domain-identifier",
         applies=_uses_domain_identifiers,
-        reason="domain identifiers are unique across one run, including pages",
+        reason="domain identifiers require one run-wide allocation scope, including pages and deferred includes",
         ee_scalable=True,
     ),
     SingleProcessPolicy(

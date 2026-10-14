@@ -20,6 +20,12 @@ class InsurancePolicy(BaseEntity):
     @property
     @property_cache
     def id(self) -> str:
+        """Get the policy ID.
+
+        Unique per entity type and field within one service instance or descriptor run,
+        including includes. Direct construction, separate runs and existing target data
+        are outside this guarantee.
+        """
         candidate = self.insurance_policy_generator.generate_id_candidate()
         return self._claim_identifier("id", candidate)
 
