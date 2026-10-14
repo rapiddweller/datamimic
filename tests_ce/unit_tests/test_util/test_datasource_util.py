@@ -6,10 +6,66 @@
 
 
 import random
+import subprocess
+import sys
+import textwrap
 from pathlib import Path
 
 from datamimic_ce.engine.io.api import DataSourcePagination
 from datamimic_ce.engine.io.data_sources.selection import get_shuffled_data_with_cyclic
+
+
+def test_shuffled_iterable_inputs_terminate_and_preserve_seeded_windows():
+    # Run out of process so an exhausted one-shot input cannot hang the suite.
+    subprocess.run(
+        [
+            sys.executable,
+            "-c",
+            textwrap.dedent(
+                """
+                from datamimic_ce.engine.io.api import DataSourcePagination
+                from datamimic_ce.engine.io.data_sources.selection import get_shuffled_data_with_cyclic
+
+                cases = [
+                    (None, False, [3, 1, 0, 2]),
+                    (DataSourcePagination(1, 2), False, [1, 0]),
+                    (DataSourcePagination(3, 5), False, [2]),
+                    (DataSourcePagination(3, 8), True, [2, 0, 2, 3, 1, 0, 1, 2]),
+                    (DataSourcePagination(4, 2), False, []),
+                    (DataSourcePagination(0, 0), True, []),
+                ]
+                for factory in (list, tuple, iter, lambda rows: (row for row in rows)):
+                    for page, cyclic, expected in cases:
+                        actual = get_shuffled_data_with_cyclic(factory([0, 1, 2, 3]), page, cyclic, 7)
+                        assert actual == expected, (factory, actual, expected)
+                        assert get_shuffled_data_with_cyclic(factory([]), page, cyclic, 7) == []
+                rows = [0, 1, 2, 3]
+                assert get_shuffled_data_with_cyclic(rows, None, False, 7) == [3, 1, 0, 2]
+                assert rows == [0, 1, 2, 3]
+
+                from pathlib import Path
+                from tempfile import TemporaryDirectory
+                from datamimic_ce.engine.runtime.api import create_run_session
+                from datamimic_ce.engine.runtime.contracts import RunRequest
+
+                with TemporaryDirectory() as directory:
+                    descriptor = Path(directory) / "main.xml"
+                    descriptor.write_text(
+                        '<setup rngSeed="7"><generate name="rows" count="4">'
+                        '<variable name="item" source="(value for value in [0, 1, 2, 3])"/>'
+                        '<key name="value" type="int" script="item"/></generate></setup>',
+                        encoding="utf-8",
+                    )
+                    request = RunRequest(descriptor_path=descriptor, test_mode=True)
+                    captured = create_run_session(request).execute().captured
+                    assert sorted(row["value"] for row in captured["rows"]) == [0, 1, 2, 3]
+                    assert create_run_session(request).execute().captured == captured
+                """
+            ),
+        ],
+        check=True,
+        timeout=15,
+    )
 
 
 class TestDataSourceUtil:
