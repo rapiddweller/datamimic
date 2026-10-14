@@ -16,6 +16,8 @@ from __future__ import annotations
 from collections import Counter
 from pathlib import Path
 
+import pytest
+
 from datamimic_ce.interfaces.python.data_mimic_test import DataMimicTest
 
 _TEST_DIR = Path(__file__).resolve().parent
@@ -90,3 +92,143 @@ def test_weights_are_honoured_under_seed():
     assert abs(branches["approved"] / total - 0.5) < 0.1
     assert abs(branches["rejected"] / total - 0.3) < 0.1
     assert abs(branches["review"] / total - 0.2) < 0.1
+
+
+def _run_xml(tmp_path, declarations, fields, *, count=8, page_size=2, tail="", seed=17):
+    descriptor = tmp_path / "aliases.xml"
+    descriptor.write_text(
+        f'<setup rngSeed="{seed}">{declarations}'
+        f'<generate name="rows" count="{count}" pageSize="{page_size}" target="">'
+        f'{fields}</generate>{tail}</setup>'
+    )
+    engine = DataMimicTest(test_dir=tmp_path, filename=descriptor.name, capture_test_result=True)
+    engine.test_with_timer()
+    return engine.capture_result()
+
+
+_MACHINE = '''<state-machine id="life" start="open">
+    <transition from="open" to="closed"/>
+</state-machine>'''
+_ALIAS = '<generator name="alias" generator="life"/>'
+
+
+def test_named_alias_keys_and_variables_share_one_walk_across_pages(tmp_path):
+    fields = '''<key name="first" generator="alias"/>
+        <variable name="step" generator="alias"/>
+        <key name="second" script="step"/>
+        <key name="third" generator="alias"/>'''
+    captured = _run_xml(tmp_path, _MACHINE + _ALIAS, fields, count=5)
+    rows = captured["rows"]
+    # Three draws per row from one two-state walk; a page rebuild must not restart it.
+    assert [[r["first"], r["second"], r["third"]] for r in rows] == [
+        ["open", "closed", "open"],
+        ["closed", "open", "closed"],
+        ["open", "closed", "open"],
+        ["closed", "open", "closed"],
+        ["open", "closed", "open"],
+    ]
+    assert captured == _run_xml(tmp_path, _MACHINE + _ALIAS, fields, count=5)
+    assert captured == _run_xml(tmp_path, _MACHINE + _ALIAS, fields, count=5, page_size=3)
+
+
+def test_direct_machine_walkers_stay_independent_from_alias_instance(tmp_path):
+    fields = '''<key name="alias" generator="alias"/>
+        <key name="direct" generator="life"/>
+        <variable name="step" generator="life"/>
+        <key name="direct_variable" script="step"/>'''
+    captured = _run_xml(tmp_path, _MACHINE + _ALIAS, fields)
+    expected = ["open", "closed"] * 4
+    assert [r["alias"] for r in captured["rows"]] == expected
+    assert [r["direct"] for r in captured["rows"]] == expected
+    assert [r["direct_variable"] for r in captured["rows"]] == expected
+
+
+def test_alias_chains_continue_shared_walk_in_later_generates(tmp_path):
+    declarations = _MACHINE + _ALIAS + '<generator name="second_alias" generator="alias"/>'
+    tail = '''<generate name="later" count="2" pageSize="1" target="">
+        <key name="state" generator="second_alias"/>
+    </generate>'''
+    captured = _run_xml(tmp_path, declarations, '<key name="state" generator="alias"/>', count=3, tail=tail)
+    assert [r["state"] for r in captured["rows"]] == ["open", "closed", "open"]
+    assert [r["state"] for r in captured["later"]] == ["closed", "open"]
+
+
+def test_named_scalar_instance_shares_only_when_explicitly_referenced(tmp_path):
+    declarations = '<generator name="scalar" generator="IntegerGenerator(min=1,max=999)"/>'
+    fields = '''<key name="named" generator="scalar"/>
+        <variable name="next" generator="scalar"/>
+        <key name="named_variable" script="next"/>
+        <key name="ordinary_a" generator="IntegerGenerator(min=1,max=999)"/>
+        <key name="ordinary_b" generator="IntegerGenerator(min=1,max=999)"/>'''
+    rows = _run_xml(tmp_path, declarations, fields, count=5)["rows"]
+    single = _run_xml(tmp_path, declarations, '<key name="value" generator="scalar"/>', count=10)["rows"]
+    assert [value for r in rows for value in (r["named"], r["named_variable"])] == [r["value"] for r in single]
+    assert [r["ordinary_a"] for r in rows] != [r["ordinary_b"] for r in rows]
+    assert [r["ordinary_a"] for r in rows] != [r["named"] for r in rows]
+
+
+@pytest.mark.parametrize(
+    "declarations,fields,tail",
+    [
+        (_MACHINE, '<key name="state" generator="unknown"/>', ""),
+        (_ALIAS + _MACHINE, '<key name="state" generator="alias"/>', ""),
+        (_MACHINE, '<key name="state" generator="alias"/>', _ALIAS),
+    ],
+)
+def test_alias_unknown_and_forward_names_fail_at_use(tmp_path, declarations, fields, tail):
+    with pytest.raises(ValueError, match="Cannot create generator"):
+        _run_xml(tmp_path, declarations, fields, tail=tail)
+
+
+def test_duplicate_generator_declaration_keeps_first_registration(tmp_path):
+    declarations = _MACHINE + _ALIAS + '<generator name="alias" generator="IntegerGenerator(min=7,max=7)"/>'
+    rows = _run_xml(tmp_path, declarations, '<key name="state" generator="alias"/>', count=3)["rows"]
+    assert [r["state"] for r in rows] == ["open", "closed", "open"]
+
+
+def test_existing_machine_name_is_not_replaced_by_generator_declaration(tmp_path):
+    declarations = _MACHINE + '<generator name="life" generator="IntegerGenerator(min=7,max=7)"/>'
+    fields = '<key name="first" generator="life"/><key name="second" generator="life"/>'
+    rows = _run_xml(tmp_path, declarations, fields, count=3)["rows"]
+    assert [(r["first"], r["second"]) for r in rows] == [
+        ("open", "open"), ("closed", "closed"), ("open", "open")
+    ]
+
+
+def test_later_machine_definition_replaces_alias_name(tmp_path):
+    declarations = '<generator name="life" generator="IntegerGenerator(min=7,max=7)"/>' + _MACHINE
+    rows = _run_xml(tmp_path, declarations, '<key name="state" generator="life"/>', count=3)["rows"]
+    assert [r["state"] for r in rows] == ["open", "closed", "open"]
+
+
+def test_builtin_generator_name_collision_stays_reserved(tmp_path):
+    declarations = _MACHINE + '<generator name="IntegerGenerator" generator="life"/>'
+    fields = '''<key name="state" generator="IntegerGenerator"/>
+        <key name="scalar" generator="IntegerGenerator(min=7,max=7)"/>'''
+    with pytest.raises(ValueError, match="reserved name"):
+        _run_xml(tmp_path, declarations, fields, count=3)
+
+
+def test_weighted_alias_seed_replays_across_pages(tmp_path):
+    machine = '''<state-machine id="life" start="open">
+        <transition from="open" to="paid" weight="0.6"/>
+        <transition from="open" to="cancelled" weight="0.4"/>
+        <transition from="paid" to="closed"/>
+    </state-machine>'''
+    fields = '<key name="state" generator="alias"/>'
+    first = _run_xml(tmp_path, machine + _ALIAS, fields, count=80)
+    assert first == _run_xml(tmp_path, machine + _ALIAS, fields, count=80, page_size=7)
+    assert first != _run_xml(tmp_path, machine + _ALIAS, fields, count=80, seed=99)
+    states = [row["state"] for row in first["rows"]]
+    _assert_legal_walk(
+        states, {"open": {"paid", "cancelled"}, "paid": {"closed"}},
+        {"cancelled", "closed"}, "open", {"open", "paid", "cancelled", "closed"},
+    )
+
+
+def test_named_alias_continues_through_nested_parent_and_page_boundaries(tmp_path):
+    fields = '''<generate name="children" count="3" pageSize="2" target="">
+        <key name="state" generator="alias"/>
+    </generate>'''
+    captured = _run_xml(tmp_path, _MACHINE + _ALIAS, fields, count=3)
+    assert [r["state"] for r in captured["children"]] == ["open", "closed"] * 4 + ["open"]
