@@ -1,12 +1,12 @@
 {
   "status": "current_source_architecture_review_accepted",
   "reviewed_by": "Astra",
-  "review_reference": "docs/architecture/refactoring-study/experiment-2/issue-279-architecture-review.md",
-  "contract_digest": "289d6c0ee28d75e53e7ed8d057edbd66dd4004c5c362b6cccf5f7c095e0f7745",
+  "review_reference": "docs/architecture/refactoring-study/experiment-2/issue-288-architecture-review.md",
+  "contract_digest": "ff897df420a8be4e4deb758fe4032beb3309c559f72bb089a3ae7800e3c7f0e3",
   "analyzer_digest": "7106e3595fa7df9269cb43ee280f9c557659db7bda171b1f65ff5619ab54aa24",
-  "source_digest": "1921bd506333b11a9d9106f109ba25f2da3055da9bcbe754ea4cc8fac825ca36",
-  "unknowns_digest": "6c354826cbf3e04125fefec841033f77f8c991e2372978988eb72f426b97919a",
-  "validation_digest": "0c63638403b89cb46ccf5389d9295b8b69f113056b6d9fca41258cc2ae45c2f2",
+  "source_digest": "66e6b272f234b1e3d2f6829dc4956893557387c5c1023388898f9f1180d79509",
+  "unknowns_digest": "ff7ed8a7260f9c1905e0325e17f4b1ea40fede976d59d4f1a071b44733cf63ed",
+  "validation_digest": "bdc90fcb7329f1ad21c87ddb7795c0cc69164f56e973d3821178a6ad574138cf",
   "groups": [
     {
       "classification": "aggregate_receipt",
@@ -22,8 +22,16 @@
       "current_review": {
         "group_index": 0,
         "record_count": 6,
-        "records_digest": "0a2b7f2efb422945ecd35f51012a14e4ba5bbf964118c911e779bcc531e52f9f",
-        "changed_records": [],
+        "records_digest": "489f99ad8b9414719c66a0a2b6db3efb81193ace3f43f442106cc76bb8fce2ef",
+        "changed_records": [
+          {
+            "id": "UNKNOWN-BOUNDARY-TYPES-740afb90c4487173",
+            "fields": [
+              "data",
+              "title"
+            ]
+          }
+        ],
         "decision": "retain_assessed_UNKNOWN"
       }
     },
@@ -155,7 +163,7 @@
     },
     {
       "classification": "global_observation_limit",
-      "reason": "Global context dataflow and dynamic-call coverage remain bounded by the scanner. Direct annotations and selected self-field/constructor bindings do not prove arbitrary runtime values or every callable target; the current unresolved-call count is retained as measured uncertainty separately from scalar boundary positions. Current unresolved calls: 1247 (base 1246). The GeneratorStatement inherited-surface record changes only its evidence reference. Its explicit Statement base is unchanged and the added super().__init__ supplies that existing base initialization. The one added unresolved call is exactly this super().__init__ expression, which the scanner labels dynamic; current total1247. All boundary annotations/reasons and other UNKNOWN records remain unchanged.",
+      "reason": "Global context dataflow and dynamic-call coverage remain bounded by the scanner. Direct annotations and selected self-field/constructor bindings do not prove arbitrary runtime values or every callable target; the current unresolved-call count is retained as measured uncertainty separately from scalar boundary positions. Current unresolved calls: 1254 (base 1246). Two PreparedPage UNKNOWNs change only fact/evidence references after ExportSession moved methods; their aliases and signatures are unchanged. The IO aggregate increases decided positions205->206 and total258->259 for the new optional str execution_id parameter; no UNKNOWN position is added. Eight new unresolved calls concern typed export carrier dict/set/list operations, dataclass cls construction, dict base initialization and export_uri.encode (total1254); four apparent call differences are comprehension-line shifts. The new products module is explicitly owned and admitted without raising budgets or adding opacity permissions. Its exact Runtime-context placement and existing DSL/IO API dependencies are approved; native report observes489/489Python files.",
       "ids": [
         "UNKNOWN-CONTEXT-DATAFLOW",
         "UNKNOWN-PYTHON-DYNAMIC-CALLS"
@@ -163,7 +171,7 @@
       "current_review": {
         "group_index": 8,
         "record_count": 2,
-        "records_digest": "959e4a93c1d6cc466922d4da30561ac7293e16b37643d5fc27491c983d129a95",
+        "records_digest": "52c9811401c599b62e58fba391c5e9854a71574e1a85e7271418dc033c86a191",
         "changed_records": [
           {
             "id": "UNKNOWN-PYTHON-DYNAMIC-CALLS",
@@ -249,15 +257,8 @@
       "current_review": {
         "group_index": 9,
         "record_count": 66,
-        "records_digest": "aea99605e1b7cba75a8f1e796f29ed2c0a26514a85ae45a6690e3ef2950c9d44",
-        "changed_records": [
-          {
-            "id": "UNKNOWN-BOUNDARY-TYPE-POSITION-4a99961c530e4651",
-            "fields": [
-              "evidence_ids"
-            ]
-          }
-        ],
+        "records_digest": "50aa9dc4ca59c8e7087d108a0f50fbfaa1d3011a690e6f4c010263b5d7a1ad0f",
+        "changed_records": [],
         "decision": "retain_assessed_UNKNOWN"
       }
     },
@@ -792,8 +793,23 @@
       "current_review": {
         "group_index": 38,
         "record_count": 2,
-        "records_digest": "367fbf264708df68a638626f1c9326af7932d61da9d17f264bed4e4282be0ff2",
-        "changed_records": [],
+        "records_digest": "20fd7f70c676ba5994b5c585d7b487965b59afb4f59446cf23778605ec2cf0cf",
+        "changed_records": [
+          {
+            "id": "UNKNOWN-BOUNDARY-TYPE-POSITION-7b5ad38256894734",
+            "fields": [
+              "evidence_ids",
+              "fact_ids"
+            ]
+          },
+          {
+            "id": "UNKNOWN-BOUNDARY-TYPE-POSITION-8958397e43ff0828",
+            "fields": [
+              "evidence_ids",
+              "fact_ids"
+            ]
+          }
+        ],
         "decision": "retain_assessed_UNKNOWN"
       }
     },
@@ -1080,18 +1096,33 @@
   "independent_review": {
     "reviewer_role": "Astra",
     "agent_task": "/root/architecture_ci_review",
-    "reviewed_at_utc": "2026-10-14T05:48:09.770824+00:00",
+    "reviewed_at_utc": "2026-10-14T05:53:03.901888+00:00",
     "base_commit": "6520b70d671295e17af159614127e19e9a5715d8",
-    "analyzed_head": "cb7a97524211199c5572e4c1b32336a78b3f8a38",
+    "analyzed_head": "4114ca558ce0095a9f1970bccd48e10965d31ccc",
     "prior_review_digest": "909b9680afc7772447b984ae5b3030be62f0b3634788c41ed2f922ded3dbad45",
     "decision": "GO",
-    "source_assessment": "GeneratorStatement initializes inherited statement identity in DSL, while Runtime factory resolves an explicitly named prebuilt generator as one shared instance. Ordinary constructor cache keys and state-machine definitions remain separate paths. No generator execution is placed in DSL or Domains, and no new public type is introduced.",
-    "delta_assessment": "The GeneratorStatement inherited-surface record changes only its evidence reference. Its explicit Statement base is unchanged and the added super().__init__ supplies that existing base initialization. The one added unresolved call is exactly this super().__init__ expression, which the scanner labels dynamic; current total1247. All boundary annotations/reasons and other UNKNOWN records remain unchanged.",
+    "source_assessment": "The new contexts/products.py is owned and explicitly published by Runtime contexts, with exact root-layout admission and structure-review rationale. ExecutedExport carries typed product/destination/targets, NestedExport carries actual executed statement/rows/children, and GenerationResult carries page/worker metadata without starting workers or constructing clients. Its imports use existing DSL/IO APIs; no task dependency is introduced into contexts. Runtime retains conditional execution/order/finalization timing; IO retains exporter registration, buffers and dispatch. The dict[str, list] compatibility carrier and native row payloads retain unproved internal typing, not a new global opacity allowance. Only the exact new module is admitted; no baseline, dependency prohibition or type grant is weakened.",
+    "delta_assessment": "Two PreparedPage UNKNOWNs change only fact/evidence references after ExportSession moved methods; their aliases and signatures are unchanged. The IO aggregate increases decided positions205->206 and total258->259 for the new optional str execution_id parameter; no UNKNOWN position is added. Eight new unresolved calls concern typed export carrier dict/set/list operations, dataclass cls construction, dict base initialization and export_uri.encode (total1254); four apparent call differences are comprehension-line shifts. The new products module is explicitly owned and admitted without raising budgets or adding opacity permissions. Its exact Runtime-context placement and existing DSL/IO API dependencies are approved; native report observes489/489Python files.",
     "record_changes": [
       {
-        "id": "UNKNOWN-BOUNDARY-TYPE-POSITION-4a99961c530e4651",
+        "id": "UNKNOWN-BOUNDARY-TYPE-POSITION-7b5ad38256894734",
         "fields": [
-          "evidence_ids"
+          "evidence_ids",
+          "fact_ids"
+        ]
+      },
+      {
+        "id": "UNKNOWN-BOUNDARY-TYPE-POSITION-8958397e43ff0828",
+        "fields": [
+          "evidence_ids",
+          "fact_ids"
+        ]
+      },
+      {
+        "id": "UNKNOWN-BOUNDARY-TYPES-740afb90c4487173",
+        "fields": [
+          "data",
+          "title"
         ]
       },
       {
@@ -1102,10 +1133,10 @@
       }
     ],
     "raw_artifact_sha256": {
-      "validation.json": "2d40afe40d822f4193f87cb4d065246270e2ad6cf78f4b8cd111d3ae1eb636d7",
-      "architecture.json": "2f1e1f4eefe75be001cda3658465d966fbbce37fdb418e8f0a7cf13108eb0dd9",
-      "completion.json": "85acf803141b50f66b990323e9227ed3436c398e19d931562b8c6a2578ca4534",
-      "provenance.json": "ad2ad4a95f71a99767d21130006d11e922bde50cb5268af629ed835c592fc747"
+      "validation.json": "b0d631a5812ee2ab6345bc8025ab8f0f81a35992fdaece70b557cb3c307f6465",
+      "architecture.json": "a8e780eefd8810ba18770468a6013b057ea5ae79beb927448403ab35d4d1c216",
+      "completion.json": "9a6cbe02c9141ca58c1feebe342ea1cee07b05383a4c6e3dbc0ff638f68b3551",
+      "provenance.json": "673584800311377011020ee6f30862f752376ee60bb2cb9fddf141627d49adbf"
     },
     "limitations": [
       "Static architecture review only; no behavioral rerun by this reviewer.",

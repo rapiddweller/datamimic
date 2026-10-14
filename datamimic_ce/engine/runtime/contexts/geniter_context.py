@@ -4,13 +4,19 @@
 # See LICENSE file for the full text of the license.
 # For questions and support, contact: info@rapiddweller.com
 
+from __future__ import annotations
+
 import random
 from random import Random
+from typing import TYPE_CHECKING
 
 from datamimic_ce.domains.api import spawn_rng
 from datamimic_ce.engine.runtime.contexts.context import Context, SetupContext
 from datamimic_ce.engine.runtime.contexts.records import dict_nested_update
 from datamimic_ce.randomness import RandomSource
+
+if TYPE_CHECKING:
+    from datamimic_ce.engine.runtime.contexts.products import NestedExport
 
 
 class GenIterContext(Context):
@@ -28,6 +34,7 @@ class GenIterContext(Context):
         self._current_product: dict = {}
         self._current_variables: dict = {}
         self._worker_id: int | None = None
+        self.pending_exports: list[NestedExport] = []
         if unique_cursors is None:
             unique_cursors = parent.unique_cursors if isinstance(parent, GenIterContext) else {}
         self.unique_cursors: dict = unique_cursors

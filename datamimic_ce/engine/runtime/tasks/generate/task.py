@@ -16,10 +16,10 @@ from datamimic_ce.engine.io.api import (
     finalize_exporter_chunks,
     has_mongodb_upsert_target,
     publish_exported_artifacts,
-    resolve_target_entity,
 )
 from datamimic_ce.engine.runtime.contexts.context import Context, SetupContext, WorkerContextPayload
 from datamimic_ce.engine.runtime.contexts.geniter_context import GenIterContext
+from datamimic_ce.engine.runtime.contexts.products import ExecutedExport, GenerationResult
 from datamimic_ce.engine.runtime.logging import gen_timer, logger
 from datamimic_ce.engine.runtime.scripting.evaluation import interpolate_variables
 from datamimic_ce.engine.runtime.tasks.base.counts import get_int_count, resolve_count
@@ -342,11 +342,10 @@ class GenerateTask(CommonSubTask):
                     # Export memstore exporters
                     self.export_memstore(context, self.statement, merged_result)
 
-                    # # Finalize chunks files (writing end of file)
-                    self.finalize_temp_files_chunks(context, self.statement)
-
-                    # Upload ARTIFACT files at the end of ALL chunks processes
-                    self.export_artifact_files(context, self.statement)
+                    exports = merged_result.exports if isinstance(merged_result, GenerationResult) else {}
+                    # Finish all chunks before publishing any artifact.
+                    self.finalize_temp_files_chunks(context, exports)
+                    self.export_artifact_files(context, exports)
 
                 return merged_result
 
@@ -384,42 +383,19 @@ class GenerateTask(CommonSubTask):
                 GenerateTask._export_memstore_children(setup_context, sub_stmt, merged_result)
 
     @staticmethod
-    def finalize_temp_files_chunks(context: SetupContext, stmt: GenerateStatement):
-        """
-        Finalize temp files chunks (writing end of file).
-        """
-        # Worker IDs identify the temporary chunk directories in both SP and MP.
-        num_workers = GenerateTask._determine_num_workers(context, stmt)
-
-        finalize_exporter_chunks(
-            context,
-            resolve_target_entity(stmt.target_entity, None, stmt.name),
-            stmt.export_uri,
-            list(stmt.targets),
-            range(1, num_workers + 1),
-        )
-
-        # Finalize temp files chunks of sub-gen_stmts
-        for sub_stmt in stmt.sub_statements:
-            if isinstance(sub_stmt, GenerateStatement):
-                GenerateTask.finalize_temp_files_chunks(context, sub_stmt)
+    def finalize_temp_files_chunks(context: SetupContext, exports: dict[ExecutedExport, set[int]]) -> None:
+        """Finalize only the actual worker executions, before publishing any artifact."""
+        for export, workers in exports.items():
+            for worker in sorted(workers):
+                finalize_exporter_chunks(
+                    context, export.product_name, export.export_uri, list(export.targets), range(worker, worker + 1)
+                )
 
     @staticmethod
-    def export_artifact_files(context: SetupContext, stmt: GenerateStatement):
-        """
-        Export artifact files to storage (Execute on outermost gen_stmt)
-        """
-        publish_exported_artifacts(
-            context,
-            resolve_target_entity(stmt.target_entity, None, stmt.name),
-            stmt.export_uri,
-            list(stmt.targets),
-        )
-
-        # Export artifact files of sub-gen_stmts
-        for sub_stmt in stmt.sub_statements:
-            if isinstance(sub_stmt, GenerateStatement):
-                GenerateTask.export_artifact_files(context, sub_stmt)
+    def export_artifact_files(context: SetupContext, exports: dict[ExecutedExport, set[int]]) -> None:
+        """Publish actual executions without initializing inactive conditional targets."""
+        for export in exports:
+            publish_exported_artifacts(context, export.product_name, export.export_uri, list(export.targets))
 
     def _reject_positional_sequences_under_mp(self) -> None:
         """A positional number sequence (step/shuffle/wedge/...) is a stateful iterator that

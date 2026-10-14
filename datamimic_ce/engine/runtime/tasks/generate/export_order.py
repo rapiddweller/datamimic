@@ -8,20 +8,32 @@ from datamimic_ce.engine.dsl.api import (
     META_SELECTOR,
     META_TARGET_ENTITY,
     META_TYPE,
-    CompositeStatement,
     GenerateStatement,
 )
 from datamimic_ce.engine.io.api import ExportSession
 from datamimic_ce.engine.io.contracts import ExportMetadata
+from datamimic_ce.engine.runtime.contexts.context import SetupContext
+from datamimic_ce.engine.runtime.contexts.products import GenerationResult, NestedExport
 
 
 def export_product_by_page(
     stmt: GenerateStatement,
     xml_result: dict[str, list[dict[str, object]]],
     export_session: ExportSession,
+    setup_context: SetupContext | None = None,
 ) -> None:
     """Dispatch a page and recurse in dependency-safe parent/child order."""
     xml_rows = xml_result[stmt.full_name]
+    if setup_context is not None:
+        export_session.register(
+            setup_context,
+            stmt.full_name,
+            stmt.target_entity or stmt.name,
+            stmt.export_uri,
+            list(stmt.targets),
+            execution_id=str(id(stmt)),
+        )
+    children = xml_result.nested_exports if isinstance(xml_result, GenerationResult) else []
     metadata: ExportMetadata = {}
     if stmt.target_entity:
         metadata[META_TARGET_ENTITY] = stmt.target_entity
@@ -33,24 +45,22 @@ def export_product_by_page(
     own_targets_delete = export_session.children_first(stmt.full_name)
 
     if own_targets_delete:
-        for sub_stmt in stmt.sub_statements:
-            _export_nested_products_by_page(sub_stmt, xml_result, export_session)
+        for child in children:
+            _export_nested_products_by_page(child, export_session, setup_context)
 
     export_session.dispatch_page(stmt.full_name, prepared_page)
 
     if not own_targets_delete:
-        for sub_stmt in stmt.sub_statements:
-            _export_nested_products_by_page(sub_stmt, xml_result, export_session)
+        for child in children:
+            _export_nested_products_by_page(child, export_session, setup_context)
 
 
 def _export_nested_products_by_page(
-    sub_stmt: object,
-    xml_result: dict[str, list[dict[str, object]]],
+    export: NestedExport,
     export_session: ExportSession,
+    setup_context: SetupContext | None,
 ) -> None:
-    if isinstance(sub_stmt, GenerateStatement):
-        if xml_result.get(sub_stmt.full_name):
-            export_product_by_page(sub_stmt, xml_result, export_session)
-    elif isinstance(sub_stmt, CompositeStatement):
-        for child in sub_stmt.sub_statements:
-            _export_nested_products_by_page(child, xml_result, export_session)
+    result = GenerationResult()
+    result[export.statement.full_name] = export.rows
+    result.nested_exports = export.children
+    export_product_by_page(export.statement, result, export_session, setup_context)
