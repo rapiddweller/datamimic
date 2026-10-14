@@ -73,7 +73,9 @@ def rows(connection, query: str) -> list[tuple]:
 )
 def test_postgresql_database_demo_roots(postgres_demo) -> None:
     demo, connections = postgres_demo
-    DataMimicTest(demo, "datamimic.xml").test_with_timer()
+    # Preparation must also reset tables that already contain related rows.
+    for _ in range(2):
+        DataMimicTest(demo, "datamimic.xml").test_with_timer()
     if len(connections) == 1:
         connection = next(iter(connections.values()))
         assert rows(connection, "SELECT count(*) FROM customer") == [(10,)]

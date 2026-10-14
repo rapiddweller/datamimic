@@ -1,4 +1,7 @@
 -- IMPORTANT: Only use semicolon for commands split when using SQLite
+-- Drop the referencing table before customer when resetting existing data.
+DROP TABLE IF EXISTS "user";
+
 -- Create the "customer" table
 DROP TABLE IF EXISTS customer;
 CREATE TABLE IF NOT EXISTS customer (
@@ -31,7 +34,6 @@ CREATE TABLE IF NOT EXISTS product (
 );
 
 -- Create the "user" table
-DROP TABLE IF EXISTS "user";
 CREATE TABLE IF NOT EXISTS "user" (
     id INTEGER PRIMARY KEY,
     tc_creation_src TEXT,
