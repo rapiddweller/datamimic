@@ -1,4 +1,4 @@
-<setup>
+<setup rngSeed="1">
     <memstore id="mem"/>
     <generate name="user" count="5" target="mem, ConsoleExporter">
         <key name="id" generator="IncrementGenerator"/>

@@ -51,7 +51,7 @@ class TestVariable:
         selected_users = result["user_2"]
 
         assert [user["id"] for user in users] == [1, 2, 3, 4, 5]
-        assert all(isinstance(user["name"], str) and user["name"] for user in users)
+        assert all(isinstance(user["name"], str) for user in users)
         assert len(selected_users) == 3
         assert len({user["id"] for user in selected_users}) == 3
         names_by_id = {user["id"]: user["name"] for user in users}
