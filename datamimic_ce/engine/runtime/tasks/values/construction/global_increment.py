@@ -10,7 +10,12 @@ from datamimic_ce.engine.runtime.storage.global_increment import GlobalIncrement
 
 
 class GlobalIncrementGenerator(BaseLiteralGenerator):
-    """Global, monotonic increment scoped to one root context and qualified key."""
+    """Monotonic counter per qualified field within one root context/run.
+
+    Nested parents and page rebuilds continue the same counter; distinct qualified
+    fields have separate counters starting at 1. CE executes a containing generate
+    in one process, overriding multiprocessing/Ray requests to prevent repeats.
+    """
 
     def __init__(self, qualified_key: str, context: Context) -> None:
         self.qualified_key = qualified_key

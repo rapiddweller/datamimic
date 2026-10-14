@@ -17,6 +17,7 @@ from dataclasses import dataclass
 
 from datamimic_ce.engine.dsl.api import (
     CompositeStatement,
+    ElementStatement,
     GenerateStatement,
     KeyStatement,
     ReferenceStatement,
@@ -26,6 +27,7 @@ from datamimic_ce.engine.dsl.api import (
 from datamimic_ce.engine.io.api import RegisteredClient, uses_mysql_sequence_storage
 from datamimic_ce.engine.runtime.logging import logger
 from datamimic_ce.engine.runtime.tasks.values.construction.entity_constructor import parse_constructor_string
+from datamimic_ce.engine.runtime.tasks.values.construction.global_increment import GlobalIncrementGenerator
 
 ClientMap = Mapping[str, RegisteredClient]
 
@@ -59,6 +61,29 @@ def _uses_domain_identifiers(stmt: GenerateStatement, seeded: bool, clients: Cli
                 return True
         if isinstance(current, CompositeStatement):
             stack.extend(current.sub_statements)
+    return False
+
+
+def _uses_global_increment(
+    stmt: GenerateStatement,
+    seeded: bool,
+    clients: ClientMap,
+    *,
+    generators: Mapping[str, object] | None = None,
+) -> bool:
+    """A qualified counter must stay in its owning process, including nested fields
+    and explicitly named instances already resolved by setup declarations/includes."""
+    stack: list[Statement] = list(stmt.sub_statements)
+    while stack:
+        child = stack.pop()
+        if isinstance(child, KeyStatement | VariableStatement | ElementStatement) and child.generator is not None:
+            expression = child.generator.strip()
+            if expression.split("(", 1)[0].strip() == "GlobalIncrementGenerator" or (
+                generators is not None and isinstance(generators.get(expression), GlobalIncrementGenerator)
+            ):
+                return True
+        if isinstance(child, CompositeStatement):
+            stack.extend(child.sub_statements)
     return False
 
 
@@ -125,6 +150,12 @@ POLICIES: tuple[SingleProcessPolicy, ...] = (
         ee_scalable=True,
     ),
     SingleProcessPolicy(
+        feature="global-increment",
+        applies=_uses_global_increment,
+        reason="GlobalIncrementGenerator keeps each qualified counter unique across the run, including nested pages",
+        ee_scalable=False,
+    ),
+    SingleProcessPolicy(
         feature="delete",
         applies=_has_delete_target,
         reason="delete operations run sequentially",
@@ -146,13 +177,20 @@ def resolve_single_process(
     requested_workers: int,
     seeded: bool = False,
     clients: ClientMap | None = None,
+    *,
+    generators: Mapping[str, object] | None = None,
 ) -> int | None:
     """Return 1 if any single-process policy applies to ``stmt`` (logging once when it overrides
     a multiprocess request, with the EE recommendation where the feature is EE-scalable), else
     None so the caller keeps ``requested_workers``. ``seeded`` = a <setup rngSeed> is in effect."""
     resolved_clients: ClientMap = clients or {}
     for policy in POLICIES:
-        if not policy.applies(stmt, seeded, resolved_clients):
+        applies = (
+            _uses_global_increment(stmt, seeded, resolved_clients, generators=generators)
+            if policy.feature == "global-increment"
+            else policy.applies(stmt, seeded, resolved_clients)
+        )
+        if not applies:
             continue
         if requested_workers > 1:
             hint = _EE_HINT if policy.ee_scalable else ""

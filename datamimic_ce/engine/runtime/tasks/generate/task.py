@@ -197,6 +197,7 @@ class GenerateTask(CommonSubTask):
             num_workers,
             current_setup_context.is_seeded,
             current_setup_context.clients,
+            generators=current_setup_context.generators,
         )
         return forced if forced is not None else num_workers
 

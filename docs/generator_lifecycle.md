@@ -59,3 +59,19 @@ class FooGenerator(BaseDomainGenerator):
     def rng(self) -> random.Random:
         return self._rng
 ```
+
+## Global increment counters
+
+`GlobalIncrementGenerator` emits a monotonic sequence starting at 1 for each
+qualified generator field in one root setup context. Pages and repeated nested
+parents continue that field's counter. Distinct qualified fields have separate
+counters, so their values can overlap; a new run starts fresh.
+
+CE executes a generate containing this generator in one process, including when
+it appears in nested generates, conditions, nested keys or XML attributes. This
+overrides both multiprocessing and Ray worker requests before workers start.
+The process-local registry cannot reserve safe disjoint ranges for arbitrary
+nested row counts. Explicitly referenced named global-increment instances in
+the setup registry use the same serial policy. An unrelated or unused generator
+alias does not force serial execution. Ordinary `IncrementGenerator` keeps its
+existing page ranges and worker behavior. Seeded runs still replay identically.
