@@ -360,6 +360,9 @@ print(f"{patient.full_name}, {patient.age}, {patient.conditions}")
 pip install datamimic-ce
 ```
 
+For database and MongoDB connections, prefer [connection profiles](docs/developer_guide.md#database-and-mongodb-connection-profiles).
+The guide explains client references, profile selection, and how profile values override XML attributes.
+
 ### Healthcare domain
 
 ```python
