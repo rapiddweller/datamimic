@@ -2,9 +2,9 @@
   "status": "GO for bounded CE architecture completion; UNKNOWN remains UNKNOWN",
   "reviewed_by": "Astra",
   "review_reference": "docs/architecture/refactoring-study/experiment-2/ce-merge-architecture-review.md",
-  "source_commit": "332fc05a49fcdca5120ead1d9ecc2b49a4bcbf19",
-  "source_digest": "f33f1e4473dfbae007c8ac0f88b7258110fbafe40150db2073d0afe37adbcf88",
-  "contract_digest": "08a8909a96bf313f6f88229b1b17642a851aa5c61d87263ca53be4e37c801321",
+  "source_commit": "abcb5ca09dc34c5f012af195b2e6ba1a8dc3b6cd",
+  "source_digest": "ca4feeac489462a75bfc10d98a0a34498d562f6af037f1dd1ddbb916b907ec01",
+  "contract_digest": "4b4fd0ba1f77f60115d3e2d4ccb973391de7ab973f5cec60fc86d5ac699310c4",
   "analyzer_digest": "7106e3595fa7df9269cb43ee280f9c557659db7bda171b1f65ff5619ab54aa24",
   "validation_digest": "6b9081a1fdff57526fec2169fa5be7deb76caad654a2ded601bd45c7eaa812c7",
   "unknowns_digest": "0efae6460863294e1125a99915b7051a9688be7a4eff73ef8c1bb2a9b079374e",
@@ -21,7 +21,8 @@
         "UNKNOWN-BOUNDARY-TYPES-e5f8a7020449fcee",
         "UNKNOWN-BOUNDARY-TYPES-f445331027bfe957"
       ],
-      "records_digest": "489f99ad8b9414719c66a0a2b6db3efb81193ace3f43f442106cc76bb8fce2ef"
+      "records_digest": "489f99ad8b9414719c66a0a2b6db3efb81193ace3f43f442106cc76bb8fce2ef",
+      "current_source_reassessment": "Reassessed against the fresh abcb5ca0 native inventory: every record in this group is byte-for-byte equal as parsed JSON to the prior independently inspected records. The only product-source change is a byte-preserving Resources helper relocation; all API/signature/source-debt positions underlying this group are unchanged. The explicit reason and UNKNOWN classification below remain applicable."
     },
     {
       "group": "CE-MERGE-02",
@@ -30,7 +31,8 @@
       "ids": [
         "UNKNOWN-BOUNDARY-TYPE-POSITION-9d9f68655b08ff1b"
       ],
-      "records_digest": "19d108edc458c7e4ffc6a0cbc417d56b7a8ce92033f8b5d3d411131521319561"
+      "records_digest": "19d108edc458c7e4ffc6a0cbc417d56b7a8ce92033f8b5d3d411131521319561",
+      "current_source_reassessment": "Reassessed against the fresh abcb5ca0 native inventory: every record in this group is byte-for-byte equal as parsed JSON to the prior independently inspected records. The only product-source change is a byte-preserving Resources helper relocation; all API/signature/source-debt positions underlying this group are unchanged. The explicit reason and UNKNOWN classification below remain applicable."
     },
     {
       "group": "CE-MERGE-03",
@@ -45,7 +47,8 @@
         "UNKNOWN-BOUNDARY-TYPE-ROUTE-7ed461ea8f5d4081",
         "UNKNOWN-BOUNDARY-TYPE-ROUTE-fe933666c3683722"
       ],
-      "records_digest": "c20762834ee0a4214b9caba5cd6b7574c77380706efb51430e0f4015a31e2de5"
+      "records_digest": "c20762834ee0a4214b9caba5cd6b7574c77380706efb51430e0f4015a31e2de5",
+      "current_source_reassessment": "Reassessed against the fresh abcb5ca0 native inventory: every record in this group is byte-for-byte equal as parsed JSON to the prior independently inspected records. The only product-source change is a byte-preserving Resources helper relocation; all API/signature/source-debt positions underlying this group are unchanged. The explicit reason and UNKNOWN classification below remain applicable."
     },
     {
       "group": "CE-MERGE-04",
@@ -56,7 +59,8 @@
         "UNKNOWN-API-SURFACE-3efc316c7d54c515",
         "UNKNOWN-API-SURFACE-bf7aa0d3ee853572"
       ],
-      "records_digest": "0d9845cbc6248f7c6fe4c1e0d3395c6a538f74fe0e1493803870b5954f65bcc5"
+      "records_digest": "0d9845cbc6248f7c6fe4c1e0d3395c6a538f74fe0e1493803870b5954f65bcc5",
+      "current_source_reassessment": "Reassessed against the fresh abcb5ca0 native inventory: every record in this group is byte-for-byte equal as parsed JSON to the prior independently inspected records. The only product-source change is a byte-preserving Resources helper relocation; all API/signature/source-debt positions underlying this group are unchanged. The explicit reason and UNKNOWN classification below remain applicable."
     },
     {
       "group": "CE-MERGE-05",
@@ -66,7 +70,8 @@
         "UNKNOWN-BOUNDARY-TYPE-POSITION-54926b283c960565",
         "UNKNOWN-BOUNDARY-TYPE-POSITION-db9b600ef5817326"
       ],
-      "records_digest": "786b3cfea67d9241f3f1673f27c9f1e1d88563075153d18ce8ac065c6ea70bfe"
+      "records_digest": "786b3cfea67d9241f3f1673f27c9f1e1d88563075153d18ce8ac065c6ea70bfe",
+      "current_source_reassessment": "Reassessed against the fresh abcb5ca0 native inventory: every record in this group is byte-for-byte equal as parsed JSON to the prior independently inspected records. The only product-source change is a byte-preserving Resources helper relocation; all API/signature/source-debt positions underlying this group are unchanged. The explicit reason and UNKNOWN classification below remain applicable."
     },
     {
       "group": "CE-MERGE-06",
@@ -81,7 +86,8 @@
         "UNKNOWN-BOUNDARY-TYPE-POSITION-ad5b516a7654fc7b",
         "UNKNOWN-BOUNDARY-TYPE-POSITION-c2124a0c8f61643e"
       ],
-      "records_digest": "1084bf40514646eb4bc6a395a2319b1be0c30875b455ebdc21c6d985fe497383"
+      "records_digest": "1084bf40514646eb4bc6a395a2319b1be0c30875b455ebdc21c6d985fe497383",
+      "current_source_reassessment": "Reassessed against the fresh abcb5ca0 native inventory: every record in this group is byte-for-byte equal as parsed JSON to the prior independently inspected records. The only product-source change is a byte-preserving Resources helper relocation; all API/signature/source-debt positions underlying this group are unchanged. The explicit reason and UNKNOWN classification below remain applicable."
     },
     {
       "group": "CE-MERGE-07",
@@ -93,7 +99,8 @@
         "UNKNOWN-BOUNDARY-TYPE-POSITION-9d8fb1e4e907c263",
         "UNKNOWN-BOUNDARY-TYPE-POSITION-aab3569db0191341"
       ],
-      "records_digest": "c3be216d78ffb97e9b49be72e60c52f3700907a8f898fa707541d10cc6774159"
+      "records_digest": "c3be216d78ffb97e9b49be72e60c52f3700907a8f898fa707541d10cc6774159",
+      "current_source_reassessment": "Reassessed against the fresh abcb5ca0 native inventory: every record in this group is byte-for-byte equal as parsed JSON to the prior independently inspected records. The only product-source change is a byte-preserving Resources helper relocation; all API/signature/source-debt positions underlying this group are unchanged. The explicit reason and UNKNOWN classification below remain applicable."
     },
     {
       "group": "CE-MERGE-08",
@@ -112,17 +119,19 @@
         "UNKNOWN-BOUNDARY-TYPE-POSITION-efbecfb04b53346a",
         "UNKNOWN-BOUNDARY-TYPE-POSITION-f618985553362946"
       ],
-      "records_digest": "8dfc0607e1cf5d065bb8755be72af56bd8add8bbef6584778d92f06bf8f8e92e"
+      "records_digest": "8dfc0607e1cf5d065bb8755be72af56bd8add8bbef6584778d92f06bf8f8e92e",
+      "current_source_reassessment": "Reassessed against the fresh abcb5ca0 native inventory: every record in this group is byte-for-byte equal as parsed JSON to the prior independently inspected records. The only product-source change is a byte-preserving Resources helper relocation; all API/signature/source-debt positions underlying this group are unchanged. The explicit reason and UNKNOWN classification below remain applicable."
     },
     {
       "group": "CE-MERGE-09",
       "classification": "global_observation_limit",
-      "reason": "Current native coverage parses all489 files but resolves only73.76% of11881 calls:8763 resolved,1857 partial and1261 unresolved. Context analysis follows direct annotations, constructor bindings and self-field access only. A decoded baseline comparison shows1246->1261 unresolved calls;29 added/14 removed scope-qualified facts include14 location-only comprehension shifts and15 net new unresolved expressions in alias policy, export metadata, DSL generator initialization and CLI parsing. Source inspection found no new ownership violation in these expressions; arbitrary call targets/dataflow remain unproved.",
+      "reason": "Current native coverage parses all489 files but resolves only73.76% of11881 calls:8763 resolved,1857 partial and1261 unresolved. Context analysis follows direct annotations, constructor bindings and self-field access only. A decoded baseline comparison shows1246->1261 unresolved calls;29 added/14 removed scope-qualified facts include14 location-only comprehension shifts and15 net new unresolved expressions in alias policy, export metadata, DSL generator initialization and CLI parsing. Source inspection found no new ownership violation in these expressions; arbitrary call targets/dataflow remain unproved. The subsequent clinical-helper relocation changes exactly seven call-source routes (six resolved and one partially resolved); expression/status/reason values are unchanged and no unresolved call is added or removed. Current uncertainty remains1261 unresolved calls.",
       "ids": [
         "UNKNOWN-CONTEXT-DATAFLOW",
         "UNKNOWN-PYTHON-DYNAMIC-CALLS"
       ],
-      "records_digest": "cc0a1c4001dc127bc3d59ca64812fb03b87d4412f8251da5def63fc0fb59f19c"
+      "records_digest": "cc0a1c4001dc127bc3d59ca64812fb03b87d4412f8251da5def63fc0fb59f19c",
+      "current_source_reassessment": "Reassessed against the fresh abcb5ca0 native inventory: every record in this group is byte-for-byte equal as parsed JSON to the prior independently inspected records. The only product-source change is a byte-preserving Resources helper relocation; all API/signature/source-debt positions underlying this group are unchanged. The explicit reason and UNKNOWN classification below remain applicable."
     },
     {
       "group": "CE-MERGE-10",
@@ -196,7 +205,8 @@
         "UNKNOWN-BOUNDARY-TYPE-POSITION-fe68122f2ce93900",
         "UNKNOWN-BOUNDARY-TYPE-POSITION-ffe02ed6aa1c3c57"
       ],
-      "records_digest": "73f60f1977437b8fb84cb4f38d19a7b2d993dc383dcd1e1237d26a61ed7c34f6"
+      "records_digest": "73f60f1977437b8fb84cb4f38d19a7b2d993dc383dcd1e1237d26a61ed7c34f6",
+      "current_source_reassessment": "Reassessed against the fresh abcb5ca0 native inventory: every record in this group is byte-for-byte equal as parsed JSON to the prior independently inspected records. The only product-source change is a byte-preserving Resources helper relocation; all API/signature/source-debt positions underlying this group are unchanged. The explicit reason and UNKNOWN classification below remain applicable."
     },
     {
       "group": "CE-MERGE-11",
@@ -205,7 +215,8 @@
       "ids": [
         "UNKNOWN-BOUNDARY-TYPE-POSITION-8c42680e3902646d"
       ],
-      "records_digest": "a90734b12de035bcdf545ecd89526d4a971db374faac88b0d5a151b3c014b89b"
+      "records_digest": "a90734b12de035bcdf545ecd89526d4a971db374faac88b0d5a151b3c014b89b",
+      "current_source_reassessment": "Reassessed against the fresh abcb5ca0 native inventory: every record in this group is byte-for-byte equal as parsed JSON to the prior independently inspected records. The only product-source change is a byte-preserving Resources helper relocation; all API/signature/source-debt positions underlying this group are unchanged. The explicit reason and UNKNOWN classification below remain applicable."
     },
     {
       "group": "CE-MERGE-12",
@@ -215,7 +226,8 @@
         "UNKNOWN-BOUNDARY-TYPE-POSITION-5280cd333eb976c5",
         "UNKNOWN-BOUNDARY-TYPE-POSITION-6445aa608973f0f3"
       ],
-      "records_digest": "0dd14e03bad19ffa1392f81d5f9dc77655c9ca43771bcea50c6dc20cedcf1e79"
+      "records_digest": "0dd14e03bad19ffa1392f81d5f9dc77655c9ca43771bcea50c6dc20cedcf1e79",
+      "current_source_reassessment": "Reassessed against the fresh abcb5ca0 native inventory: every record in this group is byte-for-byte equal as parsed JSON to the prior independently inspected records. The only product-source change is a byte-preserving Resources helper relocation; all API/signature/source-debt positions underlying this group are unchanged. The explicit reason and UNKNOWN classification below remain applicable."
     },
     {
       "group": "CE-MERGE-13",
@@ -246,7 +258,8 @@
         "UNKNOWN-BOUNDARY-TYPE-POSITION-f47cba7697103f42",
         "UNKNOWN-BOUNDARY-TYPE-POSITION-f62d17f6e309f23d"
       ],
-      "records_digest": "eda66418572a36972b8a61d19ba6f8d96182dae5ed6efb2efe3ff76ace9200e2"
+      "records_digest": "eda66418572a36972b8a61d19ba6f8d96182dae5ed6efb2efe3ff76ace9200e2",
+      "current_source_reassessment": "Reassessed against the fresh abcb5ca0 native inventory: every record in this group is byte-for-byte equal as parsed JSON to the prior independently inspected records. The only product-source change is a byte-preserving Resources helper relocation; all API/signature/source-debt positions underlying this group are unchanged. The explicit reason and UNKNOWN classification below remain applicable."
     },
     {
       "group": "CE-MERGE-14",
@@ -256,7 +269,8 @@
         "UNKNOWN-BOUNDARY-TYPE-POSITION-7ddaf82da240a182",
         "UNKNOWN-BOUNDARY-TYPE-POSITION-92a60fa84bffc8fa"
       ],
-      "records_digest": "ef85867edacb668f10ce43bd7e893d1a519edf68145ab85b2aaa5c98091c802c"
+      "records_digest": "ef85867edacb668f10ce43bd7e893d1a519edf68145ab85b2aaa5c98091c802c",
+      "current_source_reassessment": "Reassessed against the fresh abcb5ca0 native inventory: every record in this group is byte-for-byte equal as parsed JSON to the prior independently inspected records. The only product-source change is a byte-preserving Resources helper relocation; all API/signature/source-debt positions underlying this group are unchanged. The explicit reason and UNKNOWN classification below remain applicable."
     },
     {
       "group": "CE-MERGE-15",
@@ -266,7 +280,8 @@
         "UNKNOWN-BOUNDARY-TYPE-POSITION-461944100ff3d463",
         "UNKNOWN-BOUNDARY-TYPE-POSITION-ab43883d937833c2"
       ],
-      "records_digest": "ef0ab0f0ea8f5dc7705ebc20421d6a7902a8c32ef484bedfb08193e03fd4e7e6"
+      "records_digest": "ef0ab0f0ea8f5dc7705ebc20421d6a7902a8c32ef484bedfb08193e03fd4e7e6",
+      "current_source_reassessment": "Reassessed against the fresh abcb5ca0 native inventory: every record in this group is byte-for-byte equal as parsed JSON to the prior independently inspected records. The only product-source change is a byte-preserving Resources helper relocation; all API/signature/source-debt positions underlying this group are unchanged. The explicit reason and UNKNOWN classification below remain applicable."
     },
     {
       "group": "CE-MERGE-16",
@@ -278,7 +293,8 @@
         "UNKNOWN-BOUNDARY-TYPE-POSITION-da692d7974fbfe89",
         "UNKNOWN-BOUNDARY-TYPE-POSITION-f109dcc51f2a279b"
       ],
-      "records_digest": "6716d6c5d5de0890d6567fc26dfaffd565115915d90bf60bbd0518be8396abbc"
+      "records_digest": "6716d6c5d5de0890d6567fc26dfaffd565115915d90bf60bbd0518be8396abbc",
+      "current_source_reassessment": "Reassessed against the fresh abcb5ca0 native inventory: every record in this group is byte-for-byte equal as parsed JSON to the prior independently inspected records. The only product-source change is a byte-preserving Resources helper relocation; all API/signature/source-debt positions underlying this group are unchanged. The explicit reason and UNKNOWN classification below remain applicable."
     },
     {
       "group": "CE-MERGE-17",
@@ -287,7 +303,8 @@
       "ids": [
         "UNKNOWN-BOUNDARY-TYPE-POSITION-32c0b286f2828d14"
       ],
-      "records_digest": "d95cf4adec92c127d4354cb9ea3c0de3a49f2b4c608b10261142bab71bd2a86f"
+      "records_digest": "d95cf4adec92c127d4354cb9ea3c0de3a49f2b4c608b10261142bab71bd2a86f",
+      "current_source_reassessment": "Reassessed against the fresh abcb5ca0 native inventory: every record in this group is byte-for-byte equal as parsed JSON to the prior independently inspected records. The only product-source change is a byte-preserving Resources helper relocation; all API/signature/source-debt positions underlying this group are unchanged. The explicit reason and UNKNOWN classification below remain applicable."
     },
     {
       "group": "CE-MERGE-18",
@@ -297,7 +314,8 @@
         "UNKNOWN-BOUNDARY-TYPE-POSITION-27608b380a51f96a",
         "UNKNOWN-BOUNDARY-TYPE-POSITION-ba82317a503168e0"
       ],
-      "records_digest": "ad2007cd627f715093272325f2929ef7443ad4c9c9e3c474da2b4df1f8de0734"
+      "records_digest": "ad2007cd627f715093272325f2929ef7443ad4c9c9e3c474da2b4df1f8de0734",
+      "current_source_reassessment": "Reassessed against the fresh abcb5ca0 native inventory: every record in this group is byte-for-byte equal as parsed JSON to the prior independently inspected records. The only product-source change is a byte-preserving Resources helper relocation; all API/signature/source-debt positions underlying this group are unchanged. The explicit reason and UNKNOWN classification below remain applicable."
     },
     {
       "group": "CE-MERGE-19",
@@ -307,7 +325,8 @@
         "UNKNOWN-BOUNDARY-TYPE-POSITION-122e0262d4acb75f",
         "UNKNOWN-BOUNDARY-TYPE-POSITION-444b2c4c363c0276"
       ],
-      "records_digest": "9c03a06529668ba193b8ca128c062f3bd799d3d147163d963ab03401ea759d1c"
+      "records_digest": "9c03a06529668ba193b8ca128c062f3bd799d3d147163d963ab03401ea759d1c",
+      "current_source_reassessment": "Reassessed against the fresh abcb5ca0 native inventory: every record in this group is byte-for-byte equal as parsed JSON to the prior independently inspected records. The only product-source change is a byte-preserving Resources helper relocation; all API/signature/source-debt positions underlying this group are unchanged. The explicit reason and UNKNOWN classification below remain applicable."
     },
     {
       "group": "CE-MERGE-20",
@@ -317,7 +336,8 @@
         "UNKNOWN-BOUNDARY-TYPE-POSITION-0edfbe9b8e3d2d52",
         "UNKNOWN-BOUNDARY-TYPE-POSITION-6473a586f74c2f68"
       ],
-      "records_digest": "82e959b06e9a6ffd07bc17bfa4e6d11ce33a2679251df29f4ed4c0c1e3ef8330"
+      "records_digest": "82e959b06e9a6ffd07bc17bfa4e6d11ce33a2679251df29f4ed4c0c1e3ef8330",
+      "current_source_reassessment": "Reassessed against the fresh abcb5ca0 native inventory: every record in this group is byte-for-byte equal as parsed JSON to the prior independently inspected records. The only product-source change is a byte-preserving Resources helper relocation; all API/signature/source-debt positions underlying this group are unchanged. The explicit reason and UNKNOWN classification below remain applicable."
     },
     {
       "group": "CE-MERGE-21",
@@ -327,7 +347,8 @@
         "UNKNOWN-BOUNDARY-TYPE-POSITION-6a55738c879fa5ed",
         "UNKNOWN-BOUNDARY-TYPE-POSITION-87bffff1d52fdcb6"
       ],
-      "records_digest": "4671c9d3e2ede11c3b2caa554acfb9de6b8c8e7724d7fa97ecd096d772bc6a97"
+      "records_digest": "4671c9d3e2ede11c3b2caa554acfb9de6b8c8e7724d7fa97ecd096d772bc6a97",
+      "current_source_reassessment": "Reassessed against the fresh abcb5ca0 native inventory: every record in this group is byte-for-byte equal as parsed JSON to the prior independently inspected records. The only product-source change is a byte-preserving Resources helper relocation; all API/signature/source-debt positions underlying this group are unchanged. The explicit reason and UNKNOWN classification below remain applicable."
     },
     {
       "group": "CE-MERGE-22",
@@ -343,7 +364,8 @@
         "UNKNOWN-BOUNDARY-TYPE-POSITION-c0eed86ef57a44ef",
         "UNKNOWN-BOUNDARY-TYPE-POSITION-cfb3060900bf8620"
       ],
-      "records_digest": "973f74ef29d60160005682799415d12507292c243fff9d6255409dcd4a956956"
+      "records_digest": "973f74ef29d60160005682799415d12507292c243fff9d6255409dcd4a956956",
+      "current_source_reassessment": "Reassessed against the fresh abcb5ca0 native inventory: every record in this group is byte-for-byte equal as parsed JSON to the prior independently inspected records. The only product-source change is a byte-preserving Resources helper relocation; all API/signature/source-debt positions underlying this group are unchanged. The explicit reason and UNKNOWN classification below remain applicable."
     },
     {
       "group": "CE-MERGE-23",
@@ -353,7 +375,8 @@
         "UNKNOWN-BOUNDARY-TYPE-POSITION-5b56bdb7fe670a5b",
         "UNKNOWN-BOUNDARY-TYPE-POSITION-86ab8530fe231540"
       ],
-      "records_digest": "f46b303e888745543ebc8fb9bf380c09a5739806aef46753a7e9dcaebcf721ce"
+      "records_digest": "f46b303e888745543ebc8fb9bf380c09a5739806aef46753a7e9dcaebcf721ce",
+      "current_source_reassessment": "Reassessed against the fresh abcb5ca0 native inventory: every record in this group is byte-for-byte equal as parsed JSON to the prior independently inspected records. The only product-source change is a byte-preserving Resources helper relocation; all API/signature/source-debt positions underlying this group are unchanged. The explicit reason and UNKNOWN classification below remain applicable."
     },
     {
       "group": "CE-MERGE-24",
@@ -363,7 +386,8 @@
         "UNKNOWN-BOUNDARY-TYPE-POSITION-072a61056b7df66d",
         "UNKNOWN-BOUNDARY-TYPE-POSITION-ef61ce5ac53566ee"
       ],
-      "records_digest": "0c80a18204b444043a77c0d298ef9b74a251a9b5468feb7db5a1717d984dcbe7"
+      "records_digest": "0c80a18204b444043a77c0d298ef9b74a251a9b5468feb7db5a1717d984dcbe7",
+      "current_source_reassessment": "Reassessed against the fresh abcb5ca0 native inventory: every record in this group is byte-for-byte equal as parsed JSON to the prior independently inspected records. The only product-source change is a byte-preserving Resources helper relocation; all API/signature/source-debt positions underlying this group are unchanged. The explicit reason and UNKNOWN classification below remain applicable."
     },
     {
       "group": "CE-MERGE-25",
@@ -373,7 +397,8 @@
         "UNKNOWN-BOUNDARY-TYPE-POSITION-104639c1c2909429",
         "UNKNOWN-BOUNDARY-TYPE-POSITION-1d3283c039427ae7"
       ],
-      "records_digest": "84b9732b515ee5c38051367870b28f4e9a924ffb2207ddbd754f81b7b7bb1250"
+      "records_digest": "84b9732b515ee5c38051367870b28f4e9a924ffb2207ddbd754f81b7b7bb1250",
+      "current_source_reassessment": "Reassessed against the fresh abcb5ca0 native inventory: every record in this group is byte-for-byte equal as parsed JSON to the prior independently inspected records. The only product-source change is a byte-preserving Resources helper relocation; all API/signature/source-debt positions underlying this group are unchanged. The explicit reason and UNKNOWN classification below remain applicable."
     },
     {
       "group": "CE-MERGE-26",
@@ -383,7 +408,8 @@
         "UNKNOWN-BOUNDARY-TYPE-POSITION-3238a70b33c74f0d",
         "UNKNOWN-BOUNDARY-TYPE-POSITION-4a6aec4c6326c019"
       ],
-      "records_digest": "0aa0343a4afe5af57255716e97703adcd8ed4f4eff78c1806bf48e324d1d7c38"
+      "records_digest": "0aa0343a4afe5af57255716e97703adcd8ed4f4eff78c1806bf48e324d1d7c38",
+      "current_source_reassessment": "Reassessed against the fresh abcb5ca0 native inventory: every record in this group is byte-for-byte equal as parsed JSON to the prior independently inspected records. The only product-source change is a byte-preserving Resources helper relocation; all API/signature/source-debt positions underlying this group are unchanged. The explicit reason and UNKNOWN classification below remain applicable."
     },
     {
       "group": "CE-MERGE-27",
@@ -401,7 +427,8 @@
         "UNKNOWN-BOUNDARY-TYPE-POSITION-ed06de0f3fdc8f34",
         "UNKNOWN-BOUNDARY-TYPE-POSITION-f49853c726c7e5de"
       ],
-      "records_digest": "30653ec7877798cda90a27c86cf74b9c2edd1a26579ebd8b581f3a2efea14471"
+      "records_digest": "30653ec7877798cda90a27c86cf74b9c2edd1a26579ebd8b581f3a2efea14471",
+      "current_source_reassessment": "Reassessed against the fresh abcb5ca0 native inventory: every record in this group is byte-for-byte equal as parsed JSON to the prior independently inspected records. The only product-source change is a byte-preserving Resources helper relocation; all API/signature/source-debt positions underlying this group are unchanged. The explicit reason and UNKNOWN classification below remain applicable."
     },
     {
       "group": "CE-MERGE-28",
@@ -410,7 +437,8 @@
       "ids": [
         "UNKNOWN-BOUNDARY-TYPE-POSITION-fbe4ded2eb4dfd6a"
       ],
-      "records_digest": "2b30b9932fd2dfa60180c2822263b98464c41f838be303fd35598eaa2614c22d"
+      "records_digest": "2b30b9932fd2dfa60180c2822263b98464c41f838be303fd35598eaa2614c22d",
+      "current_source_reassessment": "Reassessed against the fresh abcb5ca0 native inventory: every record in this group is byte-for-byte equal as parsed JSON to the prior independently inspected records. The only product-source change is a byte-preserving Resources helper relocation; all API/signature/source-debt positions underlying this group are unchanged. The explicit reason and UNKNOWN classification below remain applicable."
     },
     {
       "group": "CE-MERGE-29",
@@ -419,7 +447,8 @@
       "ids": [
         "UNKNOWN-BOUNDARY-TYPE-POSITION-844aad32733e6b57"
       ],
-      "records_digest": "831f53d8405115be649fc5ce8458f31967e40d0a9cff339ae058be3fa443c424"
+      "records_digest": "831f53d8405115be649fc5ce8458f31967e40d0a9cff339ae058be3fa443c424",
+      "current_source_reassessment": "Reassessed against the fresh abcb5ca0 native inventory: every record in this group is byte-for-byte equal as parsed JSON to the prior independently inspected records. The only product-source change is a byte-preserving Resources helper relocation; all API/signature/source-debt positions underlying this group are unchanged. The explicit reason and UNKNOWN classification below remain applicable."
     },
     {
       "group": "CE-MERGE-30",
@@ -428,7 +457,8 @@
       "ids": [
         "UNKNOWN-BOUNDARY-TYPE-POSITION-b46539b39643885f"
       ],
-      "records_digest": "126c839ca2685245682c97fc09b8476fb49c35b08c94003ba94b8bbbe6a99cc2"
+      "records_digest": "126c839ca2685245682c97fc09b8476fb49c35b08c94003ba94b8bbbe6a99cc2",
+      "current_source_reassessment": "Reassessed against the fresh abcb5ca0 native inventory: every record in this group is byte-for-byte equal as parsed JSON to the prior independently inspected records. The only product-source change is a byte-preserving Resources helper relocation; all API/signature/source-debt positions underlying this group are unchanged. The explicit reason and UNKNOWN classification below remain applicable."
     },
     {
       "group": "CE-MERGE-31",
@@ -437,7 +467,8 @@
       "ids": [
         "UNKNOWN-BOUNDARY-TYPE-POSITION-fb89cb4d48b5e5bd"
       ],
-      "records_digest": "f621d4eda71e0e60622476a01a3832d8f6c00292f029dc1e2cb54d4e94589361"
+      "records_digest": "f621d4eda71e0e60622476a01a3832d8f6c00292f029dc1e2cb54d4e94589361",
+      "current_source_reassessment": "Reassessed against the fresh abcb5ca0 native inventory: every record in this group is byte-for-byte equal as parsed JSON to the prior independently inspected records. The only product-source change is a byte-preserving Resources helper relocation; all API/signature/source-debt positions underlying this group are unchanged. The explicit reason and UNKNOWN classification below remain applicable."
     },
     {
       "group": "CE-MERGE-32",
@@ -446,7 +477,8 @@
       "ids": [
         "UNKNOWN-BOUNDARY-TYPE-POSITION-21ed92d464a88f7c"
       ],
-      "records_digest": "fe093d395a4341d483b55370e91da3a623e3db99131c12043848982458fef669"
+      "records_digest": "fe093d395a4341d483b55370e91da3a623e3db99131c12043848982458fef669",
+      "current_source_reassessment": "Reassessed against the fresh abcb5ca0 native inventory: every record in this group is byte-for-byte equal as parsed JSON to the prior independently inspected records. The only product-source change is a byte-preserving Resources helper relocation; all API/signature/source-debt positions underlying this group are unchanged. The explicit reason and UNKNOWN classification below remain applicable."
     },
     {
       "group": "CE-MERGE-33",
@@ -460,7 +492,8 @@
         "UNKNOWN-BOUNDARY-TYPE-POSITION-c8b9d81ae9b3d91f",
         "UNKNOWN-BOUNDARY-TYPE-POSITION-f5e031f2e43037fc"
       ],
-      "records_digest": "a64d7eb34ae3ab32a9ff4e9c7e13d06a49d10fa4a1fc6c49e1906d73b086fdc9"
+      "records_digest": "a64d7eb34ae3ab32a9ff4e9c7e13d06a49d10fa4a1fc6c49e1906d73b086fdc9",
+      "current_source_reassessment": "Reassessed against the fresh abcb5ca0 native inventory: every record in this group is byte-for-byte equal as parsed JSON to the prior independently inspected records. The only product-source change is a byte-preserving Resources helper relocation; all API/signature/source-debt positions underlying this group are unchanged. The explicit reason and UNKNOWN classification below remain applicable."
     },
     {
       "group": "CE-MERGE-34",
@@ -507,7 +540,8 @@
         "UNKNOWN-BOUNDARY-TYPE-POSITION-eed4a3dfb716074d",
         "UNKNOWN-BOUNDARY-TYPE-POSITION-f253b98f4f7fccdf"
       ],
-      "records_digest": "d6efc52ad7889018af0f20ad6e60f1c0a6f2f02c6c104c5cb8def7aaaadeb6c1"
+      "records_digest": "d6efc52ad7889018af0f20ad6e60f1c0a6f2f02c6c104c5cb8def7aaaadeb6c1",
+      "current_source_reassessment": "Reassessed against the fresh abcb5ca0 native inventory: every record in this group is byte-for-byte equal as parsed JSON to the prior independently inspected records. The only product-source change is a byte-preserving Resources helper relocation; all API/signature/source-debt positions underlying this group are unchanged. The explicit reason and UNKNOWN classification below remain applicable."
     },
     {
       "group": "CE-MERGE-35",
@@ -529,7 +563,8 @@
         "UNKNOWN-BOUNDARY-TYPE-POSITION-d29db2b86739ca9e",
         "UNKNOWN-BOUNDARY-TYPE-POSITION-e9f2a054bc20e368"
       ],
-      "records_digest": "315fbdebe2e666557a63381c80837a210419a2162866ddbe61f4c414230da9ea"
+      "records_digest": "315fbdebe2e666557a63381c80837a210419a2162866ddbe61f4c414230da9ea",
+      "current_source_reassessment": "Reassessed against the fresh abcb5ca0 native inventory: every record in this group is byte-for-byte equal as parsed JSON to the prior independently inspected records. The only product-source change is a byte-preserving Resources helper relocation; all API/signature/source-debt positions underlying this group are unchanged. The explicit reason and UNKNOWN classification below remain applicable."
     },
     {
       "group": "CE-MERGE-36",
@@ -539,7 +574,8 @@
         "UNKNOWN-BOUNDARY-TYPE-POSITION-09f6b80e79e7695f",
         "UNKNOWN-BOUNDARY-TYPE-POSITION-2b96a76af66c156b"
       ],
-      "records_digest": "e3e400eb7a5f37a2f4e22f487ca8b71b398bdfd9335d5cb44a063fd81289afef"
+      "records_digest": "e3e400eb7a5f37a2f4e22f487ca8b71b398bdfd9335d5cb44a063fd81289afef",
+      "current_source_reassessment": "Reassessed against the fresh abcb5ca0 native inventory: every record in this group is byte-for-byte equal as parsed JSON to the prior independently inspected records. The only product-source change is a byte-preserving Resources helper relocation; all API/signature/source-debt positions underlying this group are unchanged. The explicit reason and UNKNOWN classification below remain applicable."
     },
     {
       "group": "CE-MERGE-37",
@@ -568,7 +604,8 @@
         "UNKNOWN-BOUNDARY-TYPE-POSITION-db551a7972bfabd9",
         "UNKNOWN-BOUNDARY-TYPE-POSITION-de227646ce1f0811"
       ],
-      "records_digest": "259fc712c481ea1a4c3792111d2d5bd62ba41d43074805eff5b132eb62c56e63"
+      "records_digest": "259fc712c481ea1a4c3792111d2d5bd62ba41d43074805eff5b132eb62c56e63",
+      "current_source_reassessment": "Reassessed against the fresh abcb5ca0 native inventory: every record in this group is byte-for-byte equal as parsed JSON to the prior independently inspected records. The only product-source change is a byte-preserving Resources helper relocation; all API/signature/source-debt positions underlying this group are unchanged. The explicit reason and UNKNOWN classification below remain applicable."
     },
     {
       "group": "CE-MERGE-38",
@@ -577,7 +614,8 @@
       "ids": [
         "UNKNOWN-BOUNDARY-TYPE-POSITION-1a2f0ac4b83db719"
       ],
-      "records_digest": "e6ee87e7bd6320beb96d5e6f32ba0fb06008c9e09118ec2ed69a74e4e7812b80"
+      "records_digest": "e6ee87e7bd6320beb96d5e6f32ba0fb06008c9e09118ec2ed69a74e4e7812b80",
+      "current_source_reassessment": "Reassessed against the fresh abcb5ca0 native inventory: every record in this group is byte-for-byte equal as parsed JSON to the prior independently inspected records. The only product-source change is a byte-preserving Resources helper relocation; all API/signature/source-debt positions underlying this group are unchanged. The explicit reason and UNKNOWN classification below remain applicable."
     },
     {
       "group": "CE-MERGE-39",
@@ -587,7 +625,8 @@
         "UNKNOWN-BOUNDARY-TYPE-POSITION-7b5ad38256894734",
         "UNKNOWN-BOUNDARY-TYPE-POSITION-8958397e43ff0828"
       ],
-      "records_digest": "20fd7f70c676ba5994b5c585d7b487965b59afb4f59446cf23778605ec2cf0cf"
+      "records_digest": "20fd7f70c676ba5994b5c585d7b487965b59afb4f59446cf23778605ec2cf0cf",
+      "current_source_reassessment": "Reassessed against the fresh abcb5ca0 native inventory: every record in this group is byte-for-byte equal as parsed JSON to the prior independently inspected records. The only product-source change is a byte-preserving Resources helper relocation; all API/signature/source-debt positions underlying this group are unchanged. The explicit reason and UNKNOWN classification below remain applicable."
     },
     {
       "group": "CE-MERGE-40",
@@ -597,7 +636,8 @@
         "UNKNOWN-BOUNDARY-TYPE-POSITION-76a2f343dc40db7f",
         "UNKNOWN-BOUNDARY-TYPE-POSITION-f2c95ea1f9e1527c"
       ],
-      "records_digest": "8488894e5e6e532d2cab0a4d7d7ae5fbe4ee9e26db0e43e46d072a335ccd6a6c"
+      "records_digest": "8488894e5e6e532d2cab0a4d7d7ae5fbe4ee9e26db0e43e46d072a335ccd6a6c",
+      "current_source_reassessment": "Reassessed against the fresh abcb5ca0 native inventory: every record in this group is byte-for-byte equal as parsed JSON to the prior independently inspected records. The only product-source change is a byte-preserving Resources helper relocation; all API/signature/source-debt positions underlying this group are unchanged. The explicit reason and UNKNOWN classification below remain applicable."
     },
     {
       "group": "CE-MERGE-41",
@@ -606,7 +646,8 @@
       "ids": [
         "UNKNOWN-BOUNDARY-TYPE-POSITION-1c57880c66cf05a2"
       ],
-      "records_digest": "e9c564d9592f19d2fcd65ed39ee446c72b0e5c3db533b842dec0ae67b345f8b6"
+      "records_digest": "e9c564d9592f19d2fcd65ed39ee446c72b0e5c3db533b842dec0ae67b345f8b6",
+      "current_source_reassessment": "Reassessed against the fresh abcb5ca0 native inventory: every record in this group is byte-for-byte equal as parsed JSON to the prior independently inspected records. The only product-source change is a byte-preserving Resources helper relocation; all API/signature/source-debt positions underlying this group are unchanged. The explicit reason and UNKNOWN classification below remain applicable."
     },
     {
       "group": "CE-MERGE-42",
@@ -615,7 +656,8 @@
       "ids": [
         "UNKNOWN-BOUNDARY-TYPE-POSITION-6d1c3cb4950381d4"
       ],
-      "records_digest": "e2cbc8f124c7dd14ff015060d56454b6064b9970276ab696d5fa629d9c3bbbc8"
+      "records_digest": "e2cbc8f124c7dd14ff015060d56454b6064b9970276ab696d5fa629d9c3bbbc8",
+      "current_source_reassessment": "Reassessed against the fresh abcb5ca0 native inventory: every record in this group is byte-for-byte equal as parsed JSON to the prior independently inspected records. The only product-source change is a byte-preserving Resources helper relocation; all API/signature/source-debt positions underlying this group are unchanged. The explicit reason and UNKNOWN classification below remain applicable."
     },
     {
       "group": "CE-MERGE-43",
@@ -624,7 +666,8 @@
       "ids": [
         "UNKNOWN-API-SURFACE-40bca825c62ac014"
       ],
-      "records_digest": "1c7cc22b561935f779a02c48381a865f544bf8b3529601fe32e3c866c54c571f"
+      "records_digest": "1c7cc22b561935f779a02c48381a865f544bf8b3529601fe32e3c866c54c571f",
+      "current_source_reassessment": "Reassessed against the fresh abcb5ca0 native inventory: every record in this group is byte-for-byte equal as parsed JSON to the prior independently inspected records. The only product-source change is a byte-preserving Resources helper relocation; all API/signature/source-debt positions underlying this group are unchanged. The explicit reason and UNKNOWN classification below remain applicable."
     },
     {
       "group": "CE-MERGE-44",
@@ -638,7 +681,8 @@
         "UNKNOWN-BOUNDARY-TYPE-POSITION-bed44ab427b0954a",
         "UNKNOWN-BOUNDARY-TYPE-POSITION-cc350779e01d8a7a"
       ],
-      "records_digest": "99948079686ca85b0a38ba151b8d20fb77d39e857993f89e9d8727135b777fc5"
+      "records_digest": "99948079686ca85b0a38ba151b8d20fb77d39e857993f89e9d8727135b777fc5",
+      "current_source_reassessment": "Reassessed against the fresh abcb5ca0 native inventory: every record in this group is byte-for-byte equal as parsed JSON to the prior independently inspected records. The only product-source change is a byte-preserving Resources helper relocation; all API/signature/source-debt positions underlying this group are unchanged. The explicit reason and UNKNOWN classification below remain applicable."
     },
     {
       "group": "CE-MERGE-45",
@@ -653,7 +697,8 @@
         "UNKNOWN-BOUNDARY-TYPE-POSITION-e9d9e28306151cf3",
         "UNKNOWN-BOUNDARY-TYPE-POSITION-f24ae27309d4ceef"
       ],
-      "records_digest": "cb1c530f12d4f694eb73b00de8546ea4a49ccbd876ad0b79bb8bc1588ff3c687"
+      "records_digest": "cb1c530f12d4f694eb73b00de8546ea4a49ccbd876ad0b79bb8bc1588ff3c687",
+      "current_source_reassessment": "Reassessed against the fresh abcb5ca0 native inventory: every record in this group is byte-for-byte equal as parsed JSON to the prior independently inspected records. The only product-source change is a byte-preserving Resources helper relocation; all API/signature/source-debt positions underlying this group are unchanged. The explicit reason and UNKNOWN classification below remain applicable."
     }
   ],
   "source_contract_debt_ids": [
@@ -667,7 +712,7 @@
   "residual_open_map_ids": [
     "UNKNOWN-BOUNDARY-TYPE-POSITION-32c0b286f2828d14"
   ],
-  "scope": "Independent combined merge/source/architecture review for PRs308\u2013325. Native ArchKeel2.0.0/Python3.11.12 only; no release/merge permission, EE certification or full behavioral equivalence claim.",
+  "scope": "Independent combined merge architecture review plus follow-up P2 correction of orphan clinical demo discovery, on exact clean sourceabcb5ca09dc34c5f012af195b2e6ba1a8dc3b6cd. Fresh ArchKeel2.0.0/Python3.11.12 evidence; UNKNOWNs and prior debts remain. Merge authorization is separate.",
   "validation_unknowns": {
     "classification": "publication_and_inherited_surface_uncertainty",
     "reason": "All20 diagnostics are interface.usage_unknown, covering16 unique subjects. LeafFieldKind is a real Literal alias used by FieldKind and LeafFieldPlan; the15 Domain models are explicit BaseEntity subclasses. AST checks confirm no direct class-body control flow in those models, while inherited/property/alias surfaces and publication use are not fully proven. These diagnostics therefore remain assessed uncertainty; they are not silently treated as used, unused or PASS.",
@@ -837,8 +882,8 @@
   "independent_review": {
     "reviewer_task": "/root/astra_merge_architecture",
     "date": "2026-10-14",
-    "method": "Read AGENTS, retained protocol/target, completion gate, contracts and combined conflict source first; read every native UNKNOWN and validation diagnostic; reconcile all six aggregate position lists; only then consult the previous receipt for continuity of classifications. Reassessed every group with new current-source rationale. Independently decoded native IR and proved all286 UNKNOWNs equal the completion projection, inspected dynamic-call deltas, checked named aliases/cursor/export ownership, and executed a two-case combined JSON export probe.",
-    "partition_note": "Previous group membership retained only after all current records were inspected and ID equality established; previous reasons/digests/verdict were not inherited.",
+    "method": "Inspected current demo discovery/autocomplete/create-all paths, RED CLI regression, committed byte-preserving helper relocation, exact examples layout/concern, historical source mapping and semantic records. Independently reviewed corrected mapping-before-target-filter order and its missing-target/invalid-selector regression. Decoded all current native UNKNOWN records, proved exact equality to the full completion projection and all prior independently inspected records, and revalidated every group digest and debt ID. Inspected native call deltas and all fresh validation diagnostics. Source/contract digests and raw artifact hashes are newly bound; prior source-bound proof is not asserted as the current scan.",
+    "partition_note": "All286 current records and all20 validation diagnostics exactly match the previous independently inspected inventory. Existing45 classifications and source-specific reasons remain applicable after current-source reassessment; each group records that reassessment explicitly.",
     "unknown_count": 286,
     "group_count": 45,
     "explicit_missing_annotation_debt_count": 6,
@@ -886,10 +931,22 @@
     },
     "baseline_note": "known-violations.json, Makefile pins, root contract and completion gate are unchanged. Historical typing_positions budget143 remains below both native base147 and merged146; no new merged typing regression is established and this receipt does not claim that every historical scalar budget is met. calls_unresolved1261 remains below1278.",
     "artifact_sha256": {
-      "architecture.json": "fc2bd5797eeca694818d9574f51a84170844be3ccd25288aa49bdc4c37159eb6",
+      "architecture.json": "ca2344f4cf172510d9a7a215c58031cffb583d8f8e3980f300b5a7e10af3bdac",
       "validation.json": "1c5d687f208f67838e1a7c64a25dba7bcafa0bbdbaff699f150424ce79eca78a",
-      "completion.json": "d8d3db35dd11dc58f6a6657f56618c64d4779383f916b95a78a39ec52926fcf3",
-      "provenance.json": "8d55cc74b05df2cfec9c54ba692299174f509e3328a4ee1a39ab45837bcb1b62"
-    }
+      "completion.json": "00d08bc712f61cb2b43a7451fbfe016449bbe60da38cb8afc23d91adcbd371cc",
+      "provenance.json": "7d65bc3fe20769680cc58143db74d27cde09021dfaf25c4a7e8f383e53e5e999"
+    },
+    "prior_independently_analyzed_source": "332fc05a49fcdca5120ead1d9ecc2b49a4bcbf19",
+    "followup_comparison_base": "08f09a9dd5ce6c95d272095605853cb56f5a92d9",
+    "followup_product_change": "100% similarity rename from resources/demos/demo-clinical-trial/script/clinical_trial.scr.py to resources/examples/generate_clinical_cohort.py",
+    "helper_sha256": "3c338b0598da99ae430816d2b255804af3bd995963a350889ff389c3bcf693b4",
+    "fresh_checks": {
+      "cli_tests_passed": 45,
+      "architecture_controls_passed": 38,
+      "ruff": "PASS",
+      "mypy_files_passed": 489
+    },
+    "followup_limits": "CLI regression proves inventory/autocomplete/copy behavior and descriptor existence, not runtime success of every demo. The unchanged helper body was not executed as a cohort-generation benchmark. Earlier combined runtime probe and broad service suites belong to the prior source; runtime bytes remain unchanged. No full behavioral/backend/EE equivalence is claimed.",
+    "prior_review_reference": "https://github.com/rapiddweller/datamimic/blob/08f09a9dd5ce6c95d272095605853cb56f5a92d9/docs/architecture/refactoring-study/experiment-2/ce-merge-architecture-review.md"
   }
 }
