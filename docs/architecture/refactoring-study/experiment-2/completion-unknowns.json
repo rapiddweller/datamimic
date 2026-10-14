@@ -1,12 +1,12 @@
 {
   "status": "current_source_architecture_review_accepted",
   "reviewed_by": "Astra",
-  "review_reference": "docs/architecture/refactoring-study/experiment-2/issue-275-architecture-review.md",
+  "review_reference": "docs/architecture/refactoring-study/experiment-2/issue-296-architecture-review.md",
   "contract_digest": "289d6c0ee28d75e53e7ed8d057edbd66dd4004c5c362b6cccf5f7c095e0f7745",
   "analyzer_digest": "7106e3595fa7df9269cb43ee280f9c557659db7bda171b1f65ff5619ab54aa24",
-  "source_digest": "d1fa9a4fae171b3a32e0a44a905927022a095e82faea11e56f10227b2e8d7400",
-  "unknowns_digest": "fb19f71dddd21d4d7a25f9f0b69fe56250a0015c2d0a0da5b632bdbcd3e68fec",
-  "validation_digest": "dcba4cc60e23868dd57592f99ea9d8ee03ca2f4131ce13ceab1671c0589e8299",
+  "source_digest": "79365764d1f35064f0a99c8aee577deab5b98107146f9da7d8e73fa2bdd01838",
+  "unknowns_digest": "612725aab375502e431b6b295381e9ec123d709bd8c96b0e4ec0273c9189847d",
+  "validation_digest": "6cd9862c4bf21edf9c0ced0bc3709ea269d05877e6096ec14b50960530e66a76",
   "groups": [
     {
       "classification": "aggregate_receipt",
@@ -155,7 +155,7 @@
     },
     {
       "classification": "global_observation_limit",
-      "reason": "Global context dataflow and dynamic-call coverage remain bounded by the scanner. Direct annotations and selected self-field/constructor bindings do not prove arbitrary runtime values or every callable target; the current unresolved-call count is retained as measured uncertainty separately from scalar boundary positions. Current unresolved calls: 1246 (base 1246). Four get_distributed_data/get_unique_data TypeVar parameter/return records differ only in fact and evidence references after definitions moved one line. Subjects, annotations, reasons and rule identities remain unchanged. Decoded unresolved-call facts are identical to base; the total remains 1246.",
+      "reason": "Global context dataflow and dynamic-call coverage remain bounded by the scanner. Direct annotations and selected self-field/constructor bindings do not prove arbitrary runtime values or every callable target; the current unresolved-call count is retained as measured uncertainty separately from scalar boundary positions. Current unresolved calls: 1246 (base 1246). All286UNKNOWN records and decoded unresolved-call facts equal the native base (1246). The single production change passes the interpolated URI into the existing DescriptorParser call; source digest changes while Target, analyzer and all uncertainty obligations remain unchanged.",
       "ids": [
         "UNKNOWN-CONTEXT-DATAFLOW",
         "UNKNOWN-PYTHON-DYNAMIC-CALLS"
@@ -700,37 +700,8 @@
       "current_review": {
         "group_index": 34,
         "record_count": 14,
-        "records_digest": "315fbdebe2e666557a63381c80837a210419a2162866ddbe61f4c414230da9ea",
-        "changed_records": [
-          {
-            "id": "UNKNOWN-BOUNDARY-TYPE-POSITION-406c1804a8306260",
-            "fields": [
-              "evidence_ids",
-              "fact_ids"
-            ]
-          },
-          {
-            "id": "UNKNOWN-BOUNDARY-TYPE-POSITION-65824dc2749b1813",
-            "fields": [
-              "evidence_ids",
-              "fact_ids"
-            ]
-          },
-          {
-            "id": "UNKNOWN-BOUNDARY-TYPE-POSITION-b32896b85e9a03be",
-            "fields": [
-              "evidence_ids",
-              "fact_ids"
-            ]
-          },
-          {
-            "id": "UNKNOWN-BOUNDARY-TYPE-POSITION-b62e9c3d9a60e505",
-            "fields": [
-              "evidence_ids",
-              "fact_ids"
-            ]
-          }
-        ],
+        "records_digest": "c42b5e04b81aa04b705ecde04979706b2de8511f394d88fcc8ecbad51184d027",
+        "changed_records": [],
         "decision": "retain_assessed_UNKNOWN"
       }
     },
@@ -1095,48 +1066,19 @@
   "independent_review": {
     "reviewer_role": "Astra",
     "agent_task": "/root/architecture_ci_review",
-    "reviewed_at_utc": "2026-10-14T05:44:01.520050+00:00",
+    "reviewed_at_utc": "2026-10-14T06:00:27.187099+00:00",
     "base_commit": "6520b70d671295e17af159614127e19e9a5715d8",
-    "analyzed_head": "361146ddc1001cd58a0b9aac24e21ddfeed322a2",
+    "analyzed_head": "4b9c7b83f483991611f0ff80bb4f842d5ba00894",
     "prior_review_digest": "909b9680afc7772447b984ae5b3030be62f0b3634788c41ed2f922ded3dbad45",
     "decision": "GO",
-    "source_assessment": "The IO selection owner materializes the iterable once and shuffles copies of that pool. This fixes exhaustion without moving selection into Runtime; signatures retain element T and RNG/row behavior remain separate functional evidence. Changed downstream fact locations do not alter boundary obligations.",
-    "delta_assessment": "Four get_distributed_data/get_unique_data TypeVar parameter/return records differ only in fact and evidence references after definitions moved one line. Subjects, annotations, reasons and rule identities remain unchanged. Decoded unresolved-call facts are identical to base; the total remains 1246.",
-    "record_changes": [
-      {
-        "id": "UNKNOWN-BOUNDARY-TYPE-POSITION-406c1804a8306260",
-        "fields": [
-          "evidence_ids",
-          "fact_ids"
-        ]
-      },
-      {
-        "id": "UNKNOWN-BOUNDARY-TYPE-POSITION-65824dc2749b1813",
-        "fields": [
-          "evidence_ids",
-          "fact_ids"
-        ]
-      },
-      {
-        "id": "UNKNOWN-BOUNDARY-TYPE-POSITION-b32896b85e9a03be",
-        "fields": [
-          "evidence_ids",
-          "fact_ids"
-        ]
-      },
-      {
-        "id": "UNKNOWN-BOUNDARY-TYPE-POSITION-b62e9c3d9a60e505",
-        "fields": [
-          "evidence_ids",
-          "fact_ids"
-        ]
-      }
-    ],
+    "source_assessment": "IncludeTask passes the already-interpolated local uri to DescriptorParser through the established Runtime-to-DSL boundary. Resolution stays Runtime-owned and profile loading remains injected through IO; no API or source ownership change is introduced.",
+    "delta_assessment": "All286UNKNOWN records and decoded unresolved-call facts equal the native base (1246). The single production change passes the interpolated URI into the existing DescriptorParser call; source digest changes while Target, analyzer and all uncertainty obligations remain unchanged.",
+    "record_changes": [],
     "raw_artifact_sha256": {
-      "validation.json": "883a7c516c636892d81ed1261902937e37cb0f3eee7bbe13da856bb69ad8a318",
-      "architecture.json": "253dc22f21b17274b0c54ad36f2990052afad5e911e705a9257ad806cac6ccb5",
-      "completion.json": "7875626736e3ea9837c012f69c0771c5c271544d81ec7604073249cd1c6edb61",
-      "provenance.json": "44a3688a24f7755ed992ccfb5dda4591914bc4e8985ecd0000f5baf45c23bb3c"
+      "validation.json": "838a362c39589a80177e67cd5816a967ae70742f5aa1fdba1fb89181fe50b55e",
+      "architecture.json": "bcded6ee4f788e5578922b239ad7edfdfff07cc015937d11f67c0151c7ee1ec6",
+      "completion.json": "1930372cb833ba8a69e066dfa162a2f884552cddc2d79e2f650773f94ac9c028",
+      "provenance.json": "82f0087a08ce263f1cb21e811c0777d3c1bdde9322c3a76bfb10c18c3719e8f0"
     },
     "limitations": [
       "Static architecture review only; no behavioral rerun by this reviewer.",
