@@ -1,12 +1,12 @@
 {
   "status": "current_source_architecture_review_accepted",
   "reviewed_by": "Astra",
-  "review_reference": "docs/architecture/refactoring-study/experiment-2/issue-287-architecture-review.md",
-  "contract_digest": "6e286ba09c32ee1ff38c4238e0d6a589ab07972657e9bebf770a91050b8f832e",
+  "review_reference": "docs/architecture/refactoring-study/experiment-2/issue-290-architecture-review.md",
+  "contract_digest": "289d6c0ee28d75e53e7ed8d057edbd66dd4004c5c362b6cccf5f7c095e0f7745",
   "analyzer_digest": "7106e3595fa7df9269cb43ee280f9c557659db7bda171b1f65ff5619ab54aa24",
-  "source_digest": "857b5ac1562932511e3134cfa7761d4d7558c4c50c670fb91cac2f429487e4ce",
+  "source_digest": "bd3e22e6cc0fb9059f901ab6a5c026829b0cbf6252f9fcb8734820b9142698fe",
   "unknowns_digest": "612725aab375502e431b6b295381e9ec123d709bd8c96b0e4ec0273c9189847d",
-  "validation_digest": "f4f4b56a4b3e3b43d1adffb268524d7539415795b89724e8cb046c9f5bba60d5",
+  "validation_digest": "00b0e69ae6f05ac7fcfca9d20edd06397657431ac4572cc4370e020f8ee36a35",
   "groups": [
     {
       "classification": "aggregate_receipt",
@@ -155,7 +155,7 @@
     },
     {
       "classification": "global_observation_limit",
-      "reason": "Global context dataflow and dynamic-call coverage remain bounded by the scanner. Direct annotations and selected self-field/constructor bindings do not prove arbitrary runtime values or every callable target; the current unresolved-call count is retained as measured uncertainty separately from scalar boundary positions. Current unresolved calls: 1246 (base 1246). All286UNKNOWN records and decoded unresolved-call facts equal the native base (1246). Removing the obsolete SequenceTableGenerator special case makes its construction class publication unused; the reviewed target now removes only that exact inner public entry. Factory/catalogue/DSL behavior remains present, and the fresh report has only the20originalusage_unknown diagnostics. This is a justified retirement of an unused cross-owner surface, not an added boundary permission or relabeling of interface.unused.",
+      "reason": "Global context dataflow and dynamic-call coverage remain bounded by the scanner. Direct annotations and selected self-field/constructor bindings do not prove arbitrary runtime values or every callable target; the current unresolved-call count is retained as measured uncertainty separately from scalar boundary positions. Current unresolved calls: 1246 (base 1246). All286UNKNOWN records and decoded unresolved-call facts equal the native base (1246). MongoDB count_table_length is now explicitly int-returning and delegates to existing count within its IO owner; RegisteredClient facade uncertainty remains unchanged. No ownership, target or analyzer drift occurs.",
       "ids": [
         "UNKNOWN-CONTEXT-DATAFLOW",
         "UNKNOWN-PYTHON-DYNAMIC-CALLS"
@@ -1066,19 +1066,19 @@
   "independent_review": {
     "reviewer_role": "Astra",
     "agent_task": "/root/architecture_ci_review",
-    "reviewed_at_utc": "2026-10-14T06:00:26.585737+00:00",
+    "reviewed_at_utc": "2026-10-14T05:59:41.020246+00:00",
     "base_commit": "6520b70d671295e17af159614127e19e9a5715d8",
-    "analyzed_head": "762fedf44fc2302d5be1ec74f1a398948187e8d2",
+    "analyzed_head": "18806c3e698a4095670e8379b2738fe1ea5d59bf",
     "prior_review_digest": "909b9680afc7772447b984ae5b3030be62f0b3634788c41ed2f922ded3dbad45",
     "decision": "GO",
-    "source_assessment": "Runtime invokes the existing zero-argument generator interface consistently in lazy construction and subsequent mode execution. Removing the SequenceTableGenerator-specific dependency reduces coupling; sequence construction already captures its context. No source/connector policy moves owners. The unused inner construction publication for SequenceTableGenerator is retired because its remaining class imports are within the construction owner; the implementation, factory catalogue and descriptor name remain intact. This narrows the declared cross-component surface without adding permissions.",
-    "delta_assessment": "All286UNKNOWN records and decoded unresolved-call facts equal the native base (1246). Removing the obsolete SequenceTableGenerator special case makes its construction class publication unused; the reviewed target now removes only that exact inner public entry. Factory/catalogue/DSL behavior remains present, and the fresh report has only the20originalusage_unknown diagnostics. This is a justified retirement of an unused cross-owner surface, not an added boundary permission or relabeling of interface.unused.",
+    "source_assessment": "MongoDBClient now implements its count_table_length adapter by delegating to its existing count operation and declaring int. Counting stays inside the IO client owner; no Runtime-specific database access or registry narrowing is introduced.",
+    "delta_assessment": "All286UNKNOWN records and decoded unresolved-call facts equal the native base (1246). MongoDB count_table_length is now explicitly int-returning and delegates to existing count within its IO owner; RegisteredClient facade uncertainty remains unchanged. No ownership, target or analyzer drift occurs.",
     "record_changes": [],
     "raw_artifact_sha256": {
-      "validation.json": "bf482f4c3d4fe31f8bad61cfa9d156b449bc74fb31fd34903371c195c9ad74b4",
-      "architecture.json": "9aaccbf1a0dba11196a9cf7cfca5a136e13641f44d80abb52b39ecb8b7d578d1",
-      "completion.json": "022d4404a162c6f7292dc38d6300bd4e20d38dbbca33dc85eac5b7f59d3b2926",
-      "provenance.json": "4aab773ccd2ed5eac0caab201d2c8018a573496386c2a06f2fde4892013f350e"
+      "validation.json": "b489a7cbca3eb0d4a9f57e1c5b6e27870934c7fb4d583ca4d1e23305fc286882",
+      "architecture.json": "d952a385fde629aaffb9cfe851d494e1ff864d3fada29854fc76f72d924db113",
+      "completion.json": "87193d5c85e72a1a3fb8dc6efb7b958c43d0a4fc672d09907e4e299ca4331ed5",
+      "provenance.json": "027f5e67fceecb32c2def2725a10e1803d3ef7182e66d33f78b8fba990230d81"
     },
     "limitations": [
       "Static architecture review only; no behavioral rerun by this reviewer.",
