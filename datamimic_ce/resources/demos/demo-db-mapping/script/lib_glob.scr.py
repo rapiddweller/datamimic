@@ -40,7 +40,7 @@ class CustomBusinessMappingConverter(CustomConverter):
         # Extract the columns to be selected
         selected_columns = parsed_data["output_columns"]
         if isinstance(selected_columns, str | list):
-            output_columns = ", ".join(selected_columns)
+            output_columns = ", ".join(f'"{column}"' for column in selected_columns)
         else:
             raise TypeError("can only join an iterable")
 
@@ -48,7 +48,7 @@ class CustomBusinessMappingConverter(CustomConverter):
 
         # Construct the WHERE clause by combining all key-value pairs with AND, excluding 'output_columns'
         filters = [
-            f"{key} = {value}" if isinstance(value, int) else f"{key} = '{value}'"
+            f'"{key}" = {value}' if isinstance(value, int) else f"\"{key}\" = '{value}'"
             for key, value in parsed_data.items()
             if key != "output_columns"
         ]
