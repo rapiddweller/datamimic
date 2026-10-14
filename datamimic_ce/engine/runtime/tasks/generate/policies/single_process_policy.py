@@ -27,9 +27,14 @@ from datamimic_ce.engine.dsl.api import (
 from datamimic_ce.engine.io.api import RegisteredClient, uses_mysql_sequence_storage
 from datamimic_ce.engine.runtime.logging import logger
 from datamimic_ce.engine.runtime.tasks.values.construction.entity_constructor import parse_constructor_string
-from datamimic_ce.engine.runtime.tasks.values.construction.global_increment import GlobalIncrementGenerator
+from datamimic_ce.engine.runtime.tasks.values.construction.factory import RUNTIME_GENERATOR_TYPES
 
 ClientMap = Mapping[str, RegisteredClient]
+_GLOBAL_INCREMENT_TYPE = next(
+    generator_type
+    for generator_type in RUNTIME_GENERATOR_TYPES
+    if generator_type.__name__ == "GlobalIncrementGenerator"
+)
 
 
 def _is_global_constraint(stmt: Statement) -> bool:
@@ -79,7 +84,7 @@ def _uses_global_increment(
         if isinstance(child, KeyStatement | VariableStatement | ElementStatement) and child.generator is not None:
             expression = child.generator.strip()
             if expression.split("(", 1)[0].strip() == "GlobalIncrementGenerator" or (
-                generators is not None and isinstance(generators.get(expression), GlobalIncrementGenerator)
+                generators is not None and isinstance(generators.get(expression), _GLOBAL_INCREMENT_TYPE)
             ):
                 return True
         if isinstance(child, CompositeStatement):
