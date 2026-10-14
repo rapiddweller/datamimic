@@ -19,39 +19,40 @@ class MongoDBModel(BaseModel):
     )
     host: str = Field(
         ...,
-        description="Hostname or IP of the MongoDB server. When omitted, resolved from "
-        "conf/{environment}.env.properties using key '{system}.mongo.host'.",
+        description="Hostname or IP of the MongoDB server. Prefer the connection profile: a matching "
+        "'{system}.mongo.host' property overrides this attribute; without one, this value is kept.",
         examples=["localhost", "127.0.0.1"],
     )
     port: str = Field(
         ...,
-        description="Port number of the MongoDB server, as a string of digits. When omitted, "
-        "resolved from conf/{environment}.env.properties using key '{system}.mongo.port'.",
+        description="Port number of the MongoDB server, as a string of digits. A matching "
+        "'{system}.mongo.port' connection-profile property overrides this attribute; otherwise this value is kept.",
         examples=["27017"],
     )
     database: str = Field(
         ...,
-        description="Database name to connect to. When omitted, resolved from "
-        "conf/{environment}.env.properties using key '{system}.mongo.database'.",
+        description="Database name to connect to. A matching '{system}.mongo.database' "
+        "connection-profile property overrides this attribute; otherwise this value is kept.",
         examples=["mydb"],
     )
     environment: str | None = Field(
         None,
-        description="Selects which conf/{environment}.env.properties file supplies credentials "
-        "not given directly on this element. Defaults to 'local' when running in development, "
-        "otherwise 'environment'.",
+        description="Selects the connection profile: first conf/{environment}.env.properties beside the descriptor, "
+        "then {environment}.env.properties in the working directory, then ~/datamimic/{environment}.env.properties. "
+        "The first existing file is used; '{system}.mongo.{attr}' properties override matching descriptor attributes. "
+        "The system prefix defaults to id. Defaults to 'local' when running in development, otherwise 'environment'.",
         examples=["local", "dev", "prod"],
     )
     user: str | None = Field(
         None,
-        description="Username for the MongoDB connection. When omitted, resolved from "
-        "conf/{environment}.env.properties using key '{system}.mongo.user'.",
+        description="Username for the MongoDB connection. A matching '{system}.mongo.user' "
+        "connection-profile property overrides this attribute; otherwise this value is kept.",
         examples=["mongo_user"],
     )
     password: str | None = Field(
         None,
-        description="Password for the MongoDB connection. When omitted, resolved from "
-        "conf/{environment}.env.properties using key '{system}.mongo.password'.",
+        description="Password for the MongoDB connection. A matching '{system}.mongo.password' "
+        "connection-profile property overrides this attribute; otherwise this value is kept.",
         examples=["secret"],
     )
 

@@ -11,7 +11,9 @@ from datamimic_ce.interfaces.cli import runtime as cli_runtime
 from datamimic_ce.interfaces.cli.presenter import CliOutputFormat
 from datamimic_ce.interfaces.demo import demo_autocomplete
 
-app = typer.Typer(help="DATAMIMIC Command Line Interface.", rich_markup_mode="markdown")
+app = typer.Typer(
+    help="DATAMIMIC Command Line Interface.", rich_markup_mode="markdown", pretty_exceptions_show_locals=False
+)
 demo_app = typer.Typer(help="Manage packaged demos.")
 app.add_typer(demo_app, name="demo")
 
@@ -151,5 +153,12 @@ def run(
     platform_configs: Annotated[str | None, typer.Option("--platform-configs")] = None,
     task_id: Annotated[str | None, typer.Option("--task-id")] = None,
     test_mode: Annotated[bool, typer.Option("--test-mode")] = False,
+    params: Annotated[
+        list[str] | None, typer.Option("--param", help="Runtime property NAME=VALUE; repeat for multiple properties.")
+    ] = None,
+    params_env: Annotated[
+        list[str] | None,
+        typer.Option("--param-env", help="Runtime property NAME=ENV_NAME, resolved from the environment; repeatable."),
+    ] = None,
 ) -> None:
-    cli_runtime.execute_descriptor(descriptor_path, platform_configs, task_id, test_mode)
+    cli_runtime.execute_descriptor(descriptor_path, platform_configs, task_id, test_mode, params, params_env)

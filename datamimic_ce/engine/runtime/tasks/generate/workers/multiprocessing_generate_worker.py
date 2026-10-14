@@ -8,6 +8,7 @@ from contextlib import suppress
 
 from datamimic_ce.engine.dsl.api import GenerateStatement
 from datamimic_ce.engine.runtime.contexts.context import WorkerContextPayload
+from datamimic_ce.engine.runtime.contexts.products import GenerationResult
 from datamimic_ce.engine.runtime.tasks.generate.workers.generate_worker import GenerateWorker
 
 
@@ -44,8 +45,9 @@ class MultiprocessingGenerateWorker(GenerateWorker):
             )
 
         # Merge result from all workers by product name
-        merged_result: dict[str, list] = {}
+        merged_result = GenerationResult()
         for result in mp_result:
+            merged_result.merge_exports(result)
             for product_name, product_data_list in result.items():
                 merged_result[product_name] = merged_result.get(product_name, []) + product_data_list
 

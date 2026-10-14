@@ -4,15 +4,19 @@ from pathlib import Path
 
 import pytest
 
-from datamimic_ce.engine.dsl.api import GenerateStatement
+from datamimic_ce.engine.dsl.api import GenerateStatement, KeyStatement
+from datamimic_ce.engine.dsl.model.generation.generate_model import GenerateModel
+from datamimic_ce.engine.dsl.model.values.scalar.key_model import KeyModel
 from datamimic_ce.engine.dsl.vocabulary.enums.dbms_enums import Dbms
 from datamimic_ce.engine.io.clients.rdbms_client import RdbmsClient
 from datamimic_ce.engine.io.contracts import DataSourcePagination
 from datamimic_ce.engine.io.exporters.diagnostics.test_result_exporter import TestResultExporter
 from datamimic_ce.engine.runtime.contexts.context import SetupContext
+from datamimic_ce.engine.runtime.contexts.geniter_context import GenIterContext
 from datamimic_ce.engine.runtime.storage.memstore_manager import MemstoreManager
 from datamimic_ce.engine.runtime.tasks.values.construction.factory import GeneratorUtil
 from datamimic_ce.engine.runtime.tasks.values.construction.global_increment import GlobalIncrementGenerator
+from datamimic_ce.engine.runtime.tasks.values.scalar.key_task import KeyTask
 
 
 class DummyRootGenStmt(GenerateStatement):
@@ -149,6 +153,38 @@ def test_sequence_table_generator_uses_cache_key(setup_context: SetupContext):
     assert g1 is g2
     assert "seq:orders:id" in setup_context.generators
     assert "SequenceTableGenerator" not in setup_context.generators
+
+
+@pytest.mark.parametrize("recover", [False, True])
+def test_sequence_key_task_reconstruction_preserves_paginated_generation(setup_context: SetupContext, recover: bool):
+    class RecoveringClient(DummyRdbmsClient):
+        reads = 0
+
+        def get_current_sequence_number(self, sequence_name, table_name=None, column_name=None):
+            self.reads += 1
+            if recover and self.reads == 1:
+                raise RuntimeError("sequence temporarily unavailable")
+            return super().get_current_sequence_number(sequence_name, table_name, column_name)
+
+    client = RecoveringClient()
+    setup_context.clients["db1"] = client
+    generate = GenerateStatement(GenerateModel(name="orders", count="5", type="orders"), None)
+    key = KeyStatement(
+        KeyModel(name="id", type="int", generator="SequenceTableGenerator", database="db1"), generate
+    )
+    generate.sub_statements = [key]
+    key.sub_statements = []
+    task = KeyTask(setup_context, key, DataSourcePagination(skip=0, limit=5))
+    context = GenIterContext(setup_context, "orders")
+
+    values = []
+    for _ in range(5):
+        task.execute(context)
+        values.append(context.current_product["id"])
+
+    assert values == [995, 996, 997, 998, 999]
+    assert client.reads == (2 if recover else 1)
+    assert client._seq == {}  # Reconstruction does not reserve an extra sequence range.
 
 
 def test_sequence_table_generator_unpaginated_instance_is_not_cached(setup_context: SetupContext):

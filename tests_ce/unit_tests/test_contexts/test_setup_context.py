@@ -29,6 +29,7 @@ from datamimic_ce.engine.runtime.storage.global_increment import GlobalIncrement
 from datamimic_ce.engine.runtime.storage.memstore_manager import MemstoreManager
 from datamimic_ce.engine.runtime.tasks.setup.include_task import IncludeTask
 from datamimic_ce.engine.runtime.tasks.setup.memstore_task import MemstoreTask
+from datamimic_ce.engine.runtime.tasks.setup.setup_task import SetupTask
 from datamimic_ce.engine.runtime.tasks.values.construction.converters import create_converter_list
 
 
@@ -164,6 +165,19 @@ def test_setup_context_deepcopy_isolates_domain_identifier_state() -> None:
     assert copied_registry.claim("TinyEntity", "id", "IDA", "ID[A-C]{1}") == "IDB"
     assert copied_registry.claim("TinyEntity", "id", "IDA", "ID[A-C]{1}") == "IDC"
     assert registry.claim("TinyEntity", "id", "IDA", "ID[A-C]{1}") == "IDB"
+
+
+def test_include_context_shares_run_identifier_state() -> None:
+    context = _context()
+    registry = context.domain_identifier_registry
+    child = SetupTask._copy_include_context(context)
+    sibling = SetupTask._copy_include_context(context)
+    nested = SetupTask._copy_include_context(child)
+
+    for included in (child, sibling, nested):
+        assert included.domain_identifier_registry is registry
+    assert [included.domain_identifier_registry.claim("Tiny", "id", "IDA", "ID[A-D]{1}")
+            for included in (context, child, sibling, nested)] == ["IDA", "IDB", "IDC", "IDD"]
 
 
 def test_add_client_registers_lookup_and_script_namespace_identity() -> None:

@@ -64,6 +64,65 @@ values, weights = load_weighted_values_try_dataset(
 )
 ```
 
+### Database and MongoDB connection profiles
+
+Prefer environment `.env.properties` files for CE connection parameters. XML declares
+clients with `<database>` or `<mongodb>` and refers to their `id` through `source`,
+`target`, or `database` attributes. For example:
+
+```xml
+<setup>
+  <database id="sink" system="postgres"/>
+  <mongodb id="documents" system="mongo"/>
+  <generate name="customers" count="2" target="sink">
+    <key name="id" generator="IncrementGenerator"/>
+  </generate>
+  <generate name="customers_copy" source="sink" type="customers"
+            distribution="ordered" target="documents"/>
+</setup>
+```
+
+Supply the PostgreSQL table before executing this example. A connection profile uses
+`{system}.db.{attribute}` for databases and `{system}.mongo.{attribute}` for MongoDB:
+
+```properties
+postgres.db.dbms=postgresql
+postgres.db.host=localhost
+postgres.db.port=5432
+postgres.db.database=example
+postgres.db.schema=public
+postgres.db.user=example_user
+mongo.mongo.host=localhost
+mongo.mongo.port=27017
+mongo.mongo.database=example
+```
+
+Add deployment-specific credentials to the profile through your environment's secret
+management; keep profiles containing credentials out of version control. `system`
+defaults to the client's `id`, so `<database id="postgres"/>` selects the same prefix
+as `<database id="sink" system="postgres"/>`.
+
+`environment="staging"` on a client selects `staging.env.properties`. Without it,
+`RUNTIME_ENVIRONMENT=development` selects `local.env.properties`; production selects
+`environment.env.properties`. CE uses the first existing file in this order:
+
+1. `conf/{environment}.env.properties` beside the XML descriptor.
+2. `{environment}.env.properties` in the process's working directory.
+3. `~/datamimic/{environment}.env.properties`.
+
+These files are alternatives, not overlays: a missing key in the first file does not
+trigger a lookup in the next file. Within the selected profile, matching properties
+override explicit XML attributes. For example, `postgres.db.schema=public` overrides
+`schema="owned_schema"` on a client with `system="postgres"`. If the matching property
+is absent, `schema="owned_schema"` is retained. Missing required values still fail
+normal client-model validation; a profile is optional only when the descriptor or
+caller supplies the required values.
+
+For Python callers supplying properties, precedence from lowest to highest is XML
+attributes, matching caller properties, then matching values from the selected file.
+Keep a setting in one place where possible; changing this existing precedence is a
+separate compatibility decision.
+
 ### Database Source Paging (TL;DR)
 
 Paged reads from an RDBMS source (`pageSize`, `numProcess`) use `OFFSET`/`LIMIT`, which is only

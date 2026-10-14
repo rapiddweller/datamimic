@@ -1,3 +1,4 @@
+import hashlib
 import logging
 import pathlib
 import shutil
@@ -53,6 +54,9 @@ class UnifiedBufferedExporter(Exporter, ABC):
         self._chunk_size = config.chunk_size  # Max entities per chunk
         # exportUri: a validated output-directory prefix; falls back to the task_id dir when unset.
         self._export_uri = config.export_uri
+        # Same-named products in conditional branches may write to different destinations.
+        suffix = hashlib.sha256(config.export_uri.encode()).hexdigest()[:16] if config.export_uri else None
+        self._buffer_product_name = f"{self.product_name}_uri_{suffix}" if suffix else self.product_name
 
     @property
     def encoding(self) -> str:
@@ -68,7 +72,7 @@ class UnifiedBufferedExporter(Exporter, ABC):
         """
         buffer_temp_dir = (
             self._descriptor_dir / f"temp_result_{self._task_id}_pid_{worker_id}_exporter_"
-            f"{self._exporter_type}_product_{self.product_name}"
+            f"{self._exporter_type}_product_{self._buffer_product_name}"
         )
         # Create directory if it doesn't exist
         pathlib.Path(buffer_temp_dir).mkdir(parents=True, exist_ok=True)
@@ -143,7 +147,7 @@ class UnifiedBufferedExporter(Exporter, ABC):
         logger.debug(f"Storing data for '{self.product_name}' with {len(data)} records")
 
         # Get exporter state storage
-        exporter_state_key = f"product_{stmt_full_name}_{self.get_file_extension()}"
+        exporter_state_key = f"product_{stmt_full_name}_{self._buffer_product_name}_{self.get_file_extension()}"
         state_storage = exporter_state_manager.get_storage(exporter_state_key)
 
         # Determine writing batch size
@@ -223,7 +227,7 @@ class UnifiedBufferedExporter(Exporter, ABC):
 
         # Only move files with the correct extension
         all_buffer_tmp_dirs = self._descriptor_dir.glob(
-            f"temp_result_{self._task_id}_pid_*_exporter_{self._exporter_type}_product_{self.product_name}"
+            f"temp_result_{self._task_id}_pid_*_exporter_{self._exporter_type}_product_{self._buffer_product_name}"
         )
         for buffer_tmp_dir in all_buffer_tmp_dirs:
             for file in buffer_tmp_dir.glob(f"*.{self.get_file_extension()}"):

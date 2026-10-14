@@ -207,6 +207,17 @@ def _target_files(files: set[str], manifest: dict) -> dict[str, set[str]]:
     return output
 
 
+def _partition_target_files(
+    files: set[str], manifest: dict
+) -> tuple[dict[str, set[str]], set[str]]:
+    """Validate every source mapping before applying exclusions to target paths."""
+    targets = _target_files(files, manifest)
+    excluded = {
+        path for path in targets if any(path.startswith(item["prefix"]) for item in manifest["exclusions"])
+    }
+    return {path: sources for path, sources in targets.items() if path not in excluded}, excluded
+
+
 def _assert_target_path(target: str) -> None:
     path = PurePosixPath(target)
     assert not path.is_absolute() and ".." not in path.parts and path.suffix == ".py", target
@@ -291,6 +302,30 @@ def _physical_target_issues(current: set[str], targets: dict[str, set[str]]) -> 
     return issues
 
 
+def test_target_exclusions_apply_after_validating_resource_relocation() -> None:
+    source = "resources/demos/old/cohort.py"
+    target = "resources/examples/cohort.py"
+    retained = "resources/demos/current/script.py"
+    manifest = {
+        "relocations": [{"source": source, "target": target}],
+        "package_relocations": [],
+        "splits": [],
+        "removed_initializers": [],
+        "removed_modules": [],
+        "merges": [],
+        "new_modules": [],
+        "exclusions": [{"prefix": "resources/demos/"}],
+    }
+
+    targets, excluded = _partition_target_files({source, retained}, manifest)
+
+    assert targets == {target: {source}}
+    assert excluded == {retained}
+    assert _physical_target_issues(set(), targets) == [f"missing target modules: ['{target}']"]
+    with pytest.raises(AssertionError, match="invalid file relocation selector"):
+        _partition_target_files({retained}, manifest)
+
+
 def test_recursive_target_definition_covers_sources_and_mounts() -> None:
     manifest = json.loads(MANIFEST.read_text(encoding="utf-8"))
     assert manifest["format_version"] == 1
@@ -313,12 +348,11 @@ def test_recursive_target_definition_covers_sources_and_mounts() -> None:
         if init in files and _source_has_python_code(init, manifest["source_commit"]):
             assert review.get("initializer_owner"), init
 
-    targets = _target_files(files, manifest)
+    targets, excluded_files = _partition_target_files(all_files, manifest)
     retained = {item["path"] for item in manifest["retained_over_seven"]}
     target_scopes = _scopes(set(targets))
     assert retained == {scope for scope in target_scopes if len(_children(scope, set(targets))) > 7}
     assert all(item.get("reason") for item in manifest["retained_over_seven"])
-    excluded_files = {file for file in all_files - files}
     layouts = _contracts()
     _check_layouts(layouts, set(targets), excluded_files)
 
@@ -530,8 +564,7 @@ def test_recursive_target_definition_rejects_mapping_and_layout_false_greens(tmp
 
     target_manifest: dict = json.loads(MANIFEST.read_text(encoding="utf-8"))
     all_files = _files_at(target_manifest["source_commit"])
-    excluded = {p for p in all_files if any(p.startswith(x["prefix"]) for x in target_manifest["exclusions"])}
-    targets = _target_files(all_files - excluded, target_manifest)
+    targets, excluded = _partition_target_files(all_files, target_manifest)
     layouts = _contracts()
     mutated = {scope: [children.copy() for children in entries] for scope, entries in layouts.items()}
     mutated.pop(next(iter(mutated)))

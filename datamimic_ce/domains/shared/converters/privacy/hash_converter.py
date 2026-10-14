@@ -13,11 +13,16 @@ from datamimic_ce.engine.dsl.vocabulary.enums.converter_enums import SupportHash
 
 class HashConverter(Converter):
     """Pseudonymize a string into a keyed hash (HMAC): the same value gives the same token within a run,
-    and nobody without the key can recompute it. The run supplies the key: <setup rngSeed> is the key,
-    so tokens replay across runs; without a seed every run gets a new random key. ``salt`` is optional
-    extra key material."""
+    and nobody without the key can recompute it. Pass an external random key to separate tokens from
+    generation. The default key derives from <setup rngSeed>, or is random per unseeded run.
+    Keys require at least 32 bytes; length alone does not establish entropy. ``salt`` is optional
+    extra material and does not replace a strong key."""
 
     def __init__(self, hash_type: str, output_format: str, salt: str | None = None, *, key: bytes):
+        if not isinstance(key, bytes):
+            raise TypeError("HashConverter key must be bytes")
+        if len(key) < 32:
+            raise ValueError("HashConverter key must contain at least 32 bytes of random material")
         support_hashes = set(support_hash.value for support_hash in SupportHash)
         support_output_format = set(support_output.value for support_output in SupportOutputFormat)
         if hash_type.lower() not in support_hashes:
