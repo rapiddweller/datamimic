@@ -4,14 +4,14 @@
         <variable name="ifVar" generator="BooleanGenerator"/>
         <variable name="elseIfVar" generator="BooleanGenerator"/>
 
-        <nestedKey name="emptyList" script="" defaultValue="[]"/> <!-- 'emptyList': '[]' -->
-        <nestedKey name="emptyList2" script="null" defaultValue="[]"/> <!-- 'emptyList2': '[]' -->
-        <nestedKey name="emptyList3" script="None" defaultValue="[]"/> <!-- 'emptyList3': None -->
-        <nestedKey name="emptyDict" script="" defaultValue="{}"/> <!-- 'emptyDict': '{}' -->
-        <nestedKey name="emptyDict2" script="null" defaultValue="{}"/> <!-- 'emptyDict2': '{}' -->
-        <nestedKey name="emptyDict3" script="None" defaultValue="{}"/> <!-- 'emptyDict3': None -->
-        <nestedKey name="removeElement" script="" defaultValue="{}" condition="False"/> <!-- Not generate cause condition False -->
-        <nestedKey name="removeElementorEmpty" script="" condition="False" defaultValue="{}"/> <!-- Not generate cause condition False -->
+        <nestedKey name="emptyList" script="" defaultValue="[]"/> <!-- 'emptyList': [] -->
+        <nestedKey name="emptyList2" script="null" defaultValue="[]"/> <!-- 'emptyList2': [] -->
+        <nestedKey name="emptyList3" script="None" defaultValue="[]"/> <!-- 'emptyList3': [] -->
+        <nestedKey name="emptyDict" script="" defaultValue="{}"/> <!-- 'emptyDict': {} -->
+        <nestedKey name="emptyDict2" script="null" defaultValue="{}"/> <!-- 'emptyDict2': {} -->
+        <nestedKey name="emptyDict3" script="None" defaultValue="{}"/> <!-- 'emptyDict3': {} -->
+        <nestedKey name="removeElement" script="" defaultValue="{}" condition="False"/> <!-- 'removeElement': {} -->
+        <nestedKey name="removeElementorEmpty" script="" condition="False" defaultValue="{}"/> <!-- 'removeElementorEmpty': {} -->
 
         <condition>
             <if condition="ifVar">
