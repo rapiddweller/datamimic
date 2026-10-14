@@ -1,12 +1,12 @@
 {
   "status": "current_source_architecture_review_accepted",
   "reviewed_by": "Astra",
-  "review_reference": "docs/architecture/refactoring-study/experiment-2/issue-301-architecture-review.md",
+  "review_reference": "docs/architecture/refactoring-study/experiment-2/issue-230-architecture-review.md",
   "contract_digest": "289d6c0ee28d75e53e7ed8d057edbd66dd4004c5c362b6cccf5f7c095e0f7745",
   "analyzer_digest": "7106e3595fa7df9269cb43ee280f9c557659db7bda171b1f65ff5619ab54aa24",
-  "source_digest": "9a37f527e9d938675c4c9021ebb7e68c5fec9521b9cca0b7c49436e8b1056a5d",
-  "unknowns_digest": "612725aab375502e431b6b295381e9ec123d709bd8c96b0e4ec0273c9189847d",
-  "validation_digest": "6cd9862c4bf21edf9c0ced0bc3709ea269d05877e6096ec14b50960530e66a76",
+  "source_digest": "06c32701ddf4746bbda5421a698c8dd6846a3dce857e398e68e34d3f92a02256",
+  "unknowns_digest": "24ddb8f5895a2ef5e22177cf8c0da79d0d0cafe2e41e4566385c97127eb5df60",
+  "validation_digest": "97d9c93ef96d1226d784973b1392585d635a2b6be1e8a5f1537cbd8d476ce132",
   "groups": [
     {
       "classification": "aggregate_receipt",
@@ -155,7 +155,7 @@
     },
     {
       "classification": "global_observation_limit",
-      "reason": "Global context dataflow and dynamic-call coverage remain bounded by the scanner. Direct annotations and selected self-field/constructor bindings do not prove arbitrary runtime values or every callable target; the current unresolved-call count is retained as measured uncertainty separately from scalar boundary positions. Current unresolved calls: 1246 (base 1246). All286UNKNOWN records are byte-for-byte equal to the native base, and decoded unresolved-call facts are identical (1246). The source digest changes for packaged demonstration converter quoting; the final service-profile correction changes tests only. Target contracts and analyzer bytes remain unchanged.",
+      "reason": "Global context dataflow and dynamic-call coverage remain bounded by the scanner. Direct annotations and selected self-field/constructor bindings do not prove arbitrary runtime values or every callable target; the current unresolved-call count is retained as measured uncertainty separately from scalar boundary positions. Current unresolved calls: 1249 (base 1246). The three additional unresolved calls are entry.partition, name.isidentifier and value.isidentifier in the CLI option adapter. Input annotations and partition semantics establish string receivers on the reviewed path; scanner inference remains incomplete. HashConverter inherited-surface evidence changed with its body/documentation, without changing its base or public signature.",
       "ids": [
         "UNKNOWN-CONTEXT-DATAFLOW",
         "UNKNOWN-PYTHON-DYNAMIC-CALLS"
@@ -163,8 +163,15 @@
       "current_review": {
         "group_index": 8,
         "record_count": 2,
-        "records_digest": "26c0280582a3643e3f8c564cac27ef317e8da6c724b2189bfe91cce3d5e45d10",
-        "changed_records": [],
+        "records_digest": "f305fd779e76fd1c3366562f9343f6340f1a6a6191691e38dc8f9f208ccc68d3",
+        "changed_records": [
+          {
+            "id": "UNKNOWN-PYTHON-DYNAMIC-CALLS",
+            "fields": [
+              "data"
+            ]
+          }
+        ],
         "decision": "retain_assessed_UNKNOWN"
       }
     },
@@ -242,8 +249,15 @@
       "current_review": {
         "group_index": 9,
         "record_count": 66,
-        "records_digest": "50aa9dc4ca59c8e7087d108a0f50fbfaa1d3011a690e6f4c010263b5d7a1ad0f",
-        "changed_records": [],
+        "records_digest": "cceae70eb1dff71fde0e0edda93ef2f57f2374c48409adeb233191c35e88afaf",
+        "changed_records": [
+          {
+            "id": "UNKNOWN-BOUNDARY-TYPE-POSITION-f9a95b4c21fea4e0",
+            "fields": [
+              "evidence_ids"
+            ]
+          }
+        ],
         "decision": "retain_assessed_UNKNOWN"
       }
     },
@@ -1066,19 +1080,32 @@
   "independent_review": {
     "reviewer_role": "Astra",
     "agent_task": "/root/architecture_ci_review",
-    "reviewed_at_utc": "2026-10-14T05:46:16.868745+00:00",
+    "reviewed_at_utc": "2026-10-14T05:42:01.631560+00:00",
     "base_commit": "6520b70d671295e17af159614127e19e9a5715d8",
-    "analyzed_head": "5c94b15e6e1e082c1e697168b3a0e1f6029db13d",
+    "analyzed_head": "b5e57c0889ac4bdb310c0d2e30871610986f639a",
     "prior_review_digest": "909b9680afc7772447b984ae5b3030be62f0b3634788c41ed2f922ded3dbad45",
     "decision": "GO",
-    "source_assessment": "Packaged resource converter and SQL fixture quote case-sensitive mapping column names consistently. This remains demonstration code in Resources, using its existing imported APIs; no runtime/core policy, component edge or public facade type is added. External-service proof of the demo remains separate from architecture acceptance.",
-    "delta_assessment": "All286UNKNOWN records are byte-for-byte equal to the native base, and decoded unresolved-call facts are identical (1246). The source digest changes for packaged demonstration converter quoting; the final service-profile correction changes tests only. Target contracts and analyzer bytes remain unchanged.",
-    "record_changes": [],
+    "source_assessment": "CLI owns repeatable argument/environment adaptation and passes merged native properties to the existing RunRequest boundary. HashConverter keeps keyed-hash validation in its Domain owner. No execution policy moves into CLI, no new dependency edge or public facade shape is introduced; additional unresolved CLI/library calls remain bounded static uncertainty.",
+    "delta_assessment": "The three additional unresolved calls are entry.partition, name.isidentifier and value.isidentifier in the CLI option adapter. Input annotations and partition semantics establish string receivers on the reviewed path; scanner inference remains incomplete. HashConverter inherited-surface evidence changed with its body/documentation, without changing its base or public signature.",
+    "record_changes": [
+      {
+        "id": "UNKNOWN-BOUNDARY-TYPE-POSITION-f9a95b4c21fea4e0",
+        "fields": [
+          "evidence_ids"
+        ]
+      },
+      {
+        "id": "UNKNOWN-PYTHON-DYNAMIC-CALLS",
+        "fields": [
+          "data"
+        ]
+      }
+    ],
     "raw_artifact_sha256": {
-      "validation.json": "838a362c39589a80177e67cd5816a967ae70742f5aa1fdba1fb89181fe50b55e",
-      "architecture.json": "283b31ddda2efb980ccc568e6427051053d985c5014b5ed3e4e2946265b50f6d",
-      "completion.json": "af241da20305a3b77b0233308f9fd92e0c83afd5185275ddaaf97609618758a9",
-      "provenance.json": "85ca95e1541b2c07f7abe66c175e444414deb4fe1f142054250e98f8d777b416"
+      "validation.json": "9f17567b48a29f54366f03dd6e199edd35a081102a52391cd9b57365be537e37",
+      "architecture.json": "ad48cbcc56cdd0be256cd4fe214d98265acddca358bd414bb8ae413711891e65",
+      "completion.json": "ec003cf16a944ff1a692b445e21504262f5c7407cc7abb6a96f3c9d36dbf18db",
+      "provenance.json": "a4005da1ce0369347eb4ed1db654ff221aefd5b2b9cc5d1ee0e618333ec7a55c"
     },
     "limitations": [
       "Static architecture review only; no behavioral rerun by this reviewer.",

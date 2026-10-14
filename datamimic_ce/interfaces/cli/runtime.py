@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import json
+import keyword
 import logging
 import os
 import platform
@@ -114,14 +115,38 @@ def create_demo(
     handle_demo(demo_name, demos_path / demo_name, overwrite, target_directory)
 
 
+def _runtime_parameters(params: list[str] | None, params_env: list[str] | None) -> dict[str, str]:
+    properties: dict[str, str] = {}
+    for option, entries in (("--param", params), ("--param-env", params_env)):
+        for entry in entries or []:
+            name, separator, value = entry.partition("=")
+            if not separator:
+                cli_presenter.fail(f"{option} requires NAME={'ENV_NAME' if option == '--param-env' else 'VALUE'}")
+            if not name.isidentifier() or keyword.iskeyword(name):
+                cli_presenter.fail(f"{option} requires a valid Python property name")
+            if name in properties:
+                cli_presenter.fail(f"Duplicate runtime property: {name}")
+            if option == "--param-env":
+                if not value.isidentifier():
+                    cli_presenter.fail("--param-env requires a valid environment variable name")
+                if value not in os.environ:
+                    cli_presenter.fail(f"Environment variable for runtime property '{name}' is not set")
+                value = os.environ[value]
+            properties[name] = value
+    return properties
+
+
 def execute_descriptor(
     descriptor_path: Path,
     platform_configs: str | None,
     task_id: str | None,
     test_mode: bool,
+    params: list[str] | None = None,
+    params_env: list[str] | None = None,
 ) -> None:
     """Full runtime execution — intentionally bypasses authoring.application.service, which only
     offers the bounded dry-run path. This is the production engine boundary."""
+    parameters = _runtime_parameters(params, params_env)
     descriptor = descriptor_path.resolve()
     if not descriptor.is_file():
         cli_presenter.fail(f"Invalid descriptor file path: {descriptor}", code=1)
@@ -137,7 +162,7 @@ def execute_descriptor(
             RunRequest(
                 descriptor_path=descriptor,
                 task_id=task_id,
-                platform_props=load_descriptor_properties(descriptor),
+                platform_props={**load_descriptor_properties(descriptor), **parameters},
                 platform_configs=PlatformConfiguration.model_construct(root=platform_config_values),
                 test_mode=test_mode,
             )
