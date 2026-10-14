@@ -2073,6 +2073,10 @@
     {
       "source": "factory/datamimic_test_factory.py",
       "target": "interfaces/python/factory.py"
+    },
+    {
+      "source": "resources/demos/demo-clinical-trial/script/clinical_trial.scr.py",
+      "target": "resources/examples/generate_clinical_cohort.py"
     }
   ],
   "package_relocations": [],
