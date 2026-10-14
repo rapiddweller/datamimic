@@ -154,6 +154,22 @@ def test_unique_values_do_not_block_later_include_or_multiprocessing(tmp_path: P
 
 
 @pytest.mark.parametrize("wrapped", [False, True], ids=["direct", "conditional"])
+def test_include_during_unique_draws_copies_only_root_state(tmp_path: Path, wrapped: bool) -> None:
+    (tmp_path / "included.xml").write_text(
+        '<setup numProcess="1"><generate name="included" count="1" target="">'
+        '<key name="copied_code" script="code"/></generate></setup>',
+        encoding="utf-8",
+    )
+    body = '<generate name="rows" count="4" pageSize="2" target="">'
+    body += _conditional('<key name="code" type="int" values="1,2,3,4" unique="true"/>', wrapped)
+    body += '<include uri="included.xml"/></generate>'
+    result = _run(tmp_path, body)
+    codes = [row["code"] for row in result["rows"]]
+    assert sorted(codes) == [1, 2, 3, 4]
+    assert [row["copied_code"] for row in result["included"]] == codes
+
+
+@pytest.mark.parametrize("wrapped", [False, True], ids=["direct", "conditional"])
 @pytest.mark.parametrize("kind", ["key", "reference"])
 def test_unique_cursor_is_scoped_to_each_nested_generate_invocation(
     tmp_path: Path, reference_setup: str, wrapped: bool, kind: str

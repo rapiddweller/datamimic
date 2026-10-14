@@ -29,7 +29,7 @@ from datamimic_ce.engine.dsl.api import (
     VariableStatement,
 )
 from datamimic_ce.engine.dsl.vocabulary.source_capabilities import SourceFileFormat, source_file_format_for
-from datamimic_ce.engine.io.api import DataSourcePagination, WeightedDataSource, unique_values
+from datamimic_ce.engine.io.api import DataSourcePagination, WeightedDataSource, unique_value_iter
 from datamimic_ce.engine.runtime.contexts.context import Context, SetupContext
 from datamimic_ce.engine.runtime.contexts.geniter_context import GenIterContext
 from datamimic_ce.engine.runtime.scripting.evaluation import interpolate_variables
@@ -360,14 +360,11 @@ class KeyVariableTask(Task):
             cursors = ctx.unique_cursors if isinstance(ctx, GenIterContext) else {}
             self._unique_iter = cursors.get(key)
             if self._unique_iter is None:
-                self._unique_iter = iter(unique_values(self._values, ctx.rng))
+                self._unique_iter = unique_value_iter(
+                    self._values, ctx.rng, f"<{self._element_tag}> '{self._statement.name}'"
+                )
                 cursors[key] = self._unique_iter
-        try:
-            return next(self._unique_iter)
-        except StopIteration:
-            raise ValueError(
-                f"Cannot generate more unique values for <{self._element_tag}> '{self._statement.name}'"
-            ) from None
+        return next(self._unique_iter)
 
     def _next_unique_generator_value(self) -> object:
         """Call the generator repeatedly until a value not yet seen this task is produced.
