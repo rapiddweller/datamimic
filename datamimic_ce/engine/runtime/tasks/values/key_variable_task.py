@@ -38,7 +38,6 @@ from datamimic_ce.engine.runtime.tasks.values.construction.factory import (
     GeneratorUtil,
     generate_random_value_based_on_type,
 )
-from datamimic_ce.engine.runtime.tasks.values.construction.sequence_table import SequenceTableGenerator
 
 
 class KeyVariableTask(Task):
@@ -280,12 +279,7 @@ class KeyVariableTask(Task):
             )
             # Switch mode to GENERATE_MODE for next task execution
             self._mode = self._GENERATOR_MODE
-            if self._generator is not None and isinstance(self._generator, SequenceTableGenerator):
-                value = self._generator.generate(ctx)
-            elif self._generator is not None:
-                value = self._generator.generate()
-            else:
-                value = None
+            value = self._generator.generate() if self._generator is not None else None
         elif self._mode == self._GENERATOR_MODE:
             if self._statement.generator is not None and self._generator is None:
                 self._generator = GeneratorUtil(ctx).create_generator(

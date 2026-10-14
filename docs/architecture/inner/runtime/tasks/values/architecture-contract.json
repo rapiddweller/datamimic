@@ -164,8 +164,7 @@
         "datamimic_ce.engine.runtime.tasks.values.construction.entity:create_entity_generator",
         "datamimic_ce.engine.runtime.tasks.values.construction.entity_constructor:parse_constructor_string",
         "datamimic_ce.engine.runtime.tasks.values.construction.factory:GeneratorUtil",
-        "datamimic_ce.engine.runtime.tasks.values.construction.factory:generate_random_value_based_on_type",
-        "datamimic_ce.engine.runtime.tasks.values.construction.sequence_table:SequenceTableGenerator"
+        "datamimic_ce.engine.runtime.tasks.values.construction.factory:generate_random_value_based_on_type"
       ],
       "decided_by": "agent"
     }

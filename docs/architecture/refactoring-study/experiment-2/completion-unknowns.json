@@ -1,12 +1,12 @@
 {
   "status": "current_source_architecture_review_accepted",
   "reviewed_by": "Astra",
-  "review_reference": "docs/architecture/refactoring-study/experiment-2/issue-296-architecture-review.md",
-  "contract_digest": "289d6c0ee28d75e53e7ed8d057edbd66dd4004c5c362b6cccf5f7c095e0f7745",
+  "review_reference": "docs/architecture/refactoring-study/experiment-2/issue-287-architecture-review.md",
+  "contract_digest": "6e286ba09c32ee1ff38c4238e0d6a589ab07972657e9bebf770a91050b8f832e",
   "analyzer_digest": "7106e3595fa7df9269cb43ee280f9c557659db7bda171b1f65ff5619ab54aa24",
-  "source_digest": "79365764d1f35064f0a99c8aee577deab5b98107146f9da7d8e73fa2bdd01838",
+  "source_digest": "857b5ac1562932511e3134cfa7761d4d7558c4c50c670fb91cac2f429487e4ce",
   "unknowns_digest": "612725aab375502e431b6b295381e9ec123d709bd8c96b0e4ec0273c9189847d",
-  "validation_digest": "6cd9862c4bf21edf9c0ced0bc3709ea269d05877e6096ec14b50960530e66a76",
+  "validation_digest": "f4f4b56a4b3e3b43d1adffb268524d7539415795b89724e8cb046c9f5bba60d5",
   "groups": [
     {
       "classification": "aggregate_receipt",
@@ -155,7 +155,7 @@
     },
     {
       "classification": "global_observation_limit",
-      "reason": "Global context dataflow and dynamic-call coverage remain bounded by the scanner. Direct annotations and selected self-field/constructor bindings do not prove arbitrary runtime values or every callable target; the current unresolved-call count is retained as measured uncertainty separately from scalar boundary positions. Current unresolved calls: 1246 (base 1246). All286UNKNOWN records and decoded unresolved-call facts equal the native base (1246). The single production change passes the interpolated URI into the existing DescriptorParser call; source digest changes while Target, analyzer and all uncertainty obligations remain unchanged.",
+      "reason": "Global context dataflow and dynamic-call coverage remain bounded by the scanner. Direct annotations and selected self-field/constructor bindings do not prove arbitrary runtime values or every callable target; the current unresolved-call count is retained as measured uncertainty separately from scalar boundary positions. Current unresolved calls: 1246 (base 1246). All286UNKNOWN records and decoded unresolved-call facts equal the native base (1246). Removing the obsolete SequenceTableGenerator special case makes its construction class publication unused; the reviewed target now removes only that exact inner public entry. Factory/catalogue/DSL behavior remains present, and the fresh report has only the20originalusage_unknown diagnostics. This is a justified retirement of an unused cross-owner surface, not an added boundary permission or relabeling of interface.unused.",
       "ids": [
         "UNKNOWN-CONTEXT-DATAFLOW",
         "UNKNOWN-PYTHON-DYNAMIC-CALLS"
@@ -1066,19 +1066,19 @@
   "independent_review": {
     "reviewer_role": "Astra",
     "agent_task": "/root/architecture_ci_review",
-    "reviewed_at_utc": "2026-10-14T06:00:27.187099+00:00",
+    "reviewed_at_utc": "2026-10-14T06:00:26.585737+00:00",
     "base_commit": "6520b70d671295e17af159614127e19e9a5715d8",
-    "analyzed_head": "4b9c7b83f483991611f0ff80bb4f842d5ba00894",
+    "analyzed_head": "762fedf44fc2302d5be1ec74f1a398948187e8d2",
     "prior_review_digest": "909b9680afc7772447b984ae5b3030be62f0b3634788c41ed2f922ded3dbad45",
     "decision": "GO",
-    "source_assessment": "IncludeTask passes the already-interpolated local uri to DescriptorParser through the established Runtime-to-DSL boundary. Resolution stays Runtime-owned and profile loading remains injected through IO; no API or source ownership change is introduced.",
-    "delta_assessment": "All286UNKNOWN records and decoded unresolved-call facts equal the native base (1246). The single production change passes the interpolated URI into the existing DescriptorParser call; source digest changes while Target, analyzer and all uncertainty obligations remain unchanged.",
+    "source_assessment": "Runtime invokes the existing zero-argument generator interface consistently in lazy construction and subsequent mode execution. Removing the SequenceTableGenerator-specific dependency reduces coupling; sequence construction already captures its context. No source/connector policy moves owners. The unused inner construction publication for SequenceTableGenerator is retired because its remaining class imports are within the construction owner; the implementation, factory catalogue and descriptor name remain intact. This narrows the declared cross-component surface without adding permissions.",
+    "delta_assessment": "All286UNKNOWN records and decoded unresolved-call facts equal the native base (1246). Removing the obsolete SequenceTableGenerator special case makes its construction class publication unused; the reviewed target now removes only that exact inner public entry. Factory/catalogue/DSL behavior remains present, and the fresh report has only the20originalusage_unknown diagnostics. This is a justified retirement of an unused cross-owner surface, not an added boundary permission or relabeling of interface.unused.",
     "record_changes": [],
     "raw_artifact_sha256": {
-      "validation.json": "838a362c39589a80177e67cd5816a967ae70742f5aa1fdba1fb89181fe50b55e",
-      "architecture.json": "bcded6ee4f788e5578922b239ad7edfdfff07cc015937d11f67c0151c7ee1ec6",
-      "completion.json": "1930372cb833ba8a69e066dfa162a2f884552cddc2d79e2f650773f94ac9c028",
-      "provenance.json": "82f0087a08ce263f1cb21e811c0777d3c1bdde9322c3a76bfb10c18c3719e8f0"
+      "validation.json": "bf482f4c3d4fe31f8bad61cfa9d156b449bc74fb31fd34903371c195c9ad74b4",
+      "architecture.json": "9aaccbf1a0dba11196a9cf7cfca5a136e13641f44d80abb52b39ecb8b7d578d1",
+      "completion.json": "022d4404a162c6f7292dc38d6300bd4e20d38dbbca33dc85eac5b7f59d3b2926",
+      "provenance.json": "4aab773ccd2ed5eac0caab201d2c8018a573496386c2a06f2fde4892013f350e"
     },
     "limitations": [
       "Static architecture review only; no behavioral rerun by this reviewer.",
