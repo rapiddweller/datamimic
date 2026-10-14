@@ -31,6 +31,7 @@ from datamimic_ce.engine.dsl.api import (
 from datamimic_ce.engine.dsl.vocabulary.source_capabilities import SourceFileFormat, source_file_format_for
 from datamimic_ce.engine.io.api import DataSourcePagination, WeightedDataSource, unique_value_iter
 from datamimic_ce.engine.runtime.contexts.context import Context, SetupContext
+from datamimic_ce.engine.runtime.contexts.geniter_context import GenIterContext
 from datamimic_ce.engine.runtime.scripting.evaluation import interpolate_variables
 from datamimic_ce.engine.runtime.tasks.base.task import Task
 from datamimic_ce.engine.runtime.tasks.values.construction.converters import create_converter_list
@@ -38,7 +39,6 @@ from datamimic_ce.engine.runtime.tasks.values.construction.factory import (
     GeneratorUtil,
     generate_random_value_based_on_type,
 )
-from datamimic_ce.engine.runtime.tasks.values.construction.sequence_table import SequenceTableGenerator
 
 
 class KeyVariableTask(Task):
@@ -280,12 +280,7 @@ class KeyVariableTask(Task):
             )
             # Switch mode to GENERATE_MODE for next task execution
             self._mode = self._GENERATOR_MODE
-            if self._generator is not None and isinstance(self._generator, SequenceTableGenerator):
-                value = self._generator.generate(ctx)
-            elif self._generator is not None:
-                value = self._generator.generate()
-            else:
-                value = None
+            value = self._generator.generate() if self._generator is not None else None
         elif self._mode == self._GENERATOR_MODE:
             if self._statement.generator is not None and self._generator is None:
                 self._generator = GeneratorUtil(ctx).create_generator(
@@ -352,11 +347,17 @@ class KeyVariableTask(Task):
 
     def _next_unique_value(self, ctx: Context) -> object:
         """Emit a distinct value per call (sampling 'values' without replacement,
-        seeded via ctx.rng). Shared with <variable source unique> via unique_value_iter."""
+        seeded via ctx.rng). The generation invocation owns the cursor across tasks/pages;
+        statement identity separates same-named keys in different conditional branches."""
         if self._unique_iter is None:
-            self._unique_iter = unique_value_iter(
-                self._values, ctx.rng, f"<{self._element_tag}> '{self._statement.name}'"
-            )
+            key = ("unique-values", self._statement)
+            cursors = ctx.unique_cursors if isinstance(ctx, GenIterContext) else {}
+            self._unique_iter = cursors.get(key)
+            if self._unique_iter is None:
+                self._unique_iter = unique_value_iter(
+                    self._values, ctx.rng, f"<{self._element_tag}> '{self._statement.name}'"
+                )
+                cursors[key] = self._unique_iter
         return next(self._unique_iter)
 
     def _next_unique_generator_value(self) -> object:

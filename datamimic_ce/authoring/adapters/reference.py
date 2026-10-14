@@ -185,7 +185,8 @@ def _render_element_attributes(schema: ElementSchema, lines: list[str]) -> None:
     if schema.open_attrs:
         lines.append(
             "Attributes: open — credentials resolve from conf/{environment}.env.properties "
-            "(keys {system}.{db|mongo}.{attr}); XML attributes override."
+            "(keys {system}.{db|mongo}.{attr}); matching profile properties override XML attributes. "
+            "XML values are retained when no matching property exists."
         )
     elif schema.attributes:
         lines.append("Attributes:")

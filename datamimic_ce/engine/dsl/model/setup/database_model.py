@@ -21,58 +21,61 @@ class DatabaseModel(BaseModel):
     )
     host: str | None = Field(
         None,
-        description="Hostname or IP of the database server. When omitted, resolved from "
-        "conf/{environment}.env.properties using key '{system}.db.host'.",
+        description="Hostname or IP of the database server. Prefer the connection profile: "
+        "a matching '{system}.db.host' property overrides this attribute; without one, this value is kept.",
         examples=["localhost", "127.0.0.1"],
     )
     port: str | None = Field(
         None,
-        description="Port number of the database server, as a string of digits. When omitted, "
-        "resolved from conf/{environment}.env.properties using key '{system}.db.port'.",
+        description="Port number of the database server, as a string of digits. A matching "
+        "'{system}.db.port' connection-profile property overrides this attribute; otherwise this value is kept.",
         examples=["5432", "3306"],
     )
     database: str | None = Field(
         None,
-        description="Database/service name to connect to. When omitted, resolved from "
-        "conf/{environment}.env.properties using key '{system}.db.database'.",
+        description="Database/service name to connect to. A matching '{system}.db.database' "
+        "connection-profile property overrides this attribute; otherwise this value is kept.",
         examples=["mydb"],
     )
     dbms: Dbms = Field(
         ...,
-        description="Database management system driving connection/dialect handling.",
+        description="Database management system driving connection/dialect handling. A matching "
+        "'{system}.db.dbms' connection-profile property overrides this attribute.",
         examples=[dbms.value for dbms in Dbms],
     )
     environment: str | None = Field(
         None,
-        description="Selects which conf/{environment}.env.properties file supplies credentials "
-        "not given directly on this element. Defaults to 'local' when running in development, "
-        "otherwise 'environment'.",
+        description="Selects the connection profile: first conf/{environment}.env.properties beside the descriptor, "
+        "then {environment}.env.properties in the working directory, then ~/datamimic/{environment}.env.properties. "
+        "The first existing file is used; matching properties override descriptor attributes. "
+        "Defaults to 'local' when running in development, otherwise 'environment'.",
         examples=["local", "dev", "prod"],
     )
     system: str | None = Field(
         None,
-        description="Credential-lookup key prefix used to read unset attributes from the "
-        "environment properties file as '{system}.db.{attr}' (e.g. db.db.host). Defaults to id "
+        description="Connection-profile key prefix used to override matching attributes as "
+        "'{system}.db.{attr}' (e.g. db.db.host). Defaults to id "
         "when omitted.",
         examples=["db"],
     )
     user: str | None = Field(
         None,
-        description="Username for the database connection. When omitted, resolved from "
-        "conf/{environment}.env.properties using key '{system}.db.user'.",
+        description="Username for the database connection. A matching '{system}.db.user' "
+        "connection-profile property overrides this attribute; otherwise this value is kept.",
         examples=["postgres"],
     )
     password: str | None = Field(
         None,
-        description="Password for the database connection. When omitted, resolved from "
-        "conf/{environment}.env.properties using key '{system}.db.password'.",
+        description="Password for the database connection. A matching '{system}.db.password' "
+        "connection-profile property overrides this attribute; otherwise this value is kept.",
         examples=["secret"],
     )
     db_schema: str | None = Field(
         None,
         alias=ATTR_SCHEMA,
         description="Default schema/namespace to use when connecting; used for table reflection, "
-        "table lookups and sequence resolution (falls back to 'public' for sequences when unset).",
+        "table lookups and sequence resolution (falls back to 'public' for sequences when unset). "
+        "A matching '{system}.db.schema' connection-profile property overrides this attribute.",
         examples=["public"],
     )
 

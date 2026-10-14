@@ -67,3 +67,18 @@ def test_missing_manifest_count_writes_failure_summary(tmp_path: Path, monkeypat
     monkeypatch.setenv("GITHUB_STEP_SUMMARY", str(summary))
     assert _compare_command(tmp_path, expected_count=2) == 1
     assert "expected 2 manifests, found 0" in summary.read_text(encoding="utf-8")
+
+
+def test_literal_replay_golden_covers_unique_draws_across_automatic_pages() -> None:
+    import hashlib
+
+    from tests_ce.integration_tests.test_determinism_seed_scenarios.test_determinism_seed_scenarios import (
+        _run_in_fresh_process,
+        canonical_result_bytes,
+    )
+
+    result = _run_in_fresh_process("replay_all_seeded.xml")
+    # The 41-column literal product automatically splits five rows into pages of three.
+    # A page restart previously repeated C in row five rather than exhausting A..E once.
+    assert [row["unique_values"] for row in result["literal"]] == ["E", "C", "D", "A", "B"]
+    assert hashlib.sha256(canonical_result_bytes(result)).hexdigest() == EXPECTED_LITERAL_REPLAY_HASH

@@ -19,7 +19,11 @@ if TYPE_CHECKING:
 
 
 class IdentifierRegistry:
-    """Own allocation of unique domain identifiers for one generation run."""
+    """Allocate IDs per entity type and field within one service instance or descriptor run.
+
+    Same-process includes share the run registry. Separate runs, existing target data
+    and entities constructed without a service are outside this allocation scope.
+    """
 
     def __init__(self) -> None:
         self._seen: dict[tuple[str, str], set[str]] = {}

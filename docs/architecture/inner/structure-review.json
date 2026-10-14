@@ -2377,6 +2377,7 @@
     }
   ],
   "new_modules": [
+    {"target": "engine/runtime/contexts/products.py", "reason": "Actual conditional export executions need typed page and worker metadata without changing public product names or importing task orchestration into row contexts."},
     {
       "target": "interfaces/cli/_app.py",
       "reason": "Executable CLI startup must load dotenv before command registration imports the application graph."
@@ -2399,6 +2400,7 @@
     }
   ],
   "target_module_concerns": [
+    {"target": "engine/runtime/contexts/products.py", "responsibility": "Carries generated rows and actual nested export executions across row contexts, pages, and worker results."},
     {"target": "__init__.py", "responsibility": "The package initializer exposes the CE namespace without loading configuration or mutating the process environment."},
     {"target": "interfaces/cli/__init__.py", "responsibility": "The CLI package exposes the app lazily so executable startup can load its environment first."},
     {"target": "interfaces/cli/__main__.py", "responsibility": "Executable CLI startup loads the working-directory environment before importing and running the app."},

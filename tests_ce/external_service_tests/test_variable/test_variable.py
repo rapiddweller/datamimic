@@ -7,8 +7,6 @@
 
 from pathlib import Path
 
-import pytest
-
 from datamimic_ce.interfaces.python.data_mimic_test import DataMimicTest
 
 
@@ -43,10 +41,21 @@ class TestVariable:
         engine = DataMimicTest(test_dir=self._test_dir, filename="test_variable_source_with_name_only.xml")
         engine.test_with_timer()
 
-    @pytest.mark.skip("This test is not ready yet.")
     def test_memstore_access(self):
-        engine = DataMimicTest(test_dir=self._test_dir, filename="test_memstore_access.xml")
+        engine = DataMimicTest(
+            test_dir=self._test_dir, filename="test_memstore_access.xml", capture_test_result=True
+        )
         engine.test_with_timer()
+        result = engine.capture_result()
+        users = result["user"]
+        selected_users = result["user_2"]
+
+        assert [user["id"] for user in users] == [1, 2, 3, 4, 5]
+        assert all(isinstance(user["name"], str) for user in users)
+        assert len(selected_users) == 3
+        assert len({user["id"] for user in selected_users}) == 3
+        names_by_id = {user["id"]: user["name"] for user in users}
+        assert all(user["name"] == names_by_id[user["id"]] for user in selected_users)
 
     def test_string_in_key(self):
         engine = DataMimicTest(test_dir=self._test_dir, filename="test_order_status.xml")

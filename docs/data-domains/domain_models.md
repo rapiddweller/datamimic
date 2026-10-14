@@ -13,6 +13,24 @@ DATAMIMIC entities follow a consistent pattern:
 3. **Caching**: Generated values are cached to ensure consistency
 4. **Based on BaseEntity**: All entities inherit from the core BaseEntity class
 
+### Identifier scope
+
+Fields marked with `unique_identifier_format` in their entity schema are unique per
+entity type and field within one service instance or one descriptor run. A descriptor
+run shares allocation across pages, sibling and nested includes, and nested entity
+generation. Cached IDs and parent/child references keep their original values.
+Separate runs, pre-existing target data, and entities constructed directly without a
+service are outside this guarantee. Replaying a seed starts a fresh allocation scope.
+Collisions use deterministic alternatives without extra random draws; exhausting the
+declared identifier format raises an error.
+
+CE runs generation of these identifiers in one process. It also conservatively runs
+any generate statement containing an include in one process: the included descriptor
+may construct domain entities and is resolved only during execution. This preserves
+run-wide allocation for dynamic includes without opening or executing them early.
+Includes that ultimately allocate no identifiers also follow this policy, which can
+reduce throughput compared with the requested worker count.
+
 The basic structure of a DATAMIMIC entity:
 
 ```python

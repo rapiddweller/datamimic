@@ -68,6 +68,11 @@ def field(
     unique_identifier_format: str | None = None,
 ) -> FieldSpec:
     """Build a leaf field spec."""
+    if unique_identifier_format is not None:
+        description += (
+            " Unique per entity type and field within one service instance or descriptor run, including includes."
+            " Direct construction, separate runs and existing target data are outside this guarantee."
+        )
     return FieldSpec(
         name=name,
         py_type=py_type,
