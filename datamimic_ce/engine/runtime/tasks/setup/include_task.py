@@ -61,7 +61,7 @@ class IncludeTask(CommonSubTask):
         elif uri.endswith(".xml"):
             # Parse and execute descriptor file
             sub_setup_stmt = DescriptorParser.parse(
-                ctx.descriptor_dir / self.statement.uri,
+                ctx.descriptor_dir / uri,
                 ctx.properties,
                 ctx.runtime_environment,
                 profile_loader=load_connection_profile,
