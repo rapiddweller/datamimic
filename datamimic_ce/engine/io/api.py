@@ -50,6 +50,7 @@ from datamimic_ce.engine.io.data_sources.selection import (
     get_unique_data,
     select_row_iterator,
     unique_value_iter,
+    unique_values,
 )
 from datamimic_ce.engine.io.data_sources.variable import read_variable_query, read_variable_source
 from datamimic_ce.engine.io.data_sources.weighted_data_source import WeightedDataSource
@@ -133,4 +134,5 @@ __all__ = [
     "window_nested_key_rows",
     "uses_mysql_sequence_storage",
     "unique_value_iter",
+    "unique_values",
 ]

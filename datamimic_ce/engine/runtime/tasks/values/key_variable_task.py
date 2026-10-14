@@ -29,7 +29,7 @@ from datamimic_ce.engine.dsl.api import (
     VariableStatement,
 )
 from datamimic_ce.engine.dsl.vocabulary.source_capabilities import SourceFileFormat, source_file_format_for
-from datamimic_ce.engine.io.api import DataSourcePagination, WeightedDataSource, unique_value_iter
+from datamimic_ce.engine.io.api import DataSourcePagination, WeightedDataSource, unique_values
 from datamimic_ce.engine.runtime.contexts.context import Context, SetupContext
 from datamimic_ce.engine.runtime.scripting.evaluation import interpolate_variables
 from datamimic_ce.engine.runtime.tasks.base.task import Task
@@ -352,12 +352,20 @@ class KeyVariableTask(Task):
 
     def _next_unique_value(self, ctx: Context) -> object:
         """Emit a distinct value per call (sampling 'values' without replacement,
-        seeded via ctx.rng). Shared with <variable source unique> via unique_value_iter."""
+        seeded via ctx.rng). The root owns the finite cursor across rebuilt tasks/pages;
+        statement identity separates same-named keys in different conditional branches."""
         if self._unique_iter is None:
-            self._unique_iter = unique_value_iter(
-                self._values, ctx.rng, f"<{self._element_tag}> '{self._statement.name}'"
-            )
-        return next(self._unique_iter)
+            key = ("unique-values", self._statement)
+            self._unique_iter = ctx.root.generators.get(key)
+            if self._unique_iter is None:
+                self._unique_iter = iter(unique_values(self._values, ctx.rng))
+                ctx.root.generators[key] = self._unique_iter
+        try:
+            return next(self._unique_iter)
+        except StopIteration:
+            raise ValueError(
+                f"Cannot generate more unique values for <{self._element_tag}> '{self._statement.name}'"
+            ) from None
 
     def _next_unique_generator_value(self) -> object:
         """Call the generator repeatedly until a value not yet seen this task is produced.

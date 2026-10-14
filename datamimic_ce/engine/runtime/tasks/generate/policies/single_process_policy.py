@@ -43,7 +43,14 @@ def _is_global_constraint(stmt: Statement) -> bool:
 
 
 def _uses_global_constraint(stmt: GenerateStatement, seeded: bool, clients: ClientMap) -> bool:
-    return _is_global_constraint(stmt) or any(_is_global_constraint(child) for child in stmt.sub_statements)
+    stack: list[Statement] = [stmt]
+    while stack:
+        current = stack.pop()
+        if _is_global_constraint(current):
+            return True
+        if isinstance(current, CompositeStatement):
+            stack.extend(current.sub_statements)
+    return False
 
 
 def _uses_domain_identifiers(stmt: GenerateStatement, seeded: bool, clients: ClientMap) -> bool:
