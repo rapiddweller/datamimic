@@ -383,41 +383,42 @@ class GenerateTask(CommonSubTask):
                 GenerateTask._export_memstore_children(setup_context, sub_stmt, merged_result)
 
     @staticmethod
-    def finalize_temp_files_chunks(context: SetupContext, stmt: GenerateStatement):
+    def finalize_temp_files_chunks(context: SetupContext, stmt: CompositeStatement):
         """
         Finalize temp files chunks (writing end of file).
         """
-        # Worker IDs identify the temporary chunk directories in both SP and MP.
-        num_workers = GenerateTask._determine_num_workers(context, stmt)
-
-        finalize_exporter_chunks(
-            context,
-            resolve_target_entity(stmt.target_entity, None, stmt.name),
-            stmt.export_uri,
-            list(stmt.targets),
-            range(1, num_workers + 1),
-        )
+        if isinstance(stmt, GenerateStatement):
+            # Worker IDs identify the temporary chunk directories in both SP and MP.
+            num_workers = GenerateTask._determine_num_workers(context, stmt)
+            finalize_exporter_chunks(
+                context,
+                resolve_target_entity(stmt.target_entity, None, stmt.name),
+                stmt.export_uri,
+                list(stmt.targets),
+                range(1, num_workers + 1),
+            )
 
         # Finalize temp files chunks of sub-gen_stmts
         for sub_stmt in stmt.sub_statements:
-            if isinstance(sub_stmt, GenerateStatement):
+            if isinstance(sub_stmt, CompositeStatement):
                 GenerateTask.finalize_temp_files_chunks(context, sub_stmt)
 
     @staticmethod
-    def export_artifact_files(context: SetupContext, stmt: GenerateStatement):
+    def export_artifact_files(context: SetupContext, stmt: CompositeStatement):
         """
         Export artifact files to storage (Execute on outermost gen_stmt)
         """
-        publish_exported_artifacts(
-            context,
-            resolve_target_entity(stmt.target_entity, None, stmt.name),
-            stmt.export_uri,
-            list(stmt.targets),
-        )
+        if isinstance(stmt, GenerateStatement):
+            publish_exported_artifacts(
+                context,
+                resolve_target_entity(stmt.target_entity, None, stmt.name),
+                stmt.export_uri,
+                list(stmt.targets),
+            )
 
         # Export artifact files of sub-gen_stmts
         for sub_stmt in stmt.sub_statements:
-            if isinstance(sub_stmt, GenerateStatement):
+            if isinstance(sub_stmt, CompositeStatement):
                 GenerateTask.export_artifact_files(context, sub_stmt)
 
     def _reject_positional_sequences_under_mp(self) -> None:

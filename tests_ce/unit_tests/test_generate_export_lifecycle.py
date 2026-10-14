@@ -117,10 +117,6 @@ def test_mixed_buffered_targets_publish_all_chunks(tmp_path: Path) -> None:
         pytest.param(
             True,
             id="condition-child",
-            marks=pytest.mark.xfail(
-                strict=True,
-                reason="step-14-export-lifecycle.md: conditional child artifacts are not published",
-            ),
         ),
     ],
 )
@@ -147,13 +143,20 @@ def test_nested_buffered_child_is_finalized_and_published(tmp_path: Path, wrappe
     assert ids == [1, 2, 3]
 
 
-def test_finalization_failure_does_not_publish_buffered_files(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+@pytest.mark.parametrize("wrapped", [False, True], ids=["direct", "condition-child"])
+def test_finalization_failure_does_not_publish_buffered_files(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch, wrapped: bool
+) -> None:
     descriptor = tmp_path / "failed_finalize.xml"
     descriptor.write_text(
-        '<setup multiprocessing="0"><generate name="rows" count="2" '
+        '<setup multiprocessing="0">'
+        + ('<generate name="parents" count="1" target=""><condition><if condition="True">' if wrapped else "")
+        + '<generate name="rows" count="2" '
         'target="JSON(chunk_size=2)" exportUri="results">'
         '<key name="id" generator="IncrementGenerator"/>'
-        "</generate></setup>",
+        "</generate>"
+        + ("</if></condition></generate>" if wrapped else "")
+        + "</setup>",
         encoding="utf-8",
     )
 
@@ -186,15 +189,20 @@ def test_public_cleanup_removes_only_this_tasks_exporter_chunks(tmp_path: Path) 
     assert unrelated_file.read_text(encoding="utf-8") == "[]"
 
 
+@pytest.mark.parametrize("wrapped", [False, True], ids=["direct", "condition-child"])
 def test_publication_failure_preserves_exception_and_cleans_chunks(
-    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch, wrapped: bool
 ) -> None:
     descriptor = tmp_path / "failed_publish.xml"
     descriptor.write_text(
-        '<setup multiprocessing="0"><generate name="rows" count="2" '
+        '<setup multiprocessing="0">'
+        + ('<generate name="parents" count="1" target=""><condition><if condition="True">' if wrapped else "")
+        + '<generate name="rows" count="2" '
         'target="JSON(chunk_size=2)" exportUri="results">'
         '<key name="id" generator="IncrementGenerator"/>'
-        "</generate></setup>",
+        "</generate>"
+        + ("</if></condition></generate>" if wrapped else "")
+        + "</setup>",
         encoding="utf-8",
     )
     failure = RuntimeError("publication failed")
@@ -210,18 +218,22 @@ def test_publication_failure_preserves_exception_and_cleans_chunks(
     assert not list(tmp_path.glob("temp_result_*"))
 
 
+@pytest.mark.parametrize("wrapped", [False, True], ids=["direct-child", "condition-child"])
 def test_nested_mixed_exporters_finish_globally_before_publishing(
-    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch, wrapped: bool
 ) -> None:
     descriptor = tmp_path / "nested_mixed_targets.xml"
     descriptor.write_text(
         '<setup multiprocessing="0"><generate name="parents" count="1" '
         'target="JSON(chunk_size=2),CSV(chunk_size=2)" exportUri="results">'
         '<key name="id" generator="IncrementGenerator"/>'
-        '<generate name="children" count="3" '
+        + ('<condition><if condition="True">' if wrapped else "")
+        + '<generate name="children" count="3" '
         'target="JSON(chunk_size=2),CSV(chunk_size=2)" exportUri="results">'
         '<key name="id" generator="IncrementGenerator"/>'
-        "</generate></generate></setup>",
+        "</generate>"
+        + ("</if></condition>" if wrapped else "")
+        + "</generate></setup>",
         encoding="utf-8",
     )
     events: list[tuple[str, str, str]] = []
