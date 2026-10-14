@@ -5,7 +5,7 @@
         <key name="name" script="name+'_mask'"/>
     </generate>
     <!--  Simple use script to mask the key we need-->
-    <generate source="sourceDB" name="USER" target="targetDB, ConsoleExporter">
+    <generate source="sourceDB" name="USER" type="USER" target="targetDB, ConsoleExporter">
         <key name="full_name" script="full_name + '_mask'"/>
         <!-- Use the default mask converter to mask into '*' (default char) -->
         <key name="email" script="email" converter="Mask"/>

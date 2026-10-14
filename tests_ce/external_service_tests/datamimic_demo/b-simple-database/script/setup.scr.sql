@@ -4,9 +4,9 @@ DROP TABLE IF EXISTS customer;
 CREATE TABLE IF NOT EXISTS customer (
     id INTEGER PRIMARY KEY,
     tc_creation_src TEXT,
-    tc_creation DATETIME NOT NULL,
+    tc_creation TIMESTAMP NOT NULL,
     tc_update_src TEXT,
-    tc_update DATETIME,
+    tc_update TIMESTAMP,
     no TEXT NOT NULL,
     name TEXT,
     active BOOLEAN NOT NULL,
@@ -18,9 +18,9 @@ DROP TABLE IF EXISTS product;
 CREATE TABLE IF NOT EXISTS product (
     id INTEGER PRIMARY KEY,
     tc_creation_src TEXT,
-    tc_creation DATETIME NOT NULL,
+    tc_creation TIMESTAMP NOT NULL,
     tc_update_src TEXT,
-    tc_update DATETIME,
+    tc_update TIMESTAMP,
     active BOOLEAN NOT NULL,
     name TEXT,
     description TEXT,
@@ -31,13 +31,13 @@ CREATE TABLE IF NOT EXISTS product (
 );
 
 -- Create the "user" table
-DROP TABLE IF EXISTS user;
-CREATE TABLE IF NOT EXISTS user (
+DROP TABLE IF EXISTS "user";
+CREATE TABLE IF NOT EXISTS "user" (
     id INTEGER PRIMARY KEY,
     tc_creation_src TEXT,
-    tc_creation DATETIME NOT NULL,
+    tc_creation TIMESTAMP NOT NULL,
     tc_update_src TEXT,
-    tc_update DATETIME,
+    tc_update TIMESTAMP,
     full_name TEXT,
     email TEXT NOT NULL,
     hashed_password TEXT NOT NULL,
