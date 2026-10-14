@@ -1,12 +1,12 @@
 {
   "status": "current_source_architecture_review_accepted",
   "reviewed_by": "Astra",
-  "review_reference": "docs/architecture/refactoring-study/experiment-2/issue-276-architecture-review.md",
+  "review_reference": "docs/architecture/refactoring-study/experiment-2/issue-279-architecture-review.md",
   "contract_digest": "289d6c0ee28d75e53e7ed8d057edbd66dd4004c5c362b6cccf5f7c095e0f7745",
   "analyzer_digest": "7106e3595fa7df9269cb43ee280f9c557659db7bda171b1f65ff5619ab54aa24",
-  "source_digest": "c075fc670ebdd3e24ff64f2c7448ce0e508c1ff82b72344b68c271ed980c0e4c",
-  "unknowns_digest": "341b0e0103929fcd1c388af4809dc218d16d8c442f8fdac261a82ce59e605907",
-  "validation_digest": "f2ce89cbf1a6d80ecd3096822b87e8bb532dff9e3c29cd9821d10284e3bb1bfe",
+  "source_digest": "1921bd506333b11a9d9106f109ba25f2da3055da9bcbe754ea4cc8fac825ca36",
+  "unknowns_digest": "6c354826cbf3e04125fefec841033f77f8c991e2372978988eb72f426b97919a",
+  "validation_digest": "0c63638403b89cb46ccf5389d9295b8b69f113056b6d9fca41258cc2ae45c2f2",
   "groups": [
     {
       "classification": "aggregate_receipt",
@@ -155,7 +155,7 @@
     },
     {
       "classification": "global_observation_limit",
-      "reason": "Global context dataflow and dynamic-call coverage remain bounded by the scanner. Direct annotations and selected self-field/constructor bindings do not prove arbitrary runtime values or every callable target; the current unresolved-call count is retained as measured uncertainty separately from scalar boundary positions. Current unresolved calls: 1249 (base 1246). Only the global dynamic-call count differs among286UNKNOWN records. Three added unresolved calls are generator-expression strip/split operations whose receivers derive from the annotated DSL string property (total1249). The fixed source removes the private GlobalIncrementGenerator import, resolves its nominal type from the already-public RUNTIME_GENERATOR_TYPES catalogue, preserves isinstance alias/subclass semantics, and dispatches the special callback by callable identity. Native evidence now has zero violations with unchanged contracts; the original private-import and descriptive-label-routing defects are resolved.",
+      "reason": "Global context dataflow and dynamic-call coverage remain bounded by the scanner. Direct annotations and selected self-field/constructor bindings do not prove arbitrary runtime values or every callable target; the current unresolved-call count is retained as measured uncertainty separately from scalar boundary positions. Current unresolved calls: 1247 (base 1246). The GeneratorStatement inherited-surface record changes only its evidence reference. Its explicit Statement base is unchanged and the added super().__init__ supplies that existing base initialization. The one added unresolved call is exactly this super().__init__ expression, which the scanner labels dynamic; current total1247. All boundary annotations/reasons and other UNKNOWN records remain unchanged.",
       "ids": [
         "UNKNOWN-CONTEXT-DATAFLOW",
         "UNKNOWN-PYTHON-DYNAMIC-CALLS"
@@ -163,7 +163,7 @@
       "current_review": {
         "group_index": 8,
         "record_count": 2,
-        "records_digest": "f305fd779e76fd1c3366562f9343f6340f1a6a6191691e38dc8f9f208ccc68d3",
+        "records_digest": "959e4a93c1d6cc466922d4da30561ac7293e16b37643d5fc27491c983d129a95",
         "changed_records": [
           {
             "id": "UNKNOWN-PYTHON-DYNAMIC-CALLS",
@@ -249,8 +249,15 @@
       "current_review": {
         "group_index": 9,
         "record_count": 66,
-        "records_digest": "50aa9dc4ca59c8e7087d108a0f50fbfaa1d3011a690e6f4c010263b5d7a1ad0f",
-        "changed_records": [],
+        "records_digest": "aea99605e1b7cba75a8f1e796f29ed2c0a26514a85ae45a6690e3ef2950c9d44",
+        "changed_records": [
+          {
+            "id": "UNKNOWN-BOUNDARY-TYPE-POSITION-4a99961c530e4651",
+            "fields": [
+              "evidence_ids"
+            ]
+          }
+        ],
         "decision": "retain_assessed_UNKNOWN"
       }
     },
@@ -1073,14 +1080,20 @@
   "independent_review": {
     "reviewer_role": "Astra",
     "agent_task": "/root/architecture_ci_review",
-    "reviewed_at_utc": "2026-10-14T05:50:30.589170+00:00",
+    "reviewed_at_utc": "2026-10-14T05:48:09.770824+00:00",
     "base_commit": "6520b70d671295e17af159614127e19e9a5715d8",
-    "analyzed_head": "f71f83d2ae29e347ed7aca5ba06448bf16952a53",
+    "analyzed_head": "cb7a97524211199c5572e4c1b32336a78b3f8a38",
     "prior_review_digest": "909b9680afc7772447b984ae5b3030be62f0b3634788c41ed2f922ded3dbad45",
     "decision": "GO",
-    "source_assessment": "Global increment remains a Runtime construction/storage concern. Runtime scheduling inspects statement vocabulary and resolved named instances through the existing published generator catalogue; it does not introduce a Domain-to-Runtime dependency. The corrected policy dispatch identifies its registered callable rather than routing on a descriptive string. Mapping[str, object] exposes the existing heterogeneous generator registry to internal scheduling and remains a bounded internal typing limitation.",
-    "delta_assessment": "Only the global dynamic-call count differs among286UNKNOWN records. Three added unresolved calls are generator-expression strip/split operations whose receivers derive from the annotated DSL string property (total1249). The fixed source removes the private GlobalIncrementGenerator import, resolves its nominal type from the already-public RUNTIME_GENERATOR_TYPES catalogue, preserves isinstance alias/subclass semantics, and dispatches the special callback by callable identity. Native evidence now has zero violations with unchanged contracts; the original private-import and descriptive-label-routing defects are resolved.",
+    "source_assessment": "GeneratorStatement initializes inherited statement identity in DSL, while Runtime factory resolves an explicitly named prebuilt generator as one shared instance. Ordinary constructor cache keys and state-machine definitions remain separate paths. No generator execution is placed in DSL or Domains, and no new public type is introduced.",
+    "delta_assessment": "The GeneratorStatement inherited-surface record changes only its evidence reference. Its explicit Statement base is unchanged and the added super().__init__ supplies that existing base initialization. The one added unresolved call is exactly this super().__init__ expression, which the scanner labels dynamic; current total1247. All boundary annotations/reasons and other UNKNOWN records remain unchanged.",
     "record_changes": [
+      {
+        "id": "UNKNOWN-BOUNDARY-TYPE-POSITION-4a99961c530e4651",
+        "fields": [
+          "evidence_ids"
+        ]
+      },
       {
         "id": "UNKNOWN-PYTHON-DYNAMIC-CALLS",
         "fields": [
@@ -1089,10 +1102,10 @@
       }
     ],
     "raw_artifact_sha256": {
-      "validation.json": "ec4b49d1ec77e72665a1c6f67c6c95e2920556736b9bd5acbfa6a33953145dd0",
-      "architecture.json": "fb591c9e51f129a8f1135f02c49e1ebabced9e58df8723719d51c3d5d0a3fe43",
-      "completion.json": "400fa7fcca09223fe87a20dc59c10c1c3f68e2b424903680a66ca4fb6ddedf4a",
-      "provenance.json": "cb3bfc107b3b67f98a29c6b81fcfdd259fd81ee1ec7e2e3a76c5152c27bd8513"
+      "validation.json": "2d40afe40d822f4193f87cb4d065246270e2ad6cf78f4b8cd111d3ae1eb636d7",
+      "architecture.json": "2f1e1f4eefe75be001cda3658465d966fbbce37fdb418e8f0a7cf13108eb0dd9",
+      "completion.json": "85acf803141b50f66b990323e9227ed3436c398e19d931562b8c6a2578ca4534",
+      "provenance.json": "ad2ad4a95f71a99767d21130006d11e922bde50cb5268af629ed835c592fc747"
     },
     "limitations": [
       "Static architecture review only; no behavioral rerun by this reviewer.",

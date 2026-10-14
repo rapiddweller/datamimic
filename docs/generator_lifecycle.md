@@ -78,3 +78,40 @@ nested row counts. Explicitly referenced named global-increment instances in
 the setup registry use the same serial policy. An unrelated or unused generator
 alias does not force serial execution. Ordinary `IncrementGenerator` keeps its
 existing page ranges and worker behavior. Seeded runs still replay identically.
+
+## Named state-machine aliases
+
+A direct `generator="life"` reference to `<state-machine id="life">` creates
+an independent walk for that qualified field. Rows and rebuilt pages continue
+that field's walk. To deliberately share one walk, declare an explicit alias:
+
+```xml
+<state-machine id="life" start="open">
+    <transition from="open" to="closed"/>
+</state-machine>
+<generator name="shared_life" generator="life"/>
+```
+
+Every key or variable using `generator="shared_life"` draws the next state from
+that same instance within its execution context, in execution order. In one
+process, the instance survives page rebuilds, nested parents and later generate
+statements in the same setup context. Alias chains reference the same instance.
+Unseeded multiprocessing copies the instance into independent worker contexts:
+each worker continues its own walk across its pages, and the combined output has
+no shared walk or state order across worker boundaries. Seeded runs execute
+serially; `rngSeed` seeds the walk at declaration and repeating the descriptor
+and seed replays it.
+
+Direct machine references keep their independent field walks and do not advance
+the alias. Cached scalar constructor aliases use the same explicit instance
+lookup; ordinary constructor fields keep separate qualified cache entries. A
+class that opts out of root caching still opts out; this change does not register
+otherwise uncached constructor results.
+
+Declarations execute in document order, so a machine must precede its alias and
+an alias must precede its use. Unknown names and forward references fail at use.
+Existing registration precedence remains: a generator declaration keeps an
+already registered name; a later state-machine declaration replaces that name
+with its definition. Existing qualified field caches retain their instances.
+Built-in names reserved by the parser remain invalid declaration names. Use
+distinct names for machines and aliases to avoid relying on these collision rules.
