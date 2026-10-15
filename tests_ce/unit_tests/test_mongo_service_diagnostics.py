@@ -109,7 +109,7 @@ def test_runner_preserves_failure_exit_code_and_records_environment(tmp_path):
     metadata = json.loads((tmp_path / "environment.json").read_text())
     assert metadata["packages"]["pymongo"] == "4.10.1"
     assert metadata["test_exit_code"] == 1
-    records = [json.loads(line) for file in tmp_path.glob("events-*.jsonl") for line in file.read_text().splitlines()]
+    records = [json.loads(line) for file in tmp_path.glob("tests-*.jsonl") for line in file.read_text().splitlines()]
     assert any(
         row["event"] == "test_start" and row["nodeid"].endswith("test_failure.py::test_failure") for row in records
     )
@@ -125,6 +125,41 @@ def test_event_files_rotate_with_a_fixed_per_process_bound(tmp_path, monkeypatch
     assert all(file.stat().st_size <= 600 for file in files)
     records = [json.loads(line) for file in files for line in file.read_text().splitlines()]
     assert max(row["index"] for row in records) == 19
+
+
+def test_test_chronology_survives_pool_and_heartbeat_rotation_within_pid_budget(tmp_path, monkeypatch):
+    from types import SimpleNamespace
+
+    from pymongo.monitoring import PoolCreatedEvent, ServerHeartbeatStartedEvent
+
+    production_file_limit = mongo_diagnostics.MAX_FILE_BYTES
+    monkeypatch.setattr(mongo_diagnostics, "MAX_FILE_BYTES", 1024)
+    monkeypatch.setenv("MONGO_DIAGNOSTICS_DIR", str(tmp_path))
+    listener = mongo_diagnostics.MetadataListener()
+    nodes = [f"test_mongo.py::test_case_{index}" for index in range(3)]
+    for nodeid in nodes:
+        mongo_diagnostics.pytest_runtest_logstart(nodeid, None)
+        for _ in range(40):
+            listener.pool_created(PoolCreatedEvent(("mongo", 27017), {}))
+            listener.started(ServerHeartbeatStartedEvent(("mongo", 27017), awaited=False))
+        mongo_diagnostics.pytest_runtest_logreport(
+            SimpleNamespace(nodeid=nodeid, when="call", outcome="passed", duration=1.2)
+        )
+    test_files = list(tmp_path.glob("tests-*.jsonl"))
+    tests = [json.loads(line) for file in test_files for line in file.read_text().splitlines()]
+    assert {row["nodeid"] for row in tests if row["event"] == "test_start"} == set(nodes)
+    assert {row["nodeid"] for row in tests if row["event"] == "test_report"} == set(nodes)
+    assert [(row["event"], row["nodeid"]) for row in sorted(tests, key=lambda row: row["monotonic"])] == [
+        (event, nodeid) for nodeid in nodes for event in ("test_start", "test_report")
+    ]
+    event_files = list(tmp_path.glob("events-*.jsonl"))
+    events = [json.loads(line) for file in event_files for line in file.read_text().splitlines()]
+    assert all(row["event"] not in {"test_start", "test_report"} for row in events)
+    assert {row["event"] for row in events} == {"PoolCreatedEvent", "ServerHeartbeatStartedEvent"}
+    assert len(event_files) == len(test_files) == 2
+    assert all(file.stat().st_size <= 1024 for file in event_files + test_files)
+    assert sum(file.stat().st_size for file in event_files + test_files) <= 4 * 1024
+    assert production_file_limit == 512 * 1024  # Four files retain the existing 2 MiB/PID ceiling.
 
 
 def test_unavailable_probe_is_distinct_from_the_test_exit_status(tmp_path):

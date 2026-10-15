@@ -22,7 +22,7 @@ from pathlib import Path
 
 from pymongo import MongoClient, monitoring
 
-MAX_FILE_BYTES = 1024 * 1024
+MAX_FILE_BYTES = 512 * 1024
 WRITE_LOCK = threading.Lock()
 
 
@@ -46,7 +46,8 @@ def emit(output, event, **fields):
     }
     try:
         line = json.dumps(record) + "\n"
-        path = Path(output) / f"events-{os.getpid()}.jsonl"
+        prefix = "tests" if event in {"test_start", "test_report"} else "events"
+        path = Path(output) / f"{prefix}-{os.getpid()}.jsonl"
         with WRITE_LOCK:
             if path.exists() and path.stat().st_size + len(line.encode()) > MAX_FILE_BYTES:
                 path.replace(path.with_suffix(".previous.jsonl"))

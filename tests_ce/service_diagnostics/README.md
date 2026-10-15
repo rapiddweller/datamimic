@@ -16,7 +16,9 @@ The always-uploaded `mongo-service-diagnostics-*` artifact contains:
 - `environment.json`: Python/package versions, resolved lock hash when available,
   and the original test exit code.
 - `events-<pid>*.jsonl`: UTC/monotonic timestamps, process/thread identity,
-  heartbeat/connection-pool metadata, and test sequence markers.
+  heartbeat/connection-pool metadata and probe events.
+- `tests-<pid>*.jsonl`: test starts and phase outcomes in a separate stream, so
+  heavy connection traffic cannot evict test chronology.
 - Independent authenticated pings every two seconds, using the same fixed test
   credentials as the service definition. Their two-second diagnostic timeout
   does not alter any runtime client option.
@@ -25,11 +27,11 @@ The always-uploaded `mongo-service-diagnostics-*` artifact contains:
   severity, component, numeric event ID and context survive the allowlist.
 
 Commands, documents, replies, credentials, exception text, container environment,
-and free-form server messages/attributes are excluded. Each PID retains a current
-and previous event file, each bounded to 1 MiB; Docker responses are capped at
-16 MiB. Docker or artifact I/O failures are best effort and do not prevent pytest
-from starting or replace its exit code. Probe failures likewise do not change
-test results. Forced cancellation can leave only the evidence already flushed;
+and free-form server messages/attributes are excluded. Each PID retains current
+and previous files for each stream, each bounded to 512 KiB (2 MiB total per PID);
+Docker responses are capped at 16 MiB. Docker or artifact I/O failures are best
+effort and do not prevent pytest from starting or replace its exit code. Probe
+failures likewise do not change test results. Forced cancellation can leave only the evidence already flushed;
 the wrapper does not add signal forwarding or process-tree management.
 
 Topology/server listeners are deliberately omitted: in pinned PyMongo 4.10.1,
