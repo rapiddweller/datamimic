@@ -1,9 +1,9 @@
 {
-  "status": "GO for bounded ArchKeel 3.0.1 upgrade review; UNKNOWN remains UNKNOWN",
+  "status": "GO for bounded CE issue #272 export-phase logging fix; UNKNOWN remains UNKNOWN",
   "reviewed_by": "Astra",
-  "review_reference": "docs/architecture/refactoring-study/experiment-2/archkeel-3.0.1-review.md",
-  "source_commit": "f8ac7a8c422017bc77a740519915224465abb5e3",
-  "source_digest": "ca4feeac489462a75bfc10d98a0a34498d562f6af037f1dd1ddbb916b907ec01",
+  "review_reference": "docs/architecture/refactoring-study/experiment-2/issue-272-logging-review.md",
+  "source_commit": "83fb0c429bd5a4bd005b63f8c121698fd0cab3aa",
+  "source_digest": "47f28e34d870e3ee4217fa09df80436755af0e4b1f8b0edb45c874fe28f8205f",
   "contract_digest": "4b4fd0ba1f77f60115d3e2d4ccb973391de7ab973f5cec60fc86d5ac699310c4",
   "analyzer_digest": "a9e159db0a1912171ba9ec7abe8a60aac53d1e865159acfc88686bd451741ef0",
   "validation_digest": "8ec476e4cdafd50bcff63d40950748eae597abc8d8d6223264251c4b524df7ce",
@@ -22,7 +22,7 @@
         "UNKNOWN-BOUNDARY-TYPES-f445331027bfe957"
       ],
       "records_digest": "489f99ad8b9414719c66a0a2b6db3efb81193ace3f43f442106cc76bb8fce2ef",
-      "current_source_reassessment": "Reassessed for published ArchKeel 3.0.1 on clean source f8ac7a8c422017bc77a740519915224465abb5e3. Every current native record in this group exactly equals its prior independently inspected 2.0.0 record, including IDs and evidence. All 21 decoded native record sections are equal; Git confirms identical CE source and contracts. The source-specific reason and UNKNOWN classification remain applicable. Analyzer identity is freshly bound; no prior analyzer proof is asserted as current."
+      "current_source_reassessment": "Reassessed for CE issue #272 on clean source 83fb0c429bd5a4bd005b63f8c121698fd0cab3aa with published ArchKeel 3.0.1 and Python 3.11.12. Every current native record in this group, including its data and evidence IDs, equals the preceding independently reviewed 3.0.1 inventory. All 21 decoded native record sections and the full validation object are equal. Git source review identifies only two timing-message string substitutions; no signatures, publication paths, control flow or contracts change. The group reason and UNKNOWN classification therefore remain applicable; its exact current records digest and assignment were independently verified."
     },
     {
       "group": "CE-MERGE-02",
@@ -32,7 +32,7 @@
         "UNKNOWN-BOUNDARY-TYPE-POSITION-9d9f68655b08ff1b"
       ],
       "records_digest": "19d108edc458c7e4ffc6a0cbc417d56b7a8ce92033f8b5d3d411131521319561",
-      "current_source_reassessment": "Reassessed for published ArchKeel 3.0.1 on clean source f8ac7a8c422017bc77a740519915224465abb5e3. Every current native record in this group exactly equals its prior independently inspected 2.0.0 record, including IDs and evidence. All 21 decoded native record sections are equal; Git confirms identical CE source and contracts. The source-specific reason and UNKNOWN classification remain applicable. Analyzer identity is freshly bound; no prior analyzer proof is asserted as current."
+      "current_source_reassessment": "Reassessed for CE issue #272 on clean source 83fb0c429bd5a4bd005b63f8c121698fd0cab3aa with published ArchKeel 3.0.1 and Python 3.11.12. Every current native record in this group, including its data and evidence IDs, equals the preceding independently reviewed 3.0.1 inventory. All 21 decoded native record sections and the full validation object are equal. Git source review identifies only two timing-message string substitutions; no signatures, publication paths, control flow or contracts change. The group reason and UNKNOWN classification therefore remain applicable; its exact current records digest and assignment were independently verified."
     },
     {
       "group": "CE-MERGE-03",
@@ -48,7 +48,7 @@
         "UNKNOWN-BOUNDARY-TYPE-ROUTE-fe933666c3683722"
       ],
       "records_digest": "c20762834ee0a4214b9caba5cd6b7574c77380706efb51430e0f4015a31e2de5",
-      "current_source_reassessment": "Reassessed for published ArchKeel 3.0.1 on clean source f8ac7a8c422017bc77a740519915224465abb5e3. Every current native record in this group exactly equals its prior independently inspected 2.0.0 record, including IDs and evidence. All 21 decoded native record sections are equal; Git confirms identical CE source and contracts. The source-specific reason and UNKNOWN classification remain applicable. Analyzer identity is freshly bound; no prior analyzer proof is asserted as current."
+      "current_source_reassessment": "Reassessed for CE issue #272 on clean source 83fb0c429bd5a4bd005b63f8c121698fd0cab3aa with published ArchKeel 3.0.1 and Python 3.11.12. Every current native record in this group, including its data and evidence IDs, equals the preceding independently reviewed 3.0.1 inventory. All 21 decoded native record sections and the full validation object are equal. Git source review identifies only two timing-message string substitutions; no signatures, publication paths, control flow or contracts change. The group reason and UNKNOWN classification therefore remain applicable; its exact current records digest and assignment were independently verified."
     },
     {
       "group": "CE-MERGE-04",
@@ -60,7 +60,7 @@
         "UNKNOWN-API-SURFACE-bf7aa0d3ee853572"
       ],
       "records_digest": "0d9845cbc6248f7c6fe4c1e0d3395c6a538f74fe0e1493803870b5954f65bcc5",
-      "current_source_reassessment": "Reassessed for published ArchKeel 3.0.1 on clean source f8ac7a8c422017bc77a740519915224465abb5e3. Every current native record in this group exactly equals its prior independently inspected 2.0.0 record, including IDs and evidence. All 21 decoded native record sections are equal; Git confirms identical CE source and contracts. The source-specific reason and UNKNOWN classification remain applicable. Analyzer identity is freshly bound; no prior analyzer proof is asserted as current."
+      "current_source_reassessment": "Reassessed for CE issue #272 on clean source 83fb0c429bd5a4bd005b63f8c121698fd0cab3aa with published ArchKeel 3.0.1 and Python 3.11.12. Every current native record in this group, including its data and evidence IDs, equals the preceding independently reviewed 3.0.1 inventory. All 21 decoded native record sections and the full validation object are equal. Git source review identifies only two timing-message string substitutions; no signatures, publication paths, control flow or contracts change. The group reason and UNKNOWN classification therefore remain applicable; its exact current records digest and assignment were independently verified."
     },
     {
       "group": "CE-MERGE-05",
@@ -71,7 +71,7 @@
         "UNKNOWN-BOUNDARY-TYPE-POSITION-db9b600ef5817326"
       ],
       "records_digest": "786b3cfea67d9241f3f1673f27c9f1e1d88563075153d18ce8ac065c6ea70bfe",
-      "current_source_reassessment": "Reassessed for published ArchKeel 3.0.1 on clean source f8ac7a8c422017bc77a740519915224465abb5e3. Every current native record in this group exactly equals its prior independently inspected 2.0.0 record, including IDs and evidence. All 21 decoded native record sections are equal; Git confirms identical CE source and contracts. The source-specific reason and UNKNOWN classification remain applicable. Analyzer identity is freshly bound; no prior analyzer proof is asserted as current."
+      "current_source_reassessment": "Reassessed for CE issue #272 on clean source 83fb0c429bd5a4bd005b63f8c121698fd0cab3aa with published ArchKeel 3.0.1 and Python 3.11.12. Every current native record in this group, including its data and evidence IDs, equals the preceding independently reviewed 3.0.1 inventory. All 21 decoded native record sections and the full validation object are equal. Git source review identifies only two timing-message string substitutions; no signatures, publication paths, control flow or contracts change. The group reason and UNKNOWN classification therefore remain applicable; its exact current records digest and assignment were independently verified."
     },
     {
       "group": "CE-MERGE-06",
@@ -87,7 +87,7 @@
         "UNKNOWN-BOUNDARY-TYPE-POSITION-c2124a0c8f61643e"
       ],
       "records_digest": "1084bf40514646eb4bc6a395a2319b1be0c30875b455ebdc21c6d985fe497383",
-      "current_source_reassessment": "Reassessed for published ArchKeel 3.0.1 on clean source f8ac7a8c422017bc77a740519915224465abb5e3. Every current native record in this group exactly equals its prior independently inspected 2.0.0 record, including IDs and evidence. All 21 decoded native record sections are equal; Git confirms identical CE source and contracts. The source-specific reason and UNKNOWN classification remain applicable. Analyzer identity is freshly bound; no prior analyzer proof is asserted as current."
+      "current_source_reassessment": "Reassessed for CE issue #272 on clean source 83fb0c429bd5a4bd005b63f8c121698fd0cab3aa with published ArchKeel 3.0.1 and Python 3.11.12. Every current native record in this group, including its data and evidence IDs, equals the preceding independently reviewed 3.0.1 inventory. All 21 decoded native record sections and the full validation object are equal. Git source review identifies only two timing-message string substitutions; no signatures, publication paths, control flow or contracts change. The group reason and UNKNOWN classification therefore remain applicable; its exact current records digest and assignment were independently verified."
     },
     {
       "group": "CE-MERGE-07",
@@ -100,7 +100,7 @@
         "UNKNOWN-BOUNDARY-TYPE-POSITION-aab3569db0191341"
       ],
       "records_digest": "c3be216d78ffb97e9b49be72e60c52f3700907a8f898fa707541d10cc6774159",
-      "current_source_reassessment": "Reassessed for published ArchKeel 3.0.1 on clean source f8ac7a8c422017bc77a740519915224465abb5e3. Every current native record in this group exactly equals its prior independently inspected 2.0.0 record, including IDs and evidence. All 21 decoded native record sections are equal; Git confirms identical CE source and contracts. The source-specific reason and UNKNOWN classification remain applicable. Analyzer identity is freshly bound; no prior analyzer proof is asserted as current."
+      "current_source_reassessment": "Reassessed for CE issue #272 on clean source 83fb0c429bd5a4bd005b63f8c121698fd0cab3aa with published ArchKeel 3.0.1 and Python 3.11.12. Every current native record in this group, including its data and evidence IDs, equals the preceding independently reviewed 3.0.1 inventory. All 21 decoded native record sections and the full validation object are equal. Git source review identifies only two timing-message string substitutions; no signatures, publication paths, control flow or contracts change. The group reason and UNKNOWN classification therefore remain applicable; its exact current records digest and assignment were independently verified."
     },
     {
       "group": "CE-MERGE-08",
@@ -120,23 +120,23 @@
         "UNKNOWN-BOUNDARY-TYPE-POSITION-f618985553362946"
       ],
       "records_digest": "8dfc0607e1cf5d065bb8755be72af56bd8add8bbef6584778d92f06bf8f8e92e",
-      "current_source_reassessment": "Reassessed for published ArchKeel 3.0.1 on clean source f8ac7a8c422017bc77a740519915224465abb5e3. Every current native record in this group exactly equals its prior independently inspected 2.0.0 record, including IDs and evidence. All 21 decoded native record sections are equal; Git confirms identical CE source and contracts. The source-specific reason and UNKNOWN classification remain applicable. Analyzer identity is freshly bound; no prior analyzer proof is asserted as current."
+      "current_source_reassessment": "Reassessed for CE issue #272 on clean source 83fb0c429bd5a4bd005b63f8c121698fd0cab3aa with published ArchKeel 3.0.1 and Python 3.11.12. Every current native record in this group, including its data and evidence IDs, equals the preceding independently reviewed 3.0.1 inventory. All 21 decoded native record sections and the full validation object are equal. Git source review identifies only two timing-message string substitutions; no signatures, publication paths, control flow or contracts change. The group reason and UNKNOWN classification therefore remain applicable; its exact current records digest and assignment were independently verified."
     },
     {
       "group": "CE-MERGE-09",
       "classification": "global_observation_limit",
-      "reason": "The current native scan parses all 489 files but resolves only 73.76% of 11,881 calls: 8,763 resolved, 1,857 partial and 1,261 unresolved. Context analysis follows direct annotations, constructor bindings and self-field access only. All 11,881 decoded call records and all context records exactly match the prior 2.0.0 scan on identical CE source. The package upgrade introduces no observed call or ownership delta; arbitrary call targets/dataflow remain unproved, and all 1,261 unresolved calls remain uncertainty.",
+      "reason": "The current native scan parses all 489 files but resolves only 73.76% of 11,881 calls: 8,763 resolved, 1,857 partial and 1,261 unresolved. Context analysis follows direct annotations, constructor bindings and self-field access only. All decoded calls and context records exactly match the preceding 3.0.1 scan. The two timing-label substitutions introduce no observed call or ownership delta; arbitrary call targets/dataflow remain unproved, and all 1,261 unresolved calls remain uncertainty.",
       "ids": [
         "UNKNOWN-CONTEXT-DATAFLOW",
         "UNKNOWN-PYTHON-DYNAMIC-CALLS"
       ],
       "records_digest": "cc0a1c4001dc127bc3d59ca64812fb03b87d4412f8251da5def63fc0fb59f19c",
-      "current_source_reassessment": "Reassessed for published ArchKeel 3.0.1 on clean source f8ac7a8c422017bc77a740519915224465abb5e3. Every current native record in this group exactly equals its prior independently inspected 2.0.0 record, including IDs and evidence. All 21 decoded native record sections are equal; Git confirms identical CE source and contracts. The source-specific reason and UNKNOWN classification remain applicable. Analyzer identity is freshly bound; no prior analyzer proof is asserted as current."
+      "current_source_reassessment": "Reassessed for CE issue #272 on clean source 83fb0c429bd5a4bd005b63f8c121698fd0cab3aa with published ArchKeel 3.0.1 and Python 3.11.12. Every current native record in this group, including its data and evidence IDs, equals the preceding independently reviewed 3.0.1 inventory. All 21 decoded native record sections and the full validation object are equal. Git source review identifies only two timing-message string substitutions; no signatures, publication paths, control flow or contracts change. The group reason and UNKNOWN classification therefore remain applicable; its exact current records digest and assignment were independently verified."
     },
     {
       "group": "CE-MERGE-10",
       "classification": "inherited_method_inventory_limit",
-      "reason": "The66 inherited-method inventory records span DSL statements/enums, Domain services/models/converters, IO types and SetupContext. Direct source fields and nominal bases do not prove inherited, decorated or dynamic members; MongoDBConnectionValues remains a TypedDict. No debt hidden behind an incomplete inventory is discharged.",
+      "reason": "The 66 inherited-method inventory records span DSL statements/enums, Domain services/models/converters, IO types and SetupContext. Direct source fields and nominal bases do not prove inherited, decorated or dynamic members; MongoDBConnectionValues remains a TypedDict. No debt hidden behind an incomplete inventory is discharged.",
       "ids": [
         "UNKNOWN-BOUNDARY-TYPE-POSITION-09789f436c1bba46",
         "UNKNOWN-BOUNDARY-TYPE-POSITION-0f10b14c3f59f2b7",
@@ -206,7 +206,7 @@
         "UNKNOWN-BOUNDARY-TYPE-POSITION-ffe02ed6aa1c3c57"
       ],
       "records_digest": "73f60f1977437b8fb84cb4f38d19a7b2d993dc383dcd1e1237d26a61ed7c34f6",
-      "current_source_reassessment": "Reassessed for published ArchKeel 3.0.1 on clean source f8ac7a8c422017bc77a740519915224465abb5e3. Every current native record in this group exactly equals its prior independently inspected 2.0.0 record, including IDs and evidence. All 21 decoded native record sections are equal; Git confirms identical CE source and contracts. The source-specific reason and UNKNOWN classification remain applicable. Analyzer identity is freshly bound; no prior analyzer proof is asserted as current."
+      "current_source_reassessment": "Reassessed for CE issue #272 on clean source 83fb0c429bd5a4bd005b63f8c121698fd0cab3aa with published ArchKeel 3.0.1 and Python 3.11.12. Every current native record in this group, including its data and evidence IDs, equals the preceding independently reviewed 3.0.1 inventory. All 21 decoded native record sections and the full validation object are equal. Git source review identifies only two timing-message string substitutions; no signatures, publication paths, control flow or contracts change. The group reason and UNKNOWN classification therefore remain applicable; its exact current records digest and assignment were independently verified."
     },
     {
       "group": "CE-MERGE-11",
@@ -216,7 +216,7 @@
         "UNKNOWN-BOUNDARY-TYPE-POSITION-8c42680e3902646d"
       ],
       "records_digest": "a90734b12de035bcdf545ecd89526d4a971db374faac88b0d5a151b3c014b89b",
-      "current_source_reassessment": "Reassessed for published ArchKeel 3.0.1 on clean source f8ac7a8c422017bc77a740519915224465abb5e3. Every current native record in this group exactly equals its prior independently inspected 2.0.0 record, including IDs and evidence. All 21 decoded native record sections are equal; Git confirms identical CE source and contracts. The source-specific reason and UNKNOWN classification remain applicable. Analyzer identity is freshly bound; no prior analyzer proof is asserted as current."
+      "current_source_reassessment": "Reassessed for CE issue #272 on clean source 83fb0c429bd5a4bd005b63f8c121698fd0cab3aa with published ArchKeel 3.0.1 and Python 3.11.12. Every current native record in this group, including its data and evidence IDs, equals the preceding independently reviewed 3.0.1 inventory. All 21 decoded native record sections and the full validation object are equal. Git source review identifies only two timing-message string substitutions; no signatures, publication paths, control flow or contracts change. The group reason and UNKNOWN classification therefore remain applicable; its exact current records digest and assignment were independently verified."
     },
     {
       "group": "CE-MERGE-12",
@@ -227,12 +227,12 @@
         "UNKNOWN-BOUNDARY-TYPE-POSITION-6445aa608973f0f3"
       ],
       "records_digest": "0dd14e03bad19ffa1392f81d5f9dc77655c9ca43771bcea50c6dc20cedcf1e79",
-      "current_source_reassessment": "Reassessed for published ArchKeel 3.0.1 on clean source f8ac7a8c422017bc77a740519915224465abb5e3. Every current native record in this group exactly equals its prior independently inspected 2.0.0 record, including IDs and evidence. All 21 decoded native record sections are equal; Git confirms identical CE source and contracts. The source-specific reason and UNKNOWN classification remain applicable. Analyzer identity is freshly bound; no prior analyzer proof is asserted as current."
+      "current_source_reassessment": "Reassessed for CE issue #272 on clean source 83fb0c429bd5a4bd005b63f8c121698fd0cab3aa with published ArchKeel 3.0.1 and Python 3.11.12. Every current native record in this group, including its data and evidence IDs, equals the preceding independently reviewed 3.0.1 inventory. All 21 decoded native record sections and the full validation object are equal. Git source review identifies only two timing-message string substitutions; no signatures, publication paths, control flow or contracts change. The group reason and UNKNOWN classification therefore remain applicable; its exact current records digest and assignment were independently verified."
     },
     {
       "group": "CE-MERGE-13",
       "classification": "property_binding_limit",
-      "reason": "The23 None positions are declared setter returns in DSL, Runtime and Domain properties. Void-return typing is valid but does not establish the setter input or inherited binding; every record remains UNKNOWN independently of any separate input debt.",
+      "reason": "The 23 None positions are declared setter returns in DSL, Runtime and Domain properties. Void-return typing is valid but does not establish the setter input or inherited binding; every record remains UNKNOWN independently of any separate input debt.",
       "ids": [
         "UNKNOWN-BOUNDARY-TYPE-POSITION-104c80423ac9667e",
         "UNKNOWN-BOUNDARY-TYPE-POSITION-14054786c87d9feb",
@@ -259,7 +259,7 @@
         "UNKNOWN-BOUNDARY-TYPE-POSITION-f62d17f6e309f23d"
       ],
       "records_digest": "eda66418572a36972b8a61d19ba6f8d96182dae5ed6efb2efe3ff76ace9200e2",
-      "current_source_reassessment": "Reassessed for published ArchKeel 3.0.1 on clean source f8ac7a8c422017bc77a740519915224465abb5e3. Every current native record in this group exactly equals its prior independently inspected 2.0.0 record, including IDs and evidence. All 21 decoded native record sections are equal; Git confirms identical CE source and contracts. The source-specific reason and UNKNOWN classification remain applicable. Analyzer identity is freshly bound; no prior analyzer proof is asserted as current."
+      "current_source_reassessment": "Reassessed for CE issue #272 on clean source 83fb0c429bd5a4bd005b63f8c121698fd0cab3aa with published ArchKeel 3.0.1 and Python 3.11.12. Every current native record in this group, including its data and evidence IDs, equals the preceding independently reviewed 3.0.1 inventory. All 21 decoded native record sections and the full validation object are equal. Git source review identifies only two timing-message string substitutions; no signatures, publication paths, control flow or contracts change. The group reason and UNKNOWN classification therefore remain applicable; its exact current records digest and assignment were independently verified."
     },
     {
       "group": "CE-MERGE-14",
@@ -270,7 +270,7 @@
         "UNKNOWN-BOUNDARY-TYPE-POSITION-92a60fa84bffc8fa"
       ],
       "records_digest": "ef85867edacb668f10ce43bd7e893d1a519edf68145ab85b2aaa5c98091c802c",
-      "current_source_reassessment": "Reassessed for published ArchKeel 3.0.1 on clean source f8ac7a8c422017bc77a740519915224465abb5e3. Every current native record in this group exactly equals its prior independently inspected 2.0.0 record, including IDs and evidence. All 21 decoded native record sections are equal; Git confirms identical CE source and contracts. The source-specific reason and UNKNOWN classification remain applicable. Analyzer identity is freshly bound; no prior analyzer proof is asserted as current."
+      "current_source_reassessment": "Reassessed for CE issue #272 on clean source 83fb0c429bd5a4bd005b63f8c121698fd0cab3aa with published ArchKeel 3.0.1 and Python 3.11.12. Every current native record in this group, including its data and evidence IDs, equals the preceding independently reviewed 3.0.1 inventory. All 21 decoded native record sections and the full validation object are equal. Git source review identifies only two timing-message string substitutions; no signatures, publication paths, control flow or contracts change. The group reason and UNKNOWN classification therefore remain applicable; its exact current records digest and assignment were independently verified."
     },
     {
       "group": "CE-MERGE-15",
@@ -281,7 +281,7 @@
         "UNKNOWN-BOUNDARY-TYPE-POSITION-ab43883d937833c2"
       ],
       "records_digest": "ef0ab0f0ea8f5dc7705ebc20421d6a7902a8c32ef484bedfb08193e03fd4e7e6",
-      "current_source_reassessment": "Reassessed for published ArchKeel 3.0.1 on clean source f8ac7a8c422017bc77a740519915224465abb5e3. Every current native record in this group exactly equals its prior independently inspected 2.0.0 record, including IDs and evidence. All 21 decoded native record sections are equal; Git confirms identical CE source and contracts. The source-specific reason and UNKNOWN classification remain applicable. Analyzer identity is freshly bound; no prior analyzer proof is asserted as current."
+      "current_source_reassessment": "Reassessed for CE issue #272 on clean source 83fb0c429bd5a4bd005b63f8c121698fd0cab3aa with published ArchKeel 3.0.1 and Python 3.11.12. Every current native record in this group, including its data and evidence IDs, equals the preceding independently reviewed 3.0.1 inventory. All 21 decoded native record sections and the full validation object are equal. Git source review identifies only two timing-message string substitutions; no signatures, publication paths, control flow or contracts change. The group reason and UNKNOWN classification therefore remain applicable; its exact current records digest and assignment were independently verified."
     },
     {
       "group": "CE-MERGE-16",
@@ -294,7 +294,7 @@
         "UNKNOWN-BOUNDARY-TYPE-POSITION-f109dcc51f2a279b"
       ],
       "records_digest": "6716d6c5d5de0890d6567fc26dfaffd565115915d90bf60bbd0518be8396abbc",
-      "current_source_reassessment": "Reassessed for published ArchKeel 3.0.1 on clean source f8ac7a8c422017bc77a740519915224465abb5e3. Every current native record in this group exactly equals its prior independently inspected 2.0.0 record, including IDs and evidence. All 21 decoded native record sections are equal; Git confirms identical CE source and contracts. The source-specific reason and UNKNOWN classification remain applicable. Analyzer identity is freshly bound; no prior analyzer proof is asserted as current."
+      "current_source_reassessment": "Reassessed for CE issue #272 on clean source 83fb0c429bd5a4bd005b63f8c121698fd0cab3aa with published ArchKeel 3.0.1 and Python 3.11.12. Every current native record in this group, including its data and evidence IDs, equals the preceding independently reviewed 3.0.1 inventory. All 21 decoded native record sections and the full validation object are equal. Git source review identifies only two timing-message string substitutions; no signatures, publication paths, control flow or contracts change. The group reason and UNKNOWN classification therefore remain applicable; its exact current records digest and assignment were independently verified."
     },
     {
       "group": "CE-MERGE-17",
@@ -304,7 +304,7 @@
         "UNKNOWN-BOUNDARY-TYPE-POSITION-32c0b286f2828d14"
       ],
       "records_digest": "d95cf4adec92c127d4354cb9ea3c0de3a49f2b4c608b10261142bab71bd2a86f",
-      "current_source_reassessment": "Reassessed for published ArchKeel 3.0.1 on clean source f8ac7a8c422017bc77a740519915224465abb5e3. Every current native record in this group exactly equals its prior independently inspected 2.0.0 record, including IDs and evidence. All 21 decoded native record sections are equal; Git confirms identical CE source and contracts. The source-specific reason and UNKNOWN classification remain applicable. Analyzer identity is freshly bound; no prior analyzer proof is asserted as current."
+      "current_source_reassessment": "Reassessed for CE issue #272 on clean source 83fb0c429bd5a4bd005b63f8c121698fd0cab3aa with published ArchKeel 3.0.1 and Python 3.11.12. Every current native record in this group, including its data and evidence IDs, equals the preceding independently reviewed 3.0.1 inventory. All 21 decoded native record sections and the full validation object are equal. Git source review identifies only two timing-message string substitutions; no signatures, publication paths, control flow or contracts change. The group reason and UNKNOWN classification therefore remain applicable; its exact current records digest and assignment were independently verified."
     },
     {
       "group": "CE-MERGE-18",
@@ -315,7 +315,7 @@
         "UNKNOWN-BOUNDARY-TYPE-POSITION-ba82317a503168e0"
       ],
       "records_digest": "ad2007cd627f715093272325f2929ef7443ad4c9c9e3c474da2b4df1f8de0734",
-      "current_source_reassessment": "Reassessed for published ArchKeel 3.0.1 on clean source f8ac7a8c422017bc77a740519915224465abb5e3. Every current native record in this group exactly equals its prior independently inspected 2.0.0 record, including IDs and evidence. All 21 decoded native record sections are equal; Git confirms identical CE source and contracts. The source-specific reason and UNKNOWN classification remain applicable. Analyzer identity is freshly bound; no prior analyzer proof is asserted as current."
+      "current_source_reassessment": "Reassessed for CE issue #272 on clean source 83fb0c429bd5a4bd005b63f8c121698fd0cab3aa with published ArchKeel 3.0.1 and Python 3.11.12. Every current native record in this group, including its data and evidence IDs, equals the preceding independently reviewed 3.0.1 inventory. All 21 decoded native record sections and the full validation object are equal. Git source review identifies only two timing-message string substitutions; no signatures, publication paths, control flow or contracts change. The group reason and UNKNOWN classification therefore remain applicable; its exact current records digest and assignment were independently verified."
     },
     {
       "group": "CE-MERGE-19",
@@ -326,7 +326,7 @@
         "UNKNOWN-BOUNDARY-TYPE-POSITION-444b2c4c363c0276"
       ],
       "records_digest": "9c03a06529668ba193b8ca128c062f3bd799d3d147163d963ab03401ea759d1c",
-      "current_source_reassessment": "Reassessed for published ArchKeel 3.0.1 on clean source f8ac7a8c422017bc77a740519915224465abb5e3. Every current native record in this group exactly equals its prior independently inspected 2.0.0 record, including IDs and evidence. All 21 decoded native record sections are equal; Git confirms identical CE source and contracts. The source-specific reason and UNKNOWN classification remain applicable. Analyzer identity is freshly bound; no prior analyzer proof is asserted as current."
+      "current_source_reassessment": "Reassessed for CE issue #272 on clean source 83fb0c429bd5a4bd005b63f8c121698fd0cab3aa with published ArchKeel 3.0.1 and Python 3.11.12. Every current native record in this group, including its data and evidence IDs, equals the preceding independently reviewed 3.0.1 inventory. All 21 decoded native record sections and the full validation object are equal. Git source review identifies only two timing-message string substitutions; no signatures, publication paths, control flow or contracts change. The group reason and UNKNOWN classification therefore remain applicable; its exact current records digest and assignment were independently verified."
     },
     {
       "group": "CE-MERGE-20",
@@ -337,7 +337,7 @@
         "UNKNOWN-BOUNDARY-TYPE-POSITION-6473a586f74c2f68"
       ],
       "records_digest": "82e959b06e9a6ffd07bc17bfa4e6d11ce33a2679251df29f4ed4c0c1e3ef8330",
-      "current_source_reassessment": "Reassessed for published ArchKeel 3.0.1 on clean source f8ac7a8c422017bc77a740519915224465abb5e3. Every current native record in this group exactly equals its prior independently inspected 2.0.0 record, including IDs and evidence. All 21 decoded native record sections are equal; Git confirms identical CE source and contracts. The source-specific reason and UNKNOWN classification remain applicable. Analyzer identity is freshly bound; no prior analyzer proof is asserted as current."
+      "current_source_reassessment": "Reassessed for CE issue #272 on clean source 83fb0c429bd5a4bd005b63f8c121698fd0cab3aa with published ArchKeel 3.0.1 and Python 3.11.12. Every current native record in this group, including its data and evidence IDs, equals the preceding independently reviewed 3.0.1 inventory. All 21 decoded native record sections and the full validation object are equal. Git source review identifies only two timing-message string substitutions; no signatures, publication paths, control flow or contracts change. The group reason and UNKNOWN classification therefore remain applicable; its exact current records digest and assignment were independently verified."
     },
     {
       "group": "CE-MERGE-21",
@@ -348,7 +348,7 @@
         "UNKNOWN-BOUNDARY-TYPE-POSITION-87bffff1d52fdcb6"
       ],
       "records_digest": "4671c9d3e2ede11c3b2caa554acfb9de6b8c8e7724d7fa97ecd096d772bc6a97",
-      "current_source_reassessment": "Reassessed for published ArchKeel 3.0.1 on clean source f8ac7a8c422017bc77a740519915224465abb5e3. Every current native record in this group exactly equals its prior independently inspected 2.0.0 record, including IDs and evidence. All 21 decoded native record sections are equal; Git confirms identical CE source and contracts. The source-specific reason and UNKNOWN classification remain applicable. Analyzer identity is freshly bound; no prior analyzer proof is asserted as current."
+      "current_source_reassessment": "Reassessed for CE issue #272 on clean source 83fb0c429bd5a4bd005b63f8c121698fd0cab3aa with published ArchKeel 3.0.1 and Python 3.11.12. Every current native record in this group, including its data and evidence IDs, equals the preceding independently reviewed 3.0.1 inventory. All 21 decoded native record sections and the full validation object are equal. Git source review identifies only two timing-message string substitutions; no signatures, publication paths, control flow or contracts change. The group reason and UNKNOWN classification therefore remain applicable; its exact current records digest and assignment were independently verified."
     },
     {
       "group": "CE-MERGE-22",
@@ -365,7 +365,7 @@
         "UNKNOWN-BOUNDARY-TYPE-POSITION-cfb3060900bf8620"
       ],
       "records_digest": "973f74ef29d60160005682799415d12507292c243fff9d6255409dcd4a956956",
-      "current_source_reassessment": "Reassessed for published ArchKeel 3.0.1 on clean source f8ac7a8c422017bc77a740519915224465abb5e3. Every current native record in this group exactly equals its prior independently inspected 2.0.0 record, including IDs and evidence. All 21 decoded native record sections are equal; Git confirms identical CE source and contracts. The source-specific reason and UNKNOWN classification remain applicable. Analyzer identity is freshly bound; no prior analyzer proof is asserted as current."
+      "current_source_reassessment": "Reassessed for CE issue #272 on clean source 83fb0c429bd5a4bd005b63f8c121698fd0cab3aa with published ArchKeel 3.0.1 and Python 3.11.12. Every current native record in this group, including its data and evidence IDs, equals the preceding independently reviewed 3.0.1 inventory. All 21 decoded native record sections and the full validation object are equal. Git source review identifies only two timing-message string substitutions; no signatures, publication paths, control flow or contracts change. The group reason and UNKNOWN classification therefore remain applicable; its exact current records digest and assignment were independently verified."
     },
     {
       "group": "CE-MERGE-23",
@@ -376,7 +376,7 @@
         "UNKNOWN-BOUNDARY-TYPE-POSITION-86ab8530fe231540"
       ],
       "records_digest": "f46b303e888745543ebc8fb9bf380c09a5739806aef46753a7e9dcaebcf721ce",
-      "current_source_reassessment": "Reassessed for published ArchKeel 3.0.1 on clean source f8ac7a8c422017bc77a740519915224465abb5e3. Every current native record in this group exactly equals its prior independently inspected 2.0.0 record, including IDs and evidence. All 21 decoded native record sections are equal; Git confirms identical CE source and contracts. The source-specific reason and UNKNOWN classification remain applicable. Analyzer identity is freshly bound; no prior analyzer proof is asserted as current."
+      "current_source_reassessment": "Reassessed for CE issue #272 on clean source 83fb0c429bd5a4bd005b63f8c121698fd0cab3aa with published ArchKeel 3.0.1 and Python 3.11.12. Every current native record in this group, including its data and evidence IDs, equals the preceding independently reviewed 3.0.1 inventory. All 21 decoded native record sections and the full validation object are equal. Git source review identifies only two timing-message string substitutions; no signatures, publication paths, control flow or contracts change. The group reason and UNKNOWN classification therefore remain applicable; its exact current records digest and assignment were independently verified."
     },
     {
       "group": "CE-MERGE-24",
@@ -387,7 +387,7 @@
         "UNKNOWN-BOUNDARY-TYPE-POSITION-ef61ce5ac53566ee"
       ],
       "records_digest": "0c80a18204b444043a77c0d298ef9b74a251a9b5468feb7db5a1717d984dcbe7",
-      "current_source_reassessment": "Reassessed for published ArchKeel 3.0.1 on clean source f8ac7a8c422017bc77a740519915224465abb5e3. Every current native record in this group exactly equals its prior independently inspected 2.0.0 record, including IDs and evidence. All 21 decoded native record sections are equal; Git confirms identical CE source and contracts. The source-specific reason and UNKNOWN classification remain applicable. Analyzer identity is freshly bound; no prior analyzer proof is asserted as current."
+      "current_source_reassessment": "Reassessed for CE issue #272 on clean source 83fb0c429bd5a4bd005b63f8c121698fd0cab3aa with published ArchKeel 3.0.1 and Python 3.11.12. Every current native record in this group, including its data and evidence IDs, equals the preceding independently reviewed 3.0.1 inventory. All 21 decoded native record sections and the full validation object are equal. Git source review identifies only two timing-message string substitutions; no signatures, publication paths, control flow or contracts change. The group reason and UNKNOWN classification therefore remain applicable; its exact current records digest and assignment were independently verified."
     },
     {
       "group": "CE-MERGE-25",
@@ -398,7 +398,7 @@
         "UNKNOWN-BOUNDARY-TYPE-POSITION-1d3283c039427ae7"
       ],
       "records_digest": "84b9732b515ee5c38051367870b28f4e9a924ffb2207ddbd754f81b7b7bb1250",
-      "current_source_reassessment": "Reassessed for published ArchKeel 3.0.1 on clean source f8ac7a8c422017bc77a740519915224465abb5e3. Every current native record in this group exactly equals its prior independently inspected 2.0.0 record, including IDs and evidence. All 21 decoded native record sections are equal; Git confirms identical CE source and contracts. The source-specific reason and UNKNOWN classification remain applicable. Analyzer identity is freshly bound; no prior analyzer proof is asserted as current."
+      "current_source_reassessment": "Reassessed for CE issue #272 on clean source 83fb0c429bd5a4bd005b63f8c121698fd0cab3aa with published ArchKeel 3.0.1 and Python 3.11.12. Every current native record in this group, including its data and evidence IDs, equals the preceding independently reviewed 3.0.1 inventory. All 21 decoded native record sections and the full validation object are equal. Git source review identifies only two timing-message string substitutions; no signatures, publication paths, control flow or contracts change. The group reason and UNKNOWN classification therefore remain applicable; its exact current records digest and assignment were independently verified."
     },
     {
       "group": "CE-MERGE-26",
@@ -409,7 +409,7 @@
         "UNKNOWN-BOUNDARY-TYPE-POSITION-4a6aec4c6326c019"
       ],
       "records_digest": "0aa0343a4afe5af57255716e97703adcd8ed4f4eff78c1806bf48e324d1d7c38",
-      "current_source_reassessment": "Reassessed for published ArchKeel 3.0.1 on clean source f8ac7a8c422017bc77a740519915224465abb5e3. Every current native record in this group exactly equals its prior independently inspected 2.0.0 record, including IDs and evidence. All 21 decoded native record sections are equal; Git confirms identical CE source and contracts. The source-specific reason and UNKNOWN classification remain applicable. Analyzer identity is freshly bound; no prior analyzer proof is asserted as current."
+      "current_source_reassessment": "Reassessed for CE issue #272 on clean source 83fb0c429bd5a4bd005b63f8c121698fd0cab3aa with published ArchKeel 3.0.1 and Python 3.11.12. Every current native record in this group, including its data and evidence IDs, equals the preceding independently reviewed 3.0.1 inventory. All 21 decoded native record sections and the full validation object are equal. Git source review identifies only two timing-message string substitutions; no signatures, publication paths, control flow or contracts change. The group reason and UNKNOWN classification therefore remain applicable; its exact current records digest and assignment were independently verified."
     },
     {
       "group": "CE-MERGE-27",
@@ -428,7 +428,7 @@
         "UNKNOWN-BOUNDARY-TYPE-POSITION-f49853c726c7e5de"
       ],
       "records_digest": "30653ec7877798cda90a27c86cf74b9c2edd1a26579ebd8b581f3a2efea14471",
-      "current_source_reassessment": "Reassessed for published ArchKeel 3.0.1 on clean source f8ac7a8c422017bc77a740519915224465abb5e3. Every current native record in this group exactly equals its prior independently inspected 2.0.0 record, including IDs and evidence. All 21 decoded native record sections are equal; Git confirms identical CE source and contracts. The source-specific reason and UNKNOWN classification remain applicable. Analyzer identity is freshly bound; no prior analyzer proof is asserted as current."
+      "current_source_reassessment": "Reassessed for CE issue #272 on clean source 83fb0c429bd5a4bd005b63f8c121698fd0cab3aa with published ArchKeel 3.0.1 and Python 3.11.12. Every current native record in this group, including its data and evidence IDs, equals the preceding independently reviewed 3.0.1 inventory. All 21 decoded native record sections and the full validation object are equal. Git source review identifies only two timing-message string substitutions; no signatures, publication paths, control flow or contracts change. The group reason and UNKNOWN classification therefore remain applicable; its exact current records digest and assignment were independently verified."
     },
     {
       "group": "CE-MERGE-28",
@@ -438,7 +438,7 @@
         "UNKNOWN-BOUNDARY-TYPE-POSITION-fbe4ded2eb4dfd6a"
       ],
       "records_digest": "2b30b9932fd2dfa60180c2822263b98464c41f838be303fd35598eaa2614c22d",
-      "current_source_reassessment": "Reassessed for published ArchKeel 3.0.1 on clean source f8ac7a8c422017bc77a740519915224465abb5e3. Every current native record in this group exactly equals its prior independently inspected 2.0.0 record, including IDs and evidence. All 21 decoded native record sections are equal; Git confirms identical CE source and contracts. The source-specific reason and UNKNOWN classification remain applicable. Analyzer identity is freshly bound; no prior analyzer proof is asserted as current."
+      "current_source_reassessment": "Reassessed for CE issue #272 on clean source 83fb0c429bd5a4bd005b63f8c121698fd0cab3aa with published ArchKeel 3.0.1 and Python 3.11.12. Every current native record in this group, including its data and evidence IDs, equals the preceding independently reviewed 3.0.1 inventory. All 21 decoded native record sections and the full validation object are equal. Git source review identifies only two timing-message string substitutions; no signatures, publication paths, control flow or contracts change. The group reason and UNKNOWN classification therefore remain applicable; its exact current records digest and assignment were independently verified."
     },
     {
       "group": "CE-MERGE-29",
@@ -448,7 +448,7 @@
         "UNKNOWN-BOUNDARY-TYPE-POSITION-844aad32733e6b57"
       ],
       "records_digest": "831f53d8405115be649fc5ce8458f31967e40d0a9cff339ae058be3fa443c424",
-      "current_source_reassessment": "Reassessed for published ArchKeel 3.0.1 on clean source f8ac7a8c422017bc77a740519915224465abb5e3. Every current native record in this group exactly equals its prior independently inspected 2.0.0 record, including IDs and evidence. All 21 decoded native record sections are equal; Git confirms identical CE source and contracts. The source-specific reason and UNKNOWN classification remain applicable. Analyzer identity is freshly bound; no prior analyzer proof is asserted as current."
+      "current_source_reassessment": "Reassessed for CE issue #272 on clean source 83fb0c429bd5a4bd005b63f8c121698fd0cab3aa with published ArchKeel 3.0.1 and Python 3.11.12. Every current native record in this group, including its data and evidence IDs, equals the preceding independently reviewed 3.0.1 inventory. All 21 decoded native record sections and the full validation object are equal. Git source review identifies only two timing-message string substitutions; no signatures, publication paths, control flow or contracts change. The group reason and UNKNOWN classification therefore remain applicable; its exact current records digest and assignment were independently verified."
     },
     {
       "group": "CE-MERGE-30",
@@ -458,7 +458,7 @@
         "UNKNOWN-BOUNDARY-TYPE-POSITION-b46539b39643885f"
       ],
       "records_digest": "126c839ca2685245682c97fc09b8476fb49c35b08c94003ba94b8bbbe6a99cc2",
-      "current_source_reassessment": "Reassessed for published ArchKeel 3.0.1 on clean source f8ac7a8c422017bc77a740519915224465abb5e3. Every current native record in this group exactly equals its prior independently inspected 2.0.0 record, including IDs and evidence. All 21 decoded native record sections are equal; Git confirms identical CE source and contracts. The source-specific reason and UNKNOWN classification remain applicable. Analyzer identity is freshly bound; no prior analyzer proof is asserted as current."
+      "current_source_reassessment": "Reassessed for CE issue #272 on clean source 83fb0c429bd5a4bd005b63f8c121698fd0cab3aa with published ArchKeel 3.0.1 and Python 3.11.12. Every current native record in this group, including its data and evidence IDs, equals the preceding independently reviewed 3.0.1 inventory. All 21 decoded native record sections and the full validation object are equal. Git source review identifies only two timing-message string substitutions; no signatures, publication paths, control flow or contracts change. The group reason and UNKNOWN classification therefore remain applicable; its exact current records digest and assignment were independently verified."
     },
     {
       "group": "CE-MERGE-31",
@@ -468,7 +468,7 @@
         "UNKNOWN-BOUNDARY-TYPE-POSITION-fb89cb4d48b5e5bd"
       ],
       "records_digest": "f621d4eda71e0e60622476a01a3832d8f6c00292f029dc1e2cb54d4e94589361",
-      "current_source_reassessment": "Reassessed for published ArchKeel 3.0.1 on clean source f8ac7a8c422017bc77a740519915224465abb5e3. Every current native record in this group exactly equals its prior independently inspected 2.0.0 record, including IDs and evidence. All 21 decoded native record sections are equal; Git confirms identical CE source and contracts. The source-specific reason and UNKNOWN classification remain applicable. Analyzer identity is freshly bound; no prior analyzer proof is asserted as current."
+      "current_source_reassessment": "Reassessed for CE issue #272 on clean source 83fb0c429bd5a4bd005b63f8c121698fd0cab3aa with published ArchKeel 3.0.1 and Python 3.11.12. Every current native record in this group, including its data and evidence IDs, equals the preceding independently reviewed 3.0.1 inventory. All 21 decoded native record sections and the full validation object are equal. Git source review identifies only two timing-message string substitutions; no signatures, publication paths, control flow or contracts change. The group reason and UNKNOWN classification therefore remain applicable; its exact current records digest and assignment were independently verified."
     },
     {
       "group": "CE-MERGE-32",
@@ -478,7 +478,7 @@
         "UNKNOWN-BOUNDARY-TYPE-POSITION-21ed92d464a88f7c"
       ],
       "records_digest": "fe093d395a4341d483b55370e91da3a623e3db99131c12043848982458fef669",
-      "current_source_reassessment": "Reassessed for published ArchKeel 3.0.1 on clean source f8ac7a8c422017bc77a740519915224465abb5e3. Every current native record in this group exactly equals its prior independently inspected 2.0.0 record, including IDs and evidence. All 21 decoded native record sections are equal; Git confirms identical CE source and contracts. The source-specific reason and UNKNOWN classification remain applicable. Analyzer identity is freshly bound; no prior analyzer proof is asserted as current."
+      "current_source_reassessment": "Reassessed for CE issue #272 on clean source 83fb0c429bd5a4bd005b63f8c121698fd0cab3aa with published ArchKeel 3.0.1 and Python 3.11.12. Every current native record in this group, including its data and evidence IDs, equals the preceding independently reviewed 3.0.1 inventory. All 21 decoded native record sections and the full validation object are equal. Git source review identifies only two timing-message string substitutions; no signatures, publication paths, control flow or contracts change. The group reason and UNKNOWN classification therefore remain applicable; its exact current records digest and assignment were independently verified."
     },
     {
       "group": "CE-MERGE-33",
@@ -493,12 +493,12 @@
         "UNKNOWN-BOUNDARY-TYPE-POSITION-f5e031f2e43037fc"
       ],
       "records_digest": "a64d7eb34ae3ab32a9ff4e9c7e13d06a49d10fa4a1fc6c49e1906d73b086fdc9",
-      "current_source_reassessment": "Reassessed for published ArchKeel 3.0.1 on clean source f8ac7a8c422017bc77a740519915224465abb5e3. Every current native record in this group exactly equals its prior independently inspected 2.0.0 record, including IDs and evidence. All 21 decoded native record sections are equal; Git confirms identical CE source and contracts. The source-specific reason and UNKNOWN classification remain applicable. Analyzer identity is freshly bound; no prior analyzer proof is asserted as current."
+      "current_source_reassessment": "Reassessed for CE issue #272 on clean source 83fb0c429bd5a4bd005b63f8c121698fd0cab3aa with published ArchKeel 3.0.1 and Python 3.11.12. Every current native record in this group, including its data and evidence IDs, equals the preceding independently reviewed 3.0.1 inventory. All 21 decoded native record sections and the full validation object are equal. Git source review identifies only two timing-message string substitutions; no signatures, publication paths, control flow or contracts change. The group reason and UNKNOWN classification therefore remain applicable; its exact current records digest and assignment were independently verified."
     },
     {
       "group": "CE-MERGE-34",
       "classification": "stdlib_type_limit",
-      "reason": "The39 direct/nested Path, Random, timedelta and Traversable positions represent actual filesystem, RNG, time and resource interfaces. Their external surfaces remain unresolved, including DTO fields; known library names do not constitute full closure.",
+      "reason": "The 39 direct/nested Path, Random, timedelta and Traversable positions represent actual filesystem, RNG, time and resource interfaces. Their external surfaces remain unresolved, including DTO fields; known library names do not constitute full closure.",
       "ids": [
         "UNKNOWN-BOUNDARY-TYPE-POSITION-006aad5a6288c516",
         "UNKNOWN-BOUNDARY-TYPE-POSITION-07420409299cad0a",
@@ -541,12 +541,12 @@
         "UNKNOWN-BOUNDARY-TYPE-POSITION-f253b98f4f7fccdf"
       ],
       "records_digest": "d6efc52ad7889018af0f20ad6e60f1c0a6f2f02c6c104c5cb8def7aaaadeb6c1",
-      "current_source_reassessment": "Reassessed for published ArchKeel 3.0.1 on clean source f8ac7a8c422017bc77a740519915224465abb5e3. Every current native record in this group exactly equals its prior independently inspected 2.0.0 record, including IDs and evidence. All 21 decoded native record sections are equal; Git confirms identical CE source and contracts. The source-specific reason and UNKNOWN classification remain applicable. Analyzer identity is freshly bound; no prior analyzer proof is asserted as current."
+      "current_source_reassessment": "Reassessed for CE issue #272 on clean source 83fb0c429bd5a4bd005b63f8c121698fd0cab3aa with published ArchKeel 3.0.1 and Python 3.11.12. Every current native record in this group, including its data and evidence IDs, equals the preceding independently reviewed 3.0.1 inventory. All 21 decoded native record sections and the full validation object are equal. Git source review identifies only two timing-message string substitutions; no signatures, publication paths, control flow or contracts change. The group reason and UNKNOWN classification therefore remain applicable; its exact current records digest and assignment were independently verified."
     },
     {
       "group": "CE-MERGE-35",
       "classification": "type_variable_limit",
-      "reason": "The14 TypeVar positions preserve generated-model T and input-element T across selectors, lists and iterators. Current bodies retain those correlations; the checker does not prove the complete generic algebra, and no object substitution is approved.",
+      "reason": "The 14 TypeVar positions preserve generated-model T and input-element T across selectors, lists and iterators. Current bodies retain those correlations; the checker does not prove the complete generic algebra, and no object substitution is approved.",
       "ids": [
         "UNKNOWN-BOUNDARY-TYPE-POSITION-11657edbd7e9f495",
         "UNKNOWN-BOUNDARY-TYPE-POSITION-1f6699e0d644c8a9",
@@ -564,7 +564,7 @@
         "UNKNOWN-BOUNDARY-TYPE-POSITION-e9f2a054bc20e368"
       ],
       "records_digest": "315fbdebe2e666557a63381c80837a210419a2162866ddbe61f4c414230da9ea",
-      "current_source_reassessment": "Reassessed for published ArchKeel 3.0.1 on clean source f8ac7a8c422017bc77a740519915224465abb5e3. Every current native record in this group exactly equals its prior independently inspected 2.0.0 record, including IDs and evidence. All 21 decoded native record sections are equal; Git confirms identical CE source and contracts. The source-specific reason and UNKNOWN classification remain applicable. Analyzer identity is freshly bound; no prior analyzer proof is asserted as current."
+      "current_source_reassessment": "Reassessed for CE issue #272 on clean source 83fb0c429bd5a4bd005b63f8c121698fd0cab3aa with published ArchKeel 3.0.1 and Python 3.11.12. Every current native record in this group, including its data and evidence IDs, equals the preceding independently reviewed 3.0.1 inventory. All 21 decoded native record sections and the full validation object are equal. Git source review identifies only two timing-message string substitutions; no signatures, publication paths, control flow or contracts change. The group reason and UNKNOWN classification therefore remain applicable; its exact current records digest and assignment were independently verified."
     },
     {
       "group": "CE-MERGE-36",
@@ -575,12 +575,12 @@
         "UNKNOWN-BOUNDARY-TYPE-POSITION-2b96a76af66c156b"
       ],
       "records_digest": "e3e400eb7a5f37a2f4e22f487ca8b71b398bdfd9335d5cb44a063fd81289afef",
-      "current_source_reassessment": "Reassessed for published ArchKeel 3.0.1 on clean source f8ac7a8c422017bc77a740519915224465abb5e3. Every current native record in this group exactly equals its prior independently inspected 2.0.0 record, including IDs and evidence. All 21 decoded native record sections are equal; Git confirms identical CE source and contracts. The source-specific reason and UNKNOWN classification remain applicable. Analyzer identity is freshly bound; no prior analyzer proof is asserted as current."
+      "current_source_reassessment": "Reassessed for CE issue #272 on clean source 83fb0c429bd5a4bd005b63f8c121698fd0cab3aa with published ArchKeel 3.0.1 and Python 3.11.12. Every current native record in this group, including its data and evidence IDs, equals the preceding independently reviewed 3.0.1 inventory. All 21 decoded native record sections and the full validation object are equal. Git source review identifies only two timing-message string substitutions; no signatures, publication paths, control flow or contracts change. The group reason and UNKNOWN classification therefore remain applicable; its exact current records digest and assignment were independently verified."
     },
     {
       "group": "CE-MERGE-37",
       "classification": "uncertain_alias_binding",
-      "reason": "All21 RegisteredClient positions retain Client | SqlScriptClient. The heterogeneous registry is intentional and capability-sensitive; the alias and all alternative surfaces remain unproved rather than narrowed to one database implementation.",
+      "reason": "All 21 RegisteredClient positions retain Client | SqlScriptClient. The heterogeneous registry is intentional and capability-sensitive; the alias and all alternative surfaces remain unproved rather than narrowed to one database implementation.",
       "ids": [
         "UNKNOWN-BOUNDARY-TYPE-POSITION-08ad9b9d956f3aff",
         "UNKNOWN-BOUNDARY-TYPE-POSITION-1ca687995b416c42",
@@ -605,7 +605,7 @@
         "UNKNOWN-BOUNDARY-TYPE-POSITION-de227646ce1f0811"
       ],
       "records_digest": "259fc712c481ea1a4c3792111d2d5bd62ba41d43074805eff5b132eb62c56e63",
-      "current_source_reassessment": "Reassessed for published ArchKeel 3.0.1 on clean source f8ac7a8c422017bc77a740519915224465abb5e3. Every current native record in this group exactly equals its prior independently inspected 2.0.0 record, including IDs and evidence. All 21 decoded native record sections are equal; Git confirms identical CE source and contracts. The source-specific reason and UNKNOWN classification remain applicable. Analyzer identity is freshly bound; no prior analyzer proof is asserted as current."
+      "current_source_reassessment": "Reassessed for CE issue #272 on clean source 83fb0c429bd5a4bd005b63f8c121698fd0cab3aa with published ArchKeel 3.0.1 and Python 3.11.12. Every current native record in this group, including its data and evidence IDs, equals the preceding independently reviewed 3.0.1 inventory. All 21 decoded native record sections and the full validation object are equal. Git source review identifies only two timing-message string substitutions; no signatures, publication paths, control flow or contracts change. The group reason and UNKNOWN classification therefore remain applicable; its exact current records digest and assignment were independently verified."
     },
     {
       "group": "CE-MERGE-38",
@@ -615,7 +615,7 @@
         "UNKNOWN-BOUNDARY-TYPE-POSITION-1a2f0ac4b83db719"
       ],
       "records_digest": "e6ee87e7bd6320beb96d5e6f32ba0fb06008c9e09118ec2ed69a74e4e7812b80",
-      "current_source_reassessment": "Reassessed for published ArchKeel 3.0.1 on clean source f8ac7a8c422017bc77a740519915224465abb5e3. Every current native record in this group exactly equals its prior independently inspected 2.0.0 record, including IDs and evidence. All 21 decoded native record sections are equal; Git confirms identical CE source and contracts. The source-specific reason and UNKNOWN classification remain applicable. Analyzer identity is freshly bound; no prior analyzer proof is asserted as current."
+      "current_source_reassessment": "Reassessed for CE issue #272 on clean source 83fb0c429bd5a4bd005b63f8c121698fd0cab3aa with published ArchKeel 3.0.1 and Python 3.11.12. Every current native record in this group, including its data and evidence IDs, equals the preceding independently reviewed 3.0.1 inventory. All 21 decoded native record sections and the full validation object are equal. Git source review identifies only two timing-message string substitutions; no signatures, publication paths, control flow or contracts change. The group reason and UNKNOWN classification therefore remain applicable; its exact current records digest and assignment were independently verified."
     },
     {
       "group": "CE-MERGE-39",
@@ -626,7 +626,7 @@
         "UNKNOWN-BOUNDARY-TYPE-POSITION-8958397e43ff0828"
       ],
       "records_digest": "20fd7f70c676ba5994b5c585d7b487965b59afb4f59446cf23778605ec2cf0cf",
-      "current_source_reassessment": "Reassessed for published ArchKeel 3.0.1 on clean source f8ac7a8c422017bc77a740519915224465abb5e3. Every current native record in this group exactly equals its prior independently inspected 2.0.0 record, including IDs and evidence. All 21 decoded native record sections are equal; Git confirms identical CE source and contracts. The source-specific reason and UNKNOWN classification remain applicable. Analyzer identity is freshly bound; no prior analyzer proof is asserted as current."
+      "current_source_reassessment": "Reassessed for CE issue #272 on clean source 83fb0c429bd5a4bd005b63f8c121698fd0cab3aa with published ArchKeel 3.0.1 and Python 3.11.12. Every current native record in this group, including its data and evidence IDs, equals the preceding independently reviewed 3.0.1 inventory. All 21 decoded native record sections and the full validation object are equal. Git source review identifies only two timing-message string substitutions; no signatures, publication paths, control flow or contracts change. The group reason and UNKNOWN classification therefore remain applicable; its exact current records digest and assignment were independently verified."
     },
     {
       "group": "CE-MERGE-40",
@@ -637,7 +637,7 @@
         "UNKNOWN-BOUNDARY-TYPE-POSITION-f2c95ea1f9e1527c"
       ],
       "records_digest": "8488894e5e6e532d2cab0a4d7d7ae5fbe4ee9e26db0e43e46d072a335ccd6a6c",
-      "current_source_reassessment": "Reassessed for published ArchKeel 3.0.1 on clean source f8ac7a8c422017bc77a740519915224465abb5e3. Every current native record in this group exactly equals its prior independently inspected 2.0.0 record, including IDs and evidence. All 21 decoded native record sections are equal; Git confirms identical CE source and contracts. The source-specific reason and UNKNOWN classification remain applicable. Analyzer identity is freshly bound; no prior analyzer proof is asserted as current."
+      "current_source_reassessment": "Reassessed for CE issue #272 on clean source 83fb0c429bd5a4bd005b63f8c121698fd0cab3aa with published ArchKeel 3.0.1 and Python 3.11.12. Every current native record in this group, including its data and evidence IDs, equals the preceding independently reviewed 3.0.1 inventory. All 21 decoded native record sections and the full validation object are equal. Git source review identifies only two timing-message string substitutions; no signatures, publication paths, control flow or contracts change. The group reason and UNKNOWN classification therefore remain applicable; its exact current records digest and assignment were independently verified."
     },
     {
       "group": "CE-MERGE-41",
@@ -647,7 +647,7 @@
         "UNKNOWN-BOUNDARY-TYPE-POSITION-1c57880c66cf05a2"
       ],
       "records_digest": "e9c564d9592f19d2fcd65ed39ee446c72b0e5c3db533b842dec0ae67b345f8b6",
-      "current_source_reassessment": "Reassessed for published ArchKeel 3.0.1 on clean source f8ac7a8c422017bc77a740519915224465abb5e3. Every current native record in this group exactly equals its prior independently inspected 2.0.0 record, including IDs and evidence. All 21 decoded native record sections are equal; Git confirms identical CE source and contracts. The source-specific reason and UNKNOWN classification remain applicable. Analyzer identity is freshly bound; no prior analyzer proof is asserted as current."
+      "current_source_reassessment": "Reassessed for CE issue #272 on clean source 83fb0c429bd5a4bd005b63f8c121698fd0cab3aa with published ArchKeel 3.0.1 and Python 3.11.12. Every current native record in this group, including its data and evidence IDs, equals the preceding independently reviewed 3.0.1 inventory. All 21 decoded native record sections and the full validation object are equal. Git source review identifies only two timing-message string substitutions; no signatures, publication paths, control flow or contracts change. The group reason and UNKNOWN classification therefore remain applicable; its exact current records digest and assignment were independently verified."
     },
     {
       "group": "CE-MERGE-42",
@@ -657,7 +657,7 @@
         "UNKNOWN-BOUNDARY-TYPE-POSITION-6d1c3cb4950381d4"
       ],
       "records_digest": "e2cbc8f124c7dd14ff015060d56454b6064b9970276ab696d5fa629d9c3bbbc8",
-      "current_source_reassessment": "Reassessed for published ArchKeel 3.0.1 on clean source f8ac7a8c422017bc77a740519915224465abb5e3. Every current native record in this group exactly equals its prior independently inspected 2.0.0 record, including IDs and evidence. All 21 decoded native record sections are equal; Git confirms identical CE source and contracts. The source-specific reason and UNKNOWN classification remain applicable. Analyzer identity is freshly bound; no prior analyzer proof is asserted as current."
+      "current_source_reassessment": "Reassessed for CE issue #272 on clean source 83fb0c429bd5a4bd005b63f8c121698fd0cab3aa with published ArchKeel 3.0.1 and Python 3.11.12. Every current native record in this group, including its data and evidence IDs, equals the preceding independently reviewed 3.0.1 inventory. All 21 decoded native record sections and the full validation object are equal. Git source review identifies only two timing-message string substitutions; no signatures, publication paths, control flow or contracts change. The group reason and UNKNOWN classification therefore remain applicable; its exact current records digest and assignment were independently verified."
     },
     {
       "group": "CE-MERGE-43",
@@ -667,7 +667,7 @@
         "UNKNOWN-API-SURFACE-40bca825c62ac014"
       ],
       "records_digest": "1c7cc22b561935f779a02c48381a865f544bf8b3529601fe32e3c866c54c571f",
-      "current_source_reassessment": "Reassessed for published ArchKeel 3.0.1 on clean source f8ac7a8c422017bc77a740519915224465abb5e3. Every current native record in this group exactly equals its prior independently inspected 2.0.0 record, including IDs and evidence. All 21 decoded native record sections are equal; Git confirms identical CE source and contracts. The source-specific reason and UNKNOWN classification remain applicable. Analyzer identity is freshly bound; no prior analyzer proof is asserted as current."
+      "current_source_reassessment": "Reassessed for CE issue #272 on clean source 83fb0c429bd5a4bd005b63f8c121698fd0cab3aa with published ArchKeel 3.0.1 and Python 3.11.12. Every current native record in this group, including its data and evidence IDs, equals the preceding independently reviewed 3.0.1 inventory. All 21 decoded native record sections and the full validation object are equal. Git source review identifies only two timing-message string substitutions; no signatures, publication paths, control flow or contracts change. The group reason and UNKNOWN classification therefore remain applicable; its exact current records digest and assignment were independently verified."
     },
     {
       "group": "CE-MERGE-44",
@@ -682,7 +682,7 @@
         "UNKNOWN-BOUNDARY-TYPE-POSITION-cc350779e01d8a7a"
       ],
       "records_digest": "99948079686ca85b0a38ba151b8d20fb77d39e857993f89e9d8727135b777fc5",
-      "current_source_reassessment": "Reassessed for published ArchKeel 3.0.1 on clean source f8ac7a8c422017bc77a740519915224465abb5e3. Every current native record in this group exactly equals its prior independently inspected 2.0.0 record, including IDs and evidence. All 21 decoded native record sections are equal; Git confirms identical CE source and contracts. The source-specific reason and UNKNOWN classification remain applicable. Analyzer identity is freshly bound; no prior analyzer proof is asserted as current."
+      "current_source_reassessment": "Reassessed for CE issue #272 on clean source 83fb0c429bd5a4bd005b63f8c121698fd0cab3aa with published ArchKeel 3.0.1 and Python 3.11.12. Every current native record in this group, including its data and evidence IDs, equals the preceding independently reviewed 3.0.1 inventory. All 21 decoded native record sections and the full validation object are equal. Git source review identifies only two timing-message string substitutions; no signatures, publication paths, control flow or contracts change. The group reason and UNKNOWN classification therefore remain applicable; its exact current records digest and assignment were independently verified."
     },
     {
       "group": "CE-MERGE-45",
@@ -698,7 +698,7 @@
         "UNKNOWN-BOUNDARY-TYPE-POSITION-f24ae27309d4ceef"
       ],
       "records_digest": "cb1c530f12d4f694eb73b00de8546ea4a49ccbd876ad0b79bb8bc1588ff3c687",
-      "current_source_reassessment": "Reassessed for published ArchKeel 3.0.1 on clean source f8ac7a8c422017bc77a740519915224465abb5e3. Every current native record in this group exactly equals its prior independently inspected 2.0.0 record, including IDs and evidence. All 21 decoded native record sections are equal; Git confirms identical CE source and contracts. The source-specific reason and UNKNOWN classification remain applicable. Analyzer identity is freshly bound; no prior analyzer proof is asserted as current."
+      "current_source_reassessment": "Reassessed for CE issue #272 on clean source 83fb0c429bd5a4bd005b63f8c121698fd0cab3aa with published ArchKeel 3.0.1 and Python 3.11.12. Every current native record in this group, including its data and evidence IDs, equals the preceding independently reviewed 3.0.1 inventory. All 21 decoded native record sections and the full validation object are equal. Git source review identifies only two timing-message string substitutions; no signatures, publication paths, control flow or contracts change. The group reason and UNKNOWN classification therefore remain applicable; its exact current records digest and assignment were independently verified."
     }
   ],
   "source_contract_debt_ids": [
@@ -712,10 +712,10 @@
   "residual_open_map_ids": [
     "UNKNOWN-BOUNDARY-TYPE-POSITION-32c0b286f2828d14"
   ],
-  "scope": "Independent published ArchKeel 2.0.0 to 3.0.1 checker upgrade review. Native observation is bound to clean analyzed source f8ac7a8c422017bc77a740519915224465abb5e3; reviewed integration commit a446c2db47bd7502f1e1faa021de86e4c1b85692 has identical analyzed CE source/contracts and changes only checker pin, documentation and tests. Existing baseline, budgets, coverage and completion policy are retained. Separate PR only; this review does not authorize merge.",
+  "scope": "Independent review of the CE-only issue #272 timing-label correction on clean analyzed source 83fb0c429bd5a4bd005b63f8c121698fd0cab3aa. Two gen_timer string literals change; tests exercise file and targetless execution. Authoring, ErrorHandling, MongoDB diagnostics, Enterprise alignment and merge authorization are outside this review. Contracts, baseline, budgets, permissions and completion policy remain unchanged.",
   "validation_unknowns": {
     "classification": "publication_and_inherited_surface_uncertainty",
-    "reason": "All20 diagnostics are interface.usage_unknown, covering16 unique subjects. LeafFieldKind is a real Literal alias used by FieldKind and LeafFieldPlan; the15 Domain models are explicit BaseEntity subclasses. AST checks confirm no direct class-body control flow in those models, while inherited/property/alias surfaces and publication use are not fully proven. These diagnostics therefore remain assessed uncertainty; they are not silently treated as used, unused or PASS.",
+    "reason": "All 20 diagnostics are interface.usage_unknown, covering 16 unique subjects. LeafFieldKind is a real Literal alias used by FieldKind and LeafFieldPlan; the 15 Domain models are explicit BaseEntity subclasses. AST checks confirm no direct class-body control flow in those models, while inherited/property/alias surfaces and publication use are not fully proven. These diagnostics therefore remain assessed uncertainty; they are not silently treated as used, unused or PASS. Current source and all current diagnostics were rechecked for issue #272; the complete diagnostic objects equal the preceding 3.0.1 validation.",
     "diagnostics": [
       {
         "code": "interface.usage_unknown",
@@ -880,10 +880,10 @@
     ]
   },
   "independent_review": {
-    "reviewer_task": "/root/astra_archkeel_301_review",
+    "reviewer_task": "/root/astra_issue272_review",
     "date": "2026-10-15",
-    "method": "Read release notes, Makefile, CI/report publisher, completion gate and tests, prior independent review and all 45 group reasons. Independently decoded all 21 current native record sections and compared them with the 2.0.0 evidence; every record is equal, including all 31,622 evidence records. Matched all 286 native UNKNOWNs to the complete projection and revalidated all 45 group digests and exact partition. Inspected six concrete annotation debts and generator open map in current source; rechecked Literal alias use and AST bases/control flow for all 15 diagnostic model subjects. Compared every validation field and preserved all diagnostics and budget failures. Verified source/contracts equality by Git and reviewed the four-file integration diff plus RED/GREEN test logs. Executed the unchanged completion gate against this new receipt.",
-    "partition_note": "All 286 records exactly equal the prior inspected inventory. All 45 classifications, source-specific reasons and six explicit annotation debt IDs are retained; each group records current reassessment. No UNKNOWN is converted to PASS.",
+    "method": "Read AGENTS, the complete source/test diff, gen_timer and its worker/process call sites, the unchanged completion gate, prior independent note and all 45 group reasons. Independently decoded and compared every current native record in all 21 sections with the preceding 3.0.1 artifacts; all records are equal. Matched all 286 native UNKNOWNs to the full projection, revalidated all group digests and exact-once partition, and verified all 267 aggregate position dictionaries against detailed records. Rechecked the six missing-annotation obligations and generator open map in current source, and checked the Literal alias and AST bases/control flow for all 15 model diagnostic subjects. Compared the full validation object, retained every diagnostic and historical budget message, and verified unchanged contracts/baseline/gate with Git. Independently executed the six focused runtime tests and the unchanged completion gate.",
+    "partition_note": "All 286 current records exactly equal the prior inspected native inventory; all 45 classifications and six annotation debt IDs are retained. No UNKNOWN is converted to PASS.",
     "unknown_count": 286,
     "group_count": 45,
     "explicit_missing_annotation_debt_count": 6,
@@ -929,46 +929,49 @@
       "rules": "PASS",
       "status": "PASS"
     },
-    "baseline_note": "known-violations.json, target contracts, permissions, coverage floor and completion gate are unchanged. All four native historical budget messages remain: unresolved calls 1278->1261, cycle edges 11->2, typing positions 143->146, and untyped private accesses 3->0. Typing 146 exceeds historical 143 exactly as before; this review does not claim every historical scalar budget is met or rewrite the baseline.",
-    "validation_changes": {
-      "open_decision_count": 0,
-      "open_decisions_complete": true
-    },
-    "validation_note": "These two previously null fields are now populated; they are the only parsed validation differences. Empty open_decisions, all 20 interface.usage_unknown diagnostics, measurements, rule assessments, failures and raw exit_code 2 remain unchanged. Validation digest is freshly calculated over the complete new object.",
+    "baseline_note": "Contracts, known-violations.json, permissions, coverage floor and completion gate are unchanged. All four historical budget messages remain: unresolved calls 1278->1261, cycle edges 11->2, typing positions 143->146, and untyped private accesses 3->0. Typing 146 exceeds historical 143; this review does not rewrite budgets or claim every scalar budget passes.",
+    "validation_changes": {},
+    "validation_note": "The complete parsed validation object equals the preceding 3.0.1 result. All 20 interface.usage_unknown diagnostics, rule assessments, measurements, failures and native exit code 2 remain. The validation digest was independently calculated over the new artifact.",
     "analyzer": {
       "package_version": "3.0.1",
       "python_version": "3.11.12",
       "internal_version": "0.74.0",
-      "previous_digest": "7106e3595fa7df9269cb43ee280f9c557659db7bda171b1f65ff5619ab54aa24",
+      "previous_digest": "a9e159db0a1912171ba9ec7abe8a60aac53d1e865159acfc88686bd451741ef0",
       "current_digest": "a9e159db0a1912171ba9ec7abe8a60aac53d1e865159acfc88686bd451741ef0"
     },
     "source_identity": {
-      "analyzed_commit": "f8ac7a8c422017bc77a740519915224465abb5e3",
-      "reviewed_integration_commit": "a446c2db47bd7502f1e1faa021de86e4c1b85692",
-      "prior_analyzed_commit": "abcb5ca09dc34c5f012af195b2e6ba1a8dc3b6cd",
-      "same_analyzed_source_and_contracts": true
+      "analyzed_commit": "83fb0c429bd5a4bd005b63f8c121698fd0cab3aa",
+      "prior_analyzed_commit": "b926dad0cb86ab6e8a7117ff5c91a89315b5f62e",
+      "prior_source_digest": "ca4feeac489462a75bfc10d98a0a34498d562f6af037f1dd1ddbb916b907ec01",
+      "same_analyzed_source": false,
+      "same_contracts": true,
+      "source_delta": "Two gen_timer timing-label string substitutions in engine/runtime/logging.py."
     },
     "artifact_sha256": {
-      "architecture.json": "55effb481336d557fab1c3ce36b65e775d23eb86661d292f757153f3ac446e6d",
+      "architecture.json": "a5e6e19a5ddd0b6961aa06ab26c8212a67c3f71fc3c8517080dab2d6b89203a2",
       "validation.json": "beb41adb6efea0333ab8558d475e4134853025f41c867e1400ef56affb05c680",
-      "completion.json": "fd06f7937107af83f86066fe21efc1cd4a492c645e769299b602c17fb875c2a9",
-      "provenance.json": "7cf66e5633b9de16c36b0641f10cfa3a1fd9f616f27f1e30accc36a5f94f8846"
+      "completion.json": "2fa7860301fd168c784b634a65a9d9d50d00ed899fe89d698ad6557594390000",
+      "provenance.json": "767e302777814fcfd6dfac496e6a42ddc1d356c9fd66293e3e80db696135fdd4"
     },
     "fresh_checks": {
-      "architecture_and_publisher_tests_passed": 1724,
-      "tests_skipped": 14,
-      "ruff": "PASS",
-      "mypy_files_passed": 489,
-      "wheel_package_smoke_passed": 1,
-      "evidence_note": "Coordinator-run logs inspected by reviewer; native comparison and completion gate executed independently by reviewer."
+      "independent_focused_tests_passed": 6,
+      "focused_test_environment": "Project .venv and PYTHONPATH=$PWD; pytest-rerunfailures disabled because its socket initialization is blocked in the reviewer sandbox. Application and test code unchanged.",
+      "coordinator_seeded_integration_tests_passed": 21,
+      "coordinator_architecture_tests_passed": 1688,
+      "coordinator_architecture_tests_skipped": 14,
+      "architecture_test_note": "1687 passed in full suite; sole installed-wheel test initially failed on read-only UV cache, then passed unchanged with task-owned UV_CACHE_DIR. Logs inspected.",
+      "coordinator_ruff": "PASS reported",
+      "coordinator_mypy_files_passed": 489,
+      "coordinator_cycle_check": "PASS reported",
+      "evidence_note": "Focused tests and native comparison/gate executed independently. Ruff/MyPy/cycle results were reported by coordinator; behavioral and wheel logs were inspected. No full unit-suite outcome is claimed in this receipt."
     },
     "limits": [
       "Architecture projection and validation remain UNKNOWN.",
       "Six missing annotations, the generator open map, inherited/property/generic/external/recursive-alias limits, and global call/dataflow uncertainty remain.",
-      "Native scan identifies the clean analyzed base; subsequent reviewed changes affect only pin, documentation and tests, plus this receipt/review when integrated.",
-      "No fresh full behavioral/database/vendor/EE equivalence evaluation is claimed.",
-      "Separate PR is reviewable; merge is not authorized by this review."
+      "The change makes timing labels describe processing phases; it does not add export-success accounting or certify every export backend.",
+      "Authoring, ErrorHandling, MongoDB diagnostics and Enterprise alignment are outside this bounded CE review.",
+      "This review does not establish fresh database/vendor/Enterprise equivalence or authorize merge."
     ],
-    "prior_review_reference": "docs/architecture/refactoring-study/experiment-2/ce-merge-architecture-review.md"
+    "prior_review_reference": "docs/architecture/refactoring-study/experiment-2/archkeel-3.0.1-review.md"
   }
 }
