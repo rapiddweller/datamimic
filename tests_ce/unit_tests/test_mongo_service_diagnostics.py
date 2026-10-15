@@ -18,28 +18,38 @@ DIAGNOSTICS = Path(__file__).resolve().parents[1] / "service_diagnostics"
 def test_bootstrap_follows_spawn_and_preserves_source_and_native_timeout(tmp_path):
     program = tmp_path / "spawn_check.py"
     program.write_text(
-        "import multiprocessing, os\n"
+        "import multiprocessing, socket\n"
         "from pathlib import Path\n"
         "import datamimic_ce\n"
         "from pymongo import MongoClient\n"
-        "def child():\n"
-        "    client = MongoClient('localhost', 1, connect=False)\n"
-        "    assert client.options.server_selection_timeout == 30\n"
-        "    client.close()\n"
+        "from pymongo.errors import ServerSelectionTimeoutError\n"
+        "def child(port):\n"
+        "    with MongoClient('127.0.0.1', port, connect=False) as native:\n"
+        "        assert native.options.server_selection_timeout == 30\n"
+        "    with MongoClient('127.0.0.1', port, serverSelectionTimeoutMS=50, connectTimeoutMS=50) as client:\n"
+        "        try:\n"
+        "            client.admin.command('ping')\n"
+        "        except ServerSelectionTimeoutError:\n"
+        "            pass\n"
+        "        else:\n"
+        "            raise AssertionError('reserved port unexpectedly accepted ping')\n"
         "if __name__ == '__main__':\n"
         "    assert Path(datamimic_ce.__file__).resolve().is_relative_to(Path.cwd())\n"
-        "    worker = multiprocessing.get_context('spawn').Process(target=child)\n"
-        "    worker.start()\n"
-        "    worker.join(20)\n"
-        "    assert worker.exitcode == 0\n"
+        "    with socket.socket() as reserved:\n"
+        "        reserved.bind(('127.0.0.1', 0))\n"
+        "        worker = multiprocessing.get_context('spawn').Process(\n"
+        "            target=child, args=(reserved.getsockname()[1],))\n"
+        "        worker.start()\n"
+        "        worker.join(20)\n"
+        "        assert worker.exitcode == 0\n"
     )
     output = tmp_path / "events"
     env = dict(os.environ, MONGO_DIAGNOSTICS_DIR=str(output), PYTHONPATH=f"{DIAGNOSTICS}{os.pathsep}{Path.cwd()}")
     result = subprocess.run([sys.executable, str(program)], env=env, text=True, capture_output=True, timeout=30)
     assert result.returncode == 0, result.stderr
     records = [json.loads(line) for file in output.glob("events-*.jsonl") for line in file.read_text().splitlines()]
-    worker_pids = {row["pid"] for row in records if row["event"] == "TopologyOpenedEvent"}
-    assert worker_pids, "the spawned worker must report its client topology"
+    worker_pids = {row["pid"] for row in records if row["event"] == "PoolCreatedEvent"}
+    assert worker_pids, "the spawned worker must report its client pool"
     assert worker_pids <= {row["pid"] for row in records if row["event"] == "process_start"}
 
 
@@ -48,7 +58,6 @@ def test_event_and_service_metadata_drop_payloads_and_exception_text(tmp_path):
 
     event = SimpleNamespace(
         connection_id=("mongo", 27017),
-        server_address=("mongo", 27017),
         reason="error",
         failure=RuntimeError("password=secret document=private"),
         command={"insert": "private"},
@@ -56,7 +65,6 @@ def test_event_and_service_metadata_drop_payloads_and_exception_text(tmp_path):
     )
     metadata = mongo_diagnostics.event_metadata(event)
     assert metadata["connection_id"] == ("mongo", 27017)
-    assert metadata["server_address"] == ("mongo", 27017)
     assert metadata["reason"] == "error"
     assert "reason" not in mongo_diagnostics.event_metadata(SimpleNamespace(reason="password=secret"))
     assert metadata["failure_type"] == "RuntimeError"
@@ -198,3 +206,19 @@ def test_diagnostic_faults_preserve_test_execution_and_exit_status(tmp_path, mon
     assert mongo_diagnostics.main() == 7
     assert marker.read_text() == "ran"
     assert "private diagnostic response" not in capsys.readouterr().err
+
+
+def test_monitoring_does_not_start_the_topology_event_executor_or_connect(tmp_path):
+    program = (
+        "import socket, threading\n"
+        "from unittest.mock import patch\n"
+        "from pymongo import MongoClient\n"
+        "with patch.object(socket.socket, 'connect',\n"
+        "                  side_effect=AssertionError('unexpected network call')) as connect:\n"
+        "    with MongoClient('localhost', 1, connect=False):\n"
+        "        assert not any(t.name == 'pymongo_events_thread' for t in threading.enumerate())\n"
+        "    assert connect.call_count == 0\n"
+    )
+    env = dict(os.environ, MONGO_DIAGNOSTICS_DIR=str(tmp_path), PYTHONPATH=f"{DIAGNOSTICS}{os.pathsep}{Path.cwd()}")
+    result = subprocess.run([sys.executable, "-c", program], env=env, capture_output=True, text=True, timeout=10)
+    assert result.returncode == 0, result.stderr

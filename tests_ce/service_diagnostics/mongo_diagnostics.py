@@ -21,7 +21,6 @@ from datetime import datetime, timezone
 from pathlib import Path
 
 from pymongo import MongoClient, monitoring
-from pymongo.topology_description import TopologyDescription
 
 MAX_FILE_BYTES = 1024 * 1024
 WRITE_LOCK = threading.Lock()
@@ -59,47 +58,24 @@ def emit(output, event, **fields):
 
 def event_metadata(event):
     fields = {}
-    for name in ("connection_id", "address", "server_address", "duration", "awaited"):
+    for name in ("connection_id", "address", "duration", "awaited"):
         value = getattr(event, name, None)
         if isinstance(value, (str, int, float, bool, tuple)):
             fields[name] = value
     reason = getattr(event, "reason", None)
     if isinstance(reason, str) and reason in {"stale", "idle", "error", "poolClosed", "timeout", "connectionError"}:
         fields["reason"] = reason
-    topology_id = getattr(event, "topology_id", None)
-    if topology_id is not None:
-        fields["topology_id"] = str(topology_id)
     failure = getattr(event, "reply", None) if isinstance(event, monitoring.ServerHeartbeatFailedEvent) else None
     failure = getattr(event, "failure", failure)
     if failure is not None:
         fields["failure_type"] = type(failure).__name__
-    description = getattr(event, "new_description", None)
-    if isinstance(description, TopologyDescription):
-        fields["topology_type"] = description.topology_type_name
-        fields["servers"] = [
-            {
-                "address": address,
-                "type": server.server_type_name,
-                "error_type": type(server.error).__name__ if server.error is not None else None,
-            }
-            for address, server in description.server_descriptions().items()
-        ]
-    elif description is not None:
-        fields["server_type"] = description.server_type_name
-        fields["error_type"] = type(description.error).__name__ if description.error is not None else None
     return fields
 
 
-class MetadataListener(
-    monitoring.TopologyListener,
-    monitoring.ServerListener,
-    monitoring.ServerHeartbeatListener,
-    monitoring.ConnectionPoolListener,
-):
+class MetadataListener(monitoring.ServerHeartbeatListener, monitoring.ConnectionPoolListener):
     def record(self, event):
         emit(os.environ["MONGO_DIAGNOSTICS_DIR"], type(event).__name__, **event_metadata(event))
 
-    opened = description_changed = closed = record
     started = succeeded = failed = record
     pool_created = pool_ready = pool_cleared = pool_closed = record
     connection_created = connection_ready = connection_closed = record
