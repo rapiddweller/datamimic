@@ -683,8 +683,19 @@ jobs:
       - name: Run external service tests with coverage
         run: |
           . .venv/bin/activate
-          uv run pytest tests_ce/external_service_tests/ --cov=. --cov-report=xml
+          uv run python tests_ce/service_diagnostics/mongo_diagnostics.py \
+            --output test-artifacts/mongo-diagnostics \
+            --mongo-host mongo --container-id '${{ job.services.mongo.id }}' \
+            -- python -m pytest tests_ce/external_service_tests/ --cov=. --cov-report=xml
         shell: bash
+      - name: Upload Mongo service diagnostics
+        if: always()
+        uses: actions/upload-artifact@v6
+        with:
+          name: mongo-service-diagnostics-${{ github.run_attempt }}
+          path: test-artifacts/mongo-diagnostics/
+          if-no-files-found: warn
+          retention-days: 7
       - name: Upload coverage report
         uses: actions/upload-artifact@v6
         with:
