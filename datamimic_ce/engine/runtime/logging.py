@@ -86,9 +86,9 @@ def gen_timer(process: Literal["generate", "export", "process"], report_logging:
             case "generate":
                 process_name = "Generating"
             case "export":
-                process_name = "Exporting"
+                process_name = "Export phase for"
             case _:
-                process_name = "Generating and exporting"
+                process_name = "Processing"
         logger.info(
             f"{process_name} {records_count:,} records '{product_name}' took {round(elapsed_time, 5)} seconds "
             f"({int(records_count / elapsed_time):,} records/second)"
