@@ -350,6 +350,7 @@ def test_io_native_payload_permissions_keep_exact_shapes_and_depths() -> None:
 def test_export_session_keeps_native_xml_rows_and_converted_scalar_rows() -> None:
     from datamimic_ce.engine.io.contracts import ExportMetadata
     from datamimic_ce.engine.io.exporters.session import PreparedPage, consume_exporters
+    from datamimic_ce.engine.runtime.contexts.products import NestedExport
     from datamimic_ce.engine.runtime.tasks.generate import export_order
 
     assert get_type_hints(io_api.ExportSession.prepare_page)["xml_rows"] == list[dict[str, object]]
@@ -361,9 +362,8 @@ def test_export_session_keeps_native_xml_rows_and_converted_scalar_rows() -> Non
     assert get_type_hints(io_api.ExportSession.prepare_page)["metadata"] is ExportMetadata
     assert get_type_hints(io_api.ExportSession.dispatch_page)["prepared_page"] == PreparedPage
     assert get_type_hints(export_order.export_product_by_page)["xml_result"] == dict[str, list[dict[str, object]]]
-    assert get_type_hints(export_order._export_nested_products_by_page)["xml_result"] == dict[
-        str, list[dict[str, object]]
-    ]
+    assert get_type_hints(export_order._export_nested_products_by_page)["export"] is NestedExport
+    assert get_type_hints(NestedExport)["rows"] == list[dict[str, object]]
 
 
 def test_memstore_and_exporter_have_truthful_canonical_definitions() -> None:
