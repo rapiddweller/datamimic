@@ -87,6 +87,11 @@
           "component": "project",
           "rationale": "Project commands create the requested workspace.",
           "decided_by": "agent"
+        },
+        {
+          "component": "bundle",
+          "rationale": "The authoring export-contract command delegates deterministic archive creation to the bundle owner.",
+          "decided_by": "agent"
         }
       ],
       "public": [],
@@ -175,6 +180,29 @@
         "docs/architecture/inner/semantic-review/astra-target-decision.md"
       ],
       "requires": []
+    },
+    {
+      "id": "TRANSPORT-BUNDLE",
+      "label": "bundle",
+      "role": "interface",
+      "packages": [
+        "datamimic_ce.interfaces.bundle"
+      ],
+      "responsibilities": [
+        "Package deterministic CE DSL and Authoring projections with CE producer/version and content hashes."
+      ],
+      "forbidden_responsibilities": [
+        "Own grammar, verification policy, hosted services or a second capability catalog."
+      ],
+      "provenance": [
+        "docs/migrations/authoring-errors.md"
+      ],
+      "requires": [],
+      "public": [],
+      "decided_by": "agent",
+      "planned": [
+        "datamimic_ce.interfaces.bundle:export_contract"
+      ]
     }
   ],
   "rules": [

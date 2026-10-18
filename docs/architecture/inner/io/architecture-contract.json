@@ -219,7 +219,8 @@
         "datamimic_ce.engine.io.clients"
       ],
       "responsibilities": [
-        "Own database operations and client construction from typed configurations, process-local reuse and cleanup, with live clients, connections and engines confined to their owning execution process. Preserve native wrapper state in same-process include clones without sharing live engines or disposing parent resources."
+        "Own database operations and client construction from typed configurations, process-local reuse and cleanup, with live clients, connections and engines confined to their owning execution process. Preserve native wrapper state in same-process include clones without sharing live engines or disposing parent resources.",
+        "Own backend exception classification and public client facts; pass normalized values to Errors factories."
       ],
       "forbidden_responsibilities": [
         "Choose source rows or exporter policy."
@@ -227,7 +228,8 @@
       "provenance": [
         "docs/architecture/inner/target.md",
         "docs/architecture/refactoring-study/experiment-2/amendment-199-process-local-clients.md",
-        "docs/architecture/refactoring-study/experiment-2/amendment-202-descriptor-client-transfer.md"
+        "docs/architecture/refactoring-study/experiment-2/amendment-202-descriptor-client-transfer.md",
+        "docs/migrations/authoring-errors.md"
       ],
       "requires": [
         {
@@ -331,14 +333,16 @@
         "datamimic_ce.engine.io.exporters"
       ],
       "responsibilities": [
-        "Output routing, serialization and write adapters."
+        "Output routing, serialization and write adapters.",
+        "Own formats, dialect, encoding, chunks, finalized artifacts and smoke writes over supplied full captures."
       ],
       "forbidden_responsibilities": [
         "Read source rows or execute runtime tasks."
       ],
       "provenance": [
         "docs/architecture/inner/target.md",
-        "docs/architecture/refactoring-study/experiment-2/amendment-168-memstore-data-owner.md"
+        "docs/architecture/refactoring-study/experiment-2/amendment-168-memstore-data-owner.md",
+        "docs/migrations/authoring-errors.md"
       ],
       "requires": [
         {

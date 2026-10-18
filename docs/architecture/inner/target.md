@@ -45,6 +45,10 @@ retain their existing owners. Active CLI/MCP initializers and descendant entrypo
 remain. Parent package introspection changes; external discovery compatibility and
 EE wheel discovery remain UNKNOWN ([Amendment 169](https://github.com/rapiddweller/datamimic/blob/384b7723d950d8b312b1080d23ffd89a5343c9b0/docs/architecture/refactoring-study/experiment-2/amendment-169-interfaces-namespace.md)).
 
+## Authoring and Errors adoption — 2026-10-18
+
+The active Authoring/Errors target is amended by [the migration contract](../../migrations/authoring-errors.md). It replaces the persisted CE Intent/Scaffold contract with DM JSON, transaction-scoped Build expectations and persisted XML. Python becomes >=3.11. Existing CE parser, Runtime and IO owners stay in place. Application consumes typed ports; bootstrap alone selects CE adapters. Complete capture, acceptance, optional export smoke and requested full replay remain separate required proofs. The historical tree below describes the preceding target; migrated Authoring/Errors APIs and ownership follow the amendment and mounted contracts.
+
 ## Physical target
 
 ```text

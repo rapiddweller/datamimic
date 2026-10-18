@@ -61,13 +61,15 @@
         "datamimic_ce.engine.dsl.api"
       ],
       "responsibilities": [
-        "Supported grammar/parser entry and capability projection."
+        "Supported grammar/parser entry and capability projection.",
+        "Publish registry-derived CE grammar facts and the existing parser entry, including in-memory parsing with descriptor-relative resources."
       ],
       "forbidden_responsibilities": [
         "Duplicate element definitions or execute descriptors."
       ],
       "provenance": [
-        "docs/architecture/inner/target.md"
+        "docs/architecture/inner/target.md",
+        "docs/migrations/authoring-errors.md"
       ],
       "requires": [
         {
@@ -136,13 +138,15 @@
         "datamimic_ce.engine.dsl.model"
       ],
       "responsibilities": [
-        "Descriptor validation models and constraints."
+        "Descriptor validation models and constraints.",
+        "Own element kinds, aliases, attributes, body-content, child, constraint and bounded metadata; no duplicate codec vocabulary."
       ],
       "forbidden_responsibilities": [
         "Construct parser implementations or execute tasks."
       ],
       "provenance": [
-        "docs/architecture/inner/target.md"
+        "docs/architecture/inner/target.md",
+        "docs/migrations/authoring-errors.md"
       ],
       "requires": [
         {
@@ -273,13 +277,15 @@
         "datamimic_ce.engine.dsl.parsers"
       ],
       "responsibilities": [
-        "Ordered document parsing and concrete parser dispatch."
+        "Ordered document parsing and concrete parser dispatch.",
+        "Parse files and in-memory XML through one normal statement path; errors use catalog factories with logical locations."
       ],
       "forbidden_responsibilities": [
         "Own a second grammar catalog or execute descriptors."
       ],
       "provenance": [
-        "docs/architecture/inner/target.md"
+        "docs/architecture/inner/target.md",
+        "docs/migrations/authoring-errors.md"
       ],
       "requires": [
         {

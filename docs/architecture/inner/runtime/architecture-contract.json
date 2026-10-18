@@ -324,13 +324,15 @@
         "datamimic_ce.engine.runtime.contracts"
       ],
       "responsibilities": [
-        "Run configuration and results."
+        "Run configuration and results.",
+        "Own run-session inputs/results and lifecycle outcomes; Authoring owns proof evidence."
       ],
       "forbidden_responsibilities": [
         "Import concrete tasks, workers, or connectors."
       ],
       "provenance": [
-        "docs/architecture/inner/target.md"
+        "docs/architecture/inner/target.md",
+        "docs/migrations/authoring-errors.md"
       ],
       "requires": [],
       "public": [
@@ -393,14 +395,16 @@
         "datamimic_ce.engine.runtime.contexts"
       ],
       "responsibilities": [
-        "Own Context/SetupContext, row and demographic state, and a minimal worker-state projection separate from include cloning that excludes live clients, parent client caches and client references in namespaces or captured state."
+        "Own Context/SetupContext, row and demographic state, and a minimal worker-state projection separate from include cloning that excludes live clients, parent client caches and client references in namespaces or captured state.",
+        "Own execution, row, parent and run-local mutable state; Errors receives only explicit portable facts."
       ],
       "forbidden_responsibilities": [
         "Start workers or construct external clients."
       ],
       "provenance": [
         "docs/architecture/inner/target.md",
-        "docs/architecture/refactoring-study/experiment-2/amendment-199-process-local-clients.md"
+        "docs/architecture/refactoring-study/experiment-2/amendment-199-process-local-clients.md",
+        "docs/migrations/authoring-errors.md"
       ],
       "requires": [
         {
@@ -490,14 +494,16 @@
         "datamimic_ce.engine.runtime.lifecycle"
       ],
       "responsibilities": [
-        "Own run configuration, parsing, session orchestration and capture, treating main as the executor for ordered serial setup, preparation and single-process work, and coordinating cleanup of clients owned by that execution through IO."
+        "Own run configuration, parsing, session orchestration and capture, treating main as the executor for ordered serial setup, preparation and single-process work, and coordinating cleanup of clients owned by that execution through IO.",
+        "Own CE session startup, child/process lifecycle, cancellation, reaping and cleanup; report execution or cleanup failure truthfully as typed failed outcomes."
       ],
       "forbidden_responsibilities": [
         "Implement source connectors or DSL grammar."
       ],
       "provenance": [
         "docs/architecture/inner/target.md",
-        "docs/architecture/refactoring-study/experiment-2/amendment-199-process-local-clients.md"
+        "docs/architecture/refactoring-study/experiment-2/amendment-199-process-local-clients.md",
+        "docs/migrations/authoring-errors.md"
       ],
       "requires": [
         {

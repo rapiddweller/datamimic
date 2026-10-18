@@ -18,7 +18,8 @@
         "database or exporter implementation"
       ],
       "provenance": [
-        "docs/architecture/refactoring-study/experiment-2/target-architecture.md"
+        "docs/architecture/refactoring-study/experiment-2/target-architecture.md",
+        "docs/migrations/authoring-errors.md"
       ],
       "requires": [
         {
@@ -40,6 +41,11 @@
         {
           "component": "python_compat",
           "rationale": "Interfaces support the package's Python 3.10 floor."
+        },
+        {
+          "component": "errors",
+          "rationale": "User-facing failures use portable catalog factories; backend classification remains with the calling owner.",
+          "decided_by": "agent"
         }
       ],
       "public": [],
@@ -65,7 +71,8 @@
         "transport-specific behavior"
       ],
       "provenance": [
-        "docs/architecture/refactoring-study/experiment-2/target-architecture.md"
+        "docs/architecture/refactoring-study/experiment-2/target-architecture.md",
+        "docs/migrations/authoring-errors.md"
       ],
       "requires": [
         {
@@ -87,6 +94,11 @@
         {
           "component": "python_compat",
           "rationale": "Authoring supports the package's Python 3.10 floor."
+        },
+        {
+          "component": "errors",
+          "rationale": "User-facing failures use portable catalog factories; backend classification remains with the calling owner.",
+          "decided_by": "agent"
         }
       ],
       "public": [
@@ -94,7 +106,16 @@
         "datamimic_ce.authoring.contracts",
         "datamimic_ce.authoring.spec:LeafFieldKind"
       ],
-      "planned": [],
+      "planned": [
+        "datamimic_ce.authoring.bootstrap:create_authoring_application",
+        "datamimic_ce.authoring.application.app:AuthoringApplication",
+        "datamimic_ce.authoring.domain.requests",
+        "datamimic_ce.authoring.domain.dm_json",
+        "datamimic_ce.authoring.domain.capabilities",
+        "datamimic_ce.authoring.domain.diagnostics",
+        "datamimic_ce.authoring.domain.expectations",
+        "datamimic_ce.authoring.domain.environments"
+      ],
       "decided_by": "agent"
     },
     {
@@ -115,12 +136,18 @@
         "authoring intent"
       ],
       "provenance": [
-        "docs/architecture/refactoring-study/experiment-2/target-architecture.md"
+        "docs/architecture/refactoring-study/experiment-2/target-architecture.md",
+        "docs/migrations/authoring-errors.md"
       ],
       "requires": [
         {
           "component": "python_compat",
           "rationale": "DSL enums support the package's Python 3.10 floor."
+        },
+        {
+          "component": "errors",
+          "rationale": "User-facing failures use portable catalog factories; backend classification remains with the calling owner.",
+          "decided_by": "agent"
         }
       ],
       "public": [
@@ -177,7 +204,8 @@
         "domain generation logic"
       ],
       "provenance": [
-        "docs/architecture/refactoring-study/experiment-2/target-architecture.md"
+        "docs/architecture/refactoring-study/experiment-2/target-architecture.md",
+        "docs/migrations/authoring-errors.md"
       ],
       "requires": [
         {
@@ -199,6 +227,11 @@
         {
           "component": "randomness",
           "rationale": "Use the shared RNG protocol and weighted-index primitive; no generator or run lifecycle dependency.",
+          "decided_by": "agent"
+        },
+        {
+          "component": "errors",
+          "rationale": "User-facing failures use portable catalog factories; backend classification remains with the calling owner.",
           "decided_by": "agent"
         }
       ],
@@ -230,7 +263,8 @@
       "provenance": [
         "docs/architecture/refactoring-study/experiment-2/target-architecture.md",
         "docs/architecture/refactoring-study/experiment-2/amendment-161-client-lookup-boundary.md",
-        "docs/architecture/refactoring-study/experiment-2/amendment-162-client-names-boundary.md"
+        "docs/architecture/refactoring-study/experiment-2/amendment-162-client-names-boundary.md",
+        "docs/migrations/authoring-errors.md"
       ],
       "requires": [
         {
@@ -246,6 +280,11 @@
         {
           "component": "randomness",
           "rationale": "Use the shared RNG protocol and weighted-index primitive; no generator or run lifecycle dependency.",
+          "decided_by": "agent"
+        },
+        {
+          "component": "errors",
+          "rationale": "User-facing failures use portable catalog factories; backend classification remains with the calling owner.",
           "decided_by": "agent"
         }
       ],
@@ -271,7 +310,7 @@
       ],
       "namespace": "datamimic_ce.errors",
       "responsibilities": [
-        "Stable public error types, codes, formatting and construction."
+        "Own stable CE error identities, codes, catalog definitions, formatting and factories without runtime or vendor imports."
       ],
       "forbidden_responsibilities": [
         "component-specific validation policy",
@@ -1821,6 +1860,90 @@
       "rationale": "Packaged runnable demos/examples and resource access. Exact reviewed target children; no hidden extra modules.",
       "provenance": [
         "docs/architecture/inner/structure-review.json"
+      ],
+      "decided_by": "agent"
+    },
+    {
+      "id": "AUTHORING-APPLICATION-NO-ADAPTERS",
+      "kind": "forbidden_dependency",
+      "source": "datamimic_ce.authoring.application",
+      "target": "datamimic_ce.authoring.adapters",
+      "include_type_checking": true,
+      "rationale": "Application orchestrates named ports; bootstrap alone chooses concrete adapters.",
+      "provenance": [
+        "docs/migrations/authoring-errors.md"
+      ],
+      "decided_by": "agent"
+    },
+    {
+      "id": "AUTHORING-PORTS-NO-ADAPTERS",
+      "kind": "forbidden_dependency",
+      "source": "datamimic_ce.authoring.ports",
+      "target": "datamimic_ce.authoring.adapters",
+      "include_type_checking": true,
+      "rationale": "Ports declare typed contracts and never construct implementations.",
+      "provenance": [
+        "docs/migrations/authoring-errors.md"
+      ],
+      "decided_by": "agent"
+    },
+    {
+      "id": "PROJECTION-NO-IO",
+      "kind": "forbidden_dependency",
+      "source": "datamimic_ce.authoring.projection",
+      "target": "datamimic_ce.engine.io",
+      "include_type_checking": true,
+      "rationale": "Projection renders supplied values; adapters own source and target access.",
+      "provenance": [
+        "docs/migrations/authoring-errors.md"
+      ],
+      "decided_by": "agent"
+    },
+    {
+      "id": "ERRORS-NO-ENGINE",
+      "kind": "forbidden_dependency",
+      "source": "datamimic_ce.errors",
+      "target": "datamimic_ce.engine",
+      "include_type_checking": true,
+      "rationale": "Error construction consumes normalized facts without runtime state, parsers or backend drivers.",
+      "provenance": [
+        "docs/migrations/authoring-errors.md"
+      ],
+      "decided_by": "agent"
+    },
+    {
+      "id": "ERRORS-NO-AUTHORING",
+      "kind": "forbidden_dependency",
+      "source": "datamimic_ce.errors",
+      "target": "datamimic_ce.authoring",
+      "include_type_checking": true,
+      "rationale": "Errors cannot import a consuming workflow or its evidence policy.",
+      "provenance": [
+        "docs/migrations/authoring-errors.md"
+      ],
+      "decided_by": "agent"
+    },
+    {
+      "id": "AUTHORING-APPLICATION-NO-ENGINE",
+      "kind": "forbidden_dependency",
+      "source": "datamimic_ce.authoring.application",
+      "target": "datamimic_ce.engine",
+      "include_type_checking": true,
+      "rationale": "Application and port contracts consume Authoring values; only CE adapters call DSL, Runtime and IO implementations.",
+      "provenance": [
+        "docs/migrations/authoring-errors.md"
+      ],
+      "decided_by": "agent"
+    },
+    {
+      "id": "AUTHORING-PORTS-NO-ENGINE",
+      "kind": "forbidden_dependency",
+      "source": "datamimic_ce.authoring.ports",
+      "target": "datamimic_ce.engine",
+      "include_type_checking": true,
+      "rationale": "Application and port contracts consume Authoring values; only CE adapters call DSL, Runtime and IO implementations.",
+      "provenance": [
+        "docs/migrations/authoring-errors.md"
       ],
       "decided_by": "agent"
     }

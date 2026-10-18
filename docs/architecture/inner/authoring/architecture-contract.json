@@ -142,19 +142,21 @@
       "label": "api",
       "role": "interface",
       "packages": [
-        "datamimic_ce.authoring.api"
+        "datamimic_ce.authoring.api",
+        "datamimic_ce.authoring.bootstrap"
       ],
       "exact_modules": [
         "datamimic_ce.authoring"
       ],
       "responsibilities": [
-        "Exposes capabilities, check, reference, run, and scaffold as typed entry points that delegate to the authoring application."
+        "Expose the typed Authoring facade; bootstrap composes CE adapters and the application lazily. Legacy api.py retires at consumer cutover."
       ],
       "forbidden_responsibilities": [
         "Own compilation, verification, or transport behavior."
       ],
       "provenance": [
-        "docs/architecture/inner/target.md"
+        "docs/architecture/inner/target.md",
+        "docs/migrations/authoring-errors.md"
       ],
       "requires": [
         {
@@ -166,12 +168,30 @@
           "component": "application",
           "rationale": "The facade delegates authoring workflows.",
           "decided_by": "agent"
+        },
+        {
+          "component": "adapters",
+          "rationale": "Only bootstrap constructs CE workspace, catalog, codec, validator, policy and executor adapters.",
+          "decided_by": "agent"
+        },
+        {
+          "component": "projection",
+          "rationale": "Static contract composition projects explicitly supplied registry facts.",
+          "decided_by": "agent"
+        },
+        {
+          "component": "ports",
+          "rationale": "Composition satisfies the named typed adapter ports.",
+          "decided_by": "agent"
         }
       ],
       "public": [
         "datamimic_ce.authoring.api"
       ],
-      "decided_by": "agent"
+      "decided_by": "agent",
+      "planned": [
+        "datamimic_ce.authoring.bootstrap:create_authoring_application"
+      ]
     },
     {
       "id": "AUTHORING-DOMAIN",
@@ -183,14 +203,15 @@
         "datamimic_ce.authoring.domain"
       ],
       "responsibilities": [
-        "Observable request/result contracts, intent specification, diagnostics, acceptance facts and pure rules; one domain aggregate without a DTO/rule component cycle."
+        "Own DM JSON, transaction expectations, typed diagnostics/evidence and pure acceptance, completeness, smoke and replay verdicts. Legacy intent contracts retire after one-time migration."
       ],
       "forbidden_responsibilities": [
         "Import Runtime or IO",
         "Parse files or execute descriptors"
       ],
       "provenance": [
-        "docs/architecture/inner/target.md"
+        "docs/architecture/inner/target.md",
+        "docs/migrations/authoring-errors.md"
       ],
       "requires": [],
       "public": [
@@ -245,7 +266,14 @@
         "datamimic_ce.authoring.domain.verification:smoke_export_evidence",
         "datamimic_ce.authoring.domain.verification:unseeded_replay_evidence"
       ],
-      "decided_by": "agent"
+      "decided_by": "agent",
+      "planned": [
+        "datamimic_ce.authoring.domain.requests",
+        "datamimic_ce.authoring.domain.dm_json",
+        "datamimic_ce.authoring.domain.capabilities",
+        "datamimic_ce.authoring.domain.expectations",
+        "datamimic_ce.authoring.domain.environments"
+      ]
     },
     {
       "id": "AUTHORING-PROJECTION",
@@ -261,7 +289,8 @@
         "Define a second DSL catalog or execute a run."
       ],
       "provenance": [
-        "docs/architecture/inner/target.md"
+        "docs/architecture/inner/target.md",
+        "docs/migrations/authoring-errors.md"
       ],
       "requires": [
         {
@@ -283,13 +312,14 @@
         "datamimic_ce.authoring.adapters"
       ],
       "responsibilities": [
-        "Bounded runtime/filesystem adapters and runtime-backed reference/capability views."
+        "Own registry-backed codec/catalog, in-memory parser validation, workspace containment, CE bounded execution and resource cleanup."
       ],
       "forbidden_responsibilities": [
         "Own intent or duplicate executable DSL definitions."
       ],
       "provenance": [
-        "docs/architecture/inner/target.md"
+        "docs/architecture/inner/target.md",
+        "docs/migrations/authoring-errors.md"
       ],
       "requires": [
         {
@@ -300,6 +330,11 @@
         {
           "component": "projection",
           "rationale": "Reference responses render canonical authoring-intent projections.",
+          "decided_by": "agent"
+        },
+        {
+          "component": "ports",
+          "rationale": "CE adapters implement the application contracts.",
           "decided_by": "agent"
         }
       ],
@@ -318,13 +353,14 @@
         "datamimic_ce.authoring.application"
       ],
       "responsibilities": [
-        "Compile/check/run/scaffold transaction coordination."
+        "Coordinate compile/decompile/build and discovery through typed ports; acceptance and optional smoke share the first complete capture, requested replay uses one second capture."
       ],
       "forbidden_responsibilities": [
         "Define new grammar facts or directly execute Runtime internals."
       ],
       "provenance": [
-        "docs/architecture/inner/target.md"
+        "docs/architecture/inner/target.md",
+        "docs/migrations/authoring-errors.md"
       ],
       "requires": [
         {
@@ -338,13 +374,45 @@
           "decided_by": "agent"
         },
         {
-          "component": "adapters",
-          "rationale": "Workflows delegate compilation and bounded checks.",
+          "component": "ports",
+          "rationale": "Use cases invoke injected catalog, codec, validator, bounded policy and executor contracts.",
           "decided_by": "agent"
         }
       ],
       "public": [
         "datamimic_ce.authoring.application.service"
+      ],
+      "decided_by": "agent",
+      "planned": [
+        "datamimic_ce.authoring.application.app:AuthoringApplication"
+      ]
+    },
+    {
+      "id": "AUTHORING-PORTS",
+      "label": "ports",
+      "role": "contract",
+      "packages": [
+        "datamimic_ce.authoring.ports"
+      ],
+      "responsibilities": [
+        "Declare Codec, Catalog, Validator, BoundedPolicy and Executor protocols over Authoring-owned values."
+      ],
+      "forbidden_responsibilities": [
+        "Import concrete adapters, open resources or construct Runtime state."
+      ],
+      "provenance": [
+        "docs/migrations/authoring-errors.md"
+      ],
+      "requires": [
+        {
+          "component": "domain",
+          "rationale": "Port inputs and results use pure document, request, diagnostic and evidence DTOs.",
+          "decided_by": "agent"
+        }
+      ],
+      "public": [],
+      "planned": [
+        "datamimic_ce.authoring.ports"
       ],
       "decided_by": "agent"
     }

@@ -59,7 +59,7 @@
         "datamimic_ce.errors.base"
       ],
       "responsibilities": [
-        "Public error hierarchy."
+        "Keep DomainError and InvalidLocaleError identities, payloads and pickle behavior; add portable ValueError/RuntimeError types with code, issue, cause and location."
       ],
       "forbidden_responsibilities": [
         "Open resources or import concrete clients."
@@ -71,6 +71,11 @@
         {
           "component": "codes",
           "rationale": "Error types carry codes without runtime policy.",
+          "decided_by": "agent"
+        },
+        {
+          "component": "context",
+          "rationale": "Portable error types carry logical descriptor location values.",
           "decided_by": "agent"
         }
       ],
@@ -87,7 +92,7 @@
         "datamimic_ce.errors.catalog"
       ],
       "responsibilities": [
-        "Canonical error message text."
+        "Own portable issue definitions, E/I/W code templates and default guidance; no backend classification."
       ],
       "forbidden_responsibilities": [
         "Inspect runtime state or implement validation policy."
@@ -95,11 +100,21 @@
       "provenance": [
         "docs/architecture/inner/target.md"
       ],
-      "requires": [],
+      "requires": [
+        {
+          "component": "codes",
+          "rationale": "Definitions refer to the canonical shared E/I/W vocabulary and CE keeps DomainErrorCode in codes.py.",
+          "decided_by": "agent"
+        }
+      ],
       "public": [
         "datamimic_ce.errors.catalog:invalid_locale_text"
       ],
-      "decided_by": "agent"
+      "decided_by": "agent",
+      "planned": [
+        "datamimic_ce.errors.catalog:IssueDefinition",
+        "datamimic_ce.errors.catalog:IssueSeverity"
+      ]
     },
     {
       "id": "ERRORS-FORMATTERS",
@@ -127,6 +142,11 @@
           "component": "codes",
           "rationale": "Formatting preserves stable codes.",
           "decided_by": "agent"
+        },
+        {
+          "component": "context",
+          "rationale": "Messages render logical descriptor identities without host paths.",
+          "decided_by": "agent"
         }
       ],
       "public": [
@@ -145,7 +165,7 @@
         "datamimic_ce.errors"
       ],
       "responsibilities": [
-        "Constructs typed errors and composes the existing package-level error exports; no vendor IO mapping."
+        "Construct user errors from typed facts and emit catalog warnings with process-local deduplication; preserve CE locale/domain metadata."
       ],
       "forbidden_responsibilities": [
         "Catch vendor exceptions or decide whether a condition is an error."
@@ -168,10 +188,45 @@
           "component": "formatters",
           "rationale": "Factories delegate message rendering.",
           "decided_by": "agent"
+        },
+        {
+          "component": "context",
+          "rationale": "Factories attach logical locations and explicit descriptor metadata.",
+          "decided_by": "agent"
+        },
+        {
+          "component": "catalog",
+          "rationale": "Warning factories use canonical definitions and severity.",
+          "decided_by": "agent"
         }
       ],
       "public": [
         "datamimic_ce.errors.factory"
+      ],
+      "decided_by": "agent"
+    },
+    {
+      "id": "ERRORS-CONTEXT",
+      "label": "context",
+      "role": "contract",
+      "packages": [
+        "datamimic_ce.errors.context",
+        "datamimic_ce.errors.descriptor_contracts"
+      ],
+      "responsibilities": [
+        "Own immutable logical descriptor identities, locations and structural carrier protocols."
+      ],
+      "forbidden_responsibilities": [
+        "Open files, inspect Runtime objects dynamically or import backend drivers."
+      ],
+      "provenance": [
+        "docs/migrations/authoring-errors.md"
+      ],
+      "requires": [],
+      "public": [],
+      "planned": [
+        "datamimic_ce.errors.context",
+        "datamimic_ce.errors.descriptor_contracts"
       ],
       "decided_by": "agent"
     }
