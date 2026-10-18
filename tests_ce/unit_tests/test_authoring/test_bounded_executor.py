@@ -157,6 +157,44 @@ def test_snapshot_bounds_are_enforced_without_relaxing_pure_mode(tmp_path, monke
     assert result.diagnostics[0].code is AuthoringSystemDiagnosticCode.ENVIRONMENT
 
 
+def test_snapshot_reads_file_identity_instead_of_windows_cached_entry_stat(tmp_path, monkeypatch):
+    from contextlib import contextmanager
+
+    from datamimic_ce.authoring.adapters import bounded_executor
+
+    source = tmp_path / "workspace"
+    source.mkdir()
+    resource = source / "rows.csv"
+    content = b"id\n1\n2\n"
+    resource.write_bytes(content)
+    original_scandir = os.scandir
+
+    class WindowsCachedEntry:
+        def __init__(self, entry):
+            self.name = entry.name
+            self.entry = entry
+
+        def stat(self, *, follow_symlinks):
+            actual = self.entry.stat(follow_symlinks=follow_symlinks)
+            fields = list(actual)
+            fields[1] = fields[2] = fields[3] = 0
+            return os.stat_result(fields, {
+                "st_atime_ns": actual.st_atime_ns,
+                "st_mtime_ns": actual.st_mtime_ns,
+                "st_ctime_ns": actual.st_ctime_ns,
+            })
+
+    @contextmanager
+    def windows_cached_scandir(path):
+        with original_scandir(path) as entries:
+            yield (WindowsCachedEntry(entry) for entry in entries)
+
+    monkeypatch.setattr(os, "scandir", windows_cached_scandir)
+    bounded_executor._snapshot_workspace(source, tmp_path / "snapshot")
+    assert (tmp_path / "snapshot" / "rows.csv").read_bytes() == content
+    assert resource.read_bytes() == content
+
+
 def test_snapshot_rejects_file_replaced_between_stat_and_open(tmp_path, monkeypatch):
     from datamimic_ce.authoring.adapters import bounded_executor
 

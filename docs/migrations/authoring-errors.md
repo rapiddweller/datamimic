@@ -157,7 +157,9 @@ The adoption phase
 and its 2.0.0 observations remain historical. Current-base integration requires fresh
 3.0.1 baseline and merged-source evidence plus independent review; do not relabel
 old measurements or receipts. [Amendment 215](../architecture/refactoring-study/experiment-2/amendment-215-current-base-reader.md)
-binds the reviewed current-base measurements and strict controls. Existing public entries stay only until their
+records the reviewed first-merge measurements and strict controls.
+[Amendment 216](../architecture/refactoring-study/experiment-2/amendment-216-windows-snapshot.md)
+binds the Windows snapshot correction and tightened current ceiling. Existing public entries stay only until their
 consumers migrate; future APIs are `planned`.
 Promote them when implemented and remove retired entries with their callers.
 Module declarations/layouts track real implementations when introduced, without

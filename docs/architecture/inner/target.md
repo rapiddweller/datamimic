@@ -104,8 +104,9 @@ reflective constructs in those functions remain prohibited. Vendor-cause normali
 with IO Clients; exporter-cause normalization stays with IO Exporters, removing the reverse
 client-to-exporter dependency. [Amendment 214](../refactoring-study/experiment-2/amendment-214-ce-authoring-measurements.md)
 records the historical adoption ceilings. [Amendment 215](../refactoring-study/experiment-2/amendment-215-current-base-reader.md)
-binds the current-base semantic union, reviewed reader control and exact current ceilings;
-UNKNOWN remains explicit.
+records the current-base semantic union and reviewed reader control.
+[Amendment 216](../refactoring-study/experiment-2/amendment-216-windows-snapshot.md) binds the Windows
+snapshot correction and exact tightened call ceiling; UNKNOWN remains explicit.
 
 ## Physical target
 

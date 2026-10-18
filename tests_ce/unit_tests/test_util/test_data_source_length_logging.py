@@ -87,3 +87,66 @@ def test_count_query_propagates_unexpected_errors() -> None:
 
     with pytest.raises(RuntimeError, match="unexpected"):
         rdbms_count_source_query(client, "SELECT 1", "db", "selector")
+
+
+@pytest.mark.parametrize("native_type", [ProgrammingError, OperationalError])
+def test_portable_count_failure_preserves_native_deferral(native_type, caplog, monkeypatch):
+    from datamimic_ce.errors import IssueCode, operation_error
+
+    monkeypatch.setattr(logging.getLogger("DATAMIMIC"), "propagate", True)
+    native = native_type("stmt", {}, Exception("unavailable during preflight"))
+    wrapped = operation_error(
+        code=IssueCode.OPERATION_EXECUTION_FAILED, target="database read", error=native_type.__name__
+    )
+    wrapped.__cause__ = native
+    client = Mock(spec=RdbmsClient)
+    client.count_query_length.side_effect = wrapped
+    with caplog.at_level(logging.ERROR, logger="DATAMIMIC"):
+        result = rdbms_count_source_query(client, "SELECT * FROM __table__", "db", "selector")
+    assert result is None
+    assert wrapped.__cause__ is native
+    assert len([record for record in caplog.records if record.levelno == logging.ERROR]) == 1
+    assert "Cannot get length of database source" in caplog.records[-1].getMessage()
+
+
+@pytest.mark.parametrize("case", ["policy", "uncategorized", "unexpected-cause"])
+def test_count_preflight_preserves_other_portable_failures(case):
+    from datamimic_ce.errors import IssueCode, OperationError
+
+    issue = (
+        IssueCode.OPERATION_READ_ONLY_WRITE_BLOCKED
+        if case == "policy"
+        else (IssueCode.OPERATION_EXECUTION_FAILED if case == "unexpected-cause" else None)
+    )
+    error = OperationError("must propagate", issue_code=issue)
+    error.__cause__ = (
+        ValueError("unexpected") if case == "unexpected-cause" else ProgrammingError("stmt", {}, Exception("native"))
+    )
+    client = Mock(spec=RdbmsClient)
+    client.count_query_length.side_effect = error
+    with pytest.raises(OperationError) as caught:
+        rdbms_count_source_query(client, "SELECT 1", "db", "selector")
+    assert caught.value is error
+
+
+def test_dynamic_sqlite_selector_defers_preflight_and_returns_actual_rows(tmp_path, monkeypatch):
+    import sqlite3
+
+    from datamimic_ce.engine.runtime.api import run
+    from datamimic_ce.engine.runtime.contracts import RunRequest
+
+    monkeypatch.chdir(tmp_path)
+    (tmp_path / "db").mkdir()
+    with sqlite3.connect(tmp_path / "db" / "dynamic.sqlite") as connection:
+        connection.execute("CREATE TABLE items(id INTEGER)")
+        connection.executemany("INSERT INTO items VALUES (?)", [(1,), (2,), (3,)])
+    descriptor = tmp_path / "model.xml"
+    descriptor.write_text(
+        '<setup rngSeed="7"><database id="db" dbms="sqlite" database="dynamic"/>'
+        '<variable name="table_name" constant="items"/>'
+        '<generate name="rows" source="db" selector="SELECT * FROM __table_name__" '
+        'distribution="ordered" target=""/></setup>',
+        encoding="utf-8",
+    )
+    result = run(RunRequest(descriptor_path=descriptor, test_mode=True))
+    assert result.captured["rows"] == [{"id": 1}, {"id": 2}, {"id": 3}]

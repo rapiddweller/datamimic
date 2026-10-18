@@ -3,6 +3,7 @@
 from pathlib import Path
 from uuid import uuid4
 
+import oracledb
 import pytest
 from pymongo import MongoClient
 from sqlalchemy import text
@@ -44,12 +45,17 @@ def test_real_backend_transaction_rejects_writes(dbms: Dbms) -> None:
         writer.execute_sql_script(f"CREATE TABLE {table}(id INTEGER)")
         created = True
         writer.execute_sql_script(f"INSERT INTO {table} VALUES (1)")
-        assert reader.get(f"SELECT id FROM {table}") == [(1,)]
+        # Oracle READ ONLY snapshots can reject newly created tables with ORA-01466.
+        read_query = "SELECT 1 FROM DUAL" if dbms is Dbms.ORACLE else f"SELECT id FROM {table}"
+        assert reader.get(read_query) == [(1,)]
         with pytest.raises(OperationError) as rejected:
             reader.get(f"DELETE FROM {table}")
         assert rejected.value.issue_code is IssueCode.OPERATION_READ_ONLY_WRITE_BLOCKED
-        with reader.engine.begin() as connection, pytest.raises(DBAPIError):
+        with reader.engine.begin() as connection, pytest.raises(DBAPIError) as native_rejected:
             connection.execute(text(f"INSERT INTO {table} VALUES (2)"))
+        if dbms is Dbms.ORACLE:
+            assert isinstance(native_rejected.value.orig, oracledb.DatabaseError)
+            assert native_rejected.value.orig.args[0].code == 1456
         assert writer.get(f"SELECT id FROM {table}") == [(1,)]
     finally:
         if reader.engine is not None:

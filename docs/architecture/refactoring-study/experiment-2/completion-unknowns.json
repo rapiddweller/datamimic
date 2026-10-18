@@ -2,11 +2,11 @@
   "status": "independent_local_architecture_review_accepted",
   "reviewed_by": "Astra",
   "review_reference": "docs/architecture/refactoring-study/experiment-2/completion.md",
-  "source_digest": "07011cd157fde1858e8ef483ea67cb839c3b8054ed6aa0d2614a5defec081b27",
+  "source_digest": "0e4aa5b2819210a9abe995260c6f62ded06c4fad2078a8bf0a5a1e4949e2ec9d",
   "contract_digest": "ada24d8d83e92bce0a93629d87d9c74ad248b2d306ccf2ddc64829d1c5e50438",
   "analyzer_digest": "a9e159db0a1912171ba9ec7abe8a60aac53d1e865159acfc88686bd451741ef0",
-  "validation_digest": "dade33f5588198a6bfb08f2f66c033e48dd9faa29be36ae5c2c39dce49082e98",
-  "unknowns_digest": "7c4441f611ed555602c1726c8be37ea6ffe2187a55ab81a85c111725f7565f50",
+  "validation_digest": "a0d4bc30d1f61165a7fb82c5a5cf5cc3ab3ea2b91d6bfd420faff8b27e06537e",
+  "unknowns_digest": "4a18924cdc08ab66bd2d63bfa143a0f91c8e36ad6cb2a3169a732d6cf18f9603",
   "groups": [
     {
       "classification": "aggregate_receipt",
@@ -94,7 +94,7 @@
     },
     {
       "classification": "global_observation_limit",
-      "reason": "Global context aliases and Python dynamic calls are not completely proven. Current native unresolved calls=1410. Relative to the same-reader adoption control, all24 added and9 removed sites were inspected: nine pairs reflect embedded anonymous-caller source locations, and15 substantive upstream calls preserve typed constructors, export collections, URI encoding, GlobalIncrement parsing and CLI parameter parsing. Against fresh dd2, the previously reviewed adoption delta remains321 added and172 removed. Manual review does not turn whole-graph completeness into PASS.",
+      "reason": "Global context aliases and Python dynamic calls are not completely proven. Current native unresolved calls=1409. The Windows snapshot fix replaces cached entry.stat with fresh anchored os.stat, removing one unresolved semantic call; the other added/removed pair is an unchanged descriptor-path expression with shifted anonymous-caller location. Independent complete multiset comparison confirms this exact delta. Prior merged-source site assessments remain applicable. Manual review does not turn whole-graph completeness into PASS.",
       "ids": [
         "UNKNOWN-CONTEXT-DATAFLOW",
         "UNKNOWN-PYTHON-DYNAMIC-CALLS"
@@ -785,7 +785,7 @@
       }
     ]
   },
-  "review_scope": "Integrated independent CE Authoring/Errors review, reopened for actual current-base dd2 integration and the reviewed upstream ArchKeel3.0.1 reader. Frozen CE84a9 and EE37d74ddb migration references remain immutable. All298 current UNKNOWN records were assessed:285 unchanged,11 evidence/fact-reference changes,one IO decided-position aggregate change andone dynamic-call count change. Changed source bodies and all15 substantive call additions were read. Existing broad-map and missing-signature source debt remains explicit. Native534-file coverage proves observation, not complete static or runtime behavior.",
-  "measurement_amendment": "Amendment215 explicitly preserves Amendment214 and frozen147-versus143 mismatch, separately records current-upstream146 typing/1261 calls, and binds merged1410 calls/173 typing signals/2 cycles/0 private/0 untyped-private. Same-source/target3.0.1 reader control matches all native sections from2.0.0. Exact current multisets were reviewed; no headroom or UNKNOWN promotion.",
-  "delivery_boundary": "Local merged source/target/migration review only. Broad merged local suites were still running when this receipt was issued. Required exact final-head CI and supported Python/native Windows process-handle coverage remain delivery gates. No merge, release or deployment approval."
+  "review_scope": "Final integrated production freeze independently reviewed after the Windows snapshot and optional SQL count-preflight repairs. Fresh anchored metadata acquisition preserves all snapshot containment/identity/limit checks. IO count defers only I901 with direct ProgrammingError/OperationalError cause; policy and unrelated portable failures propagate unchanged. Independent count/read-only tests43PASS plus actual read-only count I907 propagation; prior snapshot/source and contained-resource tests remain applicable. Oracle test-only correction is supported by three DUAL read controls and exact native1456 write rejection with writer rows unchanged; it does not claim freshly created table READ ONLY reads work. Live19-case and targeted23-case service logs were read. All298 current UNKNOWN records compared with the reviewed Windows snapshot:287 identical,11 evidence/fact-reference changes only. Same52 classifications and20 identical usage diagnostics remain applicable, including explicit source-contract debt.",
+  "measurement_amendment": "Amendment216 combined-service follow-up binds final source0e4aa5b2819210a9abe995260c6f62ded06c4fad2078a8bf0a5a1e4949e2ec9d. Complete unresolved-call multiset69eaffb982afe20f9c1fb63503d6c8f3d11e011838fcd990aebeff00bdad67df and typing multiset959ad69e1ed47607479a34693c5373d11de2c1460ab70e154b3f66bf8c70b9e2 are unchanged from the Windows fix: zero added/removed sites. Exact budgets1409/173/2/0/0, unchanged target and analyzer. Earlier source observations and original84a9 migration corpus remain historical; no headroom, permission expansion or UNKNOWN promotion.",
+  "delivery_boundary": "Local final combined-source architecture/security/behavior review approved. New final-head full CI, including actual Windows and external-service execution, remains required. Earlier failed CI and interrupted Windows-only canonical Make are historical and do not establish completion. No merge, release or deployment approval."
 }

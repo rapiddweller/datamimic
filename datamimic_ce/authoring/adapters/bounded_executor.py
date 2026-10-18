@@ -106,8 +106,13 @@ def _snapshot_workspace(source: Path, destination: Path) -> None:
                 entry_count += 1
                 if entry_count > _MAX_WORKSPACE_ENTRIES:
                     raise ValueError("workspace exceeds bounded entry count")
-                info = entry.stat(follow_symlinks=False)
                 path = source_path / entry.name
+                # Windows DirEntry.stat omits the file identity required by the opened-handle check.
+                info = os.stat(
+                    entry.name if directory_fd is not None else path,
+                    dir_fd=directory_fd,
+                    follow_symlinks=False,
+                )
                 output = output_path / entry.name
                 if stat.S_ISREG(info.st_mode):
                     copy_file(path, output, info, directory_fd=directory_fd)

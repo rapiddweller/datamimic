@@ -13,6 +13,7 @@ from pathlib import Path
 
 import pytest
 
+from datamimic_ce.errors import ErrorCode, IssueCode, TaskConfigError
 from datamimic_ce.interfaces.python.data_mimic_test import DataMimicTest
 
 _TEST_DIR = Path(__file__).resolve().parent
@@ -23,8 +24,16 @@ def _run(filename: str) -> None:
 
 
 def test_storage_on_lazy_script_source_rejected():
-    with pytest.raises(ValueError, match="dynamic/script-evaluated source"):
+    with pytest.raises(TaskConfigError) as caught:
         _run("fx_storage_lazy_source.xml")
+    error = caught.value
+    assert isinstance(error, ValueError)
+    assert error.error_code is ErrorCode.TASK_CONFIG
+    assert error.issue_code is IssueCode.TASK_VARIABLE_STORAGE_UNRESOLVABLE_SOURCE
+    assert "<variable 'row' storage='data'> source 'seed_list' has no stable pool to materialize" in str(error)
+    assert str(error).endswith("in descriptor 'fx_storage_lazy_source.xml'")
+    assert str(_TEST_DIR) not in str(error)
+    assert error.__cause__ is None
 
 
 def test_storage_on_global_variable_rejected():
