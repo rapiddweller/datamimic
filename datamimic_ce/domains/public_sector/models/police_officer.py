@@ -52,6 +52,10 @@ class PoliceOfficer(BaseEntity):
     def officer_id(self) -> str:
         """Get the officer ID.
 
+        Unique per entity type and field within one service instance or descriptor run,
+        including includes. Direct construction, separate runs and existing target data
+        are outside this guarantee.
+
         Returns:
             A unique identifier for the officer.
         """

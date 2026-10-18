@@ -40,6 +40,7 @@ class ExportSession:
     def __init__(self, worker_id: int) -> None:
         self._state_manager = ExporterStateManager(worker_id)
         self._products: dict[str, _ProductExporters] = {}
+        self._registrations: dict[tuple[str, str, str | None, tuple[str, ...]], _ProductExporters] = {}
 
     def register(
         self,
@@ -48,9 +49,18 @@ class ExportSession:
         product_name: str,
         export_uri: str | None,
         targets: list[str],
+        execution_id: str | None = None,
     ) -> None:
-        with_operation, without_operation = create_exporter_list(setup_context, product_name, export_uri, targets)
-        self._register_exporters(full_name, with_operation, without_operation)
+        # Re-activate an execution's exporters without losing learned columns or other
+        # exporter-local state when another same-named branch ran in between pages.
+        key = (execution_id or full_name, product_name, export_uri, tuple(sorted(targets)))
+        exporters = self._registrations.get(key)
+        if exporters is None:
+            with_operation, without_operation = create_exporter_list(setup_context, product_name, export_uri, targets)
+            self._register_exporters(full_name, with_operation, without_operation)
+            self._registrations[key] = self._products[full_name]
+        else:
+            self._products[full_name] = exporters
 
     def _register_exporters(
         self,

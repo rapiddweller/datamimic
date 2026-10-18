@@ -162,6 +162,13 @@ class GeneratorUtil:
                 self._context.root.generators[cache_key] = generator  # per-field reuse across rows
                 return generator
 
+            # A setup <generator name="..."> is one explicitly shared instance.
+            # Ordinary constructor fields still use their own qualified cache keys;
+            # machine definitions above still build independent per-field walks.
+            if generator_str.strip() == class_name and machine_def is not None:
+                self._context.root.generators[cache_key] = machine_def
+                return machine_def
+
             # Get generator class
             cls = self._class_dict.get(class_name)
             if cls is None:

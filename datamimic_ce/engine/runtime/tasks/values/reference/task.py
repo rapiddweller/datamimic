@@ -13,6 +13,7 @@ from datamimic_ce.engine.runtime.contexts.context import Context
 from datamimic_ce.engine.runtime.contexts.geniter_context import GenIterContext
 from datamimic_ce.engine.runtime.tasks.base.task import GenSubTask
 from datamimic_ce.engine.runtime.tasks.sources.reference import load_reference_source, reference_uses_shared_cycle
+from datamimic_ce.errors import TaskConfigError
 
 
 class ReferenceTask(GenSubTask):
@@ -29,21 +30,34 @@ class ReferenceTask(GenSubTask):
     def execute(self, ctx: Context):
         """Generate a (composite) reference record from an RDBMS or MongoDB data source."""
         if self._iterator is None:
-            if self._pagination is None and reference_uses_shared_cycle(self._statement):
-                # Without a page window the task may be rebuilt per record (nested in
-                # <condition>/<while>), so the rotation lives in the root context — an endless
-                # cycle over the selected order — instead of dying with the task instance.
-                key = f"<reference>-cycle|{self._statement.full_name}"
-                shared = ctx.root.generators.get(key)
+            if self._pagination is None and (self._statement.unique or reference_uses_shared_cycle(self._statement)):
+                # Unpaged tasks can be rebuilt per record inside control flow. Keep finite
+                # unique cursors alive too; statement identity separates same-named branches.
+                key = (
+                    ("<reference>-unique", self._statement)
+                    if self._statement.unique
+                    else f"<reference>-cycle|{self._statement.full_name}"
+                )
+                if self._statement.unique:
+                    cursors = ctx.unique_cursors if isinstance(ctx, GenIterContext) else {}
+                else:
+                    cursors = ctx.root.generators
+                shared = cursors.get(key)
                 if shared is None:
-                    shared = itertools.cycle(self._init_iterator(ctx))
-                    ctx.root.generators[key] = shared
+                    shared = self._init_iterator(ctx)
+                    if not self._statement.unique:
+                        shared = itertools.cycle(shared)
+                    cursors[key] = shared
                 self._iterator = shared
             else:
                 self._iterator = self._init_iterator(ctx)
         try:
             record = next(self._iterator)
         except StopIteration:
+            if self._statement.unique:
+                raise TaskConfigError(
+                    f"Cannot generate more unique values for <reference> '{self._statement.name}': source exhausted"
+                ) from None
             self._iterator = None
             return self.execute(ctx)
         if isinstance(ctx, GenIterContext):

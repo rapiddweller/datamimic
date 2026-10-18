@@ -76,7 +76,30 @@ class TestDemos:
 
     def test_demo_condition(self):
         """Test the condition demo."""
-        self._run_demo_test(self._demos_dir / "demo-condition")
+        engine = DataMimicTest(
+            test_dir=self._demos_dir / "demo-condition", filename="datamimic.xml", capture_test_result=True
+        )
+        engine.test_with_timer()
+        result = engine.capture_result()
+
+        assert {name: len(rows) for name, rows in result.items()} == {
+            "condition": 10,
+            "bike": 10,
+            "group_name_not_override": 10,
+            "group": 10,
+            "big_group": 1,
+        }
+        for row in result["group_name_not_override"]:
+            for field in ("emptyList", "emptyList2", "emptyList3", "list2"):
+                assert row[field] == []
+                assert isinstance(row[field], list)
+            for field in ("emptyDict", "emptyDict2", "emptyDict3", "removeElement", "removeElementorEmpty", "dict2"):
+                assert row[field] == {}
+                assert isinstance(row[field], dict)
+            assert len(row["list"]) == 2
+            assert "id" in row["dict"]
+
+        assert all(row["same_name"] == {"age": 35} for row in result["bike"])
 
     def test_demo_healthcare(self):
         """Test the healthcare demo."""

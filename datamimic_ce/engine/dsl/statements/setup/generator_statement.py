@@ -10,6 +10,7 @@ from datamimic_ce.engine.dsl.statements.base.statement import Statement
 
 class GeneratorStatement(Statement):
     def __init__(self, model: GeneratorModel):
+        super().__init__(name=model.name, parent_stmt=None)
         self._name: str = model.name
         self._generator = model.generator
 

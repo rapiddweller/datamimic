@@ -18,7 +18,9 @@ EXPECTED_FACADE_CONTENT_HASHES: dict[str, str] = {
     "person": "e8365620df54a91427b02035004bf5315c637bde7e1df0706e1c641c857bd9d4",
 }
 EXPECTED_ENTITY_REPLAY_HASH = "749dc011672c1287823ae6fff20a8cc0bf42031faf114bd70d9abd6142b8af89"
-EXPECTED_LITERAL_REPLAY_HASH = "08a79c02067e4e3d8f93a7434c6196ff5ef0da5b2bf811ca7174f65ed8557185"
+# #282 keeps the literal product's unique pool across its automatic page boundary:
+# E,C,D,A,B replaces the erroneous per-page restart E,C,D,B,C.
+EXPECTED_LITERAL_REPLAY_HASH = "94da876cb727b8df912b8e2a099989d75df8e174c7c9926510f39f578fd88a0c"
 UTF8_PROBE_HASH = "346c09d6dbf788249cbd8cf5bae13bf2d4f34dd83e6aa689c190b996cf82d2a7"
 
 

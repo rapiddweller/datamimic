@@ -6,7 +6,7 @@ INSTALLED_AUTHORING_ARGS ?=
 PACKAGE := datamimic_ce
 TESTS := tests_ce
 CE_COVERAGE_FILES := $(shell find $(PACKAGE) -type f -name '*.py')
-ARCHKEEL_SOURCE := archkeel==2.0.0
+ARCHKEEL_SOURCE := archkeel==3.0.1
 # The independent receipt includes the exact Python runtime.
 ARCHKEEL_PYTHON := 3.11.12
 ARCHITECTURE_DIR := test-artifacts/architecture/ce-recursive-target

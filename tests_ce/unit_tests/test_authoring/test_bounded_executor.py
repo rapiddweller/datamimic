@@ -283,3 +283,26 @@ def test_workspace_cleanup_failure_blocks_success_after_actual_removal(monkeypat
     result = CeBoundedExecutor().execute(BoundedExecutionRequest(xml=_XML))
     assert not result.ok
     assert result.diagnostics[0].code is AuthoringSystemDiagnosticCode.CLEANUP
+
+
+def test_unique_reference_exhaustion_keeps_category_in_private_child(tmp_path):
+    import sqlite3
+    from datamimic_ce.errors import ErrorCode
+
+    (tmp_path / "db").mkdir()
+    with sqlite3.connect(tmp_path / "db" / "database.sqlite") as connection:
+        connection.execute("CREATE TABLE items (id INTEGER)")
+        connection.executemany("INSERT INTO items VALUES (?)", [(1,), (2,), (3,), (4,)])
+    xml = (
+        '<setup rngSeed="7"><database id="db" dbms="sqlite" database="database"/>'
+        '<generate name="rows" count="5" pageSize="2"><condition><if condition="True">'
+        '<reference name="fk" source="db" sourceType="items" sourceKey="id" unique="true"/>'
+        '</if></condition></generate></setup>'
+    )
+    result = CeBoundedExecutor(AuthoringWorkspaceContext(tmp_path)).execute(BoundedExecutionRequest(xml=xml))
+    assert not result.ok
+    diagnostic = result.diagnostics[0]
+    assert diagnostic.code is AuthoringSystemDiagnosticCode.CHILD_EXECUTION
+    assert diagnostic.ce_error is not None
+    assert diagnostic.ce_error.error_code is ErrorCode.TASK_CONFIG
+    assert diagnostic.ce_error.issue_code is None

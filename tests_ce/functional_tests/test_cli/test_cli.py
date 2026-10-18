@@ -88,6 +88,22 @@ class TestCLI:
         assert result.exit_code == 1
         assert "Target directory is required with --all" in result.output
 
+    def test_demo_create_all_has_descriptors_for_discovered_demos(self, tmp_path):
+        from datamimic_ce.interfaces.demo import demo_autocomplete
+        from datamimic_ce.resources.api import demo_names
+
+        names = set(demo_names())
+        assert names
+        assert "demo-clinical-trial" not in names
+        assert list(demo_autocomplete("demo-clinical-trial")) == []
+
+        result = runner.invoke(app, ["demo", "create", "--all", "--target", str(tmp_path)])
+
+        assert result.exit_code == 0, result.output
+        created = {path.name for path in tmp_path.iterdir() if path.is_dir()}
+        assert created == names
+        assert all((tmp_path / name / "datamimic.xml").is_file() for name in created)
+
     def test_demo_create_specific_demo(self, tmp_path):
         # Setup
         demo_name = "demo-condition"

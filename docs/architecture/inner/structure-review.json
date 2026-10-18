@@ -2061,6 +2061,10 @@
     {
       "source": "factory/datamimic_test_factory.py",
       "target": "interfaces/python/factory.py"
+    },
+    {
+      "source": "resources/demos/demo-clinical-trial/script/clinical_trial.scr.py",
+      "target": "resources/examples/generate_clinical_cohort.py"
     }
   ],
   "package_relocations": [],
@@ -2680,6 +2684,10 @@
     {
       "target": "engine/dsl/parsers/input/resource.py",
       "reason": "Owns context-local descriptor resource reads with normal filesystem defaults and an injected workspace reader."
+    },
+    {
+      "target": "engine/runtime/contexts/products.py",
+      "reason": "Actual conditional export executions need typed page and worker metadata without changing public product names or importing task orchestration into row contexts."
     }
   ],
   "target_module_concerns": [
@@ -3466,6 +3474,10 @@
     {
       "target": "domains/domain_core/datasets/path.py",
       "responsibility": "Owns configured dataset paths and the exact installed package data root without environment override for packaged-data identity."
+    },
+    {
+      "target": "engine/runtime/contexts/products.py",
+      "responsibility": "Carries generated rows and actual nested export executions across row contexts, pages, and worker results."
     }
   ]
 }

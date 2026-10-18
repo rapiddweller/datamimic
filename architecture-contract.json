@@ -1897,6 +1897,7 @@
       "allowed_children": [
         "datamimic_ce.resources.examples.generate_address",
         "datamimic_ce.resources.examples.generate_cities",
+        "datamimic_ce.resources.examples.generate_clinical_cohort",
         "datamimic_ce.resources.examples.generate_companies",
         "datamimic_ce.resources.examples.generate_countries",
         "datamimic_ce.resources.examples.generate_people",
@@ -2156,7 +2157,7 @@
         "responsibility": "This legacy file contains only a docstring and does not initialize the demo directory."
       },
       {
-        "path": "datamimic_ce/resources/demos/demo-clinical-trial/script/clinical_trial.scr.py",
+        "path": "datamimic_ce/resources/examples/generate_clinical_cohort.py",
         "responsibility": "The script generates a fixed-configuration patient cohort with a locally set seed and serializes the required fields."
       },
       {

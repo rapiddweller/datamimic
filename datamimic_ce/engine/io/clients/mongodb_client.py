@@ -368,8 +368,8 @@ class MongoDBClient(DatabaseClient):
         # execute and return result
         return self._documents(self._from_bson(list(collection.aggregate(aggregate_pipeline))))
 
-    def count_table_length(self, table_name: str):
-        pass
+    def count_table_length(self, table_name: str) -> int:
+        return self.count(table_name)
 
     def insert(self, collection_name: str, data: list, is_update: bool):
         """

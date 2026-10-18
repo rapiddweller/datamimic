@@ -148,7 +148,9 @@ class SetupTask:
             if (client := client_ref()) is not None
         )
         memo: dict[int, object] = {
-            id(parent_context._descriptor_client_history): parent_context._descriptor_client_history
+            id(parent_context._descriptor_client_history): parent_context._descriptor_client_history,
+            # Same-process includes allocate in the parent run; ordinary worker copies stay isolated.
+            id(parent_context.domain_identifier_registry): parent_context.domain_identifier_registry,
         }
         clone_by_token: dict[int, RegisteredClient] = {}
         for token, client, _config in descriptor_clients:

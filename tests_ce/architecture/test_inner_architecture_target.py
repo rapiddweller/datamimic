@@ -10,8 +10,8 @@ from tests_ce.architecture.test_recursive_target_definition import (
     MANIFEST,
     _current_files,
     _files_at,
+    _partition_target_files,
     _physical_target_issues,
-    _target_files,
     _target_implementation_issues,
 )
 
@@ -54,8 +54,7 @@ def _task_client_imports(task_root: Path) -> list[str]:
 def test_current_filesystem_matches_the_frozen_target_map() -> None:
     manifest = json.loads(MANIFEST.read_text(encoding="utf-8"))
     source = _files_at(manifest["source_commit"])
-    excluded = {path for path in source if any(path.startswith(item["prefix"]) for item in manifest["exclusions"])}
-    targets = _target_files(source - excluded, manifest)
+    targets, _ = _partition_target_files(source, manifest)
     current = {
         path
         for path in _current_files()

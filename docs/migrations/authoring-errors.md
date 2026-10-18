@@ -150,8 +150,15 @@ passes. The installed runtime contains no legacy compiler or import shim.
 
 ## Enforcement and closure
 
-Use CE ArchKeel 2.0.0 throughout; no reader/baseline/tool upgrade. Existing public
-entries stay only until their consumers migrate; future APIs are `planned`.
+Use the current upstream ArchKeel 3.0.1 pin with Python 3.11.12, as approved in
+the [independent reader review](../architecture/refactoring-study/experiment-2/archkeel-3.0.1-review.md).
+The adoption phase
+[Amendment 214](../architecture/refactoring-study/experiment-2/amendment-214-ce-authoring-measurements.md)
+and its 2.0.0 observations remain historical. Current-base integration requires fresh
+3.0.1 baseline and merged-source evidence plus independent review; do not relabel
+old measurements or receipts. [Amendment 215](../architecture/refactoring-study/experiment-2/amendment-215-current-base-reader.md)
+binds the reviewed current-base measurements and strict controls. Existing public entries stay only until their
+consumers migrate; future APIs are `planned`.
 Promote them when implemented and remove retired entries with their callers.
 Module declarations/layouts track real implementations when introduced, without
 placeholder source modules. The stricter Application-to-Adapters target may expose

@@ -5,7 +5,7 @@
     </generate>
 
     <!--  Apply DATAMIMIC converters to mask email addresses or dates -->
-    <generate source="source" name="USER" target="target">
+    <generate source="source" name="USER" type="USER" target="target">
         <key name="full_name" script="full_name + '_mask'" />
         <!-- Use the default mask converter to mask into '*' (default char) -->
         <key name="email" script="email" converter="Mask" />

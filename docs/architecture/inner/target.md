@@ -103,7 +103,9 @@ pickle state so forged extra fields cannot disappear before validation. Other `A
 reflective constructs in those functions remain prohibited. Vendor-cause normalization stays
 with IO Clients; exporter-cause normalization stays with IO Exporters, removing the reverse
 client-to-exporter dependency. [Amendment 214](../refactoring-study/experiment-2/amendment-214-ce-authoring-measurements.md)
-binds the independently reviewed exact measurement ceilings; UNKNOWN remains explicit.
+records the historical adoption ceilings. [Amendment 215](../refactoring-study/experiment-2/amendment-215-current-base-reader.md)
+binds the current-base semantic union, reviewed reader control and exact current ceilings;
+UNKNOWN remains explicit.
 
 ## Physical target
 

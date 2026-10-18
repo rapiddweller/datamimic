@@ -19,7 +19,7 @@
 
   <echo>Reading watermark</echo>
   <variable name="from_ts" source="configDB" cyclic="False" selector="select value_column from watermark where key_column = 'last_processed_datetime'"/>
-  <!-- change timestamp to text string -->
+  <!-- Extract the native database timestamp from the watermark row -->
   <variable name="from_ts" script="from_ts.value_column" />
   <variable name="until_date" generator="DateTimeGenerator" />
 
@@ -34,7 +34,8 @@
     <variable name="company_ent" entity="Company"/>
     <key name="name" script="person_ent.name"/>
     <key name="company" script="company_ent.full_name"/>
-    <key name="date" script="date" inDateFormat="%Y-%m-%d %H:%M:%S.%f"/>
+    <!-- PostgreSQL returns a datetime; SQLite selectors return timestamp text. -->
+    <key name="date" script="datetime.datetime.fromisoformat(date) if type(date) is str else date"/>
   </generate>
 
 

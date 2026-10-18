@@ -163,3 +163,17 @@ def test_learning_retains_correct_scope_and_timeseries_guidance(application):
     window = TimeSeriesConfig.parse("2026-01-01T00:00:00", "2026-01-01T02:30:00", "PT1H")
     assert window.ticks_per_series == 2
     assert [(window.at(i).step, window.at(i).series) for i in range(4)] == [(0, 0), (1, 0), (0, 1), (1, 1)]
+
+
+@pytest.mark.parametrize("element, family", [("database", "db"), ("mongodb", "mongo")])
+def test_connection_catalog_preserves_profile_precedence_and_read_only_contract(application, element, family):
+    result = application.capability(CapabilityDomain.ELEMENT, element)
+    assert result.ok
+    attributes = {field.name: field for field in result.capability.attributes}
+    host = attributes["host"].description
+    assert f"'{{system}}.{family}.host'" in host
+    assert "overrides this attribute" in host and "this value is kept" in host
+    assert attributes["read_only"].xml_name == "readOnly"
+    properties = result.capability.properties_schema["properties"]
+    assert properties["host"]["description"] == host
+    assert properties["read_only"]["type"] == "boolean"

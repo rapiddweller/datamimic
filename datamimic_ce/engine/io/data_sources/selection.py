@@ -65,13 +65,14 @@ def get_shuffled_data_with_cyclic(
     data: Iterable[T], pagination: DataSourcePagination | None, cyclic: bool | None, seed: int
 ) -> list[T]:
     """Return a seeded shuffled window, optionally cycling through the source."""
-    source_len = len(list(data))
+    pool = list(data)
+    source_len = len(pool)
     if source_len == 0:
         return []
 
     if pagination is None:
         start_idx = 0
-        end_idx = len(list(data))
+        end_idx = source_len
     else:
         start_idx = pagination.skip
         end_idx = pagination.skip + pagination.limit
@@ -82,7 +83,7 @@ def get_shuffled_data_with_cyclic(
     current_seed = seed + int(start_idx / source_len)
     res: list[T] = []
     while len(res) <= end_idx - start_idx or len(res) < (start_idx % source_len) + end_idx - start_idx:
-        shuffle_data = list(data)
+        shuffle_data = pool.copy()
         # Seeded synthetic data must replay; this shuffle does not protect secrets.
         Random(current_seed).shuffle(shuffle_data)  # NOSONAR(S2245)
         res.extend(shuffle_data)

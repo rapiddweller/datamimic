@@ -33,6 +33,7 @@ class NestedKeyTask(GenSubTask):
         self._statement = statement
         self._default_value = statement.default_value
         self._sub_tasks: list | None = None
+        self._unique_cursors: dict = {}
         self._converter_list = create_converter_list(ctx, statement.converter)
 
     @property
@@ -45,6 +46,8 @@ class NestedKeyTask(GenSubTask):
         :param parent_context:
         :return:
         """
+        # Every nested-key invocation owns its finite selection scope.
+        self._unique_cursors = {}
         # Lazy creating sub_tasks of nestedkey_task for refreshing state of sub_tasks among nestedkey_tasks
         self._sub_tasks = [
             create_task(child_stmt, parent_context.root) for child_stmt in self._statement.sub_statements
@@ -96,13 +99,13 @@ class NestedKeyTask(GenSubTask):
                 # Generate data for each nestedkey record
                 for _ in range(nestedkey_len):
                     # Create sub-context for each list element creation
-                    ctx = GenIterContext(parent_context, str(self._statement.name))
+                    ctx = GenIterContext(parent_context, str(self._statement.name), unique_cursors=self._unique_cursors)
                     generated_value = self._try_execute_sub_tasks(ctx)
                     generated_rows.append(generated_value)
         elif nestedkey_type == DATA_TYPE_DICT:
             self._lazy_init_sub_tasks(parent_context=parent_context, nestedkey_length=1)
             # Create sub-context for nestedkey creation
-            ctx = GenIterContext(parent_context, str(self._statement.name))
+            ctx = GenIterContext(parent_context, str(self._statement.name), unique_cursors=self._unique_cursors)
             value = self._try_execute_sub_tasks(ctx)
         else:
             # Load value from current product then assign to nestedkey if type is not defined,
@@ -113,7 +116,7 @@ class NestedKeyTask(GenSubTask):
             )
             nestedkey_data = parent_context.current_product[self._statement.name]
             self._lazy_init_sub_tasks(parent_context=parent_context, nestedkey_length=len(nestedkey_data))
-            ctx = GenIterContext(parent_context, str(self._statement.name))
+            ctx = GenIterContext(parent_context, str(self._statement.name), unique_cursors=self._unique_cursors)
             ctx.current_product = nestedkey_data
             value = self._try_execute_sub_tasks(ctx)
 
@@ -238,7 +241,7 @@ class NestedKeyTask(GenSubTask):
         """
         self._lazy_init_sub_tasks(parent_context=parent_context, nestedkey_length=1)
         # Create sub-context for nestedkey creation
-        ctx = GenIterContext(parent_context, str(self._statement.name))
+        ctx = GenIterContext(parent_context, str(self._statement.name), unique_cursors=self._unique_cursors)
         ctx.current_product = copy.copy(value)
         modified_value = self._try_execute_sub_tasks(ctx)
         return modified_value
@@ -264,7 +267,7 @@ class NestedKeyTask(GenSubTask):
                     f"Expect current product of nestedkey '{self._statement.name}' is a dictionary, "
                     f"but get invalid datatype: '{type(current_product)}'"
                 )
-            ctx = GenIterContext(parent_context, str(self._statement.name))
+            ctx = GenIterContext(parent_context, str(self._statement.name), unique_cursors=self._unique_cursors)
             ctx.current_product = current_product
 
             # Ensure current_product is a dictionary

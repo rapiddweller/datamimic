@@ -2,15 +2,15 @@
   "status": "independent_local_architecture_review_accepted",
   "reviewed_by": "Astra",
   "review_reference": "docs/architecture/refactoring-study/experiment-2/completion.md",
-  "source_digest": "b71be23e55efeb0f42f13ee99877f8c0443d267c2ca09d6ce39356ec1c0a03e6",
-  "contract_digest": "ee87d5de646e6b19c405ef755c2c7acbf82f5d54dbc25628d57d71c0fdd03e97",
-  "analyzer_digest": "7106e3595fa7df9269cb43ee280f9c557659db7bda171b1f65ff5619ab54aa24",
-  "validation_digest": "e5afd2868371d7517a667d8a519a0c0ab64007f3231894e366f91c029de50cab",
-  "unknowns_digest": "0b9cf7fd7e8780268a0a5942e6567e77cae6622489229819a3e6cf747f1e5c01",
+  "source_digest": "07011cd157fde1858e8ef483ea67cb839c3b8054ed6aa0d2614a5defec081b27",
+  "contract_digest": "ada24d8d83e92bce0a93629d87d9c74ad248b2d306ccf2ddc64829d1c5e50438",
+  "analyzer_digest": "a9e159db0a1912171ba9ec7abe8a60aac53d1e865159acfc88686bd451741ef0",
+  "validation_digest": "dade33f5588198a6bfb08f2f66c033e48dd9faa29be36ae5c2c39dce49082e98",
+  "unknowns_digest": "7c4441f611ed555602c1726c8be37ea6ffe2187a55ab81a85c111725f7565f50",
   "groups": [
     {
       "classification": "aggregate_receipt",
-      "reason": "Aggregate summaries refer to the current detailed positions. The final native counts and reason inventories are retained; this group is not separate evidence that any undecidable position passes.",
+      "reason": "Current aggregate summaries refer to the assessed detailed positions. The merged IO aggregate has265 positions,211 decided and54 undecided: the added execution_id parameter is explicitly str|None; all undecidable position data is unchanged. Native counts and reason inventories are retained. This group is not separate evidence that any undecidable position passes.",
       "ids": [
         "UNKNOWN-BOUNDARY-TYPES-740afb90c4487173",
         "UNKNOWN-BOUNDARY-TYPES-7bd62f12a70f63ec",
@@ -94,7 +94,7 @@
     },
     {
       "classification": "global_observation_limit",
-      "reason": "Global context aliases and Python dynamic calls are not completely proven. Current native unresolved calls=1395; all321 added sites and172 removed sites are accounted for in the source-bound measurement assessment. Manual review does not turn whole-graph completeness into PASS.",
+      "reason": "Global context aliases and Python dynamic calls are not completely proven. Current native unresolved calls=1410. Relative to the same-reader adoption control, all24 added and9 removed sites were inspected: nine pairs reflect embedded anonymous-caller source locations, and15 substantive upstream calls preserve typed constructors, export collections, URI encoding, GlobalIncrement parsing and CLI parameter parsing. Against fresh dd2, the previously reviewed adoption delta remains321 added and172 removed. Manual review does not turn whole-graph completeness into PASS.",
       "ids": [
         "UNKNOWN-CONTEXT-DATAFLOW",
         "UNKNOWN-PYTHON-DYNAMIC-CALLS"
@@ -785,7 +785,7 @@
       }
     ]
   },
-  "review_scope": "One integrated independent CE Authoring/Errors adoption review against frozen CE84a9f465 and EE37d74ddb. The exact final native snapshot and all298 recorded UNKNOWNs were assessed. Native source coverage is observation evidence, not complete static or runtime proof. Existing broad-map/missing-signature debt remains explicit in groups.",
-  "measurement_amendment": "Amendment214 preserves frozen147 versus prior ceiling143 and binds exact current1395 calls/174 typing signals; cycles2/private0/untyped-private0. Complete site multisets independently reviewed; no UNKNOWN promoted.",
-  "delivery_boundary": "Local source/target/migration approval only. Required exact-head CI and native Windows process/handle coverage remain delivery gates; no merge, release or deployment approval."
+  "review_scope": "Integrated independent CE Authoring/Errors review, reopened for actual current-base dd2 integration and the reviewed upstream ArchKeel3.0.1 reader. Frozen CE84a9 and EE37d74ddb migration references remain immutable. All298 current UNKNOWN records were assessed:285 unchanged,11 evidence/fact-reference changes,one IO decided-position aggregate change andone dynamic-call count change. Changed source bodies and all15 substantive call additions were read. Existing broad-map and missing-signature source debt remains explicit. Native534-file coverage proves observation, not complete static or runtime behavior.",
+  "measurement_amendment": "Amendment215 explicitly preserves Amendment214 and frozen147-versus143 mismatch, separately records current-upstream146 typing/1261 calls, and binds merged1410 calls/173 typing signals/2 cycles/0 private/0 untyped-private. Same-source/target3.0.1 reader control matches all native sections from2.0.0. Exact current multisets were reviewed; no headroom or UNKNOWN promotion.",
+  "delivery_boundary": "Local merged source/target/migration review only. Broad merged local suites were still running when this receipt was issued. Required exact final-head CI and supported Python/native Windows process-handle coverage remain delivery gates. No merge, release or deployment approval."
 }

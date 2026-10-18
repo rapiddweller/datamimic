@@ -39,6 +39,7 @@ class TestReferenceTask(unittest.TestCase):
         self.statement.name = "test_name"
         # No selection modifier: default with-replacement path (spec-mocked attrs are truthy otherwise).
         self.statement.distribution = None
+        self.statement.unique = None
         self.statement.cyclic = None
         self.pagination = MagicMock(spec=DataSourcePagination)
         self.pagination.limit = 2
@@ -113,6 +114,26 @@ class TestReferenceTask(unittest.TestCase):
         result2 = task.execute(self.context)
         self.assertIn(result2, dataset)
         self.assertNotEqual(result1, result2)  # Values should be unique
+
+    def test_unique_exhaustion_preserves_text_with_portable_category(self):
+        from datamimic_ce.errors import ErrorCode
+
+        self.statement.unique = True
+        task = ReferenceTask(self.statement, self.pagination)
+        task._iterator = iter([{"test_name": 17}])
+        self.assertEqual(task.execute(self.context), 17)
+        with self.assertRaises(TaskConfigError) as caught:
+            task.execute(self.context)
+        error = caught.exception
+        self.assertIsInstance(error, ValueError)
+        self.assertIs(error.error_code, ErrorCode.TASK_CONFIG)
+        self.assertIsNone(error.issue_code)
+        self.assertEqual(
+            str(error),
+            "Cannot generate more unique values for <reference> 'test_name': source exhausted",
+        )
+        self.assertIsNone(error.__cause__)
+        self.assertTrue(error.__suppress_context__)
 
     def test_execute_non_unique_values(self):
         """Test execution without unique values requirement."""

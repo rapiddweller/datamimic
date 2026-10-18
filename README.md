@@ -310,6 +310,9 @@ print(f"{patient.full_name}, {patient.age}, {patient.conditions}")
 pip install datamimic-ce
 ```
 
+For database and MongoDB connections, prefer [connection profiles](docs/developer_guide.md#database-and-mongodb-connection-profiles).
+The guide explains client references, profile selection, and how profile values override XML attributes.
+
 ### Healthcare domain
 
 ```python
@@ -372,6 +375,35 @@ runs. Without a seed each run gets a new random key:
 <key name="email" script="p.email" converter="Hash('sha256','hex')" />
 <key name="iban"  script="acc.iban" converter="MiddleMask(8, 4)" />
 ```
+
+For pseudonymization, keep a random key outside the descriptor and separate from the generation
+seed. Reference a runtime property in the converter:
+
+```xml
+<key name="email" script="p.email"
+     converter="Hash('sha256','hex',key=pseudonym_key.encode('utf-8'))" />
+```
+
+Supply it from an access-controlled environment variable:
+
+```bash
+# Generate once, store securely, and reuse for stable tokens.
+export DATAMIMIC_PSEUDONYM_KEY="$(python -c 'import secrets; print(secrets.token_hex(32))')"
+datamimic run datamimic.xml --param-env pseudonym_key=DATAMIMIC_PSEUDONYM_KEY
+```
+
+`--param NAME=VALUE` and `--param-env NAME=ENV_NAME` are repeatable and override properties
+from `conf/environment.env.properties`. Property names must be Python identifiers; duplicate names
+are rejected. Use `--param-env` for secrets because command-line values can appear in process
+listings and shell history. Runtime properties remain available to descriptor scripts; use trusted
+descriptors and control access to the key and source data.
+
+Hash keys must contain at least 32 bytes before adding an optional salt. Length alone does not
+prove entropy: use a cryptographic random source, rather than a password, date or generation seed.
+Rotating the external key changes tokens for the same input; retain the prior key securely only
+when old mappings must be reproduced. An external key keeps tokens stable when `rngSeed` changes
+and leaves seeded data generation unchanged. Existing `Hash(...)` calls without an explicit key
+retain their seed-derived behavior and its weak-seed limitations.
 
 Available converters (13): `Mask`, `MiddleMask(start, end)`, `CutLength(n)`, `Substring(start, end)`, `JavaHash`, `RemoveNoneOrEmptyElement`,
 `Hash(type, format[, salt])`, `DateFormat(fmt)`, `Append`, `UpperCase`,
