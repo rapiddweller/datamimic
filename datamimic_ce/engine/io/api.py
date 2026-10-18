@@ -36,6 +36,7 @@ from datamimic_ce.engine.io.data_sources.boundary.models import (
 )
 from datamimic_ce.engine.io.data_sources.chunk_reader import ChunkSourceWindow
 from datamimic_ce.engine.io.data_sources.router import (
+    SourceAccessCapture,
     count_source,
     read_generate_database_source,
     read_generate_file_source,
@@ -77,6 +78,7 @@ from datamimic_ce.engine.io.failures import normalize_error_cause_for_transport
 from datamimic_ce.engine.io.memstore import Memstore
 
 __all__ = [
+    "SourceAccessCapture",
     "sqlite_database_path",
     "normalize_error_cause_for_transport",
     "normalize_exporter_error_cause_for_transport",

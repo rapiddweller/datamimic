@@ -17,10 +17,10 @@ from datamimic_ce.authoring.adapters.validator import CeDescriptorValidator
 from datamimic_ce.authoring.adapters.workspace import AuthoringWorkspaceContext
 from datamimic_ce.authoring.domain.diagnostics import AuthoringRuleId, AuthoringSystemDiagnosticCode
 from datamimic_ce.authoring.domain.requests import BoundedExecutionRequest
-from datamimic_ce.errors.codes import ErrorCode, IssueCode
 from datamimic_ce.engine.io.exporters.formats.json_exporter import JsonExporter
 from datamimic_ce.engine.runtime.api import create_run_session
 from datamimic_ce.engine.runtime.contracts import RunRequest
+from datamimic_ce.errors.codes import ErrorCode, IssueCode
 
 _PIPELINE = """<setup rngSeed="1">
     <memstore id="mem"/>
@@ -470,7 +470,10 @@ def test_dm002_scope_hint_matches_native_nested_scope_rules() -> None:
     assert isinstance(negative, dryrun_module._WorkerFailure)
     assert negative.error.code is ErrorCode.TASK_CONFIG
     assert negative.error.issue_code is IssueCode.TASK_EXPRESSION_EVAL_FAILED
-    assert "name 'mid' is not defined" in negative.message
+    assert "expression 'configured expression'" in negative.message
+    assert type(negative.error.__cause__) is NameError
+    assert negative.error.__cause__.name == "mid"
+    assert "NameError" in negative.message
     assert "this.name" in negative.message and "parent.name" in negative.message
     diagnostic = negative
     assert diagnostic.fix_hint == (
@@ -510,9 +513,7 @@ def test_variable_literal_generator_evaluates_in_scripts() -> None:
     assert [r["ticket_id"] for r in rows["tickets"]] == [100, 200, 300]
 
 
-def test_engine_scope_error_names_the_missing_identifier() -> None:
-    # The engine message itself (not just the hint) must say WHICH name is missing —
-    # "have undefined item or wrong structure" hid it (review-181 issue 2).
+def test_engine_scope_error_keeps_native_identifier_and_safe_repair() -> None:
     xml = """<setup rngSeed="1">
         <generate name="parents" count="2" target="ConsoleExporter">
             <key name="pid" generator="IncrementGenerator"/>
@@ -523,7 +524,12 @@ def test_engine_scope_error_names_the_missing_identifier() -> None:
     </setup>"""
     result = _capture_here(xml)
     assert isinstance(result, dryrun_module._WorkerFailure)
-    assert "ghost_field" in result.message
+    assert result.error.issue_code is IssueCode.TASK_EXPRESSION_EVAL_FAILED
+    assert type(result.error.__cause__) is NameError
+    assert result.error.__cause__.name == "ghost_field"
+    assert result.error.location.element_tag == "key"
+    assert result.error.location.attribute == "script"
+    assert "configured expression" in result.message
     assert "this." in result.message
     assert "this." in result.fix_hint and "parent." in result.fix_hint
 

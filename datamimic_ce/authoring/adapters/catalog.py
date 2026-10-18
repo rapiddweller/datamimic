@@ -30,6 +30,7 @@ from datamimic_ce.authoring.domain.capabilities import (
 from datamimic_ce.authoring.domain.diagnostics import RuleCatalogEntry, RuleOwner
 from datamimic_ce.authoring.domain.dm_json import DmJsonDocumentV1, DmJsonNodeV1
 from datamimic_ce.authoring.domain.expectations import ExactCountExpectation, ExpectationIntent, ProductRowsSubject
+from datamimic_ce.authoring.domain.proof import ForeignKeyRole, IdentifierRole, ProductRoleDeclaration
 from datamimic_ce.authoring.domain.reference import (
     AuthoringAssemblyReference,
     AuthoringExampleReference,
@@ -362,7 +363,14 @@ def _example(name: str) -> BuildRequestV4:
     expectations: tuple[ExactCountExpectation, ...] = (
         ExactCountExpectation(subject=ProductRowsSubject(product="rows"), count=2),
     )
+    roles: tuple[ProductRoleDeclaration, ...] = ()
     if name == "memstore":
+        roles = (
+            ProductRoleDeclaration(product="rows", field="id", role=IdentifierRole()),
+            ProductRoleDeclaration(
+                product="readback", field="id", role=ForeignKeyRole(parent_product="rows", parent_field="id")
+            ),
+        )
         producer = producer.model_copy(update={"properties": {**producer.properties, "target": "store"}})
         children = (
             DmJsonNodeV1(kind="memstore", properties={"id": "store"}),
@@ -377,6 +385,7 @@ def _example(name: str) -> BuildRequestV4:
     return BuildRequestV4(
         document=DmJsonDocumentV1(root=DmJsonNodeV1(kind="setup", properties={"rng_seed": 7}, children=children)),
         expectations=expectations,
+        product_roles=roles,
         max_count=10,
         sample_rows=5,
     )

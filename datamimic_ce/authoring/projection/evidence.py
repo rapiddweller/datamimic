@@ -10,11 +10,13 @@ from uuid import UUID
 
 from pydantic import JsonValue
 
-from datamimic_ce.authoring.domain.capture import CapturedProducts, validate_capture_values
+from datamimic_ce.authoring.domain.capture import CapturedObjectId, CapturedProducts, validate_capture_values
 from datamimic_ce.authoring.domain.requests import ProductEvidence
 
 
 def _json_value(value: object) -> JsonValue:
+    if isinstance(value, CapturedObjectId):
+        return value.value
     if value is None or isinstance(value, str | int | float | bool):
         return value
     if isinstance(value, Decimal | UUID):

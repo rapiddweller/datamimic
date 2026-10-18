@@ -1,5 +1,7 @@
 """Complete-capture acceptance controls for canonical DM JSON transactions."""
 
+from decimal import Decimal
+
 import pytest
 
 from datamimic_ce.authoring.adapters.dm_json_codec import CeDmJsonCodec
@@ -630,3 +632,100 @@ def test_declared_nested_foreign_key_selects_join_over_unmarked_parent_copies():
     )
     assert len(ambiguous.relationships[0].joins) == 2
     assert any(issue.code == "per_parent_count" for issue in evaluate_acceptance(ambiguous, observed))
+
+
+@pytest.mark.parametrize(
+    "left,right",
+    [
+        ({"amount": Decimal("1.2")}, {"amount": "1.2"}),
+        ({"items": (1, 2)}, {"items": [1, 2]}),
+        ({"value": True}, {"value": 1}),
+    ],
+)
+def test_uniqueness_preserves_nested_native_types(left, right):
+    spec = project(
+        '<setup><generate name="rows" count="2"><key name="payload" script="{}"/></generate></setup>',
+        expectations=[{"kind": "unique", "subject": {"kind": "product", "product": "rows"}, "field": "payload"}],
+    )
+    assert not evaluate_acceptance(spec, capture(rows=[{"payload": left}, {"payload": right}]))
+
+
+def test_mapping_order_does_not_change_acceptance_identity():
+    spec = project(
+        '<setup><generate name="rows" count="2"><key name="payload" script="{}"/></generate></setup>',
+        expectations=[{"kind": "unique", "subject": {"kind": "product", "product": "rows"}, "field": "payload"}],
+    )
+    failures = evaluate_acceptance(
+        spec,
+        capture(
+            rows=[
+                {"payload": {"a": {"b": 1}, "c": 2}},
+                {"payload": {"c": 2, "a": {"b": 1}}},
+            ]
+        ),
+    )
+    assert [item.code for item in failures] == ["unique"]
+
+
+def test_foreign_key_does_not_match_nested_decimal_to_string():
+    from decimal import Decimal
+
+    spec = project(
+        '<setup><generate name="parents" count="1"><key name="id" script="{}"/></generate>'
+        '<generate name="children" count="1"><key name="parent_id" script="{}"/></generate></setup>',
+        expectations=[
+            {
+                "kind": "foreign_key",
+                "parent": {"subject": {"kind": "product", "product": "parents"}, "field": "id"},
+                "child": {"subject": {"kind": "product", "product": "children"}, "field": "parent_id"},
+            }
+        ],
+    )
+    failures = evaluate_acceptance(
+        spec,
+        capture(
+            parents=[{"id": {"amount": Decimal("1.2")}}],
+            children=[{"parent_id": {"amount": "1.2"}}],
+        ),
+    )
+    assert [item.code for item in failures] == ["foreign_key"]
+
+
+def test_memstore_alias_does_not_hide_ambiguous_producers():
+    with pytest.raises(AcceptanceProjectionError, match="producer"):
+        project(
+            '<setup><memstore id="store"/>'
+            '<generate name="a" type="shared" count="1" target="store"><key name="id" constant="1"/></generate>'
+            '<generate name="b" targetEntity="shared" count="1" target="store"><key name="id" constant="2"/></generate>'
+            '<generate name="copy" source="store" sourceEntity="shared">'
+            '<key name="id" script="this.id"/></generate></setup>'
+        )
+
+
+def test_mutually_exclusive_branches_share_output_fields():
+    spec = project(
+        '<setup><generate name="rows" count="3"><condition>'
+        '<if condition="True"><key name="code" constant="a"/></if>'
+        '<else-if condition="False"><key name="code" constant="b"/><key name="extra" constant="x"/></else-if>'
+        '<else><key name="code" constant="c"/></else>'
+        '</condition></generate></setup>'
+    )
+    assert spec.products[0].fields == ("code", "extra")
+
+
+@pytest.mark.parametrize(
+    "fields",
+    [
+        '<key name="code" constant="a"/><key name="code" constant="b"/>',
+        '<condition><if condition="True"><key name="code" constant="a"/>'
+        '<key name="code" constant="b"/></if><else><key name="code" constant="c"/></else></condition>',
+        '<key name="code" constant="a"/><condition><if condition="True">'
+        '<key name="code" constant="b"/></if></condition>',
+        '<condition><if condition="True"><key name="code" constant="a"/></if></condition>'
+        '<condition><if condition="True"><key name="code" constant="b"/></if></condition>',
+    ],
+    ids=["same_scope", "same_branch", "outside_branch", "separate_conditions"],
+)
+def test_fields_on_the_same_execution_path_still_reject_duplicates(fields):
+    with pytest.raises(AcceptanceProjectionError):
+        project(f'<setup><generate name="rows" count="1">{fields}</generate></setup>')

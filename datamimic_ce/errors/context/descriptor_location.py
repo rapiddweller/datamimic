@@ -18,6 +18,7 @@ class DescriptorLocation:
     attribute: str | None = None
     descriptor_path: str | None = None
     line: int | None = None
+    column: int | None = None
 
     def __post_init__(self) -> None:
         object.__setattr__(
@@ -31,6 +32,8 @@ class DescriptorLocation:
             parts.append(f"attribute '{self.attribute}'")
         if self.line is not None:
             parts.append(f"line {self.line}")
+        if self.column is not None:
+            parts.append(f"column {self.column}")
         if self.descriptor_path:
             parts.append(f"descriptor '{self.descriptor_path}'")
         return " in ".join(parts[:1]) + "".join(

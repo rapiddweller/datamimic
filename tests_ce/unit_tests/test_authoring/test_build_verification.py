@@ -277,3 +277,176 @@ def test_missing_memstore_identity_proof_blocks_gates_before_execution(tmp_path:
     assert executions == []
     assert result.verification.smoke_export.status is VerificationGateStatus.BLOCKED
     assert result.verification.deterministic_replay.status is VerificationGateStatus.BLOCKED
+
+
+@pytest.mark.parametrize("traversal_count", ["{1}", "{1/0}"])
+def test_dynamic_file_count_never_gets_exhaustion_proof(tmp_path: Path, traversal_count: str) -> None:
+    from datamimic_ce.authoring.adapters.dm_json_codec import CeDmJsonCodec
+
+    (tmp_path / "rows.csv").write_text("id\n1\n2\n3\n", encoding="utf-8")
+    xml = (
+        '<setup rngSeed="7"><generate name="rows" source="rows.csv" distribution="ordered" '
+        f'count="{traversal_count}" target="JSON"><key name="id" script="this.id"/></generate></setup>'
+    )
+    request = BuildRequestV4.model_validate(
+        {
+            "document": CeDmJsonCodec().decompile(xml),
+            "expectations": [{"kind": "exact_count", "subject": {"kind": "product", "product": "rows"}, "count": 3}],
+            "verification": {"smoke_export": True, "deterministic_replay": True},
+        }
+    )
+    result = create_authoring_application(workspace_root=tmp_path).build(request)
+    assert isinstance(result, RejectedBuild), result
+    assert result.phase is DiagnosticPhase.EVIDENCE
+    assert result.evidence[0].capture.status is CaptureStatus.UNKNOWN
+    assert result.evidence[0].capture.requested is None
+    assert not result.evidence[0].capture.complete
+    assert result.verification.deterministic_replay.status is VerificationGateStatus.BLOCKED
+    assert f'count="{traversal_count}"' in result.review_artifact.compiled_xml
+
+
+@pytest.mark.parametrize("traversal_count", [1, 3])
+def test_literal_file_count_agrees_with_unmodified_runtime(tmp_path: Path, traversal_count: int) -> None:
+    from datamimic_ce.authoring.adapters.dm_json_codec import CeDmJsonCodec
+    from datamimic_ce.engine.runtime.api import create_run_session
+    from datamimic_ce.engine.runtime.contracts import RunRequest as RuntimeRequest
+
+    (tmp_path / "rows.csv").write_text("id\n1\n2\n3\n", encoding="utf-8")
+    xml = (
+        '<setup rngSeed="7"><generate name="rows" source="rows.csv" distribution="ordered" '
+        f'count="{traversal_count}" target="JSON"><key name="id" script="this.id"/></generate></setup>'
+    )
+    request = BuildRequestV4.model_validate(
+        {
+            "document": CeDmJsonCodec().decompile(xml),
+            "expectations": [
+                {"kind": "exact_count", "subject": {"kind": "product", "product": "rows"}, "count": traversal_count}
+            ],
+            "verification": {"smoke_export": True, "deterministic_replay": True},
+        }
+    )
+    result = create_authoring_application(workspace_root=tmp_path).build(request)
+    assert isinstance(result, ReadyBuild), result
+    descriptor = tmp_path / "model.xml"
+    descriptor.write_text(result.artifact.compiled_xml, encoding="utf-8")
+    captured = create_run_session(RuntimeRequest(descriptor_path=descriptor, test_mode=True)).execute().captured
+    assert len(captured["rows"]) == result.evidence[0].count == traversal_count
+    assert result.verification.smoke_export.status is VerificationGateStatus.PASSED
+    assert result.verification.deterministic_replay.status is VerificationGateStatus.PASSED
+
+
+@pytest.mark.parametrize("nested", [False, True], ids=["scalar", "nested"])
+@pytest.mark.parametrize("native_type", ["string", "decimal"])
+def test_fixed_value_keeps_native_types_at_every_depth(tmp_path: Path, nested: bool, native_type: str) -> None:
+    from datamimic_ce.authoring.adapters.dm_json_codec import CeDmJsonCodec
+
+    field = f'<key name="payload" type="{native_type}" constant="1.2"/>'
+    expected: str | dict[str, str] = "1.2"
+    if nested:
+        field = (
+            '<nestedKey name="payload" type="dict">'
+            f'<key name="amount" type="{native_type}" constant="1.2"/></nestedKey>'
+        )
+        expected = {"amount": "1.2"}
+    xml = f'<setup rngSeed="7"><generate name="rows" count="1">{field}</generate></setup>'
+    request = BuildRequestV4.model_validate(
+        {
+            "document": CeDmJsonCodec().decompile(xml),
+            "expectations": [
+                {
+                    "kind": "fixed_value",
+                    "subject": {"kind": "product", "product": "rows"},
+                    "field": "payload",
+                    "value": expected,
+                }
+            ],
+        }
+    )
+    result = create_authoring_application(workspace_root=tmp_path).build(request)
+    assert isinstance(result, ReadyBuild if native_type == "string" else RejectedBuild), result
+    if native_type == "decimal":
+        assert any(item.code == "fixed_value" for item in result.diagnostics)
+
+
+@pytest.mark.parametrize(
+    "producer_properties,entity",
+    [
+        ({}, "items"),
+        ({"type": "shared"}, "shared"),
+        ({"target_entity": "shared"}, "shared"),
+        ({"type": "ignored", "target_entity": "shared"}, "shared"),
+    ],
+)
+def test_memstore_readback_uses_resolved_output_entity(
+    tmp_path: Path, producer_properties: dict[str, str], entity: str
+) -> None:
+    payload = json.loads(_request(exporter=False).model_dump_json())
+    children = payload["document"]["root"]["children"]
+    children[0]["properties"].update(target="store", **producer_properties)
+    children.insert(0, {"kind": "memstore", "properties": {"id": "store"}})
+    children.append(
+        {
+            "kind": "generate",
+            "properties": {
+                "name": "copy",
+                "source": "store",
+                "source_entity": entity,
+                "distribution": "ordered",
+                "target": "JSON",
+            },
+            "children": [{"kind": "key", "properties": {"name": "id", "script": "this.id"}}],
+        }
+    )
+    payload["product_roles"] = [
+        {"product": "items", "field": "id", "role": {"kind": "identifier"}},
+        {
+            "product": "copy",
+            "field": "id",
+            "role": {"kind": "foreign_key", "parent_product": "items", "parent_field": "id"},
+        },
+    ]
+    payload["verification"] = {"smoke_export": True, "deterministic_replay": True}
+    result = create_authoring_application(workspace_root=tmp_path).build(BuildRequestV4.model_validate(payload))
+    assert isinstance(result, ReadyBuild), result
+    by_name = {item.name: item for item in result.evidence}
+    assert by_name["items"].rows == by_name["copy"].rows == ({"id": 1}, {"id": 2})
+    assert all(item.capture.complete for item in result.evidence)
+    assert result.verification.smoke_export.status is VerificationGateStatus.PASSED
+    assert result.verification.deterministic_replay.status is VerificationGateStatus.PASSED
+
+
+def test_conditional_field_union_matches_unmodified_runtime(tmp_path: Path) -> None:
+    from datamimic_ce.authoring.adapters.dm_json_codec import CeDmJsonCodec
+    from datamimic_ce.engine.runtime.api import create_run_session
+    from datamimic_ce.engine.runtime.contracts import RunRequest as RuntimeRequest
+
+    xml = (
+        '<setup rngSeed="7"><generate name="rows" count="3" target="JSON">'
+        '<key name="id" generator="IncrementGenerator"/>'
+        '<condition><if condition="this.id == 1"><key name="code" constant="a"/></if>'
+        '<else-if condition="this.id == 2"><key name="code" constant="b"/></else-if>'
+        '<else><key name="code" constant="c"/></else></condition></generate></setup>'
+    )
+    request = BuildRequestV4.model_validate(
+        {
+            "document": CeDmJsonCodec().decompile(xml),
+            "expectations": [
+                {
+                    "kind": "allowed_values",
+                    "subject": {"kind": "product", "product": "rows"},
+                    "field": "code",
+                    "values": ["a", "b", "c"],
+                }
+            ],
+            "verification": {"smoke_export": True, "deterministic_replay": True},
+        }
+    )
+    result = create_authoring_application(workspace_root=tmp_path).build(request)
+    assert isinstance(result, ReadyBuild), result
+    descriptor = tmp_path / "model.xml"
+    descriptor.write_text(xml, encoding="utf-8")
+    captured = create_run_session(RuntimeRequest(descriptor_path=descriptor, test_mode=True)).execute().captured
+    expected = ({"id": 1, "code": "a"}, {"id": 2, "code": "b"}, {"id": 3, "code": "c"})
+    assert tuple(captured["rows"]) == result.evidence[0].rows == expected
+    assert result.verification.smoke_export.status is VerificationGateStatus.PASSED
+    assert result.verification.deterministic_replay.status is VerificationGateStatus.PASSED

@@ -522,3 +522,22 @@ Internal bounded capture request/evidence DTOs are not published. Exporter Core
 publishes its existing `ExporterError` to the sibling Lifecycle transport normalizer;
 the exception remains internal to IO. These declarations add no dependency edge or
 boundary-rule exclusion.
+
+### Adoption error and evidence corrections — 2026-10-18
+
+IO source routing owns a scoped count of actual read requests, exposed by
+`io.api.SourceAccessCapture`; Authoring projects only source kind and count.
+Errors owns passive `NormalizedDbError` facts; IO alone interprets driver codes.
+The existing DSL time-series owner reports the invalid attribute through
+`TimeSeriesConfigError`; acceptance projects it without parsing values again.
+Unicode XML strings are already decoded; byte/file input retains XML encoding.
+Replay compares complete passive values with their types. Public known-user
+failures retain portable guidance while native causes remain available in Python.
+These corrections add no component, dependency permission or measurement waiver.
+
+BSON capture identity uses the closed passive `CapturedObjectId` in Authoring Domain;
+only the child adapter imports BSON. Samples project canonical text; smoke export
+restores native BSON; complete replay retains the type. The exact
+`capture.validate_capture_values` operation may inspect `__dict__` solely to reject
+forged missing or extra fields before constructor revalidation. Adjacent operations
+remain forbidden; no generic serializer or raw BSON unpickling is allowed.

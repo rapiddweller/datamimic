@@ -24,13 +24,16 @@ class DTDForbiddenError(ValueError):
     """Raised before an internal DTD subset can resolve custom entities."""
 
 
-def _parser() -> etree.XMLParser:
+def _parser(
+    *, unicode_source: bool = False, preserve_comments: bool = False, preserve_pis: bool = False
+) -> etree.XMLParser:
     return etree.XMLParser(
         load_dtd=False,
         no_network=True,
         recover=False,
-        remove_comments=True,
-        remove_pis=True,
+        remove_comments=not preserve_comments,
+        remove_pis=not preserve_pis,
+        encoding="utf-8" if unicode_source else None,
         resolve_entities=False,
         huge_tree=False,
     )
@@ -90,16 +93,24 @@ def _reject_unsafe_doctype_before_parse(source: bytes) -> None:
         raise DTDForbiddenError("DTD declarations with internal subsets and custom XML entities are not allowed")
 
 
-def parse_xml_source(xml: str | bytes) -> etree._Element:
+def parse_xml_source(
+    xml: str | bytes, *, preserve_comments: bool = False, preserve_pis: bool = False
+) -> etree._Element:
     """Parse XML without internal DTD subsets, entity expansion, or network access.
 
     External DTD references remain compatible with DbUnit fixtures, but are never
-    loaded or fetched by the parser.
+    loaded or fetched by the parser. Unicode input is already decoded; only bytes
+    use their XML encoding declaration.
     """
 
     source = xml.encode("utf-8") if isinstance(xml, str) else xml
     _reject_unsafe_doctype_before_parse(source)
-    return etree.fromstring(source, parser=_parser())
+    return etree.fromstring(
+        source,
+        parser=_parser(
+            unicode_source=isinstance(xml, str), preserve_comments=preserve_comments, preserve_pis=preserve_pis
+        ),
+    )
 
 
 def parse_xml_file(path: Path) -> etree._Element:

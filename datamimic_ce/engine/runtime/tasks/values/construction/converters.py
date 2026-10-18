@@ -25,7 +25,7 @@ from datamimic_ce.domains.api import (
 )
 from datamimic_ce.engine.dsl.api import ConverterEnum
 from datamimic_ce.engine.runtime.contexts.context import Context
-from datamimic_ce.errors import IssueCode, task_config_error
+from datamimic_ce.errors import DomainError, IssueCode, UserErrorBase, task_config_error
 
 
 def _create_converter_from_constructor_str(
@@ -33,25 +33,39 @@ def _create_converter_from_constructor_str(
 ) -> Converter:
     class_name = constructor_str.partition("(")[0]
     converter_class = class_dict.get(class_name)
+    diagnostic_name = class_name if converter_class is not None else "converter"
     if converter_class is None:
         converter_class = context.root.get_dynamic_class(class_name)
         if converter_class is None:
             raise task_config_error(
-                code=IssueCode.TASK_UNKNOWN_CONVERTER, class_name=class_name, element_label="converter"
+                code=IssueCode.TASK_UNKNOWN_CONVERTER, class_name="(unregistered)", element_label="converter"
             )
+        if isinstance(converter_class, type) and issubclass(converter_class, Converter):
+            diagnostic_name = converter_class.__name__
 
-    if class_name != constructor_str:
-        converter = context.evaluate_python_expression(constructor_str, class_dict)
+    try:
+        if class_name != constructor_str:
+            converter = context.evaluate_python_expression(
+                constructor_str, class_dict, diagnostic_expression=diagnostic_name
+            )
+        elif isinstance(converter_class, type) and issubclass(converter_class, CustomConverter):
+            converter = converter_class(context)
+        elif callable(converter_class):
+            converter = converter_class()
+        else:
+            raise TypeError("Configured converter must be callable")
         if isinstance(converter, Converter):
             return converter
-        raise TypeError(f"Converter expression '{constructor_str}' did not create a Converter")
-    if isinstance(converter_class, type) and issubclass(converter_class, CustomConverter):
-        return converter_class(context)
-    if callable(converter_class):
-        converter = converter_class()
-        if isinstance(converter, Converter):
-            return converter
-    raise TypeError(f"Converter '{class_name}' is not callable")
+        raise TypeError("Converter expression did not create a Converter")
+    except (UserErrorBase, DomainError):
+        raise
+    except (ValueError, TypeError, OverflowError) as error:
+        raise task_config_error(
+            code=IssueCode.TASK_CONVERTER_FAILED,
+            element_tag="converter",
+            name=diagnostic_name,
+            error=f"{type(error).__name__}; use constructor parameters that create a Converter",
+        ) from error
 
 
 def create_converter_list(context: Context, converter_str: str | None) -> list[Converter]:

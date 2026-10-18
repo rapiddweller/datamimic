@@ -109,6 +109,7 @@ graph TD
     dsl --> errors
     interfaces --> authoring
     interfaces --> domains
+    interfaces --> errors
     interfaces --> resources
     interfaces --> runtime
     io --> dsl

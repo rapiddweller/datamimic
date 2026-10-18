@@ -4,6 +4,7 @@ import pytest
 
 from datamimic_ce.engine.runtime.api import create_run_session
 from datamimic_ce.engine.runtime.contracts import RunRequest
+from datamimic_ce.errors import ErrorCode, IncludeError, UserErrorBase
 
 
 @pytest.mark.parametrize("dynamic", [False, True])
@@ -15,8 +16,7 @@ def test_setup_xml_include_executes_resolved_child(tmp_path: Path, dynamic: bool
     descriptor = tmp_path / "main.xml"
     uri = "{include_path}" if dynamic else "child.xml"
     descriptor.write_text(
-        '<setup rngSeed="1"><variable name="include_path" constant="child.xml"/>'
-        f'<include uri="{uri}"/></setup>',
+        f'<setup rngSeed="1"><variable name="include_path" constant="child.xml"/><include uri="{uri}"/></setup>',
         encoding="utf-8",
     )
 
@@ -53,9 +53,18 @@ def test_setup_include_preserves_missing_file_error(tmp_path: Path, dynamic: boo
         encoding="utf-8",
     )
 
-    expected_path = "main.xml" if extension == "properties" and not dynamic else missing
-    with pytest.raises(FileNotFoundError, match=expected_path):
+    with pytest.raises(FileNotFoundError, match=missing) as caught:
         create_run_session(RunRequest(descriptor_path=descriptor, test_mode=True)).execute()
+    error = caught.value
+    assert isinstance(error, IncludeError)
+    assert isinstance(error, UserErrorBase)
+    assert error.code is ErrorCode.INCLUDE_ERROR
+    assert error.issue_code.value == "I201"
+    assert error.location.element_tag == "include"
+    assert error.location.attribute == "uri"
+    assert error.location.descriptor_path == "main.xml"
+    assert isinstance(error.__cause__, FileNotFoundError)
+    assert str(tmp_path) not in str(error)
 
 
 @pytest.mark.parametrize("dynamic", [False, True])
@@ -75,3 +84,30 @@ def test_generate_xml_include_executes_resolved_child(tmp_path: Path, dynamic: b
     result = create_run_session(RunRequest(descriptor_path=descriptor, test_mode=True)).execute()
 
     assert result.captured == {"outer": [{}], "child": [{"value": "ok"}, {"value": "ok"}]}
+
+
+def test_nested_include_keeps_missing_inner_resource_identity(tmp_path: Path) -> None:
+    (tmp_path / "child.xml").write_text('<setup><include uri="inner.properties"/></setup>', encoding="utf-8")
+    descriptor = tmp_path / "main.xml"
+    descriptor.write_text('<setup><include uri="child.xml"/></setup>', encoding="utf-8")
+
+    with pytest.raises(FileNotFoundError, match="inner.properties") as caught:
+        create_run_session(RunRequest(descriptor_path=descriptor, test_mode=True)).execute()
+    assert isinstance(caught.value, IncludeError)
+    assert caught.value.issue_code.value == "I201"
+    assert "Include file 'child.xml' not found" not in str(caught.value)
+    assert str(tmp_path) not in str(caught.value)
+
+
+def test_included_execution_does_not_relabel_missing_runtime_resource(tmp_path: Path, monkeypatch) -> None:
+    monkeypatch.chdir(tmp_path)
+    (tmp_path / "child.xml").write_text(
+        '<setup><execute type="python">open("missing_runtime_resource.txt")</execute></setup>', encoding="utf-8"
+    )
+    descriptor = tmp_path / "main.xml"
+    descriptor.write_text('<setup><include uri="child.xml"/></setup>', encoding="utf-8")
+
+    with pytest.raises(FileNotFoundError, match="missing_runtime_resource.txt") as caught:
+        create_run_session(RunRequest(descriptor_path=descriptor, test_mode=True)).execute()
+    assert type(caught.value) is FileNotFoundError
+    assert not isinstance(caught.value, IncludeError)

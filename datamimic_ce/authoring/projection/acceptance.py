@@ -7,9 +7,11 @@
 from __future__ import annotations
 
 import ast
+from collections import Counter
 from collections.abc import Callable
 from dataclasses import dataclass
 from decimal import Decimal, InvalidOperation
+from typing import NoReturn
 
 from pydantic import JsonValue, TypeAdapter, ValidationError
 
@@ -49,7 +51,13 @@ from datamimic_ce.authoring.domain.script_semantics import (
     is_exact_scope_field_reference,
     references_current_scope_field,
 )
-from datamimic_ce.engine.dsl.api import NAME_SEPARATOR, TimeSeriesConfig, capture_product_name, parse_literal_values
+from datamimic_ce.engine.dsl.api import (
+    NAME_SEPARATOR,
+    TimeSeriesConfig,
+    TimeSeriesConfigError,
+    capture_product_name,
+    parse_literal_values,
+)
 
 
 @dataclass(frozen=True)
@@ -61,7 +69,7 @@ class _Product:
     count: int | None
 
 
-def _reject(message: str, path: tuple[str | int, ...]) -> None:
+def _reject(message: str, path: tuple[str | int, ...]) -> NoReturn:
     raise AcceptanceProjectionError(
         (
             catalog_diagnostic(
@@ -83,6 +91,12 @@ def _name(node: DmJsonNodeV1, path: tuple[str | int, ...]) -> str:
 
 
 def _fields(node: DmJsonNodeV1) -> tuple[str, ...]:
+    if node.kind == "condition":
+        # Branches are exclusive; retain duplicates within each branch.
+        alternatives: Counter[str] = Counter()
+        for branch in node.children:
+            alternatives |= Counter(_fields(branch))
+        return tuple(alternatives.elements())
     fields: list[str] = []
     for child in node.children:
         if child.kind == "generate":
@@ -108,7 +122,7 @@ def _integer(value: object) -> int | None:
     return None
 
 
-def _count(node: DmJsonNodeV1) -> int | None:
+def _count(node: DmJsonNodeV1, path: tuple[str | int, ...]) -> int | None:
     if node.properties.get("source") is not None:
         return None
     count = _integer(node.properties.get("count"))
@@ -116,7 +130,11 @@ def _count(node: DmJsonNodeV1) -> int | None:
     if isinstance(start, str) and isinstance(end, str) and isinstance(interval, str):
         if "count" in node.properties and count is None:
             return None
-        return TimeSeriesConfig.parse(start, end, interval).ticks_per_series * (count if count is not None else 1)
+        try:
+            window = TimeSeriesConfig.parse(start, end, interval)
+        except TimeSeriesConfigError as error:
+            _reject(str(error), path + ("properties", error.attribute))
+        return window.ticks_per_series * (count if count is not None else 1)
     return count
 
 
@@ -141,6 +159,14 @@ def _parent_reference(script: object) -> str | None:
     return None
 
 
+def _target_entity(node: DmJsonNodeV1, name: str) -> str:
+    for attribute in ("target_entity", "type"):
+        value = node.properties.get(attribute)
+        if isinstance(value, str) and value:
+            return value
+    return name
+
+
 def _products(document: DmJsonDocumentV1) -> tuple[_Product, ...]:
     declarations = {
         node.properties.get("id"): node.kind for node in document.root.children if node.kind in {"database", "mongodb"}
@@ -151,7 +177,7 @@ def _products(document: DmJsonDocumentV1) -> tuple[_Product, ...]:
         if node.kind == "generate":
             name = _name(node, path)
             runtime_name = NAME_SEPARATOR.join((parent.product.runtime_name, name)) if parent else name
-            entity = node.properties.get("target_entity", node.properties.get("type", name))
+            entity = _target_entity(node, name)
             targets = node.properties.get("target", "")
             sinks: list[DeclaredSinkIdentity] = []
             if isinstance(targets, str) and isinstance(entity, str):
@@ -163,8 +189,12 @@ def _products(document: DmJsonDocumentV1) -> tuple[_Product, ...]:
                     elif family == "mongodb":
                         sinks.append(DeclaredSinkIdentity(kind="mongodb", environment=target, entity=entity))
             lists = tuple(
-                AcceptanceListV1(name=_name(child, path), fields=_fields(child), count_per_row=_count(child))
-                for child in node.children
+                AcceptanceListV1(
+                    name=_name(child, path),
+                    fields=_fields(child),
+                    count_per_row=_count(child, path + ("children", index)),
+                )
+                for index, child in enumerate(node.children)
                 if child.kind == "nestedKey" and child.properties.get("type") == "list"
             )
             fields = _fields(node)
@@ -179,7 +209,7 @@ def _products(document: DmJsonDocumentV1) -> tuple[_Product, ...]:
                 lists=lists,
                 declared_sinks=tuple(sinks),
             )
-            entry = _Product(node, path, product, parent.product.name if parent else None, _count(node))
+            entry = _Product(node, path, product, parent.product.name if parent else None, _count(node, path))
             entries.append(entry)
             parent = entry
         for index, child in enumerate(node.children):
@@ -358,7 +388,14 @@ def _derive_field(
         try:
             lower, upper = Decimal(str(minimum)), Decimal(str(maximum))
         except InvalidOperation:
+            _reject("Numeric range bounds must be finite decimal values.", path + ("properties",))
             return
+        if not lower.is_finite():
+            _reject("The lower range bound must be finite.", path + ("properties", "min"))
+        if not upper.is_finite():
+            _reject("The upper range bound must be finite.", path + ("properties", "max"))
+        if lower > upper:
+            _reject("The upper range bound must be at least the lower bound.", path + ("properties", "max"))
         derive(RangeExpectation(subject=subject, field=name, minimum=lower, maximum=upper), path)
 
 
@@ -383,7 +420,7 @@ def _readbacks(
         producers = [
             entry
             for entry in entries
-            if entry.product.name == entity
+            if _target_entity(entry.node, _name(entry.node, entry.path)) == entity
             and source in {item.strip() for item in str(entry.node.properties.get("target", "")).split(",")}
         ]
         if len(producers) != 1:

@@ -138,27 +138,3 @@ class RuleCatalogEntry(AuthoringModel):
     invalid_example: NonEmptyStrictStr | None = None
     advisory_severity: Literal["error", "warning", "hint"] | None = None
     blocks_verification: bool | None = None
-
-
-def system_diagnostic(
-    code: AuthoringSystemDiagnosticCode,
-    message: str,
-    *,
-    phase: DiagnosticPhase,
-    remediation: str,
-    path: tuple[str | int, ...] = (),
-    expected: JsonValue | None = None,
-    actual: JsonValue | None = None,
-    severity: Literal["error", "warning", "info"] = "error",
-) -> Diagnostic:
-    """Create a stable non-rule diagnostic emitted by an adapter boundary."""
-    return Diagnostic(
-        code=code,
-        message=message,
-        phase=phase,
-        path=path,
-        expected=expected,
-        actual=actual,
-        severity=severity,
-        remediation=remediation,
-    )

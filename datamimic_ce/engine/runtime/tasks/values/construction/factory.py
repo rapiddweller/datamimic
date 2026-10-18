@@ -35,7 +35,7 @@ from datamimic_ce.engine.io.api import DataSourcePagination
 from datamimic_ce.engine.runtime.contexts.context import Context, SetupContext
 from datamimic_ce.engine.runtime.tasks.values.construction.global_increment import GlobalIncrementGenerator
 from datamimic_ce.engine.runtime.tasks.values.construction.sequence_table import SequenceTableGenerator
-from datamimic_ce.errors import IssueCode, generator_config_error, is_user_error
+from datamimic_ce.errors import DomainError, IssueCode, UserErrorBase, generator_config_error, is_user_error
 from datamimic_ce.randomness import RandomSource
 
 logger = logging.getLogger("DATAMIMIC")
@@ -133,6 +133,7 @@ class GeneratorUtil:
         Raises:
             ValueError: If generator creation fails or configuration is invalid
         """
+        diagnostic_class_name = "generator"
         try:
             # Get generator from element <generator>
             cache_key = key or generator_str
@@ -180,6 +181,8 @@ class GeneratorUtil:
                 else:
                     raise ValueError(f"Cannot find generator class for '{class_name}'")
                 cls = dynamic_class if isinstance(dynamic_class, type) else None
+            if cls is not None:
+                diagnostic_class_name = cls.__name__
 
             result = None
 
@@ -261,21 +264,22 @@ class GeneratorUtil:
                                         value_str = value_str[1:-1]
                                     try:
                                         parsed_constructor_args[param_name] = self._context.evaluate_python_expression(
-                                            value_str
+                                            value_str, diagnostic_expression=f"DateTimeGenerator.{param_name}"
                                         )
+                                    except (UserErrorBase, DomainError):
+                                        raise
                                     except (ValueError, SyntaxError, NameError, TypeError) as eval_exc:
                                         try:
                                             parsed_constructor_args[param_name] = ast.literal_eval(value_str)
-                                        except (ValueError, SyntaxError) as lit_exc:
-                                            logger.error(f"Fehler beim Parsen von {param_name}: {eval_exc} / {lit_exc}")
-                                            raise ValueError(
-                                                f"Konnte {param_name} nicht als Liste parsen: {value_str}"
+                                        except (ValueError, SyntaxError):
+                                            raise generator_config_error(
+                                                reason=f"DateTimeGenerator {param_name} must be a valid list."
                                             ) from eval_exc
                                 else:
                                     parsed_constructor_args[param_name] = ast.literal_eval(value_str)
                             if call_node.args:
                                 logger.warning(
-                                    f"Positional args are not processed for DateTimeGenerator string: {generator_str}"
+                                    "Positional args are not processed for DateTimeGenerator; use keyword arguments"
                                 )
                             # Seed at construction under <setup rngSeed> (this branch bypasses the eval-path
                             # rng binding below), unless the DSL already pinned seed=/rng= explicitly.
@@ -286,12 +290,14 @@ class GeneratorUtil:
                             # Use unified cache key for consistency with global cache
                             self._context.root.generators[cache_key] = result
                             return result
+                except (UserErrorBase, DomainError):
+                    raise
                 except (ValueError, SyntaxError, TypeError) as e_dt_parse:
-                    logger.error(
-                        f"Failed to parse DateTimeGenerator arguments from '{generator_str}' using ast: {e_dt_parse}"
-                    )
-                    raise ValueError(
-                        f"Error parsing parameters for DateTimeGenerator from '{generator_str}': {e_dt_parse}"
+                    raise generator_config_error(
+                        code=IssueCode.GENERATOR_CREATE_FAILED,
+                        class_name="DateTimeGenerator",
+                        element_name=stmt.name,
+                        error=type(e_dt_parse).__name__,
                     ) from e_dt_parse
             # --- End DateTimeGenerator special parsing ---
 
@@ -314,13 +320,17 @@ class GeneratorUtil:
                 if seeded_rng is not None:
                     namespace = {name: _bind_rng(obj, seeded_rng) for name, obj in namespace.items()}
                 try:
-                    result = self._context.evaluate_python_expression(generator_str, namespace)
-                except (ValueError, SyntaxError, NameError, TypeError) as e_eval:
-                    logger.error(
-                        f"Error evaluating generator string '{generator_str}' with evaluate_python_expression: {e_eval}"
+                    result = self._context.evaluate_python_expression(
+                        generator_str, namespace, diagnostic_expression=diagnostic_class_name
                     )
-                    raise ValueError(
-                        f"Cannot create generator '{class_name}' from string '{generator_str}' using evaluate: {e_eval}"
+                except (UserErrorBase, DomainError):
+                    raise
+                except (ValueError, SyntaxError, NameError, TypeError) as e_eval:
+                    raise generator_config_error(
+                        code=IssueCode.GENERATOR_CREATE_FAILED,
+                        class_name=diagnostic_class_name,
+                        element_name=stmt.name,
+                        error=type(e_eval).__name__,
                     ) from e_eval
             else:
                 seed_kw = (
@@ -344,17 +354,13 @@ class GeneratorUtil:
 
             return result
         except (ValueError, SyntaxError, NameError, TypeError) as e:
-            current_class_name = class_name if "class_name" in locals() else generator_str
-            element_name_str = f" of element '{stmt.name}'" if stmt.name is not None else ""
-            logger.error(f"Error creating generator '{current_class_name}'{element_name_str}: {e}")
             if is_user_error(e):
                 raise
             raise generator_config_error(
                 code=IssueCode.GENERATOR_CREATE_FAILED,
-                class_name=current_class_name,
+                class_name=diagnostic_class_name,
                 element_name=stmt.name,
-                descriptor="",
-                error=str(e),
+                error=type(e).__name__,
             ) from e
 
     @staticmethod
@@ -369,8 +375,8 @@ class GeneratorUtil:
         try:
             module_node = ast.parse(generator_str)
         except SyntaxError as e_syn:
-            raise ValueError(
-                f"Error parsing parameters for SequenceTableGenerator from '{generator_str}': {e_syn}"
+            raise generator_config_error(
+                reason="SequenceTableGenerator requires valid syntax; use sequence='...'"
             ) from e_syn
         if not (
             module_node.body
@@ -379,20 +385,19 @@ class GeneratorUtil:
             and isinstance(module_node.body[0].value.func, ast.Name)
             and module_node.body[0].value.func.id == "SequenceTableGenerator"
         ):
-            raise ValueError(f"Cannot parse SequenceTableGenerator arguments from '{generator_str}'")
+            raise generator_config_error(reason="SequenceTableGenerator arguments must use only sequence='...'")
         call_node = module_node.body[0].value
         if call_node.args:
-            raise ValueError(
-                f"SequenceTableGenerator does not accept positional arguments; use sequence='...' in '{generator_str}'"
+            raise generator_config_error(
+                reason="SequenceTableGenerator does not accept positional arguments; use sequence='...'"
             )
         parsed_sequence: str | None = None
         for kw in call_node.keywords:
             if kw.arg != "sequence":
-                raise ValueError(
-                    f"Unsupported keyword argument '{kw.arg}' for SequenceTableGenerator in "
-                    f"'{generator_str}'; only 'sequence' is supported"
+                raise generator_config_error(
+                    reason="SequenceTableGenerator supports only the 'sequence' keyword argument"
                 )
             if not isinstance(kw.value, ast.Constant) or not isinstance(kw.value.value, str):
-                raise ValueError(f"'sequence' must be a string literal in '{generator_str}'")
+                raise generator_config_error(reason="SequenceTableGenerator sequence must be a string literal")
             parsed_sequence = kw.value.value
         return parsed_sequence

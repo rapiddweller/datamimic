@@ -11,6 +11,7 @@ from pathlib import Path
 import pytest
 from openpyxl import load_workbook
 
+from datamimic_ce.errors import ErrorCode, IssueCode, TaskConfigError
 from datamimic_ce.interfaces.python.data_mimic_test import DataMimicTest
 
 _DIR = Path(__file__).resolve().parent
@@ -70,8 +71,12 @@ def test_binary_negative_length_raises():
 
 
 def test_binary_cannot_cast_int():
-    with pytest.raises(Exception, match=r"type='binary' cannot convert value of type 'int'"):
+    with pytest.raises(TaskConfigError) as caught:
         _run("binary_cast_invalid.xml")
+    assert caught.value.code is ErrorCode.TASK_CONFIG
+    assert caught.value.issue_code is IssueCode.TASK_DATATYPE_INVALID
+    assert "Expect datatype binary but get 'int'" in str(caught.value)
+    assert type(caught.value.__cause__) is ValueError
 
 
 # ---------- export boundary ----------

@@ -25,12 +25,14 @@ from datamimic_ce.authoring.domain.dm_json import (
     DmJsonScalar,
 )
 from datamimic_ce.engine.dsl.api import (
+    DTDForbiddenError,
     canonical_tag,
     check_constraints,
     check_is_digit_or_script,
     element_constraints,
     get_element_definition,
     list_element_tags,
+    parse_xml_source,
     serialize_constraints,
 )
 from datamimic_ce.engine.dsl.vocabulary.constants.attribute_constants import ATTR_COUNT, ATTR_MAX_COUNT, ATTR_SOURCE
@@ -57,16 +59,10 @@ class CeDmJsonCodec:
         return DmJsonCompilation(document=self.decompile(xml), xml=xml)
 
     def decompile(self, xml: str) -> DmJsonDocumentV1:
-        parser = etree.XMLParser(
-            resolve_entities=False,
-            no_network=True,
-            load_dtd=False,
-            huge_tree=False,
-            remove_comments=False,
-            remove_pis=False,
-        )
         try:
-            tree = etree.fromstring(xml.encode("utf-8"), parser=parser).getroottree()
+            tree = parse_xml_source(xml, preserve_comments=True, preserve_pis=True).getroottree()
+        except DTDForbiddenError as error:
+            raise DmJsonCodecError("DTD declarations are not supported", path=("xml",)) from error
         except (etree.XMLSyntaxError, UnicodeError) as error:
             raise DmJsonCodecError("Invalid XML syntax or encoding.", path=("xml",)) from error
         if tree.docinfo.doctype:

@@ -60,6 +60,12 @@ def _workspace(source: str, workspace_root: Path | None = None) -> Path:
     return workspace_root or (Path.cwd() if source == "-" else Path(source).resolve().parent)
 
 
+def _descriptor_path(source: str, workspace_root: Path | None) -> PurePosixPath:
+    if source == "-":
+        return PurePosixPath("model.xml")
+    return PurePosixPath(Path(source).resolve().relative_to(_workspace(source, workspace_root).resolve()).as_posix())
+
+
 @app.command("version")
 def version(output_format: OutputFormat = CliOutputFormat.JSON) -> None:
     emit_authoring({"ce_version": get_datamimic_lib_version() or "unknown"}, output_format)
@@ -136,7 +142,9 @@ def decompile_document(
     output_format: OutputFormat = CliOutputFormat.JSON,
 ) -> None:
     try:
-        logical_path = PurePosixPath(descriptor_path or ("model.xml" if source == "-" else Path(source).name))
+        logical_path = (
+            PurePosixPath(descriptor_path) if descriptor_path is not None else _descriptor_path(source, workspace_root)
+        )
         request = DecompileDocumentRequest(xml=_read(source), descriptor_path=logical_path)
     except (ValueError, ValidationError):
         emit_authoring(
@@ -179,10 +187,10 @@ def lint(
     output_format: OutputFormat = CliOutputFormat.JSON,
 ) -> None:
     try:
+        logical_path = _descriptor_path(source, workspace_root)
         request = LintRequest(xml=_read(source))
     except (ValueError, ValidationError):
         emit_authoring(LintResult.from_input_error("Invalid or unreadable XML input."), output_format, exit_code=1)
-    logical_path = PurePosixPath("model.xml" if source == "-" else Path(source).name)
     application = create_authoring_application(
         workspace_root=_workspace(source, workspace_root), descriptor_path=logical_path
     )
@@ -201,8 +209,8 @@ def _run(
     *,
     dry: bool,
 ) -> None:
-    logical_path = PurePosixPath("model.xml" if source == "-" else Path(source).name)
     try:
+        logical_path = _descriptor_path(source, workspace_root)
         request = RunRequest(
             xml=_read(source),
             descriptor_path=logical_path,

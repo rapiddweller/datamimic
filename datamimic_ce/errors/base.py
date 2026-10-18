@@ -102,6 +102,7 @@ class _UserErrorState(TypedDict):
     dataset: NotRequired[str | None]
     product_type: NotRequired[str | None]
     validation_errors: NotRequired[tuple[dict[str, object], ...]]
+    constructor_reason: NotRequired[str | None]
 
 
 class UserErrorBase(Exception):
@@ -130,6 +131,8 @@ class UserErrorBase(Exception):
             state["product_type"] = self.product_type
         if isinstance(self, ParserValidationError):
             state["validation_errors"] = self.validation_errors
+        if isinstance(self, GeneratorConfigError):
+            state["constructor_reason"] = self.constructor_reason
         return _restore_user_error, (type(self), str(self.args[0]), state, self.__cause__)
 
 
@@ -197,10 +200,15 @@ class IncludeError(UserValueError):
     error_code = ErrorCode.INCLUDE_ERROR
 
 
+class MissingIncludeError(IncludeError, FileNotFoundError):
+    """Keep missing-resource catch compatibility alongside the include identity."""
+
+
 class GeneratorConfigError(UserValueError):
     """Typed user error for generator configuration errors."""
 
     error_code = ErrorCode.GENERATOR_CONFIG
+    constructor_reason: str | None = None
 
 
 class ConditionEvaluationError(UserValueError):
@@ -215,6 +223,10 @@ class ParserValidationError(UserValueError):
     """Typed user error for descriptor/parser validation failures."""
 
     error_code = ErrorCode.PARSER_VALIDATION
+
+
+class MissingDescriptorError(ParserValidationError, FileNotFoundError):
+    """Keep missing-resource catch compatibility alongside the parser identity."""
 
 
 class ClientConfigError(UserValueError):
@@ -258,12 +270,28 @@ def _restore_user_error(
         error.product_type = state.get("product_type")
     if isinstance(error, ParserValidationError):
         error.validation_errors = state.get("validation_errors", ())
+    if isinstance(error, GeneratorConfigError):
+        error.constructor_reason = state.get("constructor_reason")
     error.__cause__ = cause
     return error
 
 
+@dataclass(frozen=True)
+class NormalizedDbError:
+    """Passive native database facts; raw statements and driver messages stay private."""
+
+    code: str | None
+    category: str | None
+    message: str
+
+    def __str__(self) -> str:
+        category = f" ({self.category})" if self.category else ""
+        code = f" [{self.code}]" if self.code else ""
+        return f"{self.message}{category}{code}"
+
+
 class ExternalFailureCause(Exception):
-    """Passive vendor classification for the private bounded-process transport."""
+    """Passive native cause classification for the private bounded-process transport."""
 
     def __init__(self, vendor_type: str, cause_types: tuple[str, ...]) -> None:
         super().__init__(vendor_type, cause_types)

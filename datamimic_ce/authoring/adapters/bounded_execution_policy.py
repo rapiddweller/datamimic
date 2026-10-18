@@ -4,7 +4,7 @@
 
 """Use the CE registry's eligibility facts; the executor owns count/target isolation."""
 
-from decimal import Decimal, InvalidOperation
+from decimal import Decimal, InvalidOperation, Overflow
 
 from datamimic_ce.authoring.domain.build_rules import catalog_diagnostic
 from datamimic_ce.authoring.domain.common import MAX_AUTHORING_DECIMAL_SCALE
@@ -24,20 +24,21 @@ class CeBoundedExecutionPolicy:
             if node.properties.get("type") == "decimal" and node.properties.get("granularity") is not None:
                 try:
                     quantum = Decimal(str(node.properties["granularity"]))
-                except InvalidOperation:
+                    exponent = quantum.normalize().as_tuple().exponent if quantum.is_finite() else None
+                except (InvalidOperation, Overflow):
                     quantum = Decimal("NaN")
-                exponent = quantum.normalize().as_tuple().exponent if quantum.is_finite() else None
+                    exponent = None
                 if not quantum.is_finite() or (isinstance(exponent, int) and exponent < -MAX_AUTHORING_DECIMAL_SCALE):
                     diagnostics.append(
                         Diagnostic(
                             code=AuthoringRuleId.LIMIT,
                             phase=DiagnosticPhase.POLICY,
                             message=(
-                                "Float-backed CE decimal ranges support at most 15 decimal places in bounded proof."
+                                "CE decimal ranges require representable granularity and at most 15 decimal places."
                             ),
                             path=path + ("properties", "granularity"),
                             expected={"maximum_decimal_places": MAX_AUTHORING_DECIMAL_SCALE},
-                            remediation="Use at most 15 decimal places for a float-backed decimal range.",
+                            remediation="Use representable granularity with at most 15 decimal places.",
                         )
                     )
             definition = get_element_definition(node.kind)

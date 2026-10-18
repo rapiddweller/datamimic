@@ -11,6 +11,7 @@ from pathlib import Path
 
 import pytest
 
+from datamimic_ce.errors import ErrorCode, GeneratorConfigError
 from datamimic_ce.interfaces.python.data_mimic_test import DataMimicTest
 
 _DIR = Path(__file__).resolve().parent
@@ -49,8 +50,12 @@ def test_mime_stubs_are_seeded_reproducible():
 
 
 def test_unknown_mime_type_raises_with_supported_list():
-    with pytest.raises(Exception, match=r"application/whatever.*[Ss]upported|[Ss]upported.*application/whatever"):
+    with pytest.raises(GeneratorConfigError, match="mimeType is not supported") as caught:
         _run("binary_mime_unknown.xml")
+    assert caught.value.code is ErrorCode.GENERATOR_CONFIG
+    assert "Supported: application/gzip, application/pdf, application/zip, image/gif, image/jpeg, image/png" in str(
+        caught.value
+    )
 
 
 def test_mime_length_smaller_than_signature_raises():

@@ -49,10 +49,10 @@ def test_expression_returns_scalars_and_normalizes_dotable_dicts_shallowly() -> 
 @pytest.mark.parametrize(
     ("expression", "message"),
     [
-        ("len", "'len' is an callable function, not a valid type (string, integer, float,...)"),
-        ("math", "'math' is an callable function, not a valid type (string, integer, float,...)"),
-        ("fake", "'fake' is _SeededFaker function, not a valid type (string, integer, float,...)"),
-        ("faker", "'faker' is Faker function, not a valid type (string, integer, float,...)"),
+        ("len", "'configured expression' is an callable function, not a valid type (string, integer, float,...)"),
+        ("math", "'configured expression' is an callable function, not a valid type (string, integer, float,...)"),
+        ("fake", "'configured expression' is _SeededFaker function, not a valid type (string, integer, float,...)"),
+        ("faker", "'configured expression' is Faker function, not a valid type (string, integer, float,...)"),
     ],
 )
 def test_expression_rejects_non_values(expression: str, message: str) -> None:
@@ -63,7 +63,7 @@ def test_expression_rejects_non_values(expression: str, message: str) -> None:
 
     assert type(exc.value) is TaskConfigError
     assert str(exc.value) == task_config_message(
-        code=IssueCode.TASK_EXPRESSION_EVAL_FAILED, expr=expression, error=message
+        code=IssueCode.TASK_EXPRESSION_EVAL_FAILED, expr="configured expression", error=message
     )
 
 
@@ -72,7 +72,7 @@ def test_expression_rejects_non_values(expression: str, message: str) -> None:
     [
         (
             "missing",
-            "Failed while evaluate 'missing': name 'missing' is not defined in this scope; "
+            "NameError: "
             "check spelling, definition order and value shape; current-scope names can resolve bare, "
             "but existing outermost bare names win collisions; intermediate ancestor names need qualification; "
             "use this.name for the current scope, parent.name for the immediate enclosing record, "
@@ -81,7 +81,7 @@ def test_expression_rejects_non_values(expression: str, message: str) -> None:
         ),
         (
             "record.missing",
-            "Failed while evaluate 'record.missing': missing attribute 'missing'; "
+            "AttributeError: "
             "check spelling, definition order and value shape; current-scope names can resolve bare, "
             "but existing outermost bare names win collisions; intermediate ancestor names need qualification; "
             "use this.name for the current scope, parent.name for the immediate enclosing record, "
@@ -90,24 +90,26 @@ def test_expression_rejects_non_values(expression: str, message: str) -> None:
         ),
         (
             "{'present': 1}['missing']",
-            "Failed while evaluate '{'present': 1}['missing']': missing key 'missing'",
+            "KeyError: missing mapping key",
             KeyError,
         ),
         (
             "1 + 'x'",
-            "Failed while evaluate '1 + 'x'': '1 + 'x'' have undefined item or wrong structure",
+            "Failed while evaluate 'configured expression': "
+            "'configured expression' have undefined item or wrong structure",
             TypeError,
         ),
         (
             "1 +",
-            "Evaluation error for expression '1 +': The expression may contain undefined elements, formatting errors, "
+            "Evaluation error for expression 'configured expression': "
+            "The expression may contain undefined elements, formatting errors, "
             "or unsupported parameter names. Ensure that boolean values and all parameter names "
             "(e.g., 'True' vs 'true') adhere to the required formats.",
             SyntaxError,
         ),
         (
             "int('x')",
-            "Failed while evaluate 'int('x')': invalid literal for int() with base 10: 'x'",
+            "ValueError",
             ValueError,
         ),
     ],
@@ -120,7 +122,7 @@ def test_expression_errors_keep_messages_and_causes(expression: str, message: st
 
     assert type(exc.value) is TaskConfigError
     assert str(exc.value) == task_config_message(
-        code=IssueCode.TASK_EXPRESSION_EVAL_FAILED, expr=expression, error=message
+        code=IssueCode.TASK_EXPRESSION_EVAL_FAILED, expr="configured expression", error=message
     )
     assert isinstance(exc.value.__cause__, cause_type)
 
@@ -131,20 +133,20 @@ def test_colon_names_are_rewritten_and_normalized() -> None:
     assert context.evaluate_python_expression(r"container.gc:CodeList.ColumnSet.id_value") == 13
 
 
-def test_colon_retry_failure_keeps_its_legacy_message_and_cause() -> None:
+def test_colon_retry_failure_keeps_safe_guidance_and_native_cause() -> None:
     context = _context()
 
     with pytest.raises(ValueError) as exc:
         context.evaluate_python_expression(r"missing\:item.value")
 
     legacy_message = (
-        "Evaluation error for expression 'missing:item.value': The expression may contain undefined items, "
+        "Evaluation error for expression 'configured expression': The expression may contain undefined items, "
         "improper structure, or case-sensitive issues (e.g., using 'true' instead of 'True'). "
         "Please double-check that all parameters and type notations are correct and supported."
     )
     assert type(exc.value) is TaskConfigError
     assert str(exc.value) == task_config_message(
-        code=IssueCode.TASK_EXPRESSION_EVAL_FAILED, expr="missing:item.value", error=legacy_message
+        code=IssueCode.TASK_EXPRESSION_EVAL_FAILED, expr="configured expression", error=legacy_message
     )
     assert isinstance(exc.value.__cause__, NameError)
 
@@ -157,3 +159,25 @@ def test_seeded_expression_evaluation_does_not_draw_before_expression_needs_rand
     assert context.evaluate_python_expression("1") == 1
     assert context.rng.getstate() == initial_state
     assert context.evaluate_python_expression("random.randint(1, 100)") == expected_rng.randint(1, 100)
+
+
+def test_colon_retry_preserves_seeded_entropy_policy():
+    context = _context(namespace={"container": {"gc:value": 1}}, seeded=True)
+    with pytest.raises(TaskConfigError, match="'os.urandom' draws entropy") as caught:
+        context.evaluate_python_expression("container.gc:value + os.urandom(1)")
+    assert caught.value.issue_code is IssueCode.TASK_EXPRESSION_EVAL_FAILED
+    assert caught.value.__cause__ is None
+
+
+def test_colon_retry_preserves_frozen_domain_error_identity():
+    from datamimic_ce.errors import DomainError, DomainErrorCode
+
+    error = DomainError(DomainErrorCode.INVALID_REQUEST, "invalid", "repair", "/field", "hash")
+
+    def refuse():
+        raise error
+
+    context = _context(namespace={"container": {"gc:refuse": refuse}})
+    with pytest.raises(DomainError) as caught:
+        context.evaluate_python_expression("container.gc:refuse()")
+    assert caught.value is error

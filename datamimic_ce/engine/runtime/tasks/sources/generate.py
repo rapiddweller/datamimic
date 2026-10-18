@@ -70,7 +70,7 @@ def load_generate_source(
             try:
                 source_data = evaluate_source_template(root, source_data, prefix, suffix)
             except Exception as error:
-                logger.debug(f"Failed to pre-evaluate source script for {stmt.full_name}: {error}")
+                logger.debug(f"Failed to pre-evaluate source script for {stmt.full_name}: {type(error).__name__}")
         elif file_source.file_format is SourceFileFormat.XML and source_scripted:
             source_data = evaluate_source_template(context, source_data, prefix, suffix)
     elif root.memstore_manager.contain(source):

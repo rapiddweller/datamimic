@@ -5,6 +5,7 @@
 # For questions and support, contact: info@rapiddweller.com
 
 from datamimic_ce.domains.shared.converters.base.converter import Converter
+from datamimic_ce.errors import IssueCode, task_config_error
 
 
 class SubstringConverter(Converter):
@@ -22,8 +23,11 @@ class SubstringConverter(Converter):
 
     def convert(self, value: object) -> str:
         if not isinstance(value, str):
-            raise ValueError(
-                f"Converter Substring expects datatype 'string', but got value {value} "
-                f"with invalid datatype {type(value)}"
+            raise task_config_error(
+                code=IssueCode.TASK_DATATYPE_INVALID,
+                element_tag="converter",
+                name="Substring",
+                expected="string",
+                data_type=type(value).__name__,
             )
         return value[self._start : self._end]

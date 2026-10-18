@@ -18,7 +18,7 @@ when the calling environment uses MCP; both transports call the same application
 | Discover vocabulary | `datamimic authoring capabilities` (`--full` for contracts) |
 | Inspect one element | `datamimic authoring capability --domain element --name generate` |
 | Discover the document/Build schema | `datamimic authoring schema` / `schema --name build_request_v4` |
-| Read a focused reference | `datamimic authoring reference --topic assembly --name model` |
+| Read a focused reference | `datamimic authoring reference --topic assembly --name starter` |
 | Compile/decompile syntax | `datamimic authoring compile -` / `decompile model.xml` |
 | Compile and prove a transaction | `datamimic authoring build -` |
 | Validate/inspect existing XML | `datamimic authoring lint model.xml` / `dry-run model.xml` |

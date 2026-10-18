@@ -88,7 +88,7 @@ class ArrayTask(GenSubTask):
                 if element_type_name not in valid_py_types:
                     raise task_config_error(
                         code=IssueCode.TASK_ARRAY_SCRIPT_ELEMENT_TYPE,
-                        script=self._statement.script,
+                        script="configured script",
                         name=self._statement.name,
                         valid_types=", ".join(valid_py_types),
                         element_type=element_type_name,
@@ -96,13 +96,13 @@ class ArrayTask(GenSubTask):
                 if not all(isinstance(ele, element_type) for ele in value):
                     raise task_config_error(
                         code=IssueCode.TASK_ARRAY_SCRIPT_MIXED_TYPES,
-                        script=self._statement.script,
+                        script="configured script",
                         name=self._statement.name,
                     )
         else:
             raise task_config_error(
                 code=IssueCode.TASK_ARRAY_SCRIPT_NOT_LIST,
-                script=self._statement.script,
+                script="configured script",
                 name=self._statement.name,
                 value_type=type(value).__name__,
             )

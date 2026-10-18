@@ -12,11 +12,51 @@ from dataclasses import dataclass
 from datetime import date, datetime
 from decimal import Decimal
 from enum import StrEnum
+from typing import TYPE_CHECKING, TypeAlias
 from uuid import UUID
 
 from pydantic import BaseModel, ConfigDict, model_validator
+from typing_extensions import TypeAliasType
 
 from .common import NonEmptyStrictStr, NonNegativeStrictInt, PositiveStrictInt
+
+MAX_CAPTURE_DEPTH = 64
+MAX_CAPTURE_ITEMS = 1_000_000
+
+
+@dataclass(frozen=True)
+class CapturedObjectId:
+    """Passive BSON identity retained until an output boundary projects its text."""
+
+    value: str
+
+    def __post_init__(self) -> None:
+        if (
+            type(self.value) is not str
+            or len(self.value) != 24
+            or any(char not in "0123456789abcdef" for char in self.value)
+        ):
+            raise ValueError("captured ObjectId must be canonical lowercase hexadecimal")
+
+
+CaptureValue: TypeAlias = (
+    str
+    | bool
+    | int
+    | float
+    | Decimal
+    | date
+    | datetime
+    | UUID
+    | CapturedObjectId
+    | None
+    | dict[str, "CaptureValue"]
+    | list["CaptureValue"]
+    | tuple["CaptureValue", ...]
+)
+if not TYPE_CHECKING:
+    # Pydantic needs a named recursive alias on Python 3.11.
+    CaptureValue = TypeAliasType("CaptureValue", CaptureValue)
 
 
 class CaptureStatus(StrEnum):
@@ -61,7 +101,7 @@ class CapturedProduct:
     """All bounded rows captured for one runtime product before projection."""
 
     name: str
-    rows: tuple[object, ...]
+    rows: tuple[CaptureValue, ...]
     capture: ProductCaptureEvidence | None = None
 
 
@@ -98,12 +138,17 @@ class SmokeExportCapture:
 def validate_capture_values(value: object) -> None:
     """Reject cyclic, oversized or executable values before any capture consumer."""
     stack: list[tuple[object, int, frozenset[int]]] = [(value, 0, frozenset())]
-    remaining = 1_000_000
+    remaining = MAX_CAPTURE_ITEMS
     while stack:
         current, depth, ancestors = stack.pop()
         remaining -= 1
-        if remaining < 0 or depth > 64:
+        if remaining < 0 or depth > MAX_CAPTURE_DEPTH:
             raise ValueError("capture exceeds its item or depth budget")
+        if type(current) is CapturedObjectId:
+            if current.__dict__.keys() != {"value"}:
+                raise ValueError("captured ObjectId contains noncanonical state")
+            CapturedObjectId(value=current.value)
+            continue
         if current is None or isinstance(current, str | bool | date | datetime | UUID):
             continue
         if isinstance(current, int):

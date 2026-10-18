@@ -2,8 +2,8 @@ from pathlib import Path
 
 import pytest
 
-from datamimic_ce.interfaces.python.data_mimic_test import DataMimicTest
 from datamimic_ce.errors import IssueCode, TaskConfigError
+from datamimic_ce.interfaces.python.data_mimic_test import DataMimicTest
 
 _DIR = Path(__file__).resolve().parent
 
@@ -20,11 +20,12 @@ def test_assert_holds_per_record():
     assert all(18 <= r["age"] <= 65 for r in rows)
 
 
-def test_assert_violation_fails_with_message_and_record():
+def test_assert_violation_keeps_explicit_message_without_dumping_record():
     with pytest.raises(Exception, match=r"idx 3 is forbidden") as exc:
         _run("assert_violated.xml")
-    assert "idx != 3" in str(exc.value)  # failing condition named
-    assert "'idx': 3" in str(exc.value)  # offending record dumped
+    assert exc.value.issue_code is IssueCode.TASK_ASSERT_FAILED
+    assert "configured condition" in str(exc.value)
+    assert "'idx': 3" not in str(exc.value)
 
 
 def test_assert_setup_level_holds():
@@ -41,6 +42,7 @@ def test_assert_broken_expression_names_the_assert():
     with pytest.raises(TaskConfigError) as rejected:
         _run("assert_bad_expression.xml")
     assert rejected.value.issue_code is IssueCode.TASK_EXPRESSION_EVAL_FAILED
-    assert "ixd == 1" in str(rejected.value) and "assert" in str(rejected.value)
-    assert isinstance(rejected.value.__cause__, TaskConfigError)
-    assert isinstance(rejected.value.__cause__.__cause__, NameError)
+    assert rejected.value.location.element_tag == "assert"
+    assert rejected.value.location.attribute == "condition"
+    assert type(rejected.value.__cause__) is NameError
+    assert rejected.value.__cause__.name == "ixd"

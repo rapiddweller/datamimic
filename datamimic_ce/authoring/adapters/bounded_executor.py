@@ -36,8 +36,13 @@ from datamimic_ce.authoring.domain.diagnostics import (
     Diagnostic,
     DiagnosticPhase,
 )
-from datamimic_ce.authoring.domain.requests import BoundedExecutionEvidence, BoundedExecutionRequest
-from datamimic_ce.errors import DomainError, UserErrorBase
+from datamimic_ce.authoring.domain.requests import (
+    BoundedExecutionEvidence,
+    BoundedExecutionRequest,
+    SourceAccessEvidence,
+)
+from datamimic_ce.errors import DomainError, GeneratorConfigError, UserErrorBase
+from datamimic_ce.errors.catalog import get_issue_definition
 from datamimic_ce.errors.codes import ErrorCode
 
 _MAX_WORKSPACE_BYTES = 256 * 1024 * 1024
@@ -178,17 +183,43 @@ def _decode_reply(payload: bytes, request: BoundedExecutionRequest) -> BoundedEx
                     error_code=message.error.code,
                     issue_code=message.error.issue_code if isinstance(message.error, UserErrorBase) else None,
                 )
+            location = message.error.location if isinstance(message.error, UserErrorBase) else None
+            definition = (
+                get_issue_definition(message.error.issue_code)
+                if isinstance(message.error, UserErrorBase) and message.error.issue_code is not None
+                else None
+            )
+            path: tuple[str, ...] = ("descriptor", request.descriptor_path.as_posix())
+            if location is not None:
+                path += (location.element_tag,)
+                if location.attribute is not None:
+                    path += (location.attribute,)
+            constructor_reason = (
+                message.error.constructor_reason if isinstance(message.error, GeneratorConfigError) else None
+            )
             diagnostic = Diagnostic(
                 code=AuthoringRuleId.SIDE_EFFECT
                 if message.policy_refusal
                 else AuthoringSystemDiagnosticCode.CHILD_EXECUTION,
                 phase=DiagnosticPhase.POLICY if message.policy_refusal else DiagnosticPhase.EVIDENCE,
-                message="Bounded CE execution refused an unsupported side effect."
-                if message.policy_refusal
-                else "Bounded CE execution failed.",
-                remediation="Repair the bounded operation or runtime input and retry.",
+                message=(
+                    constructor_reason
+                    if constructor_reason is not None
+                    else f"{definition.title} at {'/'.join(path)}."
+                    if definition is not None
+                    else "Bounded CE execution refused an unsupported side effect."
+                    if message.policy_refusal
+                    else "Bounded CE execution failed."
+                ),
+                remediation=(
+                    "Correct the generator parameters using the supported values and bounds in this diagnostic."
+                    if constructor_reason is not None
+                    else dryrun._runtime_hint(message.error)
+                    if isinstance(message.error, UserErrorBase | DomainError)
+                    else "Repair the bounded operation or runtime input and retry."
+                ),
                 ce_error=identity,
-                path=("descriptor", request.descriptor_path.as_posix()),
+                path=path,
             )
             return BoundedExecutionEvidence(
                 ok=False, captured=CapturedProducts((), request.max_count), diagnostics=(diagnostic,), base_run_ok=False
@@ -221,6 +252,10 @@ def _decode_reply(payload: bytes, request: BoundedExecutionRequest) -> BoundedEx
             captured=captured,
             diagnostics=diagnostics,
             smoke_export=message.smoke_export,
+            source_accesses=tuple(
+                SourceAccessEvidence(source_type=source_type, requests=count)
+                for source_type, count in message.source_accesses
+            ),
             base_run_ok=base_run_ok,
         )
     except (

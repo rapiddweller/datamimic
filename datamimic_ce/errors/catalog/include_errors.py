@@ -4,9 +4,19 @@
 # See LICENSE file for the full text of the license.
 
 from datamimic_ce.errors.catalog.definition import IssueDefinition
+from datamimic_ce.errors.catalog.guidance import GUIDANCE_PROJECT_ENV
 from datamimic_ce.errors.codes import IssueCode
 
 ISSUES: list[IssueDefinition] = [
+    IssueDefinition(
+        code=IssueCode.INCLUDE_FILE_NOT_FOUND,
+        name="INCLUDE_FILE_NOT_FOUND",
+        title="Include File Not Found",
+        template="Include file '{uri}' not found in task workspace",
+        cause="The referenced configuration could not be found for the include configuration.",
+        resolution="Ensure the referenced file exists and the identifier/path is correct.",
+        guidance=GUIDANCE_PROJECT_ENV,
+    ),
     IssueDefinition(
         code=IssueCode.INCLUDE_UNSUPPORTED_FILE_TYPE,
         name="INCLUDE_UNSUPPORTED_FILE_TYPE",

@@ -383,3 +383,18 @@ def test_exporter_transport_facts_keep_nested_vendor_types():
         "sqlalchemy.exc.OperationalError",
     )
     assert "private-" not in str(error.__cause__)
+
+
+@pytest.mark.parametrize(
+    "accesses",
+    [(("", 1),), (("file_csv", 0),), (("file_csv", -1),), (("file_csv", True),), ((1, 1),), (("file_csv", "1"),)],
+)
+def test_parent_revalidates_observed_source_access_fields(accesses):
+    message = dryrun._WorkerSuccess(
+        captured={"items": ({"id": 1},)},
+        budgets=(_budget(),),
+        smoke_diagnostics=(),
+        smoke_export=SmokeExportCapture.not_requested(),
+    )
+    object.__setattr__(message, "source_accesses", accesses)
+    assert _receive(message) is None

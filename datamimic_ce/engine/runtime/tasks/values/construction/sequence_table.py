@@ -15,6 +15,7 @@ from datamimic_ce.engine.io.api import (
     uses_mysql_sequence_storage,
 )
 from datamimic_ce.engine.runtime.contexts.context import Context
+from datamimic_ce.errors import DomainError, UserErrorBase, generator_config_error
 
 
 class SequenceTableGenerator(BaseLiteralGenerator):
@@ -97,21 +98,21 @@ class SequenceTableGenerator(BaseLiteralGenerator):
         self._explicit_sequence_name = sequence or None  # "" falls back to convention too
 
         if isinstance(stmt, VariableStatement):
-            raise ValueError(f"Statement type {type(stmt).__name__} must have 'database' attribute")
+            raise generator_config_error(reason="SequenceTableGenerator requires a key with a database attribute")
         source_name = stmt.database
         if source_name is None:
-            raise ValueError(f"No database client found for source: {source_name}")
+            raise generator_config_error(reason="SequenceTableGenerator requires a configured database client")
         self._source_name: str = source_name
 
         rdbms_client = context.root.clients.get(self._source_name)
         if rdbms_client is None:
-            raise ValueError(f"No database client found for source: {self._source_name}")
+            raise generator_config_error(reason="SequenceTableGenerator requires a configured database client")
 
         # Get root generate statement safely (stashed: the root of a key/variable cannot change
         # over this instance's lifetime, so pre_execute reuses it instead of re-walking the tree)
         root_gen_stmt = get_nearest_generate_statement(self._stmt)
         if root_gen_stmt is None:
-            raise ValueError("Root generate statement is required")
+            raise generator_config_error(reason="Root generate statement is required")
         self._root_gen_stmt = root_gen_stmt
 
         # Initialize sequence with process-safe range
@@ -119,15 +120,17 @@ class SequenceTableGenerator(BaseLiteralGenerator):
             total_processes = self._root_gen_stmt.num_process or context.root.num_process or 1
             uses_mysql = uses_mysql_sequence_storage(rdbms_client)
             if total_processes > 1 and uses_mysql:
-                raise ValueError(
-                    "SequenceTableGenerator with a MySQL source is single-process only; "
-                    "set numProcess=1 because MySQL has no atomic native sequence reservation"
+                raise generator_config_error(
+                    reason=(
+                        "SequenceTableGenerator with a MySQL source is single-process only; "
+                        "set numProcess=1 because MySQL has no atomic native sequence reservation"
+                    )
                 )
             self._process_id = context.root.process_id or 0
 
             count = root_gen_stmt.count
             if count is None:
-                raise ValueError("SequenceTableGenerator requires a generate count")
+                raise generator_config_error(reason="SequenceTableGenerator requires a generate count")
             total_count = int(count)
 
             # Calculate per-process count
@@ -157,8 +160,12 @@ class SequenceTableGenerator(BaseLiteralGenerator):
             self._total_processes = total_processes
             self._per_process_count = per_process_count
 
+        except (UserErrorBase, DomainError):
+            raise
         except Exception as e:
-            raise ValueError(f"Failed to initialize sequence: {str(e)}") from e
+            raise generator_config_error(
+                reason=f"SequenceTableGenerator initialization failed ({type(e).__name__})"
+            ) from e
 
     def _resolve_sequence_name(self) -> str:
         """Explicit sequence= name if given (e.g. a migrated legacy descriptor's DB sequence name,
@@ -180,7 +187,7 @@ class SequenceTableGenerator(BaseLiteralGenerator):
         """
         rdbms_client = context.root.clients.get(self._source_name)
         if rdbms_client is None:
-            raise ValueError(f"No database client found for source: {self._source_name}")
+            raise generator_config_error(reason="SequenceTableGenerator requires a configured database client")
 
         # Reserve the SAME rounded-up block __init__ assumed (per_process_count * total_processes,
         # not the raw statement count) - keeps this in sync with the per-process offset arithmetic

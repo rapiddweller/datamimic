@@ -110,6 +110,19 @@ count into persisted XML just to obtain Ready. A passing smoke/replay cannot era
 another failed gate. CE before/after compares CE data semantics; CE/EE compares
 shared language/contract semantics, without requiring identical random values.
 
+CE and EE codecs preserve decoded Unicode and whitespace-only leaf text. CE raw
+XML strings are Unicode; EE raw XML retains its established byte/declaration
+contract. Shared issue codes remain stable; CE I825 omits generated values from
+public error text.
+
+Portable runtime diagnostics retain codes, logical descriptor identity and repair guidance.
+They omit evaluated expressions, constructor arguments and automatic record dumps.
+Explicit descriptor output and Python exception causes retain their contracts.
+
+A constructor returning a non-Converter now raises `TaskConfigError` (`E013/I840`).
+Callers that caught `TypeError` must catch the portable type. Native construction
+failures remain available as causes.
+
 Bounded resources use contained opened handles, including properties substitution
 and cached file reads. Installed Domain datasets are read through their own loader;
 custom `DATAMIMIC_DOMAIN_DATA`/`DATAMIMIC_ROOT` overrides reject bounded execution.

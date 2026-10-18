@@ -20,14 +20,19 @@ from contextlib import contextmanager, suppress
 from enum import StrEnum
 from pathlib import Path
 
+from bson import ObjectId
 from pydantic import ConfigDict, StrictBool, StrictStr, TypeAdapter, ValidationError
 from pydantic.dataclasses import dataclass
 
 from datamimic_ce.authoring.adapters.workspace import AuthoringWorkspaceContext
 from datamimic_ce.authoring.domain.capture import (
+    MAX_CAPTURE_DEPTH,
+    MAX_CAPTURE_ITEMS,
+    CapturedObjectId,
     CapturedProduct,
     CapturedProducts,
     CaptureStatus,
+    CaptureValue,
     ProductCaptureEvidence,
     SmokeExportCapture,
     validate_capture_values,
@@ -37,7 +42,15 @@ from datamimic_ce.authoring.domain.rule_catalog import RuleSeverity
 from datamimic_ce.authoring.domain.xml_diagnostics import Diagnostic
 from datamimic_ce.engine.dsl.api import capture_product_name, resource_reader_scope
 from datamimic_ce.engine.io.contracts import SmokeExportRequest
-from datamimic_ce.errors import DomainError, MissingMemstoreProductError, UserErrorBase, is_user_error
+from datamimic_ce.errors import (
+    DomainError,
+    ErrorCode,
+    ExternalFailureCause,
+    GeneratorConfigError,
+    MissingMemstoreProductError,
+    UserErrorBase,
+    is_user_error,
+)
 from datamimic_ce.errors.catalog import get_issue_definition
 from datamimic_ce.errors.codes import IssueCode
 from datamimic_ce.errors.context.descriptor_identity import descriptor_scope
@@ -102,10 +115,11 @@ class _MemstoreSourceBinding:
 
 @dataclass(frozen=True, config=ConfigDict(extra="forbid", strict=True, revalidate_instances="always"))
 class _WorkerSuccess:
-    captured: dict[NonEmptyStrictStr, tuple[dict[StrictStr, object], ...]]
+    captured: dict[NonEmptyStrictStr, tuple[dict[StrictStr, CaptureValue], ...]]
     budgets: tuple[_ProductBudget, ...]
     smoke_diagnostics: tuple[dict[str, object], ...]
     smoke_export: SmokeExportCapture
+    source_accesses: tuple[tuple[NonEmptyStrictStr, PositiveStrictInt], ...] = ()
 
 
 @dataclass(frozen=True, config=ConfigDict(extra="forbid", strict=True, revalidate_instances="always"))
@@ -481,7 +495,11 @@ def neutralize_for_dry_run(
             if product_budgets is not None:
                 name = capture_product_name(stmt.full_name)
                 requested_per_parent: int | None = requested
-                if requested_per_parent is None and range_bound is None:
+                if (
+                    requested_per_parent is None
+                    and range_bound is None
+                    and count_kind is not _CountBoundaryKind.DYNAMIC
+                ):
                     requested_per_parent = source_rows
                 product_budgets[name] = _ProductBudget(
                     name=name,
@@ -567,9 +585,9 @@ def _smoke_exporter(
         )
 
 
-_CapturedRows = dict[NonEmptyStrictStr, tuple[dict[StrictStr, object], ...]]
+_CapturedRows = dict[NonEmptyStrictStr, tuple[dict[StrictStr, CaptureValue], ...]]
 _CAPTURE_ROWS = TypeAdapter(
-    dict[NonEmptyStrictStr, list[dict[StrictStr, object]] | tuple[dict[StrictStr, object], ...]]
+    dict[NonEmptyStrictStr, list[dict[StrictStr, CaptureValue]] | tuple[dict[StrictStr, CaptureValue], ...]]
 )
 _MAX_WORKER_REPLY_BYTES = 64 * 1024 * 1024
 
@@ -595,6 +613,7 @@ def _decode_worker_payload(payload: bytes) -> object:
         _MemstoreSourceBinding,
         _MemstoreBindingStatus,
         SmokeExportCapture,
+        CapturedObjectId,
         date,
         datetime,
         datetime_time,
@@ -620,9 +639,11 @@ def _decode_worker_payload(payload: bytes) -> object:
         errors.ExportConfigError,
         errors.ExternalFailureCause,
         errors.IncludeError,
+        errors.MissingIncludeError,
         errors.GeneratorConfigError,
         errors.ConditionEvaluationError,
         errors.ParserValidationError,
+        errors.MissingDescriptorError,
         errors.ClientConfigError,
         errors.TaskConfigError,
         errors.OperationError,
@@ -677,6 +698,40 @@ def _decode_worker_payload(payload: bytes) -> object:
     return result
 
 
+def _project_capture_object_ids(value: object) -> object:
+    """Copy bounded capture containers, projecting only native BSON identifiers."""
+    remaining = MAX_CAPTURE_ITEMS
+    ancestors: set[int] = set()
+
+    def project(current: object, depth: int) -> object:
+        nonlocal remaining
+        remaining -= 1
+        if remaining < 0 or depth > MAX_CAPTURE_DEPTH:
+            raise ValueError("capture exceeds its item or depth budget")
+        if type(current) is ObjectId:
+            return CapturedObjectId(value=str(current))
+        if not isinstance(current, dict | list | tuple):
+            return current
+        identity = id(current)
+        if identity in ancestors:
+            raise ValueError("capture contains a cyclic container")
+        if len(current) > remaining:
+            raise ValueError("capture exceeds its item budget")
+        ancestors.add(identity)
+        try:
+            if isinstance(current, dict):
+                if not all(isinstance(key, str) for key in current):
+                    raise ValueError("capture object keys must be strings")
+                return {key: project(item, depth + 1) for key, item in current.items()}
+            if isinstance(current, tuple):
+                return tuple(project(item, depth + 1) for item in current)
+            return [project(item, depth + 1) for item in current]
+        finally:
+            ancestors.remove(identity)
+
+    return project(value, 0)
+
+
 def _validated_capture_rows(captured: object) -> _CapturedRows:
     validate_capture_values(captured)
     try:
@@ -700,7 +755,11 @@ def _validated_worker_success(message: _WorkerSuccess, max_count: int | None = N
     SmokeExportCapture(**message.smoke_export.__dict__)
     message = _WorkerSuccess(**message.__dict__)
     message = _WorkerSuccess(
-        message.captured, tuple(validated_budgets), message.smoke_diagnostics, message.smoke_export
+        message.captured,
+        tuple(validated_budgets),
+        message.smoke_diagnostics,
+        message.smoke_export,
+        message.source_accesses,
     )
     names = [budget.name for budget in message.budgets]
     if len(names) != len(set(names)):
@@ -752,6 +811,19 @@ def _validated_worker_success(message: _WorkerSuccess, max_count: int | None = N
     return message
 
 
+def _export_capture_value(value: CaptureValue) -> object:
+    """Restore native exporter inputs only after the complete capture is validated."""
+    if isinstance(value, CapturedObjectId):
+        return ObjectId(value.value)
+    if isinstance(value, dict):
+        return {key: _export_capture_value(item) for key, item in value.items()}
+    if isinstance(value, tuple):
+        return tuple(_export_capture_value(item) for item in value)
+    if isinstance(value, list):
+        return [_export_capture_value(item) for item in value]
+    return value
+
+
 def _smoke_export(
     captured: Mapping[str, Sequence[object]],
     stripped: _StrippedTargets,
@@ -772,7 +844,10 @@ def _smoke_export(
             for full_name, (basename, file_targets, default_separator, default_line_separator) in sorted(
                 stripped.items()
             ):
-                rows = list(captured.get(capture_product_name(full_name), ()))
+                rows = [
+                    {key: _export_capture_value(value) for key, value in row.items()}
+                    for row in captured.get(capture_product_name(full_name), ())
+                ]
                 if not rows:
                     continue
                 for exporter_name, params in file_targets:
@@ -843,6 +918,7 @@ def _run_engine_capture(
     with _suppress_worker_stderr(), descriptor_scope(logical_descriptor_path or path.name):
         from functools import partial
 
+        from datamimic_ce.engine.io.api import SourceAccessCapture
         from datamimic_ce.engine.runtime.api import create_run_session
         from datamimic_ce.engine.runtime.contracts import RunRequest
 
@@ -867,9 +943,10 @@ def _run_engine_capture(
                     ),
                 ),
             )
-            session.execute()
+            with SourceAccessCapture() as source_accesses:
+                session.execute()
             capture = session.capture_test_result()
-            raw_capture = _validated_capture_rows(capture if capture is not None else {})
+            raw_capture = _validated_capture_rows(_project_capture_object_ids(capture if capture is not None else {}))
             if set(raw_capture) - set(budgets):
                 raise ValueError("runtime capture has no canonical product provenance")
             # The engine omits zero-row products; keep their explicit empty capture.
@@ -889,6 +966,7 @@ def _run_engine_capture(
                 budgets=tuple(sorted(budgets.values(), key=lambda budget: budget.name)),
                 smoke_diagnostics=tuple(diagnostic.model_dump(mode="json") for diagnostic in smoke_diagnostics),
                 smoke_export=smoke_export_capture,
+                source_accesses=source_accesses.snapshot(),
             )
         except Exception as err:
             if is_user_error(err):
@@ -899,6 +977,17 @@ def _run_engine_capture(
 
                 normalize_exporter_error_cause_for_transport(err)
                 normalize_error_cause_for_transport(err)
+            if isinstance(err, DomainError) and not isinstance(err.__cause__, ExternalFailureCause):
+                # Private IPC carries cause types; ordinary Python callers retain native causes.
+                cause_types: list[str] = []
+                current = err.__cause__
+                seen: set[int] = set()
+                while current is not None and id(current) not in seen and len(cause_types) < 16:
+                    seen.add(id(current))
+                    cause_types.append(f"{type(current).__module__}.{type(current).__name__}")
+                    current = current.__cause__
+                if cause_types:
+                    object.__setattr__(err, "__cause__", ExternalFailureCause(cause_types[0], tuple(cause_types)))
             # The process is the untyped runtime boundary: every engine exception must
             # become a stable DM002 response rather than killing the authoring transport.
             message = _WorkerFailure(
@@ -942,7 +1031,8 @@ def _capture_evidence(
         else None
     )
     if (
-        budget.source_exhaustible
+        budget.count_kind is not _CountBoundaryKind.DYNAMIC
+        and budget.source_exhaustible
         and available is not None
         and observed == available
         and (not budget.explicit_count or requested is None or requested >= available)
@@ -1224,5 +1314,14 @@ def _decode_worker_message(payload: bytes, *, max_count: int | None = None) -> _
         message = _WorkerFailure(**message.__dict__)
         if message.error is not None and not isinstance(message.error, (UserErrorBase, DomainError)):
             raise ValueError("worker failure contains an unsupported error type")
+        if isinstance(message.error, GeneratorConfigError):
+            reason = message.error.constructor_reason
+            if reason is not None and (
+                type(reason) is not str
+                or not reason.strip()
+                or message.error.code is not ErrorCode.GENERATOR_CONFIG
+                or message.error.issue_code is not None
+            ):
+                raise ValueError("worker constructor reason has invalid content or identity")
         return message
     raise ValueError("worker returned an unknown envelope")

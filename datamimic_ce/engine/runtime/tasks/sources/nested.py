@@ -66,7 +66,7 @@ def finalize_nested_key_source(
             raise task_config_error(
                 code=IssueCode.TASK_NESTEDKEY_RESULT_TYPE,
                 name=stmt.name,
-                script=stmt.source,
+                script="configured source template",
                 value_type=type(evaluated).__name__,
             )
         result = evaluated

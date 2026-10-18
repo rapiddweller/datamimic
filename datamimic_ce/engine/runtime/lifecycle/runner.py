@@ -16,7 +16,7 @@ from datamimic_ce.engine.runtime.lifecycle.config import get_settings
 from datamimic_ce.engine.runtime.logging import log_memory_info, log_system_info, setup_logger
 from datamimic_ce.engine.runtime.process_titles import bootstrap_process_title, set_main_process_title
 from datamimic_ce.engine.runtime.tasks.setup.setup_task import SetupTask
-from datamimic_ce.errors import IssueCode, parser_validation_error, task_config_error
+from datamimic_ce.errors import DomainError, IssueCode, UserErrorBase, parser_validation_error, task_config_error
 from datamimic_ce.errors.context.descriptor_identity import descriptor_scope, get_descriptor_name
 
 logger = logging.getLogger("DATAMIMIC")
@@ -90,12 +90,13 @@ class RuntimeRunSession:
                     runtime_environment=settings.RUNTIME_ENVIRONMENT,
                     ray_debug=settings.RAY_DEBUG,
                 ).execute()
-            except ValueError as error:
-                logger.error(f"Value error: {error}")
-                raise error
-            except Exception as error:
-                logger.exception(f"Error in DATAMIMIC process. Error message: {error}")
-                raise error
+            except (UserErrorBase, DomainError) as error:
+                message = error.message if isinstance(error, DomainError) else str(error)
+                logger.error("Value error: %s" if isinstance(error, ValueError) else "%s", message)
+                raise
+            except Exception:
+                logger.exception("Error in DATAMIMIC process")
+                raise
             captured = self._test_result_storage.get_result() if request.test_mode else None
             return RunResult(captured)
 

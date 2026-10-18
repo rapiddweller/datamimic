@@ -250,3 +250,13 @@ def test_parser_errors_carry_logical_descriptor_path(tmp_path):
         )
     assert error.value.location.descriptor_path == "nested/project.xml"
     assert error.value.validation_errors
+
+
+@pytest.mark.parametrize(
+    "declaration", ["", '<?xml version="1.0" encoding="UTF-8"?>', '<?xml version="1.0" encoding="ISO-8859-1"?>']
+)
+def test_decompile_preserves_already_decoded_unicode(codec, declaration):
+    document = codec.decompile(declaration + "<setup><echo>café</echo></setup>")
+
+    assert document.root.children[0].content.value == "café"
+    assert "café" in codec.compile(document).xml

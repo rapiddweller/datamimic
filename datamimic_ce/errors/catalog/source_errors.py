@@ -9,6 +9,15 @@ from datamimic_ce.errors.codes import IssueCode
 
 ISSUES: list[IssueDefinition] = [
     IssueDefinition(
+        code=IssueCode.SOURCE_INVALID_XML,
+        name="SOURCE_INVALID_XML",
+        title="Source Invalid XML",
+        template="Invalid XML in '{name}'",
+        cause="The XML file content is malformed or cannot be parsed.",
+        resolution="Fix XML syntax and ensure the file is well-formed.",
+        guidance=GUIDANCE_PROJECT_ENV,
+    ),
+    IssueDefinition(
         code=IssueCode.SOURCE_INVALID_CSV,
         name="SOURCE_INVALID_CSV",
         title="Source Invalid CSV",

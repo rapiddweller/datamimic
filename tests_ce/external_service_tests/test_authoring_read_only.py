@@ -100,3 +100,74 @@ def test_real_mongo_reads_keep_collection_unchanged_after_refused_writes() -> No
             assert list(collection.find({}, {"_id": 0})) == [{"id": 1}]
         finally:
             collection.drop()
+
+
+def test_real_mongo_object_ids_survive_bounded_capture(tmp_path) -> None:
+    from bson import ObjectId
+
+    from datamimic_ce.authoring import create_authoring_application
+    from datamimic_ce.authoring.adapters.bounded_executor import CeBoundedExecutor
+    from datamimic_ce.authoring.adapters.workspace import AuthoringWorkspaceContext
+    from datamimic_ce.authoring.domain.capture import CapturedObjectId
+    from datamimic_ce.authoring.domain.requests import BoundedExecutionRequest, RunRequest
+    from datamimic_ce.engine.runtime.api import create_run_session
+    from datamimic_ce.engine.runtime.contracts import RunRequest as RuntimeRequest
+
+    profile = _profile("test_mongodb")
+    prefix = "mongodb.mongo."
+    name = "ce_capture_" + uuid4().hex
+    identifiers = [ObjectId(), ObjectId()]
+    native_rows = [{"_id": identifier, "nested": {"ids": [identifier]}} for identifier in identifiers]
+    expected = tuple({"_id": str(identifier), "nested": {"ids": [str(identifier)]}} for identifier in identifiers)
+    conf = tmp_path / "conf"
+    conf.mkdir()
+    for environment in ("local", "environment"):
+        (conf / f"{environment}.env.properties").write_text(
+            "\n".join(f"{key}={value}" for key, value in profile.items()), encoding="utf-8"
+        )
+    xml = f"""<setup rngSeed="7"><mongodb id="mongodb"/>
+      <generate name="rows" source="mongodb" distribution="ordered"
+        selector="aggregate: '{name}', pipeline: [{{'$sort': {{'_id': 1}}}}]"/>
+    </setup>"""
+    descriptor = tmp_path / "model.xml"
+    descriptor.write_text(xml, encoding="utf-8")
+    with MongoClient(
+        host=profile[prefix + "host"],
+        port=int(profile[prefix + "port"]),
+        username=profile[prefix + "user"],
+        password=profile[prefix + "password"],
+        authSource=profile.get(prefix + "authSource", "admin"),
+        serverSelectionTimeoutMS=5000,
+    ) as connection:
+        collection = connection[profile[prefix + "database"]][name]
+        try:
+            collection.insert_many(native_rows)
+            session = create_run_session(
+                RuntimeRequest(
+                    descriptor_path=descriptor,
+                    test_mode=True,
+                    profile_loader=lambda *_: profile,
+                )
+            )
+            session.execute()
+            raw = session.capture_test_result()["rows"]
+            assert raw == native_rows
+            assert all(isinstance(row["_id"], ObjectId) for row in raw)
+            complete = CeBoundedExecutor(AuthoringWorkspaceContext(tmp_path)).execute(BoundedExecutionRequest(xml=xml))
+            assert complete.ok, complete.diagnostics
+            product = complete.captured.get("rows")
+            assert product.capture.complete
+            assert product.rows == tuple(
+                {
+                    "_id": CapturedObjectId(value=str(identifier)),
+                    "nested": {"ids": [CapturedObjectId(value=str(identifier))]},
+                }
+                for identifier in identifiers
+            )
+            result = create_authoring_application(workspace_root=tmp_path).dry_run(RunRequest(xml=xml, sample_rows=1))
+            assert result.ok, result.diagnostics
+            assert result.products[0].count == 2
+            assert result.products[0].rows == expected[:1]
+            assert list(collection.find().sort("_id", 1)) == native_rows
+        finally:
+            collection.drop()

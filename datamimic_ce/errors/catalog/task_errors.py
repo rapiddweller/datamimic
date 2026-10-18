@@ -198,7 +198,7 @@ ISSUES: list[IssueDefinition] = [
         code=IssueCode.TASK_KEY_SCRIPT_INVALID_TYPE,
         name="TASK_KEY_SCRIPT_INVALID_TYPE",
         title="Task Key Script Invalid Type",
-        template=("<key> '{name}' expects simple data type, but get invalid value '{value}' with type '{value_type}'"),
+        template="<key> '{name}' expects simple data type, but got type '{value_type}'",
         cause="The script value is invalid for the task configuration.",
         resolution="Correct the script to a valid value or configuration.",
     ),

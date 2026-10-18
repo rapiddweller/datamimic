@@ -8,7 +8,7 @@ import ast
 from abc import abstractmethod
 from collections.abc import Iterable, Iterator
 from datetime import datetime, timedelta
-from decimal import Decimal, localcontext
+from decimal import Decimal, InvalidOperation, localcontext
 from random import Random
 
 import numpy
@@ -40,7 +40,14 @@ from datamimic_ce.engine.runtime.tasks.values.construction.factory import (
     GeneratorUtil,
     generate_random_value_based_on_type,
 )
-from datamimic_ce.errors import IssueCode, datetime_conversion_error, is_user_error, task_config_error
+from datamimic_ce.errors import (
+    DescriptorLocation,
+    IssueCode,
+    UserErrorBase,
+    datetime_conversion_error,
+    is_user_error,
+    task_config_error,
+)
 
 
 class KeyVariableTask(Task):
@@ -243,12 +250,14 @@ class KeyVariableTask(Task):
                     )
                 else:
                     if is_user_error(e):
+                        if isinstance(e, UserErrorBase) and e.location is None:
+                            e.location = DescriptorLocation(self._element_tag, attribute="script")
                         raise
                     raise task_config_error(
                         code=IssueCode.TASK_SCRIPT_ERROR,
                         element_label=f"<{self._element_tag}> '{self._statement.name}'",
-                        descriptor="",
-                        error=str(e),
+                        error=type(e).__name__,
+                        location=DescriptorLocation(self._element_tag, attribute="script"),
                     ) from e
             # Throw error if <key> evaluated script get not simple data type
             if (
@@ -260,8 +269,8 @@ class KeyVariableTask(Task):
                 raise task_config_error(
                     code=IssueCode.TASK_KEY_SCRIPT_INVALID_TYPE,
                     name=self._statement.name,
-                    value=value,
                     value_type=type(value).__name__,
+                    location=DescriptorLocation(self._element_tag, attribute="script"),
                 )
         elif self._mode == self._CONSTANT_MODE:
             value = self._statement.constant
@@ -344,17 +353,35 @@ class KeyVariableTask(Task):
                 value = KeyVariableTask._convert_datetime_to_string(
                     value=value, out_date_format=self._statement.out_date_format
                 )
-        except ValueError as e:
+        except (ValueError, TypeError, OverflowError) as e:
+            input_empty = isinstance(value, str) and not value.strip()
             raise datetime_conversion_error(
                 element_tag=self._element_tag,
                 name=self._statement.name or "",
                 in_fmt=self._statement.in_date_format,
                 out_fmt=self._statement.out_date_format,
-                cause=str(e),
+                cause="Input value is empty" if input_empty else type(e).__name__,
+                input_empty=input_empty,
+                location=DescriptorLocation(
+                    self._element_tag,
+                    attribute="inDateFormat" if self._statement.in_date_format else "outDateFormat",
+                ),
             ) from e
 
         # Cast data to target type
-        value = self._convert_to_type(self._statement.type, value)
+        try:
+            value = self._convert_to_type(self._statement.type, value)
+        except (ValueError, TypeError, OverflowError, InvalidOperation) as e:
+            if is_user_error(e):
+                raise
+            raise task_config_error(
+                code=IssueCode.TASK_DATATYPE_INVALID,
+                element_tag=self._element_tag,
+                name=self._statement.name,
+                expected=self._statement.type,
+                data_type=type(value).__name__,
+                location=DescriptorLocation(self._element_tag, attribute="type"),
+            ) from e
 
         # Convert data with converters (postprocessing)
         try:
@@ -367,7 +394,8 @@ class KeyVariableTask(Task):
                 code=IssueCode.TASK_CONVERTER_FAILED,
                 element_tag=self._element_tag,
                 name=self._statement.name,
-                error=str(e),
+                error=type(e).__name__,
+                location=DescriptorLocation(self._element_tag, attribute="converter"),
             ) from e
 
         return value

@@ -14,9 +14,11 @@ from decimal import Decimal, InvalidOperation
 from typing import assert_never
 from uuid import UUID
 
+from pydantic import JsonValue
+
 from datamimic_ce.authoring.domain.acceptance_contract import AcceptanceSpecV1
 from datamimic_ce.authoring.domain.build_rules import catalog_diagnostic
-from datamimic_ce.authoring.domain.capture import CapturedProducts, CaptureStatus
+from datamimic_ce.authoring.domain.capture import CapturedObjectId, CapturedProducts, CaptureStatus
 from datamimic_ce.authoring.domain.common import MAX_AUTHORING_MAX_COUNT
 from datamimic_ce.authoring.domain.diagnostics import AuthoringRuleId, Diagnostic, DiagnosticPhase
 from datamimic_ce.authoring.domain.expectations import (
@@ -178,13 +180,24 @@ def _values(rows: tuple[Mapping[str, object], ...], field: str) -> tuple[object,
     return tuple(values)
 
 
+def _typed_identity(value: object) -> JsonValue:
+    content: JsonValue
+    if isinstance(value, Mapping):
+        content = {str(key): _typed_identity(item) for key, item in value.items()}
+    elif isinstance(value, tuple | list):
+        content = [_typed_identity(item) for item in value]
+    else:
+        content = _json_value(value)
+    return [type(value).__name__, content]
+
+
 def _display(value: object) -> str:
-    return json.dumps(
-        [type(value).__name__, _json_value(value)], sort_keys=True, separators=(",", ":"), ensure_ascii=False
-    )
+    return json.dumps(_typed_identity(value), sort_keys=True, separators=(",", ":"), ensure_ascii=False)
 
 
-def _json_value(value: object) -> object:
+def _json_value(value: object) -> JsonValue:
+    if isinstance(value, CapturedObjectId):
+        return value.value
     if value is None or isinstance(value, str | int | float | bool):
         return value
     if isinstance(value, Decimal | date | datetime | UUID):
@@ -193,7 +206,7 @@ def _json_value(value: object) -> object:
         return [_json_value(item) for item in value]
     if isinstance(value, Mapping):
         return {str(key): _json_value(item) for key, item in value.items()}
-    return _display(value)
+    raise TypeError("Unsupported capture value")
 
 
 def _duplicate_values(values: tuple[object, ...]) -> tuple[object, ...]:
@@ -207,10 +220,6 @@ def _duplicate_values(values: tuple[object, ...]) -> tuple[object, ...]:
     return tuple(duplicates)
 
 
-def _join_fields(spec: AcceptanceSpecV1, child_product: str, parent_product: str) -> tuple[str, str] | None:
-    return spec.join_fields(child_product, parent_product)
-
-
 def _groups(
     spec: AcceptanceSpecV1,
     captured: CapturedRows,
@@ -221,7 +230,7 @@ def _groups(
     parent_rows = _rows(captured, parent_product)
     if child_rows is None or parent_rows is None:
         return None
-    join = _join_fields(spec, child_product, parent_product)
+    join = spec.join_fields(child_product, parent_product)
     if join is None:
         return None
     child_field, parent_field = join

@@ -24,7 +24,11 @@ from datamimic_ce.engine.dsl.model.constraints import (
     rule_registry_revision,
     serialize_constraints,
 )
-from datamimic_ce.engine.dsl.model.generation.timeseries import TimeSeriesConfig, TimeSeriesNamespace
+from datamimic_ce.engine.dsl.model.generation.timeseries import (
+    TimeSeriesConfig,
+    TimeSeriesConfigError,
+    TimeSeriesNamespace,
+)
 from datamimic_ce.engine.dsl.model.registry import (
     canonical_tag,
     element_aliases,
@@ -293,6 +297,7 @@ __all__ = [
     "SupportHash",
     "SupportOutputFormat",
     "TimeSeriesConfig",
+    "TimeSeriesConfigError",
     "TimeSeriesNamespace",
     "UnsupportedMethod",
     "ValidValues",

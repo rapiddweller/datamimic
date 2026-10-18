@@ -5,6 +5,7 @@
 # For questions and support, contact: info@rapiddweller.com
 
 from collections.abc import Callable, Mapping
+from typing import TypeVar
 
 from datamimic_ce.engine.dsl.parsers.input.target import parse_function_string
 from datamimic_ce.engine.dsl.vocabulary.constants.exporter_constants import (
@@ -196,7 +197,10 @@ def consume_memstore_target(
             return
 
 
-def smoke_export(request: SmokeExportRequest) -> int:
+_ExportValue = TypeVar("_ExportValue")
+
+
+def smoke_export(request: SmokeExportRequest[_ExportValue]) -> int:
     """Run one bounded buffered export for an authoring smoke check."""
     params = request.params
     rows = request.rows

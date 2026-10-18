@@ -1,11 +1,10 @@
 import ast
 import copy
-import pickle
 import inspect
+import pickle
 import textwrap
 from pathlib import Path
 from typing import get_type_hints
-from unittest.mock import patch
 
 import dill
 import pytest
@@ -17,13 +16,13 @@ from datamimic_ce.engine.dsl.model.setup.setup_model import SetupModel
 from datamimic_ce.engine.dsl.statements.setup.include_statement import IncludeStatement
 from datamimic_ce.engine.dsl.statements.setup.memstore_statement import MemstoreStatement
 from datamimic_ce.engine.dsl.statements.setup.setup_statement import SetupStatement
-from datamimic_ce.engine.io.api import Client, Exporter, Memstore, RegisteredClient
 from datamimic_ce.engine.dsl.vocabulary.enums.dbms_enums import Dbms
+from datamimic_ce.engine.io.api import Client, Exporter, Memstore, RegisteredClient
 from datamimic_ce.engine.io.clients.rdbms_client import RdbmsClient
 from datamimic_ce.engine.io.connection_config.rdbms_connection_config import RdbmsConnectionConfig
-from datamimic_ce.engine.io.exporters.diagnostics.test_result_exporter import TestResultExporter
 from datamimic_ce.engine.io.exporters import registry as exporter_registry
 from datamimic_ce.engine.io.exporters import session as export_session_module
+from datamimic_ce.engine.io.exporters.diagnostics.test_result_exporter import TestResultExporter
 from datamimic_ce.engine.runtime.contexts.context import SetupContext
 from datamimic_ce.engine.runtime.storage.global_increment import GlobalIncrementRegistry
 from datamimic_ce.engine.runtime.storage.memstore_manager import MemstoreManager
@@ -176,8 +175,10 @@ def test_include_context_shares_run_identifier_state() -> None:
 
     for included in (child, sibling, nested):
         assert included.domain_identifier_registry is registry
-    assert [included.domain_identifier_registry.claim("Tiny", "id", "IDA", "ID[A-D]{1}")
-            for included in (context, child, sibling, nested)] == ["IDA", "IDB", "IDC", "IDD"]
+    assert [
+        included.domain_identifier_registry.claim("Tiny", "id", "IDA", "ID[A-D]{1}")
+        for included in (context, child, sibling, nested)
+    ] == ["IDA", "IDB", "IDC", "IDD"]
 
 
 def test_add_client_registers_lookup_and_script_namespace_identity() -> None:
@@ -414,22 +415,14 @@ def test_setup_context_namespace_copies_arbitrary_objects_and_classes() -> None:
 
 
 @pytest.mark.parametrize(
-    ("constructor", "message"),
-    [
-        ("ScriptValue", "Converter 'ScriptValue' is not callable"),
-        ("ScriptValue()", "Converter expression 'ScriptValue()' did not create a Converter"),
-    ],
-    ids=["without-parentheses", "with-parentheses"],
+    "constructor", ["ScriptValue", "ScriptValue()"], ids=["without-parentheses", "with-parentheses"]
 )
-def test_scripted_class_and_instance_remain_native_and_non_converter_is_rejected(
-    constructor: str, message: str
-) -> None:
+def test_scripted_class_and_instance_remain_native_and_non_converter_is_rejected(constructor: str) -> None:
+    from datamimic_ce.errors import IssueCode, TaskConfigError
+
     context = _context()
     updated = context.eval_namespace(
-        "class ScriptValue:\n"
-        "    def __init__(self):\n"
-        "        self.value = 42\n"
-        "instance = ScriptValue()"
+        "class ScriptValue:\n    def __init__(self):\n        self.value = 42\ninstance = ScriptValue()"
     )
     context.namespace.update(updated)
 
@@ -439,9 +432,12 @@ def test_scripted_class_and_instance_remain_native_and_non_converter_is_rejected
     assert instance is updated["instance"]
     assert instance.__class__ is dynamic_class
     assert context.evaluate_python_expression("instance.value") == 42
-    with pytest.raises(TypeError) as raised:
+    with pytest.raises(TaskConfigError) as raised:
         create_converter_list(context, constructor)
-    assert str(raised.value) == message
+    assert raised.value.issue_code is IssueCode.TASK_CONVERTER_FAILED
+    assert "TypeError; use constructor parameters that create a Converter" in str(raised.value)
+    assert type(raised.value.__cause__) is TypeError
+    assert str(raised.value.__cause__) == "Converter expression did not create a Converter"
 
 
 def test_setup_context_namespace_copy_preserves_aliases() -> None:
@@ -514,8 +510,6 @@ def test_setup_context_state_annotations_describe_dynamic_namespace_and_copy_con
     namespace_hints = get_type_hints(SetupContext._deepcopy_namespace)
     assert namespace_hints.get("memo") == dict[int, object]
     assert namespace_hints.get("return") == dict[str, object]
-
-
 
 
 def test_memstore_facade_manager_and_export_dispatch_share_canonical_classes() -> None:

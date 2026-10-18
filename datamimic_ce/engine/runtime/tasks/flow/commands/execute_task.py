@@ -15,7 +15,14 @@ from datamimic_ce.engine.io.contracts import SqlScriptClient
 from datamimic_ce.engine.runtime.contexts.context import Context
 from datamimic_ce.engine.runtime.contexts.geniter_context import GenIterContext
 from datamimic_ce.engine.runtime.tasks.base.task import SetupSubTask
-from datamimic_ce.errors import DescriptorLocation, IssueCode, task_config_error, task_warning
+from datamimic_ce.errors import (
+    DescriptorLocation,
+    DomainError,
+    IssueCode,
+    UserErrorBase,
+    task_config_error,
+    task_warning,
+)
 
 
 class ExecuteTask(SetupSubTask):
@@ -56,7 +63,7 @@ class ExecuteTask(SetupSubTask):
             if not isinstance(value, str):
                 raise task_config_error(
                     code=IssueCode.TASK_EXPRESSION_EVAL_FAILED,
-                    expr=f"execute.script={self._statement.script!r}",
+                    expr="execute.script",
                     error=f"must evaluate to a string of {self._statement.type} code, got {type(value).__name__}",
                     location=DescriptorLocation("execute", attribute="script"),
                 )
@@ -109,14 +116,25 @@ class ExecuteTask(SetupSubTask):
         raw IndentationError/SyntaxError — turn that into a DATAMIMIC error that says what to do instead."""
         try:
             updated_ns = ctx.root.eval_namespace(self._normalize_python(python_code))
+        except (UserErrorBase, DomainError):
+            raise
         except SyntaxError as e:  # IndentationError is a SyntaxError
-            src = self._statement.uri or "inline code"
             raise task_config_error(
                 code=IssueCode.TASK_EXPRESSION_EVAL_FAILED,
-                expr=f"execute.python={src!r}",
-                error=f"could not be parsed: {e.msg} (line {e.lineno}); use valid, consistently-indented Python",
+                expr="execute.python",
+                error=(
+                    f"could not be parsed: {type(e).__name__} (line {e.lineno}, column {e.offset}); "
+                    "use valid, consistently-indented Python"
+                ),
                 location=DescriptorLocation("execute"),
             ) from e
+        except (ArithmeticError, AttributeError, LookupError, NameError, TypeError, ValueError) as error:
+            raise task_config_error(
+                code=IssueCode.TASK_EXPRESSION_EVAL_FAILED,
+                expr="execute.python",
+                error=f"{type(error).__name__}; check the script and its input values",
+                location=DescriptorLocation("execute"),
+            ) from error
         ctx.root.namespace.update(updated_ns)
         if isinstance(ctx, GenIterContext) and updated_ns:
             ctx.current_variables.update(updated_ns)

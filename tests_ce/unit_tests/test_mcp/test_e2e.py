@@ -128,7 +128,10 @@ async def test_build_matches_cli_and_preserves_caller_requirement_rejections(any
 
 @pytest.mark.anyio
 async def test_bounded_run_tools_preserve_distinct_phases(anyio_backend: str, tmp_path) -> None:
-    xml = '<setup rngSeed="7"><generate name="rows" count="2"><key name="id" generator="IncrementGenerator"/></generate></setup>'
+    xml = (
+        '<setup rngSeed="7"><generate name="rows" count="2">'
+        '<key name="id" generator="IncrementGenerator"/></generate></setup>'
+    )
     async with Client(create_server(workspace_root=tmp_path)) as client:
         dry = await client.call_tool("datamimic_dry_run", {"request": {"xml": xml}})
         run = await client.call_tool("datamimic_run", {"request": {"xml": xml}})
@@ -137,3 +140,34 @@ async def test_bounded_run_tools_preserve_distinct_phases(anyio_backend: str, tm
         assert dry_payload["phase"] == "dry_run"
         assert run_payload["phase"] == "run"
         assert dry_payload["products"] == run_payload["products"]
+
+
+@pytest.mark.anyio
+@pytest.mark.parametrize(
+    "attributes,fields",
+    [
+        ('start="not-a-date" end="2026-01-01T04:00:00" interval="PT1H"', '<key name="v" constant="ok"/>'),
+        ('start="2026-01-01T00:00:00" end="2026-01-01T04:00:00" interval="P1M"', '<key name="v" constant="ok"/>'),
+        ('start="2026-01-01T00:00:00Z" end="2026-01-01T04:00:00" interval="PT1H"', '<key name="v" constant="ok"/>'),
+        ('count="1"', '<key name="v" type="float" min="3" max="1"/>'),
+        ('count="1"', '<key name="v" type="float" min="NaN" max="1"/>'),
+    ],
+)
+async def test_invalid_dsl_values_return_build_result_over_mcp(anyio_backend, tmp_path, attributes, fields):
+    from pydantic import TypeAdapter
+
+    from datamimic_ce.authoring.domain.requests import BuildResult, RejectedBuild
+
+    xml = f'<setup rngSeed="7"><generate name="rows" {attributes}>{fields}</generate></setup>'
+    async with Client(create_server(workspace_root=tmp_path)) as client:
+        decompiled = await client.call_tool("datamimic_decompile", {"request": {"xml": xml}})
+        document = json.loads(decompiled[0].text)["document"]
+        response = await client.call_tool(
+            "datamimic_build",
+            {"request": {"document": document, "verification": {"smoke_export": True, "deterministic_replay": True}}},
+        )
+        result = TypeAdapter(BuildResult).validate_json(response[0].text)
+        assert isinstance(result, RejectedBuild), result
+        assert result.diagnostics[0].path[:4] == ("document", "root", "children", 0)
+        assert result.verification.smoke_export.status == "blocked"
+        assert result.verification.deterministic_replay.status == "blocked"

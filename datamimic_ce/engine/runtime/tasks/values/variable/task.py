@@ -21,7 +21,6 @@ from datamimic_ce.engine.dsl.api import (
 from datamimic_ce.engine.io.api import DataSourcePagination
 from datamimic_ce.engine.runtime.contexts.context import Context, SetupContext
 from datamimic_ce.engine.runtime.contexts.geniter_context import GenIterContext
-from datamimic_ce.engine.runtime.logging import logger
 from datamimic_ce.engine.runtime.scripting.evaluation import DotableDict, evaluate_source_template
 from datamimic_ce.engine.runtime.tasks.base.task import CommonSubTask
 from datamimic_ce.engine.runtime.tasks.sources.variable import (
@@ -33,6 +32,14 @@ from datamimic_ce.engine.runtime.tasks.sources.variable import (
 from datamimic_ce.engine.runtime.tasks.values.construction.entity import create_entity_generator
 from datamimic_ce.engine.runtime.tasks.values.key_variable_task import KeyVariableTask
 from datamimic_ce.engine.runtime.tasks.values.variable.iterator import VariableIterator
+from datamimic_ce.errors import (
+    DescriptorLocation,
+    DomainError,
+    IssueCode,
+    UserErrorBase,
+    entity_init_error,
+    task_config_error,
+)
 
 
 class VariableTask(KeyVariableTask, CommonSubTask):
@@ -67,19 +74,28 @@ class VariableTask(KeyVariableTask, CommonSubTask):
         self._storage_mode = statement.storage
         if self._storage_mode is not None:
             if statement.is_global_variable:
-                raise ValueError(
-                    f"<variable> '{statement.name}': 'storage' is not supported on a global "
-                    "(setup-scope) variable - it has no per-row position to expose."
+                raise task_config_error(
+                    code=IssueCode.TASK_VARIABLE_SOURCE_UNSUPPORTED,
+                    source="configured storage pool",
+                    name=statement.name,
+                    guidance="Remove storage= from setup-scope variables; it requires a per-row position.",
+                    location=DescriptorLocation("variable", attribute="storage"),
                 )
             if self._source_script:
-                raise ValueError(
-                    f"<variable> '{statement.name}': 'storage' cannot be combined with sourceScripted "
-                    "(not meaningful for a list/proxy value)"
+                raise task_config_error(
+                    code=IssueCode.TASK_VARIABLE_SOURCE_UNSUPPORTED,
+                    source="configured storage pool",
+                    name=statement.name,
+                    guidance="Remove storage= or sourceScripted; a materialized pool cannot be scripted.",
+                    location=DescriptorLocation("variable", attribute="storage"),
                 )
             if statement.converter is not None:
-                raise ValueError(
-                    f"<variable> '{statement.name}': 'storage' cannot be combined with 'converter' "
-                    "(not meaningful for a list/proxy value)"
+                raise task_config_error(
+                    code=IssueCode.TASK_VARIABLE_SOURCE_UNSUPPORTED,
+                    source="configured storage pool",
+                    name=statement.name,
+                    guidance="Remove storage= or converter; converters require a scalar source value.",
+                    location=DescriptorLocation("variable", attribute="storage"),
                 )
         force_full_pool = self._storage_mode is not None
 
@@ -129,16 +145,14 @@ class VariableTask(KeyVariableTask, CommonSubTask):
                     dataset=dataset,
                     statement=statement,
                 )
-            except Exception as e:
-                logger.error(
-                    f"Failed to execute <variable> '{self._statement.name}': "
-                    f"Can't create entity '{statement.entity}': {e}"
-                )
-                #  Avoid printing tracebacks directly; structured logs handle context.
-                raise ValueError(
-                    f"Failed to execute <variable> '{self._statement.name}': "
-                    f"Can't create entity '{statement.entity}': {e}"
-                ) from e
+            except (UserErrorBase, DomainError):
+                raise
+            except (ArithmeticError, AttributeError, LookupError, TypeError, ValueError) as error:
+                raise entity_init_error(
+                    var_name=statement.name,
+                    entity="configured entity",
+                    cause=type(error).__name__,
+                ) from error
 
             self._mode = self._ENTITY_MODE
         else:

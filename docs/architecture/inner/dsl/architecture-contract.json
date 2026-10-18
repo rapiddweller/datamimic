@@ -202,6 +202,7 @@
         "datamimic_ce.engine.dsl.model.setup.demographics_model:DemographicsModel",
         "datamimic_ce.engine.dsl.model.generation.generate_model:GenerateModel",
         "datamimic_ce.engine.dsl.model.generation.timeseries:TimeSeriesConfig",
+        "datamimic_ce.engine.dsl.model.generation.timeseries:TimeSeriesConfigError",
         "datamimic_ce.engine.dsl.model.generation.timeseries:TimeSeriesNamespace",
         "datamimic_ce.engine.dsl.model.registry:ElementDefinition",
         "datamimic_ce.engine.dsl.model.registry:canonical_tag",

@@ -4,7 +4,7 @@
 
 """Optional verification gates over the same complete first capture."""
 
-from .capture import CapturedProducts, SmokeExportCapture
+from .capture import CapturedProducts, CaptureValue, SmokeExportCapture
 from .proof import (
     BuildVerificationEvidence,
     BuildVerificationOptions,
@@ -53,6 +53,18 @@ def smoke_export_evidence(
     )
 
 
+def _same_value(first: CaptureValue, replay: CaptureValue) -> bool:
+    if type(first) is not type(replay):
+        return False
+    if isinstance(first, dict) and isinstance(replay, dict):
+        return first.keys() == replay.keys() and all(_same_value(value, replay[key]) for key, value in first.items())
+    if isinstance(first, list | tuple) and isinstance(replay, list | tuple):
+        return len(first) == len(replay) and all(
+            _same_value(left, right) for left, right in zip(first, replay, strict=True)
+        )
+    return first == replay
+
+
 def compare_captures(
     first: CapturedProducts,
     replay: CapturedProducts,
@@ -88,7 +100,7 @@ def compare_captures(
             (
                 index
                 for index, (first_row, replay_row) in enumerate(zip(first_rows, replay_rows, strict=False))
-                if first_row != replay_row
+                if not _same_value(first_row, replay_row)
             ),
             None,
         )

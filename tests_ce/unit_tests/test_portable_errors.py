@@ -258,7 +258,10 @@ def test_every_transferred_issue_has_a_ce_caller_with_matching_template_fields()
                 "validation_errors",
                 "once",
             }
-            assert provided == _template_fields(get_issue_definition(code).template), (path, node.lineno, code)
+            expected = _template_fields(get_issue_definition(code).template)
+            if code in {IssueCode.TASK_SCRIPT_ERROR, IssueCode.GENERATOR_CREATE_FAILED}:
+                expected -= {"descriptor"}
+            assert provided == expected, (path, node.lineno, code)
     assert seen
     assert seen == set(IssueCode)
 

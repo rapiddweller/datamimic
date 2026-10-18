@@ -75,7 +75,13 @@ class Context(ABC):
     def rng(self) -> RandomSource:
         """The rng for randomness driven by this context (Random or random module)."""
 
-    def evaluate_python_expression(self, expr: str, local_namespace: dict[str, object] | None = None) -> object:
+    def evaluate_python_expression(
+        self,
+        expr: str,
+        local_namespace: dict[str, object] | None = None,
+        *,
+        diagnostic_expression: str | None = None,
+    ) -> object:
         """
         Get reference from current variables and attributes
         :param local_namespace:
@@ -120,7 +126,7 @@ class Context(ABC):
             rng=self.rng if is_seeded else None,
             seeded_faker_supplier=lambda: self.root.seeded_faker,
         )
-        return evaluation.evaluate_python(expr, eval_globals, data_dict)
+        return evaluation.evaluate_python(expr, eval_globals, data_dict, diagnostic_expression=diagnostic_expression)
 
     def _current_scope(self) -> dict[str, object]:
         """The current content scope for the ``this`` alias: ``this.field`` resolves to the same value as
@@ -181,9 +187,7 @@ class Context(ABC):
                     }
                     self_is_outermost = current_context is self_context
                     break
-                data_dict = {
-                    current_context.scope_name: {**scope_content, **data_dict}
-                }
+                data_dict = {current_context.scope_name: {**scope_content, **data_dict}}
                 current_context = parent_context
             # The scope evaluating THIS script also resolves its own variables/products by bare
             # name, not only nested under its own scope name (mirrors what `this.` already exposes -
@@ -438,12 +442,7 @@ class SetupContext(Context):
         }
         initial_ns.update(ns)
 
-        try:
-            # Execute the code and update the namespace
-            execute_script(content, initial_ns)
-        except Exception as e:
-            logger.error(f"Error executing content: {e}")
-            raise
+        execute_script(content, initial_ns)
 
         # Identify updated fields and remove functions from the namespace
         updated_fields: dict[str, object] = {}
@@ -514,8 +513,7 @@ class SetupContext(Context):
         self._descriptor_client_bindings = {
             client_id: token
             for client_id, token in self._descriptor_client_bindings.items()
-            if client_id in value
-            and self._descriptor_client_history[token][0]() is value[client_id]
+            if client_id in value and self._descriptor_client_history[token][0]() is value[client_id]
         }
 
     @property

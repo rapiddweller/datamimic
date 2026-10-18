@@ -3,12 +3,14 @@
 # This software is licensed under the MIT License.
 # See LICENSE file for the full text of the license.
 # For questions and support, contact: info@rapiddweller.com
-from datamimic_ce.engine.dsl.api import DescriptorParser, IncludeStatement, parse_properties
+from pathlib import Path
+
+from datamimic_ce.engine.dsl.api import DescriptorParser, IncludeStatement, SetupStatement, parse_properties
 from datamimic_ce.engine.io.api import load_connection_profile
 from datamimic_ce.engine.runtime.contexts.context import SetupContext
 from datamimic_ce.engine.runtime.contexts.geniter_context import GenIterContext
 from datamimic_ce.engine.runtime.tasks.base.task import CommonSubTask
-from datamimic_ce.errors import IssueCode, include_error
+from datamimic_ce.errors import DescriptorLocation, IssueCode, MissingDescriptorError, include_error
 
 
 class IncludeTask(CommonSubTask):
@@ -56,17 +58,19 @@ class IncludeTask(CommonSubTask):
         # Case 1: Check if uri is a properties file
         if uri.endswith(".properties"):
             # Import properties into context
-            new_props = parse_properties(ctx.descriptor_dir / uri)
+            try:
+                new_props = parse_properties(ctx.descriptor_dir / uri)
+            except FileNotFoundError as error:
+                raise include_error(
+                    code=IssueCode.INCLUDE_FILE_NOT_FOUND,
+                    uri=Path(uri).name,
+                    location=DescriptorLocation("include", attribute="uri"),
+                ) from error
             ctx.properties.update(new_props)
         # Case 2: Check if uri is a descriptor file
         elif uri.endswith(".xml"):
             # Parse and execute descriptor file
-            sub_setup_stmt = DescriptorParser.parse(
-                ctx.descriptor_dir / uri,
-                ctx.properties,
-                ctx.runtime_environment,
-                profile_loader=load_connection_profile,
-            )
+            sub_setup_stmt = _parse_included_descriptor(ctx, uri)
             SetupTask.execute_include(setup_stmt=sub_setup_stmt, parent_context=ctx)
         else:
             raise include_error(code=IssueCode.INCLUDE_UNSUPPORTED_FILE_TYPE, uri=uri)
@@ -83,12 +87,7 @@ class IncludeTask(CommonSubTask):
             from datamimic_ce.engine.runtime.tasks.setup.setup_task import SetupTask
 
             # Parse and execute descriptor file
-            sub_setup_stmt = DescriptorParser.parse(
-                root_ctx.descriptor_dir / uri,
-                root_ctx.properties,
-                root_ctx.runtime_environment,
-                profile_loader=load_connection_profile,
-            )
+            sub_setup_stmt = _parse_included_descriptor(root_ctx, uri)
             # Use copy of parent_context as child_context
             copied_root_context = SetupTask._copy_include_context(root_ctx)
 
@@ -101,3 +100,19 @@ class IncludeTask(CommonSubTask):
             SetupTask.execute_statements(sub_setup_stmt, copied_root_context)
         else:
             raise include_error(code=IssueCode.INCLUDE_UNSUPPORTED_FILE_TYPE_GENERATE, uri=uri)
+
+
+def _parse_included_descriptor(ctx: SetupContext, uri: str) -> SetupStatement:
+    try:
+        return DescriptorParser.parse(
+            ctx.descriptor_dir / uri,
+            ctx.properties,
+            ctx.runtime_environment,
+            profile_loader=load_connection_profile,
+        )
+    except MissingDescriptorError as error:
+        raise include_error(
+            code=IssueCode.INCLUDE_FILE_NOT_FOUND,
+            uri=Path(uri).name,
+            location=DescriptorLocation("include", attribute="uri"),
+        ) from error

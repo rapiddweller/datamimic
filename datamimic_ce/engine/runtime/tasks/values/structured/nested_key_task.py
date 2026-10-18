@@ -21,7 +21,14 @@ from datamimic_ce.engine.runtime.tasks.sources.nested import (
 )
 from datamimic_ce.engine.runtime.tasks.values.construction.converters import create_converter_list
 from datamimic_ce.engine.runtime.tasks.values.scalar.element_task import ElementTask
-from datamimic_ce.errors import IssueCode, task_config_error
+from datamimic_ce.errors import (
+    DescriptorLocation,
+    DomainError,
+    IssueCode,
+    UserErrorBase,
+    is_user_error,
+    task_config_error,
+)
 
 
 class NestedKeyTask(GenSubTask):
@@ -131,15 +138,32 @@ class NestedKeyTask(GenSubTask):
         if script is not None:
             try:
                 result = self._evaluate_value_from_script(parent_context, script)
-            except Exception as e:
+            except (
+                UserErrorBase,
+                DomainError,
+                ArithmeticError,
+                AttributeError,
+                LookupError,
+                TypeError,
+                ValueError,
+            ) as e:
                 if self._default_value is not None:
                     result = parent_context.evaluate_python_expression(self._default_value)
                     logger.debug(
                         f"Could not evaluate script of element '{self._statement.name}'. "
-                        f"Default value '{self._default_value}'  will be used instead."
+                        "The configured default value will be used instead."
                     )
                 else:
-                    raise ValueError(f"Failed when execute script of element '{self._statement.name}'") from e
+                    if is_user_error(e):
+                        if isinstance(e, UserErrorBase) and e.location is None:
+                            e.location = DescriptorLocation("nestedKey", attribute="script")
+                        raise
+                    raise task_config_error(
+                        code=IssueCode.TASK_SCRIPT_ERROR,
+                        element_label=f"<nestedKey> '{self._statement.name}'",
+                        error=type(e).__name__,
+                        location=DescriptorLocation("nestedKey", attribute="script"),
+                    ) from e
         elif self._statement.source:
             result = self._load_data_from_source(parent_context)
         else:
@@ -156,7 +180,7 @@ class NestedKeyTask(GenSubTask):
             raise task_config_error(
                 code=IssueCode.TASK_NESTEDKEY_RESULT_TYPE,
                 name=self._statement.name,
-                script=self._statement.script,
+                script="configured script",
                 value_type=type(result).__name__,
             )
 
@@ -212,7 +236,7 @@ class NestedKeyTask(GenSubTask):
             raise task_config_error(
                 code=IssueCode.TASK_NESTEDKEY_SCRIPT_TYPE,
                 name=self._statement.name,
-                script=script,
+                script="configured script",
                 value_type=type(value).__name__,
             )
         return result

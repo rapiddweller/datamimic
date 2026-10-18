@@ -9,6 +9,15 @@ from datamimic_ce.errors.codes import IssueCode
 
 ISSUES: list[IssueDefinition] = [
     IssueDefinition(
+        code=IssueCode.PARSER_DESCRIPTOR_INVALID_XML,
+        name="PARSER_DESCRIPTOR_INVALID_XML",
+        title="Parser Descriptor Invalid XML",
+        template="Descriptor XML '{name}' is not well-formed at {xml_location}",
+        cause="The XML value is invalid for the descriptor parsing.",
+        resolution="Correct the XML content to a valid value or configuration.",
+        guidance=GUIDANCE_DESCRIPTOR_ENV,
+    ),
+    IssueDefinition(
         code=IssueCode.PARSER_RESERVED_NAME,
         name="PARSER_RESERVED_NAME",
         title="Parser Reserved Name",

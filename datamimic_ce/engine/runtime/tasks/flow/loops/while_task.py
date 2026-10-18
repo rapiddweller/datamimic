@@ -37,7 +37,7 @@ class WhileTask(GenSubTask):
                 raise task_config_error(
                     code=IssueCode.TASK_WHILE_MAX_ITERATIONS_EXCEEDED,
                     max_iterations=self._statement.max_iterations,
-                    condition=self._statement.condition,
+                    condition="configured condition",
                 )
             # Side-effect loop: the body's <key>/<variable> mutate the row (current_product/variables),
             # so re-executing them per iteration advances the condition. Results are not accumulated.

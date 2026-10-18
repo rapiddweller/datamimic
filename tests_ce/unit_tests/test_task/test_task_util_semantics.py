@@ -41,7 +41,13 @@ class _ConverterContext:
             get_dynamic_class=lambda name: {"ContextAwareConverter": _ContextAwareConverter}.get(name),
         )
 
-    def evaluate_python_expression(self, expression: str, local_namespace: dict[str, object] | None = None) -> object:
+    def evaluate_python_expression(
+        self,
+        expression: str,
+        local_namespace: dict[str, object] | None = None,
+        *,
+        diagnostic_expression: str | None = None,
+    ) -> object:
         return eval(expression, local_namespace or {}, {})  # noqa: S307 - converter constructor syntax under test
 
 
@@ -76,7 +82,7 @@ def test_condition_evaluation_preserves_empty_boolean_and_invalid_rules() -> Non
     assert context.calls == ["truth", "falsehood"]
     with pytest.raises(
         ValueError,
-        match="Condition 'number' for element 'variable' evaluated to a non-boolean value",
+        match="Condition 'configured condition' for element 'variable' evaluated to a non-boolean value",
     ):
         evaluate_condition_value(context, "variable", "number")
 

@@ -6,12 +6,15 @@
 
 import logging
 import sys
+from pathlib import Path
+from typing import Protocol, runtime_checkable
 from urllib.parse import quote
 
 import oracledb
 import sqlalchemy
+from mysql.connector.errors import Error as MySqlError
 from sqlalchemy import MetaData, func, inspect, select, text
-from sqlalchemy.engine import Dialect
+from sqlalchemy.engine import Dialect, Engine
 from sqlalchemy.engine.default import DefaultDialect
 from sqlalchemy.engine.row import Row
 from sqlalchemy.pool import QueuePool
@@ -22,7 +25,7 @@ from datamimic_ce.engine.io.clients.database_client import DatabaseClient
 from datamimic_ce.engine.io.clients.entity_serialization import stringify_entity_value
 from datamimic_ce.engine.io.connection_config.rdbms_connection_config import RdbmsConnectionConfig, sqlite_database_path
 from datamimic_ce.engine.io.contracts import DataSourcePagination
-from datamimic_ce.errors import IssueCode, operation_error
+from datamimic_ce.errors import IssueCode, NormalizedDbError, client_config_error, operation_error
 
 logger = logging.getLogger("DATAMIMIC")
 
@@ -66,8 +69,8 @@ _RAW_SCRIPT = {"no_parameters": True}
 class RdbmsClient(DatabaseClient):
     def __init__(self, credential: RdbmsConnectionConfig, task_id: str | None = None):
         self._credential = credential
-        self._engine = None
-        self._read_only_engine = None
+        self._engine: Engine | None = None
+        self._read_only_engine: Engine | None = None
         self._task_id = task_id
         self._columns_by_selector: dict[str, list[str]] = {}
 
@@ -91,14 +94,25 @@ class RdbmsClient(DatabaseClient):
         self._engine_kwargs["pool_pre_ping"] = self._engine_kwargs.get("pool_pre_ping", True)
 
     @property
-    def engine(self):
+    def engine(self) -> Engine | None:
         return self._engine
 
     @engine.setter
-    def engine(self, value):
+    def engine(self, value: Engine | None) -> None:
         self._engine = value
 
-    def _create_engine(self):
+    def _new_engine(self, url: str, **kwargs: object) -> Engine:
+        try:
+            return sqlalchemy.create_engine(url, **kwargs)
+        except TypeError as error:
+            raise client_config_error(
+                code=IssueCode.CLIENT_PREFLIGHT_INVALID_CONFIGURATION,
+                client_id="database",
+                kind=self._credential.dbms.value,
+                reason="unsupported SQLAlchemy engine option or value",
+            ) from error
+
+    def _create_engine(self) -> Engine:
         """
         Create SQLAlchemy engine based on provided credentials and database management system (DBMS).
         :return: SQLAlchemy engine instance
@@ -122,7 +136,7 @@ class RdbmsClient(DatabaseClient):
         host = self._credential.host
         port = self._credential.port
 
-        def create_sqlite_engine(file_path):
+        def create_sqlite_engine(file_path: Path) -> Engine:
             """
             Create an SQLite engine.
             :param file_path: Path to the SQLite database file
@@ -130,13 +144,15 @@ class RdbmsClient(DatabaseClient):
             """
             logger.info(f"Using SQLite database at {file_path}")
             if self._credential.read_only:
-                return sqlalchemy.create_engine(
+                return self._new_engine(
                     f"sqlite:///file:{quote(file_path.resolve().as_posix(), safe='/')}?mode=ro&uri=true",
                     **self._engine_kwargs,
                 )
-            return sqlalchemy.create_engine(f"sqlite:///{file_path}", **self._engine_kwargs)
+            return self._new_engine(f"sqlite:///{file_path}", **self._engine_kwargs)
 
-        def create_sqlalchemy_engine(driver, user, password, host, port, db):
+        def create_sqlalchemy_engine(
+            driver: str, user: str | None, password: str | None, host: str | None, port: int | None, db: str
+        ) -> Engine:
             """
             Create a generic SQLAlchemy engine.
             :param driver: The database driver
@@ -147,7 +163,7 @@ class RdbmsClient(DatabaseClient):
             :param db: Database name
             :return: SQLAlchemy engine
             """
-            return sqlalchemy.create_engine(
+            return self._new_engine(
                 f"{driver}://{user}:{password}@{host}:{port}/{db}",
                 poolclass=QueuePool,
                 **self._engine_kwargs,
@@ -287,7 +303,7 @@ class RdbmsClient(DatabaseClient):
             raise operation_error(
                 code=IssueCode.OPERATION_EXECUTION_FAILED,
                 target="database read",
-                error=type(error).__name__,
+                error=_database_error_facts(error),
             ) from error
 
     def execute_sql_script(self, query: str) -> None:
@@ -299,25 +315,16 @@ class RdbmsClient(DatabaseClient):
         self._require_write("execute_sql_script")
         if query is None:
             return
-        with self._create_engine().connect() as connection:
-            transaction = connection.begin()
-            try:
+        try:
+            with self._create_engine().connect() as connection, connection.begin():
                 for command in sql_dialect.split_script(query, self._credential.dbms):
                     connection.exec_driver_sql(command, execution_options=_RAW_SCRIPT)
-                # Commit the changes to the database
-                transaction.commit()
-            except Exception as err:
-                # Roll back the transaction if an exception occurs
-                transaction.rollback()
-                if isinstance(err, sqlalchemy.exc.SQLAlchemyError):
-                    raise operation_error(
-                        code=IssueCode.OPERATION_EXECUTION_FAILED,
-                        target="SQL script",
-                        error=type(err).__name__,
-                    ) from err
-                raise
-
-            # connection.commit()
+        except sqlalchemy.exc.SQLAlchemyError as error:
+            raise operation_error(
+                code=IssueCode.OPERATION_EXECUTION_FAILED,
+                target="SQL script",
+                error=_database_error_facts(error),
+            ) from error
 
     def count_table_length(self, table_name: str) -> int:
         """
@@ -325,12 +332,19 @@ class RdbmsClient(DatabaseClient):
         :param table_name:
         :return:
         """
-        engine = self._create_engine()
-        table = self._get_metadata(engine).tables[self._get_actual_table_name(table_name)]
-        with engine.connect() as connection:
-            count_query = select(func.count().label("row_count")).select_from(table)
-            result = connection.execute(count_query)
-            return result.scalar()
+        try:
+            engine = self._create_engine()
+            table = self._get_metadata(engine).tables[self._get_actual_table_name(table_name)]
+            with engine.connect() as connection:
+                count_query = select(func.count().label("row_count")).select_from(table)
+                result = connection.execute(count_query)
+                return result.scalar_one()
+        except sqlalchemy.exc.SQLAlchemyError as error:
+            raise operation_error(
+                code=IssueCode.OPERATION_EXECUTION_FAILED,
+                target="database source count",
+                error=_database_error_facts(error),
+            ) from error
 
     def count_query_length(self, query: str) -> int:
         """
@@ -468,7 +482,7 @@ class RdbmsClient(DatabaseClient):
                     raise operation_error(
                         code=IssueCode.OPERATION_EXECUTION_FAILED,
                         target="database write",
-                        error=type(err).__name__,
+                        error=_database_error_facts(err),
                     ) from err
                 raise
 
@@ -552,7 +566,12 @@ class RdbmsClient(DatabaseClient):
         )
 
         if actual_table_name is None:
-            raise ValueError(f"Table '{table_name}' not found in the database.")
+            native_error = ValueError(f"Table '{table_name}' not found in the database.")
+            raise operation_error(
+                code=IssueCode.OPERATION_EXECUTION_FAILED,
+                target="database table lookup",
+                error=NormalizedDbError(None, "table_not_found", "Requested table is unavailable"),
+            ) from native_error
 
         return f"{self._credential.db_schema}.{actual_table_name}" if self._credential.db_schema else actual_table_name
 
@@ -756,3 +775,114 @@ class RdbmsClient(DatabaseClient):
     def __exit__(self, exc_type, exc_val, exc_tb):
         if self._engine:
             self._engine.dispose()
+
+
+@runtime_checkable
+class _HasPgCode(Protocol):
+    pgcode: str | None
+
+
+@runtime_checkable
+class _HasSqlState(Protocol):
+    sqlstate: str | None
+
+
+@runtime_checkable
+class _HasSqliteCode(Protocol):
+    sqlite_errorcode: int
+
+
+@runtime_checkable
+class _HasOracleCode(Protocol):
+    code: int
+
+
+_PG_CATEGORIES = {
+    "42P01": "table_not_found",
+    "42703": "column_not_found",
+    "3F000": "schema_not_found",
+    "42883": "function_not_found",
+    "42601": "syntax_error",
+    "42501": "permission_denied",
+    "22P02": "type_mismatch",
+    "22001": "type_mismatch",
+    "23505": "duplicate_key",
+    "23502": "not_null",
+    "23503": "foreign_key",
+    "23514": "check_constraint",
+    "40P01": "deadlock",
+    "57014": "timeout",
+    "08001": "connection_failed",
+    "08006": "connection_failed",
+}
+_MYSQL_CATEGORIES = {
+    1146: "table_not_found",
+    1054: "column_not_found",
+    1049: "schema_not_found",
+    1305: "function_not_found",
+    1064: "syntax_error",
+    1044: "permission_denied",
+    1045: "permission_denied",
+    1062: "duplicate_key",
+    1048: "not_null",
+    1452: "foreign_key",
+    1213: "deadlock",
+    1205: "timeout",
+    2002: "connection_failed",
+    2003: "connection_failed",
+    2006: "connection_failed",
+    2013: "connection_failed",
+}
+_ORACLE_CATEGORIES = {
+    1: "duplicate_key",
+    60: "deadlock",
+    904: "column_not_found",
+    942: "table_not_found",
+    933: "syntax_error",
+    936: "syntax_error",
+    907: "syntax_error",
+    911: "syntax_error",
+    1013: "timeout",
+    1017: "connection_failed",
+    1031: "permission_denied",
+    1400: "not_null",
+    1722: "type_mismatch",
+    1861: "type_mismatch",
+    2290: "check_constraint",
+    2291: "foreign_key",
+    2292: "foreign_key",
+    3113: "connection_failed",
+    3114: "connection_failed",
+    12541: "connection_failed",
+}
+_SQLITE_CATEGORIES = {
+    3: "permission_denied",
+    5: "timeout",
+    6: "timeout",
+    8: "permission_denied",
+    14: "connection_failed",
+    19: "constraint",
+}
+
+
+def _database_error_facts(error: sqlalchemy.exc.SQLAlchemyError) -> NormalizedDbError:
+    """Read driver code contracts without inspecting SQL or free-form vendor messages."""
+    original = error.orig if isinstance(error, sqlalchemy.exc.DBAPIError) else error
+    if isinstance(original, _HasSqliteCode):
+        code = original.sqlite_errorcode
+        return NormalizedDbError(str(code), _SQLITE_CATEGORIES.get(code & 0xFF), type(error).__name__)
+    if isinstance(original, MySqlError):
+        mysql_code = original.errno
+        return NormalizedDbError(str(mysql_code), _MYSQL_CATEGORIES.get(mysql_code), type(error).__name__)
+    if isinstance(original, oracledb.Error) and original.args and isinstance(original.args[0], _HasOracleCode):
+        oracle_code = original.args[0].code
+        return NormalizedDbError(f"ORA-{oracle_code:05d}", _ORACLE_CATEGORIES.get(oracle_code), type(error).__name__)
+    for value in (
+        original.pgcode if isinstance(original, _HasPgCode) else None,
+        original.sqlstate if isinstance(original, _HasSqlState) else None,
+    ):
+        if isinstance(value, str) and 0 < len(value) <= 5 and value.isalnum():
+            code_text = value.upper()
+            return NormalizedDbError(code_text, _PG_CATEGORIES.get(code_text), type(error).__name__)
+    category = "table_not_found" if isinstance(error, sqlalchemy.exc.NoSuchTableError) else None
+    return NormalizedDbError(None, category, type(error).__name__)

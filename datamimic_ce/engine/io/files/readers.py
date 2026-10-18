@@ -100,15 +100,27 @@ class FileUtil:
         """
         try:
             root = parse_xml_file(path)
-        except (DTDForbiddenError, etree.XMLSyntaxError) as e:
-            raise ValueError(f"dbunit dataset '{path}' is not well-formed XML: {e}") from e
+        except DTDForbiddenError as error:
+            raise invalid_source_error(
+                code=IssueCode.SOURCE_INVALID_XML,
+                name=path.name,
+                guidance="DTD declarations with internal subsets and custom XML entities are not allowed.",
+            ) from error
+        except etree.XMLSyntaxError as error:
+            raise invalid_source_error(code=IssueCode.SOURCE_INVALID_XML, name=path.name) from error
         # dbunit's root is <dataset>; anything else is not a dataset
         if root.tag != "dataset":
-            raise ValueError(f"dbunit dataset '{path}' must have a <dataset> root, got {root.tag!r}")
+            raise invalid_source_error(
+                code=IssueCode.SOURCE_INVALID_XML, name=path.name, guidance="Use a <dataset> root for DbUnit data."
+            )
         raw = [child.attrib for child in root if child.tag == table]
         if not raw:
             available = sorted({child.tag for child in root})
-            raise ValueError(f"dbunit dataset '{path}' has no rows for table '{table}'; available: {available}")
+            raise invalid_source_error(
+                code=IssueCode.SOURCE_INVALID_XML,
+                name=path.name,
+                guidance=f"DbUnit dataset has no rows for table '{table}'; available: {available}",
+            )
         # column sensing: union of columns in first-appearance order, absent -> None
         columns: dict[str, None] = {}
         for attrib in raw:
@@ -311,6 +323,12 @@ class FileUtil:
             return data
         except json.JSONDecodeError as e:
             raise invalid_source_error(code=IssueCode.SOURCE_INVALID_JSON, name=file_path.name) from e
+        except (UnicodeError, LookupError) as error:
+            raise invalid_source_error(
+                code=IssueCode.SOURCE_INVALID_JSON,
+                name=file_path.name,
+                guidance="Save the JSON source in the configured encoding (UTF-8 by default).",
+            ) from error
         except FileNotFoundError as e:
             raise FileNotFoundError(f"JSON file not found '{file_path}', error: {e}") from e
 

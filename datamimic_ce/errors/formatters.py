@@ -141,9 +141,8 @@ def descriptor_hint_if_missing(
     hint = descriptor_hint(ctx, descriptor_name)
     if not hint:
         return ""
-    # WHY: avoid duplicating descriptor hints when upstream already added them.
-    # WHY: string scan keeps this dependency-free; do not prebuild descriptor hints outside factories.
-    if "descriptor '" in message:
+    # Retain exported presentation deduplication; factories attach their own context directly.
+    if message.rstrip(".!?:; ").endswith(hint):
         return ""
     return hint
 
@@ -167,11 +166,7 @@ def rule_error_message(
     cause: str | None = None,
 ) -> str:
     """Format a user-facing rule evaluation message with descriptor context."""
-    hint = (
-        descriptor_hint(ctx, descriptor_name)
-        if err_message is None
-        else descriptor_hint_if_missing(err_message, ctx, descriptor_name)
-    )
+    hint = descriptor_hint(ctx, descriptor_name)
     template = ERROR_TEMPLATES[ErrorCode.RULE_EVAL_FAILED]
     message = template.format(
         kind=kind,
@@ -190,6 +185,7 @@ def datetime_conversion_message(
     in_fmt: str | None,
     out_fmt: str | None,
     cause: str,
+    input_empty: bool = False,
 ) -> str:
     fmt_parts: list[str] = []
     if in_fmt:
@@ -203,7 +199,7 @@ def datetime_conversion_message(
         guidance_parts.append(GUIDANCE_IN_DATE_FORMAT)
     if out_fmt and not in_fmt:
         guidance_parts.append(GUIDANCE_OUT_DATE_FORMAT)
-    if "Input value is empty" in cause:
+    if input_empty:
         guidance_parts.append(GUIDANCE_EMPTY_VALUE)
     guidance = f" {' '.join(guidance_parts)}" if guidance_parts else ""
 
@@ -267,10 +263,19 @@ def include_message(*, code: IssueCode, guidance: str | None = None, **kwargs: o
     return f"{code_prefix(ErrorCode.INCLUDE_ERROR, code)}{message}"
 
 
-def generator_config_message(*, code: IssueCode, guidance: str | None = None, **kwargs: object) -> str:
+def generator_config_message(
+    *, code: IssueCode | None = None, reason: str | None = None, guidance: str | None = None, **kwargs: object
+) -> str:
     template = ERROR_TEMPLATES[ErrorCode.GENERATOR_CONFIG]
-    issue = issue_text(code, **kwargs)
-    guidance = _resolve_guidance(code, guidance)
+    if code is None:
+        if reason is None or not reason.strip() or guidance is not None or kwargs:
+            raise ValueError("A constructor error requires only a non-empty reason, without issue fields or guidance")
+        issue = reason
+    else:
+        if reason is not None:
+            raise ValueError("A catalog error cannot also specify a constructor reason")
+        issue = issue_text(code, **kwargs)
+        guidance = _resolve_guidance(code, guidance)
     message = template.format(issue=_format_issue(issue), guidance=_format_guidance(guidance))
     return f"{code_prefix(ErrorCode.GENERATOR_CONFIG, code)}{message}"
 

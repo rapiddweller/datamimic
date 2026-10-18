@@ -2018,7 +2018,8 @@
       ],
       "allowed_sources": [
         "datamimic_ce.authoring.adapters.dryrun._validated_worker_success",
-        "datamimic_ce.authoring.adapters.dryrun._decode_worker_message"
+        "datamimic_ce.authoring.adapters.dryrun._decode_worker_message",
+        "datamimic_ce.authoring.domain.capture.validate_capture_values"
       ],
       "rationale": "Only complete-state validation of untrusted worker pickle DTOs inspects raw state, including forged extra fields; other reflective constructs remain forbidden.",
       "provenance": [

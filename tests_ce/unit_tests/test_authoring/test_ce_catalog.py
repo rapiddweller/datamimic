@@ -116,3 +116,40 @@ def test_unknown_named_reference_does_not_return_another_entry():
     ):
         result = catalog.reference(ReferenceRequest(topic=topic, name="missing"))
         assert result.entries == ()
+
+
+def test_every_published_self_contained_example_builds(tmp_path):
+    from datamimic_ce.authoring import create_authoring_application
+    from datamimic_ce.authoring.domain.requests import ReadyBuild
+
+    application = create_authoring_application(workspace_root=tmp_path)
+    listing = application.reference(ReferenceRequest(topic=ReferenceTopic.EXAMPLES))
+    assert listing.entries
+    for entry in listing.entries:
+        example = application.reference(ReferenceRequest(topic=ReferenceTopic.EXAMPLES, name=entry.name)).entries[0]
+        assert example.request is not None
+        result = application.build(example.request)
+        assert isinstance(result, ReadyBuild), (entry.name, result)
+
+
+def test_guide_reference_query_returns_buildable_assembly(tmp_path):
+    import json
+    import re
+    from pathlib import Path
+
+    from typer.testing import CliRunner
+
+    from datamimic_ce.authoring import create_authoring_application
+    from datamimic_ce.authoring.domain.requests import BuildRequestV4, ReadyBuild
+    from datamimic_ce.interfaces.cli import app
+
+    guide = (Path(__file__).parents[3] / "AGENTS.md").read_text()
+    command = re.search(r"`datamimic (authoring reference --topic assembly --name [a-z]+)`", guide)
+    assert command is not None
+    response = CliRunner().invoke(app, command[1].split())
+    assert response.exit_code == 0, response.stdout
+
+    payload = json.loads(response.stdout)
+    assert payload["entries"]
+    request = BuildRequestV4.model_validate(payload["entries"][0]["starter"])
+    assert isinstance(create_authoring_application(workspace_root=tmp_path).build(request), ReadyBuild)

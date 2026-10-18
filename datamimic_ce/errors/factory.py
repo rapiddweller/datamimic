@@ -20,6 +20,8 @@ from datamimic_ce.errors.base import (
     InvalidDatasetError,
     InvalidLocaleError,
     InvalidSourceError,
+    MissingDescriptorError,
+    MissingIncludeError,
     MissingMemstoreProductError,
     OperationError,
     ParserValidationError,
@@ -39,6 +41,7 @@ from datamimic_ce.errors.formatters import (
     condition_evaluation_message,
     dataset_message,
     datetime_conversion_message,
+    descriptor_hint,
     descriptor_hint_if_missing,
     entity_init_error_message,
     export_config_message,
@@ -83,24 +86,14 @@ def task_warning(*, code: IssueCode, once: bool = True, **kwargs: object) -> Non
         logger.warning("%s", msg)
 
 
-# WHY: factories use IssueCode + kwargs for templated errors; explicit params for category-specific helpers
-# (dataset/locale/datetime/etc.) keep call sites readable and reduce kwargs drift.
-
-
 def _append_descriptor_hint(message: str, ctx: DescriptorCarrierLike | None, descriptor_name: str | None) -> str:
     hint = descriptor_hint_if_missing(message, ctx, descriptor_name)
     if not hint:
         return message
-    if hint in message:
-        return message
-    # WHY: normalize terminal punctuation before appending descriptor hints to avoid
-    # artifacts like ". in descriptor ..." or ": in descriptor ...".
-    if hint.startswith(" in descriptor"):
-        normalized = message.rstrip()
-        if normalized.endswith((".", "!", "?", ":", ";")):
-            normalized = normalized[:-1].rstrip()
-        return f"{normalized}{hint}"
-    return f"{message}{hint}"
+    normalized = message.rstrip()
+    if normalized.endswith((".", "!", "?", ":", ";")):
+        normalized = normalized[:-1].rstrip()
+    return f"{normalized}{hint}"
 
 
 def tag_user_error(err: Exception) -> Exception:
@@ -154,7 +147,7 @@ def user_error(
         raise ValueError("user_error supports only ValueError/RuntimeError.")
     # WHY: stable mapping to static user error wrappers keeps behavior deterministic.
     cls = UserValueError if issubclass(exc_type, ValueError) else UserRuntimeError
-    return cls(f"{message}{descriptor_hint_if_missing(message, ctx, descriptor_name)}")
+    return cls(f"{message}{descriptor_hint(ctx, descriptor_name)}")
 
 
 def invalid_dataset_error(
@@ -165,7 +158,7 @@ def invalid_dataset_error(
     descriptor_name: str | None = None,
 ) -> InvalidDatasetError:
     msg = dataset_message(dataset=dataset, entity=entity)
-    msg = f"{msg}{descriptor_hint_if_missing(msg, ctx, descriptor_name)}"
+    msg = f"{msg}{descriptor_hint(ctx, descriptor_name)}"
     return InvalidDatasetError(msg, dataset=dataset)
 
 
@@ -176,8 +169,10 @@ def datetime_conversion_error(
     in_fmt: str | None,
     out_fmt: str | None,
     cause: str,
+    input_empty: bool = False,
     ctx: DescriptorCarrierLike | None = None,
     descriptor_name: str | None = None,
+    location: DescriptorLocation | None = None,
 ) -> DateTimeConversionError:
     msg = datetime_conversion_message(
         element_tag=element_tag,
@@ -185,9 +180,10 @@ def datetime_conversion_error(
         in_fmt=in_fmt,
         out_fmt=out_fmt,
         cause=cause,
+        input_empty=input_empty,
     )
-    msg = f"{msg}{descriptor_hint_if_missing(msg, ctx, descriptor_name)}"
-    return DateTimeConversionError(msg)
+    msg = f"{msg}{descriptor_hint(ctx, descriptor_name)}"
+    return DateTimeConversionError(msg, location=location)
 
 
 def entity_init_error(
@@ -199,7 +195,7 @@ def entity_init_error(
     descriptor_name: str | None = None,
 ) -> EntityInitError:
     msg = entity_init_error_message(var_name=var_name, entity=entity, cause=cause)
-    msg = f"{msg}{descriptor_hint_if_missing(msg, ctx, descriptor_name)}"
+    msg = f"{msg}{descriptor_hint(ctx, descriptor_name)}"
     return EntityInitError(msg)
 
 
@@ -241,22 +237,30 @@ def include_error(
     **kwargs: object,
 ) -> IncludeError:
     msg = include_message(code=code, guidance=guidance, **kwargs)
-    msg = f"{msg}{descriptor_hint_if_missing(msg, ctx, descriptor_name)}"
-    return IncludeError(msg, issue_code=code, location=location)
+    msg = f"{msg}{descriptor_hint(ctx, descriptor_name)}"
+    error_type = MissingIncludeError if code is IssueCode.INCLUDE_FILE_NOT_FOUND else IncludeError
+    return error_type(msg, issue_code=code, location=location)
 
 
 def generator_config_error(
     *,
-    code: IssueCode,
+    code: IssueCode | None = None,
+    reason: str | None = None,
     guidance: str | None = None,
     ctx: DescriptorCarrierLike | None = None,
     descriptor_name: str | None = None,
     location: DescriptorLocation | None = None,
     **kwargs: object,
 ) -> GeneratorConfigError:
-    msg = generator_config_message(code=code, guidance=guidance, **kwargs)
-    msg = f"{msg}{descriptor_hint_if_missing(msg, ctx, descriptor_name)}"
-    return GeneratorConfigError(msg, issue_code=code, location=location)
+    inline_descriptor = code == IssueCode.GENERATOR_CREATE_FAILED
+    if inline_descriptor:
+        kwargs["descriptor"] = descriptor_hint(ctx, descriptor_name) or kwargs.get("descriptor", "")
+    msg = generator_config_message(code=code, reason=reason, guidance=guidance, **kwargs)
+    if not inline_descriptor:
+        msg = f"{msg}{descriptor_hint(ctx, descriptor_name)}"
+    error = GeneratorConfigError(msg, issue_code=code, location=location)
+    error.constructor_reason = reason
+    return error
 
 
 def condition_evaluation_error(
@@ -269,7 +273,7 @@ def condition_evaluation_error(
     **kwargs: object,
 ) -> ConditionEvaluationError:
     msg = condition_evaluation_message(code=code, guidance=guidance, **kwargs)
-    msg = f"{msg}{descriptor_hint_if_missing(msg, ctx, descriptor_name)}"
+    msg = f"{msg}{descriptor_hint(ctx, descriptor_name)}"
     return ConditionEvaluationError(msg, issue_code=code, location=location)
 
 
@@ -284,8 +288,9 @@ def parser_validation_error(
     **kwargs: object,
 ) -> ParserValidationError:
     msg = parser_validation_message(code=code, guidance=guidance, location=location, **kwargs)
-    msg = f"{msg}{descriptor_hint_if_missing(msg, ctx, descriptor_name)}"
-    error = ParserValidationError(msg, issue_code=code, location=location)
+    msg = f"{msg}{descriptor_hint(ctx, descriptor_name)}"
+    error_type = MissingDescriptorError if code is IssueCode.PARSER_DESCRIPTOR_NOT_FOUND else ParserValidationError
+    error = error_type(msg, issue_code=code, location=location)
     error.validation_errors = validation_errors
     return error
 
@@ -300,7 +305,7 @@ def client_config_error(
     **kwargs: object,
 ) -> ClientConfigError:
     msg = client_config_message(code=code, guidance=guidance, **kwargs)
-    msg = f"{msg}{descriptor_hint_if_missing(msg, ctx, descriptor_name)}"
+    msg = f"{msg}{descriptor_hint(ctx, descriptor_name)}"
     return ClientConfigError(msg, issue_code=code, location=location)
 
 
@@ -314,7 +319,7 @@ def runtime_config_error(
     **kwargs: object,
 ) -> RuntimeConfigError:
     msg = runtime_config_message(code=code, guidance=guidance, **kwargs)
-    msg = f"{msg}{descriptor_hint_if_missing(msg, ctx, descriptor_name)}"
+    msg = f"{msg}{descriptor_hint(ctx, descriptor_name)}"
     return RuntimeConfigError(msg, issue_code=code, location=location)
 
 
@@ -327,8 +332,12 @@ def task_config_error(
     location: DescriptorLocation | None = None,
     **kwargs: object,
 ) -> TaskConfigError:
+    script_error = code == IssueCode.TASK_SCRIPT_ERROR
+    if script_error:
+        kwargs["descriptor"] = descriptor_hint(ctx, descriptor_name) or kwargs.get("descriptor", "")
     msg = task_config_message(code=code, guidance=guidance, **kwargs)
-    msg = _append_descriptor_hint(msg, ctx, descriptor_name)
+    if not script_error:
+        msg = _append_descriptor_hint(msg, ctx, descriptor_name)
     return TaskConfigError(msg, issue_code=code, location=location)
 
 
@@ -342,7 +351,7 @@ def operation_error(
     **kwargs: object,
 ) -> OperationError:
     msg = operation_message(code=code, guidance=guidance, **kwargs)
-    msg = f"{msg}{descriptor_hint_if_missing(msg, ctx, descriptor_name)}"
+    msg = f"{msg}{descriptor_hint(ctx, descriptor_name)}"
     return OperationError(msg, issue_code=code, location=location)
 
 
