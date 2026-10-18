@@ -24,6 +24,7 @@ from pydantic import (
 from .capture import CapturedProducts, ProductCaptureEvidence, SmokeExportCapture
 from .common import (
     MAX_AUTHORING_MAX_COUNT,
+    MAX_AUTHORING_XML_LENGTH,
     AuthoringModel,
     NonEmptyStrictStr,
     NonNegativeStrictInt,
@@ -349,7 +350,7 @@ BuildResult = Annotated[ReadyBuild | RejectedBuild, Field(discriminator="outcome
 
 
 class BoundedExecutionRequest(AuthoringModel):
-    xml: NonEmptyStrictStr = Field(max_length=1_000_000)
+    xml: NonEmptyStrictStr = Field(max_length=MAX_AUTHORING_XML_LENGTH)
     descriptor_path: WorkspaceDescriptorPath = DEFAULT_AUTHORING_DESCRIPTOR_PATH
     max_count: StrictInt = Field(default=DEFAULT_AUTHORING_MAX_COUNT, ge=1, le=MAX_AUTHORING_MAX_COUNT)
     allow_side_effects: StrictBool = False

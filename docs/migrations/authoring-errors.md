@@ -6,6 +6,21 @@ semantic reference: EE `37d74ddb3553ca23597a1b9264649361fe68a233`.
 Python becomes >=3.11, without an added upper bound. CE keeps SCM package versioning;
 Build `4.0` is a protocol version. This migration does not authorize merge or release.
 
+## Follow-up corrections
+
+Parser and Execute user failures use catalog exceptions with logical locations.
+Missing SQL clients, missing script files and failed Bash now raise `TaskConfigError`;
+native causes remain attached where present. Bash emits the shared warning `W007`.
+
+Build and raw XML verification reject XML over 1,000,000 characters with a typed
+`limit` diagnostic, rather than leaking an internal validation exception. Compile
+alone still proves syntax and does not promise bounded execution.
+
+For changes shared with EE, run the paired `test_bounded_descriptor_size.py` cases
+and full-capture negatives in both editions. Keep registry/runtime adapters local.
+CE roles, derived counts, caller requirements and replay/smoke remain explicit
+edition differences; matching protocol labels do not make requests interchangeable.
+
 ## Public contract
 
 Persist XML as the executable project. `DmJsonDocumentV1` is an in-memory agent
@@ -24,8 +39,8 @@ decompiling XML. `ee_version`, `ee_error`, `EeErrorIdentity` become `ce_version`
 | `datamimic run`, Domain/demo/Python runtime API | Existing owner and command retained | Seeded output, resources and normal runtime behavior |
 | `DomainError`, `InvalidLocaleError`, `DomainErrorCode` | Same CE identities plus portable catalog/factories | ValueError ancestry where present, to_dict/path/hash/hint/details/locale and pickle |
 
-Python facade publishes application, document/request/result/expectation/diagnostic
-DTOs and required capability queries. CE Build adds typed `product_roles`,
+The Python facade publishes the application and factory; typed requests and results
+live under `authoring.domain` and discovery methods belong to the application. CE Build adds typed `product_roles`,
 origin-tagged `acceptance_requirements`, and `verification` options for smoke/replay.
 Roles are proof input, never runtime XML attributes or a second stored model.
 

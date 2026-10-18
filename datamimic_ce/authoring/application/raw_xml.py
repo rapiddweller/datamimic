@@ -5,6 +5,7 @@
 """Validate and execute raw XML through the same bounded CE adapter."""
 
 from datamimic_ce.authoring.domain.build_rules import catalog_diagnostic
+from datamimic_ce.authoring.domain.common import MAX_AUTHORING_XML_LENGTH
 from datamimic_ce.authoring.domain.diagnostics import AuthoringRuleId, DiagnosticPhase
 from datamimic_ce.authoring.domain.requests import BoundedExecutionRequest, RunPhase, RunRequest, RunResult
 from datamimic_ce.authoring.ports import BoundedExecutor, DescriptorValidator
@@ -29,6 +30,21 @@ class RawXmlUseCase:
                         AuthoringRuleId.SIDE_EFFECT,
                         "Dry-run cannot enable side effects.",
                         phase=DiagnosticPhase.POLICY,
+                    ),
+                ),
+            )
+        if len(request.xml) > MAX_AUTHORING_XML_LENGTH:
+            return RunResult(
+                ok=False,
+                phase=phase,
+                diagnostics=(
+                    catalog_diagnostic(
+                        AuthoringRuleId.LIMIT,
+                        "Descriptor exceeds the bounded XML size limit.",
+                        phase=DiagnosticPhase.POLICY,
+                        path=("xml",),
+                        expected=MAX_AUTHORING_XML_LENGTH,
+                        actual=len(request.xml),
                     ),
                 ),
             )

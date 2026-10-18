@@ -190,7 +190,8 @@ class StatementParser(ABC):
                     f"Failed while parsing attributes of element <{xml_tag(self._element)}> "
                     f"naming '{self._element.get(ATTR_NAME) or self._element.get(ATTR_ID)}':"
                 )
-            for err_detail in err.errors():
+            details = err.errors(include_input=False, include_context=False)
+            for err_detail in details:
                 loc_list = err_detail.get("loc")
                 loc = ".".join(map(str, loc_list)) if loc_list else None
                 msg = err_detail.get("msg")
@@ -198,7 +199,7 @@ class StatementParser(ABC):
                 msg_err = msg_err + new_msg
             validation_errors: tuple[dict[str, object], ...] = tuple(
                 {"loc": tuple(detail["loc"]), "type": detail["type"], "msg": detail["msg"]}
-                for detail in err.errors(include_input=False, include_context=False)
+                for detail in details
             )
             raise parser_validation_error(
                 code=IssueCode.PARSER_VALIDATION_FAILED,

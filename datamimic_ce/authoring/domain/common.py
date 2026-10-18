@@ -14,6 +14,8 @@ MAX_AUTHORING_MAX_COUNT = 1000
 
 PositiveStrictInt = Annotated[StrictInt, Field(gt=0)]
 NonNegativeStrictInt = Annotated[StrictInt, Field(ge=0)]
+MAX_AUTHORING_XML_LENGTH = 1_000_000
+
 NonEmptyStrictStr = Annotated[StrictStr, Field(min_length=1)]
 
 
@@ -36,6 +38,7 @@ WorkspaceDescriptorPath = Annotated[PurePosixPath, WrapValidator(_workspace_path
 
 class AuthoringModel(BaseModel):
     model_config = ConfigDict(extra="forbid", frozen=True, validate_default=True, allow_inf_nan=False)
+
 
 # Float-backed decimal range proof retains the previous authoring precision limit.
 MAX_AUTHORING_DECIMAL_SCALE = 15

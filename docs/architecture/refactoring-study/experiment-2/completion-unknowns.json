@@ -1,11 +1,11 @@
 {
   "status": "independent_local_architecture_review_accepted",
   "reviewed_by": "Astra",
-  "review_reference": "docs/architecture/refactoring-study/experiment-2/completion.md",
-  "source_digest": "bf0400161d841feb7825ef9aa94aca25e94a9ae23120ea73ec56da837bf9d159",
+  "review_reference": "/private/tmp/ce-authoring-fixes-20261018/review.md",
+  "source_digest": "e4e688270ba9b805861a74c29ad2ab64eb49f916e2ec3c5c0a00a2cfe2664464",
   "contract_digest": "ada24d8d83e92bce0a93629d87d9c74ad248b2d306ccf2ddc64829d1c5e50438",
   "analyzer_digest": "a9e159db0a1912171ba9ec7abe8a60aac53d1e865159acfc88686bd451741ef0",
-  "validation_digest": "a0d4bc30d1f61165a7fb82c5a5cf5cc3ab3ea2b91d6bfd420faff8b27e06537e",
+  "validation_digest": "8cfa06ff1ce4e4d80fed9d211373a016d322625adbe6eedd98ad08f20119dc14",
   "unknowns_digest": "4a18924cdc08ab66bd2d63bfa143a0f91c8e36ad6cb2a3169a732d6cf18f9603",
   "groups": [
     {
@@ -94,7 +94,7 @@
     },
     {
       "classification": "global_observation_limit",
-      "reason": "Global context aliases and Python dynamic calls are not completely proven. Current native unresolved calls=1409. The Windows snapshot fix replaces cached entry.stat with fresh anchored os.stat, removing one unresolved semantic call; the other added/removed pair is an unchanged descriptor-path expression with shifted anonymous-caller location. Independent complete multiset comparison confirms this exact delta. Prior merged-source site assessments remain applicable. Manual review does not turn whole-graph completeness into PASS.",
+      "reason": "Global context aliases and Python dynamic calls remain unproven. The current unresolved-call multiset contains 1409 sites: the new ReferenceParser error.errors projection replaces one duplicated StatementParser err.errors invocation. The latter now shares one sanitized list between both unchanged loc/type/msg projections. This is real duplicate work removed, not a type/coercion/model workaround. Full native comparison found no other added or removed unresolved sites; typing and all UNKNOWN records are unchanged. Manual review cannot prove whole-graph completeness; retain UNKNOWN.",
       "ids": [
         "UNKNOWN-CONTEXT-DATAFLOW",
         "UNKNOWN-PYTHON-DYNAMIC-CALLS"
@@ -785,7 +785,7 @@
       }
     ]
   },
-  "review_scope": "Integrated CE Authoring/Errors review retained through the final cleanup-priority correction. Independently read both finally paths and exact two return-to-result-assignment substitutions. Cleanup still runs unconditionally; caught cleanup failure blocks normal success, while an already pending unexpected exception or cancellation resumes with original identity. Independent cleanup/timeout tests7PASS, including RuntimeError/KeyboardInterrupt after actual removal/reap and existing normal CLEANUP-result controls. Maintained RED4 suppression failures, broader72PASS4nativeWindowsSKIP and full Ruff/MyPy534PASS were read. All298 current UNKNOWN records are byte-identical to the independently assessed combined-service snapshot; all52 classification groups and20 identical publication-usage diagnostics remain applicable, including source-contract debt. Prior Windows, I901 count and Oracle test reviews remain applicable because those sources are unchanged.",
-  "measurement_amendment": "Amendment216 historical source observations retained. Final cleanup source bf0400161d841feb7825ef9aa94aca25e94a9ae23120ea73ec56da837bf9d159 has unchanged complete call multiset69eaffb982afe20f9c1fb63503d6c8f3d11e011838fcd990aebeff00bdad67df and typing multiset959ad69e1ed47607479a34693c5373d11de2c1460ab70e154b3f66bf8c70b9e2: zero added/removed sites. Exact budgets1409/173/2/0/0, target and analyzer remain unchanged. No permission or budget amendment follows from this behavior repair; no UNKNOWN promotion.",
-  "delivery_boundary": "Local final corrected-source architecture/security/behavior review approved. New exact-head full CI and Sonar remain required, including actual Windows execution. Earlier combined-source green test suites do not establish delivery because Sonar S1143 failed on that head. Canonical Make remains parent-owned after receipt copy. No merge, release or deployment approval."
+  "review_scope": "Independent bounded CE/EE correction review. Reviewed parser/reference/Execute catalog errors, logical locations and native causes, W007, MinIO configuration facts, exact XML character bound, and EE full-capture validation. Independent Build key-collision counterexample led to a recursive key-check correction; both sample sizes now reject, while passive native values are preserved. All 298 current UNKNOWN records are exactly identical to the prior independently assessed bf040016 source packet. Its 52 classifications remain applicable, including real source-contract debt, alias/property/inherited binding limits, recursive JSON and validated scalar aliases. The 20 publication-usage diagnostics are unchanged. No UNKNOWN is promoted to PASS.",
+  "measurement_amendment": "No amendment or waiver. Complete unresolved-call comparison retains 1409 sites: one new ReferenceParser._parse_fields error.errors call replaces one duplicated StatementParser.validate_attributes err.errors call. Both are external Pydantic validation-error projections; the shared parser now reuses the same sanitized loc/type/msg records for text and structured output. The typing multiset is unchanged at 173. All other exact budgets, Target and analyzer remain unchanged. See review-architecture-final-delta.json for identities, full delta and digest method.",
+  "delivery_boundary": "Accepts this local CE architecture receipt with explicit retained UNKNOWNs. Independent behavior probes and supplied focused tests support only the reviewed correction scope. Fresh CI, Windows, live-service delivery and deployment were not established by this reviewer. EE architecture evidence is assessed separately in review.md. Parent owns canonical Make after copying this receipt. No merge, release or deployment approval."
 }

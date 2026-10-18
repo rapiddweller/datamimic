@@ -14,6 +14,7 @@ from datamimic_ce.engine.dsl.statements.base.statement import Statement
 from datamimic_ce.engine.dsl.statements.generation.generate_statement import GenerateStatement
 from datamimic_ce.engine.dsl.statements.values.variables.variable_statement import VariableStatement
 from datamimic_ce.engine.dsl.vocabulary.constants.element_constants import EL_GENERATE, EL_ITERATE
+from datamimic_ce.errors import DescriptorLocation, IssueCode, parser_validation_error
 
 # Name reserved by the time-series iterator for its per-iteration namespace
 # (ts.now/ts.step/ts.series). A user-defined <variable name="ts"> would shadow
@@ -44,8 +45,11 @@ class GenerateParser(StatementParser):
     def _validate_element_tag(self) -> None:
         """Accept both <generate> and its alias <iterate> (base only checks a single tag)."""
         if self._element.tag not in self._VALID_TAGS:
-            raise ValueError(
-                f"Expect element tag '{EL_GENERATE}' or '{EL_ITERATE}', but got '{xml_tag(self._element)}'"
+            raise parser_validation_error(
+                code=IssueCode.PARSER_INVALID_TAG,
+                expected=f"{EL_GENERATE} or {EL_ITERATE}",
+                actual=xml_tag(self._element),
+                location=DescriptorLocation(xml_tag(self._element)),
             )
 
     def parse(
@@ -67,7 +71,11 @@ class GenerateParser(StatementParser):
         # <iterate> is the source-driven alias: it must iterate something. Reject a
         # sourceless <iterate> at parse — use <generate> for purely synthetic data.
         if self._element.tag == EL_ITERATE and not model.source:
-            raise ValueError("<iterate> requires a 'source' to iterate over; use <generate> for synthetic data")
+            raise parser_validation_error(
+                code=IssueCode.PARSER_VALIDATION_FAILED,
+                details="<iterate> requires a 'source' to iterate over; use <generate> for synthetic data",
+                location=DescriptorLocation(EL_ITERATE, attribute="source"),
+            )
 
         # Parse sub elements
 
@@ -97,8 +105,12 @@ class GenerateParser(StatementParser):
         """
         for sub in sub_stmt_list:
             if isinstance(sub, VariableStatement) and sub.name == _TIMESERIES_RESERVED_NAME:
-                raise ValueError(
-                    f"<variable name={_TIMESERIES_RESERVED_NAME!r}> is not allowed inside a "
-                    f"time-series <generate>: 'ts' is reserved for the time-iterator namespace "
-                    f"(ts.now/ts.step/ts.series). Rename the variable, e.g. 'ts_meta'."
+                raise parser_validation_error(
+                    code=IssueCode.PARSER_VALIDATION_FAILED,
+                    details=(
+                        f"<variable name={_TIMESERIES_RESERVED_NAME!r}> is not allowed inside a "
+                        "time-series <generate>: 'ts' is reserved for the time-iterator namespace "
+                        "(ts.now/ts.step/ts.series). Rename the variable, e.g. 'ts_meta'."
+                    ),
+                    location=DescriptorLocation("variable", attribute="name"),
                 )

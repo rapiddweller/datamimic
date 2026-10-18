@@ -360,4 +360,31 @@ ISSUES: list[IssueDefinition] = [
         cause="The mpPlatform value is not supported by the runtime.",
         resolution="Use multiprocessing or ray (or omit to use multiprocessing).",
     ),
+    IssueDefinition(
+        code=IssueCode.TASK_EXECUTE_CLIENT_NOT_FOUND,
+        name="TASK_EXECUTE_CLIENT_NOT_FOUND",
+        title="Task Execute Client Not Found",
+        template="Client '{client_id}' not found for <execute> task. Check your project environment configuration.",
+        cause="The referenced client could not be found for the task configuration.",
+        resolution="Ensure the referenced client exists and the identifier/path is correct.",
+    ),
+    IssueDefinition(
+        code=IssueCode.TASK_EXECUTE_SCRIPT_NOT_FOUND,
+        name="TASK_EXECUTE_SCRIPT_NOT_FOUND",
+        title="Task Execute Script Not Found",
+        template=(
+            "Script file '{script_name}' not found in task workspace. "
+            "Check your project environment configuration or uploaded script assets."
+        ),
+        cause="The referenced script could not be found for the task configuration.",
+        resolution="Ensure the referenced script exists and the identifier/path is correct.",
+    ),
+    IssueDefinition(
+        code=IssueCode.TASK_EXECUTE_BASH_FAILED,
+        name="TASK_EXECUTE_BASH_FAILED",
+        title="Task Execute Bash Failed",
+        template="<execute type='bash'> failed (exit {exit_code}): {detail}",
+        cause="The shell command run by <execute type='bash'> returned a non-zero exit status.",
+        resolution="Fix the shell command or its environment; inspect the reported stderr/exit code.",
+    ),
 ]

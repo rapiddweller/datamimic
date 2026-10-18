@@ -6,6 +6,7 @@
 
 import subprocess  # noqa: S404
 import textwrap
+from pathlib import Path
 from typing import cast
 
 from datamimic_ce.engine.dsl.api import ExecuteStatement, read_resource_bytes
@@ -13,11 +14,8 @@ from datamimic_ce.engine.io.api import execute_sql_script
 from datamimic_ce.engine.io.contracts import SqlScriptClient
 from datamimic_ce.engine.runtime.contexts.context import Context
 from datamimic_ce.engine.runtime.contexts.geniter_context import GenIterContext
-from datamimic_ce.engine.runtime.logging import logger
 from datamimic_ce.engine.runtime.tasks.base.task import SetupSubTask
-
-# One-time nudge: shell execution is a deliberate escape hatch for side effects, not data generation.
-_bash_warned = False
+from datamimic_ce.errors import DescriptorLocation, IssueCode, task_config_error, task_warning
 
 
 class ExecuteTask(SetupSubTask):
@@ -43,13 +41,24 @@ class ExecuteTask(SetupSubTask):
         """Inline code, the content of the uri script file, or - with script= - the evaluated
         expression itself (its value IS the code, e.g. a <variable string=\"...__var__...\"> DDL)."""
         if self._statement.uri:
-            return read_resource_bytes(ctx.root.descriptor_dir / self._statement.uri).decode(ctx.root.default_encoding)
+            try:
+                return read_resource_bytes(ctx.root.descriptor_dir / self._statement.uri).decode(
+                    ctx.root.default_encoding
+                )
+            except FileNotFoundError as error:
+                raise task_config_error(
+                    code=IssueCode.TASK_EXECUTE_SCRIPT_NOT_FOUND,
+                    script_name=Path(self._statement.uri).name,
+                    location=DescriptorLocation("execute", attribute="uri"),
+                ) from error
         if self._statement.script is not None:
             value = ctx.evaluate_python_expression(self._statement.script)
             if not isinstance(value, str):
-                raise ValueError(
-                    f"<execute script='{self._statement.script}'> must evaluate to a string of "
-                    f"{self._statement.type} code, got {type(value).__name__}"
+                raise task_config_error(
+                    code=IssueCode.TASK_EXPRESSION_EVAL_FAILED,
+                    expr=f"execute.script={self._statement.script!r}",
+                    error=f"must evaluate to a string of {self._statement.type} code, got {type(value).__name__}",
+                    location=DescriptorLocation("execute", attribute="script"),
                 )
             return value
         return self._statement.code or ""
@@ -63,22 +72,23 @@ class ExecuteTask(SetupSubTask):
                 raise TypeError("Interpolated SQL must evaluate to a string")
             content = evaluated_content
         target = self._statement.target
-        if target is None:
-            raise KeyError(target)
-        client = ctx.root.clients[target]
+        try:
+            if target is None:
+                raise KeyError(target)
+            client = ctx.root.clients[target]
+        except KeyError as error:
+            raise task_config_error(
+                code=IssueCode.TASK_EXECUTE_CLIENT_NOT_FOUND,
+                client_id=target if target is not None else "(none)",
+                location=DescriptorLocation("execute", attribute="target"),
+            ) from error
         execute_sql_script(cast(SqlScriptClient, client), content)
 
     def _run_bash(self, ctx: Context, code: str) -> None:
         """Run a shell command. VERBATIM — no variable interpolation, so no generated data flows into the
         shell (no command injection). Non-deterministic: a deliberate escape hatch for environment side
         effects (file prep, external tools), NOT for producing the generated data values."""
-        global _bash_warned
-        if not _bash_warned:
-            _bash_warned = True
-            logger.warning(
-                "<execute type='bash'> runs a shell command — this breaks DATAMIMIC's "
-                "determinism/reproducibility. Use it for environment side effects, not data generation."
-            )
+        task_warning(code=IssueCode.EXECUTE_BASH_NONDETERMINISTIC)
         result = subprocess.run(  # noqa: S602,S603
             ["bash", "-c", code],
             cwd=ctx.root.descriptor_dir,
@@ -87,7 +97,12 @@ class ExecuteTask(SetupSubTask):
             check=False,
         )
         if result.returncode != 0:
-            raise RuntimeError(f"<execute type='bash'> failed (exit {result.returncode}): {result.stderr.strip()}")
+            raise task_config_error(
+                code=IssueCode.TASK_EXECUTE_BASH_FAILED,
+                exit_code=result.returncode,
+                detail=result.stderr.strip() or f"exit {result.returncode}",
+                location=DescriptorLocation("execute"),
+            )
 
     def _eval_python(self, ctx: Context, python_code: str) -> None:
         """Evaluate inline/uri Python. Multi-line blocks work once dedented, but a malformed block yields a
@@ -96,10 +111,11 @@ class ExecuteTask(SetupSubTask):
             updated_ns = ctx.root.eval_namespace(self._normalize_python(python_code))
         except SyntaxError as e:  # IndentationError is a SyntaxError
             src = self._statement.uri or "inline code"
-            raise ValueError(
-                f"<execute type='python'> ({src}) could not be parsed: {e.msg} (line {e.lineno}). Inline Python "
-                f"must be valid, consistently-indented code — for a real block, keep control flow in "
-                f"<while>/<condition> and put complex logic in a .py file referenced via uri=."
+            raise task_config_error(
+                code=IssueCode.TASK_EXPRESSION_EVAL_FAILED,
+                expr=f"execute.python={src!r}",
+                error=f"could not be parsed: {e.msg} (line {e.lineno}); use valid, consistently-indented Python",
+                location=DescriptorLocation("execute"),
             ) from e
         ctx.root.namespace.update(updated_ns)
         if isinstance(ctx, GenIterContext) and updated_ns:

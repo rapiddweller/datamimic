@@ -15,6 +15,7 @@ from datamimic_ce.authoring.domain.build_verification import (
     smoke_export_evidence,
     unseeded_replay_evidence,
 )
+from datamimic_ce.authoring.domain.common import MAX_AUTHORING_XML_LENGTH
 from datamimic_ce.authoring.domain.diagnostics import AuthoringRuleId, DiagnosticPhase
 from datamimic_ce.authoring.domain.dm_json import iter_dm_json_nodes
 from datamimic_ce.authoring.domain.proof import (
@@ -104,6 +105,21 @@ class BuildDocumentWorkflow:
             **compiled.artifact.model_dump(), expectations_sha256=sha256(proof_json.encode()).hexdigest()
         )
         review = ValidatedReviewArtifact.model_validate(artifact.model_dump())
+        if len(artifact.compiled_xml) > MAX_AUTHORING_XML_LENGTH:
+            return RejectedBuild(
+                phase=DiagnosticPhase.POLICY,
+                diagnostics=(
+                    catalog_diagnostic(
+                        AuthoringRuleId.LIMIT,
+                        "Descriptor exceeds the bounded XML size limit.",
+                        phase=DiagnosticPhase.POLICY,
+                        path=("xml",),
+                        expected=MAX_AUTHORING_XML_LENGTH,
+                        actual=len(artifact.compiled_xml),
+                    ),
+                ),
+                verification=blocked_verification(request.verification, "Descriptor exceeds bounded execution limits."),
+            )
         execution_request = BoundedExecutionRequest(
             xml=artifact.compiled_xml,
             descriptor_path=request.descriptor_path,
