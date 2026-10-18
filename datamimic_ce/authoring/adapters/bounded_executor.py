@@ -361,7 +361,7 @@ class CeBoundedExecutor:
             try:
                 temporary.cleanup()
             except OSError:
-                return _failure(
+                result = _failure(
                     AuthoringSystemDiagnosticCode.CLEANUP,
                     "Private bounded workspace could not be removed.",
                     request.max_count,
@@ -430,7 +430,7 @@ class CeBoundedExecutor:
             try:
                 _terminate_process_tree(process)
             except (OSError, subprocess.TimeoutExpired):
-                return _failure(
+                result = _failure(
                     AuthoringSystemDiagnosticCode.CLEANUP,
                     "Bounded process tree could not be terminated and reaped.",
                     request.max_count,

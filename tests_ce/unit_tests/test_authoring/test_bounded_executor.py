@@ -344,3 +344,51 @@ def test_unique_reference_exhaustion_keeps_category_in_private_child(tmp_path):
     assert diagnostic.ce_error is not None
     assert diagnostic.ce_error.error_code is ErrorCode.TASK_CONFIG
     assert diagnostic.ce_error.issue_code is None
+
+
+@pytest.mark.parametrize("primary", [RuntimeError("primary failure"), KeyboardInterrupt()])
+def test_workspace_cleanup_preserves_primary_exception_after_actual_removal(monkeypatch, primary):
+    import tempfile
+
+    original = tempfile.TemporaryDirectory.cleanup
+    removed = []
+
+    def failed_cleanup(directory):
+        original(directory)
+        removed.append(Path(directory.name))
+        raise OSError("cleanup verification failed")
+
+    def failed_child(*args):
+        raise primary
+
+    monkeypatch.setattr(tempfile.TemporaryDirectory, "cleanup", failed_cleanup)
+    monkeypatch.setattr(CeBoundedExecutor, "_execute_child", failed_child)
+    with pytest.raises(type(primary)) as caught:
+        CeBoundedExecutor().execute(BoundedExecutionRequest(xml=_XML))
+    assert caught.value is primary
+    assert len(removed) == 1
+    assert not removed[0].exists()
+
+
+@pytest.mark.parametrize("primary", [RuntimeError("primary failure"), KeyboardInterrupt()])
+def test_process_cleanup_preserves_primary_exception_after_actual_reap(monkeypatch, primary):
+    from datamimic_ce.authoring.adapters import bounded_executor
+
+    original = bounded_executor._terminate_process_tree
+    reaped = []
+
+    def failed_cleanup(process):
+        original(process)
+        reaped.append(process)
+        raise OSError("cleanup verification failed")
+
+    def failed_decode(*args):
+        raise primary
+
+    monkeypatch.setattr(bounded_executor, "_terminate_process_tree", failed_cleanup)
+    monkeypatch.setattr(bounded_executor, "_decode_reply", failed_decode)
+    with pytest.raises(type(primary)) as caught:
+        CeBoundedExecutor().execute(BoundedExecutionRequest(xml=_XML))
+    assert caught.value is primary
+    assert len(reaped) == 1
+    assert reaped[0].poll() is not None
