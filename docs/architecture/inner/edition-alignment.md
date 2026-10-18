@@ -17,7 +17,7 @@ root owners; line references are from the EE experiment snapshot.
 
 | EE source owner | Shared target | Placement rule / evidence |
 |---|---|---|
-| `authoring/` | `authoring/{api.py,contracts.py,spec,domain,application,adapters,projection}` | Keep typed requests and use cases here; see `authoring/application/app.py:42-58`, `authoring/domain/requests.py:85-155`. |
+| `authoring/` | `authoring/{api.py,contracts.py,spec,domain,application,adapters,projection}` | Keep typed requests and use cases here; the current [Authoring migration](../../migrations/authoring-errors.md) supersedes the historical API/spec layout. |
 | `contract_bundle/` | `authoring/adapters/` | Bundle assembly may gather Authoring and DSL projections; DSL must not import Authoring. |
 | `model/` | `engine/dsl/model/` | Typed XML grammar and element facts. Descriptor value types belong to DSL; concrete connector/configuration behavior belongs to IO. DSL must not import IO. |
 | `model/{generator_model,state_machine_model,transition_model}.py` | `engine/dsl/model/setup/generators/` | CE and EE share the named-generator definition family here; this is an EE target, not a claim that its files have moved. |
@@ -39,11 +39,12 @@ root owners; line references are from the EE experiment snapshot.
 
 ## Boundaries
 
-Shared Authoring target: `domain/acceptance.py` and `domain/verification.py`
-own verdict policy; `contracts.py` owns bounded-capture records; Application
-owns execution sequencing. EE currently uses `projection/acceptance.py` and
-Domain request/evidence types. Its later physical migration must keep its
-algorithms and stronger tests; this CE move does not claim EE conformance.
+Current Authoring target: `domain/acceptance_contract.py`,
+`acceptance_evaluation.py` and `build_verification.py` own pure proof policy;
+`domain/capture.py` owns full capture records. `application/app.py` exposes the
+canonical Build/Compile/Decompile API; CE adapters connect it to CE Runtime/IO.
+See the [migration](../../migrations/authoring-errors.md) for the explicit format
+and protocol decision on the frozen October 18 sources.
 
 Keep the existing operations and typed values as the public seams; moves must
 not add a facade feature or synchronization framework.
@@ -58,7 +59,7 @@ conformance is not established by this decision.
 
 | Boundary | Stable operations and types | Evidence |
 |---|---|---|
-| Authoring | Typed request/result use cases. CE exposes `check`, `reference`, bounded `run`, `scaffold`; EE has its own build/roundtrip contract, not identical methods | CE `authoring/api.py`; EE `authoring/application/app.py` |
+| Authoring | Canonical Build, Compile/Decompile, schemas, discovery and bounded raw XML through typed application DTOs | `authoring/bootstrap.py`, `application/app.py`, `domain/requests.py` |
 | DSL | Parse/model operations and DSL-owned statements; neutral generator metadata belongs to Domains, serialization contract to IO | Historical CE `engine/dsl/api.py`, `engine/dsl/contracts.py`; Astra decisions D06/D18 |
 | IO | Target: source loading and exporter registration through typed IO contracts, no concrete clients/exporters as Runtime's boundary. Current CE facade still leaks exporter classes | CE `engine/io/api.py` versus target.md boundary table |
 | Runtime | `run`, `create_run_session`; `RunRequest`, `RunResult`, `RunSession` | CE `engine/runtime/api.py:34-49`; `engine/runtime/contracts.py:50-70` |
@@ -75,17 +76,14 @@ superseded by this shared physical target and Alex's no-shim requirement.
 Preserve the executable CLI command through its entry point, not the old module
 path. Do not retain `constants.runtime.api` as a compatibility wrapper.
 
-## Authoring contract remains a product decision
+## Authoring contract decision
 
-CE `AuthoringSpecV1` defines the contents of `model.dm.json`
-(`datamimic_ce/authoring/spec.py:955-961`). Its scaffold CLI reads a supplied
-file or stdin and returns the compiled/verified result; it does not write the
-input file (`datamimic_ce/interfaces/cli/authoring.py:119-157`). The user or
-project owns retaining that editable intent artifact. EE's `DmJsonDocumentV1`
-is an agent wire representation and XML is the persisted executable descriptor
-(`docs/architecture/authoring-4.0-contract.md:5-16`). These are different
-contracts today. Package alignment must not silently select a migration or
-replace one format with the other.
+The October 18 adoption explicitly replaces CE's persisted `AuthoringSpecV1`
+workflow. XML is the persisted executable project; DM JSON is transient agent
+interchange. Expectations, roles and caller requirements belong to the Build
+transaction. The [one-time migration](../../migrations/authoring-errors.md)
+retains old input, full proof and resource identity; the installed package has no
+legacy compiler or import shim. Historical snapshots above remain source evidence.
 
 ## Acceptance evidence
 

@@ -279,25 +279,34 @@ jobs:
         with:
           path: dist/*
 
-  python_310_smoke:
-    name: Python 3.10 wheel smoke test
+  python_311_smoke:
+    name: Python 3.11 wheel smoke test
     runs-on: ubuntu-22.04
     needs: build
     steps:
-      - name: Set Up Python 3.10
+      - name: Set Up Python 3.11
         uses: actions/setup-python@v6
         with:
-          python-version: '3.10'
+          python-version: '3.11'
+      - name: Checkout installed-package probe
+        uses: actions/checkout@v5
+        with:
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
       - name: Download wheel
         uses: actions/download-artifact@v7
         with:
           name: artifact
           path: dist
-      - name: Install and import built package
+      - name: Install and check built wheel
         run: |
-          python -m pip install dist/*.whl
-          python -c "import datamimic_ce; import datamimic_ce.authoring.contracts; import datamimic_ce.interfaces.cli"
-          datamimic --help
+          python -m venv "$RUNNER_TEMP/authoring-wheel"
+          "$RUNNER_TEMP/authoring-wheel/bin/python" -m pip install dist/*.whl
+          make installed-authoring-check PYTHON="$RUNNER_TEMP/authoring-wheel/bin/python"
+      - name: Install and check optional MCP wheel
+        run: |
+          wheel=(dist/*.whl)
+          "$RUNNER_TEMP/authoring-wheel/bin/python" -m pip install "${wheel[0]}[mcp]"
+          make installed-authoring-check PYTHON="$RUNNER_TEMP/authoring-wheel/bin/python" INSTALLED_AUTHORING_ARGS=--mcp
 
   python_312_smoke:
     name: Python 3.12 wheel smoke test
@@ -308,16 +317,20 @@ jobs:
         uses: actions/setup-python@v6
         with:
           python-version: '3.12'
+      - name: Checkout installed-package probe
+        uses: actions/checkout@v5
+        with:
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
       - name: Download wheel
         uses: actions/download-artifact@v7
         with:
           name: artifact
           path: dist
-      - name: Install and import built package
+      - name: Install and check built wheel
         run: |
-          python -m pip install dist/*.whl
-          python -c "import datamimic_ce; import datamimic_ce.authoring.contracts; import datamimic_ce.interfaces.cli"
-          datamimic --help
+          python -m venv "$RUNNER_TEMP/authoring-wheel"
+          "$RUNNER_TEMP/authoring-wheel/bin/python" -m pip install dist/*.whl
+          make installed-authoring-check PYTHON="$RUNNER_TEMP/authoring-wheel/bin/python"
 
   python_313_smoke:
     name: Python 3.13 wheel smoke test
@@ -328,16 +341,20 @@ jobs:
         uses: actions/setup-python@v6
         with:
           python-version: '3.13'
+      - name: Checkout installed-package probe
+        uses: actions/checkout@v5
+        with:
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
       - name: Download wheel
         uses: actions/download-artifact@v7
         with:
           name: artifact
           path: dist
-      - name: Install and import built package
+      - name: Install and check built wheel
         run: |
-          python -m pip install dist/*.whl
-          python -c "import datamimic_ce; import datamimic_ce.authoring.contracts; import datamimic_ce.interfaces.cli"
-          datamimic --help
+          python -m venv "$RUNNER_TEMP/authoring-wheel"
+          "$RUNNER_TEMP/authoring-wheel/bin/python" -m pip install dist/*.whl
+          make installed-authoring-check PYTHON="$RUNNER_TEMP/authoring-wheel/bin/python"
 
   runtime_determinism_matrix:
     name: Seeded runtime determinism on ${{ matrix.os }} Python ${{ matrix.python-version }} (${{ matrix.timezone }}, ${{ matrix.resolution }})
@@ -352,11 +369,6 @@ jobs:
             timezone: Etc/UTC
             python-version: '3.11'
             cell: ubuntu-py311-utc
-            resolution: highest
-          - os: ubuntu-22.04
-            timezone: Etc/UTC
-            python-version: '3.10'
-            cell: ubuntu-py310-utc
             resolution: highest
           - os: ubuntu-22.04
             timezone: Etc/UTC
@@ -422,6 +434,17 @@ jobs:
       - name: Run facade API determinism proof
         run: uv run pytest tests_ce/architecture/test_facade_determinism.py -q
 
+      - name: Run Windows authoring process and handle proofs
+        if: matrix.cell == 'windows-py311-utc'
+        run: >-
+          uv run pytest
+          tests_ce/unit_tests/test_authoring/test_bounded_executor_windows.py
+          tests_ce/unit_tests/test_authoring/test_bounded_executor.py
+          tests_ce/unit_tests/test_authoring/test_capture_boundary.py
+          tests_ce/unit_tests/test_authoring/test_build_verification.py
+          tests_ce/unit_tests/test_portable_errors.py
+          tests_ce/unit_tests/test_error_pickling.py -q
+
       - name: Run committed seeded entity replay proof
         run: >-
           uv run pytest
@@ -476,7 +499,7 @@ jobs:
           merge-multiple: false
 
       - name: Compare actual hashes across jobs and with committed goldens
-        run: python -m tests_ce.architecture.runtime_determinism_manifest compare --root runtime-manifests --expected-count 8
+        run: python -m tests_ce.architecture.runtime_determinism_manifest compare --root runtime-manifests --expected-count 7
 
   unit_test:
     runs-on: ubuntu-22.04
@@ -935,7 +958,7 @@ jobs:
   release:
     if: startsWith(github.ref, 'refs/tags/')
     runs-on: ubuntu-22.04
-    needs: [e2e_test, runtime_determinism_fan_in, mypy, ruff, python_310_smoke, archkeel_check]
+    needs: [e2e_test, runtime_determinism_fan_in, mypy, ruff, python_311_smoke, archkeel_check]
     environment:
       name: pypi
       url: https://pypi.org/p/datamimic-ce

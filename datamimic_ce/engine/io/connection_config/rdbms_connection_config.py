@@ -5,6 +5,8 @@
 # For questions and support, contact: info@rapiddweller.com
 
 
+from pathlib import Path
+
 from pydantic import BaseModel, ConfigDict
 
 from datamimic_ce.engine.dsl.vocabulary.enums.dbms_enums import Dbms
@@ -16,6 +18,7 @@ class RdbmsConnectionConfig(ConnectionConfig, BaseModel):
     Database's connection configuration used for connecting to database server
     """
 
+    read_only: bool = False
     dbms: Dbms
     host: str | None
     port: int | None
@@ -49,3 +52,8 @@ class RdbmsConnectionConfig(ConnectionConfig, BaseModel):
             raise ValueError("DB Schema is required")
 
         return True
+
+
+def sqlite_database_path(database: str) -> Path:
+    """Resolve CE database-name syntax relative to the execution directory."""
+    return Path("db") / f"{database}.sqlite"

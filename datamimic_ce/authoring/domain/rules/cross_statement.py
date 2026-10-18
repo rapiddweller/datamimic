@@ -13,9 +13,9 @@ from dataclasses import dataclass
 
 from lxml import etree
 
-from datamimic_ce.authoring.domain.diagnostics import Diagnostic
 from datamimic_ce.authoring.domain.rule_catalog import authoring_rule_definition
 from datamimic_ce.authoring.domain.rules.base import LintContext, Rule
+from datamimic_ce.authoring.domain.xml_diagnostics import Diagnostic
 from datamimic_ce.engine.dsl.api import (
     EL_DATABASE,
     EL_ELEMENT,

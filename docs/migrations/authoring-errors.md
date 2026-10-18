@@ -1,6 +1,6 @@
 # CE Authoring and Errors migration
 
-Status: target defined; implementation and verification pending. Tracks CE #270.
+This migration replaces CE Intent/Scaffold with the Build contract below. Tracks CE #270.
 Baseline: CE `84a9f4657148bcfa0bc560908ed42b1d5fa3efab`;
 semantic reference: EE `37d74ddb3553ca23597a1b9264649361fe68a233`.
 Python becomes >=3.11, without an added upper bound. CE keeps SCM package versioning;
@@ -95,21 +95,58 @@ count into persisted XML just to obtain Ready. A passing smoke/replay cannot era
 another failed gate. CE before/after compares CE data semantics; CE/EE compares
 shared language/contract semantics, without requiring identical random values.
 
+Bounded resources use contained opened handles, including properties substitution
+and cached file reads. Installed Domain datasets are read through their own loader;
+custom `DATAMIMIC_DOMAIN_DATA`/`DATAMIMIC_ROOT` overrides reject bounded execution.
+Connection profiles are workspace-local. XML includes are not bounded-eligible;
+contained properties includes remain supported. Property-expanded sources can still
+hit the pre-existing static unknown-source lint rule; executor support alone does
+not prove public Build eligibility.
+
+Bounded SQL sources use a conservative query subset and backend read-only transactions
+(PostgreSQL, MySQL, Oracle, SQLite); SQL Server reads reject. MongoDB blocks parsed
+write/script operations. These controls do not sandbox arbitrary Python or privileged
+backend extensions. Float-backed decimal ranges retain the former 15-place proof
+limit. Compile support, bounded proof and real target delivery remain separate.
+
 ## One-time legacy migration
 
-Use the frozen old CE compiler in an isolated environment to compile the original
-`AuthoringSpecV1` document. Keep original input and resources; write XML to a new
-output path without overwrite. Export model expectations and caller requirements
-separately with origin. Export legacy identifier/FK role declarations and all
-non-XML CompilePlan proof facts as typed transaction `product_roles` and
-`acceptance_requirements`; these are not recoverable from persisted XML.
-The new Build derives count/source/parent topology from DM JSON, merges the
-explicit roles and model/caller requirements, and rejects missing memstore
-role-pair proof. Decompile that XML through the new CE codec, then Build
-with those transaction requirements and requested smoke/replay. Preserve seed,
-order, relative resources, decimal/constraints and nested/memstore relationships.
-Unrepresentable semantics reject with an exact input path. The installed runtime
-contains no legacy compiler or import shim after consumer cutover.
+Keep the frozen CE checkout at `84a9f4657148bcfa0bc560908ed42b1d5fa3efab`
+and its compatible Python environment. From the new checkout:
+
+```bash
+PYTHONPATH=. .venv/bin/python script/migrate_authoring.py /project/model.dm.json \
+  --legacy-source /path/to/frozen-ce \
+  --legacy-python /path/to/frozen-ce/.venv/bin/python \
+  --xml-output /project/model.xml > /tmp/migration-receipt.json
+```
+
+The script checks exact revision, clean package source and compiler origin before
+importing the old compiler in an isolated subprocess. It keeps original input and
+resources, refuses overwrite, and requires XML beside the original input to retain
+relative paths. It compiles only; no engine or external target runs automatically.
+Optional `--acceptance-requirements caller.json`, `--smoke-export`,
+`--deterministic-replay`, `--max-count` and `--sample-rows` transfer transaction
+requirements/options; they do not persist another intent model.
+
+The receipt carries original/XML hashes, frozen revision, legacy plan/facts and a
+separate typed `build_request`. It retains model expectations, caller/derived
+origins, identifier/FK/timestamp/value roles (including nested-list fields), decimal
+strings, list subjects, uniqueness scope and per-parent checks. Unknown semantics
+reject at a specific input path. DM JSON in the receipt is temporary interchange.
+
+Decompilation uses the new public application. To run the separate proof:
+
+```bash
+.venv/bin/python -c 'import json,sys; json.dump(json.load(sys.stdin)["build_request"],sys.stdout)' \
+  < /tmp/migration-receipt.json | datamimic authoring build - --workspace-root /project
+```
+
+Only a new `outcome: "ready"` result establishes Build readiness. Compare its
+compiled XML/data/acceptance with the preserved legacy receipt, especially nested
+FK, file/memstore sources, time series, and decimal/list constraints. A successful
+migration receipt alone is not verification. Keep the original until this comparison
+passes. The installed runtime contains no legacy compiler or import shim.
 
 ## Enforcement and closure
 

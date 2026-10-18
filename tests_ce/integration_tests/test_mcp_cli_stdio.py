@@ -29,13 +29,20 @@ async def test_cli_stdio_authoring_roundtrip(anyio_backend: str) -> None:
     )
     async with Client(transport) as client:
         assert {tool.name for tool in await client.list_tools()} == {
-            "datamimic_check",
+            "datamimic_version",
+            "datamimic_schema",
+            "datamimic_capabilities",
+            "datamimic_capability",
+            "datamimic_compile",
+            "datamimic_decompile",
+            "datamimic_build",
+            "datamimic_lint",
+            "datamimic_dry_run",
             "datamimic_run",
             "datamimic_reference",
-            "datamimic_scaffold",
         }
         result = await client.call_tool(
             "datamimic_reference",
-            {"request": {"topic": "element", "name": "generate"}},
+            {"request": {"topic": "overview"}},
         )
-        assert "pageSize" in json.loads(result[0].text)["content"]
+        assert json.loads(result[0].text)["topic"] == "overview"

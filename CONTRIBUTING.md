@@ -18,7 +18,7 @@ cd datamimic
 
 ### 2. 🛠️ Setup Your Development Environment
 
-Ensure you have Python ≥3.10 installed. Then set up your environment:
+Ensure you have Python ≥3.11 installed. Then set up your environment:
 
 ```bash
 pip install uv

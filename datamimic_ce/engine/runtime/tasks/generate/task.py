@@ -28,6 +28,7 @@ from datamimic_ce.engine.runtime.tasks.base.task import CommonSubTask
 from datamimic_ce.engine.runtime.tasks.generate.policies.single_process_policy import resolve_single_process
 from datamimic_ce.engine.runtime.tasks.generate.workers.generate_worker import GenerateWorker
 from datamimic_ce.engine.runtime.tasks.sources.length import data_source_cache_key, set_data_source_length
+from datamimic_ce.errors import IssueCode, task_config_error
 
 
 class GenerateTask(CommonSubTask):
@@ -85,9 +86,7 @@ class GenerateTask(CommonSubTask):
                 )
                 count = count_query_length(client, selector) if client is not None else None
                 if count is None:
-                    raise ValueError(
-                        "Using selector without count only supports DatabaseClient (MongoDB, Relational Database)"
-                    )
+                    raise task_config_error(code=IssueCode.TASK_COUNT_SELECTOR_UNSUPPORTED_CLIENT)
             else:
                 count = root_context.data_source_len[data_source_cache_key(self.statement)]
 
@@ -304,9 +303,10 @@ class GenerateTask(CommonSubTask):
                         )
                         is_ray_initialized = True
                     else:
-                        raise ValueError(
-                            f"Multiprocessing platform '{mp_platform}' of <generate> '{self.statement.full_name}' "
-                            f"is not supported"
+                        raise task_config_error(
+                            code=IssueCode.TASK_MP_PLATFORM_UNSUPPORTED,
+                            mp_platform=mp_platform,
+                            stmt_name=self.statement.full_name,
                         )
                     # Execute generate task by page in multiprocessing using Ray or multiprocessing
                     merged_result = mp_worker.mp_process(copied_context, self._statement, chunks, page_size)

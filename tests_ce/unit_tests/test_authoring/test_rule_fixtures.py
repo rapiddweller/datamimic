@@ -246,23 +246,16 @@ def test_dm401_uses_adapter_exporter_names_and_reports_parse_errors() -> None:
 
     buffered_names = buffered_exporter_names()
     valid_targets = ", ".join(sorted(buffered_names))
-    valid = lint_source(
-        '<setup rngSeed="1"><generate name="g" count="1" '
-        f'target="{valid_targets}"/></setup>'
-    )
+    valid = lint_source(f'<setup rngSeed="1"><generate name="g" count="1" target="{valid_targets}"/></setup>')
     assert not [diagnostic for diagnostic in valid.diagnostics if diagnostic.rule == "DM401"]
 
-    invalid = lint_source(
-        '<setup rngSeed="1"><generate name="g" count="1" target="unknown_target"/></setup>'
-    )
+    invalid = lint_source('<setup rngSeed="1"><generate name="g" count="1" target="unknown_target"/></setup>')
     diag = next(diagnostic for diagnostic in invalid.diagnostics if diagnostic.rule == "DM401")
     assert "known targets:" in diag.fix_hint
     assert all(name in diag.fix_hint for name in buffered_names)
     assert "ConsoleExporter" in diag.fix_hint
 
-    malformed = lint_source(
-        '<setup rngSeed="1"><generate name="g" count="1" target="CSV(chunk_size=)"/></setup>'
-    )
+    malformed = lint_source('<setup rngSeed="1"><generate name="g" count="1" target="CSV(chunk_size=)"/></setup>')
     malformed_diag = next(diagnostic for diagnostic in malformed.diagnostics if diagnostic.rule == "DM401")
     assert "target parser returned: Error parsing function string: invalid syntax" in malformed_diag.message
 
@@ -271,20 +264,21 @@ def test_dm401_uses_adapter_exporter_names_and_reports_parse_errors() -> None:
 def test_dm401_rejects_non_string_target_constants_without_crashing(target: str) -> None:
     from datamimic_ce.authoring.adapters.linter import lint_source
 
-    result = lint_source(
-        f'<setup rngSeed="1"><generate name="g" count="1" target="{target}"/></setup>'
-    )
+    result = lint_source(f'<setup rngSeed="1"><generate name="g" count="1" target="{target}"/></setup>')
     assert any(diagnostic.rule == "DM401" for diagnostic in result.diagnostics)
 
 
 def test_dry_run_never_crashes_on_parse_error() -> None:
-    from datamimic_ce.authoring.adapters.dryrun import dry_run_source
+    from datamimic_ce.authoring.adapters.bounded_executor import CeBoundedExecutor
+    from datamimic_ce.authoring.domain.requests import BoundedExecutionRequest
 
     # A descriptor whose engine re-parse raises must yield a diagnostic, not crash the tool.
-    result = dry_run_source(
-        '<setup rngSeed="1"><database id="db" system="mongodb"/>'
-        '<generate name="g" count="1" source="db" selector="find: \'c\', filter: {}" '
-        'target="ConsoleExporter"/></setup>'
+    result = CeBoundedExecutor().execute(
+        BoundedExecutionRequest(
+            xml='<setup rngSeed="1"><database id="db" system="mongodb"/>'
+            '<generate name="g" count="1" source="db" selector="find: \'c\', filter: {}" '
+            'target="ConsoleExporter"/></setup>'
+        )
     )
     assert not result.ok and result.diagnostics
 

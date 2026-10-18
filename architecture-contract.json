@@ -39,10 +39,6 @@
           "rationale": "The CLI discovers shipped examples through the resource API."
         },
         {
-          "component": "python_compat",
-          "rationale": "Interfaces support the package's Python 3.10 floor."
-        },
-        {
           "component": "errors",
           "rationale": "User-facing failures use portable catalog factories; backend classification remains with the calling owner.",
           "decided_by": "agent"
@@ -92,29 +88,53 @@
           "rationale": "Authoring projects domain capabilities from their owner."
         },
         {
-          "component": "python_compat",
-          "rationale": "Authoring supports the package's Python 3.10 floor."
-        },
-        {
           "component": "errors",
           "rationale": "User-facing failures use portable catalog factories; backend classification remains with the calling owner.",
           "decided_by": "agent"
         }
       ],
       "public": [
-        "datamimic_ce.authoring.api",
-        "datamimic_ce.authoring.contracts",
-        "datamimic_ce.authoring.spec:LeafFieldKind"
-      ],
-      "planned": [
         "datamimic_ce.authoring.bootstrap:create_authoring_application",
         "datamimic_ce.authoring.application.app:AuthoringApplication",
-        "datamimic_ce.authoring.domain.requests",
         "datamimic_ce.authoring.domain.dm_json",
         "datamimic_ce.authoring.domain.capabilities",
         "datamimic_ce.authoring.domain.diagnostics",
         "datamimic_ce.authoring.domain.expectations",
-        "datamimic_ce.authoring.domain.environments"
+        "datamimic_ce.authoring.domain.environments",
+        "datamimic_ce.authoring.domain.proof",
+        "datamimic_ce.authoring.domain.reference",
+        "datamimic_ce.authoring.domain.requests:LintRequest",
+        "datamimic_ce.authoring.domain.requests:LintResult",
+        "datamimic_ce.authoring.domain.requests:ReferenceTopic",
+        "datamimic_ce.authoring.domain.requests:AuthoringSchemaId",
+        "datamimic_ce.authoring.domain.requests:ReferenceRequest",
+        "datamimic_ce.authoring.domain.requests:BuildRequestV4",
+        "datamimic_ce.authoring.domain.requests:RunRequest",
+        "datamimic_ce.authoring.domain.requests:RunPhase",
+        "datamimic_ce.authoring.domain.requests:ProductEvidence",
+        "datamimic_ce.authoring.domain.requests:RunResult",
+        "datamimic_ce.authoring.domain.requests:CompileDocumentRequest",
+        "datamimic_ce.authoring.domain.requests:DecompileDocumentRequest",
+        "datamimic_ce.authoring.domain.requests:CompiledDocumentArtifact",
+        "datamimic_ce.authoring.domain.requests:ReadyCompileDocument",
+        "datamimic_ce.authoring.domain.requests:RejectedCompileDocument",
+        "datamimic_ce.authoring.domain.requests:CompileDocumentResult",
+        "datamimic_ce.authoring.domain.requests:ReadyDecompileDocument",
+        "datamimic_ce.authoring.domain.requests:RejectedDecompileDocument",
+        "datamimic_ce.authoring.domain.requests:DecompileDocumentResult",
+        "datamimic_ce.authoring.domain.requests:BuildArtifact",
+        "datamimic_ce.authoring.domain.requests:ValidatedReviewArtifact",
+        "datamimic_ce.authoring.domain.requests:SourceAccessEvidence",
+        "datamimic_ce.authoring.domain.requests:BuildAssurance",
+        "datamimic_ce.authoring.domain.requests:RejectedBuild",
+        "datamimic_ce.authoring.domain.requests:ReadyBuild",
+        "datamimic_ce.authoring.domain.requests:BuildResult",
+        "datamimic_ce.authoring.domain.requests:DEFAULT_AUTHORING_DESCRIPTOR_PATH",
+        "datamimic_ce.authoring.ports:DmJsonDescriptorContract",
+        "datamimic_ce.authoring.ports:DslCatalog",
+        "datamimic_ce.authoring.ports:DescriptorValidator",
+        "datamimic_ce.authoring.ports:BoundedExecutor",
+        "datamimic_ce.authoring.ports:BoundedExecutionPolicy"
       ],
       "decided_by": "agent"
     },
@@ -140,10 +160,6 @@
         "docs/migrations/authoring-errors.md"
       ],
       "requires": [
-        {
-          "component": "python_compat",
-          "rationale": "DSL enums support the package's Python 3.10 floor."
-        },
         {
           "component": "errors",
           "rationale": "User-facing failures use portable catalog factories; backend classification remains with the calling owner.",
@@ -181,7 +197,19 @@
         "datamimic_ce.engine.dsl.vocabulary.enums.converter_enums",
         "datamimic_ce.engine.dsl.vocabulary.enums.distribution_enums",
         "datamimic_ce.engine.dsl.vocabulary.enums.faker_enums",
-        "datamimic_ce.engine.dsl.vocabulary.source_capabilities"
+        "datamimic_ce.engine.dsl.vocabulary.source_capabilities",
+        "datamimic_ce.engine.dsl.vocabulary.contracts.dsl_element",
+        "datamimic_ce.engine.dsl.parsers.input.resource:ResourceReader",
+        "datamimic_ce.engine.dsl.parsers.input.resource:read_resource_bytes",
+        "datamimic_ce.engine.dsl.parsers.input.resource:resource_reader_scope",
+        "datamimic_ce.engine.dsl.parsers.input.resource:resource_reader_active",
+        "datamimic_ce.engine.dsl.model.registry:ElementDefinition",
+        "datamimic_ce.engine.dsl.parsers.base.client_config:ConnectionProfileLoader",
+        "datamimic_ce.engine.dsl.vocabulary.constants.element_constants:EL_SETUP",
+        "datamimic_ce.engine.dsl.vocabulary.constants.attribute_constants:ATTR_COUNT",
+        "datamimic_ce.engine.dsl.vocabulary.constants.attribute_constants:ATTR_MAX_COUNT",
+        "datamimic_ce.engine.dsl.vocabulary.constants.attribute_constants:ATTR_SOURCE",
+        "datamimic_ce.engine.dsl.vocabulary.product_identity:capture_product_name"
       ],
       "planned": [],
       "decided_by": "agent"
@@ -219,10 +247,6 @@
         {
           "component": "domains",
           "rationale": "Runtime invokes domain generators through the domain API."
-        },
-        {
-          "component": "python_compat",
-          "rationale": "Runtime supports the package's Python 3.10 floor."
         },
         {
           "component": "randomness",
@@ -274,7 +298,8 @@
             "datamimic_ce.engine.dsl.vocabulary",
             "datamimic_ce.engine.dsl.parsers.input.properties",
             "datamimic_ce.engine.dsl.parsers.input.target",
-            "datamimic_ce.engine.dsl.parsers.input.xml"
+            "datamimic_ce.engine.dsl.parsers.input.xml",
+            "datamimic_ce.engine.dsl.parsers.input.resource"
           ]
         },
         {
@@ -322,7 +347,14 @@
       "requires": [],
       "public": [
         "datamimic_ce.errors",
-        "datamimic_ce.errors.base"
+        "datamimic_ce.errors.base",
+        "datamimic_ce.errors.context.descriptor_identity:descriptor_scope",
+        "datamimic_ce.errors.context.descriptor_identity:get_descriptor_name",
+        "datamimic_ce.errors.catalog:get_issue_definition",
+        "datamimic_ce.errors.codes:ErrorCode",
+        "datamimic_ce.errors.codes:IssueCode",
+        "datamimic_ce.errors.codes:DomainErrorCode",
+        "datamimic_ce.errors.context:DescriptorLocation"
       ],
       "decided_by": "agent",
       "inside": "docs/architecture/inner/errors/architecture-contract.json"
@@ -447,31 +479,6 @@
         "datamimic_ce.resources.api"
       ],
       "planned": [],
-      "decided_by": "agent"
-    },
-    {
-      "id": "COMP-PYTHON-COMPAT",
-      "label": "python_compat",
-      "role": "foundation",
-      "packages": [
-        "datamimic_ce._compat"
-      ],
-      "responsibilities": [
-        "Existing interpreter compatibility only; not old import aliases."
-      ],
-      "forbidden_responsibilities": [
-        "product behavior",
-        "configuration",
-        "general utilities"
-      ],
-      "provenance": [
-        "docs/architecture/refactoring-study/experiment-2/target-architecture.md"
-      ],
-      "requires": [],
-      "public": [
-        "datamimic_ce._compat:StrEnum",
-        "datamimic_ce._compat:assert_never"
-      ],
       "decided_by": "agent"
     },
     {
@@ -702,6 +709,19 @@
         },
         {
           "qualified_name": "datamimic_ce.engine.dsl.api.DescriptorParser.parse",
+          "position": "properties",
+          "field_path": "",
+          "annotation": "dict[str, str] | dict[str, object] | None",
+          "container_depth": 1
+        },
+        {
+          "qualified_name": "datamimic_ce.engine.dsl.api.DescriptorParser.parse_xml",
+          "position": "properties",
+          "field_path": "",
+          "annotation": "dict[str, str] | dict[str, object] | None"
+        },
+        {
+          "qualified_name": "datamimic_ce.engine.dsl.api.DescriptorParser.parse_xml",
           "position": "properties",
           "field_path": "",
           "annotation": "dict[str, str] | dict[str, object] | None",
@@ -1484,38 +1504,63 @@
     {
       "id": "AUTHORING-API-TYPES",
       "kind": "boundary_types",
-      "source": "datamimic_ce.authoring.api",
-      "rationale": "The Authoring facade exposes typed application requests and results rather than implementation modules.",
+      "source": "datamimic_ce.authoring.application.app",
+      "rationale": "The Authoring facade exposes typed application requests and results rather than implementation modules. Exact schema maps and registry-validated scalar property maps are wire algebras; five named constructor protocols support typed composition without exposing internal capture request/result DTOs.",
       "provenance": [
         "docs/architecture/refactoring-study/experiment-2/target-architecture.md",
         "docs/architecture/refactoring-study/experiment-2/amendment-11.md",
-        "docs/architecture/refactoring-study/experiment-2/amendment-184-authoring-sample-shapes.md"
+        "docs/architecture/refactoring-study/experiment-2/amendment-184-authoring-sample-shapes.md",
+        "docs/migrations/authoring-errors.md"
       ],
       "decided_by": "architect",
       "allowed_positions": [
         {
-          "qualified_name": "datamimic_ce.authoring.api.run",
+          "qualified_name": "datamimic_ce.authoring.application.app.AuthoringApplication.run",
           "position": "return",
-          "field_path": "products.sample",
-          "annotation": "list[dict[str, JsonValue]]"
+          "field_path": "products.rows",
+          "annotation": "tuple[dict[str, JsonValue], ...]"
         },
         {
-          "qualified_name": "datamimic_ce.authoring.api.scaffold",
+          "qualified_name": "datamimic_ce.authoring.application.app.AuthoringApplication.dry_run",
           "position": "return",
-          "field_path": "issues.repair.corrected_fragment",
+          "field_path": "products.rows",
+          "annotation": "tuple[dict[str, JsonValue], ...]"
+        },
+        {
+          "qualified_name": "datamimic_ce.authoring.application.app.AuthoringApplication.build",
+          "position": "return",
+          "field_path": "evidence.rows",
+          "annotation": "tuple[dict[str, JsonValue], ...]"
+        },
+        {
+          "qualified_name": "datamimic_ce.authoring.application.app.AuthoringApplication.document_schema",
+          "position": "return",
+          "field_path": "",
           "annotation": "dict[str, JsonValue]"
         },
         {
-          "qualified_name": "datamimic_ce.authoring.api.scaffold",
+          "qualified_name": "datamimic_ce.authoring.application.app.AuthoringApplication.schema",
           "position": "return",
-          "field_path": "products.sample",
-          "annotation": "list[dict[str, JsonValue]]"
+          "field_path": "",
+          "annotation": "dict[str, JsonValue]"
         },
         {
-          "qualified_name": "datamimic_ce.authoring.api.scaffold",
+          "qualified_name": "datamimic_ce.authoring.application.app.AuthoringApplication.compile_document",
+          "position": "request",
+          "field_path": "document.root.properties",
+          "annotation": "Mapping[str, DmJsonScalar]"
+        },
+        {
+          "qualified_name": "datamimic_ce.authoring.application.app.AuthoringApplication.build",
+          "position": "request",
+          "field_path": "document.root.properties",
+          "annotation": "Mapping[str, DmJsonScalar]"
+        },
+        {
+          "qualified_name": "datamimic_ce.authoring.application.app.AuthoringApplication.capabilities",
           "position": "return",
-          "field_path": "acceptance.results.observed_counts",
-          "annotation": "dict[str, int] | None"
+          "field_path": "element_capabilities.properties_schema",
+          "annotation": "dict[str, JsonValue]"
         }
       ]
     },
@@ -1534,9 +1579,7 @@
       "kind": "forbidden_construct",
       "source": "datamimic_ce",
       "constructs": [
-        "any_annotation",
         "delattr",
-        "dunder_dict",
         "hasattr",
         "setattr",
         "type_ignore",
@@ -1666,7 +1709,6 @@
       "kind": "root_layout",
       "root": "datamimic_ce",
       "allowed_children": [
-        "datamimic_ce._compat",
         "datamimic_ce.authoring",
         "datamimic_ce.domains",
         "datamimic_ce.engine",
@@ -1687,12 +1729,11 @@
       "root": "datamimic_ce.authoring",
       "allowed_children": [
         "datamimic_ce.authoring.adapters",
-        "datamimic_ce.authoring.api",
         "datamimic_ce.authoring.application",
-        "datamimic_ce.authoring.contracts",
+        "datamimic_ce.authoring.bootstrap",
         "datamimic_ce.authoring.domain",
-        "datamimic_ce.authoring.projection",
-        "datamimic_ce.authoring.spec"
+        "datamimic_ce.authoring.ports",
+        "datamimic_ce.authoring.projection"
       ],
       "rationale": "Compile intent and run bounded verification transactions. Exact reviewed target children; no hidden extra modules.",
       "provenance": [
@@ -1765,6 +1806,7 @@
         "datamimic_ce.engine.io.contracts",
         "datamimic_ce.engine.io.data_sources",
         "datamimic_ce.engine.io.exporters",
+        "datamimic_ce.engine.io.failures",
         "datamimic_ce.engine.io.files",
         "datamimic_ce.engine.io.memstore"
       ],
@@ -1804,6 +1846,8 @@
         "datamimic_ce.errors.base",
         "datamimic_ce.errors.catalog",
         "datamimic_ce.errors.codes",
+        "datamimic_ce.errors.context",
+        "datamimic_ce.errors.descriptor_contracts",
         "datamimic_ce.errors.factory",
         "datamimic_ce.errors.formatters"
       ],
@@ -1818,6 +1862,7 @@
       "kind": "root_layout",
       "root": "datamimic_ce.interfaces",
       "allowed_children": [
+        "datamimic_ce.interfaces.bundle",
         "datamimic_ce.interfaces.cli",
         "datamimic_ce.interfaces.demo",
         "datamimic_ce.interfaces.mcp",
@@ -1946,6 +1991,39 @@
         "docs/migrations/authoring-errors.md"
       ],
       "decided_by": "agent"
+    },
+    {
+      "id": "NO-OPAQUE-ANNOTATIONS",
+      "kind": "forbidden_construct",
+      "source": "datamimic_ce",
+      "constructs": [
+        "any_annotation"
+      ],
+      "allowed_sources": [
+        "datamimic_ce.engine.dsl.vocabulary.value_literals.parse_literal_values"
+      ],
+      "rationale": "Only the existing ast.literal_eval boundary preserves native heterogeneous dict/set/string/None literal behavior; no DTO uses Any.",
+      "provenance": [
+        "docs/architecture/inner/target.md"
+      ],
+      "decided_by": "architect"
+    },
+    {
+      "id": "NO-REFLECTIVE-STATE",
+      "kind": "forbidden_construct",
+      "source": "datamimic_ce",
+      "constructs": [
+        "dunder_dict"
+      ],
+      "allowed_sources": [
+        "datamimic_ce.authoring.adapters.dryrun._validated_worker_success",
+        "datamimic_ce.authoring.adapters.dryrun._decode_worker_message"
+      ],
+      "rationale": "Only complete-state validation of untrusted worker pickle DTOs inspects raw state, including forged extra fields; other reflective constructs remain forbidden.",
+      "provenance": [
+        "docs/architecture/inner/target.md"
+      ],
+      "decided_by": "architect"
     }
   ],
   "declarations": {
@@ -2060,10 +2138,6 @@
       {
         "path": "datamimic_ce/__init__.py",
         "responsibility": "The package initializer exposes the CE namespace without loading configuration or mutating the process environment."
-      },
-      {
-        "path": "datamimic_ce/_compat.py",
-        "responsibility": "This module provides String Enum and exhaustiveness helpers for older Python versions."
       },
       {
         "path": "datamimic_ce/randomness.py",

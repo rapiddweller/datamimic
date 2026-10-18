@@ -86,18 +86,20 @@ class TestEchoTask:
     @patch("datamimic_ce.engine.runtime.tasks.flow.commands.echo_task.logger")
     def test_execute_interpolation_with_quotes(self, mock_logger):
         ctx = MagicMock(spec=Context)
-        ctx.evaluate_python_expression.return_value = 'User: "Alice" / \'Admin\''
-        task = EchoTask(EchoStatement('User: "{user}" / \'{role}\''))
+        ctx.evaluate_python_expression.return_value = "User: \"Alice\" / 'Admin'"
+        task = EchoTask(EchoStatement("User: \"{user}\" / '{role}'"))
         task.execute(ctx)
-        ctx.evaluate_python_expression.assert_called_once_with("f'User: \\\"{user}\\\" / \\\'{role}\\\''")
-        mock_logger.debug.assert_called_once_with('Echo - User: "Alice" / \'Admin\'')
+        ctx.evaluate_python_expression.assert_called_once_with("f'User: \\\"{user}\\\" / \\'{role}\\''")
+        mock_logger.debug.assert_called_once_with("Echo - User: \"Alice\" / 'Admin'")
 
-    @patch("datamimic_ce.engine.runtime.tasks.flow.commands.echo_task.logger")
+    @patch("datamimic_ce.engine.runtime.tasks.flow.commands.echo_task.task_warning")
     def test_execute_failing_placeholder(self, mock_logger):
         ctx = MagicMock(spec=Context)
         ctx.evaluate_python_expression.side_effect = Exception("name 'unknown_var' is not defined")
         task = EchoTask(EchoStatement("Hello {unknown_var}"))
         task.execute(ctx)
-        mock_logger.warning.assert_called_once_with(
-            "Echo - Hello {unknown_var} (placeholder not evaluated: name 'unknown_var' is not defined)"
+        from datamimic_ce.errors import IssueCode
+
+        mock_logger.assert_called_once_with(
+            code=IssueCode.ECHO_PLACEHOLDER_UNRESOLVED, value="Hello {unknown_var}", error_clause=" (Exception)"
         )

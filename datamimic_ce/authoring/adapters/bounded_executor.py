@@ -1,0 +1,433 @@
+# DATAMIMIC
+# Copyright (c) 2023-2026 Rapiddweller Asia Co., Ltd.
+# This software is licensed under the MIT License. See LICENSE.
+
+"""Private workspace and process ownership for one bounded CE execution."""
+
+from __future__ import annotations
+
+import os
+import pickle
+import signal
+import stat
+import subprocess
+import sys
+import tempfile
+import time
+from contextlib import suppress
+from itertools import islice
+from pathlib import Path
+
+from lxml import etree
+
+from datamimic_ce.authoring.adapters import dryrun
+from datamimic_ce.authoring.adapters.windows_snapshot import WindowsSnapshotRoot
+from datamimic_ce.authoring.adapters.workspace import (
+    MAX_RESOURCE_BYTES,
+    AuthoringWorkspaceContext,
+    _read_resource_file,
+    _same_file,
+)
+from datamimic_ce.authoring.domain.capture import CapturedProducts
+from datamimic_ce.authoring.domain.diagnostics import (
+    AuthoringRuleId,
+    AuthoringSystemDiagnosticCode,
+    CeErrorIdentity,
+    Diagnostic,
+    DiagnosticPhase,
+)
+from datamimic_ce.authoring.domain.requests import BoundedExecutionEvidence, BoundedExecutionRequest
+from datamimic_ce.errors import DomainError, UserErrorBase
+from datamimic_ce.errors.codes import ErrorCode
+
+_MAX_WORKSPACE_BYTES = 256 * 1024 * 1024
+_MAX_WORKSPACE_FILE_BYTES = MAX_RESOURCE_BYTES
+_MAX_WORKSPACE_FILES = 2_000
+_MAX_WORKSPACE_ENTRIES = 4_000
+_MAX_WORKSPACE_DEPTH = 64
+_MAX_REPLY_BYTES = dryrun._MAX_WORKER_REPLY_BYTES
+
+
+def _failure(code: AuthoringSystemDiagnosticCode, message: str, max_count: int) -> BoundedExecutionEvidence:
+    diagnostic = Diagnostic(
+        code=code,
+        phase=DiagnosticPhase.EVIDENCE,
+        message=message,
+        remediation="Repair the bounded descriptor or its workspace resources, then retry.",
+    )
+    return BoundedExecutionEvidence(
+        ok=False, captured=CapturedProducts((), max_count), diagnostics=(diagnostic,), base_run_ok=False
+    )
+
+
+def _snapshot_workspace(source: Path, destination: Path) -> None:
+    """Read bounded regular files without following links; verify opened identities."""
+    file_count = 0
+    entry_count = 0
+    total_bytes = 0
+    windows_root: WindowsSnapshotRoot | None = None
+    destination.mkdir()
+
+    def copy_file(source_path: Path, output_path: Path, before: os.stat_result, *, directory_fd: int | None) -> None:
+        nonlocal file_count, total_bytes
+        file_count += 1
+        total_bytes += before.st_size
+        if (
+            file_count > _MAX_WORKSPACE_FILES
+            or before.st_size > _MAX_WORKSPACE_FILE_BYTES
+            or total_bytes > _MAX_WORKSPACE_BYTES
+        ):
+            raise ValueError("workspace exceeds bounded snapshot limits")
+        data = _read_resource_file(
+            source_path,
+            before,
+            max_bytes=_MAX_WORKSPACE_FILE_BYTES,
+            directory_fd=directory_fd,
+            windows_root=windows_root,
+        )
+        with output_path.open("xb") as output_file:
+            output_file.write(data)
+
+    def copy_directory(source_path: Path, output_path: Path, directory_fd: int | None = None, depth: int = 0) -> None:
+        nonlocal entry_count
+        if depth > _MAX_WORKSPACE_DEPTH:
+            raise ValueError("workspace exceeds bounded directory depth")
+        if windows_root is not None:
+            windows_root.validate_directory(source_path)
+        before = os.fstat(directory_fd) if directory_fd is not None else source_path.lstat()
+        if not stat.S_ISDIR(before.st_mode):
+            raise ValueError("workspace contains a symbolic link or non-directory root")
+        with os.scandir(directory_fd if directory_fd is not None else source_path) as entries:
+            remaining = _MAX_WORKSPACE_ENTRIES - entry_count
+            bounded_entries = list(islice(entries, remaining + 1))
+            if len(bounded_entries) > remaining:
+                raise ValueError("workspace exceeds bounded entry count")
+            for entry in sorted(bounded_entries, key=lambda item: item.name):
+                entry_count += 1
+                if entry_count > _MAX_WORKSPACE_ENTRIES:
+                    raise ValueError("workspace exceeds bounded entry count")
+                info = entry.stat(follow_symlinks=False)
+                path = source_path / entry.name
+                output = output_path / entry.name
+                if stat.S_ISREG(info.st_mode):
+                    copy_file(path, output, info, directory_fd=directory_fd)
+                elif stat.S_ISDIR(info.st_mode):
+                    output.mkdir()
+                    if os.name == "posix":
+                        child_fd = os.open(
+                            entry.name, os.O_RDONLY | os.O_DIRECTORY | os.O_NOFOLLOW, dir_fd=directory_fd
+                        )
+                        try:
+                            if not _same_file(info, os.fstat(child_fd)):
+                                raise ValueError("workspace directory was replaced")
+                            copy_directory(path, output, child_fd, depth + 1)
+                        finally:
+                            os.close(child_fd)
+                    else:
+                        copy_directory(path, output, depth=depth + 1)
+                else:
+                    raise ValueError("workspace contains a symbolic link or special file")
+        after = os.fstat(directory_fd) if directory_fd is not None else source_path.lstat()
+        if not _same_file(before, after):
+            raise ValueError("workspace directory changed during copying")
+
+    if os.name == "posix":
+        root_fd = os.open(source, os.O_RDONLY | os.O_DIRECTORY | os.O_NOFOLLOW)
+        try:
+            copy_directory(source, destination, root_fd)
+        finally:
+            os.close(root_fd)
+    else:
+        with WindowsSnapshotRoot(source) as windows_root:
+            copy_directory(source, destination)
+
+
+def _terminate_process_tree(process: subprocess.Popen[bytes]) -> None:
+    """Kill the private POSIX group, or use Windows' descendant-aware taskkill."""
+    if os.name == "nt":
+        completed = subprocess.run(
+            ["taskkill", "/PID", str(process.pid), "/T", "/F"], capture_output=True, timeout=2, check=False
+        )
+        if completed.returncode != 0:
+            raise OSError("taskkill did not terminate the bounded process tree")
+    else:
+        with suppress(ProcessLookupError):
+            os.killpg(process.pid, signal.SIGTERM)
+        with suppress(subprocess.TimeoutExpired):
+            process.wait(timeout=0.2)
+        with suppress(ProcessLookupError):
+            os.killpg(process.pid, signal.SIGKILL)
+    try:
+        process.wait(timeout=1)
+    except subprocess.TimeoutExpired as error:
+        raise OSError("bounded worker did not stop") from error
+
+
+def _decode_reply(payload: bytes, request: BoundedExecutionRequest) -> BoundedExecutionEvidence:
+    try:
+        message = dryrun._decode_worker_message(payload, max_count=request.max_count)
+        if isinstance(message, dryrun._WorkerFailure):
+            identity = None
+            if isinstance(message.error, (UserErrorBase, DomainError)) and isinstance(message.error.code, ErrorCode):
+                identity = CeErrorIdentity(
+                    error_code=message.error.code,
+                    issue_code=message.error.issue_code if isinstance(message.error, UserErrorBase) else None,
+                )
+            diagnostic = Diagnostic(
+                code=AuthoringRuleId.SIDE_EFFECT
+                if message.policy_refusal
+                else AuthoringSystemDiagnosticCode.CHILD_EXECUTION,
+                phase=DiagnosticPhase.POLICY if message.policy_refusal else DiagnosticPhase.EVIDENCE,
+                message="Bounded CE execution refused an unsupported side effect."
+                if message.policy_refusal
+                else "Bounded CE execution failed.",
+                remediation="Repair the bounded operation or runtime input and retry.",
+                ce_error=identity,
+                path=("descriptor", request.descriptor_path.as_posix()),
+            )
+            return BoundedExecutionEvidence(
+                ok=False, captured=CapturedProducts((), request.max_count), diagnostics=(diagnostic,), base_run_ok=False
+            )
+        if not isinstance(message, dryrun._WorkerSuccess):
+            raise ValueError("unknown worker response")
+        captured = dryrun._captured_products(message, request.max_count)
+        diagnostics = tuple(
+            Diagnostic(
+                code=AuthoringSystemDiagnosticCode.CHILD_EXECUTION,
+                phase=DiagnosticPhase.EVIDENCE,
+                message="A captured row failed the requested file-export smoke check.",
+                remediation="Repair the file exporter configuration or generated value types.",
+                path=("descriptor", request.descriptor_path.as_posix()),
+            )
+            for _ in message.smoke_diagnostics
+        )
+        base_run_ok = any(product.rows for product in captured.products)
+        if not base_run_ok:
+            diagnostics += (
+                Diagnostic(
+                    code=AuthoringSystemDiagnosticCode.NOT_EXECUTED,
+                    phase=DiagnosticPhase.EVIDENCE,
+                    message="Bounded execution produced no captured rows.",
+                    remediation="Use a descriptor that produces the required bounded data.",
+                ),
+            )
+        return BoundedExecutionEvidence(
+            ok=base_run_ok and not diagnostics,
+            captured=captured,
+            diagnostics=diagnostics,
+            smoke_export=message.smoke_export,
+            base_run_ok=base_run_ok,
+        )
+    except (
+        AttributeError,
+        ImportError,
+        EOFError,
+        LookupError,
+        OverflowError,
+        RecursionError,
+        pickle.PickleError,
+        TypeError,
+        ValueError,
+    ):
+        return _failure(
+            AuthoringSystemDiagnosticCode.SERIALIZATION,
+            "Bounded child returned invalid capture evidence.",
+            request.max_count,
+        )
+
+
+def _requires_workspace_snapshot(request: BoundedExecutionRequest, workspace: AuthoringWorkspaceContext) -> bool:
+    """Only omit host files when registered DSL facts prove no resource dependency.
+
+    Arbitrary expressions and extensions stay on the bounded full-snapshot path;
+    their file dependencies cannot be inferred from XML declarations.
+    """
+    from datamimic_ce.domains.api import iter_generator_types
+    from datamimic_ce.engine.dsl.api import DescriptorParser, get_element_definition, parse_xml_source
+    from datamimic_ce.engine.dsl.vocabulary.contracts.dsl_element import BoundedExecutionStrategy
+
+    root = parse_xml_source(request.xml)
+    generators = {generator.__name__ for generator in iter_generator_types()}
+    requires_snapshot = False
+    descriptor_dir = workspace.resolve_descriptor_path().parent
+
+    def check_resource(value: str) -> None:
+        relative = Path(value)
+        if relative.is_absolute() or "\\" in value:
+            raise ValueError("workspace resources must use relative contained paths")
+        if not (descriptor_dir / relative).resolve(strict=False).is_relative_to(workspace.root):
+            raise ValueError("workspace resource resolves outside the bound root")
+
+    from datamimic_ce.engine.dsl.vocabulary.source_capabilities import source_file_format_for
+
+    for element in root.iter():
+        if not isinstance(element.tag, str):
+            continue
+        definition = get_element_definition(element.tag)
+        if definition is None:
+            requires_snapshot = True
+            continue
+        if definition.client_family:
+            requires_snapshot = True
+        source = element.attrib.get("source")
+        if source is not None and source_file_format_for(element.tag, source, element.attrib.get("type")) is not None:
+            check_resource(source)
+        export_uri = element.attrib.get("exportUri")
+        if export_uri is not None:
+            check_resource(export_uri)
+        uri = element.attrib.get("uri")
+        if uri is not None:
+            check_resource(uri)
+        if definition.tag == "demographics":
+            check_resource(element.attrib.get("directory", "."))
+        profile = definition.bounded_execution_profile
+        if profile.strategy is BoundedExecutionStrategy.UNSUPPORTED or profile.dependency_attribute:
+            requires_snapshot = True
+        # These are exact DSL attribute names, not searches in source text.
+        if set(element.attrib) & {"source", "uri", "script", "condition", "selector", "converter"}:
+            requires_snapshot = True
+        generator = element.attrib.get("generator")
+        if generator is not None and generator not in generators:
+            requires_snapshot = True
+        if definition.tag in {"demographics", "generator", "assert", "if", "else-if", "while"}:
+            requires_snapshot = True
+    if requires_snapshot:
+        return True
+    # Apply the actual parser as the final proof, with the same contained loader.
+    DescriptorParser.parse_xml(
+        request.xml,
+        workspace.resolve_descriptor_path(),
+        dict(request.environment_properties),
+        "production",
+        profile_loader=workspace.load_connection_profile,
+        logical_descriptor_path=request.descriptor_path.as_posix(),
+    )
+    return False
+
+
+class CeBoundedExecutor:
+    def __init__(self, workspace_context: AuthoringWorkspaceContext | None = None) -> None:
+        self._workspace_context = workspace_context
+
+    def execute(self, request: BoundedExecutionRequest) -> BoundedExecutionEvidence:
+        from datamimic_ce.domains.api import configured_dataset_overrides
+
+        request = BoundedExecutionRequest.model_validate_json(request.model_dump_json())
+        if configured_dataset_overrides():
+            return _failure(
+                AuthoringSystemDiagnosticCode.ENVIRONMENT,
+                "Bounded execution does not support configured external Domain dataset roots.",
+                request.max_count,
+            )
+        workspace = self._workspace_context
+        if workspace is not None and request.descriptor_path != workspace.descriptor_path:
+            return _failure(
+                AuthoringSystemDiagnosticCode.DESCRIPTOR,
+                "Descriptor path does not match the bound workspace.",
+                request.max_count,
+            )
+        result: BoundedExecutionEvidence
+        temporary = tempfile.TemporaryDirectory(prefix="datamimic-bounded-")
+        try:
+            private_root = Path(temporary.name)
+            private_workspace = private_root / "workspace"
+            try:
+                if workspace is None:
+                    private_workspace.mkdir()
+                    _requires_workspace_snapshot(
+                        request, AuthoringWorkspaceContext(private_workspace, request.descriptor_path)
+                    )
+                else:
+                    if _requires_workspace_snapshot(request, workspace):
+                        _snapshot_workspace(workspace.root, private_workspace)
+                    else:
+                        private_workspace.mkdir()
+                request_file = private_root / "request.json"
+                request_file.write_text(request.model_dump_json(), encoding="utf-8")
+            except (OSError, ValueError, etree.XMLSyntaxError):
+                result = _failure(
+                    AuthoringSystemDiagnosticCode.ENVIRONMENT,
+                    "Bounded workspace could not be copied safely.",
+                    request.max_count,
+                )
+            else:
+                result = self._execute_child(request, private_workspace, request_file, private_root / "reply.pickle")
+        finally:
+            try:
+                temporary.cleanup()
+            except OSError:
+                return _failure(
+                    AuthoringSystemDiagnosticCode.CLEANUP,
+                    "Private bounded workspace could not be removed.",
+                    request.max_count,
+                )
+        return result
+
+    @staticmethod
+    def _execute_child(
+        request: BoundedExecutionRequest, workspace: Path, request_file: Path, reply_file: Path
+    ) -> BoundedExecutionEvidence:
+        command = [
+            sys.executable,
+            "-m",
+            "datamimic_ce.authoring.adapters.bounded_executor_child",
+            str(request_file),
+            str(reply_file),
+            str(workspace),
+        ]
+        try:
+            process = subprocess.Popen(
+                command,
+                stdin=subprocess.DEVNULL,
+                stdout=subprocess.DEVNULL,
+                stderr=subprocess.DEVNULL,
+                start_new_session=os.name == "posix",
+            )
+        except OSError:
+            return _failure(
+                AuthoringSystemDiagnosticCode.CHILD_CRASH, "Bounded child could not start.", request.max_count
+            )
+        result: BoundedExecutionEvidence
+        deadline = time.monotonic() + request.timeout_seconds
+        try:
+            while not reply_file.exists():
+                if process.poll() is not None:
+                    result = _failure(
+                        AuthoringSystemDiagnosticCode.CHILD_CRASH,
+                        "Bounded child exited without evidence.",
+                        request.max_count,
+                    )
+                    break
+                if time.monotonic() >= deadline:
+                    result = _failure(
+                        AuthoringSystemDiagnosticCode.TIMEOUT,
+                        "Bounded execution exceeded its timeout.",
+                        request.max_count,
+                    )
+                    break
+                time.sleep(0.01)
+            else:
+                try:
+                    if reply_file.stat().st_size > _MAX_REPLY_BYTES:
+                        raise ValueError("bounded child evidence is too large")
+                    with reply_file.open("rb") as reply:
+                        payload = reply.read(_MAX_REPLY_BYTES + 1)
+                    if len(payload) > _MAX_REPLY_BYTES:
+                        raise ValueError("bounded child evidence changed size")
+                    result = _decode_reply(payload, request)
+                except (OSError, ValueError):
+                    result = _failure(
+                        AuthoringSystemDiagnosticCode.SERIALIZATION,
+                        "Bounded child evidence could not be read safely.",
+                        request.max_count,
+                    )
+        finally:
+            try:
+                _terminate_process_tree(process)
+            except (OSError, subprocess.TimeoutExpired):
+                return _failure(
+                    AuthoringSystemDiagnosticCode.CLEANUP,
+                    "Bounded process tree could not be terminated and reaped.",
+                    request.max_count,
+                )
+        return result

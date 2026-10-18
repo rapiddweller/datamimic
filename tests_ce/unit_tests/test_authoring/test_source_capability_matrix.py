@@ -7,13 +7,11 @@
 
 import pytest
 
-from datamimic_ce.authoring.adapters.dryrun import dry_run_source
 from datamimic_ce.authoring.adapters.linter import lint_source
-from datamimic_ce.authoring.adapters.reference import capabilities_manifest, distributions_reference
-from datamimic_ce.authoring.contracts import AuthoringStage
+from datamimic_ce.authoring.bootstrap import create_authoring_application
+from datamimic_ce.authoring.domain.requests import RunPhase, RunRequest
 from datamimic_ce.engine.dsl.vocabulary.source_capabilities import (
     SourceFileFormat,
-    serialize_source_capability,
     source_capabilities,
     source_file_format_for,
 )
@@ -90,20 +88,41 @@ def test_unsupported_source_contexts_emit_dm402(xml: str, expected: str) -> None
     assert expected in diagnostic.message
 
 
-def test_variable_xml_is_rejected_by_lint_before_runtime() -> None:
-    result = dry_run_source('<setup><variable name="row" source="rows.xml"/></setup>')
-    assert result.stage is AuthoringStage.LINT
-    assert [diagnostic.rule for diagnostic in result.diagnostics if diagnostic.severity.value == "error"] == ["DM402"]
+def test_variable_xml_is_rejected_by_lint_before_runtime(tmp_path) -> None:
+    result = create_authoring_application(tmp_path).dry_run(
+        RunRequest(xml='<setup><variable name="row" source="rows.xml"/></setup>')
+    )
+    assert result.phase is RunPhase.LINT
+    assert [diagnostic.code for diagnostic in result.diagnostics if diagnostic.severity == "error"] == ["DM402"]
 
 
-def test_source_capabilities_project_identically_to_manifest_and_reference() -> None:
-    expected = [serialize_source_capability(capability) for capability in source_capabilities()]
-    assert capabilities_manifest()["source_capabilities"] == expected
-    prose = distributions_reference()
-    for capability in source_capabilities():
-        assert f"<{capability.element}>" in prose
-        for file_format in capability.file_formats:
-            assert file_format.value in prose
+def test_source_capabilities_project_identically_to_canonical_discovery() -> None:
+    snapshot = create_authoring_application().capabilities()
+    facts = source_capabilities()
+    assert facts and snapshot.source_family_capabilities and snapshot.source_suffix_capabilities
+    file_family = next(item for item in snapshot.source_family_capabilities if item.name == "file")
+    assert {(item.element, item.source_type, item.suffixes) for item in file_family.consumers} == {
+        (fact.element, fact.source_type, tuple(suffix.value for suffix in fact.file_formats))
+        for fact in facts
+        if fact.file_formats
+    }
+    for suffix in snapshot.source_suffix_capabilities:
+        assert {(item.element, item.source_type) for item in suffix.consumers} == {
+            (fact.element, fact.source_type)
+            for fact in facts
+            if any(value.value == suffix.name for value in fact.file_formats)
+        }
+    assert {item.name for item in snapshot.source_suffix_capabilities} == {
+        suffix.value for fact in facts for suffix in fact.file_formats
+    }
+    for family in snapshot.source_family_capabilities:
+        if family.name == "file":
+            continue
+        assert {(item.element, item.source_type) for item in family.consumers} == {
+            (fact.element, fact.source_type)
+            for fact in facts
+            if (fact.allows_client if family.requires_client else fact.allows_memstore)
+        }
 
 
 def test_every_declared_file_capability_resolves_in_its_own_context() -> None:

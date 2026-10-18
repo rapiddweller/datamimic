@@ -12,6 +12,7 @@ import pytest
 from datamimic_ce.engine.io.api import cleanup_exporter_chunks
 from datamimic_ce.engine.io.exporters.core.unified_buffered_exporter import UnifiedBufferedExporter
 from datamimic_ce.engine.io.exporters.formats.json_exporter import JsonExporter
+from datamimic_ce.errors import ExportConfigError, IssueCode
 from datamimic_ce.interfaces.python.data_mimic_test import DataMimicTest
 
 REPO = Path(__file__).resolve().parents[2]
@@ -163,10 +164,11 @@ def test_finalization_failure_does_not_publish_buffered_files(tmp_path: Path, mo
         raise failure
 
     monkeypatch.setattr(JsonExporter, "finalize_chunks", fail_finalize)
-    with pytest.raises(RuntimeError, match="finalization failed") as raised:
+    with pytest.raises(ExportConfigError) as raised:
         DataMimicTest(test_dir=tmp_path, filename=descriptor.name).test_with_timer()
 
-    assert raised.value is failure
+    assert raised.value.issue_code is IssueCode.EXPORT_FLUSH_FAILED
+    assert raised.value.__cause__ is failure
     assert not (tmp_path / "output" / "results").exists()
     assert not list(tmp_path.glob("temp_result_*"))
 

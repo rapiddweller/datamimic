@@ -44,17 +44,15 @@ def _run_cli(
 
 
 def test_capabilities_is_repeatable_pure_json_without_global_cli(tmp_path: Path) -> None:
-    first = _run_cli(tmp_path, "capabilities")
-    second = _run_cli(tmp_path, "capabilities")
+    first = _run_cli(tmp_path, "authoring", "capabilities")
+    second = _run_cli(tmp_path, "authoring", "capabilities")
 
     assert first.returncode == second.returncode == 0
     assert first.stderr == second.stderr == ""
     assert first.stdout == second.stdout
     manifest = json.loads(first.stdout)
-    assert manifest["schema_version"]
-    assert manifest["aliases"]["iterate"] == "generate"
-    assert "iterate" in manifest["elements"]
-    assert {"kafka-exporter", "object-storage", "operate"}.isdisjoint(manifest["elements"])
+    assert "generate" in manifest["element"]
+    assert {"kafka-exporter", "object-storage", "operate"}.isdisjoint(manifest["element"])
 
 
 def test_module_invocation_preserves_success_and_usage_exit_codes(tmp_path: Path) -> None:
@@ -62,7 +60,7 @@ def test_module_invocation_preserves_success_and_usage_exit_codes(tmp_path: Path
     env["PYTHONPATH"] = str(Path(__file__).parents[3])
 
     success = subprocess.run(
-        [sys.executable, "-m", "datamimic_ce.interfaces.cli", "capabilities"],
+        [sys.executable, "-m", "datamimic_ce.interfaces.cli", "authoring", "capabilities"],
         cwd=tmp_path,
         env=env,
         capture_output=True,
@@ -82,35 +80,20 @@ def test_module_invocation_preserves_success_and_usage_exit_codes(tmp_path: Path
 
     assert success.returncode == 0
     assert success.stderr == ""
-    assert json.loads(success.stdout)["schema_version"]
+    assert "generate" in json.loads(success.stdout)["element"]
     assert invalid_command.returncode == 2
     assert "Usage:" in invalid_command.stderr
 
 
-@pytest.mark.parametrize(
-    ("command", "message"),
-    [
-        (("lint", "model.xml", "--format", "json", "--fail-on", "banana"), "Invalid fail-on"),
-        (("lint", "model.xml", "--format", "json", "--max-diagnostics", "0"), "Invalid max-diagnostics"),
-        (("dry-run", "model.xml", "--format", "json", "--max-count", "0"), "Invalid max-count"),
-        (("dry-run", "model.xml", "--format", "json", "--sample-rows", "0"), "Invalid sample-rows"),
-        (("dry-run", "model.xml", "--format", "json", "--timeout", "0"), "Invalid timeout"),
-    ],
-)
-def test_invalid_agent_options_are_single_json_errors(
-    tmp_path: Path,
-    command: tuple[str, ...],
-    message: str,
-) -> None:
+@pytest.mark.parametrize("options", [("--max-count", "0"), ("--sample-rows", "0"), ("--timeout", "0")])
+def test_invalid_agent_options_are_single_json_errors(tmp_path: Path, options: tuple[str, ...]) -> None:
     (tmp_path / "model.xml").write_text("<setup/>", encoding="utf-8")
-
-    result = _run_cli(tmp_path, *command)
-
-    assert result.returncode == 2
+    result = _run_cli(tmp_path, "authoring", "dry-run", "model.xml", *options)
+    assert result.returncode == 1
     assert result.stderr == ""
     payload = json.loads(result.stdout)
     assert payload["ok"] is False
-    assert message in payload["error"]
+    assert payload["diagnostics"]
 
 
 def test_seeded_json_dry_run_is_repeatable_and_stderr_clean(tmp_path: Path) -> None:
@@ -125,51 +108,54 @@ def test_seeded_json_dry_run_is_repeatable_and_stderr_clean(tmp_path: Path) -> N
         encoding="utf-8",
     )
 
-    first = _run_cli(tmp_path, "dry-run", "model.xml", "--format", "json")
-    second = _run_cli(tmp_path, "dry-run", "model.xml", "--format", "json")
+    first = _run_cli(tmp_path, "authoring", "dry-run", "model.xml", "--format", "json")
+    second = _run_cli(tmp_path, "authoring", "dry-run", "model.xml", "--format", "json")
 
     assert first.returncode == second.returncode == 0
     assert first.stderr == second.stderr == ""
     first_payload = json.loads(first.stdout)
     second_payload = json.loads(second.stdout)
     assert first_payload["ok"] is second_payload["ok"] is True
-    assert first_payload["stage"] == second_payload["stage"] == "run"
+    assert first_payload["phase"] == second_payload["phase"] == "dry_run"
     assert first_payload["products"] == second_payload["products"]
 
 
-def test_seeded_json_scaffold_is_repeatable_and_stderr_clean(tmp_path: Path) -> None:
-    spec = json.dumps(
+def test_seeded_json_build_is_repeatable_and_stderr_clean(tmp_path: Path) -> None:
+    request = json.dumps(
         {
-            "version": "1",
-            "seed": 17,
-            "products": [
-                {
-                    "kind": "generated",
-                    "name": "records",
-                    "count": 8,
-                    "fields": [{"kind": "increment", "name": "id"}],
+            "document": {
+                "root": {
+                    "kind": "setup",
+                    "properties": {"rng_seed": 17},
+                    "children": [
+                        {
+                            "kind": "generate",
+                            "properties": {"name": "records", "count": 8},
+                            "children": [
+                                {"kind": "key", "properties": {"name": "id", "generator": "IncrementGenerator"}},
+                            ],
+                        },
+                    ],
                 }
-            ],
+            }
         }
     )
-
-    first = _run_cli(tmp_path, "scaffold", "-", "--format", "json", stdin=spec)
-    second = _run_cli(tmp_path, "scaffold", "-", "--format", "json", stdin=spec)
-
+    first = _run_cli(tmp_path, "authoring", "build", "-", stdin=request)
+    second = _run_cli(tmp_path, "authoring", "build", "-", stdin=request)
     assert first.returncode == second.returncode == 0
     assert first.stderr == second.stderr == ""
     assert first.stdout == second.stdout
     payload = json.loads(first.stdout)
-    assert payload["ok"] is True
-    assert payload["verified"] is True
+    assert payload["outcome"] == "ready"
+    assert payload["evidence"][0]["count"] == 8
 
 
 @pytest.mark.parametrize("stdin", ["", "{broken", "[]"])
-def test_malformed_scaffold_stdin_is_single_json_error(tmp_path: Path, stdin: str) -> None:
-    result = _run_cli(tmp_path, "scaffold", "-", "--format", "json", stdin=stdin)
+def test_malformed_build_stdin_is_single_json_rejection(tmp_path: Path, stdin: str) -> None:
+    result = _run_cli(tmp_path, "authoring", "build", "-", stdin=stdin)
 
-    assert result.returncode == 2
+    assert result.returncode == 1
     assert result.stderr == ""
     payload = json.loads(result.stdout)
-    assert payload["ok"] is False
-    assert payload["error"]
+    assert payload["outcome"] == "rejected"
+    assert payload["diagnostics"]

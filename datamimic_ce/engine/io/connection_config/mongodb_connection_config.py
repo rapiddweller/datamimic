@@ -13,6 +13,7 @@ from datamimic_ce.engine.io.connection_config.connection_config_base import Conn
 
 
 class MongoDBConnectionValues(TypedDict):
+    read_only: bool
     host: str
     port: int
     database: str
@@ -25,6 +26,7 @@ class MongoDBConnectionConfig(BaseModel, ConnectionConfig):
     MongoDB's connection configuration used for connecting to database server
     """
 
+    read_only: bool = False
     host: str
     port: int
     database: str
@@ -35,6 +37,7 @@ class MongoDBConnectionConfig(BaseModel, ConnectionConfig):
 
     def get_connection_config(self) -> MongoDBConnectionValues:
         return {
+            "read_only": self.read_only,
             "host": self.host,
             "port": self.port,
             "database": self.database,

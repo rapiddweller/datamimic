@@ -65,20 +65,21 @@ unproven ([Amendment 169](https://github.com/rapiddweller/datamimic/blob/384b772
 graph TD
     authoring --> domains
     authoring --> dsl
+    authoring --> errors
     authoring --> io
-    authoring --> python_compat
     authoring --> runtime
     domains --> dsl
     domains --> errors
     domains --> io
     domains --> randomness
-    dsl --> python_compat
+    dsl --> errors
     interfaces --> authoring
     interfaces --> domains
-    interfaces --> python_compat
+    interfaces --> errors
     interfaces --> resources
     interfaces --> runtime
     io --> dsl
+    io --> errors
     io --> randomness
     resources --> domains
     resources --> dsl
@@ -86,9 +87,9 @@ graph TD
     resources --> runtime
     runtime --> domains
     runtime --> dsl
+    runtime --> errors
     runtime --> io
     runtime --> randomness
-    runtime --> python_compat
 ```
 
 ## Observed dependencies
@@ -98,26 +99,27 @@ graph TD
 graph TD
     authoring --> domains
     authoring --> dsl
+    authoring --> errors
     authoring --> io
-    authoring --> python_compat
     authoring --> runtime
     domains --> dsl
     domains --> errors
     domains --> io
     domains --> randomness
-    dsl --> python_compat
+    dsl --> errors
     interfaces --> authoring
     interfaces --> domains
-    interfaces --> python_compat
     interfaces --> resources
     interfaces --> runtime
     io --> dsl
+    io --> errors
     io --> randomness
     resources --> domains
     resources --> io
     resources --> runtime
     runtime --> domains
     runtime --> dsl
+    runtime --> errors
     runtime --> io
     runtime --> randomness
 ```

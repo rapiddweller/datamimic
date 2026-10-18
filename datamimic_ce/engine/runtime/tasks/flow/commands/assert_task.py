@@ -8,6 +8,7 @@ from datamimic_ce.engine.dsl.api import AssertStatement
 from datamimic_ce.engine.runtime.contexts.context import Context
 from datamimic_ce.engine.runtime.contexts.geniter_context import GenIterContext
 from datamimic_ce.engine.runtime.tasks.base.task import CommonSubTask
+from datamimic_ce.errors import IssueCode, task_config_error
 
 
 class AssertTask(CommonSubTask):
@@ -33,7 +34,9 @@ class AssertTask(CommonSubTask):
         except Exception as err:
             # A broken expression (typo'd field, syntax error) must name the assert, not surface
             # as a bare NameError from deep inside the evaluator.
-            raise ValueError(f"<assert> condition '{condition}' failed to evaluate: {err}") from err
+            raise task_config_error(
+                code=IssueCode.TASK_EXPRESSION_EVAL_FAILED, expr=condition, error="assert expression failed"
+            ) from err
         if passed:
             return
         parts = [f"<assert> failed: condition '{condition}' is not true"]
@@ -41,4 +44,8 @@ class AssertTask(CommonSubTask):
             parts.append(self._statement.message)
         if isinstance(ctx, GenIterContext) and ctx.current_product:
             parts.append(f"record: {ctx.current_product}")
-        raise ValueError(" | ".join(parts))
+        raise task_config_error(
+            code=IssueCode.TASK_ASSERT_FAILED,
+            condition=repr(condition),
+            extra=" | " + " | ".join(parts[1:]) if parts[1:] else "",
+        )

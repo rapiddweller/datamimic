@@ -19,6 +19,7 @@ from datamimic_ce.engine.io.clients.rdbms_client import RdbmsClient
 from datamimic_ce.engine.runtime.contexts.geniter_context import GenIterContext
 from datamimic_ce.engine.runtime.tasks.sources.reference import load_reference_source
 from datamimic_ce.engine.runtime.tasks.values.reference.task import ReferenceTask
+from datamimic_ce.errors import TaskConfigError, IssueCode
 
 
 def test_api_reference_field_is_canonical_type():
@@ -71,15 +72,19 @@ class TestReferenceTask(unittest.TestCase):
             task.execute(self.context)
 
         message = str(context.exception)
-        self.assertIn("RDBMS and MongoDB are supported", message)
+        self.assertIsInstance(context.exception, TaskConfigError)
+        self.assertIs(context.exception.issue_code, IssueCode.TASK_REFERENCE_UNSUPPORTED_SOURCE)
+        self.assertIn("test_name", message)
+        self.assertIn("relational or MongoDB", message)
 
     def test_execute_unsupported_database_client(self):
         """A generic database client is not a supported reference source."""
         self.context.root.clients.get.return_value = MagicMock(spec=DatabaseClient)
         task = ReferenceTask(self.statement)
 
-        with self.assertRaisesRegex(ValueError, "RDBMS and MongoDB are supported"):
+        with self.assertRaises(TaskConfigError) as caught:
             task.execute(self.context)
+        self.assertIs(caught.exception.issue_code, IssueCode.TASK_REFERENCE_UNSUPPORTED_SOURCE)
 
     def test_execute_empty_dataset(self):
         """Test execution with empty dataset."""
@@ -89,7 +94,9 @@ class TestReferenceTask(unittest.TestCase):
         with self.assertRaises(ValueError) as context:
             task.execute(self.context)
 
-        self.assertEqual(str(context.exception), "No data found for reference test_name")
+        self.assertIsInstance(context.exception, TaskConfigError)
+        self.assertIs(context.exception.issue_code, IssueCode.TASK_REFERENCE_NO_DATA)
+        self.assertIn("test_name", str(context.exception))
 
     def test_execute_unique_values(self):
         """Test execution with unique values requirement."""

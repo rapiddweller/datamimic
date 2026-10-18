@@ -31,8 +31,8 @@ The DATAMIMIC API can be utilized in multiple ways:
 datamimic version                    # Display version information
 datamimic init <project-name>        # Initialize a new project
 datamimic run <descriptor.xml>       # Run a data generation descriptor
-datamimic lint <descriptor.xml>      # Lint descriptor: schema, semantics, best practices
-datamimic capabilities                # Print the DSL surface as JSON
+datamimic authoring lint <descriptor.xml>      # Lint descriptor: schema, semantics, best practices
+datamimic authoring capabilities                # Print the DSL surface as JSON
 datamimic demo list                  # List available demos
 datamimic demo create <demo-name>    # Create a specific demo
 ```

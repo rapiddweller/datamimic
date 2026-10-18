@@ -76,7 +76,7 @@ def test_condition_evaluation_preserves_empty_boolean_and_invalid_rules() -> Non
     assert context.calls == ["truth", "falsehood"]
     with pytest.raises(
         ValueError,
-        match="Evaluated value of condition script 'number' in element 'variable' is not valid boolean value",
+        match="Condition 'number' for element 'variable' evaluated to a non-boolean value",
     ):
         evaluate_condition_value(context, "variable", "number")
 
@@ -96,12 +96,8 @@ def test_selector_uses_statement_markers_before_root_defaults() -> None:
     fallback_suffix = fallback_statement.variable_suffix or context.root.default_variable_suffix
     explicit_prefix = explicit_statement.variable_prefix or context.root.default_variable_prefix
     explicit_suffix = explicit_statement.variable_suffix or context.root.default_variable_suffix
-    fallback_selector = interpolate_variables(
-        context, fallback_statement.selector, fallback_prefix, fallback_suffix
-    )
-    explicit_selector = interpolate_variables(
-        context, explicit_statement.selector, explicit_prefix, explicit_suffix
-    )
+    fallback_selector = interpolate_variables(context, fallback_statement.selector, fallback_prefix, fallback_suffix)
+    explicit_selector = interpolate_variables(context, explicit_statement.selector, explicit_prefix, explicit_suffix)
     assert fallback_selector == "where name=root"
     assert explicit_selector == "where name=local"
 

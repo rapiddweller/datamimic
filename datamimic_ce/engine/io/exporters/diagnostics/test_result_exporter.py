@@ -5,6 +5,7 @@
 # For questions and support, contact: info@rapiddweller.com
 
 
+from datamimic_ce.engine.dsl.vocabulary.product_identity import capture_product_name
 from datamimic_ce.engine.io.contracts import Exporter
 
 
@@ -25,7 +26,7 @@ class TestResultExporter(Exporter):
         :return:
         """
         name, data, *_ = product
-        name = name.split("|", 1)[-1].strip() if "|" in name else name
+        name = capture_product_name(name)
         self._storage[name] = self._storage.get(name, []) + data
 
     def get_result(self) -> dict[str, list[object]]:

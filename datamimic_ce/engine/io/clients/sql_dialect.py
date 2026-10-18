@@ -21,6 +21,7 @@ from sqlglot.dialects import Dialects
 from sqlglot.tokens import Token, TokenType
 
 from datamimic_ce.engine.dsl.vocabulary.enums.dbms_enums import Dbms
+from datamimic_ce.errors import IssueCode, operation_error
 
 logger = logging.getLogger("DATAMIMIC")
 
@@ -355,3 +356,93 @@ def _compound_block_end(tokens: list[Token], start: int) -> int | None:
                 index += 1
         index += 1
     return len(tokens) - 1
+
+
+# Unknown calls can change server state even inside a SELECT (sequences, advisory locks, UDFs).
+_READ_ONLY_FUNCTIONS = frozenset(
+    {
+        exp.Count,
+        exp.Sum,
+        exp.Avg,
+        exp.Min,
+        exp.Max,
+        exp.Abs,
+        exp.Lower,
+        exp.Upper,
+        exp.Coalesce,
+        exp.Nullif,
+        exp.Cast,
+        exp.TryCast,
+        exp.Round,
+        exp.Length,
+        exp.Substring,
+        exp.Trim,
+        exp.Concat,
+        exp.Case,
+        exp.If,
+    }
+)
+
+
+def require_read_only_query(query: str, dbms: Dbms) -> None:
+    try:
+        tokens = sqlglot.tokenize(query, read=DIALECT_RULES[dbms].sqlglot_dialect)
+        statements = sqlglot.parse(query, read=DIALECT_RULES[dbms].sqlglot_dialect)
+    except sqlglot.errors.SqlglotError:
+        raise operation_error(
+            code=IssueCode.OPERATION_READ_ONLY_WRITE_BLOCKED,
+            target="database selector",
+            reason="query could not be proven read-only",
+        ) from None
+    # Dialects can execute comments or hints that the ordinary query AST omits.
+    if any(token.comments for token in tokens):
+        raise operation_error(
+            code=IssueCode.OPERATION_READ_ONLY_WRITE_BLOCKED,
+            target="database selector",
+            reason="comments cannot be proven read-only across supported dialects",
+        )
+    if len(statements) != 1 or not isinstance(statements[0], exp.Query):
+        raise operation_error(
+            code=IssueCode.OPERATION_READ_ONLY_WRITE_BLOCKED,
+            target="database selector",
+            reason="exactly one read-only query is required",
+        )
+    for node in statements[0].walk():
+        if isinstance(
+            node,
+            (
+                exp.DML,
+                exp.DDL,
+                exp.Into,
+                exp.Lock,
+                exp.Command,
+                exp.PropertyEQ,
+                exp.NextValueFor,
+                exp.Hint,
+                exp.WithTableHint,
+            ),
+        ):
+            raise operation_error(
+                code=IssueCode.OPERATION_READ_ONLY_WRITE_BLOCKED,
+                target="database selector",
+                reason="query contains a write or locking operation",
+            )
+        if isinstance(node, exp.Func) and type(node) not in _READ_ONLY_FUNCTIONS:
+            raise operation_error(
+                code=IssueCode.OPERATION_READ_ONLY_WRITE_BLOCKED,
+                target="database selector",
+                reason="query contains a function without a read-only guarantee",
+            )
+
+        if isinstance(node, exp.Column) and dbms is Dbms.ORACLE and node.name.casefold() in {"nextval", "currval"}:
+            raise operation_error(
+                code=IssueCode.OPERATION_READ_ONLY_WRITE_BLOCKED,
+                target="database selector",
+                reason="sequence access is not read-only",
+            )
+        if isinstance(node, exp.DataType) and node.this is exp.DataType.Type.USERDEFINED:
+            raise operation_error(
+                code=IssueCode.OPERATION_READ_ONLY_WRITE_BLOCKED,
+                target="database selector",
+                reason="user-defined casts do not provide a read-only guarantee",
+            )

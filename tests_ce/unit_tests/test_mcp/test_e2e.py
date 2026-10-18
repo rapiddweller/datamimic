@@ -1,6 +1,5 @@
-"""End-to-end contract tests for the reduced MCP authoring adapter."""
+"""Optional MCP calls use the same typed application contracts as the CLI."""
 
-import hashlib
 import json
 import threading
 
@@ -10,7 +9,7 @@ fastmcp_client = pytest.importorskip("fastmcp.client")
 Client = fastmcp_client.Client
 
 import datamimic_ce.interfaces.mcp.server as mcp_server  # noqa: E402
-from datamimic_ce.authoring.domain.diagnostics import LintResult  # noqa: E402
+from datamimic_ce.authoring.domain.requests import LintResult  # noqa: E402
 from datamimic_ce.interfaces.mcp.server import create_server  # noqa: E402
 
 
@@ -24,108 +23,117 @@ async def test_exact_authoring_tool_surface_and_no_resources(anyio_backend: str)
     async with Client(create_server()) as client:
         tools = await client.list_tools()
         assert {tool.name for tool in tools} == {
-            "datamimic_check",
-            "datamimic_run",
+            "datamimic_version",
+            "datamimic_schema",
+            "datamimic_capabilities",
+            "datamimic_capability",
             "datamimic_reference",
-            "datamimic_scaffold",
+            "datamimic_compile",
+            "datamimic_decompile",
+            "datamimic_build",
+            "datamimic_lint",
+            "datamimic_dry_run",
+            "datamimic_run",
         }
         assert await client.list_resources() == []
         assert all(tool.description for tool in tools)
-        scaffold = next(tool for tool in tools if tool.name == "datamimic_scaffold")
-        schema_hash = hashlib.sha256(
-            json.dumps(scaffold.inputSchema, sort_keys=True, separators=(",", ":")).encode()
-        ).hexdigest()
-        assert schema_hash == "fa36a2e3d1da2f82cf1767a4649e6f2b3269eb5d7d12b82f5282d773221b6d51"
+        build = next(tool for tool in tools if tool.name == "datamimic_build")
+        request_schema = build.inputSchema["$defs"]["BuildRequestV4"]
+        assert "document" in request_schema["properties"]
+        assert "spec" not in request_schema["properties"]
+        assert request_schema["properties"]["version"]["const"] == "4.0"
 
 
 @pytest.mark.anyio
-async def test_reference_and_check_delegate_canonical_contracts(anyio_backend: str) -> None:
+async def test_codec_lint_and_reference_use_canonical_contracts(anyio_backend: str) -> None:
     async with Client(create_server()) as client:
-        authoring_reference = await client.call_tool(
-            "datamimic_reference",
-            {"request": {"topic": "authoring"}},
-        )
-        authoring_payload = json.loads(authoring_reference[0].text)
-        assert authoring_payload["ok"] is True
-        authoring_content = json.loads(authoring_payload["content"])
-        assert {
-            "category": "expectation",
-            "kind": "range",
-            "required_fields": ["product", "field", "minimum", "maximum"],
-            "allowed_fields": ["kind", "product", "list_field", "field", "minimum", "maximum"],
-        } in authoring_content["variants"]
-
-        field_reference = await client.call_tool(
-            "datamimic_reference",
-            {"request": {"topic": "authoring", "category": "field"}},
-        )
-        field_payload = json.loads(field_reference[0].text)
-        assert field_payload["ok"] is True
-        field_content = json.loads(field_payload["content"])
-        assert {variant["category"] for variant in field_content["variants"]} == {"field"}
-
-        reference = await client.call_tool(
-            "datamimic_reference",
-            {"request": {"topic": "element", "name": "generate"}},
-        )
-        reference_payload = json.loads(reference[0].text)
-        assert reference_payload["ok"] is True
-        assert "pageSize" in reference_payload["content"]
-
-        checked = await client.call_tool(
-            "datamimic_check",
-            {"request": {"xml": "<setup/>"}},
-        )
-        check_payload = json.loads(checked[0].text)
-        assert check_payload["ok"] is True
+        compiled = await client.call_tool("datamimic_compile", {"request": {"document": {"root": {"kind": "setup"}}}})
+        compiled_payload = json.loads(compiled[0].text)
+        assert compiled_payload["outcome"] == "ready"
+        xml = compiled_payload["artifact"]["compiled_xml"]
+        decompiled = await client.call_tool("datamimic_decompile", {"request": {"xml": xml}})
+        assert json.loads(decompiled[0].text)["document"] == compiled_payload["artifact"]["document"]
+        checked = await client.call_tool("datamimic_lint", {"request": {"xml": xml}})
+        assert json.loads(checked[0].text)["ok"] is True
+        reference = await client.call_tool("datamimic_reference", {"request": {"topic": "overview"}})
+        assert json.loads(reference[0].text)["topic"] == "overview"
+        capabilities = await client.call_tool("datamimic_capabilities", {})
+        assert "setup" in json.loads(capabilities[0].text)["element"]
 
 
 @pytest.mark.anyio
-async def test_scaffold_evaluates_caller_owned_acceptance_requirements(anyio_backend: str) -> None:
-    async with Client(create_server()) as client:
-        result = await client.call_tool(
-            "datamimic_scaffold",
-            {
-                "request": {
-                    "spec": {
-                        "version": "1",
-                        "seed": 7,
-                        "products": [
-                            {
-                                "kind": "generated",
-                                "name": "records",
-                                "count": 1,
-                                "fields": [{"kind": "increment", "name": "id"}],
-                            }
-                        ],
-                    },
-                    "acceptance_requirements": [
-                        {"kind": "exact_count", "product": "records", "count": 2}
-                    ],
-                }
-            },
-        )
-
-    payload = json.loads(result[0].text)
-    caller_result = next(item for item in payload["acceptance"]["results"] if item["source"] == "caller")
-    assert caller_result["kind"] == "exact_count"
-    assert caller_result["status"] == "fail"
-    assert payload["verified"] is False
-
-
-@pytest.mark.anyio
-async def test_blocking_service_work_is_offloaded_from_the_event_loop(
-    anyio_backend: str, monkeypatch: pytest.MonkeyPatch
-) -> None:
+async def test_blocking_service_work_is_offloaded_from_event_loop(anyio_backend: str, monkeypatch) -> None:
     event_loop_thread = threading.get_ident()
     service_threads: list[int] = []
 
-    def blocking_check(_request: object) -> LintResult:
-        service_threads.append(threading.get_ident())
-        return LintResult(ok=True)
+    class RecordingApplication:
+        def lint(self, request) -> LintResult:
+            service_threads.append(threading.get_ident())
+            return LintResult(ok=True)
 
-    monkeypatch.setattr(mcp_server, "check", blocking_check)
+    monkeypatch.setattr(mcp_server, "create_authoring_application", lambda **kwargs: RecordingApplication())
     async with Client(create_server()) as client:
-        await client.call_tool("datamimic_check", {"request": {"xml": "<setup/>"}})
-
+        await client.call_tool("datamimic_lint", {"request": {"xml": "<setup/>"}})
     assert service_threads and service_threads[0] != event_loop_thread
+
+
+@pytest.mark.anyio
+async def test_build_matches_cli_and_preserves_caller_requirement_rejections(anyio_backend: str, tmp_path) -> None:
+    from pydantic import TypeAdapter
+    from typer.testing import CliRunner
+
+    from datamimic_ce.authoring.domain.requests import BuildResult
+    from datamimic_ce.interfaces.cli import app
+
+    request = {
+        "document": {
+            "root": {
+                "kind": "setup",
+                "properties": {"rng_seed": 7},
+                "children": [
+                    {
+                        "kind": "generate",
+                        "properties": {"name": "rows", "count": 2},
+                        "children": [
+                            {"kind": "key", "properties": {"name": "id", "generator": "IncrementGenerator"}},
+                        ],
+                    },
+                ],
+            }
+        }
+    }
+    async with Client(create_server(workspace_root=tmp_path)) as client:
+        ready = await client.call_tool("datamimic_build", {"request": request})
+        cli = CliRunner().invoke(
+            app, ["authoring", "build", "-", "--workspace-root", str(tmp_path)], input=json.dumps(request)
+        )
+        assert cli.exit_code == 0, cli.stdout
+        contract = TypeAdapter(BuildResult)
+        assert contract.validate_json(ready[0].text) == contract.validate_json(cli.stdout)
+        request["acceptance_requirements"] = [
+            {
+                "origin": "caller",
+                "expectation": {
+                    "kind": "exact_count",
+                    "subject": {"kind": "product", "product": "rows"},
+                    "count": 3,
+                },
+            }
+        ]
+        rejected = await client.call_tool("datamimic_build", {"request": request})
+        payload = json.loads(rejected[0].text)
+        assert payload["outcome"] == "rejected"
+        assert any(item["path"][:2] == ["acceptance_requirements", 0] for item in payload["diagnostics"])
+
+
+@pytest.mark.anyio
+async def test_bounded_run_tools_preserve_distinct_phases(anyio_backend: str, tmp_path) -> None:
+    xml = '<setup rngSeed="7"><generate name="rows" count="2"><key name="id" generator="IncrementGenerator"/></generate></setup>'
+    async with Client(create_server(workspace_root=tmp_path)) as client:
+        dry = await client.call_tool("datamimic_dry_run", {"request": {"xml": xml}})
+        run = await client.call_tool("datamimic_run", {"request": {"xml": xml}})
+        dry_payload, run_payload = json.loads(dry[0].text), json.loads(run[0].text)
+        assert dry_payload["ok"] is run_payload["ok"] is True
+        assert dry_payload["phase"] == "dry_run"
+        assert run_payload["phase"] == "run"
+        assert dry_payload["products"] == run_payload["products"]

@@ -12,7 +12,7 @@
       },
       {
         "path": "datamimic_ce/domains/shared/datasets/loader.py",
-        "responsibility": "Loads CSV and JSON domain datasets and provides weighted selection helpers for generators."
+        "responsibility": "Loads Domain dataset rows through IO file operations, distinguishing exact installed package data from workspace-contained custom paths."
       },
       {
         "path": "datamimic_ce/domains/shared/datasets/locale_registry.py",

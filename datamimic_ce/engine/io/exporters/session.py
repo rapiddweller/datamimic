@@ -21,6 +21,7 @@ from datamimic_ce.engine.io.exporters.diagnostics.test_result_exporter import Te
 from datamimic_ce.engine.io.exporters.formats.xml_exporter import XMLExporter
 from datamimic_ce.engine.io.exporters.registry import create_exporter_list
 from datamimic_ce.engine.io.memstore import Memstore
+from datamimic_ce.errors import is_user_error
 
 logger = logging.getLogger("DATAMIMIC")
 
@@ -30,9 +31,7 @@ class _ProductExporters(TypedDict):
     without_operation: list[Exporter]
 
 
-PreparedPage = tuple[
-    tuple[str, list[object]] | tuple[str, list[object], ExportMetadata], list[dict[str, object]]
-]
+PreparedPage = tuple[tuple[str, list[object]] | tuple[str, list[object], ExportMetadata], list[dict[str, object]]]
 
 
 class ExportSession:
@@ -50,9 +49,7 @@ class ExportSession:
         export_uri: str | None,
         targets: list[str],
     ) -> None:
-        with_operation, without_operation = create_exporter_list(
-            setup_context, product_name, export_uri, targets
-        )
+        with_operation, without_operation = create_exporter_list(setup_context, product_name, export_uri, targets)
         self._register_exporters(full_name, with_operation, without_operation)
 
     def _register_exporters(
@@ -135,5 +132,7 @@ def consume_exporters(
             else:
                 raise TypeError(f"Unsupported exporter type: {type(exporter).__name__}")
         except Exception as e:
+            if is_user_error(e):
+                raise
             logger.error(f"Error in exporter {type(exporter).__name__}: {str(e)}")
             raise ValueError(f"Error in exporter {type(exporter).__name__}: {e}") from e

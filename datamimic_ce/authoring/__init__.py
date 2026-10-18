@@ -1,13 +1,6 @@
-"""Canonical public API for DATAMIMIC intent authoring."""
+"""Canonical typed authoring API; concrete adapters are constructed lazily."""
 
-from datamimic_ce.authoring.api import scaffold
-from datamimic_ce.authoring.contracts import ScaffoldRequest, ScaffoldResult
-from datamimic_ce.authoring.spec import AuthoringSpecV1, authoring_spec_json_schema
+from datamimic_ce.authoring.application.app import AuthoringApplication
+from datamimic_ce.authoring.bootstrap import create_authoring_application
 
-__all__ = [
-    "AuthoringSpecV1",
-    "ScaffoldRequest",
-    "ScaffoldResult",
-    "authoring_spec_json_schema",
-    "scaffold",
-]
+__all__ = ["AuthoringApplication", "create_authoring_application"]

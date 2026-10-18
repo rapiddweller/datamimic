@@ -12,6 +12,7 @@ from datamimic_ce.engine.dsl.statements.flow.branches.if_statement import IfStat
 from datamimic_ce.engine.runtime.contracts import FactoryConfig
 from datamimic_ce.engine.runtime.lifecycle.runner import RuntimeRunSession
 from datamimic_ce.interfaces.python.factory import DataMimicTestFactory
+from datamimic_ce.errors import ErrorCode, IssueCode, TaskConfigError
 
 
 def _generate(name: str, *, count: str | None = None, target: str | None = None) -> GenerateStatement:
@@ -50,10 +51,12 @@ def test_missing_entity_keeps_factory_error_message() -> None:
     root = SetupStatement(SetupModel())
     root.sub_statements = []
 
-    with pytest.raises(ValueError) as error:
+    with pytest.raises(TaskConfigError) as error:
         _session_without_initialization()._validate_xml_model(root, FactoryConfig("missing", 7))
 
-    assert error.value.args == ("Entity name 'missing' not found in the XML model",)
+    assert error.value.code is ErrorCode.TASK_CONFIG
+    assert error.value.issue_code is IssueCode.TASK_ENTITY_NOT_FOUND
+    assert "Entity name 'missing' not found in the XML model" in str(error.value)
 
 
 @pytest.mark.parametrize("batch", [False, True], ids=["single", "batch"])
@@ -71,16 +74,18 @@ def test_public_factory_missing_entity_logs_once(
     factory = DataMimicTestFactory(descriptor, "missing")
     caplog.clear()
 
-    with caplog.at_level(logging.ERROR, logger="DATAMIMIC"), pytest.raises(ValueError) as caught:
+    with caplog.at_level(logging.ERROR, logger="DATAMIMIC"), pytest.raises(TaskConfigError) as caught:
         if batch:
             factory.create_batch(2)
         else:
             factory.create()
 
     error = caught.value
-    assert type(error) is ValueError
-    assert error.args == ("Entity name 'missing' not found in the XML model",)
-    assert str(error) == "Entity name 'missing' not found in the XML model"
+    assert type(error) is TaskConfigError
+    assert isinstance(error, ValueError)
+    assert error.code is ErrorCode.TASK_CONFIG
+    assert error.issue_code is IssueCode.TASK_ENTITY_NOT_FOUND
+    assert "Entity name 'missing' not found in the XML model" in str(error)
     assert error.__cause__ is None
     assert error.__context__ is None
     assert error.__suppress_context__ is False
@@ -89,7 +94,7 @@ def test_public_factory_missing_entity_logs_once(
         record for record in caplog.records if record.name == "DATAMIMIC" and record.levelno == logging.ERROR
     ]
     assert len(error_records) == 1
-    assert error_records[0].getMessage() == "Value error: Entity name 'missing' not found in the XML model"
+    assert error_records[0].getMessage() == f"Value error: {error}"
     assert error_records[0].exc_info is None
 
 

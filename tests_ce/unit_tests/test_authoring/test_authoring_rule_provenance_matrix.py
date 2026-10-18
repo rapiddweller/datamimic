@@ -36,7 +36,8 @@ from pathlib import Path
 
 import pytest
 
-from datamimic_ce.authoring.adapters.reference import capabilities_manifest
+from datamimic_ce.authoring import create_authoring_application
+from datamimic_ce.authoring.domain.capabilities import CapabilityDomain
 from datamimic_ce.engine.dsl.model.constraints import element_constraints, serialize_constraints
 from datamimic_ce.engine.dsl.model.generation.generate_model import GenerateModel
 from datamimic_ce.engine.dsl.model.values.structured.nested_key_model import NestedKeyModel
@@ -72,7 +73,7 @@ RULE_FACT_MATRIX = (
         "generate",
         {
             "kind": "required_one_of",
-            "attrs": ["count", "maxCount", "minCount", "script", "source"],
+            "attrs": ["count", "end", "interval", "maxCount", "minCount", "script", "source", "start"],
         },
     ),
     (
@@ -163,10 +164,10 @@ def test_rule_fact_matrix_is_owned_by_the_central_registry(
 
 
 def test_distribution_domains_and_ee_only_exclusions_are_exact() -> None:
-    manifest = capabilities_manifest()
+    snapshot = create_authoring_application().capabilities()
 
-    source_values = frozenset(manifest["distributions"])
-    number_values = frozenset(manifest["numeric_distributions"])
+    source_values = frozenset(snapshot.capability_names(CapabilityDomain.SOURCE_DISTRIBUTION))
+    number_values = frozenset(snapshot.capability_names(CapabilityDomain.NUMERIC_DISTRIBUTION))
 
     assert source_values == CE_SOURCE_DISTRIBUTIONS
     assert source_values == frozenset(member.value for member in SourceDistribution)
@@ -175,24 +176,24 @@ def test_distribution_domains_and_ee_only_exclusions_are_exact() -> None:
 
 
 def test_legacy_weight_column_metadata_does_not_claim_ee_weighted_distribution() -> None:
-    description = capabilities_manifest()["elements"]["variable"]["attributes"]["weightColumn"]["description"]
+    description = _attributes("variable")["weightColumn"].description
 
     assert ".wgt.ent.csv" in description
     assert "not a distribution='weighted'" in description
 
 
 def test_ee_only_elements_and_attributes_do_not_leak_into_cli_mcp_capabilities() -> None:
-    elements = capabilities_manifest()["elements"]
-    exposed_attributes = {attribute for element in elements.values() for attribute in element["attributes"]}
+    elements = {item.name: item for item in create_authoring_application().capabilities().element_capabilities}
+    exposed_attributes = {attribute.xml_name for element in elements.values() for attribute in element.attributes}
 
     assert set(elements).isdisjoint(EE_ONLY_ELEMENTS)
     assert exposed_attributes.isdisjoint(EE_ONLY_ATTRIBUTES)
-    assert "exportUri" in elements["generate"]["attributes"]
+    assert "exportUri" in _attributes("generate")
 
 
 def test_ce_file_memstore_database_and_mongodb_source_families_are_discoverable() -> None:
-    elements = capabilities_manifest()["elements"]
-    source_description = elements["generate"]["attributes"]["source"]["description"]
+    elements = {item.name: item for item in create_authoring_application().capabilities().element_capabilities}
+    source_description = _attributes("generate")["source"].description
 
     assert {"memstore", "database", "mongodb"} <= set(elements)
     for token in ("file path", "<memstore>", "<database>", "<mongodb>"):
@@ -201,10 +202,10 @@ def test_ce_file_memstore_database_and_mongodb_source_families_are_discoverable(
 
 def test_adr006_computed_count_is_accepted_and_described_from_the_model() -> None:
     model = GenerateModel(name="orders", count="{customers * orders_per_customer}")
-    count_metadata = capabilities_manifest()["elements"]["generate"]["attributes"]["count"]
+    count_metadata = _attributes("generate")["count"]
 
     assert model.count == "{customers * orders_per_customer}"
-    assert "{script}" in count_metadata["description"]
+    assert "{script}" in count_metadata.description
 
 
 @pytest.mark.parametrize(
@@ -220,10 +221,10 @@ def test_adr041_stable_authoring_shapes_are_accepted(attributes: dict[str, objec
 
 
 def test_adr041_condition_and_default_semantics_reach_capabilities() -> None:
-    attributes = capabilities_manifest()["elements"]["nestedKey"]["attributes"]
+    attributes = _attributes("nestedKey")
 
-    assert "evaluates false" in attributes["condition"]["description"]
-    assert "Fallback" in attributes["defaultValue"]["description"]
+    assert "evaluates false" in attributes["condition"].description
+    assert "Fallback" in attributes["defaultValue"].description
 
 
 def test_adr029_ce_optional_header_subset(tmp_path: Path) -> None:
@@ -240,7 +241,13 @@ def test_adr029_ce_optional_header_subset(tmp_path: Path) -> None:
 
 
 def test_adr029_weighted_key_source_is_discoverable_but_not_overclaimed() -> None:
-    source = capabilities_manifest()["elements"]["key"]["attributes"]["source"]
+    source = _attributes("key")["source"]
 
-    assert "wgt.csv" in source["description"]
-    assert "with replacement" in source["description"]
+    assert "wgt.csv" in source.description
+    assert "with replacement" in source.description
+
+
+def _attributes(element: str):
+    result = create_authoring_application().capability(CapabilityDomain.ELEMENT, element)
+    assert result.ok
+    return {attribute.xml_name: attribute for attribute in result.capability.attributes}

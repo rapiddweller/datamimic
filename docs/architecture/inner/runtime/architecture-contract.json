@@ -324,8 +324,7 @@
         "datamimic_ce.engine.runtime.contracts"
       ],
       "responsibilities": [
-        "Run configuration and results.",
-        "Own run-session inputs/results and lifecycle outcomes; Authoring owns proof evidence."
+        "Run configuration and results; Own run-session inputs/results and lifecycle outcomes; Authoring owns proof evidence."
       ],
       "forbidden_responsibilities": [
         "Import concrete tasks, workers, or connectors."
@@ -395,8 +394,7 @@
         "datamimic_ce.engine.runtime.contexts"
       ],
       "responsibilities": [
-        "Own Context/SetupContext, row and demographic state, and a minimal worker-state projection separate from include cloning that excludes live clients, parent client caches and client references in namespaces or captured state.",
-        "Own execution, row, parent and run-local mutable state; Errors receives only explicit portable facts."
+        "Own Context/SetupContext, row and demographic state, and a minimal worker-state projection separate from include cloning that excludes live clients, parent client caches and client references in namespaces or captured state; Own execution, row, parent and run-local mutable state; Errors receives only explicit portable facts."
       ],
       "forbidden_responsibilities": [
         "Start workers or construct external clients."
@@ -494,8 +492,7 @@
         "datamimic_ce.engine.runtime.lifecycle"
       ],
       "responsibilities": [
-        "Own run configuration, parsing, session orchestration and capture, treating main as the executor for ordered serial setup, preparation and single-process work, and coordinating cleanup of clients owned by that execution through IO.",
-        "Own CE session startup, child/process lifecycle, cancellation, reaping and cleanup; report execution or cleanup failure truthfully as typed failed outcomes."
+        "Own run configuration, parsing, session orchestration and capture, treating main as the executor for ordered serial setup, preparation and single-process work, and coordinating cleanup of clients owned by that execution through IO; Own CE session startup, child/process lifecycle, cancellation, reaping and cleanup; report execution or cleanup failure truthfully as typed failed outcomes."
       ],
       "forbidden_responsibilities": [
         "Implement source connectors or DSL grammar."

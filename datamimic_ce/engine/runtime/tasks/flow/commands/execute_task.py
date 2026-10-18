@@ -8,7 +8,7 @@ import subprocess  # noqa: S404
 import textwrap
 from typing import cast
 
-from datamimic_ce.engine.dsl.api import ExecuteStatement
+from datamimic_ce.engine.dsl.api import ExecuteStatement, read_resource_bytes
 from datamimic_ce.engine.io.api import execute_sql_script
 from datamimic_ce.engine.io.contracts import SqlScriptClient
 from datamimic_ce.engine.runtime.contexts.context import Context
@@ -43,7 +43,7 @@ class ExecuteTask(SetupSubTask):
         """Inline code, the content of the uri script file, or - with script= - the evaluated
         expression itself (its value IS the code, e.g. a <variable string=\"...__var__...\"> DDL)."""
         if self._statement.uri:
-            return (ctx.root.descriptor_dir / self._statement.uri).read_text(encoding=ctx.root.default_encoding)
+            return read_resource_bytes(ctx.root.descriptor_dir / self._statement.uri).decode(ctx.root.default_encoding)
         if self._statement.script is not None:
             value = ctx.evaluate_python_expression(self._statement.script)
             if not isinstance(value, str):

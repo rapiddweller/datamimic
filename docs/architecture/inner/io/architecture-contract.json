@@ -112,11 +112,15 @@
       },
       {
         "path": "datamimic_ce/engine/io/files/readers.py",
-        "responsibility": "This module reads supported file formats and returns typed dataset and source rows."
+        "responsibility": "Owns file-format reading and exact installed-dataset read scopes while preserving active workspace guards for custom paths."
       },
       {
         "path": "datamimic_ce/engine/io/memstore.py",
         "responsibility": "Stores raw run-scoped rows, aggregates them, and reconciles them through the caller-supplied client."
+      },
+      {
+        "path": "datamimic_ce/engine/io/failures.py",
+        "responsibility": "Normalizes known vendor exception causes into passive facts only at bounded process transport."
       }
     ]
   },
@@ -219,8 +223,7 @@
         "datamimic_ce.engine.io.clients"
       ],
       "responsibilities": [
-        "Own database operations and client construction from typed configurations, process-local reuse and cleanup, with live clients, connections and engines confined to their owning execution process. Preserve native wrapper state in same-process include clones without sharing live engines or disposing parent resources.",
-        "Own backend exception classification and public client facts; pass normalized values to Errors factories."
+        "Own database operations and client construction from typed configurations, process-local reuse and cleanup, with live clients, connections and engines confined to their owning execution process. Preserve native wrapper state in same-process include clones without sharing live engines or disposing parent resources; Own backend exception classification and public client facts; pass normalized values to Errors factories."
       ],
       "forbidden_responsibilities": [
         "Choose source rows or exporter policy."
@@ -248,9 +251,13 @@
         "datamimic_ce.engine.io.clients.mongodb_client",
         "datamimic_ce.engine.io.clients.rdbms_client",
         "datamimic_ce.engine.io.clients.sql_dialect",
-        "datamimic_ce.engine.io.clients.operations"
+        "datamimic_ce.engine.io.clients.operations",
+        "datamimic_ce.engine.io.failures:normalize_error_cause_for_transport"
       ],
-      "decided_by": "agent"
+      "decided_by": "agent",
+      "exact_modules": [
+        "datamimic_ce.engine.io.failures"
+      ]
     },
     {
       "id": "IO-CONNECTION-CONFIG",
@@ -333,8 +340,7 @@
         "datamimic_ce.engine.io.exporters"
       ],
       "responsibilities": [
-        "Output routing, serialization and write adapters.",
-        "Own formats, dialect, encoding, chunks, finalized artifacts and smoke writes over supplied full captures."
+        "Output routing, serialization and write adapters; Own formats, dialect, encoding, chunks, finalized artifacts and smoke writes over supplied full captures."
       ],
       "forbidden_responsibilities": [
         "Read source rows or execute runtime tasks."
@@ -379,7 +385,8 @@
         "datamimic_ce.engine.io.exporters.lifecycle:cleanup_exporter_chunks",
         "datamimic_ce.engine.io.exporters.registry:buffered_exporter_names",
         "datamimic_ce.engine.io.exporters.registry:smoke_export",
-        "datamimic_ce.engine.io.exporters.diagnostics.test_result_exporter:TestResultExporter"
+        "datamimic_ce.engine.io.exporters.diagnostics.test_result_exporter:TestResultExporter",
+        "datamimic_ce.engine.io.exporters.lifecycle:normalize_exporter_error_cause_for_transport"
       ],
       "decided_by": "agent",
       "inside": "docs/architecture/inner/io/exporters/architecture-contract.json"

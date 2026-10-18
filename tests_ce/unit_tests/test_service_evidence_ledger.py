@@ -318,3 +318,21 @@ def test_git_tracking_failure_emits_no_success_json(
 
     assert error.value.stderr == "index unavailable"
     assert capsys.readouterr().out == ""
+
+
+def test_live_test_inventory_excludes_deleted_tracked_sources(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    from script.architecture_study import service_inventory
+
+    live_source = tmp_path / "tests_ce/test_live.py"
+    live_source.parent.mkdir()
+    live_source.write_text("pass\n", encoding="utf-8")
+    monkeypatch.setattr(service_inventory, "REPO", tmp_path)
+    monkeypatch.setattr(
+        service_inventory.subprocess,
+        "run",
+        lambda *args, **kwargs: subprocess.CompletedProcess(
+            args=[], returncode=0, stdout="tests_ce/test_live.py\ntests_ce/test_retired.py\n"
+        ),
+    )
+
+    assert service_inventory.tracked_test_sources() == [live_source]

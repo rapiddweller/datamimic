@@ -27,6 +27,7 @@ from datamimic_ce.engine.dsl.api import (
     ElementStatement,
     KeyStatement,
     VariableStatement,
+    parse_literal_values,
 )
 from datamimic_ce.engine.dsl.vocabulary.source_capabilities import SourceFileFormat, source_file_format_for
 from datamimic_ce.engine.io.api import DataSourcePagination, WeightedDataSource, unique_value_iter
@@ -39,6 +40,7 @@ from datamimic_ce.engine.runtime.tasks.values.construction.factory import (
     generate_random_value_based_on_type,
 )
 from datamimic_ce.engine.runtime.tasks.values.construction.sequence_table import SequenceTableGenerator
+from datamimic_ce.errors import IssueCode, datetime_conversion_error, is_user_error, task_config_error
 
 
 class KeyVariableTask(Task):
@@ -105,16 +107,14 @@ class KeyVariableTask(Task):
         elif self._statement.values is not None:
             # evaluate input values first to handle some list like input, e.g.: values="'1,2,3,4', '1,2,3', '1,2'"
             try:
-                self._values = ast.literal_eval(self._statement.values)
-                # If values is defined as single value (e.g. 'a', '1',...), convert into tuple
-                if not isinstance(self._values, Iterable) and self._values is not None:
-                    self._values = (self._values,)
+                self._values = parse_literal_values(self._statement.values)
 
             except (SyntaxError, ValueError):
-                raise ValueError(
-                    f"Error syntax, "
-                    f"'values' element of <{self._element_tag}> '{self._statement.name}' "
-                    f"is invalid: {self._statement.values}"
+                raise task_config_error(
+                    code=IssueCode.TASK_VALUES_INVALID,
+                    element_tag=self._element_tag,
+                    name=self._statement.name,
+                    values=self._statement.values,
                 ) from None
             self._weights = self._parse_weights(self._values)
             self._mode = self._VALUES_MODE
@@ -146,7 +146,10 @@ class KeyVariableTask(Task):
                     f"use a <variable source ... unique=\"true\"> or inline 'values'"
                 )
             if source_file_format_for(self._element_tag, source) is not SourceFileFormat.WEIGHTED_CSV:
-                raise ValueError(f"Data source of attribute '{self._statement.name}' must be type of: 'wgt.csv'")
+                raise task_config_error(
+                    code=IssueCode.TASK_WEIGHTED_SOURCE_INVALID,
+                    element_label=f"<{self._element_tag}> '{self._statement.name}'",
+                )
             separator = self._statement.separator or ctx.default_separator
             seeded = ctx.derive_seeded_rng()
             self._generator = WeightedDataSource(
@@ -173,7 +176,9 @@ class KeyVariableTask(Task):
         elif self._statement.type is not None:
             self._mode = self._RANDOM_MODE
         else:
-            raise ValueError(f"Cannot init generation mode for element '{self.statement.name}'")
+            raise task_config_error(
+                code=IssueCode.TASK_GENERATION_MODE_UNKNOWN, element_tag=self._element_tag, name=self._statement.name
+            )
 
     def _range_generator(self) -> str | None:
         """Native range attributes on a typed <key> -> the matching literal generator string, so a field reads
@@ -237,7 +242,14 @@ class KeyVariableTask(Task):
                         else ctx.evaluate_python_expression(self._statement.default_value)
                     )
                 else:
-                    raise ValueError(f"Failed when execute script of element '{self._statement.name}': {str(e)}") from e
+                    if is_user_error(e):
+                        raise
+                    raise task_config_error(
+                        code=IssueCode.TASK_SCRIPT_ERROR,
+                        element_label=f"<{self._element_tag}> '{self._statement.name}'",
+                        descriptor="",
+                        error=str(e),
+                    ) from e
             # Throw error if <key> evaluated script get not simple data type
             if (
                 self._element_tag == "key"
@@ -245,9 +257,11 @@ class KeyVariableTask(Task):
                 and not isinstance(value, str)
                 and not (isinstance(value, dict) and "#text" in value)
             ):
-                raise ValueError(
-                    f"<key> '{self._statement.name}' expects simple data type, "
-                    f"but get invalid value '{value}' with type '{type(value).__name__}'"
+                raise task_config_error(
+                    code=IssueCode.TASK_KEY_SCRIPT_INVALID_TYPE,
+                    name=self._statement.name,
+                    value=value,
+                    value_type=type(value).__name__,
                 )
         elif self._mode == self._CONSTANT_MODE:
             value = self._statement.constant
@@ -305,12 +319,16 @@ class KeyVariableTask(Task):
                 value = bool(value)
         elif self._mode == self._PATTERN_MODE:
             if self._statement.pattern is None:
-                raise ValueError(f"Pattern is missing for <{self._element_tag}> '{self._statement.name}'")
+                raise task_config_error(
+                    code=IssueCode.TASK_PATTERN_MISSING, element_tag=self._element_tag, name=self._statement.name
+                )
             value = StringGenerator.rnd_str_from_regex(self._statement.pattern, rng=ctx.rng)
         elif self._mode == self._RANDOM_MODE:
             value = generate_random_value_based_on_type(self._statement.type, rng=ctx.rng)
         else:
-            raise RuntimeError(f"Cannot find data generation mode for <{self._element_tag}> '{self._statement.name}'")
+            raise task_config_error(
+                code=IssueCode.TASK_GENERATION_MODE_UNKNOWN, element_tag=self._element_tag, name=self._statement.name
+            )
 
         return value
 
@@ -332,8 +350,12 @@ class KeyVariableTask(Task):
                     value=value, out_date_format=self._statement.out_date_format
                 )
         except ValueError as e:
-            raise ValueError(
-                f"Failed to convert datetime value of <{self._element_tag}> '{self._statement.name}'"
+            raise datetime_conversion_error(
+                element_tag=self._element_tag,
+                name=self._statement.name or "",
+                in_fmt=self._statement.in_date_format,
+                out_fmt=self._statement.out_date_format,
+                cause=str(e),
             ) from e
 
         # Cast data to target type
@@ -343,9 +365,14 @@ class KeyVariableTask(Task):
         try:
             for converter in self._converter_list:
                 value = converter.convert(value)
-        except Exception as e:
-            raise ValueError(
-                f"Failed to generate data for <{self._element_tag}> '{self._statement.name}': {str(e)}"
+        except (ValueError, TypeError, OverflowError) as e:
+            if is_user_error(e):
+                raise
+            raise task_config_error(
+                code=IssueCode.TASK_CONVERTER_FAILED,
+                element_tag=self._element_tag,
+                name=self._statement.name,
+                error=str(e),
             ) from e
 
         return value
@@ -372,9 +399,11 @@ class KeyVariableTask(Task):
             if value not in self._generator_seen:
                 self._generator_seen.add(value)
                 return value
-        raise ValueError(
-            f"<{self._element_tag}> '{self._statement.name}' unique=\"true\": "
-            f"generator produced only duplicates after {max_retries} retries"
+        raise task_config_error(
+            code=IssueCode.TASK_KEY_UNIQUE_EXHAUSTED,
+            element_tag=self._element_tag,
+            name=self._statement.name,
+            distinct_count=len(self._generator_seen),
         )
 
     def _parse_weights(self, values):
@@ -388,13 +417,19 @@ class KeyVariableTask(Task):
                 parsed = (parsed,)
             weights = [float(w) for w in parsed]
         except (SyntaxError, ValueError, TypeError):
-            raise ValueError(
-                f"'weights' of <{self._element_tag}> '{self._statement.name}' is invalid: {self._statement.weights}"
+            raise task_config_error(
+                code=IssueCode.TASK_KEY_WEIGHTS_NOT_NUMERIC,
+                element_tag=self._element_tag,
+                name=self._statement.name,
+                weights=self._statement.weights,
             ) from None
         if values is not None and len(weights) != len(values):
-            raise ValueError(
-                f"'weights' ({len(weights)}) must match 'values' ({len(values)}) length "
-                f"for <{self._element_tag}> '{self._statement.name}'"
+            raise task_config_error(
+                code=IssueCode.TASK_KEY_WEIGHTS_LENGTH,
+                element_tag=self._element_tag,
+                name=self._statement.name,
+                weight_count=len(weights),
+                value_count=len(values),
             )
         return weights
 
@@ -457,9 +492,12 @@ class KeyVariableTask(Task):
         elif data_type is None:
             return value
         else:
-            raise ValueError(
-                f"Failed to convert datatype for <{self._element_tag}> '{self._statement.name}'. "
-                f"Expect datatype {', '.join(self._simple_type_set)} but get '{data_type}'"
+            raise task_config_error(
+                code=IssueCode.TASK_DATATYPE_INVALID,
+                element_tag=self._element_tag,
+                name=self._statement.name,
+                expected=", ".join(sorted(self._simple_type_set)),
+                data_type=data_type,
             )
 
     @staticmethod

@@ -20,7 +20,7 @@ from datamimic_ce.engine.io.connection_config.mongodb_connection_config import (
     MongoDBConnectionValues,
 )
 from datamimic_ce.engine.io.connection_config.properties import load_connection_profile
-from datamimic_ce.engine.io.connection_config.rdbms_connection_config import RdbmsConnectionConfig
+from datamimic_ce.engine.io.connection_config.rdbms_connection_config import RdbmsConnectionConfig, sqlite_database_path
 from datamimic_ce.engine.io.contracts import (
     DataSourcePagination,
     Exporter,
@@ -63,6 +63,7 @@ from datamimic_ce.engine.io.exporters.diagnostics.test_result_exporter import Te
 from datamimic_ce.engine.io.exporters.lifecycle import (
     cleanup_exporter_chunks,
     finalize_exporter_chunks,
+    normalize_exporter_error_cause_for_transport,
     publish_exported_artifacts,
 )
 from datamimic_ce.engine.io.exporters.registry import (
@@ -72,9 +73,13 @@ from datamimic_ce.engine.io.exporters.registry import (
     smoke_export,
 )
 from datamimic_ce.engine.io.exporters.session import ExportSession
+from datamimic_ce.engine.io.failures import normalize_error_cause_for_transport
 from datamimic_ce.engine.io.memstore import Memstore
 
 __all__ = [
+    "sqlite_database_path",
+    "normalize_error_cause_for_transport",
+    "normalize_exporter_error_cause_for_transport",
     "Client",
     "clone_client_for_include",
     "RegisteredClient",

@@ -17,8 +17,8 @@ datamimic version                    # Display version information
 datamimic info                      # Show system and configuration details
 datamimic init <project-name>       # Initialize a new project
 datamimic run <descriptor.xml>      # Run a data generation descriptor
-datamimic lint <descriptor.xml>     # Lint a descriptor: schema, semantics, best practices
-datamimic capabilities               # Print the DSL surface as JSON (compact index by default; --full for the complete manifest)
+datamimic authoring lint <descriptor.xml>  # Validate persisted XML
+datamimic authoring capabilities          # Compact typed CE vocabulary
 ```
 
 ### Demo Management
@@ -95,49 +95,37 @@ datamimic run my-descriptor.xml --task-id task123
 datamimic run my-descriptor.xml --test-mode
 ```
 
-#### `lint` - Lint a Descriptor
+### Authoring
+
+XML is the persisted executable format. DM JSON is a transient representation;
+Build expectations and roles are separate transaction input. See the
+[worked transactions](../examples/authoring.md) and [migration](../migrations/authoring-errors.md).
 
 ```bash
-datamimic lint <descriptor.xml> [OPTIONS]
-
-Options:
-  --format, -f TEXT      text | json (diagnostics v1) [default: text]
-  --fail-on TEXT         error | warning [default: error]
-  --max-diagnostics INT  [default: 200]
+datamimic authoring version
+datamimic authoring schema [--name build_request_v4]
+datamimic authoring capabilities [--full]
+datamimic authoring capability --domain element --name generate
+datamimic authoring reference [--topic overview] [--name <name>]
+datamimic authoring compile <dm-json-input|-> [--descriptor-path model.xml]
+datamimic authoring decompile <descriptor.xml|-> [--descriptor-path model.xml]
+datamimic authoring build <build-request|-> [--workspace-root <project>]
+datamimic authoring lint <descriptor.xml|->
+datamimic authoring dry-run <descriptor.xml|-> [--max-count 10] [--sample-rows 5] [--timeout 30]
+datamimic authoring run <descriptor.xml|-> [--allow-side-effects] [--max-count 10]
+datamimic authoring export-contract <bundle.zip> [--package-version <version>] [--commit-sha <sha>]
 ```
 
-Runs the DSL linter (schema, semantic, and best-practice rule checks) against the
-descriptor and prints diagnostics, each with a rule id (`DMxxx`), severity, and a
-`fix_hint` describing what to change.
+Authoring defaults to `--format json`; `--format text` prints readable results.
+Compile, decompile and Build return discriminated `ready`/`rejected` results.
+Compilation readiness proves syntax only. Build additionally requires complete
+bounded capture and acceptance; `verification` requests smoke/replay gates.
+After a ready Build, persist `artifact.compiled_xml` and retain the separate proof.
 
-Exit codes: `0` when no diagnostic reaches the `--fail-on` threshold, `1` when one
-does, `2` when the file is missing or the linter itself errors.
-
-Example:
-
-```bash
-# Text output (default)
-datamimic lint my-descriptor.xml
-
-# JSON output for CI, capped at 50 diagnostics
-datamimic lint my-descriptor.xml --format json --max-diagnostics 50
-```
-
-#### `capabilities` - Print the DSL Surface
-
-```bash
-datamimic capabilities [--section <name>] [--full]
-```
-
-Prints a compact annotated JSON index of the DSL surface by default
-(elements, aliases, generators, entities, converters, targets,
-distributions), derived live from the engine registries so it cannot drift.
-Use `--full` for the complete manifest (including `authoring_spec`) or
-`--section <name>` (comma-separated) for specific sections. The compact
-output carries `_meta.format_version: 1` for stable agent contracts.
-
-Useful for agents without an MCP runtime; see the [MCP Quickstart](../mcp_quickstart.md)
-for the equivalent `datamimic_reference` MCP tool.
+File input uses its directory as the workspace. Stdin uses the current directory;
+`--workspace-root` binds an explicit project root. Descriptor identities remain
+project-relative. Bounded runs cap each generate instance; target isolation does
+not certify an external write. Normal `datamimic run` keeps production semantics.
 
 ### Demo Management
 
@@ -193,11 +181,11 @@ The CLI behavior can be customized using environment variables:
 Most commands use `0` for success and `1` for a general error (e.g. `run` on a
 missing descriptor, `init` on an invalid project name).
 
-`lint` uses a distinct, ESLint-style scheme:
-
-- `0`: no diagnostic reached the `--fail-on` threshold
-- `1`: at least one diagnostic reached the `--fail-on` threshold
-- `2`: the descriptor file was not found, or the linter itself errored
+The `authoring` subtree uses `0` for success, `1` for rejected inputs or failed
+operations, and `2` for CLI usage errors. Rejections are a single structured result
+on stdout. Root `scaffold`, `lint`, `dry-run`, `reference`, and `capabilities` are
+replaced by the typed subtree; old `--section`, `--fail-on`, and
+`--max-diagnostics` options are retired.
 
 ## Best Practices
 
@@ -248,7 +236,7 @@ Common issues and solutions:
 datamimic init customer-data
 
 # Create and lint descriptor
-datamimic lint customer-data/descriptor.xml
+datamimic authoring lint customer-data/descriptor.xml
 
 # Generate data
 datamimic run customer-data/descriptor.xml

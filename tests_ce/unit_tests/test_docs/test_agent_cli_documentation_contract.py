@@ -1,245 +1,90 @@
-# DATAMIMIC
-# Copyright (c) 2023-2025 Rapiddweller Asia Co., Ltd.
-# This software is licensed under the MIT License.
-
-"""Fast executable guards for the agent-facing README command contract."""
+"""Current authoring instructions remain executable through the public CLI."""
 
 import json
 import re
 from pathlib import Path
 
+import pytest
 from typer.testing import CliRunner
 
 from datamimic_ce.interfaces.cli import app
 
-_REPOSITORY_ROOT = Path(__file__).resolve().parents[3]
-_MARKDOWN_LINK = re.compile(r"\[[^]]+\]\(([^)]+)\)")
+ROOT = Path(__file__).resolve().parents[3]
 
 
-def _invoke_json(arguments: list[str], *, stdin: str | None = None) -> object:
-    result = CliRunner().invoke(app, arguments, input=stdin)
-    assert result.exit_code == 0, result.stdout
-    return json.loads(result.stdout)
+def _json_blocks(path: Path) -> list[dict]:
+    return [json.loads(block) for block in re.findall(r"```json\n(.*?)```", path.read_text(), re.DOTALL)]
 
 
-def test_agent_facing_readme_relative_links_resolve() -> None:
-    readmes = (_REPOSITORY_ROOT / "README.md",)
-    missing: list[str] = []
-    for readme in readmes:
-        for target in _MARKDOWN_LINK.findall(readme.read_text(encoding="utf-8")):
-            path, _, _ = target.partition("#")
-            if path and "://" not in path and not path.startswith("#"):
-                resolved = readme.parent / path
-                if not resolved.exists():
-                    missing.append(f"{readme.relative_to(_REPOSITORY_ROOT)} -> {target}")
-
-    assert missing == []
-
-
-def test_agents_md_points_to_scaffold_for_the_full_intent_schema() -> None:
-    agents_md = (_REPOSITORY_ROOT / "AGENTS.md").read_text(encoding="utf-8")
-
-    assert "datamimic reference scaffold" in agents_md
-
-
-def _scaffold_json(spec: dict) -> dict:
-    result = CliRunner().invoke(app, ["scaffold", "-", "--format", "json"], input=json.dumps(spec))
+def _build(request: dict, workspace: Path) -> dict:
+    result = CliRunner().invoke(
+        app, ["authoring", "build", "-", "--workspace-root", str(workspace)], input=json.dumps(request)
+    )
     payload = json.loads(result.stdout)
-    assert isinstance(payload, dict)
+    assert result.exit_code == (0 if payload["outcome"] == "ready" else 1), result.stdout
     return payload
 
 
-def test_agents_md_embedded_worked_example_scaffolds_verified() -> None:
-    """The minimal model.dm.json embedded in AGENTS.md is a live contract, not prose."""
-    agents_md = (_REPOSITORY_ROOT / "AGENTS.md").read_text(encoding="utf-8")
-    blocks = re.findall(r"```json\n(.*?)```", agents_md, re.DOTALL)
-    assert blocks, "AGENTS.md lost its embedded worked example"
-    spec = json.loads(blocks[0])
-
-    scaffold = _scaffold_json(spec)
-    assert scaffold["ok"] is True
-    assert scaffold["verified"] is True
+def test_agent_facing_readme_relative_links_resolve() -> None:
+    readme = ROOT / "README.md"
+    missing = []
+    for target in re.findall(r"\[[^]]+\]\(([^)]+)\)", readme.read_text()):
+        path = target.partition("#")[0]
+        if path and "://" not in path and not path.startswith("#") and not (readme.parent / path).exists():
+            missing.append(target)
+    assert missing == []
 
 
-def test_agents_md_structural_recipes_scaffold_verified() -> None:
-    """The three structural recipes documented in AGENTS.md stay executable.
-
-    Nested parent-child FK via script parent.<field> + foreign_key role; memstore
-    pipeline with the identifier/foreign_key role pair; time_series with window
-    and series_count. If the engine changes any of these contracts, this gate
-    fails before the documentation silently rots.
-    """
-    nested_fk = {
-        "version": "1",
-        "seed": 7,
-        "products": [
-            {
-                "kind": "generated",
-                "name": "customers",
-                "count": 2,
-                "fields": [{"kind": "increment", "name": "id"}],
-                "children": [
-                    {
-                        "name": "orders",
-                        "count": 2,
-                        "fields": [
-                            {
-                                "kind": "script",
-                                "name": "customer_id",
-                                "script": "parent.id",
-                                "roles": [
-                                    {"kind": "foreign_key", "parent_product": "customers", "parent_field": "id"}
-                                ],
-                            }
-                        ],
-                    }
-                ],
-            }
-        ],
-        "expectations": [
-            {"kind": "per_parent_count", "parent_product": "customers", "child_product": "orders", "count": 2}
-        ],
-    }
-    memstore_pipeline = {
-        "version": "1",
-        "seed": 7,
-        "products": [
-            {
-                "kind": "generated",
-                "name": "users",
-                "count": 2,
-                "fields": [{"kind": "increment", "name": "id", "roles": [{"kind": "identifier"}]}],
-                "targets": [{"kind": "memstore", "id": "store"}],
-            },
-            {
-                "kind": "source",
-                "name": "user_audit",
-                "source": {"kind": "memstore", "id": "store", "product": "users"},
-                "fields": [
-                    {
-                        "kind": "script",
-                        "name": "id",
-                        "script": "this.id",
-                        "roles": [{"kind": "foreign_key", "parent_product": "users", "parent_field": "id"}],
-                    }
-                ],
-            },
-        ],
-    }
-    time_series = {
-        "version": "1",
-        "seed": 7,
-        "products": [
-            {
-                "kind": "time_series",
-                "name": "readings",
-                "series_count": 2,
-                "window": {"start": "2026-01-01T00:00:00", "end": "2026-01-01T03:00:00", "interval": "PT1H"},
-                "fields": [{"kind": "values", "name": "sensor", "values": ["temp", "humidity"]}],
-            }
-        ],
-        "expectations": [{"kind": "exact_count", "product": "readings", "count": 6}],
-    }
-
-    recipes = (("nested_fk", nested_fk), ("memstore_pipeline", memstore_pipeline), ("time_series", time_series))
-    for name, spec in recipes:
-        scaffold = _scaffold_json(spec)
-        assert scaffold["ok"] is True, f"{name}: {scaffold.get('issues')}{scaffold.get('diagnostics')}"
-        assert scaffold["verified"] is True, f"{name}: {scaffold.get('acceptance')}"
+def test_agents_md_points_to_the_running_document_and_build_schemas() -> None:
+    content = (ROOT / "AGENTS.md").read_text()
+    assert "datamimic authoring schema" in content
+    assert "schema --name build_request_v4" in content
+    assert "artifact.compiled_xml" in content
 
 
-def test_agents_md_random_fk_recipe_warning_holds() -> None:
-    """AGENTS.md warns a randomly generated FK passes schema validation but fails
-    per-parent-count acceptance. Gate the warning itself."""
-    random_fk = {
-        "version": "1",
-        "seed": 7,
-        "products": [
-            {
-                "kind": "generated",
-                "name": "customers",
-                "count": 4,
-                "fields": [{"kind": "increment", "name": "id"}],
-                "children": [
-                    {
-                        "name": "orders",
-                        "count": 2,
-                        "fields": [
-                            {
-                                "kind": "int_range",
-                                "name": "customer_id",
-                                "minimum": 1,
-                                "maximum": 4,
-                                "roles": [
-                                    {"kind": "foreign_key", "parent_product": "customers", "parent_field": "id"}
-                                ],
-                            }
-                        ],
-                    }
-                ],
-            }
-        ],
-        "expectations": [
-            {"kind": "per_parent_count", "parent_product": "customers", "child_product": "orders", "count": 2}
-        ],
-    }
-
-    scaffold = _scaffold_json(random_fk)
-    assert scaffold["ok"] is True, "the documented trap is a semantic failure, not a schema rejection"
-    assert scaffold["verified"] is False, (
-        "AGENTS.md claims a random FK fails per-parent-count acceptance; "
-        "if this now verifies, update the recipe section"
-    )
+def test_agents_md_embedded_transaction_builds_ready(tmp_path: Path) -> None:
+    request = _json_blocks(ROOT / "AGENTS.md")[0]
+    result = _build(request, tmp_path)
+    assert result["outcome"] == "ready", result
+    assert result["evidence"][0]["count"] == 3
 
 
-def test_documentation_index_has_no_removed_authoring_archive() -> None:
-    documentation_index = (_REPOSITORY_ROOT / "docs" / "README.md").read_text(encoding="utf-8")
+@pytest.mark.parametrize("index", range(3), ids=["nested_fk", "memstore_readback", "time_series"])
+def test_documented_structural_transactions_build_ready(index: int, tmp_path: Path) -> None:
+    requests = _json_blocks(ROOT / "docs/examples/authoring.md")
+    assert len(requests) == 3
+    result = _build(requests[index], tmp_path)
+    assert result["outcome"] == "ready", result
 
-    assert "Authoring evaluation archive" not in documentation_index
-    assert "benchmarks/dsl-authoring" not in documentation_index
-    assert "measures how reliably agents author" not in documentation_index
+
+def test_documented_random_fk_warning_holds(tmp_path: Path) -> None:
+    request = _json_blocks(ROOT / "docs/examples/authoring.md")[0]
+    parents = request["document"]["root"]["children"][0]
+    parents["properties"]["count"] = 4
+    request["expectations"][0]["count"] = 4
+    child_fk = parents["children"][1]["children"][0]
+    child_fk["properties"] = {"name": "parent_id", "type": "int", "min": 1, "max": 4}
+    result = _build(request, tmp_path)
+    assert result["outcome"] == "rejected", "Random FK membership must not establish per-parent correctness."
+    assert result["phase"] == "expectation", result
+    assert result["diagnostics"][0]["path"] == ["product_roles", 1]
 
 
-def test_agent_cli_discovery_and_scaffold_contract() -> None:
-    capabilities = _invoke_json(["capabilities"])
-    assert isinstance(capabilities, dict)
-    assert capabilities["elements"]
+def test_documentation_index_does_not_teach_historical_benchmark_commands() -> None:
+    index = (ROOT / "docs/README.md").read_text()
+    assert "benchmarks/dsl-authoring" not in index
+    benchmark_index = (ROOT / "docs/benchmarks/dsl-authoring/README.md").read_text()
+    assert "legacy" in benchmark_index
 
-    authoring = _invoke_json(["reference", "authoring"])
-    assert isinstance(authoring, dict)
-    assert authoring["queries"]
 
-    weighted = _invoke_json(["reference", "authoring", "--category", "field", "--kind", "weighted"])
-    assert isinstance(weighted, dict)
-    assert weighted["query"] == {"category": "field", "kind": "weighted"}
-
-    memstore_source = _invoke_json(["reference", "authoring", "--category", "source", "--kind", "memstore"])
-    assert isinstance(memstore_source, dict)
-    assert memstore_source["query"] == {
-        "category": "source",
-        "kind": "memstore",
-    }
-    assert memstore_source["model"] == "MemstoreSource"
-    assert "product" in memstore_source["allowed_fields"]
-    assert "fragment" not in memstore_source
-    assert memstore_source["json_schema"]["title"] == "MemstoreSource"
-
-    spec = {
-        "version": "1",
-        "seed": 42,
-        "products": [
-            {
-                "kind": "generated",
-                "name": "records",
-                "count": 1,
-                "fields": [{"kind": "increment", "name": "record_id"}],
-            }
-        ],
-    }
-    scaffold = _invoke_json(
-        ["scaffold", "-", "--format", "json"],
-        stdin=json.dumps(spec),
-    )
-    assert isinstance(scaffold, dict)
-    assert scaffold["ok"] is True
-    assert scaffold["verified"] is True
+def test_agent_cli_discovery_uses_the_same_public_contract() -> None:
+    runner = CliRunner()
+    capabilities = runner.invoke(app, ["authoring", "capabilities"])
+    assert capabilities.exit_code == 0, capabilities.stdout
+    assert "generate" in json.loads(capabilities.stdout)["element"]
+    schema = runner.invoke(app, ["authoring", "schema", "--name", "build_request_v4"])
+    assert schema.exit_code == 0, schema.stdout
+    assert "document" in json.loads(schema.stdout)["properties"]
+    element = runner.invoke(app, ["authoring", "capability", "--domain", "element", "--name", "generate"])
+    assert element.exit_code == 0, element.stdout
+    assert json.loads(element.stdout)["capability"]["name"] == "generate"

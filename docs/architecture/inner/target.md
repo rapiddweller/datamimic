@@ -47,14 +47,69 @@ EE wheel discovery remain UNKNOWN ([Amendment 169](https://github.com/rapiddwell
 
 ## Authoring and Errors adoption — 2026-10-18
 
-The active Authoring/Errors target is amended by [the migration contract](../../migrations/authoring-errors.md). It replaces the persisted CE Intent/Scaffold contract with DM JSON, transaction-scoped Build expectations and persisted XML. Python becomes >=3.11. Existing CE parser, Runtime and IO owners stay in place. Application consumes typed ports; bootstrap alone selects CE adapters. Complete capture, acceptance, optional export smoke and requested full replay remain separate required proofs. The historical tree below describes the preceding target; migrated Authoring/Errors APIs and ownership follow the amendment and mounted contracts.
+The active Authoring/Errors target is amended by [the migration contract](../../migrations/authoring-errors.md). It replaces the persisted CE Intent/Scaffold contract with DM JSON, transaction-scoped Build expectations and persisted XML. Python becomes >=3.11. Existing CE parser, Runtime and IO owners stay in place. Application consumes typed ports; bootstrap alone selects CE adapters. Complete capture, acceptance, optional export smoke and requested full replay remain separate required proofs. The current tree below and the exact mounted declarations encode this target; historical baseline reviews remain unchanged.
+
+The implemented promotion retains six Authoring owners: API/bootstrap, Domain, Application,
+Ports, Projection and Adapters. Schema assembly belongs to Application because it coordinates
+the descriptor port; Projection receives facts and gains no Ports dependency. IO client
+ownership includes `io/failures.py`; only `io.api` exposes its transport normalization.
+The pure DSL metadata contract is public without loading execution implementations.
+Errors publishes exact `descriptor_scope`, `get_descriptor_name` and `get_issue_definition`
+operations for logical error identity and catalog lookup; their existing owners remain unchanged.
+Python 3.11 replaces `_compat`; old Intent/Scaffold owners and their public grants retire.
+
+The recursive inventory retains the historical source commit and records 59 new modules and
+14 retired targets for this adoption. Large Domain, adapter and error-catalog leaves were
+reviewed: they contain named DTO, execution, or issue-family owners; arbitrary new grouping
+would add navigation without removing a responsibility. Exact layout and module declarations
+remain enforced, including nonempty negative controls. This inventory is structural coverage,
+not completed runtime or external-service verification.
+
+### Contained descriptor resources — 2026-10-18
+
+Approved before implementation: DSL input owns `ResourceReader` (`Path -> bytes`),
+`read_resource_bytes`, `resource_reader_scope` and `resource_reader_active`, exposed through
+`dsl.api` and exact pure input operations for IO readers.
+Normal execution retains `Path.read_bytes`. Authoring binds its existing secure workspace
+reader around validation and private-child execution. XML, properties and IO file/chunk
+readers use this boundary, including paths resolved after property substitution; scoped reads
+bypass process-global resource caches. The reader owns no IO or Authoring imports. Existing
+IO-to-DSL and Authoring-to-DSL dependencies suffice; no new component or dependency grant.
+This closes the observed eager-properties and substituted-source escape paths without
+claiming that arbitrary descriptor Python becomes sandboxed.
+
+Installed Domain datasets retain a separate narrow read invariant: IO Files publishes
+`packaged_dataset_scope(path, package_root)` for the exact caller-owned installed data
+root. Domain obtains that root from its existing package-location calculation and wraps
+its existing FileUtil calls. Environment-selected and custom paths keep the active workspace
+reader. This preserves packaged generators without granting arbitrary outside reads or adding
+a Domain-to-DSL dependency; dataset root semantics remain with Domain and reading with IO.
+Domain also publishes `configured_dataset_overrides` through its existing API. Bounded
+execution rejects inherited DATAMIMIC_ROOT/DATAMIMIC_DOMAIN_DATA before catalog/runtime
+reads; normal execution retains those settings. The variable-name facts stay with Domain.
+
+### Native boundary corrections — 2026-10-18
+
+Root Authoring publishes named request/result DTOs and keeps internal bounded execution
+requests and full captures private. Its schema returns and registry-validated DM JSON scalar
+property maps have exact wire-position permissions. Five named constructor protocols remain
+typed composition inputs. In-memory parser properties retain the same exact native map
+contract as file parsing. No general map or opaque-value permission is introduced.
+
+Native construct checks retain all prohibitions except two explicit single-construct cases:
+`parse_literal_values` preserves the foreign `ast.literal_eval` result needed by existing
+CE literal modes; `_validated_worker_success` and `_decode_worker_message` inspect complete
+pickle state so forged extra fields cannot disappear before validation. Other `Any` or
+reflective constructs in those functions remain prohibited. Vendor-cause normalization stays
+with IO Clients; exporter-cause normalization stays with IO Exporters, removing the reverse
+client-to-exporter dependency. [Amendment 214](../refactoring-study/experiment-2/amendment-214-ce-authoring-measurements.md)
+binds the independently reviewed exact measurement ceilings; UNKNOWN remains explicit.
 
 ## Physical target
 
 ```text
 <edition>/
   __init__.py                    inert package initializer
-  _compat.py                     Python-version primitives only, where needed
   randomness.py                  shared RNG protocol and weighted-index primitive
   interfaces/
     cli/                        inert package, executable startup, command registration, presentation
@@ -62,22 +117,26 @@ The active Authoring/Errors target is amended by [the migration contract](../../
     python/                     DataMimic, test harness, factory entry points
       datamimic.py  data_mimic_test.py  factory.py
     demo.py  project.py
+    bundle/                     deterministic archives of public CE contracts
   authoring/
-    api.py  contracts.py  spec/
-    domain/
-      diagnostics.py  schema.py  script_semantics.py
-      rule_catalog.py
-      acceptance.py  verification.py   verdict policy over full capture evidence
-      rules/                    base, schema, semantics, intent, cross-statement
-    application/                service owns compile/run/acceptance/replay sequencing
-    adapters/                   XML loading/lint, bounded execution, live reference/capability views
-    projection/                 typed authoring-reference variants; no runtime imports
+    __init__.py  bootstrap.py    pure public entry and lazy adapter composition
+    ports.py                    named typed adapter protocols
+    domain/                     DM JSON, requests/results, capabilities, diagnostics, expectations
+      acceptance_contract.py  acceptance_evaluation.py  capture.py  proof.py
+      build_verification.py  row_conditions.py  environment_bindings.py
+      rules/                    retained raw XML schema, semantic and cross-statement checks
+    application/                app, compile/decompile use cases, Build and raw XML transactions
+      schema.py                 actual DTO/codec schema assembly through ports
+    adapters/                   codec, catalog, validator, policy, workspace and bounded child execution
+    projection/                 pure acceptance facts and response evidence samples
   engine/
     dsl/
       api.py
       vocabulary/
         constants/  enums/      canonical names and closed values
         source_capabilities.py  source-format and source-mode facts
+        contracts/              pure content and bounded-execution metadata
+        product_identity.py  value_literals.py  shared capture/literal conventions
       model/
         validation.py  constraints/  flow/  values/  setup/  generation/
         setup/generators/       named and stateful generator definitions
@@ -113,6 +172,7 @@ The active Authoring/Errors target is amended by [the migration contract](../../
           policies/             capability-based concurrency reduction; no services wrapper
     io/
       api.py  contracts.py
+      failures.py               IO-client-owned vendor cause normalization for transport
       memstore.py               raw mutable rows, aggregation and injected-client reconciliation
       clients/                  connections, transport and vendor details
       connection_config/        typed connector settings
@@ -211,7 +271,7 @@ MCP's bounded run is not permission to execute an unrestricted CLI run.
 | Runtime | Typed run/session request and result; lifecycle starts Setup, Generate chooses workers | Implement connector or exporter internals |
 | IO | Typed source/count/registration/write operations; IO owns concrete clients/exporters | Read Runtime context or interpret task statements |
 | Domains | Typed entity/generator/converter capabilities and deterministic primitives | Import Runtime; core must not import shared implementations |
-| Authoring | Intent/rules and compile/check/verify operations; adapters gather runtime facts | Duplicate DSL facts or let pure projection import Runtime |
+| Authoring | DM JSON, Build expectations and compile/lint/verify operations; adapters gather runtime facts | Duplicate DSL facts or let pure projection import Runtime |
 | Errors | Stable codes/types/catalog/formatting | Own validation policy, runtime settings or import IO clients |
 | Interfaces | Command/tool/Python adaptation | Become a second workflow engine |
 
@@ -235,11 +295,11 @@ acceptance remains open.
 [ArchKeel #253](https://github.com/rapiddweller/archkeel/issues/253)).
 Typed model construction still decides descriptor validity.
 
-Authoring Domain owns acceptance/replay verdicts and canonical bounded-capture
-records in `contracts.py`. Application sequences runs; the dry-run adapter
-produces evidence. Policies never import the execution adapter. Its eight Domain
-children are a reviewed cohesion exception, not an automatic seven-child limit
-([Amendment 80](https://github.com/rapiddweller/datamimic/blob/384b7723d950d8b312b1080d23ffd89a5343c9b0/docs/architecture/refactoring-study/experiment-2/amendment-80.md)).
+Authoring Domain owns acceptance and replay verdicts, full captures in `capture.py`,
+and public evidence in `proof.py`/`requests.py`. Application sequences runs through
+typed ports; bounded execution produces evidence. Policies never import the execution
+adapter. The current exact Domain inventory is reviewed for cohesion; it replaces
+the earlier eight-child exception in Amendment 80.
 
 The IO facade drops five unused concrete exporter re-exports; live runtime
 consumers still use its Memstore and TestResultExporter types.
@@ -449,6 +509,13 @@ typed intent-reference projection stays runtime-free.
 6. Report structure, behavior and delivery separately. Full EE leaf review and
    cross-edition descriptor execution are not implied by this CE definition.
 
-The current input-model difference (CE intent JSON versus EE transaction-scoped
-DM JSON) needs a product migration decision when Authoring is ported. It does not
-justify different physical ownership or silently changing either edition now.
+The 2026-10-18 migration decision adopts transaction-scoped DM JSON and Build in CE.
+The frozen EE implementation supplies shared semantics; CE registry vocabulary and
+execution remain authoritative. Unsupported EE capabilities are not advertised.
+
+The Python composition boundary publishes exactly the five existing Authoring Port
+protocols at `authoring.ports`; the public application constructor accepts them.
+Internal bounded capture request/evidence DTOs are not published. Exporter Core
+publishes its existing `ExporterError` to the sibling Lifecycle transport normalizer;
+the exception remains internal to IO. These declarations add no dependency edge or
+boundary-rule exclusion.

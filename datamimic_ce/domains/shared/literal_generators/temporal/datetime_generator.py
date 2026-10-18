@@ -13,6 +13,7 @@ import random as _random
 from datetime import date, datetime, time, timedelta
 
 from datamimic_ce.domains.domain_core.base_domain_generator import ClockAnchoredDomainGenerator
+from datamimic_ce.errors import IssueCode, generator_config_error
 
 
 class DateTimeGenerator(ClockAnchoredDomainGenerator):
@@ -84,20 +85,24 @@ class DateTimeGenerator(ClockAnchoredDomainGenerator):
                     try:
                         a_i, b_i = int(a), int(b)
                     except ValueError as e:
-                        raise ValueError(f"Invalid range '{p}' in spec '{spec}'") from e
+                        raise generator_config_error(code=IssueCode.DATETIME_INVALID_RANGE, range=p, spec=spec) from e
                     if a_i > b_i:
                         a_i, b_i = b_i, a_i
                     for v in range(a_i, b_i + 1):
                         if not (lo <= v <= hi):
-                            raise ValueError(f"Value {v} out of bounds [{lo},{hi}] in spec '{spec}'")
+                            raise generator_config_error(
+                                code=IssueCode.DATETIME_VALUE_OUT_OF_BOUNDS, value=v, low=lo, high=hi, spec=spec
+                            )
                         out.add(v)
                 else:
                     try:
                         v = int(p)
                     except ValueError as e:
-                        raise ValueError(f"Invalid value '{p}' in spec '{spec}'") from e
+                        raise generator_config_error(code=IssueCode.DATETIME_INVALID_VALUE, value=p, spec=spec) from e
                     if not (lo <= v <= hi):
-                        raise ValueError(f"Value {v} out of bounds [{lo},{hi}] in spec '{spec}'")
+                        raise generator_config_error(
+                            code=IssueCode.DATETIME_VALUE_OUT_OF_BOUNDS, value=v, low=lo, high=hi, spec=spec
+                        )
                     out.add(v)
             return out
 
@@ -108,7 +113,7 @@ class DateTimeGenerator(ClockAnchoredDomainGenerator):
                 s = set()
                 for v in m:
                     if not (1 <= int(v) <= 12):
-                        raise ValueError("months entries must be 1..12")
+                        raise generator_config_error(code=IssueCode.DATETIME_MONTHS_ENTRIES_RANGE)
                     s.add(int(v))
                 return s
             # Support tokens like Q1..Q4 as well as numeric ranges
@@ -159,7 +164,7 @@ class DateTimeGenerator(ClockAnchoredDomainGenerator):
                 if "-" in t:
                     a, b = t.split("-", 1)
                     if a not in name_to_idx or b not in name_to_idx:
-                        raise ValueError(f"Invalid weekday range '{tok}'")
+                        raise generator_config_error(code=IssueCode.DATETIME_WEEKDAY_RANGE_INVALID, token=tok)
                     ai, bi = name_to_idx[a], name_to_idx[b]
                     if ai <= bi:
                         return set(range(ai, bi + 1))
@@ -171,9 +176,9 @@ class DateTimeGenerator(ClockAnchoredDomainGenerator):
                 try:
                     vi = int(t)
                 except ValueError:
-                    raise ValueError(f"Invalid weekday token '{tok}'") from None
+                    raise generator_config_error(code=IssueCode.DATETIME_WEEKDAY_TOKEN_INVALID, token=tok) from None
                 if not (0 <= vi <= 6):
-                    raise ValueError(f"Weekday index {vi} out of bounds [0,6]")
+                    raise generator_config_error(code=IssueCode.DATETIME_WEEKDAY_INDEX_BOUNDS, value=vi)
                 return {vi}
 
             out: set[int] = set()
@@ -181,12 +186,12 @@ class DateTimeGenerator(ClockAnchoredDomainGenerator):
                 for it in w:
                     if isinstance(it, int):
                         if not (0 <= it <= 6):
-                            raise ValueError("weekday list values must be 0..6")
+                            raise generator_config_error(code=IssueCode.DATETIME_WEEKDAY_LIST_RANGE)
                         out.add(int(it))
                     elif isinstance(it, str):
                         out |= parse_token(it)
                     else:
-                        raise ValueError("weekday list values must be ints or weekday names")
+                        raise generator_config_error(code=IssueCode.DATETIME_WEEKDAY_LIST_INVALID)
                 return out
             # string
             for part in w.split(","):
@@ -202,7 +207,7 @@ class DateTimeGenerator(ClockAnchoredDomainGenerator):
 
             def add_num(v: int):
                 if not (1 <= v <= 31):
-                    raise ValueError("dom values must be 1..31 or 'last'")
+                    raise generator_config_error(code=IssueCode.DATETIME_DOM_VALUE_RANGE)
                 out.add(v)
 
             if isinstance(d, list):
@@ -212,7 +217,7 @@ class DateTimeGenerator(ClockAnchoredDomainGenerator):
                     elif isinstance(it, str) and it.strip().lower() == "last":
                         allow_last = True
                     else:
-                        raise ValueError("dom list values must be ints or 'last'")
+                        raise generator_config_error(code=IssueCode.DATETIME_DOM_LIST_INVALID)
                 return (out if out else None), allow_last
             # parse string like "1,3-5,last"
             for tok in [p.strip() for p in d.split(",") if p.strip()]:
@@ -225,7 +230,7 @@ class DateTimeGenerator(ClockAnchoredDomainGenerator):
                     try:
                         ai, bi = int(a), int(b)
                     except ValueError as e:
-                        raise ValueError(f"Invalid dom range '{tok}'") from e
+                        raise generator_config_error(code=IssueCode.DATETIME_DOM_RANGE_INVALID, token=tok) from e
                     if ai > bi:
                         ai, bi = bi, ai
                     for v in range(ai, bi + 1):
@@ -234,7 +239,7 @@ class DateTimeGenerator(ClockAnchoredDomainGenerator):
                     try:
                         vi = int(t)
                     except ValueError as e:
-                        raise ValueError(f"Invalid dom token '{tok}'") from e
+                        raise generator_config_error(code=IssueCode.DATETIME_DOM_TOKEN_INVALID, token=tok) from e
                     add_num(vi)
             return (out if out else None), allow_last
 
@@ -272,11 +277,11 @@ class DateTimeGenerator(ClockAnchoredDomainGenerator):
                 # keep uniform by not setting weights
                 self._hour_weights = None
             else:
-                raise ValueError(f"Unknown hours_preset '{hours_preset}' (supported: office, night, flat)")
+                raise generator_config_error(code=IssueCode.DATETIME_HOURS_PRESET_UNKNOWN, preset=hours_preset)
 
         def _granular(n: int, gran: int) -> list[float]:
             if gran <= 0 or gran > n:
-                raise ValueError(f"granularity must be in 1..{n}")
+                raise generator_config_error(code=IssueCode.DATETIME_GRANULARITY_RANGE, limit=n)
             return [1.0 if i % gran == 0 else 0.0 for i in range(n)]
 
         if self._minute_weights is None and minute_granularity is not None:
@@ -289,11 +294,13 @@ class DateTimeGenerator(ClockAnchoredDomainGenerator):
             if w is None:
                 return None
             if len(w) != expected_len:
-                raise ValueError(f"{name} must have length {expected_len}")
+                raise generator_config_error(
+                    code=IssueCode.DATETIME_WEIGHTS_LENGTH, name=name, expected_len=expected_len
+                )
             if any(v < 0 for v in w):
-                raise ValueError(f"{name} must be non-negative")
+                raise generator_config_error(code=IssueCode.DATETIME_WEIGHTS_NEGATIVE, name=name)
             if sum(w) == 0:
-                raise ValueError(f"{name} must not sum to zero")
+                raise generator_config_error(code=IssueCode.DATETIME_WEIGHTS_SUM_ZERO, name=name)
             return w
 
         self._hour_weights = _validate_weights(self._hour_weights, 24, "hour_weights")
@@ -320,7 +327,7 @@ class DateTimeGenerator(ClockAnchoredDomainGenerator):
             self._max_dt = datetime.strptime(max, self._input_format) if max else None
 
             if self._min_dt and self._max_dt and self._max_dt < self._min_dt:
-                raise ValueError("max_datetime must be greater than or equal to min_datetime")
+                raise generator_config_error(code=IssueCode.DATETIME_MAX_BEFORE_MIN)
 
             if not self._min_dt and not self._max_dt:
                 self._start_date = datetime.strptime("1970-01-01 00:00:00", self._input_format)
@@ -474,5 +481,5 @@ class DateTimeGenerator(ClockAnchoredDomainGenerator):
                 months.append((y, m, days, day_weights))
                 weights.append(total_w)
         if not months:
-            raise ValueError("No eligible dates within the range after applying month/weekday/dom weights.")
+            raise generator_config_error(code=IssueCode.DATETIME_NO_ELIGIBLE_DATES)
         return months, weights

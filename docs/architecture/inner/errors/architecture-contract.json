@@ -8,11 +8,11 @@
       },
       {
         "path": "datamimic_ce/errors/base.py",
-        "responsibility": "DomainError carries a typed error code, message, context, and serializable error data."
+        "responsibility": "Preserves CE DomainError identities and defines portable parser, execution and transport error payloads."
       },
       {
         "path": "datamimic_ce/errors/catalog/__init__.py",
-        "responsibility": "The catalog renders the locale-specific text for the locale error."
+        "responsibility": "Assembles and validates the portable CE issue catalog while preserving locale error text."
       },
       {
         "path": "datamimic_ce/errors/codes.py",
@@ -20,11 +20,79 @@
       },
       {
         "path": "datamimic_ce/errors/factory.py",
-        "responsibility": "The factory creates InvalidLocaleError with a code, context, and stable metadata."
+        "responsibility": "Constructs portable catalog-backed CE errors with logical locations and preserved domain metadata."
       },
       {
         "path": "datamimic_ce/errors/formatters.py",
-        "responsibility": "The formatter creates the locale-specific invalid-locale message."
+        "responsibility": "Formats safe catalog messages, remediation guidance and logical descriptor locations."
+      },
+      {
+        "path": "datamimic_ce/errors/catalog/definition.py",
+        "responsibility": "Defines immutable portable issue metadata and validates issue guidance templates."
+      },
+      {
+        "path": "datamimic_ce/errors/catalog/guidance.py",
+        "responsibility": "Owns normalized remediation guidance for portable CE errors."
+      },
+      {
+        "path": "datamimic_ce/errors/context/__init__.py",
+        "responsibility": "Publishes the portable descriptor location value without runtime imports."
+      },
+      {
+        "path": "datamimic_ce/errors/context/descriptor_identity.py",
+        "responsibility": "Tracks logical descriptor identity within explicit context-local scopes."
+      },
+      {
+        "path": "datamimic_ce/errors/context/descriptor_location.py",
+        "responsibility": "Defines serializable logical descriptor locations without filesystem access."
+      },
+      {
+        "path": "datamimic_ce/errors/descriptor_contracts.py",
+        "responsibility": "Defines narrow structural protocols for descriptor metadata consumed by error formatting."
+      },
+      {
+        "path": "datamimic_ce/errors/catalog/client_errors.py",
+        "responsibility": "Owns portable client configuration issue definitions and their canonical guidance."
+      },
+      {
+        "path": "datamimic_ce/errors/catalog/condition_errors.py",
+        "responsibility": "Owns portable condition evaluation issue definitions and their canonical guidance."
+      },
+      {
+        "path": "datamimic_ce/errors/catalog/exporter_errors.py",
+        "responsibility": "Owns portable export delivery issue definitions and their canonical guidance."
+      },
+      {
+        "path": "datamimic_ce/errors/catalog/generator_errors.py",
+        "responsibility": "Owns portable value generation issue definitions and their canonical guidance."
+      },
+      {
+        "path": "datamimic_ce/errors/catalog/include_errors.py",
+        "responsibility": "Owns portable descriptor inclusion issue definitions and their canonical guidance."
+      },
+      {
+        "path": "datamimic_ce/errors/catalog/operation_errors.py",
+        "responsibility": "Owns portable runtime operations issue definitions and their canonical guidance."
+      },
+      {
+        "path": "datamimic_ce/errors/catalog/parser_errors.py",
+        "responsibility": "Owns portable descriptor parsing issue definitions and their canonical guidance."
+      },
+      {
+        "path": "datamimic_ce/errors/catalog/source_errors.py",
+        "responsibility": "Owns portable source access issue definitions and their canonical guidance."
+      },
+      {
+        "path": "datamimic_ce/errors/catalog/state_machine_errors.py",
+        "responsibility": "Owns portable state machine configuration issue definitions and their canonical guidance."
+      },
+      {
+        "path": "datamimic_ce/errors/catalog/task_errors.py",
+        "responsibility": "Owns portable task execution issue definitions and their canonical guidance."
+      },
+      {
+        "path": "datamimic_ce/errors/catalog/warnings.py",
+        "responsibility": "Owns portable runtime warning issue definitions and their canonical guidance."
       }
     ]
   },
@@ -108,13 +176,10 @@
         }
       ],
       "public": [
-        "datamimic_ce.errors.catalog:invalid_locale_text"
+        "datamimic_ce.errors.catalog",
+        "datamimic_ce.errors.catalog:get_issue_definition"
       ],
-      "decided_by": "agent",
-      "planned": [
-        "datamimic_ce.errors.catalog:IssueDefinition",
-        "datamimic_ce.errors.catalog:IssueSeverity"
-      ]
+      "decided_by": "agent"
     },
     {
       "id": "ERRORS-FORMATTERS",
@@ -223,10 +288,12 @@
         "docs/migrations/authoring-errors.md"
       ],
       "requires": [],
-      "public": [],
-      "planned": [
+      "public": [
         "datamimic_ce.errors.context",
-        "datamimic_ce.errors.descriptor_contracts"
+        "datamimic_ce.errors.descriptor_contracts",
+        "datamimic_ce.errors.context.descriptor_identity:descriptor_scope",
+        "datamimic_ce.errors.context.descriptor_identity:get_descriptor_name",
+        "datamimic_ce.errors.context.descriptor_identity:logical_descriptor_name"
       ],
       "decided_by": "agent"
     }
@@ -275,10 +342,38 @@
       "id": "LAYOUT-ERRORS-CATALOG",
       "kind": "root_layout",
       "root": "datamimic_ce.errors.catalog",
-      "allowed_children": [],
+      "allowed_children": [
+        "datamimic_ce.errors.catalog.client_errors",
+        "datamimic_ce.errors.catalog.condition_errors",
+        "datamimic_ce.errors.catalog.definition",
+        "datamimic_ce.errors.catalog.exporter_errors",
+        "datamimic_ce.errors.catalog.generator_errors",
+        "datamimic_ce.errors.catalog.guidance",
+        "datamimic_ce.errors.catalog.include_errors",
+        "datamimic_ce.errors.catalog.operation_errors",
+        "datamimic_ce.errors.catalog.parser_errors",
+        "datamimic_ce.errors.catalog.source_errors",
+        "datamimic_ce.errors.catalog.state_machine_errors",
+        "datamimic_ce.errors.catalog.task_errors",
+        "datamimic_ce.errors.catalog.warnings"
+      ],
       "rationale": "Canonical error message text. Exact reviewed target children; no hidden extra modules.",
       "provenance": [
         "docs/architecture/inner/structure-review.json"
+      ],
+      "decided_by": "agent"
+    },
+    {
+      "id": "LAYOUT-ERRORS-CONTEXT",
+      "kind": "root_layout",
+      "root": "datamimic_ce.errors.context",
+      "allowed_children": [
+        "datamimic_ce.errors.context.descriptor_identity",
+        "datamimic_ce.errors.context.descriptor_location"
+      ],
+      "rationale": "Exact reviewed portable metadata, error-context or contract-export modules; no implicit extra files.",
+      "provenance": [
+        "docs/migrations/authoring-errors.md"
       ],
       "decided_by": "agent"
     }

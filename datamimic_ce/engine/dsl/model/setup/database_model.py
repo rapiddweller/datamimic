@@ -13,6 +13,11 @@ from datamimic_ce.engine.dsl.vocabulary.enums.dbms_enums import Dbms
 
 
 class DatabaseModel(BaseModel):
+    read_only: bool = Field(
+        default=False,
+        alias="readOnly",
+        description="Reject write operations and unproved source queries on this connection.",
+    )
     id: str = Field(
         ...,
         description="Unique identifier for this database connection, referenced elsewhere via "

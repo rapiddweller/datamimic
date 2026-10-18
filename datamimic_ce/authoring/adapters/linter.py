@@ -19,10 +19,10 @@ from lxml import etree
 
 from datamimic_ce.authoring.adapters.engine_check import run_engine_parse
 from datamimic_ce.authoring.adapters.xml_loader import load_file, load_source
-from datamimic_ce.authoring.domain.diagnostics import Diagnostic, LintResult
 from datamimic_ce.authoring.domain.rule_catalog import RuleSeverity
 from datamimic_ce.authoring.domain.rules import ALL_RULES, LintContext
 from datamimic_ce.authoring.domain.schema import build_schema_index
+from datamimic_ce.authoring.domain.xml_diagnostics import Diagnostic, LintResult
 from datamimic_ce.engine.io.api import buffered_exporter_names
 
 _INLINE_NOTE = (

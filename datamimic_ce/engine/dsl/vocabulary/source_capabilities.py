@@ -7,8 +7,7 @@
 """Source-file-format and capability facts for ``source=``-aware elements."""
 
 from dataclasses import dataclass
-
-from datamimic_ce._compat import StrEnum
+from enum import StrEnum
 
 # Attribute constants (imported at module level to avoid circular imports)
 from datamimic_ce.engine.dsl.vocabulary.constants.data_type_constants import DATA_TYPE_DICT, DATA_TYPE_LIST

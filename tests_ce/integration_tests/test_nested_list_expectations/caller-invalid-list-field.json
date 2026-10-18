@@ -1,8 +1,14 @@
 [
   {
-    "kind": "exact_count",
-    "product": "orders",
-    "list_field": "missing_items",
-    "count": 0
+    "origin": "caller",
+    "expectation": {
+      "kind": "exact_count",
+      "count": 0,
+      "subject": {
+        "kind": "product",
+        "product": "orders",
+        "list_field": "missing_items"
+      }
+    }
   }
 ]

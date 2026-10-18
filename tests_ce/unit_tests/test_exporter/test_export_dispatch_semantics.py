@@ -136,9 +136,7 @@ def test_memstore_uses_first_known_target_and_entity_priority_with_native_rows(
     assert first is not rows and first[0] is row and first[0]["value"] is native
     assert stores["second"].get_all_data_by_type(entity) == []
 
-    exporter_registry.consume_memstore_target(
-        context, ["first"], target_entity, product_type, "name", "full", products
-    )
+    exporter_registry.consume_memstore_target(context, ["first"], target_entity, product_type, "name", "full", products)
     current = stores["first"].get_data_by_type(entity)
     assert current is not first and current == [row, row]
     assert all(item is row for item in current)
@@ -149,9 +147,7 @@ def test_memstore_registers_missing_product_as_empty() -> None:
     manager = SimpleNamespace(contain=lambda _target: True, get_memstore=lambda _target: store)
     context = SimpleNamespace(memstore_manager=manager)
 
-    exporter_registry.consume_memstore_target(
-        context, ["mem"], None, None, "rows", "missing", MappingProxyType({})
-    )
+    exporter_registry.consume_memstore_target(context, ["mem"], None, None, "rows", "missing", MappingProxyType({}))
 
     assert store.get_data_by_type("rows") == []
 
@@ -405,13 +401,13 @@ def test_buffered_exporter_public_names_and_config_scalars(tmp_path) -> None:
 def test_exporter_factory_preserves_target_parse_and_unknown_operation_errors(tmp_path) -> None:
     setup_context = MockSetupContext(task_id="dispatch", descriptor_dir=tmp_path)
     statement = _statement()
-    with pytest.raises(ValueError, match="Error parsing target string: Non-literal parameter found") as malformed:
+    with pytest.raises(ValueError, match="Failed to parse exporter target.*Non-literal parameter found") as malformed:
         create_exporter_list(setup_context, statement.name, statement.export_uri, ["CSV(chunk_size=runtime_value)"])
     assert isinstance(malformed.value.__cause__, ValueError)
 
     with pytest.raises(
         ValueError,
-        match=r"Unknown client operation 'patch' in target 'db.patch'.*plain client id inserts.",
+        match=r"Unsupported operation 'patch' for client 'db'.*Allowed operations",
     ) as unknown_operation:
         create_exporter_list(setup_context, statement.name, statement.export_uri, ["db.patch"])
     assert unknown_operation.value.__cause__ is None

@@ -12,6 +12,8 @@ def digest(value: object) -> str:
 
 def check_completion(validation: dict, report: dict, review: dict) -> int:
     for result in (validation, report):
+        if result.get("failures"):
+            raise ValueError("Architecture validation or report failures remain.")
         if not (
             result.get("observation_complete") == "PASS"
             and result.get("declared_rules") in {"PASS", "UNKNOWN"}

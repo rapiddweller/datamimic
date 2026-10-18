@@ -4,7 +4,7 @@
     "modules": [
       {
         "path": "datamimic_ce/authoring/__init__.py",
-        "responsibility": "The package exports the canonical intent, request, and scaffold entrypoints."
+        "responsibility": "Publishes only the canonical application and lazy factory without importing Runtime or adapters."
       },
       {
         "path": "datamimic_ce/authoring/adapters/__init__.py",
@@ -23,60 +23,20 @@
         "responsibility": "The adapter loads XML, aggregates registered diagnostics, and calls the engine parser only when rule checks pass."
       },
       {
-        "path": "datamimic_ce/authoring/adapters/reference.py",
-        "responsibility": "Projects DSL facts, authoring schemas, and Domain/Runtime generator capabilities into bounded reference responses."
-      },
-      {
         "path": "datamimic_ce/authoring/adapters/xml_loader.py",
         "responsibility": "The loader uses the shared safe XML parser and converts syntax or DTD errors into DM001 diagnostics."
-      },
-      {
-        "path": "datamimic_ce/authoring/api.py",
-        "responsibility": "The API provides typed functions for capabilities, check, reference, run, and scaffold."
       },
       {
         "path": "datamimic_ce/authoring/application/__init__.py",
         "responsibility": "The package marks the authoring use cases without adding execution logic."
       },
       {
-        "path": "datamimic_ce/authoring/domain/acceptance.py",
-        "responsibility": "Evaluates explicit and derived expectations against the same full bounded capture."
-      },
-      {
-        "path": "datamimic_ce/authoring/application/compiler.py",
-        "responsibility": "The compiler translates AuthoringSpecV1 into XML and a typed plan without linting or runtime execution."
-      },
-      {
-        "path": "datamimic_ce/authoring/application/intent_linter.py",
-        "responsibility": "The linter applies intent rules to the specification and CompilePlan and decides whether findings block verification."
-      },
-      {
-        "path": "datamimic_ce/authoring/application/intent_validation.py",
-        "responsibility": "This module projects Pydantic validation errors into path-specific, repairable intent issues."
-      },
-      {
-        "path": "datamimic_ce/authoring/application/service.py",
-        "responsibility": "The service orchestrates spec validation, compilation, linting, a bounded run, acceptance, and optional evidence."
-      },
-      {
-        "path": "datamimic_ce/authoring/domain/verification.py",
-        "responsibility": "Compares captures and derives retry, smoke-export and replay evidence without executing a run."
-      },
-      {
-        "path": "datamimic_ce/authoring/contracts.py",
-        "responsibility": "Defines canonical Authoring requests, results, compiler plans and full bounded-capture evidence records."
-      },
-      {
         "path": "datamimic_ce/authoring/domain/__init__.py",
         "responsibility": "The package marks the authoring vocabulary and rules without adding domain behavior."
       },
       {
-        "path": "datamimic_ce/authoring/domain/derived_facts.py",
-        "responsibility": "Derives product, memstore, and foreign-key facts from CompilePlan for scaffold responses and intent rules."
-      },
-      {
         "path": "datamimic_ce/authoring/domain/diagnostics.py",
-        "responsibility": "The DTOs standardize individual diagnostics and lint results for authoring responses."
+        "responsibility": "Defines canonical safe diagnostics, error identities and typed Build/XML rule catalog entries."
       },
       {
         "path": "datamimic_ce/authoring/domain/rule_catalog.py",
@@ -84,11 +44,11 @@
       },
       {
         "path": "datamimic_ce/authoring/domain/rules/__init__.py",
-        "responsibility": "The package provides groups of XML and intent rules without making rule decisions itself."
+        "responsibility": "Publishes the registered raw XML lint evaluators from their canonical metadata owners."
       },
       {
         "path": "datamimic_ce/authoring/domain/rules/base.py",
-        "responsibility": "The base types give XML rules and intent rules separate contexts and diagnostic creation."
+        "responsibility": "Defines raw XML lint context and catalog-owned diagnostic construction."
       },
       {
         "path": "datamimic_ce/authoring/domain/rules/best_practice.py",
@@ -97,10 +57,6 @@
       {
         "path": "datamimic_ce/authoring/domain/rules/cross_statement.py",
         "responsibility": "The rules check relationships between declarations, sources, targets, and include paths in the XML tree."
-      },
-      {
-        "path": "datamimic_ce/authoring/domain/rules/intent_rules.py",
-        "responsibility": "The rules check product relationships and deliverability directly in AuthoringSpec and CompilePlan."
       },
       {
         "path": "datamimic_ce/authoring/domain/rules/schema_facts.py",
@@ -127,12 +83,144 @@
         "responsibility": "The package marks output-side authoring projections without adding domain behavior."
       },
       {
-        "path": "datamimic_ce/authoring/projection/reference_projection.py",
-        "responsibility": "This module projects authoring variants, schemas, and repair hints for typed reference queries."
+        "path": "datamimic_ce/authoring/adapters/bounded_execution_policy.py",
+        "responsibility": "Rejects unsupported bounded operations and missing delivery proof using CE registry facts."
       },
       {
-        "path": "datamimic_ce/authoring/spec.py",
-        "responsibility": "AuthoringSpecV1 validates the versioned JSON intent language through discriminated products, fields, and expectations."
+        "path": "datamimic_ce/authoring/adapters/bounded_executor.py",
+        "responsibility": "Owns the private workspace snapshot, child process, transport validation and cleanup for bounded execution."
+      },
+      {
+        "path": "datamimic_ce/authoring/adapters/bounded_executor_child.py",
+        "responsibility": "Runs one CE capture invocation in the private child process and returns its typed outcome."
+      },
+      {
+        "path": "datamimic_ce/authoring/adapters/catalog.py",
+        "responsibility": "Projects live CE registry capabilities, rule metadata and native learning examples into typed discovery."
+      },
+      {
+        "path": "datamimic_ce/authoring/adapters/dm_json_codec.py",
+        "responsibility": "Normalizes and converts DM JSON and XML without losing semantics using the CE element registry."
+      },
+      {
+        "path": "datamimic_ce/authoring/adapters/validator.py",
+        "responsibility": "Validates in-memory XML through the normal CE parser and projects raw lint diagnostics with logical paths."
+      },
+      {
+        "path": "datamimic_ce/authoring/adapters/windows_snapshot.py",
+        "responsibility": "Checks opened Windows workspace files against a retained root handle before snapshot copying."
+      },
+      {
+        "path": "datamimic_ce/authoring/adapters/workspace.py",
+        "responsibility": "Resolves descriptor identities and connection profiles inside the caller-owned workspace."
+      },
+      {
+        "path": "datamimic_ce/authoring/application/app.py",
+        "responsibility": "Exposes typed discovery, compile, decompile, Build and raw XML operations through injected ports."
+      },
+      {
+        "path": "datamimic_ce/authoring/application/build.py",
+        "responsibility": "Coordinates one Build transaction over normalized documents, full capture and all requested proof gates."
+      },
+      {
+        "path": "datamimic_ce/authoring/application/raw_xml.py",
+        "responsibility": "Coordinates validation and bounded execution for raw XML requests."
+      },
+      {
+        "path": "datamimic_ce/authoring/application/use_cases.py",
+        "responsibility": "Coordinates compile and decompile requests through the descriptor and validation ports."
+      },
+      {
+        "path": "datamimic_ce/authoring/application/schema.py",
+        "responsibility": "Assembles actual DTO schemas and codec grammar through the injected descriptor port."
+      },
+      {
+        "path": "datamimic_ce/authoring/bootstrap.py",
+        "responsibility": "Lazily composes workspace-bound CE adapters with the pure Authoring application."
+      },
+      {
+        "path": "datamimic_ce/authoring/domain/acceptance_contract.py",
+        "responsibility": "Defines serializable acceptance topology, checks, origins and mandatory readback relationships."
+      },
+      {
+        "path": "datamimic_ce/authoring/domain/acceptance_evaluation.py",
+        "responsibility": "Evaluates all acceptance checks against complete validated captures without executing descriptors."
+      },
+      {
+        "path": "datamimic_ce/authoring/domain/build_rules.py",
+        "responsibility": "Owns canonical Build rule metadata and structured diagnostic construction."
+      },
+      {
+        "path": "datamimic_ce/authoring/domain/build_verification.py",
+        "responsibility": "Derives smoke-export and deterministic replay verdicts from complete capture evidence."
+      },
+      {
+        "path": "datamimic_ce/authoring/domain/capabilities.py",
+        "responsibility": "Defines runtime-free typed CE capabilities and closed found-or-not-found lookups."
+      },
+      {
+        "path": "datamimic_ce/authoring/domain/capture.py",
+        "responsibility": "Defines full captured products and validates row values and provenance before evidence projection."
+      },
+      {
+        "path": "datamimic_ce/authoring/domain/common.py",
+        "responsibility": "Owns strict shared Authoring primitives and workspace-relative descriptor path validation."
+      },
+      {
+        "path": "datamimic_ce/authoring/domain/dm_json.py",
+        "responsibility": "Defines immutable canonical DM JSON documents, node content and precise codec error paths."
+      },
+      {
+        "path": "datamimic_ce/authoring/domain/document_identity.py",
+        "responsibility": "Computes canonical document serialization and semantic fingerprints independently of XML formatting."
+      },
+      {
+        "path": "datamimic_ce/authoring/domain/environment_bindings.py",
+        "responsibility": "Validates credential-free environment bindings against declared CE clients."
+      },
+      {
+        "path": "datamimic_ce/authoring/domain/environments.py",
+        "responsibility": "Defines typed database and MongoDB environment bindings for Build requests."
+      },
+      {
+        "path": "datamimic_ce/authoring/domain/expectations.py",
+        "responsibility": "Defines the closed expectation and subject vocabulary shared by Build and acceptance."
+      },
+      {
+        "path": "datamimic_ce/authoring/domain/proof.py",
+        "responsibility": "Defines product roles, requirement origins and independent optional verification evidence."
+      },
+      {
+        "path": "datamimic_ce/authoring/domain/reference.py",
+        "responsibility": "Defines typed reference navigation and the named schema collection for actual public DTOs."
+      },
+      {
+        "path": "datamimic_ce/authoring/domain/requests.py",
+        "responsibility": "Defines canonical typed request envelopes and discriminated readiness results."
+      },
+      {
+        "path": "datamimic_ce/authoring/domain/row_conditions.py",
+        "responsibility": "Parses, validates and evaluates the bounded row-condition expression vocabulary."
+      },
+      {
+        "path": "datamimic_ce/authoring/domain/validation.py",
+        "responsibility": "Projects request validation failures into safe structured logical-path diagnostics."
+      },
+      {
+        "path": "datamimic_ce/authoring/domain/xml_diagnostics.py",
+        "responsibility": "Carries internal raw XML lint findings before canonical diagnostic projection."
+      },
+      {
+        "path": "datamimic_ce/authoring/ports.py",
+        "responsibility": "Defines named typed boundaries from Authoring workflows to CE adapters."
+      },
+      {
+        "path": "datamimic_ce/authoring/projection/acceptance.py",
+        "responsibility": "Derives complete acceptance facts and merges declared transaction requirements from canonical DM JSON."
+      },
+      {
+        "path": "datamimic_ce/authoring/projection/evidence.py",
+        "responsibility": "Projects bounded JSON response samples only after complete capture validation."
       }
     ]
   },
@@ -142,14 +230,13 @@
       "label": "api",
       "role": "interface",
       "packages": [
-        "datamimic_ce.authoring.api",
         "datamimic_ce.authoring.bootstrap"
       ],
       "exact_modules": [
         "datamimic_ce.authoring"
       ],
       "responsibilities": [
-        "Expose the typed Authoring facade; bootstrap composes CE adapters and the application lazily. Legacy api.py retires at consumer cutover."
+        "Expose the typed facade and lazily compose workspace-bound CE adapters through bootstrap."
       ],
       "forbidden_responsibilities": [
         "Own compilation, verification, or transport behavior."
@@ -185,25 +272,18 @@
           "decided_by": "agent"
         }
       ],
-      "public": [
-        "datamimic_ce.authoring.api"
-      ],
-      "decided_by": "agent",
-      "planned": [
-        "datamimic_ce.authoring.bootstrap:create_authoring_application"
-      ]
+      "public": [],
+      "decided_by": "agent"
     },
     {
       "id": "AUTHORING-DOMAIN",
       "label": "domain",
       "role": "contract",
       "packages": [
-        "datamimic_ce.authoring.contracts",
-        "datamimic_ce.authoring.spec",
         "datamimic_ce.authoring.domain"
       ],
       "responsibilities": [
-        "Own DM JSON, transaction expectations, typed diagnostics/evidence and pure acceptance, completeness, smoke and replay verdicts. Legacy intent contracts retire after one-time migration."
+        "Own canonical transport values, complete capture contracts and pure acceptance, completeness, smoke and replay verdicts."
       ],
       "forbidden_responsibilities": [
         "Import Runtime or IO",
@@ -215,65 +295,31 @@
       ],
       "requires": [],
       "public": [
-        "datamimic_ce.authoring.contracts",
-        "datamimic_ce.authoring.spec",
-        "datamimic_ce.authoring.spec:AllowedValuesExpectation",
-        "datamimic_ce.authoring.spec:ConstantField",
-        "datamimic_ce.authoring.spec:DecimalRangeField",
-        "datamimic_ce.authoring.spec:ExactCountExpectation",
-        "datamimic_ce.authoring.spec:FileExportTarget",
-        "datamimic_ce.authoring.spec:FileSource",
-        "datamimic_ce.authoring.spec:ForeignKeyExpectation",
-        "datamimic_ce.authoring.spec:ForeignKeyRole",
-        "datamimic_ce.authoring.spec:GeneratedProduct",
-        "datamimic_ce.authoring.spec:IdentifierRole",
-        "datamimic_ce.authoring.spec:IncrementField",
-        "datamimic_ce.authoring.spec:IntegerRangeField",
-        "datamimic_ce.authoring.spec:MemstoreSource",
-        "datamimic_ce.authoring.spec:MemstoreTarget",
-        "datamimic_ce.authoring.spec:NestedGeneratedProduct",
-        "datamimic_ce.authoring.spec:NestedListField",
-        "datamimic_ce.authoring.spec:PatternField",
-        "datamimic_ce.authoring.spec:PerParentCountExpectation",
-        "datamimic_ce.authoring.spec:PersonEmailField",
-        "datamimic_ce.authoring.spec:PersonNameField",
-        "datamimic_ce.authoring.spec:RangeExpectation",
-        "datamimic_ce.authoring.spec:RowConditionExpectation",
-        "datamimic_ce.authoring.spec:ScriptField",
-        "datamimic_ce.authoring.spec:SourceProduct",
-        "datamimic_ce.authoring.spec:StringLengthField",
-        "datamimic_ce.authoring.spec:TimeSeriesProduct",
-        "datamimic_ce.authoring.spec:TimestampRole",
-        "datamimic_ce.authoring.spec:UniqueExpectation",
-        "datamimic_ce.authoring.spec:ValueRole",
-        "datamimic_ce.authoring.spec:ValuesField",
-        "datamimic_ce.authoring.spec:WeightedField",
-        "datamimic_ce.authoring.domain.acceptance:evaluate_acceptance",
-        "datamimic_ce.authoring.domain.derived_facts:derive_facts",
+        "datamimic_ce.authoring.domain.acceptance_contract",
+        "datamimic_ce.authoring.domain.acceptance_evaluation",
+        "datamimic_ce.authoring.domain.build_rules",
+        "datamimic_ce.authoring.domain.build_verification",
+        "datamimic_ce.authoring.domain.capabilities",
+        "datamimic_ce.authoring.domain.capture",
+        "datamimic_ce.authoring.domain.common",
         "datamimic_ce.authoring.domain.diagnostics",
+        "datamimic_ce.authoring.domain.dm_json",
+        "datamimic_ce.authoring.domain.document_identity",
+        "datamimic_ce.authoring.domain.environment_bindings",
+        "datamimic_ce.authoring.domain.environments",
+        "datamimic_ce.authoring.domain.expectations",
+        "datamimic_ce.authoring.domain.proof",
+        "datamimic_ce.authoring.domain.reference",
+        "datamimic_ce.authoring.domain.requests",
         "datamimic_ce.authoring.domain.rule_catalog",
-        "datamimic_ce.authoring.domain.rules:ALL_INTENT_RULES",
-        "datamimic_ce.authoring.domain.rules:ALL_RULES",
-        "datamimic_ce.authoring.domain.rules.base",
-        "datamimic_ce.authoring.domain.rules.schema_facts",
         "datamimic_ce.authoring.domain.schema",
         "datamimic_ce.authoring.domain.script_semantics",
-        "datamimic_ce.authoring.domain.verification:blocked_replay",
-        "datamimic_ce.authoring.domain.verification:blocked_verification",
-        "datamimic_ce.authoring.domain.verification:max_count_remediations",
-        "datamimic_ce.authoring.domain.verification:replay_evidence",
-        "datamimic_ce.authoring.domain.verification:replay_not_requested",
-        "datamimic_ce.authoring.domain.verification:smoke_export_evidence",
-        "datamimic_ce.authoring.domain.verification:unseeded_replay_evidence"
+        "datamimic_ce.authoring.domain.xml_diagnostics",
+        "datamimic_ce.authoring.domain.rules:ALL_RULES",
+        "datamimic_ce.authoring.domain.rules.base",
+        "datamimic_ce.authoring.domain.rules.schema_facts"
       ],
-      "decided_by": "agent",
-      "planned": [
-        "datamimic_ce.authoring.domain.requests",
-        "datamimic_ce.authoring.domain.dm_json",
-        "datamimic_ce.authoring.domain.capabilities",
-        "datamimic_ce.authoring.domain.expectations",
-        "datamimic_ce.authoring.domain.environments"
-      ]
+      "decided_by": "agent"
     },
     {
       "id": "AUTHORING-PROJECTION",
@@ -300,7 +346,8 @@
         }
       ],
       "public": [
-        "datamimic_ce.authoring.projection.reference_projection"
+        "datamimic_ce.authoring.projection.acceptance:project_acceptance",
+        "datamimic_ce.authoring.projection.evidence:sample_evidence"
       ],
       "decided_by": "agent"
     },
@@ -339,9 +386,12 @@
         }
       ],
       "public": [
-        "datamimic_ce.authoring.adapters.dryrun",
-        "datamimic_ce.authoring.adapters.linter",
-        "datamimic_ce.authoring.adapters.reference"
+        "datamimic_ce.authoring.adapters.bounded_execution_policy:CeBoundedExecutionPolicy",
+        "datamimic_ce.authoring.adapters.bounded_executor:CeBoundedExecutor",
+        "datamimic_ce.authoring.adapters.catalog:CeDslCatalog",
+        "datamimic_ce.authoring.adapters.dm_json_codec:CeDmJsonCodec",
+        "datamimic_ce.authoring.adapters.validator:CeDescriptorValidator",
+        "datamimic_ce.authoring.adapters.workspace:AuthoringWorkspaceContext"
       ],
       "decided_by": "agent"
     },
@@ -380,12 +430,9 @@
         }
       ],
       "public": [
-        "datamimic_ce.authoring.application.service"
-      ],
-      "decided_by": "agent",
-      "planned": [
         "datamimic_ce.authoring.application.app:AuthoringApplication"
-      ]
+      ],
+      "decided_by": "agent"
     },
     {
       "id": "AUTHORING-PORTS",
@@ -410,9 +457,12 @@
           "decided_by": "agent"
         }
       ],
-      "public": [],
-      "planned": [
-        "datamimic_ce.authoring.ports"
+      "public": [
+        "datamimic_ce.authoring.ports:DmJsonDescriptorContract",
+        "datamimic_ce.authoring.ports:DslCatalog",
+        "datamimic_ce.authoring.ports:DescriptorValidator",
+        "datamimic_ce.authoring.ports:BoundedExecutor",
+        "datamimic_ce.authoring.ports:BoundedExecutionPolicy"
       ],
       "decided_by": "agent"
     }
@@ -462,10 +512,17 @@
       "kind": "root_layout",
       "root": "datamimic_ce.authoring.adapters",
       "allowed_children": [
+        "datamimic_ce.authoring.adapters.bounded_execution_policy",
+        "datamimic_ce.authoring.adapters.bounded_executor",
+        "datamimic_ce.authoring.adapters.bounded_executor_child",
+        "datamimic_ce.authoring.adapters.catalog",
+        "datamimic_ce.authoring.adapters.dm_json_codec",
         "datamimic_ce.authoring.adapters.dryrun",
         "datamimic_ce.authoring.adapters.engine_check",
         "datamimic_ce.authoring.adapters.linter",
-        "datamimic_ce.authoring.adapters.reference",
+        "datamimic_ce.authoring.adapters.validator",
+        "datamimic_ce.authoring.adapters.windows_snapshot",
+        "datamimic_ce.authoring.adapters.workspace",
         "datamimic_ce.authoring.adapters.xml_loader"
       ],
       "rationale": "Bounded runtime/filesystem execution adapters and runtime-backed reference/capability views. Exact reviewed target children; no hidden extra modules.",
@@ -479,10 +536,11 @@
       "kind": "root_layout",
       "root": "datamimic_ce.authoring.application",
       "allowed_children": [
-        "datamimic_ce.authoring.application.compiler",
-        "datamimic_ce.authoring.application.intent_linter",
-        "datamimic_ce.authoring.application.intent_validation",
-        "datamimic_ce.authoring.application.service"
+        "datamimic_ce.authoring.application.app",
+        "datamimic_ce.authoring.application.build",
+        "datamimic_ce.authoring.application.raw_xml",
+        "datamimic_ce.authoring.application.schema",
+        "datamimic_ce.authoring.application.use_cases"
       ],
       "rationale": "Compile/check/run/scaffold transaction coordination. Exact reviewed target children; no hidden extra modules.",
       "provenance": [
@@ -495,14 +553,29 @@
       "kind": "root_layout",
       "root": "datamimic_ce.authoring.domain",
       "allowed_children": [
-        "datamimic_ce.authoring.domain.acceptance",
-        "datamimic_ce.authoring.domain.derived_facts",
+        "datamimic_ce.authoring.domain.acceptance_contract",
+        "datamimic_ce.authoring.domain.acceptance_evaluation",
+        "datamimic_ce.authoring.domain.build_rules",
+        "datamimic_ce.authoring.domain.build_verification",
+        "datamimic_ce.authoring.domain.capabilities",
+        "datamimic_ce.authoring.domain.capture",
+        "datamimic_ce.authoring.domain.common",
         "datamimic_ce.authoring.domain.diagnostics",
+        "datamimic_ce.authoring.domain.dm_json",
+        "datamimic_ce.authoring.domain.document_identity",
+        "datamimic_ce.authoring.domain.environment_bindings",
+        "datamimic_ce.authoring.domain.environments",
+        "datamimic_ce.authoring.domain.expectations",
+        "datamimic_ce.authoring.domain.proof",
+        "datamimic_ce.authoring.domain.reference",
+        "datamimic_ce.authoring.domain.requests",
+        "datamimic_ce.authoring.domain.row_conditions",
         "datamimic_ce.authoring.domain.rule_catalog",
         "datamimic_ce.authoring.domain.rules",
         "datamimic_ce.authoring.domain.schema",
         "datamimic_ce.authoring.domain.script_semantics",
-        "datamimic_ce.authoring.domain.verification"
+        "datamimic_ce.authoring.domain.validation",
+        "datamimic_ce.authoring.domain.xml_diagnostics"
       ],
       "rationale": "Intent specification, diagnostics, acceptance facts and pure rules. Exact reviewed target children; no hidden extra modules.",
       "provenance": [
@@ -518,7 +591,6 @@
         "datamimic_ce.authoring.domain.rules.base",
         "datamimic_ce.authoring.domain.rules.best_practice",
         "datamimic_ce.authoring.domain.rules.cross_statement",
-        "datamimic_ce.authoring.domain.rules.intent_rules",
         "datamimic_ce.authoring.domain.rules.schema_facts",
         "datamimic_ce.authoring.domain.rules.schema_rules",
         "datamimic_ce.authoring.domain.rules.semantic_rules"
@@ -534,7 +606,8 @@
       "kind": "root_layout",
       "root": "datamimic_ce.authoring.projection",
       "allowed_children": [
-        "datamimic_ce.authoring.projection.reference_projection"
+        "datamimic_ce.authoring.projection.acceptance",
+        "datamimic_ce.authoring.projection.evidence"
       ],
       "rationale": "Build typed authoring-reference variants from canonical intent facts. Exact reviewed target children; no hidden extra modules.",
       "provenance": [

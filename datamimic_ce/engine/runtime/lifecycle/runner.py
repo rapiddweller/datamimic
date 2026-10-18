@@ -16,6 +16,8 @@ from datamimic_ce.engine.runtime.lifecycle.config import get_settings
 from datamimic_ce.engine.runtime.logging import log_memory_info, log_system_info, setup_logger
 from datamimic_ce.engine.runtime.process_titles import bootstrap_process_title, set_main_process_title
 from datamimic_ce.engine.runtime.tasks.setup.setup_task import SetupTask
+from datamimic_ce.errors import IssueCode, parser_validation_error, task_config_error
+from datamimic_ce.errors.context.descriptor_identity import descriptor_scope, get_descriptor_name
 
 logger = logging.getLogger("DATAMIMIC")
 
@@ -37,7 +39,7 @@ class RuntimeRunSession:
 
         if not request.descriptor_path.is_file():
             logger.error(f"Invalid descriptor file path: {request.descriptor_path}")
-            raise ValueError(f"Invalid file path: {request.descriptor_path}")
+            raise parser_validation_error(code=IssueCode.PARSER_DESCRIPTOR_NOT_FOUND, name=request.descriptor_path.name)
 
     def _validate_xml_model(self, root_stmt: SetupStatement, factory_config: FactoryConfig) -> None:
         if root_stmt.num_process is not None and root_stmt.num_process > 1:
@@ -50,7 +52,7 @@ class RuntimeRunSession:
                 break
 
         if entity_stmt is None:
-            raise ValueError(f"Entity name '{factory_config.entity_name}' not found in the XML model")
+            raise task_config_error(code=IssueCode.TASK_ENTITY_NOT_FOUND, entity_name=factory_config.entity_name)
 
         if entity_stmt.count is not None:
             logger.warning("Count is not supported in factory mode")
@@ -63,38 +65,39 @@ class RuntimeRunSession:
     def execute(self) -> RunResult:
         request = self._request
         settings = get_settings()
-        try:
-            properties = request.platform_props
-            root_stmt = DescriptorParser.parse(
-                request.descriptor_path,
-                properties,
-                settings.RUNTIME_ENVIRONMENT,
-                profile_loader=load_connection_profile,
-            )
-            if request.factory_config is not None:
-                self._validate_xml_model(root_stmt, request.factory_config)
-            if request.statement_transformer is not None:
-                request.statement_transformer(root_stmt)
+        with descriptor_scope(get_descriptor_name() or request.descriptor_path.name):
+            try:
+                properties = request.platform_props
+                root_stmt = DescriptorParser.parse(
+                    request.descriptor_path,
+                    properties,
+                    settings.RUNTIME_ENVIRONMENT,
+                    profile_loader=request.profile_loader or load_connection_profile,
+                )
+                if request.factory_config is not None:
+                    self._validate_xml_model(root_stmt, request.factory_config)
+                if request.statement_transformer is not None:
+                    request.statement_transformer(root_stmt)
 
-            SetupTask(
-                setup_stmt=root_stmt,
-                memstore_manager=None,
-                task_id=self._task_id,
-                properties=properties,
-                test_mode=request.test_mode,
-                test_result_storage=self._test_result_storage,
-                descriptor_dir=request.descriptor_path.parent,
-                runtime_environment=settings.RUNTIME_ENVIRONMENT,
-                ray_debug=settings.RAY_DEBUG,
-            ).execute()
-        except ValueError as error:
-            logger.error(f"Value error: {error}")
-            raise error
-        except Exception as error:
-            logger.exception(f"Error in DATAMIMIC process. Error message: {error}")
-            raise error
-        captured = self._test_result_storage.get_result() if request.test_mode else None
-        return RunResult(captured)
+                SetupTask(
+                    setup_stmt=root_stmt,
+                    memstore_manager=None,
+                    task_id=self._task_id,
+                    properties=properties,
+                    test_mode=request.test_mode,
+                    test_result_storage=self._test_result_storage,
+                    descriptor_dir=request.descriptor_path.parent,
+                    runtime_environment=settings.RUNTIME_ENVIRONMENT,
+                    ray_debug=settings.RAY_DEBUG,
+                ).execute()
+            except ValueError as error:
+                logger.error(f"Value error: {error}")
+                raise error
+            except Exception as error:
+                logger.exception(f"Error in DATAMIMIC process. Error message: {error}")
+                raise error
+            captured = self._test_result_storage.get_result() if request.test_mode else None
+            return RunResult(captured)
 
     def capture_test_result(self) -> dict[str, list[object]] | None:
         if self._request.test_mode:

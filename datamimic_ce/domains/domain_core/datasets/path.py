@@ -18,6 +18,9 @@ resolution function so paths are easy to maintain and extend (e.g., env override
 
 DOMAIN_DATA_DIRNAME = "domain_data"
 
+_ROOT_OVERRIDE = "DATAMIMIC_ROOT"
+_DATA_OVERRIDE = "DATAMIMIC_DOMAIN_DATA"
+
 # Track which dataset codes we already logged fallback for, to avoid log spam.
 # This is process-global state: in a long-lived worker the once-per-code
 # suppression persists across runs. Call ``reset_dataset_fallback_log()`` to
@@ -46,6 +49,11 @@ def is_strict_dataset_mode() -> bool:
     return val not in ("0", "false", "False")
 
 
+def configured_dataset_overrides() -> tuple[str, ...]:
+    """Report configured dataset roots without reading caller-controlled files."""
+    return tuple(name for name in (_ROOT_OVERRIDE, _DATA_OVERRIDE) if os.getenv(name))
+
+
 def repo_root(start: Path | None = None) -> Path:
     """Return repository root inferred from a file location.
 
@@ -53,7 +61,7 @@ def repo_root(start: Path | None = None) -> Path:
     - Fallback: walk up until a directory containing `pyproject.toml` is found.
       If none found, use the third parent as previous behavior for compatibility.
     """
-    env_root = os.getenv("DATAMIMIC_ROOT")
+    env_root = os.getenv(_ROOT_OVERRIDE)
     if env_root:
         p = Path(env_root).expanduser().resolve()
         if p.exists():
@@ -75,6 +83,11 @@ def repo_root(start: Path | None = None) -> Path:
         ) from e
 
 
+def packaged_domain_data_root() -> Path:
+    """Installed assets are distinct from caller-configured dataset overrides."""
+    return Path(__file__).resolve().parents[2] / "shared" / DOMAIN_DATA_DIRNAME
+
+
 def domain_data_root(start: Path | None = None) -> Path:
     """Return the absolute path to the `domain_data` directory.
 
@@ -84,7 +97,7 @@ def domain_data_root(start: Path | None = None) -> Path:
       3. Packaged location: `domains/shared/domain_data` beside this package tree
       4. Default: `<repo>/domain_data`
     """
-    env_data = os.getenv("DATAMIMIC_DOMAIN_DATA")
+    env_data = os.getenv(_DATA_OVERRIDE)
     if env_data:
         p = Path(env_data).expanduser().resolve()
         return p
@@ -101,10 +114,8 @@ def domain_data_root(start: Path | None = None) -> Path:
         return packaged_in_root
 
     package_root = Path(__file__).resolve().parents[3]
-    if (start is None or cur.is_relative_to(package_root)) and (
-        package_root / "domains" / "shared" / DOMAIN_DATA_DIRNAME
-    ).exists():
-        return package_root / "domains" / "shared" / DOMAIN_DATA_DIRNAME
+    if (start is None or cur.is_relative_to(package_root)) and (packaged_domain_data_root()).exists():
+        return packaged_domain_data_root()
 
     return root / DOMAIN_DATA_DIRNAME
 

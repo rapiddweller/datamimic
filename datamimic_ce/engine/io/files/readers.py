@@ -8,6 +8,9 @@ import csv
 import json
 import logging
 import zipfile
+from collections.abc import Iterator
+from contextlib import contextmanager
+from io import BytesIO, StringIO
 from pathlib import Path
 from typing import TypeAlias, TypeGuard
 
@@ -17,14 +20,38 @@ import xmltodict
 from lxml import etree
 from pandas import DataFrame
 
+from datamimic_ce.engine.dsl.parsers.input.resource import (
+    read_resource_bytes,
+    resource_reader_active,
+    resource_reader_scope,
+)
 from datamimic_ce.engine.dsl.parsers.input.xml import DTDForbiddenError, parse_xml_file
 from datamimic_ce.engine.dsl.vocabulary.source_capabilities import SourceFileFormat
 from datamimic_ce.engine.io.files.cache import FileContentStorage
+from datamimic_ce.errors import IssueCode, invalid_source_error
 
 logger = logging.getLogger("DATAMIMIC")
 
 JsonScalar: TypeAlias = bool | int | float | str | None
 JsonValue: TypeAlias = JsonScalar | list["JsonValue"] | dict[str, "JsonValue"]
+
+
+@contextmanager
+def packaged_dataset_scope(path: Path, package_root: Path) -> Iterator[None]:
+    """Only installed Domain data may use native reads inside a contained run."""
+    root = package_root.resolve(strict=True)
+    if not resource_reader_active() or not path.resolve().is_relative_to(root):
+        yield
+        return
+
+    def read_packaged(requested: Path) -> bytes:
+        resolved = requested.resolve(strict=True)
+        if not resolved.is_relative_to(root):
+            raise ValueError("packaged dataset resolves outside its installed root")
+        return resolved.read_bytes()
+
+    with resource_reader_scope(read_packaged):
+        yield
 
 
 def _is_csv_rows(value: object) -> TypeGuard[list[tuple[str, ...]]]:
@@ -111,19 +138,21 @@ class FileUtil:
                 str(file_path),
                 lambda: [
                     tuple(row)
-                    for row in csv.reader(file_path.open("r", newline="", encoding=encoding), delimiter=separator)
+                    for row in csv.reader(
+                        StringIO(read_resource_bytes(file_path).decode(encoding), newline=""), delimiter=separator
+                    )
                 ],
             )
             if not _is_csv_rows(rows):
                 raise ValueError(f"Cached CSV data at '{file_path}' has an invalid shape")
             return rows
+        except csv.Error as e:
+            raise invalid_source_error(code=IssueCode.SOURCE_INVALID_CSV, name=file_path.name) from e
         except FileNotFoundError as e:
             raise FileNotFoundError(f"CSV file not found '{file_path}', error: {e}") from e
 
     @staticmethod
-    def read_csv_to_dict_list(
-        file_path: Path, separator: str, encoding: str = "utf-8"
-    ) -> list[dict[str, str]]:
+    def read_csv_to_dict_list(file_path: Path, separator: str, encoding: str = "utf-8") -> list[dict[str, str]]:
         """
         Read data from csv and parse into list of dict
         """
@@ -150,7 +179,11 @@ class FileUtil:
         from openpyxl.utils.exceptions import InvalidFileException
 
         try:
-            workbook = load_workbook(file_path, read_only=True, data_only=True)
+            workbook = load_workbook(
+                BytesIO(read_resource_bytes(file_path)) if resource_reader_active() else file_path,
+                read_only=True,
+                data_only=True,
+            )
         except (InvalidFileException, zipfile.BadZipFile, KeyError) as e:
             raise ValueError(f"Invalid XLSX file '{file_path}': {e}") from e
 
@@ -210,7 +243,7 @@ class FileUtil:
         a file that doesn't carry that header line.
         """
         lines = FileContentStorage.load_file_with_custom_func(
-            str(file_path), lambda: file_path.read_text(encoding=encoding).splitlines()
+            str(file_path), lambda: read_resource_bytes(file_path).decode(encoding).splitlines()
         )
         if not _is_string_lines(lines):
             raise ValueError(f"Cached fixed-width data at '{file_path}' has an invalid shape")
@@ -271,11 +304,13 @@ class FileUtil:
         """
         try:
             data = FileContentStorage.load_file_with_custom_func(
-                str(file_path), lambda: json.load(file_path.open(mode="r", encoding=encoding))
+                str(file_path), lambda: json.loads(read_resource_bytes(file_path).decode(encoding))
             )
             if not _is_json_value(data):
                 raise ValueError(f"JSON file '{file_path}' contains a value outside the JSON data model")
             return data
+        except json.JSONDecodeError as e:
+            raise invalid_source_error(code=IssueCode.SOURCE_INVALID_JSON, name=file_path.name) from e
         except FileNotFoundError as e:
             raise FileNotFoundError(f"JSON file not found '{file_path}', error: {e}") from e
 
@@ -288,7 +323,9 @@ class FileUtil:
         if isinstance(json_data, list):
             return json_data
         else:
-            raise ValueError(f"JSON file '{file_path}' must contain a list of objects")
+            raise invalid_source_error(
+                code=IssueCode.SOURCE_JSON_ROOT_INVALID, name=file_path.name, guidance="Expected a JSON list."
+            )
 
     @staticmethod
     def read_json_to_dict(file_path: Path, encoding: str = "utf-8") -> dict[str, JsonValue]:
@@ -299,7 +336,9 @@ class FileUtil:
         if is_json_object(json_data):
             return json_data
         else:
-            raise ValueError(f"JSON file '{file_path}' must contain a dictionary")
+            raise invalid_source_error(
+                code=IssueCode.SOURCE_JSON_ROOT_INVALID, name=file_path.name, guidance="Expected a JSON dictionary."
+            )
 
     @staticmethod
     def read_csv_to_dict_of_tuples_with_header(
@@ -473,13 +512,13 @@ def load_source_rows(
         elif is_json_object(json_data):
             return [json_data]
         else:
-            raise ValueError(f"JSON file '{key}' must contain a list of objects or a dictionary")
+            raise invalid_source_error(code=IssueCode.SOURCE_JSON_ROOT_INVALID, name=file_path.name)
     elif source_format is SourceFileFormat.XML:
         document = FileContentStorage.load_file_with_custom_func(
-            key, lambda: xmltodict.parse(Path(key).read_bytes(), attr_prefix="@", cdata_key="#text")
+            key, lambda: xmltodict.parse(read_resource_bytes(Path(key)), attr_prefix="@", cdata_key="#text")
         )
         if not isinstance(document, dict):
-            raise ValueError(f"XML source '{key}' must have a document root")
+            raise invalid_source_error(code=IssueCode.SOURCE_XML_ROOT_INVALID, name=file_path.name)
         # <list><item>...</item></list> is a row list; any other document is one row
         root = document.get("list")
         if not isinstance(root, dict) or root.get("item") is None:
@@ -492,4 +531,4 @@ def load_source_rows(
             )
         return items
     else:
-        raise ValueError(f"Data source '{key}' is not supported is not handled by DataSourceRegistry")
+        raise invalid_source_error(code=IssueCode.SOURCE_UNSUPPORTED_FILE_TYPE, name=file_path.name)

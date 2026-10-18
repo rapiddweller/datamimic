@@ -1,13 +1,15 @@
 # Authoring evaluation archive
 
 This directory contains curated evaluation records, not an executable benchmark
-harness. DATAMIMIC currently has no committed portable harness for canonical
+harness. These records exercise the legacy `AuthoringSpecV1`/scaffold contract;
+current authoring uses XML and BuildRequestV4 (see [migration](../../migrations/authoring-errors.md)).
+DATAMIMIC currently has no committed portable harness for canonical
 agent authoring.
 
 ## Records
 
 - [`evaluations/2026-07-15-t1-t5-challenge-ladder.md`](evaluations/2026-07-15-t1-t5-challenge-ladder.md)
-  — the sole current record: a five-rung difficulty ladder (flat →
+  — the original ladder record: a five-rung difficulty ladder (flat →
   relational → mixed fields → memstore pipeline → time series) across five
   local models with a Claude Haiku baseline. Self-contained and
   paper-structured: verbatim prompts, per-cell action sequences, failure
@@ -32,11 +34,11 @@ directory and must not be committed.
 
 A future harness must:
 
-- retain `model.dm.json` as the authored Intent Model SPOT;
+- persist executable XML; keep DM JSON and expectations in the Build transaction;
 - invoke authoring through the CLI or the same canonical service use case, never
   by directly composing compiler, linter, or dry-run implementation modules;
-- stop on the first scaffold result with `verified=true`;
-- evaluate business intent with a typed oracle over canonical scaffold evidence;
+- stop on the first Build result with `outcome=ready`;
+- evaluate business intent with a typed oracle over canonical Build evidence;
 - keep access failures separate from semantic failures;
 - record multiple seeds, explicit budgets, and a machine-generated hashed call
   ledger before making reliability claims; and

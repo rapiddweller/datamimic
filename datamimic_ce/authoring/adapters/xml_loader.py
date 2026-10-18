@@ -10,8 +10,8 @@ from pathlib import Path
 
 from lxml import etree
 
-from datamimic_ce.authoring.domain.diagnostics import Diagnostic
 from datamimic_ce.authoring.domain.rule_catalog import RuleSeverity
+from datamimic_ce.authoring.domain.xml_diagnostics import Diagnostic
 from datamimic_ce.engine.dsl.api import DTDForbiddenError, parse_xml_file, parse_xml_source
 
 RULE_XML_LOAD = "DM001"

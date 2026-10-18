@@ -172,7 +172,7 @@ def test_sql_execute_rolls_back_all_statements_on_failure(tmp_path, monkeypatch)
     context.add_client("db", client)
     client.execute_sql_script("CREATE TABLE anchor (id INTEGER);")
 
-    with pytest.raises(RuntimeError, match="Error when execute SQL"):
+    with pytest.raises(RuntimeError, match=r"\[E014/I901\].*SQL script") as caught:
         _sql_task(
             "db",
             "INSERT INTO anchor VALUES (1); "
@@ -180,6 +180,8 @@ def test_sql_execute_rolls_back_all_statements_on_failure(tmp_path, monkeypatch)
             "INSERT INTO missing_table VALUES (2);",
         ).execute(context)
 
+    assert "missing_table" not in str(caught.value)
+    assert caught.value.__cause__ is not None
     assert client.get("SELECT id FROM anchor") == []
     assert client.get("SELECT name FROM sqlite_master WHERE name = 'rollback_probe'") == []
     client.engine.dispose()

@@ -11,30 +11,31 @@ cross-field validation without generating anything. It is fail-fast (first
 ValueError wins), so it only runs when phase 1 found no errors — anything it
 still catches becomes a DM000 diagnostic (a lint rule gap worth closing)."""
 
-import re
 from pathlib import Path
 
-from datamimic_ce.authoring.domain.diagnostics import Diagnostic
 from datamimic_ce.authoring.domain.rule_catalog import RuleSeverity
+from datamimic_ce.authoring.domain.xml_diagnostics import Diagnostic
+from datamimic_ce.errors import ParserValidationError
 
 RULE_ENGINE_PARSE = "DM000"
 
-# The engine resolves <database>/<mongodb> credentials AT PARSE TIME from
-# conf/{env}.env.properties. That is an environment concern, not descriptor
-# validity — the linter has no conf and must not fail a structurally-correct
-# DB descriptor on it (dry-run surfaces real connectivity as DM002 instead).
-# But a MISSING STRUCTURAL attribute (e.g. <database> without dbms) shares the
-# same top-level message, so suppress only when every missing field is a credential.
-_CREDENTIAL_SIGNATURE = "make sure all required attributes are provided"
+# Client credentials are an execution concern; structural fields remain mandatory.
 _CREDENTIAL_FIELDS = {"host", "port", "database", "user", "password"}
-_MISSING_FIELD = re.compile(r"-\s*(\w+):\s*Field required")
 
 
-def _is_pure_credential_error(message: str) -> bool:
-    if _CREDENTIAL_SIGNATURE not in message:
+def _is_pure_credential_error(error: ValueError) -> bool:
+    if not isinstance(error, ParserValidationError) or not error.validation_errors:
         return False
-    missing = set(_MISSING_FIELD.findall(message))
-    return bool(missing) and missing <= _CREDENTIAL_FIELDS
+    for detail in error.validation_errors:
+        location = detail.get("loc")
+        if (
+            detail.get("type") != "missing"
+            or not isinstance(location, tuple | list)
+            or len(location) != 1
+            or location[0] not in _CREDENTIAL_FIELDS
+        ):
+            return False
+    return True
 
 
 def run_engine_parse(descriptor_path: Path) -> Diagnostic | None:
@@ -52,13 +53,13 @@ def run_engine_parse(descriptor_path: Path) -> Diagnostic | None:
             profile_loader=load_connection_profile,
         )
     except (ValueError, FileNotFoundError) as err:
-        if _is_pure_credential_error(str(err)):
+        if isinstance(err, ValueError) and _is_pure_credential_error(err):
             return None  # DB credentials are wired at run time, not a lint error
         return Diagnostic(
             rule=RULE_ENGINE_PARSE,
             severity=RuleSeverity.ERROR,
-            message=f"Engine parser rejected the descriptor: {err}",
-            fix_hint="Fix the reported element/attribute; the message quotes the engine's own check.",
+            message="Engine parser rejected the descriptor.",
+            fix_hint="Correct the descriptor fields and workspace-local resource configuration.",
             element="setup",
             path="/setup",
         )

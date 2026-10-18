@@ -23,7 +23,7 @@ from dataclasses import replace
 from lxml import etree
 from pydantic import TypeAdapter, ValidationError
 
-from datamimic_ce.authoring.domain.diagnostics import Diagnostic
+from datamimic_ce.authoring.domain.xml_diagnostics import Diagnostic
 from datamimic_ce.authoring.domain.rules.base import LintContext, Rule
 from datamimic_ce.engine.dsl.api import (
     ATTR_DISTRIBUTION,

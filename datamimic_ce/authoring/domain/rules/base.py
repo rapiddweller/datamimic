@@ -10,18 +10,14 @@ emit Diagnostics; they never raise. The engine parse (phase 2) stays the authori
 from abc import ABC, abstractmethod
 from collections.abc import Iterable, Iterator
 from pathlib import Path
-from typing import TYPE_CHECKING, ClassVar
+from typing import ClassVar
 
 from lxml import etree
 
-from datamimic_ce.authoring.domain.diagnostics import Diagnostic
 from datamimic_ce.authoring.domain.rule_catalog import RuleDefinition, RuleSeverity
 from datamimic_ce.authoring.domain.rules.schema_facts import SchemaIndex
+from datamimic_ce.authoring.domain.xml_diagnostics import Diagnostic
 from datamimic_ce.engine.dsl.api import EL_COMMENT
-
-if TYPE_CHECKING:
-    from datamimic_ce.authoring.contracts import CompilePlan
-    from datamimic_ce.authoring.spec import AuthoringSpecV1
 
 
 class LintContext:
@@ -79,48 +75,3 @@ class Rule(ABC):
 
     @abstractmethod
     def check(self, ctx: LintContext) -> Iterable[Diagnostic]: ...
-
-
-class IntentLintContext:
-    """Diagnostic factory for validated authoring intent that has no XML equivalent."""
-
-    def diag(
-        self,
-        rule: "type[IntentRule]",
-        *,
-        path: str,
-        name: str,
-        evidence: str | None = None,
-        fix_context: str | None = None,
-    ) -> Diagnostic:
-        definition = rule.definition
-        message = definition.explanation
-        if evidence:
-            message = f"{message} Evidence: {evidence}"
-        fix_hint = definition.fix_hint
-        if fix_context:
-            fix_hint = f"{fix_hint} {fix_context}"
-        return Diagnostic(
-            rule=definition.id,
-            severity=definition.severity,
-            message=message,
-            fix_hint=fix_hint,
-            element="field",
-            path=path,
-            name=name,
-            docs=definition.docs,
-        )
-
-
-class IntentRule(ABC):
-    """Rule over validated intent and compiler-owned facts absent from XML."""
-
-    definition: ClassVar[RuleDefinition]
-
-    @abstractmethod
-    def check(
-        self,
-        ctx: IntentLintContext,
-        spec: "AuthoringSpecV1",
-        plan: "CompilePlan",
-    ) -> Iterable[Diagnostic]: ...

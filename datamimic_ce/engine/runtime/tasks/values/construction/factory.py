@@ -35,6 +35,7 @@ from datamimic_ce.engine.io.api import DataSourcePagination
 from datamimic_ce.engine.runtime.contexts.context import Context, SetupContext
 from datamimic_ce.engine.runtime.tasks.values.construction.global_increment import GlobalIncrementGenerator
 from datamimic_ce.engine.runtime.tasks.values.construction.sequence_table import SequenceTableGenerator
+from datamimic_ce.errors import IssueCode, generator_config_error, is_user_error
 from datamimic_ce.randomness import RandomSource
 
 logger = logging.getLogger("DATAMIMIC")
@@ -315,9 +316,9 @@ class GeneratorUtil:
                         f"Cannot create generator '{class_name}' from string '{generator_str}' using evaluate: {e_eval}"
                     ) from e_eval
             else:
-                seed_kw = {
-                    "rng": seeded_rng
-                } if seeded_rng is not None and cls is not None and _is_rng_generator(cls) else {}
+                seed_kw = (
+                    {"rng": seeded_rng} if seeded_rng is not None and cls is not None and _is_rng_generator(cls) else {}
+                )
                 if cls is None:
                     raise TypeError("'NoneType' object is not callable")
                 if class_name in ["EmailAddressGenerator", "FamilyNameGenerator", "GivenNameGenerator"]:
@@ -339,10 +340,15 @@ class GeneratorUtil:
             current_class_name = class_name if "class_name" in locals() else generator_str
             element_name_str = f" of element '{stmt.name}'" if stmt.name is not None else ""
             logger.error(f"Error creating generator '{current_class_name}'{element_name_str}: {e}")
-            if not isinstance(e, ValueError):
-                raise ValueError(f"Cannot create generator '{current_class_name}'{element_name_str}: {e}") from e
-            else:
+            if is_user_error(e):
                 raise
+            raise generator_config_error(
+                code=IssueCode.GENERATOR_CREATE_FAILED,
+                class_name=current_class_name,
+                element_name=stmt.name,
+                descriptor="",
+                error=str(e),
+            ) from e
 
     @staticmethod
     def _parse_sequence_kwarg(generator_str: str) -> str | None:

@@ -176,7 +176,7 @@ def expression_globals(
     anchor = resolve_clock(deterministic=True)
 
     def now(tz: datetime.tzinfo | None = None) -> datetime.datetime:
-        return anchor if tz is None else anchor.replace(tzinfo=datetime.timezone.utc).astimezone(tz)
+        return anchor if tz is None else anchor.replace(tzinfo=datetime.UTC).astimezone(tz)
 
     def seeded_random(
         x: int | float | str | bytes | bytearray | None | _OmittedRandomSeed = _OMITTED_RANDOM_SEED,

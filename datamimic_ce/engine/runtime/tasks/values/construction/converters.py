@@ -25,6 +25,7 @@ from datamimic_ce.domains.api import (
 )
 from datamimic_ce.engine.dsl.api import ConverterEnum
 from datamimic_ce.engine.runtime.contexts.context import Context
+from datamimic_ce.errors import IssueCode, task_config_error
 
 
 def _create_converter_from_constructor_str(
@@ -35,7 +36,9 @@ def _create_converter_from_constructor_str(
     if converter_class is None:
         converter_class = context.root.get_dynamic_class(class_name)
         if converter_class is None:
-            raise ValueError(f"Cannot find converter '{class_name}'")
+            raise task_config_error(
+                code=IssueCode.TASK_UNKNOWN_CONVERTER, class_name=class_name, element_label="converter"
+            )
 
     if class_name != constructor_str:
         converter = context.evaluate_python_expression(constructor_str, class_dict)

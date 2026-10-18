@@ -1,15 +1,16 @@
 {
-  "status": "published_adoption_review_accepted",
+  "status": "independent_local_architecture_review_accepted",
   "reviewed_by": "Astra",
   "review_reference": "docs/architecture/refactoring-study/experiment-2/completion.md",
-  "source_digest": "81f86023ad58442a08dd77cf72e9524a24c91b0466aa46645b732cc4f393d428",
-  "contract_digest": "289d6c0ee28d75e53e7ed8d057edbd66dd4004c5c362b6cccf5f7c095e0f7745",
+  "source_digest": "b71be23e55efeb0f42f13ee99877f8c0443d267c2ca09d6ce39356ec1c0a03e6",
+  "contract_digest": "ee87d5de646e6b19c405ef755c2c7acbf82f5d54dbc25628d57d71c0fdd03e97",
   "analyzer_digest": "7106e3595fa7df9269cb43ee280f9c557659db7bda171b1f65ff5619ab54aa24",
-  "unknowns_digest": "612725aab375502e431b6b295381e9ec123d709bd8c96b0e4ec0273c9189847d",
+  "validation_digest": "e5afd2868371d7517a667d8a519a0c0ab64007f3231894e366f91c029de50cab",
+  "unknowns_digest": "0b9cf7fd7e8780268a0a5942e6567e77cae6622489229819a3e6cf747f1e5c01",
   "groups": [
     {
       "classification": "aggregate_receipt",
-      "reason": "Aggregate references current detailed positions; no extra scalar count. Current positions/decided/reason inventory replaces the old totals.",
+      "reason": "Aggregate summaries refer to the current detailed positions. The final native counts and reason inventories are retained; this group is not separate evidence that any undecidable position passes.",
       "ids": [
         "UNKNOWN-BOUNDARY-TYPES-740afb90c4487173",
         "UNKNOWN-BOUNDARY-TYPES-7bd62f12a70f63ec",
@@ -21,7 +22,7 @@
     },
     {
       "classification": "callable_alias_limit",
-      "reason": "ConnectionProfileLoader aliases Callable[[Path,str],dict[str,str]]; underlying dictionary remains real boundary debt.",
+      "reason": "ConnectionProfileLoader is Callable[[Path,str],dict[str,str]]. Both parser entry points preserve the IO-owned loader; native alias binding and the open profile-key contract remain unresolved. Resource containment is separately runtime-tested.",
       "ids": [
         "UNKNOWN-BOUNDARY-TYPE-POSITION-9d9f68655b08ff1b"
       ]
@@ -60,12 +61,7 @@
       "classification": "external_or_validated_alias_limit",
       "reason": "Retain real library/validation type; scalar ratchet excludes external_type but canonical uncertainty stays. Alias expansion may reveal additional shape obligations.",
       "ids": [
-        "UNKNOWN-BOUNDARY-TYPE-POSITION-43d5ebe480180485",
-        "UNKNOWN-BOUNDARY-TYPE-POSITION-77aee7c3ac0929f8",
-        "UNKNOWN-BOUNDARY-TYPE-POSITION-7888c0051ab4b603",
-        "UNKNOWN-BOUNDARY-TYPE-POSITION-886a2527bb45e6e6",
         "UNKNOWN-BOUNDARY-TYPE-POSITION-99cb626b5c57b1c1",
-        "UNKNOWN-BOUNDARY-TYPE-POSITION-ad5b516a7654fc7b",
         "UNKNOWN-BOUNDARY-TYPE-POSITION-c2124a0c8f61643e"
       ]
     },
@@ -98,7 +94,7 @@
     },
     {
       "classification": "global_observation_limit",
-      "reason": "Current global context and dynamic-call completeness is unproved; 1246 unresolved calls are distinct from scalar boundary positions.",
+      "reason": "Global context aliases and Python dynamic calls are not completely proven. Current native unresolved calls=1395; all321 added sites and172 removed sites are accounted for in the source-bound measurement assessment. Manual review does not turn whole-graph completeness into PASS.",
       "ids": [
         "UNKNOWN-CONTEXT-DATAFLOW",
         "UNKNOWN-PYTHON-DYNAMIC-CALLS"
@@ -113,19 +109,15 @@
         "UNKNOWN-BOUNDARY-TYPE-POSITION-11347f0958e2d8ab",
         "UNKNOWN-BOUNDARY-TYPE-POSITION-1561fcdb411e6cc7",
         "UNKNOWN-BOUNDARY-TYPE-POSITION-16a9218a38f21e23",
-        "UNKNOWN-BOUNDARY-TYPE-POSITION-171a349dc482b166",
         "UNKNOWN-BOUNDARY-TYPE-POSITION-17c5e4b2b9054b2d",
         "UNKNOWN-BOUNDARY-TYPE-POSITION-19f5a705bdf18ec4",
-        "UNKNOWN-BOUNDARY-TYPE-POSITION-1afcd0d8e4222e10",
         "UNKNOWN-BOUNDARY-TYPE-POSITION-1dd7dbbad671215d",
         "UNKNOWN-BOUNDARY-TYPE-POSITION-1fcccee1b4df192e",
         "UNKNOWN-BOUNDARY-TYPE-POSITION-218e1e783ec24c13",
         "UNKNOWN-BOUNDARY-TYPE-POSITION-23cdb8304b276110",
-        "UNKNOWN-BOUNDARY-TYPE-POSITION-271b130b70b58268",
         "UNKNOWN-BOUNDARY-TYPE-POSITION-3096245875bdb874",
         "UNKNOWN-BOUNDARY-TYPE-POSITION-33fab1fe35773ecb",
         "UNKNOWN-BOUNDARY-TYPE-POSITION-37778a951d317c8b",
-        "UNKNOWN-BOUNDARY-TYPE-POSITION-494a369cf9d50403",
         "UNKNOWN-BOUNDARY-TYPE-POSITION-4a99961c530e4651",
         "UNKNOWN-BOUNDARY-TYPE-POSITION-4c4904a69431de91",
         "UNKNOWN-BOUNDARY-TYPE-POSITION-4d4f7de8b4c37539",
@@ -135,7 +127,6 @@
         "UNKNOWN-BOUNDARY-TYPE-POSITION-5a07dc9662bc4467",
         "UNKNOWN-BOUNDARY-TYPE-POSITION-5c065b92f226a122",
         "UNKNOWN-BOUNDARY-TYPE-POSITION-5c0d945a370110e5",
-        "UNKNOWN-BOUNDARY-TYPE-POSITION-5c67d311696685a8",
         "UNKNOWN-BOUNDARY-TYPE-POSITION-64d6b1e7e96a39a5",
         "UNKNOWN-BOUNDARY-TYPE-POSITION-6b1f58f7e5aae8da",
         "UNKNOWN-BOUNDARY-TYPE-POSITION-74d167260a024cef",
@@ -144,7 +135,6 @@
         "UNKNOWN-BOUNDARY-TYPE-POSITION-834e718a57e2474d",
         "UNKNOWN-BOUNDARY-TYPE-POSITION-8924c8ea808d8b6f",
         "UNKNOWN-BOUNDARY-TYPE-POSITION-8ae58c1ea1ede8d8",
-        "UNKNOWN-BOUNDARY-TYPE-POSITION-8fdd68d8995ada8f",
         "UNKNOWN-BOUNDARY-TYPE-POSITION-9015ea57a7a25de1",
         "UNKNOWN-BOUNDARY-TYPE-POSITION-93e64930604dfdcb",
         "UNKNOWN-BOUNDARY-TYPE-POSITION-956133298d90ca41",
@@ -363,7 +353,7 @@
     },
     {
       "classification": "source_contract_obligation",
-      "reason": "Returns live mutable stored rows and preserves the existing missing-key KeyError message, logging and cause chain. Open consume/storage payloads remain unproved by the MemstoreSource read protocol; no closed DTO or identity/mutation change approved. Current return signature remains unannotated; no behavioral rerun.",
+      "reason": "Memstore returns live mutable stored rows. Its current error path uses the typed MissingMemstoreProductError factory with the original native KeyError cause; three repeated pickle probes preserve exact args/text/metadata. The unannotated successful return and open storage shapes remain real pre-existing source debt.",
       "ids": [
         "UNKNOWN-BOUNDARY-TYPE-POSITION-b46539b39643885f"
       ]
@@ -461,14 +451,6 @@
     },
     {
       "classification": "uncertain_alias_binding",
-      "reason": "Annotated discriminated union retains category-to-kind correlation and Pydantic validation. Prove binding and supported Annotated metadata, without erasing discriminator or replacing the result with an open map.",
-      "ids": [
-        "UNKNOWN-BOUNDARY-TYPE-POSITION-09f6b80e79e7695f",
-        "UNKNOWN-BOUNDARY-TYPE-POSITION-2b96a76af66c156b"
-      ]
-    },
-    {
-      "classification": "uncertain_alias_binding",
       "reason": "Client | SqlScriptClient preserves heterogeneous client implementations; prove the relevant binding and callable surface before expanding. Do not narrow the registry or infer all clients share one database API.",
       "ids": [
         "UNKNOWN-BOUNDARY-TYPE-POSITION-08ad9b9d956f3aff",
@@ -562,28 +544,91 @@
         "UNKNOWN-BOUNDARY-TYPE-POSITION-e9d9e28306151cf3",
         "UNKNOWN-BOUNDARY-TYPE-POSITION-f24ae27309d4ceef"
       ]
+    },
+    {
+      "classification": "validated_scalar_alias",
+      "reason": "Current AuthoringModel is frozen/extra-forbid with Pydantic strict scalar validation; NonEmptyStrictStr adds minimum length. Native expansion/binding of Annotated/Pydantic aliases is UNKNOWN, not an open unvalidated transport value. All nested shapes still require their own contracts.",
+      "ids": [
+        "UNKNOWN-BOUNDARY-TYPE-POSITION-047311406b26c7e6",
+        "UNKNOWN-BOUNDARY-TYPE-POSITION-206f6f1f9bdbeaab",
+        "UNKNOWN-BOUNDARY-TYPE-POSITION-252f26acb8deee27",
+        "UNKNOWN-BOUNDARY-TYPE-POSITION-3ab391aad3fbce1f",
+        "UNKNOWN-BOUNDARY-TYPE-POSITION-4cf81115e3c77ed1",
+        "UNKNOWN-BOUNDARY-TYPE-POSITION-4e9db3a37ceef6be",
+        "UNKNOWN-BOUNDARY-TYPE-POSITION-505226a9c9ad403a",
+        "UNKNOWN-BOUNDARY-TYPE-POSITION-607498d48e034dc8",
+        "UNKNOWN-BOUNDARY-TYPE-POSITION-aba980036a950c4e",
+        "UNKNOWN-BOUNDARY-TYPE-POSITION-be92f760da691d9c",
+        "UNKNOWN-BOUNDARY-TYPE-POSITION-d886aded7ba7747f",
+        "UNKNOWN-BOUNDARY-TYPE-POSITION-f32ad09e1dbbe20d"
+      ]
+    },
+    {
+      "classification": "public_json_schema_algebra",
+      "reason": "Public schema outputs are validated against Pydantic recursive JsonValue. Arbitrary schema keys are intentional; recursive external binding remains native UNKNOWN. This is JSON Schema output, not a second application-domain contract.",
+      "ids": [
+        "UNKNOWN-BOUNDARY-TYPE-POSITION-1cfa307c0993e0af",
+        "UNKNOWN-BOUNDARY-TYPE-POSITION-e43b3188d6806eb1"
+      ]
+    },
+    {
+      "classification": "closed_result_union_alias",
+      "reason": "Current aliases are explicit Annotated discriminated outcome unions of frozen closed AuthoringModel classes. This preserves rejected/ready or found/not-found correlation. The native analyzer does not prove the alias; no replacement with dict/object or broad grant is justified.",
+      "ids": [
+        "UNKNOWN-BOUNDARY-TYPE-POSITION-2488b7a355820dad",
+        "UNKNOWN-BOUNDARY-TYPE-POSITION-7f25d1f5a09ab7b6",
+        "UNKNOWN-BOUNDARY-TYPE-POSITION-c0928b42727907e9",
+        "UNKNOWN-BOUNDARY-TYPE-POSITION-f863f4c1d137803d"
+      ]
+    },
+    {
+      "classification": "native_literal_compatibility",
+      "reason": "The helper delegates to ast.literal_eval and preserves existing CE list/tuple/set/dict/scalar/None literal semantics. The exact Any boundary remains explicit debt and UNKNOWN; its function-only construct allowance has adjacent-negative and missing-scope controls. This does not authorize Any in workers or other DSL helpers.",
+      "ids": [
+        "UNKNOWN-BOUNDARY-TYPE-POSITION-2b87f31872734d86"
+      ]
+    },
+    {
+      "classification": "stdlib_type_limit",
+      "reason": "Exact pathlib.Path type retains filesystem identity; native external type expansion stays UNKNOWN. Resource containment is provided by scoped secure readers, not by assuming the Path annotation proves it.",
+      "ids": [
+        "UNKNOWN-BOUNDARY-TYPE-POSITION-8e76c096c5486ef3",
+        "UNKNOWN-BOUNDARY-TYPE-POSITION-c7b1e890c7b15c1f",
+        "UNKNOWN-BOUNDARY-TYPE-POSITION-e1f909ddb3414b32"
+      ]
+    },
+    {
+      "classification": "resource_reader_callback_alias",
+      "reason": "ResourceReader is exactly Callable[[Path],bytes], carried in a ContextVar and restored by token reset. It gives DSL an input port without importing Authoring or IO; native callable-alias binding remains UNKNOWN. Positive and escaping-resource behavior were tested separately.",
+      "ids": [
+        "UNKNOWN-BOUNDARY-TYPE-POSITION-97e11b39a81c66a1"
+      ]
+    },
+    {
+      "classification": "registry_type_object",
+      "reason": "ElementDefinition.model is an optional Pydantic model class from the single DSL registry. A runtime class/type expression is required for validation/schema generation; native generic expansion is not proven. No duplicate model catalogue or erased object replacement is justified.",
+      "ids": [
+        "UNKNOWN-BOUNDARY-TYPE-POSITION-b2386b07466f6419"
+      ]
+    },
+    {
+      "classification": "callable_alias_limit",
+      "reason": "ConnectionProfileLoader is Callable[[Path,str],dict[str,str]]. Profile keys remain an open existing map; native alias expansion is unproved. Both parser entry points receive the IO-owned loader and scoped resource reads.",
+      "ids": [
+        "UNKNOWN-BOUNDARY-TYPE-POSITION-c179ba85624fa995"
+      ]
     }
   ],
-  "source_contract_debt_ids": [
-    "UNKNOWN-BOUNDARY-TYPE-POSITION-21ed92d464a88f7c",
-    "UNKNOWN-BOUNDARY-TYPE-POSITION-844aad32733e6b57",
-    "UNKNOWN-BOUNDARY-TYPE-POSITION-8c42680e3902646d",
-    "UNKNOWN-BOUNDARY-TYPE-POSITION-b46539b39643885f",
-    "UNKNOWN-BOUNDARY-TYPE-POSITION-fb89cb4d48b5e5bd",
-    "UNKNOWN-BOUNDARY-TYPE-POSITION-fbe4ded2eb4dfd6a"
-  ],
-  "scope": "286 exact UNKNOWN records in 45 independently assessed groups; five primary Source-contract debts and one setter debt retained. All 20 exact publication-usage diagnostics are assessed uncertainty. UNKNOWN is not PASS. Published ArchKeel2.0.0 adoption evidence accepted for the bounded CE architecture slice; repository gate and delivery remain separate.",
-  "validation_digest": "6cd9862c4bf21edf9c0ced0bc3709ea269d05877e6096ec14b50960530e66a76",
   "validation_unknowns": {
-    "classification": "assessed_publication_usage_unproved",
-    "reason": "Each of15 concrete domain model types is the type argument of its registered BaseDomainService subclass. BaseDomainService.generate returns T and generate_batch returns list[T]; inherited/facade substitution remains statically unproved. These19 publication positions are assessed uncertainty, not unused exports or proof of complete model fields. Four are repeated at enclosing contract levels. Preserve exact pointers and all records. LeafFieldKind is explicitly used by public LeafFieldPlan.kind (contracts.py:576), with real construction in application/compiler.py:533. Canonical facts retain LeafFieldPlan source_member_binding_static=false and class_body_control_flow=true, and LeafFieldKind source_member_binding_static=false. The exact name is therefore a publication candidate, not proven unused or proven used. #476 correctly preserves usage UNKNOWN; it grants neither alias-body certainty nor field-boundary PASS. This assessed static-publication limit is acceptable under the user rule; no Source obligation or debt is erased.",
+    "classification": "unproven_publication_usage",
+    "reason": "The20 native diagnostics concern CompiledDocumentArtifact through the annotated CompileDocumentResult union and19 Domain model publication routes including repeated facades. Current source preserves their public owner identities, model/service use and inherited/decorated surfaces. Native analysis cannot prove every inherited or alias-mediated use; neither used nor unused is asserted. They are retained UNKNOWN, not suppressed, and are not budget failures or actual violations.",
     "diagnostics": [
       {
         "code": "interface.usage_unknown",
         "kind": "contract_invalid",
-        "pointer": "/components/1/public/2",
+        "pointer": "/components/1/public/21",
         "remedy": "Resolve the publication route or inherited bases before classifying this entry as used or unused.",
-        "subject": "datamimic_ce.authoring.spec:LeafFieldKind",
+        "subject": "datamimic_ce.authoring.domain.requests:CompiledDocumentArtifact",
         "unknown_claim": "An unproven publication or inherited signature may expose this public entry."
       },
       {
@@ -740,14 +785,7 @@
       }
     ]
   },
-  "producer_origin": {
-    "kind": "published_pypi_installation",
-    "version": "2.0.0",
-    "registry": "https://pypi.org/project/archkeel/2.0.0/",
-    "wheel_sha256": "cd7f5f52fdd78cab564c2a43bed2dd5d9496b7c45fc06d6f8573851ed36b10b6",
-    "python": "3.11.12",
-    "published_registry_install_verified": true,
-    "payload_files_equal_to_admitted_artifact": 160
-  },
-  "activation_condition": "Satisfied for this exact published-package and CE evidence: installed payload bytes equal the admitted artifact; fresh full validation, UNKNOWN contents/order and Source/Target/analyzer identities match. Any substantive future change requires renewed review."
+  "review_scope": "One integrated independent CE Authoring/Errors adoption review against frozen CE84a9f465 and EE37d74ddb. The exact final native snapshot and all298 recorded UNKNOWNs were assessed. Native source coverage is observation evidence, not complete static or runtime proof. Existing broad-map/missing-signature debt remains explicit in groups.",
+  "measurement_amendment": "Amendment214 preserves frozen147 versus prior ceiling143 and binds exact current1395 calls/174 typing signals; cycles2/private0/untyped-private0. Complete site multisets independently reviewed; no UNKNOWN promoted.",
+  "delivery_boundary": "Local source/target/migration approval only. Required exact-head CI and native Windows process/handle coverage remain delivery gates; no merge, release or deployment approval."
 }

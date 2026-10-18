@@ -22,9 +22,10 @@ from datamimic_ce.engine.io.api import (
 from datamimic_ce.engine.runtime.contexts.context import Context, SetupContext
 from datamimic_ce.engine.runtime.scripting.evaluation import interpolate_variables
 from datamimic_ce.engine.runtime.tasks.sources.length import data_source_cache_key
+from datamimic_ce.errors import IssueCode, task_config_error
 
 
-class VariableSourcePlanKind(str, Enum):
+class VariableSourcePlanKind(str, Enum):  # noqa: UP042 - Preserve the existing enum string form.
     FULL_LOAD = "full_load"
     ITERATION_SELECTOR = "iteration_selector"
     ITERATOR = "iterator"
@@ -100,7 +101,7 @@ def plan_variable_source(
     """Plan variable source execution while keeping policy in Runtime."""
     source = stmt.source
     if source is None:
-        raise ValueError(f"<variable> '{stmt.name}' has no source to plan")
+        raise task_config_error(code=IssueCode.TASK_VARIABLE_SOURCE_UNSUPPORTED, name=stmt.name, source=stmt.source)
 
     loads_all = stmt.distribution.loads_all or bool(stmt.unique)
     source_format = source_file_format_for(EL_VARIABLE, source)
@@ -126,7 +127,7 @@ def plan_variable_source(
         suffix = stmt.variable_suffix or context.default_variable_suffix
         client = context.get_client_by_id(source)
         if client is None or not is_database_client(client):
-            raise ValueError(f"<variable> '{stmt.name}': 'selector' only works with 'source' database (MongoDB, SQL)")
+            raise task_config_error(code=IssueCode.TASK_VARIABLE_SELECTOR_ONLY_DB, name=stmt.name)
         if stmt.iteration_selector is not None:
             return VariableSourcePlan(
                 kind=VariableSourcePlanKind.ITERATION_SELECTOR,
@@ -175,9 +176,11 @@ def plan_variable_source(
         return _variable_data_plan(context, stmt, source_data, pagination, force_full_pool=force_full_pool)
 
     if force_full_pool:
-        raise ValueError(
-            f"<variable> '{stmt.name}': 'storage' is not supported for a "
-            "dynamic/script-evaluated source (no stable pool to materialize up front)"
+        raise task_config_error(
+            code=IssueCode.TASK_VARIABLE_STORAGE_UNRESOLVABLE_SOURCE,
+            name=stmt.name,
+            source=source,
+            storage=stmt.storage,
         )
     return VariableSourcePlan(kind=VariableSourcePlanKind.LAZY)
 

@@ -1,13 +1,14 @@
-import inspect
+"""Public CE identity and import boundaries after the explicit API migration."""
+import importlib.util
 import json
+import subprocess
+import sys
+from pathlib import Path
 
-import datamimic_ce.authoring.contracts as contracts
-from datamimic_ce.authoring import api
-from datamimic_ce.authoring.application import service
-from datamimic_ce.authoring.application.service import scaffold
-from datamimic_ce.authoring.domain.diagnostics import LintResult
-from datamimic_ce.authoring.domain.rule_catalog import RuleSeverity
-from datamimic_ce.authoring.spec import ExactCountExpectation, ExpectationIntent
+from datamimic_ce.authoring import AuthoringApplication, create_authoring_application
+from datamimic_ce.authoring.application.app import AuthoringApplication as InternalApplication
+from datamimic_ce.authoring.bootstrap import create_authoring_application as InternalFactory
+from datamimic_ce.authoring.domain.requests import AuthoringSchemaId, BuildRequestV4, ReferenceRequest
 from datamimic_ce.engine.dsl import api as dsl_api
 from datamimic_ce.engine.dsl.api import TimeSeriesNamespace
 from datamimic_ce.engine.dsl.model.generation.timeseries import TimeSeriesNamespace as InternalTimeSeriesNamespace
@@ -17,33 +18,28 @@ from datamimic_ce.engine.runtime.contexts.context import SetupContext as Interna
 from datamimic_ce.engine.runtime.contexts.demographic_context import DemographicContext as InternalDemographicContext
 
 
-def test_authoring_api_has_typed_signatures_and_delegates(monkeypatch) -> None:
-    for public_function, service_function in (
-        (api.capabilities, service.capabilities),
-        (api.check, service.check),
-        (api.reference, service.reference),
-        (api.run, service.run),
-        (api.scaffold, service.scaffold),
-    ):
-        assert inspect.signature(public_function) == inspect.signature(service_function)
-
-    request = object()
-    result = object()
-    received: list[object] = []
-
-    def fake_check(actual_request):
-        received.append(actual_request)
-        return result
-
-    monkeypatch.setattr(service, "check", fake_check)
-    assert api.check(request) is result
-    assert received == [request]
+def test_public_contract_exports_preserve_identity():
+    assert AuthoringApplication is InternalApplication
+    assert create_authoring_application is InternalFactory
 
 
-def test_public_contract_exports_preserve_identity() -> None:
-    assert contracts.ExpectationIntent is ExpectationIntent
-    assert contracts.LintResult is LintResult
-    assert contracts.RuleSeverity is RuleSeverity
+def test_public_factory_supports_schema_and_reference_without_execution(tmp_path):
+    app = create_authoring_application(workspace_root=tmp_path)
+    schema = app.schema(AuthoringSchemaId.BUILD_REQUEST_V4)
+    assert schema["properties"]["version"]["const"] == "4.0"
+    assert app.reference(ReferenceRequest()).ok
+    assert list(tmp_path.iterdir()) == []
+
+
+def test_public_import_does_not_initialize_runtime_or_optional_transports():
+    script = "import sys,json; import datamimic_ce.authoring; print(json.dumps([m for m in sys.modules if m.startswith(('datamimic_ce.engine.runtime','datamimic_ce.engine.io','datamimic_ce.interfaces.mcp','datamimic_ee'))]))"
+    result = subprocess.run([sys.executable, "-c", script], cwd=Path(__file__).parents[3], check=True, capture_output=True, text=True)
+    assert json.loads(result.stdout) == []
+
+
+def test_legacy_authoring_modules_have_no_import_shim():
+    for module in ("datamimic_ce.authoring.spec", "datamimic_ce.authoring.api", "datamimic_ce.authoring.application.compiler"):
+        assert importlib.util.find_spec(module) is None
 
 
 def test_runtime_and_dsl_api_export_types_by_identity() -> None:
@@ -56,60 +52,3 @@ def test_runtime_and_dsl_api_export_types_by_identity() -> None:
 def test_dsl_api_exports_time_series_namespace_by_identity() -> None:
     assert dsl_api.TimeSeriesNamespace is TimeSeriesNamespace
     assert "TimeSeriesNamespace" in dsl_api.__all__
-
-
-def test_scaffold_document_keeps_json_shape() -> None:
-    raw_spec = {"version": "1", "products": []}
-    document = contracts.AuthoringDocument.model_construct(root=raw_spec)
-    request = contracts.ScaffoldRequest(spec=document)
-
-    assert request.spec is document
-    assert request.spec.root is raw_spec
-    assert request.model_dump(mode="json")["spec"] == raw_spec
-    assert json.loads(request.model_dump_json())["spec"] == raw_spec
-    validated = contracts.ScaffoldRequest.model_validate_json(json.dumps({"spec": raw_spec}))
-    assert validated.spec.root == raw_spec
-    assert contracts.ScaffoldRequest.model_json_schema()["properties"]["spec"] == {
-        "description": "Versioned AuthoringSpecV1 model.dm.json intent.",
-        "title": "Spec",
-        "type": "object",
-    }
-
-
-def test_scaffold_document_shallow_copies_outer_dict_only() -> None:
-    nested_products = [{"kind": "generated", "name": "items", "count": 1}]
-    raw_spec = {"version": "1", "products": nested_products}
-    request = contracts.ScaffoldRequest(spec=raw_spec)
-
-    assert request.spec.root is not raw_spec
-    assert request.spec.root["products"] is nested_products
-    assert request.spec.root["products"][0] is nested_products[0]
-
-
-def test_non_json_document_value_is_rejected_by_scaffold_validation() -> None:
-    request = contracts.ScaffoldRequest(spec={"version": "1", "products": [object()]})
-
-    result = scaffold(request)
-
-    assert not result.ok
-    assert result.stage is contracts.AuthoringStage.RENDER
-    assert result.issues[0].message == "Input should be a valid dictionary or object to extract fields from"
-
-
-def test_scaffold_expectation_keeps_json_shape() -> None:
-    raw_spec = {"version": "1", "products": []}
-    raw_expectation = {"kind": "exact_count", "product": "items", "count": 2}
-    request = contracts.ScaffoldRequest(spec=raw_spec, acceptance_requirements=[raw_expectation])
-
-    assert isinstance(request.acceptance_requirements[0], contracts.AuthoringExpectation)
-    assert isinstance(request.acceptance_requirements[0].root, ExactCountExpectation)
-    assert request.model_dump(mode="json")["acceptance_requirements"] == [
-        {"kind": "exact_count", "product": "items", "count": 2, "list_field": None}
-    ]
-    assert json.loads(request.model_dump_json())["acceptance_requirements"] == [
-        {"kind": "exact_count", "product": "items", "count": 2, "list_field": None}
-    ]
-    schema = contracts.ScaffoldRequest.model_json_schema()
-    item_schema = schema["properties"]["acceptance_requirements"]["items"]
-    assert item_schema["discriminator"]["propertyName"] == "kind"
-    assert len(item_schema["oneOf"]) == 7

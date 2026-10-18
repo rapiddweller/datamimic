@@ -1,0 +1,150 @@
+{
+  "generated": {
+    "document": {
+      "version": "1",
+      "root": {
+        "kind": "setup",
+        "properties": {
+          "rng_seed": 7
+        },
+        "content": null,
+        "children": [
+          {
+            "kind": "generate",
+            "properties": {
+              "name": "rows",
+              "count": "2"
+            },
+            "content": null,
+            "children": [
+              {
+                "kind": "key",
+                "properties": {
+                  "name": "id",
+                  "generator": "IncrementGenerator"
+                },
+                "content": null,
+                "children": []
+              }
+            ]
+          }
+        ]
+      }
+    },
+    "xml": "<setup rngSeed=\"7\">\n    <generate name=\"rows\" count=\"2\">\n        <key name=\"id\" generator=\"IncrementGenerator\"/>\n    </generate>\n</setup>"
+  },
+  "source_zero": {
+    "document": {
+      "version": "1",
+      "root": {
+        "kind": "setup",
+        "properties": {},
+        "content": null,
+        "children": [
+          {
+            "kind": "generate",
+            "properties": {
+              "name": "rows",
+              "source": "rows.csv",
+              "traversal_count": 0
+            },
+            "content": null,
+            "children": [
+              {
+                "kind": "key",
+                "properties": {
+                  "name": "id",
+                  "script": "this.id"
+                },
+                "content": null,
+                "children": []
+              }
+            ]
+          }
+        ]
+      }
+    },
+    "xml": "<setup>\n    <generate name=\"rows\" source=\"rows.csv\" count=\"0\">\n        <key name=\"id\" script=\"this.id\"/>\n    </generate>\n</setup>"
+  },
+  "source_expression": {
+    "document": {
+      "version": "1",
+      "root": {
+        "kind": "setup",
+        "properties": {},
+        "content": null,
+        "children": [
+          {
+            "kind": "generate",
+            "properties": {
+              "name": "rows",
+              "source": "rows.csv",
+              "traversal_count": "{row_count}"
+            },
+            "content": null,
+            "children": []
+          }
+        ]
+      }
+    },
+    "xml": "<setup>\n    <generate name=\"rows\" source=\"rows.csv\" count=\"{row_count}\"/>\n</setup>"
+  },
+  "script_content": {
+    "document": {
+      "version": "1",
+      "root": {
+        "kind": "setup",
+        "properties": {},
+        "content": null,
+        "children": [
+          {
+            "kind": "execute",
+            "properties": {
+              "type": "python"
+            },
+            "content": {
+              "kind": "script",
+              "value": "code"
+            },
+            "children": []
+          }
+        ]
+      }
+    },
+    "xml": "<setup>\n    <execute type=\"python\" script=\"code\"/>\n</setup>"
+  },
+  "comment": {
+    "document": {
+      "version": "1",
+      "root": {
+        "kind": "setup",
+        "properties": {},
+        "content": null,
+        "comment": "Root",
+        "children": [
+          {
+            "kind": "generate",
+            "properties": {
+              "name": "rows",
+              "count": "2"
+            },
+            "content": null,
+            "comment": "Rows",
+            "children": [
+              {
+                "kind": "key",
+                "properties": {
+                  "name": "id",
+                  "constant": "1"
+                },
+                "content": null,
+                "children": []
+              }
+            ]
+          }
+        ]
+      }
+    },
+    "xml": "<!--Root-->\n<setup>\n    <!--Rows-->\n    <generate name=\"rows\" count=\"2\">\n        <key name=\"id\" constant=\"1\"/>\n    </generate>\n</setup>"
+  }
+}

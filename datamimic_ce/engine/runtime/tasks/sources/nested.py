@@ -15,20 +15,21 @@ from datamimic_ce.engine.io.api import (
 )
 from datamimic_ce.engine.runtime.contexts.context import Context
 from datamimic_ce.engine.runtime.scripting.evaluation import evaluate_source_template
+from datamimic_ce.errors import IssueCode, task_config_error
 
 
 def load_nested_key_source(context: Context, stmt: NestedKeyStatement) -> object:
     """Resolve and load the raw source owned by one nested key."""
     source_expression = stmt.source
     if source_expression is None:
-        raise ValueError(f"<nestedKey> '{stmt.name}' has no source to load")
+        raise task_config_error(code=IssueCode.TASK_NESTEDKEY_SOURCE_MISSING, name=stmt.name)
     source = (
         context.evaluate_python_expression(source_expression[1:-1])
         if source_expression.startswith("{") and source_expression.endswith("}")
         else source_expression
     )
     if not isinstance(source, str):
-        raise ValueError(f"Source expression of <nestedKey> '{stmt.name}' must evaluate to a string")
+        raise task_config_error(code=IssueCode.SOURCE_EXPR_NESTED_NOT_STRING)
     source_format = source_file_format_for(EL_NESTED_KEY, source, stmt.type)
     memstore = None
     if source_format is None and stmt.type != DATA_TYPE_DICT and context.root.memstore_manager.contain(source):
@@ -62,7 +63,12 @@ def finalize_nested_key_source(
         suffix = stmt.variable_suffix or context.root.default_variable_suffix
         evaluated = evaluate_source_template(context, result, prefix, suffix)
         if not isinstance(evaluated, list | dict):
-            raise ValueError(f"Source template of <nestedKey> '{stmt.name}' must evaluate to list or dict")
+            raise task_config_error(
+                code=IssueCode.TASK_NESTEDKEY_RESULT_TYPE,
+                name=stmt.name,
+                script=stmt.source,
+                value_type=type(evaluated).__name__,
+            )
         result = evaluated
     if isinstance(result, list) and stmt.distribution.loads_all:
         seed = context.root.get_distribution_seed()

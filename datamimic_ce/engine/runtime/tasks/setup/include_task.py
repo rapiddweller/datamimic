@@ -8,6 +8,7 @@ from datamimic_ce.engine.io.api import load_connection_profile
 from datamimic_ce.engine.runtime.contexts.context import SetupContext
 from datamimic_ce.engine.runtime.contexts.geniter_context import GenIterContext
 from datamimic_ce.engine.runtime.tasks.base.task import CommonSubTask
+from datamimic_ce.errors import IssueCode, include_error
 
 
 class IncludeTask(CommonSubTask):
@@ -68,7 +69,7 @@ class IncludeTask(CommonSubTask):
             )
             SetupTask.execute_include(setup_stmt=sub_setup_stmt, parent_context=ctx)
         else:
-            raise ValueError(f"Unsupported include file type: {uri}. Only .properties and .xml are supported")
+            raise include_error(code=IssueCode.INCLUDE_UNSUPPORTED_FILE_TYPE, uri=uri)
 
     def _execute_with_geniter_context(self, ctx: GenIterContext, uri: str) -> None:
         """
@@ -99,4 +100,4 @@ class IncludeTask(CommonSubTask):
 
             SetupTask.execute_statements(sub_setup_stmt, copied_root_context)
         else:
-            raise ValueError(f"Unsupported include file type: {uri} inside <generate>. Only .xml is supported")
+            raise include_error(code=IssueCode.INCLUDE_UNSUPPORTED_FILE_TYPE_GENERATE, uri=uri)

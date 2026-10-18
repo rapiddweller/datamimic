@@ -4,27 +4,44 @@ import json
 import os
 import subprocess
 import sys
+from decimal import Decimal
 from pathlib import Path
 
-from datamimic_ce.authoring.contracts import AcceptanceStatus, RangeAcceptanceResult, ScaffoldResult
+from datamimic_ce.authoring.domain.expectations import (
+    ExactCountExpectation,
+    ProductRowsSubject,
+    RangeExpectation,
+)
+from datamimic_ce.authoring.domain.proof import (
+    BuildVerificationOptions,
+    VerificationGateStatus,
+)
+from datamimic_ce.authoring.domain.requests import (
+    BuildRequestV4,
+    ReadyBuild,
+    ReadyCompileDocument,
+    ReadyDecompileDocument,
+)
 
 _TEST_DIR = Path(__file__).resolve().parent
 _REPO_ROOT = _TEST_DIR.parents[2]
-_MODEL = _TEST_DIR / "model.dm.json"
 _XML = _TEST_DIR / "datamimic.xml"
 _EDGE_XML = _TEST_DIR / "edge_cases.xml"
 
 
-def _run_cli(*args: str, cwd: Path) -> ScaffoldResult:
+def _run_cli(*args: str, cwd: Path, stdin: str | None = None) -> str:
     result = subprocess.run(
         [sys.executable, "-m", "datamimic_ce.interfaces.cli", *args],
         cwd=cwd,
+        input=stdin,
+        timeout=60,
         check=True,
         capture_output=True,
         text=True,
         env=os.environ | {"PYTHONPATH": str(_REPO_ROOT)},
     )
-    return ScaffoldResult.model_validate_json(result.stdout)
+    assert result.stderr == ""
+    return result.stdout
 
 
 def _run_descriptor(xml: Path, tmp_path: Path, output_name: str) -> Path:
@@ -41,22 +58,39 @@ def _run_descriptor(xml: Path, tmp_path: Path, output_name: str) -> Path:
     return tmp_path / "output" / "out" / output_name
 
 
-def test_cli_scaffold_and_runtime_json_preserve_decimal_value(tmp_path: Path) -> None:
-    scaffold = _run_cli("scaffold", str(_MODEL), "--format", "json", "--smoke-export", cwd=_TEST_DIR)
-    assert scaffold.verified is True
-    assert _XML.read_text(encoding="utf-8").removesuffix("\n") == scaffold.xml
-    captured = scaffold.products[0].sample[0]
+def test_cli_build_and_runtime_json_preserve_decimal_value(tmp_path: Path) -> None:
+    decompiled = ReadyDecompileDocument.model_validate_json(_run_cli("authoring", "decompile", str(_XML), cwd=tmp_path))
+    compiled = ReadyCompileDocument.model_validate_json(
+        _run_cli("authoring", "compile", "-", cwd=tmp_path, stdin=decompiled.document.model_dump_json())
+    )
+    assert compiled.artifact.xml_sha256 == decompiled.canonical_xml_sha256
+    subject = ProductRowsSubject(product="decimal_rows")
+    request = BuildRequestV4(
+        document=decompiled.document,
+        expectations=(
+            ExactCountExpectation(subject=subject, count=1),
+            RangeExpectation(subject=subject, field="amount", minimum=Decimal("0.1"), maximum=Decimal("0.1")),
+        ),
+        verification=BuildVerificationOptions(smoke_export=True),
+    )
+    built = ReadyBuild.model_validate_json(
+        _run_cli(
+            "authoring",
+            "build",
+            "-",
+            "--workspace-root",
+            str(tmp_path),
+            cwd=tmp_path,
+            stdin=request.model_dump_json(exclude_none=True),
+        )
+    )
+    assert built.artifact.xml_sha256 == compiled.artifact.xml_sha256
+    assert built.verification.smoke_export.status is VerificationGateStatus.PASSED
+    captured = built.evidence[0].rows[0]
     assert captured["amount"] == "0.1"
     assert type(captured["amount"]) is str
-    assert scaffold.acceptance is not None
-    amount_acceptance = next(
-        item
-        for item in scaffold.acceptance.results
-        if isinstance(item, RangeAcceptanceResult) and item.field == "amount"
-    )
-    assert amount_acceptance.status is AcceptanceStatus.PASS
-    assert amount_acceptance.observed_minimum == "0.1"
-    assert amount_acceptance.observed_maximum == "0.1"
+    assert built.evidence[0].count == 1
+    assert not built.diagnostics
 
     output_path = _run_descriptor(_XML, tmp_path, "decimal_rows.json")
     output = json.loads(output_path.read_text(encoding="utf-8"))

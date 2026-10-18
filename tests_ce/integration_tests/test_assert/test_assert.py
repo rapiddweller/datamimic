@@ -3,6 +3,7 @@ from pathlib import Path
 import pytest
 
 from datamimic_ce.interfaces.python.data_mimic_test import DataMimicTest
+from datamimic_ce.errors import IssueCode, TaskConfigError
 
 _DIR = Path(__file__).resolve().parent
 
@@ -37,5 +38,9 @@ def test_assert_setup_level_violation_fails():
 
 
 def test_assert_broken_expression_names_the_assert():
-    with pytest.raises(Exception, match=r"<assert> condition 'ixd == 1' failed to evaluate"):
+    with pytest.raises(TaskConfigError) as rejected:
         _run("assert_bad_expression.xml")
+    assert rejected.value.issue_code is IssueCode.TASK_EXPRESSION_EVAL_FAILED
+    assert "ixd == 1" in str(rejected.value) and "assert" in str(rejected.value)
+    assert isinstance(rejected.value.__cause__, TaskConfigError)
+    assert isinstance(rejected.value.__cause__.__cause__, NameError)

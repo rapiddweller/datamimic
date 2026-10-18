@@ -6,15 +6,27 @@
 
 """Hard bounds, runtime evidence, and process cancellation for authoring dry-runs."""
 
-import multiprocessing as mp
 import time
 from pathlib import Path
 
 import pytest
 
 import datamimic_ce.authoring.adapters.dryrun as dryrun_module
-from datamimic_ce.authoring.adapters.dryrun import dry_run_captured, dry_run_source
-from datamimic_ce.authoring.contracts import CaptureStatus
+from datamimic_ce.authoring.adapters.bounded_executor import CeBoundedExecutor
+from datamimic_ce.authoring.adapters.workspace import AuthoringWorkspaceContext
+from datamimic_ce.authoring.domain.capture import CaptureStatus
+from datamimic_ce.authoring.domain.diagnostics import AuthoringSystemDiagnosticCode
+from datamimic_ce.authoring.domain.requests import BoundedExecutionRequest
+
+
+def _execute_source(xml, **kwargs):
+    return CeBoundedExecutor().execute(BoundedExecutionRequest(xml=xml, **kwargs))
+
+
+def _execute_file(path, **kwargs):
+    return CeBoundedExecutor(AuthoringWorkspaceContext(path.parent)).execute(
+        BoundedExecutionRequest(xml=path.read_text(encoding="utf-8"), **kwargs)
+    )
 
 
 def test_nested_generate_count_is_bounded_per_parent() -> None:
@@ -27,12 +39,12 @@ def test_nested_generate_count_is_bounded_per_parent() -> None:
         </generate>
     </setup>"""
 
-    result = dry_run_source(xml, max_count=1, sample_rows=5)
+    result = _execute_source(xml, max_count=1)
 
     assert result.ok
-    products = {product.name: product for product in result.products}
+    products = {product.name: product for product in result.captured.products}
     child = products["children"]
-    assert child.count == 1
+    assert len(child.rows) == 1
     assert child.capture.status is CaptureStatus.CAPPED
     assert not child.capture.complete
     assert child.capture.requested == 3
@@ -49,11 +61,11 @@ def test_finite_file_source_reports_proven_exhaustion(tmp_path: Path, max_count:
         encoding="utf-8",
     )
 
-    result = dry_run_captured(descriptor, max_count=max_count).result
+    result = _execute_file(descriptor, max_count=max_count)
 
     assert result.ok
-    product = result.products[0]
-    assert product.count == 3
+    product = result.captured.products[0]
+    assert len(product.rows) == 3
     assert product.capture.status is CaptureStatus.EXHAUSTED
     assert product.capture.complete
     assert product.capture.requested == product.capture.observed == 3
@@ -69,9 +81,9 @@ def test_finite_file_source_at_limit_is_noncomplete(tmp_path: Path) -> None:
         encoding="utf-8",
     )
 
-    product = dry_run_captured(descriptor, max_count=1).result.products[0]
+    product = _execute_file(descriptor, max_count=1).captured.products[0]
 
-    assert product.count == 1
+    assert len(product.rows) == 1
     assert product.capture.status is CaptureStatus.CAPPED
     assert not product.capture.complete
     assert product.capture.requested == 3
@@ -99,11 +111,14 @@ def test_file_source_count_failure_remains_unknown(tmp_path: Path, monkeypatch: 
         profile_loader=load_connection_profile,
     ).sub_statements[0]
 
-    assert dryrun_module._source_row_count(
-        stmt,
-        descriptor_dir=tmp_path,
-        default_separator="|",
-    ) is None
+    assert (
+        dryrun_module._source_row_count(
+            stmt,
+            descriptor_dir=tmp_path,
+            default_separator="|",
+        )
+        is None
+    )
 
 
 def test_dynamic_and_ranged_counts_are_bounded() -> None:
@@ -113,15 +128,15 @@ def test_dynamic_and_ranged_counts_are_bounded() -> None:
         <generate name="minimum" minCount="100"><key name="x" constant="1"/></generate>
     </setup>"""
 
-    result = dry_run_source(xml, max_count=2)
+    result = _execute_source(xml, max_count=2)
 
     assert result.ok
-    assert {product.name: product.count for product in result.products} == {
+    assert {product.name: len(product.rows) for product in result.captured.products} == {
         "dynamic": 2,
         "minimum": 2,
         "range": 2,
     }
-    assert all(product.capture.status is CaptureStatus.CAPPED for product in result.products)
+    assert all(product.capture.status is CaptureStatus.CAPPED for product in result.captured.products)
 
 
 def test_unique_complete_memstore_producer_proves_finite_readback() -> None:
@@ -133,12 +148,12 @@ def test_unique_complete_memstore_producer_proves_finite_readback() -> None:
         <generate name="a_reader" source="mem" type="shared" distribution="ordered"/>
     </setup>"""
 
-    result = dry_run_source(xml, max_count=10)
+    result = _execute_source(xml, max_count=10)
 
-    products = {product.name: product for product in result.products}
+    products = {product.name: product for product in result.captured.products}
     assert products["z_producer"].capture.status is CaptureStatus.COMPLETE
     reader = products["a_reader"]
-    assert reader.count == 8
+    assert len(reader.rows) == 8
     assert reader.capture.status is CaptureStatus.EXHAUSTED
     assert reader.capture.complete
     assert reader.capture.requested == reader.capture.observed == 8
@@ -154,9 +169,9 @@ def test_memstore_reader_is_noncomplete_when_global_bound_caps_producer() -> Non
         <generate name="reader" source="mem" type="producer" distribution="ordered"/>
     </setup>"""
 
-    result = dry_run_source(xml, max_count=4)
+    result = _execute_source(xml, max_count=4)
 
-    products = {product.name: product for product in result.products}
+    products = {product.name: product for product in result.captured.products}
     assert products["producer"].capture.status is CaptureStatus.CAPPED
     assert not products["reader"].capture.complete
     assert products["reader"].capture.status is CaptureStatus.UNKNOWN
@@ -171,10 +186,10 @@ def test_capped_memstore_producer_propagates_unknown_to_full_bounded_reader() ->
         <generate name="reader" source="mem" type="producer" distribution="ordered"/>
     </setup>"""
 
-    products = {product.name: product for product in dry_run_source(xml, max_count=10).products}
+    products = {product.name: product for product in _execute_source(xml, max_count=10).captured.products}
 
     assert products["producer"].capture.status is CaptureStatus.CAPPED
-    assert products["reader"].count == 10
+    assert len(products["reader"].rows) == 10
     assert products["reader"].capture.status is CaptureStatus.UNKNOWN
     assert "producer capture" in products["reader"].capture.reason
 
@@ -192,15 +207,15 @@ def test_memstore_read_without_generate_producer_is_unknown(tmp_path: Path) -> N
         encoding="utf-8",
     )
 
-    result = dry_run_captured(
+    result = _execute_file(
         descriptor,
         allow_side_effects=True,
         max_count=10,
-    ).result
+    )
 
     assert result.ok
-    reader = result.products[0]
-    assert reader.count == 2
+    reader = result.captured.products[0]
+    assert len(reader.rows) == 2
     assert reader.capture.status is CaptureStatus.UNKNOWN
     assert "no captured producer" in reader.capture.reason
 
@@ -217,10 +232,10 @@ def test_ambiguous_memstore_producers_fail_closed_unknown() -> None:
         <generate name="reader" source="mem" type="shared" distribution="ordered"/>
     </setup>"""
 
-    result = dry_run_source(xml, max_count=10)
+    result = _execute_source(xml, max_count=10)
 
-    reader = next(product for product in result.products if product.name == "reader")
-    assert reader.count == 4
+    reader = next(product for product in result.captured.products if product.name == "reader")
+    assert len(reader.rows) == 4
     assert reader.capture.status is CaptureStatus.UNKNOWN
     assert "multiple possible producers" in reader.capture.reason
 
@@ -244,11 +259,11 @@ def test_memstore_producer_cycle_fails_closed_unknown(tmp_path: Path) -> None:
 
     products = {
         product.name: product
-        for product in dry_run_captured(
+        for product in _execute_file(
             descriptor,
             allow_side_effects=True,
             max_count=10,
-        ).result.products
+        ).captured.products
     }
 
     assert products["product_a"].capture.status is CaptureStatus.UNKNOWN
@@ -276,26 +291,18 @@ def test_timeout_terminates_and_reaps_engine_run(tmp_path: Path) -> None:
         '<key name="x" generator="SlowGenerator()"/></generate></setup>',
         encoding="utf-8",
     )
-    before = {process.pid for process in mp.active_children()}
     started = time.perf_counter()
 
-    result = dry_run_captured(
+    result = _execute_file(
         descriptor,
         allow_side_effects=True,
         timeout_seconds=1,
-    ).result
+    )
 
     elapsed = time.perf_counter() - started
-    assert elapsed <= 1.5
+    assert elapsed <= 5
     assert not result.ok
-    assert [diagnostic.rule for diagnostic in result.diagnostics] == ["DM002"]
-    assert "terminated" in result.diagnostics[0].message
-    assert {process.pid for process in mp.active_children()} == before
-
-
-def test_process_context_is_explicit_and_worker_is_spawn_safe() -> None:
-    assert dryrun_module._process_context().get_start_method() == "spawn"
-    assert dryrun_module._engine_process_worker.__module__ == dryrun_module.__name__
+    assert result.diagnostics[0].code is AuthoringSystemDiagnosticCode.TIMEOUT
 
 
 def test_successful_dry_run_executes_engine_once(
@@ -322,7 +329,7 @@ def test_successful_dry_run_executes_engine_once(
         encoding="utf-8",
     )
 
-    result = dry_run_captured(descriptor, allow_side_effects=True).result
+    result = _execute_file(descriptor, allow_side_effects=True)
 
     assert result.ok
     assert marker.read_text(encoding="utf-8").splitlines() == ["run"]

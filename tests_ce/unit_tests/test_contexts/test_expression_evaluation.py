@@ -9,6 +9,8 @@ from datamimic_ce.engine.io.exporters.diagnostics.test_result_exporter import Te
 from datamimic_ce.engine.runtime.contexts.context import SetupContext
 from datamimic_ce.engine.runtime.scripting.evaluation import DotableDict
 from datamimic_ce.engine.runtime.storage.memstore_manager import MemstoreManager
+from datamimic_ce.errors import IssueCode, TaskConfigError
+from datamimic_ce.errors.formatters import task_config_message
 
 
 def _context(*, namespace: dict[str, object] | None = None, seeded: bool = False) -> SetupContext:
@@ -59,8 +61,10 @@ def test_expression_rejects_non_values(expression: str, message: str) -> None:
     with pytest.raises(ValueError) as exc:
         context.evaluate_python_expression(expression)
 
-    assert str(exc.value) == f"Failed while evaluate '{expression}': {message}"
-    assert isinstance(exc.value.__cause__, ValueError)
+    assert type(exc.value) is TaskConfigError
+    assert str(exc.value) == task_config_message(
+        code=IssueCode.TASK_EXPRESSION_EVAL_FAILED, expr=expression, error=message
+    )
 
 
 @pytest.mark.parametrize(
@@ -108,15 +112,16 @@ def test_expression_rejects_non_values(expression: str, message: str) -> None:
         ),
     ],
 )
-def test_expression_errors_keep_messages_and_causes(
-    expression: str, message: str, cause_type: type[Exception]
-) -> None:
+def test_expression_errors_keep_messages_and_causes(expression: str, message: str, cause_type: type[Exception]) -> None:
     context = _context(namespace={"record": {"id": 1}})
 
     with pytest.raises(ValueError) as exc:
         context.evaluate_python_expression(expression)
 
-    assert str(exc.value) == message
+    assert type(exc.value) is TaskConfigError
+    assert str(exc.value) == task_config_message(
+        code=IssueCode.TASK_EXPRESSION_EVAL_FAILED, expr=expression, error=message
+    )
     assert isinstance(exc.value.__cause__, cause_type)
 
 
@@ -132,10 +137,14 @@ def test_colon_retry_failure_keeps_its_legacy_message_and_cause() -> None:
     with pytest.raises(ValueError) as exc:
         context.evaluate_python_expression(r"missing\:item.value")
 
-    assert str(exc.value) == (
+    legacy_message = (
         "Evaluation error for expression 'missing:item.value': The expression may contain undefined items, "
         "improper structure, or case-sensitive issues (e.g., using 'true' instead of 'True'). "
         "Please double-check that all parameters and type notations are correct and supported."
+    )
+    assert type(exc.value) is TaskConfigError
+    assert str(exc.value) == task_config_message(
+        code=IssueCode.TASK_EXPRESSION_EVAL_FAILED, expr="missing:item.value", error=legacy_message
     )
     assert isinstance(exc.value.__cause__, NameError)
 

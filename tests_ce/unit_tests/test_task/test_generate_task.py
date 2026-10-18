@@ -5,6 +5,7 @@ from unittest.mock import MagicMock, PropertyMock, patch
 
 import pytest
 
+from datamimic_ce.errors import TaskConfigError
 from datamimic_ce.engine.dsl.api import GenerateStatement
 from datamimic_ce.engine.dsl.statements.setup.setup_statement import SetupStatement
 from datamimic_ce.engine.dsl.statements.values.scalar.key_statement import KeyStatement
@@ -185,8 +186,27 @@ class TestGenerateTask:
         mock_statement.source = "test_source"
         mock_context.root.get_client_by_id.return_value = MagicMock()
 
-        with pytest.raises(ValueError, match=".*only supports DatabaseClient.*"):
+        with pytest.raises(TaskConfigError, match=".*only supports DatabaseClient.*") as caught:
             generate_task._determine_count(mock_context)
+        assert caught.value.issue_code.value == "I808"
+
+    def test_execute_unsupported_platform_keeps_portable_identity(self, generate_task, mock_context, mock_statement):
+        mock_statement.mp_platform = "unknown"
+        with (
+            patch.object(generate_task, "_determine_count", return_value=2),
+            patch.object(generate_task, "_determine_num_workers", return_value=2),
+            patch.object(generate_task, "pre_execute"),
+            patch.object(generate_task, "_reject_positional_sequences_under_mp"),
+            patch(
+                "datamimic_ce.engine.runtime.tasks.generate.task.GenerateWorker.serialize_worker_context",
+                return_value={},
+            ),
+            patch("datamimic_ce.engine.runtime.tasks.generate.task.cleanup_exporter_chunks"),
+            pytest.raises(TaskConfigError) as caught,
+        ):
+            generate_task.execute(mock_context)
+        assert caught.value.issue_code.value == "I848"
+        assert "unknown" in str(caught.value)
 
     def test_calculate_default_page_size(self, generate_task, mock_statement):
         """Test _calculate_default_page_size calculation."""

@@ -9,6 +9,7 @@ from datamimic_ce.engine.dsl.parsers.base.statement_parser import StatementParse
 from datamimic_ce.engine.dsl.parsers.input.xml import XmlElement
 from datamimic_ce.engine.dsl.statements.flow.commands.execute_statement import ExecuteStatement
 from datamimic_ce.engine.dsl.vocabulary.constants.element_constants import EL_EXECUTE
+from datamimic_ce.errors import IssueCode, parser_validation_error
 
 # uri file extension -> execution language (when `type` is not given explicitly).
 _EXT_TYPE = {".py": "python", ".sql": "sql", ".sh": "bash"}
@@ -26,10 +27,7 @@ class ExecuteParser(StatementParser):
         has_inline = bool(code and code.strip())
         # Exactly one source of code: a script file (uri), inline code, or a script expression.
         if [bool(model.uri), has_inline, bool(model.script)].count(True) != 1:
-            raise ValueError(
-                "<execute> requires exactly one of 'uri' (a script file), inline code, "
-                "or 'script' (an expression evaluating to the code)"
-            )
+            raise parser_validation_error(code=IssueCode.PARSER_EXECUTE_INVALID_SOURCE)
         exec_type = self._resolve_type(model)
         return ExecuteStatement(model, exec_type=exec_type, code=code if has_inline else None)
 
@@ -41,6 +39,6 @@ class ExecuteParser(StatementParser):
             ext = model.uri[model.uri.rfind(".") :].lower() if "." in model.uri else ""
             inferred = _EXT_TYPE.get(ext)
             if inferred is None:
-                raise ValueError(f"<execute uri='{model.uri}'>: cannot infer type from extension; set type=")
+                raise parser_validation_error(code=IssueCode.PARSER_EXECUTE_TYPE_UNRESOLVED, uri=model.uri)
             return inferred
         return "python"  # inline default (flat statements; use <while>/<condition> or a .py file for blocks)

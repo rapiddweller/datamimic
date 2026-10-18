@@ -7,6 +7,7 @@ import pytest
 from sqlalchemy.exc import IntegrityError
 
 from datamimic_ce.interfaces.python.data_mimic_test import DataMimicTest
+from datamimic_ce.errors import IssueCode, OperationError
 
 
 def _descriptor(tmp_path: Path, *, target: str, count: int = 1, email: str | None = None) -> list[dict[str, object]]:
@@ -73,8 +74,11 @@ def test_insert_conflicting_with_existing_primary_key_fails_without_rekey(
             "INSERT INTO patients (patient_id, status, email) VALUES (?, 'existing', NULL)", (candidate_id,)
         )
 
-    with pytest.raises(ValueError, match="UNIQUE constraint failed"):
+    with pytest.raises(OperationError) as rejected:
         _descriptor(tmp_path, target="db")
+    assert rejected.value.issue_code is IssueCode.OPERATION_EXECUTION_FAILED
+    assert isinstance(rejected.value.__cause__, IntegrityError)
+    assert isinstance(rejected.value.__cause__.orig, sqlite3.IntegrityError)
 
     assert _stored_rows(database) == [(candidate_id, "existing", None)]
 

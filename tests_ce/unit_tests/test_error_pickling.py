@@ -10,13 +10,13 @@ from datamimic_ce.errors.factory import invalid_locale_error
 
 
 def test_package_error_exports_keep_their_defining_objects() -> None:
-    assert package_errors.__all__ == [
+    assert set(package_errors.__all__) >= {
         "DomainError",
         "DomainErrorCode",
         "ErrorCode",
         "InvalidLocaleError",
         "invalid_locale_error",
-    ]
+    }
     assert package_errors.DomainError is BaseDomainError
     assert package_errors.InvalidLocaleError is BaseInvalidLocaleError
     assert package_errors.DomainErrorCode is CodesDomainErrorCode

@@ -1,71 +1,34 @@
-# DATAMIMIC
-# Copyright (c) 2023-2025 Rapiddweller Asia Co., Ltd.
-# This software is licensed under the MIT License.
-# See LICENSE file for the full text of the license.
+"""CLI discovery uses the public typed application catalog."""
 
-"""CLI and MCP project one typed reference-topic vocabulary."""
+import json
 
 import pytest
 from typer.testing import CliRunner
 
-from datamimic_ce.authoring.contracts import AuthoringReferenceCategory, ReferenceRequest, ReferenceTopic
-from datamimic_ce.authoring.application.service import reference
+from datamimic_ce.authoring import create_authoring_application
+from datamimic_ce.authoring.domain.capabilities import CapabilityDomain
+from datamimic_ce.authoring.domain.requests import ReferenceRequest, ReferenceTopic
 from datamimic_ce.interfaces.cli import app
-
-_TOPIC_NAMES = {
-    ReferenceTopic.ELEMENT: "generate",
-    ReferenceTopic.ENTITIES: "Person",
-    ReferenceTopic.RULES: "DM315",
-}
 
 
 @pytest.mark.parametrize("topic", list(ReferenceTopic))
 def test_every_reference_topic_has_cli_and_service_parity(topic: ReferenceTopic) -> None:
-    name = _TOPIC_NAMES.get(topic)
-    args = ReferenceRequest(topic=topic, name=name)
-    assert args.topic is topic
-
-    result = reference(args)
-    assert result.ok is True
-    assert result.content
-
-    command = ["reference", topic.value]
-    if name is not None:
-        command.append(name)
-    cli_result = CliRunner().invoke(app, command)
+    result = create_authoring_application().reference(ReferenceRequest(topic=topic))
+    cli_result = CliRunner().invoke(app, ["authoring", "reference", "--topic", topic.value])
     assert cli_result.exit_code == 0, cli_result.stdout
-    assert cli_result.stdout.strip()
+    assert json.loads(cli_result.stdout) == result.model_dump(mode="json", exclude_none=True)
 
 
 def test_reference_request_uses_the_canonical_topic_type_directly() -> None:
     assert ReferenceRequest.model_fields["topic"].annotation is ReferenceTopic
 
 
-@pytest.mark.parametrize("category", list(AuthoringReferenceCategory))
-def test_every_authoring_reference_category_has_cli_and_service_parity(
-    category: AuthoringReferenceCategory,
-) -> None:
-    request = ReferenceRequest(topic=ReferenceTopic.AUTHORING, category=category)
-    result = reference(request)
-    assert result.ok is True
-    assert result.category is category
-    assert result.content
-
-    cli_result = CliRunner().invoke(app, ["reference", "authoring", "--category", category.value])
+@pytest.mark.parametrize("domain", list(CapabilityDomain))
+def test_every_capability_domain_has_cli_and_service_parity(domain: CapabilityDomain) -> None:
+    application = create_authoring_application()
+    names = application.capabilities().capability_names(domain)
+    assert names, domain
+    result = application.capability(domain, names[0])
+    cli_result = CliRunner().invoke(app, ["authoring", "capability", "--domain", domain.value, "--name", names[0]])
     assert cli_result.exit_code == 0, cli_result.stdout
-    assert cli_result.stdout.strip()
-
-
-@pytest.mark.parametrize("entity", ("Person", "Patient"))
-def test_named_reference_describes_mapping_transaction_profile(entity: str) -> None:
-    from datamimic_ce.authoring.api import reference as authoring_reference
-
-    result = authoring_reference(ReferenceRequest(topic=ReferenceTopic.ENTITIES, name=entity))
-    assert result.ok is True
-    assert result.content is not None
-    profile_lines = [line for line in result.content.splitlines() if line.startswith("- transaction_profile?")]
-    assert profile_lines == ["- transaction_profile?: (<class 'str'>, <class 'collections.abc.Mapping'>)"]
-
-    cli_result = CliRunner().invoke(app, ["reference", "entities", entity])
-    assert cli_result.exit_code == 0, cli_result.stdout
-    assert cli_result.stdout == result.content + "\n"
+    assert json.loads(cli_result.stdout) == result.model_dump(mode="json", exclude_none=True)

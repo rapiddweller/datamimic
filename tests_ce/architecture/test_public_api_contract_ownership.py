@@ -79,9 +79,12 @@ def test_inherited_domain_service_models_are_declared_at_domains_boundaries() ->
     }
     shared_public = _component(domains, "DOMAINS-SHARED")["public"]
     assert all(shared_public.count(symbol) == 1 for symbol in shared_models)
-    assert _component(domains, "DOMAINS-HEALTHCARE")["public"].count(
-        "datamimic_ce.domains.healthcare.models.patient:Patient"
-    ) == 1
+    assert (
+        _component(domains, "DOMAINS-HEALTHCARE")["public"].count(
+            "datamimic_ce.domains.healthcare.models.patient:Patient"
+        )
+        == 1
+    )
     assert models.isdisjoint(_component(domains, "DOMAINS-API")["public"])
 
 
@@ -102,8 +105,7 @@ def test_domain_type_permissions_keep_exact_demographic_maps() -> None:
     entries = rule["allowed_positions"]
     assert all(set(entry) == {"qualified_name", "position", "field_path", "annotation"} for entry in entries)
     permissions = [
-        (entry["qualified_name"], entry["position"], entry["field_path"], entry["annotation"])
-        for entry in entries
+        (entry["qualified_name"], entry["position"], entry["field_path"], entry["annotation"]) for entry in entries
     ]
     api = "datamimic_ce.domains.api."
     expected = {
@@ -143,18 +145,14 @@ def test_domain_type_permissions_keep_exact_demographic_maps() -> None:
                 "transaction_profile",
                 "str | Mapping[str, float] | None",
             ),
-            (
-                "load_demographic_profile", "return", "age_bands", "Mapping[SexKey, tuple[DemographicAgeBand, ...]]"
-            ),
+            ("load_demographic_profile", "return", "age_bands", "Mapping[SexKey, tuple[DemographicAgeBand, ...]]"),
             (
                 "load_demographic_profile",
                 "return",
                 "condition_rates",
                 "Mapping[str, tuple[DemographicConditionRate, ...]]",
             ),
-            (
-                "DemographicSampler.__init__", "profile", "age_bands", "Mapping[SexKey, tuple[DemographicAgeBand, ...]]"
-            ),
+            ("DemographicSampler.__init__", "profile", "age_bands", "Mapping[SexKey, tuple[DemographicAgeBand, ...]]"),
             (
                 "DemographicSampler.__init__",
                 "profile",
@@ -177,17 +175,13 @@ def test_statement_branch_and_memstore_manager_are_root_component_declarations()
     for owner_id, symbol in owners.items():
         assert _component(root, owner_id)["public"].count(symbol) == 1
         assert all(
-            symbol not in component.get("public", [])
-            for component in root["components"]
-            if component["id"] != owner_id
+            symbol not in component.get("public", []) for component in root["components"] if component["id"] != owner_id
         )
 
     dsl = _read_contract(ROOT / "docs/architecture/inner/dsl/statements/architecture-contract.json")
     assert owners["COMP-DSL"] in _component(dsl, "STATEMENTS-BASE")["public"]
     runtime = _read_contract(ROOT / "docs/architecture/inner/runtime/architecture-contract.json")
-    assert "datamimic_ce.engine.runtime.storage.memstore_manager" in _component(runtime, "RUNTIME-STORAGE")[
-        "public"
-    ]
+    assert "datamimic_ce.engine.runtime.storage.memstore_manager" in _component(runtime, "RUNTIME-STORAGE")["public"]
 
 
 def test_finance_model_api_types_are_declared_at_their_owning_boundaries() -> None:
@@ -233,9 +227,7 @@ def test_finance_model_api_types_are_declared_at_their_owning_boundaries() -> No
         for component in inner["components"]
         if component["id"] != "FINANCE-CONTRACTS"
     )
-    assert "contracts" in {
-        entry["component"] for entry in _component(inner, "FINANCE-MODELS")["requires"]
-    }
+    assert "contracts" in {entry["component"] for entry in _component(inner, "FINANCE-MODELS")["requires"]}
 
 
 def test_demographic_context_is_runtime_owned_and_not_root_public() -> None:
@@ -252,8 +244,7 @@ def test_demographic_context_is_runtime_owned_and_not_root_public() -> None:
     assert runtime_api_module in runtime
     assert context_module not in root["declarations"]["public_api"]
     assert all(
-        runtime_api_module not in component.get("public", [])
-        and context_module not in component.get("public", [])
+        runtime_api_module not in component.get("public", []) and context_module not in component.get("public", [])
         for component in root["components"]
         if component["id"] != "COMP-RUNTIME"
     )
@@ -264,8 +255,7 @@ def test_demographic_context_is_runtime_owned_and_not_root_public() -> None:
     assert runtime_api_module in runtime_api
     assert context_module in runtime_contexts
     assert all(
-        runtime_api_module not in component.get("public", [])
-        and context_module not in component.get("public", [])
+        runtime_api_module not in component.get("public", []) and context_module not in component.get("public", [])
         for component in inner["components"]
         if component["id"] not in {"RUNTIME-API", "RUNTIME-CONTEXTS"}
     )
@@ -319,14 +309,28 @@ def test_existing_entrypoints_have_explicit_inner_public_decisions() -> None:
     ]
 
     api = _component(authoring, "AUTHORING-API")
-    assert api["packages"] == ["datamimic_ce.authoring.api"]
+    assert api["packages"] == ["datamimic_ce.authoring.bootstrap"]
     assert api["exact_modules"] == ["datamimic_ce.authoring"]
-    assert api["public"] == ["datamimic_ce.authoring.api"]
-    assert _component(root, "COMP-AUTHORING")["public"] == [
-        "datamimic_ce.authoring.api",
-        "datamimic_ce.authoring.contracts",
-        "datamimic_ce.authoring.spec:LeafFieldKind",
-    ]
+    assert api["public"] == []  # Only the outer boundary publishes the factory.
+    public = _component(root, "COMP-AUTHORING")["public"]
+    assert "datamimic_ce.authoring.bootstrap:create_authoring_application" in public
+    assert "datamimic_ce.authoring.application.app:AuthoringApplication" in public
+    assert "datamimic_ce.authoring.domain.requests" not in public
+    assert "datamimic_ce.authoring.domain.requests:BuildRequestV4" in public
+    assert "datamimic_ce.authoring.domain.requests:BuildResult" in public
+    assert "datamimic_ce.authoring.domain.requests:BoundedExecutionRequest" not in public
+    assert "datamimic_ce.authoring.domain.requests:BoundedExecutionEvidence" not in public
+    ports = _component(authoring, "AUTHORING-PORTS")
+    assert set(ports["public"]) == {
+        f"datamimic_ce.authoring.ports:{name}"
+        for name in (
+            "DmJsonDescriptorContract", "DslCatalog", "DescriptorValidator",
+            "BoundedExecutor", "BoundedExecutionPolicy",
+        )
+    }
+    assert set(ports["public"]).issubset(public)
+    assert not api.get("planned")
+    assert not _component(root, "COMP-AUTHORING").get("planned")
 
 
 def test_domains_initializer_has_one_exact_owner_without_widening_api_selector() -> None:
@@ -340,10 +344,7 @@ def test_domains_initializer_has_one_exact_owner_without_widening_api_selector()
         component["id"]
         for component in domains["components"]
         if module in component.get("exact_modules", [])
-        or any(
-            module == package or module.startswith(f"{package}.")
-            for package in component.get("packages", [])
-        )
+        or any(module == package or module.startswith(f"{package}.") for package in component.get("packages", []))
     ] == ["DOMAINS-API"]
 
 
@@ -471,6 +472,7 @@ def test_initializers_have_exact_existing_owners(
             or any(child == package or child.startswith(f"{package}.") for package in component.get("packages", []))
         ] == [expected_owner]
 
+
 def test_model_util_stays_inside_dsl_model_boundary() -> None:
     from datamimic_ce.engine.dsl import api as dsl_api
     from datamimic_ce.engine.dsl.model import validation
@@ -483,9 +485,7 @@ def test_model_util_stays_inside_dsl_model_boundary() -> None:
         "check_min_max_count",
         "check_weights_require_values",
     }
-    validation_symbols = {
-        f"datamimic_ce.engine.dsl.model.validation:{name}" for name in validation_names
-    }
+    validation_symbols = {f"datamimic_ce.engine.dsl.model.validation:{name}" for name in validation_names}
 
     model = _read_contract(ROOT / "docs/architecture/inner/dsl/model/architecture-contract.json")
     assert model_util in _component(model, "MODEL-VALIDATION")["public"]

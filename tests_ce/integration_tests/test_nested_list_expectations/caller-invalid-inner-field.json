@@ -1,10 +1,16 @@
 [
   {
-    "kind": "range",
-    "product": "orders",
-    "list_field": "items",
-    "field": "missing_amount",
-    "minimum": 0,
-    "maximum": 1
+    "origin": "caller",
+    "expectation": {
+      "kind": "range",
+      "field": "missing_amount",
+      "minimum": 0,
+      "maximum": 1,
+      "subject": {
+        "kind": "product",
+        "product": "orders",
+        "list_field": "items"
+      }
+    }
   }
 ]

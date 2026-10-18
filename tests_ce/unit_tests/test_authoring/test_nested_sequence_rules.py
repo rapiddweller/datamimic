@@ -7,9 +7,9 @@
 
 import pytest
 
-from datamimic_ce.authoring.adapters.dryrun import dry_run_source
+from datamimic_ce.authoring.bootstrap import create_authoring_application
+from datamimic_ce.authoring.domain.requests import RunRequest, RunPhase
 from datamimic_ce.authoring.adapters.linter import lint_source
-from datamimic_ce.authoring.contracts import AuthoringStage
 from datamimic_ce.engine.dsl.vocabulary.enums.distribution_enums import POSITIONAL_NUMBER_SEQUENCES, NumberDistribution
 
 
@@ -40,11 +40,11 @@ def test_dm317_rejects_proven_finite_nested_exhaustion(distribution: str) -> Non
     assert not result.ok
 
 
-def test_dm317_stops_dry_run_before_runtime_execution() -> None:
-    result = dry_run_source(_nested_model("step"))
-    assert result.stage is AuthoringStage.LINT
+def test_dm317_stops_dry_run_before_runtime_execution(tmp_path) -> None:
+    result = create_authoring_application(tmp_path).dry_run(RunRequest(xml=_nested_model("step")))
+    assert result.phase is RunPhase.LINT
     assert not result.products
-    assert any(diag.rule == "DM317" for diag in result.diagnostics)
+    assert any(diag.code == "DM317" for diag in result.diagnostics)
 
 
 @pytest.mark.parametrize(

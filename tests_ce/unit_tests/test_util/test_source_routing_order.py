@@ -18,6 +18,7 @@ from datamimic_ce.engine.io.api import Memstore
 from datamimic_ce.engine.io.clients.database_client import DatabaseClient
 from datamimic_ce.engine.io.clients.mongodb_client import MongoDBClient
 from datamimic_ce.engine.io.clients.rdbms_client import RdbmsClient
+from datamimic_ce.engine.io.connection_config.mongodb_connection_config import MongoDBConnectionConfig
 from datamimic_ce.engine.io.connection_config.rdbms_connection_config import RdbmsConnectionConfig
 from datamimic_ce.engine.io.contracts import DataSourcePagination
 from datamimic_ce.engine.io.data_sources import chunk_reader
@@ -81,22 +82,25 @@ def test_random_reference_requires_rng_only_for_positive_windows() -> None:
             False,
         )
 
-    assert select_reference_rows(
-        rows,
-        DataSourcePagination(skip=0, limit=0),
-        False,
-        SourceDistribution.RANDOM,
-        False,
-        False,
-        1,
-        "<reference> 'items'",
-        None,
-        False,
-    ) == []
+    assert (
+        select_reference_rows(
+            rows,
+            DataSourcePagination(skip=0, limit=0),
+            False,
+            SourceDistribution.RANDOM,
+            False,
+            False,
+            1,
+            "<reference> 'items'",
+            None,
+            False,
+        )
+        == []
+    )
 
 
 def test_ordered_reference_rejects_window_past_source() -> None:
-    with pytest.raises(ValueError, match="distribution='ordered' needs 3 rows"):
+    with pytest.raises(ValueError, match="Ordered reference.*exhausted after 2 rows"):
         select_reference_rows(
             [{"id": 1}, {"id": 2}],
             DataSourcePagination(skip=0, limit=3),
@@ -613,7 +617,7 @@ def test_nested_key_requires_a_string_source_expression_before_reading(monkeypat
     source_format = Mock()
     monkeypatch.setattr(nested_source_router, "source_file_format_for", source_format)
 
-    with pytest.raises(ValueError, match="Source expression of <nestedKey> 'items' must evaluate to a string"):
+    with pytest.raises(ValueError, match="NestedKey source expression must evaluate to a string"):
         nested_source_router.load_nested_key_source(context, statement)
 
     context.evaluate_python_expression.assert_called_once_with("source_id")
@@ -1000,9 +1004,7 @@ def test_generate_database_io_uses_resolved_selector_or_entity_and_page(
     monkeypatch.setattr(io_source_router, "database_get_by_page_with_type", entity_read)
     pagination = DataSourcePagination(skip=3, limit=2)
 
-    rows = io_source_router.read_generate_database_source(
-        client, selector, entity, collection, pagination, False
-    )
+    rows = io_source_router.read_generate_database_source(client, selector, entity, collection, pagination, False)
 
     assert rows is source_rows
     assert rows[0] is source_rows[0]
@@ -1406,7 +1408,7 @@ def test_variable_query_mongo_driver_seam_retains_document_shape_and_page(
     cursor.__iter__.side_effect = lambda: iter(documents if page is None else documents[page[0] : sum(page)])
     collection.find.return_value = cursor
     collection.aggregate.return_value = iter(documents)
-    client = MongoDBClient(SimpleNamespace(database="db"))
+    client = MongoDBClient(MongoDBConnectionConfig(host="localhost", port=27017, database="db"))
     monkeypatch.setattr(client, "_create_connection", lambda: connection)
     pagination = None if page is None else DataSourcePagination(skip=page[0], limit=page[1])
     query = (
@@ -1460,8 +1462,13 @@ def test_variable_source_preserves_native_values_and_pool_identity(monkeypatch, 
     monkeypatch.setattr(io_variable_sources.FileUtil, "read_xlsx_to_dict_list", read)
     request = VariableSourceRequest(
         source="native.xlsx" if source_kind == "file" else "native",
-        descriptor_dir=Path("/descriptor"), separator="|", source_entity="rows", source_type=None,
-        name="native", materialize_full_pool=full_pool, cyclic=False,
+        descriptor_dir=Path("/descriptor"),
+        separator="|",
+        source_entity="rows",
+        source_type=None,
+        name="native",
+        materialize_full_pool=full_pool,
+        cyclic=False,
     )
     page = DataSourcePagination(skip=0, limit=len(values))
 
@@ -1495,8 +1502,14 @@ def test_variable_source_explicit_page_defers_consumption_and_retains_iterator_a
     original = values()
     monkeypatch.setattr(io_variable_sources.FileUtil, "read_xlsx_to_dict_list", lambda _: original)
     request = VariableSourceRequest(
-        source="native.xlsx", descriptor_dir=Path("/descriptor"), separator="|",
-        source_entity="rows", source_type=None, name="native", materialize_full_pool=False, cyclic=False,
+        source="native.xlsx",
+        descriptor_dir=Path("/descriptor"),
+        separator="|",
+        source_entity="rows",
+        source_type=None,
+        name="native",
+        materialize_full_pool=False,
+        cyclic=False,
     )
     page = DataSourcePagination(skip=0, limit=2)
     selected = read_variable_source(request, None, None, page)
@@ -1527,8 +1540,14 @@ def test_variable_source_preserves_native_reader_error_identity(monkeypatch, sta
     memstore = SimpleNamespace(get_data_by_type=read) if stage == "memstore" else None
     monkeypatch.setattr(io_variable_sources.FileUtil, "read_xlsx_to_dict_list", read)
     request = VariableSourceRequest(
-        source="native.xlsx" if stage == "file" else "native", descriptor_dir=Path("/descriptor"), separator="|",
-        source_entity="rows", source_type=None, name="native", materialize_full_pool=False, cyclic=False,
+        source="native.xlsx" if stage == "file" else "native",
+        descriptor_dir=Path("/descriptor"),
+        separator="|",
+        source_entity="rows",
+        source_type=None,
+        name="native",
+        materialize_full_pool=False,
+        cyclic=False,
     )
     with pytest.raises(RuntimeError) as caught:
         read_variable_source(request, client, memstore, DataSourcePagination(skip=0, limit=1))
@@ -1543,11 +1562,19 @@ def test_variable_source_real_json_retains_scalar_and_nested_list_items(tmp_path
     path = tmp_path / "native.json"
     path.write_text('[null, 7, [1, {"nested": [true, "value"]}]]', encoding="utf-8")
     request = VariableSourceRequest(
-        source=path.name, descriptor_dir=tmp_path, separator="|", source_entity="rows", source_type=None,
-        name="native", materialize_full_pool=False, cyclic=False,
+        source=path.name,
+        descriptor_dir=tmp_path,
+        separator="|",
+        source_entity="rows",
+        source_type=None,
+        name="native",
+        materialize_full_pool=False,
+        cyclic=False,
     )
     assert list(read_variable_source(request, None, None, DataSourcePagination(skip=0, limit=3))) == [
-        None, 7, [1, {"nested": [True, "value"]}]
+        None,
+        7,
+        [1, {"nested": [True, "value"]}],
     ]
 
 
@@ -1555,15 +1582,24 @@ def test_variable_source_none_missing_memstore_cause_and_unsupported_client():
     from datamimic_ce.engine.io.api import VariableSourceRequest, read_variable_source
 
     request = VariableSourceRequest(
-        source="native", descriptor_dir=Path("/descriptor"), separator="|", source_entity=None, source_type=None,
-        name=None, materialize_full_pool=False, cyclic=False,
+        source="native",
+        descriptor_dir=Path("/descriptor"),
+        separator="|",
+        source_entity=None,
+        source_type=None,
+        name=None,
+        materialize_full_pool=False,
+        cyclic=False,
     )
     client = _VariableQueryClient([])
     assert read_variable_source(request, client, None, None) is None
     assert client.calls.mock_calls == []
     with pytest.raises(ValueError) as unsupported:
         read_variable_source(request, object(), None, None)
-    assert unsupported.value.args == ("Cannot get data from source 'native' of <variable> 'None'",)
+    from datamimic_ce.errors import InvalidSourceError, IssueCode
+
+    assert type(unsupported.value) is InvalidSourceError
+    assert unsupported.value.issue_code is IssueCode.TASK_VARIABLE_SOURCE_UNSUPPORTED
     with pytest.raises(KeyError) as missing:
         read_variable_source(request, None, Memstore("native"), None)
     assert missing.value.args == ("Data naming 'None' is empty in memstore",)
@@ -1579,8 +1615,14 @@ def test_variable_source_cyclic_page_keeps_file_repetition_and_memstore_copies(m
     monkeypatch.setattr(io_variable_sources.FileUtil, "read_xlsx_to_dict_list", read)
     memstore = SimpleNamespace(get_data_by_type=read) if source_kind == "memstore" else None
     request = VariableSourceRequest(
-        source="native.xlsx" if source_kind == "file" else "native", descriptor_dir=Path("/descriptor"), separator="|",
-        source_entity="rows", source_type=None, name="native", materialize_full_pool=False, cyclic=True,
+        source="native.xlsx" if source_kind == "file" else "native",
+        descriptor_dir=Path("/descriptor"),
+        separator="|",
+        source_entity="rows",
+        source_type=None,
+        name="native",
+        materialize_full_pool=False,
+        cyclic=True,
     )
     result = read_variable_source(request, None, memstore, DataSourcePagination(skip=1, limit=3))
     selected = [next(result) for _ in range(6)] if source_kind == "file" else list(result)

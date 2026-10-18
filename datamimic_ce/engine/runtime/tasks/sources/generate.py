@@ -19,6 +19,7 @@ from datamimic_ce.engine.runtime.contexts.context import SetupContext
 from datamimic_ce.engine.runtime.contexts.geniter_context import GenIterContext
 from datamimic_ce.engine.runtime.logging import logger
 from datamimic_ce.engine.runtime.scripting.evaluation import evaluate_source_template, interpolate_variables
+from datamimic_ce.errors import IssueCode, invalid_source_error
 
 
 def load_generate_source(
@@ -74,8 +75,8 @@ def load_generate_source(
             source_data = evaluate_source_template(context, source_data, prefix, suffix)
     elif root.memstore_manager.contain(source):
         if stmt.offset:
-            raise ValueError(
-                f"<generate> '{stmt.full_name}': offset= is only supported for file sources, not memstore '{source}'"
+            raise invalid_source_error(
+                code=IssueCode.GENERATE_OFFSET_UNSUPPORTED_MEMSTORE, stmt_name=stmt.full_name, source_str=source
             )
         source_data = read_generate_memstore_source(
             root.memstore_manager.get_memstore(source),
@@ -85,9 +86,8 @@ def load_generate_source(
         )
     elif root.clients.get(source) is not None:
         if stmt.offset:
-            raise ValueError(
-                f"<generate> '{stmt.full_name}': offset= is only supported for file sources, "
-                f"not database client '{source}' - use a selector with an SQL/Mongo skip instead"
+            raise invalid_source_error(
+                code=IssueCode.GENERATE_OFFSET_UNSUPPORTED_DATABASE_CLIENT, stmt_name=stmt.full_name, source_str=source
             )
         client = root.clients[source]
         rendered_selector = interpolate_variables(root, stmt.selector or "", prefix, suffix)
@@ -100,7 +100,7 @@ def load_generate_source(
             has_mongodb_upsert_target(stmt.targets, root.clients),
         )
     else:
-        raise ValueError(f"cannot find data source {source} for iterate task")
+        raise invalid_source_error(code=IssueCode.SOURCE_CLIENT_UNSUPPORTED, client_type=source)
 
     rows = source_data if isinstance(source_data, list) else [source_data]
     return rows, build_from_source

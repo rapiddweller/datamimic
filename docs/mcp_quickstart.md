@@ -1,33 +1,46 @@
 # Optional MCP adapter
 
-The DATAMIMIC CLI is the baseline interface. Install MCP only when the calling
-environment already uses MCP:
+The CLI is the baseline interface. Install MCP only for environments that use it:
 
 ```bash
 pip install "datamimic-ce[mcp]"
 datamimic-mcp --transport stdio
 ```
 
-The adapter exposes exactly four tools. Each accepts the same typed request and
-returns the same typed result as the corresponding authoring service operation:
+Both transports use the same typed Authoring application. Tool requests are wrapped
+as `{"request": {...}}` for the request-based operations below; discovery tools
+accept their named arguments directly.
 
 | MCP tool | CLI equivalent |
 |---|---|
-| `datamimic_reference` | `datamimic reference` |
-| `datamimic_scaffold` | `datamimic scaffold` |
-| `datamimic_check` | `datamimic lint` |
-| `datamimic_run` | `datamimic dry-run` |
+| `datamimic_version` | `datamimic authoring version` |
+| `datamimic_schema` | `datamimic authoring schema --name <name>` |
+| `datamimic_capabilities` | `datamimic authoring capabilities [--full]` |
+| `datamimic_capability` | `datamimic authoring capability --domain <domain> --name <name>` |
+| `datamimic_reference` | `datamimic authoring reference --topic <topic> [--name <name>]` |
+| `datamimic_compile` | `datamimic authoring compile -` |
+| `datamimic_decompile` | `datamimic authoring decompile -` |
+| `datamimic_build` | `datamimic authoring build -` |
+| `datamimic_lint` | `datamimic authoring lint -` |
+| `datamimic_dry_run` | `datamimic authoring dry-run -` |
+| `datamimic_run` | `datamimic authoring run -` |
 
-There are no MCP-only generators, domain catalogs, schema resources, recipes,
-or alternate authoring workflows. Query `datamimic_reference` with
-`topic=authoring` for the live Intent Model surface, then submit one canonical
-`AuthoringSpecV1` document to `datamimic_scaffold`.
+Persist XML. DM JSON is transient; expectations, `product_roles`, origin-tagged
+`acceptance_requirements`, and smoke/replay options belong to `BuildRequestV4`.
+Compile/decompile readiness proves syntax; a ready Build also carries bounded
+acceptance evidence. Target isolation does not prove delivery to an external sink.
 
-For SSE transport:
+The server's working directory is its host-owned workspace. Inline XML/DM JSON and
+logical descriptor paths use that root. The Python `create_server` factory can bind
+an explicit `workspace_root` and descriptor identity. No schema resources or
+MCP-only compiler are registered. Legacy scaffold/check tools are retired; see
+[the migration guide](migrations/authoring-errors.md).
+
+For SSE:
 
 ```bash
 datamimic-mcp --transport sse --host 127.0.0.1 --port 8765
 ```
 
-Set `DATAMIMIC_MCP_API_KEY` to require either `Authorization: Bearer <key>` or
-`X-API-Key: <key>` on SSE requests. API-key policy does not apply to stdio.
+`DATAMIMIC_MCP_API_KEY` enables `Authorization: Bearer <key>` or `X-API-Key: <key>`
+for SSE. Stdio uses its owning process's access controls.
