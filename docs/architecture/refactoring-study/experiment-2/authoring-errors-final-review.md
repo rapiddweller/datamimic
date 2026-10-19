@@ -1,53 +1,45 @@
 # CE Authoring and Errors final architecture review
 
-**Accepted within the local architecture review scope. No remaining actionable branch finding.** Reviewer: Astra. This is not merge authorization, a whole-system correctness certificate, or a native all-PASS claim.
+**Accepted within the local architecture review scope. No remaining actionable finding.** Reviewer: Astra. This follow-up preserves the preceding whole-branch approval for unchanged paths and reviews the five-file delta from `8a8dc1baade090faaa42a2040d9a994ea2db88b1`. It does not authorize merge or assert native all-PASS.
 
-## Binding and approved policy
+## Current binding
 
-Review covers development `dd2e0ee20cf43b1dfd9a8eda4986345025de3a8e` through HEAD `05d9b905eac9f6a5df2e6d9ae99a340abfd528d7`, plus the explicitly approved two-value baseline amendment.
-
-- Source: `5f22f036f4494462acb508e4817cf8934c4f371a21c609296361580edd701203`, bounded to `datamimic_ce/**/*.py`.
+- Source: `7b584450cc2473a516ec75d59a558e102dba9b8ccede61946a094971a20a3e0c`, scope `datamimic_ce/**/*.py`.
 - Target: `8517a10b1fd874b2e66f7161044074d8ff649639a9f8e37e17f92c2456cc0d85`.
-- Analyzer: `bb1a3262d3fdd38c3e9a6af980cc063281ae98ab1c28c89c2c5be6dfb450744f`; package ArchKeel 4.0.1, Python 3.11.12.
-- Canonical validation digest: `622bbfad0d349e71e341a4df1792a9070fd04ece58a8d246a1b667e7a35f8f31`.
-- Direct user acceptance authorizes **only** `calls_unresolved: 1409 → 1425` and `typing_positions: 173 → 178`. Other budgets, contracts and strict completion checks remain unchanged. The change acknowledges residual measured uncertainty; it does not resolve it.
+- Analyzer: `bb1a3262d3fdd38c3e9a6af980cc063281ae98ab1c28c89c2c5be6dfb450744f`; ArchKeel 4.0.1, Python 3.11.12.
+- Canonical validation digest: `0805a19907a948bf130e89544f35da0a5328e3180fc0a3a5e7f676a6341a60f2`.
+- Approved budgets remain exactly 1,425 unresolved calls and 178 typing positions. No policy or gate weakening accompanies this repair.
 
-Independent hashing confirms that only `known-violations.json` differs among the 2,070 frozen product/policy files. All 1,723 installed-wheel package files, including 534 Python files, still match. Archived native report provenance retains its original Git head/dirty state; exact file binding, rather than relabelling that historical metadata, establishes applicability to this candidate.
+## Source review
 
-## Connected whole-branch review
+`TimeSeriesConfig._parse_datetime` and `frozen_clock` now pass input directly to `datetime.fromisoformat`, available for UTC `Z` on the required Python >=3.11. The typed TimeSeries exception and cause remain. Frozen-clock naive-input UTC assignment and aware-input UTC conversion remain. Callers in GenerateStatement, acceptance projection and person API still use the same owner. The two deleted normalizations need no replacement abstraction. `typing_extensions` is retained for actual Python 3.11/Pydantic TypedDict and recursive-alias needs, not a restored 3.10 compatibility layer.
 
-The supplied implementation plan, current AGENTS, migration contract, recursive target inventory and whole-branch change inventory were reviewed. Existing source-bound independent evidence was reused for unchanged paths; this review does not pretend to reread every line or rerun all suites.
+The snapshot-race fixture renames the original file outside the scanned workspace before writing its same-sized replacement, keeping the original inode allocated. It explicitly asserts distinct `(device, inode)` values. The production reader, containment rules, `ValueError` type and `changed before opening` expectation are unchanged. Existing independent negative controls reject both a disabled identity check and a check delayed until after reading; this correction does not merely permit a different failure.
 
-- Public Python/CLI/MCP enter one Authoring application. Bootstrap selects CE adapters; named ports separate orchestration from codec, catalog, parser, workspace and execution ownership. Application does not import adapters.
-- Transient `DmJsonDocumentV1` and transaction-scoped `BuildRequestV4` replace the active Intent/Scaffold workflow. XML remains persisted runtime input. The isolated migration script reads the frozen legacy compiler, preserves proof declarations and exposes unsupported cases rather than installing a second active compiler.
-- Build compiles and validates, projects mandatory acceptance, captures bounded execution, evaluates complete rows, then produces response samples. Requested smoke and replay remain separate gates; replay compares complete typed values. Partial, dynamic/unknown or missing capture cannot acquire Ready through sampling or a passing optional gate.
-- Connected fixes retain dynamic-count uncertainty, recursive value identity, descriptor-relative workspace containment, runtime target-entity precedence, conditional field multiplicity and mandatory memstore readback. The Counter operation enforces an actual invariant; no wrapper or annotation workaround is needed to alter static counts.
-- CE parser/runtime/IO remain their own owners. The scoped resource-reader port and bounded workspace process preserve contained resource handling without claiming arbitrary descriptor Python is sandboxed. Native client/vendor classification stays with IO.
-- Errors owns identity, catalog and factory formatting. Runtime callers preserve typed facts and chained native causes. Script/generator descriptor context is inserted once by its factory; no rendered-cause matching selects guidance. Domain metadata and edition-specific semantics remain intact.
-- Python >=3.11, CE SCM versioning, optional MCP and DTO-derived schemas remain consistent with the migration. No active old compiler, EE/Redis/Torch dependency, new shared library or unrelated architecture layer was found in the reviewed authoring/errors paths.
+The exact CI failure's cause remains UNKNOWN: no original stat pairs were captured and independent Linux probes did not reproduce it. The correction removes the fixture's unproven identity-change assumption. Existing metadata checks are not an atomic or immutable filesystem snapshot and are not presented as a sandbox.
 
-The seven-finding repair review, conditional field review, descriptor-context review and portable-contract mutation review remain applicable. Their source binding and current implementation agree; no valid finding is left open. Existing large Domain/adapter/catalog leaves retain cohesive named owners documented in the recursive inventory; a new grouping layer would not remove a responsibility.
+The preceding whole-branch review remains applicable to unchanged application/ports/adapters, transient DM JSON and persisted XML, mandatory complete-capture acceptance, smoke/replay gates, resource ownership, migrated CLI/MCP, one-time legacy migration and portable Errors paths. Hash comparison against the previous wheel identifies exactly these two product-module changes. The old installed-wheel evidence therefore supports unchanged files, not an exact-byte installation claim for this new candidate.
 
-## Native result and retained uncertainty
+## Native result and UNKNOWN assessment
 
-Fresh approved validation differs from the previous 4.0.1 validation **only** in `failures`, now empty. Coverage is 534/534 full AST, zero reported violations, zero baseline additions/resolutions. Native rules remain **271 PASS and 5 UNKNOWN**. Native validation still exits 2 for the same 20 `interface.usage_unknown` diagnostics; the full report exits 0. These facts are compatible with the strict gate's explicitly assessed uncertainty path.
+Fresh coverage remains 534/534 full AST, zero violations and zero baseline additions/resolutions, with no validation failures. Rules remain **271 PASS and five UNKNOWN**. Native validation exit 2 retains the exact 20 `interface.usage_unknown` diagnostics; full completion reporting succeeds.
 
-All 303 raw UNKNOWN records and all 20 raw diagnostics are unchanged and retained. The receipt assigns every UNKNOWN exactly once across 12 classifications:
+Call observation is 12,958 total: 9,539 resolved, 1,994 partially resolved and 1,425 unresolved. Independent decoded comparison finds exactly two removed partially resolved calls, `iso_datetime.replace` and `value.replace`, and no added semantic call. No unresolved call was promoted to resolved.
 
-- Four public API surfaces; seven DSL reexport routes; six overlapping boundary aggregates.
-- 284 boundary positions: 130 inherited, 74 other/property/alias, 50 external, 12 generic, eight dotted, five forward reference and five missing annotations.
-- One context-alias aggregate and one dynamic-call aggregate at 1,425 unresolved calls.
+All 303 raw UNKNOWN records and all 20 diagnostics are structurally unchanged. The fresh receipt retains every UNKNOWN exactly once in 12 explicitly assessed groups: four API surfaces; 284 boundary positions (including real missing-annotation/broad-shape debt); seven DSL publication routes; six overlapping aggregates; one context-alias limit; one dynamic-call limit. All 20 publication-usage diagnostics retain their exact pointers, including repeated symbols at different publication routes. No record is dropped, reclassified as PASS or interpreted as permission to remove a public entry.
 
-Missing annotations and broad/opaque shapes remain source-contract debt where reported; they are not all called analyzer limitations. The five UNKNOWN rules remain AUTHORING-, DOMAIN-, DSL-, IO- and RUNTIME-API-TYPES. Passing runtime tests or MyPy does not resolve them.
+## Evidence boundary
 
-The 20 exact diagnostics cover CompiledDocumentArtifact and 15 Domain symbols across 19 Domain publication routes. Four symbols published at additional distinct pointers are retained. No used/unused inference, deletion permission or native PASS is granted. Full raw records and per-diagnostic assessments accompany the external review evidence.
+**LOCAL VERIFIED independently:** connected five-file source review, two-file package delta, native identities and decoded call delta, complete raw UNKNOWN/diagnostic equality, unchanged policy, strict gate acceptance of 303 UNKNOWNs, and rejection of the stale prior receipt. No new collector or duplicate product suite was run by this reviewer.
 
-## Verification boundary
+**LOCAL VERIFIED through supplied evidence:** the same seven UTC/offset/naive scenarios passed before deletion; both full focused modules then passed 24 tests; two snapshot controls passed; the independent snapshot review's three-case positive/negative matrix confirms the strict expectation. These are scoped results, not a full-unit run.
 
-**LOCAL VERIFIED independently:** connected source review, exact approved-policy diff, 2,070-file product/policy comparison, 1,723-file wheel-source comparison, validation delta, raw UNKNOWN/diagnostic equality, strict completion-gate acceptance of all 303 UNKNOWNs and six rejecting mutation controls (changed validation, omitted/duplicated UNKNOWN, omitted diagnostic, wrong analyzer, remaining budget failure). No collector or product suite was duplicated.
+**CI-ONLY VERIFICATION:** CI 39179520411 recorded 2,975 passes, one snapshot-fixture failure and 15 skips. It remains failed. The later local full-unit attempt was interrupted and is not counted as a pass. A new exact-head CE CI run, applicable Windows/service execution and merge decision remain with the parent/user.
 
-**LOCAL VERIFIED through reviewed existing evidence:** independent repair regressions, conditional controls, context matrices and negative factory-contract mutations; final installed wheel 48 regressions, 118 functional tests and three installed profiles; 13 schemas, 11 MCP tools and 173 resources agree. The earlier unit evidence is composed 2,975 passing identities plus 15 existing skips, **not one clean full run**. The parent owns the fresh full-unit result and later delivery checks.
+Skipped: duplicate broad tests, collectors and EE audit. Residual risk is retained native uncertainty and outstanding final-head CI; no complete immutable-snapshot or whole-system correctness claim is made.
 
-**CI-ONLY VERIFICATION:** final exact-head CE CI and applicable Windows/service execution are not established by this review. No CE merge, release or deployment is approved here. EE delivery evidence is separately owned and was not rerun.
+## Mongo capture test follow-up
 
-Skipped: duplicate broad suites/collectors and a new whole-EE audit. Residual risk is the explicitly retained native uncertainty and any outstanding final-head CI; receipt acceptance does not close either by implication.
+The additional external-service CI failure was a false COMPLETE expectation for an uncounted Mongo source: the run recorded 184 passes, one failure and three skips. The corrected test now explicitly requires UNKNOWN, requested=None and observed=2 for that source, then uses ElementTree to add count=2 solely to a separate positive-control XML. The existing typed ObjectId equality, normal runtime, sampled public rendering and unchanged database readback assertions remain. It additionally compares the uncounted and counted captured rows. Production policy and receipt identities are unchanged; no row count is injected into user data or the persisted runtime descriptor.
+
+Source review accepts this test-only correction. Reviewed live evidence from an ephemeral MongoDB 7.0.12 confirms UNKNOWN versus COMPLETE and preserves native ObjectIds, public rendering and database readback; all three bound production-file hashes match. This is supplied live probe evidence, not an independently rerun complete service suite. The CI workflow (.github/workflows/main.yml:627–628) declares mongo:7.0, so local 7.0.12 belongs to the same major/minor family; the exact CI image patch and host can differ. MongoDB 8.0.29 was only a discarded local startup attempt that refused the local kernel; no compatibility check was bypassed. The failed CI result remains failed, and final exact-head CI remains required.

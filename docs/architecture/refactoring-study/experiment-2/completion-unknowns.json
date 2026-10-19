@@ -2,10 +2,10 @@
   "status": "independent_local_architecture_review_accepted",
   "reviewed_by": "Astra",
   "review_reference": "docs/architecture/refactoring-study/experiment-2/authoring-errors-final-review.md",
-  "source_digest": "5f22f036f4494462acb508e4817cf8934c4f371a21c609296361580edd701203",
+  "source_digest": "7b584450cc2473a516ec75d59a558e102dba9b8ccede61946a094971a20a3e0c",
   "contract_digest": "8517a10b1fd874b2e66f7161044074d8ff649639a9f8e37e17f92c2456cc0d85",
   "analyzer_digest": "bb1a3262d3fdd38c3e9a6af980cc063281ae98ab1c28c89c2c5be6dfb450744f",
-  "validation_digest": "622bbfad0d349e71e341a4df1792a9070fd04ece58a8d246a1b667e7a35f8f31",
+  "validation_digest": "0805a19907a948bf130e89544f35da0a5328e3180fc0a3a5e7f676a6341a60f2",
   "unknowns_digest": "cd103e193d28223bd693af9ebcd4e69bda6365fda88d31ba7a1e459f50cfa5ae",
   "groups": [
     {
@@ -550,7 +550,7 @@
       }
     ]
   },
-  "review_scope": "Whole CE authoring/errors adoption against the supplied plan and development base dd2e0ee20cf43b1dfd9a8eda4986345025de3a8e; current HEAD 05d9b905eac9f6a5df2e6d9ae99a340abfd528d7 plus only the approved baseline change. Connected Build, proof, bounded execution, parser/IO resource ownership, CLI/MCP, portable Errors and migration paths reviewed. Reuses exact-source-bound independent repair, conditional, context, wheel and native reviews; no broad duplicate collector or product test run.",
+  "review_scope": "Source-bound follow-up to the accepted whole-branch CE review at 8a8dc1baade090faaa42a2040d9a994ea2db88b1: remove two Python 3.10 Z normalization shims; keep datetime.fromisoformat on required Python >=3.11. Review the deterministic snapshot-race fixture with identical exception expectation. No other product changes, no policy amendment. Reuses unchanged whole-branch evidence and all exact raw UNKNOWN/diagnostic assessments; fresh native collection binds the new Source.",
   "measurement_amendment": "Direct user acceptance Ja akzeptiert authorizes only calls_unresolved 1409 -> 1425 and typing_positions 173 -> 178. Other budgets, target, construct policy and strict completion checks remain unchanged. Approved ceilings accept measured residual uncertainty; they do not resolve it.",
-  "delivery_boundary": "Accepts local bounded architecture review with 303 retained UNKNOWN records and 20 assessed raw diagnostics. Native rule result remains 271 PASS and 5 UNKNOWN. Exact final-head CE CI, service/Windows checks and merge decision remain with the parent/user. No merge, release, deployment or whole-system PASS authorization."
+  "delivery_boundary": "Local architecture review accepted with all 303 UNKNOWNs and 20 raw diagnostics retained. Fresh native rule status remains 271 PASS and 5 UNKNOWN. Earlier CI 39179520411 had 2975 passes, one snapshot-fixture failure and 15 skips; its precise cause remains UNKNOWN. Interrupted local full-unit execution is not a pass. Parent owns new exact-head CI, Windows/service evidence and merge decision. No whole-system PASS, atomic snapshot, sandbox or merge authorization."
 }

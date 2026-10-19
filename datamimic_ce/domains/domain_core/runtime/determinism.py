@@ -104,8 +104,7 @@ def compute_provenance_hash(paths: Iterable[str]) -> str:
 
 
 def frozen_clock(iso_datetime: str) -> datetime:
-    normalized = iso_datetime.replace("Z", "+00:00")
-    dt = datetime.fromisoformat(normalized)
+    dt = datetime.fromisoformat(iso_datetime)
     if dt.tzinfo is None:
         dt = dt.replace(tzinfo=UTC)
     return dt.astimezone(UTC)

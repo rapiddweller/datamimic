@@ -209,8 +209,12 @@ def test_snapshot_rejects_file_replaced_between_stat_and_open(tmp_path, monkeypa
         nonlocal replaced
         if Path(path).name == "rows.csv" and not replaced:
             replaced = True
-            resource.unlink()
+            previous = tmp_path / "previous-rows.csv"
+            # Keep the old inode alive so replacement cannot reuse its identity.
+            resource.rename(previous)
             resource.write_text("id\n2\n")
+            before, after = previous.stat(), resource.stat()
+            assert (before.st_dev, before.st_ino) != (after.st_dev, after.st_ino)
         return original_open(path, flags, *args, **kwargs)
 
     monkeypatch.setattr(os, "open", racing_open)

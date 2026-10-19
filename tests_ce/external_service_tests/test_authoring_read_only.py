@@ -2,6 +2,7 @@
 
 from pathlib import Path
 from uuid import uuid4
+from xml.etree import ElementTree
 
 import oracledb
 import pytest
@@ -108,7 +109,7 @@ def test_real_mongo_object_ids_survive_bounded_capture(tmp_path) -> None:
     from datamimic_ce.authoring import create_authoring_application
     from datamimic_ce.authoring.adapters.bounded_executor import CeBoundedExecutor
     from datamimic_ce.authoring.adapters.workspace import AuthoringWorkspaceContext
-    from datamimic_ce.authoring.domain.capture import CapturedObjectId
+    from datamimic_ce.authoring.domain.capture import CapturedObjectId, CaptureStatus
     from datamimic_ce.authoring.domain.requests import BoundedExecutionRequest, RunRequest
     from datamimic_ce.engine.runtime.api import create_run_session
     from datamimic_ce.engine.runtime.contracts import RunRequest as RuntimeRequest
@@ -153,10 +154,24 @@ def test_real_mongo_object_ids_survive_bounded_capture(tmp_path) -> None:
             raw = session.capture_test_result()["rows"]
             assert raw == native_rows
             assert all(isinstance(row["_id"], ObjectId) for row in raw)
-            complete = CeBoundedExecutor(AuthoringWorkspaceContext(tmp_path)).execute(BoundedExecutionRequest(xml=xml))
+            executor = CeBoundedExecutor(AuthoringWorkspaceContext(tmp_path))
+            uncounted = executor.execute(BoundedExecutionRequest(xml=xml))
+            assert uncounted.ok, uncounted.diagnostics
+            unknown_product = uncounted.captured.get("rows")
+            assert unknown_product.capture.status is CaptureStatus.UNKNOWN
+            assert unknown_product.capture.requested is None
+            assert unknown_product.capture.observed == 2
+            counted_root = ElementTree.fromstring(xml)
+            generate = counted_root.find("generate")
+            assert generate is not None
+            generate.set("count", "2")
+            counted_xml = ElementTree.tostring(counted_root, encoding="unicode")
+            complete = executor.execute(BoundedExecutionRequest(xml=counted_xml))
             assert complete.ok, complete.diagnostics
             product = complete.captured.get("rows")
             assert product.capture.complete
+            assert product.capture.requested == product.capture.observed == 2
+            assert unknown_product.rows == product.rows
             assert product.rows == tuple(
                 {
                     "_id": CapturedObjectId(value=str(identifier)),

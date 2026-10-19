@@ -92,10 +92,8 @@ class TimeSeriesConfig:
 
     @staticmethod
     def _parse_datetime(value: str, attr: Literal["start", "end"]) -> datetime:
-        # `Z` is valid ISO 8601 UTC but fromisoformat only accepts it from Python 3.11;
-        # normalise so this works on 3.10 too.
         try:
-            return datetime.fromisoformat(value.replace("Z", "+00:00"))
+            return datetime.fromisoformat(value)
         except ValueError as exc:
             raise TimeSeriesConfigError(
                 attr,

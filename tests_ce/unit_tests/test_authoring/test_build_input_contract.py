@@ -67,11 +67,12 @@ def test_cli_invalid_dsl_values_emit_typed_json(tmp_path: Path, attributes: str,
     assert result["diagnostics"][0]["remediation"]
 
 
-def test_valid_time_series_retains_series_times_window_count(tmp_path: Path) -> None:
+@pytest.mark.parametrize("offset", ["", "Z", "+02:00"])
+def test_valid_time_series_retains_series_times_window_count(tmp_path: Path, offset: str) -> None:
     application = create_authoring_application(workspace_root=tmp_path)
     request = _request(
         application,
-        'count="2" start="2026-01-01T00:00:00" end="2026-01-01T04:00:00" interval="PT1H"',
+        f'count="2" start="2026-01-01T00:00:00{offset}" end="2026-01-01T04:00:00{offset}" interval="PT1H"',
         '<key name="v" script="ts.now.isoformat()"/>',
     )
     result = application.build(request)
