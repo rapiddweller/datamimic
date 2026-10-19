@@ -122,6 +122,9 @@ def _snapshot_workspace(source: Path, destination: Path) -> None:
                 if stat.S_ISREG(info.st_mode):
                     copy_file(path, output, info, directory_fd=directory_fd)
                 elif stat.S_ISDIR(info.st_mode):
+                    # Host Python environments are not model resources.
+                    if depth == 0 and entry.name in {".venv", "venv"}:
+                        continue
                     output.mkdir()
                     if os.name == "posix":
                         child_fd = os.open(
