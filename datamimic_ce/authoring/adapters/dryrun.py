@@ -101,6 +101,7 @@ class _MemstoreBindingStatus(StrEnum):
     RESOLVED = "resolved"
     MISSING = "missing"
     AMBIGUOUS = "ambiguous"
+    UNRESOLVED_INCLUDES = "unresolved_includes"
 
 
 @dataclass(frozen=True, config=ConfigDict(extra="forbid", strict=True, revalidate_instances="always"))
@@ -225,6 +226,7 @@ def _memstore_source_binding(
     *,
     memstore_ids: set[str],
     producers: tuple[_MemstoreProducer, ...],
+    unresolved_includes: bool = False,
 ) -> _MemstoreSourceBinding | None:
     from datamimic_ce.engine.dsl.api import EL_GENERATE, GenerateStatement
     from datamimic_ce.engine.dsl.vocabulary.source_capabilities import source_file_format_for
@@ -238,7 +240,10 @@ def _memstore_source_binding(
     candidates = tuple(
         producer for producer in producers if producer.source_id == stmt.source and producer.entity == entity
     )
-    if len(candidates) == 1:
+    if unresolved_includes:
+        status = _MemstoreBindingStatus.UNRESOLVED_INCLUDES
+        candidates = ()
+    elif len(candidates) == 1:
         status = _MemstoreBindingStatus.RESOLVED
     elif candidates:
         status = _MemstoreBindingStatus.AMBIGUOUS
@@ -252,7 +257,7 @@ def _memstore_source_binding(
     )
 
 
-def _dry_run_hazards(root_stmt: object) -> tuple[bool, bool]:
+def _dry_run_hazards(root_stmt: object, *, includes_validated: bool) -> tuple[bool, bool]:
     from datamimic_ce.engine.dsl.api import CompositeStatement, ExecuteStatement, IncludeStatement
 
     has_execute = False
@@ -262,11 +267,81 @@ def _dry_run_hazards(root_stmt: object) -> tuple[bool, bool]:
         stmt = pending.pop()
         if isinstance(stmt, ExecuteStatement):
             has_execute = True
-        elif isinstance(stmt, IncludeStatement) and not stmt.uri.endswith(".properties"):
-            has_unbounded_include = True
+        elif isinstance(stmt, IncludeStatement):
+            if "{" in stmt.uri or not (
+                stmt.uri.endswith(".properties") or (includes_validated and stmt.uri.endswith(".xml"))
+            ):
+                has_unbounded_include = True
         elif isinstance(stmt, CompositeStatement):
             pending.extend(stmt.sub_statements)
     return has_execute, has_unbounded_include
+
+
+def _validate_bounded_includes(path: Path, *, allow_side_effects: bool) -> set[str]:
+    """Check the literal dependency graph before any task, without changing native parse order."""
+    from datamimic_ce.engine.dsl.api import get_element_definition, parse_xml_file, read_resource_bytes
+    from datamimic_ce.engine.dsl.vocabulary.contracts.dsl_element import BoundedExecutionStrategy
+
+    root = parse_xml_file(path)
+    if not any(node.tag == "include" and not node.get("uri", "").endswith(".properties") for node in root.iter()):
+        return set()
+    active: set[Path] = set()
+    products: set[str] = set()
+    memstores: set[str] = set()
+    visited = 0
+
+    def visit(descriptor: Path) -> None:
+        nonlocal visited
+        visited += 1
+        identity = Path(os.path.abspath(descriptor))
+        if identity in active or len(active) >= 64 or visited > 2000:
+            raise _BoundedPolicyRefusal("XML include dependency graph is cyclic or exceeds bounded limits")
+        active.add(identity)
+        document = parse_xml_file(descriptor)
+        if document.tag != "setup":
+            raise _BoundedPolicyRefusal("XML include must contain a setup descriptor")
+        for node in document.iter():
+            tag = node.tag
+            if not isinstance(tag, str):
+                raise _BoundedPolicyRefusal("Included descriptor element must have a text tag")
+            definition = get_element_definition(tag)
+            if tag == "include":
+                uri = node.get("uri", "")
+                if (
+                    node.getparent() is not document
+                    or not uri
+                    or "{" in uri
+                    or "\\" in uri
+                    or ":" in uri
+                    or Path(uri).is_absolute()
+                ):
+                    raise _BoundedPolicyRefusal("Bounded XML includes require literal setup-level workspace paths")
+                # Native included contexts retain the entry descriptor directory.
+                dependency = path.parent / uri
+                if uri.endswith(".properties"):
+                    read_resource_bytes(dependency)
+                elif uri.endswith(".xml"):
+                    visit(dependency)
+                else:
+                    raise _BoundedPolicyRefusal("Unsupported bounded include dependency type")
+            elif definition is None or (
+                definition.bounded_execution_profile.strategy is BoundedExecutionStrategy.UNSUPPORTED
+                and not (tag == "execute" and allow_side_effects)
+            ):
+                raise _BoundedPolicyRefusal("Included descriptor has no proven bounded execution policy")
+            if tag == "generate" or tag == "iterate":
+                name = node.get("name")
+                if name is None or "{" in name or name in products:
+                    raise _BoundedPolicyRefusal("Included products require distinct capture identities")
+                products.add(name)
+            elif tag == "memstore":
+                store_id = node.get("id")
+                if store_id is not None:
+                    memstores.add(store_id)
+        active.remove(identity)
+
+    visit(path)
+    return memstores
 
 
 # One stripped file target of a product: (exporter name in the registry, ctor params).
@@ -377,6 +452,8 @@ def neutralize_for_dry_run(
     product_budgets: _ProductBudgets | None = None,
     descriptor_dir: Path | None = None,
     workspace_root: Path | None = None,
+    includes_validated: bool = False,
+    included_memstores: set[str] | None = None,
 ) -> None:
     """Statement transformer: cap counts, keep only memstore targets, force 1 process.
     When a collector dict is given, the FILE targets removed from each product are
@@ -391,10 +468,10 @@ def neutralize_for_dry_run(
     from datamimic_ce.engine.io.api import resolve_target_entity
 
     assert isinstance(root_stmt, SetupStatement)
-    has_execute, has_include = _dry_run_hazards(root_stmt)
+    has_execute, has_include = _dry_run_hazards(root_stmt, includes_validated=includes_validated)
     if (has_execute and not allow_side_effects) or has_include:
         raise _BoundedPolicyRefusal("bounded execution refuses execute or unresolved include side effects")
-    memstores = _memstore_ids(root_stmt)
+    memstores = _memstore_ids(root_stmt) | (included_memstores or set())
     memstore_producers = _memstore_producers(root_stmt, memstores)
     root_stmt.num_process = 1
 
@@ -438,6 +515,7 @@ def neutralize_for_dry_run(
                 stmt,
                 memstore_ids=memstores,
                 producers=memstore_producers,
+                unresolved_includes=bool(included_memstores),
             )
             from datamimic_ce.engine.dsl.api import SourceDistribution
 
@@ -494,6 +572,8 @@ def neutralize_for_dry_run(
 
             if product_budgets is not None:
                 name = capture_product_name(stmt.full_name)
+                if name in product_budgets:
+                    raise _BoundedPolicyRefusal("Included products require distinct canonical capture identities")
                 requested_per_parent: int | None = requested
                 if (
                     requested_per_parent is None
@@ -788,7 +868,11 @@ def _validated_worker_success(message: _WorkerSuccess, max_count: int | None = N
                 raise ValueError("capture rows exceed the full nested product bound")
         binding = budget.memstore_source
         if binding is not None:
-            expected = {_MemstoreBindingStatus.MISSING: 0, _MemstoreBindingStatus.RESOLVED: 1}
+            expected = {
+                _MemstoreBindingStatus.MISSING: 0,
+                _MemstoreBindingStatus.RESOLVED: 1,
+                _MemstoreBindingStatus.UNRESOLVED_INCLUDES: 0,
+            }
             if binding.status in expected and len(binding.producers) != expected[binding.status]:
                 raise ValueError("invalid memstore provenance cardinality")
             if binding.status is _MemstoreBindingStatus.AMBIGUOUS and len(binding.producers) < 2:
@@ -925,6 +1009,18 @@ def _run_engine_capture(
         budgets: _ProductBudgets = {}
         stripped: _StrippedTargets | None = {} if smoke_export else None
         try:
+            included_memstores = _validate_bounded_includes(path, allow_side_effects=allow_side_effects)
+            transformer = partial(
+                neutralize_for_dry_run,
+                max_count=max_count,
+                allow_side_effects=allow_side_effects,
+                stripped_file_targets=stripped,
+                product_budgets=budgets,
+                descriptor_dir=path.parent,
+                workspace_root=workspace_root,
+                includes_validated=True,
+                included_memstores=included_memstores,
+            )
             session = create_run_session(
                 RunRequest(
                     descriptor_path=path,
@@ -932,15 +1028,8 @@ def _run_engine_capture(
                     test_mode=True,
                     profile_loader=profile_loader,
                     platform_props=environment_properties,
-                    statement_transformer=partial(
-                        neutralize_for_dry_run,
-                        max_count=max_count,
-                        allow_side_effects=allow_side_effects,
-                        stripped_file_targets=stripped,
-                        product_budgets=budgets,
-                        descriptor_dir=path.parent,
-                        workspace_root=workspace_root,
-                    ),
+                    statement_transformer=transformer,
+                    included_statement_transformer=transformer,
                 ),
             )
             with SourceAccessCapture() as source_accesses:
@@ -1255,6 +1344,8 @@ class _CaptureEvidenceResolver:
         binding = budget.memstore_source
         if binding is None:
             return base
+        if binding.status is _MemstoreBindingStatus.UNRESOLVED_INCLUDES:
+            return _unknown_from(base, "XML include graph has no complete run-wide memstore producer proof")
         if binding.status is _MemstoreBindingStatus.MISSING:
             return _unknown_from(
                 base,

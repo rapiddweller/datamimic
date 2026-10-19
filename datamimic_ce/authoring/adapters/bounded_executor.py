@@ -210,7 +210,7 @@ def _decode_reply(payload: bytes, request: BoundedExecutionRequest) -> BoundedEx
                     if constructor_reason is not None
                     else f"{definition.title} at {'/'.join(path)}."
                     if definition is not None
-                    else "Bounded CE execution refused an unsupported side effect."
+                    else message.message
                     if message.policy_refusal
                     else "Bounded CE execution failed."
                 ),

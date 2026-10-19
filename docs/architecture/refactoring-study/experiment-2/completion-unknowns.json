@@ -1,12 +1,12 @@
 {
   "status": "independent_local_architecture_review_accepted",
   "reviewed_by": "Astra",
-  "review_reference": "docs/architecture/refactoring-study/experiment-2/ce5-plugin-review.md",
-  "source_digest": "198f3c582b683d172af8284228ba49ce9bbe06faa997919ff478687f1ec0e66e",
+  "review_reference": "docs/architecture/refactoring-study/experiment-2/issue-350-profile-review.md",
+  "source_digest": "d059af8dee734c135e4a654efcc3ba09ff8440f1c2a1c3f137ad740371a2b58e",
   "contract_digest": "d83d4df102a2588a54598e26cb045b721cb024a118f51e31592b135050d4e78e",
   "analyzer_digest": "bb1a3262d3fdd38c3e9a6af980cc063281ae98ab1c28c89c2c5be6dfb450744f",
-  "validation_digest": "31276851db4edeee1e1dd4e1b56bf97a12a48a718819330150a37723276355df",
-  "unknowns_digest": "af8c268ca5545b395eef7bc4a5aa4e1451c2387382a7b12c20c94453ad85acb0",
+  "validation_digest": "e0862d4d03353f96488c97694a8cf8555a0eecb4f0f27a7ad94449e1b9cdab8d",
+  "unknowns_digest": "c92f32c24fd77c1ede5425aa7f7e619029a637ff8b8bf7c7baeec43606c65cc9",
   "groups": [
     {
       "classification": "api_surface_limit",
@@ -66,7 +66,7 @@
     },
     {
       "classification": "dynamic_call_limit",
-      "reason": "Retain UNKNOWN: 1425 unresolved calls remain, including Counter.elements in conditional field projection. The Counter multiset union preserves branch exclusivity and duplicate multiplicity; code review does not turn this into native resolution. User explicitly accepted the 1409 to 1425 ceiling change. No additional weakening.",
+      "reason": "Retain UNKNOWN: 1431 unresolved calls remain. The historical Counter.elements projection uncertainty is unchanged. Issue 268 adds six independently inspected sites: four URI suffix checks, native XML getparent and the typed include callback. Direct human acceptance on 2026-10-19 authorizes only calls_unresolved 1425 -> 1431 for issue 268. Source review and accepted ceilings do not turn any call into native resolution.",
       "ids": [
         "UNKNOWN-PYTHON-DYNAMIC-CALLS"
       ]
@@ -140,7 +140,7 @@
     },
     {
       "classification": "generic",
-      "reason": "Retain UNKNOWN: generic, Callable, type and recursive alias positions retain required semantics but are not fully resolved by native boundary analysis.",
+      "reason": "Retain UNKNOWN: generic, Callable, type and recursive alias positions retain required semantics but are not fully resolved by native boundary analysis. Issue 350 adds the explicitly annotated SetupContext.__init__.profile_loader Callable[[Path, str], dict[str, str]] | None boundary position. Its generic shape remains UNKNOWN; it is not a missing annotation or a resolved type proof.",
       "ids": [
         "UNKNOWN-BOUNDARY-TYPE-POSITION-006aad5a6288c516",
         "UNKNOWN-BOUNDARY-TYPE-POSITION-07f51ae306c82153",
@@ -150,6 +150,7 @@
         "UNKNOWN-BOUNDARY-TYPE-POSITION-5799a1013592653d",
         "UNKNOWN-BOUNDARY-TYPE-POSITION-7ef35f25bc8ab438",
         "UNKNOWN-BOUNDARY-TYPE-POSITION-b2386b07466f6419",
+        "UNKNOWN-BOUNDARY-TYPE-POSITION-b8fd253c8df2829d",
         "UNKNOWN-BOUNDARY-TYPE-POSITION-cb2e825b374b2159",
         "UNKNOWN-BOUNDARY-TYPE-POSITION-d86e6844126ff8f2",
         "UNKNOWN-BOUNDARY-TYPE-POSITION-efbecfb04b53346a",
@@ -158,11 +159,14 @@
     },
     {
       "classification": "inherited_surface",
-      "reason": "Retain UNKNOWN: native inherited-method inventory is incomplete. Current declared DTO and model identities remain; inherited expansion is not proven, and passing tests or MyPy do not certify every signature.",
+      "reason": "Retain UNKNOWN: native inherited-method inventory is incomplete. Current declared DTO and model identities remain; inherited expansion is not proven, and passing tests or MyPy do not certify every signature. Issue 268 adds six annotated separator getter/setter positions whose effective bindings remain UNKNOWN. Three num_process positions retain this classification under shifted occurrence identities; no source annotation was removed.",
       "ids": [
         "UNKNOWN-BOUNDARY-TYPE-POSITION-031a3e60166f2c40",
+        "UNKNOWN-BOUNDARY-TYPE-POSITION-05a58749b1f2183e",
         "UNKNOWN-BOUNDARY-TYPE-POSITION-072a61056b7df66d",
         "UNKNOWN-BOUNDARY-TYPE-POSITION-09789f436c1bba46",
+        "UNKNOWN-BOUNDARY-TYPE-POSITION-0b8aea78d0539513",
+        "UNKNOWN-BOUNDARY-TYPE-POSITION-0e5e9e22f1cb91e1",
         "UNKNOWN-BOUNDARY-TYPE-POSITION-0edfbe9b8e3d2d52",
         "UNKNOWN-BOUNDARY-TYPE-POSITION-0f10b14c3f59f2b7",
         "UNKNOWN-BOUNDARY-TYPE-POSITION-0f2f31fec8388112",
@@ -195,6 +199,7 @@
         "UNKNOWN-BOUNDARY-TYPE-POSITION-34abee33f26d972f",
         "UNKNOWN-BOUNDARY-TYPE-POSITION-37778a951d317c8b",
         "UNKNOWN-BOUNDARY-TYPE-POSITION-39fc6e99009823d3",
+        "UNKNOWN-BOUNDARY-TYPE-POSITION-4081514c9b237325",
         "UNKNOWN-BOUNDARY-TYPE-POSITION-432e850cb5b8cbb0",
         "UNKNOWN-BOUNDARY-TYPE-POSITION-444b2c4c363c0276",
         "UNKNOWN-BOUNDARY-TYPE-POSITION-461944100ff3d463",
@@ -207,7 +212,6 @@
         "UNKNOWN-BOUNDARY-TYPE-POSITION-4e2e2984c0ed8dd7",
         "UNKNOWN-BOUNDARY-TYPE-POSITION-4eb13dcdbf4ce815",
         "UNKNOWN-BOUNDARY-TYPE-POSITION-50106a05d3babcc2",
-        "UNKNOWN-BOUNDARY-TYPE-POSITION-51aa3b845653548f",
         "UNKNOWN-BOUNDARY-TYPE-POSITION-5280cd333eb976c5",
         "UNKNOWN-BOUNDARY-TYPE-POSITION-569ef1c8f07611b7",
         "UNKNOWN-BOUNDARY-TYPE-POSITION-58091d5f5a3bca98",
@@ -222,14 +226,17 @@
         "UNKNOWN-BOUNDARY-TYPE-POSITION-6473a586f74c2f68",
         "UNKNOWN-BOUNDARY-TYPE-POSITION-64d6b1e7e96a39a5",
         "UNKNOWN-BOUNDARY-TYPE-POSITION-64da0239b650e7ba",
+        "UNKNOWN-BOUNDARY-TYPE-POSITION-64f22b48319b93c6",
         "UNKNOWN-BOUNDARY-TYPE-POSITION-69b602a560f06790",
         "UNKNOWN-BOUNDARY-TYPE-POSITION-6a55738c879fa5ed",
         "UNKNOWN-BOUNDARY-TYPE-POSITION-6b1f58f7e5aae8da",
         "UNKNOWN-BOUNDARY-TYPE-POSITION-705ade210fcbbdc8",
+        "UNKNOWN-BOUNDARY-TYPE-POSITION-74c8a81c0513c01d",
         "UNKNOWN-BOUNDARY-TYPE-POSITION-74d167260a024cef",
         "UNKNOWN-BOUNDARY-TYPE-POSITION-756f92459122f5c7",
         "UNKNOWN-BOUNDARY-TYPE-POSITION-78f4d68c8b96a636",
         "UNKNOWN-BOUNDARY-TYPE-POSITION-7a118b1f0751a302",
+        "UNKNOWN-BOUNDARY-TYPE-POSITION-7a4d6f0515d9fe3b",
         "UNKNOWN-BOUNDARY-TYPE-POSITION-7ddaf82da240a182",
         "UNKNOWN-BOUNDARY-TYPE-POSITION-7f2a7f0836095be4",
         "UNKNOWN-BOUNDARY-TYPE-POSITION-81c687f4a2801b47",
@@ -240,7 +247,6 @@
         "UNKNOWN-BOUNDARY-TYPE-POSITION-8924c8ea808d8b6f",
         "UNKNOWN-BOUNDARY-TYPE-POSITION-8ae58c1ea1ede8d8",
         "UNKNOWN-BOUNDARY-TYPE-POSITION-8c42680e3902646d",
-        "UNKNOWN-BOUNDARY-TYPE-POSITION-8d8ad6df8d9a9105",
         "UNKNOWN-BOUNDARY-TYPE-POSITION-9015ea57a7a25de1",
         "UNKNOWN-BOUNDARY-TYPE-POSITION-92a60fa84bffc8fa",
         "UNKNOWN-BOUNDARY-TYPE-POSITION-9379a68893ebc770",
@@ -250,6 +256,7 @@
         "UNKNOWN-BOUNDARY-TYPE-POSITION-9647c653757ac98e",
         "UNKNOWN-BOUNDARY-TYPE-POSITION-9f84e866680c837e",
         "UNKNOWN-BOUNDARY-TYPE-POSITION-a145d91796e79fbd",
+        "UNKNOWN-BOUNDARY-TYPE-POSITION-a16fdd238fbace65",
         "UNKNOWN-BOUNDARY-TYPE-POSITION-a1bffe4d938fcb0b",
         "UNKNOWN-BOUNDARY-TYPE-POSITION-a5ee7f07955ee826",
         "UNKNOWN-BOUNDARY-TYPE-POSITION-a777159f0969d61b",
@@ -265,7 +272,6 @@
         "UNKNOWN-BOUNDARY-TYPE-POSITION-ba82317a503168e0",
         "UNKNOWN-BOUNDARY-TYPE-POSITION-bec12f36baf3e51c",
         "UNKNOWN-BOUNDARY-TYPE-POSITION-bf4c0eb413c5c4e1",
-        "UNKNOWN-BOUNDARY-TYPE-POSITION-c0eed86ef57a44ef",
         "UNKNOWN-BOUNDARY-TYPE-POSITION-cfb3060900bf8620",
         "UNKNOWN-BOUNDARY-TYPE-POSITION-d44a29d75ba44724",
         "UNKNOWN-BOUNDARY-TYPE-POSITION-d499fd3012d253be",
@@ -274,6 +280,7 @@
         "UNKNOWN-BOUNDARY-TYPE-POSITION-da692d7974fbfe89",
         "UNKNOWN-BOUNDARY-TYPE-POSITION-dbcb0d5db3783878",
         "UNKNOWN-BOUNDARY-TYPE-POSITION-dca24cf1bc9da58d",
+        "UNKNOWN-BOUNDARY-TYPE-POSITION-e557e85059f01beb",
         "UNKNOWN-BOUNDARY-TYPE-POSITION-e74eee4992a2bee4",
         "UNKNOWN-BOUNDARY-TYPE-POSITION-ebb3a5158b3588b7",
         "UNKNOWN-BOUNDARY-TYPE-POSITION-ed06de0f3fdc8f34",
@@ -305,10 +312,11 @@
     },
     {
       "classification": "other",
-      "reason": "Retain UNKNOWN: property/decorator/alias and recursive value-shape binding remains unresolved. Existing annotations include broad maps and opaque positions; this classification neither clears source-contract debt nor establishes their full shape.",
+      "reason": "Retain UNKNOWN: property/decorator/alias and recursive value-shape binding remains unresolved. Existing annotations include broad maps and opaque positions; this classification neither clears source-contract debt nor establishes their full shape. Issue 268 adds the explicitly annotated SetupContext included_statement_transformer parameter (StatementTransformer | None); the analyzer still cannot establish its effective binding.",
       "ids": [
         "UNKNOWN-BOUNDARY-TYPE-POSITION-047311406b26c7e6",
         "UNKNOWN-BOUNDARY-TYPE-POSITION-08ad9b9d956f3aff",
+        "UNKNOWN-BOUNDARY-TYPE-POSITION-0c7a689b9f8a6d9f",
         "UNKNOWN-BOUNDARY-TYPE-POSITION-109e0d262371d8b5",
         "UNKNOWN-BOUNDARY-TYPE-POSITION-11657edbd7e9f495",
         "UNKNOWN-BOUNDARY-TYPE-POSITION-1a2f0ac4b83db719",
@@ -386,7 +394,7 @@
   ],
   "validation_unknowns": {
     "classification": "unproven_publication_usage",
-    "reason": "All 20 exact interface.usage_unknown diagnostics remain UNKNOWN: CompiledDocumentArtifact publication through result unions and 19 Domain publication routes across 15 Domain symbols, including four additional publication pointers for repeated symbols. No used/unused conclusion, deletion permission, native PASS, or suppressed raw contract_invalid diagnostic is inferred. Current source and routes are unchanged from independently reviewed evidence.",
+    "reason": "All 20 exact interface.usage_unknown diagnostics remain UNKNOWN: CompiledDocumentArtifact publication through result unions and 19 Domain publication routes across 15 Domain symbols, including four additional publication pointers for repeated symbols. No used/unused conclusion, deletion permission, native PASS, or suppressed raw contract_invalid diagnostic is inferred. All 20 diagnostics are identical to the prior independently reviewed receipt; no publication-usage uncertainty is cleared by this change.",
     "diagnostics": [
       {
         "code": "interface.usage_unknown",
@@ -550,7 +558,7 @@
       }
     ]
   },
-  "review_scope": "Independent review from 771c25a6f5b0f75438cfc18a03cc26195b1d0f65 for issues 344/345 and the issue 337 human-first steering: project setup/onboarding, readable native models with justified typed Python, the LBA reference gate, and root-only virtual-environment snapshot exclusion. Source change is confined to the existing snapshot traversal; nested resources and model-resource identity, symlink, race and size checks remain. All 303 raw UNKNOWN records and 20 validation diagnostics are unchanged; classifications, contract, analyzer and approved 1425/178 ceilings are preserved. Final documentation consistency edits in docs/releases/5.0.md and docs/README.md correctly describe shared setup/authoring and the LBA reference gate.",
-  "measurement_amendment": "Direct user acceptance Ja akzeptiert authorizes only calls_unresolved 1409 -> 1425 and typing_positions 173 -> 178. Other budgets, target, construct policy and strict completion checks remain unchanged. Approved ceilings accept measured residual uncertainty; they do not resolve it.",
-  "delivery_boundary": "Local architecture review accepted: zero violations, 303 retained UNKNOWNs, 20 raw validation diagnostics, 271 rules PASS and 5 UNKNOWN. Reviewer independently ran 38 snapshot/plugin/normal-runtime tests and inspected fresh 3003-pass/15-skip unit, 66-pass/4-Windows-skip targeted, Ruff/MyPy and installed-base/MCP logs. The locally built 5.0.0 wheel passes isolated real-child checks with 13 schemas and 0/11 MCP tools. Typed inline/file helper tests prove normal-runtime visibility, one load per run, exact JSON/replay and negative no-output while bounded Python remains rejected. Fresh Luna original-root controlled-index Builds pass; reviewer independently reran the source/environment assertions and installed CLI Build with identical rows/XML and full replay. That attempt unnecessarily reran pip and lacks raw rejected Build responses. The strengthened terminal compatible branch passed a fresh setup-only retest: no install/upgrade/dependency writes, matching 56-package inventories and root-file hashes. Read-only pip list supplied evaluator inventory; corrected quoting errors are retained. This scoped retest does not erase the earlier attempt limitations. The earlier child-workspace workaround is not acceptance evidence. The full 540-row CE LBA gate remains open under issues 332/270. Native Claude is explicitly deferred and native Codex remains model-configuration blocked. Current-delta CI, public PyPI installation, merge and release are not established. Fresh installed-wheel Memstore, SQLite, relational and embedded scenarios all report Ready; reviewer matched raw receipts/XML hashes/verification to the summary and inspected passing oracles. SQLite actual 6/12/24-row delivery and negative composite-FK rejection are recorded; reviewer independently verified the database counts and empty foreign_key_check. Requested relational/embedded smoke/replay passes. These remain separate from full LBA acceptance."
+  "review_scope": "Independent Astra review of the four-file issue-350 profile-loader propagation fix on HEAD 9589810e57bdb81c8a6b825e6da4f8896332c450, following the accepted issue-268 review. Traced request -> SetupTask -> SetupContext/deepcopy -> included DescriptorParser and the contained AuthoringWorkspaceContext profile loader. Independently ran six SQLite controls across inline, one-include and two-include descriptors, each with and without a profile. Frozen production file hashes remained unchanged. All prior 310 UNKNOWN IDs and classifications are retained; exactly one annotated generic profile_loader boundary position is added. All 20 validation diagnostics, contract, analyzer and approved budgets are unchanged.",
+  "measurement_amendment": "Direct user acceptance Ja akzeptiert authorizes only calls_unresolved 1409 -> 1425 and typing_positions 173 -> 178. Other budgets, target, construct policy and strict completion checks remain unchanged. Approved ceilings accept measured residual uncertainty; they do not resolve it. Subsequent direct human acceptance on 2026-10-19, \"1.431 f\u00fcr #268 akzeptieren\", authorizes only calls_unresolved 1425 -> 1431 for issue 268. The earlier 1409 -> 1425 and 173 -> 178 acceptance remains historical; all other budgets and strict checks remain unchanged. The six added unresolved calls remain uncertainty.",
+  "delivery_boundary": "Local architecture review accepted for the bound source: zero observed rule violations and baseline drift; 311 UNKNOWN records and 20 assessed interface.usage_unknown diagnostics remain. Native validate exits 2 with declared_rules UNKNOWN; the full completion report exits 0. Independent six-case SQLite tests pass and verify bounded rows and unchanged workspace bytes. The optional loader is propagated through the existing execution context without changing the global fallback or workspace containment policy. This receipt does not establish current-fix full CI, service suites, Windows behavior, native-client end-to-end behavior, full CE LBA acceptance or public installation. Build still rejects external XML includes; cross-descriptor memstore completeness remains UNKNOWN. Dynamic paths, generator-local includes, cycles and duplicate/interpolated names remain unsupported. Issue 281 cause remains UNKNOWN. Merge and release decisions remain separately owned."
 }
