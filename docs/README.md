@@ -14,8 +14,7 @@ This project documentation focuses specifically on:
 
 ### Authoring with AI agents
 
-CE 5.0 is in preparation. These authoring commands require a source install;
-see [release and migration guidance](releases/5.0.md).
+These instructions describe CE 5.0, installed from PyPI.
 
 - [Codex / Claude Code plugin](agent_plugin.md): install the shared consumer skill in other projects.
 
@@ -72,11 +71,10 @@ For detailed information on DATAMIMIC's architecture and model descriptions, ple
 
 ### Installation
 
-For the CE 5.0 source preview, install the checkout matching this documentation
-in your project environment (Python 3.11+):
+Install DATAMIMIC CE from PyPI in your project environment (Python 3.11+):
 
 ```bash
-python -m pip install /absolute/path/to/datamimic
+python -m pip install datamimic-ce
 ```
 
 ### Quick Start - Python API

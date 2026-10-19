@@ -14,11 +14,14 @@ datamimic authoring reference --topic assembly --name starter
 
 The starter must expose a transaction with `version: "4.0"`, a `document.root`
 and `expectations`. If these commands or that contract are absent, stop before
-writing the model. Explain that the runtime needs CE 5.0 or a compatible source
-preview. PyPI 4.3.0 has the retired Scaffold interface. Use the project's approved
-installation source; keep its environment and dependency manager.
+writing the model. Explain that the workflow requires CE 5.0 or later. Install
+or upgrade through PyPI using the project's environment and dependency manager;
+do not substitute a source checkout or a different authoring interface.
 
-Use the returned starter as the first candidate. Query only a specific unknown:
+Use the returned starter as the first candidate. Live capabilities, schemas and
+references own element/entity purpose, attributes, generators and field types.
+Narrow discovery to the missing domain/name; do not copy a DSL catalog into the
+skill or substitute an external DSL skill. Query only a specific unknown:
 
 ```bash
 datamimic authoring capabilities
@@ -43,14 +46,10 @@ not the retired product/field intent vocabulary. Put requirements in
 checks can use `acceptance_requirements` entries with `origin: "caller"` and an
 `expectation`; discover their current schema rather than guessing fields.
 
-- Nested FK: copy the actual `parent.id`; declare producer identifier and child
-  foreign-key roles, and check `per_parent_count`. Random valid parent IDs do
-  not prove the right number of children per parent.
-- Memstore: declare the store, producer and ordered consumer. The producer's
-  identifier plus the consumer's foreign-key role pair establishes readback;
-  assert the consumer count and required copied values.
-- Time series: `generate.count` is the parallel-series count. The end of the
-  window is exclusive. Assert points per window multiplied by series count.
+For relationships, Memstore and time series, query the running assembly and
+expectation references for supported semantics and lineage declarations. Preserve
+the requested complete keys, nested shape, per-parent quantities and readback
+requirements; do not replace them with weaker checks to obtain readiness.
 
 Request smoke/replay through `verification` when required; deterministic replay
 needs an explicit seed. Increase `max_count` only to capture the intended proof.

@@ -1,11 +1,10 @@
 # Optional MCP adapter
 
-The CLI is the baseline interface. This is the unreleased CE 5.0 adapter; PyPI
-4.3.0 has the old tools. Install the source preview in your Python 3.11+ project
-environment, adding MCP only when your client uses it:
+The CLI is the baseline interface. Install CE 5.0 from PyPI in your Python 3.11+
+project environment, adding MCP only when your client uses it:
 
 ```bash
-python -m pip install "/absolute/path/to/datamimic[mcp]"
+python -m pip install "datamimic-ce[mcp]"
 datamimic-mcp --transport stdio --workspace-root "/absolute/path/to/project"
 ```
 
@@ -39,8 +38,7 @@ the launch-directory default. Inline XML/DM JSON and logical descriptor paths us
 that root. The option does not change the process working directory or its host
 environment. The Python `create_server` factory also accepts `workspace_root`
 and descriptor identity. No schema resources or
-MCP-only compiler are registered. Legacy scaffold/check tools are retired; see
-[the migration guide](migrations/authoring-errors.md).
+MCP-only compiler are registered.
 
 ## Codex
 

@@ -4,14 +4,14 @@
 > XML is the persisted executable project; DM JSON is its transient agent view.
 > Build expectations and proof declarations belong to each transaction.
 
-CE 5.0 is unreleased; the new authoring CLI requires a source installation.
-See [version and release guidance](docs/releases/5.0.md).
+Install CE 5.0 from PyPI: `python -m pip install datamimic-ce`.
 For dataset tasks use the [consumer skill](plugins/datamimic/skills/generate-test-data/SKILL.md).
 Repository contributors read [AGENTS.md](AGENTS.md) and use `.venv/bin/datamimic`.
 
 ## Authoring
 
 - [Codex / Claude Code plugin](docs/agent_plugin.md): installable steering for local CE and connected Platform projects.
+- [Model review](plugins/datamimic/skills/generate-test-data/references/review.md): model structure, requirements, outputs and evidence for human inspection.
 
 - [Agent guide](AGENTS.md): typed Build example, proof scope, DSL semantics.
 - `datamimic authoring schema`: current DM JSON schema; `--name build_request_v4` for the transaction.
@@ -20,7 +20,7 @@ Repository contributors read [AGENTS.md](AGENTS.md) and use `.venv/bin/datamimic
 - `datamimic authoring reference --topic assembly --name model`: focused authoring guidance.
 - `datamimic authoring build -`: stdin transaction; repair diagnostics; stop on `outcome=ready` and persist `artifact.compiled_xml`.
 - `datamimic authoring decompile model.xml`: transient DM JSON; expectations must be supplied again.
-- Existing XML: `datamimic authoring lint model.xml`, then `authoring dry-run model.xml`; real execution uses `datamimic run model.xml`.
+- Existing XML: `datamimic authoring lint model.xml`, then `datamimic authoring dry-run model.xml`; real execution uses `datamimic run model.xml`.
 - [Worked Build transactions](docs/examples/authoring.md): nested FK, memstore readback, time series.
 - [Migration](docs/migrations/authoring-errors.md): frozen legacy intent compiler → XML and separate Build proof.
 

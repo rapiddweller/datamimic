@@ -17,8 +17,10 @@ checks those requirements. Keep their requested outputs, relationships and scale
 - If both are available and the destination is unclear, clarify the destination
   before changing files or configuring a connection.
 
-The plugin contains usage instructions. Discover vocabulary and schemas from
-the selected runtime; CE and EE capabilities are not interchangeable.
+The plugin owns the workflow and human review. Discover purpose, vocabulary,
+attributes, generators, field types and schemas from the selected runtime,
+using focused queries. Do not duplicate DSL knowledge in the plugin or load a
+separate DSL skill. CE and EE capabilities are not interchangeable.
 
 ## Preserve the task
 
@@ -43,6 +45,8 @@ acceptance against a complete bounded capture. Sample rows are not total counts.
 Smoke/replay pass only when requested and reported as passed. Target-isolated
 capture does not prove delivery to an external database or file destination.
 
-Return the XML path, declared checks, observed counts, requested verification
-results and any remaining limitation. Execute the real descriptor only when the
-user requested execution, using the selected project's execution interface.
+Follow [the model review contract](references/review.md). Return a readable model
+outline and a requirement-to-evidence table with the XML and raw proof. A ready
+receipt cannot replace this review or independent checks for requirements the
+runtime cannot express. Execute the real descriptor only when the user requested
+execution, using the selected project's execution interface.

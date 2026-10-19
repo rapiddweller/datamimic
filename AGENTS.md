@@ -94,9 +94,7 @@ producer identifier and consumer foreign-key role pair. For time series, literal
 
 For an existing XML descriptor: `authoring lint` → `authoring dry-run`, inspect the
 bounded evidence, then use normal `datamimic run` when execution is requested.
-Legacy `AuthoringSpecV1` projects use the one-time migration in
-[the migration guide](docs/migrations/authoring-errors.md); do not restore an old
-compiler, root `scaffold` command or `model.dm.json` workflow.
+For upgrades, see [the migration guide](docs/migrations/authoring-errors.md).
 
 ## Benchmarking local Ollama models
 

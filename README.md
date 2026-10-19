@@ -51,10 +51,8 @@ The Enterprise Platform adds the governed workflows, scanners, dashboards, and e
 
 ## AI agents: author, verify, and run data models
 
-**CE 5.0 is in preparation.** The commands below require this source checkout;
-PyPI 4.3.0 still exposes the retired Scaffold API. Install this checkout in your
-project environment with `python -m pip install /absolute/path/to/datamimic`, then
-use that environment's `datamimic`. See the [5.0 migration and release gates](docs/releases/5.0.md).
+Install CE from PyPI with `python -m pip install datamimic-ce` and use your
+project environment's `datamimic`. These instructions describe CE 5.0.
 
 XML is the persisted executable project. DM JSON is its
 transient agent representation; expectations and role declarations belong to
@@ -90,13 +88,12 @@ if I requested real execution.
 ```
 
 [Worked transactions](docs/examples/authoring.md) cover nested foreign keys,
-memstore readback and time series. Existing `AuthoringSpecV1` projects use the
-[one-time migration](docs/migrations/authoring-errors.md).
+memstore readback and time series. Return a [human-readable model review](plugins/datamimic/skills/generate-test-data/references/review.md)
+with the XML and verification evidence.
 
 ### Optional MCP adapter
 
-For this unreleased source version, `python -m pip install "/absolute/path/to/datamimic[mcp]"`
-adds the same application as typed MCP tools:
+`python -m pip install "datamimic-ce[mcp]"` adds the same application as typed MCP tools:
 Build, compile/decompile, discovery, lint and bounded execution. Registration and
 request mapping are in the [MCP quickstart](docs/mcp_quickstart.md).
 
@@ -312,7 +309,7 @@ print(f"{patient.full_name}, {patient.age}, {patient.conditions}")
 ## Quickstart — Community Edition
 
 ```bash
-python -m pip install /absolute/path/to/datamimic
+python -m pip install datamimic-ce
 ```
 
 For database and MongoDB connections, prefer [connection profiles](docs/developer_guide.md#database-and-mongodb-connection-profiles).
@@ -509,7 +506,7 @@ response = generate_domain({
 # Same CE version + request + seed + clock → same output within the tested boundary.
 ```
 
-**2. Deterministic data backend for AI agents and LLM tooling.** The CLI and Python API are the baseline surfaces for seeded, verifiable generation. The optional [MCP adapter](docs/mcp_quickstart.md) exposes the canonical Build, codec, discovery, lint, and bounded-run authoring operations; this unreleased interface requires the matching source installation. Domain-facade outputs include a `determinism_proof.content_hash`, so Python callers can re-execute within the tested compatibility boundary and check whether the data is identical — useful for agent regression tests and any workflow where the data an agent saw must be reconstructable.
+**2. Deterministic data backend for AI agents and LLM tooling.** The CLI and Python API are the baseline surfaces for seeded, verifiable generation. The optional [MCP adapter](docs/mcp_quickstart.md) exposes the canonical Build, codec, discovery, lint, and bounded-run authoring operations. Domain-facade outputs include a `determinism_proof.content_hash`, so Python callers can re-execute within the tested compatibility boundary and check whether the data is identical — useful for agent regression tests and any workflow where the data an agent saw must be reconstructable.
 
 **3. Pseudonymization of staging and QA exports.** Manual model in CE (XML pipeline), no scanner license required. Seeded mode for stable regression test data; non-seeded mode for one-time deliveries that are not replay-stable. See the [Pseudonymization section above](#pseudonymization--ce-manual-model).
 

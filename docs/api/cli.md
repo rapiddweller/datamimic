@@ -4,12 +4,10 @@ The DATAMIMIC CLI provides a command-line interface for managing data generation
 
 ## Installation
 
-This is the unreleased CE 5.0 interface. Install this source checkout in your
-Python 3.11+ project environment; PyPI 4.3.0 has the retired authoring commands.
-See the [release and migration guide](../releases/5.0.md).
+Install CE 5.0 from PyPI in your Python 3.11+ project environment:
 
 ```bash
-python -m pip install /absolute/path/to/datamimic
+python -m pip install datamimic-ce
 ```
 
 ## Command Overview
@@ -187,9 +185,7 @@ missing descriptor, `init` on an invalid project name).
 
 The `authoring` subtree uses `0` for success, `1` for rejected inputs or failed
 operations, and `2` for CLI usage errors. Rejections are a single structured result
-on stdout. Root `scaffold`, `lint`, `dry-run`, `reference`, and `capabilities` are
-replaced by the typed subtree; old `--section`, `--fail-on`, and
-`--max-diagnostics` options are retired.
+on stdout. Authoring operations live under `datamimic authoring`.
 
 ## Best Practices
 
