@@ -696,10 +696,10 @@ jobs:
       - name: Setup git
         run: |
           apt-get update
-          apt-get install -y git curl 
+          apt-get install -y git curl
           git config --global --add safe.directory $(realpath .)
-          curl https://packages.microsoft.com/keys/microsoft.asc | tee /etc/apt/trusted.gpg.d/microsoft.asc
-          curl https://packages.microsoft.com/config/debian/10/prod.list | tee /etc/apt/sources.list.d/mssql-release.list
+          curl -fsSL https://packages.microsoft.com/config/debian/12/packages-microsoft-prod.deb -o /tmp/packages-microsoft-prod.deb
+          dpkg -i /tmp/packages-microsoft-prod.deb
           apt-get update
           ACCEPT_EULA=Y apt-get install -y msodbcsql17
       - name: Checkout repository
@@ -712,10 +712,55 @@ jobs:
           path: .venv
           key: ${{ runner.os }}-python-${{ hashFiles('./pyproject.toml', './uv.lock') }}
       - name: Run external service tests with coverage
+        id: service_tests
         run: |
           . .venv/bin/activate
-          uv run pytest tests_ce/external_service_tests/ --cov=. --cov-report=xml
+          export DATAMIMIC_MONGODB_DIAGNOSTICS_DIR="$PWD/test-artifacts"
+          export PYTHONPATH="$PWD/script/mongodb_diagnostics${PYTHONPATH:+:$PYTHONPATH}"
+          mkdir -p test-artifacts
+          uv run python - <<'PYTHON'
+          import json
+          import sys
+          from importlib.metadata import distributions
+          from pathlib import Path
+
+          packages = sorted((entry.metadata["Name"], entry.version) for entry in distributions())
+          Path("test-artifacts/mongodb-packages.json").write_text(json.dumps({"python": sys.version, "packages": packages}), encoding="utf-8")
+          PYTHON
+          cp uv.lock test-artifacts/mongodb-uv.lock
+          sha256sum uv.lock > test-artifacts/mongodb-lock.sha256
+          uv run --frozen pytest tests_ce/external_service_tests/ --cov=. --cov-report=xml
         shell: bash
+      - name: Observe MongoDB after a service failure
+        if: failure() && steps.service_tests.outcome == 'failure'
+        timeout-minutes: 1
+        run: |
+          . .venv/bin/activate
+          uv run python - <<'PYTHON'
+          import json
+          import os
+          from datetime import UTC, datetime
+          from pathlib import Path
+          from pymongo import MongoClient
+          from pymongo.errors import PyMongoError
+
+          result = {"pid": os.getpid(), "scope": "post-test CI process", "observed_at": datetime.now(UTC).isoformat(), "authenticated_ping": False}
+          try:
+              with MongoClient("mongo", 27017, username="datamimic", password="datamimic", authSource="admin", serverSelectionTimeoutMS=3000, connectTimeoutMS=3000) as client:
+                  result["authenticated_ping"] = client.admin.command("ping")["ok"] == 1
+          except PyMongoError as error:
+              result["error_type"] = type(error).__name__
+          Path("test-artifacts/mongodb-failure-health.json").write_text(json.dumps(result), encoding="utf-8")
+          PYTHON
+        shell: bash
+      - name: Upload MongoDB diagnostics
+        if: always()
+        uses: actions/upload-artifact@v6
+        with:
+          name: mongodb-driver-diagnostics
+          path: test-artifacts/mongodb-*
+          if-no-files-found: error
+          retention-days: 7
       - name: Upload coverage report
         uses: actions/upload-artifact@v6
         with:
