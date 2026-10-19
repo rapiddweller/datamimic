@@ -1,12 +1,12 @@
 {
   "status": "independent_local_architecture_review_accepted",
   "reviewed_by": "Astra",
-  "review_reference": "docs/architecture/refactoring-study/experiment-2/issue-268-architecture-review.md",
-  "source_digest": "001ada60a32d750fd73188e4d21c9a1dd07892e864e04ed18a172939cb54a480",
+  "review_reference": "docs/architecture/refactoring-study/experiment-2/issue-350-profile-review.md",
+  "source_digest": "d059af8dee734c135e4a654efcc3ba09ff8440f1c2a1c3f137ad740371a2b58e",
   "contract_digest": "d83d4df102a2588a54598e26cb045b721cb024a118f51e31592b135050d4e78e",
   "analyzer_digest": "bb1a3262d3fdd38c3e9a6af980cc063281ae98ab1c28c89c2c5be6dfb450744f",
-  "validation_digest": "fdff360521c7241a2020a2534bcdca306d5e5686281cb3450356be5a8d971af0",
-  "unknowns_digest": "ec9d657be366a3760c1bffe0a09494581af5585ce12a54d7b3685515afab7c93",
+  "validation_digest": "e0862d4d03353f96488c97694a8cf8555a0eecb4f0f27a7ad94449e1b9cdab8d",
+  "unknowns_digest": "c92f32c24fd77c1ede5425aa7f7e619029a637ff8b8bf7c7baeec43606c65cc9",
   "groups": [
     {
       "classification": "api_surface_limit",
@@ -140,7 +140,7 @@
     },
     {
       "classification": "generic",
-      "reason": "Retain UNKNOWN: generic, Callable, type and recursive alias positions retain required semantics but are not fully resolved by native boundary analysis.",
+      "reason": "Retain UNKNOWN: generic, Callable, type and recursive alias positions retain required semantics but are not fully resolved by native boundary analysis. Issue 350 adds the explicitly annotated SetupContext.__init__.profile_loader Callable[[Path, str], dict[str, str]] | None boundary position. Its generic shape remains UNKNOWN; it is not a missing annotation or a resolved type proof.",
       "ids": [
         "UNKNOWN-BOUNDARY-TYPE-POSITION-006aad5a6288c516",
         "UNKNOWN-BOUNDARY-TYPE-POSITION-07f51ae306c82153",
@@ -150,6 +150,7 @@
         "UNKNOWN-BOUNDARY-TYPE-POSITION-5799a1013592653d",
         "UNKNOWN-BOUNDARY-TYPE-POSITION-7ef35f25bc8ab438",
         "UNKNOWN-BOUNDARY-TYPE-POSITION-b2386b07466f6419",
+        "UNKNOWN-BOUNDARY-TYPE-POSITION-b8fd253c8df2829d",
         "UNKNOWN-BOUNDARY-TYPE-POSITION-cb2e825b374b2159",
         "UNKNOWN-BOUNDARY-TYPE-POSITION-d86e6844126ff8f2",
         "UNKNOWN-BOUNDARY-TYPE-POSITION-efbecfb04b53346a",
@@ -557,7 +558,7 @@
       }
     ]
   },
-  "review_scope": "Independent final issue-268 review from c84bf992e261ccd80e9491b95cf3f850013b3215: contained literal setup XML dependencies, native parse/property order, inherited separators, separate optional include transformer preserving the root-only callback, canonical capture identity refusal and explicit unresolved cross-descriptor memstore provenance. All eight reviewed source file hashes are unchanged. Current native records contain 310 UNKNOWNs: prior classifications retained, three num_process occurrence identities remapped, six annotated separator positions added as inherited_surface and one typed include-callback parameter added as other. All 20 validation diagnostics are unchanged; contract and analyzer are unchanged.",
-  "measurement_amendment": "Direct user acceptance Ja akzeptiert authorizes only calls_unresolved 1409 -> 1425 and typing_positions 173 -> 178. Other budgets, target, construct policy and strict completion checks remain unchanged. Approved ceilings accept measured residual uncertainty; they do not resolve it. Subsequent direct human acceptance on 2026-10-19, \"1.431 für #268 akzeptieren\", authorizes only calls_unresolved 1425 -> 1431 for issue 268. The earlier 1409 -> 1425 and 173 -> 178 acceptance remains historical; all other budgets and strict checks remain unchanged. The six added unresolved calls remain uncertainty.",
-  "delivery_boundary": "Local architecture review accepted against the explicitly approved 1431 unresolved-call ceiling: zero rule violations, zero baseline drift, 310 retained UNKNOWNs and 20 assessed interface.usage_unknown diagnostics. Independent reviewer ran 17 corrected include tests and five callback integration tests, reproduced the six-row native versus three-row bounded false-completeness defect before its fix, and inspected final 21-pass include, 100-pass expanded, 3024-pass/15-skip unit and full Ruff/MyPy logs. Isolated installed candidate logs prove real-child CLI/MCP include equality, cap 10 to 3, unchanged workspace, 13 schemas and 11 MCP tools. Build still rejects external XML includes; cross-descriptor memstore completeness remains UNKNOWN. Dynamic paths, generator-local includes, cycles and duplicate/interpolated names remain unsupported. Current-branch CI/native Windows, full CE LBA acceptance, native-client end-to-end behavior and public installation are not established by this receipt. No merge or release approval is implied."
+  "review_scope": "Independent Astra review of the four-file issue-350 profile-loader propagation fix on HEAD 9589810e57bdb81c8a6b825e6da4f8896332c450, following the accepted issue-268 review. Traced request -> SetupTask -> SetupContext/deepcopy -> included DescriptorParser and the contained AuthoringWorkspaceContext profile loader. Independently ran six SQLite controls across inline, one-include and two-include descriptors, each with and without a profile. Frozen production file hashes remained unchanged. All prior 310 UNKNOWN IDs and classifications are retained; exactly one annotated generic profile_loader boundary position is added. All 20 validation diagnostics, contract, analyzer and approved budgets are unchanged.",
+  "measurement_amendment": "Direct user acceptance Ja akzeptiert authorizes only calls_unresolved 1409 -> 1425 and typing_positions 173 -> 178. Other budgets, target, construct policy and strict completion checks remain unchanged. Approved ceilings accept measured residual uncertainty; they do not resolve it. Subsequent direct human acceptance on 2026-10-19, \"1.431 f\u00fcr #268 akzeptieren\", authorizes only calls_unresolved 1425 -> 1431 for issue 268. The earlier 1409 -> 1425 and 173 -> 178 acceptance remains historical; all other budgets and strict checks remain unchanged. The six added unresolved calls remain uncertainty.",
+  "delivery_boundary": "Local architecture review accepted for the bound source: zero observed rule violations and baseline drift; 311 UNKNOWN records and 20 assessed interface.usage_unknown diagnostics remain. Native validate exits 2 with declared_rules UNKNOWN; the full completion report exits 0. Independent six-case SQLite tests pass and verify bounded rows and unchanged workspace bytes. The optional loader is propagated through the existing execution context without changing the global fallback or workspace containment policy. This receipt does not establish current-fix full CI, service suites, Windows behavior, native-client end-to-end behavior, full CE LBA acceptance or public installation. Build still rejects external XML includes; cross-descriptor memstore completeness remains UNKNOWN. Dynamic paths, generator-local includes, cycles and duplicate/interpolated names remain unsupported. Issue 281 cause remains UNKNOWN. Merge and release decisions remain separately owned."
 }

@@ -1,5 +1,8 @@
 # Issue 268: bounded include review
 
+This records the original include change. The final profile-loader correction and
+311-UNKNOWN receipt are in [the issue 350 review](issue-350-profile-review.md).
+
 Independent review of the working tree at `c84bf992e261ccd80e9491b95cf3f850013b3215`.
 No source blocker remains in the reviewed subset. Local architecture completion
 is accepted after the human explicitly approved the exact 1431-call ceiling for
