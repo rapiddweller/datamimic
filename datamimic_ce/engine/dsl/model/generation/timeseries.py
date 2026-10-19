@@ -28,8 +28,20 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from datetime import datetime, timedelta
+from typing import Literal
 
 import isodate
+
+
+class TimeSeriesConfigError(ValueError):
+    """An invalid user time-window attribute, with a stable repair location."""
+
+    def __init__(self, attribute: Literal["start", "end", "interval"], message: str) -> None:
+        self.attribute = attribute
+        super().__init__(message)
+
+    def __reduce__(self) -> tuple[type[TimeSeriesConfigError], tuple[str, str]]:
+        return type(self), (self.attribute, str(self))
 
 
 @dataclass(frozen=True)
@@ -58,8 +70,12 @@ class TimeSeriesConfig:
         start_dt = cls._parse_datetime(start, "start")
         end_dt = cls._parse_datetime(end, "end")
         interval_td = cls._parse_duration(interval)
+        if (start_dt.utcoffset() is None) != (end_dt.utcoffset() is None):
+            raise TimeSeriesConfigError("end", "<generate start/end> must use matching timezone awareness")
         if end_dt <= start_dt:
-            raise ValueError(f"<generate end=...> must be after <generate start=...>; got start={start!r}, end={end!r}")
+            raise TimeSeriesConfigError(
+                "end", f"<generate end=...> must be after <generate start=...>; got start={start!r}, end={end!r}"
+            )
         ticks = int((end_dt - start_dt).total_seconds() // interval_td.total_seconds())
         return cls(start=start_dt, interval=interval_td, ticks_per_series=ticks)
 
@@ -75,33 +91,34 @@ class TimeSeriesConfig:
         return TimeSeriesNamespace(now=self.start + self.interval * step, step=step, series=series)
 
     @staticmethod
-    def _parse_datetime(value: str, attr: str) -> datetime:
-        # `Z` is valid ISO 8601 UTC but fromisoformat only accepts it from Python 3.11;
-        # normalise so this works on 3.10 too.
+    def _parse_datetime(value: str, attr: Literal["start", "end"]) -> datetime:
         try:
-            return datetime.fromisoformat(value.replace("Z", "+00:00"))
+            return datetime.fromisoformat(value)
         except ValueError as exc:
-            raise ValueError(
+            raise TimeSeriesConfigError(
+                attr,
                 f"<generate {attr}=...> must be an ISO 8601 datetime "
-                f"(e.g. '2026-01-01T00:00:00Z' or '2026-01-01'), got {value!r}"
+                f"(e.g. '2026-01-01T00:00:00Z' or '2026-01-01'), got {value!r}",
             ) from exc
 
     @staticmethod
     def _parse_duration(value: str) -> timedelta:
         try:
             delta = isodate.parse_duration(value)
-        except isodate.ISO8601Error as exc:
-            raise ValueError(
+        except (isodate.ISO8601Error, OverflowError) as exc:
+            raise TimeSeriesConfigError(
+                "interval",
                 f"<generate interval=...> must be an ISO 8601 duration "
-                f"(e.g. 'PT1H', 'PT15M', 'P1D', 'PT0.001S' for ms), got {value!r}"
+                f"(e.g. 'PT1H', 'PT15M', 'P1D', 'PT0.001S' for ms), got {value!r}",
             ) from exc
         # isodate.parse_duration may return Duration (months/years); we don't accept those
         # because they don't map to a constant-length timedelta. Equally, sub-microsecond
         # inputs (PT0.0000001S etc.) round down to timedelta(0) -- treat both the same way.
         if not isinstance(delta, timedelta) or delta <= timedelta(0):
-            raise ValueError(
+            raise TimeSeriesConfigError(
+                "interval",
                 f"<generate interval=...> must be a positive duration of at least 1us "
                 f"(datetime.timedelta microsecond floor; months/years are not constant-length "
-                f"and not supported); got {value!r}"
+                f"and not supported); got {value!r}",
             )
         return delta

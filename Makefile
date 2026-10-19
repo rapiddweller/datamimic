@@ -1,9 +1,12 @@
-.PHONY: help install test test-unit test-integration test-functional coverage coverage-unit typecheck lint format check architecture-check architecture-definition-check architecture-version architecture-report architecture-validation-receipt architecture-cycle-check clean
+.PHONY: help install test test-unit test-integration test-functional coverage coverage-unit typecheck lint format check architecture-check architecture-definition-check architecture-version architecture-report architecture-validation-receipt architecture-cycle-check installed-authoring-check clean
+
+PYTHON ?= python
+INSTALLED_AUTHORING_ARGS ?=
 
 PACKAGE := datamimic_ce
 TESTS := tests_ce
 CE_COVERAGE_FILES := $(shell find $(PACKAGE) -type f -name '*.py')
-ARCHKEEL_SOURCE := archkeel==3.0.1
+ARCHKEEL_SOURCE := archkeel==4.0.1
 # The independent receipt includes the exact Python runtime.
 ARCHKEEL_PYTHON := 3.11.12
 ARCHITECTURE_DIR := test-artifacts/architecture/ce-recursive-target
@@ -11,6 +14,7 @@ ARCHITECTURE_DIR := test-artifacts/architecture/ce-recursive-target
 help:
 	@echo "Available targets:"
 	@echo "  install           Install project dependencies via uv"
+	@echo "  installed-authoring-check  Check an installed wheel in an isolated workspace"
 	@echo "  test              Run the full test suite"
 	@echo "  test-unit         Run unit tests only"
 	@echo "  test-integration  Run integration tests only"
@@ -29,6 +33,9 @@ help:
 
 install:
 	uv sync
+
+installed-authoring-check:
+	$(PYTHON) -I "$(CURDIR)/script/check_installed_authoring.py" $(INSTALLED_AUTHORING_ARGS)
 
 test:
 	pytest -q
@@ -79,7 +86,7 @@ architecture-validation-receipt:
 	@uvx --python $(ARCHKEEL_PYTHON) --from '$(ARCHKEEL_SOURCE)' archkeel validate --baseline known-violations.json --json > $(ARCHITECTURE_DIR)/validation.json; status=$$?; test "$$status" -eq 0 || test "$$status" -eq 2
 
 architecture-check: architecture-cycle-check architecture-definition-check
-	uvx --python 3.11 --from pytest==8.3.5 pytest -q tests_ce/architecture/test_inner_architecture_target.py
+	uvx --python 3.11 --from pytest==8.3.5 pytest -q tests_ce/architecture/test_inner_architecture_target.py tests_ce/architecture/test_completion_gate.py
 	# ArchKeel ratchets type-only/package SCC edges; Pylint checks executable import cycles.
 	$(MAKE) architecture-validation-receipt architecture-report
 	uvx --python $(ARCHKEEL_PYTHON) --from '$(ARCHKEEL_SOURCE)' archkeel report --input $(ARCHITECTURE_DIR)/architecture.json --only architecture --full --json > $(ARCHITECTURE_DIR)/completion.json

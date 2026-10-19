@@ -1,35 +1,28 @@
 # DATAMIMIC Community Edition
 
-> DATAMIMIC is a model-driven, deterministic-first test data platform. The
-> Community Edition is the open-source engine: author new business intent in
-> model.dm.json, compile it deterministically to executable XML, and generate
-> synthetic records, transform sources, or pseudonymize exports. Existing raw
-> XML remains supported. Python-native, MIT-licensed, with a CLI and optional MCP
-> adapter for AI agents.
+> MIT-licensed Python engine for deterministic synthetic data and pseudonymization.
+> XML is the persisted executable project; DM JSON is its transient agent view.
+> Build expectations and proof declarations belong to each transaction.
 
-Agents working in a checkout must read AGENTS.md first and use
-`.venv/bin/datamimic`; it carries the tool-selection contract, authoring flow,
-and semantic rules that cause most failures.
+Read [AGENTS.md](AGENTS.md) first. In a checkout use `.venv/bin/datamimic`.
 
-## Authoring the DSL
+## Authoring
 
-- [Agent guide](AGENTS.md): read first; CLI tool selection, submit-early authoring flow with a worked example and structural recipes (nested FK, memstore pipeline, time series), raw XML compatibility flow, repair and stop policy
-- Live structural discovery: `datamimic capabilities` returns a compact annotated JSON index; `--full` for the complete manifest, `--section <name>` for one section
-- Targeted Intent Model reference (for a specific unknown, not front-loaded): `datamimic reference authoring`, then `datamimic reference authoring --category <category> --kind <kind>`
-- New model: start from AGENTS.md's minimal document shape, submit early via `datamimic scaffold model.dm.json --format json`, repair from structured issues, declare an expectation per stated requirement, and stop on `verified=true`
-- Existing raw XML: `datamimic lint <path> --format json`, then bounded `datamimic dry-run <path> --format json`; inspect intent before `datamimic run <path>`
-- Recipes and DSL specifics: query a narrow `datamimic reference` topic/name instead of guessing
-
-## Runnable examples
-
+- [Agent guide](AGENTS.md): typed Build example, proof scope, DSL semantics.
+- `datamimic authoring schema`: current DM JSON schema; `--name build_request_v4` for the transaction.
+- `datamimic authoring capabilities`: compact CE vocabulary; `--full` includes contracts.
+- `datamimic authoring capability --domain element --name generate`: one exact capability.
+- `datamimic authoring reference --topic assembly --name model`: focused authoring guidance.
+- `datamimic authoring build -`: stdin transaction; repair diagnostics; stop on `outcome=ready` and persist `artifact.compiled_xml`.
+- `datamimic authoring decompile model.xml`: transient DM JSON; expectations must be supplied again.
+- Existing XML: `datamimic authoring lint model.xml`, then `authoring dry-run model.xml`; real execution uses `datamimic run model.xml`.
+- [Worked Build transactions](docs/examples/authoring.md): nested FK, memstore readback, time series.
+- [Migration](docs/migrations/authoring-errors.md): frozen legacy intent compiler → XML and separate Build proof.
 
 ## Project
 
-- [README](README.md): what CE contains, CE vs Enterprise Platform, determinism contract
+- [README](README.md): CE, Enterprise Platform and determinism boundaries.
 - [Contributing](CONTRIBUTING.md)
-
-## Optional
-
-- [MCP quickstart](docs/mcp_quickstart.md): optional adapter over the same authoring service
+- [MCP quickstart](docs/mcp_quickstart.md): optional adapter over the same application.
 - [Developer guide](docs/developer_guide.md)
-- [Data domains](docs/data-domains): built-in domain documentation
+- [Data domains](docs/data-domains): Python domain documentation.

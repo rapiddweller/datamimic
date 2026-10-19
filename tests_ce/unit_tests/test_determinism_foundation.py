@@ -10,8 +10,11 @@ import subprocess
 import sys
 from datetime import datetime, timezone
 
+import pytest
+
 from datamimic_ce.domains.domain_core.runtime import from_epoch_utc, now_utc_naive, resolve_clock, to_epoch_utc
 from datamimic_ce.domains.domain_core.runtime.clock import DETERMINISTIC_ANCHOR
+from datamimic_ce.domains.domain_core.runtime.determinism import frozen_clock
 
 # ---------- now_utc_naive / resolve_clock ----------------------------------
 
@@ -60,3 +63,16 @@ def test_seeded_generator_byte_identical_across_python_invocations() -> None:
     out_a = subprocess.check_output([sys.executable, "-c", script], text=True).strip()
     out_b = subprocess.check_output([sys.executable, "-c", script], text=True).strip()
     assert out_a == out_b, "seeded generator output drifted across Python processes."
+
+
+@pytest.mark.parametrize(
+    ("value", "utc_hour"),
+    [
+        ("2026-01-01T12:00:00Z", 12),
+        ("2026-01-01T12:00:00+00:00", 12),
+        ("2026-01-01T12:00:00+02:00", 10),
+        ("2026-01-01T12:00:00", 12),
+    ],
+)
+def test_frozen_clock_accepts_iso_utc_and_offsets(value: str, utc_hour: int) -> None:
+    assert frozen_clock(value) == datetime(2026, 1, 1, utc_hour, tzinfo=timezone.utc)

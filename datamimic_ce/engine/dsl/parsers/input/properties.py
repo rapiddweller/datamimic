@@ -2,10 +2,14 @@
 
 from pathlib import Path
 
+from datamimic_ce.engine.dsl.parsers.input.resource import read_resource_bytes, resource_reader_active
+
 _PROPERTY_LINES: dict[str, tuple[str, ...]] = {}
 
 
 def _read_property_lines(path: Path, encoding: str) -> tuple[str, ...]:
+    if resource_reader_active():
+        return tuple(read_resource_bytes(path).decode(encoding).splitlines(keepends=True))
     cache_key = str(path)
     if cache_key not in _PROPERTY_LINES:
         try:

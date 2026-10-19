@@ -1,1 +1,1 @@
-"""Authoring use cases."""
+"""Authoring application use cases."""

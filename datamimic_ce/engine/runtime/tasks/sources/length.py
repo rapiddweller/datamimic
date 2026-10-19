@@ -65,7 +65,7 @@ def set_data_source_length(ctx: SetupContext | GenIterContext, stmt: Statement) 
                 raise TypeError("Script source result has no length")
             ds_len = len(data)
         except Exception as e:
-            logger.debug(f"Cannot get length of script data before generating data: {e}")
+            logger.debug(f"Cannot get length of script data before generating data: {type(e).__name__}")
             return
     # Check length of data source
     else:

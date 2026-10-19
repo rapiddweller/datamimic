@@ -48,7 +48,7 @@
       },
       {
         "path": "datamimic_ce/domains/domain_core/datasets/path.py",
-        "responsibility": "This module resolves the domain data root, including the environment override and US fallback, and suppresses repeated fallback warnings."
+        "responsibility": "Owns configured dataset paths and the exact installed package data root without environment override for packaged-data identity."
       },
       {
         "path": "datamimic_ce/domains/domain_core/property_cache.py",
@@ -298,7 +298,9 @@
         "datamimic_ce.domains.domain_core.runtime.determinism",
         "datamimic_ce.domains.domain_core.runtime.rng",
         "datamimic_ce.domains.domain_core.runtime.rng_uuid:uuid4_from_random",
-        "datamimic_ce.domains.domain_core.runtime.run_seed"
+        "datamimic_ce.domains.domain_core.runtime.run_seed",
+        "datamimic_ce.domains.domain_core.datasets.path:packaged_domain_data_root",
+        "datamimic_ce.domains.domain_core.datasets.path:configured_dataset_overrides"
       ],
       "decided_by": "agent"
     },

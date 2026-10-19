@@ -9,7 +9,8 @@ import os
 import platform
 import sys
 import time
-from contextlib import contextmanager
+from contextlib import AbstractContextManager
+from types import TracebackType
 from typing import Literal
 
 import psutil
@@ -69,20 +70,29 @@ def log_system_info():
     logger.info(f"CPU architecture: {platform.machine()}")
 
 
-@contextmanager
-def gen_timer(process: Literal["generate", "export", "process"], report_logging: bool, product_name: str):
-    """Time a generate, export, or process operation."""
-    timer_result: dict = {}
-    if not report_logging:
-        yield timer_result
-        return
-    start_time = time.time()
-    try:
-        yield timer_result
-    finally:
-        records_count = timer_result.get("records_count", 0)
-        elapsed_time = time.time() - start_time
-        match process:
+class _GenerationTimer(AbstractContextManager[dict[str, int]]):
+    def __init__(self, process: Literal["generate", "export", "process"], report_logging: bool, product_name: str):
+        self._process = process
+        self._report_logging = report_logging
+        self._product_name = product_name
+        self._result: dict[str, int] = {}
+        self._start_time = 0.0
+
+    def __enter__(self) -> dict[str, int]:
+        self._start_time = time.time()
+        return self._result
+
+    def __exit__(
+        self,
+        exc_type: type[BaseException] | None,
+        exc_value: BaseException | None,
+        traceback: TracebackType | None,
+    ) -> None:
+        if not self._report_logging:
+            return
+        records_count = self._result.get("records_count", 0)
+        elapsed_time = time.time() - self._start_time
+        match self._process:
             case "generate":
                 process_name = "Generating"
             case "export":
@@ -90,11 +100,18 @@ def gen_timer(process: Literal["generate", "export", "process"], report_logging:
             case _:
                 process_name = "Processing"
         logger.info(
-            f"{process_name} {records_count:,} records '{product_name}' took {round(elapsed_time, 5)} seconds "
+            f"{process_name} {records_count:,} records '{self._product_name}' took {round(elapsed_time, 5)} seconds "
             f"({int(records_count / elapsed_time):,} records/second)"
             if elapsed_time > 0
             else "N/A records/second"
         )
+
+
+def gen_timer(
+    process: Literal["generate", "export", "process"], report_logging: bool, product_name: str
+) -> AbstractContextManager[dict[str, int]]:
+    """Time operations without contextlib rewriting frozen domain exceptions."""
+    return _GenerationTimer(process, report_logging, product_name)
 
 
 def format_memory_size(size_in_mb: float) -> str:

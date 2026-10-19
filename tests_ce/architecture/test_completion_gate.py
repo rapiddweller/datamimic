@@ -108,3 +108,13 @@ def test_validation_uncertainty_cannot_bypass_completion(change):
         review["validation_digest"] = digest(validation)
     with pytest.raises(ValueError):
         check_completion(validation, report, review)
+
+
+@pytest.mark.parametrize("source", ["validation", "report"])
+def test_reviewed_usage_uncertainty_cannot_hide_measurement_failure(source):
+    validation, report, review = publication_packet()
+    result = validation if source == "validation" else report
+    result["failures"] = ["measurement budget exceeded in calls_unresolved: 1278->1395"]
+    review["validation_digest"] = digest(validation)
+    with pytest.raises(ValueError, match="failures remain"):
+        check_completion(validation, report, review)

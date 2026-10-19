@@ -8,6 +8,7 @@ from pathlib import Path
 import pytest
 
 from datamimic_ce.interfaces.python.data_mimic_test import DataMimicTest
+from datamimic_ce.errors import IssueCode, ParserValidationError
 
 _DIR = Path(__file__).resolve().parent
 
@@ -46,10 +47,16 @@ def test_execute_script_non_string_value_raises():
 
 
 def test_execute_script_plus_uri_is_a_parse_error():
-    with pytest.raises(Exception, match=r"exactly one of"):
+    from pydantic import ValidationError
+
+    with pytest.raises(ParserValidationError) as rejected:
         _run("execute_script_and_uri.xml")
+    assert rejected.value.issue_code is IssueCode.PARSER_VALIDATION_FAILED
+    assert isinstance(rejected.value.__cause__, ValidationError)
+    assert rejected.value.validation_errors
 
 
 def test_execute_script_plus_inline_body_is_a_parse_error():
-    with pytest.raises(Exception, match=r"exactly one of"):
+    with pytest.raises(ParserValidationError) as rejected:
         _run("execute_script_and_body.xml")
+    assert rejected.value.issue_code is IssueCode.PARSER_EXECUTE_INVALID_SOURCE

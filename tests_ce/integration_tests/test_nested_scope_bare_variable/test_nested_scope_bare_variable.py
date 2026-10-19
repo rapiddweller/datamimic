@@ -8,6 +8,7 @@ from pathlib import Path
 
 import pytest
 
+from datamimic_ce.errors import IssueCode, TaskConfigError
 from datamimic_ce.interfaces.python.data_mimic_test import DataMimicTest
 from datamimic_ce.interfaces.python.factory import DataMimicTestFactory
 
@@ -38,8 +39,13 @@ def test_bare_variable_does_not_reach_up_past_self():
     two scopes up) must still fail loud with the scope-rule guidance, not silently resolve - the
     same as before this fix, just scoped to the self-only bare resolution it adds."""
     engine = DataMimicTest(_dir, "nested_scope_reach_up.xml", capture_test_result=True)
-    with pytest.raises(ValueError, match="not defined in this scope"):
+    with pytest.raises(TaskConfigError, match="expression 'configured expression': NameError") as caught:
         engine.test_with_timer()
+    assert caught.value.issue_code is IssueCode.TASK_EXPRESSION_EVAL_FAILED
+    assert type(caught.value.__cause__) is NameError
+    assert caught.value.__cause__.name == "mid"
+    assert "intermediate ancestor names need qualification" in str(caught.value)
+    assert "parent.name" in str(caught.value)
 
 
 def test_own_bare_variable_does_not_override_ancestor_of_same_name():

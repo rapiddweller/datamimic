@@ -19,6 +19,7 @@ from datamimic_ce.engine.dsl.statements.base.composite_statement import Composit
 from datamimic_ce.engine.dsl.statements.base.statement import Statement
 from datamimic_ce.engine.dsl.vocabulary.constants.attribute_constants import ATTR_ID, ATTR_NAME
 from datamimic_ce.engine.dsl.vocabulary.constants.element_constants import EL_COMMENT, EL_DATABASE, EL_MONGODB
+from datamimic_ce.errors import DescriptorLocation, IssueCode, parser_validation_error
 
 
 class StatementParser(ABC):
@@ -101,8 +102,11 @@ class StatementParser(ABC):
         reserved_name_list = generator_class_name_list
         ele_name = self._element.get(ATTR_NAME, None)
         if ele_name in reserved_name_list:
-            raise ValueError(
-                f"Element <{xml_tag(self._element)}> name '{ele_name}' is a reserved name, please use another name"
+            raise parser_validation_error(
+                code=IssueCode.PARSER_RESERVED_NAME,
+                element_tag=xml_tag(self._element),
+                name=ele_name,
+                location=DescriptorLocation(xml_tag(self._element), attribute=ATTR_NAME),
             )
 
     def _validate_element_tag(self) -> None:
@@ -112,7 +116,12 @@ class StatementParser(ABC):
         """
         tag = xml_tag(self._element)
         if tag != self._valid_element_tag:
-            raise ValueError(f"Expect element tag name '{self._valid_element_tag}', but got '{tag}'")
+            raise parser_validation_error(
+                code=IssueCode.PARSER_INVALID_TAG,
+                expected=self._valid_element_tag,
+                actual=tag,
+                location=DescriptorLocation(tag),
+            )
 
     def set_and_validate_valid_sub_elements(self, valid_sub_ele_set: set | None) -> None:
         """
@@ -133,16 +142,20 @@ class StatementParser(ABC):
         # <comment> is an ignored documentation element accepted in any context.
         non_comment_children = [child for child in self._element if xml_tag(child) != EL_COMMENT]
         if len(self._valid_sub_elements) == 0 and len(non_comment_children) > 0:
-            raise ValueError(
-                f"""Element <{xml_tag(self._element)}>{
-                    " inside element " + f"'{composite_stmt.name}'" if composite_stmt is not None else ""
-                } does not accept any sub-elements"""
+            raise parser_validation_error(
+                code=IssueCode.PARSER_NO_SUBELEMENTS_ALLOWED,
+                element_tag=xml_tag(self._element),
+                parent_clause=f" inside element '{composite_stmt.name}'" if composite_stmt is not None else "",
+                location=DescriptorLocation(xml_tag(self._element)),
             )
         for child in non_comment_children:
             if xml_tag(child) not in self._valid_sub_elements:
-                raise ValueError(
-                    f"Element <{xml_tag(self._element)}> get invalid child <{xml_tag(child)}>"
-                    f", expects: {', '.join(map(lambda ele: f'<{ele}>', self._valid_sub_elements))}, "
+                raise parser_validation_error(
+                    code=IssueCode.PARSER_INVALID_CHILD,
+                    element_tag=xml_tag(self._element),
+                    child_tag=xml_tag(child),
+                    expected=", ".join(f"<{tag}>" for tag in sorted(self._valid_sub_elements)),
+                    location=DescriptorLocation(xml_tag(self._element)),
                 )
 
     def validate_attributes(
@@ -177,10 +190,20 @@ class StatementParser(ABC):
                     f"Failed while parsing attributes of element <{xml_tag(self._element)}> "
                     f"naming '{self._element.get(ATTR_NAME) or self._element.get(ATTR_ID)}':"
                 )
-            for err_detail in err.errors():
+            details = err.errors(include_input=False, include_context=False)
+            for err_detail in details:
                 loc_list = err_detail.get("loc")
-                loc = loc_list[0] if loc_list is not None and len(loc_list) > 0 else None
+                loc = ".".join(map(str, loc_list)) if loc_list else None
                 msg = err_detail.get("msg")
-                new_msg = f"\n - {msg}" if loc == "__root__" else f"\n - {loc}: {msg}"
+                new_msg = f"\n - {msg}" if loc in (None, "__root__") else f"\n - {loc}: {msg}"
                 msg_err = msg_err + new_msg
-            raise ValueError(msg_err) from err
+            validation_errors: tuple[dict[str, object], ...] = tuple(
+                {"loc": tuple(detail["loc"]), "type": detail["type"], "msg": detail["msg"]}
+                for detail in details
+            )
+            raise parser_validation_error(
+                code=IssueCode.PARSER_VALIDATION_FAILED,
+                details=msg_err,
+                validation_errors=validation_errors,
+                location=DescriptorLocation(xml_tag(self._element)),
+            ) from err

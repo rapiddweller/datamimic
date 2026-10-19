@@ -3,27 +3,37 @@
 from __future__ import annotations
 
 import secrets
+from pathlib import Path, PurePosixPath
 from typing import Protocol
 
 from anyio import to_thread
 from fastmcp import FastMCP
+from pydantic import JsonValue
 from starlette.applications import Starlette
 from starlette.middleware.base import BaseHTTPMiddleware, RequestResponseEndpoint
 from starlette.requests import Request
 from starlette.responses import JSONResponse, Response
 from starlette.status import HTTP_401_UNAUTHORIZED
 
-from datamimic_ce.authoring.api import check, reference, run, scaffold
-from datamimic_ce.authoring.contracts import (
-    CheckRequest,
+from datamimic_ce.authoring import AuthoringApplication, create_authoring_application
+from datamimic_ce.authoring.domain.capabilities import CapabilityDomain, CapabilityLookupResult
+from datamimic_ce.authoring.domain.reference import ReferenceResult
+from datamimic_ce.authoring.domain.requests import (
+    DEFAULT_AUTHORING_DESCRIPTOR_PATH,
+    AuthoringSchemaId,
+    BuildRequestV4,
+    BuildResult,
+    CompileDocumentRequest,
+    CompileDocumentResult,
+    DecompileDocumentRequest,
+    DecompileDocumentResult,
+    LintRequest,
     LintResult,
     ReferenceRequest,
-    ReferenceResult,
     RunRequest,
     RunResult,
-    ScaffoldRequest,
-    ScaffoldResult,
 )
+from datamimic_ce.domains.api import get_datamimic_lib_version
 
 
 class MountableApplication(Protocol):
@@ -45,49 +55,71 @@ class APIKeyMiddleware(BaseHTTPMiddleware):
         return await call_next(request)
 
 
-def create_server() -> FastMCP:
+def create_server(
+    *, workspace_root: Path | None = None, descriptor_path: PurePosixPath = DEFAULT_AUTHORING_DESCRIPTOR_PATH
+) -> FastMCP:
     server = FastMCP(name="datamimic-ce", version=None)
+    root = workspace_root or Path.cwd()
 
-    @server.tool("datamimic_check")
-    async def datamimic_check(request: CheckRequest) -> LintResult:
-        """Lint one DATAMIMIC XML descriptor without executing it.
+    def application(path: PurePosixPath = descriptor_path) -> AuthoringApplication:
+        return create_authoring_application(workspace_root=root, descriptor_path=path)
 
-        Provide exactly one inline xml document or server-local path. Repair every
-        error diagnostic before calling datamimic_run.
-        """
+    @server.tool("datamimic_version")
+    async def datamimic_version() -> dict[str, str]:
+        """Show the installed CE package version."""
+        version = await to_thread.run_sync(get_datamimic_lib_version)
+        return {"ce_version": version or "unknown"}
 
-        return await to_thread.run_sync(check, request)
+    @server.tool("datamimic_schema")
+    async def datamimic_schema(name: AuthoringSchemaId = AuthoringSchemaId.DM_JSON_DOCUMENT_V1) -> dict[str, JsonValue]:
+        """Read one schema generated from the running Authoring contract."""
+        return await to_thread.run_sync(application().schema, name)
 
-    @server.tool("datamimic_run")
-    async def datamimic_run(request: RunRequest) -> RunResult:
-        """Safely execute one bounded DATAMIMIC XML dry-run.
+    @server.tool("datamimic_capabilities")
+    async def datamimic_capabilities(full: bool = False) -> dict[str, object]:
+        """Discover CE runtime vocabulary; full includes each registered contract."""
+        snapshot = await to_thread.run_sync(application().capabilities)
+        return snapshot.to_dict() if full else snapshot.to_index_dict()
 
-        Counts are capped and write targets are neutralized unless the caller
-        explicitly enables side effects. Inspect captured samples and diagnostics.
-        """
-
-        return await to_thread.run_sync(run, request)
+    @server.tool("datamimic_capability")
+    async def datamimic_capability(domain: CapabilityDomain, name: str) -> CapabilityLookupResult:
+        """Read one exact registered CE capability, or its typed not-found result."""
+        return await to_thread.run_sync(application().capability, domain, name)
 
     @server.tool("datamimic_reference")
     async def datamimic_reference(request: ReferenceRequest) -> ReferenceResult:
-        """Query canonical DATAMIMIC DSL and intent-model reference data.
+        """Read one model-derived reference topic or named contract."""
+        return await to_thread.run_sync(application().reference, request)
 
-        Start with topic=overview or topic=authoring, then request one narrow
-        element, rule, category, or typed authoring variant.
-        """
+    @server.tool("datamimic_compile")
+    async def datamimic_compile(request: CompileDocumentRequest) -> CompileDocumentResult:
+        """Compile transient DM JSON to XML without claiming Build readiness."""
+        return await to_thread.run_sync(application(request.descriptor_path).compile_document, request)
 
-        return await to_thread.run_sync(reference, request)
+    @server.tool("datamimic_decompile")
+    async def datamimic_decompile(request: DecompileDocumentRequest) -> DecompileDocumentResult:
+        """Read persisted XML as transient DM JSON; proof declarations remain separate."""
+        return await to_thread.run_sync(application(request.descriptor_path).decompile_document, request)
 
-    @server.tool("datamimic_scaffold")
-    async def datamimic_scaffold(request: ScaffoldRequest) -> ScaffoldResult:
-        """Compile and verify one intent model.
+    @server.tool("datamimic_build")
+    async def datamimic_build(request: BuildRequestV4) -> BuildResult:
+        """Compile and prove one Build transaction with expectations, roles and optional gates."""
+        return await to_thread.run_sync(application(request.descriptor_path).build, request)
 
-        Use acceptance_requirements only for caller-owned, transaction-scoped
-        assertions that must be checked without mutating the submitted model.
-        Their result source is reported as caller.
-        """
+    @server.tool("datamimic_lint")
+    async def datamimic_lint(request: LintRequest) -> LintResult:
+        """Validate XML without executing it."""
+        return await to_thread.run_sync(application().lint, request)
 
-        return await to_thread.run_sync(scaffold, request)
+    @server.tool("datamimic_dry_run")
+    async def datamimic_dry_run(request: RunRequest) -> RunResult:
+        """Inspect bounded XML execution with write targets isolated."""
+        return await to_thread.run_sync(application(request.descriptor_path).dry_run, request)
+
+    @server.tool("datamimic_run")
+    async def datamimic_run(request: RunRequest) -> RunResult:
+        """Execute bounded XML; external writes require explicit allow_side_effects."""
+        return await to_thread.run_sync(application(request.descriptor_path).run, request)
 
     return server
 

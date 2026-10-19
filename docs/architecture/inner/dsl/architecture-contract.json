@@ -49,6 +49,18 @@
       {
         "path": "datamimic_ce/engine/dsl/vocabulary/source_capabilities.py",
         "responsibility": "SourceCapability facts determine format and client or memstore suitability; they describe data source families rather than individual attribute rules."
+      },
+      {
+        "path": "datamimic_ce/engine/dsl/vocabulary/contracts/dsl_element.py",
+        "responsibility": "Defines pure element-content modes and bounded-execution metadata shared by registry consumers."
+      },
+      {
+        "path": "datamimic_ce/engine/dsl/vocabulary/product_identity.py",
+        "responsibility": "Owns the CE capture product-name convention shared by runtime and acceptance."
+      },
+      {
+        "path": "datamimic_ce/engine/dsl/vocabulary/value_literals.py",
+        "responsibility": "Owns CE inline literal-value interpretation shared by runtime generation and acceptance."
       }
     ]
   },
@@ -61,13 +73,14 @@
         "datamimic_ce.engine.dsl.api"
       ],
       "responsibilities": [
-        "Supported grammar/parser entry and capability projection."
+        "Supported grammar/parser entry and capability projection; Publish registry-derived CE grammar facts and the existing parser entry, including in-memory parsing with descriptor-relative resources."
       ],
       "forbidden_responsibilities": [
         "Duplicate element definitions or execute descriptors."
       ],
       "provenance": [
-        "docs/architecture/inner/target.md"
+        "docs/architecture/inner/target.md",
+        "docs/migrations/authoring-errors.md"
       ],
       "requires": [
         {
@@ -124,7 +137,10 @@
         "datamimic_ce.engine.dsl.vocabulary.enums.distribution_enums",
         "datamimic_ce.engine.dsl.vocabulary.enums.faker_enums",
         "datamimic_ce.engine.dsl.vocabulary.enums.operation_enums",
-        "datamimic_ce.engine.dsl.vocabulary.source_capabilities"
+        "datamimic_ce.engine.dsl.vocabulary.source_capabilities",
+        "datamimic_ce.engine.dsl.vocabulary.contracts.dsl_element",
+        "datamimic_ce.engine.dsl.vocabulary.product_identity:capture_product_name",
+        "datamimic_ce.engine.dsl.vocabulary.value_literals:parse_literal_values"
       ],
       "decided_by": "agent"
     },
@@ -136,13 +152,14 @@
         "datamimic_ce.engine.dsl.model"
       ],
       "responsibilities": [
-        "Descriptor validation models and constraints."
+        "Descriptor validation models and constraints; Own element kinds, aliases, attributes, body-content, child, constraint and bounded metadata; no duplicate codec vocabulary."
       ],
       "forbidden_responsibilities": [
         "Construct parser implementations or execute tasks."
       ],
       "provenance": [
-        "docs/architecture/inner/target.md"
+        "docs/architecture/inner/target.md",
+        "docs/migrations/authoring-errors.md"
       ],
       "requires": [
         {
@@ -185,6 +202,7 @@
         "datamimic_ce.engine.dsl.model.setup.demographics_model:DemographicsModel",
         "datamimic_ce.engine.dsl.model.generation.generate_model:GenerateModel",
         "datamimic_ce.engine.dsl.model.generation.timeseries:TimeSeriesConfig",
+        "datamimic_ce.engine.dsl.model.generation.timeseries:TimeSeriesConfigError",
         "datamimic_ce.engine.dsl.model.generation.timeseries:TimeSeriesNamespace",
         "datamimic_ce.engine.dsl.model.registry:ElementDefinition",
         "datamimic_ce.engine.dsl.model.registry:canonical_tag",
@@ -273,13 +291,14 @@
         "datamimic_ce.engine.dsl.parsers"
       ],
       "responsibilities": [
-        "Ordered document parsing and concrete parser dispatch."
+        "Ordered document parsing and concrete parser dispatch; Parse files and in-memory XML through one normal statement path; errors use catalog factories with logical locations."
       ],
       "forbidden_responsibilities": [
         "Own a second grammar catalog or execute descriptors."
       ],
       "provenance": [
-        "docs/architecture/inner/target.md"
+        "docs/architecture/inner/target.md",
+        "docs/migrations/authoring-errors.md"
       ],
       "requires": [
         {
@@ -304,7 +323,11 @@
         "datamimic_ce.engine.dsl.parsers.input.target:parse_function_string",
         "datamimic_ce.engine.dsl.parsers.input.xml:DTDForbiddenError",
         "datamimic_ce.engine.dsl.parsers.input.xml:parse_xml_file",
-        "datamimic_ce.engine.dsl.parsers.input.xml:parse_xml_source"
+        "datamimic_ce.engine.dsl.parsers.input.xml:parse_xml_source",
+        "datamimic_ce.engine.dsl.parsers.input.resource:ResourceReader",
+        "datamimic_ce.engine.dsl.parsers.input.resource:read_resource_bytes",
+        "datamimic_ce.engine.dsl.parsers.input.resource:resource_reader_scope",
+        "datamimic_ce.engine.dsl.parsers.input.resource:resource_reader_active"
       ],
       "decided_by": "agent",
       "inside": "docs/architecture/inner/dsl/parsers/architecture-contract.json"
@@ -413,8 +436,11 @@
       "root": "datamimic_ce.engine.dsl.vocabulary",
       "allowed_children": [
         "datamimic_ce.engine.dsl.vocabulary.constants",
+        "datamimic_ce.engine.dsl.vocabulary.contracts",
         "datamimic_ce.engine.dsl.vocabulary.enums",
-        "datamimic_ce.engine.dsl.vocabulary.source_capabilities"
+        "datamimic_ce.engine.dsl.vocabulary.product_identity",
+        "datamimic_ce.engine.dsl.vocabulary.source_capabilities",
+        "datamimic_ce.engine.dsl.vocabulary.value_literals"
       ],
       "rationale": "Canonical descriptor constants and enums. Exact reviewed target children; no hidden extra modules.",
       "provenance": [
@@ -453,6 +479,19 @@
       "rationale": "Canonical descriptor constants and enums. Exact reviewed target children; no hidden extra modules.",
       "provenance": [
         "docs/architecture/inner/structure-review.json"
+      ],
+      "decided_by": "agent"
+    },
+    {
+      "id": "LAYOUT-ENGINE-DSL-VOCABULARY-CONTRACTS",
+      "kind": "root_layout",
+      "root": "datamimic_ce.engine.dsl.vocabulary.contracts",
+      "allowed_children": [
+        "datamimic_ce.engine.dsl.vocabulary.contracts.dsl_element"
+      ],
+      "rationale": "Exact reviewed portable metadata, error-context or contract-export modules; no implicit extra files.",
+      "provenance": [
+        "docs/migrations/authoring-errors.md"
       ],
       "decided_by": "agent"
     }

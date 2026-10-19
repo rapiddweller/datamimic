@@ -7,11 +7,10 @@
 from datamimic_ce.authoring.domain.rules import (
     best_practice,
     cross_statement,
-    intent_rules,
     schema_rules,
     semantic_rules,
 )
-from datamimic_ce.authoring.domain.rules.base import IntentLintContext, IntentRule, LintContext, Rule
+from datamimic_ce.authoring.domain.rules.base import LintContext, Rule
 
 ALL_RULES: tuple[type[Rule], ...] = (
     *schema_rules.RULES,
@@ -19,6 +18,5 @@ ALL_RULES: tuple[type[Rule], ...] = (
     *best_practice.RULES,
     *cross_statement.RULES,
 )
-ALL_INTENT_RULES: tuple[type[IntentRule], ...] = intent_rules.RULES
 
-__all__ = ["ALL_INTENT_RULES", "ALL_RULES", "IntentLintContext", "IntentRule", "LintContext", "Rule"]
+__all__ = ["ALL_RULES", "LintContext", "Rule"]

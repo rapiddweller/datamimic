@@ -6,6 +6,7 @@ from pathlib import Path
 from typing import Literal
 
 from datamimic_ce.engine.dsl.vocabulary.constants.attribute_constants import ATTR_ENVIRONMENT, ATTR_ID, ATTR_SYSTEM
+from datamimic_ce.errors import IssueCode, client_config_error
 
 logger = logging.getLogger("DATAMIMIC")
 
@@ -31,7 +32,7 @@ def fulfill_credentials(
         if system_type in ["db", "mongo", "kafka", "dwh", "object-storage"]:
             system = descriptor_attr.get(ATTR_ID)
         else:
-            raise ValueError(f"System type '{system_type}' is not supported")
+            raise client_config_error(code=IssueCode.CLIENT_SYSTEM_TYPE_UNSUPPORTED, system_type=system_type)
 
     conf_props = env_props if env_props else {}
     if environment and system:

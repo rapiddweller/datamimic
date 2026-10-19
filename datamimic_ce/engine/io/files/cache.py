@@ -7,6 +7,8 @@
 from collections.abc import Callable
 from typing import ClassVar
 
+from datamimic_ce.engine.dsl.parsers.input.resource import resource_reader_active
+
 
 class FileContentStorage:
     """
@@ -35,6 +37,8 @@ class FileContentStorage:
         :param read_func:
         :return:
         """
+        if resource_reader_active():
+            return read_func()
         # Try to load from storage
         if cache_key in cls._file_data_cache:
             return cls._file_data_cache[cache_key]

@@ -9,6 +9,7 @@ from pathlib import Path
 from datamimic_ce.engine.io.contracts import Exporter
 from datamimic_ce.engine.io.exporters.core.exporter_config import ExporterConfig
 from datamimic_ce.engine.io.exporters.core.exporter_state_manager import ExporterStateManager
+from datamimic_ce.errors import is_user_error
 
 logger = logging.getLogger("DATAMIMIC")
 
@@ -98,6 +99,8 @@ class UnifiedBufferedExporter(Exporter, ABC):
                 self._write_data_to_buffer(batch, worker_id, chunk_idx)
                 return
             except Exception as e:
+                if is_user_error(e):
+                    raise
                 logger.error(f"Attempt {attempt + 1} failed to write batch: {e}")
                 if attempt == self.MAX_RETRIES - 1:
                     raise BufferFileError(f"Failed to write batch after {self.MAX_RETRIES} attempts: {e}") from e
@@ -207,6 +210,8 @@ class UnifiedBufferedExporter(Exporter, ABC):
             for buffer_file in self._get_buffer_tmp_dir(worker_id).glob(pattern):
                 self._finalize_buffer_file(buffer_file)
         except Exception as e:
+            if is_user_error(e):
+                raise
             logger.error(f"Failed to finalize chunks: {e}")
             raise ExportError(f"Failed to finalize chunks: {e}") from e
 

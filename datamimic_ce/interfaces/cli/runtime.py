@@ -15,6 +15,7 @@ from pydantic import BaseModel, ConfigDict, Field, ValidationError
 from datamimic_ce.domains.api import get_datamimic_lib_version
 from datamimic_ce.engine.runtime.api import load_descriptor_properties, run
 from datamimic_ce.engine.runtime.contracts import PlatformConfiguration, RunRequest
+from datamimic_ce.errors import DomainError, UserErrorBase
 from datamimic_ce.interfaces.cli import presenter as cli_presenter
 from datamimic_ce.interfaces.cli.presenter import DemoInformation, DemoSummary, SystemInformation
 from datamimic_ce.interfaces.demo import handle_demo
@@ -144,8 +145,7 @@ def execute_descriptor(
     params: list[str] | None = None,
     params_env: list[str] | None = None,
 ) -> None:
-    """Full runtime execution — intentionally bypasses authoring.application.service, which only
-    offers the bounded dry-run path. This is the production engine boundary."""
+    """Production execution uses the normal runtime lifecycle."""
     parameters = _runtime_parameters(params, params_env)
     descriptor = descriptor_path.resolve()
     if not descriptor.is_file():
@@ -167,6 +167,8 @@ def execute_descriptor(
                 test_mode=test_mode,
             )
         )
+    except (UserErrorBase, DomainError) as error:
+        cli_presenter.fail(error.message if isinstance(error, DomainError) else str(error), code=1)
     finally:
         os.chdir(original_directory)
         logger.info(f"Reverted working directory to: {original_directory}")

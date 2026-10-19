@@ -48,6 +48,7 @@ import requests
 from faker import Faker
 
 from datamimic_ce.domains.api import resolve_clock, uuid4_from_random
+from datamimic_ce.errors import IssueCode, task_config_error
 from datamimic_ce.randomness import RandomSource
 
 SAFE_GLOBALS: dict[str, object] = {
@@ -124,8 +125,13 @@ class _Uncontrolled:
         self._name = name
 
     def _refuse(self) -> ValueError:
-        return ValueError(
-            f"'{self._name}' draws entropy that <setup rngSeed> cannot replay; use random.* or a generator instead"
+        return task_config_error(
+            code=IssueCode.TASK_EXPRESSION_EVAL_FAILED,
+            expr=self._name,
+            error=(
+                f"'{self._name}' draws entropy that <setup rngSeed> cannot replay; "
+                "use random.* or a generator instead"
+            ),
         )
 
     def __getattr__(self, attr: str) -> object:
@@ -176,7 +182,7 @@ def expression_globals(
     anchor = resolve_clock(deterministic=True)
 
     def now(tz: datetime.tzinfo | None = None) -> datetime.datetime:
-        return anchor if tz is None else anchor.replace(tzinfo=datetime.timezone.utc).astimezone(tz)
+        return anchor if tz is None else anchor.replace(tzinfo=datetime.UTC).astimezone(tz)
 
     def seeded_random(
         x: int | float | str | bytes | bytearray | None | _OmittedRandomSeed = _OMITTED_RANDOM_SEED,

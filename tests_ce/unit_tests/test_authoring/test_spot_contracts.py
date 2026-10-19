@@ -7,12 +7,14 @@
 """Architecture contracts for the structural and business-rule SPOTs."""
 
 import ast
+import inspect
 from pathlib import Path
 
 import pytest
 from pydantic import BaseModel
 
-from datamimic_ce.authoring.adapters.reference import capabilities_manifest, element_reference
+from datamimic_ce.authoring import create_authoring_application
+from datamimic_ce.authoring.domain.capabilities import CapabilityDomain
 from datamimic_ce.authoring.domain.schema import build_schema_index, element_json_schema
 from datamimic_ce.engine.dsl.model.constraints import (
     KEY_DISTRIBUTION_VALUES,
@@ -46,8 +48,10 @@ def test_builtin_models_select_rules_from_the_central_registry() -> None:
         if canonical_tag(tag) != tag:
             continue
         model = get_model_class(tag)
-        model_rules = getattr(model, "__constraints__", ()) if model is not None else ()
-        assert model_rules == element_constraints(tag), f"<{tag}> model rules drifted from the rule registry"
+        model_rules = model.model_json_schema().get("constraints", []) if model is not None else []
+        assert model_rules == serialize_constraints(element_constraints(tag)), (
+            f"<{tag}> model rules drifted from the rule registry"
+        )
 
 
 def test_business_rules_only_reference_attributes_owned_by_their_model() -> None:
@@ -60,11 +64,11 @@ def test_business_rules_only_reference_attributes_owned_by_their_model() -> None
 
         model_attributes = {field.alias or name for name, field in model.model_fields.items()}
         referenced: set[str] = set()
-        for fact in element_constraints(tag):
+        for fact in serialize_constraints(element_constraints(tag)):
             for collection_name in ("attrs", "needs", "excludes", "unless"):
-                referenced.update(getattr(fact, collection_name, ()))
+                referenced.update(fact.get(collection_name, ()))
             for attribute_name in ("attr", "when_attr"):
-                attribute = getattr(fact, attribute_name, None)
+                attribute = fact.get(attribute_name)
                 if attribute is not None:
                     referenced.add(attribute)
 
@@ -86,9 +90,12 @@ def test_models_do_not_construct_business_rules_locally() -> None:
         "ValidValues",
         "AllowedValuesWhen",
     }
-    model_dir = Path(__file__).parents[3] / "datamimic_ce" / "model"
+    model_dir = Path(inspect.getfile(get_model_class)).parent
     violations: list[str] = []
-    for path in sorted(model_dir.glob("*_model.py")):
+    paths = sorted(model_dir.rglob("*_model.py"))
+    assert model_dir.is_dir() and len(paths) >= 20
+    assert {"generate_model.py", "database_model.py", "key_model.py"} <= {p.name for p in paths}
+    for path in paths:
         tree = ast.parse(path.read_text(encoding="utf-8"), filename=str(path))
         for node in ast.walk(tree):
             if isinstance(node, ast.Call) and isinstance(node.func, ast.Name) and node.func.id in constraint_types:
@@ -97,14 +104,14 @@ def test_models_do_not_construct_business_rules_locally() -> None:
 
 
 def test_distribution_projections_use_the_central_runtime_derived_facts() -> None:
-    manifest = capabilities_manifest()
+    snapshot = create_authoring_application().capabilities()
     source_values = resolved_values(SOURCE_DISTRIBUTION_VALUES)
     number_values = resolved_values(KEY_DISTRIBUTION_VALUES)
 
     assert source_values == frozenset(member.value for member in SourceDistribution)
     assert number_values == frozenset(member.value for member in NumberDistribution)
-    assert manifest["distributions"] == sorted(source_values)
-    assert manifest["numeric_distributions"] == sorted(number_values)
+    assert snapshot.capability_names(CapabilityDomain.SOURCE_DISTRIBUTION) == tuple(sorted(source_values))
+    assert snapshot.capability_names(CapabilityDomain.NUMERIC_DISTRIBUTION) == tuple(sorted(number_values))
 
     for tag in ("generate", "iterate", "variable", "nestedKey", "reference"):
         assert SOURCE_DISTRIBUTION_VALUES in element_constraints(tag)
@@ -121,9 +128,17 @@ def test_schema_and_reference_project_alias_specific_central_rules() -> None:
     index = build_schema_index()
     iterate_schema = index.get(EL_ITERATE)
     assert iterate_schema is not None and iterate_schema.constraints is iterate_rules
-    assert capabilities_manifest()["elements"][EL_ITERATE]["constraints"] == expected
+    document_schema = create_authoring_application().document_schema()
+    definitions = document_schema["$defs"]
+    node_ref = definitions["DmJsonNodeV1"]["discriminator"]["mapping"][canonical_tag(EL_ITERATE)]
+    assert definitions[node_ref.removeprefix("#/$defs/")]["x-datamimic-constraints"] == serialize_constraints(
+        generate_rules
+    )
     assert element_json_schema(EL_ITERATE)["constraints"] == expected
-    assert "at least one of: source" in element_reference(EL_ITERATE)
+    capability = create_authoring_application().capability(CapabilityDomain.ELEMENT, canonical_tag(EL_ITERATE))
+    assert capability.ok
+    assert EL_ITERATE in capability.capability.aliases
+    assert {field.xml_name for field in capability.capability.attributes} >= {"source"}
 
 
 def test_extension_rules_are_registered_once_and_project_without_model_copies() -> None:
@@ -138,6 +153,11 @@ def test_extension_rules_are_registered_once_and_project_without_model_copies() 
         schema = build_schema_index().get(tag)
         assert schema is not None and schema.constraints is rules
         assert element_json_schema(tag)["constraints"] == serialize_constraints(rules)
+        application = create_authoring_application()
+        assert application.capability(CapabilityDomain.ELEMENT, tag).ok
+        definitions = application.document_schema()["$defs"]
+        ref = definitions["DmJsonNodeV1"]["discriminator"]["mapping"][tag]
+        assert definitions[ref.removeprefix("#/$defs/")]["x-datamimic-constraints"] == serialize_constraints(rules)
     finally:
         unregister_element_extension(tag)
 

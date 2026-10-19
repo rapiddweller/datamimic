@@ -30,6 +30,7 @@ from datamimic_ce.engine.dsl.vocabulary.constants.element_constants import (
     EL_SETUP,
     EL_WHILE,
 )
+from datamimic_ce.errors import DescriptorLocation, IssueCode, include_error
 
 BUILTIN_PARSERS: dict[str, Callable[..., object]] = {}
 
@@ -166,7 +167,14 @@ def parse_sub_elements(
         if isinstance(stmt, IncludeStatement):
             uri: str = stmt.uri
             if "{" not in uri and uri.endswith(".properties"):
-                copied_props.update(parse_properties(descriptor_dir / uri))
+                try:
+                    copied_props.update(parse_properties(descriptor_dir / uri))
+                except FileNotFoundError as error:
+                    raise include_error(
+                        code=IssueCode.INCLUDE_FILE_NOT_FOUND,
+                        uri=Path(uri).name,
+                        location=DescriptorLocation("include", attribute="uri"),
+                    ) from error
 
         result.append(stmt)
 

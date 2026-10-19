@@ -7,73 +7,49 @@ from pathlib import Path
 from pydantic import JsonValue
 
 import datamimic_ce.authoring as authoring
-from datamimic_ce.authoring.contracts import ProductResult, RunResult, ScaffoldResult
+from datamimic_ce.authoring.domain.requests import ProductEvidence, RunResult, ReadyBuild, RejectedBuild
 from datamimic_ce.interfaces.cli import app
 
 ROOT = Path(__file__).parents[3]
 
 
 def test_authoring_payload_permissions_keep_complete_sample_shapes() -> None:
-    assert ProductResult.model_fields["sample"].annotation == list[dict[str, JsonValue]]
-    assert RunResult.model_fields["products"].annotation == list[ProductResult]
-    assert ScaffoldResult.model_fields["products"].annotation == list[ProductResult]
-
+    assert ProductEvidence.model_fields["rows"].annotation == tuple[dict[str, JsonValue], ...]
+    assert RunResult.model_fields["products"].annotation == tuple[ProductEvidence, ...]
+    assert ReadyBuild.model_fields["evidence"].annotation == tuple[ProductEvidence, ...]
+    assert RejectedBuild.model_fields["evidence"].annotation == tuple[ProductEvidence, ...]
     contract = json.loads((ROOT / "architecture-contract.json").read_text(encoding="utf-8"))
     rule = next(rule for rule in contract["rules"] if rule["id"] == "AUTHORING-API-TYPES")
-    assert rule["allowed_positions"] == [
-        {
-            "qualified_name": "datamimic_ce.authoring.api.run",
-            "position": "return",
-            "field_path": "products.sample",
-            "annotation": "list[dict[str, JsonValue]]",
-        },
-        {
-            "qualified_name": "datamimic_ce.authoring.api.scaffold",
-            "position": "return",
-            "field_path": "issues.repair.corrected_fragment",
-            "annotation": "dict[str, JsonValue]",
-        },
-        {
-            "qualified_name": "datamimic_ce.authoring.api.scaffold",
-            "position": "return",
-            "field_path": "products.sample",
-            "annotation": "list[dict[str, JsonValue]]",
-        },
-        {
-            "qualified_name": "datamimic_ce.authoring.api.scaffold",
-            "position": "return",
-            "field_path": "acceptance.results.observed_counts",
-            "annotation": "dict[str, int] | None",
-        },
-    ]
+    assert rule["source"] == "datamimic_ce.authoring.application.app"
+    assert any(entry["field_path"] == "evidence.rows" and entry["annotation"] == "tuple[dict[str, JsonValue], ...]"
+               for entry in rule["allowed_positions"])
 
 
 def test_authoring_exports_only_the_deliberate_canonical_api() -> None:
-    assert authoring.__all__ == [
-        "AuthoringSpecV1",
-        "ScaffoldRequest",
-        "ScaffoldResult",
-        "authoring_spec_json_schema",
-        "scaffold",
-    ]
+    assert authoring.__all__ == ["AuthoringApplication", "create_authoring_application"]
 
 
-def test_scaffold_render_errors_have_one_structured_owner() -> None:
-    assert "issues" in ScaffoldResult.model_fields
-    assert "error" not in ScaffoldResult.model_fields
+def test_rejected_build_owns_structured_diagnostics() -> None:
+    assert "diagnostics" in RejectedBuild.model_fields
+    assert "error" not in RejectedBuild.model_fields
 
 
 def test_cli_has_exact_command_surface() -> None:
-    assert {command.name for command in app.registered_commands} == {
+    assert {command.name for command in app.registered_commands} == {"version", "info", "init", "run"}
+    authoring = next(group.typer_instance for group in app.registered_groups if group.name == "authoring")
+    assert {command.name for command in authoring.registered_commands} == {
         "version",
-        "info",
+        "schema",
         "capabilities",
+        "capability",
         "reference",
-        "scaffold",
+        "compile",
+        "decompile",
+        "build",
         "lint",
         "dry-run",
-        "init",
         "run",
+        "export-contract",
     }
 
 
@@ -87,6 +63,8 @@ def test_cli_entry_module_contains_no_private_or_non_command_functions() -> None
 def test_transports_do_not_import_authoring_implementation_modules() -> None:
     forbidden = {
         "datamimic_ce.authoring.application.compiler",
+        "datamimic_ce.authoring.adapters.dm_json_codec",
+        "datamimic_ce.authoring.adapters.bounded_executor",
         "datamimic_ce.authoring.adapters.dryrun",
         "datamimic_ce.authoring.adapters.linter",
         "datamimic_ce.authoring.adapters.reference",

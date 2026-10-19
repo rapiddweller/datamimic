@@ -5,6 +5,7 @@
 # For questions and support, contact: info@rapiddweller.com
 
 from collections.abc import Callable, Mapping
+from typing import TypeVar
 
 from datamimic_ce.engine.dsl.parsers.input.target import parse_function_string
 from datamimic_ce.engine.dsl.vocabulary.constants.exporter_constants import (
@@ -42,6 +43,7 @@ from datamimic_ce.engine.io.exporters.formats.txt_exporter import TXTExporter
 from datamimic_ce.engine.io.exporters.formats.xlsx_exporter import XLSXExporter
 from datamimic_ce.engine.io.exporters.formats.xml_exporter import XMLExporter
 from datamimic_ce.engine.io.memstore import Memstore
+from datamimic_ce.errors import IssueCode, export_config_error
 
 _BufferedExporterFactory = Callable[[ExporterConfig, dict], UnifiedBufferedExporter]
 _BUFFERED_EXPORTERS: dict[str, _BufferedExporterFactory] = {
@@ -74,7 +76,9 @@ def create_exporter_list(
     try:
         parsed_targets = parse_function_string(",".join(list(targets)))
     except ValueError as e:
-        raise ValueError(f"Error parsing target string: {e}") from e
+        raise export_config_error(
+            code=IssueCode.EXPORT_TARGET_PARSE_FAILED, targets=", ".join(targets), error=str(e)
+        ) from e
 
     for target in parsed_targets:
         exporter_name = target["function_name"]
@@ -85,9 +89,11 @@ def create_exporter_list(
                 operation = ExportOperation(operation_raw)
             except ValueError:
                 valid = ", ".join(op.value for op in ExportOperation)
-                raise ValueError(
-                    f"Unknown client operation '{operation_raw}' in target '{exporter_name}'. "
-                    f"Valid operations: {valid}; a plain client id inserts."
+                raise export_config_error(
+                    code=IssueCode.EXPORT_OPERATION_UNSUPPORTED,
+                    operation=operation_raw,
+                    client_name=consumer_name,
+                    allowed=valid,
                 ) from None
             client = setup_context.get_client_by_id(consumer_name)
             consumer = _create_exporter_from_client(client, consumer_name)
@@ -105,7 +111,12 @@ def _create_exporter_from_client(client: RegisteredClient | None, client_name: s
         return MongoDBExporter(client)
     if isinstance(client, RdbmsClient):
         return DatabaseExporter(client)
-    raise ValueError(f"Cannot create target for client {client_name}")
+    raise export_config_error(
+        code=IssueCode.EXPORT_TARGET_NOT_FOUND,
+        target=client_name,
+        exporters=", ".join(_BUFFERED_EXPORTERS),
+        clients="configured database clients",
+    )
 
 
 def _get_exporter_by_name(
@@ -143,12 +154,13 @@ def _get_exporter_by_name(
         return _create_exporter_from_client(setup_context.get_client_by_id(name), name)
     if setup_context.memstore_manager.contain(name):
         return setup_context.memstore_manager.get_memstore(name)
-    raise ValueError(
-        f"Target not found: {name}, please check the target name again. "
-        f"Expected: {', '.join(_BUFFERED_EXPORTERS)}, {EXPORTER_TEST_RESULT_EXPORTER}, "
-        f"{EXPORTER_CONSOLE_EXPORTER}, {EXPORTER_LOG_EXPORTER}, "
-        f"or client {list(setup_context.clients.keys())} "
-        f"or memstore {setup_context.memstore_manager.get_memstores_list()}"
+    raise export_config_error(
+        code=IssueCode.EXPORT_TARGET_NOT_FOUND,
+        target=name,
+        exporters=", ".join(
+            [*_BUFFERED_EXPORTERS, EXPORTER_TEST_RESULT_EXPORTER, EXPORTER_CONSOLE_EXPORTER, EXPORTER_LOG_EXPORTER]
+        ),
+        clients=", ".join([*setup_context.clients.keys(), *setup_context.memstore_manager.get_memstores_list()]),
     )
 
 
@@ -185,7 +197,10 @@ def consume_memstore_target(
             return
 
 
-def smoke_export(request: SmokeExportRequest) -> int:
+_ExportValue = TypeVar("_ExportValue")
+
+
+def smoke_export(request: SmokeExportRequest[_ExportValue]) -> int:
     """Run one bounded buffered export for an authoring smoke check."""
     params = request.params
     rows = request.rows

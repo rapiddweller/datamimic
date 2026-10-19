@@ -24,10 +24,15 @@ from datamimic_ce.engine.dsl.model.constraints import (
     rule_registry_revision,
     serialize_constraints,
 )
-from datamimic_ce.engine.dsl.model.generation.timeseries import TimeSeriesConfig, TimeSeriesNamespace
+from datamimic_ce.engine.dsl.model.generation.timeseries import (
+    TimeSeriesConfig,
+    TimeSeriesConfigError,
+    TimeSeriesNamespace,
+)
 from datamimic_ce.engine.dsl.model.registry import (
     canonical_tag,
     element_aliases,
+    get_element_definition,
     get_model_class,
     get_valid_children,
     list_element_tags,
@@ -42,6 +47,12 @@ from datamimic_ce.engine.dsl.model.validation import (
 )
 from datamimic_ce.engine.dsl.parsers.document.descriptor_parser import DescriptorParser
 from datamimic_ce.engine.dsl.parsers.input.properties import parse_properties
+from datamimic_ce.engine.dsl.parsers.input.resource import (
+    ResourceReader,
+    read_resource_bytes,
+    resource_reader_active,
+    resource_reader_scope,
+)
 from datamimic_ce.engine.dsl.parsers.input.xml import DTDForbiddenError, parse_xml_file, parse_xml_source
 from datamimic_ce.engine.dsl.statements.base.composite_statement import CompositeStatement
 from datamimic_ce.engine.dsl.statements.base.statement import Statement
@@ -144,6 +155,7 @@ from datamimic_ce.engine.dsl.vocabulary.enums.distribution_enums import (
 )
 from datamimic_ce.engine.dsl.vocabulary.enums.faker_enums import UnsupportedMethod
 from datamimic_ce.engine.dsl.vocabulary.enums.operation_enums import ExportOperation
+from datamimic_ce.engine.dsl.vocabulary.product_identity import capture_product_name
 from datamimic_ce.engine.dsl.vocabulary.source_capabilities import (
     DynamicSourceKind,
     SourceFileFormat,
@@ -156,8 +168,15 @@ from datamimic_ce.engine.dsl.vocabulary.source_capabilities import (
     source_file_format_for,
     supported_source_file_formats,
 )
+from datamimic_ce.engine.dsl.vocabulary.value_literals import parse_literal_values
 
 __all__ = [
+    "ResourceReader",
+    "read_resource_bytes",
+    "resource_reader_active",
+    "resource_reader_scope",
+    "capture_product_name",
+    "parse_literal_values",
     "ATTR_CONSTANT",
     "ATTR_DISTRIBUTION",
     "ATTR_ENTITY",
@@ -278,6 +297,7 @@ __all__ = [
     "SupportHash",
     "SupportOutputFormat",
     "TimeSeriesConfig",
+    "TimeSeriesConfigError",
     "TimeSeriesNamespace",
     "UnsupportedMethod",
     "ValidValues",
@@ -289,6 +309,7 @@ __all__ = [
     "element_constraints",
     "find_generate_statement_by_name",
     "get_model_class",
+    "get_element_definition",
     "get_nearest_generate_statement",
     "get_valid_children",
     "is_source_file",

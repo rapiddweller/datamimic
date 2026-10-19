@@ -11,16 +11,30 @@ from pathlib import Path
 
 import pytest
 
-from datamimic_ce.authoring.contracts import (
-    AuthoringStage,
-    IntentValidationIssueCode,
-    ScaffoldRequest,
-    ScaffoldVerification,
+from datamimic_ce.authoring import create_authoring_application
+from datamimic_ce.authoring.domain.expectations import (
+    ExactCountExpectation,
+    ProductRowsSubject,
+    RangeExpectation,
+)
+from datamimic_ce.authoring.domain.proof import (
+    BuildVerificationOptions,
     VerificationGateStatus,
 )
-from datamimic_ce.authoring.application.service import compile_document, scaffold
+from datamimic_ce.authoring.domain.requests import (
+    BuildRequestV4,
+    CompileDocumentRequest,
+    DecompileDocumentRequest,
+    ReadyBuild,
+    ReadyCompileDocument,
+    ReadyDecompileDocument,
+    RejectedBuild,
+    RejectedDecompileDocument,
+)
+from datamimic_ce.domains.shared.literal_generators.numeric.float_generator import (
+    FloatGenerator,
+)
 from datamimic_ce.interfaces.python.data_mimic_test import DataMimicTest
-from datamimic_ce.domains.shared.literal_generators.numeric.float_generator import FloatGenerator
 
 _TEST_DIR = Path(__file__).resolve().parent
 _REPO_ROOT = _TEST_DIR.parents[2]
@@ -52,22 +66,32 @@ def _run_json_export(tmp_path: Path) -> list[dict[str, object]]:
 
 
 def test_decimal_scale_compiles_to_runtime_grid_and_replays(tmp_path: Path) -> None:
-    model = json.loads((_TEST_DIR / "model.dm.json").read_text(encoding="utf-8"))
-    compiled = compile_document(model)
-    expected_xml = (_TEST_DIR / "decimal_scale.xml").read_text(encoding="utf-8").strip()
-    assert compiled.xml == expected_xml
-
-    scaffolded = scaffold(
-        ScaffoldRequest(
-            spec=model,
-            max_count=25,
-            verification=ScaffoldVerification(smoke_export=True, deterministic_replay=True),
-        )
+    application = create_authoring_application(workspace_root=tmp_path)
+    decoded = application.decompile_document(
+        DecompileDocumentRequest(xml=(_TEST_DIR / "decimal_scale.xml").read_text())
     )
-    assert scaffolded.xml == expected_xml
-    assert scaffolded.verified
-    assert scaffolded.verification.smoke_export.status is VerificationGateStatus.PASSED
-    assert scaffolded.verification.deterministic_replay.status is VerificationGateStatus.PASSED
+    assert isinstance(decoded, ReadyDecompileDocument), decoded
+    compiled = application.compile_document(CompileDocumentRequest(document=decoded.document))
+    assert isinstance(compiled, ReadyCompileDocument), compiled
+    assert compiled.artifact.xml_sha256 == decoded.canonical_xml_sha256
+    subject = ProductRowsSubject(product="payments")
+    request = BuildRequestV4(
+        document=decoded.document,
+        max_count=25,
+        expectations=(
+            ExactCountExpectation(subject=subject, count=25),
+            RangeExpectation(subject=subject, field="amount", minimum=Decimal("1.001"), maximum=Decimal("9.019")),
+            RangeExpectation(subject=subject, field="whole_amount", minimum=Decimal("2.1"), maximum=Decimal("4.9")),
+            RangeExpectation(subject=subject, field="fine_amount", minimum=Decimal("1e-15"), maximum=Decimal("9e-15")),
+        ),
+        verification=BuildVerificationOptions(smoke_export=True, deterministic_replay=True),
+    )
+    built = application.build(request)
+    assert isinstance(built, ReadyBuild), built
+    assert built.artifact.xml_sha256 == compiled.artifact.xml_sha256
+    assert built.verification.smoke_export.status is VerificationGateStatus.PASSED
+    assert built.verification.deterministic_replay.status is VerificationGateStatus.PASSED
+    assert built.verification.deterministic_replay.compared_rows == 25
 
     first = _run()
     second = _run()
@@ -138,26 +162,22 @@ def test_float_generator_repros_leave_the_declared_decimal_range(
 
 
 @pytest.mark.parametrize(
-    ("filename", "path"),
+    "filename",
     [
-        ("invalid_scale.dm.json", ("products", 0, "fields", 0, "scale")),
-        ("invalid_grid.dm.json", ("products", 0, "fields", 0)),
-        ("invalid_float_scale_15.dm.json", ("products", 0, "fields", 0)),
-        ("invalid_float_scale_2.dm.json", ("products", 0, "fields", 0)),
-        ("invalid_float_huge.dm.json", ("products", 0, "fields", 0)),
-        ("invalid_float_span.dm.json", ("products", 0, "fields", 0)),
+        "invalid_scale.xml",
+        "invalid_grid.xml",
+        "invalid_float_scale_15.xml",
+        "invalid_float_scale_2.xml",
+        "invalid_float_huge.xml",
+        "invalid_float_span.xml",
     ],
 )
-def test_invalid_decimal_scale_intent_descriptors_fail_at_model_boundary(
-    filename: str,
-    path: tuple[str | int, ...],
-) -> None:
-    spec = json.loads((_TEST_DIR / filename).read_text(encoding="utf-8"))
-    result = scaffold(ScaffoldRequest(spec=spec))
-    assert result.ok is False
-    assert result.stage is AuthoringStage.RENDER
-    assert result.verified is False
-    assert len(result.issues) == 1
-    issue = result.issues[0]
-    assert issue.code is IntentValidationIssueCode.CONSTRAINT_VIOLATION
-    assert issue.path == path
+def test_invalid_decimal_range_descriptors_never_build_ready(filename: str, tmp_path: Path) -> None:
+    application = create_authoring_application(workspace_root=tmp_path)
+    decoded = application.decompile_document(DecompileDocumentRequest(xml=(_TEST_DIR / filename).read_text()))
+    if isinstance(decoded, RejectedDecompileDocument):
+        assert decoded.diagnostics
+        return
+    result = application.build(BuildRequestV4(document=decoded.document))
+    assert isinstance(result, RejectedBuild), result
+    assert result.diagnostics

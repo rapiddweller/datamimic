@@ -7,6 +7,7 @@
 import logging
 
 from datamimic_ce.engine.io.contracts import Exporter
+from datamimic_ce.errors import missing_memstore_product_error
 
 logger = logging.getLogger("DATAMIMIC")
 
@@ -39,7 +40,7 @@ class Memstore(Exporter):
             return self._storage[product_type]
         except KeyError as e:
             logger.error(f"Data naming '{product_type}' is empty in memstore: {e}")
-            raise KeyError(f"Data naming '{product_type}' is empty in memstore") from e
+            raise missing_memstore_product_error(product_type) from e
 
     def get_data_len_by_type(self, entity_name: str | None) -> int:
         """

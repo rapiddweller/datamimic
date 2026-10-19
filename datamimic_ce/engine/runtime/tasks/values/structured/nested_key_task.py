@@ -21,6 +21,14 @@ from datamimic_ce.engine.runtime.tasks.sources.nested import (
 )
 from datamimic_ce.engine.runtime.tasks.values.construction.converters import create_converter_list
 from datamimic_ce.engine.runtime.tasks.values.scalar.element_task import ElementTask
+from datamimic_ce.errors import (
+    DescriptorLocation,
+    DomainError,
+    IssueCode,
+    UserErrorBase,
+    is_user_error,
+    task_config_error,
+)
 
 
 class NestedKeyTask(GenSubTask):
@@ -49,8 +57,7 @@ class NestedKeyTask(GenSubTask):
         self._unique_cursors = {}
         # Lazy creating sub_tasks of nestedkey_task for refreshing state of sub_tasks among nestedkey_tasks
         self._sub_tasks = [
-            create_task(child_stmt, parent_context.root)
-            for child_stmt in self._statement.sub_statements
+            create_task(child_stmt, parent_context.root) for child_stmt in self._statement.sub_statements
         ]
 
         # check condition to enable or disable element, default True
@@ -131,19 +138,36 @@ class NestedKeyTask(GenSubTask):
         if script is not None:
             try:
                 result = self._evaluate_value_from_script(parent_context, script)
-            except Exception as e:
+            except (
+                UserErrorBase,
+                DomainError,
+                ArithmeticError,
+                AttributeError,
+                LookupError,
+                TypeError,
+                ValueError,
+            ) as e:
                 if self._default_value is not None:
                     result = parent_context.evaluate_python_expression(self._default_value)
                     logger.debug(
                         f"Could not evaluate script of element '{self._statement.name}'. "
-                        f"Default value '{self._default_value}'  will be used instead."
+                        "The configured default value will be used instead."
                     )
                 else:
-                    raise ValueError(f"Failed when execute script of element '{self._statement.name}'") from e
+                    if is_user_error(e):
+                        if isinstance(e, UserErrorBase) and e.location is None:
+                            e.location = DescriptorLocation("nestedKey", attribute="script")
+                        raise
+                    raise task_config_error(
+                        code=IssueCode.TASK_SCRIPT_ERROR,
+                        element_label=f"<nestedKey> '{self._statement.name}'",
+                        error=type(e).__name__,
+                        location=DescriptorLocation("nestedKey", attribute="script"),
+                    ) from e
         elif self._statement.source:
             result = self._load_data_from_source(parent_context)
         else:
-            raise ValueError(f"Cannot load original data for <nestedKey> '{self._statement.name}'")
+            raise task_config_error(code=IssueCode.TASK_NESTEDKEY_SOURCE_MISSING, name=self._statement.name)
 
         # Post convert value after executing sub-tasks
         if isinstance(result, list):
@@ -153,9 +177,11 @@ class NestedKeyTask(GenSubTask):
         elif result is None:
             pass
         else:
-            raise ValueError(
-                f"Expect evaluated datatype of script '{self._statement.script}' (of element <{self._statement.name}>)"
-                f" is 'list' or 'dict', but get invalid datatype: '{type(result)}'"
+            raise task_config_error(
+                code=IssueCode.TASK_NESTEDKEY_RESULT_TYPE,
+                name=self._statement.name,
+                script="configured script",
+                value_type=type(result).__name__,
             )
 
         # Add field "nestedKey" into current product
@@ -185,8 +211,10 @@ class NestedKeyTask(GenSubTask):
                     break
         converted_product = self._post_convert(ctx.current_product)
         if not isinstance(converted_product, dict):
-            raise ValueError(
-                f"Nested-key product converter must return a dictionary, but got {type(converted_product)}"
+            raise task_config_error(
+                code=IssueCode.TASK_NESTEDKEY_ITEM_NOT_DICT,
+                name=self._statement.name,
+                value_type=type(converted_product).__name__,
             )
         ctx.current_product = converted_product
         return {**ctx.current_product, **attributes}
@@ -205,9 +233,11 @@ class NestedKeyTask(GenSubTask):
         elif isinstance(value, dict):
             result = self._modify_nestedkey_data_dict(parent_context, value)
         else:
-            raise ValueError(
-                f"Expect evaluated datatype of script '{self._statement.script}' is 'list' or 'dict', "
-                f"but get invalid datatype: '{type(value)}'"
+            raise task_config_error(
+                code=IssueCode.TASK_NESTEDKEY_SCRIPT_TYPE,
+                name=self._statement.name,
+                script="configured script",
+                value_type=type(value).__name__,
             )
         return result
 

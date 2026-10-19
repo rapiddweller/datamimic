@@ -10,12 +10,15 @@ from datamimic_ce.engine.io.clients.operations import (
     database_get_by_page_with_query,
     database_get_by_page_with_type,
     is_database_client,
+    is_mongodb_client,
 )
 from datamimic_ce.engine.io.contracts import DataSourcePagination, MemstoreSource
 from datamimic_ce.engine.io.data_sources.boundary.entities import resolve_source_entity
 from datamimic_ce.engine.io.data_sources.boundary.models import VariableSourceRequest
+from datamimic_ce.engine.io.data_sources.router import record_source_access
 from datamimic_ce.engine.io.data_sources.selection import select_row_iterator, select_rows
 from datamimic_ce.engine.io.files.readers import FileUtil
+from datamimic_ce.errors import IssueCode, invalid_source_error
 
 
 def read_variable_query(
@@ -28,6 +31,7 @@ def read_variable_query(
     cyclic: bool,
 ) -> list[dict[str, object]]:
     """Read a selector-backed variable pool or its requested page."""
+    record_source_access("mongodb" if is_mongodb_client(client) else "database")
     if full_pool:
         return database_get_by_page_with_query(client, rendered_selector)
 
@@ -35,9 +39,7 @@ def read_variable_query(
     if length is None:
         length = database_count_query_length(client, rendered_selector)
     if pagination is None or (cyclic and (pagination.limit > length or pagination.skip + pagination.limit > length)):
-        rows = database_get_by_page_with_query(
-            client, rendered_selector, DataSourcePagination(skip=0, limit=length)
-        )
+        rows = database_get_by_page_with_query(client, rendered_selector, DataSourcePagination(skip=0, limit=length))
         return select_rows(rows, pagination, cyclic=cyclic)
     return database_get_by_page_with_query(client, rendered_selector, pagination)
 
@@ -51,6 +53,7 @@ def read_variable_source(
     """Read one resolved file, database, or memstore variable source."""
     source_format = source_file_format_for(EL_VARIABLE, request.source)
     if source_format is not None:
+        record_source_access(f"file_{source_format.name.lower()}")
         path = request.descriptor_dir / request.source
         data: Iterable[object]
         if source_format is SourceFileFormat.CSV:
@@ -62,14 +65,17 @@ def read_variable_source(
         elif source_format is SourceFileFormat.JSON:
             data = FileUtil.read_json_to_list(path)
         else:
-            raise ValueError(f"Unsupported <variable> source format: {source_format.value}")
+            raise invalid_source_error(code=IssueCode.SOURCE_UNSUPPORTED_FILE_TYPE, name=request.source)
         if not request.materialize_full_pool:
             return select_row_iterator(data, pagination, request.cyclic)
         return data
 
     if client is not None:
         if not is_database_client(client):
-            raise ValueError(f"Cannot get data from source '{request.source}' of <variable> '{request.name}'")
+            raise invalid_source_error(
+                code=IssueCode.TASK_VARIABLE_SOURCE_UNSUPPORTED, source=request.source, name=request.name
+            )
+        record_source_access("mongodb" if is_mongodb_client(client) else "database")
         product_type = resolve_source_entity(request.source_entity, request.source_type, request.name)
         if product_type is None:
             return None
@@ -80,12 +86,15 @@ def read_variable_source(
         return database_get_by_page_with_type(client, product_type, pagination)
 
     if memstore is not None:
+        record_source_access("memstore")
         product_type = resolve_source_entity(request.source_entity, request.source_type, request.name)
         if request.materialize_full_pool:
             return memstore.get_all_data_by_type(product_type)
         return select_rows(memstore.get_data_by_type(product_type), pagination, request.cyclic)
 
-    raise ValueError(f"Cannot find memstore '{request.source}' for <variable> '{request.name}'")
+    raise invalid_source_error(
+        code=IssueCode.TASK_VARIABLE_SOURCE_UNSUPPORTED, source=request.source, name=request.name
+    )
 
 
 __all__ = ["VariableSourceRequest", "read_variable_query", "read_variable_source"]

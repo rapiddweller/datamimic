@@ -7,6 +7,7 @@
 from pathlib import Path
 from random import Random
 
+from datamimic_ce.engine.io.data_sources.router import record_source_access
 from datamimic_ce.engine.io.files.readers import FileUtil
 
 
@@ -49,6 +50,7 @@ class WeightedEntityDataSource:
         weight_column_name: str | None = None,
     ) -> None:
         weight_column = weight_column_name or "weight"
+        record_source_access("file_weighted_entity_csv")
         self._weights, self._data_dict_list = FileUtil.read_csv_having_weight_column(
             file_path, weight_column, separator
         )

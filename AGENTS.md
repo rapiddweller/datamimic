@@ -1,54 +1,98 @@
 # AGENTS.md
 
-Guidance for AI coding agents working in this repository or generating data with
-DATAMIMIC. Follows the [agents.md](https://agents.md/) open format.
+Guidance for agents working on DATAMIMIC CE, the MIT-licensed Python engine.
+Use DATAMIMIC for synthetic data, fixtures, database seeding and pseudonymization.
 
-DATAMIMIC is a model-driven, deterministic-first test data platform. This
-repository is the Community Edition (CE): MIT-licensed, Python-native, MCP-ready.
-For new models, describe the business intent in `model.dm.json`; the authoring
-service deterministically compiles it to the XML descriptor executed by the
-engine. Existing XML descriptors remain supported. The same seed produces the
-identical dataset on every run.
-
-## When should an agent reach for DATAMIMIC?
-
-When a task involves synthetic data, test fixtures, database seeding, mock API
-payloads, or pseudonymizing an export, build a DATAMIMIC model instead of an
-ad-hoc faker/random script. `model.dm.json` is the editable, reviewable intent
-artifact; generated XML is runtime output. Relationships stay consistent (child
-rows hold real parent keys), output reproduces with a seed, and bounded
-verification catches mistakes before data is written.
-
-Authoring scope (`AuthoringSpecV1`): products write to files (`file_export`)
-or in-memory stores (`memstore`), and a generated product nests one level of
-child products. Database/MongoDB sources or targets and deeper product nesting
-are reported as `unsupported_intent`; for those, use the raw XML path
-(`<database>`/`<mongodb>` clients, lint → dry-run → run, see "Working with an
-existing raw XML descriptor"). That path has no `verified` certificate, so
-check the written data yourself.
+XML is the persisted executable project format. `DmJsonDocumentV1` is its transient
+agent representation. Expectations, roles and verification options belong to a
+`BuildRequestV4` transaction; decompiling XML cannot recover those declarations.
+The same explicit seed reproduces data within the tested compatibility boundary.
 
 ## Tool selection
 
-The project CLI is the baseline contract. In this checkout, invoke it as
-`.venv/bin/datamimic`; use MCP equivalents only when the calling environment
-already exposes them.
+Use `.venv/bin/datamimic` in this checkout. Install the optional MCP adapter only
+when the calling environment uses MCP; both transports call the same application.
 
-| Need | CLI command |
+| Need | Command |
 |---|---|
-| Discover live element, enum, generator, target, and distribution names | `datamimic capabilities` (compact index by default; `--full` for the complete manifest, `--section <name>` for one section) |
-| Enumerate typed Intent Model queries | `datamimic reference authoring` |
-| Load one authoring fragment | `datamimic reference authoring --category <category> --kind <kind>` |
-| Compile and verify a new `model.dm.json` | `datamimic scaffold model.dm.json --format json` |
-| Validate existing raw XML | `datamimic lint <path> --format json` |
-| Safely inspect existing raw XML | `datamimic dry-run <path> --format json` |
-| Find DSL semantics | `datamimic reference overview` or another narrow `reference` topic/name |
-| Execute a verified runtime descriptor | `datamimic run <path>` |
+| Discover vocabulary | `datamimic authoring capabilities` (`--full` for contracts) |
+| Inspect one element | `datamimic authoring capability --domain element --name generate` |
+| Discover the document/Build schema | `datamimic authoring schema` / `schema --name build_request_v4` |
+| Read a focused reference | `datamimic authoring reference --topic assembly --name starter` |
+| Compile/decompile syntax | `datamimic authoring compile -` / `decompile model.xml` |
+| Compile and prove a transaction | `datamimic authoring build -` |
+| Validate/inspect existing XML | `datamimic authoring lint model.xml` / `dry-run model.xml` |
+| Run bounded XML with explicit write opt-in | `datamimic authoring run model.xml --allow-side-effects` |
+| Execute the persisted project normally | `datamimic run model.xml` |
+| Export editor/authoring contracts | `datamimic authoring export-contract contracts.zip` |
 
-Optional adapter mapping: CLI `reference`, `scaffold`, `lint`, and `dry-run`
-correspond to MCP `datamimic_reference`, `datamimic_scaffold`,
-`datamimic_check`, and `datamimic_run`. Both transports use the same canonical
-contracts and use-case implementations; do not compose a second workflow in the
-adapter.
+Authoring commands default to JSON. File input and `-` for stdin are supported.
+Exit codes: `0` succeeds, `1` rejects an input/operation, `2` is CLI usage error.
+`compile`/`decompile` readiness proves syntax only; Build readiness additionally
+requires complete bounded evidence and the declared acceptance checks.
+
+## Authoring a model
+
+Submit an early best attempt, then repair the reported path and remediation.
+This is a complete Build transaction, passed via stdin rather than persisted as
+another project model:
+
+```json
+{
+  "document": {
+    "root": {
+      "kind": "setup",
+      "properties": {"rng_seed": 7},
+      "children": [
+        {
+          "kind": "generate",
+          "properties": {"name": "cities", "count": 3},
+          "children": [
+            {"kind": "key", "properties": {"name": "region", "values": "('north', 'south')"}}
+          ]
+        }
+      ]
+    }
+  },
+  "expectations": [
+    {"kind": "exact_count", "subject": {"kind": "product", "product": "cities"}, "count": 3}
+  ]
+}
+```
+
+1. Call `datamimic authoring build -` with the transaction above. Its document
+   follows CE DSL kinds, properties and child order; query `capability` for a
+   specific unknown instead of guessing legacy intent kinds.
+2. Encode each requested business constraint as an expectation. Counts use
+   `count`; numeric range bounds may be decimal strings. Nested-list subjects
+   carry `list_field`; uniqueness retains `scope: "per_parent"` when required.
+3. Keep identifier/FK/timestamp/value declarations in `product_roles`. Caller-owned
+   assertions use `acceptance_requirements` with `origin: "caller"`; do not turn
+   them into persistent model configuration. Build derives mandatory topology/count
+   checks and refuses missing readback proof.
+4. Request exporter smoke/replay with `verification: {"smoke_export": true,
+   "deterministic_replay": true}` only when needed. Replay needs an explicit seed.
+   Increase transaction `max_count` only when the intended capture requires it.
+5. Stop on `outcome: "ready"`. Persist `artifact.compiled_xml` as `model.xml`;
+   retain the separate Build evidence where the caller stores verification.
+   Execute `datamimic run model.xml` only when real execution is requested.
+
+Decompile existing XML before editing through DM JSON, then supply its requirements
+again for the new Build. File-backed operations use the input file's directory as
+workspace; stdin uses the current directory. `--workspace-root` selects it explicitly.
+Target-isolated bounded evidence does not prove external database delivery.
+
+See [worked transactions](docs/examples/authoring.md) for nested FK, memstore and
+time-series cases. Child rows must hold actual `parent.id` values; random FKs can
+pass membership while failing per-parent acceptance. Memstore readback needs the
+producer identifier and consumer foreign-key role pair. For time series, literal
+`count` is the parallel series count; expected rows are window points × series.
+
+For an existing XML descriptor: `authoring lint` → `authoring dry-run`, inspect the
+bounded evidence, then use normal `datamimic run` when execution is requested.
+Legacy `AuthoringSpecV1` projects use the one-time migration in
+[the migration guide](docs/migrations/authoring-errors.md); do not restore an old
+compiler, root `scaffold` command or `model.dm.json` workflow.
 
 ## Benchmarking local Ollama models
 
@@ -60,7 +104,7 @@ failure, not a model failure.
 1. Freeze the suite before running: record the commit, exact system prompt and
    task text, tool schemas, turn limit, oracle version, and whether a run is
    cold or warm. Set and report an Ollama inference `options.seed`; this is
-   separate from any `model.dm.json` seed. Keep generated transcripts and
+   separate from the descriptor's `rngSeed`. Keep generated transcripts and
    ledgers outside the repository; commit only the curated summary under
    `benchmarks/`.
 2. Snapshot every installed model with `ollama list` and `ollama show <model>`.
@@ -90,117 +134,6 @@ The applicable Ollama protocol references are [tool calling](https://docs.ollama
 [thinking](https://docs.ollama.com/capabilities/thinking), and the
 [`/api/chat` request options](https://docs.ollama.com/api/chat).
 
-## Authoring a new model
-
-Submit early, repair from structured errors. Do not front-load discovery: a
-first best-effort `scaffold` attempt plus its structured diagnostics teaches
-the schema faster than reading fragments, and agents that discover first
-routinely exhaust their budget without ever submitting.
-
-1. Start from this minimal valid document shape (`version: "1"` is literal):
-
-   ```json
-   {
-     "version": "1",
-     "seed": 7,
-     "products": [
-       {
-         "kind": "generated",
-         "name": "cities",
-         "count": 3,
-         "fields": [
-           {"kind": "values", "name": "region", "values": ["north", "south"]}
-         ]
-       }
-     ]
-   }
-   ```
-
-   Two rules prevent the most common rejections: the top level allows ONLY
-   `version`, `seed`, `products`, `expectations`; and product-level `kind`
-   (`generated`/`source`/`time_series`) is a different vocabulary from
-   field-level `kind` (`increment`, `values`, `weighted`, `int_range`,
-   `decimal_range`, `pattern`, `constant`, `script`, ...). In
-   `model.dm.json`, range fields take `minimum`/`maximum` — `min`/`max` is
-   XML-attribute vocabulary and is rejected here. Do not hand-author XML for
-   a new model; XML is deterministic compiler output, not the Intent SPOT.
-2. Invoke `datamimic scaffold model.dm.json --format json` with your best
-   attempt after at most one discovery call. Each attempt is one transaction
-   that compiles, lints, performs one bounded run, and evaluates acceptance
-   against that same capture. Request `--smoke-export` and
-   `--deterministic-replay` only when those verification gates are required.
-3. On failure, repair from structured validation issue `path`,
-   `allowed_fields`, and optional typed `repair`, or from the rule diagnostic
-   and `fix_hint` at later stages. If `remediations` requests `max_count`,
-   retry with at least its `minimum_value`; this changes the bounded
-   verification limit, not `model.dm.json`. Never resubmit an unchanged
-   document.
-4. Reach for discovery only for a specific unknown: `datamimic reference
-   authoring` lists typed category/kind queries; `--category <category>
-   --kind <kind>` returns one fragment's `required_fields`,
-   `allowed_fields`, and `json_schema` (field-role schemas such as
-   `ForeignKeyRole`/`IdentifierRole` live in every field fragment's
-   `json_schema.$defs`). For the complete `AuthoringSpecV1` JSON Schema, run
-   `datamimic reference scaffold`.
-5. Declare an expectation for every stated requirement. `verified=true`
-   certifies ONLY the expectations you declared plus derivable defaults — a
-   requirement you never encoded (a row count, a series count, a read-back)
-   passes verification silently. Encode counts as `exact_count` with a
-   `count` field (the derived-acceptance output spells it `exact_count`; the
-   explicit input schema requires `count`).
-   An MCP caller that owns an independent task-acceptance contract can instead
-   pass typed acceptance_requirements to datamimic_scaffold. They are checked
-   for that transaction, reported with source caller, and block verified when
-   they fail; they do not mutate or become a second source of truth for
-   model.dm.json. CLI callers pass the same JSON array with
-   --acceptance-requirements path/to/requirements.json. Persist requirements
-   owned by the model itself in the document's expectations.
-6. Stop immediately when `verified=true`; do not call check/lint or dry-run
-   again. If real execution is requested, save the returned `xml` as a
-   generated runtime artifact and run `datamimic run path/to/datamimic.xml`.
-
-### Structural recipes (the three shapes that defeat most agents)
-
-- **Nested parent-child with a foreign key**: children are nested inside the
-  parent product's `children` array (each child needs `name` and `count`,
-  meaning count per parent). The child's FK field must carry the parent's
-  actual value — `{"kind": "script", "name": "customer_id", "script":
-  "parent.id", "roles": [{"kind": "foreign_key", "parent_product":
-  "customers", "parent_field": "id"}]}`. A randomly generated FK
-  (`int_range` over the parent id range) passes schema validation but fails
-  per-parent-count acceptance. A child product is exported separately, not
-  embedded in the parent's file: when the model exports files, give every
-  child its own `targets` (otherwise DM407 blocks `verified`); rows that must
-  live inside the parent record belong in a `nested_list` field instead.
-- **Memstore pipeline (write, then read back)**: the producer writes via
-  `"targets": [{"kind": "memstore", "id": "store"}]`; the consumer is a
-  second product with `"kind": "source"` and `"source": {"kind": "memstore",
-  "id": "store", "product": "<producer>"}` plus explicit fields
-  (`{"kind": "script", "script": "this.<col>"}` per column). The
-  memstore-completeness gate additionally requires a role PAIR:
-  `{"kind": "identifier"}` on the producer's id field AND `{"kind":
-  "foreign_key", "parent_product": ..., "parent_field": "id"}` on the
-  consumer's id field — without both, `ok` stays true but `verified` stays
-  false.
-- **Time series**: `"kind": "time_series"` with `"window": {"start": ...,
-  "end": ..., "interval": "PT1H"}` (ISO-8601 strings) and `"series_count":
-  N` for N parallel series. Row count = window points × series_count;
-  declare it as an `exact_count` expectation so it is actually verified.
-- **Nested-list expectations**: set `"list_field"` on `exact_count`, `unique`,
-  `range`, or `allowed_values`; exact counts flatten that list, while the other
-  checks address its named inner `field`. `unique` with `scope: "per_parent"`
-  means within each root row.
-
-## Working with an existing raw XML descriptor
-
-1. Look up the DSL before guessing with `datamimic reference overview` and then
-   the narrow DSL topic/name.
-2. Run `datamimic lint <path> --format json` and fix every diagnostic.
-3. Run `datamimic dry-run <path> --format json` once; inspect the bounded
-   samples because valid is not the same as correct. `--smoke-export`
-   additionally exercises file exporters in a temporary dir.
-4. Run the verified descriptor for real with `datamimic run <path>`.
-
 ## The semantic rules that cause most authoring failures
 
 1. Scope: inside a nested `<generate>` or `<nestedKey>`, a sibling in the SAME
@@ -229,7 +162,7 @@ routinely exhaust their budget without ever submitting.
    `string=` and `pattern=`, never in `script=` or `condition=`.
 
 Discover value-source choices and rules from the live model and rule registries
-with `datamimic reference overview`, then query a narrow topic.
+with `datamimic authoring reference --topic overview`, then query a narrow topic.
 
 ## Install the CLI
 
@@ -251,7 +184,7 @@ registration details.
   local Postgres/Mongo (credentials: `local.env.properties` at the repo root).
 - Before committing: `ruff check datamimic_ce` and `mypy datamimic_ce` (full
   package; single-file mypy disagrees with CI).
-- The authoring toolset (linter, reference, dry-run, scaffold)
+- The authoring application (codec, Build, reference and bounded execution)
   lives in `datamimic_ce/authoring/`; the MCP server in `datamimic_ce/interfaces/mcp/`.
 - Commit messages carry no AI or tool attribution lines.
 

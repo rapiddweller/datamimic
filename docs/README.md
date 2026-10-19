@@ -14,13 +14,14 @@ This project documentation focuses specifically on:
 
 ### Authoring with AI agents
 
-- [Agent guide](../AGENTS.md): repository instructions that teach a coding agent the DSL authoring loop.
-- [MCP Quickstart](mcp_quickstart.md): install and register the MCP server; the check/run/reference authoring tools.
+- [Agent guide](../AGENTS.md): persisted XML, transient DM JSON and the typed Build loop.
+- [Worked Build transactions](examples/authoring.md): nested FK, memstore readback and time series.
+- [MCP Quickstart](mcp_quickstart.md): install and register the MCP server; the typed Build, codec, discovery and bounded-run tools.
 
 ### Getting started
 
 - [Installation and first steps](#getting-started): install the package and generate your first entities.
-- [Command line interface](api/cli.md): run, lint, dry-run, scaffold, reference, capabilities, init, demo.
+- [Command line interface](api/cli.md): the authoring subtree, production run, init and demo.
 
 ### Data domains
 

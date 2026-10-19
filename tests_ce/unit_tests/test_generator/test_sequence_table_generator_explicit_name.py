@@ -22,6 +22,7 @@ from datamimic_ce.engine.io.exporters.diagnostics.test_result_exporter import Te
 from datamimic_ce.engine.runtime.contexts.context import SetupContext
 from datamimic_ce.engine.runtime.storage.memstore_manager import MemstoreManager
 from datamimic_ce.engine.runtime.tasks.values.construction.factory import GeneratorUtil
+from datamimic_ce.errors import ErrorCode, GeneratorConfigError
 
 
 class DummyRootGenStmt(GenerateStatement):
@@ -126,33 +127,74 @@ def test_pre_execute_uses_convention_name_when_no_override(setup_context: SetupC
 
 
 def test_positional_arg_is_rejected(setup_context: SetupContext):
-    with pytest.raises(ValueError, match="positional"):
+    with pytest.raises(GeneratorConfigError, match="positional") as caught:
         _make(setup_context, "SequenceTableGenerator('positional_value')", key="k5")
+    assert caught.value.code is ErrorCode.GENERATOR_CONFIG
+    assert caught.value.issue_code is None
+    assert "use sequence='...'" in str(caught.value)
 
 
 def test_unsupported_kwarg_is_rejected(setup_context: SetupContext):
-    with pytest.raises(ValueError, match="bogus"):
+    with pytest.raises(GeneratorConfigError, match="only the 'sequence' keyword argument") as caught:
         _make(setup_context, "SequenceTableGenerator(bogus='x')", key="k6")
+    assert caught.value.code is ErrorCode.GENERATOR_CONFIG
+    assert caught.value.issue_code is None
+    assert "bogus" not in str(caught.value)
 
 
 def test_malformed_args_are_rejected(setup_context: SetupContext):
-    with pytest.raises(ValueError):
+    with pytest.raises(GeneratorConfigError, match="valid syntax") as caught:
         _make(setup_context, "SequenceTableGenerator(sequence=)", key="k7")
+    assert caught.value.code is ErrorCode.GENERATOR_CONFIG
+    assert caught.value.issue_code is None
+    assert type(caught.value.__cause__) is SyntaxError
 
 
 def test_non_string_sequence_is_rejected(setup_context: SetupContext):
-    with pytest.raises(ValueError, match="string"):
+    with pytest.raises(GeneratorConfigError, match="sequence must be a string literal") as caught:
         _make(setup_context, "SequenceTableGenerator(sequence=42)", key="k8")
+    assert caught.value.code is ErrorCode.GENERATOR_CONFIG
+    assert caught.value.issue_code is None
 
 
 def test_missing_generate_count_has_useful_error(setup_context: SetupContext):
     with pytest.raises(
-        ValueError,
-        match="Failed to initialize sequence: SequenceTableGenerator requires a generate count",
-    ):
+        GeneratorConfigError,
+        match="SequenceTableGenerator requires a generate count",
+    ) as caught:
         _make(setup_context, "SequenceTableGenerator", key="k9", count=None)
+    assert caught.value.code is ErrorCode.GENERATOR_CONFIG
+    assert caught.value.issue_code is None
 
 
 def test_missing_database_name_has_useful_error(setup_context: SetupContext):
-    with pytest.raises(ValueError, match="No database client found for source: None"):
+    with pytest.raises(GeneratorConfigError, match="requires a configured database client") as caught:
         _make(setup_context, "SequenceTableGenerator", key="k10", database=None)
+    assert caught.value.code is ErrorCode.GENERATOR_CONFIG
+    assert caught.value.issue_code is None
+
+
+
+def test_unknown_sequence_kwarg_retains_only_allowed_parameter_repair(setup_context: SetupContext):
+    sentinel = "AUDIT_SEQUENCE_PRIVATE_KEY_8e2a"
+    with pytest.raises(GeneratorConfigError) as caught:
+        _make(setup_context, f"SequenceTableGenerator({sentinel}='{sentinel}')", key="private-kwarg")
+    error = caught.value
+    assert error.code is ErrorCode.GENERATOR_CONFIG
+    assert error.issue_code is None
+    assert "only the 'sequence' keyword argument" in str(error)
+    assert error.constructor_reason is not None
+    assert sentinel not in str(error)
+
+
+def test_malformed_sequence_syntax_keeps_native_cause_private(setup_context: SetupContext):
+    sentinel = "AUDIT_SEQUENCE_PRIVATE_SYNTAX_1d4f"
+    with pytest.raises(GeneratorConfigError) as caught:
+        _make(setup_context, f"SequenceTableGenerator(sequence='{sentinel}') trailing", key="private-syntax")
+    error = caught.value
+    assert error.code is ErrorCode.GENERATOR_CONFIG
+    assert error.issue_code is None
+    assert "valid syntax" in str(error)
+    assert type(error.__cause__) is SyntaxError
+    assert sentinel in error.__cause__.text
+    assert sentinel not in str(error)

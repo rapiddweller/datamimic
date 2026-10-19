@@ -1,0 +1,140 @@
+# DATAMIMIC
+# Copyright (c) 2023-2026 Rapiddweller Asia Co., Ltd.
+# This software is licensed under the MIT License. See LICENSE.
+
+"""Use the normal CE parser for in-memory descriptor hard validation."""
+
+from pathlib import PurePosixPath
+from typing import Literal
+
+from lxml import etree
+
+from datamimic_ce.authoring.adapters.linter import _run_rules
+from datamimic_ce.authoring.adapters.workspace import AuthoringWorkspaceContext
+from datamimic_ce.authoring.domain.diagnostics import (
+    AuthoringSystemDiagnosticCode,
+    CeErrorIdentity,
+    Diagnostic,
+    DiagnosticPhase,
+)
+from datamimic_ce.authoring.domain.requests import LintResult
+from datamimic_ce.authoring.domain.rule_catalog import RuleSeverity, authoring_rule_definition
+from datamimic_ce.engine.dsl.api import DescriptorParser, parse_xml_source, resource_reader_scope
+from datamimic_ce.engine.dsl.parsers.base.client_config import ConnectionProfileLoader
+from datamimic_ce.errors.base import ParserValidationError, UserErrorBase
+
+
+class CeDescriptorValidator:
+    def __init__(
+        self,
+        workspace_context: AuthoringWorkspaceContext,
+        *,
+        profile_loader: ConnectionProfileLoader,
+        properties: dict[str, str] | dict[str, object] | None = None,
+        runtime_environment: Literal["development", "production"] = "production",
+    ) -> None:
+        self._workspace_context = workspace_context
+        self._profile_loader = profile_loader
+        self._properties = properties
+        self._runtime_environment = runtime_environment
+
+    def validate(self, xml: str, *, descriptor_path: PurePosixPath | None = None) -> LintResult:
+        logical_path = descriptor_path or self._workspace_context.descriptor_path
+        if logical_path != self._workspace_context.descriptor_path:
+            return _rejected(logical_path, "Descriptor path does not match the bound workspace path.")
+        try:
+            physical_path = self._workspace_context.resolve_descriptor_path(logical_path)
+            with resource_reader_scope(self._workspace_context.read_resource_bytes):
+                DescriptorParser.parse_xml(
+                    xml,
+                    physical_path,
+                    self._properties,
+                    self._runtime_environment,
+                    profile_loader=self._profile_loader,
+                    logical_descriptor_path=logical_path.as_posix(),
+                )
+        except UserErrorBase as error:
+            identity = CeErrorIdentity(error_code=error.code, issue_code=error.issue_code) if error.code else None
+            prefix: tuple[str | int, ...] = ("descriptor", logical_path.as_posix())
+            if error.location is not None:
+                prefix += (error.location.element_tag,)
+                if error.location.line is not None:
+                    prefix += ("line", error.location.line)
+                if error.location.attribute is not None:
+                    prefix += ("attribute", error.location.attribute)
+            if isinstance(error, ParserValidationError) and error.validation_errors:
+                diagnostics = []
+                for detail in error.validation_errors:
+                    location = detail.get("loc", ())
+                    if not isinstance(location, tuple | list) or not all(
+                        isinstance(part, str | int) for part in location
+                    ):
+                        raise TypeError("parser validation location must contain only strings or integers") from error
+                    diagnostics.append(
+                        _diagnostic(
+                            "Descriptor field failed parser validation.",
+                            path=prefix + tuple(location),
+                            identity=identity,
+                        )
+                    )
+                return LintResult(ok=False, diagnostics=tuple(diagnostics))
+            return LintResult(
+                ok=False,
+                diagnostics=(
+                    _diagnostic(
+                        "Descriptor failed parser validation.",
+                        path=prefix,
+                        identity=identity,
+                    ),
+                ),
+            )
+        except etree.XMLSyntaxError as error:
+            return LintResult(
+                ok=False,
+                diagnostics=(
+                    _diagnostic(
+                        "Descriptor is not well-formed XML.",
+                        path=("descriptor", logical_path.as_posix(), "line", error.position[0]),
+                    ),
+                ),
+            )
+        except (ValueError, OSError):
+            # Parser/resource errors may contain credentials and physical host paths.
+            return _rejected(logical_path, "Descriptor or its workspace resources failed validation.")
+        findings = _run_rules(parse_xml_source(xml), base_dir=physical_path.parent)
+        diagnostics = []
+        for finding in findings:
+            definition = authoring_rule_definition(finding.rule)
+            diagnostics.append(
+                Diagnostic(
+                    code=finding.rule,
+                    phase=DiagnosticPhase.XML,
+                    message=definition.explanation,
+                    path=(
+                        "descriptor",
+                        logical_path.as_posix(),
+                        finding.path,
+                        *(("line", finding.line) if finding.line is not None else ()),
+                    ),
+                    severity="error"
+                    if finding.severity is RuleSeverity.ERROR
+                    else ("warning" if finding.severity is RuleSeverity.WARNING else "info"),
+                    remediation=definition.fix_hint,
+                )
+            )
+        return LintResult(ok=not any(item.severity == "error" for item in diagnostics), diagnostics=tuple(diagnostics))
+
+
+def _diagnostic(message: str, *, path: tuple[str | int, ...], identity: CeErrorIdentity | None = None) -> Diagnostic:
+    return Diagnostic(
+        code=AuthoringSystemDiagnosticCode.DESCRIPTOR,
+        phase=DiagnosticPhase.XML,
+        message=message,
+        path=path,
+        ce_error=identity,
+        remediation="Repair the indicated descriptor field or its workspace-local resource configuration.",
+    )
+
+
+def _rejected(path: PurePosixPath, message: str) -> LintResult:
+    return LintResult(ok=False, diagnostics=(_diagnostic(message, path=("descriptor", path.as_posix())),))

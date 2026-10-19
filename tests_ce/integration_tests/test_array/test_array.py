@@ -10,6 +10,7 @@ from pathlib import Path
 import pytest
 
 from datamimic_ce.interfaces.python.data_mimic_test import DataMimicTest
+from datamimic_ce.errors import IssueCode, ParserValidationError
 
 
 class TestArray:
@@ -55,8 +56,9 @@ class TestArray:
         """<value> children are only valid for type='literal'; a typed/scripted array with
         children is rejected."""
         test_engine = DataMimicTest(test_dir=test_dir, filename="test_array_non_literal_with_children.xml")
-        with pytest.raises(ValueError, match="sub-elements are only valid"):
+        with pytest.raises(ParserValidationError) as rejected:
             test_engine.test_with_timer()
+        assert rejected.value.issue_code is IssueCode.PARSER_ARRAY_SUBELEMENTS_NOT_ALLOWED
 
     def test_array_literal_invalid_value_child(self, test_dir: Path) -> None:
         """A <value> child missing its mandatory 'constant' attribute fails parsing."""
@@ -67,5 +69,6 @@ class TestArray:
     def test_array_literal_empty(self, test_dir: Path) -> None:
         """A literal array must have at least one <value> child."""
         test_engine = DataMimicTest(test_dir=test_dir, filename="test_array_literal_empty.xml")
-        with pytest.raises(ValueError, match="must have at least one"):
+        with pytest.raises(ParserValidationError) as rejected:
             test_engine.test_with_timer()
+        assert rejected.value.issue_code is IssueCode.PARSER_ARRAY_LITERAL_EMPTY

@@ -11,9 +11,8 @@ metadata. The runtime engine should not depend on them.
 
 from collections.abc import Mapping
 from dataclasses import dataclass
+from enum import StrEnum
 from types import MappingProxyType
-
-from datamimic_ce._compat import StrEnum
 
 
 class RuleSeverity(StrEnum):
@@ -494,21 +493,6 @@ _AUTHORING_RULE_DEFINITIONS: tuple[RuleDefinition, ...] = (
         '<setup><generate name="a" count="1"/><generate name="a" count="1"/></setup>',
     ),
     _rule_definition(
-        "DM404",
-        RuleSeverity.WARNING,
-        "Nested foreign key does not copy its parent",
-        "A nested child foreign-key field is generated independently instead of carrying its enclosing parent key.",
-        'Use a nested <key> with script="parent.<field>" to copy the enclosing parent key.',
-        "AuthoringSpecV1 nested relationship and foreign-key role contract.",
-        '<setup><generate name="customers" count="4"><key name="id" generator="IncrementGenerator"/>'
-        '<generate name="orders" count="2"><key name="customer_id" script="parent.id"/>'
-        "</generate></generate></setup>",
-        '<setup><generate name="customers" count="4"><key name="id" generator="IncrementGenerator"/>'
-        '<generate name="orders" count="2"><key name="customer_id" type="int" min="1" max="4"/>'
-        "</generate></generate></setup>",
-        blocks_verification=True,
-    ),
-    _rule_definition(
         "DM405",
         RuleSeverity.ERROR,
         "Missing include file",
@@ -519,53 +503,22 @@ _AUTHORING_RULE_DEFINITIONS: tuple[RuleDefinition, ...] = (
         '<include uri="missing.properties"/>',
     ),
     _rule_definition(
-        "DM406",
-        RuleSeverity.WARNING,
-        "Memstore readback field does not copy its source",
-        "A same-named field in a memstore-backed source product regenerates a stored value instead of reading it.",
-        'Use a script field with script="this.<field>"; retain any foreign-key role on that field. '
-        "This readback-integrity rule must pass before verified=true.",
-        "AuthoringSpecV1 memstore source readback contract.",
-        '<setup><memstore id="store"/><generate name="users" count="1" target="store">'
-        '<key name="id" generator="IncrementGenerator"/></generate>'
-        '<generate name="audit" source="store" type="users"><key name="id" script="this.id"/>'
-        "</generate></setup>",
-        '<setup><memstore id="store"/><generate name="users" count="1" target="store">'
-        '<key name="id" generator="IncrementGenerator"/></generate>'
-        '<generate name="audit" source="store" type="users"><key name="id" type="int" min="1" max="9"/>'
-        "</generate></setup>",
-        blocks_verification=True,
-    ),
-    _rule_definition(
         "DM407",
         RuleSeverity.WARNING,
         "Product has no delivery target",
-        "Fires when the spec declares at least one file_export target and a product (root or nested child) "
-        "declares none: that product is captured for verification, but the runtime writes its rows nowhere, "
-        "and a nested child generate is not embedded in its parent's export. A spec without any file_export "
+        "When the document uses a file exporter and a product (root or nested child) "
+        "has no target, its captured rows are not delivered. "
+        "A nested child generate is not embedded in its parent's export. A document without a file exporter "
         "is an in-memory model and is not checked.",
-        "Add a file_export or memstore target to the product, or model the rows as a nested_list field of the "
-        "parent. This delivery rule must pass before verified=true.",
-        "AuthoringSpecV1 product targets and runtime export contract.",
+        "Add a file or memstore target to the product, or model the rows as a nestedKey list field of the "
+        "parent. This delivery rule must pass before Build is ready.",
+        "DM JSON product targets, bounded Build policy and runtime export contract.",
         '<setup><generate name="customers" count="4" target="JSON"><key name="id" generator="IncrementGenerator"/>'
         '<generate name="accounts" count="2" target="JSON"><key name="customer_id" script="parent.id"/>'
         "</generate></generate></setup>",
         '<setup><generate name="customers" count="4" target="JSON"><key name="id" generator="IncrementGenerator"/>'
         '<generate name="accounts" count="2"><key name="customer_id" script="parent.id"/>'
         "</generate></generate></setup>",
-        blocks_verification=True,
-    ),
-    _rule_definition(
-        "DM408",
-        RuleSeverity.WARNING,
-        "Memstore target has no consumer",
-        "A product writes to a memstore that no source product reads, so the write is unobservable in the "
-        "authoring model.",
-        "Add a source product that reads the memstore, or remove the unused memstore target.",
-        "DerivedMemstoreFact.has_consumer from the validated compile plan.",
-        '{"version":"1","products":[{"kind":"generated","name":"users","count":1,"targets":[{"kind":"memstore","id":"store"}],"fields":[{"kind":"increment","name":"id","roles":[{"kind":"identifier"}]}]},{"kind":"source","name":"audit","source":{"kind":"memstore","id":"store","product":"users"},"fields":[{"kind":"script","name":"id","script":"this.id","roles":[{"kind":"foreign_key","parent_product":"users","parent_field":"id"}]}]}]}',
-        '{"kind":"generated","name":"users","targets":[{"kind":"memstore","id":"store"}],'
-        '"fields":[{"kind":"increment","name":"id"}]}',
         blocks_verification=True,
     ),
 )

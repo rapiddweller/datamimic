@@ -57,6 +57,14 @@
       {
         "path": "datamimic_ce/interfaces/python/factory.py",
         "responsibility": "The factory starts a test-configured RunSession and returns individual or batched generated entities."
+      },
+      {
+        "path": "datamimic_ce/interfaces/bundle/__init__.py",
+        "responsibility": "Publishes the deterministic CE contract archive operation."
+      },
+      {
+        "path": "datamimic_ce/interfaces/bundle/bundle.py",
+        "responsibility": "Builds deterministic CE schema and reference archives from the public Authoring application."
       }
     ]
   },
@@ -86,6 +94,11 @@
         {
           "component": "project",
           "rationale": "Project commands create the requested workspace.",
+          "decided_by": "agent"
+        },
+        {
+          "component": "bundle",
+          "rationale": "The authoring export-contract command delegates deterministic archive creation to the bundle owner.",
           "decided_by": "agent"
         }
       ],
@@ -175,6 +188,28 @@
         "docs/architecture/inner/semantic-review/astra-target-decision.md"
       ],
       "requires": []
+    },
+    {
+      "id": "TRANSPORT-BUNDLE",
+      "label": "bundle",
+      "role": "interface",
+      "packages": [
+        "datamimic_ce.interfaces.bundle"
+      ],
+      "responsibilities": [
+        "Package deterministic CE DSL and Authoring projections with CE producer/version and content hashes."
+      ],
+      "forbidden_responsibilities": [
+        "Own grammar, verification policy, hosted services or a second capability catalog."
+      ],
+      "provenance": [
+        "docs/migrations/authoring-errors.md"
+      ],
+      "requires": [],
+      "public": [
+        "datamimic_ce.interfaces.bundle:write_contract_bundle"
+      ],
+      "decided_by": "agent"
     }
   ],
   "rules": [
@@ -222,8 +257,8 @@
       "kind": "root_layout",
       "root": "datamimic_ce.interfaces.cli",
       "allowed_children": [
-        "datamimic_ce.interfaces.cli._app",
         "datamimic_ce.interfaces.cli.__main__",
+        "datamimic_ce.interfaces.cli._app",
         "datamimic_ce.interfaces.cli.authoring",
         "datamimic_ce.interfaces.cli.presenter",
         "datamimic_ce.interfaces.cli.runtime"
@@ -260,6 +295,19 @@
       "rationale": "Python caller/test-factory adaptation; factory.py is a module. Exact reviewed target children; no hidden extra modules.",
       "provenance": [
         "docs/architecture/inner/structure-review.json"
+      ],
+      "decided_by": "agent"
+    },
+    {
+      "id": "LAYOUT-INTERFACES-BUNDLE",
+      "kind": "root_layout",
+      "root": "datamimic_ce.interfaces.bundle",
+      "allowed_children": [
+        "datamimic_ce.interfaces.bundle.bundle"
+      ],
+      "rationale": "Exact reviewed portable metadata, error-context or contract-export modules; no implicit extra files.",
+      "provenance": [
+        "docs/migrations/authoring-errors.md"
       ],
       "decided_by": "agent"
     }

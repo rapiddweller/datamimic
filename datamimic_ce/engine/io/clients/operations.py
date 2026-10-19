@@ -14,6 +14,7 @@ from datamimic_ce.engine.io.clients.rdbms_client import RdbmsClient
 from datamimic_ce.engine.io.connection_config.mongodb_connection_config import MongoDBConnectionConfig
 from datamimic_ce.engine.io.connection_config.rdbms_connection_config import RdbmsConnectionConfig
 from datamimic_ce.engine.io.contracts import DataSourcePagination, SqlScriptClient
+from datamimic_ce.errors import IssueCode, OperationError
 
 logger = logging.getLogger("DATAMIMIC")
 
@@ -63,7 +64,12 @@ def rdbms_count_source_query(client: RegisteredClient, query: str, source_str: s
         raise TypeError("Client is not an RDBMS client")
     try:
         return client.count_query_length(query=query)
-    except (ProgrammingError, OperationalError):
+    except (ProgrammingError, OperationalError, OperationError) as error:
+        if isinstance(error, OperationError) and not (
+            error.issue_code is IssueCode.OPERATION_EXECUTION_FAILED
+            and isinstance(error.__cause__, ProgrammingError | OperationalError)
+        ):
+            raise
         logger.error(f"Cannot get length of database source '{source_str}' with {query_label} '{query}'")
         return None
 

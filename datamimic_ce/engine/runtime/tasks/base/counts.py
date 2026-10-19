@@ -3,6 +3,7 @@
 from typing import SupportsIndex, SupportsInt
 
 from datamimic_ce.engine.runtime.contexts.context import Context
+from datamimic_ce.errors import DomainError, IssueCode, UserErrorBase, task_config_error
 from datamimic_ce.randomness import RandomSource
 
 
@@ -13,8 +14,21 @@ def get_int_count(count: str | None, context: Context) -> int | None:
         return int(count)
     value = context.evaluate_python_expression(count[1:-1])
     if isinstance(value, str | bytes | bytearray | SupportsInt | SupportsIndex):
-        return int(value)
-    raise TypeError(f"Count expression must evaluate to an integer-compatible value, got {type(value).__name__}")
+        try:
+            return int(value)
+        except (UserErrorBase, DomainError):
+            raise
+        except (ArithmeticError, TypeError, ValueError) as error:
+            raise task_config_error(
+                code=IssueCode.TASK_EXPRESSION_EVAL_FAILED,
+                expr="count",
+                error=f"{type(error).__name__}; count must evaluate to an integer-compatible value",
+            ) from error
+    raise task_config_error(
+        code=IssueCode.TASK_EXPRESSION_EVAL_FAILED,
+        expr="count",
+        error=f"count must evaluate to an integer-compatible value, got {type(value).__name__}",
+    )
 
 
 def resolve_count(

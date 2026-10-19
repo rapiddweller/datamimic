@@ -1,241 +1,179 @@
 # DATAMIMIC
-# Copyright (c) 2023-2025 Rapiddweller Asia Co., Ltd.
-# This software is licensed under the MIT License.
+# Copyright (c) 2023-2026 Rapiddweller Asia Co., Ltd.
+# This software is licensed under the MIT License. See LICENSE.
 
-"""Reference projections remain derived from canonical registries and models."""
+"""Public discovery projects the actual CE registry and canonical request contracts."""
 
 import json
 
 import pytest
+from typer.testing import CliRunner
 
-from datamimic_ce.authoring.adapters.reference import (
-    ReferenceTopic,
-    capabilities_index,
-    capabilities_manifest,
-    capabilities_sections,
-    generator_reference,
-    known_generator_names,
-    reference,
-)
+from datamimic_ce.authoring import create_authoring_application
+from datamimic_ce.authoring.domain.capabilities import CapabilityDomain, CapabilityNotFound, DslCatalogSnapshot
+from datamimic_ce.authoring.domain.reference import ReferenceResult
+from datamimic_ce.authoring.domain.requests import AuthoringSchemaId, ReferenceRequest, ReferenceTopic
 from datamimic_ce.authoring.domain.schema import build_schema_index
-from datamimic_ce.authoring.spec import authoring_spec_json_schema
-from datamimic_ce.engine.dsl.model.registry import list_element_tags
+from datamimic_ce.engine.dsl.model.registry import canonical_tag, get_element_definition, list_element_tags
 from datamimic_ce.engine.dsl.vocabulary.enums.converter_enums import ConverterEnum
 from datamimic_ce.engine.io.api import buffered_exporter_names
+from datamimic_ce.interfaces.cli import app
 
 
-def test_overview_is_owned_prose_over_live_topics() -> None:
-    text = reference(ReferenceTopic.OVERVIEW)
-    assert "AuthoringSpecV1" in text
-    assert all(topic.value in text for topic in ReferenceTopic)
+@pytest.fixture(scope="module")
+def application():
+    return create_authoring_application()
 
 
-def test_reference_and_capabilities_project_live_intent_schema() -> None:
-    schema = authoring_spec_json_schema()
-    assert capabilities_manifest()["authoring_spec"] == schema
-    assert '"AuthoringSpecV1"' in reference(ReferenceTopic.SCAFFOLD)
+def test_overview_addresses_every_current_topic(application):
+    result = application.reference(ReferenceRequest(topic=ReferenceTopic.OVERVIEW))
+    assert "DM JSON" in result.content and "Build" in result.content
+    assert set(result.next_topics) == set(ReferenceTopic) - {ReferenceTopic.OVERVIEW}
+    assert ReferenceResult.model_validate_json(result.model_dump_json()) == result
 
 
-def test_reference_timeseries_documents_ts_namespace() -> None:
-    text = reference(ReferenceTopic.TIMESERIES)
-    assert "ts.now" in text and "ts.step" in text and "ts.series" in text
+def test_schema_discovery_uses_actual_closed_dm_json_and_build_models(application):
+    assert application.schema(AuthoringSchemaId.DM_JSON_DOCUMENT_V1) == application.document_schema()
+    build = application.schema(AuthoringSchemaId.BUILD_REQUEST_V4)
+    assert build["title"] == "BuildRequestV4" and build["additionalProperties"] is False
+    assert "document" in build["properties"]
+    for schema_id in AuthoringSchemaId:
+        assert application.schema(schema_id)
 
 
-def test_reference_converters_come_from_enum() -> None:
-    text = reference(ReferenceTopic.CONVERTERS)
-    assert all(member.value in text for member in ConverterEnum)
+def test_converters_and_targets_come_from_current_owners(application):
+    assert set(application.capability_names(CapabilityDomain.CONVERTER)) == {member.value for member in ConverterEnum}
+    snapshot = application.capabilities()
+    assert {
+        item.name for item in snapshot.exporter_capabilities if item.output_kind == "file"
+    } == buffered_exporter_names()
 
 
-def test_reference_targets_come_from_registry() -> None:
-    text = reference(ReferenceTopic.TARGETS)
-    assert all(name in text for name in buffered_exporter_names())
+def test_execute_target_capability_uses_model_description(application):
+    result = application.capability(CapabilityDomain.ELEMENT, "execute")
+    assert result.ok
+    target = next(field for field in result.capability.attributes if field.name == "target")
+    assert target.description == get_element_definition("execute").model.model_fields["target"].description
+    assert "execute_sql_script" in target.description
 
 
-def test_execute_target_capability_documents_sql_client_path() -> None:
-    target = capabilities_manifest()["elements"]["execute"]["attributes"]["target"]
-    assert target["description"] == (
-        "Client id to run the script against, required for type='sql' (e.g. a <database> id); "
-        "ctx.root.clients[target].execute_sql_script(...) executes the SQL text."
-    )
+def test_element_lookup_is_closed_and_registry_derived(application):
+    names = application.capability_names(CapabilityDomain.ELEMENT)
+    assert names and set(names) == {canonical_tag(tag) for tag in list_element_tags()}
+    for name in names:
+        result = application.capability(CapabilityDomain.ELEMENT, name)
+        assert result.ok and result.capability.properties_schema
+        definition = get_element_definition(name)
+        assert result.capability.aliases == tuple(sorted(definition.aliases))
+        assert result.capability.content_modes == definition.content_modes
+        assert result.capability.bounded_execution == definition.bounded_execution_profile
+    missing = application.capability(CapabilityDomain.ELEMENT, "generat")
+    assert isinstance(missing, CapabilityNotFound)
+    assert missing.available_names == names
 
 
-def test_element_reference_uses_registered_schema() -> None:
-    text = reference(ReferenceTopic.ELEMENT, "generate")
-    assert "Attributes:" in text and "Children:" in text
-    with pytest.raises(ValueError, match="Unknown element"):
-        reference(ReferenceTopic.ELEMENT, "generat")
+def test_schema_index_covers_all_runtime_tags_including_aliases():
+    tags = list_element_tags()
+    assert tags and set(tags) == set(build_schema_index().tags)
 
 
-def test_schema_index_covers_runtime_element_registry() -> None:
-    assert set(list_element_tags()) <= set(build_schema_index().tags)
+def test_compact_names_match_every_full_capability_without_truncation(application):
+    snapshot = application.capabilities()
+    compact = snapshot.to_index_dict()
+    assert set(compact) == {domain.value for domain in CapabilityDomain}
+    for domain in CapabilityDomain:
+        names = application.capability_names(domain)
+        assert names and compact[domain.value] == list(names)
+        assert len(names) == len(set(names))
+        for name in names:
+            detail = application.capability(domain, name)
+            assert detail.ok and detail.name == name
+    assert DslCatalogSnapshot.model_validate_json(snapshot.model_dump_json()) == snapshot
 
 
-def test_reference_context_documents_scope_aliases() -> None:
-    text = reference(ReferenceTopic.CONTEXT).lower()
-    assert "this." in text and "parent." in text and "root." in text
-
-
-# ---------------------------------------------------------------------------
-# Compact capabilities contract — Completeness, Fidelity, Budget
-# ---------------------------------------------------------------------------
-
-
-def test_compact_completeness_matches_full_manifest() -> None:
-    compact = capabilities_index()
-    full = capabilities_manifest()
-
-    # Element tags are the same set
-    assert set(compact["elements"]) == set(full["elements"])
-    for tag, el in compact["elements"].items():
-        # Attribute names match (compact has sorted names, full has dict keys)
-        assert set(el["attributes"]) == set(full["elements"][tag]["attributes"])
-        # Children are verbatim
-        assert el["children"] == full["elements"][tag]["children"]
-
-    # Rule ids match and stay in manifest order
-    assert [r["id"] for r in compact["rules"]] == [r["id"] for r in full["rules"]]
-
-    # Compact sections == manifest key order
-    assert compact["_meta"]["sections"] == list(capabilities_manifest())
-
-    # Other name arrays are verbatim
-    for section in ("generators", "entities", "converters", "distributions",
-                    "numeric_distributions", "finite_numeric_sequences"):
-        assert compact[section] == full[section]
-
-    # Source capabilities and targets are verbatim
-    assert compact["source_capabilities"] == full["source_capabilities"]
-    assert compact["targets"] == full["targets"]
-    assert compact["aliases"] == full["aliases"]
-
-
-def test_compact_fidelity_full_mode_equals_manifest() -> None:
-    """--full provides the exact capabilities_manifest() output."""
-    full = capabilities_manifest()
-    assert capabilities_manifest() == full  # idempotent
-
-
-def test_compact_fidelity_section_mode() -> None:
-    result = capabilities_sections(("elements",))
-    assert set(result) == {"elements"}
-    assert result["elements"] == capabilities_manifest()["elements"]
-
-    result = capabilities_sections(("rules", "schema_version"))
-    assert set(result) == {"rules", "schema_version"}
-    assert result["rules"] == capabilities_manifest()["rules"]
-
-
-def test_compact_budget_under_25kb_and_20_percent_of_full() -> None:
-    compact_json = json.dumps(capabilities_index())
-    full_json = json.dumps(capabilities_manifest())
-    compact_bytes = len(compact_json.encode())
-    full_bytes = len(full_json.encode())
+def test_compact_budget_remains_bounded(application):
+    compact_bytes = len(json.dumps(application.capabilities().to_index_dict()).encode())
+    full_bytes = len(application.capabilities().model_dump_json().encode())
     assert compact_bytes < 25_000
     assert compact_bytes <= full_bytes * 0.20
 
 
-def test_compact_sections_rejects_unknown_section() -> None:
-    with pytest.raises(ValueError, match="Unknown capability section"):
-        capabilities_sections(("bogus",))
-    # Atomic: valid+invalid together should fail
-    with pytest.raises(ValueError, match="Unknown capability section"):
-        capabilities_sections(("elements", "bogus"))
+def test_generator_names_are_complete_and_deterministic(application):
+    names = application.capability_names(CapabilityDomain.GENERATOR)
+    assert names and "SequenceTableGenerator" in names
+    assert names == application.capability_names(CapabilityDomain.GENERATOR)
+    result = application.capability(CapabilityDomain.GENERATOR, "SequenceTableGenerator")
+    assert result.ok and "sequence" in result.capability.parameters
 
 
-def test_compact_sections_unknown_error_carries_valid_sections() -> None:
-    from datamimic_ce.authoring.contracts import UnknownCapabilitySection
-
-    with pytest.raises(UnknownCapabilitySection) as exc_info:
-        capabilities_sections(("bogus",))
-    assert isinstance(exc_info.value.valid_sections, list)
-    assert "elements" in exc_info.value.valid_sections
-
-
-def test_generator_names_is_unbounded_and_deterministic() -> None:
-    """known_generator_names no longer parses clip()-ed prose text."""
-    names = known_generator_names()
-    assert isinstance(names, set)
-    assert len(names) > 0
-    assert "SequenceTableGenerator" in names
-    assert "- SequenceTableGenerator(sequence)" in generator_reference()
-    # Repeatable
-    assert names == known_generator_names()
+def test_reference_names_are_addressable_and_no_other_entry_substitutes(application):
+    for topic in ReferenceTopic:
+        names = application.reference_names(topic)
+        for name in names:
+            result = application.reference(ReferenceRequest(topic=topic, name=name))
+            if result.rules is not None:
+                assert tuple(str(rule.rule_id) for rule in result.rules) == (name,)
+            else:
+                assert tuple(entry.name for entry in result.entries) == (name,)
 
 
-def test_element_reference_pages_not_truncated() -> None:
-    """Every element detail page fits within the 16k clip limit."""
-    for tag in build_schema_index().tags:
-        text = reference(ReferenceTopic.ELEMENT, tag)
-        assert "[truncated" not in text, f"<{tag}> element reference is truncated"
+def test_cli_compact_and_full_match_public_application(application):
+    runner = CliRunner()
+    compact = runner.invoke(app, ["authoring", "capabilities"])
+    full = runner.invoke(app, ["authoring", "capabilities", "--full"])
+    assert compact.exit_code == full.exit_code == 0
+    assert json.loads(compact.stdout) == application.capabilities().to_index_dict()
+    assert json.loads(full.stdout) == application.capabilities().to_dict()
 
 
-def test_capabilities_cli_compact_is_valid_json() -> None:
-    """The compact output is parseable, versioned, and omits authoring_spec."""
-    from typer.testing import CliRunner
-
-    from datamimic_ce.interfaces.cli import app
-
-    result = CliRunner().invoke(app, ["capabilities"])
-    assert result.exit_code == 0
-    data = json.loads(result.stdout)
-    assert data["_meta"]["format_version"] == 1
-    assert data["_meta"]["view"] == "compact"
-    assert "authoring_spec" not in data
-    assert data["_meta"]["usage"]["authoring_spec_detail"] == "datamimic reference scaffold"
-
-
-def test_capabilities_cli_section_error_is_machine_readable() -> None:
-    from typer.testing import CliRunner
-
-    from datamimic_ce.interfaces.cli import app
-
-    result = CliRunner().invoke(app, ["capabilities", "--section", "bogus"])
+def test_cli_capability_unknown_name_is_machine_readable(application):
+    result = CliRunner().invoke(app, ["authoring", "capability", "--domain", "element", "--name", "bogus"])
     assert result.exit_code == 1
     data = json.loads(result.stdout)
-    assert data["ok"] is False
-    assert "bogus" in data["error"]
-    assert isinstance(data["valid_sections"], list)
+    assert data["ok"] is False and data["error"] == "capability_not_found"
+    assert data["available_names"] == list(application.capability_names(CapabilityDomain.ELEMENT))
 
 
-def test_capabilities_cli_section_and_full_are_mutually_exclusive() -> None:
-    from typer.testing import CliRunner
-
-    from datamimic_ce.interfaces.cli import app
-
-    result = CliRunner().invoke(app, ["capabilities", "--section", "x", "--full"])
-    assert result.exit_code == 1
-    data = json.loads(result.stdout)
-    assert data["ok"] is False
-    assert "mutually exclusive" in data["error"]
+def test_cli_rejects_unknown_domain_without_partial_result():
+    result = CliRunner().invoke(app, ["authoring", "capability", "--domain", "bogus", "--name", "generate"])
+    assert result.exit_code != 0
 
 
-def test_capabilities_cli_section_mode_returns_keyed_dict() -> None:
-    from typer.testing import CliRunner
-
-    from datamimic_ce.interfaces.cli import app
-
-    result = CliRunner().invoke(app, ["capabilities", "--section", "rules"])
+def test_cli_reference_is_exact_typed_payload(application):
+    result = CliRunner().invoke(app, ["authoring", "reference", "--topic", "rules", "--name", "DM401"])
     assert result.exit_code == 0
-    data = json.loads(result.stdout)
-    assert set(data) == {"rules"}
-    assert isinstance(data["rules"], list)
-
-    # Multiple sections
-    result = CliRunner().invoke(app, ["capabilities", "--section", "elements,rules"])
-    assert result.exit_code == 0
-    data = json.loads(result.stdout)
-    assert set(data) == {"elements", "rules"}
+    expected = application.reference(ReferenceRequest(topic=ReferenceTopic.RULES, name="DM401"))
+    assert ReferenceResult.model_validate_json(result.stdout) == expected
+    assert expected.rules and len(expected.rules) == 1
 
 
-def test_capabilities_cli_full_mode_is_unwrapped_manifest() -> None:
-    from typer.testing import CliRunner
+def test_learning_retains_correct_scope_and_timeseries_guidance(application):
+    context = application.reference(ReferenceRequest(topic=ReferenceTopic.LEARNING, name="context"))
+    description = context.entries[0].description
+    assert all(alias in description for alias in ("this.field", "parent.field", "root.field"))
+    assert "Current-scope fields can resolve bare" in description
+    assert "outermost bare name wins" in description
+    series = application.reference(ReferenceRequest(topic=ReferenceTopic.LEARNING, name="timeseries"))
+    description = series.entries[0].description
+    assert all(field in description for field in ("ts.now", "ts.step", "ts.series"))
+    assert "default 1" in description and "floor((end-start)/interval)" in description
+    assert "rng_seed" in description
+    from datamimic_ce.engine.dsl.model.generation.timeseries import TimeSeriesConfig
 
-    from datamimic_ce.interfaces.cli import app
+    window = TimeSeriesConfig.parse("2026-01-01T00:00:00", "2026-01-01T02:30:00", "PT1H")
+    assert window.ticks_per_series == 2
+    assert [(window.at(i).step, window.at(i).series) for i in range(4)] == [(0, 0), (1, 0), (0, 1), (1, 1)]
 
-    result = CliRunner().invoke(app, ["capabilities", "--full"])
-    assert result.exit_code == 0
-    data = json.loads(result.stdout)
-    # No _meta wrapper in full mode
-    assert "_meta" not in data
-    assert "authoring_spec" in data
-    assert data["elements"]["generate"]["attributes"]  # full detail, not just names
+
+@pytest.mark.parametrize("element, family", [("database", "db"), ("mongodb", "mongo")])
+def test_connection_catalog_preserves_profile_precedence_and_read_only_contract(application, element, family):
+    result = application.capability(CapabilityDomain.ELEMENT, element)
+    assert result.ok
+    attributes = {field.name: field for field in result.capability.attributes}
+    host = attributes["host"].description
+    assert f"'{{system}}.{family}.host'" in host
+    assert "overrides this attribute" in host and "this value is kept" in host
+    assert attributes["read_only"].xml_name == "readOnly"
+    properties = result.capability.properties_schema["properties"]
+    assert properties["host"]["description"] == host
+    assert properties["read_only"]["type"] == "boolean"

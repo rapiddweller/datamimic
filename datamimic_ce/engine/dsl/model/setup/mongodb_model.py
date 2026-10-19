@@ -11,6 +11,11 @@ from datamimic_ce.engine.dsl.model.validation import ModelUtil
 
 
 class MongoDBModel(BaseModel):
+    read_only: bool = Field(
+        default=False,
+        alias="readOnly",
+        description="Reject write operations and unproved source queries on this connection.",
+    )
     id: str = Field(
         ...,
         description="Unique identifier for this MongoDB connection, referenced elsewhere via "

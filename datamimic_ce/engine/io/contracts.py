@@ -4,7 +4,7 @@ from abc import ABC, abstractmethod
 from collections.abc import Mapping
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Protocol, TypedDict
+from typing import Generic, Protocol, TypedDict, TypeVar
 
 
 class Exporter:
@@ -54,13 +54,16 @@ class SqlScriptClient(Protocol):
     def execute_sql_script(self, query: str, /) -> None: ...
 
 
+_ExportValue = TypeVar("_ExportValue")
+
+
 @dataclass(frozen=True)
-class SmokeExportRequest:
+class SmokeExportRequest(Generic[_ExportValue]):
     descriptor_dir: Path
     task_id: str
     basename: str
     full_name: str
-    rows: list[dict[str, object]]
+    rows: list[dict[str, _ExportValue]]
     exporter_name: str
     params: dict[str, object]
     default_separator: str

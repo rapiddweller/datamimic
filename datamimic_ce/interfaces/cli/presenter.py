@@ -5,26 +5,22 @@ from __future__ import annotations
 import json
 from collections.abc import Mapping
 from dataclasses import dataclass
+from enum import StrEnum
 from pathlib import Path
 from typing import NoReturn
 
 import typer
+from pydantic import BaseModel
 from rich.console import Console
 from rich.panel import Panel
 from rich.table import Table
 
-from datamimic_ce._compat import StrEnum
-from datamimic_ce.authoring.contracts import AuthoringStage, LintResult, RuleSeverity, RunResult, ScaffoldResult
+from datamimic_ce.authoring.domain.requests import ReadyBuild, ReadyCompileDocument, ReadyDecompileDocument
 
 
 class CliOutputFormat(StrEnum):
     TEXT = "text"
     JSON = "json"
-
-
-class FailureThreshold(StrEnum):
-    ERROR = "error"
-    WARNING = "warning"
 
 
 @dataclass(frozen=True)
@@ -77,90 +73,6 @@ def emit_system_information(information: SystemInformation) -> None:
     Console().print(table)
 
 
-def emit_check(
-    result: LintResult,
-    descriptor_path: Path,
-    output_format: CliOutputFormat,
-    threshold: FailureThreshold,
-) -> None:
-    if output_format is CliOutputFormat.JSON:
-        typer.echo(result.model_dump_json(indent=2))
-    else:
-        for diagnostic in result.diagnostics:
-            location = f"{descriptor_path}:{diagnostic.line}" if diagnostic.line else str(descriptor_path)
-            typer.echo(f"{location}  {diagnostic.severity.value.upper():<7} {diagnostic.rule}  {diagnostic.message}")
-            typer.echo(f"    -> {diagnostic.fix_hint}")
-        suffix = f" (+{result.truncated} truncated)" if result.truncated else ""
-        typer.echo(f"Summary: {result.summary()}{suffix}")
-    severities = {RuleSeverity.ERROR}
-    if threshold is FailureThreshold.WARNING:
-        severities.add(RuleSeverity.WARNING)
-    raise typer.Exit(1 if any(item.severity in severities for item in result.diagnostics) else 0)
-
-
-def emit_run(result: RunResult, output_format: CliOutputFormat) -> None:
-    if output_format is CliOutputFormat.JSON:
-        typer.echo(result.model_dump_json(indent=2))
-    else:
-        typer.echo(f"ok: {result.ok}")
-        typer.echo(f"stage: {result.stage.value}")
-        if result.timing_ms is not None:
-            typer.echo(f"timing: {result.timing_ms}ms")
-        for product in result.products:
-            note = " (truncated)" if product.truncated_rows else ""
-            typer.echo(f"{product.name}: {product.count} rows{note}")
-            for row in product.sample:
-                typer.echo(f"  {row}")
-        if result.products_truncated:
-            typer.echo(f"(+{result.products_truncated} products truncated)")
-        for diagnostic in result.diagnostics:
-            typer.echo(f"{diagnostic.severity.value.upper():<7} {diagnostic.rule}  {diagnostic.message}")
-            typer.echo(f"    -> {diagnostic.fix_hint}")
-    raise typer.Exit(0 if result.ok else 1)
-
-
-def _emit_scaffold_human(result: ScaffoldResult) -> None:
-    """Render scaffold result as human-readable terminal output."""
-    for issue in result.issues:
-        typer.echo(f"Error: {issue.summary()}")
-    for diagnostic in result.diagnostics:
-        severity = diagnostic.severity.value.upper()
-        typer.echo(f"{severity:<7} {diagnostic.rule}  {diagnostic.message}")
-        typer.echo(f"    -> {diagnostic.fix_hint}")
-    if result.summary:
-        typer.echo(f"Summary: {result.summary}")
-    if result.xml and result.stage not in (AuthoringStage.LINT, AuthoringStage.DRY_RUN):
-        typer.echo(result.xml)
-    if result.products:
-        typer.echo("Dry-run successful:")
-    for product in result.products:
-        typer.echo(f"{product.name}: {product.count} rows")
-    if result.acceptance:
-        typer.echo(
-            f"Acceptance: {result.acceptance.passed} passed, "
-            f"{result.acceptance.failed} failed, {result.acceptance.unevaluable} unevaluable"
-        )
-    typer.echo(f"verified: {result.verified}")
-
-
-def emit_scaffold(result: ScaffoldResult, output_format: CliOutputFormat) -> None:
-    if output_format is CliOutputFormat.JSON:
-        typer.echo(result.model_dump_json(indent=2, exclude_none=True))
-    else:
-        _emit_scaffold_human(result)
-    if not result.ok or not result.verified:
-        raise typer.Exit(2 if result.stage is AuthoringStage.RENDER else 1)
-    raise typer.Exit(0)
-
-
-def emit_reference(content: str) -> None:
-    typer.echo(content)
-
-
-def emit_capabilities(payload: Mapping[str, object]) -> None:
-    typer.echo(json.dumps(payload, indent=2, default=str))
-
-
 def emit_demo_information(information: DemoInformation) -> None:
     Console().print(
         Panel(
@@ -202,3 +114,21 @@ def emit_project_created(project_name: str, project_dir: Path) -> None:
             border_style="green",
         )
     )
+
+
+def emit_authoring(
+    result: BaseModel | Mapping[str, object], output_format: CliOutputFormat, *, exit_code: int = 0
+) -> NoReturn:
+    if output_format is CliOutputFormat.TEXT and isinstance(result, (ReadyCompileDocument, ReadyBuild)):
+        for diagnostic in result.diagnostics:
+            typer.echo(f"{diagnostic.severity}: {diagnostic.message}", err=True)
+        typer.echo(result.artifact.compiled_xml)
+    elif output_format is CliOutputFormat.TEXT and isinstance(result, ReadyDecompileDocument):
+        for diagnostic in result.diagnostics:
+            typer.echo(f"{diagnostic.severity}: {diagnostic.message}", err=True)
+        typer.echo(result.document.model_dump_json(indent=2, exclude_none=True))
+    elif isinstance(result, BaseModel):
+        typer.echo(result.model_dump_json(indent=2, exclude_none=True))
+    else:
+        typer.echo(json.dumps(dict(result), indent=2, ensure_ascii=False))
+    raise typer.Exit(exit_code)

@@ -14,6 +14,7 @@ from datamimic_ce.engine.dsl.statements.values.structured.array_statement import
 from datamimic_ce.engine.dsl.vocabulary.constants.attribute_constants import ATTR_NAME
 from datamimic_ce.engine.dsl.vocabulary.constants.data_type_constants import DATA_TYPE_LITERAL
 from datamimic_ce.engine.dsl.vocabulary.constants.element_constants import EL_ARRAY
+from datamimic_ce.errors import IssueCode, parser_validation_error
 
 
 class ArrayParser(StatementParser):
@@ -38,9 +39,10 @@ class ArrayParser(StatementParser):
         if model.type == DATA_TYPE_LITERAL:
             return ArrayStatement(model, self._parse_literal_values())
         if len(self._element) > 0:
-            raise ValueError(
-                f"<array> '{model.name}' has child elements but is not type='{DATA_TYPE_LITERAL}' - "
-                f"sub-elements are only valid for a literal array"
+            raise parser_validation_error(
+                code=IssueCode.PARSER_ARRAY_SUBELEMENTS_NOT_ALLOWED,
+                name=model.name,
+                data_type=DATA_TYPE_LITERAL,
             )
         return ArrayStatement(model)
 
@@ -54,14 +56,17 @@ class ArrayParser(StatementParser):
             try:
                 value_model = ValueModel.model_validate(attributes)
             except ValidationError as err:
-                raise ValueError(
-                    f"Invalid <{xml_tag(child)}> inside <array> '{self._element.get(ATTR_NAME)}': {err}"
+                raise parser_validation_error(
+                    code=IssueCode.PARSER_ARRAY_VALUE_INVALID,
+                    child_tag=xml_tag(child),
+                    name=self._element.get(ATTR_NAME),
+                    details="; ".join(item["msg"] for item in err.errors()),
                 ) from err
             parsed_values.append(value_model.constant)
 
         if not parsed_values:
-            raise ValueError(
-                f"<array> '{self._element.get(ATTR_NAME)}' with type='{DATA_TYPE_LITERAL}' "
-                f"must have at least one <value> child"
+            raise parser_validation_error(
+                code=IssueCode.PARSER_ARRAY_LITERAL_EMPTY,
+                name=self._element.get(ATTR_NAME),
             )
         return parsed_values

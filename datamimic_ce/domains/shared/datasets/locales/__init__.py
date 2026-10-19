@@ -40,6 +40,9 @@ class UnsupportedLocaleDatasetError(ValueError):
             f"Supported dataset codes: {supported_hint}"
         )
 
+    def __reduce__(self) -> tuple[object, tuple[object, ...]]:
+        return type(self), (self.locale, self.dataset, self.supported_datasets)
+
 
 class PersonLocale(TypedDict):
     sexes: list[str]

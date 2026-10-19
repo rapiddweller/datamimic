@@ -13,6 +13,7 @@ from datamimic_ce.engine.runtime.contexts.context import Context
 from datamimic_ce.engine.runtime.contexts.geniter_context import GenIterContext
 from datamimic_ce.engine.runtime.tasks.base.task import GenSubTask
 from datamimic_ce.engine.runtime.tasks.sources.reference import load_reference_source, reference_uses_shared_cycle
+from datamimic_ce.errors import TaskConfigError
 
 
 class ReferenceTask(GenSubTask):
@@ -29,9 +30,7 @@ class ReferenceTask(GenSubTask):
     def execute(self, ctx: Context):
         """Generate a (composite) reference record from an RDBMS or MongoDB data source."""
         if self._iterator is None:
-            if self._pagination is None and (
-                self._statement.unique or reference_uses_shared_cycle(self._statement)
-            ):
+            if self._pagination is None and (self._statement.unique or reference_uses_shared_cycle(self._statement)):
                 # Unpaged tasks can be rebuilt per record inside control flow. Keep finite
                 # unique cursors alive too; statement identity separates same-named branches.
                 key = (
@@ -56,7 +55,7 @@ class ReferenceTask(GenSubTask):
             record = next(self._iterator)
         except StopIteration:
             if self._statement.unique:
-                raise ValueError(
+                raise TaskConfigError(
                     f"Cannot generate more unique values for <reference> '{self._statement.name}': source exhausted"
                 ) from None
             self._iterator = None

@@ -7,6 +7,7 @@
 import random
 
 from datamimic_ce.domains.domain_core.base_literal_generator import BaseLiteralGenerator
+from datamimic_ce.errors import generator_config_error
 
 # MIME type -> (magic header, trailer). The generated blob is header + random payload + trailer:
 # a MIME-SNIFFABLE STUB that passes magic-byte upload validators / file-type sniffers - not a
@@ -40,9 +41,8 @@ class BinaryGenerator(BaseLiteralGenerator):
     ):
         super().__init__(rng=rng)
         if mime_type is not None and mime_type not in MIME_SIGNATURES:
-            raise ValueError(
-                f"BinaryGenerator mimeType '{mime_type}' is not supported. "
-                f"Supported: {', '.join(sorted(MIME_SIGNATURES))}"
+            raise generator_config_error(
+                reason=f"BinaryGenerator mimeType is not supported. Supported: {', '.join(sorted(MIME_SIGNATURES))}"
             )
         self._header, self._trailer = MIME_SIGNATURES[mime_type] if mime_type is not None else (b"", b"")
         signature_len = len(self._header) + len(self._trailer)
@@ -60,13 +60,15 @@ class BinaryGenerator(BaseLiteralGenerator):
         else:
             lo, hi = int(min_len), int(max_len)
         if lo < 0 or hi < 0:
-            raise ValueError(f"BinaryGenerator lengths must be >= 0, got min={lo}, max={hi}")
+            raise generator_config_error(reason=f"BinaryGenerator lengths must be >= 0, got min={lo}, max={hi}")
         if lo > hi:
-            raise ValueError(f"BinaryGenerator min length {lo} exceeds max length {hi}")
+            raise generator_config_error(reason=f"BinaryGenerator min length {lo} exceeds max length {hi}")
         if mime_type is not None and hi < signature_len:
-            raise ValueError(
-                f"BinaryGenerator maxLength {hi} is too short for mimeType '{mime_type}': "
-                f"its signature needs at least {signature_len} bytes"
+            raise generator_config_error(
+                reason=(
+                    f"BinaryGenerator maxLength {hi} is too short for mimeType '{mime_type}': "
+                    f"its signature needs at least {signature_len} bytes"
+                )
             )
         self._min_len = max(lo, signature_len)
         self._max_len = hi

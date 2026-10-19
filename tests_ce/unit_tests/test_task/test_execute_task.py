@@ -14,6 +14,7 @@ from datamimic_ce.engine.io.exporters.diagnostics.test_result_exporter import Te
 from datamimic_ce.engine.runtime.contexts.context import SetupContext
 from datamimic_ce.engine.runtime.storage.memstore_manager import MemstoreManager
 from datamimic_ce.engine.runtime.tasks.flow.commands.execute_task import ExecuteTask
+from datamimic_ce.errors import TaskConfigError
 
 
 def _context(descriptor_dir: Path) -> SetupContext:
@@ -67,9 +68,12 @@ def test_sql_execute_interpolates_and_commits_against_sqlite(tmp_path, monkeypat
     client.engine.dispose()
 
 
-def test_sql_execute_missing_target_keeps_key_error(tmp_path) -> None:
-    with pytest.raises(KeyError, match="missing"):
+def test_sql_execute_missing_target_keeps_portable_identity_and_key_error_cause(tmp_path) -> None:
+    with pytest.raises(TaskConfigError) as caught:
         _sql_task("missing", "SELECT 1;").execute(_context(tmp_path))
+    assert caught.value.issue_code.value == "I823"
+    assert isinstance(caught.value.__cause__, KeyError)
+    assert caught.value.__cause__.args == ("missing",)
 
 
 def test_sql_execute_non_rdbms_target_fails_without_sql_method(tmp_path) -> None:
@@ -172,7 +176,7 @@ def test_sql_execute_rolls_back_all_statements_on_failure(tmp_path, monkeypatch)
     context.add_client("db", client)
     client.execute_sql_script("CREATE TABLE anchor (id INTEGER);")
 
-    with pytest.raises(RuntimeError, match="Error when execute SQL"):
+    with pytest.raises(RuntimeError, match=r"\[E014/I901\].*SQL script") as caught:
         _sql_task(
             "db",
             "INSERT INTO anchor VALUES (1); "
@@ -180,6 +184,8 @@ def test_sql_execute_rolls_back_all_statements_on_failure(tmp_path, monkeypatch)
             "INSERT INTO missing_table VALUES (2);",
         ).execute(context)
 
+    assert "missing_table" not in str(caught.value)
+    assert caught.value.__cause__ is not None
     assert client.get("SELECT id FROM anchor") == []
     assert client.get("SELECT name FROM sqlite_master WHERE name = 'rollback_probe'") == []
     client.engine.dispose()

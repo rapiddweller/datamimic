@@ -7,6 +7,7 @@
 from datamimic_ce.engine.dsl.api import WhileStatement
 from datamimic_ce.engine.runtime.contexts.geniter_context import GenIterContext
 from datamimic_ce.engine.runtime.tasks.base.task import CommonSubTask, GenSubTask
+from datamimic_ce.errors import IssueCode, task_config_error
 
 
 class WhileTask(GenSubTask):
@@ -28,17 +29,15 @@ class WhileTask(GenSubTask):
     def execute(self, parent_context: GenIterContext) -> None:
         from datamimic_ce.engine.runtime.tasks.base.dispatch import create_task
 
-        child_tasks = [
-            create_task(child_stmt, parent_context.root)
-            for child_stmt in self._statement.sub_statements
-        ]
+        child_tasks = [create_task(child_stmt, parent_context.root) for child_stmt in self._statement.sub_statements]
 
         iterations = 0
         while parent_context.evaluate_python_expression(self._statement.condition):
             if iterations >= self._statement.max_iterations:
-                raise ValueError(
-                    f"<while> exceeded max_iterations={self._statement.max_iterations}: condition "
-                    f"'{self._statement.condition}' never became false (possible infinite loop)"
+                raise task_config_error(
+                    code=IssueCode.TASK_WHILE_MAX_ITERATIONS_EXCEEDED,
+                    max_iterations=self._statement.max_iterations,
+                    condition="configured condition",
                 )
             # Side-effect loop: the body's <key>/<variable> mutate the row (current_product/variables),
             # so re-executing them per iteration advances the condition. Results are not accumulated.

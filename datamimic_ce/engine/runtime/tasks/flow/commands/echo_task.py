@@ -10,6 +10,7 @@ from datamimic_ce.engine.dsl.api import EchoStatement
 from datamimic_ce.engine.runtime.contexts.context import Context
 from datamimic_ce.engine.runtime.logging import logger
 from datamimic_ce.engine.runtime.tasks.base.task import CommonSubTask
+from datamimic_ce.errors import IssueCode, task_warning
 
 
 class EchoTask(CommonSubTask):
@@ -35,7 +36,9 @@ class EchoTask(CommonSubTask):
                 logger.debug(f"Echo - {evaluated_value}")
             except Exception as err:
                 # An <echo> is diagnostic output - a broken placeholder must never kill the run.
-                logger.warning(f"Echo - {_value} (placeholder not evaluated: {err})")
+                task_warning(
+                    code=IssueCode.ECHO_PLACEHOLDER_UNRESOLVED, value=_value, error_clause=f" ({type(err).__name__})"
+                )
         else:
             logger.debug(f"Echo - {_value}")
 

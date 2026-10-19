@@ -51,6 +51,12 @@ from datamimic_ce.engine.dsl.vocabulary.constants.element_constants import (
     EL_VARIABLE,
     EL_WHILE,
 )
+from datamimic_ce.engine.dsl.vocabulary.contracts.dsl_element import (
+    BoundedExecutionProfile,
+    BoundedExecutionStrategy,
+    ElementContentMode,
+    ElementContentModeKind,
+)
 
 if TYPE_CHECKING:
     from datamimic_ce.engine.dsl.model.constraints.types import Constraint
@@ -65,6 +71,12 @@ class ElementDefinition:
     parser: Callable[..., object] | None
     allowed_children: frozenset[str] | None = frozenset()
     aliases: frozenset[str] = frozenset()
+
+    client_family: bool = False
+    memory_store: bool = False
+    content_modes: tuple[ElementContentMode, ...] = ()
+    singleton_children: frozenset[str] = frozenset()
+    bounded_execution_profile: BoundedExecutionProfile = BoundedExecutionProfile()
 
     def __post_init__(self) -> None:
         if not self.tag:
@@ -105,6 +117,9 @@ def _builtin_definitions() -> dict[str, ElementDefinition]:
     from datamimic_ce.engine.dsl.model.values.structured.nested_key_model import NestedKeyModel
     from datamimic_ce.engine.dsl.model.values.variables.variable_model import VariableModel
 
+    counted = BoundedExecutionProfile(BoundedExecutionStrategy.COUNTED, ("count", "minCount", "maxCount"), "source")
+    container = BoundedExecutionProfile(BoundedExecutionStrategy.CONTAINER)
+    neutral = BoundedExecutionProfile(BoundedExecutionStrategy.NEUTRAL)
     definitions = (
         # <setup> is parsed by DescriptorParser directly, so it has no child-dispatch parser.
         ElementDefinition(
@@ -128,6 +143,7 @@ def _builtin_definitions() -> dict[str, ElementDefinition]:
                     EL_ASSERT,
                 }
             ),
+            bounded_execution_profile=container,
         ),
         ElementDefinition(
             EL_GENERATE,
@@ -152,15 +168,12 @@ def _builtin_definitions() -> dict[str, ElementDefinition]:
                 }
             ),
             frozenset({EL_ITERATE}),
+            bounded_execution_profile=counted,
         ),
         ElementDefinition(
-            EL_KEY,
-            KeyModel,
-            None,
-            frozenset({EL_ELEMENT}),
-            frozenset({EL_ID}),
+            EL_KEY, KeyModel, None, frozenset({EL_ELEMENT}), frozenset({EL_ID}), bounded_execution_profile=container
         ),
-        ElementDefinition(EL_VARIABLE, VariableModel, None),
+        ElementDefinition(EL_VARIABLE, VariableModel, None, bounded_execution_profile=neutral),
         ElementDefinition(
             EL_NESTED_KEY,
             NestedKeyModel,
@@ -181,41 +194,77 @@ def _builtin_definitions() -> dict[str, ElementDefinition]:
                     EL_ASSERT,
                 }
             ),
+            bounded_execution_profile=counted,
         ),
-        ElementDefinition(EL_ARRAY, ArrayModel, None, frozenset({EL_VALUE})),
+        ElementDefinition(
+            EL_ARRAY,
+            ArrayModel,
+            None,
+            frozenset({EL_VALUE}),
+            bounded_execution_profile=BoundedExecutionProfile(BoundedExecutionStrategy.COUNTED, ("count",)),
+        ),
         # Child-only elements have models for authoring but no standalone parser.
-        ElementDefinition(EL_VALUE, ValueModel, None),
-        ElementDefinition(EL_LIST, ListModel, None, frozenset({EL_ITEM})),
+        ElementDefinition(EL_VALUE, ValueModel, None, bounded_execution_profile=neutral),
+        ElementDefinition(EL_LIST, ListModel, None, frozenset({EL_ITEM}), bounded_execution_profile=container),
         ElementDefinition(
             EL_ITEM,
             ItemModel,
             None,
             frozenset({EL_KEY, EL_ID, EL_NESTED_KEY, EL_LIST, EL_ARRAY, EL_ELEMENT}),
+            bounded_execution_profile=container,
         ),
-        ElementDefinition(EL_REFERENCE, ReferenceModel, None, frozenset({EL_FIELD})),
-        ElementDefinition(EL_FIELD, ReferenceFieldModel, None),
-        ElementDefinition(EL_INCLUDE, IncludeModel, None, frozenset({EL_SETUP})),
-        ElementDefinition(EL_MEMSTORE, MemstoreModel, None),
-        ElementDefinition(EL_EXECUTE, ExecuteModel, None),
-        ElementDefinition(EL_DATABASE, DatabaseModel, None),
-        ElementDefinition(EL_MONGODB, MongoDBModel, None),
-        ElementDefinition(EL_IF, IfModel, None, None),
-        ElementDefinition(EL_ELSE_IF, ElseIfModel, None, None),
-        ElementDefinition(EL_ELSE, None, None, None),
-        ElementDefinition(EL_CONDITION, None, None, frozenset({EL_IF, EL_ELSE_IF, EL_ELSE})),
-        ElementDefinition(EL_ECHO, None, None),
-        ElementDefinition(EL_ELEMENT, ElementModel, None),
-        ElementDefinition(EL_GENERATOR, GeneratorModel, None),
-        ElementDefinition(EL_DEMOGRAPHICS, DemographicsModel, None),
         ElementDefinition(
-            EL_STATE_MACHINE,
-            StateMachineModel,
-            None,
-            frozenset({EL_TRANSITION}),
+            EL_REFERENCE, ReferenceModel, None, frozenset({EL_FIELD}), bounded_execution_profile=container
         ),
-        ElementDefinition(EL_TRANSITION, TransitionModel, None),
+        ElementDefinition(EL_FIELD, ReferenceFieldModel, None, bounded_execution_profile=neutral),
+        ElementDefinition(
+            EL_INCLUDE,
+            IncludeModel,
+            None,
+            frozenset({EL_SETUP}),
+            singleton_children=frozenset({EL_SETUP}),
+            bounded_execution_profile=BoundedExecutionProfile(dependency_attribute="uri"),
+        ),
+        ElementDefinition(EL_MEMSTORE, MemstoreModel, None, memory_store=True, bounded_execution_profile=neutral),
+        ElementDefinition(
+            EL_EXECUTE,
+            ExecuteModel,
+            None,
+            content_modes=(
+                ElementContentMode(ElementContentModeKind.URI, ("uri",)),
+                ElementContentMode(ElementContentModeKind.SCRIPT, ("script",)),
+                ElementContentMode(ElementContentModeKind.INLINE),
+            ),
+        ),
+        ElementDefinition(EL_DATABASE, DatabaseModel, None, client_family=True, bounded_execution_profile=neutral),
+        ElementDefinition(EL_MONGODB, MongoDBModel, None, client_family=True, bounded_execution_profile=neutral),
+        ElementDefinition(EL_IF, IfModel, None, None, bounded_execution_profile=container),
+        ElementDefinition(EL_ELSE_IF, ElseIfModel, None, None, bounded_execution_profile=container),
+        ElementDefinition(EL_ELSE, None, None, None, bounded_execution_profile=container),
+        ElementDefinition(
+            EL_CONDITION,
+            None,
+            None,
+            frozenset({EL_IF, EL_ELSE_IF, EL_ELSE}),
+            singleton_children=frozenset({EL_IF, EL_ELSE}),
+            bounded_execution_profile=container,
+        ),
+        ElementDefinition(
+            EL_ECHO,
+            None,
+            None,
+            content_modes=(ElementContentMode(ElementContentModeKind.TEXT),),
+            bounded_execution_profile=neutral,
+        ),
+        ElementDefinition(EL_ELEMENT, ElementModel, None, bounded_execution_profile=neutral),
+        ElementDefinition(EL_GENERATOR, GeneratorModel, None, bounded_execution_profile=neutral),
+        ElementDefinition(EL_DEMOGRAPHICS, DemographicsModel, None, bounded_execution_profile=neutral),
+        ElementDefinition(
+            EL_STATE_MACHINE, StateMachineModel, None, frozenset({EL_TRANSITION}), bounded_execution_profile=neutral
+        ),
+        ElementDefinition(EL_TRANSITION, TransitionModel, None, bounded_execution_profile=neutral),
         ElementDefinition(EL_WHILE, WhileModel, None, None),
-        ElementDefinition(EL_ASSERT, AssertModel, None),
+        ElementDefinition(EL_ASSERT, AssertModel, None, bounded_execution_profile=neutral),
     )
     return {definition.tag: definition for definition in definitions}
 

@@ -5,10 +5,8 @@ from typing import Annotated
 
 import typer
 
-from datamimic_ce.authoring.contracts import AuthoringReferenceCategory, ReferenceTopic
 from datamimic_ce.interfaces.cli import authoring as cli_authoring
 from datamimic_ce.interfaces.cli import runtime as cli_runtime
-from datamimic_ce.interfaces.cli.presenter import CliOutputFormat
 from datamimic_ce.interfaces.demo import demo_autocomplete
 
 app = typer.Typer(
@@ -16,10 +14,9 @@ app = typer.Typer(
 )
 demo_app = typer.Typer(help="Manage packaged demos.")
 app.add_typer(demo_app, name="demo")
+app.add_typer(cli_authoring.app, name="authoring")
 
-DESCRIPTOR_PATH = typer.Argument(..., help="Path to the descriptor file")
 DEFAULT_DESCRIPTOR_PATH = typer.Argument(Path("datamimic.xml"), help="Path to the descriptor file")
-SPEC_PATH = typer.Argument(..., help="Path to model.dm.json; use '-' for stdin")
 DEMO_NAME = typer.Argument(..., help="Packaged demo name", autocompletion=demo_autocomplete)
 OPTIONAL_DEMO_NAME = typer.Argument(None, help="Packaged demo name", autocompletion=demo_autocomplete)
 
@@ -32,90 +29,6 @@ def version() -> None:
 @app.command("info", help="Show system and DATAMIMIC configuration information.")
 def info() -> None:
     cli_runtime.show_system_information()
-
-
-@app.command(
-    "capabilities",
-    help="Print the DSL surface as JSON (compact index by default; --full for the complete manifest).",
-)
-def capabilities(
-    section: Annotated[
-        str | None,
-        typer.Option("--section", help="Comma-separated manifest sections (e.g. elements,rules)"),
-    ] = None,
-    full: Annotated[
-        bool, typer.Option("--full", help="Emit the complete manifest (today's output, unchanged)")
-    ] = False,
-) -> None:
-    cli_authoring.show_capabilities(section, full)
-
-
-@app.command("reference", help="Query canonical DATAMIMIC model, rule, and authoring reference data.")
-def reference(
-    topic: Annotated[ReferenceTopic, typer.Argument(help="Canonical reference topic")],
-    name: Annotated[str | None, typer.Argument(help="Optional name within the topic")] = None,
-    category: Annotated[AuthoringReferenceCategory | None, typer.Option("--category")] = None,
-    kind: Annotated[str | None, typer.Option("--kind")] = None,
-) -> None:
-    cli_authoring.show_reference(topic, name, category, kind)
-
-
-@app.command("scaffold", help="Compile and fully verify one model.dm.json document.")
-def scaffold(
-    spec_path: Path = SPEC_PATH,
-    acceptance_requirements_path: Annotated[
-        Path | None,
-        typer.Option(
-            "--acceptance-requirements",
-            help="JSON array of caller-owned assertions for this transaction",
-        ),
-    ] = None,
-    output_format: Annotated[CliOutputFormat, typer.Option("--format", "-f")] = CliOutputFormat.TEXT,
-    max_count: Annotated[int, typer.Option("--max-count")] = 10,
-    sample_rows: Annotated[int, typer.Option("--sample-rows")] = 5,
-    smoke_export: Annotated[bool, typer.Option("--smoke-export")] = False,
-    deterministic_replay: Annotated[bool, typer.Option("--deterministic-replay")] = False,
-) -> None:
-    cli_authoring.scaffold_model(
-        spec_path,
-        acceptance_requirements_path,
-        output_format,
-        max_count,
-        sample_rows,
-        smoke_export,
-        deterministic_replay,
-    )
-
-
-@app.command("lint", help="Lint one DATAMIMIC XML descriptor.")
-def lint(
-    descriptor_path: Path = DESCRIPTOR_PATH,
-    output_format: Annotated[CliOutputFormat, typer.Option("--format", "-f")] = CliOutputFormat.TEXT,
-    fail_on: Annotated[str, typer.Option("--fail-on")] = "error",
-    max_diagnostics: Annotated[int, typer.Option("--max-diagnostics")] = 200,
-) -> None:
-    cli_authoring.lint_descriptor(descriptor_path, output_format, fail_on, max_diagnostics)
-
-
-@app.command("dry-run", help="Safely execute one bounded, target-neutralized descriptor run.")
-def dry_run(
-    descriptor_path: Path = DESCRIPTOR_PATH,
-    max_count: Annotated[int, typer.Option("--max-count")] = 10,
-    sample_rows: Annotated[int, typer.Option("--sample-rows")] = 5,
-    allow_side_effects: Annotated[bool, typer.Option("--allow-side-effects")] = False,
-    timeout: Annotated[int, typer.Option("--timeout")] = 30,
-    smoke_export: Annotated[bool, typer.Option("--smoke-export")] = False,
-    output_format: Annotated[CliOutputFormat, typer.Option("--format", "-f")] = CliOutputFormat.TEXT,
-) -> None:
-    cli_authoring.dry_run_descriptor(
-        descriptor_path,
-        max_count,
-        sample_rows,
-        allow_side_effects,
-        timeout,
-        smoke_export,
-        output_format,
-    )
 
 
 @app.command("init", help="Initialize a DATAMIMIC project.")

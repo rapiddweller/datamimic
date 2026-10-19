@@ -7,6 +7,7 @@ import types
 from typing import Protocol, TypeGuard
 
 from datamimic_ce.engine.runtime.scripting.expression_globals import NON_VALUE_TYPES
+from datamimic_ce.errors import DomainError, IssueCode, UserErrorBase, condition_evaluation_error, task_config_error
 
 _SCOPE_GUIDANCE = (
     "check spelling, definition order and value shape; current-scope names can resolve bare, "
@@ -46,45 +47,68 @@ class DotableDict:
         return self._dictionary.keys()
 
 
-def evaluate_python(expression: str, global_namespace: dict[str, object], local_namespace: dict[str, object]) -> object:
-    """Evaluate and normalize one expression using the already assembled namespaces."""
+def evaluate_python(
+    expression: str,
+    global_namespace: dict[str, object],
+    local_namespace: dict[str, object],
+    *,
+    diagnostic_expression: str | None = None,
+) -> object:
+    """Evaluate actual input while callers may name a synthesized expression safely."""
+    diagnostic = "configured expression" if diagnostic_expression is None else diagnostic_expression
+
     def normalized_result(result: object, source: str) -> object:
         if isinstance(result, DotableDict):
             return result.to_dict()
         if isinstance(result, list):
             return [value.to_dict() if isinstance(value, DotableDict) else value for value in result]
         if callable(result) or isinstance(result, types.ModuleType):
-            raise ValueError(f"'{source}' is an callable function, not a valid type (string, integer, float,...)")
+            raise task_config_error(
+                code=IssueCode.TASK_EXPRESSION_EVAL_FAILED,
+                expr=diagnostic,
+                error=f"'{source}' is an callable function, not a valid type (string, integer, float,...)",
+            )
         if type(result) in NON_VALUE_TYPES:
-            raise ValueError(
-                f"'{source}' is {type(result).__name__} function, not a valid type (string, integer, float,...)"
+            raise task_config_error(
+                code=IssueCode.TASK_EXPRESSION_EVAL_FAILED,
+                expr=diagnostic,
+                error=f"'{source}' is {type(result).__name__} function, not a valid type (string, integer, float,...)",
             )
         return result
 
     try:
-        return normalized_result(eval(expression, global_namespace, local_namespace), expression)
-    except NameError as error:
-        missing = error.name if error.name is not None else str(error)
-        raise ValueError(
-            f"Failed while evaluate '{expression}': name '{missing}' is not defined in this scope; {_SCOPE_GUIDANCE}"
+        return normalized_result(eval(expression, global_namespace, local_namespace), diagnostic)
+    except (UserErrorBase, DomainError):
+        raise
+    except (NameError, AttributeError) as error:
+        raise task_config_error(
+            code=IssueCode.TASK_EXPRESSION_EVAL_FAILED,
+            expr=diagnostic,
+            error=f"{type(error).__name__}: {_SCOPE_GUIDANCE}",
         ) from error
-    except AttributeError as error:
-        missing_attr = f"missing attribute '{error.name}'" if error.name is not None else str(error)
-        raise ValueError(f"Failed while evaluate '{expression}': {missing_attr}; {_SCOPE_GUIDANCE}") from error
     except KeyError as error:
-        missing_key = error.args[0] if error.args else str(error)
-        raise ValueError(f"Failed while evaluate '{expression}': missing key {missing_key!r}") from error
+        raise task_config_error(
+            code=IssueCode.TASK_EXPRESSION_EVAL_FAILED,
+            expr=diagnostic,
+            error="KeyError: missing mapping key",
+        ) from error
     except TypeError as error:
-        raise ValueError(
-            f"Failed while evaluate '{expression}': '{expression}' have undefined item or wrong structure"
+        raise task_config_error(
+            code=IssueCode.TASK_EXPRESSION_EVAL_FAILED,
+            expr=diagnostic,
+            error=f"Failed while evaluate '{diagnostic}': '{diagnostic}' have undefined item or wrong structure",
         ) from error
     except SyntaxError as error:
         if ":" not in expression:
-            raise ValueError(
-                f"Evaluation error for expression '{expression}': "
-                "The expression may contain undefined elements, formatting errors, "
-                "or unsupported parameter names. Ensure that boolean values and all parameter names "
-                "(e.g., 'True' vs 'true') adhere to the required formats."
+            raise task_config_error(
+                code=IssueCode.TASK_EXPRESSION_EVAL_FAILED,
+                expr=diagnostic,
+                error=(
+                    f"Evaluation error for expression '{diagnostic}': "
+                    "The expression may contain undefined elements, formatting errors, "
+                    "or unsupported parameter names. Ensure that boolean values and all parameter names "
+                    "(e.g., 'True' vs 'true') adhere to the required formats."
+                ),
             ) from error
 
         colon_replacement = "__"
@@ -106,17 +130,26 @@ def evaluate_python(expression: str, global_namespace: dict[str, object], local_
             return updated
 
         try:
-            return normalized_result(eval(expression, global_namespace, replace_colons(local_namespace)), expression)
+            return normalized_result(eval(expression, global_namespace, replace_colons(local_namespace)), diagnostic)
+        except (UserErrorBase, DomainError):
+            raise
         except Exception as retry_error:
-            expression = expression.replace(colon_replacement, ":")
-            raise ValueError(
-                f"Evaluation error for expression '{expression}': "
-                "The expression may contain undefined items, improper structure, "
-                "or case-sensitive issues (e.g., using 'true' instead of 'True'). "
-                "Please double-check that all parameters and type notations are correct and supported."
+            raise task_config_error(
+                code=IssueCode.TASK_EXPRESSION_EVAL_FAILED,
+                expr=diagnostic,
+                error=(
+                    f"Evaluation error for expression '{diagnostic}': "
+                    "The expression may contain undefined items, improper structure, "
+                    "or case-sensitive issues (e.g., using 'true' instead of 'True'). "
+                    "Please double-check that all parameters and type notations are correct and supported."
+                ),
             ) from retry_error
     except Exception as error:
-        raise ValueError(f"Failed while evaluate '{expression}': {str(error)}") from error
+        raise task_config_error(
+            code=IssueCode.TASK_EXPRESSION_EVAL_FAILED,
+            expr=diagnostic,
+            error=type(error).__name__,
+        ) from error
 
 
 def interpolate_variables(context: ExpressionContext, expression: str, prefix: str, suffix: str) -> str:
@@ -136,8 +169,11 @@ def evaluate_condition_value(context: ExpressionContext, element_name: str | Non
     condition = context.evaluate_python_expression(value) if value else True
     if isinstance(condition, bool):
         return condition
-    raise ValueError(
-        f"Evaluated value of condition script '{value}' in element '{element_name}' is not valid boolean value"
+    raise condition_evaluation_error(
+        code=IssueCode.CONDITION_NOT_BOOLEAN,
+        condition="configured condition",
+        element_label=f"element '{element_name}'",
+        value=type(condition).__name__,
     )
 
 
@@ -158,10 +194,7 @@ def _evaluate_list(context: ExpressionContext, data: list[object], prefix: str, 
 def evaluate_source_template(context: ExpressionContext, data: object, prefix: str, suffix: str) -> object:
     """Recursively evaluate expressions embedded in source values."""
     if _dictionary(data):
-        return {
-            key: evaluate_source_template(context, value, prefix, suffix)
-            for key, value in data.items()
-        }
+        return {key: evaluate_source_template(context, value, prefix, suffix) for key, value in data.items()}
     if isinstance(data, list):
         return _evaluate_list(context, data, prefix, suffix)
     if not isinstance(data, str) or not data.strip():

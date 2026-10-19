@@ -1,80 +1,140 @@
 # DATAMIMIC
-# Copyright (c) 2023-2025 Rapiddweller Asia Co., Ltd.
-# This software is licensed under the MIT License.
-# See LICENSE file for the full text of the license.
-# For questions and support, contact: info@rapiddweller.com
+# Copyright (c) 2023-2026 Rapiddweller Asia Co., Ltd.
+# This software is licensed under the MIT License. See LICENSE.
 
-"""Diagnostic contract ("diagnostics v1") shared by the CLI and the MCP tools."""
+"""Authoring diagnostics, rule identities, and their catalog entries."""
 
-from pydantic import BaseModel, Field
+from __future__ import annotations
 
-from datamimic_ce.authoring.domain.rule_catalog import RuleSeverity
+from enum import StrEnum
+from typing import Annotated, Literal
 
+from pydantic import Field, JsonValue, StrictStr, model_validator
 
-class Diagnostic(BaseModel):
-    """One finding, always actionable: what is wrong AND what to do differently."""
+from datamimic_ce.errors.codes import ErrorCode, IssueCode
 
-    rule: str  # e.g. "DM301"
-    severity: RuleSeverity
-    message: str
-    fix_hint: str  # never empty — the agent's next edit
-    element: str  # tag, e.g. "generate"
-    path: str  # lxml getpath, e.g. "/setup/generate[2]/key[3]"
-    name: str | None = None  # name/id attribute of the element, if present
-    line: int | None = None
-    docs: str | None = None  # e.g. "reference://element/generate" — resolvable via the reference tool
+from .common import AuthoringModel, NonEmptyStrictStr
+from .expectations import ExpectationIntentKind
 
 
-class LintResult(BaseModel):
-    ok: bool  # True when no ERROR diagnostics (warnings/hints allowed)
-    file: str | None = None
-    counts: dict[str, int] = Field(default_factory=dict)  # per-severity totals (pre-truncation)
-    diagnostics: list[Diagnostic] = Field(default_factory=list)
-    truncated: int = 0  # diagnostics dropped beyond the caller's cap
+class DiagnosticPhase(StrEnum):
+    """Stable phase vocabulary shared by diagnostics and rejected builds."""
 
-    @classmethod
-    def from_diagnostics(
-        cls, diagnostics: list[Diagnostic], *, file: str | None = None, max_diagnostics: int | None = None
-    ) -> "LintResult":
-        counts: dict[str, int] = {}
-        for diag in diagnostics:
-            counts[diag.severity.value] = counts.get(diag.severity.value, 0) + 1
-        kept = diagnostics if max_diagnostics is None else diagnostics[:max_diagnostics]
-        return cls(
-            ok=counts.get(RuleSeverity.ERROR.value, 0) == 0,
-            file=file,
-            counts=counts,
-            diagnostics=kept,
-            truncated=len(diagnostics) - len(kept),
-        )
-
-    def summary(self) -> str:
-        parts = [
-            f"{self.counts.get(sev.value, 0)} {sev.value}{'s' if self.counts.get(sev.value, 0) != 1 else ''}"
-            for sev in RuleSeverity
-            if self.counts.get(sev.value, 0)
-        ]
-        return ", ".join(parts) if parts else "no findings"
+    MODEL = "model"
+    EXPECTATION = "expectation"
+    ENVIRONMENT_BINDING = "environment_binding"
+    POLICY = "policy"
+    COMPILE = "compile"
+    DECOMPILE = "decompile"
+    XML = "xml"
+    EVIDENCE = "evidence"
 
 
-def _diagnostic_dicts(diagnostics: list[Diagnostic], detailed: bool) -> list[dict[str, object]]:
-    """Serialize diagnostics to dicts, optionally filtering to concise fields.
+class AuthoringRuleId(StrEnum):
+    """Rule identities not already owned by a typed intent discriminator."""
 
-    Args:
-        diagnostics: List of Diagnostic objects
-        detailed: If True, return full diagnostic dicts; if False, only concise fields
+    UNASSURED_MULTI_CONTRIBUTOR_SINK = "unassured_multi_contributor_sink"
+    UNEVALUABLE_SINK_EXPECTATION = "unevaluable_sink_expectation"
+    LIMIT = "limit"
+    SIDE_EFFECT = "side_effect"
+    INPUT = "input"
+    VALIDATION = "validation"
+    INCLUDE = "include"
+    UNSUPPORTED_BOUNDED_OPERATION = "unsupported_bounded_operation"
 
-    Returns:
-        List of diagnostic dicts (rule, severity, line, message, fix_hint when detailed=False)
-    """
-    concise_fields = ("rule", "severity", "line", "message", "fix_hint")
-    out: list[dict[str, object]] = []
-    for diag in diagnostics:
-        data: dict[str, object] = diag.model_dump()
-        msg = data.get("message", "")
-        if isinstance(msg, str):
-            data["message"] = msg[:300]  # truncate long messages
-        if not detailed:
-            data = {key: data[key] for key in concise_fields if key in data}
-        out.append(data)
-    return out
+
+class RuleOwner(StrEnum):
+    EXPECTATION = "expectation"
+    SAFETY = "safety"
+    INPUT = "input"
+    VALIDATION = "validation"
+    TRANSPORT = "transport"
+
+
+class AuthoringSystemDiagnosticCode(StrEnum):
+    """Stable transport/runtime diagnostics that are not authoring rules."""
+
+    DESCRIPTOR = "descriptor"
+    CHILD_PARSE = "child_parse"
+    CHILD_EXECUTION = "child_execution"
+    CHILD_CRASH = "child_crash"
+    CLEANUP = "cleanup"
+    ENVIRONMENT = "environment"
+    SERIALIZATION = "serialization"
+    TIMEOUT = "timeout"
+    NOT_EXECUTED = "not_executed"
+
+
+class AuthoringBuildDiagnosticCode(StrEnum):
+    """Stable build diagnostics that are neither catalog rules nor adapter failures."""
+
+    CONFLICTING_ENVIRONMENT_DIRECTION = "conflicting_environment_direction"
+    CONFLICTING_ENVIRONMENT_REFERENCE = "conflicting_environment_reference"
+    CONFLICTING_ENVIRONMENT_TOPOLOGY = "conflicting_environment_topology"
+    DUPLICATE_ENVIRONMENT_BINDING = "duplicate_environment_binding"
+    ENVIRONMENT_FAMILY_MISMATCH = "environment_family_mismatch"
+    UNKNOWN_ENVIRONMENT = "unknown_environment"
+    UNSUPPORTED_CONSUMING_SOURCE_EVIDENCE = "unsupported_consuming_source_evidence"
+    UNSUPPORTED_TARGET_ISOLATION = "unsupported_target_isolation"
+
+
+class AuthoringCodecDiagnosticCode(StrEnum):
+    """Stable failures owned by the reversible DM-JSON/XML codec boundary."""
+
+    COMPILE_INVALID = "authoring_compile_invalid"
+    DECOMPILE_UNSUPPORTED = "authoring_decompile_unsupported"
+
+
+RawXmlDiagnosticCode = Annotated[StrictStr, Field(pattern=r"^DM[0-9]{3}$")]
+
+
+DiagnosticCode = (
+    AuthoringRuleId
+    | ExpectationIntentKind
+    | AuthoringSystemDiagnosticCode
+    | AuthoringBuildDiagnosticCode
+    | AuthoringCodecDiagnosticCode
+    | RawXmlDiagnosticCode
+)
+
+
+class CeErrorIdentity(AuthoringModel):
+    """Machine-readable identity of one catalog-backed CE error."""
+
+    error_code: ErrorCode
+    issue_code: IssueCode | None = None
+
+
+class Diagnostic(AuthoringModel):
+    code: DiagnosticCode
+    message: NonEmptyStrictStr
+    phase: DiagnosticPhase
+    path: tuple[str | int, ...] = ()
+    expected: JsonValue | None = None
+    actual: JsonValue | None = None
+    allowed_values: tuple[JsonValue, ...] | None = None
+    severity: Literal["error", "warning", "info"] = "error"
+    remediation: NonEmptyStrictStr | None = None
+    ce_error: CeErrorIdentity | None = None
+
+    @model_validator(mode="after")
+    def errors_are_actionable(self) -> Diagnostic:
+        if self.severity == "error" and self.remediation is None:
+            raise ValueError("error diagnostics require remediation")
+        return self
+
+
+class RuleCatalogEntry(AuthoringModel):
+    rule_id: AuthoringRuleId | ExpectationIntentKind | RawXmlDiagnosticCode
+    category: NonEmptyStrictStr
+    severity: Literal["error", "warning", "info"]
+    description: NonEmptyStrictStr
+    applicability: NonEmptyStrictStr
+    owner: RuleOwner
+    remediation: NonEmptyStrictStr
+    title: NonEmptyStrictStr | None = None
+    provenance: NonEmptyStrictStr | None = None
+    valid_example: NonEmptyStrictStr | None = None
+    invalid_example: NonEmptyStrictStr | None = None
+    advisory_severity: Literal["error", "warning", "hint"] | None = None
+    blocks_verification: bool | None = None

@@ -34,7 +34,7 @@ def tracked_test_sources() -> list[Path]:
         text=True,
         check=True,
     )
-    return [REPO / path for path in result.stdout.splitlines()]
+    return [REPO / path for path in result.stdout.splitlines() if (REPO / path).is_file()]
 
 
 def build_report(

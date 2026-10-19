@@ -4,97 +4,78 @@
 # See LICENSE file for the full text of the license.
 # For questions and support, contact: info@rapiddweller.com
 
-"""Safe, bounded dry-run execution with neutralized targets and typed evidence.
+"""One CE capture core with bounded counts, neutralized targets and full provenance.
 
-Safety model (allow_side_effects=False, the default):
-- memstore targets are KEPT (in-memory, required for pipeline semantics —
-  downstream <generate source="mem"> reads them)
-- every other target is stripped: file exporters (no output/ artifacts),
-  client targets (no DB writes), ConsoleExporter (writes stdout — would corrupt
-  a stdio MCP transport) and LogExporter
-- <execute> statements (arbitrary SQL/scripts) refuse the run with DM003
-- XML <include> statements refuse the run with DM003 until included statements
-  can inherit the same target and count limits
-- DB/Mongo SOURCES stay allowed — they are reads; connectivity errors surface
-  as DM002 with a hint at the conf/{env}.env.properties convention
-
-Every ``<generate>`` invocation is bounded by ``max_count``, including nested,
-dynamic-count, ranged-count, and source-driven statements.  A child process is
-the cancellation boundary: timeout terminates and reaps it, so user scripts or
-runtime I/O cannot continue after the authoring request returns.  Captured rows
-and their completeness evidence come from that single engine execution.
-
-smoke_export (opt-in) closes the export-layer gap: stripping file targets also
-hides crashes that only happen at write time (e.g. a value the JSON encoder
-rejects). With smoke_export=True the captured rows are pushed through each
-FILE exporter that was stripped from that product's targets, writing into a
-TemporaryDirectory that vanishes afterwards — no artifacts, no descriptor-dir
-writes. ConsoleExporter/LogExporter (stdio safety) and client/DB targets are
-never smoked. A failing exporter surfaces as a DM002 diagnostic, not an
-exception.
+The bounded executor owns private workspaces, process cleanup and transport.
+Smoke exporters consume the same validated full capture before projection.
 """
 
-import multiprocessing as mp
+import io
 import os
 import pickle
 import tempfile
-import time
 import uuid
-from collections.abc import Iterator, Mapping, Sequence
+from collections.abc import Callable, Iterator, Mapping, Sequence
 from contextlib import contextmanager, suppress
-from dataclasses import dataclass
-from multiprocessing.connection import Connection
+from enum import StrEnum
 from pathlib import Path
 
-from pydantic import JsonValue
+from bson import ObjectId
+from pydantic import ConfigDict, StrictBool, StrictStr, TypeAdapter, ValidationError
+from pydantic.dataclasses import dataclass
 
-from datamimic_ce._compat import StrEnum
-from datamimic_ce.authoring.adapters.linter import lint_descriptor, lint_source
-from datamimic_ce.authoring.contracts import (
-    AuthoringStage,
+from datamimic_ce.authoring.adapters.workspace import AuthoringWorkspaceContext
+from datamimic_ce.authoring.domain.capture import (
+    MAX_CAPTURE_DEPTH,
+    MAX_CAPTURE_ITEMS,
+    CapturedObjectId,
     CapturedProduct,
     CapturedProducts,
-    CapturedRun,
     CaptureStatus,
+    CaptureValue,
     ProductCaptureEvidence,
-    ProductResult,
-    RunResult,
     SmokeExportCapture,
+    validate_capture_values,
 )
-from datamimic_ce.authoring.domain.diagnostics import Diagnostic, LintResult
+from datamimic_ce.authoring.domain.common import NonEmptyStrictStr, NonNegativeStrictInt, PositiveStrictInt
 from datamimic_ce.authoring.domain.rule_catalog import RuleSeverity
+from datamimic_ce.authoring.domain.xml_diagnostics import Diagnostic
+from datamimic_ce.engine.dsl.api import capture_product_name, resource_reader_scope
 from datamimic_ce.engine.io.contracts import SmokeExportRequest
+from datamimic_ce.errors import (
+    DomainError,
+    ErrorCode,
+    ExternalFailureCause,
+    GeneratorConfigError,
+    MissingMemstoreProductError,
+    UserErrorBase,
+    is_user_error,
+)
+from datamimic_ce.errors.catalog import get_issue_definition
+from datamimic_ce.errors.codes import IssueCode
+from datamimic_ce.errors.context.descriptor_identity import descriptor_scope
 
 RULE_RUNTIME_ERROR = "DM002"
-RULE_SIDE_EFFECT_REFUSAL = "DM003"
-RULE_EMPTY_OUTPUT = "DM004"
 
 
-DryRunProduct = ProductResult
-"""Backward-compatible alias for the canonical dry-run product contract."""
-
-DryRunResult = RunResult
-"""Backward-compatible alias for the canonical dry-run result contract."""
-
-
-@dataclass(frozen=True)
+@dataclass(frozen=True, config=ConfigDict(extra="forbid", strict=True, revalidate_instances="always"))
 class _ProductBudget:
     """Static boundary facts recorded while the runtime statement tree is transformed."""
 
-    name: str
-    parent_name: str | None
-    requested_per_parent: int | None
-    explicit_count: bool
+    name: NonEmptyStrictStr
+    parent_name: NonEmptyStrictStr | None
+    requested_per_parent: NonNegativeStrictInt | None
+    explicit_count: StrictBool
     count_kind: "_CountBoundaryKind"
-    source_rows_per_parent: int | None
-    source_exhaustible: bool
+    source_rows_per_parent: NonNegativeStrictInt | None
+    source_exhaustible: StrictBool
     memstore_source: "_MemstoreSourceBinding | None"
-    source_offset: int
-    cyclic: bool
-    output_multiplier: int
-    bounded_without_cap: bool
-    cap_applied: bool
-    reason: str
+    source_offset: NonNegativeStrictInt
+    cyclic: StrictBool
+    output_multiplier: PositiveStrictInt
+    bounded_without_cap: StrictBool
+    cap_applied: StrictBool
+    reason: NonEmptyStrictStr
 
 
 _ProductBudgets = dict[str, _ProductBudget]
@@ -107,13 +88,13 @@ class _CountBoundaryKind(StrEnum):
     SOURCE = "source"
 
 
-@dataclass(frozen=True)
+@dataclass(frozen=True, config=ConfigDict(extra="forbid", strict=True, revalidate_instances="always"))
 class _MemstoreProducer:
     """One runtime statement that writes a typed entity into a declared memstore."""
 
-    source_id: str
+    source_id: NonEmptyStrictStr
     entity: str
-    product: str
+    product: NonEmptyStrictStr
 
 
 class _MemstoreBindingStatus(StrEnum):
@@ -122,40 +103,40 @@ class _MemstoreBindingStatus(StrEnum):
     AMBIGUOUS = "ambiguous"
 
 
-@dataclass(frozen=True)
+@dataclass(frozen=True, config=ConfigDict(extra="forbid", strict=True, revalidate_instances="always"))
 class _MemstoreSourceBinding:
     """Typed runtime routing fact for one generate reading a memstore entity."""
 
-    source_id: str
+    source_id: NonEmptyStrictStr
     entity: str | None
     status: _MemstoreBindingStatus
     producers: tuple[_MemstoreProducer, ...]
 
 
-@dataclass(frozen=True)
+@dataclass(frozen=True, config=ConfigDict(extra="forbid", strict=True, revalidate_instances="always"))
 class _WorkerSuccess:
-    captured: dict[str, tuple[object, ...]]
+    captured: dict[NonEmptyStrictStr, tuple[dict[StrictStr, CaptureValue], ...]]
     budgets: tuple[_ProductBudget, ...]
     smoke_diagnostics: tuple[dict[str, object], ...]
     smoke_export: SmokeExportCapture
+    source_accesses: tuple[tuple[NonEmptyStrictStr, PositiveStrictInt], ...] = ()
 
 
-@dataclass(frozen=True)
+@dataclass(frozen=True, config=ConfigDict(extra="forbid", strict=True, revalidate_instances="always"))
 class _WorkerFailure:
-    message: str
-    fix_hint: str
+    message: NonEmptyStrictStr
+    fix_hint: NonEmptyStrictStr
+    error: object | None = None
+    policy_refusal: StrictBool = False
+
+
+class _BoundedPolicyRefusal(ValueError):
+    """A parsed operation cannot inherit bounded execution guarantees."""
 
 
 _WorkerMessage = _WorkerSuccess | _WorkerFailure
-_ChildProcess = mp.context.SpawnProcess
 
 
-_MAX_PRODUCTS = 20  # generate statements per descriptor are few; a generous cap
-
-# Engine runtime errors are opaque stack traces. Map their stable signatures to
-# actionable fix hints so a runtime crash teaches the fix (critical for the agent
-# lint->fix loop — a weak model cannot recover from "Dry-run failed: <traceback>").
-# (substring in str(err)) -> hint
 _SCOPE_HINT = (
     "A script may reference an unavailable name or an unexpected value structure. Check spelling, definition order,"
     " and value shape. Names in the current scope can resolve bare or via this.name; existing outermost bare names"
@@ -163,57 +144,26 @@ _SCOPE_HINT = (
     " outermost field, or a qualified scope path to select the intended value. Intermediate ancestor names are"
     " not automatically available bare. CSV columns arrive as strings (cast: int(parent.col))."
 )
-_RUNTIME_HINTS: tuple[tuple[str, str], ...] = (
-    (
-        "is empty in memstore",
-        "A <generate>/<iterate> reads a memstore product that no earlier statement wrote. "
-        'Add a <generate target="<memstoreId>"> whose name matches this type=/sourceType= '
-        "and place it BEFORE the reader.",
-    ),
-    (
-        "cannot find data source",
-        "source= names an undeclared client/memstore. Declare <memstore id>/<database id>/"
-        "<mongodb id> with that id, or point source= at a real data file.",
-    ),
-    # undefined-name family: the engine now names the identifier (NameError/AttributeError
-    # path); "have undefined" is kept for the remaining TypeError structure errors.
-    ("is not defined in this scope", _SCOPE_HINT),
-    ("cannot find attribute", _SCOPE_HINT),
-    ("have undefined", _SCOPE_HINT),
-    (
-        "file not found",
-        "An <include>/source path does not exist relative to the descriptor. Fix the path or create the file.",
-    ),
-    (
-        "connection",
-        "Check DB connectivity and the conf/{environment}.env.properties convention (keys {system}.{db|mongo}.{attr}).",
-    ),
-    (
-        "Evaluation error",
-        "A script/count expression is malformed. count= is digits or {python_expr} (no "
-        "'script:' prefix); script= is a plain Python expression.",
-    ),
-)
 
 
 def _runtime_hint(err: Exception) -> str:
-    text = str(err).lower()
-    for signature, hint in _RUNTIME_HINTS:
-        if signature.lower() in text:
-            return hint
-    return "Fix the reported runtime error; lint the descriptor for earlier detection."
-
-
-def _run_error(rule: str, message: str, fix_hint: str, lint: LintResult, *, element: str = "setup") -> DryRunResult:
-    diag = Diagnostic(
-        rule=rule, severity=RuleSeverity.ERROR, message=message, fix_hint=fix_hint, element=element, path="/setup"
-    )
-    return DryRunResult(
-        ok=False,
-        stage=AuthoringStage.RUN,
-        lint=lint,
-        diagnostics=[diag],
-    )
+    current: BaseException | None = err
+    seen: set[int] = set()
+    while current is not None and id(current) not in seen:
+        seen.add(id(current))
+        if isinstance(current, MissingMemstoreProductError):
+            return current.guidance
+        if isinstance(current, UserErrorBase) and current.issue_code is not None:
+            if current.issue_code is IssueCode.TASK_EXPRESSION_EVAL_FAILED:
+                return _SCOPE_HINT
+            issue = get_issue_definition(current.issue_code)
+            return issue.guidance or issue.resolution
+        if isinstance(current, DomainError) and current.hint:
+            return current.hint
+        if isinstance(current, FileNotFoundError):
+            return "Provide the referenced resource relative to the descriptor workspace."
+        current = current.__cause__
+    return "Repair the reported runtime input or workspace configuration."
 
 
 def _memstore_ids(root_stmt: object) -> set[str]:
@@ -264,7 +214,7 @@ def _memstore_producers(
                 _MemstoreProducer(
                     source_id=source_id,
                     entity=entity,
-                    product=_capture_name(statement.full_name),
+                    product=capture_product_name(statement.full_name),
                 )
             )
     return tuple(producers)
@@ -325,16 +275,6 @@ _FileTarget = tuple[str, dict[str, object]]
 _StrippedTargets = dict[str, tuple[str, list[_FileTarget], str, str]]
 
 
-def _capture_name(full_name: str) -> str:
-    """Use the exact nested-product key used by ``TestResultExporter``."""
-
-    from datamimic_ce.engine.dsl.api import NAME_SEPARATOR
-
-    if NAME_SEPARATOR in full_name:
-        return full_name.split(NAME_SEPARATOR, 1)[-1]
-    return full_name
-
-
 def _parent_capture_name(stmt: object) -> str | None:
     from datamimic_ce.engine.dsl.api import GenerateStatement, Statement
 
@@ -343,7 +283,7 @@ def _parent_capture_name(stmt: object) -> str | None:
     parent = stmt.parent_stmt
     while parent is not None and not isinstance(parent, GenerateStatement):
         parent = parent.parent_stmt
-    return _capture_name(parent.full_name) if isinstance(parent, GenerateStatement) else None
+    return capture_product_name(parent.full_name) if isinstance(parent, GenerateStatement) else None
 
 
 def _source_row_count(
@@ -436,14 +376,24 @@ def neutralize_for_dry_run(
     stripped_file_targets: _StrippedTargets | None = None,
     product_budgets: _ProductBudgets | None = None,
     descriptor_dir: Path | None = None,
+    workspace_root: Path | None = None,
 ) -> None:
     """Statement transformer: cap counts, keep only memstore targets, force 1 process.
     When a collector dict is given, the FILE targets removed from each product are
     recorded so smoke_export can replay the captured rows through them afterwards."""
-    from datamimic_ce.engine.dsl.api import CompositeStatement, GenerateStatement, SetupStatement
+    from datamimic_ce.engine.dsl.api import (
+        CompositeStatement,
+        DatabaseStatement,
+        GenerateStatement,
+        MongoDBStatement,
+        SetupStatement,
+    )
     from datamimic_ce.engine.io.api import resolve_target_entity
 
     assert isinstance(root_stmt, SetupStatement)
+    has_execute, has_include = _dry_run_hazards(root_stmt)
+    if (has_execute and not allow_side_effects) or has_include:
+        raise _BoundedPolicyRefusal("bounded execution refuses execute or unresolved include side effects")
     memstores = _memstore_ids(root_stmt)
     memstore_producers = _memstore_producers(root_stmt, memstores)
     root_stmt.num_process = 1
@@ -452,6 +402,17 @@ def neutralize_for_dry_run(
     default_line_separator = root_stmt.default_line_separator or "\n"
 
     def _neutralize(stmt: object) -> None:
+        if not allow_side_effects and isinstance(stmt, (DatabaseStatement, MongoDBStatement)):
+            stmt.model.read_only = True
+        if isinstance(stmt, DatabaseStatement) and descriptor_dir is not None:
+            from datamimic_ce.engine.dsl.vocabulary.enums.dbms_enums import Dbms
+            from datamimic_ce.engine.io.api import sqlite_database_path
+
+            if stmt.model.dbms is Dbms.SQLITE and stmt.model.database is not None:
+                private_root = workspace_root or descriptor_dir
+                database = (private_root / sqlite_database_path(stmt.model.database)).resolve(strict=False)
+                if not database.is_relative_to(private_root):
+                    raise _BoundedPolicyRefusal("SQLite source resolves outside the private bounded workspace")
         if isinstance(stmt, GenerateStatement):
             if not allow_side_effects:
                 if stripped_file_targets is not None:
@@ -532,9 +493,13 @@ def neutralize_for_dry_run(
                 cap_applied = True
 
             if product_budgets is not None:
-                name = _capture_name(stmt.full_name)
+                name = capture_product_name(stmt.full_name)
                 requested_per_parent: int | None = requested
-                if requested_per_parent is None and range_bound is None:
+                if (
+                    requested_per_parent is None
+                    and range_bound is None
+                    and count_kind is not _CountBoundaryKind.DYNAMIC
+                ):
                     requested_per_parent = source_rows
                 product_budgets[name] = _ProductBudget(
                     name=name,
@@ -620,6 +585,245 @@ def _smoke_exporter(
         )
 
 
+_CapturedRows = dict[NonEmptyStrictStr, tuple[dict[StrictStr, CaptureValue], ...]]
+_CAPTURE_ROWS = TypeAdapter(
+    dict[NonEmptyStrictStr, list[dict[StrictStr, CaptureValue]] | tuple[dict[StrictStr, CaptureValue], ...]]
+)
+_MAX_WORKER_REPLY_BYTES = 64 * 1024 * 1024
+
+
+def _decode_worker_payload(payload: bytes) -> object:
+    """Accept passive CE/native values without executing arbitrary pickle reducers."""
+    from datetime import date, datetime, timedelta, timezone
+    from datetime import time as datetime_time
+    from decimal import Decimal
+    from json import JSONDecodeError
+    from uuid import UUID
+
+    from datamimic_ce.errors import base as errors
+    from datamimic_ce.errors.codes import DomainErrorCode, ErrorCode, IssueCode
+    from datamimic_ce.errors.context import DescriptorLocation
+
+    allowed = (
+        _WorkerSuccess,
+        _WorkerFailure,
+        _ProductBudget,
+        _CountBoundaryKind,
+        _MemstoreProducer,
+        _MemstoreSourceBinding,
+        _MemstoreBindingStatus,
+        SmokeExportCapture,
+        CapturedObjectId,
+        date,
+        datetime,
+        datetime_time,
+        timedelta,
+        timezone,
+        Decimal,
+        UUID,
+        DomainErrorCode,
+        ErrorCode,
+        IssueCode,
+        DescriptorLocation,
+        errors.DomainError,
+        errors.InvalidLocaleError,
+        errors.UserErrorBase,
+        errors.UserValueError,
+        errors.UserRuntimeError,
+        errors.InvalidDatasetError,
+        errors.DateTimeConversionError,
+        errors.EntityInitError,
+        errors.InvalidSourceError,
+        errors.MissingMemstoreProductError,
+        errors.RuleEvaluationError,
+        errors.ExportConfigError,
+        errors.ExternalFailureCause,
+        errors.IncludeError,
+        errors.MissingIncludeError,
+        errors.GeneratorConfigError,
+        errors.ConditionEvaluationError,
+        errors.ParserValidationError,
+        errors.MissingDescriptorError,
+        errors.ClientConfigError,
+        errors.TaskConfigError,
+        errors.OperationError,
+        errors.RuntimeConfigError,
+        errors._restore_domain_error,
+        errors._restore_locale_error,
+        errors._restore_user_error,
+        JSONDecodeError,
+        ValidationError,
+        Exception,
+        ValueError,
+        TypeError,
+        KeyError,
+        RuntimeError,
+        AttributeError,
+        IndexError,
+        ZeroDivisionError,
+        OverflowError,
+        OSError,
+        FileNotFoundError,
+        PermissionError,
+        TimeoutError,
+        AssertionError,
+        NameError,
+        ImportError,
+        SyntaxError,
+        NotImplementedError,
+    )
+    globals_by_name: dict[tuple[str, str], object] = {(value.__module__, value.__name__): value for value in allowed}
+
+    def validation_error_constructor(owner: object, name: str) -> object:
+        # Pydantic's native pickle uses this exact classmethod lookup.
+        if owner is ValidationError and name == "from_exception_data":
+            return ValidationError.from_exception_data
+        raise pickle.UnpicklingError("bounded reply requested an unsupported attribute")
+
+    globals_by_name[("builtins", "getattr")] = validation_error_constructor
+
+    class PassiveUnpickler(pickle.Unpickler):
+        def find_class(self, module: str, name: str) -> object:
+            try:
+                return globals_by_name[(module, name)]
+            except KeyError as error:
+                raise pickle.UnpicklingError("bounded reply contains an unsupported global") from error
+
+    if len(payload) > _MAX_WORKER_REPLY_BYTES:
+        raise pickle.UnpicklingError("bounded reply exceeds its byte limit")
+    stream = io.BytesIO(payload)
+    result = PassiveUnpickler(stream).load()
+    if stream.read(1):
+        raise pickle.UnpicklingError("bounded reply contains trailing data")
+    return result
+
+
+def _project_capture_object_ids(value: object) -> object:
+    """Copy bounded capture containers, projecting only native BSON identifiers."""
+    remaining = MAX_CAPTURE_ITEMS
+    ancestors: set[int] = set()
+
+    def project(current: object, depth: int) -> object:
+        nonlocal remaining
+        remaining -= 1
+        if remaining < 0 or depth > MAX_CAPTURE_DEPTH:
+            raise ValueError("capture exceeds its item or depth budget")
+        if type(current) is ObjectId:
+            return CapturedObjectId(value=str(current))
+        if not isinstance(current, dict | list | tuple):
+            return current
+        identity = id(current)
+        if identity in ancestors:
+            raise ValueError("capture contains a cyclic container")
+        if len(current) > remaining:
+            raise ValueError("capture exceeds its item budget")
+        ancestors.add(identity)
+        try:
+            if isinstance(current, dict):
+                if not all(isinstance(key, str) for key in current):
+                    raise ValueError("capture object keys must be strings")
+                return {key: project(item, depth + 1) for key, item in current.items()}
+            if isinstance(current, tuple):
+                return tuple(project(item, depth + 1) for item in current)
+            return [project(item, depth + 1) for item in current]
+        finally:
+            ancestors.remove(identity)
+
+    return project(value, 0)
+
+
+def _validated_capture_rows(captured: object) -> _CapturedRows:
+    validate_capture_values(captured)
+    try:
+        validated = _CAPTURE_ROWS.validate_python(captured, strict=True)
+    except (TypeError, ValueError) as error:
+        raise ValueError("capture contains an invalid product or row") from error
+    return {name: tuple(rows) for name, rows in validated.items()}
+
+
+def _validated_worker_success(message: _WorkerSuccess, max_count: int | None = None) -> _WorkerSuccess:
+    _validated_capture_rows(message.captured)
+    # Reconstruct from the complete state: instance revalidation discards forged extra fields.
+    validated_budgets = []
+    for budget in message.budgets:
+        if budget.memstore_source is not None:
+            original_binding = budget.memstore_source
+            _MemstoreSourceBinding(**original_binding.__dict__)
+            for producer in original_binding.producers:
+                _MemstoreProducer(**producer.__dict__)
+        validated_budgets.append(_ProductBudget(**budget.__dict__))
+    SmokeExportCapture(**message.smoke_export.__dict__)
+    message = _WorkerSuccess(**message.__dict__)
+    message = _WorkerSuccess(
+        message.captured,
+        tuple(validated_budgets),
+        message.smoke_diagnostics,
+        message.smoke_export,
+        message.source_accesses,
+    )
+    names = [budget.name for budget in message.budgets]
+    if len(names) != len(set(names)):
+        raise ValueError("duplicate capture provenance")
+    budgets = {budget.name: budget for budget in message.budgets}
+    if set(message.captured) != set(budgets):
+        raise ValueError("capture is missing product provenance")
+    for budget in message.budgets:
+        if budget.parent_name is not None and budget.parent_name not in budgets:
+            raise ValueError("capture provenance references a missing parent")
+        if budget.bounded_without_cap and budget.cap_applied:
+            raise ValueError("capture provenance has contradictory bounds")
+        if budget.explicit_count and budget.requested_per_parent is None:
+            raise ValueError("explicit count provenance requires the requested count")
+        parent = budget.parent_name
+        ancestry = {budget.name}
+        while parent is not None:
+            if parent in ancestry:
+                raise ValueError("capture parent provenance contains a cycle")
+            ancestry.add(parent)
+            parent = budgets[parent].parent_name
+        if max_count is not None:
+            parent_rows = len(message.captured.get(budget.parent_name, ())) if budget.parent_name else 1
+            limit = max_count * parent_rows * budget.output_multiplier
+            if len(message.captured.get(budget.name, ())) > limit:
+                raise ValueError("capture rows exceed the full nested product bound")
+        binding = budget.memstore_source
+        if binding is not None:
+            expected = {_MemstoreBindingStatus.MISSING: 0, _MemstoreBindingStatus.RESOLVED: 1}
+            if binding.status in expected and len(binding.producers) != expected[binding.status]:
+                raise ValueError("invalid memstore provenance cardinality")
+            if binding.status is _MemstoreBindingStatus.AMBIGUOUS and len(binding.producers) < 2:
+                raise ValueError("ambiguous memstore provenance needs multiple producers")
+            if any(
+                producer.product not in budgets or producer.source_id != binding.source_id
+                for producer in binding.producers
+            ):
+                raise ValueError("invalid memstore producer provenance")
+    smoke = message.smoke_export
+    counters = (smoke.applicable_exporters, smoke.attempted_exporters, smoke.failed_exporters)
+    if type(smoke.requested) is not bool or any(type(value) is not int or value < 0 for value in counters):
+        raise ValueError("invalid smoke-export counters")
+    if smoke.failed_exporters > smoke.attempted_exporters or smoke.attempted_exporters > smoke.applicable_exporters:
+        raise ValueError("inconsistent smoke-export counters")
+    if not smoke.requested and (any(counters) or message.smoke_diagnostics):
+        raise ValueError("unrequested smoke-export contains execution facts")
+    for diagnostic in message.smoke_diagnostics:
+        Diagnostic.model_validate(diagnostic)
+    return message
+
+
+def _export_capture_value(value: CaptureValue) -> object:
+    """Restore native exporter inputs only after the complete capture is validated."""
+    if isinstance(value, CapturedObjectId):
+        return ObjectId(value.value)
+    if isinstance(value, dict):
+        return {key: _export_capture_value(item) for key, item in value.items()}
+    if isinstance(value, tuple):
+        return tuple(_export_capture_value(item) for item in value)
+    if isinstance(value, list):
+        return [_export_capture_value(item) for item in value]
+    return value
+
+
 def _smoke_export(
     captured: Mapping[str, Sequence[object]],
     stripped: _StrippedTargets,
@@ -627,195 +831,47 @@ def _smoke_export(
     """Replay the captured rows through each stripped file exporter inside a temp dir
     (write + finalize — the two phases where serialization crashes live). The tempdir
     context manager guarantees zero artifacts. Failures become DM002 diagnostics."""
+    captured = _validated_capture_rows(captured)
     diagnostics: list[Diagnostic] = []
     applicable_exporters = sum(len(file_targets) for _basename, file_targets, _, _ in stripped.values())
     attempted_exporters = 0
     failed_exporters = 0
     with tempfile.TemporaryDirectory(prefix="datamimic_smoke_") as tmp:
-        descriptor_dir = Path(tmp)
+        descriptor_dir = Path(tmp).resolve()
         task_id = f"smoke_{uuid.uuid4().hex}"
-        for full_name, (basename, file_targets, default_separator, default_line_separator) in sorted(stripped.items()):
-            rows = [row for row in captured.get(_capture_name(full_name), []) if isinstance(row, dict)]
-            if not rows:
-                continue
-            for exporter_name, params in file_targets:
-                attempted_exporters += 1
-                diagnostic = _smoke_exporter(
-                    descriptor_dir,
-                    task_id,
-                    basename,
-                    full_name,
-                    rows,
-                    exporter_name,
-                    params,
-                    default_separator,
-                    default_line_separator,
-                )
-                if diagnostic is not None:
-                    failed_exporters += 1
-                    diagnostics.append(diagnostic)
+        # Export readback is contained in its own private artifact directory.
+        with resource_reader_scope(AuthoringWorkspaceContext(descriptor_dir).read_resource_bytes):
+            for full_name, (basename, file_targets, default_separator, default_line_separator) in sorted(
+                stripped.items()
+            ):
+                rows = [
+                    {key: _export_capture_value(value) for key, value in row.items()}
+                    for row in captured.get(capture_product_name(full_name), ())
+                ]
+                if not rows:
+                    continue
+                for exporter_name, params in file_targets:
+                    attempted_exporters += 1
+                    diagnostic = _smoke_exporter(
+                        descriptor_dir,
+                        task_id,
+                        basename,
+                        full_name,
+                        rows,
+                        exporter_name,
+                        params,
+                        default_separator,
+                        default_line_separator,
+                    )
+                    if diagnostic is not None:
+                        failed_exporters += 1
+                        diagnostics.append(diagnostic)
     return diagnostics, SmokeExportCapture(
         requested=True,
         applicable_exporters=applicable_exporters,
         attempted_exporters=attempted_exporters,
         failed_exporters=failed_exporters,
     )
-
-
-def dry_run(
-    path: Path,
-    *,
-    max_count: int = 10,
-    sample_rows: int = 5,
-    allow_side_effects: bool = False,
-    timeout_seconds: int = 30,
-    smoke_export: bool = False,
-) -> DryRunResult:
-    """Lint first (errors stop before execution), then execute neutralized and capture.
-    smoke_export additionally replays captured rows through the stripped file exporters
-    in a temp dir, catching export-layer crashes the plain dry-run cannot see."""
-    return dry_run_captured(
-        path,
-        max_count=max_count,
-        sample_rows=sample_rows,
-        allow_side_effects=allow_side_effects,
-        timeout_seconds=timeout_seconds,
-        smoke_export=smoke_export,
-    ).result
-
-
-def dry_run_captured(
-    path: Path,
-    *,
-    max_count: int = 10,
-    sample_rows: int = 5,
-    allow_side_effects: bool = False,
-    timeout_seconds: int = 30,
-    smoke_export: bool = False,
-) -> CapturedRun:
-    """Canonical file-backed dry-run retaining all bounded rows internally."""
-
-    lint = lint_descriptor(path)
-    if not lint.ok:
-        result = DryRunResult(
-            ok=False,
-            stage=AuthoringStage.LINT,
-            lint=lint,
-            diagnostics=lint.diagnostics,
-        )
-        return CapturedRun(
-            result=result,
-            captured=CapturedProducts((), max_count),
-            base_run_ok=False,
-        )
-    return _execute_captured(
-        path,
-        max_count=max_count,
-        sample_rows=sample_rows,
-        allow_side_effects=allow_side_effects,
-        timeout_seconds=timeout_seconds,
-        lint=lint,
-        smoke_export=smoke_export,
-    )
-
-
-def dry_run_source(
-    xml: str,
-    *,
-    max_count: int = 10,
-    sample_rows: int = 5,
-    allow_side_effects: bool = False,
-    timeout_seconds: int = 30,
-    smoke_export: bool = False,
-) -> DryRunResult:
-    """Dry-run inline descriptor XML in a temp dir (relative resources not resolvable)."""
-    return dry_run_source_captured(
-        xml,
-        max_count=max_count,
-        sample_rows=sample_rows,
-        allow_side_effects=allow_side_effects,
-        timeout_seconds=timeout_seconds,
-        smoke_export=smoke_export,
-    ).result
-
-
-def dry_run_source_captured(
-    xml: str,
-    *,
-    max_count: int = 10,
-    sample_rows: int = 5,
-    allow_side_effects: bool = False,
-    timeout_seconds: int = 30,
-    smoke_export: bool = False,
-) -> CapturedRun:
-    """Canonical inline dry-run retaining acceptance rows before sample projection."""
-
-    lint = lint_source(xml)
-    if not lint.ok:
-        result = DryRunResult(
-            ok=False,
-            stage=AuthoringStage.LINT,
-            lint=lint,
-            diagnostics=lint.diagnostics,
-        )
-        return CapturedRun(
-            result=result,
-            captured=CapturedProducts((), max_count),
-            base_run_ok=False,
-        )
-    with tempfile.TemporaryDirectory(prefix="datamimic_dryrun_") as tmp:
-        descriptor = Path(tmp) / "datamimic.xml"
-        descriptor.write_text(xml, encoding="utf-8")
-        return _execute_captured(
-            descriptor,
-            max_count=max_count,
-            sample_rows=sample_rows,
-            allow_side_effects=allow_side_effects,
-            timeout_seconds=timeout_seconds,
-            lint=lint,
-            smoke_export=smoke_export,
-        )
-
-
-def _clip_value(value: object, max_chars: int = 200) -> JsonValue:
-    """Clip strings but PRESERVE dict/list structure. Agents verify intent by inspecting
-    the sample ("is reviews a list of objects with a rating?"); stringifying nested
-    structures would make that check impossible."""
-    if isinstance(value, str):
-        return value if len(value) <= max_chars else value[: max_chars - 1] + "…"
-    if isinstance(value, int | float | bool | type(None)):
-        return value
-    if isinstance(value, dict):  # includes DotableDict rows from nestedKey/entity output
-        return {str(k): _clip_value(v, max_chars) for k, v in value.items()}
-    if isinstance(value, list | tuple):
-        return [_clip_value(v, max_chars) for v in value]
-    return str(value)  # datetime, Decimal, custom objects -> readable leaf
-
-
-def _failed_capture(result: DryRunResult, max_count: int) -> CapturedRun:
-    return CapturedRun(
-        result=result,
-        captured=CapturedProducts((), max_count),
-        base_run_ok=False,
-    )
-
-
-def _ipc_safe_value(value: object) -> object:
-    """Preserve structured values across IPC, stringifying only unpicklable leaves."""
-
-    if isinstance(value, str | bytes | int | float | bool | type(None)):
-        return value
-    if isinstance(value, dict):
-        return {str(key): _ipc_safe_value(item) for key, item in value.items()}
-    if isinstance(value, list):
-        return [_ipc_safe_value(item) for item in value]
-    if isinstance(value, tuple):
-        return tuple(_ipc_safe_value(item) for item in value)
-    try:
-        pickle.dumps(value)
-    except (pickle.PickleError, TypeError, AttributeError):
-        return str(value)
-    return value
 
 
 @contextmanager
@@ -846,18 +902,23 @@ def _suppress_worker_stderr() -> Iterator[None]:
             os.close(null_stderr)
 
 
-def _engine_process_worker(
+def _run_engine_capture(
     path: Path,
     max_count: int,
     allow_side_effects: bool,
     smoke_export: bool,
-    send_connection: Connection,
-) -> None:
+    *,
+    profile_loader: Callable[[Path, str], dict[str, str]] | None = None,
+    environment_properties: dict[str, str] | None = None,
+    logical_descriptor_path: str | None = None,
+    workspace_root: Path | None = None,
+) -> _WorkerMessage:
     """Execute and capture exactly one engine run inside the cancellable process."""
 
-    with _suppress_worker_stderr():
+    with _suppress_worker_stderr(), descriptor_scope(logical_descriptor_path or path.name):
         from functools import partial
 
+        from datamimic_ce.engine.io.api import SourceAccessCapture
         from datamimic_ce.engine.runtime.api import create_run_session
         from datamimic_ce.engine.runtime.contracts import RunRequest
 
@@ -869,6 +930,8 @@ def _engine_process_worker(
                     descriptor_path=path,
                     task_id=f"dryrun_{uuid.uuid4().hex}",
                     test_mode=True,
+                    profile_loader=profile_loader,
+                    platform_props=environment_properties,
                     statement_transformer=partial(
                         neutralize_for_dry_run,
                         max_count=max_count,
@@ -876,82 +939,64 @@ def _engine_process_worker(
                         stripped_file_targets=stripped,
                         product_budgets=budgets,
                         descriptor_dir=path.parent,
+                        workspace_root=workspace_root,
                     ),
                 ),
             )
-            session.execute()
+            with SourceAccessCapture() as source_accesses:
+                session.execute()
             capture = session.capture_test_result()
-            raw_capture = capture if capture is not None else {}
+            raw_capture = _validated_capture_rows(_project_capture_object_ids(capture if capture is not None else {}))
+            if set(raw_capture) - set(budgets):
+                raise ValueError("runtime capture has no canonical product provenance")
+            # The engine omits zero-row products; keep their explicit empty capture.
+            raw_capture = {name: raw_capture.get(name, ()) for name in budgets}
+            _validated_worker_success(
+                _WorkerSuccess(raw_capture, tuple(budgets.values()), (), SmokeExportCapture.not_requested()),
+                max_count=max_count,
+            )
             if stripped is None:
                 smoke_diagnostics: list[Diagnostic] = []
                 smoke_export_capture = SmokeExportCapture.not_requested()
             else:
                 smoke_diagnostics, smoke_export_capture = _smoke_export(raw_capture, stripped)
-            captured = {str(name): tuple(_ipc_safe_value(row) for row in rows) for name, rows in raw_capture.items()}
+            captured = raw_capture
             message: _WorkerMessage = _WorkerSuccess(
                 captured=captured,
                 budgets=tuple(sorted(budgets.values(), key=lambda budget: budget.name)),
                 smoke_diagnostics=tuple(diagnostic.model_dump(mode="json") for diagnostic in smoke_diagnostics),
                 smoke_export=smoke_export_capture,
+                source_accesses=source_accesses.snapshot(),
             )
         except Exception as err:
+            if is_user_error(err):
+                from datamimic_ce.engine.io.api import (
+                    normalize_error_cause_for_transport,
+                    normalize_exporter_error_cause_for_transport,
+                )
+
+                normalize_exporter_error_cause_for_transport(err)
+                normalize_error_cause_for_transport(err)
+            if isinstance(err, DomainError) and not isinstance(err.__cause__, ExternalFailureCause):
+                # Private IPC carries cause types; ordinary Python callers retain native causes.
+                cause_types: list[str] = []
+                current = err.__cause__
+                seen: set[int] = set()
+                while current is not None and id(current) not in seen and len(cause_types) < 16:
+                    seen.add(id(current))
+                    cause_types.append(f"{type(current).__module__}.{type(current).__name__}")
+                    current = current.__cause__
+                if cause_types:
+                    object.__setattr__(err, "__cause__", ExternalFailureCause(cause_types[0], tuple(cause_types)))
             # The process is the untyped runtime boundary: every engine exception must
             # become a stable DM002 response rather than killing the authoring transport.
-            message = _WorkerFailure(message=str(err), fix_hint=_runtime_hint(err))
-        try:
-            send_connection.send(message)
-        finally:
-            send_connection.close()
-
-
-def _process_context() -> mp.context.SpawnContext:
-    """Use one deterministic cross-platform start strategy for threaded transports."""
-
-    return mp.context.SpawnContext()
-
-
-def _terminate_and_reap(process: _ChildProcess) -> None:
-    """Stop a timed-out child and synchronously reap it; never leave a zombie."""
-
-    if not process.is_alive():
-        process.join(timeout=0.1)
-        return
-    process.terminate()
-    process.join(timeout=0.2)
-    if process.is_alive():
-        process.kill()
-        process.join(timeout=0.2)
-
-
-def _receive_worker_message(
-    receive_connection: Connection,
-    process: _ChildProcess,
-    timeout_seconds: int,
-) -> _WorkerMessage | None:
-    deadline = time.monotonic() + timeout_seconds
-    while True:
-        remaining = deadline - time.monotonic()
-        if remaining <= 0:
-            return None
-        if receive_connection.poll(min(0.05, remaining)):
-            try:
-                message = receive_connection.recv()
-            except (EOFError, OSError):
-                return _WorkerFailure(
-                    message="dry-run worker exited without a result",
-                    fix_hint="Inspect the descriptor for a native runtime crash.",
-                )
-            if isinstance(message, _WorkerSuccess | _WorkerFailure):
-                return message
-            return _WorkerFailure(
-                message="dry-run worker returned an invalid result",
-                fix_hint="Report this authoring runtime protocol error.",
+            message = _WorkerFailure(
+                message=str(err) or type(err).__name__,
+                fix_hint=_runtime_hint(err),
+                error=err if is_user_error(err) else None,
+                policy_refusal=isinstance(err, _BoundedPolicyRefusal),
             )
-        if not process.is_alive():
-            return _WorkerFailure(
-                message=f"dry-run worker exited with code {process.exitcode}",
-                fix_hint="Inspect the descriptor for a native runtime crash.",
-            )
+        return message
 
 
 def _capture_evidence(
@@ -986,7 +1031,8 @@ def _capture_evidence(
         else None
     )
     if (
-        budget.source_exhaustible
+        budget.count_kind is not _CountBoundaryKind.DYNAMIC
+        and budget.source_exhaustible
         and available is not None
         and observed == available
         and (not budget.explicit_count or requested is None or requested >= available)
@@ -1133,7 +1179,7 @@ def _static_memstore_capture_evidence(
 
 def _capture_evidence_by_product(
     budgets: _ProductBudgets,
-    captured: dict[str, tuple[object, ...]],
+    captured: Mapping[str, tuple[object, ...]],
     *,
     max_count: int,
 ) -> dict[str, ProductCaptureEvidence]:
@@ -1148,7 +1194,7 @@ class _CaptureEvidenceResolver:
     def __init__(
         self,
         budgets: _ProductBudgets,
-        captured: dict[str, tuple[object, ...]],
+        captured: Mapping[str, tuple[object, ...]],
         max_count: int,
     ) -> None:
         self._budgets = budgets
@@ -1247,203 +1293,35 @@ class _CaptureEvidenceResolver:
         return self._observed.get(budget.parent_name, 0)
 
 
-def _execute_captured(
-    path: Path,
-    *,
-    max_count: int,
-    sample_rows: int,
-    allow_side_effects: bool,
-    timeout_seconds: int,
-    lint: LintResult,
-    smoke_export: bool = False,
-) -> CapturedRun:
-    from datamimic_ce.engine.dsl.api import DescriptorParser
-    from datamimic_ce.engine.io.api import load_connection_profile
-
-    # Refusal gate: <execute> runs arbitrary SQL/scripts — never silently in a dry-run.
-    # The parse can raise (e.g. lint suppressed a credential error) — map it to DM002,
-    # never let it crash the tool.
-    try:
-        from datamimic_ce.engine.runtime.api import runtime_environment
-
-        root_stmt = DescriptorParser.parse(
-            path,
-            None,
-            runtime_environment(),
-            profile_loader=load_connection_profile,
-        )
-        has_execute, has_unbounded_include = _dry_run_hazards(root_stmt)
-    except Exception as err:
-        return _failed_capture(
-            _run_error(RULE_RUNTIME_ERROR, f"Dry-run failed: {err}", _runtime_hint(err), lint),
-            max_count,
-        )
-    if not allow_side_effects and has_execute:
-        return _failed_capture(
-            _run_error(
-                RULE_SIDE_EFFECT_REFUSAL,
-                "Descriptor contains <execute> (arbitrary SQL/script) — refusing the dry-run.",
-                "Re-run with allow_side_effects=true if the statement is safe to execute.",
-                lint,
-                element="execute",
-            ),
-            max_count,
-        )
-    if has_unbounded_include:
-        return _failed_capture(
-            _run_error(
-                RULE_SIDE_EFFECT_REFUSAL,
-                "Descriptor contains an XML <include> that cannot inherit dry-run safety limits.",
-                "Inline the included XML to dry-run it, or use a full run after reviewing its effects.",
-                lint,
-                element="include",
-            ),
-            max_count,
-        )
-
-    started = time.perf_counter()
-    context = _process_context()
-    receive_connection, send_connection = context.Pipe(duplex=False)
-    process = context.Process(
-        target=_engine_process_worker,
-        args=(path, max_count, allow_side_effects, smoke_export, send_connection),
-        name="datamimic-authoring-dryrun",
-    )
-    try:
-        process.start()
-    except (OSError, RuntimeError) as err:
-        receive_connection.close()
-        send_connection.close()
-        return _failed_capture(
-            _run_error(
-                RULE_RUNTIME_ERROR,
-                f"Dry-run worker could not start: {err}",
-                "Check the local multiprocessing runtime and retry.",
-                lint,
-            ),
-            max_count,
-        )
-    send_connection.close()
-    try:
-        message = _receive_worker_message(receive_connection, process, timeout_seconds)
-    finally:
-        receive_connection.close()
-    if message is None:
-        _terminate_and_reap(process)
-        return _failed_capture(
-            _run_error(
-                RULE_RUNTIME_ERROR,
-                f"Dry-run exceeded {timeout_seconds}s and was terminated.",
-                "Reduce counts/pageSize or raise timeout_seconds; inspect slow scripts and sources.",
-                lint,
-            ),
-            max_count,
-        )
-    process.join(timeout=0.2)
-    if process.is_alive():
-        _terminate_and_reap(process)
-    if isinstance(message, _WorkerFailure):
-        return _failed_capture(
-            _run_error(
-                RULE_RUNTIME_ERROR,
-                f"Dry-run failed: {message.message}",
-                message.fix_hint,
-                lint,
-            ),
-            max_count,
-        )
-    timing_ms = int((time.perf_counter() - started) * 1000)
-
-    captured = message.captured
+def _captured_products(message: _WorkerSuccess, max_count: int) -> CapturedProducts:
+    message = _validated_worker_success(message, max_count=max_count)
     budgets = {budget.name: budget for budget in message.budgets}
-    smoke_diags = [Diagnostic.model_validate(diagnostic) for diagnostic in message.smoke_diagnostics]
-    evidence_by_name = _capture_evidence_by_product(
-        budgets,
-        captured,
-        max_count=max_count,
-    )
-    captured_products = CapturedProducts(
+    evidence = _capture_evidence_by_product(budgets, message.captured, max_count=max_count)
+    return CapturedProducts(
         products=tuple(
-            CapturedProduct(
-                name=str(name),
-                rows=tuple(rows),
-                capture=evidence_by_name[str(name)],
-            )
-            for name, rows in sorted(captured.items())
+            CapturedProduct(name=name, rows=rows, capture=evidence[name])
+            for name, rows in sorted(message.captured.items())
         ),
         max_count=max_count,
     )
-    products: list[DryRunProduct] = []
-    for product in captured_products.products:
-        name = product.name
-        rows = product.rows
-        capture = product.capture
-        if capture is None:
-            capture = evidence_by_name[name]
-        sample = [
-            {str(k): _clip_value(v) for k, v in row.items()} if isinstance(row, dict) else {"value": _clip_value(row)}
-            for row in rows[:sample_rows]
-        ]
-        products.append(
-            DryRunProduct(
-                name=name,
-                count=len(rows),
-                sample=sample,
-                truncated_rows=len(rows) > sample_rows,
-                capture=capture,
-            )
-        )
-    products.sort(key=lambda p: p.name)
-    # A descriptor that generates nothing at all almost always means the author's
-    # intent didn't take (empty <setup>, missing/zero counts, a mis-shaped tree).
-    # Neither lint nor a crash catches it — surface it as a diagnostic.
-    zero_rows: list[Diagnostic] = []
-    if sum(p.count for p in products) == 0:
-        zero_rows.append(
-            Diagnostic(
-                rule=RULE_EMPTY_OUTPUT,
-                severity=RuleSeverity.WARNING,
-                message="The dry-run generated 0 rows across all products — the descriptor produces no data.",
-                fix_hint="Ensure a <generate> exists with a positive count (or a source that returns rows).",
-                element="setup",
-                path="/setup",
-            )
-        )
-    result = DryRunResult(
-        ok=not smoke_diags and not zero_rows,
-        stage=AuthoringStage.RUN,
-        timing_ms=timing_ms,
-        products=products[:_MAX_PRODUCTS],
-        products_truncated=max(0, len(products) - _MAX_PRODUCTS),
-        lint=lint,
-        diagnostics=[*smoke_diags, *zero_rows],
-    )
-    return CapturedRun(
-        result=result,
-        captured=captured_products,
-        base_run_ok=not zero_rows,
-        smoke_export=message.smoke_export,
-    )
 
 
-def _execute(
-    path: Path,
-    *,
-    max_count: int,
-    sample_rows: int,
-    allow_side_effects: bool,
-    timeout_seconds: int,
-    lint: LintResult,
-    smoke_export: bool = False,
-) -> DryRunResult:
-    """Compatibility projection over the one canonical captured execution path."""
-
-    return _execute_captured(
-        path,
-        max_count=max_count,
-        sample_rows=sample_rows,
-        allow_side_effects=allow_side_effects,
-        timeout_seconds=timeout_seconds,
-        lint=lint,
-        smoke_export=smoke_export,
-    ).result
+def _decode_worker_message(payload: bytes, *, max_count: int | None = None) -> _WorkerMessage:
+    message = _decode_worker_payload(payload)
+    if isinstance(message, _WorkerSuccess):
+        return _validated_worker_success(message, max_count=max_count)
+    if isinstance(message, _WorkerFailure):
+        message = _WorkerFailure(**message.__dict__)
+        if message.error is not None and not isinstance(message.error, (UserErrorBase, DomainError)):
+            raise ValueError("worker failure contains an unsupported error type")
+        if isinstance(message.error, GeneratorConfigError):
+            reason = message.error.constructor_reason
+            if reason is not None and (
+                type(reason) is not str
+                or not reason.strip()
+                or message.error.code is not ErrorCode.GENERATOR_CONFIG
+                or message.error.issue_code is not None
+            ):
+                raise ValueError("worker constructor reason has invalid content or identity")
+        return message
+    raise ValueError("worker returned an unknown envelope")

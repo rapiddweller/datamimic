@@ -1,0 +1,5 @@
+<setup rngSeed="7">
+    <generate name="payments" count="1">
+        <key name="amount" type="decimal" min="1000000000000000.01" max="1000000000000000.01" granularity="0.01"/>
+    </generate>
+</setup>

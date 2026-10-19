@@ -16,6 +16,7 @@ from datamimic_ce.engine.dsl.statements.flow.branches.else_if_statement import E
 from datamimic_ce.engine.dsl.statements.flow.branches.else_statement import ElseStatement
 from datamimic_ce.engine.dsl.statements.flow.branches.if_statement import IfStatement
 from datamimic_ce.engine.dsl.vocabulary.constants.attribute_constants import ATTR_CONDITION
+from datamimic_ce.errors import IssueCode, condition_evaluation_error
 
 
 class ConditionParser(StatementParser):
@@ -69,21 +70,21 @@ class ConditionParser(StatementParser):
         for stmt in sub_stmt_list:
             if isinstance(stmt, IfStatement):
                 if found_if:
-                    raise ValueError("Fail while parsing <condition>. Only one tag <if> is allowed in <condition>.")
+                    raise condition_evaluation_error(code=IssueCode.CONDITION_DUPLICATE_IF)
                 found_if = True
             elif isinstance(stmt, ElseIfStatement):
                 if not found_if:
-                    raise ValueError("Fail while parsing <condition>. Must have <if> as the first tag.")
+                    raise condition_evaluation_error(code=IssueCode.CONDITION_IF_MISSING)
                 if found_else:
-                    raise ValueError("Fail while parsing <condition>. Tag <else> must be the last tag.")
+                    raise condition_evaluation_error(code=IssueCode.CONDITION_ELSE_AFTER)
             elif isinstance(stmt, ElseStatement):
                 if not found_if:
-                    raise ValueError("Fail while parsing <condition>. Must have <if> as the first tag.")
+                    raise condition_evaluation_error(code=IssueCode.CONDITION_IF_MISSING)
                 if found_else:
-                    raise ValueError("Fail while parsing <condition>. There can only be one tag <else> at most.")
+                    raise condition_evaluation_error(code=IssueCode.CONDITION_ELSE_DUPLICATE)
                 found_else = True
             else:
-                raise ValueError(f"Invalid tag {stmt.__class__.__name__} in <condition>.")
+                raise condition_evaluation_error(code=IssueCode.CONDITION_INVALID_TAG, tag=type(stmt).__name__)
 
         if not found_if:
-            raise ValueError("Fail while parsing <condition>. Must have <if> as the first tag.")
+            raise condition_evaluation_error(code=IssueCode.CONDITION_IF_MISSING)

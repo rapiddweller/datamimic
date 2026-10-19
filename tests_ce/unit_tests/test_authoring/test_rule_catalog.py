@@ -11,30 +11,35 @@ from pathlib import Path
 
 import pytest
 from lxml import etree
+from pydantic import ValidationError
 from typer.testing import CliRunner
 
-from datamimic_ce.authoring.adapters.reference import capabilities_manifest, reference
-from datamimic_ce.authoring.contracts import ReferenceTopic
-from datamimic_ce.authoring.domain.diagnostics import Diagnostic
+from datamimic_ce.authoring import create_authoring_application
+from datamimic_ce.authoring.domain.build_rules import authoring_rule_catalog
+from datamimic_ce.authoring.domain.capabilities import CapabilityDomain
+from datamimic_ce.authoring.domain.diagnostics import RuleCatalogEntry
+from datamimic_ce.authoring.domain.requests import ReferenceRequest, ReferenceTopic
 from datamimic_ce.authoring.domain.rule_catalog import (
     AUTHORING_RULE_DEFINITIONS,
     RuleSeverity,
     authoring_rule_definitions,
     serialize_rule_definition,
 )
-from datamimic_ce.authoring.domain.rules import ALL_INTENT_RULES, ALL_RULES
-from datamimic_ce.authoring.domain.rules.base import IntentLintContext, LintContext
+from datamimic_ce.authoring.domain.rules import ALL_RULES
+from datamimic_ce.authoring.domain.rules.base import LintContext, Rule
 from datamimic_ce.authoring.domain.schema import build_schema_index
+from datamimic_ce.authoring.domain.xml_diagnostics import Diagnostic
 from datamimic_ce.engine.dsl.vocabulary.enums.distribution_enums import POSITIONAL_NUMBER_SEQUENCES, NumberDistribution
 from datamimic_ce.interfaces.cli import app
 
 
 def test_every_evaluator_points_to_exactly_one_complete_catalog_definition() -> None:
     definitions = authoring_rule_definitions()
-    evaluators = (*ALL_RULES, *ALL_INTENT_RULES)
-    assert len(definitions) == len(evaluators)
+    evaluators = ALL_RULES
+    assert definitions and evaluators
+    assert len(definitions) == len(evaluators) + 1
     assert len({definition.id for definition in definitions}) == len(definitions)
-    assert {rule.definition for rule in evaluators} == set(definitions)
+    assert {rule.definition for rule in evaluators} | {AUTHORING_RULE_DEFINITIONS["DM407"]} == set(definitions)
 
     for rule in evaluators:
         definition = rule.definition
@@ -57,20 +62,20 @@ def test_rule_severity_has_one_owner_and_catalog_is_immutable() -> None:
         AUTHORING_RULE_DEFINITIONS["DM999"] = authoring_rule_definitions()[0]  # type: ignore[index]
 
 
-@pytest.mark.parametrize("rule_id", ("DM404", "DM406"))
-def test_verification_blocking_is_central_rule_metadata(rule_id: str) -> None:
-    definition = AUTHORING_RULE_DEFINITIONS[rule_id]
-
+def test_delivery_verification_blocking_is_central_rule_metadata() -> None:
+    definition = AUTHORING_RULE_DEFINITIONS["DM407"]
     assert definition.blocks_verification is True
     assert serialize_rule_definition(definition)["blocks_verification"] is True
+    result = create_authoring_application().reference(ReferenceRequest(topic=ReferenceTopic.RULES, name="DM407"))
+    assert result.rules[0].blocks_verification is True
+    assert result.rules[0].valid_example == definition.valid_example
 
 
-def test_nested_foreign_key_rule_exposes_runtime_xml_for_review() -> None:
-    details = reference(ReferenceTopic.RULES, "DM404")
-
-    assert 'script="parent.id"' in details
-    assert 'type="int" min="1" max="4"' in details
-    assert '"kind":"script"' not in details
+def test_obsolete_intent_rule_ids_are_not_advertised() -> None:
+    application = create_authoring_application()
+    names = application.reference_names(ReferenceTopic.RULES)
+    assert {"DM401", "DM402", "DM403", "DM405", "DM407"} <= set(names)
+    assert not {"DM404", "DM406", "DM408"} & set(names)
 
 
 def test_evaluator_metadata_is_read_directly_from_definition() -> None:
@@ -80,9 +85,12 @@ def test_evaluator_metadata_is_read_directly_from_definition() -> None:
 
 
 def test_public_evaluators_do_not_declare_identity_or_severity() -> None:
-    rules_dir = Path(__file__).parents[3] / "datamimic_ce" / "authoring" / "rules"
+    rules_dir = Path(inspect.getfile(Rule)).parent
     violations: list[str] = []
-    for path in sorted(rules_dir.glob("*.py")):
+    paths = sorted(rules_dir.glob("*.py"))
+    assert rules_dir.is_dir() and len(paths) >= 5
+    assert {"schema_rules.py", "semantic_rules.py", "best_practice.py", "cross_statement.py"} <= {p.name for p in paths}
+    for path in paths:
         if path.name in {"__init__.py", "base.py"}:
             continue
         tree = ast.parse(path.read_text(encoding="utf-8"), filename=str(path))
@@ -106,18 +114,16 @@ def test_evaluators_cannot_replace_catalog_message_or_fix_hint() -> None:
     parameters = inspect.signature(LintContext.diag).parameters
     assert "message" not in parameters
     assert "fix_hint" not in parameters
-    intent_parameters = inspect.signature(IntentLintContext.diag).parameters
-    assert "message" not in intent_parameters
-    assert "fix_hint" not in intent_parameters
 
-    rules_dir = Path(__file__).parents[3] / "datamimic_ce" / "authoring" / "rules"
+    rules_dir = Path(inspect.getfile(Rule)).parent
     violations: list[str] = []
-    for path in sorted(rules_dir.glob("*.py")):
+    paths = sorted(rules_dir.glob("*.py"))
+    assert rules_dir.is_dir() and len(paths) >= 5
+    assert {"schema_rules.py", "semantic_rules.py", "best_practice.py", "cross_statement.py"} <= {p.name for p in paths}
+    for path in paths:
         if path.name in {"__init__.py", "base.py"}:
             continue
         allowed_keywords = {"evidence", "fix_context", "severity"}
-        if path.name == "intent_rules.py":
-            allowed_keywords |= {"name", "path"}
         tree = ast.parse(path.read_text(encoding="utf-8"), filename=str(path))
         for node in ast.walk(tree):
             if not isinstance(node, ast.Call):
@@ -151,28 +157,47 @@ def test_evaluators_cannot_replace_catalog_message_or_fix_hint() -> None:
         assert diagnostic.fix_hint.startswith(rule.definition.fix_hint)
 
 
-def test_catalog_projects_identically_to_capabilities_and_reference() -> None:
-    definitions = authoring_rule_definitions()
-    assert capabilities_manifest()["rules"] == [serialize_rule_definition(item) for item in definitions]
-
-    listing = reference(ReferenceTopic.RULES)
-    for definition in definitions:
-        assert f"{definition.id} [{definition.severity.value}]: {definition.title}" in listing
-        detail = reference(ReferenceTopic.RULES, definition.id.lower())
-        assert definition.explanation in detail
-        assert definition.fix_hint in detail
-        assert definition.provenance in detail
-
-    cli_result = CliRunner().invoke(app, ["reference", "rules", "DM315"])
+def test_catalog_projects_live_xml_and_build_rules_without_losing_metadata() -> None:
+    application = create_authoring_application()
+    listing = application.reference(ReferenceRequest(topic=ReferenceTopic.RULES))
+    entries = {str(rule.rule_id): rule for rule in listing.rules}
+    assert len(entries) == len(listing.rules)
+    assert set(entries) == {item.id for item in authoring_rule_definitions()} | {
+        str(item.rule_id) for item in authoring_rule_catalog()
+    }
+    for definition in authoring_rule_definitions():
+        entry = entries[definition.id]
+        assert entry.description == definition.explanation
+        assert entry.remediation == definition.fix_hint
+        assert entry.provenance == definition.provenance
+        assert entry.title == definition.title
+        assert entry.valid_example == definition.valid_example
+        assert entry.invalid_example == definition.invalid_example
+        assert entry.severity == ("info" if definition.severity is RuleSeverity.HINT else definition.severity.value)
+        assert entry.blocks_verification == definition.blocks_verification
+        assert entry.advisory_severity == (definition.advisory_severity.value if definition.advisory_severity else None)
+        assert RuleCatalogEntry.model_validate_json(entry.model_dump_json()) == entry
+        assert application.reference(ReferenceRequest(topic=ReferenceTopic.RULES, name=definition.id)).rules == (entry,)
+    assert application.reference(ReferenceRequest(topic=ReferenceTopic.RULES, name="missing")).rules == ()
+    cli_result = CliRunner().invoke(app, ["authoring", "reference", "--topic", "rules", "--name", "DM315"])
     assert cli_result.exit_code == 0
-    assert "Severity: hint" in cli_result.stdout
+    import json
+
+    assert json.loads(cli_result.stdout)["rules"][0]["severity"] == "info"
 
 
 def test_finite_sequence_projection_uses_runtime_enum_fact() -> None:
-    expected = sorted(member.value for member in POSITIONAL_NUMBER_SEQUENCES)
-    manifest = capabilities_manifest()
-    assert manifest["finite_numeric_sequences"] == expected
-    assert set(expected) < {member.value for member in NumberDistribution}
-    distribution_reference = reference(ReferenceTopic.DISTRIBUTIONS)
-    for value in expected:
-        assert value in distribution_reference
+    snapshot = create_authoring_application().capabilities()
+    expected = {member.value for member in POSITIONAL_NUMBER_SEQUENCES}
+    assert {item.name for item in snapshot.numeric_distributions if item.single_process_only} == expected
+    assert set(snapshot.capability_names(CapabilityDomain.NUMERIC_DISTRIBUTION)) == {
+        member.value for member in NumberDistribution
+    }
+
+
+@pytest.mark.parametrize("rule_id", ["DM12", "DM1000", "DM1ab", "made_up_rule", 401])
+def test_catalog_identity_rejects_untyped_raw_codes(rule_id):
+    entry = authoring_rule_catalog()[0].model_dump()
+    entry["rule_id"] = rule_id
+    with pytest.raises(ValidationError):
+        RuleCatalogEntry.model_validate(entry)

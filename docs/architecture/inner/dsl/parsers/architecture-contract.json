@@ -16,7 +16,7 @@
       },
       {
         "path": "datamimic_ce/engine/dsl/parsers/document/descriptor_parser.py",
-        "responsibility": "DescriptorParser reads the descriptor file as the sole entrypoint and delegates the root to SetupParser."
+        "responsibility": "Parses files or in-memory XML through SetupParser with logical descriptor identity and descriptor-relative resources."
       },
       {
         "path": "datamimic_ce/engine/dsl/parsers/flow/branches/condition_parser.py",
@@ -137,6 +137,10 @@
       {
         "path": "datamimic_ce/engine/dsl/parsers/values/variables/variable_parser.py",
         "responsibility": "Parses <variable>, validates VariableModel attributes, and builds VariableStatement with its parent and setup context."
+      },
+      {
+        "path": "datamimic_ce/engine/dsl/parsers/input/resource.py",
+        "responsibility": "Owns context-local descriptor resource reads with normal filesystem defaults and an injected workspace reader."
       }
     ]
   },
@@ -427,7 +431,7 @@
         "datamimic_ce.engine.dsl.parsers.input"
       ],
       "responsibilities": [
-        "Low-level XML/property/target syntax inputs used by recursive parsers and routing."
+        "Own XML/property/target syntax and context-local resource reads; callers bind workspace containment without importing IO or Authoring."
       ],
       "public": [
         "datamimic_ce.engine.dsl.parsers.input.properties:parse_properties",
@@ -436,7 +440,11 @@
         "datamimic_ce.engine.dsl.parsers.input.xml:XmlElement",
         "datamimic_ce.engine.dsl.parsers.input.xml:parse_xml_file",
         "datamimic_ce.engine.dsl.parsers.input.xml:parse_xml_source",
-        "datamimic_ce.engine.dsl.parsers.input.xml:xml_tag"
+        "datamimic_ce.engine.dsl.parsers.input.xml:xml_tag",
+        "datamimic_ce.engine.dsl.parsers.input.resource:ResourceReader",
+        "datamimic_ce.engine.dsl.parsers.input.resource:read_resource_bytes",
+        "datamimic_ce.engine.dsl.parsers.input.resource:resource_reader_scope",
+        "datamimic_ce.engine.dsl.parsers.input.resource:resource_reader_active"
       ],
       "decided_by": "agent",
       "role": "component",
@@ -444,7 +452,8 @@
         "Construct statement models or execute output targets."
       ],
       "provenance": [
-        "docs/architecture/inner/semantic-review/astra-target-decision.md"
+        "docs/architecture/inner/semantic-review/astra-target-decision.md",
+        "docs/architecture/inner/target.md"
       ],
       "requires": []
     }
@@ -597,7 +606,8 @@
       "allowed_children": [
         "datamimic_ce.engine.dsl.parsers.input.properties",
         "datamimic_ce.engine.dsl.parsers.input.target",
-        "datamimic_ce.engine.dsl.parsers.input.xml"
+        "datamimic_ce.engine.dsl.parsers.input.xml",
+        "datamimic_ce.engine.dsl.parsers.input.resource"
       ],
       "rationale": "Low-level XML/property/target syntax inputs used by recursive parsers and routing. Exact reviewed target children; no hidden extra modules.",
       "provenance": [

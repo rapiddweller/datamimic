@@ -18,6 +18,7 @@ from datamimic_ce.engine.dsl.api import (
 from datamimic_ce.engine.runtime.contexts.geniter_context import GenIterContext
 from datamimic_ce.engine.runtime.tasks.base.task import GenSubTask
 from datamimic_ce.engine.runtime.tasks.values.construction.factory import generate_random_value_based_on_type
+from datamimic_ce.errors import IssueCode, task_config_error
 
 
 class ArrayTask(GenSubTask):
@@ -85,20 +86,25 @@ class ArrayTask(GenSubTask):
                 element_type = type(value[0])
                 element_type_name = element_type.__name__
                 if element_type_name not in valid_py_types:
-                    raise ValueError(
-                        f"Failed while evaluate script '{self._statement.script} of <array> '{self._statement.name}':"
-                        f"\n - expect array element datatypes in ({', '.join(valid_py_types)})"
-                        f", but got invalid datatype '{element_type_name}'"
+                    raise task_config_error(
+                        code=IssueCode.TASK_ARRAY_SCRIPT_ELEMENT_TYPE,
+                        script="configured script",
+                        name=self._statement.name,
+                        valid_types=", ".join(valid_py_types),
+                        element_type=element_type_name,
                     )
                 if not all(isinstance(ele, element_type) for ele in value):
-                    raise ValueError(
-                        f"Failed while evaluate script '{self._statement.script} of <array> '{self._statement.name}':"
-                        f"\n - all elements in list must be the same data type"
+                    raise task_config_error(
+                        code=IssueCode.TASK_ARRAY_SCRIPT_MIXED_TYPES,
+                        script="configured script",
+                        name=self._statement.name,
                     )
         else:
-            raise ValueError(
-                f"expect datatype list of evaluated script '{self._statement.script}'"
-                f" of <array> '{self._statement.name}', but got invalid datatype '{type(value).__name__}'"
+            raise task_config_error(
+                code=IssueCode.TASK_ARRAY_SCRIPT_NOT_LIST,
+                script="configured script",
+                name=self._statement.name,
+                value_type=type(value).__name__,
             )
         # Add field "array" into current product
         parent_context.add_current_product_field(self._statement.name, value)

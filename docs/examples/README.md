@@ -4,6 +4,8 @@ This section contains verified examples for using DATAMIMIC in various practical
 
 ## Available Examples
 
+- [Authoring Build transactions](authoring.md) - Nested FK, memstore readback and time series
+
 - [Person Generation](person_generation.md) - Generate and work with person entities
 - [Healthcare Data Generation](healthcare_generation.md) - Create realistic healthcare data
 - [DateTime Generator](datetime_generator.md) - Weighted, deterministic, and DSL sugar

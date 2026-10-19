@@ -6,7 +6,8 @@ import json
 
 import pytest
 
-from datamimic_ce.authoring.adapters.reference import capabilities_manifest
+from datamimic_ce.authoring import create_authoring_application
+from datamimic_ce.authoring.domain.capabilities import DslCatalogSnapshot
 from script.architecture_study import compare_step0
 
 
@@ -67,9 +68,7 @@ def test_capability_projection_rejects_changed_current_content(monkeypatch: pyte
     monkeypatch.setattr(compare_step0, "captured_package_version", lambda: "installed-current")
     before = _current_capabilities("installed-current")
     assert compare_step0.capability_projection_equivalent(before, copy.deepcopy(before))
-    changed = _capabilities(
-        {"schema_version": "installed-current", "elements": {"sample": ["changed"]}}
-    )
+    changed = _capabilities({"schema_version": "installed-current", "elements": {"sample": ["changed"]}})
 
     assert not compare_step0.capability_projection_equivalent(before, changed)
 
@@ -82,9 +81,7 @@ def test_projection_comparison_accepts_complete_identity(monkeypatch: pytest.Mon
 
 
 @pytest.mark.parametrize("missing", ["capabilities", "reference_authoring", "reference_scaffold", "compiler"])
-def test_projection_comparison_rejects_missing_required_section(
-    missing: str, monkeypatch: pytest.MonkeyPatch
-) -> None:
+def test_projection_comparison_rejects_missing_required_section(missing: str, monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.setattr(compare_step0, "captured_package_version", lambda: "installed-current")
     before = _projections(_current_capabilities("installed-current"))
     assert compare_step0.projections_equivalent(before, copy.deepcopy(before))
@@ -95,9 +92,7 @@ def test_projection_comparison_rejects_missing_required_section(
 
 
 @pytest.mark.parametrize("changed", ["reference_authoring", "reference_scaffold", "compiler"])
-def test_non_capability_projections_remain_byte_exact(
-    changed: str, monkeypatch: pytest.MonkeyPatch
-) -> None:
+def test_non_capability_projections_remain_byte_exact(changed: str, monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.setattr(compare_step0, "captured_package_version", lambda: "installed-current")
     before = _projections(_current_capabilities("installed-current"))
     assert compare_step0.projections_equivalent(before, copy.deepcopy(before))
@@ -143,15 +138,17 @@ def test_capability_identity_rejects_missing_or_invalid_elements(
     assert not compare_step0.capability_projection_equivalent(projection, copy.deepcopy(projection))
 
 
-def test_full_current_capability_manifest_accepts_identity(monkeypatch: pytest.MonkeyPatch) -> None:
-    manifest = capabilities_manifest()
-    version = manifest["schema_version"]
-    assert isinstance(version, str) and version
-    assert isinstance(manifest["elements"], dict) and manifest["elements"]
-    monkeypatch.setattr(compare_step0, "captured_package_version", lambda: version)
-    projection = _capabilities(manifest)
-
-    assert compare_step0.capability_projection_equivalent(projection, copy.deepcopy(projection))
+def test_full_current_capability_manifest_accepts_identity() -> None:
+    snapshot = create_authoring_application().capabilities()
+    assert snapshot.element_capabilities
+    projection = _capabilities(snapshot.to_dict())
+    content = compare_step0.projection_content(projection)
+    assert content is not None
+    assert DslCatalogSnapshot.model_validate_json(content) == snapshot
+    assert compare_step0.projection_content(copy.deepcopy(projection)) == content
+    malformed = copy.deepcopy(projection)
+    malformed["sha256"] = "wrong"
+    assert compare_step0.projection_content(malformed) is None
 
 
 def test_capability_identity_still_requires_byte_exact_json(monkeypatch: pytest.MonkeyPatch) -> None:

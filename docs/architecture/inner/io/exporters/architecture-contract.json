@@ -118,7 +118,8 @@
         "datamimic_ce.engine.io.exporters.core.exporter_state_manager:ExporterStateManager",
         "datamimic_ce.engine.io.exporters.core.unified_buffered_exporter:UnifiedBufferedExporter",
         "datamimic_ce.engine.io.exporters.core.routing",
-        "datamimic_ce.engine.io.exporters.core.serialization:convert_xml_dict_to_json_dict"
+        "datamimic_ce.engine.io.exporters.core.serialization:convert_xml_dict_to_json_dict",
+        "datamimic_ce.engine.io.exporters.core.unified_buffered_exporter:ExporterError"
       ],
       "decided_by": "agent"
     },
@@ -294,7 +295,8 @@
       "public": [
         "datamimic_ce.engine.io.exporters.lifecycle:finalize_exporter_chunks",
         "datamimic_ce.engine.io.exporters.lifecycle:publish_exported_artifacts",
-        "datamimic_ce.engine.io.exporters.lifecycle:cleanup_exporter_chunks"
+        "datamimic_ce.engine.io.exporters.lifecycle:cleanup_exporter_chunks",
+        "datamimic_ce.engine.io.exporters.lifecycle:normalize_exporter_error_cause_for_transport"
       ],
       "decided_by": "agent"
     },

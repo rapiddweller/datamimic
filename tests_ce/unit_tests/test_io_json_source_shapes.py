@@ -5,6 +5,7 @@ import pytest
 
 from datamimic_ce.engine.dsl.vocabulary.source_capabilities import SourceFileFormat
 from datamimic_ce.engine.io.files.readers import load_source_rows
+from datamimic_ce.errors import InvalidSourceError, IssueCode
 
 
 @pytest.mark.parametrize(
@@ -40,5 +41,7 @@ def test_malformed_json_source_is_rejected(tmp_path) -> None:
     path = tmp_path / "source.json"
     path.write_text('{"id":', encoding="utf-8")
 
-    with pytest.raises(JSONDecodeError):
+    with pytest.raises(InvalidSourceError) as caught:
         load_source_rows(path, ",", SourceFileFormat.JSON)
+    assert caught.value.issue_code is IssueCode.SOURCE_INVALID_JSON
+    assert isinstance(caught.value.__cause__, JSONDecodeError)

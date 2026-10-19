@@ -9,6 +9,7 @@ from base64 import b64encode
 
 from datamimic_ce.domains.shared.converters.base.converter import Converter
 from datamimic_ce.engine.dsl.vocabulary.enums.converter_enums import SupportHash, SupportOutputFormat
+from datamimic_ce.errors import IssueCode, task_config_error
 
 
 class HashConverter(Converter):
@@ -22,7 +23,12 @@ class HashConverter(Converter):
         if not isinstance(key, bytes):
             raise TypeError("HashConverter key must be bytes")
         if len(key) < 32:
-            raise ValueError("HashConverter key must contain at least 32 bytes of random material")
+            raise task_config_error(
+                code=IssueCode.TASK_CONVERTER_FAILED,
+                element_tag="converter",
+                name="HashConverter",
+                error="key must contain at least 32 bytes of random material",
+            )
         support_hashes = set(support_hash.value for support_hash in SupportHash)
         support_output_format = set(support_output.value for support_output in SupportOutputFormat)
         if hash_type.lower() not in support_hashes:

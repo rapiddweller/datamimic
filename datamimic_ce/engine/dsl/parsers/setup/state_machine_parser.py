@@ -10,6 +10,7 @@ from datamimic_ce.engine.dsl.parsers.base.statement_parser import StatementParse
 from datamimic_ce.engine.dsl.parsers.input.xml import XmlElement, xml_tag
 from datamimic_ce.engine.dsl.statements.setup.state_machine_statement import StateMachineStatement
 from datamimic_ce.engine.dsl.vocabulary.constants.element_constants import EL_COMMENT, EL_STATE_MACHINE, EL_TRANSITION
+from datamimic_ce.errors import IssueCode, generator_config_error
 
 
 class StateMachineParser(StatementParser):
@@ -30,5 +31,5 @@ class StateMachineParser(StatementParser):
             transition = TransitionModel(**child.attrib)
             rules.append((transition.source, transition.target, transition.weight))
         if not rules:
-            raise ValueError(f"<state-machine> '{model.id}' needs at least one <transition>")
+            raise generator_config_error(code=IssueCode.STATE_MACHINE_NO_TRANSITIONS, id=model.id)
         return StateMachineStatement(name=model.id, start=model.start, rules=rules)

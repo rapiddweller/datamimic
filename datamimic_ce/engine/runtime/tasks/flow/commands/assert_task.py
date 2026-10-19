@@ -6,17 +6,15 @@
 
 from datamimic_ce.engine.dsl.api import AssertStatement
 from datamimic_ce.engine.runtime.contexts.context import Context
-from datamimic_ce.engine.runtime.contexts.geniter_context import GenIterContext
 from datamimic_ce.engine.runtime.tasks.base.task import CommonSubTask
+from datamimic_ce.errors import DescriptorLocation, DomainError, IssueCode, UserErrorBase, task_config_error
 
 
 class AssertTask(CommonSubTask):
     """Fail the run when ``condition`` does not evaluate truthy.
 
-    Inside a <generate> the condition sees the current record's fields/variables (checked per record);
-    under <setup> it sees the setup context (checked once). The failure names the condition, the
-    user message and — when available — the offending record, so a violated data invariant surfaces
-    as a hard error instead of silently wrong output.
+    Conditions run per record inside <generate> and once under <setup>.
+    Failures retain explicit user messages without automatically dumping record values.
     """
 
     def __init__(self, statement: AssertStatement):
@@ -30,15 +28,24 @@ class AssertTask(CommonSubTask):
         condition = self._statement.condition
         try:
             passed = bool(ctx.evaluate_python_expression(condition))
+        except (UserErrorBase, DomainError) as error:
+            if isinstance(error, UserErrorBase) and error.location is None:
+                error.location = DescriptorLocation("assert", attribute="condition")
+            raise
         except Exception as err:
             # A broken expression (typo'd field, syntax error) must name the assert, not surface
             # as a bare NameError from deep inside the evaluator.
-            raise ValueError(f"<assert> condition '{condition}' failed to evaluate: {err}") from err
+            raise task_config_error(
+                code=IssueCode.TASK_EXPRESSION_EVAL_FAILED,
+                expr="assert.condition",
+                error="assert expression failed",
+                location=DescriptorLocation("assert", attribute="condition"),
+            ) from err
         if passed:
             return
-        parts = [f"<assert> failed: condition '{condition}' is not true"]
-        if self._statement.message:
-            parts.append(self._statement.message)
-        if isinstance(ctx, GenIterContext) and ctx.current_product:
-            parts.append(f"record: {ctx.current_product}")
-        raise ValueError(" | ".join(parts))
+        raise task_config_error(
+            code=IssueCode.TASK_ASSERT_FAILED,
+            condition="configured condition",
+            extra=f" | {self._statement.message}" if self._statement.message else "",
+            location=DescriptorLocation("assert", attribute="condition"),
+        )

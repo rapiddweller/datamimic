@@ -93,7 +93,9 @@ WEIGHTS_REQUIRE_VALUES = Requires(
 
 # Fact 1: at least one count-like attribute must exist (check_exist_count in model_util:95-106)
 EXIST_COUNT = RequiredOneOf(
-    frozenset((ATTR_SOURCE, ATTR_SCRIPT, ATTR_COUNT, ATTR_MIN_COUNT, ATTR_MAX_COUNT)),
+    frozenset(
+        (ATTR_SOURCE, ATTR_SCRIPT, ATTR_COUNT, ATTR_MIN_COUNT, ATTR_MAX_COUNT, ATTR_START, ATTR_END, ATTR_INTERVAL)
+    ),
     message="Missing attribute 'count' ('count' might be optional in case 'source and script are not defined')",
 )
 

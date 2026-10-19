@@ -18,7 +18,7 @@ keywords = [
     "security", "testing", "modeling"
 ]
 urls = { Homepage = "https://datamimic.io" }
-requires-python = ">=3.10"
+requires-python = ">=3.11"
 dependencies = [
     "dill>=0.3.0", # import dill - Used for pickling
     "faker==33.3.1", # from faker import Faker - Used for generating fake data
@@ -40,7 +40,7 @@ dependencies = [
     "pandas==2.2.3", # import pandas as pd - Used for data manipulation
     "toml>=0.10.2", # import toml
     "typer>=0.12.5", # import typer
-    "typing-extensions>=4.12.0", # TypedDict NotRequired on Python 3.10
+    "typing-extensions>=4.12.0", # TypedDict support
     "psutil>=5.9.5", # import psutil
     "setproctitle>=1.3.6", # OS-visible runtime and worker process titles
     "exrex>=0.12.0", # import exrex - Used for generating random strings
@@ -107,14 +107,14 @@ dev-dependencies = [
 ]
 
 [tool.mypy]
-python_version = "3.10"
+python_version = "3.11"
 mypy_path = "$MYPY_CONFIG_FILE_DIR/stubs"
 warn_redundant_casts = true
 warn_unused_ignores = true
 
 [tool.ruff]
 line-length = 120                  # Maximum line length
-target-version = "py310"          # Keep linting aligned with requires-python
+target-version = "py311"          # Keep linting aligned with requires-python
 
 [tool.ruff.lint]
 exclude = [".git", "__pycache__", "node_modules", "public", ".venv", "tests_ce"]  # Exclude these directories from linting

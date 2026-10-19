@@ -7,14 +7,13 @@ enums define the transport choices at the boundary.
 from __future__ import annotations
 
 import os
+from enum import StrEnum
 from pathlib import Path
 from typing import Annotated
 
 import typer
 import uvicorn
 from dotenv import load_dotenv
-
-from datamimic_ce._compat import StrEnum
 
 app = typer.Typer(help="Run the DATAMIMIC MCP adapter")
 

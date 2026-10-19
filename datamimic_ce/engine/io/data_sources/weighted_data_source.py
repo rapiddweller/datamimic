@@ -7,6 +7,7 @@
 from pathlib import Path
 from random import Random
 
+from datamimic_ce.engine.io.data_sources.router import record_source_access
 from datamimic_ce.engine.io.files.readers import FileUtil
 
 
@@ -17,6 +18,7 @@ class WeightedDataSource:
 
     def __init__(self, file_path: Path, separator: str, rng: Random):
         self._file_path = file_path
+        record_source_access("file_weighted_csv")
         self._df = FileUtil.read_weight_csv(file_path, separator)
         # Explicit RNG injection (no silent stdlib fallback) so <setup rngSeed>
         # propagates fully to weighted source reads.

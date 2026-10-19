@@ -1,6 +1,6 @@
 # CI architecture reviews
 
-CI builds reports with the published ArchKeel **3.0.1** wheel. Report generation
+CI builds reports with the published ArchKeel **4.0.1** wheel. Report generation
 is independent of the architecture gate. Publishing a report does not mean PASS;
 the native validation receipt retains FAIL and UNKNOWN.
 

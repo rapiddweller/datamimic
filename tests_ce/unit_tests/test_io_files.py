@@ -8,6 +8,7 @@ from datamimic_ce.engine.io.data_sources.boundary.models import GenerateFileSour
 from datamimic_ce.engine.io.data_sources.router import read_generate_file_source, read_nested_key_source
 from datamimic_ce.engine.io.files.cache import FileContentStorage
 from datamimic_ce.engine.io.files.readers import FileUtil
+from datamimic_ce.errors import InvalidSourceError, IssueCode
 
 
 def test_nested_source_return_preserves_producer_container_types():
@@ -33,9 +34,7 @@ def test_nested_json_source_preserves_cached_root_identity(tmp_path, source_type
     path.write_text(json.dumps(value), encoding="utf-8")
     cached = FileUtil.read_json(path)
 
-    result = read_nested_key_source(
-        tmp_path, path.name, path.name, source_type, None, "items", None, "|", True, None
-    )
+    result = read_nested_key_source(tmp_path, path.name, path.name, source_type, None, "items", None, "|", True, None)
 
     assert result == value
     assert result is cached
@@ -57,9 +56,9 @@ def test_nested_csv_source_keeps_separator_string_cells_and_order(tmp_path, sepa
     [
         ("missing.json", "list", None, FileNotFoundError, "JSON file not found"),
         ("missing.csv", "list", None, FileNotFoundError, "CSV file not found"),
-        ("items.json", "list", "{", json.JSONDecodeError, "Expecting property name"),
+        ("items.json", "list", "{", InvalidSourceError, "Invalid JSON"),
         ("items.json", "list", "{}", ValueError, "must contain a list of objects"),
-        ("items.json", "dict", "[]", ValueError, "must contain a dictionary"),
+        ("items.json", "dict", "[]", InvalidSourceError, "Expected a JSON dictionary"),
         ("items.csv", "dict", None, ValueError, "does not support format items.csv"),
         ("items.unknown", "list", None, ValueError, "Invalid source 'items.unknown'"),
         ("items.unknown", None, None, ValueError, "Cannot load data from source"),
@@ -69,8 +68,14 @@ def test_nested_source_keeps_native_errors(tmp_path, source, source_type, conten
     if contents is not None:
         (tmp_path / source).write_text(contents, encoding="utf-8")
 
-    with pytest.raises(error, match=message):
+    with pytest.raises(error, match=message) as caught:
         read_nested_key_source(tmp_path, source, source, source_type, None, "items", None, "|", False, None)
+    if contents == "{":
+        assert caught.value.issue_code is IssueCode.SOURCE_INVALID_JSON
+        assert type(caught.value.__cause__) is json.JSONDecodeError
+        assert "Expecting property name" in caught.value.__cause__.msg
+    if source_type == "dict" and contents == "[]":
+        assert caught.value.issue_code is IssueCode.SOURCE_JSON_ROOT_INVALID
 
 
 @pytest.mark.parametrize(
@@ -143,7 +148,10 @@ def test_generate_xml_source_rejects_cached_non_dict_document(tmp_path):
             )
 
         assert not path.exists()
-        assert exc_info.value.args == (f"XML source '{path}' must have a document root",)
+        assert type(exc_info.value) is InvalidSourceError
+        assert exc_info.value.issue_code is IssueCode.SOURCE_XML_ROOT_INVALID
+        assert path.name in str(exc_info.value)
+        assert str(tmp_path) not in str(exc_info.value)
         assert FileContentStorage.load_file_with_cache(cache_key) is rows
         assert rows == [42]
     finally:
@@ -214,12 +222,11 @@ def test_csv_empty_file_is_empty_for_raw_and_dict_readers(tmp_path):
 def test_csv_reader_annotations_are_narrow():
     assert get_type_hints(FileUtil._read_raw_csv)["return"] == list[tuple[str, ...]]
     assert get_type_hints(FileUtil.read_csv_to_dict_list)["return"] == list[dict[str, str]]
-    assert get_type_hints(FileUtil.read_csv_having_weight_column).get("return") == tuple[
-        list[float], list[dict[str, str]]
-    ]
-    assert get_type_hints(FileUtil.read_csv_to_dict_of_tuples_with_header)["return"] == tuple[
-        dict[str, int], list[tuple[str, ...]]
-    ]
-    assert get_type_hints(FileUtil.read_csv_to_list_of_tuples_without_header)["return"] == list[
-        tuple[str, ...]
-    ]
+    assert (
+        get_type_hints(FileUtil.read_csv_having_weight_column).get("return") == tuple[list[float], list[dict[str, str]]]
+    )
+    assert (
+        get_type_hints(FileUtil.read_csv_to_dict_of_tuples_with_header)["return"]
+        == tuple[dict[str, int], list[tuple[str, ...]]]
+    )
+    assert get_type_hints(FileUtil.read_csv_to_list_of_tuples_without_header)["return"] == list[tuple[str, ...]]

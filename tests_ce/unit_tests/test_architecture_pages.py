@@ -133,7 +133,7 @@ def archive(path, source, **changes):
         "run_attempt": run["run_attempt"],
         "head_sha": run["head_sha"],
         "scanned_sha": run["head_sha"],
-        "archkeel_version": "3.0.1",
+        "archkeel_version": "4.0.1",
     }
     metadata.update(changes)
     files = {
@@ -198,6 +198,7 @@ def test_only_current_snapshot_is_published_with_native_explorer_and_unchanged_e
         {"archkeel_version": "0.8.5"},
         {"archkeel_version": "1.0.0"},
         {"archkeel_version": "2.0.0"},
+        {"archkeel_version": "3.0.1"},
     ],
 )
 def test_mismatched_identity_cannot_publish(tmp_path, changes):
