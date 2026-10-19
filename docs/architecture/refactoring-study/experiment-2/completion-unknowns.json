@@ -1,12 +1,12 @@
 {
   "status": "independent_local_architecture_review_accepted",
   "reviewed_by": "Astra",
-  "review_reference": "docs/architecture/refactoring-study/experiment-2/authoring-errors-final-review.md",
-  "source_digest": "7b584450cc2473a516ec75d59a558e102dba9b8ccede61946a094971a20a3e0c",
-  "contract_digest": "8517a10b1fd874b2e66f7161044074d8ff649639a9f8e37e17f92c2456cc0d85",
+  "review_reference": "docs/architecture/refactoring-study/experiment-2/ce5-plugin-review.md",
+  "source_digest": "198f3c582b683d172af8284228ba49ce9bbe06faa997919ff478687f1ec0e66e",
+  "contract_digest": "d83d4df102a2588a54598e26cb045b721cb024a118f51e31592b135050d4e78e",
   "analyzer_digest": "bb1a3262d3fdd38c3e9a6af980cc063281ae98ab1c28c89c2c5be6dfb450744f",
-  "validation_digest": "0805a19907a948bf130e89544f35da0a5328e3180fc0a3a5e7f676a6341a60f2",
-  "unknowns_digest": "cd103e193d28223bd693af9ebcd4e69bda6365fda88d31ba7a1e459f50cfa5ae",
+  "validation_digest": "31276851db4edeee1e1dd4e1b56bf97a12a48a718819330150a37723276355df",
+  "unknowns_digest": "af8c268ca5545b395eef7bc4a5aa4e1451c2387382a7b12c20c94453ad85acb0",
   "groups": [
     {
       "classification": "api_surface_limit",
@@ -550,7 +550,7 @@
       }
     ]
   },
-  "review_scope": "Source-bound follow-up to the accepted whole-branch CE review at 8a8dc1baade090faaa42a2040d9a994ea2db88b1: remove two Python 3.10 Z normalization shims; keep datetime.fromisoformat on required Python >=3.11. Review the deterministic snapshot-race fixture with identical exception expectation. No other product changes, no policy amendment. Reuses unchanged whole-branch evidence and all exact raw UNKNOWN/diagnostic assessments; fresh native collection binds the new Source.",
+  "review_scope": "Independent review from 771c25a6f5b0f75438cfc18a03cc26195b1d0f65 for issues 344/345 and the issue 337 human-first steering: project setup/onboarding, readable native models with justified typed Python, the LBA reference gate, and root-only virtual-environment snapshot exclusion. Source change is confined to the existing snapshot traversal; nested resources and model-resource identity, symlink, race and size checks remain. All 303 raw UNKNOWN records and 20 validation diagnostics are unchanged; classifications, contract, analyzer and approved 1425/178 ceilings are preserved. Final documentation consistency edits in docs/releases/5.0.md and docs/README.md correctly describe shared setup/authoring and the LBA reference gate.",
   "measurement_amendment": "Direct user acceptance Ja akzeptiert authorizes only calls_unresolved 1409 -> 1425 and typing_positions 173 -> 178. Other budgets, target, construct policy and strict completion checks remain unchanged. Approved ceilings accept measured residual uncertainty; they do not resolve it.",
-  "delivery_boundary": "Local architecture review accepted with all 303 UNKNOWNs and 20 raw diagnostics retained. Fresh native rule status remains 271 PASS and 5 UNKNOWN. Earlier CI 39179520411 had 2975 passes, one snapshot-fixture failure and 15 skips; its precise cause remains UNKNOWN. Interrupted local full-unit execution is not a pass. Parent owns new exact-head CI, Windows/service evidence and merge decision. No whole-system PASS, atomic snapshot, sandbox or merge authorization."
+  "delivery_boundary": "Local architecture review accepted: zero violations, 303 retained UNKNOWNs, 20 raw validation diagnostics, 271 rules PASS and 5 UNKNOWN. Reviewer independently ran 38 snapshot/plugin/normal-runtime tests and inspected fresh 3003-pass/15-skip unit, 66-pass/4-Windows-skip targeted, Ruff/MyPy and installed-base/MCP logs. The locally built 5.0.0 wheel passes isolated real-child checks with 13 schemas and 0/11 MCP tools. Typed inline/file helper tests prove normal-runtime visibility, one load per run, exact JSON/replay and negative no-output while bounded Python remains rejected. Fresh Luna original-root controlled-index Builds pass; reviewer independently reran the source/environment assertions and installed CLI Build with identical rows/XML and full replay. That attempt unnecessarily reran pip and lacks raw rejected Build responses. The strengthened terminal compatible branch passed a fresh setup-only retest: no install/upgrade/dependency writes, matching 56-package inventories and root-file hashes. Read-only pip list supplied evaluator inventory; corrected quoting errors are retained. This scoped retest does not erase the earlier attempt limitations. The earlier child-workspace workaround is not acceptance evidence. The full 540-row CE LBA gate remains open under issues 332/270. Native Claude is explicitly deferred and native Codex remains model-configuration blocked. Current-delta CI, public PyPI installation, merge and release are not established. Fresh installed-wheel Memstore, SQLite, relational and embedded scenarios all report Ready; reviewer matched raw receipts/XML hashes/verification to the summary and inspected passing oracles. SQLite actual 6/12/24-row delivery and negative composite-FK rejection are recorded; reviewer independently verified the database counts and empty foreign_key_check. Requested relational/embedded smoke/replay passes. These remain separate from full LBA acceptance."
 }

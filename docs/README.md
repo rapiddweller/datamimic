@@ -14,6 +14,10 @@ This project documentation focuses specifically on:
 
 ### Authoring with AI agents
 
+These instructions describe CE 5.0, installed from PyPI.
+
+- [Codex / Claude Code plugin](agent_plugin.md): install shared project setup and authoring in other projects.
+
 - [Agent guide](../AGENTS.md): persisted XML, transient DM JSON and the typed Build loop.
 - [Worked Build transactions](examples/authoring.md): nested FK, memstore readback and time series.
 - [MCP Quickstart](mcp_quickstart.md): install and register the MCP server; the typed Build, codec, discovery and bounded-run tools.
@@ -67,10 +71,10 @@ For detailed information on DATAMIMIC's architecture and model descriptions, ple
 
 ### Installation
 
-To install DATAMIMIC Community Edition:
+Install DATAMIMIC CE from PyPI in your project environment (Python 3.11+):
 
 ```bash
-pip install datamimic-ce
+python -m pip install datamimic-ce
 ```
 
 ### Quick Start - Python API

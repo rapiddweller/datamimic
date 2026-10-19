@@ -70,15 +70,16 @@ class VariableModel(BaseModel):
     )
     type: str | None = Field(
         None,
-        description="Normally a scalar cast for a generated value (e.g. 'int', 'string'). When "
-        "'source' is also set, this instead selects which source-backed statement's rows to read "
-        "(a producer name, not a type); sourceEntity -> type -> name is the fallback.",
+        description="Scalar cast for generated or scalar weighted-CSV values (e.g. 'int', 'string'). "
+        "For client/memstore rows it selects the physical entity/producer instead; "
+        "sourceEntity -> type -> name is the entity fallback.",
     )
     source: str | None = Field(
         None,
         description="Read rows from a declared source: a <memstore>/<database>/<mongodb> id, or a "
-        "file path. Combine with 'type' to pick which produced entity/table to read when the "
-        "source holds more than one.",
+        "file path. A headerless .wgt.csv samples scalar values with replacement using its weights; "
+        "unique, storage and non-random distribution options are unsupported for that format. "
+        "Use sourceEntity/type to select the entity/table from client or memstore sources.",
     )
     # Explicit physical entity to read (sourceEntity -> type -> name). See resolve_source_entity.
     source_entity: str | None = Field(
@@ -129,8 +130,9 @@ class VariableModel(BaseModel):
     source_script: bool | None = Field(
         None,
         alias=ATTR_SOURCE_SCRIPTED,
-        description="Evaluate 'source' as a Python script expression rather than a literal path/id "
-        "(advanced; requires source).",
+        description="Evaluate brace expressions and configured variable markers inside selected "
+        "source contents before casting. The source attribute still identifies the data source. "
+        "Requires source.",
         examples=[True, False],
     )
     generator: str | None = Field(

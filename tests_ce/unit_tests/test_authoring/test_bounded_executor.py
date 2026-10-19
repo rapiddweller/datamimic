@@ -1,13 +1,14 @@
 """The CE executor keeps complete evidence and owns private process resources."""
 
 import os
+import sys
 import time
 from pathlib import Path, PurePosixPath
 
 import psutil
 import pytest
 
-from datamimic_ce.authoring.adapters.bounded_executor import CeBoundedExecutor
+from datamimic_ce.authoring.adapters.bounded_executor import CeBoundedExecutor, _snapshot_workspace
 from datamimic_ce.authoring.adapters.workspace import AuthoringWorkspaceContext
 from datamimic_ce.authoring.domain.diagnostics import AuthoringSystemDiagnosticCode
 from datamimic_ce.authoring.domain.requests import BoundedExecutionRequest
@@ -24,6 +25,19 @@ def test_executor_keeps_full_capture_beyond_response_sample():
     assert product.capture.observed == 3
     assert product.capture.complete
     assert result.smoke_export.requested is False
+
+
+def test_launcher_package_cannot_replace_the_selected_worker(tmp_path, monkeypatch):
+    shadow = tmp_path / "datamimic_ce"
+    shadow.mkdir()
+    (shadow / "__init__.py").write_text('raise RuntimeError("wrong launcher package")\n')
+    monkeypatch.chdir(tmp_path)
+    monkeypatch.setenv("PYTHONPATH", str(Path(__file__).resolve().parents[3]))
+
+    result = CeBoundedExecutor().execute(BoundedExecutionRequest(xml=_XML))
+
+    assert result.ok, result.diagnostics
+    assert result.captured.get("rows").rows == ({"id": 1}, {"id": 2}, {"id": 3})
 
 
 def test_private_workspace_preserves_relative_sources_without_host_writes(tmp_path):
@@ -48,6 +62,46 @@ def test_private_workspace_preserves_relative_sources_without_host_writes(tmp_pa
         "nested/input.xml",
         "nested/rows.csv",
     ]
+
+
+@pytest.mark.parametrize("environment", [".venv", "venv"])
+def test_snapshot_omits_root_python_environments_but_keeps_nested_resources(tmp_path, environment):
+    source = tmp_path / "project"
+    source.mkdir()
+    (source / environment).mkdir()
+    (source / environment / "private.txt").write_text("runtime-only")
+    data = source / "data" / environment
+    data.mkdir(parents=True)
+    (data / "rows.csv").write_text("id\n1\n2\n")
+    destination = tmp_path / "snapshot"
+
+    _snapshot_workspace(source, destination)
+
+    assert not (destination / environment).exists()
+    assert (destination / "data" / environment / "rows.csv").read_text() == "id\n1\n2\n"
+
+
+def test_project_root_with_python_environment_can_build_relative_sources(tmp_path):
+    environment = tmp_path / ".venv" / "bin"
+    environment.mkdir(parents=True)
+    try:
+        (environment / "python").symlink_to(sys.executable)
+    except OSError:
+        pytest.skip("native symlink privilege unavailable")
+    data = tmp_path / "data"
+    data.mkdir()
+    (data / "rows.csv").write_text("id\n1\n2\n")
+
+    result = CeBoundedExecutor(AuthoringWorkspaceContext(tmp_path)).execute(
+        BoundedExecutionRequest(
+            xml='<setup rngSeed="7"><generate name="rows" source="data/rows.csv" distribution="ordered">'
+            '<key name="id" script="int(this.id)"/></generate></setup>'
+        )
+    )
+
+    assert result.ok, result.diagnostics
+    assert result.captured.get("rows").rows == ({"id": 1}, {"id": 2})
+    assert (environment / "python").is_symlink()
 
 
 def test_snapshot_rejects_symlinks(tmp_path):
@@ -295,6 +349,8 @@ def test_child_crash_is_typed_and_does_not_wait_for_timeout(tmp_path):
     assert not result.ok
     expected = AuthoringSystemDiagnosticCode.CLEANUP if os.name == "nt" else AuthoringSystemDiagnosticCode.CHILD_CRASH
     assert result.diagnostics[0].code is expected
+    if os.name != "nt":
+        assert "exit code 17" in result.diagnostics[0].message
 
 
 def test_process_cleanup_failure_blocks_success_after_actual_reap(tmp_path, monkeypatch):

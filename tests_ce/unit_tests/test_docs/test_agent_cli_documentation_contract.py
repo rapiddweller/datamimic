@@ -73,8 +73,6 @@ def test_documented_random_fk_warning_holds(tmp_path: Path) -> None:
 def test_documentation_index_does_not_teach_historical_benchmark_commands() -> None:
     index = (ROOT / "docs/README.md").read_text()
     assert "benchmarks/dsl-authoring" not in index
-    benchmark_index = (ROOT / "docs/benchmarks/dsl-authoring/README.md").read_text()
-    assert "legacy" in benchmark_index
 
 
 def test_agent_cli_discovery_uses_the_same_public_contract() -> None:

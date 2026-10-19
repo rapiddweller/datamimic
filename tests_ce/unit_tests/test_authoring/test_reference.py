@@ -41,6 +41,26 @@ def test_schema_discovery_uses_actual_closed_dm_json_and_build_models(applicatio
         assert application.schema(schema_id)
 
 
+def test_advertised_row_condition_examples_evaluate_against_data(application):
+    from datamimic_ce.authoring.domain.row_conditions import evaluate_row_condition
+
+    schema = application.schema(AuthoringSchemaId.BUILD_REQUEST_V4)
+    examples = schema["$defs"]["RowConditionExpectation"]["properties"]["condition"]["examples"]
+    assert examples
+    for expression in examples:
+        assert evaluate_row_condition(expression, {"amount": 25, "addresses": [{"id": 1}, {"id": 2}]})
+
+
+def test_capability_keeps_the_owners_executable_literal_examples(application):
+    from datamimic_ce.engine.dsl.vocabulary.value_literals import parse_literal_values
+
+    capability = application.capability(CapabilityDomain.ELEMENT, "key").capability
+    examples = capability.properties_schema["properties"]["values"]["examples"]
+    assert examples == get_element_definition("key").model.model_fields["values"].examples
+    for example in examples:
+        assert parse_literal_values(example)
+
+
 def test_converters_and_targets_come_from_current_owners(application):
     assert set(application.capability_names(CapabilityDomain.CONVERTER)) == {member.value for member in ConverterEnum}
     snapshot = application.capabilities()

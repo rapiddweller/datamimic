@@ -60,6 +60,15 @@ def serve(
             help="FastMCP transport (sse for network clients, stdio for agent runtimes)",
         ),
     ] = Transport.sse,
+    workspace_root: Annotated[
+        Path | None,
+        typer.Option(
+            exists=True,
+            file_okay=False,
+            resolve_path=True,
+            help="Project root for model paths; defaults to the server's working directory",
+        ),
+    ] = None,
     log_level: Annotated[
         LogLevel,
         typer.Option(help="Log level when running the SSE server"),
@@ -70,7 +79,7 @@ def serve(
     from datamimic_ce.interfaces.mcp import server as mcp_server
 
     if transport == Transport.stdio:
-        mcp_server.create_server().run(Transport.stdio.value)
+        mcp_server.create_server(workspace_root=workspace_root).run(Transport.stdio.value)
         return
 
     resolved_host = host if host is not None else os.getenv("DATAMIMIC_MCP_HOST", _DEFAULT_HOST)
@@ -79,7 +88,9 @@ def serve(
     except ValueError as exc:
         raise typer.BadParameter("DATAMIMIC_MCP_PORT must be an integer") from exc
 
-    sse_app = mcp_server.build_sse_app(mcp_server.create_server(), os.getenv("DATAMIMIC_MCP_API_KEY"))
+    sse_app = mcp_server.build_sse_app(
+        mcp_server.create_server(workspace_root=workspace_root), os.getenv("DATAMIMIC_MCP_API_KEY")
+    )
     uvicorn.run(
         sse_app,
         host=resolved_host,

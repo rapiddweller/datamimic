@@ -89,6 +89,7 @@ _SOURCE_CAPABILITIES: tuple[SourceCapability, ...] = (
         EL_VARIABLE,
         (
             SourceFileFormat.WEIGHTED_ENTITY_CSV,
+            SourceFileFormat.WEIGHTED_CSV,
             SourceFileFormat.CSV,
             SourceFileFormat.JSON,
             SourceFileFormat.XLSX,

@@ -1,0 +1,14 @@
+{
+  "name": "datamimic",
+  "owner": {
+    "name": "rapiddweller"
+  },
+  "plugins": [
+    {
+      "name": "datamimic",
+      "source": "./plugins/datamimic",
+      "description": "Author and verify synthetic test data with DATAMIMIC CE or a connected Platform project."
+    }
+  ],
+  "description": "DATAMIMIC test-data authoring for Codex and Claude Code."
+}

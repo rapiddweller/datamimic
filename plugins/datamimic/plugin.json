@@ -1,0 +1,23 @@
+{
+  "$schema": "https://agent-plugins.org/schemas/1.0.0/plugin.schema.json",
+  "name": "datamimic",
+  "version": "0.2.0",
+  "description": "Author and verify synthetic test data with DATAMIMIC CE or a connected Platform project.",
+  "author": {
+    "name": "rapiddweller"
+  },
+  "repository": "https://github.com/rapiddweller/datamimic",
+  "license": "MIT",
+  "extensions": {
+    "com.openai": {
+      "requires_local_executor": true,
+      "interface": {
+        "displayName": "DATAMIMIC",
+        "shortDescription": "Author and verify test data",
+        "developerName": "rapiddweller",
+        "category": "Productivity"
+      },
+      "onboardingSkill": "./skills/setup-datamimic/SKILL.md"
+    }
+  }
+}
