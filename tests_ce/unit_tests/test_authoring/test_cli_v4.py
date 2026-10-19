@@ -1,11 +1,13 @@
 """Typed Authoring CLI boundaries; runtime commands keep their existing owner."""
 
 import json
+import sqlite3
 from pathlib import Path
 
 import pytest
 from typer.testing import CliRunner
 
+from datamimic_ce.authoring.domain.requests import RunResult
 from datamimic_ce.interfaces.cli import app
 
 runner = CliRunner()
@@ -96,3 +98,29 @@ def test_minimal_stdin_build_from_repository_does_not_copy_unrelated_files(monke
     result = runner.invoke(app, ["authoring", "build", "-"], input=json.dumps(request))
     assert result.exit_code == 0, result.stdout
     assert json.loads(result.stdout)["outcome"] == "ready"
+
+
+def test_count_free_source_json_preserves_required_nullable_capture(tmp_path: Path) -> None:
+    (tmp_path / "db").mkdir()
+    database = tmp_path / "db" / "database.sqlite"
+    with sqlite3.connect(database) as connection:
+        connection.execute("CREATE TABLE items (id INTEGER)")
+        connection.executemany("INSERT INTO items VALUES (?)", [(1,), (2,), (3,)])
+    descriptor = tmp_path / "model.xml"
+    descriptor.write_text(
+        '<setup><database id="db" dbms="sqlite" database="database"/>'
+        '<generate name="rows" source="db" selector="SELECT id FROM items" distribution="ordered"/></setup>',
+        encoding="utf-8",
+    )
+    before = database.read_bytes()
+
+    result = runner.invoke(app, ["authoring", "dry-run", str(descriptor), "--max-count", "2"])
+
+    assert result.exit_code == 0, result.output
+    response = RunResult.model_validate_json(result.stdout)
+    assert response.ok
+    (product,) = response.products
+    assert product.rows == ({"id": 1}, {"id": 2})
+    assert product.capture is not None
+    assert product.capture.requested is None
+    assert database.read_bytes() == before

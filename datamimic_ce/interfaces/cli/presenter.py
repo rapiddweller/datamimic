@@ -128,7 +128,7 @@ def emit_authoring(
             typer.echo(f"{diagnostic.severity}: {diagnostic.message}", err=True)
         typer.echo(result.document.model_dump_json(indent=2, exclude_none=True))
     elif isinstance(result, BaseModel):
-        typer.echo(result.model_dump_json(indent=2, exclude_none=True))
+        typer.echo(result.model_dump_json(indent=2))
     else:
         typer.echo(json.dumps(dict(result), indent=2, ensure_ascii=False))
     raise typer.Exit(exit_code)
