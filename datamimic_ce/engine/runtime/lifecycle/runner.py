@@ -90,6 +90,7 @@ class RuntimeRunSession:
                     runtime_environment=settings.RUNTIME_ENVIRONMENT,
                     ray_debug=settings.RAY_DEBUG,
                     included_statement_transformer=request.included_statement_transformer,
+                    profile_loader=request.profile_loader,
                 ).execute()
             except (UserErrorBase, DomainError) as error:
                 message = error.message if isinstance(error, DomainError) else str(error)

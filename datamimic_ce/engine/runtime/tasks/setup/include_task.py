@@ -108,7 +108,7 @@ def _parse_included_descriptor(ctx: SetupContext, uri: str) -> SetupStatement:
             ctx.descriptor_dir / uri,
             ctx.properties,
             ctx.runtime_environment,
-            profile_loader=load_connection_profile,
+            profile_loader=ctx.profile_loader or load_connection_profile,
         )
         if ctx.included_statement_transformer is not None:
             if statement.default_separator is None:

@@ -1,5 +1,6 @@
 """Literal setup includes inherit the same bounded native execution contract."""
 
+import sqlite3
 from pathlib import Path, PurePosixPath
 
 import pytest
@@ -76,6 +77,40 @@ def test_nested_includes_keep_properties_order_scope_and_replay(tmp_path: Path) 
     assert by_name["rows"].capture.requested == 10
     assert by_name["after"].rows == ({"label": "after"},)
     assert first.smoke_export.attempted_exporters == 1
+
+
+@pytest.mark.parametrize("include_depth", [0, 1, 2])
+@pytest.mark.parametrize("profile_exists", [False, True])
+def test_included_sqlite_uses_workspace_profile_loader(
+    tmp_path: Path, include_depth: int, profile_exists: bool
+) -> None:
+    (tmp_path / "db").mkdir()
+    with sqlite3.connect(tmp_path / "db" / "database.sqlite") as connection:
+        connection.execute("CREATE TABLE items (id INTEGER)")
+        connection.executemany("INSERT INTO items VALUES (?)", [(index,) for index in range(1, 11)])
+    body = (
+        '<database id="db" dbms="sqlite" database="database" environment="included"/>'
+        '<generate name="rows" source="db" selector="SELECT id FROM items" distribution="ordered"/>'
+    )
+    if profile_exists:
+        (tmp_path / "conf").mkdir()
+        (tmp_path / "conf" / "included.env.properties").write_text("db.db.database=database\n", encoding="utf-8")
+    for depth in range(include_depth):
+        name = f"child{depth}.xml"
+        (tmp_path / name).write_text(f"<setup>{body}</setup>", encoding="utf-8")
+        body = f'<include uri="{name}"/>'
+    xml = f"<setup>{body}</setup>"
+    before = {path.relative_to(tmp_path): path.read_bytes() for path in tmp_path.rglob("*") if path.is_file()}
+
+    result = CeBoundedExecutor(AuthoringWorkspaceContext(tmp_path)).execute(
+        BoundedExecutionRequest(xml=xml, max_count=3)
+    )
+
+    assert result.ok, result.diagnostics
+    (product,) = result.captured.products
+    assert product.rows == ({"id": 1}, {"id": 2}, {"id": 3})
+    assert not product.capture.complete
+    assert {path.relative_to(tmp_path): path.read_bytes() for path in tmp_path.rglob("*") if path.is_file()} == before
 
 
 @pytest.mark.parametrize(

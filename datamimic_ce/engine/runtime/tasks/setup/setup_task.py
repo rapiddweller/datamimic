@@ -5,6 +5,7 @@
 # For questions and support, contact: info@rapiddweller.com
 
 import copy
+from collections.abc import Callable
 from contextlib import suppress
 from pathlib import Path
 from typing import Literal
@@ -41,6 +42,7 @@ class SetupTask:
         runtime_environment: Literal["development", "production"] = "production",
         ray_debug: bool = False,
         included_statement_transformer: StatementTransformer | None = None,
+        profile_loader: Callable[[Path, str], dict[str, str]] | None = None,
     ):
         self._descriptor_dir = descriptor_dir
         self._setup_stmt = setup_stmt
@@ -53,6 +55,7 @@ class SetupTask:
         self._runtime_environment = runtime_environment
         self._ray_debug = ray_debug
         self._included_statement_transformer = included_statement_transformer
+        self._profile_loader = profile_loader
         # Assign default setup config value
         self._use_mp = self._setup_stmt.use_mp
         self._default_separator = setup_stmt.default_separator or "|"
@@ -84,6 +87,7 @@ class SetupTask:
             runtime_environment=self._runtime_environment,
             ray_debug=self._ray_debug,
             included_statement_transformer=self._included_statement_transformer,
+            profile_loader=self._profile_loader,
         )
 
         self.execute_statements(self._setup_stmt, root_context)
