@@ -16,7 +16,7 @@ def test_every_reference_topic_has_cli_and_service_parity(topic: ReferenceTopic)
     result = create_authoring_application().reference(ReferenceRequest(topic=topic))
     cli_result = CliRunner().invoke(app, ["authoring", "reference", "--topic", topic.value])
     assert cli_result.exit_code == 0, cli_result.stdout
-    assert json.loads(cli_result.stdout) == result.model_dump(mode="json", exclude_none=True)
+    assert json.loads(cli_result.stdout) == result.model_dump(mode="json")
 
 
 def test_reference_request_uses_the_canonical_topic_type_directly() -> None:
@@ -31,4 +31,4 @@ def test_every_capability_domain_has_cli_and_service_parity(domain: CapabilityDo
     result = application.capability(domain, names[0])
     cli_result = CliRunner().invoke(app, ["authoring", "capability", "--domain", domain.value, "--name", names[0]])
     assert cli_result.exit_code == 0, cli_result.stdout
-    assert json.loads(cli_result.stdout) == result.model_dump(mode="json", exclude_none=True)
+    assert json.loads(cli_result.stdout) == result.model_dump(mode="json")

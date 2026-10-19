@@ -250,7 +250,7 @@ def test_cli_application_byte_parity_for_smoke_and_replay(tmp_path: Path) -> Non
         input=request.model_dump_json(exclude_none=True),
     )
     assert result.exit_code == 0, result.stdout
-    assert result.stdout.strip() == expected.model_dump_json(indent=2, exclude_none=True)
+    assert result.stdout.strip() == expected.model_dump_json(indent=2)
 
 
 def test_missing_memstore_identity_proof_blocks_gates_before_execution(tmp_path: Path, executions) -> None:
