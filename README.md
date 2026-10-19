@@ -51,8 +51,9 @@ The Enterprise Platform adds the governed workflows, scanners, dashboards, and e
 
 ## AI agents: author, verify, and run data models
 
-Install CE from PyPI with `python -m pip install datamimic-ce` and use your
-project environment's `datamimic`. These instructions describe CE 5.0.
+The [agent plugin](docs/agent_plugin.md) prepares CE in your project environment
+when needed. For manual installation, use `python -m pip install datamimic-ce`
+from PyPI. These instructions describe CE 5.0.
 
 XML is the persisted executable project. DM JSON is its
 transient agent representation; expectations and role declarations belong to

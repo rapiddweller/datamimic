@@ -38,6 +38,22 @@ changed candidate. If the requested behavior is unsupported or a failure repeats
 without a justified repair, report the blocker with the diagnostic and preserve
 the user's requirements.
 
+## Build a project people can understand
+
+The executable XML and its supporting files are the human review surface.
+Use native field operations, sources, types, relationships, conditions, checks
+and projections wherever they express the intent clearly. Give each file a
+named activity and each extra field a real consumer. Keep shared rule parameters
+in one place; distinguish rules, demand and source data.
+
+Use a named Python function when an algorithm is clearer there, such as global
+assignment with backtracking. Give it typed inputs and outputs and one purpose.
+Keep model-owned rules, parameters and data access visible in the model; pass
+prepared inputs into the algorithm and return decisions with their reasons.
+Expose execution order in the entry model. Validate the complete planned output
+before cleanup or external writes. Preserve separate outcomes for a solution,
+proven infeasibility and an exhausted search budget.
+
 ## Report the actual proof
 
 A ready compile proves syntax. A ready Build additionally proves its declared

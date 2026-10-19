@@ -23,6 +23,20 @@ file/database/table that real execution would read or change, the operation and
 expected scale. Record assumptions that affect the requested result. For an edit,
 summarize the XML changes and resulting count, relationship or destination changes.
 
+## Inspect the executable project
+
+Map each business rule to its XML location and parameter source. Explain the
+execution order and which outputs each file or helper serves. Identify any
+Python function, its typed input/output contract and why the algorithm belongs
+there. Keep field operations and projections visible at the fields they affect.
+Show where a person can change a rule and how its effects will be verified.
+
+For global selection, include decision reasons and the relevant rule values.
+A search budget exhausted is not proof of infeasibility. Prepare and validate
+complete output before destructive steps; state whether cleanup and delivery
+have an established common transaction. A separate report cannot compensate
+for an opaque executable model.
+
 ## Report evidence
 
 Keep one row for every original requirement, including unsupported requirements:
@@ -55,5 +69,7 @@ Use the project's requested names when present. For Platform projects, use the
 existing file/commit workflow and link the same review information to its saved
 model and execution identity; do not write local files as a substitute.
 
-On rejection, retain diagnostics and a concise incomplete review. Label any
-review XML as a rejected candidate; it is not a ready executable deliverable.
+On rejection, retain diagnostics and a concise incomplete review. Label review
+XML as a candidate until separately requested runtime execution and independent
+acceptance establish their own evidence. Preserve the bounded rejection even
+then; normal runtime success does not create a Ready Build certificate.

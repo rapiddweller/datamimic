@@ -7,16 +7,18 @@ The commands below use `datamimic` as that resolved executable.
 
 ## Preflight
 
+For a missing or incompatible project runtime, complete
+[project setup](../../setup-datamimic/SKILL.md) yourself, then continue here.
+
 ```bash
 datamimic authoring version
 datamimic authoring reference --topic assembly --name starter
 ```
 
 The starter must expose a transaction with `version: "4.0"`, a `document.root`
-and `expectations`. If these commands or that contract are absent, stop before
-writing the model. Explain that the workflow requires CE 5.0 or later. Install
-or upgrade through PyPI using the project's environment and dependency manager;
-do not substitute a source checkout or a different authoring interface.
+and `expectations`. If these commands or that contract are absent, complete
+the shared setup before writing the model. Continue only with its verified
+project CLI; do not substitute another authoring interface.
 
 Use the returned starter as the first candidate. Live capabilities, schemas and
 references own element/entity purpose, attributes, generators and field types.
@@ -33,6 +35,11 @@ Use `datamimic authoring schema --name build_request_v4` when the transaction
 shape itself is unclear; it is larger than the focused references.
 
 ## Build and repair
+
+Keep the selected project root and descriptor-relative resource paths. Root
+`.venv`/`venv` directories are runtime environments excluded from snapshots;
+model inputs belong outside them. Do not narrow the workspace to an empty
+subdirectory to hide a copying failure.
 
 Submit the transaction through stdin with an explicit absolute project root:
 
@@ -61,6 +68,15 @@ original requirements and relative resource paths. `outcome: "ready"` is the
 stopping condition. Persist `artifact.compiled_xml` in the chosen project and
 retain the separate proof. Do not lint/dry-run a successful Build again.
 
+## A model outside bounded proof
+
+If a preserved requirement needs an operation outside bounded Build, retain the
+compiled candidate and exact rejection. Do not remove that operation to obtain
+Ready. Use its dedicated normal runtime workflow only when the user requested
+that execution and its write scope is known. Verify the complete requirements
+with independent checks and readback; report actual runtime evidence separately
+from the unavailable bounded certificate. Compilation alone remains syntax proof.
+
 ## Existing XML and optional MCP
 
 Decompile existing XML through `authoring decompile` before editing its DM JSON;
@@ -71,5 +87,6 @@ original file intact. Raw XML inspection uses `authoring lint` then
 A CE MCP server is an optional transport for the same operations. Follow the
 advertised input schemas, including `request` wrappers. Its host must bind the
 user's project with `datamimic-mcp --transport stdio --workspace-root <project>`;
-verify this binding before reading project-relative resources. A plugin install
-alone does not install CE or configure that server.
+verify this binding before reading project-relative resources. The shared setup
+workflow installs CE when needed; it does not configure an MCP connection unless
+the user needs that transport.

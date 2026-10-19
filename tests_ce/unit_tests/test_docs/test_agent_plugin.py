@@ -43,3 +43,15 @@ def test_skill_references_are_available_without_a_datamimic_checkout() -> None:
             assert resource.is_file(), target
             targets.append(resource)
     assert targets, "The skill must carry its mode-specific guidance into foreign projects."
+
+
+def test_onboarding_resolves_to_a_packaged_skill() -> None:
+    manifest = json.loads((PLUGIN / "plugin.json").read_text())
+    target = manifest["extensions"]["com.openai"]["onboardingSkill"]
+    assert target.startswith("./")
+    skill = (PLUGIN / target).resolve()
+    assert skill.is_relative_to(PLUGIN)
+    assert skill.parent.parent == PLUGIN / "skills"
+    assert skill.name == "SKILL.md"
+    assert skill.is_file()
+    assert re.search(r"^name: " + re.escape(skill.parent.name) + r"$", skill.read_text(), re.MULTILINE)

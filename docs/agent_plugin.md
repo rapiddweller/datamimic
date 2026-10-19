@@ -1,23 +1,8 @@
 # DATAMIMIC plugin for Codex and Claude Code
 
-The plugin installs one shared `generate-test-data` skill: local CE authoring or
-a connected Platform project, structured repair and correctly scoped proof.
+The plugin provides shared setup and `generate-test-data` skills: local CE
+authoring or a connected Platform project, structured repair and scoped proof.
 It works in projects that do not contain DATAMIMIC's `AGENTS.md`.
-
-## Install CE 5.0
-
-Install CE from PyPI using Python 3.11+. From your own project:
-
-```bash
-python -m venv .venv
-.venv/bin/python -m pip install datamimic-ce
-.venv/bin/datamimic authoring reference --topic assembly --name starter
-```
-
-The response must contain a `version: "4.0"` starter transaction. A missing
-`authoring` command means the wrong runtime is selected. Keep this project's
-virtual environment active when starting the agent so it can resolve its CLI.
-For an existing environment, use its dependency manager instead of replacing it.
 
 ## Codex
 
@@ -33,6 +18,8 @@ Open a new Codex session in your data project. Invoke `$generate-test-data`, or
 ask for a synthetic dataset; the skill description allows automatic selection.
 The repository marketplace also uses the Claude-compatible catalog supported by
 Codex. The portable root manifest and Claude manifest share the same skill files.
+Run the offered setup workflow, or start your data task; local authoring invokes
+the same setup when needed.
 
 ## Claude Code
 
@@ -43,7 +30,27 @@ claude plugin details datamimic
 ```
 
 Start a new session in your data project and invoke
-`/datamimic:generate-test-data`.
+`/datamimic:generate-test-data`. Setup also has an explicit entry:
+`/datamimic:setup-datamimic`.
+
+## Automatic project setup
+
+The shared [setup skill](../plugins/datamimic/skills/setup-datamimic/SKILL.md)
+uses the project's Python 3.11+ environment and dependency manager. If CE is
+missing or incompatible, it installs published `datamimic-ce>=5.0.0,<6` from
+PyPI, checks the live authoring contract and continues your original task.
+An already compatible environment is reused. Existing dependency conflicts are
+reported rather than silently replacing pins. A connected Platform project uses
+its remote service and needs no local CE install.
+
+For manual CLI installation, use your project environment:
+
+```bash
+python -m pip install "datamimic-ce>=5.0.0,<6"
+```
+
+The optional MCP transport has its own [registration guide](mcp_quickstart.md).
+Setup does not automatically configure it.
 
 ## First task
 
@@ -58,6 +65,8 @@ The skill reads the running contract, submits a Build, repairs diagnostics and
 persists the returned XML only after readiness. It also returns a
 [model review](../plugins/datamimic/skills/generate-test-data/references/review.md)
 covering structure, key relationships, outputs and each original requirement.
+The executable project itself keeps field operations and rule parameters visible;
+Python functions have explicit inputs, outputs and a justified algorithmic role.
 Compile readiness proves syntax; Build
 readiness additionally proves bounded acceptance. External delivery requires its
 own execution and readback.
@@ -80,3 +89,6 @@ The ZIP is a separate `test-artifacts/agent-plugin/datamimic.zip` artifact; it i
 not a Python distribution. Native client validation and publication evidence
 belong to the release issue. Public-directory submission is separate from
 repository installation.
+
+The [LBA reference evaluation](evaluations/lba-authoring.md) defines the complex
+model-quality gate and records the distinction between EE evidence and CE proof.

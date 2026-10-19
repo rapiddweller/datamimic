@@ -6,6 +6,7 @@
 
 Install CE 5.0 from PyPI: `python -m pip install datamimic-ce`.
 For dataset tasks use the [consumer skill](plugins/datamimic/skills/generate-test-data/SKILL.md).
+Its [setup skill](plugins/datamimic/skills/setup-datamimic/SKILL.md) installs CE in the project when needed.
 Repository contributors read [AGENTS.md](AGENTS.md) and use `.venv/bin/datamimic`.
 
 ## Authoring

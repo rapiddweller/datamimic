@@ -16,7 +16,7 @@ This project documentation focuses specifically on:
 
 These instructions describe CE 5.0, installed from PyPI.
 
-- [Codex / Claude Code plugin](agent_plugin.md): install the shared consumer skill in other projects.
+- [Codex / Claude Code plugin](agent_plugin.md): install shared project setup and authoring in other projects.
 
 - [Agent guide](../AGENTS.md): persisted XML, transient DM JSON and the typed Build loop.
 - [Worked Build transactions](examples/authoring.md): nested FK, memstore readback and time series.
