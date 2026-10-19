@@ -409,6 +409,7 @@ class CeBoundedExecutor:
     ) -> BoundedExecutionEvidence:
         command = [
             sys.executable,
+            "-P",
             "-m",
             "datamimic_ce.authoring.adapters.bounded_executor_child",
             str(request_file),
@@ -434,7 +435,7 @@ class CeBoundedExecutor:
                 if process.poll() is not None:
                     result = _failure(
                         AuthoringSystemDiagnosticCode.CHILD_CRASH,
-                        "Bounded child exited without evidence.",
+                        f"Bounded child exited without evidence (exit code {process.returncode}).",
                         request.max_count,
                     )
                     break

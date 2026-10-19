@@ -97,6 +97,10 @@ def check_installed(with_mcp):
     version = importlib.metadata.version("datamimic_ce")
     assert version
 
+    shadow = Path.cwd() / "datamimic_ce"
+    shadow.mkdir()
+    (shadow / "__init__.py").write_text('raise RuntimeError("wrong launcher package")\n', encoding="utf-8")
+
     from datamimic_ce.authoring.domain.requests import (
         AuthoringSchemaId,
         BuildRequestV4,

@@ -2,11 +2,11 @@
   "status": "independent_local_architecture_review_accepted",
   "reviewed_by": "Astra",
   "review_reference": "docs/architecture/refactoring-study/experiment-2/ce5-plugin-review.md",
-  "source_digest": "16ab705cead61368523b1f80f4a3d6d292e0ffb8c23f5b4950ef96c74bbeb7ab",
-  "contract_digest": "8517a10b1fd874b2e66f7161044074d8ff649639a9f8e37e17f92c2456cc0d85",
+  "source_digest": "712a0b4ed55c59c779e8714de3e651359f9cdd69d76834cf9a43a0af38e41cf2",
+  "contract_digest": "d83d4df102a2588a54598e26cb045b721cb024a118f51e31592b135050d4e78e",
   "analyzer_digest": "bb1a3262d3fdd38c3e9a6af980cc063281ae98ab1c28c89c2c5be6dfb450744f",
-  "validation_digest": "6c24f1f8f239dc21f35e72135904f1c1aece36a44080a56340b0b071b3dcf68d",
-  "unknowns_digest": "cd103e193d28223bd693af9ebcd4e69bda6365fda88d31ba7a1e459f50cfa5ae",
+  "validation_digest": "31276851db4edeee1e1dd4e1b56bf97a12a48a718819330150a37723276355df",
+  "unknowns_digest": "af8c268ca5545b395eef7bc4a5aa4e1451c2387382a7b12c20c94453ad85acb0",
   "groups": [
     {
       "classification": "api_surface_limit",
@@ -550,7 +550,7 @@
       }
     ]
   },
-  "review_scope": "Independent review of the CE 5 plugin preparation diff from 8f89cd4dec9e29e8bb79f3bb0f4c96bae5ca404d. The sole product delta forwards the CLI-validated optional workspace root into the existing MCP server factory for both transports. Shared skill, native metadata, docs, packaging and relevant callers were inspected. Fresh native observation retains the exact prior UNKNOWN records and validation diagnostics, contract, analyzer and approved ceilings. Prior group assessments remain applicable; no policy amendment.",
+  "review_scope": "Independent corrected-diff review from 139c52bebae088326685399a10fd3c6b2c7684a9 for issues 333 and 337-343: released consumer guidance and review contract, worker origin and exit status, typed discovery metadata, scalar weighted variable routing/counting and explicit unsupported-option rejection. All 303 UNKNOWN identities retain their prior classifications; fresh raw records are rebound, not asserted byte-identical. All 20 validation diagnostics match the previous receipt. Contract digest changes only for rationale/responsibility wording; rules, budgets and analyzer are unchanged.",
   "measurement_amendment": "Direct user acceptance Ja akzeptiert authorizes only calls_unresolved 1409 -> 1425 and typing_positions 173 -> 178. Other budgets, target, construct policy and strict completion checks remain unchanged. Approved ceilings accept measured residual uncertainty; they do not resolve it.",
-  "delivery_boundary": "Local architecture review accepted with all 303 UNKNOWNs and 20 raw diagnostics retained; 271 rules PASS and 5 UNKNOWN. This receipt is not release approval or native-agent behavior proof. Native Claude execution failed authentication; Codex execution rejected the configured model. Exact-head CI, native complex workflows and publication gates remain open. See linked review for verification boundaries and the integration-test stub finding."
+  "delivery_boundary": "Local architecture review accepted: zero violations, 303 retained UNKNOWNs, 20 raw validation diagnostics, 271 rules PASS and 5 UNKNOWN. Reviewer independently ran 25 weighted/reference tests and inspected final 2999-pass/15-skip unit, 149 weighted/source, 41 source-count, Ruff/MyPy and isolated installed-base/MCP evidence. Four final-wheel Build scenarios and independent oracles passed; SQLite real delivery passed full composite readback and negative-FK checks. Wheel and sdist each match 1723 tracked package files; plugin review reference is packaged. Issue 343 updates only stale registry-test commands/contracts; seven startup/stdio/SSE checks pass. Exact-head CI remains outside this review. Claude native behavior is explicitly deferred; Codex native behavior remains blocked by model configuration. No public installation, merge or release approval is implied."
 }

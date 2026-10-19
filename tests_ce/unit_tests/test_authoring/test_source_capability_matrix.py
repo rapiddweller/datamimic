@@ -140,6 +140,7 @@ def test_every_declared_file_capability_resolves_in_its_own_context() -> None:
 
 def test_file_classifier_returns_canonical_enum_members() -> None:
     assert source_file_format_for("variable", "rows.wgt.ent.csv") is SourceFileFormat.WEIGHTED_ENTITY_CSV
+    assert source_file_format_for("variable", "rows.wgt.csv") is SourceFileFormat.WEIGHTED_CSV
 
 
 def test_element_task_satisfies_shared_task_abstraction() -> None:

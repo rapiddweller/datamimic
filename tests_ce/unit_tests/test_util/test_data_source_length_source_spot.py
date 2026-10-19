@@ -78,13 +78,20 @@ def test_length_classification_uses_every_central_file_suffix(
     statement = _statement(statement_type, f"rows{file_format.value}", source_type or "rows")
     generic = Mock(return_value=[{}, {}])
     dbunit = Mock(return_value=[{}, {}, {}])
+    weighted = Mock(return_value=[1, 2, 3, 4])
     monkeypatch.setattr(io_source_router, "load_source_rows", generic)
     monkeypatch.setattr(FileUtil, "read_dbunit_to_dict_list", dbunit)
+    monkeypatch.setattr(FileUtil, "read_weight_csv", weighted)
 
     set_data_source_length(context, statement)
     cache_key = ("consumer", f"rows{file_format.value}")
 
-    if file_format is SourceFileFormat.DBUNIT_XML:
+    if file_format is SourceFileFormat.WEIGHTED_CSV:
+        assert root.data_source_len[cache_key] == 4
+        weighted.assert_called_once_with(Path("/descriptor/rows.wgt.csv"), "|")
+        generic.assert_not_called()
+        dbunit.assert_not_called()
+    elif file_format is SourceFileFormat.DBUNIT_XML:
         assert root.data_source_len[cache_key] == 3
         dbunit.assert_called_once_with(Path("/descriptor/rows.dbunit.xml"), "rows")
         generic.assert_not_called()

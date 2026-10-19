@@ -26,6 +26,19 @@ def test_executor_keeps_full_capture_beyond_response_sample():
     assert result.smoke_export.requested is False
 
 
+def test_launcher_package_cannot_replace_the_selected_worker(tmp_path, monkeypatch):
+    shadow = tmp_path / "datamimic_ce"
+    shadow.mkdir()
+    (shadow / "__init__.py").write_text('raise RuntimeError("wrong launcher package")\n')
+    monkeypatch.chdir(tmp_path)
+    monkeypatch.setenv("PYTHONPATH", str(Path(__file__).resolve().parents[3]))
+
+    result = CeBoundedExecutor().execute(BoundedExecutionRequest(xml=_XML))
+
+    assert result.ok, result.diagnostics
+    assert result.captured.get("rows").rows == ({"id": 1}, {"id": 2}, {"id": 3})
+
+
 def test_private_workspace_preserves_relative_sources_without_host_writes(tmp_path):
     folder = tmp_path / "nested"
     folder.mkdir()
@@ -295,6 +308,8 @@ def test_child_crash_is_typed_and_does_not_wait_for_timeout(tmp_path):
     assert not result.ok
     expected = AuthoringSystemDiagnosticCode.CLEANUP if os.name == "nt" else AuthoringSystemDiagnosticCode.CHILD_CRASH
     assert result.diagnostics[0].code is expected
+    if os.name != "nt":
+        assert "exit code 17" in result.diagnostics[0].message
 
 
 def test_process_cleanup_failure_blocks_success_after_actual_reap(tmp_path, monkeypatch):

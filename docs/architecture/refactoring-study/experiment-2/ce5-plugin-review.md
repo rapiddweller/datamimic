@@ -1,46 +1,72 @@
-# CE 5 plugin preparation review
+# CE 5 authoring and plugin review
 
-Reviewed the diff from `8f89cd4dec9e29e8bb79f3bb0f4c96bae5ca404d` on
-`feat/ce-5-agent-plugin`, including callers, tests, packaging and CI.
+Independent corrected-diff review from
+`139c52bebae088326685399a10fd3c6b2c7684a9`, covering issues #333 and #337–#343.
+This follows the earlier MCP workspace/plugin review from `8f89cd4`.
 
-The MCP CLI validates an optional directory and passes it to the existing server
-factory. Both transports retain the same authoring application and default root.
-The shared skill preserves runtime discovery, transaction-owned proof, persisted
-XML and the distinction between bounded capture and external delivery. Platform
-guidance agrees with its current server instructions: observed ETags, Pending
-polling and committing only the Ready execution identity. Plugin ZIP publication
-is separate from Python distributions; package publishers select the Python artifact.
+## Findings resolved
 
-## Finding
+- The worker uses Python `-P` to prevent launcher-directory package shadowing;
+  explicit development `PYTHONPATH` remains supported. Crash evidence includes
+  the numeric return code without exposing child stderr.
+- Live typed metadata describes role scope and the closed row-condition grammar.
+  The incorrect `this.field` claim was removed. Field-owned examples survive
+  schema projection without a second DSL catalog.
+- Scalar weighted variables use the existing sampler and seeded RNG. IO counts
+  their native weighted pool rather than sending it to the dictionary-row reader.
+  Casting and scripted contents remain in the existing variable task. Unsupported
+  unique/storage/non-random options reject explicitly; weighted-entity behavior
+  remains unchanged. Typed source metadata now explains these distinctions.
+- The added `setdefault` call was replaced by a guarded dictionary assignment,
+  preserving existing annotation examples without adding an unresolved call.
+- The shared skill uses live discovery and requires a human review with complete
+  keys, counts, destinations and requirement-to-evidence mapping. Consumer docs
+  describe the requested released PyPI workflow; this is not publication evidence.
 
-The startup-dotenv integration test used a zero-argument `create_server` mock,
-which rejects the newly passed keyword (`test_dotenv_entrypoints.py`,
-`test_mcp_uses_startup_dotenv_and_process_environment_wins`). The parent reproduced
-the two failing cases, aligned both factory mocks, then passed all 24 startup,
-CLI and real stdio/SSE transport checks. Production behavior did not change.
+Issue #343 corrects the cold registry test to the current authoring CLI, compact
+capability index and typed invalid-child diagnostic. It retains positive and
+negative cases in a foreign working directory; no production behavior changes.
+The startup/stdio/SSE log reports seven passing checks.
+
+No remaining blocker found in this corrected diff. The earlier startup-dotenv
+mock defect was fixed and verified before this follow-up.
 
 ## Architecture
 
-Fresh full native collection: 534/534 files parsed, zero violations, 271 rules
-PASS and 5 UNKNOWN. All 303 UNKNOWN records and all 20 validation diagnostics
-match the prior independently assessed receipt exactly. Unresolved calls remain
-1425 and typing positions 178. Contract and analyzer digests are unchanged.
-[The receipt](completion-unknowns.json) binds the new source and validation digest;
-its prior group assessments and approved limits are preserved. UNKNOWN remains
-uncertainty, not proof of complete call resolution or public typing.
+Fresh native observation parses 534/534 files: zero violations, 271 rules PASS,
+5 UNKNOWN, 1425 unresolved calls, 178 typing positions, 2 cycle edges and zero
+private crossings. All 303 UNKNOWN identities retain their prior classifications;
+all 20 validation diagnostics match the previous receipt. The raw UNKNOWN digest
+changed and was reviewed/rebound; records are not claimed byte-identical.
+
+The contract digest changed solely for rationale/responsibility wording. Parsed
+contracts excluding those prose fields match the base. Rules, approved ceilings
+and analyzer are unchanged. [The receipt](completion-unknowns.json) binds the
+current source, contract, analyzer, validation and UNKNOWN records. Residual
+inherited surfaces, external/generic types, reexport routes and dynamic/context
+resolution remain UNKNOWN; this review does not certify complete resolution.
 
 ## Evidence boundary
 
-Inspected local evidence under `/private/tmp/datamimic-ce5-20261019`: 2989 unit
-tests passed, 15 skipped; project-venv Ruff and full MyPy passed (534 files).
-Native installation/discovery is distinct from successful skill execution:
-Claude failed with expired OAuth, and Codex rejected the configured model before
-execution. Neither run proves selection, repair or complex-workflow behavior.
-Inherited #333 weighted-variable CSV failure and #332 bounded-proof limitation
-remain outside this plugin change; the triage evidence does not claim EE parity.
+Reviewer independently ran weighted-variable and reference tests: 25 passed.
+Inspected `/private/tmp/datamimic-ce5-luna/` logs: `full-unit-final.log` reports
+2999 passed/15 skipped; `weighted-final.log` 149 passed; `weighted-length-green.log`
+41 passed; `lint-typecheck-final.log` Ruff and MyPy pass on 534 files. Isolated
+installed base and MCP logs show real-child success (13 schemas, respectively
+0/11 MCP tools) from the locally built 5.0.0 candidate. This is not a PyPI release.
 
-LOCAL VERIFIED: diff/caller review, fresh architecture identities and exact
-retained UNKNOWN/diagnostic comparison; existing test logs inspected.
-CI-ONLY VERIFICATION: exact candidate CI and platform matrix not run by this
-reviewer. Native complex behavior and public installation remain unverified.
-No merge or release approval is implied.
+The four final-wheel scenarios in `final-scenarios/summary.json` return Ready.
+Their raw receipts and oracle outputs cover Memstore tuple/readback preservation,
+relational and embedded Person/Address data, and requested smoke/replay. SQLite
+real execution writes 6/12/24 rows; the rerun script checks complete composite
+joins, uniqueness, per-parent counts, foreign-key integrity and a rejected invalid
+child insert. `package-readback.log` and its checked script establish byte equality
+for 1723 tracked package files in both wheel and sdist, plus the packaged plugin
+review reference. These are final local artifact results, not public installation.
+Claude native testing is explicitly deferred. Codex native execution remains
+blocked by model configuration. Neither host has proven the complete workflow.
+
+LOCAL VERIFIED: corrected source/caller review, 25 independent tests, native
+identity/uncertainty assessment and the inspected logs above.
+CI-ONLY VERIFICATION: exact-head CI and platform matrix remain unverified here.
+No public installation, merge or release approval is implied.

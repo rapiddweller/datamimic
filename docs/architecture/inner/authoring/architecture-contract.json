@@ -542,7 +542,7 @@
         "datamimic_ce.authoring.application.schema",
         "datamimic_ce.authoring.application.use_cases"
       ],
-      "rationale": "Compile/check/run/scaffold transaction coordination. Exact reviewed target children; no hidden extra modules.",
+      "rationale": "Compile/decompile, Build, lint and bounded-run transaction coordination. Exact reviewed target children; no hidden extra modules.",
       "provenance": [
         "docs/architecture/inner/structure-review.json"
       ],

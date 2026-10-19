@@ -20,7 +20,7 @@
       },
       {
         "path": "datamimic_ce/interfaces/cli/presenter.py",
-        "responsibility": "The presenter formats run, lint, scaffold, and demo responses and sets CLI error codes."
+        "responsibility": "The presenter serializes typed authoring results, formats runtime and demo responses, and sets CLI exit codes."
       },
       {
         "path": "datamimic_ce/interfaces/cli/runtime.py",

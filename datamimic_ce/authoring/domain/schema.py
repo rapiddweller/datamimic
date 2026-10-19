@@ -78,10 +78,9 @@ def build_schema_index() -> SchemaIndex:
 
 def element_json_schema(tag: str) -> dict[str, JsonValue]:
     """The real Pydantic-derived JSON schema for an element's attribute model
-    (BaseModel.model_json_schema()), carrying whatever description/examples the model's
-    Field(...) definitions provide. This is the SPOT other schema consumers (scaffold.py's
-    constrained-decoding spec, capabilities_manifest()) reflect from instead of hand-typing
-    a parallel schema fragment."""
+    (BaseModel.model_json_schema()), including Field descriptions and examples.
+    Schema consumers reflect this owner instead of maintaining a parallel DSL catalog.
+    """
     schema = build_schema_index().get(canonical_tag(tag))
     if schema is None or schema.model is None:
         raise ValueError(f"'{tag}' has no attribute model to reflect a JSON schema from")

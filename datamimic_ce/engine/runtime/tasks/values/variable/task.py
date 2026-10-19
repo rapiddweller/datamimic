@@ -46,7 +46,7 @@ class VariableTask(KeyVariableTask, CommonSubTask):
     _iterator: Iterator[object] | None
     _ITERATOR_MODE: Final = "iterator"
     _ENTITY_MODE: Final = "entity_builder"
-    _WEIGHTED_ENTITY_MODE: Final = "weighted_entity"
+    _WEIGHTED_SOURCE_MODE: Final = "weighted_source"
     _ITERATION_SELECTOR_MODE: Final = "iteration_selector"
     _FULL_LOAD_MODE: Final = "full_load"
     _LAZY_ITERATOR_MODE: Final = "lazy_iterator"
@@ -111,7 +111,7 @@ class VariableTask(KeyVariableTask, CommonSubTask):
                 if plan.weighted_source is None:
                     raise RuntimeError("weighted variable source plan has no data source")
                 self._weighted_data_source = plan.weighted_source
-                self._mode = self._WEIGHTED_ENTITY_MODE
+                self._mode = self._WEIGHTED_SOURCE_MODE
             elif plan.kind is VariableSourcePlanKind.ITERATION_SELECTOR:
                 if plan.client is None or plan.selector is None:
                     raise RuntimeError("iteration-selector plan is incomplete")
@@ -197,7 +197,7 @@ class VariableTask(KeyVariableTask, CommonSubTask):
             value = next(self._iterator) if self._iterator is not None else None
         elif self._mode == self._ENTITY_MODE:
             value = self._entity_generator.generate()
-        elif self._mode == self._WEIGHTED_ENTITY_MODE:
+        elif self._mode == self._WEIGHTED_SOURCE_MODE:
             value = self._weighted_data_source.generate()
         elif self._mode == self._ITERATION_SELECTOR_MODE:
             if self._selector is None:
@@ -234,7 +234,7 @@ class VariableTask(KeyVariableTask, CommonSubTask):
         if self._source_script:
             if self._mode in [
                 VariableTask._ITERATOR_MODE,
-                VariableTask._WEIGHTED_ENTITY_MODE,
+                VariableTask._WEIGHTED_SOURCE_MODE,
                 VariableTask._FULL_LOAD_MODE,
             ]:
                 # Default variable prefix and suffix

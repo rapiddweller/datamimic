@@ -204,7 +204,14 @@ class RowConditionExpectation(AuthoringModel):
         default=ExpectationIntentKind.ROW_CONDITION, description="Expectation identity; must be 'row_condition'."
     )
     subject: ProductOrSinkSubject = Field(description="Product or declared-sink rows evaluated by the condition.")
-    condition: NonEmptyStrictStr = Field(description="Boolean expression that every captured row must satisfy.")
+    condition: NonEmptyStrictStr = Field(
+        description=(
+            "Closed Boolean expression over captured fields, comparisons, arithmetic and literal containers. "
+            "Use field names and nested mapping access; len(value) is the only supported function. "
+            "Arbitrary Python calls such as str() and isinstance() are not supported."
+        ),
+        examples=["amount >= 0 and amount <= 100", "len(addresses) == 2"],
+    )
     result_type: Literal["bool"] = Field(default="bool", description="Required result type of the row condition.")
 
     @field_validator("condition")
