@@ -1,15 +1,18 @@
 # Optional MCP adapter
 
-The CLI is the baseline interface. Install MCP only for environments that use it:
+The CLI is the baseline interface. This is the unreleased CE 5.0 adapter; PyPI
+4.3.0 has the old tools. Install the source preview in your Python 3.11+ project
+environment, adding MCP only when your client uses it:
 
 ```bash
-pip install "datamimic-ce[mcp]"
-datamimic-mcp --transport stdio
+python -m pip install "/absolute/path/to/datamimic[mcp]"
+datamimic-mcp --transport stdio --workspace-root "/absolute/path/to/project"
 ```
 
-Both transports use the same typed Authoring application. Tool requests are wrapped
-as `{"request": {...}}` for the request-based operations below; discovery tools
-accept their named arguments directly.
+Both transports use the same typed Authoring application. `version`, `schema`,
+`capabilities` and `capability` accept their named arguments directly. `reference`,
+Build, codec, lint and bounded-run requests use `{"request": {...}}`. Follow each
+tool's advertised input schema.
 
 | MCP tool | CLI equivalent |
 |---|---|
@@ -30,16 +33,49 @@ Persist XML. DM JSON is transient; expectations, `product_roles`, origin-tagged
 Compile/decompile readiness proves syntax; a ready Build also carries bounded
 acceptance evidence. Target isolation does not prove delivery to an external sink.
 
-The server's working directory is its host-owned workspace. Inline XML/DM JSON and
-logical descriptor paths use that root. The Python `create_server` factory can bind
-an explicit `workspace_root` and descriptor identity. No schema resources or
+`--workspace-root` binds the host-owned project directory independently of the
+server's launch directory. It must be an existing directory. Omit it to retain
+the launch-directory default. Inline XML/DM JSON and logical descriptor paths use
+that root. The option does not change the process working directory or its host
+environment. The Python `create_server` factory also accepts `workspace_root`
+and descriptor identity. No schema resources or
 MCP-only compiler are registered. Legacy scaffold/check tools are retired; see
 [the migration guide](migrations/authoring-errors.md).
 
-For SSE:
+## Codex
+
+Install the adapter in the project's environment. Add a stdio entry to Codex's
+MCP configuration using its absolute executable and project paths:
+
+```toml
+[mcp_servers.datamimic_ce]
+command = "/absolute/path/to/project/.venv/bin/datamimic-mcp"
+args = ["--transport", "stdio", "--workspace-root", "/absolute/path/to/project"]
+```
+
+Run `codex mcp get datamimic_ce` and start a new session in that project.
+
+## Claude Code
+
+From the project directory:
 
 ```bash
-datamimic-mcp --transport sse --host 127.0.0.1 --port 8765
+claude mcp add --transport stdio --scope local datamimic_ce -- \
+  /absolute/path/to/project/.venv/bin/datamimic-mcp \
+  --transport stdio --workspace-root "/absolute/path/to/project"
+claude mcp get datamimic_ce
+```
+
+In either client, list tools, call `datamimic_reference` with
+`{"request": {"topic": "assembly", "name": "starter"}}`, and verify a read of a
+known project-relative fixture before authoring. The [agent plugin](agent_plugin.md)
+adds the shared workflow; it does not silently install or configure this adapter.
+For a remote Platform project use its [HTTP/OAuth guide](https://docs.datamimic.io/advanced/connect-mcp-client/).
+
+## SSE
+
+```bash
+datamimic-mcp --transport sse --host 127.0.0.1 --port 8765 --workspace-root "/absolute/path/to/project"
 ```
 
 `DATAMIMIC_MCP_API_KEY` enables `Authorization: Bearer <key>` or `X-API-Key: <key>`

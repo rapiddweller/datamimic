@@ -30,8 +30,14 @@ async def check_mcp(schemas, request):
     from fastmcp.client.transports import StdioTransport
 
     console = Path(sys.executable).with_name("datamimic-mcp")
+    launcher = Path.cwd() / "mcp launcher"
+    launcher.mkdir()
+    (launcher / "rows.csv").write_text("id|name\n0|WRONG_WORKSPACE\n", encoding="utf-8")
     transport = StdioTransport(
-        command=str(console), args=["--transport", "stdio"], cwd=str(Path.cwd()), env=dict(os.environ)
+        command=str(console),
+        args=["--transport", "stdio", "--workspace-root", str(Path.cwd())],
+        cwd=str(launcher),
+        env=dict(os.environ),
     )
     protocol_errors = []
 
@@ -63,6 +69,16 @@ async def check_mcp(schemas, request):
         result = await client.call_tool("datamimic_build", {"request": request})
         built = json.loads(result[0].text)
         assert built["outcome"] == "ready" and built["evidence"][0]["count"] == 2, built
+        result = await client.call_tool(
+            "datamimic_dry_run",
+            {
+                "request": {
+                    "xml": '<setup rngSeed="7"><generate name="rows" source="rows.csv" distribution="ordered"/></setup>'
+                }
+            },
+        )
+        sourced = json.loads(result[0].text)
+        assert sourced["ok"] and sourced["products"][0]["rows"][0] == {"id": "1", "name": "inside"}, sourced
     assert not protocol_errors, protocol_errors
 
 

@@ -46,3 +46,32 @@ async def test_cli_stdio_authoring_roundtrip(anyio_backend: str) -> None:
             {"request": {"topic": "overview"}},
         )
         assert json.loads(result[0].text)["topic"] == "overview"
+
+
+@pytest.mark.anyio
+async def test_cli_stdio_explicit_workspace_reads_project_instead_of_launcher(tmp_path: Path) -> None:
+    project = tmp_path / "project with spaces"
+    launcher = tmp_path / "launcher"
+    project.mkdir()
+    launcher.mkdir()
+    (project / "rows.csv").write_text("id\nPROJECT\n", encoding="utf-8")
+    (launcher / "rows.csv").write_text("id\nLAUNCHER\n", encoding="utf-8")
+    transport = PythonStdioTransport(
+        script_path=ROOT / "datamimic_ce/interfaces/mcp/cli.py",
+        args=["--transport", "stdio", "--workspace-root", str(project)],
+        python_cmd=sys.executable,
+        cwd=str(launcher),
+        env={"PYTHONPATH": str(ROOT)},
+    )
+    async with Client(transport) as client:
+        result = await client.call_tool(
+            "datamimic_dry_run",
+            {
+                "request": {
+                    "xml": '<setup rngSeed="7"><generate name="rows" source="rows.csv" distribution="ordered"/></setup>'
+                }
+            },
+        )
+        payload = json.loads(result[0].text)
+        assert payload["ok"], payload
+        assert payload["products"][0]["rows"] == [{"id": "PROJECT"}]

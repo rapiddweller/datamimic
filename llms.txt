@@ -4,9 +4,14 @@
 > XML is the persisted executable project; DM JSON is its transient agent view.
 > Build expectations and proof declarations belong to each transaction.
 
-Read [AGENTS.md](AGENTS.md) first. In a checkout use `.venv/bin/datamimic`.
+CE 5.0 is unreleased; the new authoring CLI requires a source installation.
+See [version and release guidance](docs/releases/5.0.md).
+For dataset tasks use the [consumer skill](plugins/datamimic/skills/generate-test-data/SKILL.md).
+Repository contributors read [AGENTS.md](AGENTS.md) and use `.venv/bin/datamimic`.
 
 ## Authoring
+
+- [Codex / Claude Code plugin](docs/agent_plugin.md): installable steering for local CE and connected Platform projects.
 
 - [Agent guide](AGENTS.md): typed Build example, proof scope, DSL semantics.
 - `datamimic authoring schema`: current DM JSON schema; `--name build_request_v4` for the transaction.

@@ -1,11 +1,11 @@
 {
   "status": "independent_local_architecture_review_accepted",
   "reviewed_by": "Astra",
-  "review_reference": "docs/architecture/refactoring-study/experiment-2/authoring-errors-final-review.md",
-  "source_digest": "7b584450cc2473a516ec75d59a558e102dba9b8ccede61946a094971a20a3e0c",
+  "review_reference": "docs/architecture/refactoring-study/experiment-2/ce5-plugin-review.md",
+  "source_digest": "16ab705cead61368523b1f80f4a3d6d292e0ffb8c23f5b4950ef96c74bbeb7ab",
   "contract_digest": "8517a10b1fd874b2e66f7161044074d8ff649639a9f8e37e17f92c2456cc0d85",
   "analyzer_digest": "bb1a3262d3fdd38c3e9a6af980cc063281ae98ab1c28c89c2c5be6dfb450744f",
-  "validation_digest": "0805a19907a948bf130e89544f35da0a5328e3180fc0a3a5e7f676a6341a60f2",
+  "validation_digest": "6c24f1f8f239dc21f35e72135904f1c1aece36a44080a56340b0b071b3dcf68d",
   "unknowns_digest": "cd103e193d28223bd693af9ebcd4e69bda6365fda88d31ba7a1e459f50cfa5ae",
   "groups": [
     {
@@ -550,7 +550,7 @@
       }
     ]
   },
-  "review_scope": "Source-bound follow-up to the accepted whole-branch CE review at 8a8dc1baade090faaa42a2040d9a994ea2db88b1: remove two Python 3.10 Z normalization shims; keep datetime.fromisoformat on required Python >=3.11. Review the deterministic snapshot-race fixture with identical exception expectation. No other product changes, no policy amendment. Reuses unchanged whole-branch evidence and all exact raw UNKNOWN/diagnostic assessments; fresh native collection binds the new Source.",
+  "review_scope": "Independent review of the CE 5 plugin preparation diff from 8f89cd4dec9e29e8bb79f3bb0f4c96bae5ca404d. The sole product delta forwards the CLI-validated optional workspace root into the existing MCP server factory for both transports. Shared skill, native metadata, docs, packaging and relevant callers were inspected. Fresh native observation retains the exact prior UNKNOWN records and validation diagnostics, contract, analyzer and approved ceilings. Prior group assessments remain applicable; no policy amendment.",
   "measurement_amendment": "Direct user acceptance Ja akzeptiert authorizes only calls_unresolved 1409 -> 1425 and typing_positions 173 -> 178. Other budgets, target, construct policy and strict completion checks remain unchanged. Approved ceilings accept measured residual uncertainty; they do not resolve it.",
-  "delivery_boundary": "Local architecture review accepted with all 303 UNKNOWNs and 20 raw diagnostics retained. Fresh native rule status remains 271 PASS and 5 UNKNOWN. Earlier CI 39179520411 had 2975 passes, one snapshot-fixture failure and 15 skips; its precise cause remains UNKNOWN. Interrupted local full-unit execution is not a pass. Parent owns new exact-head CI, Windows/service evidence and merge decision. No whole-system PASS, atomic snapshot, sandbox or merge authorization."
+  "delivery_boundary": "Local architecture review accepted with all 303 UNKNOWNs and 20 raw diagnostics retained; 271 rules PASS and 5 UNKNOWN. This receipt is not release approval or native-agent behavior proof. Native Claude execution failed authentication; Codex execution rejected the configured model. Exact-head CI, native complex workflows and publication gates remain open. See linked review for verification boundaries and the integration-test stub finding."
 }

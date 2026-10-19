@@ -1,0 +1,10 @@
+{
+  "name": "datamimic",
+  "version": "0.1.0",
+  "description": "Author and verify synthetic test data with DATAMIMIC CE or a connected Platform project.",
+  "author": {
+    "name": "rapiddweller"
+  },
+  "repository": "https://github.com/rapiddweller/datamimic",
+  "license": "MIT"
+}
