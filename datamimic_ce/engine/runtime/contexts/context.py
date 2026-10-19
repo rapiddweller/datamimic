@@ -36,6 +36,7 @@ from datamimic_ce.engine.io.api import (
     TestResultExporter,
 )
 from datamimic_ce.engine.runtime.contexts.demographic_context import DemographicContext
+from datamimic_ce.engine.runtime.contracts import StatementTransformer
 from datamimic_ce.engine.runtime.logging import logger
 from datamimic_ce.engine.runtime.scripting import evaluation
 from datamimic_ce.engine.runtime.scripting.expression_globals import expression_globals
@@ -235,6 +236,7 @@ class SetupContext(Context):
         domain_identifier_registry: IdentifierRegistry | None = None,
         runtime_environment: Literal["development", "production"] = "production",
         ray_debug: bool = False,
+        included_statement_transformer: StatementTransformer | None = None,
     ) -> None:
         # SetupContext is always its root_context
         super().__init__(self)
@@ -291,6 +293,7 @@ class SetupContext(Context):
         self._run_seed = run_seed if run_seed is not None else RunSeed.create(None)
         self.runtime_environment = runtime_environment
         self.ray_debug = ray_debug
+        self.included_statement_transformer = included_statement_transformer
         # Generator stream root: variables/keys without their own seed fork a reproducible child RNG from it.
         self._root_rng: Random | None = Random(self._run_seed.value) if self._run_seed.seeded else None
         # Cached call-time rng — populated lazily on first ``.rng`` access.
@@ -365,6 +368,7 @@ class SetupContext(Context):
             domain_identifier_registry=copy.deepcopy(self._domain_identifier_registry, memo),
             runtime_environment=self.runtime_environment,
             ray_debug=self.ray_debug,
+            included_statement_transformer=self.included_statement_transformer,
         )
         memo[id(self)] = copied
         copied._pending_client_configs = copy.deepcopy(self._pending_client_configs, memo)

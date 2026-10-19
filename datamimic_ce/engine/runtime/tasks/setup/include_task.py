@@ -104,12 +104,19 @@ class IncludeTask(CommonSubTask):
 
 def _parse_included_descriptor(ctx: SetupContext, uri: str) -> SetupStatement:
     try:
-        return DescriptorParser.parse(
+        statement = DescriptorParser.parse(
             ctx.descriptor_dir / uri,
             ctx.properties,
             ctx.runtime_environment,
             profile_loader=load_connection_profile,
         )
+        if ctx.included_statement_transformer is not None:
+            if statement.default_separator is None:
+                statement.default_separator = ctx.default_separator
+            if statement.default_line_separator is None:
+                statement.default_line_separator = ctx.default_line_separator
+            ctx.included_statement_transformer(statement)
+        return statement
     except MissingDescriptorError as error:
         raise include_error(
             code=IssueCode.INCLUDE_FILE_NOT_FOUND,

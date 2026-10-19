@@ -129,6 +129,17 @@ File input uses its directory as the workspace. Stdin uses the current directory
 project-relative. Bounded runs cap each generate instance; target isolation does
 not certify an external write. Normal `datamimic run` keeps production semantics.
 
+Dry-run supports contained, literal XML includes directly under `setup`, including
+nested descriptor dependencies. It checks the dependency graph before executing
+and caps each freshly parsed product without rewriting your XML. Product names
+must be literal and distinct. Dynamic paths, includes inside generators, cycles,
+linked/escaping resources and unsupported operations are refused. Included contexts
+retain the entry descriptor directory, as in normal execution.
+
+Memstore reads across an include graph report `unknown` completeness until their
+run-wide producer relationships are proven. Build still rejects external XML
+includes; a successful raw dry-run is not a Build acceptance certificate.
+
 ### Demo Management
 
 #### `demo list` - List Available Demos

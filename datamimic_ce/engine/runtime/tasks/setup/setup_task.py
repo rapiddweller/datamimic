@@ -22,6 +22,7 @@ from datamimic_ce.engine.io.api import (
     dispose_client_engine,
 )
 from datamimic_ce.engine.runtime.contexts.context import SetupContext
+from datamimic_ce.engine.runtime.contracts import StatementTransformer
 from datamimic_ce.engine.runtime.storage.memstore_manager import MemstoreManager
 from datamimic_ce.engine.runtime.tasks.base.dispatch import create_task
 from datamimic_ce.engine.runtime.tasks.base.task import CommonSubTask, SetupSubTask
@@ -39,6 +40,7 @@ class SetupTask:
         descriptor_dir: Path,
         runtime_environment: Literal["development", "production"] = "production",
         ray_debug: bool = False,
+        included_statement_transformer: StatementTransformer | None = None,
     ):
         self._descriptor_dir = descriptor_dir
         self._setup_stmt = setup_stmt
@@ -50,6 +52,7 @@ class SetupTask:
         self._test_result_storage = test_result_storage
         self._runtime_environment = runtime_environment
         self._ray_debug = ray_debug
+        self._included_statement_transformer = included_statement_transformer
         # Assign default setup config value
         self._use_mp = self._setup_stmt.use_mp
         self._default_separator = setup_stmt.default_separator or "|"
@@ -80,6 +83,7 @@ class SetupTask:
             run_seed=RunSeed.create(self._setup_stmt.rng_seed),
             runtime_environment=self._runtime_environment,
             ray_debug=self._ray_debug,
+            included_statement_transformer=self._included_statement_transformer,
         )
 
         self.execute_statements(self._setup_stmt, root_context)
@@ -167,7 +171,6 @@ class SetupTask:
             clone = clone_by_token[token]
             token_map[token] = child._record_descriptor_reference(clone, config)
         child._descriptor_client_bindings = {
-            client_id: token_map[token]
-            for client_id, token in parent_context._descriptor_client_bindings.items()
+            client_id: token_map[token] for client_id, token in parent_context._descriptor_client_bindings.items()
         }
         return child

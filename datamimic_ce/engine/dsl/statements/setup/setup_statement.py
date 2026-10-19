@@ -37,6 +37,10 @@ class SetupStatement(CompositeStatement):
     def default_separator(self) -> str | None:
         return self._default_separator
 
+    @default_separator.setter
+    def default_separator(self, value: str | None) -> None:
+        self._default_separator = value
+
     @property
     def default_locale(self) -> str | None:
         return self._default_locale
@@ -56,6 +60,10 @@ class SetupStatement(CompositeStatement):
     @property
     def default_line_separator(self) -> str | None:
         return self._default_line_separator
+
+    @default_line_separator.setter
+    def default_line_separator(self, value: str | None) -> None:
+        self._default_line_separator = value
 
     @property
     def default_source_scripted(self) -> bool | None:
