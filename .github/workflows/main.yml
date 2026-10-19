@@ -696,10 +696,10 @@ jobs:
       - name: Setup git
         run: |
           apt-get update
-          apt-get install -y git curl 
+          apt-get install -y git curl
           git config --global --add safe.directory $(realpath .)
-          curl https://packages.microsoft.com/keys/microsoft.asc | tee /etc/apt/trusted.gpg.d/microsoft.asc
-          curl https://packages.microsoft.com/config/debian/10/prod.list | tee /etc/apt/sources.list.d/mssql-release.list
+          curl -fsSL https://packages.microsoft.com/config/debian/12/packages-microsoft-prod.deb -o /tmp/packages-microsoft-prod.deb
+          dpkg -i /tmp/packages-microsoft-prod.deb
           apt-get update
           ACCEPT_EULA=Y apt-get install -y msodbcsql17
       - name: Checkout repository
