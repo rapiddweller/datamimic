@@ -41,6 +41,7 @@ import statistics
 import uuid
 from collections.abc import Callable
 from random import Random
+from types import ModuleType
 from typing import NamedTuple
 
 import numpy as np
@@ -104,7 +105,7 @@ class _EvalProxy:
     """Stands in for a module or class a DSL expression knows by name: ``overrides`` win, every
     other attribute and call goes to ``target``."""
 
-    def __init__(self, target: object, overrides: dict[str, object]) -> None:
+    def __init__(self, target: ModuleType | type | RandomSource, overrides: dict[str, object]) -> None:
         self._target = target
         self._overrides = overrides
 
