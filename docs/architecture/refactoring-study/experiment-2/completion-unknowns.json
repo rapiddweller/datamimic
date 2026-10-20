@@ -1,12 +1,12 @@
 {
   "status": "independent_local_architecture_review_accepted",
   "reviewed_by": "Astra",
-  "review_reference": "docs/architecture/refactoring-study/experiment-2/authoring-errors-final-review.md",
-  "source_digest": "7b584450cc2473a516ec75d59a558e102dba9b8ccede61946a094971a20a3e0c",
+  "review_reference": "docs/architecture/refactoring-study/experiment-2/authoring-diagnostics-review.md",
+  "source_digest": "d0639ab7bb276a2cc914ee6189efb01567c3031c38643046818cd108955a6840",
   "contract_digest": "8517a10b1fd874b2e66f7161044074d8ff649639a9f8e37e17f92c2456cc0d85",
   "analyzer_digest": "bb1a3262d3fdd38c3e9a6af980cc063281ae98ab1c28c89c2c5be6dfb450744f",
-  "validation_digest": "0805a19907a948bf130e89544f35da0a5328e3180fc0a3a5e7f676a6341a60f2",
-  "unknowns_digest": "cd103e193d28223bd693af9ebcd4e69bda6365fda88d31ba7a1e459f50cfa5ae",
+  "validation_digest": "58f46fe03fa319561e98b351eef61f64d49eeb713963f089862ea64e6d73ef18",
+  "unknowns_digest": "69312f5ce17a36d8c2be8867448da9a5e129f1873ac7800102c321978195b344",
   "groups": [
     {
       "classification": "api_surface_limit",
@@ -20,7 +20,7 @@
     },
     {
       "classification": "boundary_type_limit",
-      "reason": "Retain UNKNOWN: the six boundary summaries overlap detailed type positions; they neither add independent defects nor prove closure of those positions.",
+      "reason": "Retain UNKNOWN: the six boundary summaries overlap detailed type positions; they neither add independent defects nor prove closure of those positions. Reassessed for PR #353: the DSL-API-TYPES summary now counts 388 positions (inherited_surface 46, undecided 73) solely because of the three bounded_count_limit positions.",
       "ids": [
         "UNKNOWN-BOUNDARY-TYPES-740afb90c4487173",
         "UNKNOWN-BOUNDARY-TYPES-7bd62f12a70f63ec",
@@ -158,7 +158,7 @@
     },
     {
       "classification": "inherited_surface",
-      "reason": "Retain UNKNOWN: native inherited-method inventory is incomplete. Current declared DTO and model identities remain; inherited expansion is not proven, and passing tests or MyPy do not certify every signature.",
+      "reason": "Retain UNKNOWN: native inherited-method inventory is incomplete. Current declared DTO and model identities remain; inherited expansion is not proven, and passing tests or MyPy do not certify every signature. Reassessed for PR #353 at 1366cfe5: the three added GenerateStatement.bounded_count_limit getter/setter positions (declared int | None / None) carry the same native inherited-surface limit; they are retained as UNKNOWN, not inferred closed from MyPy or tests.",
       "ids": [
         "UNKNOWN-BOUNDARY-TYPE-POSITION-031a3e60166f2c40",
         "UNKNOWN-BOUNDARY-TYPE-POSITION-072a61056b7df66d",
@@ -178,6 +178,7 @@
         "UNKNOWN-BOUNDARY-TYPE-POSITION-17c5e4b2b9054b2d",
         "UNKNOWN-BOUNDARY-TYPE-POSITION-19f5a705bdf18ec4",
         "UNKNOWN-BOUNDARY-TYPE-POSITION-19f9433f64db2bfd",
+        "UNKNOWN-BOUNDARY-TYPE-POSITION-1d1ad3d3bd5f20ac",
         "UNKNOWN-BOUNDARY-TYPE-POSITION-1d3283c039427ae7",
         "UNKNOWN-BOUNDARY-TYPE-POSITION-1dd7dbbad671215d",
         "UNKNOWN-BOUNDARY-TYPE-POSITION-1fcccee1b4df192e",
@@ -266,6 +267,7 @@
         "UNKNOWN-BOUNDARY-TYPE-POSITION-bec12f36baf3e51c",
         "UNKNOWN-BOUNDARY-TYPE-POSITION-bf4c0eb413c5c4e1",
         "UNKNOWN-BOUNDARY-TYPE-POSITION-c0eed86ef57a44ef",
+        "UNKNOWN-BOUNDARY-TYPE-POSITION-c9b04a85e0ed15de",
         "UNKNOWN-BOUNDARY-TYPE-POSITION-cfb3060900bf8620",
         "UNKNOWN-BOUNDARY-TYPE-POSITION-d44a29d75ba44724",
         "UNKNOWN-BOUNDARY-TYPE-POSITION-d499fd3012d253be",
@@ -275,6 +277,7 @@
         "UNKNOWN-BOUNDARY-TYPE-POSITION-dbcb0d5db3783878",
         "UNKNOWN-BOUNDARY-TYPE-POSITION-dca24cf1bc9da58d",
         "UNKNOWN-BOUNDARY-TYPE-POSITION-e74eee4992a2bee4",
+        "UNKNOWN-BOUNDARY-TYPE-POSITION-e9c76c90570ba4fd",
         "UNKNOWN-BOUNDARY-TYPE-POSITION-ebb3a5158b3588b7",
         "UNKNOWN-BOUNDARY-TYPE-POSITION-ed06de0f3fdc8f34",
         "UNKNOWN-BOUNDARY-TYPE-POSITION-ed637defd3f8f3a1",
@@ -386,7 +389,7 @@
   ],
   "validation_unknowns": {
     "classification": "unproven_publication_usage",
-    "reason": "All 20 exact interface.usage_unknown diagnostics remain UNKNOWN: CompiledDocumentArtifact publication through result unions and 19 Domain publication routes across 15 Domain symbols, including four additional publication pointers for repeated symbols. No used/unused conclusion, deletion permission, native PASS, or suppressed raw contract_invalid diagnostic is inferred. Current source and routes are unchanged from independently reviewed evidence.",
+    "reason": "All 20 exact interface.usage_unknown diagnostics remain UNKNOWN: CompiledDocumentArtifact publication through result unions and 19 Domain publication routes across 15 Domain symbols, including four additional publication pointers for repeated symbols. No used/unused conclusion, deletion permission, native PASS, or suppressed raw contract_invalid diagnostic is inferred. All 20 diagnostics are byte-identical to the preceding receipt after PR #353; no publication route changed.",
     "diagnostics": [
       {
         "code": "interface.usage_unknown",
@@ -550,7 +553,7 @@
       }
     ]
   },
-  "review_scope": "Source-bound follow-up to the accepted whole-branch CE review at 8a8dc1baade090faaa42a2040d9a994ea2db88b1: remove two Python 3.10 Z normalization shims; keep datetime.fromisoformat on required Python >=3.11. Review the deterministic snapshot-race fixture with identical exception expectation. No other product changes, no policy amendment. Reuses unchanged whole-branch evidence and all exact raw UNKNOWN/diagnostic assessments; fresh native collection binds the new Source.",
+  "review_scope": "Source-bound review of PR #353 (fix/authoring-diagnostics, 8f89cd4d..1366cfe5): key min/max/granularity accepted only when a numeric type= draw is the sole value source; value-free Authoring failure causes (DateTimeGenerator reason, capture status/reason, CLI input projection, lint rule projection on parser failure); runtime-evaluated dynamic generate counts in bounded Authoring with refusal I800 above max_count; count evaluation failures located at generate/count, with the count-scope hint only for failed name lookups. No policy, budget, contract or gate change.",
   "measurement_amendment": "Direct user acceptance Ja akzeptiert authorizes only calls_unresolved 1409 -> 1425 and typing_positions 173 -> 178. Other budgets, target, construct policy and strict completion checks remain unchanged. Approved ceilings accept measured residual uncertainty; they do not resolve it.",
-  "delivery_boundary": "Local architecture review accepted with all 303 UNKNOWNs and 20 raw diagnostics retained. Fresh native rule status remains 271 PASS and 5 UNKNOWN. Earlier CI 39179520411 had 2975 passes, one snapshot-fixture failure and 15 skips; its precise cause remains UNKNOWN. Interrupted local full-unit execution is not a pass. Parent owns new exact-head CI, Windows/service evidence and merge decision. No whole-system PASS, atomic snapshot, sandbox or merge authorization."
+  "delivery_boundary": "Local architecture review accepted with all 306 UNKNOWNs (303 retained + 3 new inherited-surface positions) and 20 raw diagnostics retained; native rules remain 271 PASS and 5 UNKNOWN. Merge dependency: CE issue codes stay an exact subset of EE only after datamimic-ee MR !431 (5d19c968, reserves I800 with identical catalog text) is merged; at review time it was open with pipeline 38149 running and EE origin/development lacked I800. CE #353 must not merge before it. Full unit/integration suites, CE CI and EE runtime parity (#69) were not verified by this reviewer. No whole-system PASS or merge authorization."
 }
