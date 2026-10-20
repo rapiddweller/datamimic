@@ -1,12 +1,12 @@
 {
   "status": "independent_local_architecture_review_accepted",
   "reviewed_by": "Astra",
-  "review_reference": "docs/architecture/refactoring-study/experiment-2/issue-351-cli-review.md",
-  "source_digest": "fc8dc1c0677bf77c467bea7653c273639cff817b3cfc0f2b6902456bd793cddb",
+  "review_reference": "docs/architecture/refactoring-study/experiment-2/authoring-diagnostics-review.md",
+  "source_digest": "47ade39a28c3f05a44830f77b3839a72f85e69539cb3c137d57fe73185fda3fb",
   "contract_digest": "d83d4df102a2588a54598e26cb045b721cb024a118f51e31592b135050d4e78e",
   "analyzer_digest": "bb1a3262d3fdd38c3e9a6af980cc063281ae98ab1c28c89c2c5be6dfb450744f",
-  "validation_digest": "e0862d4d03353f96488c97694a8cf8555a0eecb4f0f27a7ad94449e1b9cdab8d",
-  "unknowns_digest": "c92f32c24fd77c1ede5425aa7f7e619029a637ff8b8bf7c7baeec43606c65cc9",
+  "validation_digest": "4db484ef6b4e01011633158d811c097cd5436cfc3266a466d07e3215838dece8",
+  "unknowns_digest": "e1e65532fbab2833c2938d047cb0e57b04b787b086aa9b90dd0bb04296e72c14",
   "groups": [
     {
       "classification": "api_surface_limit",
@@ -20,7 +20,7 @@
     },
     {
       "classification": "boundary_type_limit",
-      "reason": "Retain UNKNOWN: the six boundary summaries overlap detailed type positions; they neither add independent defects nor prove closure of those positions.",
+      "reason": "Retain UNKNOWN: the six boundary summaries overlap detailed type positions; they neither add independent defects nor prove closure of those positions. PR #353 raises the DSL-API-TYPES summary to 392 positions solely through the three bounded_count_limit positions.",
       "ids": [
         "UNKNOWN-BOUNDARY-TYPES-740afb90c4487173",
         "UNKNOWN-BOUNDARY-TYPES-7bd62f12a70f63ec",
@@ -159,7 +159,7 @@
     },
     {
       "classification": "inherited_surface",
-      "reason": "Retain UNKNOWN: native inherited-method inventory is incomplete. Current declared DTO and model identities remain; inherited expansion is not proven, and passing tests or MyPy do not certify every signature. Issue 268 adds six annotated separator getter/setter positions whose effective bindings remain UNKNOWN. Three num_process positions retain this classification under shifted occurrence identities; no source annotation was removed.",
+      "reason": "Retain UNKNOWN: native inherited-method inventory is incomplete. Current declared DTO and model identities remain; inherited expansion is not proven, and passing tests or MyPy do not certify every signature. Issue 268 adds six annotated separator getter/setter positions whose effective bindings remain UNKNOWN. Three num_process positions retain this classification under shifted occurrence identities; no source annotation was removed. PR #353 adds the three annotated GenerateStatement.bounded_count_limit getter/setter positions (int | None / None); their effective bindings remain UNKNOWN and are not inferred closed from MyPy or tests.",
       "ids": [
         "UNKNOWN-BOUNDARY-TYPE-POSITION-031a3e60166f2c40",
         "UNKNOWN-BOUNDARY-TYPE-POSITION-05a58749b1f2183e",
@@ -182,6 +182,7 @@
         "UNKNOWN-BOUNDARY-TYPE-POSITION-17c5e4b2b9054b2d",
         "UNKNOWN-BOUNDARY-TYPE-POSITION-19f5a705bdf18ec4",
         "UNKNOWN-BOUNDARY-TYPE-POSITION-19f9433f64db2bfd",
+        "UNKNOWN-BOUNDARY-TYPE-POSITION-1d1ad3d3bd5f20ac",
         "UNKNOWN-BOUNDARY-TYPE-POSITION-1d3283c039427ae7",
         "UNKNOWN-BOUNDARY-TYPE-POSITION-1dd7dbbad671215d",
         "UNKNOWN-BOUNDARY-TYPE-POSITION-1fcccee1b4df192e",
@@ -272,6 +273,7 @@
         "UNKNOWN-BOUNDARY-TYPE-POSITION-ba82317a503168e0",
         "UNKNOWN-BOUNDARY-TYPE-POSITION-bec12f36baf3e51c",
         "UNKNOWN-BOUNDARY-TYPE-POSITION-bf4c0eb413c5c4e1",
+        "UNKNOWN-BOUNDARY-TYPE-POSITION-c9b04a85e0ed15de",
         "UNKNOWN-BOUNDARY-TYPE-POSITION-cfb3060900bf8620",
         "UNKNOWN-BOUNDARY-TYPE-POSITION-d44a29d75ba44724",
         "UNKNOWN-BOUNDARY-TYPE-POSITION-d499fd3012d253be",
@@ -282,6 +284,7 @@
         "UNKNOWN-BOUNDARY-TYPE-POSITION-dca24cf1bc9da58d",
         "UNKNOWN-BOUNDARY-TYPE-POSITION-e557e85059f01beb",
         "UNKNOWN-BOUNDARY-TYPE-POSITION-e74eee4992a2bee4",
+        "UNKNOWN-BOUNDARY-TYPE-POSITION-e9c76c90570ba4fd",
         "UNKNOWN-BOUNDARY-TYPE-POSITION-ebb3a5158b3588b7",
         "UNKNOWN-BOUNDARY-TYPE-POSITION-ed06de0f3fdc8f34",
         "UNKNOWN-BOUNDARY-TYPE-POSITION-ed637defd3f8f3a1",
@@ -394,7 +397,7 @@
   ],
   "validation_unknowns": {
     "classification": "unproven_publication_usage",
-    "reason": "All 20 exact interface.usage_unknown diagnostics remain UNKNOWN: CompiledDocumentArtifact publication through result unions and 19 Domain publication routes across 15 Domain symbols, including four additional publication pointers for repeated symbols. No used/unused conclusion, deletion permission, native PASS, or suppressed raw contract_invalid diagnostic is inferred. All 20 diagnostics are identical to the prior independently reviewed receipt; no publication-usage uncertainty is cleared by this change.",
+    "reason": "All 20 exact interface.usage_unknown diagnostics remain UNKNOWN: CompiledDocumentArtifact publication through result unions and 19 Domain publication routes across 15 Domain symbols, including four additional publication pointers for repeated symbols. No used/unused conclusion, deletion permission, native PASS, or suppressed raw contract_invalid diagnostic is inferred. All 20 diagnostics are identical to the prior independently reviewed receipt and unchanged by PR #353; no publication-usage uncertainty is cleared.",
     "diagnostics": [
       {
         "code": "interface.usage_unknown",
@@ -558,7 +561,7 @@
       }
     ]
   },
-  "review_scope": "Independent Astra review of issue 351 on HEAD 4161fa58e1b3c12628b8820d64253365ce68d165 plus the one-line generic CLI BaseModel serialization fix. Traced the CLI authoring result through emit_authoring and the required nullable ProductCaptureEvidence.requested field. Independently ran the entire test_cli_v4 module: 13 passed, including real SQLite bounded capture validated by public RunResult. Frozen presenter bytes were rechecked. All 311 decoded native UNKNOWN records, their classifications, all 20 validation diagnostics, contract, analyzer and approved budgets exactly match the previously accepted issue-350 observation.",
-  "measurement_amendment": "Direct user acceptance Ja akzeptiert authorizes only calls_unresolved 1409 -> 1425 and typing_positions 173 -> 178. Other budgets, target, construct policy and strict completion checks remain unchanged. Approved ceilings accept measured residual uncertainty; they do not resolve it. Subsequent direct human acceptance on 2026-10-19, \"1.431 f\u00fcr #268 akzeptieren\", authorizes only calls_unresolved 1425 -> 1431 for issue 268. The earlier 1409 -> 1425 and 173 -> 178 acceptance remains historical; all other budgets and strict checks remain unchanged. The six added unresolved calls remain uncertainty.",
-  "delivery_boundary": "Local architecture review accepted for the bound source: zero observed rule violations or baseline drift; all 311 UNKNOWN records and 20 interface.usage_unknown diagnostics remain. Native validate exits 2 with declared_rules UNKNOWN; the full completion report exits 0. The generic CLI serializer now retains null fields required by the public result contract, without changing models or schemas. Dedicated text branches for ReadyCompileDocument, ReadyBuild and ReadyDecompileDocument are unchanged; generic JSON fallback also preserves null when selected via --format text. Independent CLI tests pass; current-fix full CI, external services, Windows and installed-package behavior are not established by this receipt. Build external XML includes remain unsupported, cross-descriptor memstore completeness remains UNKNOWN, and issue 281 cause remains UNKNOWN. Full CE LBA acceptance, native-client end-to-end behavior, public installation, merge and release are outside this receipt."
+  "review_scope": "Independent Astra review of PR #353 (fix/authoring-diagnostics) merged onto development: base 51a5be1c, head f415f52e. The merge carries the 8f89cd4d..1366cfe5 PR delta and the development delta verbatim (only the receipt conflicted). Reviewed: key min/max/granularity accepted only when a numeric type= draw is the sole value source; value-free Authoring failure causes; runtime-evaluated dynamic generate counts in bounded Authoring with refusal I800 above max_count, including counts in validated XML includes; count failures located at generate/count with the count-scope hint only for failed name lookups. No policy, budget, contract or gate change.",
+  "measurement_amendment": "Direct user acceptance Ja akzeptiert authorizes only calls_unresolved 1409 -> 1425 and typing_positions 173 -> 178. Other budgets, target, construct policy and strict completion checks remain unchanged. Approved ceilings accept measured residual uncertainty; they do not resolve it. Subsequent direct human acceptance on 2026-10-19, \"1.431 für #268 akzeptieren\", authorizes only calls_unresolved 1425 -> 1431 for issue 268. The earlier 1409 -> 1425 and 173 -> 178 acceptance remains historical; all other budgets and strict checks remain unchanged. The six added unresolved calls remain uncertainty.",
+  "delivery_boundary": "Local architecture review accepted for the bound source: zero violations or baseline drift; calls_unresolved 1431 and typing_positions 178 unchanged from development; all 314 UNKNOWN records (development's 311 plus three inherited-surface positions) and 20 interface.usage_unknown diagnostics remain; native rules 271 PASS and 5 UNKNOWN. Merge dependency: CE issue codes are an exact subset of EE only with datamimic-ee MR !431 (5d19c968, reserves I800 with identical catalog text); at review time it was open, its pipeline 38149 failed on two 90 s timeouts in external banking include tests, and EE origin/development (a3f1a3718) lacked I800. CE #353 must not merge before !431. Full CE CI, external services, Windows, EE runtime parity (#69), merge and release are not established by this receipt. Development's prior boundaries (Build external XML includes, cross-descriptor memstore completeness, issue 281 cause) remain as stated there."
 }
