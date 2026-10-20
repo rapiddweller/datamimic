@@ -21,20 +21,23 @@ def get_int_count(count: str | None, context: Context, *, element_tag: str) -> i
         return None
     if count.isdigit():
         return int(count)
+    location = DescriptorLocation(element_tag, attribute=ATTR_COUNT)
     try:
         value = context.evaluate_python_expression(count[1:-1], diagnostic_expression=ATTR_COUNT)
     except TaskConfigError as error:
-        cause = error.__cause__
-        if error.issue_code is not IssueCode.TASK_EXPRESSION_EVAL_FAILED or not isinstance(
-            cause, NameError | AttributeError
-        ):
+        if error.issue_code is not IssueCode.TASK_EXPRESSION_EVAL_FAILED:
             raise
-        raise task_config_error(
-            code=IssueCode.TASK_EXPRESSION_EVAL_FAILED,
-            expr=ATTR_COUNT,
-            error=f"{type(cause).__name__}: {GUIDANCE_COUNT_SCOPE}",
-            location=DescriptorLocation(element_tag, attribute=ATTR_COUNT),
-        ) from cause
+        cause = error.__cause__
+        if isinstance(cause, NameError | AttributeError):
+            raise task_config_error(
+                code=IssueCode.TASK_EXPRESSION_EVAL_FAILED,
+                expr=ATTR_COUNT,
+                error=f"{type(cause).__name__}: {GUIDANCE_COUNT_SCOPE}",
+                location=location,
+            ) from cause
+        if error.location is None:
+            error.location = location
+        raise
     if isinstance(value, str | bytes | bytearray | SupportsInt | SupportsIndex):
         try:
             return int(value)
@@ -43,13 +46,15 @@ def get_int_count(count: str | None, context: Context, *, element_tag: str) -> i
         except (ArithmeticError, TypeError, ValueError) as error:
             raise task_config_error(
                 code=IssueCode.TASK_EXPRESSION_EVAL_FAILED,
-                expr="count",
+                expr=ATTR_COUNT,
                 error=f"{type(error).__name__}; count must evaluate to an integer-compatible value",
+                location=location,
             ) from error
     raise task_config_error(
         code=IssueCode.TASK_EXPRESSION_EVAL_FAILED,
-        expr="count",
+        expr=ATTR_COUNT,
         error=f"count must evaluate to an integer-compatible value, got {type(value).__name__}",
+        location=location,
     )
 
 
