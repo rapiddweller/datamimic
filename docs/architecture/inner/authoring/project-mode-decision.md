@@ -1,8 +1,8 @@
 # Authoring project mode and project contract
 
-Status: **proposed** (2026-10-20). Needs Alex's decision on the open questions below before
-implementation. Shared with EE: the Build protocol is paired, so EE (datamimic-ee#69) adopts the
-same contract.
+Status: **decided in direction** (Alex, 2026-10-20): a new `BuildRequestV5` for CE and EE, CE
+first and then EE (datamimic-ee#69); custom Python runs with safe globals. The project layout
+below is a measured proposal that replaces the `datamimic-demos` layout as the reference.
 
 ## Context
 
@@ -38,32 +38,49 @@ monolith. Steering in the plugin alone cannot fix that.
 
 ## Decision 1 — Project contract
 
-A DATAMIMIC project is a directory with one entry descriptor. This layout is binding for agent
-authoring and reviewed as one unit:
+A DATAMIMIC project is a directory with one entry descriptor. The `datamimic-demos` layout was the
+starting point. The layout below improves it in three ways:
+- folders separate *what* is generated from *where* it goes;
+- numbering leaves gaps so steps can be inserted later;
+- the acceptance inputs become project files instead of being lost after every Build.
 
 ```
 <project>/
-├── datamimic.xml          entry: process comment, seed, clients, memstore, script loading, ordered includes
-├── conf/                  base.properties (+ <env>.env.properties): parameters, connection settings
-├── <n>_<activity>.xml     one step per activity, numbered in execution order
-├── entity/*.ent.csv       business data and code lists
-├── weighting/*.wgt.csv    distributions
-├── script/*.scr.py        named pure functions with typed inputs and outputs
-├── script/*.scr.sql       schema and delivery SQL
-├── template/              document templates
-└── README.md              purpose, process, rule → location table, evidence
+├── datamimic.xml                entry: process comment, seed, clients, memstore, lib loading, ordered includes
+├── conf/                        base.properties (+ <env>.env.properties): parameters, connection settings
+├── model/<nn>_<activity>.xml    business generation, one activity per file, numbered 10, 20, 30 …
+├── delivery/<nn>_<target>.xml   export, insert, upsert into targets, numbered 90+; the only writers
+├── data/
+│   ├── entity/*.ent.csv         business data and code lists
+│   ├── weighting/*.wgt.csv      distributions
+│   └── fixtures/*.ent.csv       explicitly chosen cases (appointments, edge cases behind negatives)
+├── lib/*.scr.py                 named pure functions with typed inputs and outputs (safe globals)
+├── sql/*.scr.sql                schema, cleanup and delivery SQL
+├── template/                    document templates
+├── acceptance/
+│   ├── build.json               expectations, product roles and verification for this project
+│   └── *_oracle.py | *.sql      independent checks for rules no expectation can express yet
+└── README.md                    purpose, process, rule → location table, evidence
 ```
+
+Measured on the flight-school reference project. `model/`, `delivery/`, `data/` and `lib/`
+resolve relative to the entry (included contexts keep the entry directory). With the same seed
+the output is byte-identical to the flat layout, and the independent oracle confirms R1–R5 and
+all negatives.
 
 Separation rules:
 
-1. Business data and code lists live in `entity/` and `weighting/`, never as literals spread over
-   XML. Fixed appointments (for example "who heads training") are data, not id arithmetic.
-2. Parameters and connections live in `conf/` and the entry; step files never declare clients.
-3. Generation steps write to a memstore. Delivery (export, insert, upsert, SQL) happens only in
-   dedicated delivery steps, so the target can change without touching business logic.
-4. Logic that spans tables is a named function in `script/`. All inputs are passed in from the
-   model, so the function does not read state, and it returns its decisions; it fails loudly when a rule cannot be met.
-5. The entry shows the process: one comment per step, includes in execution order.
+1. Business data and code lists live in `data/entity/` and `data/weighting/`, never as literals
+   spread over XML. Deliberately chosen cases live in `data/fixtures/`, never in id arithmetic.
+2. Parameters and connections live in `conf/` and the entry; `model/` files never declare clients.
+3. `model/` writes only to the memstore. `delivery/` reads it and is the only place that writes to
+   files, databases or brokers, so a target can change without touching business logic.
+4. Logic that spans tables is a named function in `lib/`. All inputs are passed in from the model,
+   so the function does not read state; it returns its decisions and fails loudly when a rule
+   cannot be met.
+5. The entry shows the process: one comment line per step, includes in execution order.
+6. `acceptance/build.json` is the single source of the project's acceptance. Editing XML no
+   longer loses the requirements, because they no longer exist only in the transaction.
 
 ## Decision 2 — Build project mode
 
@@ -78,8 +95,10 @@ flowchart LR
   C --> R[Ready: digest of every project file + evidence]
 ```
 
-- **Input:** the entry path, expectations, product roles and verification options. The files in
-  the workspace are the model; there is no second DM JSON copy of them.
+- **Protocol:** `BuildRequestV5`, CE first, then the paired EE port. Input: the project root and
+  `acceptance/build.json` (entry path, expectations, product roles, verification). The files in the
+  workspace are the model; there is no second DM JSON copy of them. `V4` stays for single-document
+  callers until a migration is decided.
 - **Graph:** literal includes as in #346: `.xml` steps, `.properties`, and the resources they
   read. Expectations address products by name across all files; product names stay unique per project.
 - **Proof binding:** Ready carries a digest per project file (XML, conf, entity, weighting, script).
@@ -98,24 +117,40 @@ Recommended over the alternatives:
 | Multiple DM JSON documents per transaction | agents must not edit XML directly | keeps the codec as the only writer | two representations of every file to keep in sync |
 | Keep single-file Build, plugin splits afterwards | short term only | no engine change | the proof does not cover the delivered project |
 
-## Decision 3 — Custom Python in bounded proof (#332)
+## Decision 3 — Custom Python with safe globals (#332)
 
-Allow `<execute uri="script/*.scr.py">` in bounded runs when the module is a **pure function
-library**. A static check of the module's AST before execution admits only these top-level
-statements: docstring, imports from an allowlist (stdlib modules without I/O, `__future__`),
-`def`/`class`, and constant assignments. Anything else is refused with a typed diagnostic that
-names the file and the statement line.
+`<execute uri="lib/*.scr.py">` loads a **pure function library**. The module runs with the same safe
+globals as DSL expressions, not with a full `exec`:
 
-The module runs in the bounded child that already isolates the workspace. `*.scr.sql` and
-`execute target=<client>` stay refused in bounded proof; their delivery needs a real run with
-readback, which is reported separately (target-isolated capture does not prove external delivery).
+- CE `engine/runtime/scripting/expression_globals.py` mirrors EE's `SAFE_GLOBALS` (EE ADR-031).
+  It provides curated stdlib names and no builtins.
+- Under `rngSeed`, `random` and the clock are seed-bound proxies, and entropy sources raise.
+  Helper functions are therefore reproducible without extra rules.
+- Imports are not allowed; the safe globals already provide `random`, `datetime`, `math`, `re`,
+  `json`, `itertools`, `collections`, `statistics`, `hashlib` and `base64`. The one exception is
+  `from __future__ import annotations`, which compiles away.
+
+A static check of the module's AST runs before execution. It admits only these top-level statements:
+docstring, `def`, constant assignments and the `__future__` import. Anything else is refused with a
+typed diagnostic that names the file and the statement line.
+
+Measured: the reference project's `lib/personnel.scr.py` loads and runs under the CE expression
+globals once its `__future__` import is stripped. The helper namespace still needs two additions:
+- exception types such as `ValueError`, because a function must be able to fail loudly;
+- `__build_class__`, but only if classes are admitted at all.
+
+Safe globals are a contract for determinism and intent, not a security sandbox. The isolation
+boundary stays the bounded child process with its private workspace. `sql/*.scr.sql` and
+`execute target=<client>` stay outside bounded proof. Their delivery needs a real run with
+readback, reported separately: target-isolated capture does not prove external delivery.
 
 ## Decision 4 — Plugin steering
 
 The plugin's deliverable becomes the project tree:
 
 - `references/project-structure.md` holds Decision 1. The workflow scaffolds the layout, writes data
-  to `entity/`/`weighting/`, and keeps cross-table logic in `script/`.
+  to `data/`, keeps cross-table logic in `lib/` and delivery in `delivery/`, and maintains
+  `acceptance/build.json`.
 - `review.md` reviews per file: purpose, inputs, outputs, rules located there. It keeps the
   requirement → location → evidence table and the project-wide proof.
 - The engine pitfalls the reference project hit are part of the guidance until the engine fixes
@@ -128,18 +163,20 @@ The plugin's deliverable becomes the project tree:
    cover R1, the volumes and the negatives, and an independent oracle confirms R2–R5.
 2. A change to any project file invalidates the proof.
 3. A failing element in a step file reports that file and line, without values.
-4. A Python library with a top-level side effect (file write, network import) is refused and names the line.
+4. A `lib/` module with an import, a top-level call or a file write is refused and names the line.
+   Seeded `random` inside a helper replays identically.
 5. Blind rerun (12 isolated sessions) scores project structure as well as correctness. The rubric
    covers layout, data in `entity/`/`weighting/` instead of literals, delivery steps separate from
    generation, and a readable entry process.
 
-## Open questions for Alex
+## Decisions taken (Alex, 2026-10-20)
 
-1. Is `datamimic-demos` the canonical layout, or does an EE/Platform convention take precedence?
-2. Protocol: a new operation (`build-project`) beside `BuildRequestV4`, or a `V5` that supersedes it?
-3. Order: EE first (EE leads shared boundary design) or CE first with a paired EE port?
-4. Is the Python allowlist strict enough? `random`/`datetime` would be allowed; seeded randomness
-   must come from the model, not the module.
+1. Layout: the `datamimic-demos` structure was a starting idea; this document proposes the measured layout above.
+2. Protocol: `BuildRequestV5` for CE and EE; CE first, then EE.
+3. Python: allowed as pure libraries running with safe globals.
+
+Still open: whether `class` definitions are admitted in `lib/` (needs `__build_class__`), and when
+`V4` is retired.
 
 ## Not decided here
 
