@@ -40,7 +40,7 @@ from datamimic_ce.engine.runtime.contexts.demographic_context import Demographic
 from datamimic_ce.engine.runtime.contracts import StatementTransformer
 from datamimic_ce.engine.runtime.logging import logger
 from datamimic_ce.engine.runtime.scripting import evaluation
-from datamimic_ce.engine.runtime.scripting.expression_globals import expression_globals
+from datamimic_ce.engine.runtime.scripting.expression_globals import expression_globals, rebind_seeded_script_names
 from datamimic_ce.engine.runtime.scripting.plugins import execute_script
 from datamimic_ce.engine.runtime.storage.global_increment import GlobalIncrementRegistry
 from datamimic_ce.engine.runtime.storage.memstore_manager import MemstoreManager
@@ -451,12 +451,20 @@ class SetupContext(Context):
         initial_ns.update(ns)
 
         execute_script(content, initial_ns)
+        # Under a seed, imported random/datetime/... must be the seeded stand-ins, or one script makes the whole
+        # run unseeded (#357). They stay private to the script: expressions keep their own seeded globals.
+        private = (
+            rebind_seeded_script_names(initial_ns, self.rng, lambda: self.root.seeded_faker)
+            if self.root.is_seeded
+            else frozenset()
+        )
 
         # Identify updated fields and remove functions from the namespace
         updated_fields: dict[str, object] = {}
         for key, value in initial_ns.items():
             if (
-                not key.startswith("__")
+                key not in private
+                and not key.startswith("__")
                 and not key.endswith("__")
                 and (key not in self._namespace or self._namespace[key] != initial_ns[key])
             ):

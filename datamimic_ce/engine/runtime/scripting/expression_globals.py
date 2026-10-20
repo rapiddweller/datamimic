@@ -41,6 +41,7 @@ import statistics
 import uuid
 from collections.abc import Callable
 from random import Random
+from typing import NamedTuple
 
 import numpy as np
 import pandas as pd
@@ -170,15 +171,23 @@ def _ignore_seed(*_args: object, **_kwargs: object) -> None:
     """random.seed() inside an expression would rewind the run's seeded stream, so it is a no-op."""
 
 
-def expression_globals(
-    is_seeded: bool,
-    rng: RandomSource | None,
-    seeded_faker_supplier: Callable[[], Faker],
-) -> dict[str, object]:
-    """Globals for one expression, using explicit dependencies for seeded behavior."""
-    if not is_seeded:
-        return SAFE_GLOBALS
-    assert rng is not None
+class _SeededObjects(NamedTuple):
+    """The seeded stand-ins of one expression scope; built once, shared by expression globals and scripts."""
+
+    random: _EvalProxy
+    seeded_random: Callable[..., Random]
+    uuid: _EvalProxy
+    uuid4: Callable[[], uuid.UUID]
+    datetime: _EvalProxy
+    anchored_datetime: _EvalProxy
+    anchored_date: _EvalProxy
+    pd: _EvalProxy
+    np: _EvalProxy
+    os: _EvalProxy
+    fake: _SeededFaker
+
+
+def _seeded_objects(rng: RandomSource, seeded_faker_supplier: Callable[[], Faker]) -> _SeededObjects:
     anchor = resolve_clock(deterministic=True)
 
     def now(tz: datetime.tzinfo | None = None) -> datetime.datetime:
@@ -207,13 +216,69 @@ def expression_globals(
             "today": lambda tz=None: pd.Timestamp(now(tz)),
         },
     )
+    return _SeededObjects(
+        random=_EvalProxy(rng, random_overrides),
+        seeded_random=seeded_random,
+        uuid=_EvalProxy(uuid, {"uuid4": uuid4, "uuid1": _Uncontrolled("uuid.uuid1")}),
+        uuid4=uuid4,
+        datetime=_EvalProxy(datetime, {"datetime": anchored_datetime, "date": anchored_date}),
+        anchored_datetime=anchored_datetime,
+        anchored_date=anchored_date,
+        pd=_EvalProxy(pd, {"Timestamp": anchored_timestamp}),
+        np=_EvalProxy(np, {"random": _Uncontrolled("np.random")}),
+        os=_EvalProxy(os, {"urandom": _Uncontrolled("os.urandom"), "getrandom": _Uncontrolled("os.getrandom")}),
+        fake=_SeededFaker(rng, seeded_faker_supplier),
+    )
+
+
+def expression_globals(
+    is_seeded: bool,
+    rng: RandomSource | None,
+    seeded_faker_supplier: Callable[[], Faker],
+) -> dict[str, object]:
+    """Globals for one expression, using explicit dependencies for seeded behavior."""
+    if not is_seeded:
+        return SAFE_GLOBALS
+    assert rng is not None
+    seeded = _seeded_objects(rng, seeded_faker_supplier)
     return {
         **SAFE_GLOBALS,
-        "random": _EvalProxy(rng, random_overrides),
-        "uuid": _EvalProxy(uuid, {"uuid4": uuid4, "uuid1": _Uncontrolled("uuid.uuid1")}),
-        "datetime": _EvalProxy(datetime, {"datetime": anchored_datetime, "date": anchored_date}),
-        "pd": _EvalProxy(pd, {"Timestamp": anchored_timestamp}),
-        "np": _EvalProxy(np, {"random": _Uncontrolled("np.random")}),
-        "os": _EvalProxy(os, {"urandom": _Uncontrolled("os.urandom"), "getrandom": _Uncontrolled("os.getrandom")}),
-        "fake": _SeededFaker(rng, seeded_faker_supplier),
+        "random": seeded.random,
+        "uuid": seeded.uuid,
+        "datetime": seeded.datetime,
+        "pd": seeded.pd,
+        "np": seeded.np,
+        "os": seeded.os,
+        "fake": seeded.fake,
     }
+
+
+def rebind_seeded_script_names(
+    namespace: dict[str, object], rng: RandomSource, seeded_faker_supplier: Callable[[], Faker]
+) -> frozenset[str]:
+    """Rebind names a seeded project script imported from random/datetime/uuid/numpy/pandas/os to their seeded
+    stand-ins, so its helpers replay (#357). Returns the rebound names, which stay private to the script.
+
+    Identity-based: ``import random`` / ``import datetime as dt`` / ``from datetime import datetime`` are covered;
+    other members imported by name (``from random import randint``) stay raw and fail deterministic replay.
+    """
+    seeded = _seeded_objects(rng, seeded_faker_supplier)
+    counterparts: tuple[tuple[object, object], ...] = (
+        (random, seeded.random),
+        (Random, seeded.seeded_random),
+        (uuid, seeded.uuid),
+        (uuid.uuid4, seeded.uuid4),
+        (datetime, seeded.datetime),
+        (datetime.datetime, seeded.anchored_datetime),
+        (datetime.date, seeded.anchored_date),
+        (pd, seeded.pd),
+        (np, seeded.np),
+        (os, seeded.os),
+    )
+    rebound = set()
+    for name, value in list(namespace.items()):
+        for raw, stand_in in counterparts:
+            if value is raw:
+                namespace[name] = stand_in
+                rebound.add(name)
+    return frozenset(rebound)

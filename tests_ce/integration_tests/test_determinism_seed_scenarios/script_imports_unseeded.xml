@@ -1,0 +1,14 @@
+<setup>
+    <!-- Without rngSeed a loaded script keeps the raw modules: helpers stay random. The
+         counterpart of script_imports_seeded.xml. -->
+    <execute uri="script/seeded_helpers.scr.py"/>
+    <generate name="script_imports" count="5" target="">
+        <key name="helper_draw" script="helper_draw()"/>
+        <key name="helper_own_random" script="helper_own_random()"/>
+        <key name="helper_uuid" script="helper_uuid()"/>
+        <key name="helper_now" script="helper_now()"/>
+        <key name="helper_due_date" script="helper_due_date(30)"/>
+        <key name="expr_draw" script="random.randint(1, 10**9)"/>
+        <key name="expr_now" script="datetime.datetime.now().isoformat()"/>
+    </generate>
+</setup>
