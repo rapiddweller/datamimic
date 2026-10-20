@@ -26,3 +26,8 @@ def helper_now() -> str:
 
 def helper_due_date(days: int) -> str:
     return (Datetime.now() + timedelta(days=days)).date().isoformat()
+
+
+def helper_type_checks() -> str:
+    """Type checks against imported classes must not change under a seed."""
+    return f"{isinstance(Datetime.now(), Datetime)}/{isinstance(Random(1), Random)}"

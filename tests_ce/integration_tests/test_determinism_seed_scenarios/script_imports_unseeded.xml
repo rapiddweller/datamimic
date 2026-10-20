@@ -10,5 +10,8 @@
         <key name="helper_due_date" script="helper_due_date(30)"/>
         <key name="expr_draw" script="random.randint(1, 10**9)"/>
         <key name="expr_now" script="datetime.datetime.now().isoformat()"/>
+        <!-- aliases a script imports stay usable in expressions -->
+        <key name="expr_alias_year" script="Datetime(2020, 1, 2).year"/>
+        <key name="helper_type_checks" script="helper_type_checks()"/>
     </generate>
 </setup>

@@ -160,6 +160,7 @@ def test_seeded_script_imports_replay_identically() -> None:
     assert {row["expr_now"] for row in first} == {"2025-01-01T12:00:00"}
     assert {row["helper_due_date"] for row in first} == {"2025-01-31"}
     assert len({row["helper_uuid"] for row in first}) == len(first)
+    assert {(row["expr_alias_year"], row["helper_type_checks"]) for row in first} == {(2020, "True/True")}
 
 
 def test_unseeded_script_imports_stay_random() -> None:
