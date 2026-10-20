@@ -167,6 +167,10 @@ def _random_seed(rng: RandomSource, x: _RandomSeed) -> int | float | str | bytes
     return rng.getrandbits(64) if isinstance(x, _OmittedRandomSeed) else x
 
 
+def _seeded_random(rng: RandomSource, x: _RandomSeed = _OMITTED_RANDOM_SEED) -> Random:
+    return Random(_random_seed(rng, x))
+
+
 class _SeededFaker:
     """``fake`` under a seed: every provider access reseeds the run's Faker from the rng, so a Faker
     value costs one rng draw and expressions without ``fake`` draw nothing."""
@@ -204,21 +208,20 @@ class _SeededObjects(NamedTuple):
     fake: _SeededFaker
 
 
-def _seeded_objects(rng: RandomSource, seeded_faker_supplier: Callable[[], Faker]) -> _SeededObjects:
+def _seeded_objects(
+    rng: RandomSource, seeded_faker_supplier: Callable[[], Faker], random_constructor: Callable[..., Random]
+) -> _SeededObjects:
     anchor = resolve_clock(deterministic=True)
 
     def now(tz: datetime.tzinfo | None = None) -> datetime.datetime:
         return anchor if tz is None else anchor.replace(tzinfo=datetime.UTC).astimezone(tz)
-
-    def seeded_random(x: _RandomSeed = _OMITTED_RANDOM_SEED) -> Random:
-        return Random(_random_seed(rng, x))
 
     def uuid4() -> uuid.UUID:
         return uuid.UUID(uuid4_from_random(rng))
 
     random_overrides = {
         "seed": _ignore_seed,
-        "Random": seeded_random,
+        "Random": random_constructor,
         "SystemRandom": _Uncontrolled("random.SystemRandom"),
     }
     anchored_datetime = _EvalProxy(datetime.datetime, {"now": now, "utcnow": lambda: anchor, "today": lambda: anchor})
@@ -254,7 +257,7 @@ def expression_globals(
     if not is_seeded:
         return SAFE_GLOBALS
     assert rng is not None
-    seeded = _seeded_objects(rng, seeded_faker_supplier)
+    seeded = _seeded_objects(rng, seeded_faker_supplier, functools.partial(_seeded_random, rng))
     return {
         **SAFE_GLOBALS,
         "random": seeded.random,
@@ -272,14 +275,16 @@ def rebind_seeded_script_names(
 ) -> frozenset[str]:
     """Give a seeded project script the seeded stand-ins instead of the raw modules, so its helpers replay (#357).
 
-    Names bound to raw random/uuid/datetime/numpy/pandas/os (or random.Random, datetime.datetime, datetime.date,
-    uuid.uuid4) are
-    rebound by identity; helpers resolve globals at call time. The names expressions also know (random, uuid,
-    datetime, pd, np, os) are set to the seeded stand-ins and returned: they stay private to the scripts, so
-    expressions keep their own seeded globals. Other names, such as aliases, remain shared.
-    Members imported by name (``from random import randint``) stay raw; deterministic replay detects them.
+    Script-level names bound to the raw modules or to members imported by name (``from random import randint``,
+    ``from datetime import datetime``) are rebound by identity; helpers resolve globals at call time. The names
+    expressions also know (random, uuid, datetime, pd, np, os) are set to the seeded stand-ins and returned: they
+    stay private to the scripts, so expressions keep their own seeded globals. Other names, such as aliases, remain
+    shared.
+
+    Outside this rebinding, and not replayed by a plain run: draws made while the script body itself executes
+    (module-level values, default arguments), imports inside helper bodies, and members not listed below.
+    Build's deterministic_replay verification detects them.
     """
-    seeded = _seeded_objects(rng, seeded_faker_supplier)
 
     # Built here, not per expression: a class definition costs several times an expression evaluation.
     class SeededRandom(Random):
@@ -289,6 +294,8 @@ def rebind_seeded_script_names(
         def __init__(self, x: _RandomSeed = _OMITTED_RANDOM_SEED) -> None:
             Random.__init__(self, _random_seed(rng, x))
 
+    # Scripts reach Random both directly and as random.Random; both must stay the class.
+    seeded = _seeded_objects(rng, seeded_faker_supplier, SeededRandom)
     counterparts: tuple[tuple[object, object], ...] = (
         (random, seeded.random),
         (Random, SeededRandom),
@@ -300,6 +307,22 @@ def rebind_seeded_script_names(
         (pd, seeded.pd),
         (np, seeded.np),
         (os, seeded.os),
+        # Members imported by name are the module's own objects, so identity finds them too.
+        (random.random, seeded.random.random),
+        (random.randint, seeded.random.randint),
+        (random.randrange, seeded.random.randrange),
+        (random.choice, seeded.random.choice),
+        (random.choices, seeded.random.choices),
+        (random.shuffle, seeded.random.shuffle),
+        (random.sample, seeded.random.sample),
+        (random.uniform, seeded.random.uniform),
+        (random.gauss, seeded.random.gauss),
+        (random.getrandbits, seeded.random.getrandbits),
+        (random.randbytes, seeded.random.randbytes),
+        (random.seed, seeded.random.seed),
+        (random.SystemRandom, seeded.random.SystemRandom),
+        (uuid.uuid1, seeded.uuid.uuid1),
+        (os.urandom, seeded.os.urandom),
     )
     for name, value in list(namespace.items()):
         for raw, stand_in in counterparts:
