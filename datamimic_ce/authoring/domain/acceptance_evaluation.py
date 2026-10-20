@@ -566,20 +566,24 @@ def evaluate_acceptance(spec: AcceptanceSpecV1, captured: CapturedProducts) -> t
                     and count is not None
                     and captured.max_count < count <= MAX_AUTHORING_MAX_COUNT
                 )
-                diagnostic = diagnostic.model_copy(
-                    update={
-                        "message": f"Product capture is {evidence.status.value}: {evidence.reason}.",
-                        "remediation": _retry_remediation(count)
-                        if retry and count is not None
-                        else _incomplete_capture_remediation(evidence.status),
-                        "actual": {
-                            "status": evidence.status.value,
-                            "requested": evidence.requested,
-                            "observed": evidence.observed,
-                            "limit": evidence.limit,
-                        },
+                update: dict[str, object] = {
+                    "actual": {
+                        "status": evidence.status.value,
+                        "requested": evidence.requested,
+                        "observed": evidence.observed,
+                        "limit": evidence.limit,
                     }
-                )
+                }
+                # Only a consistent incomplete capture has a cause to name; malformed evidence keeps the
+                # provenance message instead of contradicting itself ("capture is complete: ...").
+                if not evidence.complete and evidence.observed == len(item.rows):
+                    update["message"] = f"Product capture is {evidence.status.value}: {evidence.reason}."
+                    update["remediation"] = (
+                        _retry_remediation(count)
+                        if retry and count is not None
+                        else _incomplete_capture_remediation(evidence.status)
+                    )
+                diagnostic = diagnostic.model_copy(update=update)
                 if retry and count is not None:
                     retry_counts[product.name] = count
             diagnostics.append(diagnostic)

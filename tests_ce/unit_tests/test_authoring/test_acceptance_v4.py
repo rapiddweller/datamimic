@@ -84,7 +84,9 @@ def test_duplicate_capture_and_provenance_row_mismatch_fail():
     good = capture(rows=[{"id": 1}])
     assert evaluate_acceptance(spec, CapturedProducts(good.products * 2, 100))
     item = good.products[0]
-    assert evaluate_acceptance(spec, CapturedProducts((CapturedProduct(item.name, (), item.capture),), 100))
+    mismatch = evaluate_acceptance(spec, CapturedProducts((CapturedProduct(item.name, (), item.capture),), 100))
+    # "complete" evidence that disagrees with its rows is a provenance failure, not a named incomplete status.
+    assert mismatch[0].message == "Product capture is incomplete or its provenance is inconsistent."
 
 
 def test_nested_parent_counts_use_real_join_not_matching_totals():

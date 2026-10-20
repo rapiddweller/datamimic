@@ -36,6 +36,15 @@ def test_datetime_bound_layout_failure_names_argument_and_layout() -> None:
     )
 
 
+def test_custom_input_format_mismatch_does_not_recommend_the_default() -> None:
+    from datamimic_ce.domains.shared.literal_generators.temporal.datetime_generator import DateTimeGenerator
+    from datamimic_ce.errors import GeneratorConfigError
+
+    with pytest.raises(GeneratorConfigError) as caught:
+        DateTimeGenerator(min="2025-01-01", input_format="%d/%m/%Y")
+    assert caught.value.constructor_reason == "DateTimeGenerator min does not match the configured input_format"
+
+
 @pytest.mark.parametrize(
     "key",
     [

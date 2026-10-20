@@ -373,14 +373,16 @@ KEY_DISTRIBUTION_REQUIRES_RANGE = Requires(
     frozenset((ATTR_MIN, ATTR_MAX)),
     message="'distribution' on a <key> needs a range - add min= and/or max=",
 )
-# Range attributes shape only a type= draw; next to generator=/values= they were silently ignored.
-KEY_RANGE_REQUIRES_TYPE: tuple[Constraint, ...] = tuple(
-    Requires(
-        attr,
-        frozenset((ATTR_TYPE,)),
-        message="'min', 'max' and 'granularity' on a <key> apply only to a type= range draw",
-    )
-    for attr in (ATTR_MIN, ATTR_MAX, ATTR_GRANULARITY)
+# Range attributes shape only a type= draw, and every other value source wins over that draw,
+# so next to generator=/values=/script=... (even with type=) they were silently ignored.
+_KEY_RANGE_ATTRS = (ATTR_MIN, ATTR_MAX, ATTR_GRANULARITY)
+_KEY_RANGE_MESSAGE = "'min', 'max' and 'granularity' on a <key> apply only when type= is its only value source"
+KEY_RANGE_CONSTRAINTS: tuple[Constraint, ...] = (
+    *(Requires(attr, frozenset((ATTR_TYPE,)), message=_KEY_RANGE_MESSAGE) for attr in _KEY_RANGE_ATTRS),
+    *(
+        Forbids(attr, KEY_GENERATION_REQUIRED.attrs - {ATTR_TYPE}, message=_KEY_RANGE_MESSAGE)
+        for attr in _KEY_RANGE_ATTRS
+    ),
 )
 KEY_DISTRIBUTION_NUMERIC_TYPE = AllowedValuesWhen(
     ATTR_TYPE,
@@ -559,7 +561,7 @@ _KEY_RULES: tuple[Constraint, ...] = (
     KEY_DISTRIBUTION_REQUIRES_RANGE,
     KEY_DISTRIBUTION_NUMERIC_TYPE,
     KEY_DISTRIBUTION_VALUES,
-    *KEY_RANGE_REQUIRES_TYPE,
+    *KEY_RANGE_CONSTRAINTS,
     DEFAULT_VALUE_REQUIRES_SCRIPT,
     OUT_DATE_FORMAT_STRING_TYPE,
 )

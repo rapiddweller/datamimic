@@ -16,7 +16,7 @@ from datamimic_ce.engine.dsl.model.constraints import (
     KEY_DISTRIBUTION_VALUES,
     KEY_GENERATION_EXCLUSIVE,
     KEY_GENERATION_REQUIRED,
-    KEY_RANGE_REQUIRES_TYPE,
+    KEY_RANGE_CONSTRAINTS,
     KEY_TYPE_VALUES,
     KEY_UNIQUE_CONSTRAINTS,
     Constraint,
@@ -312,8 +312,8 @@ class KeyModel(BaseModel):
 
     @model_validator(mode="before")
     @classmethod
-    def validate_range_requires_type(cls, values: dict):
-        return check_constraints(values, KEY_RANGE_REQUIRES_TYPE)
+    def validate_range_is_the_only_value_source(cls, values: dict):
+        return check_constraints(values, KEY_RANGE_CONSTRAINTS)
 
     @model_validator(mode="before")
     @classmethod

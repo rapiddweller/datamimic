@@ -319,10 +319,13 @@ class DateTimeGenerator(ClockAnchoredDomainGenerator):
                 return datetime.strptime(raw, self._input_format)
             except ValueError as error:
                 # The raw value may be a resolved secret: name only the argument and the expected layout.
-                raise generator_config_error(
-                    reason=f"DateTimeGenerator {argument} does not match input_format; "
-                    "the default layout is '%Y-%m-%d %H:%M:%S', pass input_format for other layouts"
-                ) from error
+                reason = (
+                    f"DateTimeGenerator {argument} does not match the configured input_format"
+                    if input_format
+                    else f"DateTimeGenerator {argument} does not match input_format; the default layout is "
+                    "'%Y-%m-%d %H:%M:%S', pass input_format for other layouts"
+                )
+                raise generator_config_error(reason=reason) from error
 
         # Handle custom (fixed) datetime value
         if value:
