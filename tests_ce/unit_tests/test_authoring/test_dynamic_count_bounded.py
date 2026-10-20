@@ -82,10 +82,12 @@ def test_parent_scoped_count_fails_in_bounded_execution_with_count_guidance() ->
     assert diagnostic.remediation == GUIDANCE_COUNT_SCOPE
 
 
-def test_non_integer_count_failure_still_names_the_count_attribute() -> None:
+def test_non_integer_count_failure_names_the_count_attribute_without_scope_advice() -> None:
     result = _bounded("fx_dynamic_child_count_non_integer.xml")
     assert not result.ok
-    assert result.diagnostics[0].path[-2:] == ("generate", "count")
+    diagnostic = result.diagnostics[0]
+    assert diagnostic.path[-2:] == ("generate", "count")
+    assert diagnostic.remediation != GUIDANCE_COUNT_SCOPE
 
 
 def test_count_above_bounded_limit_is_refused_not_truncated() -> None:

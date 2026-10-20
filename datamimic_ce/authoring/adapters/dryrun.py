@@ -156,10 +156,13 @@ def _runtime_hint(err: Exception) -> str:
         if isinstance(current, MissingMemstoreProductError):
             return current.guidance
         if isinstance(current, UserErrorBase) and current.issue_code is not None:
-            if current.issue_code is IssueCode.TASK_EXPRESSION_EVAL_FAILED:
-                counted = current.location is not None and current.location.attribute == ATTR_COUNT
-                return GUIDANCE_COUNT_SCOPE if counted else _SCOPE_HINT
             issue = get_issue_definition(current.issue_code)
+            if current.issue_code is IssueCode.TASK_EXPRESSION_EVAL_FAILED:
+                if current.location is None or current.location.attribute != ATTR_COUNT:
+                    return _SCOPE_HINT
+                # Only a failed name lookup is a scope problem; 1/0 or int('text') in a count is not.
+                named = isinstance(current.__cause__, NameError | AttributeError)
+                return GUIDANCE_COUNT_SCOPE if named else issue.resolution
             return issue.guidance or issue.resolution
         if isinstance(current, DomainError) and current.hint:
             return current.hint
