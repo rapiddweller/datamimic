@@ -13,5 +13,8 @@
         <!-- aliases a script imports stay usable in expressions -->
         <key name="expr_alias_year" script="Datetime(2020, 1, 2).year"/>
         <key name="helper_type_checks" script="helper_type_checks()"/>
+        <!-- a generator= key copies the script namespace; the seeded aliases must survive that copy -->
+        <key name="helper_alias_draw" script="helper_alias_draw()"/>
+        <key name="generated" generator="IntegerGenerator(min=1, max=9)"/>
     </generate>
 </setup>

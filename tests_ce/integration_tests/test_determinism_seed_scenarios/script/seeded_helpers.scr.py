@@ -2,6 +2,7 @@
 
 import datetime
 import random
+import random as rnd
 import uuid
 from datetime import datetime as Datetime
 from datetime import timedelta
@@ -14,6 +15,10 @@ def helper_draw() -> int:
 
 def helper_own_random() -> int:
     return Random().randint(1, 10**9)
+
+
+def helper_alias_draw() -> int:
+    return rnd.randint(1, 10**9)
 
 
 def helper_uuid() -> str:

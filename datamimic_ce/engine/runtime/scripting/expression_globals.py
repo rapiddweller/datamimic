@@ -126,6 +126,10 @@ class _EvalProxy:
     def __subclasscheck__(self, subclass: type) -> bool:
         return isinstance(self._target, type) and issubclass(subclass, self._target)
 
+    # A copied proxy would fork or lose the run's stream; generator= keys deep-copy the script namespace.
+    def __deepcopy__(self, memo: dict[int, object]) -> _EvalProxy:
+        return self
+
 
 class _Uncontrolled:
     """An entropy source a seeded run must not reach: using it in any way raises."""
@@ -155,6 +159,12 @@ class _OmittedRandomSeed:
 
 
 _OMITTED_RANDOM_SEED = _OmittedRandomSeed()
+_RandomSeed = int | float | str | bytes | bytearray | None | _OmittedRandomSeed
+
+
+def _random_seed(rng: RandomSource, x: _RandomSeed) -> int | float | str | bytes | bytearray | None:
+    """A seeded run's Random() without a seed starts from the run's stream; an explicit seed is kept."""
+    return rng.getrandbits(64) if isinstance(x, _OmittedRandomSeed) else x
 
 
 class _SeededFaker:
@@ -183,7 +193,6 @@ class _SeededObjects(NamedTuple):
     """The seeded stand-ins of one expression scope; built once, shared by expression globals and scripts."""
 
     random: _EvalProxy
-    random_class: type[Random]
     uuid: _EvalProxy
     uuid4: Callable[[], uuid.UUID]
     datetime: _EvalProxy
@@ -201,22 +210,11 @@ def _seeded_objects(rng: RandomSource, seeded_faker_supplier: Callable[[], Faker
     def now(tz: datetime.tzinfo | None = None) -> datetime.datetime:
         return anchor if tz is None else anchor.replace(tzinfo=datetime.UTC).astimezone(tz)
 
-    def seeded_random(
-        x: int | float | str | bytes | bytearray | None | _OmittedRandomSeed = _OMITTED_RANDOM_SEED,
-    ) -> Random:
-        return Random(rng.getrandbits(64)) if isinstance(x, _OmittedRandomSeed) else Random(x)
+    def seeded_random(x: _RandomSeed = _OMITTED_RANDOM_SEED) -> Random:
+        return Random(_random_seed(rng, x))
 
     def uuid4() -> uuid.UUID:
         return uuid.UUID(uuid4_from_random(rng))
-
-    class SeededRandom(Random):
-        """random.Random for project scripts: without a seed it starts from the run's stream, and it stays a
-        real Random subclass, so annotations, isinstance and subclassing keep working."""
-
-        def __init__(
-            self, x: int | float | str | bytes | bytearray | None | _OmittedRandomSeed = _OMITTED_RANDOM_SEED
-        ) -> None:
-            Random.__init__(self, rng.getrandbits(64) if isinstance(x, _OmittedRandomSeed) else x)
 
     random_overrides = {
         "seed": _ignore_seed,
@@ -235,7 +233,6 @@ def _seeded_objects(rng: RandomSource, seeded_faker_supplier: Callable[[], Faker
     )
     return _SeededObjects(
         random=_EvalProxy(rng, random_overrides),
-        random_class=SeededRandom,
         uuid=_EvalProxy(uuid, {"uuid4": uuid4, "uuid1": _Uncontrolled("uuid.uuid1")}),
         uuid4=uuid4,
         datetime=_EvalProxy(datetime, {"datetime": anchored_datetime, "date": anchored_date}),
@@ -283,9 +280,18 @@ def rebind_seeded_script_names(
     Members imported by name (``from random import randint``) stay raw; deterministic replay detects them.
     """
     seeded = _seeded_objects(rng, seeded_faker_supplier)
+
+    # Built here, not per expression: a class definition costs several times an expression evaluation.
+    class SeededRandom(Random):
+        """random.Random for project scripts, seeded like the expression override, and still a real Random
+        subclass, so annotations, isinstance and subclassing keep working."""
+
+        def __init__(self, x: _RandomSeed = _OMITTED_RANDOM_SEED) -> None:
+            Random.__init__(self, _random_seed(rng, x))
+
     counterparts: tuple[tuple[object, object], ...] = (
         (random, seeded.random),
-        (Random, seeded.random_class),
+        (Random, SeededRandom),
         (uuid, seeded.uuid),
         (uuid.uuid4, seeded.uuid4),
         (datetime, seeded.datetime),
