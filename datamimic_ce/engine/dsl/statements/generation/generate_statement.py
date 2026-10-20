@@ -44,6 +44,8 @@ class GenerateStatement(CompositeStatement):
         self._start = model.start
         self._end = model.end
         self._interval = model.interval
+        # Set only by bounded Authoring execution: runtime counts above it are refused, never truncated.
+        self._bounded_count_limit: int | None = None
 
     @property
     def name(self) -> str:
@@ -189,3 +191,11 @@ class GenerateStatement(CompositeStatement):
         # GenerateModel validator guarantees start and end are non-None when interval is.
         assert self._start is not None and self._end is not None
         return TimeSeriesConfig.parse(self._start, self._end, self._interval)
+
+    @property
+    def bounded_count_limit(self) -> int | None:
+        return self._bounded_count_limit
+
+    @bounded_count_limit.setter
+    def bounded_count_limit(self, value: int | None) -> None:
+        self._bounded_count_limit = value

@@ -1,0 +1,6 @@
+<setup rngSeed="1">
+    <generate name="bookings" count="2">
+        <!-- default input format is '%Y-%m-%d %H:%M:%S'; a bare date cannot be parsed -->
+        <key name="booked_on" generator="DateTimeGenerator(min='2025-01-01', max='2025-12-31')"/>
+    </generate>
+</setup>

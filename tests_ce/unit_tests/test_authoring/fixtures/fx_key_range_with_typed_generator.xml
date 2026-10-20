@@ -1,0 +1,6 @@
+<setup rngSeed="1">
+    <generate name="orders" count="2">
+        <!-- the generator wins over the type= range draw, so min/max would be ignored -->
+        <key name="order_no" type="int" generator="IncrementGenerator" min="100" max="200"/>
+    </generate>
+</setup>

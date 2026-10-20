@@ -121,9 +121,9 @@ def test_file_source_count_failure_remains_unknown(tmp_path: Path, monkeypatch: 
     )
 
 
-def test_dynamic_and_ranged_counts_are_bounded() -> None:
+def test_ranged_counts_are_bounded() -> None:
+    # Dynamic counts are evaluated and refused above the limit instead (test_dynamic_count_bounded.py).
     xml = """<setup rngSeed="1">
-        <generate name="dynamic" count="{1000}"><key name="x" constant="1"/></generate>
         <generate name="range" minCount="100" maxCount="200"><key name="x" constant="1"/></generate>
         <generate name="minimum" minCount="100"><key name="x" constant="1"/></generate>
     </setup>"""
@@ -132,7 +132,6 @@ def test_dynamic_and_ranged_counts_are_bounded() -> None:
 
     assert result.ok
     assert {product.name: len(product.rows) for product in result.captured.products} == {
-        "dynamic": 2,
         "minimum": 2,
         "range": 2,
     }

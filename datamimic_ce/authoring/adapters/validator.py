@@ -4,7 +4,7 @@
 
 """Use the normal CE parser for in-memory descriptor hard validation."""
 
-from pathlib import PurePosixPath
+from pathlib import Path, PurePosixPath
 from typing import Literal
 
 from lxml import etree
@@ -77,6 +77,9 @@ class CeDescriptorValidator:
                             identity=identity,
                         )
                     )
+                # The parser message may echo resolved (possibly secret) values; the static rule
+                # projection names the violated rule and the exact element instead.
+                diagnostics.extend(_rule_diagnostics(xml, physical_path, logical_path))
                 return LintResult(ok=False, diagnostics=tuple(diagnostics))
             return LintResult(
                 ok=False,
@@ -101,28 +104,32 @@ class CeDescriptorValidator:
         except (ValueError, OSError):
             # Parser/resource errors may contain credentials and physical host paths.
             return _rejected(logical_path, "Descriptor or its workspace resources failed validation.")
-        findings = _run_rules(parse_xml_source(xml), base_dir=physical_path.parent)
-        diagnostics = []
-        for finding in findings:
-            definition = authoring_rule_definition(finding.rule)
-            diagnostics.append(
-                Diagnostic(
-                    code=finding.rule,
-                    phase=DiagnosticPhase.XML,
-                    message=definition.explanation,
-                    path=(
-                        "descriptor",
-                        logical_path.as_posix(),
-                        finding.path,
-                        *(("line", finding.line) if finding.line is not None else ()),
-                    ),
-                    severity="error"
-                    if finding.severity is RuleSeverity.ERROR
-                    else ("warning" if finding.severity is RuleSeverity.WARNING else "info"),
-                    remediation=definition.fix_hint,
-                )
+        findings = _rule_diagnostics(xml, physical_path, logical_path)
+        return LintResult(ok=not any(item.severity == "error" for item in findings), diagnostics=findings)
+
+
+def _rule_diagnostics(xml: str, physical_path: Path, logical_path: PurePosixPath) -> tuple[Diagnostic, ...]:
+    diagnostics = []
+    for finding in _run_rules(parse_xml_source(xml), base_dir=physical_path.parent):
+        definition = authoring_rule_definition(finding.rule)
+        diagnostics.append(
+            Diagnostic(
+                code=finding.rule,
+                phase=DiagnosticPhase.XML,
+                message=definition.explanation,
+                path=(
+                    "descriptor",
+                    logical_path.as_posix(),
+                    finding.path,
+                    *(("line", finding.line) if finding.line is not None else ()),
+                ),
+                severity="error"
+                if finding.severity is RuleSeverity.ERROR
+                else ("warning" if finding.severity is RuleSeverity.WARNING else "info"),
+                remediation=definition.fix_hint,
             )
-        return LintResult(ok=not any(item.severity == "error" for item in diagnostics), diagnostics=tuple(diagnostics))
+        )
+    return tuple(diagnostics)
 
 
 def _diagnostic(message: str, *, path: tuple[str | int, ...], identity: CeErrorIdentity | None = None) -> Diagnostic:

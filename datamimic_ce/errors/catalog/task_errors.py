@@ -345,6 +345,14 @@ ISSUES: list[IssueDefinition] = [
         resolution="Ensure the referenced entity exists and the identifier/path is correct.",
     ),
     IssueDefinition(
+        code=IssueCode.TASK_COUNT_ABOVE_BOUNDED_LIMIT,
+        name="TASK_COUNT_ABOVE_BOUNDED_LIMIT",
+        title="Task Count Above Bounded Limit",
+        template="count evaluated to {count}, above the bounded per-invocation limit {limit}",
+        cause="A runtime count exceeded the per-invocation limit of bounded Authoring execution.",
+        resolution="Raise max_count to at least the evaluated count, or lower the count expression.",
+    ),
+    IssueDefinition(
         code=IssueCode.TASK_COUNT_SELECTOR_UNSUPPORTED_CLIENT,
         name="TASK_COUNT_SELECTOR_UNSUPPORTED_CLIENT",
         title="Task Count Selector Unsupported Client",

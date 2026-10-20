@@ -1,0 +1,6 @@
+<setup rngSeed="1">
+    <generate name="orders" count="2">
+        <!-- min/max shape only a type= draw; next to generator= they were silently ignored -->
+        <key name="order_date" generator="DateTimeGenerator" min="2025-01-01" max="2025-12-31"/>
+    </generate>
+</setup>

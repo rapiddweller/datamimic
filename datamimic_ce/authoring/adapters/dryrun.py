@@ -41,8 +41,10 @@ from datamimic_ce.authoring.domain.common import NonEmptyStrictStr, NonNegativeS
 from datamimic_ce.authoring.domain.rule_catalog import RuleSeverity
 from datamimic_ce.authoring.domain.xml_diagnostics import Diagnostic
 from datamimic_ce.engine.dsl.api import capture_product_name, resource_reader_scope
+from datamimic_ce.engine.dsl.vocabulary.constants.attribute_constants import ATTR_COUNT
 from datamimic_ce.engine.io.contracts import SmokeExportRequest
 from datamimic_ce.errors import (
+    GUIDANCE_COUNT_SCOPE,
     DomainError,
     ErrorCode,
     ExternalFailureCause,
@@ -155,9 +157,13 @@ def _runtime_hint(err: Exception) -> str:
         if isinstance(current, MissingMemstoreProductError):
             return current.guidance
         if isinstance(current, UserErrorBase) and current.issue_code is not None:
-            if current.issue_code is IssueCode.TASK_EXPRESSION_EVAL_FAILED:
-                return _SCOPE_HINT
             issue = get_issue_definition(current.issue_code)
+            if current.issue_code is IssueCode.TASK_EXPRESSION_EVAL_FAILED:
+                if current.location is None or current.location.attribute != ATTR_COUNT:
+                    return _SCOPE_HINT
+                # Only a failed name lookup is a scope problem; 1/0 or int('text') in a count is not.
+                named = isinstance(current.__cause__, NameError | AttributeError)
+                return GUIDANCE_COUNT_SCOPE if named else issue.resolution
             return issue.guidance or issue.resolution
         if isinstance(current, DomainError) and current.hint:
             return current.hint
@@ -540,11 +546,17 @@ def neutralize_for_dry_run(
                     reason = f"static count {requested} is within the per-invocation limit"
             elif stmt.count is not None:
                 count_kind = _CountBoundaryKind.DYNAMIC
-                # Dynamic expressions are evaluated only with a runtime context. Replacing
-                # them is the only pre-execution bound that cannot be bypassed by the script.
-                stmt.count = str(max_count)
-                cap_applied = True
-                reason = "dynamic count was replaced by the per-invocation limit"
+                if stmt.source is None:
+                    # The expression is evaluated per invocation; the runtime guard refuses a value above
+                    # max_count, so a run that completes produced every requested row.
+                    stmt.bounded_count_limit = max_count
+                    bounded_without_cap = True
+                    reason = "dynamic count was evaluated at runtime within the per-invocation limit"
+                else:
+                    # A source may end before the evaluated count, so only the replaced count is provable.
+                    stmt.count = str(max_count)
+                    cap_applied = True
+                    reason = "dynamic count was replaced by the per-invocation limit"
             elif range_bound is not None:
                 count_kind = _CountBoundaryKind.RANGE
                 bounded_without_cap = range_bound <= max_count

@@ -8,6 +8,8 @@ import math
 from typing import Protocol
 
 from datamimic_ce.engine.dsl.api import CompositeStatement, GenerateStatement, KeyStatement, Statement
+from datamimic_ce.engine.dsl.vocabulary.constants.attribute_constants import ATTR_COUNT
+from datamimic_ce.engine.dsl.vocabulary.constants.element_constants import EL_GENERATE
 from datamimic_ce.engine.io.api import (
     capture_test_results,
     cleanup_exporter_chunks,
@@ -28,7 +30,7 @@ from datamimic_ce.engine.runtime.tasks.base.task import CommonSubTask
 from datamimic_ce.engine.runtime.tasks.generate.policies.single_process_policy import resolve_single_process
 from datamimic_ce.engine.runtime.tasks.generate.workers.generate_worker import GenerateWorker
 from datamimic_ce.engine.runtime.tasks.sources.length import data_source_cache_key, set_data_source_length
-from datamimic_ce.errors import IssueCode, task_config_error
+from datamimic_ce.errors import DescriptorLocation, IssueCode, task_config_error
 
 
 class GenerateTask(CommonSubTask):
@@ -61,13 +63,13 @@ class GenerateTask(CommonSubTask):
         # `count` is optional here and defaults to 1 series.
         ts_config = self._statement.get_time_series_config()
         if ts_config is not None:
-            series_count = get_int_count(self._statement.count, context) or 1
+            series_count = self._bounded(get_int_count(self._statement.count, context, element_tag=EL_GENERATE)) or 1
             return series_count * ts_config.ticks_per_series
 
         # Get count from statement: explicit count, or a random value within the
         # minCount/maxCount range (seed-bound via context.rng). Same resolution as <nestedKey>.
         count = resolve_count(
-            get_int_count(self._statement.count, context),
+            self._bounded(get_int_count(self._statement.count, context, element_tag=EL_GENERATE)),
             self._statement.min_count,
             self._statement.max_count,
             context.rng,
@@ -97,6 +99,18 @@ class GenerateTask(CommonSubTask):
 
         self._warn_count_above_source(context, count)
 
+        return count
+
+    def _bounded(self, count: int | None) -> int | None:
+        """Refuse a runtime count above the bounded Authoring limit instead of truncating it."""
+        limit = self._statement.bounded_count_limit
+        if count is not None and limit is not None and count > limit:
+            raise task_config_error(
+                code=IssueCode.TASK_COUNT_ABOVE_BOUNDED_LIMIT,
+                count=count,
+                limit=limit,
+                location=DescriptorLocation(EL_GENERATE, attribute=ATTR_COUNT),
+            )
         return count
 
     def _warn_count_above_source(self, context: SetupContext | GenIterContext, count: int) -> None:

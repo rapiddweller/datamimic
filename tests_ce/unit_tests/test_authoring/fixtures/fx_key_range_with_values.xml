@@ -1,0 +1,5 @@
+<setup rngSeed="1">
+    <generate name="orders" count="2">
+        <key name="status" values="'NEW', 'PAID'" min="1" max="2"/>
+    </generate>
+</setup>

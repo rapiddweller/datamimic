@@ -290,7 +290,7 @@ class ModelUtil:
         """
         for key in values:
             if key not in valid_attributes:
-                raise ValueError(f"invalid attribute '{key}', expect: {list(valid_attributes)}")
+                raise ValueError(f"invalid attribute '{key}', expect: {sorted(valid_attributes)}")
         return values
 
     @staticmethod

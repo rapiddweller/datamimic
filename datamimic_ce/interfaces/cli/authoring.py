@@ -49,11 +49,28 @@ WorkspaceRoot = Annotated[
 ]
 
 
+class _UnreadableInput(ValueError):
+    """The input channel itself failed, as opposed to its content."""
+
+
 def _read(source: str) -> str:
     try:
         return sys.stdin.read() if source == "-" else Path(source).read_text(encoding="utf-8")
+    # Only the file name is echoed: the host directory must not leak into diagnostics.
+    except FileNotFoundError as error:
+        raise _UnreadableInput(f"Input file not found: {Path(source).name}") from error
     except (OSError, UnicodeError) as error:
-        raise ValueError("Input must be a readable UTF-8 file or '-'.") from error
+        raise _UnreadableInput(f"Input must be a readable UTF-8 file or '-': {Path(source).name}") from error
+
+
+def _input_message(error: Exception, fallback: str) -> str:
+    if isinstance(error, _UnreadableInput):
+        return str(error)
+    if isinstance(error, ValidationError):
+        # Reuse the Build request projection (location and reason, never the input value).
+        reasons = (item.message for item in RejectedBuild.from_model_validation(error).diagnostics[:3])
+        return " ".join((fallback, *reasons))
+    return fallback
 
 
 def _workspace(source: str, workspace_root: Path | None = None) -> Path:
@@ -121,9 +138,11 @@ def compile_document(
     try:
         document = DmJsonDocumentV1.model_validate_json(_read(source))
         request = CompileDocumentRequest(document=document, descriptor_path=PurePosixPath(descriptor_path))
-    except (ValueError, ValidationError):
+    except (ValueError, ValidationError) as error:
         emit_authoring(
-            RejectedCompileDocument.from_input_error("Invalid DM JSON input or descriptor path."),
+            RejectedCompileDocument.from_input_error(
+                _input_message(error, "Invalid DM JSON input or descriptor path.")
+            ),
             output_format,
             exit_code=1,
         )
@@ -146,9 +165,9 @@ def decompile_document(
             PurePosixPath(descriptor_path) if descriptor_path is not None else _descriptor_path(source, workspace_root)
         )
         request = DecompileDocumentRequest(xml=_read(source), descriptor_path=logical_path)
-    except (ValueError, ValidationError):
+    except (ValueError, ValidationError) as error:
         emit_authoring(
-            RejectedDecompileDocument.from_input_error("Invalid XML input or descriptor path."),
+            RejectedDecompileDocument.from_input_error(_input_message(error, "Invalid XML input or descriptor path.")),
             output_format,
             exit_code=1,
         )
@@ -169,9 +188,11 @@ def build(
         request = BuildRequestV4.model_validate_json(_read(source))
     except ValidationError as error:
         emit_authoring(RejectedBuild.from_model_validation(error), output_format, exit_code=1)
-    except ValueError:
+    except ValueError as error:
         emit_authoring(
-            RejectedBuild.from_input_error("Invalid or unreadable Build request."), output_format, exit_code=1
+            RejectedBuild.from_input_error(_input_message(error, "Invalid or unreadable Build request.")),
+            output_format,
+            exit_code=1,
         )
     application = create_authoring_application(
         workspace_root=_workspace(source, workspace_root), descriptor_path=request.descriptor_path
@@ -189,8 +210,12 @@ def lint(
     try:
         logical_path = _descriptor_path(source, workspace_root)
         request = LintRequest(xml=_read(source))
-    except (ValueError, ValidationError):
-        emit_authoring(LintResult.from_input_error("Invalid or unreadable XML input."), output_format, exit_code=1)
+    except (ValueError, ValidationError) as error:
+        emit_authoring(
+            LintResult.from_input_error(_input_message(error, "Invalid or unreadable XML input.")),
+            output_format,
+            exit_code=1,
+        )
     application = create_authoring_application(
         workspace_root=_workspace(source, workspace_root), descriptor_path=logical_path
     )
@@ -219,9 +244,11 @@ def _run(
             timeout_seconds=timeout,
             allow_side_effects=allow_side_effects,
         )
-    except (ValueError, ValidationError):
+    except (ValueError, ValidationError) as error:
         emit_authoring(
-            RunResult.from_input_error("Invalid XML input or bounded-run options."), output_format, exit_code=1
+            RunResult.from_input_error(_input_message(error, "Invalid XML input or bounded-run options.")),
+            output_format,
+            exit_code=1,
         )
     application = create_authoring_application(
         workspace_root=_workspace(source, workspace_root), descriptor_path=logical_path

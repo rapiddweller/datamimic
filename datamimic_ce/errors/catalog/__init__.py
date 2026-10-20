@@ -9,6 +9,7 @@ from datamimic_ce.errors.catalog.definition import IssueDefinition
 from datamimic_ce.errors.catalog.exporter_errors import ISSUES as _EXPORTER_ERRORS
 from datamimic_ce.errors.catalog.generator_errors import ISSUES as _GENERATOR_ERRORS
 from datamimic_ce.errors.catalog.guidance import (
+    GUIDANCE_COUNT_SCOPE,
     GUIDANCE_EMPTY_VALUE,
     GUIDANCE_IN_DATE_FORMAT,
     GUIDANCE_OUT_DATE_FORMAT,
@@ -85,6 +86,7 @@ __all__ = [
     "get_issue_definition",
     "invalid_locale_text",
     "ERROR_TEMPLATES",
+    "GUIDANCE_COUNT_SCOPE",
     "GUIDANCE_EMPTY_VALUE",
     "GUIDANCE_IN_DATE_FORMAT",
     "GUIDANCE_OUT_DATE_FORMAT",

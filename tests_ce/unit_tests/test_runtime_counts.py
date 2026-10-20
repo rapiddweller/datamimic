@@ -11,10 +11,10 @@ def test_get_int_count_handles_missing_digits_and_expression() -> None:
     context = MagicMock(spec=Context)
     context.evaluate_python_expression.return_value = 12
 
-    assert get_int_count(None, context) is None
-    assert get_int_count("42", context) == 42
-    assert get_int_count("{value * 3}", context) == 12
-    context.evaluate_python_expression.assert_called_once_with("value * 3")
+    assert get_int_count(None, context, element_tag="generate") is None
+    assert get_int_count("42", context, element_tag="generate") == 42
+    assert get_int_count("{value * 3}", context, element_tag="generate") == 12
+    context.evaluate_python_expression.assert_called_once_with("value * 3", diagnostic_expression="count")
 
 
 def test_resolve_count_preserves_explicit_and_bounded_counts() -> None:

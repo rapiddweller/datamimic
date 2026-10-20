@@ -498,6 +498,21 @@ def _check_expectation(
     assert_never(expectation)
 
 
+def _retry_remediation(count: int) -> str:
+    return f"Increase max_count to at least {count} and retry the same transaction."
+
+
+def _incomplete_capture_remediation(status: CaptureStatus) -> str:
+    if status is CaptureStatus.CAPPED:
+        return (
+            "Give the product a literal count, minCount/maxCount with a static upper bound, or a finite source "
+            "within max_count; a capped capture cannot prove completeness."
+        )
+    # UNKNOWN has several causes (memstore producer binding, parent capture, cardinality); the message
+    # names the concrete one via capture.reason, so no single cardinality fix may be prescribed here.
+    return "Resolve the cause named in the capture reason so the bounded capture can prove completeness."
+
+
 def _capture_failure(message: str, path: tuple[str | int, ...]) -> Diagnostic:
     return catalog_diagnostic(AuthoringRuleId.VALIDATION, message, phase=DiagnosticPhase.EVIDENCE, path=path)
 
@@ -546,23 +561,32 @@ def evaluate_acceptance(spec: AcceptanceSpecV1, captured: CapturedProducts) -> t
         ):
             diagnostic = _capture_failure("Product capture is incomplete or its provenance is inconsistent.", path)
             if evidence is not None:
-                diagnostic = diagnostic.model_copy(
-                    update={
-                        "actual": {
-                            "status": evidence.status.value,
-                            "requested": evidence.requested,
-                            "observed": evidence.observed,
-                            "limit": evidence.limit,
-                        }
-                    }
-                )
                 count = product.count_per_invocation
-                if (
+                retry = (
                     evidence.status is CaptureStatus.CAPPED
                     and evidence.observed == len(item.rows) == evidence.limit
                     and count is not None
                     and captured.max_count < count <= MAX_AUTHORING_MAX_COUNT
-                ):
+                )
+                update: dict[str, object] = {
+                    "actual": {
+                        "status": evidence.status.value,
+                        "requested": evidence.requested,
+                        "observed": evidence.observed,
+                        "limit": evidence.limit,
+                    }
+                }
+                # Only a consistent incomplete capture has a cause to name; malformed evidence keeps the
+                # provenance message instead of contradicting itself ("capture is complete: ...").
+                if not evidence.complete and evidence.observed == len(item.rows):
+                    update["message"] = f"Product capture is {evidence.status.value}: {evidence.reason}."
+                    update["remediation"] = (
+                        _retry_remediation(count)
+                        if retry and count is not None
+                        else _incomplete_capture_remediation(evidence.status)
+                    )
+                diagnostic = diagnostic.model_copy(update=update)
+                if retry and count is not None:
                     retry_counts[product.name] = count
             diagnostics.append(diagnostic)
             continue
@@ -599,7 +623,7 @@ def evaluate_acceptance(spec: AcceptanceSpecV1, captured: CapturedProducts) -> t
                         "minimum_value": minimum,
                         "affected_products": sorted(retry_counts),
                     },
-                    "remediation": f"Increase max_count to at least {minimum} and retry the same transaction.",
+                    "remediation": _retry_remediation(minimum),
                 }
             )
         return tuple(diagnostics)
