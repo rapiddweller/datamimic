@@ -44,6 +44,7 @@ from datamimic_ce.engine.dsl.vocabulary.constants.attribute_constants import (
     ATTR_END,
     ATTR_ENTITY,
     ATTR_GENERATOR,
+    ATTR_GRANULARITY,
     ATTR_INTERVAL,
     ATTR_MAX,
     ATTR_MAX_COUNT,
@@ -372,6 +373,15 @@ KEY_DISTRIBUTION_REQUIRES_RANGE = Requires(
     frozenset((ATTR_MIN, ATTR_MAX)),
     message="'distribution' on a <key> needs a range - add min= and/or max=",
 )
+# Range attributes shape only a type= draw; next to generator=/values= they were silently ignored.
+KEY_RANGE_REQUIRES_TYPE: tuple[Constraint, ...] = tuple(
+    Requires(
+        attr,
+        frozenset((ATTR_TYPE,)),
+        message="'min', 'max' and 'granularity' on a <key> apply only to a type= range draw",
+    )
+    for attr in (ATTR_MIN, ATTR_MAX, ATTR_GRANULARITY)
+)
 KEY_DISTRIBUTION_NUMERIC_TYPE = AllowedValuesWhen(
     ATTR_TYPE,
     frozenset((DATA_TYPE_INT, DATA_TYPE_FLOAT, DATA_TYPE_DECIMAL)),
@@ -549,6 +559,7 @@ _KEY_RULES: tuple[Constraint, ...] = (
     KEY_DISTRIBUTION_REQUIRES_RANGE,
     KEY_DISTRIBUTION_NUMERIC_TYPE,
     KEY_DISTRIBUTION_VALUES,
+    *KEY_RANGE_REQUIRES_TYPE,
     DEFAULT_VALUE_REQUIRES_SCRIPT,
     OUT_DATE_FORMAT_STRING_TYPE,
 )
