@@ -116,6 +116,7 @@ class TestGenerateTask:
         statement.full_name = "test_full_name"
         statement.name = "test_name"
         statement.sub_statements = []
+        statement.bounded_count_limit = None
         statement.targets = {"mongodb.upsert", "file.write"}
         statement.selector = "test_selector"
         statement.source = "test_source"

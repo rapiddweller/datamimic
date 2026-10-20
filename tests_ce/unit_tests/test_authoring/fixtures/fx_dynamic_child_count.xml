@@ -1,0 +1,11 @@
+<setup defaultSeparator="," rngSeed="42">
+    <generate name="departments" source="fx_dynamic_child_count.departments.csv" distribution="ordered">
+        <key name="dept_id" script="dept_id"/>
+        <key name="headcount" script="headcount"/>
+        <!-- count runs in the department record: headcount resolves bare -->
+        <generate name="employees" count="{int(headcount)}">
+            <key name="employee_id" generator="GlobalIncrementGenerator"/>
+            <key name="dept_id" script="parent.dept_id"/>
+        </generate>
+    </generate>
+</setup>

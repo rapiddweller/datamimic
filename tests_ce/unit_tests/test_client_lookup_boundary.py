@@ -120,6 +120,7 @@ def test_generate_task_only_changes_zero_count_for_mongodb_upsert(monkeypatch: p
             distribution=None,
             sub_statements=[],
             get_time_series_config=lambda: None,
+            bounded_count_limit=None,
         )
         return GenerateTask(statement)._determine_count(context)
 
