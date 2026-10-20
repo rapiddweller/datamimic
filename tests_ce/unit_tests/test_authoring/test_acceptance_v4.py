@@ -731,3 +731,23 @@ def test_mutually_exclusive_branches_share_output_fields():
 def test_fields_on_the_same_execution_path_still_reject_duplicates(fields):
     with pytest.raises(AcceptanceProjectionError):
         project(f'<setup><generate name="rows" count="1">{fields}</generate></setup>')
+
+
+def test_unknown_capture_names_its_reason_without_prescribing_a_cardinality_fix():
+    spec = project('<setup><generate name="rows" count="1"><key name="id" constant="1"/></generate></setup>')
+    reason = "memstore source has no unique producer"
+    unknown = CapturedProducts(
+        (
+            CapturedProduct(
+                "rows",
+                ({"id": 1},),
+                ProductCaptureEvidence(
+                    status=CaptureStatus.UNKNOWN, requested=None, observed=1, limit=10, reason=reason
+                ),
+            ),
+        ),
+        10,
+    )
+    diagnostic = evaluate_acceptance(spec, unknown)[0]
+    assert diagnostic.message == f"Product capture is unknown: {reason}."
+    assert "literal count" not in diagnostic.remediation

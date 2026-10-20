@@ -508,7 +508,9 @@ def _incomplete_capture_remediation(status: CaptureStatus) -> str:
             "Give the product a literal count, minCount/maxCount with a static upper bound, or a finite source "
             "within max_count; a capped capture cannot prove completeness."
         )
-    return "Declare a literal count or a finite source so the bounded capture can prove completeness."
+    # UNKNOWN has several causes (memstore producer binding, parent capture, cardinality); the message
+    # names the concrete one via capture.reason, so no single cardinality fix may be prescribed here.
+    return "Resolve the cause named in the capture reason so the bounded capture can prove completeness."
 
 
 def _capture_failure(message: str, path: tuple[str | int, ...]) -> Diagnostic:
