@@ -1,9 +1,9 @@
 # CE Authoring diagnostics architecture review (PR #353)
 
-**Accepted within the local architecture review scope, with one merge dependency.**
+**Accepted within the local architecture review scope.** The EE merge dependency is now satisfied.
 
 - Reviewer: Astra (independent Opus 5.5 review agent, delegated by Alex).
-- Scope: PR #353 on `fix/authoring-diagnostics`, merged onto development. Base is `51a5be1c` (development, including #336, #346, #348, #349 and #352). Head is `f415f52e`.
+- Scope: PR #353 on `fix/authoring-diagnostics`, merged onto development. Base is `51a5be1c` (development, including #336, #346, #348, #349 and #352). Head is `c9912f5f`: merge `f415f52e`, receipt commit `907b1fca`, and the one-function follow-up `c9912f5f`.
 - This review rebinds the development receipt ([issue 351 CLI review](issue-351-cli-review.md)). It keeps all of that receipt's assessments.
 - It does not authorize a merge and does not claim that every native rule passes.
 
@@ -11,7 +11,7 @@
 
 | Item | Value |
 |---|---|
-| Source (`datamimic_ce/**/*.py`) | `47ade39a28c3f05a44830f77b3839a72f85e69539cb3c137d57fe73185fda3fb` |
+| Source (`datamimic_ce/**/*.py`) | `5eb43dd2ddd91ca98e554e90b5adaeea464c04305268ee3d922d948ecb36523f` |
 | Target, unchanged from development | `d83d4df102a2588a54598e26cb045b721cb024a118f51e31592b135050d4e78e` |
 | Analyzer, unchanged (ArchKeel 4.0.1, Python 3.11.12) | `bb1a3262d3fdd38c3e9a6af980cc063281ae98ab1c28c89c2c5be6dfb450744f` |
 | Validation digest | `4db484ef6b4e01011633158d811c097cd5436cfc3266a466d07e3215838dece8` |
@@ -47,15 +47,16 @@ The merged focused suites pass: 367 tests, 11 skipped. They cover:
 - runtime counts and the generate task;
 - the redaction tests.
 
-## Merge dependency: CE issue codes must stay a subset of EE
+## EE dependency: CE issue codes must stay a subset of EE
 
 The PR adds `IssueCode.TASK_COUNT_ABOVE_BOUNDED_LIMIT = "I800"` (`datamimic_ce/errors/codes.py:54`).
 
-- **EE today:** EE `origin/development` (`a3f1a3718`) still has no I800. Compared against it, I800 is the only CE `IssueCode`/`ErrorCode` that is missing.
-- **EE MR !431:** commit `5d19c968` registers I800 with the same name and value and the same title, template, cause and resolution. Compared against that commit, every CE `IssueCode` and `ErrorCode` is present. `DomainErrorCode` is CE-only and is out of scope for this rule.
-- **MR status at review time:** !431 was open. Its pipeline 38149 failed in `external_postgres_mongo_minio_test`, with two 90 s pytest timeouts in the banking include-properties e2e tests. The change is catalog-only, so these timeouts are unlikely to be caused by it, but I did not establish their cause.
+- **EE MR !431 is merged.** EE `origin/development` `3e7456a90` merges `81d43ef8e`, the rebased form of `5d19c968`.
+- **Same code in both editions.** The EE catalog entry for I800 has the same name, value, title, template, cause and resolution as CE.
+- **Subset holds.** Compared against EE `origin/development`, every CE `IssueCode` and `ErrorCode` at `c9912f5f` is present. `DomainErrorCode` is CE-only and is out of scope for this rule.
+- **MR pipeline.** Pipeline 38149 first failed on two 90 s timeouts in EE's external banking include-properties tests. It now reports success after the replay the author describes. I checked the status only, not the cause of the timeouts.
 
-**CE #353 must not merge before !431.** This dependency is recorded in the receipt's `delivery_boundary`.
+The dependency is satisfied and recorded in the receipt's `delivery_boundary`.
 
 ## Source review of the PR delta
 
@@ -101,17 +102,28 @@ The other output paths also add no value text:
 
 **Info.** The I800 path does not name the product. That is acceptable under the conservative redaction policy.
 
+**P2 follow-up, accepted (`c9912f5f`).** `_incomplete_capture_remediation` (`authoring/domain/acceptance_evaluation.py:505-513`) used to give every UNKNOWN capture the same advice: use a literal count or a finite source.
+- That advice does not resolve two UNKNOWN causes: unresolved memstore producer bindings and an incomplete parent capture.
+- UNKNOWN captures now point to their named capture reason. That reason is already in the message and is value-free.
+- CAPPED advice is unchanged. CAPPED arises in two places:
+  - `cap_applied` with observed rows equal to the limit (`dryrun.py:1150`). Causes: a static count or range above `max_count`, a file source above it, a dynamic count over a source, and DB, Mongo, memstore or scripted sources.
+  - Memstore availability above the limit (`dryrun.py:1238`).
+- For each of these, a static bound or a finite source within `max_count` does make completeness provable. So the advice is correct.
+- An explicit count up to the authoring maximum still gets the more specific "increase max_count" retry advice.
+- Info: the CAPPED advice does not also mention raising `max_count` for file or memstore sources. That would be an alternative fix; the current advice is not wrong.
+- The new test `test_unknown_capture_names_its_reason_without_prescribing_a_cardinality_fix` passes; the acceptance module passes 66/66.
+
 No finding blocks acceptance.
 
 ## Native result and UNKNOWN assessment
 
-Fresh `make architecture-check` at `f415f52e` failed only on the stale receipt:
+Fresh `make architecture-check` at `f415f52e`, and again at `c9912f5f`, failed only on the stale receipt:
 - 534/534 files covered; `failures` is empty.
 - 0 violations, 0 baseline additions or resolutions.
 - Rules are 271 PASS and 5 UNKNOWN.
 - Validate exits 2 with the same 20 `interface.usage_unknown` diagnostics as development. The full report exits 0.
 
-I re-collected development `51a5be1c` independently. It reproduces every digest of development's receipt.
+I re-collected development `51a5be1c` independently. It reproduces every digest of development's receipt. At `c9912f5f` only the source digest changed. The validation and UNKNOWN digests, the calls and the 314 records are identical to `f415f52e`.
 
 **Calls against development:**
 
@@ -138,18 +150,18 @@ No record is dropped or reclassified as PASS.
 **LOCAL VERIFIED (by this reviewer):**
 - Merge-delta equivalence.
 - Semantic review of the overlap areas, including an include probe.
-- EE code sets at `origin/development` and at `5d19c968`.
-- MR !431 pipeline status.
+- EE code sets and catalog text at EE `origin/development` `3e7456a90` (after the merge).
+- MR !431 merge state and pipeline status.
 - Native collection at head and at development.
 - Decoded call and UNKNOWN diffs.
 - Redaction probes.
 - 367 merged focused tests.
 - Strict completion gate acceptance of 314 assessed UNKNOWNs.
-- ruff and full mypy (534 files) on the merged head `f415f52e`.
+- ruff and full mypy (534 files) on `f415f52e` and `c9912f5f`.
 
 **NOT VERIFIED:**
 - Full unit and integration suites. The author reports 3,056 passed and 15 skipped; I did not rerun them.
-- CE CI.
-- The cause of the !431 pipeline failure, and its merge.
+- CE CI for `c9912f5f`. A green CI run was reported for `907b1fca`; I did not check it.
+- The cause of the original !431 banking timeouts.
 - EE runtime parity (datamimic-ee#69).
 - External services and Windows.
