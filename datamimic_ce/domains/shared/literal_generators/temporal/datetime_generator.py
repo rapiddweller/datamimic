@@ -314,17 +314,27 @@ class DateTimeGenerator(ClockAnchoredDomainGenerator):
         # Keep backward compatibility: "random" still supported; "random_mode" preferred internally.
         random_flag = bool(random_mode) if random_mode is not None else bool(random)
 
+        def _parse(argument: str, raw: str) -> datetime:
+            try:
+                return datetime.strptime(raw, self._input_format)
+            except ValueError as error:
+                # The raw value may be a resolved secret: name only the argument and the expected layout.
+                raise generator_config_error(
+                    reason=f"DateTimeGenerator {argument} does not match input_format; "
+                    "the default layout is '%Y-%m-%d %H:%M:%S', pass input_format for other layouts"
+                ) from error
+
         # Handle custom (fixed) datetime value
         if value:
-            self._result = datetime.strptime(value, self._input_format)
+            self._result = _parse("value", value)
             self._mode = self._CUSTOM_DATETIME_MODE
             return
 
         # Handle random datetime (or bounded window)
         if random_flag or min or max:
             default_span = timedelta(days=int(365.25 * 50))
-            self._min_dt = datetime.strptime(min, self._input_format) if min else None
-            self._max_dt = datetime.strptime(max, self._input_format) if max else None
+            self._min_dt = _parse("min", min) if min else None
+            self._max_dt = _parse("max", max) if max else None
 
             if self._min_dt and self._max_dt and self._max_dt < self._min_dt:
                 raise generator_config_error(code=IssueCode.DATETIME_MAX_BEFORE_MIN)

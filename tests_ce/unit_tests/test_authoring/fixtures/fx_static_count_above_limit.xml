@@ -1,0 +1,5 @@
+<setup rngSeed="1">
+    <generate name="customers" count="50">
+        <key name="id" generator="IncrementGenerator"/>
+    </generate>
+</setup>
