@@ -50,6 +50,7 @@ class RunRequest:
     log_level: int = logging.INFO
     statement_transformer: StatementTransformer | None = None
     profile_loader: Callable[[Path, str], dict[str, str]] | None = None
+    included_statement_transformer: StatementTransformer | None = None
 
 
 @dataclass(frozen=True)

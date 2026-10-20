@@ -122,6 +122,9 @@ def _snapshot_workspace(source: Path, destination: Path) -> None:
                 if stat.S_ISREG(info.st_mode):
                     copy_file(path, output, info, directory_fd=directory_fd)
                 elif stat.S_ISDIR(info.st_mode):
+                    # Host Python environments are not model resources.
+                    if depth == 0 and entry.name in {".venv", "venv"}:
+                        continue
                     output.mkdir()
                     if os.name == "posix":
                         child_fd = os.open(
@@ -207,7 +210,7 @@ def _decode_reply(payload: bytes, request: BoundedExecutionRequest) -> BoundedEx
                     if constructor_reason is not None
                     else f"{definition.title} at {'/'.join(path)}."
                     if definition is not None
-                    else "Bounded CE execution refused an unsupported side effect."
+                    else message.message
                     if message.policy_refusal
                     else "Bounded CE execution failed."
                 ),
@@ -409,6 +412,7 @@ class CeBoundedExecutor:
     ) -> BoundedExecutionEvidence:
         command = [
             sys.executable,
+            "-P",
             "-m",
             "datamimic_ce.authoring.adapters.bounded_executor_child",
             str(request_file),
@@ -434,7 +438,7 @@ class CeBoundedExecutor:
                 if process.poll() is not None:
                     result = _failure(
                         AuthoringSystemDiagnosticCode.CHILD_CRASH,
-                        "Bounded child exited without evidence.",
+                        f"Bounded child exited without evidence (exit code {process.returncode}).",
                         request.max_count,
                     )
                     break

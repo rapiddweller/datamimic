@@ -155,7 +155,7 @@ captured = {}
 
 def start_with_stubs():
     from datamimic_ce.interfaces.mcp import server
-    server.create_server = lambda: object()
+    server.create_server = lambda *, workspace_root=None: object()
     server.build_sse_app = lambda current, api_key: captured.update(api_key=api_key) or object()
     cli.serve()
 
@@ -242,7 +242,7 @@ from datamimic_ce.interfaces.mcp import cli
 events = []
 def start_with_stub():
     from datamimic_ce.interfaces.mcp import server
-    server.create_server = lambda: events.append("server")
+    server.create_server = lambda *, workspace_root=None: events.append("server")
     cli.serve()
 cli.app = start_with_stub
 try:

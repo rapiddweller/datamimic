@@ -642,6 +642,8 @@ def _properties_schema(tag: str) -> dict[str, object]:
         field_schema = _inline_type_schema(field.rebuild_annotation())
         if field.description:
             field_schema.setdefault("description", field.description)
+        if field.examples and "examples" not in field_schema:
+            field_schema["examples"] = field.examples
         properties[name] = field_schema
         if field.is_required():
             required.append(name)

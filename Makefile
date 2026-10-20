@@ -1,7 +1,8 @@
-.PHONY: help install test test-unit test-integration test-functional coverage coverage-unit typecheck lint format check architecture-check architecture-definition-check architecture-version architecture-report architecture-validation-receipt architecture-cycle-check installed-authoring-check clean
+.PHONY: help install test test-unit test-integration test-functional coverage coverage-unit typecheck lint format check architecture-check architecture-definition-check architecture-version architecture-report architecture-validation-receipt architecture-cycle-check installed-authoring-check agent-plugin-check agent-plugin-package clean
 
 PYTHON ?= python
 INSTALLED_AUTHORING_ARGS ?=
+AGENT_PLUGIN_ARCHIVE ?= test-artifacts/agent-plugin/datamimic.zip
 
 PACKAGE := datamimic_ce
 TESTS := tests_ce
@@ -15,6 +16,8 @@ help:
 	@echo "Available targets:"
 	@echo "  install           Install project dependencies via uv"
 	@echo "  installed-authoring-check  Check an installed wheel in an isolated workspace"
+	@echo "  agent-plugin-check  Check native plugin metadata and contained skill resources"
+	@echo "  agent-plugin-package  Build the separate agent plugin ZIP"
 	@echo "  test              Run the full test suite"
 	@echo "  test-unit         Run unit tests only"
 	@echo "  test-integration  Run integration tests only"
@@ -36,6 +39,13 @@ install:
 
 installed-authoring-check:
 	$(PYTHON) -I "$(CURDIR)/script/check_installed_authoring.py" $(INSTALLED_AUTHORING_ARGS)
+
+agent-plugin-check:
+	$(PYTHON) -m pytest -q tests_ce/unit_tests/test_docs/test_agent_plugin.py
+
+agent-plugin-package: agent-plugin-check
+	mkdir -p "$(dir $(AGENT_PLUGIN_ARCHIVE))"
+	cd plugins && $(PYTHON) -m zipfile -c "$(abspath $(AGENT_PLUGIN_ARCHIVE))" datamimic
 
 test:
 	pytest -q

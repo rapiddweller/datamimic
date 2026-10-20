@@ -88,6 +88,12 @@ def count_source(
     if source_format is SourceFileFormat.DBUNIT_XML:
         entity = resolve_source_entity(request.source_entity, request.source_type, request.name)
         return len(FileUtil.read_dbunit_to_dict_list(request.descriptor_dir / request.source, entity))
+    if source_format is SourceFileFormat.WEIGHTED_CSV:
+        return len(
+            FileUtil.read_weight_csv(
+                request.descriptor_dir / request.source, request.separator or request.default_separator
+            )
+        )
     if source_format is not None:
         return len(
             load_source_rows(
@@ -161,7 +167,7 @@ def read_generate_file_source(request: GenerateFileSourceRequest) -> GenerateFil
             name=Path(request.source).name,
             location=DescriptorLocation(EL_GENERATE, attribute="source"),
             guidance=(
-                "A headerless weighted .wgt.csv source is supported only by <key source=...>. "
+                "A headerless weighted .wgt.csv source is supported by <key source=...> and <variable source=...>. "
                 "Add a header row to read it as plain unweighted CSV at <generate>."
             ),
         )

@@ -6,11 +6,11 @@
 >
 > 👉 **Enterprise Platform:** [datamimic.io](https://datamimic.io) &nbsp;|&nbsp; 📘 **Docs:** [docs.datamimic.io](https://docs.datamimic.io) &nbsp;|&nbsp; 📅 **Book a strategy call:** [datamimic.io/contact](https://datamimic.io/contact)
 >
-> 🤖 **AI agent?** Read [`AGENTS.md`](AGENTS.md). Use `datamimic authoring build -` with transient DM JSON and transaction expectations; repair diagnostics, stop on `outcome=ready`, and persist `artifact.compiled_xml`.
+> 🤖 **AI agent?** Install the [DATAMIMIC plugin for Codex or Claude Code](docs/agent_plugin.md), or read the [consumer skill](plugins/datamimic/skills/generate-test-data/SKILL.md). Repository contributors also use [`AGENTS.md`](AGENTS.md).
 
 ---
 
-[![CI](https://img.shields.io/badge/CI-passing-brightgreen.svg)](https://github.com/rapiddweller/datamimic/actions)
+[![CI](https://github.com/rapiddweller/datamimic/actions/workflows/main.yml/badge.svg?branch=development)](https://github.com/rapiddweller/datamimic/actions)
 [![Coverage](https://sonarcloud.io/api/project_badges/measure?project=rapiddweller_datamimic&metric=coverage)](https://sonarcloud.io/summary/new_code?id=rapiddweller_datamimic)
 [![Maintainability](https://sonarcloud.io/api/project_badges/measure?project=rapiddweller_datamimic&metric=sqale_rating)](https://sonarcloud.io/summary/new_code?id=rapiddweller_datamimic)
 [![Python](https://img.shields.io/badge/Python-3.11%2B-blue.svg)](https://www.python.org/downloads/)
@@ -51,20 +51,23 @@ The Enterprise Platform adds the governed workflows, scanners, dashboards, and e
 
 ## AI agents: author, verify, and run data models
 
-Install CE with `pip install datamimic-ce`; in this checkout use
-`.venv/bin/datamimic`. XML is the persisted executable project. DM JSON is its
+The [agent plugin](docs/agent_plugin.md) prepares CE in your project environment
+when needed. For manual installation, use `python -m pip install datamimic-ce`
+from PyPI. These instructions describe CE 5.0.
+
+XML is the persisted executable project. DM JSON is its
 transient agent representation; expectations and role declarations belong to
 `BuildRequestV4`, separately from the XML.
 
 | Need | Command |
 |---|---|
-| Discover the running contracts | `datamimic authoring schema` / `schema --name build_request_v4` |
-| Discover CE vocabulary | `datamimic authoring capabilities` / `capabilities --full` |
+| Discover the running contracts | `datamimic authoring schema` / `datamimic authoring schema --name build_request_v4` |
+| Discover CE vocabulary | `datamimic authoring capabilities` / `datamimic authoring capabilities --full` |
 | Inspect one element | `datamimic authoring capability --domain element --name generate` |
 | Read focused guidance | `datamimic authoring reference --topic assembly --name model` |
-| Compile/decompile supported syntax | `datamimic authoring compile -` / `decompile model.xml` |
+| Compile/decompile supported syntax | `datamimic authoring compile -` / `datamimic authoring decompile model.xml` |
 | Compile and prove a transaction | `datamimic authoring build -` |
-| Inspect existing XML safely | `datamimic authoring lint model.xml` / `dry-run model.xml` |
+| Inspect existing XML safely | `datamimic authoring lint model.xml` / `datamimic authoring dry-run model.xml` |
 | Execute the persisted project | `datamimic run model.xml` |
 
 Authoring commands default to JSON and accept files or `-` for stdin. A ready
@@ -77,21 +80,21 @@ prove delivery to an external database.
 ### Prompt to paste into an agent
 
 ```text
-Create the dataset I describe with DATAMIMIC. Read AGENTS.md and use the project
-CLI. Submit a BuildRequestV4 with transient DM JSON, expectations for my stated
-requirements, and identifier/FK roles where needed. Repair the reported paths
+Create the dataset I describe with the DATAMIMIC plugin's generate-test-data
+skill and the project CLI. Submit a BuildRequestV4 with transient DM JSON,
+expectations for my stated requirements, and identifier/FK roles where needed. Repair the reported paths
 before retrying. Stop on outcome=ready, persist artifact.compiled_xml, and return
 its path with the separate bounded verification evidence. Execute the XML only
 if I requested real execution.
 ```
 
 [Worked transactions](docs/examples/authoring.md) cover nested foreign keys,
-memstore readback and time series. Existing `AuthoringSpecV1` projects use the
-[one-time migration](docs/migrations/authoring-errors.md).
+memstore readback and time series. Return a [human-readable model review](plugins/datamimic/skills/generate-test-data/references/review.md)
+with the XML and verification evidence.
 
 ### Optional MCP adapter
 
-`pip install "datamimic-ce[mcp]"` adds the same application as typed MCP tools:
+`python -m pip install "datamimic-ce[mcp]"` adds the same application as typed MCP tools:
 Build, compile/decompile, discovery, lint and bounded execution. Registration and
 request mapping are in the [MCP quickstart](docs/mcp_quickstart.md).
 
@@ -307,7 +310,7 @@ print(f"{patient.full_name}, {patient.age}, {patient.conditions}")
 ## Quickstart — Community Edition
 
 ```bash
-pip install datamimic-ce
+python -m pip install datamimic-ce
 ```
 
 For database and MongoDB connections, prefer [connection profiles](docs/developer_guide.md#database-and-mongodb-connection-profiles).
@@ -504,7 +507,7 @@ response = generate_domain({
 # Same CE version + request + seed + clock → same output within the tested boundary.
 ```
 
-**2. Deterministic data backend for AI agents and LLM tooling.** The CLI and Python API are the baseline surfaces for seeded, verifiable generation. The optional MCP adapter (`pip install "datamimic-ce[mcp]"`) exposes the canonical Build, codec, discovery, lint, and bounded-run authoring operations. Domain-facade outputs include a `determinism_proof.content_hash`, so Python callers can re-execute within the tested compatibility boundary and check whether the data is identical — useful for agent regression tests and any workflow where the data an agent saw must be reconstructable.
+**2. Deterministic data backend for AI agents and LLM tooling.** The CLI and Python API are the baseline surfaces for seeded, verifiable generation. The optional [MCP adapter](docs/mcp_quickstart.md) exposes the canonical Build, codec, discovery, lint, and bounded-run authoring operations. Domain-facade outputs include a `determinism_proof.content_hash`, so Python callers can re-execute within the tested compatibility boundary and check whether the data is identical — useful for agent regression tests and any workflow where the data an agent saw must be reconstructable.
 
 **3. Pseudonymization of staging and QA exports.** Manual model in CE (XML pipeline), no scanner license required. Seeded mode for stable regression test data; non-seeded mode for one-time deliveries that are not replay-stable. See the [Pseudonymization section above](#pseudonymization--ce-manual-model).
 

@@ -5,12 +5,13 @@ from dataclasses import dataclass
 from enum import Enum
 from random import Random
 
-from datamimic_ce.engine.dsl.api import EL_VARIABLE, VariableStatement
+from datamimic_ce.engine.dsl.api import EL_VARIABLE, SourceDistribution, VariableStatement
 from datamimic_ce.engine.dsl.vocabulary.source_capabilities import SourceFileFormat, source_file_format_for
 from datamimic_ce.engine.io.api import (
     DataSourcePagination,
     RegisteredClient,
     VariableSourceRequest,
+    WeightedDataSource,
     WeightedEntityDataSource,
     get_distributed_data,
     get_unique_data,
@@ -22,7 +23,7 @@ from datamimic_ce.engine.io.api import (
 from datamimic_ce.engine.runtime.contexts.context import Context, SetupContext
 from datamimic_ce.engine.runtime.scripting.evaluation import interpolate_variables
 from datamimic_ce.engine.runtime.tasks.sources.length import data_source_cache_key
-from datamimic_ce.errors import IssueCode, task_config_error
+from datamimic_ce.errors import DescriptorLocation, IssueCode, task_config_error
 
 
 class VariableSourcePlanKind(str, Enum):  # noqa: UP042 - Preserve the existing enum string form.
@@ -41,7 +42,7 @@ class VariableSourcePlan:
     kind: VariableSourcePlanKind
     data: Iterable[object] | None = None
     client: RegisteredClient | None = None
-    weighted_source: WeightedEntityDataSource | None = None
+    weighted_source: WeightedEntityDataSource | WeightedDataSource | None = None
     selector: str | None = None
     prefix: str = ""
     suffix: str = ""
@@ -107,11 +108,28 @@ def plan_variable_source(
     source_format = source_file_format_for(EL_VARIABLE, source)
     separator = stmt.separator or context.default_separator
 
-    if source_format is SourceFileFormat.WEIGHTED_ENTITY_CSV:
+    if source_format is SourceFileFormat.WEIGHTED_CSV and (
+        force_full_pool or stmt.unique or stmt.distribution is not SourceDistribution.RANDOM
+    ):
+        raise task_config_error(
+            code=IssueCode.TASK_VARIABLE_SOURCE_UNSUPPORTED,
+            source=source,
+            name=stmt.name,
+            guidance="Scalar weighted CSV samples with replacement; remove unique/storage and use random distribution.",
+            location=DescriptorLocation("variable", attribute="source"),
+        )
+
+    if source_format in {SourceFileFormat.WEIGHTED_ENTITY_CSV, SourceFileFormat.WEIGHTED_CSV}:
         seeded = context.derive_seeded_rng()
         return VariableSourcePlan(
             kind=VariableSourcePlanKind.WEIGHTED,
-            weighted_source=WeightedEntityDataSource(
+            weighted_source=WeightedDataSource(
+                file_path=context.root.descriptor_dir / source,
+                separator=separator,
+                rng=seeded if seeded is not None else Random(),
+            )
+            if source_format is SourceFileFormat.WEIGHTED_CSV
+            else WeightedEntityDataSource(
                 file_path=context.root.descriptor_dir / source,
                 separator=separator,
                 rng=seeded if seeded is not None else Random(),

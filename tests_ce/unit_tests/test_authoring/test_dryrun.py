@@ -145,7 +145,7 @@ def test_dry_run_refuses_execute_in_included_descriptor(tmp_path: Path, body: st
     assert [diagnostic.code for diagnostic in result.diagnostics] == [AuthoringRuleId.SIDE_EFFECT]
 
 
-def test_dry_run_refuses_unbounded_include_even_when_side_effects_allowed(tmp_path: Path) -> None:
+def test_dry_run_caps_included_counts_even_when_side_effects_allowed(tmp_path: Path) -> None:
     (tmp_path / "included.xml").write_text(
         '<setup><generate name="rows" count="20"><key name="id" constant="1"/></generate></setup>',
         encoding="utf-8",
@@ -155,7 +155,12 @@ def test_dry_run_refuses_unbounded_include_even_when_side_effects_allowed(tmp_pa
 
     result = _execute_file(descriptor, max_count=1, allow_side_effects=True)
 
-    assert not result.ok and [diagnostic.code for diagnostic in result.diagnostics] == [AuthoringRuleId.SIDE_EFFECT]
+    assert result.ok, result.diagnostics
+    (product,) = result.captured.products
+    assert product.rows == ({"id": "1"},)
+    assert product.capture.requested == 20
+    assert product.capture.observed == product.capture.limit == 1
+    assert not product.capture.complete
 
 
 def test_dry_run_keeps_properties_include(tmp_path: Path) -> None:

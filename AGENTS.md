@@ -8,6 +8,10 @@ agent representation. Expectations, roles and verification options belong to a
 `BuildRequestV4` transaction; decompiling XML cannot recover those declarations.
 The same explicit seed reproduces data within the tested compatibility boundary.
 
+Consumer workflow and project-mode routing live in the installable
+[DATAMIMIC skill](plugins/datamimic/skills/generate-test-data/SKILL.md).
+See [client setup](docs/agent_plugin.md); a package installation does not include this repository guide.
+
 ## Tool selection
 
 Use `.venv/bin/datamimic` in this checkout. Install the optional MCP adapter only
@@ -17,11 +21,11 @@ when the calling environment uses MCP; both transports call the same application
 |---|---|
 | Discover vocabulary | `datamimic authoring capabilities` (`--full` for contracts) |
 | Inspect one element | `datamimic authoring capability --domain element --name generate` |
-| Discover the document/Build schema | `datamimic authoring schema` / `schema --name build_request_v4` |
+| Discover the document/Build schema | `datamimic authoring schema` / `datamimic authoring schema --name build_request_v4` |
 | Read a focused reference | `datamimic authoring reference --topic assembly --name starter` |
-| Compile/decompile syntax | `datamimic authoring compile -` / `decompile model.xml` |
+| Compile/decompile syntax | `datamimic authoring compile -` / `datamimic authoring decompile model.xml` |
 | Compile and prove a transaction | `datamimic authoring build -` |
-| Validate/inspect existing XML | `datamimic authoring lint model.xml` / `dry-run model.xml` |
+| Validate/inspect existing XML | `datamimic authoring lint model.xml` / `datamimic authoring dry-run model.xml` |
 | Run bounded XML with explicit write opt-in | `datamimic authoring run model.xml --allow-side-effects` |
 | Execute the persisted project normally | `datamimic run model.xml` |
 | Export editor/authoring contracts | `datamimic authoring export-contract contracts.zip` |
@@ -90,9 +94,7 @@ producer identifier and consumer foreign-key role pair. For time series, literal
 
 For an existing XML descriptor: `authoring lint` → `authoring dry-run`, inspect the
 bounded evidence, then use normal `datamimic run` when execution is requested.
-Legacy `AuthoringSpecV1` projects use the one-time migration in
-[the migration guide](docs/migrations/authoring-errors.md); do not restore an old
-compiler, root `scaffold` command or `model.dm.json` workflow.
+For upgrades, see [the migration guide](docs/migrations/authoring-errors.md).
 
 ## Benchmarking local Ollama models
 

@@ -8,6 +8,8 @@ import subprocess
 import sys
 from pathlib import Path
 
+from datamimic_ce.errors import IssueCode
+
 ROOT = Path(__file__).resolve().parents[2]
 TASKS_CONTRACT = ROOT / "docs/architecture/inner/runtime/tasks/architecture-contract.json"
 
@@ -61,20 +63,22 @@ def test_cli_entrypoints_resolve_live_registries_outside_checkout(tmp_path: Path
     )
     unsupported.write_text('<setup rngSeed="1"><not-registered/></setup>', encoding="utf-8")
 
-    capabilities = _cli(tmp_path, "capabilities", "--full")
+    capabilities = _cli(tmp_path, "authoring", "capabilities")
     assert capabilities.returncode == 0, capabilities.stderr
     manifest = json.loads(capabilities.stdout)
-    assert {"setup", "generate", "key"} <= set(manifest["elements"])
-    assert manifest["targets"]
+    assert {"setup", "generate", "key"} <= set(manifest["element"])
+    assert manifest["target_family"]
 
-    accepted = _cli(tmp_path, "lint", valid.name, "--format", "json")
+    accepted = _cli(tmp_path, "authoring", "lint", valid.name)
     assert accepted.returncode == 0, accepted.stderr
     assert json.loads(accepted.stdout)["ok"] is True
 
-    rejected = _cli(tmp_path, "lint", unsupported.name, "--format", "json")
+    rejected = _cli(tmp_path, "authoring", "lint", unsupported.name)
     assert rejected.returncode == 1
     diagnostics = json.loads(rejected.stdout)["diagnostics"]
-    assert any(diagnostic["rule"] == "DM101" for diagnostic in diagnostics)
+    assert any(
+        diagnostic["ce_error"]["issue_code"] == IssueCode.PARSER_INVALID_CHILD.value for diagnostic in diagnostics
+    )
 
 
 def test_cold_task_dispatch_keeps_statement_fallback_and_custom_registration(tmp_path: Path) -> None:
