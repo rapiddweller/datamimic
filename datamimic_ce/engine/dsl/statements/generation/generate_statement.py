@@ -153,14 +153,6 @@ class GenerateStatement(CompositeStatement):
         return self._converter
 
     @property
-    def bounded_count_limit(self) -> int | None:
-        return self._bounded_count_limit
-
-    @bounded_count_limit.setter
-    def bounded_count_limit(self, value: int | None) -> None:
-        self._bounded_count_limit = value
-
-    @property
     def num_process(self) -> int | None:
         return self._num_process
 
@@ -199,3 +191,11 @@ class GenerateStatement(CompositeStatement):
         # GenerateModel validator guarantees start and end are non-None when interval is.
         assert self._start is not None and self._end is not None
         return TimeSeriesConfig.parse(self._start, self._end, self._interval)
+
+    @property
+    def bounded_count_limit(self) -> int | None:
+        return self._bounded_count_limit
+
+    @bounded_count_limit.setter
+    def bounded_count_limit(self, value: int | None) -> None:
+        self._bounded_count_limit = value
