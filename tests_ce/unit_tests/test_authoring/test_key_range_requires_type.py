@@ -2,7 +2,7 @@
 # Copyright (c) 2023-2026 Rapiddweller Asia Co., Ltd.
 # This software is licensed under the MIT License. See LICENSE.
 
-"""<key min/max/granularity> shape only a type= draw and need type= as the only value source.
+"""<key min/max/granularity> are accepted only where the numeric type= range draw consumes them.
 
 Next to generator= or values= they were silently ignored: a seeded DateTimeGenerator
 then produced one constant date for every row while lint and Build reported ready."""
@@ -39,16 +39,23 @@ def test_lint_names_the_rule_and_exact_element(fixture: str, rule: str, line: in
 
 
 @pytest.mark.parametrize(
-    "attributes",
+    ("attributes", "reason"),
     [
-        {"generator": "IntegerGenerator", "min": "1", "max": "5"},
-        {"type": "int", "generator": "IncrementGenerator", "min": "1", "max": "5"},
+        ({"generator": "IntegerGenerator", "min": "1", "max": "5"}, "apply only when type= is its only value source"),
+        (
+            {"type": "int", "generator": "IncrementGenerator", "min": "1", "max": "5"},
+            "apply only when type= is its only value source",
+        ),
+        ({"type": "string", "min": "1", "max": "5"}, "requires type='int', 'float', or 'decimal', not 'string'"),
+        ({"type": "float", "granularity": "0.5"}, "'granularity' on a <key> needs a range"),
+        ({"type": "int", "min": "1", "max": "9", "granularity": "2"}, "requires type='float' or 'decimal'"),
     ],
 )
-def test_engine_rejects_range_that_is_not_the_only_value_source(attributes: dict[str, str]) -> None:
-    with pytest.raises(ValidationError, match="apply only when type= is its only value source"):
+def test_engine_rejects_range_attributes_no_draw_consumes(attributes: dict[str, str], reason: str) -> None:
+    with pytest.raises(ValidationError, match=reason):
         KeyModel.model_validate({"name": "n", **attributes})
 
 
 def test_engine_keeps_typed_range() -> None:
     assert KeyModel.model_validate({"name": "n", "type": "int", "min": "1", "max": "5"}).min == "1"
+    assert KeyModel.model_validate({"name": "n", "type": "decimal", "min": "0", "granularity": "0.01"}).granularity
