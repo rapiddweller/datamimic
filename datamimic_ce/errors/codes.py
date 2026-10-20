@@ -51,6 +51,7 @@ class IssueSeverity(StrEnum):
 
 
 class IssueCode(StrEnum):
+    TASK_COUNT_ABOVE_BOUNDED_LIMIT = "I800"
     TASK_COUNT_SELECTOR_UNSUPPORTED_CLIENT = "I808"
     TASK_MP_PLATFORM_UNSUPPORTED = "I848"
 

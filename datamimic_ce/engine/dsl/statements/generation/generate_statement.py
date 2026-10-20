@@ -44,6 +44,8 @@ class GenerateStatement(CompositeStatement):
         self._start = model.start
         self._end = model.end
         self._interval = model.interval
+        # Set only by bounded Authoring execution: runtime counts above it are refused, never truncated.
+        self._bounded_count_limit: int | None = None
 
     @property
     def name(self) -> str:
@@ -149,6 +151,14 @@ class GenerateStatement(CompositeStatement):
     @property
     def converter(self) -> str | None:
         return self._converter
+
+    @property
+    def bounded_count_limit(self) -> int | None:
+        return self._bounded_count_limit
+
+    @bounded_count_limit.setter
+    def bounded_count_limit(self, value: int | None) -> None:
+        self._bounded_count_limit = value
 
     @property
     def num_process(self) -> int | None:

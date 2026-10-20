@@ -2,17 +2,39 @@
 
 from typing import SupportsIndex, SupportsInt
 
+from datamimic_ce.engine.dsl.vocabulary.constants.attribute_constants import ATTR_COUNT
 from datamimic_ce.engine.runtime.contexts.context import Context
-from datamimic_ce.errors import DomainError, IssueCode, UserErrorBase, task_config_error
+from datamimic_ce.errors import (
+    GUIDANCE_COUNT_SCOPE,
+    DescriptorLocation,
+    DomainError,
+    IssueCode,
+    TaskConfigError,
+    UserErrorBase,
+    task_config_error,
+)
 from datamimic_ce.randomness import RandomSource
 
 
-def get_int_count(count: str | None, context: Context) -> int | None:
+def get_int_count(count: str | None, context: Context, *, element_tag: str) -> int | None:
     if count is None:
         return None
     if count.isdigit():
         return int(count)
-    value = context.evaluate_python_expression(count[1:-1])
+    try:
+        value = context.evaluate_python_expression(count[1:-1], diagnostic_expression=ATTR_COUNT)
+    except TaskConfigError as error:
+        cause = error.__cause__
+        if error.issue_code is not IssueCode.TASK_EXPRESSION_EVAL_FAILED or not isinstance(
+            cause, NameError | AttributeError
+        ):
+            raise
+        raise task_config_error(
+            code=IssueCode.TASK_EXPRESSION_EVAL_FAILED,
+            expr=ATTR_COUNT,
+            error=f"{type(cause).__name__}: {GUIDANCE_COUNT_SCOPE}",
+            location=DescriptorLocation(element_tag, attribute=ATTR_COUNT),
+        ) from cause
     if isinstance(value, str | bytes | bytearray | SupportsInt | SupportsIndex):
         try:
             return int(value)

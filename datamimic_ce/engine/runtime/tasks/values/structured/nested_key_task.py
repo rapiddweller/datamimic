@@ -7,6 +7,7 @@
 import copy
 
 from datamimic_ce.engine.dsl.api import DATA_TYPE_DICT, DATA_TYPE_LIST, NestedKeyStatement
+from datamimic_ce.engine.dsl.vocabulary.constants.element_constants import EL_NESTED_KEY
 from datamimic_ce.engine.io.api import DataSourcePagination, window_nested_key_rows
 from datamimic_ce.engine.runtime.contexts.context import Context, SetupContext
 from datamimic_ce.engine.runtime.contexts.geniter_context import GenIterContext
@@ -312,7 +313,7 @@ class NestedKeyTask(GenSubTask):
 
         :return:
         """
-        count = get_int_count(self._statement.count, context)
+        count = get_int_count(self._statement.count, context, element_tag=EL_NESTED_KEY)
         return resolve_count(count, self._statement.min_count, self._statement.max_count, context.rng)
 
     def _post_convert(self, value: object) -> object:

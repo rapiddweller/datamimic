@@ -9,4 +9,10 @@ GUIDANCE_EMPTY_VALUE = "Provide a non-empty value or remove date format attribut
 GUIDANCE_VALID_LOCALE = "Use a valid locale like 'en_US'."
 GUIDANCE_PROJECT_ENV = "Check your project environment configuration or uploaded assets."
 
+# count is evaluated in the enclosing record, so the generic hint (parent.name) points one level too high.
+GUIDANCE_COUNT_SCOPE = (
+    "count is evaluated in the enclosing record: reference its fields bare or as this.name "
+    "(e.g. int(headcount)); parent.name already points one level above that record."
+)
+
 GUIDANCE_DESCRIPTOR_ENV = "Check the descriptor file in your project environment configuration or uploaded assets."
