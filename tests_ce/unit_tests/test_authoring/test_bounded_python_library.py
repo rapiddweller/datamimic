@@ -94,6 +94,10 @@ def test_execute_outside_a_setup_level_python_library_is_refused_by_policy(filen
         ("x = __builtins__['open']\n", False, Reason.FILE_OR_DYNAMIC_CODE_BUILTIN),
         ("def f():\n    return globals()\n", False, Reason.FILE_OR_DYNAMIC_CODE_BUILTIN),
         ("def f():\n    return f.__globals__\n", False, Reason.FILE_OR_DYNAMIC_CODE_BUILTIN),
+        ("def f():\n    return getattr(f, '__globals__')\n", False, Reason.FILE_OR_DYNAMIC_CODE_BUILTIN),
+        ("import random\nDATA = random.__loader__\n", False, Reason.FILE_OR_DYNAMIC_CODE_BUILTIN),
+        ("from re import compile\nPATTERN = compile('a+')\n", False, None),
+        ("class Row:\n    def as_dict(self):\n        return dict(self.__dict__)\n", False, None),
         ("def broken(:\n", False, None),
     ],
 )

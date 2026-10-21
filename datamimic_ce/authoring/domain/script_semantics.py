@@ -112,11 +112,15 @@ ADMITTED_IMPORT_ROOTS = frozenset(
 )
 ADMITTED_PACKAGES = ("datamimic_ce.domains",)
 # Referenced at all, not only called: an alias such as `write = open` or `__builtins__["open"]` reaches them too.
+# A name the library imports itself (`from re import compile`) is that import, not the builtin.
 REFUSED_NAMES = frozenset(
     {"open", "exec", "eval", "compile", "__import__", "__builtins__", "globals", "locals", "vars"}
 )
-# Introspection that leads back to the builtins or the running code, e.g. `f.__globals__["__builtins__"]`.
-REFUSED_ATTRIBUTES = frozenset({"__builtins__", "__globals__", "__code__", "__subclasses__", "__dict__"})
+# Introspection that leads back to the builtins, the running code or the file loader.
+REFUSED_ATTRIBUTES = frozenset(
+    {"__builtins__", "__globals__", "__code__", "__subclasses__", "__loader__", "__spec__"}
+)
+_ATTRIBUTE_ACCESSORS = frozenset({"getattr", "setattr", "delattr"})
 
 
 class LibraryRefusalReason(StrEnum):
@@ -176,6 +180,17 @@ def _admitted(module: str) -> bool:
     )
 
 
+def _accesses_refused_attribute(node: ast.Call) -> bool:
+    """getattr(x, "__globals__") and its setattr/delattr siblings name the attribute as a string constant."""
+    return (
+        isinstance(node.func, ast.Name)
+        and node.func.id in _ATTRIBUTE_ACCESSORS
+        and len(node.args) >= 2
+        and isinstance(node.args[1], ast.Constant)
+        and node.args[1].value in REFUSED_ATTRIBUTES
+    )
+
+
 def python_library_refusal(source: str, *, seeded: bool) -> LibraryRefusal | None:
     """The earliest rule ``source`` breaks, or None. Unparseable source is left to the runtime's diagnostic."""
     try:
@@ -189,6 +204,12 @@ def python_library_refusal(source: str, *, seeded: bool) -> LibraryRefusal | Non
         for inner in ast.walk(body)
         if isinstance(inner, (ast.Import, ast.ImportFrom))
     }
+    imported_names = {
+        alias.asname or alias.name
+        for node in ast.walk(tree)
+        if isinstance(node, (ast.Import, ast.ImportFrom))
+        for alias in node.names
+    }
     refusals: list[LibraryRefusal] = []
     for node in ast.walk(tree):
         if isinstance(node, (ast.Import, ast.ImportFrom)):
@@ -196,8 +217,10 @@ def python_library_refusal(source: str, *, seeded: bool) -> LibraryRefusal | Non
                 refusals.append(LibraryRefusal(LibraryRefusalReason.IMPORT_NOT_ADMITTED, node.lineno))
             elif seeded and id(node) in nested_imports:
                 refusals.append(LibraryRefusal(LibraryRefusalReason.IMPORT_INSIDE_BODY_UNDER_SEED, node.lineno))
-        elif (isinstance(node, ast.Name) and node.id in REFUSED_NAMES) or (
-            isinstance(node, ast.Attribute) and node.attr in REFUSED_ATTRIBUTES
+        elif (
+            (isinstance(node, ast.Name) and node.id in REFUSED_NAMES and node.id not in imported_names)
+            or (isinstance(node, ast.Attribute) and node.attr in REFUSED_ATTRIBUTES)
+            or (isinstance(node, ast.Call) and _accesses_refused_attribute(node))
         ):
             refusals.append(LibraryRefusal(LibraryRefusalReason.FILE_OR_DYNAMIC_CODE_BUILTIN, node.lineno))
     return min(refusals, key=lambda refusal: refusal.line) if refusals else None
