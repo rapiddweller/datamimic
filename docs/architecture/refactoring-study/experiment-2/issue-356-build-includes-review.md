@@ -2,7 +2,7 @@
 
 **Accepted within the local architecture review scope.** Reviewer: Astra (independent Opus 5.5 review agent, delegated by Alex).
 
-- Scope: `feat/build-includes`, base `287e9c87` (merged #362), b1 head `dab3bfc0` (`fbea1ad8` plus the Codex fixes `dab3bfc0`); the binding below is for slice b2 at `a4c9865a`.
+- Scope: `feat/build-includes`, base `287e9c87` (merged #362), b1 head `dab3bfc0` (`fbea1ad8` plus the Codex fixes `dab3bfc0`); the binding below is for slice b2 at `c79d23b8`.
 - This review rebinds the [issue 361 receipt](issue-361-bounded-containment-review.md) and keeps all of its assessments.
 - It does not authorize a merge and does not claim that every native rule passes.
 
@@ -10,7 +10,7 @@
 
 | Item | Value |
 |---|---|
-| Source | `1db82bc8cbef8a6a1102bf1a0e2669526c0062a5ab0cdb0200288c9b0909ad26` |
+| Source | `02ce6b71d63c12fd8ad86968bc91f180a5e88a9fa6cc078f2e1c2225b8ca1530` |
 | Target (unchanged) | `d83d4df102a2588a54598e26cb045b721cb024a118f51e31592b135050d4e78e` |
 | Analyzer (unchanged; ArchKeel 4.0.1, Python 3.11.12) | `bb1a3262d3fdd38c3e9a6af980cc063281ae98ab1c28c89c2c5be6dfb450744f` |
 | Validation | `3acc79e944ffb66a675ce1226c213590f21d18d2cfba8afdc39a5d7da7c5892c` |
@@ -273,4 +273,26 @@ I probed `include_graph` with a project whose entry declares `entrydb` and whose
 - The validation digest changes only because one partially resolved call goes away (the dropped `el.get("id")` filter in the client comprehension): 13,274 analyzed, 2,029 partially resolved.
 
 **Tests:** the project-build, public-lint and dry-run-includes suites pass; ruff and mypy are clean.
+
+### Addendum: `c79d23b8` (Codex P2 on #365), accepted; `74d52cc6` was blocked
+
+**The fix.** It enforces the ADR rule that clients live in the entry, and does so earlier rather than tracking ancestry.
+- `include_graph` refuses any setup-level `<database>`/`<mongodb>` in a step before step lint runs.
+- The refusal is INCLUDE, phase POLICY, with the static text "Clients belong to the entry descriptor, not to an included step.", at the structural path `("include", uri, tag, "line", n)`.
+- It returns early, so a nested step that uses its includer's client no longer reports a misleading DM401 first.
+
+I probed a project whose step `model/a.xml` declares `stepdb`: the only finding is the INCLUDE refusal at `("include","model/a.xml","database","line",2)`.
+
+**SPOT:** the check moved out of `projection/acceptance._products`. It now exists only in the validator, and Build always runs `include_graph` before acceptance projection.
+
+**Paths outside Build:** plain lint and dry-run keep the `a4c9865a` scoping.
+
+**Redaction:** the text is static; the path carries the literal uri, the tag and the line.
+
+**`74d52cc6` was blocked.** Its `getroottree().getpath()` XPath added two unresolved calls, and ArchKeel failed with a budget overrun (1,426 → 1,428). The amended `c79d23b8` uses the structural path instead:
+- validation failures [];
+- 1,426 unresolved calls, and the decoded unresolved-call diff against b1 is empty;
+- the 20 diagnostics, the 314 UNKNOWN records and the contract are unchanged.
+
+**Tests:** 122 passed across the project build, public lint, dryrun includes, acceptance and Build workflow suites; ruff and mypy are clean.
 
