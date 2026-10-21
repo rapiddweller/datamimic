@@ -41,7 +41,7 @@ class DescriptorValidator(Protocol):
 
 
 class ProjectFiles(Protocol):
-    def read(self, path: PurePosixPath) -> bytes: ...
+    def read_project_file(self, path: PurePosixPath) -> bytes: ...
 
 
 class BoundedExecutor(Protocol):

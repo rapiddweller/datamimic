@@ -82,7 +82,7 @@ class AuthoringWorkspaceContext:
             raise ValueError("descriptor_path resolves outside the authoring workspace")
         return resolved_path
 
-    def read(self, path: PurePosixPath) -> bytes:
+    def read_project_file(self, path: PurePosixPath) -> bytes:
         """One project file by its workspace path, through the same contained reader."""
         return self.read_resource_bytes(self.resolve_descriptor_path(path))
 

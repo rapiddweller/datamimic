@@ -72,7 +72,7 @@ class Files:
     entry: str
     acceptance: BuildRequestV5
 
-    def read(self, path):
+    def read_project_file(self, path):
         files = {PROJECT_ENTRY_PATH: self.entry, PROJECT_ACCEPTANCE_PATH: self.acceptance.model_dump_json()}
         return files[path].encode()
 
