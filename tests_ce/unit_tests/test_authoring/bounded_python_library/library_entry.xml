@@ -1,0 +1,5 @@
+<setup rngSeed="17">
+    <!-- Project layout: the entry loads lib/, the included steps use it. -->
+    <execute uri="lib/select.scr.py"/>
+    <include uri="selection_step.xml"/>
+</setup>

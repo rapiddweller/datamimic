@@ -1,0 +1,7 @@
+<setup rngSeed="17">
+    <!-- The seeded entry decides: the included library's import inside a function is refused. -->
+    <include uri="library_step_refused.xml"/>
+    <generate name="selected" count="1" target="">
+        <key name="draw" script="draw()"/>
+    </generate>
+</setup>

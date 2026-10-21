@@ -324,7 +324,11 @@ def _requires_workspace_snapshot(request: BoundedExecutionRequest, workspace: Au
         if definition.tag == "demographics":
             check_resource(element.attrib.get("directory", "."))
         profile = definition.bounded_execution_profile
-        if profile.strategy is BoundedExecutionStrategy.UNSUPPORTED or profile.dependency_attribute:
+        # A library may read workspace files, and inline code names none in its attributes.
+        if (
+            profile.strategy in (BoundedExecutionStrategy.UNSUPPORTED, BoundedExecutionStrategy.PYTHON_LIBRARY)
+            or profile.dependency_attribute
+        ):
             requires_snapshot = True
         # These are exact DSL attribute names, not searches in source text.
         if set(element.attrib) & {"source", "uri", "script", "condition", "selector", "converter"}:

@@ -263,16 +263,16 @@ def _memstore_source_binding(
     )
 
 
-def _dry_run_hazards(root_stmt: object, *, includes_validated: bool) -> tuple[bool, bool]:
+def _dry_run_hazards(root_stmt: object, *, includes_validated: bool) -> tuple[tuple[object, ...], bool]:
     from datamimic_ce.engine.dsl.api import CompositeStatement, ExecuteStatement, IncludeStatement
 
-    has_execute = False
+    executes: list[object] = []
     has_unbounded_include = False
     pending = [root_stmt]
     while pending:
         stmt = pending.pop()
         if isinstance(stmt, ExecuteStatement):
-            has_execute = True
+            executes.append(stmt)
         elif isinstance(stmt, IncludeStatement):
             if "{" in stmt.uri or not (
                 stmt.uri.endswith(".properties") or (includes_validated and stmt.uri.endswith(".xml"))
@@ -280,17 +280,59 @@ def _dry_run_hazards(root_stmt: object, *, includes_validated: bool) -> tuple[bo
                 has_unbounded_include = True
         elif isinstance(stmt, CompositeStatement):
             pending.extend(stmt.sub_statements)
-    return has_execute, has_unbounded_include
+    return tuple(executes), has_unbounded_include
+
+
+def _refuse_unbounded_execute(
+    language: str | None,
+    *,
+    target: str | None,
+    script: str | None,
+    uri: str | None,
+    inline: str | None,
+    setup_level: bool,
+    descriptor_dir: Path,
+    seeded: bool,
+) -> None:
+    """Admit <execute> only as a setup-level Python library that passes the static library check (#332)."""
+    from datamimic_ce.authoring.domain.script_semantics import admits_python_library, python_library_refusal
+    from datamimic_ce.engine.dsl.api import ExecuteStatement, read_resource_bytes
+
+    if not setup_level or not admits_python_library(language, target=target, script=script):
+        raise _BoundedPolicyRefusal(
+            "Bounded execution admits <execute> only as a setup-level Python library without target or script"
+        )
+    if uri is not None:
+        try:
+            raw = str(read_resource_bytes(descriptor_dir / uri), "utf-8")
+        except (FileNotFoundError, UnicodeDecodeError):
+            return  # the runtime reports the missing or unreadable script itself
+        except ValueError as error:  # the contained reader refuses paths outside the private workspace
+            raise _BoundedPolicyRefusal("Python library uri must name a file inside the workspace") from error
+        origin = Path(uri).name
+    else:
+        raw = inline or ""
+        origin = "inline <execute>"
+    # Check exactly what ExecuteTask will run: it normalizes file and inline code alike.
+    refusal = python_library_refusal(ExecuteStatement.normalize_python_source(raw), seeded=seeded)
+    if refusal is not None:
+        raise _BoundedPolicyRefusal(f"{origin}: {refusal.message()}. {refusal.remediation()}")
 
 
 def _validate_bounded_includes(path: Path, *, allow_side_effects: bool) -> set[str]:
     """Check the literal dependency graph before any task, without changing native parse order."""
-    from datamimic_ce.engine.dsl.api import get_element_definition, parse_xml_file, read_resource_bytes
+    from datamimic_ce.engine.dsl.api import (
+        ExecuteStatement,
+        get_element_definition,
+        parse_xml_file,
+        read_resource_bytes,
+    )
     from datamimic_ce.engine.dsl.vocabulary.contracts.dsl_element import BoundedExecutionStrategy
 
     root = parse_xml_file(path)
     if not any(node.tag == "include" and not node.get("uri", "").endswith(".properties") for node in root.iter()):
         return set()
+    seeded = root.get("rngSeed") is not None
     active: set[Path] = set()
     products: set[str] = set()
     memstores: set[str] = set()
@@ -330,9 +372,24 @@ def _validate_bounded_includes(path: Path, *, allow_side_effects: bool) -> set[s
                     visit(dependency)
                 else:
                     raise _BoundedPolicyRefusal("Unsupported bounded include dependency type")
-            elif definition is None or (
-                definition.bounded_execution_profile.strategy is BoundedExecutionStrategy.UNSUPPORTED
-                and not (tag == "execute" and allow_side_effects)
+            elif (
+                definition is not None
+                and definition.bounded_execution_profile.strategy is BoundedExecutionStrategy.PYTHON_LIBRARY
+            ):
+                if not allow_side_effects:
+                    _refuse_unbounded_execute(
+                        ExecuteStatement.language(node.get("type"), node.get("uri")),
+                        target=node.get("target"),
+                        script=node.get("script"),
+                        uri=node.get("uri"),
+                        inline=node.text,
+                        setup_level=any(node is child for child in document),
+                        descriptor_dir=path.parent,
+                        seeded=seeded,
+                    )
+            elif (
+                definition is None
+                or definition.bounded_execution_profile.strategy is BoundedExecutionStrategy.UNSUPPORTED
             ):
                 raise _BoundedPolicyRefusal("Included descriptor has no proven bounded execution policy")
             if tag == "generate" or tag == "iterate":
@@ -467,6 +524,7 @@ def neutralize_for_dry_run(
     from datamimic_ce.engine.dsl.api import (
         CompositeStatement,
         DatabaseStatement,
+        ExecuteStatement,
         GenerateStatement,
         MongoDBStatement,
         SetupStatement,
@@ -474,9 +532,24 @@ def neutralize_for_dry_run(
     from datamimic_ce.engine.io.api import resolve_target_entity
 
     assert isinstance(root_stmt, SetupStatement)
-    has_execute, has_include = _dry_run_hazards(root_stmt, includes_validated=includes_validated)
-    if (has_execute and not allow_side_effects) or has_include:
-        raise _BoundedPolicyRefusal("bounded execution refuses execute or unresolved include side effects")
+    executes, has_include = _dry_run_hazards(root_stmt, includes_validated=includes_validated)
+    if has_include:
+        raise _BoundedPolicyRefusal("bounded execution refuses unresolved include side effects")
+    if not allow_side_effects and descriptor_dir is not None:
+        for execute in executes:
+            assert isinstance(execute, ExecuteStatement)
+            _refuse_unbounded_execute(
+                execute.type,
+                target=execute.target,
+                script=execute.script,
+                uri=execute.uri,
+                inline=execute.code,
+                setup_level=any(execute is child for child in root_stmt.sub_statements),
+                descriptor_dir=descriptor_dir,
+                seeded=root_stmt.rng_seed is not None,
+            )
+    elif not allow_side_effects and executes:
+        raise _BoundedPolicyRefusal("bounded execution refuses execute without a descriptor directory")
     memstores = _memstore_ids(root_stmt) | (included_memstores or set())
     memstore_producers = _memstore_producers(root_stmt, memstores)
     root_stmt.num_process = 1

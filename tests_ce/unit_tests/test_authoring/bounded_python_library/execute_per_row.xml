@@ -1,0 +1,9 @@
+<setup>
+    <!-- Refused before execution: an execute inside a record runs per row, it does not load a library. -->
+    <generate name="selected" count="1" target="">
+        <nestedKey name="detail" type="dict">
+            <execute type="python">value = 1</execute>
+            <key name="value" constant="1"/>
+        </nestedKey>
+    </generate>
+</setup>

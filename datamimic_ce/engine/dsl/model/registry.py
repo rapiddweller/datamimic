@@ -235,6 +235,7 @@ def _builtin_definitions() -> dict[str, ElementDefinition]:
                 ElementContentMode(ElementContentModeKind.SCRIPT, ("script",)),
                 ElementContentMode(ElementContentModeKind.INLINE),
             ),
+            bounded_execution_profile=BoundedExecutionProfile(BoundedExecutionStrategy.PYTHON_LIBRARY),
         ),
         ElementDefinition(EL_DATABASE, DatabaseModel, None, client_family=True, bounded_execution_profile=neutral),
         ElementDefinition(EL_MONGODB, MongoDBModel, None, client_family=True, bounded_execution_profile=neutral),

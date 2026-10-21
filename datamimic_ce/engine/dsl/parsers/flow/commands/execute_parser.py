@@ -11,9 +11,6 @@ from datamimic_ce.engine.dsl.statements.flow.commands.execute_statement import E
 from datamimic_ce.engine.dsl.vocabulary.constants.element_constants import EL_EXECUTE
 from datamimic_ce.errors import IssueCode, parser_validation_error
 
-# uri file extension -> execution language (when `type` is not given explicitly).
-_EXT_TYPE = {".py": "python", ".sql": "sql", ".sh": "bash"}
-
 
 class ExecuteParser(StatementParser):
     """Parse element "execute" to ExecuteStatement (a script file via ``uri`` XOR inline code)."""
@@ -33,12 +30,7 @@ class ExecuteParser(StatementParser):
 
     @staticmethod
     def _resolve_type(model: ExecuteModel) -> str:
-        if model.type:
-            return model.type
-        if model.uri:
-            ext = model.uri[model.uri.rfind(".") :].lower() if "." in model.uri else ""
-            inferred = _EXT_TYPE.get(ext)
-            if inferred is None:
-                raise parser_validation_error(code=IssueCode.PARSER_EXECUTE_TYPE_UNRESOLVED, uri=model.uri)
-            return inferred
-        return "python"  # inline default (flat statements; use <while>/<condition> or a .py file for blocks)
+        language = ExecuteStatement.language(model.type, model.uri)
+        if language is None:
+            raise parser_validation_error(code=IssueCode.PARSER_EXECUTE_TYPE_UNRESOLVED, uri=model.uri)
+        return language

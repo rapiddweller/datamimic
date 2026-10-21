@@ -1,0 +1,7 @@
+<setup rngSeed="17">
+    <!-- Refused: the seeded rebinding cannot reach an import inside a function body. -->
+    <execute uri="lib/import_in_function.scr.py"/>
+    <generate name="selected" count="1" target="">
+        <key name="draw" script="draw()"/>
+    </generate>
+</setup>

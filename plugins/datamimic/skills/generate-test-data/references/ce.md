@@ -68,6 +68,23 @@ original requirements and relative resource paths. `outcome: "ready"` is the
 stopping condition. Persist `artifact.compiled_xml` in the chosen project and
 retain the separate proof. Do not lint/dry-run a successful Build again.
 
+## Python libraries in Build
+
+Build runs a setup-level `<execute>` that loads Python (`uri="lib/x.scr.py"` or
+inline code) when the library passes a static check. Write a library of
+functions, classes and constants:
+- import only data modules (`random`, `datetime`, `math`, `json`, `collections`,
+  `faker`, `numpy`, `pandas`, `datamimic_ce.domains`, ...);
+- read no files and build no code (`open`, `eval`, `exec`, `compile`, `__import__`,
+  `getattr`, `globals`); call module functions qualified (`re.compile`);
+- under `rngSeed`, import at module level, never inside a function or class.
+
+A refusal names the file, line and rule; repair the library, not the model.
+SQL, shell, `target=`, `script=` and an `<execute>` inside a record stay outside
+bounded proof. A seeded model that loads Python always replays: a second run must
+reproduce every row, which also catches draws the static check cannot see.
+Load the library in the entry descriptor; names a step loads stay local to it.
+
 ## A model outside bounded proof
 
 If a preserved requirement needs an operation outside bounded Build, retain the

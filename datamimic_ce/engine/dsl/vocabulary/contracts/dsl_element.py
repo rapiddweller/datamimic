@@ -27,6 +27,8 @@ class BoundedExecutionStrategy(StrEnum):
     CONTAINER = "container"
     UNSUPPORTED = "unsupported"
     NEUTRAL = "neutral"
+    # Admitted only as a setup-level Python library whose source passes the bounded library check (#332).
+    PYTHON_LIBRARY = "python_library"
 
 
 @dataclass(frozen=True)
