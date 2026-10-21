@@ -119,25 +119,39 @@ Recommended over the alternatives:
 
 ## Decision 3 — Custom Python with safe globals (#332)
 
-`<execute uri="lib/*.scr.py">` loads a **pure function library**. The module runs with the same safe
-globals as DSL expressions, not with a full `exec`:
+`<execute uri="lib/*.scr.py">` loads a **library**: functions, plus classes for custom generators
+and converters. It is not a script that does work when it loads. "Safe globals" means the
+library sees the same seeded objects as DSL expressions. It does not restrict builtins.
 
-- CE `engine/runtime/scripting/expression_globals.py` mirrors EE's `SAFE_GLOBALS` (EE ADR-031).
-  It provides curated stdlib names and no builtins.
-- Under `rngSeed`, `random` and the clock are seed-bound proxies, and entropy sources raise.
-  Helper functions are therefore reproducible without extra rules.
-- Imports are not allowed; the safe globals already provide `random`, `datetime`, `math`, `re`,
-  `json`, `itertools`, `collections`, `statistics`, `hashlib` and `base64`. The one exception is
-  `from __future__ import annotations`, which compiles away.
+- **Seeded names (CE #358, merged).** Under `rngSeed`, names bound to `random`, `uuid`,
+  `datetime`, `pd`, `np`, `os` and to members imported by name are rebound after loading. They
+  get the seeded stand-ins of `engine/runtime/scripting/expression_globals.py`, the CE mirror of
+  EE ADR-031:
+  - `random.Random` becomes a real seeded subclass, and `isinstance` checks keep working.
+  - Entropy sources (`SystemRandom`, `uuid1`, `urandom`) and a keyed `random.seed(x)` raise.
+  - Ordinary `import random` / `from datetime import datetime` therefore stay allowed.
+- **Classes are admitted**, mostly `Generator`/`Converter` subclasses. Functions-only would make
+  about half of the existing scripts unloadable.
 
-A static check of the module's AST runs before execution. It admits only these top-level statements:
-docstring, `def`, constant assignments and the `__future__` import. Anything else is refused with a
-typed diagnostic that names the file and the statement line.
+Corpus, 2026-10-21: every `*.scr.py` in CE `datamimic_ce/` and `tests_ce/`, in `datamimic-demos`
+and in `datamimic-ee`, 83 files in total:
 
-Measured: the reference project's `lib/personnel.scr.py` loads and runs under the CE expression
-globals once its `__future__` import is stripped. The helper namespace still needs two additions:
-- exception types such as `ValueError`, because a function must be able to fail loudly;
-- `__build_class__`, but only if classes are admitted at all.
+| Defines a top-level class | Imports `random` | Imports `datetime` |
+|---|---|---|
+| 41 | 45 | 23 |
+- **AST gate before execution.** Rebinding cannot reach two cases, CE #359:
+  - draws while the module body runs;
+  - imports inside function bodies.
+
+  A static check of the module refuses them, plus everything else that does work at load time.
+  Admitted top-level statements: docstring, imports, `def`, `class`, and constant assignments.
+  Refused: top-level calls and other statements, default arguments that call, and imports of
+  entropy modules inside a function body. Each refusal is a typed diagnostic that names the file
+  and the statement line, never values.
+
+Measured: the reference project's `lib/personnel.scr.py` loads and replays under rngSeed. The CE
+#358 DSL fixture covers module imports, aliases, imports by name, `isinstance`, and a `generator=`
+key that deep-copies the namespace. Each fails without the fix.
 
 Safe globals are a contract for determinism and intent, not a security sandbox. The isolation
 boundary stays the bounded child process with its private workspace. `sql/*.scr.sql` and
@@ -163,8 +177,9 @@ The plugin's deliverable becomes the project tree:
    cover R1, the volumes and the negatives, and an independent oracle confirms R2–R5.
 2. A change to any project file invalidates the proof.
 3. A failing element in a step file reports that file and line, without values.
-4. A `lib/` module with an import, a top-level call or a file write is refused and names the line.
-   Seeded `random` inside a helper replays identically.
+4. A `lib/` module with a top-level call, a calling default argument or a function-local entropy
+   import is refused and names the line. Seeded `random`/`datetime` imported by a helper replay
+   identically (already true since CE #358).
 5. Blind rerun (12 isolated sessions) scores project structure as well as correctness. The rubric
    covers layout, data in `entity/`/`weighting/` instead of literals, delivery steps separate from
    generation, and a readable entry process.
@@ -175,8 +190,8 @@ The plugin's deliverable becomes the project tree:
 2. Protocol: `BuildRequestV5` for CE and EE; CE first, then EE.
 3. Python: allowed as pure libraries running with safe globals.
 
-Still open: whether `class` definitions are admitted in `lib/` (needs `__build_class__`), and when
-`V4` is retired.
+Still open: when `V4` is retired. Admitting classes in `lib/` is recommended above (41 of 83 corpus
+scripts) and needs Alex's confirmation.
 
 ## Not decided here
 
