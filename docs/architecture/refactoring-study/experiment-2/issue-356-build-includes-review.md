@@ -2,7 +2,7 @@
 
 **Accepted within the local architecture review scope.** Reviewer: Astra (independent Opus 5.5 review agent, delegated by Alex).
 
-- Scope: `feat/build-includes`, base `287e9c87` (merged #362), b1 head `dab3bfc0` (`fbea1ad8` plus the Codex fixes `dab3bfc0`); the binding below is for slice b2 at `9b61b234`.
+- Scope: `feat/build-includes`, base `287e9c87` (merged #362), b1 head `dab3bfc0` (`fbea1ad8` plus the Codex fixes `dab3bfc0`); the binding below is for slice b2 at `d002c133`.
 - This review rebinds the [issue 361 receipt](issue-361-bounded-containment-review.md) and keeps all of its assessments.
 - It does not authorize a merge and does not claim that every native rule passes.
 
@@ -10,10 +10,10 @@
 
 | Item | Value |
 |---|---|
-| Source | `fc09ee1cdb16bf2b8fbdda471545f5384afe65434fe8aaff88ee7b0ceacee55d` |
+| Source | `a4dd219d84dc35c040f75aa6fab55bc5fb6a97e09d0eca4368a89279ca1b5fad` |
 | Target (unchanged) | `d83d4df102a2588a54598e26cb045b721cb024a118f51e31592b135050d4e78e` |
 | Analyzer (unchanged; ArchKeel 4.0.1, Python 3.11.12) | `bb1a3262d3fdd38c3e9a6af980cc063281ae98ab1c28c89c2c5be6dfb450744f` |
-| Validation | `aacb8142a541ce43b6230468c1c44c533468fc7182c82e43515d5599db00f7ad` |
+| Validation | `3acc79e944ffb66a675ce1226c213590f21d18d2cfba8afdc39a5d7da7c5892c` |
 | UNKNOWN | `2ab5f7a323140bb3c632ca77b59cb26288f438e215800f44bc66c90d77a3e676` |
 
 **Budgets:**
@@ -199,4 +199,29 @@ What b2 adds:
 - The full suites under `-n auto` (the author reports xdist contention in SQLite and the exporter matrix).
 - CI.
 - Windows.
+
+### Addendum: `d002c133` (Codex threads on #365), accepted
+
+**P1: the entry was linted standalone.**
+- `validate` now lints the entry with `project=(entry, *literal steps)` through `_entry_project`.
+- An unreadable graph falls back to standalone lint and stays refused by `include_graph` and by dry-run.
+- An entry that reads a memstore declared in a step now builds `ready`. At `5abad9c4`, decompile already rejected it.
+- **Cost:** one extra contained walk of the graph per `validate`. It is bounded by the 64 MiB graph limit. Build reads the graph again in `include_graph`, which is acceptable at this size.
+- **Leakage:** none. The walk's errors are swallowed into the standalone fallback, and the project only adds declared ids to the union. Entry findings keep their own static texts and entry paths.
+
+**P2: DM303 fired once per file.**
+- DM303 now fires only where the run's seed is owned (`run_root is root`).
+- A plain single file still reports DM303 (verified with `authoring lint`).
+- An unseeded project reports it once, at the entry.
+
+**Hidden entry errors (Info).**
+- The union ignores order, so an entry that reads a step's memstore *before* including that step now passes lint.
+- The bounded run still fails it. Build was rejected at the evidence phase with a child-execution failure, so Build never proves it.
+- This extends the declaration-order gap recorded in `delivery_boundary`, which predates b2.
+
+**Native result.**
+- 0 violations; 1,426 unresolved calls, 178 typing positions, 256 unknown positions.
+- The 20 diagnostics are unchanged; the 314 UNKNOWN records and their digest are unchanged.
+- No change in unresolved or partially resolved calls.
+- 809 authoring tests passed; ruff and mypy are clean.
 
