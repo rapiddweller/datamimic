@@ -112,7 +112,8 @@ ADMITTED_IMPORT_ROOTS = frozenset(
 )
 ADMITTED_PACKAGES = ("datamimic_ce.domains",)
 # Referenced at all, not only called: an alias such as `write = open` or `__builtins__["open"]` reaches them too.
-# A name the library imports itself (`from re import compile`) is that import, not the builtin.
+# Also a name the library imports itself (`from re import compile`): `del` or a failed import falls back to the
+# builtin, so only the qualified form (`re.compile`) is admitted.
 REFUSED_NAMES = frozenset(
     {"open", "exec", "eval", "compile", "__import__", "__builtins__", "globals", "locals", "vars"}
 )
@@ -150,7 +151,10 @@ class LibraryRefusal:
             case LibraryRefusalReason.IMPORT_NOT_ADMITTED:
                 return "Import only data modules such as random, datetime, math or datamimic_ce.domains."
             case LibraryRefusalReason.FILE_OR_DYNAMIC_CODE_BUILTIN:
-                return "Pass data in from the model instead of reading files or building code at runtime."
+                return (
+                    "Pass data in from the model instead of reading files or building code at runtime; "
+                    "call a module function with a builtin's name qualified, such as re.compile."
+                )
             case LibraryRefusalReason.IMPORT_INSIDE_BODY_UNDER_SEED:
                 return "Move the import to module level, where seeded runs rebind it to the run's stream."
 
@@ -204,12 +208,6 @@ def python_library_refusal(source: str, *, seeded: bool) -> LibraryRefusal | Non
         for inner in ast.walk(body)
         if isinstance(inner, (ast.Import, ast.ImportFrom))
     }
-    imported_names = {
-        alias.asname or alias.name
-        for node in ast.walk(tree)
-        if isinstance(node, (ast.Import, ast.ImportFrom))
-        for alias in node.names
-    }
     refusals: list[LibraryRefusal] = []
     for node in ast.walk(tree):
         if isinstance(node, (ast.Import, ast.ImportFrom)):
@@ -218,9 +216,11 @@ def python_library_refusal(source: str, *, seeded: bool) -> LibraryRefusal | Non
             elif seeded and id(node) in nested_imports:
                 refusals.append(LibraryRefusal(LibraryRefusalReason.IMPORT_INSIDE_BODY_UNDER_SEED, node.lineno))
         elif (
-            (isinstance(node, ast.Name) and node.id in REFUSED_NAMES and node.id not in imported_names)
+            (isinstance(node, ast.Name) and node.id in REFUSED_NAMES)
             or (isinstance(node, ast.Attribute) and node.attr in REFUSED_ATTRIBUTES)
             or (isinstance(node, ast.Call) and _accesses_refused_attribute(node))
+            # module.__dict__["__builtins__"] and getattr(module, "__dict__")["__builtins__"]
+            or (isinstance(node, ast.Constant) and node.value == "__builtins__")
         ):
             refusals.append(LibraryRefusal(LibraryRefusalReason.FILE_OR_DYNAMIC_CODE_BUILTIN, node.lineno))
     return min(refusals, key=lambda refusal: refusal.line) if refusals else None
