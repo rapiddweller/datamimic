@@ -116,12 +116,14 @@ ADMITTED_PACKAGES = ("datamimic_ce.domains",)
 # builtin, so only the qualified form (`re.compile`) is admitted.
 REFUSED_NAMES = frozenset(
     {"open", "exec", "eval", "compile", "__import__", "__builtins__", "globals", "locals", "vars"}
+    # Attribute access by computed name; no corpus library uses it, and aliases defeat any narrower rule.
+    | {"getattr", "setattr", "delattr"}
 )
 # Introspection that leads back to the builtins, the running code or the file loader.
 REFUSED_ATTRIBUTES = frozenset(
-    {"__builtins__", "__globals__", "__code__", "__subclasses__", "__loader__", "__spec__"}
+    {"__builtins__", "__globals__", "__code__", "__subclasses__", "__loader__", "__spec__", "__getattribute__"}
 )
-_ATTRIBUTE_ACCESSORS = frozenset({"getattr", "setattr", "delattr"})
+
 
 
 class LibraryRefusalReason(StrEnum):
@@ -141,7 +143,7 @@ class LibraryRefusal:
             case LibraryRefusalReason.IMPORT_NOT_ADMITTED:
                 rule = "imports a module outside the bounded library modules"
             case LibraryRefusalReason.FILE_OR_DYNAMIC_CODE_BUILTIN:
-                rule = "uses a file or dynamic-code builtin (open, exec, eval, compile, __import__, globals, ...)"
+                rule = "uses a file or dynamic-code builtin (open, exec, eval, compile, __import__, getattr, ...)"
             case LibraryRefusalReason.IMPORT_INSIDE_BODY_UNDER_SEED:
                 rule = "imports inside a function or class body, which <setup rngSeed> cannot seed"
         return f"Python library line {self.line} {rule}"
@@ -184,17 +186,6 @@ def _admitted(module: str) -> bool:
     )
 
 
-def _accesses_refused_attribute(node: ast.Call) -> bool:
-    """getattr(x, "__globals__") and its setattr/delattr siblings name the attribute as a string constant."""
-    return (
-        isinstance(node.func, ast.Name)
-        and node.func.id in _ATTRIBUTE_ACCESSORS
-        and len(node.args) >= 2
-        and isinstance(node.args[1], ast.Constant)
-        and node.args[1].value in REFUSED_ATTRIBUTES
-    )
-
-
 def python_library_refusal(source: str, *, seeded: bool) -> LibraryRefusal | None:
     """The earliest rule ``source`` breaks, or None. Unparseable source is left to the runtime's diagnostic."""
     try:
@@ -218,7 +209,6 @@ def python_library_refusal(source: str, *, seeded: bool) -> LibraryRefusal | Non
         elif (
             (isinstance(node, ast.Name) and node.id in REFUSED_NAMES)
             or (isinstance(node, ast.Attribute) and node.attr in REFUSED_ATTRIBUTES)
-            or (isinstance(node, ast.Call) and _accesses_refused_attribute(node))
             # module.__dict__["__builtins__"] and getattr(module, "__dict__")["__builtins__"]
             or (isinstance(node, ast.Constant) and node.value == "__builtins__")
         ):

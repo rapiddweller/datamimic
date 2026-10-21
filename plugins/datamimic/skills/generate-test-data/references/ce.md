@@ -75,7 +75,8 @@ inline code) when the library passes a static check. Write a library of
 functions, classes and constants:
 - import only data modules (`random`, `datetime`, `math`, `json`, `collections`,
   `faker`, `numpy`, `pandas`, `datamimic_ce.domains`, ...);
-- read no files and build no code (`open`, `eval`, `exec`, `compile`, `__import__`);
+- read no files and build no code (`open`, `eval`, `exec`, `compile`, `__import__`,
+  `getattr`, `globals`); call module functions qualified (`re.compile`);
 - under `rngSeed`, import at module level, never inside a function or class.
 
 A refusal names the file, line and rule; repair the library, not the model.
