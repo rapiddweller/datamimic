@@ -11,11 +11,13 @@ import pytest
 from datamimic_ce.authoring import create_authoring_application
 from datamimic_ce.authoring.adapters.bounded_executor import CeBoundedExecutor
 from datamimic_ce.authoring.adapters.workspace import AuthoringWorkspaceContext
+from datamimic_ce.authoring.domain.capabilities import CapabilityDomain
 from datamimic_ce.authoring.domain.diagnostics import AuthoringRuleId
 from datamimic_ce.authoring.domain.proof import VerificationGateStatus
 from datamimic_ce.authoring.domain.requests import BoundedExecutionRequest, BuildRequestV4, DecompileDocumentRequest
 from datamimic_ce.authoring.domain.script_semantics import LibraryRefusalReason as Reason
 from datamimic_ce.authoring.domain.script_semantics import python_library_refusal
+from datamimic_ce.engine.dsl.vocabulary.contracts.dsl_element import BoundedExecutionStrategy
 
 _MODELS = Path(__file__).parent / "bounded_python_library"
 
@@ -132,3 +134,8 @@ def test_forced_replay_names_why_a_seeded_library_model_failed() -> None:
     assert result.outcome == "rejected"
     assert result.verification.deterministic_replay.status is VerificationGateStatus.FAILED
     assert any(item.message.startswith("A seeded model that loads Python must replay") for item in result.diagnostics)
+
+
+def test_published_execute_capability_names_the_library_strategy() -> None:
+    capability = create_authoring_application(_MODELS).capability(CapabilityDomain.ELEMENT, "execute").capability
+    assert capability.bounded_execution.strategy is BoundedExecutionStrategy.PYTHON_LIBRARY

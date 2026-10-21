@@ -369,7 +369,10 @@ def _validate_bounded_includes(path: Path, *, allow_side_effects: bool) -> set[s
                     visit(dependency)
                 else:
                     raise _BoundedPolicyRefusal("Unsupported bounded include dependency type")
-            elif tag == "execute":
+            elif (
+                definition is not None
+                and definition.bounded_execution_profile.strategy is BoundedExecutionStrategy.PYTHON_LIBRARY
+            ):
                 if not allow_side_effects:
                     _refuse_unbounded_execute(
                         ExecuteStatement.language(node.get("type"), node.get("uri")),
