@@ -78,3 +78,19 @@ def test_a_library_cannot_replace_a_later_checked_library(tmp_path: Path) -> Non
     assert not result.ok
     assert not result.captured.products
     assert any("never the workspace files" in (item.remediation or "") for item in result.diagnostics)
+
+
+def test_a_native_refusal_is_reported_not_lost(tmp_path: Path) -> None:
+    # numpy turns the refused audit event into a bare SystemError; the run must still say what failed.
+    (tmp_path / "workspace").mkdir()
+    outside = tmp_path / "array.bin"
+    result = _run(tmp_path / "workspace", f"np.zeros(3).tofile('{outside.as_posix()}')")
+    assert not result.ok
+    assert not outside.exists()
+    assert all(item.message != "Bounded child returned invalid capture evidence." for item in result.diagnostics)
+
+
+def test_the_run_cannot_forge_its_reply(tmp_path: Path) -> None:
+    result = _run(tmp_path, "pd.DataFrame([{'a': 1}]).to_csv('../reply.pickle')")
+    assert not result.ok
+    assert all(item.message != "Bounded child returned invalid capture evidence." for item in result.diagnostics)

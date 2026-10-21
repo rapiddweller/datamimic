@@ -20,8 +20,11 @@ from datamimic_ce.authoring.domain.requests import BoundedExecutionRequest
 from datamimic_ce.engine.dsl.api import resource_reader_scope
 
 # Audit events that start a process; refused in every bounded run without side effects.
-_PROCESS_EVENTS = frozenset({"subprocess.Popen", "os.system", "os.exec", "os.posix_spawn", "os.spawn", "os.fork"})
-# Audit events whose first two arguments name the paths they change.
+_PROCESS_EVENTS = frozenset(
+    {"subprocess.Popen", "os.system", "os.exec", "os.posix_spawn", "os.spawn", "os.fork", "os.forkpty", "os.startfile"}
+)
+# Audit events whose first two arguments name the paths they change. CPython 3.11-3.13 raises no event for
+# os.mkfifo or os.mknod, so a FIFO outside the private root stays possible; it carries no data.
 _PATH_EVENTS = frozenset(
     {
         "os.remove",
@@ -34,6 +37,9 @@ _PATH_EVENTS = frozenset(
         "os.link",
         "os.symlink",
         "os.utime",
+        "os.chflags",
+        "os.setxattr",
+        "os.removexattr",
         "shutil.rmtree",
         "shutil.copyfile",
         "shutil.copytree",
@@ -43,10 +49,12 @@ _PATH_EVENTS = frozenset(
 _WRITE_FLAGS = os.O_WRONLY | os.O_RDWR | os.O_CREAT | os.O_TRUNC | os.O_APPEND
 
 
-def _contain(private_root: Path, workspace: Path) -> None:
+def _contain(private_root: Path, workspace: Path, transport: tuple[Path, ...]) -> set[str]:
     """Refuse writes outside ``private_root``, writes to files the workspace snapshot already holds, and new
     processes for the rest of this child process. Snapshot files are what the run was checked against: a
-    library must not replace a later, already-checked library (#360) or a resource the proof reads.
+    library must not replace a later, already-checked library (#360) or a resource the proof reads. The
+    ``transport`` files stay refused while the returned set holds them; the child clears it to write its reply,
+    so the run cannot forge that reply.
 
     The engine itself writes only below the temp directory, which moves into ``private_root``. An audit
     hook cannot be removed once installed; native code outside the audited calls is not covered. The refusal
@@ -58,6 +66,9 @@ def _contain(private_root: Path, workspace: Path) -> None:
         for directory, _, names in os.walk(workspace)
         for name in names
     )
+    reply = {os.path.normcase(os.path.realpath(path)) for path in transport}
+    # Windows resolves "nul" to "\\.\nul", so both spellings name the null device.
+    null_device = {os.path.normcase(os.devnull), os.path.normcase(os.path.realpath(os.devnull))}
     temporary = private_root / "tmp"
     os.makedirs(temporary, exist_ok=True)
     tempfile.tempdir = str(temporary)
@@ -65,9 +76,9 @@ def _contain(private_root: Path, workspace: Path) -> None:
 
     def contained(path: str | bytes | os.PathLike[str]) -> bool:
         target = os.path.normcase(os.path.realpath(os.fsdecode(path)))
-        if target == os.path.normcase(os.devnull):
+        if target in null_device:
             return True
-        return target[: len(allowed) + 1] == allowed + os.sep and target not in snapshot
+        return target[: len(allowed) + 1] == allowed + os.sep and target not in snapshot and target not in reply
 
     def hook(event: str, args: tuple[object, ...]) -> None:
         if event in _PROCESS_EVENTS:
@@ -86,6 +97,7 @@ def _contain(private_root: Path, workspace: Path) -> None:
             raise PermissionError("Bounded execution may write only new files inside its private workspace")
 
     sys.addaudithook(hook)
+    return reply
 
 
 def main() -> None:
@@ -97,8 +109,10 @@ def main() -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
     path.write_text(request.xml, encoding="utf-8")
     os.chdir(root)
-    if not request.allow_side_effects:
-        _contain(reply_file.parent, root)
+    staging = Path(f"{reply_file}.tmp")
+    guarded = (
+        set() if request.allow_side_effects else _contain(reply_file.parent, root, (request_file, reply_file, staging))
+    )
     with resource_reader_scope(workspace.read_resource_bytes):
         message = _run_engine_capture(
             path,
@@ -113,7 +127,7 @@ def main() -> None:
     payload = pickle.dumps(message, protocol=pickle.HIGHEST_PROTOCOL)
     if len(payload) > _MAX_REPLY_BYTES:
         raise ValueError("bounded child evidence exceeds the transport limit")
-    staging = reply_file.with_suffix(".tmp")
+    guarded.clear()
     staging.write_bytes(payload)
     staging.replace(reply_file)
     # Keep the tree leader alive until the parent has terminated all descendants (Windows taskkill).

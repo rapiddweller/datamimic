@@ -841,6 +841,8 @@ def _decode_worker_payload(payload: bytes) -> object:
         OSError,
         FileNotFoundError,
         PermissionError,
+        # C code that meets a refused audit event (bounded containment) may surface only this.
+        SystemError,
         TimeoutError,
         AssertionError,
         NameError,
