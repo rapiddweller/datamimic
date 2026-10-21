@@ -43,14 +43,21 @@ _PATH_EVENTS = frozenset(
 _WRITE_FLAGS = os.O_WRONLY | os.O_RDWR | os.O_CREAT | os.O_TRUNC | os.O_APPEND
 
 
-def _contain(private_root: Path) -> None:
-    """Refuse writes outside ``private_root`` and new processes for the rest of this child process.
+def _contain(private_root: Path, workspace: Path) -> None:
+    """Refuse writes outside ``private_root``, writes to files the workspace snapshot already holds, and new
+    processes for the rest of this child process. Snapshot files are what the run was checked against: a
+    library must not replace a later, already-checked library (#360) or a resource the proof reads.
 
     The engine itself writes only below the temp directory, which moves into ``private_root``. An audit
     hook cannot be removed once installed; native code outside the audited calls is not covered. The refusal
     is a plain PermissionError because the parent unpickles only listed exception types.
     """
     allowed = os.path.normcase(os.path.realpath(private_root))
+    snapshot = frozenset(
+        os.path.normcase(os.path.realpath(os.path.join(directory, name)))
+        for directory, _, names in os.walk(workspace)
+        for name in names
+    )
     temporary = private_root / "tmp"
     os.makedirs(temporary, exist_ok=True)
     tempfile.tempdir = str(temporary)
@@ -58,7 +65,9 @@ def _contain(private_root: Path) -> None:
 
     def contained(path: str | bytes | os.PathLike[str]) -> bool:
         target = os.path.normcase(os.path.realpath(os.fsdecode(path)))
-        return target == os.path.normcase(os.devnull) or target[: len(allowed) + 1] == allowed + os.sep
+        if target == os.path.normcase(os.devnull):
+            return True
+        return target[: len(allowed) + 1] == allowed + os.sep and target not in snapshot
 
     def hook(event: str, args: tuple[object, ...]) -> None:
         if event in _PROCESS_EVENTS:
@@ -70,11 +79,11 @@ def _contain(private_root: Path) -> None:
             )
             # An integer path is a file descriptor, opened and checked before.
             if writing and isinstance(path, (str, bytes, os.PathLike)) and not contained(path):
-                raise PermissionError("Bounded execution may write only inside its private workspace")
+                raise PermissionError("Bounded execution may write only new files inside its private workspace")
         elif event in _PATH_EVENTS and not all(
             contained(path) for path in args[:2] if isinstance(path, (str, bytes, os.PathLike))
         ):
-            raise PermissionError("Bounded execution may write only inside its private workspace")
+            raise PermissionError("Bounded execution may write only new files inside its private workspace")
 
     sys.addaudithook(hook)
 
@@ -89,7 +98,7 @@ def main() -> None:
     path.write_text(request.xml, encoding="utf-8")
     os.chdir(root)
     if not request.allow_side_effects:
-        _contain(reply_file.parent)
+        _contain(reply_file.parent, root)
     with resource_reader_scope(workspace.read_resource_bytes):
         message = _run_engine_capture(
             path,

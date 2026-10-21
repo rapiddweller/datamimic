@@ -219,7 +219,8 @@ def _decode_reply(payload: bytes, request: BoundedExecutionRequest) -> BoundedEx
                     if constructor_reason is not None
                     else dryrun._runtime_hint(message.error)
                     if isinstance(message.error, UserErrorBase | DomainError)
-                    else "Repair the bounded operation or runtime input and retry."
+                    # The worker's hint for an untyped error is static text chosen by its type.
+                    else message.fix_hint
                 ),
                 ce_error=identity,
                 path=path,

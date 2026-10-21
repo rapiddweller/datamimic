@@ -150,7 +150,8 @@ _SCOPE_HINT = (
 
 
 _CONTAINMENT_HINT = (
-    "Bounded execution writes only inside its private workspace and starts no process (#361). Deliver data "
+    "Bounded execution writes only new files inside its private workspace, never the workspace files it was "
+    "checked against, and starts no process (#361). Deliver data "
     "through the model's targets, or use authoring run --allow-side-effects when the write is intended."
 )
 
