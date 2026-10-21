@@ -196,3 +196,15 @@ def test_runtime_failure_in_a_step_names_the_step(tmp_path: Path) -> None:
     assert any(item.path == ("include", "model/20_orders.xml", "key", "script") for item in result.diagnostics), (
         result.diagnostics
     )
+
+
+def test_memstore_declared_in_a_step_is_known_to_later_steps(tmp_path: Path) -> None:
+    project = _copy(tmp_path)
+    entry = project / "datamimic.xml"
+    entry.write_text(entry.read_text(encoding="utf-8").replace('    <memstore id="store"/>\n', ""), encoding="utf-8")
+    step = project / "model" / "10_customers.xml"
+    step.write_text(
+        step.read_text(encoding="utf-8").replace("<setup>", '<setup>\n    <memstore id="store"/>'), encoding="utf-8"
+    )
+    result = _build(project)
+    assert result.outcome == "ready", result.diagnostics

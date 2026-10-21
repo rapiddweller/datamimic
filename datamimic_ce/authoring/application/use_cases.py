@@ -55,8 +55,9 @@ class CompileDocumentUseCase:
                 phase=DiagnosticPhase.XML,
                 diagnostics=lint.diagnostics,
             )
-        return ReadyCompileDocument(artifact=_compiled_document_artifact(compilation.document, compilation.xml),
-                                    diagnostics=lint.diagnostics)
+        return ReadyCompileDocument(
+            artifact=_compiled_document_artifact(compilation.document, compilation.xml), diagnostics=lint.diagnostics
+        )
 
 
 class DecompileDocumentUseCase:

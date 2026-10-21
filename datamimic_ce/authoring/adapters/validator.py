@@ -83,7 +83,7 @@ class CeDescriptorValidator:
                     )
                 # The parser message may echo resolved (possibly secret) values; the static rule
                 # projection names the violated rule and the exact element instead.
-                diagnostics.extend(_rule_diagnostics(xml, physical_path, logical_path))
+                diagnostics.extend(_rule_diagnostics(parse_xml_source(xml), physical_path, logical_path))
                 return LintResult(ok=False, diagnostics=tuple(diagnostics))
             return LintResult(
                 ok=False,
@@ -108,7 +108,7 @@ class CeDescriptorValidator:
         except (ValueError, OSError):
             # Parser/resource errors may contain credentials and physical host paths.
             return _rejected(logical_path, "Descriptor or its workspace resources failed validation.")
-        findings = _rule_diagnostics(xml, physical_path, logical_path)
+        findings = _rule_diagnostics(parse_xml_source(xml), physical_path, logical_path)
         return LintResult(ok=not any(item.severity == "error" for item in findings), diagnostics=findings)
 
     def include_graph(self, xml: str) -> IncludeGraphResult:
@@ -133,33 +133,32 @@ class CeDescriptorValidator:
                 except UnicodeDecodeError:
                     return _graph_refused(logical_path, "An included step is not UTF-8 encoded.")
                 descriptors.append(IncludedDescriptor(uri=uri, xml=text, sha256=sha256(data).hexdigest()))
-        entry = parse_xml_source(xml)
-        findings = tuple(
-            finding
-            for step in descriptors
-            for finding in _rule_diagnostics(
-                step.xml, physical_path, logical_path, entry=entry, prefix=("include", step.uri)
+        roots = [parse_xml_source(step.xml) for step in descriptors]
+        project = (parse_xml_source(xml), *roots)
+        findings: list[Diagnostic] = []
+        for step, root in zip(descriptors, roots, strict=True):
+            findings.extend(
+                _rule_diagnostics(root, physical_path, logical_path, project=project, prefix=("include", step.uri))
             )
-        )
         return IncludeGraphResult(
             ok=not any(item.severity == "error" for item in findings),
             descriptors=tuple(descriptors),
-            diagnostics=findings,
+            diagnostics=tuple(findings),
         )
 
 
 def _rule_diagnostics(
-    xml: str,
+    root: etree._Element,
     physical_path: Path,
     logical_path: PurePosixPath,
     *,
-    entry: etree._Element | None = None,
+    project: tuple[etree._Element, ...] = (),
     prefix: tuple[str, ...] | None = None,
 ) -> tuple[Diagnostic, ...]:
-    """Lint findings of one descriptor; an included step is linted with its entry and reported at its uri."""
+    """Lint findings of one descriptor; an included step is linted with its project and reported at its uri."""
     location = prefix or ("descriptor", logical_path.as_posix())
     diagnostics = []
-    for finding in _run_rules(parse_xml_source(xml), base_dir=physical_path.parent, entry=entry):
+    for finding in _run_rules(root, base_dir=physical_path.parent, project=project):
         definition = authoring_rule_definition(finding.rule)
         diagnostics.append(
             Diagnostic(

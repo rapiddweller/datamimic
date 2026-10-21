@@ -59,8 +59,8 @@ _CLIENT_OPERATIONS = {op.value for op in ExportOperation}
 
 
 def _declared_ids(ctx: LintContext) -> tuple[set[str], set[str]]:
-    """(client ids, memstore ids) declared in the descriptor, plus those an included step inherits from its entry."""
-    roots = (ctx.root,) if ctx.entry is None else (ctx.root, ctx.entry)
+    """(client ids, memstore ids) declared in the descriptor or, for an included step, anywhere in its project."""
+    roots = (ctx.root, *ctx.project)
     clients = {el.get("id") for root in roots for el in root.iter(EL_DATABASE, EL_MONGODB) if el.get("id")}
     memstores = {el.get("id") for root in roots for el in root.iter(EL_MEMSTORE) if el.get("id")}
     return {c for c in clients if c}, {m for m in memstores if m}
