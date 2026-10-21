@@ -28,7 +28,7 @@
       },
       {
         "path": "datamimic_ce/engine/runtime/contexts/products.py",
-        "responsibility": "Carries generated rows and actual nested export executions across row contexts, pages, and worker results."
+        "responsibility": "Carries generated rows and actual nested export executions, and owns the shared per-run total row allowance."
       },
       {
         "path": "datamimic_ce/engine/runtime/contexts/records.py",

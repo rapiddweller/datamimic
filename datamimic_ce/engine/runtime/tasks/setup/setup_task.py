@@ -43,6 +43,7 @@ class SetupTask:
         ray_debug: bool = False,
         included_statement_transformer: StatementTransformer | None = None,
         profile_loader: Callable[[Path, str], dict[str, str]] | None = None,
+        total_row_limit: int | None = None,
     ):
         self._descriptor_dir = descriptor_dir
         self._setup_stmt = setup_stmt
@@ -56,6 +57,7 @@ class SetupTask:
         self._ray_debug = ray_debug
         self._included_statement_transformer = included_statement_transformer
         self._profile_loader = profile_loader
+        self._total_row_limit = total_row_limit
         # Assign default setup config value
         self._use_mp = self._setup_stmt.use_mp
         self._default_separator = setup_stmt.default_separator or "|"
@@ -88,6 +90,7 @@ class SetupTask:
             ray_debug=self._ray_debug,
             included_statement_transformer=self._included_statement_transformer,
             profile_loader=self._profile_loader,
+            total_row_limit=self._total_row_limit,
         )
 
         self.execute_statements(self._setup_stmt, root_context)
@@ -160,6 +163,8 @@ class SetupTask:
             # Same-process includes allocate in the parent run; ordinary worker copies stay isolated.
             id(parent_context.domain_identifier_registry): parent_context.domain_identifier_registry,
         }
+        if parent_context.total_row_budget is not None:
+            memo[id(parent_context.total_row_budget)] = parent_context.total_row_budget
         clone_by_token: dict[int, RegisteredClient] = {}
         for token, client, _config in descriptor_clients:
             clone = clone_client_for_include(client)

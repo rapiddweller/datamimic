@@ -161,6 +161,29 @@ class TestGenerateTask:
         count = generate_task._determine_count(mock_context)
         assert count == 500
 
+    def test_time_series_expansion_is_bounded_before_planning(self, generate_task, mock_context, mock_statement):
+        from types import SimpleNamespace
+
+        mock_statement.count = "2"
+        mock_statement.bounded_count_limit = 5
+        mock_statement.get_time_series_config.return_value = SimpleNamespace(ticks_per_series=3)
+
+        with patch.object(generate_task, "pre_execute") as pre_execute:
+            with pytest.raises(TaskConfigError) as caught:
+                generate_task.execute(mock_context)
+            pre_execute.assert_not_called()
+
+        assert caught.value.issue_code.value == "I800"
+
+    def test_zero_time_series_count_does_not_create_a_default_series(self, generate_task, mock_context, mock_statement):
+        from types import SimpleNamespace
+
+        mock_statement.count = "0"
+        mock_statement.bounded_count_limit = 5
+        mock_statement.get_time_series_config.return_value = SimpleNamespace(ticks_per_series=3)
+
+        assert generate_task._determine_count(mock_context) == 0
+
     def test_determine_count_with_selector(self, generate_task, mock_context, mock_statement):
         """Selector interpolation uses statement markers or the setup defaults."""
         mock_statement.count = None
