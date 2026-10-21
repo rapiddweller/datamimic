@@ -41,6 +41,8 @@ import statistics
 import uuid
 from collections.abc import Callable
 from random import Random
+from types import ModuleType
+from typing import NamedTuple
 
 import numpy as np
 import pandas as pd
@@ -103,7 +105,7 @@ class _EvalProxy:
     """Stands in for a module or class a DSL expression knows by name: ``overrides`` win, every
     other attribute and call goes to ``target``."""
 
-    def __init__(self, target: object, overrides: dict[str, object]) -> None:
+    def __init__(self, target: ModuleType | type | RandomSource, overrides: dict[str, object]) -> None:
         self._target = target
         self._overrides = overrides
 
@@ -116,6 +118,17 @@ class _EvalProxy:
         if not callable(self._target):
             raise TypeError(f"'{type(self._target).__name__}' object is not callable")
         return self._target(*args, **kwargs)
+
+    # A proxied class stays a class for type checks: isinstance(x, datetime.datetime) must not change under a seed.
+    def __instancecheck__(self, instance: object) -> bool:
+        return isinstance(self._target, type) and isinstance(instance, self._target)
+
+    def __subclasscheck__(self, subclass: type) -> bool:
+        return isinstance(self._target, type) and issubclass(subclass, self._target)
+
+    # A copied proxy would fork or lose the run's stream; generator= keys deep-copy the script namespace.
+    def __deepcopy__(self, memo: dict[int, object]) -> _EvalProxy:
+        return self
 
 
 class _Uncontrolled:
@@ -141,11 +154,16 @@ class _Uncontrolled:
         raise self._refuse()
 
 
-class _OmittedRandomSeed:
-    """Distinguishes Random() from Random(None), whose seed semantics differ."""
+_RandomSeed = int | float | str | bytes | bytearray | None
 
 
-_OMITTED_RANDOM_SEED = _OmittedRandomSeed()
+def _random_seed(rng: RandomSource, x: _RandomSeed) -> _RandomSeed:
+    """Random() and Random(None) would seed from OS entropy; in a seeded run they start from the run's stream."""
+    return rng.getrandbits(64) if x is None else x
+
+
+def _seeded_random(rng: RandomSource, x: _RandomSeed = None) -> Random:
+    return Random(_random_seed(rng, x))
 
 
 class _SeededFaker:
@@ -170,31 +188,50 @@ def _ignore_seed(*_args: object, **_kwargs: object) -> None:
     """random.seed() inside an expression would rewind the run's seeded stream, so it is a no-op."""
 
 
-def expression_globals(
-    is_seeded: bool,
-    rng: RandomSource | None,
+def _refuse_keyed_seed(a: _RandomSeed = None, version: int = 2) -> None:
+    """random.seed() in a seeded script: without a value it would draw OS entropy, so it is a no-op. With a value,
+    later draws come from the run's stream, not from that key, so it is refused rather than silently ignored."""
+    if a is None:
+        return
+    raise task_config_error(
+        code=IssueCode.TASK_EXPRESSION_EVAL_FAILED,
+        expr="random.seed",
+        error="random.seed(x) in a script cannot reseed a <setup rngSeed> run; use random.Random(x) for a keyed stream",
+    )
+
+
+class _SeededObjects(NamedTuple):
+    """The seeded stand-ins of one expression scope; built once, shared by expression globals and scripts."""
+
+    random: _EvalProxy
+    uuid: _EvalProxy
+    uuid4: Callable[[], uuid.UUID]
+    datetime: _EvalProxy
+    anchored_datetime: _EvalProxy
+    anchored_date: _EvalProxy
+    pd: _EvalProxy
+    np: _EvalProxy
+    os: _EvalProxy
+    fake: _SeededFaker
+
+
+def _seeded_objects(
+    rng: RandomSource,
     seeded_faker_supplier: Callable[[], Faker],
-) -> dict[str, object]:
-    """Globals for one expression, using explicit dependencies for seeded behavior."""
-    if not is_seeded:
-        return SAFE_GLOBALS
-    assert rng is not None
+    random_constructor: Callable[..., Random],
+    seed: Callable[..., None],
+) -> _SeededObjects:
     anchor = resolve_clock(deterministic=True)
 
     def now(tz: datetime.tzinfo | None = None) -> datetime.datetime:
         return anchor if tz is None else anchor.replace(tzinfo=datetime.UTC).astimezone(tz)
 
-    def seeded_random(
-        x: int | float | str | bytes | bytearray | None | _OmittedRandomSeed = _OMITTED_RANDOM_SEED,
-    ) -> Random:
-        return Random(rng.getrandbits(64)) if isinstance(x, _OmittedRandomSeed) else Random(x)
-
     def uuid4() -> uuid.UUID:
         return uuid.UUID(uuid4_from_random(rng))
 
     random_overrides = {
-        "seed": _ignore_seed,
-        "Random": seeded_random,
+        "seed": seed,
+        "Random": random_constructor,
         "SystemRandom": _Uncontrolled("random.SystemRandom"),
     }
     anchored_datetime = _EvalProxy(datetime.datetime, {"now": now, "utcnow": lambda: anchor, "today": lambda: anchor})
@@ -207,13 +244,113 @@ def expression_globals(
             "today": lambda tz=None: pd.Timestamp(now(tz)),
         },
     )
+    return _SeededObjects(
+        random=_EvalProxy(rng, random_overrides),
+        uuid=_EvalProxy(uuid, {"uuid4": uuid4, "uuid1": _Uncontrolled("uuid.uuid1")}),
+        uuid4=uuid4,
+        datetime=_EvalProxy(datetime, {"datetime": anchored_datetime, "date": anchored_date}),
+        anchored_datetime=anchored_datetime,
+        anchored_date=anchored_date,
+        pd=_EvalProxy(pd, {"Timestamp": anchored_timestamp}),
+        np=_EvalProxy(np, {"random": _Uncontrolled("np.random")}),
+        os=_EvalProxy(os, {"urandom": _Uncontrolled("os.urandom"), "getrandom": _Uncontrolled("os.getrandom")}),
+        fake=_SeededFaker(rng, seeded_faker_supplier),
+    )
+
+
+def expression_globals(
+    is_seeded: bool,
+    rng: RandomSource | None,
+    seeded_faker_supplier: Callable[[], Faker],
+) -> dict[str, object]:
+    """Globals for one expression, using explicit dependencies for seeded behavior."""
+    if not is_seeded:
+        return SAFE_GLOBALS
+    assert rng is not None
+    seeded = _seeded_objects(rng, seeded_faker_supplier, functools.partial(_seeded_random, rng), _ignore_seed)
     return {
         **SAFE_GLOBALS,
-        "random": _EvalProxy(rng, random_overrides),
-        "uuid": _EvalProxy(uuid, {"uuid4": uuid4, "uuid1": _Uncontrolled("uuid.uuid1")}),
-        "datetime": _EvalProxy(datetime, {"datetime": anchored_datetime, "date": anchored_date}),
-        "pd": _EvalProxy(pd, {"Timestamp": anchored_timestamp}),
-        "np": _EvalProxy(np, {"random": _Uncontrolled("np.random")}),
-        "os": _EvalProxy(os, {"urandom": _Uncontrolled("os.urandom"), "getrandom": _Uncontrolled("os.getrandom")}),
-        "fake": _SeededFaker(rng, seeded_faker_supplier),
+        "random": seeded.random,
+        "uuid": seeded.uuid,
+        "datetime": seeded.datetime,
+        "pd": seeded.pd,
+        "np": seeded.np,
+        "os": seeded.os,
+        "fake": seeded.fake,
     }
+
+
+def rebind_seeded_script_names(
+    namespace: dict[str, object], rng: RandomSource, seeded_faker_supplier: Callable[[], Faker]
+) -> frozenset[str]:
+    """Give a seeded project script the seeded stand-ins instead of the raw modules, so its helpers replay (#357).
+
+    Script-level names bound to the raw modules or to members imported by name (``from random import randint``,
+    ``from datetime import datetime``) are rebound by identity; helpers resolve globals at call time. The names
+    expressions also know (random, uuid, datetime, pd, np, os) are set to the seeded stand-ins and returned: they
+    stay private to the scripts, so expressions keep their own seeded globals. Other names, such as aliases, remain
+    shared.
+
+    ``random.seed(x)`` with a value is refused: a keyed stream is ``random.Random(x)``.
+
+    Outside this rebinding, and therefore not replayed: draws made while the script body itself executes
+    (module-level values, default arguments), imports inside helper bodies, and members not listed below.
+    Neither a plain run nor Build detects them; Build refuses <execute> in bounded runs (#332).
+    """
+
+    # Built here, not per expression: a class definition costs several times an expression evaluation.
+    class SeededRandom(Random):
+        """random.Random for project scripts, seeded like the expression override, and still a real Random
+        subclass, so annotations, isinstance and subclassing keep working."""
+
+        def __init__(self, x: _RandomSeed = None) -> None:
+            Random.__init__(self, _random_seed(rng, x))
+
+    # Scripts reach Random both directly and as random.Random; both must stay the class.
+    seeded = _seeded_objects(rng, seeded_faker_supplier, SeededRandom, _refuse_keyed_seed)
+    counterparts: tuple[tuple[object, object], ...] = (
+        (random, seeded.random),
+        (Random, SeededRandom),
+        (uuid, seeded.uuid),
+        (uuid.uuid4, seeded.uuid4),
+        (datetime, seeded.datetime),
+        (datetime.datetime, seeded.anchored_datetime),
+        (datetime.date, seeded.anchored_date),
+        (pd, seeded.pd),
+        (np, seeded.np),
+        (os, seeded.os),
+        # Members imported by name are the module's own objects, so identity finds them too.
+        (random.random, seeded.random.random),
+        (random.randint, seeded.random.randint),
+        (random.randrange, seeded.random.randrange),
+        (random.choice, seeded.random.choice),
+        (random.choices, seeded.random.choices),
+        (random.shuffle, seeded.random.shuffle),
+        (random.sample, seeded.random.sample),
+        (random.uniform, seeded.random.uniform),
+        (random.gauss, seeded.random.gauss),
+        (random.getrandbits, seeded.random.getrandbits),
+        (random.randbytes, seeded.random.randbytes),
+        (random.seed, seeded.random.seed),
+        (random.SystemRandom, seeded.random.SystemRandom),
+        (uuid.uuid1, seeded.uuid.uuid1),
+        (os.urandom, seeded.os.urandom),
+    )
+    for name, value in list(namespace.items()):
+        for raw, stand_in in counterparts:
+            if value is raw:
+                namespace[name] = stand_in
+    shared_with_expressions: tuple[tuple[str, object], ...] = (
+        ("random", seeded.random),
+        ("uuid", seeded.uuid),
+        ("datetime", seeded.datetime),
+        ("pd", seeded.pd),
+        ("np", seeded.np),
+        ("os", seeded.os),
+    )
+    private = set()
+    for name, stand_in in shared_with_expressions:
+        if name not in namespace or namespace[name] is stand_in:
+            namespace[name] = stand_in
+            private.add(name)
+    return frozenset(private)
