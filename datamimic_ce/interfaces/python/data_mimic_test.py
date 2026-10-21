@@ -11,7 +11,8 @@ import uuid
 from pathlib import Path
 
 from datamimic_ce.engine.runtime.api import create_run_session
-from datamimic_ce.engine.runtime.contracts import FactoryConfig, RunRequest, RunSession
+from datamimic_ce.engine.runtime.contracts import FactoryConfig, PlatformConfiguration, RunRequest, RunSession
+from datamimic_ce.engine.runtime.pseudonymization import PseudonymizationKey
 
 logger = logging.getLogger("DATAMIMIC")
 
@@ -23,6 +24,8 @@ class DataMimicTest:
         filename: str,
         capture_test_result: bool = False,
         factory_config: FactoryConfig | None = None,
+        pseudonymization_key: PseudonymizationKey | None = None,
+        platform_configs: dict[str, object] | None = None,
     ):
         test_file_path = test_dir / filename
         self._capture_test_result = capture_test_result
@@ -33,6 +36,10 @@ class DataMimicTest:
                 task_id=self._task_id,
                 test_mode=capture_test_result,
                 factory_config=factory_config,
+                pseudonymization_key=pseudonymization_key,
+                platform_configs=PlatformConfiguration.model_construct(root=platform_configs)
+                if platform_configs is not None
+                else None,
             )
         )
 

@@ -15,6 +15,7 @@ from datamimic_ce.engine.runtime.contracts import FactoryConfig, RunRequest, Run
 from datamimic_ce.engine.runtime.lifecycle.config import get_settings
 from datamimic_ce.engine.runtime.logging import log_memory_info, log_system_info, setup_logger
 from datamimic_ce.engine.runtime.process_titles import bootstrap_process_title, set_main_process_title
+from datamimic_ce.engine.runtime.pseudonymization import resolve_pseudonymization_key
 from datamimic_ce.engine.runtime.tasks.setup.setup_task import SetupTask
 from datamimic_ce.errors import DomainError, IssueCode, UserErrorBase, parser_validation_error, task_config_error
 from datamimic_ce.errors.context.descriptor_identity import descriptor_scope, get_descriptor_name
@@ -24,6 +25,8 @@ logger = logging.getLogger("DATAMIMIC")
 
 class RuntimeRunSession:
     def __init__(self, request: RunRequest):
+        platform_config = request.platform_configs.root if request.platform_configs is not None else None
+        self._pseudonymization_key = resolve_pseudonymization_key(platform_config, request.pseudonymization_key)
         self._task_id = request.task_id or uuid.uuid4().hex
         bootstrap_process_title()
         set_main_process_title(self._task_id, request.descriptor_path.name)
@@ -92,6 +95,7 @@ class RuntimeRunSession:
                     included_statement_transformer=request.included_statement_transformer,
                     profile_loader=request.profile_loader,
                     total_row_limit=request.total_row_limit,
+                    pseudonymization_key=self._pseudonymization_key,
                 ).execute()
             except (UserErrorBase, DomainError) as error:
                 message = error.message if isinstance(error, DomainError) else str(error)

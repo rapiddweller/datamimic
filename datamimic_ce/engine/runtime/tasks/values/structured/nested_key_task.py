@@ -42,7 +42,7 @@ class NestedKeyTask(GenSubTask):
         self._default_value = statement.default_value
         self._sub_tasks: list | None = None
         self._unique_cursors: dict = {}
-        self._converter_list = create_converter_list(ctx, statement.converter)
+        self._converter_list = create_converter_list(ctx, statement, statement.converter)
 
     @property
     def statement(self) -> NestedKeyStatement:

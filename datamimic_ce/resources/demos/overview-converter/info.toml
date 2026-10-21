@@ -1,5 +1,5 @@
 title = "Converter Overview"
-description = "Explore the different types of converters available in the system."
+description = "Explore built-in converters. Hash examples require a host-provided pseudonymization key."
 icon = "convert"
 tags = ["#converter", "#replacement"]
 projectName = "overview-converter"

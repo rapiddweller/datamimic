@@ -8,7 +8,10 @@ from __future__ import annotations
 
 from collections.abc import Mapping
 from pathlib import PurePosixPath
-from typing import Protocol
+from typing import TYPE_CHECKING, Protocol
+
+if TYPE_CHECKING:
+    from datamimic_ce.engine.runtime.pseudonymization import PseudonymizationKey
 
 from .domain.capabilities import DslCatalogSnapshot
 from .domain.diagnostics import Diagnostic
@@ -41,7 +44,9 @@ class DescriptorValidator(Protocol):
 
 
 class BoundedExecutor(Protocol):
-    def execute(self, request: BoundedExecutionRequest) -> BoundedExecutionEvidence: ...
+    def execute(
+        self, request: BoundedExecutionRequest, *, pseudonymization_key: PseudonymizationKey | None = None
+    ) -> BoundedExecutionEvidence: ...
 
 
 class BoundedExecutionPolicy(Protocol):

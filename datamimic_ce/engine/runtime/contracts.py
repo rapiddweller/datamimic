@@ -2,13 +2,14 @@
 
 import logging
 from collections.abc import Callable
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Protocol
 
 from pydantic import RootModel
 
 from datamimic_ce.engine.dsl.api import SetupStatement
+from datamimic_ce.engine.runtime.pseudonymization import PseudonymizationKey
 
 
 class PlatformConfiguration(RootModel[dict[str, object]]):
@@ -52,6 +53,7 @@ class RunRequest:
     profile_loader: Callable[[Path, str], dict[str, str]] | None = None
     included_statement_transformer: StatementTransformer | None = None
     total_row_limit: int | None = None
+    pseudonymization_key: PseudonymizationKey | None = field(default=None, repr=False)
 
     def __post_init__(self) -> None:
         if self.total_row_limit is not None and (type(self.total_row_limit) is not int or self.total_row_limit < 1):

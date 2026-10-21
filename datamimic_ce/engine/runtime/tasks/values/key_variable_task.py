@@ -76,7 +76,7 @@ class KeyVariableTask(Task):
         self._statement = statement
         self._generator: WeightedDataSource | None = None
         self._pagination = pagination
-        self._converter_list = create_converter_list(ctx, statement.converter)
+        self._converter_list = create_converter_list(ctx, statement, statement.converter)
 
         self._mode: str | None = None
         # Lazily-built distinct-value iterator for unique="true" (sampling without replacement).

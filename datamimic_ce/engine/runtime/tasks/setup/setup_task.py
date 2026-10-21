@@ -24,6 +24,7 @@ from datamimic_ce.engine.io.api import (
 )
 from datamimic_ce.engine.runtime.contexts.context import SetupContext
 from datamimic_ce.engine.runtime.contracts import StatementTransformer
+from datamimic_ce.engine.runtime.pseudonymization import PseudonymizationKey
 from datamimic_ce.engine.runtime.storage.memstore_manager import MemstoreManager
 from datamimic_ce.engine.runtime.tasks.base.dispatch import create_task
 from datamimic_ce.engine.runtime.tasks.base.task import CommonSubTask, SetupSubTask
@@ -44,6 +45,7 @@ class SetupTask:
         included_statement_transformer: StatementTransformer | None = None,
         profile_loader: Callable[[Path, str], dict[str, str]] | None = None,
         total_row_limit: int | None = None,
+        pseudonymization_key: PseudonymizationKey | None = None,
     ):
         self._descriptor_dir = descriptor_dir
         self._setup_stmt = setup_stmt
@@ -58,6 +60,7 @@ class SetupTask:
         self._included_statement_transformer = included_statement_transformer
         self._profile_loader = profile_loader
         self._total_row_limit = total_row_limit
+        self._pseudonymization_key = pseudonymization_key
         # Assign default setup config value
         self._use_mp = self._setup_stmt.use_mp
         self._default_separator = setup_stmt.default_separator or "|"
@@ -91,6 +94,7 @@ class SetupTask:
             included_statement_transformer=self._included_statement_transformer,
             profile_loader=self._profile_loader,
             total_row_limit=self._total_row_limit,
+            pseudonymization_key=self._pseudonymization_key,
         )
 
         self.execute_statements(self._setup_stmt, root_context)

@@ -2688,9 +2688,17 @@
     {
       "target": "engine/runtime/contexts/products.py",
       "reason": "Generated rows and actual nested export executions need typed page metadata, while one shared per-run allowance bounds captured rows."
+    },
+    {
+      "target": "engine/runtime/pseudonymization.py",
+      "reason": "Validates and redacts the typed live key used to derive field-specific pseudonyms."
     }
   ],
   "target_module_concerns": [
+    {
+      "target": "engine/runtime/pseudonymization.py",
+      "responsibility": "Validates the explicit live pseudonymization key without exposing its bytes in public configuration or evidence."
+    },
     {
       "target": "__init__.py",
       "responsibility": "The package initializer exposes the CE namespace without loading configuration or mutating the process environment."

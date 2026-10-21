@@ -4,6 +4,10 @@
 
 """Validate and execute raw XML through the same bounded CE adapter."""
 
+from __future__ import annotations
+
+from typing import TYPE_CHECKING
+
 from datamimic_ce.authoring.domain.build_rules import catalog_diagnostic
 from datamimic_ce.authoring.domain.common import MAX_AUTHORING_XML_LENGTH
 from datamimic_ce.authoring.domain.diagnostics import AuthoringRuleId, DiagnosticPhase
@@ -11,13 +15,18 @@ from datamimic_ce.authoring.domain.requests import BoundedExecutionRequest, RunP
 from datamimic_ce.authoring.ports import BoundedExecutor, DescriptorValidator
 from datamimic_ce.authoring.projection.evidence import sample_evidence
 
+if TYPE_CHECKING:
+    from datamimic_ce.engine.runtime.pseudonymization import PseudonymizationKey
+
 
 class RawXmlUseCase:
     def __init__(self, validator: DescriptorValidator, executor: BoundedExecutor) -> None:
         self._validator = validator
         self._executor = executor
 
-    def execute(self, request: RunRequest, *, phase: RunPhase) -> RunResult:
+    def execute(
+        self, request: RunRequest, *, phase: RunPhase, pseudonymization_key: PseudonymizationKey | None = None
+    ) -> RunResult:
         lint = self._validator.validate(request.xml, descriptor_path=request.descriptor_path)
         if not lint.ok:
             return RunResult(ok=False, phase=RunPhase.LINT, diagnostics=lint.diagnostics)
@@ -55,7 +64,8 @@ class RawXmlUseCase:
                 max_count=request.max_count,
                 allow_side_effects=request.allow_side_effects,
                 timeout_seconds=request.timeout_seconds,
-            )
+            ),
+            pseudonymization_key=pseudonymization_key,
         )
         try:
             products = sample_evidence(evidence.captured, request.sample_rows)

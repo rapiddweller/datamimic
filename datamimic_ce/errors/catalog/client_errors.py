@@ -8,6 +8,14 @@ from datamimic_ce.errors.codes import IssueCode
 
 ISSUES: list[IssueDefinition] = [
     IssueDefinition(
+        code=IssueCode.RUNTIME_PSEUDONYMIZATION_KEY_INVALID,
+        name="RUNTIME_PSEUDONYMIZATION_KEY_INVALID",
+        title="Invalid pseudonymization key configuration",
+        template="{reason}",
+        cause="The run could not resolve a valid external pseudonymization key.",
+        resolution="Provide one host-owned key of at least 32 bytes using strict Base64 or the typed API input.",
+    ),
+    IssueDefinition(
         code=IssueCode.CLIENT_PREFLIGHT_INVALID_CONFIGURATION,
         name="CLIENT_PREFLIGHT_INVALID_CONFIGURATION",
         title="Client Preflight Invalid Configuration",

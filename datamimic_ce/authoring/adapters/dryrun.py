@@ -44,6 +44,7 @@ from datamimic_ce.authoring.domain.xml_diagnostics import Diagnostic
 from datamimic_ce.engine.dsl.api import NAME_SEPARATOR, capture_product_name, resource_reader_scope
 from datamimic_ce.engine.dsl.vocabulary.constants.attribute_constants import ATTR_COUNT
 from datamimic_ce.engine.io.contracts import SmokeExportRequest
+from datamimic_ce.engine.runtime.pseudonymization import PseudonymizationKey
 from datamimic_ce.errors import (
     GUIDANCE_COUNT_SCOPE,
     DomainError,
@@ -1149,6 +1150,7 @@ def _run_engine_capture(
     environment_properties: dict[str, str] | None = None,
     logical_descriptor_path: str | None = None,
     workspace_root: Path | None = None,
+    pseudonymization_key: PseudonymizationKey | None = None,
 ) -> _WorkerMessage:
     """Execute and capture exactly one engine run inside the cancellable process."""
 
@@ -1187,6 +1189,7 @@ def _run_engine_capture(
                     statement_transformer=transformer,
                     included_statement_transformer=transformer,
                     total_row_limit=max_count,
+                    pseudonymization_key=pseudonymization_key,
                 ),
             )
             with SourceAccessCapture() as source_accesses:

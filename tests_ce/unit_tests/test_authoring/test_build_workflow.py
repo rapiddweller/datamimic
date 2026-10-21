@@ -1,10 +1,19 @@
 """Orchestration counterexamples; the actual runtime is covered separately."""
 from dataclasses import dataclass, field
 
-import pytest
-
-from datamimic_ce.authoring.domain.capture import CapturedProduct, CapturedProducts, ProductCaptureEvidence, CaptureStatus
-from datamimic_ce.authoring.domain.requests import BuildRequestV4, BoundedExecutionEvidence, IncludeGraphResult, LintResult
+from datamimic_ce.authoring.domain.capture import (
+    CapturedProduct,
+    CapturedProducts,
+    CaptureStatus,
+    ProductCaptureEvidence,
+)
+from datamimic_ce.authoring.domain.requests import (
+    BoundedExecutionEvidence,
+    BuildRequestV4,
+    IncludeGraphResult,
+    LintResult,
+)
+from datamimic_ce.engine.runtime.pseudonymization import PseudonymizationKey
 
 
 def request(**overrides):
@@ -16,9 +25,15 @@ def request(**overrides):
 
 
 def captured(*, rows=({"id": 1}, {"id": 2}, {"id": 3}), complete=True):
-    return BoundedExecutionEvidence(ok=True, captured=CapturedProducts((CapturedProduct("cities", tuple(rows),
-        ProductCaptureEvidence(status=CaptureStatus.COMPLETE if complete else CaptureStatus.CAPPED,
-            requested=len(rows), observed=len(rows), limit=10 if complete else len(rows), reason="test provenance")),), 10))
+    provenance = ProductCaptureEvidence(
+        status=CaptureStatus.COMPLETE if complete else CaptureStatus.CAPPED,
+        requested=len(rows),
+        observed=len(rows),
+        limit=10 if complete else len(rows),
+        reason="test provenance",
+    )
+    product = CapturedProduct("cities", tuple(rows), provenance)
+    return BoundedExecutionEvidence(ok=True, captured=CapturedProducts((product,), 10))
 
 
 class Validator:
@@ -38,7 +53,7 @@ class Policy:
 class Executor:
     replies: list
     calls: list = field(default_factory=list)
-    def execute(self, request):
+    def execute(self, request, *, pseudonymization_key: PseudonymizationKey | None = None):
         self.calls.append(request)
         return self.replies.pop(0)
 
@@ -87,14 +102,22 @@ def test_passing_replay_does_not_erase_incomplete_first_capture():
 
 def test_unseeded_replay_fails():
     task = request(verification={"deterministic_replay": True})
-    task = task.model_copy(update={"document": task.document.model_copy(update={"root": task.document.root.model_copy(update={"properties": {}})})})
+    task = task.model_copy(
+        update={
+            "document": task.document.model_copy(
+                update={"root": task.document.root.model_copy(update={"properties": {}})}
+            )
+        }
+    )
     result = workflow(Executor([captured()])).execute(task)
     assert result.outcome == "rejected"
     assert result.verification.deterministic_replay.status.value == "failed"
 
 
 def test_missing_capture_never_ready_even_without_expectations():
-    result = workflow(Executor([BoundedExecutionEvidence(ok=True, captured=CapturedProducts((), 10))])).execute(request())
+    result = workflow(
+        Executor([BoundedExecutionEvidence(ok=True, captured=CapturedProducts((), 10))])
+    ).execute(request())
     assert result.outcome == "rejected"
 
 

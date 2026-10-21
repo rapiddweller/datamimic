@@ -9,17 +9,26 @@ from base64 import b64encode
 
 from datamimic_ce.domains.shared.converters.base.converter import Converter
 from datamimic_ce.engine.dsl.vocabulary.enums.converter_enums import SupportHash, SupportOutputFormat
-from datamimic_ce.errors import IssueCode, task_config_error
+from datamimic_ce.errors import IssueCode, runtime_config_error, task_config_error
+
+
+def derive_field_key(master_key: bytes, field_identity: str) -> bytes:
+    return hmac.digest(master_key, b"DATAMIMIC/Hash/field/v1\0" + field_identity.encode("utf-8"), "sha256")
 
 
 class HashConverter(Converter):
     """Pseudonymize a string into a keyed hash (HMAC): the same value gives the same token within a run,
     and nobody without the key can recompute it. Pass an external random key to separate tokens from
-    generation. The default key derives from <setup rngSeed>, or is random per unseeded run.
+    generation. Runtime configuration must provide an external key independent of <setup rngSeed>.
     Keys require at least 32 bytes; length alone does not establish entropy. ``salt`` is optional
     extra material and does not replace a strong key."""
 
-    def __init__(self, hash_type: str, output_format: str, salt: str | None = None, *, key: bytes):
+    def __init__(self, hash_type: str, output_format: str, salt: str | None = None, *, key: bytes | None):
+        if key is None:
+            raise runtime_config_error(
+                code=IssueCode.RUNTIME_PSEUDONYMIZATION_KEY_INVALID,
+                reason="Hash requires a host-provided external pseudonymization key",
+            )
         if not isinstance(key, bytes):
             raise TypeError("HashConverter key must be bytes")
         if len(key) < 32:

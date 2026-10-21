@@ -22,8 +22,10 @@ from datamimic_ce.domains.api import (
     SubstringConverter,
     Timestamp2DateConverter,
     UpperCaseConverter,
+    derive_field_key,
 )
 from datamimic_ce.engine.dsl.api import ConverterEnum
+from datamimic_ce.engine.dsl.statements.base.statement import Statement
 from datamimic_ce.engine.runtime.contexts.context import Context
 from datamimic_ce.errors import DomainError, IssueCode, UserErrorBase, task_config_error
 
@@ -68,10 +70,13 @@ def _create_converter_from_constructor_str(
         ) from error
 
 
-def create_converter_list(context: Context, converter_str: str | None) -> list[Converter]:
+def create_converter_list(context: Context, statement: Statement, converter_str: str | None) -> list[Converter]:
     """Create converters in descriptor order from the semicolon-separated attribute."""
     if converter_str is None or converter_str == "":
         return []
+    field_identity = statement.full_name or statement.name or ""
+    master_key = context.root.pseudonymization_key
+    field_key = derive_field_key(master_key.value, field_identity) if master_key is not None else None
     converters: list[Converter] = []
     for constructor_str in converter_str.split(";"):
         class_dict: dict[str, object] = {
@@ -83,9 +88,7 @@ def create_converter_list(context: Context, converter_str: str | None) -> list[C
             ConverterEnum.CutLength.value: CutLengthConverter,
             ConverterEnum.Substring.value: SubstringConverter,
             ConverterEnum.Append.value: AppendConverter,
-            ConverterEnum.Hash.value: functools.partial(
-                HashConverter, key=context.root.run_seed.key_for("hash-converter")
-            ),
+            ConverterEnum.Hash.value: functools.partial(HashConverter, key=field_key),
             ConverterEnum.JavaHash.value: JavaHashConverter,
             ConverterEnum.Timestamp2Date.value: Timestamp2DateConverter,
             ConverterEnum.Date2Timestamp.value: Date2TimestampConverter,

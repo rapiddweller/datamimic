@@ -25,7 +25,7 @@ from datamimic_ce.domains.registry.entities import (
 )
 from datamimic_ce.domains.registry.generators import describe_generator_type, generator_namespace
 from datamimic_ce.domains.shared.converters.base.converter import Converter
-from datamimic_ce.domains.shared.converters.privacy.hash_converter import HashConverter
+from datamimic_ce.domains.shared.converters.privacy.hash_converter import HashConverter, derive_field_key
 from datamimic_ce.domains.shared.converters.privacy.java_hash_converter import JavaHashConverter
 from datamimic_ce.domains.shared.converters.privacy.mask_converter import MaskConverter
 from datamimic_ce.domains.shared.converters.privacy.middle_mask_converter import MiddleMaskConverter
@@ -90,6 +90,7 @@ __all__ = [
     "EntitySpec",
     "GeneratorCapability",
     "HashConverter",
+    "derive_field_key",
     "IdentifierRegistry",
     "JavaHashConverter",
     "LowerCaseConverter",

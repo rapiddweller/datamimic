@@ -1,5 +1,5 @@
 <setup rngSeed="43">
-    <!-- A different rngSeed is a different key: every token changes. -->
+    <!-- A different rngSeed leaves external-key tokens unchanged. -->
     <generate name="hashed" count="10" target="">
         <key name="email" constant="max.mustermann@example.com"/>
         <key name="token" script="email" converter="Hash('sha256','hex')"/>

@@ -21,7 +21,7 @@ class ListTask(GenSubTask):
         self._statement = statement
         # Not apply pagination for sub-statement
         self._item_tasks = [create_task(child_stmt, ctx) for child_stmt in statement.sub_statements]
-        self._converter_list = create_converter_list(ctx, self._statement.converter)
+        self._converter_list = create_converter_list(ctx, self._statement, self._statement.converter)
 
     @property
     def statement(self) -> ListStatement:

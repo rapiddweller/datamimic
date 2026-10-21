@@ -6,6 +6,8 @@
 
 from __future__ import annotations
 
+import base64
+import json
 import os
 import pickle
 import signal
@@ -15,8 +17,10 @@ import sys
 import tempfile
 import time
 from contextlib import suppress
+from dataclasses import dataclass, field
 from itertools import islice
 from pathlib import Path
+from uuid import uuid4
 
 from lxml import etree
 
@@ -41,6 +45,7 @@ from datamimic_ce.authoring.domain.requests import (
     BoundedExecutionRequest,
     SourceAccessEvidence,
 )
+from datamimic_ce.engine.runtime.pseudonymization import PseudonymizationKey
 from datamimic_ce.errors import DomainError, GeneratorConfigError, UserErrorBase
 from datamimic_ce.errors.catalog import get_issue_definition
 from datamimic_ce.errors.codes import ErrorCode
@@ -51,6 +56,21 @@ _MAX_WORKSPACE_FILES = 2_000
 _MAX_WORKSPACE_ENTRIES = 4_000
 _MAX_WORKSPACE_DEPTH = 64
 _MAX_REPLY_BYTES = dryrun._MAX_WORKER_REPLY_BYTES
+
+
+@dataclass(frozen=True, slots=True, repr=False)
+class _LiveBoundedKeyEnvelope:
+    call_id: str
+    key: bytes | None = field(repr=False)
+
+    def serialize(self) -> str:
+        return json.dumps(
+            {
+                "call_id": self.call_id,
+                "pseudonymization_key": base64.b64encode(self.key).decode("ascii") if self.key is not None else None,
+            },
+            separators=(",", ":"),
+        )
 
 
 def _failure(code: AuthoringSystemDiagnosticCode, message: str, max_count: int) -> BoundedExecutionEvidence:
@@ -361,7 +381,9 @@ class CeBoundedExecutor:
     def __init__(self, workspace_context: AuthoringWorkspaceContext | None = None) -> None:
         self._workspace_context = workspace_context
 
-    def execute(self, request: BoundedExecutionRequest) -> BoundedExecutionEvidence:
+    def execute(
+        self, request: BoundedExecutionRequest, *, pseudonymization_key: PseudonymizationKey | None = None
+    ) -> BoundedExecutionEvidence:
         from datamimic_ce.domains.api import configured_dataset_overrides
 
         request = BoundedExecutionRequest.model_validate_json(request.model_dump_json())
@@ -403,7 +425,9 @@ class CeBoundedExecutor:
                     request.max_count,
                 )
             else:
-                result = self._execute_child(request, private_workspace, request_file, private_root / "reply.pickle")
+                result = self._execute_child(
+                    request, private_workspace, request_file, private_root / "reply.pickle", pseudonymization_key
+                )
         finally:
             try:
                 temporary.cleanup()
@@ -417,8 +441,13 @@ class CeBoundedExecutor:
 
     @staticmethod
     def _execute_child(
-        request: BoundedExecutionRequest, workspace: Path, request_file: Path, reply_file: Path
+        request: BoundedExecutionRequest,
+        workspace: Path,
+        request_file: Path,
+        reply_file: Path,
+        pseudonymization_key: PseudonymizationKey | None,
     ) -> BoundedExecutionEvidence:
+        call_id = uuid4().hex
         command = [
             sys.executable,
             "-P",
@@ -427,11 +456,12 @@ class CeBoundedExecutor:
             str(request_file),
             str(reply_file),
             str(workspace),
+            call_id,
         ]
         try:
             process = subprocess.Popen(
                 command,
-                stdin=subprocess.DEVNULL,
+                stdin=subprocess.PIPE,
                 stdout=subprocess.DEVNULL,
                 stderr=subprocess.DEVNULL,
                 start_new_session=os.name == "posix",
@@ -443,6 +473,15 @@ class CeBoundedExecutor:
         result: BoundedExecutionEvidence
         deadline = time.monotonic() + request.timeout_seconds
         try:
+            if process.stdin is not None:
+                process.stdin.write(
+                    _LiveBoundedKeyEnvelope(
+                        call_id, pseudonymization_key.value if pseudonymization_key is not None else None
+                    )
+                    .serialize()
+                    .encode("utf-8")
+                )
+                process.stdin.close()
             while not reply_file.exists():
                 if process.poll() is not None:
                     result = _failure(

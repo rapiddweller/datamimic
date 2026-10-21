@@ -1,7 +1,9 @@
 """The CE executor keeps complete evidence and owns private process resources."""
 
+import base64
 import os
 import sys
+import tempfile
 import time
 from pathlib import Path, PurePosixPath
 
@@ -12,9 +14,12 @@ from datamimic_ce.authoring.adapters.bounded_executor import CeBoundedExecutor, 
 from datamimic_ce.authoring.adapters.workspace import AuthoringWorkspaceContext
 from datamimic_ce.authoring.domain.diagnostics import AuthoringSystemDiagnosticCode
 from datamimic_ce.authoring.domain.requests import BoundedExecutionRequest
+from datamimic_ce.engine.runtime.pseudonymization import PseudonymizationKey
 
-
-_XML = '<setup rngSeed="7"><generate name="rows" count="3"><key name="id" generator="IncrementGenerator"/></generate></setup>'
+_XML = (
+    '<setup rngSeed="7"><generate name="rows" count="3">'
+    '<key name="id" generator="IncrementGenerator"/></generate></setup>'
+)
 
 
 def test_executor_keeps_full_capture_beyond_response_sample():
@@ -25,6 +30,43 @@ def test_executor_keeps_full_capture_beyond_response_sample():
     assert product.capture.observed == 3
     assert product.capture.complete
     assert result.smoke_export.requested is False
+
+
+def test_hash_key_reaches_private_bounded_child_without_entering_public_evidence(tmp_path, monkeypatch):
+    sentinel = b"DATAMIMIC_SENTINEL_" + b"x" * 20
+    monkeypatch.setattr(tempfile, "tempdir", str(tmp_path))
+    request = BoundedExecutionRequest(
+        xml=(
+            '<setup><generate name="rows" count="1"><key name="token" constant="known" '
+            "converter=\"Hash('sha256','hex')\"/></generate></setup>"
+        )
+    )
+    key = PseudonymizationKey(sentinel)
+    result = CeBoundedExecutor().execute(request, pseudonymization_key=key)
+    assert result.ok, result.diagnostics
+    assert result.captured.get("rows").rows[0]["token"]
+    assert sentinel.decode() not in repr(key)
+    assert sentinel.decode() not in request.model_dump_json()
+    assert sentinel.decode() not in repr(result)
+    assert base64.b64encode(sentinel).decode("ascii") not in repr(result)
+    assert list(tmp_path.iterdir()) == []
+
+
+def test_failed_private_bounded_child_does_not_return_key_material():
+    sentinel = b"DATAMIMIC_SENTINEL_" + b"x" * 20
+    request = BoundedExecutionRequest(
+        xml=(
+            '<setup><generate name="rows" count="1"><key name="token" constant="known" '
+            "converter=\"Hash('unknown','hex')\"/></generate></setup>"
+        )
+    )
+
+    result = CeBoundedExecutor().execute(request, pseudonymization_key=PseudonymizationKey(sentinel))
+
+    public_result = repr(result)
+    assert not result.ok
+    assert sentinel.decode() not in public_result
+    assert base64.b64encode(sentinel).decode("ascii") not in public_result
 
 
 def test_launcher_package_cannot_replace_the_selected_worker(tmp_path, monkeypatch):
@@ -47,11 +89,12 @@ def test_private_workspace_preserves_relative_sources_without_host_writes(tmp_pa
     original = folder / "input.xml"
     original.write_text("original descriptor", encoding="utf-8")
     workspace = AuthoringWorkspaceContext(tmp_path, PurePosixPath("nested/input.xml"))
-    xml = '<setup rngSeed="7"><generate name="rows" source="rows.csv" separator="," distribution="ordered" target="JSON"/></setup>'
+    xml = (
+        '<setup rngSeed="7"><generate name="rows" source="rows.csv" separator="," '
+        'distribution="ordered" target="JSON"/></setup>'
+    )
     result = CeBoundedExecutor(workspace).execute(
-        BoundedExecutionRequest(
-            xml=xml, descriptor_path=workspace.descriptor_path, smoke_export=True
-        )
+        BoundedExecutionRequest(xml=xml, descriptor_path=workspace.descriptor_path, smoke_export=True)
     )
     assert result.ok, result.diagnostics
     assert result.captured.get("rows").rows == ({"id": "1"}, {"id": "2"})
@@ -131,7 +174,9 @@ def test_runtime_uses_explicit_profile_loader(tmp_path, monkeypatch):
 
     descriptor = tmp_path / "model.xml"
     descriptor.write_text("<setup/>")
-    loader = lambda directory, environment: {}
+    def loader(directory, environment):
+        return {}
+
     original = DescriptorParser.parse
     observed = []
 
@@ -232,11 +277,14 @@ def test_snapshot_reads_file_identity_instead_of_windows_cached_entry_stat(tmp_p
             actual = self.entry.stat(follow_symlinks=follow_symlinks)
             fields = list(actual)
             fields[1] = fields[2] = fields[3] = 0
-            return os.stat_result(fields, {
-                "st_atime_ns": actual.st_atime_ns,
-                "st_mtime_ns": actual.st_mtime_ns,
-                "st_ctime_ns": actual.st_ctime_ns,
-            })
+            return os.stat_result(
+                fields,
+                {
+                    "st_atime_ns": actual.st_atime_ns,
+                    "st_mtime_ns": actual.st_mtime_ns,
+                    "st_ctime_ns": actual.st_ctime_ns,
+                },
+            )
 
     @contextmanager
     def windows_cached_scandir(path):
@@ -279,6 +327,7 @@ def test_snapshot_rejects_file_replaced_between_stat_and_open(tmp_path, monkeypa
 
 def test_missing_memstore_product_remains_keyerror_and_structured_across_child(tmp_path):
     import pickle
+
     from datamimic_ce.engine.io.memstore import Memstore
     from datamimic_ce.errors import MissingMemstoreProductError
     from datamimic_ce.errors.codes import ErrorCode
@@ -307,9 +356,13 @@ def test_inline_file_source_cannot_escape_private_workspace():
 
 def test_bounded_transformer_forces_read_only_after_profile_resolution(tmp_path):
     from datamimic_ce.authoring.adapters.dryrun import neutralize_for_dry_run
-    from datamimic_ce.engine.dsl.api import DescriptorParser, DatabaseStatement, MongoDBStatement
+    from datamimic_ce.engine.dsl.api import DatabaseStatement, DescriptorParser, MongoDBStatement
 
-    xml = '<setup><database id="db" dbms="postgresql" host="localhost" port="5432" database="test" user="test" password="test"/><mongodb id="mongo" host="localhost" port="27017" database="test"/></setup>'
+    xml = (
+        '<setup><database id="db" dbms="postgresql" host="localhost" port="5432" '
+        'database="test" user="test" password="test"/><mongodb id="mongo" host="localhost" '
+        'port="27017" database="test"/></setup>'
+    )
     root = DescriptorParser.parse_xml(xml, tmp_path / "model.xml", None, "production", profile_loader=lambda *_: {})
     clients = [
         statement for statement in root.sub_statements if isinstance(statement, (DatabaseStatement, MongoDBStatement))
@@ -321,13 +374,17 @@ def test_bounded_transformer_forces_read_only_after_profile_resolution(tmp_path)
 
 def test_real_sqlite_source_failure_keeps_ce_identity_in_private_child(tmp_path):
     import sqlite3
+
     from datamimic_ce.errors.codes import ErrorCode, IssueCode
 
     (tmp_path / "db").mkdir()
     connection = sqlite3.connect(tmp_path / "db" / "database.sqlite")
     connection.execute("CREATE TABLE present (id INTEGER)")
     connection.close()
-    xml = '<setup><database id="db" dbms="sqlite" database="database"/><generate name="rows" source="db" count="1" selector="SELECT private_column FROM absent"/></setup>'
+    xml = (
+        '<setup><database id="db" dbms="sqlite" database="database"/><generate name="rows" '
+        'source="db" count="1" selector="SELECT private_column FROM absent"/></setup>'
+    )
     result = CeBoundedExecutor(AuthoringWorkspaceContext(tmp_path)).execute(BoundedExecutionRequest(xml=xml))
     assert not result.ok
     assert result.diagnostics[0].code is AuthoringSystemDiagnosticCode.CHILD_EXECUTION
@@ -385,6 +442,7 @@ def test_workspace_cleanup_failure_blocks_success_after_actual_removal(monkeypat
 
 def test_unique_reference_exhaustion_keeps_category_in_private_child(tmp_path):
     import sqlite3
+
     from datamimic_ce.errors import ErrorCode
 
     (tmp_path / "db").mkdir()
@@ -395,7 +453,7 @@ def test_unique_reference_exhaustion_keeps_category_in_private_child(tmp_path):
         '<setup rngSeed="7"><database id="db" dbms="sqlite" database="database"/>'
         '<generate name="rows" count="5" pageSize="2"><condition><if condition="True">'
         '<reference name="fk" source="db" sourceType="items" sourceKey="id" unique="true"/>'
-        '</if></condition></generate></setup>'
+        "</if></condition></generate></setup>"
     )
     result = CeBoundedExecutor(AuthoringWorkspaceContext(tmp_path)).execute(BoundedExecutionRequest(xml=xml))
     assert not result.ok

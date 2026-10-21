@@ -80,8 +80,10 @@ datamimic run <descriptor.xml> [OPTIONS]
 
 Options:
   --platform-configs TEXT  Platform configurations in JSON format
-  --task-id TEXT          Task identifier
-  --test-mode             Run in test mode
+  --task-id TEXT           Task identifier
+  --test-mode              Run in test mode
+  --param TEXT             Runtime property NAME=VALUE (repeatable)
+  --param-env TEXT         Runtime property NAME=ENV_NAME (repeatable)
 ```
 
 Example:
@@ -96,6 +98,19 @@ datamimic run my-descriptor.xml --task-id task123
 # In test mode
 datamimic run my-descriptor.xml --test-mode
 ```
+
+`Hash` requires a host-owned key independent of `rngSeed`. Keep at least 32
+random bytes in a secret environment variable, encoded as strict standard
+Base64, and pass only its name in platform configuration:
+
+```bash
+export DATAMIMIC_PSEUDONYMIZATION_KEY="$(openssl rand -base64 32)"
+datamimic run my-descriptor.xml \
+  --platform-configs '{"pseudonymization_key_env":"DATAMIMIC_PSEUDONYMIZATION_KEY"}'
+```
+
+Python callers can use `PseudonymizationKey` as a typed run input. Do not put
+key material in XML, platform configuration, or a committed file.
 
 ### Authoring
 

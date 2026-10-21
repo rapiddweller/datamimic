@@ -16,6 +16,7 @@ from datamimic_ce.engine.runtime.contracts import (
     RunSession,
     StatementTransformer,
 )
+from datamimic_ce.engine.runtime.pseudonymization import PseudonymizationKey
 
 
 class DataMimic:
@@ -29,6 +30,7 @@ class DataMimic:
         factory_config: FactoryConfig | None = None,
         args: argparse.Namespace | None = None,
         statement_transformer: StatementTransformer | None = None,
+        pseudonymization_key: PseudonymizationKey | None = None,
     ):
         """Initialize a runtime session for the descriptor."""
         self._task_id = task_id or uuid.uuid4().hex
@@ -53,6 +55,7 @@ class DataMimic:
                 factory_config=factory_config,
                 log_level=log_level,
                 statement_transformer=statement_transformer,
+                pseudonymization_key=pseudonymization_key,
             )
         )
 

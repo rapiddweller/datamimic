@@ -26,6 +26,7 @@ from datamimic_ce.authoring.domain.requests import (
     ReadyBuild,
     RejectedBuild,
 )
+from datamimic_ce.engine.runtime.pseudonymization import PseudonymizationKey
 from datamimic_ce.interfaces.cli import app
 
 
@@ -76,9 +77,9 @@ def executions(monkeypatch):
     original = CeBoundedExecutor.execute
     calls = []
 
-    def recorded(executor, request):
+    def recorded(executor, request, *, pseudonymization_key: PseudonymizationKey | None = None):
         calls.append(request)
-        return original(executor, request)
+        return original(executor, request, pseudonymization_key=pseudonymization_key)
 
     monkeypatch.setattr(CeBoundedExecutor, "execute", recorded)
     return calls
@@ -113,7 +114,11 @@ def test_requested_smoke_without_exporter_is_not_applicable(tmp_path: Path) -> N
 
 def test_smoke_failure_cannot_be_masked_by_passing_acceptance(tmp_path: Path, monkeypatch) -> None:
     failed = _captured(ok=False, smoke=SmokeExportCapture(True, 1, 1, 1))
-    monkeypatch.setattr(CeBoundedExecutor, "execute", lambda executor, request: failed)
+
+    def fail_execution(executor, request, *, pseudonymization_key: PseudonymizationKey | None = None):
+        return failed
+
+    monkeypatch.setattr(CeBoundedExecutor, "execute", fail_execution)
     result = create_authoring_application(workspace_root=tmp_path).build(_request(verification={"smoke_export": True}))
     assert isinstance(result, RejectedBuild)
     assert result.phase is DiagnosticPhase.EVIDENCE
@@ -127,7 +132,7 @@ def test_base_failure_preserves_exact_smoke_status_and_blocks_replay(tmp_path: P
     failed = _captured(ok=False, base_run_ok=False, smoke=smoke)
     calls = []
 
-    def execute(executor, request):
+    def execute(executor, request, *, pseudonymization_key: PseudonymizationKey | None = None):
         calls.append(request)
         return failed
 
@@ -187,7 +192,7 @@ def test_replay_checks_complete_rows_beyond_response_samples(tmp_path: Path, mon
     captures = iter((_captured(), _captured(rows=({"id": 1}, {"id": 99}))))
     calls = []
 
-    def execute(executor, request):
+    def execute(executor, request, *, pseudonymization_key: PseudonymizationKey | None = None):
         calls.append(request)
         return next(captures)
 

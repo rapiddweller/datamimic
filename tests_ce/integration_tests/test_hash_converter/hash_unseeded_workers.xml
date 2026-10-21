@@ -1,5 +1,5 @@
 <setup>
-    <!-- No rngSeed, two workers: both use the run key, so the token is the same across workers. -->
+    <!-- No rngSeed, two workers: the host key yields the same token in both workers. -->
     <generate name="hashed" count="10" target="" numProcess="2">
         <key name="email" constant="max.mustermann@example.com"/>
         <key name="token" script="email" converter="Hash('sha256','hex')"/>

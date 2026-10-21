@@ -39,6 +39,10 @@
         "responsibility": "This module defines the typed run request, including its optional total_row_limit, result, session, and product capture."
       },
       {
+        "path": "datamimic_ce/engine/runtime/pseudonymization.py",
+        "responsibility": "Validates the explicit live pseudonymization key without exposing its bytes in public configuration or evidence."
+      },
+      {
         "path": "datamimic_ce/engine/runtime/lifecycle/__init__.py",
         "responsibility": "This empty initializer module adds no lifecycle logic."
       },

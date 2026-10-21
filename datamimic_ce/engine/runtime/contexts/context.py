@@ -40,6 +40,7 @@ from datamimic_ce.engine.runtime.contexts.demographic_context import Demographic
 from datamimic_ce.engine.runtime.contexts.products import TotalRowBudget
 from datamimic_ce.engine.runtime.contracts import StatementTransformer
 from datamimic_ce.engine.runtime.logging import logger
+from datamimic_ce.engine.runtime.pseudonymization import PseudonymizationKey
 from datamimic_ce.engine.runtime.scripting import evaluation
 from datamimic_ce.engine.runtime.scripting.expression_globals import expression_globals, rebind_seeded_script_names
 from datamimic_ce.engine.runtime.scripting.plugins import execute_script
@@ -241,6 +242,7 @@ class SetupContext(Context):
         included_statement_transformer: StatementTransformer | None = None,
         profile_loader: Callable[[Path, str], dict[str, str]] | None = None,
         total_row_limit: int | None = None,
+        pseudonymization_key: PseudonymizationKey | None = None,
     ) -> None:
         # SetupContext is always its root_context
         super().__init__(self)
@@ -300,6 +302,7 @@ class SetupContext(Context):
         self.included_statement_transformer = included_statement_transformer
         self.profile_loader = profile_loader
         self._total_row_budget = TotalRowBudget(total_row_limit) if total_row_limit is not None else None
+        self._pseudonymization_key = pseudonymization_key
         # Generator stream root: variables/keys without their own seed fork a reproducible child RNG from it.
         self._root_rng: Random | None = Random(self._run_seed.value) if self._run_seed.seeded else None
         # Cached call-time rng — populated lazily on first ``.rng`` access.
@@ -317,6 +320,10 @@ class SetupContext(Context):
     @property
     def run_seed(self) -> RunSeed:
         return self._run_seed
+
+    @property
+    def pseudonymization_key(self) -> PseudonymizationKey | None:
+        return self._pseudonymization_key
 
     @property
     def is_seeded(self) -> bool:
@@ -377,6 +384,7 @@ class SetupContext(Context):
             included_statement_transformer=self.included_statement_transformer,
             profile_loader=self.profile_loader,
             total_row_limit=self._total_row_budget.limit if self._total_row_budget is not None else None,
+            pseudonymization_key=self._pseudonymization_key,
         )
         memo[id(self)] = copied
         copied._pending_client_configs = copy.deepcopy(self._pending_client_configs, memo)
