@@ -101,6 +101,8 @@ flowchart LR
   callers until a migration is decided.
 - **Graph:** literal includes as in #346: `.xml` steps, `.properties`, and the resources they
   read. Expectations address products by name across all files; product names stay unique per project.
+  Facts that Build derives from the document must come from the resolved graph, not the entry alone.
+  Example: whether a seeded model loads Python and therefore must replay (CE #360; Codex review).
 - **Proof binding:** Ready carries a digest per project file (XML, conf, entity, weighting, script).
   Any change to any of them invalidates the proof.
 - **Project context for single files:** `lint`, `compile` and `decompile` of a step file use the
