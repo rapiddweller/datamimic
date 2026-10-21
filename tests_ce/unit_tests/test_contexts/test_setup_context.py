@@ -13,6 +13,7 @@ from datamimic_ce.domains.api import RunSeed
 from datamimic_ce.engine.dsl.model.setup.include_model import IncludeModel
 from datamimic_ce.engine.dsl.model.setup.memstore_model import MemstoreModel
 from datamimic_ce.engine.dsl.model.setup.setup_model import SetupModel
+from datamimic_ce.engine.dsl.statements.base.statement import Statement
 from datamimic_ce.engine.dsl.statements.setup.include_statement import IncludeStatement
 from datamimic_ce.engine.dsl.statements.setup.memstore_statement import MemstoreStatement
 from datamimic_ce.engine.dsl.statements.setup.setup_statement import SetupStatement
@@ -433,7 +434,7 @@ def test_scripted_class_and_instance_remain_native_and_non_converter_is_rejected
     assert instance.__class__ is dynamic_class
     assert context.evaluate_python_expression("instance.value") == 42
     with pytest.raises(TaskConfigError) as raised:
-        create_converter_list(context, constructor)
+        create_converter_list(context, Statement("converter-test", None), constructor)
     assert raised.value.issue_code is IssueCode.TASK_CONVERTER_FAILED
     assert "TypeError; use constructor parameters that create a Converter" in str(raised.value)
     assert type(raised.value.__cause__) is TypeError

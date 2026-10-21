@@ -6,6 +6,7 @@ from types import SimpleNamespace
 import pytest
 
 from datamimic_ce.domains.api import CustomConverter, RunSeed
+from datamimic_ce.engine.dsl.statements.base.statement import Statement
 from datamimic_ce.engine.dsl.vocabulary.constants.data_type_constants import (
     DATA_TYPE_BINARY,
     DATA_TYPE_BOOL,
@@ -14,6 +15,7 @@ from datamimic_ce.engine.dsl.vocabulary.constants.data_type_constants import (
     DATA_TYPE_INT,
     DATA_TYPE_STRING,
 )
+from datamimic_ce.engine.runtime.pseudonymization import PseudonymizationKey
 from datamimic_ce.engine.runtime.scripting.evaluation import evaluate_condition_value, interpolate_variables
 from datamimic_ce.engine.runtime.tasks.values.construction.converters import create_converter_list
 from datamimic_ce.engine.runtime.tasks.values.construction.factory import generate_random_value_based_on_type
@@ -35,9 +37,10 @@ class _ContextAwareConverter(CustomConverter):
 
 
 class _ConverterContext:
-    def __init__(self, seed: int) -> None:
+    def __init__(self, seed: int, key: bytes = b"x" * 32) -> None:
         self.root = SimpleNamespace(
             run_seed=RunSeed.create(seed),
+            pseudonymization_key=PseudonymizationKey(key),
             get_dynamic_class=lambda name: {"ContextAwareConverter": _ContextAwareConverter}.get(name),
         )
 
@@ -130,9 +133,10 @@ def test_scalar_factory_preserves_rng_calls_and_defaults() -> None:
     ]
 
 
-def test_converter_construction_preserves_order_dynamic_context_and_seeded_hash_key() -> None:
+def test_converter_construction_preserves_order_dynamic_context_and_external_hash_key() -> None:
     context = _ConverterContext(seed=23)
-    converters = create_converter_list(context, "LowerCase;Append('_done');ContextAwareConverter")
+    statement = Statement("field", None)
+    converters = create_converter_list(context, statement, "LowerCase;Append('_done');ContextAwareConverter")
 
     value: object = "ABC"
     for converter in converters:
@@ -141,16 +145,18 @@ def test_converter_construction_preserves_order_dynamic_context_and_seeded_hash_
     assert converters[2]._ctx is context
 
     def token(seed: int) -> str:
-        converter = create_converter_list(_ConverterContext(seed), "Hash('sha256', 'hex')")[0]
+        converter = create_converter_list(_ConverterContext(seed), statement, "Hash('sha256', 'hex')")[0]
         return converter.convert("account-7")
 
     assert token(23) == token(23)
-    assert token(23) != token(24)
+    assert token(23) == token(24)
+    rotated = create_converter_list(_ConverterContext(seed=23, key=b"r" * 32), statement, "Hash('sha256', 'hex')")[0]
+    assert token(23) != rotated.convert("account-7")
 
-    mask_converters = create_converter_list(context, "Mask('#');MiddleMask(1,1,'#')")
+    mask_converters = create_converter_list(context, statement, "Mask('#');MiddleMask(1,1,'#')")
     assert mask_converters[0].convert("abcd") == "####"
     assert mask_converters[1].convert("abcd") == "a##d"
     with pytest.raises(ValueError):
-        create_converter_list(context, "Mask(['#'])")
+        create_converter_list(context, statement, "Mask(['#'])")
     with pytest.raises(ValueError):
-        create_converter_list(context, "MiddleMask(1,1,b'#')")
+        create_converter_list(context, statement, "MiddleMask(1,1,b'#')")
