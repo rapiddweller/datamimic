@@ -134,11 +134,14 @@ library sees the same seeded objects as DSL expressions. It does not restrict bu
   about half of the existing scripts unloadable.
 
 Corpus, 2026-10-21: every `*.scr.py` in CE `datamimic_ce/` and `tests_ce/`, in `datamimic-demos`
-and in `datamimic-ee`, 83 files in total:
+and in `datamimic-ee`, deduplicated by content and without EE `.tmp/` run copies: 48 files.
 
 | Defines a top-level class | Imports `random` | Imports `datetime` |
 |---|---|---|
-| 41 | 45 | 23 |
+| 24 | 31 | 14 |
+
+The #332 library check (CE PR #360) admits 39 of them unseeded and 24 seeded. The seeded refusals are
+mostly `import random` inside `generate()`.
 - **AST gate before execution.** Rebinding cannot reach two cases, CE #359:
   - draws while the module body runs;
   - imports inside function bodies.
