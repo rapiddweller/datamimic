@@ -1,6 +1,6 @@
 # Authoring project mode and project contract
 
-Status: **decided in direction** (Alex, 2026-10-20): a new `BuildRequestV5` for CE and EE, CE
+Status: **decided** (Alex, 2026-10-20/21): a new `BuildRequestV5` for CE and EE, CE
 first and then EE (datamimic-ee#69); custom Python runs with safe globals. The project layout
 below is a measured proposal that replaces the `datamimic-demos` layout as the reference.
 
@@ -203,6 +203,7 @@ The plugin's deliverable becomes the project tree:
 
 4. `lib/` admits classes (custom generators and converters), confirmed 2026-10-21.
 5. `BuildRequestV4` is removed when V5 lands; no migration, no legacy route (2026-10-21).
+6. The project layout of Decision 1 is approved (2026-10-21).
 
 ## Delivery order
 
