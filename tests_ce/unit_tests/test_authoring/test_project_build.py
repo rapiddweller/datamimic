@@ -257,3 +257,17 @@ def test_an_unreadable_graph_is_reported_instead_of_undeclared_ids(tmp_path: Pat
     assert result.outcome == "rejected"
     errors = [item.code for item in result.diagnostics if item.severity == "error"]
     assert errors == [AuthoringRuleId.INCLUDE], result.diagnostics
+
+
+def test_a_client_a_step_declares_is_not_visible_to_its_siblings(tmp_path: Path) -> None:
+    project = _copy(tmp_path)
+    step = project / "model" / "10_customers.xml"
+    step.write_text(
+        step.read_text(encoding="utf-8").replace("<setup>", '<setup>\n    <database id="db"/>'), encoding="utf-8"
+    )
+    sibling = project / "delivery" / "90_export.xml"
+    sibling.write_text(sibling.read_text(encoding="utf-8").replace('target="CSV"', 'target="db"'), encoding="utf-8")
+    result = _build(project)
+    assert any(
+        item.code == "DM401" and item.path[:2] == ("include", "delivery/90_export.xml") for item in result.diagnostics
+    ), result.diagnostics

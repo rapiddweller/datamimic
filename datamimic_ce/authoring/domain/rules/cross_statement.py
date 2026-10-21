@@ -59,9 +59,10 @@ _CLIENT_OPERATIONS = {op.value for op in ExportOperation}
 
 
 def _declared_ids(ctx: LintContext) -> tuple[set[str], set[str]]:
-    """(client ids, memstore ids) declared in the descriptor or, for an included step, anywhere in its project."""
+    """(client ids, memstore ids) a descriptor can reach. Memstores are shared across the whole project; a client
+    is visible in its own file and, from the entry, in every step, because a step's clients end with that step."""
     roots = (ctx.root, *ctx.project)
-    clients = {el.get("id") for root in roots for el in root.iter(EL_DATABASE, EL_MONGODB) if el.get("id")}
+    clients = {el.get("id") for root in (ctx.root, *ctx.project[:1]) for el in root.iter(EL_DATABASE, EL_MONGODB)}
     memstores = {el.get("id") for root in roots for el in root.iter(EL_MEMSTORE) if el.get("id")}
     return {c for c in clients if c}, {m for m in memstores if m}
 
