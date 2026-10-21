@@ -13,8 +13,8 @@ def helper_draw() -> int:
     return random.randint(1, 10**9)
 
 
-def helper_own_random() -> int:
-    return Random().randint(1, 10**9)
+def helper_own_random() -> str:
+    return f"{Random().randint(1, 10**9)}/{random.Random(None).randint(1, 10**9)}"
 
 
 def helper_alias_draw() -> int:

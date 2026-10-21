@@ -154,20 +154,15 @@ class _Uncontrolled:
         raise self._refuse()
 
 
-class _OmittedRandomSeed:
-    """Distinguishes Random() from Random(None), whose seed semantics differ."""
+_RandomSeed = int | float | str | bytes | bytearray | None
 
 
-_OMITTED_RANDOM_SEED = _OmittedRandomSeed()
-_RandomSeed = int | float | str | bytes | bytearray | None | _OmittedRandomSeed
+def _random_seed(rng: RandomSource, x: _RandomSeed) -> _RandomSeed:
+    """Random() and Random(None) would seed from OS entropy; in a seeded run they start from the run's stream."""
+    return rng.getrandbits(64) if x is None else x
 
 
-def _random_seed(rng: RandomSource, x: _RandomSeed) -> int | float | str | bytes | bytearray | None:
-    """A seeded run's Random() without a seed starts from the run's stream; an explicit seed is kept."""
-    return rng.getrandbits(64) if isinstance(x, _OmittedRandomSeed) else x
-
-
-def _seeded_random(rng: RandomSource, x: _RandomSeed = _OMITTED_RANDOM_SEED) -> Random:
+def _seeded_random(rng: RandomSource, x: _RandomSeed = None) -> Random:
     return Random(_random_seed(rng, x))
 
 
@@ -193,10 +188,10 @@ def _ignore_seed(*_args: object, **_kwargs: object) -> None:
     """random.seed() inside an expression would rewind the run's seeded stream, so it is a no-op."""
 
 
-def _refuse_keyed_seed(a: _RandomSeed = _OMITTED_RANDOM_SEED, version: int = 2) -> None:
+def _refuse_keyed_seed(a: _RandomSeed = None, version: int = 2) -> None:
     """random.seed() in a seeded script: without a value it would draw OS entropy, so it is a no-op. With a value,
     later draws come from the run's stream, not from that key, so it is refused rather than silently ignored."""
-    if isinstance(a, _OmittedRandomSeed) or a is None:
+    if a is None:
         return
     raise task_config_error(
         code=IssueCode.TASK_EXPRESSION_EVAL_FAILED,
@@ -308,7 +303,7 @@ def rebind_seeded_script_names(
         """random.Random for project scripts, seeded like the expression override, and still a real Random
         subclass, so annotations, isinstance and subclassing keep working."""
 
-        def __init__(self, x: _RandomSeed = _OMITTED_RANDOM_SEED) -> None:
+        def __init__(self, x: _RandomSeed = None) -> None:
             Random.__init__(self, _random_seed(rng, x))
 
     # Scripts reach Random both directly and as random.Random; both must stay the class.
