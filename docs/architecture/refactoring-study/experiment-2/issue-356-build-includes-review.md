@@ -2,7 +2,7 @@
 
 **Accepted within the local architecture review scope.** Reviewer: Astra (independent Opus 5.5 review agent, delegated by Alex).
 
-- Scope: `feat/build-includes`, base `287e9c87` (merged #362), b1 head `dab3bfc0` (`fbea1ad8` plus the Codex fixes `dab3bfc0`); the binding below is for slice b2 at `d002c133`.
+- Scope: `feat/build-includes`, base `287e9c87` (merged #362), b1 head `dab3bfc0` (`fbea1ad8` plus the Codex fixes `dab3bfc0`); the binding below is for slice b2 at `85724521`.
 - This review rebinds the [issue 361 receipt](issue-361-bounded-containment-review.md) and keeps all of its assessments.
 - It does not authorize a merge and does not claim that every native rule passes.
 
@@ -10,7 +10,7 @@
 
 | Item | Value |
 |---|---|
-| Source | `a4dd219d84dc35c040f75aa6fab55bc5fb6a97e09d0eca4368a89279ca1b5fad` |
+| Source | `8f0811bbfcc9075a0271e08161b7ca7e18a5267a864a3f0cb6900d6ecdcb4301` |
 | Target (unchanged) | `d83d4df102a2588a54598e26cb045b721cb024a118f51e31592b135050d4e78e` |
 | Analyzer (unchanged; ArchKeel 4.0.1, Python 3.11.12) | `bb1a3262d3fdd38c3e9a6af980cc063281ae98ab1c28c89c2c5be6dfb450744f` |
 | Validation | `3acc79e944ffb66a675ce1226c213590f21d18d2cfba8afdc39a5d7da7c5892c` |
@@ -224,4 +224,35 @@ What b2 adds:
 - The 20 diagnostics are unchanged; the 314 UNKNOWN records and their digest are unchanged.
 - No change in unresolved or partially resolved calls.
 - 809 authoring tests passed; ruff and mypy are clean.
+
+### Addendum: `85724521` (Codex P2 on #365), accepted
+
+**The fix.** When the include graph cannot be read, `_entry_project` now returns `complete=False`.
+- DM401 then skips only its two undeclared-client and undeclared-target branches; target parse errors and unknown operations remain.
+- DM402 skips only its undeclared-id branch; unsupported file suffixes remain.
+- The real include refusal therefore surfaces in Build, instead of undeclared-id findings that the unread steps might resolve.
+
+**Probes with `authoring lint`:**
+
+| Case | Result |
+|---|---|
+| Single file with an undeclared target | DM401 |
+| Entry with a readable step and an undeclared target | DM401 (`complete` stays True) |
+| `.properties`-only include that is missing | Parse fails earlier with a descriptor error, so the flag is never reached |
+
+So a readable graph hides no real undeclared id, and the single-file and no-include paths are unchanged.
+
+**Redaction:** no new message. The change only suppresses findings.
+
+**Smaller alternative (Low, not blocking).** For an entry with a malformed step, plain `authoring lint` now returns `ok: true`; only DM303 remains. Previously it returned DM401 noise.
+- Build and dry-run still report the include refusal.
+- Having `validate` emit that refusal itself when the walk fails would make lint honest about the cause.
+- It would be no larger than the flag, and it would keep the INCLUDE-only Build result.
+
+**Native result.**
+- 0 violations; 1,426 unresolved calls, 178 typing positions.
+- The 20 diagnostics, the 314 UNKNOWN records and the validation digest are unchanged; only the source digest changes.
+- No change in unresolved or partially resolved calls.
+
+**Tests:** 810 Authoring unit tests passed, 4 skipped; ruff and mypy are clean.
 
