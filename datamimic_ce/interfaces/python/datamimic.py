@@ -12,11 +12,11 @@ from datamimic_ce.engine.runtime.api import create_run_session
 from datamimic_ce.engine.runtime.contracts import (
     FactoryConfig,
     PlatformConfiguration,
+    PseudonymizationKey,
     RunRequest,
     RunSession,
     StatementTransformer,
 )
-from datamimic_ce.engine.runtime.pseudonymization import PseudonymizationKey
 
 
 class DataMimic:

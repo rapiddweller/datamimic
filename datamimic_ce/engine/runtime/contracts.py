@@ -9,7 +9,24 @@ from typing import Protocol
 from pydantic import RootModel
 
 from datamimic_ce.engine.dsl.api import SetupStatement
-from datamimic_ce.engine.runtime.pseudonymization import PseudonymizationKey
+from datamimic_ce.errors import IssueCode, runtime_config_error
+
+
+@dataclass(frozen=True, slots=True, repr=False)
+class PseudonymizationKey:
+    """Validated key material; its representation never includes the value."""
+
+    value: bytes = field(repr=False)
+
+    def __post_init__(self) -> None:
+        if type(self.value) is not bytes or len(self.value) < 32:
+            raise runtime_config_error(
+                code=IssueCode.RUNTIME_PSEUDONYMIZATION_KEY_INVALID,
+                reason="pseudonymization key must contain at least 32 bytes",
+            )
+
+    def __repr__(self) -> str:
+        return "PseudonymizationKey(<redacted>)"
 
 
 class PlatformConfiguration(RootModel[dict[str, object]]):

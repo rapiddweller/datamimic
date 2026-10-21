@@ -14,7 +14,7 @@ from pathlib import Path
 import pytest
 
 from datamimic_ce.domains.shared.converters.privacy.hash_converter import derive_field_key
-from datamimic_ce.engine.runtime.pseudonymization import PseudonymizationKey
+from datamimic_ce.engine.runtime.contracts import PseudonymizationKey
 from datamimic_ce.errors import IssueCode, RuntimeConfigError
 from datamimic_ce.interfaces.python.data_mimic_test import DataMimicTest
 

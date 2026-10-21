@@ -11,8 +11,13 @@ import uuid
 from pathlib import Path
 
 from datamimic_ce.engine.runtime.api import create_run_session
-from datamimic_ce.engine.runtime.contracts import FactoryConfig, PlatformConfiguration, RunRequest, RunSession
-from datamimic_ce.engine.runtime.pseudonymization import PseudonymizationKey
+from datamimic_ce.engine.runtime.contracts import (
+    FactoryConfig,
+    PlatformConfiguration,
+    PseudonymizationKey,
+    RunRequest,
+    RunSession,
+)
 
 logger = logging.getLogger("DATAMIMIC")
 

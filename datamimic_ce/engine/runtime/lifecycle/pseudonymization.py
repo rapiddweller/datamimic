@@ -5,25 +5,13 @@ from __future__ import annotations
 import base64
 import binascii
 import os
-from dataclasses import dataclass, field
 
+from datamimic_ce.engine.runtime.contracts import PseudonymizationKey
 from datamimic_ce.errors import IssueCode, RuntimeConfigError, runtime_config_error
 
 
 def _invalid(reason: str) -> RuntimeConfigError:
     return runtime_config_error(code=IssueCode.RUNTIME_PSEUDONYMIZATION_KEY_INVALID, reason=reason)
-
-
-@dataclass(frozen=True, slots=True, repr=False)
-class PseudonymizationKey:
-    value: bytes = field(repr=False)
-
-    def __post_init__(self) -> None:
-        if type(self.value) is not bytes or len(self.value) < 32:
-            raise _invalid("pseudonymization key must contain at least 32 bytes")
-
-    def __repr__(self) -> str:
-        return "PseudonymizationKey(<redacted>)"
 
 
 def resolve_pseudonymization_key(

@@ -36,11 +36,7 @@
       },
       {
         "path": "datamimic_ce/engine/runtime/contracts.py",
-        "responsibility": "This module defines the typed run request, including its optional total_row_limit, result, session, and product capture."
-      },
-      {
-        "path": "datamimic_ce/engine/runtime/pseudonymization.py",
-        "responsibility": "Validates the explicit live pseudonymization key without exposing its bytes in public configuration or evidence."
+        "responsibility": "Defines typed run inputs/results and the validated, redacted pseudonymization key value."
       },
       {
         "path": "datamimic_ce/engine/runtime/lifecycle/__init__.py",
@@ -89,6 +85,10 @@
       {
         "path": "datamimic_ce/engine/runtime/storage/memstore_manager.py",
         "responsibility": "This module manages run-scoped memstore handles and their lifecycle."
+      },
+      {
+        "path": "datamimic_ce/engine/runtime/lifecycle/pseudonymization.py",
+        "responsibility": "Resolve the host environment reference for a pseudonymization key during runtime startup."
       }
     ],
     "uml": {
@@ -627,7 +627,8 @@
       "root": "datamimic_ce.engine.runtime.lifecycle",
       "allowed_children": [
         "datamimic_ce.engine.runtime.lifecycle.config",
-        "datamimic_ce.engine.runtime.lifecycle.runner"
+        "datamimic_ce.engine.runtime.lifecycle.runner",
+        "datamimic_ce.engine.runtime.lifecycle.pseudonymization"
       ],
       "rationale": "Own run configuration and session orchestration, including descriptor parsing, setup execution and test-result capture. Exact reviewed target children; no hidden extra modules.",
       "provenance": [

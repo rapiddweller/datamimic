@@ -15,7 +15,7 @@ from datamimic_ce.engine.dsl.vocabulary.constants.data_type_constants import (
     DATA_TYPE_INT,
     DATA_TYPE_STRING,
 )
-from datamimic_ce.engine.runtime.pseudonymization import PseudonymizationKey
+from datamimic_ce.engine.runtime.contracts import PseudonymizationKey
 from datamimic_ce.engine.runtime.scripting.evaluation import evaluate_condition_value, interpolate_variables
 from datamimic_ce.engine.runtime.tasks.values.construction.converters import create_converter_list
 from datamimic_ce.engine.runtime.tasks.values.construction.factory import generate_random_value_based_on_type

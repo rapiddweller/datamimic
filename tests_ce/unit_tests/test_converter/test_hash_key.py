@@ -1,11 +1,13 @@
 import base64
 import hmac
 import os
+import pickle
 
 import pytest
 
 from datamimic_ce.domains.shared.converters.privacy.hash_converter import HashConverter, derive_field_key
-from datamimic_ce.engine.runtime.pseudonymization import PseudonymizationKey, resolve_pseudonymization_key
+from datamimic_ce.engine.runtime.contracts import PseudonymizationKey
+from datamimic_ce.engine.runtime.lifecycle.pseudonymization import resolve_pseudonymization_key
 
 
 @pytest.mark.parametrize("key", [b"", b"short", b"a" * 31])
@@ -56,3 +58,8 @@ def test_environment_reference_and_typed_key_cannot_be_combined() -> None:
 def test_key_representation_is_redacted() -> None:
     key = PseudonymizationKey(b"SENTINEL" + b"x" * 24)
     assert "SENTINEL" not in repr(key)
+
+
+def test_key_value_round_trips_through_private_worker_pickle() -> None:
+    key = PseudonymizationKey(bytes(range(32)))
+    assert pickle.loads(pickle.dumps(key)) == key

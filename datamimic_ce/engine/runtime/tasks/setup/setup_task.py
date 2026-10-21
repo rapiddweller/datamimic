@@ -23,8 +23,7 @@ from datamimic_ce.engine.io.api import (
     dispose_client_engine,
 )
 from datamimic_ce.engine.runtime.contexts.context import SetupContext
-from datamimic_ce.engine.runtime.contracts import StatementTransformer
-from datamimic_ce.engine.runtime.pseudonymization import PseudonymizationKey
+from datamimic_ce.engine.runtime.contracts import PseudonymizationKey, StatementTransformer
 from datamimic_ce.engine.runtime.storage.memstore_manager import MemstoreManager
 from datamimic_ce.engine.runtime.tasks.base.dispatch import create_task
 from datamimic_ce.engine.runtime.tasks.base.task import CommonSubTask, SetupSubTask

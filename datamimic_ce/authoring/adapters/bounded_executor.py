@@ -47,7 +47,7 @@ from datamimic_ce.authoring.domain.requests import (
     BoundedExecutionRequest,
     SourceAccessEvidence,
 )
-from datamimic_ce.engine.runtime.pseudonymization import PseudonymizationKey
+from datamimic_ce.engine.runtime.contracts import PseudonymizationKey
 from datamimic_ce.errors import DomainError, GeneratorConfigError, UserErrorBase
 from datamimic_ce.errors.catalog import get_issue_definition
 from datamimic_ce.errors.codes import ErrorCode

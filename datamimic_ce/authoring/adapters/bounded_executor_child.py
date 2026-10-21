@@ -21,7 +21,7 @@ from datamimic_ce.authoring.adapters.dryrun import _run_engine_capture
 from datamimic_ce.authoring.adapters.workspace import AuthoringWorkspaceContext
 from datamimic_ce.authoring.domain.requests import BoundedExecutionRequest
 from datamimic_ce.engine.dsl.api import resource_reader_scope
-from datamimic_ce.engine.runtime.pseudonymization import PseudonymizationKey
+from datamimic_ce.engine.runtime.contracts import PseudonymizationKey
 
 # Audit events that start a process; refused in every bounded run without side effects.
 _PROCESS_EVENTS = frozenset(

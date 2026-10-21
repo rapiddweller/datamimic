@@ -38,9 +38,8 @@ from datamimic_ce.engine.io.api import (
 )
 from datamimic_ce.engine.runtime.contexts.demographic_context import DemographicContext
 from datamimic_ce.engine.runtime.contexts.products import TotalRowBudget
-from datamimic_ce.engine.runtime.contracts import StatementTransformer
+from datamimic_ce.engine.runtime.contracts import PseudonymizationKey, StatementTransformer
 from datamimic_ce.engine.runtime.logging import logger
-from datamimic_ce.engine.runtime.pseudonymization import PseudonymizationKey
 from datamimic_ce.engine.runtime.scripting import evaluation
 from datamimic_ce.engine.runtime.scripting.expression_globals import expression_globals, rebind_seeded_script_names
 from datamimic_ce.engine.runtime.scripting.plugins import execute_script
