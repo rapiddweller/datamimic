@@ -1,9 +1,9 @@
 # Bounded Python library architecture review (issue 332, PR #360)
 
-**Accepted within the local architecture review scope.** Alex decided the contract question (M1, Option A); `285e888b` implements it. `23080ad5` widens the builtin rule from calls to references, and `b0205d29`/`1d72d46f` close the routes that remained.
+**Accepted within the local architecture review scope.** Alex decided the contract question (M1, Option A); `285e888b` implements it. `23080ad5` widens the builtin rule from calls to references, and `b0205d29`/`1d72d46f` close the routes that remained. `170fca2f` names an out-of-workspace library uri as a policy refusal.
 
 - Reviewer: Astra (independent Opus 5.5 review agent, delegated by Alex).
-- Scope: `feat/bounded-python-library`, base `f4e4de69`, head `1d72d46f` (`d9d377bc`, the L1 fix `6e36e1c5`, the M1 contract change `285e888b`, the builtin-reference rule `23080ad5`, and its follow-ups `b0205d29`/`1d72d46f`).
+- Scope: `feat/bounded-python-library`, base `f4e4de69`, head `1d72d46f` (`d9d377bc`, the L1 fix `6e36e1c5`, the M1 contract change `285e888b`, the builtin-reference rule `23080ad5`, its follow-ups `b0205d29`/`1d72d46f`, and the out-of-workspace refusal `170fca2f`).
 - This review rebinds the [issue 357 receipt](issue-357-seeded-script-imports-review.md) and keeps all of its assessments.
 - It does not authorize a merge and does not claim that every native rule passes.
 
@@ -11,10 +11,10 @@
 
 | Item | Value |
 |---|---|
-| Source | `f6d30814ce059fbf6ef5d740baf277bd268ce1dd50848f60b729caea9685f3d8` |
+| Source | `1a7f4e3349b746831a5836903da3ff4165924542d87763fcd60122b0fde1deee` |
 | Target (unchanged) | `d83d4df102a2588a54598e26cb045b721cb024a118f51e31592b135050d4e78e` |
 | Analyzer (unchanged; ArchKeel 4.0.1, Python 3.11.12) | `bb1a3262d3fdd38c3e9a6af980cc063281ae98ab1c28c89c2c5be6dfb450744f` |
-| Validation | `3a90a3a937b6b19a43c2b6546dd1159c36cdf846ecc0048f7ecad02881775f54` |
+| Validation | `2e30dba62fbf149897df96420cf74e1d9d9438b26fe2d9996d740976a546f7bb` |
 | UNKNOWN | `eedde60f12fc785fc81f3044cbe020929e0c5f18b912a458d04a2d6057c46a6d` |
 
 Budgets are unchanged: 1,431 unresolved calls, 178 typing positions and 256 unknown positions. No ArchKeel policy, architecture contract, baseline, gate or `measurement_amendment` change. The published DSL contract changes additively (see M1).
@@ -113,7 +113,7 @@ I re-collected base `f4e4de69` independently, and it reproduces the previous rec
 - Rules: 271 PASS and 5 UNKNOWN.
 - The 20 diagnostics are identical. The full report exits 0. Contract and analyzer are unchanged.
 
-**Calls:** 13,069 → 13,146; resolved 9,636 → 9,700 (the L1 `catalog_diagnostic` call, the strategy dispatch and the reference rules); partially resolved 2,002 → 2,015; unresolved 1,431 → 1,431.
+**Calls:** 13,069 → 13,147; resolved 9,636 → 9,701 (the L1 `catalog_diagnostic` call, the strategy dispatch and the reference rules); partially resolved 2,002 → 2,015; unresolved 1,431 → 1,431.
 - Every unresolved difference is a move into `ExecuteStatement`, from the parser's `_resolve_type` and the task's `_normalize_python`.
 - The 13 new partially resolved calls are new authoring reads (`node.get`, `properties.get`, `module.split/startswith`, `refusal.message/remediation`) plus the moved `_EXT_TYPE.get`/`code.replace`.
 - No call was promoted.
@@ -168,6 +168,23 @@ The corpus did not hit any of these (39 unseeded and 24 seeded scripts pass, per
 
 **Included libraries in Build (Codex P1, second thread).** Not reachable today, as the author says: Build rejects `library_included.xml` as `unsupported_bounded_operation`, with replay `not_requested`. When Build starts admitting includes, the replay requirement must be decided over the resolved include graph.
 
+## Out-of-workspace library uri (`170fca2f`, Codex P1)
+
+The thread claims that an included step's `<execute uri="/tmp/library.py">` or `../x.py` runs host code. That claim does not hold, here or at the previous receipt.
+- I probed both forms. At `bb2b1c74` the dry-run failed closed with `child_execution` "Bounded CE execution failed.", and the outside file's `VALUE = 42` was never captured.
+- At `170fca2f` it fails with the static `side_effect` refusal "Python library uri must name a file inside the workspace".
+- A workspace library still runs and captures `{'v': 7}`.
+- With the check skipped (`authoring run --allow-side-effects`), the runtime read still fails closed, because `ExecuteTask` reads through the same contained reader. The child wraps the whole run in `resource_reader_scope(workspace.read_resource_bytes)` (`bounded_executor_child.py:31`).
+
+**Windows.** I could not run it here. By code reading, the contained reader first takes the lexical `os.path.abspath(...).relative_to(root)` check. That check rejects absolute, UNC, drive-relative and `..` paths. `WindowsSnapshotRoot` then refuses reparse points. A case-differing path inside the workspace would also fail `relative_to`, which is fail-closed. **NOT VERIFIED on Windows.**
+
+**Masking (Low).** `except ValueError` (`dryrun.py:310`) maps every refusal from the contained reader to the same "inside the workspace" text. That covers a file outside the workspace, the workspace root itself, a non-regular file, a file over 100 MB, a file changed while being read, and a Windows reparse point.
+- All of these fail closed, so nothing is admitted that was refused before.
+- The text is wrong for a symlinked, oversized or concurrently changed file inside the workspace.
+- `UnicodeDecodeError` (a `ValueError`) is still caught earlier and left to the runtime.
+- No unrelated defect is hidden. Before, these errors surfaced as an opaque child failure.
+- Optional: a static text such as "Python library uri must name a regular, bounded file inside the workspace" would be accurate for every case.
+
 ## Security note (pre-existing, outside this PR)
 
 The library check is an admission rule, not a sandbox. The PR documents this.
@@ -179,15 +196,16 @@ The library check is an admission rule, not a sandbox. The PR documents this.
 ## Evidence boundary
 
 **LOCAL VERIFIED (by this reviewer):**
-- Source review of `f4e4de69..1d72d46f`.
+- Source review of `f4e4de69..170fca2f`.
 - Admission, placeholder, encoding, forced-replay, mismatch, redaction and capability probes.
 - Native collection at head and base; decoded call and UNKNOWN diffs.
-- ruff and full mypy (534 files) at `d9d377bc`, `6e36e1c5`, `285e888b`, `23080ad5` and `1d72d46f`.
+- ruff and full mypy (534 files) at `d9d377bc`, `6e36e1c5`, `285e888b`, `23080ad5`, `1d72d46f` and `170fca2f`.
 - 196 tests passed: bounded Python library, dryrun includes, trusted Python authoring (functional), bounded executor, Build verification, dryrun, determinism scenarios and `extensive_script`.
 - At `6e36e1c5`: bounded Python library, Build verification and acceptance tests, 115 passed.
 - At `285e888b`: bounded Python library, build policy, CE catalog, dynamic count, reference, transport architecture, contract bundle, dryrun includes, bounded executor, trusted Python authoring and public API ownership tests, 152 passed. Capability and schema strategy counts were checked directly.
 - At `23080ad5`: bounded Python library, dryrun includes, trusted Python authoring and build policy tests, 65 passed. Probed 17 bypass and false-positive cases against `python_library_refusal`. Re-probed Build for the seeded library, the module-level draw and the included library.
 - At `1d72d46f`: the same four suites, 73 passed. Probed 13 library-check cases. Re-probed Build for the seeded library (replay passed) and the module-level draw (rejected with the forced-replay reason).
+- At `170fca2f`: the same suites plus the bounded executor tests, 105 passed. Ran out-of-workspace probes (absolute, `../`, workspace control, `--allow-side-effects` runtime read) against both `bb2b1c74` and `170fca2f`.
 - Strict completion gate acceptance.
 
 **NOT VERIFIED:**
