@@ -12,7 +12,7 @@ import pytest
 from datamimic_ce.authoring import create_authoring_application
 from datamimic_ce.authoring.domain.diagnostics import AuthoringRuleId
 from datamimic_ce.authoring.domain.proof import VerificationGateStatus
-from datamimic_ce.authoring.domain.requests import BuildRequestV4, DecompileDocumentRequest
+from datamimic_ce.authoring.domain.requests import BuildRequestV4, DecompileDocumentRequest, LintRequest
 
 _PROJECT = Path(__file__).parent / "project_build" / "order_desk"
 _ENTRY = PurePosixPath("datamimic.xml")
@@ -107,11 +107,14 @@ def test_client_declared_in_a_step_is_refused(tmp_path: Path) -> None:
         ),
         encoding="utf-8",
     )
+    # A nested use of that client must not surface first as an undeclared id.
+    nested = project / "delivery" / "90_export.xml"
+    nested.write_text(nested.read_text(encoding="utf-8").replace('target="CSV"', 'target="db"'), encoding="utf-8")
     result = _build(project)
     assert result.outcome == "rejected"
-    assert any(item.path[:2] == ("include", "model/10_customers.xml") for item in result.diagnostics), (
-        result.diagnostics
-    )
+    assert [(item.code, item.path[:2]) for item in result.diagnostics] == [
+        (AuthoringRuleId.INCLUDE, ("include", "model/10_customers.xml"))
+    ], result.diagnostics
 
 
 def test_product_names_stay_unique_across_files(tmp_path: Path) -> None:
@@ -259,15 +262,13 @@ def test_an_unreadable_graph_is_reported_instead_of_undeclared_ids(tmp_path: Pat
     assert errors == [AuthoringRuleId.INCLUDE], result.diagnostics
 
 
-def test_a_client_a_step_declares_is_not_visible_to_its_siblings(tmp_path: Path) -> None:
+def test_lint_does_not_let_the_entry_see_a_client_a_step_declares(tmp_path: Path) -> None:
     project = _copy(tmp_path)
     step = project / "model" / "10_customers.xml"
     step.write_text(
         step.read_text(encoding="utf-8").replace("<setup>", '<setup>\n    <database id="db"/>'), encoding="utf-8"
     )
-    sibling = project / "delivery" / "90_export.xml"
-    sibling.write_text(sibling.read_text(encoding="utf-8").replace('target="CSV"', 'target="db"'), encoding="utf-8")
-    result = _build(project)
-    assert any(
-        item.code == "DM401" and item.path[:2] == ("include", "delivery/90_export.xml") for item in result.diagnostics
-    ), result.diagnostics
+    entry = (project / "datamimic.xml").read_text(encoding="utf-8")
+    entry = entry.replace("</setup>", '    <generate name="probe" count="1" target="db"/>\n</setup>')
+    result = create_authoring_application(project, descriptor_path=_ENTRY).lint(LintRequest(xml=entry))
+    assert any(item.code == "DM401" for item in result.diagnostics), result.diagnostics

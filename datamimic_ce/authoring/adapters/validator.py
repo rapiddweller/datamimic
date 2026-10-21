@@ -23,7 +23,13 @@ from datamimic_ce.authoring.domain.diagnostics import (
 )
 from datamimic_ce.authoring.domain.requests import IncludedDescriptor, IncludeGraphResult, LintResult
 from datamimic_ce.authoring.domain.rule_catalog import RuleSeverity, authoring_rule_definition
-from datamimic_ce.engine.dsl.api import DescriptorParser, parse_xml_source, resource_reader_scope
+from datamimic_ce.engine.dsl.api import (
+    EL_DATABASE,
+    EL_MONGODB,
+    DescriptorParser,
+    parse_xml_source,
+    resource_reader_scope,
+)
 from datamimic_ce.engine.dsl.parsers.base.client_config import ConnectionProfileLoader
 from datamimic_ce.errors.base import ParserValidationError, UserErrorBase
 
@@ -148,6 +154,27 @@ class CeDescriptorValidator:
                     return _graph_refused(logical_path, "An included step is not UTF-8 encoded.")
                 descriptors.append(IncludedDescriptor(uri=uri, xml=text, sha256=sha256(data).hexdigest()))
         roots = [parse_xml_source(step.xml) for step in descriptors]
+        # Bindings and sinks resolve against the entry, and a step's clients end with that step; refusing them
+        # here keeps a step-declared client from surfacing first as an undeclared id in another step.
+        refusals = []
+        for step, root in zip(descriptors, roots, strict=True):
+            for element in root:
+                if isinstance(element.tag, str) and element.tag in (EL_DATABASE, EL_MONGODB):
+                    refusals.append(
+                        catalog_diagnostic(
+                            AuthoringRuleId.INCLUDE,
+                            "Clients belong to the entry descriptor, not to an included step.",
+                            phase=DiagnosticPhase.POLICY,
+                            path=(
+                                "include",
+                                step.uri,
+                                element.tag,
+                                *(("line", element.sourceline) if element.sourceline is not None else ()),
+                            ),
+                        )
+                    )
+        if refusals:
+            return IncludeGraphResult(ok=False, diagnostics=tuple(refusals))
         project = (parse_xml_source(xml), *roots)
         findings: list[Diagnostic] = []
         for step, root in zip(descriptors, roots, strict=True):
