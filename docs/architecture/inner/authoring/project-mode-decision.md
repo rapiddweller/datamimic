@@ -130,7 +130,7 @@ library sees the same seeded objects as DSL expressions. It does not restrict bu
   - `random.Random` becomes a real seeded subclass, and `isinstance` checks keep working.
   - Entropy sources (`SystemRandom`, `uuid1`, `urandom`) and a keyed `random.seed(x)` raise.
   - Ordinary `import random` / `from datetime import datetime` therefore stay allowed.
-- **Classes are admitted**, mostly `Generator`/`Converter` subclasses. Functions-only would make
+- **Classes are admitted** (Alex, 2026-10-21), mostly `Generator`/`Converter` subclasses. Functions-only would make
   about half of the existing scripts unloadable.
 
 Corpus, 2026-10-21: every `*.scr.py` in CE `datamimic_ce/` and `tests_ce/`, in `datamimic-demos`
@@ -190,8 +190,9 @@ The plugin's deliverable becomes the project tree:
 2. Protocol: `BuildRequestV5` for CE and EE; CE first, then EE.
 3. Python: allowed as pure libraries running with safe globals.
 
-Still open: when `V4` is retired. Admitting classes in `lib/` is recommended above (41 of 83 corpus
-scripts) and needs Alex's confirmation.
+4. `lib/` admits classes (custom generators and converters), confirmed 2026-10-21.
+
+Still open: when `V4` is retired.
 
 ## Not decided here
 
