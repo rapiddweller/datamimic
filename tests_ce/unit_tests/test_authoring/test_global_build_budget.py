@@ -10,7 +10,7 @@ from datamimic_ce.authoring.domain.proof import VerificationGateStatus
 from datamimic_ce.authoring.domain.requests import BuildRequestV4, DecompileDocumentRequest
 from datamimic_ce.engine.runtime.api import create_run_session
 from datamimic_ce.engine.runtime.contracts import RunRequest
-from datamimic_ce.errors import TaskConfigError
+from datamimic_ce.errors import IssueCode, TaskConfigError
 
 
 def _build(
@@ -42,6 +42,10 @@ def test_separate_products_share_one_total_budget(tmp_path: Path) -> None:
     )
 
     assert result.outcome == "rejected"
+    assert any(
+        diagnostic.ce_error is not None and diagnostic.ce_error.issue_code is IssueCode.TASK_TOTAL_ROW_BUDGET_EXCEEDED
+        for diagnostic in result.diagnostics
+    )
 
 
 def test_included_products_share_one_total_budget(tmp_path: Path) -> None:
@@ -147,3 +151,7 @@ def test_nested_products_share_one_total_budget(
     assert result.outcome == outcome, result.diagnostics
     if outcome == "ready":
         assert sum(len(product.rows) for product in result.evidence) == 5
+        assert {product.name: product.capture.limit for product in result.evidence} == {
+            "parents": 5,
+            "children": 5,
+        }

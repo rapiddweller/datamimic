@@ -1256,7 +1256,7 @@ def _capture_evidence(
     if budget is not None and budget.parent_name is not None:
         parent_observed = observed_by_name.get(budget.parent_name, 0)
     output_multiplier = budget.output_multiplier if budget is not None else 1
-    limit = max(1, max_count * parent_observed * output_multiplier)
+    limit = max_count
     if budget is None:
         return ProductCaptureEvidence(
             status=CaptureStatus.UNKNOWN,
