@@ -1,0 +1,7 @@
+<setup>
+    <!-- Refused before execution: SQL needs a client and is no library. -->
+    <execute type="sql">select 1</execute>
+    <generate name="selected" count="1" target="">
+        <key name="value" constant="1"/>
+    </generate>
+</setup>

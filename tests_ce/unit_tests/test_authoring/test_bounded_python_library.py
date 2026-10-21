@@ -1,0 +1,127 @@
+# DATAMIMIC
+# Copyright (c) 2023-2026 Rapiddweller Asia Co., Ltd.
+# This software is licensed under the MIT License. See LICENSE.
+
+"""A Python library loaded by <execute> reaches Ready through Build when it passes the library check (#332)."""
+
+from pathlib import Path, PurePosixPath
+
+import pytest
+
+from datamimic_ce.authoring import create_authoring_application
+from datamimic_ce.authoring.adapters.bounded_executor import CeBoundedExecutor
+from datamimic_ce.authoring.adapters.workspace import AuthoringWorkspaceContext
+from datamimic_ce.authoring.domain.diagnostics import AuthoringRuleId
+from datamimic_ce.authoring.domain.proof import VerificationGateStatus
+from datamimic_ce.authoring.domain.requests import BoundedExecutionRequest, BuildRequestV4, DecompileDocumentRequest
+from datamimic_ce.authoring.domain.script_semantics import LibraryRefusalReason as Reason
+from datamimic_ce.authoring.domain.script_semantics import python_library_refusal
+
+_MODELS = Path(__file__).parent / "bounded_python_library"
+
+
+def _build(filename: str):
+    application = create_authoring_application(_MODELS)
+    decoded = application.decompile_document(
+        DecompileDocumentRequest(xml=(_MODELS / filename).read_text(encoding="utf-8"))
+    )
+    assert decoded.outcome == "ready", decoded
+    return application.build(BuildRequestV4(document=decoded.document, max_count=5))
+
+
+def _rows(result) -> list[dict]:
+    return [dict(row) for product in result.evidence for row in product.rows]
+
+
+@pytest.mark.parametrize("filename", ["library_inline.xml", "library_unseeded.xml"])
+def test_library_function_reaches_ready_without_replay_when_unseeded(filename: str) -> None:
+    result = _build(filename)
+    assert result.outcome == "ready", result
+    assert [row["person_id"] for row in _rows(result)] == [2]
+    assert result.verification.deterministic_replay.status is VerificationGateStatus.NOT_REQUESTED
+
+
+def test_seeded_library_loads_once_and_build_replays_it_unrequested() -> None:
+    result = _build("library_seeded.xml")
+    assert result.outcome == "ready", result
+    rows = _rows(result)
+    assert [(row["person_id"], row["loads"]) for row in rows] == [(2, 1), (2, 1)]
+    assert rows[0]["draw"] != rows[1]["draw"]
+    assert result.verification.deterministic_replay.status is VerificationGateStatus.PASSED
+
+
+@pytest.mark.parametrize(
+    ("filename", "message"),
+    [
+        (
+            "library_import_in_function.xml",
+            "import_in_function.scr.py: Python library line 2 imports inside a function or class body",
+        ),
+        ("library_reads_file.xml", "reads_file.scr.py: Python library line 2 calls a file or dynamic-code builtin"),
+    ],
+)
+def test_library_check_refuses_before_the_library_runs(filename: str, message: str) -> None:
+    result = _build(filename)
+    assert result.outcome == "rejected"
+    assert any(
+        item.code is AuthoringRuleId.SIDE_EFFECT and item.message.startswith(message) for item in result.diagnostics
+    ), result.diagnostics
+
+
+@pytest.mark.parametrize("filename", ["execute_sql.xml", "execute_per_row.xml"])
+def test_execute_outside_a_setup_level_python_library_is_refused_by_policy(filename: str) -> None:
+    result = _build(filename)
+    assert result.outcome == "rejected"
+    assert [item.code for item in result.diagnostics] == [AuthoringRuleId.UNSUPPORTED_BOUNDED_OPERATION]
+
+
+@pytest.mark.parametrize(
+    ("source", "seeded", "reason"),
+    [
+        ("import random\nLOADS = [random.random]\n", True, None),
+        ("from datamimic_ce.domains.api import BaseLiteralGenerator\n", False, None),
+        ("def f():\n    import random\n", False, None),
+        ("def f():\n    import random\n", True, Reason.IMPORT_INSIDE_BODY_UNDER_SEED),
+        ("class G:\n    def f(self):\n        from uuid import uuid4\n", True, Reason.IMPORT_INSIDE_BODY_UNDER_SEED),
+        ("import subprocess\n", False, Reason.IMPORT_NOT_ADMITTED),
+        ("from datamimic_ce.engine.io.api import database_count_table_length\n", False, Reason.IMPORT_NOT_ADMITTED),
+        ("from . import sibling\n", False, Reason.IMPORT_NOT_ADMITTED),
+        ("VALUE = eval('1')\n", False, Reason.FILE_OR_DYNAMIC_CODE_BUILTIN),
+        ("def broken(:\n", False, None),
+    ],
+)
+def test_python_library_refusal(source: str, seeded: bool, reason: Reason | None) -> None:
+    refusal = python_library_refusal(source, seeded=seeded)
+    assert (refusal.reason if refusal else None) is reason
+
+
+def test_refusal_names_the_earliest_line_and_no_source_text() -> None:
+    refusal = python_library_refusal("SECRET = 'token-123'\nimport socket\nx = open('a')\n", seeded=False)
+    assert refusal is not None and refusal.line == 2
+    assert "token-123" not in refusal.message() and "socket" not in refusal.message()
+
+
+def _bounded_run(filename: str):
+    workspace = AuthoringWorkspaceContext(_MODELS, PurePosixPath(filename))
+    return CeBoundedExecutor(workspace).execute(
+        BoundedExecutionRequest(
+            xml=(_MODELS / filename).read_text(encoding="utf-8"), descriptor_path=workspace.descriptor_path, max_count=5
+        )
+    )
+
+
+@pytest.mark.parametrize("filename", ["library_entry.xml", "library_included.xml"])
+def test_entry_or_included_step_may_load_a_library(filename: str) -> None:
+    result = _bounded_run(filename)
+    assert result.ok, result.diagnostics
+    assert [dict(row) for product in result.captured.products for row in product.rows] == [{"person_id": 2}]
+
+
+def test_included_library_is_checked_against_the_entry_seed() -> None:
+    result = _bounded_run("library_included_refused.xml")
+    assert not result.ok
+    assert any(
+        item.code is AuthoringRuleId.SIDE_EFFECT
+        and item.message.startswith("import_in_function.scr.py: Python library line 2 imports inside")
+        for item in result.diagnostics
+    ), result.diagnostics

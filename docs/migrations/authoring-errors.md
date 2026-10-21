@@ -134,7 +134,10 @@ not prove public Build eligibility.
 Bounded SQL sources use a conservative query subset and backend read-only transactions
 (PostgreSQL, MySQL, Oracle, SQLite); SQL Server reads reject. MongoDB blocks parsed
 write/script operations. These controls do not sandbox arbitrary Python or privileged
-backend extensions. Float-backed decimal ranges retain the former 15-place proof
+backend extensions. A setup-level Python library in `<execute>` is admitted after a
+static check (data-module imports only, no file or dynamic-code builtins, and under
+`rngSeed` no imports inside a body). That check is no sandbox either; a seeded model
+that loads Python always runs deterministic replay. Float-backed decimal ranges retain the former 15-place proof
 limit. Compile support, bounded proof and real target delivery remain separate.
 
 ## One-time legacy migration

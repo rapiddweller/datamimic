@@ -1,0 +1,7 @@
+<setup>
+    <!-- Refused: a library reads no files; the model passes data in. -->
+    <execute uri="lib/reads_file.scr.py"/>
+    <generate name="selected" count="1" target="">
+        <key name="value" script="load()"/>
+    </generate>
+</setup>

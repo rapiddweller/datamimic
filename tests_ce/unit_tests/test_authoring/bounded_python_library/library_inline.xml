@@ -1,0 +1,10 @@
+<setup>
+    <!-- The #332 shape: an inline library function selects the eligible candidate. -->
+    <execute type="python">
+        def select_person(candidates):
+            return next(person_id for person_id, eligible in candidates if eligible)
+    </execute>
+    <generate name="selected" count="1" target="">
+        <key name="person_id" script="select_person([(1, False), (2, True)])"/>
+    </generate>
+</setup>

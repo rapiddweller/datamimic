@@ -295,7 +295,8 @@ def rebind_seeded_script_names(
 
     Outside this rebinding, and therefore not replayed: draws made while the script body itself executes
     (module-level values, default arguments), imports inside helper bodies, and members not listed below.
-    Neither a plain run nor Build detects them; Build refuses <execute> in bounded runs (#332).
+    A plain run does not detect them. Build refuses imports inside bodies and replays every seeded model that loads
+    Python, which catches the rest when they change the captured rows (#332).
     """
 
     # Built here, not per expression: a class definition costs several times an expression evaluation.

@@ -1,0 +1,7 @@
+<setup>
+    <!-- A step that loads its own library; its names stay local to this step. -->
+    <execute uri="lib/select.scr.py"/>
+    <generate name="selected" count="1" target="">
+        <key name="person_id" script="select_person([(1, False), (2, True)])"/>
+    </generate>
+</setup>

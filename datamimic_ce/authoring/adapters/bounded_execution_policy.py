@@ -9,12 +9,31 @@ from decimal import Decimal, InvalidOperation, Overflow
 from datamimic_ce.authoring.domain.build_rules import catalog_diagnostic
 from datamimic_ce.authoring.domain.common import MAX_AUTHORING_DECIMAL_SCALE
 from datamimic_ce.authoring.domain.diagnostics import AuthoringRuleId, Diagnostic, DiagnosticPhase
-from datamimic_ce.authoring.domain.dm_json import DmJsonDocumentV1, iter_dm_json_nodes
+from datamimic_ce.authoring.domain.dm_json import DmJsonDocumentV1, DmJsonNodeV1, iter_dm_json_nodes
 from datamimic_ce.authoring.domain.rule_catalog import authoring_rule_definition
-from datamimic_ce.engine.dsl.api import get_element_definition, parse_consumer
+from datamimic_ce.authoring.domain.script_semantics import admits_python_library
+from datamimic_ce.engine.dsl.api import EL_EXECUTE, ExecuteStatement, get_element_definition, parse_consumer
 from datamimic_ce.engine.dsl.parsers.input.target import parse_function_string
-from datamimic_ce.engine.dsl.vocabulary.contracts.dsl_element import BoundedExecutionStrategy
+from datamimic_ce.engine.dsl.vocabulary.contracts.dsl_element import BoundedExecutionStrategy, ElementContentModeKind
 from datamimic_ce.engine.io.api import buffered_exporter_names
+
+
+def _is_bounded_python_library(node: DmJsonNodeV1, path: tuple[str | int, ...]) -> bool:
+    """A setup-level Python library; the bounded child checks its source before it runs (#332)."""
+    content = node.content
+    uri = content.value if content is not None and content.kind is ElementContentModeKind.URI else None
+    script = content.value if content is not None and content.kind is ElementContentModeKind.SCRIPT else None
+    type_ = node.properties.get("type")
+    target = node.properties.get("target")
+    return (
+        node.kind == EL_EXECUTE
+        and path == ("document", "root", "children", path[-1])
+        and admits_python_library(
+            ExecuteStatement.language(type_ if isinstance(type_, str) else None, uri),
+            target=None if target is None else str(target),
+            script=script,
+        )
+    )
 
 
 class CeBoundedExecutionPolicy:
@@ -45,7 +64,7 @@ class CeBoundedExecutionPolicy:
             if (
                 definition is None
                 or definition.bounded_execution_profile.strategy is BoundedExecutionStrategy.UNSUPPORTED
-            ):
+            ) and not _is_bounded_python_library(node, path):
                 diagnostics.append(
                     catalog_diagnostic(
                         AuthoringRuleId.UNSUPPORTED_BOUNDED_OPERATION,

@@ -20,6 +20,7 @@ from datamimic_ce.authoring.domain.diagnostics import AuthoringRuleId, Diagnosti
 from datamimic_ce.authoring.domain.dm_json import iter_dm_json_nodes
 from datamimic_ce.authoring.domain.proof import (
     BuildVerificationEvidence,
+    BuildVerificationOptions,
     DeterministicReplayEvidence,
     VerificationGateStatus,
 )
@@ -35,6 +36,7 @@ from datamimic_ce.authoring.domain.requests import (
     RejectedCompileDocument,
     ValidatedReviewArtifact,
 )
+from datamimic_ce.authoring.domain.script_semantics import requires_deterministic_replay
 from datamimic_ce.authoring.ports import (
     BoundedExecutionPolicy,
     BoundedExecutor,
@@ -82,12 +84,17 @@ class BuildDocumentWorkflow:
                 diagnostics=binding_diagnostics,
                 verification=blocked_verification(request.verification, "Environment binding failed."),
             )
+        verification_options = (
+            BuildVerificationOptions(smoke_export=request.verification.smoke_export, deterministic_replay=True)
+            if requires_deterministic_replay(document)
+            else request.verification
+        )
         policy_diagnostics = self._policy.diagnostics(document)
         if policy_diagnostics:
             return RejectedBuild(
                 phase=DiagnosticPhase.POLICY,
                 diagnostics=policy_diagnostics,
-                verification=blocked_verification(request.verification, "Bounded policy refused this descriptor."),
+                verification=blocked_verification(verification_options, "Bounded policy refused this descriptor."),
             )
         try:
             acceptance = project_acceptance(request, document)
@@ -95,7 +102,7 @@ class BuildDocumentWorkflow:
             return RejectedBuild(
                 phase=DiagnosticPhase.EXPECTATION,
                 diagnostics=error.diagnostics,
-                verification=blocked_verification(request.verification, "Expectation projection failed."),
+                verification=blocked_verification(verification_options, "Expectation projection failed."),
             )
 
         proof_json = json.dumps(
@@ -118,19 +125,19 @@ class BuildDocumentWorkflow:
                         actual=len(artifact.compiled_xml),
                     ),
                 ),
-                verification=blocked_verification(request.verification, "Descriptor exceeds bounded execution limits."),
+                verification=blocked_verification(verification_options, "Descriptor exceeds bounded execution limits."),
             )
         execution_request = BoundedExecutionRequest(
             xml=artifact.compiled_xml,
             descriptor_path=request.descriptor_path,
             max_count=request.max_count,
-            smoke_export=request.verification.smoke_export,
+            smoke_export=verification_options.smoke_export,
         )
         first = self._executor.execute(execution_request)
         diagnostics = (*compiled.diagnostics, *first.diagnostics, *evaluate_acceptance(acceptance, first.captured))
-        smoke = smoke_export_evidence(request.verification.smoke_export, first.smoke_export)
+        smoke = smoke_export_evidence(verification_options.smoke_export, first.smoke_export)
         replay = DeterministicReplayEvidence()
-        if request.verification.deterministic_replay:
+        if verification_options.deterministic_replay:
             if not first.ok or not first.base_run_ok or any(item.severity == "error" for item in diagnostics):
                 replay = DeterministicReplayEvidence(
                     status=VerificationGateStatus.BLOCKED, reason="The first complete acceptance capture did not pass."
