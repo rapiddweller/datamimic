@@ -2697,7 +2697,7 @@
   "target_module_concerns": [
     {
       "target": "engine/runtime/lifecycle/pseudonymization.py",
-      "responsibility": "Resolves the host environment reference for a pseudonymization key during runtime startup."
+      "responsibility": "Resolve the host environment reference for a pseudonymization key during runtime startup."
     },
     {
       "target": "__init__.py",
