@@ -1,5 +1,6 @@
 """Complete-capture acceptance controls for canonical DM JSON transactions."""
 
+from datetime import UTC, date, datetime
 from decimal import Decimal
 
 import pytest
@@ -751,3 +752,47 @@ def test_unknown_capture_names_its_reason_without_prescribing_a_cardinality_fix(
     diagnostic = evaluate_acceptance(spec, unknown)[0]
     assert diagnostic.message == f"Product capture is unknown: {reason}."
     assert "literal count" not in diagnostic.remediation
+
+
+@pytest.mark.parametrize(
+    ("actual", "literal", "accepted"),
+    [
+        (datetime(2025, 1, 1), "2025-01-01 00:00:00", True),
+        (datetime(2025, 1, 1), "2025-01-01T00:00:00", True),
+        (datetime(2025, 1, 1, microsecond=100_000), "2025-01-01T00:00:00.1", True),
+        (datetime(2025, 1, 1, microsecond=100_000), "2025-01-01T00:00:00.100000", True),
+        (date(2025, 1, 1), "2025-01-01", True),
+        (datetime(2025, 1, 1, tzinfo=UTC), "2025-01-01T00:00:00+00:00", False),
+        (datetime(2025, 1, 1, tzinfo=UTC), "2025-01-01T00:00:00", False),
+        (datetime(2025, 1, 1), "2025-01-01", False),
+        (date(2025, 1, 1), "2025-01-01T00:00:00", False),
+        (datetime(2025, 1, 1), "2025-02-01T00:00:00", False),
+        (date(2024, 2, 29), "2024-02-29", True),
+        (date(2025, 1, 1), "2025-02-29", False),
+        (datetime(2025, 1, 1), "2025-01-01T25:00:00", False),
+        (datetime(2025, 1, 1, microsecond=100_000), "2025-01-01T00:00:00.1000000", False),
+        (date(2025, 1, 1), "20250101", False),
+        (datetime(2025, 1, 1), "2025/01/01 00:00:00", False),
+        (1, "1", False),
+        (True, "1", False),
+        (1, 1, True),
+        (True, True, True),
+        ("1", "1", True),
+    ],
+)
+def test_allowed_values_match_temporal_literals_without_coercing_json_values(actual, literal, accepted):
+    spec = project(
+        '<setup><generate name="rows" count="1"><key name="value" constant="x"/></generate></setup>',
+        expectations=[
+            {
+                "kind": "allowed_values",
+                "subject": {"kind": "product", "product": "rows"},
+                "field": "value",
+                "values": [literal],
+            }
+        ],
+    )
+
+    failures = evaluate_acceptance(spec, capture(rows=[{"value": actual}]))
+
+    assert bool(failures) is not accepted
