@@ -3,7 +3,7 @@
 **Accepted within the local architecture review scope. One open contract decision is for Alex.**
 
 - Reviewer: Astra (independent Opus 5.5 review agent, delegated by Alex).
-- Scope: `feat/bounded-python-library`, base `f4e4de69`, head `d9d377bc`.
+- Scope: `feat/bounded-python-library`, base `f4e4de69`, head `6e36e1c5` (`d9d377bc` plus the L1 fix).
 - This review rebinds the [issue 357 receipt](issue-357-seeded-script-imports-review.md) and keeps all of its assessments.
 - It does not authorize a merge and does not claim that every native rule passes.
 
@@ -11,10 +11,10 @@
 
 | Item | Value |
 |---|---|
-| Source | `b6bdbb58414227474fd4f45ad72ce3247f563e8145c3c1fe0f8b422e71fb4459` |
+| Source | `1e69892566a5c94a832d9451e492d92d0e5999a8171e2b2cef9b832be5a87fb8` |
 | Target (unchanged) | `d83d4df102a2588a54598e26cb045b721cb024a118f51e31592b135050d4e78e` |
 | Analyzer (unchanged; ArchKeel 4.0.1, Python 3.11.12) | `bb1a3262d3fdd38c3e9a6af980cc063281ae98ab1c28c89c2c5be6dfb450744f` |
-| Validation | `5fd80037de332824b1fcecb80e8e98f4cb581d370c3ed6a75c8940662aa6f756` |
+| Validation | `eb3a2269f57a8ee5303819ea934d523fa1274bdc2573b60a09e5d4ba8935bc1d` |
 | UNKNOWN | `8c982d6811d77dc23ce8a4731380aea17a8f4b2aa71a548a9f45175adb8a163f` |
 
 Budgets are unchanged: 1,431 unresolved calls, 178 typing positions and 256 unknown positions. No policy, contract, baseline, gate or `measurement_amendment` change.
@@ -39,7 +39,7 @@ The registry's bounded profile for `execute` stays `UNSUPPORTED`. Only the polic
 
 ### 1. Admission soundness
 
-Admission is correct. I probed each case on `d9d377bc`; everything outside a setup-level Python library was refused or failed loudly:
+Admission is correct. I probed each case on `d9d377bc`; the L1 fix does not touch admission; everything outside a setup-level Python library was refused or failed loudly:
 
 | Probe | Result |
 |---|---|
@@ -75,15 +75,21 @@ The semantics are correct and fail safe.
 - An unseeded library does not replay (`not_requested`).
 - Policy refusals report the forced gate as `blocked`.
 
-**Finding L1 (Low):** a failed forced replay is reported as "Bounded execution or a requested verification gate failed." (`build.py:182`), with a generic field/discriminator remediation.
-- It was not requested, and the remediation does not point at the probable cause.
-- Recommendation: give it a static reason, for example "seeded model loads Python: a draw at module level, a default argument or an unlisted import is not seeded".
+**Finding L1 (Low): resolved in `6e36e1c5`.** At `d9d377bc`, a failed forced replay was reported as "Bounded execution or a requested verification gate failed." with generic field advice.
+- Build now adds a static evidence diagnostic only when the replay failed and the caller had not requested it (`build.py:159-167`). The message names the likely cause (a module-level draw in the library) and echoes no value.
+- Re-probed:
+  - Forced replay with a module-level draw: rejected with the new message only.
+  - Requested replay: keeps the generic message.
+  - Seeded library: `passed`.
+  - Unseeded library: `not_requested`.
+- New fixture: `library_module_level_draw.xml`.
+- **Residual Info:** the diagnostic keeps the VALIDATION rule's generic remediation ("Correct the reported field, discriminator, or graph reference."), because `catalog_diagnostic` takes no remediation. The message itself carries the cause.
 
 ### 5. Placement
 
 **`python_library_refusal` / `admits_python_library` in `authoring/domain/script_semantics.py`:** cohesive. The module already owns static script checks that give authoring scripts an unambiguous runtime meaning. Policy, the bounded child and Build share it, which keeps one source of truth for the rule.
 
-**`requires_deterministic_replay` (`:149`):** a Build verification rule rather than a script rule. It would sit more naturally next to `BuildVerificationOptions` in `domain/proof.py`. **L2 (Low)**, not a layout amendment.
+**`requires_deterministic_replay` (`:149`):** arguably a Build verification rule. The author keeps it in `script_semantics.py` because moving it to `domain/proof.py` would give `proof.py` new DM-JSON and engine imports. I accept that: it is a placement preference (**L2, Info**), not a cohesion defect.
 
 **M1 (Medium, decision for Alex, not blocking):** the published `execute` capability is now inaccurate.
 - `datamimic authoring capability --domain element --name execute` still reports `bounded_execution.strategy: "unsupported"`, but Build admits setup-level Python libraries.
@@ -99,7 +105,7 @@ I re-collected base `f4e4de69` independently, and it reproduces the previous rec
 - Rules: 271 PASS and 5 UNKNOWN.
 - The 20 diagnostics are identical. The full report exits 0. Contract and analyzer are unchanged.
 
-**Calls:** 13,069 → 13,136; resolved 9,636 → 9,690; partially resolved 2,002 → 2,015; unresolved 1,431 → 1,431.
+**Calls:** 13,069 → 13,137; resolved 9,636 → 9,691 (one extra resolved `catalog_diagnostic` call from the L1 fix); partially resolved 2,002 → 2,015; unresolved 1,431 → 1,431.
 - Every unresolved difference is a move into `ExecuteStatement`, from the parser's `_resolve_type` and the task's `_normalize_python`.
 - The 13 new partially resolved calls are new authoring reads (`node.get`, `properties.get`, `module.split/startswith`, `refusal.message/remediation`) plus the moved `_EXT_TYPE.get`/`code.replace`.
 - No call was promoted.
@@ -122,8 +128,9 @@ The library check is an admission rule, not a sandbox. The PR documents this.
 - Source review of `f4e4de69..d9d377bc`.
 - Admission, placeholder, encoding, forced-replay, mismatch, redaction and capability probes.
 - Native collection at head and base; decoded call and UNKNOWN diffs.
-- ruff and full mypy (534 files).
+- ruff and full mypy (534 files) at `d9d377bc` and `6e36e1c5`.
 - 196 tests passed: bounded Python library, dryrun includes, trusted Python authoring (functional), bounded executor, Build verification, dryrun, determinism scenarios and `extensive_script`.
+- At `6e36e1c5`: bounded Python library, Build verification and acceptance tests, 115 passed.
 - Strict completion gate acceptance.
 
 **NOT VERIFIED:**

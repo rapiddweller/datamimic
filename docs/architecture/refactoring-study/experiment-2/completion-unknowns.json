@@ -2,10 +2,10 @@
   "status": "independent_local_architecture_review_accepted",
   "reviewed_by": "Astra",
   "review_reference": "docs/architecture/refactoring-study/experiment-2/issue-332-bounded-python-library-review.md",
-  "source_digest": "b6bdbb58414227474fd4f45ad72ce3247f563e8145c3c1fe0f8b422e71fb4459",
+  "source_digest": "1e69892566a5c94a832d9451e492d92d0e5999a8171e2b2cef9b832be5a87fb8",
   "contract_digest": "d83d4df102a2588a54598e26cb045b721cb024a118f51e31592b135050d4e78e",
   "analyzer_digest": "bb1a3262d3fdd38c3e9a6af980cc063281ae98ab1c28c89c2c5be6dfb450744f",
-  "validation_digest": "5fd80037de332824b1fcecb80e8e98f4cb581d370c3ed6a75c8940662aa6f756",
+  "validation_digest": "eb3a2269f57a8ee5303819ea934d523fa1274bdc2573b60a09e5d4ba8935bc1d",
   "unknowns_digest": "8c982d6811d77dc23ce8a4731380aea17a8f4b2aa71a548a9f45175adb8a163f",
   "groups": [
     {
@@ -561,7 +561,7 @@
       }
     ]
   },
-  "review_scope": "Independent Astra review of PR #360 (issue 332, feat/bounded-python-library) on base f4e4de69, head d9d377bc: a setup-level <execute> loading Python from a uri or inline text, without target or script, is admitted in bounded Build and dry-run after a static library check of the exact source in the bounded child (data-module imports, no file or dynamic-code builtins, no imports inside bodies under rngSeed); SQL, bash, target, script and nested execute stay unsupported_bounded_operation; a seeded Build that loads Python forces deterministic replay; ExecuteStatement owns language inference and inline normalisation. Registry bounded profile of execute and the published contract are unchanged. No policy, budget, contract or gate change.",
+  "review_scope": "Independent Astra review of PR #360 (issue 332, feat/bounded-python-library) on base f4e4de69, head 6e36e1c5: a setup-level <execute> loading Python from a uri or inline text, without target or script, is admitted in bounded Build and dry-run after a static library check of the exact source in the bounded child (data-module imports, no file or dynamic-code builtins, no imports inside bodies under rngSeed); SQL, bash, target, script and nested execute stay unsupported_bounded_operation; a seeded Build that loads Python forces deterministic replay and names the cause when that forced replay fails; ExecuteStatement owns language inference and inline normalisation. Registry bounded profile of execute and the published contract are unchanged. No policy, budget, contract or gate change.",
   "measurement_amendment": "Direct user acceptance Ja akzeptiert authorizes only calls_unresolved 1409 -> 1425 and typing_positions 173 -> 178. Other budgets, target, construct policy and strict completion checks remain unchanged. Approved ceilings accept measured residual uncertainty; they do not resolve it. Subsequent direct human acceptance on 2026-10-19, \"1.431 für #268 akzeptieren\", authorizes only calls_unresolved 1425 -> 1431 for issue 268. The earlier 1409 -> 1425 and 173 -> 178 acceptance remains historical; all other budgets and strict checks remain unchanged. The six added unresolved calls remain uncertainty.",
   "delivery_boundary": "Local architecture review accepted for the bound source: zero violations or baseline drift; calls_unresolved 1431, typing_positions 178 and unknown_positions 256 unchanged; all 314 UNKNOWN records (identical identities, reference churn in two records and the DSL-API-TYPES count) and 20 interface.usage_unknown diagnostics remain; native rules 271 PASS and 5 UNKNOWN. The library check is a static admission rule, not a sandbox: admitted modules (pandas, numpy, logging) and builtins reachable through __builtins__ can still read or write files; the same holds for existing bounded expressions (pd.DataFrame(...).to_csv to an absolute path wrote outside the workspace in a dry-run on this head), so bounded runs do not prove absence of file side effects. The published execute capability still reports bounded strategy unsupported while Build admits setup-level Python libraries (open contract decision for Alex). Not established by this receipt: full CE suites, CE CI, external services, Windows, EE parity, merge and release. The #357 follow-up limits (body-time draws, imports inside bodies in unseeded runs, instance reseeding) are unchanged."
 }
