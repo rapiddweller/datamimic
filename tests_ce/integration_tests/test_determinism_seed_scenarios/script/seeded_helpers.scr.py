@@ -45,3 +45,9 @@ def helper_type_checks() -> str:
         isinstance(Random(), random.Random),
     )
     return "/".join(str(check) for check in checks)
+
+
+def helper_keyed_draw(key: int) -> int:
+    """Reseeding the module with a key cannot hold under rngSeed; seeded_reject_script_keyed_seed.xml calls it."""
+    random.seed(key)
+    return random.randint(1, 10**6)

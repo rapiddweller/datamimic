@@ -171,6 +171,11 @@ def test_unseeded_script_imports_stay_random() -> None:
     assert [row["helper_direct_import_draw"] for row in first] != [row["helper_direct_import_draw"] for row in second]
 
 
+def test_seeded_script_keyed_seed_is_refused() -> None:
+    with pytest.raises(ValueError, match=r"random\.seed\(x\) in a script cannot reseed a <setup rngSeed> run"):
+        _run(_TEST_DIR, "seeded_reject_script_keyed_seed.xml")
+
+
 def test_replay_model_covers_float_rounding_boundaries() -> None:
     rows = _run(_TEST_DIR, "replay_all_seeded.xml")["literal"]
     assert [row["g_FloatGenerator_below_midpoint"] for row in rows] == [0.2] * 5

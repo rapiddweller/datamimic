@@ -1,0 +1,7 @@
+<setup rngSeed="42">
+    <!-- random.seed(key) in a script cannot reseed the run's stream: refused instead of silently ignored. -->
+    <execute uri="script/seeded_helpers.scr.py"/>
+    <generate name="rejected" count="1" target="">
+        <key name="value" script="helper_keyed_draw(7)"/>
+    </generate>
+</setup>

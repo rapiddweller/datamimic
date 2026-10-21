@@ -193,6 +193,18 @@ def _ignore_seed(*_args: object, **_kwargs: object) -> None:
     """random.seed() inside an expression would rewind the run's seeded stream, so it is a no-op."""
 
 
+def _refuse_keyed_seed(a: _RandomSeed = _OMITTED_RANDOM_SEED, version: int = 2) -> None:
+    """random.seed() in a seeded script: without a value it would draw OS entropy, so it is a no-op. With a value,
+    later draws come from the run's stream, not from that key, so it is refused rather than silently ignored."""
+    if isinstance(a, _OmittedRandomSeed) or a is None:
+        return
+    raise task_config_error(
+        code=IssueCode.TASK_EXPRESSION_EVAL_FAILED,
+        expr="random.seed",
+        error="random.seed(x) in a script cannot reseed a <setup rngSeed> run; use random.Random(x) for a keyed stream",
+    )
+
+
 class _SeededObjects(NamedTuple):
     """The seeded stand-ins of one expression scope; built once, shared by expression globals and scripts."""
 
@@ -209,7 +221,10 @@ class _SeededObjects(NamedTuple):
 
 
 def _seeded_objects(
-    rng: RandomSource, seeded_faker_supplier: Callable[[], Faker], random_constructor: Callable[..., Random]
+    rng: RandomSource,
+    seeded_faker_supplier: Callable[[], Faker],
+    random_constructor: Callable[..., Random],
+    seed: Callable[..., None],
 ) -> _SeededObjects:
     anchor = resolve_clock(deterministic=True)
 
@@ -220,7 +235,7 @@ def _seeded_objects(
         return uuid.UUID(uuid4_from_random(rng))
 
     random_overrides = {
-        "seed": _ignore_seed,
+        "seed": seed,
         "Random": random_constructor,
         "SystemRandom": _Uncontrolled("random.SystemRandom"),
     }
@@ -257,7 +272,7 @@ def expression_globals(
     if not is_seeded:
         return SAFE_GLOBALS
     assert rng is not None
-    seeded = _seeded_objects(rng, seeded_faker_supplier, functools.partial(_seeded_random, rng))
+    seeded = _seeded_objects(rng, seeded_faker_supplier, functools.partial(_seeded_random, rng), _ignore_seed)
     return {
         **SAFE_GLOBALS,
         "random": seeded.random,
@@ -281,9 +296,11 @@ def rebind_seeded_script_names(
     stay private to the scripts, so expressions keep their own seeded globals. Other names, such as aliases, remain
     shared.
 
-    Outside this rebinding, and not replayed by a plain run: draws made while the script body itself executes
+    ``random.seed(x)`` with a value is refused: a keyed stream is ``random.Random(x)``.
+
+    Outside this rebinding, and therefore not replayed: draws made while the script body itself executes
     (module-level values, default arguments), imports inside helper bodies, and members not listed below.
-    Build's deterministic_replay verification detects them.
+    Neither a plain run nor Build detects them; Build refuses <execute> in bounded runs (#332).
     """
 
     # Built here, not per expression: a class definition costs several times an expression evaluation.
@@ -295,7 +312,7 @@ def rebind_seeded_script_names(
             Random.__init__(self, _random_seed(rng, x))
 
     # Scripts reach Random both directly and as random.Random; both must stay the class.
-    seeded = _seeded_objects(rng, seeded_faker_supplier, SeededRandom)
+    seeded = _seeded_objects(rng, seeded_faker_supplier, SeededRandom, _refuse_keyed_seed)
     counterparts: tuple[tuple[object, object], ...] = (
         (random, seeded.random),
         (Random, SeededRandom),
