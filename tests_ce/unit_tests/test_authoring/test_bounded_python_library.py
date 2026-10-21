@@ -97,6 +97,8 @@ def test_execute_outside_a_setup_level_python_library_is_refused_by_policy(filen
         ("def f():\n    return f.__globals__\n", False, Reason.FILE_OR_DYNAMIC_CODE_BUILTIN),
         ("def f():\n    return getattr(f, '__globals__')\n", False, Reason.FILE_OR_DYNAMIC_CODE_BUILTIN),
         ("g = getattr\n", False, Reason.FILE_OR_DYNAMIC_CODE_BUILTIN),
+        ("def f():\n    return print.__self__.open('/x', 'w')\n", False, Reason.FILE_OR_DYNAMIC_CODE_BUILTIN),
+        ("def f(module):\n    return module.__import__('subprocess')\n", False, Reason.FILE_OR_DYNAMIC_CODE_BUILTIN),
         (
             "def f():\n    return object.__getattribute__(f, '__glo' + 'bals__')\n",
             False,

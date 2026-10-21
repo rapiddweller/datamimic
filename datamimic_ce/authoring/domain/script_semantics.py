@@ -119,9 +119,11 @@ REFUSED_NAMES = frozenset(
     # Attribute access by computed name; no corpus library uses it, and aliases defeat any narrower rule.
     | {"getattr", "setattr", "delattr"}
 )
-# Introspection that leads back to the builtins, the running code or the file loader.
+# Introspection that leads back to the builtins, the running code or the file loader, and the builtins
+# themselves reached as attributes of the builtins module (print.__self__.open). compile stays: re.compile.
 REFUSED_ATTRIBUTES = frozenset(
     {"__builtins__", "__globals__", "__code__", "__subclasses__", "__loader__", "__spec__", "__getattribute__"}
+    | {"__self__", "__import__", "open", "exec", "eval"}
 )
 
 
