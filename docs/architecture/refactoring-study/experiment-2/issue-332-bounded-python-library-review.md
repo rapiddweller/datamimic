@@ -1,9 +1,9 @@
 # Bounded Python library architecture review (issue 332, PR #360)
 
-**Accepted within the local architecture review scope.** Alex decided the contract question (M1, Option A); `285e888b` implements it. `23080ad5` widens the builtin rule from calls to references, and `b0205d29`/`1d72d46f` close the routes that remained. `170fca2f` names an out-of-workspace library uri as a policy refusal. `ef01f695` checks a library file in the same normalized form that `ExecuteTask` runs.
+**Accepted within the local architecture review scope.** Alex decided the contract question (M1, Option A); `285e888b` implements it. `23080ad5` widens the builtin rule from calls to references, and `b0205d29`/`1d72d46f` close the routes that remained. `170fca2f` names an out-of-workspace library uri as a policy refusal. `ef01f695` checks a library file in the same normalized form that `ExecuteTask` runs. `3ea19dfa` refuses attribute access by computed name, and this review fixes the check's scope line.
 
 - Reviewer: Astra (independent Opus 5.5 review agent, delegated by Alex).
-- Scope: `feat/bounded-python-library`, base `f4e4de69`, head `1d72d46f` (`d9d377bc`, the L1 fix `6e36e1c5`, the M1 contract change `285e888b`, the builtin-reference rule `23080ad5`, its follow-ups `b0205d29`/`1d72d46f`, the out-of-workspace refusal `170fca2f`, and the normalized-source check `ef01f695`).
+- Scope: `feat/bounded-python-library`, base `f4e4de69`, head `1d72d46f` (`d9d377bc`, the L1 fix `6e36e1c5`, the M1 contract change `285e888b`, the builtin-reference rule `23080ad5`, its follow-ups `b0205d29`/`1d72d46f`, the out-of-workspace refusal `170fca2f`, the normalized-source check `ef01f695`, and the computed-name refusal `3ea19dfa`).
 - This review rebinds the [issue 357 receipt](issue-357-seeded-script-imports-review.md) and keeps all of its assessments.
 - It does not authorize a merge and does not claim that every native rule passes.
 
@@ -11,10 +11,10 @@
 
 | Item | Value |
 |---|---|
-| Source | `edf806891c5707f4284b678c1dce71732ffce925c87691f716343268c841564d` |
+| Source | `143ca6476071f57d6ca0e391ba30165d0c0ef03f869e93e8d3c25454df5596e0` |
 | Target (unchanged) | `d83d4df102a2588a54598e26cb045b721cb024a118f51e31592b135050d4e78e` |
 | Analyzer (unchanged; ArchKeel 4.0.1, Python 3.11.12) | `bb1a3262d3fdd38c3e9a6af980cc063281ae98ab1c28c89c2c5be6dfb450744f` |
-| Validation | `2e30dba62fbf149897df96420cf74e1d9d9438b26fe2d9996d740976a546f7bb` |
+| Validation | `7cb2d62acf8994a52d835e88974ee444231f55b889e013c15ef6321aa10cd1b8` |
 | UNKNOWN | `eedde60f12fc785fc81f3044cbe020929e0c5f18b912a458d04a2d6057c46a6d` |
 
 Budgets are unchanged: 1,431 unresolved calls, 178 typing positions and 256 unknown positions. No ArchKeel policy, architecture contract, baseline, gate or `measurement_amendment` change. The published DSL contract changes additively (see M1).
@@ -113,7 +113,7 @@ I re-collected base `f4e4de69` independently, and it reproduces the previous rec
 - Rules: 271 PASS and 5 UNKNOWN.
 - The 20 diagnostics are identical. The full report exits 0. Contract and analyzer are unchanged.
 
-**Calls:** 13,069 → 13,147; resolved 9,636 → 9,701 (the L1 `catalog_diagnostic` call, the strategy dispatch and the reference rules); partially resolved 2,002 → 2,015; unresolved 1,431 → 1,431.
+**Calls:** 13,069 → 13,141; resolved 9,636 → 9,695 (the deleted string-constant helper removes six resolved calls) (the L1 `catalog_diagnostic` call, the strategy dispatch and the reference rules); partially resolved 2,002 → 2,015; unresolved 1,431 → 1,431.
 - Every unresolved difference is a move into `ExecuteStatement`, from the parser's `_resolve_type` and the task's `_normalize_python`.
 - The 13 new partially resolved calls are new authoring reads (`node.get`, `properties.get`, `module.split/startswith`, `refusal.message/remediation`) plus the moved `_EXT_TYPE.get`/`code.replace`.
 - No call was promoted.
@@ -208,6 +208,32 @@ Two edge cases also fail on both sides:
 - A UTF-8 BOM: the check sees a SyntaxError and admits, but the runtime then fails with "Task Expression Eval Failed".
 - Null bytes: `ast.parse` raises `ValueError`, so the child fails closed.
 
+## Computed attribute names (`3ea19dfa`, Codex P1) and the scope line
+
+The finding was valid. `3ea19dfa` closes it with a simpler rule than the one it replaces:
+- Any reference to `getattr`, `setattr` or `delattr` is refused.
+- `__getattribute__` joins the refused attributes.
+- The narrower string-constant rule for these calls is deleted.
+- No corpus library references these names (0 of 48), so the false-positive cost is nil. The corpus result is unchanged.
+- Info: the edit leaves a third blank line after `REFUSED_ATTRIBUTES`. `ruff format --check` flags the file, though it already did at `645c5d23`.
+
+**Scope line (binding for future threads).** The library check is a lint that keeps an admitted library in the shape of functions, classes and constants. It is not a containment mechanism.
+
+**In scope** (a finding is valid if a library can do one of these and still pass):
+- importing a module outside `ADMITTED_IMPORT_ROOTS`/`ADMITTED_PACKAGES`;
+- importing inside a body under `rngSeed`;
+- referencing by plain name a builtin that reads files, builds or runs code, or reaches attributes by computed name (`REFUSED_NAMES`);
+- naming one of the listed introspection attributes or the `'__builtins__'` key directly (`REFUSED_ATTRIBUTES`, the string constant);
+- the check seeing different source text from what `ExecuteTask` runs.
+
+**Out of scope, and documented** (answer such threads with this line, not with a new rule):
+- what an admitted module's public API can do, such as reading or writing files, evaluating expressions or loading native code;
+- any further route through Python object introspection or the type system that the lists above do not name.
+
+The reason: name lists cannot close these without import hooks or a runtime sandbox, and each addition trades false positives for assurance the check does not provide. Real containment needs process-level isolation, such as no host filesystem or network access in the bounded child. That belongs in a separate decision for Alex, alongside the pre-existing expression file-write gap below.
+
+**Recommendation:** stop extending the lists unless a new route is a plain builtin name, or a direct attribute or key in the same family as the ones above, *and* is zero-false-positive in the corpus.
+
 ## Security note (pre-existing, outside this PR)
 
 The library check is an admission rule, not a sandbox. The PR documents this.
@@ -219,10 +245,10 @@ The library check is an admission rule, not a sandbox. The PR documents this.
 ## Evidence boundary
 
 **LOCAL VERIFIED (by this reviewer):**
-- Source review of `f4e4de69..ef01f695`.
+- Source review of `f4e4de69..3ea19dfa`.
 - Admission, placeholder, encoding, forced-replay, mismatch, redaction and capability probes.
 - Native collection at head and base; decoded call and UNKNOWN diffs.
-- ruff and full mypy (534 files) at `d9d377bc`, `6e36e1c5`, `285e888b`, `23080ad5`, `1d72d46f`, `170fca2f` and `ef01f695`.
+- ruff and full mypy (534 files) at `d9d377bc`, `6e36e1c5`, `285e888b`, `23080ad5`, `1d72d46f`, `170fca2f`, `ef01f695` and `3ea19dfa`.
 - 196 tests passed: bounded Python library, dryrun includes, trusted Python authoring (functional), bounded executor, Build verification, dryrun, determinism scenarios and `extensive_script`.
 - At `6e36e1c5`: bounded Python library, Build verification and acceptance tests, 115 passed.
 - At `285e888b`: bounded Python library, build policy, CE catalog, dynamic count, reference, transport architecture, contract bundle, dryrun includes, bounded executor, trusted Python authoring and public API ownership tests, 152 passed. Capability and schema strategy counts were checked directly.
@@ -230,6 +256,7 @@ The library check is an admission rule, not a sandbox. The PR documents this.
 - At `1d72d46f`: the same four suites, 73 passed. Probed 13 library-check cases. Re-probed Build for the seeded library (replay passed) and the module-level draw (rejected with the forced-replay reason).
 - At `170fca2f`: the same suites plus the bounded executor tests, 105 passed. Ran out-of-workspace probes (absolute, `../`, workspace control, `--allow-side-effects` runtime read) against both `bb2b1c74` and `170fca2f`.
 - At `ef01f695`: the same five suites, 106 passed. Probed indented, tab-indented and BOM library files, and traced the check-versus-runtime source path.
+- At `3ea19dfa`: the same five suites, 109 passed. ruff and mypy are clean; `ruff format --check` flags `script_semantics.py`, as it already did at `645c5d23`.
 - Strict completion gate acceptance.
 
 **NOT VERIFIED:**
