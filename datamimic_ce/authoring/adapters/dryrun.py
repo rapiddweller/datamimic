@@ -149,6 +149,13 @@ _SCOPE_HINT = (
 )
 
 
+_CONTAINMENT_HINT = (
+    "Bounded execution writes only new files inside its private workspace, never the workspace files it was "
+    "checked against, and starts no process (#361). Deliver data "
+    "through the model's targets, or use authoring run --allow-side-effects when the write is intended."
+)
+
+
 def _runtime_hint(err: Exception) -> str:
     current: BaseException | None = err
     seen: set[int] = set()
@@ -159,6 +166,8 @@ def _runtime_hint(err: Exception) -> str:
         if isinstance(current, UserErrorBase) and current.issue_code is not None:
             issue = get_issue_definition(current.issue_code)
             if current.issue_code is IssueCode.TASK_EXPRESSION_EVAL_FAILED:
+                if isinstance(current.__cause__, PermissionError):
+                    return _CONTAINMENT_HINT
                 if current.location is None or current.location.attribute != ATTR_COUNT:
                     return _SCOPE_HINT
                 # Only a failed name lookup is a scope problem; 1/0 or int('text') in a count is not.
@@ -167,6 +176,8 @@ def _runtime_hint(err: Exception) -> str:
             return issue.guidance or issue.resolution
         if isinstance(current, DomainError) and current.hint:
             return current.hint
+        if isinstance(current, PermissionError):
+            return _CONTAINMENT_HINT
         if isinstance(current, FileNotFoundError):
             return "Provide the referenced resource relative to the descriptor workspace."
         current = current.__cause__
@@ -830,6 +841,8 @@ def _decode_worker_payload(payload: bytes) -> object:
         OSError,
         FileNotFoundError,
         PermissionError,
+        # C code that meets a refused audit event (bounded containment) may surface only this.
+        SystemError,
         TimeoutError,
         AssertionError,
         NameError,
