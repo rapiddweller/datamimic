@@ -130,11 +130,12 @@ def _unknown_source_diagnostic(
     source_type: str | None,
     clients: set[str],
     memstores: set[str],
+    declarations_complete: bool,
 ) -> _SourceDiagnostic | None:
     known_format = source_file_format(source)
     if known_format is not None:
         return _unsupported_file_source_diagnostic(element_tag, source_type, known_format)
-    if _dynamic_source_is_valid(source, element_tag, source_type):
+    if not declarations_complete or _dynamic_source_is_valid(source, element_tag, source_type):
         return None
     valid_ids: set[str] = set()
     if source_allows_client(element_tag, source_type):
@@ -156,6 +157,7 @@ def _check_target_entry(
     clients: set[str],
     memstores: set[str],
     buffered_exporter_names: frozenset[str],
+    declarations_complete: bool,
 ) -> tuple[str | None, str | None]:
     """Validate one parsed target entry name.
 
@@ -163,7 +165,7 @@ def _check_target_entry(
     """
     base = name.split(".", 1)[0]
     if "." in name:
-        if base not in clients:
+        if declarations_complete and base not in clients:
             return (
                 f"target '{name}' references undeclared client '{base}'",
                 f'Declare <mongodb id="{base}"/> or <database id="{base}" .../>.',
@@ -176,7 +178,7 @@ def _check_target_entry(
             )
         return (None, None)
     static_targets = _STATIC_TARGETS | buffered_exporter_names
-    if name not in static_targets and name not in clients and name not in memstores:
+    if declarations_complete and name not in static_targets and name not in clients and name not in memstores:
         valid = sorted(static_targets | clients | memstores)
         return (
             f"target '{name}' is not built-in or declared",
@@ -210,7 +212,7 @@ class UnknownTarget(Rule):
                     )
                     continue
                 evidence, fix_context = _check_target_entry(
-                    function_name, clients, memstores, ctx.buffered_exporter_names
+                    function_name, clients, memstores, ctx.buffered_exporter_names, ctx.declarations_complete
                 )
                 if evidence is not None:
                     yield ctx.diag(UnknownTarget, element, evidence=evidence, fix_context=fix_context)
@@ -250,7 +252,9 @@ class UnknownSource(Rule):
             source_type = element.get("type")
             if _source_is_declared(source, element_tag, source_type, clients, memstores):
                 continue
-            diagnostic = _unknown_source_diagnostic(source, element_tag, source_type, clients, memstores)
+            diagnostic = _unknown_source_diagnostic(
+                source, element_tag, source_type, clients, memstores, ctx.declarations_complete
+            )
             if diagnostic is None:
                 continue
             yield ctx.diag(

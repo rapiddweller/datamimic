@@ -32,9 +32,19 @@ _INLINE_NOTE = (
 
 
 def _run_rules(
-    root: etree._Element, base_dir: Path | None, project: tuple[etree._Element, ...] = ()
+    root: etree._Element,
+    base_dir: Path | None,
+    project: tuple[etree._Element, ...] = (),
+    declarations_complete: bool = True,
 ) -> list[Diagnostic]:
-    ctx = LintContext(root, build_schema_index(), buffered_exporter_names(), base_dir=base_dir, project=project)
+    ctx = LintContext(
+        root,
+        build_schema_index(),
+        buffered_exporter_names(),
+        base_dir=base_dir,
+        project=project,
+        declarations_complete=declarations_complete,
+    )
     diagnostics: list[Diagnostic] = []
     for rule_cls in ALL_RULES:
         diagnostics.extend(rule_cls().check(ctx))

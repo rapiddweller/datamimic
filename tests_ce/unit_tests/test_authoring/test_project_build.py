@@ -235,3 +235,25 @@ def test_an_unseeded_project_reports_the_missing_seed_once(tmp_path: Path) -> No
     entry.write_text(entry.read_text(encoding="utf-8").replace(' rngSeed="7"', ""), encoding="utf-8")
     result = _build(project)
     assert [item.path[:2] for item in result.diagnostics if item.code == "DM303"] == [("descriptor", "datamimic.xml")]
+
+
+def test_an_unreadable_graph_is_reported_instead_of_undeclared_ids(tmp_path: Path) -> None:
+    project = _copy(tmp_path)
+    entry = project / "datamimic.xml"
+    delivery = (project / "delivery" / "90_export.xml").read_text(encoding="utf-8")
+    inline = delivery.replace("<setup>\n", "").replace("</setup>\n", "")
+    entry.write_text(
+        entry.read_text(encoding="utf-8")
+        .replace('    <memstore id="store"/>\n', "")
+        .replace('    <include uri="delivery/90_export.xml"/>\n', inline),
+        encoding="utf-8",
+    )
+    step = project / "model" / "10_customers.xml"
+    step.write_text(
+        step.read_text(encoding="utf-8").replace("<setup>", '<setup>\n    <memstore id="store"/>'), encoding="utf-8"
+    )
+    (project / "model" / "20_orders.xml").write_text("<setup>", encoding="utf-8")
+    result = _build(project)
+    assert result.outcome == "rejected"
+    errors = [item.code for item in result.diagnostics if item.severity == "error"]
+    assert errors == [AuthoringRuleId.INCLUDE], result.diagnostics

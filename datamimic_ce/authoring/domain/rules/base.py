@@ -28,6 +28,7 @@ class LintContext:
         buffered_exporter_names: frozenset[str],
         base_dir: Path | None = None,
         project: tuple[etree._Element, ...] = (),
+        declarations_complete: bool = True,
     ):
         self.root = root
         self.schemas = schemas
@@ -37,6 +38,8 @@ class LintContext:
         self.project = project
         # The setup whose rngSeed governs the run; a step never carries its own.
         self.run_root = project[0] if project else root
+        # False when part of the project could not be read: an id may be declared there, so none is "unknown".
+        self.declarations_complete = declarations_complete
 
     def iter(self, *tags: str) -> Iterator[etree._Element]:
         """All elements (document order); with tags, only those. Comments are never yielded."""
