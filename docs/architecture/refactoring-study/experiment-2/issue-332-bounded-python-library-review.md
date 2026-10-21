@@ -1,9 +1,9 @@
 # Bounded Python library architecture review (issue 332, PR #360)
 
-**Accepted within the local architecture review scope.** Alex decided the contract question (M1, Option A); `285e888b` implements it. `23080ad5` widens the builtin rule from calls to references, and `b0205d29`/`1d72d46f` close the routes that remained. `170fca2f` names an out-of-workspace library uri as a policy refusal. `ef01f695` checks a library file in the same normalized form that `ExecuteTask` runs. `3ea19dfa` refuses attribute access by computed name, and this review fixes the check's scope line.
+**Accepted within the local architecture review scope.** Alex decided the contract question (M1, Option A); `285e888b` implements it. `23080ad5` widens the builtin rule from calls to references, and `b0205d29`/`1d72d46f` close the routes that remained. `170fca2f` names an out-of-workspace library uri as a policy refusal. `ef01f695` checks a library file in the same normalized form that `ExecuteTask` runs. `3ea19dfa` refuses attribute access by computed name, and this review fixes the check's scope line. `b98e37e8` applies that scope line to bound builtins.
 
 - Reviewer: Astra (independent Opus 5.5 review agent, delegated by Alex).
-- Scope: `feat/bounded-python-library`, base `f4e4de69`, head `1d72d46f` (`d9d377bc`, the L1 fix `6e36e1c5`, the M1 contract change `285e888b`, the builtin-reference rule `23080ad5`, its follow-ups `b0205d29`/`1d72d46f`, the out-of-workspace refusal `170fca2f`, the normalized-source check `ef01f695`, and the computed-name refusal `3ea19dfa`).
+- Scope: `feat/bounded-python-library`, base `f4e4de69`, head `1d72d46f` (`d9d377bc`, the L1 fix `6e36e1c5`, the M1 contract change `285e888b`, the builtin-reference rule `23080ad5`, its follow-ups `b0205d29`/`1d72d46f`, the out-of-workspace refusal `170fca2f`, the normalized-source check `ef01f695`, the computed-name refusal `3ea19dfa`, and the bound-builtin refusal `b98e37e8`).
 - This review rebinds the [issue 357 receipt](issue-357-seeded-script-imports-review.md) and keeps all of its assessments.
 - It does not authorize a merge and does not claim that every native rule passes.
 
@@ -11,7 +11,7 @@
 
 | Item | Value |
 |---|---|
-| Source | `143ca6476071f57d6ca0e391ba30165d0c0ef03f869e93e8d3c25454df5596e0` |
+| Source | `9950bf2752b0a51dea84179e90eadc57945d85a30984f7700a020706ce471b7a` |
 | Target (unchanged) | `d83d4df102a2588a54598e26cb045b721cb024a118f51e31592b135050d4e78e` |
 | Analyzer (unchanged; ArchKeel 4.0.1, Python 3.11.12) | `bb1a3262d3fdd38c3e9a6af980cc063281ae98ab1c28c89c2c5be6dfb450744f` |
 | Validation | `7cb2d62acf8994a52d835e88974ee444231f55b889e013c15ef6321aa10cd1b8` |
@@ -234,6 +234,17 @@ The reason: name lists cannot close these without import hooks or a runtime sand
 
 **Recommendation:** stop extending the lists unless a new route is a plain builtin name, or a direct attribute or key in the same family as the ones above, *and* is zero-false-positive in the corpus.
 
+**Applied once (`b98e37e8`, Codex P1 "bound-builtin attribute access").** The case falls inside the scope line, so I accept the extension:
+- `__self__` on a bound builtin is a directly named attribute leading back to the builtins module.
+- The builtin names used as attributes (`__import__`, `open`, `exec`, `eval`) are in the same family.
+- The author's census shows zero corpus uses of these as attributes. `compile` stays admitted as an attribute because `re.compile` is the recommended form.
+- The two new tests pin the case. `re.compile` and an ordinary library still pass.
+
+**Structural alternative (Codex):** running admitted libraries with restricted builtins.
+- I agree this belongs with Alex together with #361 (process-level containment), not in this PR.
+- It changes the runtime contract for every `<execute>` user. It also needs its own determinism and compatibility review, because libraries can legitimately use other builtins.
+- A static lint cannot replace it, and it should not be half-built inside the lint.
+
 ## Security note (pre-existing, outside this PR)
 
 The library check is an admission rule, not a sandbox. The PR documents this.
@@ -245,10 +256,10 @@ The library check is an admission rule, not a sandbox. The PR documents this.
 ## Evidence boundary
 
 **LOCAL VERIFIED (by this reviewer):**
-- Source review of `f4e4de69..3ea19dfa`.
+- Source review of `f4e4de69..b98e37e8`.
 - Admission, placeholder, encoding, forced-replay, mismatch, redaction and capability probes.
 - Native collection at head and base; decoded call and UNKNOWN diffs.
-- ruff and full mypy (534 files) at `d9d377bc`, `6e36e1c5`, `285e888b`, `23080ad5`, `1d72d46f`, `170fca2f`, `ef01f695` and `3ea19dfa`.
+- ruff and full mypy (534 files) at `d9d377bc`, `6e36e1c5`, `285e888b`, `23080ad5`, `1d72d46f`, `170fca2f`, `ef01f695`, `3ea19dfa` and `b98e37e8`.
 - 196 tests passed: bounded Python library, dryrun includes, trusted Python authoring (functional), bounded executor, Build verification, dryrun, determinism scenarios and `extensive_script`.
 - At `6e36e1c5`: bounded Python library, Build verification and acceptance tests, 115 passed.
 - At `285e888b`: bounded Python library, build policy, CE catalog, dynamic count, reference, transport architecture, contract bundle, dryrun includes, bounded executor, trusted Python authoring and public API ownership tests, 152 passed. Capability and schema strategy counts were checked directly.
@@ -257,6 +268,7 @@ The library check is an admission rule, not a sandbox. The PR documents this.
 - At `170fca2f`: the same suites plus the bounded executor tests, 105 passed. Ran out-of-workspace probes (absolute, `../`, workspace control, `--allow-side-effects` runtime read) against both `bb2b1c74` and `170fca2f`.
 - At `ef01f695`: the same five suites, 106 passed. Probed indented, tab-indented and BOM library files, and traced the check-versus-runtime source path.
 - At `3ea19dfa`: the same five suites, 109 passed. ruff and mypy are clean; `ruff format --check` flags `script_semantics.py`, as it already did at `645c5d23`.
+- At `b98e37e8`: the same five suites, 111 passed; ruff and mypy are clean; `re.compile` and an ordinary library still pass.
 - Strict completion gate acceptance.
 
 **NOT VERIFIED:**
