@@ -249,6 +249,7 @@ def test_ready_binds_every_file_the_run_read_and_nothing_else() -> None:
         "acceptance/build.json",
         "conf/base.properties",
         "data/entity/customers.ent.csv",
+        "data/weighting/channel.wgt.csv",
         "datamimic.xml",
         "delivery/90_export.xml",
         "lib/pricing.scr.py",
@@ -273,3 +274,21 @@ def test_a_project_without_acceptance_is_rejected(tmp_path: Path) -> None:
     result = _build(project)
     assert result.outcome == "rejected"
     assert result.diagnostics[0].code is AuthoringRuleId.INPUT
+
+
+def test_a_connection_profile_read_during_the_run_is_recorded(tmp_path: Path) -> None:
+    from datamimic_ce.authoring.adapters.workspace import AuthoringWorkspaceContext
+    from datamimic_ce.engine.dsl.api import resource_reader_scope
+
+    (tmp_path / "conf").mkdir()
+    (tmp_path / "conf" / "test.env.properties").write_text("db.host=localhost\n", encoding="utf-8")
+    workspace = AuthoringWorkspaceContext(tmp_path, PROJECT_ENTRY_PATH)
+    read: list[Path] = []
+
+    def recording(path: Path) -> bytes:
+        read.append(path)
+        return workspace.read_resource_bytes(path)
+
+    with resource_reader_scope(recording):
+        assert workspace.load_connection_profile(tmp_path, "test") == {"db.host": "localhost"}
+    assert read == [tmp_path / "conf" / "test.env.properties"]

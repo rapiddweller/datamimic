@@ -153,3 +153,18 @@ def test_entry_the_codec_cannot_read_is_rejected_before_execution():
     assert result.outcome == "rejected"
     assert result.phase.value == "decompile"
     assert executor.calls == []
+
+
+def test_a_file_that_changed_while_build_read_it_rejects_the_build():
+    from datamimic_ce.authoring.domain.requests import ProjectFileDigest
+
+    changed = captured()
+    changed = BoundedExecutionEvidence(
+        ok=changed.ok,
+        captured=changed.captured,
+        files=(ProjectFileDigest(path=PROJECT_ENTRY_PATH, sha256="0" * 64),),
+    )
+    result = workflow(Executor([changed])).execute()
+    assert result.outcome == "rejected"
+    assert result.phase.value == "evidence"
+    assert any(item.path == ("project", "datamimic.xml") for item in result.diagnostics), result.diagnostics
