@@ -94,3 +94,31 @@ def test_the_run_cannot_forge_its_reply(tmp_path: Path) -> None:
     result = _run(tmp_path, "pd.DataFrame([{'a': 1}]).to_csv('../reply.pickle')")
     assert not result.ok
     assert all(item.message != "Bounded child returned invalid capture evidence." for item in result.diagnostics)
+
+
+def test_a_relative_write_through_an_outside_directory_descriptor_is_refused(tmp_path: Path) -> None:
+    (tmp_path / "workspace").mkdir()
+    outside = tmp_path / "outside"
+    outside.mkdir()
+    flags = "os.O_CREAT | os.O_WRONLY"
+    result = _run(
+        tmp_path / "workspace", f"os.open('escaped', {flags}, dir_fd=os.open('{outside.as_posix()}', os.O_RDONLY))"
+    )
+    assert not result.ok
+    assert not (outside / "escaped").exists()
+
+
+def test_a_checked_directory_cannot_be_renamed_away_and_back(tmp_path: Path) -> None:
+    (tmp_path / "lib").mkdir()
+    (tmp_path / "lib" / "second.scr.py").write_text("VALUE = 1\n", encoding="utf-8")
+    result = _run(tmp_path, "os.rename('lib', 'moved')")
+    assert not result.ok
+
+
+def test_unaudited_node_creation_is_refused(tmp_path: Path) -> None:
+    (tmp_path / "workspace").mkdir()
+    for call in ("mknod", "mkfifo"):
+        node = tmp_path / call
+        result = _run(tmp_path / "workspace", f"os.{call}('{node.as_posix()}')")
+        assert not result.ok
+        assert not node.exists()

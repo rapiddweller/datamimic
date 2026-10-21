@@ -23,8 +23,8 @@ from datamimic_ce.engine.dsl.api import resource_reader_scope
 _PROCESS_EVENTS = frozenset(
     {"subprocess.Popen", "os.system", "os.exec", "os.posix_spawn", "os.spawn", "os.fork", "os.forkpty", "os.startfile"}
 )
-# Audit events whose first two arguments name the paths they change. CPython 3.11-3.13 raises no event for
-# os.mkfifo or os.mknod, so a FIFO outside the private root stays possible; it carries no data.
+# Audit events whose first two arguments name the paths they change; trailing integers carry dir_fd (-1 when
+# absent). CPython 3.11-3.13 raises no event for os.mkfifo or os.mknod, so _contain replaces both.
 _PATH_EVENTS = frozenset(
     {
         "os.remove",
@@ -49,6 +49,18 @@ _PATH_EVENTS = frozenset(
 _WRITE_FLAGS = os.O_WRONLY | os.O_RDWR | os.O_CREAT | os.O_TRUNC | os.O_APPEND
 
 
+_FsPath = str | bytes | os.PathLike[str] | os.PathLike[bytes]
+
+
+# os.mkfifo and os.mknod raise no audit event; in the contained child they are replaced by these refusals.
+def _refuse_mkfifo(path: _FsPath, mode: int = 0o666, *, dir_fd: int | None = None) -> None:
+    raise PermissionError("Bounded execution may write only new files inside its private workspace")
+
+
+def _refuse_mknod(path: _FsPath, mode: int = 0o600, device: int = 0, *, dir_fd: int | None = None) -> None:
+    raise PermissionError("Bounded execution may write only new files inside its private workspace")
+
+
 def _contain(private_root: Path, workspace: Path, transport: tuple[Path, ...]) -> set[str]:
     """Refuse writes outside ``private_root``, writes to files the workspace snapshot already holds, and new
     processes for the rest of this child process. Snapshot files are what the run was checked against: a
@@ -61,10 +73,11 @@ def _contain(private_root: Path, workspace: Path, transport: tuple[Path, ...]) -
     is a plain PermissionError because the parent unpickles only listed exception types.
     """
     allowed = os.path.normcase(os.path.realpath(private_root))
+    # Directories too: renaming one away and back would otherwise rewrite its files unseen.
     snapshot = frozenset(
         os.path.normcase(os.path.realpath(os.path.join(directory, name)))
-        for directory, _, names in os.walk(workspace)
-        for name in names
+        for directory, directories, names in os.walk(workspace)
+        for name in (*directories, *names, "")
     )
     reply = {os.path.normcase(os.path.realpath(path)) for path in transport}
     # Windows resolves "nul" to "\\.\nul", so both spellings name the null device.
@@ -88,15 +101,29 @@ def _contain(private_root: Path, workspace: Path, transport: tuple[Path, ...]) -
             writing = (isinstance(mode, str) and any(char in mode for char in "wax+")) or (
                 isinstance(flags, int) and bool(flags & _WRITE_FLAGS)
             )
-            # An integer path is a file descriptor, opened and checked before.
-            if writing and isinstance(path, (str, bytes, os.PathLike)) and not contained(path):
+            # An integer path is a file descriptor, opened and checked before. os.open (mode None) reports no
+            # dir_fd, so a relative os.open write may land anywhere; the engine opens absolute paths only.
+            if (
+                writing
+                and isinstance(path, (str, bytes, os.PathLike))
+                and (not contained(path) or (mode is None and not os.path.isabs(os.fsdecode(path))))
+            ):
                 raise PermissionError("Bounded execution may write only new files inside its private workspace")
-        elif event in _PATH_EVENTS and not all(
-            contained(path) for path in args[:2] if isinstance(path, (str, bytes, os.PathLike))
-        ):
-            raise PermissionError("Bounded execution may write only new files inside its private workspace")
+        elif event in _PATH_EVENTS:
+            carries_dir_fd = False
+            for value in args[2:]:
+                carries_dir_fd = carries_dir_fd or (isinstance(value, int) and value >= 0)
+            for path in args[:2]:
+                # A relative path beside a real dir_fd resolves against a directory the event does not name.
+                if isinstance(path, (str, bytes, os.PathLike)) and (
+                    not contained(path) or (carries_dir_fd and not os.path.isabs(os.fsdecode(path)))
+                ):
+                    raise PermissionError("Bounded execution may write only new files inside its private workspace")
 
     sys.addaudithook(hook)
+    if os.name == "posix":
+        os.mkfifo = _refuse_mkfifo
+        os.mknod = _refuse_mknod
     return reply
 
 
