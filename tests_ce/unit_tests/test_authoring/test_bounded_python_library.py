@@ -156,3 +156,25 @@ def test_forced_replay_names_why_a_seeded_library_model_failed() -> None:
 def test_published_execute_capability_names_the_library_strategy() -> None:
     capability = create_authoring_application(_MODELS).capability(CapabilityDomain.ELEMENT, "execute").capability
     assert capability.bounded_execution.strategy is BoundedExecutionStrategy.PYTHON_LIBRARY
+
+
+@pytest.mark.parametrize("relative", [False, True])
+def test_library_outside_the_workspace_is_refused_not_loaded(tmp_path: Path, relative: bool) -> None:
+    workspace = tmp_path / "workspace"
+    workspace.mkdir()
+    (tmp_path / "outside.py").write_text("VALUE = 41\n", encoding="utf-8")
+    uri = "../outside.py" if relative else (tmp_path / "outside.py").as_posix()
+    (workspace / "step.xml").write_text(
+        f'<setup><execute uri="{uri}"/><generate name="rows" count="1" target="">'
+        '<key name="v" script="VALUE"/></generate></setup>',
+        encoding="utf-8",
+    )
+    context = AuthoringWorkspaceContext(workspace, PurePosixPath("entry.xml"))
+    result = CeBoundedExecutor(context).execute(
+        BoundedExecutionRequest(xml='<setup><include uri="step.xml"/></setup>', descriptor_path=context.descriptor_path)
+    )
+    assert not result.ok
+    assert not result.captured.products
+    assert any(
+        item.message == "Python library uri must name a file inside the workspace" for item in result.diagnostics
+    ), result.diagnostics

@@ -307,6 +307,8 @@ def _refuse_unbounded_execute(
             source = str(read_resource_bytes(descriptor_dir / uri), "utf-8")
         except (FileNotFoundError, UnicodeDecodeError):
             return  # the runtime reports the missing or unreadable script itself
+        except ValueError as error:  # the contained reader refuses paths outside the private workspace
+            raise _BoundedPolicyRefusal("Python library uri must name a file inside the workspace") from error
         origin = Path(uri).name
     else:
         source = ExecuteStatement.normalize_python_source(inline or "")
