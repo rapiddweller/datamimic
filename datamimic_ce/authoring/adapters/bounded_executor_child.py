@@ -23,7 +23,7 @@ from datamimic_ce.engine.dsl.api import resource_reader_scope
 _PROCESS_EVENTS = frozenset(
     {"subprocess.Popen", "os.system", "os.exec", "os.posix_spawn", "os.spawn", "os.fork", "os.forkpty", "os.startfile"}
 )
-# Audit events whose first two arguments name the paths they change; trailing integers carry dir_fd (-1 when
+# Audit events whose first two arguments name the paths they change; integers after the first path carry dir_fd (-1 when
 # absent). CPython 3.11-3.13 raises no event for os.mkfifo or os.mknod, so _contain replaces both.
 _PATH_EVENTS = frozenset(
     {
@@ -110,8 +110,10 @@ def _contain(private_root: Path, workspace: Path, transport: tuple[Path, ...]) -
             ):
                 raise PermissionError("Bounded execution may write only new files inside its private workspace")
         elif event in _PATH_EVENTS:
+            # dir_fd sits at different positions (os.remove: second, os.rename: third and fourth); any
+            # non-negative integer after the first path may be one, so it makes a relative path suspect.
             carries_dir_fd = False
-            for value in args[2:]:
+            for value in args[1:]:
                 carries_dir_fd = carries_dir_fd or (isinstance(value, int) and value >= 0)
             # A file-descriptor form (os.chmod(fd), os.utime(fd)) names no path to check, so it is refused.
             if isinstance(args[0], int):

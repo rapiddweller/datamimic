@@ -153,3 +153,13 @@ def test_file_descriptor_forms_of_path_operations_are_refused(tmp_path: Path) ->
     result = _run(tmp_path / "workspace", f"os.chmod(os.open('{outside.as_posix()}', os.O_RDONLY), 0o600)")
     assert not result.ok
     assert outside.stat().st_mode == before
+
+
+def test_a_relative_remove_through_an_outside_directory_descriptor_is_refused(tmp_path: Path) -> None:
+    (tmp_path / "workspace").mkdir()
+    outside = tmp_path / "outside"
+    outside.mkdir()
+    (outside / "victim").write_text("x", encoding="utf-8")
+    result = _run(tmp_path / "workspace", f"os.remove('victim', dir_fd=os.open('{outside.as_posix()}', os.O_RDONLY))")
+    assert not result.ok
+    assert (outside / "victim").exists()
