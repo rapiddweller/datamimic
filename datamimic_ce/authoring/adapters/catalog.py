@@ -36,9 +36,10 @@ from datamimic_ce.authoring.domain.reference import (
     AuthoringExampleReference,
     AuthoringLearningReference,
     AuthoringVariantReference,
+    ProjectStarter,
     ReferenceResult,
 )
-from datamimic_ce.authoring.domain.requests import BuildRequestV4, ReferenceRequest, ReferenceTopic
+from datamimic_ce.authoring.domain.requests import BuildRequestV5, ReferenceRequest, ReferenceTopic
 
 if TYPE_CHECKING:
     from datamimic_ce.authoring.ports import DmJsonDescriptorContract
@@ -210,6 +211,10 @@ class CeDslCatalog:
             ),
         )
 
+    def _project(self, name: str) -> ProjectStarter:
+        document, acceptance = _example(name)
+        return ProjectStarter(entry_xml=self._codec.compile(document).xml, acceptance=acceptance)
+
     def reference(self, request: ReferenceRequest) -> ReferenceResult:
         match request.topic:
             case ReferenceTopic.OVERVIEW:
@@ -254,14 +259,9 @@ class CeDslCatalog:
                 if request.name is None:
                     entries = tuple(AuthoringExampleReference(name=name, title=name) for name in names)
                 elif request.name in names:
-                    build = _example(request.name)
-                    compilation = self._codec.compile(build.document)
                     entries = (
                         AuthoringExampleReference(
-                            name=request.name,
-                            title=request.name,
-                            request=build.model_copy(update={"document": compilation.document}),
-                            compiled_xml=compilation.xml,
+                            name=request.name, title=request.name, project=self._project(request.name)
                         ),
                     )
                 else:
@@ -285,14 +285,15 @@ class CeDslCatalog:
                 return ReferenceResult(
                     topic=request.topic,
                     content=(
-                        "Create the document, declare every required expectation, then Build. "
-                        "Persist only the returned XML."
+                        "Write the entry as datamimic.xml and every required expectation in acceptance/build.json, "
+                        "then Build the project directory."
                     ),
                     entries=(
                         AuthoringAssemblyReference(
                             name="starter",
-                            instruction="Build this transaction and inspect its typed readiness and evidence.",
-                            starter=_example("starter"),
+                            instruction="Write these two files, Build the project and inspect its typed readiness "
+                            "and evidence.",
+                            starter=self._project("starter"),
                         ),
                     ),
                 )
@@ -353,7 +354,7 @@ def _attribute(field: FieldSpec) -> AttributeCapability:
     )
 
 
-def _example(name: str) -> BuildRequestV4:
+def _example(name: str) -> tuple[DmJsonDocumentV1, BuildRequestV5]:
     producer = DmJsonNodeV1(
         kind="generate",
         properties={"name": "rows", "count": "2"},
@@ -382,12 +383,9 @@ def _example(name: str) -> BuildRequestV4:
             ),
         )
         expectations += (ExactCountExpectation(subject=ProductRowsSubject(product="readback"), count=2),)
-    return BuildRequestV4(
-        document=DmJsonDocumentV1(root=DmJsonNodeV1(kind="setup", properties={"rng_seed": 7}, children=children)),
-        expectations=expectations,
-        product_roles=roles,
-        max_count=10,
-        sample_rows=5,
+    return (
+        DmJsonDocumentV1(root=DmJsonNodeV1(kind="setup", properties={"rng_seed": 7}, children=children)),
+        BuildRequestV5(expectations=expectations, product_roles=roles, max_count=10, sample_rows=5),
     )
 
 

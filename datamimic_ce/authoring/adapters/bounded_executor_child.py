@@ -6,6 +6,7 @@
 
 from __future__ import annotations
 
+import dataclasses
 import os
 import pickle
 import sys
@@ -14,7 +15,7 @@ import time
 from pathlib import Path
 
 from datamimic_ce.authoring.adapters.bounded_executor import _MAX_REPLY_BYTES
-from datamimic_ce.authoring.adapters.dryrun import _run_engine_capture
+from datamimic_ce.authoring.adapters.dryrun import _run_engine_capture, _WorkerSuccess
 from datamimic_ce.authoring.adapters.workspace import AuthoringWorkspaceContext
 from datamimic_ce.authoring.domain.requests import BoundedExecutionRequest
 from datamimic_ce.engine.dsl.api import resource_reader_scope
@@ -61,12 +62,13 @@ def _refuse_mknod(path: _FsPath, mode: int = 0o600, device: int = 0, *, dir_fd: 
     raise PermissionError("Bounded execution may write only new files inside its private workspace")
 
 
-def _contain(private_root: Path, workspace: Path, transport: tuple[Path, ...]) -> set[str]:
+def _contain(private_root: Path, workspace: Path, transport: tuple[Path, ...]) -> tuple[set[str], set[str]]:
     """Refuse writes outside ``private_root``, writes to files the workspace snapshot already holds, and new
     processes for the rest of this child process. Snapshot files are what the run was checked against: a
     library must not replace a later, already-checked library (#360) or a resource the proof reads. The
     ``transport`` files stay refused while the returned set holds them; the child clears it to write its reply,
-    so the run cannot forge that reply.
+    so the run cannot forge that reply. The second returned set collects the snapshot files the run opens for
+    reading, as workspace-relative POSIX paths: the files its proof depends on.
 
     The engine itself writes only below the temp directory, which moves into ``private_root``. An audit
     hook cannot be removed once installed; native code outside the audited calls is not covered. The refusal
@@ -79,6 +81,13 @@ def _contain(private_root: Path, workspace: Path, transport: tuple[Path, ...]) -
         for directory, directories, names in os.walk(workspace)
         for name in (*directories, *names, "")
     )
+    workspace_root = os.path.realpath(workspace)
+    files = frozenset(
+        os.path.normcase(os.path.realpath(os.path.join(directory, name)))
+        for directory, _, names in os.walk(workspace)
+        for name in names
+    )
+    read: set[str] = set()
     reply = {os.path.normcase(os.path.realpath(path)) for path in transport}
     # Windows resolves "nul" to "\\.\nul", so both spellings name the null device.
     null_device = {os.path.normcase(os.devnull), os.path.normcase(os.path.realpath(os.devnull))}
@@ -109,6 +118,10 @@ def _contain(private_root: Path, workspace: Path, transport: tuple[Path, ...]) -
                 and (not contained(path) or (mode is None and not os.path.isabs(os.fsdecode(path))))
             ):
                 raise PermissionError("Bounded execution may write only new files inside its private workspace")
+            if not writing and isinstance(path, (str, bytes, os.PathLike)):
+                real = os.path.realpath(os.fsdecode(path))
+                if os.path.normcase(real) in files:
+                    read.add(Path(os.path.relpath(real, workspace_root)).as_posix())
         elif event in _PATH_EVENTS:
             # dir_fd sits at different positions (os.remove: second, os.rename: third and fourth); any
             # non-negative integer after the first path may be one, so it makes a relative path suspect.
@@ -129,7 +142,7 @@ def _contain(private_root: Path, workspace: Path, transport: tuple[Path, ...]) -
     if os.name == "posix":
         os.mkfifo = _refuse_mkfifo
         os.mknod = _refuse_mknod
-    return reply
+    return reply, read
 
 
 def main() -> None:
@@ -139,13 +152,22 @@ def main() -> None:
     workspace = AuthoringWorkspaceContext(root, descriptor)
     path = workspace.resolve_descriptor_path()
     path.parent.mkdir(parents=True, exist_ok=True)
-    path.write_text(request.xml, encoding="utf-8")
+    # newline="" keeps the bytes the parent hashed; Windows would otherwise rewrite line endings.
+    path.write_text(request.xml, encoding="utf-8", newline="")
     os.chdir(root)
     staging = Path(f"{reply_file}.tmp")
-    guarded = (
-        set() if request.allow_side_effects else _contain(reply_file.parent, root, (request_file, reply_file, staging))
+    guarded, read = (
+        (set(), set())
+        if request.allow_side_effects
+        else _contain(reply_file.parent, root, (request_file, reply_file, staging))
     )
-    with resource_reader_scope(workspace.read_resource_bytes):
+    def read_resource(resource: Path) -> bytes:
+        # The contained reader opens by dir_fd, which the open audit event does not report; record it here.
+        data = workspace.read_resource_bytes(resource)
+        read.add(Path(os.path.abspath(resource)).relative_to(workspace.root).as_posix())
+        return data
+
+    with resource_reader_scope(read_resource):
         message = _run_engine_capture(
             path,
             request.max_count,
@@ -156,6 +178,8 @@ def main() -> None:
             logical_descriptor_path=request.descriptor_path.as_posix(),
             workspace_root=workspace.root,
         )
+    if isinstance(message, _WorkerSuccess):
+        message = dataclasses.replace(message, read_files=tuple(sorted(read)))
     payload = pickle.dumps(message, protocol=pickle.HIGHEST_PROTOCOL)
     if len(payload) > _MAX_REPLY_BYTES:
         raise ValueError("bounded child evidence exceeds the transport limit")

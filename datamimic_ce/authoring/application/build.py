@@ -2,12 +2,15 @@
 # Copyright (c) 2023-2026 Rapiddweller Asia Co., Ltd.
 # This software is licensed under the MIT License. See LICENSE.
 
-"""One Build transaction over compilation, full CE evidence and optional gates."""
+"""One Build of a project: its files, their bounded CE evidence and optional gates."""
 
-import json
 from hashlib import sha256
+from importlib import metadata
+from pathlib import PurePosixPath
 
-from datamimic_ce.authoring.application.use_cases import CompileDocumentUseCase, _codec_diagnostic
+from pydantic import ValidationError
+
+from datamimic_ce.authoring.application.use_cases import _codec_diagnostic
 from datamimic_ce.authoring.domain.build_rules import catalog_diagnostic
 from datamimic_ce.authoring.domain.build_verification import (
     blocked_verification,
@@ -25,15 +28,16 @@ from datamimic_ce.authoring.domain.proof import (
     VerificationGateStatus,
 )
 from datamimic_ce.authoring.domain.requests import (
+    PROJECT_ACCEPTANCE_PATH,
+    PROJECT_ENTRY_PATH,
     BoundedExecutionRequest,
     BuildArtifact,
     BuildAssurance,
-    BuildRequestV4,
+    BuildRequestV5,
     BuildResult,
-    CompileDocumentRequest,
+    ProjectFileDigest,
     ReadyBuild,
     RejectedBuild,
-    RejectedCompileDocument,
     ValidatedReviewArtifact,
 )
 from datamimic_ce.authoring.domain.script_semantics import requires_deterministic_replay
@@ -42,6 +46,7 @@ from datamimic_ce.authoring.ports import (
     BoundedExecutor,
     DescriptorValidator,
     DmJsonDescriptorContract,
+    ProjectFiles,
 )
 from datamimic_ce.authoring.projection.evidence import sample_evidence
 
@@ -53,34 +58,71 @@ class BuildDocumentWorkflow:
         validator: DescriptorValidator,
         executor: BoundedExecutor,
         bounded_execution_policy: BoundedExecutionPolicy,
+        files: ProjectFiles,
     ) -> None:
-        self._compile = CompileDocumentUseCase(contract, validator)
+        self._files = files
         self._contract = contract
         self._validator = validator
         self._executor = executor
         self._policy = bounded_execution_policy
 
-    def execute(self, request: BuildRequestV4) -> BuildResult:
+    def execute(self) -> BuildResult:
         from datamimic_ce.authoring.domain.acceptance_contract import AcceptanceProjectionError
         from datamimic_ce.authoring.domain.acceptance_evaluation import evaluate_acceptance
         from datamimic_ce.authoring.domain.environment_bindings import validate_environment_bindings
         from datamimic_ce.authoring.projection.acceptance import project_acceptance
 
-        compiled = self._compile.execute(
-            CompileDocumentRequest(
-                document=request.document,
-                descriptor_path=request.descriptor_path,
-            )
-        )
-        if isinstance(compiled, RejectedCompileDocument):
+        try:
+            acceptance_bytes = self._files.read(PROJECT_ACCEPTANCE_PATH)
+            request = BuildRequestV5.model_validate_json(acceptance_bytes)
+        except ValidationError as error:
+            return RejectedBuild.from_model_validation(error)
+        except (OSError, ValueError):
+            return RejectedBuild.from_input_error("The project has no readable acceptance/build.json.")
+        try:
+            entry_bytes = self._files.read(PROJECT_ENTRY_PATH)
+            xml = str(entry_bytes, "utf-8")
+        except (OSError, ValueError):
+            return RejectedBuild.from_input_error("The project has no readable UTF-8 datamimic.xml entry.")
+        if len(xml) > MAX_AUTHORING_XML_LENGTH:
             return RejectedBuild(
-                phase=compiled.phase,
-                diagnostics=compiled.diagnostics,
-                verification=blocked_verification(request.verification, "Compilation or XML validation failed."),
+                phase=DiagnosticPhase.POLICY,
+                diagnostics=(
+                    catalog_diagnostic(
+                        AuthoringRuleId.LIMIT,
+                        "Descriptor exceeds the bounded XML size limit.",
+                        phase=DiagnosticPhase.POLICY,
+                        path=("descriptor", PROJECT_ENTRY_PATH.as_posix()),
+                        expected=MAX_AUTHORING_XML_LENGTH,
+                        actual=len(xml),
+                    ),
+                ),
+                verification=blocked_verification(request.verification, "Descriptor exceeds bounded execution limits."),
             )
-        document = compiled.artifact.document
+        lint = self._validator.validate(xml)
+        if not lint.ok:
+            return RejectedBuild(
+                phase=DiagnosticPhase.XML,
+                diagnostics=lint.diagnostics,
+                verification=blocked_verification(request.verification, "XML validation failed."),
+            )
+        try:
+            document = self._contract.decompile(xml)
+        except DmJsonCodecError as error:
+            return RejectedBuild(
+                phase=DiagnosticPhase.DECOMPILE,
+                diagnostics=(
+                    _codec_diagnostic(
+                        error,
+                        code=AuthoringCodecDiagnosticCode.DECOMPILE_UNSUPPORTED,
+                        phase=DiagnosticPhase.DECOMPILE,
+                        remediation="Rewrite the entry using supported DSL elements.",
+                    ),
+                ),
+                verification=blocked_verification(request.verification, "The entry is not provable."),
+            )
         # The project is the entry plus its literal include graph; every fact below covers all of its files.
-        graph = self._validator.include_graph(compiled.artifact.compiled_xml)
+        graph = self._validator.include_graph(xml)
         if not graph.ok:
             return RejectedBuild(
                 # Step lint findings are XML-phase, graph refusals policy-phase; the first error decides.
@@ -143,42 +185,26 @@ class BuildDocumentWorkflow:
                 verification=blocked_verification(verification_options, "Expectation projection failed."),
             )
 
-        proof_json = json.dumps(
-            acceptance.model_dump(mode="json"), sort_keys=True, ensure_ascii=False, separators=(",", ":")
-        )
-        artifact = BuildArtifact(
-            **compiled.artifact.model_dump(), expectations_sha256=sha256(proof_json.encode()).hexdigest()
-        )
-        review = ValidatedReviewArtifact.model_validate(artifact.model_dump())
-        if len(artifact.compiled_xml) > MAX_AUTHORING_XML_LENGTH:
-            return RejectedBuild(
-                phase=DiagnosticPhase.POLICY,
-                diagnostics=(
-                    catalog_diagnostic(
-                        AuthoringRuleId.LIMIT,
-                        "Descriptor exceeds the bounded XML size limit.",
-                        phase=DiagnosticPhase.POLICY,
-                        path=("xml",),
-                        expected=MAX_AUTHORING_XML_LENGTH,
-                        actual=len(artifact.compiled_xml),
-                    ),
-                ),
-                verification=blocked_verification(verification_options, "Descriptor exceeds bounded execution limits."),
-            )
         execution_request = BoundedExecutionRequest(
-            xml=artifact.compiled_xml,
-            descriptor_path=request.descriptor_path,
+            xml=xml,
+            descriptor_path=PROJECT_ENTRY_PATH,
             max_count=request.max_count,
             smoke_export=verification_options.smoke_export,
         )
         first = self._executor.execute(execution_request)
         diagnostics = (
-            *compiled.diagnostics,
+            *lint.diagnostics,
             *graph.diagnostics,
             *first.diagnostics,
             *evaluate_acceptance(acceptance, first.captured),
         )
         smoke = smoke_export_evidence(verification_options.smoke_export, first.smoke_export)
+        read: list[ProjectFileDigest] = [
+            ProjectFileDigest(path=PROJECT_ACCEPTANCE_PATH, sha256=sha256(acceptance_bytes).hexdigest()),
+            ProjectFileDigest(path=PROJECT_ENTRY_PATH, sha256=sha256(entry_bytes).hexdigest()),
+            *(ProjectFileDigest(path=PurePosixPath(step.uri), sha256=step.sha256) for step in graph.descriptors),
+            *first.files,
+        ]
         replay = DeterministicReplayEvidence()
         if verification_options.deterministic_replay:
             if not first.ok or not first.base_run_ok or any(item.severity == "error" for item in diagnostics):
@@ -189,6 +215,7 @@ class BuildDocumentWorkflow:
                 replay = unseeded_replay_evidence()
             else:
                 second = self._executor.execute(execution_request.model_copy(update={"smoke_export": False}))
+                read.extend(second.files)
                 replay = replay_evidence(first, second)
                 replay_acceptance = evaluate_acceptance(acceptance, second.captured)
                 if not second.ok or replay_acceptance:
@@ -209,6 +236,22 @@ class BuildDocumentWorkflow:
                 ),
             )
         verification = BuildVerificationEvidence(smoke_export=smoke, deterministic_replay=replay)
+        digests: dict[PurePosixPath, str] = {}
+        for item in read:
+            if digests.setdefault(item.path, item.sha256) != item.sha256:
+                diagnostics += (
+                    catalog_diagnostic(
+                        AuthoringRuleId.VALIDATION,
+                        "A project file changed while Build read it; the proof would not bind the bytes that ran.",
+                        phase=DiagnosticPhase.EVIDENCE,
+                        path=("project", item.path.as_posix()),
+                    ),
+                )
+        artifact = BuildArtifact(
+            files=tuple(ProjectFileDigest(path=path, sha256=digests[path]) for path in sorted(digests)),
+            ce_version=metadata.version("datamimic_ce"),
+        )
+        review = ValidatedReviewArtifact.model_validate(artifact.model_dump())
         try:
             products = sample_evidence(first.captured, request.sample_rows)
         except ValueError:

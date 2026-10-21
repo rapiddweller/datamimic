@@ -81,6 +81,10 @@ class AuthoringWorkspaceContext:
             raise ValueError("descriptor_path resolves outside the authoring workspace")
         return resolved_path
 
+    def read(self, path: PurePosixPath) -> bytes:
+        """One project file by its workspace path, through the same contained reader."""
+        return self.read_resource_bytes(self.resolve_descriptor_path(path))
+
     def read_resource_bytes(self, path: Path) -> bytes:
         # Resolve lexical parents without following links before opening the rooted walk.
         absolute = Path(os.path.abspath(path))

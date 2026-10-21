@@ -36,4 +36,5 @@ def create_authoring_application(
         executor=CeBoundedExecutor(workspace),
         descriptor_contract=codec,
         bounded_execution_policy=CeBoundedExecutionPolicy(),
+        files=workspace,
     )

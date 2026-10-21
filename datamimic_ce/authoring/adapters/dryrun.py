@@ -124,6 +124,8 @@ class _WorkerSuccess:
     smoke_diagnostics: tuple[dict[str, object], ...]
     smoke_export: SmokeExportCapture
     source_accesses: tuple[tuple[NonEmptyStrictStr, PositiveStrictInt], ...] = ()
+    # Workspace-relative POSIX paths of snapshot files the contained run opened for reading.
+    read_files: tuple[NonEmptyStrictStr, ...] = ()
 
 
 @dataclass(frozen=True, config=ConfigDict(extra="forbid", strict=True, revalidate_instances="always"))
@@ -991,6 +993,7 @@ def _validated_worker_success(message: _WorkerSuccess, max_count: int | None = N
         message.smoke_diagnostics,
         message.smoke_export,
         message.source_accesses,
+        message.read_files,
     )
     names = [budget.name for budget in message.budgets]
     if len(names) != len(set(names)):
