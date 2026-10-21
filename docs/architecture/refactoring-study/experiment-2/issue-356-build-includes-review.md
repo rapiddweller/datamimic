@@ -2,7 +2,7 @@
 
 **Accepted within the local architecture review scope.** Reviewer: Astra (independent Opus 5.5 review agent, delegated by Alex).
 
-- Scope: `feat/build-includes`, base `287e9c87` (merged #362), head `fbea1ad8`.
+- Scope: `feat/build-includes`, base `287e9c87` (merged #362), head `dab3bfc0` (`fbea1ad8` plus the Codex fixes `dab3bfc0`).
 - This review rebinds the [issue 361 receipt](issue-361-bounded-containment-review.md) and keeps all of its assessments.
 - It does not authorize a merge and does not claim that every native rule passes.
 
@@ -10,10 +10,10 @@
 
 | Item | Value |
 |---|---|
-| Source | `cf401224fd17ed41249dfc7d5dd6e5e2f9fa06e19fd3e8a877ed7bb2a29172e6` |
+| Source | `4d2255335a084b72bc556cf35b8f255f37889962bdc06cc85e26d40428471e77` |
 | Target (unchanged) | `d83d4df102a2588a54598e26cb045b721cb024a118f51e31592b135050d4e78e` |
 | Analyzer (unchanged; ArchKeel 4.0.1, Python 3.11.12) | `bb1a3262d3fdd38c3e9a6af980cc063281ae98ab1c28c89c2c5be6dfb450744f` |
-| Validation | `5e00b93c3a127eced603b6e4306e6f5224aab650078117f3c64a1af2ec0a3cf7` |
+| Validation | `abad44c6f52e49f47fffa03e21ed6ed0303e8a6f737933f72e53e69dd6c49666` |
 | UNKNOWN | `2ab5f7a323140bb3c632ca77b59cb26288f438e215800f44bc66c90d77a3e676` |
 
 **Budgets:**
@@ -100,6 +100,21 @@ No regression.
 - The #362 containment applies to the whole child run, and step files belong to the protected snapshot.
 - Forced replay now covers Python anywhere in the graph.
 
+## Codex fixes (`dab3bfc0`)
+
+**DM407 per document: valid, fixed.**
+- `CeBoundedExecutionPolicy.diagnostics` takes the other project documents.
+- The delivery rule now applies to every document when any document in the graph exports to a buffered file exporter.
+- Build passes the full project to the entry and to each step. The port signature is internal; a default keeps single-document callers working.
+- The new test pins a targetless model product next to a delivery export.
+- **Low (SPOT):** `_exports_to_file` repeats the file-export detection that `diagnostics` still computes for its own document. Calling the helper for the document too would leave one rule; the invalid-target diagnostic stays in the loop.
+- Both count only `generate` products, as before.
+
+**Aggregate include bytes: valid, fixed.**
+- The walker counts all bytes read across the graph against a 64 MiB limit and raises the existing static bounded-limits refusal.
+- It retains only `.xml` steps; `.properties` files are read for containment only.
+- Peak memory is bounded by the aggregate limit plus one contained read, at most 100 MiB. That is acceptable for the authoring process.
+
 ## Native result
 
 - **Base:** I re-collected base `287e9c87` independently, and it reproduces every digest of the previous receipt.
@@ -117,12 +132,13 @@ No regression.
 ## Evidence boundary
 
 **LOCAL VERIFIED (by this reviewer):**
-- Source review of `287e9c87..fbea1ad8`.
+- Source review of `287e9c87..dab3bfc0`.
 - Producer-parity comparison.
 - Producer/consumer order probes across steps.
 - The `order_desk` fixture dry-run.
 - 273 related tests passed: project build, dryrun includes, Build policy and workflow, library, containment, bounded executor, Build verification, acceptance, catalog, reference, `cli_v4`, trusted Python authoring.
 - ruff and mypy are clean.
+- At `dab3bfc0`: the related suites, 247 passed; ruff and mypy are clean; the calls profile is unchanged in unresolved calls (1,426).
 - Native collection and a decoded call diff.
 - Strict completion gate acceptance.
 
