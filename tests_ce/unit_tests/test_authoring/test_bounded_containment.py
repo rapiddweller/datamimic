@@ -4,6 +4,8 @@
 
 """A bounded run writes only inside its private directory and starts no process (#361)."""
 
+import subprocess
+import sys
 from pathlib import Path, PurePosixPath
 
 from datamimic_ce.authoring.adapters.bounded_executor import CeBoundedExecutor
@@ -122,3 +124,32 @@ def test_unaudited_node_creation_is_refused(tmp_path: Path) -> None:
         result = _run(tmp_path / "workspace", f"os.{call}('{node.as_posix()}')")
         assert not result.ok
         assert not node.exists()
+
+
+def test_the_null_device_is_only_writable(tmp_path: Path) -> None:
+    # sys.audit raises the event itself, so the OS permission on the null device does not decide the outcome.
+    probe = (
+        "import os, sys\n"
+        "from pathlib import Path\n"
+        "from datamimic_ce.authoring.adapters.bounded_executor_child import _contain\n"
+        "_contain(Path(sys.argv[1]), Path(sys.argv[1]), ())\n"
+        "open(os.devnull, 'w').close()\n"
+        "try:\n"
+        "    sys.audit('os.chmod', os.devnull, 0o666, -1)\n"
+        "except PermissionError:\n"
+        "    print('refused')\n"
+    )
+    completed = subprocess.run(
+        [sys.executable, "-c", probe, str(tmp_path)], capture_output=True, text=True, check=True, timeout=60
+    )
+    assert completed.stdout.strip() == "refused", completed.stderr
+
+
+def test_file_descriptor_forms_of_path_operations_are_refused(tmp_path: Path) -> None:
+    (tmp_path / "workspace").mkdir()
+    outside = tmp_path / "outside.txt"
+    outside.write_text("x", encoding="utf-8")
+    before = outside.stat().st_mode
+    result = _run(tmp_path / "workspace", f"os.chmod(os.open('{outside.as_posix()}', os.O_RDONLY), 0o600)")
+    assert not result.ok
+    assert outside.stat().st_mode == before

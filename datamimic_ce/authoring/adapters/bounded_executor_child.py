@@ -89,8 +89,6 @@ def _contain(private_root: Path, workspace: Path, transport: tuple[Path, ...]) -
 
     def contained(path: str | bytes | os.PathLike[str]) -> bool:
         target = os.path.normcase(os.path.realpath(os.fsdecode(path)))
-        if target in null_device:
-            return True
         return target[: len(allowed) + 1] == allowed + os.sep and target not in snapshot and target not in reply
 
     def hook(event: str, args: tuple[object, ...]) -> None:
@@ -103,9 +101,11 @@ def _contain(private_root: Path, workspace: Path, transport: tuple[Path, ...]) -
             )
             # An integer path is a file descriptor, opened and checked before. os.open (mode None) reports no
             # dir_fd, so a relative os.open write may land anywhere; the engine opens absolute paths only.
+            # Writing to the null device is the one write outside the root the engine needs; only open gets it.
             if (
                 writing
                 and isinstance(path, (str, bytes, os.PathLike))
+                and os.path.normcase(os.path.realpath(os.fsdecode(path))) not in null_device
                 and (not contained(path) or (mode is None and not os.path.isabs(os.fsdecode(path))))
             ):
                 raise PermissionError("Bounded execution may write only new files inside its private workspace")
@@ -113,6 +113,9 @@ def _contain(private_root: Path, workspace: Path, transport: tuple[Path, ...]) -
             carries_dir_fd = False
             for value in args[2:]:
                 carries_dir_fd = carries_dir_fd or (isinstance(value, int) and value >= 0)
+            # A file-descriptor form (os.chmod(fd), os.utime(fd)) names no path to check, so it is refused.
+            if isinstance(args[0], int):
+                raise PermissionError("Bounded execution may write only new files inside its private workspace")
             for path in args[:2]:
                 # A relative path beside a real dir_fd resolves against a directory the event does not name.
                 if isinstance(path, (str, bytes, os.PathLike)) and (
