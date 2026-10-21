@@ -146,11 +146,17 @@ mostly `import random` inside `generate()`.
   - draws while the module body runs;
   - imports inside function bodies.
 
-  A static check of the module refuses them, plus everything else that does work at load time.
-  Admitted top-level statements: docstring, imports, `def`, `class`, and constant assignments.
-  Refused: top-level calls and other statements, default arguments that call, and imports of
-  entropy modules inside a function body. Each refusal is a typed diagnostic that names the file
-  and the statement line, never values.
+  Implemented in CE PR #360, measured on the corpus. A static rule against load-time calls would also
+  refuse deterministic code: loggers, NamedTuple constant tables. The split is therefore:
+  - **static check** in the bounded child, on the exact bytes that run:
+    - imports only data modules (`random`, `datetime`, `math`, `json`, `collections`, `faker`,
+      `numpy`, `pandas`, `datamimic_ce.domains`, …);
+    - no `open`/`eval`/`exec`/`compile`/`__import__`;
+    - under rngSeed, no imports inside a function or class body.
+
+    Each refusal names the file, line and rule, never values.
+  - **forced replay:** Build always replays a seeded model that loads Python, so load-time draws fail
+    as a replay mismatch.
 
 Measured: the reference project's `lib/personnel.scr.py` loads and replays under rngSeed. The CE
 #358 DSL fixture covers module imports, aliases, imports by name, `isinstance`, and a `generator=`
@@ -180,9 +186,8 @@ The plugin's deliverable becomes the project tree:
    cover R1, the volumes and the negatives, and an independent oracle confirms R2–R5.
 2. A change to any project file invalidates the proof.
 3. A failing element in a step file reports that file and line, without values.
-4. A `lib/` module with a top-level call, a calling default argument or a function-local entropy
-   import is refused and names the line. Seeded `random`/`datetime` imported by a helper replay
-   identically (already true since CE #358).
+4. A `lib/` module that imports outside the data modules, reads files, or (seeded) imports inside a
+   body is refused and names the line. A seeded model with `lib/` always replays (CE #360).
 5. Blind rerun (12 isolated sessions) scores project structure as well as correctness. The rubric
    covers layout, data in `entity/`/`weighting/` instead of literals, delivery steps separate from
    generation, and a readable entry process.
