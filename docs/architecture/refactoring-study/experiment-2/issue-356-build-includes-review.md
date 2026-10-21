@@ -2,7 +2,7 @@
 
 **Accepted within the local architecture review scope.** Reviewer: Astra (independent Opus 5.5 review agent, delegated by Alex).
 
-- Scope: `feat/build-includes`, base `287e9c87` (merged #362), b1 head `dab3bfc0` (`fbea1ad8` plus the Codex fixes `dab3bfc0`); the binding below is for slice b2 at `85724521`.
+- Scope: `feat/build-includes`, base `287e9c87` (merged #362), b1 head `dab3bfc0` (`fbea1ad8` plus the Codex fixes `dab3bfc0`); the binding below is for slice b2 at `a4c9865a`.
 - This review rebinds the [issue 361 receipt](issue-361-bounded-containment-review.md) and keeps all of its assessments.
 - It does not authorize a merge and does not claim that every native rule passes.
 
@@ -10,7 +10,7 @@
 
 | Item | Value |
 |---|---|
-| Source | `8f0811bbfcc9075a0271e08161b7ca7e18a5267a864a3f0cb6900d6ecdcb4301` |
+| Source | `1db82bc8cbef8a6a1102bf1a0e2669526c0062a5ab0cdb0200288c9b0909ad26` |
 | Target (unchanged) | `d83d4df102a2588a54598e26cb045b721cb024a118f51e31592b135050d4e78e` |
 | Analyzer (unchanged; ArchKeel 4.0.1, Python 3.11.12) | `bb1a3262d3fdd38c3e9a6af980cc063281ae98ab1c28c89c2c5be6dfb450744f` |
 | Validation | `3acc79e944ffb66a675ce1226c213590f21d18d2cfba8afdc39a5d7da7c5892c` |
@@ -255,4 +255,22 @@ So a readable graph hides no real undeclared id, and the single-file and no-incl
 - No change in unresolved or partially resolved calls.
 
 **Tests:** 810 Authoring unit tests passed, 4 skipped; ruff and mypy are clean.
+
+### Addendum: `a4c9865a` (Codex P2 on #365), accepted
+
+The finding was valid. At runtime a step runs in a context copied from its parent, and the clients the step owns are cleaned up with it, not merged back. Lint now takes client ids from the file itself plus the entry (`project[:1]`); memstores stay project-wide.
+
+I probed `include_graph` with a project whose entry declares `entrydb` and whose step `model/a.xml` declares `stepdb`:
+- Step `a` targeting `entrydb` (the entry's client) passes.
+- Step `a` targeting `stepdb` (its own client) passes.
+- Sibling step `b` targeting `stepdb` is refused with DM401 at `("include","model/b.xml","/setup/generate","line",2)`.
+
+**Info:** a step included *by another step* sees only the entry's clients and its own, not those of the step that includes it. Lint could therefore over-report there. Build already refuses step-declared clients in acceptance projection.
+
+**Native result:**
+- 0 violations; 1,426 unresolved calls, 178 typing positions.
+- The 20 diagnostics and the 314 UNKNOWN records are unchanged.
+- The validation digest changes only because one partially resolved call goes away (the dropped `el.get("id")` filter in the client comprehension): 13,274 analyzed, 2,029 partially resolved.
+
+**Tests:** the project-build, public-lint and dry-run-includes suites pass; ruff and mypy are clean.
 
