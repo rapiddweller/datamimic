@@ -60,6 +60,7 @@ def test_seeded_library_loads_once_and_build_replays_it_unrequested() -> None:
             "import_in_function.scr.py: Python library line 2 imports inside a function or class body",
         ),
         ("library_reads_file.xml", "reads_file.scr.py: Python library line 2 uses a file or dynamic-code builtin"),
+        ("library_indented.xml", "indented_import.scr.py: Python library line 1 imports a module outside"),
     ],
 )
 def test_library_check_refuses_before_the_library_runs(filename: str, message: str) -> None:

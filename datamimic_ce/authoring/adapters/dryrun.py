@@ -304,16 +304,17 @@ def _refuse_unbounded_execute(
         )
     if uri is not None:
         try:
-            source = str(read_resource_bytes(descriptor_dir / uri), "utf-8")
+            raw = str(read_resource_bytes(descriptor_dir / uri), "utf-8")
         except (FileNotFoundError, UnicodeDecodeError):
             return  # the runtime reports the missing or unreadable script itself
         except ValueError as error:  # the contained reader refuses paths outside the private workspace
             raise _BoundedPolicyRefusal("Python library uri must name a file inside the workspace") from error
         origin = Path(uri).name
     else:
-        source = ExecuteStatement.normalize_python_source(inline or "")
+        raw = inline or ""
         origin = "inline <execute>"
-    refusal = python_library_refusal(source, seeded=seeded)
+    # Check exactly what ExecuteTask will run: it normalizes file and inline code alike.
+    refusal = python_library_refusal(ExecuteStatement.normalize_python_source(raw), seeded=seeded)
     if refusal is not None:
         raise _BoundedPolicyRefusal(f"{origin}: {refusal.message()}. {refusal.remediation()}")
 

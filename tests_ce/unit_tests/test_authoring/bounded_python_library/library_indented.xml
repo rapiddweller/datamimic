@@ -1,0 +1,7 @@
+<setup>
+    <!-- Refused: ExecuteTask dedents a fully indented file, so the check reads the dedented code too. -->
+    <execute uri="lib/indented_import.scr.py"/>
+    <generate name="selected" count="1" target="">
+        <key name="value" constant="1"/>
+    </generate>
+</setup>
