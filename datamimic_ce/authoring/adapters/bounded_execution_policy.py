@@ -32,8 +32,26 @@ def _is_bounded_python_library(node: DmJsonNodeV1, path: tuple[str | int, ...]) 
     )
 
 
+def _exports_to_file(document: DmJsonDocumentV1) -> bool:
+    """Whether a product of this document delivers to a buffered file exporter; invalid targets count as none."""
+    for node, _ in iter_dm_json_nodes(document):
+        targets = node.properties.get("target")
+        if node.kind == "generate" and isinstance(targets, str):
+            try:
+                entries = parse_function_string(targets)
+            except ValueError:
+                continue
+            if any(entry["function_name"] in buffered_exporter_names() for entry in entries):
+                return True
+    return False
+
+
 class CeBoundedExecutionPolicy:
-    def diagnostics(self, document: DmJsonDocumentV1) -> tuple[Diagnostic, ...]:
+    def diagnostics(
+        self, document: DmJsonDocumentV1, project: tuple[DmJsonDocumentV1, ...] = ()
+    ) -> tuple[Diagnostic, ...]:
+        """Findings for one document; ``project`` holds the other documents of its include graph, because the
+        delivery rule spans every file."""
         diagnostics = []
         for node, path in iter_dm_json_nodes(document):
             if node.properties.get("type") == "decimal" and node.properties.get("granularity") is not None:
@@ -87,7 +105,7 @@ class CeBoundedExecutionPolicy:
                             path=path + ("properties", "target"),
                         )
                     )
-        if has_file_export:
+        if has_file_export or any(_exports_to_file(other) for other in project):
             delivery_rule = authoring_rule_definition("DM407")
             for node, path in products:
                 targets = node.properties.get("target")

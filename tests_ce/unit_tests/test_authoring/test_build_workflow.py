@@ -30,7 +30,7 @@ class Validator:
 
 
 class Policy:
-    def diagnostics(self, document):
+    def diagnostics(self, document, project=()):
         return ()
 
 

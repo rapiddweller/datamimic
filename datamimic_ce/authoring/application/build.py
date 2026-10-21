@@ -116,12 +116,15 @@ class BuildDocumentWorkflow:
             if requires_deterministic_replay(document, tuple(step for _, step in steps))
             else request.verification
         )
+        step_documents = tuple(step for _, step in steps)
         policy_diagnostics = (
-            *self._policy.diagnostics(document),
+            *self._policy.diagnostics(document, step_documents),
             *(
                 diagnostic.relocated(("include", uri, *diagnostic.path[1:]))
-                for uri, step in steps
-                for diagnostic in self._policy.diagnostics(step)
+                for index, (uri, step) in enumerate(steps)
+                for diagnostic in self._policy.diagnostics(
+                    step, (document, *step_documents[:index], *step_documents[index + 1 :])
+                )
             ),
         )
         if policy_diagnostics:

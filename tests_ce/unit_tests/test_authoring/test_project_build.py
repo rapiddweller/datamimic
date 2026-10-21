@@ -146,3 +146,26 @@ def test_build_refuses_a_non_literal_or_uncontained_include(tmp_path: Path, uri:
     )
     assert result.outcome == "rejected"
     assert any(item.code in {AuthoringRuleId.INCLUDE, "DM405"} for item in result.diagnostics), result.diagnostics
+
+
+def test_delivery_rule_spans_the_project(tmp_path: Path) -> None:
+    # A file export in delivery/ makes every product of every step need a target (DM407).
+    project = _copy(tmp_path)
+    step = project / "model" / "20_orders.xml"
+    step.write_text(
+        step.read_text(encoding="utf-8").replace('target="store" targetEntity="orders"', ""), encoding="utf-8"
+    )
+    result = _build(project, roles=_ROLES[:2])
+    assert result.outcome == "rejected"
+    assert any(
+        item.code == "DM407" and item.path[:2] == ("include", "model/20_orders.xml") for item in result.diagnostics
+    ), result.diagnostics
+
+
+def test_include_graph_bytes_are_bounded(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    from datamimic_ce.authoring.adapters import dryrun
+
+    monkeypatch.setattr(dryrun, "_MAX_INCLUDE_GRAPH_BYTES", 64)
+    result = _build(_copy(tmp_path))
+    assert result.outcome == "rejected"
+    assert any(item.code is AuthoringRuleId.INCLUDE for item in result.diagnostics), result.diagnostics

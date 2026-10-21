@@ -331,20 +331,26 @@ def _refuse_unbounded_execute(
         raise _BoundedPolicyRefusal(f"{origin}: {refusal.message()}. {refusal.remediation()}")
 
 
+# Aggregate bytes one include graph may read; Build walks it in the authoring process, not in the bounded child.
+_MAX_INCLUDE_GRAPH_BYTES = 64 * 1024 * 1024
+
+
 def _literal_include_graph(entry: etree._Element, entry_path: Path) -> tuple[tuple[str, bytes], ...]:
-    """The entry's literal include graph in execution order: (workspace-relative uri, file bytes) for every
-    ``.xml`` step and ``.properties`` file. Nested uris resolve against the entry directory, as the runtime
-    resolves them. Raises _BoundedPolicyRefusal unless the graph is literal, setup-level, contained, acyclic and
-    bounded; reads go through the active resource reader, so a contained reader refuses paths outside it."""
+    """The entry's literal include graph in execution order: (workspace-relative uri, file bytes) per ``.xml``
+    step; ``.properties`` files are read for containment but not retained. Nested uris resolve against the entry
+    directory, as the runtime resolves them. Raises _BoundedPolicyRefusal unless the graph is literal,
+    setup-level, contained, acyclic and bounded in files and bytes; reads go through the active resource reader,
+    so a contained reader refuses paths outside it."""
     from datamimic_ce.engine.dsl.api import parse_xml_source, read_resource_bytes
 
     descriptor_dir = entry_path.parent
     graph: list[tuple[str, bytes]] = []
     active = [os.path.abspath(entry_path)]
     visited = 0
+    total = 0
 
     def visit(document: etree._Element) -> None:
-        nonlocal visited
+        nonlocal visited, total
         if document.tag != "setup":
             raise _BoundedPolicyRefusal("XML include must contain a setup descriptor")
         for node in document.iter("include"):
@@ -363,8 +369,11 @@ def _literal_include_graph(entry: etree._Element, entry_path: Path) -> tuple[tup
                 raise _BoundedPolicyRefusal("Unsupported bounded include dependency type")
             dependency = descriptor_dir / uri
             data = read_resource_bytes(dependency)
-            graph.append((uri, data))
+            total += len(data)
+            if total > _MAX_INCLUDE_GRAPH_BYTES:
+                raise _BoundedPolicyRefusal("XML include dependency graph is cyclic or exceeds bounded limits")
             if suffix == ".xml":
+                graph.append((uri, data))
                 visited += 1
                 identity = os.path.abspath(dependency)
                 if identity in active or len(active) >= 64 or visited > 2000:

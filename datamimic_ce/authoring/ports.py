@@ -45,4 +45,6 @@ class BoundedExecutor(Protocol):
 
 
 class BoundedExecutionPolicy(Protocol):
-    def diagnostics(self, document: DmJsonDocumentV1) -> tuple[Diagnostic, ...]: ...
+    def diagnostics(
+        self, document: DmJsonDocumentV1, project: tuple[DmJsonDocumentV1, ...] = ()
+    ) -> tuple[Diagnostic, ...]: ...
