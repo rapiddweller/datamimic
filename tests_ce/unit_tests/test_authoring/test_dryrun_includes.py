@@ -190,7 +190,8 @@ def test_included_smoke_export_inherits_native_separator(tmp_path: Path, monkeyp
     assert artifacts == [b"id;label\r\n1;x\r\n"]
 
 
-def test_included_memstore_producer_can_supply_root_consumer_without_false_completeness(tmp_path: Path) -> None:
+def test_included_memstore_producer_proves_a_root_consumer_complete(tmp_path: Path) -> None:
+    # Producer facts span the whole include graph, so a consumer may read what a step wrote.
     directory = tmp_path / "descriptors"
     directory.mkdir()
     (directory / "child.xml").write_text(
@@ -208,7 +209,7 @@ def test_included_memstore_producer_can_supply_root_consumer_without_false_compl
     by_name = {product.name: product for product in result.captured.products}
     assert by_name["rows"].rows == by_name["copy"].rows == ({"id": 1}, {"id": 2})
     assert by_name["rows"].capture.complete
-    assert not by_name["copy"].capture.complete
+    assert by_name["copy"].capture.complete
 
 
 @pytest.mark.parametrize("root_count", [3, 10])
@@ -233,7 +234,7 @@ def test_included_memstore_cannot_claim_a_local_producer_is_the_entire_source(tm
     products = {product.name: product for product in result.captured.products}
     assert products["copy"].rows == ({"origin": "root"},) * 3
     assert products["copy"].capture.status is CaptureStatus.UNKNOWN
-    assert "include" in products["copy"].capture.reason
+    assert "multiple possible producers" in products["copy"].capture.reason
 
 
 def test_property_expanded_product_name_cannot_overwrite_capture_provenance(tmp_path: Path) -> None:

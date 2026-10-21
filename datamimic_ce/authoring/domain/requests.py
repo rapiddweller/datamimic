@@ -47,6 +47,22 @@ class LintRequest(AuthoringModel):
     xml: NonEmptyStrictStr
 
 
+class IncludedDescriptor(AuthoringModel):
+    """One file of an entry's literal include graph, read from the bound workspace."""
+
+    uri: NonEmptyStrictStr
+    xml: NonEmptyStrictStr
+    sha256: NonEmptyStrictStr
+
+
+class IncludeGraphResult(AuthoringModel):
+    """The ``.xml`` steps an entry includes, in execution order, or why the graph is not provable."""
+
+    ok: StrictBool
+    descriptors: tuple[IncludedDescriptor, ...] = ()
+    diagnostics: tuple[Diagnostic, ...] = ()
+
+
 class LintResult(AuthoringModel):
     ok: StrictBool
     diagnostics: tuple[Diagnostic, ...] = ()

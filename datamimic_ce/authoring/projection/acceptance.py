@@ -167,10 +167,18 @@ def _target_entity(node: DmJsonNodeV1, name: str) -> str:
     return name
 
 
-def _products(document: DmJsonDocumentV1) -> tuple[_Product, ...]:
+def _products(document: DmJsonDocumentV1, included: tuple[tuple[str, DmJsonDocumentV1], ...]) -> tuple[_Product, ...]:
     declarations = {
         node.properties.get("id"): node.kind for node in document.root.children if node.kind in {"database", "mongodb"}
     }
+    for uri, step in included:
+        for index, node in enumerate(step.root.children):
+            if node.kind in {"database", "mongodb"}:
+                # Bindings and sinks resolve against the entry; a step-declared client could not be bound.
+                _reject(
+                    "Clients belong to the entry descriptor, not to an included step.",
+                    ("include", uri, "root", "children", index),
+                )
     entries: list[_Product] = []
 
     def visit(node: DmJsonNodeV1, path: tuple[str | int, ...], parent: _Product | None) -> None:
@@ -216,11 +224,18 @@ def _products(document: DmJsonDocumentV1) -> tuple[_Product, ...]:
             visit(child, path + ("children", index), parent)
 
     visit(document.root, ("document", "root"), None)
+    for uri, step in included:
+        visit(step.root, ("include", uri, "root"), None)
     return tuple(entries)
 
 
-def project_acceptance(request: BuildRequestV4, canonical_document: DmJsonDocumentV1) -> AcceptanceSpecV1:
-    entries = _products(canonical_document)
+def project_acceptance(
+    request: BuildRequestV4,
+    canonical_document: DmJsonDocumentV1,
+    included: tuple[tuple[str, DmJsonDocumentV1], ...] = (),
+) -> AcceptanceSpecV1:
+    """Acceptance over the products of the entry and of every included step, keyed by their literal uri."""
+    entries = _products(canonical_document, included)
     if len({entry.product.name for entry in entries}) != len(entries):
         _reject("Product names must be globally unique for bounded capture.", ("document", "root"))
     relationships: list[AcceptanceRelationshipV1] = []
@@ -327,7 +342,7 @@ def project_acceptance(request: BuildRequestV4, canonical_document: DmJsonDocume
         )
         for index, item in enumerate(request.acceptance_requirements)
     )
-    readbacks = _readbacks(request, entries, canonical_document)
+    readbacks = _readbacks(request, entries, (canonical_document, *(step for _, step in included)))
     spec = AcceptanceSpecV1(products=spec.products, relationships=tuple(relationships), readbacks=readbacks)
     for check in checks:
         validate_acceptance_check(spec, check)
@@ -400,10 +415,11 @@ def _derive_field(
 
 
 def _readbacks(
-    request: BuildRequestV4, entries: tuple[_Product, ...], document: DmJsonDocumentV1
+    request: BuildRequestV4, entries: tuple[_Product, ...], documents: tuple[DmJsonDocumentV1, ...]
 ) -> tuple[AcceptanceReadbackV1, ...]:
     stores = {
         identifier
+        for document in documents
         for node in document.root.children
         if node.kind == "memstore"
         if isinstance(identifier := node.properties.get("id"), str)

@@ -117,6 +117,10 @@ class Diagnostic(AuthoringModel):
     remediation: NonEmptyStrictStr | None = None
     ce_error: CeErrorIdentity | None = None
 
+    def relocated(self, path: tuple[str | int, ...]) -> Diagnostic:
+        """The same finding at another path, e.g. inside an included step."""
+        return self.model_copy(update={"path": path})
+
     @model_validator(mode="after")
     def errors_are_actionable(self) -> Diagnostic:
         if self.severity == "error" and self.remediation is None:

@@ -68,6 +68,16 @@ original requirements and relative resource paths. `outcome: "ready"` is the
 stopping condition. Persist `artifact.compiled_xml` in the chosen project and
 retain the separate proof. Do not lint/dry-run a successful Build again.
 
+## Projects with steps
+
+Build proves the entry descriptor together with its literal include graph. Keep the
+entry as the process (`<include uri="model/10_….xml"/>` per step, in order), put
+business data under `data/`, Python under `lib/` and delivery steps last. Pass the
+entry as `descriptor_path`; expectations and `product_roles` may name products of
+any step. Includes must be literal setup-level workspace paths (`.xml` or
+`.properties`), product names unique across files, and clients declared only in the
+entry. Hand data between steps through a memstore declared in the entry.
+
 ## Python libraries in Build
 
 Build runs a setup-level `<execute>` that loads Python (`uri="lib/x.scr.py"` or

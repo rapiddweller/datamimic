@@ -1,0 +1,5 @@
+<setup>
+    <generate name="customers" source="data/entity/customers.ent.csv" distribution="ordered" target="store">
+        <key name="customer_id" script="int(this.id)"/>
+    </generate>
+</setup>

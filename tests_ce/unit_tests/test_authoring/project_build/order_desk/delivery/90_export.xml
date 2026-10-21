@@ -1,0 +1,7 @@
+<setup>
+    <generate name="order_rows" source="store" type="orders" distribution="ordered" target="CSV">
+        <key name="order_id" script="this.order_id"/>
+        <key name="customer_id" script="this.customer_id"/>
+        <key name="total" script="this.total"/>
+    </generate>
+</setup>

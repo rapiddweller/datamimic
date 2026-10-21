@@ -4,7 +4,7 @@ from dataclasses import dataclass, field
 import pytest
 
 from datamimic_ce.authoring.domain.capture import CapturedProduct, CapturedProducts, ProductCaptureEvidence, CaptureStatus
-from datamimic_ce.authoring.domain.requests import BuildRequestV4, BoundedExecutionEvidence, LintResult
+from datamimic_ce.authoring.domain.requests import BuildRequestV4, BoundedExecutionEvidence, IncludeGraphResult, LintResult
 
 
 def request(**overrides):
@@ -25,9 +25,12 @@ class Validator:
     def validate(self, xml, *, descriptor_path=None):
         return LintResult(ok=True)
 
+    def include_graph(self, xml):
+        return IncludeGraphResult(ok=True)
+
 
 class Policy:
-    def diagnostics(self, document):
+    def diagnostics(self, document, project=()):
         return ()
 
 
