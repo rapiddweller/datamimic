@@ -97,8 +97,9 @@ flowchart LR
 
 - **Protocol:** `BuildRequestV5`, CE first, then the paired EE port. Input: the project root and
   `acceptance/build.json` (entry path, expectations, product roles, verification). The files in the
-  workspace are the model; there is no second DM JSON copy of them. `V4` stays for single-document
-  callers until a migration is decided.
+  workspace are the model; there is no second DM JSON copy of them. `BuildRequestV4` is removed in
+  the same release, without migration or compatibility path (Alex, 2026-10-21): too few users depend
+  on it to justify a legacy route. A single-file model is a project with one entry and no includes.
 - **Graph:** literal includes as in #346: `.xml` steps, `.properties`, and the resources they
   read. Expectations address products by name across all files; product names stay unique per project.
   Facts that Build derives from the document must come from the resolved graph, not the entry alone.
@@ -201,8 +202,20 @@ The plugin's deliverable becomes the project tree:
 3. Python: allowed as pure libraries running with safe globals.
 
 4. `lib/` admits classes (custom generators and converters), confirmed 2026-10-21.
+5. `BuildRequestV4` is removed when V5 lands; no migration, no legacy route (2026-10-21).
 
-Still open: when `V4` is retired.
+## Delivery order
+
+1. **(b) Includes:** Build resolves the literal include graph of the entry from the workspace; expectations,
+   product roles and derived facts (forced replay) cover products of every file.
+2. **(c) Project acceptance:** `acceptance/build.json` is the Build input; Ready binds a digest per project
+   file. V4 is removed here.
+3. **(d) Diagnostics:** file, element and line inside step files; no cascade that hides the first cause.
+4. **(e) Plugin steering**, then a blind rerun with the project task (Haiku and Sonnet) as before/after.
+
+Blind round 2 (2026-10-21, CE `29fb4da8`): Haiku and Sonnet reached Ready on the single-file task with
+correct R1–R5 data. On the project task Sonnet built this layout (entry, six steps, `data/`, `python/`)
+but proved only a flattened copy, because Build refuses `<include>`; Haiku did not finish.
 
 ## Not decided here
 
