@@ -1,9 +1,9 @@
 # Bounded Python library architecture review (issue 332, PR #360)
 
-**Accepted within the local architecture review scope.** Alex decided the contract question (M1, Option A); `285e888b` implements it.
+**Accepted within the local architecture review scope.** Alex decided the contract question (M1, Option A); `285e888b` implements it. `23080ad5` widens the builtin rule from calls to references.
 
 - Reviewer: Astra (independent Opus 5.5 review agent, delegated by Alex).
-- Scope: `feat/bounded-python-library`, base `f4e4de69`, head `285e888b` (`d9d377bc`, the L1 fix `6e36e1c5`, and the M1 contract change `285e888b`).
+- Scope: `feat/bounded-python-library`, base `f4e4de69`, head `23080ad5` (`d9d377bc`, the L1 fix `6e36e1c5`, the M1 contract change `285e888b`, and the builtin-reference rule `23080ad5`).
 - This review rebinds the [issue 357 receipt](issue-357-seeded-script-imports-review.md) and keeps all of its assessments.
 - It does not authorize a merge and does not claim that every native rule passes.
 
@@ -11,10 +11,10 @@
 
 | Item | Value |
 |---|---|
-| Source | `3969e999a71a862b8724a94fec4e558b85f67b23f1a5178f153daf4498c28270` |
+| Source | `5b64e910deaabe19f2b5f049ebfb8822f653be8becb1ad640d7363096cd32ed8` |
 | Target (unchanged) | `d83d4df102a2588a54598e26cb045b721cb024a118f51e31592b135050d4e78e` |
 | Analyzer (unchanged; ArchKeel 4.0.1, Python 3.11.12) | `bb1a3262d3fdd38c3e9a6af980cc063281ae98ab1c28c89c2c5be6dfb450744f` |
-| Validation | `76a46562857bcff87772b310806666974263c9f8e435206225afc9d7ef913014` |
+| Validation | `c4cbf04796207b4f81c524fce6613244e1b46d301eb91e75058094319da13514` |
 | UNKNOWN | `eedde60f12fc785fc81f3044cbe020929e0c5f18b912a458d04a2d6057c46a6d` |
 
 Budgets are unchanged: 1,431 unresolved calls, 178 typing positions and 256 unknown positions. No ArchKeel policy, architecture contract, baseline, gate or `measurement_amendment` change. The published DSL contract changes additively (see M1).
@@ -40,7 +40,7 @@ Since `285e888b`, the registry publishes `execute` with the bounded strategy `PY
 
 ### 1. Admission soundness
 
-Admission is correct. I probed each case on `d9d377bc` and re-ran the probes on `285e888b`; everything outside a setup-level Python library was refused or failed loudly:
+Admission is correct. I probed each case on `d9d377bc` and re-ran the probes on `285e888b` and `23080ad5`; everything outside a setup-level Python library was refused or failed loudly:
 
 | Probe | Result |
 |---|---|
@@ -113,7 +113,7 @@ I re-collected base `f4e4de69` independently, and it reproduces the previous rec
 - Rules: 271 PASS and 5 UNKNOWN.
 - The 20 diagnostics are identical. The full report exits 0. Contract and analyzer are unchanged.
 
-**Calls:** 13,069 → 13,138; resolved 9,636 → 9,692 (the L1 `catalog_diagnostic` call and the strategy dispatch); partially resolved 2,002 → 2,015; unresolved 1,431 → 1,431.
+**Calls:** 13,069 → 13,139; resolved 9,636 → 9,693 (the L1 `catalog_diagnostic` call, the strategy dispatch and the reference rule); partially resolved 2,002 → 2,015; unresolved 1,431 → 1,431.
 - Every unresolved difference is a move into `ExecuteStatement`, from the parser's `_resolve_type` and the task's `_normalize_python`.
 - The 13 new partially resolved calls are new authoring reads (`node.get`, `properties.get`, `module.split/startswith`, `refusal.message/remediation`) plus the moved `_EXT_TYPE.get`/`code.replace`.
 - No call was promoted.
@@ -122,24 +122,55 @@ I re-collected base `f4e4de69` independently, and it reproduces the previous rec
 - Four records changed only fact and evidence references, after line shifts: the `ExecuteStatement` surface, `get_model_class`, `get_element_definition` and one DSL facade route.
 - The DSL-API-TYPES summary now reads 318 decided of 397 positions (was 313/392): the five new declared positions are all decided, and undecided stays 79.
 
+## Builtin references (`23080ad5`, Codex P1)
+
+The finding was valid: only direct calls were refused.
+- `REFUSED_NAMES` now refuses any `ast.Name` reference to open, exec, eval, compile, `__import__`, `__builtins__`, globals, locals and vars.
+- `REFUSED_ATTRIBUTES` refuses `__builtins__`, `__globals__`, `__code__`, `__subclasses__` and `__dict__`.
+- I confirmed the reported paths are now refused: `write = open`, `__builtins__['open']`, `f.__globals__`.
+- Dropping `input` and `breakpoint` is acceptable: neither reads files nor builds code.
+
+**Remaining bypasses (Info).** These pass the check:
+- `getattr(f, '__globals__')`, with the name as a literal or a concatenated string;
+- `random.__loader__.get_data(...)`, a file read through an admitted module;
+- `pd.read_csv`, `pd.eval`, `typing.ForwardRef`, `logging.FileHandler`, `numpy.ctypeslib`.
+
+**Recommendation, not blocking:**
+- Fold two cheap cases into the existing rule: `getattr`/`setattr`/`delattr` with a string-constant name in `REFUSED_ATTRIBUTES`, and the attributes `__loader__`/`__spec__`. Both match the rule's own intent at near-zero false-positive cost.
+- Do not try to list module APIs. They cannot be closed by name, and pretending otherwise turns a lint into false assurance.
+
+**False positives (Low).** These are refused:
+- `from re import compile` followed by `compile(...)`;
+- `self.__dict__` in a serialization helper;
+- a parameter or local named `vars` or `open`.
+
+The remediation text for these cases ("Pass data in from the model instead of reading files...") is misleading. `__dict__` is the broadest entry; `self.__dict__` is a common library idiom. Two options:
+- keep it, and name `dataclasses.asdict` in the remediation; or
+- replace it with a refusal of the string constant `'__builtins__'` used as a subscript or `getattr` key.
+
+The corpus did not hit any of these (39 unseeded and 24 seeded scripts pass, per the author), so this is a preference.
+
+**Included libraries in Build (Codex P1, second thread).** Not reachable today, as the author says: Build rejects `library_included.xml` as `unsupported_bounded_operation`, with replay `not_requested`. When Build starts admitting includes, the replay requirement must be decided over the resolved include graph.
+
 ## Security note (pre-existing, outside this PR)
 
 The library check is an admission rule, not a sandbox. The PR documents this.
 - Admitted modules can still touch files: for example `pandas` `read_csv`/`to_csv`/`read_pickle` and `logging.FileHandler`.
-- `__builtins__` lookups bypass the builtin-call rule.
+- `getattr` with a string name and module attributes such as `__loader__` bypass the reference rules (see above).
 - Existing bounded expressions have the same exposure. On this head, a dry-run key `pd.DataFrame({'a': [1]}).to_csv('<absolute path outside the workspace>')` wrote the file.
 - So bounded dry-run and Build do not prove the absence of file side effects for script code. The receipt's `delivery_boundary` records this; it deserves its own follow-up rather than a change in this PR.
 
 ## Evidence boundary
 
 **LOCAL VERIFIED (by this reviewer):**
-- Source review of `f4e4de69..285e888b`.
+- Source review of `f4e4de69..23080ad5`.
 - Admission, placeholder, encoding, forced-replay, mismatch, redaction and capability probes.
 - Native collection at head and base; decoded call and UNKNOWN diffs.
-- ruff and full mypy (534 files) at `d9d377bc`, `6e36e1c5` and `285e888b`.
+- ruff and full mypy (534 files) at `d9d377bc`, `6e36e1c5`, `285e888b` and `23080ad5`.
 - 196 tests passed: bounded Python library, dryrun includes, trusted Python authoring (functional), bounded executor, Build verification, dryrun, determinism scenarios and `extensive_script`.
 - At `6e36e1c5`: bounded Python library, Build verification and acceptance tests, 115 passed.
 - At `285e888b`: bounded Python library, build policy, CE catalog, dynamic count, reference, transport architecture, contract bundle, dryrun includes, bounded executor, trusted Python authoring and public API ownership tests, 152 passed. Capability and schema strategy counts were checked directly.
+- At `23080ad5`: bounded Python library, dryrun includes, trusted Python authoring and build policy tests, 65 passed. Probed 17 bypass and false-positive cases against `python_library_refusal`. Re-probed Build for the seeded library, the module-level draw and the included library.
 - Strict completion gate acceptance.
 
 **NOT VERIFIED:**
