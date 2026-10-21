@@ -70,10 +70,10 @@ def test_replay_preserves_passive_values_and_ignores_object_key_order() -> None:
     assert compare_captures(_capture(items=(first,)), _capture(items=(replay,))) == ()
 
 
-def test_real_build_rejects_type_changing_replay(tmp_path: Path) -> None:
+def test_real_build_rejects_a_replay_that_differs(tmp_path: Path) -> None:
+    # Each run has its own private directory, and a contained run (#361) has no channel to the next one.
     workspace = tmp_path / "workspace"
     workspace.mkdir()
-    marker = tmp_path / "first-run"
     request = BuildRequestV4.model_validate(
         {
             "document": {
@@ -89,7 +89,7 @@ def test_real_build_rejects_type_changing_replay(tmp_path: Path) -> None:
                                     "kind": "key",
                                     "properties": {
                                         "name": "value",
-                                        "script": f"True if os.path.exists({str(marker)!r}) else (os.mkdir({str(marker)!r}), 1)[1]",
+                                        "script": "os.getcwd()",
                                     },
                                 },
                             ],
@@ -102,6 +102,5 @@ def test_real_build_rejects_type_changing_replay(tmp_path: Path) -> None:
     )
     result = create_authoring_application(workspace_root=workspace).build(request)
     assert isinstance(result, RejectedBuild), result
-    assert marker.is_dir()
     assert result.verification.deterministic_replay.status is VerificationGateStatus.FAILED
     assert result.verification.deterministic_replay.mismatches[0].kind is ReplayMismatchKind.ROW_CONTENT

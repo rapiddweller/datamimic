@@ -9,6 +9,7 @@ from __future__ import annotations
 import os
 import pickle
 import sys
+import tempfile
 import time
 from pathlib import Path
 
@@ -17,6 +18,65 @@ from datamimic_ce.authoring.adapters.dryrun import _run_engine_capture
 from datamimic_ce.authoring.adapters.workspace import AuthoringWorkspaceContext
 from datamimic_ce.authoring.domain.requests import BoundedExecutionRequest
 from datamimic_ce.engine.dsl.api import resource_reader_scope
+
+# Audit events that start a process; refused in every bounded run without side effects.
+_PROCESS_EVENTS = frozenset({"subprocess.Popen", "os.system", "os.exec", "os.posix_spawn", "os.spawn", "os.fork"})
+# Audit events whose first two arguments name the paths they change.
+_PATH_EVENTS = frozenset(
+    {
+        "os.remove",
+        "os.rename",
+        "os.mkdir",
+        "os.rmdir",
+        "os.truncate",
+        "os.chmod",
+        "os.chown",
+        "os.link",
+        "os.symlink",
+        "os.utime",
+        "shutil.rmtree",
+        "shutil.copyfile",
+        "shutil.copytree",
+        "shutil.move",
+    }
+)
+_WRITE_FLAGS = os.O_WRONLY | os.O_RDWR | os.O_CREAT | os.O_TRUNC | os.O_APPEND
+
+
+def _contain(private_root: Path) -> None:
+    """Refuse writes outside ``private_root`` and new processes for the rest of this child process.
+
+    The engine itself writes only below the temp directory, which moves into ``private_root``. An audit
+    hook cannot be removed once installed; native code outside the audited calls is not covered. The refusal
+    is a plain PermissionError because the parent unpickles only listed exception types.
+    """
+    allowed = os.path.normcase(os.path.realpath(private_root))
+    temporary = private_root / "tmp"
+    os.makedirs(temporary, exist_ok=True)
+    tempfile.tempdir = str(temporary)
+    os.environ["TMPDIR"] = os.environ["TEMP"] = os.environ["TMP"] = str(temporary)
+
+    def contained(path: str | bytes | os.PathLike[str]) -> bool:
+        target = os.path.normcase(os.path.realpath(os.fsdecode(path)))
+        return target == os.path.normcase(os.devnull) or target[: len(allowed) + 1] == allowed + os.sep
+
+    def hook(event: str, args: tuple[object, ...]) -> None:
+        if event in _PROCESS_EVENTS:
+            raise PermissionError("Bounded execution cannot start a process")
+        if event == "open":
+            path, mode, flags = args
+            writing = (isinstance(mode, str) and any(char in mode for char in "wax+")) or (
+                isinstance(flags, int) and bool(flags & _WRITE_FLAGS)
+            )
+            # An integer path is a file descriptor, opened and checked before.
+            if writing and isinstance(path, (str, bytes, os.PathLike)) and not contained(path):
+                raise PermissionError("Bounded execution may write only inside its private workspace")
+        elif event in _PATH_EVENTS and not all(
+            contained(path) for path in args[:2] if isinstance(path, (str, bytes, os.PathLike))
+        ):
+            raise PermissionError("Bounded execution may write only inside its private workspace")
+
+    sys.addaudithook(hook)
 
 
 def main() -> None:
@@ -28,6 +88,8 @@ def main() -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
     path.write_text(request.xml, encoding="utf-8")
     os.chdir(root)
+    if not request.allow_side_effects:
+        _contain(reply_file.parent)
     with resource_reader_scope(workspace.read_resource_bytes):
         message = _run_engine_capture(
             path,
