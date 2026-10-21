@@ -1,5 +1,8 @@
 """Orchestration counterexamples; the actual runtime is covered separately."""
+
 from dataclasses import dataclass, field
+
+from pydantic import SecretBytes
 
 from datamimic_ce.authoring.domain.capture import (
     CapturedProduct,
@@ -13,13 +16,24 @@ from datamimic_ce.authoring.domain.requests import (
     IncludeGraphResult,
     LintResult,
 )
-from datamimic_ce.engine.runtime.pseudonymization import PseudonymizationKey
 
 
 def request(**overrides):
-    data = {"document": {"root": {"kind": "setup", "properties": {"rngSeed": 7}, "children": [
-        {"kind": "generate", "properties": {"name": "cities", "count": 3}, "children": [
-            {"kind": "key", "properties": {"name": "id", "constant": "1"}}]}]}}}
+    data = {
+        "document": {
+            "root": {
+                "kind": "setup",
+                "properties": {"rngSeed": 7},
+                "children": [
+                    {
+                        "kind": "generate",
+                        "properties": {"name": "cities", "count": 3},
+                        "children": [{"kind": "key", "properties": {"name": "id", "constant": "1"}}],
+                    }
+                ],
+            }
+        }
+    }
     data.update(overrides)
     return BuildRequestV4.model_validate(data)
 
@@ -53,7 +67,8 @@ class Policy:
 class Executor:
     replies: list
     calls: list = field(default_factory=list)
-    def execute(self, request, *, pseudonymization_key: PseudonymizationKey | None = None):
+
+    def execute(self, request, *, pseudonymization_key: SecretBytes | None = None):
         self.calls.append(request)
         return self.replies.pop(0)
 
@@ -61,6 +76,7 @@ class Executor:
 def workflow(executor):
     from datamimic_ce.authoring.adapters.dm_json_codec import CeDmJsonCodec
     from datamimic_ce.authoring.application.build import BuildDocumentWorkflow
+
     return BuildDocumentWorkflow(CeDmJsonCodec(), Validator(), executor, Policy())
 
 
@@ -115,15 +131,21 @@ def test_unseeded_replay_fails():
 
 
 def test_missing_capture_never_ready_even_without_expectations():
-    result = workflow(
-        Executor([BoundedExecutionEvidence(ok=True, captured=CapturedProducts((), 10))])
-    ).execute(request())
+    result = workflow(Executor([BoundedExecutionEvidence(ok=True, captured=CapturedProducts((), 10))])).execute(
+        request()
+    )
     assert result.outcome == "rejected"
 
 
 def test_caller_requirement_is_not_replaced_by_derived_check():
-    task = request(acceptance_requirements=[{"origin": "caller", "expectation": {
-        "kind": "exact_count", "subject": {"kind": "product", "product": "cities"}, "count": 2}}])
+    task = request(
+        acceptance_requirements=[
+            {
+                "origin": "caller",
+                "expectation": {"kind": "exact_count", "subject": {"kind": "product", "product": "cities"}, "count": 2},
+            }
+        ]
+    )
     result = workflow(Executor([captured()])).execute(task)
     assert result.outcome == "rejected"
     assert any(diagnostic.path[:1] == ("acceptance_requirements",) for diagnostic in result.diagnostics)

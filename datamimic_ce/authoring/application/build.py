@@ -8,7 +8,8 @@ from __future__ import annotations
 
 import json
 from hashlib import sha256
-from typing import TYPE_CHECKING
+
+from pydantic import SecretBytes
 
 from datamimic_ce.authoring.application.use_cases import CompileDocumentUseCase, _codec_diagnostic
 from datamimic_ce.authoring.domain.build_rules import catalog_diagnostic
@@ -48,9 +49,6 @@ from datamimic_ce.authoring.ports import (
 )
 from datamimic_ce.authoring.projection.evidence import sample_evidence
 
-if TYPE_CHECKING:
-    from datamimic_ce.engine.runtime.pseudonymization import PseudonymizationKey
-
 
 class BuildDocumentWorkflow:
     def __init__(
@@ -66,9 +64,7 @@ class BuildDocumentWorkflow:
         self._executor = executor
         self._policy = bounded_execution_policy
 
-    def execute(
-        self, request: BuildRequestV4, *, pseudonymization_key: PseudonymizationKey | None = None
-    ) -> BuildResult:
+    def execute(self, request: BuildRequestV4, *, pseudonymization_key: SecretBytes | None = None) -> BuildResult:
         from datamimic_ce.authoring.domain.acceptance_contract import AcceptanceProjectionError
         from datamimic_ce.authoring.domain.acceptance_evaluation import evaluate_acceptance
         from datamimic_ce.authoring.domain.environment_bindings import validate_environment_bindings

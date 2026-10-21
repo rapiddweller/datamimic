@@ -6,7 +6,7 @@
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING
+from pydantic import SecretBytes
 
 from datamimic_ce.authoring.domain.build_rules import catalog_diagnostic
 from datamimic_ce.authoring.domain.common import MAX_AUTHORING_XML_LENGTH
@@ -15,9 +15,6 @@ from datamimic_ce.authoring.domain.requests import BoundedExecutionRequest, RunP
 from datamimic_ce.authoring.ports import BoundedExecutor, DescriptorValidator
 from datamimic_ce.authoring.projection.evidence import sample_evidence
 
-if TYPE_CHECKING:
-    from datamimic_ce.engine.runtime.pseudonymization import PseudonymizationKey
-
 
 class RawXmlUseCase:
     def __init__(self, validator: DescriptorValidator, executor: BoundedExecutor) -> None:
@@ -25,7 +22,7 @@ class RawXmlUseCase:
         self._executor = executor
 
     def execute(
-        self, request: RunRequest, *, phase: RunPhase, pseudonymization_key: PseudonymizationKey | None = None
+        self, request: RunRequest, *, phase: RunPhase, pseudonymization_key: SecretBytes | None = None
     ) -> RunResult:
         lint = self._validator.validate(request.xml, descriptor_path=request.descriptor_path)
         if not lint.ok:

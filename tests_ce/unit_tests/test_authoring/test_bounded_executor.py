@@ -2,6 +2,7 @@
 
 import base64
 import os
+import subprocess
 import sys
 import tempfile
 import time
@@ -9,12 +10,13 @@ from pathlib import Path, PurePosixPath
 
 import psutil
 import pytest
+from pydantic import SecretBytes
 
 from datamimic_ce.authoring.adapters.bounded_executor import CeBoundedExecutor, _snapshot_workspace
 from datamimic_ce.authoring.adapters.workspace import AuthoringWorkspaceContext
 from datamimic_ce.authoring.domain.diagnostics import AuthoringSystemDiagnosticCode
 from datamimic_ce.authoring.domain.requests import BoundedExecutionRequest
-from datamimic_ce.engine.runtime.pseudonymization import PseudonymizationKey
+from datamimic_ce.errors import IssueCode, RuntimeConfigError
 
 _XML = (
     '<setup rngSeed="7"><generate name="rows" count="3">'
@@ -41,7 +43,7 @@ def test_hash_key_reaches_private_bounded_child_without_entering_public_evidence
             "converter=\"Hash('sha256','hex')\"/></generate></setup>"
         )
     )
-    key = PseudonymizationKey(sentinel)
+    key = SecretBytes(sentinel)
     result = CeBoundedExecutor().execute(request, pseudonymization_key=key)
     assert result.ok, result.diagnostics
     assert result.captured.get("rows").rows[0]["token"]
@@ -50,6 +52,54 @@ def test_hash_key_reaches_private_bounded_child_without_entering_public_evidence
     assert sentinel.decode() not in repr(result)
     assert base64.b64encode(sentinel).decode("ascii") not in repr(result)
     assert list(tmp_path.iterdir()) == []
+
+
+def test_invalid_external_key_keeps_typed_runtime_error_without_echoing_secret():
+    secret = b"short-sentinel"
+
+    with pytest.raises(RuntimeConfigError) as error:
+        CeBoundedExecutor().execute(BoundedExecutionRequest(xml="<setup />"), pseudonymization_key=SecretBytes(secret))
+
+    assert error.value.issue_code is IssueCode.RUNTIME_PSEUDONYMIZATION_KEY_INVALID
+    assert secret.decode() not in str(error.value)
+
+
+def test_child_exit_while_sending_private_input_returns_child_crash(monkeypatch):
+    from datamimic_ce.authoring.adapters import bounded_executor
+
+    real_popen = subprocess.Popen
+
+    def exit_before_read(_command, **kwargs):
+        return real_popen([sys.executable, "-c", "import os; os._exit(7)"], **kwargs)
+
+    monkeypatch.setattr(bounded_executor.subprocess, "Popen", exit_before_read)
+    result = CeBoundedExecutor().execute(
+        BoundedExecutionRequest(xml="<setup />"),
+        pseudonymization_key=SecretBytes(b"x" * 32),
+    )
+
+    assert not result.ok
+    assert result.diagnostics[0].code is AuthoringSystemDiagnosticCode.CHILD_CRASH
+
+
+def test_blocked_private_input_obeys_execution_timeout(monkeypatch):
+    from datamimic_ce.authoring.adapters import bounded_executor
+
+    real_popen = subprocess.Popen
+
+    def do_not_read(_command, **kwargs):
+        return real_popen([sys.executable, "-c", "import time; time.sleep(30)"], **kwargs)
+
+    monkeypatch.setattr(bounded_executor.subprocess, "Popen", do_not_read)
+    started = time.monotonic()
+    result = CeBoundedExecutor().execute(
+        BoundedExecutionRequest(xml="<setup />", timeout_seconds=1),
+        pseudonymization_key=SecretBytes(b"x" * (4 * 1024 * 1024)),
+    )
+
+    assert time.monotonic() - started < 3
+    assert not result.ok
+    assert result.diagnostics[0].code is AuthoringSystemDiagnosticCode.TIMEOUT
 
 
 def test_failed_private_bounded_child_does_not_return_key_material():
@@ -61,7 +111,7 @@ def test_failed_private_bounded_child_does_not_return_key_material():
         )
     )
 
-    result = CeBoundedExecutor().execute(request, pseudonymization_key=PseudonymizationKey(sentinel))
+    result = CeBoundedExecutor().execute(request, pseudonymization_key=SecretBytes(sentinel))
 
     public_result = repr(result)
     assert not result.ok
@@ -174,6 +224,7 @@ def test_runtime_uses_explicit_profile_loader(tmp_path, monkeypatch):
 
     descriptor = tmp_path / "model.xml"
     descriptor.write_text("<setup/>")
+
     def loader(directory, environment):
         return {}
 

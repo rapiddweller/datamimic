@@ -4,6 +4,7 @@ import json
 from pathlib import Path
 
 import pytest
+from pydantic import SecretBytes
 from typer.testing import CliRunner
 
 from datamimic_ce.authoring import create_authoring_application
@@ -26,7 +27,6 @@ from datamimic_ce.authoring.domain.requests import (
     ReadyBuild,
     RejectedBuild,
 )
-from datamimic_ce.engine.runtime.pseudonymization import PseudonymizationKey
 from datamimic_ce.interfaces.cli import app
 
 
@@ -77,7 +77,7 @@ def executions(monkeypatch):
     original = CeBoundedExecutor.execute
     calls = []
 
-    def recorded(executor, request, *, pseudonymization_key: PseudonymizationKey | None = None):
+    def recorded(executor, request, *, pseudonymization_key: SecretBytes | None = None):
         calls.append(request)
         return original(executor, request, pseudonymization_key=pseudonymization_key)
 
@@ -115,7 +115,7 @@ def test_requested_smoke_without_exporter_is_not_applicable(tmp_path: Path) -> N
 def test_smoke_failure_cannot_be_masked_by_passing_acceptance(tmp_path: Path, monkeypatch) -> None:
     failed = _captured(ok=False, smoke=SmokeExportCapture(True, 1, 1, 1))
 
-    def fail_execution(executor, request, *, pseudonymization_key: PseudonymizationKey | None = None):
+    def fail_execution(executor, request, *, pseudonymization_key: SecretBytes | None = None):
         return failed
 
     monkeypatch.setattr(CeBoundedExecutor, "execute", fail_execution)
@@ -132,7 +132,7 @@ def test_base_failure_preserves_exact_smoke_status_and_blocks_replay(tmp_path: P
     failed = _captured(ok=False, base_run_ok=False, smoke=smoke)
     calls = []
 
-    def execute(executor, request, *, pseudonymization_key: PseudonymizationKey | None = None):
+    def execute(executor, request, *, pseudonymization_key: SecretBytes | None = None):
         calls.append(request)
         return failed
 
@@ -192,7 +192,7 @@ def test_replay_checks_complete_rows_beyond_response_samples(tmp_path: Path, mon
     captures = iter((_captured(), _captured(rows=({"id": 1}, {"id": 99}))))
     calls = []
 
-    def execute(executor, request, *, pseudonymization_key: PseudonymizationKey | None = None):
+    def execute(executor, request, *, pseudonymization_key: SecretBytes | None = None):
         calls.append(request)
         return next(captures)
 

@@ -15,6 +15,7 @@ import stat
 import subprocess
 import sys
 import tempfile
+import threading
 import time
 from contextlib import suppress
 from dataclasses import dataclass, field
@@ -23,6 +24,7 @@ from pathlib import Path
 from uuid import uuid4
 
 from lxml import etree
+from pydantic import SecretBytes
 
 from datamimic_ce.authoring.adapters import dryrun
 from datamimic_ce.authoring.adapters.windows_snapshot import WindowsSnapshotRoot
@@ -382,7 +384,7 @@ class CeBoundedExecutor:
         self._workspace_context = workspace_context
 
     def execute(
-        self, request: BoundedExecutionRequest, *, pseudonymization_key: PseudonymizationKey | None = None
+        self, request: BoundedExecutionRequest, *, pseudonymization_key: SecretBytes | None = None
     ) -> BoundedExecutionEvidence:
         from datamimic_ce.domains.api import configured_dataset_overrides
 
@@ -425,8 +427,13 @@ class CeBoundedExecutor:
                     request.max_count,
                 )
             else:
+                execution_key = (
+                    PseudonymizationKey(pseudonymization_key.get_secret_value())
+                    if pseudonymization_key is not None
+                    else None
+                )
                 result = self._execute_child(
-                    request, private_workspace, request_file, private_root / "reply.pickle", pseudonymization_key
+                    request, private_workspace, request_file, private_root / "reply.pickle", execution_key
                 )
         finally:
             try:
@@ -472,21 +479,40 @@ class CeBoundedExecutor:
             )
         result: BoundedExecutionEvidence
         deadline = time.monotonic() + request.timeout_seconds
-        try:
-            if process.stdin is not None:
-                process.stdin.write(
-                    _LiveBoundedKeyEnvelope(
-                        call_id, pseudonymization_key.value if pseudonymization_key is not None else None
-                    )
-                    .serialize()
-                    .encode("utf-8")
-                )
+        input_ready = threading.Event()
+        input_errors: list[OSError] = []
+        live_input = (
+            _LiveBoundedKeyEnvelope(call_id, pseudonymization_key.value if pseudonymization_key is not None else None)
+            .serialize()
+            .encode("utf-8")
+        )
+
+        def deliver_input() -> None:
+            try:
+                if process.stdin is None:
+                    raise BrokenPipeError("bounded child input pipe is unavailable")
+                process.stdin.write(live_input)
                 process.stdin.close()
+            except OSError as error:
+                input_errors.append(error)
+            finally:
+                input_ready.set()
+
+        input_thread = threading.Thread(target=deliver_input, daemon=True)
+        input_thread.start()
+        try:
             while not reply_file.exists():
                 if process.poll() is not None:
                     result = _failure(
                         AuthoringSystemDiagnosticCode.CHILD_CRASH,
                         f"Bounded child exited without evidence (exit code {process.returncode}).",
+                        request.max_count,
+                    )
+                    break
+                if input_ready.is_set() and input_errors:
+                    result = _failure(
+                        AuthoringSystemDiagnosticCode.CHILD_CRASH,
+                        "Bounded child could not receive its private input.",
                         request.max_count,
                     )
                     break
@@ -516,6 +542,7 @@ class CeBoundedExecutor:
         finally:
             try:
                 _terminate_process_tree(process)
+                input_thread.join(timeout=0.2)
             except (OSError, subprocess.TimeoutExpired):
                 result = _failure(
                     AuthoringSystemDiagnosticCode.CLEANUP,

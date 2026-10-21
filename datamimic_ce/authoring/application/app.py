@@ -6,9 +6,7 @@
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING
-
-from pydantic import JsonValue, TypeAdapter
+from pydantic import JsonValue, SecretBytes, TypeAdapter
 
 from datamimic_ce.authoring.application.build import BuildDocumentWorkflow
 from datamimic_ce.authoring.application.raw_xml import RawXmlUseCase
@@ -42,9 +40,6 @@ from datamimic_ce.authoring.ports import (
     DmJsonDescriptorContract,
     DslCatalog,
 )
-
-if TYPE_CHECKING:
-    from datamimic_ce.engine.runtime.pseudonymization import PseudonymizationKey
 
 
 class AuthoringApplication:
@@ -102,14 +97,14 @@ class AuthoringApplication:
     def decompile_document(self, request: DecompileDocumentRequest) -> DecompileDocumentResult:
         return self._decompile_document.execute(request)
 
-    def build(self, request: BuildRequestV4, *, pseudonymization_key: PseudonymizationKey | None = None) -> BuildResult:
+    def build(self, request: BuildRequestV4, *, pseudonymization_key: SecretBytes | None = None) -> BuildResult:
         return self._build.execute(request, pseudonymization_key=pseudonymization_key)
 
     def lint(self, request: LintRequest) -> LintResult:
         return self._validator.validate(request.xml)
 
-    def dry_run(self, request: RunRequest, *, pseudonymization_key: PseudonymizationKey | None = None) -> RunResult:
+    def dry_run(self, request: RunRequest, *, pseudonymization_key: SecretBytes | None = None) -> RunResult:
         return self._raw_xml.execute(request, phase=RunPhase.DRY_RUN, pseudonymization_key=pseudonymization_key)
 
-    def run(self, request: RunRequest, *, pseudonymization_key: PseudonymizationKey | None = None) -> RunResult:
+    def run(self, request: RunRequest, *, pseudonymization_key: SecretBytes | None = None) -> RunResult:
         return self._raw_xml.execute(request, phase=RunPhase.RUN, pseudonymization_key=pseudonymization_key)
