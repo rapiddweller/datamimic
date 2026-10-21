@@ -3,41 +3,35 @@
 from pathlib import Path
 
 from datamimic_ce.authoring import create_authoring_application
-from datamimic_ce.authoring.domain.requests import (
-    BuildRequestV4,
-    DecompileDocumentRequest,
-    ReadyBuild,
-    ReferenceRequest,
-    ReferenceTopic,
-)
+from datamimic_ce.authoring.domain.requests import PROJECT_ENTRY_PATH, ReadyBuild, ReferenceRequest, ReferenceTopic
+from tests_ce.authoring_project import build_project, write_project
 
 
 def test_file_access_is_produced_by_real_bounded_run_and_does_not_leak_between_builds(tmp_path: Path) -> None:
     (tmp_path / "private-source.csv").write_text("id|label\n1|one\n2|two\n3|three\n")
-    application = create_authoring_application(workspace_root=tmp_path)
-    decompiled = application.decompile_document(
-        DecompileDocumentRequest(
-            xml='<setup rngSeed="7"><generate name="rows" source="private-source.csv" distribution="ordered">'
-            '<key name="id" script="int(this.id)"/></generate></setup>'
-        )
+    application = create_authoring_application(workspace_root=tmp_path, descriptor_path=PROJECT_ENTRY_PATH)
+    write_project(
+        tmp_path,
+        '<setup rngSeed="7"><generate name="rows" source="private-source.csv" distribution="ordered">'
+        '<key name="id" script="int(this.id)"/></generate></setup>',
     )
-    assert decompiled.outcome == "ready"
-    result = application.build(BuildRequestV4(document=decompiled.document))
+    result = application.build()
     assert isinstance(result, ReadyBuild), result
     assert result.evidence[0].count == 3
     assert [item.model_dump() for item in result.assurance.source_accesses] == [
         {"source_type": "file_csv", "requests": 1}
     ]
-    starter = application.reference(ReferenceRequest(topic=ReferenceTopic.ASSEMBLY, name="starter")).entries[0]
-    next_result = application.build(starter.starter)
+    starter = application.reference(ReferenceRequest(topic=ReferenceTopic.ASSEMBLY, name="starter")).entries[0].starter
+    write_project(tmp_path, starter.entry_xml, **starter.acceptance.model_dump())
+    next_result = application.build()
     assert isinstance(next_result, ReadyBuild), next_result
     assert next_result.assurance.source_accesses == ()
 
 
 def test_memstore_readback_reports_one_runtime_request(tmp_path: Path) -> None:
     application = create_authoring_application(workspace_root=tmp_path)
-    example = application.reference(ReferenceRequest(topic=ReferenceTopic.EXAMPLES, name="memstore")).entries[0]
-    result = application.build(example.request)
+    example = application.reference(ReferenceRequest(topic=ReferenceTopic.EXAMPLES, name="memstore")).entries[0].project
+    result = build_project(tmp_path, example.entry_xml, **example.acceptance.model_dump())
     assert isinstance(result, ReadyBuild), result
     assert [item.model_dump() for item in result.assurance.source_accesses] == [
         {"source_type": "memstore", "requests": 1}

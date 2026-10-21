@@ -99,19 +99,20 @@ datamimic run my-descriptor.xml --test-mode
 
 ### Authoring
 
-XML is the persisted executable format. DM JSON is a transient representation;
-Build expectations and roles are separate transaction input. See the
-[worked transactions](../examples/authoring.md) and [migration](../migrations/authoring-errors.md).
+XML is the persisted executable format. A project is a directory with a
+`datamimic.xml` entry and `acceptance/build.json` holding its expectations and roles.
+DM JSON is a transient representation of one XML file. See the
+[worked projects](../examples/authoring.md) and [migration](../migrations/authoring-errors.md).
 
 ```bash
 datamimic authoring version
-datamimic authoring schema [--name build_request_v4]
+datamimic authoring schema [--name build_request_v5]
 datamimic authoring capabilities [--full]
 datamimic authoring capability --domain element --name generate
 datamimic authoring reference [--topic overview] [--name <name>]
 datamimic authoring compile <dm-json-input|-> [--descriptor-path model.xml]
 datamimic authoring decompile <descriptor.xml|-> [--descriptor-path model.xml]
-datamimic authoring build <build-request|-> [--workspace-root <project>]
+datamimic authoring build [<project>]
 datamimic authoring lint <descriptor.xml|->
 datamimic authoring dry-run <descriptor.xml|-> [--max-count 10] [--sample-rows 5] [--timeout 30]
 datamimic authoring run <descriptor.xml|-> [--allow-side-effects] [--max-count 10]
@@ -122,9 +123,11 @@ Authoring defaults to `--format json`; `--format text` prints readable results.
 Compile, decompile and Build return discriminated `ready`/`rejected` results.
 Compilation readiness proves syntax only. Build additionally requires complete
 bounded capture and acceptance; `verification` requests smoke/replay gates.
-After a ready Build, persist `artifact.compiled_xml` and retain the separate proof.
+A ready Build lists every project file it read with its digest (`artifact.files`);
+changing any of them voids the proof.
 
-File input uses its directory as the workspace. Stdin uses the current directory;
+Build takes the project directory as its workspace. Other file input uses its
+directory as the workspace. Stdin uses the current directory;
 `--workspace-root` binds an explicit project root. Descriptor identities remain
 project-relative. Bounded runs cap each generate instance; target isolation does
 not certify an external write. Normal `datamimic run` keeps production semantics.

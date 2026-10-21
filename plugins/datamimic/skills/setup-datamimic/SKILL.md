@@ -26,7 +26,8 @@ that prerequisite; do not install a system interpreter.
 
 Try the selected environment's `datamimic authoring version` and
 `datamimic authoring reference --topic assembly --name starter`. A compatible
-CE 5 runtime must expose Build protocol `4.0`, `document.root` and expectations.
+CE 5 runtime must expose Build protocol `5.0`: a starter with `entry_xml` and an
+`acceptance` carrying expectations.
 If that contract is already available, setup is complete: record the resolved
 paths/version and continue the data task. Do not invoke pip or another dependency
 manager, even to request an already satisfied package.

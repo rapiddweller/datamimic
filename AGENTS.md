@@ -3,9 +3,10 @@
 Guidance for agents working on DATAMIMIC CE, the MIT-licensed Python engine.
 Use DATAMIMIC for synthetic data, fixtures, database seeding and pseudonymization.
 
-XML is the persisted executable project format. `DmJsonDocumentV1` is its transient
-agent representation. Expectations, roles and verification options belong to a
-`BuildRequestV4` transaction; decompiling XML cannot recover those declarations.
+XML is the persisted executable project format. A project is a directory with a
+`datamimic.xml` entry, the steps it includes, and `acceptance/build.json`: the
+expectations, roles and verification options Build proves the project against.
+`DmJsonDocumentV1` is a transient agent representation of one XML file.
 The same explicit seed reproduces data within the tested compatibility boundary.
 
 Consumer workflow and project-mode routing live in the installable
@@ -21,13 +22,13 @@ when the calling environment uses MCP; both transports call the same application
 |---|---|
 | Discover vocabulary | `datamimic authoring capabilities` (`--full` for contracts) |
 | Inspect one element | `datamimic authoring capability --domain element --name generate` |
-| Discover the document/Build schema | `datamimic authoring schema` / `datamimic authoring schema --name build_request_v4` |
+| Discover the document/acceptance schema | `datamimic authoring schema` / `datamimic authoring schema --name build_request_v5` |
 | Read a focused reference | `datamimic authoring reference --topic assembly --name starter` |
 | Compile/decompile syntax | `datamimic authoring compile -` / `datamimic authoring decompile model.xml` |
-| Compile and prove a transaction | `datamimic authoring build -` |
+| Prove a project | `datamimic authoring build <project>` |
 | Validate/inspect existing XML | `datamimic authoring lint model.xml` / `datamimic authoring dry-run model.xml` |
 | Run bounded XML with explicit write opt-in | `datamimic authoring run model.xml --allow-side-effects` |
-| Execute the persisted project normally | `datamimic run model.xml` |
+| Execute the persisted project normally | `datamimic run datamimic.xml` |
 | Export editor/authoring contracts | `datamimic authoring export-contract contracts.zip` |
 
 Authoring commands default to JSON. File input and `-` for stdin are supported.
@@ -38,55 +39,50 @@ requires complete bounded evidence and the declared acceptance checks.
 ## Authoring a model
 
 Submit an early best attempt, then repair the reported path and remediation.
-This is a complete Build transaction, passed via stdin rather than persisted as
-another project model:
+A minimal project is two files. `datamimic.xml`:
+
+```xml
+<setup rngSeed="7">
+    <generate name="cities" count="3">
+        <key name="region" values="('north', 'south')"/>
+    </generate>
+</setup>
+```
+
+and `acceptance/build.json`:
 
 ```json
 {
-  "document": {
-    "root": {
-      "kind": "setup",
-      "properties": {"rng_seed": 7},
-      "children": [
-        {
-          "kind": "generate",
-          "properties": {"name": "cities", "count": 3},
-          "children": [
-            {"kind": "key", "properties": {"name": "region", "values": "('north', 'south')"}}
-          ]
-        }
-      ]
-    }
-  },
+  "version": "5.0",
   "expectations": [
     {"kind": "exact_count", "subject": {"kind": "product", "product": "cities"}, "count": 3}
   ]
 }
 ```
 
-1. Call `datamimic authoring build -` with the transaction above. Its document
-   follows CE DSL kinds, properties and child order; query `capability` for a
-   specific unknown instead of guessing legacy intent kinds.
+1. Write the entry as XML, or draft it as DM JSON and persist the
+   `artifact.compiled_xml` of `datamimic authoring compile -`. It follows CE DSL
+   kinds, attributes and child order; query `capability` for a specific unknown
+   instead of guessing. Larger projects split steps into included files.
 2. Encode each requested business constraint as an expectation. Counts use
    `count`; numeric range bounds may be decimal strings. Nested-list subjects
    carry `list_field`; uniqueness retains `scope: "per_parent"` when required.
 3. Keep identifier/FK/timestamp/value declarations in `product_roles`. Caller-owned
    assertions use `acceptance_requirements` with `origin: "caller"`; do not turn
-   them into persistent model configuration. Build derives mandatory topology/count
-   checks and refuses missing readback proof.
+   them into model configuration. Build derives mandatory topology/count checks
+   and refuses missing readback proof.
 4. Request exporter smoke/replay with `verification: {"smoke_export": true,
    "deterministic_replay": true}` only when needed. Replay needs an explicit seed.
-   Increase transaction `max_count` only when the intended capture requires it.
-5. Stop on `outcome: "ready"`. Persist `artifact.compiled_xml` as `model.xml`;
-   retain the separate Build evidence where the caller stores verification.
-   Execute `datamimic run model.xml` only when real execution is requested.
+   Increase `max_count` only when the intended capture requires it.
+5. Run `datamimic authoring build <project>` and stop on `outcome: "ready"`.
+   `artifact.files` lists every file the proof read with its digest; changing any
+   of them voids the proof. Execute `datamimic run datamimic.xml` only when real
+   execution is requested.
 
-Decompile existing XML before editing through DM JSON, then supply its requirements
-again for the new Build. File-backed operations use the input file's directory as
-workspace; stdin uses the current directory. `--workspace-root` selects it explicitly.
+`acceptance/build.json` keeps the requirements across edits to the XML.
 Target-isolated bounded evidence does not prove external database delivery.
 
-See [worked transactions](docs/examples/authoring.md) for nested FK, memstore and
+See [worked projects](docs/examples/authoring.md) for nested FK, memstore and
 time-series cases. Child rows must hold actual `parent.id` values; random FKs can
 pass membership while failing per-parent acceptance. Memstore readback needs the
 producer identifier and consumer foreign-key role pair. For time series, literal

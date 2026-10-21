@@ -11,7 +11,8 @@ import pytest
 
 from datamimic_ce.authoring import create_authoring_application
 from datamimic_ce.authoring.domain.diagnostics import AuthoringRuleId
-from datamimic_ce.authoring.domain.requests import BuildRequestV4, CompileDocumentRequest, DecompileDocumentRequest
+from datamimic_ce.authoring.domain.requests import CompileDocumentRequest, DecompileDocumentRequest
+from tests_ce.authoring_project import build_project
 
 # Count module loading through a file write, which the bounded library check refuses.
 _HELPER = """from pathlib import Path
@@ -52,7 +53,7 @@ def test_file_writing_python_keeps_bounded_rejection_and_actual_runtime_evidence
     assert compiled.outcome == "ready", compiled
     restored = application.decompile_document(DecompileDocumentRequest(xml=compiled.artifact.compiled_xml))
     assert restored.outcome == "ready" and restored.document == compiled.artifact.document
-    bounded = application.build(BuildRequestV4(document=restored.document))
+    bounded = build_project(tmp_path, restored.document)
     assert bounded.outcome == "rejected", bounded
     assert any(
         item.code is AuthoringRuleId.SIDE_EFFECT and "imports a module outside the bounded library modules" in item.message

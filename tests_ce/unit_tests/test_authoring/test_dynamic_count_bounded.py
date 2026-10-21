@@ -23,6 +23,7 @@ from datamimic_ce.engine.runtime.contracts import RunRequest
 from datamimic_ce.errors import GUIDANCE_COUNT_SCOPE
 from datamimic_ce.errors.codes import IssueCode
 from datamimic_ce.interfaces.cli import app
+from tests_ce.authoring_project import write_project
 
 _FIXTURES = Path(__file__).parent / "fixtures"
 _DEPARTMENTS = "fx_dynamic_child_count.departments.csv"
@@ -51,25 +52,18 @@ def test_dynamic_child_count_is_evaluated_and_matches_the_real_run(tmp_path: Pat
 
 
 def test_dynamic_child_count_builds_ready_with_replay(tmp_path: Path) -> None:
-    runner = CliRunner()
     shutil.copy(_FIXTURES / _DEPARTMENTS, tmp_path / _DEPARTMENTS)
-    decompiled = runner.invoke(app, ["authoring", "decompile", str(_FIXTURES / "fx_dynamic_child_count.xml")])
-    build = tmp_path / "build.json"
-    build.write_text(
-        json.dumps(
-            {
-                "document": json.loads(decompiled.output)["document"],
-                "max_count": 20,
-                "expectations": [
-                    {"kind": "exact_count", "subject": {"kind": "product", "product": "employees"}, "count": 12},
-                    {"kind": "unique", "subject": {"kind": "product", "product": "employees"}, "field": "employee_id"},
-                ],
-                "verification": {"deterministic_replay": True},
-            }
-        ),
-        encoding="utf-8",
+    write_project(
+        tmp_path,
+        (_FIXTURES / "fx_dynamic_child_count.xml").read_text(encoding="utf-8"),
+        max_count=20,
+        expectations=[
+            {"kind": "exact_count", "subject": {"kind": "product", "product": "employees"}, "count": 12},
+            {"kind": "unique", "subject": {"kind": "product", "product": "employees"}, "field": "employee_id"},
+        ],
+        verification={"deterministic_replay": True},
     )
-    result = runner.invoke(app, ["authoring", "build", str(build)])
+    result = CliRunner().invoke(app, ["authoring", "build", str(tmp_path)])
     payload = json.loads(result.output)
     assert payload["outcome"] == "ready", payload["diagnostics"]
     assert payload["verification"]["deterministic_replay"]["status"] == "passed"

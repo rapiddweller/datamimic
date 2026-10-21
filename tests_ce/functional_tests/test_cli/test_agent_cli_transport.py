@@ -16,6 +16,9 @@ from pathlib import Path
 
 import pytest
 
+from datamimic_ce.authoring.domain.requests import PROJECT_ACCEPTANCE_PATH
+from tests_ce.authoring_project import write_project
+
 
 def _console_script() -> Path:
     script = Path(sys.executable).with_name("datamimic")
@@ -121,27 +124,13 @@ def test_seeded_json_dry_run_is_repeatable_and_stderr_clean(tmp_path: Path) -> N
 
 
 def test_seeded_json_build_is_repeatable_and_stderr_clean(tmp_path: Path) -> None:
-    request = json.dumps(
-        {
-            "document": {
-                "root": {
-                    "kind": "setup",
-                    "properties": {"rng_seed": 17},
-                    "children": [
-                        {
-                            "kind": "generate",
-                            "properties": {"name": "records", "count": 8},
-                            "children": [
-                                {"kind": "key", "properties": {"name": "id", "generator": "IncrementGenerator"}},
-                            ],
-                        },
-                    ],
-                }
-            }
-        }
+    write_project(
+        tmp_path,
+        '<setup rngSeed="17"><generate name="records" count="8">'
+        '<key name="id" generator="IncrementGenerator"/></generate></setup>',
     )
-    first = _run_cli(tmp_path, "authoring", "build", "-", stdin=request)
-    second = _run_cli(tmp_path, "authoring", "build", "-", stdin=request)
+    first = _run_cli(tmp_path, "authoring", "build", ".")
+    second = _run_cli(tmp_path, "authoring", "build", ".")
     assert first.returncode == second.returncode == 0
     assert first.stderr == second.stderr == ""
     assert first.stdout == second.stdout
@@ -150,9 +139,11 @@ def test_seeded_json_build_is_repeatable_and_stderr_clean(tmp_path: Path) -> Non
     assert payload["evidence"][0]["count"] == 8
 
 
-@pytest.mark.parametrize("stdin", ["", "{broken", "[]"])
-def test_malformed_build_stdin_is_single_json_rejection(tmp_path: Path, stdin: str) -> None:
-    result = _run_cli(tmp_path, "authoring", "build", "-", stdin=stdin)
+@pytest.mark.parametrize("acceptance", ["", "{broken", "[]"])
+def test_malformed_acceptance_is_single_json_rejection(tmp_path: Path, acceptance: str) -> None:
+    write_project(tmp_path, "<setup/>")
+    (tmp_path / PROJECT_ACCEPTANCE_PATH).write_text(acceptance, encoding="utf-8")
+    result = _run_cli(tmp_path, "authoring", "build", ".")
 
     assert result.returncode == 1
     assert result.stderr == ""

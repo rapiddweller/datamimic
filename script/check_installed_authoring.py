@@ -25,7 +25,7 @@ def cli(*arguments, stdin=None, status=0):
     return result.stdout
 
 
-async def check_mcp(schemas, request):
+async def check_mcp(schemas):
     from fastmcp import Client
     from fastmcp.client.transports import StdioTransport
 
@@ -66,7 +66,7 @@ async def check_mcp(schemas, request):
         for name, schema in schemas.items():
             result = await client.call_tool("datamimic_schema", {"name": name})
             assert json.loads(result[0].text) == schema, name
-        result = await client.call_tool("datamimic_build", {"request": request})
+        result = await client.call_tool("datamimic_build", {})
         built = json.loads(result[0].text)
         assert built["outcome"] == "ready" and built["evidence"][0]["count"] == 2, built
         result = await client.call_tool(
@@ -101,9 +101,12 @@ def check_installed(with_mcp):
     shadow.mkdir()
     (shadow / "__init__.py").write_text('raise RuntimeError("wrong launcher package")\n', encoding="utf-8")
 
+    from datamimic_ce.authoring.domain.dm_json import DmJsonDocumentV1
     from datamimic_ce.authoring.domain.requests import (
+        PROJECT_ACCEPTANCE_PATH,
+        PROJECT_ENTRY_PATH,
         AuthoringSchemaId,
-        BuildRequestV4,
+        BuildRequestV5,
         CompileDocumentRequest,
         DecompileDocumentRequest,
         LintRequest,
@@ -117,39 +120,40 @@ def check_installed(with_mcp):
     application = create_authoring_application(workspace_root=Path.cwd())
     schemas = {name.value: application.schema(name) for name in AuthoringSchemaId}
     assert len(schemas) == 13 and all(schemas.values())
-    assert schemas["build_request_v4"]["properties"]["version"]["const"] == "4.0"
+    assert schemas["build_request_v5"]["properties"]["version"]["const"] == "5.0"
     snapshot = application.capabilities()
     assert snapshot.element_capabilities and snapshot.generator_capabilities
     capabilities = snapshot.to_dict()
     for topic in ReferenceTopic:
         assert application.reference(ReferenceRequest(topic=topic)).ok, topic
 
-    request = BuildRequestV4.model_validate(
+    document = DmJsonDocumentV1.model_validate(
         {
-            "document": {
-                "root": {
-                    "kind": "setup",
-                    "properties": {"rng_seed": 7},
-                    "children": [
-                        {
-                            "kind": "generate",
-                            "properties": {"name": "rows", "count": 2},
-                            "children": [
-                                {"kind": "key", "properties": {"name": "id", "generator": "IncrementGenerator"}}
-                            ],
-                        }
-                    ],
-                }
+            "root": {
+                "kind": "setup",
+                "properties": {"rng_seed": 7},
+                "children": [
+                    {
+                        "kind": "generate",
+                        "properties": {"name": "rows", "count": 2},
+                        "children": [{"kind": "key", "properties": {"name": "id", "generator": "IncrementGenerator"}}],
+                    }
+                ],
             }
         }
     )
-    compiled = application.compile_document(CompileDocumentRequest(document=request.document))
+    compiled = application.compile_document(CompileDocumentRequest(document=document))
     assert compiled.outcome == "ready", compiled
     restored = application.decompile_document(DecompileDocumentRequest(xml=compiled.artifact.compiled_xml))
     assert restored.outcome == "ready" and restored.document == compiled.artifact.document, restored
-    built = application.build(BuildRequestV4(document=restored.document))
+    # The working directory is the project: its entry and its acceptance.
+    (Path.cwd() / PROJECT_ENTRY_PATH).write_text(compiled.artifact.compiled_xml, encoding="utf-8")
+    (Path.cwd() / PROJECT_ACCEPTANCE_PATH).parent.mkdir()
+    (Path.cwd() / PROJECT_ACCEPTANCE_PATH).write_text(BuildRequestV5().model_dump_json(), encoding="utf-8")
+    built = create_authoring_application(workspace_root=Path.cwd(), descriptor_path=PROJECT_ENTRY_PATH).build()
     assert isinstance(built, ReadyBuild), built
     assert built.artifact.ce_version == version
+    assert {item.path for item in built.artifact.files} == {PROJECT_ENTRY_PATH, PROJECT_ACCEPTANCE_PATH}
     assert built.evidence[0].count == 2 and built.evidence[0].rows == ({"id": 1}, {"id": 2})
 
     invalid = '<setup><generate count="1"/></setup>'
@@ -180,15 +184,15 @@ def check_installed(with_mcp):
     assert b"<setup" in demo_root().joinpath("demo-condition/datamimic.xml").read_bytes()
     assert "demo-condition" in cli("demo", "list")
     assert json.loads(cli("authoring", "version")) == {"ce_version": version}
-    assert json.loads(cli("authoring", "schema", "--name", "build_request_v4")) == schemas["build_request_v4"]
+    assert json.loads(cli("authoring", "schema", "--name", "build_request_v5")) == schemas["build_request_v5"]
     assert json.loads(cli("authoring", "capabilities", "--full")) == capabilities
     assert json.loads(cli("authoring", "reference"))["topic"] == "overview"
-    cli_built = json.loads(cli("authoring", "build", "-", stdin=request.model_dump_json()))
+    cli_built = json.loads(cli("authoring", "build", str(Path.cwd())))
     assert cli_built["outcome"] == "ready" and cli_built["evidence"][0]["count"] == 2, cli_built
     assert not json.loads(cli("authoring", "lint", "-", stdin=invalid, status=1))["ok"]
     assert "fastmcp" not in sys.modules and "uvicorn" not in sys.modules
     if with_mcp:
-        asyncio.run(asyncio.wait_for(check_mcp(schemas, request.model_dump(mode="json")), timeout=120))
+        asyncio.run(asyncio.wait_for(check_mcp(schemas), timeout=120))
     print(
         json.dumps(
             {

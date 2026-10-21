@@ -22,13 +22,14 @@ tool's advertised input schema.
 | `datamimic_reference` | `datamimic authoring reference --topic <topic> [--name <name>]` |
 | `datamimic_compile` | `datamimic authoring compile -` |
 | `datamimic_decompile` | `datamimic authoring decompile -` |
-| `datamimic_build` | `datamimic authoring build -` |
+| `datamimic_build` | `datamimic authoring build <workspace-root>` |
 | `datamimic_lint` | `datamimic authoring lint -` |
 | `datamimic_dry_run` | `datamimic authoring dry-run -` |
 | `datamimic_run` | `datamimic authoring run -` |
 
-Persist XML. DM JSON is transient; expectations, `product_roles`, origin-tagged
-`acceptance_requirements`, and smoke/replay options belong to `BuildRequestV4`.
+Persist XML. `datamimic_build` proves the workspace root as a project: its
+`datamimic.xml` against `acceptance/build.json`, which holds expectations,
+`product_roles`, origin-tagged `acceptance_requirements` and smoke/replay options.
 Compile/decompile readiness proves syntax; a ready Build also carries bounded
 acceptance evidence. Target isolation does not prove delivery to an external sink.
 

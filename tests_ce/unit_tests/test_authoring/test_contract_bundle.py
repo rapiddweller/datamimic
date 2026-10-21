@@ -22,7 +22,7 @@ def test_contract_bundle_has_reproducible_content_and_verified_hashes(tmp_path):
     for name, digest in manifest["files"].items():
         assert hashlib.sha256(payloads[name]).hexdigest() == digest
     schemas = json.loads(payloads["authoring-schemas.json"])["schemas"]
-    assert {"compile_document_request", "decompile_document_result", "build_request_v4", "ready_build", "diagnostic"} <= schemas.keys()
+    assert {"compile_document_request", "decompile_document_result", "build_request_v5", "ready_build", "diagnostic"} <= schemas.keys()
     dsl = json.loads(payloads["dsl-contract.json"])
     assert dsl["document_schema"] == schemas["dm_json_document_v1"]
     assert dsl["document_schema"]["$defs"]["DmJsonNode_KEY"]["x-datamimic-constraints"]

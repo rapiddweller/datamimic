@@ -11,6 +11,7 @@ Client = fastmcp_client.Client
 import datamimic_ce.interfaces.mcp.server as mcp_server  # noqa: E402
 from datamimic_ce.authoring.domain.requests import LintResult  # noqa: E402
 from datamimic_ce.interfaces.mcp.server import create_server  # noqa: E402
+from tests_ce.authoring_project import write_project  # noqa: E402
 
 
 @pytest.fixture
@@ -38,10 +39,8 @@ async def test_exact_authoring_tool_surface_and_no_resources(anyio_backend: str)
         assert await client.list_resources() == []
         assert all(tool.description for tool in tools)
         build = next(tool for tool in tools if tool.name == "datamimic_build")
-        request_schema = build.inputSchema["$defs"]["BuildRequestV4"]
-        assert "document" in request_schema["properties"]
-        assert "spec" not in request_schema["properties"]
-        assert request_schema["properties"]["version"]["const"] == "4.0"
+        # Build takes no request: the workspace's acceptance/build.json is the only acceptance input.
+        assert build.inputSchema["properties"] == {}
 
 
 @pytest.mark.anyio
@@ -85,42 +84,32 @@ async def test_build_matches_cli_and_preserves_caller_requirement_rejections(any
     from datamimic_ce.authoring.domain.requests import BuildResult
     from datamimic_ce.interfaces.cli import app
 
-    request = {
-        "document": {
-            "root": {
-                "kind": "setup",
-                "properties": {"rng_seed": 7},
-                "children": [
-                    {
-                        "kind": "generate",
-                        "properties": {"name": "rows", "count": 2},
-                        "children": [
-                            {"kind": "key", "properties": {"name": "id", "generator": "IncrementGenerator"}},
-                        ],
-                    },
-                ],
-            }
-        }
-    }
+    xml = (
+        '<setup rngSeed="7"><generate name="rows" count="2">'
+        '<key name="id" generator="IncrementGenerator"/></generate></setup>'
+    )
+    write_project(tmp_path, xml)
     async with Client(create_server(workspace_root=tmp_path)) as client:
-        ready = await client.call_tool("datamimic_build", {"request": request})
-        cli = CliRunner().invoke(
-            app, ["authoring", "build", "-", "--workspace-root", str(tmp_path)], input=json.dumps(request)
-        )
+        ready = await client.call_tool("datamimic_build", {})
+        cli = CliRunner().invoke(app, ["authoring", "build", str(tmp_path)])
         assert cli.exit_code == 0, cli.stdout
         contract = TypeAdapter(BuildResult)
         assert contract.validate_json(ready[0].text) == contract.validate_json(cli.stdout)
-        request["acceptance_requirements"] = [
-            {
-                "origin": "caller",
-                "expectation": {
-                    "kind": "exact_count",
-                    "subject": {"kind": "product", "product": "rows"},
-                    "count": 3,
-                },
-            }
-        ]
-        rejected = await client.call_tool("datamimic_build", {"request": request})
+        write_project(
+            tmp_path,
+            xml,
+            acceptance_requirements=[
+                {
+                    "origin": "caller",
+                    "expectation": {
+                        "kind": "exact_count",
+                        "subject": {"kind": "product", "product": "rows"},
+                        "count": 3,
+                    },
+                }
+            ],
+        )
+        rejected = await client.call_tool("datamimic_build", {})
         payload = json.loads(rejected[0].text)
         assert payload["outcome"] == "rejected"
         assert any(item["path"][:2] == ["acceptance_requirements", 0] for item in payload["diagnostics"])
@@ -159,13 +148,9 @@ async def test_invalid_dsl_values_return_build_result_over_mcp(anyio_backend, tm
     from datamimic_ce.authoring.domain.requests import BuildResult, RejectedBuild
 
     xml = f'<setup rngSeed="7"><generate name="rows" {attributes}>{fields}</generate></setup>'
+    write_project(tmp_path, xml, verification={"smoke_export": True, "deterministic_replay": True})
     async with Client(create_server(workspace_root=tmp_path)) as client:
-        decompiled = await client.call_tool("datamimic_decompile", {"request": {"xml": xml}})
-        document = json.loads(decompiled[0].text)["document"]
-        response = await client.call_tool(
-            "datamimic_build",
-            {"request": {"document": document, "verification": {"smoke_export": True, "deterministic_replay": True}}},
-        )
+        response = await client.call_tool("datamimic_build", {})
         result = TypeAdapter(BuildResult).validate_json(response[0].text)
         assert isinstance(result, RejectedBuild), result
         assert result.diagnostics[0].path[:4] == ("document", "root", "children", 0)

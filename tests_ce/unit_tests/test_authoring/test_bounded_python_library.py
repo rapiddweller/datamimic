@@ -4,6 +4,7 @@
 
 """A Python library loaded by <execute> reaches Ready through Build when it passes the library check (#332)."""
 
+import shutil
 from pathlib import Path, PurePosixPath
 
 import pytest
@@ -14,21 +15,19 @@ from datamimic_ce.authoring.adapters.workspace import AuthoringWorkspaceContext
 from datamimic_ce.authoring.domain.capabilities import CapabilityDomain
 from datamimic_ce.authoring.domain.diagnostics import AuthoringRuleId
 from datamimic_ce.authoring.domain.proof import VerificationGateStatus
-from datamimic_ce.authoring.domain.requests import BoundedExecutionRequest, BuildRequestV4, DecompileDocumentRequest
+from datamimic_ce.authoring.domain.requests import BoundedExecutionRequest
 from datamimic_ce.authoring.domain.script_semantics import LibraryRefusalReason as Reason
 from datamimic_ce.authoring.domain.script_semantics import python_library_refusal
 from datamimic_ce.engine.dsl.vocabulary.contracts.dsl_element import BoundedExecutionStrategy
+from tests_ce.authoring_project import build_project
 
 _MODELS = Path(__file__).parent / "bounded_python_library"
 
 
-def _build(filename: str):
-    application = create_authoring_application(_MODELS)
-    decoded = application.decompile_document(
-        DecompileDocumentRequest(xml=(_MODELS / filename).read_text(encoding="utf-8"))
-    )
-    assert decoded.outcome == "ready", decoded
-    return application.build(BuildRequestV4(document=decoded.document, max_count=5))
+def _build(tmp_path: Path, filename: str):
+    """Build ``filename`` as the entry of a copy of the models, so its library paths resolve unchanged."""
+    project = shutil.copytree(_MODELS, tmp_path / "project")
+    return build_project(project, (_MODELS / filename).read_text(encoding="utf-8"), max_count=5)
 
 
 def _rows(result) -> list[dict]:
@@ -36,15 +35,15 @@ def _rows(result) -> list[dict]:
 
 
 @pytest.mark.parametrize("filename", ["library_inline.xml", "library_unseeded.xml"])
-def test_library_function_reaches_ready_without_replay_when_unseeded(filename: str) -> None:
-    result = _build(filename)
+def test_library_function_reaches_ready_without_replay_when_unseeded(tmp_path: Path, filename: str) -> None:
+    result = _build(tmp_path, filename)
     assert result.outcome == "ready", result
     assert [row["person_id"] for row in _rows(result)] == [2]
     assert result.verification.deterministic_replay.status is VerificationGateStatus.NOT_REQUESTED
 
 
-def test_seeded_library_loads_once_and_build_replays_it_unrequested() -> None:
-    result = _build("library_seeded.xml")
+def test_seeded_library_loads_once_and_build_replays_it_unrequested(tmp_path: Path) -> None:
+    result = _build(tmp_path, "library_seeded.xml")
     assert result.outcome == "ready", result
     rows = _rows(result)
     assert [(row["person_id"], row["loads"]) for row in rows] == [(2, 1), (2, 1)]
@@ -63,8 +62,8 @@ def test_seeded_library_loads_once_and_build_replays_it_unrequested() -> None:
         ("library_indented.xml", "indented_import.scr.py: Python library line 1 imports a module outside"),
     ],
 )
-def test_library_check_refuses_before_the_library_runs(filename: str, message: str) -> None:
-    result = _build(filename)
+def test_library_check_refuses_before_the_library_runs(tmp_path: Path, filename: str, message: str) -> None:
+    result = _build(tmp_path, filename)
     assert result.outcome == "rejected"
     assert any(
         item.code is AuthoringRuleId.SIDE_EFFECT and item.message.startswith(message) for item in result.diagnostics
@@ -72,8 +71,8 @@ def test_library_check_refuses_before_the_library_runs(filename: str, message: s
 
 
 @pytest.mark.parametrize("filename", ["execute_sql.xml", "execute_per_row.xml"])
-def test_execute_outside_a_setup_level_python_library_is_refused_by_policy(filename: str) -> None:
-    result = _build(filename)
+def test_execute_outside_a_setup_level_python_library_is_refused_by_policy(tmp_path: Path, filename: str) -> None:
+    result = _build(tmp_path, filename)
     assert result.outcome == "rejected"
     assert [item.code for item in result.diagnostics] == [AuthoringRuleId.UNSUPPORTED_BOUNDED_OPERATION]
 
@@ -156,8 +155,8 @@ def test_included_library_is_checked_against_the_entry_seed() -> None:
     ), result.diagnostics
 
 
-def test_forced_replay_names_why_a_seeded_library_model_failed() -> None:
-    result = _build("library_module_level_draw.xml")
+def test_forced_replay_names_why_a_seeded_library_model_failed(tmp_path: Path) -> None:
+    result = _build(tmp_path, "library_module_level_draw.xml")
     assert result.outcome == "rejected"
     assert result.verification.deterministic_replay.status is VerificationGateStatus.FAILED
     assert any(item.message.startswith("A seeded model that loads Python must replay") for item in result.diagnostics)

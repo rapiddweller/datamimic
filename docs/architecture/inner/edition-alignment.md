@@ -80,10 +80,10 @@ path. Do not retain `constants.runtime.api` as a compatibility wrapper.
 
 The October 18 adoption explicitly replaces CE's persisted `AuthoringSpecV1`
 workflow. XML is the persisted executable project; DM JSON is transient agent
-interchange. Expectations, roles and caller requirements belong to the Build
-transaction. The [one-time migration](../../migrations/authoring-errors.md)
-retains old input, full proof and resource identity; the installed package has no
-legacy compiler or import shim. Historical snapshots above remain source evidence.
+interchange. Expectations, roles and caller requirements live in the project's
+`acceptance/build.json` (`BuildRequestV5`, ADR #356). Legacy intent models are
+re-authored as projects; the installed package has no legacy compiler, import shim
+or automated [migration](../../migrations/authoring-errors.md). Historical snapshots above remain source evidence.
 
 ## Acceptance evidence
 

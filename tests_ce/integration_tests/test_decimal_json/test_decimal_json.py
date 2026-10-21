@@ -17,11 +17,12 @@ from datamimic_ce.authoring.domain.proof import (
     VerificationGateStatus,
 )
 from datamimic_ce.authoring.domain.requests import (
-    BuildRequestV4,
+    PROJECT_ENTRY_PATH,
     ReadyBuild,
     ReadyCompileDocument,
     ReadyDecompileDocument,
 )
+from tests_ce.authoring_project import write_project
 
 _TEST_DIR = Path(__file__).resolve().parent
 _REPO_ROOT = _TEST_DIR.parents[2]
@@ -65,26 +66,20 @@ def test_cli_build_and_runtime_json_preserve_decimal_value(tmp_path: Path) -> No
     )
     assert compiled.artifact.xml_sha256 == decompiled.canonical_xml_sha256
     subject = ProductRowsSubject(product="decimal_rows")
-    request = BuildRequestV4(
-        document=decompiled.document,
+    project = tmp_path / "project"
+    project.mkdir()
+    write_project(
+        project,
+        compiled.artifact.compiled_xml,
         expectations=(
             ExactCountExpectation(subject=subject, count=1),
             RangeExpectation(subject=subject, field="amount", minimum=Decimal("0.1"), maximum=Decimal("0.1")),
         ),
         verification=BuildVerificationOptions(smoke_export=True),
     )
-    built = ReadyBuild.model_validate_json(
-        _run_cli(
-            "authoring",
-            "build",
-            "-",
-            "--workspace-root",
-            str(tmp_path),
-            cwd=tmp_path,
-            stdin=request.model_dump_json(exclude_none=True),
-        )
-    )
-    assert built.artifact.xml_sha256 == compiled.artifact.xml_sha256
+    built = ReadyBuild.model_validate_json(_run_cli("authoring", "build", str(project), cwd=tmp_path))
+    files = {item.path: item.sha256 for item in built.artifact.files}
+    assert files[PROJECT_ENTRY_PATH] == compiled.artifact.xml_sha256
     assert built.verification.smoke_export.status is VerificationGateStatus.PASSED
     captured = built.evidence[0].rows[0]
     assert captured["amount"] == "0.1"
