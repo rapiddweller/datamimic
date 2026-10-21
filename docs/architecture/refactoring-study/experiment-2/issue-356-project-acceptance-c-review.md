@@ -2,7 +2,7 @@
 
 **Accepted within the local architecture review scope.** Reviewer: Astra (independent Opus 5.5 review agent, delegated by Alex).
 
-- Scope: `feat/project-acceptance-c`, base `c2ff96d5` (b2 head, PR #365), head `60df0427` (`dc0f0ae8`, `79dfda42`, `60df0427`).
+- Scope: `feat/project-acceptance-c`, base `c2ff96d5` (b2 head, PR #365), head `229a22bd` (`dc0f0ae8`, `79dfda42`, `60df0427`, `229a22bd`).
 - This review rebinds the [Build includes receipt](issue-356-build-includes-review.md) and keeps all of its assessments.
 - It does not authorize a merge and does not claim that every native rule passes.
 
@@ -10,19 +10,19 @@
 
 | Item | Value |
 |---|---|
-| Source | `884a12106ca6f316437bed4c615cd462605c4fe10d5c4dcc473d2fabe9de76ad` |
+| Source | `bae2cd577841cfb8e90d10bded66a5345317f95342e36458050eebfd4b6413c7` |
 | Target (changed by the contract widening below) | `4ed7e7f238d6b453e0a889013212c7c72ef90c5ec65a10bf0784d3c2baf184c0` |
 | Analyzer (unchanged; ArchKeel 4.0.1, Python 3.11.12) | `bb1a3262d3fdd38c3e9a6af980cc063281ae98ab1c28c89c2c5be6dfb450744f` |
-| Validation | `4a397f51c242cc18dd305eaaa111063a4b02243edd0949c20672964f679d0e2c` |
-| UNKNOWN | `2d513e4d11a2f4915d538a7f90838afc1db46de2f3bb0f40ac11c6f104081b8f` |
+| Validation | `41240ba061b86d75ab2a4b08e1905be33fa7b7379a9579d2226ee764e7e83f15` |
+| UNKNOWN | `d316c04cdb5a692b2f8d792be070e359ddfb1667b3156a29dbd7b22819d2773c` |
 
-**Budgets:** `calls_unresolved` is ratcheted down from 1,426 to 1,418, and `typing_positions` stays at 178. No gate change.
+**Budgets:** `calls_unresolved` is ratcheted down from 1,426 to 1,424, a real net −2. `typing_positions` stays at 178. No gate change.
 
 ## Design
 
 ```
 authoring build [PROJECT]
-  ProjectFiles.read (AuthoringWorkspaceContext.read, contained)   acceptance/build.json -> BuildRequestV5
+  ProjectFiles.read_project_file (AuthoringWorkspaceContext, contained)   acceptance/build.json -> BuildRequestV5
                                                                   datamimic.xml (fixed entry)
   validate (entry + literal steps) -> decompile -> include_graph (step digests) -> policy -> acceptance
   bounded run(s) -> child records reads:
@@ -76,7 +76,7 @@ ArchKeel reports exactly five public gains and no other widening:
 
 `BuildRequestV4` is removed. These gains implement Alex's ADR #356 decision (BuildRequestV5 with a per-file digest). I see no need for a separate decision, but they are listed here and in the receipt for Alex's sight.
 
-### Finding (Low): budget tightening partly by name collision
+### Finding (Low): budget tightening partly by name collision — resolved in `229a22bd`
 
 Of the eight calls removed from `calls_unresolved`, six are not resolutions. They are file-object `.read` calls:
 - `dryrun` `stream.read`;
@@ -91,6 +91,14 @@ They became "partially resolved — dynamic receiver with matching internal meth
 - **Recommendation:** name the port method distinctively (for example `read_project_file`) and set the budget to the then-measured value.
 - The receipt records this truthfully in `dynamic_call_limit` and `measurement_amendment`.
 
+**Resolved in `229a22bd`:** the port method is now `read_project_file`.
+- I re-measured against base `c2ff96d5`. None of the six file-object `.read` calls appears in the decoded diff any more, so they are back to their base status, unresolved.
+- Unresolved calls: two added (`item.path.as_posix`, `read.add`) and four removed with the V4 code, net −2 to 1,424.
+- Partially resolved calls are 2,040 (60df0427: 2,046).
+- Nothing else moved. The diagnostics, UNKNOWN identities and contract are unchanged against `60df0427`.
+- The re-measurement was taken after the coordinator's brief branch switch, on `feat/project-acceptance-c` at `229a22bd`.
+- The budget is 1,424, and the receipt notes are corrected to the honest −2.
+
 ## Native result
 
 - **Base:** I re-collected `c2ff96d5` independently, and it reproduces every digest of the previous receipt.
@@ -98,12 +106,12 @@ They became "partially resolved — dynamic receiver with matching internal meth
   - 534/534 files; failures [].
   - 0 violations, 0 baseline additions or resolutions.
   - Rules: 271 PASS and 5 UNKNOWN; the report exits 0.
-- **Calls:** 13,338 analyzed; resolved 9,874; partially resolved 2,046; unresolved 1,418.
+- **Calls (at `229a22bd`):** 13,338 analyzed; resolved 9,874; partially resolved 2,040; unresolved 1,424.
 - **Diagnostics:** still 20. The `CompiledDocumentArtifact` publication diagnostic moves from `/components/1/public/21` to `/22`, because new public entries precede it. Subject, kind and claim are identical, and the receipt carries the new pointer.
 - **UNKNOWN records:** 314 → 313.
   - `UNKNOWN-BOUNDARY-TYPE-POSITION-607498d48e034dc8` (the `AuthoringApplication.build` request position) no longer exists, because `build()` takes no argument. It is removed from the `other` group with a note.
   - 17 records have reference churn only.
-  - AUTHORING-API-TYPES now decides 13 of 30 positions, and the dynamic-call record reads 1,418.
+  - AUTHORING-API-TYPES now decides 13 of 30 positions, and the dynamic-call record reads 1,424.
 
 ## Evidence boundary
 
