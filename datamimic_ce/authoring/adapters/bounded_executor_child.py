@@ -71,8 +71,8 @@ def _contain(private_root: Path, workspace: Path, transport: tuple[Path, ...]) -
     null_device = {os.path.normcase(os.devnull), os.path.normcase(os.path.realpath(os.devnull))}
     temporary = private_root / "tmp"
     os.makedirs(temporary, exist_ok=True)
+    # Python's tempfile is the engine's only temp writer; processes are refused and C code is not audited.
     tempfile.tempdir = str(temporary)
-    os.environ["TMPDIR"] = os.environ["TEMP"] = os.environ["TMP"] = str(temporary)
 
     def contained(path: str | bytes | os.PathLike[str]) -> bool:
         target = os.path.normcase(os.path.realpath(os.fsdecode(path)))
