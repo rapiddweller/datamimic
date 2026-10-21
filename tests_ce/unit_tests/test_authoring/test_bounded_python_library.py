@@ -125,3 +125,10 @@ def test_included_library_is_checked_against_the_entry_seed() -> None:
         and item.message.startswith("import_in_function.scr.py: Python library line 2 imports inside")
         for item in result.diagnostics
     ), result.diagnostics
+
+
+def test_forced_replay_names_why_a_seeded_library_model_failed() -> None:
+    result = _build("library_module_level_draw.xml")
+    assert result.outcome == "rejected"
+    assert result.verification.deterministic_replay.status is VerificationGateStatus.FAILED
+    assert any(item.message.startswith("A seeded model that loads Python must replay") for item in result.diagnostics)

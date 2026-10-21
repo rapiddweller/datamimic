@@ -1,0 +1,7 @@
+<setup rngSeed="17">
+    <!-- Passes the static check, fails the forced replay: the library draws while it loads. -->
+    <execute uri="lib/module_level_draw.scr.py"/>
+    <generate name="selected" count="1" target="">
+        <key name="token" script="TOKEN"/>
+    </generate>
+</setup>

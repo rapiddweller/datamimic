@@ -156,6 +156,15 @@ class BuildDocumentWorkflow:
                         }
                     )
                     diagnostics += (*second.diagnostics, *replay_acceptance)
+        if replay.status is VerificationGateStatus.FAILED and not request.verification.deterministic_replay:
+            diagnostics += (
+                catalog_diagnostic(
+                    AuthoringRuleId.VALIDATION,
+                    "A seeded model that loads Python must replay identically, and this one did not: a value drawn "
+                    "outside the seeded names, such as a module-level draw in the library, differs between runs.",
+                    phase=DiagnosticPhase.EVIDENCE,
+                ),
+            )
         verification = BuildVerificationEvidence(smoke_export=smoke, deterministic_replay=replay)
         try:
             products = sample_evidence(first.captured, request.sample_rows)
