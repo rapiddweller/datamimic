@@ -95,8 +95,9 @@ flowchart LR
   C --> R[Ready: digest of every project file + evidence]
 ```
 
-- **Protocol:** `BuildRequestV5`, CE first, then the paired EE port. Input: the project root and
-  `acceptance/build.json` (entry path, expectations, product roles, verification). The files in the
+- **Protocol:** `BuildRequestV5`, CE first, then the paired EE port. Input: the project root. The
+  entry is always `datamimic.xml` at that root (the `datamimic init` and demo convention), and
+  `acceptance/build.json` holds the expectations, product roles and verification. The files in the
   workspace are the model; there is no second DM JSON copy of them. `BuildRequestV4` is removed in
   the same release, without migration or compatibility path (Alex, 2026-10-21): too few users depend
   on it to justify a legacy route. A single-file model is a project with one entry and no includes.
@@ -104,8 +105,14 @@ flowchart LR
   read. Expectations address products by name across all files; product names stay unique per project.
   Facts that Build derives from the document must come from the resolved graph, not the entry alone.
   Example: whether a seeded model loads Python and therefore must replay (CE #360; Codex review).
-- **Proof binding:** Ready carries a digest per project file (XML, conf, entity, weighting, script).
-  Any change to any of them invalidates the proof.
+- **Proof binding:** Ready carries a digest per project file the proof depended on: the entry, its
+  steps, `acceptance/build.json`, and every workspace file the bounded run opened for reading (conf,
+  entity, weighting, `lib/` scripts). The child records those reads; the parent hashes the private
+  copy the run read, which the run cannot modify. A path seen with two different hashes during one
+  Build rejects it. Files the run never reads (README, `output/`) are not bound, so writing evidence
+  or running the project does not void the proof. Known limits: a native reader outside Python's
+  audited `open` and the contained reader, and directory listings (`demographics directory=`), are
+  not recorded.
 - **Project context for single files:** `lint`, `compile` and `decompile` of a step file use the
   entry's context (seed, memstore ids, properties, loaded script symbols), so a step is not judged
   as if it were standalone.
@@ -187,7 +194,7 @@ The plugin's deliverable becomes the project tree:
 
 1. The flight-school reference project reaches Ready through project Build. Its expectations
    cover R1, the volumes and the negatives, and an independent oracle confirms R2–R5.
-2. A change to any project file invalidates the proof.
+2. A change to any file the proof read invalidates it; files the run never reads do not.
 3. A failing element in a step file reports that file and line, without values.
 4. A `lib/` module that imports outside the data modules, reads files, or (seeded) imports inside a
    body is refused and names the line. A seeded model with `lib/` always replays (CE #360).
