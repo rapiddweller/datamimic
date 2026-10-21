@@ -2,7 +2,7 @@
 
 **Accepted within the local architecture review scope.** Reviewer: Astra (independent Opus 5.5 review agent, delegated by Alex).
 
-- Scope: `fix/bounded-write-containment`, base `29fb4da8` (merged #360), head `5abd63a2` (`114c00bd`, `280a6e02`, `49c12a3b`, `a5b7f0c3`, `5abd63a2`, `f27d0d9e`).
+- Scope: `fix/bounded-write-containment`, base `29fb4da8` (merged #360), head `5abd63a2` (`114c00bd`, `280a6e02`, `49c12a3b`, `a5b7f0c3`, `5abd63a2`, `f27d0d9e`, `5a383526`).
 - This review rebinds the [issue 332 receipt](issue-332-bounded-python-library-review.md) and keeps all of its assessments.
 - It does not authorize a merge. It does not claim that the containment is a sandbox or that every native rule passes.
 
@@ -10,7 +10,7 @@
 
 | Item | Value |
 |---|---|
-| Source | `3b4e47159143cfa401f3c26eeef5a8c7d0ad6f3e784417450388b9de8ac2fb72` |
+| Source | `0b16f3b846168a710e642dd4e228433b7504416f817e061e5c4269c040a2a402` |
 | Target (unchanged) | `d83d4df102a2588a54598e26cb045b721cb024a118f51e31592b135050d4e78e` |
 | Analyzer (unchanged; ArchKeel 4.0.1, Python 3.11.12) | `bb1a3262d3fdd38c3e9a6af980cc063281ae98ab1c28c89c2c5be6dfb450744f` |
 | Validation | `5bbdcdb4f458e4e2e70cd9539459fd5b173e0935657274d00fbf27cc8fb4c22c` |
@@ -78,7 +78,15 @@ Engine check:
 - Under an audit logger, an openpyxl XLSX save, a JSON write with `file.truncate()` (the JSON exporter's call), a `tempfile` write, `shutil.copyfile` and a SQLite write raised none of the audited path events.
 - Smoke export for all six file exporters still passes.
 
-No blocking finding at `f27d0d9e`.
+**5a383526 (Codex thread), accepted:** a relative path is now refused when any non-negative integer follows the first path, which is where a directory descriptor appears.
+- I recorded the audit argument shapes with a real `dir_fd`. In every case the descriptor lies in `args[1:]`: `os.remove`, `os.rmdir` and `shutil.rmtree` (second), `os.mkdir`, `os.chmod` and `os.symlink` (third), `os.rename` and `os.link` (third and fourth), `os.utime` (fourth).
+- `os.chown` (path, uid, gid, dir_fd) has the same shape by signature. `os.truncate`, `os.chflags`, the xattr events and the `shutil` copy/move events take no `dir_fd`.
+- No dir_fd shape in `_PATH_EVENTS` is left uncovered.
+- The conservative cost (a relative `mkdir`/`chmod`/`truncate` with an explicit mode or length is refused) does not affect the engine. Smoke export, including its relative cleanup with `dir_fd` -1, passes.
+
+**On the proposed docstring note:** appropriate if it names the scope (accidental Python-level writes and process starts, not a sandbox) and the concrete follow-up issue number, rather than a generic "outstanding reports" sentence. One line is enough; the scope line below is the reference.
+
+No blocking finding at `5a383526`.
 
 ## Scope line (binding for future threads)
 
@@ -124,11 +132,12 @@ Reasoned from code only. CI on `windows-latest` is the evidence.
 ## Evidence boundary
 
 **LOCAL VERIFIED (by this reviewer):**
-- Source review of `29fb4da8..f27d0d9e`.
+- Source review of `29fb4da8..5a383526`.
 - Bounded dry-run containment probes at `280a6e02` and `49c12a3b`: outside writes and process starts refused; new files inside the workspace and the POSIX null device allowed.
 - Build smoke export (CSV, JSON, XML, TXT, XLSX, DbUnit) passed together with replay at `280a6e02`; CSV/JSON/XML/TXT passed again at `49c12a3b` and XLSX/DbUnit at `a5b7f0c3`.
 - Audit-event check for `mkfifo`/`mknod` on CPython 3.11.12 and 3.13.3.
 - `.pyc` and `tempfile` behaviour under the hook.
+- At `5a383526`: the related suites, 204 passed and 4 skipped. Smoke export with replay passed for six exporters. ruff and mypy are clean. I recorded the dir_fd argument shapes.
 - At `f27d0d9e`: the related suites, 203 passed and 4 skipped. Smoke export with replay passed for six exporters. ruff and mypy are clean. The audit-event census covered exporter-like writes. Unresolved and partially resolved calls are unchanged from `5abd63a2`; only resolved calls grew (+5).
 - At `5abd63a2`: the related suites plus the determinism scenarios, 201 passed and 4 skipped (I did not check which tests were skipped). Smoke export passed for all six file exporters (CSV, JSON, XML, TXT, XLSX, DbUnit) together with replay. ruff and mypy are clean. The calls profile is identical to `a5b7f0c3`.
 - At `a5b7f0c3`:
