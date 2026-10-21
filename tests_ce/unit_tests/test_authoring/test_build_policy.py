@@ -15,8 +15,8 @@ def test_policy_keeps_ce_count_semantics_for_sources_and_nested_counts():
     assert CeBoundedExecutionPolicy().diagnostics(task) == ()
 
 
-@pytest.mark.parametrize("node", [{"kind": "include", "properties": {"uri": "child.xml"}},
-    {"kind": "execute", "content": {"kind": "script", "value": "print(1)"}}])
+# A literal include is admitted here; the include graph walk of Build and dry-run checks it and its steps.
+@pytest.mark.parametrize("node", [{"kind": "execute", "content": {"kind": "script", "value": "print(1)"}}])
 def test_policy_rejects_unproven_nested_execution(node):
     from datamimic_ce.authoring.adapters.bounded_execution_policy import CeBoundedExecutionPolicy
     diagnostics = CeBoundedExecutionPolicy().diagnostics(document([node]))

@@ -7,7 +7,7 @@
 import json
 from hashlib import sha256
 
-from datamimic_ce.authoring.application.use_cases import CompileDocumentUseCase
+from datamimic_ce.authoring.application.use_cases import CompileDocumentUseCase, _codec_diagnostic
 from datamimic_ce.authoring.domain.build_rules import catalog_diagnostic
 from datamimic_ce.authoring.domain.build_verification import (
     blocked_verification,
@@ -16,8 +16,8 @@ from datamimic_ce.authoring.domain.build_verification import (
     unseeded_replay_evidence,
 )
 from datamimic_ce.authoring.domain.common import MAX_AUTHORING_XML_LENGTH
-from datamimic_ce.authoring.domain.diagnostics import AuthoringRuleId, DiagnosticPhase
-from datamimic_ce.authoring.domain.dm_json import iter_dm_json_nodes
+from datamimic_ce.authoring.domain.diagnostics import AuthoringCodecDiagnosticCode, AuthoringRuleId, DiagnosticPhase
+from datamimic_ce.authoring.domain.dm_json import DmJsonCodecError, DmJsonDocumentV1, iter_dm_json_nodes
 from datamimic_ce.authoring.domain.proof import (
     BuildVerificationEvidence,
     BuildVerificationOptions,
@@ -55,6 +55,8 @@ class BuildDocumentWorkflow:
         bounded_execution_policy: BoundedExecutionPolicy,
     ) -> None:
         self._compile = CompileDocumentUseCase(contract, validator)
+        self._contract = contract
+        self._validator = validator
         self._executor = executor
         self._policy = bounded_execution_policy
 
@@ -77,6 +79,31 @@ class BuildDocumentWorkflow:
                 verification=blocked_verification(request.verification, "Compilation or XML validation failed."),
             )
         document = compiled.artifact.document
+        # The project is the entry plus its literal include graph; every fact below covers all of its files.
+        graph = self._validator.include_graph(compiled.artifact.compiled_xml)
+        if not graph.ok:
+            return RejectedBuild(
+                phase=DiagnosticPhase.POLICY,
+                diagnostics=graph.diagnostics,
+                verification=blocked_verification(request.verification, "The include graph is not provable."),
+            )
+        decoded: list[tuple[str, DmJsonDocumentV1]] = []
+        for step in graph.descriptors:
+            try:
+                decoded.append((step.uri, self._contract.decompile(step.xml)))
+            except DmJsonCodecError as error:
+                diagnostic = _codec_diagnostic(
+                    error,
+                    code=AuthoringCodecDiagnosticCode.DECOMPILE_UNSUPPORTED,
+                    phase=DiagnosticPhase.DECOMPILE,
+                    remediation="Rewrite the included step using supported DSL elements.",
+                )
+                return RejectedBuild(
+                    phase=DiagnosticPhase.DECOMPILE,
+                    diagnostics=(diagnostic.relocated(("include", step.uri, *diagnostic.path)),),
+                    verification=blocked_verification(request.verification, "An included step is not provable."),
+                )
+        steps = tuple(decoded)
         binding_diagnostics = validate_environment_bindings(document, request.environment_bindings)
         if binding_diagnostics:
             return RejectedBuild(
@@ -86,10 +113,17 @@ class BuildDocumentWorkflow:
             )
         verification_options = (
             BuildVerificationOptions(smoke_export=request.verification.smoke_export, deterministic_replay=True)
-            if requires_deterministic_replay(document)
+            if requires_deterministic_replay(document, tuple(step for _, step in steps))
             else request.verification
         )
-        policy_diagnostics = self._policy.diagnostics(document)
+        policy_diagnostics = (
+            *self._policy.diagnostics(document),
+            *(
+                diagnostic.relocated(("include", uri, *diagnostic.path[1:]))
+                for uri, step in steps
+                for diagnostic in self._policy.diagnostics(step)
+            ),
+        )
         if policy_diagnostics:
             return RejectedBuild(
                 phase=DiagnosticPhase.POLICY,
@@ -97,7 +131,7 @@ class BuildDocumentWorkflow:
                 verification=blocked_verification(verification_options, "Bounded policy refused this descriptor."),
             )
         try:
-            acceptance = project_acceptance(request, document)
+            acceptance = project_acceptance(request, document, steps)
         except AcceptanceProjectionError as error:
             return RejectedBuild(
                 phase=DiagnosticPhase.EXPECTATION,
@@ -203,7 +237,11 @@ class BuildDocumentWorkflow:
             artifact=artifact,
             assurance=BuildAssurance(
                 mode="target_isolated"
-                if any(node.properties.get("target") for node, _ in iter_dm_json_nodes(document))
+                if any(
+                    node.properties.get("target")
+                    for project_document in (document, *(step for _, step in steps))
+                    for node, _ in iter_dm_json_nodes(project_document)
+                )
                 else "local_bounded",
                 source_accesses=first.source_accesses,
             ),

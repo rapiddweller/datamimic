@@ -1,0 +1,12 @@
+<setup rngSeed="7">
+    <!-- Order desk: customers from data/, one order each priced by lib/, delivered as CSV. -->
+    <include uri="conf/base.properties"/>
+    <memstore id="store"/>
+    <execute uri="lib/pricing.scr.py"/>
+    <!-- 10: customers from the business data file -->
+    <include uri="model/10_customers.xml"/>
+    <!-- 20: one priced order per customer -->
+    <include uri="model/20_orders.xml"/>
+    <!-- 90: delivery, the only step that writes files -->
+    <include uri="delivery/90_export.xml"/>
+</setup>

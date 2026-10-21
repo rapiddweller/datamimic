@@ -126,8 +126,11 @@ failures remain available as causes.
 Bounded resources use contained opened handles, including properties substitution
 and cached file reads. Installed Domain datasets are read through their own loader;
 custom `DATAMIMIC_DOMAIN_DATA`/`DATAMIMIC_ROOT` overrides reject bounded execution.
-Connection profiles are workspace-local. XML includes are not bounded-eligible;
-contained properties includes remain supported. Property-expanded sources can still
+Connection profiles are workspace-local. Build and dry-run prove a project: the entry
+descriptor plus its literal, setup-level include graph (`.xml` steps and `.properties`),
+read from the workspace. Expectations and product roles address products of every file;
+product names stay unique per project, clients belong to the entry, and memstore
+producer facts span the whole graph. Property-expanded sources can still
 hit the pre-existing static unknown-source lint rule; executor support alone does
 not prove public Build eligibility.
 

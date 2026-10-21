@@ -4,20 +4,24 @@
 
 """Use the normal CE parser for in-memory descriptor hard validation."""
 
+from hashlib import sha256
 from pathlib import Path, PurePosixPath
 from typing import Literal
 
 from lxml import etree
 
+from datamimic_ce.authoring.adapters.dryrun import _BoundedPolicyRefusal, _literal_include_graph
 from datamimic_ce.authoring.adapters.linter import _run_rules
 from datamimic_ce.authoring.adapters.workspace import AuthoringWorkspaceContext
+from datamimic_ce.authoring.domain.build_rules import catalog_diagnostic
 from datamimic_ce.authoring.domain.diagnostics import (
+    AuthoringRuleId,
     AuthoringSystemDiagnosticCode,
     CeErrorIdentity,
     Diagnostic,
     DiagnosticPhase,
 )
-from datamimic_ce.authoring.domain.requests import LintResult
+from datamimic_ce.authoring.domain.requests import IncludedDescriptor, IncludeGraphResult, LintResult
 from datamimic_ce.authoring.domain.rule_catalog import RuleSeverity, authoring_rule_definition
 from datamimic_ce.engine.dsl.api import DescriptorParser, parse_xml_source, resource_reader_scope
 from datamimic_ce.engine.dsl.parsers.base.client_config import ConnectionProfileLoader
@@ -107,6 +111,30 @@ class CeDescriptorValidator:
         findings = _rule_diagnostics(xml, physical_path, logical_path)
         return LintResult(ok=not any(item.severity == "error" for item in findings), diagnostics=findings)
 
+    def include_graph(self, xml: str) -> IncludeGraphResult:
+        """The ``.xml`` steps of the entry's literal include graph, read through the contained workspace reader
+        with the same rules the bounded run applies."""
+        logical_path = self._workspace_context.descriptor_path
+        try:
+            physical_path = self._workspace_context.resolve_descriptor_path(logical_path)
+            with resource_reader_scope(self._workspace_context.read_resource_bytes):
+                graph = _literal_include_graph(parse_xml_source(xml), physical_path)
+        except _BoundedPolicyRefusal as refusal:
+            return _graph_refused(logical_path, str(refusal))  # static rule texts, no paths or values
+        except etree.XMLSyntaxError:
+            return _graph_refused(logical_path, "An included step is not well-formed XML.")
+        except (ValueError, OSError):
+            return _graph_refused(logical_path, "An included file is missing or lies outside the workspace.")
+        descriptors = []
+        for uri, data in graph:
+            if PurePosixPath(uri).suffix == ".xml":
+                try:
+                    text = str(data, "utf-8")
+                except UnicodeDecodeError:
+                    return _graph_refused(logical_path, "An included step is not UTF-8 encoded.")
+                descriptors.append(IncludedDescriptor(uri=uri, xml=text, sha256=sha256(data).hexdigest()))
+        return IncludeGraphResult(ok=True, descriptors=tuple(descriptors))
+
 
 def _rule_diagnostics(xml: str, physical_path: Path, logical_path: PurePosixPath) -> tuple[Diagnostic, ...]:
     diagnostics = []
@@ -140,6 +168,20 @@ def _diagnostic(message: str, *, path: tuple[str | int, ...], identity: CeErrorI
         path=path,
         ce_error=identity,
         remediation="Repair the indicated descriptor field or its workspace-local resource configuration.",
+    )
+
+
+def _graph_refused(path: PurePosixPath, message: str) -> IncludeGraphResult:
+    return IncludeGraphResult(
+        ok=False,
+        diagnostics=(
+            catalog_diagnostic(
+                AuthoringRuleId.INCLUDE,
+                message,
+                phase=DiagnosticPhase.POLICY,
+                path=("descriptor", str(path), "include"),
+            ),
+        ),
     )
 
 

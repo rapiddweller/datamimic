@@ -163,10 +163,11 @@ class LibraryRefusal:
                 return "Move the import to module level, where seeded runs rebind it to the run's stream."
 
 
-def requires_deterministic_replay(document: DmJsonDocumentV1) -> bool:
-    """A seeded model that loads Python must replay: only a second run catches draws the seeded names miss."""
-    return document.root.properties.get("rng_seed") is not None and any(
-        node.kind == EL_EXECUTE for node, _ in iter_dm_json_nodes(document)
+def requires_deterministic_replay(entry: DmJsonDocumentV1, steps: tuple[DmJsonDocumentV1, ...] = ()) -> bool:
+    """A seeded model that loads Python anywhere in its include graph must replay: only a second run catches
+    draws the seeded names miss. The entry's seed governs every included step."""
+    return entry.root.properties.get("rng_seed") is not None and any(
+        node.kind == EL_EXECUTE for document in (entry, *steps) for node, _ in iter_dm_json_nodes(document)
     )
 
 

@@ -1,0 +1,148 @@
+# DATAMIMIC
+# Copyright (c) 2023-2026 Rapiddweller Asia Co., Ltd.
+# This software is licensed under the MIT License. See LICENSE.
+
+"""Build proves a project: the entry descriptor plus its literal include graph (V5 slice b)."""
+
+import shutil
+from pathlib import Path, PurePosixPath
+
+import pytest
+
+from datamimic_ce.authoring import create_authoring_application
+from datamimic_ce.authoring.domain.diagnostics import AuthoringRuleId
+from datamimic_ce.authoring.domain.proof import VerificationGateStatus
+from datamimic_ce.authoring.domain.requests import BuildRequestV4, DecompileDocumentRequest
+
+_PROJECT = Path(__file__).parent / "project_build" / "order_desk"
+_ENTRY = PurePosixPath("datamimic.xml")
+_ROLES = [
+    {"product": "customers", "field": "customer_id", "role": {"kind": "identifier"}},
+    {
+        "product": "orders",
+        "field": "customer_id",
+        "role": {"kind": "foreign_key", "parent_product": "customers", "parent_field": "customer_id"},
+    },
+    {"product": "orders", "field": "order_id", "role": {"kind": "identifier"}},
+    {
+        "product": "order_rows",
+        "field": "order_id",
+        "role": {"kind": "foreign_key", "parent_product": "orders", "parent_field": "order_id"},
+    },
+]
+
+
+def _build(project: Path = _PROJECT, *, expectations: list[dict] | None = None, roles: list[dict] = _ROLES):
+    application = create_authoring_application(project, descriptor_path=_ENTRY)
+    decoded = application.decompile_document(
+        DecompileDocumentRequest(xml=(project / _ENTRY).read_text(encoding="utf-8"), descriptor_path=_ENTRY)
+    )
+    assert decoded.outcome == "ready", decoded
+    return application.build(
+        BuildRequestV4.model_validate(
+            {
+                "document": decoded.document.model_dump(mode="json"),
+                "descriptor_path": str(_ENTRY),
+                "product_roles": roles,
+                "expectations": expectations or [],
+            }
+        )
+    )
+
+
+def _copy(tmp_path: Path) -> Path:
+    project = tmp_path / "order_desk"
+    shutil.copytree(_PROJECT, project)
+    return project
+
+
+def test_project_with_steps_and_memstore_handoff_reaches_ready() -> None:
+    result = _build(
+        expectations=[
+            {"kind": "exact_count", "subject": {"kind": "product", "product": "order_rows"}, "count": 3},
+            {
+                "kind": "range",
+                "subject": {"kind": "product", "product": "order_rows"},
+                "field": "total",
+                "minimum": "9.5",
+                "maximum": "47.5",
+            },
+        ]
+    )
+    assert result.outcome == "ready", result.diagnostics
+    assert {product.name for product in result.evidence} == {"customers", "orders", "order_rows"}
+    # The entry is seeded and its project loads Python, so Build replays it unrequested.
+    assert result.verification.deterministic_replay.status is VerificationGateStatus.PASSED
+
+
+def test_expectation_on_a_step_product_is_checked() -> None:
+    result = _build(
+        expectations=[{"kind": "exact_count", "subject": {"kind": "product", "product": "orders"}, "count": 4}]
+    )
+    assert result.outcome == "rejected"
+    assert any(item.path == ("expectations", 0) for item in result.diagnostics), result.diagnostics
+
+
+def test_library_loaded_by_a_step_forces_replay(tmp_path: Path) -> None:
+    project = _copy(tmp_path)
+    entry = (project / "datamimic.xml").read_text(encoding="utf-8")
+    (project / "datamimic.xml").write_text(
+        entry.replace('    <execute uri="lib/pricing.scr.py"/>\n', ""), encoding="utf-8"
+    )
+    step = (project / "model" / "20_orders.xml").read_text(encoding="utf-8")
+    (project / "model" / "20_orders.xml").write_text(
+        step.replace("<setup>", '<setup>\n    <execute uri="lib/pricing.scr.py"/>'), encoding="utf-8"
+    )
+    result = _build(project)
+    assert result.outcome == "ready", result.diagnostics
+    assert result.verification.deterministic_replay.status is VerificationGateStatus.PASSED
+
+
+def test_client_declared_in_a_step_is_refused(tmp_path: Path) -> None:
+    project = _copy(tmp_path)
+    step = project / "model" / "10_customers.xml"
+    step.write_text(
+        step.read_text(encoding="utf-8").replace(
+            "<setup>", '<setup>\n    <database id="db" dbms="sqlite" database="x"/>'
+        ),
+        encoding="utf-8",
+    )
+    result = _build(project)
+    assert result.outcome == "rejected"
+    assert any(item.path[:2] == ("include", "model/10_customers.xml") for item in result.diagnostics), (
+        result.diagnostics
+    )
+
+
+def test_product_names_stay_unique_across_files(tmp_path: Path) -> None:
+    project = _copy(tmp_path)
+    step = project / "delivery" / "90_export.xml"
+    step.write_text(step.read_text(encoding="utf-8").replace('name="order_rows"', 'name="orders"'), encoding="utf-8")
+    result = _build(project, roles=_ROLES[:3])
+    assert result.outcome == "rejected"
+
+
+@pytest.mark.parametrize(
+    ("uri", "inline_setup"),
+    [("../outside.xml", False), ("{step}", False), ("model/10_customers.xml", True), ("conf/base.yaml", False)],
+)
+def test_build_refuses_a_non_literal_or_uncontained_include(tmp_path: Path, uri: str, inline_setup: bool) -> None:
+    project = _copy(tmp_path)
+    (tmp_path / "outside.xml").write_text("<setup/>", encoding="utf-8")
+    (project / "conf" / "base.yaml").write_text("x: 1", encoding="utf-8")
+    application = create_authoring_application(project, descriptor_path=_ENTRY)
+    decoded = application.decompile_document(
+        DecompileDocumentRequest(xml=(project / _ENTRY).read_text(encoding="utf-8"), descriptor_path=_ENTRY)
+    )
+    document = decoded.document.model_dump(mode="json")
+    step = next(
+        node for node in document["root"]["children"] if node["properties"].get("uri") == "model/10_customers.xml"
+    )
+    step["properties"]["uri"] = uri
+    if inline_setup:
+        step["children"] = [{"kind": "setup", "properties": {}, "children": []}]
+    result = application.build(
+        BuildRequestV4.model_validate({"document": document, "descriptor_path": str(_ENTRY), "product_roles": _ROLES})
+    )
+    assert result.outcome == "rejected"
+    assert any(item.code in {AuthoringRuleId.INCLUDE, "DM405"} for item in result.diagnostics), result.diagnostics
