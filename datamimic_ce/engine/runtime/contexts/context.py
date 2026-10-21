@@ -376,7 +376,7 @@ class SetupContext(Context):
             ray_debug=self.ray_debug,
             included_statement_transformer=self.included_statement_transformer,
             profile_loader=self.profile_loader,
-            total_row_limit=self.total_row_budget.limit if self.total_row_budget is not None else None,
+            total_row_limit=self._total_row_budget.limit if self._total_row_budget is not None else None,
         )
         memo[id(self)] = copied
         copied._pending_client_configs = copy.deepcopy(self._pending_client_configs, memo)
@@ -391,8 +391,8 @@ class SetupContext(Context):
             copied._descriptor_client_history = copy.deepcopy(history, memo)
             memo[id(history)] = copied._descriptor_client_history
         copied._owned_descriptor_clients = copy.deepcopy(self._owned_descriptor_clients, memo)
-        if self.total_row_budget is not None:
-            copied._total_row_budget = self.total_row_budget
+        if self._total_row_budget is not None:
+            copied._total_row_budget = self._total_row_budget
         return copied
 
     @property

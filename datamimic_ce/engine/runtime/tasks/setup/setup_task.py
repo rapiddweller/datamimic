@@ -163,8 +163,6 @@ class SetupTask:
             # Same-process includes allocate in the parent run; ordinary worker copies stay isolated.
             id(parent_context.domain_identifier_registry): parent_context.domain_identifier_registry,
         }
-        if parent_context.total_row_budget is not None:
-            memo[id(parent_context.total_row_budget)] = parent_context.total_row_budget
         clone_by_token: dict[int, RegisteredClient] = {}
         for token, client, _config in descriptor_clients:
             clone = clone_client_for_include(client)
