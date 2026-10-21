@@ -83,7 +83,8 @@ class BuildDocumentWorkflow:
         graph = self._validator.include_graph(compiled.artifact.compiled_xml)
         if not graph.ok:
             return RejectedBuild(
-                phase=DiagnosticPhase.POLICY,
+                # Step lint findings are XML-phase, graph refusals policy-phase; the first error decides.
+                phase=next(item.phase for item in graph.diagnostics if item.severity == "error"),
                 diagnostics=graph.diagnostics,
                 verification=blocked_verification(request.verification, "The include graph is not provable."),
             )
@@ -171,7 +172,12 @@ class BuildDocumentWorkflow:
             smoke_export=verification_options.smoke_export,
         )
         first = self._executor.execute(execution_request)
-        diagnostics = (*compiled.diagnostics, *first.diagnostics, *evaluate_acceptance(acceptance, first.captured))
+        diagnostics = (
+            *compiled.diagnostics,
+            *graph.diagnostics,
+            *first.diagnostics,
+            *evaluate_acceptance(acceptance, first.captured),
+        )
         smoke = smoke_export_evidence(verification_options.smoke_export, first.smoke_export)
         replay = DeterministicReplayEvidence()
         if verification_options.deterministic_replay:

@@ -133,12 +133,33 @@ class CeDescriptorValidator:
                 except UnicodeDecodeError:
                     return _graph_refused(logical_path, "An included step is not UTF-8 encoded.")
                 descriptors.append(IncludedDescriptor(uri=uri, xml=text, sha256=sha256(data).hexdigest()))
-        return IncludeGraphResult(ok=True, descriptors=tuple(descriptors))
+        entry = parse_xml_source(xml)
+        findings = tuple(
+            finding
+            for step in descriptors
+            for finding in _rule_diagnostics(
+                step.xml, physical_path, logical_path, entry=entry, prefix=("include", step.uri)
+            )
+        )
+        return IncludeGraphResult(
+            ok=not any(item.severity == "error" for item in findings),
+            descriptors=tuple(descriptors),
+            diagnostics=findings,
+        )
 
 
-def _rule_diagnostics(xml: str, physical_path: Path, logical_path: PurePosixPath) -> tuple[Diagnostic, ...]:
+def _rule_diagnostics(
+    xml: str,
+    physical_path: Path,
+    logical_path: PurePosixPath,
+    *,
+    entry: etree._Element | None = None,
+    prefix: tuple[str, ...] | None = None,
+) -> tuple[Diagnostic, ...]:
+    """Lint findings of one descriptor; an included step is linted with its entry and reported at its uri."""
+    location = prefix or ("descriptor", logical_path.as_posix())
     diagnostics = []
-    for finding in _run_rules(parse_xml_source(xml), base_dir=physical_path.parent):
+    for finding in _run_rules(parse_xml_source(xml), base_dir=physical_path.parent, entry=entry):
         definition = authoring_rule_definition(finding.rule)
         diagnostics.append(
             Diagnostic(
@@ -146,8 +167,7 @@ def _rule_diagnostics(xml: str, physical_path: Path, logical_path: PurePosixPath
                 phase=DiagnosticPhase.XML,
                 message=definition.explanation,
                 path=(
-                    "descriptor",
-                    logical_path.as_posix(),
+                    *location,
                     finding.path,
                     *(("line", finding.line) if finding.line is not None else ()),
                 ),

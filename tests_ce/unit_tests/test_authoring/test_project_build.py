@@ -169,3 +169,30 @@ def test_include_graph_bytes_are_bounded(tmp_path: Path, monkeypatch: pytest.Mon
     result = _build(_copy(tmp_path))
     assert result.outcome == "rejected"
     assert any(item.code is AuthoringRuleId.INCLUDE for item in result.diagnostics), result.diagnostics
+
+
+def test_step_is_linted_in_the_entry_context_and_findings_name_the_step(tmp_path: Path) -> None:
+    project = _copy(tmp_path)
+    step = project / "model" / "20_orders.xml"
+    # The entry's memstore is known to the step; an undeclared target is still found, at the step's line.
+    step.write_text(
+        step.read_text(encoding="utf-8").replace('target="store" targetEntity', 'target="nostore" targetEntity'),
+        encoding="utf-8",
+    )
+    result = _build(project)
+    assert result.outcome == "rejected"
+    step_findings = [item for item in result.diagnostics if item.path[0] == "include"]
+    assert [(item.code, item.path) for item in step_findings] == [
+        ("DM401", ("include", "model/20_orders.xml", "/setup/generate", "line", 2))
+    ], result.diagnostics
+
+
+def test_runtime_failure_in_a_step_names_the_step(tmp_path: Path) -> None:
+    project = _copy(tmp_path)
+    step = project / "model" / "20_orders.xml"
+    step.write_text(step.read_text(encoding="utf-8").replace("float(unit_price)", "missing_name"), encoding="utf-8")
+    result = _build(project)
+    assert result.outcome == "rejected"
+    assert any(item.path == ("include", "model/20_orders.xml", "key", "script") for item in result.diagnostics), (
+        result.diagnostics
+    )

@@ -203,7 +203,7 @@ class UnseededRunNotReproducible(Rule):
     definition = authoring_rule_definition("DM303")
 
     def check(self, ctx: LintContext) -> Iterable[Diagnostic]:
-        if ctx.root.get("rngSeed") is None:
+        if ctx.run_root.get("rngSeed") is None:
             yield ctx.diag(type(self), ctx.root)
 
 
@@ -211,7 +211,7 @@ class SeedForcesSingleProcess(Rule):
     definition = authoring_rule_definition("DM304")
 
     def check(self, ctx: LintContext) -> Iterable[Diagnostic]:
-        if ctx.root.get("rngSeed") is None:
+        if ctx.run_root.get("rngSeed") is None:
             return
         for element in ctx.iter():
             num_process = element.get("numProcess")

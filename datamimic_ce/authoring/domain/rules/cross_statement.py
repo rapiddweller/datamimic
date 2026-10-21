@@ -59,9 +59,10 @@ _CLIENT_OPERATIONS = {op.value for op in ExportOperation}
 
 
 def _declared_ids(ctx: LintContext) -> tuple[set[str], set[str]]:
-    """(client ids, memstore ids) declared in the descriptor."""
-    clients = {el.get("id") for el in ctx.iter(EL_DATABASE, EL_MONGODB) if el.get("id")}
-    memstores = {el.get("id") for el in ctx.iter(EL_MEMSTORE) if el.get("id")}
+    """(client ids, memstore ids) declared in the descriptor, plus those an included step inherits from its entry."""
+    roots = (ctx.root,) if ctx.entry is None else (ctx.root, ctx.entry)
+    clients = {el.get("id") for root in roots for el in root.iter(EL_DATABASE, EL_MONGODB) if el.get("id")}
+    memstores = {el.get("id") for root in roots for el in root.iter(EL_MEMSTORE) if el.get("id")}
     return {c for c in clients if c}, {m for m in memstores if m}
 
 
@@ -179,7 +180,7 @@ def _check_target_entry(
         valid = sorted(static_targets | clients | memstores)
         return (
             f"target '{name}' is not built-in or declared",
-            f"For memory output add <memstore id=\"{name}\"/> above the writer; known targets: {', '.join(valid)}.",
+            f'For memory output add <memstore id="{name}"/> above the writer; known targets: {", ".join(valid)}.',
         )
     return (None, None)
 
