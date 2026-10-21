@@ -2,7 +2,7 @@
 
 **Accepted within the local architecture review scope.** Reviewer: Astra (independent Opus 5.5 review agent, delegated by Alex).
 
-- Scope: `fix/bounded-write-containment`, base `29fb4da8` (merged #360), head `5abd63a2` (`114c00bd`, `280a6e02`, `49c12a3b`, `a5b7f0c3`, `5abd63a2`).
+- Scope: `fix/bounded-write-containment`, base `29fb4da8` (merged #360), head `5abd63a2` (`114c00bd`, `280a6e02`, `49c12a3b`, `a5b7f0c3`, `5abd63a2`, `f27d0d9e`).
 - This review rebinds the [issue 332 receipt](issue-332-bounded-python-library-review.md) and keeps all of its assessments.
 - It does not authorize a merge. It does not claim that the containment is a sandbox or that every native rule passes.
 
@@ -10,10 +10,10 @@
 
 | Item | Value |
 |---|---|
-| Source | `7504ccb9e2e5196d78eb1a508931d0fe35fb3d47437d16308e70d16ef36715b2` |
+| Source | `3b4e47159143cfa401f3c26eeef5a8c7d0ad6f3e784417450388b9de8ac2fb72` |
 | Target (unchanged) | `d83d4df102a2588a54598e26cb045b721cb024a118f51e31592b135050d4e78e` |
 | Analyzer (unchanged; ArchKeel 4.0.1, Python 3.11.12) | `bb1a3262d3fdd38c3e9a6af980cc063281ae98ab1c28c89c2c5be6dfb450744f` |
-| Validation | `6fb3879782424107e7cccb69134b2e3f5a9b1cc1b701bc1ba041fcd1e7ac1529` |
+| Validation | `5bbdcdb4f458e4e2e70cd9539459fd5b173e0935657274d00fbf27cc8fb4c22c` |
 | UNKNOWN | `1a60ffbf787f02675d9769721e4178c2a2070bd98a038aca3baddd69b01b50b2` |
 
 **Budgets:**
@@ -69,7 +69,16 @@ This is the smallest placement that works: one function in the child, with no ne
 - It needs no type ignore.
 - Its ceiling is honest: it covers lookups through the `os` module attribute, which is the route DSL expressions use (libraries cannot import `os`). Like the hook, it is not a sandbox. The comment and the receipt's `delivery_boundary` state this.
 
-No blocking finding at `5abd63a2`.
+**f27d0d9e (Codex threads), accepted:**
+- The null-device exception now applies only to writing opens, so audited path operations on the null device are refused.
+- File-descriptor forms of the audited path events are refused.
+
+Engine check:
+- No bounded engine path uses a file-descriptor form. A search of `datamimic_ce` finds no `fchmod`, `ftruncate`, `copystat`, `copymode` or `chown`. `shutil.copy2` appears only in the demo installer.
+- Under an audit logger, an openpyxl XLSX save, a JSON write with `file.truncate()` (the JSON exporter's call), a `tempfile` write, `shutil.copyfile` and a SQLite write raised none of the audited path events.
+- Smoke export for all six file exporters still passes.
+
+No blocking finding at `f27d0d9e`.
 
 ## Scope line (binding for future threads)
 
@@ -106,7 +115,7 @@ Reasoned from code only. CI on `windows-latest` is the evidence.
   - 0 violations, 0 baseline additions or resolutions.
   - Rules: 271 PASS and 5 UNKNOWN.
   - The 20 diagnostics are identical, and the report exits 0.
-- **Calls:** 13,141 → 13,185; resolved 9,695 → 9,739; partially resolved 2,015 → 2,017; unresolved 1,431 → 1,429.
+- **Calls:** 13,141 → 13,190; resolved 9,695 → 9,744; partially resolved 2,015 → 2,017; unresolved 1,431 → 1,429.
   - All changes are in `bounded_executor_child.main`.
   - `reply_file.with_suffix` is removed, and `guarded.clear` is added.
   - `staging.write_bytes`/`staging.replace` move from unresolved to partially resolved.
@@ -115,11 +124,12 @@ Reasoned from code only. CI on `windows-latest` is the evidence.
 ## Evidence boundary
 
 **LOCAL VERIFIED (by this reviewer):**
-- Source review of `29fb4da8..5abd63a2`.
+- Source review of `29fb4da8..f27d0d9e`.
 - Bounded dry-run containment probes at `280a6e02` and `49c12a3b`: outside writes and process starts refused; new files inside the workspace and the POSIX null device allowed.
 - Build smoke export (CSV, JSON, XML, TXT, XLSX, DbUnit) passed together with replay at `280a6e02`; CSV/JSON/XML/TXT passed again at `49c12a3b` and XLSX/DbUnit at `a5b7f0c3`.
 - Audit-event check for `mkfifo`/`mknod` on CPython 3.11.12 and 3.13.3.
 - `.pyc` and `tempfile` behaviour under the hook.
+- At `f27d0d9e`: the related suites, 203 passed and 4 skipped. Smoke export with replay passed for six exporters. ruff and mypy are clean. The audit-event census covered exporter-like writes. Unresolved and partially resolved calls are unchanged from `5abd63a2`; only resolved calls grew (+5).
 - At `5abd63a2`: the related suites plus the determinism scenarios, 201 passed and 4 skipped (I did not check which tests were skipped). Smoke export passed for all six file exporters (CSV, JSON, XML, TXT, XLSX, DbUnit) together with replay. ruff and mypy are clean. The calls profile is identical to `a5b7f0c3`.
 - At `a5b7f0c3`:
   - 177 related tests passed, 4 skipped. Of the suites I ran, `test_bounded_executor_windows.py` is the only one targeting Windows, so the skips are probably Windows-only; I did not check which tests they were.
