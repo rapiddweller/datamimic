@@ -108,8 +108,22 @@ class CeDescriptorValidator:
         except (ValueError, OSError):
             # Parser/resource errors may contain credentials and physical host paths.
             return _rejected(logical_path, "Descriptor or its workspace resources failed validation.")
-        findings = _rule_diagnostics(parse_xml_source(xml), physical_path, logical_path)
+        root = parse_xml_source(xml)
+        findings = _rule_diagnostics(
+            root, physical_path, logical_path, project=self._entry_project(root, physical_path)
+        )
         return LintResult(ok=not any(item.severity == "error" for item in findings), diagnostics=findings)
+
+    def _entry_project(self, root: etree._Element, physical_path: Path) -> tuple[etree._Element, ...]:
+        """The entry and its literal steps, so the entry sees what a step declares; empty for a single file or an
+        unreadable graph, whose refusal Build and dry-run report themselves."""
+        try:
+            with resource_reader_scope(self._workspace_context.read_resource_bytes):
+                graph = _literal_include_graph(root, physical_path)
+            steps = [parse_xml_source(str(data, "utf-8")) for uri, data in graph if PurePosixPath(uri).suffix == ".xml"]
+        except (etree.XMLSyntaxError, ValueError, OSError):
+            return ()
+        return (root, *steps) if steps else ()
 
     def include_graph(self, xml: str) -> IncludeGraphResult:
         """The ``.xml`` steps of the entry's literal include graph, read through the contained workspace reader

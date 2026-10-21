@@ -203,7 +203,8 @@ class UnseededRunNotReproducible(Rule):
     definition = authoring_rule_definition("DM303")
 
     def check(self, ctx: LintContext) -> Iterable[Diagnostic]:
-        if ctx.run_root.get("rngSeed") is None:
+        # Reported once, by the entry that owns the run's seed; a step cannot supply one.
+        if ctx.run_root is ctx.root and ctx.root.get("rngSeed") is None:
             yield ctx.diag(type(self), ctx.root)
 
 
