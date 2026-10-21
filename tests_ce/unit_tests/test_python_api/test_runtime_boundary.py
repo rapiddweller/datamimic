@@ -12,6 +12,7 @@ from datamimic_ce.engine.dsl.statements.setup.setup_statement import SetupStatem
 from datamimic_ce.engine.io.exporters.diagnostics.test_result_exporter import TestResultExporter
 from datamimic_ce.engine.runtime import api as runtime_api
 from datamimic_ce.engine.runtime import contracts as runtime_contracts
+from datamimic_ce.engine.runtime.contexts.products import TotalRowBudget
 from datamimic_ce.engine.runtime.contracts import (
     FactoryConfig,
     PlatformConfiguration,
@@ -202,6 +203,12 @@ def test_runtime_scripting_state_permissions_are_exact() -> None:
             None,
         ),
     }
+    budget_permissions = {
+        (api + "SetupContext.__init__", "total_row_limit", "", "int | None", None),
+        (api + "SetupContext.total_row_budget", "return", "", "TotalRowBudget | None", None),
+        (api + "create_run_session", "request", "total_row_limit", "int | None", None),
+        (api + "run", "request", "total_row_limit", "int | None", None),
+    }
     scripting_names = {permission[0] for permission in map_permissions}
     scripting_positions = {permission[1] for permission in map_permissions}
     scripting_permissions = [
@@ -212,7 +219,9 @@ def test_runtime_scripting_state_permissions_are_exact() -> None:
     remaining_permissions = [
         permission
         for permission in permissions
-        if permission not in scripting_permissions and permission not in demographic_permissions
+        if permission not in scripting_permissions
+        and permission not in demographic_permissions
+        and permission not in budget_permissions
     ]
 
     assert len(scripting_permissions) == 22
@@ -222,6 +231,7 @@ def test_runtime_scripting_state_permissions_are_exact() -> None:
         permission for permission in permissions if permission in demographic_permissions
     } == demographic_permissions
     assert set(remaining_permissions) == legacy_permissions | property_permissions
+    assert {permission for permission in permissions if permission in budget_permissions} == budget_permissions
     assert [
         permission
         for permission, entry in zip(permissions, allowed_positions, strict=True)
@@ -249,6 +259,9 @@ def test_run_request_has_native_property_map_annotation() -> None:
 
 def test_run_request_has_integer_log_level_and_no_transport_args() -> None:
     assert get_type_hints(RunRequest)["log_level"] is int
+    assert get_type_hints(RunRequest)["total_row_limit"] == int | None
+    assert get_type_hints(runtime_api.SetupContext.__init__)["total_row_limit"] == int | None
+    assert get_type_hints(runtime_api.SetupContext.total_row_budget.fget)["return"] == TotalRowBudget | None
     assert RunRequest.__dataclass_fields__["log_level"].default == logging.INFO
     assert "args" not in RunRequest.__dataclass_fields__
 

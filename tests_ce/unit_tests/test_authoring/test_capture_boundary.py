@@ -148,21 +148,36 @@ def test_parent_rejects_duplicate_or_orphan_provenance():
     assert _receive(message) is None
 
 
-def test_full_nested_capture_limit_uses_actual_parent_total():
+def test_global_capture_limit_counts_nested_parent_and_child_rows():
     from dataclasses import replace
 
     parent = replace(_budget(), name="parents", requested_per_parent=2)
     child = replace(_budget(), name="parents|children", parent_name="parents", requested_per_parent=2)
     valid = dryrun._WorkerSuccess(
-        captured={"parents": ({"id": 1}, {"id": 2}), "parents|children": ({"id": 1},) * 4},
+        captured={"parents": ({"id": 1}, {"id": 2}), "parents|children": ({"id": 1},) * 3},
         budgets=(parent, child),
         smoke_diagnostics=(),
         smoke_export=SmokeExportCapture.not_requested(),
     )
-    assert dryrun._validated_worker_success(valid, max_count=2) == valid
-    object.__setattr__(valid, "captured", {**valid.captured, "parents|children": ({"id": 1},) * 5})
-    with pytest.raises(ValueError, match="nested"):
-        dryrun._validated_worker_success(valid, max_count=2)
+    assert dryrun._validated_worker_success(valid, max_count=5) == valid
+    object.__setattr__(valid, "captured", {**valid.captured, "parents|children": ({"id": 1},) * 4})
+    with pytest.raises(ValueError, match="shared total Build limit"):
+        dryrun._validated_worker_success(valid, max_count=5)
+
+
+def test_parent_rejects_aggregate_capture_above_total_build_limit():
+    from dataclasses import replace
+
+    first = _budget()
+    second = replace(first, name="other")
+    message = dryrun._WorkerSuccess(
+        captured={"items": ({"id": 1},), "other": ({"id": 2},)},
+        budgets=(first, second),
+        smoke_diagnostics=(),
+        smoke_export=SmokeExportCapture.not_requested(),
+    )
+    with pytest.raises(ValueError, match="shared total Build limit"):
+        dryrun._validated_worker_success(message, max_count=1)
 
 
 def test_boundary_rejects_missing_product_capture_even_when_provenance_exists():

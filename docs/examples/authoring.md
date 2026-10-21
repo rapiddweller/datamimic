@@ -95,3 +95,8 @@ exclusive; `count` on `generate` is the parallel series count.
 For exporter/replay verification add `"verification": {"smoke_export": true,
 "deterministic_replay": true}` to the transaction. A target-isolated bounded
 Build does not claim that an external database was written.
+
+`max_count` limits the total captured product rows in one Build execution,
+including nested products. Deterministic replay receives a fresh limit of the
+same size; it verifies the same logical dataset. Export smoke reuses the first
+capture and consumes no additional rows.
