@@ -59,7 +59,7 @@ def test_seeded_library_loads_once_and_build_replays_it_unrequested() -> None:
             "library_import_in_function.xml",
             "import_in_function.scr.py: Python library line 2 imports inside a function or class body",
         ),
-        ("library_reads_file.xml", "reads_file.scr.py: Python library line 2 calls a file or dynamic-code builtin"),
+        ("library_reads_file.xml", "reads_file.scr.py: Python library line 2 uses a file or dynamic-code builtin"),
     ],
 )
 def test_library_check_refuses_before_the_library_runs(filename: str, message: str) -> None:
@@ -89,6 +89,11 @@ def test_execute_outside_a_setup_level_python_library_is_refused_by_policy(filen
         ("from datamimic_ce.engine.io.api import database_count_table_length\n", False, Reason.IMPORT_NOT_ADMITTED),
         ("from . import sibling\n", False, Reason.IMPORT_NOT_ADMITTED),
         ("VALUE = eval('1')\n", False, Reason.FILE_OR_DYNAMIC_CODE_BUILTIN),
+        ("write = open\nwrite('/x', 'w')\n", False, Reason.FILE_OR_DYNAMIC_CODE_BUILTIN),
+        ("load = __import__\n", False, Reason.FILE_OR_DYNAMIC_CODE_BUILTIN),
+        ("x = __builtins__['open']\n", False, Reason.FILE_OR_DYNAMIC_CODE_BUILTIN),
+        ("def f():\n    return globals()\n", False, Reason.FILE_OR_DYNAMIC_CODE_BUILTIN),
+        ("def f():\n    return f.__globals__\n", False, Reason.FILE_OR_DYNAMIC_CODE_BUILTIN),
         ("def broken(:\n", False, None),
     ],
 )

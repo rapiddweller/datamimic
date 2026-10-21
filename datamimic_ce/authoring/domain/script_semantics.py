@@ -111,7 +111,12 @@ ADMITTED_IMPORT_ROOTS = frozenset(
     }
 )
 ADMITTED_PACKAGES = ("datamimic_ce.domains",)
-REFUSED_BUILTIN_CALLS = frozenset({"open", "exec", "eval", "compile", "__import__", "input", "breakpoint"})
+# Referenced at all, not only called: an alias such as `write = open` or `__builtins__["open"]` reaches them too.
+REFUSED_NAMES = frozenset(
+    {"open", "exec", "eval", "compile", "__import__", "__builtins__", "globals", "locals", "vars"}
+)
+# Introspection that leads back to the builtins or the running code, e.g. `f.__globals__["__builtins__"]`.
+REFUSED_ATTRIBUTES = frozenset({"__builtins__", "__globals__", "__code__", "__subclasses__", "__dict__"})
 
 
 class LibraryRefusalReason(StrEnum):
@@ -131,7 +136,7 @@ class LibraryRefusal:
             case LibraryRefusalReason.IMPORT_NOT_ADMITTED:
                 rule = "imports a module outside the bounded library modules"
             case LibraryRefusalReason.FILE_OR_DYNAMIC_CODE_BUILTIN:
-                rule = "calls a file or dynamic-code builtin (open, exec, eval, compile, __import__, input)"
+                rule = "uses a file or dynamic-code builtin (open, exec, eval, compile, __import__, globals, ...)"
             case LibraryRefusalReason.IMPORT_INSIDE_BODY_UNDER_SEED:
                 rule = "imports inside a function or class body, which <setup rngSeed> cannot seed"
         return f"Python library line {self.line} {rule}"
@@ -191,6 +196,8 @@ def python_library_refusal(source: str, *, seeded: bool) -> LibraryRefusal | Non
                 refusals.append(LibraryRefusal(LibraryRefusalReason.IMPORT_NOT_ADMITTED, node.lineno))
             elif seeded and id(node) in nested_imports:
                 refusals.append(LibraryRefusal(LibraryRefusalReason.IMPORT_INSIDE_BODY_UNDER_SEED, node.lineno))
-        elif isinstance(node, ast.Call) and isinstance(node.func, ast.Name) and node.func.id in REFUSED_BUILTIN_CALLS:
+        elif (isinstance(node, ast.Name) and node.id in REFUSED_NAMES) or (
+            isinstance(node, ast.Attribute) and node.attr in REFUSED_ATTRIBUTES
+        ):
             refusals.append(LibraryRefusal(LibraryRefusalReason.FILE_OR_DYNAMIC_CODE_BUILTIN, node.lineno))
     return min(refusals, key=lambda refusal: refusal.line) if refusals else None
