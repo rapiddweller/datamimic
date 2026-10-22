@@ -209,6 +209,8 @@ def _terminate_process_tree(
             if tree_stopped:
                 break
             remaining = grace_deadline - time.monotonic()
+            if remaining <= 0:
+                break
             if process_stopped:
                 time.sleep(min(0.05, remaining))
             else:

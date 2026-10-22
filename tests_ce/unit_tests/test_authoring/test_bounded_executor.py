@@ -5,7 +5,6 @@ import os
 import subprocess
 import sys
 import tempfile
-import threading
 import time
 from pathlib import Path, PurePosixPath
 
@@ -277,6 +276,46 @@ def test_posix_cleanup_escalates_when_group_still_live_and_kill_fails(monkeypatc
 
     monkeypatch.setattr(bounded_executor, "_kill_process_group", kill_group)
     monkeypatch.setattr(bounded_executor, "_process_group_is_absent", group_is_absent)
+
+    assert not bounded_executor._terminate_process_tree(Process())
+    assert signals == [bounded_executor.signal.SIGTERM, bounded_executor.signal.SIGKILL]
+
+
+def test_posix_cleanup_escalates_when_observation_outlasts_term_grace(monkeypatch):
+    from datamimic_ce.authoring.adapters import bounded_executor
+
+    class Process:
+        pid = 123
+
+        def poll(self):
+            return 0
+
+        def wait(self, *, timeout):
+            return 0
+
+    now = 0.0
+    signals = []
+
+    def monotonic():
+        return now
+
+    def sleep(duration):
+        nonlocal now
+        now += duration
+
+    def slow_group_observation(_group_id):
+        nonlocal now
+        now += 0.3
+        return False
+
+    def kill_group(_group_id, sig):
+        signals.append(sig)
+        return sig is bounded_executor.signal.SIGTERM
+
+    monkeypatch.setattr(bounded_executor.time, "monotonic", monotonic)
+    monkeypatch.setattr(bounded_executor.time, "sleep", sleep)
+    monkeypatch.setattr(bounded_executor, "_kill_process_group", kill_group)
+    monkeypatch.setattr(bounded_executor, "_process_group_is_absent", slow_group_observation)
 
     assert not bounded_executor._terminate_process_tree(Process())
     assert signals == [bounded_executor.signal.SIGTERM, bounded_executor.signal.SIGKILL]
