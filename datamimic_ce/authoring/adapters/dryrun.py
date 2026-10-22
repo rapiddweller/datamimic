@@ -146,6 +146,10 @@ class _BoundedPolicyRefusal(ValueError):
         self.path = path
 
 
+class _IncludeBudgetExceeded(_BoundedPolicyRefusal):
+    """The include graph's aggregate bytes exceed the budget."""
+
+
 _WorkerMessage = _WorkerSuccess | _WorkerFailure
 
 
@@ -379,7 +383,7 @@ def _literal_include_graph(entry: etree._Element, entry_path: Path) -> tuple[tup
             data = read_resource_bytes(dependency)
             total += len(data)
             if total > _MAX_INCLUDE_GRAPH_BYTES:
-                raise _BoundedPolicyRefusal("XML include dependency graph is cyclic or exceeds bounded limits")
+                raise _IncludeBudgetExceeded("XML include dependency graph exceeds the aggregate byte budget")
             if suffix == ".xml":
                 graph.append((uri, data))
                 visited += 1

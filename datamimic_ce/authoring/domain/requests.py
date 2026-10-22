@@ -48,7 +48,8 @@ class LintRequest(AuthoringModel):
 
 
 class IncludedDescriptor(AuthoringModel):
-    """One file of an entry's literal include graph, read from the bound workspace."""
+    """One file of an entry's literal include graph, read from the bound workspace. ``xml`` is the step as
+    analysis reads it, with target placeholders resolved; ``sha256`` binds the bytes that were read."""
 
     uri: NonEmptyStrictStr
     xml: NonEmptyStrictStr
@@ -61,6 +62,8 @@ class IncludeGraphResult(AuthoringModel):
     ok: StrictBool
     descriptors: tuple[IncludedDescriptor, ...] = ()
     diagnostics: tuple[Diagnostic, ...] = ()
+    # The entry as analysis reads it: target placeholders resolved from the project's .properties includes.
+    entry_xml: str | None = None
 
 
 class LintResult(AuthoringModel):
