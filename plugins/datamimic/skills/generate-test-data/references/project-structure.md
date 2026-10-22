@@ -14,7 +14,7 @@ review the files; Build proves them.
 │   ├── weighting/*.wgt.csv      distributions
 │   └── fixtures/*.ent.csv       deliberately chosen cases, such as the rows behind a negative test
 ├── lib/*.scr.py                 named functions with typed inputs and outputs
-├── sql/*.scr.sql                schema, cleanup and delivery SQL
+├── sql/*.scr.sql                schema, cleanup and delivery SQL (real runs only; Build refuses SQL execute)
 ├── acceptance/build.json        expectations, product roles, verification
 └── README.md                    purpose, process, rule → file table, evidence
 ```
