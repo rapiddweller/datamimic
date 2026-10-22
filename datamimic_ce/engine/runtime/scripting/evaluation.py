@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import re
 import types
+from collections.abc import Iterator, KeysView, Mapping
 from typing import Protocol, TypeGuard
 
 from datamimic_ce.engine.runtime.scripting.expression_globals import NON_VALUE_TYPES
@@ -22,29 +23,61 @@ class ExpressionContext(Protocol):
 
 
 class DotableDict:
-    """Expose dictionary fields through attribute access while evaluating expressions."""
+    """Expose dictionary fields through dot and mapping access while evaluating expressions."""
 
     def __init__(self, dictionary: dict[str, object]):
         self._dictionary = dictionary
 
-    def __getattr__(self, name: str) -> object:
-        if name not in self._dictionary:
-            raise AttributeError(f"Cannot find attribute '{name}'")
-        item = self._dictionary[name]
+    # WHY: not a Mapping subclass; inheriting would add items()/values() methods that shadow
+    # rows with fields of those names. Registered as a virtual Mapping below instead.
+    def __getitem__(self, key: str) -> object:
+        item = self._dictionary[key]
         if isinstance(item, dict):
             return DotableDict(item)
         if isinstance(item, list):
             return [DotableDict(value) if isinstance(value, dict) else value for value in item]
         return item
 
-    def get(self, name: str) -> object:
-        return self.__getattr__(name)
+    def __getattr__(self, name: str) -> object:
+        try:
+            return self[name]
+        except KeyError as error:
+            raise AttributeError(f"Cannot find attribute '{name}'") from error
+
+    def __iter__(self) -> Iterator[str]:
+        return iter(self._dictionary)
+
+    def __len__(self) -> int:
+        return len(self._dictionary)
+
+    def __contains__(self, key: object) -> bool:
+        return key in self._dictionary
+
+    def get(self, key: str, default: object = None) -> object:
+        try:
+            return self[key]
+        except KeyError:
+            return default
 
     def to_dict(self) -> dict[str, object]:
         return self._dictionary
 
-    def keys(self):
+    def keys(self) -> KeysView[str]:
         return self._dictionary.keys()
+
+
+Mapping.register(DotableDict)
+
+
+def _plain(value: object) -> object:
+    """Export nested rows as plain dicts so `dict(row)` never leaks a DotableDict."""
+    if isinstance(value, DotableDict):
+        return _plain(value.to_dict())
+    if isinstance(value, dict):
+        return {key: _plain(item) for key, item in value.items()}
+    if isinstance(value, list):
+        return [_plain(item) for item in value]
+    return value
 
 
 def evaluate_python(
@@ -58,10 +91,7 @@ def evaluate_python(
     diagnostic = "configured expression" if diagnostic_expression is None else diagnostic_expression
 
     def normalized_result(result: object, source: str) -> object:
-        if isinstance(result, DotableDict):
-            return result.to_dict()
-        if isinstance(result, list):
-            return [value.to_dict() if isinstance(value, DotableDict) else value for value in result]
+        result = _plain(result)
         if callable(result) or isinstance(result, types.ModuleType):
             raise task_config_error(
                 code=IssueCode.TASK_EXPRESSION_EVAL_FAILED,

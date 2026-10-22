@@ -1,0 +1,19 @@
+<setup>
+    <memstore id="mem" />
+    <generate name="producer" count="2" target="mem">
+        <key name="id" generator="IncrementGenerator" />
+        <nestedKey name="items" type="list" count="2">
+            <key name="sku" constant="sku-1" />
+        </nestedKey>
+    </generate>
+    <generate name="check" count="2">
+        <variable name="c" source="mem" type="producer" distribution="ordered" />
+        <key name="by_item" script="c['id']" />
+        <key name="by_dict" script="dict(c)['id']" />
+        <key name="field_count" script="len(c)" />
+        <key name="has_id" script="'id' in c" />
+        <key name="missing" script="c.get('zz', 'none')" />
+        <key name="nested_sku" script="c['items'][0].sku" />
+        <key name="item_count" script="len(c.items)" />
+    </generate>
+</setup>

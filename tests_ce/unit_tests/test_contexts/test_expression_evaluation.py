@@ -7,7 +7,6 @@ from faker import Faker
 from datamimic_ce.domains.api import RunSeed
 from datamimic_ce.engine.io.exporters.diagnostics.test_result_exporter import TestResultExporter
 from datamimic_ce.engine.runtime.contexts.context import SetupContext
-from datamimic_ce.engine.runtime.scripting.evaluation import DotableDict
 from datamimic_ce.engine.runtime.storage.memstore_manager import MemstoreManager
 from datamimic_ce.errors import IssueCode, TaskConfigError
 from datamimic_ce.errors.formatters import task_config_message
@@ -33,7 +32,7 @@ def _context(*, namespace: dict[str, object] | None = None, seeded: bool = False
     )
 
 
-def test_expression_returns_scalars_and_normalizes_dotable_dicts_shallowly() -> None:
+def test_expression_returns_scalars_and_normalizes_dotable_dicts_recursively() -> None:
     context = _context(namespace={"record": {"id": 4}, "items": [{"id": 5}]})
 
     assert context.evaluate_python_expression("40 + 2") == 42
@@ -41,8 +40,8 @@ def test_expression_returns_scalars_and_normalizes_dotable_dicts_shallowly() -> 
     assert context.evaluate_python_expression("record.id") == 4
     result = context.evaluate_python_expression("[record, [record]]")
     assert result[0] == {"id": 4}
-    assert isinstance(result[1][0], DotableDict)
-    assert result[1][0].id == 4
+    assert type(result[1][0]) is dict
+    assert result[1][0] == {"id": 4}
     assert isinstance(context.evaluate_python_expression("items[0]"), dict)
 
 
