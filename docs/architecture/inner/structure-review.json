@@ -2687,7 +2687,7 @@
     },
     {
       "target": "engine/runtime/contexts/products.py",
-      "reason": "Actual conditional export executions need typed page and worker metadata without changing public product names or importing task orchestration into row contexts."
+      "reason": "Generated rows and actual nested export executions need typed page metadata, while one shared per-run allowance bounds captured rows."
     }
   ],
   "target_module_concerns": [
@@ -3113,7 +3113,7 @@
     },
     {
       "target": "engine/runtime/contexts/context.py",
-      "responsibility": "Owns root and nested execution context state for descriptor runs."
+      "responsibility": "Owns root and nested execution context state for descriptor runs, including the shared per-run total-row budget reference."
     },
     {
       "target": "engine/runtime/contexts/demographic_context.py",
@@ -3477,7 +3477,7 @@
     },
     {
       "target": "engine/runtime/contexts/products.py",
-      "responsibility": "Carries generated rows and actual nested export executions across row contexts, pages, and worker results."
+      "responsibility": "Defines TotalRowBudget, the shared per-run total-row allowance, and carries generated rows and actual nested export executions."
     }
   ]
 }

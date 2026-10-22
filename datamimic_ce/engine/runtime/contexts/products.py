@@ -6,6 +6,23 @@ from dataclasses import dataclass, field
 
 from datamimic_ce.engine.dsl.api import GenerateStatement
 from datamimic_ce.engine.io.api import resolve_target_entity
+from datamimic_ce.errors import IssueCode, task_config_error
+
+
+@dataclass
+class TotalRowBudget:
+    """One runtime run's shared allowance for captured product rows."""
+
+    limit: int
+    used: int = 0
+
+    def reserve(self) -> None:
+        if self.used >= self.limit:
+            raise task_config_error(code=IssueCode.TASK_TOTAL_ROW_BUDGET_EXCEEDED, limit=self.limit)
+        self.used += 1
+
+    def release(self) -> None:
+        self.used -= 1
 
 
 @dataclass(frozen=True)

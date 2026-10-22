@@ -7,6 +7,7 @@
 from __future__ import annotations
 
 import json
+import re
 from collections.abc import Mapping
 from dataclasses import dataclass
 from datetime import date, datetime
@@ -42,6 +43,8 @@ from datamimic_ce.authoring.domain.expectations import (
 from datamimic_ce.authoring.domain.row_conditions import evaluate_row_condition
 
 CapturedRows = Mapping[str, tuple[Mapping[str, object], ...]]
+_DATE_LITERAL_PATTERN = r"\d{4}-\d{2}-\d{2}\Z"
+_DATETIME_LITERAL_PATTERN = r"\d{4}-\d{2}-\d{2}[ T]\d{2}:\d{2}:\d{2}(?:\.\d{1,6})?\Z"
 
 
 @dataclass(frozen=True)
@@ -193,6 +196,22 @@ def _typed_identity(value: object) -> JsonValue:
 
 def _display(value: object) -> str:
     return json.dumps(_typed_identity(value), sort_keys=True, separators=(",", ":"), ensure_ascii=False)
+
+
+def _temporal_allowed_value_matches(actual: date, expected: str) -> bool:
+    if isinstance(actual, datetime):
+        if re.fullmatch(_DATETIME_LITERAL_PATTERN, expected) is None:
+            return False
+        try:
+            return actual == datetime.fromisoformat(expected)
+        except ValueError:
+            return False
+    if re.fullmatch(_DATE_LITERAL_PATTERN, expected) is None:
+        return False
+    try:
+        return actual == date.fromisoformat(expected)
+    except ValueError:
+        return False
 
 
 def _json_value(value: object) -> JsonValue:
@@ -402,7 +421,14 @@ def _check_expectation(
                 {"expected": list(allowed), "actual": None, "allowed_values": allowed},
             )
         invalid = tuple(
-            value for value in values if _display(value) not in {_display(item) for item in expectation.values}
+            value
+            for value in values
+            if not any(
+                _temporal_allowed_value_matches(value, item)
+                if isinstance(value, date) and isinstance(item, str)
+                else _display(value) == _display(item)
+                for item in expectation.values
+            )
         )
         if invalid:
             return _ExpectationFailure(

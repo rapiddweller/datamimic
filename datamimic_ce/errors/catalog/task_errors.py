@@ -353,6 +353,14 @@ ISSUES: list[IssueDefinition] = [
         resolution="Raise max_count to at least the evaluated count, or lower the count expression.",
     ),
     IssueDefinition(
+        code=IssueCode.TASK_TOTAL_ROW_BUDGET_EXCEEDED,
+        name="TASK_TOTAL_ROW_BUDGET_EXCEEDED",
+        title="Task Total Row Budget Exceeded",
+        template="generated product rows exceed the total Build limit {limit}",
+        cause="The run attempted to generate more product rows than its shared total-row limit.",
+        resolution="Raise max_count or reduce generated rows across the products.",
+    ),
+    IssueDefinition(
         code=IssueCode.TASK_COUNT_SELECTOR_UNSUPPORTED_CLIENT,
         name="TASK_COUNT_SELECTOR_UNSUPPORTED_CLIENT",
         title="Task Count Selector Unsupported Client",

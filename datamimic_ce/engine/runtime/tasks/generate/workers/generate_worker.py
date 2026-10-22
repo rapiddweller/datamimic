@@ -30,7 +30,7 @@ from datamimic_ce.engine.runtime.contexts.context import (
     WorkerContextPayload,
 )
 from datamimic_ce.engine.runtime.contexts.geniter_context import GenIterContext
-from datamimic_ce.engine.runtime.contexts.products import GenerationResult, NestedExport
+from datamimic_ce.engine.runtime.contexts.products import GenerationResult, NestedExport, TotalRowBudget
 from datamimic_ce.engine.runtime.logging import gen_timer, logger, setup_logger
 from datamimic_ce.engine.runtime.scripting.evaluation import evaluate_source_template
 from datamimic_ce.engine.runtime.tasks.base.dispatch import create_task
@@ -366,9 +366,12 @@ class GenerateWorker:
                 ctx.current_variables["ts"] = ts_config.at(page_start + idx)
 
             # Set current product to the product from data source if building from datasource
+            if build_from_source and idx >= len(source_data):
+                break
+            budget = root_context.total_row_budget
+            if isinstance(budget, TotalRowBudget):
+                budget.reserve()
             if build_from_source:
-                if idx >= len(source_data):
-                    break
                 ctx.current_product = copy.deepcopy(source_data[idx])
 
             try:
@@ -414,6 +417,8 @@ class GenerateWorker:
                 result.append(ctx.current_product)
                 product_holder.nested_exports.extend(ctx.pending_exports)
             except StopIteration:
+                if isinstance(budget, TotalRowBudget):
+                    budget.release()
                 # Stop generating data if one of datasource reach the end
                 logger.info(
                     f"Data generator sub-task {task.__class__.__name__} '{task.statement.name}' has already reached "

@@ -28,16 +28,16 @@ _FIXTURES = Path(__file__).parent / "fixtures"
 _DEPARTMENTS = "fx_dynamic_child_count.departments.csv"
 
 
-def _bounded(fixture: str):
+def _bounded(fixture: str, *, max_count: int = 10):
     path = _FIXTURES / fixture
     logical = PurePosixPath(path.name)
     return CeBoundedExecutor(AuthoringWorkspaceContext(path.parent, logical)).execute(
-        BoundedExecutionRequest(xml=path.read_text(encoding="utf-8"), descriptor_path=logical)
+        BoundedExecutionRequest(xml=path.read_text(encoding="utf-8"), descriptor_path=logical, max_count=max_count)
     )
 
 
 def test_dynamic_child_count_is_evaluated_and_matches_the_real_run(tmp_path: Path) -> None:
-    result = _bounded("fx_dynamic_child_count.xml")
+    result = _bounded("fx_dynamic_child_count.xml", max_count=20)
     assert result.ok, result.diagnostics
     employees = {product.name: product for product in result.captured.products}["employees"]
     assert employees.capture.status.value == "complete"
@@ -59,6 +59,7 @@ def test_dynamic_child_count_builds_ready_with_replay(tmp_path: Path) -> None:
         json.dumps(
             {
                 "document": json.loads(decompiled.output)["document"],
+                "max_count": 20,
                 "expectations": [
                     {"kind": "exact_count", "subject": {"kind": "product", "product": "employees"}, "count": 12},
                     {"kind": "unique", "subject": {"kind": "product", "product": "employees"}, "field": "employee_id"},

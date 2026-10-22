@@ -646,6 +646,8 @@ def neutralize_for_dry_run(
                         )
                 stmt.targets = {t for t in stmt.targets if t in memstores}
             stmt.num_process = 1
+            # Check final rows, including time-series expansion, before runtime planning.
+            stmt.bounded_count_limit = max_count
             requested = _static_count(stmt.count)
             source_rows = _source_row_count(
                 stmt,
@@ -1031,6 +1033,8 @@ def _validated_worker_success(message: _WorkerSuccess, max_count: int | None = N
                 for producer in binding.producers
             ):
                 raise ValueError("invalid memstore producer provenance")
+    if max_count is not None and sum(len(rows) for rows in message.captured.values()) > max_count:
+        raise ValueError("capture rows exceed the shared total Build limit")
     smoke = message.smoke_export
     counters = (smoke.applicable_exporters, smoke.attempted_exporters, smoke.failed_exporters)
     if type(smoke.requested) is not bool or any(type(value) is not int or value < 0 for value in counters):
@@ -1182,6 +1186,7 @@ def _run_engine_capture(
                     platform_props=environment_properties,
                     statement_transformer=transformer,
                     included_statement_transformer=transformer,
+                    total_row_limit=max_count,
                 ),
             )
             with SourceAccessCapture() as source_accesses:
@@ -1251,7 +1256,7 @@ def _capture_evidence(
     if budget is not None and budget.parent_name is not None:
         parent_observed = observed_by_name.get(budget.parent_name, 0)
     output_multiplier = budget.output_multiplier if budget is not None else 1
-    limit = max(1, max_count * parent_observed * output_multiplier)
+    limit = max_count
     if budget is None:
         return ProductCaptureEvidence(
             status=CaptureStatus.UNKNOWN,
