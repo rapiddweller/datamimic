@@ -50,7 +50,7 @@ class DotableDict:
     def __len__(self) -> int:
         return len(self._dictionary)
 
-    def __contains__(self, key: object) -> bool:
+    def __contains__(self, key: str) -> bool:
         return key in self._dictionary
 
     def get(self, key: str, default: object = None) -> object:
@@ -74,7 +74,7 @@ def _plain(value: object) -> object:
     if isinstance(value, DotableDict):
         return _plain(value.to_dict())
     if isinstance(value, dict):
-        return {key: _plain(item) for key, item in value.items()}
+        return {key: _plain(value[key]) for key in value}
     if isinstance(value, list):
         return [_plain(item) for item in value]
     return value
