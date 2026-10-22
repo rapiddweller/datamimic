@@ -1,12 +1,11 @@
 """CE verification guarantees survive the scaffold-to-Build migration."""
 
-import json
+from hashlib import sha256
 from pathlib import Path
 
 import pytest
 from typer.testing import CliRunner
 
-from datamimic_ce.authoring import create_authoring_application
 from datamimic_ce.authoring.adapters.bounded_executor import CeBoundedExecutor
 from datamimic_ce.authoring.adapters.validator import CeDescriptorValidator
 from datamimic_ce.authoring.domain.build_rules import catalog_diagnostic
@@ -18,41 +17,44 @@ from datamimic_ce.authoring.domain.capture import (
     SmokeExportCapture,
 )
 from datamimic_ce.authoring.domain.diagnostics import AuthoringRuleId, DiagnosticPhase
+from datamimic_ce.authoring.domain.dm_json import DmJsonDocumentV1
 from datamimic_ce.authoring.domain.proof import ReplayMismatchKind, VerificationGateStatus
 from datamimic_ce.authoring.domain.requests import (
+    PROJECT_ENTRY_PATH,
     BoundedExecutionEvidence,
-    BuildRequestV4,
     LintResult,
     ReadyBuild,
     RejectedBuild,
 )
 from datamimic_ce.interfaces.cli import app
+from tests_ce.authoring_project import build_project
 
 
-def _request(*, seed: int | None = 7, count: int = 2, exporter: bool = True, **options) -> BuildRequestV4:
+def _document(*, seed: int | None = 7, count: int = 2, exporter: bool = True) -> DmJsonDocumentV1:
     properties = {"name": "items", "count": count}
     if exporter:
         properties["target"] = "JSON"
-    return BuildRequestV4.model_validate(
+    return DmJsonDocumentV1.model_validate(
         {
-            "document": {
-                "root": {
-                    "kind": "setup",
-                    "properties": {"rng_seed": seed} if seed is not None else {},
-                    "children": [
-                        {
-                            "kind": "generate",
-                            "properties": properties,
-                            "children": [
-                                {"kind": "key", "properties": {"name": "id", "generator": "IncrementGenerator"}},
-                            ],
-                        },
-                    ],
-                }
-            },
-            **options,
+            "root": {
+                "kind": "setup",
+                "properties": {"rng_seed": seed} if seed is not None else {},
+                "children": [
+                    {
+                        "kind": "generate",
+                        "properties": properties,
+                        "children": [
+                            {"kind": "key", "properties": {"name": "id", "generator": "IncrementGenerator"}},
+                        ],
+                    },
+                ],
+            }
         }
     )
+
+
+def _entry_digest(root: Path) -> str:
+    return sha256((root / PROJECT_ENTRY_PATH).read_bytes()).hexdigest()
 
 
 def _captured(*, rows=({"id": 1}, {"id": 2}), ok=True, base_run_ok=True, smoke=None) -> BoundedExecutionEvidence:
@@ -85,7 +87,7 @@ def executions(monkeypatch):
 
 
 def test_default_build_uses_one_real_capture_and_unrequested_gates(tmp_path: Path, executions) -> None:
-    result = create_authoring_application(workspace_root=tmp_path).build(_request())
+    result = build_project(tmp_path, _document())
     assert isinstance(result, ReadyBuild), result
     assert len(executions) == 1
     assert result.verification.smoke_export.status is VerificationGateStatus.NOT_REQUESTED
@@ -93,19 +95,21 @@ def test_default_build_uses_one_real_capture_and_unrequested_gates(tmp_path: Pat
 
 
 def test_smoke_reuses_first_capture_and_real_json_exporter(tmp_path: Path, executions) -> None:
-    result = create_authoring_application(workspace_root=tmp_path).build(_request(verification={"smoke_export": True}))
+    result = build_project(tmp_path, _document(), verification={"smoke_export": True})
     assert isinstance(result, ReadyBuild), result
     assert [request.smoke_export for request in executions] == [True]
     smoke = result.verification.smoke_export
     assert smoke.status is VerificationGateStatus.PASSED
     assert (smoke.applicable_exporters, smoke.attempted_exporters, smoke.failed_exporters) == (1, 1, 0)
-    assert not list(tmp_path.iterdir()), "Bounded smoke must not write project artifacts."
+    assert {path.relative_to(tmp_path).as_posix() for path in tmp_path.rglob("*")} == {
+        "acceptance",
+        "acceptance/build.json",
+        "datamimic.xml",
+    }, "Bounded smoke must not write project artifacts."
 
 
 def test_requested_smoke_without_exporter_is_not_applicable(tmp_path: Path) -> None:
-    result = create_authoring_application(workspace_root=tmp_path).build(
-        _request(exporter=False, verification={"smoke_export": True})
-    )
+    result = build_project(tmp_path, _document(exporter=False), verification={"smoke_export": True})
     assert isinstance(result, ReadyBuild), result
     assert result.verification.smoke_export.status is VerificationGateStatus.NOT_APPLICABLE
     assert result.verification.smoke_export.applicable_exporters == 0
@@ -114,7 +118,7 @@ def test_requested_smoke_without_exporter_is_not_applicable(tmp_path: Path) -> N
 def test_smoke_failure_cannot_be_masked_by_passing_acceptance(tmp_path: Path, monkeypatch) -> None:
     failed = _captured(ok=False, smoke=SmokeExportCapture(True, 1, 1, 1))
     monkeypatch.setattr(CeBoundedExecutor, "execute", lambda executor, request: failed)
-    result = create_authoring_application(workspace_root=tmp_path).build(_request(verification={"smoke_export": True}))
+    result = build_project(tmp_path, _document(), verification={"smoke_export": True})
     assert isinstance(result, RejectedBuild)
     assert result.phase is DiagnosticPhase.EVIDENCE
     assert result.verification.smoke_export.status is VerificationGateStatus.FAILED
@@ -132,9 +136,7 @@ def test_base_failure_preserves_exact_smoke_status_and_blocks_replay(tmp_path: P
         return failed
 
     monkeypatch.setattr(CeBoundedExecutor, "execute", execute)
-    result = create_authoring_application(workspace_root=tmp_path).build(
-        _request(verification={"smoke_export": True, "deterministic_replay": True})
-    )
+    result = build_project(tmp_path, _document(), verification={"smoke_export": True, "deterministic_replay": True})
     assert isinstance(result, RejectedBuild)
     assert len(calls) == 1
     expected = VerificationGateStatus.FAILED if smoke_failed else VerificationGateStatus.BLOCKED
@@ -142,23 +144,14 @@ def test_base_failure_preserves_exact_smoke_status_and_blocks_replay(tmp_path: P
     assert result.verification.deterministic_replay.status is VerificationGateStatus.BLOCKED
 
 
-def test_compile_failure_blocks_requested_gates_without_execution(tmp_path: Path, executions) -> None:
-    request = BuildRequestV4.model_validate(
-        {
-            "document": {
-                "root": {
-                    "kind": "setup",
-                    "children": [
-                        {"kind": "unknown-element"},
-                    ],
-                }
-            },
-            "verification": {"smoke_export": True, "deterministic_replay": True},
-        }
+def test_unknown_element_blocks_requested_gates_without_execution(tmp_path: Path, executions) -> None:
+    result = build_project(
+        tmp_path,
+        "<setup><unknown-element/></setup>",
+        verification={"smoke_export": True, "deterministic_replay": True},
     )
-    result = create_authoring_application(workspace_root=tmp_path).build(request)
     assert isinstance(result, RejectedBuild)
-    assert result.phase is DiagnosticPhase.COMPILE
+    assert result.phase is DiagnosticPhase.XML
     assert executions == []
     assert result.verification.smoke_export.status is VerificationGateStatus.BLOCKED
     assert result.verification.deterministic_replay.status is VerificationGateStatus.BLOCKED
@@ -173,9 +166,7 @@ def test_lint_failure_blocks_requested_gates_without_execution(tmp_path: Path, m
         "validate",
         lambda validator, xml, **kwargs: LintResult(ok=False, diagnostics=(diagnostic,)),
     )
-    result = create_authoring_application(workspace_root=tmp_path).build(
-        _request(verification={"smoke_export": True, "deterministic_replay": True})
-    )
+    result = build_project(tmp_path, _document(), verification={"smoke_export": True, "deterministic_replay": True})
     assert isinstance(result, RejectedBuild)
     assert result.phase is DiagnosticPhase.XML
     assert executions == []
@@ -192,9 +183,7 @@ def test_replay_checks_complete_rows_beyond_response_samples(tmp_path: Path, mon
         return next(captures)
 
     monkeypatch.setattr(CeBoundedExecutor, "execute", execute)
-    result = create_authoring_application(workspace_root=tmp_path).build(
-        _request(sample_rows=1, verification={"deterministic_replay": True})
-    )
+    result = build_project(tmp_path, _document(), sample_rows=1, verification={"deterministic_replay": True})
     assert isinstance(result, RejectedBuild)
     assert len(result.evidence[0].rows) == 1
     assert len(calls) == 2
@@ -206,9 +195,7 @@ def test_replay_checks_complete_rows_beyond_response_samples(tmp_path: Path, mon
 
 
 def test_seeded_replay_runs_exactly_twice_and_passes(tmp_path: Path, executions) -> None:
-    result = create_authoring_application(workspace_root=tmp_path).build(
-        _request(sample_rows=1, verification={"deterministic_replay": True})
-    )
+    result = build_project(tmp_path, _document(), sample_rows=1, verification={"deterministic_replay": True})
     assert isinstance(result, ReadyBuild), result
     assert len(executions) == 2
     assert len(result.evidence[0].rows) == 1
@@ -218,9 +205,7 @@ def test_seeded_replay_runs_exactly_twice_and_passes(tmp_path: Path, executions)
 
 
 def test_unseeded_replay_fails_without_claiming_comparison(tmp_path: Path, executions) -> None:
-    result = create_authoring_application(workspace_root=tmp_path).build(
-        _request(seed=None, verification={"deterministic_replay": True})
-    )
+    result = build_project(tmp_path, _document(seed=None), verification={"deterministic_replay": True})
     assert isinstance(result, RejectedBuild)
     assert len(executions) == 1
     replay = result.verification.deterministic_replay
@@ -230,32 +215,33 @@ def test_unseeded_replay_fails_without_claiming_comparison(tmp_path: Path, execu
 
 
 def test_capped_acceptance_cannot_be_rescued_by_replay(tmp_path: Path, executions) -> None:
-    result = create_authoring_application(workspace_root=tmp_path).build(
-        _request(max_count=1, sample_rows=1, verification={"deterministic_replay": True})
+    result = build_project(
+        tmp_path, _document(), max_count=1, sample_rows=1, verification={"deterministic_replay": True}
     )
     assert isinstance(result, RejectedBuild)
     assert result.phase is DiagnosticPhase.EVIDENCE
     assert len(executions) == 1
     assert result.verification.deterministic_replay.status is VerificationGateStatus.BLOCKED
-    assert 'count="2"' in result.review_artifact.compiled_xml
+    # The review binds the declared entry, not a copy rewritten to the cap.
+    assert 'count="2"' in (tmp_path / PROJECT_ENTRY_PATH).read_text(encoding="utf-8")
+    assert {item.path: item.sha256 for item in result.review_artifact.files}[PROJECT_ENTRY_PATH] == _entry_digest(
+        tmp_path
+    )
 
 
 def test_cli_application_byte_parity_for_smoke_and_replay(tmp_path: Path) -> None:
-    request = _request(sample_rows=1, verification={"smoke_export": True, "deterministic_replay": True})
-    expected = create_authoring_application(workspace_root=tmp_path).build(request)
-    assert isinstance(expected, ReadyBuild), expected
-    result = CliRunner().invoke(
-        app,
-        ["authoring", "build", "-", "--workspace-root", str(tmp_path)],
-        input=request.model_dump_json(exclude_none=True),
+    expected = build_project(
+        tmp_path, _document(), sample_rows=1, verification={"smoke_export": True, "deterministic_replay": True}
     )
+    assert isinstance(expected, ReadyBuild), expected
+    result = CliRunner().invoke(app, ["authoring", "build", str(tmp_path)])
     assert result.exit_code == 0, result.stdout
     assert result.stdout.strip() == expected.model_dump_json(indent=2)
 
 
 def test_missing_memstore_identity_proof_blocks_gates_before_execution(tmp_path: Path, executions) -> None:
-    payload = json.loads(_request(exporter=False).model_dump_json())
-    root = payload["document"]["root"]
+    document = _document(exporter=False).model_dump(mode="json")
+    root = document["root"]
     root["children"][0]["properties"]["target"] = "store"
     root["children"].insert(0, {"kind": "memstore", "properties": {"id": "store"}})
     root["children"].append(
@@ -270,8 +256,11 @@ def test_missing_memstore_identity_proof_blocks_gates_before_execution(tmp_path:
             "children": [{"kind": "key", "properties": {"name": "id", "script": "this.id"}}],
         }
     )
-    payload["verification"] = {"smoke_export": True, "deterministic_replay": True}
-    result = create_authoring_application(workspace_root=tmp_path).build(BuildRequestV4.model_validate(payload))
+    result = build_project(
+        tmp_path,
+        DmJsonDocumentV1.model_validate(document),
+        verification={"smoke_export": True, "deterministic_replay": True},
+    )
     assert isinstance(result, RejectedBuild)
     assert result.phase is DiagnosticPhase.EXPECTATION
     assert executions == []
@@ -281,33 +270,30 @@ def test_missing_memstore_identity_proof_blocks_gates_before_execution(tmp_path:
 
 @pytest.mark.parametrize("traversal_count", ["{1}", "{1/0}"])
 def test_dynamic_file_count_never_gets_exhaustion_proof(tmp_path: Path, traversal_count: str) -> None:
-    from datamimic_ce.authoring.adapters.dm_json_codec import CeDmJsonCodec
-
     (tmp_path / "rows.csv").write_text("id\n1\n2\n3\n", encoding="utf-8")
     xml = (
         '<setup rngSeed="7"><generate name="rows" source="rows.csv" distribution="ordered" '
         f'count="{traversal_count}" target="JSON"><key name="id" script="this.id"/></generate></setup>'
     )
-    request = BuildRequestV4.model_validate(
-        {
-            "document": CeDmJsonCodec().decompile(xml),
-            "expectations": [{"kind": "exact_count", "subject": {"kind": "product", "product": "rows"}, "count": 3}],
-            "verification": {"smoke_export": True, "deterministic_replay": True},
-        }
+    result = build_project(
+        tmp_path,
+        xml,
+        expectations=[{"kind": "exact_count", "subject": {"kind": "product", "product": "rows"}, "count": 3}],
+        verification={"smoke_export": True, "deterministic_replay": True},
     )
-    result = create_authoring_application(workspace_root=tmp_path).build(request)
     assert isinstance(result, RejectedBuild), result
     assert result.phase is DiagnosticPhase.EVIDENCE
     assert result.evidence[0].capture.status is CaptureStatus.UNKNOWN
     assert result.evidence[0].capture.requested is None
     assert not result.evidence[0].capture.complete
     assert result.verification.deterministic_replay.status is VerificationGateStatus.BLOCKED
-    assert f'count="{traversal_count}"' in result.review_artifact.compiled_xml
+    assert {item.path: item.sha256 for item in result.review_artifact.files}[PROJECT_ENTRY_PATH] == _entry_digest(
+        tmp_path
+    )
 
 
 @pytest.mark.parametrize("traversal_count", [1, 3])
 def test_literal_file_count_agrees_with_unmodified_runtime(tmp_path: Path, traversal_count: int) -> None:
-    from datamimic_ce.authoring.adapters.dm_json_codec import CeDmJsonCodec
     from datamimic_ce.engine.runtime.api import create_run_session
     from datamimic_ce.engine.runtime.contracts import RunRequest as RuntimeRequest
 
@@ -316,19 +302,18 @@ def test_literal_file_count_agrees_with_unmodified_runtime(tmp_path: Path, trave
         '<setup rngSeed="7"><generate name="rows" source="rows.csv" distribution="ordered" '
         f'count="{traversal_count}" target="JSON"><key name="id" script="this.id"/></generate></setup>'
     )
-    request = BuildRequestV4.model_validate(
-        {
-            "document": CeDmJsonCodec().decompile(xml),
-            "expectations": [
-                {"kind": "exact_count", "subject": {"kind": "product", "product": "rows"}, "count": traversal_count}
-            ],
-            "verification": {"smoke_export": True, "deterministic_replay": True},
-        }
+    result = build_project(
+        tmp_path,
+        xml,
+        expectations=[
+            {"kind": "exact_count", "subject": {"kind": "product", "product": "rows"}, "count": traversal_count}
+        ],
+        verification={"smoke_export": True, "deterministic_replay": True},
     )
-    result = create_authoring_application(workspace_root=tmp_path).build(request)
     assert isinstance(result, ReadyBuild), result
-    descriptor = tmp_path / "model.xml"
-    descriptor.write_text(result.artifact.compiled_xml, encoding="utf-8")
+    # Run the very entry bytes the artifact binds.
+    assert {item.path: item.sha256 for item in result.artifact.files}[PROJECT_ENTRY_PATH] == _entry_digest(tmp_path)
+    descriptor = tmp_path / PROJECT_ENTRY_PATH
     captured = create_run_session(RuntimeRequest(descriptor_path=descriptor, test_mode=True)).execute().captured
     assert len(captured["rows"]) == result.evidence[0].count == traversal_count
     assert result.verification.smoke_export.status is VerificationGateStatus.PASSED
@@ -338,8 +323,6 @@ def test_literal_file_count_agrees_with_unmodified_runtime(tmp_path: Path, trave
 @pytest.mark.parametrize("nested", [False, True], ids=["scalar", "nested"])
 @pytest.mark.parametrize("native_type", ["string", "decimal"])
 def test_fixed_value_keeps_native_types_at_every_depth(tmp_path: Path, nested: bool, native_type: str) -> None:
-    from datamimic_ce.authoring.adapters.dm_json_codec import CeDmJsonCodec
-
     field = f'<key name="payload" type="{native_type}" constant="1.2"/>'
     expected: str | dict[str, str] = "1.2"
     if nested:
@@ -349,20 +332,18 @@ def test_fixed_value_keeps_native_types_at_every_depth(tmp_path: Path, nested: b
         )
         expected = {"amount": "1.2"}
     xml = f'<setup rngSeed="7"><generate name="rows" count="1">{field}</generate></setup>'
-    request = BuildRequestV4.model_validate(
-        {
-            "document": CeDmJsonCodec().decompile(xml),
-            "expectations": [
-                {
-                    "kind": "fixed_value",
-                    "subject": {"kind": "product", "product": "rows"},
-                    "field": "payload",
-                    "value": expected,
-                }
-            ],
-        }
+    result = build_project(
+        tmp_path,
+        xml,
+        expectations=[
+            {
+                "kind": "fixed_value",
+                "subject": {"kind": "product", "product": "rows"},
+                "field": "payload",
+                "value": expected,
+            }
+        ],
     )
-    result = create_authoring_application(workspace_root=tmp_path).build(request)
     assert isinstance(result, ReadyBuild if native_type == "string" else RejectedBuild), result
     if native_type == "decimal":
         assert any(item.code == "fixed_value" for item in result.diagnostics)
@@ -380,8 +361,8 @@ def test_fixed_value_keeps_native_types_at_every_depth(tmp_path: Path, nested: b
 def test_memstore_readback_uses_resolved_output_entity(
     tmp_path: Path, producer_properties: dict[str, str], entity: str
 ) -> None:
-    payload = json.loads(_request(exporter=False).model_dump_json())
-    children = payload["document"]["root"]["children"]
+    document = _document(exporter=False).model_dump(mode="json")
+    children = document["root"]["children"]
     children[0]["properties"].update(target="store", **producer_properties)
     children.insert(0, {"kind": "memstore", "properties": {"id": "store"}})
     children.append(
@@ -397,7 +378,7 @@ def test_memstore_readback_uses_resolved_output_entity(
             "children": [{"kind": "key", "properties": {"name": "id", "script": "this.id"}}],
         }
     )
-    payload["product_roles"] = [
+    product_roles = [
         {"product": "items", "field": "id", "role": {"kind": "identifier"}},
         {
             "product": "copy",
@@ -405,8 +386,12 @@ def test_memstore_readback_uses_resolved_output_entity(
             "role": {"kind": "foreign_key", "parent_product": "items", "parent_field": "id"},
         },
     ]
-    payload["verification"] = {"smoke_export": True, "deterministic_replay": True}
-    result = create_authoring_application(workspace_root=tmp_path).build(BuildRequestV4.model_validate(payload))
+    result = build_project(
+        tmp_path,
+        DmJsonDocumentV1.model_validate(document),
+        product_roles=product_roles,
+        verification={"smoke_export": True, "deterministic_replay": True},
+    )
     assert isinstance(result, ReadyBuild), result
     by_name = {item.name: item for item in result.evidence}
     assert by_name["items"].rows == by_name["copy"].rows == ({"id": 1}, {"id": 2})
@@ -416,7 +401,6 @@ def test_memstore_readback_uses_resolved_output_entity(
 
 
 def test_conditional_field_union_matches_unmodified_runtime(tmp_path: Path) -> None:
-    from datamimic_ce.authoring.adapters.dm_json_codec import CeDmJsonCodec
     from datamimic_ce.engine.runtime.api import create_run_session
     from datamimic_ce.engine.runtime.contracts import RunRequest as RuntimeRequest
 
@@ -427,24 +411,21 @@ def test_conditional_field_union_matches_unmodified_runtime(tmp_path: Path) -> N
         '<else-if condition="this.id == 2"><key name="code" constant="b"/></else-if>'
         '<else><key name="code" constant="c"/></else></condition></generate></setup>'
     )
-    request = BuildRequestV4.model_validate(
-        {
-            "document": CeDmJsonCodec().decompile(xml),
-            "expectations": [
-                {
-                    "kind": "allowed_values",
-                    "subject": {"kind": "product", "product": "rows"},
-                    "field": "code",
-                    "values": ["a", "b", "c"],
-                }
-            ],
-            "verification": {"smoke_export": True, "deterministic_replay": True},
-        }
+    result = build_project(
+        tmp_path,
+        xml,
+        expectations=[
+            {
+                "kind": "allowed_values",
+                "subject": {"kind": "product", "product": "rows"},
+                "field": "code",
+                "values": ["a", "b", "c"],
+            }
+        ],
+        verification={"smoke_export": True, "deterministic_replay": True},
     )
-    result = create_authoring_application(workspace_root=tmp_path).build(request)
     assert isinstance(result, ReadyBuild), result
-    descriptor = tmp_path / "model.xml"
-    descriptor.write_text(xml, encoding="utf-8")
+    descriptor = tmp_path / PROJECT_ENTRY_PATH
     captured = create_run_session(RuntimeRequest(descriptor_path=descriptor, test_mode=True)).execute().captured
     expected = ({"id": 1, "code": "a"}, {"id": 2, "code": "b"}, {"id": 3, "code": "c"})
     assert tuple(captured["rows"]) == result.evidence[0].rows == expected

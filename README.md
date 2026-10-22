@@ -34,7 +34,7 @@ The Enterprise Platform adds the governed workflows, scanners, dashboards, and e
 - **Execute** single-system pipelines against PostgreSQL · MySQL · Oracle · MS SQL · SQLite · MongoDB · CSV · JSON · XML · XLSX · DbUnit · fixed-width (`.fcw`)
 - **Model behavior** — weighted state machines, composite multi-field references, control flow (`<while>`, `<assert>`), and a scriptable memstore for staged aggregation
 - **Emit provenance** — execution logs plus a SHA-256 content hash on `generate_domain` facade outputs, so two runs can be checked for identical output
-- **Guide agents** — machine-readable capabilities, progressive reference queries, and one canonical CLI Build transaction; an optional MCP adapter exposes the same authoring service
+- **Guide agents** — machine-readable capabilities, progressive reference queries, and one canonical CLI project Build; an optional MCP adapter exposes the same authoring service
 
 **The Enterprise Platform adds:**
 
@@ -55,40 +55,41 @@ The [agent plugin](docs/agent_plugin.md) prepares CE in your project environment
 when needed. For manual installation, use `python -m pip install datamimic-ce`
 from PyPI. These instructions describe CE 5.0.
 
-XML is the persisted executable project. DM JSON is its
-transient agent representation; expectations and role declarations belong to
-`BuildRequestV4`, separately from the XML.
+XML is the persisted executable project: a `datamimic.xml` entry and the steps it
+includes. Expectations and role declarations live beside it in
+`acceptance/build.json`. DM JSON is a transient agent representation of one XML file.
 
 | Need | Command |
 |---|---|
-| Discover the running contracts | `datamimic authoring schema` / `datamimic authoring schema --name build_request_v4` |
+| Discover the running contracts | `datamimic authoring schema` / `datamimic authoring schema --name build_request_v5` |
 | Discover CE vocabulary | `datamimic authoring capabilities` / `datamimic authoring capabilities --full` |
 | Inspect one element | `datamimic authoring capability --domain element --name generate` |
 | Read focused guidance | `datamimic authoring reference --topic assembly --name model` |
 | Compile/decompile supported syntax | `datamimic authoring compile -` / `datamimic authoring decompile model.xml` |
-| Compile and prove a transaction | `datamimic authoring build -` |
+| Prove a project | `datamimic authoring build <project>` |
 | Inspect existing XML safely | `datamimic authoring lint model.xml` / `datamimic authoring dry-run model.xml` |
-| Execute the persisted project | `datamimic run model.xml` |
+| Execute the persisted project | `datamimic run datamimic.xml` |
 
 Authoring commands default to JSON and accept files or `-` for stdin. A ready
 compile/decompile proves syntax. A ready Build also requires complete bounded
-capture and the declared acceptance checks. Include every business requirement;
-request smoke/replay through the transaction's `verification` fields when needed.
-Persist `artifact.compiled_xml` after Build readiness. Target isolation does not
-prove delivery to an external database.
+capture and the declared acceptance checks. Include every business requirement in
+`acceptance/build.json`; request smoke/replay through its `verification` fields when
+needed. A ready Build lists every project file it read with its digest. Target
+isolation does not prove delivery to an external database.
 
 ### Prompt to paste into an agent
 
 ```text
 Create the dataset I describe with the DATAMIMIC plugin's generate-test-data
-skill and the project CLI. Submit a BuildRequestV4 with transient DM JSON,
-expectations for my stated requirements, and identifier/FK roles where needed. Repair the reported paths
-before retrying. Stop on outcome=ready, persist artifact.compiled_xml, and return
-its path with the separate bounded verification evidence. Execute the XML only
-if I requested real execution.
+skill and the project CLI. Write the project as datamimic.xml plus
+acceptance/build.json with expectations for my stated requirements and identifier/FK
+roles where needed, then run datamimic authoring build on the project directory.
+Repair the reported paths before retrying. Stop on outcome=ready and return the
+project path with the bounded verification evidence. Execute the XML only if I
+requested real execution.
 ```
 
-[Worked transactions](docs/examples/authoring.md) cover nested foreign keys,
+[Worked projects](docs/examples/authoring.md) cover nested foreign keys,
 memstore readback and time series. Return a [human-readable model review](plugins/datamimic/skills/generate-test-data/references/review.md)
 with the XML and verification evidence.
 
@@ -619,12 +620,12 @@ All services are versioned and seeded; facade outputs carry a content hash that 
 ## CLI reference
 
 ```bash
-# Typed discovery and separate Build transaction
-datamimic authoring schema --name build_request_v4
+# Typed discovery and project Build
+datamimic authoring schema --name build_request_v5
 datamimic authoring capabilities
 datamimic authoring capability --domain element --name generate
 datamimic authoring reference --topic assembly --name model
-datamimic authoring build -
+datamimic authoring build my-scenario
 
 # Inspect/edit persisted XML through its transient DM JSON view
 datamimic authoring decompile my-scenario/datamimic.xml

@@ -1,3 +1,4 @@
+from pathlib import Path
 from unittest.mock import Mock
 
 from pydantic import TypeAdapter
@@ -10,7 +11,14 @@ from datamimic_ce.authoring.domain.capabilities import (
     CapabilityLookupResult,
     CapabilityNotFound,
 )
-from datamimic_ce.authoring.domain.requests import ReferenceRequest, ReferenceTopic
+from datamimic_ce.authoring.domain.reference import AuthoringExampleReference, ProjectStarter
+from datamimic_ce.authoring.domain.requests import BuildResult, ReferenceRequest, ReferenceTopic
+from tests_ce.authoring_project import build_project
+
+
+def _build_starter(project: Path, starter: ProjectStarter) -> BuildResult:
+    project.mkdir(exist_ok=True)
+    return build_project(project, starter.entry_xml, **starter.acceptance.model_dump())
 
 
 def test_snapshot_is_lazy_and_ce_only():
@@ -34,12 +42,16 @@ def test_listing_examples_does_not_compile_other_branches():
     codec = Mock(wraps=CeDmJsonCodec())
     catalog = CeDslCatalog(codec)
     listing = catalog.reference(ReferenceRequest(topic=ReferenceTopic.EXAMPLES))
-    assert listing.entries and all(entry.request is None for entry in listing.entries)
+    assert listing.entries and all(
+        isinstance(entry, AuthoringExampleReference) and entry.project is None for entry in listing.entries
+    )
     assert not codec.compile.called
     result = catalog.reference(ReferenceRequest(topic=ReferenceTopic.EXAMPLES, name="starter"))
     assert codec.compile.call_count == 1
-    assert result.entries[0].compiled_xml
-    assert result.entries[0].verification == "not_executed"
+    (example,) = result.entries
+    assert isinstance(example, AuthoringExampleReference) and example.project is not None
+    assert example.project.entry_xml
+    assert example.verification == "not_executed"
 
 
 def test_reference_topics_are_typed():
@@ -102,8 +114,10 @@ def test_memstore_example_compiles_only_requested_branch():
     codec = Mock(wraps=CeDmJsonCodec())
     result = CeDslCatalog(codec).reference(ReferenceRequest(topic=ReferenceTopic.EXAMPLES, name="memstore"))
     assert codec.compile.call_count == 1
-    assert len(result.entries[0].request.expectations) == 2
-    assert 'sourceEntity="rows"' in result.entries[0].compiled_xml
+    (example,) = result.entries
+    assert isinstance(example, AuthoringExampleReference) and example.project is not None
+    assert len(example.project.acceptance.expectations) == 2
+    assert 'sourceEntity="rows"' in example.project.entry_xml
 
 
 def test_unknown_named_reference_does_not_return_another_entry():
@@ -126,21 +140,19 @@ def test_every_published_self_contained_example_builds(tmp_path):
     listing = application.reference(ReferenceRequest(topic=ReferenceTopic.EXAMPLES))
     assert listing.entries
     for entry in listing.entries:
-        example = application.reference(ReferenceRequest(topic=ReferenceTopic.EXAMPLES, name=entry.name)).entries[0]
-        assert example.request is not None
-        result = application.build(example.request)
+        (example,) = application.reference(ReferenceRequest(topic=ReferenceTopic.EXAMPLES, name=entry.name)).entries
+        assert isinstance(example, AuthoringExampleReference) and example.project is not None
+        result = _build_starter(tmp_path / entry.name, example.project)
         assert isinstance(result, ReadyBuild), (entry.name, result)
 
 
 def test_guide_reference_query_returns_buildable_assembly(tmp_path):
     import json
     import re
-    from pathlib import Path
 
     from typer.testing import CliRunner
 
-    from datamimic_ce.authoring import create_authoring_application
-    from datamimic_ce.authoring.domain.requests import BuildRequestV4, ReadyBuild
+    from datamimic_ce.authoring.domain.requests import ReadyBuild
     from datamimic_ce.interfaces.cli import app
 
     guide = (Path(__file__).parents[3] / "AGENTS.md").read_text()
@@ -151,5 +163,5 @@ def test_guide_reference_query_returns_buildable_assembly(tmp_path):
 
     payload = json.loads(response.stdout)
     assert payload["entries"]
-    request = BuildRequestV4.model_validate(payload["entries"][0]["starter"])
-    assert isinstance(create_authoring_application(workspace_root=tmp_path).build(request), ReadyBuild)
+    starter = ProjectStarter.model_validate(payload["entries"][0]["starter"])
+    assert isinstance(_build_starter(tmp_path, starter), ReadyBuild)

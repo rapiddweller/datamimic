@@ -1,16 +1,14 @@
 """Build limits all captured product rows in one runtime execution."""
 
 from pathlib import Path
-from pathlib import PurePosixPath
 
 import pytest
 
-from datamimic_ce.authoring import create_authoring_application
 from datamimic_ce.authoring.domain.proof import VerificationGateStatus
-from datamimic_ce.authoring.domain.requests import BuildRequestV4, DecompileDocumentRequest
 from datamimic_ce.engine.runtime.api import create_run_session
 from datamimic_ce.engine.runtime.contracts import RunRequest
 from datamimic_ce.errors import IssueCode, TaskConfigError
+from tests_ce.authoring_project import build_project
 
 
 def _build(
@@ -21,16 +19,12 @@ def _build(
     smoke: bool = False,
     roles: list[dict] | None = None,
 ):
-    application = create_authoring_application(tmp_path)
-    decoded = application.decompile_document(DecompileDocumentRequest(xml=xml))
-    assert decoded.outcome == "ready", decoded
-    return application.build(
-        BuildRequestV4(
-            document=decoded.document,
-            max_count=5,
-            verification={"smoke_export": smoke, "deterministic_replay": replay},
-            product_roles=roles or [],
-        )
+    return build_project(
+        tmp_path,
+        xml,
+        max_count=5,
+        verification={"smoke_export": smoke, "deterministic_replay": replay},
+        product_roles=roles or [],
     )
 
 
@@ -57,14 +51,7 @@ def test_included_products_share_one_total_budget(tmp_path: Path) -> None:
         '<setup><generate name="two" count="3"><key name="id" constant="2"/></generate></setup>',
         encoding="utf-8",
     )
-    xml = '<setup><include uri="one.xml"/><include uri="two.xml"/></setup>'
-    application = create_authoring_application(tmp_path, descriptor_path=PurePosixPath("entry.xml"))
-    decoded = application.decompile_document(
-        DecompileDocumentRequest(xml=xml, descriptor_path=PurePosixPath("entry.xml"))
-    )
-    assert decoded.outcome == "ready", decoded
-
-    result = application.build(BuildRequestV4(document=decoded.document, max_count=5))
+    result = build_project(tmp_path, '<setup><include uri="one.xml"/><include uri="two.xml"/></setup>', max_count=5)
 
     assert result.outcome == "rejected"
 

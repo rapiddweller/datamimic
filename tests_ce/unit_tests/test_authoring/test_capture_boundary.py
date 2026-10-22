@@ -3,9 +3,13 @@
 import pytest
 import multiprocessing as mp
 import pickle
+from pathlib import Path
 
 from datamimic_ce.authoring.adapters import dryrun
 from datamimic_ce.authoring.domain.capture import SmokeExportCapture
+
+# Forged replies are refused before the parent hashes any file the run read, so this root is never read.
+_WORKSPACE = Path(__file__).parent
 
 
 def _budget():
@@ -46,7 +50,7 @@ def _receive(message):
             from datamimic_ce.authoring.domain.requests import BoundedExecutionRequest
             from datamimic_ce.authoring.domain.diagnostics import AuthoringSystemDiagnosticCode
 
-            evidence = _decode_reply(payload, BoundedExecutionRequest(xml="<setup/>"))
+            evidence = _decode_reply(payload, BoundedExecutionRequest(xml="<setup/>"), _WORKSPACE)
             assert not evidence.ok
             assert evidence.diagnostics[0].code is AuthoringSystemDiagnosticCode.SERIALIZATION
             return None
@@ -241,7 +245,7 @@ def test_pickle_reducer_cannot_execute_in_parent(tmp_path):
             return eval, (f"__import__('pathlib').Path({str(marker)!r}).write_text('escaped')",)
 
     payload = pickle.dumps(Reducer())
-    result = _decode_reply(payload, BoundedExecutionRequest(xml="<setup/>"))
+    result = _decode_reply(payload, BoundedExecutionRequest(xml="<setup/>"), tmp_path)
     assert result.diagnostics[0].code is AuthoringSystemDiagnosticCode.SERIALIZATION
     assert _receive(Reducer()) is None
     assert not marker.exists()

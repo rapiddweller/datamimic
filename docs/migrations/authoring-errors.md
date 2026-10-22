@@ -24,13 +24,13 @@ edition differences; matching protocol labels do not make requests interchangeab
 ## Public contract
 
 Persist XML as the executable project. `DmJsonDocumentV1` is an in-memory agent
-representation. Expectations are Build transaction input, declared again after
-decompiling XML. `ee_version`, `ee_error`, `EeErrorIdentity` become `ce_version`,
+representation of one XML file. Expectations and roles live in the project's
+`acceptance/build.json`, beside the XML they prove. `ee_version`, `ee_error`, `EeErrorIdentity` become `ce_version`,
 `ce_error`, `CeErrorIdentity`; producer and installed version identify CE.
 
 | Old entry | Replacement / consumer | Verification to retain |
 |---|---|---|
-| `AuthoringSpecV1`, `authoring.spec`, `ScaffoldRequest/Result` | DM JSON + `BuildRequestV4`, discriminated Ready/Rejected | Counts, roles, nested FK, memstore readback, time series, decimal/constraints |
+| `AuthoringSpecV1`, `authoring.spec`, `ScaffoldRequest/Result` | Project XML + `acceptance/build.json` (`BuildRequestV5`), discriminated Ready/Rejected | Counts, roles, nested FK, memstore readback, time series, decimal/constraints |
 | Root `scaffold`, `authoring.api.scaffold` | `create_authoring_application().build` | Full capture acceptance; explicit caller requirements with origin |
 | `api.check`, `api.run` | Application-owned lint and bounded execution through CE ports | Parser diagnostics, per-generate caps, timeout/cleanup |
 | `api.capabilities`, `api.reference` | Application capabilities, typed lookup, reference, schema, document_schema | CE registry projections and exact running DTO schemas |
@@ -143,44 +143,13 @@ static check (data-module imports only, no file or dynamic-code builtins, and un
 that loads Python always runs deterministic replay. Float-backed decimal ranges retain the former 15-place proof
 limit. Compile support, bounded proof and real target delivery remain separate.
 
-## One-time legacy migration
+## Legacy intent models
 
-Keep the frozen CE checkout at `84a9f4657148bcfa0bc560908ed42b1d5fa3efab`
-and its compatible Python environment. From the new checkout:
-
-```bash
-PYTHONPATH=. .venv/bin/python script/migrate_authoring.py /project/model.dm.json \
-  --legacy-source /path/to/frozen-ce \
-  --legacy-python /path/to/frozen-ce/.venv/bin/python \
-  --xml-output /project/model.xml > /tmp/migration-receipt.json
-```
-
-The script checks exact revision, clean package source and compiler origin before
-importing the old compiler in an isolated subprocess. It keeps original input and
-resources, refuses overwrite, and requires XML beside the original input to retain
-relative paths. It compiles only; no engine or external target runs automatically.
-Optional `--acceptance-requirements caller.json`, `--smoke-export`,
-`--deterministic-replay`, `--max-count` and `--sample-rows` transfer transaction
-requirements/options; they do not persist another intent model.
-
-The receipt carries original/XML hashes, frozen revision, legacy plan/facts and a
-separate typed `build_request`. It retains model expectations, caller/derived
-origins, identifier/FK/timestamp/value roles (including nested-list fields), decimal
-strings, list subjects, uniqueness scope and per-parent checks. Unknown semantics
-reject at a specific input path. DM JSON in the receipt is temporary interchange.
-
-Decompilation uses the new public application. To run the separate proof:
-
-```bash
-.venv/bin/python -c 'import json,sys; json.dump(json.load(sys.stdin)["build_request"],sys.stdout)' \
-  < /tmp/migration-receipt.json | datamimic authoring build - --workspace-root /project
-```
-
-Only a new `outcome: "ready"` result establishes Build readiness. Compare its
-compiled XML/data/acceptance with the preserved legacy receipt, especially nested
-FK, file/memstore sources, time series, and decimal/list constraints. A successful
-migration receipt alone is not verification. Keep the original until this comparison
-passes. The installed runtime contains no legacy compiler or import shim.
+There is no automated migration from the retired intent compiler. Re-author each
+model as a project: write its XML as `datamimic.xml`, declare its expectations and
+roles in `acceptance/build.json`, and run `datamimic authoring build <project>`.
+Only `outcome: "ready"` establishes readiness. Keep the original until its data
+matches the new project's output.
 
 ## Enforcement and closure
 

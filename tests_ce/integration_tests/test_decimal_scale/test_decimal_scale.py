@@ -22,19 +22,19 @@ from datamimic_ce.authoring.domain.proof import (
     VerificationGateStatus,
 )
 from datamimic_ce.authoring.domain.requests import (
-    BuildRequestV4,
+    PROJECT_ENTRY_PATH,
     CompileDocumentRequest,
     DecompileDocumentRequest,
     ReadyBuild,
     ReadyCompileDocument,
     ReadyDecompileDocument,
     RejectedBuild,
-    RejectedDecompileDocument,
 )
 from datamimic_ce.domains.shared.literal_generators.numeric.float_generator import (
     FloatGenerator,
 )
 from datamimic_ce.interfaces.python.data_mimic_test import DataMimicTest
+from tests_ce.authoring_project import build_project
 
 _TEST_DIR = Path(__file__).resolve().parent
 _REPO_ROOT = _TEST_DIR.parents[2]
@@ -75,8 +75,11 @@ def test_decimal_scale_compiles_to_runtime_grid_and_replays(tmp_path: Path) -> N
     assert isinstance(compiled, ReadyCompileDocument), compiled
     assert compiled.artifact.xml_sha256 == decoded.canonical_xml_sha256
     subject = ProductRowsSubject(product="payments")
-    request = BuildRequestV4(
-        document=decoded.document,
+    project = tmp_path / "project"
+    project.mkdir()
+    built = build_project(
+        project,
+        compiled.artifact.compiled_xml,
         max_count=25,
         expectations=(
             ExactCountExpectation(subject=subject, count=25),
@@ -86,9 +89,9 @@ def test_decimal_scale_compiles_to_runtime_grid_and_replays(tmp_path: Path) -> N
         ),
         verification=BuildVerificationOptions(smoke_export=True, deterministic_replay=True),
     )
-    built = application.build(request)
     assert isinstance(built, ReadyBuild), built
-    assert built.artifact.xml_sha256 == compiled.artifact.xml_sha256
+    files = {item.path: item.sha256 for item in built.artifact.files}
+    assert files[PROJECT_ENTRY_PATH] == compiled.artifact.xml_sha256
     assert built.verification.smoke_export.status is VerificationGateStatus.PASSED
     assert built.verification.deterministic_replay.status is VerificationGateStatus.PASSED
     assert built.verification.deterministic_replay.compared_rows == 25
@@ -173,11 +176,6 @@ def test_float_generator_repros_leave_the_declared_decimal_range(
     ],
 )
 def test_invalid_decimal_range_descriptors_never_build_ready(filename: str, tmp_path: Path) -> None:
-    application = create_authoring_application(workspace_root=tmp_path)
-    decoded = application.decompile_document(DecompileDocumentRequest(xml=(_TEST_DIR / filename).read_text()))
-    if isinstance(decoded, RejectedDecompileDocument):
-        assert decoded.diagnostics
-        return
-    result = application.build(BuildRequestV4(document=decoded.document))
+    result = build_project(tmp_path, (_TEST_DIR / filename).read_text())
     assert isinstance(result, RejectedBuild), result
     assert result.diagnostics

@@ -40,6 +40,10 @@ class DescriptorValidator(Protocol):
     def include_graph(self, xml: str) -> IncludeGraphResult: ...
 
 
+class ProjectFiles(Protocol):
+    def read_project_file(self, path: PurePosixPath) -> bytes: ...
+
+
 class BoundedExecutor(Protocol):
     def execute(self, request: BoundedExecutionRequest) -> BoundedExecutionEvidence: ...
 

@@ -20,8 +20,8 @@ from datamimic_ce.authoring.domain.capabilities import CapabilityDomain, Capabil
 from datamimic_ce.authoring.domain.reference import ReferenceResult
 from datamimic_ce.authoring.domain.requests import (
     DEFAULT_AUTHORING_DESCRIPTOR_PATH,
+    PROJECT_ENTRY_PATH,
     AuthoringSchemaId,
-    BuildRequestV4,
     BuildResult,
     CompileDocumentRequest,
     CompileDocumentResult,
@@ -102,9 +102,9 @@ def create_server(
         return await to_thread.run_sync(application(request.descriptor_path).decompile_document, request)
 
     @server.tool("datamimic_build")
-    async def datamimic_build(request: BuildRequestV4) -> BuildResult:
-        """Compile and prove one Build transaction with expectations, roles and optional gates."""
-        return await to_thread.run_sync(application(request.descriptor_path).build, request)
+    async def datamimic_build() -> BuildResult:
+        """Prove the workspace project: its datamimic.xml entry against its acceptance/build.json."""
+        return await to_thread.run_sync(application(PROJECT_ENTRY_PATH).build)
 
     @server.tool("datamimic_lint")
     async def datamimic_lint(request: LintRequest) -> LintResult:

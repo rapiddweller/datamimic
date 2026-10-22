@@ -97,7 +97,7 @@ class AuthoringSchemaId(StrEnum):
     DECOMPILE_DOCUMENT_RESULT = "decompile_document_result"
     READY_BUILD = "ready_build"
     REJECTED_BUILD = "rejected_build"
-    BUILD_REQUEST_V4 = "build_request_v4"
+    BUILD_REQUEST_V5 = "build_request_v5"
     EXPECTATION_INTENT = "expectation_intent"
     ENVIRONMENT_BINDING = "environment_binding"
     DIAGNOSTIC = "diagnostic"
@@ -114,24 +114,25 @@ class ReferenceRequest(AuthoringModel):
 DEFAULT_AUTHORING_MAX_COUNT = 10
 DEFAULT_AUTHORING_SAMPLE_ROWS = 5
 DEFAULT_AUTHORING_DESCRIPTOR_PATH = PurePosixPath("model.xml")
+# A project is a directory: its entry descriptor and the acceptance Build proves it against sit at fixed paths.
+PROJECT_ENTRY_PATH = PurePosixPath("datamimic.xml")
+PROJECT_ACCEPTANCE_PATH = PurePosixPath("acceptance/build.json")
 
 
-class BuildRequestV4(AuthoringModel):
-    """Canonical 4.0 build transaction over one agent-only DM JSON document."""
+class BuildRequestV5(AuthoringModel):
+    """The project's acceptance, read from ``acceptance/build.json``; the project files are the model."""
 
-    version: Literal["4.0"] = "4.0"
-    document: DmJsonDocumentV1
+    version: Literal["5.0"] = "5.0"
     expectations: tuple[ExpectationIntent, ...] = ()
     environment_bindings: tuple[ConfiguredEnvironmentBinding, ...] = ()
     product_roles: tuple[ProductRoleDeclaration, ...] = ()
     acceptance_requirements: tuple[AcceptanceRequirement, ...] = ()
     verification: BuildVerificationOptions = Field(default_factory=BuildVerificationOptions)
-    descriptor_path: WorkspaceDescriptorPath = DEFAULT_AUTHORING_DESCRIPTOR_PATH
     max_count: StrictInt = Field(default=DEFAULT_AUTHORING_MAX_COUNT, ge=1, le=MAX_AUTHORING_MAX_COUNT)
     sample_rows: StrictInt = Field(default=DEFAULT_AUTHORING_SAMPLE_ROWS, ge=1, le=50)
 
     @model_validator(mode="after")
-    def expectations_are_unique(self) -> BuildRequestV4:
+    def expectations_are_unique(self) -> BuildRequestV5:
         if len(self.expectations) != len({expectation_identity(item) for item in self.expectations}):
             raise ValueError("build expectations must be unique")
         return self
@@ -261,15 +262,25 @@ DecompileDocumentResult = Annotated[
 ]
 
 
-class BuildArtifact(AuthoringModel):
-    """Complete immutable descriptor and assurance hashes carried by a ready build."""
+class ProjectFileDigest(AuthoringModel):
+    """One project file the proof depends on, by workspace path and content hash."""
 
-    document: DmJsonDocumentV1
-    compiled_xml: NonEmptyStrictStr
-    expectations_sha256: HexSha256
-    xml_sha256: HexSha256
-    semantic_sha256: HexSha256
+    path: WorkspaceDescriptorPath
+    sha256: HexSha256
+
+
+class BuildArtifact(AuthoringModel):
+    """The project files a build proved, each bound by its digest: changing any of them voids the proof."""
+
+    files: tuple[ProjectFileDigest, ...] = Field(min_length=2)
     ce_version: NonEmptyStrictStr
+
+    @model_validator(mode="after")
+    def files_are_sorted_and_unique(self) -> BuildArtifact:
+        paths = [item.path for item in self.files]
+        if paths != sorted(set(paths)):
+            raise ValueError("project file digests must be sorted by path and unique")
+        return self
 
 
 class ValidatedReviewArtifact(BuildArtifact):
@@ -385,3 +396,5 @@ class BoundedExecutionEvidence:
     smoke_export: SmokeExportCapture = SmokeExportCapture.not_requested()
     base_run_ok: bool = True
     source_accesses: tuple[SourceAccessEvidence, ...] = ()
+    # Workspace files the run opened for reading, hashed from the private copy it read them from.
+    files: tuple[ProjectFileDigest, ...] = ()

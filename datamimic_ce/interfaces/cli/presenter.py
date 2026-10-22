@@ -119,10 +119,15 @@ def emit_project_created(project_name: str, project_dir: Path) -> None:
 def emit_authoring(
     result: BaseModel | Mapping[str, object], output_format: CliOutputFormat, *, exit_code: int = 0
 ) -> NoReturn:
-    if output_format is CliOutputFormat.TEXT and isinstance(result, (ReadyCompileDocument, ReadyBuild)):
+    if output_format is CliOutputFormat.TEXT and isinstance(result, ReadyCompileDocument):
         for diagnostic in result.diagnostics:
             typer.echo(f"{diagnostic.severity}: {diagnostic.message}", err=True)
         typer.echo(result.artifact.compiled_xml)
+    elif output_format is CliOutputFormat.TEXT and isinstance(result, ReadyBuild):
+        for diagnostic in result.diagnostics:
+            typer.echo(f"{diagnostic.severity}: {diagnostic.message}", err=True)
+        for item in result.artifact.files:
+            typer.echo(f"{item.sha256}  {item.path}")
     elif output_format is CliOutputFormat.TEXT and isinstance(result, ReadyDecompileDocument):
         for diagnostic in result.diagnostics:
             typer.echo(f"{diagnostic.severity}: {diagnostic.message}", err=True)

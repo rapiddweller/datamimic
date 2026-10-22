@@ -7,6 +7,7 @@
 import os
 import stat
 import sys
+from contextlib import nullcontext
 from dataclasses import dataclass
 from pathlib import Path, PurePosixPath
 
@@ -81,6 +82,10 @@ class AuthoringWorkspaceContext:
             raise ValueError("descriptor_path resolves outside the authoring workspace")
         return resolved_path
 
+    def read_project_file(self, path: PurePosixPath) -> bytes:
+        """One project file by its workspace path, through the same contained reader."""
+        return self.read_resource_bytes(self.resolve_descriptor_path(path))
+
     def read_resource_bytes(self, path: Path) -> bytes:
         # Resolve lexical parents without following links before opening the rooted walk.
         absolute = Path(os.path.abspath(path))
@@ -107,15 +112,16 @@ class AuthoringWorkspaceContext:
             )
 
     def load_connection_profile(self, descriptor_dir: Path, environment: str) -> dict[str, str]:
-        from datamimic_ce.engine.dsl.api import parse_properties, resource_reader_scope
+        from datamimic_ce.engine.dsl.api import parse_properties, resource_reader_active, resource_reader_scope
 
         if not environment or environment in {".", ".."} or "/" in environment or "\\" in environment:
             raise ValueError("environment must name one workspace-local profile")
         profile = descriptor_dir / "conf" / f"{environment}.env.properties"
         if not profile.is_relative_to(self.root):
             raise ValueError("connection profile resolves outside the authoring workspace")
+        # Inside a bounded run the active reader also records the profile as a file the proof read.
         try:
-            with resource_reader_scope(self.read_resource_bytes):
+            with nullcontext() if resource_reader_active() else resource_reader_scope(self.read_resource_bytes):
                 return parse_properties(profile)
         except FileNotFoundError:
             return {}

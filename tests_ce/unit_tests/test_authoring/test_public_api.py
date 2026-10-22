@@ -8,7 +8,7 @@ from pathlib import Path
 from datamimic_ce.authoring import AuthoringApplication, create_authoring_application
 from datamimic_ce.authoring.application.app import AuthoringApplication as InternalApplication
 from datamimic_ce.authoring.bootstrap import create_authoring_application as InternalFactory
-from datamimic_ce.authoring.domain.requests import AuthoringSchemaId, BuildRequestV4, ReferenceRequest
+from datamimic_ce.authoring.domain.requests import AuthoringSchemaId, ReferenceRequest
 from datamimic_ce.engine.dsl import api as dsl_api
 from datamimic_ce.engine.dsl.api import TimeSeriesNamespace
 from datamimic_ce.engine.dsl.model.generation.timeseries import TimeSeriesNamespace as InternalTimeSeriesNamespace
@@ -25,8 +25,8 @@ def test_public_contract_exports_preserve_identity():
 
 def test_public_factory_supports_schema_and_reference_without_execution(tmp_path):
     app = create_authoring_application(workspace_root=tmp_path)
-    schema = app.schema(AuthoringSchemaId.BUILD_REQUEST_V4)
-    assert schema["properties"]["version"]["const"] == "4.0"
+    schema = app.schema(AuthoringSchemaId.BUILD_REQUEST_V5)
+    assert schema["properties"]["version"]["const"] == "5.0"
     assert app.reference(ReferenceRequest()).ok
     assert list(tmp_path.iterdir()) == []
 

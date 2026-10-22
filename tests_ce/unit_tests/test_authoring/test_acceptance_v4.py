@@ -14,15 +14,14 @@ from datamimic_ce.authoring.domain.capture import (
     CaptureStatus,
     ProductCaptureEvidence,
 )
-from datamimic_ce.authoring.domain.requests import BuildRequestV4
+from datamimic_ce.authoring.domain.requests import BuildRequestV5
 from datamimic_ce.authoring.projection.acceptance import project_acceptance
 
 
 def project(xml, **kwargs):
     codec = CeDmJsonCodec()
     document = codec.compile(codec.decompile(xml)).document
-    request = BuildRequestV4(document=document, **kwargs)
-    return project_acceptance(request, document)
+    return project_acceptance(BuildRequestV5(**kwargs), document)
 
 
 def capture(**products):
@@ -484,7 +483,7 @@ def test_dedup_never_invents_derived_origin_for_explicit_only_check():
         '<setup><generate name="rows" count="1"><key name="id" constant="1"/></generate></setup>'
     )
     condition = RowConditionExpectation(subject=ProductRowsSubject(product="rows"), condition="id > 0")
-    request = BuildRequestV4(document=document).model_copy(update={"expectations": (condition, condition)})
+    request = BuildRequestV5().model_copy(update={"expectations": (condition, condition)})
     spec = project_acceptance(request, document)
     matching = [check for check in spec.checks if check.expectation.kind == "row_condition"]
     assert len(matching) == 1

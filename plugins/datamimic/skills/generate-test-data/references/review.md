@@ -59,10 +59,11 @@ uniqueness or composite foreign keys.
 
 For local projects, return clickable paths to:
 
-- `model.xml`: the exact compiled XML from the successful operation.
+- the project directory: `datamimic.xml`, its included steps and data, and
+  `acceptance/build.json` with the requirements as expectations and roles.
 - `model-review.md`: the model outline, requirements table, samples and limits.
-- `model-proof.json`: the unmodified operation response, retained as evidence,
-  not as an editable model or a replacement for the original requirements.
+- `model-proof.json`: the unmodified Build response, retained as evidence; its
+  file digests bind it to the exact project files it proved.
 
 Return the independent assertions/readback when they establish additional claims.
 Use the project's requested names when present. For Platform projects, use the

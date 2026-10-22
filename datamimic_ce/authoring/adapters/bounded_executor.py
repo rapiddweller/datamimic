@@ -15,8 +15,9 @@ import sys
 import tempfile
 import time
 from contextlib import suppress
+from hashlib import sha256
 from itertools import islice
-from pathlib import Path
+from pathlib import Path, PurePosixPath
 
 from lxml import etree
 
@@ -39,6 +40,7 @@ from datamimic_ce.authoring.domain.diagnostics import (
 from datamimic_ce.authoring.domain.requests import (
     BoundedExecutionEvidence,
     BoundedExecutionRequest,
+    ProjectFileDigest,
     SourceAccessEvidence,
 )
 from datamimic_ce.errors import DomainError, GeneratorConfigError, UserErrorBase
@@ -176,7 +178,24 @@ def _terminate_process_tree(process: subprocess.Popen[bytes]) -> None:
         raise OSError("bounded worker did not stop") from error
 
 
-def _decode_reply(payload: bytes, request: BoundedExecutionRequest) -> BoundedExecutionEvidence:
+def _read_file_digests(
+    paths: tuple[str, ...], request: BoundedExecutionRequest, workspace: Path
+) -> tuple[ProjectFileDigest, ...]:
+    """Hash each file the child read from the private copy; the run could not change those files."""
+    private = AuthoringWorkspaceContext(workspace, request.descriptor_path)
+    digests = []
+    for path in paths:
+        relative = PurePosixPath(path)
+        digests.append(
+            ProjectFileDigest(
+                path=relative,
+                sha256=sha256(private.read_resource_bytes(private.resolve_descriptor_path(relative))).hexdigest(),
+            )
+        )
+    return tuple(digests)
+
+
+def _decode_reply(payload: bytes, request: BoundedExecutionRequest, workspace: Path) -> BoundedExecutionEvidence:
     try:
         message = dryrun._decode_worker_message(payload, max_count=request.max_count)
         if isinstance(message, dryrun._WorkerFailure):
@@ -265,6 +284,7 @@ def _decode_reply(payload: bytes, request: BoundedExecutionRequest) -> BoundedEx
                 for source_type, count in message.source_accesses
             ),
             base_run_ok=base_run_ok,
+            files=_read_file_digests(message.read_files, request, workspace),
         )
     except (
         AttributeError,
@@ -467,7 +487,7 @@ class CeBoundedExecutor:
                         payload = reply.read(_MAX_REPLY_BYTES + 1)
                     if len(payload) > _MAX_REPLY_BYTES:
                         raise ValueError("bounded child evidence changed size")
-                    result = _decode_reply(payload, request)
+                    result = _decode_reply(payload, request, workspace)
                 except (OSError, ValueError):
                     result = _failure(
                         AuthoringSystemDiagnosticCode.SERIALIZATION,

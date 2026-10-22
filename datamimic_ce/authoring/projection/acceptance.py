@@ -45,7 +45,7 @@ from datamimic_ce.authoring.domain.expectations import (
     expectation_identity,
 )
 from datamimic_ce.authoring.domain.proof import AcceptanceOrigin, ForeignKeyRole, IdentifierRole
-from datamimic_ce.authoring.domain.requests import BuildRequestV4
+from datamimic_ce.authoring.domain.requests import BuildRequestV5
 from datamimic_ce.authoring.domain.script_semantics import (
     ScriptScope,
     is_exact_scope_field_reference,
@@ -222,7 +222,7 @@ def _products(document: DmJsonDocumentV1, included: tuple[tuple[str, DmJsonDocum
 
 
 def project_acceptance(
-    request: BuildRequestV4,
+    request: BuildRequestV5,
     canonical_document: DmJsonDocumentV1,
     included: tuple[tuple[str, DmJsonDocumentV1], ...] = (),
 ) -> AcceptanceSpecV1:
@@ -407,7 +407,7 @@ def _derive_field(
 
 
 def _readbacks(
-    request: BuildRequestV4, entries: tuple[_Product, ...], documents: tuple[DmJsonDocumentV1, ...]
+    request: BuildRequestV5, entries: tuple[_Product, ...], documents: tuple[DmJsonDocumentV1, ...]
 ) -> tuple[AcceptanceReadbackV1, ...]:
     stores = {
         identifier

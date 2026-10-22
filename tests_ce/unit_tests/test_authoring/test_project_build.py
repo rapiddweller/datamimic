@@ -2,8 +2,9 @@
 # Copyright (c) 2023-2026 Rapiddweller Asia Co., Ltd.
 # This software is licensed under the MIT License. See LICENSE.
 
-"""Build proves a project: the entry descriptor plus its literal include graph (V5 slice b)."""
+"""Build proves a project: datamimic.xml and its literal include graph against acceptance/build.json (V5)."""
 
+import json
 import shutil
 from pathlib import Path, PurePosixPath
 
@@ -12,42 +13,24 @@ import pytest
 from datamimic_ce.authoring import create_authoring_application
 from datamimic_ce.authoring.domain.diagnostics import AuthoringRuleId
 from datamimic_ce.authoring.domain.proof import VerificationGateStatus
-from datamimic_ce.authoring.domain.requests import BuildRequestV4, DecompileDocumentRequest, LintRequest
+from datamimic_ce.authoring.domain.requests import PROJECT_ENTRY_PATH, LintRequest
 
 _PROJECT = Path(__file__).parent / "project_build" / "order_desk"
-_ENTRY = PurePosixPath("datamimic.xml")
-_ROLES = [
-    {"product": "customers", "field": "customer_id", "role": {"kind": "identifier"}},
-    {
-        "product": "orders",
-        "field": "customer_id",
-        "role": {"kind": "foreign_key", "parent_product": "customers", "parent_field": "customer_id"},
-    },
-    {"product": "orders", "field": "order_id", "role": {"kind": "identifier"}},
-    {
-        "product": "order_rows",
-        "field": "order_id",
-        "role": {"kind": "foreign_key", "parent_product": "orders", "parent_field": "order_id"},
-    },
-]
 
 
-def _build(project: Path = _PROJECT, *, expectations: list[dict] | None = None, roles: list[dict] = _ROLES):
-    application = create_authoring_application(project, descriptor_path=_ENTRY)
-    decoded = application.decompile_document(
-        DecompileDocumentRequest(xml=(project / _ENTRY).read_text(encoding="utf-8"), descriptor_path=_ENTRY)
-    )
-    assert decoded.outcome == "ready", decoded
-    return application.build(
-        BuildRequestV4.model_validate(
-            {
-                "document": decoded.document.model_dump(mode="json"),
-                "descriptor_path": str(_ENTRY),
-                "product_roles": roles,
-                "expectations": expectations or [],
-            }
-        )
-    )
+def _build(project: Path = _PROJECT):
+    return create_authoring_application(project, descriptor_path=PROJECT_ENTRY_PATH).build()
+
+
+def _accept(project: Path, **fields: object) -> None:
+    """Replace fields of the copied project's acceptance/build.json."""
+    path = project / "acceptance" / "build.json"
+    path.write_text(json.dumps({**json.loads(path.read_text(encoding="utf-8")), **fields}), encoding="utf-8")
+
+
+def _roles(project: Path, count: int) -> None:
+    roles = json.loads((_PROJECT / "acceptance" / "build.json").read_text(encoding="utf-8"))["product_roles"]
+    _accept(project, product_roles=roles[:count], expectations=[])
 
 
 def _copy(tmp_path: Path) -> Path:
@@ -57,28 +40,19 @@ def _copy(tmp_path: Path) -> Path:
 
 
 def test_project_with_steps_and_memstore_handoff_reaches_ready() -> None:
-    result = _build(
-        expectations=[
-            {"kind": "exact_count", "subject": {"kind": "product", "product": "order_rows"}, "count": 3},
-            {
-                "kind": "range",
-                "subject": {"kind": "product", "product": "order_rows"},
-                "field": "total",
-                "minimum": "9.5",
-                "maximum": "47.5",
-            },
-        ]
-    )
+    result = _build()
     assert result.outcome == "ready", result.diagnostics
     assert {product.name for product in result.evidence} == {"customers", "orders", "order_rows"}
     # The entry is seeded and its project loads Python, so Build replays it unrequested.
     assert result.verification.deterministic_replay.status is VerificationGateStatus.PASSED
 
 
-def test_expectation_on_a_step_product_is_checked() -> None:
-    result = _build(
-        expectations=[{"kind": "exact_count", "subject": {"kind": "product", "product": "orders"}, "count": 4}]
+def test_expectation_on_a_step_product_is_checked(tmp_path: Path) -> None:
+    project = _copy(tmp_path)
+    _accept(
+        project, expectations=[{"kind": "exact_count", "subject": {"kind": "product", "product": "orders"}, "count": 4}]
     )
+    result = _build(project)
     assert result.outcome == "rejected"
     assert any(item.path == ("expectations", 0) for item in result.diagnostics), result.diagnostics
 
@@ -121,7 +95,8 @@ def test_product_names_stay_unique_across_files(tmp_path: Path) -> None:
     project = _copy(tmp_path)
     step = project / "delivery" / "90_export.xml"
     step.write_text(step.read_text(encoding="utf-8").replace('name="order_rows"', 'name="orders"'), encoding="utf-8")
-    result = _build(project, roles=_ROLES[:3])
+    _roles(project, 3)
+    result = _build(project)
     assert result.outcome == "rejected"
 
 
@@ -133,20 +108,12 @@ def test_build_refuses_a_non_literal_or_uncontained_include(tmp_path: Path, uri:
     project = _copy(tmp_path)
     (tmp_path / "outside.xml").write_text("<setup/>", encoding="utf-8")
     (project / "conf" / "base.yaml").write_text("x: 1", encoding="utf-8")
-    application = create_authoring_application(project, descriptor_path=_ENTRY)
-    decoded = application.decompile_document(
-        DecompileDocumentRequest(xml=(project / _ENTRY).read_text(encoding="utf-8"), descriptor_path=_ENTRY)
+    include = f'<include uri="{uri}"><setup/></include>' if inline_setup else f'<include uri="{uri}"/>'
+    entry = project / "datamimic.xml"
+    entry.write_text(
+        entry.read_text(encoding="utf-8").replace('<include uri="model/10_customers.xml"/>', include), encoding="utf-8"
     )
-    document = decoded.document.model_dump(mode="json")
-    step = next(
-        node for node in document["root"]["children"] if node["properties"].get("uri") == "model/10_customers.xml"
-    )
-    step["properties"]["uri"] = uri
-    if inline_setup:
-        step["children"] = [{"kind": "setup", "properties": {}, "children": []}]
-    result = application.build(
-        BuildRequestV4.model_validate({"document": document, "descriptor_path": str(_ENTRY), "product_roles": _ROLES})
-    )
+    result = _build(project)
     assert result.outcome == "rejected"
     assert any(item.code in {AuthoringRuleId.INCLUDE, "DM405"} for item in result.diagnostics), result.diagnostics
 
@@ -158,7 +125,8 @@ def test_delivery_rule_spans_the_project(tmp_path: Path) -> None:
     step.write_text(
         step.read_text(encoding="utf-8").replace('target="store" targetEntity="orders"', ""), encoding="utf-8"
     )
-    result = _build(project, roles=_ROLES[:2])
+    _roles(project, 2)
+    result = _build(project)
     assert result.outcome == "rejected"
     assert any(
         item.code == "DM407" and item.path[:2] == ("include", "model/20_orders.xml") for item in result.diagnostics
@@ -270,5 +238,62 @@ def test_lint_does_not_let_the_entry_see_a_client_a_step_declares(tmp_path: Path
     )
     entry = (project / "datamimic.xml").read_text(encoding="utf-8")
     entry = entry.replace("</setup>", '    <generate name="probe" count="1" target="db"/>\n</setup>')
-    result = create_authoring_application(project, descriptor_path=_ENTRY).lint(LintRequest(xml=entry))
+    result = create_authoring_application(project, descriptor_path=PROJECT_ENTRY_PATH).lint(LintRequest(xml=entry))
     assert any(item.code == "DM401" for item in result.diagnostics), result.diagnostics
+
+
+def test_ready_binds_every_file_the_run_read_and_nothing_else() -> None:
+    result = _build()
+    assert result.outcome == "ready", result.diagnostics
+    assert [item.path.as_posix() for item in result.artifact.files] == [
+        "acceptance/build.json",
+        "conf/base.properties",
+        "data/entity/customers.ent.csv",
+        "data/weighting/channel.wgt.csv",
+        "datamimic.xml",
+        "delivery/90_export.xml",
+        "lib/pricing.scr.py",
+        "model/10_customers.xml",
+        "model/20_orders.xml",
+    ]
+
+
+def test_a_changed_data_file_changes_its_digest_only(tmp_path: Path) -> None:
+    project = _copy(tmp_path)
+    before = {item.path: item.sha256 for item in _build(project).artifact.files}
+    data = project / "data" / "entity" / "customers.ent.csv"
+    data.write_text(data.read_text(encoding="utf-8").replace("Ada", "Adele"), encoding="utf-8")
+    (project / "README.md").write_text("evidence written after Build", encoding="utf-8")
+    after = {item.path: item.sha256 for item in _build(project).artifact.files}
+    assert {path for path in before if before[path] != after[path]} == {PurePosixPath("data/entity/customers.ent.csv")}
+
+
+def test_a_project_without_acceptance_is_rejected(tmp_path: Path) -> None:
+    project = _copy(tmp_path)
+    (project / "acceptance" / "build.json").unlink()
+    result = _build(project)
+    assert result.outcome == "rejected"
+    assert result.diagnostics[0].code is AuthoringRuleId.INPUT
+
+
+def test_a_connection_profile_read_during_the_run_is_recorded(tmp_path: Path) -> None:
+    from datamimic_ce.authoring.adapters.workspace import AuthoringWorkspaceContext
+    from datamimic_ce.engine.dsl.api import resource_reader_scope
+
+    (tmp_path / "conf").mkdir()
+    (tmp_path / "conf" / "test.env.properties").write_text("db.host=localhost\n", encoding="utf-8")
+    workspace = AuthoringWorkspaceContext(tmp_path, PROJECT_ENTRY_PATH)
+    read: list[Path] = []
+
+    def recording(path: Path) -> bytes:
+        read.append(path)
+        return workspace.read_resource_bytes(path)
+
+    with resource_reader_scope(recording):
+        assert workspace.load_connection_profile(tmp_path, "test") == {"db.host": "localhost"}
+    assert read == [tmp_path / "conf" / "test.env.properties"]
+
+
+def test_the_default_factory_builds_the_project() -> None:
+    # Build proves datamimic.xml whatever descriptor the application's other operations are bound to.
+    assert create_authoring_application(_PROJECT).build().outcome == "ready"
