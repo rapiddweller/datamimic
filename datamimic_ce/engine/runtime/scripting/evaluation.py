@@ -70,12 +70,20 @@ Mapping.register(DotableDict)
 
 
 def _plain(value: object) -> object:
-    """Export nested rows as plain dicts so `dict(row)` never leaks a DotableDict."""
+    """Export nested rows as plain dicts so `dict(row)` never leaks a DotableDict.
+
+    A dict that holds no row keeps its identity, and a dict subclass (defaultdict, Counter) stays what it is:
+    only exact dicts and lists are rebuilt.
+    """
     if isinstance(value, DotableDict):
-        return _plain(value.to_dict())
-    if isinstance(value, dict):
-        return {key: _plain(value[key]) for key in value}
-    if isinstance(value, list):
+        value = value.to_dict()
+    if type(value) is dict:
+        plain = {key: _plain(value[key]) for key in value}
+        for key in value:
+            if plain[key] is not value[key]:
+                return plain
+        return value
+    if type(value) is list:
         return [_plain(item) for item in value]
     return value
 

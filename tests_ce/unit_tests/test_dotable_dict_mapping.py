@@ -74,3 +74,19 @@ def test_script_dict_result_exports_nested_rows_plain() -> None:
     assert type(result) is dict
     assert type(result["nested"]) is dict
     assert type(result["items"][0]) is dict
+
+
+def test_script_result_keeps_identity_and_dict_subclasses() -> None:
+    from collections import Counter, defaultdict
+
+    shared = {"a": 1, "nested": {"b": 2}}
+    counts: defaultdict[str, int] = defaultdict(int)
+    tally = Counter("aab")
+    namespace: dict[str, object] = {"shared": shared, "counts": counts, "tally": tally}
+
+    assert evaluate_python("shared", namespace, namespace) is shared
+    assert evaluate_python("counts", namespace, namespace) is counts
+    assert evaluate_python("tally", namespace, namespace) is tally
+    # A row inside still exports as a plain dict, wherever it sits.
+    row_result = evaluate_python("{'r': row, 'l': [row]}", {}, {"row": DotableDict({"id": 1})})
+    assert type(row_result["r"]) is dict and type(row_result["l"][0]) is dict
