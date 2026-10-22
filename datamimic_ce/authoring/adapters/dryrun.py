@@ -871,6 +871,7 @@ def _decode_worker_payload(payload: bytes) -> object:
         errors.DateTimeConversionError,
         errors.EntityInitError,
         errors.InvalidSourceError,
+        errors.MissingSourceError,
         errors.MissingMemstoreProductError,
         errors.RuleEvaluationError,
         errors.ExportConfigError,

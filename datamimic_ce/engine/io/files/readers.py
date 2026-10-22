@@ -161,7 +161,7 @@ class FileUtil:
         except csv.Error as e:
             raise invalid_source_error(code=IssueCode.SOURCE_INVALID_CSV, name=file_path.name) from e
         except FileNotFoundError as e:
-            raise FileNotFoundError(f"CSV file not found '{file_path}', error: {e}") from e
+            raise invalid_source_error(code=IssueCode.SOURCE_FILE_NOT_FOUND, name=file_path.name) from e
 
     @staticmethod
     def read_csv_to_dict_list(file_path: Path, separator: str, encoding: str = "utf-8") -> list[dict[str, str]]:
@@ -330,7 +330,7 @@ class FileUtil:
                 guidance="Save the JSON source in the configured encoding (UTF-8 by default).",
             ) from error
         except FileNotFoundError as e:
-            raise FileNotFoundError(f"JSON file not found '{file_path}', error: {e}") from e
+            raise invalid_source_error(code=IssueCode.SOURCE_FILE_NOT_FOUND, name=file_path.name) from e
 
     @staticmethod
     def read_json_to_list(file_path: Path, encoding: str = "utf-8") -> list[JsonValue]:

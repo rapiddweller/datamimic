@@ -9,6 +9,8 @@ from typer.testing import CliRunner
 
 from datamimic_ce.authoring.adapters.workspace import MAX_RESOURCE_BYTES
 from datamimic_ce.authoring.domain.requests import PROJECT_ACCEPTANCE_PATH, PROJECT_ENTRY_PATH, ReadyBuild, RunResult
+from datamimic_ce.errors import IssueCode
+from datamimic_ce.errors.catalog import get_issue_definition
 from datamimic_ce.interfaces.cli import app
 from tests_ce.authoring_project import write_project
 
@@ -116,3 +118,19 @@ def test_count_free_source_json_preserves_required_nullable_capture(tmp_path: Pa
     assert product.capture is not None
     assert product.capture.requested is None
     assert database.read_bytes() == before
+
+
+def test_missing_source_file_dry_run_reports_catalog_identity(tmp_path: Path) -> None:
+    descriptor = tmp_path / "datamimic.xml"
+    descriptor.write_text(
+        '<setup><generate name="rows" source="missing.csv" separator=","/></setup>',
+        encoding="utf-8",
+    )
+
+    result = runner.invoke(app, ["authoring", "dry-run", str(descriptor)])
+
+    assert str(tmp_path) not in result.output
+    payload = json.loads(result.stdout)
+    diagnostic = payload["diagnostics"][0]
+    assert diagnostic["ce_error"]["issue_code"] == "I101"
+    assert diagnostic["remediation"] == get_issue_definition(IssueCode.SOURCE_FILE_NOT_FOUND).guidance
