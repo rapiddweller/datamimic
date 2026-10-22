@@ -225,6 +225,26 @@ Blind round 2 (2026-10-21, CE `29fb4da8`): Haiku and Sonnet reached Ready on the
 correct R1–R5 data. On the project task Sonnet built this layout (entry, six steps, `data/`, `python/`)
 but proved only a flattened copy, because Build refuses `<include>`; Haiku did not finish.
 
+Delivered (2026-10-22): (b) #364/#365, (c) #371, (d)+(e) #372. Blind rounds 3–6 ran the same project task in
+isolated headless sessions against frozen wheels. Every project below builds Ready again on an independent
+rebuild:
+
+| Round | State | Haiku | Sonnet |
+|---|---|---|---|
+| 3 | V5 project Build (c), CLI only | Ready, 6 steps, 14 files bound | Ready, 5 steps, 18 files bound |
+| 4 | + actionable remediations (d), CLI only | Ready, 6 steps incl. export, 17 files | — |
+| 6 | + project-structure skill (e) | Ready, `model/`, `delivery/`, `data/entity`, `lib/*.scr.py`, 15 files | Ready, full layout incl. `data/weighting`, `data/fixtures`, 25 files |
+
+Round 5 tried to load the plugin in a headless `--safe-mode` session; safe mode does not load plugin skills,
+so round 6 placed the identical skill files in the project directory.
+
+Remaining friction, in order of cost to the agents:
+1. Rules R2–R5 span tables; no expectation expresses them, so every run proves them with Python checks
+   inside the Build (see "Not decided here").
+2. Separation rule 3 (model writes to the memstore, delivery reads it back) costs a readback product with an
+   identifier/foreign-key role pair per table, and a literal or expression count per script-fed product.
+3. Python errors inside `lib/` surface only as an expression failure at the calling element.
+
 ## Not decided here
 
 Cross-table expectation kinds (conditional composite foreign key, unique per filtered group,
