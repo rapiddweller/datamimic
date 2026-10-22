@@ -21,7 +21,7 @@ Evidence (2026-10-20, CE `aa0fbb3a`):
 - **Blind tests.** 12 isolated agent sessions (no project context) built 6 scenarios. 11 reached
   Ready and their data was correct, but every project was a single XML file. Cross-table rules
   were satisfied only by construction, often through id arithmetic that a reviewer cannot follow.
-- **Reference project.** The flight-school scenario was rebuilt by hand in the target structure.
+- **Reference project.** The licensing-authority scenario was rebuilt by hand in the target structure.
   The real run met all rules R1–R5 and the negative cases, with no duplicates.
   Authoring could not prove it:
 
@@ -63,7 +63,7 @@ starting point. The layout below improves it in three ways:
 └── README.md                    purpose, process, rule → location table, evidence
 ```
 
-Measured on the flight-school reference project. `model/`, `delivery/`, `data/` and `lib/`
+Measured on the licensing-authority reference project. `model/`, `delivery/`, `data/` and `lib/`
 resolve relative to the entry (included contexts keep the entry directory). With the same seed
 the output is byte-identical to the flat layout, and the independent oracle confirms R1–R5 and
 all negatives.
@@ -194,7 +194,7 @@ The plugin's deliverable becomes the project tree:
 
 ## Acceptance
 
-1. The flight-school reference project reaches Ready through project Build. Its expectations
+1. The licensing-authority reference project reaches Ready through project Build. Its expectations
    cover R1, the volumes and the negatives, and an independent oracle confirms R2–R5.
 2. A change to any file the proof read invalidates it; files the run never reads do not.
 3. A failing element in a step file reports that file, without values: lint findings with their line,

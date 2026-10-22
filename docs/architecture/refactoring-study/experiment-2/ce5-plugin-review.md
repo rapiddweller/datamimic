@@ -10,7 +10,7 @@ No remaining source or setup blocker found in this diff. Setup reuses the select
 respects explicit pins, installs published CE 5 only when needed and verifies the
 live contract. Both plugin manifests use version 0.2.0; Codex onboarding resolves
 to the packaged setup skill. Existing Platform service use needs no local install. The release and docs-index
-wording consistently names shared setup/authoring and links the LBA gate.
+wording consistently names shared setup/authoring and links the complex-reference gate.
 
 The production change excludes root `.venv`/`venv` directories after the
 non-following stat and before traversal. Nested data directories retain their
@@ -27,7 +27,7 @@ separate from bounded approval: inline and file helpers compile/roundtrip and
 execute, but Build still rejects their unsupported operation before loading them.
 No policy or trusted-execution boundary was expanded.
 
-The [LBA evaluation](../../../evaluations/lba-authoring.md) preserves the original
+The [complex reference evaluation](../../../evaluations/complex-authoring-reference.md) preserves the original
 11-table/27-column, 540-row task and positive/negative R1–R6 controls. It is a
 reference gate, not completed CE acceptance. Planning-before-cleanup does not
 prove atomic cleanup/export. The full CE gate remains open under #332/#270.
@@ -66,7 +66,7 @@ relational/embedded Person/Address oracle results pass; the latter two also pass
 requested smoke/replay. SQLite reports actual 6/12/24-row delivery and rejection
 of an invalid composite child. Reviewer independently checked those database
 counts and an empty foreign-key integrity result. These cases do not satisfy
-the separate full LBA gate.
+the separate full complex-reference gate.
 
 The fresh Luna original-root controlled-index evaluation produces two Ready
 Builds from the root containing `.venv` and relative CSV data. The reviewer reran
@@ -99,4 +99,4 @@ LOCAL VERIFIED: source/caller/security review, 38 independent tests, fresh nativ
 identity/uncertainty assessment, installed original-root Build/replay and the
 inspected local logs above.
 CI-ONLY VERIFICATION: current-delta CI and native Windows remain unverified here.
-No public installation, full LBA acceptance, merge or release approval is implied.
+No public installation, full complex-reference acceptance, merge or release approval is implied.

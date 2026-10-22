@@ -1,4 +1,4 @@
-# LBA human-first authoring evaluation
+# Complex human-first authoring reference
 
 This is the required complex reference case for agent-authoring changes. It is
 an evaluation brief, not a claim that the supplied EE project runs unchanged in

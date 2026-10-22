@@ -10,7 +10,7 @@ Native observation covers 534/534 files. Measurements remain 1431 unresolved cal
 
 The 20 publication-usage diagnostics exactly match the prior receipt. Native validate exits 2 with declared rules UNKNOWN and no failures; full architecture report exits 0. The private receipt binds both artifacts and every UNKNOWN record by canonical digest. Historical human budget acceptances remain unchanged.
 
-CI-ONLY VERIFICATION: current-fix full CI, external services and Windows are not independently established here. Build external includes remain unsupported, cross-descriptor memstore completeness remains UNKNOWN, and issue 281 cause remains UNKNOWN. This review does not prove native-client end-to-end behavior, full CE LBA acceptance or public installation. Root owns final CI and merge decisions.
+CI-ONLY VERIFICATION: current-fix full CI, external services and Windows are not independently established here. Build external includes remain unsupported, cross-descriptor memstore completeness remains UNKNOWN, and issue 281 cause remains UNKNOWN. This review does not prove native-client end-to-end behavior, full CE complex-reference acceptance or public installation. Root owns final CI and merge decisions.
 
 Independent completion gate: exit 0, `Architecture completion: 0 violations; 311 assessed UNKNOWN records remain.` Log: `astra-completion-gate.log`.
 
