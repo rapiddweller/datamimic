@@ -109,6 +109,3 @@ QODER.md
 .ruff_cache/
 .pytest_cache/
 .truecourse/
-/.superpowers/
-/.playwright-mcp/
-/evidence/
