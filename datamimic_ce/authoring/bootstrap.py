@@ -9,7 +9,7 @@ from __future__ import annotations
 from pathlib import Path, PurePosixPath
 from typing import TYPE_CHECKING
 
-from datamimic_ce.authoring.domain.requests import DEFAULT_AUTHORING_DESCRIPTOR_PATH
+from datamimic_ce.authoring.domain.requests import DEFAULT_AUTHORING_DESCRIPTOR_PATH, PROJECT_ENTRY_PATH
 
 if TYPE_CHECKING:
     from datamimic_ce.authoring.application.app import AuthoringApplication
@@ -28,6 +28,8 @@ def create_authoring_application(
     from datamimic_ce.authoring.application.app import AuthoringApplication
 
     workspace = AuthoringWorkspaceContext(workspace_root if workspace_root is not None else Path.cwd(), descriptor_path)
+    # Build always proves the project entry, whichever descriptor the other operations are bound to.
+    project = AuthoringWorkspaceContext(workspace.root, PROJECT_ENTRY_PATH)
 
     codec = CeDmJsonCodec()
     return AuthoringApplication(
@@ -36,5 +38,7 @@ def create_authoring_application(
         executor=CeBoundedExecutor(workspace),
         descriptor_contract=codec,
         bounded_execution_policy=CeBoundedExecutionPolicy(),
-        files=workspace,
+        files=project,
+        project_validator=CeDescriptorValidator(project, profile_loader=project.load_connection_profile),
+        project_executor=CeBoundedExecutor(project),
     )

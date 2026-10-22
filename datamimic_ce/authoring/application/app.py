@@ -53,6 +53,8 @@ class AuthoringApplication:
         descriptor_contract: DmJsonDescriptorContract,
         bounded_execution_policy: BoundedExecutionPolicy,
         files: ProjectFiles,
+        project_validator: DescriptorValidator,
+        project_executor: BoundedExecutor,
     ) -> None:
         self._validator = validator
         self._raw_xml = RawXmlUseCase(validator, executor)
@@ -60,7 +62,10 @@ class AuthoringApplication:
         self._descriptor_contract = descriptor_contract
         self._compile_document = CompileDocumentUseCase(descriptor_contract, validator)
         self._decompile_document = DecompileDocumentUseCase(descriptor_contract, validator)
-        self._build = BuildDocumentWorkflow(descriptor_contract, validator, executor, bounded_execution_policy, files)
+        # Build proves the project entry, so its validator and executor are bound to it, not to the descriptor.
+        self._build = BuildDocumentWorkflow(
+            descriptor_contract, project_validator, project_executor, bounded_execution_policy, files
+        )
 
     def reference(self, request: ReferenceRequest) -> ReferenceResult:
         return self._catalog.reference(request)

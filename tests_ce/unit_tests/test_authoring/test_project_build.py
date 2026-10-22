@@ -292,3 +292,8 @@ def test_a_connection_profile_read_during_the_run_is_recorded(tmp_path: Path) ->
     with resource_reader_scope(recording):
         assert workspace.load_connection_profile(tmp_path, "test") == {"db.host": "localhost"}
     assert read == [tmp_path / "conf" / "test.env.properties"]
+
+
+def test_the_default_factory_builds_the_project() -> None:
+    # Build proves datamimic.xml whatever descriptor the application's other operations are bound to.
+    assert create_authoring_application(_PROJECT).build().outcome == "ready"
