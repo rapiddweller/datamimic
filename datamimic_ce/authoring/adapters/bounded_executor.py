@@ -192,8 +192,12 @@ def _decode_reply(payload: bytes, request: BoundedExecutionRequest) -> BoundedEx
                 if isinstance(message.error, UserErrorBase) and message.error.issue_code is not None
                 else None
             )
-            path: tuple[str, ...] = ("descriptor", request.descriptor_path.as_posix())
+            entry = request.descriptor_path.as_posix()
+            path: tuple[str, ...] = ("descriptor", entry)
             if location is not None:
+                # A failure inside an included step names that step (its literal workspace uri), not the entry.
+                if location.descriptor_path is not None and location.descriptor_path != entry:
+                    path = ("include", location.descriptor_path)
                 path += (location.element_tag,)
                 if location.attribute is not None:
                     path += (location.attribute,)

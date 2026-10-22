@@ -88,14 +88,11 @@ class CeBoundedExecutionPolicy:
                     )
                 )
         products = tuple((node, path) for node, path in iter_dm_json_nodes(document) if node.kind == "generate")
-        has_file_export = False
         for node, path in products:
             targets = node.properties.get("target")
             if isinstance(targets, str):
                 try:
-                    has_file_export |= any(
-                        entry["function_name"] in buffered_exporter_names() for entry in parse_function_string(targets)
-                    )
+                    parse_function_string(targets)
                 except ValueError:
                     diagnostics.append(
                         catalog_diagnostic(
@@ -105,7 +102,7 @@ class CeBoundedExecutionPolicy:
                             path=path + ("properties", "target"),
                         )
                     )
-        if has_file_export or any(_exports_to_file(other) for other in project):
+        if any(_exports_to_file(each) for each in (document, *project)):
             delivery_rule = authoring_rule_definition("DM407")
             for node, path in products:
                 targets = node.properties.get("target")

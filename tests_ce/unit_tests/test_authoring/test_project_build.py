@@ -12,7 +12,7 @@ import pytest
 from datamimic_ce.authoring import create_authoring_application
 from datamimic_ce.authoring.domain.diagnostics import AuthoringRuleId
 from datamimic_ce.authoring.domain.proof import VerificationGateStatus
-from datamimic_ce.authoring.domain.requests import BuildRequestV4, DecompileDocumentRequest
+from datamimic_ce.authoring.domain.requests import BuildRequestV4, DecompileDocumentRequest, LintRequest
 
 _PROJECT = Path(__file__).parent / "project_build" / "order_desk"
 _ENTRY = PurePosixPath("datamimic.xml")
@@ -107,11 +107,14 @@ def test_client_declared_in_a_step_is_refused(tmp_path: Path) -> None:
         ),
         encoding="utf-8",
     )
+    # A nested use of that client must not surface first as an undeclared id.
+    nested = project / "delivery" / "90_export.xml"
+    nested.write_text(nested.read_text(encoding="utf-8").replace('target="CSV"', 'target="db"'), encoding="utf-8")
     result = _build(project)
     assert result.outcome == "rejected"
-    assert any(item.path[:2] == ("include", "model/10_customers.xml") for item in result.diagnostics), (
-        result.diagnostics
-    )
+    assert [(item.code, item.path[:2]) for item in result.diagnostics] == [
+        (AuthoringRuleId.INCLUDE, ("include", "model/10_customers.xml"))
+    ], result.diagnostics
 
 
 def test_product_names_stay_unique_across_files(tmp_path: Path) -> None:
@@ -169,3 +172,103 @@ def test_include_graph_bytes_are_bounded(tmp_path: Path, monkeypatch: pytest.Mon
     result = _build(_copy(tmp_path))
     assert result.outcome == "rejected"
     assert any(item.code is AuthoringRuleId.INCLUDE for item in result.diagnostics), result.diagnostics
+
+
+def test_step_is_linted_in_the_entry_context_and_findings_name_the_step(tmp_path: Path) -> None:
+    project = _copy(tmp_path)
+    step = project / "model" / "20_orders.xml"
+    # The entry's memstore is known to the step; an undeclared target is still found, at the step's line.
+    step.write_text(
+        step.read_text(encoding="utf-8").replace('target="store" targetEntity', 'target="nostore" targetEntity'),
+        encoding="utf-8",
+    )
+    result = _build(project)
+    assert result.outcome == "rejected"
+    step_findings = [item for item in result.diagnostics if item.path[0] == "include"]
+    assert [(item.code, item.path) for item in step_findings] == [
+        ("DM401", ("include", "model/20_orders.xml", "/setup/generate", "line", 2))
+    ], result.diagnostics
+
+
+def test_runtime_failure_in_a_step_names_the_step(tmp_path: Path) -> None:
+    project = _copy(tmp_path)
+    step = project / "model" / "20_orders.xml"
+    step.write_text(step.read_text(encoding="utf-8").replace("float(unit_price)", "missing_name"), encoding="utf-8")
+    result = _build(project)
+    assert result.outcome == "rejected"
+    assert any(item.path == ("include", "model/20_orders.xml", "key", "script") for item in result.diagnostics), (
+        result.diagnostics
+    )
+
+
+def test_memstore_declared_in_a_step_is_known_to_later_steps(tmp_path: Path) -> None:
+    project = _copy(tmp_path)
+    entry = project / "datamimic.xml"
+    entry.write_text(entry.read_text(encoding="utf-8").replace('    <memstore id="store"/>\n', ""), encoding="utf-8")
+    step = project / "model" / "10_customers.xml"
+    step.write_text(
+        step.read_text(encoding="utf-8").replace("<setup>", '<setup>\n    <memstore id="store"/>'), encoding="utf-8"
+    )
+    result = _build(project)
+    assert result.outcome == "ready", result.diagnostics
+
+
+def test_entry_reads_a_memstore_a_step_declares(tmp_path: Path) -> None:
+    project = _copy(tmp_path)
+    entry = project / "datamimic.xml"
+    delivery = (project / "delivery" / "90_export.xml").read_text(encoding="utf-8")
+    inline = delivery.replace("<setup>\n", "").replace("</setup>\n", "")
+    entry.write_text(
+        entry.read_text(encoding="utf-8")
+        .replace('    <memstore id="store"/>\n', "")
+        .replace('    <include uri="delivery/90_export.xml"/>\n', inline),
+        encoding="utf-8",
+    )
+    step = project / "model" / "10_customers.xml"
+    step.write_text(
+        step.read_text(encoding="utf-8").replace("<setup>", '<setup>\n    <memstore id="store"/>'), encoding="utf-8"
+    )
+    result = _build(project)
+    assert result.outcome == "ready", result.diagnostics
+
+
+def test_an_unseeded_project_reports_the_missing_seed_once(tmp_path: Path) -> None:
+    project = _copy(tmp_path)
+    entry = project / "datamimic.xml"
+    entry.write_text(entry.read_text(encoding="utf-8").replace(' rngSeed="7"', ""), encoding="utf-8")
+    result = _build(project)
+    assert [item.path[:2] for item in result.diagnostics if item.code == "DM303"] == [("descriptor", "datamimic.xml")]
+
+
+def test_an_unreadable_graph_is_reported_instead_of_undeclared_ids(tmp_path: Path) -> None:
+    project = _copy(tmp_path)
+    entry = project / "datamimic.xml"
+    delivery = (project / "delivery" / "90_export.xml").read_text(encoding="utf-8")
+    inline = delivery.replace("<setup>\n", "").replace("</setup>\n", "")
+    entry.write_text(
+        entry.read_text(encoding="utf-8")
+        .replace('    <memstore id="store"/>\n', "")
+        .replace('    <include uri="delivery/90_export.xml"/>\n', inline),
+        encoding="utf-8",
+    )
+    step = project / "model" / "10_customers.xml"
+    step.write_text(
+        step.read_text(encoding="utf-8").replace("<setup>", '<setup>\n    <memstore id="store"/>'), encoding="utf-8"
+    )
+    (project / "model" / "20_orders.xml").write_text("<setup>", encoding="utf-8")
+    result = _build(project)
+    assert result.outcome == "rejected"
+    errors = [item.code for item in result.diagnostics if item.severity == "error"]
+    assert errors == [AuthoringRuleId.INCLUDE], result.diagnostics
+
+
+def test_lint_does_not_let_the_entry_see_a_client_a_step_declares(tmp_path: Path) -> None:
+    project = _copy(tmp_path)
+    step = project / "model" / "10_customers.xml"
+    step.write_text(
+        step.read_text(encoding="utf-8").replace("<setup>", '<setup>\n    <database id="db"/>'), encoding="utf-8"
+    )
+    entry = (project / "datamimic.xml").read_text(encoding="utf-8")
+    entry = entry.replace("</setup>", '    <generate name="probe" count="1" target="db"/>\n</setup>')
+    result = create_authoring_application(project, descriptor_path=_ENTRY).lint(LintRequest(xml=entry))
+    assert any(item.code == "DM401" for item in result.diagnostics), result.diagnostics

@@ -2,7 +2,7 @@
 
 **Accepted within the local architecture review scope.** Reviewer: Astra (independent Opus 5.5 review agent, delegated by Alex).
 
-- Scope: `feat/build-includes`, base `287e9c87` (merged #362), head `dab3bfc0` (`fbea1ad8` plus the Codex fixes `dab3bfc0`).
+- Scope: `feat/build-includes`, base `287e9c87` (merged #362), b1 head `dab3bfc0` (`fbea1ad8` plus the Codex fixes `dab3bfc0`); the binding below is for slice b2 at `c79d23b8`.
 - This review rebinds the [issue 361 receipt](issue-361-bounded-containment-review.md) and keeps all of its assessments.
 - It does not authorize a merge and does not claim that every native rule passes.
 
@@ -10,10 +10,10 @@
 
 | Item | Value |
 |---|---|
-| Source | `4d2255335a084b72bc556cf35b8f255f37889962bdc06cc85e26d40428471e77` |
+| Source | `02ce6b71d63c12fd8ad86968bc91f180a5e88a9fa6cc078f2e1c2225b8ca1530` |
 | Target (unchanged) | `d83d4df102a2588a54598e26cb045b721cb024a118f51e31592b135050d4e78e` |
 | Analyzer (unchanged; ArchKeel 4.0.1, Python 3.11.12) | `bb1a3262d3fdd38c3e9a6af980cc063281ae98ab1c28c89c2c5be6dfb450744f` |
-| Validation | `abad44c6f52e49f47fffa03e21ed6ed0303e8a6f737933f72e53e69dd6c49666` |
+| Validation | `3acc79e944ffb66a675ce1226c213590f21d18d2cfba8afdc39a5d7da7c5892c` |
 | UNKNOWN | `2ab5f7a323140bb3c632ca77b59cb26288f438e215800f44bc66c90d77a3e676` |
 
 **Budgets:**
@@ -147,3 +147,153 @@ No regression.
 - CE CI.
 - Windows.
 - EE parity.
+
+## Slice b2 (`57a956a4`, `9b61b234`)
+
+**Accepted at `9b61b234`; `57a956a4` was blocked.**
+
+What b2 adds:
+- Build lints every included `.xml` step in the context of its project.
+- The validator reports step findings at `("include", uri, xpath, "line", n)`.
+- DM303/DM304 read the entry's `rngSeed`, so a step no longer repeats the seed findings.
+- `include_task` scopes runtime descriptor identity to the step, so a bounded-run failure in a step is reported at `("include", uri, element, attribute)`. A missing step stays the entry's `<include>` error.
+- The delivery rule is computed once over `(document, *project)`, which resolves my earlier Low.
+
+**Blocked at `57a956a4` (Medium).** Step lint knew only the step and the entry. A memstore declared in another step was unknown to lint, although b1 treats memstores as project-wide (`dryrun.py:419`) and the runtime shares them.
+- Reproduction: an entry includes `model/a.xml` (which declares the memstore and the producer) and `model/b.xml` (a targetless consumer), with identifier and foreign-key product roles.
+- At b1 head `e9c9ab90`, Build was `ready`. At `57a956a4` it was rejected with DM402 at `("include","model/b.xml","/setup/generate","line",2)`.
+
+**Fixed at `9b61b234`.**
+- `LintContext.project` holds the entry and every step. `_declared_ids` unions all of them, and `run_root` is the entry.
+- The same project now reaches `ready`; only the DM301 warning remains.
+- The new test `test_memstore_declared_in_a_step_is_known_to_later_steps` pins the case.
+- **Info:** the commit also carries three formatter-only hunks (`use_cases.py`, `schema_rules.py`, `script_semantics.py`).
+
+**Redaction.**
+- Step findings use the static rule explanation and fix hint, at structural paths with the literal workspace-relative uri.
+- Runtime step failures project the title, the uri, the element and the attribute.
+- No descriptor values appear.
+
+**Info.**
+- Lint unions declared ids without regard to declaration order. A store declared after its first use passes lint and fails at runtime; this predates b2 and is recorded in `delivery_boundary`.
+- A malformed step file seen by the engine at runtime is named by its basename, because `DescriptorParser.parse` sets it. Bounded runs refuse malformed steps before parsing.
+
+**Native result at `9b61b234`.**
+- I re-collected the b1 head `e9c9ab90` independently, and it reproduces the previous receipt.
+- Head:
+  - 0 violations, failures [].
+  - 1,426 unresolved calls, 178 typing positions, 256 unknown positions.
+  - The 20 diagnostics are identical. Rules: 271 PASS and 5 UNKNOWN.
+  - 314 UNKNOWN records, identical to the base.
+- Calls: 13,269 analyzed; 1,426 unresolved and 2,030 partially resolved, both unchanged against b1. The decoded unresolved-call diff is empty.
+
+**LOCAL VERIFIED:**
+- The regression probe, before and after the fix.
+- All 807 authoring unit tests passed, 4 skipped.
+- 88 include-related unit and integration tests passed, 1 skipped.
+- ruff and mypy (534 files).
+- Native collection at head and base.
+- Strict completion gate acceptance.
+
+**NOT VERIFIED:**
+- The full suites under `-n auto` (the author reports xdist contention in SQLite and the exporter matrix).
+- CI.
+- Windows.
+
+### Addendum: `d002c133` (Codex threads on #365), accepted
+
+**P1: the entry was linted standalone.**
+- `validate` now lints the entry with `project=(entry, *literal steps)` through `_entry_project`.
+- An unreadable graph falls back to standalone lint and stays refused by `include_graph` and by dry-run.
+- An entry that reads a memstore declared in a step now builds `ready`. At `5abad9c4`, decompile already rejected it.
+- **Cost:** one extra contained walk of the graph per `validate`. It is bounded by the 64 MiB graph limit. Build reads the graph again in `include_graph`, which is acceptable at this size.
+- **Leakage:** none. The walk's errors are swallowed into the standalone fallback, and the project only adds declared ids to the union. Entry findings keep their own static texts and entry paths.
+
+**P2: DM303 fired once per file.**
+- DM303 now fires only where the run's seed is owned (`run_root is root`).
+- A plain single file still reports DM303 (verified with `authoring lint`).
+- An unseeded project reports it once, at the entry.
+
+**Hidden entry errors (Info).**
+- The union ignores order, so an entry that reads a step's memstore *before* including that step now passes lint.
+- The bounded run still fails it. Build was rejected at the evidence phase with a child-execution failure, so Build never proves it.
+- This extends the declaration-order gap recorded in `delivery_boundary`, which predates b2.
+
+**Native result.**
+- 0 violations; 1,426 unresolved calls, 178 typing positions, 256 unknown positions.
+- The 20 diagnostics are unchanged; the 314 UNKNOWN records and their digest are unchanged.
+- No change in unresolved or partially resolved calls.
+- 809 authoring tests passed; ruff and mypy are clean.
+
+### Addendum: `85724521` (Codex P2 on #365), accepted
+
+**The fix.** When the include graph cannot be read, `_entry_project` now returns `complete=False`.
+- DM401 then skips only its two undeclared-client and undeclared-target branches; target parse errors and unknown operations remain.
+- DM402 skips only its undeclared-id branch; unsupported file suffixes remain.
+- The real include refusal therefore surfaces in Build, instead of undeclared-id findings that the unread steps might resolve.
+
+**Probes with `authoring lint`:**
+
+| Case | Result |
+|---|---|
+| Single file with an undeclared target | DM401 |
+| Entry with a readable step and an undeclared target | DM401 (`complete` stays True) |
+| `.properties`-only include that is missing | Parse fails earlier with a descriptor error, so the flag is never reached |
+
+So a readable graph hides no real undeclared id, and the single-file and no-include paths are unchanged.
+
+**Redaction:** no new message. The change only suppresses findings.
+
+**Smaller alternative (Low, not blocking).** For an entry with a malformed step, plain `authoring lint` now returns `ok: true`; only DM303 remains. Previously it returned DM401 noise.
+- Build and dry-run still report the include refusal.
+- Having `validate` emit that refusal itself when the walk fails would make lint honest about the cause.
+- It would be no larger than the flag, and it would keep the INCLUDE-only Build result.
+
+**Native result.**
+- 0 violations; 1,426 unresolved calls, 178 typing positions.
+- The 20 diagnostics, the 314 UNKNOWN records and the validation digest are unchanged; only the source digest changes.
+- No change in unresolved or partially resolved calls.
+
+**Tests:** 810 Authoring unit tests passed, 4 skipped; ruff and mypy are clean.
+
+### Addendum: `a4c9865a` (Codex P2 on #365), accepted
+
+The finding was valid. At runtime a step runs in a context copied from its parent, and the clients the step owns are cleaned up with it, not merged back. Lint now takes client ids from the file itself plus the entry (`project[:1]`); memstores stay project-wide.
+
+I probed `include_graph` with a project whose entry declares `entrydb` and whose step `model/a.xml` declares `stepdb`:
+- Step `a` targeting `entrydb` (the entry's client) passes.
+- Step `a` targeting `stepdb` (its own client) passes.
+- Sibling step `b` targeting `stepdb` is refused with DM401 at `("include","model/b.xml","/setup/generate","line",2)`.
+
+**Info:** a step included *by another step* sees only the entry's clients and its own, not those of the step that includes it. Lint could therefore over-report there. Build already refuses step-declared clients in acceptance projection.
+
+**Native result:**
+- 0 violations; 1,426 unresolved calls, 178 typing positions.
+- The 20 diagnostics and the 314 UNKNOWN records are unchanged.
+- The validation digest changes only because one partially resolved call goes away (the dropped `el.get("id")` filter in the client comprehension): 13,274 analyzed, 2,029 partially resolved.
+
+**Tests:** the project-build, public-lint and dry-run-includes suites pass; ruff and mypy are clean.
+
+### Addendum: `c79d23b8` (Codex P2 on #365), accepted; `74d52cc6` was blocked
+
+**The fix.** It enforces the ADR rule that clients live in the entry, and does so earlier rather than tracking ancestry.
+- `include_graph` refuses any setup-level `<database>`/`<mongodb>` in a step before step lint runs.
+- The refusal is INCLUDE, phase POLICY, with the static text "Clients belong to the entry descriptor, not to an included step.", at the structural path `("include", uri, tag, "line", n)`.
+- It returns early, so a nested step that uses its includer's client no longer reports a misleading DM401 first.
+
+I probed a project whose step `model/a.xml` declares `stepdb`: the only finding is the INCLUDE refusal at `("include","model/a.xml","database","line",2)`.
+
+**SPOT:** the check moved out of `projection/acceptance._products`. It now exists only in the validator, and Build always runs `include_graph` before acceptance projection.
+
+**Paths outside Build:** plain lint and dry-run keep the `a4c9865a` scoping.
+
+**Redaction:** the text is static; the path carries the literal uri, the tag and the line.
+
+**`74d52cc6` was blocked.** Its `getroottree().getpath()` XPath added two unresolved calls, and ArchKeel failed with a budget overrun (1,426 → 1,428). The amended `c79d23b8` uses the structural path instead:
+- validation failures [];
+- 1,426 unresolved calls, and the decoded unresolved-call diff against b1 is empty;
+- the 20 diagnostics, the 314 UNKNOWN records and the contract are unchanged.
+
+**Tests:** 122 passed across the project build, public lint, dryrun includes, acceptance and Build workflow suites; ruff and mypy are clean.
+
+**Merge `931dc918` (development: #368, #369), rebound:** the merged native observation keeps 1,426 unresolved calls, 178 typing positions and 256 unknown positions, the same 20 diagnostics and the same 314 UNKNOWN identities; the receipt takes development's contract digest and its `boundary_type_limit`, scope and delivery continuations verbatim.

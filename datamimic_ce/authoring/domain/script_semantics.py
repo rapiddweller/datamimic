@@ -127,7 +127,6 @@ REFUSED_ATTRIBUTES = frozenset(
 )
 
 
-
 class LibraryRefusalReason(StrEnum):
     IMPORT_NOT_ADMITTED = "import_not_admitted"
     FILE_OR_DYNAMIC_CODE_BUILTIN = "file_or_dynamic_code_builtin"

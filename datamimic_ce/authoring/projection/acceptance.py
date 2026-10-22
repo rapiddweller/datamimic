@@ -171,14 +171,6 @@ def _products(document: DmJsonDocumentV1, included: tuple[tuple[str, DmJsonDocum
     declarations = {
         node.properties.get("id"): node.kind for node in document.root.children if node.kind in {"database", "mongodb"}
     }
-    for uri, step in included:
-        for index, node in enumerate(step.root.children):
-            if node.kind in {"database", "mongodb"}:
-                # Bindings and sinks resolve against the entry; a step-declared client could not be bound.
-                _reject(
-                    "Clients belong to the entry descriptor, not to an included step.",
-                    ("include", uri, "root", "children", index),
-                )
     entries: list[_Product] = []
 
     def visit(node: DmJsonNodeV1, path: tuple[str | int, ...], parent: _Product | None) -> None:

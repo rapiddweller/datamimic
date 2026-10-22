@@ -11,6 +11,7 @@ from datamimic_ce.engine.runtime.contexts.context import SetupContext
 from datamimic_ce.engine.runtime.contexts.geniter_context import GenIterContext
 from datamimic_ce.engine.runtime.tasks.base.task import CommonSubTask
 from datamimic_ce.errors import DescriptorLocation, IssueCode, MissingDescriptorError, include_error
+from datamimic_ce.errors.context.descriptor_identity import descriptor_scope
 
 
 class IncludeTask(CommonSubTask):
@@ -69,9 +70,9 @@ class IncludeTask(CommonSubTask):
             ctx.properties.update(new_props)
         # Case 2: Check if uri is a descriptor file
         elif uri.endswith(".xml"):
-            # Parse and execute descriptor file
             sub_setup_stmt = _parse_included_descriptor(ctx, uri)
-            SetupTask.execute_include(setup_stmt=sub_setup_stmt, parent_context=ctx)
+            with descriptor_scope(uri):
+                SetupTask.execute_include(setup_stmt=sub_setup_stmt, parent_context=ctx)
         else:
             raise include_error(code=IssueCode.INCLUDE_UNSUPPORTED_FILE_TYPE, uri=uri)
 
@@ -86,37 +87,39 @@ class IncludeTask(CommonSubTask):
         if uri.endswith(".xml"):
             from datamimic_ce.engine.runtime.tasks.setup.setup_task import SetupTask
 
-            # Parse and execute descriptor file
             sub_setup_stmt = _parse_included_descriptor(root_ctx, uri)
-            # Use copy of parent_context as child_context
-            copied_root_context = SetupTask._copy_include_context(root_ctx)
+            with descriptor_scope(uri):
+                # Use copy of parent_context as child_context
+                copied_root_context = SetupTask._copy_include_context(root_ctx)
 
-            # Update root_context with attributes defined in sub-setup statement
-            copied_root_context.update_with_stmt(sub_setup_stmt)
-            # Update root_context with parent_context variables and current_product
-            copied_root_context.global_variables.update(ctx.current_variables)
-            copied_root_context.global_variables.update(ctx.current_product)
+                # Update root_context with attributes defined in sub-setup statement
+                copied_root_context.update_with_stmt(sub_setup_stmt)
+                # Update root_context with parent_context variables and current_product
+                copied_root_context.global_variables.update(ctx.current_variables)
+                copied_root_context.global_variables.update(ctx.current_product)
 
-            SetupTask.execute_statements(sub_setup_stmt, copied_root_context)
+                SetupTask.execute_statements(sub_setup_stmt, copied_root_context)
         else:
             raise include_error(code=IssueCode.INCLUDE_UNSUPPORTED_FILE_TYPE_GENERATE, uri=uri)
 
 
 def _parse_included_descriptor(ctx: SetupContext, uri: str) -> SetupStatement:
     try:
-        statement = DescriptorParser.parse(
-            ctx.descriptor_dir / uri,
-            ctx.properties,
-            ctx.runtime_environment,
-            profile_loader=ctx.profile_loader or load_connection_profile,
-        )
-        if ctx.included_statement_transformer is not None:
-            if statement.default_separator is None:
-                statement.default_separator = ctx.default_separator
-            if statement.default_line_separator is None:
-                statement.default_line_separator = ctx.default_line_separator
-            ctx.included_statement_transformer(statement)
-        return statement
+        # Errors inside the step name the step; a missing step stays the entry's <include> error.
+        with descriptor_scope(uri):
+            statement = DescriptorParser.parse(
+                ctx.descriptor_dir / uri,
+                ctx.properties,
+                ctx.runtime_environment,
+                profile_loader=ctx.profile_loader or load_connection_profile,
+            )
+            if ctx.included_statement_transformer is not None:
+                if statement.default_separator is None:
+                    statement.default_separator = ctx.default_separator
+                if statement.default_line_separator is None:
+                    statement.default_line_separator = ctx.default_line_separator
+                ctx.included_statement_transformer(statement)
+            return statement
     except MissingDescriptorError as error:
         raise include_error(
             code=IssueCode.INCLUDE_FILE_NOT_FOUND,
