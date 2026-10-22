@@ -113,11 +113,13 @@ flowchart LR
   or running the project does not void the proof. Known limits: a native reader outside Python's
   audited `open` and the contained reader, and directory listings (`demographics directory=`), are
   not recorded.
-- **Project context for single files:** `lint`, `compile` and `decompile` of a step file use the
-  entry's context (seed, memstore ids, properties, loaded script symbols), so a step is not judged
-  as if it were standalone.
-- **Diagnostics** name the file and line of the failing element in an included file. Values
-  stay redacted; only file names, paths and element tags appear.
+- **Project context:** Build lints every step with the entry's context (seed, memstore ids, the
+  clients the step can reach), so a step is not judged as if it were standalone. `lint`,
+  `compile` and `decompile` invoked on a step file alone still judge it standalone; entry discovery
+  for those commands is not delivered.
+- **Diagnostics** name the included file: lint findings with xpath and line, runtime failures with
+  element and attribute (no line yet). Values stay redacted; only file names, paths and element
+  tags appear.
 
 Recommended over the alternatives:
 
@@ -195,7 +197,8 @@ The plugin's deliverable becomes the project tree:
 1. The flight-school reference project reaches Ready through project Build. Its expectations
    cover R1, the volumes and the negatives, and an independent oracle confirms R2–R5.
 2. A change to any file the proof read invalidates it; files the run never reads do not.
-3. A failing element in a step file reports that file and line, without values.
+3. A failing element in a step file reports that file, without values: lint findings with their line,
+   runtime failures with element and attribute.
 4. A `lib/` module that imports outside the data modules, reads files, or (seeded) imports inside a
    body is refused and names the line. A seeded model with `lib/` always replays (CE #360).
 5. Blind rerun (12 isolated sessions) scores project structure as well as correctness. The rubric
