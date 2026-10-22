@@ -139,7 +139,10 @@ class KeyModel(BaseModel):
     )
     values: str | None = Field(
         None,
-        description="Comma-separated list of literal values to pick from for the key.",
+        description=(
+            "Comma-separated values to pick from for the key, written as quoted Python literals, "
+            "for example \"'A', 'B'\" or \"[1, 2]\"."
+        ),
         examples=["1,2,3", "'A','B','C'"],
     )
     weights: str | None = Field(

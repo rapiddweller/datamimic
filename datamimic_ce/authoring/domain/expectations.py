@@ -12,7 +12,7 @@ from typing import Annotated, Literal
 from pydantic import Field, JsonValue, field_validator, model_validator
 
 from .common import AuthoringModel, NonEmptyStrictStr, NonNegativeStrictInt
-from .row_conditions import parse_row_condition
+from .row_conditions import ROW_CONDITION_GRAMMAR, parse_row_condition
 
 INTENT_REPAIR_ALIASES_SCHEMA_KEY = "x-datamimic-repair-aliases"
 
@@ -208,7 +208,7 @@ class RowConditionExpectation(AuthoringModel):
         description=(
             "Closed Boolean expression over captured fields, comparisons, arithmetic and literal containers. "
             "Use field names and nested mapping access; len(value) is the only supported function. "
-            "Arbitrary Python calls such as str() and isinstance() are not supported."
+            "Arbitrary Python calls such as str() and isinstance() are not supported. " + ROW_CONDITION_GRAMMAR
         ),
         examples=["amount >= 0 and amount <= 100", "len(addresses) == 2"],
     )
