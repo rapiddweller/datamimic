@@ -10,7 +10,7 @@ datamimic-mcp --transport stdio --workspace-root "/absolute/path/to/project"
 
 Both transports use the same typed Authoring application. `version`, `schema`,
 `capabilities` and `capability` accept their named arguments directly. `reference`,
-Build, codec, lint and bounded-run requests use `{"request": {...}}`. Follow each
+Codec, lint and bounded-run requests use `{"request": {...}}`; `datamimic_build` takes `{}` and proves the workspace root as a project. Follow each
 tool's advertised input schema.
 
 | MCP tool | CLI equivalent |
