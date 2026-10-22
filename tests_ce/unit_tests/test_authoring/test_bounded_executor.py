@@ -224,6 +224,64 @@ def test_process_group_enumeration_failure_is_not_absence(monkeypatch):
         bounded_executor._process_group_is_absent(123)
 
 
+def test_posix_cleanup_skips_sigkill_when_owned_group_is_stopped(monkeypatch):
+    from datamimic_ce.authoring.adapters import bounded_executor
+
+    class Process:
+        pid = 123
+
+        def poll(self):
+            return 0
+
+        def wait(self, *, timeout):
+            return 0
+
+    signals = []
+    monkeypatch.setattr(
+        bounded_executor,
+        "_kill_process_group",
+        lambda _group_id, sig: signals.append(sig) or True,
+    )
+    monkeypatch.setattr(bounded_executor, "_process_group_is_absent", lambda _group_id: True)
+
+    assert bounded_executor._terminate_process_tree(Process())
+    assert signals == [bounded_executor.signal.SIGTERM]
+
+
+@pytest.mark.parametrize("unknown_first", [False, True])
+def test_posix_cleanup_escalates_when_group_still_live_and_kill_fails(monkeypatch, unknown_first):
+    from datamimic_ce.authoring.adapters import bounded_executor
+
+    class Process:
+        pid = 123
+
+        def poll(self):
+            return 0
+
+        def wait(self, *, timeout):
+            return 0
+
+    signals = []
+    observations = 0
+
+    def group_is_absent(_group_id):
+        nonlocal observations
+        observations += 1
+        if unknown_first and observations == 1:
+            raise PermissionError("owned group status is unknown")
+        return False
+
+    def kill_group(_group_id, sig):
+        signals.append(sig)
+        return sig is bounded_executor.signal.SIGTERM
+
+    monkeypatch.setattr(bounded_executor, "_kill_process_group", kill_group)
+    monkeypatch.setattr(bounded_executor, "_process_group_is_absent", group_is_absent)
+
+    assert not bounded_executor._terminate_process_tree(Process())
+    assert signals == [bounded_executor.signal.SIGTERM, bounded_executor.signal.SIGKILL]
+
+
 def test_windows_suspended_child_is_killed_when_job_assignment_fails(tmp_path, monkeypatch):
     from datamimic_ce.authoring.adapters import bounded_executor
 

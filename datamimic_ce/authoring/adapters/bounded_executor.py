@@ -188,6 +188,7 @@ def _terminate_process_tree(
     """Stop the worker and confirm its owned process tree is gone."""
     deadline = time.monotonic() + _PROCESS_TREE_CLEANUP_SECONDS
     cleanup_ok = True
+    tree_stopped: bool | None = False
     if windows_job is not None:
         tree_stopped = _windows_tree_is_stopped(process, windows_job, deadline)
         if tree_stopped is None:
@@ -198,6 +199,21 @@ def _terminate_process_tree(
             cleanup_ok = windows_job.terminate()
     elif os.name == "posix":
         cleanup_ok = _kill_process_group(process.pid, signal.SIGTERM)
+        grace_deadline = min(deadline, time.monotonic() + 0.25)
+        while time.monotonic() < grace_deadline:
+            process_stopped = process.poll() is not None
+            try:
+                tree_stopped = process_stopped and _process_group_is_absent(process.pid)
+            except (psutil.Error, OSError):
+                cleanup_ok = False
+            if tree_stopped:
+                break
+            remaining = grace_deadline - time.monotonic()
+            if process_stopped:
+                time.sleep(min(0.05, remaining))
+            else:
+                with suppress(subprocess.TimeoutExpired):
+                    process.wait(timeout=min(0.05, remaining))
     else:
         try:
             process.terminate()
@@ -206,11 +222,12 @@ def _terminate_process_tree(
         except OSError:
             cleanup_ok = False
 
-    with suppress(subprocess.TimeoutExpired):
-        process.wait(timeout=min(0.25, max(0, deadline - time.monotonic())))
+    if os.name != "posix":
+        with suppress(subprocess.TimeoutExpired):
+            process.wait(timeout=min(0.25, max(0, deadline - time.monotonic())))
 
     if windows_job is None:
-        if os.name == "posix":
+        if os.name == "posix" and not tree_stopped:
             cleanup_ok = _kill_process_group(process.pid, signal.SIGKILL) and cleanup_ok
         elif process.poll() is None:
             try:
