@@ -468,9 +468,9 @@ def _readbacks(
                 "and one matching consumer foreign-key role.",
                 consumer.path,
                 remediation=(
-                    'Add two product_roles: the producer\'s key field as {"kind": "identifier"}, and the consumer '
-                    'field that holds it as {"kind": "foreign_key", "parent_product": <producer>, '
-                    '"parent_field": <key field>}.'
+                    'Add two product_roles entries: {"product": "<producer>", "field": "<key>", "role": {"kind": '
+                    '"identifier"}} and {"product": "<consumer>", "field": "<field holding the key>", "role": {"kind": '
+                    '"foreign_key", "parent_product": "<producer>", "parent_field": "<key>"}}.'
                 ),
             )
         result.append(
