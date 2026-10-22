@@ -4,6 +4,7 @@
 # See LICENSE file for the full text of the license.
 # For questions and support, contact: info@rapiddweller.com
 
+import os
 from functools import lru_cache
 from typing import Literal
 
@@ -27,3 +28,7 @@ class Settings(BaseSettings):
 @lru_cache(maxsize=1)
 def get_settings() -> Settings:
     return Settings()  # pyright: ignore
+
+
+def get_environment_value(name: str) -> str | None:
+    return os.environ.get(name)

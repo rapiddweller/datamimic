@@ -41,6 +41,25 @@ def test_environment_key_is_strict_and_does_not_mutate_environment(monkeypatch) 
     assert dict(os.environ) == before
 
 
+def test_environment_key_lookup_uses_runtime_config_owner(monkeypatch) -> None:
+    key = bytes(range(32))
+    lookups = []
+
+    def read_environment_value(name: str) -> str | None:
+        lookups.append(name)
+        return base64.b64encode(key).decode("ascii")
+
+    monkeypatch.setattr(
+        "datamimic_ce.engine.runtime.lifecycle.pseudonymization.get_environment_value",
+        read_environment_value,
+    )
+
+    resolved = resolve_pseudonymization_key({"pseudonymization_key_env": "DM_KEY"}, None)
+
+    assert resolved == PseudonymizationKey(key)
+    assert lookups == ["DM_KEY"]
+
+
 @pytest.mark.parametrize(
     "encoded", ["bad base64", base64.b64encode(b"short").decode(), " " + base64.b64encode(b"x" * 32).decode()]
 )

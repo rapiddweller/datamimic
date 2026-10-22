@@ -24,8 +24,7 @@ from datamimic_ce.domains.api import (
     UpperCaseConverter,
     derive_field_key,
 )
-from datamimic_ce.engine.dsl.api import ConverterEnum
-from datamimic_ce.engine.dsl.statements.base.statement import Statement
+from datamimic_ce.engine.dsl.api import ConverterEnum, Statement
 from datamimic_ce.engine.runtime.contexts.context import Context
 from datamimic_ce.errors import DomainError, IssueCode, UserErrorBase, task_config_error
 

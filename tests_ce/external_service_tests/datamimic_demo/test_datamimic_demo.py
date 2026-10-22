@@ -7,7 +7,10 @@
 
 from pathlib import Path
 
+from datamimic_ce.engine.runtime.contracts import PseudonymizationKey
 from datamimic_ce.interfaces.python.data_mimic_test import DataMimicTest
+
+_DEMO_PSEUDONYMIZATION_KEY = PseudonymizationKey(bytes(range(32)))
 
 
 class TestDatamimicDemo:
@@ -22,7 +25,11 @@ class TestDatamimicDemo:
         test_engine.test_with_timer()
 
     def test_c_simple_anonymization(self) -> None:
-        test_engine = DataMimicTest(test_dir=self._test_dir, filename="c-simple-anonymization/datamimic.xml")
+        test_engine = DataMimicTest(
+            test_dir=self._test_dir,
+            filename="c-simple-anonymization/datamimic.xml",
+            pseudonymization_key=_DEMO_PSEUDONYMIZATION_KEY,
+        )
         test_engine.test_with_timer()
 
     def test_d_simple_postprocess(self) -> None:
@@ -42,7 +49,11 @@ class TestDatamimicDemo:
         test_engine.test_with_timer()
 
     def test_h_converter(self) -> None:
-        test_engine = DataMimicTest(test_dir=self._test_dir, filename="h-converter/datamimic.xml")
+        test_engine = DataMimicTest(
+            test_dir=self._test_dir,
+            filename="h-converter/datamimic.xml",
+            pseudonymization_key=_DEMO_PSEUDONYMIZATION_KEY,
+        )
         test_engine.test_with_timer()
 
     def test_n_mongo(self) -> None:

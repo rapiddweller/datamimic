@@ -11,11 +11,13 @@ from pathlib import Path
 
 import pytest
 
+from datamimic_ce.engine.runtime.contracts import PseudonymizationKey
 from datamimic_ce.interfaces.python.data_mimic_test import DataMimicTest
 
 # Configure logging
 logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(name)s - %(levelname)s - %(message)s")
 logger = logging.getLogger(__name__)
+_DEMO_PSEUDONYMIZATION_KEY = PseudonymizationKey(bytes(range(32)))
 
 
 class TestDemos:
@@ -34,7 +36,7 @@ class TestDemos:
                     logger.info(f"  - {item.name}")
             pytest.fail(f"Demos directory not found at {self._demos_dir}")
 
-    def _run_demo_test(self, demo_path):
+    def _run_demo_test(self, demo_path, *, pseudonymization_key: PseudonymizationKey | None = None):
         """Helper method to run a single demo test."""
         demo_name = demo_path.name
         datamimic_file = demo_path / "datamimic.xml"
@@ -48,7 +50,11 @@ class TestDemos:
         logger.info(f"Using datamimic file: {datamimic_file}")
 
         try:
-            test_engine = DataMimicTest(test_dir=demo_path, filename="datamimic.xml")
+            test_engine = DataMimicTest(
+                test_dir=demo_path,
+                filename="datamimic.xml",
+                pseudonymization_key=pseudonymization_key,
+            )
             test_engine.test_with_timer()
             logger.info(f"Demo {demo_name} completed successfully")
         except Exception as e:
@@ -111,7 +117,9 @@ class TestDemos:
 
     def test_demo_masking(self):
         """Test the masking demo."""
-        self._run_demo_test(self._demos_dir / "demo-masking")
+        self._run_demo_test(
+            self._demos_dir / "demo-masking", pseudonymization_key=_DEMO_PSEUDONYMIZATION_KEY
+        )
 
     def test_demo_model(self):
         """Test the model demo."""
@@ -145,7 +153,9 @@ class TestDemos:
 
     def test_overview_converter(self):
         """Test the overview converter demo."""
-        self._run_demo_test(self._demos_dir / "overview-converter")
+        self._run_demo_test(
+            self._demos_dir / "overview-converter", pseudonymization_key=_DEMO_PSEUDONYMIZATION_KEY
+        )
 
     def test_overview_generator(self):
         """Test the overview generator demo."""

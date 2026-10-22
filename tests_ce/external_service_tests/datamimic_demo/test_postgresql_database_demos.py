@@ -10,15 +10,19 @@ from psycopg2 import sql
 
 from datamimic_ce.engine.io.api import load_connection_profile
 from datamimic_ce.engine.runtime.api import runtime_environment
+from datamimic_ce.engine.runtime.contracts import PseudonymizationKey
 from datamimic_ce.interfaces.python.data_mimic_test import DataMimicTest
 
 ROOT = Path(__file__).resolve().parents[3]
+_DEMO_PSEUDONYMIZATION_KEY = PseudonymizationKey(bytes(range(32)))
 
 
 @pytest.fixture
-def postgres_demo(tmp_path: Path, request: pytest.FixtureRequest) -> Iterator[tuple[Path, dict]]:
+def postgres_demo(
+    tmp_path: Path, request: pytest.FixtureRequest
+) -> Iterator[tuple[Path, dict, PseudonymizationKey | None]]:
     """Run an unchanged root with copied profiles and disposable databases."""
-    path, systems = request.param
+    path, systems, pseudonymization_key = request.param
     demo = tmp_path / "demo"
     copytree(ROOT / path, demo)
     environment = "local" if runtime_environment() == "development" else "environment"
@@ -47,7 +51,7 @@ def postgres_demo(tmp_path: Path, request: pytest.FixtureRequest) -> Iterator[tu
             target = demo / "conf" / f"{environment}.env.properties"
             target.write_text("".join(f"{key}={value}\n" for key, value in profile.items()))
             target.chmod(0o600)
-        yield demo, connections
+        yield demo, connections, pseudonymization_key
     finally:
         for connection in connections.values():
             connection.close()
@@ -66,18 +70,30 @@ def rows(connection, query: str) -> list[tuple]:
 @pytest.mark.parametrize(
     "postgres_demo",
     [
-        ("datamimic_ce/resources/demos/demo-database", ("db",)),
-        ("tests_ce/external_service_tests/datamimic_demo/b-simple-database", ("source",)),
-        ("datamimic_ce/resources/demos/demo-masking", ("source", "target")),
-        ("tests_ce/external_service_tests/datamimic_demo/c-simple-anonymization", ("source", "target")),
+        ("datamimic_ce/resources/demos/demo-database", ("db",), None),
+        ("tests_ce/external_service_tests/datamimic_demo/b-simple-database", ("source",), None),
+        (
+            "datamimic_ce/resources/demos/demo-masking",
+            ("source", "target"),
+            _DEMO_PSEUDONYMIZATION_KEY,
+        ),
+        (
+            "tests_ce/external_service_tests/datamimic_demo/c-simple-anonymization",
+            ("source", "target"),
+            _DEMO_PSEUDONYMIZATION_KEY,
+        ),
     ],
     indirect=True,
 )
 def test_postgresql_database_demo_roots(postgres_demo) -> None:
-    demo, connections = postgres_demo
+    demo, connections, pseudonymization_key = postgres_demo
     # Preparation must also reset tables that already contain related rows.
     for _ in range(2):
-        DataMimicTest(demo, "datamimic.xml").test_with_timer()
+        DataMimicTest(
+            demo,
+            "datamimic.xml",
+            pseudonymization_key=pseudonymization_key,
+        ).test_with_timer()
     if len(connections) == 1:
         connection = next(iter(connections.values()))
         assert rows(connection, "SELECT count(*) FROM customer") == [(10,)]

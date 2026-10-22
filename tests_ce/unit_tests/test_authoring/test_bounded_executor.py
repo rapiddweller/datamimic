@@ -82,6 +82,58 @@ def test_child_exit_while_sending_private_input_returns_child_crash(monkeypatch)
     assert result.diagnostics[0].code is AuthoringSystemDiagnosticCode.CHILD_CRASH
 
 
+def test_child_crash_remains_primary_when_tree_cleanup_fails(monkeypatch):
+    from datamimic_ce.authoring.adapters import bounded_executor
+
+    real_popen = subprocess.Popen
+
+    def exit_before_read(_command, **kwargs):
+        return real_popen([sys.executable, "-c", "import os; os._exit(7)"], **kwargs)
+
+    def failed_cleanup(_process):
+        raise OSError("controlled cleanup failure")
+
+    monkeypatch.setattr(bounded_executor.subprocess, "Popen", exit_before_read)
+    monkeypatch.setattr(bounded_executor, "_terminate_process_tree", failed_cleanup)
+    result = CeBoundedExecutor().execute(
+        BoundedExecutionRequest(xml="<setup />"),
+        pseudonymization_key=SecretBytes(b"x" * 32),
+    )
+
+    assert not result.ok
+    assert [diagnostic.code for diagnostic in result.diagnostics] == [
+        AuthoringSystemDiagnosticCode.CHILD_CRASH,
+        AuthoringSystemDiagnosticCode.CLEANUP,
+    ]
+
+
+def test_windows_tree_termination_shares_one_cleanup_deadline(monkeypatch):
+    from types import SimpleNamespace
+
+    from datamimic_ce.authoring.adapters import bounded_executor
+
+    now = [0.0]
+    observed = {}
+
+    class Process:
+        pid = 123
+
+        def wait(self, *, timeout):
+            observed["wait_timeout"] = timeout
+
+    def run(_command, *, timeout, **_kwargs):
+        observed["taskkill_timeout"] = timeout
+        now[0] += 0.5
+        return subprocess.CompletedProcess(["taskkill"], 0)
+
+    monkeypatch.setattr(bounded_executor, "time", SimpleNamespace(monotonic=lambda: now[0]))
+    monkeypatch.setattr(bounded_executor.subprocess, "run", run)
+
+    bounded_executor._terminate_windows_process_tree(Process())
+
+    assert 0 < observed["wait_timeout"] < observed["taskkill_timeout"] <= 1.25
+
+
 def test_blocked_private_input_obeys_execution_timeout(monkeypatch):
     from datamimic_ce.authoring.adapters import bounded_executor
 
@@ -455,8 +507,9 @@ def test_child_crash_is_typed_and_does_not_wait_for_timeout(tmp_path):
     )
     assert time.monotonic() - started < 15
     assert not result.ok
-    expected = AuthoringSystemDiagnosticCode.CLEANUP if os.name == "nt" else AuthoringSystemDiagnosticCode.CHILD_CRASH
-    assert result.diagnostics[0].code is expected
+    assert result.diagnostics[0].code is AuthoringSystemDiagnosticCode.CHILD_CRASH
+    if os.name == "nt":
+        assert any(diagnostic.code is AuthoringSystemDiagnosticCode.CLEANUP for diagnostic in result.diagnostics)
     if os.name != "nt":
         assert "exit code 17" in result.diagnostics[0].message
 

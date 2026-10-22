@@ -4,9 +4,9 @@ from __future__ import annotations
 
 import base64
 import binascii
-import os
 
 from datamimic_ce.engine.runtime.contracts import PseudonymizationKey
+from datamimic_ce.engine.runtime.lifecycle.config import get_environment_value
 from datamimic_ce.errors import IssueCode, RuntimeConfigError, runtime_config_error
 
 
@@ -29,7 +29,7 @@ def resolve_pseudonymization_key(
         return supplied
     if env_name is None:
         return None
-    encoded = os.environ.get(env_name)
+    encoded = get_environment_value(env_name)
     if encoded is None:
         raise _invalid("referenced environment variable is not set")
     try:

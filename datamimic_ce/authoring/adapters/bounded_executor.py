@@ -18,7 +18,7 @@ import tempfile
 import threading
 import time
 from contextlib import suppress
-from dataclasses import dataclass, field
+from dataclasses import dataclass, field, replace
 from itertools import islice
 from pathlib import Path
 from uuid import uuid4
@@ -180,20 +180,35 @@ def _snapshot_workspace(source: Path, destination: Path) -> None:
 def _terminate_process_tree(process: subprocess.Popen[bytes]) -> None:
     """Kill the private POSIX group, or use Windows' descendant-aware taskkill."""
     if os.name == "nt":
-        completed = subprocess.run(
-            ["taskkill", "/PID", str(process.pid), "/T", "/F"], capture_output=True, timeout=2, check=False
-        )
-        if completed.returncode != 0:
-            raise OSError("taskkill did not terminate the bounded process tree")
-    else:
-        with suppress(ProcessLookupError):
-            os.killpg(process.pid, signal.SIGTERM)
-        with suppress(subprocess.TimeoutExpired):
-            process.wait(timeout=0.2)
-        with suppress(ProcessLookupError):
-            os.killpg(process.pid, signal.SIGKILL)
+        _terminate_windows_process_tree(process)
+        return
+    with suppress(ProcessLookupError):
+        os.killpg(process.pid, signal.SIGTERM)
+    with suppress(subprocess.TimeoutExpired):
+        process.wait(timeout=0.2)
+    with suppress(ProcessLookupError):
+        os.killpg(process.pid, signal.SIGKILL)
     try:
         process.wait(timeout=1)
+    except subprocess.TimeoutExpired as error:
+        raise OSError("bounded worker did not stop") from error
+
+
+def _terminate_windows_process_tree(process: subprocess.Popen[bytes]) -> None:
+    deadline = time.monotonic() + 1.25
+    completed = subprocess.run(
+        ["taskkill", "/PID", str(process.pid), "/T", "/F"],
+        capture_output=True,
+        timeout=deadline - time.monotonic(),
+        check=False,
+    )
+    if completed.returncode != 0:
+        raise OSError("taskkill did not terminate the bounded process tree")
+    remaining = deadline - time.monotonic()
+    if remaining <= 0:
+        raise OSError("bounded worker termination exceeded its cleanup budget")
+    try:
+        process.wait(timeout=remaining)
     except subprocess.TimeoutExpired as error:
         raise OSError("bounded worker did not stop") from error
 
@@ -477,7 +492,7 @@ class CeBoundedExecutor:
             return _failure(
                 AuthoringSystemDiagnosticCode.CHILD_CRASH, "Bounded child could not start.", request.max_count
             )
-        result: BoundedExecutionEvidence
+        result: BoundedExecutionEvidence | None = None
         deadline = time.monotonic() + request.timeout_seconds
         input_ready = threading.Event()
         input_errors: list[OSError] = []
@@ -543,10 +558,24 @@ class CeBoundedExecutor:
             try:
                 _terminate_process_tree(process)
                 input_thread.join(timeout=0.2)
+                if input_thread.is_alive():
+                    raise OSError("bounded worker input writer did not stop")
             except (OSError, subprocess.TimeoutExpired):
-                result = _failure(
+                cleanup_failure = _failure(
                     AuthoringSystemDiagnosticCode.CLEANUP,
                     "Bounded process tree could not be terminated and reaped.",
                     request.max_count,
                 )
+                if result is not None:
+                    result = (
+                        replace(
+                            result,
+                            ok=False,
+                            diagnostics=result.diagnostics + cleanup_failure.diagnostics,
+                            base_run_ok=False,
+                        )
+                        if not result.ok
+                        else cleanup_failure
+                    )
+        assert result is not None
         return result
