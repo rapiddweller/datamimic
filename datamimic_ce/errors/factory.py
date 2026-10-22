@@ -23,6 +23,7 @@ from datamimic_ce.errors.base import (
     MissingDescriptorError,
     MissingIncludeError,
     MissingMemstoreProductError,
+    MissingSourceError,
     OperationError,
     ParserValidationError,
     RuleEvaluationError,
@@ -210,6 +211,8 @@ def invalid_source_error(
 ) -> InvalidSourceError:
     msg = invalid_source_message(code=code, guidance=guidance, **kwargs)
     msg = _append_descriptor_hint(msg, ctx, descriptor_name)
+    if code is IssueCode.SOURCE_FILE_NOT_FOUND:
+        return MissingSourceError(msg, issue_code=code, location=location)
     return InvalidSourceError(msg, issue_code=code, location=location)
 
 

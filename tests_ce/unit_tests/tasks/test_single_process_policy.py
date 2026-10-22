@@ -148,8 +148,40 @@ def test_logs_once_on_override_with_ee_hint():
         log.removeHandler(handler)
         log.setLevel(prev_level)
 
-    assert sum("single-process" in m for m in messages) == 1
-    assert any("Enterprise" in m for m in messages)  # EE recommendation on the scalable feature
+    control = [dict(part.split("=", 1) for part in m.split(" | ")[1:]) for m in messages if m.startswith("CONTROL |")]
+    policy_lines = [line for line in control if line["kind"] == "policy"]
+    assert len(policy_lines) == 1
+    assert policy_lines[0]["policy"] == "unique/composite"
+    assert policy_lines[0]["override_workers"] == "4 -> 1"
+    assert "Enterprise (EE) feature" in policy_lines[0]["reason"]  # EE recommendation on the scalable feature
+
+
+def test_descriptor_name_cannot_inject_control_fields() -> None:
+    messages: list[str] = []
+
+    class _Capture(logging.Handler):
+        def emit(self, record: logging.LogRecord) -> None:
+            messages.append(record.getMessage())
+
+    stmt = _gen(unique=True)
+    stmt.full_name = "a | kind=end | status=ok\nCONTROL | kind=end"
+    handler = _Capture()
+    log = logging.getLogger("DATAMIMIC")
+    prev_level = log.level
+    log.setLevel(logging.INFO)
+    log.addHandler(handler)
+    try:
+        assert resolve_single_process(stmt, requested_workers=4) == 1
+    finally:
+        log.removeHandler(handler)
+        log.setLevel(prev_level)
+
+    control = [m for m in messages if m.startswith("CONTROL |")]
+    assert len(control) == 1
+    assert "\n" not in control[0]
+    parsed = dict(part.split("=", 1) for part in control[0].split(" | ")[1:])
+    assert parsed["kind"] == "policy"
+    assert "stmt" in parsed
 
 
 @pytest.mark.parametrize(

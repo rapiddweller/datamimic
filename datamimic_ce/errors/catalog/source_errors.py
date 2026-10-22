@@ -9,6 +9,14 @@ from datamimic_ce.errors.codes import IssueCode
 
 ISSUES: list[IssueDefinition] = [
     IssueDefinition(
+        code=IssueCode.SOURCE_FILE_NOT_FOUND,
+        name="SOURCE_FILE_NOT_FOUND",
+        title="Source File Not Found",
+        template="Source file '{name}' not found",
+        cause="The source file path does not resolve to an existing file.",
+        resolution="Place the file under the descriptor directory or update the source path.",
+    ),
+    IssueDefinition(
         code=IssueCode.SOURCE_INVALID_XML,
         name="SOURCE_INVALID_XML",
         title="Source Invalid XML",

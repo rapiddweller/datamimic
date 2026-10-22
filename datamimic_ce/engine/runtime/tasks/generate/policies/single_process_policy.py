@@ -12,6 +12,7 @@ worker logic) to make CE serialise it; ``resolve_single_process`` is the single 
 point used by the generate task.
 """
 
+import re
 from collections.abc import Callable, Mapping
 from dataclasses import dataclass
 
@@ -189,6 +190,11 @@ POLICIES: tuple[SingleProcessPolicy, ...] = (
 _EE_HINT = " Multiprocess scaling of this is an Enterprise (EE) feature."
 
 
+def _control_value(text: str) -> str:
+    """Make descriptor text safe for a ' | '-delimited CONTROL record: no line breaks, no spaced pipes."""
+    return re.sub(r"\s*\|\s*", "|", " ".join(text.split()))
+
+
 def resolve_single_process(
     stmt: GenerateStatement,
     requested_workers: int,
@@ -212,8 +218,12 @@ def resolve_single_process(
         if requested_workers > 1:
             hint = _EE_HINT if policy.ee_scalable else ""
             logger.info(
-                f"<generate> '{stmt.name}': {policy.reason} — CE runs it single-process "
-                f"({requested_workers} requested workers ignored).{hint}"
+                "CONTROL | kind=policy | policy=%s | stmt=%s | override_workers=%s -> %s | reason=%s",
+                policy.feature,
+                _control_value(stmt.full_name),
+                requested_workers,
+                1,
+                policy.reason + hint,
             )
         return 1
     return None

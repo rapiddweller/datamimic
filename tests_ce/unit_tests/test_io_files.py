@@ -54,8 +54,8 @@ def test_nested_csv_source_keeps_separator_string_cells_and_order(tmp_path, sepa
 @pytest.mark.parametrize(
     ("source", "source_type", "contents", "error", "message"),
     [
-        ("missing.json", "list", None, FileNotFoundError, "JSON file not found"),
-        ("missing.csv", "list", None, FileNotFoundError, "CSV file not found"),
+        ("missing.json", "list", None, FileNotFoundError, "not found"),
+        ("missing.csv", "list", None, FileNotFoundError, "not found"),
         ("items.json", "list", "{", InvalidSourceError, "Invalid JSON"),
         ("items.json", "list", "{}", ValueError, "must contain a list of objects"),
         ("items.json", "dict", "[]", InvalidSourceError, "Expected a JSON dictionary"),

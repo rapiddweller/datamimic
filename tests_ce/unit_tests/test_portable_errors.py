@@ -173,6 +173,21 @@ def test_source_json_diagnostics_keep_logical_name_and_cause(tmp_path):
     assert str(tmp_path) not in str(caught.value)
 
 
+def test_missing_source_file_is_portable_and_keeps_native_cause(tmp_path):
+    from datamimic_ce.engine.io.files.readers import FileUtil
+    from datamimic_ce.errors import MissingSourceError
+
+    with pytest.raises(FileNotFoundError) as caught:
+        FileUtil.read_csv_to_dict_list(tmp_path / "missing.csv", ",")
+    err = caught.value
+    assert type(err) is MissingSourceError
+    assert err.issue_code is IssueCode.SOURCE_FILE_NOT_FOUND
+    assert isinstance(err, FileNotFoundError)
+    assert type(err.__cause__) is FileNotFoundError
+    assert "missing.csv" in str(err)
+    assert str(tmp_path) not in str(err)
+
+
 def test_converter_failure_retains_specific_type(tmp_path):
     from datamimic_ce.engine.runtime.api import run
     from datamimic_ce.engine.runtime.contracts import RunRequest

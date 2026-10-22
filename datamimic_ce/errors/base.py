@@ -172,6 +172,10 @@ class InvalidSourceError(UserValueError):
     error_code = ErrorCode.INVALID_SOURCE
 
 
+class MissingSourceError(InvalidSourceError, FileNotFoundError):
+    """Keep missing-resource catch compatibility alongside the source identity."""
+
+
 class MissingMemstoreProductError(InvalidSourceError, KeyError):
     """A declared in-memory source has not received the requested product."""
 

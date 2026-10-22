@@ -93,11 +93,14 @@ class RuntimeRunSession:
                     profile_loader=request.profile_loader,
                     total_row_limit=request.total_row_limit,
                 ).execute()
+                logger.info("CONTROL | kind=end | status=ok")
             except (UserErrorBase, DomainError) as error:
+                logger.info("CONTROL | kind=end | status=error | reason=%s", type(error).__name__)
                 message = error.message if isinstance(error, DomainError) else str(error)
                 logger.error("Value error: %s" if isinstance(error, ValueError) else "%s", message)
                 raise
-            except Exception:
+            except Exception as error:
+                logger.info("CONTROL | kind=end | status=error | reason=%s", type(error).__name__)
                 logger.exception("Error in DATAMIMIC process")
                 raise
             captured = self._test_result_storage.get_result() if request.test_mode else None
