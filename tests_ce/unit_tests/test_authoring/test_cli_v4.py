@@ -133,4 +133,4 @@ def test_missing_source_file_dry_run_reports_catalog_identity(tmp_path: Path) ->
     payload = json.loads(result.stdout)
     diagnostic = payload["diagnostics"][0]
     assert diagnostic["ce_error"]["issue_code"] == "I101"
-    assert diagnostic["remediation"] == get_issue_definition(IssueCode.SOURCE_FILE_NOT_FOUND).guidance
+    assert diagnostic["remediation"] == get_issue_definition(IssueCode.SOURCE_FILE_NOT_FOUND).resolution

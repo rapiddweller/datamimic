@@ -15,7 +15,6 @@ ISSUES: list[IssueDefinition] = [
         template="Source file '{name}' not found",
         cause="The source file path does not resolve to an existing file.",
         resolution="Place the file under the descriptor directory or update the source path.",
-        guidance=GUIDANCE_PROJECT_ENV,
     ),
     IssueDefinition(
         code=IssueCode.SOURCE_INVALID_XML,
