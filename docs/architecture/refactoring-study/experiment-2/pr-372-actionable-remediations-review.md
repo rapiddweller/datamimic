@@ -61,3 +61,10 @@ The four new tests fail without the change.
 - **Plugin reference:** `project-structure.md` now marks `sql/` as "real runs only; Build refuses SQL execute".
 - **Binding:** the source digest is rebound. Validation, contract, the 20 diagnostics and the 313 UNKNOWN records are unchanged, and the measurements stay at 1,424/178/255.
 - **Gates:** 87 related tests passed; `agent-plugin-check`, ruff and mypy are clean; the strict completion gate passes.
+
+## Addendum: `c03ef6d8` (Codex P2s), accepted
+
+- **Role pair remediation:** it now shows two complete `product_roles` entries with quoted placeholders. The test validates both against `BuildRequestV5`.
+- **Undeclared field under `list_field`:** the remediation now names the `<nestedKey type="list">` that `list_field` points to, instead of the product.
+- **Redaction:** both texts stay static, and no descriptor value is echoed.
+- **Binding:** only the source digest is rebound. The contract, the 20 diagnostics and the 313 UNKNOWN records are unchanged, and budgets stay at 1,424/178.
