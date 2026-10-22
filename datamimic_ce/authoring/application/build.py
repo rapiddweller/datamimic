@@ -106,8 +106,17 @@ class BuildDocumentWorkflow:
                 diagnostics=lint.diagnostics,
                 verification=blocked_verification(request.verification, "XML validation failed."),
             )
+        # The project is the entry plus its literal include graph; every fact below covers all of its files.
+        graph = self._validator.include_graph(xml)
+        if not graph.ok:
+            return RejectedBuild(
+                # Step lint findings are XML-phase, graph refusals policy-phase; the first error decides.
+                phase=next(item.phase for item in graph.diagnostics if item.severity == "error"),
+                diagnostics=graph.diagnostics,
+                verification=blocked_verification(request.verification, "The include graph is not provable."),
+            )
         try:
-            document = self._contract.decompile(xml)
+            document = self._contract.decompile(xml if graph.entry_xml is None else graph.entry_xml)
         except DmJsonCodecError as error:
             return RejectedBuild(
                 phase=DiagnosticPhase.DECOMPILE,
@@ -120,15 +129,6 @@ class BuildDocumentWorkflow:
                     ),
                 ),
                 verification=blocked_verification(request.verification, "The entry is not provable."),
-            )
-        # The project is the entry plus its literal include graph; every fact below covers all of its files.
-        graph = self._validator.include_graph(xml)
-        if not graph.ok:
-            return RejectedBuild(
-                # Step lint findings are XML-phase, graph refusals policy-phase; the first error decides.
-                phase=next(item.phase for item in graph.diagnostics if item.severity == "error"),
-                diagnostics=graph.diagnostics,
-                verification=blocked_verification(request.verification, "The include graph is not provable."),
             )
         decoded: list[tuple[str, DmJsonDocumentV1]] = []
         for step in graph.descriptors:

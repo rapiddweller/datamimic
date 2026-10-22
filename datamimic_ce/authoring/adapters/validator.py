@@ -4,13 +4,19 @@
 
 """Use the normal CE parser for in-memory descriptor hard validation."""
 
+import re
+from collections.abc import Sequence
 from hashlib import sha256
 from pathlib import Path, PurePosixPath
 from typing import Literal
 
 from lxml import etree
 
-from datamimic_ce.authoring.adapters.dryrun import _BoundedPolicyRefusal, _literal_include_graph
+from datamimic_ce.authoring.adapters.dryrun import (
+    _BoundedPolicyRefusal,
+    _IncludeBudgetExceeded,
+    _literal_include_graph,
+)
 from datamimic_ce.authoring.adapters.linter import _run_rules
 from datamimic_ce.authoring.adapters.workspace import AuthoringWorkspaceContext
 from datamimic_ce.authoring.domain.build_rules import catalog_diagnostic
@@ -27,6 +33,7 @@ from datamimic_ce.engine.dsl.api import (
     EL_DATABASE,
     EL_MONGODB,
     DescriptorParser,
+    parse_properties,
     parse_xml_source,
     resource_reader_scope,
 )
@@ -55,6 +62,7 @@ class CeDescriptorValidator:
         try:
             physical_path = self._workspace_context.resolve_descriptor_path(logical_path)
             with resource_reader_scope(self._workspace_context.read_resource_bytes):
+                self._refuse_oversized_includes(xml, physical_path)
                 DescriptorParser.parse_xml(
                     xml,
                     physical_path,
@@ -111,13 +119,29 @@ class CeDescriptorValidator:
                     ),
                 ),
             )
+        except _IncludeBudgetExceeded as refusal:
+            return LintResult(ok=False, diagnostics=_graph_refused(logical_path, str(refusal)).diagnostics)
         except (ValueError, OSError):
             # Parser/resource errors may contain credentials and physical host paths.
             return _rejected(logical_path, "Descriptor or its workspace resources failed validation.")
         root = parse_xml_source(xml)
         project, complete = self._entry_project(root, physical_path)
+        with resource_reader_scope(self._workspace_context.read_resource_bytes):
+            properties = _include_properties(project or (root,), physical_path.parent)
+        for document in project or (root,):
+            _resolve_targets(document, properties)
         findings = _rule_diagnostics(root, physical_path, logical_path, project=project, declarations_complete=complete)
         return LintResult(ok=not any(item.severity == "error" for item in findings), diagnostics=findings)
+
+    def _refuse_oversized_includes(self, xml: str, physical_path: Path) -> None:
+        """The parser decodes literal ``.properties`` includes eagerly, so the byte budget has to hold before it
+        runs. Every other graph problem (missing file, non-literal uri, cycle) is left to the parser and Build."""
+        try:
+            _literal_include_graph(parse_xml_source(xml), physical_path)
+        except _IncludeBudgetExceeded:
+            raise
+        except (etree.XMLSyntaxError, ValueError, OSError):
+            return
 
     def _entry_project(self, root: etree._Element, physical_path: Path) -> tuple[tuple[etree._Element, ...], bool]:
         """The entry and its literal steps, so the entry sees what a step declares; empty for a single file. An
@@ -145,15 +169,23 @@ class CeDescriptorValidator:
             return _graph_refused(logical_path, "An included step is not well-formed XML.")
         except (ValueError, OSError):
             return _graph_refused(logical_path, "An included file is missing or lies outside the workspace.")
-        descriptors = []
+        steps: list[tuple[str, str, str]] = []
         for uri, data in graph:
             if PurePosixPath(uri).suffix == ".xml":
                 try:
-                    text = str(data, "utf-8")
+                    steps.append((uri, str(data, "utf-8"), sha256(data).hexdigest()))
                 except UnicodeDecodeError:
                     return _graph_refused(logical_path, "An included step is not UTF-8 encoded.")
-                descriptors.append(IncludedDescriptor(uri=uri, xml=text, sha256=sha256(data).hexdigest()))
-        roots = [parse_xml_source(step.xml) for step in descriptors]
+        entry_root = parse_xml_source(xml)
+        roots = [parse_xml_source(text) for _, text, _ in steps]
+        with resource_reader_scope(self._workspace_context.read_resource_bytes):
+            properties = _include_properties((entry_root, *roots), physical_path.parent)
+        descriptors = [
+            IncludedDescriptor(uri=uri, xml=_resolved_xml(text, properties), sha256=digest)
+            for uri, text, digest in steps
+        ]
+        for root in roots:
+            _resolve_targets(root, properties)
         # Bindings and sinks resolve against the entry, and a step's clients end with that step; refusing them
         # here keeps a step-declared client from surfacing first as an undeclared id in another step.
         refusals = []
@@ -175,7 +207,8 @@ class CeDescriptorValidator:
                     )
         if refusals:
             return IncludeGraphResult(ok=False, diagnostics=tuple(refusals))
-        project = (parse_xml_source(xml), *roots)
+        _resolve_targets(entry_root, properties)
+        project = (entry_root, *roots)
         findings: list[Diagnostic] = []
         for step, root in zip(descriptors, roots, strict=True):
             findings.extend(
@@ -185,6 +218,7 @@ class CeDescriptorValidator:
             ok=not any(item.severity == "error" for item in findings),
             descriptors=tuple(descriptors),
             diagnostics=tuple(findings),
+            entry_xml=_resolved_xml(xml, properties),
         )
 
 
@@ -232,6 +266,45 @@ def _diagnostic(message: str, *, path: tuple[str | int, ...], identity: CeErrorI
         ce_error=identity,
         remediation="Repair the indicated descriptor field or its workspace-local resource configuration.",
     )
+
+
+_PLACEHOLDER = r"\{([a-zA-Z_][a-zA-Z0-9_]*)\}"
+
+
+def _include_properties(documents: Sequence[etree._Element], base_dir: Path) -> dict[str, str]:
+    """The properties of every literal ``.properties`` include, entry first and steps in graph order, later
+    files overriding earlier ones. An unreadable file adds nothing: the parser reports it."""
+    properties: dict[str, str] = {}
+    for document in documents:
+        for node in document.iter("include"):
+            uri = node.get("uri", "")
+            if PurePosixPath(uri).suffix == ".properties" and not any(mark in uri for mark in "{\\:"):
+                try:
+                    properties.update(parse_properties(base_dir / uri))
+                except (OSError, ValueError):
+                    continue
+    return properties
+
+
+def _resolve_targets(document: etree._Element, properties: dict[str, str]) -> bool:
+    """Substitute whole-value ``{name}`` placeholders in ``target`` attributes in place; an undefined name stays
+    as written. Returns whether anything changed. The runtime's own rule (``retrieve_element_attributes``) is not
+    part of the DSL API, and a .properties file is flat, so only the undotted form applies."""
+    changed = False
+    for node in document.iter():
+        target = node.get("target") if isinstance(node.tag, str) else None
+        placeholder = re.fullmatch(_PLACEHOLDER, target) if target else None
+        if placeholder is not None and placeholder[1] in properties:
+            node.attrib["target"] = properties[placeholder[1]]
+            changed = True
+    return changed
+
+
+def _resolved_xml(xml: str, properties: dict[str, str]) -> str:
+    """``xml`` with its target placeholders resolved, or ``xml`` itself when none applies, so line numbers
+    only move for a descriptor that uses a placeholder."""
+    document = parse_xml_source(xml)
+    return etree.tostring(document, encoding="unicode") if _resolve_targets(document, properties) else xml
 
 
 def _graph_refused(path: PurePosixPath, message: str) -> IncludeGraphResult:
