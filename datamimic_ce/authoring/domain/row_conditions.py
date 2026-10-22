@@ -80,7 +80,7 @@ ROW_CONDITION_GRAMMAR = (
     "Indexes: constant non-negative integer indexes or constant string keys; negative indexes such as items[-1] "
     "are rejected. Arithmetic is numeric only (no string concatenation). "
     f"Numeric budget: integers up to {MAX_INTEGER_BITS} bits, finite floats up to magnitude "
-    f"{MAX_FLOAT_MAGNITUDE:.0e}, decimals with an adjusted exponent up to {MAX_DECIMAL_ADJUSTED_EXPONENT}. "
+    f"{MAX_FLOAT_MAGNITUDE:.0e}, decimals with an adjusted exponent between -{MAX_DECIMAL_ADJUSTED_EXPONENT} and {MAX_DECIMAL_ADJUSTED_EXPONENT}. "
     f"Budgets: {MAX_CONDITION_LENGTH} characters, {MAX_CONDITION_NODES} AST nodes, nesting depth "
     f"{MAX_CONDITION_DEPTH}, {MAX_CONTAINER_ITEMS} container items, strings up to {MAX_STRING_LENGTH} characters."
 )
@@ -91,7 +91,7 @@ class RowConditionFailure(StrEnum):
 
     MISSING_VALUE = "a referenced field, attribute or index is absent from a captured row"
     UNSUPPORTED_VALUE = "a value is not None, bool, number, string, list or mapping; dates are not comparable"
-    OVER_BUDGET = "a value exceeds the string length, container size or nesting budget"
+    OVER_BUDGET = "a value exceeds the numeric, string length, container size or nesting budget"
     TYPE_MISMATCH = "operands have incompatible types"
     ARITHMETIC = "arithmetic failed or left the numeric budget"
 

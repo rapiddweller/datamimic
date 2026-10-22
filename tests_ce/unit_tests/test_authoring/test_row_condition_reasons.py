@@ -127,3 +127,8 @@ def test_grammar_names_the_numeric_budget_and_operand_rules():
     assert str(MAX_DECIMAL_ADJUSTED_EXPONENT) in ROW_CONDITION_GRAMMAR
     assert "arithmetic is numeric only (no string concatenation)" in ROW_CONDITION_GRAMMAR.lower()
     assert "constant non-negative integer indexes" in ROW_CONDITION_GRAMMAR
+
+
+def test_over_budget_reason_names_the_numeric_budget():
+    # A number outside the budget must not send the author looking at strings or containers.
+    assert "numeric" in RowConditionFailure.OVER_BUDGET.value
