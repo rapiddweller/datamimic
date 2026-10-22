@@ -189,7 +189,8 @@ The plugin's deliverable becomes the project tree:
 - `review.md` reviews per file: purpose, inputs, outputs, rules located there. It keeps the
   requirement → location → evidence table and the project-wide proof.
 - The engine pitfalls the reference project hit are part of the guidance until the engine fixes
-  them: records are `DotableDict` (`get()`/attribute access, no item access), keys hold no lists,
+  them: records are `DotableDict` (attribute access, `get()` and item access; nested rows need
+  `to_dict()` for JSON), keys hold no lists,
   `<variable>` has no `min`/`max`, and a nested `count` evaluates in the enclosing record.
 
 ## Acceptance

@@ -155,9 +155,10 @@ The applicable Ollama protocol references are [tool calling](https://docs.ollama
    page instead of loading everything.
 6. No `rngSeed` on `<setup>` means every run differs, by design. Seeded runs
    replay identically and force single-process execution.
-7. `script=` is python. A `<variable>` row is dot-accessed (`row.field`, never
-   `row['field']`). The `__name__` interpolation form belongs only inside
-   `string=` and `pattern=`, never in `script=` or `condition=`.
+7. `script=` is python. A `<variable>` row is dot-accessed (`row.field`), the
+   documented form; mapping access (`row['field']`, `dict(row)`) also works. Nested
+   rows need `row.to_dict()` for `json.dumps`. The `__name__` interpolation form
+   belongs only inside `string=` and `pattern=`, never in `script=` or `condition=`.
 
 Discover value-source choices and rules from the live model and rule registries
 with `datamimic authoring reference --topic overview`, then query a narrow topic.

@@ -312,7 +312,9 @@ class CeDslCatalog:
                             "the current record, parent.field its immediate parent, "
                             "and root.field the outermost record. "
                             "An existing outermost bare name wins a collision; qualify intermediate ancestor fields. "
-                            "Variable records use dot access (row.field). __name__ interpolation belongs to string "
+                            "Variable records use dot access (row.field), the documented form; mapping access "
+                            "(row['field'], dict(row)) also works. Nested rows need row.to_dict() for json.dumps. "
+                            "__name__ interpolation belongs to string "
                             "and pattern attributes, not scripts."
                         ),
                     ),
