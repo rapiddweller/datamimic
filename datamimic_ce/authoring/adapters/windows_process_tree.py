@@ -7,6 +7,7 @@
 from __future__ import annotations
 
 import ctypes
+import sys
 import time
 
 _BOOL = ctypes.c_int32
@@ -28,6 +29,12 @@ _JOB_OBJECT_BASIC_ACCOUNTING_INFORMATION = 1
 _JOB_OBJECT_BASIC_PROCESS_ID_LIST = 3
 _JOB_OBJECT_LIMIT_KILL_ON_JOB_CLOSE = 0x00002000
 _MAX_TRACKED_PROCESSES = 65_536
+
+
+def _windows_kernel() -> ctypes.CDLL:
+    if sys.platform == "win32":
+        return ctypes.WinDLL("kernel32", use_last_error=True)
+    raise OSError("Windows process jobs require Windows")
 
 
 class _BasicLimitInformation(ctypes.Structure):
@@ -102,7 +109,7 @@ class WindowsProcessTree:
     """Own a process and all descendants through one kill-on-close job."""
 
     def __init__(self) -> None:
-        kernel32 = ctypes.WinDLL("kernel32", use_last_error=True)  # type: ignore[attr-defined]
+        kernel32 = _windows_kernel()
         kernel32.CloseHandle.argtypes = [_HANDLE]
         kernel32.CloseHandle.restype = _BOOL
         kernel32.SetInformationJobObject.argtypes = [

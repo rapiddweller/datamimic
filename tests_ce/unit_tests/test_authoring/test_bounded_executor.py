@@ -22,6 +22,7 @@ _XML = (
     '<setup rngSeed="7"><generate name="rows" count="3">'
     '<key name="id" generator="IncrementGenerator"/></generate></setup>'
 )
+POSIX_ONLY = pytest.mark.skipif(os.name != "posix", reason="requires POSIX process groups")
 
 
 def test_executor_keeps_full_capture_beyond_response_sample():
@@ -210,6 +211,7 @@ def test_windows_tree_query_failure_blocks_cleanup_success():
     assert not bounded_executor._terminate_process_tree(Process(), windows_job=Job())
 
 
+@POSIX_ONLY
 def test_process_group_enumeration_failure_is_not_absence(monkeypatch):
     from datamimic_ce.authoring.adapters import bounded_executor
 
@@ -223,6 +225,7 @@ def test_process_group_enumeration_failure_is_not_absence(monkeypatch):
         bounded_executor._process_group_is_absent(123)
 
 
+@POSIX_ONLY
 def test_posix_cleanup_skips_sigkill_when_owned_group_is_stopped(monkeypatch):
     from datamimic_ce.authoring.adapters import bounded_executor
 
@@ -248,6 +251,7 @@ def test_posix_cleanup_skips_sigkill_when_owned_group_is_stopped(monkeypatch):
 
 
 @pytest.mark.parametrize("unknown_first", [False, True])
+@POSIX_ONLY
 def test_posix_cleanup_escalates_when_group_still_live_and_kill_fails(monkeypatch, unknown_first):
     from datamimic_ce.authoring.adapters import bounded_executor
 
@@ -281,6 +285,7 @@ def test_posix_cleanup_escalates_when_group_still_live_and_kill_fails(monkeypatc
     assert signals == [bounded_executor.signal.SIGTERM, bounded_executor.signal.SIGKILL]
 
 
+@POSIX_ONLY
 def test_posix_cleanup_escalates_when_observation_outlasts_term_grace(monkeypatch):
     from datamimic_ce.authoring.adapters import bounded_executor
 
