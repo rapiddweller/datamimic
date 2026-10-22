@@ -75,6 +75,8 @@ def test_reference_row_condition_describes_the_grammar(tmp_path: Path):
         ("id > 'x'", {"id": 5}, RowConditionFailure.TYPE_MISMATCH),
         ("id / 0 > 1", {"id": 1}, RowConditionFailure.ARITHMETIC),
         ("customer.missing > 1", {"customer": {"id": 1}}, RowConditionFailure.MISSING_VALUE),
+        ("note == 'x'", {"note": "x" * 2000}, RowConditionFailure.OVER_BUDGET),
+        ("len(items) > 1", {"items": list(range(65))}, RowConditionFailure.OVER_BUDGET),
     ],
 )
 def test_evaluation_failures_carry_a_typed_reason(condition, row, failure):
@@ -97,3 +99,9 @@ def test_build_reports_a_date_operand_with_the_unsupported_reason(tmp_path: Path
         ],
     )
     assert build.diagnostics[0].message.endswith(RowConditionFailure.UNSUPPORTED_VALUE.value)
+
+
+def test_grammar_names_the_string_budget():
+    from datamimic_ce.authoring.domain.row_conditions import MAX_STRING_LENGTH, ROW_CONDITION_GRAMMAR
+
+    assert str(MAX_STRING_LENGTH) in ROW_CONDITION_GRAMMAR

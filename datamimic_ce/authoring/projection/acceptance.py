@@ -483,8 +483,8 @@ def _readbacks(
                 "and one matching consumer foreign-key role.",
                 consumer.path,
                 remediation=(
-                    "Keep exactly one producer identifier role and one consumer foreign-key role naming it; "
-                    "remove the extra product_roles entries."
+                    "Declare exactly one producer identifier role and exactly one consumer foreign-key role naming "
+                    "it: remove the extra product_roles entries and add the missing one."
                     if len(identifiers) > 1 or len(candidates) > 1
                     else 'Add two product_roles entries: {"product": "<producer>", "field": "<key>", "role": {"kind": '
                     '"identifier"}} and {"product": "<consumer>", "field": "<field holding the key>", "role": {"kind": '

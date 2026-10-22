@@ -125,6 +125,8 @@ def test_dm316_no_longer_advises_cyclic_wrapping() -> None:
     (finding,) = [d for d in lint_source(xml).diagnostics if d.rule == "DM316"]
     assert "Enable cyclic" not in finding.fix_hint
     assert "source size" in finding.fix_hint
+    # Build proves a cyclic file source but not a cyclic memstore readback; the text must say which.
+    assert "memstore readback" in finding.fix_hint
 
 
 def test_two_identifier_roles_on_one_producer_name_the_extra_roles(tmp_path: Path) -> None:
@@ -145,7 +147,23 @@ def test_two_identifier_roles_on_one_producer_name_the_extra_roles(tmp_path: Pat
         },
     ]
     diagnostic = _first_error(build_project(tmp_path, xml, product_roles=roles))
-    assert diagnostic.remediation.startswith("Keep exactly one producer identifier role")
+    assert diagnostic.remediation.startswith("Declare exactly one producer identifier role")
+
+
+def test_two_identifiers_and_no_foreign_key_say_to_add_the_missing_role(tmp_path: Path) -> None:
+    xml = (
+        '<setup rngSeed="1"><memstore id="store"/>'
+        '<generate name="parents" count="2" target="store"><key name="id" generator="IncrementGenerator"/>'
+        '<key name="code" constant="x"/></generate>'
+        '<generate name="readback" source="store" type="parents" distribution="ordered">'
+        '<key name="id" script="this.id"/></generate></setup>'
+    )
+    roles = [
+        {"product": "parents", "field": "id", "role": {"kind": "identifier"}},
+        {"product": "parents", "field": "code", "role": {"kind": "identifier"}},
+    ]
+    diagnostic = _first_error(build_project(tmp_path, xml, product_roles=roles))
+    assert "add the missing one" in diagnostic.remediation
 
 
 def test_a_policy_refusal_in_an_included_step_names_the_step(tmp_path: Path) -> None:

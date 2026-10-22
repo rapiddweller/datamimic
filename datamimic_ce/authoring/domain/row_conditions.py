@@ -17,6 +17,7 @@ MAX_CONDITION_LENGTH = 4096
 MAX_CONDITION_NODES = 96
 MAX_CONDITION_DEPTH = 12
 MAX_CONTAINER_ITEMS = 64
+MAX_STRING_LENGTH = 1024
 
 # Keyed by node type because the evaluator dispatches on types, not on symbol strings.
 _OPERATORS: Mapping[type[ast.AST], str] = {
@@ -74,7 +75,7 @@ ROW_CONDITION_GRAMMAR = (
     "Operands: captured field names, dot access into nested mappings, constant integer or string indexes, "
     "numbers, strings, booleans, None, and list, tuple or set literals; len(value) is the only call. "
     f"Budgets: {MAX_CONDITION_LENGTH} characters, {MAX_CONDITION_NODES} AST nodes, nesting depth "
-    f"{MAX_CONDITION_DEPTH}, {MAX_CONTAINER_ITEMS} container items."
+    f"{MAX_CONDITION_DEPTH}, {MAX_CONTAINER_ITEMS} container items, strings up to {MAX_STRING_LENGTH} characters."
 )
 
 
@@ -83,6 +84,7 @@ class RowConditionFailure(StrEnum):
 
     MISSING_VALUE = "a referenced field, attribute or index is absent from a captured row"
     UNSUPPORTED_VALUE = "a value is not None, bool, number, string, list or mapping; dates are not comparable"
+    OVER_BUDGET = "a value exceeds the string length, container size or nesting budget"
     TYPE_MISMATCH = "operands have incompatible types"
     ARITHMETIC = "arithmetic failed or left the numeric budget"
 
@@ -160,16 +162,18 @@ def _safe_number(value: object) -> int | float | Decimal:
 
 def _safe_value(value: object, depth: int = 0) -> object:
     if depth > MAX_CONDITION_DEPTH:
-        raise RowConditionError(RowConditionFailure.UNSUPPORTED_VALUE)
+        raise RowConditionError(RowConditionFailure.OVER_BUDGET)
     if value is None or type(value) is bool:
         return value
     if isinstance(value, int | float | Decimal):
         return _safe_number(value)
-    if type(value) is str and len(value) <= 1024:
-        return value
+    if type(value) is str:
+        if len(value) <= MAX_STRING_LENGTH:
+            return value
+        raise RowConditionError(RowConditionFailure.OVER_BUDGET)
     if isinstance(value, list | tuple | set | dict):
         if len(value) > MAX_CONTAINER_ITEMS:
-            raise RowConditionError(RowConditionFailure.UNSUPPORTED_VALUE)
+            raise RowConditionError(RowConditionFailure.OVER_BUDGET)
         items = value.values() if isinstance(value, dict) else value
         for item in items:
             _safe_value(item, depth + 1)
