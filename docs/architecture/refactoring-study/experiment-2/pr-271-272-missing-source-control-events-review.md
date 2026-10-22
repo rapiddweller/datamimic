@@ -58,3 +58,12 @@
 - Full suites.
 - CI.
 - Windows.
+
+## Addendum: `41c1da51`, remediation Low resolved
+
+- CE's I101 entry no longer carries `GUIDANCE_PROJECT_ENV`. The dry-run remediation is now the entry's resolution: "Place the file under the descriptor directory or update the source path."
+- The runtime message also drops the guidance suffix: "Source file 'missing.csv' not found in descriptor 'miss.xml'". It still carries no host path.
+- `test_cli_v4.py` now asserts on `resolution`.
+- Binding: only the Source digest moves. Validation, Contract, the 313 UNKNOWN records and the 20 diagnostics are unchanged, and so are the 1424/178/255 measurements.
+- The `BaseException` Low stays open by decision, since EE behaves the same.
+- LOCAL VERIFIED: the dry-run and run probes; 952 passed and 4 skipped on the same test set; ruff; the full gate.
