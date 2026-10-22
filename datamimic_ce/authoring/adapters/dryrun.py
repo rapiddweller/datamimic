@@ -134,10 +134,16 @@ class _WorkerFailure:
     fix_hint: NonEmptyStrictStr
     error: object | None = None
     policy_refusal: StrictBool = False
+    # Empty unless the refusal names the included step and element that breaks the policy.
+    policy_path: tuple[NonEmptyStrictStr, ...] = ()
 
 
 class _BoundedPolicyRefusal(ValueError):
     """A parsed operation cannot inherit bounded execution guarantees."""
+
+    def __init__(self, message: str, path: tuple[str, ...] = ()) -> None:
+        ValueError.__init__(self, message)
+        self.path = path
 
 
 _WorkerMessage = _WorkerSuccess | _WorkerFailure
@@ -414,6 +420,7 @@ def _validate_bounded_includes(
     except (OSError, ValueError) as error:
         # Every step is checked before any runs, so a missing file stops the whole graph.
         raise _BoundedPolicyRefusal("An included file is missing or lies outside the workspace") from error
+    step_uris = tuple(uri for uri, _ in graph if PurePosixPath(uri).suffix == ".xml")
     steps = tuple(parse_xml_source(data) for uri, data in graph if PurePosixPath(uri).suffix == ".xml")
     documents = (root, *steps)
     seeded = root.get("rngSeed") is not None
@@ -421,10 +428,12 @@ def _validate_bounded_includes(
     memstores = {node.get("id", "") for document in documents for node in document.iter("memstore")} - {""}
     producers: list[_MemstoreProducer] = []
 
-    def check(node: etree._Element, document: etree._Element, lineage: tuple[str, ...]) -> None:
+    def check(node: etree._Element, document: etree._Element, lineage: tuple[str, ...], uri: str | None) -> None:
         tag = node.tag
         if not isinstance(tag, str):
             raise _BoundedPolicyRefusal("Included descriptor element must have a text tag")
+        # The root has no step uri; its refusals fall back to the descriptor path.
+        where = () if uri is None else ("include", uri, tag)
         definition = get_element_definition(tag)
         if tag == "include":
             return  # the graph walk already checked every include
@@ -433,24 +442,27 @@ def _validate_bounded_includes(
             and definition.bounded_execution_profile.strategy is BoundedExecutionStrategy.PYTHON_LIBRARY
         ):
             if not allow_side_effects:
-                _refuse_unbounded_execute(
-                    ExecuteStatement.language(node.get("type"), node.get("uri")),
-                    target=node.get("target"),
-                    script=node.get("script"),
-                    uri=node.get("uri"),
-                    inline=node.text,
-                    setup_level=any(node is child for child in document),
-                    descriptor_dir=path.parent,
-                    seeded=seeded,
-                )
+                try:
+                    _refuse_unbounded_execute(
+                        ExecuteStatement.language(node.get("type"), node.get("uri")),
+                        target=node.get("target"),
+                        script=node.get("script"),
+                        uri=node.get("uri"),
+                        inline=node.text,
+                        setup_level=any(node is child for child in document),
+                        descriptor_dir=path.parent,
+                        seeded=seeded,
+                    )
+                except _BoundedPolicyRefusal as refusal:
+                    raise _BoundedPolicyRefusal(str(refusal), where) from refusal
         elif (
             definition is None or definition.bounded_execution_profile.strategy is BoundedExecutionStrategy.UNSUPPORTED
         ):
-            raise _BoundedPolicyRefusal("Included descriptor has no proven bounded execution policy")
+            raise _BoundedPolicyRefusal("Included descriptor has no proven bounded execution policy", where)
         if tag == "generate" or tag == "iterate":
             name = node.get("name")
             if name is None or "{" in name or name in products:
-                raise _BoundedPolicyRefusal("Included products require distinct capture identities")
+                raise _BoundedPolicyRefusal("Included products require distinct capture identities", where)
             products.add(name)
             lineage = (*lineage, name)
             # Run-wide producer facts: one statement tree alone cannot see what another step writes.
@@ -462,10 +474,10 @@ def _validate_bounded_includes(
                     )
                 )
         for child in node:
-            check(child, document, lineage)
+            check(child, document, lineage, uri)
 
-    for document in documents:
-        check(document, document, ())
+    for uri, document in zip((None, *step_uris), documents, strict=True):
+        check(document, document, (), uri)
     return memstores, tuple(producers)
 
 
@@ -1251,6 +1263,7 @@ def _run_engine_capture(
                 fix_hint=_runtime_hint(err),
                 error=err if is_user_error(err) else None,
                 policy_refusal=isinstance(err, _BoundedPolicyRefusal),
+                policy_path=err.path if isinstance(err, _BoundedPolicyRefusal) else (),
             )
         return message
 

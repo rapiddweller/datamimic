@@ -229,8 +229,17 @@ def project_acceptance(
 ) -> AcceptanceSpecV1:
     """Acceptance over the products of the entry and of every included step, keyed by their literal uri."""
     entries = _products(canonical_document, included)
-    if len({entry.product.name for entry in entries}) != len(entries):
-        _reject("Product names must be globally unique for bounded capture.", ("document", "root"))
+    seen: set[str] = set()
+    for entry in entries:
+        if entry.product.name in seen:
+            _reject(
+                "Product names must be globally unique for bounded capture.",
+                entry.path + ("properties", "name"),
+                remediation=(
+                    "Rename one of the products; Build addresses every product, nested included, by its own name."
+                ),
+            )
+        seen.add(entry.product.name)
     relationships: list[AcceptanceRelationshipV1] = []
     checks: list[AcceptanceCheckV1] = []
 
@@ -363,7 +372,13 @@ def _derive_field(
         try:
             literal = parse_literal_values(values)
         except (ValueError, SyntaxError):
-            _reject("Allowed values are not valid CE literal values.", path + ("properties", "values"))
+            _reject(
+                "Allowed values are not valid CE literal values.",
+                path + ("properties", "values"),
+                remediation=(
+                    "Write values as quoted Python literals, for example values=\"'A', 'B'\" or values=\"[1, 2]\"."
+                ),
+            )
             return
         allowed: tuple[JsonValue, ...]
         if literal is None:
@@ -468,7 +483,10 @@ def _readbacks(
                 "and one matching consumer foreign-key role.",
                 consumer.path,
                 remediation=(
-                    'Add two product_roles entries: {"product": "<producer>", "field": "<key>", "role": {"kind": '
+                    "Keep exactly one producer identifier role and one consumer foreign-key role naming it; "
+                    "remove the extra product_roles entries."
+                    if len(identifiers) > 1 or len(candidates) > 1
+                    else 'Add two product_roles entries: {"product": "<producer>", "field": "<key>", "role": {"kind": '
                     '"identifier"}} and {"product": "<consumer>", "field": "<field holding the key>", "role": {"kind": '
                     '"foreign_key", "parent_product": "<producer>", "parent_field": "<key>"}}.'
                 ),

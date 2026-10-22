@@ -171,7 +171,10 @@ class VariableModel(BaseModel):
     )
     values: str | None = Field(
         None,
-        description="Comma-separated list of literal values to pick from for the variable.",
+        description=(
+            "Comma-separated values to pick from for the variable, written as quoted Python literals, "
+            "for example \"'A', 'B'\" or \"[1, 2]\"."
+        ),
         examples=["'A','B','C'", "1,2,3"],
     )
     weights: str | None = Field(

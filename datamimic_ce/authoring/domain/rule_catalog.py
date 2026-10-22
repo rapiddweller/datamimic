@@ -435,7 +435,8 @@ _AUTHORING_RULE_DEFINITIONS: tuple[RuleDefinition, ...] = (
         RuleSeverity.HINT,
         "Source count may cap",
         "A non-cyclic source read can stop below count when its source is exhausted.",
-        "Enable cyclic wrapping or omit count to consume the source once.",
+        "Omit count to read the source once, or keep count at most the source size; "
+        "cyclic wrapping cannot prove a complete Build capture.",
         "GenerateWorker StopIteration contract.",
         '<iterate name="x" source="rows.csv" distribution="ordered"/>',
         '<iterate name="x" source="rows.csv" count="99" distribution="ordered"/>',

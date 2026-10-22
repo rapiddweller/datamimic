@@ -212,7 +212,7 @@ def _decode_reply(payload: bytes, request: BoundedExecutionRequest, workspace: P
                 else None
             )
             entry = request.descriptor_path.as_posix()
-            path: tuple[str, ...] = ("descriptor", entry)
+            path: tuple[str, ...] = message.policy_path or ("descriptor", entry)
             if location is not None:
                 # A failure inside an included step names that step (its literal workspace uri), not the entry.
                 if location.descriptor_path is not None and location.descriptor_path != entry:
