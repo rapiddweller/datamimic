@@ -125,7 +125,12 @@ def test_policy_logs_single_process_override():
         _run("composite_mp.xml")
     finally:
         dm_logger.removeHandler(handler)
-    assert any("single-process" in m and "Enterprise" in m for m in messages)
+    control = [dict(part.split("=", 1) for part in m.split(" | ")[1:]) for m in messages if m.startswith("CONTROL |")]
+    policy_lines = [line for line in control if line["kind"] == "policy"]
+    assert len(policy_lines) == 1
+    assert policy_lines[0]["policy"] == "unique/composite"
+    assert policy_lines[0]["override_workers"] == "4 -> 1"
+    assert "Enterprise (EE) feature" in policy_lines[0]["reason"]
 
 
 @pytest.mark.parametrize(

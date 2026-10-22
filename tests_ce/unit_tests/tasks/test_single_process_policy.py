@@ -148,8 +148,12 @@ def test_logs_once_on_override_with_ee_hint():
         log.removeHandler(handler)
         log.setLevel(prev_level)
 
-    assert sum("single-process" in m for m in messages) == 1
-    assert any("Enterprise" in m for m in messages)  # EE recommendation on the scalable feature
+    control = [dict(part.split("=", 1) for part in m.split(" | ")[1:]) for m in messages if m.startswith("CONTROL |")]
+    policy_lines = [line for line in control if line["kind"] == "policy"]
+    assert len(policy_lines) == 1
+    assert policy_lines[0]["policy"] == "unique/composite"
+    assert policy_lines[0]["override_workers"] == "4 -> 1"
+    assert "Enterprise (EE) feature" in policy_lines[0]["reason"]  # EE recommendation on the scalable feature
 
 
 @pytest.mark.parametrize(

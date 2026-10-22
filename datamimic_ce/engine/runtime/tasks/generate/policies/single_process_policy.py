@@ -212,8 +212,12 @@ def resolve_single_process(
         if requested_workers > 1:
             hint = _EE_HINT if policy.ee_scalable else ""
             logger.info(
-                f"<generate> '{stmt.name}': {policy.reason} — CE runs it single-process "
-                f"({requested_workers} requested workers ignored).{hint}"
+                "CONTROL | kind=policy | policy=%s | stmt=%s | override_workers=%s -> %s | reason=%s",
+                policy.feature,
+                stmt.full_name,
+                requested_workers,
+                1,
+                policy.reason + hint,
             )
         return 1
     return None
