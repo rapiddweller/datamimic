@@ -10,6 +10,6 @@ Native observation covers 534/534 files. Measurements remain 1431 unresolved cal
 
 Native validate exits 2 with declared rules UNKNOWN and no failures or baseline drift. The full architecture report exits 0. The receipt binds the current source and validation by digest and preserves the unchanged UNKNOWN digest. Historical human budget acceptances remain unchanged.
 
-CI-ONLY VERIFICATION: current-fix full CI, external services, Windows and installed-package behavior are not independently established here. Build external includes remain unsupported; cross-descriptor memstore completeness and issue 281 cause remain UNKNOWN. Full CE LBA acceptance, native-client end-to-end behavior and public installation remain outside this review. Root owns final CI and merge decisions.
+CI-ONLY VERIFICATION: current-fix full CI, external services, Windows and installed-package behavior are not independently established here. Build external includes remain unsupported; cross-descriptor memstore completeness and issue 281 cause remain UNKNOWN. Full CE complex-reference acceptance, native-client end-to-end behavior and public installation remain outside this review. Root owns final CI and merge decisions.
 
 Independent completion gate: exit 0, `Architecture completion: 0 violations; 311 assessed UNKNOWN records remain.` Evidence: `astra-cli-completion-gate.log`.

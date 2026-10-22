@@ -90,5 +90,5 @@ not a Python distribution. Native client validation and publication evidence
 belong to the release issue. Public-directory submission is separate from
 repository installation.
 
-The [LBA reference evaluation](evaluations/lba-authoring.md) defines the complex
+The [complex reference evaluation](evaluations/complex-authoring-reference.md) defines the complex
 model-quality gate and records the distinction between EE evidence and CE proof.
