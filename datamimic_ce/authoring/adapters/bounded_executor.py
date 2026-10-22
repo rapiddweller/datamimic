@@ -252,6 +252,34 @@ def _terminate_process_tree(
     return tree_stopped is True and writer_stopped and cleanup_ok
 
 
+def _terminate_suspended_process(process: subprocess.Popen[bytes], windows_job: WindowsProcessTree) -> bool:
+    """Reap a Windows worker that has not resumed from its suspended launch."""
+    deadline = time.monotonic() + _PROCESS_TREE_CLEANUP_SECONDS
+    cleanup_ok = True
+    try:
+        if process.poll() is None:
+            process.kill()
+    except ProcessLookupError:
+        pass
+    except OSError:
+        cleanup_ok = False
+    try:
+        process.wait(timeout=max(0, deadline - time.monotonic()))
+    except subprocess.TimeoutExpired:
+        cleanup_ok = False
+    except OSError:
+        cleanup_ok = False
+    cleanup_ok = windows_job.close() and cleanup_ok
+    if process.poll() is None:
+        try:
+            process.wait(timeout=max(0, deadline - time.monotonic()))
+        except subprocess.TimeoutExpired:
+            cleanup_ok = False
+        except OSError:
+            cleanup_ok = False
+    return process.poll() is not None and cleanup_ok
+
+
 def _windows_tree_is_stopped(
     process: subprocess.Popen[bytes], windows_job: WindowsProcessTree, deadline: float
 ) -> bool | None:
@@ -597,118 +625,127 @@ class CeBoundedExecutor:
                     "Bounded child process ownership could not be created.",
                     request.max_count,
                 )
+        process: subprocess.Popen[bytes] | None = None
+        job_assigned = False
+        input_thread: threading.Thread | None = None
+        input_thread_started = False
+        cleanup_ok = False
         try:
-            process = subprocess.Popen(
-                command,
-                stdin=subprocess.PIPE,
-                stdout=subprocess.DEVNULL,
-                stderr=subprocess.DEVNULL,
-                start_new_session=os.name == "posix",
-                creationflags=_CREATE_SUSPENDED if windows_job is not None else 0,
-            )
-        except OSError:
-            result = _failure(
-                AuthoringSystemDiagnosticCode.CHILD_CRASH, "Bounded child could not start.", request.max_count
-            )
-            if windows_job is not None and not windows_job.close():
-                return _append_cleanup_failure(result, request.max_count)
-            return result
-        if windows_job is not None:
-            if not windows_job.assign(process.pid):
-                result = _failure(
-                    AuthoringSystemDiagnosticCode.CHILD_CRASH,
-                    "Bounded child could not enter its process job.",
-                    request.max_count,
-                )
-                try:
-                    process.kill()
-                    process.wait(timeout=_PROCESS_TREE_CLEANUP_SECONDS)
-                    stopped = process.poll() is not None
-                except (OSError, subprocess.TimeoutExpired):
-                    stopped = False
-                if not windows_job.close() or not stopped:
-                    return _append_cleanup_failure(result, request.max_count)
-                return result
-            if not windows_job.resume_suspended_process(process.pid):
-                result = _failure(
-                    AuthoringSystemDiagnosticCode.CHILD_CRASH,
-                    "Bounded child could not resume in its process job.",
-                    request.max_count,
-                )
-                if not _terminate_process_tree(process, windows_job=windows_job):
-                    return _append_cleanup_failure(result, request.max_count)
-                return result
-        deadline = time.monotonic() + request.timeout_seconds
-        input_ready = threading.Event()
-        input_errors: list[OSError] = []
-        live_input = (
-            _LiveBoundedKeyEnvelope(call_id, pseudonymization_key.value if pseudonymization_key is not None else None)
-            .serialize()
-            .encode("utf-8")
-        )
-
-        def deliver_input() -> None:
             try:
-                if process.stdin is None:
-                    raise BrokenPipeError("bounded child input pipe is unavailable")
-                process.stdin.write(live_input)
-                process.stdin.close()
-            except OSError as error:
-                input_errors.append(error)
-            finally:
-                input_ready.set()
-
-        input_thread = threading.Thread(target=deliver_input, daemon=True)
-        input_thread.start()
-        try:
-            while not reply_file.exists():
-                if process.poll() is not None:
-                    result = _failure(
-                        AuthoringSystemDiagnosticCode.CHILD_CRASH,
-                        f"Bounded child exited without evidence (exit code {process.returncode}).",
-                        request.max_count,
-                    )
-                    break
-                if input_ready.is_set() and input_errors:
-                    result = _failure(
-                        AuthoringSystemDiagnosticCode.CHILD_CRASH,
-                        "Bounded child could not receive its private input.",
-                        request.max_count,
-                    )
-                    break
-                if time.monotonic() >= deadline:
-                    result = _failure(
-                        AuthoringSystemDiagnosticCode.TIMEOUT,
-                        "Bounded execution exceeded its timeout.",
-                        request.max_count,
-                    )
-                    break
-                time.sleep(0.01)
-            else:
-                try:
-                    if reply_file.stat().st_size > _MAX_REPLY_BYTES:
-                        raise ValueError("bounded child evidence is too large")
-                    with reply_file.open("rb") as reply:
-                        payload = reply.read(_MAX_REPLY_BYTES + 1)
-                    if len(payload) > _MAX_REPLY_BYTES:
-                        raise ValueError("bounded child evidence changed size")
-                    result = _decode_reply(payload, request)
-                except (OSError, ValueError):
-                    result = _failure(
-                        AuthoringSystemDiagnosticCode.SERIALIZATION,
-                        "Bounded child evidence could not be read safely.",
-                        request.max_count,
-                    )
-        finally:
-            if not _terminate_process_tree(process, input_thread, windows_job):
-                result = (
-                    _append_cleanup_failure(result, request.max_count)
-                    if result is not None
-                    else _failure(
-                        AuthoringSystemDiagnosticCode.CLEANUP,
-                        "Bounded process tree could not be terminated and reaped.",
-                        request.max_count,
-                    )
+                process = subprocess.Popen(
+                    command,
+                    stdin=subprocess.PIPE,
+                    stdout=subprocess.DEVNULL,
+                    stderr=subprocess.DEVNULL,
+                    start_new_session=os.name == "posix",
+                    creationflags=_CREATE_SUSPENDED if windows_job is not None else 0,
                 )
+            except OSError:
+                result = _failure(
+                    AuthoringSystemDiagnosticCode.CHILD_CRASH, "Bounded child could not start.", request.max_count
+                )
+            if process is not None:
+                can_execute = True
+                if windows_job is not None:
+                    job_assigned = windows_job.assign(process.pid)
+                    if not job_assigned:
+                        can_execute = False
+                        result = _failure(
+                            AuthoringSystemDiagnosticCode.CHILD_CRASH,
+                            "Bounded child could not enter its process job.",
+                            request.max_count,
+                        )
+                    elif not windows_job.resume_suspended_process(process.pid):
+                        can_execute = False
+                        result = _failure(
+                            AuthoringSystemDiagnosticCode.CHILD_CRASH,
+                            "Bounded child could not resume in its process job.",
+                            request.max_count,
+                        )
+                if can_execute:
+                    deadline = time.monotonic() + request.timeout_seconds
+                    input_ready = threading.Event()
+                    input_errors: list[OSError] = []
+                    live_input = (
+                        _LiveBoundedKeyEnvelope(
+                            call_id,
+                            pseudonymization_key.value if pseudonymization_key is not None else None,
+                        )
+                        .serialize()
+                        .encode("utf-8")
+                    )
+
+                    def deliver_input() -> None:
+                        try:
+                            if process.stdin is None:
+                                raise BrokenPipeError("bounded child input pipe is unavailable")
+                            process.stdin.write(live_input)
+                            process.stdin.close()
+                        except OSError as error:
+                            input_errors.append(error)
+                        finally:
+                            input_ready.set()
+
+                    input_thread = threading.Thread(target=deliver_input, daemon=True)
+                    try:
+                        input_thread.start()
+                    except BaseException:
+                        input_thread_started = input_thread.is_alive()
+                        raise
+                    input_thread_started = True
+                    while not reply_file.exists():
+                        if process.poll() is not None:
+                            result = _failure(
+                                AuthoringSystemDiagnosticCode.CHILD_CRASH,
+                                f"Bounded child exited without evidence (exit code {process.returncode}).",
+                                request.max_count,
+                            )
+                            break
+                        if input_ready.is_set() and input_errors:
+                            result = _failure(
+                                AuthoringSystemDiagnosticCode.CHILD_CRASH,
+                                "Bounded child could not receive its private input.",
+                                request.max_count,
+                            )
+                            break
+                        if time.monotonic() >= deadline:
+                            result = _failure(
+                                AuthoringSystemDiagnosticCode.TIMEOUT,
+                                "Bounded execution exceeded its timeout.",
+                                request.max_count,
+                            )
+                            break
+                        time.sleep(0.01)
+                    else:
+                        try:
+                            if reply_file.stat().st_size > _MAX_REPLY_BYTES:
+                                raise ValueError("bounded child evidence is too large")
+                            with reply_file.open("rb") as reply:
+                                payload = reply.read(_MAX_REPLY_BYTES + 1)
+                            if len(payload) > _MAX_REPLY_BYTES:
+                                raise ValueError("bounded child evidence changed size")
+                            result = _decode_reply(payload, request)
+                        except (OSError, ValueError):
+                            result = _failure(
+                                AuthoringSystemDiagnosticCode.SERIALIZATION,
+                                "Bounded child evidence could not be read safely.",
+                                request.max_count,
+                            )
+        finally:
+            try:
+                if process is None:
+                    cleanup_ok = windows_job is None or windows_job.close()
+                elif windows_job is not None and not job_assigned:
+                    cleanup_ok = _terminate_suspended_process(process, windows_job)
+                else:
+                    cleanup_ok = _terminate_process_tree(
+                        process,
+                        input_thread if input_thread_started else None,
+                        windows_job,
+                    )
+            except Exception:
+                cleanup_ok = False
+            if not cleanup_ok and result is not None:
+                result = _append_cleanup_failure(result, request.max_count)
         assert result is not None
         return result

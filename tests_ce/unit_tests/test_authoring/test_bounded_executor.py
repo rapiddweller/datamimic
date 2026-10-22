@@ -5,6 +5,7 @@ import os
 import subprocess
 import sys
 import tempfile
+import threading
 import time
 from pathlib import Path, PurePosixPath
 
@@ -210,6 +211,19 @@ def test_windows_tree_query_failure_blocks_cleanup_success():
     assert not bounded_executor._terminate_process_tree(Process(), windows_job=Job())
 
 
+def test_process_group_enumeration_failure_is_not_absence(monkeypatch):
+    from datamimic_ce.authoring.adapters import bounded_executor
+
+    def fail_enumeration():
+        raise PermissionError("process table unavailable")
+
+    monkeypatch.setattr(bounded_executor.os, "killpg", lambda *_args: None)
+    monkeypatch.setattr(bounded_executor.psutil, "process_iter", fail_enumeration)
+
+    with pytest.raises(PermissionError):
+        bounded_executor._process_group_is_absent(123)
+
+
 def test_windows_suspended_child_is_killed_when_job_assignment_fails(tmp_path, monkeypatch):
     from datamimic_ce.authoring.adapters import bounded_executor
 
@@ -254,6 +268,145 @@ def test_windows_suspended_child_is_killed_when_job_assignment_fails(tmp_path, m
     assert result.diagnostics[0].code is AuthoringSystemDiagnosticCode.CHILD_CRASH
     assert process.killed
     assert job.closed == 1
+
+
+@pytest.mark.parametrize(
+    ("stage", "failure", "uses_job_cleanup"),
+    [
+        ("assign_exception", KeyboardInterrupt, False),
+        ("resume_false", None, True),
+        ("resume_exception", OSError, True),
+        ("thread_constructor", RuntimeError, True),
+        ("thread_start", OSError, True),
+    ],
+)
+def test_windows_setup_faults_close_process_ownership(tmp_path, monkeypatch, stage, failure, uses_job_cleanup):
+    from datamimic_ce.authoring.adapters import bounded_executor
+
+    class Process:
+        pid = 123
+        stdin = object()
+        killed = False
+
+        def kill(self):
+            self.killed = True
+
+        def wait(self, *, timeout):
+            assert timeout >= 0
+
+        def poll(self):
+            return 0 if self.killed else None
+
+    class Job:
+        closed = 0
+
+        def assign(self, _process_id):
+            if stage == "assign_exception":
+                raise KeyboardInterrupt("assignment cancelled")
+            return True
+
+        def resume_suspended_process(self, _process_id):
+            if stage == "resume_false":
+                return False
+            if stage == "resume_exception":
+                raise OSError("resume failed")
+            return True
+
+        def close(self):
+            self.closed += 1
+            return True
+
+    class FailingThread:
+        def __init__(self, **_kwargs):
+            if stage == "thread_constructor":
+                raise RuntimeError("thread construction failed")
+
+        def start(self):
+            if stage == "thread_start":
+                raise OSError("thread start failed")
+
+        def is_alive(self):
+            return False
+
+    process = Process()
+    job = Job()
+    tree_cleanup_calls = []
+
+    def terminate_owned_tree(candidate, input_thread, candidate_job):
+        tree_cleanup_calls.append((candidate, input_thread, candidate_job))
+        candidate.kill()
+        assert candidate_job is not None
+        return candidate_job.close()
+
+    monkeypatch.setattr(bounded_executor, "_is_windows_platform", lambda: True)
+    monkeypatch.setattr(bounded_executor, "WindowsProcessTree", lambda: job)
+    monkeypatch.setattr(bounded_executor.subprocess, "Popen", lambda *_args, **_kwargs: process)
+    monkeypatch.setattr(bounded_executor, "_terminate_process_tree", terminate_owned_tree)
+    if stage.startswith("thread_"):
+        monkeypatch.setattr(bounded_executor.threading, "Thread", FailingThread)
+
+    def run():
+        return bounded_executor.CeBoundedExecutor._execute_child(
+            BoundedExecutionRequest(xml="<setup />"), tmp_path, tmp_path / "request", tmp_path / "reply", None
+        )
+
+    if failure is None:
+        result = run()
+        assert not result.ok
+        assert result.diagnostics[0].code is AuthoringSystemDiagnosticCode.CHILD_CRASH
+    else:
+        with pytest.raises(failure):
+            run()
+
+    assert process.killed
+    assert job.closed == 1
+    assert bool(tree_cleanup_calls) is uses_job_cleanup
+
+
+@pytest.mark.skipif(os.name != "posix", reason="private process-group cleanup is a POSIX contract")
+def test_malformed_child_reply_still_terminates_descendant(tmp_path, monkeypatch):
+    from datamimic_ce.authoring.adapters import bounded_executor
+
+    reply_file = tmp_path / "reply.pickle"
+    pid_file = tmp_path / "descendant.pid"
+    script = (
+        "import pathlib, subprocess, sys; "
+        "sys.stdin.buffer.read(); "
+        "child = subprocess.Popen([sys.executable, '-c', 'import time; time.sleep(30)']); "
+        "pathlib.Path(sys.argv[2]).write_text(str(child.pid)); "
+        "pathlib.Path(sys.argv[1]).write_bytes(bytes([255]))"
+    )
+    real_popen = subprocess.Popen
+
+    def spawn_worker(_command, **kwargs):
+        return real_popen([sys.executable, "-c", script, str(reply_file), str(pid_file)], **kwargs)
+
+    monkeypatch.setattr(bounded_executor.subprocess, "Popen", spawn_worker)
+    descendant_pid = None
+    try:
+        result = CeBoundedExecutor._execute_child(
+            BoundedExecutionRequest(xml="<setup />"), tmp_path, tmp_path / "request.json", reply_file, None
+        )
+        descendant_pid = int(pid_file.read_text())
+        assert not result.ok
+        assert result.diagnostics[0].code is AuthoringSystemDiagnosticCode.SERIALIZATION
+        for _ in range(40):
+            try:
+                descendant = psutil.Process(descendant_pid)
+            except psutil.NoSuchProcess:
+                break
+            if descendant.status() == psutil.STATUS_ZOMBIE or not descendant.is_running():
+                break
+            time.sleep(0.05)
+        else:
+            raise AssertionError(f"descendant process {descendant_pid} survived malformed reply cleanup")
+    finally:
+        if descendant_pid is not None:
+            try:
+                descendant = psutil.Process(descendant_pid)
+                descendant.kill()
+            except psutil.NoSuchProcess:
+                pass
 
 
 def test_blocked_private_input_obeys_execution_timeout(monkeypatch):
