@@ -15,7 +15,8 @@ class MemstoreModel(BaseModel):
     id: str = Field(
         ...,
         description="Identifier for this in-memory store, used as a <generate target=> write "
-        "destination and a <variable source=> read source for pipeline handoff within the same run.",
+        "destination and a <variable source=> read source for pipeline handoff within the same run. "
+        "Use 'mem' to stay portable: EE ignores the declaration (warning W005) and provides only 'mem'.",
         examples=["mem"],
     )
 
