@@ -91,6 +91,10 @@
         "responsibility": "Owns the private workspace snapshot, child process, transport validation and cleanup for bounded execution."
       },
       {
+        "path": "datamimic_ce/authoring/adapters/windows_process_tree.py",
+        "responsibility": "Owns each suspended bounded worker and confirms or terminates its Windows Job Object process tree."
+      },
+      {
         "path": "datamimic_ce/authoring/adapters/bounded_executor_child.py",
         "responsibility": "Runs one CE capture invocation in the private child process and returns its typed outcome."
       },
@@ -521,6 +525,7 @@
         "datamimic_ce.authoring.adapters.engine_check",
         "datamimic_ce.authoring.adapters.linter",
         "datamimic_ce.authoring.adapters.validator",
+        "datamimic_ce.authoring.adapters.windows_process_tree",
         "datamimic_ce.authoring.adapters.windows_snapshot",
         "datamimic_ce.authoring.adapters.workspace",
         "datamimic_ce.authoring.adapters.xml_loader"

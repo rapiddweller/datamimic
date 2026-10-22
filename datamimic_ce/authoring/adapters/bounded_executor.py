@@ -23,10 +23,12 @@ from itertools import islice
 from pathlib import Path
 from uuid import uuid4
 
+import psutil
 from lxml import etree
 from pydantic import SecretBytes
 
 from datamimic_ce.authoring.adapters import dryrun
+from datamimic_ce.authoring.adapters.windows_process_tree import _CREATE_SUSPENDED, WindowsProcessTree
 from datamimic_ce.authoring.adapters.windows_snapshot import WindowsSnapshotRoot
 from datamimic_ce.authoring.adapters.workspace import (
     MAX_RESOURCE_BYTES,
@@ -58,6 +60,7 @@ _MAX_WORKSPACE_FILES = 2_000
 _MAX_WORKSPACE_ENTRIES = 4_000
 _MAX_WORKSPACE_DEPTH = 64
 _MAX_REPLY_BYTES = dryrun._MAX_WORKER_REPLY_BYTES
+_PROCESS_TREE_CLEANUP_SECONDS = 1.25
 
 
 @dataclass(frozen=True, slots=True, repr=False)
@@ -177,40 +180,143 @@ def _snapshot_workspace(source: Path, destination: Path) -> None:
             copy_directory(source, destination)
 
 
-def _terminate_process_tree(process: subprocess.Popen[bytes]) -> None:
-    """Kill the private POSIX group, or use Windows' descendant-aware taskkill."""
-    if os.name == "nt":
-        _terminate_windows_process_tree(process)
-        return
-    with suppress(ProcessLookupError):
-        os.killpg(process.pid, signal.SIGTERM)
+def _terminate_process_tree(
+    process: subprocess.Popen[bytes],
+    writer_thread: threading.Thread | None = None,
+    windows_job: WindowsProcessTree | None = None,
+) -> bool:
+    """Stop the worker and confirm its owned process tree is gone."""
+    deadline = time.monotonic() + _PROCESS_TREE_CLEANUP_SECONDS
+    cleanup_ok = True
+    if windows_job is not None:
+        tree_stopped = _windows_tree_is_stopped(process, windows_job, deadline)
+        if tree_stopped is None:
+            cleanup_ok = False
+            if time.monotonic() < deadline:
+                cleanup_ok = windows_job.terminate() and cleanup_ok
+        elif not tree_stopped:
+            cleanup_ok = windows_job.terminate()
+    elif os.name == "posix":
+        cleanup_ok = _kill_process_group(process.pid, signal.SIGTERM)
+    else:
+        try:
+            process.terminate()
+        except ProcessLookupError:
+            pass
+        except OSError:
+            cleanup_ok = False
+
     with suppress(subprocess.TimeoutExpired):
-        process.wait(timeout=0.2)
-    with suppress(ProcessLookupError):
-        os.killpg(process.pid, signal.SIGKILL)
+        process.wait(timeout=min(0.25, max(0, deadline - time.monotonic())))
+
+    if windows_job is None:
+        if os.name == "posix":
+            cleanup_ok = _kill_process_group(process.pid, signal.SIGKILL) and cleanup_ok
+        elif process.poll() is None:
+            try:
+                process.kill()
+            except ProcessLookupError:
+                pass
+            except OSError:
+                cleanup_ok = False
+
+    while True:
+        process_stopped = process.poll() is not None
+        if windows_job is not None:
+            tree_stopped = _windows_tree_is_stopped(process, windows_job, deadline)
+            if tree_stopped is None:
+                cleanup_ok = False
+                if time.monotonic() < deadline:
+                    cleanup_ok = windows_job.terminate() and cleanup_ok
+            elif tree_stopped:
+                break
+        elif process_stopped and (os.name != "posix" or _process_group_is_absent(process.pid)):
+            break
+        remaining = deadline - time.monotonic()
+        if remaining <= 0:
+            cleanup_ok = False
+            break
+        if process_stopped:
+            time.sleep(min(0.05, remaining))
+        else:
+            with suppress(subprocess.TimeoutExpired):
+                process.wait(timeout=min(0.05, remaining))
+
+    if writer_thread is not None:
+        writer_thread.join(timeout=max(0, deadline - time.monotonic()))
+    writer_stopped = writer_thread is None or not writer_thread.is_alive()
+    if windows_job is not None:
+        cleanup_ok = windows_job.close() and cleanup_ok
+    else:
+        tree_stopped = process.poll() is not None and (os.name != "posix" or _process_group_is_absent(process.pid))
+    return tree_stopped is True and writer_stopped and cleanup_ok
+
+
+def _windows_tree_is_stopped(
+    process: subprocess.Popen[bytes], windows_job: WindowsProcessTree, deadline: float
+) -> bool | None:
+    if windows_job.active_process_count() is None:
+        return None
+    process_ids = windows_job.process_ids(deadline)
+    if process_ids is None or process.poll() is None:
+        return None if process_ids is None else False
+    return not any(process_id != process.pid for process_id in process_ids)
+
+
+def _kill_process_group(group_id: int, sig: signal.Signals) -> bool:
     try:
-        process.wait(timeout=1)
-    except subprocess.TimeoutExpired as error:
-        raise OSError("bounded worker did not stop") from error
+        os.killpg(group_id, sig)
+    except ProcessLookupError:
+        return True
+    except OSError:
+        return False
+    return True
 
 
-def _terminate_windows_process_tree(process: subprocess.Popen[bytes]) -> None:
-    deadline = time.monotonic() + 1.25
-    completed = subprocess.run(
-        ["taskkill", "/PID", str(process.pid), "/T", "/F"],
-        capture_output=True,
-        timeout=deadline - time.monotonic(),
-        check=False,
+def _process_group_is_absent(group_id: int) -> bool:
+    try:
+        os.killpg(group_id, 0)
+    except ProcessLookupError:
+        return True
+    except OSError:
+        return False
+    for process in psutil.process_iter():
+        try:
+            process_group_id = os.getpgid(process.pid)
+        except psutil.NoSuchProcess:
+            continue
+        except OSError:
+            return False
+        if process_group_id != group_id:
+            continue
+        try:
+            if process.status() != psutil.STATUS_ZOMBIE:
+                return False
+        except psutil.NoSuchProcess:
+            continue
+        except (psutil.AccessDenied, OSError):
+            return False
+    return True
+
+
+def _append_cleanup_failure(result: BoundedExecutionEvidence, max_count: int) -> BoundedExecutionEvidence:
+    cleanup_failure = _failure(
+        AuthoringSystemDiagnosticCode.CLEANUP,
+        "Bounded process tree could not be terminated and reaped.",
+        max_count,
     )
-    if completed.returncode != 0:
-        raise OSError("taskkill did not terminate the bounded process tree")
-    remaining = deadline - time.monotonic()
-    if remaining <= 0:
-        raise OSError("bounded worker termination exceeded its cleanup budget")
-    try:
-        process.wait(timeout=remaining)
-    except subprocess.TimeoutExpired as error:
-        raise OSError("bounded worker did not stop") from error
+    if result.ok:
+        return cleanup_failure
+    return replace(
+        result,
+        ok=False,
+        diagnostics=result.diagnostics + cleanup_failure.diagnostics,
+        base_run_ok=False,
+    )
+
+
+def _is_windows_platform() -> bool:
+    return os.name == "nt"
 
 
 def _decode_reply(payload: bytes, request: BoundedExecutionRequest) -> BoundedExecutionEvidence:
@@ -480,6 +586,17 @@ class CeBoundedExecutor:
             str(workspace),
             call_id,
         ]
+        windows_job: WindowsProcessTree | None = None
+        result: BoundedExecutionEvidence | None = None
+        if _is_windows_platform():
+            try:
+                windows_job = WindowsProcessTree()
+            except OSError:
+                return _failure(
+                    AuthoringSystemDiagnosticCode.CHILD_CRASH,
+                    "Bounded child process ownership could not be created.",
+                    request.max_count,
+                )
         try:
             process = subprocess.Popen(
                 command,
@@ -487,12 +604,40 @@ class CeBoundedExecutor:
                 stdout=subprocess.DEVNULL,
                 stderr=subprocess.DEVNULL,
                 start_new_session=os.name == "posix",
+                creationflags=_CREATE_SUSPENDED if windows_job is not None else 0,
             )
         except OSError:
-            return _failure(
+            result = _failure(
                 AuthoringSystemDiagnosticCode.CHILD_CRASH, "Bounded child could not start.", request.max_count
             )
-        result: BoundedExecutionEvidence | None = None
+            if windows_job is not None and not windows_job.close():
+                return _append_cleanup_failure(result, request.max_count)
+            return result
+        if windows_job is not None:
+            if not windows_job.assign(process.pid):
+                result = _failure(
+                    AuthoringSystemDiagnosticCode.CHILD_CRASH,
+                    "Bounded child could not enter its process job.",
+                    request.max_count,
+                )
+                try:
+                    process.kill()
+                    process.wait(timeout=_PROCESS_TREE_CLEANUP_SECONDS)
+                    stopped = process.poll() is not None
+                except (OSError, subprocess.TimeoutExpired):
+                    stopped = False
+                if not windows_job.close() or not stopped:
+                    return _append_cleanup_failure(result, request.max_count)
+                return result
+            if not windows_job.resume_suspended_process(process.pid):
+                result = _failure(
+                    AuthoringSystemDiagnosticCode.CHILD_CRASH,
+                    "Bounded child could not resume in its process job.",
+                    request.max_count,
+                )
+                if not _terminate_process_tree(process, windows_job=windows_job):
+                    return _append_cleanup_failure(result, request.max_count)
+                return result
         deadline = time.monotonic() + request.timeout_seconds
         input_ready = threading.Event()
         input_errors: list[OSError] = []
@@ -555,27 +700,15 @@ class CeBoundedExecutor:
                         request.max_count,
                     )
         finally:
-            try:
-                _terminate_process_tree(process)
-                input_thread.join(timeout=0.2)
-                if input_thread.is_alive():
-                    raise OSError("bounded worker input writer did not stop")
-            except (OSError, subprocess.TimeoutExpired):
-                cleanup_failure = _failure(
-                    AuthoringSystemDiagnosticCode.CLEANUP,
-                    "Bounded process tree could not be terminated and reaped.",
-                    request.max_count,
-                )
-                if result is not None:
-                    result = (
-                        replace(
-                            result,
-                            ok=False,
-                            diagnostics=result.diagnostics + cleanup_failure.diagnostics,
-                            base_run_ok=False,
-                        )
-                        if not result.ok
-                        else cleanup_failure
+            if not _terminate_process_tree(process, input_thread, windows_job):
+                result = (
+                    _append_cleanup_failure(result, request.max_count)
+                    if result is not None
+                    else _failure(
+                        AuthoringSystemDiagnosticCode.CLEANUP,
+                        "Bounded process tree could not be terminated and reaped.",
+                        request.max_count,
                     )
+                )
         assert result is not None
         return result

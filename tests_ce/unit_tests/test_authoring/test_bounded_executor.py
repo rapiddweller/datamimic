@@ -90,8 +90,8 @@ def test_child_crash_remains_primary_when_tree_cleanup_fails(monkeypatch):
     def exit_before_read(_command, **kwargs):
         return real_popen([sys.executable, "-c", "import os; os._exit(7)"], **kwargs)
 
-    def failed_cleanup(_process):
-        raise OSError("controlled cleanup failure")
+    def failed_cleanup(*_args, **_kwargs):
+        return False
 
     monkeypatch.setattr(bounded_executor.subprocess, "Popen", exit_before_read)
     monkeypatch.setattr(bounded_executor, "_terminate_process_tree", failed_cleanup)
@@ -107,31 +107,153 @@ def test_child_crash_remains_primary_when_tree_cleanup_fails(monkeypatch):
     ]
 
 
-def test_windows_tree_termination_shares_one_cleanup_deadline(monkeypatch):
-    from types import SimpleNamespace
-
+def test_windows_tree_termination_keeps_success_after_worker_exit():
     from datamimic_ce.authoring.adapters import bounded_executor
-
-    now = [0.0]
-    observed = {}
 
     class Process:
         pid = 123
 
+        def poll(self):
+            return 0
+
         def wait(self, *, timeout):
-            observed["wait_timeout"] = timeout
+            assert timeout > 0
 
-    def run(_command, *, timeout, **_kwargs):
-        observed["taskkill_timeout"] = timeout
-        now[0] += 0.5
-        return subprocess.CompletedProcess(["taskkill"], 0)
+    class Job:
+        closed = 0
 
-    monkeypatch.setattr(bounded_executor, "time", SimpleNamespace(monotonic=lambda: now[0]))
-    monkeypatch.setattr(bounded_executor.subprocess, "run", run)
+        def active_process_count(self):
+            return 1
 
-    bounded_executor._terminate_windows_process_tree(Process())
+        def process_ids(self, _deadline):
+            return (123,)
 
-    assert 0 < observed["wait_timeout"] < observed["taskkill_timeout"] <= 1.25
+        def terminate(self):
+            pytest.fail("an empty job must not be terminated")
+
+        def close(self):
+            self.closed += 1
+            return True
+
+    job = Job()
+    assert bounded_executor._terminate_process_tree(Process(), windows_job=job)
+    assert job.closed == 1
+
+
+@pytest.mark.parametrize("descendants", [(456,), (456, 789)])
+def test_windows_tree_termination_tracks_descendants_after_worker_exit(descendants):
+    from datamimic_ce.authoring.adapters import bounded_executor
+
+    class Process:
+        pid = 123
+
+        def poll(self):
+            return 0
+
+        def wait(self, *, timeout):
+            return 0
+
+    class Job:
+        active = 1 + len(descendants)
+        terminated = 0
+        closed = 0
+
+        def active_process_count(self):
+            return self.active
+
+        def process_ids(self, _deadline):
+            return (123, *descendants) if self.active > 1 else (123,)
+
+        def terminate(self):
+            self.terminated += 1
+            self.active = 0
+            return True
+
+        def close(self):
+            self.closed += 1
+            return True
+
+    job = Job()
+    assert bounded_executor._terminate_process_tree(Process(), windows_job=job)
+    assert job.terminated == 1
+    assert job.closed == 1
+
+
+def test_windows_tree_query_failure_blocks_cleanup_success():
+    from datamimic_ce.authoring.adapters import bounded_executor
+
+    class Process:
+        pid = 123
+
+        def poll(self):
+            return 0
+
+        def wait(self, *, timeout):
+            return 0
+
+    class Job:
+        queries = 0
+
+        def active_process_count(self):
+            self.queries += 1
+            return None if self.queries == 1 else 1
+
+        def process_ids(self, _deadline):
+            return (123,)
+
+        def terminate(self):
+            return True
+
+        def close(self):
+            return True
+
+    assert not bounded_executor._terminate_process_tree(Process(), windows_job=Job())
+
+
+def test_windows_suspended_child_is_killed_when_job_assignment_fails(tmp_path, monkeypatch):
+    from datamimic_ce.authoring.adapters import bounded_executor
+
+    class Process:
+        pid = 123
+        stdin = None
+        killed = False
+
+        def kill(self):
+            self.killed = True
+
+        def wait(self, *, timeout):
+            assert timeout > 0
+
+        def poll(self):
+            return 1 if self.killed else None
+
+    class Job:
+        closed = 0
+
+        def assign(self, _process_id):
+            return False
+
+        def resume_suspended_process(self, _process_id):
+            pytest.fail("a child outside the job must not resume")
+
+        def close(self):
+            self.closed += 1
+            return True
+
+    process = Process()
+    job = Job()
+    monkeypatch.setattr(bounded_executor, "_is_windows_platform", lambda: True)
+    monkeypatch.setattr(bounded_executor, "WindowsProcessTree", lambda: job)
+    monkeypatch.setattr(bounded_executor.subprocess, "Popen", lambda *_args, **_kwargs: process)
+
+    result = bounded_executor.CeBoundedExecutor._execute_child(
+        BoundedExecutionRequest(xml="<setup />"), tmp_path, tmp_path / "request", tmp_path / "reply", None
+    )
+
+    assert not result.ok
+    assert result.diagnostics[0].code is AuthoringSystemDiagnosticCode.CHILD_CRASH
+    assert process.killed
+    assert job.closed == 1
 
 
 def test_blocked_private_input_obeys_execution_timeout(monkeypatch):
@@ -303,7 +425,7 @@ def test_workspace_profile_loader_has_no_home_or_cwd_fallback(tmp_path, monkeypa
         workspace.load_connection_profile(root, "../environment")
 
 
-@pytest.mark.skipif(os.name not in {"posix", "nt"}, reason="requires POSIX process groups or Windows taskkill")
+@pytest.mark.skipif(os.name not in {"posix", "nt"}, reason="requires supported process-tree ownership")
 def test_timeout_terminates_worker_children_and_grandchildren(tmp_path):
     import json
 
@@ -508,8 +630,6 @@ def test_child_crash_is_typed_and_does_not_wait_for_timeout(tmp_path):
     assert time.monotonic() - started < 15
     assert not result.ok
     assert result.diagnostics[0].code is AuthoringSystemDiagnosticCode.CHILD_CRASH
-    if os.name == "nt":
-        assert any(diagnostic.code is AuthoringSystemDiagnosticCode.CLEANUP for diagnostic in result.diagnostics)
     if os.name != "nt":
         assert "exit code 17" in result.diagnostics[0].message
 
@@ -519,9 +639,9 @@ def test_process_cleanup_failure_blocks_success_after_actual_reap(tmp_path, monk
 
     original = bounded_executor._terminate_process_tree
 
-    def failed_cleanup(process):
-        original(process)
-        raise OSError("cleanup verification failed")
+    def failed_cleanup(process, *args, **kwargs):
+        original(process, *args, **kwargs)
+        return False
 
     monkeypatch.setattr(bounded_executor, "_terminate_process_tree", failed_cleanup)
     result = CeBoundedExecutor().execute(BoundedExecutionRequest(xml=_XML))
@@ -599,10 +719,10 @@ def test_process_cleanup_preserves_primary_exception_after_actual_reap(monkeypat
     original = bounded_executor._terminate_process_tree
     reaped = []
 
-    def failed_cleanup(process):
-        original(process)
+    def failed_cleanup(process, *args, **kwargs):
+        original(process, *args, **kwargs)
         reaped.append(process)
-        raise OSError("cleanup verification failed")
+        return False
 
     def failed_decode(*args):
         raise primary

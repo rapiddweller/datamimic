@@ -2462,6 +2462,10 @@
       "reason": "Runs one CE capture invocation in the private child process and returns its typed outcome."
     },
     {
+      "target": "authoring/adapters/windows_process_tree.py",
+      "reason": "Owns each suspended bounded worker and confirms or terminates its Windows Job Object process tree."
+    },
+    {
       "target": "authoring/adapters/catalog.py",
       "reason": "Projects live CE registry capabilities, rule metadata and native learning examples into typed discovery."
     },
@@ -2698,6 +2702,10 @@
     {
       "target": "engine/runtime/lifecycle/pseudonymization.py",
       "responsibility": "Resolve the host environment reference for a pseudonymization key during runtime startup."
+    },
+    {
+      "target": "authoring/adapters/windows_process_tree.py",
+      "responsibility": "Owns each suspended bounded worker and confirms or terminates its Windows Job Object process tree."
     },
     {
       "target": "__init__.py",
