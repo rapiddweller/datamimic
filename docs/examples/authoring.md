@@ -46,13 +46,17 @@ a randomly selected valid parent key does not establish per-parent cardinality.
 The producer identifier and consumer FK role pair makes readback integrity part
 of the proof. Merely declaring a memstore target does not establish readback.
 
+Declare the store as `<memstore id="mem"/>`. EE has one built-in `mem` store and
+ignores the declaration with warning `W005`, so this form runs in CE and EE.
+Other ids are a CE-only extension.
+
 ```xml
 <setup rngSeed="7">
-    <memstore id="store"/>
-    <generate name="parents" count="2" target="store">
+    <memstore id="mem"/>
+    <generate name="parents" count="2" target="mem">
         <key name="id" generator="IncrementGenerator"/>
     </generate>
-    <generate name="readback" source="store" type="parents" distribution="ordered">
+    <generate name="readback" source="mem" type="parents" distribution="ordered">
         <key name="id" script="this.id"/>
     </generate>
 </setup>

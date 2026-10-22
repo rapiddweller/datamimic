@@ -27,7 +27,9 @@ Leave out folders the task does not need. Keep the entry at `datamimic.xml`.
    spread over XML. Deliberately chosen cases live in `data/fixtures/`, never in
    id arithmetic.
 2. Clients and the memstore are declared in the entry. Steps never declare
-   clients; Build refuses them there.
+   clients; Build refuses them there. Declare the memstore as `<memstore id="mem"/>`:
+   EE ignores the declaration (warning W005) and always provides `mem`, so only
+   this id runs in both editions.
 3. `model/` steps write only to the memstore. `delivery/` steps read it and are the
    only ones that write to files, databases or brokers.
 4. Logic that spans tables is a named function in `lib/`. The model passes every
