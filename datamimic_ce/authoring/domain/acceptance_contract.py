@@ -146,7 +146,7 @@ class AcceptanceSpecV1(AuthoringModel):
         return self
 
 
-def _reject(message: str, path: tuple[str | int, ...]) -> None:
+def _reject(message: str, path: tuple[str | int, ...], remediation: str | None = None) -> None:
     raise AcceptanceProjectionError(
         (
             catalog_diagnostic(
@@ -154,6 +154,7 @@ def _reject(message: str, path: tuple[str | int, ...]) -> None:
                 message,
                 phase=DiagnosticPhase.EXPECTATION,
                 path=path,
+                remediation=remediation,
             ),
         )
     )
@@ -188,14 +189,23 @@ def validate_acceptance_subject(
             _reject("Expectation references an unknown product.", path + ("product",))
             return
         fields = product.fields
+        owner = "of that product"
         if isinstance(subject, ProductRowsSubject) and subject.list_field is not None:
             selected = next((item for item in product.lists if item.name == subject.list_field), None)
             if selected is None:
                 _reject("Expectation references an unknown list field.", path + ("list_field",))
                 return
             fields = selected.fields
+            owner = 'inside the <nestedKey type="list"> that list_field names'
         if field is not None and field not in fields:
-            _reject("Expectation references an unknown field.", path + ("field",))
+            _reject(
+                "Expectation references an unknown field.",
+                path + ("field",),
+                remediation=(
+                    f"Declare the field as a <key> {owner}; Build knows only declared keys, not fields that "
+                    "appear only in rows a script or source produces."
+                ),
+            )
 
 
 def validate_acceptance_check(spec: AcceptanceSpecV1, check: AcceptanceCheckV1) -> None:

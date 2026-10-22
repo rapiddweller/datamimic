@@ -13,11 +13,12 @@ import sqlalchemy
 from typer.testing import CliRunner
 
 from datamimic_ce.authoring import create_authoring_application
-from datamimic_ce.authoring.domain.requests import BuildRequestV4, DecompileDocumentRequest, RejectedBuild
+from datamimic_ce.authoring.domain.requests import PROJECT_ENTRY_PATH, RejectedBuild
 from datamimic_ce.engine.runtime.api import run
 from datamimic_ce.engine.runtime.contracts import RunRequest
 from datamimic_ce.errors import IssueCode, OperationError, UserErrorBase
 from datamimic_ce.interfaces.cli import app
+from tests_ce.authoring_project import write_project
 
 SENTINEL = "AUDIT_SYNTHETIC_PRIVATE_VALUE_583c"
 EXPRESSIONS = (
@@ -112,28 +113,24 @@ def test_key_invalid_result_reports_type_without_generated_values(tmp_path, monk
     assert error.location.attribute == "script"
 
 
+def _build(project):
+    return create_authoring_application(project, descriptor_path=PROJECT_ENTRY_PATH).build()
+
+
 @pytest.mark.parametrize("interval", ["P999999999999999999999D", "PT999999999999999999999S"])
 @pytest.mark.parametrize("transport", ["python", "cli"])
 def test_extreme_duration_is_a_typed_build_rejection(tmp_path, interval, transport):
-    application = create_authoring_application(tmp_path)
-    parsed = application.decompile_document(
-        DecompileDocumentRequest(
-            xml=(
-                '<setup rngSeed="7"><generate name="rows" start="2026-01-01" end="2026-01-02" '
-                f'interval="{interval}"><key name="v" constant="ok"/></generate></setup>'
-            )
-        )
+    write_project(
+        tmp_path,
+        '<setup rngSeed="7"><generate name="rows" start="2026-01-01" end="2026-01-02" '
+        f'interval="{interval}"><key name="v" constant="ok"/></generate></setup>',
     )
-    assert parsed.outcome == "ready"
-    request = BuildRequestV4(document=parsed.document)
     if transport == "python":
-        result = application.build(request)
+        result = _build(tmp_path)
         assert isinstance(result, RejectedBuild)
         diagnostic = result.diagnostics[0].model_dump(mode="json")
     else:
-        response = CliRunner().invoke(
-            app, ["authoring", "build", "-", "--workspace-root", str(tmp_path)], input=request.model_dump_json()
-        )
+        response = CliRunner().invoke(app, ["authoring", "build", str(tmp_path)])
         assert response.exit_code == 1
         result = json.loads(response.stdout)
         assert result["outcome"] == "rejected"
@@ -144,25 +141,17 @@ def test_extreme_duration_is_a_typed_build_rejection(tmp_path, interval, transpo
 
 @pytest.mark.parametrize("transport", ["python", "cli"])
 def test_extreme_decimal_quantum_is_a_typed_build_rejection(tmp_path, transport):
-    application = create_authoring_application(tmp_path)
-    parsed = application.decompile_document(
-        DecompileDocumentRequest(
-            xml=(
-                '<setup rngSeed="7"><generate name="rows" count="1"><key name="v" type="decimal" '
-                'min="1" max="2" granularity="1e999999999"/></generate></setup>'
-            )
-        )
+    write_project(
+        tmp_path,
+        '<setup rngSeed="7"><generate name="rows" count="1"><key name="v" type="decimal" '
+        'min="1" max="2" granularity="1e999999999"/></generate></setup>',
     )
-    assert parsed.outcome == "ready"
-    request = BuildRequestV4(document=parsed.document)
     if transport == "python":
-        result = application.build(request)
+        result = _build(tmp_path)
         assert isinstance(result, RejectedBuild)
         diagnostic = result.diagnostics[0].model_dump(mode="json")
     else:
-        response = CliRunner().invoke(
-            app, ["authoring", "build", "-", "--workspace-root", str(tmp_path)], input=request.model_dump_json()
-        )
+        response = CliRunner().invoke(app, ["authoring", "build", str(tmp_path)])
         assert response.exit_code == 1
         result = json.loads(response.stdout)
         assert result["outcome"] == "rejected"

@@ -27,11 +27,19 @@ class LintContext:
         schemas: SchemaIndex,
         buffered_exporter_names: frozenset[str],
         base_dir: Path | None = None,
+        project: tuple[etree._Element, ...] = (),
+        declarations_complete: bool = True,
     ):
         self.root = root
         self.schemas = schemas
         self.buffered_exporter_names = buffered_exporter_names
         self.base_dir = base_dir  # descriptor dir; None for inline XML without one
+        # For an included step: the entry, then every step; their clients and memstores are shared at runtime.
+        self.project = project
+        # The setup whose rngSeed governs the run; a step never carries its own.
+        self.run_root = project[0] if project else root
+        # False when part of the project could not be read: an id may be declared there, so none is "unknown".
+        self.declarations_complete = declarations_complete
 
     def iter(self, *tags: str) -> Iterator[etree._Element]:
         """All elements (document order); with tags, only those. Comments are never yielded."""

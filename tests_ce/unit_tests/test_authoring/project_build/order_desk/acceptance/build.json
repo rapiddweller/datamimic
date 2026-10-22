@@ -1,0 +1,27 @@
+{
+  "version": "5.0",
+  "expectations": [
+    {"kind": "exact_count", "subject": {"kind": "product", "product": "order_rows"}, "count": 3},
+    {
+      "kind": "range",
+      "subject": {"kind": "product", "product": "order_rows"},
+      "field": "total",
+      "minimum": "9.5",
+      "maximum": "47.5"
+    }
+  ],
+  "product_roles": [
+    {"product": "customers", "field": "customer_id", "role": {"kind": "identifier"}},
+    {
+      "product": "orders",
+      "field": "customer_id",
+      "role": {"kind": "foreign_key", "parent_product": "customers", "parent_field": "customer_id"}
+    },
+    {"product": "orders", "field": "order_id", "role": {"kind": "identifier"}},
+    {
+      "product": "order_rows",
+      "field": "order_id",
+      "role": {"kind": "foreign_key", "parent_product": "orders", "parent_field": "order_id"}
+    }
+  ]
+}

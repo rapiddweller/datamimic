@@ -12,14 +12,21 @@ from pydantic import Field, JsonValue
 
 from .common import AuthoringModel, NonEmptyStrictStr
 from .diagnostics import RuleCatalogEntry
-from .requests import AuthoringSchemaId, BuildRequestV4, ReferenceTopic
+from .requests import AuthoringSchemaId, BuildRequestV5, ReferenceTopic
+
+
+class ProjectStarter(AuthoringModel):
+    """A minimal project: the text of ``datamimic.xml`` and the content of ``acceptance/build.json``."""
+
+    entry_xml: NonEmptyStrictStr
+    acceptance: BuildRequestV5
 
 
 class AuthoringAssemblyReference(AuthoringModel):
     entry_kind: Literal["assembly"] = "assembly"
     name: NonEmptyStrictStr
     instruction: NonEmptyStrictStr
-    starter: BuildRequestV4 | None = None
+    starter: ProjectStarter | None = None
 
 
 class AuthoringVariantReference(AuthoringModel):
@@ -32,8 +39,7 @@ class AuthoringExampleReference(AuthoringModel):
     entry_kind: Literal["example"] = "example"
     name: NonEmptyStrictStr
     title: NonEmptyStrictStr
-    request: BuildRequestV4 | None = None
-    compiled_xml: str | None = None
+    project: ProjectStarter | None = None
     verification: Literal["not_executed"] = "not_executed"
 
 
@@ -67,7 +73,7 @@ class AuthoringContractSchemas(AuthoringModel):
     compile_document_result: dict[str, JsonValue]
     decompile_document_request: dict[str, JsonValue]
     decompile_document_result: dict[str, JsonValue]
-    build_request_v4: dict[str, JsonValue]
+    build_request_v5: dict[str, JsonValue]
     ready_build: dict[str, JsonValue]
     rejected_build: dict[str, JsonValue]
     build_result: dict[str, JsonValue]
@@ -93,8 +99,8 @@ class AuthoringContractSchemas(AuthoringModel):
                 return self.ready_build
             case AuthoringSchemaId.REJECTED_BUILD:
                 return self.rejected_build
-            case AuthoringSchemaId.BUILD_REQUEST_V4:
-                return self.build_request_v4
+            case AuthoringSchemaId.BUILD_REQUEST_V5:
+                return self.build_request_v5
             case AuthoringSchemaId.EXPECTATION_INTENT:
                 return self.expectation_intent
             case AuthoringSchemaId.ENVIRONMENT_BINDING:

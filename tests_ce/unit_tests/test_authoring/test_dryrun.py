@@ -24,7 +24,7 @@ from datamimic_ce.errors.codes import ErrorCode, IssueCode
 
 _PIPELINE = """<setup rngSeed="1">
     <memstore id="mem"/>
-    <generate name="users" count="500" target="mem,CSV,ConsoleExporter">
+    <generate name="users" count="3" target="mem,CSV,ConsoleExporter">
         <key name="id" generator="IncrementGenerator"/>
         <key name="age" type="int" min="18" max="99"/>
     </generate>
@@ -67,15 +67,15 @@ def _observe_smoke_artifact(directory):
         _observe_smoke_artifact.original_cleanup(directory)
 
 
-def test_dry_run_caps_counts_strips_targets_keeps_memstore(tmp_path: Path, monkeypatch) -> None:
+def test_dry_run_strips_targets_and_keeps_memstore_pipeline(tmp_path: Path, monkeypatch) -> None:
     monkeypatch.chdir(tmp_path)  # any accidental artifact would land here
     result = _execute_source(_PIPELINE, max_count=7)
     assert result.ok, [d.message for d in result.diagnostics]
 
     by_name = {p.name: p for p in result.captured.products}
-    assert len(by_name["users"].rows) == 7  # capped from 500
-    assert len(by_name["from_mem"].rows) == 7  # memstore target kept -> pipeline works
-    assert len(by_name["users"].rows) == 7  # response sampling cannot shrink internal capture
+    assert len(by_name["users"].rows) == 3
+    assert len(by_name["from_mem"].rows) == 3  # memstore target kept -> pipeline works
+    assert len(by_name["users"].rows) == 3  # response sampling cannot shrink internal capture
     assert by_name["users"].rows[0]["id"] == 1
 
     # no artifacts anywhere: CSV/JSON/Console were stripped

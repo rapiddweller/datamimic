@@ -316,7 +316,7 @@ def test_existing_entrypoints_have_explicit_inner_public_decisions() -> None:
     assert "datamimic_ce.authoring.bootstrap:create_authoring_application" in public
     assert "datamimic_ce.authoring.application.app:AuthoringApplication" in public
     assert "datamimic_ce.authoring.domain.requests" not in public
-    assert "datamimic_ce.authoring.domain.requests:BuildRequestV4" in public
+    assert "datamimic_ce.authoring.domain.requests:BuildRequestV5" in public
     assert "datamimic_ce.authoring.domain.requests:BuildResult" in public
     assert "datamimic_ce.authoring.domain.requests:BoundedExecutionRequest" not in public
     assert "datamimic_ce.authoring.domain.requests:BoundedExecutionEvidence" not in public
@@ -325,7 +325,7 @@ def test_existing_entrypoints_have_explicit_inner_public_decisions() -> None:
         f"datamimic_ce.authoring.ports:{name}"
         for name in (
             "DmJsonDescriptorContract", "DslCatalog", "DescriptorValidator",
-            "BoundedExecutor", "BoundedExecutionPolicy",
+            "BoundedExecutor", "BoundedExecutionPolicy", "ProjectFiles",
         )
     }
     assert set(ports["public"]).issubset(public)

@@ -45,7 +45,7 @@ from datamimic_ce.authoring.domain.expectations import (
     expectation_identity,
 )
 from datamimic_ce.authoring.domain.proof import AcceptanceOrigin, ForeignKeyRole, IdentifierRole
-from datamimic_ce.authoring.domain.requests import BuildRequestV4
+from datamimic_ce.authoring.domain.requests import BuildRequestV5
 from datamimic_ce.authoring.domain.script_semantics import (
     ScriptScope,
     is_exact_scope_field_reference,
@@ -69,7 +69,7 @@ class _Product:
     count: int | None
 
 
-def _reject(message: str, path: tuple[str | int, ...]) -> NoReturn:
+def _reject(message: str, path: tuple[str | int, ...], remediation: str | None = None) -> NoReturn:
     raise AcceptanceProjectionError(
         (
             catalog_diagnostic(
@@ -77,6 +77,7 @@ def _reject(message: str, path: tuple[str | int, ...]) -> NoReturn:
                 message,
                 phase=DiagnosticPhase.EXPECTATION,
                 path=path,
+                remediation=remediation,
             ),
         )
     )
@@ -167,7 +168,7 @@ def _target_entity(node: DmJsonNodeV1, name: str) -> str:
     return name
 
 
-def _products(document: DmJsonDocumentV1) -> tuple[_Product, ...]:
+def _products(document: DmJsonDocumentV1, included: tuple[tuple[str, DmJsonDocumentV1], ...]) -> tuple[_Product, ...]:
     declarations = {
         node.properties.get("id"): node.kind for node in document.root.children if node.kind in {"database", "mongodb"}
     }
@@ -216,11 +217,18 @@ def _products(document: DmJsonDocumentV1) -> tuple[_Product, ...]:
             visit(child, path + ("children", index), parent)
 
     visit(document.root, ("document", "root"), None)
+    for uri, step in included:
+        visit(step.root, ("include", uri, "root"), None)
     return tuple(entries)
 
 
-def project_acceptance(request: BuildRequestV4, canonical_document: DmJsonDocumentV1) -> AcceptanceSpecV1:
-    entries = _products(canonical_document)
+def project_acceptance(
+    request: BuildRequestV5,
+    canonical_document: DmJsonDocumentV1,
+    included: tuple[tuple[str, DmJsonDocumentV1], ...] = (),
+) -> AcceptanceSpecV1:
+    """Acceptance over the products of the entry and of every included step, keyed by their literal uri."""
+    entries = _products(canonical_document, included)
     if len({entry.product.name for entry in entries}) != len(entries):
         _reject("Product names must be globally unique for bounded capture.", ("document", "root"))
     relationships: list[AcceptanceRelationshipV1] = []
@@ -327,7 +335,7 @@ def project_acceptance(request: BuildRequestV4, canonical_document: DmJsonDocume
         )
         for index, item in enumerate(request.acceptance_requirements)
     )
-    readbacks = _readbacks(request, entries, canonical_document)
+    readbacks = _readbacks(request, entries, (canonical_document, *(step for _, step in included)))
     spec = AcceptanceSpecV1(products=spec.products, relationships=tuple(relationships), readbacks=readbacks)
     for check in checks:
         validate_acceptance_check(spec, check)
@@ -400,10 +408,11 @@ def _derive_field(
 
 
 def _readbacks(
-    request: BuildRequestV4, entries: tuple[_Product, ...], document: DmJsonDocumentV1
+    request: BuildRequestV5, entries: tuple[_Product, ...], documents: tuple[DmJsonDocumentV1, ...]
 ) -> tuple[AcceptanceReadbackV1, ...]:
     stores = {
         identifier
+        for document in documents
         for node in document.root.children
         if node.kind == "memstore"
         if isinstance(identifier := node.properties.get("id"), str)
@@ -458,6 +467,11 @@ def _readbacks(
                 "Memstore completeness requires one producer identifier role "
                 "and one matching consumer foreign-key role.",
                 consumer.path,
+                remediation=(
+                    'Add two product_roles entries: {"product": "<producer>", "field": "<key>", "role": {"kind": '
+                    '"identifier"}} and {"product": "<consumer>", "field": "<field holding the key>", "role": {"kind": '
+                    '"foreign_key", "parent_product": "<producer>", "parent_field": "<key>"}}.'
+                ),
             )
         result.append(
             AcceptanceReadbackV1(
@@ -475,6 +489,12 @@ def _readbacks(
         for store in (item.strip() for item in target.split(",")):
             if store in stores and (producer.product.name, store) not in producers_read:
                 _reject(
-                    "A memstore target requires a declared consumer readback.", producer.path + ("properties", "target")
+                    "A memstore target requires a declared consumer readback.",
+                    producer.path + ("properties", "target"),
+                    remediation=(
+                        "Read the product back in a later generate (source=<memstore id>, type=<this product>) and "
+                        "declare its identifier/foreign-key role pair; a product nothing reads back needs a file "
+                        "target instead of the memstore."
+                    ),
                 )
     return tuple(result)

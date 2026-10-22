@@ -177,12 +177,17 @@ def test_seeded_fake_provider_draws_one_64_bit_seed_lazily() -> None:
     assert context.events == ["faker", "bits"]
 
 
-def test_seeded_random_omitted_seed_draws_lazily_but_none_does_not() -> None:
+def test_seeded_random_without_seed_or_with_none_draws_from_the_run_lazily() -> None:
     context = _TrackedSeededContext(seeded=True)
     random_proxy = _globals(context)["random"]
+    assert context._rng.bits == []
 
     random_proxy.Random()
     assert context._rng.bits == [64]
 
+    # Random(None) seeds from OS entropy like Random(), so a seeded run controls both.
     random_proxy.Random(None)
-    assert context._rng.bits == [64]
+    assert context._rng.bits == [64, 64]
+
+    random_proxy.Random(5)
+    assert context._rng.bits == [64, 64]

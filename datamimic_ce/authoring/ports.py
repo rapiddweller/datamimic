@@ -14,7 +14,13 @@ from .domain.capabilities import DslCatalogSnapshot
 from .domain.diagnostics import Diagnostic
 from .domain.dm_json import DmJsonCompilation, DmJsonDocumentV1
 from .domain.reference import ReferenceResult
-from .domain.requests import BoundedExecutionEvidence, BoundedExecutionRequest, LintResult, ReferenceRequest
+from .domain.requests import (
+    BoundedExecutionEvidence,
+    BoundedExecutionRequest,
+    IncludeGraphResult,
+    LintResult,
+    ReferenceRequest,
+)
 
 
 class DmJsonDescriptorContract(Protocol):
@@ -31,6 +37,11 @@ class DslCatalog(Protocol):
 
 class DescriptorValidator(Protocol):
     def validate(self, xml: str, *, descriptor_path: PurePosixPath | None = None) -> LintResult: ...
+    def include_graph(self, xml: str) -> IncludeGraphResult: ...
+
+
+class ProjectFiles(Protocol):
+    def read_project_file(self, path: PurePosixPath) -> bytes: ...
 
 
 class BoundedExecutor(Protocol):
@@ -38,4 +49,6 @@ class BoundedExecutor(Protocol):
 
 
 class BoundedExecutionPolicy(Protocol):
-    def diagnostics(self, document: DmJsonDocumentV1) -> tuple[Diagnostic, ...]: ...
+    def diagnostics(
+        self, document: DmJsonDocumentV1, project: tuple[DmJsonDocumentV1, ...] = ()
+    ) -> tuple[Diagnostic, ...]: ...

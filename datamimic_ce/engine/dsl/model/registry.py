@@ -223,7 +223,10 @@ def _builtin_definitions() -> dict[str, ElementDefinition]:
             None,
             frozenset({EL_SETUP}),
             singleton_children=frozenset({EL_SETUP}),
-            bounded_execution_profile=BoundedExecutionProfile(dependency_attribute="uri"),
+            # Build and dry-run resolve the literal include graph from the workspace and check every step.
+            bounded_execution_profile=BoundedExecutionProfile(
+                BoundedExecutionStrategy.NEUTRAL, dependency_attribute="uri"
+            ),
         ),
         ElementDefinition(EL_MEMSTORE, MemstoreModel, None, memory_store=True, bounded_execution_profile=neutral),
         ElementDefinition(
@@ -235,6 +238,7 @@ def _builtin_definitions() -> dict[str, ElementDefinition]:
                 ElementContentMode(ElementContentModeKind.SCRIPT, ("script",)),
                 ElementContentMode(ElementContentModeKind.INLINE),
             ),
+            bounded_execution_profile=BoundedExecutionProfile(BoundedExecutionStrategy.PYTHON_LIBRARY),
         ),
         ElementDefinition(EL_DATABASE, DatabaseModel, None, client_family=True, bounded_execution_profile=neutral),
         ElementDefinition(EL_MONGODB, MongoDBModel, None, client_family=True, bounded_execution_profile=neutral),

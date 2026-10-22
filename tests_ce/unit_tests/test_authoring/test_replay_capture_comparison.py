@@ -6,11 +6,11 @@ from pathlib import Path
 
 import pytest
 
-from datamimic_ce.authoring import create_authoring_application
 from datamimic_ce.authoring.domain.build_verification import compare_captures
 from datamimic_ce.authoring.domain.capture import CapturedProduct, CapturedProducts
 from datamimic_ce.authoring.domain.proof import ReplayMismatchKind, VerificationGateStatus
-from datamimic_ce.authoring.domain.requests import BuildRequestV4, RejectedBuild
+from datamimic_ce.authoring.domain.requests import RejectedBuild
+from tests_ce.authoring_project import build_project
 
 
 def _capture(**products: tuple[object, ...]) -> CapturedProducts:
@@ -70,38 +70,15 @@ def test_replay_preserves_passive_values_and_ignores_object_key_order() -> None:
     assert compare_captures(_capture(items=(first,)), _capture(items=(replay,))) == ()
 
 
-def test_real_build_rejects_type_changing_replay(tmp_path: Path) -> None:
+def test_real_build_rejects_a_replay_that_differs(tmp_path: Path) -> None:
+    # Each run has its own private directory, and a contained run (#361) has no channel to the next one.
     workspace = tmp_path / "workspace"
     workspace.mkdir()
-    marker = tmp_path / "first-run"
-    request = BuildRequestV4.model_validate(
-        {
-            "document": {
-                "root": {
-                    "kind": "setup",
-                    "properties": {"rng_seed": 7},
-                    "children": [
-                        {
-                            "kind": "generate",
-                            "properties": {"name": "items", "count": 1},
-                            "children": [
-                                {
-                                    "kind": "key",
-                                    "properties": {
-                                        "name": "value",
-                                        "script": f"True if os.path.exists({str(marker)!r}) else (os.mkdir({str(marker)!r}), 1)[1]",
-                                    },
-                                },
-                            ],
-                        },
-                    ],
-                }
-            },
-            "verification": {"deterministic_replay": True},
-        }
+    entry = (
+        '<setup rngSeed="7"><generate name="items" count="1">'
+        '<key name="value" script="os.getcwd()"/></generate></setup>'
     )
-    result = create_authoring_application(workspace_root=workspace).build(request)
+    result = build_project(workspace, entry, verification={"deterministic_replay": True})
     assert isinstance(result, RejectedBuild), result
-    assert marker.is_dir()
     assert result.verification.deterministic_replay.status is VerificationGateStatus.FAILED
     assert result.verification.deterministic_replay.mismatches[0].kind is ReplayMismatchKind.ROW_CONTENT

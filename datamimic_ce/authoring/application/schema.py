@@ -12,7 +12,7 @@ from datamimic_ce.authoring.domain.environments import ConfiguredEnvironmentBind
 from datamimic_ce.authoring.domain.expectations import ExpectationIntent
 from datamimic_ce.authoring.domain.reference import AuthoringContractSchemas
 from datamimic_ce.authoring.domain.requests import (
-    BuildRequestV4,
+    BuildRequestV5,
     BuildResult,
     CompileDocumentRequest,
     CompileDocumentResult,
@@ -40,9 +40,7 @@ def contract_schemas(contract: DmJsonDescriptorContract) -> AuthoringContractSch
         decompile_document_result=TypeAdapter(dict[str, JsonValue]).validate_python(
             contract.project_document_schema(TypeAdapter(DecompileDocumentResult).json_schema())
         ),
-        build_request_v4=TypeAdapter(dict[str, JsonValue]).validate_python(
-            contract.project_document_schema(BuildRequestV4.model_json_schema())
-        ),
+        build_request_v5=TypeAdapter(dict[str, JsonValue]).validate_python(BuildRequestV5.model_json_schema()),
         ready_build=TypeAdapter(dict[str, JsonValue]).validate_python(
             contract.project_document_schema(ReadyBuild.model_json_schema())
         ),

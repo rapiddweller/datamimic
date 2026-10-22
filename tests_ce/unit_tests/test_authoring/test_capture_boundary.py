@@ -3,9 +3,13 @@
 import pytest
 import multiprocessing as mp
 import pickle
+from pathlib import Path
 
 from datamimic_ce.authoring.adapters import dryrun
 from datamimic_ce.authoring.domain.capture import SmokeExportCapture
+
+# Forged replies are refused before the parent hashes any file the run read, so this root is never read.
+_WORKSPACE = Path(__file__).parent
 
 
 def _budget():
@@ -46,7 +50,7 @@ def _receive(message):
             from datamimic_ce.authoring.domain.requests import BoundedExecutionRequest
             from datamimic_ce.authoring.domain.diagnostics import AuthoringSystemDiagnosticCode
 
-            evidence = _decode_reply(payload, BoundedExecutionRequest(xml="<setup/>"))
+            evidence = _decode_reply(payload, BoundedExecutionRequest(xml="<setup/>"), _WORKSPACE)
             assert not evidence.ok
             assert evidence.diagnostics[0].code is AuthoringSystemDiagnosticCode.SERIALIZATION
             return None
@@ -148,21 +152,36 @@ def test_parent_rejects_duplicate_or_orphan_provenance():
     assert _receive(message) is None
 
 
-def test_full_nested_capture_limit_uses_actual_parent_total():
+def test_global_capture_limit_counts_nested_parent_and_child_rows():
     from dataclasses import replace
 
     parent = replace(_budget(), name="parents", requested_per_parent=2)
     child = replace(_budget(), name="parents|children", parent_name="parents", requested_per_parent=2)
     valid = dryrun._WorkerSuccess(
-        captured={"parents": ({"id": 1}, {"id": 2}), "parents|children": ({"id": 1},) * 4},
+        captured={"parents": ({"id": 1}, {"id": 2}), "parents|children": ({"id": 1},) * 3},
         budgets=(parent, child),
         smoke_diagnostics=(),
         smoke_export=SmokeExportCapture.not_requested(),
     )
-    assert dryrun._validated_worker_success(valid, max_count=2) == valid
-    object.__setattr__(valid, "captured", {**valid.captured, "parents|children": ({"id": 1},) * 5})
-    with pytest.raises(ValueError, match="nested"):
-        dryrun._validated_worker_success(valid, max_count=2)
+    assert dryrun._validated_worker_success(valid, max_count=5) == valid
+    object.__setattr__(valid, "captured", {**valid.captured, "parents|children": ({"id": 1},) * 4})
+    with pytest.raises(ValueError, match="shared total Build limit"):
+        dryrun._validated_worker_success(valid, max_count=5)
+
+
+def test_parent_rejects_aggregate_capture_above_total_build_limit():
+    from dataclasses import replace
+
+    first = _budget()
+    second = replace(first, name="other")
+    message = dryrun._WorkerSuccess(
+        captured={"items": ({"id": 1},), "other": ({"id": 2},)},
+        budgets=(first, second),
+        smoke_diagnostics=(),
+        smoke_export=SmokeExportCapture.not_requested(),
+    )
+    with pytest.raises(ValueError, match="shared total Build limit"):
+        dryrun._validated_worker_success(message, max_count=1)
 
 
 def test_boundary_rejects_missing_product_capture_even_when_provenance_exists():
@@ -226,7 +245,7 @@ def test_pickle_reducer_cannot_execute_in_parent(tmp_path):
             return eval, (f"__import__('pathlib').Path({str(marker)!r}).write_text('escaped')",)
 
     payload = pickle.dumps(Reducer())
-    result = _decode_reply(payload, BoundedExecutionRequest(xml="<setup/>"))
+    result = _decode_reply(payload, BoundedExecutionRequest(xml="<setup/>"), tmp_path)
     assert result.diagnostics[0].code is AuthoringSystemDiagnosticCode.SERIALIZATION
     assert _receive(Reducer()) is None
     assert not marker.exists()

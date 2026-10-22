@@ -21,7 +21,7 @@ from datamimic_ce.engine.io.api import (
 )
 from datamimic_ce.engine.runtime.contexts.context import Context, SetupContext, WorkerContextPayload
 from datamimic_ce.engine.runtime.contexts.geniter_context import GenIterContext
-from datamimic_ce.engine.runtime.contexts.products import ExecutedExport, GenerationResult
+from datamimic_ce.engine.runtime.contexts.products import ExecutedExport, GenerationResult, TotalRowBudget
 from datamimic_ce.engine.runtime.logging import gen_timer, logger
 from datamimic_ce.engine.runtime.scripting.evaluation import interpolate_variables
 from datamimic_ce.engine.runtime.tasks.base.counts import get_int_count, resolve_count
@@ -63,13 +63,14 @@ class GenerateTask(CommonSubTask):
         # `count` is optional here and defaults to 1 series.
         ts_config = self._statement.get_time_series_config()
         if ts_config is not None:
-            series_count = self._bounded(get_int_count(self._statement.count, context, element_tag=EL_GENERATE)) or 1
-            return series_count * ts_config.ticks_per_series
+            series_count = get_int_count(self._statement.count, context, element_tag=EL_GENERATE)
+            series_count = 1 if series_count is None else series_count
+            return self._bounded(series_count * ts_config.ticks_per_series) or 0
 
         # Get count from statement: explicit count, or a random value within the
         # minCount/maxCount range (seed-bound via context.rng). Same resolution as <nestedKey>.
         count = resolve_count(
-            self._bounded(get_int_count(self._statement.count, context, element_tag=EL_GENERATE)),
+            get_int_count(self._statement.count, context, element_tag=EL_GENERATE),
             self._statement.min_count,
             self._statement.max_count,
             context.rng,
@@ -96,6 +97,10 @@ class GenerateTask(CommonSubTask):
         if count == 0 and has_mongodb_upsert_target(self.statement.targets, root_context.clients):
             # Upsert one collection when no record found by query
             count = 1
+
+        count = self._bounded(count)
+        if count is None:
+            raise ValueError("resolved generate count is missing")
 
         self._warn_count_above_source(context, count)
 
@@ -197,6 +202,9 @@ class GenerateTask(CommonSubTask):
         current_setup_context = context
         while not isinstance(current_setup_context, SetupContext):
             current_setup_context = current_setup_context.parent
+
+        if isinstance(current_setup_context.total_row_budget, TotalRowBudget):
+            return 1
 
         if stmt.num_process is not None:
             num_workers = stmt.num_process

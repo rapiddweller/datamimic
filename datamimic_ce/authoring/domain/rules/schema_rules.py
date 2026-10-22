@@ -181,9 +181,7 @@ def _check_distribution_element(
 ) -> Iterable[Diagnostic]:
     """Validate one element's distribution= value against the registered fact."""
     distribution_fact = _distribution_fact(ctx, tag)
-    valid_distributions = (
-        resolved_values(distribution_fact) if distribution_fact is not None else frozenset()
-    )
+    valid_distributions = resolved_values(distribution_fact) if distribution_fact is not None else frozenset()
     if distribution_fact is None or distribution in valid_distributions:
         return
     if distribution_fact is KEY_DISTRIBUTION_VALUES:
@@ -235,9 +233,7 @@ def _check_type_element(
     )
 
 
-def _check_int_attributes(
-    ctx: LintContext, element: etree._Element, tag: str
-) -> Iterable[Diagnostic]:
+def _check_int_attributes(ctx: LintContext, element: etree._Element, tag: str) -> Iterable[Diagnostic]:
     """Validate that attributes annotated as int hold integer values."""
     schema = ctx.schemas.get(tag)
     if schema is None:

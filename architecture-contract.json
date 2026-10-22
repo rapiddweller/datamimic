@@ -108,7 +108,8 @@
         "datamimic_ce.authoring.domain.requests:ReferenceTopic",
         "datamimic_ce.authoring.domain.requests:AuthoringSchemaId",
         "datamimic_ce.authoring.domain.requests:ReferenceRequest",
-        "datamimic_ce.authoring.domain.requests:BuildRequestV4",
+        "datamimic_ce.authoring.domain.requests:BuildRequestV5",
+        "datamimic_ce.authoring.domain.requests:PROJECT_ENTRY_PATH",
         "datamimic_ce.authoring.domain.requests:RunRequest",
         "datamimic_ce.authoring.domain.requests:RunPhase",
         "datamimic_ce.authoring.domain.requests:ProductEvidence",
@@ -122,6 +123,7 @@
         "datamimic_ce.authoring.domain.requests:ReadyDecompileDocument",
         "datamimic_ce.authoring.domain.requests:RejectedDecompileDocument",
         "datamimic_ce.authoring.domain.requests:DecompileDocumentResult",
+        "datamimic_ce.authoring.domain.requests:ProjectFileDigest",
         "datamimic_ce.authoring.domain.requests:BuildArtifact",
         "datamimic_ce.authoring.domain.requests:ValidatedReviewArtifact",
         "datamimic_ce.authoring.domain.requests:SourceAccessEvidence",
@@ -133,6 +135,7 @@
         "datamimic_ce.authoring.ports:DmJsonDescriptorContract",
         "datamimic_ce.authoring.ports:DslCatalog",
         "datamimic_ce.authoring.ports:DescriptorValidator",
+        "datamimic_ce.authoring.ports:ProjectFiles",
         "datamimic_ce.authoring.ports:BoundedExecutor",
         "datamimic_ce.authoring.ports:BoundedExecutionPolicy"
       ],
@@ -262,6 +265,7 @@
       "public": [
         "datamimic_ce.engine.runtime.api",
         "datamimic_ce.engine.runtime.contracts",
+        "datamimic_ce.engine.runtime.contexts.products:TotalRowBudget",
         "datamimic_ce.engine.runtime.storage.memstore_manager:MemstoreManager"
       ],
       "planned": [],
@@ -948,7 +952,7 @@
       "id": "RUNTIME-API-TYPES",
       "kind": "boundary_types",
       "source": "datamimic_ce.engine.runtime.api",
-      "rationale": "Fixed requests and execution controls stay typed. Captures, descriptor properties, the client registry, native Python state and copy memo use exact reviewed positions. Runtime accepts mutable string-loader or native Properties maps at its request and SetupContext boundaries; only native values accept opacity. Runtime owns native registries keyed by declared client IDs and by statement/source identities. Their exact RegisteredClient and tuple-to-count mapping contracts preserve mutable registry identity without fixed-field wrappers. Runtime installs and forwards Domain demographic records with the complete named-profile, typed-weight-map or None contract.",
+      "rationale": "Fixed requests and execution controls stay typed. Captures, descriptor properties, the client registry, native Python state and copy memo use exact reviewed positions. Runtime accepts mutable string-loader or native Properties maps at its request and SetupContext boundaries; only native values accept opacity. Runtime owns native registries keyed by declared client IDs and by statement/source identities. Their exact RegisteredClient and tuple-to-count mapping contracts preserve mutable registry identity without fixed-field wrappers. Runtime installs and forwards Domain demographic records with the complete named-profile, typed-weight-map or None contract. The optional total-row limit is an integer execution control; Runtime contexts share the declared TotalRowBudget type across nested includes.",
       "provenance": [
         "docs/architecture/refactoring-study/experiment-2/target-architecture.md",
         "docs/architecture/refactoring-study/experiment-2/amendment-70.md",
@@ -1034,6 +1038,30 @@
           "field_path": "",
           "annotation": "dict[str, RegisteredClient] | None",
           "literal_mapping_arm": "dict[str, RegisteredClient]"
+        },
+        {
+          "qualified_name": "datamimic_ce.engine.runtime.api.SetupContext.__init__",
+          "position": "total_row_limit",
+          "field_path": "",
+          "annotation": "int | None"
+        },
+        {
+          "qualified_name": "datamimic_ce.engine.runtime.api.SetupContext.total_row_budget",
+          "position": "return",
+          "field_path": "",
+          "annotation": "TotalRowBudget | None"
+        },
+        {
+          "qualified_name": "datamimic_ce.engine.runtime.api.create_run_session",
+          "position": "request",
+          "field_path": "total_row_limit",
+          "annotation": "int | None"
+        },
+        {
+          "qualified_name": "datamimic_ce.engine.runtime.api.run",
+          "position": "request",
+          "field_path": "total_row_limit",
+          "annotation": "int | None"
         },
         {
           "qualified_name": "datamimic_ce.engine.runtime.api.SetupContext.clients",

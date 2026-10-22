@@ -76,10 +76,6 @@ def test_all_document_schemas_use_closed_live_variants():
         schemas.compile_document_request,
         schemas.compile_document_result,
         schemas.decompile_document_result,
-        schemas.build_request_v4,
-        schemas.ready_build,
-        schemas.rejected_build,
-        schemas.build_result,
     )
     for schema in projected:
         variants = schema["$defs"]["DmJsonNodeV1"]
@@ -87,25 +83,31 @@ def test_all_document_schemas_use_closed_live_variants():
         assert "setup" in variants["discriminator"]["mapping"]
         assert "kafka" not in variants["discriminator"]["mapping"]
         assert "root" not in schema.get("required", []) or schema["properties"]["root"]["$ref"].endswith("_SETUP")
+    # A Build proves project files, so neither its request nor its results carry a DM JSON document.
+    for schema in (schemas.build_request_v5, schemas.ready_build, schemas.rejected_build, schemas.build_result):
+        assert "DmJsonNodeV1" not in schema.get("$defs", {})
 
 
 def test_public_compile_and_build_property_diagnostics_omit_input_values(tmp_path):
     from datamimic_ce.authoring import create_authoring_application
-    from datamimic_ce.authoring.domain.requests import BuildRequestV4
+    from tests_ce.authoring_project import build_project
 
     application = create_authoring_application(workspace_root=tmp_path)
     secret = "SENSITIVE_SENTINEL=/private/host/credential"
     document = DmJsonDocumentV1(root=DmJsonNodeV1(kind="setup", properties={"num_process": secret}))
-    for result in (
-        application.compile_document(CompileDocumentRequest(document=document)),
-        application.build(BuildRequestV4(document=document)),
-    ):
-        assert result.outcome == "rejected"
-        assert result.phase is DiagnosticPhase.COMPILE
-        diagnostic = result.diagnostics[0]
-        assert diagnostic.path == ("root", "properties", "num_process")
+    compiled = application.compile_document(CompileDocumentRequest(document=document))
+    assert compiled.outcome == "rejected"
+    assert compiled.phase is DiagnosticPhase.COMPILE
+    diagnostic = compiled.diagnostics[0]
+    assert diagnostic.path == ("root", "properties", "num_process")
+    assert diagnostic.expected["validation_error_types"]
+    # Build reads the persisted entry, so the same value is refused by the XML parser instead of the codec.
+    built = build_project(tmp_path, f'<setup numProcess="{secret}"/>')
+    assert built.outcome == "rejected"
+    assert built.phase is DiagnosticPhase.XML
+    assert built.diagnostics[0].path == ("descriptor", "datamimic.xml", "setup", "numProcess")
+    for result in (compiled, built):
         assert secret not in result.model_dump_json()
         assert "input_value" not in result.model_dump_json()
-        assert diagnostic.actual is None
-        assert diagnostic.expected["validation_error_types"]
-        assert diagnostic.remediation
+        assert result.diagnostics[0].actual is None
+        assert result.diagnostics[0].remediation

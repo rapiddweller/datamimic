@@ -23,13 +23,14 @@ from datamimic_ce.authoring.domain.proof import (
     VerificationGateStatus,
 )
 from datamimic_ce.authoring.domain.requests import (
-    BuildRequestV4,
+    PROJECT_ENTRY_PATH,
     BuildResult,
     DecompileDocumentRequest,
     ReadyBuild,
     ReadyDecompileDocument,
     RejectedBuild,
 )
+from tests_ce.authoring_project import write_project
 
 _TEST_DIR = Path(__file__).resolve().parent
 _REPO_ROOT = _TEST_DIR.parents[2]
@@ -39,34 +40,29 @@ _REQUIREMENTS = TypeAdapter(tuple[AcceptanceRequirement, ...])
 _BUILD_RESULT = TypeAdapter(BuildResult)
 
 
-def _request(
-    *, xml: Path = _XML, expectations: tuple[ExpectationIntent, ...] = (), requirements: Path | None = None
-) -> BuildRequestV4:
+def _project(
+    tmp_path: Path,
+    *,
+    xml: Path = _XML,
+    expectations: tuple[ExpectationIntent, ...] = (),
+    requirements: Path | None = None,
+) -> Path:
     application = create_authoring_application(workspace_root=_TEST_DIR)
     decoded = application.decompile_document(DecompileDocumentRequest(xml=xml.read_text()))
     assert isinstance(decoded, ReadyDecompileDocument), decoded
-    return BuildRequestV4(
-        document=decoded.document,
+    return write_project(
+        tmp_path,
+        decoded.document,
         expectations=expectations,
         acceptance_requirements=_REQUIREMENTS.validate_json(requirements.read_text()) if requirements else (),
         verification=BuildVerificationOptions(smoke_export=True),
     )
 
 
-def _run_cli(request: BuildRequestV4, tmp_path: Path) -> BuildResult:
+def _run_cli(project: Path) -> BuildResult:
     process = subprocess.run(
-        [
-            sys.executable,
-            "-m",
-            "datamimic_ce.interfaces.cli",
-            "authoring",
-            "build",
-            "-",
-            "--workspace-root",
-            str(tmp_path),
-        ],
-        cwd=tmp_path,
-        input=request.model_dump_json(exclude_none=True),
+        [sys.executable, "-m", "datamimic_ce.interfaces.cli", "authoring", "build", str(project)],
+        cwd=project,
         check=False,
         capture_output=True,
         text=True,
@@ -97,8 +93,7 @@ def _expectations(*, failing: bool = False) -> tuple[ExpectationIntent, ...]:
 
 
 def test_build_verifies_nested_list_expectations_and_xml_roundtrip(tmp_path: Path) -> None:
-    request = _request(expectations=_expectations())
-    result = _run_cli(request, tmp_path)
+    result = _run_cli(_project(tmp_path, expectations=_expectations()))
     assert isinstance(result, ReadyBuild), result
     assert result.verification.smoke_export.status is VerificationGateStatus.PASSED
     rows = result.evidence[0].rows
@@ -112,24 +107,25 @@ def test_build_verifies_nested_list_expectations_and_xml_roundtrip(tmp_path: Pat
         DecompileDocumentRequest(xml=_XML.read_text())
     )
     assert isinstance(decoded, ReadyDecompileDocument)
-    assert result.artifact.xml_sha256 == decoded.canonical_xml_sha256
+    files = {item.path: item.sha256 for item in result.artifact.files}
+    assert files[PROJECT_ENTRY_PATH] == decoded.canonical_xml_sha256
 
 
 def test_bad_nested_list_subjects_reject_with_new_transaction_paths(tmp_path: Path) -> None:
-    application = create_authoring_application(workspace_root=tmp_path)
     for subject, field, suffix in (
         (ProductRowsSubject(product="orders", list_field="missing_items"), "amount", ("subject", "list_field")),
         (ProductRowsSubject(product="orders", list_field="items"), "missing_amount", ("field",)),
     ):
         expectation = RangeExpectation(subject=subject, field=field, minimum=Decimal(0), maximum=Decimal(1))
-        result = application.build(_request(expectations=(expectation,)))
+        _project(tmp_path, expectations=(expectation,))
+        result = create_authoring_application(tmp_path, descriptor_path=PROJECT_ENTRY_PATH).build()
         assert isinstance(result, RejectedBuild)
         assert result.phase.value == "expectation"
         assert result.diagnostics[0].path == ("expectations", 0, *suffix)
 
 
 def test_nested_list_all_four_requirement_families_fail_on_bad_rows(tmp_path: Path) -> None:
-    result = _run_cli(_request(expectations=_expectations(failing=True)), tmp_path)
+    result = _run_cli(_project(tmp_path, expectations=_expectations(failing=True)))
     assert isinstance(result, RejectedBuild)
     failures = [item for item in result.diagnostics if item.path[:1] == ("expectations",)]
     assert {item.code.value for item in failures} == {"exact_count", "unique", "range", "allowed_values"}
@@ -137,7 +133,7 @@ def test_nested_list_all_four_requirement_families_fail_on_bad_rows(tmp_path: Pa
 
 
 def test_caller_nested_list_requirement_accepts_empty_list(tmp_path: Path) -> None:
-    result = _run_cli(_request(xml=_EMPTY_XML, requirements=_TEST_DIR / "caller-valid-empty.json"), tmp_path)
+    result = _run_cli(_project(tmp_path, xml=_EMPTY_XML, requirements=_TEST_DIR / "caller-valid-empty.json"))
     assert isinstance(result, ReadyBuild), result
     assert result.evidence[0].rows == ({"order_id": 1, "items": []},)
     assert not result.diagnostics
@@ -148,7 +144,7 @@ def test_caller_nested_list_unknown_references_reject_even_for_empty_rows(tmp_pa
         ("caller-invalid-inner-field.json", ("field",)),
         ("caller-invalid-list-field.json", ("subject", "list_field")),
     ):
-        result = _run_cli(_request(xml=_EMPTY_XML, requirements=_TEST_DIR / filename), tmp_path)
+        result = _run_cli(_project(tmp_path, xml=_EMPTY_XML, requirements=_TEST_DIR / filename))
         assert isinstance(result, RejectedBuild)
         assert result.phase.value == "expectation"
         assert len(result.diagnostics) == 1

@@ -10,7 +10,7 @@ datamimic-mcp --transport stdio --workspace-root "/absolute/path/to/project"
 
 Both transports use the same typed Authoring application. `version`, `schema`,
 `capabilities` and `capability` accept their named arguments directly. `reference`,
-Build, codec, lint and bounded-run requests use `{"request": {...}}`. Follow each
+codec, lint and bounded-run requests use `{"request": {...}}`; `datamimic_build` takes `{}` and proves the workspace root as a project. Follow each
 tool's advertised input schema.
 
 | MCP tool | CLI equivalent |
@@ -22,13 +22,14 @@ tool's advertised input schema.
 | `datamimic_reference` | `datamimic authoring reference --topic <topic> [--name <name>]` |
 | `datamimic_compile` | `datamimic authoring compile -` |
 | `datamimic_decompile` | `datamimic authoring decompile -` |
-| `datamimic_build` | `datamimic authoring build -` |
+| `datamimic_build` | `datamimic authoring build <workspace-root>` |
 | `datamimic_lint` | `datamimic authoring lint -` |
 | `datamimic_dry_run` | `datamimic authoring dry-run -` |
 | `datamimic_run` | `datamimic authoring run -` |
 
-Persist XML. DM JSON is transient; expectations, `product_roles`, origin-tagged
-`acceptance_requirements`, and smoke/replay options belong to `BuildRequestV4`.
+Persist XML. `datamimic_build` proves the workspace root as a project: its
+`datamimic.xml` against `acceptance/build.json`, which holds expectations,
+`product_roles`, origin-tagged `acceptance_requirements` and smoke/replay options.
 Compile/decompile readiness proves syntax; a ready Build also carries bounded
 acceptance evidence. Target isolation does not prove delivery to an external sink.
 

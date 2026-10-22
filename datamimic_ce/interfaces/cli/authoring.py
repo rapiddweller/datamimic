@@ -13,8 +13,8 @@ from datamimic_ce.authoring import create_authoring_application
 from datamimic_ce.authoring.domain.capabilities import CapabilityDomain
 from datamimic_ce.authoring.domain.dm_json import DmJsonDocumentV1
 from datamimic_ce.authoring.domain.requests import (
+    PROJECT_ENTRY_PATH,
     AuthoringSchemaId,
-    BuildRequestV4,
     CompileDocumentRequest,
     DecompileDocumentRequest,
     LintRequest,
@@ -180,24 +180,19 @@ def decompile_document(
 
 @app.command("build")
 def build(
-    source: Input,
-    workspace_root: WorkspaceRoot = None,
+    project: Annotated[
+        Path,
+        typer.Argument(
+            exists=True,
+            file_okay=False,
+            readable=True,
+            help="Project directory holding datamimic.xml and acceptance/build.json.",
+        ),
+    ] = Path("."),
     output_format: OutputFormat = CliOutputFormat.JSON,
 ) -> None:
-    try:
-        request = BuildRequestV4.model_validate_json(_read(source))
-    except ValidationError as error:
-        emit_authoring(RejectedBuild.from_model_validation(error), output_format, exit_code=1)
-    except ValueError as error:
-        emit_authoring(
-            RejectedBuild.from_input_error(_input_message(error, "Invalid or unreadable Build request.")),
-            output_format,
-            exit_code=1,
-        )
-    application = create_authoring_application(
-        workspace_root=_workspace(source, workspace_root), descriptor_path=request.descriptor_path
-    )
-    result = application.build(request)
+    application = create_authoring_application(workspace_root=project, descriptor_path=PROJECT_ENTRY_PATH)
+    result = application.build()
     emit_authoring(result, output_format, exit_code=0 if isinstance(result, ReadyBuild) else 1)
 
 

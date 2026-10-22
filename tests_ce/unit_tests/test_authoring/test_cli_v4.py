@@ -7,8 +7,10 @@ from pathlib import Path
 import pytest
 from typer.testing import CliRunner
 
-from datamimic_ce.authoring.domain.requests import RunResult
+from datamimic_ce.authoring.adapters.workspace import MAX_RESOURCE_BYTES
+from datamimic_ce.authoring.domain.requests import PROJECT_ACCEPTANCE_PATH, PROJECT_ENTRY_PATH, ReadyBuild, RunResult
 from datamimic_ce.interfaces.cli import app
+from tests_ce.authoring_project import write_project
 
 runner = CliRunner()
 
@@ -56,12 +58,11 @@ def test_missing_input_diagnostic_does_not_expose_host_path(tmp_path: Path) -> N
 
 
 def test_schema_selects_the_running_build_contract() -> None:
-    result = runner.invoke(app, ["authoring", "schema", "--name", "build_request_v4"])
+    result = runner.invoke(app, ["authoring", "schema", "--name", "build_request_v5"])
     assert result.exit_code == 0, result.output
     payload = json.loads(result.output)
-    assert "document" in payload["properties"]
-    assert "spec" not in payload["properties"]
-    assert payload["properties"]["version"]["const"] == "4.0"
+    assert {"document", "descriptor_path", "spec"}.isdisjoint(payload["properties"])
+    assert payload["properties"]["version"]["const"] == "5.0"
 
 
 def test_one_capability_has_a_structured_not_found_result() -> None:
@@ -76,28 +77,19 @@ def test_reference_defaults_to_the_typed_overview() -> None:
     assert json.loads(result.output)["topic"] == "overview"
 
 
-def test_minimal_stdin_build_from_repository_does_not_copy_unrelated_files(monkeypatch) -> None:
-    monkeypatch.chdir(Path(__file__).resolve().parents[3])
-    request = {
-        "document": {
-            "root": {
-                "kind": "setup",
-                "properties": {"rng_seed": 7},
-                "children": [
-                    {
-                        "kind": "generate",
-                        "properties": {"name": "rows", "count": 2},
-                        "children": [
-                            {"kind": "key", "properties": {"name": "id", "generator": "IncrementGenerator"}},
-                        ],
-                    },
-                ],
-            }
-        }
-    }
-    result = runner.invoke(app, ["authoring", "build", "-"], input=json.dumps(request))
+def test_minimal_project_build_does_not_copy_unrelated_files(tmp_path: Path) -> None:
+    write_project(
+        tmp_path,
+        '<setup rngSeed="7"><generate name="rows" count="2">'
+        '<key name="id" generator="IncrementGenerator"/></generate></setup>',
+    )
+    # A snapshot of the whole directory would refuse this file as over the per-file limit.
+    with (tmp_path / "unrelated.bin").open("wb") as unrelated:
+        unrelated.truncate(MAX_RESOURCE_BYTES + 1)
+    result = runner.invoke(app, ["authoring", "build", str(tmp_path)])
     assert result.exit_code == 0, result.stdout
-    assert json.loads(result.stdout)["outcome"] == "ready"
+    ready = ReadyBuild.model_validate_json(result.stdout)
+    assert {item.path for item in ready.artifact.files} == {PROJECT_ENTRY_PATH, PROJECT_ACCEPTANCE_PATH}
 
 
 def test_count_free_source_json_preserves_required_nullable_capture(tmp_path: Path) -> None:

@@ -19,7 +19,6 @@ from datamimic_ce.authoring.domain.capabilities import CapabilityDomain, Capabil
 from datamimic_ce.authoring.domain.reference import ReferenceResult
 from datamimic_ce.authoring.domain.requests import (
     AuthoringSchemaId,
-    BuildRequestV4,
     BuildResult,
     CompileDocumentRequest,
     CompileDocumentResult,
@@ -39,6 +38,7 @@ from datamimic_ce.authoring.ports import (
     DescriptorValidator,
     DmJsonDescriptorContract,
     DslCatalog,
+    ProjectFiles,
 )
 
 
@@ -52,6 +52,9 @@ class AuthoringApplication:
         executor: BoundedExecutor,
         descriptor_contract: DmJsonDescriptorContract,
         bounded_execution_policy: BoundedExecutionPolicy,
+        files: ProjectFiles,
+        project_validator: DescriptorValidator,
+        project_executor: BoundedExecutor,
     ) -> None:
         self._validator = validator
         self._raw_xml = RawXmlUseCase(validator, executor)
@@ -59,7 +62,10 @@ class AuthoringApplication:
         self._descriptor_contract = descriptor_contract
         self._compile_document = CompileDocumentUseCase(descriptor_contract, validator)
         self._decompile_document = DecompileDocumentUseCase(descriptor_contract, validator)
-        self._build = BuildDocumentWorkflow(descriptor_contract, validator, executor, bounded_execution_policy)
+        # Build proves the project entry, so its validator and executor are bound to it, not to the descriptor.
+        self._build = BuildDocumentWorkflow(
+            descriptor_contract, project_validator, project_executor, bounded_execution_policy, files
+        )
 
     def reference(self, request: ReferenceRequest) -> ReferenceResult:
         return self._catalog.reference(request)
@@ -97,8 +103,9 @@ class AuthoringApplication:
     def decompile_document(self, request: DecompileDocumentRequest) -> DecompileDocumentResult:
         return self._decompile_document.execute(request)
 
-    def build(self, request: BuildRequestV4) -> BuildResult:
-        return self._build.execute(request)
+    def build(self) -> BuildResult:
+        """Prove the bound project: its datamimic.xml entry against its acceptance/build.json."""
+        return self._build.execute()
 
     def lint(self, request: LintRequest) -> LintResult:
         return self._validator.validate(request.xml)

@@ -2,7 +2,7 @@
 
 > MIT-licensed Python engine for deterministic synthetic data and pseudonymization.
 > XML is the persisted executable project; DM JSON is its transient agent view.
-> Build expectations and proof declarations belong to each transaction.
+> A project is a datamimic.xml entry plus acceptance/build.json, which holds its expectations and proof declarations.
 
 Install CE 5.0 from PyPI: `python -m pip install datamimic-ce`.
 For dataset tasks use the [consumer skill](plugins/datamimic/skills/generate-test-data/SKILL.md).
@@ -15,14 +15,14 @@ Repository contributors read [AGENTS.md](AGENTS.md) and use `.venv/bin/datamimic
 - [Model review](plugins/datamimic/skills/generate-test-data/references/review.md): model structure, requirements, outputs and evidence for human inspection.
 
 - [Agent guide](AGENTS.md): typed Build example, proof scope, DSL semantics.
-- `datamimic authoring schema`: current DM JSON schema; `--name build_request_v4` for the transaction.
+- `datamimic authoring schema`: current DM JSON schema; `--name build_request_v5` for `acceptance/build.json`.
 - `datamimic authoring capabilities`: compact CE vocabulary; `--full` includes contracts.
 - `datamimic authoring capability --domain element --name generate`: one exact capability.
 - `datamimic authoring reference --topic assembly --name model`: focused authoring guidance.
-- `datamimic authoring build -`: stdin transaction; repair diagnostics; stop on `outcome=ready` and persist `artifact.compiled_xml`.
+- `datamimic authoring build <project>`: prove the project; repair diagnostics; stop on `outcome=ready`, whose `artifact.files` bind every file it read.
 - `datamimic authoring decompile model.xml`: transient DM JSON; expectations must be supplied again.
 - Existing XML: `datamimic authoring lint model.xml`, then `datamimic authoring dry-run model.xml`; real execution uses `datamimic run model.xml`.
-- [Worked Build transactions](docs/examples/authoring.md): nested FK, memstore readback, time series.
+- [Worked Build projects](docs/examples/authoring.md): nested FK, memstore readback, time series.
 - [Migration](docs/migrations/authoring-errors.md): frozen legacy intent compiler → XML and separate Build proof.
 
 ## Project

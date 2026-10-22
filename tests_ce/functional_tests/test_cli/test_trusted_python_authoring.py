@@ -1,4 +1,4 @@
-"""Reviewed Python uses normal execution; bounded rejection remains evidence."""
+"""Python that writes files stays outside bounded proof; normal execution remains its evidence."""
 
 import json
 import os
@@ -11,9 +11,10 @@ import pytest
 
 from datamimic_ce.authoring import create_authoring_application
 from datamimic_ce.authoring.domain.diagnostics import AuthoringRuleId
-from datamimic_ce.authoring.domain.requests import BuildRequestV4, CompileDocumentRequest, DecompileDocumentRequest
+from datamimic_ce.authoring.domain.requests import CompileDocumentRequest, DecompileDocumentRequest
+from tests_ce.authoring_project import build_project
 
-# Count module loading without making the tested selection function stateful.
+# Count module loading through a file write, which the bounded library check refuses.
 _HELPER = """from pathlib import Path
 with Path("loads.txt").open("a", encoding="utf-8") as stream:
     stream.write("load\\n")
@@ -28,7 +29,7 @@ def select_person(candidates: list[tuple[int, bool]]) -> int:
 
 @pytest.mark.parametrize("mode", ["uri", "inline"])
 @pytest.mark.parametrize("has_candidate", [True, False], ids=["eligible", "no_candidate"])
-def test_reviewed_python_keeps_bounded_rejection_and_actual_runtime_evidence(tmp_path, mode, has_candidate):
+def test_file_writing_python_keeps_bounded_rejection_and_actual_runtime_evidence(tmp_path, mode, has_candidate):
     script = tmp_path / "script/select.py"
     script.parent.mkdir()
     script.write_text(_HELPER, encoding="utf-8")
@@ -52,9 +53,12 @@ def test_reviewed_python_keeps_bounded_rejection_and_actual_runtime_evidence(tmp
     assert compiled.outcome == "ready", compiled
     restored = application.decompile_document(DecompileDocumentRequest(xml=compiled.artifact.compiled_xml))
     assert restored.outcome == "ready" and restored.document == compiled.artifact.document
-    bounded = application.build(BuildRequestV4(document=restored.document))
+    bounded = build_project(tmp_path, restored.document)
     assert bounded.outcome == "rejected", bounded
-    assert any(item.code is AuthoringRuleId.UNSUPPORTED_BOUNDED_OPERATION for item in bounded.diagnostics)
+    assert any(
+        item.code is AuthoringRuleId.SIDE_EFFECT and "imports a module outside the bounded library modules" in item.message
+        for item in bounded.diagnostics
+    )
     assert not (tmp_path / "loads.txt").exists()
 
     (tmp_path / "model.xml").write_text(compiled.artifact.compiled_xml, encoding="utf-8")

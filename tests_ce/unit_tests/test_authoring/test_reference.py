@@ -12,7 +12,7 @@ from typer.testing import CliRunner
 from datamimic_ce.authoring import create_authoring_application
 from datamimic_ce.authoring.domain.capabilities import CapabilityDomain, CapabilityNotFound, DslCatalogSnapshot
 from datamimic_ce.authoring.domain.reference import ReferenceResult
-from datamimic_ce.authoring.domain.requests import AuthoringSchemaId, ReferenceRequest, ReferenceTopic
+from datamimic_ce.authoring.domain.requests import AuthoringSchemaId, BuildRequestV5, ReferenceRequest, ReferenceTopic
 from datamimic_ce.authoring.domain.schema import build_schema_index
 from datamimic_ce.engine.dsl.model.registry import canonical_tag, get_element_definition, list_element_tags
 from datamimic_ce.engine.dsl.vocabulary.enums.converter_enums import ConverterEnum
@@ -34,9 +34,9 @@ def test_overview_addresses_every_current_topic(application):
 
 def test_schema_discovery_uses_actual_closed_dm_json_and_build_models(application):
     assert application.schema(AuthoringSchemaId.DM_JSON_DOCUMENT_V1) == application.document_schema()
-    build = application.schema(AuthoringSchemaId.BUILD_REQUEST_V4)
-    assert build["title"] == "BuildRequestV4" and build["additionalProperties"] is False
-    assert "document" in build["properties"]
+    build = application.schema(AuthoringSchemaId.BUILD_REQUEST_V5)
+    assert build["title"] == "BuildRequestV5" and build["additionalProperties"] is False
+    assert set(build["properties"]) == set(BuildRequestV5.model_fields)
     for schema_id in AuthoringSchemaId:
         assert application.schema(schema_id)
 
@@ -44,7 +44,7 @@ def test_schema_discovery_uses_actual_closed_dm_json_and_build_models(applicatio
 def test_advertised_row_condition_examples_evaluate_against_data(application):
     from datamimic_ce.authoring.domain.row_conditions import evaluate_row_condition
 
-    schema = application.schema(AuthoringSchemaId.BUILD_REQUEST_V4)
+    schema = application.schema(AuthoringSchemaId.BUILD_REQUEST_V5)
     examples = schema["$defs"]["RowConditionExpectation"]["properties"]["condition"]["examples"]
     assert examples
     for expression in examples:

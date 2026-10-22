@@ -150,6 +150,32 @@ def test_seeded_script_globals_replay_identically() -> None:
     assert {(row["built_year"], row["now_type"], row["uuid_int"]) for row in first} == {(2020, "datetime", 5)}
 
 
+def test_seeded_script_imports_replay_identically() -> None:
+    """A script loaded with <execute> imports random/datetime/uuid; under rngSeed its helpers and the later
+    expressions replay, and the clock is the deterministic anchor in both (issue #357)."""
+    first = _run(_TEST_DIR, "script_imports_seeded.xml")["script_imports"]
+    second = _run(_TEST_DIR, "script_imports_seeded.xml")["script_imports"]
+    assert first == second
+    assert {row["helper_now"] for row in first} == {"2025-01-01T12:00:00"}
+    assert {row["expr_now"] for row in first} == {"2025-01-01T12:00:00"}
+    assert {row["helper_due_date"] for row in first} == {"2025-01-31"}
+    assert len({row["helper_uuid"] for row in first}) == len(first)
+    assert {(row["expr_alias_year"], row["helper_type_checks"]) for row in first} == {(2020, "True/True/True")}
+
+
+def test_unseeded_script_imports_stay_random() -> None:
+    first = _run(_TEST_DIR, "script_imports_unseeded.xml")["script_imports"]
+    second = _run(_TEST_DIR, "script_imports_unseeded.xml")["script_imports"]
+    assert [row["helper_draw"] for row in first] != [row["helper_draw"] for row in second]
+    assert [row["helper_uuid"] for row in first] != [row["helper_uuid"] for row in second]
+    assert [row["helper_direct_import_draw"] for row in first] != [row["helper_direct_import_draw"] for row in second]
+
+
+def test_seeded_script_keyed_seed_is_refused() -> None:
+    with pytest.raises(ValueError, match=r"random\.seed\(x\) in a script cannot reseed a <setup rngSeed> run"):
+        _run(_TEST_DIR, "seeded_reject_script_keyed_seed.xml")
+
+
 def test_replay_model_covers_float_rounding_boundaries() -> None:
     rows = _run(_TEST_DIR, "replay_all_seeded.xml")["literal"]
     assert [row["g_FloatGenerator_below_midpoint"] for row in rows] == [0.2] * 5

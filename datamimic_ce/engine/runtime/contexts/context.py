@@ -37,10 +37,11 @@ from datamimic_ce.engine.io.api import (
     TestResultExporter,
 )
 from datamimic_ce.engine.runtime.contexts.demographic_context import DemographicContext
+from datamimic_ce.engine.runtime.contexts.products import TotalRowBudget
 from datamimic_ce.engine.runtime.contracts import StatementTransformer
 from datamimic_ce.engine.runtime.logging import logger
 from datamimic_ce.engine.runtime.scripting import evaluation
-from datamimic_ce.engine.runtime.scripting.expression_globals import expression_globals
+from datamimic_ce.engine.runtime.scripting.expression_globals import expression_globals, rebind_seeded_script_names
 from datamimic_ce.engine.runtime.scripting.plugins import execute_script
 from datamimic_ce.engine.runtime.storage.global_increment import GlobalIncrementRegistry
 from datamimic_ce.engine.runtime.storage.memstore_manager import MemstoreManager
@@ -239,6 +240,7 @@ class SetupContext(Context):
         ray_debug: bool = False,
         included_statement_transformer: StatementTransformer | None = None,
         profile_loader: Callable[[Path, str], dict[str, str]] | None = None,
+        total_row_limit: int | None = None,
     ) -> None:
         # SetupContext is always its root_context
         super().__init__(self)
@@ -297,6 +299,7 @@ class SetupContext(Context):
         self.ray_debug = ray_debug
         self.included_statement_transformer = included_statement_transformer
         self.profile_loader = profile_loader
+        self._total_row_budget = TotalRowBudget(total_row_limit) if total_row_limit is not None else None
         # Generator stream root: variables/keys without their own seed fork a reproducible child RNG from it.
         self._root_rng: Random | None = Random(self._run_seed.value) if self._run_seed.seeded else None
         # Cached call-time rng — populated lazily on first ``.rng`` access.
@@ -373,6 +376,7 @@ class SetupContext(Context):
             ray_debug=self.ray_debug,
             included_statement_transformer=self.included_statement_transformer,
             profile_loader=self.profile_loader,
+            total_row_limit=self._total_row_budget.limit if self._total_row_budget is not None else None,
         )
         memo[id(self)] = copied
         copied._pending_client_configs = copy.deepcopy(self._pending_client_configs, memo)
@@ -387,7 +391,13 @@ class SetupContext(Context):
             copied._descriptor_client_history = copy.deepcopy(history, memo)
             memo[id(history)] = copied._descriptor_client_history
         copied._owned_descriptor_clients = copy.deepcopy(self._owned_descriptor_clients, memo)
+        if self._total_row_budget is not None:
+            copied._total_row_budget = self._total_row_budget
         return copied
+
+    @property
+    def total_row_budget(self) -> TotalRowBudget | None:
+        return self._total_row_budget
 
     @property
     def domain_identifier_registry(self) -> IdentifierRegistry:
@@ -451,12 +461,20 @@ class SetupContext(Context):
         initial_ns.update(ns)
 
         execute_script(content, initial_ns)
+        # Under a seed, imported random/datetime/... must be the seeded stand-ins, or one script makes the whole
+        # run unseeded (#357). They stay private to the script: expressions keep their own seeded globals.
+        private = (
+            rebind_seeded_script_names(initial_ns, self.rng, lambda: self.root.seeded_faker)
+            if self.root.is_seeded
+            else frozenset()
+        )
 
         # Identify updated fields and remove functions from the namespace
         updated_fields: dict[str, object] = {}
         for key, value in initial_ns.items():
             if (
-                not key.startswith("__")
+                key not in private
+                and not key.startswith("__")
                 and not key.endswith("__")
                 and (key not in self._namespace or self._namespace[key] != initial_ns[key])
             ):

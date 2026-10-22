@@ -51,6 +51,11 @@ class RunRequest:
     statement_transformer: StatementTransformer | None = None
     profile_loader: Callable[[Path, str], dict[str, str]] | None = None
     included_statement_transformer: StatementTransformer | None = None
+    total_row_limit: int | None = None
+
+    def __post_init__(self) -> None:
+        if self.total_row_limit is not None and (type(self.total_row_limit) is not int or self.total_row_limit < 1):
+            raise ValueError("total_row_limit must be positive")
 
 
 @dataclass(frozen=True)

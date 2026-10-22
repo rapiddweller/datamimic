@@ -12,11 +12,11 @@ from datamimic_ce.authoring.domain.diagnostics import AuthoringRuleId
 from datamimic_ce.authoring.domain.requests import BoundedExecutionRequest
 
 
-def _run(root: Path, xml: str, *, smoke_export: bool = False):
+def _run(root: Path, xml: str, *, max_count: int = 3, smoke_export: bool = False):
     workspace = AuthoringWorkspaceContext(root, PurePosixPath("descriptors/main.xml"))
     return CeBoundedExecutor(workspace).execute(
         BoundedExecutionRequest(
-            xml=xml, descriptor_path=workspace.descriptor_path, max_count=3, smoke_export=smoke_export
+            xml=xml, descriptor_path=workspace.descriptor_path, max_count=max_count, smoke_export=smoke_export
         )
     )
 
@@ -49,7 +49,7 @@ def test_direct_and_included_products_have_identical_caps(tmp_path: Path, includ
 def test_nested_includes_keep_properties_order_scope_and_replay(tmp_path: Path) -> None:
     directory = tmp_path / "descriptors"
     directory.mkdir()
-    (directory / "before.properties").write_text("limit=10\nlabel=before\n", encoding="utf-8")
+    (directory / "before.properties").write_text("limit=3\nlabel=before\n", encoding="utf-8")
     (directory / "after.properties").write_text("label=after\n", encoding="utf-8")
     (directory / "child.xml").write_text(
         '<setup defaultSeparator=";"><include uri="grandchild.xml"/></setup>', encoding="utf-8"
@@ -66,15 +66,15 @@ def test_nested_includes_keep_properties_order_scope_and_replay(tmp_path: Path) 
         '<generate name="after" count="1"><key name="label" constant="{label}"/></generate></setup>'
     )
 
-    first = _run(tmp_path, xml, smoke_export=True)
-    second = _run(tmp_path, xml, smoke_export=True)
+    first = _run(tmp_path, xml, max_count=4, smoke_export=True)
+    second = _run(tmp_path, xml, max_count=4, smoke_export=True)
 
     assert first.ok, first.diagnostics
     assert second.ok, second.diagnostics
     assert first.captured == second.captured
     by_name = {product.name: product for product in first.captured.products}
     assert by_name["rows"].rows == ({"label": "before", "context": "visible"},) * 3
-    assert by_name["rows"].capture.requested == 10
+    assert by_name["rows"].capture.requested == 3
     assert by_name["after"].rows == ({"label": "after"},)
     assert first.smoke_export.attempted_exporters == 1
 
@@ -122,7 +122,8 @@ def test_included_sqlite_uses_workspace_profile_loader(
         '<include uri="../../outside.xml"/>',
         '<include uri="{dynamic_path}"/>',
         '<generate name="outer" count="1"><include uri="safe.xml"/></generate>',
-        '<execute type="python">raise RuntimeError("must not execute")</execute>',
+        '<execute type="bash">echo unsafe</execute>',
+        '<execute type="python">import subprocess</execute>',
         '<while condition="True"><echo message="unbounded"/></while>',
         '<execute uri="unsafe.sql"/>',
         "<unsupportedTask/>",
@@ -189,7 +190,8 @@ def test_included_smoke_export_inherits_native_separator(tmp_path: Path, monkeyp
     assert artifacts == [b"id;label\r\n1;x\r\n"]
 
 
-def test_included_memstore_producer_can_supply_root_consumer_without_false_completeness(tmp_path: Path) -> None:
+def test_included_memstore_producer_proves_a_root_consumer_complete(tmp_path: Path) -> None:
+    # Producer facts span the whole include graph, so a consumer may read what a step wrote.
     directory = tmp_path / "descriptors"
     directory.mkdir()
     (directory / "child.xml").write_text(
@@ -201,13 +203,14 @@ def test_included_memstore_producer_can_supply_root_consumer_without_false_compl
         tmp_path,
         '<setup rngSeed="7"><memstore id="store"/><include uri="child.xml"/>'
         '<generate name="copy" source="store" type="rows" distribution="ordered"/></setup>',
+        max_count=4,
     )
 
     assert result.ok, result.diagnostics
     by_name = {product.name: product for product in result.captured.products}
     assert by_name["rows"].rows == by_name["copy"].rows == ({"id": 1}, {"id": 2})
     assert by_name["rows"].capture.complete
-    assert not by_name["copy"].capture.complete
+    assert by_name["copy"].capture.complete
 
 
 @pytest.mark.parametrize("root_count", [3, 10])
@@ -226,13 +229,13 @@ def test_included_memstore_cannot_claim_a_local_producer_is_the_entire_source(tm
         + '<key name="origin" constant="root"/></generate><include uri="child.xml"/></setup>'
     )
 
-    result = _run(tmp_path, xml)
+    result = _run(tmp_path, xml, max_count=2 * root_count + 6)
 
     assert result.ok, result.diagnostics
     products = {product.name: product for product in result.captured.products}
-    assert products["copy"].rows == ({"origin": "root"},) * 3
+    assert products["copy"].rows == ({"origin": "root"},) * root_count + ({"origin": "child"},) * 3
     assert products["copy"].capture.status is CaptureStatus.UNKNOWN
-    assert "include" in products["copy"].capture.reason
+    assert "multiple possible producers" in products["copy"].capture.reason
 
 
 def test_property_expanded_product_name_cannot_overwrite_capture_provenance(tmp_path: Path) -> None:

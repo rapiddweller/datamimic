@@ -462,7 +462,8 @@
         "datamimic_ce.authoring.ports:DslCatalog",
         "datamimic_ce.authoring.ports:DescriptorValidator",
         "datamimic_ce.authoring.ports:BoundedExecutor",
-        "datamimic_ce.authoring.ports:BoundedExecutionPolicy"
+        "datamimic_ce.authoring.ports:BoundedExecutionPolicy",
+        "datamimic_ce.authoring.ports:ProjectFiles"
       ],
       "decided_by": "agent"
     }

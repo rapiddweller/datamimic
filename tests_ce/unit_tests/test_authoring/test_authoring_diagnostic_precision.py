@@ -19,6 +19,7 @@ from datamimic_ce.authoring.adapters.bounded_executor import CeBoundedExecutor
 from datamimic_ce.authoring.adapters.workspace import AuthoringWorkspaceContext
 from datamimic_ce.authoring.domain.requests import BoundedExecutionRequest
 from datamimic_ce.interfaces.cli import app
+from tests_ce.authoring_project import write_project
 
 _FIXTURES = Path(__file__).parent / "fixtures"
 
@@ -69,32 +70,24 @@ def test_lint_and_dry_run_never_echo_descriptor_values(tmp_path: Path, key: str)
 
 
 def test_capped_capture_names_reason_and_exact_retry_bound(tmp_path: Path) -> None:
-    runner = CliRunner()
-    decompiled = runner.invoke(app, ["authoring", "decompile", str(_FIXTURES / "fx_static_count_above_limit.xml")])
-    document = json.loads(decompiled.output)["document"]
-    build = tmp_path / "build.json"
-    build.write_text(
-        json.dumps(
-            {
-                "document": document,
-                "expectations": [
-                    {"kind": "exact_count", "subject": {"kind": "product", "product": "customers"}, "count": 50}
-                ],
-            }
-        ),
-        encoding="utf-8",
+    write_project(
+        tmp_path,
+        (_FIXTURES / "fx_static_count_above_limit.xml").read_text(encoding="utf-8"),
+        expectations=[{"kind": "exact_count", "subject": {"kind": "product", "product": "customers"}, "count": 50}],
     )
-    result = runner.invoke(app, ["authoring", "build", str(build)])
+    result = CliRunner().invoke(app, ["authoring", "build", str(tmp_path)])
     assert result.exit_code == 1, result.output
     capped = json.loads(result.output)["diagnostics"][0]
     assert capped["message"] == "Product capture is capped: static count 50 exceeds per-invocation limit 10."
     assert capped["remediation"] == "Increase max_count to at least 50 and retry the same transaction."
 
 
-def test_missing_build_file_is_named_without_its_host_directory(tmp_path: Path) -> None:
-    result = CliRunner().invoke(app, ["authoring", "build", str(tmp_path / "absent.json")])
+def test_missing_acceptance_file_is_named_without_its_host_directory(tmp_path: Path) -> None:
+    result = CliRunner().invoke(app, ["authoring", "build", str(tmp_path)])
     assert result.exit_code == 1
-    assert json.loads(result.output)["diagnostics"][0]["message"] == "Input file not found: absent.json"
+    assert (
+        json.loads(result.output)["diagnostics"][0]["message"] == "The project has no readable acceptance/build.json."
+    )
     assert str(tmp_path) not in result.output
 
 

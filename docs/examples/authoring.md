@@ -1,27 +1,31 @@
-# Build transactions
+# Build projects
 
-Pass each JSON transaction to `datamimic authoring build -`. Persist the returned
-`artifact.compiled_xml` only after `outcome: "ready"`; keep proof separately.
-DM JSON is transient. XML retains runtime structure and seed, while each new Build
-receives its expectations and roles again. Use the running schema for full fields.
+Each example is a project: write the XML as `datamimic.xml` and the JSON as
+`acceptance/build.json` in one directory, then run `datamimic authoring build <dir>`.
+`outcome: "ready"` lists every file the proof read with its digest; changing any of
+them voids the proof. Expectations and roles live in `acceptance/build.json`, so they
+survive edits to the XML. Use `datamimic authoring schema --name build_request_v5`
+for every acceptance field.
 
 ## Nested foreign keys
 
 Two parents, two child rows per parent. The child carries the real `parent.id`;
 a randomly selected valid parent key does not establish per-parent cardinality.
 
+```xml
+<setup rngSeed="7">
+    <generate name="parents" count="2">
+        <key name="id" generator="IncrementGenerator"/>
+        <generate name="children" count="2">
+            <key name="parent_id" script="parent.id"/>
+        </generate>
+    </generate>
+</setup>
+```
+
 ```json
 {
-  "document": {"root": {
-    "kind": "setup", "properties": {"rng_seed": 7}, "children": [
-      {"kind": "generate", "properties": {"name": "parents", "count": 2}, "children": [
-        {"kind": "key", "properties": {"name": "id", "generator": "IncrementGenerator"}},
-        {"kind": "generate", "properties": {"name": "children", "count": 2}, "children": [
-          {"kind": "key", "properties": {"name": "parent_id", "script": "parent.id"}}
-        ]}
-      ]}
-    ]
-  }},
+  "version": "5.0",
   "product_roles": [
     {"product": "parents", "field": "id", "role": {"kind": "identifier"}},
     {"product": "children", "field": "parent_id", "role": {
@@ -42,21 +46,21 @@ a randomly selected valid parent key does not establish per-parent cardinality.
 The producer identifier and consumer FK role pair makes readback integrity part
 of the proof. Merely declaring a memstore target does not establish readback.
 
+```xml
+<setup rngSeed="7">
+    <memstore id="store"/>
+    <generate name="parents" count="2" target="store">
+        <key name="id" generator="IncrementGenerator"/>
+    </generate>
+    <generate name="readback" source="store" type="parents" distribution="ordered">
+        <key name="id" script="this.id"/>
+    </generate>
+</setup>
+```
+
 ```json
 {
-  "document": {"root": {
-    "kind": "setup", "properties": {"rng_seed": 7}, "children": [
-      {"kind": "memstore", "properties": {"id": "store"}},
-      {"kind": "generate", "properties": {"name": "parents", "count": 2, "target": "store"}, "children": [
-        {"kind": "key", "properties": {"name": "id", "generator": "IncrementGenerator"}}
-      ]},
-      {"kind": "generate", "properties": {
-        "name": "readback", "source": "store", "type": "parents", "distribution": "ordered"
-      }, "children": [
-        {"kind": "key", "properties": {"name": "id", "script": "this.id"}}
-      ]}
-    ]
-  }},
+  "version": "5.0",
   "product_roles": [
     {"product": "parents", "field": "id", "role": {"kind": "identifier"}},
     {"product": "readback", "field": "id", "role": {
@@ -74,18 +78,17 @@ of the proof. Merely declaring a memstore target does not establish readback.
 Two parallel series over three hourly points produce six rows. The end is
 exclusive; `count` on `generate` is the parallel series count.
 
+```xml
+<setup rngSeed="7">
+    <generate name="readings" count="2" start="2026-01-01T00:00:00" end="2026-01-01T03:00:00" interval="PT1H">
+        <key name="reading" constant="ok"/>
+    </generate>
+</setup>
+```
+
 ```json
 {
-  "document": {"root": {
-    "kind": "setup", "properties": {"rng_seed": 7}, "children": [
-      {"kind": "generate", "properties": {
-        "name": "readings", "count": 2, "start": "2026-01-01T00:00:00",
-        "end": "2026-01-01T03:00:00", "interval": "PT1H"
-      }, "children": [
-        {"kind": "key", "properties": {"name": "reading", "constant": "ok"}}
-      ]}
-    ]
-  }},
+  "version": "5.0",
   "expectations": [
     {"kind": "exact_count", "subject": {"kind": "product", "product": "readings"}, "count": 6}
   ]
@@ -93,5 +96,10 @@ exclusive; `count` on `generate` is the parallel series count.
 ```
 
 For exporter/replay verification add `"verification": {"smoke_export": true,
-"deterministic_replay": true}` to the transaction. A target-isolated bounded
+"deterministic_replay": true}` to `acceptance/build.json`. A target-isolated bounded
 Build does not claim that an external database was written.
+
+`max_count` limits the total captured product rows in one Build execution,
+including nested products. Deterministic replay receives a fresh limit of the
+same size; it verifies the same logical dataset. Export smoke reuses the first
+capture and consumes no additional rows.

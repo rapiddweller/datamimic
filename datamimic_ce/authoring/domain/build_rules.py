@@ -159,7 +159,7 @@ AUTHORING_RULE_CATALOG: tuple[RuleCatalogEntry, ...] = (
         rule_id=AuthoringRuleId.VALIDATION,
         category="validation",
         severity="error",
-        description="Authoring payloads must satisfy the versioned DM JSON or BuildRequestV4 contract.",
+        description="Authoring payloads must satisfy the versioned DM JSON or BuildRequestV5 contract.",
         applicability="JSON authoring payload validation.",
         owner=RuleOwner.VALIDATION,
         remediation="Correct the reported field, discriminator, or graph reference.",
@@ -205,7 +205,9 @@ def catalog_diagnostic(
     path: tuple[str | int, ...] = (),
     expected: JsonValue | None = None,
     actual: JsonValue | None = None,
+    remediation: str | None = None,
 ) -> Diagnostic:
+    """A catalog finding; ``remediation`` replaces the rule's generic fix when the caller knows the specific one."""
     rule = _RULES_BY_ID[rule_id]
     return Diagnostic(
         code=rule.rule_id,
@@ -215,5 +217,5 @@ def catalog_diagnostic(
         expected=expected,
         actual=actual,
         severity=rule.severity,
-        remediation=rule.remediation,
+        remediation=remediation or rule.remediation,
     )

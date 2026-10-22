@@ -1,6 +1,6 @@
 {
   "budgets": {
-    "calls_unresolved": 1431,
+    "calls_unresolved": 1424,
     "cycle_edges": 2,
     "private_crossings": 0,
     "typing_positions": 178,

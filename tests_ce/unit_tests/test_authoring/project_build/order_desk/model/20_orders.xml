@@ -1,0 +1,9 @@
+<setup>
+    <generate name="orders" source="store" type="customers" distribution="ordered" target="store" targetEntity="orders">
+        <key name="customer_id" script="this.customer_id"/>
+        <key name="order_id" script="this.customer_id * 10 + 1"/>
+        <key name="quantity" type="int" min="1" max="5"/>
+        <key name="channel" type="string" source="data/weighting/channel.wgt.csv"/>
+        <key name="total" script="order_total(this.quantity, float(unit_price))"/>
+    </generate>
+</setup>

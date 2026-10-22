@@ -29,9 +29,9 @@ ranges, time windows and delivery destination before building. Convert each into
 an explicit acceptance check. Check the result against that original list so an
 omitted requirement cannot disappear behind a successful Build.
 
-XML is the persisted executable model. DM JSON is a transient agent view;
-expectations and identifier/FK declarations are Build transaction input. Supply
-those requirements again when editing existing XML.
+XML is the persisted executable model. Expectations and identifier/FK declarations
+live in the project's `acceptance/build.json`, so they survive edits to the XML.
+DM JSON is a transient agent view of one XML file.
 
 Repair structured diagnostic codes, paths and remediations, then retry with a
 changed candidate. If the requested behavior is unsupported or a failure repeats
@@ -40,7 +40,10 @@ the user's requirements.
 
 ## Build a project people can understand
 
-The executable XML and its supporting files are the human review surface.
+Lay out every local project as in [project structure](references/project-structure.md):
+the entry, steps per activity, data files, `lib/` functions, delivery steps last and
+`acceptance/build.json`. The executable XML and its supporting files are the human
+review surface.
 Use native field operations, sources, types, relationships, conditions, checks
 and projections wherever they express the intent clearly. Give each file a
 named activity and each extra field a real consumer. Keep shared rule parameters

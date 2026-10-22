@@ -15,8 +15,8 @@ datamimic authoring version
 datamimic authoring reference --topic assembly --name starter
 ```
 
-The starter must expose a transaction with `version: "4.0"`, a `document.root`
-and `expectations`. If these commands or that contract are absent, complete
+The starter must expose a project: `entry_xml` and an `acceptance` with
+`version: "5.0"` and `expectations`. If these commands or that contract are absent, complete
 the shared setup before writing the model. Continue only with its verified
 project CLI; do not substitute another authoring interface.
 
@@ -31,8 +31,8 @@ datamimic authoring capability --domain element --name generate
 datamimic authoring reference --topic expectations --name exact_count
 ```
 
-Use `datamimic authoring schema --name build_request_v4` when the transaction
-shape itself is unclear; it is larger than the focused references.
+Use `datamimic authoring schema --name build_request_v5` when the shape of
+`acceptance/build.json` is unclear; it is larger than the focused references.
 
 ## Build and repair
 
@@ -41,15 +41,17 @@ Keep the selected project root and descriptor-relative resource paths. Root
 model inputs belong outside them. Do not narrow the workspace to an empty
 subdirectory to hide a copying failure.
 
-Submit the transaction through stdin with an explicit absolute project root:
+Write the entry as `datamimic.xml` at the project root and the acceptance as
+`acceptance/build.json`, then Build the project directory:
 
 ```bash
-datamimic authoring build - --workspace-root "/absolute/path/to/project"
+datamimic authoring build "/absolute/path/to/project"
 ```
 
-DM JSON follows registered DSL nodes (`kind`, `properties`, ordered `children`),
-not the retired product/field intent vocabulary. Put requirements in
-`expectations` and identity/lineage in `product_roles`. Independently owned task
+The XML follows registered DSL elements and attributes, not the retired
+product/field intent vocabulary; `datamimic authoring compile -` turns a DM JSON
+draft into it. Put requirements in `expectations` and identity/lineage in
+`product_roles`. Independently owned task
 checks can use `acceptance_requirements` entries with `origin: "caller"` and an
 `expectation`; discover their current schema rather than guessing fields.
 
@@ -65,8 +67,34 @@ Never inject or change a runtime count just to satisfy the proof budget.
 Inspect `outcome`, `phase`, diagnostics and complete acceptance/evidence. On a
 rejection, repair its reported path using the code/remediation; preserve the
 original requirements and relative resource paths. `outcome: "ready"` is the
-stopping condition. Persist `artifact.compiled_xml` in the chosen project and
-retain the separate proof. Do not lint/dry-run a successful Build again.
+stopping condition. `artifact.files` lists every project file the proof read
+with its digest; retain the response as the proof. Do not lint/dry-run a
+successful Build again.
+
+## Projects with steps
+
+Build proves the entry descriptor together with its literal include graph; follow
+[project structure](project-structure.md). Expectations and `product_roles` may
+name products of any step. Includes must be literal setup-level workspace paths
+(`.xml` or `.properties`), product names unique across files, and clients declared
+only in the entry. Hand data between steps through a memstore declared in the entry.
+
+## Python libraries in Build
+
+Build runs a setup-level `<execute>` that loads Python (`uri="lib/x.scr.py"` or
+inline code) when the library passes a static check. Write a library of
+functions, classes and constants:
+- import only data modules (`random`, `datetime`, `math`, `json`, `collections`,
+  `faker`, `numpy`, `pandas`, `datamimic_ce.domains`, ...);
+- read no files and build no code (`open`, `eval`, `exec`, `compile`, `__import__`,
+  `getattr`, `globals`); call module functions qualified (`re.compile`);
+- under `rngSeed`, import at module level, never inside a function or class.
+
+A refusal names the file, line and rule; repair the library, not the model.
+SQL, shell, `target=`, `script=` and an `<execute>` inside a record stay outside
+bounded proof. A seeded model that loads Python always replays: a second run must
+reproduce every row, which also catches draws the static check cannot see.
+Load the library in the entry descriptor; names a step loads stay local to it.
 
 ## A model outside bounded proof
 

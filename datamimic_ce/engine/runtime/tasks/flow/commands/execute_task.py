@@ -5,7 +5,6 @@
 # For questions and support, contact: info@rapiddweller.com
 
 import subprocess  # noqa: S404
-import textwrap
 from pathlib import Path
 from typing import cast
 
@@ -115,7 +114,7 @@ class ExecuteTask(SetupSubTask):
         """Evaluate inline/uri Python. Multi-line blocks work once dedented, but a malformed block yields a
         raw IndentationError/SyntaxError — turn that into a DATAMIMIC error that says what to do instead."""
         try:
-            updated_ns = ctx.root.eval_namespace(self._normalize_python(python_code))
+            updated_ns = ctx.root.eval_namespace(ExecuteStatement.normalize_python_source(python_code))
         except (UserErrorBase, DomainError):
             raise
         except SyntaxError as e:  # IndentationError is a SyntaxError
@@ -138,14 +137,3 @@ class ExecuteTask(SetupSubTask):
         ctx.root.namespace.update(updated_ns)
         if isinstance(ctx, GenIterContext) and updated_ns:
             ctx.current_variables.update(updated_ns)
-
-    @staticmethod
-    def _normalize_python(code: str) -> str:
-        """Make XML-embedded Python parseable: tabs->spaces, drop blank first/last lines, then dedent the
-        common leading indentation (relative block indentation is preserved)."""
-        lines = code.replace("\t", "    ").splitlines()
-        while lines and not lines[0].strip():
-            lines.pop(0)
-        while lines and not lines[-1].strip():
-            lines.pop()
-        return textwrap.dedent("\n".join(lines))

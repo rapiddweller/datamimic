@@ -18,9 +18,10 @@ import uuid
 from collections.abc import Callable, Iterator, Mapping, Sequence
 from contextlib import contextmanager, suppress
 from enum import StrEnum
-from pathlib import Path
+from pathlib import Path, PurePosixPath
 
 from bson import ObjectId
+from lxml import etree
 from pydantic import ConfigDict, StrictBool, StrictStr, TypeAdapter, ValidationError
 from pydantic.dataclasses import dataclass
 
@@ -40,7 +41,7 @@ from datamimic_ce.authoring.domain.capture import (
 from datamimic_ce.authoring.domain.common import NonEmptyStrictStr, NonNegativeStrictInt, PositiveStrictInt
 from datamimic_ce.authoring.domain.rule_catalog import RuleSeverity
 from datamimic_ce.authoring.domain.xml_diagnostics import Diagnostic
-from datamimic_ce.engine.dsl.api import capture_product_name, resource_reader_scope
+from datamimic_ce.engine.dsl.api import NAME_SEPARATOR, capture_product_name, resource_reader_scope
 from datamimic_ce.engine.dsl.vocabulary.constants.attribute_constants import ATTR_COUNT
 from datamimic_ce.engine.io.contracts import SmokeExportRequest
 from datamimic_ce.errors import (
@@ -123,6 +124,8 @@ class _WorkerSuccess:
     smoke_diagnostics: tuple[dict[str, object], ...]
     smoke_export: SmokeExportCapture
     source_accesses: tuple[tuple[NonEmptyStrictStr, PositiveStrictInt], ...] = ()
+    # Workspace-relative POSIX paths of snapshot files the contained run opened for reading.
+    read_files: tuple[NonEmptyStrictStr, ...] = ()
 
 
 @dataclass(frozen=True, config=ConfigDict(extra="forbid", strict=True, revalidate_instances="always"))
@@ -149,6 +152,13 @@ _SCOPE_HINT = (
 )
 
 
+_CONTAINMENT_HINT = (
+    "Bounded execution writes only new files inside its private workspace, never the workspace files it was "
+    "checked against, and starts no process (#361). Deliver data "
+    "through the model's targets, or use authoring run --allow-side-effects when the write is intended."
+)
+
+
 def _runtime_hint(err: Exception) -> str:
     current: BaseException | None = err
     seen: set[int] = set()
@@ -159,6 +169,8 @@ def _runtime_hint(err: Exception) -> str:
         if isinstance(current, UserErrorBase) and current.issue_code is not None:
             issue = get_issue_definition(current.issue_code)
             if current.issue_code is IssueCode.TASK_EXPRESSION_EVAL_FAILED:
+                if isinstance(current.__cause__, PermissionError):
+                    return _CONTAINMENT_HINT
                 if current.location is None or current.location.attribute != ATTR_COUNT:
                     return _SCOPE_HINT
                 # Only a failed name lookup is a scope problem; 1/0 or int('text') in a count is not.
@@ -167,6 +179,8 @@ def _runtime_hint(err: Exception) -> str:
             return issue.guidance or issue.resolution
         if isinstance(current, DomainError) and current.hint:
             return current.hint
+        if isinstance(current, PermissionError):
+            return _CONTAINMENT_HINT
         if isinstance(current, FileNotFoundError):
             return "Provide the referenced resource relative to the descriptor workspace."
         current = current.__cause__
@@ -263,16 +277,16 @@ def _memstore_source_binding(
     )
 
 
-def _dry_run_hazards(root_stmt: object, *, includes_validated: bool) -> tuple[bool, bool]:
+def _dry_run_hazards(root_stmt: object, *, includes_validated: bool) -> tuple[tuple[object, ...], bool]:
     from datamimic_ce.engine.dsl.api import CompositeStatement, ExecuteStatement, IncludeStatement
 
-    has_execute = False
+    executes: list[object] = []
     has_unbounded_include = False
     pending = [root_stmt]
     while pending:
         stmt = pending.pop()
         if isinstance(stmt, ExecuteStatement):
-            has_execute = True
+            executes.append(stmt)
         elif isinstance(stmt, IncludeStatement):
             if "{" in stmt.uri or not (
                 stmt.uri.endswith(".properties") or (includes_validated and stmt.uri.endswith(".xml"))
@@ -280,74 +294,179 @@ def _dry_run_hazards(root_stmt: object, *, includes_validated: bool) -> tuple[bo
                 has_unbounded_include = True
         elif isinstance(stmt, CompositeStatement):
             pending.extend(stmt.sub_statements)
-    return has_execute, has_unbounded_include
+    return tuple(executes), has_unbounded_include
 
 
-def _validate_bounded_includes(path: Path, *, allow_side_effects: bool) -> set[str]:
-    """Check the literal dependency graph before any task, without changing native parse order."""
-    from datamimic_ce.engine.dsl.api import get_element_definition, parse_xml_file, read_resource_bytes
-    from datamimic_ce.engine.dsl.vocabulary.contracts.dsl_element import BoundedExecutionStrategy
+def _refuse_unbounded_execute(
+    language: str | None,
+    *,
+    target: str | None,
+    script: str | None,
+    uri: str | None,
+    inline: str | None,
+    setup_level: bool,
+    descriptor_dir: Path,
+    seeded: bool,
+) -> None:
+    """Admit <execute> only as a setup-level Python library that passes the static library check (#332)."""
+    from datamimic_ce.authoring.domain.script_semantics import admits_python_library, python_library_refusal
+    from datamimic_ce.engine.dsl.api import ExecuteStatement, read_resource_bytes
 
-    root = parse_xml_file(path)
-    if not any(node.tag == "include" and not node.get("uri", "").endswith(".properties") for node in root.iter()):
-        return set()
-    active: set[Path] = set()
-    products: set[str] = set()
-    memstores: set[str] = set()
+    if not setup_level or not admits_python_library(language, target=target, script=script):
+        raise _BoundedPolicyRefusal(
+            "Bounded execution admits <execute> only as a setup-level Python library without target or script"
+        )
+    if uri is not None:
+        try:
+            raw = str(read_resource_bytes(descriptor_dir / uri), "utf-8")
+        except (FileNotFoundError, UnicodeDecodeError):
+            return  # the runtime reports the missing or unreadable script itself
+        except ValueError as error:  # the contained reader refuses paths outside the private workspace
+            raise _BoundedPolicyRefusal("Python library uri must name a file inside the workspace") from error
+        origin = Path(uri).name
+    else:
+        raw = inline or ""
+        origin = "inline <execute>"
+    # Check exactly what ExecuteTask will run: it normalizes file and inline code alike.
+    refusal = python_library_refusal(ExecuteStatement.normalize_python_source(raw), seeded=seeded)
+    if refusal is not None:
+        raise _BoundedPolicyRefusal(f"{origin}: {refusal.message()}. {refusal.remediation()}")
+
+
+# Aggregate bytes one include graph may read; Build walks it in the authoring process, not in the bounded child.
+_MAX_INCLUDE_GRAPH_BYTES = 64 * 1024 * 1024
+
+
+def _literal_include_graph(entry: etree._Element, entry_path: Path) -> tuple[tuple[str, bytes], ...]:
+    """The entry's literal include graph in execution order: (workspace-relative uri, file bytes) per ``.xml``
+    step; ``.properties`` files are read for containment but not retained. Nested uris resolve against the entry
+    directory, as the runtime resolves them. Raises _BoundedPolicyRefusal unless the graph is literal,
+    setup-level, contained, acyclic and bounded in files and bytes; reads go through the active resource reader,
+    so a contained reader refuses paths outside it."""
+    from datamimic_ce.engine.dsl.api import parse_xml_source, read_resource_bytes
+
+    descriptor_dir = entry_path.parent
+    graph: list[tuple[str, bytes]] = []
+    active = [os.path.abspath(entry_path)]
     visited = 0
+    total = 0
 
-    def visit(descriptor: Path) -> None:
-        nonlocal visited
-        visited += 1
-        identity = Path(os.path.abspath(descriptor))
-        if identity in active or len(active) >= 64 or visited > 2000:
-            raise _BoundedPolicyRefusal("XML include dependency graph is cyclic or exceeds bounded limits")
-        active.add(identity)
-        document = parse_xml_file(descriptor)
+    def visit(document: etree._Element) -> None:
+        nonlocal visited, total
         if document.tag != "setup":
             raise _BoundedPolicyRefusal("XML include must contain a setup descriptor")
-        for node in document.iter():
-            tag = node.tag
-            if not isinstance(tag, str):
-                raise _BoundedPolicyRefusal("Included descriptor element must have a text tag")
-            definition = get_element_definition(tag)
-            if tag == "include":
-                uri = node.get("uri", "")
-                if (
-                    node.getparent() is not document
-                    or not uri
-                    or "{" in uri
-                    or "\\" in uri
-                    or ":" in uri
-                    or Path(uri).is_absolute()
-                ):
-                    raise _BoundedPolicyRefusal("Bounded XML includes require literal setup-level workspace paths")
-                # Native included contexts retain the entry descriptor directory.
-                dependency = path.parent / uri
-                if uri.endswith(".properties"):
-                    read_resource_bytes(dependency)
-                elif uri.endswith(".xml"):
-                    visit(dependency)
-                else:
-                    raise _BoundedPolicyRefusal("Unsupported bounded include dependency type")
-            elif definition is None or (
-                definition.bounded_execution_profile.strategy is BoundedExecutionStrategy.UNSUPPORTED
-                and not (tag == "execute" and allow_side_effects)
+        for node in document.iter("include"):
+            uri = node.get("uri", "")
+            if (
+                node.getparent() is not document
+                or not uri
+                or any(mark in uri for mark in "{\\:")
+                or Path(uri).is_absolute()
             ):
-                raise _BoundedPolicyRefusal("Included descriptor has no proven bounded execution policy")
-            if tag == "generate" or tag == "iterate":
-                name = node.get("name")
-                if name is None or "{" in name or name in products:
-                    raise _BoundedPolicyRefusal("Included products require distinct capture identities")
-                products.add(name)
-            elif tag == "memstore":
-                store_id = node.get("id")
-                if store_id is not None:
-                    memstores.add(store_id)
-        active.remove(identity)
+                raise _BoundedPolicyRefusal("Bounded XML includes require literal setup-level workspace paths")
+            if len(node):
+                raise _BoundedPolicyRefusal("Bounded XML includes require a uri without an inline setup")
+            suffix = PurePosixPath(uri).suffix
+            if suffix not in {".xml", ".properties"}:
+                raise _BoundedPolicyRefusal("Unsupported bounded include dependency type")
+            dependency = descriptor_dir / uri
+            data = read_resource_bytes(dependency)
+            total += len(data)
+            if total > _MAX_INCLUDE_GRAPH_BYTES:
+                raise _BoundedPolicyRefusal("XML include dependency graph is cyclic or exceeds bounded limits")
+            if suffix == ".xml":
+                graph.append((uri, data))
+                visited += 1
+                identity = os.path.abspath(dependency)
+                if identity in active or len(active) >= 64 or visited > 2000:
+                    raise _BoundedPolicyRefusal("XML include dependency graph is cyclic or exceeds bounded limits")
+                active.append(identity)
+                visit(parse_xml_source(data))
+                active.pop()
 
-    visit(path)
-    return memstores
+    visit(entry)
+    return tuple(graph)
+
+
+def _validate_bounded_includes(
+    path: Path, *, allow_side_effects: bool
+) -> tuple[set[str], tuple[_MemstoreProducer, ...] | None]:
+    """Check the literal dependency graph before any task, without changing native parse order. Returns the
+    graph's memstore ids and its run-wide memstore producers, or no producers when the entry includes no step."""
+    from datamimic_ce.engine.dsl.api import (
+        ExecuteStatement,
+        get_element_definition,
+        parse_consumer,
+        parse_xml_file,
+        parse_xml_source,
+    )
+    from datamimic_ce.engine.dsl.vocabulary.contracts.dsl_element import BoundedExecutionStrategy
+    from datamimic_ce.engine.io.api import resolve_target_entity
+
+    root = parse_xml_file(path)
+    # Without steps the engine resolves properties includes itself and reports a missing file as a typed error.
+    if all(PurePosixPath(node.get("uri", "")).suffix != ".xml" for node in root.iter("include")):
+        return set(), None
+    try:
+        graph = _literal_include_graph(root, path)
+    except _BoundedPolicyRefusal:
+        raise
+    except (OSError, ValueError) as error:
+        # Every step is checked before any runs, so a missing file stops the whole graph.
+        raise _BoundedPolicyRefusal("An included file is missing or lies outside the workspace") from error
+    steps = tuple(parse_xml_source(data) for uri, data in graph if PurePosixPath(uri).suffix == ".xml")
+    documents = (root, *steps)
+    seeded = root.get("rngSeed") is not None
+    products: set[str] = set()
+    memstores = {node.get("id", "") for document in documents for node in document.iter("memstore")} - {""}
+    producers: list[_MemstoreProducer] = []
+
+    def check(node: etree._Element, document: etree._Element, lineage: tuple[str, ...]) -> None:
+        tag = node.tag
+        if not isinstance(tag, str):
+            raise _BoundedPolicyRefusal("Included descriptor element must have a text tag")
+        definition = get_element_definition(tag)
+        if tag == "include":
+            return  # the graph walk already checked every include
+        if (
+            definition is not None
+            and definition.bounded_execution_profile.strategy is BoundedExecutionStrategy.PYTHON_LIBRARY
+        ):
+            if not allow_side_effects:
+                _refuse_unbounded_execute(
+                    ExecuteStatement.language(node.get("type"), node.get("uri")),
+                    target=node.get("target"),
+                    script=node.get("script"),
+                    uri=node.get("uri"),
+                    inline=node.text,
+                    setup_level=any(node is child for child in document),
+                    descriptor_dir=path.parent,
+                    seeded=seeded,
+                )
+        elif (
+            definition is None or definition.bounded_execution_profile.strategy is BoundedExecutionStrategy.UNSUPPORTED
+        ):
+            raise _BoundedPolicyRefusal("Included descriptor has no proven bounded execution policy")
+        if tag == "generate" or tag == "iterate":
+            name = node.get("name")
+            if name is None or "{" in name or name in products:
+                raise _BoundedPolicyRefusal("Included products require distinct capture identities")
+            products.add(name)
+            lineage = (*lineage, name)
+            # Run-wide producer facts: one statement tree alone cannot see what another step writes.
+            entity = resolve_target_entity(node.get("targetEntity"), node.get("type"), name)
+            for source_id in sorted(parse_consumer(node.get("target")) & memstores):
+                producers.append(
+                    _MemstoreProducer(
+                        source_id=source_id, entity=entity, product=capture_product_name(NAME_SEPARATOR.join(lineage))
+                    )
+                )
+        for child in node:
+            check(child, document, lineage)
+
+    for document in documents:
+        check(document, document, ())
+    return memstores, tuple(producers)
 
 
 # One stripped file target of a product: (exporter name in the registry, ctor params).
@@ -460,6 +579,7 @@ def neutralize_for_dry_run(
     workspace_root: Path | None = None,
     includes_validated: bool = False,
     included_memstores: set[str] | None = None,
+    graph_producers: tuple[_MemstoreProducer, ...] | None = None,
 ) -> None:
     """Statement transformer: cap counts, keep only memstore targets, force 1 process.
     When a collector dict is given, the FILE targets removed from each product are
@@ -467,6 +587,7 @@ def neutralize_for_dry_run(
     from datamimic_ce.engine.dsl.api import (
         CompositeStatement,
         DatabaseStatement,
+        ExecuteStatement,
         GenerateStatement,
         MongoDBStatement,
         SetupStatement,
@@ -474,11 +595,27 @@ def neutralize_for_dry_run(
     from datamimic_ce.engine.io.api import resolve_target_entity
 
     assert isinstance(root_stmt, SetupStatement)
-    has_execute, has_include = _dry_run_hazards(root_stmt, includes_validated=includes_validated)
-    if (has_execute and not allow_side_effects) or has_include:
-        raise _BoundedPolicyRefusal("bounded execution refuses execute or unresolved include side effects")
+    executes, has_include = _dry_run_hazards(root_stmt, includes_validated=includes_validated)
+    if has_include:
+        raise _BoundedPolicyRefusal("bounded execution refuses unresolved include side effects")
+    if not allow_side_effects and descriptor_dir is not None:
+        for execute in executes:
+            assert isinstance(execute, ExecuteStatement)
+            _refuse_unbounded_execute(
+                execute.type,
+                target=execute.target,
+                script=execute.script,
+                uri=execute.uri,
+                inline=execute.code,
+                setup_level=any(execute is child for child in root_stmt.sub_statements),
+                descriptor_dir=descriptor_dir,
+                seeded=root_stmt.rng_seed is not None,
+            )
+    elif not allow_side_effects and executes:
+        raise _BoundedPolicyRefusal("bounded execution refuses execute without a descriptor directory")
     memstores = _memstore_ids(root_stmt) | (included_memstores or set())
-    memstore_producers = _memstore_producers(root_stmt, memstores)
+    # With steps, producers come from the whole graph: a step may read what another step wrote.
+    memstore_producers = graph_producers if graph_producers is not None else _memstore_producers(root_stmt, memstores)
     root_stmt.num_process = 1
 
     default_separator = root_stmt.default_separator or "|"
@@ -511,6 +648,8 @@ def neutralize_for_dry_run(
                         )
                 stmt.targets = {t for t in stmt.targets if t in memstores}
             stmt.num_process = 1
+            # Check final rows, including time-series expansion, before runtime planning.
+            stmt.bounded_count_limit = max_count
             requested = _static_count(stmt.count)
             source_rows = _source_row_count(
                 stmt,
@@ -521,7 +660,7 @@ def neutralize_for_dry_run(
                 stmt,
                 memstore_ids=memstores,
                 producers=memstore_producers,
-                unresolved_includes=bool(included_memstores),
+                unresolved_includes=bool(included_memstores) and graph_producers is None,
             )
             from datamimic_ce.engine.dsl.api import SourceDistribution
 
@@ -533,7 +672,13 @@ def neutralize_for_dry_run(
             output_multiplier = time_series.ticks_per_series if time_series is not None else 1
             cap_applied = False
             bounded_without_cap = False
-            reason = "runtime cardinality is not statically known"
+            # Only a generate without a source can be fixed by its count; a source's row count stays unproven.
+            reason = (
+                "runtime cardinality is not statically known; give the generate a literal count, a count "
+                "expression over the rows it produces, minCount/maxCount, or a finite source"
+                if stmt.source is None
+                else "runtime cardinality is not statically known"
+            )
 
             if requested is not None:
                 count_kind = _CountBoundaryKind.STATIC
@@ -757,6 +902,8 @@ def _decode_worker_payload(payload: bytes) -> object:
         OSError,
         FileNotFoundError,
         PermissionError,
+        # C code that meets a refused audit event (bounded containment) may surface only this.
+        SystemError,
         TimeoutError,
         AssertionError,
         NameError,
@@ -852,6 +999,7 @@ def _validated_worker_success(message: _WorkerSuccess, max_count: int | None = N
         message.smoke_diagnostics,
         message.smoke_export,
         message.source_accesses,
+        message.read_files,
     )
     names = [budget.name for budget in message.budgets]
     if len(names) != len(set(names)):
@@ -894,6 +1042,8 @@ def _validated_worker_success(message: _WorkerSuccess, max_count: int | None = N
                 for producer in binding.producers
             ):
                 raise ValueError("invalid memstore producer provenance")
+    if max_count is not None and sum(len(rows) for rows in message.captured.values()) > max_count:
+        raise ValueError("capture rows exceed the shared total Build limit")
     smoke = message.smoke_export
     counters = (smoke.applicable_exporters, smoke.attempted_exporters, smoke.failed_exporters)
     if type(smoke.requested) is not bool or any(type(value) is not int or value < 0 for value in counters):
@@ -1021,7 +1171,9 @@ def _run_engine_capture(
         budgets: _ProductBudgets = {}
         stripped: _StrippedTargets | None = {} if smoke_export else None
         try:
-            included_memstores = _validate_bounded_includes(path, allow_side_effects=allow_side_effects)
+            included_memstores, graph_producers = _validate_bounded_includes(
+                path, allow_side_effects=allow_side_effects
+            )
             transformer = partial(
                 neutralize_for_dry_run,
                 max_count=max_count,
@@ -1032,6 +1184,7 @@ def _run_engine_capture(
                 workspace_root=workspace_root,
                 includes_validated=True,
                 included_memstores=included_memstores,
+                graph_producers=graph_producers,
             )
             session = create_run_session(
                 RunRequest(
@@ -1042,6 +1195,7 @@ def _run_engine_capture(
                     platform_props=environment_properties,
                     statement_transformer=transformer,
                     included_statement_transformer=transformer,
+                    total_row_limit=max_count,
                 ),
             )
             with SourceAccessCapture() as source_accesses:
@@ -1111,7 +1265,7 @@ def _capture_evidence(
     if budget is not None and budget.parent_name is not None:
         parent_observed = observed_by_name.get(budget.parent_name, 0)
     output_multiplier = budget.output_multiplier if budget is not None else 1
-    limit = max(1, max_count * parent_observed * output_multiplier)
+    limit = max_count
     if budget is None:
         return ProductCaptureEvidence(
             status=CaptureStatus.UNKNOWN,

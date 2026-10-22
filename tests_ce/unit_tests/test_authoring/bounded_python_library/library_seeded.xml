@@ -1,0 +1,9 @@
+<setup rngSeed="17">
+    <!-- A seeded model that loads a library: Build replays it even when replay was not requested. -->
+    <execute uri="lib/select.scr.py"/>
+    <generate name="selected" count="2" target="">
+        <key name="person_id" script="select_person([(1, False), (2, True)])"/>
+        <key name="loads" script="len(LOADS)"/>
+        <key name="draw" script="draw()"/>
+    </generate>
+</setup>

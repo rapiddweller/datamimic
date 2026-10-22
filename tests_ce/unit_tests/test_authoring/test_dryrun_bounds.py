@@ -29,7 +29,7 @@ def _execute_file(path, **kwargs):
     )
 
 
-def test_nested_generate_count_is_bounded_per_parent() -> None:
+def test_nested_generate_capture_uses_one_global_limit() -> None:
     xml = """<setup rngSeed="1">
         <generate name="parents" count="1" target="ConsoleExporter">
             <key name="parent_id" generator="IncrementGenerator"/>
@@ -39,16 +39,32 @@ def test_nested_generate_count_is_bounded_per_parent() -> None:
         </generate>
     </setup>"""
 
-    result = _execute_source(xml, max_count=1)
+    result = _execute_source(xml, max_count=4)
 
     assert result.ok
     products = {product.name: product for product in result.captured.products}
     child = products["children"]
-    assert len(child.rows) == 1
-    assert child.capture.status is CaptureStatus.CAPPED
-    assert not child.capture.complete
+    assert len(child.rows) == 3
+    assert child.capture.status is CaptureStatus.COMPLETE
+    assert child.capture.complete
     assert child.capture.requested == 3
-    assert child.capture.observed == child.capture.limit == 1
+    assert child.capture.observed == 3
+    assert child.capture.limit == 4
+
+
+def test_time_series_capture_reports_the_global_limit() -> None:
+    xml = (
+        '<setup rngSeed="1"><generate name="rows" start="2026-01-01T00:00:00" '
+        'end="2026-01-01T03:00:00" interval="PT1H" count="1">'
+        '<key name="timestamp" script="ts.now"/></generate></setup>'
+    )
+
+    result = _execute_source(xml, max_count=5)
+
+    assert result.ok, result.diagnostics
+    product = result.captured.products[0]
+    assert len(product.rows) == 3
+    assert product.capture.limit == 5
 
 
 @pytest.mark.parametrize("max_count", [4, 10])
@@ -125,17 +141,13 @@ def test_ranged_counts_are_bounded() -> None:
     # Dynamic counts are evaluated and refused above the limit instead (test_dynamic_count_bounded.py).
     xml = """<setup rngSeed="1">
         <generate name="range" minCount="100" maxCount="200"><key name="x" constant="1"/></generate>
-        <generate name="minimum" minCount="100"><key name="x" constant="1"/></generate>
     </setup>"""
 
     result = _execute_source(xml, max_count=2)
 
     assert result.ok
-    assert {product.name: len(product.rows) for product in result.captured.products} == {
-        "minimum": 2,
-        "range": 2,
-    }
-    assert all(product.capture.status is CaptureStatus.CAPPED for product in result.captured.products)
+    assert {product.name: len(product.rows) for product in result.captured.products} == {"range": 2}
+    assert result.captured.products[0].capture.status is CaptureStatus.CAPPED
 
 
 def test_unique_complete_memstore_producer_proves_finite_readback() -> None:
@@ -147,7 +159,7 @@ def test_unique_complete_memstore_producer_proves_finite_readback() -> None:
         <generate name="a_reader" source="mem" type="shared" distribution="ordered"/>
     </setup>"""
 
-    result = _execute_source(xml, max_count=10)
+    result = _execute_source(xml, max_count=16)
 
     products = {product.name: product for product in result.captured.products}
     assert products["z_producer"].capture.status is CaptureStatus.COMPLETE
@@ -156,27 +168,26 @@ def test_unique_complete_memstore_producer_proves_finite_readback() -> None:
     assert reader.capture.status is CaptureStatus.EXHAUSTED
     assert reader.capture.complete
     assert reader.capture.requested == reader.capture.observed == 8
-    assert reader.capture.limit == 10
+    assert reader.capture.limit == 16
 
 
-def test_memstore_reader_is_noncomplete_when_global_bound_caps_producer() -> None:
+def test_memstore_producer_is_capped_at_global_bound() -> None:
     xml = """<setup rngSeed="1">
         <memstore id="mem"/>
         <generate name="producer" count="8" target="mem">
             <key name="id" generator="IncrementGenerator"/>
         </generate>
-        <generate name="reader" source="mem" type="producer" distribution="ordered"/>
     </setup>"""
 
     result = _execute_source(xml, max_count=4)
 
     products = {product.name: product for product in result.captured.products}
     assert products["producer"].capture.status is CaptureStatus.CAPPED
-    assert not products["reader"].capture.complete
-    assert products["reader"].capture.status is CaptureStatus.UNKNOWN
+    assert len(products["producer"].rows) == 4
+    assert products["producer"].capture.limit == 4
 
 
-def test_capped_memstore_producer_propagates_unknown_to_full_bounded_reader() -> None:
+def test_memstore_readback_cannot_reuse_the_producers_global_budget() -> None:
     xml = """<setup rngSeed="1">
         <memstore id="mem"/>
         <generate name="producer" count="20" target="mem">
@@ -185,12 +196,10 @@ def test_capped_memstore_producer_propagates_unknown_to_full_bounded_reader() ->
         <generate name="reader" source="mem" type="producer" distribution="ordered"/>
     </setup>"""
 
-    products = {product.name: product for product in _execute_source(xml, max_count=10).captured.products}
+    result = _execute_source(xml, max_count=10)
 
-    assert products["producer"].capture.status is CaptureStatus.CAPPED
-    assert len(products["reader"].rows) == 10
-    assert products["reader"].capture.status is CaptureStatus.UNKNOWN
-    assert "producer capture" in products["reader"].capture.reason
+    assert not result.ok
+    assert not result.captured.products
 
 
 def test_memstore_read_without_generate_producer_is_unknown(tmp_path: Path) -> None:
