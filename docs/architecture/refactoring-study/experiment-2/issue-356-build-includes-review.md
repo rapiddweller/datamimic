@@ -296,3 +296,4 @@ I probed a project whose step `model/a.xml` declares `stepdb`: the only finding 
 
 **Tests:** 122 passed across the project build, public lint, dryrun includes, acceptance and Build workflow suites; ruff and mypy are clean.
 
+**Merge `931dc918` (development: #368, #369), rebound:** the merged native observation keeps 1,426 unresolved calls, 178 typing positions and 256 unknown positions, the same 20 diagnostics and the same 314 UNKNOWN identities; the receipt takes development's contract digest and its `boundary_type_limit`, scope and delivery continuations verbatim.
