@@ -80,7 +80,8 @@ ROW_CONDITION_GRAMMAR = (
     "Indexes: constant non-negative integer indexes or constant string keys; negative indexes such as items[-1] "
     "are rejected. Arithmetic is numeric only (no string concatenation). "
     f"Numeric budget: integers up to {MAX_INTEGER_BITS} bits, finite floats up to magnitude "
-    f"{MAX_FLOAT_MAGNITUDE:.0e}, decimals with an adjusted exponent between -{MAX_DECIMAL_ADJUSTED_EXPONENT} and {MAX_DECIMAL_ADJUSTED_EXPONENT}. "
+    f"{MAX_FLOAT_MAGNITUDE:.0e}, decimals with an adjusted exponent between -{MAX_DECIMAL_ADJUSTED_EXPONENT} "
+    f"and {MAX_DECIMAL_ADJUSTED_EXPONENT}. "
     f"Budgets: {MAX_CONDITION_LENGTH} characters, {MAX_CONDITION_NODES} AST nodes, nesting depth "
     f"{MAX_CONDITION_DEPTH}, {MAX_CONTAINER_ITEMS} container items, strings up to {MAX_STRING_LENGTH} characters."
 )
