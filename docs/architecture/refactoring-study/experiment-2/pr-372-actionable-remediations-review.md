@@ -54,3 +54,10 @@ The four new tests fail without the change.
 **NOT VERIFIED:**
 - Full suites.
 - CI.
+
+## Addendum: `a53f3da8`, both Lows resolved
+
+- **Unknown-cardinality reason:** the count hint is now appended only when `stmt.source is None`. A source-driven generate keeps the plain causal reason, and its fix stays in the capture remediation.
+- **Plugin reference:** `project-structure.md` now marks `sql/` as "real runs only; Build refuses SQL execute".
+- **Binding:** the source digest is rebound. Validation, contract, the 20 diagnostics and the 313 UNKNOWN records are unchanged, and the measurements stay at 1,424/178/255.
+- **Gates:** 87 related tests passed; `agent-plugin-check`, ruff and mypy are clean; the strict completion gate passes.
