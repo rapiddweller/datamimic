@@ -40,7 +40,11 @@ from datamimic_ce.authoring.domain.expectations import (
     UniqueExpectation,
     expectation_subjects,
 )
-from datamimic_ce.authoring.domain.row_conditions import evaluate_row_condition
+from datamimic_ce.authoring.domain.row_conditions import (
+    RowConditionError,
+    RowConditionFailure,
+    evaluate_row_condition,
+)
 
 CapturedRows = Mapping[str, tuple[Mapping[str, object], ...]]
 _DATE_LITERAL_PATTERN = r"\d{4}-\d{2}-\d{2}\Z"
@@ -510,7 +514,14 @@ def _check_expectation(
             failures = [
                 index for index, row in enumerate(rows) if not evaluate_row_condition(expectation.condition, row)
             ]
-        except (ArithmeticError, TypeError, ValueError):
+        except RowConditionError as error:
+            return _unevaluable_row_condition(expectation, error.failure)
+        except TypeError:
+            return _unevaluable_row_condition(expectation, RowConditionFailure.TYPE_MISMATCH)
+        except ArithmeticError:
+            return _unevaluable_row_condition(expectation, RowConditionFailure.ARITHMETIC)
+        except ValueError:
+            # Parse rejection of a condition the model already validated: no failure category applies.
             return _ExpectationFailure(
                 f"row condition could not be evaluated for {_subject_label(expectation.subject)}",
                 {"expected": expectation.condition, "actual": None},
@@ -522,6 +533,15 @@ def _check_expectation(
             )
         return None
     assert_never(expectation)
+
+
+def _unevaluable_row_condition(
+    expectation: RowConditionExpectation, failure: RowConditionFailure
+) -> _ExpectationFailure:
+    return _ExpectationFailure(
+        f"row condition could not be evaluated for {_subject_label(expectation.subject)}: {failure.value}",
+        {"expected": expectation.condition, "actual": None},
+    )
 
 
 def _retry_remediation(count: int) -> str:
