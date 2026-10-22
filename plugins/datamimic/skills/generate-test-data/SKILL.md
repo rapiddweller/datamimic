@@ -40,7 +40,10 @@ the user's requirements.
 
 ## Build a project people can understand
 
-The executable XML and its supporting files are the human review surface.
+Lay out every local project as in [project structure](references/project-structure.md):
+the entry, steps per activity, data files, `lib/` functions, delivery steps last and
+`acceptance/build.json`. The executable XML and its supporting files are the human
+review surface.
 Use native field operations, sources, types, relationships, conditions, checks
 and projections wherever they express the intent clearly. Give each file a
 named activity and each extra field a real consumer. Keep shared rule parameters
