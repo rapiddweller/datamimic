@@ -146,7 +146,7 @@ class AcceptanceSpecV1(AuthoringModel):
         return self
 
 
-def _reject(message: str, path: tuple[str | int, ...]) -> None:
+def _reject(message: str, path: tuple[str | int, ...], remediation: str | None = None) -> None:
     raise AcceptanceProjectionError(
         (
             catalog_diagnostic(
@@ -154,6 +154,7 @@ def _reject(message: str, path: tuple[str | int, ...]) -> None:
                 message,
                 phase=DiagnosticPhase.EXPECTATION,
                 path=path,
+                remediation=remediation,
             ),
         )
     )
@@ -195,7 +196,14 @@ def validate_acceptance_subject(
                 return
             fields = selected.fields
         if field is not None and field not in fields:
-            _reject("Expectation references an unknown field.", path + ("field",))
+            _reject(
+                "Expectation references an unknown field.",
+                path + ("field",),
+                remediation=(
+                    "Declare the field as a <key> of that product; Build knows only declared keys, not fields that "
+                    "appear only in rows a script or source produces."
+                ),
+            )
 
 
 def validate_acceptance_check(spec: AcceptanceSpecV1, check: AcceptanceCheckV1) -> None:
