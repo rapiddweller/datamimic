@@ -672,7 +672,13 @@ def neutralize_for_dry_run(
             output_multiplier = time_series.ticks_per_series if time_series is not None else 1
             cap_applied = False
             bounded_without_cap = False
-            reason = "runtime cardinality is not statically known"
+            # Only a generate without a source can be fixed by its count; a source's row count stays unproven.
+            reason = (
+                "runtime cardinality is not statically known; give the generate a literal count, a count "
+                "expression over the rows it produces, minCount/maxCount, or a finite source"
+                if stmt.source is None
+                else "runtime cardinality is not statically known"
+            )
 
             if requested is not None:
                 count_kind = _CountBoundaryKind.STATIC

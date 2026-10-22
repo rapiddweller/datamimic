@@ -69,7 +69,7 @@ class _Product:
     count: int | None
 
 
-def _reject(message: str, path: tuple[str | int, ...]) -> NoReturn:
+def _reject(message: str, path: tuple[str | int, ...], remediation: str | None = None) -> NoReturn:
     raise AcceptanceProjectionError(
         (
             catalog_diagnostic(
@@ -77,6 +77,7 @@ def _reject(message: str, path: tuple[str | int, ...]) -> NoReturn:
                 message,
                 phase=DiagnosticPhase.EXPECTATION,
                 path=path,
+                remediation=remediation,
             ),
         )
     )
@@ -466,6 +467,11 @@ def _readbacks(
                 "Memstore completeness requires one producer identifier role "
                 "and one matching consumer foreign-key role.",
                 consumer.path,
+                remediation=(
+                    'Add two product_roles entries: {"product": "<producer>", "field": "<key>", "role": {"kind": '
+                    '"identifier"}} and {"product": "<consumer>", "field": "<field holding the key>", "role": {"kind": '
+                    '"foreign_key", "parent_product": "<producer>", "parent_field": "<key>"}}.'
+                ),
             )
         result.append(
             AcceptanceReadbackV1(
@@ -483,6 +489,12 @@ def _readbacks(
         for store in (item.strip() for item in target.split(",")):
             if store in stores and (producer.product.name, store) not in producers_read:
                 _reject(
-                    "A memstore target requires a declared consumer readback.", producer.path + ("properties", "target")
+                    "A memstore target requires a declared consumer readback.",
+                    producer.path + ("properties", "target"),
+                    remediation=(
+                        "Read the product back in a later generate (source=<memstore id>, type=<this product>) and "
+                        "declare its identifier/foreign-key role pair; a product nothing reads back needs a file "
+                        "target instead of the memstore."
+                    ),
                 )
     return tuple(result)
