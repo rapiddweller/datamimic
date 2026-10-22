@@ -154,3 +154,23 @@ They became "partially resolved — dynamic receiver with matching internal meth
 
 **Tests:** 101 passed across project build, global Build budget, dynamic count, Build workflow, Build verification, dryrun includes and public lint.
 
+## Addendum: `7c53e2cd` (#371, Codex P1), accepted
+
+**The finding was valid.** `create_authoring_application(project).build()` was bound to the default `model.xml`, so the executor refused every project; only the CLI and MCP passed `PROJECT_ENTRY_PATH`.
+
+**The fix.**
+- The composition root (`bootstrap.py`) creates a second workspace context at `PROJECT_ENTRY_PATH`.
+- It wires Build to that context's validator and executor, and to `ProjectFiles`, through the existing public ports (`project_validator`, `project_executor`).
+- The other operations keep the descriptor-bound ports.
+- It is the smallest correct placement: binding stays in the composition root, and no contract changes.
+
+**Verification.**
+- The default factory now builds `order_desk` `ready` with the 9-file manifest.
+- 61 tests passed across project build, Build workflow, public API, MCP end-to-end and `cli_v4`; ruff and mypy are clean.
+
+**Native result.**
+- 0 violations; 1,424 unresolved calls, 178 typing positions, 255 unknown positions.
+- The unresolved-call diff against development is unchanged.
+- The same 20 diagnostics and 313 UNKNOWN identities.
+- AUTHORING-API-TYPES decides 15 of 32 positions; the two new constructor positions are both decided.
+
