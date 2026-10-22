@@ -67,3 +67,36 @@
 - Binding: only the Source digest moves. Validation, Contract, the 313 UNKNOWN records and the 20 diagnostics are unchanged, and so are the 1424/178/255 measurements.
 - The `BaseException` Low stays open by decision, since EE behaves the same.
 - LOCAL VERIFIED: the dry-run and run probes; 952 passed and 4 skipped on the same test set; ruff; the full gate.
+
+## Addendum: `058d64e4`, CONTROL field injection (Codex P1)
+
+**Accepted.** `_control_value` normalises the one descriptor-controlled field, the policy record's `stmt`: `" ".join(text.split())`, then `\s*\|\s*` becomes `|`.
+
+**No gap in the normalisation.**
+- `str.split()` breaks on every `str.isspace()` character, and every `str.splitlines()` boundary is one of them: `\r`, `\v`, `\f`, `\x1c`-`\x1e`, `\x85`, U+2028, U+2029.
+- So no line break survives. Probed: those characters, NBSP, U+3000, tabs and CRLF.
+- A zero-width space or a full-width pipe can survive, but neither forms the ASCII ` | ` delimiter.
+- Nested `a|b` and names containing plain spaces are unchanged.
+- The new test fails without the fix.
+
+**The other fields carry no descriptor text.** `policy` and `reason` are static. `override_workers` holds integers. `kind=end` carries a class name.
+
+**Residual Medium, pre-existing and outside this fix: whole forged CONTROL lines.**
+- Log and CLI lines that echo descriptor text still pass line breaks through.
+- Example: `source="x&#10;CONTROL | kind=end | status=ok.csv"` makes the I101 `Value error:` log line and the CLI `Error:` line each print a continuation line. Each such line starts with `CONTROL | kind=end | status=ok...`.
+- The base `60b3d377` prints two such lines too, so this PR does not worsen it.
+- Impact:
+  - A consumer that matches `CONTROL |` anywhere in a line can be fooled. `test_control_lines_go_to_stderr_only` parses that way.
+  - A consumer that requires the logger prefix (timestamp | level | logger | worker) cannot.
+  - In the bounded child, stderr goes to the null device.
+- Follow-up: anchor consumers on the logger prefix, or escape line breaks in the formatter for every record.
+
+**Binding.**
+- Moved: Source and Validation. Validation moved only through coverage counts: 13,374 → 13,378 calls analysed, 9,905 → 9,908 resolved, 2,045 → 2,046 partially resolved.
+- Unchanged: 1,424 unresolved calls, 178 typing positions, 255 unknown positions; Contract, the 313 UNKNOWN records and the 20 diagnostics.
+
+**LOCAL VERIFIED:**
+- 953 passed and 4 skipped on the same test set.
+- mypy on the full package.
+- ruff on `datamimic_ce`. The one I001 is in the untouched `test_reference_task.py`.
+- The probes and the full gate.
