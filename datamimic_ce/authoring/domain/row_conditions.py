@@ -18,6 +18,9 @@ MAX_CONDITION_NODES = 96
 MAX_CONDITION_DEPTH = 12
 MAX_CONTAINER_ITEMS = 64
 MAX_STRING_LENGTH = 1024
+MAX_INTEGER_BITS = 256
+MAX_FLOAT_MAGNITUDE = 1e100
+MAX_DECIMAL_ADJUSTED_EXPONENT = 128
 
 # Keyed by node type because the evaluator dispatches on types, not on symbol strings.
 _OPERATORS: Mapping[type[ast.AST], str] = {
@@ -72,8 +75,13 @@ _ALLOWED_NODES = (
 
 ROW_CONDITION_GRAMMAR = (
     f"Operators: {_SUPPORTED_OPERATORS}. "
-    "Operands: captured field names, dot access into nested mappings, constant integer or string indexes, "
-    "numbers, strings, booleans, None, and list, tuple or set literals; len(value) is the only call. "
+    "Operands: captured field names, dot access into nested mappings, numbers, strings, booleans, None, "
+    "and list, tuple or set literals; len(value) is the only call. "
+    "Indexes: constant non-negative integer indexes or constant string keys; negative indexes such as items[-1] "
+    "are rejected. Arithmetic is numeric only (no string concatenation). "
+    f"Numeric budget: integers up to {MAX_INTEGER_BITS} bits, finite floats up to magnitude "
+    f"{MAX_FLOAT_MAGNITUDE:.0e}, decimals with an adjusted exponent between -{MAX_DECIMAL_ADJUSTED_EXPONENT} "
+    f"and {MAX_DECIMAL_ADJUSTED_EXPONENT}. "
     f"Budgets: {MAX_CONDITION_LENGTH} characters, {MAX_CONDITION_NODES} AST nodes, nesting depth "
     f"{MAX_CONDITION_DEPTH}, {MAX_CONTAINER_ITEMS} container items, strings up to {MAX_STRING_LENGTH} characters."
 )
@@ -84,7 +92,7 @@ class RowConditionFailure(StrEnum):
 
     MISSING_VALUE = "a referenced field, attribute or index is absent from a captured row"
     UNSUPPORTED_VALUE = "a value is not None, bool, number, string, list or mapping; dates are not comparable"
-    OVER_BUDGET = "a value exceeds the string length, container size or nesting budget"
+    OVER_BUDGET = "a value exceeds the numeric, string length, container size or nesting budget"
     TYPE_MISMATCH = "operands have incompatible types"
     ARITHMETIC = "arithmetic failed or left the numeric budget"
 
@@ -150,14 +158,20 @@ def _depth(node: ast.AST) -> int:
     return 1 + max((_depth(child) for child in ast.iter_child_nodes(node)), default=0)
 
 
-def _safe_number(value: object) -> int | float | Decimal:
-    if type(value) is int and value.bit_length() <= 256:
+def _safe_number(
+    value: object, out_of_budget: RowConditionFailure = RowConditionFailure.OVER_BUDGET
+) -> int | float | Decimal:
+    # A non-number is a type error; only a number outside the budget (or an arithmetic result) is a budget error.
+    if isinstance(value, bool) or not isinstance(value, int | float | Decimal):
+        raise RowConditionError(RowConditionFailure.TYPE_MISMATCH)
+    # Exact types: an int or float subclass could override operators inside the closed evaluator.
+    if type(value) is int and value.bit_length() <= MAX_INTEGER_BITS:
         return value
-    if type(value) is float and math.isfinite(value) and abs(value) <= 1e100:
+    if type(value) is float and math.isfinite(value) and abs(value) <= MAX_FLOAT_MAGNITUDE:
         return value
-    if isinstance(value, Decimal) and value.is_finite() and abs(value.adjusted()) <= 128:
+    if isinstance(value, Decimal) and value.is_finite() and abs(value.adjusted()) <= MAX_DECIMAL_ADJUSTED_EXPONENT:
         return value
-    raise RowConditionError(RowConditionFailure.ARITHMETIC)
+    raise RowConditionError(out_of_budget)
 
 
 def _safe_value(value: object, depth: int = 0) -> object:
@@ -267,7 +281,11 @@ def _evaluate(node: ast.AST, row: Mapping[str, object]) -> object:
         if isinstance(node, ast.Tuple):
             return tuple(values)
         if isinstance(node, ast.Set):
-            return set(values)
+            try:
+                return set(values)
+            except TypeError as error:
+                # An unhashable captured value (a list or mapping) cannot be a set member.
+                raise RowConditionError(RowConditionFailure.TYPE_MISMATCH) from error
         return values
     if isinstance(node, ast.UnaryOp) and isinstance(node.op, (ast.UAdd, ast.USub, ast.Not)):
         value = _evaluate(node.operand, row)
@@ -301,7 +319,7 @@ def _evaluate(node: ast.AST, row: Mapping[str, object]) -> object:
         except TypeError as error:
             # Mixed float and Decimal operands are not combinable in Python.
             raise RowConditionError(RowConditionFailure.TYPE_MISMATCH) from error
-        return _safe_number(result)
+        return _safe_number(result, RowConditionFailure.ARITHMETIC)
     if isinstance(node, ast.Compare):
         left = _evaluate(node.left, row)
         for operation_node, comparator in zip(node.ops, node.comparators, strict=True):

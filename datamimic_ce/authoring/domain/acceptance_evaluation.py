@@ -516,12 +516,8 @@ def _check_expectation(
             ]
         except RowConditionError as error:
             return _unevaluable_row_condition(expectation, error.failure)
-        except TypeError:
-            return _unevaluable_row_condition(expectation, RowConditionFailure.TYPE_MISMATCH)
-        except ArithmeticError:
-            return _unevaluable_row_condition(expectation, RowConditionFailure.ARITHMETIC)
-        except ValueError:
-            # Parse rejection of a condition the model already validated: no failure category applies.
+        except (ArithmeticError, TypeError, ValueError):
+            # Anything the evaluator did not classify: report it without a reason rather than guess one.
             return _ExpectationFailure(
                 f"row condition could not be evaluated for {_subject_label(expectation.subject)}",
                 {"expected": expectation.condition, "actual": None},

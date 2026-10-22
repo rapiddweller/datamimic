@@ -5,6 +5,7 @@
 """Row-condition grammar is advertised from the parser's own table, and evaluation failures carry typed reasons."""
 
 import ast
+import math
 from datetime import datetime
 from pathlib import Path
 
@@ -14,7 +15,11 @@ from datamimic_ce.authoring import create_authoring_application
 from datamimic_ce.authoring.domain.requests import ReferenceRequest, ReferenceTopic
 from datamimic_ce.authoring.domain.row_conditions import (
     _OPERATORS,
+    _SUPPORTED_OPERATORS,
     MAX_CONDITION_LENGTH,
+    MAX_DECIMAL_ADJUSTED_EXPONENT,
+    MAX_FLOAT_MAGNITUDE,
+    MAX_INTEGER_BITS,
     ROW_CONDITION_GRAMMAR,
     RowConditionError,
     RowConditionFailure,
@@ -50,7 +55,7 @@ def test_every_advertised_operator_parses_and_unsupported_ones_name_the_list():
         parse_row_condition(sample)
     with pytest.raises(ValueError) as error:
         parse_row_condition("a % 2 == 0")
-    assert all(symbol in str(error.value) for symbol in _OPERATORS.values())
+    assert _SUPPORTED_OPERATORS in str(error.value)
 
 
 def test_over_length_condition_names_the_length_budget():
@@ -74,9 +79,18 @@ def test_reference_row_condition_describes_the_grammar(tmp_path: Path):
         ("when > '2026-01-01'", {"when": datetime(2026, 1, 1)}, RowConditionFailure.UNSUPPORTED_VALUE),
         ("id > 'x'", {"id": 5}, RowConditionFailure.TYPE_MISMATCH),
         ("id / 0 > 1", {"id": 1}, RowConditionFailure.ARITHMETIC),
+        ("value * value > 0", {"value": 2**200}, RowConditionFailure.ARITHMETIC),
         ("customer.missing > 1", {"customer": {"id": 1}}, RowConditionFailure.MISSING_VALUE),
         ("note == 'x'", {"note": "x" * 2000}, RowConditionFailure.OVER_BUDGET),
         ("len(items) > 1", {"items": list(range(65))}, RowConditionFailure.OVER_BUDGET),
+        ("first + last == 'ab'", {"first": "a", "last": "b"}, RowConditionFailure.TYPE_MISMATCH),
+        ("flag + 1 == 2", {"flag": True}, RowConditionFailure.TYPE_MISMATCH),
+        ("x + 1 == 2", {"x": None}, RowConditionFailure.TYPE_MISMATCH),
+        ("-name == 1", {"name": "a"}, RowConditionFailure.TYPE_MISMATCH),
+        ("score >= 0", {"score": math.nan}, RowConditionFailure.OVER_BUDGET),
+        ("score >= 0", {"score": 1e101}, RowConditionFailure.OVER_BUDGET),
+        ("x < 1e101", {"x": 1}, RowConditionFailure.OVER_BUDGET),
+        ("{tags} == {1}", {"tags": [1]}, RowConditionFailure.TYPE_MISMATCH),
     ],
 )
 def test_evaluation_failures_carry_a_typed_reason(condition, row, failure):
@@ -105,3 +119,16 @@ def test_grammar_names_the_string_budget():
     from datamimic_ce.authoring.domain.row_conditions import MAX_STRING_LENGTH, ROW_CONDITION_GRAMMAR
 
     assert str(MAX_STRING_LENGTH) in ROW_CONDITION_GRAMMAR
+
+
+def test_grammar_names_the_numeric_budget_and_operand_rules():
+    assert str(MAX_INTEGER_BITS) in ROW_CONDITION_GRAMMAR
+    assert f"{MAX_FLOAT_MAGNITUDE:.0e}" in ROW_CONDITION_GRAMMAR
+    assert str(MAX_DECIMAL_ADJUSTED_EXPONENT) in ROW_CONDITION_GRAMMAR
+    assert "arithmetic is numeric only (no string concatenation)" in ROW_CONDITION_GRAMMAR.lower()
+    assert "constant non-negative integer indexes" in ROW_CONDITION_GRAMMAR
+
+
+def test_over_budget_reason_names_the_numeric_budget():
+    # A number outside the budget must not send the author looking at strings or containers.
+    assert "numeric" in RowConditionFailure.OVER_BUDGET.value

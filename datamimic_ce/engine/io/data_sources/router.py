@@ -37,7 +37,14 @@ from datamimic_ce.engine.io.data_sources.boundary.models import (
 )
 from datamimic_ce.engine.io.data_sources.selection import get_distributed_data, get_unique_data, select_rows
 from datamimic_ce.engine.io.files.readers import FileUtil, JsonValue, load_source_rows, weighted_csv_has_header
-from datamimic_ce.errors import DescriptorLocation, IssueCode, OperationError, invalid_source_error, task_config_error
+from datamimic_ce.errors import (
+    DescriptorLocation,
+    IssueCode,
+    MissingSourceError,
+    OperationError,
+    invalid_source_error,
+    task_config_error,
+)
 from datamimic_ce.randomness import RandomSource
 
 logger = logging.getLogger("DATAMIMIC")
@@ -95,13 +102,18 @@ def count_source(
             )
         )
     if source_format is not None:
-        return len(
-            load_source_rows(
-                request.descriptor_dir / request.source,
-                request.separator or request.default_separator,
-                source_format,
+        try:
+            return len(
+                load_source_rows(
+                    request.descriptor_dir / request.source,
+                    request.separator or request.default_separator,
+                    source_format,
+                )
             )
-        )
+        except MissingSourceError as error:
+            # The length pass runs before the read, so it must name the step too.
+            error.location = DescriptorLocation(request.element, attribute="source")
+            raise
     if memstore is not None:
         return memstore.get_data_len_by_type(
             resolve_source_entity(request.source_entity, request.source_type, request.name)
@@ -184,9 +196,14 @@ def read_generate_file_source(request: GenerateFileSourceRequest) -> GenerateFil
             if request.start_idx is not None and request.end_idx is not None
             else None
         )
-        loaded: Iterable[dict] = load_source_rows(
-            file_path, request.separator if file_format is SourceFileFormat.CSV else ",", file_format
-        )
+        try:
+            loaded: Iterable[dict] = load_source_rows(
+                file_path, request.separator if file_format is SourceFileFormat.CSV else ",", file_format
+            )
+        except MissingSourceError as error:
+            # Without a location the failure is reported at the entry, not at the step that reads the file.
+            error.location = DescriptorLocation(EL_GENERATE, attribute="source")
+            raise
         rows = select_rows(
             loaded,
             pagination,

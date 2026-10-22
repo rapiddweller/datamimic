@@ -236,7 +236,8 @@ def project_acceptance(
                 "Product names must be globally unique for bounded capture.",
                 entry.path + ("properties", "name"),
                 remediation=(
-                    "Rename one of the products; Build addresses every product, nested included, by its own name."
+                    "Rename one of the products; Build addresses every product, nested products included, "
+                    "by its own name."
                 ),
             )
         seen.add(entry.product.name)
@@ -468,28 +469,48 @@ def _readbacks(
             and role.list_field is None
             and isinstance(role.role, IdentifierRole)
         }
-        candidates = [
+        named = [
             role
             for role in request.product_roles
             if role.product == consumer.product.name
             and role.list_field is None
             and isinstance(role.role, ForeignKeyRole)
             and role.role.parent_product == producer.product.name
-            and role.role.parent_field in identifiers
+        ]
+        candidates = [
+            role for role in named if isinstance(role.role, ForeignKeyRole) and role.role.parent_field in identifiers
         ]
         if len(identifiers) != 1 or len(candidates) != 1:
+            if len(identifiers) > 1:
+                remediation = (
+                    "Memstore readback checks one identifier role per producer: declare only the identifier that the "
+                    "consumer's foreign key names, and express any other uniqueness as a unique expectation."
+                )
+            elif not identifiers:
+                remediation = (
+                    'Add the producer identifier role: {"product": "<producer>", "field": "<key>", "role": {"kind": '
+                    '"identifier"}}.'
+                    if named
+                    else 'Add two product_roles entries: {"product": "<producer>", "field": "<key>", "role": {"kind": '
+                    '"identifier"}} and {"product": "<consumer>", "field": "<field holding the key>", "role": {"kind": '
+                    '"foreign_key", "parent_product": "<producer>", "parent_field": "<key>"}}.'
+                )
+            elif not candidates:
+                remediation = (
+                    "Add the consumer foreign-key role, or point an existing one at the producer's identifier field: "
+                    '{"product": "<consumer>", "field": "<field holding the key>", '
+                    '"role": {"kind": "foreign_key", "parent_product": "<producer>", "parent_field": "<key>"}}.'
+                )
+            else:
+                remediation = (
+                    "More than one foreign-key role on the consumer names this producer: keep only the one that reads "
+                    "the memstore back."
+                )
             _reject(
                 "Memstore completeness requires one producer identifier role "
                 "and one matching consumer foreign-key role.",
                 consumer.path,
-                remediation=(
-                    "Declare exactly one producer identifier role and exactly one consumer foreign-key role naming "
-                    "it: remove the extra product_roles entries and add the missing one."
-                    if len(identifiers) > 1 or len(candidates) > 1
-                    else 'Add two product_roles entries: {"product": "<producer>", "field": "<key>", "role": {"kind": '
-                    '"identifier"}} and {"product": "<consumer>", "field": "<field holding the key>", "role": {"kind": '
-                    '"foreign_key", "parent_product": "<producer>", "parent_field": "<key>"}}.'
-                ),
+                remediation=remediation,
             )
         result.append(
             AcceptanceReadbackV1(
