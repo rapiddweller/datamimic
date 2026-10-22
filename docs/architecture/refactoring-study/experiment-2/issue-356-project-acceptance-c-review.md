@@ -131,3 +131,26 @@ They became "partially resolved — dynamic receiver with matching internal meth
 - CE CI.
 - EE parity (BuildRequestV5 is CE first).
 - The installed-wheel check (the author ran `check_installed_authoring.py --mcp`).
+
+## Addendum: rebase onto development `2a1898ab` (#365 merged), head `5943699a`
+
+**Receipt.** I rebound it against development's current receipt.
+- The #368/#369 continuation passages and development's `boundary_type_limit` note are kept verbatim.
+- The slice (c) facts are appended to `review_scope` and `delivery_boundary`.
+
+**Contract.** The digest moves from development's `3bc00974` to `c70eaaf6` only because of slice (c)'s five public gains, re-confirmed with ArchKeel `--against 2a1898ab`. Development's TotalRowBudget entries stay in the file.
+
+**b2's late changes still fit slice (c):**
+- Build lints the entry with `validator.validate` before calling `include_graph`. With an unreadable graph, `declarations_complete=False` suppresses only undeclared-id findings, and the INCLUDE refusal decides.
+- A step-declared client is refused in `include_graph` before step lint. Probed under V5 Build: `rejected`, phase POLICY, with only `("include","model/a.xml","database","line",2)`.
+- Client scoping (file plus entry) and project-wide memstores are unchanged.
+- The `order_desk` Build is `ready` with the same 9-file manifest.
+
+**Native result against `2a1898ab`, re-collected after an initial collector timeout under load:**
+- 0 violations; 1,424 unresolved calls, 178 typing positions, 255 unknown positions.
+- The decoded unresolved-call diff is exactly the slice (c) set: `item.path.as_posix` and `read.add` added; the two V4 `model_dump` calls, `proof_json.encode` and `build.model_copy` removed. No file-object `.read` call moved.
+- 20 diagnostics, with the one pointer shift.
+- 313 UNKNOWN records: the `build()` request position is removed; 17 records have reference churn only.
+
+**Tests:** 101 passed across project build, global Build budget, dynamic count, Build workflow, Build verification, dryrun includes and public lint.
+
