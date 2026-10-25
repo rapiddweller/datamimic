@@ -173,6 +173,17 @@ def test_a_whole_source_delete_in_an_included_step_is_refused_in_dry_run_and_bui
     assert _rows(workspace) == 2
 
 
+def test_a_whole_source_delete_from_a_client_declared_in_the_step_is_refused_in_dry_run(workspace: Path):
+    (workspace / "steps").mkdir()
+    (workspace / "steps" / "d.xml").write_text(
+        '<setup><database id="db2" dbms="sqlite" database="d"/>'
+        '<generate name="d" source="db2" type="items" count="2" target="db2.delete"/></setup>'
+    )
+    result = _app(workspace).dry_run(_request(xml=_setup('<include uri="steps/d.xml"/>')))
+    assert not result.ok
+    assert _rows(workspace) == 2
+
+
 def test_build_proves_the_products_and_reports_the_clear_it_did_not_run(workspace: Path):
     result = build_project(
         workspace,

@@ -202,13 +202,6 @@ def _runtime_hint(err: Exception) -> str:
     return "Repair the reported runtime input or workspace configuration."
 
 
-def _entry_database_ids(path: Path) -> set[str]:
-    """Ids of the ``<database>`` and ``<mongodb>`` clients the entry declares; Build refuses clients inside steps."""
-    from datamimic_ce.engine.dsl.api import parse_xml_file
-
-    return {node.get("id", "") for node in parse_xml_file(path).iter("database", "mongodb")} - {""}
-
-
 def _memstore_ids(root_stmt: object) -> set[str]:
     from datamimic_ce.engine.dsl.api import MemstoreStatement, SetupStatement
 
@@ -656,13 +649,12 @@ def neutralize_for_dry_run(
     default_line_separator = root_stmt.default_line_separator or "\n"
 
     dropped: set[int] = set()
-    # An included step declares no client: the entry's ids come from the caller.
+    # The entry runs first and its clients stay visible to every included step through the shared set.
     if database_ids is None:
-        database_ids = {
-            stmt.model.id
-            for stmt in root_stmt.sub_statements
-            if isinstance(stmt, (DatabaseStatement, MongoDBStatement))
-        }
+        database_ids = set()
+    database_ids.update(
+        stmt.model.id for stmt in root_stmt.sub_statements if isinstance(stmt, (DatabaseStatement, MongoDBStatement))
+    )
 
     def _neutralize(stmt: object, nested: bool = False) -> None:
         if isinstance(stmt, GenerateStatement) and stmt.is_statement_operation:
@@ -1264,7 +1256,7 @@ def _run_engine_capture(
                 graph_producers=graph_producers,
                 skipped_operations=skipped,
                 executed_operations=executed,
-                database_ids=_entry_database_ids(path),
+                database_ids=set(),
             )
             session = create_run_session(
                 RunRequest(
