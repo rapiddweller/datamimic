@@ -6,6 +6,7 @@
 
 import logging
 import os
+import re
 import subprocess
 import sys
 from collections.abc import Iterator
@@ -60,6 +61,59 @@ def test_failed_run_logs_one_end_event_with_error_type(tmp_path: Path, dm_caplog
         create_run_session(RunRequest(descriptor_path=descriptor, test_mode=True)).execute()
 
     assert _end_events(dm_caplog.records) == [{"kind": "end", "status": "error", "reason": type(raised.value).__name__}]
+
+
+def _control_kinds(records: list[logging.LogRecord]) -> list[str]:
+    return [_parse(record.getMessage())["kind"] for record in records if record.getMessage().startswith("CONTROL |")]
+
+
+def test_run_logs_one_start_event_with_descriptor_name_before_the_end_event(
+    tmp_path: Path, dm_caplog: pytest.LogCaptureFixture
+) -> None:
+    descriptor = tmp_path / "ok.xml"
+    descriptor.write_text(OK_DESCRIPTOR, encoding="utf-8")
+
+    create_run_session(RunRequest(descriptor_path=descriptor, test_mode=True)).execute()
+
+    assert _control_kinds(dm_caplog.records) == ["start", "end"]
+    start = _parse(next(r.getMessage() for r in dm_caplog.records if "kind=start" in r.getMessage()))
+    assert start["descriptor"] == "ok.xml"  # the name only: a path would leak the host layout
+    assert start["pid"] == str(os.getpid())
+
+
+def test_failed_run_logs_the_error_record_before_the_end_event(
+    tmp_path: Path, dm_caplog: pytest.LogCaptureFixture
+) -> None:
+    descriptor = tmp_path / "bad.xml"
+    descriptor.write_text(BAD_DESCRIPTOR, encoding="utf-8")
+
+    with pytest.raises(UserErrorBase):
+        create_run_session(RunRequest(descriptor_path=descriptor, test_mode=True)).execute()
+
+    shape = [
+        "end" if record.getMessage().startswith("CONTROL | kind=end") else record.levelname
+        for record in dm_caplog.records
+        if record.levelno >= logging.ERROR or record.getMessage().startswith("CONTROL | kind=end")
+    ]
+    assert shape == ["ERROR", "end"]
+
+
+def test_log_lines_carry_milliseconds_and_the_plain_main_label(tmp_path: Path) -> None:
+    descriptor = tmp_path / "ok.xml"
+    descriptor.write_text(OK_DESCRIPTOR, encoding="utf-8")
+    proc = subprocess.run(
+        [sys.executable, "-c", "from datamimic_ce.interfaces.cli.__main__ import main; main()", "run", str(descriptor)],
+        cwd=REPO_ROOT,
+        env={**os.environ, "PYTHONPATH": str(REPO_ROOT)},
+        capture_output=True,
+        text=True,
+        check=False,
+    )
+
+    layout = re.compile(r"^\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2},\d{3} \| [A-Z ]{5} \| DATAMIMIC \| MAIN    \| ")
+    lines = [line for line in proc.stderr.splitlines() if line.strip()]
+    assert lines
+    assert all(layout.match(line) for line in lines)
 
 
 def test_control_lines_go_to_stderr_only(tmp_path: Path) -> None:

@@ -22,6 +22,11 @@ from datamimic_ce.domains.api import get_datamimic_lib_version
 _LINE_BREAKS = r"[\n\v\f\x1c\x1d\x1e\x85\u2028\u2029]"
 
 
+# strftime has no millisecond directive: the fraction comes from the record, as in EE.
+_DATE_FORMAT = "%Y-%m-%d %H:%M:%S"
+_TIMESTAMP = "%(asctime)s,%(msecs)03d"
+
+
 class _SingleLineFormatter(logging.Formatter):
     """A record is one physical line: descriptor text may hold line breaks, and a continuation line that starts
     with a CONTROL marker would otherwise pass for a record of its own. Tracebacks are appended after the message
@@ -43,14 +48,14 @@ def setup_logger(logger_name: str, worker_name: str, level=logging.INFO):
     # TODO: check if ray support this configuration with PR https://github.com/ray-project/ray/pull/48742
     if worker_name == "MAIN":
         formatter = _SingleLineFormatter(
-            f"%(asctime)s | %(levelname)-5s | %(name)-9s | {worker_name}    | %(message)s",
-            datefmt="%Y-%m-%d %H:%M:%S,%f"[:-3],
+            f"{_TIMESTAMP} | %(levelname)-5s | %(name)-9s | {worker_name}    | %(message)s",
+            datefmt=_DATE_FORMAT,
         )
     else:
         worker_proc_name, worker_id = worker_name.split("-")[0:2]
         formatter = _SingleLineFormatter(
-            f"%(asctime)s | %(levelname)-5s | %(name)-9s | {worker_proc_name}-{worker_id.zfill(2)} | %(message)s",
-            datefmt="%Y-%m-%d %H:%M:%S,%f"[:-3],
+            f"{_TIMESTAMP} | %(levelname)-5s | %(name)-9s | {worker_proc_name}-{worker_id.zfill(2)} | %(message)s",
+            datefmt=_DATE_FORMAT,
         )
 
     # Avoid adding duplicate stream handlers

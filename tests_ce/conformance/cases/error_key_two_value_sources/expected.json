@@ -2,5 +2,10 @@
   "area": "error-handling",
   "outcome": "error",
   "error_code": "E011",
-  "issue_code": "I605"
+  "issue_code": "I605",
+  "control": [
+    "kind=start",
+    "kind=end|status=error|reason=ParserValidationError"
+  ],
+  "error_record_before_end": true
 }

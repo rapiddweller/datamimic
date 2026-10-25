@@ -21,6 +21,8 @@ The case id starts with `ok_` or `error_`. A case holds the descriptor only. It 
 | `products` | For `ok`: product name to row count. Names that are not listed are not checked. |
 | `issue_code` | For `error`: the catalog issue code, for example `I928` |
 | `error_code` | For `error`, optional: the error code, for example `E014` |
+| `control` | Optional. The `CONTROL` records of the run, in order, as `kind=..\|status=..\|reason=..`. Other fields vary per run. |
+| `error_record_before_end` | Optional. `true`: an `ERROR` record comes before `CONTROL kind=end`. |
 | `edition_notes` | Optional. A difference on purpose, per edition, with the reason. |
 
 A case never compares messages, paths or row values. The codes and the counts are the contract.
@@ -33,6 +35,7 @@ A case never compares messages, paths or row values. The codes and the counts ar
    because it needs Platform settings (task id, Redis and MinIO).
 4. For `ok`, count the rows of each product in `products`.
 5. For `error`, expect one catalog error. Compare `issue_code`, and `error_code` when present.
+   Capture the records of the `DATAMIMIC` logger and compare `control` and `error_record_before_end` when present.
 6. A case with an `edition_notes` entry for your edition may fail. Report it as `known-difference`, not as `fail`.
 
 The CE runner is `test_conformance.py`:
