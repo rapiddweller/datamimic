@@ -13,7 +13,7 @@ from datamimic_ce.engine.dsl.api import DescriptorParser, SetupStatement, find_g
 from datamimic_ce.engine.io.api import TestResultExporter, load_connection_profile
 from datamimic_ce.engine.runtime.contracts import FactoryConfig, RunRequest, RunResult
 from datamimic_ce.engine.runtime.lifecycle.config import get_settings
-from datamimic_ce.engine.runtime.logging import log_memory_info, log_system_info, setup_logger
+from datamimic_ce.engine.runtime.logging import control_value, log_memory_info, log_system_info, setup_logger
 from datamimic_ce.engine.runtime.process_titles import bootstrap_process_title, set_main_process_title
 from datamimic_ce.engine.runtime.tasks.setup.setup_task import SetupTask
 from datamimic_ce.errors import DomainError, IssueCode, UserErrorBase, parser_validation_error, task_config_error
@@ -66,7 +66,9 @@ class RuntimeRunSession:
         request = self._request
         settings = get_settings()
         with descriptor_scope(get_descriptor_name() or request.descriptor_path.name):
-            logger.info(f"CONTROL | kind=start | descriptor={request.descriptor_path.name} | pid={os.getpid()}")
+            logger.info(
+                f"CONTROL | kind=start | descriptor={control_value(request.descriptor_path.name)} | pid={os.getpid()}"
+            )
             try:
                 properties = request.platform_props
                 root_stmt = DescriptorParser.parse(

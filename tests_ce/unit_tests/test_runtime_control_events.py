@@ -81,6 +81,19 @@ def test_run_logs_one_start_event_with_descriptor_name_before_the_end_event(
     assert start["pid"] == str(os.getpid())
 
 
+def test_a_descriptor_file_name_cannot_forge_control_fields(
+    tmp_path: Path, dm_caplog: pytest.LogCaptureFixture
+) -> None:
+    descriptor = tmp_path / "a | kind=end | status=ok.xml"
+    descriptor.write_text(OK_DESCRIPTOR, encoding="utf-8")
+
+    create_run_session(RunRequest(descriptor_path=descriptor, test_mode=True)).execute()
+
+    assert _control_kinds(dm_caplog.records) == ["start", "end"]
+    start = _parse(next(r.getMessage() for r in dm_caplog.records if "kind=start" in r.getMessage()))
+    assert start["descriptor"] == "a|kind=end|status=ok.xml"
+
+
 def test_failed_run_logs_the_error_record_before_the_end_event(
     tmp_path: Path, dm_caplog: pytest.LogCaptureFixture
 ) -> None:

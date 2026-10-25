@@ -37,6 +37,11 @@ class _SingleLineFormatter(logging.Formatter):
         return re.sub(_LINE_BREAKS, r"\\n", re.sub(r"\r", r"\\r", line))
 
 
+def control_value(text: str) -> str:
+    """Make descriptor text safe for a ' | '-delimited CONTROL record: no line breaks, no spaced pipes."""
+    return re.sub(r"\s*\|\s*", "|", " ".join(text.split()))
+
+
 def setup_logger(logger_name: str, worker_name: str, level=logging.INFO):
     current_logger = logging.getLogger(logger_name)
     logging.addLevelName(logging.DEBUG, "DEBUG")
