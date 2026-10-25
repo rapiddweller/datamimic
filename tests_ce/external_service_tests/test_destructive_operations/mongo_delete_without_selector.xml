@@ -1,0 +1,5 @@
+<setup>
+    <mongodb id="mongodb"/>
+    <!-- Reading a whole collection without a selector and deleting it is a clear written as a delete. -->
+    <generate name="delete_docs" type="dm_delete_no_selector_docs" source="mongodb" target="mongodb.delete"/>
+</setup>

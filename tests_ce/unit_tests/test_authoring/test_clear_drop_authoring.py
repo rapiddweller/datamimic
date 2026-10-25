@@ -147,6 +147,15 @@ def test_a_product_without_rows_next_to_a_clear_still_names_the_missing_rows(wor
     assert any("no captured rows" in item.message for item in result.diagnostics)
 
 
+def test_a_delete_of_a_whole_database_source_is_refused_with_i928_in_bounded_execution(workspace: Path):
+    whole = '<generate name="d" source="db" sourceEntity="items" targetEntity="items" target="db.delete"/>'
+    result = _app(workspace).dry_run(_request(xml=_setup(whole)))
+    assert not result.ok
+    (error,) = (item for item in result.diagnostics if item.severity == "error")
+    assert error.ce_error is not None and error.ce_error.issue_code == "I928"
+    assert _rows(workspace) == 2
+
+
 def test_build_proves_the_products_and_reports_the_clear_it_did_not_run(workspace: Path):
     result = build_project(
         workspace,

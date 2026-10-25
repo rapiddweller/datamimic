@@ -230,3 +230,16 @@ def test_mongo_clear_with_a_selector_is_refused_before_the_collection_is_touched
         assert mongo_db[name].count_documents({}) == 2
     finally:
         mongo_db[name].drop()
+
+
+def test_mongo_delete_of_a_whole_collection_without_a_selector_is_refused(mongo_db, caplog):
+    name = "dm_delete_no_selector_docs"
+    mongo_db[name].drop()
+    mongo_db[name].insert_many([{"_id": 1}, {"_id": 2}])
+    try:
+        with pytest.raises(OperationError) as caught:
+            _run("mongo_delete_without_selector.xml", caplog)
+        assert caught.value.issue_code is IssueCode.OPERATION_INTENT_INVALID
+        assert mongo_db[name].count_documents({}) == 2
+    finally:
+        mongo_db[name].drop()

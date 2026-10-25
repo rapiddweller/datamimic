@@ -648,6 +648,9 @@ def neutralize_for_dry_run(
     default_line_separator = root_stmt.default_line_separator or "\n"
 
     dropped: set[int] = set()
+    database_ids = {
+        stmt.model.id for stmt in root_stmt.sub_statements if isinstance(stmt, (DatabaseStatement, MongoDBStatement))
+    }
 
     def _neutralize(stmt: object, nested: bool = False) -> None:
         if isinstance(stmt, GenerateStatement) and stmt.is_statement_operation:
@@ -679,6 +682,15 @@ def neutralize_for_dry_run(
                     raise _BoundedPolicyRefusal("SQLite source resolves outside the private bounded workspace")
         if isinstance(stmt, GenerateStatement):
             if not allow_side_effects:
+                # The strip below removes the delete target, so the engine would never see it.
+                delete_problem = stmt.delete_intent_problem(source_is_database=stmt.source in database_ids)
+                if delete_problem is not None:
+                    raise operation_error(
+                        code=IssueCode.OPERATION_INTENT_INVALID,
+                        target=stmt.delete_target,
+                        reason=delete_problem[0],
+                        migration=delete_problem[1],
+                    )
                 if stripped_file_targets is not None:
                     file_targets = _parse_buffered_targets(stmt.targets - memstores)
                     if file_targets:

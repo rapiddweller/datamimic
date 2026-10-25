@@ -1,0 +1,15 @@
+<setup rngSeed="1">
+    <database id="db" database="delete_sel_keys" dbms="sqlite"/>
+    <execute type="sql" target="db">
+        DROP TABLE IF EXISTS items;
+        CREATE TABLE items (id INTEGER PRIMARY KEY);
+        INSERT INTO items VALUES (1);
+        INSERT INTO items VALUES (2);
+        INSERT INTO items VALUES (3);
+    </execute>
+    <!-- a generated row has no source: it deletes the row with its own key -->
+    <generate name="delete_items" count="2" targetEntity="items" target="db.delete">
+        <key name="id" generator="IncrementGenerator"/>
+    </generate>
+    <generate name="items_left" source="db" selector="SELECT id FROM items" distribution="ordered" target=""/>
+</setup>

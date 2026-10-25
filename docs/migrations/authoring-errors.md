@@ -151,6 +151,20 @@ roles in `acceptance/build.json`, and run `datamimic authoring build <project>`.
 Only `outcome: "ready"` establishes readiness. Keep the original until its data
 matches the new project's output.
 
+## Destructive database operations (BC-4.0-016)
+
+CE 5.0 adds `clientId.clear` (every RDBMS row or Mongo document) and `clientId.drop` (Mongo collection); see I928
+for the shape rules. A `delete` that reads a database `source` now needs a `selector`. Without one, the delete would
+remove everything the source returns, so it fails with `I928` before any database access. Migrate each such model:
+
+| Before | After |
+|---|---|
+| `<generate type="users" source="mongodb" target="mongodb.delete"/>` | `<generate targetEntity="users" target="mongodb.clear"/>` |
+| `<generate source="db" sourceEntity="t" targetEntity="t" target="db.delete"/>` | `<generate targetEntity="t" target="db.clear"/>` |
+
+A `delete` on generated rows (no `source`) or on a file source is unchanged: it deletes by the row keys. A selector
+with an empty Mongo filter (`filter: {}`) still works as a delete; prefer `mongodb.clear` for that intent.
+
 ## Enforcement and closure
 
 Use the current upstream ArchKeel 3.0.1 pin with Python 3.11.12, as approved in

@@ -1,0 +1,5 @@
+<setup>
+    <database id="db" database="delete_sel_whole" dbms="sqlite"/>
+    <!-- no selector: the delete would remove every row the source returns, which is a clear -->
+    <generate name="delete_items" source="db" sourceEntity="items" targetEntity="items" target="db.delete"/>
+</setup>
