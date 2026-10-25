@@ -265,7 +265,25 @@ def _decode_reply(payload: bytes, request: BoundedExecutionRequest, workspace: P
             for _ in message.smoke_diagnostics
         )
         base_run_ok = any(product.rows for product in captured.products)
-        if not base_run_ok:
+        # A skipped clear or drop is reported, not failed: bounded execution neither ran it nor proves its effect.
+        skipped: tuple[Diagnostic, ...] = ()
+        for name in message.skipped_operations:
+            skipped += (
+                Diagnostic(
+                    code=AuthoringSystemDiagnosticCode.NOT_EXECUTED,
+                    phase=DiagnosticPhase.EVIDENCE,
+                    severity="warning",
+                    message=(
+                        f"'{name}' is a destructive database operation (clear or drop); bounded execution did not "
+                        "run it, so its effect is not proved."
+                    ),
+                    remediation=(
+                        "Run it with authoring run --allow-side-effects or datamimic run against the target, and "
+                        "check the database state there."
+                    ),
+                ),
+            )
+        if not base_run_ok and not skipped:
             diagnostics += (
                 Diagnostic(
                     code=AuthoringSystemDiagnosticCode.NOT_EXECUTED,
@@ -275,9 +293,9 @@ def _decode_reply(payload: bytes, request: BoundedExecutionRequest, workspace: P
                 ),
             )
         return BoundedExecutionEvidence(
-            ok=base_run_ok and not diagnostics,
+            ok=(base_run_ok or bool(skipped)) and not diagnostics,
             captured=captured,
-            diagnostics=diagnostics,
+            diagnostics=diagnostics + skipped,
             smoke_export=message.smoke_export,
             source_accesses=tuple(
                 SourceAccessEvidence(source_type=source_type, requests=count)

@@ -49,6 +49,7 @@ from datamimic_ce.authoring.domain.requests import BuildRequestV5
 from datamimic_ce.authoring.domain.script_semantics import (
     ScriptScope,
     is_exact_scope_field_reference,
+    names_statement_operation,
     references_current_scope_field,
 )
 from datamimic_ce.engine.dsl.api import (
@@ -175,7 +176,9 @@ def _products(document: DmJsonDocumentV1, included: tuple[tuple[str, DmJsonDocum
     entries: list[_Product] = []
 
     def visit(node: DmJsonNodeV1, path: tuple[str | int, ...], parent: _Product | None) -> None:
-        if node.kind == "generate":
+        # A source-free clear or drop produces no rows: it is an operation, not a product to prove.
+        target = node.properties.get("target")
+        if node.kind == "generate" and not (isinstance(target, str) and names_statement_operation(target)):
             name = _name(node, path)
             runtime_name = NAME_SEPARATOR.join((parent.product.runtime_name, name)) if parent else name
             entity = _target_entity(node, name)

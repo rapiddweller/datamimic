@@ -64,6 +64,7 @@ from datamimic_ce.engine.dsl.api import (
     resolved_values,
 )
 from datamimic_ce.authoring.domain.rule_catalog import RuleSeverity, authoring_rule_definition
+from datamimic_ce.authoring.domain.script_semantics import names_statement_operation
 
 _GENERATES = (EL_GENERATE, EL_ITERATE)
 
@@ -358,8 +359,8 @@ class CountRequired(Rule):
 
     def check(self, ctx: LintContext) -> Iterable[Diagnostic]:
         for element, constraints in _constrained(ctx):
-            if EXIST_COUNT not in constraints:
-                continue
+            if EXIST_COUNT not in constraints or names_statement_operation(element.get("target")):
+                continue  # a source-free clear or drop runs once and takes no count
             # A fully-satisfied AllOrNone group (the <generate> time-series window
             # start/end/interval) switches the element into a mode where count is
             # optional (defaults to 1 series) — derived from the declared facts.

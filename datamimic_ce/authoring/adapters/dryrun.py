@@ -53,6 +53,7 @@ from datamimic_ce.errors import (
     MissingMemstoreProductError,
     UserErrorBase,
     is_user_error,
+    operation_error,
 )
 from datamimic_ce.errors.catalog import get_issue_definition
 from datamimic_ce.errors.codes import IssueCode
@@ -126,6 +127,8 @@ class _WorkerSuccess:
     source_accesses: tuple[tuple[NonEmptyStrictStr, PositiveStrictInt], ...] = ()
     # Workspace-relative POSIX paths of snapshot files the contained run opened for reading.
     read_files: tuple[NonEmptyStrictStr, ...] = ()
+    # Names of the clear and drop statements bounded execution skipped instead of running.
+    skipped_operations: tuple[NonEmptyStrictStr, ...] = ()
 
 
 @dataclass(frozen=True, config=ConfigDict(extra="forbid", strict=True, revalidate_instances="always"))
@@ -596,8 +599,12 @@ def neutralize_for_dry_run(
     includes_validated: bool = False,
     included_memstores: set[str] | None = None,
     graph_producers: tuple[_MemstoreProducer, ...] | None = None,
+    skipped_operations: list[str] | None = None,
 ) -> None:
     """Statement transformer: cap counts, keep only memstore targets, force 1 process.
+    A source-free clear or drop is checked for its shape (I928, as at runtime) and then skipped: bounded execution
+    must neither run it nor invent a row count for it. Its name goes to ``skipped_operations`` for the report.
+    With side effects allowed it stays as written.
     When a collector dict is given, the FILE targets removed from each product are
     recorded so smoke_export can replay the captured rows through them afterwards."""
     from datamimic_ce.engine.dsl.api import (
@@ -637,7 +644,23 @@ def neutralize_for_dry_run(
     default_separator = root_stmt.default_separator or "|"
     default_line_separator = root_stmt.default_line_separator or "\n"
 
-    def _neutralize(stmt: object) -> None:
+    dropped: set[int] = set()
+
+    def _neutralize(stmt: object, nested: bool = False) -> None:
+        if isinstance(stmt, GenerateStatement) and stmt.is_statement_operation:
+            problem = stmt.operation_intent_problem(nested=nested)
+            if problem is not None:
+                raise operation_error(
+                    code=IssueCode.OPERATION_INTENT_INVALID,
+                    target=stmt.operation_target,
+                    reason=problem[0],
+                    migration=problem[1],
+                )
+            if not allow_side_effects:
+                dropped.add(id(stmt))
+                if skipped_operations is not None:
+                    skipped_operations.append(stmt.name)
+            return
         if not allow_side_effects and isinstance(stmt, (DatabaseStatement, MongoDBStatement)):
             stmt.model.read_only = True
         if isinstance(stmt, DatabaseStatement) and descriptor_dir is not None:
@@ -772,10 +795,12 @@ def neutralize_for_dry_run(
                 )
         if isinstance(stmt, CompositeStatement):
             for sub in stmt.sub_statements:
-                _neutralize(sub)
+                _neutralize(sub, nested or isinstance(stmt, GenerateStatement))
+            stmt.sub_statements = [sub for sub in stmt.sub_statements if id(sub) not in dropped]
 
     for stmt in root_stmt.sub_statements:
         _neutralize(stmt)
+    root_stmt.sub_statements = [stmt for stmt in root_stmt.sub_statements if id(stmt) not in dropped]
 
 
 def _smoke_exporter(
@@ -1019,6 +1044,7 @@ def _validated_worker_success(message: _WorkerSuccess, max_count: int | None = N
         message.smoke_export,
         message.source_accesses,
         message.read_files,
+        message.skipped_operations,
     )
     names = [budget.name for budget in message.budgets]
     if len(names) != len(set(names)):
@@ -1188,6 +1214,7 @@ def _run_engine_capture(
         from datamimic_ce.engine.runtime.contracts import RunRequest
 
         budgets: _ProductBudgets = {}
+        skipped: list[str] = []
         stripped: _StrippedTargets | None = {} if smoke_export else None
         try:
             included_memstores, graph_producers = _validate_bounded_includes(
@@ -1204,6 +1231,7 @@ def _run_engine_capture(
                 includes_validated=True,
                 included_memstores=included_memstores,
                 graph_producers=graph_producers,
+                skipped_operations=skipped,
             )
             session = create_run_session(
                 RunRequest(
@@ -1241,6 +1269,7 @@ def _run_engine_capture(
                 smoke_diagnostics=tuple(diagnostic.model_dump(mode="json") for diagnostic in smoke_diagnostics),
                 smoke_export=smoke_export_capture,
                 source_accesses=source_accesses.snapshot(),
+                skipped_operations=tuple(skipped),
             )
         except Exception as err:
             if is_user_error(err):

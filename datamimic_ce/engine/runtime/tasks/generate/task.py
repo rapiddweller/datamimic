@@ -5,7 +5,6 @@
 # For questions and support, contact: info@rapiddweller.com
 
 import math
-import re
 from typing import Protocol
 
 from datamimic_ce.engine.dsl.api import CompositeStatement, GenerateStatement, KeyStatement, Statement
@@ -31,7 +30,7 @@ from datamimic_ce.engine.runtime.tasks.base.task import CommonSubTask
 from datamimic_ce.engine.runtime.tasks.generate.policies.single_process_policy import resolve_single_process
 from datamimic_ce.engine.runtime.tasks.generate.workers.generate_worker import GenerateWorker
 from datamimic_ce.engine.runtime.tasks.sources.length import data_source_cache_key, set_data_source_length
-from datamimic_ce.errors import DescriptorLocation, IssueCode, OperationError, operation_error, task_config_error
+from datamimic_ce.errors import DescriptorLocation, IssueCode, operation_error, task_config_error
 
 
 class GenerateTask(CommonSubTask):
@@ -230,54 +229,29 @@ class GenerateTask(CommonSubTask):
         the operation on the target entity."""
         stmt = self._statement
         self._assert_statement_operation_shape(context)
-        result = GenerateWorker.run_statement_operation(stmt, context.root)
-        if isinstance(context, SetupContext):
-            if context.test_mode:
-                capture_test_results(context.root, result)
-            self.export_memstore(context, stmt, result)
-        return result
+        # No product: nothing is captured for test mode and no memstore consumes it (other targets are refused).
+        return GenerateWorker.run_statement_operation(stmt, context.root)
 
     def _assert_statement_operation_shape(self, context: SetupContext | GenIterContext) -> None:
         """Fail closed with I928 before any database access when a clear or drop is not source-free, one-time and
         root-level, as in EE (BC-4.0-016)."""
         stmt = self._statement
-        target = ", ".join(f"{client}.{operation.value}" for client, operation in stmt.client_operations)
-
-        def refuse(reason: str, migration: str) -> OperationError:
-            return operation_error(
-                code=IssueCode.OPERATION_INTENT_INVALID, target=target, reason=reason, migration=migration
-            )
-
-        if not isinstance(context, SetupContext) or context.within_generate:
-            raise refuse(
-                "clear and drop are root-only operations and cannot run in a nested context",
-                "move the operation to the root <setup> scope",
-            )
-        for client, _ in stmt.client_operations:
-            if context.get_client_by_id(client) is None:
-                raise refuse(
-                    f"target client '{client}' is not configured",
-                    f"define a database client with id '{client}' before using this target",
-                )
-        if not stmt.target_entity or re.fullmatch(r"\s*", stmt.target_entity):
-            raise refuse(
-                "clear and drop require explicit targetEntity", "set targetEntity to the table or collection to mutate"
-            )
-        present = {
-            "children": bool(stmt.sub_statements),
-            "count": any(value is not None for value in (stmt.count, stmt.min_count, stmt.max_count)),
-            "interval": any(value is not None for value in (stmt.start, stmt.end, stmt.interval)),
-            "otherTargets": len(stmt.targets) > 1,
-            "script": stmt.script is not None,
-            "selector": stmt.selector is not None,
-            "source": stmt.source is not None,
-            "sourceEntity": stmt.source_entity is not None,
-        }
-        forbidden = sorted(name for name, found in present.items() if found)
-        if forbidden:
-            raise refuse(
-                f"clear and drop are source-free one-time operations; forbidden attributes: {', '.join(forbidden)}",
-                "remove source, selectors, count, keys/children, scripts, and additional targets",
+        problem = stmt.operation_intent_problem(nested=not isinstance(context, SetupContext) or context.within_generate)
+        if problem is None:
+            for client, _ in stmt.client_operations:
+                if context.root.get_client_by_id(client) is None:
+                    problem = (
+                        f"target client '{client}' is not configured",
+                        f"define a database client with id '{client}' before using this target",
+                    )
+                    break
+        if problem is not None:
+            reason, migration = problem
+            raise operation_error(
+                code=IssueCode.OPERATION_INTENT_INVALID,
+                target=stmt.operation_target,
+                reason=reason,
+                migration=migration,
             )
 
     def execute(

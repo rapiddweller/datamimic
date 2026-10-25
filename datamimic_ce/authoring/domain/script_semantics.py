@@ -9,7 +9,7 @@ from dataclasses import dataclass
 from enum import StrEnum
 
 from datamimic_ce.authoring.domain.dm_json import DmJsonDocumentV1, iter_dm_json_nodes
-from datamimic_ce.engine.dsl.api import EL_EXECUTE
+from datamimic_ce.engine.dsl.api import EL_EXECUTE, ExportOperation, parse_consumer
 
 
 class ScriptScope(StrEnum):
@@ -160,6 +160,15 @@ class LibraryRefusal:
                 )
             case LibraryRefusalReason.IMPORT_INSIDE_BODY_UNDER_SEED:
                 return "Move the import to module level, where seeded runs rebind it to the run's stream."
+
+
+def names_statement_operation(target: str | None) -> bool:
+    """Whether a ``target`` attribute names a source-free ``clear`` or ``drop`` (``db.clear``, ``mongo.drop()``)."""
+    for part in parse_consumer(target):
+        parsed = ExportOperation.from_target(part)
+        if parsed is not None and parsed[1].is_statement_operation:
+            return True
+    return False
 
 
 def requires_deterministic_replay(entry: DmJsonDocumentV1, steps: tuple[DmJsonDocumentV1, ...] = ()) -> bool:

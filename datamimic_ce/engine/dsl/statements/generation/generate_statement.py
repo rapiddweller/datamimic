@@ -117,6 +117,42 @@ class GenerateStatement(CompositeStatement):
         return any(operation.is_statement_operation for _, operation in self.client_operations)
 
     @property
+    def operation_target(self) -> str:
+        """The clear or drop targets as written for a message, for example ``db.clear``."""
+        return ", ".join(f"{client}.{operation.value}" for client, operation in self.client_operations)
+
+    def operation_intent_problem(self, *, nested: bool) -> tuple[str, str] | None:
+        """``(reason, migration)`` of the first rule a clear or drop breaks (BC-4.0-016), None for a valid one-time
+        statement. The runtime and bounded authoring run this same check."""
+        if nested:
+            return (
+                "clear and drop are root-only operations and cannot run in a nested context",
+                "move the operation to the root <setup> scope",
+            )
+        if not self._target_entity or not self._target_entity.strip():
+            return (
+                "clear and drop require explicit targetEntity",
+                "set targetEntity to the table or collection to mutate",
+            )
+        present = {
+            "children": bool(self.sub_statements),
+            "count": any(value is not None for value in (self._count, self._min_count, self._max_count)),
+            "interval": any(value is not None for value in (self._start, self._end, self._interval)),
+            "otherTargets": len(self._targets) > 1,
+            "script": self._script is not None,
+            "selector": self._selector is not None,
+            "source": self._source is not None,
+            "sourceEntity": self._source_entity is not None,
+        }
+        forbidden = sorted(name for name, found in present.items() if found)
+        if forbidden:
+            return (
+                f"clear and drop are source-free one-time operations; forbidden attributes: {', '.join(forbidden)}",
+                "remove source, selectors, count, keys/children, scripts, and additional targets",
+            )
+        return None
+
+    @property
     def target_entity(self) -> str | None:
         return self._target_entity
 
