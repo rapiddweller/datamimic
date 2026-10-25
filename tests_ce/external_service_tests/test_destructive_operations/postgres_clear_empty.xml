@@ -1,0 +1,9 @@
+<setup>
+    <database id="sourceDB" system="postgresql"/>
+    <execute type="sql" target="sourceDB">
+        DROP TABLE IF EXISTS dm_clear_empty;
+        CREATE TABLE dm_clear_empty (id INTEGER PRIMARY KEY);
+    </execute>
+    <!-- Nothing to remove is not an error. -->
+    <generate name="clear_rows" targetEntity="dm_clear_empty" target="sourceDB.clear"/>
+</setup>

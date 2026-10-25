@@ -9,6 +9,7 @@
 The models are DSL files next to this test; the RDBMS runs on SQLite. MongoDB drop and clear run in the
 external-service tests."""
 
+import sqlite3
 from pathlib import Path
 
 import pytest
@@ -46,6 +47,15 @@ def test_several_clears_run_in_document_order():
 
 def test_a_clear_reached_through_an_include_runs():
     assert _run("clear_through_include.xml")["items_left"] == []
+
+
+def test_clear_on_a_read_only_client_is_blocked_and_keeps_the_rows():
+    with pytest.raises(OperationError) as caught:
+        _run("clear_read_only.xml")
+    assert caught.value.issue_code is IssueCode.OPERATION_READ_ONLY_WRITE_BLOCKED
+    # SQLite files live under the working directory
+    with sqlite3.connect(Path.cwd() / "db" / "clear_ops_readonly.sqlite") as connection:
+        assert connection.execute("SELECT COUNT(*) FROM items").fetchone() == (1,)
 
 
 @pytest.mark.parametrize(

@@ -1,0 +1,5 @@
+<setup>
+    <mongodb id="mongodb"/>
+    <!-- A selector beside clear is refused before the collection is touched. -->
+    <generate name="clear_docs" targetEntity="dm_clear_untouched_docs" source="mongodb" selector="find: 'dm_clear_untouched_docs', filter: {}" target="mongodb.clear"/>
+</setup>

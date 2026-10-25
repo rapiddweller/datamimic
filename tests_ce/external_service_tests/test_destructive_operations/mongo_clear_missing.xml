@@ -1,0 +1,6 @@
+<setup>
+    <mongodb id="mongodb"/>
+    <!-- Clearing or dropping a collection that does not exist is not an error. -->
+    <generate name="clear_missing" targetEntity="dm_never_created_a" target="mongodb.clear"/>
+    <generate name="drop_missing" targetEntity="dm_never_created_b" target="mongodb.drop"/>
+</setup>

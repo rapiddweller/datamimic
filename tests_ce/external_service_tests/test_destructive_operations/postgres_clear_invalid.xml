@@ -1,0 +1,11 @@
+<setup>
+    <database id="sourceDB" system="postgresql"/>
+    <execute type="sql" target="sourceDB">
+        DROP TABLE IF EXISTS dm_clear_untouched;
+        CREATE TABLE dm_clear_untouched (id INTEGER PRIMARY KEY);
+        INSERT INTO dm_clear_untouched VALUES (1);
+        INSERT INTO dm_clear_untouched VALUES (2);
+    </execute>
+    <!-- A source beside clear is refused before the table is touched. -->
+    <generate name="clear_rows" targetEntity="dm_clear_untouched" source="sourceDB" selector="SELECT id FROM dm_clear_untouched" target="sourceDB.clear"/>
+</setup>
