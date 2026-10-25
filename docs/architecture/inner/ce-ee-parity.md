@@ -17,6 +17,7 @@ Every row has one status:
 | `unverified` | Not compared yet. Each one is listed in [Open rows](#open-rows). |
 
 The release gate: no `gap` and no `unverified` row stays open for CE 5.0.
+A gap on the EE side (E5, E11, A1, A4, A5) has no issue yet. The EE session files it in the EE tracker.
 
 ## Method
 
@@ -31,16 +32,16 @@ The facts come from the code and from runs of the same inputs in both editions. 
 
 | # | Behavior | CE | EE | Status | Owner / next step |
 |---|---|---|---|---|---|
-| E1 | Issue code names and values | 105 codes | 411 codes. 104 of the CE codes have the same name and value. | `gap` | `TASK_TOTAL_ROW_BUDGET_EXCEEDED` (`I955`) exists only in CE. Reserve it in EE first (CE rule: CE codes are a subset of EE). Owner: EE session, then CE. |
+| E1 | Issue code names and values | 105 codes | 411 codes. 104 of the CE codes have the same name and value. | `gap` | `TASK_TOTAL_ROW_BUDGET_EXCEEDED` (`I955`) exists only in CE. Reserve it in EE first (CE rule: CE codes are a subset of EE). Owner: EE session, then CE. Issue #400. |
 | E2 | Code name, title and severity of the 104 shared codes | same | same | `identical` | Catalog comparison. |
 | E3 | Error code templates (`E0xx`, 15) | same | same | `identical` | Catalog comparison. |
 | E4 | EE-only issue codes | none | 307 | `EE-only` | EE features (native engine, ML, HL7, platform). No CE action. |
 | E5 | Message `DATETIME_MAX_BEFORE_MIN` (`I430`) | "must be greater than or equal to" | "must be greater than" | `gap` | Both editions raise only when `max < min`, so equal values pass. The CE text is right. Owner: EE text fix. |
 | E6 | Message `SOURCE_FILE_NOT_FOUND` | "Source file '{name}' not found" | adds "in task workspace" | `CE-extension` | CE reads from the descriptor directory and has no task workspace. Keep both texts. |
 | E7 | Message `TASK_KEY_SCRIPT_INVALID_TYPE` | names the type only | also prints the value | `CE-extension` | CE redacts descriptor values in diagnostics (secrets in parameter environments). Keep. |
-| E8 | Resolution `TASK_MP_PLATFORM_UNSUPPORTED` | "multiprocessing or ray" | "fork, spawn, or forkserver" | `gap` | The two editions name different values for the same attribute. Owner: CE and EE session decide the valid values, then align the text. |
+| E8 | Resolution `TASK_MP_PLATFORM_UNSUPPORTED` | "multiprocessing or ray" | "fork, spawn, or forkserver" | `gap` | The two editions name different values for the same attribute. Owner: CE and EE session decide the valid values, then align the text. Issue #400. |
 | E9 | Exit codes of the CLI | 0 ok, 1 error, 2 usage | 1 error (run), 2 usage | `identical` | Observed with one valid and one invalid descriptor. |
-| E10 | Order of records on a user error | `CONTROL kind=end`, then `ERROR <message>` | `ERROR USER_ERROR \| <message>`, then `CONTROL kind=end` | `gap` | Both order and the `USER_ERROR` prefix differ. Owner: shared decision, then one edition changes. |
+| E10 | Order of records on a user error | `CONTROL kind=end`, then `ERROR <message>` | `ERROR USER_ERROR \| <message>`, then `CONTROL kind=end` | `gap` | Both order and the `USER_ERROR` prefix differ. Owner: shared decision, then one edition changes. Issue #399. |
 | E11 | Multi-line error text in one log record | one physical line (`\n` escaped) | several physical lines | `gap` | CE did this in #384. Owner: EE session. |
 | E12 | `run` CLI | `datamimic run DESCRIPTOR` | `datamimic-ee run DESCRIPTOR TASK_ID RUNTIME_CONFIG_JSON`, needs Redis and MinIO settings | `EE-only` | Platform coupling. The conformance runner uses the in-process API, not the CLI. |
 
@@ -49,10 +50,10 @@ The facts come from the code and from runs of the same inputs in both editions. 
 | # | Behavior | CE | EE | Status | Owner / next step |
 |---|---|---|---|---|---|
 | L1 | Record layout | `time \| LEVEL \| DATAMIMIC \| worker \| message` | same layout | `identical` | Run output. |
-| L2 | Timestamp | seconds only. The source builds a format with milliseconds, but the output shows none. | milliseconds (`20:16:20,418`) | `gap` | CE bug in `engine/runtime/logging.py` (the `datefmt` slice). Owner: CE. |
-| L3 | Worker label | `MAIN` | `MAIN-<pid>` | `gap` | Owner: shared decision. |
+| L2 | Timestamp | seconds only. The source builds a format with milliseconds, but the output shows none. | milliseconds (`20:16:20,418`) | `gap` | CE bug in `engine/runtime/logging.py` (the `datefmt` slice). Owner: CE. Issue #399. |
+| L3 | Worker label | `MAIN` | `MAIN-<pid>` | `gap` | Owner: shared decision. Issue #399. |
 | L4 | Level names | `WARN ` for warnings | `WARN ` | `identical` | Both register the same level name. |
-| L5 | Start records | none | `Start data generation`, `Log level`, `Runtime config`, `FASTOPS`, `Evaluation engine`, `CONTROL kind=start` | `gap` | CE has no `kind=start`. Owner: shared decision on the minimum start record. |
+| L5 | Start records | none | `Start data generation`, `Log level`, `Runtime config`, `FASTOPS`, `Evaluation engine`, `CONTROL kind=start` | `gap` | CE has no `kind=start`. Owner: shared decision on the minimum start record. Issue #399. |
 | L6 | `CONTROL` kinds `end` and `policy` | both | both | `identical` | Run output and source. |
 | L7 | `CONTROL` kinds `execution_plan`, paging policy and `RATE_CARD` | none | present | `EE-only` | Tied to the EE data source engine. No CE action. |
 | L8 | `OPERATION` records of clear and drop | specified and tested | specified in the EE guide | `identical` (specification) | [Guide](../../guides/destructive-database-operations.md). EE test pending in the conformance runner. |
@@ -83,7 +84,7 @@ The facts come from the code and from runs of the same inputs in both editions. 
 
 ## Open rows
 
-These rows are not compared yet. They need a comparison before the release date.
+These rows are not compared yet. They need a comparison before the release date. Issue #401.
 
 | # | Behavior | Why it is open |
 |---|---|---|
