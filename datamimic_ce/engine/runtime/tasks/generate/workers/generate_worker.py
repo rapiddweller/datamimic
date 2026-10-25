@@ -53,7 +53,7 @@ class GenerateWorker:
             root_context.export_session = ExportSession(0)
         logger.info(f"Executing one-time operations for statement '{stmt.full_name}'")
         result: dict[str, list] = {stmt.full_name: []}
-        export_product_by_page(stmt, result, root_context.export_session, root_context)
+        export_product_by_page(stmt, result, root_context.export_session, root_context, statement_operation=True)
         return result
 
     @staticmethod

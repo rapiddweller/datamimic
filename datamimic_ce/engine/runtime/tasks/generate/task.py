@@ -248,7 +248,7 @@ class GenerateTask(CommonSubTask):
                 code=IssueCode.OPERATION_INTENT_INVALID, target=target, reason=reason, migration=migration
             )
 
-        if not isinstance(context, SetupContext):
+        if not isinstance(context, SetupContext) or context.within_generate:
             raise refuse(
                 "clear and drop are root-only operations and cannot run in a nested context",
                 "move the operation to the root <setup> scope",

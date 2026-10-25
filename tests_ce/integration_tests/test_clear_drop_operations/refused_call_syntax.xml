@@ -1,0 +1,11 @@
+<setup>
+    <database id="db" database="clear_ops_refused" dbms="sqlite"/>
+    <execute type="sql" target="db">
+        DROP TABLE IF EXISTS items;
+        CREATE TABLE items (id INTEGER PRIMARY KEY);
+        INSERT INTO items VALUES (1);
+        INSERT INTO items VALUES (2);
+    </execute>
+    <!-- db.clear() is the same target as db.clear. Beside a count it would clear once per page, so it is refused. -->
+    <generate name="clear_items" targetEntity="items" count="3" target="db.clear()"/>
+</setup>

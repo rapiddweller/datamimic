@@ -91,6 +91,8 @@ class IncludeTask(CommonSubTask):
             with descriptor_scope(uri):
                 # Use copy of parent_context as child_context
                 copied_root_context = SetupTask._copy_include_context(root_ctx)
+                # The step runs once per row of the enclosing <generate>: clear and drop refuse to run there.
+                copied_root_context.within_generate = True
 
                 # Update root_context with attributes defined in sub-setup statement
                 copied_root_context.update_with_stmt(sub_setup_stmt)

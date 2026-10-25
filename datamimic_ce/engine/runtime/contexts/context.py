@@ -291,6 +291,8 @@ class SetupContext(Context):
         self._default_source_scripted = default_source_scripted
         self._report_logging = report_logging
         self._export_session: ExportSession | None = None
+        # True for the copy an <include> inside a <generate> runs its steps in; such steps run once per row.
+        self._within_generate = False
         self._namespace_functions: bytes | None = None
         self._serialized_generators: bytes | None = None
         self._demographic_context = demographic_context
@@ -613,6 +615,14 @@ class SetupContext(Context):
     @export_session.setter
     def export_session(self, value: ExportSession | None) -> None:
         self._export_session = value
+
+    @property
+    def within_generate(self) -> bool:
+        return self._within_generate
+
+    @within_generate.setter
+    def within_generate(self, value: bool) -> None:
+        self._within_generate = value
 
     @property
     def default_separator(self) -> str:

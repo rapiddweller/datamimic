@@ -58,6 +58,27 @@ def test_clear_on_a_read_only_client_is_blocked_and_keeps_the_rows():
         assert connection.execute("SELECT COUNT(*) FROM items").fetchone() == (1,)
 
 
+def _rows_left() -> int:
+    # SQLite files live under the working directory
+    with sqlite3.connect(Path.cwd() / "db" / "clear_ops_refused.sqlite") as connection:
+        return connection.execute("SELECT COUNT(*) FROM items").fetchone()[0]
+
+
+@pytest.mark.parametrize(
+    ("model", "reason"),
+    [
+        ("refused_call_syntax", "runs only as a source-free one-time statement"),
+        ("refused_include_in_generate", "root-only operations"),
+    ],
+)
+def test_a_clear_that_would_repeat_is_refused_and_keeps_the_rows(model: str, reason: str):
+    with pytest.raises(OperationError) as caught:
+        _run(f"{model}.xml")
+    assert caught.value.issue_code is IssueCode.OPERATION_INTENT_INVALID
+    assert reason in str(caught.value)
+    assert _rows_left() == 2
+
+
 @pytest.mark.parametrize(
     ("model", "reason"),
     [

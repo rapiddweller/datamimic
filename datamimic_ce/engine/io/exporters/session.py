@@ -21,7 +21,7 @@ from datamimic_ce.engine.io.exporters.diagnostics.test_result_exporter import Te
 from datamimic_ce.engine.io.exporters.formats.xml_exporter import XMLExporter
 from datamimic_ce.engine.io.exporters.registry import create_exporter_list
 from datamimic_ce.engine.io.memstore import Memstore
-from datamimic_ce.errors import is_user_error
+from datamimic_ce.errors import IssueCode, is_user_error, operation_error
 
 logger = logging.getLogger("DATAMIMIC")
 
@@ -90,7 +90,7 @@ class ExportSession:
         self._products[full_name]
         return json_product, xml_rows
 
-    def dispatch_page(self, full_name: str, prepared_page: PreparedPage) -> None:
+    def dispatch_page(self, full_name: str, prepared_page: PreparedPage, statement_operation: bool = False) -> None:
         json_product, xml_rows = prepared_page
         exporters = self._products[full_name]
         consume_exporters(
@@ -100,6 +100,7 @@ class ExportSession:
             exporters["with_operation"],
             exporters["without_operation"],
             self._state_manager,
+            statement_operation,
         )
 
 
@@ -110,9 +111,21 @@ def consume_exporters(
     exporters_with_operation: list[tuple[Exporter, ExportOperation]],
     exporters_without_operation: list[Exporter],
     exporter_state_manager: ExporterStateManager,
+    statement_operation: bool = False,
 ) -> None:
-    """Dispatch one product page to its already-constructed exporters."""
+    """Dispatch one product page to its already-constructed exporters.
+
+    ``clear`` and ``drop`` run only for a source-free statement operation (``statement_operation=True``). Reached
+    by row dispatch, for example through a target spelled ``db.clear()`` beside a count, they would repeat for
+    every page, so they fail closed instead."""
     for exporter, operation in exporters_with_operation:
+        if operation.is_statement_operation and not statement_operation:
+            raise operation_error(
+                code=IssueCode.OPERATION_INTENT_INVALID,
+                target=operation.value,
+                reason=f"{operation.value} runs only as a source-free one-time statement, not for generated rows",
+                migration="write the target as clientId.clear or clientId.drop on a <generate> with only targetEntity",
+            )
         if not isinstance(exporter, DatabaseExporter | MongoDBExporter):
             raise ValueError(f"Exporter does not support operation: {exporter}.{operation}")
         if isinstance(exporter, MongoDBExporter) and operation is ExportOperation.UPSERT:
