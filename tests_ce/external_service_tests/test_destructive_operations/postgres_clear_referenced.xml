@@ -1,0 +1,18 @@
+<setup>
+    <database id="sourceDB" system="postgresql"/>
+    <execute type="sql" target="sourceDB">
+        DROP TABLE IF EXISTS dm_clear_child;
+        DROP TABLE IF EXISTS dm_clear_parent;
+        CREATE TABLE dm_clear_parent (id INTEGER PRIMARY KEY);
+        CREATE TABLE dm_clear_child (id INTEGER PRIMARY KEY, parent_id INTEGER REFERENCES dm_clear_parent(id));
+        INSERT INTO dm_clear_parent VALUES (1);
+        INSERT INTO dm_clear_parent VALUES (2);
+        INSERT INTO dm_clear_child VALUES (1, 1);
+    </execute>
+    <!-- Child first, then the parent. PostgreSQL refuses TRUNCATE on a referenced table, so the parent
+         is emptied by the DELETE fallback. -->
+    <generate name="clear_child" targetEntity="dm_clear_child" target="sourceDB.clear"/>
+    <generate name="clear_parent" targetEntity="dm_clear_parent" target="sourceDB.clear"/>
+    <generate name="parent_left" source="sourceDB" selector="SELECT id FROM dm_clear_parent" distribution="ordered" target=""/>
+    <generate name="child_left" source="sourceDB" selector="SELECT id FROM dm_clear_child" distribution="ordered" target=""/>
+</setup>

@@ -43,7 +43,7 @@ from datamimic_ce.engine.io.exporters.formats.txt_exporter import TXTExporter
 from datamimic_ce.engine.io.exporters.formats.xlsx_exporter import XLSXExporter
 from datamimic_ce.engine.io.exporters.formats.xml_exporter import XMLExporter
 from datamimic_ce.engine.io.memstore import Memstore
-from datamimic_ce.errors import IssueCode, export_config_error
+from datamimic_ce.errors import IssueCode, export_config_error, operation_error
 
 _BufferedExporterFactory = Callable[[ExporterConfig, dict], UnifiedBufferedExporter]
 _BUFFERED_EXPORTERS: dict[str, _BufferedExporterFactory] = {
@@ -85,25 +85,36 @@ def create_exporter_list(
         params = target.get("params") or {}
         if "." in exporter_name:
             consumer_name, operation_raw = exporter_name.split(".", 1)
-            try:
-                operation = ExportOperation(operation_raw)
-            except ValueError:
-                valid = ", ".join(op.value for op in ExportOperation)
+            client = setup_context.get_client_by_id(consumer_name)
+            allowed = _client_operations(client)
+            parsed = ExportOperation.from_target(exporter_name)
+            if parsed is None or parsed[1] not in allowed:
+                if parsed is not None and parsed[1].is_statement_operation:
+                    raise operation_error(
+                        code=IssueCode.OPERATION_INTENT_INVALID,
+                        target=exporter_name,
+                        reason="drop is supported only for MongoDB collections",
+                        migration="use an explicit <execute> DDL statement for an RDBMS table",
+                    )
                 raise export_config_error(
                     code=IssueCode.EXPORT_OPERATION_UNSUPPORTED,
                     operation=operation_raw,
                     client_name=consumer_name,
-                    allowed=valid,
-                ) from None
-            client = setup_context.get_client_by_id(consumer_name)
+                    allowed=", ".join(op.value for op in allowed),
+                )
             consumer = _create_exporter_from_client(client, consumer_name)
-            consumers_with_operation.append((consumer, operation))
+            consumers_with_operation.append((consumer, parsed[1]))
         else:
             exporter = _get_exporter_by_name(setup_context, exporter_name, product_name, export_uri, params)
             if exporter is not None:
                 consumers_without_operation.append(exporter)
 
     return consumers_with_operation, consumers_without_operation
+
+
+def _client_operations(client: RegisteredClient | None) -> tuple[ExportOperation, ...]:
+    """The operations a client family accepts; an unknown client keeps the full set, its own error follows."""
+    return ExportOperation.for_rdbms() if isinstance(client, RdbmsClient) else ExportOperation.for_mongodb()
 
 
 def _create_exporter_from_client(client: RegisteredClient | None, client_name: str) -> Exporter:

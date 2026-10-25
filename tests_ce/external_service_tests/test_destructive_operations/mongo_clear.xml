@@ -1,0 +1,9 @@
+<setup>
+    <mongodb id="mongodb"/>
+    <!-- Cleanup, then load: every run ends with the same three documents, and the collection stays usable. -->
+    <generate name="clear_docs" targetEntity="dm_clear_docs" target="mongodb.clear"/>
+    <generate name="dm_clear_docs" count="3" target="mongodb">
+        <key name="doc_id" generator="IncrementGenerator"/>
+    </generate>
+    <generate name="docs_left" type="dm_clear_docs" source="mongodb" distribution="ordered" target=""/>
+</setup>

@@ -1,0 +1,10 @@
+<setup>
+    <database id="sourceDB" system="postgresql"/>
+    <database id="readerDB" system="postgresql" readOnly="true"/>
+    <execute type="sql" target="sourceDB">
+        DROP TABLE IF EXISTS dm_clear_guarded;
+        CREATE TABLE dm_clear_guarded (id INTEGER PRIMARY KEY);
+        INSERT INTO dm_clear_guarded VALUES (1);
+    </execute>
+    <generate name="clear_rows" targetEntity="dm_clear_guarded" target="readerDB.clear"/>
+</setup>

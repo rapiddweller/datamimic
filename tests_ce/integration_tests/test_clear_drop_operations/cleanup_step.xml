@@ -1,0 +1,3 @@
+<setup>
+    <generate name="clear_items" targetEntity="items" target="db.clear"/>
+</setup>

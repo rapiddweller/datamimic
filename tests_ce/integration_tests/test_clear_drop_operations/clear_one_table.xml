@@ -1,0 +1,16 @@
+<setup>
+    <database id="db" database="clear_ops_one" dbms="sqlite"/>
+    <execute type="sql" target="db">
+        DROP TABLE IF EXISTS items;
+        DROP TABLE IF EXISTS kept;
+        CREATE TABLE items (id INTEGER PRIMARY KEY, name TEXT);
+        CREATE TABLE kept (id INTEGER PRIMARY KEY);
+        INSERT INTO items VALUES (1, 'a');
+        INSERT INTO items VALUES (2, 'b');
+        INSERT INTO kept VALUES (1);
+    </execute>
+    <!-- clear keeps the table and touches no other table -->
+    <generate name="clear_items" targetEntity="items" target="db.clear"/>
+    <generate name="items_left" source="db" selector="SELECT id FROM items" distribution="ordered" target=""/>
+    <generate name="kept_left" source="db" selector="SELECT id FROM kept" distribution="ordered" target=""/>
+</setup>

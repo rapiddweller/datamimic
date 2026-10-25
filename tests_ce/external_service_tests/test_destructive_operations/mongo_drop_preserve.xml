@@ -1,0 +1,4 @@
+<setup>
+    <mongodb id="mongodb"/>
+    <generate name="drop_docs" targetEntity="dm_drop_whole" target="mongodb.drop"/>
+</setup>

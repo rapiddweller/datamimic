@@ -1,0 +1,4 @@
+<setup>
+    <mongodb id="readerMongo" readOnly="true"/>
+    <generate name="clear_docs" targetEntity="dm_clear_guarded_docs" target="readerMongo.clear"/>
+</setup>

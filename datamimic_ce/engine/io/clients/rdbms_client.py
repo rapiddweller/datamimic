@@ -6,6 +6,7 @@
 
 import logging
 import sys
+from contextlib import suppress
 from pathlib import Path
 from typing import Protocol, runtime_checkable
 from urllib.parse import quote
@@ -28,6 +29,8 @@ from datamimic_ce.engine.io.contracts import DataSourcePagination
 from datamimic_ce.errors import IssueCode, NormalizedDbError, client_config_error, operation_error
 
 logger = logging.getLogger("DATAMIMIC")
+
+_TRUNCATE_DIALECTS = frozenset({"postgresql", "mssql"})  # SQLAlchemy dialect names
 
 # SQLAlchemy create_engine kwargs DATAMIMIC forwards (pooling/behavior). Anything else in the
 # connection config is either connection identity (see _CONNECTION_IDENTITY, used to build the URL)
@@ -551,6 +554,37 @@ class RdbmsClient(DatabaseClient):
                 clause = self._pk_clause(table, row, pk, table_name, "delete")
                 deleted += connection.execute(table.delete().where(*clause)).rowcount
         return deleted
+
+    def clear_table(self, table_name: str) -> None:
+        """Remove every row and keep the table, its indexes and constraints (target="db.clear").
+
+        PostgreSQL and MSSQL use TRUNCATE and fall back to a full-table DELETE when the database refuses it;
+        other dialects use DELETE. A successful TRUNCATE reports no row count."""
+        self._require_write("clear")
+        engine = self._create_engine()
+        table = self._get_metadata(engine).tables[self._get_actual_table_name(table_name)]
+        try:
+            backend_action, deleted = self._truncate_or_delete_all(engine, table)
+        except sqlalchemy.exc.SQLAlchemyError as err:
+            raise operation_error(
+                code=IssueCode.OPERATION_EXECUTION_FAILED, target="rdbms.clear", error=_database_error_facts(err)
+            ) from err
+        logger.info(
+            "OPERATION | rdbms.clear | table=%s | action=clear | backend_action=%s | deleted_count=%s",
+            table.name,
+            backend_action,
+            "unavailable" if deleted is None else deleted,
+        )
+
+    @staticmethod
+    def _truncate_or_delete_all(engine, table) -> tuple[str, int | None]:
+        if engine.dialect.name in _TRUNCATE_DIALECTS:
+            # A refused TRUNCATE (e.g. a foreign key references the table) falls through to the DELETE below.
+            with suppress(sqlalchemy.exc.SQLAlchemyError), engine.begin() as connection:
+                connection.execute(text(f"TRUNCATE TABLE {engine.dialect.identifier_preparer.format_table(table)}"))
+                return "truncate", None
+        with engine.begin() as connection:
+            return "delete_all", connection.execute(table.delete()).rowcount
 
     def _get_actual_table_name(self, table_name: str) -> str:
         """

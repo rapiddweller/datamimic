@@ -55,6 +55,16 @@ class MongoDBExporter(Exporter):
         data, routing = self._routing(product)
         return product[0], self._client.upsert(selector_dict=routing, updated_data=data)
 
+    def clear_target(self, product: tuple) -> None:
+        """Delete every document of the target collection (target="mongo.clear")."""
+        _, routing = self._routing(product)
+        self._client.clear_collection(routing[META_TARGET_ENTITY])
+
+    def drop_target(self, product: tuple) -> None:
+        """Drop the target collection (target="mongo.drop")."""
+        _, routing = self._routing(product)
+        self._client.drop_collection(routing[META_TARGET_ENTITY])
+
     def delete(self, product: tuple):
         """
         Delete data from MongoDB database

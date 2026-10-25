@@ -1,0 +1,13 @@
+<setup rngSeed="7">
+    <database id="db" database="clear_ops_reload" dbms="sqlite"/>
+    <execute type="sql" target="db">
+        CREATE TABLE IF NOT EXISTS items (id INTEGER PRIMARY KEY, name TEXT);
+    </execute>
+    <!-- Cleanup then load: a second run ends with the same rows, not twice as many. -->
+    <generate name="clear_items" targetEntity="items" target="db.clear"/>
+    <generate name="items" count="3" target="db">
+        <key name="id" generator="IncrementGenerator"/>
+        <key name="name" script="'n' + str(this.id)"/>
+    </generate>
+    <generate name="items_left" source="db" selector="SELECT id, name FROM items ORDER BY id" distribution="ordered" target=""/>
+</setup>

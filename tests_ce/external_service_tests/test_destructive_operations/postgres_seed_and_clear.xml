@@ -1,0 +1,13 @@
+<setup>
+    <database id="sourceDB" system="postgresql"/>
+    <execute type="sql" target="sourceDB">
+        DROP TABLE IF EXISTS dm_clear_seeded;
+        CREATE TABLE dm_clear_seeded (id INTEGER PRIMARY KEY, status TEXT NOT NULL);
+        CREATE INDEX dm_clear_seeded_status_idx ON dm_clear_seeded (status);
+    </execute>
+    <generate name="seed_rows" targetEntity="dm_clear_seeded" count="5" target="sourceDB">
+        <key name="id" generator="IncrementGenerator"/>
+        <key name="status" constant="seed"/>
+    </generate>
+    <generate name="clear_rows" targetEntity="dm_clear_seeded" target="sourceDB.clear"/>
+</setup>

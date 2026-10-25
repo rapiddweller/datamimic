@@ -1,0 +1,4 @@
+<setup>
+    <mongodb id="mongodb"/>
+    <generate name="clear_docs" targetEntity="dm_clear_preserve" target="mongodb.clear"/>
+</setup>

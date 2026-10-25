@@ -21,8 +21,10 @@ def export_product_by_page(
     xml_result: dict[str, list[dict[str, object]]],
     export_session: ExportSession,
     setup_context: SetupContext | None = None,
+    statement_operation: bool = False,
 ) -> None:
-    """Dispatch a page and recurse in dependency-safe parent/child order."""
+    """Dispatch a page and recurse in dependency-safe parent/child order. ``statement_operation`` applies to this
+    statement only: a one-time clear or drop, not a page of rows."""
     xml_rows = xml_result[stmt.full_name]
     if setup_context is not None:
         export_session.register(
@@ -48,7 +50,7 @@ def export_product_by_page(
         for child in children:
             _export_nested_products_by_page(child, export_session, setup_context)
 
-    export_session.dispatch_page(stmt.full_name, prepared_page)
+    export_session.dispatch_page(stmt.full_name, prepared_page, statement_operation)
 
     if not own_targets_delete:
         for child in children:

@@ -291,6 +291,8 @@ class SetupContext(Context):
         self._default_source_scripted = default_source_scripted
         self._report_logging = report_logging
         self._export_session: ExportSession | None = None
+        # True for the copy an <include> inside a <generate> runs its steps in; such steps run once per row.
+        self._within_generate = False
         self._namespace_functions: bytes | None = None
         self._serialized_generators: bytes | None = None
         self._demographic_context = demographic_context
@@ -391,6 +393,7 @@ class SetupContext(Context):
             copied._descriptor_client_history = copy.deepcopy(history, memo)
             memo[id(history)] = copied._descriptor_client_history
         copied._owned_descriptor_clients = copy.deepcopy(self._owned_descriptor_clients, memo)
+        copied._within_generate = self._within_generate
         if self._total_row_budget is not None:
             copied._total_row_budget = self._total_row_budget
         return copied
@@ -613,6 +616,14 @@ class SetupContext(Context):
     @export_session.setter
     def export_session(self, value: ExportSession | None) -> None:
         self._export_session = value
+
+    @property
+    def within_generate(self) -> bool:
+        return self._within_generate
+
+    @within_generate.setter
+    def within_generate(self, value: bool) -> None:
+        self._within_generate = value
 
     @property
     def default_separator(self) -> str:

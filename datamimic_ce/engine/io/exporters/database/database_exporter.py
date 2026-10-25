@@ -43,9 +43,12 @@ class DatabaseExporter(Exporter):
         name, data, *rest = product
         return self._client.delete(self._table_name(name, rest), data) if data else 0
 
+    def clear_target(self, product: tuple) -> None:
+        """Remove every row of the target table (target="db.clear"); the product carries no rows."""
+        name, _, *rest = product
+        self._client.clear_table(self._table_name(name, rest))
+
     @staticmethod
     def _table_name(name: str, rest: list) -> str:
         # targetEntity -> type -> name.
-        return resolve_target_entity_from_metadata(
-            name, rest[0] if rest and isinstance(rest[0], dict) else None
-        )
+        return resolve_target_entity_from_metadata(name, rest[0] if rest and isinstance(rest[0], dict) else None)

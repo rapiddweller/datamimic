@@ -1,0 +1,8 @@
+<setup>
+    <mongodb id="mongodb"/>
+    <generate name="dm_drop_docs" count="3" target="mongodb">
+        <key name="doc_id" generator="IncrementGenerator"/>
+    </generate>
+    <generate name="drop_docs" targetEntity="dm_drop_docs" target="mongodb.drop"/>
+    <generate name="docs_left" type="dm_drop_docs" source="mongodb" distribution="ordered" target=""/>
+</setup>
