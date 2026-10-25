@@ -852,6 +852,7 @@ def _decode_worker_payload(payload: bytes) -> object:
     from decimal import Decimal
     from json import JSONDecodeError
     from uuid import UUID
+    from xml.parsers.expat import ExpatError
 
     from datamimic_ce.errors import base as errors
     from datamimic_ce.errors.codes import DomainErrorCode, ErrorCode, IssueCode
@@ -906,6 +907,7 @@ def _decode_worker_payload(payload: bytes) -> object:
         errors._restore_locale_error,
         errors._restore_user_error,
         JSONDecodeError,
+        ExpatError,
         ValidationError,
         Exception,
         ValueError,

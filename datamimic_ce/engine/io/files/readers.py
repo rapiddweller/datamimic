@@ -13,6 +13,7 @@ from contextlib import contextmanager
 from io import BytesIO, StringIO
 from pathlib import Path
 from typing import TypeAlias, TypeGuard
+from xml.parsers.expat import ExpatError
 
 import numpy as np
 import pandas as pd
@@ -100,6 +101,8 @@ class FileUtil:
         """
         try:
             root = parse_xml_file(path)
+        except FileNotFoundError as error:
+            raise invalid_source_error(code=IssueCode.SOURCE_FILE_NOT_FOUND, name=path.name) from error
         except DTDForbiddenError as error:
             raise invalid_source_error(
                 code=IssueCode.SOURCE_INVALID_XML,
@@ -156,7 +159,7 @@ class FileUtil:
                 ],
             )
             if not _is_csv_rows(rows):
-                raise ValueError(f"Cached CSV data at '{file_path}' has an invalid shape")
+                raise ValueError(f"Cached CSV data at '{file_path.name}' has an invalid shape")
             return rows
         except csv.Error as e:
             raise invalid_source_error(code=IssueCode.SOURCE_INVALID_CSV, name=file_path.name) from e
@@ -196,13 +199,15 @@ class FileUtil:
                 read_only=True,
                 data_only=True,
             )
+        except FileNotFoundError as e:
+            raise invalid_source_error(code=IssueCode.SOURCE_FILE_NOT_FOUND, name=file_path.name) from e
         except (InvalidFileException, zipfile.BadZipFile, KeyError) as e:
-            raise ValueError(f"Invalid XLSX file '{file_path}': {e}") from e
+            raise ValueError(f"Invalid XLSX file '{file_path.name}'") from e
 
         try:
             sheet = workbook[sheet_name] if sheet_name else workbook.active
         except KeyError as e:
-            raise ValueError(f"XLSX file '{file_path}' has no sheet named '{sheet_name}'") from e
+            raise ValueError(f"XLSX file '{file_path.name}' has no sheet named '{sheet_name}'") from e
         if sheet is None:
             return []  # no sheet -> empty source
 
@@ -254,11 +259,14 @@ class FileUtil:
         path - the same convention ``FixedWidthExporter`` writes. Pass ``spec`` explicitly to read
         a file that doesn't carry that header line.
         """
-        lines = FileContentStorage.load_file_with_custom_func(
-            str(file_path), lambda: read_resource_bytes(file_path).decode(encoding).splitlines()
-        )
+        try:
+            lines = FileContentStorage.load_file_with_custom_func(
+                str(file_path), lambda: read_resource_bytes(file_path).decode(encoding).splitlines()
+            )
+        except FileNotFoundError as error:
+            raise invalid_source_error(code=IssueCode.SOURCE_FILE_NOT_FOUND, name=file_path.name) from error
         if not _is_string_lines(lines):
-            raise ValueError(f"Cached fixed-width data at '{file_path}' has an invalid shape")
+            raise ValueError(f"Cached fixed-width data at '{file_path.name}' has an invalid shape")
         if not lines:
             return []  # an empty file is an empty source, not a crash
 
@@ -269,7 +277,7 @@ class FileUtil:
             header = lines[0]
             if not header.startswith("#"):
                 raise ValueError(
-                    f"Fixed-width file '{file_path}' has no '# name[width],...' spec header on its "
+                    f"Fixed-width file '{file_path.name}' has no '# name[width],...' spec header on its "
                     f"first line - pass spec= explicitly to read a file without one"
                 )
             fields = FileUtil.parse_fixed_width_spec(header[1:])
@@ -319,7 +327,11 @@ class FileUtil:
                 str(file_path), lambda: json.loads(read_resource_bytes(file_path).decode(encoding))
             )
             if not _is_json_value(data):
-                raise ValueError(f"JSON file '{file_path}' contains a value outside the JSON data model")
+                raise invalid_source_error(
+                    code=IssueCode.SOURCE_INVALID_JSON,
+                    name=file_path.name,
+                    guidance="The file holds a value outside the JSON data model.",
+                )
             return data
         except json.JSONDecodeError as e:
             raise invalid_source_error(code=IssueCode.SOURCE_INVALID_JSON, name=file_path.name) from e
@@ -532,9 +544,14 @@ def load_source_rows(
         else:
             raise invalid_source_error(code=IssueCode.SOURCE_JSON_ROOT_INVALID, name=file_path.name)
     elif source_format is SourceFileFormat.XML:
-        document = FileContentStorage.load_file_with_custom_func(
-            key, lambda: xmltodict.parse(read_resource_bytes(Path(key)), attr_prefix="@", cdata_key="#text")
-        )
+        try:
+            document = FileContentStorage.load_file_with_custom_func(
+                key, lambda: xmltodict.parse(read_resource_bytes(Path(key)), attr_prefix="@", cdata_key="#text")
+            )
+        except FileNotFoundError as error:
+            raise invalid_source_error(code=IssueCode.SOURCE_FILE_NOT_FOUND, name=file_path.name) from error
+        except ExpatError as error:
+            raise invalid_source_error(code=IssueCode.SOURCE_INVALID_XML, name=file_path.name) from error
         if not isinstance(document, dict):
             raise invalid_source_error(code=IssueCode.SOURCE_XML_ROOT_INVALID, name=file_path.name)
         # <list><item>...</item></list> is a row list; any other document is one row
@@ -543,9 +560,10 @@ def load_source_rows(
             return [document]
         items = root["item"] if isinstance(root["item"], list) else [root["item"]]
         if not all(isinstance(item, dict) for item in items):
-            raise ValueError(
-                f"XML source '{key}': every <list><item> must contain child elements to form a row, "
-                f"got a text-only <item>"
+            raise invalid_source_error(
+                code=IssueCode.SOURCE_INVALID_XML,
+                name=file_path.name,
+                guidance="Every <list><item> must have child elements to form a row; a text-only <item> is not a row.",
             )
         return items
     else:
