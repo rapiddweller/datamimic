@@ -134,3 +134,15 @@ def test_missing_source_file_dry_run_reports_catalog_identity(tmp_path: Path) ->
     diagnostic = payload["diagnostics"][0]
     assert diagnostic["ce_error"]["issue_code"] == "I101"
     assert diagnostic["remediation"] == get_issue_definition(IssueCode.SOURCE_FILE_NOT_FOUND).resolution
+
+
+def test_malformed_xml_source_dry_run_reports_catalog_identity(tmp_path: Path) -> None:
+    (tmp_path / "bad.xml").write_text("<a><b></a>", encoding="utf-8")
+    descriptor = tmp_path / "datamimic.xml"
+    descriptor.write_text('<setup><generate name="rows" source="bad.xml" count="1"/></setup>', encoding="utf-8")
+
+    result = runner.invoke(app, ["authoring", "dry-run", str(descriptor)])
+
+    assert str(tmp_path) not in result.output
+    diagnostic = json.loads(result.stdout)["diagnostics"][0]
+    assert diagnostic["ce_error"]["issue_code"] == "I105"

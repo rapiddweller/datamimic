@@ -159,7 +159,7 @@ class FileUtil:
                 ],
             )
             if not _is_csv_rows(rows):
-                raise ValueError(f"Cached CSV data at '{file_path}' has an invalid shape")
+                raise ValueError(f"Cached CSV data at '{file_path.name}' has an invalid shape")
             return rows
         except csv.Error as e:
             raise invalid_source_error(code=IssueCode.SOURCE_INVALID_CSV, name=file_path.name) from e
