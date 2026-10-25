@@ -301,8 +301,9 @@ def _decode_reply(payload: bytes, request: BoundedExecutionRequest, workspace: P
                 SourceAccessEvidence(source_type=source_type, requests=count)
                 for source_type, count in message.source_accesses
             ),
-            # A run that only skipped clear/drop has nothing to capture and nothing failed; Build still needs products.
-            base_run_ok=base_run_ok or bool(skipped),
+            # A run that only skipped clear/drop has nothing to capture and nothing failed. A product without rows
+            # next to a skipped clear stays a failure, as without the clear; Build still needs products.
+            base_run_ok=base_run_ok or (bool(skipped) and not captured.products),
             files=_read_file_digests(message.read_files, request, workspace),
         )
     except (
