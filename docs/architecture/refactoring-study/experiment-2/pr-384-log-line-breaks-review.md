@@ -2,14 +2,13 @@
 
 **Accepted within the local architecture review scope.** Reviewer: Astra (independent Opus 5.5 review agent, delegated by Alex).
 
-- Scope: `fix/log-line-breaks`, base `c495d365` (#382 merged), head `9e21a185` (two commits).
-- This review rebinds the [#382 receipt](pr-382-memstore-portable-id-review.md) and keeps all of its assessments.
-- #383 is unmerged and independent. Whichever of the two merges second rebinds on top of the other.
+- Scope: `fix/log-line-breaks`, rebased onto development `afda44ba` (#383 and #386 merged), head `8f2df8c8`. The code is unchanged from the reviewed `9e21a185`.
+- This review rebinds the [#383 receipt](pr-383-include-budget-and-properties-review.md) and keeps all of its assessments.
 - It does not authorize a merge.
 
 ## Binding
 
-- **Moved:** the Source and Validation digests. Validation moves through coverage counts only (13,412 calls analysed).
+- **Moved:** the Source and Validation digests. Validation moves through coverage counts only (13,443 calls analysed on the rebased base).
 - **Unchanged:** Contract (`c70eaaf6`), analyzer, the Unknowns digest, the 313 UNKNOWN records and the 20 diagnostics.
 - **Measurements:** 1,424 unresolved calls, 182 typing positions, 255 unknown positions, 0 violations.
 
