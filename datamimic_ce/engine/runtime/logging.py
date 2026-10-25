@@ -18,6 +18,9 @@ import psutil
 
 from datamimic_ce.domains.api import get_datamimic_lib_version
 
+# Every character str.splitlines() splits on, bar CR: a reader that splits lines that way must not see a new record.
+_LINE_BREAKS = r"[\n\v\f\x1c\x1d\x1e\x85\u2028\u2029]"
+
 
 class _SingleLineFormatter(logging.Formatter):
     """A record is one physical line: descriptor text may hold line breaks, and a continuation line that starts
@@ -26,7 +29,7 @@ class _SingleLineFormatter(logging.Formatter):
 
     def formatMessage(self, record: logging.LogRecord) -> str:
         line = logging.Formatter.formatMessage(self, record)
-        return re.sub(r"\r", r"\\r", re.sub(r"\n", r"\\n", line))
+        return re.sub(_LINE_BREAKS, r"\\n", re.sub(r"\r", r"\\r", line))
 
 
 def setup_logger(logger_name: str, worker_name: str, level=logging.INFO):
