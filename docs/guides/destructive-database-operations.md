@@ -109,7 +109,7 @@ These cases give the input for the CE/EE parity matrix (#387). Each case has a D
 | Clear on a read-only client | `I907`. The rows stay. | `.../clear_read_only.xml` |
 | Clear with `source`, `selector`, `count`, `script`, children, a second target or a nested position | `I928` before any database access. | `.../invalid/` |
 | `db.drop` on an RDBMS | `I928`. | `.../invalid/drop_on_rdbms.xml` |
-| `.clear` with call syntax (`db.clear()`) | `I928`. | `.../refused_call_syntax.xml` |
+| `db.clear()` beside a `count` | `I928`. `db.clear()` is the same target as `db.clear`; the `count` is the breach. | `.../refused_call_syntax.xml` |
 | Clear or drop inside an include inside a `<generate>` | `I928`. | `.../refused_include_in_generate.xml` |
 | PostgreSQL clear | `TRUNCATE`, count `unavailable`, foreign keys intact. | `tests_ce/external_service_tests/test_destructive_operations/` |
 | PostgreSQL clear of a referenced table | Falls back to `DELETE`. | same directory |
