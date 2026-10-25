@@ -20,6 +20,7 @@ from datamimic_ce.engine.io.data_sources import router as io_source_router
 from datamimic_ce.engine.io.files.api import FileUtil
 from datamimic_ce.engine.io.files.readers import load_source_rows
 from datamimic_ce.engine.runtime.tasks.sources.length import set_data_source_length
+from datamimic_ce.errors import InvalidSourceError, IssueCode
 
 
 def _context() -> tuple[Mock, Mock]:
@@ -229,5 +230,7 @@ def test_malformed_xml_source_is_rejected(tmp_path: Path) -> None:
     path = tmp_path / "source.xml"
     path.write_text("<list><item>", encoding="utf-8")
 
-    with pytest.raises(ExpatError):
+    with pytest.raises(InvalidSourceError) as caught:
         load_source_rows(path, ",", SourceFileFormat.XML)
+    assert caught.value.issue_code is IssueCode.SOURCE_INVALID_XML
+    assert isinstance(caught.value.__cause__, ExpatError)
