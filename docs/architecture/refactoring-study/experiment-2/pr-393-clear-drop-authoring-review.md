@@ -103,3 +103,41 @@ Setup-level `<if>` and `<while>` are not valid CE children (I604), so they need 
 - `test_clear_drop_authoring`.
 - ruff.
 - Native collection and the strict completion gate.
+
+## Addendum: `70d4e22a` (Codex P2 threads)
+
+**Accepted.**
+
+**Thread 1: the coordinator's claim holds, so no code change is needed.**
+- `_literal_include_graph` walks every `<include>` of the entry and of each step with `document.iter("include")`.
+- It refuses an include unless the include is a direct child of `<setup>` and has a literal, contained uri.
+- No alias maps to `include`: the only aliases are `iterate` and `id`.
+- Dry-run and `authoring run --allow-side-effects` both call `_validate_bounded_includes` before the transformer. A clear in a step included from a `<generate>` therefore never reaches `neutralize_for_dry_run`.
+- Probe against ce393-pg: both commands give a `side_effect` error, and the 2 rows stay in the table.
+
+**Thread 2: `executed_operations`.**
+- With side effects allowed, a clear or drop that passes the shape check is recorded at transform time.
+- The child returns `_WorkerSuccess` only when the run raised nothing, so a recorded operation means it ran.
+
+Probes against ce393-pg with side effects allowed:
+
+| Case | Result | Rows left |
+|---|---|---|
+| Cleanup-only `authoring run --allow-side-effects` | ok, no diagnostics | 0 |
+| Same, read-only client | I907 failure | 2 |
+
+The field is appended last, matching the positional rebuild. It holds names only, so the pickle payload needs no new globals.
+
+**Low: a zero-row product next to a clear fails without a reason.** With a skipped or executed clear, the "no captured rows" diagnostic is suppressed. Probes:
+- `authoring run --allow-side-effects` fails with exit code 1 and an empty diagnostics list.
+- dry-run fails with only the `not_executed` warning.
+
+Suggested fix: emit the no-rows diagnostic whenever `captured.products` exist and none has rows, and suppress it only when there are no products.
+
+**Binding.** Source and Validation move. Unknowns, Contract and the 20 diagnostics are unchanged, and so are the 1,428 / 182 / 261 measurements.
+
+**LOCAL VERIFIED:**
+- 8 probes.
+- `test_clear_drop_authoring`.
+- ruff.
+- Native collection and the strict completion gate.
