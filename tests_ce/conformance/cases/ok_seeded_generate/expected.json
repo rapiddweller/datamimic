@@ -3,5 +3,9 @@
   "outcome": "ok",
   "products": {
     "cities": 3
-  }
+  },
+  "control": [
+    "kind=start",
+    "kind=end|status=ok"
+  ]
 }

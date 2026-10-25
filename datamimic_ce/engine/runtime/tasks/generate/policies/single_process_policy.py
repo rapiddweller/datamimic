@@ -12,7 +12,6 @@ worker logic) to make CE serialise it; ``resolve_single_process`` is the single 
 point used by the generate task.
 """
 
-import re
 from collections.abc import Callable, Mapping
 from dataclasses import dataclass
 
@@ -28,7 +27,7 @@ from datamimic_ce.engine.dsl.api import (
     VariableStatement,
 )
 from datamimic_ce.engine.io.api import RegisteredClient, uses_mysql_sequence_storage
-from datamimic_ce.engine.runtime.logging import logger
+from datamimic_ce.engine.runtime.logging import control_value, logger
 from datamimic_ce.engine.runtime.tasks.values.construction.entity_constructor import parse_constructor_string
 from datamimic_ce.engine.runtime.tasks.values.construction.factory import RUNTIME_GENERATOR_TYPES
 
@@ -191,11 +190,6 @@ POLICIES: tuple[SingleProcessPolicy, ...] = (
 _EE_HINT = " Multiprocess scaling of this is an Enterprise (EE) feature."
 
 
-def _control_value(text: str) -> str:
-    """Make descriptor text safe for a ' | '-delimited CONTROL record: no line breaks, no spaced pipes."""
-    return re.sub(r"\s*\|\s*", "|", " ".join(text.split()))
-
-
 def resolve_single_process(
     stmt: GenerateStatement,
     requested_workers: int,
@@ -221,7 +215,7 @@ def resolve_single_process(
             logger.info(
                 "CONTROL | kind=policy | policy=%s | stmt=%s | override_workers=%s -> %s | reason=%s",
                 policy.feature,
-                _control_value(stmt.full_name),
+                control_value(stmt.full_name),
                 requested_workers,
                 1,
                 policy.reason + hint,
