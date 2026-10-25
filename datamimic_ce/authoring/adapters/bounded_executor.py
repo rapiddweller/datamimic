@@ -285,7 +285,7 @@ def _decode_reply(payload: bytes, request: BoundedExecutionRequest, workspace: P
                     ),
                 ),
             )
-        if not base_run_ok and not skipped and not ran_operation:
+        if not base_run_ok and (captured.products or not (skipped or ran_operation)):
             diagnostics += (
                 Diagnostic(
                     code=AuthoringSystemDiagnosticCode.NOT_EXECUTED,

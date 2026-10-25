@@ -139,6 +139,14 @@ def test_an_include_inside_a_generate_never_reaches_bounded_execution(workspace:
     assert _rows(workspace) == 2
 
 
+@pytest.mark.parametrize("allow_side_effects", [False, True])
+def test_a_product_without_rows_next_to_a_clear_still_names_the_missing_rows(workspace: Path, allow_side_effects: bool):
+    empty = '<generate name="none" source="db" selector="SELECT id FROM items WHERE id &lt; 0" count="5" target=""/>'
+    result = _app(workspace).run(_request(xml=_setup(_CLEAR, empty), allow_side_effects=allow_side_effects))
+    assert not result.ok
+    assert any("no captured rows" in item.message for item in result.diagnostics)
+
+
 def test_build_proves_the_products_and_reports_the_clear_it_did_not_run(workspace: Path):
     result = build_project(
         workspace,
