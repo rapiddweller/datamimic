@@ -141,3 +141,38 @@ The intended root and setup-include clears still run once.
 - The 12-case run probe at 8feb975a, and the 8-case nested and multiprocess probe at 7d92af2d.
 - A content-matched UNKNOWN diff against a fresh collection at `1ca4b09d`.
 - Native collection and the strict completion gate.
+
+## Addendum: `e4344e27` (Codex: export session and target spelling)
+
+**Accepted.**
+
+**Own export session.**
+- The one-time statement used to create the shared root export session with worker id 0. A later buffered export then wrote `pid_0` files that only `pid_1` finalized.
+- It now dispatches through its own `ExportSession(1)` and never touches `root_context.export_session`.
+- `ExportSession` construction has no side effects.
+- `GenerateWorker` is the only other code that builds a session, with the real worker id.
+- Probe: `db.clear()` followed by a 3-row JSON export writes one `rows.json` holding 3 rows.
+
+**`from_target` reads the target as an expression.**
+- It uses `ast.parse` and accepts a call's function or the attribute itself, when that attribute sits on a name.
+- Compared with the registry's `parse_function_string` over 25 spellings, the two agree on every valid one: `db.clear`, `db.clear()`, `db.clear(x=1)`, ` db . clear `, `db.delete()`, `mongo.drop()`, commas inside quoted parameters, and mixed lists such as `CSV(columns='a'), db.clear()`.
+- `from_target` returns `None` exactly where the registry fails or reports an unsupported operation: `db.Clear`, `a.b.clear`, `db['clear']`, `db.clear()()`, statements, lambdas and conditionals, and unbalanced input.
+- **Effect:** `db.delete()` again forces single-process. `db.clear()` with a count is now refused earlier, by the shape check (I928, count). The row-dispatch guard stays as defense in depth.
+- **Consumers:** the registry, `GenerateStatement.client_operations` (shape check, single-process policy) and `names_statement_operation` (the model's count exemption).
+
+**Robustness.**
+- A 1 MB parameter string parses in about 3 ms.
+- A null byte gives `None`.
+- A deeply nested unary or attribute target raises `RecursionError`. The base `c495d365` raises the same in `authoring lint`, `dry-run` and `run`, so this is pre-existing and not widened. A typed guard is optional follow-up work.
+
+**Binding.**
+- Moved: Source, Validation and Unknowns. In the UNKNOWNs, only three records re-issue `fact_ids` and `evidence_ids`; the 319 ids and their groups are unchanged.
+- Unchanged: Contract, analyzer, the 20 diagnostics, and the 1,428 / 182 / 261 measurements.
+
+**LOCAL VERIFIED:**
+- External, integration and unit clear/drop tests plus the policy and control-event tests: 97 passed, twice in the combined order. One earlier combined run showed 4 sqlite "no such table" failures while the gate ran in parallel in the same worktree; I could not reproduce them.
+- The from_target–registry comparison.
+- The robustness probe, run against the base as well.
+- The JSON export probe.
+- ruff.
+- Native collection and the strict completion gate.
