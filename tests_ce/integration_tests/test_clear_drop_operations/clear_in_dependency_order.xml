@@ -1,0 +1,16 @@
+<setup>
+    <database id="db" database="clear_ops_order" dbms="sqlite"/>
+    <execute type="sql" target="db">
+        DROP TABLE IF EXISTS child;
+        DROP TABLE IF EXISTS parent;
+        CREATE TABLE parent (id INTEGER PRIMARY KEY);
+        CREATE TABLE child (id INTEGER PRIMARY KEY, parent_id INTEGER REFERENCES parent(id));
+        INSERT INTO parent VALUES (1);
+        INSERT INTO child VALUES (1, 1);
+    </execute>
+    <!-- Statements run in document order: the child first, then the parent it references. -->
+    <generate name="clear_child" targetEntity="child" target="db.clear"/>
+    <generate name="clear_parent" targetEntity="parent" target="db.clear"/>
+    <generate name="parent_left" source="db" selector="SELECT id FROM parent" distribution="ordered" target=""/>
+    <generate name="child_left" source="db" selector="SELECT id FROM child" distribution="ordered" target=""/>
+</setup>

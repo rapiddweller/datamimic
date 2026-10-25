@@ -46,6 +46,17 @@ class GenerateWorker:
     """
 
     @staticmethod
+    def run_statement_operation(stmt: GenerateStatement, root_context: SetupContext) -> dict[str, list]:
+        """Dispatch a source-free ``clear`` or ``drop`` once. The statement carries no rows, so the product is
+        registered empty, as for count 0, and its exporter performs the operation on the target entity."""
+        if root_context.export_session is None:
+            root_context.export_session = ExportSession(0)
+        logger.info(f"Executing one-time operations for statement '{stmt.full_name}'")
+        result: dict[str, list] = {stmt.full_name: []}
+        export_product_by_page(stmt, result, root_context.export_session, root_context)
+        return result
+
+    @staticmethod
     def serialize_worker_context(context: SetupContext) -> WorkerContextPayload:
         configs = {
             token: config
@@ -58,9 +69,7 @@ class GenerateWorker:
             if (client := client_ref()) is not None
         }
         bindings = {
-            client_id: tokens[id(client)]
-            for client_id, client in context.clients.items()
-            if id(client) in tokens
+            client_id: tokens[id(client)] for client_id, client in context.clients.items() if id(client) in tokens
         }
         projected = context.worker_projection()
         namespace_functions = {key: value for key, value in projected.namespace.items() if callable(value)}
@@ -108,9 +117,7 @@ class GenerateWorker:
     def deserialize_worker_context(payload: WorkerContextPayload) -> SetupContext:
         created: list[tuple[RegisteredClient, ClientConfig]] = []
 
-        def load_graph(
-            blob: bytes, configs: dict[int, ClientConfig]
-        ) -> tuple[object, dict[int, RegisteredClient]]:
+        def load_graph(blob: bytes, configs: dict[int, ClientConfig]) -> tuple[object, dict[int, RegisteredClient]]:
             graph_clients: dict[int, RegisteredClient] = {}
             stream = BytesIO(blob)
 
@@ -334,9 +341,7 @@ class GenerateWorker:
         converter_list = create_converter_list(context, stmt.converter)
 
         # 1: Build sub-tasks in GenIterStatement
-        tasks = [
-            create_task(child_stmt, root_context, pagination) for child_stmt in stmt.sub_statements
-        ]
+        tasks = [create_task(child_stmt, root_context, pagination) for child_stmt in stmt.sub_statements]
 
         # 2: Load this page's window of the data source (file, database, memory, ...)
         source_data, build_from_source = source_reader.read_page(page_start, page_end)

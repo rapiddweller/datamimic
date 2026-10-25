@@ -19,6 +19,7 @@ from datamimic_ce.engine.dsl.statements.values.references.reference_statement im
 from datamimic_ce.engine.dsl.statements.values.scalar.key_statement import KeyStatement
 from datamimic_ce.engine.dsl.statements.values.variables.variable_statement import VariableStatement
 from datamimic_ce.engine.dsl.vocabulary.enums.dbms_enums import Dbms
+from datamimic_ce.engine.dsl.vocabulary.enums.operation_enums import ExportOperation
 from datamimic_ce.engine.io.clients.rdbms_client import RdbmsClient
 from datamimic_ce.engine.runtime.tasks.generate.policies.single_process_policy import resolve_single_process
 
@@ -26,6 +27,7 @@ from datamimic_ce.engine.runtime.tasks.generate.policies.single_process_policy i
 def _gen(children=(), unique=False, targets=()) -> MagicMock:
     g = MagicMock(spec=GenerateStatement)
     g.name, g.unique, g.sub_statements, g.targets = "g", unique, list(children), list(targets)
+    g.client_operations = tuple(parsed for parsed in map(ExportOperation.from_target, targets) if parsed is not None)
     return g
 
 
@@ -56,6 +58,11 @@ def _mysql_client() -> RdbmsClient:
 )
 def test_policy_forces_single_process(stmt):
     assert resolve_single_process(stmt, requested_workers=4) == 1
+
+
+def test_a_target_that_only_contains_delete_does_not_force_single_process():
+    # the operation is parsed, not matched as a substring
+    assert resolve_single_process(_gen(targets=["mytable.deleted"]), requested_workers=4) is None
 
 
 def test_no_constraint_keeps_requested_workers():

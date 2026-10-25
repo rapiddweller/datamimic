@@ -19,6 +19,7 @@ from dataclasses import dataclass
 from datamimic_ce.engine.dsl.api import (
     CompositeStatement,
     ElementStatement,
+    ExportOperation,
     GenerateStatement,
     IncludeStatement,
     KeyStatement,
@@ -106,7 +107,7 @@ def _uses_global_increment(
 
 
 def _has_delete_target(stmt: GenerateStatement, seeded: bool, clients: ClientMap) -> bool:
-    return any(".delete" in target for target in stmt.targets)
+    return any(operation is ExportOperation.DELETE for _, operation in stmt.client_operations)
 
 
 def _seeded(stmt: GenerateStatement, seeded: bool, clients: ClientMap) -> bool:

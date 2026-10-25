@@ -23,4 +23,15 @@ ISSUES: list[IssueDefinition] = [
         cause="A write operation was attempted against a datasource configured for read-only access.",
         resolution="Disable read-only mode or use a writable datasource for update/delete/insert operations.",
     ),
+    IssueDefinition(
+        code=IssueCode.OPERATION_INTENT_INVALID,
+        name="OPERATION_INTENT_INVALID",
+        title="Database Operation Intent Is Invalid",
+        template="Operation '{target}' is unsafe or ambiguous: {reason}. Migration: {migration}",
+        cause=(
+            "The descriptor does not distinguish selective deletion, clearing records, and dropping the "
+            "database object strongly enough for a destructive operation."
+        ),
+        resolution="Use the explicit delete, clear, or drop target described in the migration guidance.",
+    ),
 ]

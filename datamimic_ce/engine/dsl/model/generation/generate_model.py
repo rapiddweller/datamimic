@@ -57,6 +57,7 @@ from datamimic_ce.engine.dsl.vocabulary.constants.attribute_constants import (
     ATTR_VARIABLE_SUFFIX,
 )
 from datamimic_ce.engine.dsl.vocabulary.constants.element_constants import EL_GENERATE
+from datamimic_ce.engine.dsl.vocabulary.enums.operation_enums import names_statement_operation
 
 _TIMESERIES_ATTRS: frozenset[str] = TIMESERIES_ALL_OR_NONE.attrs
 
@@ -342,6 +343,10 @@ class GenerateModel(BaseModel):
         # In time-series mode count is optional (default 1 series); otherwise enforce the
         # existing rule that count is required unless source/script supplies the length.
         if _TIMESERIES_ATTRS & values.keys():
+            return values
+        # A source-free clear or drop runs once and takes no count; the runtime rejects any attribute beside it.
+        target = values.get("target")
+        if isinstance(target, str) and names_statement_operation(target):
             return values
         return check_exist_count(values=values)
 

@@ -10,6 +10,7 @@ from datamimic_ce.engine.dsl.statements.base.composite_statement import Composit
 from datamimic_ce.engine.dsl.statements.base.statement import Statement
 from datamimic_ce.engine.dsl.statements.generation.targets import parse_consumer
 from datamimic_ce.engine.dsl.vocabulary.enums.distribution_enums import SourceDistribution
+from datamimic_ce.engine.dsl.vocabulary.enums.operation_enums import ExportOperation
 
 
 class GenerateStatement(CompositeStatement):
@@ -103,6 +104,17 @@ class GenerateStatement(CompositeStatement):
     @property
     def source_entity(self) -> str | None:
         return self._source_entity
+
+    @property
+    def client_operations(self) -> tuple[tuple[str, ExportOperation], ...]:
+        """``(clientId, operation)`` of each target that names a client operation (``db.delete``), by target."""
+        parsed = (ExportOperation.from_target(target) for target in sorted(self._targets))
+        return tuple(item for item in parsed if item is not None)
+
+    @property
+    def is_statement_operation(self) -> bool:
+        """Whether a target is a source-free ``clear`` or ``drop``, which runs once instead of generating rows."""
+        return any(operation.is_statement_operation for _, operation in self.client_operations)
 
     @property
     def target_entity(self) -> str | None:

@@ -5,6 +5,7 @@
 # For questions and support, contact: info@rapiddweller.com
 
 import json
+import logging
 import re
 from collections.abc import Iterator, Mapping
 from contextlib import contextmanager
@@ -25,6 +26,8 @@ from datamimic_ce.engine.io.clients.entity_serialization import stringify_entity
 from datamimic_ce.engine.io.connection_config.mongodb_connection_config import MongoDBConnectionConfig
 from datamimic_ce.engine.io.contracts import DataSourcePagination
 from datamimic_ce.errors import IssueCode, invalid_source_error, is_user_error, operation_error
+
+logger = logging.getLogger("DATAMIMIC")
 
 
 class MongoDBClient(DatabaseClient):
@@ -656,6 +659,33 @@ class MongoDBClient(DatabaseClient):
                     "currently Mongodb selector only support 'find' and 'aggregate'"
                 ),
             )
+
+    def clear(self, collection_name: str) -> None:
+        """Delete every document and keep the collection, its indexes and options (target="mongo.clear")."""
+        self._require_write("clear")
+        collection_name = self._operation_collection(collection_name)
+        with self._create_connection() as conn:
+            deleted = conn[self._credential.database][collection_name].delete_many({}).deleted_count
+        logger.info(
+            "OPERATION | mongodb.clear | collection=%s | action=clear | deleted_count=%s", collection_name, deleted
+        )
+
+    def drop(self, collection_name: str) -> None:
+        """Drop the collection with its documents, indexes and options (target="mongo.drop")."""
+        self._require_write("drop")
+        collection_name = self._operation_collection(collection_name)
+        with self._create_connection() as conn:
+            conn[self._credential.database][collection_name].drop()
+        logger.info("OPERATION | mongodb.drop | collection=%s | action=drop", collection_name)
+
+    @staticmethod
+    def _operation_collection(collection_name: str | None) -> str:
+        if not collection_name or re.fullmatch(r"\s*", collection_name):
+            raise invalid_source_error(
+                code=IssueCode.SOURCE_MONGO_SELECTOR_INVALID,
+                error=f"Syntax error: collection name '{collection_name}' not found",
+            )
+        return collection_name
 
     def delete(self, query: dict, data: list):
         """

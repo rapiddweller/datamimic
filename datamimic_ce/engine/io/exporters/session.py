@@ -123,6 +123,10 @@ def consume_exporters(
             exporter.upsert(json_product)
         elif operation is ExportOperation.DELETE:
             exporter.delete(json_product)
+        elif operation is ExportOperation.CLEAR:
+            exporter.clear(json_product)
+        elif operation is ExportOperation.DROP and isinstance(exporter, MongoDBExporter):
+            exporter.drop(json_product)
         else:
             raise ValueError(f"Exporter does not support operation: {exporter}.{operation}")
 

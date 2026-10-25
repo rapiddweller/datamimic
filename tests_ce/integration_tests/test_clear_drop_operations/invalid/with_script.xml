@@ -1,0 +1,5 @@
+<setup>
+    <database id="db" database="clear_ops_invalid" dbms="sqlite"/>
+    <execute type="sql" target="db">CREATE TABLE IF NOT EXISTS items (id INTEGER PRIMARY KEY);</execute>
+    <generate name="clear_items" targetEntity="items" script="1" target="db.clear"/>
+</setup>

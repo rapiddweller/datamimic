@@ -118,6 +118,7 @@ class TestGenerateTask:
         statement.sub_statements = []
         statement.bounded_count_limit = None
         statement.targets = {"mongodb.upsert", "file.write"}
+        statement.is_statement_operation = False
         statement.selector = "test_selector"
         statement.source = "test_source"
         statement.multiprocessing = True
