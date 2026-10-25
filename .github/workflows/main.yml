@@ -581,7 +581,7 @@ jobs:
       - name: Run functional tests with coverage
         run: |
           . .venv/bin/activate
-          uv run pytest tests_ce/functional_tests/ --cov --cov-report=xml
+          uv run pytest tests_ce/functional_tests/ tests_ce/conformance/ --cov --cov-report=xml
         shell: bash
       - name: Upload coverage report
         uses: actions/upload-artifact@v6

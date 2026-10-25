@@ -1,0 +1,5 @@
+<setup rngSeed="7">
+    <generate name="cities" count="3">
+        <key name="region" values="('north', 'south')" constant="x"/>
+    </generate>
+</setup>
