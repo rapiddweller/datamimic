@@ -133,7 +133,8 @@ class GenerateStatement(CompositeStatement):
         """``(reason, migration)`` when a ``delete`` would remove everything its database source reads, None otherwise.
 
         A file source lists the rows to delete and a generated row deletes by its own keys: neither needs a selector."""
-        if self.delete_target is None or not source_is_database or self._selector is not None:
+        # The source reader treats a blank selector as absent and reads the whole entity.
+        if self.delete_target is None or not source_is_database or (self._selector and self._selector.strip()):
             return None
         return (
             "delete reads a database source without a selector, so it removes every row the source returns",

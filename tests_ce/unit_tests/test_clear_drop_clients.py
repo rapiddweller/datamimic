@@ -284,6 +284,11 @@ def test_a_delete_of_a_database_source_needs_a_selector():
     assert selected.delete_intent_problem(source_is_database=True) is None
 
 
+@pytest.mark.parametrize("selector", ["", "   "])
+def test_a_blank_selector_is_no_selector_for_a_delete_of_a_database_source(selector):
+    assert _delete_statement(source="db", selector=selector).delete_intent_problem(source_is_database=True) is not None
+
+
 def test_a_delete_needs_no_selector_for_a_file_source_or_generated_rows():
     assert _delete_statement(source="ids.csv").delete_intent_problem(source_is_database=False) is None
     assert _delete_statement(count="2").delete_intent_problem(source_is_database=False) is None

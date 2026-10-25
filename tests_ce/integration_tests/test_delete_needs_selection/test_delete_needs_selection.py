@@ -40,6 +40,20 @@ def test_a_delete_of_a_whole_database_source_is_refused_and_keeps_the_rows():
         assert connection.execute("SELECT COUNT(*) FROM items").fetchone() == (2,)
 
 
+def test_a_delete_with_a_blank_selector_is_refused_and_keeps_the_rows():
+    database = Path.cwd() / "db" / "delete_sel_blank.sqlite"
+    database.parent.mkdir(exist_ok=True)
+    database.unlink(missing_ok=True)
+    with sqlite3.connect(database) as connection:
+        connection.execute("CREATE TABLE items (id INTEGER PRIMARY KEY)")
+        connection.executemany("INSERT INTO items VALUES (?)", [(1,), (2,)])
+    with pytest.raises(OperationError) as caught:
+        _run("delete_blank_selector.xml")
+    assert caught.value.issue_code is IssueCode.OPERATION_INTENT_INVALID
+    with sqlite3.connect(database) as connection:
+        assert connection.execute("SELECT COUNT(*) FROM items").fetchone() == (2,)
+
+
 def test_a_delete_with_a_selector_removes_only_the_selected_rows():
     assert [row["id"] for row in _run("delete_selected_rows.xml")["items_left"]] == [1]
 
