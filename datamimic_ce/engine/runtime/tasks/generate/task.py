@@ -17,6 +17,7 @@ from datamimic_ce.engine.io.api import (
     count_query_length,
     finalize_exporter_chunks,
     has_mongodb_upsert_target,
+    is_database_client,
     publish_exported_artifacts,
 )
 from datamimic_ce.engine.runtime.contexts.context import Context, SetupContext, WorkerContextPayload
@@ -254,6 +255,22 @@ class GenerateTask(CommonSubTask):
                 migration=migration,
             )
 
+    def _assert_delete_selects_rows(self, context: SetupContext | GenIterContext) -> None:
+        """Fail closed with I928 before any database access when a ``delete`` would remove everything its database
+        source reads: that is a ``clear`` or ``drop`` written as a delete (BC-4.0-016)."""
+        stmt = self._statement
+        source = stmt.source
+        client = context.root.get_client_by_id(source) if source is not None else None
+        problem = stmt.delete_intent_problem(source_is_database=is_database_client(client))
+        if problem is not None:
+            reason, migration = problem
+            raise operation_error(
+                code=IssueCode.OPERATION_INTENT_INVALID,
+                target=stmt.delete_target,
+                reason=reason,
+                migration=migration,
+            )
+
     def execute(
         self,
         context: SetupContext | GenIterContext,
@@ -270,6 +287,7 @@ class GenerateTask(CommonSubTask):
         """
         if self.statement.is_statement_operation:
             return self._execute_statement_operation(context)
+        self._assert_delete_selects_rows(context)
         with gen_timer("process", context.root.report_logging, self.statement.full_name) as timer_result:
             try:
                 # Mark Ray initialization status for shutdown at the end of execution

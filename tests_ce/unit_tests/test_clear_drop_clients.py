@@ -16,6 +16,7 @@ from pydantic import ValidationError
 from sqlalchemy import create_engine
 from sqlalchemy.exc import OperationalError
 
+from datamimic_ce.engine.dsl.api import GenerateStatement
 from datamimic_ce.engine.dsl.model.generation.generate_model import GenerateModel
 from datamimic_ce.engine.dsl.vocabulary.constants.attribute_constants import META_TARGET_ENTITY
 from datamimic_ce.engine.dsl.vocabulary.enums.dbms_enums import Dbms
@@ -271,3 +272,23 @@ def test_row_dispatch_refuses_clear_and_drop_whatever_reached_it():
         True,
     )
     client.clear_table.assert_called_once_with("items")
+
+
+def _delete_statement(**attributes: str):
+    return GenerateStatement(GenerateModel(name="d", target="db.delete", **attributes), None)
+
+
+def test_a_delete_of_a_database_source_needs_a_selector():
+    assert _delete_statement(source="db").delete_intent_problem(source_is_database=True) is not None
+    selected = _delete_statement(source="db", selector="SELECT id FROM t")
+    assert selected.delete_intent_problem(source_is_database=True) is None
+
+
+@pytest.mark.parametrize("selector", ["", "   "])
+def test_a_blank_selector_is_no_selector_for_a_delete_of_a_database_source(selector):
+    assert _delete_statement(source="db", selector=selector).delete_intent_problem(source_is_database=True) is not None
+
+
+def test_a_delete_needs_no_selector_for_a_file_source_or_generated_rows():
+    assert _delete_statement(source="ids.csv").delete_intent_problem(source_is_database=False) is None
+    assert _delete_statement(count="2").delete_intent_problem(source_is_database=False) is None

@@ -603,6 +603,7 @@ def neutralize_for_dry_run(
     graph_producers: tuple[_MemstoreProducer, ...] | None = None,
     skipped_operations: list[str] | None = None,
     executed_operations: list[str] | None = None,
+    database_ids: set[str] | None = None,
 ) -> None:
     """Statement transformer: cap counts, keep only memstore targets, force 1 process.
     A source-free clear or drop is checked for its shape (I928, as at runtime) and then skipped: bounded execution
@@ -648,6 +649,12 @@ def neutralize_for_dry_run(
     default_line_separator = root_stmt.default_line_separator or "\n"
 
     dropped: set[int] = set()
+    # The entry runs first and its clients stay visible to every included step through the shared set.
+    if database_ids is None:
+        database_ids = set()
+    database_ids.update(
+        stmt.model.id for stmt in root_stmt.sub_statements if isinstance(stmt, (DatabaseStatement, MongoDBStatement))
+    )
 
     def _neutralize(stmt: object, nested: bool = False) -> None:
         if isinstance(stmt, GenerateStatement) and stmt.is_statement_operation:
@@ -679,6 +686,15 @@ def neutralize_for_dry_run(
                     raise _BoundedPolicyRefusal("SQLite source resolves outside the private bounded workspace")
         if isinstance(stmt, GenerateStatement):
             if not allow_side_effects:
+                # The strip below removes the delete target, so the engine would never see it.
+                delete_problem = stmt.delete_intent_problem(source_is_database=stmt.source in database_ids)
+                if delete_problem is not None:
+                    raise operation_error(
+                        code=IssueCode.OPERATION_INTENT_INVALID,
+                        target=stmt.delete_target,
+                        reason=delete_problem[0],
+                        migration=delete_problem[1],
+                    )
                 if stripped_file_targets is not None:
                     file_targets = _parse_buffered_targets(stmt.targets - memstores)
                     if file_targets:
@@ -1240,6 +1256,7 @@ def _run_engine_capture(
                 graph_producers=graph_producers,
                 skipped_operations=skipped,
                 executed_operations=executed,
+                database_ids=set(),
             )
             session = create_run_session(
                 RunRequest(

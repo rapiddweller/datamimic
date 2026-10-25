@@ -1,0 +1,5 @@
+<setup>
+    <database id="db" database="delete_sel_blank" dbms="sqlite"/>
+    <!-- a blank selector is no selector: the source reads the whole entity -->
+    <generate name="delete_items" count="5" source="db" sourceEntity="items" targetEntity="items" selector="" target="db.delete"/>
+</setup>

@@ -147,6 +147,43 @@ def test_a_product_without_rows_next_to_a_clear_still_names_the_missing_rows(wor
     assert any("no captured rows" in item.message for item in result.diagnostics)
 
 
+def test_a_delete_of_a_whole_database_source_is_refused_with_i928_in_bounded_execution(workspace: Path):
+    whole = '<generate name="d" source="db" sourceEntity="items" targetEntity="items" target="db.delete"/>'
+    result = _app(workspace).dry_run(_request(xml=_setup(whole)))
+    assert not result.ok
+    (error,) = (item for item in result.diagnostics if item.severity == "error")
+    assert error.ce_error is not None and error.ce_error.issue_code == "I928"
+    assert _rows(workspace) == 2
+
+
+def test_a_whole_source_delete_in_an_included_step_is_refused_in_dry_run_and_build(workspace: Path):
+    (workspace / "steps").mkdir()
+    (workspace / "steps" / "d.xml").write_text(
+        '<setup><generate name="d" source="db" type="items" count="2" target="db.delete"/></setup>'
+    )
+    xml = _setup('<include uri="steps/d.xml"/>')
+    dry = _app(workspace).dry_run(_request(xml=xml))
+    assert not dry.ok
+    (error,) = (item for item in dry.diagnostics if item.severity == "error")
+    assert error.ce_error is not None and error.ce_error.issue_code == "I928"
+    built = build_project(
+        workspace, xml, version="5.0", environment_bindings=[{"environment": "db", "family": "database"}]
+    )
+    assert built.outcome == "rejected"
+    assert _rows(workspace) == 2
+
+
+def test_a_whole_source_delete_from_a_client_declared_in_the_step_is_refused_in_dry_run(workspace: Path):
+    (workspace / "steps").mkdir()
+    (workspace / "steps" / "d.xml").write_text(
+        '<setup><database id="db2" dbms="sqlite" database="d"/>'
+        '<generate name="d" source="db2" type="items" count="2" target="db2.delete"/></setup>'
+    )
+    result = _app(workspace).dry_run(_request(xml=_setup('<include uri="steps/d.xml"/>')))
+    assert not result.ok
+    assert _rows(workspace) == 2
+
+
 def test_build_proves_the_products_and_reports_the_clear_it_did_not_run(workspace: Path):
     result = build_project(
         workspace,

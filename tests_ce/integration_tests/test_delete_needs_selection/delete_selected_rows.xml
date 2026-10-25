@@ -1,0 +1,12 @@
+<setup>
+    <database id="db" database="delete_sel_rows" dbms="sqlite"/>
+    <execute type="sql" target="db">
+        DROP TABLE IF EXISTS items;
+        CREATE TABLE items (id INTEGER PRIMARY KEY);
+        INSERT INTO items VALUES (1);
+        INSERT INTO items VALUES (2);
+        INSERT INTO items VALUES (3);
+    </execute>
+    <generate name="delete_items" source="db" selector="SELECT id FROM items WHERE id &gt; 1" targetEntity="items" target="db.delete"/>
+    <generate name="items_left" source="db" selector="SELECT id FROM items" distribution="ordered" target=""/>
+</setup>

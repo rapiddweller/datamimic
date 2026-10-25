@@ -121,6 +121,26 @@ class GenerateStatement(CompositeStatement):
         """The clear or drop targets as written for a message, for example ``db.clear``."""
         return ", ".join(f"{client}.{operation.value}" for client, operation in self.client_operations)
 
+    @property
+    def delete_target(self) -> str | None:
+        """The delete targets as written for a message, for example ``db.delete``; None without one."""
+        names = [
+            f"{client}.delete" for client, operation in self.client_operations if operation is ExportOperation.DELETE
+        ]
+        return ", ".join(names) or None
+
+    def delete_intent_problem(self, *, source_is_database: bool) -> tuple[str, str] | None:
+        """``(reason, migration)`` when a ``delete`` would remove everything its database source reads, None otherwise.
+
+        A file source lists the rows to delete and a generated row deletes by its own keys: neither needs a selector."""
+        # The source reader treats a blank selector as absent and reads the whole entity.
+        if self.delete_target is None or not source_is_database or (self._selector and self._selector.strip()):
+            return None
+        return (
+            "delete reads a database source without a selector, so it removes every row the source returns",
+            "add a selector that selects the rows to delete, or use clientId.clear or clientId.drop to remove all",
+        )
+
     def operation_intent_problem(self, *, nested: bool) -> tuple[str, str] | None:
         """``(reason, migration)`` of the first rule a clear or drop breaks (BC-4.0-016), None for a valid one-time
         statement. The runtime and bounded authoring run this same check."""
