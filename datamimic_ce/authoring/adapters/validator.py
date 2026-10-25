@@ -279,31 +279,37 @@ def _resolve_project_targets(
     """Substitute whole-value ``{name}`` placeholders in ``target`` attributes in place, in the order the runtime
     parses them: a literal ``.properties`` include applies to the siblings after it and their subtrees, and a step
     starts from the properties its include saw. An undefined name stays as written. A step's own ``.properties``
-    includes are ignored: the runtime resolves them against the step's directory, where they fail. Returns the
-    documents that changed."""
+    include is resolved by the runtime against the step's directory, which analysis does not follow, so the
+    placeholders after it stay as written and are rejected rather than proved against the wrong values. Returns
+    the documents that changed."""
     changed: set[etree._Element] = set()
 
-    def walk(element: etree._Element, inherited: dict[str, str], document: etree._Element, in_step: bool) -> None:
+    def walk(
+        element: etree._Element, inherited: dict[str, str], document: etree._Element, in_step: bool, known: bool
+    ) -> None:
         properties = dict(inherited)
         for child in element:
             if not isinstance(child.tag, str):
                 continue
             uri = child.get("uri", "")
             if child.tag == "include":
-                if PurePosixPath(uri).suffix == ".properties" and not in_step and not any(m in uri for m in "{\\:"):
-                    with suppress(OSError, ValueError):  # an unreadable file adds nothing: the parser reports it
-                        properties.update(parse_properties(base_dir / uri))
+                if PurePosixPath(uri).suffix == ".properties" and not any(m in uri for m in "{\\:"):
+                    if in_step:
+                        known = False
+                    else:
+                        with suppress(OSError, ValueError):  # an unreadable file adds nothing: the parser reports it
+                            properties.update(parse_properties(base_dir / uri))
                 elif uri in steps:
-                    walk(steps[uri], properties, steps[uri], True)
+                    walk(steps[uri], properties, steps[uri], True, known)
                 continue
             target = child.get("target")
             placeholder = re.fullmatch(_PLACEHOLDER, target) if target else None
-            if placeholder is not None and placeholder[1] in properties:
+            if known and placeholder is not None and placeholder[1] in properties:
                 child.attrib["target"] = properties[placeholder[1]]
                 changed.add(document)
-            walk(child, properties, document, in_step)
+            walk(child, properties, document, in_step, known)
 
-    walk(entry, {}, entry, False)
+    walk(entry, {}, entry, False, True)
     return changed
 
 

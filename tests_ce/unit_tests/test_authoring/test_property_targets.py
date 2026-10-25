@@ -89,3 +89,16 @@ def test_a_generate_after_the_properties_include_is_resolved(tmp_path: Path) -> 
     )
     result = build_project(root, entry, version="5.0", expectations=[_COUNT])
     assert result.outcome == "ready", result.diagnostics
+
+
+def test_a_step_with_its_own_properties_include_is_not_proved_against_the_entrys_values(tmp_path: Path) -> None:
+    # The runtime reads a step's properties relative to the step; analysis does not follow that, so it must not
+    # resolve the step's placeholders from the entry's file (a step override could change or remove the target).
+    root = _ordered_project(tmp_path, "")
+    (root / "delivery" / "override.properties").write_text("sink=\n", encoding="utf-8")
+    (root / "override.properties").write_text("sink=\n", encoding="utf-8")
+    step = '<setup><include uri="override.properties"/><generate name="rows" count="2" target="{sink}"/></setup>'
+    (root / "delivery" / "90_export.xml").write_text(step, encoding="utf-8")
+    entry = '<setup rngSeed="1"><include uri="conf/base.properties"/><include uri="delivery/90_export.xml"/></setup>'
+    result = build_project(root, entry, version="5.0", expectations=[_COUNT])
+    assert result.outcome == "rejected"
