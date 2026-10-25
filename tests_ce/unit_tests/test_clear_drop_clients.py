@@ -7,6 +7,7 @@
 """The client side of clear and drop (BC-4.0-016): the SQL and MongoDB operations, the per-client operation sets and
 the count gate. Model-level behavior is pinned by integration_tests/test_clear_drop_operations."""
 
+import logging
 from contextlib import contextmanager
 from unittest.mock import MagicMock
 
@@ -43,30 +44,41 @@ def _sql_client(path, read_only=False) -> RdbmsClient:
     return client
 
 
-def test_sql_clear_removes_every_row_and_keeps_the_table(tmp_path, caplog):
+@pytest.fixture
+def dm_caplog(caplog):
+    # The DATAMIMIC logger may have propagate=False after an earlier test, so attach caplog to it directly.
+    logger = logging.getLogger("DATAMIMIC")
+    logger.addHandler(caplog.handler)
+    try:
+        with caplog.at_level(logging.INFO, logger="DATAMIMIC"):
+            yield caplog
+    finally:
+        logger.removeHandler(caplog.handler)
+
+
+def test_sql_clear_removes_every_row_and_keeps_the_table(tmp_path, dm_caplog):
     client = _sql_client(tmp_path / "t.db")
     client.execute_sql_script(
         "CREATE TABLE Rows(id INTEGER PRIMARY KEY); INSERT INTO Rows VALUES (1); INSERT INTO Rows VALUES (2)"
     )
-    with caplog.at_level("INFO", logger="DATAMIMIC"):
-        client.clear("rows")  # the table name matches case-insensitively, as for delete
+    client.clear_table("rows")  # the table name matches case-insensitively, as for delete
     assert client.get("SELECT id FROM Rows") == []
     client.execute_sql_script("INSERT INTO Rows VALUES (3)")  # the table is still there
     assert (
         "OPERATION | rdbms.clear | table=Rows | action=clear | backend_action=delete_all | deleted_count=2"
-        in caplog.text
+        in dm_caplog.text
     )
 
 
 def test_sql_clear_on_a_missing_table_is_a_catalog_error(tmp_path):
     with pytest.raises(OperationError) as caught:
-        _sql_client(tmp_path / "t.db").clear("missing")
+        _sql_client(tmp_path / "t.db").clear_table("missing")
     assert caught.value.issue_code is IssueCode.OPERATION_EXECUTION_FAILED
 
 
 def test_sql_clear_is_blocked_on_a_read_only_connection(tmp_path):
     with pytest.raises(OperationError) as caught:
-        _sql_client(tmp_path / "t.db", read_only=True).clear("rows")
+        _sql_client(tmp_path / "t.db", read_only=True).clear_table("rows")
     assert caught.value.issue_code is IssueCode.OPERATION_READ_ONLY_WRITE_BLOCKED
 
 
@@ -137,27 +149,25 @@ def _mongo(monkeypatch, read_only=False):
     return client, collection
 
 
-def test_mongo_clear_deletes_all_documents_and_keeps_the_collection(monkeypatch, caplog):
+def test_mongo_clear_deletes_all_documents_and_keeps_the_collection(monkeypatch, dm_caplog):
     client, collection = _mongo(monkeypatch)
-    with caplog.at_level("INFO", logger="DATAMIMIC"):
-        client.clear("orders")
+    client.clear_collection("orders")
     collection.delete_many.assert_called_once_with({})
     collection.drop.assert_not_called()
-    assert "OPERATION | mongodb.clear | collection=orders | action=clear | deleted_count=5" in caplog.text
+    assert "OPERATION | mongodb.clear | collection=orders | action=clear | deleted_count=5" in dm_caplog.text
 
 
-def test_mongo_drop_removes_the_collection(monkeypatch, caplog):
+def test_mongo_drop_removes_the_collection(monkeypatch, dm_caplog):
     client, collection = _mongo(monkeypatch)
-    with caplog.at_level("INFO", logger="DATAMIMIC"):
-        client.drop("orders")
+    client.drop_collection("orders")
     collection.drop.assert_called_once_with()
     collection.delete_many.assert_not_called()
-    assert "OPERATION | mongodb.drop | collection=orders | action=drop" in caplog.text
+    assert "OPERATION | mongodb.drop | collection=orders | action=drop" in dm_caplog.text
 
 
 def test_mongo_clear_and_drop_are_blocked_on_a_read_only_connection(monkeypatch):
     client, collection = _mongo(monkeypatch, read_only=True)
-    for attempt in (lambda: client.clear("orders"), lambda: client.drop("orders")):
+    for attempt in (lambda: client.clear_collection("orders"), lambda: client.drop_collection("orders")):
         with pytest.raises(OperationError) as caught:
             attempt()
         assert caught.value.issue_code is IssueCode.OPERATION_READ_ONLY_WRITE_BLOCKED
@@ -168,7 +178,7 @@ def test_mongo_clear_and_drop_are_blocked_on_a_read_only_connection(monkeypatch)
 def test_mongo_clear_rejects_a_blank_collection(monkeypatch):
     client, _ = _mongo(monkeypatch)
     with pytest.raises(ValueError, match="collection name"):
-        client.clear("  ")
+        client.clear_collection("  ")
 
 
 def test_the_target_suffix_names_a_typed_operation():

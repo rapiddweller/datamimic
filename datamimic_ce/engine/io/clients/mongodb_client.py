@@ -660,7 +660,7 @@ class MongoDBClient(DatabaseClient):
                 ),
             )
 
-    def clear(self, collection_name: str) -> None:
+    def clear_collection(self, collection_name: str) -> None:
         """Delete every document and keep the collection, its indexes and options (target="mongo.clear")."""
         self._require_write("clear")
         collection_name = self._operation_collection(collection_name)
@@ -670,7 +670,7 @@ class MongoDBClient(DatabaseClient):
             "OPERATION | mongodb.clear | collection=%s | action=clear | deleted_count=%s", collection_name, deleted
         )
 
-    def drop(self, collection_name: str) -> None:
+    def drop_collection(self, collection_name: str) -> None:
         """Drop the collection with its documents, indexes and options (target="mongo.drop")."""
         self._require_write("drop")
         collection_name = self._operation_collection(collection_name)

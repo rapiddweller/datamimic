@@ -555,7 +555,7 @@ class RdbmsClient(DatabaseClient):
                 deleted += connection.execute(table.delete().where(*clause)).rowcount
         return deleted
 
-    def clear(self, table_name: str) -> None:
+    def clear_table(self, table_name: str) -> None:
         """Remove every row and keep the table, its indexes and constraints (target="db.clear").
 
         PostgreSQL and MSSQL use TRUNCATE and fall back to a full-table DELETE when the database refuses it;
