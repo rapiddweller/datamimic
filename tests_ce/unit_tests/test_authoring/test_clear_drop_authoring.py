@@ -156,6 +156,23 @@ def test_a_delete_of_a_whole_database_source_is_refused_with_i928_in_bounded_exe
     assert _rows(workspace) == 2
 
 
+def test_a_whole_source_delete_in_an_included_step_is_refused_in_dry_run_and_build(workspace: Path):
+    (workspace / "steps").mkdir()
+    (workspace / "steps" / "d.xml").write_text(
+        '<setup><generate name="d" source="db" type="items" count="2" target="db.delete"/></setup>'
+    )
+    xml = _setup('<include uri="steps/d.xml"/>')
+    dry = _app(workspace).dry_run(_request(xml=xml))
+    assert not dry.ok
+    (error,) = (item for item in dry.diagnostics if item.severity == "error")
+    assert error.ce_error is not None and error.ce_error.issue_code == "I928"
+    built = build_project(
+        workspace, xml, version="5.0", environment_bindings=[{"environment": "db", "family": "database"}]
+    )
+    assert built.outcome == "rejected"
+    assert _rows(workspace) == 2
+
+
 def test_build_proves_the_products_and_reports_the_clear_it_did_not_run(workspace: Path):
     result = build_project(
         workspace,
