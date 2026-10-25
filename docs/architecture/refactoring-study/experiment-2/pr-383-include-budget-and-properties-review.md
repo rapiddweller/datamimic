@@ -65,3 +65,41 @@
 **NOT VERIFIED:**
 - Full suites, and mypy at this head. The coordinator reports both clean.
 - CI.
+
+## Addendum: `05f3a085`, a step's own `.properties` include fails closed (Codex P2)
+
+**Accepted.** After a literal `.properties` include inside a step, placeholders in the rest of that scope stay as written and are rejected with DM401. This also covers nested scopes and steps. The entry walk and later steps are unaffected.
+
+**Correction to the 45f40f6d note.** It said a step's own `.properties` include fails at runtime. That was wrong. At runtime the file is read twice:
+- **At parse time**, relative to the step's directory. That read decides the step's targets.
+- **When the include task runs**, relative to the entry's directory. That file must exist too, or the run fails with I201.
+
+**Probes.** Each layout gives the head Build, the `c2469bca` Build, and what `datamimic run` does. In each one, the step includes `override.properties`, with a copy next to the step and another next to the entry.
+
+| Layout | Head (`05f3a085`) | `c2469bca` | `datamimic run` |
+|---|---|---|---|
+| Entry `sink=CSV`; step copy `sink=JSON`, entry copy `sink=XML` | DM401 | **ready, proving CSV** | writes `rows.json` |
+| Entry `sink=CSV`; step's file defines only another key | DM401 | ready | writes `rows.csv` |
+| No `sink` in the entry; step's file has `sink=CSV` | DM401 | DM401 | writes `rows.csv` |
+| A step's properties followed by a later step that uses `{sink}` | ready | — | writes `rows.csv` |
+
+- The first row is the Codex case: c2469bca proved a different target than the run writes, and the fix closes it.
+- The last row shows a step's properties do not reach later steps, so analysis and runtime agree there.
+
+**Why fail closed is the right call.**
+- It never proves a target the runtime would not use.
+- Following the step's directory would be more precise. It needs no change to `_literal_include_graph`: the step's directory is the parent of its uri, and the bounded child already reports a missing entry-relative copy as I201.
+- But it would encode a two-path runtime rule that is itself questionable.
+
+**The cost is false rejections.** The second and third rows are valid projects that are rejected. The second was `ready` at c2469bca.
+
+**Low (follow-up).** DM401 does not say *why* a placeholder after a step-level `.properties` include is not proved. A dedicated remediation would tell the author to move the property to the entry.
+
+**Binding.** Only the Source digest moves. Validation, Contract, Unknowns, the 313 UNKNOWN records and the 20 diagnostics are unchanged, as are the 1424/182/255 measurements.
+
+**LOCAL VERIFIED:**
+- Source review.
+- The four probes, at the head and at c2469bca, with the real runs.
+- `test_property_targets` and `test_include_budget`: 9 passed.
+- ruff.
+- The full gate.
