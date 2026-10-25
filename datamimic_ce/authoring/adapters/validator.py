@@ -5,7 +5,7 @@
 """Use the normal CE parser for in-memory descriptor hard validation."""
 
 import re
-from collections.abc import Sequence
+from contextlib import suppress
 from hashlib import sha256
 from pathlib import Path, PurePosixPath
 from typing import Literal
@@ -125,11 +125,10 @@ class CeDescriptorValidator:
             # Parser/resource errors may contain credentials and physical host paths.
             return _rejected(logical_path, "Descriptor or its workspace resources failed validation.")
         root = parse_xml_source(xml)
-        project, complete = self._entry_project(root, physical_path)
+        steps, complete = self._entry_project(root, physical_path)
         with resource_reader_scope(self._workspace_context.read_resource_bytes):
-            properties = _include_properties(project or (root,), physical_path.parent)
-        for document in project or (root,):
-            _resolve_targets(document, properties)
+            _resolve_project_targets(root, steps, physical_path.parent)
+        project = (root, *steps.values()) if steps else ()
         findings = _rule_diagnostics(root, physical_path, logical_path, project=project, declarations_complete=complete)
         return LintResult(ok=not any(item.severity == "error" for item in findings), diagnostics=findings)
 
@@ -143,17 +142,19 @@ class CeDescriptorValidator:
         except (etree.XMLSyntaxError, ValueError, OSError):
             return
 
-    def _entry_project(self, root: etree._Element, physical_path: Path) -> tuple[tuple[etree._Element, ...], bool]:
-        """The entry and its literal steps, so the entry sees what a step declares; empty for a single file. An
+    def _entry_project(self, root: etree._Element, physical_path: Path) -> tuple[dict[str, etree._Element], bool]:
+        """The entry's literal steps by uri, so the entry sees what a step declares; empty for a single file. An
         unreadable graph leaves its declarations unknown, so the entry's lint does not pre-empt the graph refusal
         that Build and dry-run report."""
         try:
             with resource_reader_scope(self._workspace_context.read_resource_bytes):
                 graph = _literal_include_graph(root, physical_path)
-            steps = [parse_xml_source(str(data, "utf-8")) for uri, data in graph if PurePosixPath(uri).suffix == ".xml"]
+            steps = {
+                uri: parse_xml_source(str(data, "utf-8")) for uri, data in graph if PurePosixPath(uri).suffix == ".xml"
+            }
         except (etree.XMLSyntaxError, ValueError, OSError):
-            return (), False
-        return ((root, *steps) if steps else ()), True
+            return {}, False
+        return steps, True
 
     def include_graph(self, xml: str) -> IncludeGraphResult:
         """The ``.xml`` steps of the entry's literal include graph, read through the contained workspace reader
@@ -179,13 +180,13 @@ class CeDescriptorValidator:
         entry_root = parse_xml_source(xml)
         roots = [parse_xml_source(text) for _, text, _ in steps]
         with resource_reader_scope(self._workspace_context.read_resource_bytes):
-            properties = _include_properties((entry_root, *roots), physical_path.parent)
+            changed = _resolve_project_targets(
+                entry_root, {uri: root for (uri, _, _), root in zip(steps, roots, strict=True)}, physical_path.parent
+            )
         descriptors = [
-            IncludedDescriptor(uri=uri, xml=_resolved_xml(text, properties), sha256=digest)
-            for uri, text, digest in steps
+            IncludedDescriptor(uri=uri, xml=_analysis_xml(root, text, changed), sha256=digest)
+            for (uri, text, digest), root in zip(steps, roots, strict=True)
         ]
-        for root in roots:
-            _resolve_targets(root, properties)
         # Bindings and sinks resolve against the entry, and a step's clients end with that step; refusing them
         # here keeps a step-declared client from surfacing first as an undeclared id in another step.
         refusals = []
@@ -207,7 +208,6 @@ class CeDescriptorValidator:
                     )
         if refusals:
             return IncludeGraphResult(ok=False, diagnostics=tuple(refusals))
-        _resolve_targets(entry_root, properties)
         project = (entry_root, *roots)
         findings: list[Diagnostic] = []
         for step, root in zip(descriptors, roots, strict=True):
@@ -218,7 +218,7 @@ class CeDescriptorValidator:
             ok=not any(item.severity == "error" for item in findings),
             descriptors=tuple(descriptors),
             diagnostics=tuple(findings),
-            entry_xml=_resolved_xml(xml, properties),
+            entry_xml=_analysis_xml(entry_root, xml, changed),
         )
 
 
@@ -268,43 +268,49 @@ def _diagnostic(message: str, *, path: tuple[str | int, ...], identity: CeErrorI
     )
 
 
+# The undotted form of the runtime's whole-value rule (dispatch.retrieve_element_attributes, which is not DSL
+# API); a .properties file is flat. Keep the two in step.
 _PLACEHOLDER = r"\{([a-zA-Z_][a-zA-Z0-9_]*)\}"
 
 
-def _include_properties(documents: Sequence[etree._Element], base_dir: Path) -> dict[str, str]:
-    """The properties of every literal ``.properties`` include, entry first and steps in graph order, later
-    files overriding earlier ones. An unreadable file adds nothing: the parser reports it."""
-    properties: dict[str, str] = {}
-    for document in documents:
-        for node in document.iter("include"):
-            uri = node.get("uri", "")
-            if PurePosixPath(uri).suffix == ".properties" and not any(mark in uri for mark in "{\\:"):
-                try:
-                    properties.update(parse_properties(base_dir / uri))
-                except (OSError, ValueError):
-                    continue
-    return properties
+def _resolve_project_targets(
+    entry: etree._Element, steps: dict[str, etree._Element], base_dir: Path
+) -> set[etree._Element]:
+    """Substitute whole-value ``{name}`` placeholders in ``target`` attributes in place, in the order the runtime
+    parses them: a literal ``.properties`` include applies to the siblings after it and their subtrees, and a step
+    starts from the properties its include saw. An undefined name stays as written. A step's own ``.properties``
+    includes are ignored: the runtime resolves them against the step's directory, where they fail. Returns the
+    documents that changed."""
+    changed: set[etree._Element] = set()
 
+    def walk(element: etree._Element, inherited: dict[str, str], document: etree._Element, in_step: bool) -> None:
+        properties = dict(inherited)
+        for child in element:
+            if not isinstance(child.tag, str):
+                continue
+            uri = child.get("uri", "")
+            if child.tag == "include":
+                if PurePosixPath(uri).suffix == ".properties" and not in_step and not any(m in uri for m in "{\\:"):
+                    with suppress(OSError, ValueError):  # an unreadable file adds nothing: the parser reports it
+                        properties.update(parse_properties(base_dir / uri))
+                elif uri in steps:
+                    walk(steps[uri], properties, steps[uri], True)
+                continue
+            target = child.get("target")
+            placeholder = re.fullmatch(_PLACEHOLDER, target) if target else None
+            if placeholder is not None and placeholder[1] in properties:
+                child.attrib["target"] = properties[placeholder[1]]
+                changed.add(document)
+            walk(child, properties, document, in_step)
 
-def _resolve_targets(document: etree._Element, properties: dict[str, str]) -> bool:
-    """Substitute whole-value ``{name}`` placeholders in ``target`` attributes in place; an undefined name stays
-    as written. Returns whether anything changed. The runtime's own rule (``retrieve_element_attributes``) is not
-    part of the DSL API, and a .properties file is flat, so only the undotted form applies."""
-    changed = False
-    for node in document.iter():
-        target = node.get("target") if isinstance(node.tag, str) else None
-        placeholder = re.fullmatch(_PLACEHOLDER, target) if target else None
-        if placeholder is not None and placeholder[1] in properties:
-            node.attrib["target"] = properties[placeholder[1]]
-            changed = True
+    walk(entry, {}, entry, False)
     return changed
 
 
-def _resolved_xml(xml: str, properties: dict[str, str]) -> str:
-    """``xml`` with its target placeholders resolved, or ``xml`` itself when none applies, so line numbers
-    only move for a descriptor that uses a placeholder."""
-    document = parse_xml_source(xml)
-    return etree.tostring(document, encoding="unicode") if _resolve_targets(document, properties) else xml
+def _analysis_xml(root: etree._Element, xml: str, changed: set[etree._Element]) -> str:
+    """The document as analysis reads it: re-serialised only when a placeholder resolved, so line numbers move
+    only for a descriptor that uses one."""
+    return etree.tostring(root, encoding="unicode") if root in changed else xml
 
 
 def _graph_refused(path: PurePosixPath, message: str) -> IncludeGraphResult:
