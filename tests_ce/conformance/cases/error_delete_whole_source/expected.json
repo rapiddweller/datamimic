@@ -1,0 +1,9 @@
+{
+  "area": "error-handling",
+  "outcome": "error",
+  "error_code": "E014",
+  "issue_code": "I928",
+  "edition_notes": {
+    "ee": "EE 4.x rewrites this delete to a clear and warns with W003. The bridge goes in EE 5.0; until then EE does not pass this case."
+  }
+}
