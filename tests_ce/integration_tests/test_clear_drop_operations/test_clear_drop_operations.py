@@ -69,6 +69,7 @@ def _rows_left() -> int:
     [
         ("refused_call_syntax", "runs only as a source-free one-time statement"),
         ("refused_include_in_generate", "root-only operations"),
+        ("refused_nested_include_in_generate", "root-only operations"),
     ],
 )
 def test_a_clear_that_would_repeat_is_refused_and_keeps_the_rows(model: str, reason: str):

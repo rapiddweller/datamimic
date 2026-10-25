@@ -1,0 +1,3 @@
+<setup>
+    <include uri="cleanup_step.xml"/>
+</setup>

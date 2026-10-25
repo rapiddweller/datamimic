@@ -393,6 +393,7 @@ class SetupContext(Context):
             copied._descriptor_client_history = copy.deepcopy(history, memo)
             memo[id(history)] = copied._descriptor_client_history
         copied._owned_descriptor_clients = copy.deepcopy(self._owned_descriptor_clients, memo)
+        copied._within_generate = self._within_generate
         if self._total_row_budget is not None:
             copied._total_row_budget = self._total_row_budget
         return copied
