@@ -74,3 +74,32 @@ Setup-level `<if>` and `<while>` are not valid CE children (I604), so they need 
 **NOT VERIFIED:**
 - Full suites, and mypy at this head. The coordinator reports both clean.
 - CI.
+
+## Addendum: `ac0e5ad3` and `139558a5` (skip-only dry-run)
+
+**Accepted at `139558a5`.**
+
+**What changed.** A dry-run that only skipped a clear or drop now reports ok, with the `not_executed` warning.
+
+**Blocked at ac0e5ad3.** That head set `base_run_ok = base_run_ok or bool(skipped)`. Build's gate reads that value, so adding a skipped clear turned a rejected zero-row Build into `ready`.
+
+**Fixed in 139558a5.** A skip now counts only when nothing else was captured: `base_run_ok or (bool(skipped) and not captured.products)`.
+
+**Re-probed against ce393-pg.** The table stays at 2 rows after every command.
+
+| Project | dry-run | Build |
+|---|---|---|
+| A zero-row product with `exact_count 0` and a skipped clear | rejected | rejected |
+| The same project without the clear | rejected | rejected |
+| Cleanup-only | ok, with the warning | rejected (no products) |
+| Clear followed by rows | ok | `ready`, with the warning |
+
+**Low.** With a skipped clear present, the specific "Bounded execution produced no captured rows." diagnostic is suppressed. A zero-row project with a clear is therefore rejected only by Build's generic gate message. Emitting that diagnostic whenever a product exists without rows would name the reason.
+
+**Binding.** Source and Validation move. Unknowns, Contract and the 20 diagnostics are unchanged, and so are the 1,428 / 182 / 261 measurements.
+
+**LOCAL VERIFIED:**
+- The four probes.
+- `test_clear_drop_authoring`.
+- ruff.
+- Native collection and the strict completion gate.
