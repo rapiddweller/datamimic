@@ -104,6 +104,14 @@ def test_a_clear_with_a_wrong_shape_is_refused_with_i928_in_every_mode(workspace
     assert _rows(workspace) == 2
 
 
+def test_a_descriptor_that_only_clears_is_a_successful_dry_run_with_the_warning(workspace: Path):
+    result = _app(workspace).dry_run(_request(xml=_setup(_CLEAR)))
+    assert result.ok
+    assert result.products == ()
+    assert [str(item.code) for item in result.diagnostics] == ["not_executed"]
+    assert _rows(workspace) == 2
+
+
 def test_run_with_side_effects_clears_inside_the_contained_run_only(workspace: Path):
     result = _app(workspace).run(_request(xml=_setup(_CLEAR, _READ_AFTER), allow_side_effects=True))
     assert [(product.name, len(product.rows)) for product in result.products] == [("items_left", 0)]
@@ -126,6 +134,17 @@ def test_build_proves_the_products_and_reports_the_clear_it_did_not_run(workspac
     assert result.assurance.mode == "target_isolated"
     (warning,) = [item for item in result.diagnostics if item.severity == "warning"]
     assert "clear_items" in warning.message
+    assert _rows(workspace) == 2
+
+
+def test_build_of_a_project_that_only_cleans_up_has_no_product_to_prove_and_is_rejected(workspace: Path):
+    result = build_project(
+        workspace,
+        _setup(_CLEAR),
+        version="5.0",
+        environment_bindings=[{"environment": "db", "family": "database"}],
+    )
+    assert result.outcome == "rejected"
     assert _rows(workspace) == 2
 
 
