@@ -265,6 +265,8 @@ def _decode_reply(payload: bytes, request: BoundedExecutionRequest, workspace: P
             for _ in message.smoke_diagnostics
         )
         base_run_ok = any(product.rows for product in captured.products)
+        # A side-effect run of a clear or drop succeeded when the engine raised nothing; it captures no rows.
+        ran_operation = bool(message.executed_operations)
         # A skipped clear or drop is reported, not failed: bounded execution neither ran it nor proves its effect.
         skipped: tuple[Diagnostic, ...] = ()
         for name in message.skipped_operations:
@@ -283,7 +285,7 @@ def _decode_reply(payload: bytes, request: BoundedExecutionRequest, workspace: P
                     ),
                 ),
             )
-        if not base_run_ok and not skipped:
+        if not base_run_ok and not skipped and not ran_operation:
             diagnostics += (
                 Diagnostic(
                     code=AuthoringSystemDiagnosticCode.NOT_EXECUTED,
@@ -293,7 +295,7 @@ def _decode_reply(payload: bytes, request: BoundedExecutionRequest, workspace: P
                 ),
             )
         return BoundedExecutionEvidence(
-            ok=(base_run_ok or bool(skipped)) and not diagnostics,
+            ok=(base_run_ok or bool(skipped) or ran_operation) and not diagnostics,
             captured=captured,
             diagnostics=diagnostics + skipped,
             smoke_export=message.smoke_export,
@@ -303,7 +305,7 @@ def _decode_reply(payload: bytes, request: BoundedExecutionRequest, workspace: P
             ),
             # A run that only skipped clear/drop has nothing to capture and nothing failed. A product without rows
             # next to a skipped clear stays a failure, as without the clear; Build still needs products.
-            base_run_ok=base_run_ok or (bool(skipped) and not captured.products),
+            base_run_ok=base_run_ok or ((bool(skipped) or ran_operation) and not captured.products),
             files=_read_file_digests(message.read_files, request, workspace),
         )
     except (

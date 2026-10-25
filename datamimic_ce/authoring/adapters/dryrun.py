@@ -129,6 +129,8 @@ class _WorkerSuccess:
     read_files: tuple[NonEmptyStrictStr, ...] = ()
     # Names of the clear and drop statements bounded execution skipped instead of running.
     skipped_operations: tuple[NonEmptyStrictStr, ...] = ()
+    # Names of the clear and drop statements a side-effect run executed: they establish success without a product.
+    executed_operations: tuple[NonEmptyStrictStr, ...] = ()
 
 
 @dataclass(frozen=True, config=ConfigDict(extra="forbid", strict=True, revalidate_instances="always"))
@@ -600,11 +602,12 @@ def neutralize_for_dry_run(
     included_memstores: set[str] | None = None,
     graph_producers: tuple[_MemstoreProducer, ...] | None = None,
     skipped_operations: list[str] | None = None,
+    executed_operations: list[str] | None = None,
 ) -> None:
     """Statement transformer: cap counts, keep only memstore targets, force 1 process.
     A source-free clear or drop is checked for its shape (I928, as at runtime) and then skipped: bounded execution
     must neither run it nor invent a row count for it. Its name goes to ``skipped_operations`` for the report.
-    With side effects allowed it stays as written.
+    With side effects allowed it stays as written and its name goes to ``executed_operations``.
     When a collector dict is given, the FILE targets removed from each product are
     recorded so smoke_export can replay the captured rows through them afterwards."""
     from datamimic_ce.engine.dsl.api import (
@@ -660,6 +663,8 @@ def neutralize_for_dry_run(
                 dropped.add(id(stmt))
                 if skipped_operations is not None:
                     skipped_operations.append(stmt.name)
+            elif executed_operations is not None:
+                executed_operations.append(stmt.name)
             return
         if not allow_side_effects and isinstance(stmt, (DatabaseStatement, MongoDBStatement)):
             stmt.model.read_only = True
@@ -1045,6 +1050,7 @@ def _validated_worker_success(message: _WorkerSuccess, max_count: int | None = N
         message.source_accesses,
         message.read_files,
         message.skipped_operations,
+        message.executed_operations,
     )
     names = [budget.name for budget in message.budgets]
     if len(names) != len(set(names)):
@@ -1215,6 +1221,7 @@ def _run_engine_capture(
 
         budgets: _ProductBudgets = {}
         skipped: list[str] = []
+        executed: list[str] = []
         stripped: _StrippedTargets | None = {} if smoke_export else None
         try:
             included_memstores, graph_producers = _validate_bounded_includes(
@@ -1232,6 +1239,7 @@ def _run_engine_capture(
                 included_memstores=included_memstores,
                 graph_producers=graph_producers,
                 skipped_operations=skipped,
+                executed_operations=executed,
             )
             session = create_run_session(
                 RunRequest(
@@ -1270,6 +1278,7 @@ def _run_engine_capture(
                 smoke_export=smoke_export_capture,
                 source_accesses=source_accesses.snapshot(),
                 skipped_operations=tuple(skipped),
+                executed_operations=tuple(executed),
             )
         except Exception as err:
             if is_user_error(err):

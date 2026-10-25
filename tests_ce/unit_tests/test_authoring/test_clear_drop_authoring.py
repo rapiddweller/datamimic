@@ -121,6 +121,24 @@ def test_run_with_side_effects_clears_inside_the_contained_run_only(workspace: P
     assert _rows(workspace) == 2  # the workspace database is a private copy in a contained run
 
 
+def test_a_descriptor_that_only_clears_succeeds_with_side_effects_too(workspace: Path):
+    result = _app(workspace).run(_request(xml=_setup(_CLEAR), allow_side_effects=True))
+    assert result.ok, result.diagnostics
+    assert result.products == ()
+    assert _rows(workspace) == 2  # the workspace database is a private copy in a contained run
+
+
+@pytest.mark.parametrize("allow_side_effects", [False, True])
+def test_an_include_inside_a_generate_never_reaches_bounded_execution(workspace: Path, allow_side_effects: bool):
+    # The engine refuses clear/drop in such a step (I928); bounded execution refuses the include itself first.
+    (workspace / "cleanup.xml").write_text(f"<setup>{_CLEAR}</setup>")
+    xml = _setup('<generate name="rows" count="2"><key name="x" constant="1"/><include uri="cleanup.xml"/></generate>')
+    result = _app(workspace).run(_request(xml=xml, allow_side_effects=allow_side_effects))
+    assert not result.ok
+    assert [str(item.code) for item in result.diagnostics if item.severity == "error"] == ["side_effect"]
+    assert _rows(workspace) == 2
+
+
 def test_build_proves_the_products_and_reports_the_clear_it_did_not_run(workspace: Path):
     result = build_project(
         workspace,
