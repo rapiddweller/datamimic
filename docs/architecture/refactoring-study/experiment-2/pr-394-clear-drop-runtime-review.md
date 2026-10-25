@@ -91,3 +91,53 @@ The methods are now named `clear_table`, `clear_collection`, `drop_collection`, 
 **NOT VERIFIED:**
 - Full suites and mypy at this head. The coordinator reports 3,262 unit and 15 integration tests passing.
 - CI.
+
+## Addendum: `8feb975a` and `7d92af2d` (Codex bypasses)
+
+**Accepted at `7d92af2d`.** Codex found two bypasses; both are fixed.
+
+**Bypass 1: the call-syntax spelling `db.clear()` with a count.**
+- `from_target` does not recognise the parenthesised form. The registry normalises it to CLEAR, so it ran once per page through row dispatch.
+- Fix: `consume_exporters` now refuses CLEAR and DROP with I928 unless `statement_operation=True`.
+- Only `GenerateWorker.run_statement_operation` passes `True`. `export_product_by_page` forwards it only to the statement's own `dispatch_page`, and nested children dispatch with `False`.
+
+**Bypass 2: an `<include>` inside a `<generate>`.**
+- The included step runs in a copied `SetupContext`, so the root-level check accepted a clear there, and it ran once per row.
+- Fix: `IncludeTask._execute_with_geniter_context` sets `within_generate`, and the shape check refuses it.
+
+**Blocked at `8feb975a`.** `SetupContext.__deepcopy__` did not copy `_within_generate`. An include inside that include started with `False` again. Probe: include → include → clear under a `<generate count="2">` cleared twice.
+
+**Fixed in `7d92af2d`.** The flag is now copied. Worker projection (`worker_projection` is a deepcopy, sent with dill, which keeps `__dict__`) and nested include copies (`_copy_include_context` is a deepcopy) both keep it. Only the root context is built without a copy.
+
+**Re-probed with SQLite and `datamimic run`.** In every case below the rows stay untouched and no clear runs:
+
+| Case | Result |
+|---|---|
+| `db.clear(x=1)`, ` db.clear() `, `ConsoleExporter, db.clear()` | I928 |
+| `db.clear()` with `numProcess=2` | I928 |
+| A nested child with `db.clear()` | I928 |
+| `db.drop()` on an RDBMS | I928 |
+| Include → clear under a `<generate>` | I928 |
+| Include → include → clear under a `<generate>` | I928 |
+| Three levels of include under a `<generate>` | I928 |
+| The include → include case with `numProcess=2` | I928 |
+| A step's `<generate>` that includes a clear | I928 |
+| A multiprocess `<generate>` in a step inside a `<generate>` include | I928 |
+
+The intended root and setup-include clears still run once.
+
+**Low.** In a mixed list such as `db.insert, db.clear()`, the insert in the same page runs before the refusal. Nothing is cleared.
+
+**UNKNOWN churn (record by record).**
+- The three new `within_generate` positions (value, return `bool`, return `None`) join `inherited_surface`.
+- 27 later `SetupContext` positions are re-issued under new ids. Only their `occurrence` index differs; qualified name, position and annotation are identical. They stay in the same group.
+- The boundary summary records only update their position counts.
+
+**Binding.**
+- Moved: Source, Validation and Unknowns. The receipt now holds 319 UNKNOWN records, and unknown positions rose to 261.
+- Unchanged: Contract, analyzer, the 20 diagnostics, and the 1428 / 182 measurements.
+
+**LOCAL VERIFIED:**
+- The 12-case run probe at 8feb975a, and the 8-case nested and multiprocess probe at 7d92af2d.
+- A content-matched UNKNOWN diff against a fresh collection at `1ca4b09d`.
+- Native collection and the strict completion gate.
