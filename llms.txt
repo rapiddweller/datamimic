@@ -24,6 +24,7 @@ Repository contributors read [AGENTS.md](AGENTS.md) and use `.venv/bin/datamimic
 - Existing XML: `datamimic authoring lint model.xml`, then `datamimic authoring dry-run model.xml`; real execution uses `datamimic run model.xml`.
 - [Worked Build projects](docs/examples/authoring.md): nested FK, memstore readback, time series.
 - [Migration](docs/migrations/authoring-errors.md): frozen legacy intent compiler → XML and separate Build proof.
+- [Destructive database operations](docs/guides/destructive-database-operations.md): clear, drop and selective delete, rules, logs, conformance cases.
 
 ## Project
 
