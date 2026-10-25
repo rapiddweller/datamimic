@@ -141,3 +141,24 @@ Suggested fix: emit the no-rows diagnostic whenever `captured.products` exist an
 - `test_clear_drop_authoring`.
 - ruff.
 - Native collection and the strict completion gate.
+
+## Addendum: `918238c1` (no-rows diagnostic)
+
+**Accepted.** The Low from `70d4e22a` is resolved: the "no captured rows" error now fires whenever a declared product captured none. This holds whether or not a clear or drop is skipped or executed next to it.
+
+Re-probed against ce393-pg:
+
+| Project | dry-run | `authoring run --allow-side-effects` | Build |
+|---|---|---|---|
+| Zero-row product and a clear | rejected, names the missing rows | rejected, names the missing rows (the clear ran) | rejected, names the missing rows |
+| Cleanup only | ok, with the warning | ok, no diagnostics | rejected (no products) |
+| Clear followed by rows | ok, with the warning | ok | `ready`, with the warning |
+| Zero-row product, no clear | rejected | rejected | rejected |
+
+**Binding.** Only the Source digest moves. Validation, Unknowns, Contract and the 20 diagnostics are unchanged, and so are the 1,428 / 182 / 261 measurements.
+
+**LOCAL VERIFIED:**
+- The 12-command probe matrix.
+- `test_clear_drop_authoring`.
+- ruff.
+- Native collection and the strict completion gate.
