@@ -84,8 +84,10 @@ check: lint typecheck test
 architecture-definition-check:
 	uvx --python 3.11 --from pytest==8.3.5 pytest -q tests_ce/architecture/test_recursive_target_definition.py tests_ce/architecture/test_current_module_concerns.py tests_ce/architecture/test_exact_module_targets.py tests_ce/architecture/test_registry_entrypoints.py::test_registry_owns_exact_initializer_and_keeps_package_selector tests_ce/architecture/test_public_api_contract_ownership.py::test_existing_entrypoints_have_explicit_inner_public_decisions
 
+# The result is one line of ~140 KB; keep it out of the job log, where it buries the reason a later step fails.
 architecture-report:
-	uvx --python $(ARCHKEEL_PYTHON) --from '$(ARCHKEEL_SOURCE)' archkeel report --output $(ARCHITECTURE_DIR)/architecture.json --json
+	mkdir -p $(ARCHITECTURE_DIR)
+	uvx --python $(ARCHKEEL_PYTHON) --from '$(ARCHKEEL_SOURCE)' archkeel report --output $(ARCHITECTURE_DIR)/architecture.json --json > $(ARCHITECTURE_DIR)/report.stdout.json
 
 architecture-version:
 	@version="$$(uvx --python $(ARCHKEEL_PYTHON) --from '$(ARCHKEEL_SOURCE)' archkeel --version)" && test "$$version" = 'archkeel $(patsubst archkeel==%,%,$(ARCHKEEL_SOURCE))' && printf '%s\n' "$${version#archkeel }"
