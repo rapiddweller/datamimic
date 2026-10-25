@@ -24,7 +24,9 @@ from datamimic_ce.authoring.domain.dm_json import (
     DmJsonNodeV1,
     DmJsonScalar,
 )
+from datamimic_ce.authoring.domain.script_semantics import names_statement_operation
 from datamimic_ce.engine.dsl.api import (
+    EXIST_COUNT,
     DTDForbiddenError,
     canonical_tag,
     check_constraints,
@@ -143,8 +145,12 @@ def _normalize_node(node: DmJsonNodeV1, *, path: tuple[str | int, ...]) -> DmJso
         mode = next(item for item in definition.content_modes if item.kind == node.content.kind)
         for attribute in mode.required_attributes:
             attributes[attribute] = node.content.value
+    constraints = element_constraints(node.kind)
+    target = attributes.get("target")
+    if isinstance(target, str) and names_statement_operation(target):
+        constraints = tuple(constraint for constraint in constraints if constraint != EXIST_COUNT)  # runs once
     try:
-        check_constraints(attributes, element_constraints(node.kind))
+        check_constraints(attributes, constraints)
     except ValueError as error:
         raise DmJsonCodecError(
             "Element properties violate registered DSL constraints.", path=path + ("properties",)

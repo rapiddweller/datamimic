@@ -68,6 +68,7 @@ class CeDslCatalog:
         from datamimic_ce.domains.api import iter_generator_capabilities as domain_generators
         from datamimic_ce.domains.api import list_entity_specs
         from datamimic_ce.engine.dsl.api import (
+            EL_MONGODB,
             EXPORTER_CONSOLE_EXPORTER,
             EXPORTER_LOG_EXPORTER,
             EXPORTER_TEST_RESULT_EXPORTER,
@@ -143,7 +144,17 @@ class CeDslCatalog:
                     TargetFamilyCapability(
                         name=element.name,
                         requires_client=definition.client_family,
-                        operations=("insert", *(operation.value for operation in ExportOperation))
+                        operations=(
+                            "insert",
+                            *(
+                                operation.value
+                                for operation in (
+                                    ExportOperation.for_mongodb()
+                                    if element.name == EL_MONGODB
+                                    else ExportOperation.for_rdbms()
+                                )
+                            ),
+                        )
                         if definition.client_family
                         else ("insert",),
                     )

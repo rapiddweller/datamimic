@@ -55,7 +55,16 @@ _STATIC_TARGETS = {
 }
 # Dotted <clientId>.<op> write operations, derived from the engine's own enum so
 # this rule cannot drift from what the exporter boundary accepts (SPOT).
-_CLIENT_OPERATIONS = {op.value for op in ExportOperation}
+
+
+def _client_operations(ctx: LintContext, target: str) -> tuple[ExportOperation, ...]:
+    """The operations the family of the target's client accepts; all of them while the client is not declared."""
+    client = target.partition(".")[0]
+    for root in (ctx.root, *ctx.project[:1]):
+        for element in root.iter(EL_DATABASE, EL_MONGODB):
+            if element.get("id") == client:
+                return ExportOperation.for_mongodb() if element.tag == EL_MONGODB else ExportOperation.for_rdbms()
+    return ExportOperation.for_mongodb()
 
 
 def _declared_ids(ctx: LintContext) -> tuple[set[str], set[str]]:
@@ -159,6 +168,7 @@ def _check_target_entry(
     memstores: set[str],
     buffered_exporter_names: frozenset[str],
     declarations_complete: bool,
+    operations: tuple[ExportOperation, ...],
 ) -> tuple[str | None, str | None]:
     """Validate one parsed target entry name.
 
@@ -172,10 +182,11 @@ def _check_target_entry(
                 f'Declare <mongodb id="{base}"/> or <database id="{base}" .../>.',
             )
         operation = name.split(".", 1)[1]
-        if operation not in _CLIENT_OPERATIONS:
+        accepted = sorted(item.value for item in operations)
+        if operation not in accepted:
             return (
                 f"operation '{operation}' in target '{name}' is unknown",
-                f"Client operations: {', '.join(sorted(_CLIENT_OPERATIONS))}; plain clientId inserts.",
+                f"Client operations: {', '.join(accepted)}; plain clientId inserts.",
             )
         return (None, None)
     static_targets = _STATIC_TARGETS | buffered_exporter_names
@@ -213,7 +224,12 @@ class UnknownTarget(Rule):
                     )
                     continue
                 evidence, fix_context = _check_target_entry(
-                    function_name, clients, memstores, ctx.buffered_exporter_names, ctx.declarations_complete
+                    function_name,
+                    clients,
+                    memstores,
+                    ctx.buffered_exporter_names,
+                    ctx.declarations_complete,
+                    _client_operations(ctx, function_name),
                 )
                 if evidence is not None:
                     yield ctx.diag(UnknownTarget, element, evidence=evidence, fix_context=fix_context)
