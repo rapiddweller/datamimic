@@ -9,6 +9,8 @@
 The models are DSL files next to this test; the RDBMS runs on SQLite. MongoDB drop and clear run in the
 external-service tests."""
 
+import json
+import shutil
 import sqlite3
 from pathlib import Path
 
@@ -58,6 +60,17 @@ def test_clear_on_a_read_only_client_is_blocked_and_keeps_the_rows():
         assert connection.execute("SELECT COUNT(*) FROM items").fetchone() == (1,)
 
 
+def test_a_clear_before_a_file_export_leaves_the_exported_file_complete():
+    out = _DIR / "output"
+    shutil.rmtree(out, ignore_errors=True)
+    try:
+        _run("clear_then_json_export.xml")
+        (exported,) = list(out.rglob("exported.json"))
+        assert [row["id"] for row in json.loads(exported.read_text(encoding="utf-8"))] == [1, 2, 3]
+    finally:
+        shutil.rmtree(out, ignore_errors=True)
+
+
 def _rows_left() -> int:
     # SQLite files live under the working directory
     with sqlite3.connect(Path.cwd() / "db" / "clear_ops_refused.sqlite") as connection:
@@ -67,7 +80,7 @@ def _rows_left() -> int:
 @pytest.mark.parametrize(
     ("model", "reason"),
     [
-        ("refused_call_syntax", "runs only as a source-free one-time statement"),
+        ("refused_call_syntax", "forbidden attributes: count"),
         ("refused_include_in_generate", "root-only operations"),
         ("refused_nested_include_in_generate", "root-only operations"),
     ],

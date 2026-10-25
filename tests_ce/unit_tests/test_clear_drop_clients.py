@@ -17,6 +17,7 @@ from sqlalchemy import create_engine
 from sqlalchemy.exc import OperationalError
 
 from datamimic_ce.engine.dsl.model.generation.generate_model import GenerateModel
+from datamimic_ce.engine.dsl.vocabulary.constants.attribute_constants import META_TARGET_ENTITY
 from datamimic_ce.engine.dsl.vocabulary.enums.dbms_enums import Dbms
 from datamimic_ce.engine.dsl.vocabulary.enums.operation_enums import ExportOperation, split_targets
 from datamimic_ce.engine.io.clients.mongodb_client import MongoDBClient
@@ -218,3 +219,55 @@ def test_clear_and_drop_need_no_count_but_delete_still_does():
         GenerateModel(name="c", target="db.delete")
     with pytest.raises(ValidationError, match="Missing attribute 'count'"):
         GenerateModel(name="c", target="db.deleted")
+
+
+@pytest.mark.parametrize(
+    "target",
+    [
+        "db.clear",
+        "db.clear()",
+        "db.clear(x=1)",
+        " db.clear ",
+        "db . clear",
+        "db.clear( )",
+        "mongo.drop()",
+        "db.delete()",
+    ],
+)
+def test_the_operation_is_read_the_way_the_exporter_registry_reads_the_target(target):
+    from datamimic_ce.engine.dsl.parsers.input.target import parse_function_string
+
+    (parsed,) = parse_function_string(target)
+    registry_view = ExportOperation.from_target(parsed["function_name"])
+    assert registry_view is not None
+    assert ExportOperation.from_target(target) == registry_view
+
+
+@pytest.mark.parametrize(
+    "target", ["CSV", "db", "db.patch", "db.clear.extra", "1 +", "db.clear[0]", "ConsoleExporter()"]
+)
+def test_a_target_that_is_not_a_client_operation_has_none(target):
+    assert ExportOperation.from_target(target) is None
+
+
+def test_row_dispatch_refuses_clear_and_drop_whatever_reached_it():
+    from datamimic_ce.engine.io.exporters.database.database_exporter import DatabaseExporter
+    from datamimic_ce.engine.io.exporters.session import consume_exporters
+
+    client = MagicMock()
+    exporter = DatabaseExporter(client)
+    for operation in (ExportOperation.CLEAR, ExportOperation.DROP):
+        with pytest.raises(OperationError) as caught:
+            consume_exporters(("rows", [{}]), [{}], "rows", [(exporter, operation)], [], MagicMock())
+        assert caught.value.issue_code is IssueCode.OPERATION_INTENT_INVALID
+    client.clear_table.assert_not_called()
+    consume_exporters(
+        ("rows", [], {META_TARGET_ENTITY: "items"}),
+        [],
+        "rows",
+        [(exporter, ExportOperation.CLEAR)],
+        [],
+        MagicMock(),
+        True,
+    )
+    client.clear_table.assert_called_once_with("items")

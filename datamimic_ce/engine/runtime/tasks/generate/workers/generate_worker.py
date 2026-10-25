@@ -49,11 +49,11 @@ class GenerateWorker:
     def run_statement_operation(stmt: GenerateStatement, root_context: SetupContext) -> dict[str, list]:
         """Dispatch a source-free ``clear`` or ``drop`` once. The statement carries no rows, so the product is
         registered empty, as for count 0, and its exporter performs the operation on the target entity."""
-        if root_context.export_session is None:
-            root_context.export_session = ExportSession(0)
         logger.info(f"Executing one-time operations for statement '{stmt.full_name}'")
         result: dict[str, list] = {stmt.full_name: []}
-        export_product_by_page(stmt, result, root_context.export_session, root_context, statement_operation=True)
+        # A session of its own: the shared one belongs to the row-producing generates (their worker id names the
+        # buffered files they finalize), and a clear or drop writes none.
+        export_product_by_page(stmt, result, ExportSession(1), root_context, statement_operation=True)
         return result
 
     @staticmethod

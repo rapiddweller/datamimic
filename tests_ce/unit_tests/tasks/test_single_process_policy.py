@@ -54,6 +54,7 @@ def _mysql_client() -> RdbmsClient:
         _gen(children=[_child(ReferenceStatement, unique=True)]),  # <reference unique>
         _gen(children=[_child(ReferenceStatement, is_composite=True)]),  # composite <reference>
         _gen(targets=["mytable.delete"]),  # delete operation
+        _gen(targets=["mytable.delete()"]),  # the same operation, spelled as a call
     ],
 )
 def test_policy_forces_single_process(stmt):

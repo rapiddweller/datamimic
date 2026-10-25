@@ -4,6 +4,7 @@
 # See LICENSE file for the full text of the license.
 # For questions and support, contact: info@rapiddweller.com
 
+import ast
 import re
 from enum import StrEnum
 
@@ -30,12 +31,19 @@ class ExportOperation(StrEnum):
 
     @classmethod
     def from_target(cls, target: str) -> tuple[str, "ExportOperation"] | None:
-        """``("db", ExportOperation.CLEAR)`` for the target ``db.clear``; None for a plain or unknown-suffix target."""
-        client, dot, suffix = target.partition(".")
-        if not dot:
+        """``("db", ExportOperation.CLEAR)`` for the target ``db.clear``; None for a plain or unknown-suffix target.
+
+        The target is read as an expression, as the exporter registry reads it, so ``db.clear()``, ``db.clear(x=1)``
+        and ``db . clear`` name the same operation as ``db.clear``."""
+        try:
+            expression = ast.parse(target.strip(), mode="eval").body
+        except SyntaxError:
+            return None
+        named = expression.func if isinstance(expression, ast.Call) else expression
+        if not (isinstance(named, ast.Attribute) and isinstance(named.value, ast.Name)):
             return None
         try:
-            return client, ExportOperation(suffix)
+            return named.value.id, ExportOperation(named.attr)
         except ValueError:
             return None
 
