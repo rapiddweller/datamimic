@@ -49,7 +49,7 @@ Bounded execution touched no row in any case.
 
 ## Findings (not P1)
 
-- **Info, pre-existing.** `selector=""` passes the rule. The run then fails with a raw `KeyError`, and nothing is deleted. The coordinator will file a follow-up issue.
+- **Superseded by the `ee592e12` addendum below.** At 6e0bea4f, `selector=""` passed the rule. Without a `count` the run failed with a raw `KeyError`, but with a `count` it deleted every row. For a delete, a blank selector now gives I928. #397 tracks the raw `KeyError` for other operations.
 - **Info.** The shared set also makes one step's clients visible to later steps. Such a reference fails at runtime anyway, so at worst dry-run reports I928 where the run reports a missing client.
 - **Tests.** The mock change in `test_generate_task.py` (`delete_intent_problem.return_value = None`) is needed for a `MagicMock` statement. The DSL tests and the probes cover the real behavior.
 
@@ -66,3 +66,34 @@ Bounded execution touched no row in any case.
 **NOT VERIFIED:**
 - Full suites, mypy, and the external services. The coordinator reports these.
 - CI.
+
+## Addendum: `ee592e12` (Codex P1, blank selector)
+
+**Accepted.** The hole was real.
+
+- **The hole:** with `count="5" source="db" sourceEntity="items" selector="" targetEntity="items" target="db.delete"`, the code at `c32e8343` deleted both rows. The run exited 0 and logged "Cannot get length…". The source reader treats a blank selector as absent and reads the whole entity.
+- **The fix:** `delete_intent_problem` treats an empty or whitespace selector as no selector.
+
+Re-probed with SQLite, 2 rows in the table:
+
+| Case | `datamimic run` | dry-run | Build | Rows left |
+|---|---|---|---|---|
+| `selector=""` with a count | I928 | I928 | I928 | 2 |
+| `selector="   "` with a count | I928 | I928 | I928 | 2 |
+| `selector="&#10;"` with a count | I928 | I928 | I928 | 2 |
+| Blank selector in an included step | I928 | I928 | I928 | 2 |
+| A real selector (`WHERE id = 1`) | deletes 1 row | ok | rejected (cardinality unknown) | 1 (run) |
+
+#397 stays open for the raw `KeyError` that other operations hit with a blank selector.
+
+**Binding.**
+- Source, Validation and Unknowns move. Against a fresh collection at `6e0bea4f`, the Unknowns move is only re-issued `fact_ids` and `evidence_ids`. The 319 ids and their groups are unchanged.
+- Contract, analyzer and the 20 diagnostics are unchanged, and so are the 1,428 / 182 / 261 measurements.
+
+**LOCAL VERIFIED:**
+- The hole reproduced on the old code.
+- The 5-case probe at `ee592e12`.
+- `test_clear_drop_clients` and the delete DSL tests: 39 passed.
+- ruff.
+- A clean gate run.
+- The strict completion gate after the rebind.
