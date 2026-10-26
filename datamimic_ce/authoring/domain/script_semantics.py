@@ -171,52 +171,94 @@ def names_statement_operation(target: str | None) -> bool:
     return False
 
 
-# Calls whose result does not depend on the order in which they read a set argument.
-_ORDER_FREE_CALLS = frozenset({"sorted", "len", "min", "max", "sum", "any", "all", "set", "frozenset"})
+# Calls whose result does not depend on the order in which they read a set argument. sorted, min and max lose this
+# with key=: ties keep the set order.
+_ORDER_FREE_CALLS = frozenset({"sorted", "len", "min", "max", "sum", "any", "all", "bool", "set", "frozenset"})
+_KEYED_CALLS = frozenset({"sorted", "min", "max"})
+# Conversions that keep the set order; an order-free call around them stays order-free: len(list(set(x))).
+_ORDER_KEEPING_CALLS = frozenset({"list", "tuple"})
+_SET_PREDICATES = frozenset({"issubset", "issuperset", "isdisjoint"})
+_DICT_VIEWS = frozenset({"keys", "items"})
 _SET_OPERATORS = (ast.BitOr, ast.BitAnd, ast.Sub, ast.BitXor)
 # Script attributes that hold one Python expression.
 SCRIPT_PROPERTIES = ("script", "condition")
+
+
+def _called_name(node: ast.AST | None) -> str | None:
+    return node.func.id if isinstance(node, ast.Call) and isinstance(node.func, ast.Name) else None
+
+
+def _is_dict_view(node: ast.AST) -> bool:
+    return (
+        isinstance(node, ast.Call)
+        and isinstance(node.func, ast.Attribute)
+        and node.func.attr in _DICT_VIEWS
+        and not node.args
+    )
 
 
 def _is_set(node: ast.AST) -> bool:
     if isinstance(node, ast.Set | ast.SetComp):
         return True
     if isinstance(node, ast.Call):
-        return isinstance(node.func, ast.Name) and node.func.id in ("set", "frozenset")
+        return _called_name(node) in ("set", "frozenset")
+    # d.keys() - e.keys() is a set too.
     return (
         isinstance(node, ast.BinOp)
         and isinstance(node.op, _SET_OPERATORS)
-        and (_is_set(node.left) or _is_set(node.right))
+        and any(_is_set(side) or _is_dict_view(side) for side in (node.left, node.right))
+    )
+
+
+def _has_fixed_order(node: ast.AST) -> bool:
+    """A literal set of numbers iterates in the same order under every hash seed: a number hashes to its value."""
+    elements: list[ast.expr] | None = None
+    if isinstance(node, ast.Set):
+        elements = node.elts
+    elif (
+        isinstance(node, ast.Call) and len(node.args) == 1 and isinstance(node.args[0], ast.List | ast.Tuple | ast.Set)
+    ):
+        elements = node.args[0].elts
+    return elements is not None and all(
+        isinstance(element, ast.Constant) and isinstance(element.value, int | float) for element in elements
+    )
+
+
+def _reads_order_free(node: ast.AST, parents: dict[int, ast.AST]) -> bool:
+    parent = parents.get(id(node))
+    while isinstance(parent, ast.Call) and _called_name(parent) in _ORDER_KEEPING_CALLS:
+        node, parent = parent, parents.get(id(parent))
+    if isinstance(parent, ast.Compare | ast.UnaryOp) or (isinstance(parent, ast.BinOp) and _is_set(parent)):
+        return True
+    if isinstance(parent, ast.IfExp) and parent.test is node:
+        return True
+    # {...}.issubset(x) and x.issubset({...}) give a bool.
+    if isinstance(parent, ast.Attribute) and parent.attr in _SET_PREDICATES:
+        return True
+    if isinstance(parent, ast.Call) and isinstance(parent.func, ast.Attribute) and parent.func.attr in _SET_PREDICATES:
+        return True
+    name = _called_name(parent)
+    return (
+        isinstance(parent, ast.Call)
+        and name in _ORDER_FREE_CALLS
+        and node in parent.args
+        and not (name in _KEYED_CALLS and any(keyword.arg == "key" for keyword in parent.keywords))
     )
 
 
 def iterates_a_set(script: str) -> bool:
     """Whether a script reads a set in an order-dependent way (#425). The order of a set of strings follows the
-    process hash seed, which rngSeed does not fix. Membership tests, comparisons and order-free calls such as
-    sorted(...) or len(...) are safe; a set that is iterated, converted or returned is not. A set reached through a
-    name is not seen; deterministic replay with a different hash seed is the proof."""
+    process hash seed, which rngSeed does not fix. Membership tests, comparisons, set predicates and order-free calls
+    such as sorted(...) or len(...) are safe; a set that is iterated, converted or returned is not. This is a lint
+    hint, not a proof: a set reached through a name, a variable or a helper is not seen."""
     try:
         tree = ast.parse(script, mode="eval")
     except SyntaxError:
         return False
     parents = {id(child): node for node in ast.walk(tree) for child in ast.iter_child_nodes(node)}
-    for node in ast.walk(tree):
-        if not _is_set(node):
-            continue
-        parent = parents.get(id(node))
-        if isinstance(parent, ast.Compare | ast.UnaryOp) or (isinstance(parent, ast.BinOp) and _is_set(parent)):
-            continue
-        if isinstance(parent, ast.IfExp) and parent.test is node:
-            continue
-        if (
-            isinstance(parent, ast.Call)
-            and isinstance(parent.func, ast.Name)
-            and parent.func.id in _ORDER_FREE_CALLS
-            and node in parent.args
-        ):
-            continue
-        return True
-    return False
+    return any(
+        _is_set(node) and not _has_fixed_order(node) and not _reads_order_free(node, parents) for node in ast.walk(tree)
+    )
 
 
 class ReplayCause(StrEnum):
