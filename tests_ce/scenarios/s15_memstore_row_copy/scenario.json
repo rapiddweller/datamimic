@@ -19,8 +19,13 @@
   },
   "negatives": [
     {
-      "dir": "negative/producer_has_mark",
-      "diagnostic": "field_absent"
+      "name": "producer_has_mark",
+      "diagnostic": "field_absent",
+      "patch": {
+        "file": "datamimic.xml",
+        "old": "<key name=\"code\" generator=\"IncrementGenerator\"/>\n",
+        "new": "<key name=\"code\" generator=\"IncrementGenerator\"/>\n        <key name=\"mark\" constant=\"written by the producer\"/>\n"
+      }
     }
   ]
 }

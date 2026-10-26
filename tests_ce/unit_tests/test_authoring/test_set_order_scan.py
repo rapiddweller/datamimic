@@ -7,6 +7,7 @@ partition of a classifier, and the mutant needs to change the replay hash seeds.
 tests_ce/scenarios/s17_set_hash_order: its negatives are rejected by the replay under other hash seeds, sorted(...)
 and a membership test stay ready."""
 
+import json
 import shutil
 from pathlib import Path
 
@@ -115,7 +116,14 @@ _SET_ORDER_NEGATIVES = ("set_order", "two_element_set", "sorted_key_tie", "dict_
 def _build_negative(name: str, tmp_path: Path) -> BuildResult:
     project = tmp_path / name
     shutil.copytree(_S17, project)
-    shutil.copytree(_S17 / "negative" / name, project, dirs_exist_ok=True)
+    # scenario.json holds the one patch that makes each negative.
+    (patch,) = (
+        item["patch"] for item in json.loads((_S17 / "scenario.json").read_text())["negatives"] if item["name"] == name
+    )
+    entry = project / patch["file"]
+    text = entry.read_text(encoding="utf-8")
+    assert text.count(patch["old"]) == 1, f"the {name} patch must match exactly once"
+    entry.write_text(text.replace(patch["old"], patch["new"]), encoding="utf-8")
     return create_authoring_application(project, descriptor_path=PROJECT_ENTRY_PATH).build()
 
 

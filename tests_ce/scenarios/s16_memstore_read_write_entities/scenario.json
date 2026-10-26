@@ -14,12 +14,22 @@
   },
   "negatives": [
     {
-      "dir": "negative/write_into_read_entity",
-      "diagnostic": "input"
+      "name": "write_into_read_entity",
+      "diagnostic": "input",
+      "patch": {
+        "file": "datamimic.xml",
+        "old": "type=\"demand\" distribution=\"ordered\" target=\"mem\">",
+        "new": "type=\"demand\" distribution=\"ordered\" target=\"mem\" targetEntity=\"demand\">"
+      }
     },
     {
-      "dir": "negative/read_unwritten_entity",
-      "diagnostic": "input"
+      "name": "read_unwritten_entity",
+      "diagnostic": "input",
+      "patch": {
+        "file": "datamimic.xml",
+        "old": "<generate name=\"slot_readback\" source=\"mem\" sourceEntity=\"slots\"",
+        "new": "<generate name=\"slot_readback\" source=\"mem\" sourceEntity=\"slot\""
+      }
     }
   ]
 }

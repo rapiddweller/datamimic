@@ -12,12 +12,23 @@
   },
   "negatives": [
     {
-      "dir": "negative/system_random",
-      "diagnostic": "child_execution"
+      "name": "system_random",
+      "diagnostic": "child_execution",
+      "run_error": "'random.SystemRandom' draws entropy that <setup rngSeed> cannot replay",
+      "patch": {
+        "file": "lib/draws.scr.py",
+        "old": "from random import weibullvariate as weibull\n\n\ndef spread():\n    return round(triangular(0, 10, 3), 6)\n",
+        "new": "from random import SystemRandom\nfrom random import weibullvariate as weibull\n\n\ndef spread():\n    return round(SystemRandom().random() * 10, 6)\n"
+      }
     },
     {
-      "dir": "negative/subclass_random",
-      "diagnostic": "validation"
+      "name": "subclass_random",
+      "diagnostic": "validation",
+      "patch": {
+        "file": "lib/draws.scr.py",
+        "old": "def dice():\n    return randint(1, 6)\n",
+        "new": "class LocalRandom(Random):\n    pass\n\n\ndef dice():\n    return LocalRandom().randint(1, 6)\n"
+      }
     }
   ]
 }

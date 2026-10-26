@@ -11,24 +11,49 @@
   },
   "negatives": [
     {
-      "dir": "negative/set_order",
-      "diagnostic": "validation"
+      "name": "set_order",
+      "diagnostic": "validation",
+      "patch": {
+        "file": "datamimic.xml",
+        "old": "script=\"sorted({'alpha', 'bravo', 'charlie', 'delta', 'echo', 'foxtrot', 'golf', 'hotel'}).index('bravo')\"",
+        "new": "script=\"list({'alpha', 'bravo', 'charlie', 'delta', 'echo', 'foxtrot', 'golf', 'hotel'}).index('bravo')\""
+      }
     },
     {
-      "dir": "negative/two_element_set",
-      "diagnostic": "validation"
+      "name": "two_element_set",
+      "diagnostic": "validation",
+      "patch": {
+        "file": "datamimic.xml",
+        "old": "script=\"sorted({'alpha', 'bravo', 'charlie', 'delta', 'echo', 'foxtrot', 'golf', 'hotel'}).index('bravo')\"",
+        "new": "script=\"['north', 'south'].index(list({'north', 'south'})[0])\""
+      }
     },
     {
-      "dir": "negative/sorted_key_tie",
-      "diagnostic": "validation"
+      "name": "sorted_key_tie",
+      "diagnostic": "validation",
+      "patch": {
+        "file": "datamimic.xml",
+        "old": "script=\"sorted({'alpha', 'bravo', 'charlie', 'delta', 'echo', 'foxtrot', 'golf', 'hotel'}).index('bravo')\"",
+        "new": "script=\"['alpha', 'bravo', 'charlie', 'delta', 'echo', 'foxtrot', 'golf', 'hotel'].index(sorted({'alpha', 'bravo', 'charlie', 'delta', 'echo', 'foxtrot', 'golf', 'hotel'}, key=len)[0])\""
+      }
     },
     {
-      "dir": "negative/dict_view_difference",
-      "diagnostic": "validation"
+      "name": "dict_view_difference",
+      "diagnostic": "validation",
+      "patch": {
+        "file": "datamimic.xml",
+        "old": "script=\"sorted({'alpha', 'bravo', 'charlie', 'delta', 'echo', 'foxtrot', 'golf', 'hotel'}).index('bravo')\"",
+        "new": "script=\"['alpha', 'bravo', 'charlie', 'delta', 'echo', 'foxtrot'].index(list({'alpha': 1, 'bravo': 2, 'charlie': 3, 'delta': 4, 'echo': 5, 'foxtrot': 6}.keys() - {'zulu': 0}.keys())[0])\""
+      }
     },
     {
-      "dir": "negative/variable_set",
-      "diagnostic": "validation"
+      "name": "variable_set",
+      "diagnostic": "validation",
+      "patch": {
+        "file": "datamimic.xml",
+        "old": "<key name=\"id\" generator=\"IncrementGenerator\"/>\n        <key name=\"flag\" script=\"sorted({'alpha', 'bravo', 'charlie', 'delta', 'echo', 'foxtrot', 'golf', 'hotel'}).index('bravo')\"",
+        "new": "<variable name=\"pool\" script=\"{'alpha', 'bravo', 'charlie', 'delta', 'echo', 'foxtrot', 'golf', 'hotel'}\"/>\n        <key name=\"id\" generator=\"IncrementGenerator\"/>\n        <key name=\"flag\" script=\"['alpha', 'bravo', 'charlie', 'delta', 'echo', 'foxtrot', 'golf', 'hotel'].index(list(pool)[0])\""
+      }
     }
   ]
 }
