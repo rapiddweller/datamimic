@@ -4,8 +4,14 @@
     "a seeded flat table reproduces the same rows on every run",
     "ids are unique, status stays in a closed set, battery stays in a numeric range"
   ],
-  "products": {"devices": 20},
+  "products": {
+    "devices": 20
+  },
   "negatives": [
-    {"dir": "negative/wrong_count", "diagnostic": "exact_count"}
+    {
+      "dir": "negative/wrong_count",
+      "diagnostic": "exact_count",
+      "expected": "19"
+    }
   ]
 }

@@ -23,6 +23,7 @@ class Negative(BaseModel):
 
     dir: StrictStr
     diagnostic: StrictStr
+    expected: StrictStr | None = None
 
 
 class Scenario(BaseModel):
@@ -86,3 +87,6 @@ def test_negative_is_rejected_with_named_diagnostic(directory: Path, negative: N
     assert isinstance(rejected, RejectedBuild), "Build accepted a variant that must be rejected"
     codes = [str(item.code) for item in rejected.diagnostics]
     assert negative.diagnostic in codes, f"expected {negative.diagnostic}, Build reported {codes}"
+    if negative.expected is not None:  # one code covers many rules; the expectation text names the rule
+        named = [str(item.expected) for item in rejected.diagnostics if str(item.code) == negative.diagnostic]
+        assert negative.expected in named, f"expected {negative.expected!r}, Build reported {named}"

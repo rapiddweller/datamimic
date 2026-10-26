@@ -22,7 +22,7 @@ The id starts with `s`, a two-digit number and a short name, for example `s02_pa
 | `title` | One short line. |
 | `proves` | A list of short sentences. Each sentence is a fact the scenario shows. |
 | `products` | Product name to expected row count of a normal run. |
-| `negatives` | A list of `{"dir": "negative/<name>", "diagnostic": "<code>"}`. |
+| `negatives` | A list of `{"dir": "negative/<name>", "diagnostic": "<code>", "expected": "<text>"}`. `expected` is optional. Use it when one code covers several rules (for example `row_condition`): it is the `expected` text of the diagnostic, which names the rule. |
 
 A negative `diagnostic` is a code that Build reports, for example `exact_count` or `DM315`.
 Build must reject the variant, and the code must be in the list of diagnostics.
