@@ -27,4 +27,4 @@ def test_sql_execute_interpolates_before_missing_client_lookup(target, missing_k
 
     assert raised.value.issue_code.value == "I823"
     assert raised.value.__cause__.args == (missing_key,)
-    context.evaluate_python_expression.assert_called_once_with("f'''SELECT {value}'''")
+    context.evaluate_python_expression.assert_called_once_with("f'''SELECT {value}'''", text_from_data=True)
