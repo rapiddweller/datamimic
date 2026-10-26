@@ -18,6 +18,7 @@ from datamimic_ce.authoring.domain.requests import (
     ReferenceTopic,
     RejectedBuild,
 )
+from tests_ce.authoring_project import build_project
 
 _PROJECT = Path(__file__).resolve().parents[2] / "scenarios" / "s13_file_projection"
 
@@ -91,6 +92,28 @@ def test_a_default_build_without_a_target_keeps_the_plain_reason(tmp_path: Path)
     )
 
     result = create_authoring_application(project, descriptor_path=PROJECT_ENTRY_PATH).build()
+
+    assert isinstance(result, ReadyBuild), result.diagnostics
+    assert result.verification.smoke_export.reason == "Smoke export was not requested"
+
+
+def test_a_default_build_with_only_a_memstore_target_keeps_the_plain_reason(tmp_path: Path) -> None:
+    """A memstore is read back in the same run; datamimic run writes nothing for it under output/."""
+    xml = (
+        '<setup rngSeed="7"><memstore id="mem"/><generate name="parents" count="3" target="mem">'
+        '<key name="id" generator="IncrementGenerator"/></generate><generate name="readback" source="mem" '
+        'type="parents" distribution="ordered"><key name="id" script="this.id"/></generate></setup>'
+    )
+    roles = (
+        {"product": "parents", "field": "id", "role": {"kind": "identifier"}},
+        {
+            "product": "readback",
+            "field": "id",
+            "role": {"kind": "foreign_key", "parent_product": "parents", "parent_field": "id"},
+        },
+    )
+
+    result = build_project(tmp_path, xml, product_roles=roles)
 
     assert isinstance(result, ReadyBuild), result.diagnostics
     assert result.verification.smoke_export.reason == "Smoke export was not requested"

@@ -21,17 +21,18 @@ def smoke_export_evidence(
     requested: bool,
     capture: SmokeExportCapture,
     *,
-    targeted: bool = False,
+    writes_targets: bool,
 ) -> SmokeExportEvidence:
-    """Project typed internal smoke facts without inspecting diagnostics. ``targeted``: the model names a target."""
+    """Project typed internal smoke facts without inspecting diagnostics. ``writes_targets``: the model names a
+    target other than a memstore."""
 
     if not requested:
         return (
             SmokeExportEvidence(
-                reason="Smoke export was not requested. Build writes no file into the project; only datamimic run "
-                "datamimic.xml writes file targets, under output/<exportUri or the task id>/ beside datamimic.xml"
+                reason="Smoke export was not requested. Build writes to no target; only datamimic run datamimic.xml "
+                "does, and it writes file targets under output/<exportUri or the task id>/ beside datamimic.xml"
             )
-            if targeted
+            if writes_targets
             else SmokeExportEvidence()
         )
     if not capture.requested:

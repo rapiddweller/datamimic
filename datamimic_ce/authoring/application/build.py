@@ -221,12 +221,23 @@ class BuildDocumentWorkflow:
             *first.diagnostics,
             *(() if failed else evaluate_acceptance(acceptance, first.captured)),
         )
-        targeted = any(
-            node.properties.get("target")
+        project_nodes = tuple(
+            node
             for project_document in (document, *(step for _, step in steps))
             for node, _ in iter_dm_json_nodes(project_document)
         )
-        smoke = smoke_export_evidence(verification_options.smoke_export, first.smoke_export, targeted=targeted)
+        targeted = any(node.properties.get("target") for node in project_nodes)
+        memstores = {node.properties.get("id") for node in project_nodes if node.kind == "memstore"}
+        # A memstore is read back in the same run, so only another target is written by datamimic run.
+        writes_targets = any(
+            entry.strip() not in memstores
+            for node in project_nodes
+            if isinstance(target := node.properties.get("target"), str)
+            for entry in target.split(",")
+        )
+        smoke = smoke_export_evidence(
+            verification_options.smoke_export, first.smoke_export, writes_targets=writes_targets
+        )
         read: list[ProjectFileDigest] = [
             ProjectFileDigest(path=PROJECT_ACCEPTANCE_PATH, sha256=sha256(acceptance_bytes).hexdigest()),
             ProjectFileDigest(path=PROJECT_ENTRY_PATH, sha256=sha256(entry_bytes).hexdigest()),
