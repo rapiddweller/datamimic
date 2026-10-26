@@ -8,7 +8,9 @@
   ],
   "products": {"priced_orders": 6},
   "negatives": [
-    {"dir": "negative/generate_source_copies_columns", "diagnostic": "field_absent"},
-    {"dir": "negative/count_above_source_rows", "diagnostic": "validation"}
+    {"name": "generate_source_copies_columns", "diagnostic": "field_absent",
+     "patch": {"file": "datamimic.xml", "old": "count=\"6\" target=\"JSON\"", "new": "source=\"fixtures/orders.csv\" distribution=\"ordered\" target=\"JSON\""}},
+    {"name": "count_above_source_rows", "diagnostic": "validation",
+     "patch": {"file": "datamimic.xml", "old": "count=\"6\"", "new": "count=\"7\""}}
   ]
 }

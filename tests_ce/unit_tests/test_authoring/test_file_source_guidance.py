@@ -5,6 +5,7 @@
 """A blind agent finds the file-source projection and the place of the written file (#417). The projects are in
 tests_ce/scenarios/s13_file_projection; this module checks the texts that lead an agent there."""
 
+import json
 import shutil
 from pathlib import Path
 
@@ -23,11 +24,14 @@ from tests_ce.authoring_project import build_project
 _PROJECT = Path(__file__).resolve().parents[2] / "scenarios" / "s13_file_projection"
 
 
-def _copy(tmp_path: Path, variant: str | None = None) -> Path:
+def _copy(tmp_path: Path, negative: str | None = None) -> Path:
     project = tmp_path / "project"
     shutil.copytree(_PROJECT, project)
-    if variant is not None:
-        shutil.copytree(_PROJECT / "negative" / variant, project, dirs_exist_ok=True)
+    if negative is not None:  # the scenario.json patch is the single source of the variant
+        negatives = json.loads((_PROJECT / "scenario.json").read_text(encoding="utf-8"))["negatives"]
+        [patch] = [item["patch"] for item in negatives if item["name"] == negative]
+        target = project / patch["file"]
+        target.write_text(target.read_text(encoding="utf-8").replace(patch["old"], patch["new"]), encoding="utf-8")
     return project
 
 
