@@ -416,8 +416,9 @@ def _declared_seed(work: Path) -> str | None:
 
 def _copy(project: Path, case: str, destination: Path, fixtures: str = _FIXTURES) -> Path:
     """A private copy, with the case's ``fixtures`` directory laid over ``fixtures/`` so the agent cannot change it."""
-    # output/ holds files from the agent's own runs; only the oracle runs may write there
-    shutil.copytree(project, destination, ignore=shutil.ignore_patterns("output"))
+    # output/ holds files from the agent's own runs; only the oracle runs may write there. casefold: macOS file
+    # systems ignore case, so the engine writes into a shipped Output/ too.
+    shutil.copytree(project, destination, ignore=lambda _, names: [n for n in names if n.casefold() == "output"])
     source = CASES / case / fixtures
     if source.is_dir():
         shutil.copytree(source, destination / _FIXTURES, dirs_exist_ok=True)

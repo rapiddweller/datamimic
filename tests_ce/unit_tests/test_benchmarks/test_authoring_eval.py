@@ -21,6 +21,8 @@ from benchmarks.authoring_eval.oracle import (
     ExactRows,
     FieldRef,
     Observed,
+    OracleSpec,
+    OutputRows,
     PerParentCount,
     Repeatable,
     Unique,
@@ -346,11 +348,14 @@ def test_broken_variant_fails_exactly_the_expected_checks(broken: Broken, tmp_pa
     assert not evaluate(broken.case, project).passed
 
 
-def test_output_file_left_by_the_agents_own_run_does_not_count(tmp_path: Path) -> None:
+@pytest.mark.parametrize("folder", ["output", "Output"])  # macOS file systems ignore case
+def test_output_file_left_by_the_agents_own_run_does_not_count(folder: str, tmp_path: Path) -> None:
     project = _reference(tmp_path, "e04")
-    stale = project / "output" / "earlier-run"
+    stale = project / folder / "earlier-run"
     stale.mkdir(parents=True)
-    (stale / "priced_orders.json").write_text(json.dumps([{}] * 6), encoding="utf-8")
+    spec = OracleSpec.model_validate_json((CASES / "e04" / "oracle.json").read_text(encoding="utf-8"))
+    right = next(check for check in spec.checks if isinstance(check, OutputRows) and check.fixtures == "fixtures")
+    (stale / "priced_orders.json").write_text(json.dumps(right.rows), encoding="utf-8")
     (project / _XML).write_text((project / _XML).read_text(encoding="utf-8").replace(' target="JSON"', ""))
 
     assert _failed(project, "e04") == _BOTH_OUTPUTS
