@@ -139,11 +139,14 @@ class UnknownAttribute(Rule):
                 continue  # unknown element, no attribute schema, or credentials-style open model
             valid = set(schema.attributes)
             for attr in element.attrib:
-                attr_name = str(attr)
-                if attr_name not in valid:
+                if str(attr) not in valid:
+                    # lxml names a namespaced attribute {uri}local; the URI is a value and can carry credentials.
+                    attr_name = etree.QName(attr).localname
                     suggestion = difflib.get_close_matches(attr_name, sorted(valid), n=1)
                     hint = (
-                        f"Did you mean '{suggestion[0]}'?"
+                        "Remove the namespace prefix; DATAMIMIC attributes have no namespace."
+                        if attr_name != str(attr)
+                        else f"Did you mean '{suggestion[0]}'?"
                         if suggestion
                         else f"Valid attributes: {', '.join(sorted(valid))}."
                     )

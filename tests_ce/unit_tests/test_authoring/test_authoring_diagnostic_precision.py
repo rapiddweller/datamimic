@@ -69,6 +69,61 @@ def test_lint_and_dry_run_never_echo_descriptor_values(tmp_path: Path, key: str)
     assert result.exit_code == 1, result.output  # every case is rejected at the latest by bounded execution
 
 
+_NAMESPACE_SECRET = "Hunter2SECRET"
+_NAMESPACE = f"https://admin:{_NAMESPACE_SECRET}@db.internal/"
+
+
+@pytest.mark.parametrize(
+    ("generate", "rule"),
+    [
+        (
+            f'<generate name="r" count="1"><key xmlns:s="{_NAMESPACE}" s:x="1" name="id" constant="1"/></generate>',
+            "DM103",
+        ),
+        (
+            f'<generate xmlns:s="{_NAMESPACE}" s:name="r" name="r" count="1"><key name="id" constant="1"/></generate>',
+            "DM103",
+        ),
+        (f'<generate name="r" count="1"><key xmlns="{_NAMESPACE}" name="id" constant="1"/></generate>', "I604"),
+    ],
+)
+def test_namespace_uri_is_never_echoed(tmp_path: Path, generate: str, rule: str) -> None:
+    """A namespace URI is an attribute value; lxml carries it in the Clark name {uri}local of each namespaced name."""
+    write_project(tmp_path, f"<setup>{generate}</setup>")
+    runner = CliRunner()
+    outputs = [
+        runner.invoke(app, ["authoring", "lint", str(tmp_path / "datamimic.xml")]).output,
+        runner.invoke(app, ["authoring", "dry-run", str(tmp_path / "datamimic.xml")]).output,
+        runner.invoke(app, ["authoring", "build", str(tmp_path)]).output,
+    ]
+    for output in outputs:
+        assert _NAMESPACE_SECRET not in output
+    # Negative control: every command still reports the namespaced name, so the check above cannot pass vacuously.
+    assert all(rule in output for output in outputs), outputs
+
+
+@pytest.mark.parametrize(
+    ("key", "rule"),
+    [
+        ('type="int" min="1" max="5" separator="{secret}"', "DM214"),
+        ('generator="IntegerGenerator" min="{secret}" max="{secret}"', "DM218"),
+    ],
+)
+def test_names_only_rules_never_echo_attribute_values(tmp_path: Path, key: str, rule: str) -> None:
+    """DM214 and DM218 name attributes from the schema constraints, never from the document."""
+    sentinel = "AUDIT_NAMES_ONLY_SECRET_9c1"
+    xml = f'<setup><generate name="r" count="1"><key name="k" {key.format(secret=sentinel)}/></generate></setup>'
+    write_project(tmp_path, xml)
+    runner = CliRunner()
+    outputs = [
+        runner.invoke(app, ["authoring", "lint", str(tmp_path / "datamimic.xml")]).output,
+        runner.invoke(app, ["authoring", "build", str(tmp_path)]).output,
+    ]
+    for output in outputs:
+        assert sentinel not in output
+        assert rule in output, output
+
+
 def test_declared_rows_above_max_count_name_the_exact_retry_bound(tmp_path: Path) -> None:
     write_project(
         tmp_path,
