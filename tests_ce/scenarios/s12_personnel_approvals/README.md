@@ -138,7 +138,7 @@ The outcomes of the reference brief map to these cases:
 
 Product limits. Issue #420 tracks them.
 
-- No `delivery/` and no cleanup step. Build refuses the SQL that creates a table (`unsupported_bounded_operation`), and an SQLite insert does not create its table. So the project writes CSV files, and a new run writes new files. There is no transaction boundary: each table is written on its own, and a failed run can leave some files.
+- No `delivery/` and no cleanup step. Build refuses the SQL that creates a table (`unsupported_bounded_operation`), and an SQLite insert does not create its table. So the project writes CSV files, and a new run writes new files. There is no transaction boundary: each table is written on its own. The R4 assert stops the run before any CSV; an infeasible run exits 0 and writes the master tables without `staffing.csv`.
 - Build drops the message of a failed `<assert>` and every capture (only `child_execution`). So only the R4 maximum stops the run. The plan checks are row conditions, which only Build checks: a search with a defect still delivers a plan that breaks a rule, and the run ends with exit 0. When the plan is not complete, the run writes the master data tables and no `staffing.csv`.
 - The export keys list the 27 columns, but they do not filter: a source field outside the list reaches the CSV. Build has no exact field-set expectation, and an export without `source=` needs a literal count that silently truncates a longer file.
 - Build caps the bounded capture at 1000 rows in total. The base case uses 925. So the trace leaves out the `try` decisions, and a search mutant that skips many people can exceed the cap.
