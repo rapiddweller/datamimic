@@ -5,6 +5,7 @@
 """Run every scenario directory (README.md holds the contract). The projects are the test; this module only
 copies, Builds, runs and compares."""
 
+import re
 import shutil
 from pathlib import Path
 
@@ -13,6 +14,7 @@ from pydantic import BaseModel, ConfigDict, StrictInt, StrictStr, model_validato
 
 from datamimic_ce.authoring import create_authoring_application
 from datamimic_ce.authoring.domain.requests import PROJECT_ENTRY_PATH, BuildResult, ReadyBuild, RejectedBuild
+from datamimic_ce.errors.base import TaskConfigError
 from datamimic_ce.interfaces.python.data_mimic_test import DataMimicTest
 
 _ROOT = Path(__file__).resolve().parent
@@ -37,6 +39,8 @@ class Negative(BaseModel):
     dir: StrictStr | None = None
     diagnostic: StrictStr
     expected: StrictStr | None = None
+    # A normal run of the variant must also stop, with an error that contains this text.
+    run_error: StrictStr | None = None
 
     @model_validator(mode="after")
     def _one_change(self) -> "Negative":
@@ -108,7 +112,9 @@ def test_scenario_builds_runs_and_replays(directory: Path, tmp_path: Path, monke
     _NEGATIVES,
     ids=[f"{path.name}/{negative.name}" for path, negative in _NEGATIVES],
 )
-def test_negative_is_rejected_with_named_diagnostic(directory: Path, negative: Negative, tmp_path: Path) -> None:
+def test_negative_is_rejected_with_named_diagnostic(
+    directory: Path, negative: Negative, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
     project = _copy(directory, tmp_path / "variant")
     _apply(negative, directory, project)
     rejected = _build(project)
@@ -118,3 +124,7 @@ def test_negative_is_rejected_with_named_diagnostic(directory: Path, negative: N
     if negative.expected is not None:  # one code covers many rules; the expectation text names the rule
         named = [str(item.expected) for item in rejected.diagnostics if str(item.code) == negative.diagnostic]
         assert negative.expected in named, f"expected {negative.expected!r}, Build reported {named}"
+    if negative.run_error is not None:
+        monkeypatch.chdir(project)
+        with pytest.raises(TaskConfigError, match=re.escape(negative.run_error)):
+            _run(project)

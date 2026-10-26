@@ -25,6 +25,7 @@ The id starts with `s`, a two-digit number and a short name, for example `s02_pa
 
 A negative `diagnostic` is a code that Build reports, for example `exact_count` or `DM315`.
 Build must reject the variant, and the code must be in the list of diagnostics.
+A negative can also give `run_error`. Then a normal run of the variant must stop with an error that contains this text.
 
 ## What the test does
 
