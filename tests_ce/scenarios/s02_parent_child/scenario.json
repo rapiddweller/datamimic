@@ -1,0 +1,13 @@
+{
+  "title": "Customers and their orders",
+  "proves": [
+    "each order copies the real identifier of its customer",
+    "every customer has exactly three orders",
+    "the local line number is unique per customer and the order id is unique overall"
+  ],
+  "products": {"customers": 4, "orders": 12},
+  "negatives": [
+    {"dir": "negative/random_child_key", "diagnostic": "input"},
+    {"dir": "negative/wrong_orders_per_customer", "diagnostic": "per_parent_count"}
+  ]
+}

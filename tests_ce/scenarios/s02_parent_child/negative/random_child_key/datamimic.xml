@@ -1,0 +1,12 @@
+<setup rngSeed="23">
+    <generate name="customers" count="4">
+        <key name="customer_id" generator="IncrementGenerator"/>
+        <key name="segment" values="('retail', 'business')"/>
+        <generate name="orders" count="3">
+            <key name="line_no" generator="IncrementGenerator"/>
+            <key name="order_id" script="parent.customer_id * 10 + this.line_no"/>
+            <key name="customer_id" type="int" min="1" max="4"/>
+            <key name="amount" type="int" min="5" max="500"/>
+        </generate>
+    </generate>
+</setup>

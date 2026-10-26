@@ -1,0 +1,13 @@
+{
+  "version": "5.0",
+  "max_count": 20,
+  "product_roles": [
+    {"product": "devices", "field": "device_id", "role": {"kind": "identifier"}}
+  ],
+  "expectations": [
+    {"kind": "exact_count", "subject": {"kind": "product", "product": "devices"}, "count": 19},
+    {"kind": "unique", "subject": {"kind": "product", "product": "devices"}, "field": "device_id"},
+    {"kind": "allowed_values", "subject": {"kind": "product", "product": "devices"}, "field": "status", "values": ["active", "idle", "retired"]},
+    {"kind": "range", "subject": {"kind": "product", "product": "devices"}, "field": "battery_pct", "minimum": 0, "maximum": 100}
+  ]
+}
