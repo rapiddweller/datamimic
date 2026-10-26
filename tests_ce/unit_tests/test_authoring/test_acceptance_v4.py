@@ -704,6 +704,17 @@ def test_two_writers_of_one_memstore_entity_are_ambiguous():
         )
 
 
+def test_a_memstore_read_that_no_product_writes_names_the_cause():
+    # type="shared" on the producer no longer names its written entity (#422); it writes "a".
+    with pytest.raises(AcceptanceProjectionError, match="No product writes the memstore entity"):
+        project(
+            '<setup><memstore id="store"/>'
+            '<generate name="a" type="shared" count="1" target="store"><key name="id" constant="1"/></generate>'
+            '<generate name="copy" source="store" sourceEntity="shared">'
+            '<key name="id" script="this.id"/></generate></setup>'
+        )
+
+
 def test_mutually_exclusive_branches_share_output_fields():
     spec = project(
         '<setup><generate name="rows" count="3"><condition>'
