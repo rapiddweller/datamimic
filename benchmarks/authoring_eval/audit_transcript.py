@@ -4,12 +4,13 @@
 
 """Audit a sub-agent transcript (#412) for forbidden actions; a run with a finding does not count.
 
-    python -m benchmarks.authoring_eval.audit_transcript <transcript.jsonl> --allow <run-dir> --allow <venv> \
-        --forbid <repository-root>
+    python -m benchmarks.authoring_eval.audit_transcript <transcript.jsonl> --allow <run-dir> \
+        --allow <venv>/bin/datamimic --forbid <repository-root> [--canary <token>]
 
-The transcript is Claude Code JSONL. Only the tool calls of assistant messages are examined: the brief itself
-names the forbidden things. Limit: the shell is read for absolute and ``~`` paths only; relative paths and
-paths built by variables or commands are not resolved."""
+The transcript is Claude Code JSONL. The tool calls of assistant messages are examined: a tool outside the
+allowlist, a path outside the allowed roots, a mention of AGENTS.md. The canary token is searched in every line,
+tool results included. Limit: the shell is read for absolute and ``~`` paths only; relative paths and paths built
+by variables or commands are not resolved."""
 
 import argparse
 import json
@@ -21,8 +22,10 @@ from dataclasses import asdict, dataclass
 from enum import StrEnum
 from pathlib import Path
 
-_SKILL_TOOL = "Skill"
+# The only tools a subject gets; the runner passes the same set to `claude --tools`.
+ALLOWED_TOOLS = ("Bash", "Read", "Write", "Edit", "Glob", "Grep")
 _SHELL_TOOL = "Bash"
+_GLOB_TOOL = "Glob"
 _PATH_KEYS = ("file_path", "path", "notebook_path")
 _PATTERN_KEYS = ("pattern",)
 _AGENTS_FILE = "agents.md"
@@ -32,10 +35,11 @@ _SHELL_PATH = re.compile(r"(?<![\w.:/$~-])(?:~?/)[^\s'\"|;&<>()`$]*")
 
 
 class FindingKind(StrEnum):
-    SKILL = "skill"
+    TOOL = "tool"
     AGENTS_FILE = "agents_file"
     FORBIDDEN_ROOT = "forbidden_root"
     OUTSIDE_ALLOWED = "outside_allowed"
+    CANARY = "canary"
 
 
 @dataclass(frozen=True)
@@ -70,7 +74,8 @@ def _paths(tool: str, tool_input: dict[str, object]) -> list[str]:
     if tool == _SHELL_TOOL:
         command = tool_input.get("command")
         return [path for path in _SHELL_PATH.findall(command) if _is_path(path)] if isinstance(command, str) else []
-    return [value for key in _PATH_KEYS if isinstance(value := tool_input.get(key), str) and os.path.isabs(value)]
+    keys = (*_PATH_KEYS, *_PATTERN_KEYS) if tool == _GLOB_TOOL else _PATH_KEYS
+    return [value for key in keys if isinstance(value := tool_input.get(key), str) and os.path.isabs(value)]
 
 
 def _scanned_text(tool: str, tool_input: dict[str, object]) -> list[str]:
@@ -89,13 +94,13 @@ def _spellings(roots: Sequence[Path]) -> list[Path]:
     return [Path(os.path.normpath(root)) for root in roots] + [Path(os.path.realpath(root)) for root in roots]
 
 
-def audit(transcript: Path, allow: Sequence[Path], forbid: Sequence[Path]) -> list[Finding]:
+def audit(transcript: Path, allow: Sequence[Path], forbid: Sequence[Path], canary: str | None = None) -> list[Finding]:
     allowed = _spellings(allow) + list(_SYSTEM_PATHS)
     forbidden = _spellings(forbid)
     findings = []
     for line, tool, tool_input in _tool_calls(transcript):
-        if tool == _SKILL_TOOL:
-            findings.append(Finding(line, FindingKind.SKILL, tool, str(tool_input.get("skill", ""))))
+        if tool not in ALLOWED_TOOLS:
+            findings.append(Finding(line, FindingKind.TOOL, tool, "tool outside the allowlist"))
         if any(_AGENTS_FILE in text.casefold() for text in _scanned_text(tool, tool_input)):
             findings.append(Finding(line, FindingKind.AGENTS_FILE, tool, "mentions AGENTS.md"))
         for path in _paths(tool, tool_input):
@@ -103,16 +108,23 @@ def audit(transcript: Path, allow: Sequence[Path], forbid: Sequence[Path]) -> li
                 findings.append(Finding(line, FindingKind.FORBIDDEN_ROOT, tool, path))
             if not _under(path, allowed):
                 findings.append(Finding(line, FindingKind.OUTSIDE_ALLOWED, tool, path))
+    with transcript.open(encoding="utf-8") as lines:
+        findings += [
+            Finding(number, FindingKind.CANARY, "", "canary token in the transcript")
+            for number, text in enumerate(lines, start=1)
+            if canary and canary in text
+        ]
     return findings
 
 
 def main(argv: list[str]) -> int:
     parser = argparse.ArgumentParser(prog="python -m benchmarks.authoring_eval.audit_transcript")
     parser.add_argument("transcript", type=Path)
-    parser.add_argument("--allow", type=Path, action="append", required=True, help="the run directory and the venv")
+    parser.add_argument("--allow", type=Path, action="append", required=True, help="the run dir, <venv>/bin/datamimic")
     parser.add_argument("--forbid", type=Path, action="append", default=[], help="a root the agent must not touch")
+    parser.add_argument("--canary", help="a token that only a leaked instruction file holds")
     arguments = parser.parse_args(argv)
-    findings = audit(arguments.transcript, arguments.allow, arguments.forbid)
+    findings = audit(arguments.transcript, arguments.allow, arguments.forbid, arguments.canary)
     print(json.dumps({"clean": not findings, "findings": [asdict(finding) for finding in findings]}, indent=2))
     return 1 if findings else 0
 

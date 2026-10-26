@@ -417,8 +417,9 @@ def _transcript(tmp_path: Path, *lines: str) -> Path:
     return path
 
 
-def _audit(transcript: Path, run: Path, venv: Path) -> list[FindingKind]:
-    return [finding.kind for finding in audit(transcript, allow=[run, venv], forbid=[Path("/repo")])]
+def _audit(transcript: Path, run: Path, venv: Path, canary: str | None = None) -> list[FindingKind]:
+    allow = [run, venv / "bin" / "datamimic"]
+    return [finding.kind for finding in audit(transcript, allow=allow, forbid=[Path("/repo")], canary=canary)]
 
 
 def test_clean_transcript_has_no_findings(tmp_path: Path) -> None:
@@ -427,11 +428,44 @@ def test_clean_transcript_has_no_findings(tmp_path: Path) -> None:
         tmp_path,
         _line(_call("Bash", command=f"cd {run} && {venv}/bin/datamimic authoring build . | head -c 500")),
         _line(_call("Write", file_path=f"{run}/datamimic.xml", content="<setup/>")),
-        _line(_call("Read", file_path=f"{venv}/lib/python3.11/site-packages/datamimic_ce/__init__.py")),
+        _line(_call("Glob", pattern="**/*.xml", path=str(run))),
         _line({"type": "text", "text": "I read AGENTS.md"}),
     )
 
-    assert _audit(transcript, run, venv) == []
+    assert _audit(transcript, run, venv, canary="canary-0123") == []
+
+
+def test_reading_the_installed_source_is_flagged(tmp_path: Path) -> None:
+    run, venv = tmp_path / "run", tmp_path / "venv"
+    source = f"{venv}/lib/python3.11/site-packages/datamimic_ce/__init__.py"
+
+    assert _audit(_transcript(tmp_path, _line(_call("Read", file_path=source))), run, venv) == [
+        FindingKind.OUTSIDE_ALLOWED
+    ]
+
+
+@pytest.mark.parametrize("tool", ["Skill", "WebFetch", "WebSearch", "Agent", "Task", "NotebookEdit"])
+def test_tool_outside_the_allowlist_is_flagged(tool: str, tmp_path: Path) -> None:
+    run, venv = tmp_path / "run", tmp_path / "venv"
+
+    assert _audit(_transcript(tmp_path, _line(_call(tool, prompt="x"))), run, venv) == [FindingKind.TOOL]
+
+
+def test_absolute_glob_pattern_outside_the_run_directory_is_flagged(tmp_path: Path) -> None:
+    run, venv = tmp_path / "run", tmp_path / "venv"
+    transcript = _transcript(tmp_path, _line(_call("Glob", pattern=f"{venv}/lib/**/*.py")))
+
+    assert _audit(transcript, run, venv) == [FindingKind.OUTSIDE_ALLOWED]
+
+
+def test_canary_anywhere_in_the_transcript_is_flagged(tmp_path: Path) -> None:
+    """A relative `cat ../AGENTS.md` passes the path checks; its tool result still carries the token."""
+    run, venv = tmp_path / "run", tmp_path / "venv"
+    tool_result = {"type": "tool_result", "content": "canary-0123"}
+    result = {"type": "user", "message": {"role": "user", "content": [tool_result]}}
+    transcript = _transcript(tmp_path, _line(_call("Bash", command="cat ../AGENTS.md")), json.dumps(result))
+
+    assert _audit(transcript, run, venv, canary="canary-0123") == [FindingKind.AGENTS_FILE, FindingKind.CANARY]
 
 
 def test_xml_in_a_heredoc_is_not_a_path(tmp_path: Path) -> None:
@@ -440,14 +474,6 @@ def test_xml_in_a_heredoc_is_not_a_path(tmp_path: Path) -> None:
     transcript = _transcript(tmp_path, _line(_call("Bash", command=command)))
 
     assert _audit(transcript, run, venv) == []
-
-
-def test_skill_use_is_flagged(tmp_path: Path) -> None:
-    run, venv = tmp_path / "run", tmp_path / "venv"
-
-    assert _audit(_transcript(tmp_path, _line(_call("Skill", skill="generate-test-data"))), run, venv) == [
-        FindingKind.SKILL
-    ]
 
 
 def test_repository_read_and_agents_file_are_flagged(tmp_path: Path) -> None:
