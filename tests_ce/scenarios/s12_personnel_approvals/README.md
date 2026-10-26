@@ -82,7 +82,7 @@ The library has three functions that the steps call. None of them reads a file.
 | R1 | The person has an employment at the position's company in the position's function. It has three parts: `R1_person`, `R1_company`, `R1_function`. | `_employment` | none | `unfilled_by.R1_person == 0`, `unfilled_by.R1_company == 0`, `unfilled_by.R1_function == 0`, `all_eligible` |
 | R2 | The person has an active base license. It is valid on the version's date; the expiry day is valid; no expiry date is not valid. | `_base_license` | `base_license`, `active_status` | `unfilled_by.R2 == 0`, `all_eligible` |
 | R3 | The person has the qualification of the function. | `_qualification` | `required_qualification` | `unfilled_by.R3 == 0`, `all_eligible` |
-| R4 | Demand is 1 to `max_seats` seats. Different people take the seats of one position. A position is a version and a function. | `positions` (step 1), `_conflict` | `max_seats` | `seats >= 1 and seats <= max_seats`, `unfilled_by.R4 == 0`, `distinct_people` |
+| R4 | Demand is 1 to `max_seats` seats. Different people take the seats of one position. A position is a version and a function. | `<assert>` in step 1 (the run stops), `_conflict` | `max_seats` | `child_execution` at `model/1_prepare.xml/assert`, `unfilled_by.R4 == 0`, `distinct_people` |
 | R5 | A person of an exclusive approval takes no seat of another approval. Versions of one approval share people. | `_conflict` | `exclusive_approvals` | `unfilled_by.R5 == 0`, `skipped_by.R5 >= 1`, `approval_exclusive` |
 | R6 | A person takes seats of one company only. Approvals of one company share people. | `_conflict` | none | `unfilled_by.R6 == 0`, `company_exclusive` |
 | budget | The search stops after `search_budget` tries. It then reports `budget_exhausted`, not `infeasible`. | `assign_seats` | `search_budget` | `outcome != 'budget_exhausted'` |
@@ -127,7 +127,7 @@ Each variant in `scenario.json` patches one row of one data file in a copy of th
 | `r2_inactive` | It is inactive. | `unfilled_by.R2 == 0` |
 | `r2_no_expiry` | It has no expiry date. | `unfilled_by.R2 == 0` |
 | `r3_missing` | Person 47 has the planner qualification, not the inspector one. | `unfilled_by.R3 == 0` |
-| `r4_above_maximum` | `A11-V1-OPR` asks for 4 seats. | `seats >= 1 and seats <= max_seats` |
+| `r4_above_maximum` | `A11-V1-OPR` asks for 4 seats. The run stops in step 1. | `child_execution` |
 | `r4_same_person` | `A07-V1-INS` asks for 2 seats. Only person 47 is eligible. | `unfilled_by.R4 == 0` |
 | `r5_exclusive_approval` | `A01-V1-OPR` asks for 2 seats. The search proves it infeasible. | `unfilled_by.R5 == 0` |
 | `r6_cross_company` | Person 47 is also the only inspector of company C06. | `unfilled_by.R6 == 0` |

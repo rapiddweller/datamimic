@@ -14,7 +14,7 @@
         <key name="approval_id" script="approval.approval_id"/>
         <key name="company_id" script="approval.company_id"/>
         <key name="valid_on" script="version.valid_on"/>
-        <key name="max_seats" script="policy.max_seats"/>
+        <assert condition="1 &lt;= this.seats &lt;= policy.max_seats" message="R4: the demand of a position is 1 to max_seats seats"/>
         <key name="exclusive" script="approval.approval_id in policy.exclusive_approvals"/>
     </generate>
 </setup>

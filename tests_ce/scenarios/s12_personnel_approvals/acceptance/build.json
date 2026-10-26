@@ -13,7 +13,6 @@
   "expectations": [
     {"kind": "exact_count", "subject": {"kind": "product", "product": "positions"}, "count": 60},
     {"kind": "unique", "subject": {"kind": "product", "product": "positions"}, "field": "position_id"},
-    {"kind": "row_condition", "subject": {"kind": "product", "product": "positions"}, "condition": "seats >= 1 and seats <= max_seats"},
     {"kind": "foreign_key", "child": {"subject": {"kind": "product", "product": "positions"}, "field": "version_id"}, "parent": {"subject": {"kind": "product", "product": "approval_versions"}, "field": "version_id"}},
     {"kind": "foreign_key", "child": {"subject": {"kind": "product", "product": "positions"}, "field": "function_id"}, "parent": {"subject": {"kind": "product", "product": "functions"}, "field": "function_id"}},
     {"kind": "row_condition", "subject": {"kind": "product", "product": "assignment"}, "condition": "outcome != 'infeasible'"},
