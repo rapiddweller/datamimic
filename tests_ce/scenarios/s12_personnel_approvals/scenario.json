@@ -7,10 +7,10 @@
     "the search needs backtracking: its first choice for A03-V1-PLN leaves A05-V1-PLN short (R6)",
     "versions share their approval (A01) and approvals of one company share people (A03 and A04)",
     "an infeasible demand ends below the budget as infeasible; a too small budget ends as budget_exhausted",
-    "step 4 checks R1 to R3 per seat from the raw rows and R4 to R6 per position; it catches a broken search or a broken step 2 by name",
+    "step 4 checks R1 to R3 per seat from the raw rows and the step-1 positions, and R4 to R6 per position; it catches a broken search or a broken step 2 by name",
     "a demand above max_seats stops a normal run in step 1",
     "the trace names the person, the rule and the reason of each rejection",
-    "each data variant changes one fact, each library variant breaks one check; Build rejects each with a diagnostic that names the rule"
+    "each data variant changes one fact, each library variant breaks one check; Build rejects each with a diagnostic that names the rule, or a normal run stops with an error that names it (r4_above_maximum)"
   ],
   "products": {
     "companies": 10,
@@ -43,6 +43,7 @@
     {"name": "search_ignores_r4", "diagnostic": "row_condition", "expected": "distinct_people", "patch": {"file": "lib/staffing.scr.py", "old": "if _position_key(other) == _position_key(position):", "new": "if False:"}},
     {"name": "search_ignores_r5", "diagnostic": "row_condition", "expected": "approval_exclusive", "patch": {"file": "lib/staffing.scr.py", "old": "if other[\"approval_id\"] != position[\"approval_id\"] and (other[\"exclusive\"] or position[\"exclusive\"]):", "new": "if False:"}},
     {"name": "search_ignores_r6", "diagnostic": "row_condition", "expected": "company_exclusive", "patch": {"file": "lib/staffing.scr.py", "old": "if other[\"company_id\"] != position[\"company_id\"]:", "new": "if False:"}},
+    {"name": "search_omits_dead_end_trace", "diagnostic": "exact_count", "expected": "40", "patch": {"file": "lib/staffing.scr.py", "old": "                for rule in sorted(rules):\n                    self.decisions.append(_decision(position, seat_id, person_id, \"dead_end\", rule, reason))\n", "new": ""}},
     {"name": "suitability_counts_missing_expiry_as_valid", "diagnostic": "row_condition", "expected": "r2_licensed", "patch": {"file": "lib/staffing.scr.py", "old": "dated = [row for row in active if row[\"expires_on\"] is not None]", "new": "dated = [{**row, \"expires_on\": row[\"expires_on\"] or \"9999-12-31\"} for row in active]"}},
     {"name": "suitability_ignores_qualification", "diagnostic": "row_condition", "expected": "r3_qualified", "patch": {"file": "lib/staffing.scr.py", "old": "if any(row[\"person_id\"] == person_id and row[\"qualification_id\"] == required for row in person_qualifications):", "new": "if True:"}}
   ]

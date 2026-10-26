@@ -22,7 +22,7 @@ acceptance/build.json checks the input, the plan, the trace and the 11 target ta
 | 1 prepare | `model/1_prepare.xml` | Resolves each demanded position to its approval, its company (the approval's addressee) and its date. An `<assert>` stops the run when a demand is not 1 to `max_seats` seats. |
 | 2 suitability | `model/2_suitability.xml` | Calls `suitable_people` once per position: R1 to R3 for every person, the exclusions counted by rule and the near misses. |
 | 3 assign | `model/3_assign.xml` | Calls `assign_seats` once: one search fills every seat under R4 to R6. It writes the plan, the counters and the trace. It gives no plan unless every seat is filled. |
-| 4 validate output | `model/4_validate_output.xml` | Checks the plan without the search and without step 2. `seat_check` tests R1 to R3 for each seat in XML from the raw rows. `plan_check` calls `check_position` for R4 to R6. |
+| 4 validate output | `model/4_validate_output.xml` | Checks the plan without the search and without step 2. `seat_check` tests R1 to R3 for each seat in XML from the raw rows and the step-1 positions. `plan_check` calls `check_position` for R4 to R6. |
 | 5 export | `model/5_export.xml` | Writes the 11 target tables to CSV. Staffing reads the plan from the memstore. |
 
 Input validation and cleanup have no model file (see "Known limits").
@@ -81,9 +81,9 @@ The library reads no file. `read_policy` checks the type of each policy paramete
 | R4 | Demand is 1 to `max_seats` seats. Different people take the seats of one position (a version and a function). | `<assert>` in step 1; `_conflict` | `distinct_people` | `max_seats` |
 | R5 | A person of an exclusive approval takes no seat of another approval. Versions of one approval share people. | `_conflict` | `approval_exclusive` | `exclusive_approvals` |
 | R6 | A person takes seats of one company only. Approvals of one company share people. | `_conflict` | `company_exclusive` | none |
-| budget | The search stops after `search_budget` tries and reports `budget_exhausted`, not `infeasible`. | `assign_seats` | `outcome != 'budget_exhausted'` | `search_budget` |
+| budget | The search stops after `search_budget` tries and reports `budget_exhausted`, not `infeasible`. | `assign_seats` | Build: `outcome != 'budget_exhausted'` | `search_budget` |
 
-"Decided in" is a function in `lib/staffing.scr.py` or an element in `model/`. "Checked again in" is a key of step 4; Build requires it to be true for every row.
+"Decided in" is a function in `lib/staffing.scr.py` or an element in `model/`. "Checked again in" is a key of step 4; Build requires it to be true for every row. "Build:" marks a Build condition on `assignment`, not a key of step 4.
 When a seat stays empty, `unfilled_by.<rule> == 0` names the rule that blocked it.
 
 ## Decision evidence
@@ -102,7 +102,7 @@ Build pins each control case, so it cannot vanish when the data changes.
 |---|---|---|
 | Expiry day is valid | Person 47 is the only inspector for `A07-V1`. The license expires on 2026-03-01, the version date. | `seat_id != 'A07-V1-INS-1' or person_id == 47` |
 | Versions share their approval | `A01` (exclusive) keeps person 4 for both versions. | `seat_id not in ('A01-V1-OPR-1', 'A01-V2-OPR-1') or person_id == 4` |
-| Backtracking | `A03-V1-PLN` first takes person 20. Then `A05-V1-PLN` has too few people (R6). The search undoes it and takes person 94. | `outcome != 'complete' or backtracks >= 1`, the `dead_end` trace row of person 20 (R6), `seat_id != 'A03-V1-PLN-1' or person_id == 94` |
+| Backtracking | `A03-V1-PLN` first takes person 20. Then `A05-V1-PLN` has too few people (R6). The search undoes it and takes person 94. | `outcome != 'complete' or backtracks >= 1`; the trace count 40, which holds exactly one `dead_end` row; that row is person 20 (R6); `seat_id != 'A03-V1-PLN-1' or person_id == 94` |
 | R5 is used | The search skips people because of R5. | `outcome != 'complete' or skipped_by.R5 >= 1` |
 | Approvals of one company share people | `A03` and `A04` (company C02) both use persons 12 and 13. | the staffing count (C02 has two eligible operators for eight seats) |
 | Near misses | 1 (no expiry date), 11 (no base license), 22 (expired), 32 (inactive), 14 and 62 (no qualification). | visible in `plan_check.json`, not pinned |
@@ -112,16 +112,18 @@ Build pins each control case, so it cannot vanish when the data changes.
 Each negative in `scenario.json` patches one text in one file of a copy of the project. Build must reject it with the named rule.
 
 - The data variants change one row of one data file. Most of them change a fact of person 47, the only inspector for `A07-V1`.
-- A data variant without a plan fails its named rule and also the same three consequences: `outcome != 'infeasible'` (or `'budget_exhausted'`), `filled == seats` and the staffing count 82.
+- A data variant without a plan fails its named rule and also four consequences: `outcome != 'infeasible'` (or `'budget_exhausted'`), `filled == seats`, the staffing count 82 and the trace count 40.
+- `r5_exclusive_approval` and `r6_cross_company` also fail the `dead_end` pin of person 20, because their search records other dead ends.
 - `r4_above_maximum` stops the run in step 1. Build reports only `child_execution` for it, so the harness also runs the variant and checks the message of the `<assert>`.
-- The `search_ignores_*` and `suitability_*` variants patch `lib/staffing.scr.py`. Step 4 must reject each one by the named check. The pinned control cases can fail too, because the plan changes.
+- The `search_ignores_*` and `suitability_*` variants patch `lib/staffing.scr.py`. Step 4 must reject each one by the named check. The pinned control cases and the trace count can fail too, because the plan changes.
+- `search_omits_dead_end_trace` deletes the `dead_end` rows from the trace. Only the trace count 40 rejects it, so the count makes the `dead_end` pin real.
 
 The outcomes of the reference brief map to these cases:
 
 | Outcome | Where |
 |---|---|
 | Backtracking | Base case: person 20 is undone in `A03-V1-PLN`, person 94 takes the seat. |
-| Infeasible | `r5_exclusive_approval` and `r6_cross_company`: the search proves below the budget that no plan exists. |
+| Infeasible | `r5_exclusive_approval` and `r6_cross_company`: the search proves below the budget that no plan exists. Only search dead ends count R5 and R6 in `unfilled_by`, and an exhausted budget sets every count to 0. So `unfilled_by.R5` or `unfilled_by.R6` above 0 proves a finished search. |
 | Exhausted budget | `budget_exhausted`: it reports `budget_exhausted`, never `infeasible`. |
 | Expiry date is valid | Base case (person 47, pinned); `r2_expired` moves the expiry one day earlier. |
 | Missing expiry is not valid | `r2_no_expiry`; `suitability_counts_missing_expiry_as_valid` breaks the rule in step 2 and step 4 rejects it. |

@@ -31,6 +31,7 @@
     {"kind": "row_condition", "subject": {"kind": "product", "product": "staffing"}, "condition": "seat_id != 'A07-V1-INS-1' or person_id == 47"},
     {"kind": "row_condition", "subject": {"kind": "product", "product": "staffing"}, "condition": "seat_id not in ('A01-V1-OPR-1', 'A01-V2-OPR-1') or person_id == 4"},
     {"kind": "row_condition", "subject": {"kind": "product", "product": "staffing"}, "condition": "seat_id != 'A03-V1-PLN-1' or person_id == 94"},
+    {"kind": "exact_count", "subject": {"kind": "product", "product": "trace"}, "count": 40},
     {"kind": "row_condition", "subject": {"kind": "product", "product": "trace"}, "condition": "action != 'dead_end' or (person_id == 20 and full_name == 'Person 020' and rule == 'R6')"},
     {"kind": "row_condition", "subject": {"kind": "product", "product": "plan_check"}, "condition": "filled == seats"},
     {"kind": "row_condition", "subject": {"kind": "product", "product": "seat_check"}, "condition": "r1_employed"},

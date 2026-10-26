@@ -1,6 +1,6 @@
 <setup>
     <!-- Validate output: check the plan without the search and without step 2, before the export reads it.
-         R1 to R3 for each seat, from the raw rows: a defect in step 2 cannot hide here. -->
+         R1 to R3 for each seat, from the raw rows and the step-1 positions: a defect in step 2 cannot hide here. -->
     <generate name="seat_check" source="mem" sourceEntity="plan" distribution="ordered" target="JSON">
         <variable name="positions" source="mem" sourceEntity="positions" storage="data" distribution="ordered"/>
         <variable name="employments" source="data/employments.json" storage="data" distribution="ordered"/>
