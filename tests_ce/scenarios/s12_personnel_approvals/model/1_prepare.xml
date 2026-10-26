@@ -1,0 +1,20 @@
+<setup>
+    <!-- Prepare: resolve each demanded position to its approval, its company (the approval's addressee) and its date. -->
+    <generate name="positions" source="data/demand.json" distribution="ordered" target="mem">
+        <variable name="versions" source="data/approval_versions.json" storage="data" distribution="ordered"/>
+        <variable name="approvals" source="data/approvals.json" storage="data" distribution="ordered"/>
+        <variable name="policy_row" source="data/policy.json" storage="value" distribution="ordered"/>
+        <variable name="policy" script="read_policy(policy_row)"/>
+        <variable name="version" script="{row.version_id: row for row in versions}[this.version_id]"/>
+        <variable name="approval" script="{row.approval_id: row for row in approvals}[version.approval_id]"/>
+        <key name="position_id" script="this.position_id"/>
+        <key name="version_id" script="this.version_id"/>
+        <key name="function_id" script="this.function_id"/>
+        <key name="seats" script="this.seats"/>
+        <key name="approval_id" script="approval.approval_id"/>
+        <key name="company_id" script="approval.company_id"/>
+        <key name="valid_on" script="version.valid_on"/>
+        <assert condition="1 &lt;= this.seats &lt;= policy.max_seats" message="R4: the demand of a position is 1 to max_seats seats"/>
+        <key name="exclusive" script="approval.approval_id in policy.exclusive_approvals"/>
+    </generate>
+</setup>

@@ -5,10 +5,15 @@
   ],
   "products": {"accounts": 5, "payments": 8},
   "negatives": [
-    {"dir": "negative/wrong_count", "diagnostic": "exact_count"},
-    {"dir": "negative/duplicate_id", "diagnostic": "unique"},
-    {"dir": "negative/orphan_fk", "diagnostic": "foreign_key"},
-    {"dir": "negative/value_outside_set", "diagnostic": "allowed_values"},
-    {"dir": "negative/range_exceeded", "diagnostic": "range"}
+    {"name": "wrong_count", "diagnostic": "exact_count",
+     "patch": {"file": "acceptance/build.json", "old": "\"payments\"}, \"count\": 8}", "new": "\"payments\"}, \"count\": 9}"}},
+    {"name": "duplicate_id", "diagnostic": "unique",
+     "patch": {"file": "datamimic.xml", "old": "<key name=\"account_id\" generator=\"IncrementGenerator\"/>", "new": "<key name=\"account_id\" constant=\"1\"/>"}},
+    {"name": "orphan_fk", "diagnostic": "foreign_key",
+     "patch": {"file": "datamimic.xml", "old": "<key name=\"account_id\" type=\"int\" min=\"1\" max=\"5\"/>", "new": "<key name=\"account_id\" type=\"int\" min=\"1\" max=\"9\"/>"}},
+    {"name": "value_outside_set", "diagnostic": "allowed_values",
+     "patch": {"file": "datamimic.xml", "old": "values=\"('basic', 'plus')\"", "new": "values=\"('basic', 'plus', 'trial')\""}},
+    {"name": "range_exceeded", "diagnostic": "range",
+     "patch": {"file": "datamimic.xml", "old": "min=\"1\" max=\"1000\"", "new": "min=\"1\" max=\"2000\""}}
   ]
 }

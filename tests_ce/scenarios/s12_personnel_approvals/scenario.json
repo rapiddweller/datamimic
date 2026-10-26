@@ -1,0 +1,50 @@
+{
+  "title": "Personnel and approvals: staff every seat of every approval version under six cross-table rules",
+  "proves": [
+    "eleven target tables with 27 columns and 540 rows come from data files, demand and one policy file",
+    "R1 to R3 decide each person per position; the evidence counts the exclusions by rule and names each near miss with its reason",
+    "a license is valid on its expiry date: person 47 is the only inspector for A07-V1 and expires on its date",
+    "the search needs backtracking: its first choice for A03-V1-PLN leaves A05-V1-PLN short (R6)",
+    "versions share their approval (A01) and approvals of one company share people (A03 and A04)",
+    "an infeasible demand ends below the budget as infeasible; a too small budget ends as budget_exhausted",
+    "step 4 checks R1 to R3 per seat from the raw rows and the step-1 positions, and R4 to R6 per position; it catches a broken search or a broken step 2 by name",
+    "a demand above max_seats stops a normal run in step 1",
+    "the trace names the person, the rule and the reason of each rejection",
+    "each data variant changes one fact, each library variant breaks one check; Build rejects each with a diagnostic that names the rule, or a normal run stops with an error that names it (r4_above_maximum)"
+  ],
+  "products": {
+    "companies": 10,
+    "people": 100,
+    "functions": 4,
+    "employments": 105,
+    "licenses": 2,
+    "person_licenses": 102,
+    "qualifications": 4,
+    "person_qualifications": 98,
+    "approvals": 11,
+    "approval_versions": 22,
+    "staffing": 82
+  },
+  "negatives": [
+    {"name": "r1_person", "diagnostic": "row_condition", "expected": "unfilled_by.R1_person == 0", "patch": {"file": "data/employments.json", "old": "{\"person_id\": 47, \"company_id\": \"C05\", \"function_id\": \"INS\"}", "new": "{\"person_id\": 100, \"company_id\": \"C05\", \"function_id\": \"INS\"}"}},
+    {"name": "r1_company", "diagnostic": "row_condition", "expected": "unfilled_by.R1_company == 0", "patch": {"file": "data/employments.json", "old": "{\"person_id\": 47, \"company_id\": \"C05\", \"function_id\": \"INS\"}", "new": "{\"person_id\": 47, \"company_id\": \"C10\", \"function_id\": \"INS\"}"}},
+    {"name": "r1_function", "diagnostic": "row_condition", "expected": "unfilled_by.R1_function == 0", "patch": {"file": "data/employments.json", "old": "{\"person_id\": 47, \"company_id\": \"C05\", \"function_id\": \"INS\"}", "new": "{\"person_id\": 47, \"company_id\": \"C05\", \"function_id\": \"PLN\"}"}},
+    {"name": "r2_missing", "diagnostic": "row_condition", "expected": "unfilled_by.R2 == 0", "patch": {"file": "data/person_licenses.json", "old": "{\"person_id\": 47, \"license_type\": \"BASE\", \"status\": \"active\", \"expires_on\": \"2026-03-01\"}", "new": "{\"person_id\": 47, \"license_type\": \"TRAINEE\", \"status\": \"active\", \"expires_on\": \"2026-03-01\"}"}},
+    {"name": "r2_expired", "diagnostic": "row_condition", "expected": "unfilled_by.R2 == 0", "patch": {"file": "data/person_licenses.json", "old": "{\"person_id\": 47, \"license_type\": \"BASE\", \"status\": \"active\", \"expires_on\": \"2026-03-01\"}", "new": "{\"person_id\": 47, \"license_type\": \"BASE\", \"status\": \"active\", \"expires_on\": \"2026-02-28\"}"}},
+    {"name": "r2_inactive", "diagnostic": "row_condition", "expected": "unfilled_by.R2 == 0", "patch": {"file": "data/person_licenses.json", "old": "{\"person_id\": 47, \"license_type\": \"BASE\", \"status\": \"active\", \"expires_on\": \"2026-03-01\"}", "new": "{\"person_id\": 47, \"license_type\": \"BASE\", \"status\": \"inactive\", \"expires_on\": \"2026-03-01\"}"}},
+    {"name": "r2_no_expiry", "diagnostic": "row_condition", "expected": "unfilled_by.R2 == 0", "patch": {"file": "data/person_licenses.json", "old": "{\"person_id\": 47, \"license_type\": \"BASE\", \"status\": \"active\", \"expires_on\": \"2026-03-01\"}", "new": "{\"person_id\": 47, \"license_type\": \"BASE\", \"status\": \"active\", \"expires_on\": null}"}},
+    {"name": "r3_missing", "diagnostic": "row_condition", "expected": "unfilled_by.R3 == 0", "patch": {"file": "data/person_qualifications.json", "old": "{\"person_id\": 47, \"qualification_id\": \"Q-INS\"}", "new": "{\"person_id\": 47, \"qualification_id\": \"Q-PLN\"}"}},
+    {"name": "r4_above_maximum", "diagnostic": "child_execution", "run_error": "R4: the demand of a position is 1 to max_seats seats", "patch": {"file": "data/demand.json", "old": "{\"position_id\": \"A11-V1-OPR\", \"version_id\": \"A11-V1\", \"function_id\": \"OPR\", \"seats\": 2}", "new": "{\"position_id\": \"A11-V1-OPR\", \"version_id\": \"A11-V1\", \"function_id\": \"OPR\", \"seats\": 4}"}},
+    {"name": "r4_same_person", "diagnostic": "row_condition", "expected": "unfilled_by.R4 == 0", "patch": {"file": "data/demand.json", "old": "{\"position_id\": \"A07-V1-INS\", \"version_id\": \"A07-V1\", \"function_id\": \"INS\", \"seats\": 1}", "new": "{\"position_id\": \"A07-V1-INS\", \"version_id\": \"A07-V1\", \"function_id\": \"INS\", \"seats\": 2}"}},
+    {"name": "r5_exclusive_approval", "diagnostic": "row_condition", "expected": "unfilled_by.R5 == 0", "patch": {"file": "data/demand.json", "old": "{\"position_id\": \"A01-V1-OPR\", \"version_id\": \"A01-V1\", \"function_id\": \"OPR\", \"seats\": 1}", "new": "{\"position_id\": \"A01-V1-OPR\", \"version_id\": \"A01-V1\", \"function_id\": \"OPR\", \"seats\": 2}"}},
+    {"name": "r6_cross_company", "diagnostic": "row_condition", "expected": "unfilled_by.R6 == 0", "patch": {"file": "data/employments.json", "old": "{\"person_id\": 57, \"company_id\": \"C06\", \"function_id\": \"INS\"}", "new": "{\"person_id\": 47, \"company_id\": \"C06\", \"function_id\": \"INS\"}"}},
+    {"name": "budget_exhausted", "diagnostic": "row_condition", "expected": "outcome != 'budget_exhausted'", "patch": {"file": "data/policy.json", "old": "\"search_budget\": 1000", "new": "\"search_budget\": 50"}},
+    {"name": "search_ignores_suitability", "diagnostic": "row_condition", "expected": "r1_employed", "patch": {"file": "lib/staffing.scr.py", "old": "for entry in position[\"eligible\"]:\n            person_id = entry[\"person_id\"]", "new": "for entry in [*position[\"near_misses\"][:1], *position[\"eligible\"]]:\n            person_id = entry[\"person_id\"]"}},
+    {"name": "search_ignores_r4", "diagnostic": "row_condition", "expected": "distinct_people", "patch": {"file": "lib/staffing.scr.py", "old": "if _position_key(other) == _position_key(position):", "new": "if False:"}},
+    {"name": "search_ignores_r5", "diagnostic": "row_condition", "expected": "approval_exclusive", "patch": {"file": "lib/staffing.scr.py", "old": "if other[\"approval_id\"] != position[\"approval_id\"] and (other[\"exclusive\"] or position[\"exclusive\"]):", "new": "if False:"}},
+    {"name": "search_ignores_r6", "diagnostic": "row_condition", "expected": "company_exclusive", "patch": {"file": "lib/staffing.scr.py", "old": "if other[\"company_id\"] != position[\"company_id\"]:", "new": "if False:"}},
+    {"name": "search_omits_dead_end_trace", "diagnostic": "exact_count", "expected": "40", "patch": {"file": "lib/staffing.scr.py", "old": "                for rule in sorted(rules):\n                    self.decisions.append(_decision(position, seat_id, person_id, \"dead_end\", rule, reason))\n", "new": ""}},
+    {"name": "suitability_counts_missing_expiry_as_valid", "diagnostic": "row_condition", "expected": "r2_licensed", "patch": {"file": "lib/staffing.scr.py", "old": "dated = [row for row in active if row[\"expires_on\"] is not None]", "new": "dated = [{**row, \"expires_on\": row[\"expires_on\"] or \"9999-12-31\"} for row in active]"}},
+    {"name": "suitability_ignores_qualification", "diagnostic": "row_condition", "expected": "r3_qualified", "patch": {"file": "lib/staffing.scr.py", "old": "if any(row[\"person_id\"] == person_id and row[\"qualification_id\"] == required for row in person_qualifications):", "new": "if True:"}}
+  ]
+}
