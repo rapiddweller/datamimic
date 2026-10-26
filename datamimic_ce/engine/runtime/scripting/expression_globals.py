@@ -39,6 +39,7 @@ import os
 import random
 import re
 import statistics
+import sys
 import uuid
 from collections.abc import Callable, Iterable
 from dataclasses import dataclass
@@ -312,7 +313,6 @@ def rebind_seeded_script_names(
 
     # Scripts reach Random both directly and as random.Random; both must stay the class.
     seeded = _seeded_objects(rng, seeded_faker_supplier, SeededRandom, _refuse_keyed_seed)
-    raw_random = _EvalProxy(random, {})
     counterparts: tuple[tuple[object, object], ...] = (
         (random, seeded.random),
         (uuid, seeded.uuid),
@@ -323,14 +323,40 @@ def rebind_seeded_script_names(
         (pd, seeded.pd),
         (np, seeded.np),
         (os, seeded.os),
-        # Members imported by name are the module's own objects, so identity finds them too. random.__all__ names
-        # every public member, so no hand-kept list misses one, also one a newer Python adds (#391). Both sides
-        # resolve through the proxy: the stand-in is what an expression gets for random.<name>, with the Random,
-        # seed and SystemRandom overrides.
-        *((raw_random.__getattr__(name), seeded.random.__getattr__(name)) for name in random.__all__),
+        # Members imported by name are the module's own objects, so identity finds them too. One pair for each name
+        # in random.__all__ (#391); test_every_public_random_member_imported_by_name_is_rebound fails when a Python
+        # version adds one. The stand-in is what an expression gets for random.<name>, with the Random, seed and
+        # SystemRandom overrides.
+        (random.Random, seeded.random.Random),
+        (random.SystemRandom, seeded.random.SystemRandom),
+        (random.betavariate, seeded.random.betavariate),
+        (random.choice, seeded.random.choice),
+        (random.choices, seeded.random.choices),
+        (random.expovariate, seeded.random.expovariate),
+        (random.gammavariate, seeded.random.gammavariate),
+        (random.gauss, seeded.random.gauss),
+        (random.getrandbits, seeded.random.getrandbits),
+        (random.getstate, seeded.random.getstate),
+        (random.lognormvariate, seeded.random.lognormvariate),
+        (random.normalvariate, seeded.random.normalvariate),
+        (random.paretovariate, seeded.random.paretovariate),
+        (random.randbytes, seeded.random.randbytes),
+        (random.randint, seeded.random.randint),
+        (random.random, seeded.random.random),
+        (random.randrange, seeded.random.randrange),
+        (random.sample, seeded.random.sample),
+        (random.seed, seeded.random.seed),
+        (random.setstate, seeded.random.setstate),
+        (random.shuffle, seeded.random.shuffle),
+        (random.triangular, seeded.random.triangular),
+        (random.uniform, seeded.random.uniform),
+        (random.vonmisesvariate, seeded.random.vonmisesvariate),
+        (random.weibullvariate, seeded.random.weibullvariate),
         (uuid.uuid1, seeded.uuid.uuid1),
         (os.urandom, seeded.os.urandom),
     )
+    if sys.version_info >= (3, 12):
+        counterparts += ((random.binomialvariate, seeded.random.binomialvariate),)
     for name, value in list(namespace.items()):
         for raw, stand_in in counterparts:
             if value is raw:
