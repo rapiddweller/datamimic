@@ -61,3 +61,14 @@ def test_a_value_never_reaches_the_remediation(tmp_path: Path) -> None:
     result = _rejected(tmp_path, '<key name="price" generator="IntegerGenerator" min="12345" max="67890"/>')
 
     assert not any("12345" in str(item.remediation) or "67890" in item.message for item in result.diagnostics)
+
+
+def test_an_unsupported_element_in_the_entry_is_named(tmp_path: Path) -> None:
+    """#355 item 9: the refusal names the element kind, as it already does inside an included step."""
+    xml = '<setup rngSeed="1"><execute type="bash">exit 0</execute><generate name="r" count="2"/></setup>'
+    result = build_project(tmp_path, xml)
+
+    assert isinstance(result, RejectedBuild)
+    [refusal] = [item for item in result.diagnostics if str(item.code) == "unsupported_bounded_operation"]
+    assert refusal.message == "The <execute> element has no proven bounded CE execution policy."
+    assert refusal.path == ("document", "root", "children", 0)

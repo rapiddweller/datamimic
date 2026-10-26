@@ -36,8 +36,10 @@ from datamimic_ce.engine.dsl.api import (
     EL_REFERENCE,
     EL_VARIABLE,
     POSITIONAL_NUMBER_SEQUENCES,
+    GenerateStatement,
     NumberDistribution,
     SourceDistribution,
+    parse_consumer,
 )
 
 _GENERATES = (EL_GENERATE, EL_ITERATE)
@@ -373,6 +375,32 @@ class SeededScriptIteratesSet(Rule):
                     yield ctx.diag(type(self), element, evidence=f"{attr} reads a set in an order-dependent way")
 
 
+def _memstore_rows(ctx: LintContext, consumer: etree._Element) -> int | None:
+    """Rows that top-level producers with literal counts write to the memstore entity the consumer reads;
+    None when a producer is nested or counted by a script, or none exists. The consumer reads sourceEntity, then
+    type, then name; a producer writes the entity of GenerateStatement.memstore_entity."""
+    entity = consumer.get("sourceEntity") or consumer.get("type") or consumer.get("name")
+    rows = 0
+    found = False
+    for root in ctx.project or (ctx.root,):
+        for producer in root.iter(*_GENERATES):
+            if consumer.get("source") not in parse_consumer(producer.get("target")):
+                continue
+            if GenerateStatement.memstore_entity(producer.get("targetEntity"), producer.get("name", "")) != entity:
+                continue
+            count = producer.get("count") or ""
+            if producer not in root or re.fullmatch("[0-9]+", count) is None:
+                return None
+            rows += int(count)
+            found = True
+    return rows if found else None
+
+
+def _within_memstore_rows(ctx: LintContext, consumer: etree._Element, count: int) -> bool:
+    rows = _memstore_rows(ctx, consumer)
+    return rows is not None and count <= rows
+
+
 class CountWithSourceCapsSilently(Rule):
     definition = authoring_rule_definition("DM316")
 
@@ -386,6 +414,7 @@ class CountWithSourceCapsSilently(Rule):
                 and not _is_true(element.get("cyclic"))
                 # cumulated samples WITH replacement — it never runs out, so no cap
                 and element.get("distribution") != SourceDistribution.CUMULATED.value
+                and not _within_memstore_rows(ctx, element, int(count))
             ):
                 yield ctx.diag(
                     type(self),
