@@ -154,7 +154,10 @@ The applicable Ollama protocol references are [tool calling](https://docs.ollama
    Use `distribution="ordered"` for source order; only ordered reads page by
    page instead of loading everything.
 6. No `rngSeed` on `<setup>` means every run differs, by design. Seeded runs
-   replay identically and force single-process execution.
+   replay identically and force single-process execution. The seed does not fix
+   the iteration order of a set of strings across processes: iterate
+   `sorted(...)`, a list or a tuple. Build replays such a script with another
+   hash seed and rejects it when the rows differ.
 7. `script=` is python. A `<variable>` row is dot-accessed (`row.field`), the
    documented form; mapping access (`row['field']`, `dict(row)`) also works. Nested
    rows need `row.to_dict()` for `json.dumps`. The `__name__` interpolation form

@@ -40,7 +40,7 @@ from datamimic_ce.authoring.domain.requests import (
     RejectedBuild,
     ValidatedReviewArtifact,
 )
-from datamimic_ce.authoring.domain.script_semantics import requires_deterministic_replay
+from datamimic_ce.authoring.domain.script_semantics import replay_causes
 from datamimic_ce.authoring.ports import (
     BoundedExecutionPolicy,
     BoundedExecutor,
@@ -49,6 +49,12 @@ from datamimic_ce.authoring.ports import (
     ProjectFiles,
 )
 from datamimic_ce.authoring.projection.evidence import sample_evidence
+
+# The first run and the replay run under two fixed, different hash seeds (#425): a set of strings then iterates in
+# two orders, so a script that depends on it differs, and the Build outcome is the same on every attempt.
+# Limitation: one fixed pair can give the same order for some set; more replays would lower that chance.
+_FIRST_RUN_HASH_SEED = 1
+_REPLAY_HASH_SEED = 2
 
 
 class BuildDocumentWorkflow:
@@ -154,9 +160,10 @@ class BuildDocumentWorkflow:
                 diagnostics=binding_diagnostics,
                 verification=blocked_verification(request.verification, "Environment binding failed."),
             )
+        causes = replay_causes(document, tuple(step for _, step in steps))
         verification_options = (
             BuildVerificationOptions(smoke_export=request.verification.smoke_export, deterministic_replay=True)
-            if requires_deterministic_replay(document, tuple(step for _, step in steps))
+            if causes
             else request.verification
         )
         step_documents = tuple(step for _, step in steps)
@@ -190,6 +197,7 @@ class BuildDocumentWorkflow:
             descriptor_path=PROJECT_ENTRY_PATH,
             max_count=request.max_count,
             smoke_export=verification_options.smoke_export,
+            hash_seed=_FIRST_RUN_HASH_SEED,
         )
         first = self._executor.execute(execution_request)
         diagnostics = (
@@ -214,7 +222,9 @@ class BuildDocumentWorkflow:
             elif document.root.properties.get("rng_seed") is None:
                 replay = unseeded_replay_evidence()
             else:
-                second = self._executor.execute(execution_request.model_copy(update={"smoke_export": False}))
+                second = self._executor.execute(
+                    execution_request.model_copy(update={"smoke_export": False, "hash_seed": _REPLAY_HASH_SEED})
+                )
                 read.extend(second.files)
                 replay = replay_evidence(first, second)
                 replay_acceptance = evaluate_acceptance(acceptance, second.captured)
@@ -227,13 +237,9 @@ class BuildDocumentWorkflow:
                     )
                     diagnostics += (*second.diagnostics, *replay_acceptance)
         if replay.status is VerificationGateStatus.FAILED and not request.verification.deterministic_replay:
-            diagnostics += (
-                catalog_diagnostic(
-                    AuthoringRuleId.VALIDATION,
-                    "A seeded model that loads Python must replay identically, and this one did not: a value drawn "
-                    "outside the seeded names, such as a module-level draw in the library, differs between runs.",
-                    phase=DiagnosticPhase.EVIDENCE,
-                ),
+            diagnostics += tuple(
+                catalog_diagnostic(AuthoringRuleId.VALIDATION, cause.failure_message(), phase=DiagnosticPhase.EVIDENCE)
+                for cause in causes
             )
         verification = BuildVerificationEvidence(smoke_export=smoke, deterministic_replay=replay)
         digests: dict[PurePosixPath, str] = {}

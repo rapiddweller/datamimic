@@ -171,12 +171,93 @@ def names_statement_operation(target: str | None) -> bool:
     return False
 
 
-def requires_deterministic_replay(entry: DmJsonDocumentV1, steps: tuple[DmJsonDocumentV1, ...] = ()) -> bool:
-    """A seeded model that loads Python anywhere in its include graph must replay: only a second run catches
-    draws the seeded names miss. The entry's seed governs every included step."""
-    return entry.root.properties.get("rng_seed") is not None and any(
-        node.kind == EL_EXECUTE for document in (entry, *steps) for node, _ in iter_dm_json_nodes(document)
+# Calls whose result does not depend on the order in which they read a set argument.
+_ORDER_FREE_CALLS = frozenset({"sorted", "len", "min", "max", "sum", "any", "all", "set", "frozenset"})
+_SET_OPERATORS = (ast.BitOr, ast.BitAnd, ast.Sub, ast.BitXor)
+# Script attributes that hold one Python expression.
+SCRIPT_PROPERTIES = ("script", "condition")
+
+
+def _is_set(node: ast.AST) -> bool:
+    if isinstance(node, ast.Set | ast.SetComp):
+        return True
+    if isinstance(node, ast.Call):
+        return isinstance(node.func, ast.Name) and node.func.id in ("set", "frozenset")
+    return (
+        isinstance(node, ast.BinOp)
+        and isinstance(node.op, _SET_OPERATORS)
+        and (_is_set(node.left) or _is_set(node.right))
     )
+
+
+def iterates_a_set(script: str) -> bool:
+    """Whether a script reads a set in an order-dependent way (#425). The order of a set of strings follows the
+    process hash seed, which rngSeed does not fix. Membership tests, comparisons and order-free calls such as
+    sorted(...) or len(...) are safe; a set that is iterated, converted or returned is not. A set reached through a
+    name is not seen; deterministic replay with a different hash seed is the proof."""
+    try:
+        tree = ast.parse(script, mode="eval")
+    except SyntaxError:
+        return False
+    parents = {id(child): node for node in ast.walk(tree) for child in ast.iter_child_nodes(node)}
+    for node in ast.walk(tree):
+        if not _is_set(node):
+            continue
+        parent = parents.get(id(node))
+        if isinstance(parent, ast.Compare | ast.UnaryOp) or (isinstance(parent, ast.BinOp) and _is_set(parent)):
+            continue
+        if isinstance(parent, ast.IfExp) and parent.test is node:
+            continue
+        if (
+            isinstance(parent, ast.Call)
+            and isinstance(parent.func, ast.Name)
+            and parent.func.id in _ORDER_FREE_CALLS
+            and node in parent.args
+        ):
+            continue
+        return True
+    return False
+
+
+class ReplayCause(StrEnum):
+    """Why Build replays a seeded model although the request did not ask for it."""
+
+    PYTHON_LIBRARY = "python_library"
+    SET_ORDER = "set_order"
+
+    def failure_message(self) -> str:
+        """Static text for a replay that differed; names the cause, never source text or values."""
+        match self:
+            case ReplayCause.PYTHON_LIBRARY:
+                return (
+                    "A seeded model that loads Python must replay identically, and this one did not: a value drawn "
+                    "outside the seeded names, such as a module-level draw in the library, differs between runs."
+                )
+            case ReplayCause.SET_ORDER:
+                return (
+                    "A seeded model whose script iterates a set must replay identically, and this one did not: the "
+                    "order of a set of strings changes with the process hash seed, which rngSeed does not fix. Use "
+                    "sorted(...), a list or a tuple."
+                )
+
+
+def replay_causes(entry: DmJsonDocumentV1, steps: tuple[DmJsonDocumentV1, ...] = ()) -> tuple[ReplayCause, ...]:
+    """Why a seeded model must replay, in a fixed order; empty when it need not. Only a second run catches draws the
+    seeded names miss in a Python library, and only a second run with another hash seed catches a set order. The
+    entry's seed governs every included step."""
+    if entry.root.properties.get("rng_seed") is None:
+        return ()
+    nodes = [node for document in (entry, *steps) for node, _ in iter_dm_json_nodes(document)]
+    causes = []
+    if any(node.kind == EL_EXECUTE for node in nodes):
+        causes.append(ReplayCause.PYTHON_LIBRARY)
+    if any(
+        isinstance(script := node.properties.get(name), str) and iterates_a_set(script)
+        for node in nodes
+        for name in SCRIPT_PROPERTIES
+    ):
+        causes.append(ReplayCause.SET_ORDER)
+    return tuple(causes)
 
 
 def admits_python_library(language: str | None, *, target: str | None, script: str | None) -> bool:

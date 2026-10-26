@@ -1,0 +1,10 @@
+{
+  "version": "5.0",
+  "product_roles": [
+    {"product": "rows", "field": "id", "role": {"kind": "identifier"}}
+  ],
+  "expectations": [
+    {"kind": "exact_count", "subject": {"kind": "product", "product": "rows"}, "count": 3},
+    {"kind": "range", "subject": {"kind": "product", "product": "rows"}, "field": "flag", "minimum": 0, "maximum": 7}
+  ]
+}
