@@ -7,8 +7,10 @@
     "the search needs backtracking: its first choice for A03-V1-PLN leaves A05-V1-PLN short (R6)",
     "versions share their approval (A01) and approvals of one company share people (A03 and A04)",
     "an infeasible demand ends below the budget as infeasible; a too small budget ends as budget_exhausted",
-    "the output check per position catches a search that ignores R4, R5, R6 or the suitability decision (the search_ignores_* negatives)",
-    "each data variant changes one fact, the search variant drops one check; Build rejects each with a row condition that names the rule"
+    "step 4 checks R1 to R3 per seat from the raw rows and R4 to R6 per position; it catches a broken search or a broken step 2 by name",
+    "a demand above max_seats stops a normal run in step 1",
+    "the trace names the person, the rule and the reason of each rejection",
+    "each data variant changes one fact, each library variant breaks one check; Build rejects each with a diagnostic that names the rule"
   ],
   "products": {
     "companies": 10,
