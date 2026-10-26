@@ -202,7 +202,7 @@ class BuildDocumentWorkflow:
         if acceptance.declared_rows is not None and acceptance.declared_rows > limit:
             return RejectedBuild(
                 phase=DiagnosticPhase.POLICY,
-                diagnostics=(_row_limit_diagnostic(acceptance.declared_rows, limit),),
+                diagnostics=(_row_limit_diagnostic(acceptance.declared_rows, request.max_count),),
                 verification=blocked_verification(verification_options, "The declared rows exceed the Build limit."),
             )
         execution_request = BoundedExecutionRequest(
@@ -326,29 +326,36 @@ class BuildDocumentWorkflow:
         )
 
 
-def _row_limit_diagnostic(declared_rows: int, limit: int) -> Diagnostic:
+def _row_limit_diagnostic(declared_rows: int, max_count: int | None) -> Diagnostic:
     """The declared total is a sum of literal counts, so the numbers are Build facts, not descriptor values."""
-    if declared_rows > MAX_AUTHORING_MAX_COUNT:
+    ceiling = MAX_AUTHORING_MAX_COUNT
+    if max_count is None:
+        # A derived limit covers the declared total, so only the ceiling can be too low.
         return catalog_diagnostic(
             AuthoringRuleId.LIMIT,
-            f"The products declare {declared_rows} rows in total, above the Build ceiling of "
-            f"{MAX_AUTHORING_MAX_COUNT} rows.",
+            f"The products declare {declared_rows} rows in total, above the Build ceiling of {ceiling} rows.",
             phase=DiagnosticPhase.POLICY,
             path=("descriptor", PROJECT_ENTRY_PATH.as_posix()),
-            expected=limit,
+            expected=ceiling,
             actual=declared_rows,
-            remediation=f"Reduce the counts so that all products together declare at most {MAX_AUTHORING_MAX_COUNT} "
-            "rows; Build proves a bounded sample, and datamimic run generates the full volume.",
+            remediation=f"Reduce the counts so that all products together declare at most {ceiling} rows; Build "
+            "proves a bounded sample, and datamimic run generates the full volume.",
         )
-    # Below the ceiling only an explicit max_count can be too low: a derived limit covers the declared total.
+    above_ceiling = declared_rows > ceiling
     return catalog_diagnostic(
         AuthoringRuleId.LIMIT,
-        f"The products declare {declared_rows} rows in total, above max_count {limit}; max_count limits the rows "
-        "of all products together.",
+        f"The products declare {declared_rows} rows in total, above max_count {max_count} and above the Build "
+        f"ceiling of {ceiling} rows."
+        if above_ceiling
+        else f"The products declare {declared_rows} rows in total, above max_count {max_count}; max_count limits "
+        "the rows of all products together.",
         phase=DiagnosticPhase.POLICY,
         path=(PROJECT_ACCEPTANCE_PATH.as_posix(), "max_count"),
-        expected=limit,
+        expected=max_count,
         actual=declared_rows,
-        remediation=f"Set max_count to at least {declared_rows}, or remove max_count: Build then derives the limit "
+        remediation=f"Reduce the counts so that all products together declare at most {ceiling} rows, and set "
+        f"max_count to at least that total or remove it; max_count cannot go above {ceiling}."
+        if above_ceiling
+        else f"Set max_count to at least {declared_rows}, or remove max_count: Build then derives the limit "
         "from the declared counts.",
     )

@@ -79,6 +79,23 @@ def test_declared_total_above_the_ceiling_is_rejected_before_execution(tmp_path:
     assert "at most 1000" in str(diagnostic.remediation)
 
 
+def test_explicit_max_count_with_a_total_above_the_ceiling_names_both_bounds(tmp_path: Path) -> None:
+    """Following the remediation must lead to a Build that passes: max_count cannot go above 1000."""
+    result = build_project(tmp_path, _flat(700, 800), max_count=500)
+
+    assert isinstance(result, RejectedBuild)
+    [diagnostic] = result.diagnostics
+    assert (diagnostic.code, diagnostic.expected, diagnostic.actual) == (AuthoringRuleId.LIMIT, 500, 1500)
+    assert diagnostic.path == ("acceptance/build.json", "max_count")
+    assert diagnostic.message == (
+        "The products declare 1500 rows in total, above max_count 500 and above the Build ceiling of 1000 rows."
+    )
+    assert diagnostic.remediation == (
+        "Reduce the counts so that all products together declare at most 1000 rows, and set max_count to at least "
+        "that total or remove it; max_count cannot go above 1000."
+    )
+
+
 @pytest.mark.parametrize(
     ("max_count", "outcome"),
     [

@@ -3,11 +3,13 @@
   "proves": [
     "a project of three products with 25 rows in total reaches ready without max_count",
     "an explicit max_count below the declared total is rejected before execution, with the limit as expected value",
-    "a declared total above the Build ceiling of 1000 rows is rejected before execution"
+    "a declared total above the Build ceiling of 1000 rows is rejected before execution",
+    "an explicit max_count with a declared total above the ceiling names max_count as the expected value"
   ],
   "products": {"customers": 5, "products": 8, "orders": 12},
   "negatives": [
     {"dir": "negative/max_count_below_total", "diagnostic": "limit", "expected": "24"},
-    {"dir": "negative/above_ceiling", "diagnostic": "limit", "expected": "1000"}
+    {"dir": "negative/above_ceiling", "diagnostic": "limit", "expected": "1000"},
+    {"dir": "negative/max_count_with_total_above_ceiling", "diagnostic": "limit", "expected": "500"}
   ]
 }
