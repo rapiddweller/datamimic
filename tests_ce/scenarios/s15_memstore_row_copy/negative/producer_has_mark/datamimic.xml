@@ -1,0 +1,31 @@
+<setup rngSeed="1">
+    <memstore id="mem"/>
+    <generate name="types" count="2" target="mem">
+        <key name="code" generator="IncrementGenerator"/>
+        <key name="mark" constant="written by the producer"/>
+    </generate>
+    <generate name="teams" count="2" target="mem">
+        <key name="team_id" generator="IncrementGenerator"/>
+        <nestedKey name="tags" type="list" count="1">
+            <key name="label" constant="base"/>
+        </nestedKey>
+    </generate>
+    <generate name="probe" count="1">
+        <variable name="types" source="mem" sourceEntity="types" storage="data" distribution="ordered"/>
+        <variable name="teams" source="mem" sourceEntity="teams" storage="data" distribution="ordered"/>
+        <nestedKey name="items" script="[t.to_dict() for t in types]">
+            <key name="mark" constant="written by probe"/>
+        </nestedKey>
+        <nestedKey name="labels" script="[tag for team in teams for tag in team.tags]">
+            <key name="mark" constant="written by probe"/>
+        </nestedKey>
+        <key name="marked_items" script="len([item for item in this.items if 'mark' in item])"/>
+        <key name="marked_labels" script="len([label for label in this.labels if 'mark' in label])"/>
+    </generate>
+    <generate name="readback" source="mem" sourceEntity="types" distribution="ordered">
+        <key name="code" script="this.code"/>
+    </generate>
+    <generate name="team_readback" source="mem" sourceEntity="teams" distribution="ordered">
+        <key name="team_id" script="this.team_id"/>
+    </generate>
+</setup>

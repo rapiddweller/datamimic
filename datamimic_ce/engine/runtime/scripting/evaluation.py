@@ -60,7 +60,10 @@ class DotableDict:
             return default
 
     def to_dict(self) -> dict[str, object]:
-        return self._dictionary
+        """A copy: a script that changes it must not change the stored row, such as a memstore row (#421). Item access
+        wraps each nested row, and _plain unwraps it through this method again, so every row level is rebuilt; other
+        values stay shared, as in EE."""
+        return {key: _plain(self[key]) for key in self._dictionary}
 
     def keys(self) -> KeysView[str]:
         return self._dictionary.keys()

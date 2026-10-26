@@ -1,0 +1,21 @@
+{
+  "title": "A script copy of a memstore row leaves the store unchanged",
+  "proves": [
+    "row.to_dict() on a memstore row returns a copy: a nestedKey that adds a field to it changes neither the producer's output nor the memstore",
+    "a nested list field read from a memstore row holds copies of its rows",
+    "a later readback of the memstore sees the rows the producer wrote"
+  ],
+  "products": {
+    "types": 2,
+    "teams": 2,
+    "probe": 1,
+    "readback": 2,
+    "team_readback": 2
+  },
+  "negatives": [
+    {
+      "dir": "negative/producer_has_mark",
+      "diagnostic": "field_absent"
+    }
+  ]
+}
