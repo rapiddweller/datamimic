@@ -121,7 +121,12 @@ def _scanned_text(tool: str, tool_input: dict[str, object]) -> list[str]:
 
 def _under(path: str, roots: Sequence[Path]) -> bool:
     # normpath, not realpath: a venv's python is a symlink to a path outside the venv
-    candidate = Path(os.path.normpath(os.path.expanduser(path)))
+    # normpath keeps a leading double slash (POSIX), so //usr and /usr would differ
+    candidate = (
+        Path("/" + os.path.normpath(os.path.expanduser(path)).lstrip("/"))
+        if path.startswith("/")
+        else Path(os.path.normpath(os.path.expanduser(path)))
+    )
     return any(candidate.is_relative_to(root) for root in roots)
 
 

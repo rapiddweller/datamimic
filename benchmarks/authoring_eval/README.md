@@ -50,7 +50,7 @@ Raw transcripts and run directories stay outside the repository.
 | `per_parent_count` | each parent key owns exactly `n` child rows. Keys are compared as text, so keep `whole_number` on the parent key. |
 | `value_in` | every value is in `values`. |
 | `range` | every value is a whole number (as `whole_number`) from `min` to `max`, inclusive. |
-| `text` | every row has the field, and the value is a text that is not empty. A number, `None` and `""` fail. |
+| `text` | every row has the field, and the value is a text that is not empty. A number, `None` and `""` fail. A numeric string such as `"123"` and a blank string pass, so `script="str(ticket_id)"` passes. |
 | `field_at_most` | in every row, both fields are numbers and `field` is at most `other`. |
 | `exact_rows` | the captured rows equal `rows`. Row order is ignored. Keys and JSON types must match. |
 | `output_rows` | the run with the case directory `fixtures` laid over `fixtures/` produced the product and wrote `<product>.json`, or the chunk parts `<product>_<n>.json`, and their rows equal `rows` (as `exact_rows`). |
@@ -218,7 +218,7 @@ A void run can pass the audit. The fix review found that the audit misses these 
 |---|---|
 | a variable | `cat $HOME/.claude/CLAUDE.md`; `D=<venv>/bin/datamimic; cat ${D%/bin/datamimic}/lib/…` |
 | a bare `~` | `find ~ -name orders.csv`; `cd ~ && cat .claude/CLAUDE.md` |
-| a bare `/` | `find / -name oracle.json` |
+| a bare `/` or `//` | `find / -name oracle.json`; `ls //`; `cd // && cat etc/passwd` |
 | a relative path | `ls $PWD/../..`; `rm -rf ../../*`; `cat ../AGENTS.md` is flagged only by its name |
 | a glob | `cat ../AGENT?.md`; `cat ../C*.md` |
 | a changed canary | `cat ../CLAUDE.md \| tr a-z A-Z` |

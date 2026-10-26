@@ -273,7 +273,8 @@ class ExactRows(_Check):
 class OutputRows(_Check):
     """A run with the case directory ``fixtures`` laid over ``fixtures/`` wrote ``<product>.json`` (the JSON
     exporter) holding exactly ``rows``. A changed fixtures directory proves that the rows come from the input.
-    With a chunk size, the exporter writes ``<product>_<n>.json`` parts; the check joins them in order."""
+    With a chunk size, the exporter writes ``<product>_<n>.json`` parts; the check collects all of them. Row order
+    does not matter. A file whose stem names another product is not a part of this product."""
 
     kind: Literal["output_rows"]
     product: str
@@ -289,18 +290,19 @@ class OutputRows(_Check):
             return f"no run with {self.fixtures}"
         if output.error is not None:
             return f"run failed: {output.error}"
-        # a product named priced_orders_0 also writes priced_orders_0.json
         if self.product not in output.products:
             return f"product {self.product} was not produced"
-        name = re.compile(re.escape(self.product) + r"(?:_(\d+))?")
-        parts = sorted(
-            (int(match.group(1) or -1), rows)
-            for stem, rows in output.files.items()
-            if (match := name.fullmatch(stem)) is not None
-        )
-        if not parts:
+        name = re.compile(re.escape(self.product) + r"(?:_\d+)?")
+        # a product named priced_orders_0 also writes priced_orders_0.json, which is not a part of priced_orders
+        rows = [
+            row
+            for stem, part in output.files.items()
+            if name.fullmatch(stem) is not None and (stem == self.product or stem not in output.products)
+            for row in part
+        ]
+        if not rows:
             return f"no {self.product}.json was written"
-        return _row_difference([row for _, rows in parts for row in rows], self.rows)
+        return _row_difference(rows, self.rows)
 
 
 class WholeNumber(_Check):

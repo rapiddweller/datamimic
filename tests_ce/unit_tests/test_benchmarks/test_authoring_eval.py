@@ -178,6 +178,32 @@ _BROKEN = [
         },
         _BOTH_OUTPUTS,
     ),
+    # a second product named like a chunk of the first holds the right rows; the first one writes a CSV file only
+    Broken(
+        "e04",
+        "decoy_product_named_like_a_chunk",
+        {
+            _XML: [
+                (
+                    '<generate name="priced_orders" count="6" target="JSON">',
+                    '<generate name="priced_orders" count="6" target="CSV">\n'
+                    '        <variable name="source_row" source="fixtures/orders.csv" distribution="ordered"/>\n'
+                    '        <key name="order_id" script="source_row.order_id"/>\n'
+                    "    </generate>\n"
+                    '    <generate name="priced_orders_0" count="6" target="JSON">',
+                )
+            ],
+            _ACCEPTANCE: [
+                ('"max_count": 6', '"max_count": 12'),
+                (
+                    '"count": 6}\n  ]',
+                    '"count": 6},\n    {"kind": "exact_count", '
+                    '"subject": {"kind": "product", "product": "priced_orders_0"}, "count": 6}\n  ]',
+                ),
+            ],
+        },
+        _BOTH_OUTPUTS,
+    ),
     Broken(
         "e05",
         "independent_prices",
@@ -1032,3 +1058,10 @@ def test_a_killed_process_that_no_one_reaps_is_not_alive() -> None:
     finally:
         child.kill()
         child.wait()
+
+
+def test_a_double_leading_slash_names_the_same_place_as_a_single_one(tmp_path):
+    from benchmarks.authoring_eval.audit_transcript import _under
+
+    assert _under(f"/{tmp_path}/x", [tmp_path])
+    assert not _under("//etc/passwd", [tmp_path])
