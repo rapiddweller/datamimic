@@ -6,7 +6,7 @@
 
 Each step reads the policy through ``read_policy``. The model calls three functions with prepared rows and the
 policy; none reads a file: ``suitable_people`` (R1 to R3, once per position), ``assign_seats`` (R4 to R6, once per
-run) and ``check_position`` (the output check, once per position).
+run) and ``check_position`` (the R4 to R6 output check, once per position).
 """
 
 from collections import Counter
@@ -347,14 +347,12 @@ def assign_seats(positions: Sequence[Row], policy: Policy) -> Assignment:
 
 
 def check_position(position: Row, plan: Sequence[Row], positions: Sequence[Row]) -> dict[str, Any]:
-    """Check the plan for one position without the search: R1 to R3 by the eligible list, R4 to R6 directly."""
+    """Check R4 to R6 in the plan for one position without the search."""
     by_key = {_position_key(row): row for row in positions}
     people = [row["person_id"] for row in plan if _position_key(row) == _position_key(position)]
-    eligible = {entry["person_id"] for entry in position["eligible"]}
     others = [by_key[_position_key(row)] for row in plan if row["person_id"] in people]
     return {
         "filled": len(people),
-        "all_eligible": all(person in eligible for person in people),
         "distinct_people": len(set(people)) == len(people),
         "approval_exclusive": all(
             other["approval_id"] == position["approval_id"]

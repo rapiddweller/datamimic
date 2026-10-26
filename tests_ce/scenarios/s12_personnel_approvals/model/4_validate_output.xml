@@ -1,14 +1,28 @@
 <setup>
-    <!-- Validate output: check the plan of each position without the search, before the export reads it. -->
+    <!-- Validate output: check the plan without the search and without step 2, before the export reads it.
+         R1 to R3 for each seat, from the raw rows: a defect in step 2 cannot hide here. -->
+    <generate name="seat_check" source="mem" sourceEntity="plan" distribution="ordered" target="JSON">
+        <variable name="positions" source="mem" sourceEntity="positions" storage="data" distribution="ordered"/>
+        <variable name="employments" source="data/employments.json" storage="data" distribution="ordered"/>
+        <variable name="person_licenses" source="data/person_licenses.json" storage="data" distribution="ordered"/>
+        <variable name="person_qualifications" source="data/person_qualifications.json" storage="data" distribution="ordered"/>
+        <variable name="policy" source="data/policy.json" storage="value" distribution="ordered"/>
+        <variable name="position" script="{(row.version_id, row.function_id): row for row in positions}[(this.version_id, this.function_id)]"/>
+        <!-- The latest expiry per person, license type and status. A missing expiry sorts first and is never valid. -->
+        <variable name="latest_expiry" script="{(row.person_id, row.license_type, row.status): row.expires_on for row in sorted(person_licenses, key=lambda row: row.expires_on or '')}"/>
+        <key name="seat_id" script="this.seat_id"/>
+        <key name="r1_employed" script="(this.person_id, position.company_id, this.function_id) in {(row.person_id, row.company_id, row.function_id) for row in employments}"/>
+        <key name="r2_licensed" script="(latest_expiry.get((this.person_id, policy.base_license, policy.active_status)) or '') &gt;= position.valid_on"/>
+        <key name="r3_qualified" script="(this.person_id, policy.required_qualification[this.function_id]) in {(row.person_id, row.qualification_id) for row in person_qualifications}"/>
+    </generate>
+    <!-- R4 to R6 for each position: they need every seat that a person holds. Build needs a reader of step 2 rows. -->
     <generate name="plan_check" source="mem" sourceEntity="suitability" distribution="ordered" target="JSON">
         <variable name="plan" source="mem" sourceEntity="plan" storage="data" distribution="ordered"/>
-        <!-- The generate reads one position at a time; R5 and R6 need every position a person holds a seat in. -->
-        <variable name="positions" source="mem" sourceEntity="suitability" storage="data" distribution="ordered"/>
+        <variable name="positions" source="mem" sourceEntity="positions" storage="data" distribution="ordered"/>
         <variable name="check" script="check_position(this, plan, positions)"/>
         <key name="position_id" script="this.position_id"/>
         <key name="seats" script="this.seats"/>
         <key name="filled" script="check['filled']"/>
-        <key name="all_eligible" script="check['all_eligible']"/>
         <key name="distinct_people" script="check['distinct_people']"/>
         <key name="approval_exclusive" script="check['approval_exclusive']"/>
         <key name="company_exclusive" script="check['company_exclusive']"/>

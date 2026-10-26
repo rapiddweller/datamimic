@@ -73,15 +73,15 @@ The library has three functions that the steps call. None of them reads a file.
 
 - `suitable_people` gets one position and the person rows. It returns the eligible people, the exclusions counted by rule and the near misses (people that fail one rule).
 - `assign_seats` gets all positions with their eligible people and the policy. It returns the outcome, the plan and the decisions.
-- `check_position` gets one position and the plan. It returns the checks of step 4.
+- `check_position` gets one position and the plan. It returns the R4 to R6 checks of step 4. Step 4 checks R1 to R3 for each seat in XML (`seat_check`), from the raw rows.
 
 ## Rules
 
 | Rule | Meaning | Decided in | Parameter in `data/policy.json` | Build expectation |
 |---|---|---|---|---|
-| R1 | The person has an employment at the position's company in the position's function. It has three parts: `R1_person`, `R1_company`, `R1_function`. | `_employment` | none | `unfilled_by.R1_person == 0`, `unfilled_by.R1_company == 0`, `unfilled_by.R1_function == 0`, `all_eligible` |
-| R2 | The person has an active base license. It is valid on the version's date; the expiry day is valid; no expiry date is not valid. | `_base_license` | `base_license`, `active_status` | `unfilled_by.R2 == 0`, `all_eligible` |
-| R3 | The person has the qualification of the function. | `_qualification` | `required_qualification` | `unfilled_by.R3 == 0`, `all_eligible` |
+| R1 | The person has an employment at the position's company in the position's function. It has three parts: `R1_person`, `R1_company`, `R1_function`. | `_employment` | none | `unfilled_by.R1_person == 0`, `unfilled_by.R1_company == 0`, `unfilled_by.R1_function == 0`, `r1_employed` (step 4) |
+| R2 | The person has an active base license. It is valid on the version's date; the expiry day is valid; no expiry date is not valid. | `_base_license` | `base_license`, `active_status` | `unfilled_by.R2 == 0`, `r2_licensed` (step 4) |
+| R3 | The person has the qualification of the function. | `_qualification` | `required_qualification` | `unfilled_by.R3 == 0`, `r3_qualified` (step 4) |
 | R4 | Demand is 1 to `max_seats` seats. Different people take the seats of one position. A position is a version and a function. | `<assert>` in step 1 (the run stops), `_conflict` | `max_seats` | `child_execution` at `model/1_prepare.xml/assert`, `unfilled_by.R4 == 0`, `distinct_people` |
 | R5 | A person of an exclusive approval takes no seat of another approval. Versions of one approval share people. | `_conflict` | `exclusive_approvals` | `unfilled_by.R5 == 0`, `skipped_by.R5 >= 1`, `approval_exclusive` |
 | R6 | A person takes seats of one company only. Approvals of one company share people. | `_conflict` | none | `unfilled_by.R6 == 0`, `company_exclusive` |
@@ -141,7 +141,7 @@ The `search_ignores_*` negatives patch `lib/staffing.scr.py` and break the searc
 
 | Mutant | Changed lines | Build reports |
 |---|---|---|
-| `search_ignores_suitability` | the search also tries the near misses | `all_eligible` |
+| `search_ignores_suitability` | the search also tries the near misses | `r1_employed` |
 | `search_ignores_r4` | the R4 check in `_conflict` is removed | `distinct_people` |
 | `search_ignores_r5` | the R5 check in `_conflict` is removed | `approval_exclusive` |
 | `search_ignores_r6` | the R6 check in `_conflict` is removed | `company_exclusive` |
