@@ -150,3 +150,13 @@ What `3d33533b` changed:
   - Source and Validation move.
   - Unknowns, Contract, analyzer and the 20 diagnostics are unchanged, and so are the 1,428 / 182 / 261 measurements.
   - The rebind uses a gate run that finished without a collector error.
+
+## Addendum: squashed onto `83c2777d` (head `9886ec3c`)
+
+- **The patch is unchanged.** Against `83c2777d` it touches the same files with the same lines as the reviewed `c1e4472c` against `96aa455e`. This covers `datamimic_ce`, `tests_ce` and `docs/migrations`.
+- **The base moved.** Development now includes #395, #396, #398, #402 and #403.
+- **Merge precondition:** EE MR !464 (the corrected W008 text) must merge first.
+- **Binding:**
+  - Source and Validation move.
+  - Unknowns, Contract, analyzer and the 20 diagnostics are unchanged, and so are the 1,428 / 182 / 261 measurements.
+  - The rebind uses a gate run that finished without a collector error.
