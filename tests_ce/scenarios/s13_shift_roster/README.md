@@ -53,12 +53,12 @@ the roster that the search returns, also when that roster breaks a rule. Run onl
 
 | Rule | Decided in | Checked in the output | Parameter from |
 |---|---|---|---|
-| RS1 certification valid on the shift date | `certificate_status` (`lib/roster_rules.scr.py:27`), called by `model/2_suitability.xml:19` | `entry_checks.cert_status` must be `valid` (`acceptance/build.json:59`) | `data/shift_types.csv` (`required_cert`), `data/staff_certifications.csv` |
+| RS1 certification valid on the shift date | `certificate_status` (`lib/roster_rules.scr.py:27`), called by `model/2_suitability.xml:19` | `cert_status == 'valid'` on `entry_checks` (`acceptance/build.json:59`) | `data/shift_types.csv` (`required_cert`), `data/staff_certifications.csv` |
 | RS2 rest between two shifts, no overlap | `blocker` in `plan_roster` (`lib/roster_search.scr.py:59`) | `entry_checks.rest_hours >= min_rest_hours` (`acceptance/build.json:60`) | `data/policy.properties` (`min_rest_hours`) |
 | RS3 weekly hours within the contract | `blocker` in `plan_roster` | `hours_checks.busiest_week_hours <= contract_hours` (`acceptance/build.json:61`) | `data/contracts.csv` |
 | RS4 minimum and maximum staff, minimum lead holders | `solve` and `shortage` in `plan_roster` | `coverage_checks` (`acceptance/build.json:62`, `:63`) | `data/demand.csv` |
-| RS5 one ward per day | `blocker` in `plan_roster` | `entry_checks.wards_that_day` must be 1 (`acceptance/build.json:64`) | the rule itself |
-| RS6 never rostered on approved leave | `on_approved_leave` (`lib/roster_rules.scr.py:45`), called by `model/2_suitability.xml:15` | `entry_checks.on_leave` must be false (`acceptance/build.json:65`) | `data/leave.csv` |
+| RS5 one ward per day | `blocker` in `plan_roster` | `wards_that_day == 1` on `entry_checks` (`acceptance/build.json:64`) | the rule itself |
+| RS6 never rostered on approved leave | `on_approved_leave` (`lib/roster_rules.scr.py:45`), called by `model/2_suitability.xml:15` | `not on_leave` on `entry_checks` (`acceptance/build.json:65`) | `data/leave.csv` |
 
 The output checks read the roster and the data again. They do not read the suitability decisions or the search evidence.
 A rule that the search breaks is therefore caught, also when the search itself has a defect.
@@ -136,9 +136,9 @@ The export is not a transaction: the files are written one after the other.
 
 Each negative holds only the files that differ from the project.
 
-| Negative | What breaks | Build reports |
+| Negative | What breaks | `row_condition` that Build reports |
 |---|---|---|
-| `rs1_certificate_ignored` | Suitability ignores the certification. | `allowed_values` on `entry_checks.cert_status` |
+| `rs1_certificate_ignored` | Suitability ignores the certification. | `cert_status == 'valid'` |
 | `rs1_expiry_exclusive` | The expiry date is read as exclusive. | `row_condition`, caller control for S07 on 2026-03-04 |
 | `rs1_missing_expiry_unlimited` | A missing expiry date is read as valid. | `row_condition`, caller control for S09 |
 | `rs1_issue_date_ignored` | The issue date is ignored: a certification is valid before it starts. | `row_condition`, caller control for S06 on 2026-03-02 |
@@ -146,19 +146,21 @@ Each negative holds only the files that differ from the project.
 | `rs3_over_contract` | One extra entry after the search: S11 works 36 h of 32 h. | `row_condition` on `hours_checks` |
 | `rs4_lead_ignored` | The assign step gives the search no lead requirement. | `row_condition` on `coverage_checks.leads` |
 | `rs4_over_max` | Two extra entries after the search: 3 people in a slot with a maximum of 2. | `row_condition` on `coverage_checks.staffed` |
-| `rs5_second_ward` | One extra entry after the search: S07 works in W1 and W2 on one day. | `fixed_value` on `entry_checks.wards_that_day` |
-| `rs6_leave_ignored` | Suitability ignores the leave. | `fixed_value` on `entry_checks.on_leave` |
+| `rs5_second_ward` | One extra entry after the search: S07 works in W1 and W2 on one day. | `wards_that_day == 1` |
+| `rs6_leave_ignored` | Suitability ignores the leave. | `not on_leave` |
 | `rs6_leave_end_exclusive` | The last day of a leave is read as exclusive. | `row_condition`, caller control for S03 on 2026-03-04 |
-| `infeasible_monday_lead` | S01 is on leave on Monday: no one can lead the W2 night shift. The check before the search proves it. | `allowed_values` on `plan.outcome` (`infeasible`) |
-| `infeasible_after_search` | The W1 night shift also needs an ICU lead. Each Monday night slot alone has a lead (S01), both together have not. The search tries every team. | `allowed_values` on `plan.outcome` (`infeasible`) |
-| `budget_exhausted` | `search_budget` is 50. | `fixed_value` on `plan.search_complete` |
+| `infeasible_monday_lead` | S01 is on leave on Monday: no one can lead the W2 night shift. The check before the search proves it. | `outcome != 'infeasible'` |
+| `infeasible_after_search` | The W1 night shift also needs an ICU lead. Each Monday night slot alone has a lead (S01), both together have not. The search tries every team. | `outcome != 'infeasible'` |
+| `budget_exhausted` | `search_budget` is 50. | `search_complete == True` |
 
 When a negative changes the suitability or the lead requirement, the search does not need its backtrack.
 Then the caller control `backtracks >= 1` also fails. This is not a second broken rule.
 
-In `scenario.json`, `expected` is the `expected` text of the named diagnostic. For a `row_condition` it is the
-condition, which names the rule. For `allowed_values` and `fixed_value` it is only the expected value
-(for example `False`), and the two infeasible negatives share `['solved']` with `budget_exhausted`.
+Every rule check is a `row_condition`, so its `expected` text in `scenario.json` is the condition, which names the
+rule. The plan has two checks: `outcome != 'infeasible'` fails only when no roster exists, and
+`search_complete == True` fails only when the budget ran out. Together they mean `solved`, because the search has
+three outcomes. The two infeasible negatives share `outcome != 'infeasible'`: they prove the same outcome on two paths,
+and the `plan.message` shows which path (a slot shortage before the search, or every team failing in the search).
 
 An overlay replaces whole files. Four negatives therefore hold a full copy of `lib/roster_rules.scr.py`
 (`rs1_expiry_exclusive`, `rs1_missing_expiry_unlimited`, `rs1_issue_date_ignored`, `rs6_leave_end_exclusive`).

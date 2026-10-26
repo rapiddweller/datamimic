@@ -53,16 +53,16 @@
     {"kind": "row_condition", "subject": {"kind": "product", "product": "staff_certifications"}, "condition": "valid_days == None or valid_days >= 0"},
     {"kind": "row_condition", "subject": {"kind": "product", "product": "demand"}, "condition": "min_staff <= max_staff and min_lead <= min_staff"},
 
-    {"kind": "allowed_values", "subject": {"kind": "product", "product": "plan"}, "field": "outcome", "values": ["solved"]},
-    {"kind": "fixed_value", "subject": {"kind": "product", "product": "plan"}, "field": "search_complete", "value": true},
+    {"kind": "row_condition", "subject": {"kind": "product", "product": "plan"}, "condition": "outcome != 'infeasible'"},
+    {"kind": "row_condition", "subject": {"kind": "product", "product": "plan"}, "condition": "search_complete == True"},
 
-    {"kind": "allowed_values", "subject": {"kind": "product", "product": "entry_checks"}, "field": "cert_status", "values": ["valid"]},
+    {"kind": "row_condition", "subject": {"kind": "product", "product": "entry_checks"}, "condition": "cert_status == 'valid'"},
     {"kind": "row_condition", "subject": {"kind": "product", "product": "entry_checks"}, "condition": "rest_hours == None or rest_hours >= min_rest_hours"},
     {"kind": "row_condition", "subject": {"kind": "product", "product": "hours_checks"}, "condition": "busiest_week_hours <= contract_hours"},
     {"kind": "row_condition", "subject": {"kind": "product", "product": "coverage_checks"}, "condition": "staffed >= min_staff and staffed <= max_staff"},
     {"kind": "row_condition", "subject": {"kind": "product", "product": "coverage_checks"}, "condition": "leads >= min_lead"},
-    {"kind": "fixed_value", "subject": {"kind": "product", "product": "entry_checks"}, "field": "wards_that_day", "value": 1},
-    {"kind": "fixed_value", "subject": {"kind": "product", "product": "entry_checks"}, "field": "on_leave", "value": false}
+    {"kind": "row_condition", "subject": {"kind": "product", "product": "entry_checks"}, "condition": "wards_that_day == 1"},
+    {"kind": "row_condition", "subject": {"kind": "product", "product": "entry_checks"}, "condition": "not on_leave"}
   ],
   "acceptance_requirements": [
     {"origin": "caller", "expectation": {"kind": "row_condition", "subject": {"kind": "product", "product": "candidates"}, "condition": "candidate_id != 'S07/2026-03-04' or 'night' in eligible_shifts"}},
