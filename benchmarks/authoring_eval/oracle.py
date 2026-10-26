@@ -13,6 +13,7 @@ import argparse
 import contextlib
 import json
 import os
+import re
 import secrets
 import shutil
 import subprocess
@@ -53,6 +54,7 @@ class Output:
 
     error: str | None  # exception class name when the run failed
     files: dict[str, list[object]] = field(default_factory=dict)  # file stem -> parsed JSON array
+    products: frozenset[str] = frozenset()  # the products the run captured
 
 
 @dataclass(frozen=True)
@@ -270,7 +272,8 @@ class ExactRows(_Check):
 
 class OutputRows(_Check):
     """A run with the case directory ``fixtures`` laid over ``fixtures/`` wrote ``<product>.json`` (the JSON
-    exporter) holding exactly ``rows``. A changed fixtures directory proves that the rows come from the input."""
+    exporter) holding exactly ``rows``. A changed fixtures directory proves that the rows come from the input.
+    With a chunk size, the exporter writes ``<product>_<n>.json`` parts; the check joins them in order."""
 
     kind: Literal["output_rows"]
     product: str
@@ -286,10 +289,18 @@ class OutputRows(_Check):
             return f"no run with {self.fixtures}"
         if output.error is not None:
             return f"run failed: {output.error}"
-        written = output.files.get(self.product)
-        if written is None:
+        # a product named priced_orders_0 also writes priced_orders_0.json
+        if self.product not in output.products:
+            return f"product {self.product} was not produced"
+        name = re.compile(re.escape(self.product) + r"(?:_(\d+))?")
+        parts = sorted(
+            (int(match.group(1) or -1), rows)
+            for stem, rows in output.files.items()
+            if (match := name.fullmatch(stem)) is not None
+        )
+        if not parts:
             return f"no {self.product}.json was written"
-        return _row_difference(written, self.rows)
+        return _row_difference([row for _, rows in parts for row in rows], self.rows)
 
 
 class WholeNumber(_Check):
@@ -460,8 +471,8 @@ def _observe(case: str, project: Path, changed_fixtures: list[str]) -> Observed:
         build = create_authoring_application(build_copy, descriptor_path=PROJECT_ENTRY_PATH).build()
         build_note = None if isinstance(build, ReadyBuild) else f"Build {build.outcome} in phase {build.phase.value}"
         first, second, *changed = [_finish(process) for process in processes]
-        outputs = {_FIXTURES: Output(first.error, json_outputs(first_copy))} | {
-            name: Output(capture.error, json_outputs(copy))
+        outputs = {_FIXTURES: Output(first.error, json_outputs(first_copy), frozenset(first.rows))} | {
+            name: Output(capture.error, json_outputs(copy), frozenset(capture.rows))
             for name, copy, capture in zip(changed_fixtures, changed_copies, changed, strict=True)
         }
         return Observed(

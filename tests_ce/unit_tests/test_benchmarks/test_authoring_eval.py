@@ -161,6 +161,23 @@ _BROKEN = [
         {_XML: [(' target="JSON"', "")]},
         _BOTH_OUTPUTS,
     ),
+    # chunked output is valid, so only the wrong rule fails
+    Broken(
+        "e04",
+        "chunked_wrong_priority_threshold",
+        {_XML: [(' target="JSON"', ' target="JSON(chunk_size=4)"'), (">= 5000", ">= 4000")]},
+        _BOTH_OUTPUTS,
+    ),
+    # the right rows in priced_orders_0.json, but the dataset has the wrong name
+    Broken(
+        "e04",
+        "product_named_like_a_chunk",
+        {
+            _XML: [('<generate name="priced_orders"', '<generate name="priced_orders_0"')],
+            _ACCEPTANCE: [('"product": "priced_orders"', '"product": "priced_orders_0"')],
+        },
+        _BOTH_OUTPUTS,
+    ),
     Broken(
         "e05",
         "independent_prices",
@@ -361,6 +378,15 @@ def test_broken_variant_fails_exactly_the_expected_checks(broken: Broken, tmp_pa
 
     assert _failed(project, broken.case) == broken.fails
     assert not evaluate(broken.case, project).passed
+
+
+@pytest.mark.parametrize("chunk_size", [10, 4])  # one part priced_orders_0.json, or two parts
+def test_chunked_json_output_passes_for_both_fixtures(chunk_size: int, tmp_path: Path) -> None:
+    project = _reference(tmp_path, "e04")
+    xml = (project / _XML).read_text(encoding="utf-8")
+    (project / _XML).write_text(xml.replace(' target="JSON"', f' target="JSON(chunk_size={chunk_size})"'))
+
+    assert _failed(project, "e04") == set()
 
 
 @pytest.mark.parametrize("folder", ["output", "Output"])  # macOS file systems ignore case

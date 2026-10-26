@@ -53,7 +53,7 @@ Raw transcripts and run directories stay outside the repository.
 | `text` | every row has the field, and the value is a text that is not empty. A number, `None` and `""` fail. |
 | `field_at_most` | in every row, both fields are numbers and `field` is at most `other`. |
 | `exact_rows` | the captured rows equal `rows`. Row order is ignored. Keys and JSON types must match. |
-| `output_rows` | the run with the case directory `fixtures` laid over `fixtures/` wrote `<product>.json`, and its rows equal `rows` (as `exact_rows`). |
+| `output_rows` | the run with the case directory `fixtures` laid over `fixtures/` produced the product and wrote `<product>.json`, or the chunk parts `<product>_<n>.json`, and their rows equal `rows` (as `exact_rows`). |
 | `seed_is` | `<setup rngSeed>` of the entry `datamimic.xml` is `seed`. The agent's `acceptance/build.json` is never read. |
 | `repeatable` | two runs give the same rows in the same order. The runs use separate copies and interpreters, with `PYTHONHASHSEED` `1` and `2`. |
 
