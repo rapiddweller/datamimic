@@ -248,7 +248,6 @@ class _Search:
                 raise _BudgetExhausted
             self.held.setdefault(person_id, []).append(position)
             self.chosen[seat_id] = person_id
-            self.decisions.append(_decision(position, seat_id, person_id, "try"))
             starved = self._forward_check(index + 1)
             if starved is None and self.fill(index + 1):
                 return True
