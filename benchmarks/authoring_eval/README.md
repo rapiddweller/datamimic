@@ -32,9 +32,9 @@ Raw transcripts and run directories stay outside the repository.
 | Id | Class | Domain | What it tests |
 |---|---|---|---|
 | e01 | simple | flat dataset | count, unique id, closed value set, numeric range, generated text that differs per ticket |
-| e05 | simple | prices | closed value set, two ranges, one rule across two fields |
-| e02 | complex | parent and child | exact count per parent, key copied from the parent, unique id over all children |
-| e03 | complex | parent and child | child id from a given formula of the parent id and a per-parent counter, helper value that is not a field, fixed value |
+| e05 | simple | prices | closed value set, two ranges, one rule across two fields; one constant value per field passes too |
+| e02 | complex | parent and child | exact count per parent, a parent key in each child, unique id over all children; a flat project passes too |
+| e03 | complex | parent and child | the exact 12 slot rows of a prescribed `slot_id` formula, with no helper field; a literal table of the rows passes too |
 | e04 | complex | CSV to JSON | comma separator, text to number, derived field, field subset, file output, rows that come from the input |
 
 ## Oracle checks
@@ -66,9 +66,14 @@ The exit code is `0` when all checks pass and `1` otherwise.
 Limits of the oracle:
 
 - `per_parent_count` groups the child rows by the parent key. It does not prove that a child sits under the right parent when two parents swap keys.
-- The oracle checks values, not the method. e03 prescribes the `slot_id` formula, so a global counter gives wrong values. A flat project that computes the per-depot counter by arithmetic still passes.
+- The oracle checks values, not the method. The fix review wrote these projects, and they pass:
+  - e03: a global counter gives wrong values and fails. A flat project that computes the per-depot counter by arithmetic passes. A literal list of the 12 `slot_id` values passes, because the prompt fixes all 12 rows. e03 proves the arithmetic, not nested authoring.
+  - e02: a flat `invoices` product with `subscriber_id = (invoice_id - 1) // 3 + 1` passes.
+  - e05: `tier=GOLD`, `list_price=900`, `sale_price=50` in all 40 rows passes. That is literal compliance with the prompt.
 - e04 proves that the rows come from the CSV with a second CSV of other values (`fixtures_changed/`). It does not prove how the project reads the file.
   A project that reads its own copy of the CSV at another path fails that check. The prompt names `fixtures/orders.csv`, so this is intended.
+- The answer key is on disk: in this repository, in other checkouts of it, and in the transcripts of the sessions that wrote the cases (`~/.claude/projects`).
+  The sandbox blocks Bash reads of this checkout and of `~/.claude/projects` only. So e04 proves that the rows come from the CSV only for a subject that does not search the disk. Read the transcript.
 - `repeatable` finds a difference that two hash seeds expose. The engine fixes the clock and the random generators when the seed is set, so a script cannot use them to make a seeded run differ.
 
 ## Protocol
@@ -198,8 +203,22 @@ A run is void when the runner reports a problem or the audit finds a forbidden a
 
 A void run does not count in any rate. Repeat it with a new process. List the void runs in the results file with the finding.
 
-The audit reads the tool calls of the assistant for tools and paths, and every line for the canary. It reads shell commands for absolute and `~` paths only.
-It does not resolve relative paths or paths built by variables. A void run can still pass the audit when the agent hides a path in a variable. Read the transcript when a result looks too good.
+The audit reads the tool calls of the assistant for tools and paths, and every line for the canary. It reads shell commands for absolute and `~/` paths only.
+A void run can pass the audit. The fix review found that the audit misses these Bash forms:
+
+| Form | Example |
+|---|---|
+| a variable | `cat $HOME/.claude/CLAUDE.md`; `D=<venv>/bin/datamimic; cat ${D%/bin/datamimic}/lib/…` |
+| a bare `~` | `find ~ -name orders.csv`; `cd ~ && cat .claude/CLAUDE.md` |
+| a bare `/` | `find / -name oracle.json` |
+| a relative path | `ls $PWD/../..`; `rm -rf ../../*`; `cat ../AGENTS.md` is flagged only by its name |
+| a glob | `cat ../AGENT?.md`; `cat ../C*.md` |
+| a changed canary | `cat ../CLAUDE.md \| tr a-z A-Z` |
+| an interpreter under `/usr` | `/usr/bin/python3 -c "open(…/.ssh/config)"`; `/usr` is allowed |
+| the network | `curl -s https://…` |
+
+The audit also misses a relative file-tool path such as `Read file_path=../CLAUDE.md`. `--restricted` denies that read, and the denial voids the run.
+The sandbox blocks the network and the writes outside the cwd and the sandbox temp directory for every form above, but not all reads (see [Bash sandbox](#bash-sandbox)). Read the transcript when a result looks too good.
 
 ## Targets
 
