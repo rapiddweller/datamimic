@@ -21,7 +21,7 @@ def _holding_status(holding: Row, day: datetime.date) -> str:
         return "not_yet_issued"
     if not isinstance(expires_on, datetime.date):
         return "no_expiry_date"  # a missing expiry date is not unlimited validity
-    return "valid" if day <= expires_on else "expired"  # the expiry datetime.date itself is still valid
+    return "valid" if day <= expires_on else "expired"  # the expiry date itself is still valid
 
 
 def certificate_status(holdings: Sequence[Row], staff_id: str, cert_code: str, day: datetime.date) -> str:

@@ -1,0 +1,28 @@
+<setup>
+    <!-- Assign: search for one complete roster over all slots (RS2 to RS5) and keep the evidence of each decision. -->
+    <generate name="plan" count="1" target="mem">
+        <variable name="slots" source="mem" sourceEntity="slots" storage="data" distribution="ordered"/>
+        <variable name="candidates" source="mem" sourceEntity="candidates" storage="data" distribution="ordered"/>
+        <variable name="result" script="plan_roster([dict(row, min_lead=0) for row in slots], candidates, int(min_rest_hours), int(search_budget))"/>
+        <key name="plan_id" script="1"/>
+        <key name="outcome" script="result['outcome']"/>
+        <key name="search_complete" script="result['search_complete']"/>
+        <key name="message" script="result['message']"/>
+        <key name="steps" script="result['steps']"/>
+        <key name="backtracks" script="result['backtracks']"/>
+        <key name="search_budget" script="int(search_budget)"/>
+        <generate name="roster" script="result['entries']" count="{len(result['entries'])}" distribution="ordered" target="mem">
+            <key name="entry_id" script="entry_id"/>
+            <key name="slot_id" script="slot_id"/>
+            <key name="shift_date" script="shift_date"/>
+            <key name="ward_id" script="ward_id"/>
+            <key name="shift_code" script="shift_code"/>
+            <key name="staff_id" script="staff_id"/>
+        </generate>
+        <generate name="slot_decisions" script="result['decisions']" count="{len(result['decisions'])}" distribution="ordered" target="mem">
+            <key name="slot_id" script="slot_id"/>
+            <array name="assigned" script="assigned"/>
+            <nestedKey name="blocked" script="blocked"/>
+        </generate>
+    </generate>
+</setup>

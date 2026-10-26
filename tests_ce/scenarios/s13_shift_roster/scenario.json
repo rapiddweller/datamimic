@@ -30,5 +30,17 @@
     "hours_checks": 16,
     "coverage_checks": 42
   },
-  "negatives": []
+  "negatives": [
+    {"dir": "negative/rs1_certificate_ignored", "diagnostic": "allowed_values"},
+    {"dir": "negative/rs1_expiry_exclusive", "diagnostic": "row_condition"},
+    {"dir": "negative/rs1_missing_expiry_unlimited", "diagnostic": "row_condition"},
+    {"dir": "negative/rs2_rest_ignored", "diagnostic": "row_condition"},
+    {"dir": "negative/rs3_over_contract", "diagnostic": "row_condition"},
+    {"dir": "negative/rs4_lead_ignored", "diagnostic": "row_condition"},
+    {"dir": "negative/rs4_over_max", "diagnostic": "row_condition"},
+    {"dir": "negative/rs5_second_ward", "diagnostic": "fixed_value"},
+    {"dir": "negative/rs6_leave_ignored", "diagnostic": "fixed_value"},
+    {"dir": "negative/infeasible_monday_lead", "diagnostic": "allowed_values"},
+    {"dir": "negative/budget_exhausted", "diagnostic": "fixed_value"}
+  ]
 }
