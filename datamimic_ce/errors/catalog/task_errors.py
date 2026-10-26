@@ -359,7 +359,8 @@ ISSUES: list[IssueDefinition] = [
         template="generated product rows exceed the total Build limit {limit}",
         cause="The run attempted to generate more product rows than its shared total-row limit.",
         resolution=(
-            "Build derives max_count only when every product has a literal count or reads a memstore back. "
+            "Build derives max_count only when every product has a literal count or reads a memstore back from a "
+            "literal producer. "
             "Set max_count to the rows of all products together, or reduce the rows."
         ),
     ),

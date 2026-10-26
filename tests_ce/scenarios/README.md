@@ -52,8 +52,8 @@ For each negative the test copies the project, applies the patch to the copy, Bu
 
 - Use no real data and no customer names.
 - Use only file, SQLite or targetless products here. A scenario that needs a service goes to `external_service_tests`.
-- Omit `max_count` when every product has a literal count or reads a memstore back: Build derives the limit
-  from the declared total. Set it when a product reads a file source without count, or uses a script count or a
-  count range, and all products make more than 10 rows.
+- Omit `max_count` when every product has a literal count or reads a memstore back from a literal producer:
+  Build derives the limit from the declared total. Set it when a product reads a file source without count, or
+  uses a script count or a count range, and all products make more than 10 rows.
 - Break one rule in each negative. Then the code in `scenario.json` names the cause.
 - A defect that a scenario finds gets its own fix and its own test, or a documented limit.

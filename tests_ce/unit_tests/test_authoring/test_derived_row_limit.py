@@ -145,7 +145,8 @@ def test_runtime_total_overrun_names_the_limit_without_capture_noise(tmp_path: P
     assert "all products together" in diagnostic.message
     # No number is known here, so the remediation names which total to count and why Build could not derive it.
     assert diagnostic.remediation == (
-        "Build derives max_count only when every product has a literal count or reads a memstore back. "
+        "Build derives max_count only when every product has a literal count or reads a memstore back from a "
+        "literal producer. "
         "Set max_count to the rows of all products together, or reduce the rows."
     )
 

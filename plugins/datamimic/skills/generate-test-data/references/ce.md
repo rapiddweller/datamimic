@@ -66,8 +66,8 @@ some columns and to find where `datamimic run` writes a file target, read
 Request smoke through `verification` when required. Build replays every seeded
 model under other hash seeds; requesting deterministic replay also fails an
 unseeded model. Omit `max_count` when every product has a literal count
-or reads a memstore back: Build derives the limit from the declared total (at most
-1000). For a file source without count, a script count or a count range
+or reads a memstore back from a literal producer: Build derives the limit from the
+declared total (at most 1000). For a file source without count, a script count or a count range
 (`minCount`/`maxCount`), set it to the total rows of all products.
 Never inject or change a runtime count just to satisfy the proof budget.
 

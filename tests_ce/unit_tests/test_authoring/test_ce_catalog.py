@@ -168,7 +168,9 @@ def test_guide_reference_query_returns_buildable_assembly(tmp_path):
 
 
 def test_taught_acceptance_omits_max_count(tmp_path):
-    """The starters teach the wire form agents copy: omit max_count, never send null (CE 4 and EE reject null)."""
+    """The starters teach the wire form agents copy: omit max_count, never send null.
+
+    CE before #426 and EE Build v4 reject a null max_count."""
     import json
 
     from typer.testing import CliRunner

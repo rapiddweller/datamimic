@@ -75,9 +75,10 @@ and `acceptance/build.json`:
    needed. Build replays every seeded model; `"deterministic_replay": true` also
    requires the replay and fails an unseeded model.
    Omit `max_count`: with literal counts Build derives the limit from the declared
-   total (at most 1000). A source with a literal count and a memstore readback count
-   too. Set it only for a file source without count, a script count or a count range
-   (`minCount`/`maxCount`); it limits the rows of all products together.
+   total (at most 1000). A source with a literal count and a memstore readback of a
+   literal producer count too. Set it only for a file source without count, a script
+   count or a count range (`minCount`/`maxCount`); it limits the rows of all products
+   together.
 5. Run `datamimic authoring build <project>` and stop on `outcome: "ready"`.
    `artifact.files` lists every file the proof read with its digest; changing any
    of them voids the proof. Execute `datamimic run datamimic.xml` only when real
