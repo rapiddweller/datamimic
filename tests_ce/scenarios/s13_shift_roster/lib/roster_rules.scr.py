@@ -4,7 +4,7 @@
 
 """Output evidence for RS2 and RS3: sums and lookups over the whole roster for one entry or person.
 
-A script comprehension cannot do them: it does not see the fields of the current record (see README.md, Python).
+Each needs a sum or a search over the whole roster for one entry or person (see README.md, Python).
 """
 
 import datetime  # the module, as scripts see it: a library name shadows the script global of the same name

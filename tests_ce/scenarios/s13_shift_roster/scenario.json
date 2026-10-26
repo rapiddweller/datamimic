@@ -11,7 +11,7 @@
     "a person works in one ward per day",
     "the search needs one backtrack: the greedy first choice for Monday night in W1 leaves W2 without a lead",
     "a demand that no roster can meet is reported as infeasible, and an exhausted budget is reported as not proven",
-    "the decision evidence names the rule and the reason for every person who is left out"
+    "the decision evidence names the strongest rule and the reason for every person who is left out, or not_needed when no rule excludes the person"
   ],
   "products": {
     "policy": 1,
@@ -49,6 +49,7 @@
     {"name": "rs6_leave_end_exclusive", "diagnostic": "row_condition", "expected": "candidate_id != 'S03/2026-03-04' or on_leave", "patch": {"file": "lib/leave.scr.py", "old": "row[\"staff_id\"] == staff_id and row[\"status\"] == \"approved\" and row[\"first_day\"] <= day <= row[\"last_day\"]", "new": "row[\"staff_id\"] == staff_id and row[\"status\"] == \"approved\" and row[\"first_day\"] <= day < row[\"last_day\"]"}},
     {"name": "infeasible_monday_lead", "diagnostic": "row_condition", "expected": "outcome != 'infeasible'", "patch": {"file": "data/leave.csv", "old": "L5,S18,2026-03-02,2026-03-04,approved\n", "new": "L5,S18,2026-03-02,2026-03-04,approved\nL6,S01,2026-03-02,2026-03-02,approved\n"}},
     {"name": "infeasible_after_search", "diagnostic": "row_condition", "expected": "outcome != 'infeasible'", "patch": {"file": "data/demand.csv", "old": "D1,W1,night,1,2,ALS,1", "new": "D1,W1,night,1,2,ICU,1"}},
+    {"name": "policy_not_whole", "diagnostic": "child_execution", "run_error": "ValueError in descriptor 'model/1_prepare.xml'", "patch": {"file": "data/policy.properties", "old": "search_budget=1000", "new": "search_budget=ten"}},
     {"name": "budget_exhausted", "diagnostic": "row_condition", "expected": "search_complete == True", "patch": {"file": "data/policy.properties", "old": "search_budget=1000", "new": "search_budget=50"}}
   ]
 }

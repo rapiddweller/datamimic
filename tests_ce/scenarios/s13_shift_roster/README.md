@@ -216,6 +216,7 @@ copy of the project and Builds the copy.
 | `rs6_leave_end_exclusive` | The last day of a leave is read as exclusive. |
 | `infeasible_monday_lead` | S01 is on leave on Monday: no one can lead the W2 night shift. The check before the search proves it. |
 | `infeasible_after_search` | The W1 night shift also needs an ICU lead. Each Monday night slot alone has a lead (S01), both together have not. The search tries every team. |
+| `policy_not_whole` | `search_budget` is `ten`. Step 1 stops the run: Build reports `child_execution`, and a normal run fails with a `ValueError`. |
 | `budget_exhausted` | `search_budget` is 50. |
 
 When a negative changes the suitability or the lead requirement, the search does not need its backtrack.
@@ -239,8 +240,9 @@ fallback would hide a failure in the decision evidence. A failing script must st
 - The checks are a gate in Build only (see [Process](#process); F13, #420).
 - There is no `delivery/` folder, and the cleanup step deletes nothing. A SQLite target needs an existing table, and Build refuses the
   SQL that creates it, so the project writes CSV files (F19, #420).
-- The rule checks are Python functions in `lib/`, not only the search. A `script=` comprehension does not see the
-  fields of the current record (F1, #423).
+- The rule checks are Python functions in `lib/`, not only the search. RS1 and RS6 could be native `nestedKey`
+  rules, but then each would have a second definition in the output check. A `script=` comprehension does not see
+  the fields of the current record (F1, #423).
 - The libraries import the module `datetime`, because a library name hides a script global of the same name (F3, #423).
 - Every store read uses `sourceEntity=`, not `type=`: `type=` also sets the entity that a step writes (F4, #422).
 - The `nestedKey` in suitability builds new dicts for its items and never uses `row.to_dict()`: that call returns the
