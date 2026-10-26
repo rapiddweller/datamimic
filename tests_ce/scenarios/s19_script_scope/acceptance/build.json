@@ -8,7 +8,7 @@
   ],
   "expectations": [
     {"kind": "exact_count", "subject": {"kind": "product", "product": "orders"}, "count": 3},
-    {"kind": "exact_count", "subject": {"kind": "product", "product": "checks"}, "count": 3},
+    {"kind": "exact_count", "subject": {"kind": "product", "product": "checks"}, "count": 4},
     {"kind": "unique", "subject": {"kind": "product", "product": "orders"}, "field": "order_id"}
   ],
   "acceptance_requirements": [
@@ -19,6 +19,8 @@
     {"origin": "caller", "expectation": {"kind": "row_condition", "subject": {"kind": "product", "product": "orders"}, "condition": "empty_count == 0"}},
     {"origin": "caller", "expectation": {"kind": "row_condition", "subject": {"kind": "product", "product": "orders"}, "condition": "rebound_len == 10 and squared == (order_id + 1) * (order_id + 1)"}},
     {"origin": "caller", "expectation": {"kind": "row_condition", "subject": {"kind": "product", "product": "orders"}, "condition": "field_wins == True"}},
+    {"origin": "caller", "expectation": {"kind": "row_condition", "subject": {"kind": "product", "product": "orders"}, "condition": "3 <= dice <= 18 and len(pick) == 2 and positive == 'yes'"}},
+    {"origin": "caller", "expectation": {"kind": "row_condition", "subject": {"kind": "product", "product": "orders"}, "condition": "hits[0]['n'] == list_count"}},
     {"origin": "caller", "expectation": {"kind": "row_condition", "subject": {"kind": "product", "product": "checks"}, "condition": "parent_count >= 1 and parent_count == root_count"}},
     {"origin": "caller", "expectation": {"kind": "row_condition", "subject": {"kind": "product", "product": "checks"}, "condition": "order_id != 2 or parent_count == 2"}}
   ]

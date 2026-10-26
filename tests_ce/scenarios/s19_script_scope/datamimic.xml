@@ -15,7 +15,13 @@
         <key name="squared" script="(side := order_id + 1) * side"/>
         <key name="round" script="order_id * 100"/>
         <key name="field_wins" script="sum(round for line in lines if line['order'] == order_id) == round * list_count"/>
-        <generate name="checks" count="1">
+        <key name="dice" script="sum(random.randint(1, 6) for _ in range(3))"/>
+        <key name="pick" script="''.join([random.choice('abc') for _ in range(2)])"/>
+        <key name="positive" constant="yes" condition="all(line['qty'] &gt; 0 for line in lines if line['order'] == order_id)"/>
+        <nestedKey name="hits" type="list" count="1">
+            <key name="n" script="len([line for line in root.lines if root.order_id == line.order])"/>
+        </nestedKey>
+        <generate name="checks" count="{sum(1 for line in lines if line['order'] == order_id)}">
             <key name="order_id" script="parent.order_id"/>
             <key name="parent_count" script="sum(1 for line in parent.lines if line.order == parent.order_id)"/>
             <key name="root_count" script="len([line for line in root.lines if line.order == root.order_id])"/>

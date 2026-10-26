@@ -1,6 +1,7 @@
 import copy
 import datetime
 import json
+import sys
 from pathlib import Path
 
 import pytest
@@ -227,3 +228,32 @@ def test_text_from_data_is_not_kept_in_the_compile_cache() -> None:
     assert evaluation._compiled.cache_info().currsize == 0
     context.evaluate_python_expression("40 + 2")
     assert evaluation._compiled.cache_info().currsize == 1
+
+
+def test_an_assignment_in_a_generator_expression_does_not_reach_the_shared_engine_names() -> None:
+    """Python-only: only an unseeded run shares one engine-name dict across evaluations, and every scenario sets
+    rngSeed (a seeded run copies the dict per evaluation). A later generate must not read the name."""
+    from datamimic_ce.engine.runtime.scripting.expression_globals import SAFE_GLOBALS
+
+    context = _context()
+    assert context.evaluate_python_expression("any((leaked := v * 100) for v in [2])") is True
+
+    assert "leaked" not in SAFE_GLOBALS
+    with pytest.raises(TaskConfigError, match="NameError: name 'leaked' is not defined"):
+        context.evaluate_python_expression("leaked")
+
+
+@pytest.mark.skipif(
+    sys.version_info >= (3, 12),
+    reason="3.12+ inlines comprehensions (PEP 709): there the field already won before #423, so no value changes",
+)
+def test_a_field_named_max_wins_inside_a_comprehension_on_python_3_11() -> None:
+    """Python 3.11 value change of #423: a field `max` read in `[max(a, 2) for ...]` used the builtin and gave
+    '[2, 3]'. The comprehension now sees the field, as the top level does, so the call fails and names the field."""
+    with pytest.raises(TaskConfigError) as exc:
+        _context(namespace={"max": 7}).evaluate_python_expression("str([max(a, 2) for a in [1, 3]])")
+
+    assert isinstance(exc.value.__cause__, TypeError)
+    assert "the expression reads 'max', which a script, variable or field binds in place of the engine's" in str(
+        exc.value
+    )
