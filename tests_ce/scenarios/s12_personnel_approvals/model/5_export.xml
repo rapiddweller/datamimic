@@ -1,5 +1,6 @@
 <setup>
-    <!-- Export: project the eleven target tables to CSV; staffing reads the checked plan back from the memstore. -->
+    <!-- Export: write the eleven target tables to CSV; staffing reads the checked plan back from the memstore.
+         The keys list the 27 target columns. They do not filter: a source field outside the list still reaches the CSV (#420). -->
     <generate name="companies" source="data/companies.json" distribution="ordered" target="CSV">
         <key name="company_id" script="this.company_id"/>
         <key name="company_name" script="this.company_name"/>
