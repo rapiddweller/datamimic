@@ -12,6 +12,9 @@
     <execute uri="script/flagged/class_body.scr.py"/>
     <execute uri="script/flagged/eager_consumer.scr.py"/>
     <execute uri="script/flagged/import_in_body.scr.py"/>
+    <execute uri="script/flagged/starred_list.scr.py"/>
+    <execute uri="script/flagged/starred_call.scr.py"/>
+    <execute uri="script/flagged/starred_tuple.scr.py"/>
     <generate name="rows" count="1">
         <key name="id" generator="IncrementGenerator"/>
     </generate>

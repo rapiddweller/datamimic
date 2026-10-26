@@ -460,6 +460,15 @@ def _callee_name(func: ast.expr) -> str | None:
     return func.attr if isinstance(func, ast.Attribute) else None
 
 
+def _generator_parts(generator: ast.GeneratorExp) -> list[ast.AST]:
+    """The parts of a generator expression that run once something consumes it."""
+    parts: list[ast.AST] = [generator.elt]
+    for comprehension in generator.generators:
+        parts.append(comprehension.iter)
+        parts.extend(comprehension.ifs)
+    return parts
+
+
 def _load_time_calls(tree: ast.Module) -> list[ast.Call]:
     """Calls the module body runs while loading: everything except function and lambda bodies and the deferred
     parts of a generator expression. A function's decorators and default arguments run, a class body runs too.
@@ -473,10 +482,10 @@ def _load_time_calls(tree: ast.Module) -> list[ast.Call]:
             if _callee_name(node.func) in _EAGER_CONSUMERS:
                 for argument in node.args:
                     if isinstance(argument, ast.GeneratorExp):
-                        pending.append(argument.elt)
-                        for comprehension in argument.generators:
-                            pending.append(comprehension.iter)
-                            pending.extend(comprehension.ifs)
+                        pending.extend(_generator_parts(argument))
+        if isinstance(node, ast.Starred) and isinstance(node.value, ast.GeneratorExp):
+            pending.extend(_generator_parts(node.value))  # `[*gen]`, `f(*gen)` and `(*gen,)` consume it at once
+            continue
         if isinstance(node, ast.GeneratorExp):
             pending.append(node.generators[0].iter)  # only the outermost iterable is evaluated eagerly
             continue
