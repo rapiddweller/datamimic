@@ -68,6 +68,24 @@ git push origin my-feature-or-fix
 
 ---
 
+## 🏛️ Architecture Check
+
+One check applies to everybody: `make architecture-check`. Run it before you open a pull request.
+
+The check fails when one of these is true:
+
+- The code has an architecture violation, or the baseline in `known-violations.json` drifts.
+- A measurement budget is exceeded, or the report is incomplete.
+- The code adds an UNKNOWN finding that the review record does not assess.
+
+A code change that adds no UNKNOWN finding, and changes neither the architecture contract nor the analyzer, needs no review record. You do not edit `docs/architecture/refactoring-study/experiment-2/completion-unknowns.json`.
+
+A maintainer records a review only when the set of UNKNOWN findings, the contract, or the analyzer changes. If your change causes that, the maintainer adds the record to your branch.
+
+The independent architecture review stays a required process step. It is recorded as a review note in the pull request, not as a digest.
+
+---
+
 ## 💬 Community
 
 Join our [GitHub Discussions](https://github.com/rapiddweller/datamimic/discussions) to share ideas, ask questions, or discuss potential features and improvements.
