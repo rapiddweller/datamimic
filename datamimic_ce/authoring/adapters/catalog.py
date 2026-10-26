@@ -29,7 +29,13 @@ from datamimic_ce.authoring.domain.capabilities import (
 )
 from datamimic_ce.authoring.domain.diagnostics import RuleCatalogEntry, RuleOwner
 from datamimic_ce.authoring.domain.dm_json import DmJsonDocumentV1, DmJsonNodeV1
-from datamimic_ce.authoring.domain.expectations import ExactCountExpectation, ExpectationIntent, ProductRowsSubject
+from datamimic_ce.authoring.domain.expectations import (
+    ExactCountExpectation,
+    ExpectationIntent,
+    ExpectationIntentKind,
+    ProductRowsSubject,
+    expectation_example,
+)
 from datamimic_ce.authoring.domain.proof import ForeignKeyRole, IdentifierRole, ProductRoleDeclaration
 from datamimic_ce.authoring.domain.reference import (
     AuthoringAssemblyReference,
@@ -253,7 +259,11 @@ class CeDslCatalog:
                 schema = TypeAdapter(ExpectationIntent).json_schema()
                 mapping = schema["discriminator"]["mapping"]
                 expectation_entries = tuple(
-                    AuthoringVariantReference(name=name, json_schema={"$ref": reference, "$defs": schema["$defs"]})
+                    AuthoringVariantReference(
+                        name=name,
+                        json_schema={"$ref": reference, "$defs": schema["$defs"]},
+                        usage_example=expectation_example(ExpectationIntentKind(name)),
+                    )
                     for name, reference in sorted(mapping.items())
                     if request.name is None or request.name == name
                 )

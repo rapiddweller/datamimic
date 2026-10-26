@@ -7,7 +7,7 @@ from __future__ import annotations
 import json
 from decimal import Decimal
 from enum import StrEnum
-from typing import Annotated, Literal
+from typing import Annotated, ClassVar, Literal, get_args
 
 from pydantic import Field, JsonValue, field_validator, model_validator
 
@@ -90,6 +90,12 @@ class FieldSelection(AuthoringModel):
 class ExactCountExpectation(AuthoringModel):
     """Require one product or declared sink to contain exactly the declared captured rows."""
 
+    usage_example: ClassVar[dict[str, JsonValue]] = {
+        "kind": "exact_count",
+        "subject": {"kind": "product", "product": "customers"},
+        "count": 100,
+    }
+
     kind: Literal[ExpectationIntentKind.EXACT_COUNT] = Field(
         default=ExpectationIntentKind.EXACT_COUNT, description="Expectation identity; must be 'exact_count'."
     )
@@ -103,6 +109,12 @@ class ExactCountExpectation(AuthoringModel):
 class PerParentCountExpectation(AuthoringModel):
     """Require each parent row to produce exactly the declared number of child rows."""
 
+    usage_example: ClassVar[dict[str, JsonValue]] = {
+        "kind": "per_parent_count",
+        "subject": {"kind": "per_parent", "parent_product": "orders", "child_product": "items"},
+        "count": 3,
+    }
+
     kind: Literal[ExpectationIntentKind.PER_PARENT_COUNT] = Field(
         default=ExpectationIntentKind.PER_PARENT_COUNT, description="Expectation identity; must be 'per_parent_count'."
     )
@@ -112,6 +124,12 @@ class PerParentCountExpectation(AuthoringModel):
 
 class UniqueExpectation(AuthoringModel):
     """Require captured field values to be unique within one explicit row-set subject."""
+
+    usage_example: ClassVar[dict[str, JsonValue]] = {
+        "kind": "unique",
+        "subject": {"kind": "product", "product": "orders"},
+        "field": "external_order_id",
+    }
 
     kind: Literal[ExpectationIntentKind.UNIQUE] = Field(
         default=ExpectationIntentKind.UNIQUE, description="Expectation identity; must be 'unique'."
@@ -130,6 +148,12 @@ class UniqueExpectation(AuthoringModel):
 class ForeignKeyExpectation(AuthoringModel):
     """Require every captured child reference to exist in the parent product's key set."""
 
+    usage_example: ClassVar[dict[str, JsonValue]] = {
+        "kind": "foreign_key",
+        "child": {"subject": {"kind": "product", "product": "orders"}, "field": "customer_id"},
+        "parent": {"subject": {"kind": "product", "product": "customers"}, "field": "id"},
+    }
+
     kind: Literal[ExpectationIntentKind.FOREIGN_KEY] = Field(
         default=ExpectationIntentKind.FOREIGN_KEY, description="Expectation identity; must be 'foreign_key'."
     )
@@ -139,6 +163,13 @@ class ForeignKeyExpectation(AuthoringModel):
 
 class AllowedValuesExpectation(AuthoringModel):
     """Require every captured field value to belong to one explicit accepted vocabulary."""
+
+    usage_example: ClassVar[dict[str, JsonValue]] = {
+        "kind": "allowed_values",
+        "subject": {"kind": "product", "product": "orders"},
+        "field": "status",
+        "values": ["new", "paid"],
+    }
 
     kind: Literal[ExpectationIntentKind.ALLOWED_VALUES] = Field(
         default=ExpectationIntentKind.ALLOWED_VALUES, description="Expectation identity; must be 'allowed_values'."
@@ -151,13 +182,25 @@ class AllowedValuesExpectation(AuthoringModel):
 class RangeExpectation(AuthoringModel):
     """Require every captured numeric field value to remain inside inclusive bounds."""
 
+    usage_example: ClassVar[dict[str, JsonValue]] = {
+        "kind": "range",
+        "subject": {"kind": "product", "product": "orders"},
+        "field": "amount",
+        "minimum": "0",
+        "maximum": "10000",
+    }
+
     kind: Literal[ExpectationIntentKind.RANGE] = Field(
         default=ExpectationIntentKind.RANGE, description="Expectation identity; must be 'range'."
     )
     subject: ProductOrSinkSubject = Field(description="Product or declared-sink row set containing the numeric field.")
     field: NonEmptyStrictStr = Field(description="Numeric field whose captured values are bounded.")
-    minimum: Decimal = Field(description="Inclusive accepted lower bound.")
-    maximum: Decimal = Field(description="Inclusive accepted upper bound.")
+    minimum: Decimal = Field(
+        description="Inclusive accepted lower bound.", json_schema_extra={INTENT_REPAIR_ALIASES_SCHEMA_KEY: ["min"]}
+    )
+    maximum: Decimal = Field(
+        description="Inclusive accepted upper bound.", json_schema_extra={INTENT_REPAIR_ALIASES_SCHEMA_KEY: ["max"]}
+    )
 
     @model_validator(mode="after")
     def ordered_bounds(self) -> RangeExpectation:
@@ -168,6 +211,13 @@ class RangeExpectation(AuthoringModel):
 
 class FixedValueExpectation(AuthoringModel):
     """Require every captured field value to equal one JSON literal."""
+
+    usage_example: ClassVar[dict[str, JsonValue]] = {
+        "kind": "fixed_value",
+        "subject": {"kind": "product", "product": "orders"},
+        "field": "currency",
+        "value": "EUR",
+    }
 
     kind: Literal[ExpectationIntentKind.FIXED_VALUE] = Field(
         default=ExpectationIntentKind.FIXED_VALUE, description="Expectation identity; must be 'fixed_value'."
@@ -180,6 +230,12 @@ class FixedValueExpectation(AuthoringModel):
 class FieldPresentExpectation(AuthoringModel):
     """Require every captured row to contain one declared field."""
 
+    usage_example: ClassVar[dict[str, JsonValue]] = {
+        "kind": "field_present",
+        "subject": {"kind": "product", "product": "orders"},
+        "field": "payment_id",
+    }
+
     kind: Literal[ExpectationIntentKind.FIELD_PRESENT] = Field(
         default=ExpectationIntentKind.FIELD_PRESENT, description="Expectation identity; must be 'field_present'."
     )
@@ -190,6 +246,12 @@ class FieldPresentExpectation(AuthoringModel):
 class FieldAbsentExpectation(AuthoringModel):
     """Require every captured row to omit one forbidden field."""
 
+    usage_example: ClassVar[dict[str, JsonValue]] = {
+        "kind": "field_absent",
+        "subject": {"kind": "product", "product": "orders"},
+        "field": "legacy_flag",
+    }
+
     kind: Literal[ExpectationIntentKind.FIELD_ABSENT] = Field(
         default=ExpectationIntentKind.FIELD_ABSENT, description="Expectation identity; must be 'field_absent'."
     )
@@ -199,6 +261,12 @@ class FieldAbsentExpectation(AuthoringModel):
 
 class RowConditionExpectation(AuthoringModel):
     """Require every captured product row to satisfy one boolean business expression."""
+
+    usage_example: ClassVar[dict[str, JsonValue]] = {
+        "kind": "row_condition",
+        "subject": {"kind": "product", "product": "orders"},
+        "condition": "amount >= 0 and currency == 'EUR'",
+    }
 
     kind: Literal[ExpectationIntentKind.ROW_CONDITION] = Field(
         default=ExpectationIntentKind.ROW_CONDITION, description="Expectation identity; must be 'row_condition'."
@@ -235,6 +303,38 @@ ExpectationIntent = Annotated[
     Field(discriminator="kind"),
 ]
 ExpectationSubject = ProductRowsSubject | PerParentRowsSubject | DeclaredSinkRowsSubject
+_MODELS = {model.model_fields["kind"].default: model for model in get_args(get_args(ExpectationIntent)[0])}
+
+
+def expectation_example(kind: ExpectationIntentKind) -> dict[str, JsonValue]:
+    return _MODELS[kind].usage_example
+
+
+def expectation_repair(location: tuple[str | int, ...]) -> str | None:
+    """The shape of the expectation kind a validation location names, and the field to rename when the location
+    is a known wrong name; None outside an expectation. Locations hold field names only, never values."""
+    kinds = {kind.value: kind for kind in ExpectationIntentKind}
+    for index in range(1, len(location)):
+        before, part = location[index - 1], location[index]
+        # The kind is the union tag right after an item of "expectations" or after an "expectation" field.
+        tagged = before == "expectation" or (
+            isinstance(before, int) and location[index - 2 : index - 1] == ("expectations",)
+        )
+        if not tagged or not isinstance(part, str) or part not in kinds:
+            continue
+        kind = kinds[part]
+        model = _MODELS[kind]
+        rename = ""
+        if index + 1 < len(location):
+            wrong = location[index + 1]
+            for name in model.model_fields:
+                extra = model.model_fields[name].json_schema_extra
+                aliases = extra[INTENT_REPAIR_ALIASES_SCHEMA_KEY] if isinstance(extra, dict) else None
+                if isinstance(aliases, list) and wrong in aliases:
+                    rename = f"Rename {wrong} to {name}. "
+        shape = json.dumps(model.usage_example)
+        return f"{rename}A {kind.value} expectation has this shape: {shape}"
+    return None
 
 
 def expectation_subjects(expectation: ExpectationIntent) -> tuple[ExpectationSubject, ...]:

@@ -33,6 +33,7 @@ class AuthoringVariantReference(AuthoringModel):
     entry_kind: Literal["expectation"] = "expectation"
     name: NonEmptyStrictStr
     json_schema: dict[str, JsonValue]
+    usage_example: dict[str, JsonValue]
 
 
 class AuthoringExampleReference(AuthoringModel):

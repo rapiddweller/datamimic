@@ -14,6 +14,8 @@
     {"name": "value_outside_set", "diagnostic": "allowed_values",
      "patch": {"file": "datamimic.xml", "old": "values=\"('basic', 'plus')\"", "new": "values=\"('basic', 'plus', 'trial')\""}},
     {"name": "range_exceeded", "diagnostic": "range",
-     "patch": {"file": "datamimic.xml", "old": "min=\"1\" max=\"1000\"", "new": "min=\"1\" max=\"2000\""}}
+     "patch": {"file": "datamimic.xml", "old": "min=\"1\" max=\"1000\"", "new": "min=\"1\" max=\"2000\""}},
+    {"name": "range_min_max", "diagnostic": "validation",
+     "patch": {"file": "acceptance/build.json", "old": "\"minimum\": 1, \"maximum\": 1000", "new": "\"min\": 1, \"max\": 1000"}}
   ]
 }
