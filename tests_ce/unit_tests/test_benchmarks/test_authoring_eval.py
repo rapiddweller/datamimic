@@ -721,11 +721,11 @@ def test_a_debug_log_without_both_markers_is_an_isolation_problem(log: str | Non
     assert _problems(run) != []
 
 
-def test_a_debug_log_that_is_not_utf8_is_still_read(tmp_path: Path) -> None:
+def test_a_debug_log_that_is_not_utf8_is_a_problem_and_is_still_read(tmp_path: Path) -> None:
     run = _blind_run(tmp_path)
     run.debug_log.write_bytes(_MARKERS.encode() + b"\xff\xfe AGENTS.md loaded: " + str(tmp_path / "AGENTS.md").encode())
 
-    assert _problems(run) == ["the CLI found AGENTS.md"]
+    assert _problems(run) == ["the debug log is not UTF-8", "the CLI found AGENTS.md"]
 
 
 def test_a_transcript_line_that_is_not_json_is_a_finding_not_a_crash(tmp_path: Path) -> None:

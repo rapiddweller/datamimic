@@ -108,7 +108,11 @@ def isolation_problems(
             problems.append(f"the CLI ended with an error: {result.get('terminal_reason')}")
         if result.get("permission_denials"):
             problems.append("a tool call was denied")
-    log = debug_log.read_text(encoding="utf-8", errors="replace") if debug_log.is_file() else ""
+    raw = debug_log.read_bytes() if debug_log.is_file() else b""
+    # replace, not fail: a broken byte must not hide a canary file or a hook named after it
+    log = raw.decode("utf-8", errors="replace")
+    if log.encode("utf-8") != raw:
+        problems.append("the debug log is not UTF-8")
     # without the log, the canary-file and hook checks below would pass silently
     if _SAFE_MODE not in log:
         problems.append("the debug log does not show safe mode")

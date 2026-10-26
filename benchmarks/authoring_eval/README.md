@@ -110,7 +110,7 @@ Follow these steps for every run. One run is one `claude -p` process for one cas
    | `--output-format stream-json --verbose --debug-file` | the transcript and the debug log, both in `<base>` |
 
    The child gets only `HOME`, `USER`, `LOGNAME`, `LANG`, `TMPDIR`, `SHELL` and a system `PATH` (`oracle.child_env`).
-   The child runs in its own process group. On a timeout (30 min), and after every run, the runner kills that group, so no Bash command of the subject survives.
+   The child runs in its own process group. On a timeout (30 min), and after every run, the runner kills that group. A stand-in CLI proves that its child dies too.
 4. It checks the isolation (`isolation_problems`) and audits the transcript with `--allow <run-dir> --allow <venv>/bin/datamimic --forbid <repository-root> --canary <token>`.
 5. It always prints a JSON report with the run directory, the CLI version and the result line. The exit code is `0` only when the report has no problem and no finding.
 
@@ -120,7 +120,7 @@ The isolation check fails the run when:
 - the init message is missing, its `tools` are not the allowlist, or it lists skills, MCP servers or slash commands;
 - the cwd of the subject is not the run directory;
 - the result message is missing, reports an error, or reports a denied tool call (an access or configuration error, not a model failure);
-- the debug log is missing, or does not show `project memory is off` (safe mode) and `Sandbox: ignoring permission rules` (the sandbox settings loaded);
+- the debug log is missing or not UTF-8, or does not show `project memory is off` (safe mode) and `Sandbox: ignoring permission rules` (the sandbox settings loaded);
 - the debug log names a canary file (in the `/var` or the `/private/var` spelling), or shows that a hook added context;
 - a file in the run directory holds the canary, or cannot be read.
 
@@ -152,11 +152,14 @@ Evidence from Claude Code 2.1.304 on macOS, with three Haiku probes (USD 0.0076 
 |---|---|---|
 | `rm` of a canary in a fresh `$TMPDIR` directory, outside the cwd | deleted | `Operation not permitted` |
 | `rm` of a canary in a fresh `/tmp` directory | deleted | `Operation not permitted` |
+| `rm` of a canary in a fresh `/tmp/claude-<uid>` directory (the sandbox temp directory) | not probed | **deleted** |
 | `curl https://example.com` | `200` | `CONNECT tunnel failed, response 403` |
 | `wc -c <repository>/…/e04/oracle.json`; `ls ~/.claude/projects` | read | `Operation not permitted` |
 | `touch` in the cwd; `<venv>/bin/datamimic authoring build .` (venv outside the repository) | ok, `ready` | ok, `ready` |
 
 The debug log shows no line for each sandboxed command. It shows `Sandbox: ignoring permission rules …` only when the sandbox settings load, so the isolation check requires that line.
+Keep that check. In `-p` mode the CLI silently ignores a settings value that fails validation, so one unknown key can turn the sandbox off without an error; `failIfUnavailable` does not catch that.
+Do not add a sandbox key without a new probe.
 Repeat the probes (`rm` outside the cwd, `curl`) when the CLI version changes.
 
 What stays unproven:
@@ -164,7 +167,8 @@ What stays unproven:
 - The canary sits only in the parent directory. Safe mode states that it turns off the user `~/.claude/CLAUDE.md` too, but no canary proves it. The runner does not edit the user's files.
 - A clean config home is not possible with a keychain login: an empty `CLAUDE_CONFIG_DIR` gives `Not logged in`. `--bare` needs `ANTHROPIC_API_KEY`. The subject therefore uses the real login and the real `~/.claude`.
 - The init message still lists the installed plugins. The debug log says safe mode does not load them.
-- The sandbox temp directory is `/tmp/claude-<uid>`, and Bash can write and delete there. Other Claude Code sessions of the same user keep their temporary files there. `CLAUDE_CODE_TMPDIR` did not move it. Do not run a campaign while another session keeps work there.
+- The sandbox temp directory is `/tmp/claude-<uid>`, and Bash can write and delete there. It holds the temporary files and the scratchpad of every Claude Code session of the same user, including the session that starts the runner. `CLAUDE_CODE_TMPDIR` did not move it. Before a campaign, keep nothing there that you need.
+- The process-group kill is proven with a stand-in CLI only. No probe showed that Claude Code keeps the Bash commands of the subject in its process group.
 - Bash can read every file that the user can read, except the two `denyRead` paths. Other checkouts of this repository hold the answer key too.
 - The oracle has no sandbox (see the protocol, step 5).
 - The turn limit is a rule of the brief. The report counts the tool calls.
