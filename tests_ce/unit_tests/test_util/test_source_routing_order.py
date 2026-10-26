@@ -178,6 +178,7 @@ def test_variable_selector_is_eager_but_iteration_selector_is_row_deferred(
         cyclic=False,
         is_global_variable=False,
         full_name="variable",
+        blank_selector_attribute=None,
     )
     plan = variable_sources.plan_variable_source(context, selector, pagination, force_full_pool=False)
 

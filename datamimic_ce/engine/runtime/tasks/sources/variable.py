@@ -23,7 +23,7 @@ from datamimic_ce.engine.io.api import (
 from datamimic_ce.engine.runtime.contexts.context import Context, SetupContext
 from datamimic_ce.engine.runtime.scripting.evaluation import interpolate_variables
 from datamimic_ce.engine.runtime.tasks.sources.length import data_source_cache_key
-from datamimic_ce.errors import DescriptorLocation, IssueCode, task_config_error
+from datamimic_ce.errors import DescriptorLocation, IssueCode, invalid_source_error, task_config_error
 
 
 class VariableSourcePlanKind(str, Enum):  # noqa: UP042 - Preserve the existing enum string form.
@@ -138,14 +138,21 @@ def plan_variable_source(
         )
 
     if stmt.selector is not None or stmt.iteration_selector is not None:
-        selector = stmt.selector or stmt.iteration_selector
+        selector = stmt.selector if stmt.selector is not None else stmt.iteration_selector
         if selector is None:
-            raise RuntimeError("variable selector plan reached an impossible empty selector")
+            raise RuntimeError("variable selector plan reached an impossible missing selector")
         prefix = stmt.variable_prefix or context.default_variable_prefix
         suffix = stmt.variable_suffix or context.default_variable_suffix
         client = context.get_client_by_id(source)
         if client is None or not is_database_client(client):
             raise task_config_error(code=IssueCode.TASK_VARIABLE_SELECTOR_ONLY_DB, name=stmt.name)
+        blank = stmt.blank_selector_attribute
+        if blank is not None:  # no query to run; the length pass refuses the same for a variable inside a generate
+            raise invalid_source_error(
+                code=IssueCode.SOURCE_SELECTOR_BLANK,
+                attribute=blank,
+                location=DescriptorLocation(EL_VARIABLE, attribute=blank),
+            )
         if stmt.iteration_selector is not None:
             return VariableSourcePlan(
                 kind=VariableSourcePlanKind.ITERATION_SELECTOR,

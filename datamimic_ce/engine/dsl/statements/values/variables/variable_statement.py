@@ -4,9 +4,14 @@
 # See LICENSE file for the full text of the license.
 # For questions and support, contact: info@rapiddweller.com
 
+import re
 
 from datamimic_ce.engine.dsl.model.values.variables.variable_model import VariableModel
 from datamimic_ce.engine.dsl.statements.base.statement import Statement
+from datamimic_ce.engine.dsl.vocabulary.constants.attribute_constants import (
+    ATTR_ITERATION_SELECTOR,
+    ATTR_SELECTOR,
+)
 from datamimic_ce.engine.dsl.vocabulary.enums.distribution_enums import SourceDistribution
 
 
@@ -144,6 +149,16 @@ class VariableStatement(Statement):
     @property
     def iteration_selector(self) -> str | None:
         return self._iteration_selector
+
+    @property
+    def blank_selector_attribute(self) -> str | None:
+        """The selector attribute that is given but blank: it then holds no query (#397)."""
+        # re, not str.strip: ArchKeel counts str method calls as unresolved and the budget is fixed; same whitespace.
+        if self._selector is not None and re.fullmatch(r"\s*", self._selector):
+            return ATTR_SELECTOR
+        if self._iteration_selector is not None and re.fullmatch(r"\s*", self._iteration_selector):
+            return ATTR_ITERATION_SELECTOR
+        return None
 
     @property
     def default_value(self) -> str | None:

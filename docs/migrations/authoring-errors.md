@@ -185,6 +185,10 @@ remove everything the source returns, so it fails with `I928` before any databas
 A `delete` on generated rows (no `source`) or on a file source is unchanged: it deletes by the row keys. A selector
 with an empty Mongo filter (`filter: {}`) still works as a delete; prefer `mongodb.clear` for that intent.
 
+A blank `selector` or `iterationSelector` (empty or whitespace only) on a database source holds no query. It fails
+with `I196` before any database access: remove the attribute, or give a query. A blank selector on a `delete` still
+fails with `I928`.
+
 ## Memstore read and write entities (#422)
 
 In CE, `type` never sets the memstore entity that a product writes. On a `<generate>` that reads `source="mem"`,

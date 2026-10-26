@@ -1,0 +1,5 @@
+<setup>
+    <database id="db" database="blank_selector_items" dbms="sqlite"/>
+    <!-- valid control: a query with surrounding whitespace is not blank -->
+    <generate name="items_read" source="db" distribution="ordered" selector="  SELECT id FROM items ORDER BY id  "/>
+</setup>

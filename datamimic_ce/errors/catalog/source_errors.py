@@ -94,4 +94,13 @@ ISSUES: list[IssueDefinition] = [
         cause="The configuration provides an invalid Mongo selector: {error}.",
         resolution="Correct the Mongo selector to a valid value or configuration.",
     ),
+    IssueDefinition(
+        code=IssueCode.SOURCE_SELECTOR_BLANK,
+        name="SOURCE_SELECTOR_BLANK",
+        title="Source Selector Blank",
+        template="Attribute '{attribute}' of the database source is blank",
+        cause="The selector attribute is empty or holds only whitespace, so it gives no query.",
+        resolution="Remove the attribute to read the whole table or collection, or give a query.",
+        guidance="Remove the attribute, or give a query.",
+    ),
 ]

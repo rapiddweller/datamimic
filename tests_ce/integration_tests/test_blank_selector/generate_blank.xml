@@ -1,0 +1,5 @@
+<setup>
+    <database id="db" database="blank_selector_never" dbms="sqlite"/>
+    <!-- the issue repro: an empty selector holds no query -->
+    <generate name="items_read" count="2" source="db" sourceEntity="items" selector=""/>
+</setup>
