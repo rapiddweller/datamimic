@@ -9,7 +9,7 @@ import shutil
 from pathlib import Path
 
 import pytest
-from pydantic import BaseModel, ConfigDict, StrictInt, StrictStr
+from pydantic import BaseModel, ConfigDict, StrictInt, StrictStr, model_validator
 
 from datamimic_ce.authoring import create_authoring_application
 from datamimic_ce.authoring.domain.requests import PROJECT_ENTRY_PATH, BuildResult, ReadyBuild, RejectedBuild
@@ -18,12 +18,31 @@ from datamimic_ce.interfaces.python.data_mimic_test import DataMimicTest
 _ROOT = Path(__file__).resolve().parent
 
 
+class Patch(BaseModel):
+    """Replace one text in one file of the copied project. The text must occur exactly once."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    file: StrictStr
+    old: StrictStr
+    new: StrictStr
+
+
 class Negative(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
-    dir: StrictStr
+    name: StrictStr
+    patch: Patch | None = None
+    # A directory of whole files copied over the project; only for a change that one patch cannot express.
+    dir: StrictStr | None = None
     diagnostic: StrictStr
     expected: StrictStr | None = None
+
+    @model_validator(mode="after")
+    def _one_change(self) -> "Negative":
+        if (self.patch is None) == (self.dir is None):
+            raise ValueError(f"negative {self.name} must give exactly one of patch or dir")
+        return self
 
 
 class Scenario(BaseModel):
@@ -46,6 +65,17 @@ _NEGATIVES = [(path, negative) for path in _DIRECTORIES for negative in _load(pa
 def _copy(source: Path, destination: Path) -> Path:
     shutil.copytree(source, destination)
     return destination
+
+
+def _apply(negative: Negative, directory: Path, project: Path) -> None:
+    if negative.dir is not None:
+        shutil.copytree(directory / negative.dir, project, dirs_exist_ok=True)
+        return
+    assert negative.patch is not None
+    target = project / negative.patch.file
+    text = target.read_text(encoding="utf-8")
+    assert text.count(negative.patch.old) == 1, f"{negative.patch.file} must contain the old text exactly once"
+    target.write_text(text.replace(negative.patch.old, negative.patch.new), encoding="utf-8")
 
 
 def _build(project: Path) -> BuildResult:
@@ -76,13 +106,11 @@ def test_scenario_builds_runs_and_replays(directory: Path, tmp_path: Path, monke
 @pytest.mark.parametrize(
     ("directory", "negative"),
     _NEGATIVES,
-    ids=[f"{path.name}/{negative.dir}" for path, negative in _NEGATIVES],
+    ids=[f"{path.name}/{negative.name}" for path, negative in _NEGATIVES],
 )
 def test_negative_is_rejected_with_named_diagnostic(directory: Path, negative: Negative, tmp_path: Path) -> None:
-    variant = directory / negative.dir
-    assert variant.is_dir(), f"negative directory {negative.dir} does not exist"
     project = _copy(directory, tmp_path / "variant")
-    shutil.copytree(variant, project, dirs_exist_ok=True)  # the variant holds only the files that differ
+    _apply(negative, directory, project)
     rejected = _build(project)
     assert isinstance(rejected, RejectedBuild), "Build accepted a variant that must be rejected"
     codes = [str(item.code) for item in rejected.diagnostics]
