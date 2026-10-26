@@ -169,6 +169,9 @@ The applicable Ollama protocol references are [tool calling](https://docs.ollama
    documented form; mapping access (`row['field']`, `dict(row)`) also works. Nested
    rows need `row.to_dict()` for `json.dumps`. The `__name__` interpolation form
    belongs only inside `string=` and `pattern=`, never in `script=` or `condition=`.
+   A name a library binds replaces the engine's name of the same spelling in every
+   expression: after `from datetime import datetime`, `datetime` is the class, not
+   the module. Import under another name (`from datetime import datetime as dt`).
 
 Discover value-source choices and rules from the live model and rule registries
 with `datamimic authoring reference --topic overview`, then query a narrow topic.

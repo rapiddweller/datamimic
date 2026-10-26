@@ -93,27 +93,46 @@ def _plain(value: object) -> object:
     return value
 
 
-def _written_names(expression: str) -> frozenset[str]:
-    """The names and attribute names written in the expression: descriptor structure, never a value."""
+def _written_names(expression: str) -> tuple[frozenset[str], frozenset[str]]:
+    """The names and the attribute names written in the expression: descriptor structure, never a value."""
     try:
         tree = ast.parse(expression.lstrip(" \t"), mode="eval")
     except SyntaxError:
-        return frozenset()
-    return frozenset(
-        node.id if isinstance(node, ast.Name) else node.attr
-        for node in ast.walk(tree)
-        if isinstance(node, ast.Name | ast.Attribute)
+        return frozenset(), frozenset()
+    nodes = tuple(ast.walk(tree))
+    return (
+        frozenset(node.id for node in nodes if isinstance(node, ast.Name)),
+        frozenset(node.attr for node in nodes if isinstance(node, ast.Attribute)),
     )
 
 
 def _lookup_failure(error: NameError | AttributeError, expression: str) -> str:
     """Name the missing name only when the expression text holds it: a called function can raise a name built
     from data, and a diagnostic never shows a value."""
-    if error.name not in _written_names(expression):
+    names, attributes = _written_names(expression)
+    if error.name not in names | attributes:
         return type(error).__name__
     if isinstance(error, NameError):
         return f"NameError: name '{error.name}' is not defined"
     return f"AttributeError: no attribute '{error.name}'"
+
+
+def _replaced_engine_names(
+    expression: str, global_namespace: dict[str, object], local_namespace: dict[str, object]
+) -> str:
+    """A library import such as `from datetime import datetime` replaces the engine's `datetime` in expressions,
+    as in Python and in EE. When such an expression fails, say which names it reads that are not the engine's."""
+    names, _attributes = _written_names(expression)
+    replaced = sorted(
+        name
+        for name in names
+        if name in global_namespace and name in local_namespace and local_namespace[name] is not global_namespace[name]
+    )
+    return "".join(
+        f"; the expression reads '{name}', which a script, variable or field binds in place of the engine's "
+        f"'{name}': import it under another name or rename the field"
+        for name in replaced
+    )
 
 
 # As in EE: the same expression text runs once per row, so compile it once.
@@ -167,7 +186,10 @@ def evaluate_python(
         raise task_config_error(
             code=IssueCode.TASK_EXPRESSION_EVAL_FAILED,
             expr=diagnostic,
-            error=f"{_lookup_failure(error, expression)}: {_SCOPE_GUIDANCE}",
+            error=(
+                f"{_lookup_failure(error, expression)}: {_SCOPE_GUIDANCE}"
+                f"{_replaced_engine_names(expression, global_namespace, local_namespace)}"
+            ),
         ) from error
     except KeyError as error:
         raise task_config_error(
@@ -179,7 +201,10 @@ def evaluate_python(
         raise task_config_error(
             code=IssueCode.TASK_EXPRESSION_EVAL_FAILED,
             expr=diagnostic,
-            error=f"Failed while evaluate '{diagnostic}': '{diagnostic}' have undefined item or wrong structure",
+            error=(
+                f"Failed while evaluate '{diagnostic}': '{diagnostic}' have undefined item or wrong structure"
+                f"{_replaced_engine_names(expression, global_namespace, local_namespace)}"
+            ),
         ) from error
     except SyntaxError as error:
         if ":" not in expression:

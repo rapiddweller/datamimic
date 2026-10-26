@@ -95,7 +95,9 @@ functions, classes and constants:
   `faker`, `numpy`, `pandas`, `datamimic_ce.domains`, ...);
 - read no files and build no code (`open`, `eval`, `exec`, `compile`, `__import__`,
   `getattr`, `globals`); call module functions qualified (`re.compile`);
-- under `rngSeed`, import at module level, never inside a function or class.
+- under `rngSeed`, import at module level, never inside a function or class;
+- import a member under another name (`from datetime import datetime as dt`): a
+  library name replaces the engine's `datetime`, `random`, `math`, ... in `script=`.
 
 A refusal names the file, line and rule; repair the library, not the model.
 SQL, shell, `target=`, `script=` and an `<execute>` inside a record stay outside

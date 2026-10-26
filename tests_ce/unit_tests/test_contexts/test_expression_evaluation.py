@@ -1,4 +1,6 @@
 import copy
+import datetime
+import json
 from pathlib import Path
 
 import pytest
@@ -180,3 +182,29 @@ def test_colon_retry_preserves_frozen_domain_error_identity():
     with pytest.raises(DomainError) as caught:
         context.evaluate_python_expression("container.gc:refuse()")
     assert caught.value is error
+
+
+_REPLACED_DATETIME = (
+    "the expression reads 'datetime', which a script, variable or field binds in place of the engine's 'datetime'"
+)
+
+
+@pytest.mark.parametrize(
+    ("namespace", "expression", "hinted"),
+    [
+        ({"datetime": datetime.datetime}, "datetime.date(2026, 3, 2)", True),
+        ({"datetime": datetime.datetime}, "datetime.timedelta(days=1)", True),
+        ({"json": json}, "json.loads(1)", False),
+    ],
+    ids=["type_error", "attribute_error", "same_object"],
+)
+def test_a_failing_expression_names_an_engine_name_that_a_script_replaces(
+    namespace: dict[str, object], expression: str, hinted: bool
+) -> None:
+    """Python-only: a scenario negative asserts only text that is present, and one patch reaches only the first
+    failing key; this test also proves the absent hint when the script binds the engine's own object."""
+    with pytest.raises(TaskConfigError) as exc:
+        _context(namespace=namespace).evaluate_python_expression(expression)
+
+    replaced = _REPLACED_DATETIME if "datetime" in namespace else "the expression reads 'json'"
+    assert (replaced in str(exc.value)) is hinted
