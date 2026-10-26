@@ -358,7 +358,10 @@ ISSUES: list[IssueDefinition] = [
         title="Task Total Row Budget Exceeded",
         template="generated product rows exceed the total Build limit {limit}",
         cause="The run attempted to generate more product rows than its shared total-row limit.",
-        resolution="Raise max_count or reduce generated rows across the products.",
+        resolution=(
+            "max_count limits the rows of all products together. Raise max_count to at least that total, "
+            "or reduce the rows."
+        ),
     ),
     IssueDefinition(
         code=IssueCode.TASK_COUNT_SELECTOR_UNSUPPORTED_CLIENT,

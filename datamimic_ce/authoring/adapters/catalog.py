@@ -402,7 +402,7 @@ def _example(name: str) -> tuple[DmJsonDocumentV1, BuildRequestV5]:
         expectations += (ExactCountExpectation(subject=ProductRowsSubject(product="readback"), count=2),)
     return (
         DmJsonDocumentV1(root=DmJsonNodeV1(kind="setup", properties={"rng_seed": 7}, children=children)),
-        BuildRequestV5(expectations=expectations, product_roles=roles, max_count=10, sample_rows=5),
+        BuildRequestV5(expectations=expectations, product_roles=roles, sample_rows=5),
     )
 
 

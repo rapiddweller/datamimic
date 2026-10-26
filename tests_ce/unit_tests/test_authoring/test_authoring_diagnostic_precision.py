@@ -69,17 +69,21 @@ def test_lint_and_dry_run_never_echo_descriptor_values(tmp_path: Path, key: str)
     assert result.exit_code == 1, result.output  # every case is rejected at the latest by bounded execution
 
 
-def test_capped_capture_names_reason_and_exact_retry_bound(tmp_path: Path) -> None:
+def test_declared_rows_above_max_count_name_the_exact_retry_bound(tmp_path: Path) -> None:
     write_project(
         tmp_path,
         (_FIXTURES / "fx_static_count_above_limit.xml").read_text(encoding="utf-8"),
         expectations=[{"kind": "exact_count", "subject": {"kind": "product", "product": "customers"}, "count": 50}],
+        max_count=10,
     )
     result = CliRunner().invoke(app, ["authoring", "build", str(tmp_path)])
     assert result.exit_code == 1, result.output
-    capped = json.loads(result.output)["diagnostics"][0]
-    assert capped["message"] == "Product capture is capped: static count 50 exceeds per-invocation limit 10."
-    assert capped["remediation"] == "Increase max_count to at least 50 and retry the same transaction."
+    [limit] = json.loads(result.output)["diagnostics"]
+    assert limit["message"] == (
+        "The products declare 50 rows in total, above max_count 10; max_count limits the rows of all products together."
+    )
+    assert (limit["expected"], limit["actual"]) == (10, 50)
+    assert limit["remediation"].startswith("Set max_count to at least 50")
 
 
 def test_missing_acceptance_file_is_named_without_its_host_directory(tmp_path: Path) -> None:

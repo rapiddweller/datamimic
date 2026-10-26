@@ -109,6 +109,9 @@ seeded model also without the request, under three other hash seeds. A target-is
 Build does not claim that an external database was written.
 
 `max_count` limits the total captured product rows in one Build execution,
-including nested products. Deterministic replay receives a fresh limit of the
+including nested products. Omit it: when every product has a literal count, Build
+sets the limit to the declared total (at least 10, at most 1000). A project with
+a source-driven or script count gets the limit 10; set `max_count` to the total
+rows of all products. Deterministic replay receives a fresh limit of the
 same size; it verifies the same logical dataset. Export smoke reuses the first
 capture and consumes no additional rows.

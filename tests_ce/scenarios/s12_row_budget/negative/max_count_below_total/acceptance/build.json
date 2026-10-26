@@ -1,0 +1,38 @@
+{
+  "version": "5.0",
+  "expectations": [
+    {
+      "kind": "exact_count",
+      "subject": {
+        "kind": "product",
+        "product": "customers"
+      },
+      "count": 5
+    },
+    {
+      "kind": "exact_count",
+      "subject": {
+        "kind": "product",
+        "product": "products"
+      },
+      "count": 8
+    },
+    {
+      "kind": "exact_count",
+      "subject": {
+        "kind": "product",
+        "product": "orders"
+      },
+      "count": 12
+    },
+    {
+      "kind": "unique",
+      "subject": {
+        "kind": "product",
+        "product": "orders"
+      },
+      "field": "order_id"
+    }
+  ],
+  "max_count": 24
+}

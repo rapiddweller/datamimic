@@ -18,8 +18,13 @@ from datamimic_ce.authoring.domain.build_verification import (
     smoke_export_evidence,
     unseeded_replay_evidence,
 )
-from datamimic_ce.authoring.domain.common import MAX_AUTHORING_XML_LENGTH
-from datamimic_ce.authoring.domain.diagnostics import AuthoringCodecDiagnosticCode, AuthoringRuleId, DiagnosticPhase
+from datamimic_ce.authoring.domain.common import MAX_AUTHORING_MAX_COUNT, MAX_AUTHORING_XML_LENGTH
+from datamimic_ce.authoring.domain.diagnostics import (
+    AuthoringCodecDiagnosticCode,
+    AuthoringRuleId,
+    Diagnostic,
+    DiagnosticPhase,
+)
 from datamimic_ce.authoring.domain.dm_json import DmJsonCodecError, DmJsonDocumentV1, iter_dm_json_nodes
 from datamimic_ce.authoring.domain.proof import (
     BuildVerificationEvidence,
@@ -193,19 +198,28 @@ class BuildDocumentWorkflow:
                 verification=blocked_verification(verification_options, "Expectation projection failed."),
             )
 
+        limit = request.capture_limit(acceptance.declared_rows)
+        if acceptance.declared_rows is not None and acceptance.declared_rows > limit:
+            return RejectedBuild(
+                phase=DiagnosticPhase.POLICY,
+                diagnostics=(_row_limit_diagnostic(acceptance.declared_rows, limit),),
+                verification=blocked_verification(verification_options, "The declared rows exceed the Build limit."),
+            )
         execution_request = BoundedExecutionRequest(
             xml=xml,
             descriptor_path=PROJECT_ENTRY_PATH,
-            max_count=request.max_count,
+            max_count=limit,
             smoke_export=verification_options.smoke_export,
             hash_seed=_FIRST_RUN_HASH_SEED,
         )
         first = self._executor.execute(execution_request)
+        # A failed execution captures nothing; "capture is missing" for each product would only repeat its cause.
+        failed = not first.captured.products and any(item.severity == "error" for item in first.diagnostics)
         diagnostics = (
             *lint.diagnostics,
             *graph.diagnostics,
             *first.diagnostics,
-            *evaluate_acceptance(acceptance, first.captured),
+            *(() if failed else evaluate_acceptance(acceptance, first.captured)),
         )
         smoke = smoke_export_evidence(verification_options.smoke_export, first.smoke_export)
         read: list[ProjectFileDigest] = [
@@ -311,3 +325,31 @@ class BuildDocumentWorkflow:
             verification=verification,
             diagnostics=diagnostics,
         )
+
+
+def _row_limit_diagnostic(declared_rows: int, limit: int) -> Diagnostic:
+    """The declared total is a sum of literal counts, so the numbers are Build facts, not descriptor values."""
+    if declared_rows > MAX_AUTHORING_MAX_COUNT:
+        return catalog_diagnostic(
+            AuthoringRuleId.LIMIT,
+            f"The products declare {declared_rows} rows in total, above the Build ceiling of "
+            f"{MAX_AUTHORING_MAX_COUNT} rows.",
+            phase=DiagnosticPhase.POLICY,
+            path=("descriptor", PROJECT_ENTRY_PATH.as_posix()),
+            expected=limit,
+            actual=declared_rows,
+            remediation=f"Reduce the counts so that all products together declare at most {MAX_AUTHORING_MAX_COUNT} "
+            "rows; Build proves a bounded sample, and datamimic run generates the full volume.",
+        )
+    # Below the ceiling only an explicit max_count can be too low: a derived limit covers the declared total.
+    return catalog_diagnostic(
+        AuthoringRuleId.LIMIT,
+        f"The products declare {declared_rows} rows in total, above max_count {limit}; max_count limits the rows "
+        "of all products together.",
+        phase=DiagnosticPhase.POLICY,
+        path=(PROJECT_ACCEPTANCE_PATH.as_posix(), "max_count"),
+        expected=limit,
+        actual=declared_rows,
+        remediation=f"Set max_count to at least {declared_rows}, or remove max_count: Build then derives the limit "
+        "from the declared counts.",
+    )

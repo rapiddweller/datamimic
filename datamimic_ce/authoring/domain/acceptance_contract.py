@@ -84,6 +84,8 @@ class AcceptanceSpecV1(AuthoringModel):
     relationships: tuple[AcceptanceRelationshipV1, ...] = ()
     checks: tuple[AcceptanceCheckV1, ...] = ()
     readbacks: tuple[AcceptanceReadbackV1, ...] = ()
+    # The rows of all products together; None when a product has no literal count (a source, a script count).
+    declared_rows: NonNegativeStrictInt | None = None
 
     def product(self, name: str) -> AcceptanceProductV1 | None:
         return next((product for product in self.products if product.name == name), None)

@@ -29,9 +29,10 @@ def _build(
 
 
 def test_separate_products_share_one_total_budget(tmp_path: Path) -> None:
+    # A count range has no declared total, so the runtime budget, not the Build preflight, refuses the run.
     result = _build(
         tmp_path,
-        '<setup rngSeed="1"><generate name="a" count="3"><key name="id" constant="1"/></generate>'
+        '<setup rngSeed="1"><generate name="a" minCount="3" maxCount="3"><key name="id" constant="1"/></generate>'
         '<generate name="b" count="3"><key name="id" constant="2"/></generate></setup>',
     )
 
@@ -40,6 +41,17 @@ def test_separate_products_share_one_total_budget(tmp_path: Path) -> None:
         diagnostic.ce_error is not None and diagnostic.ce_error.issue_code is IssueCode.TASK_TOTAL_ROW_BUDGET_EXCEEDED
         for diagnostic in result.diagnostics
     )
+
+
+def test_static_products_over_the_total_budget_are_refused_before_execution(tmp_path: Path) -> None:
+    result = _build(
+        tmp_path,
+        '<setup rngSeed="1"><generate name="a" count="3"><key name="id" constant="1"/></generate>'
+        '<generate name="b" count="3"><key name="id" constant="2"/></generate></setup>',
+    )
+
+    assert result.outcome == "rejected"
+    assert [(item.code, item.expected, item.actual) for item in result.diagnostics] == [("limit", 5, 6)]
 
 
 def test_included_products_share_one_total_budget(tmp_path: Path) -> None:

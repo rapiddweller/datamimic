@@ -366,6 +366,7 @@ def project_acceptance(
         relationships=spec.relationships,
         readbacks=spec.readbacks,
         checks=tuple(unique.values()),
+        declared_rows=sum(counts.values()) if all(entry.product.name in counts for entry in entries) else None,
     )
 
 
