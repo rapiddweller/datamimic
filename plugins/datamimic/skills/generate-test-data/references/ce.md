@@ -104,6 +104,9 @@ SQL, shell, `target=`, `script=` and an `<execute>` inside a record stay outside
 bounded proof. Every seeded model replays: each replay must reproduce every row,
 which also catches draws the static check cannot see.
 Load the library in the entry descriptor; names a step loads stay local to it.
+A comprehension, generator expression or lambda in `script=` sees the record's names
+(`sum(1 for r in rows if r == k)`, `lambda: k`): this works in CE 5.0 only; EE
+alignment is tracked separately.
 
 ## A model outside bounded proof
 
