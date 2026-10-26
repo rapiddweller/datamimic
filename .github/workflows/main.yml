@@ -254,7 +254,7 @@ jobs:
         with:
           fetch-depth: 0
           fetch-tags: true
-          ref: ${{ github.event.pull_request.head.ref || github.ref }}
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
 
       - name: Set Up Python 3.11
         uses: actions/setup-python@v6
