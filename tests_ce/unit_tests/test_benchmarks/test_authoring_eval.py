@@ -378,6 +378,14 @@ def test_clean_transcript_has_no_findings(tmp_path: Path) -> None:
     assert _audit(transcript, run, venv) == []
 
 
+def test_xml_in_a_heredoc_is_not_a_path(tmp_path: Path) -> None:
+    run, venv = tmp_path / "run", tmp_path / "venv"
+    command = f'cat > {run}/datamimic.xml <<\'EOF\'\n<setup>\n  <key name="x" constant="1"/>\n</setup>\nEOF'
+    transcript = _transcript(tmp_path, _line(_call("Bash", command=command)))
+
+    assert _audit(transcript, run, venv) == []
+
+
 def test_skill_use_is_flagged(tmp_path: Path) -> None:
     run, venv = tmp_path / "run", tmp_path / "venv"
 

@@ -61,8 +61,9 @@ def _tool_calls(transcript: Path) -> Iterator[tuple[int, str, dict[str, object]]
 
 
 def _is_path(candidate: str) -> bool:
-    """Regex and sed patterns such as /def/,/p/ look like paths; a real path starts in an existing top directory."""
-    return candidate.startswith("~") or os.path.lexists("/" + candidate.split("/")[1])
+    """Regex and sed patterns such as /def/,/p/ and the `/>` of XML look like paths; a real path starts in an existing
+    top directory."""
+    return candidate.startswith("~") or (candidate != "/" and os.path.lexists("/" + candidate.split("/")[1]))
 
 
 def _paths(tool: str, tool_input: dict[str, object]) -> list[str]:
