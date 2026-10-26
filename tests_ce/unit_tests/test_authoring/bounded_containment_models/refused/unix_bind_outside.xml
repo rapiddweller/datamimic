@@ -1,0 +1,6 @@
+<!-- Refused: the AF_UNIX path lies outside the private root (the test substitutes @OUTSIDE@), so bind would create a socket inode there. -->
+<setup rngSeed="7">
+    <generate name="rows" count="1" target="">
+        <key name="value" script="requests.packages.urllib3.util.connection.socket.socket(requests.packages.urllib3.util.connection.socket.AF_UNIX).bind('@OUTSIDE@/s.sock') or 1"/>
+    </generate>
+</setup>

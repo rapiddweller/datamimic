@@ -1,0 +1,6 @@
+<!-- Accepted: os.truncate takes no dir_fd; its length is not a descriptor. -->
+<setup rngSeed="7">
+    <generate name="rows" count="1" target="">
+        <key name="value" script="pd.DataFrame([{'a': 1}]).to_csv('note.csv') or os.truncate('note.csv', 0) or 1"/>
+    </generate>
+</setup>

@@ -24,29 +24,28 @@ from datamimic_ce.engine.dsl.api import resource_reader_scope
 _PROCESS_EVENTS = frozenset(
     {"subprocess.Popen", "os.system", "os.exec", "os.posix_spawn", "os.spawn", "os.fork", "os.forkpty", "os.startfile"}
 )
-# Audit events whose first two arguments name the paths they change; integers after the first path carry dir_fd (-1 when
-# absent). CPython 3.11-3.13 raises no event for os.mkfifo or os.mknod, so _contain replaces both.
-_PATH_EVENTS = frozenset(
-    {
-        "os.remove",
-        "os.rename",
-        "os.mkdir",
-        "os.rmdir",
-        "os.truncate",
-        "os.chmod",
-        "os.chown",
-        "os.link",
-        "os.symlink",
-        "os.utime",
-        "os.chflags",
-        "os.setxattr",
-        "os.removexattr",
-        "shutil.rmtree",
-        "shutil.copyfile",
-        "shutil.copytree",
-        "shutil.move",
-    }
-)
+# Audit events whose first two arguments name the paths they change, with the argument positions that carry dir_fd
+# (-1 or None when absent); () marks events without one. CPython 3.11-3.13 raises no event for os.mkfifo or os.mknod,
+# so _contain replaces both.
+_PATH_EVENTS: dict[str, tuple[int, ...]] = {
+    "os.remove": (1,),
+    "os.rmdir": (1,),
+    "shutil.rmtree": (1,),
+    "os.mkdir": (2,),
+    "os.chmod": (2,),
+    "os.symlink": (2,),
+    "os.rename": (2, 3),
+    "os.link": (2, 3),
+    "os.utime": (3,),
+    "os.chown": (3,),
+    "os.truncate": (),
+    "os.chflags": (),
+    "os.setxattr": (),
+    "os.removexattr": (),
+    "shutil.copyfile": (),
+    "shutil.copytree": (),
+    "shutil.move": (),
+}
 _WRITE_FLAGS = os.O_WRONLY | os.O_RDWR | os.O_CREAT | os.O_TRUNC | os.O_APPEND
 
 
@@ -123,11 +122,9 @@ def _contain(private_root: Path, workspace: Path, transport: tuple[Path, ...]) -
                 if os.path.normcase(real) in files:
                     read.add(Path(os.path.relpath(real, workspace_root)).as_posix())
         elif event in _PATH_EVENTS:
-            # dir_fd sits at different positions (os.remove: second, os.rename: third and fourth); any
-            # non-negative integer after the first path may be one, so it makes a relative path suspect.
-            carries_dir_fd = False
-            for value in args[1:]:
-                carries_dir_fd = carries_dir_fd or (isinstance(value, int) and value >= 0)
+            # Limit: shutil.rmtree of a non-empty relative tree stays refused; its inner events carry a real fd,
+            # which looks like a caller's dir_fd.
+            carries_dir_fd = any(isinstance(value := args[i], int) and value >= 0 for i in _PATH_EVENTS[event])
             # A file-descriptor form (os.chmod(fd), os.utime(fd)) names no path to check, so it is refused.
             if isinstance(args[0], int):
                 raise PermissionError("Bounded execution may write only new files inside its private workspace")
@@ -137,6 +134,16 @@ def _contain(private_root: Path, workspace: Path, transport: tuple[Path, ...]) -
                     not contained(path) or (carries_dir_fd and not os.path.isabs(os.fsdecode(path)))
                 ):
                     raise PermissionError("Bounded execution may write only new files inside its private workspace")
+        elif event == "socket.bind":
+            address = args[1]
+            # Every non-tuple address is an AF_UNIX path. CPython also takes any buffer there; it cannot be read as a
+            # path here, so it is refused like every other path outside the root.
+            if not isinstance(address, tuple) and (
+                not isinstance(address, (str, bytes))
+                # A leading NUL names a Linux abstract socket, which creates no inode (not tested on Linux).
+                or (os.fsdecode(address)[:1] != "\0" and not contained(address))
+            ):
+                raise PermissionError("Bounded execution may write only new files inside its private workspace")
 
     sys.addaudithook(hook)
     if os.name == "posix":

@@ -1,0 +1,6 @@
+<!-- Refused: the real dir_fd (third argument) makes "probe" resolve in the outside directory the test substitutes for @OUTSIDE@. -->
+<setup rngSeed="7">
+    <generate name="rows" count="1" target="">
+        <key name="value" script="os.mkdir('probe', dir_fd=os.open('@OUTSIDE@', os.O_RDONLY)) or 1"/>
+    </generate>
+</setup>

@@ -1,0 +1,6 @@
+<!-- Refused: dst_dir_fd (fourth argument) makes "probe" resolve in the outside directory the test substitutes for @OUTSIDE@. -->
+<setup rngSeed="7">
+    <generate name="rows" count="1" target="">
+        <key name="value" script="pd.DataFrame([{'a': 1}]).to_csv('note.csv') or os.rename('note.csv', 'probe', dst_dir_fd=os.open('@OUTSIDE@', os.O_RDONLY)) or 1"/>
+    </generate>
+</setup>
