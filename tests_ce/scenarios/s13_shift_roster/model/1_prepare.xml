@@ -16,7 +16,6 @@
     </generate>
     <generate name="certifications" source="data/certifications.csv" distribution="ordered" target="mem">
         <key name="cert_code" script="cert_code"/>
-        <key name="title" script="title"/>
     </generate>
     <generate name="staff_certifications" source="data/staff_certifications.csv" distribution="ordered" target="mem">
         <key name="holding_id" script="holding_id"/>
@@ -28,7 +27,6 @@
     </generate>
     <generate name="wards" source="data/wards.csv" distribution="ordered" target="mem">
         <key name="ward_id" script="ward_id"/>
-        <key name="title" script="title"/>
     </generate>
     <generate name="shift_types" source="data/shift_types.csv" distribution="ordered" target="mem">
         <key name="shift_code" script="shift_code"/>
