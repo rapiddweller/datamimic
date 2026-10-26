@@ -1,0 +1,8 @@
+<setup>
+    <!-- Without rngSeed nothing is expected to replay, so nothing is reported. -->
+    <execute uri="script/leaky.scr.py"/>
+    <generate name="rows" count="2">
+        <key name="id" generator="IncrementGenerator"/>
+        <key name="token" script="token(1)"/>
+    </generate>
+</setup>

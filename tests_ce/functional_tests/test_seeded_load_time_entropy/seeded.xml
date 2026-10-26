@@ -1,0 +1,8 @@
+<setup rngSeed="7">
+    <!-- The script draws while it loads: a module-level value, a default argument and an import in a body. -->
+    <execute uri="script/leaky.scr.py"/>
+    <generate name="rows" count="2">
+        <key name="id" generator="IncrementGenerator"/>
+        <key name="token" script="token(1)"/>
+    </generate>
+</setup>

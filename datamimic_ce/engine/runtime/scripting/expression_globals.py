@@ -25,6 +25,7 @@ identifier, which evaluate_python_expression turns into an error naming the miss
 
 from __future__ import annotations
 
+import ast
 import base64
 import calendar
 import collections
@@ -39,7 +40,9 @@ import random
 import re
 import statistics
 import uuid
-from collections.abc import Callable
+from collections.abc import Callable, Iterable
+from dataclasses import dataclass
+from enum import StrEnum
 from random import Random
 from types import ModuleType
 from typing import NamedTuple
@@ -142,8 +145,7 @@ class _Uncontrolled:
             code=IssueCode.TASK_EXPRESSION_EVAL_FAILED,
             expr=self._name,
             error=(
-                f"'{self._name}' draws entropy that <setup rngSeed> cannot replay; "
-                "use random.* or a generator instead"
+                f"'{self._name}' draws entropy that <setup rngSeed> cannot replay; use random.* or a generator instead"
             ),
         )
 
@@ -355,3 +357,171 @@ def rebind_seeded_script_names(
             namespace[name] = stand_in
             private.add(name)
     return frozenset(private)
+
+
+# Entropy a seeded <execute> script draws while it loads (#359). A script's names are rebound to the seeded
+# stand-ins after its body has run, so a module-level call, a default argument or an import inside a function body
+# is not seeded. The scan is static, recognises only unambiguous constructs and never reports source text.
+class LoadTimeDraw(StrEnum):
+    MODULE_LEVEL_CALL = "draws entropy while the script loads (module level or default argument)"
+    IMPORT_IN_BODY = "imports an entropy module inside a function or class body and draws from it"
+
+
+@dataclass(frozen=True)
+class LoadTimeFinding:
+    draw: LoadTimeDraw
+    line: int
+
+
+# Only the draws the run's seeded names stand in for, so that moving the draw into a function is a true remedy.
+# module -> the attributes that draw; None means any attribute of the module does.
+_DRAWING_ATTRIBUTES: dict[str, frozenset[str] | None] = {
+    "random": None,
+    "uuid": frozenset({"uuid1", "uuid4"}),
+    "datetime": frozenset({"now", "utcnow", "today"}),
+    "os": frozenset({"urandom"}),
+}
+# Given a seed value (not None) these build or seed a deterministic generator instead of drawing.
+_SEEDED_WHEN_GIVEN_A_SEED = frozenset({"Random", "seed"})
+
+
+def load_time_entropy(source: str) -> tuple[LoadTimeFinding, ...]:
+    """Findings in source order. Unparseable source has none: the runtime reports its syntax error itself."""
+    try:
+        tree = ast.parse(source)
+    except SyntaxError:
+        return ()
+    modules, members = _entropy_bindings(_module_scope_nodes(tree))
+    findings: list[LoadTimeFinding] = []
+    for call in _load_time_calls(tree):
+        if _draws(call, modules, members):
+            findings.append(LoadTimeFinding(LoadTimeDraw.MODULE_LEVEL_CALL, call.lineno))
+    for body in ast.walk(tree):
+        if isinstance(body, ast.FunctionDef | ast.AsyncFunctionDef | ast.ClassDef):
+            local_modules, local_members = _entropy_bindings(ast.walk(body))
+            if any(
+                isinstance(call, ast.Call) and _draws(call, local_modules, local_members) for call in ast.walk(body)
+            ):
+                for inner in ast.walk(body):
+                    if isinstance(inner, ast.Import | ast.ImportFrom) and _imports_entropy(inner):
+                        findings.append(LoadTimeFinding(LoadTimeDraw.IMPORT_IN_BODY, inner.lineno))
+    return tuple(sorted(set(findings), key=lambda finding: (finding.line, finding.draw.value)))
+
+
+def _root_module(name: str) -> str:
+    return name.partition(".")[0]
+
+
+def _imports_entropy(node: ast.Import | ast.ImportFrom) -> bool:
+    if isinstance(node, ast.Import):
+        return any(_root_module(alias.name) in _DRAWING_ATTRIBUTES for alias in node.names)
+    return node.level == 0 and _root_module(node.module or "") in _DRAWING_ATTRIBUTES
+
+
+def _module_scope_nodes(tree: ast.Module) -> list[ast.AST]:
+    """The nodes of the module's own namespace: everything except function and lambda bodies, which have theirs."""
+    nodes: list[ast.AST] = []
+    pending: list[ast.AST] = list(tree.body)
+    while pending:
+        node = pending.pop()
+        nodes.append(node)
+        if not isinstance(node, ast.FunctionDef | ast.AsyncFunctionDef | ast.Lambda):
+            pending.extend(ast.iter_child_nodes(node))
+    return nodes
+
+
+def _entropy_bindings(nodes: Iterable[ast.AST]) -> tuple[dict[str, str], dict[str, tuple[str, str]]]:
+    """Names bound to an entropy module (``import random as r``) and to one of its members
+    (``from random import randint``, ``from datetime import datetime``) by the imports among ``nodes``."""
+    modules: dict[str, str] = {}
+    members: dict[str, tuple[str, str]] = {}
+    for node in nodes:
+        if isinstance(node, ast.Import):
+            for alias in node.names:
+                root = _root_module(alias.name)
+                if root in _DRAWING_ATTRIBUTES:
+                    modules[alias.asname or root] = root
+        elif isinstance(node, ast.ImportFrom) and node.level == 0 and node.module in _DRAWING_ATTRIBUTES:
+            for alias in node.names:
+                members[alias.asname or alias.name] = (node.module, alias.name)
+    return modules, members
+
+
+# A generator handed straight to one of these is consumed while the module loads; iter, map, zip, enumerate and
+# the like only wrap it, and a later consumer inside a function draws from the seeded names.
+_EAGER_CONSUMERS = frozenset(
+    {"join", "list", "tuple", "set", "frozenset", "dict", "sum", "min", "max", "any", "all", "sorted", "next"}
+)
+
+
+def _callee_name(func: ast.expr) -> str | None:
+    if isinstance(func, ast.Name):
+        return func.id
+    return func.attr if isinstance(func, ast.Attribute) else None
+
+
+def _load_time_calls(tree: ast.Module) -> list[ast.Call]:
+    """Calls the module body runs while loading: everything except function and lambda bodies and the deferred
+    parts of a generator expression. A function's decorators and default arguments run, a class body runs too.
+    Annotations do not: the runtime compiles scripts with postponed annotations, so they stay strings."""
+    calls: list[ast.Call] = []
+    pending: list[ast.AST] = list(tree.body)
+    while pending:
+        node = pending.pop()
+        if isinstance(node, ast.Call):
+            calls.append(node)
+            if _callee_name(node.func) in _EAGER_CONSUMERS:
+                for argument in node.args:
+                    if isinstance(argument, ast.GeneratorExp):
+                        pending.append(argument.elt)
+                        for comprehension in argument.generators:
+                            pending.append(comprehension.iter)
+                            pending.extend(comprehension.ifs)
+        if isinstance(node, ast.GeneratorExp):
+            pending.append(node.generators[0].iter)  # only the outermost iterable is evaluated eagerly
+            continue
+        if isinstance(node, ast.FunctionDef | ast.AsyncFunctionDef | ast.Lambda):
+            if not isinstance(node, ast.Lambda):
+                pending.extend(node.decorator_list)
+            pending.extend(node.args.defaults)
+            for default in node.args.kw_defaults:
+                if default is not None:
+                    pending.append(default)
+            continue
+        pending.extend(ast.iter_child_nodes(node))
+    return calls
+
+
+def _draws(call: ast.Call, modules: dict[str, str], members: dict[str, tuple[str, str]]) -> bool:
+    func = call.func
+    if isinstance(func, ast.Name):
+        bound = members.get(func.id)
+        return bound is not None and _attribute_draws(bound[0], bound[1], call)
+    if isinstance(func, ast.Attribute):
+        root = func.value
+        while isinstance(root, ast.Attribute):
+            root = root.value
+        if not isinstance(root, ast.Name):
+            return False
+        module = modules.get(root.id) or (members[root.id][0] if root.id in members else None)
+        return module is not None and _attribute_draws(module, func.attr, call)
+    return False
+
+
+def _supplies_seed(call: ast.Call) -> bool:
+    """``Random(7)`` and ``seed(a=7)`` supply a seed; ``Random()``, ``Random(None)`` and ``seed(version=2)`` do not."""
+    if call.args:
+        seed = call.args[0]
+    else:
+        seeds = [keyword.value for keyword in call.keywords if keyword.arg in ("x", "a")]
+        if not seeds:
+            return False
+        seed = seeds[0]
+    return not (isinstance(seed, ast.Constant) and seed.value is None)
+
+
+def _attribute_draws(module: str, attribute: str, call: ast.Call) -> bool:
+    if module == "random" and attribute in _SEEDED_WHEN_GIVEN_A_SEED and _supplies_seed(call):
+        return False
+    drawing = _DRAWING_ATTRIBUTES[module]
+    return drawing is None or attribute in drawing
