@@ -1,0 +1,12 @@
+<!-- No script in script/quiet draws while it loads: the seed covers each draw, so nothing is reported. -->
+<setup rngSeed="7">
+    <execute uri="script/quiet/seeded_random_object.scr.py"/>
+    <execute uri="script/quiet/draw_in_function.scr.py"/>
+    <execute uri="script/quiet/lazy_generator.scr.py"/>
+    <execute uri="script/quiet/annotations.scr.py"/>
+    <execute uri="script/quiet/deterministic_calls.scr.py"/>
+    <execute uri="script/quiet/lambda_and_alias.scr.py"/>
+    <generate name="rows" count="1">
+        <key name="id" generator="IncrementGenerator"/>
+    </generate>
+</setup>
