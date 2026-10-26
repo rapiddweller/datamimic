@@ -1,5 +1,8 @@
 <setup>
     <!-- Export: write the target tables, the roster and its decision evidence to CSV, read back from the store. -->
+    <generate name="export_policy" source="mem" sourceEntity="policy" distribution="ordered" target="CSV" targetEntity="policy">
+        <key name="policy_id" script="policy_id"/>
+    </generate>
     <generate name="export_contracts" source="mem" sourceEntity="contracts" distribution="ordered" target="CSV" targetEntity="contracts">
         <key name="contract_id" script="contract_id"/>
     </generate>

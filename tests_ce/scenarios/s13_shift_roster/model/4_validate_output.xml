@@ -5,12 +5,14 @@
         <variable name="holdings" source="mem" sourceEntity="staff_certifications" storage="data" distribution="ordered"/>
         <variable name="leave" source="mem" sourceEntity="leave" storage="data" distribution="ordered"/>
         <variable name="shift_types" source="mem" sourceEntity="shift_types" storage="data" distribution="ordered"/>
+        <variable name="policy" source="mem" sourceEntity="policy" storage="data" distribution="ordered"/>
         <key name="entry_id" script="entry_id"/>
+        <key name="slot_id" script="slot_id"/>
         <key name="staff_id" script="staff_id"/>
         <key name="required_cert" script="{row.shift_code: row.required_cert for row in shift_types}[shift_code]"/>
         <key name="cert_status" script="certificate_status(holdings, staff_id, required_cert, shift_date)"/>
         <key name="rest_hours" script="rest_hours_before(roster, shift_types, entry_id)"/>
-        <key name="min_rest_hours" script="int(min_rest_hours)"/>
+        <key name="min_rest_hours" script="policy[0].min_rest_hours"/>
         <key name="wards_that_day" script="wards_on_day(roster, staff_id, shift_date)"/>
         <key name="on_leave" script="on_approved_leave(leave, staff_id, shift_date)"/>
     </generate>
@@ -31,5 +33,21 @@
         <key name="min_lead" script="min_lead"/>
         <key name="staffed" script="[row.slot_id for row in roster].count(slot_id)"/>
         <key name="leads" script="lead_holders(roster, holdings, slot_id, lead_cert, shift_date)"/>
+    </generate>
+    <generate name="boundary_controls" count="1" target="CSV">
+        <!-- Spec boundaries on fixed small inputs: ISO week 1 of 2026 and of 2027 are two weeks (RS3); a person may work
+             a night and the evening of the same day, exactly 11 h of rest and exactly 13 h of a 13 h contract (RS2, RS3). -->
+        <variable name="shift_types" source="mem" sourceEntity="shift_types" storage="data" distribution="ordered"/>
+        <variable name="days" script="[datetime.date(2026, 1, 1), datetime.date(2027, 1, 7)]"/>
+        <variable name="roster" script="[{'entry_id': day.year, 'staff_id': 'X', 'shift_date': day, 'shift_code': 'day'} for day in days]"/>
+        <variable name="slots" script="[{'slot_id': str(day), 'shift_date': day, 'ward_id': 'W1', 'shift_code': 'day', 'starts_at': datetime.datetime.combine(day, datetime.time(7)), 'ends_at': datetime.datetime.combine(day, datetime.time(18)), 'hours': 11, 'min_staff': 1, 'lead_cert': 'BLS', 'min_lead': 0} for day in days]"/>
+        <variable name="candidates" script="[{'staff_id': 'X', 'shift_date': day, 'max_weekly_hours': 11, 'eligible_shifts': ['day'], 'valid_certs': ['BLS']} for day in days]"/>
+        <variable name="monday" script="datetime.date(2026, 1, 5)"/>
+        <variable name="rest_slots" script="[{'slot_id': code, 'shift_date': day, 'ward_id': 'W1', 'shift_code': code, 'starts_at': datetime.datetime.combine(day, datetime.time(start)), 'ends_at': datetime.datetime.combine(day, datetime.time(start)) + datetime.timedelta(hours=hours), 'hours': hours, 'min_staff': 1, 'lead_cert': 'BLS', 'min_lead': 0} for day, code, start, hours in [(monday, 'night', 0, 7), (monday, 'evening', 18, 6)]]"/>
+        <variable name="rest_candidates" script="[{'staff_id': 'X', 'shift_date': monday, 'max_weekly_hours': 13, 'eligible_shifts': ['night', 'evening'], 'valid_certs': ['BLS']}]"/>
+        <key name="control_id" script="1"/>
+        <key name="rules_week_hours" script="busiest_week_hours(roster, shift_types, 'X')"/>
+        <key name="week_search_outcome" script="plan_roster(slots, candidates, 11, 10)['outcome']"/>
+        <key name="rest_search_outcome" script="plan_roster(rest_slots, rest_candidates, 11, 10)['outcome']"/>
     </generate>
 </setup>

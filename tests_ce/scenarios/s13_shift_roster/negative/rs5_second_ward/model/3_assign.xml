@@ -3,14 +3,14 @@
     <generate name="plan" count="1" target="mem">
         <variable name="slots" source="mem" sourceEntity="slots" storage="data" distribution="ordered"/>
         <variable name="candidates" source="mem" sourceEntity="candidates" storage="data" distribution="ordered"/>
-        <variable name="result" script="plan_roster(slots, candidates, int(min_rest_hours), int(search_budget))"/>
+        <variable name="policy" source="mem" sourceEntity="policy" storage="data" distribution="ordered"/>
+        <variable name="result" script="plan_roster(slots, candidates, policy[0].min_rest_hours, policy[0].search_budget)"/>
         <key name="plan_id" script="1"/>
         <key name="outcome" script="result['outcome']"/>
         <key name="search_complete" script="result['search_complete']"/>
         <key name="message" script="result['message']"/>
         <key name="steps" script="result['steps']"/>
         <key name="backtracks" script="result['backtracks']"/>
-        <key name="search_budget" script="int(search_budget)"/>
         <generate name="roster" script="result['entries'] + [{'entry_id': 101, 'slot_id': '2026-03-02/W2/night', 'shift_date': datetime.date(2026, 3, 2), 'ward_id': 'W2', 'shift_code': 'night', 'staff_id': 'S07'}]" count="{len(result['entries']) + 1}" distribution="ordered" target="mem">
             <key name="entry_id" script="entry_id"/>
             <key name="slot_id" script="slot_id"/>

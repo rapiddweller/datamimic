@@ -21,6 +21,7 @@ class Outcome(StrEnum):
     SOLVED = "solved"
     INFEASIBLE = "infeasible"
     BUDGET_EXHAUSTED = "budget_exhausted"
+    NOT_RUN = "not_run"
 
 
 class Rule(StrEnum):
@@ -31,10 +32,14 @@ class Rule(StrEnum):
 
 
 def plan_roster(
-    slots: Sequence[Row], candidates: Sequence[Row], min_rest_hours: int, search_budget: int
+    slots: Sequence[Row], candidates: Sequence[Row], min_rest_hours: int | None, search_budget: int | None
 ) -> dict[str, object]:
     """Return the plan (``entries``), the outcome with its message, the search counters and, per slot, why each
-    suitable person who is not assigned was left out (``decisions``)."""
+    suitable person who is not assigned was left out (``decisions``). A parameter is None when the policy file does
+    not give a whole number; then the search does not run, and the policy checks name the parameter."""
+    if min_rest_hours is None or search_budget is None:
+        message = "the search did not run: min_rest_hours or search_budget is not a whole number"
+        return _result(Outcome.NOT_RUN, message, 0, 0, [], [])
     order = sorted(slots, key=lambda slot: (slot["starts_at"], slot["ward_id"]))
     pool = {
         slot["slot_id"]: sorted(
@@ -53,8 +58,9 @@ def plan_roster(
     steps = backtracks = 0
     stopped_at: Row | None = None
 
-    def week(row: Row) -> int:
-        return row["shift_date"].isocalendar().week
+    def week(row: Row) -> tuple[int, int]:
+        """The ISO year and week of the shift start; a shift counts fully in that week."""
+        return row["starts_at"].isocalendar()[:2]
 
     def blocker(candidate: Row, slot: Row) -> tuple[Rule, str] | None:
         """The first rule that forbids this person the slot, given the shifts the person already has."""
@@ -67,7 +73,7 @@ def plan_roster(
                 return Rule.REST, f"{gap.total_seconds() / 3600:g} h from {other['slot_id']}, needs {min_rest_hours} h"
         hours = slot["hours"] + sum(other["hours"] for other in worked if week(other) == week(slot))
         if hours > candidate["max_weekly_hours"]:
-            return Rule.HOURS, f"{hours} h in week {week(slot)}, contract allows {candidate['max_weekly_hours']} h"
+            return Rule.HOURS, f"{hours} h in ISO week {week(slot)}, contract allows {candidate['max_weekly_hours']} h"
         return None
 
     def available(slot: Row) -> list[Row]:
@@ -148,11 +154,18 @@ def plan_roster(
             if candidate["staff_id"] in assigned:
                 continue
             rule, reason = blocker(candidate, slot) or (Rule.DEMAND_MET, f"{slot['min_staff']} staff already assigned")
-            blocked.append({"staff_id": candidate["staff_id"], "rule": rule, "reason": reason})
+            blocked.append({"staff_id": candidate["staff_id"], "rule": rule.value, "reason": reason})
         decisions.append({"slot_id": slot["slot_id"], "assigned": assigned, "blocked": blocked})
+    return _result(outcome, message, steps, backtracks, entries, decisions)
+
+
+def _result(
+    outcome: Outcome, message: str, steps: int, backtracks: int, entries: list[Row], decisions: list[Row]
+) -> dict[str, object]:
+    # A row holds plain values, so the enum leaves as its value.
     return {
-        "outcome": outcome,
-        "search_complete": outcome is not Outcome.BUDGET_EXHAUSTED,
+        "outcome": outcome.value,
+        "search_complete": outcome in (Outcome.SOLVED, Outcome.INFEASIBLE),
         "message": message,
         "steps": steps,
         "backtracks": backtracks,

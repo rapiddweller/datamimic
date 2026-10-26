@@ -2,6 +2,7 @@
   "version": "5.0",
   "max_count": 1000,
   "product_roles": [
+    {"product": "policy", "field": "policy_id", "role": {"kind": "identifier"}},
     {"product": "contracts", "field": "contract_id", "role": {"kind": "identifier"}},
     {"product": "staff", "field": "staff_id", "role": {"kind": "identifier"}},
     {"product": "staff", "field": "contract_id", "role": {"kind": "foreign_key", "parent_product": "contracts", "parent_field": "contract_id"}},
@@ -33,6 +34,7 @@
     {"product": "entry_checks", "field": "entry_id", "role": {"kind": "foreign_key", "parent_product": "roster", "parent_field": "entry_id"}},
     {"product": "hours_checks", "field": "staff_id", "role": {"kind": "foreign_key", "parent_product": "staff_capacity", "parent_field": "staff_id"}},
     {"product": "coverage_checks", "field": "slot_id", "role": {"kind": "foreign_key", "parent_product": "slots", "parent_field": "slot_id"}},
+    {"product": "export_policy", "field": "policy_id", "role": {"kind": "foreign_key", "parent_product": "policy", "parent_field": "policy_id"}},
     {"product": "export_contracts", "field": "contract_id", "role": {"kind": "foreign_key", "parent_product": "contracts", "parent_field": "contract_id"}},
     {"product": "export_staff", "field": "staff_id", "role": {"kind": "foreign_key", "parent_product": "staff", "parent_field": "staff_id"}},
     {"product": "export_certifications", "field": "cert_code", "role": {"kind": "foreign_key", "parent_product": "certifications", "parent_field": "cert_code"}},
@@ -48,6 +50,7 @@
     {"product": "export_slot_decisions", "field": "slot_id", "role": {"kind": "foreign_key", "parent_product": "slot_decisions", "parent_field": "slot_id"}}
   ],
   "expectations": [
+    {"kind": "row_condition", "subject": {"kind": "product", "product": "policy"}, "condition": "search_budget != None and search_budget >= 1"},
     {"kind": "allowed_values", "subject": {"kind": "product", "product": "leave"}, "field": "status", "values": ["approved", "requested"]},
     {"kind": "row_condition", "subject": {"kind": "product", "product": "leave"}, "condition": "days >= 1"},
     {"kind": "row_condition", "subject": {"kind": "product", "product": "staff_certifications"}, "condition": "valid_days == None or valid_days >= 0"},
@@ -62,9 +65,14 @@
     {"kind": "row_condition", "subject": {"kind": "product", "product": "coverage_checks"}, "condition": "staffed >= min_staff and staffed <= max_staff"},
     {"kind": "row_condition", "subject": {"kind": "product", "product": "coverage_checks"}, "condition": "leads >= min_lead"},
     {"kind": "row_condition", "subject": {"kind": "product", "product": "entry_checks"}, "condition": "wards_that_day == 1"},
-    {"kind": "row_condition", "subject": {"kind": "product", "product": "entry_checks"}, "condition": "not on_leave"}
+    {"kind": "row_condition", "subject": {"kind": "product", "product": "entry_checks"}, "condition": "not on_leave"},
+
+    {"kind": "row_condition", "subject": {"kind": "product", "product": "boundary_controls"}, "condition": "rules_week_hours == 11"},
+    {"kind": "row_condition", "subject": {"kind": "product", "product": "boundary_controls"}, "condition": "week_search_outcome == 'solved'"},
+    {"kind": "row_condition", "subject": {"kind": "product", "product": "boundary_controls"}, "condition": "rest_search_outcome == 'solved'"}
   ],
   "acceptance_requirements": [
+    {"origin": "caller", "expectation": {"kind": "row_condition", "subject": {"kind": "product", "product": "policy"}, "condition": "min_rest_hours != None and min_rest_hours >= 11"}},
     {"origin": "caller", "expectation": {"kind": "row_condition", "subject": {"kind": "product", "product": "candidates"}, "condition": "candidate_id != 'S07/2026-03-04' or 'night' in eligible_shifts"}},
     {"origin": "caller", "expectation": {"kind": "row_condition", "subject": {"kind": "product", "product": "candidates"}, "condition": "candidate_id != 'S07/2026-03-05' or 'night' not in eligible_shifts"}},
     {"origin": "caller", "expectation": {"kind": "row_condition", "subject": {"kind": "product", "product": "candidates"}, "condition": "staff_id != 'S09' or 'night' not in eligible_shifts"}},
@@ -72,6 +80,11 @@
     {"origin": "caller", "expectation": {"kind": "row_condition", "subject": {"kind": "product", "product": "candidates"}, "condition": "candidate_id != 'S03/2026-03-04' or on_leave"}},
     {"origin": "caller", "expectation": {"kind": "row_condition", "subject": {"kind": "product", "product": "candidates"}, "condition": "candidate_id != 'S03/2026-03-05' or not on_leave"}},
     {"origin": "caller", "expectation": {"kind": "row_condition", "subject": {"kind": "product", "product": "candidates"}, "condition": "candidate_id != 'S06/2026-03-02' or 'night' not in eligible_shifts"}},
-    {"origin": "caller", "expectation": {"kind": "row_condition", "subject": {"kind": "product", "product": "plan"}, "condition": "backtracks >= 1"}}
+    {"origin": "caller", "expectation": {"kind": "row_condition", "subject": {"kind": "product", "product": "plan"}, "condition": "backtracks >= 1"}},
+    {"origin": "caller", "expectation": {"kind": "row_condition", "subject": {"kind": "product", "product": "candidates"}, "condition": "candidate_id != 'S03/2026-03-02' or on_leave"}},
+    {"origin": "caller", "expectation": {"kind": "row_condition", "subject": {"kind": "product", "product": "candidates"}, "condition": "candidate_id != 'S06/2026-03-03' or 'night' in eligible_shifts"}},
+    {"origin": "caller", "expectation": {"kind": "row_condition", "subject": {"kind": "product", "product": "candidates"}, "condition": "candidate_id != 'S04/2026-03-02' or 'night' in eligible_shifts"}},
+    {"origin": "caller", "expectation": {"kind": "row_condition", "subject": {"kind": "product", "product": "hours_checks"}, "condition": "staff_id != 'S01' or busiest_week_hours == contract_hours"}},
+    {"origin": "caller", "expectation": {"kind": "row_condition", "subject": {"kind": "product", "product": "coverage_checks"}, "condition": "slot_id != '2026-03-02/W1/evening' or staffed == max_staff"}}
   ]
 }

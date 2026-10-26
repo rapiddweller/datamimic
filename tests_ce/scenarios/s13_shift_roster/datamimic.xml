@@ -2,6 +2,8 @@
     <!-- Shift roster for one hospital week. README.md names the files and where each rule RS1 to RS6 lives. -->
     <include uri="data/policy.properties"/>
     <memstore id="mem"/>
+    <execute uri="lib/certificates.scr.py"/>
+    <execute uri="lib/leave.scr.py"/>
     <execute uri="lib/roster_rules.scr.py"/>
     <execute uri="lib/roster_search.scr.py"/>
     <include uri="model/1_prepare.xml"/>

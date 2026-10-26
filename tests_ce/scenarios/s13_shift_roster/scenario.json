@@ -13,23 +13,25 @@
     "the decision evidence names the rule and the reason for every person who is left out"
   ],
   "products": {
-    "contracts": 3,
-    "staff": 16,
+    "policy": 1,
+    "contracts": 4,
+    "staff": 17,
     "certifications": 3,
-    "staff_certifications": 32,
+    "staff_certifications": 37,
     "wards": 2,
     "shift_types": 3,
     "demand": 6,
     "leave": 4,
     "calendar": 7,
     "slots": 42,
-    "candidates": 112,
+    "candidates": 119,
     "plan": 1,
     "roster": 49,
     "slot_decisions": 42,
     "entry_checks": 49,
-    "hours_checks": 16,
-    "coverage_checks": 42
+    "hours_checks": 17,
+    "coverage_checks": 42,
+    "boundary_controls": 1
   },
   "negatives": [
     {"dir": "negative/rs1_certificate_ignored", "diagnostic": "row_condition", "expected": "cert_status == 'valid'"},

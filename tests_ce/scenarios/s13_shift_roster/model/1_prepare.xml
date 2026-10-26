@@ -1,5 +1,11 @@
 <setup>
     <!-- Prepare: read each data file, give each column its type, and expand each demand row over the plan days into slots. -->
+    <generate name="policy" count="1" target="mem">
+        <!-- The rule parameters as whole numbers; None when a value is missing or not whole (the policy checks name it). -->
+        <key name="policy_id" script="1"/>
+        <key name="min_rest_hours" script="int(min_rest_hours)" defaultValue="None"/>
+        <key name="search_budget" script="int(search_budget)" defaultValue="None"/>
+    </generate>
     <generate name="contracts" source="data/contracts.csv" distribution="ordered" target="mem">
         <key name="contract_id" script="contract_id"/>
         <key name="max_weekly_hours" script="int(max_weekly_hours)"/>
