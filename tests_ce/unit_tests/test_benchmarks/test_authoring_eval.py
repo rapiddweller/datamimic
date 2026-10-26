@@ -10,6 +10,7 @@ import os
 import re
 import shutil
 import sys
+import tempfile
 import time
 from dataclasses import dataclass
 from datetime import datetime
@@ -769,15 +770,18 @@ print(json.dumps({{"type": "result", "subtype": "success", "is_error": False, "p
 """
 
 
-def _fake_claude(tmp_path: Path, tail: str) -> str:
+def _fake_claude(tmp_path: Path, monkeypatch: pytest.MonkeyPatch, tail: str) -> str:
+    monkeypatch.setattr(tempfile, "tempdir", str(tmp_path))  # the run's base directory, not the system's
     path = tmp_path / "claude"
     path.write_text(_FAKE_CLAUDE.format(python=sys.executable, markers=_MARKERS, tail=tail), encoding="utf-8")
     path.chmod(0o755)
     return str(path)
 
 
-def test_a_clean_run_is_reported_clean_and_starts_the_cli_with_the_bash_sandbox(tmp_path: Path) -> None:
-    report = run_subject.run("e01", tmp_path / "venv", "haiku", _fake_claude(tmp_path, "sys.exit(0)"))
+def test_a_clean_run_is_reported_clean_and_starts_the_cli_with_the_bash_sandbox(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    report = run_subject.run("e01", tmp_path / "venv", "haiku", _fake_claude(tmp_path, monkeypatch, "sys.exit(0)"))
 
     assert (report["problems"], report["findings"]) == ([], [])
     argv = json.loads((Path(str(report["run_dir"])).parent / "argv.json").read_text(encoding="utf-8"))
@@ -788,8 +792,8 @@ def test_a_clean_run_is_reported_clean_and_starts_the_cli_with_the_bash_sandbox(
     assert str(run_subject.REPO_ROOT) in sandbox["filesystem"]["denyRead"]
 
 
-def test_a_cli_exit_code_other_than_zero_is_a_problem(tmp_path: Path) -> None:
-    report = run_subject.run("e01", tmp_path / "venv", "haiku", _fake_claude(tmp_path, "sys.exit(3)"))
+def test_a_cli_exit_code_other_than_zero_is_a_problem(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    report = run_subject.run("e01", tmp_path / "venv", "haiku", _fake_claude(tmp_path, monkeypatch, "sys.exit(3)"))
 
     assert report["problems"] == ["the CLI exited with 3"]
 
@@ -804,7 +808,7 @@ def test_a_timeout_is_a_problem_and_kills_the_children_of_the_cli(
         "time.sleep(60)"
     )
 
-    report = run_subject.run("e01", tmp_path / "venv", "haiku", _fake_claude(tmp_path, tail))
+    report = run_subject.run("e01", tmp_path / "venv", "haiku", _fake_claude(tmp_path, monkeypatch, tail))
 
     assert report["problems"] == ["the CLI did not finish in 2 s"]
     child = int((Path(str(report["run_dir"])).parent / "child.pid").read_text(encoding="utf-8"))
