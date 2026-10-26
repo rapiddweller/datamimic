@@ -6,9 +6,9 @@
 broken variant fails exactly the checks it should, and the audit flags forbidden actions."""
 
 import json
-import os
 import re
 import shutil
+import subprocess
 import sys
 import tempfile
 import time
@@ -822,8 +822,26 @@ def test_a_timeout_is_a_problem_and_kills_the_children_of_the_cli(
 
 
 def _alive(pid: int) -> bool:
+    """A zombie is dead. os.kill(pid, 0) succeeds on a zombie; the slim CI image has /proc but no ps."""
+    if Path("/proc").is_dir():
+        try:
+            return Path(f"/proc/{pid}/stat").read_text(encoding="utf-8").rsplit(")", 1)[1].split()[0] != "Z"
+        except FileNotFoundError:
+            return False
+    state = subprocess.run(["ps", "-o", "stat=", "-p", str(pid)], capture_output=True, text=True, check=False).stdout
+    return bool(state.strip()) and not state.strip().startswith("Z")
+
+
+def test_a_killed_process_that_no_one_reaps_is_not_alive() -> None:
+    """The killed child stays a zombie when its new parent never reaps it: PID 1 of the CI container is `tail`."""
+    child = subprocess.Popen(["sleep", "60"])
     try:
-        os.kill(pid, 0)
-    except ProcessLookupError:
-        return False
-    return True
+        assert _alive(child.pid)
+        child.kill()  # no wait(): the process stays a zombie
+        deadline = time.monotonic() + 5
+        while _alive(child.pid) and time.monotonic() < deadline:
+            time.sleep(0.1)
+        assert not _alive(child.pid)
+    finally:
+        child.kill()
+        child.wait()
