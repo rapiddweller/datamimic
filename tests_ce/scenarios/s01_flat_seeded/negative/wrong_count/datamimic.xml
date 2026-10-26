@@ -1,0 +1,8 @@
+<setup rngSeed="11">
+    <generate name="devices" count="20">
+        <key name="device_id" generator="IncrementGenerator"/>
+        <key name="status" values="('active', 'idle', 'retired')"/>
+        <key name="battery_pct" type="int" min="0" max="100"/>
+        <key name="firmware" pattern="[1-3]\.[0-9]\.[0-9]"/>
+    </generate>
+</setup>

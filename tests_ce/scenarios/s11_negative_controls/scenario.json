@@ -1,0 +1,14 @@
+{
+  "title": "Each business rule is caught when violated",
+  "proves": [
+    "exact count, uniqueness, foreign-key membership, closed value set and numeric range are each enforced by Build"
+  ],
+  "products": {"accounts": 5, "payments": 8},
+  "negatives": [
+    {"dir": "negative/wrong_count", "diagnostic": "exact_count"},
+    {"dir": "negative/duplicate_id", "diagnostic": "unique"},
+    {"dir": "negative/orphan_fk", "diagnostic": "foreign_key"},
+    {"dir": "negative/value_outside_set", "diagnostic": "allowed_values"},
+    {"dir": "negative/range_exceeded", "diagnostic": "range"}
+  ]
+}
