@@ -79,15 +79,17 @@ def test_entity_count_is_an_alias_of_get_data_len_by_type():
     assert mem.entityCount("t") == 2 == mem.get_data_len_by_type("t")
 
 
-def test_missing_optional_entity_remains_strict_for_rows_and_lenient_for_length(caplog, monkeypatch):
+def test_missing_entity_fails_for_rows_and_length_without_an_error_log(caplog, monkeypatch):
+    """The typed error is the report; an ERROR log before the raise only repeated it."""
     mem = Memstore("mem")
     monkeypatch.setattr(logging.getLogger("DATAMIMIC"), "propagate", True)
 
-    with caplog.at_level(logging.ERROR, logger="DATAMIMIC"), pytest.raises(
-        KeyError, match="Data naming 'None' is empty in memstore"
+    with (
+        caplog.at_level(logging.ERROR, logger="DATAMIMIC"),
+        pytest.raises(KeyError, match="Data naming 'None' is empty in memstore"),
     ):
         mem.get_data_by_type(None)
-    assert "Data naming 'None' is empty in memstore" in caplog.messages[0]
+    assert caplog.messages == []
 
     caplog.clear()
     with pytest.raises(KeyError, match="Data naming 'None' is empty in memstore"):

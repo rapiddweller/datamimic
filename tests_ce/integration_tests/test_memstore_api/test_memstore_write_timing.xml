@@ -1,0 +1,34 @@
+<setup>
+    <memstore id="mem"/>
+    <!-- A producer that writes no rows still creates its entity. -->
+    <generate name="empty" count="0" target="mem">
+        <key name="id" generator="IncrementGenerator"/>
+    </generate>
+    <generate name="empty_reader" source="mem" sourceEntity="empty">
+        <key name="x" constant="1"/>
+    </generate>
+    <generate name="empty_count" count="1">
+        <variable name="rows" source="mem" sourceEntity="empty" storage="data"/>
+        <key name="n" script="len(rows)"/>
+    </generate>
+    <!-- A nested producer reaches the store when its outermost generate ends, also inside a false condition. -->
+    <generate name="outer" count="2">
+        <key name="oid" generator="IncrementGenerator"/>
+        <generate name="inner" count="2" target="mem">
+            <key name="iid" generator="IncrementGenerator"/>
+        </generate>
+        <condition>
+            <if condition="False">
+                <generate name="skipped" count="2" target="mem">
+                    <key name="sid" generator="IncrementGenerator"/>
+                </generate>
+            </if>
+        </condition>
+    </generate>
+    <generate name="inner_reader" source="mem" sourceEntity="inner">
+        <key name="x" constant="1"/>
+    </generate>
+    <generate name="skipped_reader" source="mem" sourceEntity="skipped">
+        <key name="x" constant="1"/>
+    </generate>
+</setup>
