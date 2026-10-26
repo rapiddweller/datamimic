@@ -38,7 +38,10 @@ CE is done (#399). EE follows in [EE #89](https://gitlab.dwellerlab.com/rapiddwe
 
 | # | Behavior | CE | EE | Status | Owner / next step |
 |---|---|---|---|---|---|
-| E1 | Issue code names and values | 105 codes | 411 codes. 104 of the CE codes have the same name and value. | `gap` | `TASK_TOTAL_ROW_BUDGET_EXCEEDED` (`I955`) exists only in CE. Reserve it in EE first (CE rule: CE codes are a subset of EE). Owner: EE session, then CE. Issue #400. |
+| E1 | Issue code names and values | 109 codes (105 at `10ac45a9`, then `W008`, `I196`, `I197`, `I198`) | 411 codes. 104 of the 105 CE codes at `10ac45a9` have the same name and value. | `gap` | `TASK_TOTAL_ROW_BUDGET_EXCEEDED` (`I955`) exists only in CE. Reserve it in EE first (CE rule: CE codes are a subset of EE). Owner: EE session, then CE. Issue #400. Rows E1a to E1c list the codes added after `10ac45a9`; `W008` is in O3. |
+| E1a | `SOURCE_SELECTOR_BLANK` (`I196`): blank `selector` or `iterationSelector` on a database source (#397) | present | not defined (EE uses up to `I195`) | `gap` | Owner: EE reservation. Reserve `I196` with the same name in EE. |
+| E1b | `SOURCE_INVALID_XLSX` (`I197`): file is not an `.xlsx` workbook (#379) | present | not defined | `gap` | Owner: EE reservation. Reserve `I197` with the same name in EE. |
+| E1c | `SOURCE_INVALID_FIXED_WIDTH` (`I198`): `.fcw` file without a valid spec line (#379) | present | not defined | `gap` | Owner: EE reservation. Reserve `I198` with the same name in EE. |
 | E2 | Code name, title and severity of the 104 shared codes | same | same | `identical` | Catalog comparison. |
 | E3 | Error code templates (`E0xx`, 15) | same | same | `identical` | Catalog comparison. |
 | E4 | EE-only issue codes | none | 307 | `EE-only` | EE features (native engine, ML, HL7, platform). No CE action. |
@@ -50,6 +53,7 @@ CE is done (#399). EE follows in [EE #89](https://gitlab.dwellerlab.com/rapiddwe
 | E10 | Order of records on a user error | error record, then `CONTROL kind=end` | `ERROR USER_ERROR \| <message>`, then `CONTROL kind=end` | `gap` | CE changed to the agreed order and has no prefix. EE must drop the `USER_ERROR` prefix and keep the order: [EE #89](https://gitlab.dwellerlab.com/rapiddweller/datamimic/datamimic-ee/-/work_items/89). Decision on #399. |
 | E11 | Multi-line error text in one log record | one physical line (`\n` escaped) | several physical lines | `gap` | CE did this in #384. Owner: EE, [EE #85](https://gitlab.dwellerlab.com/rapiddweller/datamimic/datamimic-ee/-/work_items/85). |
 | E12 | `run` CLI | `datamimic run DESCRIPTOR` | `datamimic-ee run DESCRIPTOR TASK_ID RUNTIME_CONFIG_JSON`, needs Redis and MinIO settings | `EE-only` | Platform coupling. The conformance runner uses the in-process API, not the CLI. |
+| E13 | JSON source with `NaN`, `Infinity`, `-Infinity` or a number above the largest float | read as a float | read as a float | `identical` | Decision (#379, owner): both editions accept these values; a catalog code for them is left out by decision. CE's JSON exporter writes `NaN`, and CE reads that file back (`test_a_json_file_that_ce_exports_with_nan_reads_back`). CE `authoring dry-run` and Build still refuse a non-finite captured value without a catalog code (`child_execution`). |
 
 ## Logging
 
@@ -109,9 +113,9 @@ These rows are not compared yet. They need a comparison before the release date.
 
 | Status | Rows |
 |---|---|
-| `identical` | 10 |
+| `identical` | 11 |
 | `CE-extension` | 3 |
 | `EE-only` | 4 |
-| `gap` | 9 |
+| `gap` | 12 |
 | `unverified` | 1 |
 | Open rows (not compared) | 9 |
