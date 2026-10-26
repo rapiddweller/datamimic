@@ -1,0 +1,54 @@
+{
+  "title": "Script expressions: a comprehension, generator expression or lambda sees the same names as the expression",
+  "proves": [
+    "a list, set or dict comprehension, a generator expression and a lambda see the record's keys, variables, setup variables and this/parent/root, on every supported Python (#423)",
+    "a name that a record binds wins over the engine's name of the same spelling, at the top level and in a nested scope alike",
+    "an assignment expression binds only inside one evaluation: it changes neither the engine's names nor the next key or row"
+  ],
+  "products": {
+    "orders": 3,
+    "checks": 3
+  },
+  "negatives": [
+    {
+      "name": "generator_expression_filter",
+      "diagnostic": "row_condition",
+      "expected": "list_count == generator_count",
+      "patch": {
+        "file": "datamimic.xml",
+        "old": "if line['order'] == this.order_id)",
+        "new": "if line['order'] != this.order_id)"
+      }
+    },
+    {
+      "name": "lambda_key",
+      "diagnostic": "row_condition",
+      "expected": "order_id != 1 or closest_qty == 1",
+      "patch": {
+        "file": "datamimic.xml",
+        "old": "key=lambda qty: abs(qty - order_id)",
+        "new": "key=lambda qty: -abs(qty - order_id)"
+      }
+    },
+    {
+      "name": "parent_in_generator_expression",
+      "diagnostic": "row_condition",
+      "expected": "parent_count >= 1 and parent_count == root_count",
+      "patch": {
+        "file": "datamimic.xml",
+        "old": "if line.order == parent.order_id)",
+        "new": "if line.order == parent.order_id + 1)"
+      }
+    },
+    {
+      "name": "field_shadows_engine_name",
+      "diagnostic": "row_condition",
+      "expected": "field_wins == True",
+      "patch": {
+        "file": "datamimic.xml",
+        "old": "sum(round for line in lines",
+        "new": "sum(round + 1 for line in lines"
+      }
+    }
+  ]
+}

@@ -5,6 +5,7 @@ from __future__ import annotations
 import re
 import types
 from collections.abc import Iterator, KeysView, Mapping
+from functools import lru_cache
 from typing import Protocol, TypeGuard
 
 from datamimic_ce.engine.runtime.scripting.expression_globals import NON_VALUE_TYPES
@@ -91,6 +92,13 @@ def _plain(value: object) -> object:
     return value
 
 
+# As in EE: the same expression text runs once per row, so compile it once.
+@lru_cache(maxsize=8192)
+def _compiled(expression: str) -> types.CodeType:
+    # eval() of a string drops leading spaces and tabs; compile() does not, so drop them here (script=" a + b").
+    return compile(expression.lstrip(" \t"), "<expression>", "eval")
+
+
 def evaluate_python(
     expression: str,
     global_namespace: dict[str, object],
@@ -117,8 +125,18 @@ def evaluate_python(
             )
         return result
 
+    def single_namespace(names: dict[str, object]) -> dict[str, object]:
+        """One dict as globals: a comprehension, generator expression or lambda sees only globals, so with
+        separate locals it would not see the record (#423). Local names win, as at the top level."""
+        namespace = {**global_namespace, **names}
+        if "__builtins__" in names:  # a local never chose the builtins, so a field of that name must not either
+            del namespace["__builtins__"]
+            if "__builtins__" in global_namespace:
+                namespace["__builtins__"] = global_namespace["__builtins__"]
+        return namespace
+
     try:
-        return normalized_result(eval(expression, global_namespace, local_namespace), diagnostic)
+        return normalized_result(eval(_compiled(expression), single_namespace(local_namespace)), diagnostic)
     except (UserErrorBase, DomainError):
         raise
     except (NameError, AttributeError) as error:
@@ -171,7 +189,7 @@ def evaluate_python(
             return updated
 
         try:
-            return normalized_result(eval(expression, global_namespace, replace_colons(local_namespace)), diagnostic)
+            return normalized_result(eval(expression, single_namespace(replace_colons(local_namespace))), diagnostic)
         except (UserErrorBase, DomainError):
             raise
         except Exception as retry_error:
