@@ -12,6 +12,15 @@
     <execute uri="script/flagged/class_body.scr.py"/>
     <execute uri="script/flagged/eager_consumer.scr.py"/>
     <execute uri="script/flagged/import_in_body.scr.py"/>
+    <execute uri="script/flagged/starred_list.scr.py"/>
+    <execute uri="script/flagged/starred_call.scr.py"/>
+    <execute uri="script/flagged/starred_tuple.scr.py"/>
+    <execute uri="script/flagged/for_over_generator.scr.py"/>
+    <execute uri="script/flagged/tuple_unpacking.scr.py"/>
+    <execute uri="script/flagged/comprehension_over_generator.scr.py"/>
+    <execute uri="script/flagged/lazy_wrapper_consumed.scr.py"/>
+    <execute uri="script/flagged/nested_generator_iterable.scr.py"/>
+    <execute uri="script/flagged/membership_test.scr.py"/>
     <generate name="rows" count="1">
         <key name="id" generator="IncrementGenerator"/>
     </generate>
