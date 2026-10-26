@@ -54,6 +54,7 @@ class Decision(TypedDict):
 class Suitability:
     eligible: list[dict[str, int]]
     near_misses: list[Exclusion]
+    excluded_by: dict[str, int]
 
 
 @dataclass(frozen=True)
@@ -120,10 +121,11 @@ def suitable_people(
     person_qualifications: Sequence[Row],
     policy: Row,
 ) -> Suitability:
-    """Decide R1 to R3 for every person and one position. A near miss fails exactly one rule."""
+    """Decide R1 to R3 for every person and one position. Count each failed rule; name the near misses (one rule)."""
     on = date.fromisoformat(valid_on)
     eligible: list[dict[str, int]] = []
     near_misses: list[Exclusion] = []
+    excluded_by: Counter[Rule] = Counter()
     for person in people:
         person_id = person["person_id"]
         checks = (
@@ -132,11 +134,13 @@ def suitable_people(
             _qualification(person_id, function_id, person_qualifications, policy),
         )
         failures = [failure for failure in checks if failure is not None]
+        excluded_by.update(failure["rule"] for failure in failures)
         if not failures:
             eligible.append({"person_id": person_id})
         elif len(failures) == 1:
             near_misses.append(failures[0])
-    return Suitability(eligible=eligible, near_misses=near_misses)
+    counts = {rule.value: excluded_by[rule] for rule in (Rule.R1, Rule.R2, Rule.R3)}
+    return Suitability(eligible=eligible, near_misses=near_misses, excluded_by=counts)
 
 
 def _conflict(held: Sequence[Row], position: Row) -> tuple[Rule, str] | None:

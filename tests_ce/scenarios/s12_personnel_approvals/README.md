@@ -42,7 +42,7 @@ Input validation and cleanup have no model file. Build checks the input in `acce
 
 The library has three public functions. None of them reads a file.
 
-- `suitable_people` gets one position and the person rows. It returns the eligible people and the near misses (people that fail one rule).
+- `suitable_people` gets one position and the person rows. It returns the eligible people, the exclusions counted by rule and the near misses (people that fail one rule).
 - `assign_seats` gets all positions with their eligible people and the policy. It returns the outcome, the plan and the decisions.
 - `check_position` gets one position and the plan. It returns the checks of step 4.
 
@@ -64,7 +64,8 @@ All rule functions are in `lib/staffing.scr.py`. All expectations are in `accept
 
 - `assignment.json` has the outcome, the number of tries (`nodes`), the backtracks and `unfilled_by` (seats left empty, counted by rule).
 - Its `decisions` list names the position, the seat, the person, the action, the rule and the reason. Actions: `try`, `skip`, `dead_end`, `undo`, `short`.
-- `plan_check.json` has, for each position, the eligible people, the near misses with rule and reason, and the checks of step 4.
+- `plan_check.json` has, for each position, the eligible people, `excluded_by` (people excluded, counted by rule), the near misses with rule and reason, and the checks of step 4.
+- A near miss is a person that fails exactly one rule. A person that fails two or more rules is counted, not named.
 
 ## Control cases in the data
 
@@ -95,7 +96,7 @@ Each directory in `negative/` holds one file that differs from the project. The 
 | `r5_exclusive_approval` | `A01-V1-OPR` asks for 2 seats. The search proves it infeasible. | `unfilled_by.R5 == 0` |
 | `r6_cross_company` | Person 47 is also the only inspector of company C06. | `unfilled_by.R6 == 0` |
 | `budget_exhausted` | `search_budget` is 50. The base case needs 83 tries. | `outcome != 'budget_exhausted'` |
-| `search_ignores_r5` | The library skips the R5 check. Step 4 finds the breach. | `approval_exclusive` |
+| `search_ignores_r5` | A copy of the library without the R5 check. Step 4 finds the breach. Keep it equal to `lib/staffing.scr.py` except for that check. | `approval_exclusive` |
 
 An infeasible variant also fails `outcome != 'infeasible'`, `filled == seats` and the staffing count.
 
