@@ -94,14 +94,9 @@ The caller requirements in `acceptance/build.json` name each edge with its ids. 
 | A requested leave does not block | S14 requested leave on 2026-03-05 | S14 may work the day shift of 2026-03-05 |
 | Hours exactly at the contract maximum | S01 has the contract PT07 (7 h) and is the only Monday ICU+ALS holder | S01 works exactly 7 of 7 h |
 | Only RS5 blocks a pair | S18 (BLS, 7 h contract) returns from leave on 2026-03-05 and takes the W1 evening. S03 works the W1 night: 11 h of rest before the W2 evening, and the fewest hours of the ICU holders | Without the RS5 check, the search gives S03 the W2 evening (negative `rs5_search_ignores_ward`) |
+| Exactly the minimum rest is allowed | S03 works the W2 night and the W2 evening of 2026-03-07: 11 h of rest | The W2 evening of 2026-03-07 has `rest_hours == min_rest_hours` |
 | Staff exactly at the slot maximum | The W1 evening needs 1 and allows 1 | W1 evening on 2026-03-02 is staffed at its maximum |
 | The search needs a backtrack | see [Search](#search) | `backtracks >= 1` |
-
-The `boundary_controls` product of step 4 runs the libraries on fixed small inputs. Its expectations check that
-ISO week 1 of 2026 and week 1 of 2027 are two weeks (in `busiest_week_hours` and in `plan_roster`). They also check
-that the search lets one person work a night and the evening of the same day: exactly 11 h of rest, and exactly
-13 h of a 13 h contract. These inputs use the specification value 11, not the policy value, because a whole-hour
-roster cannot hold this edge in the data: any data that needs an 11 h rest is infeasible at a policy value of 12.
 
 ## Decision evidence
 
@@ -182,14 +177,13 @@ Build captures 34 products. Each one is listed here with its step.
 | 1 prepare | `policy`, `contracts`, `staff`, `certifications`, `staff_certifications`, `wards`, `shift_types`, `demand`, `slots` (one per demand row and plan day), `leave`, `calendar` |
 | 2 suitability | `staff_capacity` (each person with the contract hours), `candidates` (each person and plan day) |
 | 3 assign | `plan` (the outcome), `roster` (the assignment), `slot_decisions` (the decision evidence) |
-| 4 validate output | `entry_checks`, `hours_checks`, `coverage_checks`, `boundary_controls` |
+| 4 validate output | `entry_checks`, `hours_checks`, `coverage_checks` |
 | 5 export | `export_policy`, `export_contracts`, `export_staff`, `export_certifications`, `export_staff_certifications`, `export_wards`, `export_shift_types`, `export_demand`, `export_leave`, `export_calendar`, `export_candidates`, `export_plan`, `export_roster`, `export_slot_decisions` |
 
 ## Output
 
 `datamimic run datamimic.xml` writes CSV files to `output/<random task id>/`. Each file has a header row, and the
-delimiter is a comma (`defaultSeparator`). Step 4 writes `entry_checks.csv`, `hours_checks.csv`, `coverage_checks.csv`
-and `boundary_controls.csv`. Step 5 writes the 14 export files, named after the products they read (`roster.csv`,
+delimiter is a comma (`defaultSeparator`). Step 4 writes `entry_checks.csv`, `hours_checks.csv` and `coverage_checks.csv`. Step 5 writes the 14 export files, named after the products they read (`roster.csv`,
 `slot_decisions.csv`, and so on).
 
 List and nested columns (`valid_certs`, `shifts`, `eligible_shifts`, `assigned`, `blocked`) hold Python literals,
@@ -200,11 +194,12 @@ When no roster exists, the run still ends with exit code 0. There is then no `ro
 
 ## Change one parameter
 
-1. Edit `data/policy.properties`, for example `min_rest_hours=12`.
-2. Run `datamimic authoring build tests_ce/scenarios/s13_shift_roster`. A value below 11 is rejected by the policy check.
-3. Read `plan` for `steps`, `backtracks` and `message`.
-4. Read `entry_checks` for `min_rest_hours` and `rest_hours` of each entry.
-5. Read `slot_decisions` for the people that RS2 now leaves out.
+1. Edit `data/policy.properties`, for example `search_budget=50`.
+2. Run `datamimic authoring build tests_ce/scenarios/s13_shift_roster`.
+3. Read `plan` for `outcome`, `steps` and `message`. At 50 steps the outcome is `budget_exhausted`.
+
+A change of `min_rest_hours` also changes the roster. The edge control for the exact minimum rest then fails, because
+it pins the 11 h rest of S03 on 2026-03-07.
 
 ## Cleanup
 

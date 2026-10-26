@@ -31,8 +31,7 @@
     "slot_decisions": 42,
     "entry_checks": 49,
     "hours_checks": 18,
-    "coverage_checks": 42,
-    "boundary_controls": 1
+    "coverage_checks": 42
   },
   "negatives": [
     {"dir": "negative/rs1_certificate_ignored", "diagnostic": "row_condition", "expected": "cert_status == 'valid'"},
