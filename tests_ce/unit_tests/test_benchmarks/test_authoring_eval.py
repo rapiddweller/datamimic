@@ -6,14 +6,18 @@
 broken variant fails exactly the checks it should, and the audit flags forbidden actions."""
 
 import json
+import os
 import re
 import shutil
+import sys
+import time
 from dataclasses import dataclass
 from datetime import datetime
 from pathlib import Path
 
 import pytest
 
+from benchmarks.authoring_eval import run_subject
 from benchmarks.authoring_eval.audit_transcript import FindingKind, audit
 from benchmarks.authoring_eval.oracle import (
     CASES,
@@ -606,6 +610,13 @@ def test_seed_is_reads_the_entry_descriptor_not_the_agents_acceptance_file(tmp_p
 # --- the subject runner: the isolation checks ------------------------------------------------------------------
 
 _TOKEN = "canary-0123"
+# The two lines a real 2.1.304 debug log holds with --safe-mode and the sandbox settings of the runner.
+_SAFE_MODE_LINE = "[DEBUG] $.fs.ancestors (cc-plugin-agents-md): project memory is off\n"
+_SANDBOX_LINE = (
+    "[INFO] Sandbox: ignoring permission rules and sandbox.filesystem entries "
+    "from disabled setting source userSettings\n"
+)
+_MARKERS = _SAFE_MODE_LINE + _SANDBOX_LINE
 
 
 @dataclass(frozen=True)
@@ -647,7 +658,7 @@ def _blind_run(tmp_path: Path, init: dict | None = None, result: dict | None = N
         | (result or {}),
     ]
     run.transcript.write_text("\n".join(json.dumps(record) for record in records) + "\n", encoding="utf-8")
-    run.debug_log.write_text("[DEBUG] $.fs.ancestors (cc-plugin-agents-md): project memory is off\n" + debug)
+    run.debug_log.write_text(_MARKERS + debug)
     return run
 
 
@@ -678,10 +689,48 @@ def test_isolation_problem_is_reported(change: dict, tmp_path: Path) -> None:
 
 
 def test_a_canary_file_named_in_the_debug_log_is_an_isolation_problem(tmp_path: Path) -> None:
+    run = _blind_run(tmp_path, debug=f"[DEBUG] no CLAUDE.md found; AGENTS.md loaded: {tmp_path}/AGENTS.md\n")
+
+    assert _problems(run) == ["the CLI found AGENTS.md"]
+
+
+def test_a_canary_file_is_found_under_the_other_spelling_of_its_path(tmp_path: Path) -> None:
+    """/var and /private/var name the same place on macOS; the CLI logs one, the runner may hold the other."""
+    real = tmp_path / "real"
+    real.mkdir()
+    (tmp_path / "link").symlink_to(real)
+    run = _blind_run(real, debug=f"[DEBUG] AGENTS.md loaded: {real}/AGENTS.md\n")
+    linked = [tmp_path / "link" / "AGENTS.md"]
+
+    assert isolation_problems(run.transcript, run.debug_log, run.run_dir, _TOKEN, linked) == ["the CLI found AGENTS.md"]
+
+
+@pytest.mark.parametrize("log", [None, "", _SANDBOX_LINE, _SAFE_MODE_LINE])
+def test_a_debug_log_without_both_markers_is_an_isolation_problem(log: str | None, tmp_path: Path) -> None:
+    """Missing, empty, without safe mode, without the sandbox: the debug-log checks cannot pass silently."""
     run = _blind_run(tmp_path)
-    run.debug_log.write_text(f"[DEBUG] no CLAUDE.md found; AGENTS.md loaded: {run.canary_files[0]}\n")
+    if log is None:
+        run.debug_log.unlink()
+    else:
+        run.debug_log.write_text(log, encoding="utf-8")
 
     assert _problems(run) != []
+
+
+def test_a_debug_log_that_is_not_utf8_is_still_read(tmp_path: Path) -> None:
+    run = _blind_run(tmp_path)
+    run.debug_log.write_bytes(_MARKERS.encode() + b"\xff\xfe AGENTS.md loaded: " + str(tmp_path / "AGENTS.md").encode())
+
+    assert _problems(run) == ["the CLI found AGENTS.md"]
+
+
+def test_a_transcript_line_that_is_not_json_is_a_finding_not_a_crash(tmp_path: Path) -> None:
+    run = _blind_run(tmp_path)
+    with run.transcript.open("a", encoding="utf-8") as transcript:
+        transcript.write('not json\n{"type": "assistant", "message": {"role": "assi')
+
+    assert _problems(run) == []
+    assert _audit(run.transcript, run.run_dir, tmp_path / "venv") == [FindingKind.UNREADABLE] * 2
 
 
 def test_the_canary_in_a_file_of_the_run_directory_is_an_isolation_problem(tmp_path: Path) -> None:
@@ -701,3 +750,73 @@ def test_the_brief_fills_every_placeholder(tmp_path: Path) -> None:
     assert (CASES / "e01" / "prompt.md").read_text(encoding="utf-8") in text
     assert f"{tmp_path}/venv/bin/datamimic" in text
     assert not re.search(r"<(venv|run-dir|turn-limit|task)>", text)
+
+
+# --- the subject runner end to end, with a stand-in for the claude CLI ----------------------------------------
+
+_FAKE_CLAUDE = """#!{python}
+import json, os, subprocess, sys, time
+from pathlib import Path
+args = sys.argv[1:]
+debug = Path(args[args.index("--debug-file") + 1])
+debug.write_text({markers!r})
+(debug.parent / "argv.json").write_text(json.dumps(args))
+tools = ["Bash", "Edit", "Glob", "Grep", "Read", "Write"]
+init = {{"type": "system", "subtype": "init", "cwd": os.getcwd(), "tools": tools}}
+print(json.dumps(init | {{"mcp_servers": [], "slash_commands": [], "skills": []}}))
+print(json.dumps({{"type": "result", "subtype": "success", "is_error": False, "permission_denials": []}}), flush=True)
+{tail}
+"""
+
+
+def _fake_claude(tmp_path: Path, tail: str) -> str:
+    path = tmp_path / "claude"
+    path.write_text(_FAKE_CLAUDE.format(python=sys.executable, markers=_MARKERS, tail=tail), encoding="utf-8")
+    path.chmod(0o755)
+    return str(path)
+
+
+def test_a_clean_run_is_reported_clean_and_starts_the_cli_with_the_bash_sandbox(tmp_path: Path) -> None:
+    report = run_subject.run("e01", tmp_path / "venv", "haiku", _fake_claude(tmp_path, "sys.exit(0)"))
+
+    assert (report["problems"], report["findings"]) == ([], [])
+    argv = json.loads((Path(str(report["run_dir"])).parent / "argv.json").read_text(encoding="utf-8"))
+    sandbox = json.loads(argv[argv.index("--settings") + 1])["sandbox"]
+    assert sandbox["enabled"] is True
+    assert sandbox["failIfUnavailable"] is True
+    assert sandbox["allowUnsandboxedCommands"] is False
+    assert str(run_subject.REPO_ROOT) in sandbox["filesystem"]["denyRead"]
+
+
+def test_a_cli_exit_code_other_than_zero_is_a_problem(tmp_path: Path) -> None:
+    report = run_subject.run("e01", tmp_path / "venv", "haiku", _fake_claude(tmp_path, "sys.exit(3)"))
+
+    assert report["problems"] == ["the CLI exited with 3"]
+
+
+def test_a_timeout_is_a_problem_and_kills_the_children_of_the_cli(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    monkeypatch.setattr(run_subject, "_TIMEOUT_SECONDS", 2)
+    tail = (
+        'child = subprocess.Popen(["sleep", "60"])\n'
+        '(debug.parent / "child.pid").write_text(str(child.pid))\n'
+        "time.sleep(60)"
+    )
+
+    report = run_subject.run("e01", tmp_path / "venv", "haiku", _fake_claude(tmp_path, tail))
+
+    assert report["problems"] == ["the CLI did not finish in 2 s"]
+    child = int((Path(str(report["run_dir"])).parent / "child.pid").read_text(encoding="utf-8"))
+    deadline = time.monotonic() + 5
+    while _alive(child) and time.monotonic() < deadline:
+        time.sleep(0.1)
+    assert not _alive(child)
+
+
+def _alive(pid: int) -> bool:
+    try:
+        os.kill(pid, 0)
+    except ProcessLookupError:
+        return False
+    return True

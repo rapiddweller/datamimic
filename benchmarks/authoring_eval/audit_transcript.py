@@ -21,6 +21,7 @@ from collections.abc import Iterator, Sequence
 from dataclasses import asdict, dataclass
 from enum import StrEnum
 from pathlib import Path
+from typing import Any
 
 # The only tools a subject gets; the runner passes the same set to `claude --tools`.
 ALLOWED_TOOLS = ("Bash", "Read", "Write", "Edit", "Glob", "Grep")
@@ -40,6 +41,7 @@ class FindingKind(StrEnum):
     FORBIDDEN_ROOT = "forbidden_root"
     OUTSIDE_ALLOWED = "outside_allowed"
     CANARY = "canary"
+    UNREADABLE = "unreadable"  # a line that is not one JSON object can hide a tool call
 
 
 @dataclass(frozen=True)
@@ -50,18 +52,31 @@ class Finding:
     detail: str
 
 
+def records(transcript: Path) -> Iterator[tuple[int, dict[str, Any] | None]]:
+    """(line number, record) for every line that is not blank; the record is None when the line is not a JSON object."""
+    # iterate the file, not str.splitlines(): that also splits on U+2028 and form feeds inside JSON strings.
+    # errors="replace": a broken byte must not lose the report.
+    with transcript.open(encoding="utf-8", errors="replace") as lines:
+        for number, text in enumerate(lines, start=1):
+            if not text.strip():
+                continue
+            try:
+                record = json.loads(text)
+            except ValueError:
+                record = None
+            yield number, record if isinstance(record, dict) else None
+
+
 def tool_calls(transcript: Path) -> Iterator[tuple[int, str, dict[str, object]]]:
     """(line number, tool name, tool input) for every tool call the agent made."""
-    # iterate the file, not str.splitlines(): that also splits on U+2028 and form feeds inside JSON strings
-    with transcript.open(encoding="utf-8") as lines:
-        for number, text in enumerate(lines, start=1):
-            message = json.loads(text).get("message") if text.strip() else None
-            if not isinstance(message, dict) or message.get("role") != "assistant":
-                continue
-            content = message.get("content")
-            for block in content if isinstance(content, list) else []:
-                if block.get("type") == "tool_use":
-                    yield number, block["name"], block["input"]
+    for number, record in records(transcript):
+        message = record.get("message") if record else None
+        if not isinstance(message, dict) or message.get("role") != "assistant":
+            continue
+        content = message.get("content")
+        for block in content if isinstance(content, list) else []:
+            if isinstance(block, dict) and block.get("type") == "tool_use":
+                yield number, block["name"], block["input"]
 
 
 def _is_path(candidate: str) -> bool:
@@ -89,15 +104,19 @@ def _under(path: str, roots: Sequence[Path]) -> bool:
     return any(candidate.is_relative_to(root) for root in roots)
 
 
-def _spellings(roots: Sequence[Path]) -> list[Path]:
+def spellings(roots: Sequence[Path]) -> list[Path]:
     """Each root as given and with symlinks resolved, because /tmp and /private/tmp name the same place."""
     return [Path(os.path.normpath(root)) for root in roots] + [Path(os.path.realpath(root)) for root in roots]
 
 
 def audit(transcript: Path, allow: Sequence[Path], forbid: Sequence[Path], canary: str | None = None) -> list[Finding]:
-    allowed = _spellings(allow) + list(_SYSTEM_PATHS)
-    forbidden = _spellings(forbid)
-    findings = []
+    allowed = spellings(allow) + list(_SYSTEM_PATHS)
+    forbidden = spellings(forbid)
+    findings = [
+        Finding(number, FindingKind.UNREADABLE, "", "line is not a JSON object")
+        for number, record in records(transcript)
+        if record is None
+    ]
     for line, tool, tool_input in tool_calls(transcript):
         if tool not in ALLOWED_TOOLS:
             findings.append(Finding(line, FindingKind.TOOL, tool, "tool outside the allowlist"))
@@ -108,7 +127,7 @@ def audit(transcript: Path, allow: Sequence[Path], forbid: Sequence[Path], canar
                 findings.append(Finding(line, FindingKind.FORBIDDEN_ROOT, tool, path))
             if not _under(path, allowed):
                 findings.append(Finding(line, FindingKind.OUTSIDE_ALLOWED, tool, path))
-    with transcript.open(encoding="utf-8") as lines:
+    with transcript.open(encoding="utf-8", errors="replace") as lines:
         findings += [
             Finding(number, FindingKind.CANARY, "", "canary token in the transcript")
             for number, text in enumerate(lines, start=1)

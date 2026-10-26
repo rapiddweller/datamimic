@@ -77,7 +77,8 @@ Follow these steps for every run. One run is one `claude -p` process for one cas
 
 1. Freeze the commit. Write the commit SHA in the results file.
 2. Build the wheel: `uv build --wheel`.
-3. Make a fresh virtual environment for the run, outside the repository and in a directory whose path does not name the product:
+3. Make a fresh virtual environment for the run, outside the repository and in a directory whose path does not name the product.
+   The Bash sandbox blocks reads of the repository, so a venv inside it does not run:
    `uv venv <venv>` then `uv pip install --python <venv>/bin/python <wheel>`. Do not reuse a venv between runs.
 4. Start the subject: `python -m benchmarks.authoring_eval.run_subject <id> --venv <venv> --model <model>`. Record the JSON report.
 5. Run the oracle from the frozen checkout with its own venv, not the venv of the subject: `python -m benchmarks.authoring_eval.oracle <id> <run-dir>`. Record the verdict.
@@ -94,7 +95,8 @@ Follow these steps for every run. One run is one `claude -p` process for one cas
    | Flag | Effect |
    |---|---|
    | `--safe-mode` | no CLAUDE.md, AGENTS.md, memory, skills, installed plugins, hooks or MCP servers |
-   | `--restricted` | the user, project and local settings files are ignored; the file tools stay in the cwd (per `--help`; no run tried a read outside) |
+   | `--restricted` | the user, project and local settings files are ignored; the file tools stay in the cwd (a probe `Read ../PARENT.md` was denied) |
+   | `--settings` with `sandbox_settings()` | the Bash sandbox of Claude Code: see [Bash sandbox](#bash-sandbox) |
    | `--tools` and `--allowed-tools` `Bash,Read,Write,Edit,Glob,Grep` | only these tools exist, and they need no prompt |
    | `--permission-prompts none` | any other permission request is denied |
    | `--disable-slash-commands`, `--strict-mcp-config` | no skills or commands, no MCP servers |
@@ -102,30 +104,64 @@ Follow these steps for every run. One run is one `claude -p` process for one cas
    | `--max-budget-usd 3` | a cost limit; the CLI has no turn limit flag |
    | `--output-format stream-json --verbose --debug-file` | the transcript and the debug log, both in `<base>` |
 
-   The child gets only `HOME`, `USER`, `LOGNAME`, `LANG`, `TMPDIR`, `SHELL` and a system `PATH`.
+   The child gets only `HOME`, `USER`, `LOGNAME`, `LANG`, `TMPDIR`, `SHELL` and a system `PATH` (`oracle.child_env`).
+   The child runs in its own process group. On a timeout (30 min), and after every run, the runner kills that group, so no Bash command of the subject survives.
 4. It checks the isolation (`isolation_problems`) and audits the transcript with `--allow <run-dir> --allow <venv>/bin/datamimic --forbid <repository-root> --canary <token>`.
-5. It prints a JSON report with the CLI version and the result line. The exit code is `0` only when the report has no problem and no finding.
+5. It always prints a JSON report with the run directory, the CLI version and the result line. The exit code is `0` only when the report has no problem and no finding.
 
 The isolation check fails the run when:
 
+- the CLI did not finish before the timeout, or its exit code is not `0`;
 - the init message is missing, its `tools` are not the allowlist, or it lists skills, MCP servers or slash commands;
 - the cwd of the subject is not the run directory;
 - the result message is missing, reports an error, or reports a denied tool call (an access or configuration error, not a model failure);
-- the debug log names a canary file, or shows that a hook added context;
-- a file in the run directory holds the canary.
+- the debug log is missing, or does not show `project memory is off` (safe mode) and `Sandbox: ignoring permission rules` (the sandbox settings loaded);
+- the debug log names a canary file (in the `/var` or the `/private/var` spelling), or shows that a hook added context;
+- a file in the run directory holds the canary, or cannot be read.
+
+The audit adds a finding for a transcript line that is not one JSON object, because such a line can hide a tool call.
 
 Evidence from Claude Code 2.1.304, with a model name that does not exist (no API call): without `--safe-mode`, the debug log shows
 `AGENTS.md loaded: <base>/AGENTS.md` and a SessionStart hook with `additionalContext`, and the isolation check reports both.
 With `--safe-mode`, the debug log shows `project memory is off`, and the init message lists no skills.
 When the CLI version changes, repeat that probe without `--safe-mode` and confirm that the isolation check still reports the leak.
 
+### Bash sandbox
+
+`--allowed-tools Bash` approves every Bash command. Without more, a subject can delete or send anything that the user can.
+The runner therefore passes `--settings` with the Claude Code Bash sandbox ([docs](https://code.claude.com/docs/en/sandboxing)):
+
+```json
+{"sandbox": {"enabled": true, "failIfUnavailable": true, "allowUnsandboxedCommands": false,
+             "filesystem": {"denyRead": ["<repository-root>", "~/.claude/projects"]}}}
+```
+
+- `enabled`: every Bash command runs in the macOS Seatbelt or Linux bubblewrap sandbox. Writes stay in the cwd and the sandbox temp directory. The network goes through a proxy that refuses each host that is not allowed, because nobody answers the prompt.
+- `failIfUnavailable`: the CLI does not start when the sandbox cannot start.
+- `allowUnsandboxedCommands: false`: the CLI ignores `dangerouslyDisableSandbox`. Without it, the `Bash` allow rule approves an unsandboxed retry.
+- `denyRead`: the repository and the transcripts of earlier sessions hold the answer key.
+
+Evidence from Claude Code 2.1.304 on macOS, with three Haiku probes (USD 0.0076 in total). Each probe made one Bash call with the flags of the runner:
+
+| Command in the probe | without `--settings` | with `--settings` |
+|---|---|---|
+| `rm` of a canary in a fresh `$TMPDIR` directory, outside the cwd | deleted | `Operation not permitted` |
+| `rm` of a canary in a fresh `/tmp` directory | deleted | `Operation not permitted` |
+| `curl https://example.com` | `200` | `CONNECT tunnel failed, response 403` |
+| `wc -c <repository>/…/e04/oracle.json`; `ls ~/.claude/projects` | read | `Operation not permitted` |
+| `touch` in the cwd; `<venv>/bin/datamimic authoring build .` (venv outside the repository) | ok, `ready` | ok, `ready` |
+
+The debug log shows no line for each sandboxed command. It shows `Sandbox: ignoring permission rules …` only when the sandbox settings load, so the isolation check requires that line.
+Repeat the probes (`rm` outside the cwd, `curl`) when the CLI version changes.
+
 What stays unproven:
 
 - The canary sits only in the parent directory. Safe mode states that it turns off the user `~/.claude/CLAUDE.md` too, but no canary proves it. The runner does not edit the user's files.
 - A clean config home is not possible with a keychain login: an empty `CLAUDE_CONFIG_DIR` gives `Not logged in`. `--bare` needs `ANTHROPIC_API_KEY`. The subject therefore uses the real login and the real `~/.claude`.
 - The init message still lists the installed plugins. The debug log says safe mode does not load them.
-- Bash is not confined. A subject can read outside the run directory with a relative path or a variable. The audit misses that path, unless the canary token shows up in the output.
-- Bash has network access.
+- The sandbox temp directory is `/tmp/claude-<uid>`, and Bash can write and delete there. Other Claude Code sessions of the same user keep their temporary files there. `CLAUDE_CODE_TMPDIR` did not move it. Do not run a campaign while another session keeps work there.
+- Bash can read every file that the user can read, except the two `denyRead` paths. Other checkouts of this repository hold the answer key too.
+- The oracle has no sandbox (see the protocol, step 5).
 - The turn limit is a rule of the brief. The report counts the tool calls.
 - No run has shown a model that writes the canary token. The leak that was caught came from the debug-log check.
 - A run that reaches `--max-budget-usd` probably ends with `is_error` and is then void, though it is a model failure. The exact result fields of a budget stop are not verified; read the `result` of the report.
