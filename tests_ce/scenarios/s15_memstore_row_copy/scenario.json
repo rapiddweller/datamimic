@@ -3,6 +3,7 @@
   "proves": [
     "row.to_dict() on a memstore row returns a copy: a nestedKey that adds a field to it changes neither the producer's output nor the memstore",
     "a nested list field read from a memstore row holds copies of its rows",
+    "a nestedKey that reads the memstore as its source and adds a field changes neither the producer's output nor the memstore",
     "a later readback of the memstore sees the rows the producer wrote"
   ],
   "products": {

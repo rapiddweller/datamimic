@@ -14,6 +14,7 @@
     {"kind": "field_absent", "subject": {"kind": "product", "product": "team_readback"}, "field": "mark"},
     {"kind": "field_absent", "subject": {"kind": "product", "product": "teams", "list_field": "tags"}, "field": "mark"},
     {"kind": "allowed_values", "subject": {"kind": "product", "product": "probe"}, "field": "marked_items", "values": [2]},
-    {"kind": "allowed_values", "subject": {"kind": "product", "product": "probe"}, "field": "marked_labels", "values": [2]}
+    {"kind": "allowed_values", "subject": {"kind": "product", "product": "probe"}, "field": "marked_labels", "values": [2]},
+    {"kind": "allowed_values", "subject": {"kind": "product", "product": "probe"}, "field": "marked_sourced", "values": [2]}
   ]
 }

@@ -19,7 +19,11 @@
         <nestedKey name="labels" script="[tag for team in teams for tag in team.tags]">
             <key name="mark" constant="written by probe"/>
         </nestedKey>
+        <nestedKey name="sourced" source="mem" sourceEntity="types" distribution="ordered" count="2">
+            <key name="mark" constant="written by probe"/>
+        </nestedKey>
         <key name="marked_items" script="len([item for item in this.items if 'mark' in item])"/>
+        <key name="marked_sourced" script="len([row for row in this.sourced if 'mark' in row])"/>
         <key name="marked_labels" script="len([label for label in this.labels if 'mark' in label])"/>
     </generate>
     <generate name="readback" source="mem" sourceEntity="types" distribution="ordered">

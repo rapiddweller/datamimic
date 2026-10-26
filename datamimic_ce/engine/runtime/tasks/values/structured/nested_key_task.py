@@ -293,7 +293,8 @@ class NestedKeyTask(GenSubTask):
                     f"but get invalid datatype: '{type(current_product)}'"
                 )
             ctx = GenIterContext(parent_context, str(self._statement.name), unique_cursors=self._unique_cursors)
-            ctx.current_product = current_product
+            # A copy, as a <generate> source row gets: a source or script row can be a stored memstore row (#421).
+            ctx.current_product = copy.deepcopy(current_product)
 
             # Ensure current_product is a dictionary
             if not isinstance(ctx.current_product, dict):
