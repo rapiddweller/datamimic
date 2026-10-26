@@ -128,6 +128,24 @@ DSL source path (`source="mem"`, `sourceEntity="…"`, with `pageSize` or `cycli
 owns selection; do not pass paging policy to the raw getter. `offset` remains
 file-only for Generate sources.
 
+Both raw getters return the stored rows themselves, not copies. A script that
+changes a row from `mem.get_all_data_by_type(...)` changes the store (#421).
+Read through the DSL source path when a script must not change the store.
+
+## Memstore write entity (CE and EE differ)
+
+| Edition | Entity that a memstore write uses |
+|---|---|
+| CE 5.0 | `targetEntity`, else the product name (`GenerateStatement.memstore_entity`) |
+| EE | `targetEntity`, else `type`, else the product name (`exporter_factory.py`, `entity_identity.py`) |
+
+CE differs on purpose (#422). On a memstore source, `type` names the entity
+that the step reads. When `type` also set the written entity, a step that read
+one entity and wrote the store appended its rows to the entity it read. EE
+needs an aligning change before the two editions agree. Until then, a project
+that runs in both editions reads with `sourceEntity`, writes with the product
+name or `targetEntity`, and does not put `type=` on a memstore source.
+
 ## Interfaces namespace
 
 [Amendment 169](https://github.com/rapiddweller/datamimic/blob/384b7723d950d8b312b1080d23ffd89a5343c9b0/docs/architecture/refactoring-study/experiment-2/amendment-169-interfaces-namespace.md)
