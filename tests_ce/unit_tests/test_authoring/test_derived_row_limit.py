@@ -126,3 +126,58 @@ def test_runtime_total_overrun_names_the_limit_without_capture_noise(tmp_path: P
     assert diagnostic.ce_error.issue_code is IssueCode.TASK_TOTAL_ROW_BUDGET_EXCEEDED
     assert diagnostic.expected == 10
     assert "all products together" in diagnostic.message
+    # No number is known here, so the remediation names which total to count and why Build could not derive it.
+    assert diagnostic.remediation == (
+        "Build derives max_count only when every product has a literal count or reads a memstore back. "
+        "Set max_count to the rows of all products together, or reduce the rows."
+    )
+
+
+_READBACK_ROLES = (
+    {"product": "parents", "field": "id", "role": {"kind": "identifier"}},
+    {
+        "product": "readback",
+        "field": "id",
+        "role": {"kind": "foreign_key", "parent_product": "parents", "parent_field": "id"},
+    },
+)
+
+
+def _memstore(produced: int, readback_count: str = "") -> str:
+    producer = (
+        f'<generate name="parents" count="{produced}" target="mem"><key name="id" generator="IncrementGenerator"/>'
+        "</generate>"
+    )
+    readback = (
+        f'<generate name="readback" source="mem" type="parents" distribution="ordered"{readback_count}>'
+        '<key name="id" script="this.id"/></generate>'
+    )
+    return f'<setup rngSeed="7"><memstore id="mem"/>{producer}{readback}</setup>'
+
+
+@pytest.mark.parametrize(
+    ("xml", "limit"),
+    [
+        pytest.param(_memstore(6), 12, id="readback-without-count-reads-the-producer-rows"),
+        pytest.param(_memstore(7, ' count="9"'), 16, id="readback-literal-count-bounds-its-rows"),
+    ],
+)
+def test_memstore_readback_counts_into_the_derived_limit(tmp_path: Path, xml: str, limit: int) -> None:
+    result = build_project(tmp_path, xml, product_roles=_READBACK_ROLES)
+
+    assert result.outcome == "ready", result.diagnostics
+    assert set(_limits(result).values()) == {limit}
+
+
+def test_file_source_with_a_literal_count_counts_into_the_derived_limit(tmp_path: Path) -> None:
+    (tmp_path / "rows.csv").write_text("id\n" + "".join(f"{row}\n" for row in range(1, 7)), encoding="utf-8")
+    xml = (
+        '<setup rngSeed="1"><generate name="generated" count="8"><key name="id" generator="IncrementGenerator"/>'
+        '</generate><generate name="read" source="rows.csv" distribution="ordered" count="6">'
+        '<key name="copy" script="id"/></generate></setup>'
+    )
+
+    result = build_project(tmp_path, xml)
+
+    assert result.outcome == "ready", result.diagnostics
+    assert set(_limits(result).values()) == {14}

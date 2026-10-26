@@ -149,8 +149,10 @@ Build does not claim that an external database was written.
 
 `max_count` limits the total captured product rows in one Build execution,
 including nested products. Omit it: when every product has a literal count, Build
-sets the limit to the declared total (at least 10, at most 1000). A project with
-a source-driven or script count gets the limit 10; set `max_count` to the total
-rows of all products. Deterministic replay receives a fresh limit of the
+sets the limit to the declared total (at least 10, at most 1000). A source with a
+literal count counts that count; a memstore readback without count counts the rows
+of its literal producer. A project with a file source without count, a script count
+or a count range (`minCount`/`maxCount`) gets the limit 10; set `max_count` to the
+total rows of all products. Deterministic replay receives a fresh limit of the
 same size; it verifies the same logical dataset. Export smoke reuses the first
 capture and consumes no additional rows.
