@@ -102,7 +102,7 @@ architecture-check: architecture-cycle-check architecture-definition-check
 	# ArchKeel ratchets type-only/package SCC edges; Pylint checks executable import cycles.
 	$(MAKE) architecture-validation-receipt architecture-report
 	uvx --python $(ARCHKEEL_PYTHON) --from '$(ARCHKEEL_SOURCE)' archkeel report --input $(ARCHITECTURE_DIR)/architecture.json --only architecture --full --json > $(ARCHITECTURE_DIR)/completion.json
-	uvx --python 3.11 --from pytest==8.3.5 python tests_ce/architecture/completion_gate.py $(ARCHITECTURE_DIR)/validation.json $(ARCHITECTURE_DIR)/completion.json docs/architecture/refactoring-study/experiment-2/completion-unknowns.json
+	uvx --python 3.11 --from pytest==8.3.5 python tests_ce/architecture/completion_gate.py $(ARCHITECTURE_DIR)/validation.json $(ARCHITECTURE_DIR)/completion.json docs/architecture/refactoring-study/experiment-2/completion-unknowns.json known-violations.json
 
 architecture-cycle-check:
 	uvx --python 3.11 --from pylint==3.3.7 pylint --disable=all --enable=cyclic-import --persistent=n --score=n datamimic_ce

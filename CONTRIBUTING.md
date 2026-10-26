@@ -76,13 +76,16 @@ The check fails when one of these is true:
 
 - The code has an architecture violation, or the baseline in `known-violations.json` drifts.
 - A measurement budget is exceeded, or the report is incomplete.
-- The code adds an UNKNOWN finding that the review record does not assess.
+- The set of UNKNOWN findings differs from the set the review record assesses.
+- A budget or a baseline entry in `known-violations.json` differs from the one the review record names.
 
-A code change that adds no UNKNOWN finding, and changes neither the architecture contract nor the analyzer, needs no review record. You do not edit `docs/architecture/refactoring-study/experiment-2/completion-unknowns.json`.
+A code change that does none of this, and changes neither the architecture contract nor the analyzer, needs no review record. Do not edit `docs/architecture/refactoring-study/experiment-2/completion-unknowns.json`.
 
-A maintainer records a review only when the set of UNKNOWN findings, the contract, or the analyzer changes. If your change causes that, the maintainer adds the record to your branch.
+A maintainer records a review only when the set of UNKNOWN findings, the validation diagnostics, the contract, the analyzer, or `known-violations.json` changes. If your change causes that, the maintainer adds the record to your branch.
 
-The independent architecture review stays a required process step. It is recorded as a review note in the pull request, not as a digest.
+A budget or baseline change in `known-violations.json` needs a `measurement_amendment` entry and the new `known_violations_digest` in the same pull request. A maintainer can still raise a ratchet budget when the raise is argued and verified.
+
+The independent architecture review stays a required process step. It is recorded as a review note under `docs/architecture/refactoring-study/experiment-2/`, or as an approving review on the pull request, not as a digest.
 
 ---
 

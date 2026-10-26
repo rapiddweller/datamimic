@@ -1,11 +1,16 @@
 """Reject architecture completion without a current independent UNKNOWN review."""
 
+import hashlib
 import json
 import sys
 from pathlib import Path
 
 
-def check_completion(validation: dict, report: dict, review: dict) -> int:
+def digest(value: object) -> str:
+    return hashlib.sha256(json.dumps(value, sort_keys=True, separators=(",", ":")).encode()).hexdigest()
+
+
+def check_completion(validation: dict, report: dict, review: dict, known_violations: dict) -> int:
     for result in (validation, report):
         if result.get("failures"):
             raise ValueError("Architecture validation or report failures remain.")
@@ -17,6 +22,9 @@ def check_completion(validation: dict, report: dict, review: dict) -> int:
             raise ValueError("Architecture observation or validation is incomplete.")
     if report.get("exit_code") != 0 or report.get("diagnostics"):
         raise ValueError("Architecture report is incomplete.")
+    # Budgets and accepted baseline entries are decisions; a change needs a measurement_amendment and a new digest.
+    if review.get("known_violations_digest") != digest(known_violations):
+        raise ValueError("known-violations.json changed after independent review.")
     diagnostics = validation.get("diagnostics") or []
     assessment = review.get("validation_unknowns") or {}
     if diagnostics:

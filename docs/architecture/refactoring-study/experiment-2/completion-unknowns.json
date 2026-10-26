@@ -2,6 +2,7 @@
   "status": "independent_local_architecture_review_accepted",
   "reviewed_by": "Astra",
   "review_reference": "docs/architecture/refactoring-study/experiment-2/pr-363-bounded-containment-review.md",
+  "known_violations_digest": "89f8612dac4f14c5b9d80689f1921b86109a4e91652018d42184cf673b7c8980",
   "contract_digest": "c70eaaf61c8ddba9ba98074ace8d94bd8150cf560f6d45aa30f03f876cffa852",
   "analyzer_digest": "bb1a3262d3fdd38c3e9a6af980cc063281ae98ab1c28c89c2c5be6dfb450744f",
   "groups": [
