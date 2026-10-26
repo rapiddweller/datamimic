@@ -1,0 +1,15 @@
+<setup>
+    <!-- Suitability: decide R1 to R3 for every person and position; keep the eligible people and the near misses. -->
+    <generate name="suitability" source="mem" sourceEntity="positions" distribution="ordered" target="mem">
+        <variable name="people" source="data/people.json" storage="data" distribution="ordered"/>
+        <variable name="employments" source="data/employments.json" storage="data" distribution="ordered"/>
+        <variable name="person_licenses" source="data/person_licenses.json" storage="data" distribution="ordered"/>
+        <variable name="person_qualifications" source="data/person_qualifications.json" storage="data" distribution="ordered"/>
+        <variable name="policy" source="data/policy.json" storage="value" distribution="ordered"/>
+        <variable name="verdict" script="suitable_people(this.company_id, this.function_id, this.valid_on, people, employments, person_licenses, person_qualifications, policy)"/>
+        <key name="position_id" script="this.position_id"/>
+        <key name="eligible_count" script="len(verdict.eligible)"/>
+        <nestedKey name="eligible" script="verdict.eligible"/>
+        <nestedKey name="near_misses" script="verdict.near_misses"/>
+    </generate>
+</setup>

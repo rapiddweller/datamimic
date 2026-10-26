@@ -1,0 +1,15 @@
+<setup>
+    <!-- Validate output: check the plan of each position without the search, before the export reads it. -->
+    <generate name="plan_check" source="mem" sourceEntity="suitability" distribution="ordered" target="JSON">
+        <variable name="plan" source="mem" sourceEntity="plan" storage="data" distribution="ordered"/>
+        <variable name="positions" source="mem" sourceEntity="suitability" storage="data" distribution="ordered"/>
+        <variable name="check" script="check_position(this, plan, positions)"/>
+        <key name="position_id" script="this.position_id"/>
+        <key name="seats" script="this.seats"/>
+        <key name="filled" script="check['filled']"/>
+        <key name="all_eligible" script="check['all_eligible']"/>
+        <key name="distinct_people" script="check['distinct_people']"/>
+        <key name="approval_exclusive" script="check['approval_exclusive']"/>
+        <key name="company_exclusive" script="check['company_exclusive']"/>
+    </generate>
+</setup>

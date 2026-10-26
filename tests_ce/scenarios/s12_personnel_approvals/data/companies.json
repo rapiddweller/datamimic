@@ -1,0 +1,12 @@
+[
+  {"company_id": "C01", "company_name": "Company Alpha"},
+  {"company_id": "C02", "company_name": "Company Bravo"},
+  {"company_id": "C03", "company_name": "Company Charlie"},
+  {"company_id": "C04", "company_name": "Company Delta"},
+  {"company_id": "C05", "company_name": "Company Echo"},
+  {"company_id": "C06", "company_name": "Company Foxtrot"},
+  {"company_id": "C07", "company_name": "Company Golf"},
+  {"company_id": "C08", "company_name": "Company Hotel"},
+  {"company_id": "C09", "company_name": "Company India"},
+  {"company_id": "C10", "company_name": "Company Juliett"}
+]

@@ -1,0 +1,42 @@
+{
+  "title": "Personnel and approvals: staff every seat of every approval version under six cross-table rules",
+  "proves": [
+    "eleven target tables with 27 columns and 540 rows come from data files, demand and one policy file",
+    "R1 to R3 decide each person per position, and the decision names the rule and the reason for each near miss",
+    "a license is valid on its expiry date: person 47 is the only inspector for A07-V1 and expires on its date",
+    "the search needs backtracking: its first choice for A03-V1-PLN leaves A05-V1-PLN short (R6)",
+    "versions share their approval (A01) and approvals of one company share people (A03 and A04)",
+    "an infeasible demand ends below the budget as infeasible; a too small budget ends as budget_exhausted",
+    "an independent output check per position catches a search that ignores R5",
+    "each variant changes one fact and Build rejects it with a row condition that names the rule"
+  ],
+  "products": {
+    "companies": 10,
+    "people": 100,
+    "functions": 4,
+    "employments": 105,
+    "licenses": 2,
+    "person_licenses": 102,
+    "qualifications": 4,
+    "person_qualifications": 98,
+    "approvals": 11,
+    "approval_versions": 22,
+    "staffing": 82
+  },
+  "negatives": [
+    {"dir": "negative/r1_person", "diagnostic": "row_condition"},
+    {"dir": "negative/r1_company", "diagnostic": "row_condition"},
+    {"dir": "negative/r1_function", "diagnostic": "row_condition"},
+    {"dir": "negative/r2_missing", "diagnostic": "row_condition"},
+    {"dir": "negative/r2_expired", "diagnostic": "row_condition"},
+    {"dir": "negative/r2_inactive", "diagnostic": "row_condition"},
+    {"dir": "negative/r2_no_expiry", "diagnostic": "row_condition"},
+    {"dir": "negative/r3_missing", "diagnostic": "row_condition"},
+    {"dir": "negative/r4_above_maximum", "diagnostic": "row_condition"},
+    {"dir": "negative/r4_same_person", "diagnostic": "row_condition"},
+    {"dir": "negative/r5_exclusive_approval", "diagnostic": "row_condition"},
+    {"dir": "negative/r6_cross_company", "diagnostic": "row_condition"},
+    {"dir": "negative/budget_exhausted", "diagnostic": "row_condition"},
+    {"dir": "negative/search_ignores_r5", "diagnostic": "row_condition"}
+  ]
+}

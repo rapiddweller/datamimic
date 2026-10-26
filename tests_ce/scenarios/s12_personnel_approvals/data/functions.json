@@ -1,0 +1,6 @@
+[
+  {"function_id": "INS", "function_name": "Inspector"},
+  {"function_id": "OPR", "function_name": "Operator"},
+  {"function_id": "PLN", "function_name": "Planner"},
+  {"function_id": "SUP", "function_name": "Supervisor"}
+]

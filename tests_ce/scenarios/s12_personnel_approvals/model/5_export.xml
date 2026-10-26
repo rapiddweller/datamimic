@@ -1,0 +1,52 @@
+<setup>
+    <!-- Export: project the eleven target tables to CSV; staffing reads the checked plan back from the memstore. -->
+    <generate name="companies" source="data/companies.json" distribution="ordered" target="CSV">
+        <key name="company_id" script="this.company_id"/>
+        <key name="company_name" script="this.company_name"/>
+    </generate>
+    <generate name="people" source="data/people.json" distribution="ordered" target="CSV">
+        <key name="person_id" script="this.person_id"/>
+        <key name="full_name" script="this.full_name"/>
+    </generate>
+    <generate name="functions" source="data/functions.json" distribution="ordered" target="CSV">
+        <key name="function_id" script="this.function_id"/>
+        <key name="function_name" script="this.function_name"/>
+    </generate>
+    <generate name="employments" source="data/employments.json" distribution="ordered" target="CSV">
+        <key name="person_id" script="this.person_id"/>
+        <key name="company_id" script="this.company_id"/>
+        <key name="function_id" script="this.function_id"/>
+    </generate>
+    <generate name="licenses" source="data/licenses.json" distribution="ordered" target="CSV">
+        <key name="license_type" script="this.license_type"/>
+    </generate>
+    <generate name="person_licenses" source="data/person_licenses.json" distribution="ordered" target="CSV">
+        <key name="person_id" script="this.person_id"/>
+        <key name="license_type" script="this.license_type"/>
+        <key name="status" script="this.status"/>
+        <key name="expires_on" script="this.expires_on"/>
+    </generate>
+    <generate name="qualifications" source="data/qualifications.json" distribution="ordered" target="CSV">
+        <key name="qualification_id" script="this.qualification_id"/>
+        <key name="qualification_name" script="this.qualification_name"/>
+    </generate>
+    <generate name="person_qualifications" source="data/person_qualifications.json" distribution="ordered" target="CSV">
+        <key name="person_id" script="this.person_id"/>
+        <key name="qualification_id" script="this.qualification_id"/>
+    </generate>
+    <generate name="approvals" source="data/approvals.json" distribution="ordered" target="CSV">
+        <key name="approval_id" script="this.approval_id"/>
+        <key name="company_id" script="this.company_id"/>
+    </generate>
+    <generate name="approval_versions" source="data/approval_versions.json" distribution="ordered" target="CSV">
+        <key name="version_id" script="this.version_id"/>
+        <key name="approval_id" script="this.approval_id"/>
+        <key name="valid_on" script="this.valid_on"/>
+    </generate>
+    <generate name="staffing" source="mem" sourceEntity="plan" distribution="ordered" target="CSV">
+        <key name="seat_id" script="this.seat_id"/>
+        <key name="version_id" script="this.version_id"/>
+        <key name="function_id" script="this.function_id"/>
+        <key name="person_id" script="this.person_id"/>
+    </generate>
+</setup>
