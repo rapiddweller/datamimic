@@ -409,7 +409,10 @@ def test_a_project_cannot_tell_the_changed_fixtures_run_by_its_path(tmp_path: Pa
     xml = (project / _XML).read_text(encoding="utf-8")
     rule = "'high' if int(source_row.total_cents) >= 5000 else 'standard'"
     (project / _XML).write_text(
-        xml.replace(f'script="{rule}"', f"script=\"'x' if 'changed' in {_OS}['getcwd']() else {rule}\""),
+        xml.replace(
+            f'script="{rule}"',
+            f"script=\"'x' if {_OS}['getcwd']().rsplit('/', 1)[1] in ('3', 'fixtures_changed') else {rule}\"",
+        ),
         encoding="utf-8",
     )
 
