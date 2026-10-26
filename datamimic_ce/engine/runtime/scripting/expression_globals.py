@@ -494,6 +494,50 @@ def _callee_name(func: ast.expr) -> str | None:
     return func.attr if isinstance(func, ast.Attribute) else None
 
 
+# A match star or mapping-rest capture binds a list or a dict, which no call consumes a generator through.
+_Binder = (
+    ast.Name
+    | ast.ExceptHandler
+    | ast.FunctionDef
+    | ast.AsyncFunctionDef
+    | ast.ClassDef
+    | ast.Import
+    | ast.ImportFrom
+    | ast.MatchAs
+)
+
+
+def _bound_names(node: _Binder) -> list[str]:
+    if isinstance(node, ast.Import):
+        return [alias.asname or _root_module(alias.name) for alias in node.names]
+    if isinstance(node, ast.ImportFrom):
+        return [alias.asname or alias.name for alias in node.names]
+    if isinstance(node, ast.Name):
+        return [] if isinstance(node.ctx, ast.Load) else [node.id]
+    return [node.name] if node.name else []
+
+
+def _itertools_bindings(scope: list[ast.AST]) -> tuple[dict[str, str], dict[str, tuple[str, str]]]:
+    """The itertools imports still bound once the module has loaded. The last binding of a name in source order
+    wins: an assignment, del, def, class, loop or with target, except or match capture name, or another import
+    after the import drops it, and the name stays reported (fail safe). One decision covers the whole file."""
+    binders = sorted(
+        (node for node in scope if isinstance(node, _Binder)), key=lambda node: (node.lineno, node.col_offset)
+    )
+    modules: dict[str, str] = {}
+    members: dict[str, tuple[str, str]] = {}
+    for node in binders:
+        for name in _bound_names(node):
+            if name in modules:
+                del modules[name]
+            if name in members:
+                del members[name]
+        imported_modules, imported_members = _bindings((node,), ("itertools",))
+        modules |= imported_modules
+        members |= imported_members
+    return modules, members
+
+
 def _wraps_lazily(func: ast.expr, modules: dict[str, str], members: dict[str, tuple[str, str]]) -> bool:
     """A builtin lazy wrapper, or a lazy itertools function reached through an import (never a bare name alone)."""
     if _callee_name(func) in _LAZY_WRAPPERS:
@@ -516,12 +560,7 @@ def _stored_generators(tree: ast.Module) -> set[int]:
     argument stays reported, as a decorator argument does: a call at load consumes it unseeded. A generator stored
     and consumed later at module level is missed."""
     stored: set[int] = set()
-    scope = _module_scope_nodes(tree)
-    modules, members = _bindings(scope, ("itertools",))
-    # A def or class of the same name replaces the import, wherever it sits: the name stays reported (fail safe).
-    for node in scope:
-        if isinstance(node, ast.FunctionDef | ast.AsyncFunctionDef | ast.ClassDef) and node.name in members:
-            del members[node.name]
+    modules, members = _itertools_bindings(_module_scope_nodes(tree))
 
     def mark(value: ast.expr | None) -> None:
         if isinstance(value, ast.GeneratorExp):
