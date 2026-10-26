@@ -20,11 +20,15 @@ data/*.csv ──> 1 prepare ──> (validate input) ──> 2 suitability ─�
 | validate input | `acceptance/build.json` | The input expectations check the prepared tables. There is no step file. |
 | 2 suitability | `model/2_suitability.xml` | For each person and plan day, decide which shift types the person may work, and why not. |
 | 3 assign | `model/3_assign.xml` | Search for one complete roster and keep the evidence of each decision. |
-| 4 validate output | `model/4_validate_output.xml` | Measure the complete roster against every rule again, from the data. |
+| 4 validate output | `model/4_validate_output.xml` | Measure the complete roster against every rule again, from the data. Build compares the measured values. |
 | cleanup | none | See [Cleanup](#cleanup). |
-| 5 export | `model/5_export.xml` | Read each validated product back from the store and write it to a CSV file. |
+| 5 export | `model/5_export.xml` | Read each product back from the store and write it to a CSV file. |
 
 Every step hands its products to the next step through the memory store `mem`.
+
+The output checks are a gate in Build only. `datamimic authoring build` rejects the project when a check fails, and the
+proof names the digest of each file it read. A plain `datamimic run` does not read `acceptance/build.json`: it exports
+the roster that the search returns, also when that roster breaks a rule. Run only a project whose files Build proved.
 
 ## Files
 
@@ -58,15 +62,19 @@ Every step hands its products to the next step through the memory store `mem`.
 
 The output checks read the roster and the data again. They do not read the suitability decisions or the search evidence.
 A rule that the search breaks is therefore caught, also when the search itself has a defect.
-RS1 and RS6 use one function in suitability and in the output check. A defect in that function is caught only by the edge controls below.
+RS1 and RS6 use one function in suitability and in the output check. A defect in that function is caught only by the
+caller's edge controls below, not by the output check.
 
 RS1 has two edge cases:
 
 - The expiry date is inclusive. S07 holds ALS until 2026-03-04, so S07 may work the night shift on that day, but not on 2026-03-05.
 - A missing expiry date is not unlimited validity. S09 holds ALS without an expiry date, so S09 never works a night shift.
 
-The caller's edge controls in `acceptance/build.json:68` to `:71` name these cases with their ids.
-They also check that a requested leave (S14 on 2026-03-05) does not block.
+A certification is not valid before its issue date: the ALS of S06 starts on 2026-03-03.
+RS6 has its own edges: the last day of a leave is a leave day (S03 on 2026-03-04, not on 2026-03-05),
+and a requested leave does not block (S14 on 2026-03-05).
+
+The caller's edge controls in `acceptance/build.json:68` to `:74` name these cases with their ids.
 
 ## Decision evidence
 
@@ -90,7 +98,7 @@ The order is fixed, so the same inputs give the same plan. The first descent is 
 
 **Backtracking case.** On Monday 2026-03-02 only S01 holds ICU and ALS: S03 is on leave and the ALS of S06 starts on 2026-03-03.
 The greedy pass gives the W1 night shift to S01, who comes first. Then the W2 night shift has no ICU lead.
-The search undoes this choice and gives W1 to S02. The caller control `backtracks >= 1` (`acceptance/build.json:72`) proves this.
+The search undoes this choice and gives W1 to S02. The caller control `backtracks >= 1` (`acceptance/build.json:75`) proves this.
 
 **Three outcomes.** They have different values and messages.
 
@@ -107,9 +115,11 @@ The same model, data, seed and calendar give the same roster. Build replays the 
 
 ## Python
 
-The rule checks need lookups over a whole table for the current record, for example "the holdings of this person".
-A comprehension in `script=` cannot do this, because it does not see the fields of the current record.
-For this reason, each rule check is one small named function in `lib/roster_rules.scr.py`.
+A lookup by one key works natively with a dict index, for example
+`{row.contract_id: row.max_weekly_hours for row in contracts}[contract_id]`. The project uses this form.
+A lookup or a sum over another table that filters by a field of the current record does not work in `script=`,
+for example "the holdings of this person". A comprehension does not see the fields of the current record.
+For this reason, each of these rule checks is one small named function in `lib/roster_rules.scr.py`.
 Suitability and the output checks call the same function, so each rule has one definition.
 
 A library shares its names with the scripts. The libraries import the module `datetime`, not its classes:
@@ -137,7 +147,8 @@ Each negative holds only the files that differ from the project.
 | `rs4_over_max` | Two extra entries after the search: 3 people in a slot with a maximum of 2. | `row_condition` on `coverage_checks.staffed` |
 | `rs5_second_ward` | One extra entry after the search: S07 works in W1 and W2 on one day. | `fixed_value` on `entry_checks.wards_that_day` |
 | `rs6_leave_ignored` | Suitability ignores the leave. | `fixed_value` on `entry_checks.on_leave` |
-| `infeasible_monday_lead` | S01 is on leave on Monday: no one can lead the W2 night shift. | `allowed_values` on `plan.outcome` (`infeasible`) |
+| `infeasible_monday_lead` | S01 is on leave on Monday: no one can lead the W2 night shift. The check before the search proves it. | `allowed_values` on `plan.outcome` (`infeasible`) |
+| `infeasible_after_search` | The W1 night shift also needs an ICU lead. Each Monday night slot alone has a lead (S01), both together have not. The search tries every team. | `allowed_values` on `plan.outcome` (`infeasible`) |
 | `budget_exhausted` | `search_budget` is 50. | `fixed_value` on `plan.search_complete` |
 
 When a negative changes the suitability or the lead requirement, the search does not need its backtrack.

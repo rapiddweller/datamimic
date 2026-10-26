@@ -69,6 +69,9 @@
     {"origin": "caller", "expectation": {"kind": "row_condition", "subject": {"kind": "product", "product": "candidates"}, "condition": "candidate_id != 'S07/2026-03-05' or 'night' not in eligible_shifts"}},
     {"origin": "caller", "expectation": {"kind": "row_condition", "subject": {"kind": "product", "product": "candidates"}, "condition": "staff_id != 'S09' or 'night' not in eligible_shifts"}},
     {"origin": "caller", "expectation": {"kind": "row_condition", "subject": {"kind": "product", "product": "candidates"}, "condition": "candidate_id != 'S14/2026-03-05' or 'day' in eligible_shifts"}},
+    {"origin": "caller", "expectation": {"kind": "row_condition", "subject": {"kind": "product", "product": "candidates"}, "condition": "candidate_id != 'S03/2026-03-04' or on_leave"}},
+    {"origin": "caller", "expectation": {"kind": "row_condition", "subject": {"kind": "product", "product": "candidates"}, "condition": "candidate_id != 'S03/2026-03-05' or not on_leave"}},
+    {"origin": "caller", "expectation": {"kind": "row_condition", "subject": {"kind": "product", "product": "candidates"}, "condition": "candidate_id != 'S06/2026-03-02' or 'night' not in eligible_shifts"}},
     {"origin": "caller", "expectation": {"kind": "row_condition", "subject": {"kind": "product", "product": "plan"}, "condition": "backtracks >= 1"}}
   ]
 }

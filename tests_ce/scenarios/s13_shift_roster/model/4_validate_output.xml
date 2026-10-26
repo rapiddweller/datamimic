@@ -1,5 +1,5 @@
 <setup>
-    <!-- Validate output: measure the complete roster against every rule again, from the data, before it is exported. -->
+    <!-- Validate output: measure the complete roster against every rule again, from the data; Build compares the values. -->
     <generate name="entry_checks" source="mem" sourceEntity="roster" distribution="ordered" target="CSV">
         <variable name="roster" source="mem" sourceEntity="roster" storage="data" distribution="ordered"/>
         <variable name="holdings" source="mem" sourceEntity="staff_certifications" storage="data" distribution="ordered"/>
