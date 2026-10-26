@@ -112,6 +112,7 @@ Follow these steps for every run. One run is one `claude -p` process for one cas
    The child gets only `HOME`, `USER`, `LOGNAME`, `LANG`, `TMPDIR`, `SHELL` and a system `PATH` (`oracle.child_env`).
    The child runs in its own process group. On a timeout (30 min), and after every run, the runner kills that group. A stand-in CLI proves that its child dies too.
 4. It checks the isolation (`isolation_problems`) and audits the transcript with `--allow <run-dir> --allow <venv>/bin/datamimic --forbid <repository-root> --canary <token>`.
+   It also allows the `tool-results` directory of the run's own session (`own_tool_results`), when the init message names a session id that is a UUID.
 5. It always prints a JSON report with the run directory, the CLI version and the result line. The exit code is `0` only when the report has no problem and no finding.
 
 The isolation check fails the run when:
@@ -202,7 +203,9 @@ A run is void when the runner reports a problem or the audit finds a forbidden a
 - any tool outside `Bash`, `Read`, `Write`, `Edit`, `Glob` and `Grep`;
 - any tool call that touches a path under the repository root;
 - any mention of `AGENTS.md` in a tool call;
-- any read or write of a file outside the run directory, except a run of `<venv>/bin/datamimic` (so the installed source stays unread);
+- any read or write of a file outside the run directory, except a run of `<venv>/bin/datamimic` (so the installed source stays unread)
+  and the `tool-results` directory of the run's own session, where the CLI saves a long tool result and tells the model to read it.
+  A path that does not exist, such as a typo, still counts: it is an access attempt;
 - the canary token anywhere in the transcript.
 
 A void run does not count in any rate. Repeat it with a new process. List the void runs in the results file with the finding.

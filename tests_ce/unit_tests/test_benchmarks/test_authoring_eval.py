@@ -589,6 +589,102 @@ def test_a_home_relative_read_is_checked(tmp_path: Path) -> None:
     assert _audit(_transcript(tmp_path, _line(_call("Read", file_path="~/.claude/x.json"))), run, venv) == _OUT
 
 
+# --- regressions from the first real runs (transcript line numbers of the reports) ---
+
+_TMP = "/private/var/folders/sn/ws6fv3bj5tv3gz79ycxkprk00000gn/T"
+
+
+def test_floor_division_in_a_heredoc_is_not_a_path(tmp_path: Path) -> None:
+    """e03, line 72."""
+    run, venv = Path(f"{_TMP}/dm-eval-a5imyqwq/run"), Path(f"{_TMP}/dm-single-CfvHjGvC/v-e03")
+    command = (
+        "mkdir -p acceptance && cat > datamimic.xml <<'EOF'\n<setup rngSeed=\"56606\">\n"
+        '    <generate name="slots" count="12">\n        <variable name="i" generator="IncrementGenerator"/>\n'
+        '        <key name="depot_id" script="(i - 1) // 4 + 1"/>\n'
+        '        <key name="slot_id" script="((i - 1) // 4 + 1) * 100 + (i - 1) % 4 + 1"/>\n'
+        f"    </generate>\n</setup>\nEOF\n{venv}/bin/datamimic authoring build . 2>&1"
+    )
+    transcript = _transcript(tmp_path, _line(_call("Bash", command=command)))
+
+    assert _audit(transcript, run, venv) == []
+
+
+@pytest.mark.parametrize(
+    ("command", "kinds"),
+    [
+        ('python3 -c "print(7 // 2, 7//2)"', []),
+        ("cat //etc/passwd", [FindingKind.OUTSIDE_ALLOWED]),  # POSIX reads // as /
+        ("cat ///etc/passwd", [FindingKind.OUTSIDE_ALLOWED]),
+    ],
+)
+def test_a_double_slash_is_a_path_only_with_a_name_after_it(
+    command: str, kinds: list[FindingKind], tmp_path: Path
+) -> None:
+    run, venv = tmp_path / "run", tmp_path / "venv"
+
+    assert _audit(_transcript(tmp_path, _line(_call("Bash", command=command))), run, venv) == kinds
+
+
+_SESSION = "ce382f35-85d8-4fbc-89c7-acb61bf5a4f3"
+_E01_RUN = Path(f"{_TMP}/dm-eval-ly3uyh84/run")
+_E01_SLUG = "-private-var-folders-sn-ws6fv3bj5tv3gz79ycxkprk00000gn-T-dm-eval-ly3uyh84-run"
+
+
+def _read_saved_output(path: str) -> str:
+    """e01, line 29: the CLI saved a long tool result and told the model to read it there."""
+    return f"F={path}; python3 -c \"\nimport json,sys\nd=json.load(open('$F'))\n\" 2>&1 | head -80"
+
+
+@pytest.mark.parametrize(
+    ("relative", "kinds"),
+    [
+        (f"{_E01_SLUG}/{_SESSION}/tool-results/b94d2b45t.txt", []),
+        (f"{_E01_SLUG}/{_SESSION}/tool-results", []),
+        (f"{_E01_SLUG}/00000000-0000-4000-8000-000000000000/tool-results/x.txt", [FindingKind.OUTSIDE_ALLOWED]),
+        (f"{_E01_SLUG}/{_SESSION}.jsonl", [FindingKind.OUTSIDE_ALLOWED]),
+        (f"{_E01_SLUG}-x/{_SESSION}/tool-results/x.txt", [FindingKind.OUTSIDE_ALLOWED]),
+        (f"{_E01_SLUG}/{_SESSION}/tool-results/../../x.jsonl", [FindingKind.OUTSIDE_ALLOWED]),
+    ],
+)
+def test_only_the_tool_results_of_the_runs_own_session_are_allowed(
+    relative: str, kinds: list[FindingKind], tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    monkeypatch.setenv("HOME", str(tmp_path / "home"))
+    venv = tmp_path / "venv"
+    command = _read_saved_output(f"{tmp_path}/home/.claude/projects/{relative}")
+    allow = [_E01_RUN, venv / "bin" / "datamimic", run_subject.own_tool_results(_E01_RUN, _SESSION)]
+
+    findings = audit(_transcript(tmp_path, _line(_call("Bash", command=command))), allow=allow, forbid=[])
+
+    assert [finding.kind for finding in findings] == kinds
+
+
+def test_the_tool_results_slug_replaces_every_character_but_letters_and_digits(tmp_path: Path) -> None:
+    slug = run_subject.own_tool_results(tmp_path / "dm-eval-z8_zcb7h" / "run", _SESSION).parts[-3]
+
+    assert slug.endswith("-dm-eval-z8-zcb7h-run")
+    assert slug.replace("-", "").isalnum()
+
+
+def test_a_session_id_that_is_not_a_uuid_allows_nothing(tmp_path: Path) -> None:
+    assert run_subject.own_tool_results(tmp_path, "../..") is None
+
+
+def test_a_path_that_does_not_exist_is_still_an_access_attempt(tmp_path: Path) -> None:
+    """e05, line 51: a typo for /var/folders."""
+    run = Path("/var/folders/sn/ws6fv3bj5tv3gz79ycxkprk00000gn/T/dm-eval-1e4cn30o/run")
+    command = f"cd /var/floders 2>/dev/null; cd {run} && sed -n '567,580p' $TMPDIR/exp.txt"
+
+    findings = audit(_transcript(tmp_path, _line(_call("Bash", command=command))), allow=[run], forbid=[])
+
+    assert [(finding.kind, finding.detail) for finding in findings] == [
+        (
+            FindingKind.OUTSIDE_ALLOWED,
+            "/var/floders: an access attempt outside the allowed roots, also if it does not exist",
+        )
+    ]
+
+
 def test_canary_anywhere_in_the_transcript_is_flagged(tmp_path: Path) -> None:
     """A relative `cat ../AGENTS.md` passes the path checks; its tool result still carries the token."""
     run, venv = tmp_path / "run", tmp_path / "venv"
@@ -841,7 +937,7 @@ debug = Path(args[args.index("--debug-file") + 1])
 debug.write_text({markers!r})
 (debug.parent / "argv.json").write_text(json.dumps(args))
 tools = ["Bash", "Edit", "Glob", "Grep", "Read", "Write"]
-init = {{"type": "system", "subtype": "init", "cwd": os.getcwd(), "tools": tools}}
+init = {{"type": "system", "subtype": "init", "cwd": os.getcwd(), "tools": tools, "session_id": {session!r}}}
 print(json.dumps(init | {{"mcp_servers": [], "slash_commands": [], "skills": []}}))
 print(json.dumps({{"type": "result", "subtype": "success", "is_error": False, "permission_denials": []}}), flush=True)
 {tail}
@@ -851,7 +947,8 @@ print(json.dumps({{"type": "result", "subtype": "success", "is_error": False, "p
 def _fake_claude(tmp_path: Path, monkeypatch: pytest.MonkeyPatch, tail: str) -> str:
     monkeypatch.setattr(tempfile, "tempdir", str(tmp_path))  # the run's base directory, not the system's
     path = tmp_path / "claude"
-    path.write_text(_FAKE_CLAUDE.format(python=sys.executable, markers=_MARKERS, tail=tail), encoding="utf-8")
+    script = _FAKE_CLAUDE.format(python=sys.executable, markers=_MARKERS, session=_SESSION, tail=tail)
+    path.write_text(script, encoding="utf-8")
     path.chmod(0o755)
     return str(path)
 
@@ -868,6 +965,21 @@ def test_a_clean_run_is_reported_clean_and_starts_the_cli_with_the_bash_sandbox(
     assert sandbox["failIfUnavailable"] is True
     assert sandbox["allowUnsandboxedCommands"] is False
     assert str(run_subject.REPO_ROOT) in sandbox["filesystem"]["denyRead"]
+
+
+def test_a_run_that_reads_its_own_saved_tool_output_is_clean(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.setenv("HOME", str(tmp_path / "home"))
+    tail = (
+        "import re\n"
+        "slug = re.sub('[^A-Za-z0-9]', '-', os.path.realpath(os.getcwd()))\n"
+        f"saved = f'{tmp_path}/home/.claude/projects/{{slug}}/{_SESSION}/tool-results/x.txt'\n"
+        "call = {'type': 'tool_use', 'id': 't', 'name': 'Read', 'input': {'file_path': saved}}\n"
+        "print(json.dumps({'type': 'assistant', 'message': {'role': 'assistant', 'content': [call]}}))"
+    )
+
+    report = run_subject.run("e01", tmp_path / "venv", "haiku", _fake_claude(tmp_path, monkeypatch, tail))
+
+    assert (report["problems"], report["findings"]) == ([], [])
 
 
 def test_a_cli_exit_code_other_than_zero_is_a_problem(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:

@@ -19,12 +19,14 @@ import argparse
 import contextlib
 import json
 import os
+import re
 import secrets
 import shutil
 import signal
 import subprocess
 import sys
 import tempfile
+import uuid
 from collections.abc import Sequence
 from dataclasses import asdict
 from pathlib import Path
@@ -70,6 +72,19 @@ def sandbox_settings() -> dict[str, object]:
             "filesystem": {"denyRead": [str(REPO_ROOT), "~/.claude/projects"]},
         }
     }
+
+
+def own_tool_results(run_dir: Path, session_id: str) -> Path | None:
+    """The directory where the CLI saves a long tool result of this session and tells the model to read it.
+    None when the session id is not a UUID, so that no other path under ~/.claude can be allowed."""
+    try:
+        if str(uuid.UUID(session_id)) != session_id:
+            return None
+    except ValueError:
+        return None
+    # the CLI names a project directory after its cwd, with each character but a letter or digit replaced by -
+    slug = re.sub(r"[^A-Za-z0-9]", "-", os.path.realpath(run_dir))
+    return Path.home() / ".claude" / "projects" / slug / session_id / "tool-results"
 
 
 def _records(transcript: Path) -> list[dict[str, Any]]:
@@ -169,9 +184,13 @@ def run(case: str, venv: Path, model: str, claude: str) -> dict[str, object]:
     # fmt: on
     # inherit nothing else: this process can run inside a Claude Code session, whose variables name that session
     exit_code = _execute(command, run_dir, child_env(), transcript, base / "stderr.txt")
-    findings = audit(transcript, allow=[run_dir, venv / "bin" / "datamimic"], forbid=[REPO_ROOT], canary=canary)
     parsed = _records(transcript)
     init, result = _init(parsed) or {}, _result(parsed) or {}
+    allow = [run_dir, venv / "bin" / "datamimic"]
+    session = init.get("session_id")
+    if isinstance(session, str) and (saved := own_tool_results(run_dir, session)) is not None:
+        allow.append(saved)
+    findings = audit(transcript, allow=allow, forbid=[REPO_ROOT], canary=canary)
     problems = isolation_problems(transcript, debug_log, run_dir, canary, canary_files)
     if exit_code is None:
         problems.insert(0, f"the CLI did not finish in {_TIMEOUT_SECONDS} s")
