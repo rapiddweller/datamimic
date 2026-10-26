@@ -205,6 +205,7 @@ def catalog_diagnostic(
     path: tuple[str | int, ...] = (),
     expected: JsonValue | None = None,
     actual: JsonValue | None = None,
+    allowed_values: tuple[JsonValue, ...] | None = None,
     remediation: str | None = None,
 ) -> Diagnostic:
     """A catalog finding; ``remediation`` replaces the rule's generic fix when the caller knows the specific one."""
@@ -216,6 +217,7 @@ def catalog_diagnostic(
         path=path,
         expected=expected,
         actual=actual,
+        allowed_values=allowed_values,
         severity=rule.severity,
         remediation=remediation or rule.remediation,
     )

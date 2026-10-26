@@ -106,3 +106,39 @@ def test_reference_publishes_the_example_of_each_kind(tmp_path: Path) -> None:
     [entry] = result.entries or ()
     assert isinstance(entry, AuthoringVariantReference)
     assert entry.usage_example == expectation_example(ExpectationIntentKind.RANGE)
+
+
+@pytest.mark.parametrize(
+    ("expectation", "path", "declared"),
+    [
+        pytest.param(
+            {"kind": "unique", "subject": _PRODUCT, "field": "input"},
+            ("expectations", 0, "field"),
+            ("customer_id", "score"),
+            id="unknown-field",
+        ),
+        pytest.param(
+            {"kind": "unique", "subject": {"kind": "product", "product": "clients"}, "field": "customer_id"},
+            ("expectations", 0, "subject", "product"),
+            ("customers", "orders"),
+            id="unknown-product",
+        ),
+        pytest.param(
+            {
+                "kind": "unique",
+                "subject": {"kind": "per_parent", "parent_product": "customers", "child_product": "orders"},
+                "field": "line_no",
+                "scope": "per_parent",
+            },
+            ("expectations", 0, "field"),
+            ("customer_id",),
+            id="unknown-child-field",
+        ),
+    ],
+)
+def test_an_unknown_name_lists_the_declared_names(
+    tmp_path: Path, expectation: dict[str, object], path: tuple[str | int, ...], declared: tuple[str, ...]
+) -> None:
+    [diagnostic] = _build(tmp_path, {"expectations": [expectation]}).diagnostics
+
+    assert (diagnostic.path, diagnostic.allowed_values) == (path, declared)
