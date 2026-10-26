@@ -74,7 +74,8 @@ class ExecuteTask(SetupSubTask):
         # f-string interpolation so inline SQL may reference descriptor variables (e.g. {table}).
         if interpolate:
             escaped_text = content.replace("'", "\\'").replace('"', '\\"')
-            evaluated_content = ctx.evaluate_python_expression(f"f'''{escaped_text}'''")
+            # SQL text holds data literals ('{vip,gold}' arrays), so a failing brace must not show its name.
+            evaluated_content = ctx.evaluate_python_expression(f"f'''{escaped_text}'''", text_from_data=True)
             if not isinstance(evaluated_content, str):
                 raise TypeError("Interpolated SQL must evaluate to a string")
             content = evaluated_content

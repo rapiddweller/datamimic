@@ -296,6 +296,27 @@ def test_a_scripted_source_value_that_names_a_missing_name_keeps_the_name_hidden
     assert SENTINEL not in str(caught.value)
 
 
+@pytest.mark.parametrize(
+    "sql_file,inline",
+    [
+        (f"INSERT INTO account(note) VALUES ('{{{SENTINEL}}}');", ""),
+        (None, f"INSERT INTO account(tags) VALUES ('{{{SENTINEL},vip}}');"),
+    ],
+    ids=["sql_file", "inline_array_literal"],
+)
+def test_a_sql_brace_literal_keeps_the_name_hidden(tmp_path, sql_file, inline):
+    """SQL text is data: a brace literal fails the interpolation before the client lookup (no database needed)."""
+    if sql_file is None:
+        body = f'<execute target="nodb" type="sql">{inline}</execute>'
+    else:
+        (tmp_path / "seed.sql").write_text(sql_file, encoding="utf-8")
+        body = '<execute uri="seed.sql" target="nodb" type="sql"/>'
+    with pytest.raises(UserErrorBase) as caught:
+        _run(tmp_path, body)
+    assert isinstance(caught.value.__cause__, NameError)
+    assert SENTINEL not in str(caught.value)
+
+
 @pytest.mark.parametrize("error_type", [NameError, AttributeError])
 def test_a_missing_name_is_shown_only_when_the_expression_text_holds_it(error_type):
     """Python-only: a called function that raises a name built from data cannot be written as a descriptor
