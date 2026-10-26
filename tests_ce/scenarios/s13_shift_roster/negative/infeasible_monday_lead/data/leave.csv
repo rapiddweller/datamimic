@@ -1,6 +1,0 @@
-leave_id,staff_id,first_day,last_day,status
-L1,S03,2026-03-02,2026-03-04,approved
-L2,S12,2026-03-06,2026-03-08,approved
-L3,S14,2026-03-05,2026-03-05,requested
-L4,S10,2026-03-07,2026-03-07,approved
-L5,S01,2026-03-02,2026-03-02,approved

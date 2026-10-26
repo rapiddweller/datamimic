@@ -198,7 +198,8 @@ The export is not a transaction: the files are written one after the other.
 
 ## Negatives
 
-Each negative holds only the files that differ from the project.
+Each negative is one text patch in `scenario.json`: a file, an old text and a new text. The harness applies it to a
+copy of the project and Builds the copy.
 
 | Negative | What breaks |
 |---|---|
@@ -226,13 +227,6 @@ the roster also fail. These are consequences of the empty roster, not more broke
 `outcome != 'infeasible'` fails only when no roster exists, and `search_complete == True` fails only when the search
 stopped early. Together they mean `solved`. The two infeasible negatives share `outcome != 'infeasible'`: they prove
 the same outcome on two paths, and `plan.message` shows which path.
-
-An overlay replaces whole files. Three negatives hold a copy of `lib/certificates.scr.py` (`rs1_expiry_exclusive`,
-`rs1_missing_expiry_unlimited`, `rs1_issue_date_ignored`), `rs6_leave_end_exclusive` holds a copy of
-`lib/leave.scr.py`, and `rs5_search_ignores_ward` holds a copy of `lib/roster_search.scr.py`. When you change one of these libraries, change each copy too:
-`diff lib/<library> negative/<name>/lib/<library>` must show only the changed lines.
-`budget_exhausted/data/policy.properties` repeats `min_rest_hours=11` for the same reason: an overlay cannot change
-one property, and without the line `min_rest_hours` is not defined.
 
 ## Warnings
 
