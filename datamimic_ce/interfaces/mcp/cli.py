@@ -6,19 +6,27 @@ enums define the transport choices at the boundary.
 
 from __future__ import annotations
 
+import contextlib
+import importlib.util
 import os
 from enum import StrEnum
 from pathlib import Path
 from typing import Annotated
 
 import typer
-import uvicorn
 from dotenv import load_dotenv
+
+# uvicorn and fastmcp come from the optional ``mcp`` extra, but a plain ``pip install datamimic-ce`` still
+# installs this command. Without the extra, main() names the install command instead of failing on an import.
+with contextlib.suppress(ModuleNotFoundError):
+    import uvicorn
 
 app = typer.Typer(help="Run the DATAMIMIC MCP adapter")
 
 _DEFAULT_HOST = "127.0.0.1"
 _DEFAULT_PORT = 8765
+_MCP_EXTRA_MODULES = ("fastmcp", "uvicorn")
+_MCP_EXTRA_MISSING = 'datamimic-mcp needs the optional MCP extra: pip install "datamimic-ce[mcp]"'
 
 
 class Transport(StrEnum):
@@ -100,6 +108,9 @@ def serve(
 
 
 def main() -> None:
+    if any(importlib.util.find_spec(name) is None for name in _MCP_EXTRA_MODULES):
+        typer.echo(_MCP_EXTRA_MISSING, err=True)
+        raise SystemExit(1)
     load_dotenv(Path.cwd() / ".env", override=False)
     app()
 

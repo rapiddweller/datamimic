@@ -1,5 +1,7 @@
 """Transport option tests for the direct MCP CLI interface."""
 
+import importlib
+import sys
 from dataclasses import dataclass, field
 from pathlib import Path
 
@@ -7,6 +9,7 @@ import pytest
 
 from typer.testing import CliRunner
 
+import datamimic_ce.interfaces.mcp as mcp_package
 import datamimic_ce.interfaces.mcp.cli as cli
 from datamimic_ce.interfaces.mcp import server as mcp_server
 
@@ -98,3 +101,19 @@ def test_workspace_root_requires_an_existing_directory(tmp_path: Path, kind: str
         path.write_text("not a directory")
     result = runner.invoke(cli.app, ["--transport", "stdio", "--workspace-root", str(path)])
     assert result.exit_code == 2, result.output
+
+
+@pytest.mark.parametrize("missing", ["fastmcp", "uvicorn"])
+def test_entry_point_without_the_mcp_extra_names_the_install_command(
+    monkeypatch, capsys: pytest.CaptureFixture[str], missing: str
+) -> None:
+    monkeypatch.setitem(sys.modules, missing, None)
+    monkeypatch.delitem(sys.modules, "datamimic_ce.interfaces.mcp.cli")
+    monkeypatch.setattr(mcp_package, "cli", cli)  # restored after the fresh import below rebinds it
+    monkeypatch.setattr(sys, "argv", ["datamimic-mcp", "--transport", "stdio"])
+
+    with pytest.raises(SystemExit) as exit_info:
+        importlib.import_module("datamimic_ce.interfaces.mcp.cli").main()
+
+    assert exit_info.value.code == 1
+    assert capsys.readouterr().err == 'datamimic-mcp needs the optional MCP extra: pip install "datamimic-ce[mcp]"\n'
