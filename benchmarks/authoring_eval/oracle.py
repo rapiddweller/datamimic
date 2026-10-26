@@ -261,6 +261,7 @@ class ExactRows(_Check):
     kind: Literal["exact_rows"]
     product: str
     rows: list[dict[str, Scalar]]
+    ignore_extra_fields: bool = False  # True: compare only the fields that ``rows`` names
 
     def label(self) -> str:
         return f"exact_rows:{self.product}"
@@ -269,6 +270,9 @@ class ExactRows(_Check):
         found = _product_rows(observed, self.product)
         if isinstance(found, str):
             return found
+        if self.ignore_extra_fields:
+            named = {key for row in self.rows for key in row}
+            found = [{key: value for key, value in row.items() if key in named} for row in found]
         return _row_difference(found, self.rows)
 
 

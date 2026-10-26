@@ -52,7 +52,7 @@ Raw transcripts and run directories stay outside the repository.
 | `range` | every value is a whole number (as `whole_number`) from `min` to `max`, inclusive. |
 | `text` | every row has the field, and the value is a text that is not empty. A number, `None` and `""` fail. A numeric string such as `"123"` and a blank string pass, so `script="str(ticket_id)"` passes. |
 | `field_at_most` | in every row, both fields are numbers and `field` is at most `other`. |
-| `exact_rows` | the captured rows equal `rows`. Row order is ignored. Keys and JSON types must match. |
+| `exact_rows` | the captured rows equal `rows`. Row order is ignored. Keys and JSON types must match. With `ignore_extra_fields: true`, only the fields that `rows` names are compared (e03 depots: the prompt fixes the field set for slots only). |
 | `output_rows` | the run with the case directory `fixtures` laid over `fixtures/` produced the product and wrote `<product>.json`, or the chunk parts `<product>_<n>.json`, and their rows equal `rows` (as `exact_rows`). |
 | `fixtures_unchanged` | every file of the case directory `fixtures` is in the submitted `fixtures/`, byte for byte. A changed or deleted file fails; a new file passes. The prompt says not to change the file. |
 | `seed_is` | `<setup rngSeed>` of the entry `datamimic.xml` is `seed`. The agent's `acceptance/build.json` is never read. |

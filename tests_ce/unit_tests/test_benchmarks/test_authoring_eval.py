@@ -296,6 +296,21 @@ _BROKEN = [
         {"fixtures/orders.csv": [("O-100,C-10,OPEN,1200", "O-100,C-10,CLOSED,1200")]},
         frozenset({"fixtures_unchanged"}),
     ),
+    # --- the depots ---
+    Broken(
+        "e03",
+        "depot_ids_skip_three",
+        {
+            _XML: [
+                (
+                    '<key name="depot_id" generator="IncrementGenerator"/>',
+                    '<variable name="depot_no" generator="IncrementGenerator"/>\n'
+                    '        <key name="depot_id" script="[1, 2, 4][depot_no - 1]"/>',
+                )
+            ]
+        },
+        frozenset({"exact_rows:depots", "exact_rows:slots"}),
+    ),
     # --- identifiers must be whole numbers ---
     Broken(
         "e01",
@@ -438,6 +453,18 @@ def test_a_new_fixture_file_passes(tmp_path: Path) -> None:
     (project / "fixtures" / "notes.txt").write_text("my notes", encoding="utf-8")
 
     assert _failed(project, "e04") == set()
+
+
+def test_an_extra_depot_field_passes(tmp_path: Path) -> None:
+    project = _reference(tmp_path, "e03")
+    depot_id = '<key name="depot_id" generator="IncrementGenerator"/>'
+    xml = (project / _XML).read_text(encoding="utf-8")
+    assert depot_id in xml
+    # the prompt fixes the field set for slots only
+    label = '\n        <key name="label" string="Depot __depot_id__"/>'
+    (project / _XML).write_text(xml.replace(depot_id, depot_id + label), encoding="utf-8")
+
+    assert _failed(project, "e03") == set()
 
 
 @pytest.mark.parametrize("chunk_size", [10, 4])  # one part priced_orders_0.json, or two parts

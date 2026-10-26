@@ -1,7 +1,7 @@
 {
   "checks": [
     {"kind": "build_ready"},
-    {"kind": "exact_rows", "product": "depots", "rows": [{"depot_id": 1}, {"depot_id": 2}, {"depot_id": 3}]},
+    {"kind": "exact_rows", "product": "depots", "ignore_extra_fields": true, "rows": [{"depot_id": 1}, {"depot_id": 2}, {"depot_id": 3}]},
     {"kind": "exact_rows", "product": "slots", "rows": [{"depot_id": 1, "slot_id": 101, "state": "FREE"}, {"depot_id": 1, "slot_id": 102, "state": "FREE"}, {"depot_id": 1, "slot_id": 103, "state": "FREE"}, {"depot_id": 1, "slot_id": 104, "state": "FREE"}, {"depot_id": 2, "slot_id": 201, "state": "FREE"}, {"depot_id": 2, "slot_id": 202, "state": "FREE"}, {"depot_id": 2, "slot_id": 203, "state": "FREE"}, {"depot_id": 2, "slot_id": 204, "state": "FREE"}, {"depot_id": 3, "slot_id": 301, "state": "FREE"}, {"depot_id": 3, "slot_id": 302, "state": "FREE"}, {"depot_id": 3, "slot_id": 303, "state": "FREE"}, {"depot_id": 3, "slot_id": 304, "state": "FREE"}]},
     {"kind": "seed_is", "seed": 56606},
     {"kind": "repeatable"}
