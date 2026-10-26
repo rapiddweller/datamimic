@@ -60,3 +60,59 @@ Every other position consumes it at load time.
 **NOT VERIFIED:**
 - Full suites and mypy. The coordinator reports these.
 - CI.
+
+## Addendum: `746da2f6` (inverted rule)
+
+**Accepted.** The five false negatives above are fixed. A generator expression is now deferred only in two cases:
+- it is stored: the value of an `Assign` without an unpacking target, of an `AnnAssign`, or of a bare `Expr`;
+- it sits inside lazy wrappers (`iter`, `map`, `zip`, `filter`, `enumerate`, `reversed`) that are themselves stored.
+
+Every other generator is scanned whole. The `Starred` special case is gone because the new rule covers it.
+
+**Re-probed.** Now flagged:
+- a module-level `for` over a generator;
+- tuple unpacking;
+- a list comprehension over a generator;
+- `0.5 in gen`;
+- `list(enumerate(gen))`;
+- a nested generator iterable;
+- `sorted(gen)`;
+- a consumer inside a `with` block or a class body.
+
+Still quiet:
+- a stored generator, also with an attribute, subscript or annotated target, in a class body, or as a bare expression;
+- `iter`, `map` and `zip`, also nested and with keyword arguments;
+- a generator returned from a `def`.
+
+**Real corpus.** The old and new scanners were compared over the repository's 107 script files. Only the six new flagged corpus scripts change; no demo or test script gains a finding.
+
+### Findings (Low: false positives of the conservative rule; warning only)
+
+All are verified with the scanner.
+
+| Form | Example |
+|---|---|
+| A stored `itertools` lazy wrapper | `itertools.islice(gen, 2)`, `itertools.chain(gen, gen)`, `itertools.cycle(gen)` |
+| A generator stored inside a container literal | `gens = [gen]`, `{'a': gen}` |
+| A generator stored through a conditional expression or a walrus | `x = gen if c else ()`, `if (g := gen):` |
+| A generator as a default argument | `def f(g=gen):` |
+| A generator passed to an unknown callee | `Pool(gen)`, `print(gen)`, a decorator argument |
+
+Two notes on these:
+- The default-argument case was quiet at `9eb7df8f`, so it is new. The element runs only when the function consumes the generator, after the names are rebound to the seeded ones.
+- The unknown-callee case is documented as conservative.
+
+Suggested follow-up:
+1. Add the lazy `itertools` functions to `_LAZY_WRAPPERS`: `islice`, `chain`, `cycle`, `tee`, `takewhile`, `dropwhile`, `accumulate`, `compress`, `groupby`, `starmap`, `zip_longest`, `filterfalse`, `pairwise`. Do not add `product`, `permutations` or `combinations`: they consume their input.
+2. Let `mark` descend into container literals, `IfExp` branches, `NamedExpr` values and function default arguments.
+
+**Known limit (documented).** A generator stored and then consumed later at module level is missed.
+
+**Binding.** Source and Validation move. Unknowns, Contract, analyzer and the 20 diagnostics are unchanged, and so are the 1,428 / 182 / 261 measurements.
+
+**LOCAL VERIFIED:**
+- A 30-form scanner probe.
+- The old-versus-new corpus comparison over 107 scripts.
+- `test_load_time_entropy` and the DSL functional test: 34 passed.
+- ruff.
+- A clean gate run and the strict completion gate after the rebind.
