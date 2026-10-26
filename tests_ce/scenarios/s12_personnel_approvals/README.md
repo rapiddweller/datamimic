@@ -68,7 +68,6 @@ The row counts are the project's contract. `acceptance/build.json` pins each cou
 | `lib/staffing.scr.py` | `read_policy` and the three functions below | steps 1 to 4 |
 | `acceptance/build.json` | the expectations that Build proves | Build |
 | `scenario.json` | expected rows and the negative variants | `tests_ce/scenarios/test_scenarios.py` |
-| `test_s12_mutants.py` | four broken searches that step 4 must reject | pytest |
 
 The library has three functions that the steps call. None of them reads a file.
 
@@ -138,7 +137,7 @@ Each variant in `scenario.json` patches one row of one data file in a copy of th
 `scenario.json` names this `expected` text for each variant, so CI checks the rule and not only the code `row_condition`.
 A variant that leaves a seat empty also fails other expectations, for example `outcome != 'infeasible'`, `filled == seats` and the staffing count.
 
-`test_s12_mutants.py` breaks the search four times in a copy of the library and Builds the copy. Step 4 must reject each one:
+The `search_ignores_*` negatives patch `lib/staffing.scr.py` and break the search four times. Step 4 must reject each one:
 
 | Mutant | Changed lines | Build reports |
 |---|---|---|
@@ -146,8 +145,6 @@ A variant that leaves a seat empty also fails other expectations, for example `o
 | `search_ignores_r4` | the R4 check in `_conflict` is removed | `distinct_people` |
 | `search_ignores_r5` | the R5 check in `_conflict` is removed | `approval_exclusive` |
 | `search_ignores_r6` | the R6 check in `_conflict` is removed | `company_exclusive` |
-
-The test fails when the library no longer contains the lines that a mutant changes.
 
 The six outcomes of the reference brief map to these cases:
 
