@@ -4,9 +4,9 @@
 
 """The staffing rules that need more than one row: person suitability, seat search and the output check.
 
-The model calls three functions, each with prepared rows and the policy; none reads a file:
-``suitable_people`` (R1 to R3, once per position), ``assign_seats`` (R4 to R6, once per run) and
-``check_position`` (the output check, once per position).
+Each step reads the policy through ``read_policy``. The model calls three functions with prepared rows and the
+policy; none reads a file: ``suitable_people`` (R1 to R3, once per position), ``assign_seats`` (R4 to R6, once per
+run) and ``check_position`` (the output check, once per position).
 """
 
 from collections import Counter
@@ -54,6 +54,16 @@ class Decision(TypedDict):
 
 
 @dataclass(frozen=True)
+class Policy:
+    base_license: str
+    active_status: str
+    required_qualification: dict[str, str]
+    max_seats: int
+    exclusive_approvals: tuple[str, ...]
+    search_budget: int
+
+
+@dataclass(frozen=True)
 class Suitability:
     eligible: list[dict[str, int]]
     near_misses: list[Exclusion]
@@ -67,7 +77,38 @@ class Assignment:
     backtracks: int
     seats: list[dict[str, Any]]
     unfilled_by: dict[str, int]
+    skipped_by: dict[str, int]
     decisions: list[Decision]
+
+
+def read_policy(row: Row) -> Policy:
+    """Check the type of each rule parameter: a text where a list of ids belongs would still match by substring."""
+    for name in ("base_license", "active_status"):
+        if not isinstance(row[name], str):
+            raise TypeError(f"policy {name} must be a text")
+    for name in ("max_seats", "search_budget"):
+        if not isinstance(row[name], int) or isinstance(row[name], bool):
+            raise TypeError(f"policy {name} must be an integer")
+    exclusive = row["exclusive_approvals"]
+    if not isinstance(exclusive, list) or not all(isinstance(item, str) for item in exclusive):
+        raise TypeError("policy exclusive_approvals must be a list of approval ids")
+    # A row's mapping has keys and item access only (DotableDict), so copy it by key.
+    required = {key: row["required_qualification"][key] for key in row["required_qualification"]}
+    if not all(isinstance(item, str) for item in required.values()):
+        raise TypeError("policy required_qualification must map function ids to qualification ids")
+    return Policy(
+        base_license=row["base_license"],
+        active_status=row["active_status"],
+        required_qualification=required,
+        max_seats=row["max_seats"],
+        exclusive_approvals=tuple(exclusive),
+        search_budget=row["search_budget"],
+    )
+
+
+def _position_key(row: Row) -> tuple[str, str]:
+    """R4 and the output check name a position by version and function, not by the id of its demand row."""
+    return row["version_id"], row["function_id"]
 
 
 def _employment(person_id: int, company_id: str, function_id: str, employments: Sequence[Row]) -> Exclusion | None:
@@ -88,13 +129,11 @@ def _employment(person_id: int, company_id: str, function_id: str, employments: 
     return None
 
 
-def _base_license(person_id: int, valid_on: date, person_licenses: Sequence[Row], policy: Row) -> Exclusion | None:
+def _base_license(person_id: int, valid_on: date, person_licenses: Sequence[Row], policy: Policy) -> Exclusion | None:
     licenses = [
-        row
-        for row in person_licenses
-        if row["person_id"] == person_id and row["license_type"] == policy["base_license"]
+        row for row in person_licenses if row["person_id"] == person_id and row["license_type"] == policy.base_license
     ]
-    active = [row for row in licenses if row["status"] == policy["active_status"]]
+    active = [row for row in licenses if row["status"] == policy.active_status]
     dated = [row for row in active if row["expires_on"] is not None]
     # The expiry date itself is still valid; a missing expiry is not unlimited validity.
     if any(date.fromisoformat(row["expires_on"]) >= valid_on for row in dated):
@@ -110,9 +149,9 @@ def _base_license(person_id: int, valid_on: date, person_licenses: Sequence[Row]
 
 
 def _qualification(
-    person_id: int, function_id: str, person_qualifications: Sequence[Row], policy: Row
+    person_id: int, function_id: str, person_qualifications: Sequence[Row], policy: Policy
 ) -> Exclusion | None:
-    required = policy["required_qualification"][function_id]
+    required = policy.required_qualification[function_id]
     if any(row["person_id"] == person_id and row["qualification_id"] == required for row in person_qualifications):
         return None
     return Exclusion(person_id=person_id, rule=Rule.R3, reason="missing qualification", value=required)
@@ -126,7 +165,7 @@ def suitable_people(
     employments: Sequence[Row],
     person_licenses: Sequence[Row],
     person_qualifications: Sequence[Row],
-    policy: Row,
+    policy: Policy,
 ) -> Suitability:
     """Decide R1 to R3 for every person and one position. Count each failed rule; name the near misses (one rule)."""
     on = date.fromisoformat(valid_on)
@@ -146,15 +185,12 @@ def suitable_people(
             eligible.append({"person_id": person_id})
         elif len(failures) == 1:
             near_misses.append(failures[0])
-    counts = {
-        rule.value: excluded_by[rule] for rule in (Rule.R1_PERSON, Rule.R1_COMPANY, Rule.R1_FUNCTION, Rule.R2, Rule.R3)
-    }
-    return Suitability(eligible=eligible, near_misses=near_misses, excluded_by=counts)
+    return Suitability(eligible=eligible, near_misses=near_misses, excluded_by=_by_rule(excluded_by))
 
 
 def _conflict(held: Sequence[Row], position: Row) -> tuple[Rule, str] | None:
     for other in held:
-        if other["position_id"] == position["position_id"]:
+        if _position_key(other) == _position_key(position):
             return Rule.R4, "already holds a seat of this position"
         if other["approval_id"] != position["approval_id"] and (other["exclusive"] or position["exclusive"]):
             return Rule.R5, f"holds a seat of approval {other['approval_id']}; one of the two is exclusive"
@@ -176,12 +212,13 @@ class _Search:
     held: dict[int, list[Row]] = field(default_factory=dict)
     chosen: dict[str, int] = field(default_factory=dict)
     dead_ends: Counter[Rule] = field(default_factory=Counter)
+    skipped: Counter[Rule] = field(default_factory=Counter)
     decisions: list[Decision] = field(default_factory=list)
 
     def _forward_check(self, start: int) -> tuple[Row, set[Rule]] | None:
         """Return the first open position that has fewer free people than open seats, with the rules that took them."""
-        open_seats = Counter(position["position_id"] for _, position in self.seats[start:])
-        for position in {row["position_id"]: row for _, row in self.seats[start:]}.values():
+        open_seats = Counter(_position_key(position) for _, position in self.seats[start:])
+        for position in {_position_key(row): row for _, row in self.seats[start:]}.values():
             rules = set()
             free = 0
             for entry in position["eligible"]:
@@ -190,7 +227,7 @@ class _Search:
                     free += 1
                 else:
                     rules.add(conflict[0])
-            if free < open_seats[position["position_id"]]:
+            if free < open_seats[_position_key(position)]:
                 return position, rules
         return None
 
@@ -203,6 +240,7 @@ class _Search:
             person_id = entry["person_id"]
             conflict = _conflict(self.held.get(person_id, []), position)
             if conflict is not None:
+                self.skipped[conflict[0]] += 1
                 self.decisions.append(_decision(position, seat_id, person_id, "skip", *conflict))
                 continue
             self.nodes += 1
@@ -270,25 +308,29 @@ def _by_rule(counts: Counter[Rule]) -> dict[str, int]:
     return {rule.value: counts[rule] for rule in Rule}
 
 
-def assign_seats(positions: Sequence[Row], policy: Row) -> Assignment:
+def assign_seats(positions: Sequence[Row], policy: Policy) -> Assignment:
     """Fill the most constrained positions first, then company by company and function by function."""
     blocked, shortage = _shortages(positions)
     if blocked:
-        return Assignment(Outcome.INFEASIBLE, 0, 0, [], _by_rule(blocked), shortage)
+        return Assignment(Outcome.INFEASIBLE, 0, 0, [], _by_rule(blocked), _by_rule(Counter()), shortage)
     ordered = sorted(
         positions, key=lambda row: (len(row["eligible"]), row["company_id"], row["function_id"], row["version_id"])
     )
     seats = [(f"{row['position_id']}-{number}", row) for row in ordered for number in range(1, row["seats"] + 1)]
-    search = _Search(seats=seats, budget=policy["search_budget"])
+    search = _Search(seats=seats, budget=policy.search_budget)
     try:
         complete = search.fill(0)
     except _BudgetExhausted:
+        skipped_by = _by_rule(search.skipped)
+        unfilled_by = _by_rule(Counter())
         return Assignment(
-            Outcome.BUDGET_EXHAUSTED, search.budget, search.backtracks, [], _by_rule(Counter()), search.decisions
+            Outcome.BUDGET_EXHAUSTED, search.budget, search.backtracks, [], unfilled_by, skipped_by, search.decisions
         )
+    skipped_by = _by_rule(search.skipped)
     if not complete:
+        unfilled_by = _by_rule(search.dead_ends)
         return Assignment(
-            Outcome.INFEASIBLE, search.nodes, search.backtracks, [], _by_rule(search.dead_ends), search.decisions
+            Outcome.INFEASIBLE, search.nodes, search.backtracks, [], unfilled_by, skipped_by, search.decisions
         )
     plan = [
         {
@@ -299,16 +341,17 @@ def assign_seats(positions: Sequence[Row], policy: Row) -> Assignment:
         }
         for seat_id, row in seats
     ]
-    return Assignment(Outcome.COMPLETE, search.nodes, search.backtracks, plan, _by_rule(Counter()), search.decisions)
+    return Assignment(
+        Outcome.COMPLETE, search.nodes, search.backtracks, plan, _by_rule(Counter()), skipped_by, search.decisions
+    )
 
 
 def check_position(position: Row, plan: Sequence[Row], positions: Sequence[Row]) -> dict[str, Any]:
     """Check the plan for one position without the search: R1 to R3 by the eligible list, R4 to R6 directly."""
-    by_seat = {(row["version_id"], row["function_id"]): row for row in positions}
-    key = (position["version_id"], position["function_id"])
-    people = [row["person_id"] for row in plan if (row["version_id"], row["function_id"]) == key]
+    by_key = {_position_key(row): row for row in positions}
+    people = [row["person_id"] for row in plan if _position_key(row) == _position_key(position)]
     eligible = {entry["person_id"] for entry in position["eligible"]}
-    others = [by_seat[(row["version_id"], row["function_id"])] for row in plan if row["person_id"] in people]
+    others = [by_key[_position_key(row)] for row in plan if row["person_id"] in people]
     return {
         "filled": len(people),
         "all_eligible": all(person in eligible for person in people),

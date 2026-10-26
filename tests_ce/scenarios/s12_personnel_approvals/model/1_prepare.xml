@@ -3,7 +3,8 @@
     <generate name="positions" source="data/demand.json" distribution="ordered" target="mem">
         <variable name="versions" source="data/approval_versions.json" storage="data" distribution="ordered"/>
         <variable name="approvals" source="data/approvals.json" storage="data" distribution="ordered"/>
-        <variable name="policy" source="data/policy.json" storage="value" distribution="ordered"/>
+        <variable name="policy_row" source="data/policy.json" storage="value" distribution="ordered"/>
+        <variable name="policy" script="read_policy(policy_row)"/>
         <variable name="version" script="{row.version_id: row for row in versions}[this.version_id]"/>
         <variable name="approval" script="{row.approval_id: row for row in approvals}[version.approval_id]"/>
         <key name="position_id" script="this.position_id"/>
