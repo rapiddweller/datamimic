@@ -59,6 +59,9 @@ For relationships, Memstore and time series, query the running assembly and
 expectation references for supported semantics and lineage declarations. Preserve
 the requested complete keys, nested shape, per-parent quantities and readback
 requirements; do not replace them with weaker checks to obtain readiness.
+A `<generate source=...>` copies every file column into the output; to keep only
+some columns and to find where `datamimic run` writes a file target, read
+`datamimic authoring reference --topic learning --name file_sources`.
 
 Request smoke through `verification` when required. Build replays every seeded
 model under other hash seeds; requesting deterministic replay also fails an

@@ -1,0 +1,9 @@
+<setup rngSeed="51110" defaultSeparator=",">
+    <generate name="priced_orders" count="7" target="JSON" exportUri="priced_orders">
+        <variable name="order" source="fixtures/orders.csv" distribution="ordered"/>
+        <key name="order_id" script="order.order_id"/>
+        <key name="customer_id" script="order.customer_id"/>
+        <key name="total_cents" script="int(order.total_cents)"/>
+        <key name="priority" script="'high' if int(order.total_cents) >= 5000 else 'standard'"/>
+    </generate>
+</setup>

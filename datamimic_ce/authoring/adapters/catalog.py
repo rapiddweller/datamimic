@@ -344,6 +344,20 @@ class CeDslCatalog:
                         ),
                     ),
                     AuthoringLearningReference(
+                        name="file_sources",
+                        path="docs/examples/authoring.md",
+                        description=(
+                            "<generate source=...> copies every file column into each row. To keep only some "
+                            'columns, read the file with <variable name="row" source="..." '
+                            'distribution="ordered"/> in a generate whose count is the number of data rows, and '
+                            "copy each column with a key script such as row.order_id. A field_absent expectation "
+                            "proves that a column is not in the output. A file source has no row filter. Build, "
+                            "authoring run and smoke export write no file into the project; only datamimic run "
+                            "datamimic.xml writes a file target, to output/<exportUri>/<entity>.<ext> beside "
+                            "datamimic.xml (without exportUri, a new task id directory for each run)."
+                        ),
+                    ),
+                    AuthoringLearningReference(
                         name="timeseries",
                         path="datamimic_ce/engine/dsl/model/generation/timeseries.py",
                         description=(

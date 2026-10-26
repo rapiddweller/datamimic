@@ -1,0 +1,14 @@
+{
+  "title": "Project a CSV file onto chosen columns",
+  "proves": [
+    "a variable that reads the file in order, with count equal to its rows, keeps only the declared keys",
+    "field_absent proves that a source column is not in the output",
+    "a generate with source= copies every source column, so field_absent rejects it",
+    "a count above the source rows cannot prove a complete capture"
+  ],
+  "products": {"priced_orders": 6},
+  "negatives": [
+    {"dir": "negative/generate_source_copies_columns", "diagnostic": "field_absent"},
+    {"dir": "negative/count_above_source_rows", "diagnostic": "validation"}
+  ]
+}

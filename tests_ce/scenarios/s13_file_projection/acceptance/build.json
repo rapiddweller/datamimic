@@ -1,0 +1,9 @@
+{
+  "version": "5.0",
+  "expectations": [
+    {"kind": "exact_count", "subject": {"kind": "product", "product": "priced_orders"}, "count": 6},
+    {"kind": "field_absent", "subject": {"kind": "product", "product": "priced_orders"}, "field": "status"},
+    {"kind": "allowed_values", "subject": {"kind": "product", "product": "priced_orders"}, "field": "priority", "values": ["high", "standard"]},
+    {"kind": "range", "subject": {"kind": "product", "product": "priced_orders"}, "field": "total_cents", "minimum": 0, "maximum": 100000}
+  ]
+}

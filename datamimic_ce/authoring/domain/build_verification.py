@@ -43,7 +43,10 @@ def smoke_export_evidence(
         reason = "Not every applicable file exporter wrote the captured rows"
     else:
         status = VerificationGateStatus.PASSED
-        reason = "Every applicable file exporter wrote all captured rows"
+        reason = (
+            "Every applicable file exporter wrote all captured rows to a temporary directory; only datamimic run "
+            "datamimic.xml writes the files into the project, under output/"
+        )
     return SmokeExportEvidence(
         status=status,
         applicable_exporters=capture.applicable_exporters,

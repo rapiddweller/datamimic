@@ -97,7 +97,11 @@ AUTHORING_RULE_CATALOG: tuple[RuleCatalogEntry, ...] = (
         description="No captured row may contain the declared field.",
         applicability="Explicit forbidden-field expectations.",
         owner=RuleOwner.EXPECTATION,
-        remediation="Remove the forbidden field from the product model.",
+        remediation=(
+            "Remove the forbidden field from the product model. A generate with source= copies every source "
+            "column; read the file through a <variable> with a count instead "
+            "(datamimic authoring reference --topic learning --name file_sources)."
+        ),
     ),
     RuleCatalogEntry(
         rule_id=ExpectationIntentKind.ROW_CONDITION,
