@@ -377,19 +377,24 @@ class SeededScriptIteratesSet(Rule):
 
 def _memstore_rows(ctx: LintContext, consumer: etree._Element) -> int | None:
     """Rows that top-level producers with literal counts write to the memstore entity the consumer reads;
-    None when a producer is nested or counted by a script, or none exists. The consumer reads sourceEntity, then
-    type, then name; a producer writes the entity of GenerateStatement.memstore_entity."""
+    None when a producer is nested, reads a source (it can stop below its count) or is counted by a script,
+    or none exists. The consumer reads sourceEntity, then type, then name; a producer writes the entity of
+    GenerateStatement.memstore_entity."""
     entity = consumer.get("sourceEntity") or consumer.get("type") or consumer.get("name")
     rows = 0
     found = False
     for root in ctx.project or (ctx.root,):
         for producer in root.iter(*_GENERATES):
+            if producer is consumer:
+                # A producer after the consumer in its own file has not run yet. Limitation: a producer in another
+                # file of the project counts wherever its include sits.
+                break
             if consumer.get("source") not in parse_consumer(producer.get("target")):
                 continue
             if GenerateStatement.memstore_entity(producer.get("targetEntity"), producer.get("name", "")) != entity:
                 continue
             count = producer.get("count") or ""
-            if producer not in root or re.fullmatch("[0-9]+", count) is None:
+            if producer not in root or producer.get("source") is not None or re.fullmatch("[0-9]+", count) is None:
                 return None
             rows += int(count)
             found = True

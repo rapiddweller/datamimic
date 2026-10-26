@@ -139,6 +139,30 @@ def test_dm316_is_silent_when_count_is_within_the_proven_memstore_size(count: st
     assert any(d.rule == "DM316" for d in lint_source(xml).diagnostics) is fires
 
 
+_PRODUCER = '<generate name="seed" count="5" target="mem"><key name="x" constant="1"/></generate>'
+_SOURCE_PRODUCER = (
+    '<generate name="seed" source="rows.csv" count="5" target="mem"><key name="x" constant="1"/></generate>'
+)
+_READER = (
+    '<generate name="reader" source="mem" sourceEntity="seed" count="5"><key name="y" script="this.x"/></generate>'
+)
+
+
+@pytest.mark.parametrize(
+    ("steps", "fires"),
+    [
+        pytest.param(_PRODUCER + _READER, False, id="readback-after-literal-producer"),
+        pytest.param(_READER + _PRODUCER, True, id="readback-before-its-producer-reads-an-empty-store"),
+        pytest.param(_SOURCE_PRODUCER + _READER, True, id="source-producer-can-stop-below-its-count"),
+    ],
+)
+def test_dm316_trusts_only_a_literal_producer_that_runs_first(steps: str, fires: bool) -> None:
+    from datamimic_ce.authoring.adapters.linter import lint_source
+
+    diagnostics = lint_source(f'<setup rngSeed="1"><memstore id="mem"/>{steps}</setup>').diagnostics
+    assert any(d.rule == "DM316" and d.name == "reader" for d in diagnostics) is fires
+
+
 def test_db_descriptor_lints_without_spurious_credential_error() -> None:
     from datamimic_ce.authoring.adapters.linter import lint_source
 
