@@ -50,7 +50,7 @@ class Finding:
     detail: str
 
 
-def _tool_calls(transcript: Path) -> Iterator[tuple[int, str, dict[str, object]]]:
+def tool_calls(transcript: Path) -> Iterator[tuple[int, str, dict[str, object]]]:
     """(line number, tool name, tool input) for every tool call the agent made."""
     # iterate the file, not str.splitlines(): that also splits on U+2028 and form feeds inside JSON strings
     with transcript.open(encoding="utf-8") as lines:
@@ -98,7 +98,7 @@ def audit(transcript: Path, allow: Sequence[Path], forbid: Sequence[Path], canar
     allowed = _spellings(allow) + list(_SYSTEM_PATHS)
     forbidden = _spellings(forbid)
     findings = []
-    for line, tool, tool_input in _tool_calls(transcript):
+    for line, tool, tool_input in tool_calls(transcript):
         if tool not in ALLOWED_TOOLS:
             findings.append(Finding(line, FindingKind.TOOL, tool, "tool outside the allowlist"))
         if any(_AGENTS_FILE in text.casefold() for text in _scanned_text(tool, tool_input)):

@@ -6,6 +6,7 @@
 broken variant fails exactly the checks it should, and the audit flags forbidden actions."""
 
 import json
+import re
 import shutil
 from dataclasses import dataclass
 from datetime import datetime
@@ -27,6 +28,7 @@ from benchmarks.authoring_eval.oracle import (
     evaluate,
     json_outputs,
 )
+from benchmarks.authoring_eval.run_subject import brief, isolation_problems
 
 _ALL_CASES = sorted(path.name for path in CASES.iterdir() if path.is_dir())
 
@@ -544,3 +546,103 @@ def test_seed_is_reads_the_entry_descriptor_not_the_agents_acceptance_file(tmp_p
     )
 
     assert "seed_is" in _failed(project, "e01")
+
+
+# --- the subject runner: the isolation checks ------------------------------------------------------------------
+
+_TOKEN = "canary-0123"
+
+
+@dataclass(frozen=True)
+class _Run:
+    base: Path
+    run_dir: Path
+    transcript: Path
+    debug_log: Path
+
+    @property
+    def canary_files(self) -> list[Path]:
+        return [self.base / "AGENTS.md", self.base / "CLAUDE.md"]
+
+
+def _blind_run(tmp_path: Path, init: dict | None = None, result: dict | None = None, debug: str = "") -> _Run:
+    """A transcript shaped like `claude -p --output-format stream-json` (key names from a real 2.1.304 run)."""
+    run = _Run(tmp_path, tmp_path / "run", tmp_path / "transcript.jsonl", tmp_path / "debug.log")
+    run.run_dir.mkdir()
+    (run.run_dir / _XML).write_text("<setup/>", encoding="utf-8")
+    records = [
+        {
+            "type": "system",
+            "subtype": "init",
+            "cwd": str(run.run_dir),
+            "tools": ["Bash", "Edit", "Glob", "Grep", "Read", "Write"],
+            "mcp_servers": [],
+            "slash_commands": [],
+            "skills": [],
+            "plugins": [{"name": "installed-but-disabled"}],
+        }
+        | (init or {}),
+        {
+            "type": "result",
+            "subtype": "success",
+            "is_error": False,
+            "terminal_reason": "completed",
+            "permission_denials": [],
+        }
+        | (result or {}),
+    ]
+    run.transcript.write_text("\n".join(json.dumps(record) for record in records) + "\n", encoding="utf-8")
+    run.debug_log.write_text("[DEBUG] $.fs.ancestors (cc-plugin-agents-md): project memory is off\n" + debug)
+    return run
+
+
+def _problems(run: _Run) -> list[str]:
+    return isolation_problems(run.transcript, run.debug_log, run.run_dir, _TOKEN, run.canary_files)
+
+
+def test_a_blind_run_has_no_isolation_problems(tmp_path: Path) -> None:
+    assert _problems(_blind_run(tmp_path)) == []
+
+
+@pytest.mark.parametrize(
+    "change",
+    [
+        {"init": {"tools": ["Bash", "Edit", "Glob", "Grep", "Read", "Write", "WebFetch"]}},
+        {"init": {"skills": ["generate-test-data"]}},
+        {"init": {"mcp_servers": [{"name": "datamimic"}]}},
+        {"init": {"slash_commands": ["compact"]}},
+        {"init": {"subtype": "status"}},  # no init message at all
+        {"result": {"is_error": True, "terminal_reason": "api_error"}},
+        {"result": {"permission_denials": [{"tool_name": "Write"}]}},
+        {"result": {"type": "assistant"}},  # no result message at all
+        {"debug": '[DEBUG] "Hook SessionStart:startup success: {"additionalContext": "..."}"\n'},
+    ],
+)
+def test_isolation_problem_is_reported(change: dict, tmp_path: Path) -> None:
+    assert _problems(_blind_run(tmp_path, **change)) != []
+
+
+def test_a_canary_file_named_in_the_debug_log_is_an_isolation_problem(tmp_path: Path) -> None:
+    run = _blind_run(tmp_path)
+    run.debug_log.write_text(f"[DEBUG] no CLAUDE.md found; AGENTS.md loaded: {run.canary_files[0]}\n")
+
+    assert _problems(run) != []
+
+
+def test_the_canary_in_a_file_of_the_run_directory_is_an_isolation_problem(tmp_path: Path) -> None:
+    run = _blind_run(tmp_path)
+    (run.run_dir / "notes.txt").write_text(f"code word {_TOKEN}", encoding="utf-8")
+
+    assert _problems(run) != []
+
+
+def test_a_cwd_other_than_the_run_directory_is_an_isolation_problem(tmp_path: Path) -> None:
+    assert _problems(_blind_run(tmp_path, init={"cwd": str(tmp_path)})) != []
+
+
+def test_the_brief_fills_every_placeholder(tmp_path: Path) -> None:
+    text = brief("e01", tmp_path / "venv", tmp_path / "run")
+
+    assert (CASES / "e01" / "prompt.md").read_text(encoding="utf-8") in text
+    assert f"{tmp_path}/venv/bin/datamimic" in text
+    assert not re.search(r"<(venv|run-dir|turn-limit|task)>", text)

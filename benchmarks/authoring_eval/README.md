@@ -1,8 +1,9 @@
 # Blind-agent authoring eval
 
 This eval measures how well an agent builds a project with the installed `datamimic` CLI alone.
-The agent is a sub-agent with no context and no skills. It gets one prompt and an empty directory.
-An independent oracle judges the rows that the finished project produces. The agent's own `acceptance/build.json` does not count.
+The agent is a separate `claude -p` process with no project instructions, no memory and no skills. It gets one brief and an empty directory.
+The brief asks for a project that `datamimic authoring build` reports `ready` for. Build needs the agent's own `acceptance/build.json`.
+That file does not decide the verdict: an independent oracle judges the rows that the finished project produces.
 
 Issue: #412. Scope of this directory: the cases, the oracle, the transcript audit and this protocol.
 
@@ -13,6 +14,8 @@ benchmarks/authoring_eval/
   README.md            this protocol
   oracle.py            python -m benchmarks.authoring_eval.oracle <case> <project-dir>
   audit_transcript.py  python -m benchmarks.authoring_eval.audit_transcript <transcript.jsonl> ...
+  run_subject.py       python -m benchmarks.authoring_eval.run_subject <case> --venv <venv> --model <model>
+  brief.md             the brief of every subject; run_subject.py fills it in
   cases/<id>/
     prompt.md          the only text the subject sees
     oracle.json        the checks (hidden from the subject)
@@ -70,71 +73,91 @@ Limits of the oracle:
 
 ## Protocol
 
-Follow these steps for every run. One run is one sub-agent for one case.
+Follow these steps for every run. One run is one `claude -p` process for one case.
 
 1. Freeze the commit. Write the commit SHA in the results file.
 2. Build the wheel: `uv build --wheel`.
-3. Make a fresh virtual environment for the run: `uv venv <venv>` then `uv pip install --python <venv>/bin/python <wheel>`.
-   Do not reuse a venv between runs.
-4. Make an empty run directory outside the repository. Copy `cases/<id>/fixtures/` into it when the case has fixtures. Copy nothing else.
-5. Start the sub-agent with the brief below. Use a fresh agent with no inherited turns. Record the model.
-6. Wait for the agent notification. Record tokens, tool calls and duration from it.
-7. Save the transcript outside the repository.
-8. Run the oracle from the frozen checkout with its own venv, not the venv of the subject: `python -m benchmarks.authoring_eval.oracle <id> <run-dir>`. Record the verdict.
-9. Run the audit: `python -m benchmarks.authoring_eval.audit_transcript <transcript> --allow <run-dir> --allow <venv> --forbid <repository-root>`.
-   The harness saves long tool output in a `tool-results` directory under `~/.claude/projects/`. When the agent reads such a file, add that directory with `--allow`.
-   Record the verdict.
-10. Delete the run directory and the venv after the record is complete.
+3. Make a fresh virtual environment for the run, outside the repository and in a directory whose path does not name the product:
+   `uv venv <venv>` then `uv pip install --python <venv>/bin/python <wheel>`. Do not reuse a venv between runs.
+4. Start the subject: `python -m benchmarks.authoring_eval.run_subject <id> --venv <venv> --model <model>`. Record the JSON report.
+5. Run the oracle from the frozen checkout with its own venv, not the venv of the subject: `python -m benchmarks.authoring_eval.oracle <id> <run-dir>`. Record the verdict.
+6. Delete the run directory, its parent and the venv after the record is complete.
+
+### What the runner does
+
+1. It makes a fresh temporary directory `<base>` and the run directory `<base>/run`. It copies `cases/<id>/fixtures/` into the run directory when the case has fixtures.
+2. It writes `<base>/AGENTS.md` and `<base>/CLAUDE.md`. Both hold a unique canary token. The brief does not mention them.
+3. It fills in `brief.md` and starts `claude -p` with the run directory as the cwd and these flags:
+
+   | Flag | Effect |
+   |---|---|
+   | `--safe-mode` | no CLAUDE.md, AGENTS.md, memory, skills, installed plugins, hooks or MCP servers |
+   | `--restricted` | the user, project and local settings files are ignored; the file tools stay in the cwd |
+   | `--tools` and `--allowed-tools` `Bash,Read,Write,Edit,Glob,Grep` | only these tools exist, and they need no prompt |
+   | `--permission-prompts none` | any other permission request is denied |
+   | `--disable-slash-commands`, `--strict-mcp-config` | no skills or commands, no MCP servers |
+   | `--no-session-persistence` | the run leaves no session under `~/.claude/projects/` |
+   | `--max-budget-usd 3` | a cost limit; the CLI has no turn limit flag |
+   | `--output-format stream-json --verbose --debug-file` | the transcript and the debug log, both in `<base>` |
+
+   The child gets only `HOME`, `USER`, `LOGNAME`, `LANG`, `TMPDIR`, `SHELL` and a system `PATH`.
+4. It checks the isolation (`isolation_problems`) and audits the transcript with `--allow <run-dir> --allow <venv>/bin/datamimic --forbid <repository-root> --canary <token>`.
+5. It prints a JSON report. The exit code is `0` only when the report has no problem and no finding.
+
+The isolation check fails the run when:
+
+- the init message is missing, its `tools` are not the allowlist, or it lists skills, MCP servers or slash commands;
+- the cwd of the subject is not the run directory;
+- the result message is missing, reports an error, or reports a denied tool call (an access or configuration error, not a model failure);
+- the debug log names a canary file, or shows that a hook added context;
+- a file in the run directory holds the canary.
+
+Evidence from Claude Code 2.1.304, with a model name that does not exist (no API call): without `--safe-mode`, the debug log shows
+`AGENTS.md loaded: <base>/AGENTS.md` and a SessionStart hook with `additionalContext`, and the isolation check reports both.
+With `--safe-mode`, the debug log shows `project memory is off`, and the init message lists no skills.
+
+What stays unproven:
+
+- The canary sits only in the parent directory. Safe mode states that it turns off the user `~/.claude/CLAUDE.md` too, but no canary proves it. The runner does not edit the user's files.
+- A clean config home is not possible with a keychain login: an empty `CLAUDE_CONFIG_DIR` gives `Not logged in`. `--bare` needs `ANTHROPIC_API_KEY`. The subject therefore uses the real login and the real `~/.claude`.
+- The init message still lists the installed plugins. The debug log says safe mode does not load them.
+- Bash is not confined. A subject can read outside the run directory with a relative path or a variable. The audit misses that path, unless the canary token shows up in the output.
+- Bash has network access.
+- The turn limit is a rule of the brief. The report counts the tool calls.
 
 ### Subject brief
 
-Replace the words in angle brackets. Put no other text in the brief. Do not add hints.
-
-```
-Build the project that the task below describes.
-
-Rules:
-1. You may run only the installed `datamimic` command: <venv>/bin/datamimic.
-2. Work only in this directory: <run-dir>. It is empty except for files that the task names.
-3. Do not use the Skill tool.
-4. Do not read any repository. Do not read any file named AGENTS.md.
-5. Do not read or write any file outside <run-dir>.
-6. Leave your finished project in <run-dir>.
-7. Do not claim a result. An independent check decides.
-8. Stop after <turn-limit> tool calls.
-
-Task:
-<contents of cases/<id>/prompt.md>
-```
-
-The turn limit is 40 tool calls for every case. A rule that the audit cannot check (rule 1, rule 8) is checked by reading the transcript.
+`brief.md` holds the brief. The runner replaces the words in angle brackets. Put no other text in the brief. Do not add hints.
+The turn limit is 40 tool calls for every case. A rule that the audit cannot check (rule 1, rule 7) is checked by reading the transcript.
 
 ### What to record for each run
 
 | Field | Source |
 |---|---|
-| model | the agent setup |
-| tokens, tool calls, duration | the agent notification |
+| model | the runner command |
+| tool calls | the runner report |
+| tokens, cost, duration | the `result` line of the transcript |
 | first Build call and its outcome | the transcript |
 | final Build outcome | the `build_ready` check of the oracle |
 | oracle verdict | the oracle output |
-| audit verdict | the audit output |
+| isolation and audit verdict | the runner report |
 
 A run is first-try `ready` when the first `datamimic authoring build` call of the agent returns `ready` and the oracle passes on the final project.
 A run is a pass within the turn budget when the oracle passes on the final project and the agent used at most the turn limit.
 
 ### Void runs
 
-A run is void when the audit finds a forbidden action. The forbidden actions are:
+A run is void when the runner reports a problem or the audit finds a forbidden action. The forbidden actions are:
 
-- any use of the `Skill` tool;
+- any tool outside `Bash`, `Read`, `Write`, `Edit`, `Glob` and `Grep`;
 - any tool call that touches a path under the repository root;
 - any mention of `AGENTS.md` in a tool call;
-- any read or write of a file outside the run directory and the venv.
+- any read or write of a file outside the run directory, except a run of `<venv>/bin/datamimic` (so the installed source stays unread);
+- the canary token anywhere in the transcript.
 
-A void run does not count in any rate. Repeat it with a new agent. List the void runs in the results file with the finding.
+A void run does not count in any rate. Repeat it with a new process. List the void runs in the results file with the finding.
 
-The audit reads only the tool calls of the assistant. It reads shell commands for absolute and `~` paths only.
+The audit reads the tool calls of the assistant for tools and paths, and every line for the canary. It reads shell commands for absolute and `~` paths only.
 It does not resolve relative paths or paths built by variables. A void run can still pass the audit when the agent hides a path in a variable. Read the transcript when a result looks too good.
 
 ## Targets
