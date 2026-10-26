@@ -1,6 +1,7 @@
 {
   "title": "Hospital ward roster for one week",
   "proves": [
+    "the policy values are whole numbers, and min_rest_hours is at least the specification value 11",
     "every roster entry holds the certification its shift type requires, valid on the shift date",
     "a certification is valid on its expiry date, and a missing expiry date is not valid",
     "a person on approved leave is never rostered, the last leave day included, and a requested leave does not block",

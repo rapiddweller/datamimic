@@ -73,7 +73,9 @@ def plan_roster(
                 return Rule.REST, f"{gap.total_seconds() / 3600:g} h from {other['slot_id']}, needs {min_rest_hours} h"
         hours = slot["hours"] + sum(other["hours"] for other in worked if week(other) == week(slot))
         if hours > candidate["max_weekly_hours"]:
-            return Rule.HOURS, f"{hours} h in ISO week {week(slot)}, contract allows {candidate['max_weekly_hours']} h"
+            year, number = week(slot)
+            limit = candidate["max_weekly_hours"]
+            return Rule.HOURS, f"{hours} h in ISO week {year}-W{number:02d}, contract allows {limit} h"
         return None
 
     def available(slot: Row) -> list[Row]:
