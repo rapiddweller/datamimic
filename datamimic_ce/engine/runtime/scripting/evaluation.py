@@ -5,7 +5,7 @@ from __future__ import annotations
 import ast
 import re
 import types
-from collections.abc import Iterator, KeysView, Mapping
+from collections.abc import Iterable, Iterator, KeysView, Mapping
 from functools import lru_cache
 from typing import Protocol, TypeGuard
 
@@ -95,24 +95,20 @@ def _plain(value: object) -> object:
     return value
 
 
-def _written_names(expression: str) -> tuple[frozenset[str], frozenset[str]]:
-    """The names and the attribute names written in the expression: descriptor structure, never a value."""
+def _written_nodes(expression: str) -> tuple[ast.AST, ...]:
+    """The syntax nodes written in the expression: descriptor structure, never a value."""
     try:
-        tree = ast.parse(expression.lstrip(" \t"), mode="eval")
+        return tuple(ast.walk(ast.parse(expression.lstrip(" \t"), mode="eval")))
     except SyntaxError:
-        return frozenset(), frozenset()
-    nodes = tuple(ast.walk(tree))
-    return (
-        frozenset(node.id for node in nodes if isinstance(node, ast.Name)),
-        frozenset(node.attr for node in nodes if isinstance(node, ast.Attribute)),
-    )
+        return ()
 
 
-def _lookup_failure(error: NameError | AttributeError, expression: str) -> str:
+def _lookup_failure(error: NameError | AttributeError, nodes: tuple[ast.AST, ...]) -> str:
     """Name the missing name only when the expression text holds it: a called function can raise a name built
     from data, and a diagnostic never shows a value."""
-    names, attributes = _written_names(expression)
-    if error.name not in names | attributes:
+    written = {node.id for node in nodes if isinstance(node, ast.Name)}
+    written |= {node.attr for node in nodes if isinstance(node, ast.Attribute)}
+    if error.name not in written:
         return type(error).__name__
     if isinstance(error, NameError):
         return f"NameError: name '{error.name}' is not defined"
@@ -120,14 +116,13 @@ def _lookup_failure(error: NameError | AttributeError, expression: str) -> str:
 
 
 def _replaced_engine_names(
-    expression: str, global_namespace: dict[str, object], local_namespace: dict[str, object]
+    names: Iterable[str], global_namespace: dict[str, object], local_namespace: dict[str, object]
 ) -> str:
     """A library import such as `from datetime import datetime` replaces the engine's `datetime` in expressions,
-    as in Python and in EE. When such an expression fails, say which names it reads that are not the engine's."""
-    names, _attributes = _written_names(expression)
+    as in Python and in EE. When such an expression fails, say which of the given names are not the engine's."""
     replaced = sorted(
         name
-        for name in names
+        for name in set(names)
         if name in global_namespace and name in local_namespace and local_namespace[name] is not global_namespace[name]
     )
     return "".join(
@@ -190,12 +185,23 @@ def evaluate_python(
     except (UserErrorBase, DomainError):
         raise
     except (NameError, AttributeError) as error:
+        nodes = _written_nodes(shown)
+        # A missing name is never the replaced name, and only `replaced.missing` blames the replacement.
+        receivers = (
+            []
+            if isinstance(error, NameError)
+            else [
+                node.value.id
+                for node in nodes
+                if isinstance(node, ast.Attribute) and node.attr == error.name and isinstance(node.value, ast.Name)
+            ]
+        )
         raise task_config_error(
             code=IssueCode.TASK_EXPRESSION_EVAL_FAILED,
             expr=diagnostic,
             error=(
-                f"{_lookup_failure(error, shown)}: {_SCOPE_GUIDANCE}"
-                f"{_replaced_engine_names(shown, global_namespace, local_namespace)}"
+                f"{_lookup_failure(error, nodes)}: {_SCOPE_GUIDANCE}"
+                f"{_replaced_engine_names(receivers, global_namespace, local_namespace)}"
             ),
         ) from error
     except KeyError as error:
@@ -205,12 +211,13 @@ def evaluate_python(
             error="KeyError: missing mapping key",
         ) from error
     except TypeError as error:
+        read = (node.id for node in _written_nodes(shown) if isinstance(node, ast.Name))
         raise task_config_error(
             code=IssueCode.TASK_EXPRESSION_EVAL_FAILED,
             expr=diagnostic,
             error=(
                 f"Failed while evaluate '{diagnostic}': '{diagnostic}' have undefined item or wrong structure"
-                f"{_replaced_engine_names(shown, global_namespace, local_namespace)}"
+                f"{_replaced_engine_names(read, global_namespace, local_namespace)}"
             ),
         ) from error
     except SyntaxError as error:

@@ -195,19 +195,23 @@ _REPLACED_DATETIME = (
         ({"datetime": datetime.datetime}, "datetime.date(2026, 3, 2)", True),
         ({"datetime": datetime.datetime}, "datetime.timedelta(days=1)", True),
         ({"json": json}, "json.loads(1)", False),
+        ({"datetime": "retail"}, "datetime.upper() + missing_name", False),
+        ({"datetime": datetime.datetime, "record": {"id": 1}}, "datetime.now() and record.nope", False),
     ],
-    ids=["type_error", "attribute_error", "same_object"],
+    ids=["type_error", "attribute_error", "same_object", "unrelated_name_error", "attribute_on_another_name"],
 )
 def test_a_failing_expression_names_an_engine_name_that_a_script_replaces(
     namespace: dict[str, object], expression: str, hinted: bool
 ) -> None:
     """Python-only: a scenario negative asserts only text that is present, and one patch reaches only the first
-    failing key; this test also proves the absent hint when the script binds the engine's own object."""
+    failing key; this test also proves the absent hint when the script binds the engine's own object, and when the
+    failure is about another name than the replaced one (a legit field must not get "rename the field" advice)."""
     with pytest.raises(TaskConfigError) as exc:
         _context(namespace=namespace).evaluate_python_expression(expression)
 
-    replaced = _REPLACED_DATETIME if "datetime" in namespace else "the expression reads 'json'"
-    assert (replaced in str(exc.value)) is hinted
+    assert ("in place of the engine's" in str(exc.value)) is hinted
+    if hinted:
+        assert _REPLACED_DATETIME in str(exc.value)
 
 
 def test_text_from_data_is_not_kept_in_the_compile_cache() -> None:
