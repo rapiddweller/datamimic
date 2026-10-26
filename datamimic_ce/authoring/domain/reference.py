@@ -8,7 +8,7 @@ from __future__ import annotations
 
 from typing import Annotated, Literal, assert_never
 
-from pydantic import Field, JsonValue
+from pydantic import Field, JsonValue, SerializationInfo, field_serializer
 
 from .common import AuthoringModel, NonEmptyStrictStr
 from .diagnostics import RuleCatalogEntry
@@ -20,6 +20,11 @@ class ProjectStarter(AuthoringModel):
 
     entry_xml: NonEmptyStrictStr
     acceptance: BuildRequestV5
+
+    @field_serializer("acceptance")
+    def _acceptance_without_nulls(self, acceptance: BuildRequestV5, info: SerializationInfo) -> dict[str, object]:
+        # Agents copy this file: teach an omitted max_count, because CE 4 and EE reject an explicit null.
+        return acceptance.model_dump(mode=info.mode, exclude_none=True)
 
 
 class AuthoringAssemblyReference(AuthoringModel):
