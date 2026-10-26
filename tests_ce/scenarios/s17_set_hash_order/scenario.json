@@ -3,7 +3,7 @@
   "proves": [
     "sorted(...) over a set and a membership test replay identically under rngSeed",
     "Build replays every seeded model under three other hash seeds and rejects a set order that changes the rows",
-    "a two-element set, a key= tie and a dict-view difference are each rejected",
+    "a two-element set, a key= tie, a dict-view difference and a set kept in a variable are each rejected",
     "the replay is a check, not a proof: a set whose order agrees under all four hash seeds stays hidden"
   ],
   "products": {
@@ -24,6 +24,10 @@
     },
     {
       "dir": "negative/dict_view_difference",
+      "diagnostic": "validation"
+    },
+    {
+      "dir": "negative/variable_set",
       "diagnostic": "validation"
     }
   ]

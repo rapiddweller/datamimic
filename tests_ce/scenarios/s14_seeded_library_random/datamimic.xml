@@ -5,5 +5,8 @@
         <key name="spread" script="spread()"/>
         <key name="shape" script="shape()"/>
         <key name="dice" script="dice()"/>
+        <key name="fresh" script="fresh()"/>
+        <key name="reseed" script="reseed()"/>
+        <key name="restored" script="restored()"/>
     </generate>
 </setup>

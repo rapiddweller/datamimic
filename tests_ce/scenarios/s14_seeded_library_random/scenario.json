@@ -3,6 +3,8 @@
   "proves": [
     "every public random function a library imports by name draws from the run's seeded stream",
     "triangular, betavariate, expovariate, gammavariate, lognormvariate, normalvariate, paretovariate, vonmisesvariate and weibullvariate replay identically, also under an alias",
+    "Random() without a seed, random.seed() without a value and getstate/setstate replay identically",
+    "a Random subclass that the library defines while it loads is not seeded, and the Build replay rejects it",
     "random.SystemRandom stays refused under rngSeed"
   ],
   "products": {
@@ -12,6 +14,10 @@
     {
       "dir": "negative/system_random",
       "diagnostic": "child_execution"
+    },
+    {
+      "dir": "negative/subclass_random",
+      "diagnostic": "validation"
     }
   ]
 }

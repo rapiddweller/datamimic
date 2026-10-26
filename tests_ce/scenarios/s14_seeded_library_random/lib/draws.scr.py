@@ -1,11 +1,15 @@
+import random
 from random import (
+    Random,
     betavariate,
     expovariate,
     gammavariate,
+    getstate,
     lognormvariate,
     normalvariate,
     paretovariate,
     randint,
+    setstate,
     triangular,
     vonmisesvariate,
 )
@@ -32,3 +36,19 @@ def shape():
 
 def dice():
     return randint(1, 6)
+
+
+def fresh():
+    return Random().randint(1, 10**9)
+
+
+def reseed():
+    random.seed()
+    return random.randint(1, 10**9)
+
+
+def restored():
+    state = getstate()
+    first = random.random()
+    setstate(state)
+    return random.random() == first

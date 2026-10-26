@@ -109,7 +109,7 @@ def test_replay_causes_name_why_a_seeded_model_must_replay(xml: str, causes: tup
 
 
 _S17 = Path(__file__).resolve().parents[2] / "scenarios" / "s17_set_hash_order"
-_SET_ORDER_NEGATIVES = ("set_order", "two_element_set", "sorted_key_tie", "dict_view_difference")
+_SET_ORDER_NEGATIVES = ("set_order", "two_element_set", "sorted_key_tie", "dict_view_difference", "variable_set")
 
 
 def _build_negative(name: str, tmp_path: Path) -> BuildResult:

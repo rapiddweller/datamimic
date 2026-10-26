@@ -11,3 +11,15 @@ def shape():
 
 def dice():
     return randint(1, 6)
+
+
+def fresh():
+    return 1
+
+
+def reseed():
+    return 1
+
+
+def restored():
+    return True

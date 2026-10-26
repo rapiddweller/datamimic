@@ -7,6 +7,7 @@
     {"kind": "exact_count", "subject": {"kind": "product", "product": "samples"}, "count": 5},
     {"kind": "unique", "subject": {"kind": "product", "product": "samples"}, "field": "sample_id"},
     {"kind": "range", "subject": {"kind": "product", "product": "samples"}, "field": "spread", "minimum": 0, "maximum": 10},
-    {"kind": "range", "subject": {"kind": "product", "product": "samples"}, "field": "dice", "minimum": 1, "maximum": 6}
+    {"kind": "range", "subject": {"kind": "product", "product": "samples"}, "field": "dice", "minimum": 1, "maximum": 6},
+    {"kind": "allowed_values", "subject": {"kind": "product", "product": "samples"}, "field": "restored", "values": [true]}
   ]
 }

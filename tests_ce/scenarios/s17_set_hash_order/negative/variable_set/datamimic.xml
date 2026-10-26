@@ -1,0 +1,8 @@
+<setup rngSeed="7">
+    <generate name="rows" count="3">
+        <variable name="pool" script="{'alpha', 'bravo', 'charlie', 'delta', 'echo', 'foxtrot', 'golf', 'hotel'}"/>
+        <key name="id" generator="IncrementGenerator"/>
+        <key name="flag" script="['alpha', 'bravo', 'charlie', 'delta', 'echo', 'foxtrot', 'golf', 'hotel'].index(list(pool)[0])"/>
+        <key name="known" script="'golf' in {'alpha', 'golf'}"/>
+    </generate>
+</setup>
