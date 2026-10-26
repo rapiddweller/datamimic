@@ -27,8 +27,9 @@ class Outcome(StrEnum):
 class Rule(StrEnum):
     REST = "RS2"
     HOURS = "RS3"
-    DEMAND_MET = "RS4"
+    AT_MAXIMUM = "RS4"
     ONE_WARD = "RS5"
+    NOT_NEEDED = "not_needed"  # no rule excludes the person; the slot has its minimum staff
 
 
 def plan_roster(
@@ -63,14 +64,16 @@ def plan_roster(
         return row["starts_at"].isocalendar()[:2]
 
     def blocker(candidate: Row, slot: Row) -> tuple[Rule, str] | None:
-        """The first rule that forbids this person the slot, given the shifts the person already has."""
+        """The strongest rule that forbids this person the slot, given the shifts the person already has: rest and
+        overlap (RS2) first, then one ward per day (RS5), then the weekly hours (RS3)."""
         worked = shifts[candidate["staff_id"]]
         for other in worked:
-            if other["shift_date"] == slot["shift_date"] and other["ward_id"] != slot["ward_id"]:
-                return Rule.ONE_WARD, f"works in {other['ward_id']} on {slot['shift_date']}"
             gap = max(slot["starts_at"] - other["ends_at"], other["starts_at"] - slot["ends_at"])
             if gap < rest:
                 return Rule.REST, f"{gap.total_seconds() / 3600:g} h from {other['slot_id']}, needs {min_rest_hours} h"
+        for other in worked:
+            if other["shift_date"] == slot["shift_date"] and other["ward_id"] != slot["ward_id"]:
+                return Rule.ONE_WARD, f"works in {other['ward_id']} on {slot['shift_date']}"
         hours = slot["hours"] + sum(other["hours"] for other in worked if week(other) == week(slot))
         if hours > candidate["max_weekly_hours"]:
             iso_week = slot["starts_at"].strftime("%G-W%V")
@@ -154,7 +157,11 @@ def plan_roster(
         for candidate in pool[slot["slot_id"]]:
             if candidate["staff_id"] in assigned:
                 continue
-            rule, reason = blocker(candidate, slot) or (Rule.DEMAND_MET, f"{slot['min_staff']} staff already assigned")
+            rule, reason = blocker(candidate, slot) or (
+                (Rule.AT_MAXIMUM, f"the slot has its maximum of {slot['max_staff']} staff")
+                if slot["min_staff"] == slot["max_staff"]
+                else (Rule.NOT_NEEDED, f"the slot has its minimum of {slot['min_staff']} staff")
+            )
             blocked.append({"staff_id": candidate["staff_id"], "rule": rule.value, "reason": reason})
         decisions.append({"slot_id": slot["slot_id"], "assigned": assigned, "blocked": blocked})
     return _result(outcome, message, steps, backtracks, entries, decisions)

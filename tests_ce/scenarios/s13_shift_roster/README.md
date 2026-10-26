@@ -108,7 +108,7 @@ roster cannot hold this edge in the data: any data that needs an 11 h rest is in
 |---|---|
 | `candidates` | One row for each person and plan day. `shifts` holds one decision for each shift type: `cert_status`, and `excluded_by` (`RS1`, `RS6` or empty). |
 | `plan` | `outcome`, `search_complete`, `message`, `steps` and `backtracks`. |
-| `slot_decisions` | For each slot: the assigned people, and for each other suitable person the rule and the reason (`RS2`, `RS3`, `RS5`, or `RS4` when the demand is already met). |
+| `slot_decisions` | For each slot: the assigned people, and for each other suitable person the strongest rule that excludes the person and the reason: `RS2` before `RS5` before `RS3`. `RS4` means that the slot has its maximum staff. `not_needed` means that no rule excludes the person: the slot has its minimum staff, and the search adds no more. |
 | `entry_checks`, `hours_checks`, `coverage_checks` | The measured values that the rule expectations compare. |
 
 A sample from one run. S09 on 2026-03-02 (`candidates.csv`) is excluded from the night by RS1, because the ALS has no
@@ -121,10 +121,10 @@ S09/2026-03-02, valid_certs ['BLS'], shifts [{'shift_code': 'night', 'required_c
 The W1 night slot of 2026-03-02 (`slot_decisions.csv`) gets S02. Each other suitable person has a rule and a reason:
 
 ```text
-S01 RS5 works in W2 on 2026-03-02
+S01 RS2 -7 h from 2026-03-02/W2/night, needs 11 h      (a negative rest is an overlap)
 S04 RS2 0 h from 2026-03-02/W1/day, needs 11 h
 S11 RS3 36 h in ISO week 2026-W10, contract allows 32 h
-S07, S13, S16, S17 RS4 1 staff already assigned
+S07, S13, S16, S17 not_needed the slot has its minimum of 1 staff
 ```
 
 ## Search
