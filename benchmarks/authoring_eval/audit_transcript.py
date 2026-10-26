@@ -9,8 +9,9 @@
 
 The transcript is Claude Code JSONL. The tool calls of assistant messages are examined: a tool outside the
 allowlist, a path outside the allowed roots, a mention of AGENTS.md. The canary token is searched in every line,
-tool results included. Limit: the shell is read for absolute and ``~/`` paths only; relative paths, globs, a bare
-``~`` or ``/``, and paths built by variables or commands are not resolved (README, "Void runs")."""
+tool results included. An absolute ``Glob`` pattern is checked from its root. Limit: the shell is read for absolute
+and ``~/`` paths only; relative paths, globs, a bare ``~`` or ``/``, and paths built by variables or commands are not
+resolved (README, "Void runs")."""
 
 import argparse
 import json
@@ -33,6 +34,7 @@ _AGENTS_FILE = "agents.md"
 _SYSTEM_PATHS = (Path("/usr"), Path("/bin"), Path("/dev/null"))
 # An absolute or home path in a shell command; a letter, dot or slash before the slash means a relative path or a URL.
 _SHELL_PATH = re.compile(r"(?<![\w.:/$~-])(?:~?/)[^\s'\"|;&<>()`$]*")
+_GLOB_CHAR = re.compile(r"[*?[{]")
 
 
 class FindingKind(StrEnum):
@@ -85,12 +87,30 @@ def _is_path(candidate: str) -> bool:
     return candidate.startswith("~") or (candidate != "/" and os.path.lexists("/" + candidate.split("/")[1]))
 
 
+def _glob_root(pattern: str) -> str:
+    """The directory a glob pattern searches: up to the last slash before the first glob character. After a glob
+    character, `..` can climb anywhere (`**` can match no directory), so that pattern searches from /."""
+    glob = _GLOB_CHAR.search(pattern)
+    if glob is None:
+        return pattern
+    if ".." in Path(pattern[glob.start() :]).parts:
+        return "/"
+    return pattern[: glob.start()].rsplit("/", 1)[0] or "/"
+
+
 def _paths(tool: str, tool_input: dict[str, object]) -> list[str]:
     if tool == _SHELL_TOOL:
         command = tool_input.get("command")
         return [path for path in _SHELL_PATH.findall(command) if _is_path(path)] if isinstance(command, str) else []
-    keys = (*_PATH_KEYS, *_PATTERN_KEYS) if tool == _GLOB_TOOL else _PATH_KEYS
-    return [value for key in keys if isinstance(value := tool_input.get(key), str) and os.path.isabs(value)]
+    paths = [value for key in _PATH_KEYS if isinstance(value := tool_input.get(key), str)]
+    if tool == _GLOB_TOOL and isinstance(pattern := tool_input.get("pattern"), str) and _absolute(pattern):
+        paths.append(_glob_root(pattern))
+    return [path for path in paths if _absolute(path)]
+
+
+def _absolute(path: str) -> bool:
+    """A relative path resolves in the run directory (or in the Glob path); ~ is the home directory."""
+    return os.path.isabs(path) or path.startswith("~")
 
 
 def _scanned_text(tool: str, tool_input: dict[str, object]) -> list[str]:

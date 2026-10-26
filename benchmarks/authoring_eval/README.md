@@ -208,6 +208,7 @@ A run is void when the runner reports a problem or the audit finds a forbidden a
 A void run does not count in any rate. Repeat it with a new process. List the void runs in the results file with the finding.
 
 The audit reads the tool calls of the assistant for tools and paths, and every line for the canary. It reads shell commands for absolute and `~/` paths only.
+It checks an absolute or `~` `Glob` pattern from its root: the directory before the first glob character. A `..` after a glob character makes the root `/`.
 A void run can pass the audit. The fix review found that the audit misses these Bash forms:
 
 | Form | Example |

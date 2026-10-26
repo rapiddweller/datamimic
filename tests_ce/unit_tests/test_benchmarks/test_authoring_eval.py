@@ -557,6 +557,38 @@ def test_absolute_glob_pattern_outside_the_run_directory_is_flagged(tmp_path: Pa
     assert _audit(transcript, run, venv) == [FindingKind.OUTSIDE_ALLOWED]
 
 
+_OUT, _REPO = [FindingKind.OUTSIDE_ALLOWED], [FindingKind.FORBIDDEN_ROOT, FindingKind.OUTSIDE_ALLOWED]
+
+
+@pytest.mark.parametrize(
+    ("pattern", "kinds"),
+    [
+        ("/etc/*", _OUT),
+        ("{home}/.claude/**", _OUT),
+        ("~/.claude/**", _OUT),
+        ("{run}*/datamimic.xml", _OUT),  # run* also matches the siblings of the run directory
+        ("{run}/**/../*", _OUT),  # ** can match no directory, so .. climbs out of the run directory
+        ("/repo/benchmarks/authoring_eval/cases/**/reference/*", _REPO),
+        ("/repo*/x", _OUT),  # the root is /, outside the run directory; not proven to touch /repo
+        ("{run}/**/*.xml", []),
+        ("{run}/datamimic.xml", []),
+    ],
+)
+def test_an_absolute_glob_pattern_without_a_path_is_checked_from_its_root(
+    pattern: str, kinds: list[FindingKind], tmp_path: Path
+) -> None:
+    run, venv = tmp_path / "run", tmp_path / "venv"
+    glob = pattern.format(run=run, home=Path.home())
+
+    assert _audit(_transcript(tmp_path, _line(_call("Glob", pattern=glob))), run, venv) == kinds
+
+
+def test_a_home_relative_read_is_checked(tmp_path: Path) -> None:
+    run, venv = tmp_path / "run", tmp_path / "venv"
+
+    assert _audit(_transcript(tmp_path, _line(_call("Read", file_path="~/.claude/x.json"))), run, venv) == _OUT
+
+
 def test_canary_anywhere_in_the_transcript_is_flagged(tmp_path: Path) -> None:
     """A relative `cat ../AGENTS.md` passes the path checks; its tool result still carries the token."""
     run, venv = tmp_path / "run", tmp_path / "venv"
