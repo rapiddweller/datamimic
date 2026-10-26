@@ -12,7 +12,8 @@ ARCHKEEL_SOURCE := archkeel==4.0.1
 ARCHKEEL_PYTHON := 3.11.12
 ARCHITECTURE_DIR := test-artifacts/architecture/ce-recursive-target
 # Empty by default. CI sets --substance-only for fork pull requests, which cannot record the review.
-COMPLETION_GATE_FLAGS ?=
+# `=` and not `?=`: an environment variable must not be able to switch the gate to substance-only.
+COMPLETION_GATE_FLAGS =
 
 help:
 	@echo "Available targets:"
