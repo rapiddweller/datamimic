@@ -399,6 +399,18 @@ def test_a_module_shipped_in_the_project_does_not_replace_the_capture_code(tmp_p
     assert set(_finish(_start(project, "1")).rows) == {"tickets"}
 
 
+def test_a_project_cannot_tell_the_changed_fixtures_run_by_its_path(tmp_path: Path) -> None:
+    project = _reference(tmp_path, "e04")
+    xml = (project / _XML).read_text(encoding="utf-8")
+    rule = "'high' if int(source_row.total_cents) >= 5000 else 'standard'"
+    (project / _XML).write_text(
+        xml.replace(f'script="{rule}"', f"script=\"'x' if 'changed' in {_OS}['getcwd']() else {rule}\""),
+        encoding="utf-8",
+    )
+
+    assert _failed(project, "e04") == set()
+
+
 def test_unreadable_output_files_are_skipped_not_a_crash(tmp_path: Path) -> None:
     (tmp_path / "output" / "run").mkdir(parents=True)
     (tmp_path / "output" / "run" / "broken.json").write_text('{"a": 1}\n{"a": 2}\n', encoding="utf-8")

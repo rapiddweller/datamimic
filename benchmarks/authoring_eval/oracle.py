@@ -464,7 +464,10 @@ def _observe(case: str, project: Path, changed_fixtures: list[str]) -> Observed:
     with tempfile.TemporaryDirectory() as scratch:
         root = Path(scratch)
         build_copy, first_copy, second_copy = (_copy(project, case, root / name) for name in ("build", "1", "2"))
-        changed_copies = [_copy(project, case, root / name, name) for name in changed_fixtures]
+        # numbered like the main copies: a project that reads its path must not tell the changed run apart
+        changed_copies = [
+            _copy(project, case, root / str(number), name) for number, name in enumerate(changed_fixtures, start=3)
+        ]
         processes = [
             _start(first_copy, _HASH_SEEDS[0]),
             _start(second_copy, _HASH_SEEDS[1]),
