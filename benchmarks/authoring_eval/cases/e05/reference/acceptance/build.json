@@ -1,0 +1,7 @@
+{
+  "version": "5.0",
+  "max_count": 40,
+  "expectations": [
+    {"kind": "exact_count", "subject": {"kind": "product", "product": "offers"}, "count": 40}
+  ]
+}

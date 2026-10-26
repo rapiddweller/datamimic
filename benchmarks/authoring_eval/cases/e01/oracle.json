@@ -1,0 +1,10 @@
+{
+  "checks": [
+    {"kind": "build_ready"},
+    {"kind": "exact_count", "product": "tickets", "n": 25},
+    {"kind": "unique", "product": "tickets", "field": "ticket_id"},
+    {"kind": "value_in", "product": "tickets", "field": "priority", "values": ["LOW", "MEDIUM", "HIGH"]},
+    {"kind": "range", "product": "tickets", "field": "estimate_hours", "min": 1, "max": 40},
+    {"kind": "field_present", "product": "tickets", "fields": ["ticket_id", "priority", "title", "estimate_hours"]}
+  ]
+}

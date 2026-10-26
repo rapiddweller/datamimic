@@ -1,0 +1,18 @@
+{
+  "version": "5.0",
+  "max_count": 20,
+  "product_roles": [
+    {"product": "subscribers", "field": "subscriber_id", "role": {"kind": "identifier"}},
+    {"product": "invoices", "field": "invoice_id", "role": {"kind": "identifier"}},
+    {"product": "invoices", "field": "subscriber_id", "role": {
+      "kind": "foreign_key", "parent_product": "subscribers", "parent_field": "subscriber_id"
+    }}
+  ],
+  "expectations": [
+    {"kind": "exact_count", "subject": {"kind": "product", "product": "subscribers"}, "count": 5},
+    {"kind": "exact_count", "subject": {"kind": "product", "product": "invoices"}, "count": 15},
+    {"kind": "per_parent_count", "subject": {
+      "kind": "per_parent", "parent_product": "subscribers", "child_product": "invoices"
+    }, "count": 3}
+  ]
+}
