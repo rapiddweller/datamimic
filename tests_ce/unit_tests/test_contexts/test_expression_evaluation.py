@@ -208,3 +208,18 @@ def test_a_failing_expression_names_an_engine_name_that_a_script_replaces(
 
     replaced = _REPLACED_DATETIME if "datetime" in namespace else "the expression reads 'json'"
     assert (replaced in str(exc.value)) is hinted
+
+
+def test_text_from_data_is_not_kept_in_the_compile_cache() -> None:
+    """Python-only: retention is process memory, which no descriptor can observe. Data text is a value per row, so
+    caching it holds every distinct text (1 MB here) for the process lifetime."""
+    from datamimic_ce.engine.runtime.scripting import evaluation
+
+    context = _context()
+    big = "'" + "a" * 1_000_000 + "'"
+    evaluation._compiled.cache_clear()
+
+    assert len(context.evaluate_python_expression(big, text_from_data=True)) == 1_000_000
+    assert evaluation._compiled.cache_info().currsize == 0
+    context.evaluate_python_expression("40 + 2")
+    assert evaluation._compiled.cache_info().currsize == 1

@@ -183,8 +183,10 @@ def evaluate_python(
                 namespace["__builtins__"] = global_namespace["__builtins__"]
         return namespace
 
+    # Data text is a new value on each row: a cache would only keep every distinct text alive.
+    compiled = _compiled.__wrapped__ if text_from_data else _compiled
     try:
-        return normalized_result(eval(_compiled(expression), single_namespace(local_namespace)), diagnostic)
+        return normalized_result(eval(compiled(expression), single_namespace(local_namespace)), diagnostic)
     except (UserErrorBase, DomainError):
         raise
     except (NameError, AttributeError) as error:
