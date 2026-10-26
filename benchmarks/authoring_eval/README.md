@@ -51,7 +51,6 @@ Raw transcripts and run directories stay outside the repository.
 | `value_in` | every value is in `values`. |
 | `range` | every value is a whole number (as `whole_number`) from `min` to `max`, inclusive. |
 | `field_present` | every row has each field, and the value is not empty (`None` or `""`). |
-| `exact_fields` | every row has exactly these fields, no more. |
 | `field_at_most` | in every row, both fields are numbers and `field` is at most `other`. |
 | `exact_rows` | the captured rows equal `rows`. Row order is ignored. Keys and JSON types must match. |
 | `output_rows` | the run with the case directory `fixtures` laid over `fixtures/` wrote `<product>.json`, and its rows equal `rows` (as `exact_rows`). |

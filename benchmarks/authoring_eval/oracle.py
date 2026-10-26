@@ -229,22 +229,6 @@ class FieldPresent(_Check):
         return None if not empty else f"missing or empty in some rows: {', '.join(empty)}"
 
 
-class ExactFields(_Check):
-    kind: Literal["exact_fields"]
-    product: str
-    fields: list[str]
-
-    def label(self) -> str:
-        return f"exact_fields:{self.product}"
-
-    def failure(self, observed: Observed) -> str | None:
-        rows = _product_rows(observed, self.product)
-        if isinstance(rows, str):
-            return rows
-        odd = sum(1 for row in rows if set(row) != set(self.fields))
-        return None if not odd else f"{odd} rows do not have exactly the expected fields"
-
-
 class FieldAtMost(_Check):
     kind: Literal["field_at_most"]
     product: str
@@ -367,7 +351,6 @@ Check = Annotated[
     | ValueIn
     | InRange
     | FieldPresent
-    | ExactFields
     | FieldAtMost
     | ExactRows
     | OutputRows
