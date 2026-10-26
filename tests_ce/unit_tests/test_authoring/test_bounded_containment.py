@@ -4,18 +4,28 @@
 
 """A bounded run writes only inside its private directory and starts no process (#361)."""
 
+import os
 import subprocess
 import sys
+import tempfile
 from pathlib import Path, PurePosixPath
+
+import pytest
 
 from datamimic_ce.authoring.adapters.bounded_executor import CeBoundedExecutor
 from datamimic_ce.authoring.adapters.workspace import AuthoringWorkspaceContext
 from datamimic_ce.authoring.domain.requests import BoundedExecutionRequest
 
+_MODELS = Path(__file__).parent / "bounded_containment_models"
+
 
 def _run(root: Path, script: str, *, allow_side_effects: bool = False):
-    workspace = AuthoringWorkspaceContext(root, PurePosixPath("model.xml"))
     xml = f'<setup><generate name="rows" count="1" target=""><key name="value" script="{script}"/></generate></setup>'
+    return _execute(root, xml, allow_side_effects=allow_side_effects)
+
+
+def _execute(root: Path, xml: str, *, allow_side_effects: bool = False):
+    workspace = AuthoringWorkspaceContext(root, PurePosixPath("model.xml"))
     return CeBoundedExecutor(workspace).execute(
         BoundedExecutionRequest(
             xml=xml, descriptor_path=workspace.descriptor_path, allow_side_effects=allow_side_effects
@@ -163,3 +173,26 @@ def test_a_relative_remove_through_an_outside_directory_descriptor_is_refused(tm
     result = _run(tmp_path / "workspace", f"os.remove('victim', dir_fd=os.open('{outside.as_posix()}', os.O_RDONLY))")
     assert not result.ok
     assert (outside / "victim").exists()
+
+
+@pytest.mark.skipif(os.name != "posix", reason="the models use POSIX paths and AF_UNIX sockets")
+@pytest.mark.parametrize("model", sorted((_MODELS / "accepted").glob("*.xml")), ids=lambda path: path.stem)
+def test_an_accepted_model_runs_inside_the_private_workspace(tmp_path: Path, model: Path) -> None:
+    result = _execute(tmp_path, model.read_text(encoding="utf-8"))
+    assert result.ok, result.diagnostics
+    assert not any(tmp_path.iterdir()), "the private copy, not the workspace, received every write"
+
+
+@pytest.mark.skipif(os.name != "posix", reason="the models use POSIX paths and AF_UNIX sockets")
+@pytest.mark.parametrize("model", sorted((_MODELS / "refused").glob("*.xml")), ids=lambda path: path.stem)
+def test_a_refused_model_leaves_no_trace_outside_the_private_workspace(tmp_path: Path, model: Path) -> None:
+    # /tmp keeps the socket path under the 104-byte AF_UNIX limit that macOS enforces before the audit event.
+    with tempfile.TemporaryDirectory(prefix="dm363", dir="/tmp") as outside:
+        xml = model.read_text(encoding="utf-8").replace("@OUTSIDE@", outside)
+        result = _execute(tmp_path, xml)
+        assert not result.ok
+        assert any(
+            "writes only new files inside its private workspace" in (item.remediation or "")
+            for item in result.diagnostics
+        )
+        assert not list(Path(outside).iterdir())

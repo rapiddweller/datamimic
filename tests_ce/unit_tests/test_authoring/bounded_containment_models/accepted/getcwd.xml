@@ -1,0 +1,6 @@
+<!-- Accepted: a plain read of the working directory touches no path event. (also passes before #363: it guards the fix against over-refusing) -->
+<setup rngSeed="7">
+    <generate name="rows" count="1" target="">
+        <key name="value" script="len(os.getcwd()) > 0"/>
+    </generate>
+</setup>

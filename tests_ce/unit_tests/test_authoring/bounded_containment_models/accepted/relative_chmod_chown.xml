@@ -1,0 +1,6 @@
+<!-- Accepted: mode, uid and gid are not dir_fd values, and "out" lies inside the private root. -->
+<setup rngSeed="7">
+    <generate name="rows" count="1" target="">
+        <key name="value" script="[os.mkdir('out'), os.chmod('out', 0o700), os.chown('out', -1, -1)] and 1"/>
+    </generate>
+</setup>
