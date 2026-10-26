@@ -57,7 +57,9 @@ class LintContext:
         evidence: str | None = None,
         fix_context: str | None = None,
         severity: RuleSeverity | None = None,
+        names_only: bool = False,
     ) -> Diagnostic:
+        """``names_only`` marks a ``fix_context`` built from element, attribute and schema names only."""
         definition = rule.definition
         message = definition.explanation
         if evidence:
@@ -75,6 +77,7 @@ class LintContext:
             name=element.get("name") or element.get("id"),
             line=element.sourceline,
             docs=definition.docs,
+            names_only_fix=fix_context if names_only else None,
         )
 
 

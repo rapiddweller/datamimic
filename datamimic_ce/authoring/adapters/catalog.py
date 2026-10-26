@@ -29,7 +29,13 @@ from datamimic_ce.authoring.domain.capabilities import (
 )
 from datamimic_ce.authoring.domain.diagnostics import RuleCatalogEntry, RuleOwner
 from datamimic_ce.authoring.domain.dm_json import DmJsonDocumentV1, DmJsonNodeV1
-from datamimic_ce.authoring.domain.expectations import ExactCountExpectation, ExpectationIntent, ProductRowsSubject
+from datamimic_ce.authoring.domain.expectations import (
+    ExactCountExpectation,
+    ExpectationIntent,
+    ExpectationIntentKind,
+    ProductRowsSubject,
+    expectation_example,
+)
 from datamimic_ce.authoring.domain.proof import ForeignKeyRole, IdentifierRole, ProductRoleDeclaration
 from datamimic_ce.authoring.domain.reference import (
     AuthoringAssemblyReference,
@@ -253,7 +259,11 @@ class CeDslCatalog:
                 schema = TypeAdapter(ExpectationIntent).json_schema()
                 mapping = schema["discriminator"]["mapping"]
                 expectation_entries = tuple(
-                    AuthoringVariantReference(name=name, json_schema={"$ref": reference, "$defs": schema["$defs"]})
+                    AuthoringVariantReference(
+                        name=name,
+                        json_schema={"$ref": reference, "$defs": schema["$defs"]},
+                        usage_example=expectation_example(ExpectationIntentKind(name)),
+                    )
                     for name, reference in sorted(mapping.items())
                     if request.name is None or request.name == name
                 )
@@ -334,6 +344,20 @@ class CeDslCatalog:
                         ),
                     ),
                     AuthoringLearningReference(
+                        name="file_sources",
+                        path="docs/examples/authoring.md",
+                        description=(
+                            "<generate source=...> copies every file column into each row. To keep only some "
+                            'columns, read the file with <variable name="row" source="..." '
+                            'distribution="ordered"/> in a generate whose count is the number of data rows, and '
+                            "copy each column with a key script such as row.order_id. A field_absent expectation "
+                            "proves that a column is not in the output. A file source has no row filter. Build, "
+                            "authoring run and smoke export write no file into the project; only datamimic run "
+                            "datamimic.xml writes a file target, to output/<exportUri>/<entity>.<ext> beside "
+                            "datamimic.xml (without exportUri, a new task id directory for each run)."
+                        ),
+                    ),
+                    AuthoringLearningReference(
                         name="timeseries",
                         path="datamimic_ce/engine/dsl/model/generation/timeseries.py",
                         description=(
@@ -402,7 +426,7 @@ def _example(name: str) -> tuple[DmJsonDocumentV1, BuildRequestV5]:
         expectations += (ExactCountExpectation(subject=ProductRowsSubject(product="readback"), count=2),)
     return (
         DmJsonDocumentV1(root=DmJsonNodeV1(kind="setup", properties={"rng_seed": 7}, children=children)),
-        BuildRequestV5(expectations=expectations, product_roles=roles, max_count=10, sample_rows=5),
+        BuildRequestV5(expectations=expectations, product_roles=roles, sample_rows=5),
     )
 
 

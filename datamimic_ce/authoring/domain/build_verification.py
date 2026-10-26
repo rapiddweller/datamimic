@@ -20,11 +20,21 @@ from .requests import BoundedExecutionEvidence
 def smoke_export_evidence(
     requested: bool,
     capture: SmokeExportCapture,
+    *,
+    writes_targets: bool,
 ) -> SmokeExportEvidence:
-    """Project typed internal smoke facts without inspecting diagnostics."""
+    """Project typed internal smoke facts without inspecting diagnostics. ``writes_targets``: the model names a
+    target other than a memstore."""
 
     if not requested:
-        return SmokeExportEvidence()
+        return (
+            SmokeExportEvidence(
+                reason="Smoke export was not requested. Build writes to no target; only datamimic run datamimic.xml "
+                "does, and it writes file targets under output/<exportUri or the task id>/ beside datamimic.xml"
+            )
+            if writes_targets
+            else SmokeExportEvidence()
+        )
     if not capture.requested:
         return SmokeExportEvidence(
             status=VerificationGateStatus.BLOCKED,
@@ -43,7 +53,10 @@ def smoke_export_evidence(
         reason = "Not every applicable file exporter wrote the captured rows"
     else:
         status = VerificationGateStatus.PASSED
-        reason = "Every applicable file exporter wrote all captured rows"
+        reason = (
+            "Every applicable file exporter wrote all captured rows to a temporary directory; only datamimic run "
+            "datamimic.xml writes the files into the project, under output/"
+        )
     return SmokeExportEvidence(
         status=status,
         applicable_exporters=capture.applicable_exporters,

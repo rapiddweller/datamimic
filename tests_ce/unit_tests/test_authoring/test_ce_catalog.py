@@ -165,3 +165,29 @@ def test_guide_reference_query_returns_buildable_assembly(tmp_path):
     assert payload["entries"]
     starter = ProjectStarter.model_validate(payload["entries"][0]["starter"])
     assert isinstance(_build_starter(tmp_path, starter), ReadyBuild)
+
+
+def test_taught_acceptance_omits_max_count(tmp_path):
+    """The starters teach the wire form agents copy: omit max_count, never send null.
+
+    CE before #426 and EE Build v4 reject a null max_count."""
+    import json
+
+    from typer.testing import CliRunner
+
+    from datamimic_ce.authoring.domain.requests import BuildRequestV5
+    from datamimic_ce.interfaces.cli import app
+
+    runner = CliRunner()
+    queries = (
+        ("--topic", "assembly", "--name", "starter"),
+        ("--topic", "examples", "--name", "starter"),
+        ("--topic", "examples", "--name", "memstore"),
+    )
+    for query in queries:
+        response = runner.invoke(app, ["authoring", "reference", *query])
+        assert response.exit_code == 0, response.stdout
+        [entry] = json.loads(response.stdout)["entries"]
+        acceptance = (entry.get("starter") or entry["project"])["acceptance"]
+        assert "max_count" not in acceptance, query
+        assert BuildRequestV5.model_validate(acceptance).max_count is None

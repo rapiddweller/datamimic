@@ -18,8 +18,13 @@ from datamimic_ce.authoring.domain.build_verification import (
     smoke_export_evidence,
     unseeded_replay_evidence,
 )
-from datamimic_ce.authoring.domain.common import MAX_AUTHORING_XML_LENGTH
-from datamimic_ce.authoring.domain.diagnostics import AuthoringCodecDiagnosticCode, AuthoringRuleId, DiagnosticPhase
+from datamimic_ce.authoring.domain.common import MAX_AUTHORING_MAX_COUNT, MAX_AUTHORING_XML_LENGTH
+from datamimic_ce.authoring.domain.diagnostics import (
+    AuthoringCodecDiagnosticCode,
+    AuthoringRuleId,
+    Diagnostic,
+    DiagnosticPhase,
+)
 from datamimic_ce.authoring.domain.dm_json import DmJsonCodecError, DmJsonDocumentV1, iter_dm_json_nodes
 from datamimic_ce.authoring.domain.proof import (
     BuildVerificationEvidence,
@@ -193,21 +198,43 @@ class BuildDocumentWorkflow:
                 verification=blocked_verification(verification_options, "Expectation projection failed."),
             )
 
+        limit = request.capture_limit(acceptance.declared_rows)
+        if acceptance.declared_rows is not None and acceptance.declared_rows > limit:
+            return RejectedBuild(
+                phase=DiagnosticPhase.POLICY,
+                diagnostics=(_row_limit_diagnostic(acceptance.declared_rows, request.max_count),),
+                verification=blocked_verification(verification_options, "The declared rows exceed the Build limit."),
+            )
         execution_request = BoundedExecutionRequest(
             xml=xml,
             descriptor_path=PROJECT_ENTRY_PATH,
-            max_count=request.max_count,
+            max_count=limit,
             smoke_export=verification_options.smoke_export,
             hash_seed=_FIRST_RUN_HASH_SEED,
         )
         first = self._executor.execute(execution_request)
+        # A failed execution captures nothing; "capture is missing" for each product would only repeat its cause.
+        failed = not first.captured.products and any(item.severity == "error" for item in first.diagnostics)
         diagnostics = (
             *lint.diagnostics,
             *graph.diagnostics,
             *first.diagnostics,
-            *evaluate_acceptance(acceptance, first.captured),
+            *(() if failed else evaluate_acceptance(acceptance, first.captured)),
         )
-        smoke = smoke_export_evidence(verification_options.smoke_export, first.smoke_export)
+        project_nodes = tuple(
+            node
+            for project_document in (document, *(step for _, step in steps))
+            for node, _ in iter_dm_json_nodes(project_document)
+        )
+        targeted = any(node.properties.get("target") for node in project_nodes)
+        memstores = {node.properties.get("id") for node in project_nodes if node.kind == "memstore"}
+        # A memstore is read back in the same run; a target list that names more than one store counts as written.
+        writes_targets = any(
+            node.properties.get("target") not in memstores for node in project_nodes if node.properties.get("target")
+        )
+        smoke = smoke_export_evidence(
+            verification_options.smoke_export, first.smoke_export, writes_targets=writes_targets
+        )
         read: list[ProjectFileDigest] = [
             ProjectFileDigest(path=PROJECT_ACCEPTANCE_PATH, sha256=sha256(acceptance_bytes).hexdigest()),
             ProjectFileDigest(path=PROJECT_ENTRY_PATH, sha256=sha256(entry_bytes).hexdigest()),
@@ -298,16 +325,45 @@ class BuildDocumentWorkflow:
         return ReadyBuild(
             artifact=artifact,
             assurance=BuildAssurance(
-                mode="target_isolated"
-                if any(
-                    node.properties.get("target")
-                    for project_document in (document, *(step for _, step in steps))
-                    for node, _ in iter_dm_json_nodes(project_document)
-                )
-                else "local_bounded",
+                mode="target_isolated" if targeted else "local_bounded",
                 source_accesses=first.source_accesses,
             ),
             evidence=products,
             verification=verification,
             diagnostics=diagnostics,
         )
+
+
+def _row_limit_diagnostic(declared_rows: int, max_count: int | None) -> Diagnostic:
+    """The declared total is a sum of literal counts, so the numbers are Build facts, not descriptor values."""
+    ceiling = MAX_AUTHORING_MAX_COUNT
+    if max_count is None:
+        # A derived limit covers the declared total, so only the ceiling can be too low.
+        return catalog_diagnostic(
+            AuthoringRuleId.LIMIT,
+            f"The products declare {declared_rows} rows in total, above the Build ceiling of {ceiling} rows.",
+            phase=DiagnosticPhase.POLICY,
+            path=("descriptor", PROJECT_ENTRY_PATH.as_posix()),
+            expected=ceiling,
+            actual=declared_rows,
+            remediation=f"Reduce the counts so that all products together declare at most {ceiling} rows; Build "
+            "proves a bounded sample, and datamimic run generates the full volume.",
+        )
+    above_ceiling = declared_rows > ceiling
+    return catalog_diagnostic(
+        AuthoringRuleId.LIMIT,
+        f"The products declare {declared_rows} rows in total, above max_count {max_count} and above the Build "
+        f"ceiling of {ceiling} rows."
+        if above_ceiling
+        else f"The products declare {declared_rows} rows in total, above max_count {max_count}; max_count limits "
+        "the rows of all products together.",
+        phase=DiagnosticPhase.POLICY,
+        path=(PROJECT_ACCEPTANCE_PATH.as_posix(), "max_count"),
+        expected=max_count,
+        actual=declared_rows,
+        remediation=f"Reduce the counts so that all products together declare at most {ceiling} rows, and set "
+        f"max_count to at least that total or remove it; max_count cannot go above {ceiling}."
+        if above_ceiling
+        else f"Set max_count to at least {declared_rows}, or remove max_count: Build then derives the limit "
+        "from the declared counts.",
+    )

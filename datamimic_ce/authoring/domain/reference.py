@@ -8,7 +8,7 @@ from __future__ import annotations
 
 from typing import Annotated, Literal, assert_never
 
-from pydantic import Field, JsonValue
+from pydantic import Field, JsonValue, SerializationInfo, field_serializer
 
 from .common import AuthoringModel, NonEmptyStrictStr
 from .diagnostics import RuleCatalogEntry
@@ -20,6 +20,10 @@ class ProjectStarter(AuthoringModel):
 
     entry_xml: NonEmptyStrictStr
     acceptance: BuildRequestV5
+
+    @field_serializer("acceptance")
+    def _taught_acceptance(self, acceptance: BuildRequestV5, info: SerializationInfo) -> dict[str, object]:
+        return acceptance.taught_form(info.mode)
 
 
 class AuthoringAssemblyReference(AuthoringModel):
@@ -33,6 +37,7 @@ class AuthoringVariantReference(AuthoringModel):
     entry_kind: Literal["expectation"] = "expectation"
     name: NonEmptyStrictStr
     json_schema: dict[str, JsonValue]
+    usage_example: dict[str, JsonValue]
 
 
 class AuthoringExampleReference(AuthoringModel):

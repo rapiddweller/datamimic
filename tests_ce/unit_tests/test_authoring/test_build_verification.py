@@ -215,15 +215,24 @@ def test_unseeded_replay_fails_without_claiming_comparison(tmp_path: Path, execu
 
 
 def test_capped_acceptance_cannot_be_rescued_by_replay(tmp_path: Path, executions) -> None:
+    # A count range has no declared total, so Build runs it and caps the capture instead of refusing it first.
+    document = _document().model_dump(mode="json")
+    properties = document["root"]["children"][0]["properties"]
+    del properties["count"]
+    properties.update({"min_count": 2, "max_count": 2})
     result = build_project(
-        tmp_path, _document(), max_count=1, sample_rows=1, verification={"deterministic_replay": True}
+        tmp_path,
+        DmJsonDocumentV1.model_validate(document),
+        max_count=1,
+        sample_rows=1,
+        verification={"deterministic_replay": True},
     )
     assert isinstance(result, RejectedBuild)
     assert result.phase is DiagnosticPhase.EVIDENCE
     assert len(executions) == 1
     assert result.verification.deterministic_replay.status is VerificationGateStatus.BLOCKED
     # The review binds the declared entry, not a copy rewritten to the cap.
-    assert 'count="2"' in (tmp_path / PROJECT_ENTRY_PATH).read_text(encoding="utf-8")
+    assert 'maxCount="2"' in (tmp_path / PROJECT_ENTRY_PATH).read_text(encoding="utf-8")
     assert {item.path: item.sha256 for item in result.review_artifact.files}[PROJECT_ENTRY_PATH] == _entry_digest(
         tmp_path
     )

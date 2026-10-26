@@ -23,6 +23,8 @@ class Diagnostic(BaseModel):
     name: str | None = None  # name/id attribute of the element, if present
     line: int | None = None
     docs: str | None = None  # e.g. "reference://element/generate" — resolvable via the reference tool
+    # A fix built from element, attribute and schema names only; Build may show it because it holds no value.
+    names_only_fix: str | None = Field(default=None, exclude=True)
 
 
 class LintResult(BaseModel):

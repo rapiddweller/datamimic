@@ -123,7 +123,7 @@ def test_evaluators_cannot_replace_catalog_message_or_fix_hint() -> None:
     for path in paths:
         if path.name in {"__init__.py", "base.py"}:
             continue
-        allowed_keywords = {"evidence", "fix_context", "severity"}
+        allowed_keywords = {"evidence", "fix_context", "severity", "names_only"}
         tree = ast.parse(path.read_text(encoding="utf-8"), filename=str(path))
         for node in ast.walk(tree):
             if not isinstance(node, ast.Call):

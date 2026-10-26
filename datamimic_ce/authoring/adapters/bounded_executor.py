@@ -43,7 +43,7 @@ from datamimic_ce.authoring.domain.requests import (
     ProjectFileDigest,
     SourceAccessEvidence,
 )
-from datamimic_ce.errors import DomainError, GeneratorConfigError, UserErrorBase
+from datamimic_ce.errors import DomainError, GeneratorConfigError, IssueCode, UserErrorBase
 from datamimic_ce.errors.catalog import get_issue_definition
 from datamimic_ce.errors.codes import ErrorCode
 
@@ -223,14 +223,24 @@ def _decode_reply(payload: bytes, request: BoundedExecutionRequest, workspace: P
             constructor_reason = (
                 message.error.constructor_reason if isinstance(message.error, GeneratorConfigError) else None
             )
+            # The limit is Build's own number, so the message can name it.
+            over_limit = (
+                isinstance(message.error, UserErrorBase)
+                and message.error.issue_code is IssueCode.TASK_TOTAL_ROW_BUDGET_EXCEEDED
+            )
+            reason = (
+                f"The generated rows of all products together exceed the Build limit {request.max_count}."
+                if over_limit
+                else constructor_reason
+            )
             diagnostic = Diagnostic(
                 code=AuthoringRuleId.SIDE_EFFECT
                 if message.policy_refusal
                 else AuthoringSystemDiagnosticCode.CHILD_EXECUTION,
                 phase=DiagnosticPhase.POLICY if message.policy_refusal else DiagnosticPhase.EVIDENCE,
                 message=(
-                    constructor_reason
-                    if constructor_reason is not None
+                    reason
+                    if reason is not None
                     else f"{definition.title} at {'/'.join(path)}."
                     if definition is not None
                     else message.message
@@ -247,6 +257,7 @@ def _decode_reply(payload: bytes, request: BoundedExecutionRequest, workspace: P
                 ),
                 ce_error=identity,
                 path=path,
+                expected=request.max_count if over_limit else None,
             )
             return BoundedExecutionEvidence(
                 ok=False, captured=CapturedProducts((), request.max_count), diagnostics=(diagnostic,), base_run_ok=False

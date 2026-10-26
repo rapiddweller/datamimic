@@ -1,7 +1,8 @@
 {
   "title": "Each business rule is caught when violated",
   "proves": [
-    "exact count, uniqueness, foreign-key membership, closed value set and numeric range are each enforced by Build"
+    "exact count, uniqueness, foreign-key membership, closed value set and numeric range are each enforced by Build",
+    "an explicit max_count with a declared total above the Build ceiling names max_count as the expected value"
   ],
   "products": {"accounts": 5, "payments": 8},
   "negatives": [
@@ -14,6 +15,12 @@
     {"name": "value_outside_set", "diagnostic": "allowed_values",
      "patch": {"file": "datamimic.xml", "old": "values=\"('basic', 'plus')\"", "new": "values=\"('basic', 'plus', 'trial')\""}},
     {"name": "range_exceeded", "diagnostic": "range",
-     "patch": {"file": "datamimic.xml", "old": "min=\"1\" max=\"1000\"", "new": "min=\"1\" max=\"2000\""}}
+     "patch": {"file": "datamimic.xml", "old": "min=\"1\" max=\"1000\"", "new": "min=\"1\" max=\"2000\""}},
+    {"name": "range_min_max", "diagnostic": "validation",
+     "patch": {"file": "acceptance/build.json", "old": "\"minimum\": 1, \"maximum\": 1000", "new": "\"min\": 1, \"max\": 1000"}},
+    {"name": "unknown_field", "diagnostic": "input",
+     "patch": {"file": "acceptance/build.json", "old": "\"unique\", \"subject\": {\"kind\": \"product\", \"product\": \"accounts\"}, \"field\": \"account_id\"", "new": "\"unique\", \"subject\": {\"kind\": \"product\", \"product\": \"accounts\"}, \"field\": \"input\""}},
+    {"name": "max_count_with_total_above_ceiling", "diagnostic": "limit", "expected": "20",
+     "patch": {"file": "datamimic.xml", "old": "<generate name=\"payments\" count=\"8\">", "new": "<generate name=\"payments\" count=\"996\">"}}
   ]
 }

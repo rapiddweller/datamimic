@@ -10,6 +10,7 @@ from pydantic import JsonValue, ValidationError
 from pydantic_core import ErrorDetails
 
 from datamimic_ce.authoring.domain.diagnostics import AuthoringRuleId, Diagnostic, DiagnosticPhase
+from datamimic_ce.authoring.domain.expectations import expectation_repair
 
 
 def validation_diagnostics(
@@ -19,19 +20,23 @@ def validation_diagnostics(
     phase: DiagnosticPhase = DiagnosticPhase.MODEL,
     remediation: str = "Repair the canonical authoring model at the reported path.",
 ) -> tuple[Diagnostic, ...]:
-    return tuple(
-        Diagnostic(
-            code=AuthoringRuleId.VALIDATION,
-            phase=phase,
-            message=_validation_message(item),
-            path=(*prefix, *(_path_part(part) for part in item.get("loc", ()))),
-            expected=_expected(item),
-            actual=_actual(item),
-            allowed_values=_allowed_values(item),
-            remediation=remediation,
+    diagnostics = []
+    for item in error.errors():
+        path = (*prefix, *(_path_part(part) for part in item.get("loc", ())))
+        diagnostics.append(
+            Diagnostic(
+                code=AuthoringRuleId.VALIDATION,
+                phase=phase,
+                message=_validation_message(item),
+                path=path,
+                expected=_expected(item),
+                actual=_actual(item),
+                allowed_values=_allowed_values(item),
+                # A malformed expectation gets the shape of its kind; the path holds field names only.
+                remediation=expectation_repair(path) or remediation,
+            )
         )
-        for item in error.errors()
-    )
+    return tuple(diagnostics)
 
 
 def _validation_message(item: ErrorDetails) -> str:

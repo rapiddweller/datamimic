@@ -116,6 +116,53 @@ def test_dm316_count_with_source_hints_the_silent_cap() -> None:
     assert not any(d.rule == "DM316" for d in scripted)
 
 
+@pytest.mark.parametrize(
+    ("count", "producer", "fires"),
+    [
+        pytest.param("4", 'name="seed" count="5"', False, id="below-producer-size"),
+        pytest.param("5", 'name="seed" count="5"', False, id="equal-to-producer-size"),
+        pytest.param("6", 'name="seed" count="5"', True, id="above-producer-size"),
+        pytest.param("5", 'name="other" targetEntity="seed" count="5"', False, id="producer-by-target-entity"),
+        pytest.param("5", 'name="seed" count="{5}"', True, id="script-producer-count-is-unknown"),
+        pytest.param("5", 'name="unrelated" count="5"', True, id="no-producer-of-the-entity"),
+    ],
+)
+def test_dm316_is_silent_when_count_is_within_the_proven_memstore_size(count: str, producer: str, fires: bool) -> None:
+    """#355 item 7: a readback of exactly the producer size cannot stop below its count."""
+    from datamimic_ce.authoring.adapters.linter import lint_source
+
+    xml = (
+        f'<setup rngSeed="1"><memstore id="mem"/><generate {producer} target="mem"><key name="x" constant="1"/>'
+        f'</generate><generate name="reader" source="mem" sourceEntity="seed" count="{count}">'
+        '<key name="y" script="this.x"/></generate></setup>'
+    )
+    assert any(d.rule == "DM316" for d in lint_source(xml).diagnostics) is fires
+
+
+_PRODUCER = '<generate name="seed" count="5" target="mem"><key name="x" constant="1"/></generate>'
+_SOURCE_PRODUCER = (
+    '<generate name="seed" source="rows.csv" count="5" target="mem"><key name="x" constant="1"/></generate>'
+)
+_READER = (
+    '<generate name="reader" source="mem" sourceEntity="seed" count="5"><key name="y" script="this.x"/></generate>'
+)
+
+
+@pytest.mark.parametrize(
+    ("steps", "fires"),
+    [
+        pytest.param(_PRODUCER + _READER, False, id="readback-after-literal-producer"),
+        pytest.param(_READER + _PRODUCER, True, id="readback-before-its-producer-reads-an-empty-store"),
+        pytest.param(_SOURCE_PRODUCER + _READER, True, id="source-producer-can-stop-below-its-count"),
+    ],
+)
+def test_dm316_trusts_only_a_literal_producer_that_runs_first(steps: str, fires: bool) -> None:
+    from datamimic_ce.authoring.adapters.linter import lint_source
+
+    diagnostics = lint_source(f'<setup rngSeed="1"><memstore id="mem"/>{steps}</setup>').diagnostics
+    assert any(d.rule == "DM316" and d.name == "reader" for d in diagnostics) is fires
+
+
 def test_db_descriptor_lints_without_spurious_credential_error() -> None:
     from datamimic_ce.authoring.adapters.linter import lint_source
 

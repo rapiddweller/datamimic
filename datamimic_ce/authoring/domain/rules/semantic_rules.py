@@ -254,6 +254,7 @@ def _source_companion_diag(
             evidence=f"{declared_message}; present: {present}",
             fix_context=f"Required: {' or '.join(f'{need}=' for need in sorted(needs))}.",
             severity=severity,
+            names_only=True,
         )
     if needs == frozenset((ATTR_SOURCE,)):
         return ctx.diag(
@@ -269,6 +270,7 @@ def _source_companion_diag(
         evidence=f"{present} is present without {needed}",
         fix_context=f"Required: {needed}.",
         severity=severity,
+        names_only=True,
     )
 
 
@@ -296,6 +298,7 @@ def _forbidden_companion_diag(
         evidence=f"{message} Present forbidden attributes: {', '.join(present)}",
         fix_context=f"Remove {', '.join(f'{attr}=' for attr in present)} or {fact.attr}=.",
         severity=rule.definition.severity_for(advisory=fact.lint_only),
+        names_only=True,
     )
 
 

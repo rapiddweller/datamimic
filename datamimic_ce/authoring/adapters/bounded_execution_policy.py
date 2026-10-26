@@ -82,7 +82,7 @@ class CeBoundedExecutionPolicy:
                 diagnostics.append(
                     catalog_diagnostic(
                         AuthoringRuleId.UNSUPPORTED_BOUNDED_OPERATION,
-                        "This descriptor element has no proven bounded CE execution policy.",
+                        f"The <{node.kind}> element has no proven bounded CE execution policy.",
                         phase=DiagnosticPhase.POLICY,
                         path=path,
                     )

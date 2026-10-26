@@ -103,12 +103,60 @@ exclusive; `count` on `generate` is the parallel series count.
 }
 ```
 
+## File sources
+
+`<generate source="fixtures/orders.csv">` copies every column of the file into
+each row, also the columns that no `<key>` names. To keep only some columns, read
+the file through a `<variable>` in source order and set `count` to the number of
+data rows. Each `<key>` then copies one column. A `field_absent` expectation
+proves that a column is not in the output.
+
+```xml
+<setup rngSeed="51110" defaultSeparator=",">
+    <generate name="priced_orders" count="6" target="JSON" exportUri="priced_orders">
+        <variable name="order" source="fixtures/orders.csv" distribution="ordered"/>
+        <key name="order_id" script="order.order_id"/>
+        <key name="total_cents" script="int(order.total_cents)"/>
+    </generate>
+</setup>
+```
+
+```json
+{
+  "version": "5.0",
+  "expectations": [
+    {"kind": "exact_count", "subject": {"kind": "product", "product": "priced_orders"}, "count": 6},
+    {"kind": "field_absent", "subject": {"kind": "product", "product": "priced_orders"}, "field": "status"}
+  ]
+}
+```
+
+CSV columns arrive as strings: cast them in the script. A `count` above the data
+rows cannot prove a complete capture, and Build rejects it. A file source has no
+row filter: a `<condition>` decides which keys a row gets, not which rows exist.
+
+Build, `authoring run` and smoke export write no file into the project. Only
+`datamimic run datamimic.xml` writes a file target, to
+`output/<exportUri>/<entity>.<ext>` beside `datamimic.xml`. Without `exportUri`
+the directory is a new task id for each run. The example above writes
+`output/priced_orders/priced_orders.json`. The complete project is
+`tests_ce/scenarios/s13_file_projection`.
+
 For exporter/replay verification add `"verification": {"smoke_export": true,
 "deterministic_replay": true}` to `acceptance/build.json`. Build replays every
 seeded model also without the request, under three other hash seeds. A target-isolated bounded
 Build does not claim that an external database was written.
 
 `max_count` limits the total captured product rows in one Build execution,
-including nested products. Deterministic replay receives a fresh limit of the
+including nested products. Omit it: when every product has a literal count, Build
+sets the limit to the declared total (at least 10, at most 1000). A source with a
+literal count counts that count; a memstore readback without count counts the rows
+of its literal producer. A nested product with a literal count multiplies the bound
+of its parent, also of a source parent. A project with a file source without count, a script count
+or a count range (`minCount`/`maxCount`) gets the limit 10; set `max_count` to the
+total rows of all products. The products of every `<condition>` branch count in
+full, so the derived limit can be higher than the rows of a run. A higher limit is
+safe. Near the ceiling of 1000, the branches can cause a refusal: then set the
+counts lower. Deterministic replay receives a fresh limit of the
 same size; it verifies the same logical dataset. Export smoke reuses the first
 capture and consumes no additional rows.

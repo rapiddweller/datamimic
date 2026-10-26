@@ -2,6 +2,7 @@
 
 import json
 import re
+import shutil
 from pathlib import Path
 
 import pytest
@@ -55,10 +56,12 @@ def test_agents_md_embedded_project_builds_ready(tmp_path: Path) -> None:
     assert result["evidence"][0]["count"] == 3
 
 
-@pytest.mark.parametrize("index", range(3), ids=["nested_fk", "memstore_readback", "time_series"])
+@pytest.mark.parametrize("index", range(4), ids=["nested_fk", "memstore_readback", "time_series", "file_sources"])
 def test_documented_structural_projects_build_ready(index: int, tmp_path: Path) -> None:
     projects = _projects(ROOT / "docs/examples/authoring.md")
-    assert len(projects) == 3
+    assert len(projects) == 4
+    # The file-source example reads the fixture of the scenario that holds the complete project.
+    shutil.copytree(ROOT / "tests_ce/scenarios/s13_file_projection/fixtures", tmp_path / "fixtures")
     result = _build(projects[index], tmp_path)
     assert result["outcome"] == "ready", result
 

@@ -131,7 +131,17 @@ class BuildRequestV5(AuthoringModel):
     product_roles: tuple[ProductRoleDeclaration, ...] = ()
     acceptance_requirements: tuple[AcceptanceRequirement, ...] = ()
     verification: BuildVerificationOptions = Field(default_factory=BuildVerificationOptions)
-    max_count: StrictInt = Field(default=DEFAULT_AUTHORING_MAX_COUNT, ge=1, le=MAX_AUTHORING_MAX_COUNT)
+    max_count: StrictInt | None = Field(
+        default=None,
+        ge=1,
+        le=MAX_AUTHORING_MAX_COUNT,
+        description=(
+            "Limit for the captured rows of all products together. Omit it: when every product has a literal "
+            "count, or reads a memstore back from a literal producer, Build uses the declared total (at least "
+            f"{DEFAULT_AUTHORING_MAX_COUNT}, at most {MAX_AUTHORING_MAX_COUNT}; every <condition> branch counts "
+            f"in full); otherwise {DEFAULT_AUTHORING_MAX_COUNT}."
+        ),
+    )
     sample_rows: StrictInt = Field(default=DEFAULT_AUTHORING_SAMPLE_ROWS, ge=1, le=50)
 
     @model_validator(mode="after")
@@ -139,6 +149,20 @@ class BuildRequestV5(AuthoringModel):
         if len(self.expectations) != len({expectation_identity(item) for item in self.expectations}):
             raise ValueError("build expectations must be unique")
         return self
+
+    def taught_form(self, mode: str) -> dict[str, object]:
+        """The file as a starter teaches it: max_count omitted, never null.
+
+        CE before #426 and EE Build v4 reject a null max_count."""
+        return self.model_dump(mode=mode, exclude_none=True)
+
+    def capture_limit(self, declared_rows: int | None) -> int:
+        """The explicit max_count; else the declared total of rows, kept between the default and the ceiling."""
+        if self.max_count is not None:
+            return self.max_count
+        if declared_rows is None:
+            return DEFAULT_AUTHORING_MAX_COUNT
+        return min(max(DEFAULT_AUTHORING_MAX_COUNT, declared_rows), MAX_AUTHORING_MAX_COUNT)
 
 
 class RunRequest(AuthoringModel):

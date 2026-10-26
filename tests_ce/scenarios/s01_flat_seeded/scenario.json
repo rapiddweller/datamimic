@@ -9,6 +9,10 @@
   },
   "negatives": [
     {"name": "wrong_count", "diagnostic": "exact_count", "expected": "19",
-     "patch": {"file": "acceptance/build.json", "old": "\"devices\"}, \"count\": 20}", "new": "\"devices\"}, \"count\": 19}"}}
+     "patch": {"file": "acceptance/build.json", "old": "\"devices\"}, \"count\": 20}", "new": "\"devices\"}, \"count\": 19}"}},
+    {"name": "unknown_attribute", "diagnostic": "DM103",
+     "patch": {"file": "datamimic.xml", "old": "min=\"0\" max=\"100\"", "new": "minimum=\"0\" max=\"100\""}},
+    {"name": "namespaced_attribute", "diagnostic": "DM103",
+     "patch": {"file": "datamimic.xml", "old": "<key name=\"battery_pct\" type=\"int\" min=\"0\" max=\"100\"/>", "new": "<key xmlns:v=\"https://example.invalid/vendor\" name=\"battery_pct\" type=\"int\" min=\"0\" max=\"100\" v:unit=\"pct\"/>"}}
   ]
 }

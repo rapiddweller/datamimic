@@ -84,6 +84,8 @@ class AcceptanceSpecV1(AuthoringModel):
     relationships: tuple[AcceptanceRelationshipV1, ...] = ()
     checks: tuple[AcceptanceCheckV1, ...] = ()
     readbacks: tuple[AcceptanceReadbackV1, ...] = ()
+    # The rows of all products together; None when a product has no literal count (a source, a script count).
+    declared_rows: NonNegativeStrictInt | None = None
 
     def product(self, name: str) -> AcceptanceProductV1 | None:
         return next((product for product in self.products if product.name == name), None)
@@ -146,7 +148,13 @@ class AcceptanceSpecV1(AuthoringModel):
         return self
 
 
-def _reject(message: str, path: tuple[str | int, ...], remediation: str | None = None) -> None:
+def _reject(
+    message: str,
+    path: tuple[str | int, ...],
+    remediation: str | None = None,
+    declared: tuple[str, ...] | None = None,
+) -> None:
+    """``declared`` lists the structural names the reference can take: products or fields, never row values."""
     raise AcceptanceProjectionError(
         (
             catalog_diagnostic(
@@ -154,6 +162,7 @@ def _reject(message: str, path: tuple[str | int, ...], remediation: str | None =
                 message,
                 phase=DiagnosticPhase.EXPECTATION,
                 path=path,
+                allowed_values=declared,
                 remediation=remediation,
             ),
         )
@@ -174,7 +183,11 @@ def validate_acceptance_subject(
         if field is not None:
             product = spec.product(subject.child_product)
             if product is None or field not in product.fields:
-                _reject("Expectation references an unknown child field.", path + ("field",))
+                _reject(
+                    "Expectation references an unknown child field.",
+                    path + ("field",),
+                    declared=product.fields if product is not None else None,
+                )
         return
     names = (
         (subject.product,)
@@ -186,7 +199,11 @@ def validate_acceptance_subject(
     for name in names:
         product = spec.product(name)
         if product is None:
-            _reject("Expectation references an unknown product.", path + ("product",))
+            _reject(
+                "Expectation references an unknown product.",
+                path + ("product",),
+                declared=tuple(item.name for item in spec.products),
+            )
             return
         fields = product.fields
         owner = "of that product"
@@ -205,6 +222,7 @@ def validate_acceptance_subject(
                     f"Declare the field as a <key> {owner}; Build knows only declared keys, not fields that "
                     "appear only in rows a script or source produces."
                 ),
+                declared=fields,
             )
 
 

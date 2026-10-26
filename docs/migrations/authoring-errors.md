@@ -24,6 +24,23 @@ and full-capture negatives in both editions. Keep registry/runtime adapters loca
 CE roles, derived counts, caller requirements and replay/smoke remain explicit
 edition differences; matching protocol labels do not make requests interchangeable.
 
+### Build row limit (#426)
+
+`build_request_v5.max_count` changes from `integer, default 10` to `integer or null,
+default null`. The version stays `"5.0"`. Omit the field rather than send `null`:
+CE before this change and EE reject `null`. When the field is omitted, Build derives
+the limit from the declared total: literal counts, the literal count of a source, and
+the producer rows of a memstore readback whose producer has a literal count and
+no source; a nested literal count multiplies the bound of its parent (at least 10,
+at most 1000). Every `<condition>` branch counts in full,
+so the limit can be higher than a run. A product
+without such a bound (a file source without count, a script count, a count range)
+keeps the limit 10. An explicit `max_count` below the declared total is refused
+before execution. Old files stay valid; a file that omitted `max_count` with more
+than 10 declared rows was rejected and is now ready. `datamimic run` ignores
+`max_count`, and the XML does not change. EE has no Build v5 yet; an EE port must
+derive the limit the same way.
+
 ## Public contract
 
 Persist XML as the executable project. `DmJsonDocumentV1` is an in-memory agent

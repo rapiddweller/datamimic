@@ -97,7 +97,11 @@ AUTHORING_RULE_CATALOG: tuple[RuleCatalogEntry, ...] = (
         description="No captured row may contain the declared field.",
         applicability="Explicit forbidden-field expectations.",
         owner=RuleOwner.EXPECTATION,
-        remediation="Remove the forbidden field from the product model.",
+        remediation=(
+            "Remove the forbidden field from the product model. If the product reads a file with source=, that "
+            "copies every column; read the file through a <variable> with a count instead "
+            "(datamimic authoring reference --topic learning --name file_sources)."
+        ),
     ),
     RuleCatalogEntry(
         rule_id=ExpectationIntentKind.ROW_CONDITION,
@@ -205,6 +209,7 @@ def catalog_diagnostic(
     path: tuple[str | int, ...] = (),
     expected: JsonValue | None = None,
     actual: JsonValue | None = None,
+    allowed_values: tuple[JsonValue, ...] | None = None,
     remediation: str | None = None,
 ) -> Diagnostic:
     """A catalog finding; ``remediation`` replaces the rule's generic fix when the caller knows the specific one."""
@@ -216,6 +221,7 @@ def catalog_diagnostic(
         path=path,
         expected=expected,
         actual=actual,
+        allowed_values=allowed_values,
         severity=rule.severity,
         remediation=remediation or rule.remediation,
     )

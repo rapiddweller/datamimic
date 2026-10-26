@@ -1,0 +1,11 @@
+{
+  "version": "5.0",
+  "expectations": [
+    {"kind": "exact_count", "subject": {"kind": "product", "product": "branches"}, "count": 6},
+    {"kind": "exact_count", "subject": {"kind": "product", "product": "tellers"}, "count": 12}
+  ],
+  "product_roles": [
+    {"product": "branches", "field": "branch_id", "role": {"kind": "identifier"}},
+    {"product": "tellers", "field": "branch_id", "role": {"kind": "foreign_key", "parent_product": "branches", "parent_field": "branch_id"}}
+  ]
+}
