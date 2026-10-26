@@ -250,7 +250,8 @@ def iterates_a_set(script: str) -> bool:
     """Whether a script reads a set in an order-dependent way (#425). The order of a set of strings follows the
     process hash seed, which rngSeed does not fix. Membership tests, comparisons, set predicates and order-free calls
     such as sorted(...) or len(...) are safe; a set that is iterated, converted or returned is not. This is a lint
-    hint, not a proof: a set reached through a name, a variable or a helper is not seen."""
+    hint, not a proof: a set reached through a name, a variable, a helper or string= is not seen. Build replays every
+    seeded model under other hash seeds, which lowers the chance that such a miss stays hidden; it cannot remove it."""
     try:
         tree = ast.parse(script, mode="eval")
     except SyntaxError:
@@ -262,10 +263,11 @@ def iterates_a_set(script: str) -> bool:
 
 
 class ReplayCause(StrEnum):
-    """Why Build replays a seeded model although the request did not ask for it."""
+    """What a seeded model contains that a replay is known to catch; the cause a failed replay names."""
 
     PYTHON_LIBRARY = "python_library"
     SET_ORDER = "set_order"
+    OTHER = "other"
 
     def failure_message(self) -> str:
         """Static text for a replay that differed. It names a possible cause, because a model can have several, and
@@ -282,12 +284,18 @@ class ReplayCause(StrEnum):
                     "possible cause: the order of a set of strings changes with the process hash seed, which rngSeed "
                     "does not fix. Use sorted(...), a list or a tuple."
                 )
+            case ReplayCause.OTHER:
+                return (
+                    "A seeded model must replay identically, and this one did not. A possible cause: a set of strings "
+                    "read in an order-dependent way where the lint does not look, such as string= or a helper. Its "
+                    "order changes with the process hash seed, which rngSeed does not fix. Use sorted(...), a list or "
+                    "a tuple."
+                )
 
 
 def replay_causes(entry: DmJsonDocumentV1, steps: tuple[DmJsonDocumentV1, ...] = ()) -> tuple[ReplayCause, ...]:
-    """Why a seeded model must replay, in a fixed order; empty when it need not. Only a second run catches draws the
-    seeded names miss in a Python library, and only a second run with another hash seed catches a set order. The
-    entry's seed governs every included step."""
+    """The causes a failed replay of a seeded model names, in a fixed order; OTHER when the model shows none, and
+    empty for an unseeded model, which Build does not replay. The entry's seed governs every included step."""
     if entry.root.properties.get("rng_seed") is None:
         return ()
     nodes = [node for document in (entry, *steps) for node, _ in iter_dm_json_nodes(document)]
@@ -300,7 +308,7 @@ def replay_causes(entry: DmJsonDocumentV1, steps: tuple[DmJsonDocumentV1, ...] =
         for name in SCRIPT_PROPERTIES
     ):
         causes.append(ReplayCause.SET_ORDER)
-    return tuple(causes)
+    return tuple(causes) or (ReplayCause.OTHER,)
 
 
 def admits_python_library(language: str | None, *, target: str | None, script: str | None) -> bool:

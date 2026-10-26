@@ -140,7 +140,7 @@ def replay_evidence(
     first_run: BoundedExecutionEvidence,
     replay_run: BoundedExecutionEvidence,
 ) -> DeterministicReplayEvidence:
-    """Evaluate a service-supplied second run without performing any I/O."""
+    """Evaluate one service-supplied replay against the first run without performing any I/O."""
 
     if not replay_run.base_run_ok:
         return DeterministicReplayEvidence(
@@ -162,7 +162,7 @@ def replay_evidence(
         status=VerificationGateStatus.PASSED,
         compared_products=compared_products,
         compared_rows=compared_rows,
-        reason="The full bounded capture is identical across both seeded runs",
+        reason="The full bounded capture is identical in the first run and every seeded replay",
     )
 
 

@@ -104,7 +104,8 @@ exclusive; `count` on `generate` is the parallel series count.
 ```
 
 For exporter/replay verification add `"verification": {"smoke_export": true,
-"deterministic_replay": true}` to `acceptance/build.json`. A target-isolated bounded
+"deterministic_replay": true}` to `acceptance/build.json`. Build replays every
+seeded model also without the request, under three other hash seeds. A target-isolated bounded
 Build does not claim that an external database was written.
 
 `max_count` limits the total captured product rows in one Build execution,

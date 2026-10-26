@@ -326,7 +326,9 @@ class CeDslCatalog:
                             "Variable records use dot access (row.field), the documented form; mapping access "
                             "(row['field'], dict(row)) also works. Nested rows need row.to_dict() for json.dumps. "
                             "rngSeed does not fix the iteration order of a set of strings, which follows the process "
-                            "hash seed: iterate sorted(...), a list or a tuple. "
+                            "hash seed: iterate sorted(...), a list or a tuple. Build replays every seeded model "
+                            "under three other hash seeds; that lowers the chance of a hidden set order and is no "
+                            "proof. "
                             "__name__ interpolation belongs to string "
                             "and pattern attributes, not scripts."
                         ),

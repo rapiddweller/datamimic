@@ -470,7 +470,7 @@ _AUTHORING_RULE_DEFINITIONS: tuple[RuleDefinition, ...] = (
         "Under rngSeed a script reads a set in an order-dependent way. The order of a set of strings follows the "
         "process hash seed, so two runs with the same rngSeed can differ.",
         "Use sorted(...), a list or a tuple; membership tests such as x in {...} stay safe.",
-        "PYTHONHASHSEED set-iteration contract; Build replays such a model with another hash seed (#425).",
+        "PYTHONHASHSEED set-iteration contract; Build replays every seeded model under three other hash seeds (#425).",
         '<setup rngSeed="1"><generate name="g" count="1">'
         "<key name=\"x\" script=\"sorted({'a', 'b'})[0]\"/></generate></setup>",
         '<setup rngSeed="1"><generate name="g" count="1">'

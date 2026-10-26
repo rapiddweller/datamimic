@@ -2,8 +2,9 @@
   "title": "A seeded script that reads a set of strings",
   "proves": [
     "sorted(...) over a set and a membership test replay identically under rngSeed",
-    "Build replays a seeded model whose script iterates a set, with a different hash seed, and rejects it every time",
-    "the rejection names the set order as the cause"
+    "Build replays every seeded model under three other hash seeds and rejects a set order that changes the rows",
+    "a two-element set, a key= tie and a dict-view difference are each rejected",
+    "the replay is a check, not a proof: a set whose order agrees under all four hash seeds stays hidden"
   ],
   "products": {
     "rows": 3
@@ -11,6 +12,18 @@
   "negatives": [
     {
       "dir": "negative/set_order",
+      "diagnostic": "validation"
+    },
+    {
+      "dir": "negative/two_element_set",
+      "diagnostic": "validation"
+    },
+    {
+      "dir": "negative/sorted_key_tie",
+      "diagnostic": "validation"
+    },
+    {
+      "dir": "negative/dict_view_difference",
       "diagnostic": "validation"
     }
   ]

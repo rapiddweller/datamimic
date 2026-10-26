@@ -1,0 +1,7 @@
+<setup rngSeed="7">
+    <generate name="rows" count="3">
+        <key name="id" generator="IncrementGenerator"/>
+        <key name="flag" script="['alpha', 'bravo', 'charlie', 'delta', 'echo', 'foxtrot'].index(list({'alpha': 1, 'bravo': 2, 'charlie': 3, 'delta': 4, 'echo': 5, 'foxtrot': 6}.keys() - {'zulu': 0}.keys())[0])"/>
+        <key name="known" script="'golf' in {'alpha', 'golf'}"/>
+    </generate>
+</setup>

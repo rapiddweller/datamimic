@@ -71,8 +71,9 @@ and `acceptance/build.json`:
    assertions use `acceptance_requirements` with `origin: "caller"`; do not turn
    them into model configuration. Build derives mandatory topology/count checks
    and refuses missing readback proof.
-4. Request exporter smoke/replay with `verification: {"smoke_export": true,
-   "deterministic_replay": true}` only when needed. Replay needs an explicit seed.
+4. Request exporter smoke with `verification: {"smoke_export": true}` only when
+   needed. Build replays every seeded model; `"deterministic_replay": true` also
+   requires the replay and fails an unseeded model.
    Increase `max_count` only when the intended capture requires it.
 5. Run `datamimic authoring build <project>` and stop on `outcome: "ready"`.
    `artifact.files` lists every file the proof read with its digest; changing any
@@ -156,8 +157,10 @@ The applicable Ollama protocol references are [tool calling](https://docs.ollama
 6. No `rngSeed` on `<setup>` means every run differs, by design. Seeded runs
    replay identically and force single-process execution. The seed does not fix
    the iteration order of a set of strings across processes: iterate
-   `sorted(...)`, a list or a tuple. Build replays such a script with another
-   hash seed and rejects it when the rows differ.
+   `sorted(...)`, a list or a tuple. Build replays every seeded model under
+   three other hash seeds and rejects it when the rows differ. This lowers the
+   chance that a set order stays hidden; it is not a proof. About 1 in 8
+   two-element sets give the same order under all four seeds.
 7. `script=` is python. A `<variable>` row is dot-accessed (`row.field`), the
    documented form; mapping access (`row['field']`, `dict(row)`) also works. Nested
    rows need `row.to_dict()` for `json.dumps`. The `__name__` interpolation form
