@@ -6,6 +6,7 @@
     <execute uri="script/quiet/annotations.scr.py"/>
     <execute uri="script/quiet/deterministic_calls.scr.py"/>
     <execute uri="script/quiet/lambda_and_alias.scr.py"/>
+    <execute uri="script/quiet/stored_generators.scr.py"/>
     <generate name="rows" count="1">
         <key name="id" generator="IncrementGenerator"/>
     </generate>

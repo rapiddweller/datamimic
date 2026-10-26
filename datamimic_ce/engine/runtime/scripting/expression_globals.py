@@ -447,17 +447,37 @@ def _entropy_bindings(nodes: Iterable[ast.AST]) -> tuple[dict[str, str], dict[st
     return modules, members
 
 
-# A generator handed straight to one of these is consumed while the module loads; iter, map, zip, enumerate and
-# the like only wrap it, and a later consumer inside a function draws from the seeded names.
-_EAGER_CONSUMERS = frozenset(
-    {"join", "list", "tuple", "set", "frozenset", "dict", "sum", "min", "max", "any", "all", "sorted", "next"}
-)
+# These only wrap a generator: it runs later, when something consumes it.
+_LAZY_WRAPPERS = frozenset({"iter", "map", "zip", "filter", "enumerate", "reversed"})
 
 
 def _callee_name(func: ast.expr) -> str | None:
     if isinstance(func, ast.Name):
         return func.id
     return func.attr if isinstance(func, ast.Attribute) else None
+
+
+def _stored_generators(tree: ast.Module) -> set[int]:
+    """Generator expressions the module only stores, alone or inside lazy wrappers (`g = (x for x in y)`,
+    `m = map(f, (x for x in y))`). Any other position consumes the generator while the module loads: a call, a
+    loop, an unpacking, a comprehension, a test. A generator stored and consumed later at module level is missed."""
+    stored: set[int] = set()
+
+    def mark(value: ast.expr) -> None:
+        if isinstance(value, ast.GeneratorExp):
+            stored.add(id(value))
+        elif isinstance(value, ast.Call) and _callee_name(value.func) in _LAZY_WRAPPERS:
+            for argument in value.args:
+                mark(argument)
+
+    for node in ast.walk(tree):
+        if isinstance(node, ast.Assign) and any(
+            isinstance(t, ast.Tuple | ast.List | ast.Starred) for t in node.targets
+        ):
+            continue  # unpacking consumes the generator
+        if isinstance(node, ast.Assign | ast.AnnAssign | ast.Expr) and node.value is not None:
+            mark(node.value)
+    return stored
 
 
 def _generator_parts(generator: ast.GeneratorExp) -> list[ast.AST]:
@@ -474,20 +494,17 @@ def _load_time_calls(tree: ast.Module) -> list[ast.Call]:
     parts of a generator expression. A function's decorators and default arguments run, a class body runs too.
     Annotations do not: the runtime compiles scripts with postponed annotations, so they stay strings."""
     calls: list[ast.Call] = []
+    stored = _stored_generators(tree)
     pending: list[ast.AST] = list(tree.body)
     while pending:
         node = pending.pop()
         if isinstance(node, ast.Call):
             calls.append(node)
-            if _callee_name(node.func) in _EAGER_CONSUMERS:
-                for argument in node.args:
-                    if isinstance(argument, ast.GeneratorExp):
-                        pending.extend(_generator_parts(argument))
-        if isinstance(node, ast.Starred) and isinstance(node.value, ast.GeneratorExp):
-            pending.extend(_generator_parts(node.value))  # `[*gen]`, `f(*gen)` and `(*gen,)` consume it at once
-            continue
         if isinstance(node, ast.GeneratorExp):
-            pending.append(node.generators[0].iter)  # only the outermost iterable is evaluated eagerly
+            if id(node) in stored:
+                pending.append(node.generators[0].iter)  # only the outermost iterable is evaluated eagerly
+            else:
+                pending.extend(_generator_parts(node))
             continue
         if isinstance(node, ast.FunctionDef | ast.AsyncFunctionDef | ast.Lambda):
             if not isinstance(node, ast.Lambda):
