@@ -93,6 +93,7 @@ The caller requirements in `acceptance/build.json` name each edge with its ids. 
 | The first and the last leave day are leave days | S03 has approved leave from 2026-03-02 to 2026-03-04 | S03 is on leave on 2026-03-02 and 2026-03-04, not on 2026-03-05 |
 | A requested leave does not block | S14 requested leave on 2026-03-05 | S14 may work the day shift of 2026-03-05 |
 | Hours exactly at the contract maximum | S01 has the contract PT07 (7 h) and is the only Monday ICU+ALS holder | S01 works exactly 7 of 7 h |
+| Only RS5 blocks a pair | S18 (BLS, 7 h contract) returns from leave on 2026-03-05 and takes the W1 evening. S03 works the W1 night: 11 h of rest before the W2 evening, and the fewest hours of the ICU holders | Without the RS5 check, the search gives S03 the W2 evening (negative `rs5_search_ignores_ward`) |
 | Staff exactly at the slot maximum | The W1 evening needs 1 and allows 1 | W1 evening on 2026-03-02 is staffed at its maximum |
 | The search needs a backtrack | see [Search](#search) | `backtracks >= 1` |
 
@@ -223,10 +224,10 @@ Each negative holds only the files that differ from the project.
 | `rs1_missing_expiry_unlimited` | A missing expiry date is read as valid. | caller control for S09 |
 | `rs1_issue_date_ignored` | The issue date is ignored: a certification is valid before it starts. | caller control for S06 on 2026-03-02 |
 | `rs2_rest_ignored` | The assign step gives the search 0 hours of rest. | `rest_hours == None or rest_hours >= min_rest_hours` |
-| `rs3_over_contract` | One extra entry after the search: S11 works 36 h of 32 h. | `busiest_week_hours <= contract_hours` |
+| `rs3_over_contract` | One extra entry after the search: S13 works 36 h of 32 h. | `busiest_week_hours <= contract_hours` |
 | `rs4_lead_ignored` | The assign step gives the search no lead requirement. | `leads >= min_lead` |
 | `rs4_over_max` | Two extra entries after the search: 3 people in a slot with a maximum of 2. | `staffed >= min_staff and staffed <= max_staff` |
-| `rs5_second_ward` | One extra entry after the search: S07 works in W1 and W2 on one day. | `wards_that_day == 1` |
+| `rs5_search_ignores_ward` | The search does not check RS5. S03 then works the W1 night and the W2 evening of 2026-03-05. | `wards_that_day == 1` |
 | `rs6_leave_ignored` | Suitability ignores the leave. | `not on_leave` |
 | `rs6_leave_end_exclusive` | The last day of a leave is read as exclusive. | caller control for S03 on 2026-03-04 |
 | `infeasible_monday_lead` | S01 is on leave on Monday: no one can lead the W2 night shift. The check before the search proves it. | `outcome != 'infeasible'` |
