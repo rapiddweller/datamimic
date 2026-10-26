@@ -64,7 +64,7 @@ def test_memstore_write_rejects_wrong_exporter_type() -> None:
     context = SimpleNamespace(memstore_manager=manager)
 
     with pytest.raises(TypeError, match="Memstore target requires Memstore exporter"):
-        exporter_registry.consume_memstore_target(context, ["mem"], None, None, "rows", "rows", {"rows": []})
+        exporter_registry.consume_memstore_target(context, ["mem"], "rows", "rows", {"rows": []})
 
 
 def test_capture_preserves_read_only_product_order_and_native_row_identity() -> None:
@@ -114,13 +114,8 @@ def test_capture_preserves_native_mapping_error() -> None:
     assert caught.value is failure
 
 
-@pytest.mark.parametrize(
-    ("target_entity", "product_type", "entity"),
-    [("target", "type", "target"), (None, "type", "type"), ("", "type", "type"), (None, "", "name")],
-)
-def test_memstore_uses_first_known_target_and_entity_priority_with_native_rows(
-    target_entity, product_type, entity
-) -> None:
+def test_memstore_uses_first_known_target_with_native_rows() -> None:
+    entity = "rows"
     stores = {name: Memstore(name) for name in ["first", "second"]}
     manager = SimpleNamespace(contain=stores.__contains__, get_memstore=stores.__getitem__)
     context = SimpleNamespace(memstore_manager=manager)
@@ -129,14 +124,12 @@ def test_memstore_uses_first_known_target_and_entity_priority_with_native_rows(
     rows = [row]
     products = MappingProxyType({"full": rows})
 
-    exporter_registry.consume_memstore_target(
-        context, ["unknown", "first", "second"], target_entity, product_type, "name", "full", products
-    )
+    exporter_registry.consume_memstore_target(context, ["unknown", "first", "second"], entity, "full", products)
     first = stores["first"].get_data_by_type(entity)
     assert first is not rows and first[0] is row and first[0]["value"] is native
     assert stores["second"].get_all_data_by_type(entity) == []
 
-    exporter_registry.consume_memstore_target(context, ["first"], target_entity, product_type, "name", "full", products)
+    exporter_registry.consume_memstore_target(context, ["first"], entity, "full", products)
     current = stores["first"].get_data_by_type(entity)
     assert current is not first and current == [row, row]
     assert all(item is row for item in current)
@@ -147,7 +140,7 @@ def test_memstore_registers_missing_product_as_empty() -> None:
     manager = SimpleNamespace(contain=lambda _target: True, get_memstore=lambda _target: store)
     context = SimpleNamespace(memstore_manager=manager)
 
-    exporter_registry.consume_memstore_target(context, ["mem"], None, None, "rows", "missing", MappingProxyType({}))
+    exporter_registry.consume_memstore_target(context, ["mem"], "rows", "missing", MappingProxyType({}))
 
     assert store.get_data_by_type("rows") == []
 
@@ -165,9 +158,9 @@ def test_memstore_reads_mapping_only_after_finding_target_and_before_exporter_ch
     )
     context = SimpleNamespace(memstore_manager=manager)
 
-    exporter_registry.consume_memstore_target(context, ["unknown"], None, None, "rows", "full", BrokenGet())
+    exporter_registry.consume_memstore_target(context, ["unknown"], "rows", "full", BrokenGet())
     with pytest.raises(RuntimeError) as caught:
-        exporter_registry.consume_memstore_target(context, ["mem"], None, None, "rows", "full", BrokenGet())
+        exporter_registry.consume_memstore_target(context, ["mem"], "rows", "full", BrokenGet())
 
     assert caught.value is failure
     assert fetched == []
@@ -182,7 +175,7 @@ def test_memstore_preserves_previous_rows_when_concatenation_fails() -> None:
     context = SimpleNamespace(memstore_manager=manager)
 
     with pytest.raises(TypeError, match="concatenate"):
-        exporter_registry.consume_memstore_target(context, ["mem"], None, None, "rows", "full", {"full": (row,)})
+        exporter_registry.consume_memstore_target(context, ["mem"], "rows", "full", {"full": (row,)})
 
     assert store.get_data_by_type("rows") is previous
     assert previous[0] is row

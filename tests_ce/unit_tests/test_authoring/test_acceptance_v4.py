@@ -693,11 +693,11 @@ def test_foreign_key_does_not_match_nested_decimal_to_string():
     assert [item.code for item in failures] == ["foreign_key"]
 
 
-def test_memstore_alias_does_not_hide_ambiguous_producers():
-    with pytest.raises(AcceptanceProjectionError, match="producer"):
+def test_two_writers_of_one_memstore_entity_are_ambiguous():
+    with pytest.raises(AcceptanceProjectionError, match="More than one product writes the memstore entity"):
         project(
             '<setup><memstore id="store"/>'
-            '<generate name="a" type="shared" count="1" target="store"><key name="id" constant="1"/></generate>'
+            '<generate name="a" targetEntity="shared" count="1" target="store"><key name="id" constant="1"/></generate>'
             '<generate name="b" targetEntity="shared" count="1" target="store"><key name="id" constant="2"/></generate>'
             '<generate name="copy" source="store" sourceEntity="shared">'
             '<key name="id" script="this.id"/></generate></setup>'

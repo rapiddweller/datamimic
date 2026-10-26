@@ -353,7 +353,7 @@ def test_fixed_value_keeps_native_types_at_every_depth(tmp_path: Path, nested: b
     "producer_properties,entity",
     [
         ({}, "items"),
-        ({"type": "shared"}, "shared"),
+        ({"type": "ignored"}, "items"),  # type names only a memstore read (#422)
         ({"target_entity": "shared"}, "shared"),
         ({"type": "ignored", "target_entity": "shared"}, "shared"),
     ],

@@ -9,6 +9,9 @@
 import shutil
 from pathlib import Path
 
+import pytest
+
+from datamimic_ce.errors import MissingMemstoreProductError
 from datamimic_ce.interfaces.python.data_mimic_test import DataMimicTest
 
 _dir = Path(__file__).resolve().parent
@@ -81,3 +84,13 @@ def test_memstore_remove_not_existing_ids():
     finally:
         for d in (output_dir, repo_root_db_dir, local_db_dir):
             shutil.rmtree(d, ignore_errors=True)
+
+
+@pytest.mark.parametrize(
+    "descriptor", ["test_memstore_read_unwritten_generate.xml", "test_memstore_read_unwritten_variable.xml"]
+)
+def test_reading_a_memstore_entity_that_no_product_wrote_fails(descriptor: str) -> None:
+    """#422: a read of an entity that no product wrote used to log an ERROR and go on with zero rows."""
+    engine = DataMimicTest(_dir, descriptor, capture_test_result=True)
+    with pytest.raises(MissingMemstoreProductError):
+        engine.test_with_timer()

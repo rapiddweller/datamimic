@@ -172,6 +172,13 @@ class GenerateStatement(CompositeStatement):
             )
         return None
 
+    @staticmethod
+    def memstore_entity(target_entity: str | None, name: str) -> str:
+        """The memstore entity a product writes: targetEntity, then the product name, as in EE. type names only the
+        entity that a memstore source reads, so a step that reads one entity and writes the store keeps them apart
+        (#422). The runtime, bounded execution and Build acceptance use this one rule."""
+        return target_entity or name
+
     @property
     def target_entity(self) -> str | None:
         return self._target_entity

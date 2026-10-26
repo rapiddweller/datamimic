@@ -43,14 +43,9 @@ class Memstore(Exporter):
             raise missing_memstore_product_error(product_type) from e
 
     def get_data_len_by_type(self, entity_name: str | None) -> int:
-        """
-        Get length of data from memstore
-        """
-        try:
-            return len(self._storage[entity_name])
-        except KeyError:
-            logger.error(f"Data having entity '{entity_name}' is empty in memstore")
-        return 0
+        """Row count of one entity. An entity that no product wrote fails like a read (#422): zero rows would hide a
+        misrouted write. A product that wrote no rows still counts 0."""
+        return len(self.get_data_by_type(entity_name))
 
     def consume(self, product: tuple) -> None:
         """
@@ -76,8 +71,9 @@ class Memstore(Exporter):
         return int(total) if total.is_integer() else total
 
     def entityCount(self, product_type: str) -> int:
-        """Alias of get_data_len_by_type (legacy camelCase naming)."""
-        return self.get_data_len_by_type(product_type)
+        """Row count for scripts (legacy camelCase naming); stays lenient for migration parity: 0 for an unwritten
+        entity."""
+        return len(self._storage.get(product_type, []))
 
     def removeNotExistingIds(self, product_type: str, id_col: str, ref_type: str, client) -> None:
         """Keep only the rows of `product_type` whose `id_col` value exists in `ref_type` as read

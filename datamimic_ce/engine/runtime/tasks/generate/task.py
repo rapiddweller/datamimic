@@ -436,9 +436,7 @@ class GenerateTask(CommonSubTask):
         consume_memstore_target(
             setup_context,
             list(current_stmt.targets),
-            current_stmt.target_entity,
-            current_stmt.type,
-            current_stmt.name,
+            GenerateStatement.memstore_entity(current_stmt.target_entity, current_stmt.name),
             current_stmt.full_name,
             merged_result,
         )

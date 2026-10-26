@@ -1,0 +1,11 @@
+<setup rngSeed="1">
+    <memstore id="mem"/>
+    <generate name="demand" count="2" target="mem">
+        <key name="demand_id" generator="IncrementGenerator"/>
+    </generate>
+    <generate name="count_check" count="1">
+        <!-- No product writes "slot": the read must fail, not count zero rows. -->
+        <variable name="slot_rows" source="mem" sourceEntity="slot" storage="data" distribution="ordered"/>
+        <key name="slot_rows" script="len(slot_rows)"/>
+    </generate>
+</setup>

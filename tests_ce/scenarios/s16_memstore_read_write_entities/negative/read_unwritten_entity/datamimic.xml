@@ -1,0 +1,19 @@
+<setup rngSeed="1">
+    <memstore id="mem"/>
+    <generate name="demand" count="2" target="mem">
+        <key name="demand_id" generator="IncrementGenerator"/>
+    </generate>
+    <generate name="slots" source="mem" type="demand" distribution="ordered" target="mem">
+        <key name="slot_id" generator="IncrementGenerator"/>
+        <key name="demand_id" script="this.demand_id"/>
+    </generate>
+    <generate name="slot_readback" source="mem" sourceEntity="slot" distribution="ordered">
+        <key name="slot_id" script="this.slot_id"/>
+    </generate>
+    <generate name="count_check" count="1">
+        <variable name="demand_rows" source="mem" sourceEntity="demand" storage="data" distribution="ordered"/>
+        <variable name="slot_rows" source="mem" sourceEntity="slots" storage="data" distribution="ordered"/>
+        <key name="demand_rows" script="len(demand_rows)"/>
+        <key name="slot_rows" script="len(slot_rows)"/>
+    </generate>
+</setup>

@@ -1,0 +1,16 @@
+{
+  "version": "5.0",
+  "product_roles": [
+    {"product": "demand", "field": "demand_id", "role": {"kind": "identifier"}},
+    {"product": "slots", "field": "demand_id", "role": {"kind": "foreign_key", "parent_product": "demand", "parent_field": "demand_id"}},
+    {"product": "slots", "field": "slot_id", "role": {"kind": "identifier"}},
+    {"product": "slot_readback", "field": "slot_id", "role": {"kind": "foreign_key", "parent_product": "slots", "parent_field": "slot_id"}}
+  ],
+  "expectations": [
+    {"kind": "exact_count", "subject": {"kind": "product", "product": "demand"}, "count": 2},
+    {"kind": "exact_count", "subject": {"kind": "product", "product": "slots"}, "count": 2},
+    {"kind": "exact_count", "subject": {"kind": "product", "product": "slot_readback"}, "count": 2},
+    {"kind": "allowed_values", "subject": {"kind": "product", "product": "count_check"}, "field": "demand_rows", "values": [2]},
+    {"kind": "allowed_values", "subject": {"kind": "product", "product": "count_check"}, "field": "slot_rows", "values": [2]}
+  ]
+}

@@ -193,5 +193,7 @@ def test_memstore_row_lookup_distinguishes_missing_from_present_empty() -> None:
         memstore.get_data_by_type("missing")
 
     assert memstore.get_data_by_type("empty") == []
-    assert memstore.get_data_len_by_type("missing") == 0
+    with pytest.raises(KeyError, match="Data naming 'missing' is empty in memstore"):
+        memstore.get_data_len_by_type("missing")
     assert memstore.get_data_len_by_type("empty") == 0
+    assert memstore.entityCount("missing") == 0

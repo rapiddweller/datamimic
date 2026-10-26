@@ -50,13 +50,17 @@ Declare the store as `<memstore id="mem"/>`. EE has one built-in `mem` store and
 ignores the declaration with warning `W005`, so this form runs in CE and EE.
 Other ids are a CE-only extension.
 
+Read an entity with `sourceEntity`. A product writes the entity named by
+`targetEntity`, else its own name. On a memstore source, `type` names only the
+entity that the step reads.
+
 ```xml
 <setup rngSeed="7">
     <memstore id="mem"/>
     <generate name="parents" count="2" target="mem">
         <key name="id" generator="IncrementGenerator"/>
     </generate>
-    <generate name="readback" source="mem" type="parents" distribution="ordered">
+    <generate name="readback" source="mem" sourceEntity="parents" distribution="ordered">
         <key name="id" script="this.id"/>
     </generate>
 </setup>

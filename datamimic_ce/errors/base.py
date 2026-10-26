@@ -179,7 +179,10 @@ class MissingSourceError(InvalidSourceError, FileNotFoundError):
 class MissingMemstoreProductError(InvalidSourceError, KeyError):
     """A declared in-memory source has not received the requested product."""
 
-    guidance = "Generate the requested product into the memstore before reading it; check sourceEntity/type/name."
+    guidance = (
+        "Generate the requested product into the memstore before reading it. A product writes the entity named by "
+        "targetEntity, else its name; a source reads sourceEntity, else type, else its name."
+    )
 
     def __init__(self, message: str, *, product_type: str | None = None) -> None:
         super().__init__(message)
