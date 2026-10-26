@@ -7,7 +7,7 @@
     "the search needs backtracking: its first choice for A03-V1-PLN leaves A05-V1-PLN short (R6)",
     "versions share their approval (A01) and approvals of one company share people (A03 and A04)",
     "an infeasible demand ends below the budget as infeasible; a too small budget ends as budget_exhausted",
-    "an independent output check per position catches a search that ignores R5",
+    "the output check per position catches a search that ignores R4, R5, R6 or the suitability decision",
     "each data variant changes one fact, the search variant drops one check; Build rejects each with a row condition that names the rule"
   ],
   "products": {
@@ -24,19 +24,23 @@
     "staffing": 82
   },
   "negatives": [
-    {"dir": "negative/r1_person", "diagnostic": "row_condition"},
-    {"dir": "negative/r1_company", "diagnostic": "row_condition"},
-    {"dir": "negative/r1_function", "diagnostic": "row_condition"},
-    {"dir": "negative/r2_missing", "diagnostic": "row_condition"},
-    {"dir": "negative/r2_expired", "diagnostic": "row_condition"},
-    {"dir": "negative/r2_inactive", "diagnostic": "row_condition"},
-    {"dir": "negative/r2_no_expiry", "diagnostic": "row_condition"},
-    {"dir": "negative/r3_missing", "diagnostic": "row_condition"},
-    {"dir": "negative/r4_above_maximum", "diagnostic": "row_condition"},
-    {"dir": "negative/r4_same_person", "diagnostic": "row_condition"},
-    {"dir": "negative/r5_exclusive_approval", "diagnostic": "row_condition"},
-    {"dir": "negative/r6_cross_company", "diagnostic": "row_condition"},
-    {"dir": "negative/budget_exhausted", "diagnostic": "row_condition"},
-    {"dir": "negative/search_ignores_r5", "diagnostic": "row_condition"}
+    {"dir": "negative/r1_person", "diagnostic": "row_condition", "expected": "unfilled_by.R1_person == 0"},
+    {"dir": "negative/r1_company", "diagnostic": "row_condition", "expected": "unfilled_by.R1_company == 0"},
+    {"dir": "negative/r1_function", "diagnostic": "row_condition", "expected": "unfilled_by.R1_function == 0"},
+    {"dir": "negative/r2_missing", "diagnostic": "row_condition", "expected": "unfilled_by.R2 == 0"},
+    {"dir": "negative/r2_expired", "diagnostic": "row_condition", "expected": "unfilled_by.R2 == 0"},
+    {"dir": "negative/r2_inactive", "diagnostic": "row_condition", "expected": "unfilled_by.R2 == 0"},
+    {"dir": "negative/r2_no_expiry", "diagnostic": "row_condition", "expected": "unfilled_by.R2 == 0"},
+    {"dir": "negative/r3_missing", "diagnostic": "row_condition", "expected": "unfilled_by.R3 == 0"},
+    {"dir": "negative/r4_above_maximum", "diagnostic": "row_condition", "expected": "seats >= 1 and seats <= max_seats"},
+    {"dir": "negative/r4_same_person", "diagnostic": "row_condition", "expected": "unfilled_by.R4 == 0"},
+    {"dir": "negative/r5_exclusive_approval", "diagnostic": "row_condition", "expected": "unfilled_by.R5 == 0"},
+    {"dir": "negative/r6_cross_company", "diagnostic": "row_condition", "expected": "unfilled_by.R6 == 0"},
+    {"dir": "negative/infeasible", "diagnostic": "row_condition", "expected": "outcome != 'infeasible'"},
+    {"dir": "negative/budget_exhausted", "diagnostic": "row_condition", "expected": "outcome != 'budget_exhausted'"},
+    {"dir": "negative/search_ignores_suitability", "diagnostic": "row_condition", "expected": "all_eligible"},
+    {"dir": "negative/search_ignores_r4", "diagnostic": "row_condition", "expected": "distinct_people"},
+    {"dir": "negative/search_ignores_r5", "diagnostic": "row_condition", "expected": "approval_exclusive"},
+    {"dir": "negative/search_ignores_r6", "diagnostic": "row_condition", "expected": "company_exclusive"}
   ]
 }
