@@ -77,7 +77,7 @@ values:
 |---|---|---|---|
 | RS1 certification valid on the shift date | `certificate_status`, called by the `cert_status` key of `candidates` in step 3 | `cert_status == 'valid'` on `entry_checks` | `data/shift_types.csv` (`required_cert`), `data/staff_certifications.csv` |
 | RS2 rest between two shifts, no overlap | `blocker` in `plan_roster` | `rest_hours == None or rest_hours >= min_rest_hours` on `entry_checks` | `data/policy.properties` (`min_rest_hours`) |
-| RS3 weekly hours within the contract | `blocker` in `plan_roster` | `busiest_week_hours <= max_weekly_hours` on `hours_checks` | `data/contracts.csv` |
+| RS3 weekly hours within the contract | `blocker` in `plan_roster` | `busiest_week_hours <= contract_hours` on `hours_checks` | `data/contracts.csv` |
 | RS4 minimum and maximum staff, minimum lead holders | `solve` and `shortage` in `plan_roster` | `staffed >= min_staff and staffed <= max_staff`, `leads >= min_lead` on `coverage_checks` | `data/demand.csv` |
 | RS5 one ward per day | `blocker` in `plan_roster` | `wards_that_day == 1` on `entry_checks`, a native `script=` count | the rule itself |
 | RS6 never rostered on approved leave | `on_approved_leave`, called by the `on_leave` key of `candidates` in step 3 | `not on_leave` on `entry_checks` | `data/leave.csv` |

@@ -19,9 +19,11 @@
     </generate>
     <generate name="hours_checks" source="mem" sourceEntity="staff_capacity" distribution="ordered" target="CSV">
         <variable name="roster" source="mem" sourceEntity="roster" storage="data" distribution="ordered"/>
+        <variable name="contracts" source="mem" sourceEntity="contracts" storage="data" distribution="ordered"/>
         <variable name="shift_types" source="mem" sourceEntity="shift_types" storage="data" distribution="ordered"/>
         <key name="staff_id" script="staff_id"/>
-        <key name="max_weekly_hours" script="max_weekly_hours"/>
+        <!-- The lookup repeats staff_capacity on purpose: the RS3 check must not trust the input of the search. -->
+        <key name="contract_hours" script="{row.contract_id: row.max_weekly_hours for row in contracts}[contract_id]"/>
         <key name="busiest_week_hours" script="busiest_week_hours(roster, shift_types, staff_id)"/>
     </generate>
     <generate name="coverage_checks" source="mem" sourceEntity="slots" distribution="ordered" target="CSV">
