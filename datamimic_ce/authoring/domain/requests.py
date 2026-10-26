@@ -138,8 +138,8 @@ class BuildRequestV5(AuthoringModel):
         description=(
             "Limit for the captured rows of all products together. Omit it: when every product has a literal "
             "count or reads a memstore back, Build uses the declared total (at least "
-            f"{DEFAULT_AUTHORING_MAX_COUNT}, at most {MAX_AUTHORING_MAX_COUNT}); otherwise "
-            f"{DEFAULT_AUTHORING_MAX_COUNT}."
+            f"{DEFAULT_AUTHORING_MAX_COUNT}, at most {MAX_AUTHORING_MAX_COUNT}; every <condition> branch counts "
+            f"in full); otherwise {DEFAULT_AUTHORING_MAX_COUNT}."
         ),
     )
     sample_rows: StrictInt = Field(default=DEFAULT_AUTHORING_SAMPLE_ROWS, ge=1, le=50)

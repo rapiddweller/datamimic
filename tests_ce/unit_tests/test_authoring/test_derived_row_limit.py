@@ -198,3 +198,22 @@ def test_file_source_with_a_literal_count_counts_into_the_derived_limit(tmp_path
 
     assert result.outcome == "ready", result.diagnostics
     assert set(_limits(result).values()) == {14}
+
+
+def test_condition_branches_all_count_into_the_declared_total() -> None:
+    """Build counts every <condition> branch in full: 6 + 6x2 + 6x2 = 30, while a run makes 18 rows. A limit that is
+    too high is safe; one that is too low would refuse a valid project."""
+    from datamimic_ce.authoring.adapters.dm_json_codec import CeDmJsonCodec
+    from datamimic_ce.authoring.domain.requests import BuildRequestV5
+    from datamimic_ce.authoring.projection.acceptance import project_acceptance
+
+    xml = (
+        '<setup rngSeed="1"><generate name="p" count="6"><key name="id" generator="IncrementGenerator"/>'
+        '<condition><if condition="id % 2 == 1"><generate name="c1" count="2"><key name="x" constant="1"/></generate>'
+        '</if><else><generate name="c2" count="2"><key name="x" constant="1"/></generate></else></condition>'
+        "</generate></setup>"
+    )
+
+    spec = project_acceptance(BuildRequestV5(), CeDmJsonCodec().decompile(xml))
+
+    assert spec.declared_rows == 30
