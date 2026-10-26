@@ -22,9 +22,8 @@ class ProjectStarter(AuthoringModel):
     acceptance: BuildRequestV5
 
     @field_serializer("acceptance")
-    def _acceptance_without_nulls(self, acceptance: BuildRequestV5, info: SerializationInfo) -> dict[str, object]:
-        # Agents copy this file: teach an omitted max_count, because CE 4 and EE reject an explicit null.
-        return acceptance.model_dump(mode=info.mode, exclude_none=True)
+    def _taught_acceptance(self, acceptance: BuildRequestV5, info: SerializationInfo) -> dict[str, object]:
+        return acceptance.taught_form(info.mode)
 
 
 class AuthoringAssemblyReference(AuthoringModel):

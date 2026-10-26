@@ -228,12 +228,9 @@ class BuildDocumentWorkflow:
         )
         targeted = any(node.properties.get("target") for node in project_nodes)
         memstores = {node.properties.get("id") for node in project_nodes if node.kind == "memstore"}
-        # A memstore is read back in the same run, so only another target is written by datamimic run.
+        # A memstore is read back in the same run; a target list that names more than one store counts as written.
         writes_targets = any(
-            entry.strip() not in memstores
-            for node in project_nodes
-            if isinstance(target := node.properties.get("target"), str)
-            for entry in target.split(",")
+            node.properties.get("target") not in memstores for node in project_nodes if node.properties.get("target")
         )
         smoke = smoke_export_evidence(
             verification_options.smoke_export, first.smoke_export, writes_targets=writes_targets

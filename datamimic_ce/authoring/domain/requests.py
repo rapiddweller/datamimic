@@ -150,6 +150,10 @@ class BuildRequestV5(AuthoringModel):
             raise ValueError("build expectations must be unique")
         return self
 
+    def taught_form(self, mode: str) -> dict[str, object]:
+        """The file as a starter teaches it: max_count omitted, never null, because CE 4 and EE reject null."""
+        return self.model_dump(mode=mode, exclude_none=True)
+
     def capture_limit(self, declared_rows: int | None) -> int:
         """The explicit max_count; else the declared total of rows, kept between the default and the ceiling."""
         if self.max_count is not None:
