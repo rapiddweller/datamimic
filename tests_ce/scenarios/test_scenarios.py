@@ -78,7 +78,10 @@ def test_scenario_builds_runs_and_replays(directory: Path, tmp_path: Path, monke
     ids=[f"{path.name}/{negative.dir}" for path, negative in _NEGATIVES],
 )
 def test_negative_is_rejected_with_named_diagnostic(directory: Path, negative: Negative, tmp_path: Path) -> None:
-    project = _copy(directory / negative.dir, tmp_path / "variant")
+    variant = directory / negative.dir
+    assert variant.is_dir(), f"negative directory {negative.dir} does not exist"
+    project = _copy(directory, tmp_path / "variant")
+    shutil.copytree(variant, project, dirs_exist_ok=True)  # the variant holds only the files that differ
     rejected = _build(project)
     assert isinstance(rejected, RejectedBuild), "Build accepted a variant that must be rejected"
     codes = [str(item.code) for item in rejected.diagnostics]

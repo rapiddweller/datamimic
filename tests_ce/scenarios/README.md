@@ -10,7 +10,7 @@ One Python module, `test_scenarios.py`, runs every scenario. It holds no project
 <id>/model/ delivery/ lib/   optional steps and helpers, as the project needs them
 <id>/acceptance/build.json   the business rules Build must prove
 <id>/scenario.json           what the scenario promises (see below)
-<id>/negative/<name>/        a full project variant that Build must reject
+<id>/negative/<name>/        the files that differ from the project (a variant that Build must reject)
 ```
 
 The id starts with `s`, a two-digit number and a short name, for example `s02_parent_child`.
@@ -36,7 +36,7 @@ For each scenario directory the test:
 3. Runs it and checks the row count of each product in `products`.
 4. Runs it a second time and checks that the rows are identical.
 
-For each negative the test copies the variant, Builds it, and checks the rejection and the code.
+For each negative the test copies the project, copies the variant files over it, Builds it, and checks the rejection and the code.
 
 ## Add a scenario
 
@@ -44,7 +44,7 @@ For each negative the test copies the variant, Builds it, and checks the rejecti
 2. Write each business rule as an expectation or role in `acceptance/build.json`.
 3. Run `datamimic authoring build tests_ce/scenarios/<id>` until the outcome is `ready`.
 4. Write `scenario.json`.
-5. For each rule, copy the project to `negative/<name>/` and break that one rule.
+5. For each rule, put only the changed files in `negative/<name>/` (for example `datamimic.xml` or `acceptance/build.json`) and break that one rule.
 6. Run Build on the variant. Copy the code it reports into `negatives`.
 7. Run `pytest tests_ce/scenarios -q`.
 
