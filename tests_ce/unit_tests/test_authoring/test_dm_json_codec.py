@@ -186,8 +186,8 @@ def test_workspace_validator_uses_logical_path_and_never_writes(tmp_path):
         '<setup><generate name="x" count="1"><key name="id" type="not-a-type"/></generate></setup>'
     )
     assert not failed.ok
-    assert failed.diagnostics[0].ce_error is not None
-    assert "nested/logical.xml" in failed.diagnostics[0].path
+    [parser] = [item for item in failed.diagnostics if item.ce_error is not None]
+    assert "nested/logical.xml" in parser.path
     assert str(tmp_path) not in failed.model_dump_json()
     assert list(tmp_path.iterdir()) == []
 

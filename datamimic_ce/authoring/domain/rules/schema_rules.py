@@ -151,7 +151,8 @@ class UnknownAttribute(Rule):
                         type(self),
                         element,
                         evidence=f"attribute '{attr_name}' appears on <{tag}>",
-                        fix_context=hint,
+                        fix_context=f"Attribute '{attr_name}' is unknown on <{tag}>. {hint}",
+                        names_only=True,
                     )
 
 

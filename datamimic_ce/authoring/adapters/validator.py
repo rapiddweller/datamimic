@@ -96,9 +96,11 @@ class CeDescriptorValidator:
                         )
                     )
                 # The parser message may echo resolved (possibly secret) values; the static rule
-                # projection names the violated rule and the exact element instead.
-                diagnostics.extend(_rule_diagnostics(parse_xml_source(xml), physical_path, logical_path))
-                return LintResult(ok=False, diagnostics=tuple(diagnostics))
+                # projection names the violated rule and the exact element, so its errors come first.
+                rules = _rule_diagnostics(parse_xml_source(xml), physical_path, logical_path)
+                errors = tuple(item for item in rules if item.severity == "error")
+                rest = tuple(item for item in rules if item.severity != "error")
+                return LintResult(ok=False, diagnostics=(*errors, *diagnostics, *rest))
             return LintResult(
                 ok=False,
                 diagnostics=(
@@ -251,7 +253,9 @@ def _rule_diagnostics(
                 severity="error"
                 if finding.severity is RuleSeverity.ERROR
                 else ("warning" if finding.severity is RuleSeverity.WARNING else "info"),
-                remediation=definition.fix_hint,
+                remediation=definition.fix_hint
+                if finding.names_only_fix is None
+                else f"{definition.fix_hint} {finding.names_only_fix}",
             )
         )
     return tuple(diagnostics)
