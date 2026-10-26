@@ -14,6 +14,8 @@ native causes remain attached where present. Bash emits the shared warning `W007
 Under `<setup rngSeed>`, a `<execute>` Python script that draws entropy while it loads (a module-level call,
 a default argument, an entropy import inside a function or class body) emits the shared warning `W008`
 with the script name and line; nothing is rejected, and Build's deterministic replay stays the hard check.
+A generator that the script only stores (alone, in a container, in a conditional expression, through a walrus,
+as a default argument, or in a lazy wrapper such as `map` or `itertools.islice`) is not reported.
 
 File source readers name only the file, never the host path. A file that is not an `.xlsx` workbook fails with
 `I197`; a fixed-width (`.fcw`) file without a valid `# name[width],...` first line fails with `I198`. A JSON source

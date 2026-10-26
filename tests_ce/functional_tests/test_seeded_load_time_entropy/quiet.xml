@@ -7,6 +7,10 @@
     <execute uri="script/quiet/deterministic_calls.scr.py"/>
     <execute uri="script/quiet/lambda_and_alias.scr.py"/>
     <execute uri="script/quiet/stored_generators.scr.py"/>
+    <execute uri="script/quiet/itertools_wrappers.scr.py"/>
+    <execute uri="script/quiet/containers.scr.py"/>
+    <execute uri="script/quiet/conditional_and_walrus.scr.py"/>
+    <execute uri="script/quiet/generator_default.scr.py"/>
     <generate name="rows" count="1">
         <key name="id" generator="IncrementGenerator"/>
     </generate>

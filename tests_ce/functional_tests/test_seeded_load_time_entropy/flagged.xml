@@ -21,6 +21,13 @@
     <execute uri="script/flagged/lazy_wrapper_consumed.scr.py"/>
     <execute uri="script/flagged/nested_generator_iterable.scr.py"/>
     <execute uri="script/flagged/membership_test.scr.py"/>
+    <execute uri="script/flagged/itertools_product.scr.py"/>
+    <execute uri="script/flagged/itertools_permutations.scr.py"/>
+    <execute uri="script/flagged/itertools_combinations.scr.py"/>
+    <execute uri="script/flagged/shadowed_wrapper_name.scr.py"/>
+    <execute uri="script/flagged/pool_argument.scr.py"/>
+    <execute uri="script/flagged/print_argument.scr.py"/>
+    <execute uri="script/flagged/decorator_argument.scr.py"/>
     <generate name="rows" count="1">
         <key name="id" generator="IncrementGenerator"/>
     </generate>

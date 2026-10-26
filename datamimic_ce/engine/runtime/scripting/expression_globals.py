@@ -41,7 +41,7 @@ import re
 import statistics
 import sys
 import uuid
-from collections.abc import Callable, Iterable
+from collections.abc import Callable, Container, Iterable
 from dataclasses import dataclass
 from enum import StrEnum
 from random import Random
@@ -409,14 +409,14 @@ def load_time_entropy(source: str) -> tuple[LoadTimeFinding, ...]:
         tree = ast.parse(source)
     except SyntaxError:
         return ()
-    modules, members = _entropy_bindings(_module_scope_nodes(tree))
+    modules, members = _bindings(_module_scope_nodes(tree), _DRAWING_ATTRIBUTES)
     findings: list[LoadTimeFinding] = []
     for call in _load_time_calls(tree):
         if _draws(call, modules, members):
             findings.append(LoadTimeFinding(LoadTimeDraw.MODULE_LEVEL_CALL, call.lineno))
     for body in ast.walk(tree):
         if isinstance(body, ast.FunctionDef | ast.AsyncFunctionDef | ast.ClassDef):
-            local_modules, local_members = _entropy_bindings(ast.walk(body))
+            local_modules, local_members = _bindings(ast.walk(body), _DRAWING_ATTRIBUTES)
             if any(
                 isinstance(call, ast.Call) and _draws(call, local_modules, local_members) for call in ast.walk(body)
             ):
@@ -448,8 +448,8 @@ def _module_scope_nodes(tree: ast.Module) -> list[ast.AST]:
     return nodes
 
 
-def _entropy_bindings(nodes: Iterable[ast.AST]) -> tuple[dict[str, str], dict[str, tuple[str, str]]]:
-    """Names bound to an entropy module (``import random as r``) and to one of its members
+def _bindings(nodes: Iterable[ast.AST], roots: Container[str]) -> tuple[dict[str, str], dict[str, tuple[str, str]]]:
+    """Names bound to one of the ``roots`` modules (``import random as r``) and to one of its members
     (``from random import randint``, ``from datetime import datetime``) by the imports among ``nodes``."""
     modules: dict[str, str] = {}
     members: dict[str, tuple[str, str]] = {}
@@ -457,9 +457,9 @@ def _entropy_bindings(nodes: Iterable[ast.AST]) -> tuple[dict[str, str], dict[st
         if isinstance(node, ast.Import):
             for alias in node.names:
                 root = _root_module(alias.name)
-                if root in _DRAWING_ATTRIBUTES:
+                if root in roots:
                     modules[alias.asname or root] = root
-        elif isinstance(node, ast.ImportFrom) and node.level == 0 and node.module in _DRAWING_ATTRIBUTES:
+        elif isinstance(node, ast.ImportFrom) and node.level == 0 and node.module is not None and node.module in roots:
             for alias in node.names:
                 members[alias.asname or alias.name] = (node.module, alias.name)
     return modules, members
@@ -467,6 +467,25 @@ def _entropy_bindings(nodes: Iterable[ast.AST]) -> tuple[dict[str, str], dict[st
 
 # These only wrap a generator: it runs later, when something consumes it.
 _LAZY_WRAPPERS = frozenset({"iter", "map", "zip", "filter", "enumerate", "reversed"})
+# The stdlib does not mark which itertools are lazy, so this is a list; a name outside it stays reported. product,
+# permutations and combinations consume their input at once.
+LAZY_ITERTOOLS = frozenset(
+    {
+        "accumulate",
+        "chain",
+        "compress",
+        "cycle",
+        "dropwhile",
+        "filterfalse",
+        "groupby",
+        "islice",
+        "pairwise",
+        "starmap",
+        "takewhile",
+        "tee",
+        "zip_longest",
+    }
+)
 
 
 def _callee_name(func: ast.expr) -> str | None:
@@ -475,26 +494,61 @@ def _callee_name(func: ast.expr) -> str | None:
     return func.attr if isinstance(func, ast.Attribute) else None
 
 
-def _stored_generators(tree: ast.Module) -> set[int]:
-    """Generator expressions the module only stores, alone or inside lazy wrappers (`g = (x for x in y)`,
-    `m = map(f, (x for x in y))`). Any other position consumes the generator while the module loads: a call, a
-    loop, an unpacking, a comprehension, a test. A generator stored and consumed later at module level is missed."""
-    stored: set[int] = set()
+def _wraps_lazily(func: ast.expr, modules: dict[str, str], members: dict[str, tuple[str, str]]) -> bool:
+    """A builtin lazy wrapper, or a lazy itertools function reached through an import (never a bare name alone)."""
+    if _callee_name(func) in _LAZY_WRAPPERS:
+        return True
+    if isinstance(func, ast.Name):
+        return func.id in members and members[func.id][1] in LAZY_ITERTOOLS
+    return (
+        isinstance(func, ast.Attribute)
+        and isinstance(func.value, ast.Name)
+        and func.value.id in modules
+        and func.attr in LAZY_ITERTOOLS
+    )
 
-    def mark(value: ast.expr) -> None:
+
+def _stored_generators(tree: ast.Module) -> set[int]:
+    """Generator expressions the module only stores or tests for truth: alone, inside lazy wrappers or containers,
+    as a branch of a conditional expression, through a walrus, or as a default argument (`g = (x for x in y)`,
+    `m = map(f, (x for x in y))`, `gens = [(x for x in y)]`, `if (g := (x for x in y)):`). Any other position
+    consumes the generator while the module loads: a call, a loop, an unpacking, a starred element, a comprehension,
+    a membership test. A generator stored and consumed later at module level is missed."""
+    stored: set[int] = set()
+    modules, members = _bindings(_module_scope_nodes(tree), ("itertools",))
+
+    def mark(value: ast.expr | None) -> None:
         if isinstance(value, ast.GeneratorExp):
             stored.add(id(value))
-        elif isinstance(value, ast.Call) and _callee_name(value.func) in _LAZY_WRAPPERS:
+        elif isinstance(value, ast.Call) and _wraps_lazily(value.func, modules, members):
             for argument in value.args:
                 mark(argument)
+        elif isinstance(value, ast.List | ast.Tuple | ast.Set):
+            for element in value.elts:
+                mark(element)  # a starred element is no generator here: it stays consumed
+        elif isinstance(value, ast.Dict):
+            for key, item in zip(value.keys, value.values, strict=True):
+                if key is not None:  # a None key is a ** unpacking
+                    mark(key)
+                    mark(item)
+        elif isinstance(value, ast.IfExp):
+            for part in (value.test, value.body, value.orelse):
+                mark(part)
+        elif isinstance(value, ast.NamedExpr):
+            mark(value.value)
 
     for node in ast.walk(tree):
         if isinstance(node, ast.Assign) and any(
             isinstance(t, ast.Tuple | ast.List | ast.Starred) for t in node.targets
         ):
             continue  # unpacking consumes the generator
-        if isinstance(node, ast.Assign | ast.AnnAssign | ast.Expr) and node.value is not None:
+        if isinstance(node, ast.Assign | ast.AnnAssign | ast.Expr):
             mark(node.value)
+        elif isinstance(node, ast.If | ast.While):
+            mark(node.test)
+        elif isinstance(node, ast.FunctionDef | ast.AsyncFunctionDef | ast.Lambda):
+            for default in (*node.args.defaults, *node.args.kw_defaults):
+                mark(default)
     return stored
 
 
