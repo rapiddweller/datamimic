@@ -151,7 +151,8 @@ Build does not claim that an external database was written.
 including nested products. Omit it: when every product has a literal count, Build
 sets the limit to the declared total (at least 10, at most 1000). A source with a
 literal count counts that count; a memstore readback without count counts the rows
-of its literal producer. A project with a file source without count, a script count
+of its literal producer. A nested product with a literal count multiplies the bound
+of its parent, also of a source parent. A project with a file source without count, a script count
 or a count range (`minCount`/`maxCount`) gets the limit 10; set `max_count` to the
 total rows of all products. The products of every `<condition>` branch count in
 full, so the derived limit can be higher than the rows of a run. A higher limit is

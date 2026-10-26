@@ -374,17 +374,21 @@ def _declared_rows(
     entries: tuple[_Product, ...], counts: dict[str, int], readbacks: tuple[AcceptanceReadbackV1, ...]
 ) -> int | None:
     """An upper bound of the rows of all products, kept apart from ``counts`` because a source read can stop early:
-    its literal count bounds it, a memstore readback without one reads its literal producer. None when one product
-    has no such bound (a script or range count, a file source without count)."""
+    its literal count bounds it, a memstore readback without one reads its literal producer, and a source-free child
+    multiplies its parent's bound. None when one product has no such bound (a script or range count, a file source
+    without count)."""
     producers = {item.consumer: item.producer for item in readbacks}
     rows = dict(counts)
     for entry in entries:  # a parent precedes its children
         name = entry.product.name
-        if name in rows or entry.node.properties.get("source") is None:
+        if name in rows:
             continue
-        per_invocation = entry.product.count_per_invocation
-        if per_invocation is None and name in producers:
-            per_invocation = counts.get(producers[name])
+        if entry.node.properties.get("source") is None:
+            per_invocation = entry.count
+        else:
+            per_invocation = entry.product.count_per_invocation
+            if per_invocation is None and name in producers:
+                per_invocation = counts.get(producers[name])
         parent_rows = 1 if entry.parent is None else rows.get(entry.parent)
         if per_invocation is None or parent_rows is None:
             return None

@@ -1,0 +1,9 @@
+<setup rngSeed="18" defaultSeparator=",">
+    <generate name="branches" source="fixtures/branches.csv" distribution="ordered" count="6">
+        <key name="branch_id" script="int(this.branch_id)"/>
+        <generate name="tellers" count="2">
+            <key name="branch_id" script="parent.branch_id"/>
+            <key name="teller_no" generator="IncrementGenerator"/>
+        </generate>
+    </generate>
+</setup>

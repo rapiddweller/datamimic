@@ -244,3 +244,36 @@ def test_memstore_producer_with_a_source_bounds_only_by_literal_counts(
 
     assert result.outcome == "ready", result.diagnostics
     assert set(_limits(result).values()) == {limit}
+
+
+def _source_parent(parent_count: int, grandchildren: str = "") -> str:
+    return (
+        '<setup rngSeed="1"><generate name="parents" source="rows.csv" distribution="ordered" '
+        f'count="{parent_count}"><key name="id" script="int(this.id)"/>'
+        f'<generate name="children" count="2"><key name="parent_id" script="parent.id"/>{grandchildren}</generate>'
+        "</generate></setup>"
+    )
+
+
+@pytest.mark.parametrize(
+    ("xml", "declared_rows"),
+    [
+        pytest.param(_source_parent(6), 18, id="source-parent-6-children-2"),
+        pytest.param(
+            _source_parent(3, '<generate name="grandchildren" count="2"><key name="x" constant="1"/></generate>'),
+            21,
+            id="two-levels-3-2-2",
+        ),
+        pytest.param(_source_parent(0), 0, id="source-parent-count-0"),
+    ],
+)
+def test_source_free_children_of_a_source_parent_multiply_its_bound(xml: str, declared_rows: int) -> None:
+    """A literal count bounds the rows of a source parent; a source-free child multiplies that bound by its literal
+    count. s18_source_parent_children Builds the first case and its negative controls."""
+    from datamimic_ce.authoring.adapters.dm_json_codec import CeDmJsonCodec
+    from datamimic_ce.authoring.domain.requests import BuildRequestV5
+    from datamimic_ce.authoring.projection.acceptance import project_acceptance
+
+    spec = project_acceptance(BuildRequestV5(), CeDmJsonCodec().decompile(xml))
+
+    assert spec.declared_rows == declared_rows
