@@ -2,7 +2,10 @@
 
 import json
 import re
+import shlex
 from pathlib import Path
+
+from typer.testing import CliRunner
 
 ROOT = Path(__file__).resolve().parents[3]
 PLUGIN = ROOT / "plugins/datamimic"
@@ -55,3 +58,30 @@ def test_onboarding_resolves_to_a_packaged_skill() -> None:
     assert skill.name == "SKILL.md"
     assert skill.is_file()
     assert re.search(r"^name: " + re.escape(skill.parent.name) + r"$", skill.read_text(), re.MULTILINE)
+
+
+def _command_lines() -> list[tuple[Path, list[str]]]:
+    """Every `datamimic ...` command the plugin text tells an agent to run, as shell tokens."""
+    found = []
+    for document in [*PLUGIN.rglob("*.md"), ROOT / "docs/agent_plugin.md"]:
+        text = document.read_text()
+        blocks = re.findall(r"```\w*\n(.*?)```", text, re.DOTALL)
+        spans = re.findall(r"`([^`\n]+)`", re.sub(r"```.*?```", "", text, flags=re.DOTALL))
+        for line in [ln for block in blocks for ln in block.splitlines()] + spans:
+            # A bare `authoring lint` span names the same CLI as `datamimic authoring lint`.
+            line = f"datamimic {line}" if line.startswith("authoring ") else line
+            if line.startswith("datamimic "):
+                found.append((document, shlex.split(line)[1:]))
+    return found
+
+
+def test_every_command_the_plugin_names_exists_in_the_cli() -> None:
+    from datamimic_ce.interfaces.cli._app import app
+
+    commands = _command_lines()
+    assert len(commands) >= 10, "The scan must find the plugin's commands."
+    runner = CliRunner()
+    for document, tokens in commands:
+        # --help is eager: the parser still rejects an unknown command or option, and nothing executes.
+        result = runner.invoke(app, [*tokens, "--help"])
+        assert result.exit_code == 0, f"{document.relative_to(ROOT)}: datamimic {' '.join(tokens)}\n{result.output}"
