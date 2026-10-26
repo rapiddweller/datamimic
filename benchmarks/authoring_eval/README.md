@@ -35,19 +35,24 @@ Raw transcripts and run directories stay outside the repository.
 
 ## Oracle checks
 
-`oracle.json` holds a list of typed checks. Pydantic validates the list. The kinds are a closed set:
+`oracle.json` holds the `seed` that the prompt prescribes and a list of typed checks. Pydantic validates both. The kinds are a closed set:
 `build_ready`, `exact_count`, `unique`, `per_parent_count`, `fk_in_parent`, `value_in`, `range`,
-`field_present`, `exact_fields`, `field_at_most`, `exact_rows`, `output_rows`.
+`field_present`, `exact_fields`, `field_at_most`, `exact_rows`, `output_rows`, `whole_number`, `seed_is`, `repeatable`.
 
-The oracle copies the project to a private directory. It lays the case fixtures over the copy.
-It then runs `Build` on the copy, runs the copy, and captures the rows per product.
-Every check reads the captured rows. The verdict is JSON. It holds one short reason for each check and no row value.
+- `whole_number` accepts only a Python `int`. A `bool`, a float and a text are not whole numbers. Every case applies it to each identifier field that the prompt names (not e04, whose ids are text).
+- `seed_is` parses the entry `datamimic.xml` and compares `<setup rngSeed>` with the `seed` of the case. It never reads the agent's `acceptance/build.json`.
+- `repeatable` compares the rows of two runs, in order. The runs use separate copies of the project and separate Python interpreters, with `PYTHONHASHSEED` set to `1` and to `2`. A project can have the right seed and still give different rows, for example when a value depends on the order of a set of strings.
+
+The oracle copies the project to private directories. It lays the case fixtures over each copy.
+It runs `Build` on one copy. It runs the other two copies at the same time and captures the rows per product from each run.
+Every row check reads the rows of the first run. The verdict is JSON. It holds one short reason for each check and no row value.
 The exit code is `0` when all checks pass and `1` otherwise.
 
 Limits of the oracle:
 
 - `per_parent_count` groups the child rows by the parent key. It does not prove that a child sits under the right parent when two parents swap keys.
 - The oracle does not check how a value is built (for example that `slot_id` contains `depot_id`). It checks that the values are unique and complete.
+- `repeatable` finds a difference that two hash seeds expose. The engine fixes the clock and the random generators when the seed is set, so a script cannot use them to make a seeded run differ.
 
 ## Protocol
 

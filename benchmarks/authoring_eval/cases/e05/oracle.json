@@ -1,4 +1,5 @@
 {
+  "seed": 77031,
   "checks": [
     {"kind": "build_ready"},
     {"kind": "exact_count", "product": "offers", "n": 40},
@@ -6,6 +7,9 @@
     {"kind": "value_in", "product": "offers", "field": "tier", "values": ["BRONZE", "SILVER", "GOLD"]},
     {"kind": "range", "product": "offers", "field": "list_price", "min": 100, "max": 900},
     {"kind": "range", "product": "offers", "field": "sale_price", "min": 50, "max": 900},
-    {"kind": "field_at_most", "product": "offers", "field": "sale_price", "other": "list_price"}
+    {"kind": "field_at_most", "product": "offers", "field": "sale_price", "other": "list_price"},
+    {"kind": "seed_is"},
+    {"kind": "repeatable"},
+    {"kind": "whole_number", "product": "offers", "field": "offer_id"}
   ]
 }

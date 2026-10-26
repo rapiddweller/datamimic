@@ -1,19 +1,11 @@
 {
+  "seed": 51110,
   "checks": [
     {"kind": "build_ready"},
     {"kind": "exact_count", "product": "priced_orders", "n": 6},
     {"kind": "output_rows", "product": "priced_orders", "n": 6},
-    {
-      "kind": "exact_rows",
-      "product": "priced_orders",
-      "rows": [
-        {"order_id": "O-100", "customer_id": "C-10", "total_cents": 1200, "priority": "standard"},
-        {"order_id": "O-101", "customer_id": "C-11", "total_cents": 4500, "priority": "standard"},
-        {"order_id": "O-102", "customer_id": "C-10", "total_cents": 8000, "priority": "high"},
-        {"order_id": "O-103", "customer_id": "C-12", "total_cents": 3200, "priority": "standard"},
-        {"order_id": "O-104", "customer_id": "C-13", "total_cents": 250, "priority": "standard"},
-        {"order_id": "O-105", "customer_id": "C-14", "total_cents": 9900, "priority": "high"}
-      ]
-    }
+    {"kind": "exact_rows", "product": "priced_orders", "rows": [{"order_id": "O-100", "customer_id": "C-10", "total_cents": 1200, "priority": "standard"}, {"order_id": "O-101", "customer_id": "C-11", "total_cents": 4500, "priority": "standard"}, {"order_id": "O-102", "customer_id": "C-10", "total_cents": 8000, "priority": "high"}, {"order_id": "O-103", "customer_id": "C-12", "total_cents": 3200, "priority": "standard"}, {"order_id": "O-104", "customer_id": "C-13", "total_cents": 250, "priority": "standard"}, {"order_id": "O-105", "customer_id": "C-14", "total_cents": 9900, "priority": "high"}]},
+    {"kind": "seed_is"},
+    {"kind": "repeatable"}
   ]
 }

@@ -12,7 +12,9 @@ is JSON with one reason per check and never contains a row value."""
 import argparse
 import contextlib
 import json
+import os
 import shutil
+import subprocess
 import sys
 import tempfile
 from abc import ABC, abstractmethod
@@ -21,13 +23,20 @@ from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Annotated, Literal
 
+from lxml import etree
 from pydantic import BaseModel, ConfigDict, Field, StrictInt, StrictStr
 
+from benchmarks.authoring_eval.capture import Capture
 from datamimic_ce.authoring import create_authoring_application
 from datamimic_ce.authoring.domain.requests import PROJECT_ENTRY_PATH, ReadyBuild
-from datamimic_ce.interfaces.python.data_mimic_test import DataMimicTest
+from datamimic_ce.engine.dsl.api import DTDForbiddenError, parse_xml_file
 
 CASES = Path(__file__).resolve().parent / "cases"
+REPO_ROOT = Path(__file__).resolve().parents[2]
+_RUN_TIMEOUT_SECONDS = 120
+# Fixed and different for the two runs: the verdict stays reproducible, and a value that depends on the hash order
+# of strings (which the interpreter randomises per process) differs between the runs.
+_HASH_SEEDS = ("1", "2")
 
 Row = dict[str, object]
 Scalar = StrictStr | StrictInt
@@ -41,6 +50,10 @@ class Observed:
     run_error: str | None  # exception class name when the run failed
     rows: dict[str, list[Row]] = field(default_factory=dict)
     json_outputs: dict[str, list[object]] = field(default_factory=dict)  # file stem -> parsed JSON array
+    expected_seed: int | None = None  # the seed the prompt prescribes
+    declared_seed: str | None = None  # rngSeed of the entry descriptor's <setup>, None when absent
+    second_rows: dict[str, list[Row]] | None = None  # rows of a second run in a fresh interpreter
+    second_error: str | None = None
 
 
 def _product_rows(observed: Observed, product: str) -> list[Row] | str:
@@ -293,6 +306,59 @@ class OutputRows(_Check):
         return None if len(written) == self.n else f"{len(written)} rows written, expected {self.n}"
 
 
+class WholeNumber(_Check):
+    """Every value is a Python int; a bool, float or text is not a whole number."""
+
+    kind: Literal["whole_number"]
+    product: str
+    field: str
+
+    def label(self) -> str:
+        return f"whole_number:{self.product}.{self.field}"
+
+    def failure(self, observed: Observed) -> str | None:
+        found = FieldRef(product=self.product, field=self.field).values(observed)
+        if isinstance(found, str):
+            return found
+        bad = [value for value in found if isinstance(value, bool) or not isinstance(value, int)]
+        return None if not bad else f"{len(bad)} values are not whole numbers"
+
+
+class SeedIs(_Check):
+    """The entry descriptor's <setup rngSeed> is the seed that the case prescribes."""
+
+    kind: Literal["seed_is"]
+
+    def label(self) -> str:
+        return "seed_is"
+
+    def failure(self, observed: Observed) -> str | None:
+        if observed.declared_seed is None:
+            return "the entry descriptor declares no rngSeed"
+        # an XML attribute is text, so compare with the text of the prescribed number
+        return None if observed.declared_seed == str(observed.expected_seed) else "rngSeed is not the prescribed seed"
+
+
+class Repeatable(_Check):
+    """A second run, in a fresh interpreter, produces the same rows in the same order."""
+
+    kind: Literal["repeatable"]
+
+    def label(self) -> str:
+        return "repeatable"
+
+    def failure(self, observed: Observed) -> str | None:
+        if observed.run_error is not None:
+            return f"run failed: {observed.run_error}"
+        if observed.second_error is not None:
+            return f"second run failed: {observed.second_error}"
+        second = observed.second_rows or {}
+        differing = sorted(
+            name for name in observed.rows.keys() | second.keys() if observed.rows.get(name) != second.get(name)
+        )
+        return None if not differing else f"two runs produced different rows in: {', '.join(differing)}"
+
+
 Check = Annotated[
     BuildReady
     | ExactCount
@@ -305,7 +371,10 @@ Check = Annotated[
     | ExactFields
     | FieldAtMost
     | ExactRows
-    | OutputRows,
+    | OutputRows
+    | WholeNumber
+    | SeedIs
+    | Repeatable,
     Field(discriminator="kind"),
 ]
 
@@ -313,6 +382,7 @@ Check = Annotated[
 class OracleSpec(BaseModel):
     model_config = ConfigDict(extra="forbid", frozen=True)
 
+    seed: int
     checks: list[Check]
 
 
@@ -341,30 +411,70 @@ def json_outputs(work: Path) -> dict[str, list[object]]:
     return found
 
 
-def _observe(case: str, project: Path) -> Observed:
-    """Build and run a private copy, with the case's fixtures laid over it so the agent cannot change them."""
+def _declared_seed(work: Path) -> str | None:
+    try:
+        return parse_xml_file(work / PROJECT_ENTRY_PATH).get("rngSeed")
+    except (OSError, etree.XMLSyntaxError, DTDForbiddenError):
+        return None
+
+
+def _copy(project: Path, case: str, destination: Path) -> Path:
+    """A private copy, with the case's fixtures laid over it so the agent cannot change them."""
+    # output/ holds files from the agent's own runs; only the oracle runs may write there
+    shutil.copytree(project, destination, ignore=shutil.ignore_patterns("output"))
+    fixtures = CASES / case / "fixtures"
+    if fixtures.is_dir():
+        shutil.copytree(fixtures, destination / fixtures.name, dirs_exist_ok=True)
+    return destination
+
+
+def _start(work: Path, hash_seed: str) -> subprocess.Popen[str]:
+    return subprocess.Popen(
+        [sys.executable, "-m", "benchmarks.authoring_eval.capture", str(work)],
+        cwd=REPO_ROOT,
+        env={**os.environ, "PYTHONHASHSEED": hash_seed},
+        stdout=subprocess.PIPE,
+        stderr=subprocess.DEVNULL,
+        text=True,
+    )
+
+
+def _finish(process: subprocess.Popen[str]) -> Capture:
+    try:
+        stdout, _ = process.communicate(timeout=_RUN_TIMEOUT_SECONDS)
+    except subprocess.TimeoutExpired:
+        process.kill()
+        process.communicate()
+        return Capture(error="Timeout")
+    try:
+        return Capture.model_validate_json(stdout)
+    except ValueError:  # the interpreter died before it printed a result
+        return Capture(error="CaptureCrashed")
+
+
+def _observe(case: str, project: Path, seed: int) -> Observed:
+    """Build one copy while two other copies run at the same time, each in its own interpreter."""
     with tempfile.TemporaryDirectory() as scratch:
-        work = Path(scratch) / "project"
-        # output/ holds files from the agent's own runs; only this oracle run may write there
-        shutil.copytree(project, work, ignore=shutil.ignore_patterns("output"))
-        fixtures = CASES / case / "fixtures"
-        if fixtures.is_dir():
-            shutil.copytree(fixtures, work / fixtures.name, dirs_exist_ok=True)
-        build = create_authoring_application(work, descriptor_path=PROJECT_ENTRY_PATH).build()
+        build_copy, first_copy, second_copy = (_copy(project, case, Path(scratch) / name) for name in "abc")
+        processes = [_start(first_copy, _HASH_SEEDS[0]), _start(second_copy, _HASH_SEEDS[1])]
+        build = create_authoring_application(build_copy, descriptor_path=PROJECT_ENTRY_PATH).build()
         build_note = None if isinstance(build, ReadyBuild) else f"Build {build.outcome} in phase {build.phase.value}"
-        try:
-            engine = DataMimicTest(test_dir=work, filename=PROJECT_ENTRY_PATH, capture_test_result=True)
-            engine.test_with_timer()
-        except Exception as error:  # an untrusted project can fail in any way; the class name is the whole reason
-            return Observed(build_note, type(error).__name__)
-        captured = engine.capture_result() or {}
-        rows = {product: [dict(row) for row in product_rows] for product, product_rows in captured.items()}
-        return Observed(build_note, None, rows, json_outputs(work))
+        first, second = (_finish(process) for process in processes)
+        return Observed(
+            build_note,
+            first.error,
+            first.rows,
+            json_outputs(first_copy),
+            expected_seed=seed,
+            declared_seed=_declared_seed(first_copy),
+            second_rows=second.rows,
+            second_error=second.error,
+        )
 
 
 def evaluate(case: str, project: Path) -> Verdict:
     spec = OracleSpec.model_validate_json((CASES / case / "oracle.json").read_text(encoding="utf-8"))
-    observed = _observe(case, project)
+    observed = _observe(case, project, spec.seed)
     results = []
     for check in spec.checks:
         reason = check.failure(observed)

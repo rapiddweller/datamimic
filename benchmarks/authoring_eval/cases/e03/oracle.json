@@ -1,4 +1,5 @@
 {
+  "seed": 56606,
   "checks": [
     {"kind": "build_ready"},
     {"kind": "exact_count", "product": "depots", "n": 3},
@@ -7,16 +8,12 @@
     {"kind": "unique", "product": "slots", "field": "slot_id"},
     {"kind": "exact_fields", "product": "slots", "fields": ["depot_id", "slot_id", "state"]},
     {"kind": "value_in", "product": "slots", "field": "state", "values": ["FREE"]},
-    {
-      "kind": "per_parent_count",
-      "child": {"product": "slots", "field": "depot_id"},
-      "parent": {"product": "depots", "field": "depot_id"},
-      "n": 4
-    },
-    {
-      "kind": "fk_in_parent",
-      "child": {"product": "slots", "field": "depot_id"},
-      "parent": {"product": "depots", "field": "depot_id"}
-    }
+    {"kind": "per_parent_count", "child": {"product": "slots", "field": "depot_id"}, "parent": {"product": "depots", "field": "depot_id"}, "n": 4},
+    {"kind": "fk_in_parent", "child": {"product": "slots", "field": "depot_id"}, "parent": {"product": "depots", "field": "depot_id"}},
+    {"kind": "seed_is"},
+    {"kind": "repeatable"},
+    {"kind": "whole_number", "product": "depots", "field": "depot_id"},
+    {"kind": "whole_number", "product": "slots", "field": "slot_id"},
+    {"kind": "whole_number", "product": "slots", "field": "depot_id"}
   ]
 }

@@ -14,7 +14,16 @@ from pathlib import Path
 import pytest
 
 from benchmarks.authoring_eval.audit_transcript import FindingKind, audit
-from benchmarks.authoring_eval.oracle import CASES, ExactRows, Observed, Unique, evaluate, json_outputs
+from benchmarks.authoring_eval.oracle import (
+    CASES,
+    ExactRows,
+    Observed,
+    Repeatable,
+    Unique,
+    WholeNumber,
+    evaluate,
+    json_outputs,
+)
 
 _ALL_CASES = sorted(path.name for path in CASES.iterdir() if path.is_dir())
 
@@ -32,12 +41,24 @@ class Broken:
 _XML = "datamimic.xml"
 _ACCEPTANCE = "acceptance/build.json"
 
+# Under PYTHONHASHSEED=1 this is 0 and under 2 it is 1 (CPython 3.11), which is what the oracle sets for its two runs.
+_FLAG = "list({'alpha', 'bravo', 'charlie', 'delta', 'echo', 'foxtrot', 'golf', 'hotel'}).index('bravo') % 2"
+
+
+def _COUNTED(field: str, counter: str, script: str) -> tuple[str, str]:
+    """Edit that turns an IncrementGenerator identifier into one built by ``script`` from a counter variable."""
+    return (
+        f'<key name="{field}" generator="IncrementGenerator"/>',
+        f'<variable name="{counter}" generator="IncrementGenerator"/>\n        <key name="{field}" script="{script}"/>',
+    )
+
+
 _BROKEN = [
     Broken(
         "e01",
         "constant_ids",
         {_XML: [('name="ticket_id" generator="IncrementGenerator"', 'name="ticket_id" constant="7"')]},
-        frozenset({"unique:tickets.ticket_id"}),
+        frozenset({"unique:tickets.ticket_id", "whole_number:tickets.ticket_id"}),  # constant= is text
     ),
     Broken(
         "e01",
@@ -126,6 +147,113 @@ _BROKEN = [
         "tier_outside_set",
         {_XML: [("('BRONZE', 'SILVER', 'GOLD')", "('BRONZE', 'SILVER', 'GOLD', 'PLATINUM')")]},
         frozenset({"value_in:offers.tier"}),
+    ),
+    # --- seed and repeatability (the prompts prescribe a seed) ---
+    *[
+        Broken(case, "missing_seed", {_XML: [(f' rngSeed="{seed}"', "")]}, fails)
+        for case, seed, fails in [
+            ("e01", "10421", frozenset({"seed_is", "repeatable"})),
+            ("e02", "30517", frozenset({"seed_is", "repeatable"})),
+            ("e03", "56606", frozenset({"seed_is"})),  # no random draw, so unseeded runs still agree
+            ("e04", "51110", frozenset({"seed_is"})),
+            ("e05", "77031", frozenset({"seed_is", "repeatable"})),
+        ]
+    ],
+    *[
+        Broken(case, "wrong_seed", {_XML: [(f'rngSeed="{seed}"', 'rngSeed="1"')]}, frozenset({"seed_is"}))
+        for case, seed in [("e01", "10421"), ("e02", "30517"), ("e03", "56606"), ("e04", "51110"), ("e05", "77031")]
+    ],
+    # The seed is right, but one value depends on the order of a set of strings. That order changes with the
+    # interpreter's hash seed, so only a second run in a fresh interpreter shows it.
+    Broken(
+        "e01",
+        "hash_ordered_hours",
+        {_XML: [('name="estimate_hours" type="int" min="1" max="40"', f'name="estimate_hours" script="1 + {_FLAG}"')]},
+        frozenset({"repeatable"}),
+    ),
+    Broken(
+        "e02",
+        "hash_ordered_amount",
+        {
+            _XML: [
+                ('name="amount_cents" type="int" min="500" max="20000"', f'name="amount_cents" script="500 + {_FLAG}"')
+            ]
+        },
+        frozenset({"repeatable"}),
+    ),
+    Broken(
+        "e03",
+        "hash_ordered_slot_ids",
+        {
+            _XML: [
+                ('script="parent.depot_id * 100 + token"', f'script="parent.depot_id * 100 + token + 50 * ({_FLAG})"')
+            ]
+        },
+        frozenset({"repeatable"}),
+    ),
+    Broken(
+        "e04",
+        "hash_ordered_priority",
+        {
+            _XML: [
+                (
+                    "script=\"'high' if int(source_row.total_cents) >= 5000 else 'standard'\"",
+                    "script=\"('high' if int(source_row.total_cents) >= 5000 else 'standard') "
+                    f"if {_FLAG} == 0 else 'unknown'\"",
+                )
+            ]
+        },
+        frozenset({"repeatable"}),
+    ),
+    Broken(
+        "e05",
+        "hash_ordered_sale_price",
+        {_XML: [("list_price * 8 // 10", f"list_price * 8 // 10 + {_FLAG}")]},
+        frozenset({"repeatable"}),
+    ),
+    # --- identifiers must be whole numbers ---
+    Broken(
+        "e01",
+        "string_ticket_ids",
+        {_XML: [_COUNTED("ticket_id", "ticket_no", "str(ticket_no)")]},
+        frozenset({"whole_number:tickets.ticket_id"}),
+    ),
+    Broken(
+        "e01",
+        "float_ticket_ids",
+        {_XML: [_COUNTED("ticket_id", "ticket_no", "float(ticket_no)")]},
+        frozenset({"whole_number:tickets.ticket_id"}),
+    ),
+    Broken(
+        "e02",
+        "string_invoice_ids",
+        {
+            _XML: [
+                (
+                    'script="parent.subscriber_id * 10 + invoice_no"',
+                    'script="str(parent.subscriber_id * 10 + invoice_no)"',
+                )
+            ]
+        },
+        frozenset({"whole_number:invoices.invoice_id"}),
+    ),
+    Broken(
+        "e03",
+        "string_slot_ids",
+        {_XML: [('script="parent.depot_id * 100 + token"', 'script="str(parent.depot_id * 100 + token)"')]},
+        frozenset({"whole_number:slots.slot_id"}),
+    ),
+    Broken(
+        "e05",
+        "string_offer_ids",
+        {_XML: [_COUNTED("offer_id", "offer_no", "str(offer_no)")]},
+        frozenset({"whole_number:offers.offer_id"}),
+    ),
+    Broken(
+        "e05",
+        "float_offer_ids",
+        {_XML: [_COUNTED("offer_id", "offer_no", "float(offer_no)")]},
+        frozenset({"whole_number:offers.offer_id"}),
     ),
 ]
 
@@ -284,3 +412,33 @@ def test_line_separator_inside_a_tool_call_does_not_split_a_record(tmp_path: Pat
     )
 
     assert _audit(_transcript(tmp_path, line), run, venv) == [FindingKind.OUTSIDE_ALLOWED]
+
+
+# --- the new check kinds, one by one ---------------------------------------------------------------------------
+
+
+def test_whole_number_rejects_bool_float_and_text() -> None:
+    check = WholeNumber(kind="whole_number", product="p", field="id")
+
+    assert check.failure(Observed(None, None, {"p": [{"id": 1}, {"id": 2}]})) is None
+    for bad in (True, 1.0, "1", None):
+        assert check.failure(Observed(None, None, {"p": [{"id": 1}, {"id": bad}]})) is not None
+
+
+def test_repeatable_compares_the_second_run_in_order() -> None:
+    check = Repeatable(kind="repeatable")
+    rows = {"p": [{"a": 1}, {"a": 2}]}
+
+    assert check.failure(Observed(None, None, rows, second_rows={"p": [{"a": 1}, {"a": 2}]})) is None
+    assert check.failure(Observed(None, None, rows, second_rows={"p": [{"a": 2}, {"a": 1}]})) is not None
+    assert check.failure(Observed(None, None, rows, second_error="Timeout")) is not None
+
+
+def test_seed_is_reads_the_entry_descriptor_not_the_agents_acceptance_file(tmp_path: Path) -> None:
+    project = _reference(tmp_path, "e01")
+    (project / _ACCEPTANCE).write_text('{"version": "5.0", "expectations": [], "seed": 1}', encoding="utf-8")
+    (project / _XML).write_text(
+        (project / _XML).read_text(encoding="utf-8").replace('rngSeed="10421"', 'rngSeed="10421 "'), encoding="utf-8"
+    )
+
+    assert "seed_is" in _failed(project, "e01")
