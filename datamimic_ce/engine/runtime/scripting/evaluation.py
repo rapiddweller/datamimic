@@ -132,11 +132,15 @@ def _replaced_engine_names(
     )
 
 
+def _compile(expression: str) -> types.CodeType:
+    # eval() of a string drops leading spaces and tabs; compile() does not, so drop them here (script=" a + b").
+    return compile(expression.lstrip(" \t"), "<expression>", "eval")
+
+
 # As in EE: the same expression text runs once per row, so compile it once.
 @lru_cache(maxsize=8192)
 def _compiled(expression: str) -> types.CodeType:
-    # eval() of a string drops leading spaces and tabs; compile() does not, so drop them here (script=" a + b").
-    return compile(expression.lstrip(" \t"), "<expression>", "eval")
+    return _compile(expression)
 
 
 def evaluate_python(
@@ -179,9 +183,9 @@ def evaluate_python(
         return namespace
 
     # Data text is a new value on each row: a cache would only keep every distinct text alive.
-    compiled = _compiled.__wrapped__ if text_from_data else _compiled
     try:
-        return normalized_result(eval(compiled(expression), single_namespace(local_namespace)), diagnostic)
+        code = _compile(expression) if text_from_data else _compiled(expression)
+        return normalized_result(eval(code, single_namespace(local_namespace)), diagnostic)
     except (UserErrorBase, DomainError):
         raise
     except (NameError, AttributeError) as error:
