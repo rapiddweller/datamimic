@@ -118,4 +118,4 @@ user's project with `datamimic-mcp --transport stdio --workspace-root <project>`
 verify this binding before reading project-relative resources. The shared setup
 workflow installs CE when needed; it does not configure an MCP connection unless
 the user needs that transport. `datamimic-mcp` needs the `datamimic-ce[mcp]` extra;
-a plain CE install lists the command but it fails on import.
+a plain CE install lists the command, which then exits with code 1 and names the extra.
