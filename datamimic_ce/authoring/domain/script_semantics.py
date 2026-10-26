@@ -226,18 +226,19 @@ class ReplayCause(StrEnum):
     SET_ORDER = "set_order"
 
     def failure_message(self) -> str:
-        """Static text for a replay that differed; names the cause, never source text or values."""
+        """Static text for a replay that differed. It names a possible cause, because a model can have several, and
+        never source text or values."""
         match self:
             case ReplayCause.PYTHON_LIBRARY:
                 return (
-                    "A seeded model that loads Python must replay identically, and this one did not: a value drawn "
-                    "outside the seeded names, such as a module-level draw in the library, differs between runs."
+                    "A seeded model that loads Python must replay identically, and this one did not. A possible "
+                    "cause: a value drawn outside the seeded names, such as a module-level draw in the library."
                 )
             case ReplayCause.SET_ORDER:
                 return (
-                    "A seeded model whose script iterates a set must replay identically, and this one did not: the "
-                    "order of a set of strings changes with the process hash seed, which rngSeed does not fix. Use "
-                    "sorted(...), a list or a tuple."
+                    "A seeded model whose script iterates a set must replay identically, and this one did not. A "
+                    "possible cause: the order of a set of strings changes with the process hash seed, which rngSeed "
+                    "does not fix. Use sorted(...), a list or a tuple."
                 )
 
 
