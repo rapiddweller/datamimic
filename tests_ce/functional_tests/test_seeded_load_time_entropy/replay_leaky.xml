@@ -1,0 +1,7 @@
+<setup rngSeed="7">
+    <execute uri="script/replay/leaky.scr.py"/>
+    <generate name="rows" count="3">
+        <key name="id" generator="IncrementGenerator"/>
+        <key name="value" script="boot()"/>
+    </generate>
+</setup>

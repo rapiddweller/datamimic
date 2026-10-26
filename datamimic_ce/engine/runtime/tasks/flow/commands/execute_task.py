@@ -13,6 +13,7 @@ from datamimic_ce.engine.io.api import execute_sql_script
 from datamimic_ce.engine.io.contracts import SqlScriptClient
 from datamimic_ce.engine.runtime.contexts.context import Context
 from datamimic_ce.engine.runtime.contexts.geniter_context import GenIterContext
+from datamimic_ce.engine.runtime.scripting.expression_globals import load_time_entropy
 from datamimic_ce.engine.runtime.tasks.base.task import SetupSubTask
 from datamimic_ce.errors import (
     DescriptorLocation,
@@ -113,8 +114,18 @@ class ExecuteTask(SetupSubTask):
     def _eval_python(self, ctx: Context, python_code: str) -> None:
         """Evaluate inline/uri Python. Multi-line blocks work once dedented, but a malformed block yields a
         raw IndentationError/SyntaxError — turn that into a DATAMIMIC error that says what to do instead."""
+        source = ExecuteStatement.normalize_python_source(python_code)
+        if ctx.root.is_seeded:
+            script = Path(self._statement.uri).name if self._statement.uri else "inline"
+            for finding in load_time_entropy(source):
+                task_warning(
+                    code=IssueCode.EXECUTE_SEEDED_LOAD_TIME_ENTROPY,
+                    script=script,
+                    line=finding.line,
+                    draw=finding.draw.value,
+                )
         try:
-            updated_ns = ctx.root.eval_namespace(ExecuteStatement.normalize_python_source(python_code))
+            updated_ns = ctx.root.eval_namespace(source)
         except (UserErrorBase, DomainError):
             raise
         except SyntaxError as e:  # IndentationError is a SyntaxError

@@ -11,6 +11,9 @@ Build `4.0` is a protocol version. This migration does not authorize merge or re
 Parser and Execute user failures use catalog exceptions with logical locations.
 Missing SQL clients, missing script files and failed Bash now raise `TaskConfigError`;
 native causes remain attached where present. Bash emits the shared warning `W007`.
+Under `<setup rngSeed>`, a `<execute>` Python script that draws entropy while it loads (a module-level call,
+a default argument, an entropy import inside a function or class body) emits the shared warning `W008`
+with the script name and line; nothing is rejected, and Build's deterministic replay stays the hard check.
 
 Build and raw XML verification reject XML over 1,000,000 characters with a typed
 `limit` diagnostic, rather than leaking an internal validation exception. Compile

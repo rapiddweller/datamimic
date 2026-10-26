@@ -1,0 +1,8 @@
+<setup rngSeed="7">
+    <!-- Drawing inside a function the model calls, from a module-level import, is seeded and raises nothing. -->
+    <execute uri="script/clean.scr.py"/>
+    <generate name="rows" count="2">
+        <key name="id" generator="IncrementGenerator"/>
+        <key name="token" script="token(1)"/>
+    </generate>
+</setup>

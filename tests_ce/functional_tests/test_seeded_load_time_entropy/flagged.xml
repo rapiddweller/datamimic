@@ -1,0 +1,18 @@
+<!-- Every script in script/flagged draws while it loads. Its `# W008` comment marks the line that is reported. -->
+<setup rngSeed="7">
+    <execute uri="script/flagged/random_call.scr.py"/>
+    <execute uri="script/flagged/from_import.scr.py"/>
+    <execute uri="script/flagged/alias.scr.py"/>
+    <execute uri="script/flagged/datetime_now.scr.py"/>
+    <execute uri="script/flagged/uuid4.scr.py"/>
+    <execute uri="script/flagged/urandom.scr.py"/>
+    <execute uri="script/flagged/unseeded_random_object.scr.py"/>
+    <execute uri="script/flagged/seed_none.scr.py"/>
+    <execute uri="script/flagged/default_argument.scr.py"/>
+    <execute uri="script/flagged/class_body.scr.py"/>
+    <execute uri="script/flagged/eager_consumer.scr.py"/>
+    <execute uri="script/flagged/import_in_body.scr.py"/>
+    <generate name="rows" count="1">
+        <key name="id" generator="IncrementGenerator"/>
+    </generate>
+</setup>

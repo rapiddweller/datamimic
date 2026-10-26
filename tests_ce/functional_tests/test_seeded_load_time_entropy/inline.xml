@@ -1,0 +1,10 @@
+<setup rngSeed="7">
+    <!-- Inline code has no file name: the warning names it "inline". -->
+    <execute type="python">
+import random
+BOOT = random.random()
+    </execute>
+    <generate name="rows" count="1">
+        <key name="id" generator="IncrementGenerator"/>
+    </generate>
+</setup>
