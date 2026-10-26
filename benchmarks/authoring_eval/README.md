@@ -69,6 +69,7 @@ Limits of the oracle:
 - `per_parent_count` groups the child rows by the parent key. It does not prove that a child sits under the right parent when two parents swap keys.
 - The oracle checks values, not the method. e03 prescribes the `slot_id` formula, so a global counter gives wrong values. A flat project that computes the per-depot counter by arithmetic still passes.
 - e04 proves that the rows come from the CSV with a second CSV of other values (`fixtures_changed/`). It does not prove how the project reads the file.
+  A project that reads its own copy of the CSV at another path fails that check. The prompt names `fixtures/orders.csv`, so this is intended.
 - `repeatable` finds a difference that two hash seeds expose. The engine fixes the clock and the random generators when the seed is set, so a script cannot use them to make a seeded run differ.
 
 ## Protocol
@@ -92,17 +93,17 @@ Follow these steps for every run. One run is one `claude -p` process for one cas
    | Flag | Effect |
    |---|---|
    | `--safe-mode` | no CLAUDE.md, AGENTS.md, memory, skills, installed plugins, hooks or MCP servers |
-   | `--restricted` | the user, project and local settings files are ignored; the file tools stay in the cwd |
+   | `--restricted` | the user, project and local settings files are ignored; the file tools stay in the cwd (per `--help`; no run tried a read outside) |
    | `--tools` and `--allowed-tools` `Bash,Read,Write,Edit,Glob,Grep` | only these tools exist, and they need no prompt |
    | `--permission-prompts none` | any other permission request is denied |
    | `--disable-slash-commands`, `--strict-mcp-config` | no skills or commands, no MCP servers |
-   | `--no-session-persistence` | the run leaves no session under `~/.claude/projects/` |
+   | `--no-session-persistence` | the run cannot be resumed; long tool output still goes to `~/.claude/projects/<run>/…/tool-results/` |
    | `--max-budget-usd 3` | a cost limit; the CLI has no turn limit flag |
    | `--output-format stream-json --verbose --debug-file` | the transcript and the debug log, both in `<base>` |
 
    The child gets only `HOME`, `USER`, `LOGNAME`, `LANG`, `TMPDIR`, `SHELL` and a system `PATH`.
 4. It checks the isolation (`isolation_problems`) and audits the transcript with `--allow <run-dir> --allow <venv>/bin/datamimic --forbid <repository-root> --canary <token>`.
-5. It prints a JSON report. The exit code is `0` only when the report has no problem and no finding.
+5. It prints a JSON report with the CLI version and the result line. The exit code is `0` only when the report has no problem and no finding.
 
 The isolation check fails the run when:
 
@@ -115,6 +116,7 @@ The isolation check fails the run when:
 Evidence from Claude Code 2.1.304, with a model name that does not exist (no API call): without `--safe-mode`, the debug log shows
 `AGENTS.md loaded: <base>/AGENTS.md` and a SessionStart hook with `additionalContext`, and the isolation check reports both.
 With `--safe-mode`, the debug log shows `project memory is off`, and the init message lists no skills.
+When the CLI version changes, repeat that probe without `--safe-mode` and confirm that the isolation check still reports the leak.
 
 What stays unproven:
 
@@ -124,6 +126,8 @@ What stays unproven:
 - Bash is not confined. A subject can read outside the run directory with a relative path or a variable. The audit misses that path, unless the canary token shows up in the output.
 - Bash has network access.
 - The turn limit is a rule of the brief. The report counts the tool calls.
+- No run has shown a model that writes the canary token. The leak that was caught came from the debug-log check.
+- A run that reaches `--max-budget-usd` probably ends with `is_error` and is then void, though it is a model failure. The exact result fields of a budget stop are not verified; read the `result` of the report.
 
 ### Subject brief
 

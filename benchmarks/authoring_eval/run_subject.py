@@ -25,6 +25,7 @@ import tempfile
 from collections.abc import Sequence
 from dataclasses import asdict
 from pathlib import Path
+from typing import Any
 
 from benchmarks.authoring_eval.audit_transcript import ALLOWED_TOOLS, audit, tool_calls
 from benchmarks.authoring_eval.oracle import CASES, REPO_ROOT
@@ -55,10 +56,18 @@ def brief(case: str, venv: Path, run_dir: Path) -> str:
     return text
 
 
-def _records(transcript: Path) -> list[dict[str, object]]:
+def _records(transcript: Path) -> list[dict[str, Any]]:
     # iterate the file, not str.splitlines(): that also splits on U+2028 inside JSON strings
     with transcript.open(encoding="utf-8") as lines:
         return [json.loads(line) for line in lines if line.strip()]
+
+
+def _init(records: list[dict[str, Any]]) -> dict[str, Any] | None:
+    return next((r for r in records if r.get("type") == "system" and r.get("subtype") == "init"), None)
+
+
+def _result(records: list[dict[str, Any]]) -> dict[str, Any] | None:
+    return next((r for r in records if r.get("type") == "result"), None)
 
 
 def isolation_problems(
@@ -67,7 +76,7 @@ def isolation_problems(
     """Each way the run was not blind or not a valid run; empty when it was both."""
     records = _records(transcript)
     problems = []
-    init = next((r for r in records if r.get("type") == "system" and r.get("subtype") == "init"), None)
+    init = _init(records)
     if init is None:
         problems.append("no init message")
     else:
@@ -76,7 +85,7 @@ def isolation_problems(
         problems += [f"init lists {key}" for key in _EMPTY_IN_INIT if init.get(key) != []]
         if os.path.realpath(str(init.get("cwd"))) != os.path.realpath(run_dir):
             problems.append("the cwd is not the run directory")
-    result = next((r for r in records if r.get("type") == "result"), None)
+    result = _result(records)
     if result is None:
         problems.append("no result message")
     else:
@@ -126,12 +135,17 @@ def run(case: str, venv: Path, model: str) -> dict[str, object]:
     with transcript.open("w", encoding="utf-8") as out, (base / "stderr.txt").open("w", encoding="utf-8") as err:
         completed = subprocess.run(command, cwd=run_dir, env=env, stdout=out, stderr=err, timeout=_TIMEOUT_SECONDS)
     findings = audit(transcript, allow=[run_dir, venv / "bin" / "datamimic"], forbid=[REPO_ROOT], canary=canary)
+    records = _records(transcript)
+    init, result = _init(records) or {}, _result(records) or {}
     return {
         "case": case,
         "model": model,
         "run_dir": str(run_dir),
         "transcript": str(transcript),
         "claude_exit": completed.returncode,
+        # the debug-log check depends on how this version logs a loaded instruction file
+        "claude_code_version": init.get("claude_code_version"),
+        "result": {key: result.get(key) for key in ("subtype", "terminal_reason", "total_cost_usd", "duration_ms")},
         "tool_calls": sum(1 for _ in tool_calls(transcript)),
         "problems": isolation_problems(transcript, debug_log, run_dir, canary, canary_files),
         "findings": [asdict(finding) for finding in findings],
