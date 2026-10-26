@@ -145,7 +145,7 @@ def _base_license(person_id: int, valid_on: date, person_licenses: Sequence[Row]
     if not dated:
         return Exclusion(person_id=person_id, rule=Rule.R2, reason="base license has no expiry date", value=None)
     latest = max(row["expires_on"] for row in dated)
-    return Exclusion(person_id=person_id, rule=Rule.R2, reason="base license expired", value=latest)
+    return Exclusion(person_id=person_id, rule=Rule.R2, reason="base license expired", value=f"{latest} < {valid_on}")
 
 
 def _qualification(
@@ -291,16 +291,17 @@ def _shortages(positions: Sequence[Row]) -> tuple[Counter[Rule], list[Decision]]
         eligible, seats = len(position["eligible"]), position["seats"]
         if eligible >= seats:
             continue
+        causes: list[Decision] = []
         if eligible:
-            blocked[Rule.R4] += 1
-            decisions.append(
-                _decision(position, None, None, "short", Rule.R4, f"{eligible} eligible people for {seats} seats")
-            )
+            causes.append(_decision(position, None, None, "short", Rule.R4, f"{eligible} eligible for {seats} seats"))
         for miss in position["near_misses"]:
-            rule = Rule(miss["rule"])
-            blocked[rule] += 1
             reason = miss["reason"] if miss["value"] is None else f"{miss['reason']} ({miss['value']})"
-            decisions.append(_decision(position, None, miss["person_id"], "short", rule, reason))
+            causes.append(_decision(position, None, miss["person_id"], "short", Rule(miss["rule"]), reason))
+        # People of other companies always miss R1; they are the cause only when no closer cause exists.
+        closer = [cause for cause in causes if cause["rule"] != Rule.R1_COMPANY]
+        for cause in closer or causes:
+            blocked[Rule(cause["rule"])] += 1
+            decisions.append(cause)
     return blocked, decisions
 
 
