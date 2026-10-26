@@ -510,12 +510,18 @@ def _wraps_lazily(func: ast.expr, modules: dict[str, str], members: dict[str, tu
 
 def _stored_generators(tree: ast.Module) -> set[int]:
     """Generator expressions the module only stores or tests for truth: alone, inside lazy wrappers or containers,
-    as a branch of a conditional expression, through a walrus, or as a default argument (`g = (x for x in y)`,
-    `m = map(f, (x for x in y))`, `gens = [(x for x in y)]`, `if (g := (x for x in y)):`). Any other position
-    consumes the generator while the module loads: a call, a loop, an unpacking, a starred element, a comprehension,
-    a membership test. A generator stored and consumed later at module level is missed."""
+    as a branch of a conditional expression, or through a walrus (`g = (x for x in y)`, `m = map(f, (x for x in y))`,
+    `gens = [(x for x in y)]`, `if (g := (x for x in y)):`). Any other position consumes the generator while the
+    module loads: a call, a loop, an unpacking, a starred element, a comprehension, a membership test. A default
+    argument stays reported, as a decorator argument does: a call at load consumes it unseeded. A generator stored
+    and consumed later at module level is missed."""
     stored: set[int] = set()
-    modules, members = _bindings(_module_scope_nodes(tree), ("itertools",))
+    scope = _module_scope_nodes(tree)
+    modules, members = _bindings(scope, ("itertools",))
+    # A def or class of the same name replaces the import, wherever it sits: the name stays reported (fail safe).
+    for node in scope:
+        if isinstance(node, ast.FunctionDef | ast.AsyncFunctionDef | ast.ClassDef) and node.name in members:
+            del members[node.name]
 
     def mark(value: ast.expr | None) -> None:
         if isinstance(value, ast.GeneratorExp):
@@ -546,9 +552,6 @@ def _stored_generators(tree: ast.Module) -> set[int]:
             mark(node.value)
         elif isinstance(node, ast.If | ast.While):
             mark(node.test)
-        elif isinstance(node, ast.FunctionDef | ast.AsyncFunctionDef | ast.Lambda):
-            for default in (*node.args.defaults, *node.args.kw_defaults):
-                mark(default)
     return stored
 
 

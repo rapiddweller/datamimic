@@ -28,6 +28,8 @@
     <execute uri="script/flagged/pool_argument.scr.py"/>
     <execute uri="script/flagged/print_argument.scr.py"/>
     <execute uri="script/flagged/decorator_argument.scr.py"/>
+    <execute uri="script/flagged/generator_default.scr.py"/>
+    <execute uri="script/flagged/shadowed_imported_wrapper_name.scr.py"/>
     <generate name="rows" count="1">
         <key name="id" generator="IncrementGenerator"/>
     </generate>
