@@ -250,7 +250,7 @@ def iterates_a_set(script: str) -> bool:
     """Whether a script reads a set in an order-dependent way (#425). The order of a set of strings follows the
     process hash seed, which rngSeed does not fix. Membership tests, comparisons, set predicates and order-free calls
     such as sorted(...) or len(...) are safe; a set that is iterated, converted or returned is not. This is a lint
-    hint, not a proof: a set reached through a name, a variable, a helper or string= is not seen. Build replays every
+    hint, not a proof: a set held in a name or returned by a helper is not seen. Build replays every
     seeded model under other hash seeds, which lowers the chance that such a miss stays hidden; it cannot remove it."""
     try:
         tree = ast.parse(script, mode="eval")
@@ -287,7 +287,7 @@ class ReplayCause(StrEnum):
             case ReplayCause.OTHER:
                 return (
                     "A seeded model must replay identically, and this one did not. A possible cause: a set of strings "
-                    "read in an order-dependent way where the lint does not look, such as string= or a helper. Its "
+                    "held in a name or returned by a helper, read in an order-dependent way. Its "
                     "order changes with the process hash seed, which rngSeed does not fix. Use sorted(...), a list or "
                     "a tuple."
                 )

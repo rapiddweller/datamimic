@@ -128,7 +128,7 @@ class ReplayProductMismatch(AuthoringModel):
 
 
 class DeterministicReplayEvidence(AuthoringModel):
-    """Typed result of an optional full bounded-capture replay comparison."""
+    """Typed result of the full bounded-capture replay comparison; every seeded Build runs it."""
 
     status: VerificationGateStatus = VerificationGateStatus.NOT_REQUESTED
     scope: ReplayScope = ReplayScope.FULL_BOUNDED_CAPTURE
