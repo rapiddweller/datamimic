@@ -68,3 +68,29 @@ def test_a_passed_smoke_export_says_that_only_datamimic_run_writes_the_file(tmp_
     assert isinstance(result, ReadyBuild), result.diagnostics
     assert "datamimic run datamimic.xml" in result.verification.smoke_export.reason
     assert not (project / "output").exists()
+
+
+def test_a_default_build_with_a_target_says_where_datamimic_run_writes(tmp_path: Path) -> None:
+    """The blind e04 run built without smoke export first; that Build must already name the output place."""
+    project = _copy(tmp_path, "generate_source_copies_columns")
+    acceptance = project / PROJECT_ACCEPTANCE_PATH
+    acceptance.write_text('{"version": "5.0"}', encoding="utf-8")
+
+    result = create_authoring_application(project, descriptor_path=PROJECT_ENTRY_PATH).build()
+
+    assert isinstance(result, ReadyBuild), result.diagnostics
+    assert "datamimic run datamimic.xml" in result.verification.smoke_export.reason
+    assert "output/" in result.verification.smoke_export.reason
+
+
+def test_a_default_build_without_a_target_keeps_the_plain_reason(tmp_path: Path) -> None:
+    project = _copy(tmp_path)
+    entry = project / PROJECT_ENTRY_PATH
+    entry.write_text(
+        entry.read_text(encoding="utf-8").replace(' target="JSON" exportUri="priced_orders"', ""), encoding="utf-8"
+    )
+
+    result = create_authoring_application(project, descriptor_path=PROJECT_ENTRY_PATH).build()
+
+    assert isinstance(result, ReadyBuild), result.diagnostics
+    assert result.verification.smoke_export.reason == "Smoke export was not requested"
