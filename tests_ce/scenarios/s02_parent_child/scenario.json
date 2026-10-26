@@ -7,7 +7,9 @@
   ],
   "products": {"customers": 4, "orders": 12},
   "negatives": [
-    {"dir": "negative/random_child_key", "diagnostic": "input"},
-    {"dir": "negative/wrong_orders_per_customer", "diagnostic": "per_parent_count"}
+    {"name": "random_child_key", "diagnostic": "input",
+     "patch": {"file": "datamimic.xml", "old": "<key name=\"customer_id\" script=\"parent.customer_id\"/>", "new": "<key name=\"customer_id\" type=\"int\" min=\"1\" max=\"4\"/>"}},
+    {"name": "wrong_orders_per_customer", "diagnostic": "per_parent_count",
+     "patch": {"file": "acceptance/build.json", "old": "}, \"count\": 3}", "new": "}, \"count\": 2}"}}
   ]
 }
