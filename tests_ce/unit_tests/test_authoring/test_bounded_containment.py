@@ -7,6 +7,7 @@
 import os
 import subprocess
 import sys
+import tempfile
 from pathlib import Path, PurePosixPath
 
 import pytest
@@ -16,8 +17,6 @@ from datamimic_ce.authoring.adapters.workspace import AuthoringWorkspaceContext
 from datamimic_ce.authoring.domain.requests import BoundedExecutionRequest
 
 _MODELS = Path(__file__).parent / "bounded_containment_models"
-# The refused models name these outside paths; a regression would create them.
-_OUTSIDE_PATHS = (Path("/tmp/dm363_outside.sock"), Path("/tmp/dm363_probe"))
 
 
 def _run(root: Path, script: str, *, allow_side_effects: bool = False):
@@ -187,18 +186,13 @@ def test_an_accepted_model_runs_inside_the_private_workspace(tmp_path: Path, mod
 @pytest.mark.skipif(os.name != "posix", reason="the models use POSIX paths and AF_UNIX sockets")
 @pytest.mark.parametrize("model", sorted((_MODELS / "refused").glob("*.xml")), ids=lambda path: path.stem)
 def test_a_refused_model_leaves_no_trace_outside_the_private_workspace(tmp_path: Path, model: Path) -> None:
-    for outside in _OUTSIDE_PATHS:
-        assert not outside.exists(), f"remove {outside} left by an earlier run"
-    try:
-        result = _execute(tmp_path, model.read_text(encoding="utf-8"))
+    # /tmp keeps the socket path under the 104-byte AF_UNIX limit that macOS enforces before the audit event.
+    with tempfile.TemporaryDirectory(prefix="dm363", dir="/tmp") as outside:
+        xml = model.read_text(encoding="utf-8").replace("@OUTSIDE@", outside)
+        result = _execute(tmp_path, xml)
         assert not result.ok
         assert any(
             "writes only new files inside its private workspace" in (item.remediation or "")
             for item in result.diagnostics
         )
-        assert not [outside for outside in _OUTSIDE_PATHS if outside.exists()]
-    finally:
-        for outside in _OUTSIDE_PATHS:
-            outside.unlink(missing_ok=True)
-            if outside.is_dir():
-                outside.rmdir()
+        assert not list(Path(outside).iterdir())

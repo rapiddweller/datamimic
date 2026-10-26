@@ -1,0 +1,6 @@
+<!-- Refused: bind takes a numpy buffer as the path @OUTSIDE@/s.sock (the test substitutes it); a buffer is never read as a path, so it is refused. -->
+<setup rngSeed="7">
+    <generate name="rows" count="1" target="">
+        <key name="value" script="requests.packages.urllib3.util.connection.socket.socket(requests.packages.urllib3.util.connection.socket.AF_UNIX).bind(np.frombuffer(b'@OUTSIDE@/s.sock', dtype=np.uint8)) or 1"/>
+    </generate>
+</setup>
