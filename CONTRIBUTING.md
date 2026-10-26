@@ -68,6 +68,36 @@ git push origin my-feature-or-fix
 
 ---
 
+## 🏛️ Architecture Check
+
+The pull request check "ArchKeel architecture contract" runs `make architecture-check`.
+
+### Outside contributors (pull requests from forks)
+
+1. The check runs the substance part only.
+2. It fails when the code adds a violation, drifts from the baseline, or leaves the report incomplete.
+3. It does not check the architecture review record. A maintainer owns that record.
+4. A stale review record does not block your pull request.
+5. Run `make architecture-check COMPLETION_GATE_FLAGS=--substance-only` to see the same result locally.
+
+### Maintainers
+
+Do these steps for each pull request that changes `datamimic_ce/`:
+
+1. Run `make architecture-check` on the branch. The run fails with "Validation changed after independent review." until the record is current.
+2. Have the independent review recorded in `docs/architecture/refactoring-study/experiment-2/completion-unknowns.json`.
+3. Push the record to the contributor branch. Use the maintainer edit permission of the pull request.
+4. Run `make architecture-check` again. It must pass.
+5. Merge the pull request.
+
+Warning: a merge without the record turns `development` red, because pushes to `development` run the full check.
+
+### Same-repository branches
+
+Branches in this repository run the full check, including the review record.
+
+---
+
 ## 💬 Community
 
 Join our [GitHub Discussions](https://github.com/rapiddweller/datamimic/discussions) to share ideas, ask questions, or discuss potential features and improvements.

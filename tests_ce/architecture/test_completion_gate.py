@@ -1,10 +1,16 @@
 """Completion requires current evidence and explicit review of every UNKNOWN."""
 
+import json
+import subprocess
+import sys
 from copy import deepcopy
+from pathlib import Path
 
 import pytest
 
-from tests_ce.architecture.completion_gate import check_completion, digest
+from tests_ce.architecture.completion_gate import check_completion, check_substance, digest
+
+GATE = Path(__file__).with_name("completion_gate.py")
 
 
 def packet():
@@ -118,3 +124,80 @@ def test_reviewed_usage_uncertainty_cannot_hide_measurement_failure(source):
     review["validation_digest"] = digest(validation)
     with pytest.raises(ValueError, match="failures remain"):
         check_completion(validation, report, review)
+
+
+STALE_RECEIPT = ["validation_digest", "reviewer", "source", "unknowns_digest", "unreviewed_group"]
+
+
+def stale_receipt(review, change):
+    if change == "reviewer":
+        review["reviewed_by"] = "someone else"
+    elif change == "source":
+        review["source_digest"] = "stale"
+    elif change == "unreviewed_group":
+        review["groups"][0]["ids"] = []
+    else:
+        review[change] = "stale"
+
+
+@pytest.mark.parametrize("change", STALE_RECEIPT)
+def test_stale_review_receipt_fails_by_default_and_passes_substance_only(change):
+    validation, report, review = packet()
+    stale_receipt(review, change)
+    with pytest.raises(ValueError):
+        check_completion(validation, report, review)
+    assert check_substance(validation, report) == 1
+
+
+def test_stale_diagnostic_assessment_is_binding_only():
+    validation, report, review = publication_packet()
+    review["validation_unknowns"]["reason"] = ""
+    with pytest.raises(ValueError, match="independently assessed"):
+        check_completion(validation, report, review)
+    assert check_substance(validation, report) == 1
+
+
+SUBSTANCE_FAILURES = [
+    "violation", "coverage", "filter", "measured", "baseline_new", "baseline_resolved",
+    "failures", "observation", "unknown_class", "exit_shape",
+]
+
+
+@pytest.mark.parametrize("mode", ["default", "substance_only"])
+@pytest.mark.parametrize("change", SUBSTANCE_FAILURES)
+def test_substance_failure_fails_in_both_modes(change, mode):
+    validation, report, review = packet()
+    if change == "violation":
+        report["filtered_violations"] = [{"id": "V1"}]
+    elif change == "coverage":
+        report["coverage"]["status"] = "UNKNOWN"
+    elif change == "filter":
+        report["report_filter"]["component"] = "COMP-IO"
+    elif change == "measured":
+        validation["measurements"]["scalars"]["violations"] = 1
+    elif change in {"baseline_new", "baseline_resolved"}:
+        validation[change] = 1
+    elif change == "failures":
+        report["failures"] = ["measurement budget exceeded"]
+    elif change == "observation":
+        validation["observation_complete"] = "UNKNOWN"
+    elif change == "unknown_class":
+        report["recorded_unknowns"][0]["evidence_class"] = "FACT"
+    else:
+        validation["exit_code"] = 2
+    # A matching receipt isolates the substance failure from the review binding.
+    review["validation_digest"] = digest(validation)
+    with pytest.raises(ValueError):
+        check_completion(validation, report, review) if mode == "default" else check_substance(validation, report)
+
+
+@pytest.mark.parametrize("flag", [[], ["--substance-only"]])
+def test_command_line_flag_selects_the_mode(tmp_path, flag):
+    validation, report, review = packet()
+    review["reviewed_by"] = "someone else"
+    paths = []
+    for name, value in (("validation", validation), ("report", report), ("review", review)):
+        paths.append(str(tmp_path / f"{name}.json"))
+        Path(paths[-1]).write_text(json.dumps(value))
+    result = subprocess.run([sys.executable, str(GATE), *flag, *paths], capture_output=True, text=True)
+    assert (result.returncode == 0) == bool(flag)

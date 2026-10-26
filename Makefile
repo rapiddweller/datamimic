@@ -11,6 +11,8 @@ ARCHKEEL_SOURCE := archkeel==4.0.1
 # The independent receipt includes the exact Python runtime.
 ARCHKEEL_PYTHON := 3.11.12
 ARCHITECTURE_DIR := test-artifacts/architecture/ce-recursive-target
+# Empty by default. CI sets --substance-only for fork pull requests, which cannot record the review.
+COMPLETION_GATE_FLAGS ?=
 
 help:
 	@echo "Available targets:"
@@ -102,7 +104,7 @@ architecture-check: architecture-cycle-check architecture-definition-check
 	# ArchKeel ratchets type-only/package SCC edges; Pylint checks executable import cycles.
 	$(MAKE) architecture-validation-receipt architecture-report
 	uvx --python $(ARCHKEEL_PYTHON) --from '$(ARCHKEEL_SOURCE)' archkeel report --input $(ARCHITECTURE_DIR)/architecture.json --only architecture --full --json > $(ARCHITECTURE_DIR)/completion.json
-	uvx --python 3.11 --from pytest==8.3.5 python tests_ce/architecture/completion_gate.py $(ARCHITECTURE_DIR)/validation.json $(ARCHITECTURE_DIR)/completion.json docs/architecture/refactoring-study/experiment-2/completion-unknowns.json
+	uvx --python 3.11 --from pytest==8.3.5 python tests_ce/architecture/completion_gate.py $(COMPLETION_GATE_FLAGS) $(ARCHITECTURE_DIR)/validation.json $(ARCHITECTURE_DIR)/completion.json docs/architecture/refactoring-study/experiment-2/completion-unknowns.json
 
 architecture-cycle-check:
 	uvx --python 3.11 --from pylint==3.3.7 pylint --disable=all --enable=cyclic-import --persistent=n --score=n datamimic_ce
