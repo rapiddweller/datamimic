@@ -21,7 +21,9 @@ _SCOPE_GUIDANCE = (
 
 
 class ExpressionContext(Protocol):
-    def evaluate_python_expression(self, expr: str, local_namespace: dict[str, object] | None = None) -> object: ...
+    def evaluate_python_expression(
+        self, expr: str, local_namespace: dict[str, object] | None = None, *, text_from_data: bool = False
+    ) -> object: ...
 
 
 class DotableDict:
@@ -148,9 +150,12 @@ def evaluate_python(
     local_namespace: dict[str, object],
     *,
     diagnostic_expression: str | None = None,
+    text_from_data: bool = False,
 ) -> object:
-    """Evaluate actual input while callers may name a synthesized expression safely."""
+    """Evaluate actual input while callers may name a synthesized expression safely. An expression read from source
+    data (``text_from_data``) is a value, so its error names nothing that it holds."""
     diagnostic = "configured expression" if diagnostic_expression is None else diagnostic_expression
+    shown = "" if text_from_data else expression
 
     def normalized_result(result: object, source: str) -> object:
         result = _plain(result)
@@ -187,8 +192,8 @@ def evaluate_python(
             code=IssueCode.TASK_EXPRESSION_EVAL_FAILED,
             expr=diagnostic,
             error=(
-                f"{_lookup_failure(error, expression)}: {_SCOPE_GUIDANCE}"
-                f"{_replaced_engine_names(expression, global_namespace, local_namespace)}"
+                f"{_lookup_failure(error, shown)}: {_SCOPE_GUIDANCE}"
+                f"{_replaced_engine_names(shown, global_namespace, local_namespace)}"
             ),
         ) from error
     except KeyError as error:
@@ -203,7 +208,7 @@ def evaluate_python(
             expr=diagnostic,
             error=(
                 f"Failed while evaluate '{diagnostic}': '{diagnostic}' have undefined item or wrong structure"
-                f"{_replaced_engine_names(expression, global_namespace, local_namespace)}"
+                f"{_replaced_engine_names(shown, global_namespace, local_namespace)}"
             ),
         ) from error
     except SyntaxError as error:
@@ -260,14 +265,16 @@ def evaluate_python(
         ) from error
 
 
-def interpolate_variables(context: ExpressionContext, expression: str, prefix: str, suffix: str) -> str:
+def interpolate_variables(
+    context: ExpressionContext, expression: str, prefix: str, suffix: str, *, text_from_data: bool = False
+) -> str:
     """Replace configured variable markers with values from the current context."""
     pattern = rf"{re.escape(prefix)}([^{re.escape(prefix)}]\S*?){re.escape(suffix)}"
     if re.search(pattern, expression) is None:
         return expression
     return re.sub(
         pattern,
-        lambda match: str(context.evaluate_python_expression(match.group(1))),
+        lambda match: str(context.evaluate_python_expression(match.group(1), text_from_data=text_from_data)),
         expression,
     )
 
@@ -309,8 +316,8 @@ def evaluate_source_template(context: ExpressionContext, data: object, prefix: s
         return data
     if data.startswith("{") and data.endswith("}"):
         match = re.fullmatch(r"{(.*)}", data)
-        return context.evaluate_python_expression(match.group(1)) if match is not None else None
-    return interpolate_variables(context, data, prefix, suffix)
+        return context.evaluate_python_expression(match.group(1), text_from_data=True) if match is not None else None
+    return interpolate_variables(context, data, prefix, suffix, text_from_data=True)
 
 
 __all__ = [
