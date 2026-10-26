@@ -2,7 +2,7 @@
 # Copyright (c) 2023-2026 Rapiddweller Asia Co., Ltd.
 # This software is licensed under the MIT License. See LICENSE.
 
-"""Output evidence for RS2, RS3 and RS5: sums and lookups over the whole roster for one entry or person.
+"""Output evidence for RS2 and RS3: sums and lookups over the whole roster for one entry or person.
 
 A script comprehension cannot do them: it does not see the fields of the current record (see README.md, Python).
 """
@@ -49,8 +49,3 @@ def busiest_week_hours(roster: Sequence[Row], shift_types: Sequence[Row], staff_
             week = starts_at.isocalendar()[:2]
             weeks[week] = weeks.get(week, 0) + (ends_at - starts_at) // datetime.timedelta(hours=1)
     return max(weeks.values(), default=0)
-
-
-def wards_on_day(roster: Sequence[Row], staff_id: str, day: datetime.date) -> int:
-    """RS5: the number of wards the person works in on ``day``, the start date of a shift."""
-    return len({row["ward_id"] for row in roster if row["staff_id"] == staff_id and row["shift_date"] == day})

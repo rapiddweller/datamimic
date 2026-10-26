@@ -21,7 +21,6 @@ class Outcome(StrEnum):
     SOLVED = "solved"
     INFEASIBLE = "infeasible"
     BUDGET_EXHAUSTED = "budget_exhausted"
-    NOT_RUN = "not_run"
 
 
 class Rule(StrEnum):
@@ -33,14 +32,10 @@ class Rule(StrEnum):
 
 
 def plan_roster(
-    slots: Sequence[Row], candidates: Sequence[Row], min_rest_hours: int | None, search_budget: int | None
+    slots: Sequence[Row], candidates: Sequence[Row], min_rest_hours: int, search_budget: int
 ) -> dict[str, object]:
     """Return the plan (``entries``), the outcome with its message, the search counters and, per slot, why each
-    suitable person who is not assigned was left out (``decisions``). A parameter is None when the policy file does
-    not give a whole number; then the search does not run, and the policy checks name the parameter."""
-    if min_rest_hours is None or search_budget is None:
-        message = "the search did not run: min_rest_hours or search_budget is not a whole number"
-        return _result(Outcome.NOT_RUN, message, 0, 0, [], [])
+    suitable person who is not assigned was left out (``decisions``)."""
     order = sorted(slots, key=lambda slot: (slot["starts_at"], slot["ward_id"]))
     pool = {
         slot["slot_id"]: sorted(

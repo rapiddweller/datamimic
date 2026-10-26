@@ -46,7 +46,7 @@ run but makes Build lose every named check (#420). Run only a project whose file
 | `data/calendar.csv` | The plan days. This file is the clock of the plan: nothing reads the system time. |
 | `lib/certificates.scr.py` | RS1: `certificate_status`, `valid_certificates`, `lead_holders` and the enum `CertificateStatus`. |
 | `lib/leave.scr.py` | RS6: `on_approved_leave`. |
-| `lib/roster_rules.scr.py` | The output evidence for RS2, RS3 and RS5: `rest_hours_before`, `busiest_week_hours`, `wards_on_day`. |
+| `lib/roster_rules.scr.py` | The output evidence for RS2 and RS3: `rest_hours_before`, `busiest_week_hours`. |
 | `lib/roster_search.scr.py` | The global search `plan_roster`. |
 | `acceptance/build.json` | The roles, the input expectations, the rule expectations and the caller's edge controls. |
 | `scenario.json` | What the corpus runner checks: the row counts and the negatives. |
@@ -54,12 +54,12 @@ run but makes Build lose every named check (#420). Run only a project whose file
 ## Policy
 
 `data/policy.properties` is the one place for the rule parameters. The `policy` product of step 1 reads each value
-once as a whole number. A value that is missing or not a whole number becomes empty (`None`), and the search does not
-run (`outcome` is `not_run`). Two checks then name the key:
+once as a whole number. A value that is missing or not a whole number stops the run in step 1. Two checks limit the
+values:
 
-- `min_rest_hours != None and min_rest_hours >= 11`: a caller requirement. The specification asks for 11 hours of rest,
-  so a smaller value is refused. A larger value is allowed.
-- `search_budget != None and search_budget >= 1`: an input expectation.
+- `min_rest_hours >= 11`: a caller requirement. The specification asks for 11 hours of rest, so a smaller value is
+  refused. A larger value is allowed.
+- `search_budget >= 1`: an input expectation.
 
 ## Rules
 
@@ -67,9 +67,9 @@ run (`outcome` is `not_run`). Two checks then name the key:
 |---|---|---|---|
 | RS1 certification valid on the shift date | `certificate_status`, called by the `cert_status` key of `candidates` in step 3 | `cert_status == 'valid'` on `entry_checks` | `data/shift_types.csv` (`required_cert`), `data/staff_certifications.csv` |
 | RS2 rest between two shifts, no overlap | `blocker` in `plan_roster` | `rest_hours == None or rest_hours >= min_rest_hours` on `entry_checks` | `data/policy.properties` (`min_rest_hours`) |
-| RS3 weekly hours within the contract | `blocker` in `plan_roster` | `busiest_week_hours <= contract_hours` on `hours_checks` | `data/contracts.csv` |
+| RS3 weekly hours within the contract | `blocker` in `plan_roster` | `busiest_week_hours <= max_weekly_hours` on `hours_checks` | `data/contracts.csv` |
 | RS4 minimum and maximum staff, minimum lead holders | `solve` and `shortage` in `plan_roster` | `staffed >= min_staff and staffed <= max_staff`, `leads >= min_lead` on `coverage_checks` | `data/demand.csv` |
-| RS5 one ward per day | `blocker` in `plan_roster` | `wards_that_day == 1` on `entry_checks` | the rule itself |
+| RS5 one ward per day | `blocker` in `plan_roster` | `wards_that_day == 1` on `entry_checks`, a native `script=` count | the rule itself |
 | RS6 never rostered on approved leave | `on_approved_leave`, called by the `on_leave` key of `candidates` in step 3 | `not on_leave` on `entry_checks` | `data/leave.csv` |
 
 The output checks read the roster and the data again. They do not read the suitability decisions or the search evidence.
@@ -145,7 +145,6 @@ ICU lead. The search undoes this choice and gives W1 to S02.
 | `solved` | true | Every slot is staffed. |
 | `infeasible` | true | No roster exists. The message names the slot and the shortage, or says that every team failed. |
 | `budget_exhausted` | false | The search stopped at `search_budget` steps. This is not a proof that no roster exists. |
-| `not_run` | false | A policy value is missing or not a whole number. |
 
 ## Replay and seed
 
@@ -208,7 +207,7 @@ Each negative holds only the files that differ from the project.
 | `rs1_missing_expiry_unlimited` | A missing expiry date is read as valid. | caller control for S09 |
 | `rs1_issue_date_ignored` | The issue date is ignored: a certification is valid before it starts. | caller control for S06 on 2026-03-02 |
 | `rs2_rest_ignored` | The assign step gives the search 0 hours of rest. | `rest_hours == None or rest_hours >= min_rest_hours` |
-| `rs3_over_contract` | One extra entry after the search: S13 works 36 h of 32 h. | `busiest_week_hours <= contract_hours` |
+| `rs3_over_contract` | One extra entry after the search: S13 works 36 h of 32 h. | `busiest_week_hours <= max_weekly_hours` |
 | `rs4_lead_ignored` | The assign step gives the search no lead requirement. | `leads >= min_lead` |
 | `rs4_over_max` | Two extra entries after the search: 3 people in a slot with a maximum of 2. | `staffed >= min_staff and staffed <= max_staff` |
 | `rs5_search_ignores_ward` | The search does not check RS5. S03 then works the W1 night and the W2 evening of 2026-03-05. | `wards_that_day == 1` |

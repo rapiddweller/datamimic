@@ -41,7 +41,7 @@
     {"dir": "negative/rs1_missing_expiry_unlimited", "diagnostic": "row_condition", "expected": "staff_id != 'S09' or 'night' not in eligible_shifts"},
     {"dir": "negative/rs1_issue_date_ignored", "diagnostic": "row_condition", "expected": "candidate_id != 'S06/2026-03-02' or 'night' not in eligible_shifts"},
     {"dir": "negative/rs2_rest_ignored", "diagnostic": "row_condition", "expected": "rest_hours == None or rest_hours >= min_rest_hours"},
-    {"dir": "negative/rs3_over_contract", "diagnostic": "row_condition", "expected": "busiest_week_hours <= contract_hours"},
+    {"dir": "negative/rs3_over_contract", "diagnostic": "row_condition", "expected": "busiest_week_hours <= max_weekly_hours"},
     {"dir": "negative/rs4_lead_ignored", "diagnostic": "row_condition", "expected": "leads >= min_lead"},
     {"dir": "negative/rs4_over_max", "diagnostic": "row_condition", "expected": "staffed >= min_staff and staffed <= max_staff"},
     {"dir": "negative/rs5_search_ignores_ward", "diagnostic": "row_condition", "expected": "wards_that_day == 1"},
