@@ -4,6 +4,16 @@ This project makes the roster of two hospital wards for one week. Each shift of 
 The people must hold a valid certification, get enough rest, and stay within their contract hours.
 All names and data are synthetic.
 
+## Run the tests
+
+```bash
+pytest tests_ce/scenarios -q -k s13
+datamimic authoring build tests_ce/scenarios/s13_shift_roster
+```
+
+The first command Builds, runs and replays the project, and Builds each negative. The tests live in
+`tests_ce/scenarios/test_scenarios.py`, so `pytest tests_ce/scenarios/s13_shift_roster` finds no tests.
+
 ## Process
 
 The entry `datamimic.xml` runs the steps in this order. Each step is one file in `model/`.
@@ -107,21 +117,9 @@ The caller requirements in `acceptance/build.json` name each edge with its ids. 
 | `slot_decisions` | For each slot: the assigned people, and for each other suitable person the strongest rule that excludes the person and the reason: `RS2` before `RS5` before `RS3`. `RS4` means that the slot has its maximum staff. `not_needed` means that no rule excludes the person: the slot has its minimum staff, and the search adds no more. |
 | `entry_checks`, `hours_checks`, `coverage_checks` | The measured values that the rule expectations compare. |
 
-A sample from one run. S09 on 2026-03-02 (`candidates.csv`) is excluded from the night by RS1, because the ALS has no
-expiry date:
+The reasons in `slot_decisions` are computed against the final roster. A person can therefore show `RS2` where the
+search first excluded the person by `RS5`: both rules hold, and RS2 is the stronger one.
 
-```text
-S09/2026-03-02, valid_certs ['BLS'], shifts [{'shift_code': 'night', 'required_cert': 'ALS', 'cert_status': 'no_expiry_date', 'excluded_by': 'RS1'}, ...], eligible_shifts ['day', 'evening']
-```
-
-The W1 night slot of 2026-03-02 (`slot_decisions.csv`) gets S02. Each other suitable person has a rule and a reason:
-
-```text
-S01 RS2 -7 h from 2026-03-02/W2/night, needs 11 h      (a negative rest is an overlap)
-S04 RS2 0 h from 2026-03-02/W1/day, needs 11 h
-S11 RS3 36 h in ISO week 2026-W10, contract allows 32 h
-S07, S13, S16, S17 not_needed the slot has its minimum of 1 staff
-```
 
 ## Search
 
@@ -155,15 +153,17 @@ proof. The plan days come from `data/calendar.csv`, so the same model, data, see
 ## Python
 
 A lookup by one key works natively with a dict index, for example
-`{row.contract_id: row.max_weekly_hours for row in contracts}[contract_id]`. The project uses this form.
-A lookup or a sum over another table that filters by a field of the current record does not work in `script=`,
-for example "the holdings of this person". A comprehension does not see the fields of the current record.
-For this reason, each of these rule checks is one small named function in `lib/`.
-Suitability and the output checks call the same function, so each rule has one definition.
+`{row.contract_id: row.max_weekly_hours for row in contracts}[contract_id]`. A count works natively when the method
+call sees the current record, for example `wards_that_day` in step 5. A comprehension that filters by a field of the
+current record does not work in `script=`, because it does not see that field (#423).
+
+A `nestedKey` over another table can filter natively with `this.staff_id == parent.staff_id`, so RS6 could be a
+DSL rule. The project keeps RS1 and RS6 as functions in `lib/`, because suitability and the output check then call
+one definition of each rule. RS2 and RS3 need sums over the whole roster for one entry, so they are functions too.
 
 A library shares its names with the scripts. The libraries import the module `datetime`, not its classes:
 the class `datetime` would hide the module `datetime` that the scripts use.
-`CertificateStatus` and the search enums `Outcome` and `Rule` name the vocabularies. A row holds their plain values,
+`CertificateStatus` and the search enums `Outcome` and `Rule` name the vocabularies (`Rule` also holds `not_needed`). A row holds their plain values,
 so the XML conditions compare with the string `'valid'`. The search never reads a certificate status: it reads
 `eligible_shifts` and `valid_certs`.
 
@@ -200,37 +200,37 @@ The export is not a transaction: the files are written one after the other.
 
 Each negative holds only the files that differ from the project.
 
-| Negative | What breaks | `row_condition` that Build reports |
-|---|---|---|
-| `rs1_certificate_ignored` | Suitability ignores the certification. | `cert_status == 'valid'` |
-| `rs1_expiry_exclusive` | The expiry date is read as exclusive. | caller control for S07 on 2026-03-04 |
-| `rs1_missing_expiry_unlimited` | A missing expiry date is read as valid. | caller control for S09 |
-| `rs1_issue_date_ignored` | The issue date is ignored: a certification is valid before it starts. | caller control for S06 on 2026-03-02 |
-| `rs2_rest_ignored` | The assign step gives the search 0 hours of rest. | `rest_hours == None or rest_hours >= min_rest_hours` |
-| `rs3_over_contract` | One extra entry after the search: S13 works 36 h of 32 h. | `busiest_week_hours <= max_weekly_hours` |
-| `rs4_lead_ignored` | The assign step gives the search no lead requirement. | `leads >= min_lead` |
-| `rs4_over_max` | Two extra entries after the search: 3 people in a slot with a maximum of 2. | `staffed >= min_staff and staffed <= max_staff` |
-| `rs5_search_ignores_ward` | The search does not check RS5. S03 then works the W1 night and the W2 evening of 2026-03-05. | `wards_that_day == 1` |
-| `rs6_leave_ignored` | Suitability ignores the leave. | `not on_leave` |
-| `rs6_leave_end_exclusive` | The last day of a leave is read as exclusive. | caller control for S03 on 2026-03-04 |
-| `infeasible_monday_lead` | S01 is on leave on Monday: no one can lead the W2 night shift. The check before the search proves it. | `outcome != 'infeasible'` |
-| `infeasible_after_search` | The W1 night shift also needs an ICU lead. Each Monday night slot alone has a lead (S01), both together have not. The search tries every team. | `outcome != 'infeasible'` |
-| `budget_exhausted` | `search_budget` is 50. | `search_complete == True` |
+| Negative | What breaks |
+|---|---|
+| `rs1_certificate_ignored` | Suitability ignores the certification. |
+| `rs1_expiry_exclusive` | The expiry date is read as exclusive. |
+| `rs1_missing_expiry_unlimited` | A missing expiry date is read as valid. |
+| `rs1_issue_date_ignored` | The issue date is ignored: a certification is valid before it starts. |
+| `rs2_rest_ignored` | The assign step gives the search 0 hours of rest. |
+| `rs3_over_contract` | One extra entry after the search: S13 works 36 h of 32 h. |
+| `rs4_lead_ignored` | The assign step gives the search no lead requirement. |
+| `rs4_over_max` | Two extra entries after the search: 3 people in a slot with a maximum of 2. |
+| `rs5_search_ignores_ward` | The search does not check RS5. S03 then works the W1 night and the W2 evening of 2026-03-05. |
+| `rs6_leave_ignored` | Suitability ignores the leave. |
+| `rs6_leave_end_exclusive` | The last day of a leave is read as exclusive. |
+| `infeasible_monday_lead` | S01 is on leave on Monday: no one can lead the W2 night shift. The check before the search proves it. |
+| `infeasible_after_search` | The W1 night shift also needs an ICU lead. Each Monday night slot alone has a lead (S01), both together have not. The search tries every team. |
+| `budget_exhausted` | `search_budget` is 50. |
 
 When a negative changes the suitability or the lead requirement, the search does not need its backtrack.
 Then the caller control `backtracks >= 1` also fails. This is not a second broken rule.
 When no roster exists (the two infeasible negatives and `budget_exhausted`), the coverage checks and the controls on
 the roster also fail. These are consequences of the empty roster, not more broken rules.
 
-Every check is a `row_condition`, so its `expected` text in `scenario.json` is the condition, which names the rule.
+`scenario.json` names the `row_condition` that Build reports for each negative. The condition names the rule.
 `outcome != 'infeasible'` fails only when no roster exists, and `search_complete == True` fails only when the search
 stopped early. Together they mean `solved`. The two infeasible negatives share `outcome != 'infeasible'`: they prove
 the same outcome on two paths, and `plan.message` shows which path.
 
 An overlay replaces whole files. Three negatives hold a copy of `lib/certificates.scr.py` (`rs1_expiry_exclusive`,
-`rs1_missing_expiry_unlimited`, `rs1_issue_date_ignored`), and `rs6_leave_end_exclusive` holds a copy of
-`lib/leave.scr.py`. When you change one of these libraries, change each copy too:
-`diff lib/<library> negative/<name>/lib/<library>` must show only the one changed line.
+`rs1_missing_expiry_unlimited`, `rs1_issue_date_ignored`), `rs6_leave_end_exclusive` holds a copy of
+`lib/leave.scr.py`, and `rs5_search_ignores_ward` holds a copy of `lib/roster_search.scr.py`. When you change one of these libraries, change each copy too:
+`diff lib/<library> negative/<name>/lib/<library>` must show only the changed lines.
 `budget_exhausted/data/policy.properties` repeats `min_rest_hours=11` for the same reason: an overlay cannot change
 one property, and without the line `min_rest_hours` is not defined.
 
@@ -252,9 +252,12 @@ fallback would hide a failure in the decision evidence. A failing script must st
 - The `nestedKey` in suitability builds new dicts for its items and never uses `row.to_dict()`: that call returns the
   stored row, and the enrichment would change the store (F2, #421).
 - No shift in the data crosses midnight. The code handles it: an evening shift from 20:00 for 8 hours also builds ready.
-- Build captures at most 1000 rows. This project uses 758 of them, including the evidence, the checks and the export
-  readbacks, so a longer horizon or a larger staff cannot be proved by Build.
+- Build captures at most 1000 rows (`max_count`). See [Size](#size).
 
 ## Size
 
-The eleven tables (the policy, nine data tables and the roster) hold 133 rows. Build captures 758 rows in 34 products.
+The brief asks for about 300 rows and 20 to 30 columns. The ten tables (nine data files and the roster) hold 135 rows
+and 34 columns: 28 in the data files and 6 in the roster. Every column has a reader.
+The rows stay below the brief, because Build captures at most 1000 rows, and this project uses 822 of them. One more
+person adds about 18 captured rows (candidates, checks and export readbacks). A second week doubles the slots, the
+candidates and the roster, and goes above the limit.
