@@ -1,5 +1,4 @@
 {
-  "seed": 30517,
   "checks": [
     {"kind": "build_ready"},
     {"kind": "exact_count", "product": "subscribers", "n": 5},
@@ -10,8 +9,7 @@
     {"kind": "value_in", "product": "invoices", "field": "state", "values": ["OPEN", "PAID", "VOID"]},
     {"kind": "range", "product": "invoices", "field": "amount_cents", "min": 500, "max": 20000},
     {"kind": "per_parent_count", "child": {"product": "invoices", "field": "subscriber_id"}, "parent": {"product": "subscribers", "field": "subscriber_id"}, "n": 3},
-    {"kind": "fk_in_parent", "child": {"product": "invoices", "field": "subscriber_id"}, "parent": {"product": "subscribers", "field": "subscriber_id"}},
-    {"kind": "seed_is"},
+    {"kind": "seed_is", "seed": 30517},
     {"kind": "repeatable"},
     {"kind": "whole_number", "product": "subscribers", "field": "subscriber_id"},
     {"kind": "whole_number", "product": "invoices", "field": "invoice_id"},

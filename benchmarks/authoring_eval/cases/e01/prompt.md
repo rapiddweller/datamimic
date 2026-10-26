@@ -4,7 +4,7 @@ Each ticket has:
 
 - `ticket_id`, a whole number that is different for every ticket;
 - `priority`, one of `LOW`, `MEDIUM` or `HIGH`;
-- `title`, a generated text that is never empty;
+- `title`, a generated text that is never empty and is different for every ticket;
 - `estimate_hours`, a whole number from 1 to 40, inclusive.
 
 Use seed `10421`.

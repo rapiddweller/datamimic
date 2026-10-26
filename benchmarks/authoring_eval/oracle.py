@@ -37,9 +37,19 @@ _RUN_TIMEOUT_SECONDS = 120
 # Fixed and different for the two runs: the verdict stays reproducible, and a value that depends on the hash order
 # of strings (which the interpreter randomises per process) differs between the runs.
 _HASH_SEEDS = ("1", "2")
+# The case directory that the main runs lay over the project, at the same path in the copy.
+_FIXTURES = "fixtures"
 
 Row = dict[str, object]
 Scalar = StrictStr | StrictInt
+
+
+@dataclass(frozen=True)
+class Output:
+    """The JSON files of one run."""
+
+    error: str | None  # exception class name when the run failed
+    files: dict[str, list[object]] = field(default_factory=dict)  # file stem -> parsed JSON array
 
 
 @dataclass(frozen=True)
@@ -49,8 +59,7 @@ class Observed:
     build_note: str | None  # None when Build reached ready, else a short outcome description
     run_error: str | None  # exception class name when the run failed
     rows: dict[str, list[Row]] = field(default_factory=dict)
-    json_outputs: dict[str, list[object]] = field(default_factory=dict)  # file stem -> parsed JSON array
-    expected_seed: int | None = None  # the seed the prompt prescribes
+    outputs: dict[str, Output] = field(default_factory=dict)  # fixtures directory name -> the run with it
     declared_seed: str | None = None  # rngSeed of the entry descriptor's <setup>, None when absent
     second_rows: dict[str, list[Row]] | None = None  # rows of a second run in a fresh interpreter
     second_error: str | None = None
@@ -65,6 +74,14 @@ def _product_rows(observed: Observed, product: str) -> list[Row] | str:
     return observed.rows[product]
 
 
+def _row_difference(found: list[Row] | list[object], wanted: list[dict[str, Scalar]]) -> str | None:
+    """None when both hold the same rows in any order, with the same keys and JSON types."""
+    expected = Counter(json.dumps(row, sort_keys=True) for row in wanted)
+    # default=str: a subject row can hold any type, and that must be a failed check, not a crash
+    produced = Counter(json.dumps(row, sort_keys=True, default=str) for row in found)
+    return None if expected == produced else "produced rows differ from the expected rows"
+
+
 class _Check(BaseModel, ABC):
     model_config = ConfigDict(extra="forbid", frozen=True)
 
@@ -74,9 +91,6 @@ class _Check(BaseModel, ABC):
     @abstractmethod
     def failure(self, observed: Observed) -> str | None:
         """None when the check holds, else a short reason without row values."""
-
-    def _rows(self, observed: Observed, product: str) -> list[Row] | str:
-        return _product_rows(observed, product)
 
 
 class BuildReady(_Check):
@@ -98,7 +112,7 @@ class ExactCount(_Check):
         return f"exact_count:{self.product}"
 
     def failure(self, observed: Observed) -> str | None:
-        rows = self._rows(observed, self.product)
+        rows = _product_rows(observed, self.product)
         if isinstance(rows, str):
             return rows
         return None if len(rows) == self.n else f"{len(rows)} rows, expected {self.n}"
@@ -113,7 +127,7 @@ class Unique(_Check):
         return f"unique:{self.product}.{self.field}"
 
     def failure(self, observed: Observed) -> str | None:
-        rows = self._rows(observed, self.product)
+        rows = _product_rows(observed, self.product)
         if isinstance(rows, str):
             return rows
         values = [row.get(self.field) for row in rows]
@@ -161,25 +175,6 @@ class PerParentCount(_Check):
         return None if not wrong else f"{len(wrong)} of {len(parents)} parents do not own exactly {self.n} children"
 
 
-class FkInParent(_Check):
-    kind: Literal["fk_in_parent"]
-    child: FieldRef
-    parent: FieldRef
-
-    def label(self) -> str:
-        return f"fk_in_parent:{self.child}"
-
-    def failure(self, observed: Observed) -> str | None:
-        children, parents = self.child.values(observed), self.parent.values(observed)
-        if isinstance(children, str):
-            return children
-        if isinstance(parents, str):
-            return parents
-        keys = {str(value) for value in parents}
-        orphans = [value for value in children if str(value) not in keys]
-        return None if not orphans else f"{len(orphans)} child rows reference no parent"
-
-
 class ValueIn(_Check):
     kind: Literal["value_in"]
     product: str
@@ -225,7 +220,7 @@ class FieldPresent(_Check):
         return f"field_present:{self.product}"
 
     def failure(self, observed: Observed) -> str | None:
-        rows = self._rows(observed, self.product)
+        rows = _product_rows(observed, self.product)
         if isinstance(rows, str):
             return rows
         empty = [name for name in self.fields if any(row.get(name) in (None, "") for row in rows)]
@@ -241,7 +236,7 @@ class ExactFields(_Check):
         return f"exact_fields:{self.product}"
 
     def failure(self, observed: Observed) -> str | None:
-        rows = self._rows(observed, self.product)
+        rows = _product_rows(observed, self.product)
         if isinstance(rows, str):
             return rows
         odd = sum(1 for row in rows if set(row) != set(self.fields))
@@ -258,7 +253,7 @@ class FieldAtMost(_Check):
         return f"field_at_most:{self.product}.{self.field}"
 
     def failure(self, observed: Observed) -> str | None:
-        rows = self._rows(observed, self.product)
+        rows = _product_rows(observed, self.product)
         if isinstance(rows, str):
             return rows
         bad = 0
@@ -278,32 +273,34 @@ class ExactRows(_Check):
         return f"exact_rows:{self.product}"
 
     def failure(self, observed: Observed) -> str | None:
-        found = self._rows(observed, self.product)
+        found = _product_rows(observed, self.product)
         if isinstance(found, str):
             return found
-        wanted = Counter(json.dumps(row, sort_keys=True) for row in self.rows)
-        # default=str: a subject row can hold any type, and that must be a failed check, not a crash
-        produced = Counter(json.dumps(row, sort_keys=True, default=str) for row in found)
-        return None if wanted == produced else "produced rows differ from the expected rows"
+        return _row_difference(found, self.rows)
 
 
 class OutputRows(_Check):
-    """The project wrote ``<product>.json`` (the JSON exporter) holding n rows."""
+    """A run with the case directory ``fixtures`` laid over ``fixtures/`` wrote ``<product>.json`` (the JSON
+    exporter) holding exactly ``rows``. A changed fixtures directory proves that the rows come from the input."""
 
     kind: Literal["output_rows"]
     product: str
-    n: int
+    fixtures: str = _FIXTURES
+    rows: list[dict[str, Scalar]]
 
     def label(self) -> str:
-        return f"output_rows:{self.product}"
+        return f"output_rows:{self.product}:{self.fixtures}"
 
     def failure(self, observed: Observed) -> str | None:
-        if observed.run_error is not None:
-            return f"run failed: {observed.run_error}"
-        written = observed.json_outputs.get(self.product)
+        output = observed.outputs.get(self.fixtures)
+        if output is None:
+            return f"no run with {self.fixtures}"
+        if output.error is not None:
+            return f"run failed: {output.error}"
+        written = output.files.get(self.product)
         if written is None:
             return f"no {self.product}.json was written"
-        return None if len(written) == self.n else f"{len(written)} rows written, expected {self.n}"
+        return _row_difference(written, self.rows)
 
 
 class WholeNumber(_Check):
@@ -328,6 +325,7 @@ class SeedIs(_Check):
     """The entry descriptor's <setup rngSeed> is the seed that the case prescribes."""
 
     kind: Literal["seed_is"]
+    seed: int
 
     def label(self) -> str:
         return "seed_is"
@@ -336,7 +334,7 @@ class SeedIs(_Check):
         if observed.declared_seed is None:
             return "the entry descriptor declares no rngSeed"
         # an XML attribute is text, so compare with the text of the prescribed number
-        return None if observed.declared_seed == str(observed.expected_seed) else "rngSeed is not the prescribed seed"
+        return None if observed.declared_seed == str(self.seed) else "rngSeed is not the prescribed seed"
 
 
 class Repeatable(_Check):
@@ -364,7 +362,6 @@ Check = Annotated[
     | ExactCount
     | Unique
     | PerParentCount
-    | FkInParent
     | ValueIn
     | InRange
     | FieldPresent
@@ -382,7 +379,6 @@ Check = Annotated[
 class OracleSpec(BaseModel):
     model_config = ConfigDict(extra="forbid", frozen=True)
 
-    seed: int
     checks: list[Check]
 
 
@@ -418,13 +414,13 @@ def _declared_seed(work: Path) -> str | None:
         return None
 
 
-def _copy(project: Path, case: str, destination: Path) -> Path:
-    """A private copy, with the case's fixtures laid over it so the agent cannot change them."""
+def _copy(project: Path, case: str, destination: Path, fixtures: str = _FIXTURES) -> Path:
+    """A private copy, with the case's ``fixtures`` directory laid over ``fixtures/`` so the agent cannot change it."""
     # output/ holds files from the agent's own runs; only the oracle runs may write there
     shutil.copytree(project, destination, ignore=shutil.ignore_patterns("output"))
-    fixtures = CASES / case / "fixtures"
-    if fixtures.is_dir():
-        shutil.copytree(fixtures, destination / fixtures.name, dirs_exist_ok=True)
+    source = CASES / case / fixtures
+    if source.is_dir():
+        shutil.copytree(source, destination / _FIXTURES, dirs_exist_ok=True)
     return destination
 
 
@@ -452,20 +448,30 @@ def _finish(process: subprocess.Popen[str]) -> Capture:
         return Capture(error="CaptureCrashed")
 
 
-def _observe(case: str, project: Path, seed: int) -> Observed:
-    """Build one copy while two other copies run at the same time, each in its own interpreter."""
+def _observe(case: str, project: Path, changed_fixtures: list[str]) -> Observed:
+    """Build one copy while the other copies run at the same time, each in its own interpreter: two runs with the
+    case fixtures, and one run for each changed fixtures directory."""
     with tempfile.TemporaryDirectory() as scratch:
-        build_copy, first_copy, second_copy = (_copy(project, case, Path(scratch) / name) for name in "abc")
-        processes = [_start(first_copy, _HASH_SEEDS[0]), _start(second_copy, _HASH_SEEDS[1])]
+        root = Path(scratch)
+        build_copy, first_copy, second_copy = (_copy(project, case, root / name) for name in ("build", "1", "2"))
+        changed_copies = [_copy(project, case, root / name, name) for name in changed_fixtures]
+        processes = [
+            _start(first_copy, _HASH_SEEDS[0]),
+            _start(second_copy, _HASH_SEEDS[1]),
+            *(_start(copy, _HASH_SEEDS[0]) for copy in changed_copies),
+        ]
         build = create_authoring_application(build_copy, descriptor_path=PROJECT_ENTRY_PATH).build()
         build_note = None if isinstance(build, ReadyBuild) else f"Build {build.outcome} in phase {build.phase.value}"
-        first, second = (_finish(process) for process in processes)
+        first, second, *changed = [_finish(process) for process in processes]
+        outputs = {_FIXTURES: Output(first.error, json_outputs(first_copy))} | {
+            name: Output(capture.error, json_outputs(copy))
+            for name, copy, capture in zip(changed_fixtures, changed_copies, changed, strict=True)
+        }
         return Observed(
             build_note,
             first.error,
             first.rows,
-            json_outputs(first_copy),
-            expected_seed=seed,
+            outputs,
             declared_seed=_declared_seed(first_copy),
             second_rows=second.rows,
             second_error=second.error,
@@ -474,7 +480,8 @@ def _observe(case: str, project: Path, seed: int) -> Observed:
 
 def evaluate(case: str, project: Path) -> Verdict:
     spec = OracleSpec.model_validate_json((CASES / case / "oracle.json").read_text(encoding="utf-8"))
-    observed = _observe(case, project, spec.seed)
+    changed = sorted({c.fixtures for c in spec.checks if isinstance(c, OutputRows) and c.fixtures != _FIXTURES})
+    observed = _observe(case, project, changed)
     results = []
     for check in spec.checks:
         reason = check.failure(observed)

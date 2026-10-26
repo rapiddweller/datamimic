@@ -17,6 +17,7 @@ benchmarks/authoring_eval/
     prompt.md          the only text the subject sees
     oracle.json        the checks (hidden from the subject)
     fixtures/          files given to the subject with the prompt (only some cases)
+    fixtures_changed/  the same files with other values; the oracle runs the project with them too (hidden)
     reference/         a good project; the positive test of the oracle (hidden)
   results/             short Markdown summaries of finished campaigns
 ```
@@ -27,31 +28,44 @@ Raw transcripts and run directories stay outside the repository.
 
 | Id | Class | Domain | What it tests |
 |---|---|---|---|
-| e01 | simple | flat dataset | count, unique id, closed value set, numeric range, generated text |
+| e01 | simple | flat dataset | count, unique id, closed value set, numeric range, generated text that differs per ticket |
 | e05 | simple | prices | closed value set, two ranges, one rule across two fields |
 | e02 | complex | parent and child | exact count per parent, key copied from the parent, unique id over all children |
-| e03 | complex | parent and child | child id built from the parent id, helper value that is not a field, fixed value |
-| e04 | complex | CSV to JSON | comma separator, text to number, derived field, field subset, file output |
+| e03 | complex | parent and child | child id from a given formula of the parent id and a per-parent counter, helper value that is not a field, fixed value |
+| e04 | complex | CSV to JSON | comma separator, text to number, derived field, field subset, file output, rows that come from the input |
 
 ## Oracle checks
 
-`oracle.json` holds the `seed` that the prompt prescribes and a list of typed checks. Pydantic validates both. The kinds are a closed set:
-`build_ready`, `exact_count`, `unique`, `per_parent_count`, `fk_in_parent`, `value_in`, `range`,
-`field_present`, `exact_fields`, `field_at_most`, `exact_rows`, `output_rows`, `whole_number`, `seed_is`, `repeatable`.
+`oracle.json` holds a list of typed checks. Pydantic validates it. A check passes when:
 
-- `whole_number` accepts only a Python `int`. A `bool`, a float and a text are not whole numbers. Every case applies it to each identifier field that the prompt names (not e04, whose ids are text).
-- `seed_is` parses the entry `datamimic.xml` and compares `<setup rngSeed>` with the `seed` of the case. It never reads the agent's `acceptance/build.json`.
-- `repeatable` compares the rows of two runs, in order. The runs use separate copies of the project and separate Python interpreters, with `PYTHONHASHSEED` set to `1` and to `2`. A project can have the right seed and still give different rows, for example when a value depends on the order of a set of strings.
+| Kind | Passes when |
+|---|---|
+| `build_ready` | `datamimic authoring build` on the project reaches `ready`. Build needs the agent's own `acceptance/build.json`. |
+| `exact_count` | the product has exactly `n` rows. |
+| `unique` | every value of the field is a text or a number, and no value repeats. Floats and texts are accepted. |
+| `whole_number` | every value is a Python `int`. A `bool`, a float and a text fail. |
+| `per_parent_count` | each parent key owns exactly `n` child rows. Keys are compared as text, so keep `whole_number` on the parent key. |
+| `value_in` | every value is in `values`. |
+| `range` | every value is a whole number (as `whole_number`) from `min` to `max`, inclusive. |
+| `field_present` | every row has each field, and the value is not empty (`None` or `""`). |
+| `exact_fields` | every row has exactly these fields, no more. |
+| `field_at_most` | in every row, both fields are numbers and `field` is at most `other`. |
+| `exact_rows` | the captured rows equal `rows`. Row order is ignored. Keys and JSON types must match. |
+| `output_rows` | the run with the case directory `fixtures` laid over `fixtures/` wrote `<product>.json`, and its rows equal `rows` (as `exact_rows`). |
+| `seed_is` | `<setup rngSeed>` of the entry `datamimic.xml` is `seed`. The agent's `acceptance/build.json` is never read. |
+| `repeatable` | two runs give the same rows in the same order. The runs use separate copies and interpreters, with `PYTHONHASHSEED` `1` and `2`. |
 
 The oracle copies the project to private directories. It lays the case fixtures over each copy.
-It runs `Build` on one copy. It runs the other two copies at the same time and captures the rows per product from each run.
-Every row check reads the rows of the first run. The verdict is JSON. It holds one short reason for each check and no row value.
+It runs `Build` on one copy. It runs the other copies at the same time and captures the rows per product from each run.
+Every row check reads the rows of the first run. An `output_rows` check with another `fixtures` directory gets one more run with that directory.
+The verdict is JSON. It holds one short reason for each check and no row value.
 The exit code is `0` when all checks pass and `1` otherwise.
 
 Limits of the oracle:
 
 - `per_parent_count` groups the child rows by the parent key. It does not prove that a child sits under the right parent when two parents swap keys.
-- The oracle does not check how a value is built (for example that `slot_id` contains `depot_id`). It checks that the values are unique and complete.
+- The oracle checks values, not the method. e03 prescribes the `slot_id` formula, so a global counter gives wrong values. A flat project that computes the per-depot counter by arithmetic still passes.
+- e04 proves that the rows come from the CSV with a second CSV of other values (`fixtures_changed/`). It does not prove how the project reads the file.
 - `repeatable` finds a difference that two hash seeds expose. The engine fixes the clock and the random generators when the seed is set, so a script cannot use them to make a seeded run differ.
 
 ## Protocol

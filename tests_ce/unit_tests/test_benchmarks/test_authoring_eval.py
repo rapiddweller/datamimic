@@ -16,8 +16,11 @@ import pytest
 from benchmarks.authoring_eval.audit_transcript import FindingKind, audit
 from benchmarks.authoring_eval.oracle import (
     CASES,
+    ExactCount,
     ExactRows,
+    FieldRef,
     Observed,
+    PerParentCount,
     Repeatable,
     Unique,
     WholeNumber,
@@ -42,6 +45,8 @@ _XML = "datamimic.xml"
 _ACCEPTANCE = "acceptance/build.json"
 
 # Under PYTHONHASHSEED=1 this is 0 and under 2 it is 1 (CPython 3.11), which is what the oracle sets for its two runs.
+_BOTH_OUTPUTS = frozenset({"output_rows:priced_orders:fixtures", "output_rows:priced_orders:fixtures_changed"})
+
 _FLAG = "list({'alpha', 'bravo', 'charlie', 'delta', 'echo', 'foxtrot', 'golf', 'hotel'}).index('bravo') % 2"
 
 
@@ -58,7 +63,14 @@ _BROKEN = [
         "e01",
         "constant_ids",
         {_XML: [('name="ticket_id" generator="IncrementGenerator"', 'name="ticket_id" constant="7"')]},
-        frozenset({"unique:tickets.ticket_id", "whole_number:tickets.ticket_id"}),  # constant= is text
+        # constant= is text, and every title is the same "Ticket 7"
+        frozenset({"unique:tickets.ticket_id", "whole_number:tickets.ticket_id", "unique:tickets.title"}),
+    ),
+    Broken(
+        "e01",
+        "constant_title",
+        {_XML: [('string="Ticket __ticket_id__"', 'constant="Untitled"')]},
+        frozenset({"unique:tickets.title"}),
     ),
     Broken(
         "e01",
@@ -98,37 +110,37 @@ _BROKEN = [
         "e03",
         "colliding_slot_ids",
         {_XML: [('script="parent.depot_id * 100 + token"', 'script="token"')]},
-        frozenset({"unique:slots.slot_id", "build_ready"}),
+        frozenset({"exact_rows:slots", "build_ready"}),
     ),
     Broken(
         "e03",
         "token_in_output",
         {_XML: [('<variable name="token"', '<key name="token"')]},
-        frozenset({"exact_fields:slots", "build_ready"}),
+        frozenset({"exact_rows:slots", "build_ready"}),
     ),
     Broken(
         "e03",
         "wrong_state",
         {_XML: [('constant="FREE"', 'constant="BUSY"')]},
-        frozenset({"value_in:slots.state"}),
+        frozenset({"exact_rows:slots"}),
     ),
     Broken(
         "e04",
         "total_left_as_text",
         {_XML: [('script="int(source_row.total_cents)"', 'script="source_row.total_cents"')]},
-        frozenset({"exact_rows:priced_orders"}),
+        _BOTH_OUTPUTS,
     ),
     Broken(
         "e04",
         "wrong_priority_threshold",
         {_XML: [(">= 5000", ">= 4000")]},
-        frozenset({"exact_rows:priced_orders"}),
+        _BOTH_OUTPUTS,
     ),
     Broken(
         "e04",
         "no_json_target",
         {_XML: [(' target="JSON"', "")]},
-        frozenset({"output_rows:priced_orders"}),
+        _BOTH_OUTPUTS,
     ),
     Broken(
         "e05",
@@ -241,7 +253,7 @@ _BROKEN = [
         "e03",
         "string_slot_ids",
         {_XML: [('script="parent.depot_id * 100 + token"', 'script="str(parent.depot_id * 100 + token)"')]},
-        frozenset({"whole_number:slots.slot_id"}),
+        frozenset({"exact_rows:slots"}),
     ),
     Broken(
         "e05",
@@ -256,6 +268,50 @@ _BROKEN = [
         frozenset({"whole_number:offers.offer_id"}),
     ),
 ]
+
+
+# Whole wrong projects that a weak agent can write. Each one has the right shape and must still fail.
+_CHEAT_ACCEPTANCE = '{"version": "5.0", "max_count": 15, "expectations": []}'
+_CHEATS = {
+    # slot_id from one counter over all slots, not from the depot and a counter inside it
+    "e03": (
+        """<setup rngSeed="56606">
+    <generate name="depots" count="3">
+        <key name="depot_id" generator="IncrementGenerator"/>
+    </generate>
+    <generate name="slots" count="12">
+        <key name="slot_id" generator="IncrementGenerator"/>
+        <key name="depot_id" script="(slot_id - 1) // 4 + 1"/>
+        <key name="state" constant="FREE"/>
+    </generate>
+</setup>""",
+        frozenset({"exact_rows:slots"}),
+    ),
+    # the six rows typed into scripts: the CSV is never read
+    "e04": (
+        """<setup rngSeed="51110">
+    <generate name="priced_orders" count="6" target="JSON">
+        <variable name="i" generator="IncrementGenerator"/>
+        <key name="order_id" script="'O-' + str(99 + i)"/>
+        <key name="customer_id" script="['C-10','C-11','C-10','C-12','C-13','C-14'][i - 1]"/>
+        <key name="total_cents" script="[1200, 4500, 8000, 3200, 250, 9900][i - 1]"/>
+        <key name="priority" script="'high' if total_cents >= 5000 else 'standard'"/>
+    </generate>
+</setup>""",
+        frozenset({"output_rows:priced_orders:fixtures_changed"}),
+    ),
+}
+
+
+@pytest.mark.parametrize("case", sorted(_CHEATS))
+def test_cheat_project_fails_the_oracle(case: str, tmp_path: Path) -> None:
+    xml, fails = _CHEATS[case]
+    project = tmp_path / "project"
+    (project / "acceptance").mkdir(parents=True)
+    (project / _XML).write_text(xml, encoding="utf-8")
+    (project / _ACCEPTANCE).write_text(_CHEAT_ACCEPTANCE, encoding="utf-8")
+
+    assert _failed(project, case) == fails
 
 
 def _failed(project: Path, case: str) -> set[str]:
@@ -295,7 +351,7 @@ def test_output_file_left_by_the_agents_own_run_does_not_count(tmp_path: Path) -
     (stale / "priced_orders.json").write_text(json.dumps([{}] * 6), encoding="utf-8")
     (project / _XML).write_text((project / _XML).read_text(encoding="utf-8").replace(' target="JSON"', ""))
 
-    assert _failed(project, "e04") == {"output_rows:priced_orders"}
+    assert _failed(project, "e04") == _BOTH_OUTPUTS
 
 
 def test_unreadable_output_files_are_skipped_not_a_crash(tmp_path: Path) -> None:
@@ -431,6 +487,18 @@ def test_whole_number_rejects_bool_float_and_text() -> None:
     assert check.failure(Observed(None, None, {"p": [{"id": 1}, {"id": 2}]})) is None
     for bad in (True, 1.0, "1", None):
         assert check.failure(Observed(None, None, {"p": [{"id": 1}, {"id": bad}]})) is not None
+
+
+def test_whole_number_on_the_parent_key_is_what_catches_orphans() -> None:
+    """unique + per_parent_count + exact_count prove that no child is an orphan only while the parent keys stay
+    distinct as text: per_parent_count groups by str(), so the parents 1 and "1" merge and children 99 hide."""
+    parents, children = FieldRef(product="p", field="id"), FieldRef(product="c", field="pid")
+    observed = Observed(None, None, {"p": [{"id": 1}, {"id": "1"}], "c": [{"pid": v} for v in (1, 1, 99, 99)]})
+
+    assert Unique(kind="unique", product="p", field="id").failure(observed) is None
+    assert PerParentCount(kind="per_parent_count", child=children, parent=parents, n=2).failure(observed) is None
+    assert ExactCount(kind="exact_count", product="c", n=4).failure(observed) is None
+    assert WholeNumber(kind="whole_number", product="p", field="id").failure(observed) is not None
 
 
 def test_repeatable_compares_the_second_run_in_order() -> None:
