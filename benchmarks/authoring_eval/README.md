@@ -55,7 +55,7 @@ Raw transcripts and run directories stay outside the repository.
 | `exact_rows` | the captured rows equal `rows`. Row order is ignored. Keys and JSON types must match. |
 | `output_rows` | the run with the case directory `fixtures` laid over `fixtures/` produced the product and wrote `<product>.json`, or the chunk parts `<product>_<n>.json`, and their rows equal `rows` (as `exact_rows`). |
 | `seed_is` | `<setup rngSeed>` of the entry `datamimic.xml` is `seed`. The agent's `acceptance/build.json` is never read. |
-| `repeatable` | two runs give the same rows in the same order. The runs use separate copies and interpreters, with `PYTHONHASHSEED` `1` and `2`. |
+| `repeatable` | two runs give the same rows in the same order. The runs use separate copies and interpreters, with `PYTHONHASHSEED` `1` and `2`. Build also replays a seeded project under another hash seed, so a hash-order project fails `build_ready` too. |
 
 The oracle copies the project to private directories. It lays the case fixtures over each copy.
 It runs `Build` on one copy. It runs the other copies at the same time and captures the rows per product from each run.

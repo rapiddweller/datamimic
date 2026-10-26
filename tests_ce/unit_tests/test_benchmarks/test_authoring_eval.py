@@ -59,6 +59,9 @@ _ACCEPTANCE = "acceptance/build.json"
 # Under PYTHONHASHSEED=1 this is 0 and under 2 it is 1 (CPython 3.11), which is what the oracle sets for its two runs.
 _BOTH_OUTPUTS = frozenset({"output_rows:priced_orders:fixtures", "output_rows:priced_orders:fixtures_changed"})
 
+# Build and the second oracle run both replay the project under another hash seed.
+_HASH_ORDER = frozenset({"build_ready", "repeatable"})
+
 _FLAG = "list({'alpha', 'bravo', 'charlie', 'delta', 'echo', 'foxtrot', 'golf', 'hotel'}).index('bravo') % 2"
 
 
@@ -238,12 +241,12 @@ _BROKEN = [
         for case, seed in [("e01", "10421"), ("e02", "30517"), ("e03", "56606"), ("e04", "51110"), ("e05", "77031")]
     ],
     # The seed is right, but one value depends on the order of a set of strings. That order changes with the
-    # interpreter's hash seed, so only a second run in a fresh interpreter shows it.
+    # interpreter's hash seed. Build replays under another hash seed, and so does the second oracle run.
     Broken(
         "e01",
         "hash_ordered_hours",
         {_XML: [('name="estimate_hours" type="int" min="1" max="40"', f'name="estimate_hours" script="1 + {_FLAG}"')]},
-        frozenset({"repeatable"}),
+        _HASH_ORDER,
     ),
     Broken(
         "e02",
@@ -253,7 +256,7 @@ _BROKEN = [
                 ('name="amount_cents" type="int" min="500" max="20000"', f'name="amount_cents" script="500 + {_FLAG}"')
             ]
         },
-        frozenset({"repeatable"}),
+        _HASH_ORDER,
     ),
     Broken(
         "e03",
@@ -263,7 +266,7 @@ _BROKEN = [
                 ('script="parent.depot_id * 100 + token"', f'script="parent.depot_id * 100 + token + 50 * ({_FLAG})"')
             ]
         },
-        frozenset({"repeatable"}),
+        _HASH_ORDER,
     ),
     Broken(
         "e04",
@@ -277,13 +280,13 @@ _BROKEN = [
                 )
             ]
         },
-        frozenset({"repeatable"}),
+        _HASH_ORDER,
     ),
     Broken(
         "e05",
         "hash_ordered_sale_price",
         {_XML: [("list_price * 8 // 10", f"list_price * 8 // 10 + {_FLAG}")]},
-        frozenset({"repeatable"}),
+        _HASH_ORDER,
     ),
     # --- identifiers must be whole numbers ---
     Broken(
