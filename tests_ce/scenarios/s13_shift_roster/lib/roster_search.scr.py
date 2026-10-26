@@ -35,7 +35,7 @@ def plan_roster(
     slots: Sequence[Row], candidates: Sequence[Row], min_rest_hours: int, search_budget: int
 ) -> dict[str, object]:
     """Return the plan (``entries``), the outcome with its message, the search counters and, per slot, why each
-    suitable person who is not assigned was left out (``decisions``)."""
+    suitable person who is not assigned was left out, given the shifts of the earlier slots (``decisions``)."""
     order = sorted(slots, key=lambda slot: (slot["starts_at"], slot["ward_id"]))
     pool = {
         slot["slot_id"]: sorted(
@@ -134,6 +134,9 @@ def plan_roster(
         message = f"no roster exists: {proof or f'every team for every slot fails after {steps} steps'}"
     entries = []
     decisions = []
+    # Replay the plan slot by slot: a reason must not name a shift that the search had not chosen yet.
+    for worked in shifts.values():
+        worked.clear()
     for slot in order if outcome is Outcome.SOLVED else ():
         team = teams[slot["slot_id"]]
         assigned = [member["staff_id"] for member in team]
@@ -159,6 +162,8 @@ def plan_roster(
             )
             blocked.append({"staff_id": candidate["staff_id"], "rule": rule.value, "reason": reason})
         decisions.append({"slot_id": slot["slot_id"], "assigned": assigned, "blocked": blocked})
+        for member in team:
+            shifts[member["staff_id"]].append(slot)
     return _result(outcome, message, steps, backtracks, entries, decisions)
 
 

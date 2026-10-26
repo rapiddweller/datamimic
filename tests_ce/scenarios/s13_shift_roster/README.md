@@ -103,7 +103,7 @@ The caller requirements in `acceptance/build.json` name each edge with its ids. 
 | The first and the last leave day are leave days | S03 has approved leave from 2026-03-02 to 2026-03-04 | S03 is on leave on 2026-03-02 and 2026-03-04, not on 2026-03-05 |
 | A requested leave does not block | S14 requested leave on 2026-03-05 | S14 may work the day shift of 2026-03-05 |
 | Hours exactly at the contract maximum | S01 has the contract PT07 (7 h) and is the only Monday ICU+ALS holder | S01 works exactly 7 of 7 h |
-| Only RS5 blocks a pair | S18 (BLS, 7 h contract) returns from leave on 2026-03-05 and takes the W1 evening. S03 works the W1 night: 11 h of rest before the W2 evening, and the fewest hours of the ICU holders | Without the RS5 check, the search gives S03 the W2 evening (negative `rs5_search_ignores_ward`) |
+| Only RS5 blocks a pair | S18 (BLS, 7 h contract) returns from leave on 2026-03-05 and takes the W1 evening. S03 works the W1 night: 11 h of rest before the W2 evening, and the fewest hours of the ICU holders | Without the RS5 check, the search gives S03 the W2 evening (negative `rs5_search_ignores_ward`). `slot_decisions` of `2026-03-05/W2/evening` shows S03 with `RS5` |
 | Exactly the minimum rest is allowed | S03 works the W2 night and the W2 evening of 2026-03-07: 11 h of rest | The W2 evening of 2026-03-07 has `rest_hours == min_rest_hours` |
 | Staff exactly at the slot maximum | The W1 evening needs 1 and allows 1 | W1 evening on 2026-03-02 is staffed at its maximum |
 | The search needs a backtrack | see [Search](#search) | `backtracks >= 1` |
@@ -114,11 +114,13 @@ The caller requirements in `acceptance/build.json` name each edge with its ids. 
 |---|---|
 | `candidates` | One row for each person and plan day. `shifts` holds one decision for each shift type: `cert_status`, and `excluded_by` (`RS1`, `RS6` or empty). |
 | `plan` | `outcome`, `search_complete`, `message`, `steps` and `backtracks`. |
-| `slot_decisions` | For each slot: the assigned people, and for each other suitable person the strongest rule that excludes the person and the reason: `RS2` before `RS5` before `RS3`. `RS4` means that the slot has its maximum staff. `not_needed` means that no rule excludes the person: the slot has its minimum staff, and the search adds no more. |
+| `slot_decisions` | For each slot: the assigned people, and for each other suitable person the strongest rule that excludes the person, given the shifts of the earlier slots, and the reason: `RS2` before `RS5` before `RS3`. `RS4` means that the slot has its maximum staff. `not_needed` means that no rule excludes the person: the slot has its minimum staff, and the search adds no more. |
 | `entry_checks`, `hours_checks`, `coverage_checks` | The measured values that the rule expectations compare. |
 
-The reasons in `slot_decisions` are computed against the final roster. A person can therefore show `RS2` where the
-search first excluded the person by `RS5`: both rules hold, and RS2 is the stronger one.
+The reasons in `slot_decisions` replay the plan slot by slot in search order. A reason sees only the shifts of the
+earlier slots, never a later one. A choice that the search undid leaves no row: S01 shows `not_needed` on the W1 night
+of 2026-03-02, although the search tried S01 there first. Only `plan.backtracks` shows that backtrack. The W2 night
+shows its other half: S02 has `RS2`, because S02 now works the W1 night.
 
 
 ## Search
@@ -223,6 +225,11 @@ When a negative changes the suitability or the lead requirement, the search does
 Then the caller control `backtracks >= 1` also fails. This is not a second broken rule.
 When no roster exists (the two infeasible negatives and `budget_exhausted`), the coverage checks and the controls on
 the roster also fail. These are consequences of the empty roster, not more broken rules.
+When a negative changes the plan, the `slot_decisions` pins can also fail: in `rs1_certificate_ignored`,
+`rs1_issue_date_ignored`, `rs4_lead_ignored`, `rs5_search_ignores_ward` (the S03 `RS5` pin), `rs6_leave_ignored` and
+`rs6_leave_end_exclusive`. These are consequences too.
+A `slot_decisions` pin reads one index of `blocked`, because a row condition cannot search a list. Each pin also
+checks the `staff_id` at its index. So an added person makes the pin fail, not pass. Then correct the index.
 
 `scenario.json` names the `row_condition` that Build reports for each negative. The condition names the rule.
 `outcome != 'infeasible'` fails only when no roster exists, and `search_complete == True` fails only when the search
@@ -247,13 +254,15 @@ fallback would hide a failure in the decision evidence. A failing script must st
 - Every store read uses `sourceEntity=`, not `type=`: `type=` also sets the entity that a step writes (F4, #422).
 - The `nestedKey` in suitability builds new dicts for its items and never uses `row.to_dict()`: that call returns the
   stored row, and the enrichment would change the store (F2, #421).
-- No shift in the data crosses midnight. The code handles it: an evening shift from 20:00 for 8 hours also builds ready.
+- No shift in the data crosses midnight. With an evening shift from 20:00 for 8 hours, every rule check holds, but
+  Build rejects the project: the rest edge on 2026-03-07 and the S03 `RS5` pin depend on the 18:00 evening.
 - Build captures at most 1000 rows (`max_count`). See [Size](#size).
 
 ## Size
 
 The brief asks for about 300 rows and 20 to 30 columns. The ten tables (nine data files and the roster) hold 135 rows
-and 34 columns: 28 in the data files and 6 in the roster. Every column has a reader.
+and 34 columns: 28 in the data files and 6 in the roster. That is 4 columns above the brief. Every column has a
+reader, so the project keeps them.
 The rows stay below the brief, because Build captures at most 1000 rows, and this project uses 822 of them. One more
 person adds about 18 captured rows (candidates, checks and export readbacks). A second week doubles the slots, the
 candidates and the roster, and goes above the limit.
