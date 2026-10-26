@@ -1,0 +1,4 @@
+<setup>
+    <!-- Cleanup: delete the rows of an earlier run; a CSV export writes a new output directory, so nothing remains. -->
+    <echo>cleanup: nothing to delete</echo>
+</setup>

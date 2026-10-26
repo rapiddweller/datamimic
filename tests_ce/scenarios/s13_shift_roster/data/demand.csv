@@ -1,0 +1,7 @@
+demand_id,ward_id,shift_code,min_staff,max_staff,lead_cert,min_lead
+D1,W1,night,1,2,ALS,1
+D2,W1,day,2,3,ALS,1
+D3,W1,evening,1,1,ALS,0
+D4,W2,night,1,2,ICU,1
+D5,W2,day,1,2,ICU,1
+D6,W2,evening,1,2,ICU,1
