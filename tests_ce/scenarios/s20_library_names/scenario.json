@@ -5,7 +5,7 @@
     "a library that imports a member under an alias (from datetime import datetime as Datetime) leaves the engine's datetime module to the expressions",
     "a record field wins over a library name of the same spelling",
     "under rngSeed, import random and from random import randint in a library replay identically (#391)",
-    "when a library import replaces an engine name and an expression then fails, the run error names that name (#423)"
+    "when a library import replaces an engine name and a call or an attribute read on that name then fails, the run error names that name (#423)"
   ],
   "products": {
     "days": 3
