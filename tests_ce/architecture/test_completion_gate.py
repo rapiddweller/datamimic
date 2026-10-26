@@ -1,10 +1,11 @@
 """Completion requires current evidence and explicit review of every UNKNOWN."""
 
+import json
 from copy import deepcopy
 
 import pytest
 
-from tests_ce.architecture.completion_gate import check_completion
+from tests_ce.architecture.completion_gate import check_completion, digest
 
 
 def packet():
@@ -21,28 +22,30 @@ def packet():
         "filtered_violations": [], "recorded_unknowns": records,
         "architecture_projection": {"source": {"source_digest": "source"}, "contract_digest": "contract", "analyzer_digest": "analyzer"},
     }
+    known = {"budgets": {"calls_unresolved": 1428}, "schema_version": "1.3.0", "violations": []}
     review = {
+        "known_violations_digest": digest(known),
         "reviewed_by": "Astra", "contract_digest": "contract",
         "analyzer_digest": "analyzer",
         "groups": [{"classification": "external_type", "reason": "Static evidence cannot prove the external provider.", "ids": ["U1"]}],
     }
-    return validation, report, review
+    return validation, report, review, known
 
 
 def test_assessed_unknown_is_retained_and_accepted():
-    validation, report, review = packet()
+    validation, report, review, known = packet()
     original = deepcopy(report)
-    assert check_completion(validation, report, review) == 1
+    assert check_completion(validation, report, review, known) == 1
     assert report == original
 
 
 def test_source_validation_and_record_churn_needs_no_rebind():
-    validation, report, review = packet()
+    validation, report, review, known = packet()
     report["architecture_projection"]["source"]["source_digest"] = "edited"
     validation["measurements"]["scalars"]["unknown_positions"] = 2
     validation["coverage"]["calls_analyzed"] = 99
     report["recorded_unknowns"][0].update(fact_id="F2", evidence_id="E2")
-    assert check_completion(validation, report, review) == 1
+    assert check_completion(validation, report, review, known) == 1
 
 
 HARD_CHECKS = [
@@ -54,7 +57,7 @@ HARD_CHECKS = [
 
 @pytest.mark.parametrize("change", HARD_CHECKS)
 def test_hard_checks_still_fail(change):
-    validation, report, review = packet()
+    validation, report, review, known = packet()
     if change == "violation":
         report["filtered_violations"] = [{"id": "V1"}]
     elif change in {"baseline_new", "baseline_resolved"}:
@@ -88,15 +91,32 @@ def test_hard_checks_still_fail(change):
     else:
         validation["exit_code"] = 2
     with pytest.raises(ValueError):
-        check_completion(validation, report, review)
+        check_completion(validation, report, review, known)
+
+
+def test_whitespace_only_reformatting_of_known_violations_passes():
+    validation, report, review, known = packet()
+    reloaded = json.loads(json.dumps(known, indent=4, sort_keys=False))
+    assert check_completion(validation, report, review, reloaded) == 1
+
+
+@pytest.mark.parametrize("change", ["raised_budget", "added_baseline_entry"])
+def test_known_violations_change_needs_a_new_review(change):
+    validation, report, review, known = packet()
+    if change == "raised_budget":
+        known["budgets"]["calls_unresolved"] += 1
+    else:
+        known["violations"].append({"id": "V1", "reason": "accepted"})
+    with pytest.raises(ValueError, match="known-violations.json changed after independent review"):
+        check_completion(validation, report, review, known)
 
 
 @pytest.mark.parametrize("change", ["contract", "analyzer", "reviewer"])
 def test_review_target_and_analyzer_must_match(change):
-    validation, report, review = packet()
+    validation, report, review, known = packet()
     review["reviewed_by" if change == "reviewer" else change + "_digest"] = "stale"
     with pytest.raises(ValueError, match="does not match"):
-        check_completion(validation, report, review)
+        check_completion(validation, report, review, known)
 
 
 GROUP_BREAKS = ["new_unknown", "extra_group_id", "unreviewed", "duplicate", "no_reason", "no_classification"]
@@ -104,7 +124,7 @@ GROUP_BREAKS = ["new_unknown", "extra_group_id", "unreviewed", "duplicate", "no_
 
 @pytest.mark.parametrize("change", GROUP_BREAKS)
 def test_every_unknown_needs_exactly_one_assessment(change):
-    validation, report, review = packet()
+    validation, report, review, known = packet()
     group = review["groups"][0]
     if change == "new_unknown":
         report["recorded_unknowns"].append({"id": "U2", "evidence_class": "UNKNOWN"})
@@ -119,11 +139,11 @@ def test_every_unknown_needs_exactly_one_assessment(change):
     else:
         del group["classification"]
     with pytest.raises(ValueError):
-        check_completion(validation, report, review)
+        check_completion(validation, report, review, known)
 
 
 def publication_packet():
-    validation, report, review = packet()
+    validation, report, review, known = packet()
     diagnostic = {
         "code": "interface.usage_unknown", "kind": "contract_invalid",
         "pointer": "/components/0/public/0", "subject": "sample.models:Model",
@@ -135,19 +155,19 @@ def publication_packet():
         "reason": "The registered service returns the model through an unresolved inherited type variable.",
         "diagnostics": deepcopy(validation["diagnostics"]),
     }
-    return validation, report, review
+    return validation, report, review, known
 
 
 def test_reviewed_validation_uncertainty_preserves_raw_exit_and_diagnostic():
-    validation, report, review = publication_packet()
+    validation, report, review, known = publication_packet()
     original = deepcopy(validation)
-    assert check_completion(validation, report, review) == 1
+    assert check_completion(validation, report, review, known) == 1
     assert validation == original
 
 
 @pytest.mark.parametrize("change", ["unreviewed", "unused", "claim", "pointer", "unexpected_exit", "empty"])
 def test_validation_uncertainty_cannot_bypass_completion(change):
-    validation, report, review = publication_packet()
+    validation, report, review, known = publication_packet()
     if change == "unreviewed":
         del review["validation_unknowns"]
     elif change == "unused":
@@ -162,13 +182,13 @@ def test_validation_uncertainty_cannot_bypass_completion(change):
         validation["diagnostics"] = []
         review["validation_unknowns"]["diagnostics"] = []
     with pytest.raises(ValueError):
-        check_completion(validation, report, review)
+        check_completion(validation, report, review, known)
 
 
 @pytest.mark.parametrize("source", ["validation", "report"])
 def test_reviewed_usage_uncertainty_cannot_hide_measurement_failure(source):
-    validation, report, review = publication_packet()
+    validation, report, review, known = publication_packet()
     result = validation if source == "validation" else report
     result["failures"] = ["measurement budget exceeded in calls_unresolved: 1278->1395"]
     with pytest.raises(ValueError, match="failures remain"):
-        check_completion(validation, report, review)
+        check_completion(validation, report, review, known)
