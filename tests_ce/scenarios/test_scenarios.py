@@ -10,7 +10,7 @@ import shutil
 from pathlib import Path
 
 import pytest
-from pydantic import BaseModel, ConfigDict, StrictInt, StrictStr, model_validator
+from pydantic import BaseModel, ConfigDict, StrictInt, StrictStr
 
 from datamimic_ce.authoring import create_authoring_application
 from datamimic_ce.authoring.domain.requests import PROJECT_ENTRY_PATH, BuildResult, ReadyBuild, RejectedBuild
@@ -34,19 +34,11 @@ class Negative(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
     name: StrictStr
-    patch: Patch | None = None
-    # A directory of whole files copied over the project; only for a change that one patch cannot express.
-    dir: StrictStr | None = None
+    patch: Patch
     diagnostic: StrictStr
     expected: StrictStr | None = None
     # A normal run of the variant must also stop, with an error that contains this text.
     run_error: StrictStr | None = None
-
-    @model_validator(mode="after")
-    def _one_change(self) -> "Negative":
-        if (self.patch is None) == (self.dir is None):
-            raise ValueError(f"negative {self.name} must give exactly one of patch or dir")
-        return self
 
 
 class Scenario(BaseModel):
@@ -71,15 +63,12 @@ def _copy(source: Path, destination: Path) -> Path:
     return destination
 
 
-def _apply(negative: Negative, directory: Path, project: Path) -> None:
-    if negative.dir is not None:
-        shutil.copytree(directory / negative.dir, project, dirs_exist_ok=True)
-        return
-    assert negative.patch is not None
-    target = project / negative.patch.file
+def _apply(patch: Patch, project: Path) -> None:
+    target = (project / patch.file).resolve()
+    assert target.is_relative_to(project.resolve()), f"{patch.file} must stay inside the project copy"
     text = target.read_text(encoding="utf-8")
-    assert text.count(negative.patch.old) == 1, f"{negative.patch.file} must contain the old text exactly once"
-    target.write_text(text.replace(negative.patch.old, negative.patch.new), encoding="utf-8")
+    assert text.count(patch.old) == 1, f"{patch.file} must contain the old text exactly once"
+    target.write_text(text.replace(patch.old, patch.new), encoding="utf-8")
 
 
 def _build(project: Path) -> BuildResult:
@@ -116,7 +105,7 @@ def test_negative_is_rejected_with_named_diagnostic(
     directory: Path, negative: Negative, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
     project = _copy(directory, tmp_path / "variant")
-    _apply(negative, directory, project)
+    _apply(negative.patch, project)
     rejected = _build(project)
     assert isinstance(rejected, RejectedBuild), "Build accepted a variant that must be rejected"
     codes = [str(item.code) for item in rejected.diagnostics]
@@ -128,3 +117,16 @@ def test_negative_is_rejected_with_named_diagnostic(
         monkeypatch.chdir(project)
         with pytest.raises(TaskConfigError, match=re.escape(negative.run_error)):
             _run(project)
+
+
+@pytest.mark.parametrize("escape", ["absolute", "parent"])
+def test_patch_outside_the_project_copy_is_refused(escape: str, tmp_path: Path) -> None:
+    project = tmp_path / "variant"
+    project.mkdir()
+    outside = tmp_path / "outside.txt"
+    outside.write_text("old", encoding="utf-8")
+    file = str(outside) if escape == "absolute" else "../outside.txt"
+
+    with pytest.raises(AssertionError, match="inside the project copy"):
+        _apply(Patch(file=file, old="old", new="new"), project)
+    assert outside.read_text(encoding="utf-8") == "old"
