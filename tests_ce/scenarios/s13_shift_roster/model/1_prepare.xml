@@ -1,0 +1,71 @@
+<setup>
+    <!-- Prepare: read each data file, give each column its type, and expand each demand row over the plan days into slots. -->
+    <generate name="contracts" source="data/contracts.csv" distribution="ordered" target="mem">
+        <key name="contract_id" script="contract_id"/>
+        <key name="max_weekly_hours" script="int(max_weekly_hours)"/>
+    </generate>
+    <generate name="staff" source="data/staff.csv" distribution="ordered" target="mem">
+        <key name="staff_id" script="staff_id"/>
+        <key name="contract_id" script="contract_id"/>
+    </generate>
+    <generate name="certifications" source="data/certifications.csv" distribution="ordered" target="mem">
+        <key name="cert_code" script="cert_code"/>
+        <key name="title" script="title"/>
+    </generate>
+    <generate name="staff_certifications" source="data/staff_certifications.csv" distribution="ordered" target="mem">
+        <key name="holding_id" script="holding_id"/>
+        <key name="staff_id" script="staff_id"/>
+        <key name="cert_code" script="cert_code"/>
+        <key name="issued_on" script="datetime.date.fromisoformat(issued_on)"/>
+        <!-- An empty cell is a missing expiry date; RS1 treats it as not valid. -->
+        <key name="expires_on" script="None if expires_on == '' else datetime.date.fromisoformat(expires_on)"/>
+        <key name="valid_days" script="None if expires_on is None else (expires_on - issued_on).days"/>
+    </generate>
+    <generate name="wards" source="data/wards.csv" distribution="ordered" target="mem">
+        <key name="ward_id" script="ward_id"/>
+        <key name="title" script="title"/>
+    </generate>
+    <generate name="shift_types" source="data/shift_types.csv" distribution="ordered" target="mem">
+        <key name="shift_code" script="shift_code"/>
+        <key name="start_hour" script="int(start_hour)"/>
+        <key name="length_hours" script="int(length_hours)"/>
+        <key name="required_cert" script="required_cert"/>
+    </generate>
+    <generate name="demand" source="data/demand.csv" distribution="ordered" target="mem">
+        <key name="demand_id" script="demand_id"/>
+        <key name="ward_id" script="ward_id"/>
+        <key name="shift_code" script="shift_code"/>
+        <key name="min_staff" script="int(min_staff)"/>
+        <key name="max_staff" script="int(max_staff)"/>
+        <key name="lead_cert" script="lead_cert"/>
+        <key name="min_lead" script="int(min_lead)"/>
+        <!-- One slot for each plan day; the calendar file is read here, a store readback allows one read per row. -->
+        <generate name="slots" source="data/calendar.csv" distribution="ordered" target="mem">
+            <variable name="shift_types" source="mem" sourceEntity="shift_types" storage="data" distribution="ordered"/>
+            <variable name="shift" script="{row.shift_code: row for row in shift_types}[parent.shift_code]"/>
+            <key name="shift_date" script="datetime.date.fromisoformat(shift_date)"/>
+            <key name="slot_id" script="f'{shift_date}/{parent.ward_id}/{parent.shift_code}'"/>
+            <key name="demand_id" script="parent.demand_id"/>
+            <key name="ward_id" script="parent.ward_id"/>
+            <key name="shift_code" script="parent.shift_code"/>
+            <key name="min_staff" script="parent.min_staff"/>
+            <key name="max_staff" script="parent.max_staff"/>
+            <key name="lead_cert" script="parent.lead_cert"/>
+            <key name="min_lead" script="parent.min_lead"/>
+            <key name="starts_at" script="datetime.datetime.combine(shift_date, datetime.time(shift['start_hour']))"/>
+            <key name="hours" script="shift['length_hours']"/>
+            <key name="ends_at" script="starts_at + datetime.timedelta(hours=hours)"/>
+        </generate>
+    </generate>
+    <generate name="leave" source="data/leave.csv" distribution="ordered" target="mem">
+        <key name="leave_id" script="leave_id"/>
+        <key name="staff_id" script="staff_id"/>
+        <key name="first_day" script="datetime.date.fromisoformat(first_day)"/>
+        <key name="last_day" script="datetime.date.fromisoformat(last_day)"/>
+        <key name="days" script="(last_day - first_day).days + 1"/>
+        <key name="status" script="status"/>
+    </generate>
+    <generate name="calendar" source="data/calendar.csv" distribution="ordered" target="mem">
+        <key name="shift_date" script="datetime.date.fromisoformat(shift_date)"/>
+    </generate>
+</setup>

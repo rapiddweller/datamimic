@@ -1,0 +1,35 @@
+<setup>
+    <!-- Validate output: measure the complete roster against every rule again, from the data, before it is exported. -->
+    <generate name="entry_checks" source="mem" sourceEntity="roster" distribution="ordered" target="CSV">
+        <variable name="roster" source="mem" sourceEntity="roster" storage="data" distribution="ordered"/>
+        <variable name="holdings" source="mem" sourceEntity="staff_certifications" storage="data" distribution="ordered"/>
+        <variable name="leave" source="mem" sourceEntity="leave" storage="data" distribution="ordered"/>
+        <variable name="shift_types" source="mem" sourceEntity="shift_types" storage="data" distribution="ordered"/>
+        <key name="entry_id" script="entry_id"/>
+        <key name="staff_id" script="staff_id"/>
+        <key name="required_cert" script="{row.shift_code: row.required_cert for row in shift_types}[shift_code]"/>
+        <key name="cert_status" script="certificate_status(holdings, staff_id, required_cert, shift_date)"/>
+        <key name="rest_hours" script="rest_hours_before(roster, shift_types, entry_id)"/>
+        <key name="min_rest_hours" script="int(min_rest_hours)"/>
+        <key name="wards_that_day" script="wards_on_day(roster, staff_id, shift_date)"/>
+        <key name="on_leave" script="on_approved_leave(leave, staff_id, shift_date)"/>
+    </generate>
+    <generate name="hours_checks" source="mem" sourceEntity="staff_capacity" distribution="ordered" target="CSV">
+        <variable name="roster" source="mem" sourceEntity="roster" storage="data" distribution="ordered"/>
+        <variable name="contracts" source="mem" sourceEntity="contracts" storage="data" distribution="ordered"/>
+        <variable name="shift_types" source="mem" sourceEntity="shift_types" storage="data" distribution="ordered"/>
+        <key name="staff_id" script="staff_id"/>
+        <key name="contract_hours" script="{row.contract_id: row.max_weekly_hours for row in contracts}[contract_id]"/>
+        <key name="busiest_week_hours" script="busiest_week_hours(roster, shift_types, staff_id)"/>
+    </generate>
+    <generate name="coverage_checks" source="mem" sourceEntity="slots" distribution="ordered" target="CSV">
+        <variable name="roster" source="mem" sourceEntity="roster" storage="data" distribution="ordered"/>
+        <variable name="holdings" source="mem" sourceEntity="staff_certifications" storage="data" distribution="ordered"/>
+        <key name="slot_id" script="slot_id"/>
+        <key name="min_staff" script="min_staff"/>
+        <key name="max_staff" script="max_staff"/>
+        <key name="min_lead" script="min_lead"/>
+        <key name="staffed" script="[row.slot_id for row in roster].count(slot_id)"/>
+        <key name="leads" script="lead_holders(roster, holdings, slot_id, lead_cert, shift_date)"/>
+    </generate>
+</setup>

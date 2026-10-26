@@ -1,0 +1,14 @@
+<setup rngSeed="13" defaultSeparator=",">
+    <!-- Shift roster for one hospital week. README.md names the files and where each rule RS1 to RS6 lives. -->
+    <include uri="data/policy.properties"/>
+    <memstore id="mem"/>
+    <execute uri="lib/roster_rules.scr.py"/>
+    <execute uri="lib/roster_search.scr.py"/>
+    <include uri="model/1_prepare.xml"/>
+    <!-- Validate input: the input expectations in acceptance/build.json check the prepared tables; no step file. -->
+    <include uri="model/2_suitability.xml"/>
+    <include uri="model/3_assign.xml"/>
+    <include uri="model/4_validate_output.xml"/>
+    <!-- Cleanup: no step; each run writes a new output directory, so no earlier rows remain (README.md, Cleanup). -->
+    <include uri="model/5_export.xml"/>
+</setup>

@@ -1,0 +1,34 @@
+{
+  "title": "Hospital ward roster for one week",
+  "proves": [
+    "every roster entry holds the certification its shift type requires, valid on the shift date",
+    "a certification is valid on its expiry date, and a missing expiry date is not valid",
+    "a person on approved leave is never rostered, and a requested leave does not block",
+    "between two shifts of one person there are at least min_rest_hours hours, and no two shifts overlap",
+    "the hours of a person in a week stay within the contract maximum",
+    "each slot gets at least its minimum staff and lead holders, and not more than its maximum staff",
+    "a person works in one ward per day",
+    "the search needs one backtrack: the greedy first choice for Monday night in W1 leaves W2 without a lead",
+    "the decision evidence names the rule and the reason for every person who is left out"
+  ],
+  "products": {
+    "contracts": 3,
+    "staff": 16,
+    "certifications": 3,
+    "staff_certifications": 32,
+    "wards": 2,
+    "shift_types": 3,
+    "demand": 6,
+    "leave": 4,
+    "calendar": 7,
+    "slots": 42,
+    "candidates": 112,
+    "plan": 1,
+    "roster": 49,
+    "slot_decisions": 42,
+    "entry_checks": 49,
+    "hours_checks": 16,
+    "coverage_checks": 42
+  },
+  "negatives": []
+}

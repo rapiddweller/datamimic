@@ -1,0 +1,42 @@
+<setup>
+    <!-- Export: write the target tables, the roster and its decision evidence to CSV, read back from the store. -->
+    <generate name="export_contracts" source="mem" sourceEntity="contracts" distribution="ordered" target="CSV" targetEntity="contracts">
+        <key name="contract_id" script="contract_id"/>
+    </generate>
+    <generate name="export_staff" source="mem" sourceEntity="staff" distribution="ordered" target="CSV" targetEntity="staff">
+        <key name="staff_id" script="staff_id"/>
+    </generate>
+    <generate name="export_certifications" source="mem" sourceEntity="certifications" distribution="ordered" target="CSV" targetEntity="certifications">
+        <key name="cert_code" script="cert_code"/>
+    </generate>
+    <generate name="export_staff_certifications" source="mem" sourceEntity="staff_certifications" distribution="ordered" target="CSV" targetEntity="staff_certifications">
+        <key name="holding_id" script="holding_id"/>
+    </generate>
+    <generate name="export_wards" source="mem" sourceEntity="wards" distribution="ordered" target="CSV" targetEntity="wards">
+        <key name="ward_id" script="ward_id"/>
+    </generate>
+    <generate name="export_shift_types" source="mem" sourceEntity="shift_types" distribution="ordered" target="CSV" targetEntity="shift_types">
+        <key name="shift_code" script="shift_code"/>
+    </generate>
+    <generate name="export_demand" source="mem" sourceEntity="demand" distribution="ordered" target="CSV" targetEntity="demand">
+        <key name="demand_id" script="demand_id"/>
+    </generate>
+    <generate name="export_leave" source="mem" sourceEntity="leave" distribution="ordered" target="CSV" targetEntity="leave">
+        <key name="leave_id" script="leave_id"/>
+    </generate>
+    <generate name="export_calendar" source="mem" sourceEntity="calendar" distribution="ordered" target="CSV" targetEntity="calendar">
+        <key name="shift_date" script="shift_date"/>
+    </generate>
+    <generate name="export_candidates" source="mem" sourceEntity="candidates" distribution="ordered" target="CSV" targetEntity="candidates">
+        <key name="candidate_id" script="candidate_id"/>
+    </generate>
+    <generate name="export_plan" source="mem" sourceEntity="plan" distribution="ordered" target="CSV" targetEntity="plan">
+        <key name="plan_id" script="plan_id"/>
+    </generate>
+    <generate name="export_roster" source="mem" sourceEntity="roster" distribution="ordered" target="CSV" targetEntity="roster">
+        <key name="entry_id" script="entry_id"/>
+    </generate>
+    <generate name="export_slot_decisions" source="mem" sourceEntity="slot_decisions" distribution="ordered" target="CSV" targetEntity="slot_decisions">
+        <key name="slot_id" script="slot_id"/>
+    </generate>
+</setup>
