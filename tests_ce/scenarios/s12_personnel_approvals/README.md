@@ -116,7 +116,7 @@ Build pins each control case, so it cannot vanish when the data changes.
 
 ## Negative variants
 
-Each directory in `negative/` holds one file that differs from the project. The runner copies it over the project. Build must reject the variant.
+Each variant in `scenario.json` patches one row of one data file in a copy of the project. Build must reject the variant.
 
 | Variant | Changed fact | Build reports (`expected`) |
 |---|---|---|

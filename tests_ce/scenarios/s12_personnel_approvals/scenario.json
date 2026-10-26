@@ -24,19 +24,19 @@
     "staffing": 82
   },
   "negatives": [
-    {"name": "r1_person", "dir": "negative/r1_person", "diagnostic": "row_condition", "expected": "unfilled_by.R1_person == 0"},
-    {"name": "r1_company", "dir": "negative/r1_company", "diagnostic": "row_condition", "expected": "unfilled_by.R1_company == 0"},
-    {"name": "r1_function", "dir": "negative/r1_function", "diagnostic": "row_condition", "expected": "unfilled_by.R1_function == 0"},
-    {"name": "r2_missing", "dir": "negative/r2_missing", "diagnostic": "row_condition", "expected": "unfilled_by.R2 == 0"},
-    {"name": "r2_expired", "dir": "negative/r2_expired", "diagnostic": "row_condition", "expected": "unfilled_by.R2 == 0"},
-    {"name": "r2_inactive", "dir": "negative/r2_inactive", "diagnostic": "row_condition", "expected": "unfilled_by.R2 == 0"},
-    {"name": "r2_no_expiry", "dir": "negative/r2_no_expiry", "diagnostic": "row_condition", "expected": "unfilled_by.R2 == 0"},
-    {"name": "r3_missing", "dir": "negative/r3_missing", "diagnostic": "row_condition", "expected": "unfilled_by.R3 == 0"},
-    {"name": "r4_above_maximum", "dir": "negative/r4_above_maximum", "diagnostic": "row_condition", "expected": "seats >= 1 and seats <= max_seats"},
-    {"name": "r4_same_person", "dir": "negative/r4_same_person", "diagnostic": "row_condition", "expected": "unfilled_by.R4 == 0"},
-    {"name": "r5_exclusive_approval", "dir": "negative/r5_exclusive_approval", "diagnostic": "row_condition", "expected": "unfilled_by.R5 == 0"},
-    {"name": "r6_cross_company", "dir": "negative/r6_cross_company", "diagnostic": "row_condition", "expected": "unfilled_by.R6 == 0"},
-    {"name": "infeasible", "dir": "negative/infeasible", "diagnostic": "row_condition", "expected": "outcome != 'infeasible'"},
-    {"name": "budget_exhausted", "dir": "negative/budget_exhausted", "diagnostic": "row_condition", "expected": "outcome != 'budget_exhausted'"}
+    {"name": "r1_person", "diagnostic": "row_condition", "expected": "unfilled_by.R1_person == 0", "patch": {"file": "data/employments.json", "old": "{\"person_id\": 47, \"company_id\": \"C05\", \"function_id\": \"INS\"}", "new": "{\"person_id\": 100, \"company_id\": \"C05\", \"function_id\": \"INS\"}"}},
+    {"name": "r1_company", "diagnostic": "row_condition", "expected": "unfilled_by.R1_company == 0", "patch": {"file": "data/employments.json", "old": "{\"person_id\": 47, \"company_id\": \"C05\", \"function_id\": \"INS\"}", "new": "{\"person_id\": 47, \"company_id\": \"C10\", \"function_id\": \"INS\"}"}},
+    {"name": "r1_function", "diagnostic": "row_condition", "expected": "unfilled_by.R1_function == 0", "patch": {"file": "data/employments.json", "old": "{\"person_id\": 47, \"company_id\": \"C05\", \"function_id\": \"INS\"}", "new": "{\"person_id\": 47, \"company_id\": \"C05\", \"function_id\": \"PLN\"}"}},
+    {"name": "r2_missing", "diagnostic": "row_condition", "expected": "unfilled_by.R2 == 0", "patch": {"file": "data/person_licenses.json", "old": "{\"person_id\": 47, \"license_type\": \"BASE\", \"status\": \"active\", \"expires_on\": \"2026-03-01\"}", "new": "{\"person_id\": 47, \"license_type\": \"TRAINEE\", \"status\": \"active\", \"expires_on\": \"2026-03-01\"}"}},
+    {"name": "r2_expired", "diagnostic": "row_condition", "expected": "unfilled_by.R2 == 0", "patch": {"file": "data/person_licenses.json", "old": "{\"person_id\": 47, \"license_type\": \"BASE\", \"status\": \"active\", \"expires_on\": \"2026-03-01\"}", "new": "{\"person_id\": 47, \"license_type\": \"BASE\", \"status\": \"active\", \"expires_on\": \"2026-02-28\"}"}},
+    {"name": "r2_inactive", "diagnostic": "row_condition", "expected": "unfilled_by.R2 == 0", "patch": {"file": "data/person_licenses.json", "old": "{\"person_id\": 47, \"license_type\": \"BASE\", \"status\": \"active\", \"expires_on\": \"2026-03-01\"}", "new": "{\"person_id\": 47, \"license_type\": \"BASE\", \"status\": \"inactive\", \"expires_on\": \"2026-03-01\"}"}},
+    {"name": "r2_no_expiry", "diagnostic": "row_condition", "expected": "unfilled_by.R2 == 0", "patch": {"file": "data/person_licenses.json", "old": "{\"person_id\": 47, \"license_type\": \"BASE\", \"status\": \"active\", \"expires_on\": \"2026-03-01\"}", "new": "{\"person_id\": 47, \"license_type\": \"BASE\", \"status\": \"active\", \"expires_on\": null}"}},
+    {"name": "r3_missing", "diagnostic": "row_condition", "expected": "unfilled_by.R3 == 0", "patch": {"file": "data/person_qualifications.json", "old": "{\"person_id\": 47, \"qualification_id\": \"Q-INS\"}", "new": "{\"person_id\": 47, \"qualification_id\": \"Q-PLN\"}"}},
+    {"name": "r4_above_maximum", "diagnostic": "row_condition", "expected": "seats >= 1 and seats <= max_seats", "patch": {"file": "data/demand.json", "old": "{\"position_id\": \"A11-V1-OPR\", \"version_id\": \"A11-V1\", \"function_id\": \"OPR\", \"seats\": 2}", "new": "{\"position_id\": \"A11-V1-OPR\", \"version_id\": \"A11-V1\", \"function_id\": \"OPR\", \"seats\": 4}"}},
+    {"name": "r4_same_person", "diagnostic": "row_condition", "expected": "unfilled_by.R4 == 0", "patch": {"file": "data/demand.json", "old": "{\"position_id\": \"A07-V1-INS\", \"version_id\": \"A07-V1\", \"function_id\": \"INS\", \"seats\": 1}", "new": "{\"position_id\": \"A07-V1-INS\", \"version_id\": \"A07-V1\", \"function_id\": \"INS\", \"seats\": 2}"}},
+    {"name": "r5_exclusive_approval", "diagnostic": "row_condition", "expected": "unfilled_by.R5 == 0", "patch": {"file": "data/demand.json", "old": "{\"position_id\": \"A01-V1-OPR\", \"version_id\": \"A01-V1\", \"function_id\": \"OPR\", \"seats\": 1}", "new": "{\"position_id\": \"A01-V1-OPR\", \"version_id\": \"A01-V1\", \"function_id\": \"OPR\", \"seats\": 2}"}},
+    {"name": "r6_cross_company", "diagnostic": "row_condition", "expected": "unfilled_by.R6 == 0", "patch": {"file": "data/employments.json", "old": "{\"person_id\": 57, \"company_id\": \"C06\", \"function_id\": \"INS\"}", "new": "{\"person_id\": 47, \"company_id\": \"C06\", \"function_id\": \"INS\"}"}},
+    {"name": "infeasible", "diagnostic": "row_condition", "expected": "outcome != 'infeasible'", "patch": {"file": "data/employments.json", "old": "{\"person_id\": 94, \"company_id\": \"C02\", \"function_id\": \"PLN\"}", "new": "{\"person_id\": 94, \"company_id\": \"C10\", \"function_id\": \"PLN\"}"}},
+    {"name": "budget_exhausted", "diagnostic": "row_condition", "expected": "outcome != 'budget_exhausted'", "patch": {"file": "data/policy.json", "old": "\"search_budget\": 1000", "new": "\"search_budget\": 50"}}
   ]
 }
