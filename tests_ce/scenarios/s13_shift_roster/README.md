@@ -141,18 +141,43 @@ Each negative holds only the files that differ from the project.
 | `rs1_certificate_ignored` | Suitability ignores the certification. | `allowed_values` on `entry_checks.cert_status` |
 | `rs1_expiry_exclusive` | The expiry date is read as exclusive. | `row_condition`, caller control for S07 on 2026-03-04 |
 | `rs1_missing_expiry_unlimited` | A missing expiry date is read as valid. | `row_condition`, caller control for S09 |
+| `rs1_issue_date_ignored` | The issue date is ignored: a certification is valid before it starts. | `row_condition`, caller control for S06 on 2026-03-02 |
 | `rs2_rest_ignored` | The assign step gives the search 0 hours of rest. | `row_condition` on `entry_checks.rest_hours` |
 | `rs3_over_contract` | One extra entry after the search: S11 works 36 h of 32 h. | `row_condition` on `hours_checks` |
 | `rs4_lead_ignored` | The assign step gives the search no lead requirement. | `row_condition` on `coverage_checks.leads` |
 | `rs4_over_max` | Two extra entries after the search: 3 people in a slot with a maximum of 2. | `row_condition` on `coverage_checks.staffed` |
 | `rs5_second_ward` | One extra entry after the search: S07 works in W1 and W2 on one day. | `fixed_value` on `entry_checks.wards_that_day` |
 | `rs6_leave_ignored` | Suitability ignores the leave. | `fixed_value` on `entry_checks.on_leave` |
+| `rs6_leave_end_exclusive` | The last day of a leave is read as exclusive. | `row_condition`, caller control for S03 on 2026-03-04 |
 | `infeasible_monday_lead` | S01 is on leave on Monday: no one can lead the W2 night shift. The check before the search proves it. | `allowed_values` on `plan.outcome` (`infeasible`) |
 | `infeasible_after_search` | The W1 night shift also needs an ICU lead. Each Monday night slot alone has a lead (S01), both together have not. The search tries every team. | `allowed_values` on `plan.outcome` (`infeasible`) |
 | `budget_exhausted` | `search_budget` is 50. | `fixed_value` on `plan.search_complete` |
 
 When a negative changes the suitability or the lead requirement, the search does not need its backtrack.
 Then the caller control `backtracks >= 1` also fails. This is not a second broken rule.
+
+In `scenario.json`, `expected` is the `expected` text of the named diagnostic. For a `row_condition` it is the
+condition, which names the rule. For `allowed_values` and `fixed_value` it is only the expected value
+(for example `False`), and the two infeasible negatives share `['solved']` with `budget_exhausted`.
+
+An overlay replaces whole files. Four negatives therefore hold a full copy of `lib/roster_rules.scr.py`
+(`rs1_expiry_exclusive`, `rs1_missing_expiry_unlimited`, `rs1_issue_date_ignored`, `rs6_leave_end_exclusive`).
+When you change that library, change each copy too: `diff lib/roster_rules.scr.py negative/<name>/lib/roster_rules.scr.py`
+must show only the one changed line. `budget_exhausted/data/policy.properties` repeats `min_rest_hours=11` for the
+same reason: an overlay cannot change one property, and without the line `min_rest_hours` is not defined.
+
+## Known limits of this project
+
+- The output checks are a gate in Build only. A plain `datamimic run` exports the roster without the checks, and an
+  `<assert>` gate would hide its message and all evidence in Build (F13, #420).
+- There is no `delivery/` folder and no cleanup step. A SQLite target needs an existing table, and Build refuses the
+  SQL that creates it, so the project writes CSV files (F19, #420).
+- `lib/roster_rules.scr.py` holds rule checks in Python, not only the search. A `script=` comprehension does not see
+  the fields of the current record (F1, #423).
+- The libraries import the module `datetime`, because a library name hides a script global of the same name (F3, #423).
+- Every store read uses `sourceEntity=`, not `type=`: `type=` also sets the entity that a step writes (F4, #422).
+- The `nestedKey` in suitability builds new dicts for its items and never uses `row.to_dict()`: that call returns the
+  stored row, and the enrichment would change the store (F2, #421).
 
 ## Size
 
