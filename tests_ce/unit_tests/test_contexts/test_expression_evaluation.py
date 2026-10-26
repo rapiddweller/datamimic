@@ -71,7 +71,7 @@ def test_expression_rejects_non_values(expression: str, message: str) -> None:
     [
         (
             "missing",
-            "NameError: "
+            "NameError: name 'missing' is not defined: "
             "check spelling, definition order and value shape; current-scope names can resolve bare, "
             "but existing outermost bare names win collisions; intermediate ancestor names need qualification; "
             "use this.name for the current scope, parent.name for the immediate enclosing record, "
@@ -80,7 +80,7 @@ def test_expression_rejects_non_values(expression: str, message: str) -> None:
         ),
         (
             "record.missing",
-            "AttributeError: "
+            "AttributeError: no attribute 'missing': "
             "check spelling, definition order and value shape; current-scope names can resolve bare, "
             "but existing outermost bare names win collisions; intermediate ancestor names need qualification; "
             "use this.name for the current scope, parent.name for the immediate enclosing record, "

@@ -286,6 +286,20 @@ def test_native_lookup_errors_without_metadata_keep_only_safe_failure_facts(erro
     assert SENTINEL not in str(caught.value)
 
 
+@pytest.mark.parametrize("error_type", [NameError, AttributeError])
+def test_a_missing_name_is_shown_only_when_the_expression_text_holds_it(error_type):
+    """Python-only: a called function that raises a name built from data cannot be written as a descriptor
+    without a library that raises it on purpose, and this module owns the redaction boundary."""
+    from datamimic_ce.engine.runtime.scripting.evaluation import evaluate_python
+
+    def fail():
+        raise error_type("lookup failed", name=SENTINEL)
+
+    with pytest.raises(UserErrorBase) as caught:
+        evaluate_python("fail()", {"fail": fail}, {})
+    assert SENTINEL not in str(caught.value)
+
+
 @pytest.mark.parametrize(
     "body,issue",
     [

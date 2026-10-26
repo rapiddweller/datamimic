@@ -3,13 +3,34 @@
   "proves": [
     "a list, set or dict comprehension, a generator expression and a lambda see the record's keys, variables, setup variables and this/parent/root, on every supported Python (#423)",
     "a name that a record binds wins over the engine's name of the same spelling, at the top level and in a nested scope alike",
-    "an assignment expression binds only inside one evaluation: it changes neither the engine's names nor the next key or row"
+    "an assignment expression binds only inside one evaluation: it changes neither the engine's names nor the next key or row",
+    "a name that does not exist is named in the run error; the value of the expression is not shown"
   ],
   "products": {
     "orders": 3,
     "checks": 3
   },
   "negatives": [
+    {
+      "name": "missing_name_in_comprehension",
+      "diagnostic": "child_execution",
+      "run_error": "NameError: name 'order_no' is not defined",
+      "patch": {
+        "file": "datamimic.xml",
+        "old": "len([line for line in lines if line['order'] == order_id])",
+        "new": "len([line for line in lines if line['order'] == order_no])"
+      }
+    },
+    {
+      "name": "assignment_does_not_reach_the_next_key",
+      "diagnostic": "child_execution",
+      "run_error": "NameError: name 'side' is not defined",
+      "patch": {
+        "file": "datamimic.xml",
+        "old": "script=\"order_id * 100\"",
+        "new": "script=\"order_id * 100 + side\""
+      }
+    },
     {
       "name": "generator_expression_filter",
       "diagnostic": "row_condition",

@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import ast
 import re
 import types
 from collections.abc import Iterator, KeysView, Mapping
@@ -43,7 +44,7 @@ class DotableDict:
         try:
             return self[name]
         except KeyError as error:
-            raise AttributeError(f"Cannot find attribute '{name}'") from error
+            raise AttributeError(f"Cannot find attribute '{name}'", name=name) from error
 
     def __iter__(self) -> Iterator[str]:
         return iter(self._dictionary)
@@ -90,6 +91,29 @@ def _plain(value: object) -> object:
     if type(value) is list:
         return [_plain(item) for item in value]
     return value
+
+
+def _written_names(expression: str) -> frozenset[str]:
+    """The names and attribute names written in the expression: descriptor structure, never a value."""
+    try:
+        tree = ast.parse(expression.lstrip(" \t"), mode="eval")
+    except SyntaxError:
+        return frozenset()
+    return frozenset(
+        node.id if isinstance(node, ast.Name) else node.attr
+        for node in ast.walk(tree)
+        if isinstance(node, ast.Name | ast.Attribute)
+    )
+
+
+def _lookup_failure(error: NameError | AttributeError, expression: str) -> str:
+    """Name the missing name only when the expression text holds it: a called function can raise a name built
+    from data, and a diagnostic never shows a value."""
+    if error.name not in _written_names(expression):
+        return type(error).__name__
+    if isinstance(error, NameError):
+        return f"NameError: name '{error.name}' is not defined"
+    return f"AttributeError: no attribute '{error.name}'"
 
 
 # As in EE: the same expression text runs once per row, so compile it once.
@@ -143,7 +167,7 @@ def evaluate_python(
         raise task_config_error(
             code=IssueCode.TASK_EXPRESSION_EVAL_FAILED,
             expr=diagnostic,
-            error=f"{type(error).__name__}: {_SCOPE_GUIDANCE}",
+            error=f"{_lookup_failure(error, expression)}: {_SCOPE_GUIDANCE}",
         ) from error
     except KeyError as error:
         raise task_config_error(
