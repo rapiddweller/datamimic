@@ -54,10 +54,11 @@ Raw transcripts and run directories stay outside the repository.
 | `field_at_most` | in every row, both fields are numbers and `field` is at most `other`. |
 | `exact_rows` | the captured rows equal `rows`. Row order is ignored. Keys and JSON types must match. |
 | `output_rows` | the run with the case directory `fixtures` laid over `fixtures/` produced the product and wrote `<product>.json`, or the chunk parts `<product>_<n>.json`, and their rows equal `rows` (as `exact_rows`). |
+| `fixtures_unchanged` | every file of the case directory `fixtures` is in the submitted `fixtures/`, byte for byte. A changed or deleted file fails; a new file passes. The prompt says not to change the file. |
 | `seed_is` | `<setup rngSeed>` of the entry `datamimic.xml` is `seed`. The agent's `acceptance/build.json` is never read. |
 | `repeatable` | two runs give the same rows in the same order. The runs use separate copies and interpreters, with `PYTHONHASHSEED` `1` and `2`. Build also replays a seeded project under another hash seed, so a hash-order project fails `build_ready` too. |
 
-The oracle copies the project to private directories. It lays the case fixtures over each copy.
+The oracle compares the submitted `fixtures/` with the case fixtures first. Then it copies the project to private directories and lays the case fixtures over each copy.
 It runs `Build` on one copy. It runs the other copies at the same time and captures the rows per product from each run.
 Every row check reads the rows of the first run. An `output_rows` check with another `fixtures` directory gets one more run with that directory.
 The verdict is JSON. It holds one short reason for each check and no row value.

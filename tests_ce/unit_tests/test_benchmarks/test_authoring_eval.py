@@ -288,6 +288,14 @@ _BROKEN = [
         {_XML: [("list_price * 8 // 10", f"list_price * 8 // 10 + {_FLAG}")]},
         _HASH_ORDER,
     ),
+    # --- the supplied fixtures must stay as they are ---
+    # the project still works, but the prompt says not to change the file
+    Broken(
+        "e04",
+        "edited_fixture",
+        {"fixtures/orders.csv": [("O-100,C-10,OPEN,1200", "O-100,C-10,CLOSED,1200")]},
+        frozenset({"fixtures_unchanged"}),
+    ),
     # --- identifiers must be whole numbers ---
     Broken(
         "e01",
@@ -371,7 +379,7 @@ _CHEATS = {
 @pytest.mark.parametrize("case", sorted(_CHEATS))
 def test_cheat_project_fails_the_oracle(case: str, tmp_path: Path) -> None:
     xml, fails = _CHEATS[case]
-    project = tmp_path / "project"
+    project = _start_dir(tmp_path, case)
     (project / "acceptance").mkdir(parents=True)
     (project / _XML).write_text(xml, encoding="utf-8")
     (project / _ACCEPTANCE).write_text(_CHEAT_ACCEPTANCE, encoding="utf-8")
@@ -383,8 +391,17 @@ def _failed(project: Path, case: str) -> set[str]:
     return {result.check for result in evaluate(case, project).checks if not result.passed}
 
 
+def _start_dir(tmp_path: Path, case: str) -> Path:
+    """The project directory as a subject gets it: empty, or with the case fixtures, as run_subject makes it."""
+    project = tmp_path / "project"
+    project.mkdir()
+    if (CASES / case / "fixtures").is_dir():
+        shutil.copytree(CASES / case / "fixtures", project / "fixtures")
+    return project
+
+
 def _reference(tmp_path: Path, case: str) -> Path:
-    return shutil.copytree(CASES / case / "reference", tmp_path / "project")
+    return shutil.copytree(CASES / case / "reference", _start_dir(tmp_path, case), dirs_exist_ok=True)
 
 
 @pytest.mark.parametrize("case", _ALL_CASES)
@@ -407,6 +424,20 @@ def test_broken_variant_fails_exactly_the_expected_checks(broken: Broken, tmp_pa
 
     assert _failed(project, broken.case) == broken.fails
     assert not evaluate(broken.case, project).passed
+
+
+def test_a_deleted_fixture_fails_although_the_oracle_supplies_it(tmp_path: Path) -> None:
+    project = _reference(tmp_path, "e04")
+    (project / "fixtures" / "orders.csv").unlink()
+
+    assert _failed(project, "e04") == {"fixtures_unchanged"}
+
+
+def test_a_new_fixture_file_passes(tmp_path: Path) -> None:
+    project = _reference(tmp_path, "e04")
+    (project / "fixtures" / "notes.txt").write_text("my notes", encoding="utf-8")
+
+    assert _failed(project, "e04") == set()
 
 
 @pytest.mark.parametrize("chunk_size", [10, 4])  # one part priced_orders_0.json, or two parts

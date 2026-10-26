@@ -11,6 +11,7 @@ is JSON with one reason per check and never contains a row value."""
 
 import argparse
 import contextlib
+import filecmp
 import json
 import os
 import re
@@ -68,6 +69,7 @@ class Observed:
     declared_seed: str | None = None  # rngSeed of the entry descriptor's <setup>, None when absent
     second_rows: dict[str, list[Row]] | None = None  # rows of a second run in a fresh interpreter
     second_error: str | None = None
+    edited_fixtures: tuple[str, ...] = ()  # the supplied fixture files that the project changed or deleted
 
 
 def _product_rows(observed: Observed, product: str) -> list[Row] | str:
@@ -339,6 +341,19 @@ class SeedIs(_Check):
         return None if observed.declared_seed == str(self.seed) else "rngSeed is not the prescribed seed"
 
 
+class FixturesUnchanged(_Check):
+    """Every file that the case supplies in ``fixtures/`` is in the project, byte for byte. A new file is allowed."""
+
+    kind: Literal["fixtures_unchanged"]
+
+    def label(self) -> str:
+        return "fixtures_unchanged"
+
+    def failure(self, observed: Observed) -> str | None:
+        edited = observed.edited_fixtures
+        return None if not edited else f"supplied fixtures changed or deleted: {', '.join(edited)}"
+
+
 class Repeatable(_Check):
     """A second run, in a fresh interpreter, produces the same rows in the same order."""
 
@@ -372,6 +387,7 @@ Check = Annotated[
     | OutputRows
     | WholeNumber
     | SeedIs
+    | FixturesUnchanged
     | Repeatable,
     Field(discriminator="kind"),
 ]
@@ -424,6 +440,17 @@ def _copy(project: Path, case: str, destination: Path, fixtures: str = _FIXTURES
     if source.is_dir():
         shutil.copytree(source, destination / _FIXTURES, dirs_exist_ok=True)
     return destination
+
+
+def _edited_fixtures(project: Path, case: str) -> tuple[str, ...]:
+    """The case fixture files that the submitted project changed or deleted. Read before any copy gets the overlay."""
+    source = CASES / case / _FIXTURES
+    edited = []
+    for path in sorted(source.rglob("*")):
+        submitted = project / _FIXTURES / path.relative_to(source)
+        if path.is_file() and not (submitted.is_file() and filecmp.cmp(path, submitted, shallow=False)):
+            edited.append(path.relative_to(source).as_posix())
+    return tuple(edited)
 
 
 def child_env(**extra: str) -> dict[str, str]:
@@ -485,6 +512,7 @@ def _observe(case: str, project: Path, changed_fixtures: list[str]) -> Observed:
             declared_seed=_declared_seed(first_copy),
             second_rows=second.rows,
             second_error=second.error,
+            edited_fixtures=_edited_fixtures(project, case),
         )
 
 
