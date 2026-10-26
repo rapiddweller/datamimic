@@ -1,0 +1,11 @@
+<setup>
+    <!-- Validate input: measure the prepared leave and certification periods; acceptance/build.json compares the values. -->
+    <generate name="leave_checks" source="mem" sourceEntity="leave" distribution="ordered" target="CSV">
+        <key name="leave_id" script="leave_id"/>
+        <key name="days" script="(last_day - first_day).days + 1"/>
+    </generate>
+    <generate name="certification_checks" source="mem" sourceEntity="staff_certifications" distribution="ordered" target="CSV">
+        <key name="holding_id" script="holding_id"/>
+        <key name="valid_days" script="None if expires_on is None else (expires_on - issued_on).days"/>
+    </generate>
+</setup>

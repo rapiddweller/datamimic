@@ -20,6 +20,8 @@
     {"product": "leave", "field": "leave_id", "role": {"kind": "identifier"}},
     {"product": "leave", "field": "staff_id", "role": {"kind": "foreign_key", "parent_product": "staff", "parent_field": "staff_id"}},
     {"product": "calendar", "field": "shift_date", "role": {"kind": "identifier"}},
+    {"product": "leave_checks", "field": "leave_id", "role": {"kind": "foreign_key", "parent_product": "leave", "parent_field": "leave_id"}},
+    {"product": "certification_checks", "field": "holding_id", "role": {"kind": "foreign_key", "parent_product": "staff_certifications", "parent_field": "holding_id"}},
     {"product": "slots", "field": "slot_id", "role": {"kind": "identifier"}},
     {"product": "slots", "field": "demand_id", "role": {"kind": "foreign_key", "parent_product": "demand", "parent_field": "demand_id"}},
     {"product": "staff_capacity", "field": "staff_id", "role": {"kind": "identifier"}},
@@ -52,8 +54,8 @@
   "expectations": [
     {"kind": "row_condition", "subject": {"kind": "product", "product": "policy"}, "condition": "search_budget != None and search_budget >= 1"},
     {"kind": "allowed_values", "subject": {"kind": "product", "product": "leave"}, "field": "status", "values": ["approved", "requested"]},
-    {"kind": "row_condition", "subject": {"kind": "product", "product": "leave"}, "condition": "days >= 1"},
-    {"kind": "row_condition", "subject": {"kind": "product", "product": "staff_certifications"}, "condition": "valid_days == None or valid_days >= 0"},
+    {"kind": "row_condition", "subject": {"kind": "product", "product": "leave_checks"}, "condition": "days >= 1"},
+    {"kind": "row_condition", "subject": {"kind": "product", "product": "certification_checks"}, "condition": "valid_days == None or valid_days >= 0"},
     {"kind": "row_condition", "subject": {"kind": "product", "product": "demand"}, "condition": "min_staff <= max_staff and min_lead <= min_staff"},
 
     {"kind": "row_condition", "subject": {"kind": "product", "product": "plan"}, "condition": "outcome != 'infeasible'"},

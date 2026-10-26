@@ -6,29 +6,29 @@ All names and data are synthetic.
 
 ## Process
 
-The entry `datamimic.xml` runs the steps in this order.
+The entry `datamimic.xml` runs the steps in this order. Each step is one file in `model/`.
 
 ```text
-data/* ──> 1 prepare ──> (validate input) ──> 2 suitability ──> 3 assign ──> 4 validate output ──> (cleanup) ──> 5 export
-           typed tables   build.json            RS1, RS6          search        RS1..RS6 again                     CSV files
-           policy, slots  expectations          candidates        RS2..RS5      check products
+data/* ──> 1 prepare ──> 2 validate input ──> 3 suitability ──> 4 assign ──> 5 validate output ──> 6 cleanup ──> 7 export
+           typed tables   leave_checks,        RS1, RS6          search       RS1..RS6 again        no-op         CSV files
+           policy, slots  certification_checks candidates        RS2..RS5     check products
 ```
 
 | Step | File | Purpose |
 |---|---|---|
 | 1 prepare | `model/1_prepare.xml` | Read each data file and the policy, give each column its type, and make one slot for each demand row and plan day. |
-| validate input | `acceptance/build.json` | The input expectations check the prepared tables. There is no step file. |
-| 2 suitability | `model/2_suitability.xml` | For each person and plan day, decide which shift types the person may work, and why not. |
-| 3 assign | `model/3_assign.xml` | Search for one complete roster and keep the evidence of each decision. |
-| 4 validate output | `model/4_validate_output.xml` | Measure the complete roster against every rule again, from the data. Build compares the measured values. |
-| cleanup | none | See [Cleanup](#cleanup). |
-| 5 export | `model/5_export.xml` | Read each product back from the store and write it to a CSV file. |
+| 2 validate input | `model/2_validate_input.xml` | Measure the leave and certification periods. Build compares them with the input expectations. |
+| 3 suitability | `model/3_suitability.xml` | For each person and plan day, decide which shift types the person may work, and why not. |
+| 4 assign | `model/4_assign.xml` | Search for one complete roster and keep the evidence of each decision. |
+| 5 validate output | `model/5_validate_output.xml` | Measure the complete roster against every rule again, from the data. Build compares the measured values. |
+| 6 cleanup | `model/6_cleanup.xml` | Nothing to delete. See [Cleanup](#cleanup). |
+| 7 export | `model/7_export.xml` | Read each product back from the store and write it to a CSV file. |
 
 Every step hands its products to the next step through the memory store `mem`.
 
-The output checks are a gate in Build only. `datamimic authoring build` rejects the project when a check fails, and the
-proof names the digest of each file it read. A plain `datamimic run` does not read `acceptance/build.json`: it exports
-the roster that the search returns, also when that roster breaks a rule. Run only a project whose files Build proved.
+The checks are a gate in Build only. `datamimic authoring build` rejects the project when a check fails. A plain
+`datamimic run` exports a roster that breaks a rule and ends with exit code 0, because a CE `<assert>` gate stops the
+run but makes Build lose every named check (#420). Run only a project whose files Build proved.
 
 ## Files
 
@@ -65,12 +65,12 @@ run (`outcome` is `not_run`). Two checks then name the key:
 
 | Rule | Decided in | Checked in the output | Parameter from |
 |---|---|---|---|
-| RS1 certification valid on the shift date | `certificate_status`, called by the `cert_status` key of `candidates` in step 2 | `cert_status == 'valid'` on `entry_checks` | `data/shift_types.csv` (`required_cert`), `data/staff_certifications.csv` |
+| RS1 certification valid on the shift date | `certificate_status`, called by the `cert_status` key of `candidates` in step 3 | `cert_status == 'valid'` on `entry_checks` | `data/shift_types.csv` (`required_cert`), `data/staff_certifications.csv` |
 | RS2 rest between two shifts, no overlap | `blocker` in `plan_roster` | `rest_hours == None or rest_hours >= min_rest_hours` on `entry_checks` | `data/policy.properties` (`min_rest_hours`) |
 | RS3 weekly hours within the contract | `blocker` in `plan_roster` | `busiest_week_hours <= contract_hours` on `hours_checks` | `data/contracts.csv` |
 | RS4 minimum and maximum staff, minimum lead holders | `solve` and `shortage` in `plan_roster` | `staffed >= min_staff and staffed <= max_staff`, `leads >= min_lead` on `coverage_checks` | `data/demand.csv` |
 | RS5 one ward per day | `blocker` in `plan_roster` | `wards_that_day == 1` on `entry_checks` | the rule itself |
-| RS6 never rostered on approved leave | `on_approved_leave`, called by the `on_leave` key of `candidates` in step 2 | `not on_leave` on `entry_checks` | `data/leave.csv` |
+| RS6 never rostered on approved leave | `on_approved_leave`, called by the `on_leave` key of `candidates` in step 3 | `not on_leave` on `entry_checks` | `data/leave.csv` |
 
 The output checks read the roster and the data again. They do not read the suitability decisions or the search evidence.
 A rule that the search breaks is therefore caught, also when the search itself has a defect.
@@ -168,22 +168,10 @@ the class `datetime` would hide the module `datetime` that the scripts use.
 so the XML conditions compare with the string `'valid'`. The search never reads a certificate status: it reads
 `eligible_shifts` and `valid_certs`.
 
-## Build products
-
-Build captures 34 products. Each one is listed here with its step.
-
-| Step | Products |
-|---|---|
-| 1 prepare | `policy`, `contracts`, `staff`, `certifications`, `staff_certifications`, `wards`, `shift_types`, `demand`, `slots` (one per demand row and plan day), `leave`, `calendar` |
-| 2 suitability | `staff_capacity` (each person with the contract hours), `candidates` (each person and plan day) |
-| 3 assign | `plan` (the outcome), `roster` (the assignment), `slot_decisions` (the decision evidence) |
-| 4 validate output | `entry_checks`, `hours_checks`, `coverage_checks` |
-| 5 export | `export_policy`, `export_contracts`, `export_staff`, `export_certifications`, `export_staff_certifications`, `export_wards`, `export_shift_types`, `export_demand`, `export_leave`, `export_calendar`, `export_candidates`, `export_plan`, `export_roster`, `export_slot_decisions` |
-
 ## Output
 
 `datamimic run datamimic.xml` writes CSV files to `output/<random task id>/`. Each file has a header row, and the
-delimiter is a comma (`defaultSeparator`). Step 4 writes `entry_checks.csv`, `hours_checks.csv` and `coverage_checks.csv`. Step 5 writes the 14 export files, named after the products they read (`roster.csv`,
+delimiter is a comma (`defaultSeparator`). Steps 2 and 5 write their check products. Step 7 writes the 14 export files, named after the products they read (`roster.csv`,
 `slot_decisions.csv`, and so on).
 
 List and nested columns (`valid_certs`, `shifts`, `eligible_shifts`, `assigned`, `blocked`) hold Python literals,
@@ -203,7 +191,8 @@ it pins the 11 h rest of S03 on 2026-03-07.
 
 ## Cleanup
 
-There is no cleanup step. The CSV exporter writes a new output directory for each run, so no rows of an earlier run remain.
+The cleanup step has nothing to delete. The CSV exporter writes a new output directory for each run, so no rows of an
+earlier run remain. The step holds one `<echo>`, because Build refuses a step file that holds only a comment.
 A database target needs a cleanup step that deletes the earlier rows after the output checks. A CE SQLite insert needs
 an existing table, and Build refuses the SQL `execute` that creates it. For this reason this project uses CSV files.
 The export is not a transaction: the files are written one after the other.
@@ -248,15 +237,14 @@ one property, and without the line `min_rest_hours` is not defined.
 
 ## Warnings
 
-Build reports two DM214 warnings: the `nestedKey` elements `shifts` (step 2) and `blocked` (step 3) have no
+Build reports two DM214 warnings: the `nestedKey` elements `shifts` (step 3) and `blocked` (step 4) have no
 `defaultValue`. The rule asks for a fallback value when the script fails. This project accepts the warnings: a
 fallback would hide a failure in the decision evidence. A failing script must stop the run.
 
 ## Known limits of this project
 
-- The output checks are a gate in Build only. A plain `datamimic run` exports the roster without the checks, and an
-  `<assert>` gate would hide its message and all evidence in Build (F13, #420).
-- There is no `delivery/` folder and no cleanup step. A SQLite target needs an existing table, and Build refuses the
+- The checks are a gate in Build only (see [Process](#process); F13, #420).
+- There is no `delivery/` folder, and the cleanup step deletes nothing. A SQLite target needs an existing table, and Build refuses the
   SQL that creates it, so the project writes CSV files (F19, #420).
 - The rule checks are Python functions in `lib/`, not only the search. A `script=` comprehension does not see the
   fields of the current record (F1, #423).

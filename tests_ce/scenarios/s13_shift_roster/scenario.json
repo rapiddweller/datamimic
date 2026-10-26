@@ -24,6 +24,8 @@
     "demand": 6,
     "leave": 5,
     "calendar": 7,
+    "leave_checks": 5,
+    "certification_checks": 38,
     "slots": 42,
     "candidates": 126,
     "plan": 1,
