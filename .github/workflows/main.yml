@@ -72,8 +72,8 @@ jobs:
       - name: Validate architecture contract (fork pull request)
         if: github.event.pull_request.head.repo.fork == true
         run: |
-          echo 'Architecture review: a maintainer records it before merge. Your pull request is not blocked by it.' >> "$GITHUB_STEP_SUMMARY"
           make architecture-check COMPLETION_GATE_FLAGS=--substance-only
+          echo 'Architecture review: a maintainer records it before merge. Your pull request is not blocked by it.' >> "$GITHUB_STEP_SUMMARY"
 
   architecture_report:
     name: Architecture review report
