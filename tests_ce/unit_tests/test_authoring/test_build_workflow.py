@@ -2,8 +2,6 @@
 
 from dataclasses import dataclass, field
 
-import pytest
-
 from datamimic_ce.authoring.domain.capture import (
     CapturedProduct,
     CapturedProducts,

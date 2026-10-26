@@ -157,9 +157,9 @@ def test_remove_not_existing_ids_replaces_list_and_preserves_survivor_aliases():
     expected = [repeated, first, repeated, missing, null, literal_null]
     assert current is not previous
     assert current == expected
-    assert all(actual is original for actual, original in zip(current, expected))
+    assert all(actual is original for actual, original in zip(current, expected, strict=True))
     assert previous == rows
-    assert all(actual is original for actual, original in zip(previous, rows))
+    assert all(actual is original for actual, original in zip(previous, rows, strict=True))
     assert current[0] is current[2]
 
 
