@@ -124,6 +124,23 @@ def test_names_only_rules_never_echo_attribute_values(tmp_path: Path, key: str, 
         assert rule in output, output
 
 
+def test_capped_capture_names_reason_and_exact_retry_bound(tmp_path: Path) -> None:
+    """A source without count leaves the declared total unknown, so the limit stays 10 and the capture is capped."""
+    (tmp_path / "empty.csv").write_text("id\n", encoding="utf-8")
+    write_project(
+        tmp_path,
+        '<setup rngSeed="1"><generate name="customers" count="50"><key name="id" generator="IncrementGenerator"/>'
+        '</generate><generate name="copies" source="empty.csv" distribution="ordered" separator=",">'
+        '<key name="copy" script="id"/></generate></setup>',
+        expectations=[{"kind": "exact_count", "subject": {"kind": "product", "product": "customers"}, "count": 50}],
+    )
+    result = CliRunner().invoke(app, ["authoring", "build", str(tmp_path)])
+    assert result.exit_code == 1, result.output
+    capped = json.loads(result.output)["diagnostics"][0]
+    assert capped["message"] == "Product capture is capped: static count 50 exceeds per-invocation limit 10."
+    assert capped["remediation"] == "Increase max_count to at least 50 and retry the same transaction."
+
+
 def test_declared_rows_above_max_count_name_the_exact_retry_bound(tmp_path: Path) -> None:
     write_project(
         tmp_path,
