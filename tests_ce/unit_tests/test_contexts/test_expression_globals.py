@@ -191,3 +191,16 @@ def test_seeded_random_without_seed_or_with_none_draws_from_the_run_lazily() -> 
 
     random_proxy.Random(5)
     assert context._rng.bits == [64, 64]
+
+
+def test_every_public_random_member_imported_by_name_is_rebound() -> None:
+    """Python-only because the member set depends on the Python version (3.12 adds binomialvariate), and a DSL
+    library that imported a newer member would not load on 3.11. The DSL replay proof is the scenario
+    tests_ce/scenarios/s14_seeded_library_random (#391)."""
+    import random
+
+    from datamimic_ce.engine.runtime.scripting.expression_globals import rebind_seeded_script_names
+
+    namespace: dict[str, object] = {name: vars(random)[name] for name in random.__all__}
+    rebind_seeded_script_names(namespace, Random(7), Faker)
+    assert [name for name in random.__all__ if namespace[name] is vars(random)[name]] == []

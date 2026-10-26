@@ -1,0 +1,9 @@
+<setup rngSeed="5">
+    <execute uri="lib/draws.scr.py"/>
+    <generate name="samples" count="5">
+        <key name="sample_id" generator="IncrementGenerator"/>
+        <key name="spread" script="spread()"/>
+        <key name="shape" script="shape()"/>
+        <key name="dice" script="dice()"/>
+    </generate>
+</setup>

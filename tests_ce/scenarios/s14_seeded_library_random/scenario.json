@@ -1,0 +1,17 @@
+{
+  "title": "A seeded library that imports random functions by name",
+  "proves": [
+    "every public random function a library imports by name draws from the run's seeded stream",
+    "triangular, betavariate, expovariate, gammavariate, lognormvariate, normalvariate, paretovariate, vonmisesvariate and weibullvariate replay identically, also under an alias",
+    "random.SystemRandom stays refused under rngSeed"
+  ],
+  "products": {
+    "samples": 5
+  },
+  "negatives": [
+    {
+      "dir": "negative/system_random",
+      "diagnostic": "child_execution"
+    }
+  ]
+}

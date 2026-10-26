@@ -296,7 +296,8 @@ def rebind_seeded_script_names(
     ``random.seed(x)`` with a value is refused: a keyed stream is ``random.Random(x)``.
 
     Outside this rebinding, and therefore not replayed: draws made while the script body itself executes
-    (module-level values, default arguments), imports inside helper bodies, and members not listed below.
+    (module-level values, default arguments), imports inside helper bodies, and members of uuid, datetime and os
+    that are not listed below.
     A plain run does not detect them. Build refuses imports inside bodies and replays every seeded model that loads
     Python, which catches the rest when they change the captured rows (#332).
     """
@@ -311,9 +312,9 @@ def rebind_seeded_script_names(
 
     # Scripts reach Random both directly and as random.Random; both must stay the class.
     seeded = _seeded_objects(rng, seeded_faker_supplier, SeededRandom, _refuse_keyed_seed)
+    raw_random = _EvalProxy(random, {})
     counterparts: tuple[tuple[object, object], ...] = (
         (random, seeded.random),
-        (Random, SeededRandom),
         (uuid, seeded.uuid),
         (uuid.uuid4, seeded.uuid4),
         (datetime, seeded.datetime),
@@ -322,20 +323,11 @@ def rebind_seeded_script_names(
         (pd, seeded.pd),
         (np, seeded.np),
         (os, seeded.os),
-        # Members imported by name are the module's own objects, so identity finds them too.
-        (random.random, seeded.random.random),
-        (random.randint, seeded.random.randint),
-        (random.randrange, seeded.random.randrange),
-        (random.choice, seeded.random.choice),
-        (random.choices, seeded.random.choices),
-        (random.shuffle, seeded.random.shuffle),
-        (random.sample, seeded.random.sample),
-        (random.uniform, seeded.random.uniform),
-        (random.gauss, seeded.random.gauss),
-        (random.getrandbits, seeded.random.getrandbits),
-        (random.randbytes, seeded.random.randbytes),
-        (random.seed, seeded.random.seed),
-        (random.SystemRandom, seeded.random.SystemRandom),
+        # Members imported by name are the module's own objects, so identity finds them too. random.__all__ names
+        # every public member, so no hand-kept list misses one, also one a newer Python adds (#391). Both sides
+        # resolve through the proxy: the stand-in is what an expression gets for random.<name>, with the Random,
+        # seed and SystemRandom overrides.
+        *((raw_random.__getattr__(name), seeded.random.__getattr__(name)) for name in random.__all__),
         (uuid.uuid1, seeded.uuid.uuid1),
         (os.urandom, seeded.os.urandom),
     )
