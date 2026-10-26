@@ -1,0 +1,3 @@
+<setup>
+    <generate name="rows" count="1" source="data/no_spec_header.fcw"/>
+</setup>

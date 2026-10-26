@@ -44,6 +44,22 @@ ISSUES: list[IssueDefinition] = [
         guidance=GUIDANCE_PROJECT_ENV,
     ),
     IssueDefinition(
+        code=IssueCode.SOURCE_INVALID_XLSX,
+        name="SOURCE_INVALID_XLSX",
+        title="Source Invalid XLSX",
+        template="Invalid XLSX in '{name}'",
+        cause="The file is not an .xlsx workbook that can be opened.",
+        resolution="Save the source as an .xlsx workbook, or use a source of another supported format.",
+    ),
+    IssueDefinition(
+        code=IssueCode.SOURCE_INVALID_FIXED_WIDTH,
+        name="SOURCE_INVALID_FIXED_WIDTH",
+        title="Source Invalid Fixed-Width",
+        template="Invalid fixed-width file '{name}'",
+        cause="The first line is not a '# name[width],...' column spec.",
+        resolution="Start the file with a '# name[width],...' line; a column reads name[width] or name[width r pad].",
+    ),
+    IssueDefinition(
         code=IssueCode.SOURCE_JSON_ROOT_INVALID,
         name="SOURCE_JSON_ROOT_INVALID",
         title="Source JSON Root Invalid",

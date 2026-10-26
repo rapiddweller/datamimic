@@ -33,7 +33,7 @@ def test_fixed_width_read():
 
 def test_fixed_width_missing_header_raises():
     engine = DataMimicTest(_dir, "test_fixed_width_malformed.xml", capture_test_result=True)
-    with pytest.raises(ValueError, match="Fixed-width"):
+    with pytest.raises(ValueError, match=r"\[E006/I198\]"):
         engine.test_with_timer()
 
 

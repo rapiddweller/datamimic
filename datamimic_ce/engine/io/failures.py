@@ -2,8 +2,11 @@
 # Copyright (c) 2023-2026 Rapiddweller Asia Co., Ltd.
 # This software is licensed under the MIT License. See LICENSE.
 
-"""Reduce driver causes to passive facts only at the bounded IPC boundary."""
+"""Reduce driver and parser causes to passive facts only at the bounded IPC boundary."""
 
+from zipfile import BadZipFile
+
+from lxml.etree import Error as LxmlError
 from pymongo.errors import PyMongoError
 from sqlalchemy.exc import SQLAlchemyError
 
@@ -19,7 +22,8 @@ def normalize_error_cause_for_transport(error: BaseException) -> None:
         if id(cause) in seen:
             return
         seen.add(id(cause))
-        if isinstance(cause, (SQLAlchemyError, PyMongoError)):
+        # lxml errors do not pickle; a BadZipFile from an invalid .xlsx is no passive value either.
+        if isinstance(cause, (SQLAlchemyError, PyMongoError, LxmlError, BadZipFile)):
             cause_types: list[str] = []
             nested: BaseException | None = cause
             vendor_seen: set[int] = set()

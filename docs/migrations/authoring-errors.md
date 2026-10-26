@@ -15,6 +15,11 @@ Under `<setup rngSeed>`, a `<execute>` Python script that draws entropy while it
 a default argument, an entropy import inside a function or class body) emits the shared warning `W008`
 with the script name and line; nothing is rejected, and Build's deterministic replay stays the hard check.
 
+File source readers name only the file, never the host path. A file that is not an `.xlsx` workbook fails with
+`I197`; a fixed-width (`.fcw`) file without a valid `# name[width],...` first line fails with `I198`. A JSON source
+with `NaN`, `Infinity`, `-Infinity` or a number above the largest float now fails with `I104`: these values are not
+JSON (RFC 8259), and `datamimic run` used to load them as floats. An empty or zero-weight `.wgt.csv` fails with `I102`.
+
 Build and raw XML verification reject XML over 1,000,000 characters with a typed
 `limit` diagnostic, rather than leaking an internal validation exception. Compile
 alone still proves syntax and does not promise bounded execution.

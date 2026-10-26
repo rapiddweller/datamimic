@@ -1,0 +1,3 @@
+<setup>
+    <generate name="rows" count="1" source="data/not_a_workbook.xlsx"/>
+</setup>
