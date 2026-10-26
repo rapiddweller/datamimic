@@ -82,6 +82,8 @@ Follow these steps for every run. One run is one `claude -p` process for one cas
    `uv venv <venv>` then `uv pip install --python <venv>/bin/python <wheel>`. Do not reuse a venv between runs.
 4. Start the subject: `python -m benchmarks.authoring_eval.run_subject <id> --venv <venv> --model <model>`. Record the JSON report.
 5. Run the oracle from the frozen checkout with its own venv, not the venv of the subject: `python -m benchmarks.authoring_eval.oracle <id> <run-dir>`. Record the verdict.
+   WARNING: the oracle executes untrusted project code without a sandbox. Build runs it in the oracle process, with the full environment.
+   Each capture run is a child process with the project copy as the cwd and only the variables of the runner (see below).
 6. Delete the run directory, its parent and the venv after the record is complete.
 
 ### What the runner does

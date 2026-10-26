@@ -27,6 +27,8 @@ from benchmarks.authoring_eval.oracle import (
     Repeatable,
     Unique,
     WholeNumber,
+    _finish,
+    _start,
     evaluate,
     json_outputs,
 )
@@ -359,6 +361,42 @@ def test_output_file_left_by_the_agents_own_run_does_not_count(folder: str, tmp_
     (project / _XML).write_text((project / _XML).read_text(encoding="utf-8").replace(' target="JSON"', ""))
 
     assert _failed(project, "e04") == _BOTH_OUTPUTS
+
+
+# A project script can reach the os module through the subclasses of object, despite the empty __builtins__.
+_OS = "[c for c in ().__class__.__base__.__subclasses__() if c.__name__ == '_wrap_close'][0].__init__.__globals__"
+
+
+def test_the_capture_run_sees_neither_the_repository_nor_the_operators_environment(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    monkeypatch.setenv("DM_EVAL_OPERATOR_SECRET", "x")
+    project = tmp_path / "project"
+    project.mkdir()
+    (project / _XML).write_text(
+        f"""<setup>
+    <generate name="probe" count="1">
+        <key name="cwd" script="{_OS}['getcwd']()"/>
+        <key name="secret" script="{_OS}['environ'].get('DM_EVAL_OPERATOR_SECRET', 'absent')"/>
+    </generate>
+</setup>""",
+        encoding="utf-8",
+    )
+
+    capture = _finish(_start(project, "1"))
+
+    assert capture.rows["probe"] == [{"cwd": str(project), "secret": "absent"}]
+
+
+def test_a_module_shipped_in_the_project_does_not_replace_the_capture_code(tmp_path: Path) -> None:
+    project = _reference(tmp_path, "e01")
+    shadow = project / "benchmarks" / "authoring_eval"
+    shadow.mkdir(parents=True)
+    (project / "benchmarks" / "__init__.py").write_text("", encoding="utf-8")
+    (shadow / "__init__.py").write_text("", encoding="utf-8")
+    (shadow / "capture.py").write_text('print(\'{"rows": {"shadow": []}}\')', encoding="utf-8")
+
+    assert set(_finish(_start(project, "1")).rows) == {"tickets"}
 
 
 def test_unreadable_output_files_are_skipped_not_a_crash(tmp_path: Path) -> None:

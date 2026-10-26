@@ -39,6 +39,8 @@ _RUN_TIMEOUT_SECONDS = 120
 _HASH_SEEDS = ("1", "2")
 # The case directory that the main runs lay over the project, at the same path in the copy.
 _FIXTURES = "fixtures"
+_ENV_KEYS = ("HOME", "USER", "LOGNAME", "LANG", "TMPDIR", "SHELL")
+_SYSTEM_PATH = "/usr/bin:/bin:/usr/sbin:/sbin"
 
 Row = dict[str, object]
 Scalar = StrictStr | StrictInt
@@ -425,11 +427,18 @@ def _copy(project: Path, case: str, destination: Path, fixtures: str = _FIXTURES
     return destination
 
 
+def child_env(**extra: str) -> dict[str, str]:
+    """The few variables a child process gets: the operator's other variables can hold secrets."""
+    return {key: os.environ[key] for key in _ENV_KEYS if key in os.environ} | {"PATH": _SYSTEM_PATH} | extra
+
+
 def _start(work: Path, hash_seed: str) -> subprocess.Popen[str]:
+    """The project's scripts are untrusted code: the run sees its copy as the cwd and none of the operator's secrets."""
     return subprocess.Popen(
-        [sys.executable, "-m", "benchmarks.authoring_eval.capture", str(work)],
-        cwd=REPO_ROOT,
-        env={**os.environ, "PYTHONHASHSEED": hash_seed},
+        # -P: the cwd is the project copy, and a module there must not replace the capture code
+        [sys.executable, "-P", "-m", "benchmarks.authoring_eval.capture", str(work)],
+        cwd=work,
+        env=child_env(PYTHONPATH=str(REPO_ROOT), PYTHONHASHSEED=hash_seed),
         stdout=subprocess.PIPE,
         stderr=subprocess.DEVNULL,
         text=True,
