@@ -217,3 +217,29 @@ def test_condition_branches_all_count_into_the_declared_total() -> None:
     spec = project_acceptance(BuildRequestV5(), CeDmJsonCodec().decompile(xml))
 
     assert spec.declared_rows == 30
+
+
+@pytest.mark.parametrize(
+    ("readback_count", "limit"),
+    [
+        pytest.param("", 10, id="readback-without-count-of-a-source-producer-is-unknown"),
+        pytest.param(' count="8"', 16, id="readback-literal-count-still-bounds-it"),
+    ],
+)
+def test_memstore_producer_with_a_source_bounds_only_by_literal_counts(
+    tmp_path: Path, readback_count: str, limit: int
+) -> None:
+    """The producer reads 3 file rows under count 8: its rows are not known, only bounded by its count."""
+    (tmp_path / "rows.csv").write_text("id\n1\n2\n3\n", encoding="utf-8")
+    xml = (
+        '<setup rngSeed="7" defaultSeparator=","><memstore id="mem"/>'
+        '<generate name="parents" source="rows.csv" distribution="ordered" count="8" target="mem">'
+        '<key name="id" script="int(this.id)"/></generate>'
+        f'<generate name="readback" source="mem" type="parents" distribution="ordered"{readback_count}>'
+        '<key name="id" script="this.id"/></generate></setup>'
+    )
+
+    result = build_project(tmp_path, xml, product_roles=_READBACK_ROLES)
+
+    assert result.outcome == "ready", result.diagnostics
+    assert set(_limits(result).values()) == {limit}
