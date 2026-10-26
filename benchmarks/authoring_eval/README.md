@@ -50,7 +50,7 @@ Raw transcripts and run directories stay outside the repository.
 | `per_parent_count` | each parent key owns exactly `n` child rows. Keys are compared as text, so keep `whole_number` on the parent key. |
 | `value_in` | every value is in `values`. |
 | `range` | every value is a whole number (as `whole_number`) from `min` to `max`, inclusive. |
-| `field_present` | every row has each field, and the value is not empty (`None` or `""`). |
+| `text` | every row has the field, and the value is a text that is not empty. A number, `None` and `""` fail. |
 | `field_at_most` | in every row, both fields are numbers and `field` is at most `other`. |
 | `exact_rows` | the captured rows equal `rows`. Row order is ignored. Keys and JSON types must match. |
 | `output_rows` | the run with the case directory `fixtures` laid over `fixtures/` wrote `<product>.json`, and its rows equal `rows` (as `exact_rows`). |

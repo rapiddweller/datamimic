@@ -6,7 +6,7 @@
     {"kind": "value_in", "product": "tickets", "field": "priority", "values": ["LOW", "MEDIUM", "HIGH"]},
     {"kind": "range", "product": "tickets", "field": "estimate_hours", "min": 1, "max": 40},
     {"kind": "unique", "product": "tickets", "field": "title"},
-    {"kind": "field_present", "product": "tickets", "fields": ["title"]},
+    {"kind": "text", "product": "tickets", "field": "title"},
     {"kind": "seed_is", "seed": 10421},
     {"kind": "repeatable"},
     {"kind": "whole_number", "product": "tickets", "field": "ticket_id"}

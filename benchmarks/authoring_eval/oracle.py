@@ -214,20 +214,22 @@ class InRange(_Check):
         return None if not bad else f"{len(bad)} values are not whole numbers in {self.min}..{self.max}"
 
 
-class FieldPresent(_Check):
-    kind: Literal["field_present"]
+class Text(_Check):
+    """Every value is a text that is not empty; a number is not a text."""
+
+    kind: Literal["text"]
     product: str
-    fields: list[str]
+    field: str
 
     def label(self) -> str:
-        return f"field_present:{self.product}"
+        return f"text:{self.product}.{self.field}"
 
     def failure(self, observed: Observed) -> str | None:
-        rows = _product_rows(observed, self.product)
-        if isinstance(rows, str):
-            return rows
-        empty = [name for name in self.fields if any(row.get(name) in (None, "") for row in rows)]
-        return None if not empty else f"missing or empty in some rows: {', '.join(empty)}"
+        found = FieldRef(product=self.product, field=self.field).values(observed)
+        if isinstance(found, str):
+            return found
+        bad = [value for value in found if not isinstance(value, str) or not value]
+        return None if not bad else f"{len(bad)} values are not texts that are not empty"
 
 
 class FieldAtMost(_Check):
@@ -351,7 +353,7 @@ Check = Annotated[
     | PerParentCount
     | ValueIn
     | InRange
-    | FieldPresent
+    | Text
     | FieldAtMost
     | ExactRows
     | OutputRows

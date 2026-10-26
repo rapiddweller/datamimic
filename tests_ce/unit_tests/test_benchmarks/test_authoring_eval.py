@@ -30,6 +30,7 @@ from benchmarks.authoring_eval.oracle import (
     OutputRows,
     PerParentCount,
     Repeatable,
+    Text,
     Unique,
     WholeNumber,
     _finish,
@@ -82,6 +83,13 @@ _BROKEN = [
         "constant_title",
         {_XML: [('string="Ticket __ticket_id__"', 'constant="Untitled"')]},
         frozenset({"unique:tickets.title"}),
+    ),
+    # integer titles are unique and not empty, but the prompt asks for text
+    Broken(
+        "e01",
+        "numeric_titles",
+        {_XML: [('string="Ticket __ticket_id__"', 'generator="IncrementGenerator"')]},
+        frozenset({"text:tickets.title"}),
     ),
     Broken(
         "e01",
@@ -578,6 +586,15 @@ def test_whole_number_rejects_bool_float_and_text() -> None:
     assert check.failure(Observed(None, None, {"p": [{"id": 1}, {"id": 2}]})) is None
     for bad in (True, 1.0, "1", None):
         assert check.failure(Observed(None, None, {"p": [{"id": 1}, {"id": bad}]})) is not None
+
+
+def test_text_rejects_a_number_an_empty_text_and_a_missing_value() -> None:
+    check = Text(kind="text", product="p", field="title")
+
+    assert check.failure(Observed(None, None, {"p": [{"title": "a"}, {"title": "b"}]})) is None
+    for bad in (1, 1.5, True, "", None):
+        assert check.failure(Observed(None, None, {"p": [{"title": "a"}, {"title": bad}]})) is not None
+    assert check.failure(Observed(None, None, {"p": [{"title": "a"}, {}]})) is not None
 
 
 def test_whole_number_on_the_parent_key_is_what_catches_orphans() -> None:
