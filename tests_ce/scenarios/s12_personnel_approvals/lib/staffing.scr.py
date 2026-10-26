@@ -20,7 +20,10 @@ Row = Mapping[str, Any]
 
 
 class Rule(StrEnum):
-    R1 = "R1"
+    # R1 has three parts: the employment must name the person, the company and the function.
+    R1_PERSON = "R1_person"
+    R1_COMPANY = "R1_company"
+    R1_FUNCTION = "R1_function"
     R2 = "R2"
     R3 = "R3"
     R4 = "R4"
@@ -70,14 +73,18 @@ class Assignment:
 def _employment(person_id: int, company_id: str, function_id: str, employments: Sequence[Row]) -> Exclusion | None:
     jobs = [job for job in employments if job["person_id"] == person_id]
     if not jobs:
-        return Exclusion(person_id=person_id, rule=Rule.R1, reason="no employment", value=None)
+        return Exclusion(person_id=person_id, rule=Rule.R1_PERSON, reason="no employment", value=None)
     at_company = [job for job in jobs if job["company_id"] == company_id]
     if not at_company:
         companies = ",".join(sorted(job["company_id"] for job in jobs))
-        return Exclusion(person_id=person_id, rule=Rule.R1, reason="employed by another company", value=companies)
+        return Exclusion(
+            person_id=person_id, rule=Rule.R1_COMPANY, reason="employed by another company", value=companies
+        )
     if all(job["function_id"] != function_id for job in at_company):
         functions = ",".join(sorted(job["function_id"] for job in at_company))
-        return Exclusion(person_id=person_id, rule=Rule.R1, reason="other function at this company", value=functions)
+        return Exclusion(
+            person_id=person_id, rule=Rule.R1_FUNCTION, reason="other function at this company", value=functions
+        )
     return None
 
 
@@ -139,7 +146,9 @@ def suitable_people(
             eligible.append({"person_id": person_id})
         elif len(failures) == 1:
             near_misses.append(failures[0])
-    counts = {rule.value: excluded_by[rule] for rule in (Rule.R1, Rule.R2, Rule.R3)}
+    counts = {
+        rule.value: excluded_by[rule] for rule in (Rule.R1_PERSON, Rule.R1_COMPANY, Rule.R1_FUNCTION, Rule.R2, Rule.R3)
+    }
     return Suitability(eligible=eligible, near_misses=near_misses, excluded_by=counts)
 
 
