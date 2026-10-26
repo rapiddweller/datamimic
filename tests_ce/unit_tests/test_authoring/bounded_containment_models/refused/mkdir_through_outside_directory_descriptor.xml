@@ -1,0 +1,6 @@
+<!-- Refused: the real dir_fd (third argument) makes "dm363_probe" resolve in /tmp, outside the private root. -->
+<setup rngSeed="7">
+    <generate name="rows" count="1" target="">
+        <key name="value" script="os.mkdir('dm363_probe', dir_fd=os.open('/tmp', os.O_RDONLY)) or 1"/>
+    </generate>
+</setup>

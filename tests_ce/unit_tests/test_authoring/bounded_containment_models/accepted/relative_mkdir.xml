@@ -1,0 +1,6 @@
+<!-- Accepted: the 0o777 default mode is no dir_fd, and "out" lies inside the private root. -->
+<setup rngSeed="7">
+    <generate name="rows" count="1" target="">
+        <key name="value" script="os.mkdir('out') or 1"/>
+    </generate>
+</setup>
