@@ -19,9 +19,10 @@ or in a lazy wrapper such as `map` or an imported `itertools.islice`) is not rep
 stays reported, as a decorator argument does: a call while the script loads consumes it before the seed applies.
 
 File source readers name only the file, never the host path. A file that is not an `.xlsx` workbook fails with
-`I197`; a fixed-width (`.fcw`) file without a valid `# name[width],...` first line fails with `I198`. A JSON source
-with `NaN`, `Infinity`, `-Infinity` or a number above the largest float now fails with `I104`: these values are not
-JSON (RFC 8259), and `datamimic run` used to load them as floats. An empty or zero-weight `.wgt.csv` fails with `I102`.
+`I197`; a fixed-width (`.fcw`) file without a valid `# name[width],...` first line fails with `I198`. The error
+names the file, not its directory. An empty or zero-weight `.wgt.csv` fails with `I102`. A JSON source with `NaN`,
+`Infinity`, `-Infinity` or a number above the largest float still reads as a float, as in EE: CE's JSON exporter
+writes `NaN`, and CE reads that file back.
 
 Build and raw XML verification reject XML over 1,000,000 characters with a typed
 `limit` diagnostic, rather than leaking an internal validation exception. Compile

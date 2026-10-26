@@ -7,7 +7,6 @@
 import csv
 import json
 import logging
-import math
 import zipfile
 from collections.abc import Iterator
 from contextlib import contextmanager
@@ -67,10 +66,8 @@ def _is_string_lines(value: object) -> TypeGuard[list[str]]:
 
 
 def _is_json_value(value: object) -> TypeGuard[JsonValue]:
-    if value is None or isinstance(value, str | int | bool):
+    if value is None or isinstance(value, str | int | float | bool):
         return True
-    if isinstance(value, float):
-        return math.isfinite(value)  # json.loads accepts NaN and Infinity; RFC 8259 JSON has neither
     if isinstance(value, list):
         return all(_is_json_value(item) for item in value)
     if isinstance(value, dict):

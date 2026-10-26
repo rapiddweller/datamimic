@@ -9,6 +9,7 @@ The models are DSL files next to this test. `datamimic run` runs in a subprocess
 user sees: the log, the `Error:` line and any traceback."""
 
 import json
+import math
 import re
 import shutil
 import subprocess
@@ -41,10 +42,6 @@ _REFUSED = [
     ("fixed_width_bad_spec_column", IssueCode.SOURCE_INVALID_FIXED_WIDTH),
     ("json_missing", IssueCode.SOURCE_FILE_NOT_FOUND),
     ("json_malformed", IssueCode.SOURCE_INVALID_JSON),
-    ("json_nan", IssueCode.SOURCE_INVALID_JSON),
-    ("json_infinity", IssueCode.SOURCE_INVALID_JSON),
-    ("json_negative_infinity", IssueCode.SOURCE_INVALID_JSON),
-    ("json_above_max_float", IssueCode.SOURCE_INVALID_JSON),
     ("weighted_csv_empty", IssueCode.SOURCE_INVALID_CSV),
 ]
 _IDS = [row[0] for row in _REFUSED]
@@ -94,15 +91,39 @@ def test_the_error_keeps_its_type_and_dry_run_its_code(tmp_path: Path, model: st
     assert diagnostic["ce_error"]["issue_code"] == code.value
 
 
-@pytest.mark.parametrize(
-    ("model", "rows"),
-    [
-        ("fixed_width_valid", [{"id": "1", "name": "a"}]),
-        ("json_max_float", [{"id": 1, "score": 1.7976931348623157e308}]),
-    ],
-    ids=["fixed_width_valid", "json_max_float"],
-)
-def test_the_valid_neighbour_still_reads(model: str, rows: list[dict]) -> None:
-    engine = DataMimicTest(test_dir=_DIR, filename=f"{model}.xml", capture_test_result=True)
+def _rows(project: Path, model: str) -> list[dict]:
+    engine = DataMimicTest(test_dir=project, filename=f"{model}.xml", capture_test_result=True)
     engine.test_with_timer()
-    assert engine.capture_result()["rows"] == rows
+    return engine.capture_result()["rows"]
+
+
+def test_the_valid_fixed_width_neighbour_still_reads() -> None:
+    assert _rows(_DIR, "fixed_width_valid") == [{"id": "1", "name": "a"}]
+
+
+# CE and EE read NaN and Infinity as floats; a catalog code for them is left out by decision (ce-ee-parity.md).
+@pytest.mark.parametrize(
+    ("model", "score"),
+    [
+        ("json_nan", "nan"),
+        ("json_infinity", "inf"),
+        ("json_negative_infinity", "-inf"),
+        ("json_above_max_float", "inf"),  # json.loads gives inf for 1e309
+    ],
+)
+def test_a_non_finite_json_number_reads_as_a_float(model: str, score: str) -> None:
+    (row,) = _rows(_DIR, model)
+    assert row["id"] == 1
+    assert isinstance(row["score"], float)
+    assert str(row["score"]) == score  # str, because NaN never equals NaN
+
+
+def test_a_json_file_that_ce_exports_with_nan_reads_back(tmp_path: Path) -> None:
+    project = _project(tmp_path)
+    DataMimicTest(test_dir=project, filename="json_nan_export.xml").test_with_timer()
+    (exported,) = (project / "output").rglob("scores.json")
+    assert "NaN" in exported.read_text(encoding="utf-8")  # the exporter writes NaN, not null
+    shutil.copy(exported, project / "data" / "exported_nan.json")
+    rows = _rows(project, "json_nan_readback")
+    assert [row["id"] for row in rows] == [1, 2]
+    assert all(math.isnan(row["score"]) for row in rows)
