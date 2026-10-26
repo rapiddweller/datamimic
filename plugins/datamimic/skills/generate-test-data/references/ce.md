@@ -60,8 +60,9 @@ expectation references for supported semantics and lineage declarations. Preserv
 the requested complete keys, nested shape, per-parent quantities and readback
 requirements; do not replace them with weaker checks to obtain readiness.
 
-Request smoke/replay through `verification` when required; deterministic replay
-needs an explicit seed. Increase `max_count` only to capture the intended proof.
+Request smoke through `verification` when required. Build replays every seeded
+model under other hash seeds; requesting deterministic replay also fails an
+unseeded model. Increase `max_count` only to capture the intended proof.
 Never inject or change a runtime count just to satisfy the proof budget.
 
 Inspect `outcome`, `phase`, diagnostics and complete acceptance/evidence. On a
@@ -92,8 +93,8 @@ functions, classes and constants:
 
 A refusal names the file, line and rule; repair the library, not the model.
 SQL, shell, `target=`, `script=` and an `<execute>` inside a record stay outside
-bounded proof. A seeded model that loads Python always replays: a second run must
-reproduce every row, which also catches draws the static check cannot see.
+bounded proof. Every seeded model replays: each replay must reproduce every row,
+which also catches draws the static check cannot see.
 Load the library in the entry descriptor; names a step loads stay local to it.
 
 ## A model outside bounded proof

@@ -1,0 +1,26 @@
+{
+  "version": "5.0",
+  "max_count": 100,
+  "product_roles": [
+    {"product": "types", "field": "code", "role": {"kind": "identifier"}},
+    {"product": "readback", "field": "code", "role": {"kind": "foreign_key", "parent_product": "types", "parent_field": "code"}},
+    {"product": "teams", "field": "team_id", "role": {"kind": "identifier"}},
+    {"product": "team_readback", "field": "team_id", "role": {"kind": "foreign_key", "parent_product": "teams", "parent_field": "team_id"}},
+    {"product": "grids", "field": "grid_id", "role": {"kind": "identifier"}},
+    {"product": "grid_readback", "field": "grid_id", "role": {"kind": "foreign_key", "parent_product": "grids", "parent_field": "grid_id"}}
+  ],
+  "expectations": [
+    {"kind": "exact_count", "subject": {"kind": "product", "product": "types"}, "count": 2},
+    {"kind": "exact_count", "subject": {"kind": "product", "product": "readback"}, "count": 2},
+    {"kind": "field_absent", "subject": {"kind": "product", "product": "types"}, "field": "mark"},
+    {"kind": "field_absent", "subject": {"kind": "product", "product": "readback"}, "field": "mark"},
+    {"kind": "field_absent", "subject": {"kind": "product", "product": "team_readback"}, "field": "mark"},
+    {"kind": "field_absent", "subject": {"kind": "product", "product": "teams", "list_field": "tags"}, "field": "mark"},
+    {"kind": "allowed_values", "subject": {"kind": "product", "product": "probe"}, "field": "marked_items", "values": [2]},
+    {"kind": "allowed_values", "subject": {"kind": "product", "product": "probe"}, "field": "marked_labels", "values": [2]},
+    {"kind": "allowed_values", "subject": {"kind": "product", "product": "probe"}, "field": "marked_sourced", "values": [2]},
+    {"kind": "allowed_values", "subject": {"kind": "product", "product": "team_readback"}, "field": "first_label", "values": ["base"]},
+    {"kind": "allowed_values", "subject": {"kind": "product", "product": "team_readback"}, "field": "tag_count", "values": [1]},
+    {"kind": "allowed_values", "subject": {"kind": "product", "product": "grid_readback"}, "field": "cell_count", "values": [2]}
+  ]
+}

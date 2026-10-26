@@ -39,6 +39,7 @@ import os
 import random
 import re
 import statistics
+import sys
 import uuid
 from collections.abc import Callable, Iterable
 from dataclasses import dataclass
@@ -296,7 +297,8 @@ def rebind_seeded_script_names(
     ``random.seed(x)`` with a value is refused: a keyed stream is ``random.Random(x)``.
 
     Outside this rebinding, and therefore not replayed: draws made while the script body itself executes
-    (module-level values, default arguments), imports inside helper bodies, and members not listed below.
+    (module-level values, default arguments), imports inside helper bodies, and members of uuid, datetime and os
+    that are not listed below.
     A plain run does not detect them. Build refuses imports inside bodies and replays every seeded model that loads
     Python, which catches the rest when they change the captured rows (#332).
     """
@@ -313,7 +315,6 @@ def rebind_seeded_script_names(
     seeded = _seeded_objects(rng, seeded_faker_supplier, SeededRandom, _refuse_keyed_seed)
     counterparts: tuple[tuple[object, object], ...] = (
         (random, seeded.random),
-        (Random, SeededRandom),
         (uuid, seeded.uuid),
         (uuid.uuid4, seeded.uuid4),
         (datetime, seeded.datetime),
@@ -322,23 +323,40 @@ def rebind_seeded_script_names(
         (pd, seeded.pd),
         (np, seeded.np),
         (os, seeded.os),
-        # Members imported by name are the module's own objects, so identity finds them too.
-        (random.random, seeded.random.random),
-        (random.randint, seeded.random.randint),
-        (random.randrange, seeded.random.randrange),
+        # Members imported by name are the module's own objects, so identity finds them too. One pair for each name
+        # in random.__all__ (#391); test_every_public_random_member_imported_by_name_is_rebound fails when a Python
+        # version adds one. The stand-in is what an expression gets for random.<name>, with the Random, seed and
+        # SystemRandom overrides.
+        (random.Random, seeded.random.Random),
+        (random.SystemRandom, seeded.random.SystemRandom),
+        (random.betavariate, seeded.random.betavariate),
         (random.choice, seeded.random.choice),
         (random.choices, seeded.random.choices),
-        (random.shuffle, seeded.random.shuffle),
-        (random.sample, seeded.random.sample),
-        (random.uniform, seeded.random.uniform),
+        (random.expovariate, seeded.random.expovariate),
+        (random.gammavariate, seeded.random.gammavariate),
         (random.gauss, seeded.random.gauss),
         (random.getrandbits, seeded.random.getrandbits),
+        (random.getstate, seeded.random.getstate),
+        (random.lognormvariate, seeded.random.lognormvariate),
+        (random.normalvariate, seeded.random.normalvariate),
+        (random.paretovariate, seeded.random.paretovariate),
         (random.randbytes, seeded.random.randbytes),
+        (random.randint, seeded.random.randint),
+        (random.random, seeded.random.random),
+        (random.randrange, seeded.random.randrange),
+        (random.sample, seeded.random.sample),
         (random.seed, seeded.random.seed),
-        (random.SystemRandom, seeded.random.SystemRandom),
+        (random.setstate, seeded.random.setstate),
+        (random.shuffle, seeded.random.shuffle),
+        (random.triangular, seeded.random.triangular),
+        (random.uniform, seeded.random.uniform),
+        (random.vonmisesvariate, seeded.random.vonmisesvariate),
+        (random.weibullvariate, seeded.random.weibullvariate),
         (uuid.uuid1, seeded.uuid.uuid1),
         (os.urandom, seeded.os.urandom),
     )
+    if sys.version_info >= (3, 12):
+        counterparts += ((random.binomialvariate, seeded.random.binomialvariate),)
     for name, value in list(namespace.items()):
         for raw, stand_in in counterparts:
             if value is raw:

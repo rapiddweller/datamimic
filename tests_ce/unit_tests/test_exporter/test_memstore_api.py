@@ -79,20 +79,21 @@ def test_entity_count_is_an_alias_of_get_data_len_by_type():
     assert mem.entityCount("t") == 2 == mem.get_data_len_by_type("t")
 
 
-def test_missing_optional_entity_remains_strict_for_rows_and_lenient_for_length(caplog, monkeypatch):
+def test_missing_entity_fails_for_rows_and_length_without_an_error_log(caplog, monkeypatch):
+    """The typed error is the report; an ERROR log before the raise only repeated it."""
     mem = Memstore("mem")
     monkeypatch.setattr(logging.getLogger("DATAMIMIC"), "propagate", True)
 
-    with caplog.at_level(logging.ERROR, logger="DATAMIMIC"), pytest.raises(
-        KeyError, match="Data naming 'None' is empty in memstore"
+    with (
+        caplog.at_level(logging.ERROR, logger="DATAMIMIC"),
+        pytest.raises(KeyError, match="Data naming 'None' is empty in memstore"),
     ):
         mem.get_data_by_type(None)
-    assert "Data naming 'None' is empty in memstore" in caplog.messages[0]
+    assert caplog.messages == []
 
     caplog.clear()
-    with caplog.at_level(logging.ERROR, logger="DATAMIMIC"):
-        assert mem.get_data_len_by_type(None) == 0
-    assert caplog.messages == ["Data having entity 'None' is empty in memstore"]
+    with pytest.raises(KeyError, match="Data naming 'None' is empty in memstore"):
+        mem.get_data_len_by_type(None)
 
 
 def test_remove_not_existing_ids_keeps_only_matches():
@@ -156,9 +157,9 @@ def test_remove_not_existing_ids_replaces_list_and_preserves_survivor_aliases():
     expected = [repeated, first, repeated, missing, null, literal_null]
     assert current is not previous
     assert current == expected
-    assert all(actual is original for actual, original in zip(current, expected))
+    assert all(actual is original for actual, original in zip(current, expected, strict=True))
     assert previous == rows
-    assert all(actual is original for actual, original in zip(previous, rows))
+    assert all(actual is original for actual, original in zip(previous, rows, strict=True))
     assert current[0] is current[2]
 
 

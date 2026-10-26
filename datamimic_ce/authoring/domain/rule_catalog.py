@@ -464,6 +464,19 @@ _AUTHORING_RULE_DEFINITIONS: tuple[RuleDefinition, ...] = (
         '<key name="n" type="int" min="1" max="2" distribution="step"/></generate></generate>',
     ),
     _rule_definition(
+        "DM319",
+        RuleSeverity.WARNING,
+        "Seeded script iterates a set",
+        "Under rngSeed a script reads a set in an order-dependent way. The order of a set of strings follows the "
+        "process hash seed, so two runs with the same rngSeed can differ.",
+        "Use sorted(...), a list or a tuple; membership tests such as x in {...} stay safe.",
+        "PYTHONHASHSEED set-iteration contract; Build replays every seeded model under three other hash seeds (#425).",
+        '<setup rngSeed="1"><generate name="g" count="1">'
+        "<key name=\"x\" script=\"sorted({'a', 'b'})[0]\"/></generate></setup>",
+        '<setup rngSeed="1"><generate name="g" count="1">'
+        "<key name=\"x\" script=\"list({'a', 'b'})[0]\"/></generate></setup>",
+    ),
+    _rule_definition(
         "DM401",
         RuleSeverity.ERROR,
         "Unknown target",

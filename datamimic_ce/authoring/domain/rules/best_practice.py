@@ -17,6 +17,7 @@ from lxml import etree
 
 from datamimic_ce.authoring.domain.rule_catalog import authoring_rule_definition
 from datamimic_ce.authoring.domain.rules.base import LintContext, Rule
+from datamimic_ce.authoring.domain.script_semantics import iterates_a_set
 from datamimic_ce.authoring.domain.xml_diagnostics import Diagnostic
 from datamimic_ce.domains.api import finite_number_sequence_capacity
 from datamimic_ce.engine.dsl.api import (
@@ -359,6 +360,19 @@ class NestedFiniteSequenceCardinalityUnknown(Rule):
             )
 
 
+class SeededScriptIteratesSet(Rule):
+    definition = authoring_rule_definition("DM319")
+
+    def check(self, ctx: LintContext) -> Iterable[Diagnostic]:
+        if ctx.run_root.get("rngSeed") is None:
+            return
+        for element in ctx.iter():
+            for attr in _SCRIPT_ATTRS:
+                value = element.get(attr)
+                if value is not None and iterates_a_set(value):
+                    yield ctx.diag(type(self), element, evidence=f"{attr} reads a set in an order-dependent way")
+
+
 class CountWithSourceCapsSilently(Rule):
     definition = authoring_rule_definition("DM316")
 
@@ -394,4 +408,5 @@ RULES: tuple[type[Rule], ...] = (
     NestedFiniteSequenceExhaustion,
     NestedFiniteSequenceCardinalityUnknown,
     CountWithSourceCapsSilently,
+    SeededScriptIteratesSet,
 )

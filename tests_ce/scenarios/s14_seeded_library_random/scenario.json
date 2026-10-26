@@ -1,0 +1,34 @@
+{
+  "title": "A seeded library that imports random functions by name",
+  "proves": [
+    "every public random function a library imports by name draws from the run's seeded stream",
+    "triangular, betavariate, expovariate, gammavariate, lognormvariate, normalvariate, paretovariate, vonmisesvariate and weibullvariate replay identically, also under an alias",
+    "Random() without a seed, random.seed() without a value and getstate/setstate replay identically",
+    "a Random subclass that the library defines while it loads is not seeded, and the Build replay rejects it",
+    "random.SystemRandom stays refused under rngSeed"
+  ],
+  "products": {
+    "samples": 5
+  },
+  "negatives": [
+    {
+      "name": "system_random",
+      "diagnostic": "child_execution",
+      "run_error": "'random.SystemRandom' draws entropy that <setup rngSeed> cannot replay",
+      "patch": {
+        "file": "lib/draws.scr.py",
+        "old": "from random import weibullvariate as weibull\n\n\ndef spread():\n    return round(triangular(0, 10, 3), 6)\n",
+        "new": "from random import SystemRandom\nfrom random import weibullvariate as weibull\n\n\ndef spread():\n    return round(SystemRandom().random() * 10, 6)\n"
+      }
+    },
+    {
+      "name": "subclass_random",
+      "diagnostic": "validation",
+      "patch": {
+        "file": "lib/draws.scr.py",
+        "old": "def dice():\n    return randint(1, 6)\n",
+        "new": "class LocalRandom(Random):\n    pass\n\n\ndef dice():\n    return LocalRandom().randint(1, 6)\n"
+      }
+    }
+  ]
+}

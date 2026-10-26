@@ -61,7 +61,9 @@ proven infeasibility and an exhausted search budget.
 
 A ready compile proves syntax. A ready Build additionally proves its declared
 acceptance against a complete bounded capture. Sample rows are not total counts.
-Smoke/replay pass only when requested and reported as passed. Target-isolated
+Smoke passes only when requested and reported as passed. Build replays every
+seeded model under other hash seeds; a passed replay lowers, but does not
+remove, the chance of a hidden set order. Target-isolated
 capture does not prove delivery to an external database or file destination.
 
 Follow [the model review contract](references/review.md). Return a readable model

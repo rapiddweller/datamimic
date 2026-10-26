@@ -234,17 +234,12 @@ def _memstore_producers(
     memstore_ids: set[str],
 ) -> tuple[_MemstoreProducer, ...]:
     from datamimic_ce.engine.dsl.api import GenerateStatement
-    from datamimic_ce.engine.io.api import resolve_target_entity
 
     producers: list[_MemstoreProducer] = []
     for statement in _generate_statements(root_stmt):
         if not isinstance(statement, GenerateStatement):
             continue
-        entity = resolve_target_entity(
-            statement.target_entity,
-            statement.type,
-            statement.name,
-        )
+        entity = GenerateStatement.memstore_entity(statement.target_entity, statement.name)
         for source_id in sorted(statement.targets & memstore_ids):
             producers.append(
                 _MemstoreProducer(
@@ -410,13 +405,13 @@ def _validate_bounded_includes(
     graph's memstore ids and its run-wide memstore producers, or no producers when the entry includes no step."""
     from datamimic_ce.engine.dsl.api import (
         ExecuteStatement,
+        GenerateStatement,
         get_element_definition,
         parse_consumer,
         parse_xml_file,
         parse_xml_source,
     )
     from datamimic_ce.engine.dsl.vocabulary.contracts.dsl_element import BoundedExecutionStrategy
-    from datamimic_ce.engine.io.api import resolve_target_entity
 
     root = parse_xml_file(path)
     # Without steps the engine resolves properties includes itself and reports a missing file as a typed error.
@@ -475,7 +470,7 @@ def _validate_bounded_includes(
             products.add(name)
             lineage = (*lineage, name)
             # Run-wide producer facts: one statement tree alone cannot see what another step writes.
-            entity = resolve_target_entity(node.get("targetEntity"), node.get("type"), name)
+            entity = GenerateStatement.memstore_entity(node.get("targetEntity"), name)
             for source_id in sorted(parse_consumer(node.get("target")) & memstores):
                 producers.append(
                     _MemstoreProducer(

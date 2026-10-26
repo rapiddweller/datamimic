@@ -28,7 +28,6 @@ from datamimic_ce.engine.io.contracts import Exporter, SmokeExportRequest
 from datamimic_ce.engine.io.exporters.core.exporter_config import ExporterConfig
 from datamimic_ce.engine.io.exporters.core.exporter_context import ExporterContext
 from datamimic_ce.engine.io.exporters.core.exporter_state_manager import ExporterStateManager
-from datamimic_ce.engine.io.exporters.core.routing import resolve_target_entity
 from datamimic_ce.engine.io.exporters.core.unified_buffered_exporter import UnifiedBufferedExporter
 from datamimic_ce.engine.io.exporters.database.database_exporter import DatabaseExporter
 from datamimic_ce.engine.io.exporters.database.mongodb_exporter import MongoDBExporter
@@ -190,16 +189,13 @@ def capture_test_results(
 def consume_memstore_target(
     setup_context: ExporterContext,
     targets: list[str],
-    target_entity: str | None,
-    product_type: str | None,
-    product_name: str,
+    entity: str,
     full_name: str,
     products: Mapping[str, list[dict[str, object]]],
 ) -> None:
     """Preserve the existing first-memstore-target write rule."""
     for target in targets:
         if setup_context.memstore_manager.contain(target):
-            entity = resolve_target_entity(target_entity, product_type, product_name)
             rows = products.get(full_name, [])
             exporter = setup_context.memstore_manager.get_memstore(target)
             if not isinstance(exporter, Memstore):

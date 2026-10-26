@@ -473,6 +473,7 @@ class CeBoundedExecutor:
         try:
             process = subprocess.Popen(
                 command,
+                env=None if request.hash_seed is None else {**os.environ, "PYTHONHASHSEED": str(request.hash_seed)},
                 stdin=subprocess.DEVNULL,
                 stdout=subprocess.DEVNULL,
                 stderr=subprocess.DEVNULL,

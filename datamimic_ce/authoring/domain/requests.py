@@ -387,6 +387,8 @@ class BoundedExecutionRequest(AuthoringModel):
     timeout_seconds: StrictInt = Field(default=30, ge=1, le=120)
     environment_properties: tuple[tuple[NonEmptyStrictStr, StrictStr], ...] = ()
     smoke_export: StrictBool = False
+    # PYTHONHASHSEED of the child process; None inherits the caller's environment.
+    hash_seed: StrictInt | None = Field(default=None, ge=0, le=4294967295)
 
 
 @dataclass(frozen=True)

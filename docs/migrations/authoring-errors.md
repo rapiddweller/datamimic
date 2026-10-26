@@ -168,6 +168,24 @@ remove everything the source returns, so it fails with `I928` before any databas
 A `delete` on generated rows (no `source`) or on a file source is unchanged: it deletes by the row keys. A selector
 with an empty Mongo filter (`filter: {}`) still works as a delete; prefer `mongodb.clear` for that intent.
 
+## Memstore read and write entities (#422)
+
+In CE, `type` never sets the memstore entity that a product writes. On a `<generate>` that reads `source="mem"`,
+`type` names only the entity it reads. The entity a product writes is `targetEntity`, else the product name.
+Before CE 5.0, `type` also set the written entity, so a step that read one
+entity and wrote the store appended its rows to the entity it read. A read of an entity that no product wrote now
+fails with `MissingMemstoreProductError` instead of a log line and zero rows. `mem.entityCount` stays lenient.
+
+| Before | After |
+|---|---|
+| `<generate name="slots" source="mem" type="demand" target="mem">` wrote `demand` | it writes `slots` |
+| to keep the old routing | add `targetEntity="demand"` |
+
+EE differs: it still writes `targetEntity`, then `type`, then the product name (see
+[edition alignment](../architecture/inner/edition-alignment.md)). For a project that runs in both editions, read with
+`sourceEntity`, write with the product name or `targetEntity`, and do not put `type=` on a memstore source. Build
+names the cause when no product, or more than one product, writes the entity a memstore source reads.
+
 ## Enforcement and closure
 
 Use the current upstream ArchKeel 3.0.1 pin with Python 3.11.12, as approved in

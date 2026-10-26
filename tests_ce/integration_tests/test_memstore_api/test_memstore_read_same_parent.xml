@@ -1,0 +1,13 @@
+<setup>
+    <memstore id="mem"/>
+    <generate name="outer" count="2">
+        <key name="oid" generator="IncrementGenerator"/>
+        <generate name="inner" count="2" target="mem">
+            <key name="iid" generator="IncrementGenerator"/>
+        </generate>
+        <!-- inner reaches the store only after outer ends, so this sibling read fails. -->
+        <generate name="reader" source="mem" sourceEntity="inner">
+            <key name="x" constant="1"/>
+        </generate>
+    </generate>
+</setup>

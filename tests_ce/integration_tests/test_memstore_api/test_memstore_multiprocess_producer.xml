@@ -1,0 +1,9 @@
+<setup numProcess="2">
+    <memstore id="mem"/>
+    <generate name="pages" count="20" pageSize="5" multiprocessing="True" target="mem">
+        <key name="id" generator="IncrementGenerator"/>
+    </generate>
+    <generate name="reader" source="mem" sourceEntity="pages">
+        <key name="x" constant="1"/>
+    </generate>
+</setup>

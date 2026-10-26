@@ -54,6 +54,7 @@ from datamimic_ce.authoring.domain.script_semantics import (
 )
 from datamimic_ce.engine.dsl.api import (
     NAME_SEPARATOR,
+    GenerateStatement,
     TimeSeriesConfig,
     TimeSeriesConfigError,
     capture_product_name,
@@ -161,7 +162,13 @@ def _parent_reference(script: object) -> str | None:
     return None
 
 
+def _memstore_entity(node: DmJsonNodeV1, name: str) -> str:
+    target_entity = node.properties.get("target_entity")
+    return GenerateStatement.memstore_entity(target_entity if isinstance(target_entity, str) else None, name)
+
+
 def _target_entity(node: DmJsonNodeV1, name: str) -> str:
+    """A database or MongoDB sink's entity; type takes part here, unlike a memstore write."""
     for attribute in ("target_entity", "type"):
         value = node.properties.get(attribute)
         if isinstance(value, str) and value:
@@ -448,11 +455,23 @@ def _readbacks(
         producers = [
             entry
             for entry in entries
-            if _target_entity(entry.node, _name(entry.node, entry.path)) == entity
+            if _memstore_entity(entry.node, _name(entry.node, entry.path)) == entity
             and source in {item.strip() for item in str(entry.node.properties.get("target", "")).split(",")}
         ]
-        if len(producers) != 1:
-            _reject("Memstore readback requires one declared producer for the source entity.", consumer.path)
+        if not producers:
+            _reject(
+                "No product writes the memstore entity that this source reads.",
+                consumer.path,
+                "Write the entity with a generate that targets this memstore. A product writes the entity named by "
+                "targetEntity, else its own name; type and sourceEntity name only the entity that a source reads.",
+            )
+        if len(producers) > 1:
+            _reject(
+                "More than one product writes the memstore entity that this source reads.",
+                consumer.path,
+                "Give each writer its own entity. A product writes the entity named by targetEntity, else its own "
+                "name; type and sourceEntity name only the entity that a source reads.",
+            )
         producer = producers[0]
         if isinstance(source, str):
             producers_read.add((producer.product.name, source))

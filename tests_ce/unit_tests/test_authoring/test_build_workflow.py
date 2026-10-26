@@ -2,8 +2,6 @@
 
 from dataclasses import dataclass, field
 
-import pytest
-
 from datamimic_ce.authoring.domain.capture import (
     CapturedProduct,
     CapturedProducts,
@@ -87,13 +85,32 @@ def workflow(executor, entry=SEEDED, **acceptance):
 
 def test_ready_uses_full_capture_and_one_execution():
     executor = Executor([captured()])
-    result = workflow(executor, sample_rows=1).execute()
+    result = workflow(executor, SEEDED.replace(' rngSeed="7"', ""), sample_rows=1).execute()
     assert result.outcome == "ready"
     assert result.evidence[0].count == 3
     assert len(result.evidence[0].rows) == 1
     assert result.evidence[0].capture.complete
     assert result.verification.deterministic_replay.status.value == "not_requested"
     assert len(executor.calls) == 1
+
+
+def test_a_seeded_build_always_replays_under_three_other_hash_seeds():
+    executor = Executor([captured() for _ in range(4)])
+    result = workflow(executor).execute()
+    assert result.outcome == "ready"
+    assert result.verification.deterministic_replay.status.value == "passed"
+    assert [call.hash_seed for call in executor.calls] == [1, 2, 3, 4]
+
+
+def test_a_differing_replay_stops_the_replays_and_names_a_possible_cause():
+    from datamimic_ce.authoring.domain.script_semantics import ReplayCause
+
+    executor = Executor([captured(), captured(rows=({"id": 1}, {"id": 2}, {"id": 999}))])
+    result = workflow(executor).execute()
+    assert result.outcome == "rejected"
+    assert result.verification.deterministic_replay.status.value == "failed"
+    assert len(executor.calls) == 2
+    assert ReplayCause.OTHER.failure_message() in [item.message for item in result.diagnostics]
 
 
 def test_derived_count_cannot_be_omitted_by_caller():
@@ -164,7 +181,7 @@ def test_a_file_that_changed_while_build_read_it_rejects_the_build():
         captured=changed.captured,
         files=(ProjectFileDigest(path=PROJECT_ENTRY_PATH, sha256="0" * 64),),
     )
-    result = workflow(Executor([changed])).execute()
+    result = workflow(Executor([changed, *(captured() for _ in range(3))])).execute()
     assert result.outcome == "rejected"
     assert result.phase.value == "evidence"
     assert any(item.path == ("project", "datamimic.xml") for item in result.diagnostics), result.diagnostics

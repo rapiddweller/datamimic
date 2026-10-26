@@ -1,0 +1,10 @@
+<setup rngSeed="1">
+    <memstore id="mem"/>
+    <generate name="demand" count="2" target="mem">
+        <key name="demand_id" generator="IncrementGenerator"/>
+    </generate>
+    <!-- No product writes "slot": the read must fail, not yield zero rows. -->
+    <generate name="slot_readback" source="mem" sourceEntity="slot" distribution="ordered">
+        <key name="demand_id" script="this.demand_id"/>
+    </generate>
+</setup>

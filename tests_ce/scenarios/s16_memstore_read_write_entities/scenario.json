@@ -1,0 +1,35 @@
+{
+  "title": "A step that reads one memstore entity and writes another",
+  "proves": [
+    "type on a memstore source names only the entity the step reads",
+    "the step writes the entity named by its own product name, so demand keeps 2 rows and slots gets 2 rows",
+    "Build names the cause when two products write the entity a memstore source reads",
+    "Build names the cause when no product writes the entity a memstore source reads"
+  ],
+  "products": {
+    "demand": 2,
+    "slots": 2,
+    "slot_readback": 2,
+    "count_check": 1
+  },
+  "negatives": [
+    {
+      "name": "write_into_read_entity",
+      "diagnostic": "input",
+      "patch": {
+        "file": "datamimic.xml",
+        "old": "type=\"demand\" distribution=\"ordered\" target=\"mem\">",
+        "new": "type=\"demand\" distribution=\"ordered\" target=\"mem\" targetEntity=\"demand\">"
+      }
+    },
+    {
+      "name": "read_unwritten_entity",
+      "diagnostic": "input",
+      "patch": {
+        "file": "datamimic.xml",
+        "old": "<generate name=\"slot_readback\" source=\"mem\" sourceEntity=\"slots\"",
+        "new": "<generate name=\"slot_readback\" source=\"mem\" sourceEntity=\"slot\""
+      }
+    }
+  ]
+}

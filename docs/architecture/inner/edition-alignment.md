@@ -124,9 +124,27 @@ The old `get_data_by_type(entity, pagination, cyclic)` call is removed. Use
 list, raises `KeyError` for a missing entity, and returns `[]` for an existing
 empty entity. `get_all_data_by_type(entity)` is lenient and returns `[]` when
 the entity is missing. Scripts that need paging or cyclic reads should use the
-DSL source path (`source="mem"`, `type="…"`, with `pageSize` or `cyclic`) so IO
+DSL source path (`source="mem"`, `sourceEntity="…"`, with `pageSize` or `cyclic`) so IO
 owns selection; do not pass paging policy to the raw getter. `offset` remains
 file-only for Generate sources.
+
+Both raw getters return the stored rows themselves, not copies. A script that
+changes a row from `mem.get_all_data_by_type(...)` changes the store (#421).
+Read through the DSL source path when a script must not change the store.
+
+## Memstore write entity (CE and EE differ)
+
+| Edition | Entity that a memstore write uses |
+|---|---|
+| CE 5.0 | `targetEntity`, else the product name (`GenerateStatement.memstore_entity`) |
+| EE | `targetEntity`, else `type`, else the product name (`exporter_factory.py`, `entity_identity.py`) |
+
+CE differs on purpose (#422). On a memstore source, `type` names the entity
+that the step reads. When `type` also set the written entity, a step that read
+one entity and wrote the store appended its rows to the entity it read. EE
+needs an aligning change before the two editions agree. Until then, a project
+that runs in both editions reads with `sourceEntity`, writes with the product
+name or `targetEntity`, and does not put `type=` on a memstore source.
 
 ## Interfaces namespace
 

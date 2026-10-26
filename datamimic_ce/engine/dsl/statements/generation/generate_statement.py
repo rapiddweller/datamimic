@@ -172,6 +172,15 @@ class GenerateStatement(CompositeStatement):
             )
         return None
 
+    @staticmethod
+    def memstore_entity(target_entity: str | None, name: str) -> str:
+        """The memstore entity a product writes: targetEntity, then the product name. type names only the entity that
+        a memstore source reads, so a step that reads one entity and writes the store keeps them apart (#422). EE
+        still writes targetEntity, then type, then name (edition-alignment.md). The runtime, bounded execution and
+        Build acceptance use this one rule. It is not engine.io's resolve_target_entity(t, None, name): rule
+        PROJECTION-NO-IO keeps Build acceptance from importing engine.io."""
+        return target_entity or name
+
     @property
     def target_entity(self) -> str | None:
         return self._target_entity

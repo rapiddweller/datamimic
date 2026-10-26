@@ -87,7 +87,7 @@ def executions(monkeypatch):
 
 
 def test_default_build_uses_one_real_capture_and_unrequested_gates(tmp_path: Path, executions) -> None:
-    result = build_project(tmp_path, _document())
+    result = build_project(tmp_path, _document(seed=None))
     assert isinstance(result, ReadyBuild), result
     assert len(executions) == 1
     assert result.verification.smoke_export.status is VerificationGateStatus.NOT_REQUESTED
@@ -97,7 +97,7 @@ def test_default_build_uses_one_real_capture_and_unrequested_gates(tmp_path: Pat
 def test_smoke_reuses_first_capture_and_real_json_exporter(tmp_path: Path, executions) -> None:
     result = build_project(tmp_path, _document(), verification={"smoke_export": True})
     assert isinstance(result, ReadyBuild), result
-    assert [request.smoke_export for request in executions] == [True]
+    assert [request.smoke_export for request in executions] == [True, False, False, False]
     smoke = result.verification.smoke_export
     assert smoke.status is VerificationGateStatus.PASSED
     assert (smoke.applicable_exporters, smoke.attempted_exporters, smoke.failed_exporters) == (1, 1, 0)
@@ -194,10 +194,10 @@ def test_replay_checks_complete_rows_beyond_response_samples(tmp_path: Path, mon
     assert replay.mismatches[0].first_difference == 1
 
 
-def test_seeded_replay_runs_exactly_twice_and_passes(tmp_path: Path, executions) -> None:
+def test_seeded_replay_runs_once_per_hash_seed_and_passes(tmp_path: Path, executions) -> None:
     result = build_project(tmp_path, _document(), sample_rows=1, verification={"deterministic_replay": True})
     assert isinstance(result, ReadyBuild), result
-    assert len(executions) == 2
+    assert [request.hash_seed for request in executions] == [1, 2, 3, 4]
     assert len(result.evidence[0].rows) == 1
     replay = result.verification.deterministic_replay
     assert replay.status is VerificationGateStatus.PASSED
@@ -353,7 +353,7 @@ def test_fixed_value_keeps_native_types_at_every_depth(tmp_path: Path, nested: b
     "producer_properties,entity",
     [
         ({}, "items"),
-        ({"type": "shared"}, "shared"),
+        ({"type": "ignored"}, "items"),  # type names only a memstore read (#422)
         ({"target_entity": "shared"}, "shared"),
         ({"type": "ignored", "target_entity": "shared"}, "shared"),
     ],

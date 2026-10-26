@@ -153,7 +153,7 @@ def test_ranged_counts_are_bounded() -> None:
 def test_unique_complete_memstore_producer_proves_finite_readback() -> None:
     xml = """<setup rngSeed="1">
         <memstore id="mem"/>
-        <generate name="z_producer" type="shared" count="8" target="mem">
+        <generate name="z_producer" targetEntity="shared" count="8" target="mem">
             <key name="id" generator="IncrementGenerator"/>
         </generate>
         <generate name="a_reader" source="mem" type="shared" distribution="ordered"/>
@@ -231,10 +231,10 @@ def test_memstore_read_without_generate_producer_is_unknown(tmp_path: Path) -> N
 def test_ambiguous_memstore_producers_fail_closed_unknown() -> None:
     xml = """<setup rngSeed="1">
         <memstore id="mem"/>
-        <generate name="producer_a" type="shared" count="2" target="mem">
+        <generate name="producer_a" targetEntity="shared" count="2" target="mem">
             <key name="id" generator="IncrementGenerator"/>
         </generate>
-        <generate name="producer_b" type="shared" count="2" target="mem">
+        <generate name="producer_b" targetEntity="shared" count="2" target="mem">
             <key name="id" generator="IncrementGenerator"/>
         </generate>
         <generate name="reader" source="mem" type="shared" distribution="ordered"/>

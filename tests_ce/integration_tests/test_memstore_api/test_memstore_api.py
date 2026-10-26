@@ -9,6 +9,9 @@
 import shutil
 from pathlib import Path
 
+import pytest
+
+from datamimic_ce.errors import MissingMemstoreProductError
 from datamimic_ce.interfaces.python.data_mimic_test import DataMimicTest
 
 _dir = Path(__file__).resolve().parent
@@ -81,3 +84,40 @@ def test_memstore_remove_not_existing_ids():
     finally:
         for d in (output_dir, repo_root_db_dir, local_db_dir):
             shutil.rmtree(d, ignore_errors=True)
+
+
+@pytest.mark.parametrize(
+    "descriptor", ["test_memstore_read_unwritten_generate.xml", "test_memstore_read_unwritten_variable.xml"]
+)
+def test_reading_a_memstore_entity_that_no_product_wrote_fails(descriptor: str) -> None:
+    """#422: a read of an entity that no product wrote used to log an ERROR and go on with zero rows."""
+    engine = DataMimicTest(_dir, descriptor, capture_test_result=True)
+    with pytest.raises(MissingMemstoreProductError):
+        engine.test_with_timer()
+
+
+def test_a_sibling_read_of_a_nested_memstore_product_fails_with_guidance_that_names_the_timing() -> None:
+    """A nested product reaches the store only after the outermost generate ends; the earlier guidance told the
+    author to write the product first, which the descriptor already does."""
+    engine = DataMimicTest(_dir, "test_memstore_read_same_parent.xml", capture_test_result=True)
+    with pytest.raises(MissingMemstoreProductError) as caught:
+        engine.test_with_timer()
+    assert "after the outermost <generate> ends" in caught.value.guidance
+
+
+def test_memstore_write_timing_classes() -> None:
+    """Review probes for #422: a zero-row producer, a nested producer read after its outermost generate, and a
+    nested producer in a false condition each keep the row counts they had before the change."""
+    engine = DataMimicTest(_dir, "test_memstore_write_timing.xml", capture_test_result=True)
+    engine.test_with_timer()
+    result = engine.capture_result()
+    assert len(result.get("empty_reader", [])) == 0
+    assert result["empty_count"] == [{"n": 0}]
+    assert len(result["inner_reader"]) == 4
+    assert len(result.get("skipped_reader", [])) == 0
+
+
+def test_a_multiprocess_producer_writes_every_page_to_the_memstore() -> None:
+    engine = DataMimicTest(_dir, "test_memstore_multiprocess_producer.xml", capture_test_result=True)
+    engine.test_with_timer()
+    assert sorted(row["id"] for row in engine.capture_result()["reader"]) == list(range(1, 21))
