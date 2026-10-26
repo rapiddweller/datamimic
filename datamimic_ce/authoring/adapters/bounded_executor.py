@@ -43,7 +43,7 @@ from datamimic_ce.authoring.domain.requests import (
     ProjectFileDigest,
     SourceAccessEvidence,
 )
-from datamimic_ce.errors import DomainError, GeneratorConfigError, IssueCode, UserErrorBase
+from datamimic_ce.errors import DescriptorLocation, DomainError, GeneratorConfigError, IssueCode, UserErrorBase
 from datamimic_ce.errors.catalog import get_issue_definition
 from datamimic_ce.errors.codes import ErrorCode
 
@@ -195,6 +195,50 @@ def _read_file_digests(
     return tuple(digests)
 
 
+# Whole-value ``{name}`` is replaced by a property, possibly a secret, when the runtime parses the descriptor; ``__``
+# is the interpolation mark of string and pattern. A message with neither mark is the literal text of the file.
+_INTERPOLATION_MARKS = ("{", "}", "__")
+
+
+def _failed_assert(
+    location: DescriptorLocation, request: BoundedExecutionRequest, entry: str, workspace: Path
+) -> tuple[tuple[str | int, ...], str, str | None]:
+    """Path, message and literal rule text of the failed <assert>, read from the raw file that ran. Only the
+    attribute text of that file can prove a message literal: the runtime value of ``{name}`` has no braces."""
+    from datamimic_ce.engine.dsl.api import parse_xml_source
+
+    file = location.descriptor_path or entry
+    path: tuple[str | int, ...] = ("descriptor", entry) if file == entry else ("include", file)
+    line: tuple[str | int, ...] = () if location.line is None else ("line", location.line)
+    private = AuthoringWorkspaceContext(workspace, request.descriptor_path)
+    # (message attribute, name of the enclosing generate or nestedKey) of each assert on the reported line
+    found: list[tuple[str | None, str | None]] = []
+    owners: list[str | None] = []
+    try:
+        root = parse_xml_source(request.xml if file == entry else private.read_project_file(PurePosixPath(file)))
+        for event, item in etree.iterwalk(root, events=("start", "end")):
+            if item.tag in ("generate", "nestedKey"):
+                owners = [*owners, item.get("name")] if event == "start" else owners[:-1]
+            elif event == "start" and item.tag == "assert" and item.sourceline == location.line:
+                found.append((item.get("message"), owners[-1] if owners else None))
+    except (OSError, ValueError, etree.XMLSyntaxError):
+        found = []
+    if len(found) != 1 or location.line is None:
+        return (*path, "assert", *line), "An <assert> failed.", None
+    raw, owner = found[0]
+    where = "under <setup>" if owner is None else f"in '{owner}'"
+    rule = raw if raw and not any(mark in raw for mark in _INTERPOLATION_MARKS) else None
+    message = (
+        f"The <assert> {where} failed: {rule}"
+        if rule is not None
+        else f"The <assert> {where} failed. It has no message; a message names the rule."
+        if raw is None
+        else f"The <assert> {where} failed. Its message is not shown: it contains {{, }} or __ and can hold a "
+        "property value."
+    )
+    return (*path, "assert", *line), message, rule
+
+
 def _decode_reply(payload: bytes, request: BoundedExecutionRequest, workspace: Path) -> BoundedExecutionEvidence:
     try:
         message = dryrun._decode_worker_message(payload, max_count=request.max_count)
@@ -206,12 +250,40 @@ def _decode_reply(payload: bytes, request: BoundedExecutionRequest, workspace: P
                     issue_code=message.error.issue_code if isinstance(message.error, UserErrorBase) else None,
                 )
             location = message.error.location if isinstance(message.error, UserErrorBase) else None
+            entry = request.descriptor_path.as_posix()
+            if (
+                location is not None
+                and isinstance(message.error, UserErrorBase)
+                and message.error.issue_code is IssueCode.TASK_ASSERT_FAILED
+            ):
+                assert_path, text, rule = _failed_assert(location, request, entry, workspace)
+                return BoundedExecutionEvidence(
+                    ok=False,
+                    captured=(
+                        dryrun._captured_products(message.stopped_capture, request.max_count)
+                        if message.stopped_capture is not None
+                        else CapturedProducts((), request.max_count)
+                    ),
+                    diagnostics=(
+                        Diagnostic(
+                            code=AuthoringSystemDiagnosticCode.ASSERT_FAILED,
+                            phase=DiagnosticPhase.EVIDENCE,
+                            message=text,
+                            remediation="Change the data or the model so that every row meets the condition, or "
+                            "correct the condition. The run stops at the first failed <assert>, as datamimic run does.",
+                            ce_error=identity,
+                            path=assert_path,
+                            expected=rule,
+                        ),
+                    ),
+                    base_run_ok=False,
+                    stopped_by_assert=True,
+                )
             definition = (
                 get_issue_definition(message.error.issue_code)
                 if isinstance(message.error, UserErrorBase) and message.error.issue_code is not None
                 else None
             )
-            entry = request.descriptor_path.as_posix()
             path: tuple[str, ...] = message.policy_path or ("descriptor", entry)
             if location is not None:
                 # A failure inside an included step names that step (its literal workspace uri), not the entry.

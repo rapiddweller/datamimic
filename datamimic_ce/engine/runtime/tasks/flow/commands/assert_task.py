@@ -26,11 +26,12 @@ class AssertTask(CommonSubTask):
 
     def execute(self, ctx: Context) -> None:
         condition = self._statement.condition
+        location = DescriptorLocation("assert", attribute="condition", line=self._statement.line)
         try:
             passed = bool(ctx.evaluate_python_expression(condition))
         except (UserErrorBase, DomainError) as error:
             if isinstance(error, UserErrorBase) and error.location is None:
-                error.location = DescriptorLocation("assert", attribute="condition")
+                error.location = location
             raise
         except Exception as err:
             # A broken expression (typo'd field, syntax error) must name the assert, not surface
@@ -39,7 +40,7 @@ class AssertTask(CommonSubTask):
                 code=IssueCode.TASK_EXPRESSION_EVAL_FAILED,
                 expr="assert.condition",
                 error="assert expression failed",
-                location=DescriptorLocation("assert", attribute="condition"),
+                location=location,
             ) from err
         if passed:
             return
@@ -47,5 +48,5 @@ class AssertTask(CommonSubTask):
             code=IssueCode.TASK_ASSERT_FAILED,
             condition="configured condition",
             extra=f" | {self._statement.message}" if self._statement.message else "",
-            location=DescriptorLocation("assert", attribute="condition"),
+            location=location,
         )

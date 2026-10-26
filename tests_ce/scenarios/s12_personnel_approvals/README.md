@@ -114,7 +114,7 @@ Each negative in `scenario.json` patches one text in one file of a copy of the p
 - The data variants change one row of one data file. Most of them change a fact of person 47, the only inspector for `A07-V1`.
 - A data variant without a plan fails its named rule and also four consequences: `outcome != 'infeasible'` (or `'budget_exhausted'`), `filled == seats`, the staffing count 82 and the trace count 40.
 - `r5_exclusive_approval` and `r6_cross_company` also fail the `dead_end` pin of person 20, because their search records other dead ends.
-- `r4_above_maximum` stops the run in step 1. Build reports only `child_execution` for it, so the harness also runs the variant and checks the message of the `<assert>`.
+- `r4_above_maximum` stops the run in step 1. Build reports `assert_failed` with the message of the `<assert>`, and `not_executed` for the checks it could not evaluate. Build keeps the products that complete before a failed assert, but `positions` is the first product, so no check is evaluated. The harness also runs the variant and checks the message.
 - The `search_ignores_*` and `suitability_*` variants patch `lib/staffing.scr.py`. Step 4 must reject each one by the named check. The pinned control cases and the trace count can fail too, because the plan changes.
 - `search_omits_dead_end_trace` deletes the `dead_end` rows from the trace. Only the trace count 40 rejects it, so the count makes the `dead_end` pin real.
 
@@ -141,7 +141,7 @@ The outcomes of the reference brief map to these cases:
 Product limits. Issue #420 tracks them.
 
 - No `delivery/` and no cleanup step. Build refuses the SQL that creates a table (`unsupported_bounded_operation`), and an SQLite insert does not create its table. So the project writes CSV files, and a new run writes new files. There is no transaction boundary: each table is written on its own. The R4 assert stops the run before any CSV; an infeasible run exits 0 and writes the master tables without `staffing.csv`.
-- Build drops the message of a failed `<assert>` and every capture (only `child_execution`). So only the R4 maximum stops the run. The plan checks are row conditions, which only Build checks: a search with a defect still delivers a plan that breaks a rule, and the run ends with exit 0. When the plan is not complete, the run writes the master data tables and no `staffing.csv`.
+- Only the R4 maximum stops the run. The plan checks are row conditions, which only Build checks: a search with a defect still delivers a plan that breaks a rule, and the run ends with exit 0. When the plan is not complete, the run writes the master data tables and no `staffing.csv`. A failed `<assert>` stops Build at the same point as the run: Build keeps the products made before it and lists the checks it could not evaluate.
 - The export keys list the 27 columns, but they do not filter: a source field outside the list reaches the CSV. Build has no exact field-set expectation, and an export without `source=` needs a literal count that silently truncates a longer file.
 - Build caps the bounded capture at 1000 rows in total. The base case uses 925. So the trace leaves out the `try` decisions, and a search mutant that skips many people can exceed the cap.
 - A Python error in a script loses its text: a wrong policy type is rejected as `child_execution` without the message of `read_policy`.

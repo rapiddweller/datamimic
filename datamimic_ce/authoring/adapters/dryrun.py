@@ -141,6 +141,8 @@ class _WorkerFailure:
     policy_refusal: StrictBool = False
     # Empty unless the refusal names the included step and element that breaks the policy.
     policy_path: tuple[NonEmptyStrictStr, ...] = ()
+    # A failed <assert> stops the run like a normal run; these are the products that completed before it.
+    stopped_capture: _WorkerSuccess | None = None
 
 
 class _BoundedPolicyRefusal(ValueError):
@@ -1210,6 +1212,26 @@ def _suppress_worker_stderr() -> Iterator[None]:
             os.close(null_stderr)
 
 
+def _stopped_capture(
+    capture: dict[str, list[object]] | None, budgets: _ProductBudgets, max_count: int
+) -> _WorkerSuccess | None:
+    """The products a run completed before a failed <assert>. The engine captures an outermost generate only when
+    it completes, so no product is partial. Inconsistent provenance keeps nothing: Build then evaluates nothing."""
+    try:
+        rows = _validated_capture_rows(_project_capture_object_ids(capture or {}))
+        return _validated_worker_success(
+            _WorkerSuccess(
+                rows,
+                tuple(sorted((budgets[name] for name in rows), key=lambda budget: budget.name)),
+                (),
+                SmokeExportCapture.not_requested(),
+            ),
+            max_count=max_count,
+        )
+    except (KeyError, TypeError, ValueError):
+        return None
+
+
 def _run_engine_capture(
     path: Path,
     max_count: int,
@@ -1228,12 +1250,13 @@ def _run_engine_capture(
 
         from datamimic_ce.engine.io.api import SourceAccessCapture
         from datamimic_ce.engine.runtime.api import create_run_session
-        from datamimic_ce.engine.runtime.contracts import RunRequest
+        from datamimic_ce.engine.runtime.contracts import RunRequest, RunSession
 
         budgets: _ProductBudgets = {}
         skipped: list[str] = []
         executed: list[str] = []
         stripped: _StrippedTargets | None = {} if smoke_export else None
+        session: RunSession | None = None
         try:
             included_memstores, graph_producers = _validate_bounded_includes(
                 path, allow_side_effects=allow_side_effects
@@ -1312,9 +1335,17 @@ def _run_engine_capture(
                     current = current.__cause__
                 if cause_types:
                     object.__setattr__(err, "__cause__", ExternalFailureCause(cause_types[0], tuple(cause_types)))
+            stopped_capture = (
+                _stopped_capture(session.capture_test_result(), budgets, max_count)
+                if session is not None
+                and isinstance(err, UserErrorBase)
+                and err.issue_code is IssueCode.TASK_ASSERT_FAILED
+                else None
+            )
             # The process is the untyped runtime boundary: every engine exception must
             # become a stable DM002 response rather than killing the authoring transport.
             message = _WorkerFailure(
+                stopped_capture=stopped_capture,
                 message=str(err) or type(err).__name__,
                 fix_hint=_runtime_hint(err),
                 error=err if is_user_error(err) else None,
@@ -1639,6 +1670,8 @@ def _decode_worker_message(payload: bytes, *, max_count: int | None = None) -> _
         return _validated_worker_success(message, max_count=max_count)
     if isinstance(message, _WorkerFailure):
         message = _WorkerFailure(**message.__dict__)
+        if message.stopped_capture is not None:
+            _validated_worker_success(message.stopped_capture, max_count=max_count)
         if message.error is not None and not isinstance(message.error, (UserErrorBase, DomainError)):
             raise ValueError("worker failure contains an unsupported error type")
         if isinstance(message.error, GeneratorConfigError):

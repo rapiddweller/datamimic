@@ -46,3 +46,10 @@ def test_assert_broken_expression_names_the_assert():
     assert rejected.value.location.attribute == "condition"
     assert type(rejected.value.__cause__) is NameError
     assert rejected.value.__cause__.name == "ixd"
+
+
+def test_assert_violation_in_a_worker_process_stops_the_run():
+    # Build always runs one process; only a normal run reaches a worker process (#420).
+    with pytest.raises(TaskConfigError, match=r"idx 7 is forbidden") as exc:
+        _run("assert_violated_multiprocess.xml")
+    assert exc.value.issue_code is IssueCode.TASK_ASSERT_FAILED
