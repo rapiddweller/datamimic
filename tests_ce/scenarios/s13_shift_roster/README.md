@@ -37,8 +37,9 @@ data/* ──> 1 prepare ──> 2 validate input ──> 3 suitability ──> 
 Every step hands its products to the next step through the memory store `mem`.
 
 The checks are a gate in Build only. `datamimic authoring build` rejects the project when a check fails. A plain
-`datamimic run` exports a roster that breaks a rule and ends with exit code 0, because a CE `<assert>` gate stops the
-run but makes Build lose every named check (#420). Run only a project whose files Build proved.
+`datamimic run` exports a roster that breaks a rule and ends with exit code 0. Only an `<assert>` stops a run; see
+`datamimic authoring reference --topic learning --name assert_or_expectation`. Run only a project whose files Build
+proved.
 
 ## Files
 

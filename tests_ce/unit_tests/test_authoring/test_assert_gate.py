@@ -14,7 +14,8 @@ import pytest
 from typer.testing import CliRunner
 
 from datamimic_ce.authoring import create_authoring_application
-from datamimic_ce.authoring.domain.requests import PROJECT_ENTRY_PATH, RejectedBuild
+from datamimic_ce.authoring.domain.reference import AuthoringLearningReference
+from datamimic_ce.authoring.domain.requests import PROJECT_ENTRY_PATH, ReferenceRequest, ReferenceTopic, RejectedBuild
 from datamimic_ce.interfaces.cli import app
 
 _PROJECT = Path(__file__).resolve().parents[2] / "scenarios" / "s21_assert_gate"
@@ -157,3 +158,15 @@ def test_an_assert_in_the_first_product_still_lists_every_check_it_could_not_eva
     assert _codes(result) == ["assert_failed", "not_executed"]
     assert result.evidence == ()
     assert len(_not_evaluated(result)) == 72
+
+
+def test_the_learning_reference_says_when_to_use_an_assert_or_an_expectation(tmp_path: Path) -> None:
+    result = create_authoring_application(tmp_path).reference(
+        ReferenceRequest(topic=ReferenceTopic.LEARNING, name="assert_or_expectation")
+    )
+
+    [entry] = result.entries or ()
+    assert isinstance(entry, AuthoringLearningReference)
+    for fact in ("<assert>", "exit code 1", "assert_failed", "not_executed", "exits 0", "literal", "expectations"):
+        assert fact in entry.description
+    assert (Path(__file__).resolve().parents[3] / entry.path).is_file()

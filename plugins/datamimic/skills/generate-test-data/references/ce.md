@@ -62,6 +62,8 @@ requirements; do not replace them with weaker checks to obtain readiness.
 A `<generate source=...>` copies every file column into the output; to keep only
 some columns and to find where `datamimic run` writes a file target, read
 `datamimic authoring reference --topic learning --name file_sources`.
+A rule that must stop `datamimic run` is an `<assert>`; Build checks only `expectations`. Read
+`datamimic authoring reference --topic learning --name assert_or_expectation`.
 
 Request smoke through `verification` when required. Build replays every seeded
 model under other hash seeds; requesting deterministic replay also fails an
