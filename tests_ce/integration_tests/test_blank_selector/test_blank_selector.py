@@ -118,3 +118,8 @@ def test_a_padded_query_is_not_blank_and_reads_the_rows():
     engine = DataMimicTest(test_dir=_DIR, filename="generate_padded_selector.xml", capture_test_result=True)
     engine.test_with_timer()
     assert [row["id"] for row in engine.capture_result()["items_read"]] == [1, 2]
+
+
+def test_a_zero_width_selector_is_not_blank_and_fails_at_the_database():
+    # str.isspace is false for U+200B, so the selector is a query; SQLite refuses it with a typed code.
+    assert _refusal("generate_zero_width.xml").issue_code is IssueCode.OPERATION_EXECUTION_FAILED
