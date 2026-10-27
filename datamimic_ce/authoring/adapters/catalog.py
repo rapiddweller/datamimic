@@ -381,7 +381,9 @@ class CeDslCatalog:
                             'distribution="ordered"/> in a generate whose count is the number of data rows (or add '
                             'cyclic="true"). Without distribution a source read is shuffled. Every column is text: '
                             'cast with int(row.age). <generate name="x" source="fixtures/people.ent.csv" '
-                            'distribution="ordered"/> copies every column of every row. A weighted file *.wgt.csv '
+                            'distribution="ordered"/> copies every column of every row; to keep some rows or columns '
+                            "with where= or columns=, read --topic learning --name file_sources. "
+                            "A weighted file *.wgt.csv "
                             'has no header and one value|weight on each line. <key name="function" '
                             'source="fixtures/functions.wgt.csv"/> draws one value by weight for each row; so does '
                             '<variable name="f" source="fixtures/functions.wgt.csv"/> with <key name="function" '

@@ -213,6 +213,9 @@ def test_learning_names_the_project_data_file_forms_the_s24_scenario_proves(appl
     ):
         assert form in text, form
     assert 'distribution="ordered" has no effect on a .wgt.ent.csv <variable>' in text
+    # file_sources owns the where=/columns= rules; data_files only points to it.
+    assert "--topic learning --name file_sources" in text
+    assert 'where="' not in text and 'columns="' not in text
     assert entry.path == "tests_ce/scenarios/s24_project_data_files"
     overview = application.reference(ReferenceRequest(topic=ReferenceTopic.OVERVIEW))
     assert "--topic learning --name data_files" in overview.content
