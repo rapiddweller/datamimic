@@ -348,11 +348,11 @@ class RejectedBuild(AuthoringModel):
         return self
 
     @classmethod
-    def from_input_error(cls, message: str) -> RejectedBuild:
+    def from_input_error(cls, message: str, remediation: str | None = None) -> RejectedBuild:
         from datamimic_ce.authoring.domain.build_rules import catalog_diagnostic
 
         phase = DiagnosticPhase.MODEL
-        diagnostic = catalog_diagnostic(AuthoringRuleId.INPUT, message, phase=phase)
+        diagnostic = catalog_diagnostic(AuthoringRuleId.INPUT, message, phase=phase, remediation=remediation)
         return cls(phase=phase, diagnostics=(diagnostic,))
 
     @classmethod

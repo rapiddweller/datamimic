@@ -84,6 +84,7 @@ CE is done (#399). EE follows in [EE #89](https://gitlab.dwellerlab.com/rapiddwe
 | A6 | Bounded execution of `clear` and `drop` | skip with `not_executed` warning | not specified | `unverified` | Needs the destructive-operations port to EE first. |
 | A7 | Bounded execution of a failed `<assert>` | `assert_failed` at the assert line; keeps the products that completed; `not_executed` for the other checks; message only when literal | the run error as a diagnostic, with the message; no products | `gap` | EE has no Build v5 (A1). Corpus: `tests_ce/scenarios/s21_assert_gate`. |
 | A8 | `where=` and `columns=` on `<generate>`/`<iterate>` file sources (#447) | row condition over one row before count, cyclic, distribution, paging and chunks; clock reads and random draws refused; output column list, unlisted columns stay row variables; Build counts kept rows in its bounded run | not ported: no `where`/`columns` on the generate model | `gap` | Owner: EE port, [EE #93](https://gitlab.dwellerlab.com/rapiddweller/datamimic/datamimic-ee/-/work_items/93). Apply the condition in every file loader and every length counter before the count (CSV counter, JSON/NDJSON streaming; no parquet metadata count with `where`). Acceptance: CE scenario `tests_ce/scenarios/s22_file_filter` and `tests_ce/integration_tests/test_file_filter` pass on EE. |
+| A9 | Natural spellings of first-Build input (#426) | `range` accepts `min`/`max`; `result_type: "boolean"`; `values="A,B,C"` (two or more plain ASCII names, no keyword) reads as strings in Build and in `datamimic run`; the published schema lists the range spellings | `range` takes `minimum`/`maximum` only; `result_type` takes `"bool"` only; `values=` takes a Python literal (`literal_eval`) only | `gap` | Owner: EE port, with [EE #86](https://gitlab.dwellerlab.com/rapiddweller/datamimic/datamimic-ee/-/work_items/86). A CE project that uses a bare `values=` list fails in EE (`key_variable_task.py` line 227). Conformance case to add: `ok_values_plain_names`. |
 
 ## Behavior cases
 
@@ -121,6 +122,6 @@ These rows are not compared yet. They need a comparison before the release date.
 | `identical` | 11 |
 | `CE-extension` | 3 |
 | `EE-only` | 4 |
-| `gap` | 17 |
+| `gap` | 18 |
 | `unverified` | 1 |
 | Open rows (not compared) | 9 |

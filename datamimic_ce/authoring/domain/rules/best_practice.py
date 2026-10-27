@@ -41,9 +41,23 @@ from datamimic_ce.engine.dsl.api import (
     SourceDistribution,
     parse_consumer,
 )
+from datamimic_ce.engine.dsl.vocabulary.source_capabilities import SourceFileFormat, source_file_format
 
 _GENERATES = (EL_GENERATE, EL_ITERATE)
 _SOURCE_READERS = (*_GENERATES, EL_VARIABLE, EL_NESTED_KEY, EL_REFERENCE)
+
+
+_WEIGHTED_DRAWS = (SourceFileFormat.WEIGHTED_CSV, SourceFileFormat.WEIGHTED_ENTITY_CSV)
+
+
+def _ordered_source(element: etree._Element) -> str | None:
+    """The source of an element that reads it in an order. A <variable> draws a weighted file by weight: it
+    refuses distribution="ordered" on a .wgt.csv and draws the same rows with it on a .wgt.ent.csv."""
+    source = element.get("source")
+    if source is None or (element.tag == EL_VARIABLE and source_file_format(source) in _WEIGHTED_DRAWS):
+        return None
+    return source
+
 
 # A bare __name__ token (the string-interpolation syntax) used as an identifier —
 # not `.__dunder__` attribute access, which is legitimate Python.
@@ -178,7 +192,7 @@ class DistributionDefaultsToRandom(Rule):
 
     def check(self, ctx: LintContext) -> Iterable[Diagnostic]:
         for element in ctx.iter(*_SOURCE_READERS):
-            if element.get("source") is not None and element.get("distribution") is None:
+            if _ordered_source(element) is not None and element.get("distribution") is None:
                 yield ctx.diag(
                     type(self),
                     element,
@@ -191,7 +205,7 @@ class NonOrderedLoadsWholeSource(Rule):
 
     def check(self, ctx: LintContext) -> Iterable[Diagnostic]:
         for element in ctx.iter(*_SOURCE_READERS):
-            if element.get("source") is None:
+            if _ordered_source(element) is None:
                 continue
             distribution = element.get("distribution")
             if distribution in ("random", "cumulated") or _is_true(element.get("unique")):
@@ -295,11 +309,17 @@ class InterpolationInScript(Rule):
                 token_match = _INTERP_TOKEN.search(value) if value else None
                 if token_match:
                     token = token_match.group()
+                    # Agents import modules that scripts already have; the text is static, so Build may show it.
+                    imports = token == "__import__"
                     yield ctx.diag(
                         type(self),
                         element,
                         evidence=f"{attr} contains interpolation token {token}",
-                        fix_context=f"Use {token.strip('_')}.field in {attr}=.",
+                        fix_context="Scripts have no __import__; the datetime module is there: "
+                        "datetime.date(2026, 1, 1)."
+                        if imports
+                        else f"Use {token.strip('_')}.field in {attr}=.",
+                        names_only=imports,
                     )
 
 

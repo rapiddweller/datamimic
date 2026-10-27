@@ -138,7 +138,8 @@ class VariableModel(BaseModel):
     generator: str | None = Field(
         None,
         description="Predefined generator constructor used to produce the variable's value; validated "
-        "against the generator registry.",
+        "against the generator registry. Parameters go inside the call, not into attributes: "
+        'generator="IntegerGenerator(min=1, max=9)".',
         examples=["IncrementGenerator", "DateTimeGenerator(random=True)"],
     )
     dataset: str | None = Field(
@@ -173,7 +174,8 @@ class VariableModel(BaseModel):
         None,
         description=(
             "Comma-separated values to pick from for the variable, written as quoted Python literals, "
-            "for example \"'A', 'B'\" or \"[1, 2]\"."
+            "for example \"'A', 'B'\" or \"[1, 2]\". Plain names without spaces or quotes, for example "
+            '"LOW,MEDIUM,HIGH", are read as strings; a list with True, False or None is not.'
         ),
         examples=["'A','B','C'", "1,2,3"],
     )
