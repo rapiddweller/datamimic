@@ -13,7 +13,7 @@
             <key name="staff_id" script="parent.staff_id"/>
             <key name="max_weekly_hours" script="parent.max_weekly_hours"/>
             <key name="on_leave" script="on_approved_leave(leave, staff_id, shift_date)"/>
-            <array name="valid_certs" script="valid_certificates(holdings, staff_id, shift_date)"/>
+            <array name="valid_certs" script="sorted({row.cert_code for row in holdings if row.staff_id == staff_id and certificate_status(holdings, staff_id, row.cert_code, shift_date) == 'valid'})"/>
             <!-- One decision for each shift type: RS6 excludes a person on approved leave, RS1 one without the certification. -->
             <nestedKey name="shifts" script="[{'shift_code': row.shift_code, 'required_cert': row.required_cert} for row in shift_types]">
                 <key name="cert_status" script="certificate_status(parent.holdings, parent.staff_id, required_cert, parent.shift_date)"/>

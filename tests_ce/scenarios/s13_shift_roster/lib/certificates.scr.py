@@ -39,9 +39,3 @@ def certificate_status(holdings: Sequence[Row], staff_id: str, cert_code: str, d
     if CertificateStatus.VALID in statuses:
         return CertificateStatus.VALID.value
     return statuses[0].value if statuses else CertificateStatus.MISSING.value
-
-
-def valid_certificates(holdings: Sequence[Row], staff_id: str, day: datetime.date) -> list[str]:
-    """The certification codes the person holds validly on ``day`` (RS1, and the lead certification of RS4)."""
-    codes = sorted({str(holding["cert_code"]) for holding in holdings if holding["staff_id"] == staff_id})
-    return [code for code in codes if certificate_status(holdings, staff_id, code, day) == CertificateStatus.VALID]

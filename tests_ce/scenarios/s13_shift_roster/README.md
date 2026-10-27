@@ -55,7 +55,7 @@ proved.
 | `data/demand.csv` | For each ward and shift type: the minimum and maximum staff, the lead certification and the minimum number of lead holders. |
 | `data/leave.csv` | Leave periods and their status. Only `approved` leave blocks a person. |
 | `data/calendar.csv` | The plan days. This file is the clock of the plan: nothing reads the system time. |
-| `lib/certificates.scr.py` | RS1: `certificate_status`, `valid_certificates` and the enum `CertificateStatus`. |
+| `lib/certificates.scr.py` | RS1: `certificate_status` and the enum `CertificateStatus`. |
 | `lib/leave.scr.py` | RS6: `on_approved_leave`. |
 | `lib/roster_rules.scr.py` | The output evidence for RS2 and RS3: `rest_hours_before`, `busiest_week_hours`. |
 | `lib/roster_search.scr.py` | The global search `plan_roster`. |
