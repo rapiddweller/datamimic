@@ -3,7 +3,7 @@
 # This software is licensed under the MIT License.
 # See LICENSE file for the full text of the license.
 
-from enum import Enum, StrEnum
+from enum import Enum, StrEnum, unique
 
 
 class DomainErrorCode(str, Enum):  # noqa: UP042 - Preserve the public CE enum string representation.
@@ -50,6 +50,8 @@ class IssueSeverity(StrEnum):
     WARNING = "warning"
 
 
+# A repeated value would make a silent alias of an earlier code.
+@unique
 class IssueCode(StrEnum):
     TASK_COUNT_ABOVE_BOUNDED_LIMIT = "I800"
     TASK_TOTAL_ROW_BUDGET_EXCEEDED = "I955"
@@ -59,6 +61,9 @@ class IssueCode(StrEnum):
     SOURCE_UNSUPPORTED_FILE_TYPE = "I109"
     SOURCE_CLIENT_UNSUPPORTED = "I120"
     SOURCE_MONGO_SELECTOR_INVALID = "I150"
+    SOURCE_SELECTOR_BLANK = "I196"
+    SOURCE_INVALID_XLSX = "I197"
+    SOURCE_INVALID_FIXED_WIDTH = "I198"
     INCLUDE_FILE_NOT_FOUND = "I201"
     INCLUDE_UNSUPPORTED_FILE_TYPE = "I203"
     INCLUDE_UNSUPPORTED_FILE_TYPE_GENERATE = "I204"

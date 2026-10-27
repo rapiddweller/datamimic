@@ -4,12 +4,14 @@
 # See LICENSE file for the full text of the license.
 # For questions and support, contact: info@rapiddweller.com
 
+import itertools
 import logging
 import re
 from pathlib import Path
 
 import pytest
 
+from datamimic_ce.engine.runtime.scripting import expression_globals
 from datamimic_ce.errors import factory
 from datamimic_ce.interfaces.python.data_mimic_test import DataMimicTest
 
@@ -97,3 +99,37 @@ def test_a_load_time_draw_breaks_the_replay_that_the_seed_promises() -> None:
 
 def test_a_draw_inside_a_function_replays_with_the_same_seed() -> None:
     assert _rows("replay_quiet.xml") == _rows("replay_quiet.xml")
+
+
+_SCRIPTS = sorted((_DIR / "script").glob("*/*.scr.py"))
+
+
+def _marks(path: Path) -> list[int]:
+    lines = path.read_text(encoding="utf-8").splitlines()
+    return [number for number, line in enumerate(lines, start=1) if line.rstrip().endswith("# W008")]
+
+
+@pytest.mark.parametrize(
+    "script",
+    [p for p in _SCRIPTS if p.parent.name in ("quiet", "flagged")],
+    ids=lambda p: p.name.removesuffix(".scr.py"),
+)
+def test_each_form_is_reported_on_exactly_its_marked_lines(script: Path) -> None:
+    """One row per form: a quiet script has no mark and no finding, a flagged one its marked line."""
+    findings = expression_globals.load_time_entropy(script.read_text(encoding="utf-8"))
+    assert [finding.line for finding in findings] == _marks(script)
+    assert (_marks(script) == []) is (script.parent.name == "quiet")
+
+
+@pytest.mark.parametrize("model", ["quiet", "flagged"])
+def test_the_model_runs_every_script_of_its_directory(model: str) -> None:
+    # A script the model does not list would pass without being run.
+    listed = set(re.findall(r'uri="script/(\w+/\w+\.scr\.py)"', (_DIR / f"{model}.xml").read_text(encoding="utf-8")))
+    assert listed == {f"{model}/{path.name}" for path in (_DIR / "script" / model).glob("*.scr.py")}
+
+
+def test_every_lazy_itertools_wrapper_exists_and_no_consumer_is_one() -> None:
+    assert set(dir(itertools)) >= expression_globals.LAZY_ITERTOOLS
+    assert {"product", "permutations", "combinations", "combinations_with_replacement"}.isdisjoint(
+        expression_globals.LAZY_ITERTOOLS
+    )

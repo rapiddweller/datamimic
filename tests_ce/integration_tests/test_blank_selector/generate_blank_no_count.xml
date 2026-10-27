@@ -1,0 +1,5 @@
+<setup>
+    <database id="db" database="blank_selector_never" dbms="sqlite"/>
+    <!-- without count the length pass ran the empty query first and failed with a raw KeyError -->
+    <generate name="items_read" source="db" sourceEntity="items" selector=""/>
+</setup>

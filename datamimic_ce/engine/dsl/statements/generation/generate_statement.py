@@ -4,11 +4,14 @@
 # See LICENSE file for the full text of the license.
 # For questions and support, contact: info@rapiddweller.com
 
+import re
+
 from datamimic_ce.engine.dsl.model.generation.generate_model import GenerateModel
 from datamimic_ce.engine.dsl.model.generation.timeseries import TimeSeriesConfig
 from datamimic_ce.engine.dsl.statements.base.composite_statement import CompositeStatement
 from datamimic_ce.engine.dsl.statements.base.statement import Statement
 from datamimic_ce.engine.dsl.statements.generation.targets import parse_consumer
+from datamimic_ce.engine.dsl.vocabulary.constants.attribute_constants import ATTR_SELECTOR
 from datamimic_ce.engine.dsl.vocabulary.enums.distribution_enums import SourceDistribution
 from datamimic_ce.engine.dsl.vocabulary.enums.operation_enums import ExportOperation
 
@@ -129,12 +132,20 @@ class GenerateStatement(CompositeStatement):
         ]
         return ", ".join(names) or None
 
+    @property
+    def blank_selector_attribute(self) -> str | None:
+        """``selector`` when it is given but blank: it then holds no query (#397)."""
+        # re, not str.strip: ArchKeel counts str method calls as unresolved and the budget is fixed; same whitespace.
+        return ATTR_SELECTOR if self._selector is not None and re.fullmatch(r"\s*", self._selector) else None
+
     def delete_intent_problem(self, *, source_is_database: bool) -> tuple[str, str] | None:
         """``(reason, migration)`` when a ``delete`` would remove everything its database source reads, None otherwise.
 
         A file source lists the rows to delete and a generated row deletes by its own keys: neither needs a selector."""
         # The source reader treats a blank selector as absent and reads the whole entity.
-        if self.delete_target is None or not source_is_database or (self._selector and self._selector.strip()):
+        if self.delete_target is None or not source_is_database:
+            return None
+        if self._selector is not None and self.blank_selector_attribute is None:
             return None
         return (
             "delete reads a database source without a selector, so it removes every row the source returns",

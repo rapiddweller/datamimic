@@ -76,10 +76,7 @@ def test_generate_uses_one_seeded_choices_draw_per_value_and_preserves_rng_state
     seed = 718
     df = FileUtil.read_weight_csv(source_file, "|")
     expected_rng = Random(seed)
-    expected = [
-        expected_rng.choices(list(df[0]), weights=list(df[1]), k=1)[0]
-        for _ in range(draw_count)
-    ]
+    expected = [expected_rng.choices(list(df[0]), weights=list(df[1]), k=1)[0] for _ in range(draw_count)]
 
     actual_rng = _CountingRandom(seed)
     source = WeightedDataSource(source_file, "|", actual_rng)
@@ -116,7 +113,7 @@ def test_generate_rejects_non_text_choice_as_wrapped_type_error(tmp_path: Path, 
     source_file.write_text("valid,1\n", encoding="utf-8")
     source = WeightedDataSource(source_file, ",", _FixedResultRandom(value))
 
-    with pytest.raises(ValueError, match="Cannot get data from csv file") as raised:
+    with pytest.raises(ValueError, match=r"\[E006/I102\] .*'[a-z-]*\.wgt\.csv'") as raised:
         source.generate()
 
     assert type(raised.value.__cause__) is TypeError
@@ -132,7 +129,7 @@ def test_empty_weights_fail_on_generate_with_original_index_error(tmp_path: Path
     source_file.write_text("", encoding="utf-8")
     source = WeightedDataSource(source_file, ",", Random(1))
 
-    with pytest.raises(ValueError, match="Cannot get data from csv file") as raised:
+    with pytest.raises(ValueError, match=r"\[E006/I102\] .*'[a-z-]*\.wgt\.csv'") as raised:
         source.generate()
 
     assert type(raised.value.__cause__) is IndexError
@@ -144,7 +141,7 @@ def test_all_zero_weights_fail_on_generate_with_original_random_error(tmp_path: 
     source_file.write_text("A,0\nB,0\n", encoding="utf-8")
     source = WeightedDataSource(source_file, ",", Random(1))
 
-    with pytest.raises(ValueError, match="Cannot get data from csv file") as raised:
+    with pytest.raises(ValueError, match=r"\[E006/I102\] .*'[a-z-]*\.wgt\.csv'") as raised:
         source.generate()
 
     assert type(raised.value.__cause__) is ValueError

@@ -14,6 +14,15 @@ native causes remain attached where present. Bash emits the shared warning `W007
 Under `<setup rngSeed>`, a `<execute>` Python script that draws entropy while it loads (a module-level call,
 a default argument, an entropy import inside a function or class body) emits the shared warning `W008`
 with the script name and line; nothing is rejected, and Build's deterministic replay stays the hard check.
+A generator that the script only stores (alone, in a container, in a conditional expression, through a walrus,
+or in a lazy wrapper such as `map` or an imported `itertools.islice`) is not reported. A generator default argument
+stays reported, as a decorator argument does: a call while the script loads consumes it before the seed applies.
+
+File source readers name only the file, never the host path. A file that is not an `.xlsx` workbook fails with
+`I197`; a fixed-width (`.fcw`) file without a valid `# name[width],...` first line fails with `I198`. The error
+names the file, not its directory. An empty or zero-weight `.wgt.csv` fails with `I102`. A JSON source with `NaN`,
+`Infinity`, `-Infinity` or a number above the largest float still reads as a float, as in EE: CE's JSON exporter
+writes `NaN`, and CE reads that file back.
 
 Build and raw XML verification reject XML over 1,000,000 characters with a typed
 `limit` diagnostic, rather than leaking an internal validation exception. Compile
@@ -184,6 +193,10 @@ remove everything the source returns, so it fails with `I928` before any databas
 
 A `delete` on generated rows (no `source`) or on a file source is unchanged: it deletes by the row keys. A selector
 with an empty Mongo filter (`filter: {}`) still works as a delete; prefer `mongodb.clear` for that intent.
+
+A blank `selector` or `iterationSelector` (empty or whitespace only) on a database source holds no query. It fails
+with `I196` before any database access: remove the attribute, or give a query. A blank selector on a `delete` still
+fails with `I928`.
 
 ## Memstore read and write entities (#422)
 

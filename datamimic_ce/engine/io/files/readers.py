@@ -118,11 +118,11 @@ class FileUtil:
             )
         raw = [child.attrib for child in root if child.tag == table]
         if not raw:
-            available = sorted({child.tag for child in root})
+            # Table names come from the descriptor and the file; the message names neither.
             raise invalid_source_error(
                 code=IssueCode.SOURCE_INVALID_XML,
                 name=path.name,
-                guidance=f"DbUnit dataset has no rows for table '{table}'; available: {available}",
+                guidance="The DbUnit dataset has no rows for the table that sourceEntity or name selects.",
             )
         # column sensing: union of columns in first-appearance order, absent -> None
         columns: dict[str, None] = {}
@@ -202,7 +202,7 @@ class FileUtil:
         except FileNotFoundError as e:
             raise invalid_source_error(code=IssueCode.SOURCE_FILE_NOT_FOUND, name=file_path.name) from e
         except (InvalidFileException, zipfile.BadZipFile, KeyError) as e:
-            raise ValueError(f"Invalid XLSX file '{file_path.name}'") from e
+            raise invalid_source_error(code=IssueCode.SOURCE_INVALID_XLSX, name=file_path.name) from e
 
         try:
             sheet = workbook[sheet_name] if sheet_name else workbook.active
@@ -276,11 +276,19 @@ class FileUtil:
         else:
             header = lines[0]
             if not header.startswith("#"):
-                raise ValueError(
-                    f"Fixed-width file '{file_path.name}' has no '# name[width],...' spec header on its "
-                    f"first line - pass spec= explicitly to read a file without one"
+                raise invalid_source_error(
+                    code=IssueCode.SOURCE_INVALID_FIXED_WIDTH,
+                    name=file_path.name,
+                    guidance="The first line must be a '# name[width],...' column spec.",
                 )
-            fields = FileUtil.parse_fixed_width_spec(header[1:])
+            try:
+                fields = FileUtil.parse_fixed_width_spec(header[1:])
+            except ValueError as error:  # its message quotes the header text
+                raise invalid_source_error(
+                    code=IssueCode.SOURCE_INVALID_FIXED_WIDTH,
+                    name=file_path.name,
+                    guidance="Each column of the spec line must read name[width] or name[width r pad].",
+                ) from error
             data_lines = lines[1:]
 
         result: list[dict[str, str]] = []
@@ -528,7 +536,7 @@ def load_source_rows(
 ) -> list[dict[str, str]] | list[dict[str, object]] | list[dict[str, JsonValue]] | list[dict[object, object]]:
     """Decode one supported source file into rows without applying a row window."""
     key = str(file_path)
-    logger.debug(f"Load source {key} from file")
+    logger.debug(f"Load source {file_path.name} from file")
     if source_format in (SourceFileFormat.CSV, SourceFileFormat.WEIGHTED_ENTITY_CSV):
         return FileUtil.read_csv_to_dict_list(Path(key), csv_separator)
     elif source_format is SourceFileFormat.XLSX:

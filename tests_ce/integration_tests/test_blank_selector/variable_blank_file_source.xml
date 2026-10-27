@@ -1,0 +1,7 @@
+<setup>
+    <!-- a selector reads only a database: on a file source a blank one is the same misuse as any other -->
+    <generate name="rows" count="2">
+        <variable name="item" source="data/items.ent.csv" selector=""/>
+        <key name="id" generator="IncrementGenerator"/>
+    </generate>
+</setup>

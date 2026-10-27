@@ -9,6 +9,7 @@ from random import Random
 
 from datamimic_ce.engine.io.data_sources.router import record_source_access
 from datamimic_ce.engine.io.files.readers import FileUtil
+from datamimic_ce.errors import IssueCode, invalid_source_error
 
 
 class WeightedDataSource:
@@ -34,6 +35,8 @@ class WeightedDataSource:
                 return value
             raise TypeError("Weighted CSV values must be strings or None")
         except Exception as err:
-            raise ValueError(
-                f"Cannot get data from csv file '{self._file_path}', please check file path or separator again: {err}"
+            raise invalid_source_error(
+                code=IssueCode.SOURCE_INVALID_CSV,
+                name=self._file_path.name,
+                guidance="Give at least one value row with a positive weight, and check the separator.",
             ) from err

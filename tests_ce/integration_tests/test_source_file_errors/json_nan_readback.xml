@@ -1,0 +1,3 @@
+<setup>
+    <generate name="rows" count="2" source="data/exported_nan.json" distribution="ordered"/>
+</setup>

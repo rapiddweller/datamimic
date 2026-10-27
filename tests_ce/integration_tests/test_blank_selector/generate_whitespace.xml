@@ -1,0 +1,4 @@
+<setup>
+    <database id="db" database="blank_selector_never" dbms="sqlite"/>
+    <generate name="items_read" count="2" source="db" sourceEntity="items" selector="   "/>
+</setup>

@@ -1,0 +1,7 @@
+<!-- CE's JSON exporter writes NaN; json_nan_readback.xml reads the exported file back. -->
+<setup>
+    <generate name="scores" count="2" target="JSON">
+        <key name="id" generator="IncrementGenerator"/>
+        <key name="score" script="float('nan')"/>
+    </generate>
+</setup>

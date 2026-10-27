@@ -56,9 +56,14 @@ def test_a_dtd_reference_is_ignored_not_fetched():
 # ---- error handling ----
 
 
-def test_unknown_table_lists_the_available_tables():
-    with pytest.raises(ValueError, match=r"no rows for table 'nope'.*db_category|account"):
+def test_unknown_table_names_neither_the_table_nor_the_file_tables():
+    # Both come from the descriptor or the file; a diagnostic names the file only (#379).
+    with pytest.raises(
+        ValueError, match=r"\[E006/I105\].*no rows for the table that sourceEntity or name selects"
+    ) as error:
         FileUtil.read_dbunit_to_dict_list(_SHOP, "nope")
+    assert "nope" not in str(error.value)
+    assert "db_category" not in str(error.value)
 
 
 def test_a_non_dataset_root_is_a_clear_error(tmp_path):

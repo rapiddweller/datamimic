@@ -1,0 +1,7 @@
+<setup>
+    <database id="db" database="blank_selector_never" dbms="sqlite"/>
+    <generate name="rows" count="2">
+        <variable name="item" source="db" iterationSelector=" "/>
+        <key name="id" generator="IncrementGenerator"/>
+    </generate>
+</setup>

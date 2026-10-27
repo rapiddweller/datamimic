@@ -19,10 +19,12 @@ from datamimic_ce.engine.dsl.vocabulary.source_capabilities import (
 from datamimic_ce.engine.io.api import (
     CountSourceRequest,
     count_source,
+    is_database_client,
 )
 from datamimic_ce.engine.runtime.contexts.context import SetupContext
 from datamimic_ce.engine.runtime.contexts.geniter_context import GenIterContext
 from datamimic_ce.engine.runtime.logging import logger
+from datamimic_ce.errors import DescriptorLocation, IssueCode, invalid_source_error
 
 
 def data_source_cache_key(stmt: Statement) -> tuple[str | None, str | None]:
@@ -106,6 +108,14 @@ def set_data_source_length(ctx: SetupContext | GenIterContext, stmt: Statement) 
             client = root_ctx.get_client_by_id(source_str)
             if client is None:
                 raise ValueError(f"Client '{source_str}' could not be found in your context, please check your script")
+            # A blank selector holds no query: refuse it before the first count or read (#397).
+            blank = stmt.blank_selector_attribute if isinstance(stmt, GenerateStatement | VariableStatement) else None
+            if blank is not None and is_database_client(client):
+                raise invalid_source_error(
+                    code=IssueCode.SOURCE_SELECTOR_BLANK,
+                    attribute=blank,
+                    location=DescriptorLocation(source_element, attribute=blank),
+                )
         selector = (
             stmt.selector
             if client is not None and isinstance(stmt, GenerateStatement | VariableStatement)

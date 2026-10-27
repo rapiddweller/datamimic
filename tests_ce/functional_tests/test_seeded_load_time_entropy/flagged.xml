@@ -21,6 +21,26 @@
     <execute uri="script/flagged/lazy_wrapper_consumed.scr.py"/>
     <execute uri="script/flagged/nested_generator_iterable.scr.py"/>
     <execute uri="script/flagged/membership_test.scr.py"/>
+    <execute uri="script/flagged/itertools_product.scr.py"/>
+    <execute uri="script/flagged/itertools_permutations.scr.py"/>
+    <execute uri="script/flagged/itertools_combinations.scr.py"/>
+    <execute uri="script/flagged/shadowed_wrapper_name.scr.py"/>
+    <execute uri="script/flagged/pool_argument.scr.py"/>
+    <execute uri="script/flagged/print_argument.scr.py"/>
+    <execute uri="script/flagged/decorator_argument.scr.py"/>
+    <execute uri="script/flagged/generator_default.scr.py"/>
+    <execute uri="script/flagged/shadowed_imported_wrapper_name.scr.py"/>
+    <execute uri="script/flagged/member_shadowed_by_assignment.scr.py"/>
+    <execute uri="script/flagged/member_shadowed_by_annotated_assignment.scr.py"/>
+    <execute uri="script/flagged/member_shadowed_by_tuple_unpacking.scr.py"/>
+    <execute uri="script/flagged/member_shadowed_by_for_target.scr.py"/>
+    <execute uri="script/flagged/member_shadowed_by_with_target.scr.py"/>
+    <execute uri="script/flagged/module_alias_shadowed_by_class.scr.py"/>
+    <execute uri="script/flagged/module_alias_shadowed_by_assignment.scr.py"/>
+    <execute uri="script/flagged/module_alias_shadowed_by_import.scr.py"/>
+    <execute uri="script/flagged/member_deleted.scr.py"/>
+    <execute uri="script/flagged/member_shadowed_by_except_name.scr.py"/>
+    <execute uri="script/flagged/member_shadowed_by_match_capture.scr.py"/>
     <generate name="rows" count="1">
         <key name="id" generator="IncrementGenerator"/>
     </generate>

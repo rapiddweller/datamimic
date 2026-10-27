@@ -1,0 +1,7 @@
+<setup>
+    <database id="db" database="blank_selector_never" dbms="sqlite"/>
+    <generate name="orders" count="1">
+        <key name="id" generator="IncrementGenerator"/>
+        <generate name="lines" count="1" source="db" sourceEntity="items" selector=""/>
+    </generate>
+</setup>

@@ -1,0 +1,6 @@
+<setup>
+    <generate name="rows" count="1">
+        <variable name="pick" source="data/empty.wgt.csv"/>
+        <key name="value" script="pick"/>
+    </generate>
+</setup>

@@ -68,7 +68,7 @@ def test_read_blank_header_columns_are_dropped(xlsx_test_dir: Path):
 
 def test_read_invalid_file_raises_clear_error(xlsx_test_dir: Path):
     _write_raw_fixture(xlsx_test_dir, b"this is plainly not a zip-based xlsx")
-    with pytest.raises(Exception, match=r"Invalid XLSX file"):
+    with pytest.raises(ValueError, match=r"\[E006/I197\] .*Invalid XLSX in 'fixture\.xlsx'"):
         _run("read_count_only.xml", xlsx_test_dir)
 
 

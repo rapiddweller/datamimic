@@ -1,0 +1,5 @@
+<setup>
+    <database id="db" database="blank_selector_zero_width" dbms="sqlite"/>
+    <!-- boundary: U+200B is not whitespace, so the selector is not blank and reaches the database -->
+    <generate name="items_read" count="2" source="db" sourceEntity="items" selector="&#x200B;"/>
+</setup>

@@ -67,19 +67,19 @@ def test_an_invalid_xml_or_json_source_carries_its_code_and_no_host_path(
 
 
 @pytest.mark.parametrize(
-    ("name", "content", "source_format"),
+    ("name", "content", "source_format", "code"),
     [
-        ("broken.xlsx", b"not a workbook", SourceFileFormat.XLSX),
-        ("plain.txt", b"no spec header\nrow", SourceFileFormat.FIXED_WIDTH),
+        ("broken.xlsx", b"not a workbook", SourceFileFormat.XLSX, IssueCode.SOURCE_INVALID_XLSX),
+        ("plain.txt", b"no spec header\nrow", SourceFileFormat.FIXED_WIDTH, IssueCode.SOURCE_INVALID_FIXED_WIDTH),
     ],
 )
-def test_the_remaining_invalid_sources_do_not_leak_the_host_path(
-    tmp_path: Path, name: str, content: bytes, source_format: SourceFileFormat
+def test_an_invalid_xlsx_or_fixed_width_source_carries_its_code_and_no_host_path(
+    tmp_path: Path, name: str, content: bytes, source_format: SourceFileFormat, code: IssueCode
 ) -> None:
-    # No catalog code exists for these two yet (it needs a shared CE/EE code); the message must at least be portable.
     path = tmp_path / name
     path.write_bytes(content)
-    with pytest.raises(ValueError) as caught:
+    with pytest.raises(InvalidSourceError) as caught:
         load_source_rows(path, ",", source_format)
+    assert caught.value.issue_code is code
     assert name in str(caught.value)
     assert str(tmp_path) not in str(caught.value)

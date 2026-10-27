@@ -44,6 +44,22 @@ ISSUES: list[IssueDefinition] = [
         guidance=GUIDANCE_PROJECT_ENV,
     ),
     IssueDefinition(
+        code=IssueCode.SOURCE_INVALID_XLSX,
+        name="SOURCE_INVALID_XLSX",
+        title="Source Invalid XLSX",
+        template="Invalid XLSX in '{name}'",
+        cause="The file is not an .xlsx workbook that can be opened.",
+        resolution="Save the source as an .xlsx workbook, or use a source of another supported format.",
+    ),
+    IssueDefinition(
+        code=IssueCode.SOURCE_INVALID_FIXED_WIDTH,
+        name="SOURCE_INVALID_FIXED_WIDTH",
+        title="Source Invalid Fixed-Width",
+        template="Invalid fixed-width file '{name}'",
+        cause="The first line is not a '# name[width],...' column spec.",
+        resolution="Start the file with a '# name[width],...' line; a column reads name[width] or name[width r pad].",
+    ),
+    IssueDefinition(
         code=IssueCode.SOURCE_JSON_ROOT_INVALID,
         name="SOURCE_JSON_ROOT_INVALID",
         title="Source JSON Root Invalid",
@@ -93,5 +109,14 @@ ISSUES: list[IssueDefinition] = [
         template="Invalid Mongo selector: {error}",
         cause="The configuration provides an invalid Mongo selector: {error}.",
         resolution="Correct the Mongo selector to a valid value or configuration.",
+    ),
+    IssueDefinition(
+        code=IssueCode.SOURCE_SELECTOR_BLANK,
+        name="SOURCE_SELECTOR_BLANK",
+        title="Source Selector Blank",
+        template="Attribute '{attribute}' of the database source is blank",
+        cause="The selector attribute is empty or holds only whitespace, so it gives no query.",
+        resolution="Remove the attribute to read the whole table or collection, or give a query.",
+        guidance="Remove the attribute, or give a query.",
     ),
 ]
