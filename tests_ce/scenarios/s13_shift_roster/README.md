@@ -238,7 +238,7 @@ fallback would hide a failure in the decision evidence. A failing script must st
 
 ## Known limits of this project
 
-- The checks are a gate in Build only (see [Process](#process); F13, #420).
+- The checks are a gate in Build only (see [Process](#process)). A failed `<assert>` stops `datamimic run`, and Build rejects it with `assert_failed` and evaluates the products made before it. An `<assert>` in step 5 can also make the checks stop the run, but it sees only its own row, and it stops the run before step 7 exports.
 - There is no `delivery/` folder, and the cleanup step deletes nothing. A SQLite target needs an existing table, and Build refuses the
   SQL that creates it, so the project writes CSV files (F19, #420).
 - RS1 is Python besides the search (see [Python](#python)). Its output check shares the suitability definition.
