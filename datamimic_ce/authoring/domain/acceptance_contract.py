@@ -30,6 +30,12 @@ from .expectations import (
 from .proof import AcceptanceOrigin
 from .row_conditions import parse_row_condition
 
+# Agents read a memstore back to take a subset of the producer rows; a readback reads each row once.
+MEMSTORE_READBACK_ONCE = (
+    "A memstore readback reads every producer row exactly once, so its count is the producer count. For a "
+    "subset of the rows, or for rows that belong to one parent, nest the child <generate> under the parent "
+    "and copy parent.<field> instead."
+)
 # Script scope names that a row condition does not have; an agent writes this.field from the scripts.
 _SCRIPT_SCOPES = frozenset(("this", "parent", "root"))
 

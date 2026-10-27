@@ -132,3 +132,35 @@ def test_a_declared_field_named_like_a_scope_still_resolves(tmp_path: Path) -> N
     result = build_project(tmp_path, xml, expectations=[condition])
 
     assert result.outcome == "ready", result.diagnostics
+
+
+_HANDOFF = (
+    '<setup rngSeed="1"><memstore id="store"/>'
+    '<generate name="employments" count="4" target="store"><key name="id" generator="IncrementGenerator"/>'
+    "</generate>"
+    '<generate name="assignments" source="store" type="employments" distribution="ordered" count="{count}">'
+    '<key name="id" script="this.id"/></generate></setup>'
+)
+_ROLES = [
+    {"product": "employments", "field": "id", "role": {"kind": "identifier"}},
+    {
+        "product": "assignments",
+        "field": "id",
+        "role": {"kind": "foreign_key", "parent_product": "employments", "parent_field": "id"},
+    },
+]
+
+
+def test_a_memstore_handoff_without_roles_names_its_products(tmp_path: Path) -> None:
+    [error] = _errors(tmp_path, _HANDOFF.format(count=4))
+
+    assert '"product": "employments"' in str(error.remediation)
+    assert '"product": "assignments"' in str(error.remediation)
+    assert "nest" in str(error.remediation)
+
+
+def test_a_memstore_readback_of_a_subset_names_the_nested_form(tmp_path: Path) -> None:
+    errors = _errors(tmp_path, _HANDOFF.format(count=2), product_roles=_ROLES)
+
+    [error] = [item for item in errors if item.message.startswith("Memstore readback must preserve")]
+    assert "exactly once" in str(error.remediation) and "nest" in str(error.remediation)
