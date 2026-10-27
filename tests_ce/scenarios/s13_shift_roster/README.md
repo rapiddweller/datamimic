@@ -19,9 +19,9 @@ The first command Builds, runs and replays the project, and Builds each negative
 The entry `datamimic.xml` runs the steps in this order. Each step is one file in `model/`.
 
 ```text
-data/* ──> 1 prepare ──> 2 validate input ──> 3 suitability ──> 4 assign ──> 5 validate output ──> 6 cleanup ──> 7 export
-           typed tables   leave_checks,        RS1, RS6          search       RS1..RS6 again        no-op         CSV files
-           policy, slots  certification_checks candidates        RS2..RS5     check products
+data/entity/*, conf/* ──> 1 prepare ──> 2 validate input ──> 3 suitability ──> 4 assign ──> 5 validate output ──> 6 cleanup ──> 7 export
+                          typed tables   leave_checks,        RS1, RS6          search       RS1..RS6 again        no-op         CSV files
+                          policy, slots  certification_checks candidates        RS2..RS5     check products
 ```
 
 | Step | File | Purpose |
@@ -43,18 +43,22 @@ proved.
 
 ## Files
 
+The data files and the parameters follow the DATAMIMIC skill reference `project-structure.md`. The nine data files
+are entity files in `data/entity/`: UTF-8, one header row, and the pipe `|` as the field separator, which is the
+default. No value holds a pipe or a quote. An empty field is an empty value. The parameters are in `conf/`.
+
 | File | Owner of |
 |---|---|
-| `data/policy.properties` | The rule parameters: `min_rest_hours` and `search_budget`. |
-| `data/staff.csv` | The people and their contract. |
-| `data/contracts.csv` | The maximum weekly hours of each contract. |
-| `data/certifications.csv` | The certification kinds. |
-| `data/staff_certifications.csv` | Who holds which certification, from which day, until which day. An empty `expires_on` is a missing expiry date. |
-| `data/wards.csv` | The wards. |
-| `data/shift_types.csv` | The start hour, the length and the required certification of each shift type. |
-| `data/demand.csv` | For each ward and shift type: the minimum and maximum staff, the lead certification and the minimum number of lead holders. |
-| `data/leave.csv` | Leave periods and their status. Only `approved` leave blocks a person. |
-| `data/calendar.csv` | The plan days. This file is the clock of the plan: nothing reads the system time. |
+| `conf/policy.properties` | The rule parameters: `min_rest_hours` and `search_budget`. |
+| `data/entity/staff.ent.csv` | The people and their contract. |
+| `data/entity/contracts.ent.csv` | The maximum weekly hours of each contract. |
+| `data/entity/certifications.ent.csv` | The certification kinds. |
+| `data/entity/staff_certifications.ent.csv` | Who holds which certification, from which day, until which day. An empty `expires_on` is a missing expiry date. |
+| `data/entity/wards.ent.csv` | The wards. |
+| `data/entity/shift_types.ent.csv` | The start hour, the length and the required certification of each shift type. |
+| `data/entity/demand.ent.csv` | For each ward and shift type: the minimum and maximum staff, the lead certification and the minimum number of lead holders. |
+| `data/entity/leave.ent.csv` | Leave periods and their status. Only `approved` leave blocks a person. |
+| `data/entity/calendar.ent.csv` | The plan days. This file is the clock of the plan: nothing reads the system time. |
 | `lib/certificates.scr.py` | RS1: `certificate_status` and the enum `CertificateStatus`. |
 | `lib/roster_search.scr.py` | The global search `plan_roster`. |
 | `acceptance/build.json` | The roles, the input expectations, the rule expectations and the caller's edge controls. |
@@ -62,7 +66,7 @@ proved.
 
 ## Policy
 
-`data/policy.properties` is the one place for the rule parameters. The `policy` product of step 1 reads each value
+`conf/policy.properties` is the one place for the rule parameters. The `policy` product of step 1 reads each value
 once as a whole number. A value that is missing or not a whole number stops the run in step 1. Two checks limit the
 values:
 
@@ -74,12 +78,12 @@ values:
 
 | Rule | Decided in | Checked in the output | Parameter from |
 |---|---|---|---|
-| RS1 certification valid on the shift date | `certificate_status`, called by the `cert_status` key of `candidates` in step 3 | `cert_status == 'valid'` on `entry_checks` | `data/shift_types.csv` (`required_cert`), `data/staff_certifications.csv` |
-| RS2 rest between two shifts, no overlap | `blocker` in `plan_roster` | `rest_hours == None or rest_hours >= min_rest_hours` on `entry_checks` | `data/policy.properties` (`min_rest_hours`) |
-| RS3 weekly hours within the contract | `blocker` in `plan_roster` | `busiest_week_hours <= contract_hours` on `hours_checks` | `data/contracts.csv` |
-| RS4 minimum and maximum staff, minimum lead holders | `solve` and `shortage` in `plan_roster` | `staffed >= min_staff and staffed <= max_staff`, `leads >= min_lead` on `coverage_checks` | `data/demand.csv` |
+| RS1 certification valid on the shift date | `certificate_status`, called by the `cert_status` key of `candidates` in step 3 | `cert_status == 'valid'` on `entry_checks` | `data/entity/shift_types.ent.csv` (`required_cert`), `data/entity/staff_certifications.ent.csv` |
+| RS2 rest between two shifts, no overlap | `blocker` in `plan_roster` | `rest_hours == None or rest_hours >= min_rest_hours` on `entry_checks` | `conf/policy.properties` (`min_rest_hours`) |
+| RS3 weekly hours within the contract | `blocker` in `plan_roster` | `busiest_week_hours <= contract_hours` on `hours_checks` | `data/entity/contracts.ent.csv` |
+| RS4 minimum and maximum staff, minimum lead holders | `solve` and `shortage` in `plan_roster` | `staffed >= min_staff and staffed <= max_staff`, `leads >= min_lead` on `coverage_checks` | `data/entity/demand.ent.csv` |
 | RS5 one ward per day | `blocker` in `plan_roster` | `wards_that_day == 1` on `entry_checks`, a native `script=` count | the rule itself |
-| RS6 never rostered on approved leave | the `on_leave` key of `candidates` in step 3 | `not on_leave` on `entry_checks`, the same filter stated again | `data/leave.csv` |
+| RS6 never rostered on approved leave | the `on_leave` key of `candidates` in step 3 | `not on_leave` on `entry_checks`, the same filter stated again | `data/entity/leave.ent.csv` |
 
 The output checks read the roster and the data again. They do not read the suitability decisions or the search evidence.
 A rule that the search breaks is therefore caught, also when the search itself has a defect.
@@ -150,7 +154,7 @@ ICU lead. The search undoes this choice and gives W1 to S02.
 
 `rngSeed` is set, but nothing in this project is random: the search and the checks are fixed functions of the data.
 The seed has no visible effect on the rows. It lets Build replay the run and compare every row, which is the replay
-proof. The plan days come from `data/calendar.csv`, so the same model, data, seed and calendar give the same roster.
+proof. The plan days come from `data/entity/calendar.ent.csv`, so the same model, data, seed and calendar give the same roster.
 
 ## Python
 
@@ -167,7 +171,7 @@ so the XML conditions compare with the string `'valid'`. The search never reads 
 ## Output
 
 `datamimic run datamimic.xml` writes CSV files to `output/<random task id>/`. Each file has a header row, and the
-delimiter is a comma (`defaultSeparator`). Steps 2 and 5 write their check products. Step 7 writes the 14 export files, named after the products they read (`roster.csv`,
+delimiter is the default pipe `|`, as in the data files. Steps 2 and 5 write their check products. Step 7 writes the 14 export files, named after the products they read (`roster.csv`,
 `slot_decisions.csv`, and so on).
 
 List and nested columns (`valid_certs`, `shifts`, `eligible_shifts`, `assigned`, `blocked`) hold Python literals,
@@ -178,7 +182,7 @@ When no roster exists, the run still ends with exit code 0. There is then no `ro
 
 ## Change one parameter
 
-1. Edit `data/policy.properties`, for example `search_budget=50`.
+1. Edit `conf/policy.properties`, for example `search_budget=50`.
 2. Run `datamimic authoring build tests_ce/scenarios/s13_shift_roster`.
 3. Read `plan` for `outcome`, `steps` and `message`. At 50 steps the outcome is `budget_exhausted`.
 

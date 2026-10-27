@@ -4,7 +4,7 @@
         <variable name="contracts" source="mem" sourceEntity="contracts" storage="data" distribution="ordered"/>
         <key name="staff_id" script="staff_id"/>
         <key name="max_weekly_hours" script="{row.contract_id: row.max_weekly_hours for row in contracts}[contract_id]"/>
-        <generate name="candidates" source="data/calendar.csv" distribution="ordered" target="mem">
+        <generate name="candidates" source="data/entity/calendar.ent.csv" distribution="ordered" target="mem">
             <variable name="holdings" source="mem" sourceEntity="staff_certifications" storage="data" distribution="ordered"/>
             <variable name="leave" source="mem" sourceEntity="leave" storage="data" distribution="ordered"/>
             <variable name="shift_types" source="mem" sourceEntity="shift_types" storage="data" distribution="ordered"/>
