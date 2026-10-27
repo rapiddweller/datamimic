@@ -1,0 +1,21 @@
+<setup rngSeed="40961">
+    <!-- A file source has no row filter: this one row holds both files, and order_report takes the kept orders. -->
+    <generate name="report_input" count="1" target="ConsoleExporter">
+        <variable name="customers" source="fixtures/customers.ent.csv" storage="data" distribution="ordered"/>
+        <variable name="orders" source="fixtures/orders.ent.csv" storage="data" distribution="ordered"/>
+        <variable name="kept" script="[order for order in orders if int(order.amount_cents) &gt;= 1000]"/>
+        <!-- One row for each kept order. The keys copy only the report fields; a source row would add every column. -->
+        <generate name="order_report" count="{len(kept)}" target="JSON">
+            <variable name="i" generator="IncrementGenerator"/>
+            <variable name="order" script="parent.kept[i - 1]"/>
+            <variable name="customer" script="{row.customer_id: row for row in parent.customers}.get(order.customer_id)"/>
+            <variable name="amount" script="int(order.amount_cents)"/>
+            <variable name="percent" script="{'GOLD': 10, 'SILVER': 5}.get(customer.tier, 0) if customer else 0"/>
+            <key name="order_id" script="order.order_id"/>
+            <key name="customer_id" script="order.customer_id"/>
+            <key name="customer_name" script="customer.name if customer else 'UNKNOWN'"/>
+            <key name="net_cents" script="amount - amount * percent // 100"/>
+            <key name="campaign" script="'YES' if '2026-03-01' &lt;= order.order_date &lt;= '2026-03-31' else 'NO'"/>
+        </generate>
+    </generate>
+</setup>

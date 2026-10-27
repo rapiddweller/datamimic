@@ -1,0 +1,28 @@
+{
+  "version": "5.0",
+  "max_count": 124,
+  "product_roles": [
+    {"product": "companies", "field": "company_id", "role": {"kind": "identifier"}},
+    {"product": "people", "field": "person_id", "role": {"kind": "identifier"}},
+    {"product": "employments", "field": "employment_id", "role": {"kind": "identifier"}},
+    {"product": "employments", "field": "person_id", "role": {
+      "kind": "foreign_key", "parent_product": "people", "parent_field": "person_id"
+    }},
+    {"product": "employments", "field": "company_id", "role": {
+      "kind": "foreign_key", "parent_product": "companies", "parent_field": "company_id"
+    }},
+    {"product": "licenses", "field": "license_id", "role": {"kind": "identifier"}},
+    {"product": "licenses", "field": "person_id", "role": {
+      "kind": "foreign_key", "parent_product": "people", "parent_field": "person_id"
+    }},
+    {"product": "assignments", "field": "assignment_id", "role": {"kind": "identifier"}},
+    {"product": "assignments", "field": "company_id", "role": {
+      "kind": "foreign_key", "parent_product": "companies", "parent_field": "company_id"
+    }}
+  ],
+  "expectations": [
+    {"kind": "exact_count", "subject": {"kind": "product", "product": "assignments"}, "count": 20},
+    {"kind": "allowed_values", "subject": {"kind": "product", "product": "employments"}, "field": "function",
+     "values": ["OPERATOR", "INSPECTOR", "PLANNER"]}
+  ]
+}

@@ -24,6 +24,7 @@ import tempfile
 from abc import ABC, abstractmethod
 from collections import Counter
 from dataclasses import dataclass, field
+from datetime import date
 from pathlib import Path
 from typing import IO, Annotated, Literal
 
@@ -56,7 +57,7 @@ class Output:
 
     error: str | None  # exception class name when the run failed
     files: dict[str, list[object]] = field(default_factory=dict)  # file stem -> parsed JSON array
-    products: frozenset[str] = frozenset()  # the products the run captured
+    rows: dict[str, list[Row]] = field(default_factory=dict)  # the rows the run captured, per product
 
 
 @dataclass(frozen=True)
@@ -73,13 +74,19 @@ class Observed:
     edited_fixtures: tuple[str, ...] = ()  # the supplied fixture files that the project changed or deleted
 
 
-def _product_rows(observed: Observed, product: str) -> list[Row] | str:
-    """The product's rows, or the reason there are none."""
-    if observed.run_error is not None:
-        return f"run failed: {observed.run_error}"
-    if product not in observed.rows:
+def _product_rows(observed: Observed, product: str, fixtures: str = _FIXTURES) -> list[Row] | str:
+    """The product's rows in the run with the case directory ``fixtures``, or the reason there are none."""
+    if fixtures == _FIXTURES:
+        error, rows = observed.run_error, observed.rows
+    elif (output := observed.outputs.get(fixtures)) is not None:
+        error, rows = output.error, output.rows
+    else:
+        return f"no run with {fixtures}"
+    if error is not None:
+        return f"run failed: {error}"
+    if product not in rows:
         return f"product {product} was not produced"
-    return observed.rows[product]
+    return rows[product]
 
 
 def _row_difference(found: list[Row] | list[object], wanted: list[dict[str, Scalar]]) -> str | None:
@@ -144,15 +151,134 @@ class Unique(_Check):
         return None if len(set(values)) == len(values) else f"{len(values) - len(set(values))} duplicate values"
 
 
+class UniqueTogether(_Check):
+    """No two rows hold the same combination of the fields; one field alone may repeat."""
+
+    kind: Literal["unique_together"]
+    product: str
+    fields: list[str]
+
+    def label(self) -> str:
+        return f"unique_together:{self.product}.{'+'.join(self.fields)}"
+
+    def failure(self, observed: Observed) -> str | None:
+        rows = _product_rows(observed, self.product)
+        if isinstance(rows, str):
+            return rows
+        combinations = [tuple(row.get(name) for name in self.fields) for row in rows]
+        if not all(isinstance(value, str | int | float) for combination in combinations for value in combination):
+            return "values are missing or not scalar"
+        repeated = len(combinations) - len(set(combinations))
+        return None if not repeated else f"{repeated} duplicate combinations"
+
+
+# date.fromisoformat also reads 20260301 and 2026-W09-7; the prompts ask for YYYY-MM-DD only
+_ISO_DATE = re.compile(r"[0-9]{4}-[0-9]{2}-[0-9]{2}")
+
+
+def _iso_date(value: object) -> date | None:
+    """The date of a YYYY-MM-DD text; None for anything else, a null and an empty text included."""
+    if not isinstance(value, str) or _ISO_DATE.fullmatch(value) is None:
+        return None
+    try:
+        return date.fromisoformat(value)
+    except ValueError:  # 2026-02-30
+        return None
+
+
+def _typed(value: object) -> str:
+    """A value with its JSON type, so that 1, "1", 1.0 and true stay different."""
+    return json.dumps(value, sort_keys=True, default=str)
+
+
+class DateWindow(BaseModel):
+    model_config = ConfigDict(extra="forbid", frozen=True)
+
+    date: str  # the field of the checked row
+    start: str  # the fields of the target row that bound it; both days count
+    end: str
+
+
+class RowExistsIn(_Check):
+    """For each row of ``product`` a row of ``target`` holds the same ``fields`` with the same JSON types. With a
+    window, the date of the row is also from the target's start to its end, both days included. A bound that is
+    missing, null or not a YYYY-MM-DD date never matches: no expiry date is no validity."""
+
+    kind: Literal["row_exists_in"]
+    product: str
+    target: str
+    fields: list[str]
+    window: DateWindow | None = None
+
+    def label(self) -> str:
+        return f"row_exists_in:{self.product}->{self.target}"
+
+    def _key(self, row: Row) -> tuple[str, ...] | None:
+        if any(name not in row for name in self.fields):
+            return None
+        return tuple(_typed(row[name]) for name in self.fields)
+
+    def _covers(self, target: Row, row: Row) -> bool:
+        if self.window is None:
+            return True
+        day = _iso_date(row.get(self.window.date))
+        start = _iso_date(target.get(self.window.start))
+        end = _iso_date(target.get(self.window.end))
+        return day is not None and start is not None and end is not None and start <= day <= end
+
+    def failure(self, observed: Observed) -> str | None:
+        rows, targets = _product_rows(observed, self.product), _product_rows(observed, self.target)
+        if isinstance(rows, str):
+            return rows
+        if isinstance(targets, str):
+            return targets
+        by_key: dict[tuple[str, ...], list[Row]] = {}
+        for target in targets:
+            if (key := self._key(target)) is not None:
+                by_key.setdefault(key, []).append(target)
+        unmatched = 0
+        # Limitation: rows x targets inside one key, about 0.7 s at 1000 x 1000; index the window if a case needs more.
+        for row in rows:
+            key = self._key(row)
+            if key is None or not any(self._covers(target, row) for target in by_key.get(key, [])):
+                unmatched += 1
+        return None if not unmatched else f"{unmatched} of {len(rows)} rows have no matching {self.target} row"
+
+
+class DateRange(_Check):
+    """Every value is a YYYY-MM-DD text from ``min`` to ``max``, inclusive, except exactly ``missing`` nulls. An
+    empty text is not a null, and a row without the field fails."""
+
+    kind: Literal["date_range"]
+    product: str
+    field: str
+    min: date
+    max: date
+    missing: int = 0
+
+    def label(self) -> str:
+        return f"date_range:{self.product}.{self.field}"
+
+    def failure(self, observed: Observed) -> str | None:
+        found = FieldRef(product=self.product, field=self.field).values(observed)
+        if isinstance(found, str):
+            return found
+        nulls = sum(value is None for value in found)
+        if nulls != self.missing:
+            return f"{nulls} values are null, expected {self.missing}"
+        bad = [v for v in found if v is not None and not ((day := _iso_date(v)) and self.min <= day <= self.max)]
+        return None if not bad else f"{len(bad)} values are not dates YYYY-MM-DD in {self.min}..{self.max}"
+
+
 class FieldRef(BaseModel):
     model_config = ConfigDict(extra="forbid", frozen=True)
 
     product: str
     field: str
 
-    def values(self, observed: Observed) -> list[object] | str:
+    def values(self, observed: Observed, fixtures: str = _FIXTURES) -> list[object] | str:
         """The field's value in every row, or the reason they cannot be read."""
-        rows = _product_rows(observed, self.product)
+        rows = _product_rows(observed, self.product, fixtures)
         if isinstance(rows, str):
             return rows
         if any(self.field not in row for row in rows):
@@ -184,16 +310,21 @@ class PerParentCount(_Check):
 
 
 class ValueIn(_Check):
+    """Every value is in ``values``, in the run with the case directory ``fixtures`` laid over ``fixtures/``. A
+    closed set that the input file defines needs one check for each fixtures directory."""
+
     kind: Literal["value_in"]
     product: str
     field: str
     values: list[Scalar]
+    fixtures: str = _FIXTURES
 
     def label(self) -> str:
-        return f"value_in:{self.product}.{self.field}"
+        label = f"value_in:{self.product}.{self.field}"
+        return label if self.fixtures == _FIXTURES else f"{label}:{self.fixtures}"
 
     def failure(self, observed: Observed) -> str | None:
-        found = FieldRef(product=self.product, field=self.field).values(observed)
+        found = FieldRef(product=self.product, field=self.field).values(observed, self.fixtures)
         if isinstance(found, str):
             return found
         outside = [value for value in found if value not in self.values]
@@ -297,14 +428,14 @@ class OutputRows(_Check):
             return f"no run with {self.fixtures}"
         if output.error is not None:
             return f"run failed: {output.error}"
-        if self.product not in output.products:
+        if self.product not in output.rows:
             return f"product {self.product} was not produced"
         name = re.compile(re.escape(self.product) + r"(?:_\d+)?")
         # a product named priced_orders_0 also writes priced_orders_0.json, which is not a part of priced_orders
         rows = [
             row
             for stem, part in output.files.items()
-            if name.fullmatch(stem) is not None and (stem == self.product or stem not in output.products)
+            if name.fullmatch(stem) is not None and (stem == self.product or stem not in output.rows)
             for row in part
         ]
         if not rows:
@@ -383,6 +514,9 @@ Check = Annotated[
     BuildReady
     | ExactCount
     | Unique
+    | UniqueTogether
+    | RowExistsIn
+    | DateRange
     | PerParentCount
     | ValueIn
     | InRange
@@ -518,11 +652,17 @@ def _observe(case: str, project: Path, changed_fixtures: list[str]) -> Observed:
             _start(second_copy, _HASH_SEEDS[1]),
             *(_start(copy, _HASH_SEEDS[0]) for copy in changed_copies),
         ]
-        build = create_authoring_application(build_copy, descriptor_path=PROJECT_ENTRY_PATH).build()
-        build_note = None if isinstance(build, ReadyBuild) else f"Build {build.outcome} in phase {build.phase.value}"
+        try:
+            build = create_authoring_application(build_copy, descriptor_path=PROJECT_ENTRY_PATH).build()
+        except Exception as error:  # an untrusted project can make Build raise; the runs must still finish
+            build_note: str | None = f"Build raised {type(error).__name__}"
+        else:
+            build_note = (
+                None if isinstance(build, ReadyBuild) else f"Build {build.outcome} in phase {build.phase.value}"
+            )
         first, second, *changed = [_finish(*run) for run in runs]
-        outputs = {_FIXTURES: Output(first.error, json_outputs(first_copy), frozenset(first.rows))} | {
-            name: Output(capture.error, json_outputs(copy), frozenset(capture.rows))
+        outputs = {_FIXTURES: Output(first.error, json_outputs(first_copy), first.rows)} | {
+            name: Output(capture.error, json_outputs(copy), capture.rows)
             for name, copy, capture in zip(changed_fixtures, changed_copies, changed, strict=True)
         }
         return Observed(
@@ -539,7 +679,9 @@ def _observe(case: str, project: Path, changed_fixtures: list[str]) -> Observed:
 
 def evaluate(case: str, project: Path) -> Verdict:
     spec = OracleSpec.model_validate_json((CASES / case / "oracle.json").read_text(encoding="utf-8"))
-    changed = sorted({c.fixtures for c in spec.checks if isinstance(c, OutputRows) and c.fixtures != _FIXTURES})
+    changed = sorted(
+        {c.fixtures for c in spec.checks if isinstance(c, OutputRows | ValueIn) and c.fixtures != _FIXTURES}
+    )
     observed = _observe(case, project, changed)
     results = []
     for check in spec.checks:

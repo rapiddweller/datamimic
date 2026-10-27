@@ -1,0 +1,39 @@
+<setup rngSeed="61423">
+    <generate name="companies" count="4">
+        <key name="company_id" generator="IncrementGenerator"/>
+        <key name="name" string="Company __company_id__"/>
+    </generate>
+    <generate name="people" count="20">
+        <key name="person_id" generator="IncrementGenerator"/>
+        <key name="badge" script="'P-%03d' % person_id"/>
+        <variable name="given" generator="GivenNameGenerator"/>
+        <variable name="family" generator="FamilyNameGenerator"/>
+        <key name="full_name" script="given + ' ' + family"/>
+        <!-- The day of the person's one assignment. The first license expires on it, so the expiry day must count. -->
+        <variable name="work_day" generator="IntegerGenerator(min=2, max=30)"/>
+        <generate name="licenses" count="2">
+            <variable name="n" generator="IncrementGenerator"/>
+            <key name="license_id" script="parent.person_id * 10 + n"/>
+            <key name="person_id" script="parent.person_id"/>
+            <key name="valid_from" script="'2026-01-%02d' % parent.person_id if n == 1 else '2026-03-31'"/>
+            <!-- The second license of each even person has no expiry date: 10 of the 40 licenses. -->
+            <key name="expires_on" script="'2026-03-%02d' % parent.work_day if n == 1 else (None if parent.person_id % 2 == 0 else '2026-12-31')"/>
+        </generate>
+        <!-- Two different companies per person. The first ones spread over the 4 companies, 5 people each. -->
+        <generate name="employments" count="2">
+            <variable name="n" generator="IncrementGenerator"/>
+            <key name="employment_id" script="parent.person_id * 10 + n"/>
+            <key name="person_id" script="parent.person_id"/>
+            <key name="company_id" script="(parent.person_id + n) % 4 + 1"/>
+            <key name="function" source="fixtures/functions.wgt.csv"/>
+            <!-- The one assignment of the person copies the first employment, so it always matches one. -->
+            <generate name="assignments" count="{1 if n == 1 else 0}">
+                <key name="assignment_id" script="parent.employment_id"/>
+                <key name="person_id" script="parent.person_id"/>
+                <key name="company_id" script="parent.company_id"/>
+                <key name="function" script="parent.function"/>
+                <key name="work_date" script="'2026-03-%02d' % root.work_day"/>
+            </generate>
+        </generate>
+    </generate>
+</setup>
