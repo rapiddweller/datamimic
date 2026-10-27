@@ -53,6 +53,10 @@ changes the artifact. A `<variable source>` of a product after the assert is not
 and not listed. Build counts the rows of a top-level `<generate source>` before the
 run, so that file is listed also after the assert. An `<assert>` tag over several
 lines reports its last line; the runtime and Build read the same line.
+A nested `<generate>` inside an outer `<generate count="0">` is not registered by the
+engine, so its checks are listed as `not_executed` even when the outer product
+completed before the assert. Build does not rebuild the empty descendants of a stopped
+run. The result errs on the side of fewer checks, and Build still rejects.
 
 ## Public contract
 
