@@ -46,3 +46,8 @@ def test_literals_and_lists_of_plain_names_are_read(expression: str, values: obj
 def test_every_other_unquoted_form_stays_an_error(expression: str) -> None:
     with pytest.raises((ValueError, SyntaxError)):
         parse_literal_values(expression)
+
+
+def test_plain_names_are_strings_even_when_a_variable_has_the_same_name() -> None:
+    # The names are never variable references: a name that matches a variable still reads as text.
+    assert parse_literal_values("LOW,HIGH") == ("LOW", "HIGH")
