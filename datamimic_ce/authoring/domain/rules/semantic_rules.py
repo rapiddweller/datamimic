@@ -248,11 +248,12 @@ def _source_companion_diag(
     present = ", ".join(sorted(attrs))
     severity = rule.definition.severity_for(advisory=lint_only)
     if declared_message is not None:
+        # A declared fact message is static text with names only, so Build may show it.
         return ctx.diag(
             rule,
             element,
             evidence=f"{declared_message}; present: {present}",
-            fix_context=f"Required: {' or '.join(f'{need}=' for need in sorted(needs))}.",
+            fix_context=f"{declared_message}. Required: {' or '.join(f'{need}=' for need in sorted(needs))}.",
             severity=severity,
             names_only=True,
         )
@@ -296,7 +297,8 @@ def _forbidden_companion_diag(
         rule,
         element,
         evidence=f"{message} Present forbidden attributes: {', '.join(present)}",
-        fix_context=f"Remove {', '.join(f'{attr}=' for attr in present)} or {fact.attr}=.",
+        fix_context=(f"{fact.message}. " if fact.message else "")
+        + f"Remove {', '.join(f'{attr}=' for attr in present)} or {fact.attr}=.",
         severity=rule.definition.severity_for(advisory=fact.lint_only),
         names_only=True,
     )

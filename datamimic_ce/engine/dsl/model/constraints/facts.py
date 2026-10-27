@@ -390,7 +390,11 @@ KEY_DISTRIBUTION_REQUIRES_RANGE = Requires(
 # Range attributes shape only a numeric type= draw (key_variable_task._range_generator), and every other
 # value source wins over that draw, so anywhere else they were silently ignored.
 _KEY_RANGE_ATTRS = (ATTR_MIN, ATTR_MAX, ATTR_GRANULARITY)
-_KEY_RANGE_MESSAGE = "'min', 'max' and 'granularity' on a <key> apply only when type= is its only value source"
+_KEY_RANGE_MESSAGE = (
+    "'min', 'max' and 'granularity' on a <key> apply only when type= is its only value source: write "
+    'type="int" min="1" max="9" alone, or pass the bounds in the generator call, '
+    'generator="IntegerGenerator(min=1, max=9)"'
+)
 KEY_RANGE_CONSTRAINTS: tuple[Constraint, ...] = (
     *(Requires(attr, frozenset((ATTR_TYPE,)), message=_KEY_RANGE_MESSAGE) for attr in _KEY_RANGE_ATTRS),
     *(

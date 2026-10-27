@@ -72,3 +72,41 @@ def test_an_unsupported_element_in_the_entry_is_named(tmp_path: Path) -> None:
     [refusal] = [item for item in result.diagnostics if str(item.code) == "unsupported_bounded_operation"]
     assert refusal.message == "The <execute> element has no proven bounded CE execution policy."
     assert refusal.path == ("document", "root", "children", 0)
+
+
+_CALL_FORM = 'generator="IntegerGenerator(min=1, max=9)"'
+
+
+@pytest.mark.parametrize(
+    ("element", "code"),
+    [
+        pytest.param('<key name="amount" generator="IntegerGenerator" min="500" max="20000"/>', "DM214", id="key"),
+        pytest.param('<key name="amount" generator="IntegerGenerator" min="500" max="20000"/>', "DM218", id="key-218"),
+        pytest.param('<key name="sale" type="int" min="50" max="900" script="list_price"/>', "DM218", id="key-script"),
+        pytest.param(
+            '<variable name="lp" generator="IntegerGenerator" min="100" max="900"/><key name="v" script="lp"/>',
+            "DM103",
+            id="variable",
+        ),
+        pytest.param(
+            '<variable name="ratio" generator="FloatGenerator" min="0.5" max="1.0"/><key name="v" script="ratio"/>',
+            "DM103",
+            id="variable-float",
+        ),
+    ],
+)
+def test_bounds_written_as_attributes_beside_a_generator_name_the_call_form(
+    tmp_path: Path, element: str, code: str
+) -> None:
+    """The campaign at 89f304b9: agents read the generator parameters min and max and wrote them as attributes
+    (8 of 50 first Builds). The remediation names the working form: the bounds in the generator call."""
+    diagnostics = _rejected(tmp_path, element).diagnostics
+    remediations = [str(item.remediation) for item in diagnostics if str(item.code) == code]
+
+    assert any(_CALL_FORM in text for text in remediations), remediations
+
+
+def test_a_bound_value_beside_a_generator_never_reaches_the_remediation(tmp_path: Path) -> None:
+    result = _rejected(tmp_path, '<variable name="v" generator="IntegerGenerator" min="12345" max="67890"/>')
+
+    assert not any("12345" in str(item.remediation) or "67890" in item.message for item in result.diagnostics)

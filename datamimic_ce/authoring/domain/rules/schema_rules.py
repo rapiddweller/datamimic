@@ -17,6 +17,7 @@ from datamimic_ce.authoring.domain.rule_catalog import authoring_rule_definition
 from datamimic_ce.authoring.domain.rules.base import LintContext, Rule
 from datamimic_ce.authoring.domain.xml_diagnostics import Diagnostic
 from datamimic_ce.engine.dsl.api import (
+    ATTR_GENERATOR,
     DATA_TYPE_DICT,
     DATA_TYPE_LIST,
     EL_COMMENT,
@@ -31,6 +32,8 @@ from datamimic_ce.engine.dsl.api import (
 )
 
 _DATE_TYPE_GUESSES = {"datetime", "date", "timestamp", "time"}
+# Generator parameters such as min and max are no element attributes; they belong to the call.
+_GENERATOR_PARAMETERS = 'Pass generator parameters in the call: generator="IntegerGenerator(min=1, max=9)".'
 
 
 def _key_id_data_types(ctx: LintContext) -> frozenset[str]:
@@ -148,6 +151,8 @@ class UnknownAttribute(Rule):
                         if attr_name != str(attr)
                         else f"Did you mean '{suggestion[0]}'?"
                         if suggestion
+                        else _GENERATOR_PARAMETERS
+                        if element.get(ATTR_GENERATOR) is not None
                         else f"Valid attributes: {', '.join(sorted(valid))}."
                     )
                     yield ctx.diag(
