@@ -32,15 +32,17 @@ from datamimic_ce.engine.runtime.scripting.evaluation import WhereCondition
 from datamimic_ce.errors import DescriptorLocation, IssueCode, invalid_source_error
 
 
-def data_source_cache_key(stmt: Statement) -> tuple[str | None, str | None]:
+def data_source_cache_key(stmt: Statement) -> tuple[str | None, str | None, str | None]:
     """Cache key for a statement's data-source length. Statements may SHARE a name (e.g. three
     <iterate name='db_product'> feeding one table from different sources), so the key must
-    include the source - keyed by name alone, the second statement inherits the first one's
-    length and silently truncates its rows. A tuple key on real statement types, no string
-    concatenation, no duck-typing."""
-    if isinstance(stmt, GenerateStatement | VariableStatement | NestedKeyStatement):
-        return (stmt.full_name, stmt.source)
-    return (stmt.full_name, None)
+    include the source and the where= condition - keyed without them, the second statement inherits
+    the first one's length and silently truncates its rows. A tuple key on real statement types, no
+    string concatenation, no duck-typing."""
+    if isinstance(stmt, GenerateStatement):
+        return (stmt.full_name, stmt.source, stmt.where)
+    if isinstance(stmt, VariableStatement | NestedKeyStatement):
+        return (stmt.full_name, stmt.source, None)
+    return (stmt.full_name, None, None)
 
 
 def refuse_row_selection(
@@ -82,7 +84,7 @@ def set_data_source_length(ctx: SetupContext | GenIterContext, stmt: Statement) 
         return
 
     root_ctx = ctx.root
-    source_id: tuple[str | None, str | None] = data_source_cache_key(stmt)
+    source_id = data_source_cache_key(stmt)
     # Check if data source length is already set
     if root_ctx.data_source_len.get(source_id, None) is not None:
         return
@@ -165,7 +167,7 @@ def set_data_source_length(ctx: SetupContext | GenIterContext, stmt: Statement) 
         ds_len = count_source(
             CountSourceRequest(
                 source=source_str,
-                source_id=source_id,
+                source_id=(stmt.full_name, stmt.source),
                 descriptor_dir=root_ctx.descriptor_dir,
                 element=source_element,
                 source_type=stmt.type,

@@ -61,6 +61,15 @@ def test_columns_order_readable_variables_empty_list_and_overriding_key() -> Non
     assert result["duplicates"] == [{"id": "1"}, {"id": "1"}]
 
 
+def test_statements_on_one_file_with_other_conditions_keep_their_own_rows() -> None:
+    """The kept-row count belongs to the condition: a same-name statement must not reuse the count of the first."""
+    result = _run("same_file_other_where.xml")
+    assert [row["id"] for row in result["closed_rows"]] == ["3", "5"]
+    assert [row["id"] for row in result["open_rows"]] == ["1", "2", "4"]
+    for product in ("rows", "child"):
+        assert [row["id"] for row in result[product]] == ["3", "5", "1", "2", "4"], product
+
+
 @pytest.mark.parametrize(
     ("filename", "code"),
     [

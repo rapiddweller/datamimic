@@ -1,0 +1,18 @@
+<setup>
+    <!-- One file, two conditions. Each statement counts its own kept rows, also when the names are the same. -->
+    <iterate name="closed_rows" source="data/fixtures/orders.ent.csv" distribution="ordered"
+             where="status == 'closed'" columns="id" target="ConsoleExporter"/>
+    <iterate name="open_rows" source="data/fixtures/orders.ent.csv" distribution="ordered"
+             where="status == 'open'" columns="id" target="ConsoleExporter"/>
+    <!-- Build refuses a duplicate product name; datamimic run accepts it, so only the run can lose rows here. -->
+    <iterate name="rows" source="data/fixtures/orders.ent.csv" distribution="ordered"
+             where="status == 'closed'" columns="id" target="ConsoleExporter"/>
+    <iterate name="rows" source="data/fixtures/orders.ent.csv" distribution="ordered"
+             where="status == 'open'" columns="id" target="ConsoleExporter"/>
+    <generate name="parent" count="1">
+        <iterate name="child" source="data/fixtures/orders.ent.csv" distribution="ordered"
+                 where="status == 'closed'" columns="id" target="ConsoleExporter"/>
+        <iterate name="child" source="data/fixtures/orders.ent.csv" distribution="ordered"
+                 where="status == 'open'" columns="id" target="ConsoleExporter"/>
+    </generate>
+</setup>

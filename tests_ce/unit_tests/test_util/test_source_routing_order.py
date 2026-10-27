@@ -142,7 +142,7 @@ def test_length_cache_keeps_same_named_sources_separate() -> None:
     length_source_router.set_data_source_length(context, _variable_statement("first", full_name="consumer"))
     length_source_router.set_data_source_length(context, _variable_statement("second", full_name="consumer"))
 
-    assert root.data_source_len == {("consumer", "first"): 2, ("consumer", "second"): 5}
+    assert root.data_source_len == {("consumer", "first", None): 2, ("consumer", "second", None): 5}
     first.get_data_len_by_type.assert_called_once_with("rows")
     second.get_data_len_by_type.assert_called_once_with("rows")
 
@@ -156,7 +156,7 @@ def test_variable_selector_is_eager_but_iteration_selector_is_row_deferred(
         default_variable_prefix="{{",
         default_variable_suffix="}}",
         get_client_by_id=Mock(return_value=client),
-        data_source_len={("variable", None): 1},
+        data_source_len={("variable", None, None): 1},
         root=Mock(),
     )
     pagination = DataSourcePagination(skip=0, limit=1)

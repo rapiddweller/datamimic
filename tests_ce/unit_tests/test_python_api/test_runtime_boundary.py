@@ -167,10 +167,16 @@ def test_runtime_scripting_state_permissions_are_exact() -> None:
             api + "SetupContext.__init__",
             "data_source_len",
             "",
-            "dict[tuple[str | None, str | None], int] | None",
+            "dict[tuple[str | None, str | None, str | None], int] | None",
             None,
         ),
-        (api + "SetupContext.data_source_len", "return", "", "dict[tuple[str | None, str | None], int]", None),
+        (
+            api + "SetupContext.data_source_len",
+            "return",
+            "",
+            "dict[tuple[str | None, str | None, str | None], int]",
+            None,
+        ),
     }
     property_permissions = {
         (api + "SetupContext.__init__", "properties", "", "dict[str, str] | dict[str, object] | None", None),
