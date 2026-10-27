@@ -41,6 +41,16 @@ than 10 declared rows was rejected and is now ready. `datamimic run` ignores
 `max_count`, and the XML does not change. EE has no Build v5 yet; an EE port must
 derive the limit the same way.
 
+### Failed assert (#420)
+
+A failed `<assert>` rejects Build with `assert_failed` at the assert line, keeps the
+products that completed before it and lists the other checks as `not_executed`.
+`assert_failed` echoes only a literal message: text without `{`, `}` or `__`, at most
+200 characters. It is author text from the descriptor file, never a resolved value.
+The evidence of a stopped run has no `files` and no `source_accesses`; the Build is
+rejected, so no ready proof depends on them. An `<assert>` tag over several lines
+reports its last line; the runtime and Build read the same line.
+
 ## Public contract
 
 Persist XML as the executable project. `DmJsonDocumentV1` is an in-memory agent
