@@ -13,8 +13,7 @@
         <key name="cert_status" script="certificate_status(holdings, staff_id, required_cert, shift_date)"/>
         <key name="rest_hours" script="rest_hours_before(roster, shift_types, entry_id)"/>
         <key name="min_rest_hours" script="policy[0].min_rest_hours"/>
-        <!-- The distinct (person, day, ward) triples of the roster, counted for this person and day. -->
-        <key name="wards_that_day" script="[triple[:2] for triple in {(row.staff_id, row.shift_date, row.ward_id) for row in roster}].count((staff_id, shift_date))"/>
+        <key name="wards_that_day" script="len({row.ward_id for row in roster if row.staff_id == staff_id and row.shift_date == shift_date})"/>
         <key name="on_leave" script="on_approved_leave(leave, staff_id, shift_date)"/>
     </generate>
     <generate name="hours_checks" source="mem" sourceEntity="staff_capacity" distribution="ordered" target="CSV">
