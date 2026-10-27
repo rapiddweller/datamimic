@@ -5,7 +5,7 @@
     {"product": "order_report", "field": "order_id", "role": {"kind": "identifier"}}
   ],
   "expectations": [
-    {"kind": "exact_count", "subject": {"kind": "product", "product": "order_report"}, "count": 9},
+    {"kind": "exact_count", "subject": {"kind": "product", "product": "order_report"}, "count": 10},
     {"kind": "allowed_values", "subject": {"kind": "product", "product": "order_report"}, "field": "campaign",
      "values": ["YES", "NO"]}
   ]

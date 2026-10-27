@@ -90,7 +90,7 @@ _E07_LAST_KEY = (
     "<key name=\"campaign\" script=\"'YES' if '2026-03-01' &lt;= order.order_date &lt;= '2026-03-31' else 'NO'\"/>"
 )
 _E07_OUTPUTS = frozenset({"output_rows:order_report:fixtures", "output_rows:order_report:fixtures_changed"})
-# The reference acceptance pins 9 rows and the two campaign values, and Build needs a known row count.
+# The reference acceptance pins 10 rows and the two campaign values, and Build needs a known row count.
 _E07_OUTPUTS_AND_BUILD = _E07_OUTPUTS | {"build_ready"}
 
 
@@ -706,6 +706,20 @@ _BROKEN = [
         "campaign_without_its_first_day",
         {_XML: [("'2026-03-01' &lt;= order.order_date", "'2026-03-01' &lt; order.order_date")]},
         _E07_OUTPUTS,
+    ),
+    # both fixture sets hold a kept order from March of another year
+    Broken(
+        "e07",
+        "campaign_ignores_the_year",
+        {_XML: [("'2026-03-01' &lt;= order.order_date &lt;= '2026-03-31'", "order.order_date[5:7] == '03'")]},
+        _E07_OUTPUTS,
+    ),
+    # GOLDEN is another tier, so it gets no discount
+    Broken(
+        "e07",
+        "tier_matched_on_its_prefix",
+        {_XML: [("{'GOLD': 10, 'SILVER': 5}.get(customer.tier, 0)", "{'G': 10, 'S': 5}.get(customer.tier[:1], 0)")]},
+        frozenset({"output_rows:order_report:fixtures_changed"}),
     ),
     # a scripted generate copies every source column into the row
     Broken(

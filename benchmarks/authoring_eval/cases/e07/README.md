@@ -26,37 +26,37 @@ Each fixture set has a row on each side of each rule:
 | Rule | `fixtures/` | `fixtures_changed/` |
 |---|---|---|
 | threshold 1000 | 999 (out), 1000 (in), 1001 (in) | 999 (out), 1000 (in), 1001 (in) |
-| campaign window | 02-28, 03-01, 03-31, 04-01 | 02-28, 03-01, 03-31, 04-01 |
+| campaign window | 2026: 02-28, 03-01, 03-31, 04-01; 2025-03-15 (out) | 2026: 02-28, 03-01, 03-31, 04-01; 2027-03-15 (out) |
 | lookup default | C-109, C-110 | C-298, C-299 |
 | one customer, several orders | C-101, C-102, C-104 | C-201, C-202, C-204 |
-| tiers | GOLD, SILVER, BRONZE, empty | GOLD, SILVER, BRONZE, empty |
+| tiers | GOLD, SILVER, BRONZE, empty | GOLD, SILVER, BRONZE, empty, GOLDEN (no discount) |
 | rounding | 1999 GOLD: 1800, not 1799 | 2999 GOLD: 2700, not 2699 |
 
-The two sets keep different numbers of orders (12 and 10) and different numbers of kept orders (9 and 8).
+The two sets keep different numbers of orders (13 and 11) and different numbers of kept orders (10 and 9).
 
 ## Reference
 
 A file source has no row filter, and a `<generate source=...>` copies every column. So the reference reads both files into one row of `report_input` (`storage="data"`).
 `order_report` is nested in it: one row for each kept order (`count="{len(kept)}"`), and one key for each report field.
 `report_input` has `target="ConsoleExporter"`: Build needs a target on it when the document has a file exporter (DM407), and this one writes no file.
-Build captures 10 rows, in the cap of 1000. The dynamic count stops Build from deriving the row total, so the reference sets `max_count`.
+Build captures 11 rows, in the cap of 1000. The dynamic count stops Build from deriving the row total, so the reference sets `max_count`.
 
 ## Equivalence classes
 
-| Class | Variant in `test_authoring_eval.py` |
-|---|---|
-| valid | `reference/` with both fixture sets |
-| threshold min - 1, min, min + 1 | the fixture rows 999, 1000, 1001; `threshold_excludes_1000` |
-| no filter, flat copy | `no_threshold`, `_CHEATS` `e07-flat_copy` |
-| duplicate: each order twice | `each_order_twice` |
-| type: CSV text compared as text | `threshold_compared_as_text` |
-| missing customer | `other_default_name` |
-| empty tier, other tier, silver | the fixture rows; `silver_without_discount` |
-| rounding | `net_rounded_down_instead_of_the_discount` |
-| window first and last day | `campaign_without_its_first_day`, `campaign_without_its_last_day` |
-| field set: extra, missing, source columns | `extra_field`, `missing_field`, `source_columns_in_the_output` |
-| no file | `no_json_file` |
-| hard-coded answer | `_CHEATS` `e07-typed_rows` (fails `fixtures_changed` only) |
-| order: shuffled read | `orders_read_shuffled` (passes) |
-| edited input | `edited_fixture` |
-| seed and hash order | `missing_seed`, `wrong_seed`, `hash_ordered_campaign` |
+The `e07` variants and cheats in `test_authoring_eval.py` cover these classes:
+
+- valid: `reference/` with both fixture sets
+- threshold: min - 1, min, min + 1 (the fixture rows 999, 1000, 1001), 1000 excluded
+- no filter, flat copy
+- duplicate: each order twice
+- type: CSV text compared as text
+- missing customer
+- tiers: empty, other, silver, a prefix match (`GOLDEN`)
+- rounding
+- window: first and last day, March of another year
+- field set: extra, missing, source columns
+- no file
+- hard-coded answer (fails `fixtures_changed` only)
+- order: a shuffled read (passes)
+- edited input
+- seed and hash order
