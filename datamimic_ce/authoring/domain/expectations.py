@@ -9,7 +9,7 @@ from decimal import Decimal
 from enum import StrEnum
 from typing import Annotated, ClassVar, Literal, get_args
 
-from pydantic import Field, JsonValue, field_validator, model_validator
+from pydantic import AliasChoices, Field, JsonValue, field_validator, model_validator
 
 from .common import AuthoringModel, NonEmptyStrictStr, NonNegativeStrictInt
 from .row_conditions import ROW_CONDITION_GRAMMAR, parse_row_condition
@@ -195,11 +195,16 @@ class RangeExpectation(AuthoringModel):
     )
     subject: ProductOrSinkSubject = Field(description="Product or declared-sink row set containing the numeric field.")
     field: NonEmptyStrictStr = Field(description="Numeric field whose captured values are bounded.")
+    # min and max are accepted because the <key> attributes of the same bounds are spelled so.
     minimum: Decimal = Field(
-        description="Inclusive accepted lower bound.", json_schema_extra={INTENT_REPAIR_ALIASES_SCHEMA_KEY: ["min"]}
+        validation_alias=AliasChoices("minimum", "min"),
+        description="Inclusive accepted lower bound; min is the same field.",
+        json_schema_extra={INTENT_REPAIR_ALIASES_SCHEMA_KEY: ["min"]},
     )
     maximum: Decimal = Field(
-        description="Inclusive accepted upper bound.", json_schema_extra={INTENT_REPAIR_ALIASES_SCHEMA_KEY: ["max"]}
+        validation_alias=AliasChoices("maximum", "max"),
+        description="Inclusive accepted upper bound; max is the same field.",
+        json_schema_extra={INTENT_REPAIR_ALIASES_SCHEMA_KEY: ["max"]},
     )
 
     @model_validator(mode="after")
@@ -328,10 +333,14 @@ def expectation_repair(location: tuple[str | int, ...]) -> str | None:
         if index + 1 < len(location):
             wrong = location[index + 1]
             for name in model.model_fields:
-                extra = model.model_fields[name].json_schema_extra
+                field = model.model_fields[name]
+                extra = field.json_schema_extra
                 aliases = extra[INTENT_REPAIR_ALIASES_SCHEMA_KEY] if isinstance(extra, dict) else None
                 if isinstance(aliases, list) and wrong in aliases:
-                    rename = f"Rename {wrong} to {name}. "
+                    alias = field.validation_alias
+                    accepted = isinstance(alias, AliasChoices) and wrong in alias.choices
+                    # An accepted alias is extra only when the canonical name is present too.
+                    rename = f"Write only one of {wrong} and {name}. " if accepted else f"Rename {wrong} to {name}. "
         shape = json.dumps(model.usage_example)
         return f"{rename}A {kind.value} expectation has this shape: {shape}"
     return None
