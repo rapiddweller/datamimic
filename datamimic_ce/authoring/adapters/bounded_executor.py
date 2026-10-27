@@ -43,7 +43,14 @@ from datamimic_ce.authoring.domain.requests import (
     ProjectFileDigest,
     SourceAccessEvidence,
 )
-from datamimic_ce.errors import DescriptorLocation, DomainError, GeneratorConfigError, IssueCode, UserErrorBase
+from datamimic_ce.errors import (
+    DescriptorLocation,
+    DomainError,
+    GeneratorConfigError,
+    IssueCode,
+    TaskConfigError,
+    UserErrorBase,
+)
 from datamimic_ce.errors.catalog import get_issue_definition
 from datamimic_ce.errors.codes import ErrorCode
 
@@ -355,6 +362,11 @@ def _decode_reply(payload: bytes, request: BoundedExecutionRequest, workspace: P
                 ce_error=identity,
                 path=path,
                 expected=request.max_count if over_limit else None,
+                actual=(
+                    {"requested": message.error.kept_rows, "limit": request.max_count}
+                    if isinstance(message.error, TaskConfigError) and message.error.kept_rows is not None
+                    else None
+                ),
             )
             return BoundedExecutionEvidence(
                 ok=False, captured=CapturedProducts((), request.max_count), diagnostics=(diagnostic,), base_run_ok=False

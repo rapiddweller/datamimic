@@ -225,20 +225,50 @@ def _run_xml(tmp_path: Path, xml: str) -> list[dict[str, object]]:
     return (engine.capture_result() or {})["rows"]
 
 
-def test_build_refuses_kept_rows_above_the_limit_with_the_count_rule(tmp_path: Path) -> None:
-    """20 kept rows exceed the default limit 10: the run refuses the count instead of capping it silently."""
+@pytest.mark.parametrize(
+    ("statement", "attribute", "remediation", "actual"),
+    [
+        (
+            '<iterate name="rows" source="data/fixtures/many.ent.csv" distribution="ordered" '
+            'where="int(amount) % 2 == 0" target="ConsoleExporter"/>',
+            "where",
+            "Raise max_count to at least the number of rows that where= keeps, or narrow the where= condition.",
+            {"requested": 20, "limit": 10},
+        ),
+        # Control: a count expression keeps its location, its fix and no value, because the descriptor computed it.
+        (
+            '<generate name="rows" count="{5 * 4}" target="ConsoleExporter"/>',
+            "count",
+            "Raise max_count to at least the evaluated count, or lower the count expression.",
+            None,
+        ),
+    ],
+)
+def test_build_refuses_kept_rows_above_the_limit_with_the_count_rule(
+    tmp_path: Path, statement: str, attribute: str, remediation: str, actual: dict[str, int] | None
+) -> None:
+    """20 kept rows exceed the default limit 10: the run refuses the count instead of capping it silently, and the
+    diagnostic names where=, the kept rows and the limit."""
     from datamimic_ce.authoring.bootstrap import create_authoring_application
     from datamimic_ce.authoring.domain.requests import PROJECT_ENTRY_PATH, RejectedBuild
 
-    iterate = (
-        '<iterate name="rows" source="data/fixtures/many.ent.csv" distribution="ordered" '
-        'where="int(amount) % 2 == 0" target="ConsoleExporter"/>'
-    )
-    built = create_authoring_application(_project(tmp_path, iterate), descriptor_path=PROJECT_ENTRY_PATH).build()
+    built = create_authoring_application(_project(tmp_path, statement), descriptor_path=PROJECT_ENTRY_PATH).build()
     assert isinstance(built, RejectedBuild)
-    assert [(str(d.code), d.ce_error.issue_code if d.ce_error else None) for d in built.diagnostics] == [
-        ("child_execution", IssueCode.TASK_COUNT_ABOVE_BOUNDED_LIMIT)
-    ]
+    (diagnostic,) = built.diagnostics
+    assert (
+        diagnostic.ce_error is not None and diagnostic.ce_error.issue_code is IssueCode.TASK_COUNT_ABOVE_BOUNDED_LIMIT
+    )
+    assert diagnostic.model_dump(mode="json", exclude={"ce_error"}) == {
+        "code": "child_execution",
+        "message": f"Task Count Above Bounded Limit at descriptor/datamimic.xml/generate/{attribute}.",
+        "phase": "evidence",
+        "path": ["descriptor", "datamimic.xml", "generate", attribute],
+        "severity": "error",
+        "remediation": remediation,
+        "expected": None,
+        "actual": actual,
+        "allowed_values": None,
+    }
 
 
 @pytest.mark.parametrize(

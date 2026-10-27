@@ -51,6 +51,7 @@ from datamimic_ce.errors import (
     ExternalFailureCause,
     GeneratorConfigError,
     MissingMemstoreProductError,
+    TaskConfigError,
     UserErrorBase,
     is_user_error,
     operation_error,
@@ -179,6 +180,9 @@ _CONTAINMENT_HINT = (
 )
 
 
+_KEPT_ROWS_HINT = "Raise max_count to at least the number of rows that where= keeps, or narrow the where= condition."
+
+
 def _runtime_hint(err: Exception) -> str:
     current: BaseException | None = err
     seen: set[int] = set()
@@ -196,6 +200,8 @@ def _runtime_hint(err: Exception) -> str:
                 # Only a failed name lookup is a scope problem; 1/0 or int('text') in a count is not.
                 named = isinstance(current.__cause__, NameError | AttributeError)
                 return GUIDANCE_COUNT_SCOPE if named else issue.resolution
+            if isinstance(current, TaskConfigError) and current.kept_rows is not None:
+                return _KEPT_ROWS_HINT
             return issue.guidance or issue.resolution
         if isinstance(current, DomainError) and current.hint:
             return current.hint
