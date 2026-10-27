@@ -37,3 +37,14 @@ def test_an_unclosed_element_gets_the_same_well_formed_diagnostic(tmp_path: Path
     [error] = _errors(tmp_path, xml)
 
     assert error.message == "Descriptor is not well-formed XML."
+
+
+def test_unique_on_a_typed_key_names_a_pool_a_key_accepts(tmp_path: Path) -> None:
+    xml = (
+        '<setup rngSeed="1"><generate name="tickets" count="3"><key name="ticket_id" generator="IncrementGenerator"/>'
+        '<key name="title" type="string" minLength="8" maxLength="40" unique="true"/></generate></setup>'
+    )
+
+    remediations = [str(item.remediation) for item in _errors(tmp_path, xml) if str(item.code) == "DM204"]
+
+    assert remediations and all('generator="StringGenerator" unique="true"' in text for text in remediations)
