@@ -39,6 +39,14 @@ from datamimic_ce.engine.dsl.api import (
 )
 from datamimic_ce.engine.dsl.parsers.base.client_config import ConnectionProfileLoader
 from datamimic_ce.errors.base import ParserValidationError, UserErrorBase
+from datamimic_ce.errors.codes import IssueCode
+
+# The parser reason may quote the descriptor, so the remediation names the two usual causes instead.
+_NOT_WELL_FORMED = "Descriptor is not well-formed XML."
+_ESCAPE_HINT = (
+    "Inside an attribute value write < as &lt; and & as &amp;, for example "
+    'script="a &lt;= b"; or turn the comparison around (b >= a). Close every element and quote every attribute.'
+)
 
 
 class CeDescriptorValidator:
@@ -74,6 +82,9 @@ class CeDescriptorValidator:
         except UserErrorBase as error:
             identity = CeErrorIdentity(error_code=error.code, issue_code=error.issue_code) if error.code else None
             prefix: tuple[str | int, ...] = ("descriptor", logical_path.as_posix())
+            if error.issue_code is IssueCode.PARSER_DESCRIPTOR_INVALID_XML:
+                line = () if error.location is None or error.location.line is None else ("line", error.location.line)
+                return _not_well_formed((*prefix, *line), identity)
             if error.location is not None:
                 prefix += (error.location.element_tag,)
                 if error.location.line is not None:
@@ -112,15 +123,7 @@ class CeDescriptorValidator:
                 ),
             )
         except etree.XMLSyntaxError as error:
-            return LintResult(
-                ok=False,
-                diagnostics=(
-                    _diagnostic(
-                        "Descriptor is not well-formed XML.",
-                        path=("descriptor", logical_path.as_posix(), "line", error.position[0]),
-                    ),
-                ),
-            )
+            return _not_well_formed(("descriptor", logical_path.as_posix(), "line", error.position[0]), None)
         except _IncludeBudgetExceeded as refusal:
             return LintResult(ok=False, diagnostics=_graph_refused(logical_path, str(refusal)).diagnostics)
         except (ValueError, OSError):
@@ -261,14 +264,27 @@ def _rule_diagnostics(
     return tuple(diagnostics)
 
 
-def _diagnostic(message: str, *, path: tuple[str | int, ...], identity: CeErrorIdentity | None = None) -> Diagnostic:
+def _diagnostic(
+    message: str,
+    *,
+    path: tuple[str | int, ...],
+    identity: CeErrorIdentity | None = None,
+    remediation: str = "Repair the indicated descriptor field or its workspace-local resource configuration.",
+) -> Diagnostic:
     return Diagnostic(
         code=AuthoringSystemDiagnosticCode.DESCRIPTOR,
         phase=DiagnosticPhase.XML,
         message=message,
         path=path,
         ce_error=identity,
-        remediation="Repair the indicated descriptor field or its workspace-local resource configuration.",
+        remediation=remediation,
+    )
+
+
+def _not_well_formed(path: tuple[str | int, ...], identity: CeErrorIdentity | None) -> LintResult:
+    return LintResult(
+        ok=False,
+        diagnostics=(_diagnostic(_NOT_WELL_FORMED, path=path, identity=identity, remediation=_ESCAPE_HINT),),
     )
 
 
