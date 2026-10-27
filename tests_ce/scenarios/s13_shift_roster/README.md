@@ -102,6 +102,7 @@ The caller requirements in `acceptance/build.json` name each edge with its ids. 
 | The first and the last leave day are leave days | S03 has approved leave from 2026-03-02 to 2026-03-04 | S03 is on leave on 2026-03-02 and 2026-03-04, not on 2026-03-05 |
 | A requested leave does not block | S14 requested leave on 2026-03-05 | S14 may work the day shift of 2026-03-05 |
 | Hours exactly at the contract maximum | S01 has the contract PT07 (7 h) and is the only Monday ICU+ALS holder | S01 works exactly 7 of 7 h |
+| The week sums every shift | S05 works three 11 h day shifts in one ISO week | S05 has `busiest_week_hours == 33` |
 | Only RS5 blocks a pair | S18 (BLS, 7 h contract) returns from leave on 2026-03-05 and takes the W1 evening. S03 works the W1 night: 11 h of rest before the W2 evening, and the fewest hours of the ICU holders | Without the RS5 check, the search gives S03 the W2 evening (negative `rs5_search_ignores_ward`). `slot_decisions` of `2026-03-05/W2/evening` shows S03 with `RS5` |
 | Exactly the minimum rest is allowed | S03 works the W2 night and the W2 evening of 2026-03-07: 11 h of rest | The W2 evening of 2026-03-07 has `rest_hours == min_rest_hours` |
 | Staff exactly at the slot maximum | The W1 evening needs 1 and allows 1 | W1 evening on 2026-03-02 is staffed at its maximum |
@@ -154,8 +155,8 @@ proof. The plan days come from `data/calendar.csv`, so the same model, data, see
 ## Python
 
 Python holds two things. `plan_roster` is the global search. `certificate_status` is RS1: suitability and the output
-check call this one definition, because its five-way status is evidence in `candidates.csv`. Every other rule is a
-`script=` filter in XML: RS6 in suitability and again in step 5, and the RS2 to RS5 output checks in step 5.
+check call this one definition, because its five-way status is evidence in `candidates.csv`. The RS4 lead holders
+reuse it (`valid_certs`, `leads`). The other checks are `script=` filters: RS6 in steps 3 and 5, RS2 to RS5 in step 5.
 
 A library shares its names with the scripts. The libraries import the module `datetime`, not its classes:
 the class `datetime` would hide the module `datetime` that the scripts use.
@@ -204,24 +205,23 @@ copy of the project and Builds the copy.
 | `rs1_missing_expiry_unlimited` | A missing expiry date is read as valid. |
 | `rs1_issue_date_ignored` | The issue date is ignored: a certification is valid before it starts. |
 | `rs2_rest_ignored` | The assign step gives the search 0 hours of rest. |
+| `rs2_same_slot_twice` | One extra entry: S02 works the W1 night of 2026-03-02 twice. Only the `<=` bound of `rest_hours` sees it. |
 | `rs3_over_contract` | One extra entry after the search: S13 works 36 h of 32 h. |
 | `rs4_lead_ignored` | The assign step gives the search no lead requirement. |
 | `rs4_over_max` | Two extra entries after the search: 3 people in a slot with a maximum of 2. |
 | `rs5_search_ignores_ward` | The search does not check RS5. S03 then works the W1 night and the W2 evening of 2026-03-05. |
 | `rs6_leave_ignored` | Suitability ignores the leave. |
-| `rs6_leave_end_exclusive` | The last day of a leave is read as exclusive. |
+| `rs6_leave_end_exclusive`, `rs6_leave_end_exclusive_output_check` | Suitability reads the last leave day as exclusive. The first names the caller pin, the second the step 5 `not on_leave`. |
 | `infeasible_monday_lead` | S01 is on leave on Monday: no one can lead the W2 night shift. The check before the search proves it. |
 | `infeasible_after_search` | The W1 night shift also needs an ICU lead. Each Monday night slot alone has a lead (S01), both together have not. The search tries every team. |
 | `policy_not_whole` | `search_budget` is `ten`. Step 1 stops the run: Build reports `child_execution`, and a normal run fails with a `ValueError`. |
 | `budget_exhausted` | `search_budget` is 50. |
 
-When a negative changes the suitability or the lead requirement, the search does not need its backtrack.
-Then the caller control `backtracks >= 1` also fails. This is not a second broken rule.
-When no roster exists (the two infeasible negatives and `budget_exhausted`), the coverage checks and the controls on
-the roster also fail. These are consequences of the empty roster, not more broken rules.
-When a negative changes the plan, the `slot_decisions` pins can also fail: in `rs1_certificate_ignored`,
-`rs1_issue_date_ignored`, `rs4_lead_ignored`, `rs5_search_ignores_ward` (the S03 `RS5` pin), `rs6_leave_ignored` and
-`rs6_leave_end_exclusive`. These are consequences too.
+When a negative changes the suitability or the lead requirement, the search needs no backtrack, so `backtracks >= 1`
+also fails. When no roster exists (the two infeasible negatives and `budget_exhausted`), the coverage checks and the
+controls on the roster also fail. When a negative changes the plan, the `slot_decisions` pins and the S05 hours pin
+can also fail: in `rs1_certificate_ignored`, `rs1_issue_date_ignored`, `rs4_lead_ignored`, `rs5_search_ignores_ward`
+(the S03 `RS5` pin) and the `rs6_*` negatives. These are consequences, not more broken rules.
 A `slot_decisions` pin reads one index of `blocked`, because a row condition cannot search a list. Each pin also
 checks the `staff_id` at its index. So an added person makes the pin fail, not pass. Then correct the index.
 

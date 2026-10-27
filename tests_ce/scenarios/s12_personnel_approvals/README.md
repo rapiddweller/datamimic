@@ -115,7 +115,7 @@ Each negative in `scenario.json` patches one text in one file of a copy of the p
 - A data variant without a plan fails its named rule and also four consequences: `outcome != 'infeasible'` (or `'budget_exhausted'`), `filled == seats`, the staffing count 82 and the trace count 40.
 - `r5_exclusive_approval` and `r6_cross_company` also fail the `dead_end` pin of person 20, because their search records other dead ends.
 - `r4_above_maximum` stops the run in step 1. Build reports `assert_failed` with the message of the `<assert>`, and `not_executed` for the checks it could not evaluate. Build keeps the products that complete before a failed assert, but `positions` is the first product, so no check is evaluated. The harness also runs the variant and checks the message.
-- The `search_ignores_*` and `suitability_*` variants patch `lib/staffing.scr.py`. Step 4 must reject each one by the named check. The pinned control cases and the trace count can fail too, because the plan changes.
+- The `search_ignores_*` and `suitability_*` variants patch `lib/staffing.scr.py`. `plan_other_company` gives seat `A01-V1-INS-1` (C01) to person 15 of C02: only the company part of R1 fails. Step 4 must reject each one by the named check. The pinned control cases and the trace count can fail too, because the plan changes.
 - `search_omits_dead_end_trace` deletes the `dead_end` rows from the trace. Only the trace count 40 rejects it, so the count makes the `dead_end` pin real.
 
 The outcomes of the reference brief map to these cases:
@@ -151,7 +151,7 @@ Product limits. Issue #420 tracks them.
 Project limits.
 
 - Input validation runs in Build only, except the R4 maximum.
-- A list that a `<variable>` script builds holds plain dicts without dot access, so the R5 and R6 keys of `plan_check` read `other['company_id']`. No issue is filed for this yet.
+- Rows stored in a `<variable>` list lose dot access (#441), so the R5 and R6 keys of `plan_check` read `other['company_id']`.
 - Step 2 keeps R1 to R3 in Python: the search reads the near misses, and each one names the failed part of R1 or the R2 reason. In XML that is one long conditional per rule. Step 4 states R1 to R3 a second time in XML, for each seat.
 - R3 cannot say "active": `person_qualifications` has no status column. A qualification row counts as active.
 - A person that fails two or more rules is counted, not named.
