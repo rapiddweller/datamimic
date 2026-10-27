@@ -374,7 +374,10 @@ class CeDslCatalog:
                         name="data_files",
                         path="tests_ce/scenarios/s24_project_data_files",
                         description=(
-                            "Read a data file the task gives; do not type its values into the project. An entity "
+                            "Read a data file the task gives; do not type its values into the project. In a project "
+                            "keep entity files in data/entity/, weighted files in data/weighting/ and deliberately "
+                            "chosen cases in data/fixtures/; a path the task names (such as fixtures/...) stays as "
+                            "given. An entity "
                             "file *.ent.csv is UTF-8, pipe-separated, with a header row. The pipe is the default "
                             'separator, so write no separator=; separator="," on a pipe file gives one merged '
                             'column. Read it row by row with <variable name="row" source="fixtures/people.ent.csv" '
