@@ -22,7 +22,7 @@ acceptance/build.json checks the input, the plan, the trace and the 11 target ta
 | 1 prepare | `model/1_prepare.xml` | Resolves each demanded position to its approval, its company (the approval's addressee) and its date. An `<assert>` stops the run when a demand is not 1 to `max_seats` seats. |
 | 2 suitability | `model/2_suitability.xml` | Calls `suitable_people` once per position: R1 to R3 for every person, the exclusions counted by rule and the near misses. |
 | 3 assign | `model/3_assign.xml` | Calls `assign_seats` once: one search fills every seat under R4 to R6. It writes the plan, the counters and the trace. It gives no plan unless every seat is filled. |
-| 4 validate output | `model/4_validate_output.xml` | Checks the plan without the search and without step 2. `seat_check` tests R1 to R3 for each seat in XML from the raw rows and the step-1 positions. `plan_check` calls `check_position` for R4 to R6. |
+| 4 validate output | `model/4_validate_output.xml` | Checks the plan without the search and without step 2. `seat_check` tests R1 to R3 for each seat in XML from the raw rows and the step-1 positions. `plan_check` tests R4 to R6 for each position in XML from the plan. |
 | 5 export | `model/5_export.xml` | Writes the 11 target tables to CSV. Staffing reads the plan from the memstore. |
 
 Input validation and cleanup have no model file (see "Known limits").
@@ -66,7 +66,7 @@ The project delivers 11 tables with 27 columns and 540 rows. `PK` is the key tha
 | `data/approvals.json`, `approval_versions.json` | the approval's addressee company, the version's date | steps 1, 5 |
 | `data/demand.json` | seats per version and function (the positions) | step 1 |
 | `data/policy.json` | all rule parameters | steps 1 to 4 |
-| `lib/staffing.scr.py` | `read_policy`, `suitable_people`, `assign_seats`, `check_position` | steps 1 to 4 |
+| `lib/staffing.scr.py` | `read_policy`, `suitable_people`, `assign_seats` | steps 1 to 3 |
 | `acceptance/build.json` | the expectations that Build proves | Build |
 
 The library reads no file. `read_policy` checks the type of each policy parameter.
@@ -115,7 +115,7 @@ Each negative in `scenario.json` patches one text in one file of a copy of the p
 - A data variant without a plan fails its named rule and also four consequences: `outcome != 'infeasible'` (or `'budget_exhausted'`), `filled == seats`, the staffing count 82 and the trace count 40.
 - `r5_exclusive_approval` and `r6_cross_company` also fail the `dead_end` pin of person 20, because their search records other dead ends.
 - `r4_above_maximum` stops the run in step 1. Build reports `assert_failed` with the message of the `<assert>`, and `not_executed` for the checks it could not evaluate. Build keeps the products that complete before a failed assert, but `positions` is the first product, so no check is evaluated. The harness also runs the variant and checks the message.
-- The `search_ignores_*` and `suitability_*` variants patch `lib/staffing.scr.py`. Step 4 must reject each one by the named check. The pinned control cases and the trace count can fail too, because the plan changes.
+- The `search_ignores_*` and `suitability_*` variants patch `lib/staffing.scr.py`. `plan_other_company` gives seat `A01-V1-INS-1` (C01) to person 15 of C02: `r1_employed` fails by its company part, and R5 and R6 as consequences. Step 4 must reject each one by the named check. The pinned control cases and the trace count can fail too, because the plan changes.
 - `search_omits_dead_end_trace` deletes the `dead_end` rows from the trace. Only the trace count 40 rejects it, so the count makes the `dead_end` pin real.
 
 The outcomes of the reference brief map to these cases:
@@ -141,20 +141,18 @@ The outcomes of the reference brief map to these cases:
 Product limits. Issue #420 tracks them.
 
 - No `delivery/` and no cleanup step. Build refuses the SQL that creates a table (`unsupported_bounded_operation`), and an SQLite insert does not create its table. So the project writes CSV files, and a new run writes new files. There is no transaction boundary: each table is written on its own. The R4 assert stops the run before any CSV; an infeasible run exits 0 and writes the master tables without `staffing.csv`.
-- Only the R4 maximum stops the run. The plan checks are row conditions, which only Build checks: a search with a defect still delivers a plan that breaks a rule, and the run ends with exit 0. When the plan is not complete, the run writes the master data tables and no `staffing.csv`. A failed `<assert>` stops Build at the same point as the run: Build keeps the products made before it and lists the checks it could not evaluate.
+- Only the R4 maximum stops the run. The plan checks are row conditions, which only Build checks: a search with a defect still delivers a plan that breaks a rule, and the run ends with exit 0. When the plan is not complete, the run writes the master data tables and no `staffing.csv`. A failed `<assert>` stops Build at the same point as the run: Build keeps the products made before it and lists the checks it could not evaluate. An `<assert>` in step 4 can also make the plan checks stop `datamimic run`, but it sees only its own row, and it stops the run before step 5 exports.
 - The export keys list the 27 columns, but they do not filter: a source field outside the list reaches the CSV. Build has no exact field-set expectation, and an export without `source=` needs a literal count that silently truncates a longer file.
 - Build caps the bounded capture at 1000 rows in total. The base case uses 925. So the trace leaves out the `try` decisions, and a search mutant that skips many people can exceed the cap.
 - A Python error in a script loses its text: a wrong policy type is rejected as `child_execution` without the message of `read_policy`.
-- A comprehension in `script=` sees outer names only in its first iterable. So step 1 and step 4 build a dict or set first and test the key outside: `(this.person_id, ...) in {(row.person_id, ...) for row in employments}`.
 - Build reads the fields of a product from its keys. A key such as `seat_id` on `seat_check` only copies a source field, but Build needs it for the product roles.
 - Steps share data only through the memstore. Build refuses `<include>` inside `<generate>`, and it accepts only a `<generate>` as a memstore reader with a declared role. So `plan_check` reads the step 2 rows.
-- `type=` on a memstore reader also names the entity that it writes. A reader that writes to the memstore again uses `sourceEntity=`.
-- A JSON object in a row is a `Mapping` without `values()` or `items()`. `read_policy` copies it by key.
 
 Project limits.
 
 - Input validation runs in Build only, except the R4 maximum.
-- Step 2 keeps R1 to R3 in Python. As XML keys they need one row per person and position (6,000 rows), which exceeds the 1000-row cap, and the near-miss reasons need a Python classification. Step 4 states R1 to R3 a second time in XML, for each seat.
+- Rows stored in a `<variable>` list lose dot access (#441), so the R5 and R6 keys of `plan_check` read `other['company_id']`.
+- Step 2 keeps R1 to R3 in Python: the search reads the near misses, and each one names the failed part of R1 or the R2 reason. In XML that is one long conditional per rule. Step 4 states R1 to R3 a second time in XML, for each seat.
 - R3 cannot say "active": `person_qualifications` has no status column. A qualification row counts as active.
 - A person that fails two or more rules is counted, not named.
 - `read_policy` checks the policy types only; the data files get no type check. A wrong value fails a rule or stops the run.

@@ -55,9 +55,7 @@ proved.
 | `data/demand.csv` | For each ward and shift type: the minimum and maximum staff, the lead certification and the minimum number of lead holders. |
 | `data/leave.csv` | Leave periods and their status. Only `approved` leave blocks a person. |
 | `data/calendar.csv` | The plan days. This file is the clock of the plan: nothing reads the system time. |
-| `lib/certificates.scr.py` | RS1: `certificate_status`, `valid_certificates`, `lead_holders` and the enum `CertificateStatus`. |
-| `lib/leave.scr.py` | RS6: `on_approved_leave`. |
-| `lib/roster_rules.scr.py` | The output evidence for RS2 and RS3: `rest_hours_before`, `busiest_week_hours`. |
+| `lib/certificates.scr.py` | RS1: `certificate_status` and the enum `CertificateStatus`. |
 | `lib/roster_search.scr.py` | The global search `plan_roster`. |
 | `acceptance/build.json` | The roles, the input expectations, the rule expectations and the caller's edge controls. |
 | `scenario.json` | What the corpus runner checks: the row counts and the negatives. |
@@ -81,12 +79,12 @@ values:
 | RS3 weekly hours within the contract | `blocker` in `plan_roster` | `busiest_week_hours <= contract_hours` on `hours_checks` | `data/contracts.csv` |
 | RS4 minimum and maximum staff, minimum lead holders | `solve` and `shortage` in `plan_roster` | `staffed >= min_staff and staffed <= max_staff`, `leads >= min_lead` on `coverage_checks` | `data/demand.csv` |
 | RS5 one ward per day | `blocker` in `plan_roster` | `wards_that_day == 1` on `entry_checks`, a native `script=` count | the rule itself |
-| RS6 never rostered on approved leave | `on_approved_leave`, called by the `on_leave` key of `candidates` in step 3 | `not on_leave` on `entry_checks` | `data/leave.csv` |
+| RS6 never rostered on approved leave | the `on_leave` key of `candidates` in step 3 | `not on_leave` on `entry_checks`, the same filter stated again | `data/leave.csv` |
 
 The output checks read the roster and the data again. They do not read the suitability decisions or the search evidence.
 A rule that the search breaks is therefore caught, also when the search itself has a defect.
-RS1 and RS6 use one function in suitability and in the output check. A defect in that function is caught only by the
-caller's edge controls, not by the output check.
+RS1 uses one function in suitability and in the output check. A defect in that function is caught only by the
+caller's edge controls, not by the output check. RS6 is stated twice in XML, so the output check catches a suitability defect.
 
 Definitions: a shift belongs to the day and the ISO week (year and week) of its start. It counts fully in that week,
 also when it ends after midnight. "One ward per day" (RS5) uses the same start date.
@@ -104,6 +102,7 @@ The caller requirements in `acceptance/build.json` name each edge with its ids. 
 | The first and the last leave day are leave days | S03 has approved leave from 2026-03-02 to 2026-03-04 | S03 is on leave on 2026-03-02 and 2026-03-04, not on 2026-03-05 |
 | A requested leave does not block | S14 requested leave on 2026-03-05 | S14 may work the day shift of 2026-03-05 |
 | Hours exactly at the contract maximum | S01 has the contract PT07 (7 h) and is the only Monday ICU+ALS holder | S01 works exactly 7 of 7 h |
+| The week sums every shift | S05 works three 11 h day shifts in one ISO week | S05 has `busiest_week_hours == 33` |
 | Only RS5 blocks a pair | S18 (BLS, 7 h contract) returns from leave on 2026-03-05 and takes the W1 evening. S03 works the W1 night: 11 h of rest before the W2 evening, and the fewest hours of the ICU holders | Without the RS5 check, the search gives S03 the W2 evening (negative `rs5_search_ignores_ward`). `slot_decisions` of `2026-03-05/W2/evening` shows S03 with `RS5` |
 | Exactly the minimum rest is allowed | S03 works the W2 night and the W2 evening of 2026-03-07: 11 h of rest | The W2 evening of 2026-03-07 has `rest_hours == min_rest_hours` |
 | Staff exactly at the slot maximum | The W1 evening needs 1 and allows 1 | W1 evening on 2026-03-02 is staffed at its maximum |
@@ -155,14 +154,9 @@ proof. The plan days come from `data/calendar.csv`, so the same model, data, see
 
 ## Python
 
-A lookup by one key works natively with a dict index, for example
-`{row.contract_id: row.max_weekly_hours for row in contracts}[contract_id]`. A count works natively when the method
-call sees the current record, for example `wards_that_day` in step 5. A comprehension that filters by a field of the
-current record does not work in `script=`, because it does not see that field (#423).
-
-A `nestedKey` over another table can filter natively with `this.staff_id == parent.staff_id`, so RS6 could be a
-DSL rule. The project keeps RS1 and RS6 as functions in `lib/`, because suitability and the output check then call
-one definition of each rule. RS2 and RS3 need sums over the whole roster for one entry, so they are functions too.
+Python holds two things. `plan_roster` is the global search. `certificate_status` is RS1: suitability and the output
+check call this one definition, because its five-way status is evidence in `candidates.csv`. The RS4 lead holders
+reuse it (`valid_certs`, `leads`). The other checks are `script=` filters: RS6 in steps 3 and 5, RS2 to RS5 in step 5.
 
 A library shares its names with the scripts. The libraries import the module `datetime`, not its classes:
 the class `datetime` would hide the module `datetime` that the scripts use.
@@ -211,24 +205,23 @@ copy of the project and Builds the copy.
 | `rs1_missing_expiry_unlimited` | A missing expiry date is read as valid. |
 | `rs1_issue_date_ignored` | The issue date is ignored: a certification is valid before it starts. |
 | `rs2_rest_ignored` | The assign step gives the search 0 hours of rest. |
+| `rs2_same_slot_twice` | One extra entry: S02 works the W1 night of 2026-03-02 twice. Only the `<=` bound of `rest_hours` sees it. |
 | `rs3_over_contract` | One extra entry after the search: S13 works 36 h of 32 h. |
 | `rs4_lead_ignored` | The assign step gives the search no lead requirement. |
 | `rs4_over_max` | Two extra entries after the search: 3 people in a slot with a maximum of 2. |
 | `rs5_search_ignores_ward` | The search does not check RS5. S03 then works the W1 night and the W2 evening of 2026-03-05. |
 | `rs6_leave_ignored` | Suitability ignores the leave. |
-| `rs6_leave_end_exclusive` | The last day of a leave is read as exclusive. |
+| `rs6_leave_end_exclusive`, `rs6_leave_end_exclusive_output_check` | Suitability reads the last leave day as exclusive. The first names the caller pin, the second the step 5 `not on_leave`. |
 | `infeasible_monday_lead` | S01 is on leave on Monday: no one can lead the W2 night shift. The check before the search proves it. |
 | `infeasible_after_search` | The W1 night shift also needs an ICU lead. Each Monday night slot alone has a lead (S01), both together have not. The search tries every team. |
 | `policy_not_whole` | `search_budget` is `ten`. Step 1 stops the run: Build reports `child_execution`, and a normal run fails with a `ValueError`. |
 | `budget_exhausted` | `search_budget` is 50. |
 
-When a negative changes the suitability or the lead requirement, the search does not need its backtrack.
-Then the caller control `backtracks >= 1` also fails. This is not a second broken rule.
-When no roster exists (the two infeasible negatives and `budget_exhausted`), the coverage checks and the controls on
-the roster also fail. These are consequences of the empty roster, not more broken rules.
-When a negative changes the plan, the `slot_decisions` pins can also fail: in `rs1_certificate_ignored`,
-`rs1_issue_date_ignored`, `rs4_lead_ignored`, `rs5_search_ignores_ward` (the S03 `RS5` pin), `rs6_leave_ignored` and
-`rs6_leave_end_exclusive`. These are consequences too.
+When a negative changes the suitability or the lead requirement, the search needs no backtrack, so `backtracks >= 1`
+also fails. When no roster exists (the two infeasible negatives and `budget_exhausted`), the coverage checks and the
+controls on the roster also fail. When a negative changes the plan, the `slot_decisions` pins and the S05 hours pin
+can also fail: in `rs1_certificate_ignored`, `rs1_issue_date_ignored`, `rs4_lead_ignored`, `rs5_search_ignores_ward`
+(the S03 `RS5` pin) and the `rs6_*` negatives. These are consequences, not more broken rules.
 A `slot_decisions` pin reads one index of `blocked`, because a row condition cannot search a list. Each pin also
 checks the `staff_id` at its index. So an added person makes the pin fail, not pass. Then correct the index.
 
@@ -245,19 +238,14 @@ fallback would hide a failure in the decision evidence. A failing script must st
 
 ## Known limits of this project
 
-- The checks are a gate in Build only (see [Process](#process); F13, #420).
+- The checks are a gate in Build only (see [Process](#process)). A failed `<assert>` stops `datamimic run`, and Build rejects it with `assert_failed` and evaluates the products made before it. An `<assert>` in step 5 can also make the checks stop the run, but it sees only its own row, and it stops the run before step 7 exports.
 - There is no `delivery/` folder, and the cleanup step deletes nothing. A SQLite target needs an existing table, and Build refuses the
   SQL that creates it, so the project writes CSV files (F19, #420).
-- The rule checks are Python functions in `lib/`, not only the search. RS1 and RS6 could be native `nestedKey`
-  rules, but then each would have a second definition in the output check. A `script=` comprehension does not see
-  the fields of the current record (F1, #423).
+- RS1 is Python besides the search (see [Python](#python)). Its output check shares the suitability definition.
 - The libraries import the module `datetime`, because a library name hides a script global of the same name (F3, #423).
-- Every store read uses `sourceEntity=`, not `type=`: `type=` also sets the entity that a step writes (F4, #422).
-- The `nestedKey` in suitability builds new dicts for its items and never uses `row.to_dict()`: that call returns the
-  stored row, and the enrichment would change the store (F2, #421).
 - No shift in the data crosses midnight. With an evening shift from 20:00 for 8 hours, every rule check holds, but
   Build rejects the project: the rest edge on 2026-03-07 and the S03 `RS5` pin depend on the 18:00 evening.
-- Build captures at most 1000 rows (`max_count`). See [Size](#size).
+- Build captures at most 1000 rows. See [Size](#size).
 
 ## Size
 

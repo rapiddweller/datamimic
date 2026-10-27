@@ -8,23 +8,24 @@
         <variable name="person_qualifications" source="data/person_qualifications.json" storage="data" distribution="ordered"/>
         <variable name="policy" source="data/policy.json" storage="value" distribution="ordered"/>
         <variable name="position" script="{(row.version_id, row.function_id): row for row in positions}[(this.version_id, this.function_id)]"/>
-        <!-- The latest expiry per person, license type and status. A missing expiry sorts first and is never valid. -->
-        <variable name="latest_expiry" script="{(row.person_id, row.license_type, row.status): row.expires_on for row in sorted(person_licenses, key=lambda row: row.expires_on or '')}"/>
         <key name="seat_id" script="this.seat_id"/>
-        <key name="r1_employed" script="(this.person_id, position.company_id, this.function_id) in {(row.person_id, row.company_id, row.function_id) for row in employments}"/>
-        <key name="r2_licensed" script="(latest_expiry.get((this.person_id, policy.base_license, policy.active_status)) or '') &gt;= position.valid_on"/>
-        <key name="r3_qualified" script="(this.person_id, policy.required_qualification[this.function_id]) in {(row.person_id, row.qualification_id) for row in person_qualifications}"/>
+        <key name="r1_employed" script="any(row.person_id == this.person_id and row.company_id == position.company_id and row.function_id == this.function_id for row in employments)"/>
+        <key name="r2_licensed" script="any(row.person_id == this.person_id and row.license_type == policy.base_license and row.status == policy.active_status and row.expires_on is not None and row.expires_on &gt;= position.valid_on for row in person_licenses)"/>
+        <key name="r3_qualified" script="any(row.person_id == this.person_id and row.qualification_id == policy.required_qualification[this.function_id] for row in person_qualifications)"/>
     </generate>
     <!-- R4 to R6 for each position: they need every seat that a person holds. Build needs a reader of step 2 rows. -->
     <generate name="plan_check" source="mem" sourceEntity="suitability" distribution="ordered" target="JSON">
         <variable name="plan" source="mem" sourceEntity="plan" storage="data" distribution="ordered"/>
         <variable name="positions" source="mem" sourceEntity="positions" storage="data" distribution="ordered"/>
-        <variable name="check" script="check_position(this, plan, positions)"/>
+        <variable name="people" script="[row.person_id for row in plan if row.version_id == this.version_id and row.function_id == this.function_id]"/>
+        <variable name="position_of" script="{(row.version_id, row.function_id): row for row in positions}"/>
+        <!-- The position of each seat that these people hold. Rows stored in a variable list lose dot access (#441): read them by key. -->
+        <variable name="held" script="[position_of[(row.version_id, row.function_id)] for row in plan if row.person_id in people]"/>
         <key name="position_id" script="this.position_id"/>
         <key name="seats" script="this.seats"/>
-        <key name="filled" script="check['filled']"/>
-        <key name="distinct_people" script="check['distinct_people']"/>
-        <key name="approval_exclusive" script="check['approval_exclusive']"/>
-        <key name="company_exclusive" script="check['company_exclusive']"/>
+        <key name="filled" script="len(people)"/>
+        <key name="distinct_people" script="len(set(people)) == len(people)"/>
+        <key name="approval_exclusive" script="all(other['approval_id'] == this.approval_id for other in held if this.exclusive or other['exclusive'])"/>
+        <key name="company_exclusive" script="all(other['company_id'] == this.company_id for other in held)"/>
     </generate>
 </setup>
