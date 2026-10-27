@@ -129,22 +129,64 @@ def test_negative_is_rejected_with_named_diagnostic(
 
 
 # Both quote styles; a separator other than the comma is not this guard's concern.
-_COMMA_SEPARATOR = re.compile(r"""(?:default)?[sS]eparator\s*=\s*(["']),\1""")
+_COMMA_SEPARATOR = re.compile(r"""[sS]eparator\s*=\s*(["']),\1""")
+_NAME = "a data file must be *.ent.csv or *.wgt.csv"
+_WEIGHTING = "a *.wgt.csv file must sit in data/weighting/"
+_ENTITY = "an *.ent.csv file must sit in data/entity/ or data/fixtures/"
+_SEPARATOR = 'separator="," overrides the default pipe separator'
+
+
+def _data_standard_findings(root: Path) -> list[str]:
+    """plugins/datamimic/skills/generate-test-data/references/project-structure.md: checks the data file names, their
+    folders and the comma separator. <scenario>/output/ is what a local datamimic run writes, not project data."""
+    found = []
+    for path in sorted(root.rglob("*")):
+        name = path.relative_to(root)
+        if name.parts[1:2] == ("output",) or not path.is_file():
+            continue
+        folder = name.parent.parts[1:]
+        if path.suffix == ".csv" and not path.name.endswith((".ent.csv", ".wgt.csv")):
+            found.append(f"{name}: {_NAME}")
+        elif path.suffix == ".csv" and ".wgt" in path.suffixes:  # x.wgt.ent.csv is a weighted entity file
+            if folder != ("data", "weighting"):
+                found.append(f"{name}: {_WEIGHTING}")
+        elif path.suffix == ".csv" and folder not in {("data", "entity"), ("data", "fixtures")}:
+            found.append(f"{name}: {_ENTITY}")
+        elif path.suffix == ".xml" and _COMMA_SEPARATOR.search(path.read_text(encoding="utf-8")):
+            found.append(f"{name}: {_SEPARATOR}")
+    return found
 
 
 def test_scenario_data_follows_the_project_data_standard() -> None:
-    """plugins/datamimic/skills/generate-test-data/references/project-structure.md: data files are *.ent.csv or
-    *.wgt.csv, separated by the default pipe. output/ is what a local datamimic run writes, not project data."""
-    found = []
-    for path in sorted(_ROOT.rglob("*")):
-        name = path.relative_to(_ROOT)
-        if "output" in name.parts or not path.is_file():
-            continue
-        if path.suffix == ".csv" and not path.name.endswith((".ent.csv", ".wgt.csv")):
-            found.append(f"{name}: a data file must be *.ent.csv or *.wgt.csv")
-        elif path.suffix == ".xml" and _COMMA_SEPARATOR.search(path.read_text(encoding="utf-8")):
-            found.append(f'{name}: separator="," overrides the default pipe separator')
+    found = _data_standard_findings(_ROOT)
     assert not found, "\n".join(found)
+
+
+@pytest.mark.parametrize(
+    ("file", "content", "reason"),
+    [
+        ("s99/data/entity/x.ent.csv", "id\n1\n", None),
+        ("s99/data/fixtures/x.ent.csv", "id\n1\n", None),
+        ("s99/data/weighting/x.wgt.csv", "a|1\n", None),
+        ("s99/data/weighting/x.wgt.ent.csv", "id\n1\n", None),
+        ("s99/output/x.csv", "a,b\n", None),
+        ("README.md", "root file\n", None),
+        ("s99/x.ent.csv", "id\n1\n", _ENTITY),
+        ("s99/fixtures/x.ent.csv", "id\n1\n", _ENTITY),
+        ("s99/data/entity/x.wgt.csv", "a|1\n", _WEIGHTING),
+        ("s99/data/entity/x.wgt.ent.csv", "id\n1\n", _WEIGHTING),
+        ("s99/x.csv", "a,b\n", _NAME),
+        ("s99/data/output/x.csv", "a,b\n", _NAME),
+        ("s99/datamimic.xml", '<setup defaultSeparator=","/>', _SEPARATOR),
+        ("s99/datamimic.xml", "<setup><generate separator = ','/></setup>", _SEPARATOR),
+    ],
+)
+def test_data_standard_guard_names_the_one_broken_rule(
+    file: str, content: str, reason: str | None, tmp_path: Path
+) -> None:
+    (tmp_path / file).parent.mkdir(parents=True, exist_ok=True)
+    (tmp_path / file).write_text(content, encoding="utf-8")
+    assert _data_standard_findings(tmp_path) == ([] if reason is None else [f"{Path(file)}: {reason}"])
 
 
 @pytest.mark.parametrize("escape", ["absolute", "parent"])
