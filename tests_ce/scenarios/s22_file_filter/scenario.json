@@ -25,7 +25,7 @@
     {"name": "where_not_bool", "diagnostic": "child_execution", "issue": "I507",
      "patch": {"file": "datamimic.xml", "old": "where=\"int(amount_cents) &gt;= 1000\" columns=\"order_id, customer_id\"", "new": "where=\"amount_cents\" columns=\"order_id, customer_id\""}},
     {"name": "where_draws_random", "diagnostic": "child_execution", "issue": "I832",
-     "run_error": "where reads one row and must not draw random values",
+     "run_error": "where reads one row and must not read the clock or draw random values",
      "patch": {"file": "datamimic.xml", "old": "where=\"int(amount_cents) &gt;= 1000\" columns=\"order_id, customer_id\"", "new": "where=\"random.random() &lt; 2\" columns=\"order_id, customer_id\""}},
     {"name": "where_with_offset", "diagnostic": "DM218",
      "patch": {"file": "datamimic.xml", "old": "<iterate name=\"order_report\" source=\"data/fixtures/orders.ent.csv\"", "new": "<iterate name=\"order_report\" offset=\"1\" source=\"data/fixtures/orders.ent.csv\""}},

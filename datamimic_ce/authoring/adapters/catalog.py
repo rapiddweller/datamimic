@@ -351,7 +351,7 @@ class CeDslCatalog:
                             'where="<python bool>" keeps the rows for which it is true, before count, cyclic, '
                             "distribution and paging; without count the count is the number of kept rows, so Build "
                             "proves a product of up to max_count kept rows (default 10). where reads the row's "
-                            "columns as bare names or this.<column> and must not draw random values. "
+                            "columns as bare names or this.<column> and must not read the clock or draw random values. "
                             'columns="a, b" lists the source columns that go into the output, in that order; the '
                             "other columns stay readable by keys and scripts as row variables, and a key with the "
                             'name of an unlisted column writes it. columns="" copies none. Both apply to file '

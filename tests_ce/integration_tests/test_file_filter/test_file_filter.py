@@ -29,8 +29,8 @@ def _run(filename: str) -> dict[str, list[dict[str, object]]]:
     return engine.capture_result() or {}
 
 
-def _refusal(filename: str) -> UserErrorBase:
-    engine = DataMimicTest(_DIR, filename, capture_test_result=True)
+def _refusal(filename: str, directory: Path = _DIR) -> UserErrorBase:
+    engine = DataMimicTest(directory, filename, capture_test_result=True)
     with pytest.raises(UserErrorBase) as raised:
         engine.test_with_timer()
     return raised.value
@@ -77,8 +77,62 @@ def test_refused_row_selection_names_its_catalog_code(filename: str, code: Issue
     assert _refusal(filename).issue_code is code
 
 
+_ROW_RULE = "where reads one row and must not read the clock or draw random values"
+
+
 def test_unseeded_where_refuses_a_random_draw_with_the_row_rule() -> None:
-    assert "where reads one row and must not draw random values" in str(_refusal("refused_where_draws.xml"))
+    assert _ROW_RULE in str(_refusal("refused_where_draws.xml"))
+
+
+@pytest.mark.parametrize("setup", ['rngSeed="1"', ""], ids=["seeded", "unseeded"])
+@pytest.mark.parametrize(
+    "read",
+    [
+        "datetime.datetime.now()",
+        "datetime.datetime.utcnow()",
+        "datetime.datetime.today()",
+        "datetime.date.today()",
+        "pd.Timestamp.now()",
+        "pd.Timestamp.utcnow()",
+        "pd.Timestamp.today()",
+        "np.random.random()",
+        "os.urandom(1)",
+        "os.getrandom(1)",
+        "uuid.uuid1()",
+        "uuid.uuid4()",
+        "random.SystemRandom()",
+        "random.random()",
+        "fake.boolean()",
+    ],
+)
+def test_where_refuses_every_clock_read_and_draw_with_the_row_rule(tmp_path: Path, setup: str, read: str) -> None:
+    """A seeded run would see the fixed anchor and an unseeded run the wall clock: where must see neither."""
+    _project(tmp_path, f'<iterate name="rows" source="data/fixtures/orders.ent.csv" where="{read} is None"/>', setup)
+    error = _refusal("datamimic.xml", tmp_path)
+    assert error.issue_code is IssueCode.TASK_EXPRESSION_EVAL_FAILED
+    assert _ROW_RULE in str(error)
+
+
+@pytest.mark.parametrize("setup", ['rngSeed="1"', ""], ids=["seeded", "unseeded"])
+@pytest.mark.parametrize("read", ["time.time()", "time.monotonic()"])
+def test_where_has_no_time_module(tmp_path: Path, setup: str, read: str) -> None:
+    """Expressions know no time module, so where cannot reach that clock either."""
+    _project(tmp_path, f'<iterate name="rows" source="data/fixtures/orders.ent.csv" where="{read} &gt; 0"/>', setup)
+    assert _refusal("datamimic.xml", tmp_path).issue_code is IssueCode.TASK_EXPRESSION_EVAL_FAILED
+
+
+def test_where_keeps_date_arithmetic_without_the_clock(tmp_path: Path) -> None:
+    where = (
+        "datetime.date.fromisoformat('2026-03-02') - datetime.timedelta(days=1) &gt;= datetime.date(2026, 3, 1) "
+        "and datetime.datetime(2026, 1, 1).year == 2026 and int(amount) &gt;= 1000"
+    )
+    _project(
+        tmp_path,
+        f'<iterate name="rows" source="data/fixtures/orders.ent.csv" distribution="ordered" '
+        f'where="{where}" columns="id"/>',
+        "",
+    )
+    assert [row["id"] for row in _run_xml(tmp_path, "")] == _KEPT
 
 
 def test_unknown_column_message_names_the_statement_and_the_column() -> None:
@@ -129,11 +183,11 @@ def test_seeded_where_run_replays_identically_across_hash_seeds() -> None:
     assert len({row["id"] for row in rows}) == 15  # the random pool is the 20 kept rows, drawn without repeats
 
 
-def _project(tmp_path: Path, iterate: str) -> Path:
+def _project(tmp_path: Path, iterate: str, setup: str = 'rngSeed="1"') -> Path:
     shutil.copytree(_DIR / "data", tmp_path / "data")
     (tmp_path / "acceptance").mkdir()
     (tmp_path / "acceptance" / "build.json").write_text('{"version": "5.0", "expectations": []}', encoding="utf-8")
-    (tmp_path / "datamimic.xml").write_text(f'<setup rngSeed="1">{iterate}</setup>', encoding="utf-8")
+    (tmp_path / "datamimic.xml").write_text(f"<setup {setup}>{iterate}</setup>", encoding="utf-8")
     return tmp_path
 
 

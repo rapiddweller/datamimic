@@ -74,7 +74,7 @@ Descriptors without them do not change.
 
 | Attribute | Rule |
 |---|---|
-| `where="<python bool>"` | Keeps the rows for which it is true, in file order, before count, `cyclic`, distribution, paging and worker chunks. Without `count` the count is the number of kept rows. It reads one row: bare column names, `this` and the expression functions; no `parent.`, variables or setup names. Every random draw is refused (`I832`, "where reads one row and must not draw random values"), also in an unseeded run; `random.Random(<seed>)` stays allowed. A result that is not a bool fails with `I507`. |
+| `where="<python bool>"` | Keeps the rows for which it is true, in file order, before count, `cyclic`, distribution, paging and worker chunks. Without `count` the count is the number of kept rows. It reads one row: bare column names, `this` and the expression functions; no `parent.`, variables or setup names. Every clock read and every random draw is refused (`I832`, "where reads one row and must not read the clock or draw random values"), also in an unseeded run; `random.Random(<seed>)` stays allowed. A result that is not a bool fails with `I507`. |
 | `columns="a, b"` | The source columns that go into the output, in this order. The other columns stay readable as row variables (bare name, `this.<column>`, `parent.<column>` in a child). A key with the name of an unlisted column writes it. `columns=""` copies none. A blank entry or a repeated name is refused by the model. |
 
 | Code | Name | When |

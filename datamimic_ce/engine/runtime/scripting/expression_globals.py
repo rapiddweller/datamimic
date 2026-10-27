@@ -17,6 +17,7 @@ Under ``<setup rngSeed>`` no name reachable from a script expression may draw un
   iteration order of sets of strings across processes (``PYTHONHASHSEED``)
 
 Mirrors DATAMIMIC EE's per-request evaluation proxies (EE ADR-031). Unseeded runs keep the raw modules.
+A ``where=`` condition refuses every controlled and rejected name above, seeded or not (``row_expression_globals``).
 
 ``base64`` pairs a binary payload with its b64/hex form. ``__builtins__`` is an empty dict rather than
 None: it still blocks every builtin, but an unresolvable name raises a NameError carrying the
@@ -136,19 +137,18 @@ class _EvalProxy:
 
 
 class _Uncontrolled:
-    """An entropy source a seeded run must not reach: using it in any way raises."""
+    """An entropy source (or, in where=, a clock) an expression must not reach: using it in any way raises."""
 
-    def __init__(self, name: str) -> None:
+    def __init__(self, name: str, error: str | None = None) -> None:
         self._name = name
+        self._error = (
+            f"'{name}' draws entropy that <setup rngSeed> cannot replay; use random.* or a generator instead"
+            if error is None
+            else error
+        )
 
     def _refuse(self) -> ValueError:
-        return task_config_error(
-            code=IssueCode.TASK_EXPRESSION_EVAL_FAILED,
-            expr=self._name,
-            error=(
-                f"'{self._name}' draws entropy that <setup rngSeed> cannot replay; use random.* or a generator instead"
-            ),
-        )
+        return task_config_error(code=IssueCode.TASK_EXPRESSION_EVAL_FAILED, expr=self._name, error=self._error)
 
     def __getattr__(self, attr: str) -> object:
         raise self._refuse()
@@ -284,7 +284,7 @@ def expression_globals(
 
 
 _T = TypeVar("_T")
-ROW_DRAW_REFUSED = "where reads one row and must not draw random values"
+ROW_DRAW_REFUSED = "where reads one row and must not read the clock or draw random values"
 
 
 class _RefusedDraws:
@@ -327,14 +327,29 @@ class _RefusedDraws:
 
 
 def row_expression_globals() -> dict[str, object]:
-    """Globals for a where= condition: the seeded stand-ins over a random source that refuses every draw, in a
-    seeded and an unseeded run alike; the clock is the deterministic anchor."""
+    """Globals for a where= condition, in a seeded and an unseeded run alike: every random draw, entropy source and
+    clock read raises with the row rule. A seeded anchor and an unseeded wall clock would keep other rows than the
+    keys of the same run see."""
     refused = _RefusedDraws()
-
-    def no_faker() -> Faker:
-        refused._refuse()
-
-    return expression_globals(is_seeded=True, rng=refused, seeded_faker_supplier=no_faker)
+    no = _Uncontrolled("where", ROW_DRAW_REFUSED)
+    return {
+        **SAFE_GLOBALS,
+        "random": _EvalProxy(
+            refused, {"seed": _ignore_seed, "Random": functools.partial(_seeded_random, refused), "SystemRandom": no}
+        ),
+        "uuid": _EvalProxy(uuid, {"uuid1": no, "uuid4": no}),
+        "datetime": _EvalProxy(
+            datetime,
+            {
+                "datetime": _EvalProxy(datetime.datetime, {"now": no, "utcnow": no, "today": no}),
+                "date": _EvalProxy(datetime.date, {"today": no}),
+            },
+        ),
+        "pd": _EvalProxy(pd, {"Timestamp": _EvalProxy(pd.Timestamp, {"now": no, "utcnow": no, "today": no})}),
+        "np": _EvalProxy(np, {"random": no}),
+        "os": _EvalProxy(os, {"urandom": no, "getrandom": no}),
+        "fake": no,
+    }
 
 
 def rebind_seeded_script_names(

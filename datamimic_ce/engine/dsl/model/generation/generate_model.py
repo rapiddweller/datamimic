@@ -124,8 +124,9 @@ class GenerateModel(BaseModel):
         description="Python condition over one source row of a file source: the rows for which it is true are "
         "kept, the others are skipped before count, cyclic, distribution, paging and worker chunks. Without count "
         "the count is the number of kept rows. It reads the row's columns as bare names or this.<column>, and the "
-        "expression globals; it cannot read parent., variables or setup names, and it must not draw random "
-        "values. It must return a bool. Requires 'source'; not with 'offset', memstore, database or sourceScripted.",
+        "expression globals; it cannot read parent., variables or setup names, and it must not read the clock or "
+        "draw random values. It must return a bool. Requires 'source'; not with 'offset', memstore, database or "
+        "sourceScripted.",
         examples=["int(amount_cents) >= 1000", "status == 'open'"],
         pattern=r"\S",
     )

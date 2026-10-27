@@ -139,8 +139,8 @@ a file source:
 ```
 
 CSV columns arrive as strings: cast them in `where` and in scripts. `where` reads
-one row: its columns, `this`, and the expression functions. It must not draw random
-values, and it cannot read `parent.`, variables or setup names. `where` and `columns`
+one row: its columns, `this`, and the expression functions. It must not read the
+clock or draw random values, and it cannot read `parent.`, variables or setup names. `where` and `columns`
 apply to file sources only (CSV, `.ent.csv`, `.wgt.csv` with a header, JSON, XML,
 XLSX, fixed-width, DbUnit), not to a memstore, a database (use `selector=`) or
 `sourceScripted`. `where` does not combine with `offset`. Build counts the kept rows
