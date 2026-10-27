@@ -474,6 +474,7 @@ def wait_then_kill_group(process: subprocess.Popen[bytes], timeout: float) -> in
         # EPERM: macOS refuses the signal while the members of the group exit (#432)
         with contextlib.suppress(ProcessLookupError, PermissionError):
             os.killpg(process.pid, signal.SIGKILL)
+        process.kill()  # the leader at least, when killpg was refused; a no-op after a normal exit
         process.wait()
 
 

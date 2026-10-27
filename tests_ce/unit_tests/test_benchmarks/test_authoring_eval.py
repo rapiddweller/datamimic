@@ -6,6 +6,7 @@
 broken variant fails exactly the checks it should, and the audit flags forbidden actions."""
 
 import contextlib
+import errno
 import json
 import os
 import re
@@ -533,18 +534,16 @@ class Descendants:
     error: str | None  # the expected Capture.error
     dies: bool = True  # False: the process left the group (setsid), and no group kill can reach it
     rows: dict[str, list[dict[str, object]]] | None = None  # set when the script starts no process
+    refused_killpg: bool = False  # True: killpg fails with EPERM, as macOS does while the group exits (#432)
 
 
 _SYSTEM = f"{_OS}['system']"
+_EXEC_SLEEP = f"{_SYSTEM}('echo $PPID > {{pidfile}}') or {_OS}['execv']('/bin/sleep', ['sleep', '30'])"
 _SPAWN = f"{_OS}['posix_spawn']('/bin/sleep', ['sleep', '30'], dict()"
 _DESCENDANTS = [
     Descendants("finishes", "7", None, None, rows={"probe": [{"out": 7}]}),
-    Descendants(
-        "times_out_without_child",
-        f"{_SYSTEM}('echo $PPID > {{pidfile}}') or {_OS}['execv']('/bin/sleep', ['sleep', '30'])",
-        8,
-        "Timeout",
-    ),
+    Descendants("times_out_without_child", _EXEC_SLEEP, 8, "Timeout"),
+    Descendants("times_out_while_killpg_is_refused", _EXEC_SLEEP, 8, "Timeout", refused_killpg=True),
     # the Codex case: the child inherits stdout and outlives the killed capture interpreter
     Descendants(
         "times_out_with_child_on_stdout", f"{_SYSTEM}('sleep 30 & echo $! > {{pidfile}}; sleep 30')", 8, "Timeout"
@@ -562,6 +561,10 @@ _DESCENDANTS = [
 ]
 
 
+def _refuse_killpg(pgid: int, signum: int) -> None:
+    raise PermissionError(errno.EPERM, "Operation not permitted")
+
+
 @pytest.mark.parametrize("case", _DESCENDANTS, ids=lambda case: case.name)
 def test_a_capture_returns_promptly_and_ends_its_descendants(
     case: Descendants, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
@@ -569,6 +572,8 @@ def test_a_capture_returns_promptly_and_ends_its_descendants(
     """A descendant that holds stdout open must not delay the verdict, and the group kill must end it."""
     if case.timeout is not None:
         monkeypatch.setattr(oracle, "_RUN_TIMEOUT_SECONDS", case.timeout)
+    if case.refused_killpg:
+        monkeypatch.setattr(oracle.os, "killpg", _refuse_killpg)
     pidfile = tmp_path / "descendant.pid"
     project = tmp_path / "project"
     project.mkdir()
