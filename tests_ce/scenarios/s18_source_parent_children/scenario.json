@@ -14,7 +14,7 @@
     {"name": "child_count_range", "diagnostic": "child_execution", "expected": "10",
      "patch": {"file": "datamimic.xml", "old": "<generate name=\"tellers\" count=\"2\">", "new": "<generate name=\"tellers\" minCount=\"2\" maxCount=\"2\">"}},
     {"name": "child_own_source", "diagnostic": "child_execution", "expected": "10",
-     "patch": {"file": "datamimic.xml", "old": "<generate name=\"tellers\" count=\"2\">", "new": "<generate name=\"tellers\" source=\"fixtures/tellers.csv\" distribution=\"ordered\">"}},
+     "patch": {"file": "datamimic.xml", "old": "<generate name=\"tellers\" count=\"2\">", "new": "<generate name=\"tellers\" source=\"data/fixtures/tellers.ent.csv\" distribution=\"ordered\">"}},
     {"name": "above_ceiling", "diagnostic": "limit", "expected": "1000",
      "patch": {"file": "datamimic.xml", "old": "count=\"6\"", "new": "count=\"400\""}}
   ]
