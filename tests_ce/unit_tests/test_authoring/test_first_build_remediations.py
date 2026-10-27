@@ -266,3 +266,20 @@ def test_a_per_parent_count_with_parent_and_child_sides_names_the_subject(tmp_pa
 
     assert errors and all(str(item.remediation).startswith("Put both products inside subject") for item in errors)
     assert all("nested <generate>" in str(item.remediation) for item in errors)
+
+
+def test_a_per_parent_count_with_grouping_fields_says_that_the_nesting_groups(tmp_path: Path) -> None:
+    """haiku e02-1 named the products as sides and the grouping key in child_field and parent_field."""
+    count = {
+        "kind": "per_parent_count",
+        "parent": {"kind": "product", "product": "tickets"},
+        "child": {"kind": "product", "product": "tickets"},
+        "child_field": "ticket_id",
+        "parent_field": "ticket_id",
+        "count": 3,
+    }
+
+    errors = _raw_errors(tmp_path, _TICKETS, [count])
+
+    fields = [str(item.remediation) for item in errors if item.path[3:] in (("child_field",), ("parent_field",))]
+    assert len(fields) == 2 and all("grouped by that nesting" in text for text in fields), fields

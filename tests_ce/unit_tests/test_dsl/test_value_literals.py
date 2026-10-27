@@ -2,7 +2,7 @@
 # Copyright (c) 2023-2026 Rapiddweller Asia Co., Ltd.
 # This software is licensed under the MIT License. See LICENSE.
 
-"""values= reads Python literals; a list of plain names is read as strings (8 of 50 blind first Builds at
+"""values= reads Python literals; a list of plain names is read as strings (5 of 50 blind first Builds at
 89f304b9 wrote values="LOW,MEDIUM,HIGH"). Every other unquoted form stays an error. One parser serves Build and
 datamimic run; tests_ce/scenarios/s25_bare_value_list runs both."""
 
