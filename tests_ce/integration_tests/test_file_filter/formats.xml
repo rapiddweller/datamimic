@@ -1,0 +1,18 @@
+<setup>
+    <!-- One iterate per file format: the same five orders, the same condition, the same output column. -->
+    <iterate name="rows_ent" source="data/fixtures/orders.ent.csv" distribution="ordered"
+             where="int(amount) &gt;= 1000" columns="id" target="ConsoleExporter"/>
+    <!-- At <generate>, a .wgt.csv with a header is a plain table: weight is an ordinary column that where= reads. -->
+    <iterate name="rows_wgt" source="data/weighting/orders.wgt.csv" distribution="ordered"
+             where="int(amount) &gt;= 1000 and float(weight) &gt;= 2" columns="id" target="ConsoleExporter"/>
+    <iterate name="rows_json" source="data/fixtures/orders.json" distribution="ordered"
+             where="amount &gt;= 1000" columns="id" target="ConsoleExporter"/>
+    <iterate name="rows_xml" source="data/fixtures/orders.xml" distribution="ordered"
+             where="int(amount) &gt;= 1000" columns="id" target="ConsoleExporter"/>
+    <iterate name="rows_xlsx" source="data/fixtures/orders.xlsx" distribution="ordered"
+             where="int(amount) &gt;= 1000" columns="id" target="ConsoleExporter"/>
+    <iterate name="rows_fcw" source="data/fixtures/orders.fcw" distribution="ordered"
+             where="int(amount) &gt;= 1000" columns="id" target="ConsoleExporter"/>
+    <iterate name="rows_dbunit" source="data/fixtures/orders.dbunit.xml" sourceEntity="orders" distribution="ordered"
+             where="int(amount) &gt;= 1000" columns="id" target="ConsoleExporter"/>
+</setup>

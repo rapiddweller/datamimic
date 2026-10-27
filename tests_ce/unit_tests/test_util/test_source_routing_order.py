@@ -142,7 +142,7 @@ def test_length_cache_keeps_same_named_sources_separate() -> None:
     length_source_router.set_data_source_length(context, _variable_statement("first", full_name="consumer"))
     length_source_router.set_data_source_length(context, _variable_statement("second", full_name="consumer"))
 
-    assert root.data_source_len == {("consumer", "first"): 2, ("consumer", "second"): 5}
+    assert root.data_source_len == {("consumer", "first", None): 2, ("consumer", "second", None): 5}
     first.get_data_len_by_type.assert_called_once_with("rows")
     second.get_data_len_by_type.assert_called_once_with("rows")
 
@@ -156,7 +156,7 @@ def test_variable_selector_is_eager_but_iteration_selector_is_row_deferred(
         default_variable_prefix="{{",
         default_variable_suffix="}}",
         get_client_by_id=Mock(return_value=client),
-        data_source_len={("variable", None): 1},
+        data_source_len={("variable", None, None): 1},
         root=Mock(),
     )
     pagination = DataSourcePagination(skip=0, limit=1)
@@ -172,6 +172,8 @@ def test_variable_selector_is_eager_but_iteration_selector_is_row_deferred(
         iteration_selector=None,
         separator=None,
         variable_prefix=None,
+        where=None,
+        columns=None,
         variable_suffix=None,
         distribution=SourceDistribution.ORDERED,
         unique=False,
@@ -221,6 +223,8 @@ def test_invalid_variable_selector_rejects_before_interpolation_or_query(
         iteration_selector=None,
         separator=None,
         variable_prefix=None,
+        where=None,
+        columns=None,
         variable_suffix=None,
         distribution=SourceDistribution.ORDERED,
         unique=False,
@@ -330,6 +334,8 @@ def test_generate_csv_reads_one_chunk_then_templates_against_root(monkeypatch: p
     context = SimpleNamespace(root=root)
     statement = SimpleNamespace(
         variable_prefix=None,
+        where=None,
+        columns=None,
         variable_suffix=None,
         cyclic=False,
         offset=3,
@@ -548,6 +554,8 @@ def test_generate_json_template_failure_keeps_loaded_rows(monkeypatch: pytest.Mo
     context = SimpleNamespace(root=root)
     statement = SimpleNamespace(
         variable_prefix=None,
+        where=None,
+        columns=None,
         variable_suffix=None,
         full_name="products",
         name="products",
@@ -586,6 +594,8 @@ def test_generate_xml_template_evaluates_against_context(monkeypatch: pytest.Mon
     context = SimpleNamespace(root=root)
     statement = SimpleNamespace(
         variable_prefix=None,
+        where=None,
+        columns=None,
         variable_suffix=None,
         full_name="products",
         name="products",
@@ -677,6 +687,8 @@ def test_nested_key_templates_before_distribution_seed_and_selection(monkeypatch
     statement = SimpleNamespace(
         source_script=True,
         variable_prefix=None,
+        where=None,
+        columns=None,
         variable_suffix=None,
         name="items",
         cyclic=False,
@@ -749,6 +761,7 @@ def test_chunk_ordered_source_reads_each_page_without_stable_seed(monkeypatch: p
         full_name="products",
         name="products",
         cyclic=False,
+        where=None,
     )
     load = Mock(side_effect=[([{"id": 0}], True), ([{"id": 1}], True)])
     monkeypatch.setattr(chunk_source_reader, "load_generate_source", load)
@@ -758,6 +771,37 @@ def test_chunk_ordered_source_reads_each_page_without_stable_seed(monkeypatch: p
     assert reader.read_page(1, 2) == ([{"id": 1}], True)
 
     assert [call.args[5:7] for call in load.call_args_list] == [(0, 1), (1, 2)]
+    root.stable_distribution_seed.assert_not_called()
+
+
+@pytest.mark.parametrize("cyclic", [False, True])
+def test_chunk_ordered_where_source_filters_once_and_pages_in_file_order(
+    monkeypatch: pytest.MonkeyPatch, cyclic: bool
+) -> None:
+    """A where= read loads the kept rows once per chunk (not once per page), keeps file order and draws no seed."""
+    root = SimpleNamespace(default_source_scripted=False, default_separator="|", stable_distribution_seed=Mock())
+    statement = SimpleNamespace(
+        source="rows.ent.csv",
+        source_script=None,
+        separator=None,
+        distribution=SourceDistribution.ORDERED,
+        unique=False,
+        full_name="products",
+        name="products",
+        cyclic=cyclic,
+        where="True",
+    )
+    load = Mock(return_value=([{"id": 0}, {"id": 1}, {"id": 2}], True))
+    monkeypatch.setattr(chunk_source_reader, "load_generate_source", load)
+
+    reader = ChunkSourceReader(SimpleNamespace(root=root), statement, chunk_start=1, chunk_end=5 if cyclic else 3)
+    pages = [reader.read_page(1, 2)[0], reader.read_page(2, 3)[0]]
+    if cyclic:
+        pages.append(reader.read_page(3, 5)[0])
+
+    assert pages == ([[{"id": 1}], [{"id": 2}], [{"id": 0}, {"id": 1}]] if cyclic else [[{"id": 1}], [{"id": 2}]])
+    assert load.call_count == 1
+    assert load.call_args.args[5:8] == (None, None, None)
     root.stable_distribution_seed.assert_not_called()
 
 
@@ -901,6 +945,8 @@ def test_generate_prefers_memstore_while_variable_prefers_client_for_same_source
     generate_context = SimpleNamespace(root=root)
     generate = SimpleNamespace(
         variable_prefix=None,
+        where=None,
+        columns=None,
         variable_suffix=None,
         cyclic=False,
         offset=0,
@@ -1025,6 +1071,8 @@ def _generate_source_statement(**overrides: object) -> SimpleNamespace:
         "variable_suffix": None,
         "cyclic": False,
         "offset": 0,
+        "where": None,
+        "columns": None,
         "full_name": "products",
         "name": "products",
         "source_entity": None,

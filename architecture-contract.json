@@ -965,7 +965,8 @@
         "docs/architecture/refactoring-study/experiment-2/amendment-182-demographic-map-contracts.md",
         "docs/architecture/refactoring-study/experiment-2/amendment-186-runtime-properties-policy.md",
         "docs/architecture/refactoring-study/experiment-2/amendment-187-properties-source-contract.md",
-        "docs/architecture/refactoring-study/experiment-2/amendment-213-native-open-payloads.md"
+        "docs/architecture/refactoring-study/experiment-2/amendment-213-native-open-payloads.md",
+        "docs/architecture/refactoring-study/experiment-2/amendment-447-where-length-key.md"
       ],
       "decided_by": "agent",
       "allowed_positions": [
@@ -1221,13 +1222,13 @@
           "qualified_name": "datamimic_ce.engine.runtime.api.SetupContext.__init__",
           "position": "data_source_len",
           "field_path": "",
-          "annotation": "dict[tuple[str | None, str | None], int] | None"
+          "annotation": "dict[tuple[str | None, str | None, str | None], int] | None"
         },
         {
           "qualified_name": "datamimic_ce.engine.runtime.api.SetupContext.data_source_len",
           "position": "return",
           "field_path": "",
-          "annotation": "dict[tuple[str | None, str | None], int]"
+          "annotation": "dict[tuple[str | None, str | None, str | None], int]"
         },
         {
           "qualified_name": "datamimic_ce.engine.runtime.api.SetupContext.__init__",

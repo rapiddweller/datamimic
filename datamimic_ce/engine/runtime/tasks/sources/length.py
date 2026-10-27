@@ -3,6 +3,10 @@
 from collections.abc import Sized
 
 from datamimic_ce.engine.dsl.api import (
+    ATTR_COLUMNS,
+    ATTR_SOURCE,
+    ATTR_SOURCE_SCRIPTED,
+    ATTR_WHERE,
     EL_GENERATE,
     EL_NESTED_KEY,
     EL_VARIABLE,
@@ -24,18 +28,46 @@ from datamimic_ce.engine.io.api import (
 from datamimic_ce.engine.runtime.contexts.context import SetupContext
 from datamimic_ce.engine.runtime.contexts.geniter_context import GenIterContext
 from datamimic_ce.engine.runtime.logging import logger
+from datamimic_ce.engine.runtime.scripting.evaluation import WhereCondition
 from datamimic_ce.errors import DescriptorLocation, IssueCode, invalid_source_error
 
 
-def data_source_cache_key(stmt: Statement) -> tuple[str | None, str | None]:
+def data_source_cache_key(stmt: Statement) -> tuple[str | None, str | None, str | None]:
     """Cache key for a statement's data-source length. Statements may SHARE a name (e.g. three
     <iterate name='db_product'> feeding one table from different sources), so the key must
-    include the source - keyed by name alone, the second statement inherits the first one's
-    length and silently truncates its rows. A tuple key on real statement types, no string
-    concatenation, no duck-typing."""
-    if isinstance(stmt, GenerateStatement | VariableStatement | NestedKeyStatement):
-        return (stmt.full_name, stmt.source)
-    return (stmt.full_name, None)
+    include the source and the where= condition - keyed without them, the second statement inherits
+    the first one's length and silently truncates its rows. A tuple key on real statement types, no
+    string concatenation, no duck-typing."""
+    if isinstance(stmt, GenerateStatement):
+        return (stmt.full_name, stmt.source, stmt.where)
+    if isinstance(stmt, VariableStatement | NestedKeyStatement):
+        return (stmt.full_name, stmt.source, None)
+    return (stmt.full_name, None, None)
+
+
+def refuse_row_selection(
+    stmt: GenerateStatement, source: str, *, memstore: bool, client: bool, default_scripted: bool
+) -> None:
+    """where= and columns= select file rows only. The length pass reads every source first, so the refusal comes
+    before any count, row condition or page."""
+    attribute = ATTR_WHERE if stmt.where is not None else ATTR_COLUMNS if stmt.columns is not None else None
+    if attribute is None:
+        return
+    if memstore or client:
+        raise invalid_source_error(
+            code=IssueCode.GENERATE_ROW_SELECTION_FILE_ONLY,
+            stmt_name=stmt.full_name,
+            attribute=attribute,
+            source_kind="memstore" if memstore else "database client",
+            source_str=source,
+            location=DescriptorLocation(EL_GENERATE, attribute=ATTR_SOURCE),
+        )
+    if stmt.source_script if stmt.source_script is not None else default_scripted:
+        raise invalid_source_error(
+            code=IssueCode.GENERATE_ROW_SELECTION_SOURCE_SCRIPTED,
+            stmt_name=stmt.full_name,
+            location=DescriptorLocation(EL_GENERATE, attribute=ATTR_SOURCE_SCRIPTED),
+        )
 
 
 def set_data_source_length(ctx: SetupContext | GenIterContext, stmt: Statement) -> None:
@@ -52,7 +84,7 @@ def set_data_source_length(ctx: SetupContext | GenIterContext, stmt: Statement) 
         return
 
     root_ctx = ctx.root
-    source_id: tuple[str | None, str | None] = data_source_cache_key(stmt)
+    source_id = data_source_cache_key(stmt)
     # Check if data source length is already set
     if root_ctx.data_source_len.get(source_id, None) is not None:
         return
@@ -116,6 +148,14 @@ def set_data_source_length(ctx: SetupContext | GenIterContext, stmt: Statement) 
                     attribute=blank,
                     location=DescriptorLocation(source_element, attribute=blank),
                 )
+        if isinstance(stmt, GenerateStatement):
+            refuse_row_selection(
+                stmt,
+                source_str,
+                memstore=memstore is not None,
+                client=client is not None,
+                default_scripted=bool(root_ctx.default_source_scripted),
+            )
         selector = (
             stmt.selector
             if client is not None and isinstance(stmt, GenerateStatement | VariableStatement)
@@ -127,7 +167,7 @@ def set_data_source_length(ctx: SetupContext | GenIterContext, stmt: Statement) 
         ds_len = count_source(
             CountSourceRequest(
                 source=source_str,
-                source_id=source_id,
+                source_id=(stmt.full_name, stmt.source),
                 descriptor_dir=root_ctx.descriptor_dir,
                 element=source_element,
                 source_type=stmt.type,
@@ -145,6 +185,12 @@ def set_data_source_length(ctx: SetupContext | GenIterContext, stmt: Statement) 
                 ),
                 selector=selector,
                 iteration_selector=iteration_selector,
+                where=(
+                    WhereCondition(stmt.where, stmt.full_name)
+                    if isinstance(stmt, GenerateStatement) and stmt.where is not None
+                    else None
+                ),
+                columns=stmt.columns if isinstance(stmt, GenerateStatement) else None,
             ),
             memstore,
             client,

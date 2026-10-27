@@ -1,0 +1,7 @@
+<setup rngSeed="7">
+    <iterate name="rows" source="data/fixtures/many.ent.csv" where="int(amount) % 2 == 0 and random.Random(5).random() &lt; 2"
+             columns="id" count="15" target="ConsoleExporter">
+        <key name="draw" script="random.randint(1, 1000)"/>
+        <key name="tag" script="sorted({'b', 'a', 'c'})[0] + str(amount)"/>
+    </iterate>
+</setup>

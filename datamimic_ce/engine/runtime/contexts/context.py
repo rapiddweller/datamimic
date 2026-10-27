@@ -229,7 +229,7 @@ class SetupContext(Context):
         default_variable_suffix: str,
         default_line_separator: str | None,
         clients: dict[str, RegisteredClient] | None = None,
-        data_source_len: dict[tuple[str | None, str | None], int] | None = None,
+        data_source_len: dict[tuple[str | None, str | None, str | None], int] | None = None,
         properties: dict[str, str] | dict[str, object] | None = None,
         namespace: dict[str, object] | None = None,
         global_variables: dict[str, object] | None = None,
@@ -253,7 +253,7 @@ class SetupContext(Context):
         self._descriptor_client_bindings: dict[str, int] = {}
         self._descriptor_client_history: list[tuple[weakref.ReferenceType[RegisteredClient], ClientConfig]] = []
         self._owned_descriptor_clients: list[RegisteredClient] = []
-        self._data_source_len: dict[tuple[str | None, str | None], int] = (
+        self._data_source_len: dict[tuple[str | None, str | None, str | None], int] = (
             {} if data_source_len is None else data_source_len
         )
         # Per-statement distribution seed, computed once and reused across a statement's pages so
@@ -549,7 +549,7 @@ class SetupContext(Context):
         }
 
     @property
-    def data_source_len(self) -> dict[tuple[str | None, str | None], int]:
+    def data_source_len(self) -> dict[tuple[str | None, str | None, str | None], int]:
         return self._data_source_len
 
     @property

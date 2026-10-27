@@ -1,0 +1,7 @@
+[
+  {"id": "1", "amount": 999, "status": "open"},
+  {"id": "2", "amount": 1000, "status": "open"},
+  {"id": "3", "amount": 1001, "status": "closed", "note": "only this row has a note"},
+  {"id": "4", "amount": 150, "status": "open"},
+  {"id": "5", "amount": 2500, "status": "closed"}
+]

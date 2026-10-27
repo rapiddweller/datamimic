@@ -99,8 +99,8 @@ AUTHORING_RULE_CATALOG: tuple[RuleCatalogEntry, ...] = (
         owner=RuleOwner.EXPECTATION,
         remediation=(
             "Remove the forbidden field from the product model. If the product reads a file with source=, that "
-            "copies every column; read the file through a <variable> with a count instead "
-            "(datamimic authoring reference --topic learning --name file_sources)."
+            "copies every column: list the output columns with columns=, or read the file through a <variable> "
+            "with a count (datamimic authoring reference --topic learning --name file_sources)."
         ),
     ),
     RuleCatalogEntry(

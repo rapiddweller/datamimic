@@ -24,6 +24,7 @@ from datamimic_ce.engine.dsl.model.constraints import (
     rule_registry_revision,
     serialize_constraints,
 )
+from datamimic_ce.engine.dsl.model.generation.generate_model import GenerateModel
 from datamimic_ce.engine.dsl.model.generation.timeseries import (
     TimeSeriesConfig,
     TimeSeriesConfigError,
@@ -89,15 +90,18 @@ from datamimic_ce.engine.dsl.statements.values.structured.list_statement import 
 from datamimic_ce.engine.dsl.statements.values.structured.nested_key_statement import NestedKeyStatement
 from datamimic_ce.engine.dsl.statements.values.variables.variable_statement import VariableStatement
 from datamimic_ce.engine.dsl.vocabulary.constants.attribute_constants import (
+    ATTR_COLUMNS,
     ATTR_CONSTANT,
     ATTR_DISTRIBUTION,
     ATTR_ENTITY,
     ATTR_GENERATOR,
     ATTR_SCRIPT,
     ATTR_SOURCE,
+    ATTR_SOURCE_SCRIPTED,
     ATTR_TYPE,
     ATTR_UNIQUE,
     ATTR_VALUES,
+    ATTR_WHERE,
     META_SELECTOR,
     META_TARGET_ENTITY,
     META_TYPE,
@@ -171,22 +175,29 @@ from datamimic_ce.engine.dsl.vocabulary.source_capabilities import (
 )
 from datamimic_ce.engine.dsl.vocabulary.value_literals import parse_literal_values
 
+# The columns= text rule, for analysis that holds DM JSON instead of a statement.
+column_names = GenerateModel.column_names
+
 __all__ = [
     "ResourceReader",
     "read_resource_bytes",
     "resource_reader_active",
     "resource_reader_scope",
     "capture_product_name",
+    "column_names",
     "parse_literal_values",
+    "ATTR_COLUMNS",
     "ATTR_CONSTANT",
     "ATTR_DISTRIBUTION",
     "ATTR_ENTITY",
     "ATTR_GENERATOR",
     "ATTR_SCRIPT",
     "ATTR_SOURCE",
+    "ATTR_SOURCE_SCRIPTED",
     "ATTR_TYPE",
     "ATTR_UNIQUE",
     "ATTR_VALUES",
+    "ATTR_WHERE",
     "AllOrNone",
     "AllowedValuesWhen",
     "ArrayStatement",

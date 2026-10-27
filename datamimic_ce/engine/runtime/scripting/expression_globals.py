@@ -17,6 +17,7 @@ Under ``<setup rngSeed>`` no name reachable from a script expression may draw un
   iteration order of sets of strings across processes (``PYTHONHASHSEED``)
 
 Mirrors DATAMIMIC EE's per-request evaluation proxies (EE ADR-031). Unseeded runs keep the raw modules.
+A ``where=`` condition refuses every controlled and rejected name above, seeded or not (``row_expression_globals``).
 
 ``base64`` pairs a binary payload with its b64/hex form. ``__builtins__`` is an empty dict rather than
 None: it still blocks every builtin, but an unresolvable name raises a NameError carrying the
@@ -41,12 +42,12 @@ import re
 import statistics
 import sys
 import uuid
-from collections.abc import Callable, Container, Iterable
+from collections.abc import Callable, Container, Iterable, MutableSequence, Sequence
 from dataclasses import dataclass
 from enum import StrEnum
 from random import Random
 from types import ModuleType
-from typing import NamedTuple
+from typing import NamedTuple, NoReturn, TypeVar
 
 import numpy as np
 import pandas as pd
@@ -136,19 +137,18 @@ class _EvalProxy:
 
 
 class _Uncontrolled:
-    """An entropy source a seeded run must not reach: using it in any way raises."""
+    """An entropy source (or, in where=, a clock) an expression must not reach: using it in any way raises."""
 
-    def __init__(self, name: str) -> None:
+    def __init__(self, name: str, error: str | None = None) -> None:
         self._name = name
+        self._error = (
+            f"'{name}' draws entropy that <setup rngSeed> cannot replay; use random.* or a generator instead"
+            if error is None
+            else error
+        )
 
     def _refuse(self) -> ValueError:
-        return task_config_error(
-            code=IssueCode.TASK_EXPRESSION_EVAL_FAILED,
-            expr=self._name,
-            error=(
-                f"'{self._name}' draws entropy that <setup rngSeed> cannot replay; use random.* or a generator instead"
-            ),
-        )
+        return task_config_error(code=IssueCode.TASK_EXPRESSION_EVAL_FAILED, expr=self._name, error=self._error)
 
     def __getattr__(self, attr: str) -> object:
         raise self._refuse()
@@ -280,6 +280,75 @@ def expression_globals(
         "np": seeded.np,
         "os": seeded.os,
         "fake": seeded.fake,
+    }
+
+
+_T = TypeVar("_T")
+ROW_DRAW_REFUSED = "where reads one row and must not read the clock or draw random values"
+
+
+class _RefusedDraws:
+    """The random source of a row condition: every draw raises, so the length pass and every worker keep the same
+    rows. Keyed streams (random.Random(5)) stay deterministic and allowed."""
+
+    def _refuse(self) -> NoReturn:
+        raise task_config_error(code=IssueCode.TASK_EXPRESSION_EVAL_FAILED, expr="where", error=ROW_DRAW_REFUSED)
+
+    def randint(self, a: int, b: int) -> int:
+        self._refuse()
+
+    def random(self) -> float:
+        self._refuse()
+
+    def uniform(self, a: float, b: float) -> float:
+        self._refuse()
+
+    def randbytes(self, n: int) -> bytes:
+        self._refuse()
+
+    def getrandbits(self, k: int) -> int:
+        self._refuse()
+
+    def choice(self, seq: Sequence[_T]) -> _T:
+        self._refuse()
+
+    def choices(
+        self,
+        population: Sequence[_T],
+        weights: Sequence[float] | None = None,
+        *,
+        cum_weights: Sequence[float] | None = None,
+        k: int = 1,
+    ) -> list[_T]:
+        self._refuse()
+
+    def shuffle(self, x: MutableSequence[_T]) -> None:
+        self._refuse()
+
+
+def row_expression_globals() -> dict[str, object]:
+    """Globals for a where= condition, in a seeded and an unseeded run alike: every random draw, entropy source and
+    clock read raises with the row rule. A seeded anchor and an unseeded wall clock would keep other rows than the
+    keys of the same run see."""
+    refused = _RefusedDraws()
+    no = _Uncontrolled("where", ROW_DRAW_REFUSED)
+    return {
+        **SAFE_GLOBALS,
+        "random": _EvalProxy(
+            refused, {"seed": _ignore_seed, "Random": functools.partial(_seeded_random, refused), "SystemRandom": no}
+        ),
+        "uuid": _EvalProxy(uuid, {"uuid1": no, "uuid4": no}),
+        "datetime": _EvalProxy(
+            datetime,
+            {
+                "datetime": _EvalProxy(datetime.datetime, {"now": no, "utcnow": no, "today": no}),
+                "date": _EvalProxy(datetime.date, {"today": no}),
+            },
+        ),
+        "pd": _EvalProxy(pd, {"Timestamp": _EvalProxy(pd.Timestamp, {"now": no, "utcnow": no, "today": no})}),
+        "np": _EvalProxy(np, {"random": no}),
+        "os": _EvalProxy(os, {"urandom": no, "getrandom": no}),
+        "fake": no,
     }
 
 

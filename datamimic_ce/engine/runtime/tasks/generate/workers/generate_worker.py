@@ -377,7 +377,13 @@ class GenerateWorker:
             if isinstance(budget, TotalRowBudget):
                 budget.reserve()
             if build_from_source:
-                ctx.current_product = copy.deepcopy(source_data[idx])
+                row = copy.deepcopy(source_data[idx])
+                if stmt.columns is None:
+                    ctx.current_product = row
+                else:
+                    # Unlisted columns stay readable as row variables but are not emitted (#447).
+                    ctx.current_product = {name: row[name] for name in stmt.columns if name in row}
+                    ctx.current_variables.update({name: row[name] for name in row if name not in ctx.current_product})
 
             try:
                 # Start executing sub-tasks

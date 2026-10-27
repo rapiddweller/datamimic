@@ -167,6 +167,8 @@ def test_runtime_generate_routes_memstore_reads_through_io_facade(monkeypatch: p
         variable_suffix=None,
         cyclic=True,
         offset=0,
+        where=None,
+        columns=None,
         full_name="products",
         name="products",
         source_entity="rows",

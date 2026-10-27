@@ -1,0 +1,7 @@
+<setup>
+    <generate name="parent_rows" count="1" target="ConsoleExporter">
+        <key name="limit" constant="1000"/>
+        <generate name="rows" source="data/fixtures/orders.ent.csv" where="int(amount) &gt;= parent.limit"
+                  target="ConsoleExporter"/>
+    </generate>
+</setup>

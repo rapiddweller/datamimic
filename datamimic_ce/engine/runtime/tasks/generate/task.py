@@ -7,7 +7,7 @@
 import math
 from typing import Protocol
 
-from datamimic_ce.engine.dsl.api import CompositeStatement, GenerateStatement, KeyStatement, Statement
+from datamimic_ce.engine.dsl.api import ATTR_WHERE, CompositeStatement, GenerateStatement, KeyStatement, Statement
 from datamimic_ce.engine.dsl.vocabulary.constants.attribute_constants import ATTR_COUNT
 from datamimic_ce.engine.dsl.vocabulary.constants.element_constants import EL_GENERATE
 from datamimic_ce.engine.io.api import (
@@ -78,6 +78,7 @@ class GenerateTask(CommonSubTask):
         )
 
         # Set length of data source if count is not defined explicitly in statement
+        kept_rows = False
         if count is None:
             # Check if "selector" is defined with "source"
             if self.statement.selector:
@@ -93,13 +94,14 @@ class GenerateTask(CommonSubTask):
                     raise task_config_error(code=IssueCode.TASK_COUNT_SELECTOR_UNSUPPORTED_CLIENT)
             else:
                 count = root_context.data_source_len[data_source_cache_key(self.statement)]
+                kept_rows = self.statement.where is not None
 
         # Check if there is a special consumer (e.g., mongodb_upsert)
         if count == 0 and has_mongodb_upsert_target(self.statement.targets, root_context.clients):
             # Upsert one collection when no record found by query
             count = 1
 
-        count = self._bounded(count)
+        count = self._bounded(count, kept_rows=kept_rows)
         if count is None:
             raise ValueError("resolved generate count is missing")
 
@@ -107,16 +109,24 @@ class GenerateTask(CommonSubTask):
 
         return count
 
-    def _bounded(self, count: int | None) -> int | None:
-        """Refuse a runtime count above the bounded Authoring limit instead of truncating it."""
+    def _bounded(self, count: int | None, *, kept_rows: bool = False) -> int | None:
+        """Refuse a runtime count above the bounded Authoring limit instead of truncating it. A count of the rows
+        that where= kept is a row count, not a descriptor value, so the error carries it for Build. An accepted count
+        is added to the statement: a source or generator that ends early stops the rows without an error, so Build
+        compares its capture with this total."""
         limit = self._statement.bounded_count_limit
         if count is not None and limit is not None and count > limit:
-            raise task_config_error(
+            error = task_config_error(
                 code=IssueCode.TASK_COUNT_ABOVE_BOUNDED_LIMIT,
                 count=count,
                 limit=limit,
-                location=DescriptorLocation(EL_GENERATE, attribute=ATTR_COUNT),
+                location=DescriptorLocation(EL_GENERATE, attribute=ATTR_WHERE if kept_rows else ATTR_COUNT),
             )
+            if kept_rows:
+                error.kept_rows = count
+            raise error
+        if count is not None and limit is not None:
+            self._statement.bounded_rows += count
         return count
 
     def _warn_count_above_source(self, context: SetupContext | GenIterContext, count: int) -> None:
@@ -138,7 +148,8 @@ class GenerateTask(CommonSubTask):
         ds_len = context.root.data_source_len.get(data_source_cache_key(stmt))
         if ds_len is not None and count > ds_len:
             logger.warning(
-                f"<generate> '{stmt.name}': count={count} exceeds the {ds_len} rows available from "
+                f"<generate> '{stmt.name}': count={count} exceeds the {ds_len} rows "
+                f"{'available' if stmt.where is None else 'kept by where='} from "
                 f"source '{stmt.source}' and cyclic is off — only {ds_len} rows will be generated. "
                 f'Set cyclic="True" to wrap the source, or drop count=.'
             )

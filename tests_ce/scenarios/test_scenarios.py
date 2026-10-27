@@ -37,6 +37,8 @@ class Negative(BaseModel):
     patch: Patch
     diagnostic: StrictStr
     expected: StrictStr | None = None
+    # The catalog issue code of a runtime refusal, which Build reports as the diagnostic's ce_error.
+    issue: StrictStr | None = None
     # A normal run of the variant must also stop, with an error that contains this text.
     run_error: StrictStr | None = None
 
@@ -113,6 +115,13 @@ def test_negative_is_rejected_with_named_diagnostic(
     if negative.expected is not None:  # one code covers many rules; the expectation text names the rule
         named = [str(item.expected) for item in rejected.diagnostics if str(item.code) == negative.diagnostic]
         assert negative.expected in named, f"expected {negative.expected!r}, Build reported {named}"
+    if negative.issue is not None:
+        issues = [
+            str(item.ce_error.issue_code)
+            for item in rejected.diagnostics
+            if str(item.code) == negative.diagnostic and item.ce_error is not None
+        ]
+        assert negative.issue in issues, f"expected issue {negative.issue}, Build reported {issues}"
     if negative.run_error is not None:
         monkeypatch.chdir(project)
         with pytest.raises(TaskConfigError, match=re.escape(negative.run_error)):

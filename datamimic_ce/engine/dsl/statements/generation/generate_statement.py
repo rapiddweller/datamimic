@@ -26,6 +26,8 @@ class GenerateStatement(CompositeStatement):
         self._source = model.source
         self._cyclic = model.cyclic
         self._offset = model.offset
+        self._where = model.where
+        self._columns = None if model.columns is None else GenerateModel.column_names(model.columns)
         self._unique = model.unique
         self._source_script = model.source_scripted
         self._type = model.type
@@ -50,6 +52,8 @@ class GenerateStatement(CompositeStatement):
         self._interval = model.interval
         # Set only by bounded Authoring execution: runtime counts above it are refused, never truncated.
         self._bounded_count_limit: int | None = None
+        # Rows the bounded run resolved for this statement, summed over its invocations (one per parent row).
+        self.bounded_rows = 0
 
     @property
     def name(self) -> str:
@@ -95,6 +99,16 @@ class GenerateStatement(CompositeStatement):
     def offset(self) -> int:
         """Rows to skip at the start of the source; 0 when not set."""
         return self._offset or 0
+
+    @property
+    def where(self) -> str | None:
+        """The row condition of a file source; None keeps every row."""
+        return self._where
+
+    @property
+    def columns(self) -> tuple[str, ...] | None:
+        """The source columns copied to the output, in order; None copies all of them."""
+        return self._columns
 
     @property
     def source_script(self) -> bool | None:

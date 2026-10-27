@@ -60,6 +60,40 @@ ISSUES: list[IssueDefinition] = [
         resolution="Start the file with a '# name[width],...' line; a column reads name[width] or name[width r pad].",
     ),
     IssueDefinition(
+        code=IssueCode.GENERATE_ROW_SELECTION_FILE_ONLY,
+        name="GENERATE_ROW_SELECTION_FILE_ONLY",
+        title="Row Selection Needs a File Source",
+        template=(
+            "<generate> '{stmt_name}': {attribute}= applies to file sources only, not {source_kind} '{source_str}'."
+        ),
+        cause="where= and columns= select the rows and columns of a file source; this source is not a file.",
+        resolution=(
+            "Read the rows from a file source, or remove the attribute. A database source filters with selector=."
+        ),
+    ),
+    IssueDefinition(
+        code=IssueCode.GENERATE_ROW_SELECTION_SOURCE_SCRIPTED,
+        name="GENERATE_ROW_SELECTION_SOURCE_SCRIPTED",
+        title="Row Selection With a Scripted Source",
+        template=(
+            "<generate> '{stmt_name}': where= and columns= read the file values; they do not combine with "
+            "sourceScripted."
+        ),
+        cause="A scripted source evaluates its values after the rows are selected, so the selection would read text.",
+        resolution=(
+            'Set sourceScripted="False" on the statement (also when <setup defaultSourceScripted> is on), or remove '
+            "where= and columns=."
+        ),
+    ),
+    IssueDefinition(
+        code=IssueCode.SOURCE_COLUMN_UNKNOWN,
+        name="SOURCE_COLUMN_UNKNOWN",
+        title="Source Column Unknown",
+        template="<generate> '{stmt_name}': columns= names '{column}', which no row of the source has.",
+        cause="A name in columns= is not a column of any row that the source file holds.",
+        resolution="Write a name from the header of the source.",
+    ),
+    IssueDefinition(
         code=IssueCode.SOURCE_JSON_ROOT_INVALID,
         name="SOURCE_JSON_ROOT_INVALID",
         title="Source JSON Root Invalid",

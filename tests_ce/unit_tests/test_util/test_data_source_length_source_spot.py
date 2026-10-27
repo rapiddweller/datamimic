@@ -50,6 +50,8 @@ def _statement(
     if isinstance(statement, GenerateStatement):
         statement._script = None
         statement._offset = None
+        statement._where = None
+        statement._columns = None
     return statement
 
 
@@ -85,7 +87,7 @@ def test_length_classification_uses_every_central_file_suffix(
     monkeypatch.setattr(FileUtil, "read_weight_csv", weighted)
 
     set_data_source_length(context, statement)
-    cache_key = ("consumer", f"rows{file_format.value}")
+    cache_key = ("consumer", f"rows{file_format.value}", None)
 
     if file_format is SourceFileFormat.WEIGHTED_CSV:
         assert root.data_source_len[cache_key] == 4
@@ -117,7 +119,7 @@ def test_nonfile_source_still_uses_memstore_classification(
 
     set_data_source_length(context, statement)
 
-    assert root.data_source_len[("consumer", "upstream_rows")] == 5
+    assert root.data_source_len[("consumer", "upstream_rows", None)] == 5
     root.memstore_manager.get_memstore.assert_called_once_with("upstream_rows")
     memstore.get_data_len_by_type.assert_called_once_with("rows")
     generic.assert_not_called()
@@ -133,20 +135,20 @@ def test_supported_file_length_never_inspects_memstore_or_client(monkeypatch: py
 
     set_data_source_length(context, statement)
 
-    assert root.data_source_len == {("consumer", "rows.csv"): 2}
+    assert root.data_source_len == {("consumer", "rows.csv", None): 2}
     reader.assert_called_once_with(Path("/descriptor/rows.csv"), "|", SourceFileFormat.CSV)
 
 
 def test_cached_source_length_skips_reader(monkeypatch: pytest.MonkeyPatch) -> None:
     context, root = _context()
     statement = _statement(VariableStatement, "rows.csv", "rows")
-    root.data_source_len[("consumer", "rows.csv")] = 7
+    root.data_source_len[("consumer", "rows.csv", None)] = 7
     reader = Mock()
 
     monkeypatch.setattr(io_source_router, "load_source_rows", reader)
     set_data_source_length(context, statement)
 
-    assert root.data_source_len == {("consumer", "rows.csv"): 7}
+    assert root.data_source_len == {("consumer", "rows.csv", None): 7}
     reader.assert_not_called()
 
 
@@ -162,7 +164,7 @@ def test_generate_offset_is_applied_before_source_length_cache(
 
     set_data_source_length(context, statement)
 
-    assert root.data_source_len[("consumer", "rows.csv")] == expected
+    assert root.data_source_len[("consumer", "rows.csv", None)] == expected
     reader.assert_called_once()
 
 

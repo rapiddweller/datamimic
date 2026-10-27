@@ -1,0 +1,6 @@
+<setup>
+    <iterate name="rows" source="data/fixtures/many.ent.csv" distribution="ordered" pageSize="3"
+             where="int(amount) % 3 == 0" columns="id" target="ConsoleExporter">
+        <key name="pid" script="os.getpid()"/>
+    </iterate>
+</setup>

@@ -1,0 +1,4 @@
+<setup>
+    <iterate name="rows" source="data/fixtures/orders.ent.csv" sourceScripted="True" where="int(amount) &gt; 1"
+             target="ConsoleExporter"/>
+</setup>

@@ -1,9 +1,13 @@
 """Scalar requests for IO-owned source operations."""
 
+from collections.abc import Callable, Mapping
 from dataclasses import dataclass
 from pathlib import Path
 
 from datamimic_ce.engine.dsl.vocabulary.source_capabilities import SourceFileFormat
+
+# A where= condition over one file-source row; the runtime builds it, so IO does not import the runtime.
+RowPredicate = Callable[[Mapping[str, object]], bool]
 
 
 @dataclass(frozen=True)
@@ -17,6 +21,8 @@ class GenerateFileSourceRequest:
     end_idx: int | None
     offset: int
     source_entity: str | None
+    where: RowPredicate | None = None
+    columns: tuple[str, ...] | None = None
 
 
 @dataclass(frozen=True)
@@ -38,6 +44,8 @@ class CountSourceRequest:
     default_separator: str
     selector: str | None
     iteration_selector: str | None
+    where: RowPredicate | None = None
+    columns: tuple[str, ...] | None = None
 
 
 @dataclass(frozen=True)
@@ -52,4 +60,10 @@ class VariableSourceRequest:
     cyclic: bool
 
 
-__all__ = ["CountSourceRequest", "GenerateFileSource", "GenerateFileSourceRequest", "VariableSourceRequest"]
+__all__ = [
+    "CountSourceRequest",
+    "GenerateFileSource",
+    "GenerateFileSourceRequest",
+    "RowPredicate",
+    "VariableSourceRequest",
+]

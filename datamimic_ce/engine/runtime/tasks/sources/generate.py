@@ -18,7 +18,11 @@ from datamimic_ce.engine.io.api import (
 from datamimic_ce.engine.runtime.contexts.context import SetupContext
 from datamimic_ce.engine.runtime.contexts.geniter_context import GenIterContext
 from datamimic_ce.engine.runtime.logging import logger
-from datamimic_ce.engine.runtime.scripting.evaluation import evaluate_source_template, interpolate_variables
+from datamimic_ce.engine.runtime.scripting.evaluation import (
+    WhereCondition,
+    evaluate_source_template,
+    interpolate_variables,
+)
 from datamimic_ce.errors import IssueCode, invalid_source_error
 
 
@@ -50,6 +54,8 @@ def load_generate_source(
                 end_idx,
                 stmt.offset,
                 resolve_source_entity(stmt.source_entity, stmt.type, stmt.name),
+                None if stmt.where is None else WhereCondition(stmt.where, stmt.full_name),
+                stmt.columns,
             )
         )
         if source is not None

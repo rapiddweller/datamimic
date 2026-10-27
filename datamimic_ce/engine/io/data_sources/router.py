@@ -2,7 +2,6 @@
 
 import logging
 from collections import Counter
-from collections.abc import Iterable
 from contextvars import ContextVar, Token
 from pathlib import Path
 from types import TracebackType
@@ -34,6 +33,7 @@ from datamimic_ce.engine.io.data_sources.boundary.models import (
     CountSourceRequest,
     GenerateFileSource,
     GenerateFileSourceRequest,
+    RowPredicate,
 )
 from datamimic_ce.engine.io.data_sources.selection import get_distributed_data, get_unique_data, select_rows
 from datamimic_ce.engine.io.files.readers import FileUtil, JsonValue, load_source_rows, weighted_csv_has_header
@@ -85,6 +85,23 @@ def record_source_access(source_type: str) -> None:
         counts[source_type] += 1
 
 
+def keep_rows(
+    rows: list[dict], where: RowPredicate | None, columns: tuple[str, ...] | None, stmt_name: str
+) -> list[dict]:
+    """Refuse a columns= name that no source row has, then keep the rows that where= accepts, in file order."""
+    if columns and rows:
+        present = {key for row in rows for key in row}
+        for column in columns:
+            if column not in present:
+                raise invalid_source_error(
+                    code=IssueCode.SOURCE_COLUMN_UNKNOWN,
+                    stmt_name=stmt_name,
+                    column=column,
+                    location=DescriptorLocation(EL_GENERATE, attribute="columns"),
+                )
+    return rows if where is None else list(filter(where, rows))
+
+
 def count_source(
     request: CountSourceRequest,
     memstore: MemstoreSource | None,
@@ -94,7 +111,8 @@ def count_source(
     source_format = source_file_format_for(request.element, request.source, request.source_type)
     if source_format is SourceFileFormat.DBUNIT_XML:
         entity = resolve_source_entity(request.source_entity, request.source_type, request.name)
-        return len(FileUtil.read_dbunit_to_dict_list(request.descriptor_dir / request.source, entity))
+        table = FileUtil.read_dbunit_to_dict_list(request.descriptor_dir / request.source, entity)
+        return len(keep_rows(table, request.where, request.columns, request.name))
     if source_format is SourceFileFormat.WEIGHTED_CSV:
         return len(
             FileUtil.read_weight_csv(
@@ -103,13 +121,12 @@ def count_source(
         )
     if source_format is not None:
         try:
-            return len(
-                load_source_rows(
-                    request.descriptor_dir / request.source,
-                    request.separator or request.default_separator,
-                    source_format,
-                )
+            rows = load_source_rows(
+                request.descriptor_dir / request.source,
+                request.separator or request.default_separator,
+                source_format,
             )
+            return len(keep_rows(rows, request.where, request.columns, request.name))
         except MissingSourceError as error:
             # The length pass runs before the read, so it must name the step too.
             error.location = DescriptorLocation(request.element, attribute="source")
@@ -189,7 +206,8 @@ def read_generate_file_source(request: GenerateFileSourceRequest) -> GenerateFil
     record_source_access(f"file_{file_format.name.lower()}")
     rows: list[dict]
     if file_format is SourceFileFormat.DBUNIT_XML:
-        rows = FileUtil.read_dbunit_to_dict_list(file_path, request.source_entity or request.name)[request.offset :]
+        rows = FileUtil.read_dbunit_to_dict_list(file_path, request.source_entity or request.name)
+        rows = keep_rows(rows, request.where, request.columns, request.name)[request.offset :]
     else:
         pagination = (
             DataSourcePagination(request.start_idx, request.end_idx - request.start_idx)
@@ -197,7 +215,7 @@ def read_generate_file_source(request: GenerateFileSourceRequest) -> GenerateFil
             else None
         )
         try:
-            loaded: Iterable[dict] = load_source_rows(
+            loaded: list[dict] = load_source_rows(
                 file_path, request.separator if file_format is SourceFileFormat.CSV else ",", file_format
             )
         except MissingSourceError as error:
@@ -205,7 +223,7 @@ def read_generate_file_source(request: GenerateFileSourceRequest) -> GenerateFil
             error.location = DescriptorLocation(EL_GENERATE, attribute="source")
             raise
         rows = select_rows(
-            loaded,
+            keep_rows(loaded, request.where, request.columns, request.name),
             pagination,
             False if request.cyclic is None else request.cyclic,
             request.offset,

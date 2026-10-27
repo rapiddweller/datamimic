@@ -103,6 +103,7 @@ class _UserErrorState(TypedDict):
     product_type: NotRequired[str | None]
     validation_errors: NotRequired[tuple[dict[str, object], ...]]
     constructor_reason: NotRequired[str | None]
+    kept_rows: NotRequired[int | None]
 
 
 class UserErrorBase(Exception):
@@ -133,6 +134,8 @@ class UserErrorBase(Exception):
             state["validation_errors"] = self.validation_errors
         if isinstance(self, GeneratorConfigError):
             state["constructor_reason"] = self.constructor_reason
+        if isinstance(self, TaskConfigError):
+            state["kept_rows"] = self.kept_rows
         return _restore_user_error, (type(self), str(self.args[0]), state, self.__cause__)
 
 
@@ -248,6 +251,8 @@ class TaskConfigError(UserValueError):
     """Typed user error for task/statement configuration failures."""
 
     error_code = ErrorCode.TASK_CONFIG
+    # The rows a where= condition kept, when that count is above the bounded limit (I800).
+    kept_rows: int | None = None
 
 
 class OperationError(UserRuntimeError):
@@ -281,6 +286,8 @@ def _restore_user_error(
         error.validation_errors = state.get("validation_errors", ())
     if isinstance(error, GeneratorConfigError):
         error.constructor_reason = state.get("constructor_reason")
+    if isinstance(error, TaskConfigError):
+        error.kept_rows = state.get("kept_rows")
     error.__cause__ = cause
     return error
 

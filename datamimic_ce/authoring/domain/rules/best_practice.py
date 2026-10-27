@@ -49,7 +49,7 @@ _SOURCE_READERS = (*_GENERATES, EL_VARIABLE, EL_NESTED_KEY, EL_REFERENCE)
 # not `.__dunder__` attribute access, which is legitimate Python.
 _INTERP_TOKEN = re.compile(r"(?<![\w.])__[A-Za-z]\w*__")
 # Attributes evaluated as Python expressions, where __var__ interpolation does NOT apply.
-_SCRIPT_ATTRS = ("script", "condition")
+_SCRIPT_ATTRS = ("script", "condition", "where")
 _CONDITIONAL_TAGS = (EL_CONDITION, EL_IF, EL_ELSE_IF, EL_ELSE)
 
 
