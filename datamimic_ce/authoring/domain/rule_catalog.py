@@ -209,7 +209,7 @@ _AUTHORING_RULE_DEFINITIONS: tuple[RuleDefinition, ...] = (
         "itself does not own uniqueness.",
         "Use values, source or generator as a supported pool; remove conflicting weights, cyclic or distribution. "
         'On <key>, type= alone is no pool: use values= or generator=, for example generator="StringGenerator" '
-        """unique="true", or derive the text from a unique key, script="'T-' + str(this.id)".""",
+        """unique="true", or derive the text from a unique key without unique=, script="'T-' + str(this.id)".""",
         "Central unique/source compatibility facts and ADR-042.",
         '<key name="x" generator="EANGenerator()" unique="true"/>',
         '<variable name="x" values="1,2" unique="true" cyclic="true"/>',

@@ -309,11 +309,17 @@ class InterpolationInScript(Rule):
                 token_match = _INTERP_TOKEN.search(value) if value else None
                 if token_match:
                     token = token_match.group()
+                    # Agents import modules that scripts already have; the text is static, so Build may show it.
+                    imports = token == "__import__"
                     yield ctx.diag(
                         type(self),
                         element,
                         evidence=f"{attr} contains interpolation token {token}",
-                        fix_context=f"Use {token.strip('_')}.field in {attr}=.",
+                        fix_context="Scripts have no __import__; the datetime module is there: "
+                        "datetime.date(2026, 1, 1)."
+                        if imports
+                        else f"Use {token.strip('_')}.field in {attr}=.",
+                        names_only=imports,
                     )
 
 

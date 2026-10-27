@@ -388,7 +388,9 @@ class CeDslCatalog:
                             'script="f"/>. A headerless .wgt.csv refuses distribution="ordered", unique="true" and '
                             "<generate source=...>; <key source=...> refuses an .ent.csv. A weighted entity file "
                             '*.wgt.ent.csv has a header and a weight column: <variable name="t" '
-                            'source="fixtures/tiers.wgt.ent.csv"/> draws one row by weight; read t.tier.'
+                            'source="fixtures/tiers.wgt.ent.csv"/> draws one row by weight; read t.tier. '
+                            'distribution="ordered" has no effect on a .wgt.ent.csv <variable>: the draws do not '
+                            "follow the file order."
                         ),
                     ),
                     AuthoringLearningReference(

@@ -60,7 +60,8 @@ def test_the_named_rule_comes_before_the_generic_parser_failure(tmp_path: Path) 
 def test_a_value_never_reaches_the_remediation(tmp_path: Path) -> None:
     result = _rejected(tmp_path, '<key name="price" generator="IntegerGenerator" min="12345" max="67890"/>')
 
-    assert not any("12345" in str(item.remediation) or "67890" in item.message for item in result.diagnostics)
+    texts = [text for item in result.diagnostics for text in (item.message, str(item.remediation))]
+    assert texts and not any("12345" in text or "67890" in text for text in texts)
 
 
 def test_an_unsupported_element_in_the_entry_is_named(tmp_path: Path) -> None:
@@ -109,7 +110,16 @@ def test_bounds_written_as_attributes_beside_a_generator_name_the_call_form(
 def test_a_bound_value_beside_a_generator_never_reaches_the_remediation(tmp_path: Path) -> None:
     result = _rejected(tmp_path, '<variable name="v" generator="IntegerGenerator" min="12345" max="67890"/>')
 
-    assert not any("12345" in str(item.remediation) or "67890" in item.message for item in result.diagnostics)
+    texts = [text for item in result.diagnostics for text in (item.message, str(item.remediation))]
+    assert texts and not any("12345" in text or "67890" in text for text in texts)
+
+
+def test_an_unknown_attribute_that_is_no_bound_keeps_the_valid_attribute_list(tmp_path: Path) -> None:
+    """Only a bound written as an attribute gets the call form; another unknown attribute keeps the list."""
+    result = _rejected(tmp_path, '<variable name="v" generator="IntegerGenerator" method="x"/>')
+    [remediation] = [str(item.remediation) for item in result.diagnostics if str(item.code) == "DM103"]
+
+    assert "Valid attributes:" in remediation and _CALL_FORM not in remediation
 
 
 @pytest.mark.parametrize("element", ["key", "variable"])

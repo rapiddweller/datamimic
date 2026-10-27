@@ -52,6 +52,31 @@ def test_an_unclosed_element_gets_the_same_well_formed_diagnostic(tmp_path: Path
     assert error.message == "Descriptor is not well-formed XML."
 
 
+def test_a_forbidden_dtd_keeps_the_parser_text_without_the_escape_hint(tmp_path: Path) -> None:
+    xml = (
+        '<?xml version="1.0"?><!DOCTYPE setup [<!ENTITY x "SECRETDTD">]><setup rngSeed="1">'
+        '<generate name="a" count="1"><key name="k" constant="&x;"/></generate></setup>'
+    )
+
+    [error] = _errors(tmp_path, xml)
+
+    assert error.message == "Descriptor failed parser validation."
+    assert "&lt;" not in str(error.remediation)
+    assert "SECRETDTD" not in error.model_dump_json()
+
+
+def test_a_less_than_sign_in_an_included_step_names_the_escape(tmp_path: Path) -> None:
+    (tmp_path / "step.xml").write_text(
+        '<setup><generate name="a" count="2"><key name="k" script="7349 if 1 < 2 else 0"/></generate></setup>',
+        encoding="utf-8",
+    )
+
+    [error] = _errors(tmp_path, '<setup rngSeed="1"><include uri="step.xml"/></setup>')
+
+    assert "&lt;" in str(error.remediation) and "&amp;" in str(error.remediation)
+    assert "7349" not in error.model_dump_json()
+
+
 def test_unique_on_a_typed_key_names_a_pool_a_key_accepts(tmp_path: Path) -> None:
     xml = (
         '<setup rngSeed="1"><generate name="tickets" count="3"><key name="ticket_id" generator="IncrementGenerator"/>'
@@ -61,6 +86,18 @@ def test_unique_on_a_typed_key_names_a_pool_a_key_accepts(tmp_path: Path) -> Non
     remediations = [str(item.remediation) for item in _errors(tmp_path, xml) if str(item.code) == "DM204"]
 
     assert remediations and all('generator="StringGenerator" unique="true"' in text for text in remediations)
+    assert all("without unique=" in text for text in remediations)
+
+
+def test_an_import_in_a_script_names_the_datetime_module_scripts_have(tmp_path: Path) -> None:
+    xml = (
+        '<setup rngSeed="1"><generate name="rows" count="2">'
+        '<key name="d" script="__import__(\'datetime\').date(2026, 1, 1)"/></generate></setup>'
+    )
+
+    [remediation] = [str(item.remediation) for item in _errors(tmp_path, xml) if str(item.code) == "DM314"]
+
+    assert "datetime.date(" in remediation and "import.field" not in remediation
 
 
 _TICKETS = (
@@ -85,6 +122,19 @@ def test_a_foreign_key_side_without_subject_names_the_side_shape(tmp_path: Path)
         or text.startswith("Put the product of parent inside subject")
         for text in child
     ), child
+
+
+def test_a_field_typo_in_a_foreign_key_side_with_a_subject_gets_the_shape_only(tmp_path: Path) -> None:
+    foreign_key = {
+        "kind": "foreign_key",
+        "child": {"subject": _TICKET_ROWS, "fields": "ticket_id"},
+        "parent": {"subject": _TICKET_ROWS, "field": "ticket_id"},
+    }
+
+    errors = _raw_errors(tmp_path, _TICKETS, [foreign_key])
+
+    assert errors and not any("Put the product" in str(item.remediation) for item in errors)
+    assert all("A foreign_key expectation has this shape" in str(item.remediation) for item in errors)
 
 
 def test_a_row_condition_result_type_other_than_bool_says_to_omit_it(tmp_path: Path) -> None:

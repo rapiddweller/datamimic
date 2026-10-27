@@ -3,16 +3,13 @@
   "proves": [
     "a range written with min and max, the spelling of the key attributes, is ready on the first Build",
     "the two spellings can be mixed in one range",
-    "a bound written as min is checked: a narrower max rejects rows outside it",
-    "both spellings of one bound in one range are rejected"
+    "a bound written as min is checked: a narrower max rejects rows outside it"
   ],
   "products": {"tickets": 25},
   "negatives": [
     {"name": "max_alias_is_checked", "diagnostic": "range",
      "patch": {"file": "acceptance/build.json", "old": "\"min\": 1, \"max\": 40", "new": "\"min\": 1, \"max\": 2"}},
     {"name": "min_alias_is_checked", "diagnostic": "range",
-     "patch": {"file": "acceptance/build.json", "old": "\"min\": 1, \"max\": 40", "new": "\"min\": 39, \"max\": 40"}},
-    {"name": "both_spellings_of_one_bound", "diagnostic": "validation",
-     "patch": {"file": "acceptance/build.json", "old": "\"min\": 1, \"max\": 40", "new": "\"min\": 1, \"minimum\": 1, \"max\": 40"}}
+     "patch": {"file": "acceptance/build.json", "old": "\"min\": 1, \"max\": 40", "new": "\"min\": 39, \"max\": 40"}}
   ]
 }

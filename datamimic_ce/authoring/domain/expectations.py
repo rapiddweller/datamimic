@@ -331,7 +331,9 @@ def expectation_repair(location: tuple[str | int, ...]) -> str | None:
         model = _MODELS[kind]
         rename = ""
         rest = location[index + 1 :]
-        if kind is ExpectationIntentKind.FOREIGN_KEY and rest[:1] in (("child",), ("parent",)) and len(rest) > 1:
+        # Only a misplaced product names the side shape; a field typo beside a right subject gets the plain shape.
+        side_key = rest[1] if len(rest) > 1 and rest[0] in ("child", "parent") else None
+        if kind is ExpectationIntentKind.FOREIGN_KEY and side_key in ("product", "kind", "subject"):
             side = rest[0]
             rename = (
                 f"Put the product of {side} inside subject: "

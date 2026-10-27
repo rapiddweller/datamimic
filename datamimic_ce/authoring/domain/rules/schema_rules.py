@@ -35,6 +35,8 @@ from datamimic_ce.engine.dsl.api import (
 _DATE_TYPE_GUESSES = {"datetime", "date", "timestamp", "time"}
 # Generator parameters such as min and max are no element attributes; they belong to the call.
 _GENERATOR_PARAMETERS = 'Pass generator parameters in the call: generator="IntegerGenerator(min=1, max=9)".'
+# The generator parameters that agents write as attributes; another unknown attribute keeps the valid list.
+_GENERATOR_BOUNDS = frozenset(("min", "max", "granularity"))
 
 
 def _key_id_data_types(ctx: LintContext) -> frozenset[str]:
@@ -153,7 +155,7 @@ class UnknownAttribute(Rule):
                         else f"Did you mean '{suggestion[0]}'?"
                         if suggestion
                         else _GENERATOR_PARAMETERS
-                        if element.get(ATTR_GENERATOR) is not None
+                        if element.get(ATTR_GENERATOR) is not None and attr_name in _GENERATOR_BOUNDS
                         else f"Valid attributes: {', '.join(sorted(valid))}."
                     )
                     yield ctx.diag(

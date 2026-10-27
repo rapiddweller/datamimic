@@ -212,6 +212,7 @@ def test_learning_names_the_project_data_file_forms_the_s24_scenario_proves(appl
         'separator=","',
     ):
         assert form in text, form
+    assert 'distribution="ordered" has no effect on a .wgt.ent.csv <variable>' in text
     assert entry.path == "tests_ce/scenarios/s24_project_data_files"
     overview = application.reference(ReferenceRequest(topic=ReferenceTopic.OVERVIEW))
     assert "--topic learning --name data_files" in overview.content
