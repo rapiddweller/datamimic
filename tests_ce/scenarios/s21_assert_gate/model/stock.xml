@@ -1,0 +1,6 @@
+<setup>
+    <generate name="stock" count="3">
+        <key name="bin" generator="IncrementGenerator"/>
+        <assert condition="this.bin &lt;= 3" message="The store has 3 bins"/>
+    </generate>
+</setup>

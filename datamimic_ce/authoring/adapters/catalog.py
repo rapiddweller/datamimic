@@ -358,6 +358,24 @@ class CeDslCatalog:
                         ),
                     ),
                     AuthoringLearningReference(
+                        name="assert_or_expectation",
+                        path="datamimic_ce/engine/dsl/model/flow/commands/assert_model.py",
+                        description=(
+                            "Use <assert> for a rule that must stop datamimic run. A failed condition stops the run "
+                            "with exit code 1 and the message, and Build rejects it with assert_failed. Build keeps "
+                            "the products that completed before the failed assert, evaluates their expectations and "
+                            "lists the other checks as not_executed. An assert costs one expression for each row in "
+                            "every run. It sees only the current row or the setup context. The products before it "
+                            "are already written when it stops the run. Use expectations for what Build proves over "
+                            "complete products: counts, unique values, foreign keys, ranges and row conditions. "
+                            "Expectations cost nothing in datamimic run, because the run does not check them: a run "
+                            "that breaks one exits 0. Build shows the message of an assert only when it is literal "
+                            "text without {, } or __, so give each assert a short literal message that names the "
+                            "rule. A ready Build ran every assert on its bounded rows, so the rule needs no second "
+                            "expectation."
+                        ),
+                    ),
+                    AuthoringLearningReference(
                         name="timeseries",
                         path="datamimic_ce/engine/dsl/model/generation/timeseries.py",
                         description=(
@@ -378,7 +396,7 @@ class CeDslCatalog:
                 return ReferenceResult(
                     topic=request.topic,
                     name=request.name,
-                    content="CE migration, script scope and time-series guidance."
+                    content="CE migration, script scope, file sources, assert or expectation and time-series guidance."
                     if learning_entries
                     else "No matching learning resource.",
                     entries=learning_entries,

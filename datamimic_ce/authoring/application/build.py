@@ -214,12 +214,17 @@ class BuildDocumentWorkflow:
         )
         first = self._executor.execute(execution_request)
         # A failed execution captures nothing; "capture is missing" for each product would only repeat its cause.
-        failed = not first.captured.products and any(item.severity == "error" for item in first.diagnostics)
+        # A failed <assert> keeps the products made before it, and Build names what it could not evaluate.
+        failed = (
+            not first.stopped_by_assert
+            and not first.captured.products
+            and any(item.severity == "error" for item in first.diagnostics)
+        )
         diagnostics = (
             *lint.diagnostics,
             *graph.diagnostics,
             *first.diagnostics,
-            *(() if failed else evaluate_acceptance(acceptance, first.captured)),
+            *(() if failed else evaluate_acceptance(acceptance, first.captured, stopped=first.stopped_by_assert)),
         )
         project_nodes = tuple(
             node

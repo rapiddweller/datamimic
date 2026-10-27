@@ -63,6 +63,7 @@ class AuthoringSystemDiagnosticCode(StrEnum):
     SERIALIZATION = "serialization"
     TIMEOUT = "timeout"
     NOT_EXECUTED = "not_executed"
+    ASSERT_FAILED = "assert_failed"
 
 
 class AuthoringBuildDiagnosticCode(StrEnum):

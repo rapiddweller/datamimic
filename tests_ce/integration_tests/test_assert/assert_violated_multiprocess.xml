@@ -1,0 +1,7 @@
+<setup numProcess="2">
+    <!-- No rngSeed: a seeded run forces one process. The record idx 7 is in the second worker's chunk. -->
+    <generate name="g" count="10" target="" mpPlatform="multiprocessing">
+        <key name="idx" generator="IncrementGenerator"/>
+        <assert condition="idx != 7" message="idx 7 is forbidden"/>
+    </generate>
+</setup>

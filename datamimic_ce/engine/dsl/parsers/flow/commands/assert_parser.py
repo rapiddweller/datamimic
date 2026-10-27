@@ -30,4 +30,4 @@ class AssertParser(StatementParser):
         )
 
     def parse(self, **kwargs: Any) -> AssertStatement:
-        return AssertStatement(self.validate_attributes(AssertModel))
+        return AssertStatement(self.validate_attributes(AssertModel), line=self._element.sourceline)

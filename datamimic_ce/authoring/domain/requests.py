@@ -427,3 +427,5 @@ class BoundedExecutionEvidence:
     source_accesses: tuple[SourceAccessEvidence, ...] = ()
     # Workspace files the run opened for reading, hashed from the private copy it read them from.
     files: tuple[ProjectFileDigest, ...] = ()
+    # A failed <assert> stopped the run; ``captured`` holds only the products that completed before it.
+    stopped_by_assert: bool = False

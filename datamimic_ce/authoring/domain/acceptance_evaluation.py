@@ -21,7 +21,12 @@ from datamimic_ce.authoring.domain.acceptance_contract import AcceptanceSpecV1
 from datamimic_ce.authoring.domain.build_rules import catalog_diagnostic
 from datamimic_ce.authoring.domain.capture import CapturedObjectId, CapturedProducts, CaptureStatus
 from datamimic_ce.authoring.domain.common import MAX_AUTHORING_MAX_COUNT
-from datamimic_ce.authoring.domain.diagnostics import AuthoringRuleId, Diagnostic, DiagnosticPhase
+from datamimic_ce.authoring.domain.diagnostics import (
+    AuthoringRuleId,
+    AuthoringSystemDiagnosticCode,
+    Diagnostic,
+    DiagnosticPhase,
+)
 from datamimic_ce.authoring.domain.expectations import (
     AllowedValuesExpectation,
     DeclaredSinkRowsSubject,
@@ -569,9 +574,50 @@ def _valid_json(value: object) -> bool:
     return True
 
 
-def evaluate_acceptance(spec: AcceptanceSpecV1, captured: CapturedProducts) -> tuple[Diagnostic, ...]:
-    """Reject incomplete evidence before evaluating any declared or derived check."""
+def _expectation_products(spec: AcceptanceSpecV1, expectation: ExpectationIntent) -> set[str]:
+    names: set[str] = set()
+    contributors = spec.declared_sink_contributors()
+    for subject in expectation_subjects(expectation):
+        if isinstance(subject, ProductRowsSubject):
+            names.add(subject.product)
+        elif isinstance(subject, PerParentRowsSubject):
+            names.update((subject.parent_product, subject.child_product))
+        else:
+            names.update(contributors.get(subject.sink, ()))
+    return names
+
+
+def _not_evaluated(spec: AcceptanceSpecV1, not_run: set[str]) -> tuple[tuple[str | int, ...], ...]:
+    """The checks and readbacks that read a product the stopped run did not complete."""
+    return (
+        *(check.path for check in spec.checks if _expectation_products(spec, check.expectation) & not_run),
+        *(readback.path for readback in spec.readbacks if {readback.producer, readback.consumer} & not_run),
+    )
+
+
+def _not_evaluated_diagnostic(not_run: set[str], skipped: tuple[tuple[str | int, ...], ...]) -> Diagnostic:
+    return Diagnostic(
+        code=AuthoringSystemDiagnosticCode.NOT_EXECUTED,
+        phase=DiagnosticPhase.EVIDENCE,
+        # True also when a completed product holds a value Build cannot capture: Build then keeps no product.
+        message=f"The run stopped at a failed <assert>. Build kept no capture of these products: "
+        f"{', '.join(sorted(not_run))}. Build did not evaluate the "
+        f"{'1 check that reads' if len(skipped) == 1 else f'{len(skipped)} checks that read'} them.",
+        path=("evidence",),
+        expected=[list(path) for path in skipped],
+        remediation="Fix the failed <assert> and every other error of this Build. Build evaluates these checks when "
+        "it captures every product.",
+    )
+
+
+def evaluate_acceptance(
+    spec: AcceptanceSpecV1, captured: CapturedProducts, *, stopped: bool = False
+) -> tuple[Diagnostic, ...]:
+    """Reject incomplete evidence before evaluating any declared or derived check. A run ``stopped`` by a failed
+    <assert> captured only the products that completed before it: Build evaluates the checks on those and names the
+    checks it could not evaluate."""
     diagnostics: list[Diagnostic] = []
+    not_run: set[str] = set()
     names = [product.name for product in captured.products]
     if len(names) != len(set(names)):
         return (_capture_failure("Duplicate capture product identities.", ("evidence",)),)
@@ -586,7 +632,10 @@ def evaluate_acceptance(spec: AcceptanceSpecV1, captured: CapturedProducts) -> t
         item = captured.get(product.capture_name)
         path = ("evidence", product.name)
         if item is None:
-            diagnostics.append(_capture_failure("Declared product capture is missing.", path))
+            if stopped:
+                not_run.add(product.name)
+            else:
+                diagnostics.append(_capture_failure("Declared product capture is missing.", path))
             continue
         evidence = item.capture
         if (
@@ -655,6 +704,8 @@ def evaluate_acceptance(spec: AcceptanceSpecV1, captured: CapturedProducts) -> t
                         )
                     )
         rows_by_name[product.name] = tuple(rows)
+    skipped = _not_evaluated(spec, not_run)
+    not_evaluated = (_not_evaluated_diagnostic(not_run, skipped),) if not_run else ()
     if diagnostics:
         if retry_counts:
             minimum = max(retry_counts.values())
@@ -668,9 +719,11 @@ def evaluate_acceptance(spec: AcceptanceSpecV1, captured: CapturedProducts) -> t
                     "remediation": _retry_remediation(minimum),
                 }
             )
-        return tuple(diagnostics)
+        return (*diagnostics, *not_evaluated)
     for check in spec.checks:
         expectation = check.expectation
+        if _expectation_products(spec, expectation) & not_run:
+            continue
         unevaluable = _unevaluable_sink_subject(spec, rows_by_name, expectation)
         if unevaluable is not None:
             subject, missing = unevaluable
@@ -680,6 +733,8 @@ def evaluate_acceptance(spec: AcceptanceSpecV1, captured: CapturedProducts) -> t
         if failure is not None:
             diagnostics.append(_diagnostic(expectation.kind, failure, path=check.path))
     for readback in spec.readbacks:
+        if {readback.producer, readback.consumer} & not_run:
+            continue
         producer = _values(rows_by_name[readback.producer], readback.producer_field)
         consumer = _values(rows_by_name[readback.consumer], readback.consumer_field)
         if (
@@ -693,7 +748,7 @@ def evaluate_acceptance(spec: AcceptanceSpecV1, captured: CapturedProducts) -> t
             diagnostics.append(
                 _capture_failure("Memstore readback must preserve every producer identity exactly once.", readback.path)
             )
-    return tuple(diagnostics)
+    return (*diagnostics, *not_evaluated)
 
 
 __all__ = ["declared_sink_coverage_warnings", "evaluate_acceptance"]

@@ -1,0 +1,15 @@
+{
+  "version": "5.0",
+  "max_count": 20,
+  "product_roles": [
+    {"product": "lines", "field": "line_no", "role": {"kind": "identifier"}},
+    {"product": "parts", "field": "line_no", "role": {"kind": "foreign_key", "parent_product": "lines", "parent_field": "line_no"}}
+  ],
+  "expectations": [
+    {"kind": "exact_count", "subject": {"kind": "product", "product": "items"}, "count": 4},
+    {"kind": "range", "subject": {"kind": "product", "product": "items"}, "field": "qty", "minimum": 1, "maximum": 4},
+    {"kind": "exact_count", "subject": {"kind": "product", "product": "lines"}, "count": 4},
+    {"kind": "exact_count", "subject": {"kind": "product", "product": "parts"}, "count": 8},
+    {"kind": "exact_count", "subject": {"kind": "product", "product": "stock"}, "count": 3}
+  ]
+}
