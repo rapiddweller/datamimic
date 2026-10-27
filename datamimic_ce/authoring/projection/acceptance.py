@@ -215,7 +215,12 @@ def _products(document: DmJsonDocumentV1, included: tuple[tuple[str, DmJsonDocum
                 # columns= declares the source columns it emits; a key of the same name replaces the column.
                 fields = (*(name for name in column_names(columns) if name not in fields), *fields)
             if len(fields) != len(set(fields)):
-                _reject("Declared output fields must be unique for acceptance.", path + ("children",))
+                _reject(
+                    "Declared output fields must be unique for acceptance.",
+                    path + ("children",),
+                    remediation="Give each <key> of one product its own name. For a value that depends on a "
+                    "condition, write one key with both cases: script=\"'A' if n == 1 else 'B'\".",
+                )
             product = AcceptanceProductV1(
                 name=name,
                 runtime_name=runtime_name,

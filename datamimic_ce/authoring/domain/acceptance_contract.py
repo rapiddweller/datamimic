@@ -30,6 +30,9 @@ from .expectations import (
 from .proof import AcceptanceOrigin
 from .row_conditions import parse_row_condition
 
+# Script scope names that a row condition does not have; an agent writes this.field from the scripts.
+_SCRIPT_SCOPES = frozenset(("this", "parent", "root"))
+
 
 class AcceptanceProjectionError(ValueError):
     def __init__(self, diagnostics: tuple[Diagnostic, ...]) -> None:
@@ -240,6 +243,16 @@ def validate_acceptance_check(spec: AcceptanceSpecV1, check: AcceptanceCheckV1) 
         call_functions = {id(node.func) for node in ast.walk(tree) if isinstance(node, ast.Call)}
         for node in ast.walk(tree):
             if isinstance(node, ast.Name) and id(node) not in call_functions:
-                validate_acceptance_subject(spec, expectation.subject, check.path + ("condition",), node.id)
+                try:
+                    validate_acceptance_subject(spec, expectation.subject, check.path + ("condition",), node.id)
+                except AcceptanceProjectionError:
+                    if node.id not in _SCRIPT_SCOPES:
+                        raise
+                    _reject(
+                        "Expectation references an unknown field.",
+                        check.path + ("condition", "field"),
+                        remediation="A row condition reads one captured row and names its fields bare: write "
+                        "price <= 9, not this.price <= 9. this, parent and root belong to scripts.",
+                    )
     elif not isinstance(expectation, (ExactCountExpectation, PerParentCountExpectation, FieldAbsentExpectation)):
         validate_acceptance_subject(spec, expectation.subject, check.path, expectation.field)

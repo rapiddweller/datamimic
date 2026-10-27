@@ -330,8 +330,17 @@ def expectation_repair(location: tuple[str | int, ...]) -> str | None:
         kind = kinds[part]
         model = _MODELS[kind]
         rename = ""
-        if index + 1 < len(location):
-            wrong = location[index + 1]
+        rest = location[index + 1 :]
+        if kind is ExpectationIntentKind.FOREIGN_KEY and rest[:1] in (("child",), ("parent",)) and len(rest) > 1:
+            side = rest[0]
+            rename = (
+                f"Put the product of {side} inside subject: "
+                f'"{side}": {{"subject": {{"kind": "product", "product": "<product>"}}, "field": "<field>"}}. '
+            )
+        elif kind is ExpectationIntentKind.ROW_CONDITION and rest == ("result_type",):
+            rename = 'Omit result_type; "bool" is its only value. '
+        elif rest:
+            wrong = rest[0]
             for name in model.model_fields:
                 field = model.model_fields[name]
                 extra = field.json_schema_extra
