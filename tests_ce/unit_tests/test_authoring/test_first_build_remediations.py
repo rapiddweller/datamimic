@@ -138,11 +138,21 @@ def test_a_field_typo_in_a_foreign_key_side_with_a_subject_gets_the_shape_only(t
 
 
 def test_a_row_condition_result_type_other_than_bool_says_to_omit_it(tmp_path: Path) -> None:
-    condition = {"kind": "row_condition", "subject": _TICKET_ROWS, "condition": "price >= 1", "result_type": "boolean"}
+    condition = {"kind": "row_condition", "subject": _TICKET_ROWS, "condition": "price >= 1", "result_type": "int"}
 
     [error] = _raw_errors(tmp_path, _TICKETS, [condition])
 
-    assert str(error.remediation).startswith('Omit result_type; "bool" is its only value.')
+    assert str(error.remediation).startswith("Omit result_type: a row condition is always boolean.")
+
+
+def test_result_type_boolean_and_range_min_max_are_ready_on_the_first_build(tmp_path: Path) -> None:
+    """sonnet e05-2 wrote result_type "boolean"; 8 of 50 first Builds wrote min and max."""
+    condition = {"kind": "row_condition", "subject": _TICKET_ROWS, "condition": "price >= 1", "result_type": "boolean"}
+    bounds = {"kind": "range", "subject": _TICKET_ROWS, "field": "price", "min": 1, "max": 9}
+
+    result = build_project(tmp_path, _TICKETS, expectations=[condition, bounds])
+
+    assert result.outcome == "ready", result.diagnostics
 
 
 def test_a_row_condition_with_this_names_the_bare_field(tmp_path: Path) -> None:

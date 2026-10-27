@@ -95,6 +95,15 @@ instead of a capped capture. An ordered read with `where=` loads the kept rows o
 for each worker chunk, not once for each page. A `.wgt.csv` with a header at `<generate>`
 is a plain table, so `where=` can read its weight column.
 
+### Natural acceptance spellings
+
+Build accepts `min` and `max` for the `minimum` and `maximum` of a `range`, and
+`"result_type": "boolean"` for `"bool"` in a `row_condition`. Build checks and dumps the
+canonical names. The published `build_request_v5` schema and `reference --topic expectations`
+list both spellings; `min` beside `minimum` is rejected. `minimum` and `maximum` no longer list
+`min` and `max` in `x-datamimic-repair-aliases`. EE Build must accept the same spellings before
+a CE-ready `build.json` is EE-ready.
+
 ## Public contract
 
 Persist XML as the executable project. `DmJsonDocumentV1` is an in-memory agent
