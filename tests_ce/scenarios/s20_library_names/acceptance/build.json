@@ -1,0 +1,19 @@
+{
+  "version": "5.0",
+  "product_roles": [
+    {"product": "days", "field": "day", "role": {"kind": "identifier"}}
+  ],
+  "expectations": [
+    {"kind": "exact_count", "subject": {"kind": "product", "product": "days"}, "count": 3},
+    {"kind": "unique", "subject": {"kind": "product", "product": "days"}, "field": "day"},
+    {"kind": "range", "subject": {"kind": "product", "product": "days"}, "field": "dice", "minimum": 1, "maximum": 6},
+    {"kind": "range", "subject": {"kind": "product", "product": "days"}, "field": "draw", "minimum": 1, "maximum": 6},
+    {"kind": "range", "subject": {"kind": "product", "product": "days"}, "field": "engine_draw", "minimum": 1, "maximum": 6},
+    {"kind": "allowed_values", "subject": {"kind": "product", "product": "days"}, "field": "coin", "values": ["heads", "tails"]}
+  ],
+  "acceptance_requirements": [
+    {"origin": "caller", "expectation": {"kind": "row_condition", "subject": {"kind": "product", "product": "days"}, "condition": "module_date == library_date"}},
+    {"origin": "caller", "expectation": {"kind": "row_condition", "subject": {"kind": "product", "product": "days"}, "condition": "day != 2 or (module_date == '2026-03-02' and code == '0002' and codes == '0000,0001')"}},
+    {"origin": "caller", "expectation": {"kind": "row_condition", "subject": {"kind": "product", "product": "days"}, "condition": "field_wins == True"}}
+  ]
+}

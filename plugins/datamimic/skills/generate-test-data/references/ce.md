@@ -95,13 +95,18 @@ functions, classes and constants:
   `faker`, `numpy`, `pandas`, `datamimic_ce.domains`, ...);
 - read no files and build no code (`open`, `eval`, `exec`, `compile`, `__import__`,
   `getattr`, `globals`); call module functions qualified (`re.compile`);
-- under `rngSeed`, import at module level, never inside a function or class.
+- under `rngSeed`, import at module level, never inside a function or class;
+- import a member under another name (`from datetime import datetime as dt`): a
+  library name replaces the engine's `datetime`, `random`, `math`, ... in `script=`.
 
 A refusal names the file, line and rule; repair the library, not the model.
 SQL, shell, `target=`, `script=` and an `<execute>` inside a record stay outside
 bounded proof. Every seeded model replays: each replay must reproduce every row,
 which also catches draws the static check cannot see.
 Load the library in the entry descriptor; names a step loads stay local to it.
+A comprehension, generator expression or lambda in `script=` sees the record's names
+(`sum(1 for r in rows if r == k)`, `lambda: k`): this works in CE 5.0 only; EE
+alignment is tracked separately.
 
 ## A model outside bounded proof
 

@@ -1,0 +1,30 @@
+<setup rngSeed="19">
+    <variable name="offset" script="10"/>
+    <generate name="orders" count="3">
+        <variable name="lines" script="[{'order': 1, 'qty': 2}, {'order': 2, 'qty': 5}, {'order': 2, 'qty': 1}, {'order': 3, 'qty': 4}]"/>
+        <key name="order_id" generator="IncrementGenerator"/>
+        <key name="rebound_len" script="(len := 5) + len"/>
+        <key name="list_count" script="len([line for line in lines if line['order'] == order_id])"/>
+        <key name="generator_count" script="sum(1 for line in lines if line['order'] == this.order_id)"/>
+        <key name="largest_qty" script="max((line['qty'] for line in lines if line['order'] == order_id), default=0)"/>
+        <key name="empty_count" script="sum(1 for line in lines if line['order'] == order_id + offset)"/>
+        <key name="closest_qty" script="sorted([line['qty'] for line in lines], key=lambda qty: abs(qty - order_id))[0]"/>
+        <key name="qty_total" script="sum({line['qty']: order_id for line in lines if line['order'] == order_id}.keys())"/>
+        <key name="qty_set" script="str(sorted({line['qty'] for line in lines if line['order'] == order_id}))"/>
+        <key name="pairs" script="sum(1 for line in lines for other in lines if line['order'] == other['order'] == order_id)"/>
+        <key name="squared" script="(side := order_id + 1) * side"/>
+        <key name="round" script="order_id * 100"/>
+        <key name="field_wins" script="sum(round for line in lines if line['order'] == order_id) == round * list_count"/>
+        <key name="dice" script="sum(random.randint(1, 6) for _ in range(3))"/>
+        <key name="pick" script="''.join([random.choice('abc') for _ in range(2)])"/>
+        <key name="positive" constant="yes" condition="all(line['qty'] &gt; 0 for line in lines if line['order'] == order_id)"/>
+        <nestedKey name="hits" type="list" count="1">
+            <key name="n" script="len([line for line in root.lines if root.order_id == line.order])"/>
+        </nestedKey>
+        <generate name="checks" count="{sum(1 for line in lines if line['order'] == order_id)}">
+            <key name="order_id" script="parent.order_id"/>
+            <key name="parent_count" script="sum(1 for line in parent.lines if line.order == parent.order_id)"/>
+            <key name="root_count" script="len([line for line in root.lines if line.order == root.order_id])"/>
+        </generate>
+    </generate>
+</setup>

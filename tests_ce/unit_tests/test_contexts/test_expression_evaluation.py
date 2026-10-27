@@ -1,4 +1,7 @@
 import copy
+import datetime
+import json
+import sys
 from pathlib import Path
 
 import pytest
@@ -71,7 +74,7 @@ def test_expression_rejects_non_values(expression: str, message: str) -> None:
     [
         (
             "missing",
-            "NameError: "
+            "NameError: name 'missing' is not defined: "
             "check spelling, definition order and value shape; current-scope names can resolve bare, "
             "but existing outermost bare names win collisions; intermediate ancestor names need qualification; "
             "use this.name for the current scope, parent.name for the immediate enclosing record, "
@@ -80,7 +83,7 @@ def test_expression_rejects_non_values(expression: str, message: str) -> None:
         ),
         (
             "record.missing",
-            "AttributeError: "
+            "AttributeError: no attribute 'missing': "
             "check spelling, definition order and value shape; current-scope names can resolve bare, "
             "but existing outermost bare names win collisions; intermediate ancestor names need qualification; "
             "use this.name for the current scope, parent.name for the immediate enclosing record, "
@@ -180,3 +183,77 @@ def test_colon_retry_preserves_frozen_domain_error_identity():
     with pytest.raises(DomainError) as caught:
         context.evaluate_python_expression("container.gc:refuse()")
     assert caught.value is error
+
+
+_REPLACED_DATETIME = (
+    "the expression reads 'datetime', which a script, variable or field binds in place of the engine's 'datetime'"
+)
+
+
+@pytest.mark.parametrize(
+    ("namespace", "expression", "hinted"),
+    [
+        ({"datetime": datetime.datetime}, "datetime.date(2026, 3, 2)", True),
+        ({"datetime": datetime.datetime}, "datetime.timedelta(days=1)", True),
+        ({"json": json}, "json.loads(1)", False),
+        ({"datetime": "retail"}, "datetime.upper() + missing_name", False),
+        ({"datetime": datetime.datetime, "record": {"id": 1}}, "datetime.now() and record.nope", False),
+    ],
+    ids=["type_error", "attribute_error", "same_object", "unrelated_name_error", "attribute_on_another_name"],
+)
+def test_a_failing_expression_names_an_engine_name_that_a_script_replaces(
+    namespace: dict[str, object], expression: str, hinted: bool
+) -> None:
+    """Python-only: a scenario negative asserts only text that is present, and one patch reaches only the first
+    failing key; this test also proves the absent hint when the script binds the engine's own object, and when the
+    failure is about another name than the replaced one (a legit field must not get "rename the field" advice)."""
+    with pytest.raises(TaskConfigError) as exc:
+        _context(namespace=namespace).evaluate_python_expression(expression)
+
+    assert ("in place of the engine's" in str(exc.value)) is hinted
+    if hinted:
+        assert _REPLACED_DATETIME in str(exc.value)
+
+
+def test_text_from_data_is_not_kept_in_the_compile_cache() -> None:
+    """Python-only: retention is process memory, which no descriptor can observe. Data text is a value per row, so
+    caching it holds every distinct text (1 MB here) for the process lifetime."""
+    from datamimic_ce.engine.runtime.scripting import evaluation
+
+    context = _context()
+    big = "'" + "a" * 1_000_000 + "'"
+    evaluation._compiled.cache_clear()
+
+    assert len(context.evaluate_python_expression(big, text_from_data=True)) == 1_000_000
+    assert evaluation._compiled.cache_info().currsize == 0
+    context.evaluate_python_expression("40 + 2")
+    assert evaluation._compiled.cache_info().currsize == 1
+
+
+def test_an_assignment_in_a_generator_expression_does_not_reach_the_shared_engine_names() -> None:
+    """Python-only: only an unseeded run shares one engine-name dict across evaluations, and every scenario sets
+    rngSeed (a seeded run copies the dict per evaluation). A later generate must not read the name."""
+    from datamimic_ce.engine.runtime.scripting.expression_globals import SAFE_GLOBALS
+
+    context = _context()
+    assert context.evaluate_python_expression("any((leaked := v * 100) for v in [2])") is True
+
+    assert "leaked" not in SAFE_GLOBALS
+    with pytest.raises(TaskConfigError, match="NameError: name 'leaked' is not defined"):
+        context.evaluate_python_expression("leaked")
+
+
+@pytest.mark.skipif(
+    sys.version_info >= (3, 12),
+    reason="3.12+ inlines comprehensions (PEP 709): there the field already won before #423, so no value changes",
+)
+def test_a_field_named_max_wins_inside_a_comprehension_on_python_3_11() -> None:
+    """Python 3.11 value change of #423: a field `max` read in `[max(a, 2) for ...]` used the builtin and gave
+    '[2, 3]'. The comprehension now sees the field, as the top level does, so the call fails and names the field."""
+    with pytest.raises(TaskConfigError) as exc:
+        _context(namespace={"max": 7}).evaluate_python_expression("str([max(a, 2) for a in [1, 3]])")
+
+    assert isinstance(exc.value.__cause__, TypeError)
+    assert "the expression reads 'max', which a script, variable or field binds in place of the engine's" in str(
+        exc.value
+    )

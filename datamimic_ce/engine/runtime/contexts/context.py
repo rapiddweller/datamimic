@@ -84,6 +84,7 @@ class Context(ABC):
         local_namespace: dict[str, object] | None = None,
         *,
         diagnostic_expression: str | None = None,
+        text_from_data: bool = False,
     ) -> object:
         """
         Get reference from current variables and attributes
@@ -129,7 +130,9 @@ class Context(ABC):
             rng=self.rng if is_seeded else None,
             seeded_faker_supplier=lambda: self.root.seeded_faker,
         )
-        return evaluation.evaluate_python(expr, eval_globals, data_dict, diagnostic_expression=diagnostic_expression)
+        return evaluation.evaluate_python(
+            expr, eval_globals, data_dict, diagnostic_expression=diagnostic_expression, text_from_data=text_from_data
+        )
 
     def _current_scope(self) -> dict[str, object]:
         """The current content scope for the ``this`` alias: ``this.field`` resolves to the same value as

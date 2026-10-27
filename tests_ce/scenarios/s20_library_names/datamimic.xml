@@ -1,0 +1,16 @@
+<setup rngSeed="20">
+    <execute uri="lib/helpers.scr.py"/>
+    <generate name="days" count="3">
+        <key name="day" generator="IncrementGenerator"/>
+        <key name="module_date" script="datetime.date(2026, 3, day).isoformat()"/>
+        <key name="library_date" script="stamp(day)"/>
+        <key name="code" script="hex(day)"/>
+        <key name="codes" script="','.join(hex(value) for value in range(day))"/>
+        <key name="dice" script="dice()"/>
+        <key name="draw" script="randint(1, 6)"/>
+        <key name="engine_draw" script="random.randint(1, 6)"/>
+        <key name="coin" script="coin()"/>
+        <key name="Datetime" constant="a field"/>
+        <key name="field_wins" script="Datetime == 'a field' and all(Datetime == 'a field' for _ in range(2))"/>
+    </generate>
+</setup>

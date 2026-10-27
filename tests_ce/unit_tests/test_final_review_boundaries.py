@@ -84,7 +84,7 @@ def test_key_fallback_error_keeps_native_cause_without_native_text(tmp_path, mon
 
     failure = ValueError(SENTINEL)
 
-    def fail(*args, diagnostic_expression=None):
+    def fail(*args, diagnostic_expression=None, text_from_data=False):
         raise failure
 
     monkeypatch.setattr(evaluation, "evaluate_python", fail)
@@ -283,6 +283,51 @@ def test_native_lookup_errors_without_metadata_keep_only_safe_failure_facts(erro
         evaluate_python("fail()", {"fail": fail}, {})
     assert caught.value.__cause__ is native
     assert error_type.__name__ in str(caught.value)
+    assert SENTINEL not in str(caught.value)
+
+
+@pytest.mark.parametrize("value", [f"{{{SENTINEL}}}", f"id __{SENTINEL}__"], ids=["template", "interpolation"])
+def test_a_scripted_source_value_that_names_a_missing_name_keeps_the_name_hidden(tmp_path, value):
+    """A scripted source evaluates text from the data file, so a name in that text is a value."""
+    (tmp_path / "data.json").write_text(json.dumps([{"field": value}]), encoding="utf-8")
+    with pytest.raises(UserErrorBase) as caught:
+        _run(tmp_path, '<generate name="rows" source="data.json" sourceScripted="True" count="1"/>')
+    assert isinstance(caught.value.__cause__, NameError)
+    assert SENTINEL not in str(caught.value)
+
+
+@pytest.mark.parametrize(
+    "sql_file,inline",
+    [
+        (f"INSERT INTO account(note) VALUES ('{{{SENTINEL}}}');", ""),
+        (None, f"INSERT INTO account(tags) VALUES ('{{{SENTINEL},vip}}');"),
+    ],
+    ids=["sql_file", "inline_array_literal"],
+)
+def test_a_sql_brace_literal_keeps_the_name_hidden(tmp_path, sql_file, inline):
+    """SQL text is data: a brace literal fails the interpolation before the client lookup (no database needed)."""
+    if sql_file is None:
+        body = f'<execute target="nodb" type="sql">{inline}</execute>'
+    else:
+        (tmp_path / "seed.sql").write_text(sql_file, encoding="utf-8")
+        body = '<execute uri="seed.sql" target="nodb" type="sql"/>'
+    with pytest.raises(UserErrorBase) as caught:
+        _run(tmp_path, body)
+    assert isinstance(caught.value.__cause__, NameError)
+    assert SENTINEL not in str(caught.value)
+
+
+@pytest.mark.parametrize("error_type", [NameError, AttributeError])
+def test_a_missing_name_is_shown_only_when_the_expression_text_holds_it(error_type):
+    """Python-only: a called function that raises a name built from data cannot be written as a descriptor
+    without a library that raises it on purpose, and this module owns the redaction boundary."""
+    from datamimic_ce.engine.runtime.scripting.evaluation import evaluate_python
+
+    def fail():
+        raise error_type("lookup failed", name=SENTINEL)
+
+    with pytest.raises(UserErrorBase) as caught:
+        evaluate_python("fail()", {"fail": fail}, {})
     assert SENTINEL not in str(caught.value)
 
 

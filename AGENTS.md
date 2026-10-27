@@ -169,6 +169,14 @@ The applicable Ollama protocol references are [tool calling](https://docs.ollama
    documented form; mapping access (`row['field']`, `dict(row)`) also works. Nested
    rows need `row.to_dict()` for `json.dumps`. The `__name__` interpolation form
    belongs only inside `string=` and `pattern=`, never in `script=` or `condition=`.
+   A name a library binds replaces the engine's name of the same spelling in every
+   expression: after `from datetime import datetime`, `datetime` is the class, not
+   the module. Import under another name (`from datetime import datetime as dt`).
+   A comprehension, generator expression or lambda sees the record's names
+   (`sum(1 for r in rows if r == k)`, `lambda: k`): this works in CE 5.0 only; EE
+   alignment is tracked separately. On Python 3.11 a field named like an engine
+   name (`max`) read inside a comprehension now fails with a hint; before, the
+   comprehension silently used the builtin.
 
 Discover value-source choices and rules from the live model and rule registries
 with `datamimic authoring reference --topic overview`, then query a narrow topic.

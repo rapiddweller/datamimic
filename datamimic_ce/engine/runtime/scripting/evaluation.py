@@ -2,9 +2,11 @@
 
 from __future__ import annotations
 
+import ast
 import re
 import types
-from collections.abc import Iterator, KeysView, Mapping
+from collections.abc import Iterable, Iterator, KeysView, Mapping
+from functools import lru_cache
 from typing import Protocol, TypeGuard
 
 from datamimic_ce.engine.runtime.scripting.expression_globals import NON_VALUE_TYPES
@@ -19,7 +21,9 @@ _SCOPE_GUIDANCE = (
 
 
 class ExpressionContext(Protocol):
-    def evaluate_python_expression(self, expr: str, local_namespace: dict[str, object] | None = None) -> object: ...
+    def evaluate_python_expression(
+        self, expr: str, local_namespace: dict[str, object] | None = None, *, text_from_data: bool = False
+    ) -> object: ...
 
 
 class DotableDict:
@@ -42,7 +46,7 @@ class DotableDict:
         try:
             return self[name]
         except KeyError as error:
-            raise AttributeError(f"Cannot find attribute '{name}'") from error
+            raise AttributeError(f"Cannot find attribute '{name}'", name=name) from error
 
     def __iter__(self) -> Iterator[str]:
         return iter(self._dictionary)
@@ -91,15 +95,66 @@ def _plain(value: object) -> object:
     return value
 
 
+def _written_nodes(expression: str) -> tuple[ast.AST, ...]:
+    """The syntax nodes written in the expression: descriptor structure, never a value."""
+    try:
+        return tuple(ast.walk(ast.parse(expression.lstrip(" \t"), mode="eval")))
+    except SyntaxError:
+        return ()
+
+
+def _lookup_failure(error: NameError | AttributeError, nodes: tuple[ast.AST, ...]) -> str:
+    """Name the missing name only when the expression text holds it: a called function can raise a name built
+    from data, and a diagnostic never shows a value."""
+    written = {node.id for node in nodes if isinstance(node, ast.Name)}
+    written |= {node.attr for node in nodes if isinstance(node, ast.Attribute)}
+    if error.name not in written:
+        return type(error).__name__
+    if isinstance(error, NameError):
+        return f"NameError: name '{error.name}' is not defined"
+    return f"AttributeError: no attribute '{error.name}'"
+
+
+def _replaced_engine_names(
+    names: Iterable[str], global_namespace: dict[str, object], local_namespace: dict[str, object]
+) -> str:
+    """A library import such as `from datetime import datetime` replaces the engine's `datetime` in expressions,
+    as in Python and in EE. When such an expression fails, say which of the given names are not the engine's."""
+    replaced = sorted(
+        name
+        for name in set(names)
+        if name in global_namespace and name in local_namespace and local_namespace[name] is not global_namespace[name]
+    )
+    return "".join(
+        f"; the expression reads '{name}', which a script, variable or field binds in place of the engine's "
+        f"'{name}': import it under another name or rename the field"
+        for name in replaced
+    )
+
+
+def _compile(expression: str) -> types.CodeType:
+    # eval() of a string drops leading spaces and tabs; compile() does not, so drop them here (script=" a + b").
+    return compile(expression.lstrip(" \t"), "<expression>", "eval")
+
+
+# As in EE: the same expression text runs once per row, so compile it once.
+@lru_cache(maxsize=8192)
+def _compiled(expression: str) -> types.CodeType:
+    return _compile(expression)
+
+
 def evaluate_python(
     expression: str,
     global_namespace: dict[str, object],
     local_namespace: dict[str, object],
     *,
     diagnostic_expression: str | None = None,
+    text_from_data: bool = False,
 ) -> object:
-    """Evaluate actual input while callers may name a synthesized expression safely."""
+    """Evaluate actual input while callers may name a synthesized expression safely. An expression read from source
+    data (``text_from_data``) is a value, so its error names nothing that it holds."""
     diagnostic = "configured expression" if diagnostic_expression is None else diagnostic_expression
+    shown = "" if text_from_data else expression
 
     def normalized_result(result: object, source: str) -> object:
         result = _plain(result)
@@ -117,15 +172,41 @@ def evaluate_python(
             )
         return result
 
+    def single_namespace(names: dict[str, object]) -> dict[str, object]:
+        """One dict as globals: a comprehension, generator expression or lambda sees only globals, so with
+        separate locals it would not see the record (#423). Local names win, as at the top level."""
+        namespace = {**global_namespace, **names}
+        if "__builtins__" in names:  # a local never chose the builtins, so a field of that name must not either
+            del namespace["__builtins__"]
+            if "__builtins__" in global_namespace:
+                namespace["__builtins__"] = global_namespace["__builtins__"]
+        return namespace
+
+    # Data text is a new value on each row: a cache would only keep every distinct text alive.
     try:
-        return normalized_result(eval(expression, global_namespace, local_namespace), diagnostic)
+        code = _compile(expression) if text_from_data else _compiled(expression)
+        return normalized_result(eval(code, single_namespace(local_namespace)), diagnostic)
     except (UserErrorBase, DomainError):
         raise
     except (NameError, AttributeError) as error:
+        nodes = _written_nodes(shown)
+        # A missing name is never the replaced name, and only `replaced.missing` blames the replacement.
+        receivers = (
+            []
+            if isinstance(error, NameError)
+            else [
+                node.value.id
+                for node in nodes
+                if isinstance(node, ast.Attribute) and node.attr == error.name and isinstance(node.value, ast.Name)
+            ]
+        )
         raise task_config_error(
             code=IssueCode.TASK_EXPRESSION_EVAL_FAILED,
             expr=diagnostic,
-            error=f"{type(error).__name__}: {_SCOPE_GUIDANCE}",
+            error=(
+                f"{_lookup_failure(error, nodes)}: {_SCOPE_GUIDANCE}"
+                f"{_replaced_engine_names(receivers, global_namespace, local_namespace)}"
+            ),
         ) from error
     except KeyError as error:
         raise task_config_error(
@@ -134,10 +215,14 @@ def evaluate_python(
             error="KeyError: missing mapping key",
         ) from error
     except TypeError as error:
+        read = (node.id for node in _written_nodes(shown) if isinstance(node, ast.Name))
         raise task_config_error(
             code=IssueCode.TASK_EXPRESSION_EVAL_FAILED,
             expr=diagnostic,
-            error=f"Failed while evaluate '{diagnostic}': '{diagnostic}' have undefined item or wrong structure",
+            error=(
+                f"Failed while evaluate '{diagnostic}': '{diagnostic}' have undefined item or wrong structure"
+                f"{_replaced_engine_names(read, global_namespace, local_namespace)}"
+            ),
         ) from error
     except SyntaxError as error:
         if ":" not in expression:
@@ -171,7 +256,7 @@ def evaluate_python(
             return updated
 
         try:
-            return normalized_result(eval(expression, global_namespace, replace_colons(local_namespace)), diagnostic)
+            return normalized_result(eval(expression, single_namespace(replace_colons(local_namespace))), diagnostic)
         except (UserErrorBase, DomainError):
             raise
         except Exception as retry_error:
@@ -193,14 +278,16 @@ def evaluate_python(
         ) from error
 
 
-def interpolate_variables(context: ExpressionContext, expression: str, prefix: str, suffix: str) -> str:
+def interpolate_variables(
+    context: ExpressionContext, expression: str, prefix: str, suffix: str, *, text_from_data: bool = False
+) -> str:
     """Replace configured variable markers with values from the current context."""
     pattern = rf"{re.escape(prefix)}([^{re.escape(prefix)}]\S*?){re.escape(suffix)}"
     if re.search(pattern, expression) is None:
         return expression
     return re.sub(
         pattern,
-        lambda match: str(context.evaluate_python_expression(match.group(1))),
+        lambda match: str(context.evaluate_python_expression(match.group(1), text_from_data=text_from_data)),
         expression,
     )
 
@@ -242,8 +329,8 @@ def evaluate_source_template(context: ExpressionContext, data: object, prefix: s
         return data
     if data.startswith("{") and data.endswith("}"):
         match = re.fullmatch(r"{(.*)}", data)
-        return context.evaluate_python_expression(match.group(1)) if match is not None else None
-    return interpolate_variables(context, data, prefix, suffix)
+        return context.evaluate_python_expression(match.group(1), text_from_data=True) if match is not None else None
+    return interpolate_variables(context, data, prefix, suffix, text_from_data=True)
 
 
 __all__ = [

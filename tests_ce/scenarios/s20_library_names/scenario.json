@@ -1,0 +1,45 @@
+{
+  "title": "Library names next to the engine's names in script expressions",
+  "proves": [
+    "a name that a library binds wins over the engine's name of the same spelling, at the top level and in a nested scope (Python's rule, as in EE)",
+    "a library that imports a member under an alias (from datetime import datetime as Datetime) leaves the engine's datetime module to the expressions",
+    "a record field wins over a library name of the same spelling",
+    "under rngSeed, import random and from random import randint in a library replay identically (#391)",
+    "when a library import replaces an engine name and a call or an attribute read on that name then fails, the run error names that name (#423)"
+  ],
+  "products": {
+    "days": 3
+  },
+  "negatives": [
+    {
+      "name": "library_import_replaces_engine_module",
+      "diagnostic": "child_execution",
+      "run_error": "the expression reads 'datetime', which a script, variable or field binds in place of the engine's 'datetime'",
+      "patch": {
+        "file": "lib/helpers.scr.py",
+        "old": "from random import randint\n",
+        "new": "from random import randint\nfrom datetime import datetime\n"
+      }
+    },
+    {
+      "name": "engine_hex_without_the_library_definition",
+      "diagnostic": "row_condition",
+      "expected": "day != 2 or (module_date == '2026-03-02' and code == '0002' and codes == '0000,0001')",
+      "patch": {
+        "file": "lib/helpers.scr.py",
+        "old": "def hex(value):",
+        "new": "def hex_code(value):"
+      }
+    },
+    {
+      "name": "library_name_without_the_field",
+      "diagnostic": "row_condition",
+      "expected": "field_wins == True",
+      "patch": {
+        "file": "datamimic.xml",
+        "old": "<key name=\"Datetime\" constant=\"a field\"/>",
+        "new": "<key name=\"label\" constant=\"a field\"/>"
+      }
+    }
+  ]
+}

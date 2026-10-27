@@ -24,7 +24,9 @@ class _ExpressionContext:
         self.values = values
         self.calls: list[str] = []
 
-    def evaluate_python_expression(self, expression: str, local_namespace: dict[str, object] | None = None) -> object:
+    def evaluate_python_expression(
+        self, expression: str, local_namespace: dict[str, object] | None = None, *, text_from_data: bool = False
+    ) -> object:
         self.calls.append(expression)
         return self.values[expression]
 
