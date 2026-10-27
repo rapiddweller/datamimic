@@ -30,15 +30,15 @@ def _rejected(tmp_path: Path, key: str) -> RejectedBuild:
             id="unknown-attribute",
         ),
         pytest.param(
-            '<key name="price" generator="IntegerGenerator" min="100" max="900"/>',
+            '<key name="price" script="1" min="100" max="900"/>',
             "DM214",
-            "Required: type=.",
+            "Required: generator= or type=.",
             id="companion-without-mode",
         ),
         pytest.param(
-            '<key name="price" generator="IntegerGenerator" min="100" max="900"/>',
+            '<key name="price" script="1" min="100" max="900"/>',
             "DM218",
-            "Remove generator= or min=.",
+            "Remove script= or min=.",
             id="forbidden-companion",
         ),
     ],
@@ -58,7 +58,8 @@ def test_the_named_rule_comes_before_the_generic_parser_failure(tmp_path: Path) 
 
 
 def test_a_value_never_reaches_the_remediation(tmp_path: Path) -> None:
-    result = _rejected(tmp_path, '<key name="price" generator="IntegerGenerator" min="12345" max="67890"/>')
+    # IncrementGenerator takes no min or max, so the bounded run refuses the attributes (I438).
+    result = _rejected(tmp_path, '<key name="price" generator="IncrementGenerator" min="12345" max="67890"/>')
 
     texts = [text for item in result.diagnostics for text in (item.message, str(item.remediation))]
     assert texts and not any("12345" in text or "67890" in text for text in texts)
@@ -76,35 +77,42 @@ def test_an_unsupported_element_in_the_entry_is_named(tmp_path: Path) -> None:
 
 
 _CALL_FORM = 'generator="IntegerGenerator(min=1, max=9)"'
+# A <key> takes the bounds of its generator as attributes (#456); a <variable> keeps the call form.
+_ATTRIBUTE_FORM = 'generator="IntegerGenerator" min="1" max="9"'
 
 
 @pytest.mark.parametrize(
-    ("element", "code"),
+    ("element", "code", "form"),
     [
-        pytest.param('<key name="amount" generator="IntegerGenerator" min="500" max="20000"/>', "DM214", id="key"),
-        pytest.param('<key name="amount" generator="IntegerGenerator" min="500" max="20000"/>', "DM218", id="key-218"),
-        pytest.param('<key name="sale" type="int" min="50" max="900" script="list_price"/>', "DM218", id="key-script"),
+        pytest.param(
+            '<key name="sale" type="int" min="50" max="900" script="list_price"/>',
+            "DM218",
+            _ATTRIBUTE_FORM,
+            id="key-script",
+        ),
         pytest.param(
             '<variable name="lp" generator="IntegerGenerator" min="100" max="900"/><key name="v" script="lp"/>',
             "DM103",
+            _CALL_FORM,
             id="variable",
         ),
         pytest.param(
             '<variable name="ratio" generator="FloatGenerator" min="0.5" max="1.0"/><key name="v" script="ratio"/>',
             "DM103",
+            _CALL_FORM,
             id="variable-float",
         ),
     ],
 )
-def test_bounds_written_as_attributes_beside_a_generator_name_the_call_form(
-    tmp_path: Path, element: str, code: str
+def test_bounds_written_as_attributes_beside_a_generator_name_the_working_form(
+    tmp_path: Path, element: str, code: str, form: str
 ) -> None:
     """The campaign at 89f304b9: agents read the generator parameters min and max and wrote them as attributes
-    (8 of 50 first Builds). The remediation names the working form: the bounds in the generator call."""
+    (8 of 50 first Builds). The remediation names the working form for the element."""
     diagnostics = _rejected(tmp_path, element).diagnostics
     remediations = [str(item.remediation) for item in diagnostics if str(item.code) == code]
 
-    assert any(_CALL_FORM in text for text in remediations), remediations
+    assert any(form in text for text in remediations), remediations
 
 
 def test_a_bound_value_beside_a_generator_never_reaches_the_remediation(tmp_path: Path) -> None:
@@ -132,3 +140,14 @@ def test_the_generator_attribute_description_shows_the_call_form(tmp_path: Path,
     [generator] = [item for item in result.capability.attributes if item.name == "generator"]
 
     assert _CALL_FORM in generator.description
+
+
+def test_the_key_generator_description_shows_the_attribute_form(tmp_path: Path) -> None:
+    """Capability output reads the key model, so it teaches the attribute form of #456; no DSL descriptor shows it."""
+    from datamimic_ce.authoring import create_authoring_application
+    from datamimic_ce.authoring.domain.capabilities import CapabilityDomain
+
+    result = create_authoring_application(tmp_path).capability(CapabilityDomain.ELEMENT, "key")
+    [generator] = [item for item in result.capability.attributes if item.name == "generator"]
+
+    assert _ATTRIBUTE_FORM in generator.description

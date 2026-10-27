@@ -2,10 +2,10 @@
 # Copyright (c) 2023-2026 Rapiddweller Asia Co., Ltd.
 # This software is licensed under the MIT License. See LICENSE.
 
-"""<key min/max/granularity> are accepted only where the numeric type= range draw consumes them.
+"""<key min/max/granularity> are accepted only where a type= range draw or a generator= consumes them.
 
-Next to generator= or values= they were silently ignored: a seeded DateTimeGenerator
-then produced one constant date for every row while lint and Build reported ready."""
+Next to values= they would be silently ignored. Next to generator= they are the generator's arguments
+(#456); tests_ce/scenarios/s26_key_generator_attributes proves that form and its refusals."""
 
 from pathlib import Path, PurePosixPath
 
@@ -22,9 +22,8 @@ _FIXTURES = Path(__file__).parent / "fixtures"
 @pytest.mark.parametrize(
     ("fixture", "rule", "line"),
     [
-        ("fx_key_range_with_generator.xml", "DM214", 4),
         ("fx_key_range_with_values.xml", "DM214", 3),
-        ("fx_key_range_with_typed_generator.xml", "DM218", 4),
+        ("fx_key_range_with_values.xml", "DM218", 3),
     ],
 )
 def test_lint_names_the_rule_and_exact_element(fixture: str, rule: str, line: int) -> None:
@@ -41,11 +40,8 @@ def test_lint_names_the_rule_and_exact_element(fixture: str, rule: str, line: in
 @pytest.mark.parametrize(
     ("attributes", "reason"),
     [
-        ({"generator": "IntegerGenerator", "min": "1", "max": "5"}, "apply only when type= is its only value source"),
-        (
-            {"type": "int", "generator": "IncrementGenerator", "min": "1", "max": "5"},
-            "apply only when type= is its only value source",
-        ),
+        ({"values": "1, 2", "min": "1", "max": "5"}, "apply to type= or generator= only"),
+        ({"generator": "IntegerGenerator", "min": "1", "distribution": "cumulated"}, "write it in the call"),
         ({"type": "string", "min": "1", "max": "5"}, "requires type='int', 'float', or 'decimal', not 'string'"),
         ({"type": "float", "granularity": "0.5"}, "'granularity' on a <key> needs a range"),
         ({"type": "int", "min": "1", "max": "9", "granularity": "2"}, "requires type='float' or 'decimal'"),

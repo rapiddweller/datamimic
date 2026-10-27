@@ -106,7 +106,7 @@ def test_namespace_uri_is_never_echoed(tmp_path: Path, generate: str, rule: str)
     ("key", "rule"),
     [
         ('type="int" min="1" max="5" separator="{secret}"', "DM214"),
-        ('generator="IntegerGenerator" min="{secret}" max="{secret}"', "DM218"),
+        ('constant="1" min="{secret}" max="{secret}"', "DM218"),
     ],
 )
 def test_names_only_rules_never_echo_attribute_values(tmp_path: Path, key: str, rule: str) -> None:

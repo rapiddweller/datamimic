@@ -43,6 +43,15 @@ class Negative(BaseModel):
     run_error: StrictStr | None = None
 
 
+class Equivalent(BaseModel):
+    """A second spelling of the project: Build is ready and a run gives the same rows as the project."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    name: StrictStr
+    patch: Patch
+
+
 class Scenario(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
@@ -50,6 +59,7 @@ class Scenario(BaseModel):
     proves: list[StrictStr]
     products: dict[StrictStr, StrictInt]
     negatives: list[Negative] = []
+    equivalents: list[Equivalent] = []
 
 
 def _load(directory: Path) -> Scenario:
@@ -58,6 +68,7 @@ def _load(directory: Path) -> Scenario:
 
 _DIRECTORIES = sorted(path.parent for path in _ROOT.glob("*/scenario.json"))
 _NEGATIVES = [(path, negative) for path in _DIRECTORIES for negative in _load(path).negatives]
+_EQUIVALENTS = [(path, equivalent) for path in _DIRECTORIES for equivalent in _load(path).equivalents]
 
 
 def _copy(source: Path, destination: Path) -> Path:
@@ -187,6 +198,26 @@ def test_data_standard_guard_names_the_one_broken_rule(
     (tmp_path / file).parent.mkdir(parents=True, exist_ok=True)
     (tmp_path / file).write_text(content, encoding="utf-8")
     assert _data_standard_findings(tmp_path) == ([] if reason is None else [f"{Path(file)}: {reason}"])
+
+
+@pytest.mark.parametrize(
+    ("directory", "equivalent"),
+    _EQUIVALENTS,
+    ids=[f"{path.name}/{equivalent.name}" for path, equivalent in _EQUIVALENTS],
+)
+def test_equivalent_spelling_gives_the_same_rows(
+    directory: Path, equivalent: Equivalent, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    project = _copy(directory, tmp_path / "project")
+    variant = _copy(directory, tmp_path / "variant")
+    _apply(equivalent.patch, variant)
+    built = _build(variant)
+    assert isinstance(built, ReadyBuild), [(str(item.code), item.message) for item in built.diagnostics]
+
+    monkeypatch.chdir(project)
+    rows = _run(project)
+    monkeypatch.chdir(variant)
+    assert _run(variant) == rows, "the two spellings must give identical rows for the same seed"
 
 
 @pytest.mark.parametrize("escape", ["absolute", "parent"])
