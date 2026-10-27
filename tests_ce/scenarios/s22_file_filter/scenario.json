@@ -33,8 +33,10 @@
      "patch": {"file": "datamimic.xml", "old": "where=\"int(amount_cents) &gt; 1000000\"", "new": "where=\"int(amount_cents) &gt; 1000\""}},
     {"name": "random_distribution_other_rows", "diagnostic": "allowed_values",
      "patch": {"file": "datamimic.xml", "old": "where=\"int(amount_cents) &gt;= 1000\" columns=\"order_id\"", "new": "where=\"int(amount_cents) &gt;= 999\" columns=\"order_id\""}},
-    {"name": "count_above_kept_rows_without_cyclic", "diagnostic": "DM316",
+    {"name": "count_above_kept_rows_without_cyclic", "diagnostic": "validation",
      "patch": {"file": "datamimic.xml", "old": " cyclic=\"True\"", "new": ""}},
+    {"name": "count_with_where_above_kept_rows", "diagnostic": "validation",
+     "patch": {"file": "datamimic.xml", "old": "<iterate name=\"order_report\" source=\"data/fixtures/orders.ent.csv\" distribution=\"ordered\"", "new": "<iterate name=\"order_report\" source=\"data/fixtures/orders.ent.csv\" distribution=\"ordered\" count=\"5\""}},
     {"name": "cyclic_without_where_wraps_all_rows", "diagnostic": "allowed_values",
      "patch": {"file": "datamimic.xml", "old": "where=\"channel == 'STORE' and int(amount_cents) &gt;= 1000\" ", "new": ""}}
   ]

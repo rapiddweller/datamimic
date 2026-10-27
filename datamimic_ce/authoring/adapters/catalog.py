@@ -352,6 +352,9 @@ class CeDslCatalog:
                             "distribution and paging; without count the count is the number of kept rows, so Build "
                             "proves a product of up to max_count kept rows (default 10). where reads the row's "
                             "columns as bare names or this.<column> and must not read the clock or draw random values. "
+                            "A column name with a space or a Python keyword is this['order id'] or this['class']. "
+                            "Omit count when you use where=: a count above the kept rows without cyclic stops at the "
+                            "kept rows, and Build cannot prove that capture complete. "
                             'columns="a, b" lists the source columns that go into the output, in that order; the '
                             "other columns stay readable by keys and scripts as row variables, and a key with the "
                             'name of an unlisted column writes it. columns="" copies none. Both apply to file '

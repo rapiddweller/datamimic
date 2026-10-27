@@ -42,9 +42,9 @@ CE is done (#399). EE follows in [EE #89](https://gitlab.dwellerlab.com/rapiddwe
 | E1a | `SOURCE_SELECTOR_BLANK` (`I196`): blank `selector` or `iterationSelector` on a database source (#397) | present | not defined (EE uses up to `I195`) | `gap` | Owner: EE reservation. Reserve `I196` with the same name in EE. |
 | E1b | `SOURCE_INVALID_XLSX` (`I197`): file is not an `.xlsx` workbook (#379) | present | not defined | `gap` | Owner: EE reservation. Reserve `I197` with the same name in EE. |
 | E1c | `SOURCE_INVALID_FIXED_WIDTH` (`I198`): `.fcw` file without a valid spec line (#379) | present | not defined | `gap` | Owner: EE reservation. Reserve `I198` with the same name in EE. |
-| E1d | `GENERATE_ROW_SELECTION_FILE_ONLY` (`I199`): `where=`/`columns=` on a memstore or database source (#447) | present | not defined | `gap` | Owner: EE port, [EE #93](https://gitlab.dwellerlab.com/rapiddweller/datamimic/datamimic-ee/-/work_items/93). Reserve `I199` with the same name and template. |
-| E1e | `GENERATE_ROW_SELECTION_SOURCE_SCRIPTED` (`I200`): `where=`/`columns=` with `sourceScripted` (#447) | present | not defined | `gap` | Owner: EE port, [EE #93](https://gitlab.dwellerlab.com/rapiddweller/datamimic/datamimic-ee/-/work_items/93). Reserve `I200` with the same name and template. |
-| E1f | `SOURCE_COLUMN_UNKNOWN` (`I209`): a `columns=` name that no source row has (#447) | present | not defined (EE uses `I201` to `I208`) | `gap` | Owner: EE port, [EE #93](https://gitlab.dwellerlab.com/rapiddweller/datamimic/datamimic-ee/-/work_items/93). Reserve `I209` with the same name and template. |
+| E1d | `GENERATE_ROW_SELECTION_FILE_ONLY` (`I199`): `where=`/`columns=` on a memstore or database source (#447) | present | not defined | `gap` | Owner: EE port, [EE #93](https://gitlab.dwellerlab.com/rapiddweller/datamimic/datamimic-ee/-/work_items/93). Reserve `I199` with the same name and template. `I199` is the last number of the EE `I1xx` source range; the later source codes `I200` and `I209` fall into the `I2xx` include range (E1e, E1f). |
+| E1e | `GENERATE_ROW_SELECTION_SOURCE_SCRIPTED` (`I200`): `where=`/`columns=` with `sourceScripted` (#447) | present | not defined | `gap` | Owner: EE port, [EE #93](https://gitlab.dwellerlab.com/rapiddweller/datamimic/datamimic-ee/-/work_items/93). Reserve `I200` with the same name and template. `I200` is a source code inside the `I2xx` include range of EE; reserve it in EE #93 with the family exception noted. |
+| E1f | `SOURCE_COLUMN_UNKNOWN` (`I209`): a `columns=` name that no source row has (#447) | present | not defined (EE uses `I201` to `I208`) | `gap` | Owner: EE port, [EE #93](https://gitlab.dwellerlab.com/rapiddweller/datamimic/datamimic-ee/-/work_items/93). Reserve `I209` with the same name and template. `I209` is a source code inside the `I2xx` include range, and it is the next free EE include number: reserve it in EE #93 before EE adds an include code. |
 | E2 | Code name, title and severity of the 104 shared codes | same | same | `identical` | Catalog comparison. |
 | E3 | Error code templates (`E0xx`, 15) | same | same | `identical` | Catalog comparison. |
 | E4 | EE-only issue codes | none | 307 | `EE-only` | EE features (native engine, ML, HL7, platform). No CE action. |
@@ -121,6 +121,6 @@ These rows are not compared yet. They need a comparison before the release date.
 | `identical` | 11 |
 | `CE-extension` | 3 |
 | `EE-only` | 4 |
-| `gap` | 16 |
+| `gap` | 17 |
 | `unverified` | 1 |
 | Open rows (not compared) | 9 |

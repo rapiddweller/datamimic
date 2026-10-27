@@ -157,7 +157,7 @@ The applicable Ollama protocol references are [tool calling](https://docs.ollama
    not comma. Reading a comma CSV needs `separator=","`.
 5. Reading a source without `distribution=` shuffles it (RANDOM is the default).
    Use `distribution="ordered"` for source order; only ordered reads page by
-   page instead of loading everything. `where=` (one row, no clock, no random draws) filters a file source and loads its kept rows once per chunk; `columns=` selects output columns.
+   page instead of loading everything. `where=` (one row, no clock, no random draws) filters a file source and loads its kept rows once per chunk and once per parent invocation in a nested generate; `columns=` selects output columns.
 6. No `rngSeed` on `<setup>` means every run differs, by design. Seeded runs
    replay identically and force single-process execution. The seed does not fix
    the iteration order of a set of strings across processes: iterate
