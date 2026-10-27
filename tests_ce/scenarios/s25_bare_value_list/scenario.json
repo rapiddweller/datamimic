@@ -1,0 +1,18 @@
+{
+  "title": "values= reads a list of plain names as strings, in Build and in datamimic run",
+  "proves": [
+    "values=\"LOW,MEDIUM,HIGH\" on a <key> and on a <variable> gives the three strings",
+    "Build derives the closed set of the names and checks it against the acceptance",
+    "a name outside the accepted set is rejected",
+    "a keyword or a space in the list keeps the list an error, in Build and in datamimic run"
+  ],
+  "products": {"tickets": 12},
+  "negatives": [
+    {"name": "a_name_outside_the_accepted_set", "diagnostic": "allowed_values",
+     "patch": {"file": "datamimic.xml", "old": "values=\"LOW,MEDIUM,HIGH\"", "new": "values=\"LOW,MEDIUM,URGENT\""}},
+    {"name": "a_keyword_in_the_list", "diagnostic": "input", "run_error": "values",
+     "patch": {"file": "datamimic.xml", "old": "values=\"LOW,MEDIUM,HIGH\"", "new": "values=\"LOW,MEDIUM,True\""}},
+    {"name": "a_space_in_the_list", "diagnostic": "input", "run_error": "values",
+     "patch": {"file": "datamimic.xml", "old": "values=\"LOW,MEDIUM,HIGH\"", "new": "values=\"LOW, MEDIUM, HIGH\""}}
+  ]
+}

@@ -141,7 +141,8 @@ class KeyModel(BaseModel):
         None,
         description=(
             "Comma-separated values to pick from for the key, written as quoted Python literals, "
-            "for example \"'A', 'B'\" or \"[1, 2]\"."
+            "for example \"'A', 'B'\" or \"[1, 2]\". Plain names without spaces or quotes, for example "
+            '"LOW,MEDIUM,HIGH", are read as strings; a list with True, False or None is not.'
         ),
         examples=["1,2,3", "'A','B','C'"],
     )

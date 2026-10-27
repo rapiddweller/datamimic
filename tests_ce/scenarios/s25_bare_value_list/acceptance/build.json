@@ -1,0 +1,8 @@
+{
+  "version": "5.0",
+  "expectations": [
+    {"kind": "exact_count", "subject": {"kind": "product", "product": "tickets"}, "count": 12},
+    {"kind": "allowed_values", "subject": {"kind": "product", "product": "tickets"}, "field": "priority", "values": ["LOW", "MEDIUM", "HIGH"]},
+    {"kind": "allowed_values", "subject": {"kind": "product", "product": "tickets"}, "field": "plan_name", "values": ["BASIC", "PLUS", "PRO"]}
+  ]
+}

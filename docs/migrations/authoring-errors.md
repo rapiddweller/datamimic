@@ -104,6 +104,12 @@ list both spellings; `min` beside `minimum` is rejected. `minimum` and `maximum`
 `min` and `max` in `x-datamimic-repair-aliases`. EE Build must accept the same spellings before
 a CE-ready `build.json` is EE-ready.
 
+`values="LOW,MEDIUM,HIGH"` on a `<key>` or `<variable>` now gives the strings `LOW`, `MEDIUM` and
+`HIGH` in Build and in `datamimic run`; before, both rejected it. The rule applies only when every
+comma-separated part is a plain ASCII name (letters, digits, underscore) and no part is a Python
+keyword. One name alone, a space, a quote or `True` in the list keeps the error. The one parser is
+`parse_literal_values`; EE must read the same form before such a descriptor is EE-ready.
+
 ## Public contract
 
 Persist XML as the executable project. `DmJsonDocumentV1` is an in-memory agent
