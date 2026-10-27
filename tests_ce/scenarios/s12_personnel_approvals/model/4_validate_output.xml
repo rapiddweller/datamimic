@@ -11,7 +11,7 @@
         <key name="seat_id" script="this.seat_id"/>
         <key name="r1_employed" script="any(row.person_id == this.person_id and row.company_id == position.company_id and row.function_id == this.function_id for row in employments)"/>
         <key name="r2_licensed" script="any(row.person_id == this.person_id and row.license_type == policy.base_license and row.status == policy.active_status and row.expires_on is not None and row.expires_on &gt;= position.valid_on for row in person_licenses)"/>
-        <key name="r3_qualified" script="(this.person_id, policy.required_qualification[this.function_id]) in {(row.person_id, row.qualification_id) for row in person_qualifications}"/>
+        <key name="r3_qualified" script="any(row.person_id == this.person_id and row.qualification_id == policy.required_qualification[this.function_id] for row in person_qualifications)"/>
     </generate>
     <!-- R4 to R6 for each position: they need every seat that a person holds. Build needs a reader of step 2 rows. -->
     <generate name="plan_check" source="mem" sourceEntity="suitability" distribution="ordered" target="JSON">
