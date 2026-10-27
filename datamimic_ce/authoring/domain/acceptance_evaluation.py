@@ -56,6 +56,13 @@ _DATE_LITERAL_PATTERN = r"\d{4}-\d{2}-\d{2}\Z"
 _DATETIME_LITERAL_PATTERN = r"\d{4}-\d{2}-\d{2}[ T]\d{2}:\d{2}:\d{2}(?:\.\d{1,6})?\Z"
 
 
+# Build joins a child row to its parent only through one key that copies a unique parent field.
+_GROUP_BY_PARENT_COPY = (
+    "Build groups the child rows by one child <key> whose script is exactly parent.<field> of a unique parent "
+    'field, for example <key name="depot_id" script="parent.depot_id"/>.'
+)
+
+
 @dataclass(frozen=True)
 class _ExpectationFailure:
     message: str
@@ -309,7 +316,7 @@ def _check_expectation(
         if parent_groups is None:
             return _ExpectationFailure(
                 f"could not group '{subject.child_product}' by '{subject.parent_product}'",
-                {"expected": expectation.count, "actual": None},
+                {"expected": expectation.count, "actual": None, "remediation": _GROUP_BY_PARENT_COPY},
             )
         counts = {parent: len(rows) for parent, rows in parent_groups.items()}
         if any(count != expectation.count for count in counts.values()):

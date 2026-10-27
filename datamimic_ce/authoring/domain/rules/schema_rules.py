@@ -18,6 +18,7 @@ from datamimic_ce.authoring.domain.rules.base import LintContext, Rule
 from datamimic_ce.authoring.domain.xml_diagnostics import Diagnostic
 from datamimic_ce.engine.dsl.api import (
     ATTR_GENERATOR,
+    ATTR_SOURCE,
     DATA_TYPE_DICT,
     DATA_TYPE_LIST,
     EL_COMMENT,
@@ -199,6 +200,8 @@ def _check_distribution_element(
             f'type="int"/"float"/"decimal" with min=/max=). Use one of: '
             f"{', '.join(sorted(valid_distributions))}."
         )
+        if element.get(ATTR_SOURCE) is not None:
+            hint = f"A <{tag} source> already draws by the weights of its file: remove distribution=. {hint}"
     else:
         hint = f"Use one of: {', '.join(sorted(valid_distributions))}."
     yield ctx.diag(
@@ -206,6 +209,7 @@ def _check_distribution_element(
         element,
         evidence=f"distribution='{distribution}' on <{tag}>",
         fix_context=hint,
+        names_only=True,  # the tag and the registered distribution names, never the written value
     )
 
 

@@ -164,3 +164,31 @@ def test_a_memstore_readback_of_a_subset_names_the_nested_form(tmp_path: Path) -
 
     [error] = [item for item in errors if item.message.startswith("Memstore readback must preserve")]
     assert "exactly once" in str(error.remediation) and "nest" in str(error.remediation)
+
+
+def test_a_child_without_a_parent_copy_names_the_grouping_key(tmp_path: Path) -> None:
+    xml = (
+        '<setup rngSeed="1"><generate name="depots" count="2"><key name="depot_id" generator="IncrementGenerator"/>'
+        '<generate name="slots" count="2"><key name="depot_id" script="depot_id"/></generate></generate></setup>'
+    )
+    count = {
+        "kind": "per_parent_count",
+        "subject": {"kind": "per_parent", "parent_product": "depots", "child_product": "slots"},
+        "count": 2,
+    }
+
+    errors = [item for item in _errors(tmp_path, xml, expectations=[count]) if item.message.startswith("could not")]
+
+    assert errors and all('script="parent.' in str(error.remediation) for error in errors)
+
+
+def test_a_distribution_on_a_weighted_key_says_the_file_weights_apply(tmp_path: Path) -> None:
+    (tmp_path / "functions.wgt.csv").write_text("OPERATOR|80\nPLANNER|20\n", encoding="utf-8")
+    xml = (
+        '<setup rngSeed="1"><generate name="rows" count="2">'
+        '<key name="function" source="functions.wgt.csv" distribution="weighted"/></generate></setup>'
+    )
+
+    remediations = [str(item.remediation) for item in _errors(tmp_path, xml) if str(item.code) == "DM105"]
+
+    assert remediations and all("remove distribution=" in text for text in remediations), remediations
