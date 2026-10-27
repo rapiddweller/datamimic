@@ -75,6 +75,7 @@ CE is done (#399). EE follows in [EE #89](https://gitlab.dwellerlab.com/rapiddwe
 | A4 | Focused schema names | 13, with compile/decompile requests and results, `ready_build`, `rejected_build`, `build_request_v5` | 7, with `build_request_v4` | `gap` | Follows A1. Owner: EE, [EE #87](https://gitlab.dwellerlab.com/rapiddweller/datamimic/datamimic-ee/-/work_items/87). |
 | A5 | Lint rule codes | 40 numbered `DM` codes plus build rule ids | 18 published rule entries, no `DM` codes | `gap` | Owner: EE, [EE #88](https://gitlab.dwellerlab.com/rapiddweller/datamimic/datamimic-ee/-/work_items/88). |
 | A6 | Bounded execution of `clear` and `drop` | skip with `not_executed` warning | not specified | `unverified` | Needs the destructive-operations port to EE first. |
+| A7 | Bounded execution of a failed `<assert>` | `assert_failed` at the assert line; keeps the products that completed; `not_executed` for the other checks; message only when literal | the run error as a diagnostic, with the message; no products | `gap` | EE has no Build v5 (A1). Corpus: `tests_ce/scenarios/s21_assert_gate`. |
 
 ## Behavior cases
 

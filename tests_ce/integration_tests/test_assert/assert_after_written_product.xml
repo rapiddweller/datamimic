@@ -1,0 +1,10 @@
+<setup rngSeed="1">
+    <!-- The run writes first.csv, then the assert in the second product stops it: second.csv is never written. -->
+    <generate name="first" count="3" target="CSV">
+        <key name="id" generator="IncrementGenerator"/>
+    </generate>
+    <generate name="second" count="3" target="CSV">
+        <key name="id" generator="IncrementGenerator"/>
+        <assert condition="this.id &lt; 2" message="second stops at id 2"/>
+    </generate>
+</setup>

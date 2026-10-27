@@ -1,8 +1,11 @@
+import shutil
 from pathlib import Path
 
 import pytest
+from typer.testing import CliRunner
 
 from datamimic_ce.errors import IssueCode, TaskConfigError
+from datamimic_ce.interfaces.cli import app
 from datamimic_ce.interfaces.python.data_mimic_test import DataMimicTest
 
 _DIR = Path(__file__).resolve().parent
@@ -53,3 +56,11 @@ def test_assert_violation_in_a_worker_process_stops_the_run():
     with pytest.raises(TaskConfigError, match=r"idx 7 is forbidden") as exc:
         _run("assert_violated_multiprocess.xml")
     assert exc.value.issue_code is IssueCode.TASK_ASSERT_FAILED
+
+
+def test_a_failed_assert_keeps_the_files_of_the_products_before_it(tmp_path, monkeypatch):
+    shutil.copy(_DIR / "assert_after_written_product.xml", tmp_path / "datamimic.xml")
+    monkeypatch.chdir(tmp_path)
+
+    assert CliRunner().invoke(app, ["run", "datamimic.xml"]).exit_code == 1
+    assert [path.name for path in (tmp_path / "output").rglob("*.csv")] == ["first.csv"]

@@ -224,7 +224,8 @@ def _failed_assert(
     except (OSError, ValueError, etree.XMLSyntaxError):
         found = []
     if len(found) != 1 or location.line is None:
-        return (*path, "assert", *line), "An <assert> failed.", None
+        shared = "An <assert> on this line failed. The line holds more than one <assert>, so Build shows no message."
+        return (*path, "assert", *line), shared if len(found) > 1 else "An <assert> failed.", None
     raw, owner = found[0]
     where = "under <setup>" if owner is None else f"in '{owner}'"
     rule = raw if raw and not any(mark in raw for mark in _INTERPOLATION_MARKS) else None

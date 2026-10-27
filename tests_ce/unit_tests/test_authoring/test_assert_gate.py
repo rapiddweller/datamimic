@@ -15,7 +15,13 @@ from typer.testing import CliRunner
 
 from datamimic_ce.authoring import create_authoring_application
 from datamimic_ce.authoring.domain.reference import AuthoringLearningReference
-from datamimic_ce.authoring.domain.requests import PROJECT_ENTRY_PATH, ReferenceRequest, ReferenceTopic, RejectedBuild
+from datamimic_ce.authoring.domain.requests import (
+    PROJECT_ENTRY_PATH,
+    ReferenceRequest,
+    ReferenceTopic,
+    RejectedBuild,
+    RunRequest,
+)
 from datamimic_ce.interfaces.cli import app
 
 _PROJECT = Path(__file__).resolve().parents[2] / "scenarios" / "s21_assert_gate"
@@ -113,6 +119,28 @@ def test_a_message_that_can_hold_a_value_is_not_shown(tmp_path: Path, negative: 
     # A normal run resolves {audit_note} to this value (scenario.json run_error); Build must not show it.
     assert "TOPSECRET-21" not in serialized
     assert "{audit_note}" not in serialized and "__qty__" not in serialized
+
+
+def test_two_asserts_on_one_line_show_no_message(tmp_path: Path) -> None:
+    result = _build(tmp_path, "asserts_share_a_line")
+
+    [failed] = [item for item in result.diagnostics if str(item.code) == "assert_failed"]
+    assert failed.path == ("descriptor", "datamimic.xml", "assert", "line", 11)
+    assert failed.expected is None
+    assert "more than one <assert>" in failed.message
+
+
+def test_authoring_dry_run_is_not_ok_and_shows_the_kept_products(tmp_path: Path) -> None:
+    project = _copy(tmp_path, "fails_in_included_step")
+    xml = (project / PROJECT_ENTRY_PATH).read_text(encoding="utf-8")
+
+    result = create_authoring_application(project, descriptor_path=PROJECT_ENTRY_PATH).dry_run(
+        RunRequest(xml=xml, descriptor_path=PROJECT_ENTRY_PATH, max_count=20)
+    )
+
+    assert result.ok is False
+    assert [str(item.code) for item in result.diagnostics if item.severity == "error"] == ["assert_failed"]
+    assert [product.name for product in result.products] == ["items", "lines", "parts"]
 
 
 def test_an_assert_without_message_says_so(tmp_path: Path) -> None:
