@@ -19,7 +19,7 @@ benchmarks/authoring_eval/
   cases/<id>/
     prompt.md          the only text the subject sees
     oracle.json        the checks (hidden from the subject)
-    fixtures/          files given to the subject with the prompt (only some cases)
+    fixtures/          files given to the subject with the prompt (only some cases): *.ent.csv, *.wgt.csv, pipe-separated UTF-8
     fixtures_changed/  the same files with other values; the oracle runs the project with them too (hidden)
     reference/         a good project; the positive test of the oracle (hidden)
     README.md          the prompt-to-check mapping and the equivalence classes (only e06, e07; hidden)
@@ -37,7 +37,7 @@ Raw transcripts and run directories stay outside the repository.
 | e02 | complex | parent and child | exact count per parent, a parent key in each child, unique id over all children; a flat project passes too |
 | e03 | complex | parent and child | the exact 12 slot rows of a prescribed `slot_id` formula, with no helper field; a literal table of the rows passes too |
 | e04 | complex | entity file to JSON | a pipe-separated UTF-8 `.ent.csv` file with a header, a non-ASCII value, text to number, derived field, field subset, file output, rows that come from the input |
-| e06 | complex | staffing register | five tables, foreign keys, counts per parent, a unique pair, a closed set, a derived field, an assignment that needs an employment of the same person, company and function and a license valid on its date (both days count, no expiry is never valid) |
+| e06 | complex | staffing register | five tables, foreign keys, counts per parent, a unique pair, a closed set drawn from a headerless weighted `.wgt.csv` file (other names in `fixtures_changed/`), a derived field, an assignment that needs an employment of the same person, company and function and a license valid on its date (both days count, no expiry is never valid) |
 | e07 | complex | two entity files to JSON | pipe-separated UTF-8 `.ent.csv` files with a non-ASCII name, a join with a default, a threshold filter, a tier discount rounded down, a date window with both days included, an exact field subset, rows that come from the input |
 
 ## Oracle checks
@@ -51,7 +51,7 @@ Raw transcripts and run directories stay outside the repository.
 | `unique` | every value of the field is a text or a number, and no value repeats. Floats and texts are accepted. |
 | `whole_number` | every value is a Python `int`. A `bool`, a float and a text fail. |
 | `per_parent_count` | each parent key owns exactly `n` child rows. Keys are compared as text, so keep `whole_number` on the parent key. |
-| `value_in` | every value is in `values`. |
+| `value_in` | every value is in `values`. With `fixtures`, the check reads the run with that case directory laid over `fixtures/` (e06: the functions of a weighted file). |
 | `range` | every value is a whole number (as `whole_number`) from `min` to `max`, inclusive. |
 | `text` | every row has the field, and the value is a text that is not empty. A number, `None` and `""` fail. A numeric string such as `"123"` and a blank string pass, so `script="str(ticket_id)"` passes. |
 | `unique_together` | every row has each of `fields` as a text or a number, and no two rows hold the same combination. One field alone may repeat. |
@@ -66,7 +66,7 @@ Raw transcripts and run directories stay outside the repository.
 
 The oracle compares the submitted `fixtures/` with the case fixtures first. Then it copies the project to private directories and lays the case fixtures over each copy.
 It runs `Build` on one copy. It runs the other copies at the same time and captures the rows per product from each run.
-Every row check reads the rows of the first run. An `output_rows` check with another `fixtures` directory gets one more run with that directory.
+Every row check reads the rows of the first run. An `output_rows` or `value_in` check with another `fixtures` directory gets one more run with that directory, and reads that run.
 The verdict is JSON. It holds one short reason for each check and no row value.
 The exit code is `0` when all checks pass and `1` otherwise.
 
@@ -79,7 +79,9 @@ Limits of the oracle:
   - e05: `tier=GOLD`, `list_price=900`, `sale_price=50` in all 40 rows passes. That is literal compliance with the prompt.
 - e06: the subject makes its own data, so a rule binds only the rows the subject makes. e06 proves that the rows obey the rules, not that the subject handled the expiry-day or null boundary.
   `row_exists_in` needs one matching license. A project whose licenses all cover the whole year passes, though it never puts a work date on an expiry day and never needs a license without an expiry date. The reference and the variants prove each boundary of the check.
-- e06: a project that types all 124 consistent rows passes. The oracle proves the values, not the generation, as for e03.
+- e06: a project that types all 124 consistent rows fails only the hidden function set. With the functions read from the file, it passes:
+  the oracle proves the values, not the generation, as for e03. The two function checks prove the closed set, not the shares
+  (`cases/e06/README.md`, "The weighted list").
 - The capture writes a value that is not JSON as its text. A Python `date` becomes `"2026-03-01"` and passes `date_range`; a `datetime` becomes `"2026-03-01 00:00:00"` and fails it. The prompt asks for a text, and the oracle cannot see that difference.
 - `row_exists_in` proves that a matching row exists, not that the project intended that row: a project can match by chance. With the case seed, the cheat with random foreign keys fails: its 20 random assignments do not all match an employment.
 - e04 proves that the rows come from the input file with a second file of other values (`fixtures_changed/`). It does not prove how the project reads the file.

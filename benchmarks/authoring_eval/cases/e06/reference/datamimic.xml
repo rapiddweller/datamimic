@@ -25,7 +25,7 @@
             <key name="employment_id" script="parent.person_id * 10 + n"/>
             <key name="person_id" script="parent.person_id"/>
             <key name="company_id" script="(parent.person_id + n) % 4 + 1"/>
-            <key name="function" values="'OPERATOR', 'INSPECTOR', 'PLANNER'"/>
+            <key name="function" source="fixtures/functions.wgt.csv"/>
             <!-- The one assignment of the person copies the first employment, so it always matches one. -->
             <generate name="assignments" count="{1 if n == 1 else 0}">
                 <key name="assignment_id" script="parent.employment_id"/>

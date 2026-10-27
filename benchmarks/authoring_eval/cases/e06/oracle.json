@@ -12,6 +12,7 @@
     {"kind": "whole_number", "product": "employments", "field": "employment_id"},
     {"kind": "row_exists_in", "product": "employments", "target": "companies", "fields": ["company_id"]},
     {"kind": "value_in", "product": "employments", "field": "function", "values": ["OPERATOR", "INSPECTOR", "PLANNER"]},
+    {"kind": "value_in", "product": "employments", "field": "function", "fixtures": "fixtures_changed", "values": ["WELDER", "DRIVER", "CLERK", "MEDIC"]},
     {"kind": "unique_together", "product": "employments", "fields": ["person_id", "company_id"]},
     {"kind": "exact_count", "product": "licenses", "n": 40},
     {"kind": "per_parent_count", "child": {"product": "licenses", "field": "person_id"}, "parent": {"product": "people", "field": "person_id"}, "n": 2},

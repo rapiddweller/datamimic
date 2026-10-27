@@ -1,7 +1,9 @@
 # e06 staffing register
 
-Hidden from the subject. The subject gets `prompt.md` only.
-The case asks for five tables with foreign keys and three rules across tables. The data is generated: no fixtures.
+Hidden from the subject. The subject gets `prompt.md` and `fixtures/` only.
+The case asks for five tables with foreign keys and three rules across tables. The data is generated, except the functions.
+`fixtures/functions.wgt.csv` is a weighted list without a header: `value|weight` on each line.
+`fixtures_changed/functions.wgt.csv` holds other functions. The oracle runs the project with it too, so a typed list fails.
 
 ## Prompt to check
 
@@ -17,7 +19,7 @@ The case asks for five tables with foreign keys and three rules across tables. T
 | employment `person_id` is the person's whole number | `whole_number:employments.person_id` |
 | `employment_id` is a different whole number | `unique:employments.employment_id`, `whole_number:employments.employment_id` |
 | employment `company_id` is a company in `companies` | `row_exists_in:employments->companies` |
-| `function` is `OPERATOR`, `INSPECTOR` or `PLANNER` | `value_in:employments.function` |
+| `function` is drawn from `fixtures/functions.wgt.csv` | `value_in:employments.function` (the visible names), `value_in:employments.function:fixtures_changed` (the hidden names) |
 | never two employments at the same company | `unique_together:employments.person_id+company_id` |
 | 2 licenses for each person, 40 in total | `exact_count:licenses`, `per_parent_count:licenses.person_id` |
 | license `person_id` is the person's whole number | `whole_number:licenses.person_id` |
@@ -40,7 +42,8 @@ The type of a foreign key is checked by `row_exists_in`: it compares the JSON ty
 The one assignment of a person sits under the first employment and copies it. So the employment rule holds by construction.
 The work day is a person variable. The first license expires on that day, so the reference proves that the expiry day counts.
 e06 proves that the rows obey the rules, not that the subject handled the expiry-day or null boundary: `row_exists_in` needs one matching license.
-The 124 rows are in the Build row cap of 1000. The assignment count is an expression, so Build cannot derive the row total: the reference sets `max_count` to 124.
+The function key reads the weighted file (`source=` on the `<key>`), with no separator attribute.
+The 124 rows are in the Build row cap of 1000. The hidden set adds a capture run, not a Build. The assignment count is an expression, so Build cannot derive the row total: the reference sets `max_count` to 124.
 
 ## Equivalence classes
 
@@ -53,11 +56,26 @@ The `e06` variants and cheats in `test_authoring_eval.py` cover these classes:
 - count per parent: employments, licenses, assignments, companies, a person without an assignment
 - duplicate: a pair in employments, a pair in assignments, ids
 - invalid rule: another company, function or person
-- closed set, derived field
+- closed set from the weighted file: a function outside the file; the visible names and weights typed into the project (fails the hidden set only); the file read through a `<variable>` (passes)
+- derived field
 - type: text ids and foreign keys, a date of another form, a number as a name, an empty name
 - order: the people in reverse order (passes)
 - seed and hash order
-- cheat: random foreign keys from the right sets
+- cheat: random foreign keys from the right sets, with typed functions
+
+## The weighted list
+
+The two `value_in` checks prove the closed set of each fixture set. They do not prove the shares.
+No check of the shares exists, for two reasons:
+
+1. Every engine form that reads the file draws with the weights. `<key source>` and `<variable source>` sample with replacement.
+   `distribution="ordered"` and `storage="data"` on a headerless `.wgt.csv` are refused, and `<generate source>` refuses it too.
+   So a project that ignores the weights must type the names, and the hidden set fails it.
+2. A frequency check is weak. "The name of weight 80 is the most frequent of the 40" is stable: an honest draw misses it with a
+   probability of 8e-7. But a uniform draw passes it 30 % of the time, and a typed list with the right weights passes it always.
+
+Engine facts from probes: a weight of 0 is never drawn; a duplicate value adds its weights; an empty weight on a later line stops the run with a `ValueError`.
+A first line whose weight is not a number is read as a header and skipped.
 
 `test_every_check_of_the_complex_cases_fails_in_some_variant` proves that each check fails in at least one variant or cheat.
 The synthetic tests of `unique_together`, `row_exists_in` and `date_range` cover null, empty, absent, non-ISO and calendar-invalid dates.

@@ -16,7 +16,7 @@ Create a repeatable staffing register of five datasets: `companies`, `people`, `
 - `employment_id`, a whole number that is different for every employment;
 - `person_id`, the `person_id` of the person;
 - `company_id`, the `company_id` of a company in `companies`;
-- `function`, one of `OPERATOR`, `INSPECTOR` or `PLANNER`.
+- `function`, drawn from the weighted list in `fixtures/functions.wgt.csv`. Each line of that pipe-separated UTF-8 file holds a function and its weight, and the file has no header row. A weight is the relative share.
 
 A person never has two employments at the same company.
 

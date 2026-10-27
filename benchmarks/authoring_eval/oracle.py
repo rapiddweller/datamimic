@@ -57,7 +57,7 @@ class Output:
 
     error: str | None  # exception class name when the run failed
     files: dict[str, list[object]] = field(default_factory=dict)  # file stem -> parsed JSON array
-    products: frozenset[str] = frozenset()  # the products the run captured
+    rows: dict[str, list[Row]] = field(default_factory=dict)  # the rows the run captured, per product
 
 
 @dataclass(frozen=True)
@@ -74,13 +74,19 @@ class Observed:
     edited_fixtures: tuple[str, ...] = ()  # the supplied fixture files that the project changed or deleted
 
 
-def _product_rows(observed: Observed, product: str) -> list[Row] | str:
-    """The product's rows, or the reason there are none."""
-    if observed.run_error is not None:
-        return f"run failed: {observed.run_error}"
-    if product not in observed.rows:
+def _product_rows(observed: Observed, product: str, fixtures: str = _FIXTURES) -> list[Row] | str:
+    """The product's rows in the run with the case directory ``fixtures``, or the reason there are none."""
+    if fixtures == _FIXTURES:
+        error, rows = observed.run_error, observed.rows
+    elif (output := observed.outputs.get(fixtures)) is not None:
+        error, rows = output.error, output.rows
+    else:
+        return f"no run with {fixtures}"
+    if error is not None:
+        return f"run failed: {error}"
+    if product not in rows:
         return f"product {product} was not produced"
-    return observed.rows[product]
+    return rows[product]
 
 
 def _row_difference(found: list[Row] | list[object], wanted: list[dict[str, Scalar]]) -> str | None:
@@ -270,9 +276,9 @@ class FieldRef(BaseModel):
     product: str
     field: str
 
-    def values(self, observed: Observed) -> list[object] | str:
+    def values(self, observed: Observed, fixtures: str = _FIXTURES) -> list[object] | str:
         """The field's value in every row, or the reason they cannot be read."""
-        rows = _product_rows(observed, self.product)
+        rows = _product_rows(observed, self.product, fixtures)
         if isinstance(rows, str):
             return rows
         if any(self.field not in row for row in rows):
@@ -304,16 +310,21 @@ class PerParentCount(_Check):
 
 
 class ValueIn(_Check):
+    """Every value is in ``values``, in the run with the case directory ``fixtures`` laid over ``fixtures/``. A
+    closed set that the input file defines needs one check for each fixtures directory."""
+
     kind: Literal["value_in"]
     product: str
     field: str
     values: list[Scalar]
+    fixtures: str = _FIXTURES
 
     def label(self) -> str:
-        return f"value_in:{self.product}.{self.field}"
+        label = f"value_in:{self.product}.{self.field}"
+        return label if self.fixtures == _FIXTURES else f"{label}:{self.fixtures}"
 
     def failure(self, observed: Observed) -> str | None:
-        found = FieldRef(product=self.product, field=self.field).values(observed)
+        found = FieldRef(product=self.product, field=self.field).values(observed, self.fixtures)
         if isinstance(found, str):
             return found
         outside = [value for value in found if value not in self.values]
@@ -417,14 +428,14 @@ class OutputRows(_Check):
             return f"no run with {self.fixtures}"
         if output.error is not None:
             return f"run failed: {output.error}"
-        if self.product not in output.products:
+        if self.product not in output.rows:
             return f"product {self.product} was not produced"
         name = re.compile(re.escape(self.product) + r"(?:_\d+)?")
         # a product named priced_orders_0 also writes priced_orders_0.json, which is not a part of priced_orders
         rows = [
             row
             for stem, part in output.files.items()
-            if name.fullmatch(stem) is not None and (stem == self.product or stem not in output.products)
+            if name.fullmatch(stem) is not None and (stem == self.product or stem not in output.rows)
             for row in part
         ]
         if not rows:
@@ -650,8 +661,8 @@ def _observe(case: str, project: Path, changed_fixtures: list[str]) -> Observed:
                 None if isinstance(build, ReadyBuild) else f"Build {build.outcome} in phase {build.phase.value}"
             )
         first, second, *changed = [_finish(*run) for run in runs]
-        outputs = {_FIXTURES: Output(first.error, json_outputs(first_copy), frozenset(first.rows))} | {
-            name: Output(capture.error, json_outputs(copy), frozenset(capture.rows))
+        outputs = {_FIXTURES: Output(first.error, json_outputs(first_copy), first.rows)} | {
+            name: Output(capture.error, json_outputs(copy), capture.rows)
             for name, copy, capture in zip(changed_fixtures, changed_copies, changed, strict=True)
         }
         return Observed(
@@ -668,7 +679,9 @@ def _observe(case: str, project: Path, changed_fixtures: list[str]) -> Observed:
 
 def evaluate(case: str, project: Path) -> Verdict:
     spec = OracleSpec.model_validate_json((CASES / case / "oracle.json").read_text(encoding="utf-8"))
-    changed = sorted({c.fixtures for c in spec.checks if isinstance(c, OutputRows) and c.fixtures != _FIXTURES})
+    changed = sorted(
+        {c.fixtures for c in spec.checks if isinstance(c, OutputRows | ValueIn) and c.fixtures != _FIXTURES}
+    )
     observed = _observe(case, project, changed)
     results = []
     for check in spec.checks:

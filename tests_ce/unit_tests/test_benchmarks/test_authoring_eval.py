@@ -35,6 +35,7 @@ from benchmarks.authoring_eval.oracle import (
     FieldRef,
     Observed,
     OracleSpec,
+    Output,
     OutputRows,
     PerParentCount,
     Repeatable,
@@ -43,6 +44,7 @@ from benchmarks.authoring_eval.oracle import (
     Text,
     Unique,
     UniqueTogether,
+    ValueIn,
     WholeNumber,
     _finish,
     _start,
@@ -87,6 +89,7 @@ _E06_EXPIRY = (
     "script=\"'2026-03-%02d' % parent.work_day if n == 1 else (None if parent.person_id % 2 == 0 else '2026-12-31')\""
 )
 _PERSON = '\n            <key name="person_id" script="parent.person_id"/>'
+_E06_FUNCTION = 'source="fixtures/functions.wgt.csv"'
 _E07_KEPT = "[order for order in orders if int(order.amount_cents) &gt;= 1000]"
 _E07_NET = "amount - amount * percent // 100"
 _E07_LAST_KEY = (
@@ -517,11 +520,19 @@ _BROKEN = [
         {_XML: [("(parent.person_id + n) % 4 + 1", "(parent.person_id + 1) % 4 + 1")]},
         frozenset({"unique_together:employments.person_id+company_id"}),
     ),
+    # the reference acceptance has the visible set too
     Broken(
         "e06",
-        "function_outside_the_set",
-        {_XML: [("values=\"'OPERATOR', 'INSPECTOR', 'PLANNER'\"", "values=\"'OPERATOR', 'INSPECTOR', 'DRIVER'\"")]},
-        frozenset({"value_in:employments.function", "build_ready"}),  # the reference acceptance has the set too
+        "function_outside_the_file",
+        {_XML: [(_E06_FUNCTION, 'constant="SUPERVISOR"')]},
+        frozenset({"value_in:employments.function", "value_in:employments.function:fixtures_changed", "build_ready"}),
+    ),
+    # the visible list and its weights typed into the project: the hidden list has other functions
+    Broken(
+        "e06",
+        "functions_typed_into_the_project",
+        {_XML: [(_E06_FUNCTION, "values=\"'OPERATOR', 'INSPECTOR', 'PLANNER'\" weights=\"80, 15, 5\"")]},
+        frozenset({"value_in:employments.function:fixtures_changed"}),
     ),
     Broken(
         "e06",
@@ -797,6 +808,20 @@ _EQUIVALENT = [
         {_XML: [("'2026-01-%02d' % parent.person_id if n == 1", "'2026-03-%02d' % parent.work_day if n == 1")]},
         frozenset(),
     ),
+    # the weighted list read through a variable instead of the key's own source
+    Broken(
+        "e06",
+        "function_read_through_a_variable",
+        {
+            _XML: [
+                (
+                    f'<key name="function" {_E06_FUNCTION}/>',
+                    f'<variable name="drawn" {_E06_FUNCTION}/>\n            <key name="function" script="drawn"/>',
+                )
+            ]
+        },
+        frozenset(),
+    ),
     # order: the people in reverse order; every check ignores the row order
     Broken(
         "e06",
@@ -871,7 +896,8 @@ _CHEATS = {
         _typed_rows("e04", "priced_orders"),
         frozenset({"output_rows:priced_orders:fixtures_changed"}),
     ),
-    # every foreign key drawn at random from the right set: each one exists, but the rules across tables break
+    # every foreign key drawn at random from the right set: each one exists, but the rules across tables break;
+    # the functions are typed, so the hidden weighted file fails them
     ("e06", "random_foreign_keys"): (
         """<setup rngSeed="61423">
     <generate name="companies" count="4">
@@ -903,7 +929,13 @@ _CHEATS = {
         <key name="work_date" script="'2026-03-%02d' % assignment_id"/>
     </generate>
 </setup>""",
-        frozenset({"unique_together:employments.person_id+company_id", "row_exists_in:assignments->employments"}),
+        frozenset(
+            {
+                "unique_together:employments.person_id+company_id",
+                "row_exists_in:assignments->employments",
+                "value_in:employments.function:fixtures_changed",
+            }
+        ),
     ),
     # the kept rows typed into scripts: the input files are never read
     ("e07", "typed_rows"): (
@@ -954,7 +986,7 @@ def _whole_project(tmp_path: Path, case: str, xml: str) -> Path:
     return project
 
 
-@pytest.mark.parametrize(("case", "name"), sorted(_CHEATS), ids="-".join)
+@pytest.mark.parametrize(("case", "name"), sorted(_CHEATS), ids=[f"{case}-{name}" for case, name in sorted(_CHEATS)])
 def test_cheat_project_fails_the_oracle(case: str, name: str, tmp_path: Path) -> None:
     xml, fails = _CHEATS[case, name]
 
@@ -1220,6 +1252,16 @@ def test_case_fixtures_follow_the_project_file_standard(case: str) -> None:
         assert all("|" in line for line in raw.decode("utf-8").splitlines()), path
     for xml in (CASES / case / "reference").rglob("*.xml"):
         assert "separator" not in xml.read_text(encoding="utf-8").casefold(), xml
+
+
+def test_the_e06_function_sets_are_the_names_in_each_weighted_file() -> None:
+    """The oracle states each closed set literally; this keeps it equal to the first column of the file it checks."""
+    spec = OracleSpec.model_validate_json((CASES / "e06" / "oracle.json").read_text(encoding="utf-8"))
+    checks = [check for check in spec.checks if isinstance(check, ValueIn) and check.field == "function"]
+    assert {check.fixtures for check in checks} == {"fixtures", "fixtures_changed"}
+    for check in checks:
+        lines = (CASES / "e06" / check.fixtures / "functions.wgt.csv").read_text(encoding="utf-8").splitlines()
+        assert sorted(check.values) == sorted(line.split("|")[0] for line in lines)
 
 
 def test_every_case_has_broken_variants() -> None:
@@ -1544,6 +1586,24 @@ def test_repeatable_compares_the_second_run_in_order() -> None:
     assert check.failure(Observed(None, None, rows, second_rows={"p": [{"a": 1}, {"a": 2}]})) is None
     assert check.failure(Observed(None, None, rows, second_rows={"p": [{"a": 2}, {"a": 1}]})) is not None
     assert check.failure(Observed(None, None, rows, second_error="Timeout")) is not None
+
+
+def test_value_in_with_a_fixtures_set_reads_the_rows_of_that_run() -> None:
+    check = ValueIn(kind="value_in", product="p", field="f", values=["X", "Y"], fixtures="fixtures_changed")
+    observed = Observed(
+        None,
+        None,
+        {"p": [{"f": "OTHER"}]},  # the first run is not the one this check reads
+        {"fixtures_changed": Output(None, rows={"p": [{"f": "X"}, {"f": "Y"}]})},
+    )
+
+    assert check.label() == "value_in:p.f:fixtures_changed"
+    assert check.failure(observed) is None
+    outside = {"fixtures_changed": Output(None, rows={"p": [{"f": "X"}, {"f": "Z"}]})}
+    assert check.failure(Observed(None, None, {}, outside)) == "1 values outside the allowed set"
+    assert check.failure(Observed(None, None, {}, {"fixtures_changed": Output("Timeout")})) == "run failed: Timeout"
+    assert check.failure(Observed(None, None, {})) == "no run with fixtures_changed"
+    assert ValueIn(kind="value_in", product="p", field="f", values=["X"]).label() == "value_in:p.f"
 
 
 def test_unique_together_rejects_a_repeated_pair_only() -> None:
