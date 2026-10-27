@@ -166,6 +166,8 @@ def test_a_kept_product_that_build_cannot_capture_leaves_every_check_unevaluated
 
     assert _codes(result) == ["assert_failed", "child_execution", "not_executed"]
     assert result.evidence == ()
+    # The failure envelope, not the dropped capture, carries the read files.
+    assert "data/items.json" in _artifact(result)
     [skipped] = [item for item in result.diagnostics if str(item.code) == "not_executed"]
     assert skipped.message == (
         "The run stopped at a failed <assert>. Build kept no capture of these products: items, lines, parts, stock. "
