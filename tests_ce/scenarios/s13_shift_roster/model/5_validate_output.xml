@@ -23,7 +23,10 @@
         <key name="staff_id" script="staff_id"/>
         <!-- The lookup repeats staff_capacity on purpose: the RS3 check must not trust the input of the search. -->
         <key name="contract_hours" script="{row.contract_id: row.max_weekly_hours for row in contracts}[contract_id]"/>
-        <key name="busiest_week_hours" script="busiest_week_hours(roster, shift_types, staff_id)"/>
+        <variable name="length_of" script="{row.shift_code: row.length_hours for row in shift_types}"/>
+        <!-- The ISO week (year, week) and the hours of each shift of this person; a shift counts fully in the week of its start. -->
+        <variable name="shifts" script="[(row.shift_date.isocalendar()[:2], length_of[row.shift_code]) for row in roster if row.staff_id == staff_id]"/>
+        <key name="busiest_week_hours" script="max((sum(hours for week, hours in shifts if week == busiest) for busiest, _ in shifts), default=0)"/>
     </generate>
     <generate name="coverage_checks" source="mem" sourceEntity="slots" distribution="ordered" target="CSV">
         <variable name="roster" source="mem" sourceEntity="roster" storage="data" distribution="ordered"/>

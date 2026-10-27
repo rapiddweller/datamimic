@@ -2,10 +2,8 @@
 # Copyright (c) 2023-2026 Rapiddweller Asia Co., Ltd.
 # This software is licensed under the MIT License. See LICENSE.
 
-"""Output evidence for RS2 and RS3: sums and lookups over the whole roster for one entry or person.
-
-Each needs a sum or a search over the whole roster for one entry or person (see README.md, Python).
-"""
+"""Output evidence for RS2: the rest before one roster entry, from the shift windows of the person (see README.md,
+Python)."""
 
 import datetime  # the module, as scripts see it: a library name shadows the script global of the same name
 from collections.abc import Mapping, Sequence
@@ -36,16 +34,3 @@ def rest_hours_before(roster: Sequence[Row], shift_types: Sequence[Row], entry_i
         if row["staff_id"] == entry["staff_id"] and row["entry_id"] != entry_id and _window(row, types)[0] <= starts_at
     ]
     return (starts_at - max(earlier_ends)).total_seconds() / 3600 if earlier_ends else None
-
-
-def busiest_week_hours(roster: Sequence[Row], shift_types: Sequence[Row], staff_id: str) -> int:
-    """RS3: the person's hours in the ISO week (year and week) with the most hours. A shift counts fully in the
-    week of its start date."""
-    types = {row["shift_code"]: row for row in shift_types}
-    weeks: dict[tuple[int, int], int] = {}
-    for row in roster:
-        if row["staff_id"] == staff_id:
-            starts_at, ends_at = _window(row, types)
-            week = starts_at.isocalendar()[:2]
-            weeks[week] = weeks.get(week, 0) + (ends_at - starts_at) // datetime.timedelta(hours=1)
-    return max(weeks.values(), default=0)
