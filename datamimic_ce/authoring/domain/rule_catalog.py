@@ -414,7 +414,7 @@ _AUTHORING_RULE_DEFINITIONS: tuple[RuleDefinition, ...] = (
         RuleSeverity.ERROR,
         "Interpolation token in Python",
         "Double-underscore interpolation tokens are invalid inside Python expressions.",
-        "Use the bare Python variable name in script or condition.",
+        "Use the bare Python variable name in script, condition or where.",
         "Expression evaluator and string interpolation contracts.",
         '<key name="x" script="row.value"/>',
         '<key name="x" script="__row__.value"/>',

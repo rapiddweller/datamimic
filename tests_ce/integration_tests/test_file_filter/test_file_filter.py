@@ -335,6 +335,61 @@ def test_lint_refuses_the_static_row_selection_rules(tmp_path: Path, attributes:
     assert rule in found, result.diagnostics
 
 
+@pytest.mark.parametrize(
+    ("where", "rules"),
+    [
+        # A set of strings iterates in hash-seed order: the kept rows change with PYTHONHASHSEED under rngSeed.
+        ("list({'open', 'closed', 'x1', 'y2'})[0] == status", {"DM319"}),
+        ("__status__ == 'open'", {"DM314"}),
+        ("sorted({'open', 'closed', 'x1', 'y2'})[0] == status", set()),
+    ],
+)
+def test_lint_scans_where_like_a_script(where: str, rules: set[str]) -> None:
+    from datamimic_ce.authoring.bootstrap import create_authoring_application
+    from datamimic_ce.authoring.domain.requests import LintRequest
+
+    xml = (
+        '<setup rngSeed="1"><iterate name="rows" source="data/fixtures/orders.ent.csv" '
+        f'where="{where}" target="ConsoleExporter"/></setup>'
+    )
+    codes = {str(item.code) for item in create_authoring_application(_DIR).lint(LintRequest(xml=xml)).diagnostics}
+    assert codes & {"DM314", "DM319"} == rules
+
+
+@pytest.mark.parametrize(
+    ("where", "rows", "phrase"),
+    [
+        ('where="int(amount) &gt;= 1000" ', 3, "kept by where= from"),
+        ("", 5, "available from"),
+    ],
+)
+def test_count_above_the_rows_names_the_kept_rows(tmp_path: Path, where: str, rows: int, phrase: str) -> None:
+    import logging
+
+    class _Records(logging.Handler):
+        def __init__(self) -> None:
+            super().__init__()
+            self.messages: list[str] = []
+
+        def emit(self, record: logging.LogRecord) -> None:
+            self.messages.append(record.getMessage())
+
+    _project(
+        tmp_path,
+        f'<iterate name="rows" source="data/fixtures/orders.ent.csv" distribution="ordered" {where}count="9"/>',
+    )
+    records = _Records()
+    logging.getLogger("DATAMIMIC").addHandler(records)
+    try:
+        _run_xml(tmp_path, "")
+    finally:
+        logging.getLogger("DATAMIMIC").removeHandler(records)
+    assert [message for message in records.messages if "count=9" in message] == [
+        f"<generate> 'rows': count=9 exceeds the {rows} rows {phrase} source 'data/fixtures/orders.ent.csv' and "
+        f'cyclic is off — only {rows} rows will be generated. Set cyclic="True" to wrap the source, or drop count=.'
+    ]
+
+
 @pytest.mark.parametrize("text", ["", "   "])
 def test_an_empty_columns_text_names_no_column(text: str) -> None:
     from datamimic_ce.engine.dsl.model.generation.generate_model import GenerateModel

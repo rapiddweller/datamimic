@@ -144,7 +144,8 @@ class GenerateTask(CommonSubTask):
         ds_len = context.root.data_source_len.get(data_source_cache_key(stmt))
         if ds_len is not None and count > ds_len:
             logger.warning(
-                f"<generate> '{stmt.name}': count={count} exceeds the {ds_len} rows available from "
+                f"<generate> '{stmt.name}': count={count} exceeds the {ds_len} rows "
+                f"{'available' if stmt.where is None else 'kept by where='} from "
                 f"source '{stmt.source}' and cyclic is off — only {ds_len} rows will be generated. "
                 f'Set cyclic="True" to wrap the source, or drop count=.'
             )
