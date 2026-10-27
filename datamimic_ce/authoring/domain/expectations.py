@@ -9,12 +9,37 @@ from decimal import Decimal
 from enum import StrEnum
 from typing import Annotated, ClassVar, Literal, get_args
 
-from pydantic import Field, JsonValue, field_validator, model_validator
+from pydantic import AliasChoices, BaseModel, ConfigDict, Field, JsonValue, field_validator, model_validator
+from pydantic.json_schema import JsonDict
 
 from .common import AuthoringModel, NonEmptyStrictStr, NonNegativeStrictInt
 from .row_conditions import ROW_CONDITION_GRAMMAR, parse_row_condition
 
 INTENT_REPAIR_ALIASES_SCHEMA_KEY = "x-datamimic-repair-aliases"
+
+
+def _publish_alias_choices(schema: JsonDict, model: type[BaseModel]) -> None:
+    """Publish every AliasChoices spelling of a field, which pydantic leaves out of the schema: the same value
+    schema, never beside the field name, and one of the names required."""
+    properties, required = schema["properties"], schema["required"]
+    if not isinstance(properties, dict) or not isinstance(required, list):
+        raise TypeError("a model schema has properties and required")
+    spelled: list[str] = []
+    alternatives: list[JsonValue] = []
+    excluded: JsonDict = {}
+    for name in model.model_fields:
+        alias = model.model_fields[name].validation_alias
+        if not isinstance(alias, AliasChoices):
+            continue
+        spellings = [choice for choice in alias.choices if isinstance(choice, str) and choice != name]
+        for spelling in spellings:
+            properties[spelling] = properties[name]
+            excluded[spelling] = {"not": {"required": [name]}}
+        spelled.append(name)
+        alternatives.append({"anyOf": [{"required": [choice]} for choice in (name, *spellings)]})
+    schema["required"] = [name for name in required if name not in spelled]
+    schema["dependentSchemas"] = excluded
+    schema["allOf"] = alternatives
 
 
 class ExpectationIntentKind(StrEnum):
@@ -182,6 +207,8 @@ class AllowedValuesExpectation(AuthoringModel):
 class RangeExpectation(AuthoringModel):
     """Require every captured numeric field value to remain inside inclusive bounds."""
 
+    model_config = ConfigDict(json_schema_extra=_publish_alias_choices)
+
     usage_example: ClassVar[dict[str, JsonValue]] = {
         "kind": "range",
         "subject": {"kind": "product", "product": "orders"},
@@ -195,11 +222,14 @@ class RangeExpectation(AuthoringModel):
     )
     subject: ProductOrSinkSubject = Field(description="Product or declared-sink row set containing the numeric field.")
     field: NonEmptyStrictStr = Field(description="Numeric field whose captured values are bounded.")
+    # min and max are accepted because the <key> attributes of the same bounds are spelled so.
     minimum: Decimal = Field(
-        description="Inclusive accepted lower bound.", json_schema_extra={INTENT_REPAIR_ALIASES_SCHEMA_KEY: ["min"]}
+        validation_alias=AliasChoices("minimum", "min"),
+        description="Inclusive accepted lower bound; min is the same field.",
     )
     maximum: Decimal = Field(
-        description="Inclusive accepted upper bound.", json_schema_extra={INTENT_REPAIR_ALIASES_SCHEMA_KEY: ["max"]}
+        validation_alias=AliasChoices("maximum", "max"),
+        description="Inclusive accepted upper bound; max is the same field.",
     )
 
     @model_validator(mode="after")
@@ -280,7 +310,14 @@ class RowConditionExpectation(AuthoringModel):
         ),
         examples=["amount >= 0 and amount <= 100", "len(addresses) == 2"],
     )
-    result_type: Literal["bool"] = Field(default="bool", description="Required result type of the row condition.")
+    result_type: Literal["bool", "boolean"] = Field(
+        default="bool", description='Result type of the row condition; "boolean" is the same as "bool".'
+    )
+
+    @field_validator("result_type")
+    @classmethod
+    def one_boolean_name(cls, value: str) -> Literal["bool"]:
+        return "bool"
 
     @field_validator("condition")
     @classmethod
@@ -310,6 +347,10 @@ def expectation_example(kind: ExpectationIntentKind) -> dict[str, JsonValue]:
     return _MODELS[kind].usage_example
 
 
+# The keys that agents write for the products of a per-parent count.
+_PER_PARENT_KEYS = (("subject",), ("parent",), ("child",), ("parent_field",), ("child_field",))
+
+
 def expectation_repair(location: tuple[str | int, ...]) -> str | None:
     """The shape of the expectation kind a validation location names, and the field to rename when the location
     is a known wrong name; None outside an expectation. Locations hold field names only, never values."""
@@ -325,12 +366,34 @@ def expectation_repair(location: tuple[str | int, ...]) -> str | None:
         kind = kinds[part]
         model = _MODELS[kind]
         rename = ""
-        if index + 1 < len(location):
-            wrong = location[index + 1]
+        rest = location[index + 1 :]
+        # Only a misplaced product names the side shape; a field typo beside a right subject gets the plain shape.
+        side_key = rest[1] if len(rest) > 1 and rest[0] in ("child", "parent") else None
+        if kind is ExpectationIntentKind.FOREIGN_KEY and side_key in ("product", "kind", "subject"):
+            side = rest[0]
+            rename = (
+                f"Put the product of {side} inside subject: "
+                f'"{side}": {{"subject": {{"kind": "product", "product": "<product>"}}, "field": "<field>"}}. '
+            )
+        elif kind is ExpectationIntentKind.PER_PARENT_COUNT and rest[:1] in _PER_PARENT_KEYS:
+            rename = (
+                'Put both products inside subject: "subject": {"kind": "per_parent", "parent_product": "<parent>", '
+                '"child_product": "<child>"}; the child must be a nested <generate> inside the parent, and its rows '
+                "are grouped by that nesting, so no field names the grouping. "
+            )
+        elif kind is ExpectationIntentKind.ROW_CONDITION and rest == ("result_type",):
+            rename = "Omit result_type: a row condition is always boolean. "
+        elif rest:
+            wrong = rest[0]
             for name in model.model_fields:
-                extra = model.model_fields[name].json_schema_extra
+                field = model.model_fields[name]
+                extra = field.json_schema_extra
                 aliases = extra[INTENT_REPAIR_ALIASES_SCHEMA_KEY] if isinstance(extra, dict) else None
-                if isinstance(aliases, list) and wrong in aliases:
+                alias = field.validation_alias
+                if isinstance(alias, AliasChoices) and wrong != name and wrong in alias.choices:
+                    # An accepted spelling is extra only beside the field name.
+                    rename = f"Write only one of {wrong} and {name}. "
+                elif isinstance(aliases, list) and wrong in aliases:
                     rename = f"Rename {wrong} to {name}. "
         shape = json.dumps(model.usage_example)
         return f"{rename}A {kind.value} expectation has this shape: {shape}"

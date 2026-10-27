@@ -55,3 +55,18 @@ def test_scalar_weighted_source_does_not_silently_ignore_pool_options(tmp_path, 
         diagnostic.ce_error is not None and diagnostic.ce_error.issue_code is IssueCode.TASK_VARIABLE_SOURCE_UNSUPPORTED
         for diagnostic in result.diagnostics
     ), result
+
+
+def test_a_weighted_variable_gets_no_order_advice(tmp_path):
+    """DM301/DM302 advised distribution="ordered" for a headerless .wgt.csv, which the variable refuses; a weighted
+    read draws by weight, so no order applies (campaign at 89f304b9, e06)."""
+    (tmp_path / "functions.wgt.csv").write_text("OPERATOR|80\nPLANNER|20\n", encoding="utf-8")
+    xml = (
+        '<setup rngSeed="7"><generate name="rows" count="4">'
+        '<variable name="f" source="functions.wgt.csv"/><key name="function" script="f"/></generate></setup>'
+    )
+
+    result = build_project(tmp_path, xml)
+
+    assert isinstance(result, ReadyBuild), result
+    assert not {"DM301", "DM302"} & {str(item.code) for item in result.diagnostics}

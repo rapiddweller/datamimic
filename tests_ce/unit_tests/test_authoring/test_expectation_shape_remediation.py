@@ -48,13 +48,13 @@ def _shape(kind: ExpectationIntentKind) -> str:
     return json.dumps(expectation_example(kind))
 
 
-def test_range_with_min_and_max_names_the_field_to_rename(tmp_path: Path) -> None:
-    range_ = {"kind": "range", "subject": _PRODUCT, "field": "score", "min": 1, "max": 9}
+def test_range_with_both_spellings_of_a_bound_names_the_two_names(tmp_path: Path) -> None:
+    range_ = {"kind": "range", "subject": _PRODUCT, "field": "score", "min": 1, "minimum": 1, "max": 9, "maximum": 9}
 
     remediations = _remediations(_build(tmp_path, {"expectations": [range_]}))
 
-    assert remediations[("expectations", 0, "range", "min")].startswith("Rename min to minimum.")
-    assert remediations[("expectations", 0, "range", "max")].startswith("Rename max to maximum.")
+    assert remediations[("expectations", 0, "range", "min")].startswith("Write only one of min and minimum.")
+    assert remediations[("expectations", 0, "range", "max")].startswith("Write only one of max and maximum.")
     assert all(_shape(ExpectationIntentKind.RANGE) in text for text in remediations.values())
 
 
@@ -77,13 +77,13 @@ def test_per_parent_count_with_a_product_subject_shows_the_per_parent_shape(tmp_
 
 
 def test_acceptance_requirement_expectation_gets_the_same_shape(tmp_path: Path) -> None:
-    range_ = {"kind": "range", "subject": _PRODUCT, "field": "score", "min": 1, "maximum": 9}
+    range_ = {"kind": "range", "subject": _PRODUCT, "field": "score", "min": 1, "minimum": 1, "maximum": 9}
     requirement = {"expectation": range_, "origin": "caller"}
 
     remediations = _remediations(_build(tmp_path, {"acceptance_requirements": [requirement]}))
 
     path = ("acceptance_requirements", 0, "expectation", "range", "min")
-    assert remediations[path].startswith("Rename min to minimum.")
+    assert remediations[path].startswith("Write only one of min and minimum.")
 
 
 def test_an_error_outside_an_expectation_keeps_the_model_remediation(tmp_path: Path) -> None:

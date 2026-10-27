@@ -90,7 +90,11 @@ class BuildDocumentWorkflow:
         except ValidationError as error:
             return RejectedBuild.from_model_validation(error)
         except (OSError, ValueError):
-            return RejectedBuild.from_input_error("The project has no readable acceptance/build.json.")
+            return RejectedBuild.from_input_error(
+                "The project has no readable acceptance/build.json.",
+                remediation='Write acceptance/build.json beside datamimic.xml, at least {"version": "5.0", '
+                '"expectations": []}; datamimic authoring reference --topic assembly shows a starter project.',
+            )
         try:
             entry_bytes = self._files.read_project_file(PROJECT_ENTRY_PATH)
             xml = str(entry_bytes, "utf-8")

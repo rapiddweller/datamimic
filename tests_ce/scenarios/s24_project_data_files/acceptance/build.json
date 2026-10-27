@@ -1,0 +1,13 @@
+{
+  "version": "5.0",
+  "expectations": [
+    {"kind": "exact_count", "subject": {"kind": "product", "product": "people"}, "count": 3},
+    {"kind": "unique", "subject": {"kind": "product", "product": "people"}, "field": "person_id"},
+    {"kind": "range", "subject": {"kind": "product", "product": "people"}, "field": "age", "min": 20, "max": 60},
+    {"kind": "allowed_values", "subject": {"kind": "product", "product": "people"}, "field": "function", "values": ["OPERATOR", "INSPECTOR", "PLANNER"]},
+    {"kind": "allowed_values", "subject": {"kind": "product", "product": "people"}, "field": "second_function", "values": ["OPERATOR", "INSPECTOR", "PLANNER"]},
+    {"kind": "allowed_values", "subject": {"kind": "product", "product": "people"}, "field": "tier", "values": ["GOLD", "SILVER"]},
+    {"kind": "range", "subject": {"kind": "product", "product": "people"}, "field": "discount", "min": 5, "max": 10},
+    {"kind": "exact_count", "subject": {"kind": "product", "product": "copies"}, "count": 3}
+  ]
+}

@@ -1,0 +1,8 @@
+<setup rngSeed="10425">
+    <generate name="tickets" count="12">
+        <key name="ticket_id" generator="IncrementGenerator"/>
+        <key name="priority" values="LOW,MEDIUM,HIGH"/>
+        <variable name="plan" values="BASIC,PLUS,PRO"/>
+        <key name="plan_name" script="plan"/>
+    </generate>
+</setup>

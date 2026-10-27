@@ -7,6 +7,7 @@
 from __future__ import annotations
 
 import ast
+import json
 from collections import Counter
 from collections.abc import Callable
 from dataclasses import dataclass
@@ -16,6 +17,7 @@ from typing import NoReturn
 from pydantic import JsonValue, TypeAdapter, ValidationError
 
 from datamimic_ce.authoring.domain.acceptance_contract import (
+    MEMSTORE_READBACK_ONCE,
     AcceptanceCheckV1,
     AcceptanceJoinV1,
     AcceptanceListV1,
@@ -215,7 +217,12 @@ def _products(document: DmJsonDocumentV1, included: tuple[tuple[str, DmJsonDocum
                 # columns= declares the source columns it emits; a key of the same name replaces the column.
                 fields = (*(name for name in column_names(columns) if name not in fields), *fields)
             if len(fields) != len(set(fields)):
-                _reject("Declared output fields must be unique for acceptance.", path + ("children",))
+                _reject(
+                    "Declared output fields must be unique for acceptance.",
+                    path + ("children",),
+                    remediation="Give each <key> of one product its own name. For a value that depends on a "
+                    "condition, write one key with both cases: script=\"'A' if n == 1 else 'B'\".",
+                )
             product = AcceptanceProductV1(
                 name=name,
                 runtime_name=runtime_name,
@@ -535,6 +542,13 @@ def _readbacks(
             role for role in named if isinstance(role.role, ForeignKeyRole) and role.role.parent_field in identifiers
         ]
         if len(identifiers) != 1 or len(candidates) != 1:
+            # Product names are structural names, so the role templates carry them.
+            producer_name, consumer_name = json.dumps(producer.product.name), json.dumps(consumer.product.name)
+            producer_role = f'{{"product": {producer_name}, "field": "<key>", "role": {{"kind": "identifier"}}}}'
+            consumer_role = (
+                f'{{"product": {consumer_name}, "field": "<field holding the key>", "role": {{"kind": "foreign_key", '
+                f'"parent_product": {producer_name}, "parent_field": "<key>"}}}}'
+            )
             if len(identifiers) > 1:
                 remediation = (
                     "Memstore readback checks one identifier role per producer: declare only the identifier that the "
@@ -542,18 +556,14 @@ def _readbacks(
                 )
             elif not identifiers:
                 remediation = (
-                    'Add the producer identifier role: {"product": "<producer>", "field": "<key>", "role": {"kind": '
-                    '"identifier"}}.'
+                    f"Add the producer identifier role: {producer_role}. {MEMSTORE_READBACK_ONCE}"
                     if named
-                    else 'Add two product_roles entries: {"product": "<producer>", "field": "<key>", "role": {"kind": '
-                    '"identifier"}} and {"product": "<consumer>", "field": "<field holding the key>", "role": {"kind": '
-                    '"foreign_key", "parent_product": "<producer>", "parent_field": "<key>"}}.'
+                    else f"Add two product_roles entries: {producer_role} and {consumer_role}. {MEMSTORE_READBACK_ONCE}"
                 )
             elif not candidates:
                 remediation = (
                     "Add the consumer foreign-key role, or point an existing one at the producer's identifier field: "
-                    '{"product": "<consumer>", "field": "<field holding the key>", '
-                    '"role": {"kind": "foreign_key", "parent_product": "<producer>", "parent_field": "<key>"}}.'
+                    f"{consumer_role}. {MEMSTORE_READBACK_ONCE}"
                 )
             else:
                 remediation = (

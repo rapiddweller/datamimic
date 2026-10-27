@@ -1,0 +1,8 @@
+<setup rngSeed="10421">
+    <generate name="tickets" count="25">
+        <key name="ticket_id" generator="IncrementGenerator"/>
+        <key name="priority" values="'LOW', 'MEDIUM', 'HIGH'"/>
+        <key name="estimate_hours" type="int" min="1" max="40"/>
+        <key name="discount" type="float" min="0" max="0.5"/>
+    </generate>
+</setup>

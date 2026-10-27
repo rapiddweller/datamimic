@@ -207,7 +207,9 @@ _AUTHORING_RULE_DEFINITIONS: tuple[RuleDefinition, ...] = (
         "unique requires a finite pool (values, source, or generator) and must follow the element's "
         "central distribution policy. Generator-backed unique uses task-level dedup — the generator "
         "itself does not own uniqueness.",
-        "Use values, source or generator as a supported pool; remove conflicting weights, cyclic or distribution.",
+        "Use values, source or generator as a supported pool; remove conflicting weights, cyclic or distribution. "
+        'On <key>, type= alone is no pool: use values= or generator=, for example generator="StringGenerator" '
+        """unique="true", or derive the text from a unique key without unique=, script="'T-' + str(this.id)".""",
         "Central unique/source compatibility facts and ADR-042.",
         '<key name="x" generator="EANGenerator()" unique="true"/>',
         '<variable name="x" values="1,2" unique="true" cyclic="true"/>',

@@ -17,7 +17,7 @@ from uuid import UUID
 
 from pydantic import JsonValue
 
-from datamimic_ce.authoring.domain.acceptance_contract import AcceptanceSpecV1
+from datamimic_ce.authoring.domain.acceptance_contract import MEMSTORE_READBACK_ONCE, AcceptanceSpecV1
 from datamimic_ce.authoring.domain.build_rules import catalog_diagnostic
 from datamimic_ce.authoring.domain.capture import CapturedObjectId, CapturedProducts, CaptureStatus
 from datamimic_ce.authoring.domain.common import MAX_AUTHORING_MAX_COUNT
@@ -54,6 +54,13 @@ from datamimic_ce.authoring.domain.row_conditions import (
 CapturedRows = Mapping[str, tuple[Mapping[str, object], ...]]
 _DATE_LITERAL_PATTERN = r"\d{4}-\d{2}-\d{2}\Z"
 _DATETIME_LITERAL_PATTERN = r"\d{4}-\d{2}-\d{2}[ T]\d{2}:\d{2}:\d{2}(?:\.\d{1,6})?\Z"
+
+
+# Build joins a child row to its parent only through one key that copies a unique parent field.
+_GROUP_BY_PARENT_COPY = (
+    "Build groups the child rows by one child <key> whose script is exactly parent.<field> of a unique parent "
+    'field, for example <key name="depot_id" script="parent.depot_id"/>.'
+)
 
 
 @dataclass(frozen=True)
@@ -309,7 +316,7 @@ def _check_expectation(
         if parent_groups is None:
             return _ExpectationFailure(
                 f"could not group '{subject.child_product}' by '{subject.parent_product}'",
-                {"expected": expectation.count, "actual": None},
+                {"expected": expectation.count, "actual": None, "remediation": _GROUP_BY_PARENT_COPY},
             )
         counts = {parent: len(rows) for parent, rows in parent_groups.items()}
         if any(count != expectation.count for count in counts.values()):
@@ -746,7 +753,13 @@ def evaluate_acceptance(
             or set(map(_display, producer)) != set(map(_display, consumer))
         ):
             diagnostics.append(
-                _capture_failure("Memstore readback must preserve every producer identity exactly once.", readback.path)
+                catalog_diagnostic(
+                    AuthoringRuleId.VALIDATION,
+                    "Memstore readback must preserve every producer identity exactly once.",
+                    phase=DiagnosticPhase.EVIDENCE,
+                    path=readback.path,
+                    remediation=MEMSTORE_READBACK_ONCE,
+                )
             )
     return (*diagnostics, *not_evaluated)
 
