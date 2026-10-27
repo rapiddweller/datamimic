@@ -17,6 +17,7 @@ import os
 import re
 import secrets
 import shutil
+import signal
 import subprocess
 import sys
 import tempfile
@@ -24,7 +25,7 @@ from abc import ABC, abstractmethod
 from collections import Counter
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import Annotated, Literal
+from typing import IO, Annotated, Literal
 
 from lxml import etree
 from pydantic import BaseModel, ConfigDict, Field, StrictInt, StrictStr
@@ -462,30 +463,45 @@ def child_env(**extra: str) -> dict[str, str]:
     return {key: os.environ[key] for key in _ENV_KEYS if key in os.environ} | {"PATH": _SYSTEM_PATH} | extra
 
 
-def _start(work: Path, hash_seed: str) -> subprocess.Popen[str]:
-    """The project's scripts are untrusted code: the run sees its copy as the cwd and none of the operator's secrets."""
-    return subprocess.Popen(
+def wait_then_kill_group(process: subprocess.Popen[bytes], timeout: float) -> int | None:
+    """The exit code, or None on a timeout. Every process left in the group of ``process`` (started with
+    ``start_new_session=True``) ends with it. A process that calls setsid() leaves the group and is out of reach."""
+    try:
+        return process.wait(timeout=timeout)
+    except subprocess.TimeoutExpired:
+        return None
+    finally:
+        # EPERM: macOS refuses the signal while the members of the group exit (#432)
+        with contextlib.suppress(ProcessLookupError, PermissionError):
+            os.killpg(process.pid, signal.SIGKILL)
+        process.wait()
+
+
+def _start(work: Path, hash_seed: str) -> tuple[subprocess.Popen[bytes], IO[bytes]]:
+    """The project's scripts are untrusted code: the run sees its copy as the cwd and none of the operator's secrets.
+    Stdout goes to a file, not a pipe: a descendant that keeps a pipe open blocks the read until it exits."""
+    stdout = tempfile.TemporaryFile()  # noqa: SIM115 - _finish closes it
+    process = subprocess.Popen(
         # -P: the cwd is the project copy, and a module there must not replace the capture code
         [sys.executable, "-P", "-m", "benchmarks.authoring_eval.capture", str(work)],
         cwd=work,
         env=child_env(PYTHONPATH=str(REPO_ROOT), PYTHONHASHSEED=hash_seed),
-        stdout=subprocess.PIPE,
+        stdout=stdout,
         stderr=subprocess.DEVNULL,
-        text=True,
+        start_new_session=True,
     )
+    return process, stdout
 
 
-def _finish(process: subprocess.Popen[str]) -> Capture:
-    try:
-        stdout, _ = process.communicate(timeout=_RUN_TIMEOUT_SECONDS)
-    except subprocess.TimeoutExpired:
-        process.kill()
-        process.communicate()
-        return Capture(error="Timeout")
-    try:
-        return Capture.model_validate_json(stdout)
-    except ValueError:  # the interpreter died before it printed a result
-        return Capture(error="CaptureCrashed")
+def _finish(process: subprocess.Popen[bytes], stdout: IO[bytes]) -> Capture:
+    with stdout:
+        if wait_then_kill_group(process, _RUN_TIMEOUT_SECONDS) is None:
+            return Capture(error="Timeout")
+        stdout.seek(0)
+        try:
+            return Capture.model_validate_json(stdout.read())
+        except ValueError:  # the interpreter died before it printed a result
+            return Capture(error="CaptureCrashed")
 
 
 def _observe(case: str, project: Path, changed_fixtures: list[str]) -> Observed:
@@ -496,14 +512,14 @@ def _observe(case: str, project: Path, changed_fixtures: list[str]) -> Observed:
         # random names: a project that reads its path must not tell the runs apart
         build_copy, first_copy, second_copy = (_copy(project, case, root / secrets.token_hex(4)) for _ in range(3))
         changed_copies = [_copy(project, case, root / secrets.token_hex(4), name) for name in changed_fixtures]
-        processes = [
+        runs = [
             _start(first_copy, _HASH_SEEDS[0]),
             _start(second_copy, _HASH_SEEDS[1]),
             *(_start(copy, _HASH_SEEDS[0]) for copy in changed_copies),
         ]
         build = create_authoring_application(build_copy, descriptor_path=PROJECT_ENTRY_PATH).build()
         build_note = None if isinstance(build, ReadyBuild) else f"Build {build.outcome} in phase {build.phase.value}"
-        first, second, *changed = [_finish(process) for process in processes]
+        first, second, *changed = [_finish(*run) for run in runs]
         outputs = {_FIXTURES: Output(first.error, json_outputs(first_copy), frozenset(first.rows))} | {
             name: Output(capture.error, json_outputs(copy), frozenset(capture.rows))
             for name, copy, capture in zip(changed_fixtures, changed_copies, changed, strict=True)

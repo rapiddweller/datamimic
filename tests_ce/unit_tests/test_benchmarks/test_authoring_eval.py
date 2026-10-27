@@ -5,9 +5,12 @@
 """The blind-agent eval oracle and transcript audit (#412): each reference project passes, each deliberately
 broken variant fails exactly the checks it should, and the audit flags forbidden actions."""
 
+import contextlib
 import json
+import os
 import re
 import shutil
+import signal
 import subprocess
 import sys
 import tempfile
@@ -15,11 +18,13 @@ import time
 from dataclasses import dataclass
 from datetime import datetime
 from pathlib import Path
+from xml.sax.saxutils import escape as xml_escape
 
 import pytest
 
-from benchmarks.authoring_eval import run_subject
+from benchmarks.authoring_eval import oracle, run_subject
 from benchmarks.authoring_eval.audit_transcript import FindingKind, audit
+from benchmarks.authoring_eval.capture import Capture
 from benchmarks.authoring_eval.oracle import (
     CASES,
     ExactCount,
@@ -509,9 +514,89 @@ def test_the_capture_run_sees_neither_the_repository_nor_the_operators_environme
         encoding="utf-8",
     )
 
-    capture = _finish(_start(project, "1"))
+    capture = _capture(project)
 
     assert capture.rows["probe"] == [{"cwd": str(project), "secret": "absent"}]
+
+
+def _capture(project: Path) -> Capture:
+    return _finish(*_start(project, "1"))
+
+
+@dataclass(frozen=True)
+class Descendants:
+    """A capture whose key script starts processes. ``{pidfile}`` in the script names where a shell writes a pid."""
+
+    name: str
+    script: str
+    timeout: int | None  # the run timeout in seconds; None keeps the oracle's own
+    error: str | None  # the expected Capture.error
+    dies: bool = True  # False: the process left the group (setsid), and no group kill can reach it
+    rows: dict[str, list[dict[str, object]]] | None = None  # set when the script starts no process
+
+
+_SYSTEM = f"{_OS}['system']"
+_SPAWN = f"{_OS}['posix_spawn']('/bin/sleep', ['sleep', '30'], dict()"
+_DESCENDANTS = [
+    Descendants("finishes", "7", None, None, rows={"probe": [{"out": 7}]}),
+    Descendants(
+        "times_out_without_child",
+        f"{_SYSTEM}('echo $PPID > {{pidfile}}') or {_OS}['execv']('/bin/sleep', ['sleep', '30'])",
+        8,
+        "Timeout",
+    ),
+    # the Codex case: the child inherits stdout and outlives the killed capture interpreter
+    Descendants(
+        "times_out_with_child_on_stdout", f"{_SYSTEM}('sleep 30 & echo $! > {{pidfile}}; sleep 30')", 8, "Timeout"
+    ),
+    # the subshell exits at once: init adopts the sleep, which stays in the group and keeps stdout open
+    Descendants("leaves_daemonized_grandchild", f"{_SYSTEM}('(sleep 30 & echo $! > {{pidfile}})')", None, None),
+    Descendants("leaves_stray_child", f"{_SYSTEM}('echo %d > {{pidfile}}' % {_SPAWN}))", None, None),
+    Descendants(
+        "leaves_child_in_own_session",
+        f"{_SYSTEM}('echo %d > {{pidfile}}' % {_SPAWN}, setsid=True))",
+        None,
+        None,
+        dies=False,
+    ),
+]
+
+
+@pytest.mark.parametrize("case", _DESCENDANTS, ids=lambda case: case.name)
+def test_a_capture_returns_promptly_and_ends_its_descendants(
+    case: Descendants, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """A descendant that holds stdout open must not delay the verdict, and the group kill must end it."""
+    if case.timeout is not None:
+        monkeypatch.setattr(oracle, "_RUN_TIMEOUT_SECONDS", case.timeout)
+    pidfile = tmp_path / "descendant.pid"
+    project = tmp_path / "project"
+    project.mkdir()
+    script = xml_escape(case.script.format(pidfile=pidfile))
+    xml = f'<setup rngSeed="1">\n    <generate name="probe" count="1">\n        <key name="out" script="{script}"/>\n'
+    (project / _XML).write_text(xml + "    </generate>\n</setup>", encoding="utf-8")
+    try:
+        started = time.monotonic()
+        capture = _capture(project)
+        elapsed = time.monotonic() - started
+
+        assert capture.error == case.error
+        # a timeout ends after the timeout plus the kill; a normal exit ends long before the 30 s of the descendant
+        assert elapsed < (case.timeout + 2 if case.timeout is not None else 20)
+        if case.rows is not None:
+            assert capture.rows == case.rows
+            return
+        # without the pid the script never ran, and the test would prove nothing
+        pid = int(pidfile.read_text(encoding="utf-8"))
+        deadline = time.monotonic() + 5
+        while case.dies and _alive(pid) and time.monotonic() < deadline:
+            time.sleep(0.1)
+        assert _alive(pid) is not case.dies
+    finally:
+        # also after a failed assert: a descendant must not outlive the test
+        if pidfile.is_file() and _alive(pid := int(pidfile.read_text(encoding="utf-8"))):
+            with contextlib.suppress(ProcessLookupError):
+                os.kill(pid, signal.SIGKILL)
 
 
 def test_a_module_shipped_in_the_project_does_not_replace_the_capture_code(tmp_path: Path) -> None:
@@ -522,7 +607,7 @@ def test_a_module_shipped_in_the_project_does_not_replace_the_capture_code(tmp_p
     (shadow / "__init__.py").write_text("", encoding="utf-8")
     (shadow / "capture.py").write_text('print(\'{"rows": {"shadow": []}}\')', encoding="utf-8")
 
-    assert set(_finish(_start(project, "1")).rows) == {"tickets"}
+    assert set(_capture(project).rows) == {"tickets"}
 
 
 def test_a_project_cannot_tell_the_changed_fixtures_run_by_its_path(tmp_path: Path) -> None:

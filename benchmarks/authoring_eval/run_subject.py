@@ -16,13 +16,11 @@ The report is JSON and is always printed. The exit code is 0 only when the isola
 audit are clean. The run directory stays for the oracle; the report names it."""
 
 import argparse
-import contextlib
 import json
 import os
 import re
 import secrets
 import shutil
-import signal
 import subprocess
 import sys
 import tempfile
@@ -33,7 +31,7 @@ from pathlib import Path
 from typing import Any
 
 from benchmarks.authoring_eval.audit_transcript import ALLOWED_TOOLS, audit, records, spellings, tool_calls
-from benchmarks.authoring_eval.oracle import CASES, REPO_ROOT, child_env
+from benchmarks.authoring_eval.oracle import CASES, REPO_ROOT, child_env, wait_then_kill_group
 
 BRIEF = Path(__file__).with_name("brief.md")
 _TURN_LIMIT = 40
@@ -150,14 +148,7 @@ def _execute(command: list[str], cwd: Path, env: dict[str, str], out: Path, err:
     of the subject must not outlive the run."""
     with out.open("w", encoding="utf-8") as stdout, err.open("w", encoding="utf-8") as stderr:
         process = subprocess.Popen(command, cwd=cwd, env=env, stdout=stdout, stderr=stderr, start_new_session=True)
-        try:
-            return process.wait(timeout=_TIMEOUT_SECONDS)
-        except subprocess.TimeoutExpired:
-            return None
-        finally:
-            with contextlib.suppress(ProcessLookupError):
-                os.killpg(process.pid, signal.SIGKILL)
-            process.wait()
+        return wait_then_kill_group(process, _TIMEOUT_SECONDS)
 
 
 def run(case: str, venv: Path, model: str, claude: str) -> dict[str, object]:
