@@ -347,14 +347,22 @@ class CeDslCatalog:
                         name="file_sources",
                         path="docs/examples/authoring.md",
                         description=(
-                            "<generate source=...> copies every file column into each row. To keep only some "
-                            'columns, read the file with <variable name="row" source="..." '
-                            'distribution="ordered"/> in a generate whose count is the number of data rows, and '
-                            "copy each column with a key script such as row.order_id. A field_absent expectation "
-                            "proves that a column is not in the output. A file source has no row filter. Build, "
-                            "authoring run and smoke export write no file into the project; only datamimic run "
-                            "datamimic.xml writes a file target, to output/<exportUri>/<entity>.<ext> beside "
-                            "datamimic.xml (without exportUri, a new task id directory for each run)."
+                            "<generate source=...> and <iterate source=...> copy every file column into each row. "
+                            'where="<python bool>" keeps the rows for which it is true, before count, cyclic, '
+                            "distribution and paging; without count the count is the number of kept rows, so Build "
+                            "proves a product of up to max_count kept rows (default 10). where reads the row's "
+                            "columns as bare names or this.<column> and must not draw random values. "
+                            'columns="a, b" lists the source columns that go into the output, in that order; the '
+                            "other columns stay readable by keys and scripts as row variables, and a key with the "
+                            'name of an unlisted column writes it. columns="" copies none. Both apply to file '
+                            "sources only (not memstore, database or sourceScripted). A field_absent expectation "
+                            "proves that a column is not in the output. A filter that reads parent. or setup names "
+                            'needs the older form: read the file with <variable name="row" source="..." '
+                            'distribution="ordered"/> in a generate whose count is the number of data rows, and copy '
+                            "each column with a key script such as row.order_id. Build, authoring run and smoke "
+                            "export write no file into the project; only datamimic run datamimic.xml writes a file "
+                            "target, to output/<exportUri>/<entity>.<ext> beside datamimic.xml (without exportUri, "
+                            "a new task id directory for each run)."
                         ),
                     ),
                     AuthoringLearningReference(

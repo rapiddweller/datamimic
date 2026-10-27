@@ -105,19 +105,25 @@ exclusive; `count` on `generate` is the parallel series count.
 
 ## File sources
 
-`<generate source="fixtures/orders.csv">` copies every column of the file into
-each row, also the columns that no `<key>` names. To keep only some columns, read
-the file through a `<variable>` in source order and set `count` to the number of
-data rows. Each `<key>` then copies one column. A `field_absent` expectation
-proves that a column is not in the output.
+`<iterate source="data/fixtures/orders.ent.csv">` copies every column of the file
+into each row, also the columns that no `<key>` names. Two attributes select from
+a file source:
+
+- `where="<python bool>"` keeps the rows for which it is true. Count, `cyclic`,
+  distribution, paging and worker chunks then work on the kept rows. Without
+  `count` the count is the number of kept rows.
+- `columns="a, b"` lists the source columns that go into the output, in that order.
+  The other columns stay readable by keys and scripts as row variables (bare name
+  or `this.<column>`). A key with the name of an unlisted column writes it.
+  `columns=""` copies no column.
 
 ```xml
-<setup rngSeed="51110" defaultSeparator=",">
-    <generate name="priced_orders" count="6" target="JSON" exportUri="priced_orders">
-        <variable name="order" source="fixtures/orders.csv" distribution="ordered"/>
-        <key name="order_id" script="order.order_id"/>
-        <key name="total_cents" script="int(order.total_cents)"/>
-    </generate>
+<setup rngSeed="40961">
+    <iterate name="order_report" source="data/fixtures/orders.ent.csv" distribution="ordered"
+             where="int(amount_cents) &gt;= 1000" columns="order_id, customer_id"
+             target="JSON" exportUri="order_report">
+        <key name="net_cents" script="int(amount_cents)"/>
+    </iterate>
 </setup>
 ```
 
@@ -125,22 +131,33 @@ proves that a column is not in the output.
 {
   "version": "5.0",
   "expectations": [
-    {"kind": "exact_count", "subject": {"kind": "product", "product": "priced_orders"}, "count": 6},
-    {"kind": "field_absent", "subject": {"kind": "product", "product": "priced_orders"}, "field": "status"}
+    {"kind": "exact_count", "subject": {"kind": "product", "product": "order_report"}, "count": 3},
+    {"kind": "range", "subject": {"kind": "product", "product": "order_report"}, "field": "net_cents", "minimum": 1000, "maximum": 1000000},
+    {"kind": "field_absent", "subject": {"kind": "product", "product": "order_report"}, "field": "amount_cents"}
   ]
 }
 ```
 
-CSV columns arrive as strings: cast them in the script. A `count` above the data
-rows cannot prove a complete capture, and Build rejects it. A file source has no
-row filter: a `<condition>` decides which keys a row gets, not which rows exist.
+CSV columns arrive as strings: cast them in `where` and in scripts. `where` reads
+one row: its columns, `this`, and the expression functions. It must not draw random
+values, and it cannot read `parent.`, variables or setup names. `where` and `columns`
+apply to file sources only (CSV, `.ent.csv`, `.wgt.csv` with a header, JSON, XML,
+XLSX, fixed-width, DbUnit), not to a memstore, a database (use `selector=`) or
+`sourceScripted`. `where` does not combine with `offset`. Build counts the kept rows
+in its bounded run; more than `max_count` kept rows (default 10) stop the run with
+`I800`. `unique="True"` compares whole source rows, not only the listed columns.
+
+A filter that depends on the parent row needs the older form: read the file through
+a `<variable name="order" source="..." distribution="ordered"/>` in a generate whose
+`count` is the number of data rows, and copy each column with a key script such as
+`order.order_id` (`tests_ce/scenarios/s13_file_projection`).
 
 Build, `authoring run` and smoke export write no file into the project. Only
 `datamimic run datamimic.xml` writes a file target, to
 `output/<exportUri>/<entity>.<ext>` beside `datamimic.xml`. Without `exportUri`
 the directory is a new task id for each run. The example above writes
-`output/priced_orders/priced_orders.json`. The complete project is
-`tests_ce/scenarios/s13_file_projection`.
+`output/order_report/order_report.json`. The complete project is
+`tests_ce/scenarios/s22_file_filter`.
 
 For exporter/replay verification add `"verification": {"smoke_export": true,
 "deterministic_replay": true}` to `acceptance/build.json`. Build replays every

@@ -38,10 +38,13 @@ CE is done (#399). EE follows in [EE #89](https://gitlab.dwellerlab.com/rapiddwe
 
 | # | Behavior | CE | EE | Status | Owner / next step |
 |---|---|---|---|---|---|
-| E1 | Issue code names and values | 109 codes (105 at `10ac45a9`, then `W008`, `I196`, `I197`, `I198`) | 411 codes. 104 of the 105 CE codes at `10ac45a9` have the same name and value. | `gap` | `TASK_TOTAL_ROW_BUDGET_EXCEEDED` (`I955`) exists only in CE. Reserve it in EE first (CE rule: CE codes are a subset of EE). Owner: EE session, then CE. Issue #400. Rows E1a to E1c list the codes added after `10ac45a9`; `W008` is in O3. |
+| E1 | Issue code names and values | 112 codes (105 at `10ac45a9`, then `W008`, `I196`, `I197`, `I198`, `I199`, `I200`, `I209`) | 411 codes. 104 of the 105 CE codes at `10ac45a9` have the same name and value. | `gap` | `TASK_TOTAL_ROW_BUDGET_EXCEEDED` (`I955`) exists only in CE. Reserve it in EE first (CE rule: CE codes are a subset of EE). Owner: EE session, then CE. Issue #400. Rows E1a to E1f list the codes added after `10ac45a9`; `W008` is in O3. |
 | E1a | `SOURCE_SELECTOR_BLANK` (`I196`): blank `selector` or `iterationSelector` on a database source (#397) | present | not defined (EE uses up to `I195`) | `gap` | Owner: EE reservation. Reserve `I196` with the same name in EE. |
 | E1b | `SOURCE_INVALID_XLSX` (`I197`): file is not an `.xlsx` workbook (#379) | present | not defined | `gap` | Owner: EE reservation. Reserve `I197` with the same name in EE. |
 | E1c | `SOURCE_INVALID_FIXED_WIDTH` (`I198`): `.fcw` file without a valid spec line (#379) | present | not defined | `gap` | Owner: EE reservation. Reserve `I198` with the same name in EE. |
+| E1d | `GENERATE_ROW_SELECTION_FILE_ONLY` (`I199`): `where=`/`columns=` on a memstore or database source (#447) | present | not defined | `gap` | Owner: EE port, [EE #93](https://gitlab.dwellerlab.com/rapiddweller/datamimic/datamimic-ee/-/work_items/93). Reserve `I199` with the same name and template. |
+| E1e | `GENERATE_ROW_SELECTION_SOURCE_SCRIPTED` (`I200`): `where=`/`columns=` with `sourceScripted` (#447) | present | not defined | `gap` | Owner: EE port, [EE #93](https://gitlab.dwellerlab.com/rapiddweller/datamimic/datamimic-ee/-/work_items/93). Reserve `I200` with the same name and template. |
+| E1f | `SOURCE_COLUMN_UNKNOWN` (`I209`): a `columns=` name that no source row has (#447) | present | not defined (EE uses `I201` to `I208`) | `gap` | Owner: EE port, [EE #93](https://gitlab.dwellerlab.com/rapiddweller/datamimic/datamimic-ee/-/work_items/93). Reserve `I209` with the same name and template. |
 | E2 | Code name, title and severity of the 104 shared codes | same | same | `identical` | Catalog comparison. |
 | E3 | Error code templates (`E0xx`, 15) | same | same | `identical` | Catalog comparison. |
 | E4 | EE-only issue codes | none | 307 | `EE-only` | EE features (native engine, ML, HL7, platform). No CE action. |
@@ -80,6 +83,7 @@ CE is done (#399). EE follows in [EE #89](https://gitlab.dwellerlab.com/rapiddwe
 | A5 | Lint rule codes | 40 numbered `DM` codes plus build rule ids | 18 published rule entries, no `DM` codes | `gap` | Owner: EE, [EE #88](https://gitlab.dwellerlab.com/rapiddweller/datamimic/datamimic-ee/-/work_items/88). |
 | A6 | Bounded execution of `clear` and `drop` | skip with `not_executed` warning | not specified | `unverified` | Needs the destructive-operations port to EE first. |
 | A7 | Bounded execution of a failed `<assert>` | `assert_failed` at the assert line; keeps the products that completed; `not_executed` for the other checks; message only when literal | the run error as a diagnostic, with the message; no products | `gap` | EE has no Build v5 (A1). Corpus: `tests_ce/scenarios/s21_assert_gate`. |
+| A8 | `where=` and `columns=` on `<generate>`/`<iterate>` file sources (#447) | row condition over one row before count, cyclic, distribution, paging and chunks; random draws refused; output column list, unlisted columns stay row variables; Build counts kept rows in its bounded run | not ported: no `where`/`columns` on the generate model | `gap` | Owner: EE port, [EE #93](https://gitlab.dwellerlab.com/rapiddweller/datamimic/datamimic-ee/-/work_items/93). Apply the condition in every file loader and every length counter before the count (CSV counter, JSON/NDJSON streaming; no parquet metadata count with `where`). Acceptance: CE scenario `tests_ce/scenarios/s22_file_filter` and `tests_ce/integration_tests/test_file_filter` pass on EE. |
 
 ## Behavior cases
 
@@ -117,6 +121,6 @@ These rows are not compared yet. They need a comparison before the release date.
 | `identical` | 11 |
 | `CE-extension` | 3 |
 | `EE-only` | 4 |
-| `gap` | 12 |
+| `gap` | 16 |
 | `unverified` | 1 |
 | Open rows (not compared) | 9 |

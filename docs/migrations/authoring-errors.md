@@ -67,6 +67,32 @@ engine, so its checks are listed as `not_executed` even when the outer product
 completed before the assert. Build does not rebuild the empty descendants of a stopped
 run. The result errs on the side of fewer checks, and Build still rejects.
 
+### File-source row and column selection (#447)
+
+`<generate>` and `<iterate>` accept two new optional attributes on a file source.
+Descriptors without them do not change.
+
+| Attribute | Rule |
+|---|---|
+| `where="<python bool>"` | Keeps the rows for which it is true, in file order, before count, `cyclic`, distribution, paging and worker chunks. Without `count` the count is the number of kept rows. It reads one row: bare column names, `this` and the expression functions; no `parent.`, variables or setup names. Every random draw is refused (`I832`, "where reads one row and must not draw random values"), also in an unseeded run; `random.Random(<seed>)` stays allowed. A result that is not a bool fails with `I507`. |
+| `columns="a, b"` | The source columns that go into the output, in this order. The other columns stay readable as row variables (bare name, `this.<column>`, `parent.<column>` in a child). A key with the name of an unlisted column writes it. `columns=""` copies none. A blank entry or a repeated name is refused by the model. |
+
+| Code | Name | When |
+|---|---|---|
+| `I199` | `GENERATE_ROW_SELECTION_FILE_ONLY` | `where=` or `columns=` on a memstore or database source (a database filters with `selector=`) |
+| `I200` | `GENERATE_ROW_SELECTION_SOURCE_SCRIPTED` | `where=` or `columns=` with `sourceScripted`, also through `<setup defaultSourceScripted>` |
+| `I209` | `SOURCE_COLUMN_UNKNOWN` | a `columns=` name that no row of the file has (a file without rows is not checked) |
+
+The model refuses `where`/`columns` without `source` (`DM214`) and `where` with `offset`
+(`DM218`); lint, dry-run and Build report these central rules. `I199`, `I200` and `I209` are
+runtime refusals: `datamimic run`, dry-run and Build report them with the same code
+(Build: `child_execution` with `ce_error.issue_code`); lint does not open the file and
+does not report them. Build counts the kept rows in its bounded run. A run that keeps more
+than `max_count` rows (default 10 for a file source without count) stops with `I800`
+instead of a capped capture. An ordered read with `where=` loads the kept rows once
+for each worker chunk, not once for each page. A `.wgt.csv` with a header at `<generate>`
+is a plain table, so `where=` can read its weight column.
+
 ## Public contract
 
 Persist XML as the executable project. `DmJsonDocumentV1` is an in-memory agent

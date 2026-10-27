@@ -61,7 +61,7 @@ def test_documented_structural_projects_build_ready(index: int, tmp_path: Path) 
     projects = _projects(ROOT / "docs/examples/authoring.md")
     assert len(projects) == 4
     # The file-source example reads the fixture of the scenario that holds the complete project.
-    shutil.copytree(ROOT / "tests_ce/scenarios/s13_file_projection/fixtures", tmp_path / "fixtures")
+    shutil.copytree(ROOT / "tests_ce/scenarios/s22_file_filter/data", tmp_path / "data")
     result = _build(projects[index], tmp_path)
     assert result["outcome"] == "ready", result
 

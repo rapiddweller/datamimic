@@ -59,8 +59,9 @@ For relationships, Memstore and time series, query the running assembly and
 expectation references for supported semantics and lineage declarations. Preserve
 the requested complete keys, nested shape, per-parent quantities and readback
 requirements; do not replace them with weaker checks to obtain readiness.
-A `<generate source=...>` copies every file column into the output; to keep only
-some columns and to find where `datamimic run` writes a file target, read
+A `<generate source=...>` copies every file column into the output. `where=` keeps
+the file rows for which a row condition is true, and `columns=` lists the output
+columns; for both and for the place where `datamimic run` writes a file target, read
 `datamimic authoring reference --topic learning --name file_sources`.
 A rule that must stop `datamimic run` is an `<assert>`; Build checks only `expectations`. Read
 `datamimic authoring reference --topic learning --name assert_or_expectation`.
