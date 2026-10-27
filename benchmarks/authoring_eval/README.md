@@ -233,7 +233,7 @@ A void run can pass the audit. The fix review found that the audit misses these 
 | Form | Example |
 |---|---|
 | a variable | `cat $HOME/.claude/CLAUDE.md`; `D=<venv>/bin/datamimic; cat ${D%/bin/datamimic}/lib/…` |
-| a bare `~` | `find ~ -name orders.csv`; `cd ~ && cat .claude/CLAUDE.md` |
+| a bare `~` | `find ~ -name orders.ent.csv`; `cd ~ && cat .claude/CLAUDE.md` |
 | a bare `/` or `//` | `find / -name oracle.json`; `ls //`; `cd // && cat etc/passwd` |
 | a relative path | `ls $PWD/../..`; `rm -rf ../../*`; `cat ../AGENTS.md` is flagged only by its name |
 | a glob | `cat ../AGENT?.md`; `cat ../C*.md` |

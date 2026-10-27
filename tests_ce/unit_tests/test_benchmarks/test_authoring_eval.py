@@ -954,6 +954,20 @@ _CHEATS = {
 
 # Whole valid projects in another style than the reference; the oracle must pass them.
 _OTHER_STYLES = {
+    # the whole file in one row, and one priced order for each of its rows
+    "e04": """<setup rngSeed="51110">
+    <generate name="order_file" count="1" target="ConsoleExporter">
+        <variable name="orders" source="fixtures/orders.ent.csv" storage="data" distribution="ordered"/>
+        <generate name="priced_orders" count="{len(orders)}" target="JSON">
+            <variable name="i" generator="IncrementGenerator"/>
+            <variable name="order" script="parent.orders[i - 1]"/>
+            <key name="order_id" script="order.order_id"/>
+            <key name="customer_id" script="order.customer_id"/>
+            <key name="total_cents" script="int(order.total_cents)"/>
+            <key name="priority" script="'high' if int(order.total_cents) &gt;= 5000 else 'standard'"/>
+        </generate>
+    </generate>
+</setup>""",
     # one report row under each order row, only for a kept order; the lookups are list comprehensions
     "e07": """<setup rngSeed="40961">
     <iterate name="orders" source="fixtures/orders.ent.csv" distribution="ordered" target="ConsoleExporter">

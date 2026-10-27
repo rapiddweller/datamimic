@@ -73,6 +73,7 @@ No check of the shares exists, for two reasons:
    So a project that ignores the weights must type the names, and the hidden set fails it.
 2. A frequency check is weak. "The name of weight 80 is the most frequent of the 40" is stable: an honest draw misses it with a
    probability of 8e-7. But a uniform draw passes it 30 % of the time, and a typed list with the right weights passes it always.
+   On the hidden set (50/30/15/5) the reference itself draws DRIVER 18 times and WELDER 14 times, so such a check fails a valid project.
 
 Engine facts from probes: a weight of 0 is never drawn; a duplicate value adds its weights; an empty weight on a later line stops the run with a `ValueError`.
 A first line whose weight is not a number is read as a header and skipped.
