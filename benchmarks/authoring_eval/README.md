@@ -77,15 +77,15 @@ Limits of the oracle:
   - e03: a global counter gives wrong values and fails. A flat project that computes the per-depot counter by arithmetic passes. A literal list of the 12 `slot_id` values passes, because the prompt fixes all 12 rows. e03 proves the arithmetic, not nested authoring.
   - e02: a flat `invoices` product with `subscriber_id = (invoice_id - 1) // 3 + 1` passes.
   - e05: `tier=GOLD`, `list_price=900`, `sale_price=50` in all 40 rows passes. That is literal compliance with the prompt.
-- e06: the subject makes its own data, so a rule binds only the rows the subject makes. A project that never puts a work date on an expiry day passes, though it can count the expiry day as invalid.
-  The prompt requires 10 licenses without an expiry date, so "no expiry is never valid" binds every submission. The reference and the variants prove each boundary of the check.
+- e06: the subject makes its own data, so a rule binds only the rows the subject makes. e06 proves that the rows obey the rules, not that the subject handled the expiry-day or null boundary.
+  `row_exists_in` needs one matching license. A project whose licenses all cover the whole year passes, though it never puts a work date on an expiry day and never needs a license without an expiry date. The reference and the variants prove each boundary of the check.
 - e06: a project that types all 124 consistent rows passes. The oracle proves the values, not the generation, as for e03.
 - The capture writes a value that is not JSON as its text. A Python `date` becomes `"2026-03-01"` and passes `date_range`; a `datetime` becomes `"2026-03-01 00:00:00"` and fails it. The prompt asks for a text, and the oracle cannot see that difference.
 - `row_exists_in` proves that a matching row exists, not that the project intended that row: a project can match by chance. With the case seed, the cheat with random foreign keys fails: its 20 random assignments do not all match an employment.
 - e04 proves that the rows come from the CSV with a second CSV of other values (`fixtures_changed/`). It does not prove how the project reads the file.
   A project that reads its own copy of the CSV at another path fails that check. The prompt names `fixtures/orders.csv`, so this is intended.
 - e07 proves the same with `fixtures_changed/`, which also has another number of orders and of kept orders. The oracle reads only the `order_report` files, so a helper product may write another file.
-- The engine names a product nested two levels deep `inner|leaf`. The capture names it `leaf`, as Build does. Build refuses two products with the same name.
+- The engine names a product nested two levels deep `inner|leaf`. The capture names it `leaf`, as Build does. Build refuses two products with the same name. A top-level name with `|` is cut the same way; that changes the name, not the rows. Two names with the same last segment make Build raise, and the oracle then fails `build_ready`.
 - The answer key is on disk: in this repository, in other checkouts of it, and in the transcripts of the sessions that wrote the cases (`~/.claude/projects`).
   The sandbox blocks Bash reads of this checkout and of `~/.claude/projects` only. So e04 proves that the rows come from the CSV only for a subject that does not search the disk. Read the transcript.
 - `repeatable` finds a difference that two hash seeds expose. The engine fixes the clock and the random generators when the seed is set, so a script cannot use them to make a seeded run differ.

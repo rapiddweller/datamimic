@@ -39,28 +39,25 @@ The type of a foreign key is checked by `row_exists_in`: it compares the JSON ty
 `reference/` makes the rows with arithmetic in nested `<generate>` elements. Each person owns its licenses and employments.
 The one assignment of a person sits under the first employment and copies it. So the employment rule holds by construction.
 The work day is a person variable. The first license expires on that day, so the reference proves that the expiry day counts.
+e06 proves that the rows obey the rules, not that the subject handled the expiry-day or null boundary: `row_exists_in` needs one matching license.
 The 124 rows are in the Build row cap of 1000. The assignment count is an expression, so Build cannot derive the row total: the reference sets `max_count` to 124.
 
 ## Equivalence classes
 
-| Class | Variant in `test_authoring_eval.py` |
-|---|---|
-| valid | `reference/` |
-| boundary: work date is the expiry day (max) | `reference/` |
-| boundary: work date is the first valid day (min) | `work_date_on_valid_from` (passes) |
-| boundary: max + 1, min - 1 | `work_date_after_the_expiry_day`, `work_date_before_valid_from`, `valid_from_after_march` |
-| missing: no expiry date counted as valid | `missing_expiry_counts_as_valid` |
-| empty: an empty text for a missing date | `empty_text_for_a_missing_expiry` |
-| absent: no field for a missing date | `absent_field_for_a_missing_expiry` |
-| count of nulls: 9, 11 | `nine_missing_expiries`, `eleven_missing_expiries` |
-| count per parent: 3 employments, 3 licenses, 4 and 6 assignments, 5 companies, 19 assignments | `three_employments_per_person`, `three_licenses_per_person`, `six_assignments_at_one_company`, `five_companies`, `person_without_assignment` |
-| duplicate: pair in employments, pair in assignments, ids | `two_employments_at_one_company`, `two_assignments_on_one_day`, `colliding_*_ids` |
-| invalid rule: other company, function, person | `assignment_at_a_company_without_employment`, `assignment_in_another_function`, `assignment_of_another_person` |
-| closed set, derived field | `function_outside_the_set`, `badge_without_three_digits` |
-| type: text ids, text foreign keys, date of another form, number as name, empty name | `text_*_ids`, `text_company_ids_in_employments`, `text_person_ids_in_*`, `work_date_in_another_format`, `numeric_company_names`, `empty_full_names` |
-| order: people in reverse order | `people_in_reverse_order` (passes) |
-| seed and hash order | `missing_seed`, `wrong_seed`, `hash_ordered_names` |
-| cheat: random foreign keys from the right sets | `_CHEATS` `e06-random_foreign_keys` |
+The `e06` variants and cheats in `test_authoring_eval.py` cover these classes:
+
+- valid: `reference/`
+- boundary: the work date is the expiry day (max, `reference/`), the first valid day (min, passes), max + 1, min - 1
+- missing: no expiry date counted as valid; an empty text or no field for a missing date
+- count of nulls: 9, 11
+- count per parent: employments, licenses, assignments, companies, a person without an assignment
+- duplicate: a pair in employments, a pair in assignments, ids
+- invalid rule: another company, function or person
+- closed set, derived field
+- type: text ids and foreign keys, a date of another form, a number as a name, an empty name
+- order: the people in reverse order (passes)
+- seed and hash order
+- cheat: random foreign keys from the right sets
 
 `test_every_check_of_the_complex_cases_fails_in_some_variant` proves that each check fails in at least one variant or cheat.
 The synthetic tests of `unique_together`, `row_exists_in` and `date_range` cover null, empty, absent, non-ISO and calendar-invalid dates.
