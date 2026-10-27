@@ -13,17 +13,17 @@
   "products": {"people": 3, "copies": 3},
   "negatives": [
     {"name": "the_values_come_from_the_file", "diagnostic": "allowed_values",
-     "patch": {"file": "fixtures/functions.wgt.csv", "old": "OPERATOR|80", "new": "DRIVER|80"}},
+     "patch": {"file": "data/weighting/functions.wgt.csv", "old": "OPERATOR|80", "new": "DRIVER|80"}},
     {"name": "value_outside_the_closed_set", "diagnostic": "allowed_values",
      "patch": {"file": "acceptance/build.json", "old": "\"field\": \"function\", \"values\": [\"OPERATOR\", \"INSPECTOR\", \"PLANNER\"]", "new": "\"field\": \"function\", \"values\": [\"INSPECTOR\", \"PLANNER\"]"}},
     {"name": "weighted_file_read_in_order", "diagnostic": "child_execution",
-     "patch": {"file": "datamimic.xml", "old": "<variable name=\"other\" source=\"fixtures/functions.wgt.csv\"/>", "new": "<variable name=\"other\" source=\"fixtures/functions.wgt.csv\" distribution=\"ordered\"/>"}},
+     "patch": {"file": "datamimic.xml", "old": "<variable name=\"other\" source=\"data/weighting/functions.wgt.csv\"/>", "new": "<variable name=\"other\" source=\"data/weighting/functions.wgt.csv\" distribution=\"ordered\"/>"}},
     {"name": "generate_reads_a_headerless_weighted_file", "diagnostic": "child_execution",
-     "patch": {"file": "datamimic.xml", "old": "<generate name=\"copies\" source=\"fixtures/people.ent.csv\" distribution=\"ordered\"/>", "new": "<generate name=\"copies\" source=\"fixtures/functions.wgt.csv\"/>"}},
+     "patch": {"file": "datamimic.xml", "old": "<generate name=\"copies\" source=\"data/entity/people.ent.csv\" distribution=\"ordered\"/>", "new": "<generate name=\"copies\" source=\"data/weighting/functions.wgt.csv\"/>"}},
     {"name": "key_reads_an_entity_file", "diagnostic": "DM402",
-     "patch": {"file": "datamimic.xml", "old": "<key name=\"function\" source=\"fixtures/functions.wgt.csv\"/>", "new": "<key name=\"function\" source=\"fixtures/people.ent.csv\"/>"}},
+     "patch": {"file": "datamimic.xml", "old": "<key name=\"function\" source=\"data/weighting/functions.wgt.csv\"/>", "new": "<key name=\"function\" source=\"data/entity/people.ent.csv\"/>"}},
     {"name": "comma_separator_on_a_pipe_file", "diagnostic": "child_execution",
-     "patch": {"file": "datamimic.xml", "old": "<variable name=\"row\" source=\"fixtures/people.ent.csv\" distribution=\"ordered\"/>", "new": "<variable name=\"row\" source=\"fixtures/people.ent.csv\" distribution=\"ordered\" separator=\",\"/>"}},
+     "patch": {"file": "datamimic.xml", "old": "<variable name=\"row\" source=\"data/entity/people.ent.csv\" distribution=\"ordered\"/>", "new": "<variable name=\"row\" source=\"data/entity/people.ent.csv\" distribution=\"ordered\" separator=\",\"/>"}},
     {"name": "more_rows_than_the_file", "diagnostic": "validation",
      "patch": {"file": "datamimic.xml", "old": "<generate name=\"people\" count=\"3\">", "new": "<generate name=\"people\" count=\"4\">"}}
   ]
