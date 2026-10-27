@@ -435,6 +435,7 @@ def test_build_limit_boundary_for_kept_rows(tmp_path: Path, kept: int, ready: bo
 
 _KEEP = 'source="data/fixtures/orders.ent.csv" distribution="ordered" where="int(amount) &gt;= 1000"'
 _TWO = '<variable name="v" source="data/fixtures/two.ent.csv" distribution="ordered"/>'
+_TICKS = 'start="2026-01-01T00:00:00+00:00" end="2026-01-01T00:00:03+00:00" interval="PT1S"'
 _TWO_CYCLIC = '<variable name="v" source="data/fixtures/two.ent.csv" distribution="ordered" cyclic="True"/>'
 
 
@@ -468,6 +469,9 @@ _TWO_CYCLIC = '<variable name="v" source="data/fixtures/two.ent.csv" distributio
         (f'<generate name="rows" count="{{1 + 2}}">{_TWO}</generate>', "unknown", 2, "count"),
         (f'<generate name="rows" minCount="3" maxCount="4">{_TWO}</generate>', "unknown", 2, "count"),
         ('<generate name="rows" count="{1 + 2}"/>', "complete", 3, "dynamic count"),
+        # A time series resolves series times ticks rows: two series of three ticks are six rows.
+        (f'<generate name="rows" count="{{2}}" {_TICKS}/>', "complete", 6, "dynamic count"),
+        (f'<generate name="rows" count="{{2}}" {_TICKS}>{_TWO}</generate>', "unknown", 2, "count"),
     ],
 )
 def test_build_compares_the_emitted_rows_with_the_runtime_count(

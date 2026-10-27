@@ -766,8 +766,8 @@ def neutralize_for_dry_run(
             elif stmt.count is not None:
                 count_kind = _CountBoundaryKind.DYNAMIC
                 if stmt.source is None:
-                    # The expression is evaluated per invocation; the runtime guard refuses a value above
-                    # max_count, so a run that completes produced every requested row.
+                    # The expression is evaluated per invocation and the runtime guard refuses a value above
+                    # max_count; _check_runtime_counts compares the capture with the evaluated total.
                     stmt.bounded_count_limit = max_count
                     bounded_without_cap = True
                     reason = "dynamic count was evaluated at runtime within the per-invocation limit"
@@ -786,7 +786,7 @@ def neutralize_for_dry_run(
                 else:
                     reason = f"count range has static upper bound {range_bound}"
             elif isinstance(stmt, GenerateStatement) and stmt.where is not None:
-                # Only the run counts kept rows, and it refuses more than max_count: a completed run emitted them all.
+                # Only the run counts kept rows and refuses more than max_count; _check_runtime_counts compares them.
                 count_kind = _CountBoundaryKind.DYNAMIC
                 bounded_without_cap = True
                 reason = "file source rows kept by where= were counted at runtime within the per-invocation limit"
