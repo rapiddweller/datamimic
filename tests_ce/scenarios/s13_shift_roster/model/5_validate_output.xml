@@ -11,7 +11,13 @@
         <key name="staff_id" script="staff_id"/>
         <key name="required_cert" script="{row.shift_code: row.required_cert for row in shift_types}[shift_code]"/>
         <key name="cert_status" script="certificate_status(holdings, staff_id, required_cert, shift_date)"/>
-        <key name="rest_hours" script="rest_hours_before(roster, shift_types, entry_id)"/>
+        <variable name="start_hour_of" script="{row.shift_code: row.start_hour for row in shift_types}"/>
+        <variable name="length_of" script="{row.shift_code: row.length_hours for row in shift_types}"/>
+        <!-- The id, start and length of each shift of this person, from the shift types, not from the slots of the search. -->
+        <variable name="shifts" script="[(row.entry_id, datetime.datetime.combine(row.shift_date, datetime.time(start_hour_of[row.shift_code])), length_of[row.shift_code]) for row in roster if row.staff_id == staff_id]"/>
+        <variable name="starts_at" script="datetime.datetime.combine(shift_date, datetime.time(start_hour_of[shift_code]))"/>
+        <!-- The gap to the end of each other shift that starts no later; negative when they overlap, None for the first shift. -->
+        <key name="rest_hours" script="min(((starts_at - start - datetime.timedelta(hours=hours)).total_seconds() / 3600 for entry, start, hours in shifts if entry != entry_id and start &lt;= starts_at), default=None)"/>
         <key name="min_rest_hours" script="policy[0].min_rest_hours"/>
         <key name="wards_that_day" script="len({row.ward_id for row in roster if row.staff_id == staff_id and row.shift_date == shift_date})"/>
         <key name="on_leave" script="any(row.staff_id == staff_id and row.status == 'approved' and row.first_day &lt;= shift_date &lt;= row.last_day for row in leave)"/>

@@ -56,7 +56,6 @@ proved.
 | `data/leave.csv` | Leave periods and their status. Only `approved` leave blocks a person. |
 | `data/calendar.csv` | The plan days. This file is the clock of the plan: nothing reads the system time. |
 | `lib/certificates.scr.py` | RS1: `certificate_status` and the enum `CertificateStatus`. |
-| `lib/roster_rules.scr.py` | The output evidence for RS2: `rest_hours_before`. |
 | `lib/roster_search.scr.py` | The global search `plan_roster`. |
 | `acceptance/build.json` | The roles, the input expectations, the rule expectations and the caller's edge controls. |
 | `scenario.json` | What the corpus runner checks: the row counts and the negatives. |
