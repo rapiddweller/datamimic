@@ -83,6 +83,7 @@
     {"origin": "caller", "expectation": {"kind": "row_condition", "subject": {"kind": "product", "product": "candidates"}, "condition": "candidate_id != 'S06/2026-03-03' or 'night' in eligible_shifts"}},
     {"origin": "caller", "expectation": {"kind": "row_condition", "subject": {"kind": "product", "product": "candidates"}, "condition": "candidate_id != 'S04/2026-03-02' or 'night' in eligible_shifts"}},
     {"origin": "caller", "expectation": {"kind": "row_condition", "subject": {"kind": "product", "product": "hours_checks"}, "condition": "staff_id != 'S01' or busiest_week_hours == contract_hours"}},
+    {"origin": "caller", "expectation": {"kind": "row_condition", "subject": {"kind": "product", "product": "hours_checks"}, "condition": "staff_id != 'S05' or busiest_week_hours == 33"}},
     {"origin": "caller", "expectation": {"kind": "row_condition", "subject": {"kind": "product", "product": "coverage_checks"}, "condition": "slot_id != '2026-03-02/W1/evening' or staffed == max_staff"}},
     {"origin": "caller", "expectation": {"kind": "row_condition", "subject": {"kind": "product", "product": "entry_checks"}, "condition": "slot_id != '2026-03-07/W2/evening' or rest_hours == min_rest_hours"}},
     {"origin": "caller", "expectation": {"kind": "row_condition", "subject": {"kind": "product", "product": "slot_decisions"}, "condition": "slot_id != '2026-03-02/W2/night' or (blocked[0].staff_id == 'S02' and blocked[0].rule == 'RS2')"}},
