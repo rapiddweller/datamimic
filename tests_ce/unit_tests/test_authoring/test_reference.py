@@ -197,3 +197,28 @@ def test_connection_catalog_preserves_profile_precedence_and_read_only_contract(
     properties = result.capability.properties_schema["properties"]
     assert properties["host"]["description"] == host
     assert properties["read_only"]["type"] == "boolean"
+
+
+def test_learning_names_the_project_data_file_forms_the_s24_scenario_proves(application):
+    """Blind agents typed the names of a weighted file into the project instead of reading it (campaign at
+    89f304b9, e06). The forms named here are the ones tests_ce/scenarios/s24_project_data_files builds."""
+    [entry] = application.reference(ReferenceRequest(topic=ReferenceTopic.LEARNING, name="data_files")).entries
+    text = entry.description
+    for form in (
+        '<key name="function" source="fixtures/functions.wgt.csv"/>',
+        '<variable name="row" source="fixtures/people.ent.csv" distribution="ordered"/>',
+        "int(row.age)",
+        ".wgt.ent.csv",
+        'separator=","',
+    ):
+        assert form in text, form
+    assert entry.path == "tests_ce/scenarios/s24_project_data_files"
+    overview = application.reference(ReferenceRequest(topic=ReferenceTopic.OVERVIEW))
+    assert "--topic learning --name data_files" in overview.content
+
+
+def test_authoring_help_points_to_the_data_file_guidance():
+    result = CliRunner().invoke(app, ["authoring", "--help"])
+
+    assert result.exit_code == 0
+    assert "data_files" in result.stdout

@@ -1,0 +1,20 @@
+<setup rngSeed="24">
+    <!-- An entity file: pipe-separated, a header row, UTF-8. The default separator is the pipe. -->
+    <generate name="people" count="3">
+        <variable name="row" source="fixtures/people.ent.csv" distribution="ordered"/>
+        <!-- A CSV column arrives as text: cast it for numbers. -->
+        <key name="person_id" script="int(row.person_id)"/>
+        <key name="name" script="row.name"/>
+        <key name="age" script="int(row.age)"/>
+        <!-- A headerless weighted file, value|weight: both forms draw by weight. -->
+        <key name="function" source="fixtures/functions.wgt.csv"/>
+        <variable name="other" source="fixtures/functions.wgt.csv"/>
+        <key name="second_function" script="other"/>
+        <!-- A weighted entity file has a header and a weight column; a variable draws one row by weight. -->
+        <variable name="tier_row" source="fixtures/tiers.wgt.ent.csv"/>
+        <key name="tier" script="tier_row.tier"/>
+        <key name="discount" script="int(tier_row.discount)"/>
+    </generate>
+    <!-- A generate source copies every column of every row, as text, in file order. -->
+    <generate name="copies" source="fixtures/people.ent.csv" distribution="ordered"/>
+</setup>

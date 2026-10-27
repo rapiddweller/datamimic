@@ -115,7 +115,10 @@ def capability(
     emit_authoring(result, output_format, exit_code=0 if result.ok else 1)
 
 
-@app.command("reference")
+@app.command(
+    "reference",
+    help="Read guidance by topic, starting with overview. Data files: --topic learning --name data_files.",
+)
 def reference(
     topic: Annotated[ReferenceTopic, typer.Option("--topic")] = ReferenceTopic.OVERVIEW,
     name: Annotated[str | None, typer.Option("--name")] = None,

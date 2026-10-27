@@ -1,0 +1,30 @@
+{
+  "title": "The project data files: a pipe entity file, a headerless weighted file and a weighted entity file",
+  "proves": [
+    "a <variable> with distribution=\"ordered\" reads a pipe-separated UTF-8 .ent.csv row by row, with no separator attribute",
+    "a CSV column arrives as text and int(row.x) makes it a number",
+    "<key source=\"*.wgt.csv\"> and <variable source=\"*.wgt.csv\"> both draw a value of a headerless value|weight file",
+    "a <variable> draws one row of a .wgt.ent.csv by its weight column",
+    "a <generate source=\"*.ent.csv\"> copies every column of every row as text",
+    "the drawn values come from the file: another file content fails the closed set",
+    "distribution=\"ordered\" on a .wgt.csv, a <generate> over a headerless .wgt.csv and a <key> over an .ent.csv are refused",
+    "a comma separator on a pipe file and more rows than the file holds are rejected"
+  ],
+  "products": {"people": 3, "copies": 3},
+  "negatives": [
+    {"name": "the_values_come_from_the_file", "diagnostic": "allowed_values",
+     "patch": {"file": "fixtures/functions.wgt.csv", "old": "OPERATOR|80", "new": "DRIVER|80"}},
+    {"name": "value_outside_the_closed_set", "diagnostic": "allowed_values",
+     "patch": {"file": "acceptance/build.json", "old": "\"field\": \"function\", \"values\": [\"OPERATOR\", \"INSPECTOR\", \"PLANNER\"]", "new": "\"field\": \"function\", \"values\": [\"INSPECTOR\", \"PLANNER\"]"}},
+    {"name": "weighted_file_read_in_order", "diagnostic": "child_execution",
+     "patch": {"file": "datamimic.xml", "old": "<variable name=\"other\" source=\"fixtures/functions.wgt.csv\"/>", "new": "<variable name=\"other\" source=\"fixtures/functions.wgt.csv\" distribution=\"ordered\"/>"}},
+    {"name": "generate_reads_a_headerless_weighted_file", "diagnostic": "child_execution",
+     "patch": {"file": "datamimic.xml", "old": "<generate name=\"copies\" source=\"fixtures/people.ent.csv\" distribution=\"ordered\"/>", "new": "<generate name=\"copies\" source=\"fixtures/functions.wgt.csv\"/>"}},
+    {"name": "key_reads_an_entity_file", "diagnostic": "DM402",
+     "patch": {"file": "datamimic.xml", "old": "<key name=\"function\" source=\"fixtures/functions.wgt.csv\"/>", "new": "<key name=\"function\" source=\"fixtures/people.ent.csv\"/>"}},
+    {"name": "comma_separator_on_a_pipe_file", "diagnostic": "child_execution",
+     "patch": {"file": "datamimic.xml", "old": "<variable name=\"row\" source=\"fixtures/people.ent.csv\" distribution=\"ordered\"/>", "new": "<variable name=\"row\" source=\"fixtures/people.ent.csv\" distribution=\"ordered\" separator=\",\"/>"}},
+    {"name": "more_rows_than_the_file", "diagnostic": "validation",
+     "patch": {"file": "datamimic.xml", "old": "<generate name=\"people\" count=\"3\">", "new": "<generate name=\"people\" count=\"4\">"}}
+  ]
+}

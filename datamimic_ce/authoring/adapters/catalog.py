@@ -239,7 +239,9 @@ class CeDslCatalog:
                     topic=request.topic,
                     content=(
                         "Author DM JSON, compile to XML, and declare expectations in each Build. "
-                        "Codec support, parser validity, bounded evidence and external delivery are separate claims."
+                        "Codec support, parser validity, bounded evidence and external delivery are separate claims. "
+                        "Project data files (*.ent.csv, *.wgt.csv): "
+                        "datamimic authoring reference --topic learning --name data_files."
                     ),
                     next_topics=tuple(topic for topic in ReferenceTopic if topic != ReferenceTopic.OVERVIEW),
                 )
@@ -369,6 +371,27 @@ class CeDslCatalog:
                         ),
                     ),
                     AuthoringLearningReference(
+                        name="data_files",
+                        path="tests_ce/scenarios/s24_project_data_files",
+                        description=(
+                            "Read a data file the task gives; do not type its values into the project. An entity "
+                            "file *.ent.csv is UTF-8, pipe-separated, with a header row. The pipe is the default "
+                            'separator, so write no separator=; separator="," on a pipe file gives one merged '
+                            'column. Read it row by row with <variable name="row" source="fixtures/people.ent.csv" '
+                            'distribution="ordered"/> in a generate whose count is the number of data rows (or add '
+                            'cyclic="true"). Without distribution a source read is shuffled. Every column is text: '
+                            'cast with int(row.age). <generate name="x" source="fixtures/people.ent.csv" '
+                            'distribution="ordered"/> copies every column of every row. A weighted file *.wgt.csv '
+                            'has no header and one value|weight on each line. <key name="function" '
+                            'source="fixtures/functions.wgt.csv"/> draws one value by weight for each row; so does '
+                            '<variable name="f" source="fixtures/functions.wgt.csv"/> with <key name="function" '
+                            'script="f"/>. A headerless .wgt.csv refuses distribution="ordered", unique="true" and '
+                            "<generate source=...>; <key source=...> refuses an .ent.csv. A weighted entity file "
+                            '*.wgt.ent.csv has a header and a weight column: <variable name="t" '
+                            'source="fixtures/tiers.wgt.ent.csv"/> draws one row by weight; read t.tier.'
+                        ),
+                    ),
+                    AuthoringLearningReference(
                         name="assert_or_expectation",
                         path="datamimic_ce/engine/dsl/model/flow/commands/assert_model.py",
                         description=(
@@ -407,7 +430,8 @@ class CeDslCatalog:
                 return ReferenceResult(
                     topic=request.topic,
                     name=request.name,
-                    content="CE migration, script scope, file sources, assert or expectation and time-series guidance."
+                    content="CE migration, script scope, file sources, data files, assert or expectation and "
+                    "time-series guidance."
                     if learning_entries
                     else "No matching learning resource.",
                     entries=learning_entries,
