@@ -92,8 +92,7 @@ def read_policy(row: Row) -> Policy:
     exclusive = row["exclusive_approvals"]
     if not isinstance(exclusive, list) or not all(isinstance(item, str) for item in exclusive):
         raise TypeError("policy exclusive_approvals must be a list of approval ids")
-    # A row's mapping has keys and item access only (DotableDict), so copy it by key.
-    required = {key: row["required_qualification"][key] for key in row["required_qualification"]}
+    required = dict(row["required_qualification"])
     if not all(isinstance(item, str) for item in required.values()):
         raise TypeError("policy required_qualification must map function ids to qualification ids")
     return Policy(

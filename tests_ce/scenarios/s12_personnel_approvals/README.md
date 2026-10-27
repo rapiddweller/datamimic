@@ -149,7 +149,6 @@ Product limits. Issue #420 tracks them.
 - Build reads the fields of a product from its keys. A key such as `seat_id` on `seat_check` only copies a source field, but Build needs it for the product roles.
 - Steps share data only through the memstore. Build refuses `<include>` inside `<generate>`, and it accepts only a `<generate>` as a memstore reader with a declared role. So `plan_check` reads the step 2 rows.
 - `type=` on a memstore reader also names the entity that it writes. A reader that writes to the memstore again uses `sourceEntity=`.
-- A JSON object in a row is a `Mapping` without `values()` or `items()`. `read_policy` copies it by key.
 
 Project limits.
 
