@@ -297,6 +297,11 @@ def _decode_reply(payload: bytes, request: BoundedExecutionRequest, workspace: P
                         ),
                     ),
                     base_run_ok=False,
+                    source_accesses=tuple(
+                        SourceAccessEvidence(source_type=source_type, requests=count)
+                        for source_type, count in message.source_accesses
+                    ),
+                    files=_read_file_digests(message.read_files, request, workspace),
                     stopped_by_assert=True,
                 )
             definition = (

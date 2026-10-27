@@ -47,9 +47,12 @@ A failed `<assert>` rejects Build with `assert_failed` at the assert line, keeps
 products that completed before it and lists the other checks as `not_executed`.
 `assert_failed` echoes only a literal message: text without `{`, `}` or `__`, at most
 200 characters. It is author text from the descriptor file, never a resolved value.
-The evidence of a stopped run has no `files` and no `source_accesses`; the Build is
-rejected, so no ready proof depends on them. An `<assert>` tag over several lines
-reports its last line; the runtime and Build read the same line.
+The `review_artifact` of a stopped run lists each workspace file that the run read
+before the assert, with its digest, as a ready Build does. A changed source file
+changes the artifact. A `<variable source>` of a product after the assert is not read
+and not listed. Build counts the rows of a top-level `<generate source>` before the
+run, so that file is listed also after the assert. An `<assert>` tag over several
+lines reports its last line; the runtime and Build read the same line.
 
 ## Public contract
 

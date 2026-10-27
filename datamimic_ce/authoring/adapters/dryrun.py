@@ -143,6 +143,9 @@ class _WorkerFailure:
     policy_path: tuple[NonEmptyStrictStr, ...] = ()
     # A failed <assert> stops the run like a normal run; these are the products that completed before it.
     stopped_capture: _WorkerSuccess | None = None
+    # What the run read before it failed, as in _WorkerSuccess: the stopped evidence binds those files.
+    source_accesses: tuple[tuple[NonEmptyStrictStr, PositiveStrictInt], ...] = ()
+    read_files: tuple[NonEmptyStrictStr, ...] = ()
 
 
 class _BoundedPolicyRefusal(ValueError):
@@ -1258,6 +1261,7 @@ def _run_engine_capture(
         executed: list[str] = []
         stripped: _StrippedTargets | None = {} if smoke_export else None
         session: RunSession | None = None
+        source_accesses = SourceAccessCapture()
         try:
             included_memstores, graph_producers = _validate_bounded_includes(
                 path, allow_side_effects=allow_side_effects
@@ -1289,7 +1293,7 @@ def _run_engine_capture(
                     total_row_limit=max_count,
                 ),
             )
-            with SourceAccessCapture() as source_accesses:
+            with source_accesses:
                 session.execute()
             capture = session.capture_test_result()
             raw_capture = _validated_capture_rows(_project_capture_object_ids(capture if capture is not None else {}))
@@ -1352,6 +1356,7 @@ def _run_engine_capture(
                 error=err if is_user_error(err) else None,
                 policy_refusal=isinstance(err, _BoundedPolicyRefusal),
                 policy_path=err.path if isinstance(err, _BoundedPolicyRefusal) else (),
+                source_accesses=source_accesses.snapshot(),
             )
         return message
 

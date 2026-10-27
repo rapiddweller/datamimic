@@ -9,6 +9,7 @@ that one code cannot carry: what Build kept, what it could not evaluate, and tha
 import json
 import pickle
 import shutil
+from hashlib import sha256
 from pathlib import Path
 
 import pytest
@@ -16,15 +17,19 @@ from typer.testing import CliRunner
 
 from datamimic_ce.authoring import create_authoring_application
 from datamimic_ce.authoring.adapters import bounded_executor, dryrun
+from datamimic_ce.authoring.adapters.bounded_executor import CeBoundedExecutor
+from datamimic_ce.authoring.adapters.workspace import AuthoringWorkspaceContext
 from datamimic_ce.authoring.domain.capture import SmokeExportCapture
 from datamimic_ce.authoring.domain.reference import AuthoringLearningReference
 from datamimic_ce.authoring.domain.requests import (
     PROJECT_ENTRY_PATH,
     BoundedExecutionRequest,
+    ReadyBuild,
     ReferenceRequest,
     ReferenceTopic,
     RejectedBuild,
     RunRequest,
+    SourceAccessEvidence,
 )
 from datamimic_ce.errors import DescriptorLocation, IssueCode, task_config_error
 from datamimic_ce.interfaces.cli import app
@@ -260,6 +265,144 @@ def test_a_forged_stopped_capture_that_does_not_validate_is_refused(tmp_path: Pa
     evidence = bounded_executor._decode_reply(payload, BoundedExecutionRequest(xml="<setup/>"), tmp_path)
 
     assert [str(item.code) for item in evidence.diagnostics] == ["serialization"]
+
+
+def _artifact(result: ReadyBuild | RejectedBuild) -> dict[str, str]:
+    artifact = result.artifact if isinstance(result, ReadyBuild) else result.review_artifact
+    assert artifact is not None
+    return {item.path.as_posix(): item.sha256 for item in artifact.files}
+
+
+def test_the_review_artifact_binds_the_files_the_stopped_run_read(tmp_path: Path) -> None:
+    ready = create_authoring_application(_copy(tmp_path / "ready", None), descriptor_path=PROJECT_ENTRY_PATH).build()
+    assert isinstance(ready, ReadyBuild)
+    first = _build(tmp_path / "first", "fails_at_middle_row")
+    project = _copy(tmp_path / "second", "fails_at_middle_row")
+    items = project / "data" / "items.json"
+    # A byte that no assert or check reads: the run stops at the same row with the same diagnostics.
+    items.write_text(items.read_text(encoding="utf-8").replace('"S1"', '"S9"'), encoding="utf-8")
+    second = create_authoring_application(project, descriptor_path=PROJECT_ENTRY_PATH).build()
+    assert isinstance(second, RejectedBuild)
+
+    assert [item.model_dump() for item in second.diagnostics] == [item.model_dump() for item in first.diagnostics]
+    assert set(_artifact(first)) == set(_artifact(ready))
+    assert _artifact(second)["data/items.json"] == sha256(items.read_bytes()).hexdigest()
+    assert _artifact(first)["data/items.json"] != _artifact(second)["data/items.json"]
+
+
+def _stopped_project(tmp_path: Path) -> Path:
+    (tmp_path / "data").mkdir()
+    for name in ("a", "b", "c", "counted", "late"):
+        (tmp_path / "data" / f"{name}.json").write_text('[{"v": 1}]', encoding="utf-8")
+    (tmp_path / "model").mkdir()
+    (tmp_path / "model" / "step.xml").write_text(
+        '<setup><generate name="c" source="data/c.json"/></setup>', encoding="utf-8"
+    )
+    (tmp_path / "acceptance").mkdir()
+    (tmp_path / "acceptance" / "build.json").write_text(
+        json.dumps(
+            {
+                "version": "5.0",
+                "expectations": [{"kind": "exact_count", "subject": {"kind": "product", "product": "a"}, "count": 1}],
+            }
+        ),
+        encoding="utf-8",
+    )
+    (tmp_path / PROJECT_ENTRY_PATH).write_text(
+        """<setup>
+    <include uri="model/step.xml"/>
+    <generate name="a" source="data/a.json"/>
+    <generate name="b" source="data/b.json"/>
+    <generate name="stop" count="1"><assert condition="False" message="stop"/></generate>
+    <generate name="late" count="1">
+        <variable name="row" source="data/late.json"/>
+        <key name="v" script="row.v"/>
+    </generate>
+    <!-- Build counts the rows of a generate source before the run, so it reads this file before the assert. -->
+    <generate name="counted" source="data/counted.json"/>
+</setup>""",
+        encoding="utf-8",
+    )
+    return tmp_path
+
+
+def test_a_stopped_run_lists_the_files_it_read_before_the_assert_and_not_after(tmp_path: Path) -> None:
+    project = _stopped_project(tmp_path)
+    result = create_authoring_application(project, descriptor_path=PROJECT_ENTRY_PATH).build()
+    entry = project / PROJECT_ENTRY_PATH
+    entry.write_text(
+        entry.read_text(encoding="utf-8").replace('condition="False"', 'condition="True"'), encoding="utf-8"
+    )
+    complete = create_authoring_application(project, descriptor_path=PROJECT_ENTRY_PATH).build()
+
+    assert isinstance(result, RejectedBuild)
+    assert _codes(result) == ["assert_failed", "not_executed"]
+    assert sorted(_artifact(result)) == [
+        "acceptance/build.json",
+        "data/a.json",
+        "data/b.json",
+        "data/c.json",
+        "data/counted.json",
+        PROJECT_ENTRY_PATH.as_posix(),
+        "model/step.xml",
+    ]
+    assert set(_artifact(complete)) == {*_artifact(result), "data/late.json"}
+
+
+def test_a_stopped_run_keeps_its_source_accesses(tmp_path: Path) -> None:
+    project = _stopped_project(tmp_path)
+
+    evidence = CeBoundedExecutor(AuthoringWorkspaceContext(project, PROJECT_ENTRY_PATH)).execute(
+        BoundedExecutionRequest(
+            xml=(project / PROJECT_ENTRY_PATH).read_text(encoding="utf-8"),
+            descriptor_path=PROJECT_ENTRY_PATH,
+            max_count=20,
+        )
+    )
+
+    assert evidence.stopped_by_assert
+    assert evidence.source_accesses == (SourceAccessEvidence(source_type="file_json", requests=3),)
+
+
+def test_a_project_that_reads_no_file_binds_only_its_own_files(tmp_path: Path) -> None:
+    result = _project(
+        tmp_path,
+        '<setup><generate name="a" count="1"><assert condition="False" message="a closes"/></generate></setup>',
+        {
+            "version": "5.0",
+            "expectations": [{"kind": "exact_count", "subject": {"kind": "product", "product": "a"}, "count": 1}],
+        },
+    )
+
+    assert sorted(_artifact(result)) == ["acceptance/build.json", PROJECT_ENTRY_PATH.as_posix()]
+
+
+@pytest.mark.parametrize(
+    ("read_file", "refusal"), [("data/gone.json", "os_error"), ("../outside.json", "serialization")]
+)
+def test_a_stopped_run_that_names_a_missing_or_outside_file_fails_like_a_success(
+    tmp_path: Path, read_file: str, refusal: str
+) -> None:
+    # The audit hook refuses to remove a snapshot file, so only a forged reply names one; both envelopes refuse it.
+    error = task_config_error(
+        code=IssueCode.TASK_ASSERT_FAILED,
+        condition="configured condition",
+        extra="",
+        location=DescriptorLocation("assert", attribute="condition", line=2),
+    )
+    success = dryrun._WorkerSuccess({}, (), (), SmokeExportCapture.not_requested(), read_files=(read_file,))
+    stopped = dryrun._WorkerFailure(message="m", fix_hint="h", error=error, read_files=(read_file,))
+
+    def outcome(message: object) -> list[str]:
+        try:
+            evidence = bounded_executor._decode_reply(
+                pickle.dumps(message), BoundedExecutionRequest(xml="<setup/>"), tmp_path
+            )
+        except OSError:
+            return ["os_error"]  # CeBoundedExecutor.execute reports an OSError of the reply as serialization
+        return [str(item.code) for item in evidence.diagnostics]
+
+    assert outcome(stopped) == outcome(success) == [refusal]
 
 
 @pytest.mark.parametrize(("negative", "exit_code"), [(None, 0), ("fails_at_last_row", 1)])
