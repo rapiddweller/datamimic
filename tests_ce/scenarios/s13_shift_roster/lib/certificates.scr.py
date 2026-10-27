@@ -2,7 +2,8 @@
 # Copyright (c) 2023-2026 Rapiddweller Asia Co., Ltd.
 # This software is licensed under the MIT License. See LICENSE.
 
-"""RS1: the status of a certification on one day, used by suitability and by output validation."""
+"""RS1: the status of a certification on one day. One definition for suitability and the output check: the status is
+evidence in candidates.csv."""
 
 import datetime  # the module, as scripts see it: a library name shadows the script global of the same name
 from collections.abc import Mapping, Sequence

@@ -153,14 +153,9 @@ proof. The plan days come from `data/calendar.csv`, so the same model, data, see
 
 ## Python
 
-A lookup by one key works natively with a dict index, for example
-`{row.contract_id: row.max_weekly_hours for row in contracts}[contract_id]`. A count works natively when the method
-call sees the current record, for example `wards_that_day` in step 5. A comprehension that filters by a field of the
-current record does not work in `script=`, because it does not see that field (#423).
-
-A `nestedKey` over another table can filter natively with `this.staff_id == parent.staff_id`, so RS6 could be a
-DSL rule. The project keeps RS1 and RS6 as functions in `lib/`, because suitability and the output check then call
-one definition of each rule. RS2 and RS3 need sums over the whole roster for one entry, so they are functions too.
+Python holds two things. `plan_roster` is the global search. `certificate_status` is RS1: suitability and the output
+check call this one definition, because its five-way status is evidence in `candidates.csv`. Every other rule is a
+`script=` filter in XML: RS6 in suitability and again in step 5, and the RS2 to RS5 output checks in step 5.
 
 A library shares its names with the scripts. The libraries import the module `datetime`, not its classes:
 the class `datetime` would hide the module `datetime` that the scripts use.
@@ -246,16 +241,11 @@ fallback would hide a failure in the decision evidence. A failing script must st
 - The checks are a gate in Build only (see [Process](#process); F13, #420).
 - There is no `delivery/` folder, and the cleanup step deletes nothing. A SQLite target needs an existing table, and Build refuses the
   SQL that creates it, so the project writes CSV files (F19, #420).
-- The rule checks are Python functions in `lib/`, not only the search. RS1 and RS6 could be native `nestedKey`
-  rules, but then each would have a second definition in the output check. A `script=` comprehension does not see
-  the fields of the current record (F1, #423).
+- RS1 is Python besides the search (see [Python](#python)). Its output check shares the suitability definition.
 - The libraries import the module `datetime`, because a library name hides a script global of the same name (F3, #423).
-- Every store read uses `sourceEntity=`, not `type=`: `type=` also sets the entity that a step writes (F4, #422).
-- The `nestedKey` in suitability builds new dicts for its items and never uses `row.to_dict()`: that call returns the
-  stored row, and the enrichment would change the store (F2, #421).
 - No shift in the data crosses midnight. With an evening shift from 20:00 for 8 hours, every rule check holds, but
   Build rejects the project: the rest edge on 2026-03-07 and the S03 `RS5` pin depend on the 18:00 evening.
-- Build captures at most 1000 rows (`max_count`). See [Size](#size).
+- Build captures at most 1000 rows. See [Size](#size).
 
 ## Size
 
