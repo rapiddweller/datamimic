@@ -85,9 +85,11 @@ Descriptors without them do not change.
 
 The model refuses `where`/`columns` without `source` (`DM214`) and `where` with `offset`
 (`DM218`); lint, dry-run and Build report these central rules. `I199`, `I200` and `I209` are
-runtime refusals: `datamimic run`, dry-run and Build report them with the same code
-(Build: `child_execution` with `ce_error.issue_code`); lint does not open the file and
-does not report them. Build counts the kept rows in its bounded run. A run that keeps more
+runtime refusals of the length pass, which runs before any read; lint does not open the
+file and does not report them. `datamimic run` reports all three. Dry-run and Build
+report `I200` and `I209` as `child_execution` with `ce_error.issue_code` (tested); a
+Build of a memstore read needs its producer and consumer roles first, so `I199` is
+tested with `datamimic run` only. Build counts the kept rows in its bounded run. A run that keeps more
 than `max_count` rows (default 10 for a file source without count) stops with `I800`
 instead of a capped capture. An ordered read with `where=` loads the kept rows once
 for each worker chunk, not once for each page. A `.wgt.csv` with a header at `<generate>`
