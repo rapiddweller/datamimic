@@ -7,7 +7,9 @@
     "Build lists the expectations it could not evaluate because the run stopped (not_executed)",
     "the failed row (first, middle or last) does not change the diagnostics: the product that holds the assert is never captured in part",
     "Build shows the message only when it is a literal text; a message that can hold an interpolated value is not shown",
-    "a condition that raises stays child_execution: it is a broken expression, not a broken rule"
+    "a condition that raises stays child_execution: it is a broken expression, not a broken rule",
+    "a kept product with a value Build cannot capture adds child_execution, and Build evaluates no check",
+    "an <assert> tag over several lines reports the line where the tag ends; Build shows at most 200 characters of a message"
   ],
   "products": {"items": 4, "lines": 4, "parts": 8, "stock": 3},
   "negatives": [
@@ -37,6 +39,14 @@
      "patch": {"file": "datamimic.xml", "old": "this.qty &lt;= 4", "new": "this.qtx &lt;= 4"}},
     {"name": "two_asserts_fail", "diagnostic": "assert_failed", "expected": "A line holds at most 4 items", "run_error": "A line holds at most 4 items",
      "patch": {"file": "datamimic.xml", "old": "<key name=\"qty\" script=\"item.qty\"/>", "new": "<key name=\"qty\" script=\"item.qty * 10\"/>"}},
+    {"name": "assert_tag_spans_lines", "diagnostic": "assert_failed", "expected": "A line holds at most 4 items", "run_error": "A line holds at most 4 items",
+     "patch": {"file": "datamimic.xml", "old": "<assert condition=\"this.qty &lt;= 4\" message=\"A line holds at most 4 items\"/>", "new": "<assert\n            condition=\"this.qty &lt;= 0\"\n            message=\"A line holds at most 4 items\"/>"}},
+    {"name": "message_of_200_characters", "diagnostic": "assert_failed", "expected": "A line holds at most 4 items; A line holds at most 4 items; A line holds at most 4 items; A line holds at most 4 items; A line holds at most 4 items; A line holds at most 4 items; A line holds at mos.", "run_error": "A line holds at most 4 items; A line holds at most 4 items; A line holds at most 4 items; A line holds at most 4 items; A line holds at most 4 items; A line holds at most 4 items; A line holds at mos",
+     "patch": {"file": "datamimic.xml", "old": "<assert condition=\"this.qty &lt;= 4\" message=\"A line holds at most 4 items\"/>", "new": "<assert condition=\"this.qty &lt;= 0\" message=\"A line holds at most 4 items; A line holds at most 4 items; A line holds at most 4 items; A line holds at most 4 items; A line holds at most 4 items; A line holds at most 4 items; A line holds at mos.\"/>"}},
+    {"name": "message_of_201_characters", "diagnostic": "assert_failed", "expected": "A line holds at most 4 items; A line holds at most 4 items; A line holds at most 4 items; A line holds at most 4 items; A line holds at most 4 items; A line holds at most 4 items; A line holds at m...", "run_error": "A line holds at most 4 items; A line holds at most 4 items; A line holds at most 4 items; A line holds at most 4 items; A line holds at most 4 items; A line holds at most 4 items; A line holds at most",
+     "patch": {"file": "datamimic.xml", "old": "<assert condition=\"this.qty &lt;= 4\" message=\"A line holds at most 4 items\"/>", "new": "<assert condition=\"this.qty &lt;= 0\" message=\"A line holds at most 4 items; A line holds at most 4 items; A line holds at most 4 items; A line holds at most 4 items; A line holds at most 4 items; A line holds at most 4 items; A line holds at most.\"/>"}},
+    {"name": "invalid_value_in_a_kept_product", "diagnostic": "child_execution", "run_error": "A line holds at most 4 items",
+     "patch": {"file": "data/items.json", "old": "{\"sku\": \"S1\", \"qty\": 1}", "new": "{\"sku\": \"S1\", \"qty\": 1e309}"}},
     {"name": "assert_and_failing_expectation", "diagnostic": "range", "run_error": "A line holds at most 4 items",
      "patch": {"file": "data/items.json", "old": "{\"sku\": \"S1\", \"qty\": 1}", "new": "{\"sku\": \"S1\", \"qty\": 9}"}}
   ]

@@ -599,11 +599,14 @@ def _not_evaluated_diagnostic(not_run: set[str], skipped: tuple[tuple[str | int,
     return Diagnostic(
         code=AuthoringSystemDiagnosticCode.NOT_EXECUTED,
         phase=DiagnosticPhase.EVIDENCE,
-        message=f"The run stopped at a failed <assert> before these products completed: {', '.join(sorted(not_run))}."
-        f" Build did not evaluate the {len(skipped)} checks that read them.",
+        # True also when a completed product holds a value Build cannot capture: Build then keeps no product.
+        message=f"The run stopped at a failed <assert>. Build kept no capture of these products: "
+        f"{', '.join(sorted(not_run))}. Build did not evaluate the "
+        f"{'1 check that reads' if len(skipped) == 1 else f'{len(skipped)} checks that read'} them.",
         path=("evidence",),
         expected=[list(path) for path in skipped],
-        remediation="Fix the failed <assert>. Build evaluates these checks when the run completes.",
+        remediation="Fix the failed <assert> and every other error of this Build. Build evaluates these checks when "
+        "it captures every product.",
     )
 
 

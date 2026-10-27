@@ -158,6 +158,98 @@ def test_a_condition_that_raises_stays_a_broken_expression(tmp_path: Path) -> No
     assert result.evidence == ()
 
 
+def test_a_kept_product_that_build_cannot_capture_leaves_every_check_unevaluated(tmp_path: Path) -> None:
+    # items completes with an infinite qty; without the failed assert the same value gives child_execution.
+    result = _build(tmp_path, "invalid_value_in_a_kept_product")
+
+    assert _codes(result) == ["assert_failed", "child_execution", "not_executed"]
+    assert result.evidence == ()
+    [skipped] = [item for item in result.diagnostics if str(item.code) == "not_executed"]
+    assert skipped.message == (
+        "The run stopped at a failed <assert>. Build kept no capture of these products: items, lines, parts, stock. "
+        "Build did not evaluate the 11 checks that read them."
+    )
+
+
+def test_an_assert_tag_over_several_lines_reports_the_line_where_it_ends(tmp_path: Path) -> None:
+    # libxml2 gives an element the line of its start tag's end; the runtime and Build both read that line.
+    result = _build(tmp_path, "assert_tag_spans_lines")
+
+    [failed] = [item for item in result.diagnostics if str(item.code) == "assert_failed"]
+    assert failed.path == ("descriptor", "datamimic.xml", "assert", "line", 13)
+
+
+def test_a_long_message_is_cut_to_200_characters_in_message_and_expected(tmp_path: Path) -> None:
+    result = _build(tmp_path, "message_of_201_characters")
+
+    [failed] = [item for item in result.diagnostics if str(item.code) == "assert_failed"]
+    assert isinstance(failed.expected, str) and len(failed.expected) == 200 and failed.expected.endswith("...")
+    assert failed.message == f"The <assert> in 'lines' failed: {failed.expected}"
+
+
+def _project(tmp_path: Path, xml: str, acceptance: object) -> RejectedBuild:
+    (tmp_path / "acceptance").mkdir()
+    (tmp_path / PROJECT_ENTRY_PATH).write_text(xml, encoding="utf-8")
+    (tmp_path / "acceptance" / "build.json").write_text(json.dumps(acceptance), encoding="utf-8")
+    result = create_authoring_application(tmp_path, descriptor_path=PROJECT_ENTRY_PATH).build()
+    assert isinstance(result, RejectedBuild)
+    return result
+
+
+def test_a_child_product_before_its_failed_parent_keeps_its_count_and_skips_its_foreign_key(tmp_path: Path) -> None:
+    result = _project(
+        tmp_path,
+        """<setup rngSeed="1">
+    <generate name="orders" count="3">
+        <key name="id" generator="IncrementGenerator"/>
+        <key name="cust" script="this.id"/>
+    </generate>
+    <generate name="customers" count="3">
+        <key name="cid" generator="IncrementGenerator"/>
+        <assert condition="this.cid &lt; 3" message="customer fails"/>
+    </generate>
+</setup>""",
+        {
+            "version": "5.0",
+            "product_roles": [
+                {"product": "customers", "field": "cid", "role": {"kind": "identifier"}},
+                {
+                    "product": "orders",
+                    "field": "cust",
+                    "role": {"kind": "foreign_key", "parent_product": "customers", "parent_field": "cid"},
+                },
+            ],
+            # Wrong on purpose: the kept orders product is evaluated, so its count check reports.
+            "expectations": [{"kind": "exact_count", "subject": {"kind": "product", "product": "orders"}, "count": 4}],
+        },
+    )
+
+    assert _codes(result) == ["assert_failed", "exact_count", "not_executed"]
+    assert [product.name for product in result.evidence] == ["orders"]
+    assert _not_evaluated(result) == {
+        json.dumps(["document", "root", "children", 1]),
+        json.dumps(["product_roles", 0]),
+        json.dumps(["product_roles", 1]),
+    }
+
+
+def test_one_unevaluated_check_is_named_in_the_singular(tmp_path: Path) -> None:
+    result = _project(
+        tmp_path,
+        """<setup>
+    <generate name="a" count="2"><key name="id" generator="IncrementGenerator"/></generate>
+    <generate name="b" count="2"><assert condition="False" message="b closes"/></generate>
+</setup>""",
+        {
+            "version": "5.0",
+            "expectations": [{"kind": "exact_count", "subject": {"kind": "product", "product": "a"}, "count": 2}],
+        },
+    )
+
+    [skipped] = [item for item in result.diagnostics if str(item.code) == "not_executed"]
+    assert skipped.message.endswith("Build did not evaluate the 1 check that reads them.")
+
+
 @pytest.mark.parametrize(("negative", "exit_code"), [(None, 0), ("fails_at_last_row", 1)])
 def test_datamimic_run_stops_with_exit_one_only_when_an_assert_fails(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch, negative: str | None, exit_code: int

@@ -1216,7 +1216,8 @@ def _stopped_capture(
     capture: dict[str, list[object]] | None, budgets: _ProductBudgets, max_count: int
 ) -> _WorkerSuccess | None:
     """The products a run completed before a failed <assert>. The engine captures an outermost generate only when
-    it completes, so no product is partial. Inconsistent provenance keeps nothing: Build then evaluates nothing."""
+    it completes, so no product is partial. None means the products do not validate (an unsupported value or
+    inconsistent provenance): Build then keeps nothing, reports the capture failure and evaluates no check."""
     try:
         rows = _validated_capture_rows(_project_capture_object_ids(capture or {}))
         return _validated_worker_success(

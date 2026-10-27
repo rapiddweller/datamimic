@@ -198,6 +198,7 @@ def _read_file_digests(
 # Whole-value ``{name}`` is replaced by a property, possibly a secret, when the runtime parses the descriptor; ``__``
 # is the interpolation mark of string and pattern. A message with neither mark is the literal text of the file.
 _INTERPOLATION_MARKS = ("{", "}", "__")
+_SHOWN_MESSAGE_LENGTH = 200
 
 
 def _failed_assert(
@@ -229,6 +230,9 @@ def _failed_assert(
     raw, owner = found[0]
     where = "under <setup>" if owner is None else f"in '{owner}'"
     rule = raw if raw and not any(mark in raw for mark in _INTERPOLATION_MARKS) else None
+    # Build shows the rule twice (message and expected); a cap keeps a long message from doubling the result size.
+    if rule is not None and len(rule) > _SHOWN_MESSAGE_LENGTH:
+        rule = rule[: _SHOWN_MESSAGE_LENGTH - 3] + "..."
     message = (
         f"The <assert> {where} failed: {rule}"
         if rule is not None
@@ -275,6 +279,21 @@ def _decode_reply(payload: bytes, request: BoundedExecutionRequest, workspace: P
                             ce_error=identity,
                             path=assert_path,
                             expected=rule,
+                        ),
+                        # No stopped capture: the completed products hold a value Build cannot capture.
+                        *(
+                            ()
+                            if message.stopped_capture is not None
+                            else (
+                                Diagnostic(
+                                    code=AuthoringSystemDiagnosticCode.CHILD_EXECUTION,
+                                    phase=DiagnosticPhase.EVIDENCE,
+                                    message="Build cannot capture the products that completed before the failed "
+                                    "<assert>.",
+                                    remediation="Repair the reported runtime input or workspace configuration.",
+                                    path=("descriptor", entry),
+                                ),
+                            )
                         ),
                     ),
                     base_run_ok=False,
