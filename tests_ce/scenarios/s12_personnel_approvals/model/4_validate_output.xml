@@ -18,8 +18,9 @@
         <variable name="plan" source="mem" sourceEntity="plan" storage="data" distribution="ordered"/>
         <variable name="positions" source="mem" sourceEntity="positions" storage="data" distribution="ordered"/>
         <variable name="people" script="[row.person_id for row in plan if row.version_id == this.version_id and row.function_id == this.function_id]"/>
-        <!-- The position of each seat that these people hold. A variable holds plain dicts: read them by key. -->
-        <variable name="held" script="[other for row in plan if row.person_id in people for other in positions if (other.version_id, other.function_id) == (row.version_id, row.function_id)]"/>
+        <variable name="position_of" script="{(row.version_id, row.function_id): row for row in positions}"/>
+        <!-- The position of each seat that these people hold. Rows stored in a variable list lose dot access (#441): read them by key. -->
+        <variable name="held" script="[position_of[(row.version_id, row.function_id)] for row in plan if row.person_id in people]"/>
         <key name="position_id" script="this.position_id"/>
         <key name="seats" script="this.seats"/>
         <key name="filled" script="len(people)"/>
