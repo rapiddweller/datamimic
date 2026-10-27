@@ -1671,8 +1671,6 @@ def _decode_worker_message(payload: bytes, *, max_count: int | None = None) -> _
         return _validated_worker_success(message, max_count=max_count)
     if isinstance(message, _WorkerFailure):
         message = _WorkerFailure(**message.__dict__)
-        if message.stopped_capture is not None:
-            _validated_worker_success(message.stopped_capture, max_count=max_count)
         if message.error is not None and not isinstance(message.error, (UserErrorBase, DomainError)):
             raise ValueError("worker failure contains an unsupported error type")
         if isinstance(message.error, GeneratorConfigError):

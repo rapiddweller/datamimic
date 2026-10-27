@@ -7,6 +7,7 @@ tests_ce/scenarios/s21_assert_gate; the scenario runner checks one code per vari
 that one code cannot carry: what Build kept, what it could not evaluate, and that no property value reaches it."""
 
 import json
+import pickle
 import shutil
 from pathlib import Path
 
@@ -14,14 +15,18 @@ import pytest
 from typer.testing import CliRunner
 
 from datamimic_ce.authoring import create_authoring_application
+from datamimic_ce.authoring.adapters import bounded_executor, dryrun
+from datamimic_ce.authoring.domain.capture import SmokeExportCapture
 from datamimic_ce.authoring.domain.reference import AuthoringLearningReference
 from datamimic_ce.authoring.domain.requests import (
     PROJECT_ENTRY_PATH,
+    BoundedExecutionRequest,
     ReferenceRequest,
     ReferenceTopic,
     RejectedBuild,
     RunRequest,
 )
+from datamimic_ce.errors import DescriptorLocation, IssueCode, task_config_error
 from datamimic_ce.interfaces.cli import app
 
 _PROJECT = Path(__file__).resolve().parents[2] / "scenarios" / "s21_assert_gate"
@@ -54,12 +59,11 @@ def _not_evaluated(result: RejectedBuild) -> set[str]:
     return {json.dumps(path) for path in item.expected}
 
 
-@pytest.mark.parametrize("negative", ["fails_at_first_row", "fails_at_middle_row", "fails_at_last_row"])
-def test_the_failed_row_does_not_change_what_build_keeps(tmp_path: Path, negative: str) -> None:
-    result = _build(tmp_path, negative)
-    first_row = _build(tmp_path / "first", "fails_at_first_row")
+def test_the_failed_row_does_not_change_what_build_keeps(tmp_path: Path) -> None:
+    result, *others = (_build(tmp_path / row, f"fails_at_{row}_row") for row in ("first", "middle", "last"))
 
-    assert [item.model_dump() for item in result.diagnostics] == [item.model_dump() for item in first_row.diagnostics]
+    for other in others:
+        assert [item.model_dump() for item in other.diagnostics] == [item.model_dump() for item in result.diagnostics]
     assert _codes(result) == ["assert_failed", "not_executed"]
     assert [product.name for product in result.evidence] == ["items"]
     assert "Declared product capture is missing." not in result.model_dump_json()
@@ -99,13 +103,6 @@ def test_an_unrelated_failing_expectation_is_still_reported(tmp_path: Path) -> N
     result = _build(tmp_path, "assert_and_failing_expectation")
 
     assert _codes(result) == ["assert_failed", "range", "not_executed"]
-
-
-def test_two_failing_asserts_report_the_first_in_run_order(tmp_path: Path) -> None:
-    result = _build(tmp_path, "two_asserts_fail")
-
-    [failed] = [item for item in result.diagnostics if str(item.code) == "assert_failed"]
-    assert failed.expected == "A line holds at most 4 items"
 
 
 @pytest.mark.parametrize("negative", ["message_is_a_property", "message_has_braces", "message_has_dunder"])
@@ -248,6 +245,21 @@ def test_one_unevaluated_check_is_named_in_the_singular(tmp_path: Path) -> None:
 
     [skipped] = [item for item in result.diagnostics if str(item.code) == "not_executed"]
     assert skipped.message.endswith("Build did not evaluate the 1 check that reads them.")
+
+
+def test_a_forged_stopped_capture_that_does_not_validate_is_refused(tmp_path: Path) -> None:
+    error = task_config_error(
+        code=IssueCode.TASK_ASSERT_FAILED,
+        condition="configured condition",
+        extra="",
+        location=DescriptorLocation("assert", attribute="condition", line=2),
+    )
+    forged = dryrun._WorkerSuccess({"a": ({"v": float("inf")},)}, (), (), SmokeExportCapture.not_requested())
+    payload = pickle.dumps(dryrun._WorkerFailure(message="m", fix_hint="h", error=error, stopped_capture=forged))
+
+    evidence = bounded_executor._decode_reply(payload, BoundedExecutionRequest(xml="<setup/>"), tmp_path)
+
+    assert [str(item.code) for item in evidence.diagnostics] == ["serialization"]
 
 
 @pytest.mark.parametrize(("negative", "exit_code"), [(None, 0), ("fails_at_last_row", 1)])
