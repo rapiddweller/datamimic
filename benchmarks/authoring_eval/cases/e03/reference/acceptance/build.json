@@ -1,0 +1,19 @@
+{
+  "version": "5.0",
+  "max_count": 15,
+  "product_roles": [
+    {"product": "depots", "field": "depot_id", "role": {"kind": "identifier"}},
+    {"product": "slots", "field": "slot_id", "role": {"kind": "identifier"}},
+    {"product": "slots", "field": "depot_id", "role": {
+      "kind": "foreign_key", "parent_product": "depots", "parent_field": "depot_id"
+    }}
+  ],
+  "expectations": [
+    {"kind": "exact_count", "subject": {"kind": "product", "product": "depots"}, "count": 3},
+    {"kind": "exact_count", "subject": {"kind": "product", "product": "slots"}, "count": 12},
+    {"kind": "per_parent_count", "subject": {
+      "kind": "per_parent", "parent_product": "depots", "child_product": "slots"
+    }, "count": 4},
+    {"kind": "field_absent", "subject": {"kind": "product", "product": "slots"}, "field": "token"}
+  ]
+}

@@ -1,0 +1,13 @@
+<setup rngSeed="30517">
+    <generate name="subscribers" count="5">
+        <key name="subscriber_id" generator="IncrementGenerator"/>
+        <key name="plan" values="('BASIC', 'PLUS', 'PRO')"/>
+        <generate name="invoices" count="3">
+            <variable name="invoice_no" generator="IncrementGenerator"/>
+            <key name="invoice_id" script="parent.subscriber_id * 10 + invoice_no"/>
+            <key name="subscriber_id" script="parent.subscriber_id"/>
+            <key name="state" values="('OPEN', 'PAID', 'VOID')"/>
+            <key name="amount_cents" type="int" min="500" max="20000"/>
+        </generate>
+    </generate>
+</setup>

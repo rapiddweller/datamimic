@@ -1,0 +1,8 @@
+<setup rngSeed="77031">
+    <generate name="offers" count="40">
+        <key name="offer_id" generator="IncrementGenerator"/>
+        <key name="tier" values="('BRONZE', 'SILVER', 'GOLD')"/>
+        <key name="list_price" type="int" min="100" max="900"/>
+        <key name="sale_price" script="list_price * 8 // 10"/>
+    </generate>
+</setup>

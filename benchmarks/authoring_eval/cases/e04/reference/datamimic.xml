@@ -1,0 +1,9 @@
+<setup rngSeed="51110" defaultSeparator=",">
+    <generate name="priced_orders" count="6" target="JSON">
+        <variable name="source_row" source="fixtures/orders.csv" distribution="ordered"/>
+        <key name="order_id" script="source_row.order_id"/>
+        <key name="customer_id" script="source_row.customer_id"/>
+        <key name="total_cents" script="int(source_row.total_cents)"/>
+        <key name="priority" script="'high' if int(source_row.total_cents) >= 5000 else 'standard'"/>
+    </generate>
+</setup>

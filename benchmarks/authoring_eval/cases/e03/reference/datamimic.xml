@@ -1,0 +1,11 @@
+<setup rngSeed="56606">
+    <generate name="depots" count="3">
+        <key name="depot_id" generator="IncrementGenerator"/>
+        <generate name="slots" count="4">
+            <variable name="token" generator="IncrementGenerator"/>
+            <key name="depot_id" script="parent.depot_id"/>
+            <key name="slot_id" script="parent.depot_id * 100 + token"/>
+            <key name="state" constant="FREE"/>
+        </generate>
+    </generate>
+</setup>
