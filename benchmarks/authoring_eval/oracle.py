@@ -215,10 +215,9 @@ class RowExistsIn(_Check):
     def _covers(self, target: Row, row: Row) -> bool:
         if self.window is None:
             return True
-        day, start, end = (
-            _iso_date(r.get(f))
-            for r, f in ((row, self.window.date), (target, self.window.start), (target, self.window.end))
-        )
+        day = _iso_date(row.get(self.window.date))
+        start = _iso_date(target.get(self.window.start))
+        end = _iso_date(target.get(self.window.end))
         return day is not None and start is not None and end is not None and start <= day <= end
 
     def failure(self, observed: Observed) -> str | None:
@@ -232,6 +231,7 @@ class RowExistsIn(_Check):
             if (key := self._key(target)) is not None:
                 by_key.setdefault(key, []).append(target)
         unmatched = 0
+        # Limitation: rows x targets inside one key, about 0.7 s at 1000 x 1000; index the window if a case needs more.
         for row in rows:
             key = self._key(row)
             if key is None or not any(self._covers(target, row) for target in by_key.get(key, [])):

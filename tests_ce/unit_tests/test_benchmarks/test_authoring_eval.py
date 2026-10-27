@@ -844,15 +844,7 @@ _CHEATS = {
     ),
     # the six rows typed into scripts: the CSV is never read
     ("e04", "typed_rows"): (
-        """<setup rngSeed="51110">
-    <generate name="priced_orders" count="6" target="JSON">
-        <variable name="i" generator="IncrementGenerator"/>
-        <key name="order_id" script="'O-' + str(99 + i)"/>
-        <key name="customer_id" script="['C-10','C-11','C-10','C-12','C-13','C-14'][i - 1]"/>
-        <key name="total_cents" script="[1200, 4500, 8000, 3200, 250, 9900][i - 1]"/>
-        <key name="priority" script="'high' if total_cents >= 5000 else 'standard'"/>
-    </generate>
-</setup>""",
+        _typed_rows("e04", "priced_orders"),
         frozenset({"output_rows:priced_orders:fixtures_changed"}),
     ),
     # every foreign key drawn at random from the right set: each one exists, but the rules across tables break
