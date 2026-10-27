@@ -28,6 +28,8 @@ from benchmarks.authoring_eval.audit_transcript import FindingKind, audit
 from benchmarks.authoring_eval.capture import Capture
 from benchmarks.authoring_eval.oracle import (
     CASES,
+    DateRange,
+    DateWindow,
     ExactCount,
     ExactRows,
     FieldRef,
@@ -36,8 +38,10 @@ from benchmarks.authoring_eval.oracle import (
     OutputRows,
     PerParentCount,
     Repeatable,
+    RowExistsIn,
     Text,
     Unique,
+    UniqueTogether,
     WholeNumber,
     _finish,
     _start,
@@ -947,6 +951,123 @@ def test_repeatable_compares_the_second_run_in_order() -> None:
     assert check.failure(Observed(None, None, rows, second_rows={"p": [{"a": 1}, {"a": 2}]})) is None
     assert check.failure(Observed(None, None, rows, second_rows={"p": [{"a": 2}, {"a": 1}]})) is not None
     assert check.failure(Observed(None, None, rows, second_error="Timeout")) is not None
+
+
+def test_unique_together_rejects_a_repeated_pair_only() -> None:
+    check = UniqueTogether(kind="unique_together", product="p", fields=["a", "b"])
+
+    # each field repeats, but no pair does
+    assert (
+        check.failure(Observed(None, None, {"p": [{"a": 1, "b": "x"}, {"a": 1, "b": "y"}, {"a": 2, "b": "x"}]})) is None
+    )
+    assert check.failure(Observed(None, None, {"p": [{"a": 1, "b": "x"}, {"a": 1, "b": "x"}]})) is not None
+    for bad in (None, [1], {}):
+        assert check.failure(Observed(None, None, {"p": [{"a": 1, "b": bad}]})) is not None
+    assert check.failure(Observed(None, None, {"p": [{"a": 1}]})) is not None
+    assert check.label() == "unique_together:p.a+b"
+
+
+def _exists(rows: list[dict[str, object]], targets: list[dict[str, object]], window: bool = False) -> str | None:
+    bounds = DateWindow(date="day", start="start", end="end") if window else None
+    check = RowExistsIn(kind="row_exists_in", product="c", target="t", fields=["k"], window=bounds)
+    return check.failure(Observed(None, None, {"c": rows, "t": targets}))
+
+
+def test_row_exists_in_compares_the_fields_with_their_json_types() -> None:
+    assert _exists([{"k": 1}, {"k": 2}], [{"k": 1}, {"k": 2}, {"k": 3}]) is None
+    assert _exists([{"k": 4}], [{"k": 1}]) is not None
+    # a parent key 1 is not the text "1", a float or a bool
+    for other in ("1", 1.0, True):
+        assert _exists([{"k": other}], [{"k": 1}]) is not None
+    assert _exists([{}], [{"k": None}]) is not None  # a missing field matches nothing, not even a null
+
+
+@pytest.mark.parametrize(
+    ("day", "start", "end", "matches"),
+    [
+        ("2026-02-28", "2026-03-01", "2026-03-31", False),  # start - 1
+        ("2026-03-01", "2026-03-01", "2026-03-31", True),  # start
+        ("2026-03-31", "2026-03-01", "2026-03-31", True),  # end: the expiry day is valid
+        ("2026-04-01", "2026-03-01", "2026-03-31", False),  # end + 1
+        ("2026-03-10", "2026-03-01", None, False),  # no expiry date is not an unlimited validity
+        ("2026-03-10", "2026-03-01", "", False),
+        ("2026-03-10", None, "2026-03-31", False),
+        ("2026-03-10", "2026-03-01", "20260331", False),  # date.fromisoformat accepts it, the prompt does not
+        ("2026-03-10", "2026-03-01", "2026-03-31 00:00:00", False),
+        ("2026-03-10", "2026-03-01", "31.03.2026", False),
+        ("2026-3-10", "2026-03-01", "2026-03-31", False),
+        ("2026-02-30", "2026-02-01", "2026-03-31", False),  # not a day of the calendar
+    ],
+)
+def test_row_exists_in_window_includes_both_bounds_and_needs_real_dates(
+    day: str, start: str | None, end: str | None, matches: bool
+) -> None:
+    found = _exists([{"k": 1, "day": day}], [{"k": 1, "start": start, "end": end}], window=True)
+
+    assert (found is None) is matches
+
+
+def test_row_exists_in_window_takes_any_matching_target_row() -> None:
+    targets = [
+        {"k": 1, "start": "2026-01-01", "end": None},
+        {"k": 1, "start": "2026-03-01", "end": "2026-03-31"},
+        {"k": 2, "start": "2026-01-01", "end": "2026-12-31"},
+    ]
+
+    assert _exists([{"k": 1, "day": "2026-03-15"}], targets, window=True) is None
+    # the window of another key does not count
+    assert _exists([{"k": 1, "day": "2026-06-15"}], targets, window=True) is not None
+    # a bound field that the target row lacks is no bound
+    assert _exists([{"k": 1, "day": "2026-03-15"}], [{"k": 1, "start": "2026-03-01"}], window=True) is not None
+
+
+def test_row_exists_in_reports_a_missing_product() -> None:
+    check = RowExistsIn(kind="row_exists_in", product="c", target="t", fields=["k"])
+
+    assert check.failure(Observed(None, None, {"c": [{"k": 1}]})) == "product t was not produced"
+    assert check.label() == "row_exists_in:c->t"
+
+
+def _dates(*values: object, missing: int = 0) -> str | None:
+    check = DateRange(kind="date_range", product="p", field="d", min="2026-03-01", max="2026-03-31", missing=missing)
+    return check.failure(Observed(None, None, {"p": [{"d": value} for value in values]}))
+
+
+def test_date_range_includes_both_bounds() -> None:
+    assert _dates("2026-03-01", "2026-03-31", "2026-03-15") is None
+    for bad in ("2026-02-28", "2026-04-01", "2026-03-32", "20260315", "2026-03-15T00:00:00", 20260315, None):
+        assert _dates("2026-03-01", bad) is not None, bad
+
+
+def test_date_range_counts_the_null_values_exactly() -> None:
+    assert _dates("2026-03-01", None, missing=1) is None
+    assert _dates("2026-03-01", "2026-03-02", missing=1) is not None  # min - 1 nulls
+    assert _dates(None, None, missing=1) is not None  # max + 1 nulls
+    assert _dates("2026-03-01", "", missing=1) is not None  # an empty text is not a missing value
+    check = DateRange(kind="date_range", product="p", field="d", min="2026-03-01", max="2026-03-31", missing=1)
+    assert check.failure(Observed(None, None, {"p": [{"d": "2026-03-01"}, {}]})) is not None  # an absent field
+
+
+def test_a_doubly_nested_product_is_captured_by_its_own_name(tmp_path: Path) -> None:
+    """The engine names it ``inner|leaf``; the checks and Build name a product by its own name."""
+    project = tmp_path / "project"
+    project.mkdir()
+    (project / _XML).write_text(
+        """<setup rngSeed="1">
+    <generate name="outer" count="1">
+        <key name="a" constant="1"/>
+        <generate name="inner" count="1">
+            <key name="b" constant="2"/>
+            <generate name="leaf" count="2">
+                <key name="c" constant="3"/>
+            </generate>
+        </generate>
+    </generate>
+</setup>""",
+        encoding="utf-8",
+    )
+
+    assert _capture(project).rows == {"outer": [{"a": "1"}], "inner": [{"b": "2"}], "leaf": [{"c": "3"}] * 2}
 
 
 def test_seed_is_reads_the_entry_descriptor_not_the_agents_acceptance_file(tmp_path: Path) -> None:

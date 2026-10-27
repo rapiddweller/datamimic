@@ -24,6 +24,7 @@ import tempfile
 from abc import ABC, abstractmethod
 from collections import Counter
 from dataclasses import dataclass, field
+from datetime import date
 from pathlib import Path
 from typing import IO, Annotated, Literal
 
@@ -142,6 +143,125 @@ class Unique(_Check):
         if not all(isinstance(value, str | int | float) for value in values):
             return "values are missing or not scalar"
         return None if len(set(values)) == len(values) else f"{len(values) - len(set(values))} duplicate values"
+
+
+class UniqueTogether(_Check):
+    """No two rows hold the same combination of the fields; one field alone may repeat."""
+
+    kind: Literal["unique_together"]
+    product: str
+    fields: list[str]
+
+    def label(self) -> str:
+        return f"unique_together:{self.product}.{'+'.join(self.fields)}"
+
+    def failure(self, observed: Observed) -> str | None:
+        rows = _product_rows(observed, self.product)
+        if isinstance(rows, str):
+            return rows
+        combinations = [tuple(row.get(name) for name in self.fields) for row in rows]
+        if not all(isinstance(value, str | int | float) for combination in combinations for value in combination):
+            return "values are missing or not scalar"
+        repeated = len(combinations) - len(set(combinations))
+        return None if not repeated else f"{repeated} duplicate combinations"
+
+
+# date.fromisoformat also reads 20260301 and 2026-W09-7; the prompts ask for YYYY-MM-DD only
+_ISO_DATE = re.compile(r"[0-9]{4}-[0-9]{2}-[0-9]{2}")
+
+
+def _iso_date(value: object) -> date | None:
+    """The date of a YYYY-MM-DD text; None for anything else, a null and an empty text included."""
+    if not isinstance(value, str) or _ISO_DATE.fullmatch(value) is None:
+        return None
+    try:
+        return date.fromisoformat(value)
+    except ValueError:  # 2026-02-30
+        return None
+
+
+def _typed(value: object) -> str:
+    """A value with its JSON type, so that 1, "1", 1.0 and true stay different."""
+    return json.dumps(value, sort_keys=True, default=str)
+
+
+class DateWindow(BaseModel):
+    model_config = ConfigDict(extra="forbid", frozen=True)
+
+    date: str  # the field of the checked row
+    start: str  # the fields of the target row that bound it; both days count
+    end: str
+
+
+class RowExistsIn(_Check):
+    """For each row of ``product`` a row of ``target`` holds the same ``fields`` with the same JSON types. With a
+    window, the date of the row is also from the target's start to its end, both days included. A bound that is
+    missing, null or not a YYYY-MM-DD date never matches: no expiry date is no validity."""
+
+    kind: Literal["row_exists_in"]
+    product: str
+    target: str
+    fields: list[str]
+    window: DateWindow | None = None
+
+    def label(self) -> str:
+        return f"row_exists_in:{self.product}->{self.target}"
+
+    def _key(self, row: Row) -> tuple[str, ...] | None:
+        if any(name not in row for name in self.fields):
+            return None
+        return tuple(_typed(row[name]) for name in self.fields)
+
+    def _covers(self, target: Row, row: Row) -> bool:
+        if self.window is None:
+            return True
+        day, start, end = (
+            _iso_date(r.get(f))
+            for r, f in ((row, self.window.date), (target, self.window.start), (target, self.window.end))
+        )
+        return day is not None and start is not None and end is not None and start <= day <= end
+
+    def failure(self, observed: Observed) -> str | None:
+        rows, targets = _product_rows(observed, self.product), _product_rows(observed, self.target)
+        if isinstance(rows, str):
+            return rows
+        if isinstance(targets, str):
+            return targets
+        by_key: dict[tuple[str, ...], list[Row]] = {}
+        for target in targets:
+            if (key := self._key(target)) is not None:
+                by_key.setdefault(key, []).append(target)
+        unmatched = 0
+        for row in rows:
+            key = self._key(row)
+            if key is None or not any(self._covers(target, row) for target in by_key.get(key, [])):
+                unmatched += 1
+        return None if not unmatched else f"{unmatched} of {len(rows)} rows have no matching {self.target} row"
+
+
+class DateRange(_Check):
+    """Every value is a YYYY-MM-DD text from ``min`` to ``max``, inclusive, except exactly ``missing`` nulls. An
+    empty text is not a null, and a row without the field fails."""
+
+    kind: Literal["date_range"]
+    product: str
+    field: str
+    min: date
+    max: date
+    missing: int = 0
+
+    def label(self) -> str:
+        return f"date_range:{self.product}.{self.field}"
+
+    def failure(self, observed: Observed) -> str | None:
+        found = FieldRef(product=self.product, field=self.field).values(observed)
+        if isinstance(found, str):
+            return found
+        nulls = sum(value is None for value in found)
+        if nulls != self.missing:
+            return f"{nulls} values are null, expected {self.missing}"
+        bad = [v for v in found if v is not None and not ((day := _iso_date(v)) and self.min <= day <= self.max)]
+        return None if not bad else f"{len(bad)} values are not dates YYYY-MM-DD in {self.min}..{self.max}"
 
 
 class FieldRef(BaseModel):
@@ -383,6 +503,9 @@ Check = Annotated[
     BuildReady
     | ExactCount
     | Unique
+    | UniqueTogether
+    | RowExistsIn
+    | DateRange
     | PerParentCount
     | ValueIn
     | InRange

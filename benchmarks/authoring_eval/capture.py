@@ -17,6 +17,7 @@ from pathlib import Path
 from pydantic import BaseModel
 
 from datamimic_ce.authoring.domain.requests import PROJECT_ENTRY_PATH
+from datamimic_ce.engine.dsl.api import NAME_SEPARATOR
 from datamimic_ce.interfaces.python.data_mimic_test import DataMimicTest
 
 
@@ -32,7 +33,10 @@ def run(project: Path) -> Capture:
     except Exception as error:  # an untrusted project can fail in any way; the class name is the whole reason
         return Capture(error=type(error).__name__)
     captured = engine.capture_result() or {}
-    return Capture(rows={product: [dict(row) for row in rows] for product, rows in captured.items()})
+    # The engine names a product nested two levels deep "inner|leaf"; Build and the checks name it "leaf".
+    return Capture(
+        rows={product.rsplit(NAME_SEPARATOR, 1)[-1]: [dict(row) for row in rows] for product, rows in captured.items()}
+    )
 
 
 def main(argv: list[str]) -> int:
