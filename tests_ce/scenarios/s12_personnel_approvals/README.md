@@ -22,7 +22,7 @@ acceptance/build.json checks the input, the plan, the trace and the 11 target ta
 | 1 prepare | `model/1_prepare.xml` | Resolves each demanded position to its approval, its company (the approval's addressee) and its date. An `<assert>` stops the run when a demand is not 1 to `max_seats` seats. |
 | 2 suitability | `model/2_suitability.xml` | Calls `suitable_people` once per position: R1 to R3 for every person, the exclusions counted by rule and the near misses. |
 | 3 assign | `model/3_assign.xml` | Calls `assign_seats` once: one search fills every seat under R4 to R6. It writes the plan, the counters and the trace. It gives no plan unless every seat is filled. |
-| 4 validate output | `model/4_validate_output.xml` | Checks the plan without the search and without step 2. `seat_check` tests R1 to R3 for each seat in XML from the raw rows and the step-1 positions. `plan_check` calls `check_position` for R4 to R6. |
+| 4 validate output | `model/4_validate_output.xml` | Checks the plan without the search and without step 2. `seat_check` tests R1 to R3 for each seat in XML from the raw rows and the step-1 positions. `plan_check` tests R4 to R6 for each position in XML from the plan. |
 | 5 export | `model/5_export.xml` | Writes the 11 target tables to CSV. Staffing reads the plan from the memstore. |
 
 Input validation and cleanup have no model file (see "Known limits").
@@ -66,7 +66,7 @@ The project delivers 11 tables with 27 columns and 540 rows. `PK` is the key tha
 | `data/approvals.json`, `approval_versions.json` | the approval's addressee company, the version's date | steps 1, 5 |
 | `data/demand.json` | seats per version and function (the positions) | step 1 |
 | `data/policy.json` | all rule parameters | steps 1 to 4 |
-| `lib/staffing.scr.py` | `read_policy`, `suitable_people`, `assign_seats`, `check_position` | steps 1 to 4 |
+| `lib/staffing.scr.py` | `read_policy`, `suitable_people`, `assign_seats` | steps 1 to 3 |
 | `acceptance/build.json` | the expectations that Build proves | Build |
 
 The library reads no file. `read_policy` checks the type of each policy parameter.

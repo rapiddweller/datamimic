@@ -17,12 +17,14 @@
     <generate name="plan_check" source="mem" sourceEntity="suitability" distribution="ordered" target="JSON">
         <variable name="plan" source="mem" sourceEntity="plan" storage="data" distribution="ordered"/>
         <variable name="positions" source="mem" sourceEntity="positions" storage="data" distribution="ordered"/>
-        <variable name="check" script="check_position(this, plan, positions)"/>
+        <variable name="people" script="[row.person_id for row in plan if row.version_id == this.version_id and row.function_id == this.function_id]"/>
+        <!-- The position of each seat that these people hold. A variable holds plain dicts: read them by key. -->
+        <variable name="held" script="[other for row in plan if row.person_id in people for other in positions if (other.version_id, other.function_id) == (row.version_id, row.function_id)]"/>
         <key name="position_id" script="this.position_id"/>
         <key name="seats" script="this.seats"/>
-        <key name="filled" script="check['filled']"/>
-        <key name="distinct_people" script="check['distinct_people']"/>
-        <key name="approval_exclusive" script="check['approval_exclusive']"/>
-        <key name="company_exclusive" script="check['company_exclusive']"/>
+        <key name="filled" script="len(people)"/>
+        <key name="distinct_people" script="len(set(people)) == len(people)"/>
+        <key name="approval_exclusive" script="all(other['approval_id'] == this.approval_id for other in held if this.exclusive or other['exclusive'])"/>
+        <key name="company_exclusive" script="all(other['company_id'] == this.company_id for other in held)"/>
     </generate>
 </setup>
