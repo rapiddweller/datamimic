@@ -1190,6 +1190,17 @@ def test_oracle_reports_a_missing_project_as_failed_checks(tmp_path: Path) -> No
     assert not any(result.passed for result in verdict.checks)
 
 
+# Build raises on two top-level names with the same last segment; the capture names both "tickets".
+def test_a_build_that_raises_fails_build_ready_and_still_gives_a_verdict(tmp_path: Path) -> None:
+    project = _reference(tmp_path, "e01")
+    xml = (project / _XML).read_text(encoding="utf-8")
+    (project / _XML).write_text(xml.replace("</setup>", '<generate name="x|tickets" count="1"/></setup>'))
+
+    verdict = evaluate("e01", project)
+
+    assert {result.check: result.reason for result in verdict.checks}["build_ready"] == "Build raised ValidationError"
+
+
 def test_verdict_carries_no_row_values(tmp_path: Path) -> None:
     text = evaluate("e04", _reference(tmp_path, "e04")).model_dump_json()
 

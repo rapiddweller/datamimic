@@ -641,8 +641,14 @@ def _observe(case: str, project: Path, changed_fixtures: list[str]) -> Observed:
             _start(second_copy, _HASH_SEEDS[1]),
             *(_start(copy, _HASH_SEEDS[0]) for copy in changed_copies),
         ]
-        build = create_authoring_application(build_copy, descriptor_path=PROJECT_ENTRY_PATH).build()
-        build_note = None if isinstance(build, ReadyBuild) else f"Build {build.outcome} in phase {build.phase.value}"
+        try:
+            build = create_authoring_application(build_copy, descriptor_path=PROJECT_ENTRY_PATH).build()
+        except Exception as error:  # an untrusted project can make Build raise; the runs must still finish
+            build_note: str | None = f"Build raised {type(error).__name__}"
+        else:
+            build_note = (
+                None if isinstance(build, ReadyBuild) else f"Build {build.outcome} in phase {build.phase.value}"
+            )
         first, second, *changed = [_finish(*run) for run in runs]
         outputs = {_FIXTURES: Output(first.error, json_outputs(first_copy), frozenset(first.rows))} | {
             name: Output(capture.error, json_outputs(copy), frozenset(capture.rows))
