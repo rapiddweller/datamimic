@@ -42,17 +42,6 @@ def certificate_status(holdings: Sequence[Row], staff_id: str, cert_code: str, d
 
 
 def valid_certificates(holdings: Sequence[Row], staff_id: str, day: datetime.date) -> list[str]:
-    """The certification codes the person holds validly on ``day`` (RS1, and the lead holders of RS4)."""
+    """The certification codes the person holds validly on ``day`` (RS1, and the lead certification of RS4)."""
     codes = sorted({str(holding["cert_code"]) for holding in holdings if holding["staff_id"] == staff_id})
     return [code for code in codes if certificate_status(holdings, staff_id, code, day) == CertificateStatus.VALID]
-
-
-def lead_holders(
-    roster: Sequence[Row], holdings: Sequence[Row], slot_id: str, lead_cert: str, day: datetime.date
-) -> int:
-    """RS4: the number of staff in the slot who hold the lead certification validly on ``day``."""
-    return sum(
-        certificate_status(holdings, str(row["staff_id"]), lead_cert, day) == CertificateStatus.VALID
-        for row in roster
-        if row["slot_id"] == slot_id
-    )

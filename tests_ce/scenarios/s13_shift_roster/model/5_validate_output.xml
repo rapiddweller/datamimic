@@ -33,6 +33,6 @@
         <key name="max_staff" script="max_staff"/>
         <key name="min_lead" script="min_lead"/>
         <key name="staffed" script="[row.slot_id for row in roster].count(slot_id)"/>
-        <key name="leads" script="lead_holders(roster, holdings, slot_id, lead_cert, shift_date)"/>
+        <key name="leads" script="sum(certificate_status(holdings, row.staff_id, lead_cert, shift_date) == 'valid' for row in roster if row.slot_id == slot_id)"/>
     </generate>
 </setup>
