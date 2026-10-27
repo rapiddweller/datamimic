@@ -337,6 +337,11 @@ def expectation_repair(location: tuple[str | int, ...]) -> str | None:
                 f"Put the product of {side} inside subject: "
                 f'"{side}": {{"subject": {{"kind": "product", "product": "<product>"}}, "field": "<field>"}}. '
             )
+        elif kind is ExpectationIntentKind.PER_PARENT_COUNT and rest[:1] in (("subject",), ("parent",), ("child",)):
+            rename = (
+                'Put both products inside subject: "subject": {"kind": "per_parent", "parent_product": "<parent>", '
+                '"child_product": "<child>"}; the child must be a nested <generate> inside the parent. '
+            )
         elif kind is ExpectationIntentKind.ROW_CONDITION and rest == ("result_type",):
             rename = 'Omit result_type; "bool" is its only value. '
         elif rest:

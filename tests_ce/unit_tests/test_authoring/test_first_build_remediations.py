@@ -192,3 +192,17 @@ def test_a_distribution_on_a_weighted_key_says_the_file_weights_apply(tmp_path: 
     remediations = [str(item.remediation) for item in _errors(tmp_path, xml) if str(item.code) == "DM105"]
 
     assert remediations and all("remove distribution=" in text for text in remediations), remediations
+
+
+def test_a_per_parent_count_with_parent_and_child_sides_names_the_subject(tmp_path: Path) -> None:
+    count = {
+        "kind": "per_parent_count",
+        "parent": {"product": "tickets", "field": "ticket_id"},
+        "child": {"product": "tickets", "field": "ticket_id"},
+        "count": 3,
+    }
+
+    errors = _raw_errors(tmp_path, _TICKETS, [count])
+
+    assert errors and all(str(item.remediation).startswith("Put both products inside subject") for item in errors)
+    assert all("nested <generate>" in str(item.remediation) for item in errors)
