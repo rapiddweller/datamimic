@@ -56,7 +56,6 @@ proved.
 | `data/leave.csv` | Leave periods and their status. Only `approved` leave blocks a person. |
 | `data/calendar.csv` | The plan days. This file is the clock of the plan: nothing reads the system time. |
 | `lib/certificates.scr.py` | RS1: `certificate_status` and the enum `CertificateStatus`. |
-| `lib/leave.scr.py` | RS6: `on_approved_leave`. |
 | `lib/roster_rules.scr.py` | The output evidence for RS2 and RS3: `rest_hours_before`, `busiest_week_hours`. |
 | `lib/roster_search.scr.py` | The global search `plan_roster`. |
 | `acceptance/build.json` | The roles, the input expectations, the rule expectations and the caller's edge controls. |
@@ -81,12 +80,12 @@ values:
 | RS3 weekly hours within the contract | `blocker` in `plan_roster` | `busiest_week_hours <= contract_hours` on `hours_checks` | `data/contracts.csv` |
 | RS4 minimum and maximum staff, minimum lead holders | `solve` and `shortage` in `plan_roster` | `staffed >= min_staff and staffed <= max_staff`, `leads >= min_lead` on `coverage_checks` | `data/demand.csv` |
 | RS5 one ward per day | `blocker` in `plan_roster` | `wards_that_day == 1` on `entry_checks`, a native `script=` count | the rule itself |
-| RS6 never rostered on approved leave | `on_approved_leave`, called by the `on_leave` key of `candidates` in step 3 | `not on_leave` on `entry_checks` | `data/leave.csv` |
+| RS6 never rostered on approved leave | the `on_leave` key of `candidates` in step 3 | `not on_leave` on `entry_checks`, the same filter stated again | `data/leave.csv` |
 
 The output checks read the roster and the data again. They do not read the suitability decisions or the search evidence.
 A rule that the search breaks is therefore caught, also when the search itself has a defect.
-RS1 and RS6 use one function in suitability and in the output check. A defect in that function is caught only by the
-caller's edge controls, not by the output check.
+RS1 uses one function in suitability and in the output check. A defect in that function is caught only by the
+caller's edge controls, not by the output check. RS6 is stated twice in XML, so the output check catches a suitability defect.
 
 Definitions: a shift belongs to the day and the ISO week (year and week) of its start. It counts fully in that week,
 also when it ends after midnight. "One ward per day" (RS5) uses the same start date.
