@@ -4,7 +4,7 @@
 # See LICENSE file for the full text of the license.
 # For questions and support, contact: info@rapiddweller.com
 
-from datamimic_ce.engine.dsl.api import GenerateStatement
+from datamimic_ce.engine.dsl.api import GenerateStatement, SourceDistribution
 from datamimic_ce.engine.io.api import ChunkSourceWindow, DataSourcePagination
 from datamimic_ce.engine.runtime.contexts.context import SetupContext
 from datamimic_ce.engine.runtime.contexts.geniter_context import GenIterContext
@@ -30,7 +30,8 @@ class ChunkSourceReader:
             stmt.source_script if stmt.source_script is not None else bool(root.default_source_scripted)
         )
         self._separator = stmt.separator or root.default_separator
-        self._loads_all = stmt.distribution.loads_all or bool(stmt.unique)
+        # A where= condition runs once per chunk on the whole file, not once per page.
+        self._loads_all = stmt.distribution.loads_all or bool(stmt.unique) or stmt.where is not None
         self._window: ChunkSourceWindow | None = None
         self._build_from_source = True
 
@@ -53,7 +54,12 @@ class ChunkSourceReader:
             pool, self._build_from_source = load_generate_source(
                 self._context, stmt, stmt.source, self._separator, self._source_scripted, None, None, None
             )
-            seed = self._context.root.stable_distribution_seed(stmt.full_name)
+            # An ordered where= read shuffles nothing, so it draws no seed from the run's stream.
+            seed = (
+                0
+                if stmt.distribution is SourceDistribution.ORDERED and not stmt.unique
+                else self._context.root.stable_distribution_seed(stmt.full_name)
+            )
             self._window = ChunkSourceWindow(
                 pool,
                 DataSourcePagination(skip=self._chunk_start, limit=self._chunk_end - self._chunk_start),

@@ -771,6 +771,11 @@ def neutralize_for_dry_run(
                     reason = f"count range can exceed per-invocation limit {max_count}"
                 else:
                     reason = f"count range has static upper bound {range_bound}"
+            elif isinstance(stmt, GenerateStatement) and stmt.where is not None:
+                # Only the run counts kept rows, and it refuses more than max_count: a completed run emitted them all.
+                count_kind = _CountBoundaryKind.DYNAMIC
+                bounded_without_cap = True
+                reason = "file source rows kept by where= were counted at runtime within the per-invocation limit"
             elif source_rows is not None:
                 count_kind = _CountBoundaryKind.SOURCE
                 bounded_without_cap = source_rows <= max_count

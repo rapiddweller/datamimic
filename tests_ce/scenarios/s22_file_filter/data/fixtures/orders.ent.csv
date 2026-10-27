@@ -1,0 +1,5 @@
+order_id|customer_id|order_date|amount_cents|channel
+O-1|C-1|2026-03-01|999|WEB
+O-2|C-2|2026-02-28|1000|PHONE
+O-3|C-3|2026-03-31|1001|WEB
+O-4|C-1|2026-04-01|2500|STORE

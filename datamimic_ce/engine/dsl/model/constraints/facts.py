@@ -35,6 +35,7 @@ from datamimic_ce.engine.dsl.model.constraints.types import (
     ValidValues,
 )
 from datamimic_ce.engine.dsl.vocabulary.constants.attribute_constants import (
+    ATTR_COLUMNS,
     ATTR_CONDITION,
     ATTR_CONSTANT,
     ATTR_COUNT,
@@ -68,6 +69,7 @@ from datamimic_ce.engine.dsl.vocabulary.constants.attribute_constants import (
     ATTR_VALUES,
     ATTR_WEIGHT_COLUMN,
     ATTR_WEIGHTS,
+    ATTR_WHERE,
 )
 from datamimic_ce.engine.dsl.vocabulary.constants.data_type_constants import (
     DATA_TYPE_BINARY,
@@ -323,6 +325,18 @@ GENERATE_OFFSET_REQUIRES_SOURCE = Requires(
     frozenset((ATTR_SOURCE,)),
     message="'offset' requires a 'source' - it skips the first N source rows",
 )
+# where= and columns= select the rows and output columns of a file source (#447).
+GENERATE_ROW_SELECTION_CONSTRAINTS: tuple[Constraint, ...] = (
+    Requires(ATTR_WHERE, frozenset((ATTR_SOURCE,)), message="'where' requires a 'source' - it keeps source rows"),
+    Requires(
+        ATTR_COLUMNS, frozenset((ATTR_SOURCE,)), message="'columns' requires a 'source' - it selects source columns"
+    ),
+    Forbids(
+        ATTR_WHERE,
+        frozenset((ATTR_OFFSET,)),
+        message="'where' cannot be combined with 'offset': remove offset= and express the skip in where=",
+    ),
+)
 ITERATE_REQUIRES_SOURCE = RequiredOneOf(
     frozenset((ATTR_SOURCE,)),
     message="<iterate> requires a 'source' to iterate over; use <generate> for synthetic data",
@@ -568,6 +582,7 @@ _GENERATE_RULES: tuple[Constraint, ...] = (
     SOURCE_MODE_EXCLUSIVE,
     TIMESERIES_ALL_OR_NONE,
     GENERATE_OFFSET_REQUIRES_SOURCE,
+    *GENERATE_ROW_SELECTION_CONSTRAINTS,
     SOURCE_DISTRIBUTION_VALUES,
 )
 _KEY_RULES: tuple[Constraint, ...] = (

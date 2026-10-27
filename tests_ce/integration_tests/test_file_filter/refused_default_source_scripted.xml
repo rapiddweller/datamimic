@@ -1,0 +1,3 @@
+<setup defaultSourceScripted="True">
+    <iterate name="rows" source="data/fixtures/orders.ent.csv" columns="id" target="ConsoleExporter"/>
+</setup>

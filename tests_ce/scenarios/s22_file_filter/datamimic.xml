@@ -1,0 +1,22 @@
+<setup rngSeed="40961">
+    <!-- Keep the orders of 1000 cents or more; emit two of the five source columns and the keys. -->
+    <iterate name="order_report" source="data/fixtures/orders.ent.csv" distribution="ordered"
+             where="int(amount_cents) &gt;= 1000" columns="order_id, customer_id"
+             target="JSON" exportUri="order_report">
+        <key name="net_cents" script="int(amount_cents)"/>
+        <key name="campaign" script="'YES' if '2026-03-01' &lt;= order_date &lt;= '2026-03-31' else 'NO'"/>
+        <key name="channel" script="channel.lower()"/>
+    </iterate>
+    <!-- The same condition with a random distribution keeps the same rows. -->
+    <iterate name="shuffled_report" source="data/fixtures/orders.ent.csv" distribution="random"
+             where="int(amount_cents) &gt;= 1000" columns="order_id" target="JSON" exportUri="shuffled_report"/>
+    <!-- No row passes: the product is empty. -->
+    <iterate name="empty_report" source="data/fixtures/orders.ent.csv" distribution="ordered"
+             where="int(amount_cents) &gt; 1000000" columns="order_id" target="JSON" exportUri="empty_report"/>
+    <!-- One kept row and count 2: cyclic wraps over the kept rows only. -->
+    <iterate name="store_cycle" source="data/fixtures/orders.ent.csv" distribution="ordered" count="2" cyclic="True"
+             where="channel == 'STORE' and int(amount_cents) &gt;= 1000" columns="order_id"
+             target="JSON" exportUri="store_cycle">
+        <key name="net_cents" script="int(amount_cents)"/>
+    </iterate>
+</setup>

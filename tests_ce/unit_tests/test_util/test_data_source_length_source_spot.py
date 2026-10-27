@@ -50,6 +50,8 @@ def _statement(
     if isinstance(statement, GenerateStatement):
         statement._script = None
         statement._offset = None
+        statement._where = None
+        statement._columns = None
     return statement
 
 

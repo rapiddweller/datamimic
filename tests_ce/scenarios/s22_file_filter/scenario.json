@@ -1,0 +1,41 @@
+{
+  "title": "Filter the rows of a CSV file and select its output columns",
+  "proves": [
+    "where= keeps the rows for which it is true: 999 is out, 1000 and 1001 are in",
+    "without count, the count is the number of kept rows, and Build proves it without max_count",
+    "columns= keeps two of the five source columns in the output",
+    "a key reads a source column that columns= does not list",
+    "a key with the name of an unlisted column writes that field to the output",
+    "a random distribution keeps the same rows as distribution=\"ordered\"",
+    "a condition that keeps no row gives an empty product, and exact_count 0 proves it",
+    "cyclic with a count above the kept rows wraps over the kept rows only"
+  ],
+  "products": {"order_report": 3, "shuffled_report": 3, "empty_report": 0, "store_cycle": 2},
+  "negatives": [
+    {"name": "no_where", "diagnostic": "exact_count",
+     "patch": {"file": "datamimic.xml", "old": "where=\"int(amount_cents) &gt;= 1000\" columns=\"order_id, customer_id\"", "new": "columns=\"order_id, customer_id\""}},
+    {"name": "threshold_1000_out", "diagnostic": "exact_count",
+     "patch": {"file": "datamimic.xml", "old": "where=\"int(amount_cents) &gt;= 1000\" columns=\"order_id, customer_id\"", "new": "where=\"int(amount_cents) &gt; 1000\" columns=\"order_id, customer_id\""}},
+    {"name": "threshold_999_in", "diagnostic": "range",
+     "patch": {"file": "datamimic.xml", "old": "where=\"int(amount_cents) &gt;= 1000\" columns=\"order_id, customer_id\"", "new": "where=\"int(amount_cents) &gt;= 999\" columns=\"order_id, customer_id\""}},
+    {"name": "no_columns", "diagnostic": "field_absent",
+     "patch": {"file": "datamimic.xml", "old": " columns=\"order_id, customer_id\"", "new": ""}},
+    {"name": "unknown_column", "diagnostic": "child_execution", "issue": "I209",
+     "patch": {"file": "datamimic.xml", "old": "columns=\"order_id, customer_id\"", "new": "columns=\"order_id, customer\""}},
+    {"name": "where_not_bool", "diagnostic": "child_execution", "issue": "I507",
+     "patch": {"file": "datamimic.xml", "old": "where=\"int(amount_cents) &gt;= 1000\" columns=\"order_id, customer_id\"", "new": "where=\"amount_cents\" columns=\"order_id, customer_id\""}},
+    {"name": "where_draws_random", "diagnostic": "child_execution", "issue": "I832",
+     "run_error": "where reads one row and must not draw random values",
+     "patch": {"file": "datamimic.xml", "old": "where=\"int(amount_cents) &gt;= 1000\" columns=\"order_id, customer_id\"", "new": "where=\"random.random() &lt; 2\" columns=\"order_id, customer_id\""}},
+    {"name": "where_with_offset", "diagnostic": "DM218",
+     "patch": {"file": "datamimic.xml", "old": "<iterate name=\"order_report\" source=\"data/fixtures/orders.ent.csv\"", "new": "<iterate name=\"order_report\" offset=\"1\" source=\"data/fixtures/orders.ent.csv\""}},
+    {"name": "empty_condition_keeps_rows", "diagnostic": "exact_count",
+     "patch": {"file": "datamimic.xml", "old": "where=\"int(amount_cents) &gt; 1000000\"", "new": "where=\"int(amount_cents) &gt; 1000\""}},
+    {"name": "random_distribution_other_rows", "diagnostic": "allowed_values",
+     "patch": {"file": "datamimic.xml", "old": "where=\"int(amount_cents) &gt;= 1000\" columns=\"order_id\"", "new": "where=\"int(amount_cents) &gt;= 999\" columns=\"order_id\""}},
+    {"name": "count_above_kept_rows_without_cyclic", "diagnostic": "DM316",
+     "patch": {"file": "datamimic.xml", "old": " cyclic=\"True\"", "new": ""}},
+    {"name": "cyclic_without_where_wraps_all_rows", "diagnostic": "allowed_values",
+     "patch": {"file": "datamimic.xml", "old": "where=\"channel == 'STORE' and int(amount_cents) &gt;= 1000\" ", "new": ""}}
+  ]
+}

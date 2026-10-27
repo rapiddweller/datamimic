@@ -41,12 +41,12 @@ import re
 import statistics
 import sys
 import uuid
-from collections.abc import Callable, Container, Iterable
+from collections.abc import Callable, Container, Iterable, MutableSequence, Sequence
 from dataclasses import dataclass
 from enum import StrEnum
 from random import Random
 from types import ModuleType
-from typing import NamedTuple
+from typing import NamedTuple, NoReturn, TypeVar
 
 import numpy as np
 import pandas as pd
@@ -281,6 +281,60 @@ def expression_globals(
         "os": seeded.os,
         "fake": seeded.fake,
     }
+
+
+_T = TypeVar("_T")
+ROW_DRAW_REFUSED = "where reads one row and must not draw random values"
+
+
+class _RefusedDraws:
+    """The random source of a row condition: every draw raises, so the length pass and every worker keep the same
+    rows. Keyed streams (random.Random(5)) stay deterministic and allowed."""
+
+    def _refuse(self) -> NoReturn:
+        raise task_config_error(code=IssueCode.TASK_EXPRESSION_EVAL_FAILED, expr="where", error=ROW_DRAW_REFUSED)
+
+    def randint(self, a: int, b: int) -> int:
+        self._refuse()
+
+    def random(self) -> float:
+        self._refuse()
+
+    def uniform(self, a: float, b: float) -> float:
+        self._refuse()
+
+    def randbytes(self, n: int) -> bytes:
+        self._refuse()
+
+    def getrandbits(self, k: int) -> int:
+        self._refuse()
+
+    def choice(self, seq: Sequence[_T]) -> _T:
+        self._refuse()
+
+    def choices(
+        self,
+        population: Sequence[_T],
+        weights: Sequence[float] | None = None,
+        *,
+        cum_weights: Sequence[float] | None = None,
+        k: int = 1,
+    ) -> list[_T]:
+        self._refuse()
+
+    def shuffle(self, x: MutableSequence[_T]) -> None:
+        self._refuse()
+
+
+def row_expression_globals() -> dict[str, object]:
+    """Globals for a where= condition: the seeded stand-ins over a random source that refuses every draw, in a
+    seeded and an unseeded run alike; the clock is the deterministic anchor."""
+    refused = _RefusedDraws()
+
+    def no_faker() -> Faker:
+        refused._refuse()
+
+    return expression_globals(is_seeded=True, rng=refused, seeded_faker_supplier=no_faker)
 
 
 def rebind_seeded_script_names(

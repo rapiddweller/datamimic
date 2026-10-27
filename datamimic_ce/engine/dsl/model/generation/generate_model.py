@@ -11,6 +11,7 @@ from pydantic import BaseModel, ConfigDict, Field, field_validator, model_valida
 
 from datamimic_ce.engine.dsl.model.constraints import (
     GENERATE_OFFSET_REQUIRES_SOURCE,
+    GENERATE_ROW_SELECTION_CONSTRAINTS,
     GENERATE_UNIQUE_CONSTRAINTS,
     SOURCE_DISTRIBUTION_VALUES,
     TIMESERIES_ALL_OR_NONE,
@@ -27,6 +28,7 @@ from datamimic_ce.engine.dsl.model.validation import (
     check_min_max_count,
 )
 from datamimic_ce.engine.dsl.vocabulary.constants.attribute_constants import (
+    ATTR_COLUMNS,
     ATTR_CONVERTER,
     ATTR_COUNT,
     ATTR_CYCLIC,
@@ -55,6 +57,7 @@ from datamimic_ce.engine.dsl.vocabulary.constants.attribute_constants import (
     ATTR_UNIQUE,
     ATTR_VARIABLE_PREFIX,
     ATTR_VARIABLE_SUFFIX,
+    ATTR_WHERE,
 )
 from datamimic_ce.engine.dsl.vocabulary.constants.element_constants import EL_GENERATE
 from datamimic_ce.engine.dsl.vocabulary.enums.operation_enums import names_statement_operation
@@ -115,6 +118,24 @@ class GenerateModel(BaseModel):
         "only; count default, cyclic wrap and page windows all operate on the post-offset region. "
         "Requires 'source'.",
         examples=[0, 100],
+    )
+    where: str | None = Field(
+        None,
+        description="Python condition over one source row of a file source: the rows for which it is true are "
+        "kept, the others are skipped before count, cyclic, distribution, paging and worker chunks. Without count "
+        "the count is the number of kept rows. It reads the row's columns as bare names or this.<column>, and the "
+        "expression globals; it cannot read parent., variables or setup names, and it must not draw random "
+        "values. It must return a bool. Requires 'source'; not with 'offset', memstore, database or sourceScripted.",
+        examples=["int(amount_cents) >= 1000", "status == 'open'"],
+        pattern=r"\S",
+    )
+    columns: str | None = Field(
+        None,
+        description="Comma-separated source columns that go into the output, in this order. Every source column "
+        "stays readable by keys and scripts as a row variable (bare name or this.<column>); a key with the name "
+        "of an unlisted column writes that field. An empty text copies no column. Absent: all columns. Each name "
+        "must be in a row of the source, and a name must not repeat. File sources only; requires 'source'.",
+        examples=["order_id, customer_id", ""],
     )
     unique: bool | None = Field(
         None,
@@ -269,6 +290,8 @@ class GenerateModel(BaseModel):
                 ATTR_MAX_COUNT,
                 ATTR_CYCLIC,
                 ATTR_OFFSET,
+                ATTR_WHERE,
+                ATTR_COLUMNS,
                 ATTR_UNIQUE,
                 ATTR_NAME,
                 ATTR_SELECTOR,
@@ -303,7 +326,25 @@ class GenerateModel(BaseModel):
     @classmethod
     def validate_offset_requires_source(cls, values: dict):
         # Enforce the declared fact (static message lives on the fact).
-        return check_constraints(values, (GENERATE_OFFSET_REQUIRES_SOURCE,))
+        return check_constraints(values, (GENERATE_OFFSET_REQUIRES_SOURCE, *GENERATE_ROW_SELECTION_CONSTRAINTS))
+
+    @staticmethod
+    def column_names(columns: str) -> tuple[str, ...]:
+        """The names of a columns= text in their written order; an empty text names no column."""
+        names = tuple(map(str.strip, columns.split(",")))
+        return () if names == ("",) else names
+
+    @field_validator("columns")
+    @classmethod
+    def _columns_are_distinct_names(cls, value: str | None) -> str | None:
+        if value is None:
+            return None
+        names = cls.column_names(value)
+        if any(not name for name in names):
+            raise ValueError("columns must not hold an empty name: remove the extra comma")
+        if len(set(names)) != len(names):
+            raise ValueError("columns must name each column once")
+        return value
 
     @field_validator("source_entity", "target_entity")
     @classmethod

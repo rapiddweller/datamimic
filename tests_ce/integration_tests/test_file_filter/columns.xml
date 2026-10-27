@@ -1,0 +1,25 @@
+<setup>
+    <!-- Listed order is output order; unlisted columns are row variables (bare, this., parent.). -->
+    <iterate name="ordered_columns" source="data/fixtures/orders.ent.csv" distribution="ordered"
+             columns="status, id" target="ConsoleExporter">
+        <key name="doubled" script="int(amount) * 2"/>
+        <key name="same" script="this.amount == amount"/>
+        <generate name="line" count="1" target="ConsoleExporter">
+            <key name="parent_amount" script="parent.amount"/>
+        </generate>
+    </iterate>
+    <!-- An empty list copies no column; a key with the name of an unlisted column is emitted. -->
+    <iterate name="no_columns" source="data/fixtures/orders.ent.csv" distribution="ordered" columns=""
+             target="ConsoleExporter">
+        <key name="amount" script="int(amount) + 1"/>
+    </iterate>
+    <!-- A JSON column that only one row has is a known column; rows without it simply lack the field. -->
+    <iterate name="sparse_json" source="data/fixtures/orders.json" distribution="ordered" columns="id, note"
+             target="ConsoleExporter"/>
+    <!-- A header-only file has no rows: columns= has nothing to check, the product is empty. -->
+    <iterate name="empty_file" source="data/fixtures/orders_header_only.ent.csv" columns="id"
+             target="ConsoleExporter"/>
+    <!-- Two equal source rows that both pass stay two rows, in file order. -->
+    <iterate name="duplicates" source="data/fixtures/orders_duplicates.ent.csv" distribution="ordered"
+             where="int(amount) &gt;= 1000" columns="id" target="ConsoleExporter"/>
+</setup>

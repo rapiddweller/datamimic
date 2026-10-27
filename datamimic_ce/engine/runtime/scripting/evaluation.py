@@ -9,8 +9,16 @@ from collections.abc import Iterable, Iterator, KeysView, Mapping
 from functools import lru_cache
 from typing import Protocol, TypeGuard
 
-from datamimic_ce.engine.runtime.scripting.expression_globals import NON_VALUE_TYPES
-from datamimic_ce.errors import DomainError, IssueCode, UserErrorBase, condition_evaluation_error, task_config_error
+from datamimic_ce.engine.dsl.api import ATTR_WHERE, EL_GENERATE
+from datamimic_ce.engine.runtime.scripting.expression_globals import NON_VALUE_TYPES, row_expression_globals
+from datamimic_ce.errors import (
+    DescriptorLocation,
+    DomainError,
+    IssueCode,
+    UserErrorBase,
+    condition_evaluation_error,
+    task_config_error,
+)
 
 _SCOPE_GUIDANCE = (
     "check spelling, definition order and value shape; current-scope names can resolve bare, "
@@ -305,6 +313,39 @@ def evaluate_condition_value(context: ExpressionContext, element_name: str | Non
     )
 
 
+class WhereCondition:
+    """The where= condition of one file-source statement. It reads one row (bare columns and ``this``) and the row
+    globals, never parent., variables or setup names, so every process and every pass keep the same rows."""
+
+    def __init__(self, where: str, stmt_name: str) -> None:
+        self._where = where
+        self._stmt_name = stmt_name
+        self._globals = row_expression_globals()
+        self._location = DescriptorLocation(EL_GENERATE, attribute=ATTR_WHERE)
+
+    def __call__(self, row: Mapping[str, object]) -> bool:
+        names = dict(row)
+        for key, value in names.items():
+            if isinstance(value, dict):
+                names[key] = DotableDict(value)
+        names.setdefault("this", DotableDict(dict(row)))
+        try:
+            result = evaluate_python(self._where, self._globals, names, diagnostic_expression=ATTR_WHERE)
+        except UserErrorBase as error:
+            if error.location is None:
+                error.location = self._location
+            raise
+        if isinstance(result, bool):
+            return result
+        raise condition_evaluation_error(
+            code=IssueCode.CONDITION_NOT_BOOLEAN,
+            condition=ATTR_WHERE,
+            element_label=f"<generate> '{self._stmt_name}'",
+            value=type(result).__name__,
+            location=self._location,
+        )
+
+
 def _dictionary(value: object) -> TypeGuard[dict[object, object]]:
     return isinstance(value, dict)
 
@@ -335,6 +376,7 @@ def evaluate_source_template(context: ExpressionContext, data: object, prefix: s
 
 __all__ = [
     "DotableDict",
+    "WhereCondition",
     "evaluate_condition_value",
     "evaluate_python",
     "evaluate_source_template",

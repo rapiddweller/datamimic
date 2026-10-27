@@ -1,0 +1,7 @@
+<list>
+  <item><id>1</id><amount>999</amount><status>open</status></item>
+  <item><id>2</id><amount>1000</amount><status>open</status></item>
+  <item><id>3</id><amount>1001</amount><status>closed</status></item>
+  <item><id>4</id><amount>150</amount><status>open</status></item>
+  <item><id>5</id><amount>2500</amount><status>closed</status></item>
+</list>

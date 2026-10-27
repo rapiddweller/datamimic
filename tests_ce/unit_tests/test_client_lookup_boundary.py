@@ -145,6 +145,8 @@ def test_source_loader_preserves_empty_mongodb_read_behavior(
         variable_suffix=None,
         cyclic=False,
         offset=0,
+        where=None,
+        columns=None,
         full_name="rows",
         name="rows",
         source_entity="rows",

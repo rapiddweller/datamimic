@@ -1,0 +1,18 @@
+{
+  "version": "5.0",
+  "expectations": [
+    {"kind": "exact_count", "subject": {"kind": "product", "product": "order_report"}, "count": 3},
+    {"kind": "range", "subject": {"kind": "product", "product": "order_report"}, "field": "net_cents", "minimum": 1000, "maximum": 1000000},
+    {"kind": "field_absent", "subject": {"kind": "product", "product": "order_report"}, "field": "amount_cents"},
+    {"kind": "field_absent", "subject": {"kind": "product", "product": "order_report"}, "field": "order_date"},
+    {"kind": "allowed_values", "subject": {"kind": "product", "product": "order_report"}, "field": "campaign", "values": ["YES", "NO"]},
+    {"kind": "allowed_values", "subject": {"kind": "product", "product": "order_report"}, "field": "channel", "values": ["web", "phone", "store"]},
+    {"kind": "exact_count", "subject": {"kind": "product", "product": "shuffled_report"}, "count": 3},
+    {"kind": "unique", "subject": {"kind": "product", "product": "shuffled_report"}, "field": "order_id"},
+    {"kind": "allowed_values", "subject": {"kind": "product", "product": "shuffled_report"}, "field": "order_id", "values": ["O-2", "O-3", "O-4"]},
+    {"kind": "exact_count", "subject": {"kind": "product", "product": "empty_report"}, "count": 0},
+    {"kind": "exact_count", "subject": {"kind": "product", "product": "store_cycle"}, "count": 2},
+    {"kind": "allowed_values", "subject": {"kind": "product", "product": "store_cycle"}, "field": "order_id", "values": ["O-4"]},
+    {"kind": "range", "subject": {"kind": "product", "product": "store_cycle"}, "field": "net_cents", "minimum": 1000, "maximum": 1000000}
+  ]
+}
