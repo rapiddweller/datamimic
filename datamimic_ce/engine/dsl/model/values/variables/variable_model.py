@@ -138,7 +138,8 @@ class VariableModel(BaseModel):
     generator: str | None = Field(
         None,
         description="Predefined generator constructor used to produce the variable's value; validated "
-        "against the generator registry.",
+        "against the generator registry. Parameters go inside the call, not into attributes: "
+        'generator="IntegerGenerator(min=1, max=9)".',
         examples=["IncrementGenerator", "DateTimeGenerator(random=True)"],
     )
     dataset: str | None = Field(

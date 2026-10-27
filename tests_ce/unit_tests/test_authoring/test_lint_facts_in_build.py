@@ -110,3 +110,15 @@ def test_a_bound_value_beside_a_generator_never_reaches_the_remediation(tmp_path
     result = _rejected(tmp_path, '<variable name="v" generator="IntegerGenerator" min="12345" max="67890"/>')
 
     assert not any("12345" in str(item.remediation) or "67890" in item.message for item in result.diagnostics)
+
+
+@pytest.mark.parametrize("element", ["key", "variable"])
+def test_the_generator_attribute_description_shows_the_call_form(tmp_path: Path, element: str) -> None:
+    """Agents read the element capability before writing; it now shows where generator parameters go."""
+    from datamimic_ce.authoring import create_authoring_application
+    from datamimic_ce.authoring.domain.capabilities import CapabilityDomain
+
+    result = create_authoring_application(tmp_path).capability(CapabilityDomain.ELEMENT, element)
+    [generator] = [item for item in result.capability.attributes if item.name == "generator"]
+
+    assert _CALL_FORM in generator.description
