@@ -39,6 +39,7 @@ from benchmarks.authoring_eval.oracle import (
     PerParentCount,
     Repeatable,
     RowExistsIn,
+    SeedIs,
     Text,
     Unique,
     UniqueTogether,
@@ -73,6 +74,24 @@ _BOTH_OUTPUTS = frozenset({"output_rows:priced_orders:fixtures", "output_rows:pr
 _HASH_ORDER = frozenset({"build_ready", "repeatable"})
 
 _FLAG = "list({'alpha', 'bravo', 'charlie', 'delta', 'echo', 'foxtrot', 'golf', 'hotel'}).index('bravo') % 2"
+
+# Texts of the e06 and e07 references that several variants edit.
+_E06_ASSIGNEE = (
+    '<key name="assignment_id" script="parent.employment_id"/>\n'
+    '                <key name="person_id" script="parent.person_id"/>'
+)
+_E06_EXPIRY = (
+    "script=\"'2026-03-%02d' % parent.work_day if n == 1 else (None if parent.person_id % 2 == 0 else '2026-12-31')\""
+)
+_PERSON = '\n            <key name="person_id" script="parent.person_id"/>'
+_E07_KEPT = "[order for order in orders if int(order.amount_cents) &gt;= 1000]"
+_E07_NET = "amount - amount * percent // 100"
+_E07_LAST_KEY = (
+    "<key name=\"campaign\" script=\"'YES' if '2026-03-01' &lt;= order.order_date &lt;= '2026-03-31' else 'NO'\"/>"
+)
+_E07_OUTPUTS = frozenset({"output_rows:order_report:fixtures", "output_rows:order_report:fixtures_changed"})
+# The reference acceptance pins 9 rows and the two campaign values, and Build needs a known row count.
+_E07_OUTPUTS_AND_BUILD = _E07_OUTPUTS | {"build_ready"}
 
 
 def _COUNTED(field: str, counter: str, script: str) -> tuple[str, str]:
@@ -365,14 +384,438 @@ _BROKEN = [
         {_XML: [_COUNTED("offer_id", "offer_no", "float(offer_no)")]},
         frozenset({"whole_number:offers.offer_id"}),
     ),
+    # --- e06: one variant per rule; the reference itself is the boundary case "work_date is the expiry day" ---
+    Broken(
+        "e06",
+        "assignment_at_a_company_without_employment",
+        {
+            _XML: [
+                (
+                    'name="company_id" script="parent.company_id"',
+                    'name="company_id" script="(parent.company_id + 1) % 4 + 1"',
+                )
+            ]
+        },
+        frozenset({"row_exists_in:assignments->employments"}),
+    ),
+    Broken(
+        "e06",
+        "assignment_in_another_function",
+        {
+            _XML: [
+                (
+                    'name="function" script="parent.function"',
+                    "name=\"function\" script=\"'PLANNER' if parent.function == 'OPERATOR' else 'OPERATOR'\"",
+                )
+            ]
+        },
+        frozenset({"row_exists_in:assignments->employments"}),
+    ),
+    Broken(
+        "e06",
+        "assignment_of_another_person",
+        {
+            _XML: [
+                (
+                    _E06_ASSIGNEE,
+                    _E06_ASSIGNEE.replace(
+                        'person_id" script="parent.person_id', 'person_id" script="parent.person_id % 20 + 1'
+                    ),
+                )
+            ]
+        },
+        frozenset({"row_exists_in:assignments->employments", "row_exists_in:assignments->licenses"}),
+    ),
+    # max + 1: the work date is the day after the expiry day
+    Broken(
+        "e06",
+        "work_date_after_the_expiry_day",
+        {_XML: [("'2026-03-%02d' % parent.work_day if n == 1", "'2026-03-%02d' % (parent.work_day - 1) if n == 1")]},
+        frozenset({"row_exists_in:assignments->licenses"}),
+    ),
+    # min - 1: the work date is the day before the license starts
+    Broken(
+        "e06",
+        "work_date_before_valid_from",
+        {_XML: [("'2026-01-%02d' % parent.person_id if n == 1", "'2026-03-%02d' % (parent.work_day + 1) if n == 1")]},
+        frozenset({"row_exists_in:assignments->licenses"}),
+    ),
+    # the even people work on a license without an expiry date; still 10 such licenses
+    Broken(
+        "e06",
+        "missing_expiry_counts_as_valid",
+        {
+            _XML: [
+                (
+                    _E06_EXPIRY,
+                    "script=\"(None if parent.person_id % 2 == 0 else '2026-03-%02d' % parent.work_day) "
+                    "if n == 1 else '2026-12-31'\"",
+                )
+            ]
+        },
+        frozenset({"row_exists_in:assignments->licenses"}),
+    ),
+    # absent: the license without an expiry date leaves the field out instead of null
+    Broken(
+        "e06",
+        "absent_field_for_a_missing_expiry",
+        {
+            _XML: [
+                (
+                    '<key name="expires_on" script=',
+                    '<key name="expires_on" condition="n == 1 or parent.person_id % 2 == 1" script=',
+                )
+            ]
+        },
+        frozenset({"date_range:licenses.expires_on"}),
+    ),
+    Broken(
+        "e06",
+        "empty_text_for_a_missing_expiry",
+        {_XML: [("(None if parent.person_id % 2 == 0", "('' if parent.person_id % 2 == 0")]},
+        frozenset({"date_range:licenses.expires_on"}),
+    ),
+    Broken(  # min - 1
+        "e06",
+        "nine_missing_expiries",
+        {_XML: [("None if parent.person_id % 2 == 0", "None if parent.person_id % 2 == 0 and parent.person_id != 20")]},
+        frozenset({"date_range:licenses.expires_on"}),
+    ),
+    Broken(  # max + 1
+        "e06",
+        "eleven_missing_expiries",
+        {_XML: [("None if parent.person_id % 2 == 0", "None if parent.person_id % 2 == 0 or parent.person_id == 1")]},
+        frozenset({"date_range:licenses.expires_on"}),
+    ),
+    # a date text of another form is no date, so no license can cover it
+    Broken(
+        "e06",
+        "work_date_in_another_format",
+        {_XML: [("'2026-03-%02d' % root.work_day", "'%02d.03.2026' % root.work_day")]},
+        frozenset({"date_range:assignments.work_date", "row_exists_in:assignments->licenses"}),
+    ),
+    Broken(
+        "e06",
+        "two_employments_at_one_company",
+        {_XML: [("(parent.person_id + n) % 4 + 1", "(parent.person_id + 1) % 4 + 1")]},
+        frozenset({"unique_together:employments.person_id+company_id"}),
+    ),
+    Broken(
+        "e06",
+        "function_outside_the_set",
+        {_XML: [("values=\"'OPERATOR', 'INSPECTOR', 'PLANNER'\"", "values=\"'OPERATOR', 'INSPECTOR', 'DRIVER'\"")]},
+        frozenset({"value_in:employments.function", "build_ready"}),  # the reference acceptance has the set too
+    ),
+    Broken(
+        "e06",
+        "badge_without_three_digits",
+        {_XML: [("'P-%03d' % person_id", "'P-%d' % person_id")]},
+        frozenset({"exact_rows:people"}),
+    ),
+    # the text "2" is not the company 2; the assignment copies the text and so still matches its employment
+    Broken(
+        "e06",
+        "text_company_ids_in_employments",
+        {_XML: [("(parent.person_id + n) % 4 + 1", "str((parent.person_id + n) % 4 + 1)")]},
+        frozenset({"row_exists_in:employments->companies", "build_ready"}),
+    ),
+    Broken(
+        "e06",
+        "three_employments_per_person",
+        {
+            _XML: [('<generate name="employments" count="2">', '<generate name="employments" count="3">')],
+            _ACCEPTANCE: [('"max_count": 124', '"max_count": 144')],
+        },
+        frozenset({"exact_count:employments", "per_parent_count:employments.person_id"}),
+    ),
+    # person 1 is assigned at company 4, which then has 6 assignments and company 3 has 4
+    Broken(
+        "e06",
+        "six_assignments_at_one_company",
+        {_XML: [("(parent.person_id + n) % 4 + 1", "(parent.person_id + n + (parent.person_id == 1)) % 4 + 1")]},
+        frozenset({"per_parent_count:assignments.company_id"}),
+    ),
+    Broken(
+        "e06",
+        "text_assignment_ids",
+        {
+            _XML: [
+                (
+                    _E06_ASSIGNEE,
+                    _E06_ASSIGNEE.replace(
+                        '"assignment_id" script="parent.employment_id',
+                        '"assignment_id" script="str(parent.employment_id)',
+                    ),
+                )
+            ]
+        },
+        frozenset({"whole_number:assignments.assignment_id"}),
+    ),
+    Broken(
+        "e06",
+        "empty_full_names",
+        {_XML: [("script=\"given + ' ' + family\"", "script=\"''\"")]},
+        frozenset({"text:people.full_name"}),
+    ),
+    Broken("e06", "missing_seed", {_XML: [(' rngSeed="61423"', "")]}, frozenset({"seed_is", "repeatable"})),
+    Broken("e06", "wrong_seed", {_XML: [('rngSeed="61423"', 'rngSeed="1"')]}, frozenset({"seed_is"})),
+    Broken(
+        "e06",
+        "hash_ordered_names",
+        {_XML: [("script=\"given + ' ' + family\"", f"script=\"given + ' ' + family + str({_FLAG})\"")]},
+        _HASH_ORDER,
+    ),
+    # duplicate: person 1 takes the assignment of person 2 at company 4, on the day of its other assignment
+    Broken(
+        "e06",
+        "two_assignments_on_one_day",
+        {
+            _XML: [
+                (
+                    'count="{1 if n == 1 else 0}"',
+                    'count="{1 if (n == 1 and person_id != 2) or (n == 2 and person_id == 1) else 0}"',
+                )
+            ]
+        },
+        frozenset({"unique_together:assignments.person_id+work_date"}),
+    ),
+    Broken(
+        "e06",
+        "person_without_assignment",
+        {_XML: [('count="{1 if n == 1 else 0}"', 'count="{1 if n == 1 and person_id != 1 else 0}"')]},
+        frozenset({"exact_count:assignments", "per_parent_count:assignments.company_id", "build_ready"}),
+    ),
+    Broken(  # max + 1
+        "e06",
+        "valid_from_after_march",
+        {_XML: [("else '2026-03-31'\"/>", "else '2026-04-01'\"/>")]},
+        frozenset({"date_range:licenses.valid_from"}),
+    ),
+    # the third license of each even person has no expiry date either: 20 nulls
+    Broken(
+        "e06",
+        "three_licenses_per_person",
+        {
+            _XML: [('<generate name="licenses" count="2">', '<generate name="licenses" count="3">')],
+            _ACCEPTANCE: [('"max_count": 124', '"max_count": 144')],
+        },
+        frozenset({"exact_count:licenses", "per_parent_count:licenses.person_id", "date_range:licenses.expires_on"}),
+    ),
+    # company 5 has no assignment
+    Broken(
+        "e06",
+        "five_companies",
+        {
+            _XML: [('<generate name="companies" count="4">', '<generate name="companies" count="5">')],
+            _ACCEPTANCE: [('"max_count": 124', '"max_count": 125')],
+        },
+        frozenset({"exact_rows:companies", "per_parent_count:assignments.company_id"}),
+    ),
+    Broken(
+        "e06",
+        "numeric_company_names",
+        {_XML: [('string="Company __company_id__"', 'script="company_id"')]},
+        frozenset({"text:companies.name"}),
+    ),
+    # The assignment_id copies the employment_id, so a broken employment_id breaks the assignment_id too.
+    Broken(
+        "e06",
+        "colliding_employment_ids",
+        {_XML: [('name="employment_id" script="parent.person_id * 10 + n"', 'name="employment_id" script="n"')]},
+        frozenset({"unique:employments.employment_id", "unique:assignments.assignment_id", "build_ready"}),
+    ),
+    Broken(
+        "e06",
+        "colliding_license_ids",
+        {_XML: [('name="license_id" script="parent.person_id * 10 + n"', 'name="license_id" script="n"')]},
+        frozenset({"unique:licenses.license_id", "build_ready"}),
+    ),
+    Broken(
+        "e06",
+        "colliding_assignment_ids",
+        {_XML: [('name="assignment_id" script="parent.employment_id"', 'name="assignment_id" script="1"')]},
+        frozenset({"unique:assignments.assignment_id", "build_ready"}),
+    ),
+    Broken(
+        "e06",
+        "text_employment_ids",
+        {
+            _XML: [
+                (
+                    'name="employment_id" script="parent.person_id * 10 + n"',
+                    'name="employment_id" script="str(parent.person_id * 10 + n)"',
+                )
+            ]
+        },
+        frozenset({"whole_number:employments.employment_id", "whole_number:assignments.assignment_id"}),
+    ),
+    Broken(
+        "e06",
+        "text_license_ids",
+        {
+            _XML: [
+                (
+                    'name="license_id" script="parent.person_id * 10 + n"',
+                    'name="license_id" script="str(parent.person_id * 10 + n)"',
+                )
+            ]
+        },
+        frozenset({"whole_number:licenses.license_id"}),
+    ),
+    # The text "1" is not the person 1. The assignments copy it, so no license of the person matches; Build's
+    # foreign key role compares the types too.
+    *[
+        Broken(
+            "e06",
+            f"text_person_ids_in_{product}",
+            {_XML: [(f"{before}{_PERSON}", f"{before}{_PERSON.replace('parent.person_id', 'str(parent.person_id)')}")]},
+            frozenset({f"whole_number:{product}.person_id", "row_exists_in:assignments->licenses", "build_ready"}),
+        )
+        for product, before in [
+            ("employments", '<key name="employment_id" script="parent.person_id * 10 + n"/>'),
+            ("licenses", '<key name="license_id" script="parent.person_id * 10 + n"/>'),
+        ]
+    ],
+    # --- e07: one variant per rule; every rule has a boundary row in both fixture sets ---
+    Broken("e07", "no_threshold", {_XML: [(_E07_KEPT, "list(orders)")]}, _E07_OUTPUTS_AND_BUILD),
+    Broken("e07", "threshold_excludes_1000", {_XML: [("&gt;= 1000", "&gt; 1000")]}, _E07_OUTPUTS_AND_BUILD),
+    # CSV values are texts: '999' >= '1000' is true
+    Broken(
+        "e07",
+        "threshold_compared_as_text",
+        {_XML: [("int(order.amount_cents) &gt;= 1000", "order.amount_cents &gt;= '1000'")]},
+        _E07_OUTPUTS_AND_BUILD,
+    ),
+    Broken("e07", "other_default_name", {_XML: [("'UNKNOWN'", "'N/A'")]}, _E07_OUTPUTS),
+    Broken("e07", "silver_without_discount", {_XML: [("{'GOLD': 10, 'SILVER': 5}", "{'GOLD': 10}")]}, _E07_OUTPUTS),
+    # 1999 at 10 percent: 1999 - 199 = 1800, but int(1999 * 0.9) = 1799
+    Broken(
+        "e07",
+        "net_rounded_down_instead_of_the_discount",
+        {_XML: [(_E07_NET, "int(amount * (1 - percent / 100))")]},
+        _E07_OUTPUTS,
+    ),
+    Broken(
+        "e07",
+        "campaign_without_its_last_day",
+        {_XML: [("order.order_date &lt;= '2026-03-31'", "order.order_date &lt; '2026-03-31'")]},
+        _E07_OUTPUTS,
+    ),
+    Broken(
+        "e07",
+        "campaign_without_its_first_day",
+        {_XML: [("'2026-03-01' &lt;= order.order_date", "'2026-03-01' &lt; order.order_date")]},
+        _E07_OUTPUTS,
+    ),
+    # a scripted generate copies every source column into the row
+    Broken(
+        "e07",
+        "source_columns_in_the_output",
+        {_XML: [('count="{len(kept)}"', 'script="kept"')]},
+        _E07_OUTPUTS_AND_BUILD,
+    ),
+    Broken(
+        "e07",
+        "extra_field",
+        {_XML: [(_E07_LAST_KEY, _E07_LAST_KEY + '\n            <key name="channel" script="order.channel"/>')]},
+        _E07_OUTPUTS,
+    ),
+    # duplicate: every kept order twice
+    Broken(
+        "e07",
+        "each_order_twice",
+        {
+            _XML: [
+                ('count="{len(kept)}"', 'count="{2 * len(kept)}"'),
+                ("parent.kept[i - 1]", "parent.kept[(i - 1) % len(parent.kept)]"),
+            ]
+        },
+        _E07_OUTPUTS_AND_BUILD,
+    ),
+    Broken("e07", "missing_field", {_XML: [(_E07_LAST_KEY, "")]}, _E07_OUTPUTS_AND_BUILD),
+    Broken("e07", "no_json_file", {_XML: [('count="{len(kept)}" target="JSON"', 'count="{len(kept)}"')]}, _E07_OUTPUTS),
+    Broken(
+        "e07",
+        "edited_fixture",
+        {"fixtures/customers.csv": [("C-104,Dune Parts,GOLD,PT", "C-104,Dune Parts,SILVER,PT")]},
+        frozenset({"fixtures_unchanged"}),
+    ),
+    Broken("e07", "missing_seed", {_XML: [(' rngSeed="40961"', "")]}, frozenset({"seed_is"})),  # no random draw
+    Broken("e07", "wrong_seed", {_XML: [('rngSeed="40961"', 'rngSeed="1"')]}, frozenset({"seed_is"})),
+    Broken(
+        "e07",
+        "hash_ordered_campaign",
+        {_XML: [("else 'NO'\"", f"else 'NO' if {_FLAG} == 0 else 'MAYBE'\"")]},
+        _HASH_ORDER,
+    ),
+]
+
+# Variants that change the method but not the values; the oracle must pass them.
+_EQUIVALENT = [
+    # min: the work date is the first day of the license
+    Broken(
+        "e06",
+        "work_date_on_valid_from",
+        {_XML: [("'2026-01-%02d' % parent.person_id if n == 1", "'2026-03-%02d' % parent.work_day if n == 1")]},
+        frozenset(),
+    ),
+    # order: the people in reverse order; every check ignores the row order
+    Broken(
+        "e06",
+        "people_in_reverse_order",
+        {
+            _XML: [
+                (
+                    '<key name="person_id" generator="IncrementGenerator"/>',
+                    '<variable name="person_no" generator="IncrementGenerator"/>\n'
+                    '        <key name="person_id" script="21 - person_no"/>',
+                )
+            ]
+        },
+        frozenset(),
+    ),
+    # order: the orders read in a shuffled order
+    Broken(
+        "e07",
+        "orders_read_shuffled",
+        {
+            _XML: [
+                (
+                    'name="orders" source="fixtures/orders.csv" storage="data" distribution="ordered"',
+                    'name="orders" source="fixtures/orders.csv" storage="data"',
+                )
+            ]
+        },
+        frozenset(),
+    ),
 ]
 
 
+@pytest.mark.parametrize("variant", _EQUIVALENT, ids=lambda variant: f"{variant.case}-{variant.name}")
+def test_an_equivalent_variant_passes(variant: Broken, tmp_path: Path) -> None:
+    project = _edited_reference(tmp_path, variant)
+
+    assert _failed(project, variant.case) == set()
+
+
+def _typed_rows(case: str, product: str) -> str:
+    """A project that types the expected rows of the case fixtures into one script and reads no file."""
+    spec = OracleSpec.model_validate_json((CASES / case / "oracle.json").read_text(encoding="utf-8"))
+    rows = next(check.rows for check in spec.checks if isinstance(check, OutputRows) and check.fixtures == "fixtures")
+    seed = next(check.seed for check in spec.checks if isinstance(check, SeedIs))
+    keys = "".join(f'\n        <key name="{name}" script="row[{name!r}]"/>' for name in rows[0])
+    return (
+        f'<setup rngSeed="{seed}">\n    <generate name="{product}" count="{len(rows)}" target="JSON">\n'
+        f'        <variable name="i" generator="IncrementGenerator"/>\n'
+        f'        <variable name="row" script="{xml_escape(repr(rows))}[i - 1]"/>{keys}\n    </generate>\n</setup>'
+    )
+
+
 # Whole wrong projects that a weak agent can write. Each one has the right shape and must still fail.
-_CHEAT_ACCEPTANCE = '{"version": "5.0", "max_count": 15, "expectations": []}'
+_CHEAT_ACCEPTANCE = '{"version": "5.0", "max_count": 200, "expectations": []}'
 _CHEATS = {
     # slot_id from one counter over all slots, not from the depot and a counter inside it
-    "e03": (
+    ("e03", "global_counter"): (
         """<setup rngSeed="56606">
     <generate name="depots" count="3">
         <key name="depot_id" generator="IncrementGenerator"/>
@@ -386,7 +829,7 @@ _CHEATS = {
         frozenset({"exact_rows:slots"}),
     ),
     # the six rows typed into scripts: the CSV is never read
-    "e04": (
+    ("e04", "typed_rows"): (
         """<setup rngSeed="51110">
     <generate name="priced_orders" count="6" target="JSON">
         <variable name="i" generator="IncrementGenerator"/>
@@ -398,12 +841,58 @@ _CHEATS = {
 </setup>""",
         frozenset({"output_rows:priced_orders:fixtures_changed"}),
     ),
+    # every foreign key drawn at random from the right set: each one exists, but the rules across tables break
+    ("e06", "random_foreign_keys"): (
+        """<setup rngSeed="61423">
+    <generate name="companies" count="4">
+        <key name="company_id" generator="IncrementGenerator"/>
+        <key name="name" string="Company __company_id__"/>
+    </generate>
+    <generate name="people" count="20">
+        <key name="person_id" generator="IncrementGenerator"/>
+        <key name="badge" script="'P-%03d' % person_id"/>
+        <key name="full_name" string="Person __person_id__"/>
+    </generate>
+    <generate name="employments" count="40">
+        <key name="employment_id" generator="IncrementGenerator"/>
+        <key name="person_id" script="(employment_id - 1) // 2 + 1"/>
+        <key name="company_id" type="int" min="1" max="4"/>
+        <key name="function" values="'OPERATOR', 'INSPECTOR', 'PLANNER'"/>
+    </generate>
+    <generate name="licenses" count="40">
+        <key name="license_id" generator="IncrementGenerator"/>
+        <key name="person_id" script="(license_id - 1) // 2 + 1"/>
+        <key name="valid_from" constant="2026-01-01"/>
+        <key name="expires_on" script="None if license_id % 4 == 0 else '2026-12-31'"/>
+    </generate>
+    <generate name="assignments" count="20">
+        <key name="assignment_id" generator="IncrementGenerator"/>
+        <key name="person_id" type="int" min="1" max="20"/>
+        <key name="company_id" script="(assignment_id - 1) // 5 + 1"/>
+        <key name="function" values="'OPERATOR', 'INSPECTOR', 'PLANNER'"/>
+        <key name="work_date" script="'2026-03-%02d' % assignment_id"/>
+    </generate>
+</setup>""",
+        frozenset({"unique_together:employments.person_id+company_id", "row_exists_in:assignments->employments"}),
+    ),
+    # the kept rows typed into scripts: the CSV files are never read
+    ("e07", "typed_rows"): (
+        _typed_rows("e07", "order_report"),
+        frozenset({"output_rows:order_report:fixtures_changed"}),
+    ),
+    # a flat copy of the orders file: every order and every column
+    ("e07", "flat_copy"): (
+        """<setup rngSeed="40961" defaultSeparator=",">
+    <generate name="order_report" source="fixtures/orders.csv" distribution="ordered" target="JSON"/>
+</setup>""",
+        _E07_OUTPUTS,
+    ),
 }
 
 
-@pytest.mark.parametrize("case", sorted(_CHEATS))
-def test_cheat_project_fails_the_oracle(case: str, tmp_path: Path) -> None:
-    xml, fails = _CHEATS[case]
+@pytest.mark.parametrize(("case", "name"), sorted(_CHEATS), ids="-".join)
+def test_cheat_project_fails_the_oracle(case: str, name: str, tmp_path: Path) -> None:
+    xml, fails = _CHEATS[case, name]
     project = _start_dir(tmp_path, case)
     (project / "acceptance").mkdir(parents=True)
     (project / _XML).write_text(xml, encoding="utf-8")
@@ -437,15 +926,20 @@ def test_reference_passes_every_check(case: str, tmp_path: Path) -> None:
     assert verdict.passed
 
 
-@pytest.mark.parametrize("broken", _BROKEN, ids=lambda broken: f"{broken.case}-{broken.name}")
-def test_broken_variant_fails_exactly_the_expected_checks(broken: Broken, tmp_path: Path) -> None:
-    project = _reference(tmp_path, broken.case)
-    for filename, edits in broken.edits.items():
+def _edited_reference(tmp_path: Path, variant: Broken) -> Path:
+    project = _reference(tmp_path, variant.case)
+    for filename, edits in variant.edits.items():
         text = (project / filename).read_text(encoding="utf-8")
         for old, new in edits:
-            assert old in text, f"edit target missing from {filename}: {old}"
+            assert text.count(old) == 1, f"edit target not exactly once in {filename}: {old}"
             text = text.replace(old, new)
         (project / filename).write_text(text, encoding="utf-8")
+    return project
+
+
+@pytest.mark.parametrize("broken", _BROKEN, ids=lambda broken: f"{broken.case}-{broken.name}")
+def test_broken_variant_fails_exactly_the_expected_checks(broken: Broken, tmp_path: Path) -> None:
+    project = _edited_reference(tmp_path, broken)
 
     assert _failed(project, broken.case) == broken.fails
     assert not evaluate(broken.case, project).passed
@@ -652,6 +1146,16 @@ def test_rows_that_json_cannot_encode_fail_the_check_but_do_not_crash() -> None:
 
 def test_every_case_has_broken_variants() -> None:
     assert {broken.case for broken in _BROKEN} == set(_ALL_CASES)
+
+
+@pytest.mark.parametrize("case", ["e06", "e07"])
+def test_every_check_of_the_complex_cases_fails_in_some_variant(case: str) -> None:
+    """A check that no variant or cheat fails is not proven to fail at all."""
+    spec = OracleSpec.model_validate_json((CASES / case / "oracle.json").read_text(encoding="utf-8"))
+    failed = {label for broken in _BROKEN if broken.case == case for label in broken.fails}
+    failed |= {label for (cheat_case, _), (_, fails) in _CHEATS.items() if cheat_case == case for label in fails}
+
+    assert {check.label() for check in spec.checks} - failed == set()
 
 
 def test_oracle_ignores_the_agents_own_acceptance(tmp_path: Path) -> None:

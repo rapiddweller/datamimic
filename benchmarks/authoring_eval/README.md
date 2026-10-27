@@ -22,6 +22,7 @@ benchmarks/authoring_eval/
     fixtures/          files given to the subject with the prompt (only some cases)
     fixtures_changed/  the same files with other values; the oracle runs the project with them too (hidden)
     reference/         a good project; the positive test of the oracle (hidden)
+    README.md          the prompt-to-check mapping and the equivalence classes (only e06, e07; hidden)
   results/             short Markdown summaries of finished campaigns
 ```
 
@@ -36,6 +37,8 @@ Raw transcripts and run directories stay outside the repository.
 | e02 | complex | parent and child | exact count per parent, a parent key in each child, unique id over all children; a flat project passes too |
 | e03 | complex | parent and child | the exact 12 slot rows of a prescribed `slot_id` formula, with no helper field; a literal table of the rows passes too |
 | e04 | complex | CSV to JSON | comma separator, text to number, derived field, field subset, file output, rows that come from the input |
+| e06 | complex | staffing register | five tables, foreign keys, counts per parent, a unique pair, a closed set, a derived field, an assignment that needs an employment of the same person, company and function and a license valid on its date (both days count, no expiry is never valid) |
+| e07 | complex | two CSV files to JSON | a join with a default, a threshold filter, a tier discount rounded down, a date window with both days included, an exact field subset, rows that come from the input |
 
 ## Oracle checks
 
@@ -51,6 +54,9 @@ Raw transcripts and run directories stay outside the repository.
 | `value_in` | every value is in `values`. |
 | `range` | every value is a whole number (as `whole_number`) from `min` to `max`, inclusive. |
 | `text` | every row has the field, and the value is a text that is not empty. A number, `None` and `""` fail. A numeric string such as `"123"` and a blank string pass, so `script="str(ticket_id)"` passes. |
+| `unique_together` | every row has each of `fields` as a text or a number, and no two rows hold the same combination. One field alone may repeat. |
+| `row_exists_in` | for each row of `product`, a row of `target` holds the same `fields` with the same JSON types (`1` is not `"1"`). With a `window`, the `date` field of the row is also from the target's `start` to its `end` field, both days included. A bound that is null, empty, absent or not a `YYYY-MM-DD` date never matches, so a missing expiry date is never valid. |
+| `date_range` | every value is a `YYYY-MM-DD` text of a real day from `min` to `max`, inclusive, except exactly `missing` nulls. An empty text is not a null; a row without the field fails. |
 | `field_at_most` | in every row, both fields are numbers and `field` is at most `other`. |
 | `exact_rows` | the captured rows equal `rows`. Row order is ignored. Keys and JSON types must match. With `ignore_extra_fields: true`, only the fields that `rows` names are compared (e03 depots: the prompt fixes the field set for slots only). |
 | `output_rows` | the run with the case directory `fixtures` laid over `fixtures/` produced the product and wrote `<product>.json`, or the chunk parts `<product>_<n>.json`, and their rows equal `rows` (as `exact_rows`). |
@@ -71,8 +77,15 @@ Limits of the oracle:
   - e03: a global counter gives wrong values and fails. A flat project that computes the per-depot counter by arithmetic passes. A literal list of the 12 `slot_id` values passes, because the prompt fixes all 12 rows. e03 proves the arithmetic, not nested authoring.
   - e02: a flat `invoices` product with `subscriber_id = (invoice_id - 1) // 3 + 1` passes.
   - e05: `tier=GOLD`, `list_price=900`, `sale_price=50` in all 40 rows passes. That is literal compliance with the prompt.
+- e06: the subject makes its own data, so a rule binds only the rows the subject makes. A project that never puts a work date on an expiry day passes, though it can count the expiry day as invalid.
+  The prompt requires 10 licenses without an expiry date, so "no expiry is never valid" binds every submission. The reference and the variants prove each boundary of the check.
+- e06: a project that types all 124 consistent rows passes. The oracle proves the values, not the generation, as for e03.
+- The capture writes a value that is not JSON as its text. A Python `date` becomes `"2026-03-01"` and passes `date_range`; a `datetime` becomes `"2026-03-01 00:00:00"` and fails it. The prompt asks for a text, and the oracle cannot see that difference.
+- `row_exists_in` proves that a matching row exists, not that the project intended that row: a project can match by chance. With the case seed, the cheat with random foreign keys fails: its 20 random assignments do not all match an employment.
 - e04 proves that the rows come from the CSV with a second CSV of other values (`fixtures_changed/`). It does not prove how the project reads the file.
   A project that reads its own copy of the CSV at another path fails that check. The prompt names `fixtures/orders.csv`, so this is intended.
+- e07 proves the same with `fixtures_changed/`, which also has another number of orders and of kept orders. The oracle reads only the `order_report` files, so a helper product may write another file.
+- The engine names a product nested two levels deep `inner|leaf`. The capture names it `leaf`, as Build does. Build refuses two products with the same name.
 - The answer key is on disk: in this repository, in other checkouts of it, and in the transcripts of the sessions that wrote the cases (`~/.claude/projects`).
   The sandbox blocks Bash reads of this checkout and of `~/.claude/projects` only. So e04 proves that the rows come from the CSV only for a subject that does not search the disk. Read the transcript.
 - `repeatable` finds a difference that two hash seeds expose. The engine fixes the clock and the random generators when the seed is set, so a script cannot use them to make a seeded run differ.
@@ -234,7 +247,7 @@ The sandbox blocks the network and the writes outside the cwd and the sandbox te
 | Class | Cases | Target |
 |---|---|---|
 | simple | e01, e05 | at least 95 % of runs are first-try `ready` and pass the oracle |
-| complex | e02, e03, e04 | at least 80 % of runs pass the oracle within the turn budget |
+| complex | e02, e03, e04, e06, e07 | at least 80 % of runs pass the oracle within the turn budget |
 
 Run every case with Haiku, Sonnet and Opus. Do at least five runs for each model and case.
 Void runs do not count towards the five.
