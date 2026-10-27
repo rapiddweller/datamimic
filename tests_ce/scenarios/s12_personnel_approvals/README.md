@@ -145,13 +145,13 @@ Product limits. Issue #420 tracks them.
 - The export keys list the 27 columns, but they do not filter: a source field outside the list reaches the CSV. Build has no exact field-set expectation, and an export without `source=` needs a literal count that silently truncates a longer file.
 - Build caps the bounded capture at 1000 rows in total. The base case uses 925. So the trace leaves out the `try` decisions, and a search mutant that skips many people can exceed the cap.
 - A Python error in a script loses its text: a wrong policy type is rejected as `child_execution` without the message of `read_policy`.
-- A list that a `<variable>` script builds holds plain dicts without dot access. So the R5 and R6 keys of `plan_check` read `other['company_id']`.
 - Build reads the fields of a product from its keys. A key such as `seat_id` on `seat_check` only copies a source field, but Build needs it for the product roles.
 - Steps share data only through the memstore. Build refuses `<include>` inside `<generate>`, and it accepts only a `<generate>` as a memstore reader with a declared role. So `plan_check` reads the step 2 rows.
 
 Project limits.
 
 - Input validation runs in Build only, except the R4 maximum.
+- A list that a `<variable>` script builds holds plain dicts without dot access, so the R5 and R6 keys of `plan_check` read `other['company_id']`. No issue is filed for this yet.
 - Step 2 keeps R1 to R3 in Python: the search reads the near misses, and each one names the failed part of R1 or the R2 reason. In XML that is one long conditional per rule. Step 4 states R1 to R3 a second time in XML, for each seat.
 - R3 cannot say "active": `person_qualifications` has no status column. A qualification row counts as active.
 - A person that fails two or more rules is counted, not named.
