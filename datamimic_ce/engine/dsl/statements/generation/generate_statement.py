@@ -52,6 +52,8 @@ class GenerateStatement(CompositeStatement):
         self._interval = model.interval
         # Set only by bounded Authoring execution: runtime counts above it are refused, never truncated.
         self._bounded_count_limit: int | None = None
+        # Rows the bounded run resolved for this statement, summed over its invocations (one per parent row).
+        self.bounded_rows = 0
 
     @property
     def name(self) -> str:

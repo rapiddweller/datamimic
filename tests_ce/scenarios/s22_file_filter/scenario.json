@@ -8,7 +8,8 @@
     "a key with the name of an unlisted column writes that field to the output",
     "a random distribution keeps the same rows as distribution=\"ordered\"",
     "a condition that keeps no row gives an empty product, and exact_count 0 proves it",
-    "cyclic with a count above the kept rows wraps over the kept rows only"
+    "cyclic with a count above the kept rows wraps over the kept rows only",
+    "a generator that ends before the last kept row leaves the capture unknown, so Build is not ready"
   ],
   "products": {"order_report": 3, "shuffled_report": 3, "empty_report": 0, "store_cycle": 2},
   "negatives": [
@@ -37,6 +38,8 @@
      "patch": {"file": "datamimic.xml", "old": " cyclic=\"True\"", "new": ""}},
     {"name": "count_with_where_above_kept_rows", "diagnostic": "validation",
      "patch": {"file": "datamimic.xml", "old": "<iterate name=\"order_report\" source=\"data/fixtures/orders.ent.csv\" distribution=\"ordered\"", "new": "<iterate name=\"order_report\" source=\"data/fixtures/orders.ent.csv\" distribution=\"ordered\" count=\"5\""}},
+    {"name": "generator_ends_before_the_kept_rows", "diagnostic": "validation",
+     "patch": {"file": "datamimic.xml", "old": "<key name=\"channel\" script=\"channel.lower()\"/>", "new": "<key name=\"channel\" script=\"channel.lower()\"/><key name=\"line\" generator=\"IncrementGenerator(end=2)\"/>"}},
     {"name": "cyclic_without_where_wraps_all_rows", "diagnostic": "allowed_values",
      "patch": {"file": "datamimic.xml", "old": "where=\"channel == 'STORE' and int(amount_cents) &gt;= 1000\" ", "new": ""}}
   ]

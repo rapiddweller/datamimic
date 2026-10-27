@@ -431,3 +431,96 @@ def test_build_limit_boundary_for_kept_rows(tmp_path: Path, kept: int, ready: bo
     )
     built = create_authoring_application(project, descriptor_path=PROJECT_ENTRY_PATH).build()
     assert isinstance(built, ReadyBuild) is ready, built.diagnostics
+
+
+_KEEP = 'source="data/fixtures/orders.ent.csv" distribution="ordered" where="int(amount) &gt;= 1000"'
+_TWO = '<variable name="v" source="data/fixtures/two.ent.csv" distribution="ordered"/>'
+_TWO_CYCLIC = '<variable name="v" source="data/fixtures/two.ent.csv" distribution="ordered" cyclic="True"/>'
+
+
+@pytest.mark.parametrize(
+    ("generate", "status", "observed", "reason"),
+    [
+        # The three kept rows are emitted in full.
+        (f'<generate name="rows" {_KEEP}/>', "complete", 3, "where="),
+        # A shorter non-cyclic variable source ends the generate after two of the three kept rows.
+        (f'<generate name="rows" {_KEEP}>{_TWO}</generate>', "unknown", 2, "where="),
+        # A cyclic variable wraps: the loop never emits more rows than where= kept.
+        (f'<generate name="rows" {_KEEP}>{_TWO_CYCLIC}</generate>', "complete", 3, "where="),
+        # No row passes: no row is read from the variable and the empty capture is complete.
+        (
+            '<generate name="rows" source="data/fixtures/orders.ent.csv" where="int(amount) &gt; 99999">'
+            f"{_TWO}</generate>",
+            "complete",
+            0,
+            "where=",
+        ),
+        # An explicit count is the requested count: the underrun is visible without the runtime count.
+        (f'<generate name="rows" count="3" {_KEEP}>{_TWO}</generate>', "unknown", 2, "static count"),
+        # Without where= the source length is the requested count: the same underrun stays unknown.
+        (
+            f'<generate name="rows" source="data/fixtures/orders.ent.csv" distribution="ordered">{_TWO}</generate>',
+            "unknown",
+            2,
+            "file source",
+        ),
+        # A count expression and a count range have no static requested count either.
+        (f'<generate name="rows" count="{{1 + 2}}">{_TWO}</generate>', "unknown", 2, "count"),
+        (f'<generate name="rows" minCount="3" maxCount="4">{_TWO}</generate>', "unknown", 2, "count"),
+        ('<generate name="rows" count="{1 + 2}"/>', "complete", 3, "dynamic count"),
+    ],
+)
+def test_build_compares_the_emitted_rows_with_the_runtime_count(
+    tmp_path: Path, generate: str, status: str, observed: int, reason: str
+) -> None:
+    """Build is one process. A generator or variable source that ends early stops the generate without an error,
+    so a capture is complete only when it holds every row that the run resolved for the generate."""
+    from datamimic_ce.authoring.bootstrap import create_authoring_application
+    from datamimic_ce.authoring.domain.requests import PROJECT_ENTRY_PATH, RunRequest
+
+    project = _project(tmp_path, generate)
+    xml = (project / "datamimic.xml").read_text(encoding="utf-8")
+    result = create_authoring_application(project, descriptor_path=PROJECT_ENTRY_PATH).dry_run(
+        RunRequest(xml=xml, descriptor_path=PROJECT_ENTRY_PATH)
+    )
+    (product,) = result.products
+    assert product.capture is not None
+    assert (product.capture.status.value, product.capture.observed) == (status, observed), product.capture
+    assert reason in product.capture.reason
+
+
+@pytest.mark.parametrize(("variable", "status", "observed"), [(_TWO, "unknown", 4), (_TWO_CYCLIC, "complete", 6)])
+def test_build_adds_the_kept_rows_of_a_nested_generate_across_its_parents(
+    tmp_path: Path, variable: str, status: str, observed: int
+) -> None:
+    """Each of the two parents keeps three rows: the runtime count of the child is the sum, six."""
+    from datamimic_ce.authoring.bootstrap import create_authoring_application
+    from datamimic_ce.authoring.domain.requests import PROJECT_ENTRY_PATH, RunRequest
+
+    generate = f'<generate name="parents" count="2"><generate name="rows" {_KEEP}>{variable}</generate></generate>'
+    project = _project(tmp_path, generate)
+    xml = (project / "datamimic.xml").read_text(encoding="utf-8")
+    result = create_authoring_application(project, descriptor_path=PROJECT_ENTRY_PATH).dry_run(
+        RunRequest(xml=xml, descriptor_path=PROJECT_ENTRY_PATH)
+    )
+    child = {product.name: product for product in result.products}["rows"]
+    assert child.capture is not None
+    assert (child.capture.status.value, child.capture.observed) == (status, observed), child.capture
+
+
+def test_a_failed_assert_keeps_the_underrun_unknown_in_the_stopped_capture(tmp_path: Path) -> None:
+    """A failed assert stops the run and Build keeps the products that completed before it: their capture evidence
+    compares the emitted rows with the runtime count as on success."""
+    from datamimic_ce.authoring.bootstrap import create_authoring_application
+    from datamimic_ce.authoring.domain.requests import PROJECT_ENTRY_PATH, RejectedBuild
+
+    generate = (
+        f'<generate name="rows" {_KEEP}>{_TWO}</generate>'
+        '<generate name="gate" count="1"><key name="n" script="1"/>'
+        '<assert condition="this.n &gt; 1" message="stop here"/></generate>'
+    )
+    built = create_authoring_application(_project(tmp_path, generate), descriptor_path=PROJECT_ENTRY_PATH).build()
+    assert isinstance(built, RejectedBuild)
+    rows = {product.name: product for product in built.evidence}["rows"]
+    assert rows.capture is not None
+    assert (rows.capture.status.value, rows.capture.observed) == ("unknown", 2), rows.capture

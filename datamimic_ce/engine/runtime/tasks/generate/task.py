@@ -111,7 +111,9 @@ class GenerateTask(CommonSubTask):
 
     def _bounded(self, count: int | None, *, kept_rows: bool = False) -> int | None:
         """Refuse a runtime count above the bounded Authoring limit instead of truncating it. A count of the rows
-        that where= kept is a row count, not a descriptor value, so the error carries it for Build."""
+        that where= kept is a row count, not a descriptor value, so the error carries it for Build. An accepted count
+        is added to the statement: a source or generator that ends early stops the rows without an error, so Build
+        compares its capture with this total."""
         limit = self._statement.bounded_count_limit
         if count is not None and limit is not None and count > limit:
             error = task_config_error(
@@ -123,6 +125,8 @@ class GenerateTask(CommonSubTask):
             if kept_rows:
                 error.kept_rows = count
             raise error
+        if count is not None and limit is not None:
+            self._statement.bounded_rows += count
         return count
 
     def _warn_count_above_source(self, context: SetupContext | GenIterContext, count: int) -> None:

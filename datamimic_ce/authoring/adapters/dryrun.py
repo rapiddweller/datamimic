@@ -17,6 +17,7 @@ import tempfile
 import uuid
 from collections.abc import Callable, Iterator, Mapping, Sequence
 from contextlib import contextmanager, suppress
+from dataclasses import replace
 from enum import StrEnum
 from pathlib import Path, PurePosixPath
 
@@ -41,7 +42,7 @@ from datamimic_ce.authoring.domain.capture import (
 from datamimic_ce.authoring.domain.common import NonEmptyStrictStr, NonNegativeStrictInt, PositiveStrictInt
 from datamimic_ce.authoring.domain.rule_catalog import RuleSeverity
 from datamimic_ce.authoring.domain.xml_diagnostics import Diagnostic
-from datamimic_ce.engine.dsl.api import NAME_SEPARATOR, capture_product_name, resource_reader_scope
+from datamimic_ce.engine.dsl.api import NAME_SEPARATOR, GenerateStatement, capture_product_name, resource_reader_scope
 from datamimic_ce.engine.dsl.vocabulary.constants.attribute_constants import ATTR_COUNT
 from datamimic_ce.engine.io.contracts import SmokeExportRequest
 from datamimic_ce.errors import (
@@ -177,6 +178,12 @@ _CONTAINMENT_HINT = (
     "Bounded execution writes only new files inside its private workspace, never the workspace files it was "
     "checked against, and starts no process (#361). Deliver data "
     "through the model's targets, or use authoring run --allow-side-effects when the write is intended."
+)
+
+
+_UNDERRUN_REASON = (
+    "the captured rows differ from the count that the run resolved from where=, a count expression or a count range;"
+    " a non-cyclic variable source or a generator ended early"
 )
 
 
@@ -602,6 +609,7 @@ def neutralize_for_dry_run(
     allow_side_effects: bool,
     stripped_file_targets: _StrippedTargets | None = None,
     product_budgets: _ProductBudgets | None = None,
+    bounded_statements: dict[str, GenerateStatement] | None = None,
     descriptor_dir: Path | None = None,
     workspace_root: Path | None = None,
     includes_validated: bool = False,
@@ -809,6 +817,8 @@ def neutralize_for_dry_run(
                     and count_kind is not _CountBoundaryKind.DYNAMIC
                 ):
                     requested_per_parent = source_rows
+                if bounded_statements is not None:
+                    bounded_statements[name] = stmt
                 product_budgets[name] = _ProductBudget(
                     name=name,
                     parent_name=_parent_capture_name(stmt),
@@ -1226,14 +1236,31 @@ def _suppress_worker_stderr() -> Iterator[None]:
             os.close(null_stderr)
 
 
+def _check_runtime_counts(
+    budgets: _ProductBudgets, statements: dict[str, GenerateStatement], captured: _CapturedRows
+) -> None:
+    """A bound without a requested count (where=, a count expression, a range) proves a complete capture only when
+    the capture holds every row that the run resolved: a non-cyclic variable source or a generator that ends early
+    stops the rows without an error (GenerateWorker). A requested count is compared in _capture_evidence."""
+    for name, stmt in statements.items():
+        budget = budgets[name]
+        observed = len(captured[name]) if name in captured else 0
+        if budget.bounded_without_cap and budget.requested_per_parent is None and observed != stmt.bounded_rows:
+            budgets[name] = replace(budget, bounded_without_cap=False, reason=_UNDERRUN_REASON)
+
+
 def _stopped_capture(
-    capture: dict[str, list[object]] | None, budgets: _ProductBudgets, max_count: int
+    capture: dict[str, list[object]] | None,
+    budgets: _ProductBudgets,
+    statements: dict[str, GenerateStatement],
+    max_count: int,
 ) -> _WorkerSuccess | None:
     """The products a run completed before a failed <assert>. The engine captures an outermost generate only when
     it completes, so no product is partial. None means the products do not validate (an unsupported value or
     inconsistent provenance): Build then keeps nothing, reports the capture failure and evaluates no check."""
     try:
         rows = _validated_capture_rows(_project_capture_object_ids(capture or {}))
+        _check_runtime_counts(budgets, statements, rows)
         return _validated_worker_success(
             _WorkerSuccess(
                 rows,
@@ -1268,6 +1295,7 @@ def _run_engine_capture(
         from datamimic_ce.engine.runtime.contracts import RunRequest, RunSession
 
         budgets: _ProductBudgets = {}
+        statements: dict[str, GenerateStatement] = {}
         skipped: list[str] = []
         executed: list[str] = []
         stripped: _StrippedTargets | None = {} if smoke_export else None
@@ -1283,6 +1311,7 @@ def _run_engine_capture(
                 allow_side_effects=allow_side_effects,
                 stripped_file_targets=stripped,
                 product_budgets=budgets,
+                bounded_statements=statements,
                 descriptor_dir=path.parent,
                 workspace_root=workspace_root,
                 includes_validated=True,
@@ -1312,6 +1341,7 @@ def _run_engine_capture(
                 raise ValueError("runtime capture has no canonical product provenance")
             # The engine omits zero-row products; keep their explicit empty capture.
             raw_capture = {name: raw_capture.get(name, ()) for name in budgets}
+            _check_runtime_counts(budgets, statements, raw_capture)
             _validated_worker_success(
                 _WorkerSuccess(raw_capture, tuple(budgets.values()), (), SmokeExportCapture.not_requested()),
                 max_count=max_count,
@@ -1352,7 +1382,7 @@ def _run_engine_capture(
                 if cause_types:
                     object.__setattr__(err, "__cause__", ExternalFailureCause(cause_types[0], tuple(cause_types)))
             stopped_capture = (
-                _stopped_capture(session.capture_test_result(), budgets, max_count)
+                _stopped_capture(session.capture_test_result(), budgets, statements, max_count)
                 if session is not None
                 and isinstance(err, UserErrorBase)
                 and err.issue_code is IssueCode.TASK_ASSERT_FAILED
