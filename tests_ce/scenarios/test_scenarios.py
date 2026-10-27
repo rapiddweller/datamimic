@@ -128,6 +128,25 @@ def test_negative_is_rejected_with_named_diagnostic(
             _run(project)
 
 
+# Both quote styles; a separator other than the comma is not this guard's concern.
+_COMMA_SEPARATOR = re.compile(r"""(?:default)?[sS]eparator\s*=\s*(["']),\1""")
+
+
+def test_scenario_data_follows_the_project_data_standard() -> None:
+    """plugins/datamimic/skills/generate-test-data/references/project-structure.md: data files are *.ent.csv or
+    *.wgt.csv, separated by the default pipe. output/ is what a local datamimic run writes, not project data."""
+    found = []
+    for path in sorted(_ROOT.rglob("*")):
+        name = path.relative_to(_ROOT)
+        if "output" in name.parts or not path.is_file():
+            continue
+        if path.suffix == ".csv" and not path.name.endswith((".ent.csv", ".wgt.csv")):
+            found.append(f"{name}: a data file must be *.ent.csv or *.wgt.csv")
+        elif path.suffix == ".xml" and _COMMA_SEPARATOR.search(path.read_text(encoding="utf-8")):
+            found.append(f'{name}: separator="," overrides the default pipe separator')
+    assert not found, "\n".join(found)
+
+
 @pytest.mark.parametrize("escape", ["absolute", "parent"])
 def test_patch_outside_the_project_copy_is_refused(escape: str, tmp_path: Path) -> None:
     project = tmp_path / "variant"
