@@ -1,6 +1,6 @@
-<setup rngSeed="51110" defaultSeparator=",">
+<setup rngSeed="51110">
     <generate name="priced_orders" count="6" target="JSON">
-        <variable name="source_row" source="fixtures/orders.csv" distribution="ordered"/>
+        <variable name="source_row" source="fixtures/orders.ent.csv" distribution="ordered"/>
         <key name="order_id" script="source_row.order_id"/>
         <key name="customer_id" script="source_row.customer_id"/>
         <key name="total_cents" script="int(source_row.total_cents)"/>

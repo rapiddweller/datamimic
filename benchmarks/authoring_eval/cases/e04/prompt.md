@@ -1,4 +1,4 @@
-The file `fixtures/orders.csv` holds six orders. It is a comma-separated text file with a header row. Its columns are `order_id`, `customer_id`, `status` and `total_cents`.
+The file `fixtures/orders.ent.csv` holds six orders. It is a pipe-separated UTF-8 text file with a header row. Its columns are `order_id`, `customer_id`, `status` and `total_cents`.
 
 Write all six orders to a JSON file, as a dataset named `priced_orders`. Each JSON object has exactly these fields:
 

@@ -1,7 +1,7 @@
 # e07 order report
 
 Hidden from the subject. The subject gets `prompt.md` and `fixtures/` only.
-The case reads two CSV files, joins them, applies three rules and writes one JSON dataset.
+The case reads two entity files (`.ent.csv`, pipe-separated, UTF-8), joins them, applies three rules and writes one JSON dataset.
 `fixtures_changed/` holds other customers and orders with the same columns. The oracle runs the project with them too, so typed rows fail.
 
 ## Prompt to check
@@ -11,7 +11,7 @@ The case reads two CSV files, joins them, applies three rules and writes one JSO
 | the project is ready (brief) | `build_ready` |
 | a JSON file for `order_report`, exact field set, all rules below | `output_rows:order_report:fixtures`, `output_rows:order_report:fixtures_changed` |
 | only orders with `amount_cents` 1000 or more (threshold) | both `output_rows` |
-| `customer_name` from `customers.csv`, `UNKNOWN` for an unknown customer (lookup with a default) | both `output_rows` |
+| `customer_name` from `customers.ent.csv`, `UNKNOWN` for an unknown customer (lookup with a default) | both `output_rows` |
 | `net_cents`: 10 % for `GOLD`, 5 % for `SILVER`, 0 otherwise, discount rounded down | both `output_rows` |
 | `campaign` `YES` from 2026-03-01 to 2026-03-31, both days included (date window) | both `output_rows` |
 | do not change the two files | `fixtures_unchanged` |
@@ -31,6 +31,7 @@ Each fixture set has a row on each side of each rule:
 | one customer, several orders | C-101, C-102, C-104 | C-201, C-202, C-204 |
 | tiers | GOLD, SILVER, BRONZE, empty | GOLD, SILVER, BRONZE, empty, GOLDEN (no discount) |
 | rounding | 1999 GOLD: 1800, not 1799 | 2999 GOLD: 2700, not 2699 |
+| UTF-8 | `Cedar Müller` (kept) | `Zoë Freight` (kept) |
 
 The two sets keep different numbers of orders (13 and 11) and different numbers of kept orders (10 and 9).
 
@@ -45,11 +46,12 @@ Build captures 11 rows, in the cap of 1000. The dynamic count stops Build from d
 
 The `e07` variants and cheats in `test_authoring_eval.py` cover these classes:
 
-- valid: `reference/` with both fixture sets
+- valid: `reference/` with both fixture sets; another style (`<iterate>` over the orders, lookups by list comprehension)
+- file standard: pipe-separated `.ent.csv` with a header, read without a separator attribute; a non-ASCII name; an empty tier
 - threshold: min - 1, min, min + 1 (the fixture rows 999, 1000, 1001), 1000 excluded
 - no filter, flat copy
 - duplicate: each order twice
-- type: CSV text compared as text
+- type: a source text compared as text
 - missing customer
 - tiers: empty, other, silver, a prefix match (`GOLDEN`)
 - rounding

@@ -1,8 +1,8 @@
-<setup rngSeed="40961" defaultSeparator=",">
+<setup rngSeed="40961">
     <!-- A file source has no row filter: this one row holds both files, and order_report takes the kept orders. -->
     <generate name="report_input" count="1" target="ConsoleExporter">
-        <variable name="customers" source="fixtures/customers.csv" storage="data" distribution="ordered"/>
-        <variable name="orders" source="fixtures/orders.csv" storage="data" distribution="ordered"/>
+        <variable name="customers" source="fixtures/customers.ent.csv" storage="data" distribution="ordered"/>
+        <variable name="orders" source="fixtures/orders.ent.csv" storage="data" distribution="ordered"/>
         <variable name="kept" script="[order for order in orders if int(order.amount_cents) &gt;= 1000]"/>
         <!-- One row for each kept order. The keys copy only the report fields; a source row would add every column. -->
         <generate name="order_report" count="{len(kept)}" target="JSON">

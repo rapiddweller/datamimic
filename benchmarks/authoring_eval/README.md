@@ -36,9 +36,9 @@ Raw transcripts and run directories stay outside the repository.
 | e05 | simple | prices | closed value set, two ranges, one rule across two fields; one constant value per field passes too |
 | e02 | complex | parent and child | exact count per parent, a parent key in each child, unique id over all children; a flat project passes too |
 | e03 | complex | parent and child | the exact 12 slot rows of a prescribed `slot_id` formula, with no helper field; a literal table of the rows passes too |
-| e04 | complex | CSV to JSON | comma separator, text to number, derived field, field subset, file output, rows that come from the input |
+| e04 | complex | entity file to JSON | a pipe-separated UTF-8 `.ent.csv` file with a header, a non-ASCII value, text to number, derived field, field subset, file output, rows that come from the input |
 | e06 | complex | staffing register | five tables, foreign keys, counts per parent, a unique pair, a closed set, a derived field, an assignment that needs an employment of the same person, company and function and a license valid on its date (both days count, no expiry is never valid) |
-| e07 | complex | two CSV files to JSON | a join with a default, a threshold filter, a tier discount rounded down, a date window with both days included, an exact field subset, rows that come from the input |
+| e07 | complex | two entity files to JSON | pipe-separated UTF-8 `.ent.csv` files with a non-ASCII name, a join with a default, a threshold filter, a tier discount rounded down, a date window with both days included, an exact field subset, rows that come from the input |
 
 ## Oracle checks
 
@@ -82,12 +82,12 @@ Limits of the oracle:
 - e06: a project that types all 124 consistent rows passes. The oracle proves the values, not the generation, as for e03.
 - The capture writes a value that is not JSON as its text. A Python `date` becomes `"2026-03-01"` and passes `date_range`; a `datetime` becomes `"2026-03-01 00:00:00"` and fails it. The prompt asks for a text, and the oracle cannot see that difference.
 - `row_exists_in` proves that a matching row exists, not that the project intended that row: a project can match by chance. With the case seed, the cheat with random foreign keys fails: its 20 random assignments do not all match an employment.
-- e04 proves that the rows come from the CSV with a second CSV of other values (`fixtures_changed/`). It does not prove how the project reads the file.
-  A project that reads its own copy of the CSV at another path fails that check. The prompt names `fixtures/orders.csv`, so this is intended.
+- e04 proves that the rows come from the input file with a second file of other values (`fixtures_changed/`). It does not prove how the project reads the file.
+  A project that reads its own copy of the file at another path fails that check. The prompt names `fixtures/orders.ent.csv`, so this is intended.
 - e07 proves the same with `fixtures_changed/`, which also has another number of orders and of kept orders. The oracle reads only the `order_report` files, so a helper product may write another file.
 - The engine names a product nested two levels deep `inner|leaf`. The capture names it `leaf`, as Build does. Build refuses two products with the same name. A top-level name with `|` is cut the same way; that changes the name, not the rows. Two names with the same last segment make Build raise, and the oracle then fails `build_ready`.
 - The answer key is on disk: in this repository, in other checkouts of it, and in the transcripts of the sessions that wrote the cases (`~/.claude/projects`).
-  The sandbox blocks Bash reads of this checkout and of `~/.claude/projects` only. So e04 proves that the rows come from the CSV only for a subject that does not search the disk. Read the transcript.
+  The sandbox blocks Bash reads of this checkout and of `~/.claude/projects` only. So e04 proves that the rows come from the input file only for a subject that does not search the disk. Read the transcript.
 - `repeatable` finds a difference that two hash seeds expose. The engine fixes the clock and the random generators when the seed is set, so a script cannot use them to make a seeded run differ.
 
 ## Protocol

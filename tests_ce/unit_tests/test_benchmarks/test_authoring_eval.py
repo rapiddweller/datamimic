@@ -70,6 +70,9 @@ _ACCEPTANCE = "acceptance/build.json"
 # Under PYTHONHASHSEED=1 this is 0 and under 2 it is 1 (CPython 3.11), which is what the oracle sets for its two runs.
 _BOTH_OUTPUTS = frozenset({"output_rows:priced_orders:fixtures", "output_rows:priced_orders:fixtures_changed"})
 
+# A run that fails: no output file, no captured rows, and Build stops too.
+_E04_RUN_FAILS = _BOTH_OUTPUTS | {"build_ready", "repeatable"}
+
 # Build and the second oracle run both replay the project under another hash seed.
 _HASH_ORDER = frozenset({"build_ready", "repeatable"})
 
@@ -210,6 +213,20 @@ _BROKEN = [
         },
         _BOTH_OUTPUTS,
     ),
+    # the file is pipe-separated: with a comma, each line is one column and the row has no order_id
+    Broken(
+        "e04",
+        "comma_separator",
+        {_XML: [('source="fixtures/orders.ent.csv"', 'source="fixtures/orders.ent.csv" separator=","')]},
+        _E04_RUN_FAILS,
+    ),
+    # file missing: the project reads a file that the case does not supply
+    Broken(
+        "e04",
+        "file_missing",
+        {_XML: [('source="fixtures/orders.ent.csv"', 'source="fixtures/orders.csv"')]},
+        _E04_RUN_FAILS,
+    ),
     # a second product named like a chunk of the first holds the right rows; the first one writes a CSV file only
     Broken(
         "e04",
@@ -219,7 +236,7 @@ _BROKEN = [
                 (
                     '<generate name="priced_orders" count="6" target="JSON">',
                     '<generate name="priced_orders" count="6" target="CSV">\n'
-                    '        <variable name="source_row" source="fixtures/orders.csv" distribution="ordered"/>\n'
+                    '        <variable name="source_row" source="fixtures/orders.ent.csv" distribution="ordered"/>\n'
                     '        <key name="order_id" script="source_row.order_id"/>\n'
                     "    </generate>\n"
                     '    <generate name="priced_orders_0" count="6" target="JSON">',
@@ -322,7 +339,7 @@ _BROKEN = [
     Broken(
         "e04",
         "edited_fixture",
-        {"fixtures/orders.csv": [("O-100,C-10,OPEN,1200", "O-100,C-10,CLOSED,1200")]},
+        {"fixtures/orders.ent.csv": [("O-100|C-10|OPEN|1200", "O-100|C-10|CLOSED|1200")]},
         frozenset({"fixtures_unchanged"}),
     ),
     # --- the depots ---
@@ -679,7 +696,7 @@ _BROKEN = [
     # --- e07: one variant per rule; every rule has a boundary row in both fixture sets ---
     Broken("e07", "no_threshold", {_XML: [(_E07_KEPT, "list(orders)")]}, _E07_OUTPUTS_AND_BUILD),
     Broken("e07", "threshold_excludes_1000", {_XML: [("&gt;= 1000", "&gt; 1000")]}, _E07_OUTPUTS_AND_BUILD),
-    # CSV values are texts: '999' >= '1000' is true
+    # source values are texts: '999' >= '1000' is true
     Broken(
         "e07",
         "threshold_compared_as_text",
@@ -751,7 +768,7 @@ _BROKEN = [
     Broken(
         "e07",
         "edited_fixture",
-        {"fixtures/customers.csv": [("C-104,Dune Parts,GOLD,PT", "C-104,Dune Parts,SILVER,PT")]},
+        {"fixtures/customers.ent.csv": [("C-104|Dune Parts|GOLD|PT", "C-104|Dune Parts|SILVER|PT")]},
         frozenset({"fixtures_unchanged"}),
     ),
     Broken("e07", "missing_seed", {_XML: [(' rngSeed="40961"', "")]}, frozenset({"seed_is"})),  # no random draw
@@ -766,6 +783,13 @@ _BROKEN = [
 
 # Variants that change the method but not the values; the oracle must pass them.
 _EQUIVALENT = [
+    # order: without distribution="ordered" the read is shuffled, and output_rows ignores the row order
+    Broken(
+        "e04",
+        "orders_read_shuffled",
+        {_XML: [(' source="fixtures/orders.ent.csv" distribution="ordered"', ' source="fixtures/orders.ent.csv"')]},
+        frozenset(),
+    ),
     # min: the work date is the first day of the license
     Broken(
         "e06",
@@ -795,8 +819,8 @@ _EQUIVALENT = [
         {
             _XML: [
                 (
-                    'name="orders" source="fixtures/orders.csv" storage="data" distribution="ordered"',
-                    'name="orders" source="fixtures/orders.csv" storage="data"',
+                    'name="orders" source="fixtures/orders.ent.csv" storage="data" distribution="ordered"',
+                    'name="orders" source="fixtures/orders.ent.csv" storage="data"',
                 )
             ]
         },
@@ -842,7 +866,7 @@ _CHEATS = {
 </setup>""",
         frozenset({"exact_rows:slots"}),
     ),
-    # the six rows typed into scripts: the CSV is never read
+    # the six rows typed into scripts: the input file is never read
     ("e04", "typed_rows"): (
         _typed_rows("e04", "priced_orders"),
         frozenset({"output_rows:priced_orders:fixtures_changed"}),
@@ -881,30 +905,65 @@ _CHEATS = {
 </setup>""",
         frozenset({"unique_together:employments.person_id+company_id", "row_exists_in:assignments->employments"}),
     ),
-    # the kept rows typed into scripts: the CSV files are never read
+    # the kept rows typed into scripts: the input files are never read
     ("e07", "typed_rows"): (
         _typed_rows("e07", "order_report"),
         frozenset({"output_rows:order_report:fixtures_changed"}),
     ),
     # a flat copy of the orders file: every order and every column
     ("e07", "flat_copy"): (
-        """<setup rngSeed="40961" defaultSeparator=",">
-    <generate name="order_report" source="fixtures/orders.csv" distribution="ordered" target="JSON"/>
+        """<setup rngSeed="40961">
+    <generate name="order_report" source="fixtures/orders.ent.csv" distribution="ordered" target="JSON"/>
 </setup>""",
         _E07_OUTPUTS,
     ),
 }
 
 
-@pytest.mark.parametrize(("case", "name"), sorted(_CHEATS), ids="-".join)
-def test_cheat_project_fails_the_oracle(case: str, name: str, tmp_path: Path) -> None:
-    xml, fails = _CHEATS[case, name]
+# Whole valid projects in another style than the reference; the oracle must pass them.
+_OTHER_STYLES = {
+    # one report row under each order row, only for a kept order; the lookups are list comprehensions
+    "e07": """<setup rngSeed="40961">
+    <iterate name="orders" source="fixtures/orders.ent.csv" distribution="ordered" target="ConsoleExporter">
+        <variable name="customers" source="fixtures/customers.ent.csv" storage="data" distribution="ordered"/>
+        <variable name="names" script="[c.name for c in customers if c.customer_id == customer_id]"/>
+        <variable name="percents" script="[{'GOLD': 10, 'SILVER': 5}.get(c.tier, 0)
+            for c in customers if c.customer_id == customer_id]"/>
+        <variable name="amount" script="int(amount_cents)"/>
+        <variable name="report" script="{'order_id': order_id, 'customer_id': customer_id,
+            'customer_name': names[0] if names else 'UNKNOWN',
+            'net_cents': amount - amount * (percents[0] if percents else 0) // 100,
+            'campaign': 'YES' if '2026-03-01' &lt;= order_date &lt;= '2026-03-31' else 'NO'}"/>
+        <generate name="order_report" count="{1 if amount &gt;= 1000 else 0}" target="JSON">
+            <key name="order_id" script="parent.report['order_id']"/>
+            <key name="customer_id" script="parent.report['customer_id']"/>
+            <key name="customer_name" script="parent.report['customer_name']"/>
+            <key name="net_cents" script="parent.report['net_cents']"/>
+            <key name="campaign" script="parent.report['campaign']"/>
+        </generate>
+    </iterate>
+</setup>""",
+}
+
+
+def _whole_project(tmp_path: Path, case: str, xml: str) -> Path:
     project = _start_dir(tmp_path, case)
     (project / "acceptance").mkdir(parents=True)
     (project / _XML).write_text(xml, encoding="utf-8")
     (project / _ACCEPTANCE).write_text(_CHEAT_ACCEPTANCE, encoding="utf-8")
+    return project
 
-    assert _failed(project, case) == fails
+
+@pytest.mark.parametrize(("case", "name"), sorted(_CHEATS), ids="-".join)
+def test_cheat_project_fails_the_oracle(case: str, name: str, tmp_path: Path) -> None:
+    xml, fails = _CHEATS[case, name]
+
+    assert _failed(_whole_project(tmp_path, case, xml), case) == fails
+
+
+@pytest.mark.parametrize("case", sorted(_OTHER_STYLES))
+def test_a_valid_project_in_another_style_passes(case: str, tmp_path: Path) -> None:
+    assert _failed(_whole_project(tmp_path, case, _OTHER_STYLES[case]), case) == set()
 
 
 def _failed(project: Path, case: str) -> set[str]:
@@ -953,7 +1012,7 @@ def test_broken_variant_fails_exactly_the_expected_checks(broken: Broken, tmp_pa
 
 def test_a_deleted_fixture_fails_although_the_oracle_supplies_it(tmp_path: Path) -> None:
     project = _reference(tmp_path, "e04")
-    (project / "fixtures" / "orders.csv").unlink()
+    (project / "fixtures" / "orders.ent.csv").unlink()
 
     assert _failed(project, "e04") == {"fixtures_unchanged"}
 
@@ -1148,6 +1207,19 @@ def test_rows_that_json_cannot_encode_fail_the_check_but_do_not_crash() -> None:
 
     assert ExactRows(kind="exact_rows", product="p", rows=[{"a": 1}]).failure(observed) is not None
     assert Unique(kind="unique", product="p", field="b").failure(observed) is not None
+
+
+@pytest.mark.parametrize("case", [case for case in _ALL_CASES if (CASES / case / "fixtures").is_dir()])
+def test_case_fixtures_follow_the_project_file_standard(case: str) -> None:
+    """Business data is ``*.ent.csv`` and a distribution ``*.wgt.csv``: UTF-8 without a BOM, each line pipe-separated.
+    The CE default separator is the pipe, so the reference names no separator."""
+    for path in (path for path in (CASES / case).glob("fixtures*/**/*") if path.is_file()):
+        assert path.name.endswith((".ent.csv", ".wgt.csv")), path
+        raw = path.read_bytes()
+        assert not raw.startswith(b"\xef\xbb\xbf"), path
+        assert all("|" in line for line in raw.decode("utf-8").splitlines()), path
+    for xml in (CASES / case / "reference").rglob("*.xml"):
+        assert "separator" not in xml.read_text(encoding="utf-8").casefold(), xml
 
 
 def test_every_case_has_broken_variants() -> None:
