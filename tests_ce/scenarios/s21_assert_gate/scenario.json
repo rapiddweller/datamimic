@@ -47,6 +47,8 @@
      "patch": {"file": "datamimic.xml", "old": "<assert condition=\"this.qty &lt;= 4\" message=\"A line holds at most 4 items\"/>", "new": "<assert condition=\"this.qty &lt;= 0\" message=\"A line holds at most 4 items; A line holds at most 4 items; A line holds at most 4 items; A line holds at most 4 items; A line holds at most 4 items; A line holds at most 4 items; A line holds at most.\"/>"}},
     {"name": "invalid_value_in_a_kept_product", "diagnostic": "child_execution", "run_error": "A line holds at most 4 items",
      "patch": {"file": "data/entity/items.json", "old": "{\"sku\": \"S1\", \"qty\": 1}", "new": "{\"sku\": \"S1\", \"qty\": 1e309}"}},
+    {"name": "fails_in_first_product", "diagnostic": "assert_failed", "expected": "An item is never in stock", "run_error": "An item is never in stock",
+     "patch": {"file": "datamimic.xml", "old": "<key name=\"sku\" script=\"this.sku\"/>", "new": "<key name=\"sku\" script=\"this.sku\"/><assert condition=\"this.qty &lt; 0\" message=\"An item is never in stock\"/>"}},
     {"name": "assert_and_failing_expectation", "diagnostic": "range", "run_error": "A line holds at most 4 items",
      "patch": {"file": "data/entity/items.json", "old": "{\"sku\": \"S1\", \"qty\": 1}", "new": "{\"sku\": \"S1\", \"qty\": 9}"}}
   ]

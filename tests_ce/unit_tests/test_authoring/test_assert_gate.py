@@ -175,6 +175,18 @@ def test_a_kept_product_that_build_cannot_capture_leaves_every_check_unevaluated
     )
 
 
+def test_an_assert_in_the_first_product_keeps_a_valid_empty_capture(tmp_path: Path) -> None:
+    # No product completed, so the empty stopped capture is valid: no child_execution may claim a lost capture.
+    result = _build(tmp_path, "fails_in_first_product")
+
+    assert _codes(result) == ["assert_failed", "not_executed"]
+    assert result.evidence == ()
+    [skipped] = [item for item in result.diagnostics if str(item.code) == "not_executed"]
+    assert skipped.message.startswith(
+        "The run stopped at a failed <assert>. Build kept no capture of these products: items, lines, parts, stock."
+    )
+
+
 def test_an_assert_tag_over_several_lines_reports_the_line_where_it_ends(tmp_path: Path) -> None:
     # libxml2 gives an element the line of its start tag's end; the runtime and Build both read that line.
     result = _build(tmp_path, "assert_tag_spans_lines")
