@@ -6,7 +6,7 @@
 
 Each step reads the policy through ``read_policy``. The model calls two functions with prepared rows and the
 policy; none reads a file: ``suitable_people`` (R1 to R3, once per position) and ``assign_seats`` (R4 to R6, once
-per run). The output check of step 4 is XML.
+per run). The output check of step 90 is XML.
 """
 
 from collections import Counter

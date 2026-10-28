@@ -134,17 +134,23 @@ _NAME = "a data file must be *.ent.csv or *.wgt.csv"
 _WEIGHTING = "a *.wgt.csv file must sit in data/weighting/"
 _ENTITY = "an *.ent.csv file must sit in data/entity/ or data/fixtures/"
 _SEPARATOR = 'separator="," overrides the default pipe separator'
+_PARAMETERS = "a *.properties file must sit in conf/"
+_DATA_FOLDER = "a file in data/ must sit in data/entity/, data/weighting/ or data/fixtures/"
+_STEP = "a step must be model/<nn>_<activity>.xml, or delivery/<nn>_<target>.xml with nn 90 to 99"
+_STEP_NAME = {("model",): re.compile(r"\d\d_"), ("delivery",): re.compile(r"9\d_")}
 
 
 def _data_standard_findings(root: Path) -> list[str]:
-    """plugins/datamimic/skills/generate-test-data/references/project-structure.md: checks the data file names, their
-    folders and the comma separator. <scenario>/output/ is what a local datamimic run writes, not project data."""
+    """plugins/datamimic/skills/generate-test-data/references/project-structure.md: checks the data file names and
+    folders, the parameter folder, the step names and the comma separator. One finding per file: the first broken
+    rule. <scenario>/output/ is what a local datamimic run writes, not project data."""
     found = []
     for path in sorted(root.rglob("*")):
         name = path.relative_to(root)
         if name.parts[1:2] == ("output",) or not path.is_file():
             continue
         folder = name.parent.parts[1:]
+        step_name = _STEP_NAME.get(folder)
         if path.suffix == ".csv" and not path.name.endswith((".ent.csv", ".wgt.csv")):
             found.append(f"{name}: {_NAME}")
         elif path.suffix == ".csv" and ".wgt" in path.suffixes:  # x.wgt.ent.csv is a weighted entity file
@@ -152,8 +158,14 @@ def _data_standard_findings(root: Path) -> list[str]:
                 found.append(f"{name}: {_WEIGHTING}")
         elif path.suffix == ".csv" and folder not in {("data", "entity"), ("data", "fixtures")}:
             found.append(f"{name}: {_ENTITY}")
+        elif path.suffix == ".properties" and folder != ("conf",):
+            found.append(f"{name}: {_PARAMETERS}")
+        elif folder[:1] == ("data",) and folder[1:2] not in {("entity",), ("weighting",), ("fixtures",)}:
+            found.append(f"{name}: {_DATA_FOLDER}")
         elif path.suffix == ".xml" and _COMMA_SEPARATOR.search(path.read_text(encoding="utf-8")):
             found.append(f"{name}: {_SEPARATOR}")
+        elif path.suffix == ".xml" and step_name is not None and not step_name.match(path.name):
+            found.append(f"{name}: {_STEP}")
     return found
 
 
@@ -179,6 +191,22 @@ def test_scenario_data_follows_the_project_data_standard() -> None:
         ("s99/data/output/x.csv", "a,b\n", _NAME),
         ("s99/datamimic.xml", '<setup defaultSeparator=","/>', _SEPARATOR),
         ("s99/datamimic.xml", "<setup><generate separator = ','/></setup>", _SEPARATOR),
+        ("s99/conf/base.properties", "a=1\n", None),
+        ("s99/data/entity/x.json", "[]\n", None),
+        ("s99/model/10_x.xml", "<setup/>", None),
+        ("s99/delivery/90_x.xml", "<setup/>", None),
+        ("s99/delivery/99_x.xml", "<setup/>", None),
+        ("s99/data/x.properties", "a=1\n", _PARAMETERS),
+        ("s99/x.properties", "a=1\n", _PARAMETERS),
+        ("s99/data/x.json", "[]\n", _DATA_FOLDER),
+        ("s99/data/other/x.json", "[]\n", _DATA_FOLDER),
+        ("s99/model/x.xml", "<setup/>", _STEP),
+        ("s99/model/1_x.xml", "<setup/>", _STEP),
+        ("s99/model/100_x.xml", "<setup/>", _STEP),
+        ("s99/model/_x.xml", "<setup/>", _STEP),
+        ("s99/model/ab_x.xml", "<setup/>", _STEP),
+        ("s99/delivery/89_x.xml", "<setup/>", _STEP),
+        ("s99/delivery/100_x.xml", "<setup/>", _STEP),
     ],
 )
 def test_data_standard_guard_names_the_one_broken_rule(

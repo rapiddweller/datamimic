@@ -81,7 +81,7 @@ def test_an_included_step_keeps_every_product_before_it(tmp_path: Path) -> None:
     result = _build(tmp_path, "fails_in_included_step")
 
     [failed] = [item for item in result.diagnostics if str(item.code) == "assert_failed"]
-    assert failed.path == ("include", "model/stock.xml", "assert", "line", 4)
+    assert failed.path == ("include", "model/10_stock.xml", "assert", "line", 4)
     assert [product.name for product in result.evidence] == ["items", "lines", "parts"]
     # Only the two checks on the stock product stay unevaluated; the checks on the earlier products passed.
     assert len(_not_evaluated(result)) == 2
@@ -167,7 +167,7 @@ def test_a_kept_product_that_build_cannot_capture_leaves_every_check_unevaluated
     assert _codes(result) == ["assert_failed", "child_execution", "not_executed"]
     assert result.evidence == ()
     # The failure envelope, not the dropped capture, carries the read files.
-    assert "data/items.json" in _artifact(result)
+    assert "data/entity/items.json" in _artifact(result)
     [skipped] = [item for item in result.diagnostics if str(item.code) == "not_executed"]
     assert skipped.message == (
         "The run stopped at a failed <assert>. Build kept no capture of these products: items, lines, parts, stock. "
@@ -280,7 +280,7 @@ def test_the_review_artifact_binds_the_files_the_stopped_run_read(tmp_path: Path
     assert isinstance(ready, ReadyBuild)
     first = _build(tmp_path / "first", "fails_at_middle_row")
     project = _copy(tmp_path / "second", "fails_at_middle_row")
-    items = project / "data" / "items.json"
+    items = project / "data" / "entity" / "items.json"
     # A byte that no assert or check reads: the run stops at the same row with the same diagnostics.
     items.write_text(items.read_text(encoding="utf-8").replace('"S1"', '"S9"'), encoding="utf-8")
     second = create_authoring_application(project, descriptor_path=PROJECT_ENTRY_PATH).build()
@@ -288,8 +288,8 @@ def test_the_review_artifact_binds_the_files_the_stopped_run_read(tmp_path: Path
 
     assert [item.model_dump() for item in second.diagnostics] == [item.model_dump() for item in first.diagnostics]
     assert set(_artifact(first)) == set(_artifact(ready))
-    assert _artifact(second)["data/items.json"] == sha256(items.read_bytes()).hexdigest()
-    assert _artifact(first)["data/items.json"] != _artifact(second)["data/items.json"]
+    assert _artifact(second)["data/entity/items.json"] == sha256(items.read_bytes()).hexdigest()
+    assert _artifact(first)["data/entity/items.json"] != _artifact(second)["data/entity/items.json"]
 
 
 def _stopped_project(tmp_path: Path) -> Path:
