@@ -1,0 +1,11 @@
+<setup rngSeed="31">
+    <!-- A lookup (a join): each account reads the row of its branch from a second file. -->
+    <generate name="account_view" source="data/entity/accounts.ent.csv" distribution="ordered" columns="account_id, branch_id">
+        <!-- storage="data" holds every row of the file, the same list in each record; a variable is no output field.
+             branch is None when no branch row has the key. Both keys are file text. -->
+        <variable name="branches" source="data/entity/branches.ent.csv" storage="data" distribution="ordered"/>
+        <variable name="branch" script="{b.branch_id: b for b in branches}.get(branch_id)"/>
+        <key name="city" script="branch.city if branch else 'UNKNOWN'"/>
+        <key name="region" script="(branch.region or 'NONE') if branch else 'UNKNOWN'"/>
+    </generate>
+</setup>

@@ -42,11 +42,18 @@ from datamimic_ce.authoring.domain.capture import (
 from datamimic_ce.authoring.domain.common import NonEmptyStrictStr, NonNegativeStrictInt, PositiveStrictInt
 from datamimic_ce.authoring.domain.rule_catalog import RuleSeverity
 from datamimic_ce.authoring.domain.xml_diagnostics import Diagnostic
-from datamimic_ce.engine.dsl.api import NAME_SEPARATOR, GenerateStatement, capture_product_name, resource_reader_scope
+from datamimic_ce.engine.dsl.api import (
+    ATTR_WHERE,
+    NAME_SEPARATOR,
+    GenerateStatement,
+    capture_product_name,
+    resource_reader_scope,
+)
 from datamimic_ce.engine.dsl.vocabulary.constants.attribute_constants import ATTR_COUNT
 from datamimic_ce.engine.io.contracts import SmokeExportRequest
 from datamimic_ce.errors import (
     GUIDANCE_COUNT_SCOPE,
+    GUIDANCE_WHERE_SCOPE,
     DomainError,
     ErrorCode,
     ExternalFailureCause,
@@ -202,11 +209,14 @@ def _runtime_hint(err: Exception) -> str:
             if current.issue_code is IssueCode.TASK_EXPRESSION_EVAL_FAILED:
                 if isinstance(current.__cause__, PermissionError):
                     return _CONTAINMENT_HINT
-                if current.location is None or current.location.attribute != ATTR_COUNT:
-                    return _SCOPE_HINT
+                attribute = None if current.location is None else current.location.attribute
                 # Only a failed name lookup is a scope problem; 1/0 or int('text') in a count is not.
                 named = isinstance(current.__cause__, NameError | AttributeError)
-                return GUIDANCE_COUNT_SCOPE if named else issue.resolution
+                if attribute == ATTR_COUNT:
+                    return GUIDANCE_COUNT_SCOPE if named else issue.resolution
+                if attribute == ATTR_WHERE:
+                    return GUIDANCE_WHERE_SCOPE if named else issue.resolution
+                return _SCOPE_HINT
             if isinstance(current, TaskConfigError) and current.kept_rows is not None:
                 return _KEPT_ROWS_HINT
             return issue.guidance or issue.resolution

@@ -10,8 +10,13 @@ from functools import lru_cache
 from typing import Protocol, TypeGuard
 
 from datamimic_ce.engine.dsl.api import ATTR_WHERE, EL_GENERATE
-from datamimic_ce.engine.runtime.scripting.expression_globals import NON_VALUE_TYPES, row_expression_globals
+from datamimic_ce.engine.runtime.scripting.expression_globals import (
+    NON_VALUE_TYPES,
+    UNOFFERED_BUILTINS,
+    row_expression_globals,
+)
 from datamimic_ce.errors import (
+    GUIDANCE_WHERE_SCOPE,
     DescriptorLocation,
     DomainError,
     IssueCode,
@@ -111,6 +116,13 @@ def _written_nodes(expression: str) -> tuple[ast.AST, ...]:
         return ()
 
 
+def _called(nodes: tuple[ast.AST, ...], name: str) -> bool:
+    """A bare builtin name such as id can be an ancestor field that does not resolve; only a call is the builtin."""
+    return any(
+        isinstance(node, ast.Call) and isinstance(node.func, ast.Name) and node.func.id == name for node in nodes
+    )
+
+
 def _lookup_failure(error: NameError | AttributeError, nodes: tuple[ast.AST, ...]) -> str:
     """Name the missing name only when the expression text holds it: a called function can raise a name built
     from data, and a diagnostic never shows a value."""
@@ -198,6 +210,13 @@ def evaluate_python(
         raise
     except (NameError, AttributeError) as error:
         nodes = _written_nodes(shown)
+        # Only a name the expression text holds is shown; a builtin name is no descriptor value.
+        if isinstance(error, NameError) and error.name in UNOFFERED_BUILTINS and _called(nodes, error.name):
+            raise task_config_error(
+                code=IssueCode.TASK_EXPRESSION_BUILTIN_UNAVAILABLE,
+                expr=diagnostic,
+                builtin=error.name,
+            ) from error
         # A missing name is never the replaced name, and only `replaced.missing` blames the replacement.
         receivers = (
             []
@@ -332,6 +351,16 @@ class WhereCondition:
         try:
             result = evaluate_python(self._where, self._globals, names, diagnostic_expression=ATTR_WHERE)
         except UserErrorBase as error:
+            cause = error.__cause__
+            if error.issue_code is IssueCode.TASK_EXPRESSION_EVAL_FAILED and isinstance(
+                cause, NameError | AttributeError
+            ):
+                raise task_config_error(
+                    code=IssueCode.TASK_EXPRESSION_EVAL_FAILED,
+                    expr=ATTR_WHERE,
+                    error=f"{_lookup_failure(cause, _written_nodes(self._where))}: {GUIDANCE_WHERE_SCOPE}",
+                    location=self._location,
+                ) from cause
             if error.location is None:
                 error.location = self._location
             raise

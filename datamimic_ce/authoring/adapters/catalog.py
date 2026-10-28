@@ -46,6 +46,7 @@ from datamimic_ce.authoring.domain.reference import (
     ReferenceResult,
 )
 from datamimic_ce.authoring.domain.requests import BuildRequestV5, ReferenceRequest, ReferenceTopic
+from datamimic_ce.errors import FILE_LOOKUP_PATTERN
 
 if TYPE_CHECKING:
     from datamimic_ce.authoring.ports import DmJsonDescriptorContract
@@ -241,7 +242,9 @@ class CeDslCatalog:
                         "Author DM JSON, compile to XML, and declare expectations in each Build. "
                         "Codec support, parser validity, bounded evidence and external delivery are separate claims. "
                         "Project data files (*.ent.csv, *.wgt.csv): "
-                        "datamimic authoring reference --topic learning --name data_files."
+                        "datamimic authoring reference --topic learning --name data_files. "
+                        "A row of a second file by a key (a join): "
+                        "datamimic authoring reference --topic learning --name lookup."
                     ),
                     next_topics=tuple(topic for topic in ReferenceTopic if topic != ReferenceTopic.OVERVIEW),
                 )
@@ -364,10 +367,25 @@ class CeDslCatalog:
                             "proves that a column is not in the output. A filter that reads parent. or setup names "
                             'needs the older form: read the file with <variable name="row" source="..." '
                             'distribution="ordered"/> in a generate whose count is the number of data rows, and copy '
-                            "each column with a key script such as row.order_id. Build, authoring run and smoke "
+                            "each column with a key script such as row.order_id. A row of another file with the key "
+                            "of the current row is a lookup, not a filter: read --topic learning --name lookup. "
+                            "Build, authoring run and smoke "
                             "export write no file into the project; only datamimic run datamimic.xml writes a file "
                             "target, to output/<exportUri>/<entity>.<ext> beside datamimic.xml (without exportUri, "
                             "a new task id directory for each run)."
+                        ),
+                    ),
+                    AuthoringLearningReference(
+                        name="lookup",
+                        path="tests_ce/scenarios/s31_file_lookup",
+                        description=(
+                            "A lookup (a join) reads the row of a second file that has the key of the current "
+                            f'record. {FILE_LOOKUP_PATTERN} storage="data" holds the list of all rows, the same '
+                            "list in each record. The keys of both files are text: compare text with text; int() on "
+                            'one side finds no row. A <variable> is not an output field. A <nestedKey type="list" '
+                            "source=...> also holds the rows, but it writes them into every output row; a nested "
+                            "<generate> is a product of its own, not a lookup. <variable> has no where=, where= on a "
+                            "<generate> reads only the current file row, and scripts cannot open files."
                         ),
                     ),
                     AuthoringLearningReference(
@@ -385,7 +403,8 @@ class CeDslCatalog:
                             'cyclic="true"). Without distribution a source read is shuffled. Every column is text: '
                             'cast with int(row.age). <generate name="x" source="fixtures/people.ent.csv" '
                             'distribution="ordered"/> copies every column of every row; to keep some rows or columns '
-                            "with where= or columns=, read --topic learning --name file_sources. "
+                            "with where= or columns=, read --topic learning --name file_sources; to look up a row of "
+                            "another file by a key, read --topic learning --name lookup. "
                             "A weighted file *.wgt.csv "
                             'has no header and one value|weight on each line. <key name="function" '
                             'source="fixtures/functions.wgt.csv"/> draws one value by weight for each row; so does '
@@ -437,8 +456,8 @@ class CeDslCatalog:
                 return ReferenceResult(
                     topic=request.topic,
                     name=request.name,
-                    content="CE migration, script scope, file sources, data files, assert or expectation and "
-                    "time-series guidance."
+                    content="CE migration, script scope, file sources, file lookup, data files, assert or expectation "
+                    "and time-series guidance."
                     if learning_entries
                     else "No matching learning resource.",
                     entries=learning_entries,

@@ -1,0 +1,14 @@
+{
+  "version": "5.0",
+  "product_roles": [
+    {"product": "account_view", "field": "account_id", "role": {"kind": "identifier"}}
+  ],
+  "expectations": [
+    {"kind": "exact_count", "subject": {"kind": "product", "product": "account_view"}, "count": 6},
+    {"kind": "row_condition", "subject": {"kind": "product", "product": "account_view"},
+     "condition": "(branch_id == 'B-01' and city == 'Lisbon' and region == 'SOUTH') or (branch_id == 'B-02' and city == 'Oslo' and region == 'NORTH') or (branch_id == 'B-03' and city == 'Riga' and region == 'NONE') or (branch_id == 'B-09' and city == 'UNKNOWN' and region == 'UNKNOWN')"},
+    {"kind": "field_absent", "subject": {"kind": "product", "product": "account_view"}, "field": "branches"},
+    {"kind": "field_absent", "subject": {"kind": "product", "product": "account_view"}, "field": "branch"},
+    {"kind": "field_absent", "subject": {"kind": "product", "product": "account_view"}, "field": "balance_cents"}
+  ]
+}

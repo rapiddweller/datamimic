@@ -5,6 +5,7 @@
 """Public discovery projects the actual CE registry and canonical request contracts."""
 
 import json
+from pathlib import Path
 
 import pytest
 from typer.testing import CliRunner
@@ -219,6 +220,25 @@ def test_learning_names_the_project_data_file_forms_the_s24_scenario_proves(appl
     assert entry.path == "tests_ce/scenarios/s24_project_data_files"
     overview = application.reference(ReferenceRequest(topic=ReferenceTopic.OVERVIEW))
     assert "--topic learning --name data_files" in overview.content
+
+
+def test_learning_lookup_teaches_the_join_the_s31_scenario_builds(application):
+    """Blind agents found no way to join a second file and tried open(), <variable where=> and nested
+    generates (campaign b3 at 57db8b06, e07). The reference text must stay the form that s31 builds."""
+    [entry] = application.reference(ReferenceRequest(topic=ReferenceTopic.LEARNING, name="lookup")).entries
+    assert entry.path == "tests_ce/scenarios/s31_file_lookup"
+    scenario = (Path(__file__).parents[3] / entry.path / "datamimic.xml").read_text(encoding="utf-8")
+    for form in (
+        '<variable name="branches" source="data/entity/branches.ent.csv" storage="data" distribution="ordered"/>',
+        '<variable name="branch" script="{b.branch_id: b for b in branches}.get(branch_id)"/>',
+        "branch.city if branch else 'UNKNOWN'",
+    ):
+        assert form in entry.description and form in scenario, form
+    for name in ("file_sources", "data_files"):
+        [pointer] = application.reference(ReferenceRequest(topic=ReferenceTopic.LEARNING, name=name)).entries
+        assert "--topic learning --name lookup" in pointer.description, name
+    overview = application.reference(ReferenceRequest(topic=ReferenceTopic.OVERVIEW))
+    assert "--topic learning --name lookup" in overview.content
 
 
 def test_authoring_help_points_to_the_data_file_guidance():

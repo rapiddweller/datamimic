@@ -10,6 +10,7 @@ from enum import StrEnum
 
 from datamimic_ce.authoring.domain.dm_json import DmJsonDocumentV1, iter_dm_json_nodes
 from datamimic_ce.engine.dsl.api import EL_EXECUTE, ExportOperation, parse_consumer
+from datamimic_ce.errors import GUIDANCE_LOOKUP_POINTER
 
 
 class ScriptScope(StrEnum):
@@ -156,7 +157,8 @@ class LibraryRefusal:
             case LibraryRefusalReason.FILE_OR_DYNAMIC_CODE_BUILTIN:
                 return (
                     "Pass data in from the model instead of reading files or building code at runtime; "
-                    "call a module function with a builtin's name qualified, such as re.compile."
+                    "call a module function with a builtin's name qualified, such as re.compile. "
+                    f"{GUIDANCE_LOOKUP_POINTER}"
                 )
             case LibraryRefusalReason.IMPORT_INSIDE_BODY_UNDER_SEED:
                 return "Move the import to module level, where seeded runs rebind it to the run's stream."

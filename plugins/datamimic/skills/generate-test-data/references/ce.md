@@ -63,6 +63,8 @@ A `<generate source=...>` copies every file column into the output. `where=` kee
 the file rows for which a row condition is true, and `columns=` lists the output
 columns; for both and for the place where `datamimic run` writes a file target, read
 `datamimic authoring reference --topic learning --name file_sources`.
+A row of a second file by a key (a join) is a lookup, not a filter: read
+`datamimic authoring reference --topic learning --name lookup`.
 A rule that must stop `datamimic run` is an `<assert>`; Build checks only `expectations`. Read
 `datamimic authoring reference --topic learning --name assert_or_expectation`.
 

@@ -4,6 +4,7 @@
 # See LICENSE file for the full text of the license.
 
 from datamimic_ce.errors.catalog.definition import IssueDefinition
+from datamimic_ce.errors.catalog.guidance import GUIDANCE_SCRIPT_BUILTIN
 from datamimic_ce.errors.codes import IssueCode
 
 ISSUES: list[IssueDefinition] = [
@@ -225,6 +226,15 @@ ISSUES: list[IssueDefinition] = [
         template="Failed to evaluate expression '{expr}': {error}",
         cause="The system failed to evaluate expression '{expr}': {error}.",
         resolution="Fix the expression or script and retry.",
+    ),
+    IssueDefinition(
+        code=IssueCode.TASK_EXPRESSION_BUILTIN_UNAVAILABLE,
+        name="TASK_EXPRESSION_BUILTIN_UNAVAILABLE",
+        title="Script Builtin Unavailable",
+        template=("Expression '{expr}' calls the Python builtin '{builtin}', which scripts do not offer."),
+        cause="A script calls a Python builtin that DATAMIMIC scripts do not offer.",
+        resolution="Use a builtin that scripts offer. Read a file through a source element, not with open().",
+        guidance=GUIDANCE_SCRIPT_BUILTIN,
     ),
     IssueDefinition(
         code=IssueCode.TASK_VALUES_INVALID,

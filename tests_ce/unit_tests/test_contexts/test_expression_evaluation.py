@@ -257,3 +257,45 @@ def test_a_field_named_max_wins_inside_a_comprehension_on_python_3_11() -> None:
     assert "the expression reads 'max', which a script, variable or field binds in place of the engine's" in str(
         exc.value
     )
+
+
+@pytest.mark.parametrize("builtin", ["open", "next", "isinstance", "enumerate", "zip"])
+def test_a_python_builtin_that_scripts_do_not_offer_is_named_with_the_offered_ones(builtin: str) -> None:
+    """Python-only: s31 proves open and next through Build; this pins the other builtins blind agents wrote
+    (campaign b3, e07) and the exact engine message."""
+    from datamimic_ce.errors import SCRIPT_BUILTIN_NAMES
+
+    with pytest.raises(TaskConfigError) as exc:
+        _context().evaluate_python_expression(f"{builtin}(x)")
+
+    assert exc.value.issue_code is IssueCode.TASK_EXPRESSION_BUILTIN_UNAVAILABLE
+    assert str(exc.value) == task_config_message(
+        code=IssueCode.TASK_EXPRESSION_BUILTIN_UNAVAILABLE,
+        expr="configured expression",
+        builtin=builtin,
+    )
+    assert isinstance(exc.value.__cause__, NameError)
+    assert builtin not in SCRIPT_BUILTIN_NAMES and "len" in SCRIPT_BUILTIN_NAMES
+
+
+def test_a_builtin_name_in_data_text_is_not_shown() -> None:
+    """Python-only: data text reaches evaluation only from a source value; its error must name nothing it holds."""
+    with pytest.raises(TaskConfigError) as exc:
+        _context().evaluate_python_expression("open('secret.txt')", text_from_data=True)
+
+    assert exc.value.issue_code is IssueCode.TASK_EXPRESSION_EVAL_FAILED
+    assert "open" not in str(exc.value) and "secret" not in str(exc.value)
+
+
+def test_a_bare_builtin_name_that_no_field_holds_keeps_the_scope_error() -> None:
+    """Python-only: an intermediate ancestor field such as id does not resolve bare; it is a scope error, not I957."""
+    with pytest.raises(TaskConfigError) as exc:
+        _context().evaluate_python_expression("int(id) + 1")
+
+    assert exc.value.issue_code is IssueCode.TASK_EXPRESSION_EVAL_FAILED
+    assert "name 'id' is not defined" in str(exc.value)
+
+
+def test_a_field_with_a_builtin_name_still_resolves() -> None:
+    """Python-only: a CSV column may be named like a builtin (next, id); the record value wins over the refusal."""
+    assert _context(namespace={"next": 3}).evaluate_python_expression("next + 1") == 4
