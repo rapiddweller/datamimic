@@ -445,19 +445,19 @@ def test_an_assert_in_step_10_still_lists_every_check_it_could_not_evaluate(tmp_
 
     assert isinstance(result, RejectedBuild)
     assert _codes(result) == ["assert_failed", "not_executed"]
-    assert {product.name for product in result.evidence} == {
-        "policy",
-        "companies",
-        "people",
-        "functions",
-        "employments",
-        "licenses",
-        "person_licenses",
-        "qualifications",
-        "person_qualifications",
-        "approvals",
+    assert [product.name for product in result.evidence] == [
         "approval_versions",
-    }
+        "approvals",
+        "companies",
+        "employments",
+        "functions",
+        "licenses",
+        "people",
+        "person_licenses",
+        "person_qualifications",
+        "policy",
+        "qualifications",
+    ]
     assert len(_not_evaluated(result)) == 73
 
 
