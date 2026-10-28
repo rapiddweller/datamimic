@@ -15,11 +15,6 @@ import numpy
 
 from datamimic_ce.domains.api import StringGenerator, from_epoch_utc, to_epoch_utc
 from datamimic_ce.engine.dsl.api import (
-    ATTR_GRANULARITY,
-    ATTR_MAX,
-    ATTR_MAX_LENGTH,
-    ATTR_MIN,
-    ATTR_MIN_LENGTH,
     DATA_TYPE_BINARY,
     DATA_TYPE_BOOL,
     DATA_TYPE_DECIMAL,
@@ -53,14 +48,6 @@ from datamimic_ce.errors import (
     is_user_error,
     task_config_error,
 )
-
-
-def _length_arguments(
-    stmt: KeyStatement | VariableStatement | ElementStatement,
-) -> tuple[tuple[str, str, str | None], ...]:
-    """minLength/maxLength are the min_len/max_len parameters of StringGenerator and BinaryGenerator, in the
-    type= form and in the generator= attribute form."""
-    return ((ATTR_MIN_LENGTH, "min_len", stmt.min_length), (ATTR_MAX_LENGTH, "max_len", stmt.max_length))
 
 
 class KeyVariableTask(Task):
@@ -208,14 +195,7 @@ class KeyVariableTask(Task):
         """``<key generator="IntegerGenerator" min="1" max="9"/>`` -> ``IntegerGenerator(min=1, max=9)``: the
         attribute form is the call form, so both give the same data for one seed. <variable> and <element> too."""
         stmt = self._statement
-        # (attribute, generator parameter, text): the range attributes share their names with the parameters.
-        attributes = (
-            (ATTR_MIN, "min", stmt.min),
-            (ATTR_MAX, "max", stmt.max),
-            (ATTR_GRANULARITY, "granularity", stmt.granularity),
-            *_length_arguments(stmt),
-        )
-        arguments = [(attribute, parameter, text) for attribute, parameter, text in attributes if text is not None]
+        arguments = stmt.generator_arguments.written()
         if not arguments:
             return generator
         util = GeneratorUtil(ctx)
@@ -229,7 +209,8 @@ class KeyVariableTask(Task):
         stmt = self._statement
         if not isinstance(stmt, KeyStatement):
             return None
-        lens = [f"{parameter}={text}" for _, parameter, text in _length_arguments(stmt) if text is not None]
+        bounds = stmt.generator_arguments
+        lens = [f"{parameter}={text}" for _, parameter, text in bounds.lengths() if text is not None]
         if stmt.type == DATA_TYPE_STRING and lens:
             return f"StringGenerator({', '.join(lens)})"
         if stmt.type == DATA_TYPE_BINARY:
@@ -237,7 +218,7 @@ class KeyVariableTask(Task):
             if stmt.mime_type is not None:
                 lens.append(f"mime_type='{stmt.mime_type}'")
             return f"BinaryGenerator({', '.join(lens)})"
-        if stmt.min is None and stmt.max is None:
+        if bounds.min is None and bounds.max is None:
             return None
         if stmt.type == DATA_TYPE_INT:
             cls = "IntegerGenerator"
@@ -245,9 +226,9 @@ class KeyVariableTask(Task):
             cls = "FloatGenerator"
         else:
             return None
-        args = [f"{k}={v}" for k, v in (("min", stmt.min), ("max", stmt.max)) if v is not None]
-        if cls == "FloatGenerator" and stmt.granularity is not None:
-            args.append(f"granularity={stmt.granularity}")
+        args = [f"{k}={v}" for k, v in (("min", bounds.min), ("max", bounds.max)) if v is not None]
+        if cls == "FloatGenerator" and bounds.granularity is not None:
+            args.append(f"granularity={bounds.granularity}")
         if stmt.distribution is not None:
             # value validated against NumberDistribution at parse time (key_model); lookup by
             # VALUE - member names differ from values for randomWalk/bitreverse
@@ -522,8 +503,11 @@ class KeyVariableTask(Task):
         elif data_type == DATA_TYPE_DECIMAL:
             # str() so a float value (e.g. 8.2) doesn't re-introduce binary float error
             decimal_value = Decimal(str(value))
-            if isinstance(self._statement, KeyStatement) and self._statement.granularity is not None:
-                granularity = Decimal(self._statement.granularity)
+            if (
+                isinstance(self._statement, KeyStatement)
+                and self._statement.generator_arguments.granularity is not None
+            ):
+                granularity = Decimal(self._statement.generator_arguments.granularity)
                 exponent = granularity.as_tuple().exponent
                 if not isinstance(exponent, int):
                     return decimal_value.quantize(granularity)

@@ -5,9 +5,11 @@
 # For questions and support, contact: info@rapiddweller.com
 
 import re
+from typing import Final
 
 from datamimic_ce.engine.dsl.model.values.variables.variable_model import VariableModel
 from datamimic_ce.engine.dsl.statements.base.statement import Statement
+from datamimic_ce.engine.dsl.statements.values.scalar.key_statement import GeneratorArguments
 from datamimic_ce.engine.dsl.vocabulary.constants.attribute_constants import (
     ATTR_ITERATION_SELECTOR,
     ATTR_SELECTOR,
@@ -31,11 +33,7 @@ class VariableStatement(Statement):
         self._dataset = model.dataset
         self._entity = model.entity
         self._generator = model.generator
-        self._min = model.min
-        self._max = model.max
-        self._granularity = model.granularity
-        self._min_length = model.min_length
-        self._max_length = model.max_length
+        self.generator_arguments: Final = GeneratorArguments.of(model)
         self._locale = model.locale
         self._in_date_format = model.in_date_format
         self._out_date_format = model.out_date_format
@@ -122,26 +120,6 @@ class VariableStatement(Statement):
     @property
     def generator(self) -> str | None:
         return self._generator
-
-    @property
-    def min(self) -> str | None:
-        return self._min
-
-    @property
-    def max(self) -> str | None:
-        return self._max
-
-    @property
-    def granularity(self) -> str | None:
-        return self._granularity
-
-    @property
-    def min_length(self) -> str | None:
-        return self._min_length
-
-    @property
-    def max_length(self) -> str | None:
-        return self._max_length
 
     @property
     def in_date_format(self) -> str | None:
