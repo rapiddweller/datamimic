@@ -28,6 +28,8 @@ A negative `diagnostic` is a code that Build reports, for example `exact_count` 
 Build must reject the variant, and the code must be in the list of diagnostics.
 A negative can also give `issue`: the catalog code of a runtime refusal, for example `I199`.
 Build reports it as the `ce_error` of the diagnostic with the code `diagnostic`, usually `child_execution`.
+A negative can also give `remediation`: a text that the remediation of a diagnostic with the code `diagnostic` contains.
+Use it when the scenario proves the fix that the agent reads, not only the rejection.
 A negative can also give `run_error`. Then a normal run of the variant must stop with a `TaskConfigError` that contains this text.
 
 ## What the test does

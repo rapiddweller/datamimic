@@ -1,0 +1,21 @@
+{
+  "version": "5.0",
+  "max_count": 12,
+  "product_roles": [
+    {"product": "teams", "field": "team_id", "role": {"kind": "identifier"}},
+    {"product": "team_copy", "field": "team_id", "role": {
+      "kind": "foreign_key", "parent_product": "teams", "parent_field": "team_id"
+    }},
+    {"product": "people", "field": "person_id", "role": {"kind": "identifier"}},
+    {"product": "badges", "field": "person_id", "role": {
+      "kind": "foreign_key", "parent_product": "people", "parent_field": "person_id"
+    }}
+  ],
+  "expectations": [
+    {"kind": "exact_count", "subject": {"kind": "product", "product": "teams"}, "count": 3},
+    {"kind": "exact_count", "subject": {"kind": "product", "product": "people"}, "count": 4},
+    {"kind": "exact_count", "subject": {"kind": "product", "product": "badges"}, "count": 2},
+    {"kind": "allowed_values", "subject": {"kind": "product", "product": "people"}, "field": "tier",
+     "values": ["GOLD", "SILVER", "NONE"]}
+  ]
+}

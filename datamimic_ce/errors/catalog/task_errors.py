@@ -360,8 +360,9 @@ ISSUES: list[IssueDefinition] = [
         cause="The run attempted to generate more product rows than its shared total-row limit.",
         resolution=(
             "Build derives max_count only when every product has a literal count or reads a memstore back from a "
-            "literal producer. "
-            "Set max_count to the rows of all products together, or reduce the rows."
+            'literal producer. Otherwise add "max_count": <the rows of all products together> at the top level '
+            'of acceptance/build.json, beside "expectations" (authoring run takes --max-count). A higher value '
+            "is safe, up to the Build ceiling. Or reduce the rows."
         ),
     ),
     IssueDefinition(

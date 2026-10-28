@@ -30,6 +30,7 @@ from datamimic_ce.authoring.adapters.workspace import (
     _same_file,
 )
 from datamimic_ce.authoring.domain.capture import CapturedProducts
+from datamimic_ce.authoring.domain.common import MAX_AUTHORING_MAX_COUNT
 from datamimic_ce.authoring.domain.diagnostics import (
     AuthoringRuleId,
     AuthoringSystemDiagnosticCode,
@@ -333,7 +334,8 @@ def _decode_reply(payload: bytes, request: BoundedExecutionRequest, workspace: P
                 and message.error.issue_code is IssueCode.TASK_TOTAL_ROW_BUDGET_EXCEEDED
             )
             reason = (
-                f"The generated rows of all products together exceed the Build limit {request.max_count}."
+                f"The generated rows of all products together exceed the Build limit {request.max_count}; the Build "
+                f"ceiling is {MAX_AUTHORING_MAX_COUNT}."
                 if over_limit
                 else constructor_reason
             )

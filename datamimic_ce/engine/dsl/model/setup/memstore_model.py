@@ -14,8 +14,9 @@ from datamimic_ce.engine.dsl.vocabulary.constants.attribute_constants import ATT
 class MemstoreModel(BaseModel):
     id: str = Field(
         ...,
-        description="Identifier for this in-memory store, used as a <generate target=> write "
-        "destination and a <variable source=> read source for pipeline handoff within the same run. "
+        description="Identifier for this in-memory store within one run: a <generate target=> writes rows into "
+        "it, and a later <generate source= sourceEntity=> reads every row back exactly once. Build proves only "
+        "that <generate> readback, not a <variable source=> read. "
         "Use 'mem' to stay portable: EE ignores the declaration (warning W005) and provides only 'mem'.",
         examples=["mem"],
     )

@@ -473,13 +473,18 @@ def _example(name: str) -> tuple[DmJsonDocumentV1, BuildRequestV5]:
                 product="readback", field="id", role=ForeignKeyRole(parent_product="rows", parent_field="id")
             ),
         )
-        producer = producer.model_copy(update={"properties": {**producer.properties, "target": "store"}})
+        producer = producer.model_copy(update={"properties": {**producer.properties, "target": "mem"}})
         children = (
-            DmJsonNodeV1(kind="memstore", properties={"id": "store"}),
+            DmJsonNodeV1(kind="memstore", properties={"id": "mem"}),
             producer,
             DmJsonNodeV1(
                 kind="generate",
-                properties={"name": "readback", "source": "store", "source_entity": "rows", "traversal_count": 2},
+                properties={
+                    "name": "readback",
+                    "source": "mem",
+                    "source_entity": "rows",
+                    "distribution": "ordered",
+                },
                 children=(DmJsonNodeV1(kind="key", properties={"name": "id", "script": "this.id"}),),
             ),
         )

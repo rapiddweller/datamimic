@@ -170,7 +170,9 @@ _SCOPE_HINT = (
     " and value shape. Names in the current scope can resolve bare or via this.name; existing outermost bare names"
     " take precedence on collisions. Use parent.name for the immediate enclosing scope, root.name for an"
     " outermost field, or a qualified scope path to select the intended value. Intermediate ancestor names are"
-    " not automatically available bare. CSV columns arrive as strings (cast: int(parent.col))."
+    " not automatically available bare. CSV columns arrive as strings (cast: int(parent.col)). Scripts cannot"
+    ' call open(): read a data file with <variable name="rows" source="<file>" storage="data"'
+    ' distribution="ordered"/> and select from rows in the script.'
 )
 
 
