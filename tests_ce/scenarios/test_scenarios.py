@@ -259,3 +259,9 @@ def test_patch_outside_the_project_copy_is_refused(escape: str, tmp_path: Path) 
     with pytest.raises(AssertionError, match="inside the project copy"):
         _apply(Patch(file=file, old="old", new="new"), project)
     assert outside.read_text(encoding="utf-8") == "old"
+
+
+def test_readme_pseudonymization_model_is_the_s28_entry() -> None:
+    # Python only: the check compares two file texts. README.md names s28 as the proof of its example.
+    entry = (_ROOT / "s28_pseudonymize_source" / PROJECT_ENTRY_PATH).read_text(encoding="utf-8")
+    assert entry.strip() in (_ROOT.parents[1] / "README.md").read_text(encoding="utf-8")

@@ -351,7 +351,7 @@ DATAMIMIC supports two pseudonymization modes with different repeatability prope
 > **Note on GDPR:** Pseudonymisation does not make data anonymous or establish GDPR compliance. Under Recital 26, anonymity depends on whether a person remains identifiable considering means reasonably likely to be used.
 
 In CE, PII fields are identified and modeled manually in the XML pipeline. The source is a
-pipe-separated project data file; the scenario `tests_ce/scenarios/s27_pseudonymize_source` runs this model:
+pipe-separated project data file; the scenario `tests_ce/scenarios/s28_pseudonymize_source` runs this model:
 
 ```xml
 <setup rngSeed="42">
