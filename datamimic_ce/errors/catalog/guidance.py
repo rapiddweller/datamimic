@@ -26,3 +26,8 @@ FILE_LOOKUP_PATTERN = (
     "branch is None when no row has the key: branch.city if branch else 'UNKNOWN'."
 )
 GUIDANCE_FILE_LOOKUP = f"{FILE_LOOKUP_PATTERN} Read datamimic authoring reference --topic learning --name lookup."
+# Build shows no engine message, so this names the replacements of the builtins agents reach for (campaign b3, e07).
+GUIDANCE_SCRIPT_BUILTIN = (
+    "Write next(...) as ([x for x in rows if ...] or [None])[0] and isinstance(x, str) as type(x) is str. "
+    f"{GUIDANCE_FILE_LOOKUP}"
+)

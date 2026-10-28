@@ -31,7 +31,12 @@ from datamimic_ce.errors.base import (
     UserValueError,
     is_user_error,
 )
-from datamimic_ce.errors.catalog import FILE_LOOKUP_PATTERN, GUIDANCE_COUNT_SCOPE, GUIDANCE_FILE_LOOKUP
+from datamimic_ce.errors.catalog import (
+    FILE_LOOKUP_PATTERN,
+    GUIDANCE_COUNT_SCOPE,
+    GUIDANCE_FILE_LOOKUP,
+    GUIDANCE_SCRIPT_BUILTIN,
+)
 from datamimic_ce.errors.codes import DomainErrorCode, ErrorCode, IssueCode
 from datamimic_ce.errors.context import DescriptorLocation
 from datamimic_ce.errors.factory import (
@@ -68,6 +73,7 @@ __all__ = [
     "FILE_LOOKUP_PATTERN",
     "GUIDANCE_COUNT_SCOPE",
     "GUIDANCE_FILE_LOOKUP",
+    "GUIDANCE_SCRIPT_BUILTIN",
     "DomainError",
     "DomainErrorCode",
     "ClientConfigError",

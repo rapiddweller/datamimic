@@ -7,7 +7,8 @@
     "an empty column of the found row stays empty text, and the script can replace it",
     "the lookup variables and an unlisted source column are not output fields",
     "a list comprehension spells the same lookup, and the order of the second file does not change the result",
-    "the lookup table in a <nestedKey> is an output field, a key of another type finds no row, a missing default fails the run, and <variable> has no where="
+    "the lookup table in a <nestedKey> is an output field, a key of another type finds no row, a missing default fails the run, and <variable> has no where=",
+    "a script can use the builtins that scripts offer (str), and open() and next() fail with I956, which names the builtin"
   ],
   "products": {"account_view": 6},
   "equivalents": [
@@ -18,7 +19,9 @@
     {"name": "lookup_file_order_does_not_matter",
      "patch": {"file": "datamimic.xml",
                "old": " storage=\"data\" distribution=\"ordered\"",
-               "new": " storage=\"data\""}}
+               "new": " storage=\"data\""}},
+    {"name": "an_offered_builtin_works",
+     "patch": {"file": "datamimic.xml", "old": "script=\"branch.city if branch", "new": "script=\"str(branch.city) if branch"}}
   ],
   "negatives": [
     {"name": "a_nested_key_lookup_table_is_an_output_field", "diagnostic": "field_absent",
@@ -32,6 +35,14 @@
     {"name": "a_variable_has_no_where", "diagnostic": "DM103",
      "patch": {"file": "datamimic.xml",
                "old": "<variable name=\"branch\" script=\"{b.branch_id: b for b in branches}.get(branch_id)\"/>",
-               "new": "<variable name=\"branch\" source=\"data/entity/branches.ent.csv\" where=\"branch_id == this.branch_id\" distribution=\"ordered\"/>"}}
+               "new": "<variable name=\"branch\" source=\"data/entity/branches.ent.csv\" where=\"branch_id == this.branch_id\" distribution=\"ordered\"/>"}},
+    {"name": "a_script_cannot_open_a_file", "diagnostic": "child_execution", "issue": "I956",
+     "run_error": "uses the Python builtin 'open', which scripts do not offer",
+     "patch": {"file": "datamimic.xml", "old": "script=\"branch.city if branch else 'UNKNOWN'\"",
+               "new": "script=\"open('data/entity/branches.ent.csv').read()\""}},
+    {"name": "next_is_no_script_builtin", "diagnostic": "child_execution", "issue": "I956",
+     "run_error": "uses the Python builtin 'next', which scripts do not offer",
+     "patch": {"file": "datamimic.xml", "old": "script=\"{b.branch_id: b for b in branches}.get(branch_id)\"",
+               "new": "script=\"next((b for b in branches if b.branch_id == branch_id), None)\""}}
   ]
 }
