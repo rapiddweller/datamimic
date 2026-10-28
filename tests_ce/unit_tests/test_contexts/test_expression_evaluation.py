@@ -288,6 +288,15 @@ def test_a_builtin_name_in_data_text_is_not_shown() -> None:
     assert "open" not in str(exc.value) and "secret" not in str(exc.value)
 
 
+def test_a_bare_builtin_name_that_no_field_holds_keeps_the_scope_error() -> None:
+    """Python-only: an intermediate ancestor field such as id does not resolve bare; it is a scope error, not I956."""
+    with pytest.raises(TaskConfigError) as exc:
+        _context().evaluate_python_expression("int(id) + 1")
+
+    assert exc.value.issue_code is IssueCode.TASK_EXPRESSION_EVAL_FAILED
+    assert "name 'id' is not defined" in str(exc.value)
+
+
 def test_a_field_with_a_builtin_name_still_resolves() -> None:
     """Python-only: a CSV column may be named like a builtin (next, id); the record value wins over the refusal."""
     assert _context(namespace={"next": 3}).evaluate_python_expression("next + 1") == 4

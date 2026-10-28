@@ -117,8 +117,11 @@ def _written_nodes(expression: str) -> tuple[ast.AST, ...]:
         return ()
 
 
-def _names_read(nodes: tuple[ast.AST, ...], name: str) -> bool:
-    return any(isinstance(node, ast.Name) and node.id == name for node in nodes)
+def _called(nodes: tuple[ast.AST, ...], name: str) -> bool:
+    """A bare builtin name such as id can be an ancestor field that does not resolve; only a call is the builtin."""
+    return any(
+        isinstance(node, ast.Call) and isinstance(node.func, ast.Name) and node.func.id == name for node in nodes
+    )
 
 
 def _lookup_failure(error: NameError | AttributeError, nodes: tuple[ast.AST, ...]) -> str:
@@ -209,7 +212,7 @@ def evaluate_python(
     except (NameError, AttributeError) as error:
         nodes = _written_nodes(shown)
         # Only a name the expression text holds is shown; a builtin name is no descriptor value.
-        if isinstance(error, NameError) and error.name in UNOFFERED_BUILTINS and _names_read(nodes, error.name):
+        if isinstance(error, NameError) and error.name in UNOFFERED_BUILTINS and _called(nodes, error.name):
             raise task_config_error(
                 code=IssueCode.TASK_EXPRESSION_BUILTIN_UNAVAILABLE,
                 expr=diagnostic,
