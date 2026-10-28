@@ -130,6 +130,6 @@ These rows are not compared yet. They need a comparison before the release date.
 | `identical` | 11 |
 | `CE-extension` | 3 |
 | `EE-only` | 4 |
-| `gap` | 25 |
+| `gap` | 26 |
 | `unverified` | 1 |
 | Open rows (not compared) | 9 |
