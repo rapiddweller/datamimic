@@ -53,8 +53,8 @@ For each negative the test copies the project, applies the patch to the copy, Bu
 ## Rules
 
 - Use no real data and no customer names.
-- Projects follow the DATAMIMIC skill reference `project-structure.md`. The guard test checks the data file names and
-  folders, `*.properties` in `conf/`, the `nn_` step names and the separator.
+- Data files, parameters and step names follow the DATAMIMIC skill reference `project-structure.md`. The guard test
+  checks the data file names and folders, `*.properties` in `conf/`, the `nn_` step names and the separator.
 - Use only file, SQLite or targetless products here. A scenario that needs a service goes to `external_service_tests`.
 - Omit `max_count` when every product has a literal count or reads a memstore back from a literal producer:
   Build derives the limit from the declared total. Set it when a product reads a file source without count, or
