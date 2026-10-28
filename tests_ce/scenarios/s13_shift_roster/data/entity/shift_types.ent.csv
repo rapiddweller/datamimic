@@ -1,0 +1,4 @@
+shift_code|start_hour|length_hours|required_cert
+night|0|7|ALS
+day|7|11|BLS
+evening|18|6|BLS

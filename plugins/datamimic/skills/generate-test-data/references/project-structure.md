@@ -19,6 +19,10 @@ review the files; Build proves them.
 └── README.md                    purpose, process, rule → file table, evidence
 ```
 
+Data files are UTF-8 and use the default pipe `|` separator. Never set
+`separator=","` or `defaultSeparator=","`. An `.ent.csv` file has one header row.
+A `.wgt.csv` file has no header; each line is `value|weight`.
+
 Leave out folders the task does not need. Keep the entry at `datamimic.xml`.
 
 ## Separation rules
