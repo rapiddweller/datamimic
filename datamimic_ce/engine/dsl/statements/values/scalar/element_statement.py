@@ -4,8 +4,11 @@
 # See LICENSE file for the full text of the license.
 # For questions and support, contact: info@rapiddweller.com
 
+from typing import Final
+
 from datamimic_ce.engine.dsl.model.values.scalar.element_model import ElementModel
 from datamimic_ce.engine.dsl.statements.base.statement import Statement
+from datamimic_ce.engine.dsl.statements.values.scalar.key_statement import GeneratorArguments
 
 
 class ElementStatement(Statement):
@@ -17,6 +20,7 @@ class ElementStatement(Statement):
         self._constant = model.constant
         self._converter = model.converter
         self._generator = model.generator
+        self.generator_arguments: Final = GeneratorArguments.of(model)
         self._in_date_format = model.in_date_format
         self._out_date_format = model.out_date_format
         self._script = model.script

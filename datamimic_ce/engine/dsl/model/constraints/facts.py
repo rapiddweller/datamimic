@@ -49,8 +49,10 @@ from datamimic_ce.engine.dsl.vocabulary.constants.attribute_constants import (
     ATTR_INTERVAL,
     ATTR_MAX,
     ATTR_MAX_COUNT,
+    ATTR_MAX_LENGTH,
     ATTR_MIN,
     ATTR_MIN_COUNT,
+    ATTR_MIN_LENGTH,
     ATTR_OFFSET,
     ATTR_OUT_DATE_FORMAT,
     ATTR_PATTERN,
@@ -395,18 +397,27 @@ _KEY_RANGE_MESSAGE = (
     "'min', 'max' and 'granularity' on a <key> apply to type= or generator= only: write "
     'type="int" min="1" max="9", or generator="IntegerGenerator" min="1" max="9"'
 )
+# Length attributes shape a type="string"/"binary" draw or are the min_len/max_len arguments of generator= (#459).
+_KEY_LENGTH_ATTRS = (ATTR_MIN_LENGTH, ATTR_MAX_LENGTH)
+_KEY_LENGTH_MESSAGE = (
+    "'minLength' and 'maxLength' on a <key> apply to type= or generator= only: write "
+    'type="string" minLength="1" maxLength="9", or generator="StringGenerator" minLength="1" maxLength="9"'
+)
 KEY_RANGE_CONSTRAINTS: tuple[Constraint, ...] = (
     *(Requires(attr, _KEY_RANGE_SOURCES, message=_KEY_RANGE_MESSAGE) for attr in _KEY_RANGE_ATTRS),
     *(
         Forbids(attr, KEY_GENERATION_REQUIRED.attrs - _KEY_RANGE_SOURCES, message=_KEY_RANGE_MESSAGE)
         for attr in _KEY_RANGE_ATTRS
     ),
+    # The numeric type gates shape the type= draw only; next to generator= the type casts the drawn value (#458).
     *(
         AllowedValuesWhen(
             ATTR_TYPE,
             frozenset((DATA_TYPE_INT, DATA_TYPE_FLOAT, DATA_TYPE_DECIMAL)),
             attr,
-            message=f"'{attr}' on a <key> requires type='int', 'float', or 'decimal', not '{{actual_value}}'",
+            unless=frozenset((ATTR_GENERATOR,)),
+            message=f"'{attr}' on a <key> without generator= requires type='int', 'float', or 'decimal', "
+            "not '{actual_value}'",
         )
         for attr in (ATTR_MIN, ATTR_MAX)
     ),
@@ -414,7 +425,8 @@ KEY_RANGE_CONSTRAINTS: tuple[Constraint, ...] = (
         ATTR_TYPE,
         frozenset((DATA_TYPE_FLOAT, DATA_TYPE_DECIMAL)),
         ATTR_GRANULARITY,
-        message="'granularity' on a <key> requires type='float' or 'decimal', not '{actual_value}'",
+        unless=frozenset((ATTR_GENERATOR,)),
+        message="'granularity' on a <key> without generator= requires type='float' or 'decimal', not '{actual_value}'",
     ),
     Requires(
         ATTR_GRANULARITY,
@@ -427,6 +439,22 @@ KEY_RANGE_CONSTRAINTS: tuple[Constraint, ...] = (
         frozenset((ATTR_GENERATOR,)),
         message="'distribution' on a <key> shapes a type= range; with generator= write it in the call: "
         'generator="IntegerGenerator(min=1, max=9, distribution=NumberDistribution.CUMULATED)"',
+    ),
+    *(Requires(attr, _KEY_RANGE_SOURCES, message=_KEY_LENGTH_MESSAGE) for attr in _KEY_LENGTH_ATTRS),
+    *(
+        Forbids(attr, KEY_GENERATION_REQUIRED.attrs - _KEY_RANGE_SOURCES, message=_KEY_LENGTH_MESSAGE)
+        for attr in _KEY_LENGTH_ATTRS
+    ),
+    *(
+        AllowedValuesWhen(
+            ATTR_TYPE,
+            frozenset((DATA_TYPE_STRING, DATA_TYPE_BINARY)),
+            attr,
+            unless=frozenset((ATTR_GENERATOR,)),
+            message=f"'{attr}' on a <key> without generator= requires type='string' or 'binary', "
+            "not '{actual_value}'",
+        )
+        for attr in _KEY_LENGTH_ATTRS
     ),
 )
 KEY_DISTRIBUTION_NUMERIC_TYPE = AllowedValuesWhen(
@@ -488,6 +516,22 @@ VARIABLE_GENERATION_EXCLUSIVE = MutuallyExclusive(
             ATTR_STRING,
         )
     )
+)
+# A <variable> has no type= range draw: its argument attributes are the arguments of generator= only (#460).
+_VARIABLE_ARGUMENT_MESSAGE = (
+    "'min', 'max', 'granularity', 'minLength' and 'maxLength' on a <variable> are generator arguments: write "
+    'generator="IntegerGenerator" min="1" max="9"'
+)
+VARIABLE_GENERATOR_ARGUMENT_CONSTRAINTS: tuple[Constraint, ...] = (
+    *(
+        Requires(attr, frozenset((ATTR_GENERATOR,)), message=_VARIABLE_ARGUMENT_MESSAGE)
+        for attr in (*_KEY_RANGE_ATTRS, *_KEY_LENGTH_ATTRS)
+    ),
+    Requires(
+        ATTR_GRANULARITY,
+        frozenset((ATTR_MIN, ATTR_MAX)),
+        message="'granularity' on a <variable> needs a range - add min= and/or max=",
+    ),
 )
 VARIABLE_STORAGE_VALUES = ValidValues(ATTR_STORAGE, ("value", "data", "iterator"))
 ITERATION_SELECTOR_REQUIRES_SOURCE = Requires(
@@ -627,6 +671,7 @@ _VARIABLE_RULES: tuple[Constraint, ...] = (
     VARIABLE_STORAGE_VALUES,
     ITERATION_SELECTOR_REQUIRES_SOURCE,
     SOURCE_DISTRIBUTION_VALUES,
+    *VARIABLE_GENERATOR_ARGUMENT_CONSTRAINTS,
 )
 _NESTED_KEY_RULES: tuple[Constraint, ...] = (
     COUNT_XOR_MIN,

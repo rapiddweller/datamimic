@@ -275,7 +275,7 @@ class PreferNativeNumericRange(Rule):
     definition = authoring_rule_definition("DM310")
 
     def check(self, ctx: LintContext) -> Iterable[Diagnostic]:
-        for element in ctx.iter(EL_KEY, EL_ID, EL_VARIABLE, EL_NESTED_KEY):
+        for element in ctx.iter(EL_KEY, EL_ID, EL_NESTED_KEY):  # a <variable> has no type= range to move to
             generator = element.get("generator") or ""
             if generator.startswith("IntegerGenerator(") and ("min" in generator or "max" in generator):
                 yield ctx.diag(
@@ -289,7 +289,7 @@ class PreferNativeStringLength(Rule):
     definition = authoring_rule_definition("DM311")
 
     def check(self, ctx: LintContext) -> Iterable[Diagnostic]:
-        for element in ctx.iter(EL_KEY, EL_ID, EL_VARIABLE, EL_NESTED_KEY):
+        for element in ctx.iter(EL_KEY, EL_ID, EL_NESTED_KEY):
             generator = element.get("generator") or ""
             if generator.startswith("StringGenerator("):
                 yield ctx.diag(

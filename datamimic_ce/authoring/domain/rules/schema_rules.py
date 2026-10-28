@@ -33,7 +33,7 @@ from datamimic_ce.engine.dsl.api import (
 )
 
 _DATE_TYPE_GUESSES = {"datetime", "date", "timestamp", "time"}
-# Only <key> takes min and max as generator arguments (#456); on other elements they belong to the call.
+# <key>, <id>, <element> and <variable> take min and max as generator arguments (#456, #460); others take the call.
 _GENERATOR_PARAMETERS = 'Pass generator parameters in the call: generator="IntegerGenerator(min=1, max=9)".'
 # The generator parameters that agents write as attributes; another unknown attribute keeps the valid list.
 _GENERATOR_BOUNDS = frozenset(("min", "max", "granularity"))

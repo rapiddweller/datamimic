@@ -97,6 +97,22 @@ def test_dm315_increment_generator_fires_nested_only() -> None:
     assert not [d for d in lint_source(nested_key).diagnostics if d.rule == "DM315"]
 
 
+def test_dm310_dm311_hint_the_key_but_not_the_variable() -> None:
+    from datamimic_ce.authoring.adapters.linter import lint_source
+
+    # Why: the hint says "use type= min= max=", and a <variable> refuses that form (DM214).
+    xml = (
+        '<setup rngSeed="1"><generate name="g" count="1" target="ConsoleExporter">'
+        '<variable name="v" generator="IntegerGenerator(min=1, max=9)"/>'
+        '<variable name="w" generator="StringGenerator(max_len=5)"/>'
+        '<key name="k" generator="IntegerGenerator(min=1, max=9)"/>'
+        '<key name="s" generator="StringGenerator(max_len=5)"/>'
+        "</generate></setup>"
+    )
+    hinted = {(d.rule, d.name) for d in lint_source(xml).diagnostics if d.rule in {"DM310", "DM311"}}
+    assert hinted == {("DM310", "k"), ("DM311", "s")}
+
+
 def test_dm316_count_with_source_hints_the_silent_cap() -> None:
     from datamimic_ce.authoring.adapters.linter import lint_source
 

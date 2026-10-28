@@ -7,5 +7,9 @@
         <key name="score" generator="FloatGenerator" min="0" max="1" granularity="0.25"/>
         <key name="joined" generator="DateTimeGenerator" min="2026-01-01 00:00:00" max="2026-01-31 23:59:59"
              converter="DateFormat('%Y-%m-%d')"/>
+        <key name="stamp" type="string" generator="DateTimeGenerator" min="2026-02-01 00:00:00"
+             max="2026-02-28 23:59:59"/>
+        <key name="share" type="string" generator="FloatGenerator" min="0" max="1" granularity="0.5"/>
+        <key name="code" generator="StringGenerator" minLength="8" maxLength="12"/>
     </generate>
 </setup>

@@ -184,8 +184,8 @@ ISSUES: list[IssueDefinition] = [
         code=IssueCode.GENERATOR_ARGUMENT_UNKNOWN,
         name="GENERATOR_ARGUMENT_UNKNOWN",
         title="Generator Argument Unknown",
-        template="<key> '{element_name}': generator '{class_name}' takes no argument '{attribute}'.",
-        cause="The key gives the attribute to its generator, and the generator has no parameter of that name.",
+        template="<{element_tag}> '{element_name}': generator '{class_name}' takes no argument '{attribute}'.",
+        cause="The element gives the attribute to its generator, and the generator has no parameter of that name.",
         resolution=(
             'Remove the attribute, or use a generator that takes it, for example generator="IntegerGenerator" '
             'min="1" max="9".'
@@ -195,8 +195,10 @@ ISSUES: list[IssueDefinition] = [
         code=IssueCode.GENERATOR_ARGUMENTS_IN_TWO_FORMS,
         name="GENERATOR_ARGUMENTS_IN_TWO_FORMS",
         title="Generator Arguments in Two Forms",
-        template="<key> '{element_name}': write the generator arguments in the call or as attributes, not both.",
-        cause="generator= is a call, and the key also has min=, max= or granularity=.",
+        template=(
+            "<{element_tag}> '{element_name}': write the generator arguments in the call or as attributes, not both."
+        ),
+        cause="generator= is a call, and the element also has min=, max=, granularity=, minLength= or maxLength=.",
         resolution=(
             'Write generator="IntegerGenerator" min="1" max="9", or generator="IntegerGenerator(min=1, max=9)" '
             "without the attributes."

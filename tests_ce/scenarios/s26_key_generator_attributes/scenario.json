@@ -2,11 +2,12 @@
   "title": "A key passes min, max and granularity to its generator as attributes (#456)",
   "proves": [
     "generator=\"IntegerGenerator\" min= max= draws inside the bounds; one bound alone keeps the other default",
-    "type=\"int\" next to the attribute form does not change it",
+    "type=\"int\" next to the attribute form does not change it; type=\"string\" next to it is the cast of the drawn value (#458)",
     "FloatGenerator takes granularity= as an attribute, and DateTimeGenerator takes its text bounds as written",
+    "StringGenerator takes minLength= and maxLength= as its min_len and max_len arguments (#459)",
     "each attribute form gives the same rows as the call form for the same seed",
     "an attribute the generator does not take is refused with I438, an attribute next to a call with I439",
-    "distribution=, a value source other than type= or generator=, and <variable> keep their earlier refusals"
+    "distribution= and a value source other than type= or generator= keep their earlier refusals; <variable> is s27"
   ],
   "products": {"members": 25},
   "equivalents": [
@@ -19,9 +20,39 @@
     {"name": "float_call_form",
      "patch": {"file": "datamimic.xml", "old": "generator=\"FloatGenerator\" min=\"0\" max=\"1\" granularity=\"0.25\"", "new": "generator=\"FloatGenerator(min=0, max=1, granularity=0.25)\""}},
     {"name": "datetime_call_form",
-     "patch": {"file": "datamimic.xml", "old": "generator=\"DateTimeGenerator\" min=\"2026-01-01 00:00:00\" max=\"2026-01-31 23:59:59\"", "new": "generator=\"DateTimeGenerator(min='2026-01-01 00:00:00', max='2026-01-31 23:59:59')\""}}
+     "patch": {"file": "datamimic.xml", "old": "generator=\"DateTimeGenerator\" min=\"2026-01-01 00:00:00\" max=\"2026-01-31 23:59:59\"", "new": "generator=\"DateTimeGenerator(min='2026-01-01 00:00:00', max='2026-01-31 23:59:59')\""}},
+    {"name": "string_typed_datetime_call_form",
+     "patch": {"file": "datamimic.xml", "old": "generator=\"DateTimeGenerator\" min=\"2026-02-01 00:00:00\"\n             max=\"2026-02-28 23:59:59\"", "new": "generator=\"DateTimeGenerator(min='2026-02-01 00:00:00', max='2026-02-28 23:59:59')\""}},
+    {"name": "string_typed_granularity_call_form",
+     "patch": {"file": "datamimic.xml", "old": "generator=\"FloatGenerator\" min=\"0\" max=\"1\" granularity=\"0.5\"", "new": "generator=\"FloatGenerator(min=0, max=1, granularity=0.5)\""}},
+    {"name": "string_length_call_form",
+     "patch": {"file": "datamimic.xml", "old": "generator=\"StringGenerator\" minLength=\"8\" maxLength=\"12\"", "new": "generator=\"StringGenerator(min_len=8, max_len=12)\""}},
+    {"name": "string_type_beside_the_length_attributes",
+     "patch": {"file": "datamimic.xml", "old": "<key name=\"code\" generator=", "new": "<key name=\"code\" type=\"string\" generator="}}
   ],
   "negatives": [
+    {"name": "string_lengths_are_applied", "diagnostic": "row_condition",
+     "patch": {"file": "datamimic.xml", "old": " minLength=\"8\"", "new": ""}},
+    {"name": "length_the_generator_does_not_take", "diagnostic": "child_execution", "issue": "I438",
+     "patch": {"file": "datamimic.xml", "old": "generator=\"IntegerGenerator\" max=\"3\"", "new": "generator=\"IntegerGenerator\" max=\"3\" minLength=\"2\""}},
+    {"name": "length_call_and_attribute", "diagnostic": "child_execution", "issue": "I439",
+     "patch": {"file": "datamimic.xml", "old": "generator=\"StringGenerator\" minLength=\"8\"", "new": "generator=\"StringGenerator(min_len=8)\""}},
+    {"name": "length_is_not_a_literal", "diagnostic": "child_execution", "issue": "I436",
+     "patch": {"file": "datamimic.xml", "old": "minLength=\"8\"", "new": "minLength=\"eight\""}},
+    {"name": "length_min_above_max_is_refused_as_in_the_call_form", "diagnostic": "child_execution", "issue": "I832",
+     "patch": {"file": "datamimic.xml", "old": "minLength=\"8\"", "new": "minLength=\"13\""}},
+    {"name": "length_next_to_another_value_source", "diagnostic": "DM218",
+     "patch": {"file": "datamimic.xml", "old": "generator=\"StringGenerator\" minLength=\"8\"", "new": "values=\"'abcdefgh'\" minLength=\"8\""}},
+    {"name": "length_on_a_numeric_type_without_generator", "diagnostic": "DM220",
+     "patch": {"file": "datamimic.xml", "old": "generator=\"IntegerGenerator\" max=\"3\"", "new": "type=\"int\" minLength=\"3\""}},
+    {"name": "string_typed_datetime_bounds_are_applied", "diagnostic": "row_condition",
+     "patch": {"file": "datamimic.xml", "old": "max=\"2026-02-28 23:59:59\"", "new": "max=\"2026-04-30 23:59:59\""}},
+    {"name": "string_typed_granularity_is_applied", "diagnostic": "allowed_values",
+     "patch": {"file": "datamimic.xml", "old": " granularity=\"0.5\"", "new": ""}},
+    {"name": "bounds_on_a_string_type_without_generator", "diagnostic": "DM220",
+     "patch": {"file": "datamimic.xml", "old": "type=\"string\" generator=\"DateTimeGenerator\" min", "new": "type=\"string\" min"}},
+    {"name": "granularity_on_an_int_type_without_generator", "diagnostic": "DM220",
+     "patch": {"file": "datamimic.xml", "old": "type=\"string\" generator=\"FloatGenerator\"", "new": "type=\"int\""}},
     {"name": "integer_bounds_are_applied", "diagnostic": "range",
      "patch": {"file": "datamimic.xml", "old": "generator=\"IntegerGenerator\" min=\"18\" max=\"65\"", "new": "generator=\"IntegerGenerator\""}},
     {"name": "granularity_is_applied", "diagnostic": "allowed_values",
@@ -45,12 +76,10 @@
     {"name": "unknown_generator_with_attributes", "diagnostic": "child_execution", "issue": "I436",
      "patch": {"file": "datamimic.xml", "old": "generator=\"IntegerGenerator\" min=\"18\"", "new": "generator=\"IntegerGen\" min=\"18\""}},
     {"name": "granularity_without_bounds", "diagnostic": "DM214",
-     "patch": {"file": "datamimic.xml", "old": "generator=\"FloatGenerator\" min=\"0\" max=\"1\" granularity", "new": "generator=\"FloatGenerator\" granularity"}},
+     "patch": {"file": "datamimic.xml", "old": "name=\"score\" generator=\"FloatGenerator\" min=\"0\" max=\"1\" granularity", "new": "name=\"score\" generator=\"FloatGenerator\" granularity"}},
     {"name": "distribution_next_to_generator", "diagnostic": "DM218",
      "patch": {"file": "datamimic.xml", "old": "min=\"1\" max=\"5\"", "new": "min=\"1\" max=\"5\" distribution=\"cumulated\""}},
     {"name": "bounds_next_to_another_value_source", "diagnostic": "DM218",
-     "patch": {"file": "datamimic.xml", "old": "generator=\"IntegerGenerator\" max=\"3\"", "new": "values=\"0, 1, 2, 3\" max=\"3\""}},
-    {"name": "variable_keeps_the_call_form", "diagnostic": "DM103",
-     "patch": {"file": "datamimic.xml", "old": "<key name=\"member_id\"", "new": "<variable name=\"bonus\" generator=\"IntegerGenerator\" min=\"1\" max=\"2\"/>\n        <key name=\"member_id\""}}
+     "patch": {"file": "datamimic.xml", "old": "generator=\"IntegerGenerator\" max=\"3\"", "new": "values=\"0, 1, 2, 3\" max=\"3\""}}
   ]
 }

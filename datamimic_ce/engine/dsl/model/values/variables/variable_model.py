@@ -13,13 +13,14 @@ from datamimic_ce.engine.dsl.model.constraints import (
     SOURCE_DISTRIBUTION_VALUES,
     VARIABLE_GENERATION_EXCLUSIVE,
     VARIABLE_GENERATION_REQUIRED,
+    VARIABLE_GENERATOR_ARGUMENT_CONSTRAINTS,
     VARIABLE_STORAGE_VALUES,
     Constraint,
     constraints_schema_extra,
     element_constraints,
     resolved_values,
 )
-from datamimic_ce.engine.dsl.model.validation import ModelUtil, check_weights_require_values
+from datamimic_ce.engine.dsl.model.validation import ModelUtil, check_constraints, check_weights_require_values
 from datamimic_ce.engine.dsl.vocabulary.constants.attribute_constants import (
     ATTR_CONSTANT,
     ATTR_CONVERTER,
@@ -30,9 +31,14 @@ from datamimic_ce.engine.dsl.vocabulary.constants.attribute_constants import (
     ATTR_DISTRIBUTION,
     ATTR_ENTITY,
     ATTR_GENERATOR,
+    ATTR_GRANULARITY,
     ATTR_IN_DATE_FORMAT,
     ATTR_ITERATION_SELECTOR,
     ATTR_LOCALE,
+    ATTR_MAX,
+    ATTR_MAX_LENGTH,
+    ATTR_MIN,
+    ATTR_MIN_LENGTH,
     ATTR_NAME,
     ATTR_OUT_DATE_FORMAT,
     ATTR_PATTERN,
@@ -138,9 +144,39 @@ class VariableModel(BaseModel):
     generator: str | None = Field(
         None,
         description="Predefined generator constructor used to produce the variable's value; validated "
-        "against the generator registry. Parameters go inside the call, not into attributes: "
-        'generator="IntegerGenerator(min=1, max=9)".',
+        "against the generator registry. Write parameters in the call, "
+        'generator="IntegerGenerator(min=1, max=9)", or write min, max, granularity, minLength (min_len) and '
+        'maxLength (max_len) as attributes of the variable, generator="IntegerGenerator" min="1" max="9", '
+        "when the generator takes them. Both forms give the same data; one variable uses one form.",
         examples=["IncrementGenerator", "DateTimeGenerator(random=True)"],
+    )
+    # Generator arguments as attributes (#460); there is no type= range draw on a <variable>.
+    min: str | None = Field(
+        None,
+        description='The generator\'s min argument: generator="IntegerGenerator" min="1" max="9". Requires generator.',
+        examples=["0", "2026-01-01 00:00:00"],
+    )
+    max: str | None = Field(
+        None,
+        description="The generator's max argument. Requires generator.",
+        examples=["99", "2026-12-31 23:59:59"],
+    )
+    granularity: str | None = Field(
+        None,
+        description="The generator's granularity argument (FloatGenerator). Requires generator and min or max.",
+        examples=["0.5"],
+    )
+    min_length: str | None = Field(
+        None,
+        alias=ATTR_MIN_LENGTH,
+        description='The generator\'s min_len argument: generator="StringGenerator" minLength="5". Requires generator.',
+        examples=["5"],
+    )
+    max_length: str | None = Field(
+        None,
+        alias=ATTR_MAX_LENGTH,
+        description="The generator's max_len argument. Requires generator.",
+        examples=["12"],
     )
     dataset: str | None = Field(
         None,
@@ -311,6 +347,11 @@ class VariableModel(BaseModel):
                 ATTR_SCRIPT,
                 ATTR_WEIGHT_COLUMN,
                 ATTR_GENERATOR,
+                ATTR_MIN,
+                ATTR_MAX,
+                ATTR_GRANULARITY,
+                ATTR_MIN_LENGTH,
+                ATTR_MAX_LENGTH,
                 ATTR_DATASET,
                 ATTR_LOCALE,
                 ATTR_OUT_DATE_FORMAT,
@@ -342,6 +383,11 @@ class VariableModel(BaseModel):
     @classmethod
     def validate_weights_require_values(cls, values: dict):
         return check_weights_require_values(values)
+
+    @model_validator(mode="before")
+    @classmethod
+    def validate_generator_arguments_require_generator(cls, values: dict):
+        return check_constraints(values, VARIABLE_GENERATOR_ARGUMENT_CONSTRAINTS)
 
     @model_validator(mode="before")
     @classmethod

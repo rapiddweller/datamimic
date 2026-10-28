@@ -107,7 +107,8 @@ class KeyModel(BaseModel):
     min_length: str | None = Field(
         None,
         alias=ATTR_MIN_LENGTH,
-        description='Minimum length for a type="string" (StringGenerator) or type="binary" (BinaryGenerator) payload.',
+        description='Minimum length for a type="string" (StringGenerator) or type="binary" (BinaryGenerator) payload. '
+        'With generator= it is the generator\'s min_len argument: generator="StringGenerator" minLength="5".',
         examples=["5", "1"],
     )
     mime_type: str | None = Field(
@@ -120,7 +121,8 @@ class KeyModel(BaseModel):
     max_length: str | None = Field(
         None,
         alias=ATTR_MAX_LENGTH,
-        description='Maximum length for a type="string" (StringGenerator) or type="binary" (BinaryGenerator) payload.',
+        description='Maximum length for a type="string" (StringGenerator) or type="binary" (BinaryGenerator) payload. '
+        "With generator= it is the generator's max_len argument.",
         examples=["12", "16"],
     )
     source: str | None = Field(
@@ -171,7 +173,8 @@ class KeyModel(BaseModel):
         None,
         description="Predefined generator constructor used to produce the key's value; validated "
         "against the generator registry. Write parameters in the call, "
-        'generator="IntegerGenerator(min=1, max=9)", or write min, max and granularity as attributes of '
+        'generator="IntegerGenerator(min=1, max=9)", or write min, max, granularity, minLength (min_len) and '
+        "maxLength (max_len) as attributes of "
         'the key, generator="IntegerGenerator" min="1" max="9", when the generator takes them. Both '
         "forms give the same data; one key uses one form.",
         examples=["IncrementGenerator", "DateTimeGenerator(random=True)"],
