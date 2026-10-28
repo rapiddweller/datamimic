@@ -231,10 +231,7 @@ ISSUES: list[IssueDefinition] = [
         code=IssueCode.TASK_EXPRESSION_BUILTIN_UNAVAILABLE,
         name="TASK_EXPRESSION_BUILTIN_UNAVAILABLE",
         title="Script Builtin Unavailable",
-        template=(
-            "Expression '{expr}' calls the Python builtin '{builtin}', which scripts do not offer. "
-            "Scripts offer these builtins: {offered}"
-        ),
+        template=("Expression '{expr}' calls the Python builtin '{builtin}', which scripts do not offer."),
         cause="A script calls a Python builtin that DATAMIMIC scripts do not offer.",
         resolution="Use a builtin that scripts offer. Read a file through a source element, not with open().",
         guidance=GUIDANCE_SCRIPT_BUILTIN,

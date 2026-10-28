@@ -17,9 +17,10 @@ GUIDANCE_COUNT_SCOPE = (
 
 GUIDANCE_DESCRIPTOR_ENV = "Check the descriptor file in your project environment configuration or uploaded assets."
 
-# The one way CE joins a second file; tests_ce/scenarios/s31_file_lookup builds this text.
+# The one-product lookup form, the best default for a join; tests_ce/scenarios/s31_file_lookup builds this text.
 FILE_LOOKUP_PATTERN = (
-    "To look up a row of another file by a key, read the whole file once with "
+    "To look up a row of another file by a key, read the whole file inside the <generate> of the record "
+    "(not at setup level) with "
     '<variable name="branches" source="data/entity/branches.ent.csv" storage="data" distribution="ordered"/> '
     "and select the row in a script: "
     '<variable name="branch" script="{b.branch_id: b for b in branches}.get(branch_id)"/>. '
@@ -32,11 +33,18 @@ GUIDANCE_LOOKUP_POINTER = f"To look up a row of another file by a key, read {_LO
 # where= reads one row, so the generic hint (parent.name, root.name) sends a lookup to a dead end (campaign b3, e07).
 GUIDANCE_WHERE_SCOPE = (
     "where= reads only the current file row: its columns bare or as this.<column>, and the expression functions; "
-    "parent., root., a <variable> and a setup name do not exist there. A row of another file with the key of the "
+    "parent., root., a <variable> and a setup name do not exist there. Every column is text: cast it, for example "
+    "int(amount_cents). A row of another file with the key of the "
     f"current record is a lookup, not a filter. {GUIDANCE_FILE_LOOKUP}"
 )
-# Build shows no engine message, so this names the replacements of the builtins agents reach for (campaign b3, e07).
+# The Python builtins in the script globals (SAFE_GLOBALS); a unit test pins the two equal.
+SCRIPT_BUILTIN_NAMES = (
+    "abs", "all", "any", "bin", "bool", "dict", "filter", "float", "hex", "int", "len", "list",
+    "map", "max", "min", "oct", "range", "round", "set", "sorted", "str", "sum", "tuple", "type",
+)  # fmt: skip
+# Build shows no engine message, so this names the offered builtins and the replacements agents need (campaign b3, e07).
 GUIDANCE_SCRIPT_BUILTIN = (
+    f"Scripts offer these Python builtins: {', '.join(SCRIPT_BUILTIN_NAMES)}. "
     "Write next(...) as ([x for x in rows if ...] or [None])[0] and isinstance(x, str) as type(x) is str. "
     f"{GUIDANCE_FILE_LOOKUP}"
 )

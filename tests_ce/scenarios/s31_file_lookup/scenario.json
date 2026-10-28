@@ -8,49 +8,157 @@
     "the lookup variables and an unlisted source column are not output fields",
     "a list comprehension spells the same lookup, and the order of the second file does not change the result",
     "the lookup table in a <nestedKey> is an output field, a key of another type finds no row, a missing default fails the run, and <variable> has no where=",
-    "a script can use the builtins that scripts offer (str), and open() and next() fail with I956, which names the builtin; a bare builtin name that is no field (id) stays I832",
-    "where= reads only the current file row: a where= that reads parent. fails with I832 and the where= guidance"
+    "a script can use the builtins that scripts offer (str), and open() and next() fail with I957, which names the builtin; a bare builtin name that is no field (id) stays I832",
+    "where= reads only the current file row: a where= that reads parent. fails with I832 and the where= guidance",
+    "the lookup variable goes inside the <generate> (a setup-level one fails with I830); a where= value error gets the issue resolution, not the scope hint; a key script name failure keeps the scope hint"
   ],
-  "products": {"account_view": 6},
+  "products": {
+    "account_view": 6
+  },
   "equivalents": [
-    {"name": "list_comprehension_lookup",
-     "patch": {"file": "datamimic.xml",
-               "old": "script=\"{b.branch_id: b for b in branches}.get(branch_id)\"",
-               "new": "script=\"([b for b in branches if b.branch_id == branch_id] or [None])[0]\""}},
-    {"name": "lookup_file_order_does_not_matter",
-     "patch": {"file": "datamimic.xml",
-               "old": " storage=\"data\" distribution=\"ordered\"",
-               "new": " storage=\"data\""}},
-    {"name": "an_offered_builtin_works",
-     "patch": {"file": "datamimic.xml", "old": "script=\"branch.city if branch", "new": "script=\"str(branch.city) if branch"}}
+    {
+      "name": "list_comprehension_lookup",
+      "patch": {
+        "file": "datamimic.xml",
+        "old": "script=\"{b.branch_id: b for b in branches}.get(branch_id)\"",
+        "new": "script=\"([b for b in branches if b.branch_id == branch_id] or [None])[0]\""
+      }
+    },
+    {
+      "name": "lookup_file_order_does_not_matter",
+      "patch": {
+        "file": "datamimic.xml",
+        "old": " storage=\"data\" distribution=\"ordered\"",
+        "new": " storage=\"data\""
+      }
+    },
+    {
+      "name": "an_offered_builtin_works",
+      "patch": {
+        "file": "datamimic.xml",
+        "old": "script=\"branch.city if branch",
+        "new": "script=\"str(branch.city) if branch"
+      }
+    }
   ],
   "negatives": [
-    {"name": "a_nested_key_lookup_table_is_an_output_field", "diagnostic": "field_absent",
-     "patch": {"file": "datamimic.xml",
-               "old": "<variable name=\"branches\" source=\"data/entity/branches.ent.csv\" storage=\"data\" distribution=\"ordered\"/>\n        <variable name=\"branch\" script=\"{b.branch_id: b for b in branches}",
-               "new": "<nestedKey name=\"branches\" type=\"list\" source=\"data/entity/branches.ent.csv\" distribution=\"ordered\"/>\n        <variable name=\"branch\" script=\"{b.branch_id: b for b in this.branches}"}},
-    {"name": "a_key_of_another_type_finds_no_row", "diagnostic": "row_condition",
-     "patch": {"file": "datamimic.xml", "old": ".get(branch_id)", "new": ".get(int(branch_id[2:]))"}},
-    {"name": "an_unknown_key_needs_a_default", "diagnostic": "child_execution", "issue": "I832",
-     "patch": {"file": "datamimic.xml", "old": "script=\"branch.city if branch else 'UNKNOWN'\"", "new": "script=\"branch.city\""}},
-    {"name": "a_variable_has_no_where", "diagnostic": "DM103",
-     "patch": {"file": "datamimic.xml",
-               "old": "<variable name=\"branch\" script=\"{b.branch_id: b for b in branches}.get(branch_id)\"/>",
-               "new": "<variable name=\"branch\" source=\"data/entity/branches.ent.csv\" where=\"branch_id == this.branch_id\" distribution=\"ordered\"/>"}},
-    {"name": "a_script_cannot_open_a_file", "diagnostic": "child_execution", "issue": "I956",
-     "run_error": "calls the Python builtin 'open', which scripts do not offer",
-     "patch": {"file": "datamimic.xml", "old": "script=\"branch.city if branch else 'UNKNOWN'\"",
-               "new": "script=\"open('data/entity/branches.ent.csv').read()\""}},
-    {"name": "next_is_no_script_builtin", "diagnostic": "child_execution", "issue": "I956",
-     "run_error": "calls the Python builtin 'next', which scripts do not offer",
-     "patch": {"file": "datamimic.xml", "old": "script=\"{b.branch_id: b for b in branches}.get(branch_id)\"",
-               "new": "script=\"next((b for b in branches if b.branch_id == branch_id), None)\""}},
-    {"name": "a_bare_builtin_name_is_a_missing_field", "diagnostic": "child_execution", "issue": "I832",
-     "run_error": "NameError: name 'id' is not defined: check spelling",
-     "patch": {"file": "datamimic.xml", "old": "script=\"branch.city if branch else 'UNKNOWN'\"", "new": "script=\"str(id)\""}},
-    {"name": "where_reads_only_the_current_row", "diagnostic": "child_execution", "issue": "I832",
-     "run_error": "where= reads only the current file row",
-     "patch": {"file": "datamimic.xml", "old": "columns=\"account_id, branch_id\">",
-               "new": "columns=\"account_id, branch_id\" where=\"branch_id != parent.closed_branch\">"}}
+    {
+      "name": "a_nested_key_lookup_table_is_an_output_field",
+      "diagnostic": "field_absent",
+      "patch": {
+        "file": "datamimic.xml",
+        "old": "<variable name=\"branches\" source=\"data/entity/branches.ent.csv\" storage=\"data\" distribution=\"ordered\"/>\n        <variable name=\"branch\" script=\"{b.branch_id: b for b in branches}",
+        "new": "<nestedKey name=\"branches\" type=\"list\" source=\"data/entity/branches.ent.csv\" distribution=\"ordered\"/>\n        <variable name=\"branch\" script=\"{b.branch_id: b for b in this.branches}"
+      }
+    },
+    {
+      "name": "a_key_of_another_type_finds_no_row",
+      "diagnostic": "row_condition",
+      "patch": {
+        "file": "datamimic.xml",
+        "old": ".get(branch_id)",
+        "new": ".get(int(branch_id[2:]))"
+      }
+    },
+    {
+      "name": "an_unknown_key_needs_a_default",
+      "diagnostic": "child_execution",
+      "issue": "I832",
+      "patch": {
+        "file": "datamimic.xml",
+        "old": "script=\"branch.city if branch else 'UNKNOWN'\"",
+        "new": "script=\"branch.city\""
+      }
+    },
+    {
+      "name": "a_variable_has_no_where",
+      "diagnostic": "DM103",
+      "remediation": "where= keeps rows of a <generate> or <iterate> file source. To look up a row of another file",
+      "patch": {
+        "file": "datamimic.xml",
+        "old": "<variable name=\"branch\" script=\"{b.branch_id: b for b in branches}.get(branch_id)\"/>",
+        "new": "<variable name=\"branch\" source=\"data/entity/branches.ent.csv\" where=\"branch_id == this.branch_id\" distribution=\"ordered\"/>"
+      }
+    },
+    {
+      "name": "a_script_cannot_open_a_file",
+      "diagnostic": "child_execution",
+      "issue": "I957",
+      "run_error": "calls the Python builtin 'open', which scripts do not offer",
+      "remediation": "Scripts offer these Python builtins: abs, all, any, bin",
+      "patch": {
+        "file": "datamimic.xml",
+        "old": "script=\"branch.city if branch else 'UNKNOWN'\"",
+        "new": "script=\"open('data/entity/branches.ent.csv').read()\""
+      }
+    },
+    {
+      "name": "next_is_no_script_builtin",
+      "diagnostic": "child_execution",
+      "issue": "I957",
+      "run_error": "calls the Python builtin 'next', which scripts do not offer",
+      "remediation": "Write next(...) as ([x for x in rows if ...] or [None])[0]",
+      "patch": {
+        "file": "datamimic.xml",
+        "old": "script=\"{b.branch_id: b for b in branches}.get(branch_id)\"",
+        "new": "script=\"next((b for b in branches if b.branch_id == branch_id), None)\""
+      }
+    },
+    {
+      "name": "a_bare_builtin_name_is_a_missing_field",
+      "diagnostic": "child_execution",
+      "issue": "I832",
+      "run_error": "NameError: name 'id' is not defined: check spelling",
+      "remediation": "Use parent.name for the immediate enclosing scope",
+      "patch": {
+        "file": "datamimic.xml",
+        "old": "script=\"branch.city if branch else 'UNKNOWN'\"",
+        "new": "script=\"str(id)\""
+      }
+    },
+    {
+      "name": "where_reads_only_the_current_row",
+      "diagnostic": "child_execution",
+      "issue": "I832",
+      "run_error": "where= reads only the current file row",
+      "remediation": "where= reads only the current file row: its columns bare or as this.<column>, and the expression functions; parent., root., a <variable> and a setup name do not exist there. Every column is text: cast it",
+      "patch": {
+        "file": "datamimic.xml",
+        "old": "columns=\"account_id, branch_id\">",
+        "new": "columns=\"account_id, branch_id\" where=\"branch_id != parent.closed_branch\">"
+      }
+    },
+    {
+      "name": "the_lookup_variable_goes_inside_the_generate",
+      "diagnostic": "child_execution",
+      "issue": "I830",
+      "patch": {
+        "file": "datamimic.xml",
+        "old": "    <generate name=\"account_view\" source=\"data/entity/accounts.ent.csv\" distribution=\"ordered\" columns=\"account_id, branch_id\">\n        <!-- storage=\"data\" holds every row of the file, the same list in each record; a variable is no output field.\n             branch is None when no branch row has the key. Both keys are file text. -->\n        <variable name=\"branches\" source=\"data/entity/branches.ent.csv\" storage=\"data\" distribution=\"ordered\"/>",
+        "new": "    <variable name=\"branches\" source=\"data/entity/branches.ent.csv\" storage=\"data\" distribution=\"ordered\"/>\n    <generate name=\"account_view\" source=\"data/entity/accounts.ent.csv\" distribution=\"ordered\" columns=\"account_id, branch_id\">\n        <!-- storage=\"data\" holds every row of the file, the same list in each record; a variable is no output field.\n             branch is None when no branch row has the key. Both keys are file text. -->"
+      }
+    },
+    {
+      "name": "a_where_value_error_gets_no_scope_hint",
+      "diagnostic": "child_execution",
+      "issue": "I832",
+      "remediation": "Fix the expression or script and retry.",
+      "patch": {
+        "file": "datamimic.xml",
+        "old": "columns=\"account_id, branch_id\">",
+        "new": "columns=\"account_id, branch_id\" where=\"int(account_id) == 1\">"
+      }
+    },
+    {
+      "name": "a_key_script_keeps_the_scope_hint",
+      "diagnostic": "child_execution",
+      "issue": "I832",
+      "remediation": "Use parent.name for the immediate enclosing scope",
+      "patch": {
+        "file": "datamimic.xml",
+        "old": "script=\"branch.city if branch else 'UNKNOWN'\"",
+        "new": "script=\"parent.city\""
+      }
+    }
   ]
 }

@@ -214,7 +214,9 @@ def _runtime_hint(err: Exception) -> str:
                 named = isinstance(current.__cause__, NameError | AttributeError)
                 if attribute == ATTR_COUNT:
                     return GUIDANCE_COUNT_SCOPE if named else issue.resolution
-                return GUIDANCE_WHERE_SCOPE if attribute == ATTR_WHERE and named else _SCOPE_HINT
+                if attribute == ATTR_WHERE:
+                    return GUIDANCE_WHERE_SCOPE if named else issue.resolution
+                return _SCOPE_HINT
             if isinstance(current, TaskConfigError) and current.kept_rows is not None:
                 return _KEPT_ROWS_HINT
             return issue.guidance or issue.resolution

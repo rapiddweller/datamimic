@@ -4,24 +4,23 @@
 
 """Build tells an agent why a script failed and how to join a second file (campaign b3, e07).
 
-Python-only: the scenario harness checks the diagnostic code and issue, not the remediation text. Each case
-patches tests_ce/scenarios/s31_file_lookup, so the descriptor stays the checked-in DSL project."""
+The Build remediations of the s31 negatives are checked in s31/scenario.json. What stays here has no one-text
+patch of s31 (a <nestedKey> with where=) or is static catalog text."""
 
+import builtins
 import shutil
 from pathlib import Path
-
-import pytest
 
 from datamimic_ce.authoring import create_authoring_application
 from datamimic_ce.authoring.domain.requests import PROJECT_ENTRY_PATH, RejectedBuild
 from datamimic_ce.authoring.domain.rule_catalog import authoring_rule_definition
 from datamimic_ce.authoring.domain.script_semantics import LibraryRefusal, LibraryRefusalReason
-from datamimic_ce.engine.runtime.scripting.expression_globals import SCRIPT_BUILTINS, UNOFFERED_BUILTINS
+from datamimic_ce.engine.runtime.scripting.expression_globals import SAFE_GLOBALS, UNOFFERED_BUILTINS
 from datamimic_ce.errors import (
     GUIDANCE_FILE_LOOKUP,
     GUIDANCE_LOOKUP_POINTER,
     GUIDANCE_SCRIPT_BUILTIN,
-    GUIDANCE_WHERE_SCOPE,
+    SCRIPT_BUILTIN_NAMES,
 )
 
 _SCENARIO = Path(__file__).parents[2] / "scenarios" / "s31_file_lookup"
@@ -40,47 +39,17 @@ def _remediations(tmp_path: Path, old: str, new: str) -> dict[str, str]:
     return {str(item.code): str(item.remediation) for item in built.diagnostics}
 
 
-@pytest.mark.parametrize(
-    "script",
-    [
-        "next((b for b in branches if b.branch_id == branch_id), None)",
-        "open('data/entity/branches.ent.csv').read()",
-    ],
-    ids=["next", "open"],
-)
-def test_build_gives_the_builtin_replacements_and_the_lookup(tmp_path: Path, script: str) -> None:
-    remediation = _remediations(tmp_path, _LOOKUP, f'<variable name="branch" script="{script}"/>')["child_execution"]
-
-    assert remediation == GUIDANCE_SCRIPT_BUILTIN
-
-
-def test_the_builtin_guidance_names_only_what_scripts_lack_and_offer() -> None:
+def test_the_builtin_guidance_lists_exactly_the_builtins_in_the_script_globals() -> None:
+    """Python-only: the errors layer cannot import the engine globals, so this pins the two equal."""
+    assert tuple(sorted(SAFE_GLOBALS.keys() & set(dir(builtins)))) == SCRIPT_BUILTIN_NAMES
     assert {"next", "isinstance", "open"} <= UNOFFERED_BUILTINS
-    assert "type" in SCRIPT_BUILTINS and "type(x) is str" in GUIDANCE_SCRIPT_BUILTIN
+    assert "type" in SCRIPT_BUILTIN_NAMES and "type(x) is str" in GUIDANCE_SCRIPT_BUILTIN
 
 
-def test_build_says_where_reads_one_row_and_gives_the_lookup(tmp_path: Path) -> None:
+def test_where_on_a_nested_key_points_to_the_lookup(tmp_path: Path) -> None:
+    """The <variable> case is the s31 negative a_variable_has_no_where; s31 has no <nestedKey> to patch in one text."""
     remediation = _remediations(
-        tmp_path,
-        'columns="account_id, branch_id">',
-        'columns="account_id, branch_id" where="branch_id != parent.closed_branch">',
-    )["child_execution"]
-
-    assert remediation == GUIDANCE_WHERE_SCOPE and GUIDANCE_FILE_LOOKUP in remediation
-
-
-def test_build_keeps_the_scope_hint_for_a_key_script(tmp_path: Path) -> None:
-    remediation = _remediations(tmp_path, "script=\"branch.city if branch else 'UNKNOWN'\"", 'script="parent.city"')[
-        "child_execution"
-    ]
-
-    assert remediation != GUIDANCE_WHERE_SCOPE and "parent.name" in remediation
-
-
-@pytest.mark.parametrize("element", ["variable", "nestedKey"])
-def test_where_on_a_value_element_points_to_the_lookup(tmp_path: Path, element: str) -> None:
-    remediation = _remediations(
-        tmp_path, _LOOKUP, f'<{element} name="branch" source="data/entity/branches.ent.csv" where="branch_id == x"/>'
+        tmp_path, _LOOKUP, '<nestedKey name="branch" source="data/entity/branches.ent.csv" where="branch_id == x"/>'
     )["DM103"]
 
     assert remediation.endswith(f"where= keeps rows of a <generate> or <iterate> file source. {GUIDANCE_FILE_LOOKUP}")

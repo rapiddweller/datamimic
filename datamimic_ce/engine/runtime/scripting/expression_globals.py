@@ -105,8 +105,7 @@ SAFE_GLOBALS: dict[str, object] = {
     "base64": base64,
     "__builtins__": {},
 }
-# The Python builtins a script can use; a script that calls another one fails with I956.
-SCRIPT_BUILTINS = tuple(sorted(SAFE_GLOBALS.keys() & set(dir(builtins))))
+# A script that calls one of these Python builtins fails with I957 (SCRIPT_BUILTIN_NAMES are the offered ones).
 UNOFFERED_BUILTINS = frozenset(dir(builtins)) - SAFE_GLOBALS.keys()
 
 

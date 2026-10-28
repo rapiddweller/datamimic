@@ -12,7 +12,6 @@ from typing import Protocol, TypeGuard
 from datamimic_ce.engine.dsl.api import ATTR_WHERE, EL_GENERATE
 from datamimic_ce.engine.runtime.scripting.expression_globals import (
     NON_VALUE_TYPES,
-    SCRIPT_BUILTINS,
     UNOFFERED_BUILTINS,
     row_expression_globals,
 )
@@ -217,7 +216,6 @@ def evaluate_python(
                 code=IssueCode.TASK_EXPRESSION_BUILTIN_UNAVAILABLE,
                 expr=diagnostic,
                 builtin=error.name,
-                offered=", ".join(SCRIPT_BUILTINS),
             ) from error
         # A missing name is never the replaced name, and only `replaced.missing` blames the replacement.
         receivers = (

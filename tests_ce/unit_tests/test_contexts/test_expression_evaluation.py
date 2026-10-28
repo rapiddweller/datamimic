@@ -263,7 +263,7 @@ def test_a_field_named_max_wins_inside_a_comprehension_on_python_3_11() -> None:
 def test_a_python_builtin_that_scripts_do_not_offer_is_named_with_the_offered_ones(builtin: str) -> None:
     """Python-only: s31 proves open and next through Build; this pins the other builtins blind agents wrote
     (campaign b3, e07) and the exact engine message."""
-    from datamimic_ce.engine.runtime.scripting.expression_globals import SCRIPT_BUILTINS
+    from datamimic_ce.errors import SCRIPT_BUILTIN_NAMES
 
     with pytest.raises(TaskConfigError) as exc:
         _context().evaluate_python_expression(f"{builtin}(x)")
@@ -273,10 +273,9 @@ def test_a_python_builtin_that_scripts_do_not_offer_is_named_with_the_offered_on
         code=IssueCode.TASK_EXPRESSION_BUILTIN_UNAVAILABLE,
         expr="configured expression",
         builtin=builtin,
-        offered=", ".join(SCRIPT_BUILTINS),
     )
     assert isinstance(exc.value.__cause__, NameError)
-    assert builtin not in SCRIPT_BUILTINS and "len" in SCRIPT_BUILTINS
+    assert builtin not in SCRIPT_BUILTIN_NAMES and "len" in SCRIPT_BUILTIN_NAMES
 
 
 def test_a_builtin_name_in_data_text_is_not_shown() -> None:
@@ -289,7 +288,7 @@ def test_a_builtin_name_in_data_text_is_not_shown() -> None:
 
 
 def test_a_bare_builtin_name_that_no_field_holds_keeps_the_scope_error() -> None:
-    """Python-only: an intermediate ancestor field such as id does not resolve bare; it is a scope error, not I956."""
+    """Python-only: an intermediate ancestor field such as id does not resolve bare; it is a scope error, not I957."""
     with pytest.raises(TaskConfigError) as exc:
         _context().evaluate_python_expression("int(id) + 1")
 

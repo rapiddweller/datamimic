@@ -38,6 +38,7 @@ from datamimic_ce.errors.catalog import (
     GUIDANCE_LOOKUP_POINTER,
     GUIDANCE_SCRIPT_BUILTIN,
     GUIDANCE_WHERE_SCOPE,
+    SCRIPT_BUILTIN_NAMES,
 )
 from datamimic_ce.errors.codes import DomainErrorCode, ErrorCode, IssueCode
 from datamimic_ce.errors.context import DescriptorLocation
@@ -78,6 +79,7 @@ __all__ = [
     "GUIDANCE_LOOKUP_POINTER",
     "GUIDANCE_SCRIPT_BUILTIN",
     "GUIDANCE_WHERE_SCOPE",
+    "SCRIPT_BUILTIN_NAMES",
     "DomainError",
     "DomainErrorCode",
     "ClientConfigError",
