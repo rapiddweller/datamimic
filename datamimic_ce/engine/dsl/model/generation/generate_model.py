@@ -161,9 +161,9 @@ class GenerateModel(BaseModel):
     )
     separator: str | None = Field(
         None,
-        description="Field separator for delimited file sources (default '|'); set separator=\",\" to "
-        "read a comma-separated CSV.",
-        examples=[",", ";", "|"],
+        description="Field separator for delimited file sources (default '|'). Project data files use the pipe, "
+        "so leave it out; set it only to read an external file with another separator, such as a comma.",
+        examples=["|", ";", ","],
     )
     source_scripted: bool | None = Field(
         None,

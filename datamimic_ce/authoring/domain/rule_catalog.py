@@ -221,8 +221,8 @@ _AUTHORING_RULE_DEFINITIONS: tuple[RuleDefinition, ...] = (
         "A gated source mode combines mutually exclusive attributes.",
         "Keep only one source selector/type mode.",
         "MutuallyExclusiveWhen central constraint.",
-        '<variable name="x" source="rows.csv" type="row"/>',
-        '<variable name="x" source="rows.csv" type="row" selector="all"/>',
+        '<variable name="x" source="data/entity/rows.ent.csv" type="row"/>',
+        '<variable name="x" source="data/entity/rows.ent.csv" type="row" selector="all"/>',
         RuleSeverity.WARNING,
     ),
     _rule_definition(
@@ -233,7 +233,7 @@ _AUTHORING_RULE_DEFINITIONS: tuple[RuleDefinition, ...] = (
         "Add count bounds or use a declared database/mongodb source.",
         "GenerateTask and VariableTask database selector contract.",
         '<generate name="g" source="db" selector="select *"/>',
-        '<generate name="g" source="rows.csv" selector="all"/>',
+        '<generate name="g" source="data/entity/rows.ent.csv" selector="all"/>',
     ),
     _rule_definition(
         "DM212",
@@ -252,8 +252,8 @@ _AUTHORING_RULE_DEFINITIONS: tuple[RuleDefinition, ...] = (
         "A cyclic nestedKey without count bounds cannot terminate.",
         "Add count, minCount or maxCount.",
         "NestedKey runtime length contract.",
-        '<nestedKey name="x" source="rows.csv" cyclic="true" count="2"/>',
-        '<nestedKey name="x" source="rows.csv" cyclic="true"/>',
+        '<nestedKey name="x" type="list" source="data/entity/rows.ent.csv" cyclic="true" count="2"/>',
+        '<nestedKey name="x" type="list" source="data/entity/rows.ent.csv" cyclic="true"/>',
     ),
     _rule_definition(
         "DM214",
@@ -262,8 +262,8 @@ _AUTHORING_RULE_DEFINITIONS: tuple[RuleDefinition, ...] = (
         "A declared companion attribute is present without the mode it requires.",
         "Add the required mode attribute or remove the companion.",
         "Central Requires constraints.",
-        '<variable name="x" source="rows.csv" separator=","/>',
-        '<variable name="x" separator=","/>',
+        '<variable name="x" source="data/entity/rows.ent.csv" cyclic="true"/>',
+        '<variable name="x" cyclic="true"/>',
         RuleSeverity.WARNING,
     ),
     _rule_definition(
@@ -338,8 +338,8 @@ _AUTHORING_RULE_DEFINITIONS: tuple[RuleDefinition, ...] = (
         "A source read without distribution uses random order, not source order.",
         "Set distribution explicitly to ordered or random.",
         "SourceDistribution default runtime contract.",
-        '<variable name="x" source="rows.csv" distribution="ordered"/>',
-        '<variable name="x" source="rows.csv"/>',
+        '<variable name="x" source="data/entity/rows.ent.csv" distribution="ordered"/>',
+        '<variable name="x" source="data/entity/rows.ent.csv"/>',
     ),
     _rule_definition(
         "DM302",
@@ -348,8 +348,8 @@ _AUTHORING_RULE_DEFINITIONS: tuple[RuleDefinition, ...] = (
         "Non-ordered or unique source selection loads the complete source into memory.",
         "Use ordered for bounded paging or accept the memory cost explicitly.",
         "SourceDistribution.loads_all runtime contract.",
-        '<variable name="x" source="rows.csv" distribution="ordered"/>',
-        '<variable name="x" source="rows.csv" distribution="random"/>',
+        '<variable name="x" source="data/entity/rows.ent.csv" distribution="ordered"/>',
+        '<variable name="x" source="data/entity/rows.ent.csv" distribution="random"/>',
     ),
     _rule_definition(
         "DM303",
@@ -440,8 +440,8 @@ _AUTHORING_RULE_DEFINITIONS: tuple[RuleDefinition, ...] = (
         "Omit count to read the source once, or keep count at most the source size. "
         'For a file source, cyclic="True" also works; Build cannot prove a cyclic memstore readback.',
         "GenerateWorker StopIteration contract.",
-        '<iterate name="x" source="rows.csv" distribution="ordered"/>',
-        '<iterate name="x" source="rows.csv" count="99" distribution="ordered"/>',
+        '<iterate name="x" source="data/entity/rows.ent.csv" distribution="ordered"/>',
+        '<iterate name="x" source="data/entity/rows.ent.csv" count="99" distribution="ordered"/>',
     ),
     _rule_definition(
         "DM317",
@@ -462,7 +462,7 @@ _AUTHORING_RULE_DEFINITIONS: tuple[RuleDefinition, ...] = (
         "POSITIONAL_NUMBER_SEQUENCES and dynamic generate cardinality contract.",
         '<generate name="p" count="2"><generate name="c" count="2">'
         '<key name="n" type="int" min="1" max="4" distribution="step"/></generate></generate>',
-        '<generate name="p" source="rows.csv"><generate name="c" count="2">'
+        '<generate name="p" source="data/entity/rows.ent.csv"><generate name="c" count="2">'
         '<key name="n" type="int" min="1" max="2" distribution="step"/></generate></generate>',
     ),
     _rule_definition(
@@ -495,7 +495,7 @@ _AUTHORING_RULE_DEFINITIONS: tuple[RuleDefinition, ...] = (
         "A source is neither a supported data file nor a declared source id.",
         "Use a supported file or declare the memstore/database/mongodb id.",
         "Source routing contract.",
-        '<variable name="x" source="rows.csv"/>',
+        '<variable name="x" source="data/entity/rows.ent.csv"/>',
         '<variable name="x" source="missing"/>',
     ),
     _rule_definition(

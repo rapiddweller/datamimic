@@ -147,7 +147,7 @@ _ENTITY = "an *.ent.csv file must sit in data/entity/ or data/fixtures/"
 _SEPARATOR = 'separator="," overrides the default pipe separator'
 _PARAMETERS = "a *.properties file must sit in conf/"
 _DATA_FOLDER = "a file in data/ must sit in data/entity/, data/weighting/ or data/fixtures/"
-_STEP = "a step must be model/<nn>_<activity>.xml, or delivery/<nn>_<target>.xml with nn 90 to 99"
+_STEP = "a step must be model/<nn>_<activity>.xml, or delivery/<nn>_<activity>.xml with nn 90 to 99"
 _STEP_NAME = {("model",): re.compile(r"\d\d_"), ("delivery",): re.compile(r"9\d_")}
 
 
@@ -259,3 +259,9 @@ def test_patch_outside_the_project_copy_is_refused(escape: str, tmp_path: Path) 
     with pytest.raises(AssertionError, match="inside the project copy"):
         _apply(Patch(file=file, old="old", new="new"), project)
     assert outside.read_text(encoding="utf-8") == "old"
+
+
+def test_readme_pseudonymization_model_is_the_s28_entry() -> None:
+    # Python only: the check compares two file texts. README.md names s28 as the proof of its example.
+    entry = (_ROOT / "s28_pseudonymize_source" / PROJECT_ENTRY_PATH).read_text(encoding="utf-8")
+    assert entry.strip() in (_ROOT.parents[1] / "README.md").read_text(encoding="utf-8")

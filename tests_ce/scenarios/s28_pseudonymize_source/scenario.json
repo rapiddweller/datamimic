@@ -1,0 +1,29 @@
+{
+  "title": "The README pseudonymization model: replace the PII columns of a pipe-separated project data file",
+  "proves": [
+    "the README model runs as written: a <generate> reads data/entity/customers.ent.csv in order with the default pipe separator",
+    "each PII column gets a seeded pseudonym and the source key customer_id stays",
+    "an explicit separator=\"|\" gives the same rows, so the pipe is the default",
+    "a comma separator on the setup or on the source merges the columns into one, and the model stops on the missing customer_id",
+    "a kept source value, a duplicate source key, a missing row and an unseeded run are each rejected"
+  ],
+  "products": {"customers": 4},
+  "negatives": [
+    {"name": "comma_default_separator", "diagnostic": "child_execution", "run_error": "name 'customer_id' is not defined",
+     "patch": {"file": "datamimic.xml", "old": "<setup rngSeed=\"42\">", "new": "<setup defaultSeparator=\",\" rngSeed=\"42\">"}},
+    {"name": "comma_separator_on_the_source", "diagnostic": "child_execution", "run_error": "name 'customer_id' is not defined",
+     "patch": {"file": "datamimic.xml", "old": "target=\"CSV\" distribution=\"ordered\">", "new": "target=\"CSV\" distribution=\"ordered\" separator=\",\">"}},
+    {"name": "source_email_kept", "diagnostic": "row_condition", "expected": "'example.invalid' not in email",
+     "patch": {"file": "datamimic.xml", "old": "script=\"p.email\"", "new": "script=\"email\""}},
+    {"name": "duplicate_source_key", "diagnostic": "unique", "expected": "unique",
+     "patch": {"file": "data/entity/customers.ent.csv", "old": "C002|Ben", "new": "C001|Ben"}},
+    {"name": "one_row_less", "diagnostic": "exact_count", "expected": "4",
+     "patch": {"file": "data/entity/customers.ent.csv", "old": "C004|Dan|Sample|dan.sample@example.invalid|DE00000000000000000004|1983-04-04\n", "new": ""}},
+    {"name": "unseeded_run_does_not_replay", "diagnostic": "validation",
+     "patch": {"file": "datamimic.xml", "old": "<setup rngSeed=\"42\">", "new": "<setup>"}}
+  ],
+  "equivalents": [
+    {"name": "explicit_pipe_separator",
+     "patch": {"file": "datamimic.xml", "old": "target=\"CSV\" distribution=\"ordered\">", "new": "target=\"CSV\" distribution=\"ordered\" separator=\"|\">"}}
+  ]
+}

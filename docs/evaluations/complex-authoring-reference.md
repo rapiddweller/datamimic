@@ -8,7 +8,7 @@ Do not copy customer data or connection configuration into the plugin.
 
 ## Fixed task
 
-Preserve eleven target tables and their 27 existing columns. The standard case
+Preserve eleven target tables and their 27 existing columns. (The checked-in corpus project S12 delivers 30 columns for now: five id columns that the memstore readback needs. Owner waiver 2026-10-28; removal is tracked in #471.) The standard case
 has 100 people, ten companies, eleven approvals, 22 approval versions and 82
 staffing rows: 540 rows across the full target contract. No extra rule tables,
 runtime AI or custom rule framework. Rule parameters, demand and master data

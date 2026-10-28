@@ -14,6 +14,7 @@ from datamimic_ce.authoring.domain.capture import (
     CaptureStatus,
     ProductCaptureEvidence,
 )
+from datamimic_ce.authoring.domain.common import MAX_AUTHORING_MAX_COUNT
 from datamimic_ce.authoring.domain.requests import BuildRequestV5
 from datamimic_ce.authoring.projection.acceptance import project_acceptance
 
@@ -539,7 +540,10 @@ def test_acceptance_domain_imports_have_no_runtime_or_adapter_dependency():
                 assert not any(alias.name.startswith(forbidden) for alias in node.names)
 
 
-@pytest.mark.parametrize("count,expected_minimum", [(15, 15), (1000, 1000), (1001, None)])
+@pytest.mark.parametrize(
+    "count,expected_minimum",
+    [(15, 15), (MAX_AUTHORING_MAX_COUNT, MAX_AUTHORING_MAX_COUNT), (MAX_AUTHORING_MAX_COUNT + 1, None)],
+)
 def test_capped_count_retry_uses_one_canonical_limit(count, expected_minimum):
     spec = project(f'<setup><generate name="rows" count="{count}"><key name="id" constant="1"/></generate></setup>')
     proof = ProductCaptureEvidence(

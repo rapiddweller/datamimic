@@ -49,7 +49,7 @@ starting point. The layout below improves it in three ways:
 ├── datamimic.xml                entry: process comment, seed, clients, memstore, lib loading, ordered includes
 ├── conf/                        base.properties (+ <env>.env.properties): parameters, connection settings
 ├── model/<nn>_<activity>.xml    business generation, one activity per file, numbered 10, 20, 30 …
-├── delivery/<nn>_<target>.xml   export, insert, upsert into targets, numbered 90+; the only writers
+├── delivery/<nn>_<activity>.xml export, insert, upsert into targets, numbered 90+; the only writers
 ├── data/
 │   ├── entity/*.ent.csv         business data and code lists
 │   ├── weighting/*.wgt.csv      distributions
@@ -75,6 +75,8 @@ Separation rules:
 2. Parameters and connections live in `conf/` and the entry; `model/` files never declare clients.
 3. `model/` writes only to the memstore. `delivery/` reads it and is the only place that writes to
    files, databases or brokers, so a target can change without touching business logic.
+   Name a delivery step after its activity, for example `delivery/91_export.xml`. One exception: a check step
+   that writes its check products is a delivery step. Number it before the other delivery steps.
 4. Logic that spans tables is a named function in `lib/`. All inputs are passed in from the model,
    so the function does not read state; it returns its decisions and fails loudly when a rule
    cannot be met.

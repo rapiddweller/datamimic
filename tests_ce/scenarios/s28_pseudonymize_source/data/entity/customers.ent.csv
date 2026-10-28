@@ -1,0 +1,5 @@
+customer_id|first_name|last_name|email|iban|birth_date
+C001|Anna|Sample|anna.sample@example.invalid|DE00000000000000000001|1980-01-01
+C002|Ben|Sample|ben.sample@example.invalid|DE00000000000000000002|1981-02-02
+C003|Cleo|Sample|cleo.sample@example.invalid|DE00000000000000000003|1982-03-03
+C004|Dan|Sample|dan.sample@example.invalid|DE00000000000000000004|1983-04-04

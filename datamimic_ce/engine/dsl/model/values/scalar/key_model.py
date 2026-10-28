@@ -137,7 +137,7 @@ class KeyModel(BaseModel):
     separator: str | None = Field(
         None,
         description="Field separator for the weighted CSV 'source' (defaults to the project's default separator).",
-        examples=[",", ";", "|"],
+        examples=["|", ";", ","],
     )
     values: str | None = Field(
         None,

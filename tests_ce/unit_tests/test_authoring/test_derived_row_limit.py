@@ -9,6 +9,7 @@ from pathlib import Path
 
 import pytest
 
+from datamimic_ce.authoring.domain.common import MAX_AUTHORING_MAX_COUNT
 from datamimic_ce.authoring.domain.diagnostics import AuthoringRuleId
 from datamimic_ce.authoring.domain.requests import RejectedBuild
 from datamimic_ce.errors import IssueCode
@@ -33,7 +34,7 @@ def _limits(result: object) -> dict[str, int]:
         pytest.param((2, 2), 10, id="total-below-default-keeps-default"),
         pytest.param((5, 8, 12), 25, id="three-products-25-rows"),
         pytest.param((0, 4), 10, id="zero-count-product"),
-        pytest.param((400, 600), 1000, id="total-at-ceiling"),
+        pytest.param((400, MAX_AUTHORING_MAX_COUNT - 400), MAX_AUTHORING_MAX_COUNT, id="total-at-ceiling"),
     ],
 )
 def test_omitted_max_count_derives_the_limit_from_literal_counts(
@@ -71,28 +72,31 @@ def test_time_series_ticks_count_into_the_derived_limit(tmp_path: Path) -> None:
 
 
 def test_declared_total_above_the_ceiling_is_rejected_before_execution(tmp_path: Path) -> None:
-    result = build_project(tmp_path, _flat(400, 601))
+    result = build_project(tmp_path, _flat(400, MAX_AUTHORING_MAX_COUNT - 399))
 
     assert isinstance(result, RejectedBuild)
     [diagnostic] = result.diagnostics
-    assert (diagnostic.code, diagnostic.expected, diagnostic.actual) == (AuthoringRuleId.LIMIT, 1000, 1001)
-    assert "at most 1000" in str(diagnostic.remediation)
+    limit = MAX_AUTHORING_MAX_COUNT
+    assert (diagnostic.code, diagnostic.expected, diagnostic.actual) == (AuthoringRuleId.LIMIT, limit, limit + 1)
+    assert f"at most {limit}" in str(diagnostic.remediation)
 
 
 def test_explicit_max_count_with_a_total_above_the_ceiling_names_both_bounds(tmp_path: Path) -> None:
-    """Following the remediation must lead to a Build that passes: max_count cannot go above 1000."""
-    result = build_project(tmp_path, _flat(700, 800), max_count=500)
+    """Following the remediation must lead to a Build that passes: max_count cannot go above the ceiling."""
+    limit = MAX_AUTHORING_MAX_COUNT
+    result = build_project(tmp_path, _flat(700, limit + 800), max_count=500)
 
     assert isinstance(result, RejectedBuild)
     [diagnostic] = result.diagnostics
-    assert (diagnostic.code, diagnostic.expected, diagnostic.actual) == (AuthoringRuleId.LIMIT, 500, 1500)
+    assert (diagnostic.code, diagnostic.expected, diagnostic.actual) == (AuthoringRuleId.LIMIT, 500, limit + 1500)
     assert diagnostic.path == ("acceptance/build.json", "max_count")
     assert diagnostic.message == (
-        "The products declare 1500 rows in total, above max_count 500 and above the Build ceiling of 1000 rows."
+        f"The products declare {limit + 1500} rows in total, above max_count 500 and above the Build ceiling of "
+        f"{limit} rows."
     )
     assert diagnostic.remediation == (
-        "Reduce the counts so that all products together declare at most 1000 rows, and set max_count to at least "
-        "that total or remove it; max_count cannot go above 1000."
+        f"Reduce the counts so that all products together declare at most {limit} rows, and set max_count to at "
+        f"least that total or remove it; max_count cannot go above {limit}."
     )
 
 

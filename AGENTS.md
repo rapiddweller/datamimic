@@ -75,7 +75,7 @@ and `acceptance/build.json`:
    needed. Build replays every seeded model; `"deterministic_replay": true` also
    requires the replay and fails an unseeded model.
    Omit `max_count`: with literal counts Build derives the limit from the declared
-   total (at most 1000). A source with a literal count and a memstore readback of a
+   total (at most 2000). A source with a literal count and a memstore readback of a
    literal producer count too. Set it only for a file source without count, a script
    count or a count range (`minCount`/`maxCount`); it limits the rows of all products
    together.
@@ -154,7 +154,8 @@ The applicable Ollama protocol references are [tool calling](https://docs.ollama
    `string=`. `weights=` requires `values=`.
 4. CSV source columns arrive as strings (cast before arithmetic:
    `script="int(parent.branch_id)"`), and the default field separator is `|`,
-   not comma. Reading a comma CSV needs `separator=","`.
+   not comma. Project data files use the pipe, so write no `separator=`. Set
+   `separator=","` only on a source that reads an external comma file.
 5. Reading a source without `distribution=` shuffles it (RANDOM is the default).
    Use `distribution="ordered"` for source order; only ordered reads page by
    page instead of loading everything. `where=` (one row, no clock, no random draws) filters a file source and loads its kept rows once per chunk and once per parent invocation in a nested generate; `columns=` selects output columns.
